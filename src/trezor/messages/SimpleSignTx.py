@@ -19,7 +19,7 @@ class SimpleSignTx(p.MessageType):
         4: ('coin_name', p.UnicodeType, 0),  # default='Bitcoin'
         5: ('version', p.UVarintType, 0),  # default=1
         6: ('lock_time', p.UVarintType, 0),  # default=0
-        7: ('decred_expiry', p.UVarintType, 0),
+        7: ('expiry', p.UVarintType, 0),
         8: ('overwintered', p.BoolType, 0),
     }
 
@@ -31,7 +31,7 @@ class SimpleSignTx(p.MessageType):
         coin_name: str = None,
         version: int = None,
         lock_time: int = None,
-        decred_expiry: int = None,
+        expiry: int = None,
         overwintered: bool = None
     ) -> None:
         self.inputs = inputs if inputs is not None else []
@@ -40,5 +40,5 @@ class SimpleSignTx(p.MessageType):
         self.coin_name = coin_name
         self.version = version
         self.lock_time = lock_time
-        self.decred_expiry = decred_expiry
+        self.expiry = expiry
         self.overwintered = overwintered

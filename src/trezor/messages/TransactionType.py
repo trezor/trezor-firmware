@@ -21,7 +21,7 @@ class TransactionType(p.MessageType):
         7: ('outputs_cnt', p.UVarintType, 0),
         8: ('extra_data', p.BytesType, 0),
         9: ('extra_data_len', p.UVarintType, 0),
-        10: ('decred_expiry', p.UVarintType, 0),
+        10: ('expiry', p.UVarintType, 0),
         11: ('overwintered', p.BoolType, 0),
     }
 
@@ -36,7 +36,7 @@ class TransactionType(p.MessageType):
         outputs_cnt: int = None,
         extra_data: bytes = None,
         extra_data_len: int = None,
-        decred_expiry: int = None,
+        expiry: int = None,
         overwintered: bool = None
     ) -> None:
         self.version = version
@@ -48,5 +48,5 @@ class TransactionType(p.MessageType):
         self.outputs_cnt = outputs_cnt
         self.extra_data = extra_data
         self.extra_data_len = extra_data_len
-        self.decred_expiry = decred_expiry
+        self.expiry = expiry
         self.overwintered = overwintered

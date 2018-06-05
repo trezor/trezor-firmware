@@ -105,7 +105,7 @@ def sanitize_sign_tx(tx: SignTx) -> SignTx:
     tx.inputs_count = tx.inputs_count if tx.inputs_count is not None else 0
     tx.outputs_count = tx.outputs_count if tx.outputs_count is not None else 0
     tx.coin_name = tx.coin_name if tx.coin_name is not None else 'Bitcoin'
-    tx.decred_expiry = tx.decred_expiry if tx.decred_expiry is not None else 0
+    tx.expiry = tx.expiry if tx.expiry is not None else 0
     tx.overwintered = tx.overwintered if tx.overwintered is not None else False
     return tx
 
@@ -116,7 +116,7 @@ def sanitize_tx_meta(tx: TransactionType) -> TransactionType:
     tx.inputs_cnt = tx.inputs_cnt if tx.inputs_cnt is not None else 0
     tx.outputs_cnt = tx.outputs_cnt if tx.outputs_cnt is not None else 0
     tx.extra_data_len = tx.extra_data_len if tx.extra_data_len is not None else 0
-    tx.decred_expiry = tx.decred_expiry if tx.decred_expiry is not None else 0
+    tx.expiry = tx.expiry if tx.expiry is not None else 0
     tx.overwintered = tx.overwintered if tx.overwintered is not None else False
     return tx
 

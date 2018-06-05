@@ -167,7 +167,7 @@ COINS = [
         segwit=False,
         fork_id=None,
         force_bip143=False,
-        version_group_id=63210096,
+        version_group_id=0x03c48270,
     ),
     CoinInfo(
         coin_name='Zcash Testnet',
@@ -182,7 +182,7 @@ COINS = [
         segwit=False,
         fork_id=None,
         force_bip143=False,
-        version_group_id=63210096,
+        version_group_id=0x03c48270,
     ),
     CoinInfo(
         coin_name='Bgold',

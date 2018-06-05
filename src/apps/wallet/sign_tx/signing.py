@@ -97,7 +97,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
 
         elif txi.script_type in (InputScriptType.SPENDADDRESS,
                                  InputScriptType.SPENDMULTISIG):
-            if coin.force_bip143:
+            if coin.force_bip143 or tx.overwintered:
                 if not txi.amount:
                     raise SigningError(FailureType.DataError,
                                        'BIP 143 input without amount')
@@ -107,7 +107,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
             else:
                 segwit[i] = False
                 total_in += await get_prevtx_output_value(
-                    tx_req, txi.prev_hash, txi.prev_index)
+                    coin, tx_req, txi.prev_hash, txi.prev_index)
 
         else:
             raise SigningError(FailureType.DataError,
@@ -194,12 +194,12 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             w_txi = bytearray_with_cap(
                 7 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4)
             if i_sign == 0:  # serializing first input => prepend headers
-                write_bytes(w_txi, get_tx_header(tx, True))
+                write_bytes(w_txi, get_tx_header(coin, tx, True))
             write_tx_input(w_txi, txi_sign)
             tx_ser.serialized_tx = w_txi
             tx_req.serialized = tx_ser
 
-        elif coin.force_bip143:
+        elif coin.force_bip143 or tx.overwintered:
             # STAGE_REQUEST_SEGWIT_INPUT
             txi_sign = await request_tx_input(tx_req, i_sign)
             input_check_wallet_path(txi_sign, wallet_path)
@@ -214,7 +214,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             key_sign = node_derive(root, txi_sign.address_n)
             key_sign_pub = key_sign.public_key()
             bip143_hash = bip143.preimage_hash(
-                tx, txi_sign, ecdsa_hash_pubkey(key_sign_pub), get_hash_type(coin))
+                coin, tx, txi_sign, ecdsa_hash_pubkey(key_sign_pub), get_hash_type(coin))
 
             # if multisig, check if singing with a key that is included in multisig
             if txi_sign.multisig:
@@ -230,7 +230,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             w_txi_sign = bytearray_with_cap(
                 5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4)
             if i_sign == 0:  # serializing first input => prepend headers
-                write_bytes(w_txi_sign, get_tx_header(tx))
+                write_bytes(w_txi_sign, get_tx_header(coin, tx))
             write_tx_input(w_txi_sign, txi_sign)
             tx_ser.serialized_tx = w_txi_sign
 
@@ -242,7 +242,12 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             # same as h_first, checked before signing the digest
             h_second = HashWriter(sha256)
 
-            write_uint32(h_sign, tx.version)
+            if tx.overwintered:
+                write_uint32(h_sign, tx.version | 0x80000000)  # nVersion | fOverwintered
+                write_uint32(h_sign, coin.version_group_id)    # nVersionGroupId
+            else:
+                write_uint32(h_sign, tx.version)               # nVersion
+
             write_varint(h_sign, tx.inputs_count)
 
             for i in range(tx.inputs_count):
@@ -281,6 +286,8 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                 write_tx_output(h_sign, txo_bin)
 
             write_uint32(h_sign, tx.lock_time)
+            if tx.overwintered:
+                write_uint32(h_sign, tx.expiry)
 
             write_uint32(h_sign, get_hash_type(coin))
 
@@ -304,7 +311,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             w_txi_sign = bytearray_with_cap(
                 5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4)
             if i_sign == 0:  # serializing first input => prepend headers
-                write_bytes(w_txi_sign, get_tx_header(tx))
+                write_bytes(w_txi_sign, get_tx_header(coin, tx))
             write_tx_input(w_txi_sign, txi_sign)
             tx_ser.serialized_tx = w_txi_sign
 
@@ -349,7 +356,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             key_sign = node_derive(root, txi.address_n)
             key_sign_pub = key_sign.public_key()
             bip143_hash = bip143.preimage_hash(
-                tx, txi, ecdsa_hash_pubkey(key_sign_pub), get_hash_type(coin))
+                coin, tx, txi, ecdsa_hash_pubkey(key_sign_pub), get_hash_type(coin))
 
             signature = ecdsa_sign(key_sign, bip143_hash)
             if txi.multisig:
@@ -370,11 +377,13 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
         tx_req.serialized = tx_ser
 
     write_uint32(tx_ser.serialized_tx, tx.lock_time)
+    if tx.overwintered:
+        write_uint32(tx_ser.serialized_tx, tx.expiry)
 
     await request_tx_finish(tx_req)
 
 
-async def get_prevtx_output_value(tx_req: TxRequest, prev_hash: bytes, prev_index: int) -> int:
+async def get_prevtx_output_value(coin: CoinInfo, tx_req: TxRequest, prev_hash: bytes, prev_index: int) -> int:
     total_out = 0  # sum of output amounts
 
     # STAGE_REQUEST_2_PREV_META
@@ -382,7 +391,12 @@ async def get_prevtx_output_value(tx_req: TxRequest, prev_hash: bytes, prev_inde
 
     txh = HashWriter(sha256)
 
-    write_uint32(txh, tx.version)
+    if tx.overwintered:
+        write_uint32(txh, tx.version | 0x80000000)  # nVersion | fOverwintered
+        write_uint32(txh, coin.version_group_id)    # nVersionGroupId
+    else:
+        write_uint32(txh, tx.version)               # nVersion
+
     write_varint(txh, tx.inputs_cnt)
 
     for i in range(tx.inputs_cnt):
@@ -428,9 +442,13 @@ def get_hash_type(coin: CoinInfo) -> int:
     return hashtype
 
 
-def get_tx_header(tx: SignTx, segwit: bool = False):
+def get_tx_header(coin: CoinInfo, tx: SignTx, segwit: bool = False):
     w_txi = bytearray()
-    write_uint32(w_txi, tx.version)
+    if tx.overwintered:
+        write_uint32(w_txi, tx.version | 0x80000000)  # nVersion | fOverwintered
+        write_uint32(w_txi, coin.version_group_id)    # nVersionGroupId
+    else:
+        write_uint32(w_txi, tx.version)  # nVersion
     if segwit:
         write_varint(w_txi, 0x00)  # segwit witness marker
         write_varint(w_txi, 0x01)  # segwit witness flag

@@ -29,10 +29,11 @@ for c in coins:
         name = 'bitcoin_testnet'
     data = json.load(open('../../vendor/trezor-common/defs/coins/%s.json' % name, 'r'))
     for n in fields:
-        if n == 'xpub_magic':
-            print('        %s=0x%08x,' % (n, data[n]))
+        if n in ['xpub_magic', 'version_group_id']:
+            v = '0x%08x' % data[n] if data[n] is not None else 'None'
         else:
-            print('        %s=%s,' % (n, repr(data[n])))
+            v = repr(data[n])
+        print('        %s=%s,' % (n, v))
     print('    ),')
 
 print(']')
