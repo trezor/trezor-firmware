@@ -77,7 +77,7 @@ int main(void)
 
     display_printf("updating boardloader + bootloader\n");
 
-    const uint8_t sectors[] = {
+    static const uint8_t sectors[] = {
         FLASH_SECTOR_BOARDLOADER_START,
         1,
         FLASH_SECTOR_BOARDLOADER_END,

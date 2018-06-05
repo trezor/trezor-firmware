@@ -475,7 +475,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
 
         // if firmware is not upgrade, erase storage
         if (sectrue != is_upgrade) {
-            const uint8_t sectors_storage[] = {
+            static const uint8_t sectors_storage[] = {
                 FLASH_SECTOR_STORAGE_1,
                 FLASH_SECTOR_STORAGE_2,
             };
@@ -530,7 +530,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
 
 int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
-    const uint8_t sectors[] = {
+    static const uint8_t sectors[] = {
         3,
         FLASH_SECTOR_STORAGE_1,
         FLASH_SECTOR_STORAGE_2,
