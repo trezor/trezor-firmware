@@ -13,7 +13,8 @@ class CoinInfo:
         cashaddr_prefix: str,
         segwit: bool,
         fork_id: int,
-        force_bip143: bool
+        force_bip143: bool,
+        version_group_id: int
     ):
         self.coin_name = coin_name
         self.coin_shortcut = coin_shortcut
@@ -27,6 +28,7 @@ class CoinInfo:
         self.segwit = segwit
         self.fork_id = fork_id
         self.force_bip143 = force_bip143
+        self.version_group_id = version_group_id
 
 
 # the following list is generated using tools/codegen/gen_coins.py
@@ -45,6 +47,7 @@ COINS = [
         segwit=True,
         fork_id=None,
         force_bip143=False,
+        version_group_id=None,
     ),
     CoinInfo(
         coin_name='Testnet',
@@ -59,6 +62,7 @@ COINS = [
         segwit=True,
         fork_id=None,
         force_bip143=False,
+        version_group_id=None,
     ),
     CoinInfo(
         coin_name='Bcash',
@@ -73,6 +77,7 @@ COINS = [
         segwit=False,
         fork_id=0,
         force_bip143=True,
+        version_group_id=None,
     ),
     CoinInfo(
         coin_name='Bcash Testnet',
@@ -87,6 +92,7 @@ COINS = [
         segwit=False,
         fork_id=0,
         force_bip143=True,
+        version_group_id=None,
     ),
     CoinInfo(
         coin_name='Namecoin',
@@ -101,6 +107,7 @@ COINS = [
         segwit=False,
         fork_id=None,
         force_bip143=False,
+        version_group_id=None,
     ),
     CoinInfo(
         coin_name='Litecoin',
@@ -115,6 +122,7 @@ COINS = [
         segwit=True,
         fork_id=None,
         force_bip143=False,
+        version_group_id=None,
     ),
     CoinInfo(
         coin_name='Dogecoin',
@@ -129,6 +137,7 @@ COINS = [
         segwit=False,
         fork_id=None,
         force_bip143=False,
+        version_group_id=None,
     ),
     CoinInfo(
         coin_name='Dash',
@@ -143,6 +152,7 @@ COINS = [
         segwit=False,
         fork_id=None,
         force_bip143=False,
+        version_group_id=None,
     ),
     CoinInfo(
         coin_name='Zcash',
@@ -157,6 +167,7 @@ COINS = [
         segwit=False,
         fork_id=None,
         force_bip143=False,
+        version_group_id=63210096,
     ),
     CoinInfo(
         coin_name='Zcash Testnet',
@@ -171,6 +182,7 @@ COINS = [
         segwit=False,
         fork_id=None,
         force_bip143=False,
+        version_group_id=63210096,
     ),
     CoinInfo(
         coin_name='Bgold',
@@ -185,6 +197,7 @@ COINS = [
         segwit=True,
         fork_id=79,
         force_bip143=True,
+        version_group_id=None,
     ),
     CoinInfo(
         coin_name='DigiByte',
@@ -199,6 +212,7 @@ COINS = [
         segwit=True,
         fork_id=None,
         force_bip143=False,
+        version_group_id=None,
     ),
     CoinInfo(
         coin_name='Monacoin',
@@ -213,6 +227,7 @@ COINS = [
         segwit=True,
         fork_id=None,
         force_bip143=False,
+        version_group_id=None,
     ),
     CoinInfo(
         coin_name='Fujicoin',
@@ -227,6 +242,7 @@ COINS = [
         segwit=True,
         fork_id=None,
         force_bip143=False,
+        version_group_id=None,
     ),
     CoinInfo(
         coin_name='Vertcoin',
@@ -241,5 +257,6 @@ COINS = [
         segwit=True,
         fork_id=None,
         force_bip143=False,
+        version_group_id=None,
     ),
 ]
