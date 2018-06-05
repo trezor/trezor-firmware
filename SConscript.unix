@@ -274,11 +274,6 @@ env.Replace(
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
     MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross', )
 
-if int(ARGUMENTS.get('TREZOR_X86', '0')):
-    env.Append(
-        CCFLAGS='-m32',
-        LINKFLAGS='-m32', )
-
 #
 # Micropython version
 #

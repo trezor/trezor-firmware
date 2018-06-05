@@ -18,21 +18,20 @@ make vendor
 Install the required packages, depending on your operating system.
 * __Debian/Ubuntu__:
   ```sh
-  sudo dpkg --add-architecture i386
   sudo apt-get update
-  sudo apt-get install scons libsdl2-dev:i386 libsdl2-image-dev:i386 gcc-multilib
+  sudo apt-get install scons libsdl2-dev libsdl2-image-dev
   ```
 * __Fedora__:
   ```sh
-  sudo yum install scons SDL2-devel.i686 SDL2_image-devel.i686
+  sudo yum install scons SDL2-devel SDL2_image-devel
   ```
 * __OpenSUSE__:
   ```sh
-  sudo zypper install scons libSDL2-devel-32bit libSDL2_image-devel-32bit
+  sudo zypper install scons libSDL2-devel libSDL2_image-devel
   ```
 * __Arch__:
   ```sh
-  sudo pacman -S gcc-multilib scons lib32-sdl2 lib32-sdl2_image
+  sudo pacman -S scons sdl2 sdl2_image
   ```
 * __Mac OS X__:
   ```sh

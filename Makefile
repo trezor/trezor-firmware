@@ -13,11 +13,7 @@ FIRMWARE_BUILD_DIR    = $(BUILD_DIR)/firmware
 UNIX_BUILD_DIR        = $(BUILD_DIR)/unix
 
 UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Darwin)
-UNIX_PORT_OPTS ?= TREZOR_X86=0
-else
-UNIX_PORT_OPTS ?= TREZOR_X86=1
-endif
+UNIX_PORT_OPTS ?=
 CROSS_PORT_OPTS ?=
 
 ifeq ($(DISPLAY_ILI9341V), 1)
