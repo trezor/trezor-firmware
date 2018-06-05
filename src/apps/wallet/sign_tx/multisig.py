@@ -6,7 +6,7 @@ from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
 from trezor.messages.HDNodePathType import HDNodePathType
 from trezor.messages import FailureType
 
-from apps.wallet.sign_tx.writers import *
+from apps.wallet.sign_tx.writers import write_bytes, write_uint32
 
 
 class MultisigError(ValueError):

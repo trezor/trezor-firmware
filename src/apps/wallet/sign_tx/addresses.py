@@ -9,8 +9,8 @@ from trezor.messages import InputScriptType
 
 from apps.common.coininfo import CoinInfo
 from apps.common.address_type import addrtype_bytes
-from apps.wallet.sign_tx.scripts import *
-from apps.wallet.sign_tx.multisig import *
+from apps.wallet.sign_tx.scripts import output_script_multisig, sha256_ripemd160_digest, output_script_native_p2wpkh_or_p2wsh
+from apps.wallet.sign_tx.multisig import multisig_pubkey_index, multisig_get_pubkeys
 
 # supported witness version for bech32 addresses
 _BECH32_WITVER = const(0x00)

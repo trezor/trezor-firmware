@@ -15,7 +15,7 @@ from trezor.crypto import hashlib
 from trezor.crypto import hmac
 from trezor.crypto import random
 from trezor.crypto.curve import nist256p1
-from apps.common import storage
+from apps.common import storage, HARDENED
 
 
 _HID_RPT_SIZE = const(64)
@@ -418,7 +418,7 @@ class ConfirmContent(ui.Widget):
     def boot(self) -> None:
         from ubinascii import hexlify
         from trezor import res
-        from . import knownapps
+        from apps.fido_u2f import knownapps
 
         app_id = bytes(self.app_id)  # could be bytearray, which doesn't have __hash__
 
@@ -563,7 +563,7 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     from apps.common import seed
 
     # derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
-    keypath = [0x80000000 | random.uniform(0xf0000000) for _ in range(0, 8)]
+    keypath = [HARDENED | random.uniform(0xf0000000) for _ in range(0, 8)]
     nodepath = [_U2F_KEY_PATH] + keypath
 
     # prepare signing key from random path, compute decompressed public key
@@ -679,7 +679,7 @@ def msg_authenticate_genkey(app_id: bytes, keyhandle: bytes):
 
     # check high bit for hardened keys
     for i in keypath:
-        if not i & 0x80000000:
+        if not i & HARDENED:
             if __debug__:
                 log.warning(__name__, 'invalid key path')
             return None

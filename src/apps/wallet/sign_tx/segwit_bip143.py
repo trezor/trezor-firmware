@@ -1,10 +1,13 @@
 from trezor.crypto.hashlib import sha256
 from trezor.messages.SignTx import SignTx
+from trezor.messages.TxInputType import TxInputType
+from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.messages import InputScriptType, FailureType
 from trezor.utils import HashWriter
 
 from apps.common.coininfo import CoinInfo
-from apps.wallet.sign_tx.writers import *
+from apps.common import OVERWINTERED
+from apps.wallet.sign_tx.writers import write_bytes, write_bytes_rev, write_uint32, write_uint64, write_varint, write_tx_output, get_tx_hash
 from apps.wallet.sign_tx.scripts import output_script_p2pkh, output_script_multisig
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
 
@@ -43,7 +46,7 @@ class Bip143:
         h_preimage = HashWriter(sha256)
 
         if tx.overwintered:
-            write_uint32(h_preimage, tx.version | 0x80000000)  # nVersion | fOverwintered
+            write_uint32(h_preimage, tx.version | OVERWINTERED)  # nVersion | fOverwintered
             write_uint32(h_preimage, coin.version_group_id)    # nVersionGroupId
         else:
             write_uint32(h_preimage, tx.version)  # nVersion

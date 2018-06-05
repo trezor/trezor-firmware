@@ -104,7 +104,7 @@ async def send_request_chunk(ctx, data_left: int):
 
 async def send_signature(ctx, msg: EthereumSignTx, digest):
     from trezor.crypto.curve import secp256k1
-    from ..common import seed
+    from apps.common import seed
 
     address_n = msg.address_n or ()
     node = await seed.derive_node(ctx, address_n)

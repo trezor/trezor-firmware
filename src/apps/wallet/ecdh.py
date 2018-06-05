@@ -7,7 +7,7 @@ from apps.common.confirm import require_confirm
 from apps.wallet.sign_identity import serialize_identity, serialize_identity_without_proto
 from trezor.ui.text import Text
 
-from ..common import seed
+from apps.common import seed, HARDENED
 
 
 async def get_ecdh_session_key(ctx, msg):
@@ -39,7 +39,7 @@ def get_ecdh_path(identity: str, index: int):
     identity_hash = sha256(pack('<I', index) + identity).digest()
 
     address_n = (17, ) + unpack('<IIII', identity_hash[:16])
-    address_n = [0x80000000 | x for x in address_n]
+    address_n = [HARDENED | x for x in address_n]
 
     return address_n
 

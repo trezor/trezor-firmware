@@ -5,7 +5,7 @@ async def ethereum_get_address(ctx, msg):
     from trezor.messages.EthereumAddress import EthereumAddress
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha3_256
-    from ..common import seed
+    from apps.common import seed
 
     address_n = msg.address_n or ()
 

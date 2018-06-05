@@ -1,12 +1,13 @@
-from apps.common.confirm import *
-from apps.ethereum import tokens
+from ubinascii import hexlify
+
 from trezor import ui
 from trezor.utils import chunks, format_amount
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
-from ubinascii import hexlify
-from . import networks
-from .get_address import _ethereum_address_hex
+
+from apps.common.confirm import require_confirm, require_hold_to_confirm
+from apps.ethereum import networks, tokens
+from apps.ethereum.get_address import _ethereum_address_hex
 
 
 async def require_confirm_tx(ctx, to, value, chain_id, token=None, tx_type=None):

@@ -1,7 +1,7 @@
 from trezor import config, loop, ui, wire
 from trezor.messages import wire_types
+from trezor.messages import ButtonRequestType
 from trezor.messages.ButtonRequest import ButtonRequest
-from trezor.messages.ButtonRequestType import Other
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int, show_pin_timeout
 from trezor.ui.text import Text
@@ -71,7 +71,7 @@ async def request_pin_confirm(ctx, *args, **kwargs):
 
 async def request_pin_ack(ctx, *args, **kwargs):
     try:
-        await ctx.call(ButtonRequest(code=Other), wire_types.ButtonAck)
+        await ctx.call(ButtonRequest(code=ButtonRequestType.Other), wire_types.ButtonAck)
         return await ctx.wait(request_pin(*args, **kwargs))
     except PinCancelled:
         raise wire.ActionCancelled('Cancelled')

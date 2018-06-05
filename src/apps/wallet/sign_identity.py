@@ -1,12 +1,13 @@
+from ustruct import pack, unpack
+
 from trezor import ui
 from trezor.crypto.hashlib import sha256
 from trezor.messages.SignedIdentity import SignedIdentity
-from ustruct import pack, unpack
 from trezor.utils import chunks
-from apps.common.confirm import require_confirm
 from trezor.ui.text import Text
 
-from ..common import coins, seed
+from apps.common import coins, seed, HARDENED
+from apps.common.confirm import require_confirm
 
 
 async def sign_identity(ctx, msg):
@@ -84,7 +85,7 @@ def get_identity_path(identity: str, index: int):
     identity_hash = sha256(pack('<I', index) + identity).digest()
 
     address_n = (13, ) + unpack('<IIII', identity_hash[:16])
-    address_n = [0x80000000 | x for x in address_n]
+    address_n = [HARDENED | x for x in address_n]
 
     return address_n
 
@@ -101,7 +102,7 @@ def sign_challenge(seckey: bytes,
         from trezor.crypto.curve import nist256p1
     elif curve == 'ed25519':
         from trezor.crypto.curve import ed25519
-    from ..common.signverify import message_digest
+    from apps.common.signverify import message_digest
 
     if sigtype == 'gpg':
         data = challenge_hidden

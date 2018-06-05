@@ -9,10 +9,11 @@ from trezor.messages import OutputScriptType
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 
-from apps.common import address_type, coins
+from apps.common import address_type, coins, OVERWINTERED
 from apps.common.coininfo import CoinInfo
 from apps.wallet.sign_tx.addresses import *
 from apps.wallet.sign_tx.helpers import *
+from apps.wallet.sign_tx.multisig import *
 from apps.wallet.sign_tx.scripts import *
 from apps.wallet.sign_tx.segwit_bip143 import *
 from apps.wallet.sign_tx.tx_weight_calculator import *
@@ -243,7 +244,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             h_second = HashWriter(sha256)
 
             if tx.overwintered:
-                write_uint32(h_sign, tx.version | 0x80000000)  # nVersion | fOverwintered
+                write_uint32(h_sign, tx.version | OVERWINTERED)  # nVersion | fOverwintered
                 write_uint32(h_sign, coin.version_group_id)    # nVersionGroupId
             else:
                 write_uint32(h_sign, tx.version)               # nVersion
@@ -394,7 +395,7 @@ async def get_prevtx_output_value(coin: CoinInfo, tx_req: TxRequest, prev_hash: 
     txh = HashWriter(sha256)
 
     if tx.overwintered:
-        write_uint32(txh, tx.version | 0x80000000)  # nVersion | fOverwintered
+        write_uint32(txh, tx.version | OVERWINTERED)  # nVersion | fOverwintered
         write_uint32(txh, coin.version_group_id)    # nVersionGroupId
     else:
         write_uint32(txh, tx.version)               # nVersion
@@ -450,7 +451,7 @@ def get_hash_type(coin: CoinInfo) -> int:
 def get_tx_header(coin: CoinInfo, tx: SignTx, segwit: bool = False):
     w_txi = bytearray()
     if tx.overwintered:
-        write_uint32(w_txi, tx.version | 0x80000000)  # nVersion | fOverwintered
+        write_uint32(w_txi, tx.version | OVERWINTERED)  # nVersion | fOverwintered
         write_uint32(w_txi, coin.version_group_id)    # nVersionGroupId
     else:
         write_uint32(w_txi, tx.version)  # nVersion
