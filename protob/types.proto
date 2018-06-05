@@ -226,9 +226,9 @@ message TransactionType {
 	optional uint32 lock_time = 4;
 	optional uint32 inputs_cnt = 6;
 	optional uint32 outputs_cnt = 7;
-	optional bytes extra_data = 8;
-	optional uint32 extra_data_len = 9;
-	optional uint32 decred_expiry = 10;		// only for Decred
+	optional bytes extra_data = 8;			// only for Zcash
+	optional uint32 extra_data_len = 9;		// only for Zcash
+	optional uint32 expiry = 10;			// only for Decred and Zcash
 	optional bool overwintered = 11;		// only for Zcash
 }
 

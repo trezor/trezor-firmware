@@ -655,7 +655,7 @@ message SignTx {
 	optional string coin_name = 3 [default='Bitcoin'];	// coin to use
 	optional uint32 version = 4 [default=1];		// transaction version
 	optional uint32 lock_time = 5 [default=0];		// transaction lock_time
-	optional uint32 decred_expiry = 6;			// only for Decred
+	optional uint32 expiry = 6;				// only for Decred and Zcash
 	optional bool overwintered = 7;				// only for Zcash
 }
 
@@ -675,7 +675,7 @@ message SimpleSignTx {
 	optional string coin_name = 4 [default='Bitcoin'];	// coin to use
 	optional uint32 version = 5 [default=1];		// transaction version
 	optional uint32 lock_time = 6 [default=0];		// transaction lock_time
-	optional uint32 decred_expiry = 7;			// only for Decred
+	optional uint32 expiry = 7;				// only for Decred and Zcash
 	optional bool overwintered = 8;				// only for Zcash
 }
 
