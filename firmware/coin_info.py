@@ -62,7 +62,7 @@ def format_string(value):
 
 def format_hex(value):
     if value is None:
-        value = "0"
+        value = 0
     return "0x{:08x}".format(value)
 
 
@@ -90,6 +90,7 @@ def coin_to_struct(coin):
         ("xpub_magic",            format_hex(coin["xpub_magic"])),
         ("xprv_magic",            format_hex(coin["xprv_magic"])),
         ("fork_id",               format_number(coin["fork_id"])),
+        ("version_group_id",      format_hex(coin["version_group_id"])),
         ("bech32_prefix",         format_string(coin["bech32_prefix"])),
         ("cashaddr_prefix",       format_string(coin["cashaddr_prefix"])),
         ("coin_type",             "({} | 0x80000000)".format(format_number(coin["slip44"]))),  # noqa: E501
