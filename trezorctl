@@ -559,7 +559,7 @@ def sign_tx(connect, coin):
     tx_version = click.prompt('Transaction version', type=int, default=2)
     tx_locktime = click.prompt('Transaction locktime', type=int, default=0)
 
-    (signatures, serialized_tx) = client.sign_tx(coin, inputs, outputs, tx_version, tx_locktime)
+    _, serialized_tx = client.sign_tx(coin, inputs, outputs, tx_version, tx_locktime)
 
     client.close()
 
@@ -757,7 +757,7 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
     if ' ' in value:
         value, unit = value.split(' ', 1)
         if unit.lower() not in ether_units:
-            raise CallException(proto.Failure_DataError, 'Unrecognized ether unit %r' % unit)
+            raise CallException(proto.Failure.DataError, 'Unrecognized ether unit %r' % unit)
         value = int(value) * ether_units[unit.lower()]
     else:
         value = int(value)
@@ -766,7 +766,7 @@ def ethereum_sign_tx(connect, host, chain_id, address, value, gas_limit, gas_pri
         if ' ' in gas_price:
             gas_price, unit = gas_price.split(' ', 1)
             if unit.lower() not in ether_units:
-                raise CallException(proto.Failure_DataError, 'Unrecognized gas price unit %r' % unit)
+                raise CallException(proto.Failure.DataError, 'Unrecognized gas price unit %r' % unit)
             gas_price = int(gas_price) * ether_units[unit.lower()]
         else:
             gas_price = int(gas_price)
@@ -971,4 +971,4 @@ def stellar_sign_transaction(connect, b64envelope, address, network_passphrase):
 
 
 if __name__ == '__main__':
-    cli()
+    cli()  # pylint: disable=E1120
