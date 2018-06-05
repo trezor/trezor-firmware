@@ -599,7 +599,7 @@ uint32_t tx_serialize_footer(TxStruct *tx, uint8_t *out)
 {
 	memcpy(out, &(tx->lock_time), 4);
 	if (tx->is_decred) {
-		memcpy(out + 4, &(tx->decred_expiry), 4);
+		memcpy(out + 4, &(tx->expiry), 4);
 		return 8;
 	}
 	return 4;
@@ -609,7 +609,7 @@ uint32_t tx_serialize_footer_hash(TxStruct *tx)
 {
 	hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->lock_time), 4);
 	if (tx->is_decred) {
-		hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->decred_expiry), 4);
+		hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->expiry), 4);
 		return 8;
 	}
 	return 4;
@@ -701,7 +701,7 @@ void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t v
 	tx->size = 0;
 	tx->is_segwit = false;
 	tx->is_decred = false;
-	tx->decred_expiry = 0;
+	tx->expiry = 0;
 	hasher_Init(&(tx->hasher), hasher_sign);
 }
 

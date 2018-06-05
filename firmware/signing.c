@@ -511,12 +511,12 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 	if (coin->decred) {
 		to.version |= (DECRED_SERIALIZE_FULL << 16);
 		to.is_decred = true;
-		to.decred_expiry = msg->decred_expiry;
+		to.expiry = msg->expiry;
 
 		tx_init(&ti, inputs_count, outputs_count, version, lock_time, 0, coin->curve->hasher_sign);
 		ti.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
 		ti.is_decred = true;
-		ti.decred_expiry = msg->decred_expiry;
+		ti.expiry = msg->expiry;
 	}
 
 	// segwit hashes for hashPrevouts and hashSequence
@@ -1014,7 +1014,7 @@ void signing_txack(TransactionType *tx)
 			if (coin->decred) {
 				tp.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
 				tp.is_decred = true;
-				tp.decred_expiry = tx->decred_expiry;
+				tp.expiry = tx->expiry;
 			}
 			progress_meta_step = progress_step / (tp.inputs_len + tp.outputs_len);
 			idx2 = 0;

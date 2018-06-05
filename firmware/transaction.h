@@ -34,7 +34,7 @@ typedef struct {
 
 	uint32_t version;
 	uint32_t lock_time;
-	uint32_t decred_expiry;
+	uint32_t expiry;
 	bool is_segwit;
 	bool is_decred;
 
