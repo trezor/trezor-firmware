@@ -287,7 +287,8 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
 
             write_uint32(h_sign, tx.lock_time)
             if tx.overwintered:
-                write_uint32(h_sign, tx.expiry)
+                write_uint32(h_sign, tx.expiry)  # expiryHeight
+                write_varint(h_sign, 0)          # nJoinSplit
 
             write_uint32(h_sign, get_hash_type(coin))
 
@@ -378,7 +379,8 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
 
     write_uint32(tx_ser.serialized_tx, tx.lock_time)
     if tx.overwintered:
-        write_uint32(tx_ser.serialized_tx, tx.expiry)
+        write_uint32(tx_ser.serialized_tx, tx.expiry)  # expiryHeight
+        write_varint(tx_ser.serialized_tx, 0)          # nJoinSplit
 
     await request_tx_finish(tx_req)
 
@@ -414,6 +416,9 @@ async def get_prevtx_output_value(coin: CoinInfo, tx_req: TxRequest, prev_hash: 
             total_out += txo_bin.amount
 
     write_uint32(txh, tx.lock_time)
+
+    if tx.overwintered:
+        write_uint32(txh, tx.expiry)
 
     ofs = 0
     while ofs < tx.extra_data_len:

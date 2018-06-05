@@ -64,6 +64,7 @@ class Bip143:
         write_uint32(h_preimage, tx.lock_time)  # nLockTime
         if tx.overwintered:
             write_uint32(h_preimage, tx.expiry)  # expiryHeight
+            write_varint(h_preimage, 0)  # nJoinSplit
         write_uint32(h_preimage, sighash)  # nHashType
 
         return get_tx_hash(h_preimage, True)
