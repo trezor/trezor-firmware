@@ -77,7 +77,7 @@ class TestSegwitBip143(unittest.TestCase):
             bip143.add_output(txo_bin)
 
         # test data public key hash
-        result = bip143.preimage_hash(self.tx, self.inp1, unhexlify('79091972186c449eb1ded22b78e40d009bdf0089'), 0x01)
+        result = bip143.preimage_hash(coin, self.tx, self.inp1, unhexlify('79091972186c449eb1ded22b78e40d009bdf0089'), 0x01)
         self.assertEqual(hexlify(result), b'64f3b0f4dd2bb3aa1ce8566d220cc74dda9df97d8490cc81d89d735c92e59fb6')
 
 

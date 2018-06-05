@@ -91,7 +91,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
 
         # test data public key hash
         # only for input 2 - input 1 is not segwit
-        result = bip143.preimage_hash(self.tx, self.inp2, unhexlify('1d0f172a0ecb48aee1be1f2687d2963ae33f71a1'), 0x01)
+        result = bip143.preimage_hash(coin, self.tx, self.inp2, unhexlify('1d0f172a0ecb48aee1be1f2687d2963ae33f71a1'), 0x01)
         self.assertEqual(hexlify(result), b'c37af31116d1b27caf68aae9e3ac82f1477929014d5b917657d0eb49478cb670')
 
 
