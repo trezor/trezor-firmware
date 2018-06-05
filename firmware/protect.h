@@ -28,6 +28,7 @@ bool protectPin(bool use_cached);
 bool protectChangePin(void);
 bool protectPassphrase(void);
 
+extern bool protectAbortedByCancel;
 extern bool protectAbortedByInitialize;
 
 #endif

@@ -114,6 +114,9 @@ void fsm_sendFailureDebug(FailureType code, const char *text, const char *source
 void fsm_sendFailure(FailureType code, const char *text)
 #endif
 {
+	if (protectAbortedByCancel) {
+		protectAbortedByCancel = false;
+	}
 	if (protectAbortedByInitialize) {
 		fsm_msgInitialize((Initialize *)0);
 		protectAbortedByInitialize = false;
@@ -230,7 +233,7 @@ static bool fsm_layoutAddress(const char *address, const char *desc, bool ignore
 		if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
 			return true;
 		}
-		if (protectAbortedByInitialize) {
+		if (protectAbortedByCancel || protectAbortedByInitialize) {
 			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			layoutHome();
 			return false;
