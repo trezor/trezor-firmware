@@ -17,14 +17,14 @@
     "chain_id": 3,
     "slip44": 1,
     "shortcut": "tETH",
-    "name": "Ethereum Testnet/Ropsten",
+    "name": "Ethereum Testnet Ropsten",
     "url": "https://www.ethereum.org"
   },
   {
     "chain_id": 4,
     "slip44": 1,
     "shortcut": "tETH",
-    "name": "Ethereum Testnet/Rinkeby",
+    "name": "Ethereum Testnet Rinkeby",
     "url": "https://www.ethereum.org"
   },
   {
@@ -59,7 +59,7 @@
     "chain_id": 42,
     "slip44": 1,
     "shortcut": "tETH",
-    "name": "Ethereum Testnet/Kovan",
+    "name": "Ethereum Testnet Kovan",
     "url": "https://www.ethereum.org"
   },
   {
