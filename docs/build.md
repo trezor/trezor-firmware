@@ -16,36 +16,47 @@ make vendor
 ```
 
 Install the required packages, depending on your operating system.
+
 * __Debian/Ubuntu__:
+
   ```sh
-  sudo apt-get update
   sudo apt-get install scons libsdl2-dev libsdl2-image-dev
   ```
+
 * __Fedora__:
+
   ```sh
   sudo yum install scons SDL2-devel SDL2_image-devel
   ```
+
 * __OpenSUSE__:
+
   ```sh
   sudo zypper install scons libSDL2-devel libSDL2_image-devel
   ```
+
 * __Arch__:
+
   ```sh
   sudo pacman -S scons sdl2 sdl2_image
   ```
+
 * __Mac OS X__:
+
   ```sh
   brew install scons sdl2 sdl2_image
   ```
+
 * __Windows__: not supported yet, sorry.
 
-
 Run the build with:
+
 ```sh
 make build_unix
 ```
 
 Now you can start the emulator:
+
 ```sh
 ./emu.sh
 ```

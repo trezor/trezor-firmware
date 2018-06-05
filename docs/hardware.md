@@ -101,6 +101,7 @@
 * Integrated STMicroelectronics ST-LINK/V2.1 debugger
 
 Minimum MCU requirements:
+
 * STM32F4 family [STM32F427VIT6](http://www.st.com/en/microcontrollers/stm32f427vi.html)
 * 168 MHz, 8 MHz HSE
 * 2048 KB Flash memory
@@ -112,4 +113,3 @@ Minimum MCU requirements:
 #### Clock Tree
 
 ![Clock Tree](hardware/clock-tree.png)
-
