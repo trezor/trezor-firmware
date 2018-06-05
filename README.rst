@@ -11,22 +11,60 @@ Python library and commandline client for communicating with TREZOR Hardware Wal
 
 See https://trezor.io for more information
 
+
 Install
 -------
 
-Linux requirements:
+Python-trezor requires Python 3.3 or higher, and libusb 1.0. The easiest way to install it is with ``pip``.
+The rest of this guide assumes you have a working ``pip``; if not, you can refer to
+`this guide <https://packaging.python.org/tutorials/installing-packages/>`_.
+
+Trezor T only
+~~~~~~~~~~~~~
+
+On a typical Linux / Mac / BSD system, you already have all you need. Install ``trezor`` with:
 
 .. code::
 
-  sudo apt-get install python3-dev cython3 libusb-1.0-0-dev libudev-dev git
+  pip3 install --upgrade setuptools
+  pip3 install trezor
 
-Linux & Mac Python requirements:
+On Windows, you also need to install `libusb <https://github.com/libusb/libusb/wiki/Windows>`_
+and the appropriate `drivers <https://zadig.akeo.ie/>`_. This is, unfortunately, a topic bigger
+than this README.
+
+Trezor One support
+~~~~~~~~~~~~~~~~~~
+
+In addition to the above, you need to install development headers for HIDAPI.
+
+On a Debian or Ubuntu based system, you can install these:
 
 .. code::
 
-  sudo -H pip3 install setuptools
-  sudo -H pip3 install -r requirements.txt
-  sudo -H pip3 install trezor
+  sudo apt-get install python3-dev python3-pip cython3 libusb-1.0-0-dev libudev-dev
+
+When installing the `trezor` library, you need to specify that you want ``hidapi``:
+
+.. code::
+
+  pip3 install --upgrade setuptools
+  pip3 install trezor[hidapi]
+
+Ethereum support
+~~~~~~~~~~~~~~~~
+
+Ethereum requires additional python packages. Instead of ``pip3 install trezor``, specify
+``pip3 install trezor[ethereum]``.
+
+You can combine it with the above, to get both HIDAPI and Ethereum support:
+
+.. code::
+
+  pip3 install trezor[ethereum,hidapi]
+
+FreeBSD
+~~~~~~~
 
 On FreeBSD you can install the packages:
 
@@ -43,7 +81,7 @@ or build via ports:
 
 
 Commandline client (trezorctl)
----------------------------
+------------------------------
 
 The included ``trezorctl`` python script can perform various tasks such as changing setting in the Trezor, signing transactions, retrieving account info and addresses. See the `docs/ <docs/>`_ sub folder for detailed examples and options.
 
