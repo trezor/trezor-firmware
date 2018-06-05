@@ -2,39 +2,6 @@ from trezor.crypto import base32
 import ustruct
 
 
-class UiConfirmInit:
-
-    def __init__(self, pubkey: bytes, network: str):
-        self.pubkey = pubkey
-        self.network = network
-
-
-class UiConfirmMemo:
-
-    def __init__(self, memo_type: int, memo_text: str):
-        self.memo_type = memo_type
-        self.memo_text = memo_text
-
-
-class UiConfirmFinal:
-
-    def __init__(self, fee: int, num_operations: int):
-        self.fee = fee
-        self.num_operations = num_operations
-
-
-def confirm_init(pubkey: bytes, network: str):
-    return (yield UiConfirmInit(pubkey, network))
-
-
-def confirm_memo(memo_type: int, memo_text: str):
-    return (yield UiConfirmMemo(memo_type, memo_text))
-
-
-def confirm_final(fee: int, num_operations: int):
-    return (yield UiConfirmFinal(fee, num_operations))
-
-
 def address_from_public_key(pubkey: bytes):
     """Returns the base32-encoded version of public key bytes (G...)"""
 

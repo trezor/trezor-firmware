@@ -9,8 +9,8 @@ def dispatch_StellarGetPublicKey(*args, **kwargs):
 
 
 def dispatch_StellarSignTx(*args, **kwargs):
-    from .sign_tx import sign_tx_loop
-    return sign_tx_loop(*args, **kwargs)
+    from .sign_tx import sign_tx
+    return sign_tx(*args, **kwargs)
 
 
 def boot():
