@@ -1,4 +1,4 @@
-from trezor import config, utils
+from trezor import config, utils, wire
 from trezor.wire import register, protobuf_workflow
 from trezor.messages import wire_types
 from trezor.messages.Features import Features
@@ -41,6 +41,10 @@ async def handle_GetFeatures(ctx, msg):
     return get_features()
 
 
+async def handle_Cancel(ctx, msg):
+    raise wire.ActionCancelled('Cancelled')
+
+
 async def handle_ClearSession(ctx, msg):
     cache.clear()
     return Success(message='Session cleared')
@@ -62,5 +66,6 @@ async def handle_Ping(ctx, msg):
 def boot():
     register(wire_types.Initialize, protobuf_workflow, handle_Initialize)
     register(wire_types.GetFeatures, protobuf_workflow, handle_GetFeatures)
+    register(wire_types.Cancel, protobuf_workflow, handle_Cancel)
     register(wire_types.ClearSession, protobuf_workflow, handle_ClearSession)
     register(wire_types.Ping, protobuf_workflow, handle_Ping)
