@@ -235,6 +235,14 @@ def update_ethereum(details):
     set_default(out, 't2_enabled', 'yes')
     update_marketcap(out, 'etsc')
 
+    ut = details['coins'].setdefault('coin2:EOSC', {})
+    out['type'] = 'coin'
+    set_default(out, 'shortcut', 'EOSC')
+    set_default(out, 'name', 'EOS Classic')
+    set_default(out, 't1_enabled', 'yes')
+    set_default(out, 't2_enabled', 'yes')
+    update_marketcap(out, 'eosc')
+
 def update_mosaics(details):
     d = json.load(open('defs/nem/nem_mosaics.json'))
     supported = []

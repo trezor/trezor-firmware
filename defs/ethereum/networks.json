@@ -96,5 +96,12 @@
     "shortcut": "EGEM",
     "name": "EtherGem",
     "url": "https://egem.io"
+  },
+  {
+    "chain_id": 2018,
+    "slip44": 2018,
+    "shortcut": "EOSC",
+    "name": "EOS Classic",
+    "url": "https://eos-classic.io"
   }
 ]

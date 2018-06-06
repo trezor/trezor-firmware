@@ -65,6 +65,19 @@
             "t2_enabled": "yes",
             "type": "coin"
         },
+        "coin2:EOSC": {
+            "links": {
+                "Homepage": "https://eos-classic.io",
+                "MyCrypto Wallet": "https://mycrypto.com",
+                "MyEtherWallet": "https://www.myetherwallet.com"
+            },
+            "marketcap_usd": 0,
+            "name": "EOS Classic",
+            "shortcut": "EOSC",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin"
+        },
         "coin2:LSK": {
             "links": {
                 "Homepage": "https://lisk.io/"
