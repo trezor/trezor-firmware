@@ -1,10 +1,11 @@
-from apps.nem.writers import *
-from apps.nem.helpers import *
-from trezor.messages.NEMSignTx import NEMSignTx
-from trezor.crypto import hashlib
-from trezor.crypto import nem
-from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+from trezor.crypto import hashlib, nem
 from trezor.messages.NEMAggregateModification import NEMAggregateModification
+from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+
+from ..helpers import (NEM_TRANSACTION_TYPE_AGGREGATE_MODIFICATION,
+                       NEM_TRANSACTION_TYPE_MULTISIG,
+                       NEM_TRANSACTION_TYPE_MULTISIG_SIGNATURE)
+from ..writers import write_bytes_with_length, write_common, write_uint32
 
 
 def serialize_multisig(common: NEMTransactionCommon, public_key: bytes, inner: bytes):

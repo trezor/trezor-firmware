@@ -1,8 +1,11 @@
-from apps.nem.writers import *
-from apps.nem.helpers import *
-from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
-from trezor.messages.NEMMosaicSupplyChange import NEMMosaicSupplyChange
 from trezor.messages.NEMMosaicCreation import NEMMosaicCreation
+from trezor.messages.NEMMosaicSupplyChange import NEMMosaicSupplyChange
+from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+
+from ..helpers import (NEM_TRANSACTION_TYPE_MOSAIC_CREATION,
+                       NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE)
+from ..writers import (write_bytes_with_length, write_common, write_uint32,
+                       write_uint64)
 
 
 def serialize_mosaic_creation(common: NEMTransactionCommon, creation: NEMMosaicCreation, public_key: bytes):
@@ -17,10 +20,10 @@ def serialize_mosaic_creation(common: NEMTransactionCommon, creation: NEMMosaicC
     write_bytes_with_length(mosaics_w, bytearray(creation.definition.description))
     write_uint32(mosaics_w, 4)  # number of properties
 
-    _write_property(mosaics_w, "divisibility", creation.definition.divisibility)
-    _write_property(mosaics_w, "initialSupply", creation.definition.supply)
-    _write_property(mosaics_w, "supplyMutable", creation.definition.mutable_supply)
-    _write_property(mosaics_w, "transferable", creation.definition.transferable)
+    _write_property(mosaics_w, 'divisibility', creation.definition.divisibility)
+    _write_property(mosaics_w, 'initialSupply', creation.definition.supply)
+    _write_property(mosaics_w, 'supplyMutable', creation.definition.mutable_supply)
+    _write_property(mosaics_w, 'transferable', creation.definition.transferable)
 
     if creation.definition.levy:
         levy_identifier_length = 4 + len(creation.definition.levy_namespace) + 4 + len(creation.definition.levy_mosaic)
@@ -58,15 +61,15 @@ def serialize_mosaic_supply_change(common: NEMTransactionCommon, change: NEMMosa
 
 def _write_property(w: bytearray, name: str, value):
     if value is None:
-        if name in ['divisibility', 'initialSupply']:
+        if name in ('divisibility', 'initialSupply'):
             value = 0
-        elif name in ['supplyMutable', 'transferable']:
+        elif name in ('supplyMutable', 'transferable'):
             value = False
     if type(value) == bool:
         if value:
-            value = "true"
+            value = 'true'
         else:
-            value = "false"
+            value = 'false'
     elif type(value) == int:
         value = str(value)
     elif type(value) != str:

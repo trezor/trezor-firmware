@@ -1,9 +1,13 @@
-from apps.nem.layout import *
-from trezor.messages import NEMAggregateModification
-from trezor.messages import NEMModificationType
-from trezor.messages import NEMSignTx
-from trezor.messages import NEMTransactionCommon
+from trezor import ui
 from trezor.crypto import nem
+from trezor.messages import (ButtonRequestType, NEMAggregateModification,
+                             NEMModificationType, NEMSignTx,
+                             NEMTransactionCommon)
+from trezor.ui.text import Text
+
+from ..layout import (require_confirm, require_confirm_fee,
+                      require_confirm_final, require_confirm_text,
+                      split_address)
 
 
 async def ask_multisig(ctx, msg: NEMSignTx):

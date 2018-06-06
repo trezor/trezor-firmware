@@ -1,11 +1,16 @@
-from apps.nem.layout import *
-from trezor.messages import NEMTransactionCommon
-from trezor.messages import NEMSupplyChangeType
-from trezor.messages import NEMMosaicDefinition
-from trezor.messages import NEMMosaicCreation
-from trezor.messages import NEMMosaicSupplyChange
-from trezor.messages import NEMMosaicLevy
+from micropython import const
+from trezor import ui
+from trezor.messages import (NEMMosaicCreation, NEMMosaicDefinition,
+                             NEMMosaicLevy, NEMMosaicSupplyChange,
+                             NEMSupplyChangeType, NEMTransactionCommon)
+from trezor.ui.confirm import ConfirmDialog
 from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
+from trezor.ui.text import Text
+from trezor.utils import split_words
+
+from ..layout import (require_confirm_content, require_confirm_fee,
+                      require_confirm_final, require_confirm_text,
+                      split_address, trim)
 
 
 async def ask_mosaic_creation(ctx, common: NEMTransactionCommon, creation: NEMMosaicCreation):

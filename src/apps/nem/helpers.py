@@ -26,3 +26,12 @@ NEM_MOSAIC_AMOUNT_DIVISOR = const(1000000)
 
 NEM_MAX_PLAIN_PAYLOAD_SIZE = const(1024)
 NEM_MAX_ENCRYPTED_PAYLOAD_SIZE = const(960)
+
+
+def get_network_str(network: int) -> str:
+    if network == NEM_NETWORK_MAINNET:
+        return 'Mainnet'
+    elif network == NEM_NETWORK_TESTNET:
+        return 'Testnet'
+    elif network == NEM_NETWORK_MIJIN:
+        return 'Mijin'

@@ -1,13 +1,11 @@
-from apps.nem import namespace
-from apps.nem import transfer
-from apps.nem import mosaic
-from apps.nem import multisig
-from apps.nem.validators import validate
-from apps.nem.helpers import *
-from apps.common import seed
-from trezor.messages.NEMSignTx import NEMSignTx
-from trezor.messages.NEMSignedTx import NEMSignedTx
 from trezor.crypto.curve import ed25519
+from trezor.messages.NEMSignedTx import NEMSignedTx
+from trezor.messages.NEMSignTx import NEMSignTx
+from apps.common import seed
+
+from . import mosaic, multisig, namespace, transfer
+from .helpers import NEM_CURVE, NEM_HASH_ALG
+from .validators import validate
 
 
 async def sign_tx(ctx, msg: NEMSignTx):

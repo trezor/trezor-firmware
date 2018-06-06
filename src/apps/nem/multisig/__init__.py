@@ -1,21 +1,20 @@
-from .serialize import *
-from .layout import *
 from trezor.messages.NEMAggregateModification import NEMAggregateModification
+from trezor.messages.NEMSignTx import NEMSignTx
+from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+
+from . import layout, serialize
 
 
 async def ask(ctx, msg: NEMSignTx):
-    await ask_multisig(ctx, msg)
+    await layout.ask_multisig(ctx, msg)
 
 
 def initiate(public_key, common: NEMTransactionCommon, inner_tx: bytes) -> bytes:
-    return serialize_multisig(common, public_key, inner_tx)
+    return serialize.serialize_multisig(common, public_key, inner_tx)
 
 
 def cosign(public_key, common: NEMTransactionCommon, inner_tx: bytes, signer: bytes) -> bytes:
-    return serialize_multisig_signature(common,
-                                        public_key,
-                                        inner_tx,
-                                        signer)
+    return serialize.serialize_multisig_signature(common, public_key, inner_tx, signer)
 
 
 async def aggregate_modification(ctx,
@@ -23,12 +22,12 @@ async def aggregate_modification(ctx,
                                  common: NEMTransactionCommon,
                                  aggr: NEMAggregateModification,
                                  multisig: bool):
-    await ask_aggregate_modification(ctx, common, aggr, multisig)
-    w = serialize_aggregate_modification(common, aggr, public_key)
+    await layout.ask_aggregate_modification(ctx, common, aggr, multisig)
+    w = serialize.serialize_aggregate_modification(common, aggr, public_key)
 
     for m in aggr.modifications:
-        serialize_cosignatory_modification(w, m.type, m.public_key)
+        serialize.serialize_cosignatory_modification(w, m.type, m.public_key)
 
     if aggr.relative_change:
-        serialize_minimum_cosignatories(w, aggr.relative_change)
+        serialize.serialize_minimum_cosignatories(w, aggr.relative_change)
     return w

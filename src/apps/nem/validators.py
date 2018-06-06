@@ -1,18 +1,19 @@
-from apps.nem.helpers import *
-from trezor.messages import NEMModificationType
-from trezor.messages.NEMSignTx import NEMAggregateModification
-from trezor.messages.NEMSignTx import NEMImportanceTransfer
-from trezor.messages.NEMSignTx import NEMMosaicCreation
-from trezor.messages.NEMSignTx import NEMMosaicSupplyChange
-from trezor.messages.NEMSignTx import NEMProvisionNamespace
-from trezor.messages.NEMSignTx import NEMSignTx
-from trezor.messages.NEMSignTx import NEMTransactionCommon
-from trezor.messages.NEMSignTx import NEMTransfer
 from trezor.crypto import nem
+from trezor.messages import NEMModificationType
+from trezor.messages.NEMSignTx import (NEMAggregateModification,
+                                       NEMImportanceTransfer,
+                                       NEMMosaicCreation,
+                                       NEMMosaicSupplyChange,
+                                       NEMProvisionNamespace, NEMSignTx,
+                                       NEMTransactionCommon, NEMTransfer)
+
+from .helpers import (NEM_MAX_DIVISIBILITY, NEM_MAX_ENCRYPTED_PAYLOAD_SIZE,
+                      NEM_MAX_PLAIN_PAYLOAD_SIZE, NEM_MAX_SUPPLY,
+                      NEM_NETWORK_MAINNET, NEM_NETWORK_MIJIN,
+                      NEM_NETWORK_TESTNET, NEM_PUBLIC_KEY_SIZE)
 
 
 def validate(msg: NEMSignTx):
-
     if msg.transaction is None:
         raise ValueError('No common provided')
 
@@ -42,13 +43,9 @@ def validate(msg: NEMSignTx):
 def validate_network(network: int) -> int:
     if network is None:
         return NEM_NETWORK_MAINNET
-    _validate_network(network)
-    return network
-
-
-def _validate_network(network: int):
-    if network not in [NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET, NEM_NETWORK_MIJIN]:
+    if network not in (NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET, NEM_NETWORK_MIJIN):
         raise ValueError('Invalid NEM network')
+    return network
 
 
 def _validate_single_tx(msg: NEMSignTx):
@@ -65,8 +62,7 @@ def _validate_single_tx(msg: NEMSignTx):
         raise ValueError('More than one transaction provided')
 
 
-def _validate_common(common: NEMTransactionCommon, inner: bool=False):
-
+def _validate_common(common: NEMTransactionCommon, inner: bool = False):
     common.network = validate_network(common.network)
 
     err = None
@@ -85,19 +81,19 @@ def _validate_common(common: NEMTransactionCommon, inner: bool=False):
 
     if err:
         if inner:
-            raise ValueError('No ' + err + ' provided in inner transaction')
+            raise ValueError('No %s provided in inner transaction' % err)
         else:
-            raise ValueError('No ' + err + ' provided')
+            raise ValueError('No %s provided' % err)
 
     if common.signer is not None:
         _validate_public_key(common.signer, 'Invalid signer public key in inner transaction')
 
 
-def _validate_public_key(public_key: bytes, err_msg):
+def _validate_public_key(public_key: bytes, err_msg: str):
     if not public_key:
-        raise ValueError(err_msg + ' (none provided)')
+        raise ValueError('%s (none provided)' % err_msg)
     if len(public_key) != NEM_PUBLIC_KEY_SIZE:
-        raise ValueError(err_msg + ' (invalid length)')
+        raise ValueError('%s (invalid length)' % err_msg)
 
 
 def _validate_importance_transfer(importance_transfer: NEMImportanceTransfer):
@@ -107,24 +103,26 @@ def _validate_importance_transfer(importance_transfer: NEMImportanceTransfer):
 
 
 def _validate_multisig(multisig: NEMTransactionCommon, network: int):
-    _validate_public_key(multisig.signer, 'Invalid multisig signer public key provided')
     if multisig.network != network:
         raise ValueError('Inner transaction network is different')
+    _validate_public_key(multisig.signer, 'Invalid multisig signer public key provided')
 
 
-def _validate_aggregate_modification(aggregate_modification: NEMAggregateModification, creation: bool=False):
+def _validate_aggregate_modification(
+        aggregate_modification: NEMAggregateModification,
+        creation: bool = False):
 
-    if creation and len(aggregate_modification.modifications) == 0:
+    if creation and not aggregate_modification.modifications:
         raise ValueError('No modifications provided')
 
     for m in aggregate_modification.modifications:
         if not m.type:
             raise ValueError('No modification type provided')
-        if m.type not in [
+        if m.type not in (
             NEMModificationType.CosignatoryModification_Add,
             NEMModificationType.CosignatoryModification_Delete
-        ]:
-            raise ValueError('Unknown aggregate modification ')
+        ):
+            raise ValueError('Unknown aggregate modification')
         if creation and m.type == NEMModificationType.CosignatoryModification_Delete:
             raise ValueError('Cannot remove cosignatory when converting account')
         _validate_public_key(m.public_key, 'Invalid cosignatory public key provided')
@@ -156,7 +154,7 @@ def _validate_mosaic_creation(mosaic_creation: NEMMosaicCreation, network: int):
         raise ValueError('Name not allowed in mosaic creation transactions')
     if mosaic_creation.definition.ticker is not None:
         raise ValueError('Ticker not allowed in mosaic creation transactions')
-    if len(mosaic_creation.definition.networks):
+    if mosaic_creation.definition.networks:
         raise ValueError('Networks not allowed in mosaic creation transactions')
 
     if mosaic_creation.definition.namespace is None:
@@ -165,9 +163,9 @@ def _validate_mosaic_creation(mosaic_creation: NEMMosaicCreation, network: int):
         raise ValueError('No mosaic name provided')
 
     if mosaic_creation.definition.supply is not None and mosaic_creation.definition.divisibility is None:
-            raise ValueError('Definition divisibility needs to be provided when supply is')
+        raise ValueError('Definition divisibility needs to be provided when supply is')
     if mosaic_creation.definition.supply is None and mosaic_creation.definition.divisibility is not None:
-            raise ValueError('Definition supply needs to be provided when divisibility is')
+        raise ValueError('Definition supply needs to be provided when divisibility is')
 
     if mosaic_creation.definition.levy is not None:
         if mosaic_creation.definition.fee is None:

@@ -1,7 +1,8 @@
-from apps.nem.helpers import *
-from apps.nem.writers import *
-from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 from trezor.messages.NEMProvisionNamespace import NEMProvisionNamespace
+from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+
+from ..helpers import NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE
+from ..writers import write_bytes_with_length, write_common, write_uint32, write_uint64
 
 
 def serialize_provision_namespace(common: NEMTransactionCommon, namespace: NEMProvisionNamespace, public_key: bytes) -> bytearray:
