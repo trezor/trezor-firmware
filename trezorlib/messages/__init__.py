@@ -95,9 +95,12 @@ from .Initialize import Initialize
 from .LiskAddress import LiskAddress
 from .LiskGetAddress import LiskGetAddress
 from .LiskGetPublicKey import LiskGetPublicKey
+from .LiskMessageSignature import LiskMessageSignature
 from .LiskPublicKey import LiskPublicKey
+from .LiskSignMessage import LiskSignMessage
 from .LiskSignTx import LiskSignTx
 from .LiskSignedTx import LiskSignedTx
+from .LiskVerifyMessage import LiskVerifyMessage
 from .LoadDevice import LoadDevice
 from .MessageSignature import MessageSignature
 from .NEMAddress import NEMAddress

@@ -911,6 +911,33 @@ def lisk_sign_tx(connect, address, file):
     return payload
 
 
+@cli.command(help='Sign message with Lisk address.')
+@click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/134'/0'/0'")
+@click.argument('message')
+@click.pass_obj
+def lisk_sign_message(connect, address, message):
+    client = connect()
+    address_n = client.expand_path(address)
+    res = client.lisk_sign_message(address_n, message)
+    output = {
+        "message": message,
+        "public_key": binascii.hexlify(res.public_key).decode(),
+        "signature": binascii.hexlify(res.signature).decode()
+    }
+    return output
+
+
+@cli.command(help='Verify message signed with Lisk address.')
+@click.argument('pubkey')
+@click.argument('signature')
+@click.argument('message')
+@click.pass_obj
+def lisk_verify_message(connect, pubkey, signature, message):
+    signature = bytes.fromhex(signature)
+    pubkey = bytes.fromhex(pubkey)
+    return connect().lisk_verify_message(pubkey, signature, message)
+
+
 #
 # CoSi functions
 #
