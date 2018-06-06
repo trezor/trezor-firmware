@@ -9,13 +9,14 @@ from trezor.messages import OutputScriptType
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 
-from apps.common import address_type, coins, OVERWINTERED
+from apps.common import address_type, coins
 from apps.common.coininfo import CoinInfo
 from apps.wallet.sign_tx.addresses import *
 from apps.wallet.sign_tx.helpers import *
 from apps.wallet.sign_tx.multisig import *
 from apps.wallet.sign_tx.scripts import *
-from apps.wallet.sign_tx.segwit_bip143 import *
+from apps.wallet.sign_tx.segwit_bip143 import Bip143, Bip143Error  # noqa:F401
+from apps.wallet.sign_tx.overwinter_zip143 import Zip143, Zip143Error, OVERWINTERED  # noqa:F401
 from apps.wallet.sign_tx.tx_weight_calculator import *
 from apps.wallet.sign_tx.writers import *
 from apps.wallet.sign_tx import progress
@@ -55,7 +56,11 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
     # tx, as the SignTx info is streamed only once
     h_first = HashWriter(sha256)  # not a real tx hash
 
-    bip143 = Bip143()  # bip143 transaction hashing
+    if tx.overwintered:
+        hash143 = Zip143()  # zip143 transaction hashing
+    else:
+        hash143 = Bip143()  # bip143 transaction hashing
+
     multifp = MultisigFingerprint()  # control checksum of multisig inputs
     weight = TxWeightCalculator(tx.inputs_count, tx.outputs_count)
 
@@ -78,8 +83,8 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
         wallet_path = input_extract_wallet_path(txi, wallet_path)
         write_tx_input_check(h_first, txi)
         weight.add_input(txi)
-        bip143.add_prevouts(txi)  # all inputs are included (non-segwit as well)
-        bip143.add_sequence(txi)
+        hash143.add_prevouts(txi)  # all inputs are included (non-segwit as well)
+        hash143.add_sequence(txi)
 
         if txi.multisig:
             multifp.add(txi.multisig)
@@ -101,7 +106,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
             if coin.force_bip143 or tx.overwintered:
                 if not txi.amount:
                     raise SigningError(FailureType.DataError,
-                                       'BIP 143 input without amount')
+                                       'BIP/ZIP 143 input without amount')
                 segwit[i] = False
                 segwit_in += txi.amount
                 total_in += txi.amount
@@ -129,7 +134,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
                                'Output cancelled')
 
         write_tx_output(h_first, txo_bin)
-        bip143.add_output(txo_bin)
+        hash143.add_output(txo_bin)
         total_out += txo_bin.amount
 
     fee = total_in - total_out
@@ -147,7 +152,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
         raise SigningError(FailureType.ActionCancelled,
                            'Total cancelled')
 
-    return h_first, bip143, segwit, total_in, wallet_path
+    return h_first, hash143, segwit, total_in, wallet_path
 
 
 async def sign_tx(tx: SignTx, root: bip32.HDNode):
@@ -157,7 +162,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
 
     # Phase 1
 
-    h_first, bip143, segwit, authorized_in, wallet_path = await check_tx_fee(tx, root)
+    h_first, hash143, segwit, authorized_in, wallet_path = await check_tx_fee(tx, root)
 
     # Phase 2
     # - sign inputs
@@ -214,14 +219,14 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
 
             key_sign = node_derive(root, txi_sign.address_n)
             key_sign_pub = key_sign.public_key()
-            bip143_hash = bip143.preimage_hash(
+            hash143_hash = hash143.preimage_hash(
                 coin, tx, txi_sign, ecdsa_hash_pubkey(key_sign_pub), get_hash_type(coin))
 
             # if multisig, check if singing with a key that is included in multisig
             if txi_sign.multisig:
                 multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
 
-            signature = ecdsa_sign(key_sign, bip143_hash)
+            signature = ecdsa_sign(key_sign, hash143_hash)
             tx_ser.signature_index = i_sign
             tx_ser.signature = signature
 
@@ -357,10 +362,10 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
 
             key_sign = node_derive(root, txi.address_n)
             key_sign_pub = key_sign.public_key()
-            bip143_hash = bip143.preimage_hash(
+            hash143_hash = hash143.preimage_hash(
                 coin, tx, txi, ecdsa_hash_pubkey(key_sign_pub), get_hash_type(coin))
 
-            signature = ecdsa_sign(key_sign, bip143_hash)
+            signature = ecdsa_sign(key_sign, hash143_hash)
             if txi.multisig:
                 # find out place of our signature based on the pubkey
                 signature_index = multisig_pubkey_index(txi.multisig, key_sign_pub)

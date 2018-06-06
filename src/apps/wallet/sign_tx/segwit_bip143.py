@@ -6,7 +6,6 @@ from trezor.messages import InputScriptType, FailureType
 from trezor.utils import HashWriter
 
 from apps.common.coininfo import CoinInfo
-from apps.common import OVERWINTERED
 from apps.wallet.sign_tx.writers import write_bytes, write_bytes_rev, write_uint32, write_uint64, write_varint, write_tx_output, get_tx_hash
 from apps.wallet.sign_tx.scripts import output_script_p2pkh, output_script_multisig
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
@@ -45,11 +44,9 @@ class Bip143:
     def preimage_hash(self, coin: CoinInfo, tx: SignTx, txi: TxInputType, pubkeyhash: bytes, sighash: int) -> bytes:
         h_preimage = HashWriter(sha256)
 
-        if tx.overwintered:
-            write_uint32(h_preimage, tx.version | OVERWINTERED)  # nVersion | fOverwintered
-            write_uint32(h_preimage, coin.version_group_id)    # nVersionGroupId
-        else:
-            write_uint32(h_preimage, tx.version)  # nVersion
+        assert not tx.overwintered
+
+        write_uint32(h_preimage, tx.version)  # nVersion
 
         write_bytes(h_preimage, bytearray(self.get_prevouts_hash()))  # hashPrevouts
         write_bytes(h_preimage, bytearray(self.get_sequence_hash()))  # hashSequence
@@ -65,9 +62,6 @@ class Bip143:
 
         write_bytes(h_preimage, bytearray(self.get_outputs_hash()))  # hashOutputs
         write_uint32(h_preimage, tx.lock_time)  # nLockTime
-        if tx.overwintered:
-            write_uint32(h_preimage, tx.expiry)  # expiryHeight
-            write_varint(h_preimage, 0)  # nJoinSplit
         write_uint32(h_preimage, sighash)  # nHashType
 
         return get_tx_hash(h_preimage, True)
