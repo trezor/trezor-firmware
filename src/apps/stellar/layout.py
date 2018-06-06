@@ -1,4 +1,4 @@
-from apps.common.confirm import *
+from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.stellar import consts
 from apps.stellar import helpers
 from trezor import ui
@@ -66,6 +66,7 @@ def format_address(pubkey: bytes) -> str:
     return helpers.address_from_public_key(pubkey)
 
 
+# todo merge with nem
 def split(text):
     return utils.chunks(text, 17)
 

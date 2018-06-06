@@ -36,5 +36,5 @@ async def _show(ctx, address: str):
         cancel_style=ui.BTN_KEY)
 
 
-def _split_address(address: str):
+def _split_address(address: str):  # todo merge with NEM
     return chunks(address, 17)

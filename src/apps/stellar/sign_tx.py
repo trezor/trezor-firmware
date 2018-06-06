@@ -1,9 +1,8 @@
 from apps.common import seed
-from apps.stellar.writers import *
+from apps.stellar import writers
 from apps.stellar.operations import operation
 from apps.stellar import layout
 from apps.stellar import consts
-from apps.stellar import helpers
 from trezor.messages.StellarSignTx import StellarSignTx
 from trezor.messages.StellarTxOpRequest import StellarTxOpRequest
 from trezor.messages.StellarSignedTx import StellarSignedTx
@@ -16,39 +15,66 @@ async def sign_tx(ctx, msg: StellarSignTx):
     if msg.num_operations == 0:
         raise ValueError('Stellar: At least one operation is required')
 
-    network_passphrase_hash = sha256(msg.network_passphrase).digest()
-
-    # Stellar transactions consist of sha256 of:
-    # - sha256(network passphrase)
-    # - 4-byte unsigned big-endian int type constant (2 for tx)
-    # - public key
-
-    w = bytearray()
-    write_bytes(w, network_passphrase_hash)
-    write_bytes(w, consts.TX_TYPE)
-
     node = await seed.derive_node(ctx, msg.address_n, consts.STELLAR_CURVE)
     pubkey = seed.remove_ed25519_public_key_prefix(node.public_key())
-    write_pubkey(w, pubkey)
+
+    w = bytearray()
+    await _init(ctx, w, pubkey, msg)
+    _timebounds(w, msg.timebounds_start, msg.timebounds_end)
+    await _memo(ctx, w, msg)
+    await _operations(ctx, w, msg.num_operations)
+    await _final(ctx, w, msg)
+
+    # sign
+    digest = sha256(w).digest()
+    signature = ed25519.sign(node.private_key(), digest)
+
+    # Add the public key for verification that the right account was used for signing
+    return StellarSignedTx(pubkey, signature)
+
+
+async def _final(ctx, w: bytearray, msg: StellarSignTx):
+    # 4 null bytes representing a (currently unused) empty union
+    writers.write_uint32(w, 0)
+    # final confirm
+    await layout.require_confirm_final(ctx, msg.fee, msg.num_operations)
+
+
+async def _init(ctx, w: bytearray, pubkey: bytes, msg: StellarSignTx):
+    network_passphrase_hash = sha256(msg.network_passphrase).digest()
+    writers.write_bytes(w, network_passphrase_hash)
+    writers.write_bytes(w, consts.TX_TYPE)
+
+    writers.write_pubkey(w, pubkey)
     if msg.source_account != pubkey:
         raise ValueError('Stellar: source account does not match address_n')
+    writers.write_uint32(w, msg.fee)
+    writers.write_uint64(w, msg.sequence_number)
 
     # confirm init
     await layout.require_confirm_init(ctx, pubkey, msg.network_passphrase)
 
-    write_uint32(w, msg.fee)
-    write_uint64(w, msg.sequence_number)
 
+def _timebounds(w: bytearray, start: int, end: int):
     # timebounds are only present if timebounds_start or timebounds_end is non-zero
-    if msg.timebounds_start or msg.timebounds_end:
-        write_bool(w, True)
+    if start or end:
+        writers.write_bool(w, True)
         # timebounds are sent as uint32s since that's all we can display, but they must be hashed as 64bit
-        write_uint64(w, msg.timebounds_start)
-        write_uint64(w, msg.timebounds_end)
+        writers.write_uint64(w, start)
+        writers.write_uint64(w, end)
     else:
-        write_bool(w, False)
+        writers.write_bool(w, False)
 
-    write_uint32(w, msg.memo_type)
+
+async def _operations(ctx, w: bytearray, num_operations: int):
+    writers.write_uint32(w, num_operations)
+    for i in range(num_operations):
+        op = await ctx.call(StellarTxOpRequest(), *consts.op_wire_types)
+        await operation(ctx, w, op)
+
+
+async def _memo(ctx, w: bytearray, msg: StellarSignTx):
+    writers.write_uint32(w, msg.memo_type)
     if msg.memo_type == consts.MEMO_TYPE_NONE:
         # nothing is serialized
         memo_confirm_text = ''
@@ -56,38 +82,19 @@ async def sign_tx(ctx, msg: StellarSignTx):
         # Text: 4 bytes (size) + up to 28 bytes
         if len(msg.memo_text) > 28:
             raise ValueError('Stellar: max length of a memo text is 28 bytes')
-        write_string(w, msg.memo_text)
+        writers.write_string(w, msg.memo_text)
         memo_confirm_text = msg.memo_text
     elif msg.memo_type == consts.MEMO_TYPE_ID:
         # ID: 64 bit unsigned integer
-        write_uint64(w, msg.memo_id)
+        writers.write_uint64(w, msg.memo_id)
         memo_confirm_text = str(msg.memo_id)
-    elif msg.memo_type in [consts.MEMO_TYPE_HASH, consts.MEMO_TYPE_RETURN]:
+    elif msg.memo_type in (consts.MEMO_TYPE_HASH, consts.MEMO_TYPE_RETURN):
         # Hash/Return: 32 byte hash
-        write_bytes(w, bytearray(msg.memo_hash))
+        writers.write_bytes(w, bytearray(msg.memo_hash))
         memo_confirm_text = hexlify(msg.memo_hash).decode()
     else:
         raise ValueError('Stellar invalid memo type')
     await layout.require_confirm_memo(ctx, msg.memo_type, memo_confirm_text)
-
-    write_uint32(w, msg.num_operations)
-    for i in range(msg.num_operations):
-        op = await ctx.call(StellarTxOpRequest(), *consts.op_wire_types)
-        await operation(ctx, w, op)
-
-    # 4 null bytes representing a (currently unused) empty union
-    write_uint32(w, 0)
-
-    # final confirm
-    await layout.require_confirm_final(ctx, msg.fee, msg.num_operations)
-
-    # sign
-    # (note that the signature does not include the 4-byte hint since it can be calculated from the public key)
-    digest = sha256(w).digest()
-    signature = ed25519.sign(node.private_key(), digest)
-
-    # Add the public key for verification that the right account was used for signing
-    return StellarSignedTx(pubkey, signature)
 
 
 def node_derive(root, address_n: list):

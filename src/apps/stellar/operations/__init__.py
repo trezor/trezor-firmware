@@ -1,44 +1,46 @@
-from apps.stellar.operations.serialize import *
-from apps.stellar.operations.layout import *
+from apps.stellar.operations import serialize
+from apps.stellar.operations import layout
+from apps.stellar import consts
+from apps.stellar import writers
 
 
 async def operation(ctx, w, op):
     if op.source_account:
-        await confirm_source_account(ctx, op.source_account)
-    serialize_account(w, op.source_account)
-    write_uint32(w, get_op_code(op))
-    if isinstance(op, StellarAccountMergeOp):
-        await confirm_account_merge_op(ctx, op)
-        serialize_account_merge_op(w, op)
-    elif isinstance(op, StellarAllowTrustOp):
-        await confirm_allow_trust_op(ctx, op)
-        serialize_allow_trust_op(w, op)
-    elif isinstance(op, StellarBumpSequenceOp):
-        await confirm_bump_sequence_op(ctx, op)
-        serialize_bump_sequence_op(w, op)
-    elif isinstance(op, StellarChangeTrustOp):
-        await confirm_change_trust_op(ctx, op)
-        serialize_change_trust_op(w, op)
-    elif isinstance(op, StellarCreateAccountOp):
-        await confirm_create_account_op(ctx, op)
-        serialize_create_account_op(w, op)
-    elif isinstance(op, StellarCreatePassiveOfferOp):
-        await confirm_create_passive_offer_op(ctx, op)
-        serialize_create_passive_offer_op(w, op)
-    elif isinstance(op, StellarManageDataOp):
-        await confirm_manage_data_op(ctx, op)
-        serialize_manage_data_op(w, op)
-    elif isinstance(op, StellarManageOfferOp):
-        await confirm_manage_offer_op(ctx, op)
-        serialize_manage_offer_op(w, op)
-    elif isinstance(op, StellarPathPaymentOp):
-        await confirm_path_payment_op(ctx, op)
-        serialize_path_payment_op(w, op)
-    elif isinstance(op, StellarPaymentOp):
-        await confirm_payment_op(ctx, op)
-        serialize_payment_op(w, op)
-    elif isinstance(op, StellarSetOptionsOp):
-        await confirm_set_options_op(ctx, op)
-        serialize_set_options_op(w, op)
+        await layout.confirm_source_account(ctx, op.source_account)
+    serialize.serialize_account(w, op.source_account)
+    writers.write_uint32(w, consts.get_op_code(op))
+    if isinstance(op, serialize.StellarAccountMergeOp):
+        await layout.confirm_account_merge_op(ctx, op)
+        serialize.serialize_account_merge_op(w, op)
+    elif isinstance(op, serialize.StellarAllowTrustOp):
+        await layout.confirm_allow_trust_op(ctx, op)
+        serialize.serialize_allow_trust_op(w, op)
+    elif isinstance(op, serialize.StellarBumpSequenceOp):
+        await layout.confirm_bump_sequence_op(ctx, op)
+        serialize.serialize_bump_sequence_op(w, op)
+    elif isinstance(op, serialize.StellarChangeTrustOp):
+        await layout.confirm_change_trust_op(ctx, op)
+        serialize.serialize_change_trust_op(w, op)
+    elif isinstance(op, serialize.StellarCreateAccountOp):
+        await layout.confirm_create_account_op(ctx, op)
+        serialize.serialize_create_account_op(w, op)
+    elif isinstance(op, serialize.StellarCreatePassiveOfferOp):
+        await layout.confirm_create_passive_offer_op(ctx, op)
+        serialize.serialize_create_passive_offer_op(w, op)
+    elif isinstance(op, serialize.StellarManageDataOp):
+        await layout.confirm_manage_data_op(ctx, op)
+        serialize.serialize_manage_data_op(w, op)
+    elif isinstance(op, serialize.StellarManageOfferOp):
+        await layout.confirm_manage_offer_op(ctx, op)
+        serialize.serialize_manage_offer_op(w, op)
+    elif isinstance(op, serialize.StellarPathPaymentOp):
+        await layout.confirm_path_payment_op(ctx, op)
+        serialize.serialize_path_payment_op(w, op)
+    elif isinstance(op, serialize.StellarPaymentOp):
+        await layout.confirm_payment_op(ctx, op)
+        serialize.serialize_payment_op(w, op)
+    elif isinstance(op, serialize.StellarSetOptionsOp):
+        await layout.confirm_set_options_op(ctx, op)
+        serialize.serialize_set_options_op(w, op)
     else:
-        raise ValueError('Stellar: unknown operation')
+        raise ValueError('serialize.Stellar: unknown operation')

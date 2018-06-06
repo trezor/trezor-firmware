@@ -34,6 +34,7 @@ op_wire_types = [
     wire_types.StellarSetOptionsOp,
 ]
 
+# https://github.com/stellar/go/blob/e0ffe19f58879d3c31e2976b97a5bf10e13a337b/xdr/xdr_generated.go#L584
 ASSET_TYPE_NATIVE = const(0)
 ASSET_TYPE_ALPHANUM4 = const(1)
 ASSET_TYPE_ALPHANUM12 = const(2)
