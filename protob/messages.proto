@@ -1325,8 +1325,8 @@ message LiskMessageSignature {
 * @next Failure
 */
 message LiskVerifyMessage {
-	optional bytes signature = 1;
-	optional bytes public_key = 2;
+	optional bytes public_key = 1;
+	optional bytes signature = 2;
 	optional bytes message = 3;
 }
 
