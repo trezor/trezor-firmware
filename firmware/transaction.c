@@ -688,12 +688,13 @@ uint32_t tx_serialize_extra_data_hash(TxStruct *tx, const uint8_t *data, uint32_
 	return datalen;
 }
 
-void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t version, uint32_t lock_time, uint32_t extra_data_len, HasherType hasher_sign)
+void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t version, uint32_t lock_time, uint32_t expiry, uint32_t extra_data_len, HasherType hasher_sign)
 {
 	tx->inputs_len = inputs_len;
 	tx->outputs_len = outputs_len;
 	tx->version = version;
 	tx->lock_time = lock_time;
+	tx->expiry = expiry;
 	tx->have_inputs = 0;
 	tx->have_outputs = 0;
 	tx->extra_data_len = extra_data_len;
@@ -701,7 +702,6 @@ void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t v
 	tx->size = 0;
 	tx->is_segwit = false;
 	tx->is_decred = false;
-	tx->expiry = 0;
 	hasher_Init(&(tx->hasher), hasher_sign);
 }
 

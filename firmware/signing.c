@@ -63,6 +63,7 @@ static uint8_t hash_check[32];
 static uint64_t to_spend, authorized_amount, spending, change_spend;
 static uint32_t version = 1;
 static uint32_t lock_time = 0;
+static uint32_t expiry = 0;
 static uint32_t next_nonsegwit_input;
 static uint32_t progress, progress_step, progress_meta_step;
 static bool multisig_fp_set, multisig_fp_mismatch;
@@ -477,6 +478,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 	root = _root;
 	version = msg->version;
 	lock_time = msg->lock_time;
+	expiry = msg->expiry;
 
 	uint32_t size = TXSIZE_HEADER + TXSIZE_FOOTER + ser_length_size(inputs_count) + ser_length_size(outputs_count);
 	if (coin->decred) {
@@ -506,17 +508,15 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 	multisig_fp_mismatch = false;
 	next_nonsegwit_input = 0xffffffff;
 
-	tx_init(&to, inputs_count, outputs_count, version, lock_time, 0, coin->curve->hasher_sign);
+	tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign);
 
 	if (coin->decred) {
 		to.version |= (DECRED_SERIALIZE_FULL << 16);
 		to.is_decred = true;
-		to.expiry = msg->expiry;
 
-		tx_init(&ti, inputs_count, outputs_count, version, lock_time, 0, coin->curve->hasher_sign);
+		tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign);
 		ti.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
 		ti.is_decred = true;
-		ti.expiry = msg->expiry;
 	}
 
 	// segwit hashes for hashPrevouts and hashSequence
@@ -1010,11 +1010,10 @@ void signing_txack(TransactionType *tx)
 				signing_abort();
 				return;
 			}
-			tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time, tx->extra_data_len, coin->curve->hasher_sign);
+			tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time, tx->expiry, tx->extra_data_len, coin->curve->hasher_sign);
 			if (coin->decred) {
 				tp.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
 				tp.is_decred = true;
-				tp.expiry = tx->expiry;
 			}
 			progress_meta_step = progress_step / (tp.inputs_len + tp.outputs_len);
 			idx2 = 0;
@@ -1094,7 +1093,7 @@ void signing_txack(TransactionType *tx)
 		case STAGE_REQUEST_4_INPUT:
 			progress = 500 + ((signatures * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION);
 			if (idx2 == 0) {
-				tx_init(&ti, inputs_count, outputs_count, version, lock_time, 0, coin->curve->hasher_sign);
+				tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign);
 				hasher_Reset(&hashers[0]);
 			}
 			// check prevouts and script type
@@ -1289,12 +1288,12 @@ void signing_txack(TransactionType *tx)
 			progress = 500 + ((signatures * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION);
 			if (idx1 == 0) {
 				// witness
-				tx_init(&to, inputs_count, outputs_count, version, lock_time, 0, coin->curve->hasher_sign);
+				tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign);
 				to.is_decred = true;
 			}
 
 			// witness hash
-			tx_init(&ti, inputs_count, outputs_count, version, lock_time, 0, coin->curve->hasher_sign);
+			tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign);
 			ti.version |= (DECRED_SERIALIZE_WITNESS_SIGNING << 16);
 			ti.is_decred = true;
 			if (!compile_input_script_sig(&tx->inputs[0])) {
