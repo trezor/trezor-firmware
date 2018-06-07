@@ -105,6 +105,9 @@ enum MessageType {
 	MessageType_LiskAddress = 115 [(wire_out) = true];
 	MessageType_LiskSignTx = 116 [(wire_in) = true];
 	MessageType_LiskSignedTx = 117 [(wire_out) = true];
+	MessageType_LiskSignMessage = 118 [(wire_in) = true];
+	MessageType_LiskMessageSignature = 119 [(wire_out) = true];
+	MessageType_LiskVerifyMessage = 120 [(wire_in) = true];
 	MessageType_LiskGetPublicKey = 121 [(wire_in) = true];
 	MessageType_LiskPublicKey = 122 [(wire_out) = true];
 
@@ -1295,6 +1298,36 @@ message LiskPublicKey {
 */
 message LiskSignedTx {
 	optional bytes signature = 1;
+}
+
+/**
+* Request: Ask device to sign message
+* @next LiskMessageSignature
+* @next Failure
+*/
+message LiskSignMessage {
+	repeated uint32 address_n = 1;
+	optional bytes message = 2;
+}
+
+/**
+* Response: Signed message
+* @prev LiskSignMessage
+*/
+message LiskMessageSignature {
+	optional bytes public_key = 1;
+	optional bytes signature = 2;
+}
+
+/**
+* Request: Ask device to verify message
+* @next Success
+* @next Failure
+*/
+message LiskVerifyMessage {
+	optional bytes signature = 1;
+	optional bytes public_key = 2;
+	optional bytes message = 3;
 }
 
 /////////////////////////////////////////////////////////////
