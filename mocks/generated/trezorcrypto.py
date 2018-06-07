@@ -93,6 +93,16 @@ class HDNode:
         Compute a base58-encoded address string from the HD node.
         '''
 
+    def nem_address(self, network: int) -> str:
+        '''
+        Compute a NEM address string from the HD node.
+        '''
+
+    def nem_encrypt(self, transfer_public_key: bytes, iv: bytes, salt: bytes, payload: bytes) -> bytes:
+        '''
+        Encrypts payload using the transfer's public key
+        '''
+
     def ethereum_pubkeyhash(self) -> bytes:
         '''
         Compute an Ethereum pubkeyhash (aka address) from the HD node.
@@ -274,7 +284,7 @@ def publickey(secret_key: bytes) -> bytes:
     '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
-def sign(secret_key: bytes, message: bytes) -> bytes:
+def sign(secret_key: bytes, message: bytes, hasher: str='') -> bytes:
     '''
     Uses secret key to produce the signature of message.
     '''
@@ -302,6 +312,18 @@ def cosi_combine_signatures(R: bytes, signatures: List[bytes]) -> bytes:
 def cosi_sign(secret_key: bytes, message: bytes, nonce: bytes, sigR: bytes, combined_pubkey: bytes) -> bytes:
     '''
     Produce signature of message using COSI cosigning scheme.
+    '''
+
+# extmod/modtrezorcrypto/modtrezorcrypto-nem.h
+def validate_address(address: str, network: int) -> bool:
+    '''
+    Validate a NEM address
+    '''
+
+# extmod/modtrezorcrypto/modtrezorcrypto-nem.h
+def compute_address(public_key: bytes, network: int) -> str:
+    '''
+    Compute a NEM address from a public key
     '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-nist256p1.h

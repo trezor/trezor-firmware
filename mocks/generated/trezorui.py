@@ -112,7 +112,7 @@ class Display:
         Call without the xy parameter to just perform the read of the value.
         '''
 
-    def save(self, filename: str) -> None:
+    def save(self, prefix: str) -> None:
         '''
-        Saves current display contents to file filename.
+        Saves current display contents to PNG file with given prefix.
         '''

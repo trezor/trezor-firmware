@@ -20,6 +20,7 @@
 #include "py/objstr.h"
 
 #include "ed25519-donna/ed25519.h"
+#include "ed25519-donna/ed25519-keccak.h"
 
 #include "rand.h"
 
@@ -54,14 +55,14 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_publickey(mp_obj_t secret_key) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_ed25519_publickey_obj, mod_trezorcrypto_ed25519_publickey);
 
-/// def sign(secret_key: bytes, message: bytes) -> bytes:
+/// def sign(secret_key: bytes, message: bytes, hasher: str='') -> bytes:
 ///     '''
 ///     Uses secret key to produce the signature of message.
 ///     '''
-STATIC mp_obj_t mod_trezorcrypto_ed25519_sign(mp_obj_t secret_key, mp_obj_t message) {
+STATIC mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args, const mp_obj_t *args) {
     mp_buffer_info_t sk, msg;
-    mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
-    mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
+    mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
+    mp_get_buffer_raise(args[1], &msg, MP_BUFFER_READ);
     if (sk.len != 32) {
         mp_raise_ValueError("Invalid length of secret key");
     }
@@ -69,12 +70,26 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign(mp_obj_t secret_key, mp_obj_t mess
         mp_raise_ValueError("Empty data to sign");
     }
     ed25519_public_key pk;
-    ed25519_publickey(*(const ed25519_secret_key *)sk.buf, pk);
     uint8_t out[64];
-    ed25519_sign(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf, pk, *(ed25519_signature *)out);
+    mp_buffer_info_t hash_func;
+
+    if (n_args == 3) {
+        mp_get_buffer_raise(args[2], &hash_func, MP_BUFFER_READ);
+        // if hash_func == 'keccak':
+        if (memcmp(hash_func.buf, "keccak", sizeof("keccak")) == 0) {
+            ed25519_publickey_keccak(*(const ed25519_secret_key *)sk.buf, pk);
+            ed25519_sign_keccak(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf, pk, *(ed25519_signature *)out);
+        } else {
+            mp_raise_ValueError("Unknown hash function");
+        }
+    } else {
+        ed25519_publickey(*(const ed25519_secret_key *)sk.buf, pk);
+        ed25519_sign(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf, pk, *(ed25519_signature *)out);
+    }
+
     return mp_obj_new_bytes(out, sizeof(out));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ed25519_sign_obj, mod_trezorcrypto_ed25519_sign);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_ed25519_sign_obj, 2, 3, mod_trezorcrypto_ed25519_sign);
 
 /// def verify(public_key: bytes, signature: bytes, message: bytes) -> bool:
 ///     '''
