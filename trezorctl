@@ -282,9 +282,30 @@ def set_u2f_counter(connect, counter):
 
 
 @cli.command(help='Reset device to factory defaults and remove all private data.')
+@click.option('-b', '--bootloader', help='Wipe device in bootloader mode. This also erases the firmware.', is_flag=True)
 @click.pass_obj
-def wipe_device(connect):
-    return connect().wipe_device()
+def wipe_device(connect, bootloader):
+    client = connect()
+    if bootloader:
+        if not client.features.bootloader_mode:
+            click.echo('Please switch your device to bootloader mode.')
+            sys.exit(1)
+        else:
+            click.echo('Wiping user data and firmware. Please confirm on your device.')
+    else:
+        if client.features.bootloader_mode:
+            click.echo('Your device is in bootloader mode. This operation would also erase firmware.')
+            click.echo('Specify "--bootloader" if that is what you want, or disconnect and reconnect device in normal mode.')
+            click.echo('Aborting.')
+            sys.exit(1)
+        else:
+            click.echo('Wiping user data. Please confirm on your device.')
+
+    try:
+        return connect().wipe_device()
+    except CallException as e:
+        click.echo('Action failed: {} {}'.format(*e.args))
+        sys.exit(3)
 
 
 @cli.command(help='Load custom configuration to the device.')
@@ -460,7 +481,7 @@ def firmware_update(connect, filename, url, version, skip_check, fingerprint):
     try:
         return client.firmware_update(fp=io.BytesIO(fp))
     except CallException as e:
-        if e.args[0] == proto.FailureType.FirmwareError:
+        if e.args[0] in (proto.FailureType.FirmwareError, proto.FailureType.ActionCancelled):
             click.echo("Update aborted on device.")
         else:
             click.echo("Update failed: {} {}".format(*e.args))
