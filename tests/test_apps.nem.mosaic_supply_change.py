@@ -1,6 +1,9 @@
 from common import *
 
+from apps.nem.helpers import *
 from apps.nem.mosaic import *
+from apps.nem.mosaic.serialize import *
+
 from trezor.crypto import hashlib
 from trezor.messages.NEMSignTx import NEMSignTx
 from trezor.messages.NEMMosaicSupplyChange import NEMMosaicSupplyChange

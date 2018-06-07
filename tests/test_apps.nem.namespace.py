@@ -1,6 +1,9 @@
 from common import *
 
+from apps.nem.helpers import *
 from apps.nem.namespace import *
+from apps.nem.namespace.serialize import *
+
 from trezor.crypto import hashlib
 from trezor.messages.NEMProvisionNamespace import NEMProvisionNamespace
 from trezor.messages.NEMSignTx import NEMSignTx
