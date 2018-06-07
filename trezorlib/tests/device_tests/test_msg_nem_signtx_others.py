@@ -26,7 +26,6 @@ from trezorlib.tools import parse_path
 
 # assertion data from T1
 @pytest.mark.nem
-@pytest.mark.xfail  # to be removed when nem is merged
 class TestMsgNEMSignTxOther(TrezorTest):
 
     def test_nem_signtx_importance_transfer(self):

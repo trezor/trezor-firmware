@@ -22,7 +22,6 @@ from trezorlib.tools import parse_path
 
 
 @pytest.mark.nem
-@pytest.mark.xfail  # to be removed when nem is merged
 class TestMsgNEMGetaddress(TrezorTest):
 
     def test_nem_getaddress(self):
