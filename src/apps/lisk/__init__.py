@@ -1,6 +1,6 @@
 from trezor.wire import register, protobuf_workflow
 from trezor.messages.wire_types import \
-    LiskGetAddress, LiskSignTx, LiskGetPublicKey
+    LiskGetAddress, LiskSignTx, LiskGetPublicKey, LiskSignMessage, LiskVerifyMessage
 
 
 def dispatch_LiskGetAddress(*args, **kwargs):
@@ -18,7 +18,19 @@ def dispatch_LiskSignTx(*args, **kwargs):
     return lisk_sign_tx(*args, **kwargs)
 
 
+def dispatch_LiskSignMessage(*args, **kwargs):
+    from .sign_message import lisk_sign_message
+    return lisk_sign_message(*args, **kwargs)
+
+
+def dispatch_LiskVerifyMessage(*args, **kwargs):
+    from .verify_message import lisk_verify_message
+    return lisk_verify_message(*args, **kwargs)
+
+
 def boot():
     register(LiskGetPublicKey, protobuf_workflow, dispatch_LiskGetPublicKey)
     register(LiskGetAddress, protobuf_workflow, dispatch_LiskGetAddress)
+    register(LiskSignMessage, protobuf_workflow, dispatch_LiskSignMessage)
+    register(LiskVerifyMessage, protobuf_workflow, dispatch_LiskVerifyMessage)
     register(LiskSignTx, protobuf_workflow, dispatch_LiskSignTx)
