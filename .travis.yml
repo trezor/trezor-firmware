@@ -33,13 +33,22 @@ matrix:
         - $PYTHON -m pip install --user pipenv
         - pipenv install
       script:
-        - script/cibuild && pipenv run script/test
+        # use outer environment (with protobuf & ecdsa) to build,
+        # then use pipenv to run tests
+        - ./script/cibuild && pipenv run script/test
+
+# using two "separate" python environments is somewhat unwieldy, and it would be nicer
+# to consolidate everything into one.
+# Unfortunately, installing pipenv and fetching python-trezor from git takes about one minute.
+# For now, we keep the envs separate. If the number of "outer" modules grows significantly,
+# they should probably be moved into pipenv.
 
 install:
   - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
   - unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d protoc
   - export PATH="$(pwd)/protoc/bin:$PATH"
   - $PYTHON -m pip install --user "protobuf==${PROTOBUF_VERSION}"
+  - $PYTHON -m pip install --user ecdsa  # for firmware_sign
 
 script:
   - script/cibuild

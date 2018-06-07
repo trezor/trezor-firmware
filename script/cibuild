@@ -20,4 +20,4 @@ fi
 make -C vendor/nanopb/generator/proto
 make -C firmware/protob
 
-make -C firmware
+make -C firmware sign

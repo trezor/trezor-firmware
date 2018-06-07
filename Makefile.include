@@ -143,10 +143,10 @@ upload: sign
 	trezorctl firmware_update -f $(NAME).bin
 
 sign: $(NAME).bin
-	../bootloader/firmware_sign.py -f $(NAME).bin
+	$(PYTHON) ../bootloader/firmware_sign.py -f $(NAME).bin
 
 release: $(NAME).bin
-	../bootloader/firmware_sign.py -f $(NAME).bin
+	$(PYTHON) ../bootloader/firmware_sign.py -f $(NAME).bin
 	cp $(NAME).bin $(NAME)-$(APPVER).bin
 	chmod -x $(NAME)-$(APPVER).bin
 	xxd -p $(NAME)-$(APPVER).bin | tr -d '\n' > $(NAME)-$(APPVER).bin.hex
