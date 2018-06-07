@@ -23,6 +23,8 @@
 import base64
 import binascii
 import click
+import hashlib
+import io
 import json
 import logging
 import os
@@ -387,9 +389,20 @@ def backup_device(connect):
 @click.option('-u', '--url')
 @click.option('-v', '--version')
 @click.option('-s', '--skip-check', is_flag=True)
-@click.option('-e', '--erase', is_flag=True)
+@click.option('--fingerprint', help='Expected firmware fingerprint in hex')
 @click.pass_obj
-def firmware_update(connect, filename, url, version, skip_check, erase):
+def firmware_update(connect, filename, url, version, skip_check, fingerprint):
+    if sum(bool(x) for x in (filename, url, version)) > 1:
+        click.echo("You can use only one of: firmware, url, version.")
+        sys.exit(1)
+
+    client = connect()
+    if not client.features.bootloader_mode:
+        click.echo("Please switch your device to bootloader mode.")
+        sys.exit(1)
+
+    firmware_version = client.features.major_version
+
     if filename:
         fp = open(filename, 'rb').read()
     elif url:
@@ -397,11 +410,9 @@ def firmware_update(connect, filename, url, version, skip_check, erase):
         click.echo('Downloading from', url)
         r = requests.get(url)
         fp = r.content
-    elif erase:
-        fp = 32768 * b'\xFF'
     else:
         import requests
-        r = requests.get('https://wallet.trezor.io/data/firmware/releases.json')
+        r = requests.get('https://wallet.trezor.io/data/firmware/{}/releases.json'.format(firmware_version))
         releases = r.json()
 
         def version_func(r):
@@ -411,26 +422,49 @@ def firmware_update(connect, filename, url, version, skip_check, erase):
             return '.'.join(map(str, version_func(r)))
 
         if version:
-            release = next((r for r in releases if version_string(r) == version))
+            try:
+                release = next(r for r in releases if version_string(r) == version)
+            except StopIteration:
+                click.echo("Version {} not found.".format(version))
+                sys.exit(1)
         else:
             release = max(releases, key=version_func)
             click.echo('Fetching version: %s' % version_string(release))
-        click.echo('Firmware fingerprint: %s' % release['fingerprint'])
+
+        if not fingerprint:
+            fingerprint = release['fingerprint']
         url = 'https://wallet.trezor.io/' + release['url']
         click.echo('Downloading from %s' % url)
         r = requests.get(url)
         fp = r.content
 
-    if not skip_check and not erase:
+    if not skip_check:
         if fp[:8] == b'54525a52' or fp[:8] == b'54525a56':
             fp = binascii.unhexlify(fp)
         if fp[:4] != b'TRZR' and fp[:4] != b'TRZV':
-            raise CallException(proto.FailureType.FirmwareError, 'TREZOR firmware header expected')
+            click.echo("Trezor firmware header expected.")
+            sys.exit(2)
+
+        if fingerprint and firmware_version > 1:
+            click.echo("Checking Trezor T fingerprint is not supported yet.")
+        elif firmware_version == 1:
+            calculated_fingerprint = hashlib.sha256(fp[256:]).hexdigest()
+            click.echo("Firmware fingerprint: {}".format(calculated_fingerprint))
+            if fingerprint and fingerprint != calculated_fingerprint:
+                click.echo("Expected fingerprint: {}".format(fingerprint))
+                click.echo("Fingerprints do not match, aborting.")
+                sys.exit(5)
 
     click.echo('Please confirm action on device...')
 
-    from io import BytesIO
-    return connect().firmware_update(fp=BytesIO(fp))
+    try:
+        return client.firmware_update(fp=io.BytesIO(fp))
+    except CallException as e:
+        if e.args[0] == proto.FailureType.FirmwareError:
+            click.echo("Update aborted on device.")
+        else:
+            click.echo("Update failed: {} {}".format(*e.args))
+        sys.exit(3)
 
 
 @cli.command(help='Perform a self-test.')

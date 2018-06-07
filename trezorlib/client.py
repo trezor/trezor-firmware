@@ -715,7 +715,7 @@ class ProtocolMixin(object):
         try:
             msg = nem.create_sign_tx(transaction)
         except ValueError as e:
-            raise CallException(e.message)
+            raise CallException(e.args)
 
         assert msg.transaction is not None
         msg.transaction.address_n = n
