@@ -33,13 +33,13 @@
 #define FONT_SIZE   20
 
 #ifdef TREZOR_FONT_MONO_ENABLE
-#define FONT_MONO   0
+#define FONT_MONO   1
 #endif
 #ifdef TREZOR_FONT_NORMAL_ENABLE
-#define FONT_NORMAL 1
+#define FONT_NORMAL 2
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
-#define FONT_BOLD   2
+#define FONT_BOLD   3
 #endif
 
 #define AVATAR_IMAGE_SIZE  144
