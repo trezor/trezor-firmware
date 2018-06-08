@@ -185,7 +185,33 @@ for fn in glob.glob(scriptdir + '/../*.json'):
         coins[n] = c
         defs[n] = d
 
-
 json.dump(coins, open('coins.json', 'w'), indent=4, sort_keys=True)
 if BUILD_DEFS:
     json.dump(defs, open('coindefs.json', 'w'), indent=4, sort_keys=True)
+
+# check for colliding address versions
+at_p2pkh = {}
+at_p2sh = {}
+
+for n, c in coins.items():
+    if c['cashaddr_prefix']:  # skip cashaddr currencies
+        continue
+    a1, a2 = c['address_type'], c['address_type_p2sh']
+    if a1 not in at_p2pkh:
+        at_p2pkh[a1] = []
+    if a2 not in at_p2sh:
+        at_p2sh[a2] = []
+    at_p2pkh[a1].append(n)
+    at_p2sh[a2].append(n)
+
+print()
+print('Colliding address_types for P2PKH:')
+for k, v in at_p2pkh.items():
+    if len(v) > 2:
+        print('-', k, ':', ','.join(v))
+
+print()
+print('Colliding address_types for P2SH:')
+for k, v in at_p2sh.items():
+    if len(v) > 2:
+        print('-', k, ':', ','.join(v))
