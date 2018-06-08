@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+# This script generates coins.json files from the definitions in defs/
+#
+# - `./build_coins.py` generates a big file with everything
+# - `./build_coins.py XXX` generates a file with coins that are supported by XXX
+#      for example: `./build_coins.py webwallet` or `./build_coins.py trezor1`
+# - `./build_coins.py XXX --defs` also adds protobuf definitions with TOIF icon
+#
+# generated file is coins.json in current directory, and coindefs.json if --def is enabled
+
 import json
 import glob
 import re
