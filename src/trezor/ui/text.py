@@ -6,7 +6,8 @@ TEXT_LINE_HEIGHT = const(26)
 TEXT_MARGIN_LEFT = const(14)
 TEXT_MAX_LINES = const(4)
 
-BR = const(-1)
+# needs to be different from all colors and font ids
+BR = const(-256)
 
 
 def render_words(words: list, new_lines: bool, max_lines: int) -> None:
