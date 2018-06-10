@@ -3,11 +3,12 @@
 # This script generates coins.json files from the definitions in defs/
 #
 # - `./build_coins.py` generates a big file with everything
-# - `./build_coins.py XXX` generates a file with coins that are supported by XXX
+# - `./build_coins.py XXX` generates a file with coins supported by XXX
 #      for example: `./build_coins.py webwallet` or `./build_coins.py trezor1`
 # - `./build_coins.py XXX --defs` also adds protobuf definitions with TOIF icon
 #
-# generated file is coins.json in current directory, and coindefs.json if --def is enabled
+# generated file is coins.json in current directory,
+# and coindefs.json if --def is enabled
 
 import json
 import glob
@@ -201,8 +202,14 @@ if BUILD_DEFS:
 # check for colliding address versions
 at_p2pkh = {}
 at_p2sh = {}
+slip44 = {}
 
 for n, c in coins.items():
+    s = c['slip44']
+    if s not in slip44:
+        slip44[s] = []
+    if not(n.endswith('Testnet') and s == 1):
+        slip44[s].append(n)
     if c['cashaddr_prefix']:  # skip cashaddr currencies
         continue
     a1, a2 = c['address_type'], c['address_type_p2sh']
@@ -216,11 +223,17 @@ for n, c in coins.items():
 print()
 print('Colliding address_types for P2PKH:')
 for k, v in at_p2pkh.items():
-    if len(v) > 2:
+    if len(v) >= 2:
         print('-', k, ':', ','.join(v))
 
 print()
 print('Colliding address_types for P2SH:')
 for k, v in at_p2sh.items():
-    if len(v) > 2:
+    if len(v) >= 2:
+        print('-', k, ':', ','.join(v))
+
+print()
+print('Colliding SLIP44 constants:')
+for k, v in slip44.items():
+    if len(v) >= 2:
         print('-', k, ':', ','.join(v))
