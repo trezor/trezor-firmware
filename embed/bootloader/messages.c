@@ -403,6 +403,8 @@ static void detect_installation(vendor_header *current_vhdr, image_header *curre
     *is_upgrade = sectrue;
 }
 
+static int firmware_upload_chunk_retry = FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT;
+
 int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
     MSG_RECV_INIT(FirmwareUpload);
@@ -496,6 +498,16 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
     }
 
     if (sectrue != check_single_hash(hdr.hashes + firmware_block * 32, chunk_buffer + firstskip, chunk_size - firstskip)) {
+
+        if (firmware_upload_chunk_retry > 0) {
+            --firmware_upload_chunk_retry;
+            MSG_SEND_INIT(FirmwareRequest);
+            MSG_SEND_ASSIGN_VALUE(offset, firmware_block * IMAGE_CHUNK_SIZE);
+            MSG_SEND_ASSIGN_VALUE(length, chunk_requested);
+            MSG_SEND(FirmwareRequest);
+            return (int)firmware_remaining;
+        }
+
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Invalid chunk hash");
@@ -514,6 +526,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
 
     firmware_remaining -= chunk_requested;
     firmware_block++;
+    firmware_upload_chunk_retry = FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT;
 
     if (firmware_remaining > 0) {
         chunk_requested = (firmware_remaining > IMAGE_CHUNK_SIZE) ? IMAGE_CHUNK_SIZE : firmware_remaining;
