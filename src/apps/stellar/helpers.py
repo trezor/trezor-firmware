@@ -1,6 +1,8 @@
 from trezor.crypto import base32
 import ustruct
 
+STELLAR_CURVE = 'ed25519'
+
 
 def address_from_public_key(pubkey: bytes):
     """Returns the base32-encoded version of public key bytes (G...)"""

@@ -18,7 +18,6 @@ async def get_address(ctx, msg):
     address = node.nem_address(network)
 
     if msg.show_display:
-
         while True:
             if await _show_address(ctx, address, network):
                 break
