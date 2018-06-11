@@ -1100,13 +1100,13 @@ class ProtocolMixin(object):
 
     @field('public_key')
     @expect(proto.StellarPublicKey)
-    def stellar_get_public_key(self, address_n):
-        return self.call(proto.StellarGetPublicKey(address_n=address_n))
+    def stellar_get_public_key(self, address_n, show_display=False):
+        return self.call(proto.StellarGetPublicKey(address_n=address_n, show_display=show_display))
 
     @field('address')
     @expect(proto.StellarAddress)
-    def stellar_get_address(self, address_n):
-        return self.call(proto.StellarGetAddress(address_n=address_n))
+    def stellar_get_address(self, address_n, show_display=False):
+        return self.call(proto.StellarGetAddress(address_n=address_n, show_display=show_display))
 
     def stellar_sign_transaction(self, tx, operations, address_n, network_passphrase=None):
         # default networkPassphrase to the public network

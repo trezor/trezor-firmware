@@ -1025,20 +1025,22 @@ def cosi_sign(connect, address, data, global_commitment, global_pubkey):
 #
 @cli.command(help='Get Stellar public address')
 @click.option('-n', '--address', required=False, help="BIP32 path. Always use hardened paths and the m/44'/148'/ prefix", default=stellar.DEFAULT_BIP32_PATH)
+@click.option('-d', '--show-display', is_flag=True)
 @click.pass_obj
-def stellar_get_address(connect, address):
+def stellar_get_address(connect, address, show_display):
     client = connect()
     address_n = tools.parse_path(address)
-    return client.stellar_get_address(address_n)
+    return client.stellar_get_address(address_n, show_display)
 
 
 @cli.command(help='Get Stellar public key')
 @click.option('-n', '--address', required=False, help="BIP32 path. Always use hardened paths and the m/44'/148'/ prefix", default=stellar.DEFAULT_BIP32_PATH)
+@click.option('-d', '--show-display', is_flag=True)
 @click.pass_obj
-def stellar_get_public_key(connect, address):
+def stellar_get_public_key(connect, address, show_display):
     client = connect()
     address_n = tools.parse_path(address)
-    return client.stellar_get_public_key(address_n)
+    return client.stellar_get_public_key(address_n, show_display)
 
 
 @cli.command(help='Sign a base64-encoded transaction envelope')
