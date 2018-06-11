@@ -51,7 +51,9 @@ async def verify_message(ctx, msg):
     if addr != address:
         raise wire.ProcessError('Invalid signature')
 
-    await require_confirm_verify_message(ctx, address, message)
+    address_short = address[len(coin.cashaddr_prefix) + 1:] if coin.cashaddr_prefix is not None else address
+
+    await require_confirm_verify_message(ctx, address_short, message)
 
     return Success(message='Message verified')
 

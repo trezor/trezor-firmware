@@ -17,10 +17,11 @@ async def get_address(ctx, msg):
 
     node = await seed.derive_node(ctx, msg.address_n)
     address = addresses.get_address(msg.script_type, coin, node, msg.multisig)
+    address_short = address[len(coin.cashaddr_prefix) + 1:] if coin.cashaddr_prefix is not None else address
 
     if msg.show_display:
         while True:
-            if await _show_address(ctx, address):
+            if await _show_address(ctx, address_short):
                 break
             if await _show_qr(ctx, address.upper() if msg.script_type == InputScriptType.SPENDWITNESS else address):
                 break
