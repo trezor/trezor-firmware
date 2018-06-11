@@ -4,6 +4,7 @@
     "slip44": 60,
     "shortcut": "ETH",
     "name": "Ethereum",
+    "rskip60": false,
     "url": "https://www.ethereum.org"
   },
   {
@@ -11,6 +12,7 @@
     "slip44": 40,
     "shortcut": "EXP",
     "name": "Expanse",
+    "rskip60": false,
     "url": "https://expanse.tech"
   },
   {
@@ -18,6 +20,7 @@
     "slip44": 1,
     "shortcut": "tETH",
     "name": "Ethereum Testnet Ropsten",
+    "rskip60": false,
     "url": "https://www.ethereum.org"
   },
   {
@@ -25,6 +28,7 @@
     "slip44": 1,
     "shortcut": "tETH",
     "name": "Ethereum Testnet Rinkeby",
+    "rskip60": false,
     "url": "https://www.ethereum.org"
   },
   {
@@ -32,6 +36,7 @@
     "slip44": 108,
     "shortcut": "UBQ",
     "name": "UBIQ",
+    "rskip60": false,
     "url": "https://ubiqsmart.com"
   },
   {
@@ -39,6 +44,7 @@
     "slip44": 2018,
     "shortcut": "EOSC",
     "name": "EOS Classic",
+    "rskip60": false,
     "url": "https://eos-classic.io"
   },
   {
@@ -46,6 +52,7 @@
     "slip44": 1128,
     "shortcut": "ETSC",
     "name": "Ethereum Social",
+    "rskip60": false,
     "url": "https://ethereumsocial.kr"
   },
   {
@@ -53,6 +60,7 @@
     "slip44": 137,
     "shortcut": "RSK",
     "name": "RSK",
+    "rskip60": true,
     "url": "https://www.rsk.co"
   },
   {
@@ -60,6 +68,7 @@
     "slip44": 1,
     "shortcut": "tRSK",
     "name": "RSK Testnet",
+    "rskip60": true,
     "url": "https://www.rsk.co"
   },
   {
@@ -67,6 +76,7 @@
     "slip44": 1,
     "shortcut": "tETH",
     "name": "Ethereum Testnet Kovan",
+    "rskip60": false,
     "url": "https://www.ethereum.org"
   },
   {
@@ -74,6 +84,7 @@
     "slip44": 61,
     "shortcut": "ETC",
     "name": "Ethereum Classic",
+    "rskip60": false,
     "url": "https://ethereumclassic.github.io"
   },
   {
@@ -81,6 +92,7 @@
     "slip44": 1,
     "shortcut": "tETC",
     "name": "Ethereum Classic Testnet",
+    "rskip60": false,
     "url": "https://ethereumclassic.github.io"
   },
   {
@@ -88,6 +100,7 @@
     "slip44": 163,
     "shortcut": "ELLA",
     "name": "Ellaism",
+    "rskip60": false,
     "url": "https://ellaism.org"
   },
   {
@@ -95,6 +108,7 @@
     "slip44": 820,
     "shortcut": "CLO",
     "name": "Callisto",
+    "rskip60": false,
     "url": "https://callisto.network"
   },
   {
@@ -102,6 +116,7 @@
     "slip44": 1987,
     "shortcut": "EGEM",
     "name": "EtherGem",
+    "rskip60": false,
     "url": "https://egem.io"
   }
 ]
