@@ -45,32 +45,6 @@
 static bool stellar_signing = false;
 static StellarTransaction stellar_activeTx;
 
-static const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen)
-{
-	static char str[4][32 + 1];
-	if (rowlen > 32) {
-		rowlen = 32;
-	}
-	memset(str, 0, sizeof(str));
-	strlcpy(str[0], (char *)msg, rowlen + 1);
-	if (len > rowlen) {
-		strlcpy(str[1], (char *)msg + rowlen, rowlen + 1);
-	}
-	if (len > rowlen * 2) {
-		strlcpy(str[2], (char *)msg + rowlen * 2, rowlen + 1);
-	}
-	if (len > rowlen * 3) {
-		strlcpy(str[3], (char *)msg + rowlen * 3, rowlen + 1);
-	}
-	if (len > rowlen * 4) {
-		str[3][rowlen - 1] = '.';
-		str[3][rowlen - 2] = '.';
-		str[3][rowlen - 3] = '.';
-	}
-	static const char *ret[4] = { str[0], str[1], str[2], str[3] };
-	return ret;
-}
-
 /*
  * Starts the signing process and parses the transaction header
  */
@@ -100,16 +74,19 @@ void stellar_signingInit(StellarSignTx *msg)
     stellar_hashupdate_bytes(tx_type_bytes, sizeof(tx_type_bytes));
 
     // Public key comes from deriving the specified account path
-    uint8_t bytes_pubkey[32];
-    stellar_getPubkeyAtAddress(msg->address_n, msg->address_n_count, bytes_pubkey, sizeof(bytes_pubkey));
-    memcpy(&(stellar_activeTx.signing_pubkey), bytes_pubkey, sizeof(stellar_activeTx.signing_pubkey));
+    HDNode *node = stellar_deriveNode(msg->address_n, msg->address_n_count);
+    if (!node) {
+        // TODO: bail on error
+        return;
+    }
+    memcpy(&(stellar_activeTx.signing_pubkey), node->public_key + 1, sizeof(stellar_activeTx.signing_pubkey));
 
     stellar_activeTx.address_n_count = msg->address_n_count;
     // todo: fix sizeof check
     memcpy(&(stellar_activeTx.address_n), &(msg->address_n), sizeof(stellar_activeTx.address_n));
 
     // Hash: public key
-    stellar_hashupdate_address(bytes_pubkey);
+    stellar_hashupdate_address(node->public_key + 1);
 
     // Hash: fee
     stellar_hashupdate_uint32(msg->fee);
@@ -1320,23 +1297,6 @@ uint16_t stellar_crc16(uint8_t *bytes, uint32_t length)
 }
 
 /*
- * Writes 32-byte public key to out
- */
-void stellar_getPubkeyAtAddress(uint32_t *address_n, size_t address_n_count, uint8_t *out, size_t outlen)
-{
-    if (outlen < 32) return;
-
-    HDNode *node = stellar_deriveNode(address_n, address_n_count);
-
-    if (node == 0) {
-        stellar_signingAbort();
-        return;
-    }
-
-    memcpy(out, node->public_key + 1, outlen);
-}
-
-/*
  * Derives the HDNode at the given index
  * Standard Stellar prefix is m/44'/148'/ and the default account is m/44'/148'/0'
  *
@@ -1637,8 +1597,11 @@ void stellar_layoutSigningDialog(const char *line1, const char *line2, const cha
     int offset_y = 1;
     int line_height = 9;
 
-    uint8_t public_key[32];
-    stellar_getPubkeyAtAddress(address_n, address_n_count, public_key, sizeof(public_key));
+    HDNode *node = stellar_deriveNode(address_n, address_n_count);
+    if (!node) {
+        // TODO: bail on error
+        return;
+    }
 
     char str_pubaddr_truncated[12]; // G???? + null
     memset(str_pubaddr_truncated, 0, sizeof(str_pubaddr_truncated));
@@ -1650,7 +1613,7 @@ void stellar_layoutSigningDialog(const char *line1, const char *line2, const cha
     // Load up public address
     char str_pubaddr[56+1];
     memset(str_pubaddr, 0, sizeof(str_pubaddr));
-    stellar_publicAddressAsStr(public_key, str_pubaddr, sizeof(str_pubaddr));
+    stellar_publicAddressAsStr(node->public_key + 1, str_pubaddr, sizeof(str_pubaddr));
     memcpy(str_pubaddr_truncated, str_pubaddr, sizeof(str_pubaddr_truncated) - 1);
 
     // Header
@@ -1742,25 +1705,4 @@ void stellar_layoutTransactionDialog(const char *line1, const char *line2, const
         str_warning,
         false
     );
-}
-
-void stellar_layoutGetPublicKey(uint32_t *address_n, size_t address_n_count)
-{
-    // Derive node and calculate address
-    uint8_t pubkey_bytes[32];
-    stellar_getPubkeyAtAddress(address_n, address_n_count, pubkey_bytes, sizeof(pubkey_bytes));
-    const char **str_addr_rows = stellar_lineBreakAddress(pubkey_bytes);
-
-    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), _("Share public account ID?"),
-        str_addr_rows[0],
-        str_addr_rows[1],
-        str_addr_rows[2],
-        NULL,
-        NULL, NULL
-        );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-        fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-        layoutHome();
-        return;
-    }
 }

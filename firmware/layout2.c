@@ -153,7 +153,7 @@ static const char *address_n_str(const uint32_t *address_n, size_t address_n_cou
 }
 
 // split longer string into 4 rows, rowlen chars each
-static const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen)
+const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen)
 {
 	static char str[4][32 + 1];
 	if (rowlen > 32) {

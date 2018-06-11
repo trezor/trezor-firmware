@@ -58,7 +58,6 @@ void stellar_confirmManageDataOp(StellarManageDataOp *msg);
 void stellar_confirmBumpSequenceOp(StellarBumpSequenceOp *msg);
 
 // Layout
-void stellar_layoutGetPublicKey(uint32_t *address_n, size_t address_n_count);
 void stellar_layoutTransactionDialog(const char *line1, const char *line2, const char *line3, const char *line4, const char *line5);
 void stellar_layoutTransactionSummary(StellarSignTx *msg);
 void stellar_layoutSigningDialog(const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, uint32_t *address_n, size_t address_n_count, const char *warning, bool is_final_step);
@@ -68,7 +67,6 @@ HDNode *stellar_deriveNode(uint32_t *address_n, size_t address_n_count);
 
 size_t stellar_publicAddressAsStr(uint8_t *bytes, char *out, size_t outlen);
 const char **stellar_lineBreakAddress(uint8_t *addrbytes);
-void stellar_getPubkeyAtAddress(uint32_t *address_n, size_t address_n_count, uint8_t *out, size_t outlen);
 
 void stellar_hashupdate_uint32(uint32_t value);
 void stellar_hashupdate_uint64(uint64_t value);

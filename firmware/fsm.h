@@ -81,6 +81,7 @@ void fsm_msgCosiCommit(CosiCommit *msg);
 void fsm_msgCosiSign(CosiSign *msg);
 
 // Stellar
+void fsm_msgStellarGetAddress(StellarGetAddress *msg);
 void fsm_msgStellarGetPublicKey(StellarGetPublicKey *msg);
 void fsm_msgStellarSignTx(StellarSignTx *msg);
 void fsm_msgStellarPaymentOp(StellarPaymentOp *msg);
