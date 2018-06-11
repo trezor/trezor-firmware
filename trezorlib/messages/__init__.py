@@ -127,11 +127,13 @@ from .SignTx import SignTx
 from .SignedIdentity import SignedIdentity
 from .SimpleSignTx import SimpleSignTx
 from .StellarAccountMergeOp import StellarAccountMergeOp
+from .StellarAddress import StellarAddress
 from .StellarAllowTrustOp import StellarAllowTrustOp
 from .StellarBumpSequenceOp import StellarBumpSequenceOp
 from .StellarChangeTrustOp import StellarChangeTrustOp
 from .StellarCreateAccountOp import StellarCreateAccountOp
 from .StellarCreatePassiveOfferOp import StellarCreatePassiveOfferOp
+from .StellarGetAddress import StellarGetAddress
 from .StellarGetPublicKey import StellarGetPublicKey
 from .StellarManageDataOp import StellarManageDataOp
 from .StellarManageOfferOp import StellarManageOfferOp
