@@ -60,7 +60,7 @@ def format_ethereum_amount(value: int, token, chain_id: int, tx_type=None):
         suffix = token[2]
         decimals = token[3]
     else:
-        suffix = networks.suffix_by_chain_id(chain_id, tx_type)
+        suffix = networks.shortcut_by_chain_id(chain_id, tx_type)
         decimals = 18
 
     if value <= 1e9:
