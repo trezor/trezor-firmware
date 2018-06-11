@@ -1098,10 +1098,12 @@ class ProtocolMixin(object):
 
         return self.call(proto.SelfTest(payload=b'\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC'))
 
+    @field('public_key')
     @expect(proto.StellarPublicKey)
     def stellar_get_public_key(self, address_n):
         return self.call(proto.StellarGetPublicKey(address_n=address_n))
 
+    @field('address')
     @expect(proto.StellarAddress)
     def stellar_get_address(self, address_n):
         return self.call(proto.StellarGetAddress(address_n=address_n))
