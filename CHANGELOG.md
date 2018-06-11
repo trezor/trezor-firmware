@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 _At the moment, the project does __not__ adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
 
+## [0.10.1] - 2018-06-11
+[0.10.1]: https://github.com/trezor/python-trezor/compare/v0.10.0...v0.10.1
+
+### Fixed
+- previous release fails to build on Windows [#274]
+
 ## [0.10.0] - 2018-06-08
 [0.10.0]: https://github.com/trezor/python-trezor/compare/v0.9.1...v0.10.0
 
@@ -100,3 +106,4 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 [#256]: https://github.com/trezor/python-trezor/issues/256
 [#268]: https://github.com/trezor/python-trezor/issues/268
 [#269]: https://github.com/trezor/python-trezor/issues/269
+[#274]: https://github.com/trezor/python-trezor/issues/274
