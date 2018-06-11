@@ -116,6 +116,8 @@ enum MessageType {
 	MessageType_StellarPublicKey = 201 [(wire_out) = true];
 	MessageType_StellarSignTx = 202 [(wire_in) = true];
 	MessageType_StellarTxOpRequest = 203 [(wire_out) = true];
+	MessageType_StellarGetAddress = 207 [(wire_in) = true];
+	MessageType_StellarAddress = 208 [(wire_out) = true];
 	MessageType_StellarCreateAccountOp = 210 [(wire_in) = true];
 	MessageType_StellarPaymentOp = 211 [(wire_in) = true];
 	MessageType_StellarPathPaymentOp = 212 [(wire_in) = true];
@@ -1019,6 +1021,22 @@ message StellarGetPublicKey {
  */
 message StellarPublicKey {
 	optional bytes public_key = 1;	// Raw bytes of the public key (no version or checksum)
+}
+
+/**
+ * Request: Address at the specified index
+ * @next StellarAddress
+ */
+message StellarGetAddress {
+	repeated uint32 address_n = 1;	// BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
+}
+
+/**
+ * Response: Address for the given index
+ * @prev StellarGetAddress
+ */
+message StellarAddress {
+	optional string address = 1;	// Address in Stellar format (base32 of a pubkey with checksum)
 }
 
 /**
