@@ -1029,9 +1029,16 @@ def cosi_sign(connect, address, data, global_commitment, global_pubkey):
 def stellar_get_address(connect, address):
     client = connect()
     address_n = tools.parse_path(address)
-    # StellarPublicKey response
-    response = client.stellar_get_public_key(address_n)
-    return stellar.address_from_public_key(response.public_key)
+    return client.stellar_get_address(address_n)
+
+
+@cli.command(help='Get Stellar public key')
+@click.option('-n', '--address', required=False, help="BIP32 path. Always use hardened paths and the m/44'/148'/ prefix", default=stellar.DEFAULT_BIP32_PATH)
+@click.pass_obj
+def stellar_get_public_key(connect, address):
+    client = connect()
+    address_n = tools.parse_path(address)
+    return client.stellar_get_public_key(address_n)
 
 
 @cli.command(help='Sign a base64-encoded transaction envelope')
