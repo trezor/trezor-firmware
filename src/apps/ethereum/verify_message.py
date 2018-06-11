@@ -5,9 +5,9 @@ from trezor import ui
 from trezor.ui.text import Text
 from trezor.messages.Success import Success
 from apps.common.confirm import require_confirm
+from apps.common.display_address import split_address
 from apps.common.signverify import split_message
 from apps.ethereum.sign_message import message_digest
-from apps.wallet.get_address import _split_address
 
 
 async def ethereum_verify_message(ctx, msg):
@@ -32,7 +32,7 @@ async def ethereum_verify_message(ctx, msg):
 
 
 async def require_confirm_verify_message(ctx, address, message):
-    lines = _split_address(address)
+    lines = split_address(address)
     content = Text('Confirm address', ui.ICON_DEFAULT, ui.MONO, *lines)
     await require_confirm(ctx, content)
 

@@ -5,9 +5,9 @@ from trezor.messages.Success import Success
 from trezor.ui.text import Text
 from apps.common import coins
 from apps.common.confirm import require_confirm
+from apps.common.display_address import split_address
 from apps.common.signverify import message_digest, split_message
 from apps.wallet.sign_tx.addresses import address_pkh, address_p2wpkh_in_p2sh, address_p2wpkh, address_to_cashaddr
-from apps.wallet.get_address import _split_address
 
 
 async def verify_message(ctx, msg):
@@ -59,7 +59,7 @@ async def verify_message(ctx, msg):
 
 
 async def require_confirm_verify_message(ctx, address, message):
-    lines = _split_address(address)
+    lines = split_address(address)
     content = Text('Confirm address', ui.ICON_DEFAULT, ui.MONO, *lines)
     await require_confirm(ctx, content)
 
