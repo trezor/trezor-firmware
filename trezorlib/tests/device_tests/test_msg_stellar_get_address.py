@@ -22,13 +22,23 @@ from trezorlib.tools import parse_path
 
 
 @pytest.mark.stellar
+@pytest.mark.xfail(TREZOR_VERSION == 1, reason="T1 support for get address is not yet finished")
 @pytest.mark.xfail(TREZOR_VERSION == 2, reason="T2 support is not yet finished")
-class TestMsgStellarGetPublicKey(TrezorTest):
+class TestMsgStellarGetAddress(TrezorTest):
 
-    def test_stellar_get_public_key(self):
+    def test_stellar_get_address(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
         # GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW
-        response = self.client.stellar_get_public_key(parse_path(stellar.DEFAULT_BIP32_PATH))
-        assert hexlify(response.public_key) == b'15d648bfe4d36f196cfb5735ffd8ca54cd4b8233f743f22449de7cf301cdb469'
-        assert stellar.address_from_public_key(response.public_key) == b'GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW'
+        response = self.client.stellar_get_address(parse_path(stellar.DEFAULT_BIP32_PATH))
+        assert response.address == 'GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW'
+
+    def test_stellar_get_address_get_pubkey(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        pubkey_response = self.client.stellar_get_public_key(parse_path(stellar.DEFAULT_BIP32_PATH))
+
+        # GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW
+        address_response = self.client.stellar_get_address(parse_path(stellar.DEFAULT_BIP32_PATH))
+
+        assert stellar.address_from_public_key(pubkey_response.public_key).decode('utf8') == address_response.address
