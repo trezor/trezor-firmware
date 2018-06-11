@@ -1040,7 +1040,7 @@ def stellar_get_address(connect, address, show_display):
 def stellar_get_public_key(connect, address, show_display):
     client = connect()
     address_n = tools.parse_path(address)
-    return client.stellar_get_public_key(address_n, show_display)
+    return binascii.hexlify(client.stellar_get_public_key(address_n, show_display))
 
 
 @cli.command(help='Sign a base64-encoded transaction envelope')
