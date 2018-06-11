@@ -35,6 +35,13 @@
     "url": "https://ubiqsmart.com"
   },
   {
+    "chain_id": 20,
+    "slip44": 2018,
+    "shortcut": "EOSC",
+    "name": "EOS Classic",
+    "url": "https://eos-classic.io"
+  },
+  {
     "chain_id": 28,
     "slip44": 1128,
     "shortcut": "ETSC",
@@ -96,12 +103,5 @@
     "shortcut": "EGEM",
     "name": "EtherGem",
     "url": "https://egem.io"
-  },
-  {
-    "chain_id": 2018,
-    "slip44": 2018,
-    "shortcut": "EOSC",
-    "name": "EOS Classic",
-    "url": "https://eos-classic.io"
   }
 ]
