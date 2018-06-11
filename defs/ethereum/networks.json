@@ -45,14 +45,14 @@
     "chain_id": 30,
     "slip44": 137,
     "shortcut": "RSK",
-    "name": "Rootstock",
+    "name": "RSK",
     "url": "https://www.rsk.co"
   },
   {
     "chain_id": 31,
     "slip44": 1,
     "shortcut": "tRSK",
-    "name": "Rootstock Testnet",
+    "name": "RSK Testnet",
     "url": "https://www.rsk.co"
   },
   {
