@@ -18,6 +18,8 @@ from .common import TrezorTest
 from .conftest import TREZOR_VERSION
 from binascii import hexlify
 from trezorlib import stellar
+from trezorlib import messages as proto
+from trezorlib.client import CallException
 from trezorlib.tools import parse_path
 
 
@@ -40,3 +42,12 @@ class TestMsgStellarGetAddress(TrezorTest):
         address = self.client.stellar_get_address(parse_path(stellar.DEFAULT_BIP32_PATH))
 
         assert stellar.address_from_public_key(pubkey).decode('utf8') == address
+
+    def test_stellar_get_address_fail(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        with pytest.raises(CallException) as exc:
+            self.client.stellar_get_address(parse_path('m/0/1'))
+
+        assert exc.value.args[0] == proto.FailureType.ProcessError
+        assert exc.value.args[1].endswith('Failed to derive private key')
