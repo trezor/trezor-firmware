@@ -29,6 +29,7 @@
 #include "sha2.h"
 #include "blake256.h"
 #include "groestl.h"
+#include "blake2b.h"
 
 #define HASHER_DIGEST_LENGTH 32
 
@@ -40,6 +41,11 @@ typedef enum {
     HASHER_BLAKED,
 
     HASHER_GROESTLD_TRUNC, /* Double Groestl512 hasher truncated to 256 bits */
+
+    HASHER_OVERWINTER_PREVOUTS,
+    HASHER_OVERWINTER_SEQUENCE,
+    HASHER_OVERWINTER_OUTPUTS,
+    HASHER_OVERWINTER_PREIMAGE,
 } HasherType;
 
 typedef struct {
@@ -49,6 +55,7 @@ typedef struct {
         SHA256_CTX sha2;
         BLAKE256_CTX blake;
         GROESTL512_CTX groestl;
+        BLAKE2B_CTX blake2b;
     } ctx;
 } Hasher;
 
