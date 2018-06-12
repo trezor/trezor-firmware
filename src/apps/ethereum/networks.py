@@ -76,7 +76,7 @@ NETWORKS = [
     ),
     NetworkInfo(
         chain_id=31,
-        slip44=1,
+        slip44=37310,
         shortcut='tRSK',
         name='RSK Testnet',
         rskip60=True,
