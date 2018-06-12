@@ -50,12 +50,13 @@ def validate_network(network: int) -> int:
 
 def _validate_single_tx(msg: NEMSignTx):
     # ensure exactly one transaction is provided
-    tx_count = bool(msg.transfer) + \
-               bool(msg.provision_namespace) + \
-               bool(msg.mosaic_creation) + \
-               bool(msg.supply_change) + \
-               bool(msg.aggregate_modification) + \
-               bool(msg.importance_transfer)
+    tx_count = \
+        bool(msg.transfer) + \
+        bool(msg.provision_namespace) + \
+        bool(msg.mosaic_creation) + \
+        bool(msg.supply_change) + \
+        bool(msg.aggregate_modification) + \
+        bool(msg.importance_transfer)
     if tx_count == 0:
         raise ValueError('No transaction provided')
     if tx_count > 1:

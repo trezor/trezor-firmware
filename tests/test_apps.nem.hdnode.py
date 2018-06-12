@@ -226,9 +226,9 @@ class TestNemHDNode(unittest.TestCase):
             )
 
             encrypted = node.nem_encrypt(unhexlify(test['public']),
-                             unhexlify(test['iv']),
-                             unhexlify(test['salt']),
-                             unhexlify(test['input']))
+                                         unhexlify(test['iv']),
+                                         unhexlify(test['salt']),
+                                         unhexlify(test['input']))
 
             self.assertEqual(encrypted, unhexlify(test['output']))
 

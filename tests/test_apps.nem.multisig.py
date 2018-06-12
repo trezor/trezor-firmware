@@ -45,13 +45,13 @@ class TestNemMultisig(unittest.TestCase):
     def test_nem_multisig_2(self):
         # http://chain.nem.ninja/#/multisig/1016cf3bdd61bd57b9b2b07b6ff2dee390279d8d899265bdc23d42360abe2e6c
         m = _create_provision_msg(NEM_NETWORK_MAINNET,
-                                 59414272,
-                                 20000000,
-                                 59500672,
-                                 "dim",
-                                 "",
-                                 "NAMESPACEWH4MKFMBCVFERDPOOP4FK7MTBXDPZZA",
-                                 5000000000)
+                                  59414272,
+                                  20000000,
+                                  59500672,
+                                  "dim",
+                                  "",
+                                  "NAMESPACEWH4MKFMBCVFERDPOOP4FK7MTBXDPZZA",
+                                  5000000000)
         base_tx = serialize_provision_namespace(m.transaction, m.provision_namespace, unhexlify("a1df5306355766bd2f9a64efdc089eb294be265987b3359093ae474c051d7d5a"))
 
         m = _create_common_msg(NEM_NETWORK_MAINNET,

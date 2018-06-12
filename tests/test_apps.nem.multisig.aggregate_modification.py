@@ -52,7 +52,7 @@ class TestNemMultisigAggregateModification(unittest.TestCase):
             "43aa69177018fc3e2bdbeb259c81cddf24be50eef9c5386db51d82386c41475a"))
 
         self.assertEqual(hashlib.sha3_256(t).digest(True),
-                          unhexlify("cc64ca69bfa95db2ff7ac1e21fe6d27ece189c603200ebc9778d8bb80ca25c3c"))
+                         unhexlify("cc64ca69bfa95db2ff7ac1e21fe6d27ece189c603200ebc9778d8bb80ca25c3c"))
 
     def test_nem_transaction_aggregate_modification_relative_change(self):
         # http://bob.nem.ninja:8765/#/aggregate/1fbdae5ba753e68af270930413ae90f671eb8ab58988116684bac0abd5726584
