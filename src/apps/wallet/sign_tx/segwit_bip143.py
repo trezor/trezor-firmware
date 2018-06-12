@@ -46,23 +46,22 @@ class Bip143:
 
         assert not tx.overwintered
 
-        write_uint32(h_preimage, tx.version)  # nVersion
-
+        write_uint32(h_preimage, tx.version)                          # nVersion
         write_bytes(h_preimage, bytearray(self.get_prevouts_hash()))  # hashPrevouts
         write_bytes(h_preimage, bytearray(self.get_sequence_hash()))  # hashSequence
-        write_bytes_rev(h_preimage, txi.prev_hash)  # outpoint
-        write_uint32(h_preimage, txi.prev_index)  # outpoint
 
-        script_code = self.derive_script_code(txi, pubkeyhash)
-        write_varint(h_preimage, len(script_code))  # scriptCode length
-        write_bytes(h_preimage, script_code)  # scriptCode
+        write_bytes_rev(h_preimage, txi.prev_hash)                    # outpoint
+        write_uint32(h_preimage, txi.prev_index)                      # outpoint
 
-        write_uint64(h_preimage, txi.amount)  # amount
-        write_uint32(h_preimage, txi.sequence)  # nSequence
+        script_code = self.derive_script_code(txi, pubkeyhash)        # scriptCode
+        write_varint(h_preimage, len(script_code))
+        write_bytes(h_preimage, script_code)
 
-        write_bytes(h_preimage, bytearray(self.get_outputs_hash()))  # hashOutputs
-        write_uint32(h_preimage, tx.lock_time)  # nLockTime
-        write_uint32(h_preimage, sighash)  # nHashType
+        write_uint64(h_preimage, txi.amount)                          # amount
+        write_uint32(h_preimage, txi.sequence)                        # nSequence
+        write_bytes(h_preimage, bytearray(self.get_outputs_hash()))   # hashOutputs
+        write_uint32(h_preimage, tx.lock_time)                        # nLockTime
+        write_uint32(h_preimage, sighash)                             # nHashType
 
         return get_tx_hash(h_preimage, True)
 
