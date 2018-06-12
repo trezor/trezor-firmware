@@ -64,6 +64,7 @@ static uint64_t to_spend, authorized_amount, spending, change_spend;
 static uint32_t version = 1;
 static uint32_t lock_time = 0;
 static uint32_t expiry = 0;
+static bool overwintered = false;
 static uint32_t next_nonsegwit_input;
 static uint32_t progress, progress_step, progress_meta_step;
 static bool multisig_fp_set, multisig_fp_mismatch;
@@ -479,6 +480,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 	version = msg->version;
 	lock_time = msg->lock_time;
 	expiry = msg->expiry;
+	overwintered = msg->has_overwintered && msg->overwintered;
 
 	uint32_t size = TXSIZE_HEADER + TXSIZE_FOOTER + ser_length_size(inputs_count) + ser_length_size(outputs_count);
 	if (coin->decred) {
@@ -508,22 +510,31 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 	multisig_fp_mismatch = false;
 	next_nonsegwit_input = 0xffffffff;
 
-	tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign);
+	tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered);
 
 	if (coin->decred) {
 		to.version |= (DECRED_SERIALIZE_FULL << 16);
 		to.is_decred = true;
 
-		tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign);
+		tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered);
 		ti.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
 		ti.is_decred = true;
 	}
 
-	hasher_Init(&hasher_prevouts, coin->curve->hasher_sign);
-	hasher_Init(&hasher_sequence, coin->curve->hasher_sign);
-	hasher_Init(&hasher_outputs, coin->curve->hasher_sign);
-	hasher_Init(&hasher_check, coin->curve->hasher_sign);
-	hasher_Init(&hasher_preimage, coin->curve->hasher_sign);
+	// segwit hashes for hashPrevouts and hashSequence
+	if (overwintered) {
+		hasher_Init(&hasher_prevouts, HASHER_OVERWINTER_PREVOUTS);
+		hasher_Init(&hasher_sequence, HASHER_OVERWINTER_SEQUENCE);
+		hasher_Init(&hasher_outputs, HASHER_OVERWINTER_OUTPUTS);
+		hasher_Init(&hasher_preimage, HASHER_OVERWINTER_PREIMAGE);
+		hasher_Init(&hasher_check, coin->curve->hasher_sign);
+	} else {
+		hasher_Init(&hasher_prevouts, coin->curve->hasher_sign);
+		hasher_Init(&hasher_sequence, coin->curve->hasher_sign);
+		hasher_Init(&hasher_outputs, coin->curve->hasher_sign);
+		hasher_Init(&hasher_preimage, coin->curve->hasher_sign);
+		hasher_Init(&hasher_check, coin->curve->hasher_sign);
+	}
 
 	layoutProgressSwipe(_("Signing transaction"), 0);
 
@@ -739,16 +750,39 @@ static void phase1_request_next_output(void) {
 static void signing_hash_bip143(const TxInputType *txinput, uint8_t *hash) {
 	uint32_t hash_type = signing_hash_type();
 	hasher_Reset(&hasher_preimage);
-	hasher_Update(&hasher_preimage, (const uint8_t *)&version, 4);
-	hasher_Update(&hasher_preimage, hash_prevouts, 32);
-	hasher_Update(&hasher_preimage, hash_sequence, 32);
-	tx_prevout_hash(&hasher_preimage, txinput);
-	tx_script_hash(&hasher_preimage, txinput->script_sig.size, txinput->script_sig.bytes);
-	hasher_Update(&hasher_preimage, (const uint8_t*) &txinput->amount, 8);
-	tx_sequence_hash(&hasher_preimage, txinput);
-	hasher_Update(&hasher_preimage, hash_outputs, 32);
-	hasher_Update(&hasher_preimage, (const uint8_t*) &lock_time, 4);
-	hasher_Update(&hasher_preimage, (const uint8_t*) &hash_type, 4);
+	hasher_Update(&hasher_preimage, (const uint8_t *)&version, 4);							// nVersion
+	hasher_Update(&hasher_preimage, hash_prevouts, 32);										// hashPrevouts
+	hasher_Update(&hasher_preimage, hash_sequence, 32);										// hashSequence
+	tx_prevout_hash(&hasher_preimage, txinput);												// outpoint
+	tx_script_hash(&hasher_preimage, txinput->script_sig.size, txinput->script_sig.bytes);	// scriptCode
+	hasher_Update(&hasher_preimage, (const uint8_t*) &txinput->amount, 8);					// amount
+	tx_sequence_hash(&hasher_preimage, txinput);											// nSequence
+	hasher_Update(&hasher_preimage, hash_outputs, 32);										// hashOutputs
+	hasher_Update(&hasher_preimage, (const uint8_t*)&lock_time, 4);							// nLockTime
+	hasher_Update(&hasher_preimage, (const uint8_t*)&hash_type, 4);							// nHashType
+	hasher_Final(&hasher_preimage, hash);
+}
+
+static void signing_hash_zip143(const TxInputType *txinput, uint8_t *hash) {
+	uint32_t hash_type = signing_hash_type();
+	hasher_Reset(&hasher_preimage);
+	uint32_t ver = version | TX_OVERWINTERED;												// 1. nVersion | fOverwintered
+	hasher_Update(&hasher_preimage, (const uint8_t *)&ver, 4);
+	hasher_Update(&hasher_preimage, (const uint8_t *)&coin->version_group_id, 4);			// 2. nVersionGroupId
+	hasher_Update(&hasher_preimage, hash_prevouts, 32);										// 3. hashPrevouts
+	hasher_Update(&hasher_preimage, hash_sequence, 32);										// 4. hashSequence
+	hasher_Update(&hasher_preimage, hash_outputs, 32);										// 5. hashOutputs
+																							// 6. hashJoinSplits
+	hasher_Update(&hasher_preimage, (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32);
+	hasher_Update(&hasher_preimage, (const uint8_t*)&lock_time, 4);							// 7. nLockTime
+	hasher_Update(&hasher_preimage, (const uint8_t*)&expiry, 4);							// 8. expiryHeight
+	hasher_Update(&hasher_preimage, (const uint8_t*)&hash_type, 4);							// 9. nHashType
+
+	tx_prevout_hash(&hasher_preimage, txinput);												// 10a. outpoint
+	tx_script_hash(&hasher_preimage, txinput->script_sig.size, txinput->script_sig.bytes);	// 10b. scriptCode
+	hasher_Update(&hasher_preimage, (const uint8_t*)&txinput->amount, 8);					// 10c. value
+	tx_sequence_hash(&hasher_preimage, txinput);											// 10d. nSequence
+
 	hasher_Final(&hasher_preimage, hash);
 }
 
@@ -933,9 +967,9 @@ void signing_txack(TransactionType *tx)
 				}
 #endif
 
-				if (coin->force_bip143) {
+				if (coin->force_bip143 || overwintered) {
 					if (!tx->inputs[0].has_amount) {
-						fsm_sendFailure(FailureType_Failure_DataError, _("BIP 143 input without amount"));
+						fsm_sendFailure(FailureType_Failure_DataError, _("BIP/ZIP 143 input without amount"));
 						signing_abort();
 						return;
 					}
@@ -1011,7 +1045,7 @@ void signing_txack(TransactionType *tx)
 				signing_abort();
 				return;
 			}
-			tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time, tx->expiry, tx->extra_data_len, coin->curve->hasher_sign);
+			tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time, tx->expiry, tx->extra_data_len, coin->curve->hasher_sign, overwintered);
 			if (coin->decred) {
 				tp.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
 				tp.is_decred = true;
@@ -1094,7 +1128,7 @@ void signing_txack(TransactionType *tx)
 		case STAGE_REQUEST_4_INPUT:
 			progress = 500 + ((signatures * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION);
 			if (idx2 == 0) {
-				tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign);
+				tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered);
 				hasher_Reset(&hasher_check);
 			}
 			// check prevouts and script type
@@ -1181,7 +1215,7 @@ void signing_txack(TransactionType *tx)
 			resp.serialized.has_serialized_tx = true;
 			if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG
 				|| tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
-				if (!coin->force_bip143) {
+				if (!(coin->force_bip143 || overwintered)) {
 					fsm_sendFailure(FailureType_Failure_DataError, _("Transaction has changed during signing"));
 					signing_abort();
 					return;
@@ -1199,7 +1233,11 @@ void signing_txack(TransactionType *tx)
 				authorized_amount -= tx->inputs[0].amount;
 
 				uint8_t hash[32];
-				signing_hash_bip143(&tx->inputs[0], hash);
+				if (overwintered) {
+					signing_hash_zip143(&tx->inputs[0], hash);
+				} else {
+					signing_hash_bip143(&tx->inputs[0], hash);
+				}
 				if (!signing_sign_hash(&tx->inputs[0], node.private_key, node.public_key, hash))
 					return;
 				// since this took a longer time, update progress
@@ -1289,12 +1327,12 @@ void signing_txack(TransactionType *tx)
 			progress = 500 + ((signatures * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION);
 			if (idx1 == 0) {
 				// witness
-				tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign);
+				tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered);
 				to.is_decred = true;
 			}
 
 			// witness hash
-			tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign);
+			tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered);
 			ti.version |= (DECRED_SERIALIZE_WITNESS_SIGNING << 16);
 			ti.is_decred = true;
 			if (!compile_input_script_sig(&tx->inputs[0])) {

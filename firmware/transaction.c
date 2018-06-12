@@ -465,10 +465,18 @@ uint32_t tx_serialize_script(uint32_t size, const uint8_t *data, uint8_t *out)
 uint32_t tx_serialize_header(TxStruct *tx, uint8_t *out)
 {
 	int r = 4;
-	memcpy(out, &(tx->version), 4);
-	if (tx->is_segwit) {
-		memcpy(out + r, segwit_header, 2);
-		r += 2;
+	if (tx->overwintered) {
+		uint32_t ver = tx->version | TX_OVERWINTERED;
+		memcpy(out, &ver, 4);
+		uint32_t version_group_id = 0x03c48270;
+		memcpy(out + 4, &version_group_id, 4);
+		r += 4;
+	} else {
+		memcpy(out, &(tx->version), 4);
+		if (tx->is_segwit) {
+			memcpy(out + r, segwit_header, 2);
+			r += 2;
+		}
 	}
 	return r + ser_length(tx->inputs_len, out + r);
 }
@@ -476,10 +484,18 @@ uint32_t tx_serialize_header(TxStruct *tx, uint8_t *out)
 uint32_t tx_serialize_header_hash(TxStruct *tx)
 {
 	int r = 4;
-	hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->version), 4);
-	if (tx->is_segwit) {
-		hasher_Update(&(tx->hasher), segwit_header, 2);
-		r += 2;
+	if (tx->overwintered) {
+		uint32_t ver = tx->version | TX_OVERWINTERED;
+		hasher_Update(&(tx->hasher), (const uint8_t *)&ver, 4);
+		uint32_t version_group_id = 0x03c48270;
+		hasher_Update(&(tx->hasher), (const uint8_t *)&version_group_id, 4);
+		r += 4;
+	} else {
+		hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->version), 4);
+		if (tx->is_segwit) {
+			hasher_Update(&(tx->hasher), segwit_header, 2);
+			r += 2;
+		}
 	}
 	return r + ser_length_hash(&(tx->hasher), tx->inputs_len);
 }
@@ -598,6 +614,11 @@ uint32_t tx_serialize_middle_hash(TxStruct *tx)
 uint32_t tx_serialize_footer(TxStruct *tx, uint8_t *out)
 {
 	memcpy(out, &(tx->lock_time), 4);
+	if (tx->overwintered) {
+		memcpy(out + 4, &(tx->expiry), 4);
+		out[8] = 0x00; // nJoinSplit
+		return 9;
+	}
 	if (tx->is_decred) {
 		memcpy(out + 4, &(tx->expiry), 4);
 		return 8;
@@ -608,6 +629,11 @@ uint32_t tx_serialize_footer(TxStruct *tx, uint8_t *out)
 uint32_t tx_serialize_footer_hash(TxStruct *tx)
 {
 	hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->lock_time), 4);
+	if (tx->overwintered) {
+		hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->expiry), 4);
+		hasher_Update(&(tx->hasher), (const uint8_t *)"\x00", 1); // nJoinSplit
+		return 9;
+	}
 	if (tx->is_decred) {
 		hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->expiry), 4);
 		return 8;
@@ -688,7 +714,7 @@ uint32_t tx_serialize_extra_data_hash(TxStruct *tx, const uint8_t *data, uint32_
 	return datalen;
 }
 
-void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t version, uint32_t lock_time, uint32_t expiry, uint32_t extra_data_len, HasherType hasher_sign)
+void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t version, uint32_t lock_time, uint32_t expiry, uint32_t extra_data_len, HasherType hasher_sign, bool overwintered)
 {
 	tx->inputs_len = inputs_len;
 	tx->outputs_len = outputs_len;
@@ -702,6 +728,7 @@ void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t v
 	tx->size = 0;
 	tx->is_segwit = false;
 	tx->is_decred = false;
+	tx->overwintered = overwintered;
 	hasher_Init(&(tx->hasher), hasher_sign);
 }
 

@@ -65,6 +65,8 @@ OBJS += ../vendor/trezor-crypto/ripemd160.o
 OBJS += ../vendor/trezor-crypto/sha2.o
 OBJS += ../vendor/trezor-crypto/sha3.o
 OBJS += ../vendor/trezor-crypto/blake256.o
+OBJS += ../vendor/trezor-crypto/blake2b.o
+OBJS += ../vendor/trezor-crypto/groestl.o
 OBJS += ../vendor/trezor-crypto/hasher.o
 
 OBJS += ../vendor/trezor-crypto/aes/aescrypt.o
@@ -103,6 +105,7 @@ CFLAGS += -DDEBUG_LOG=$(DEBUG_LOG)
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'
 CFLAGS += -DUSE_ETHEREUM=1
 CFLAGS += -DUSE_NEM=1
+CFLAGS += -DUSE_MONERO=0
 
 define GENERATE_CODE
 # $(1) - Basename for script and output header file
