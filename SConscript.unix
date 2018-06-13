@@ -152,6 +152,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/mpstate.c',
     'vendor/micropython/py/mpz.c',
     'vendor/micropython/py/nativeglue.c',
+    'vendor/micropython/py/nlr.c',
     'vendor/micropython/py/nlrx86.c',
     'vendor/micropython/py/nlrx64.c',
     'vendor/micropython/py/obj.c',
