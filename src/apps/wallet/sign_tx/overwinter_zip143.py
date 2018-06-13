@@ -38,13 +38,13 @@ class Zip143:
         write_tx_output(self.h_outputs, txo_bin)
 
     def get_prevouts_hash(self) -> bytes:
-        return get_tx_hash(self.h_prevouts, False)
+        return get_tx_hash(self.h_prevouts)
 
     def get_sequence_hash(self) -> bytes:
-        return get_tx_hash(self.h_sequence, False)
+        return get_tx_hash(self.h_sequence)
 
     def get_outputs_hash(self) -> bytes:
-        return get_tx_hash(self.h_outputs, False)
+        return get_tx_hash(self.h_outputs)
 
     def preimage_hash(self, coin: CoinInfo, tx: SignTx, txi: TxInputType, pubkeyhash: bytes, sighash: int) -> bytes:
         h_preimage = HashWriter(blake2b, b'', 32, b'ZcashSigHash\x19\x1b\xa8\x5b')  # BRANCH_ID = 0x5ba81b19
@@ -72,7 +72,7 @@ class Zip143:
 
         write_uint32(h_preimage, txi.sequence)                        # 10d. nSequence
 
-        return get_tx_hash(h_preimage, False)
+        return get_tx_hash(h_preimage)
 
     # see https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification
     # item 5 for details

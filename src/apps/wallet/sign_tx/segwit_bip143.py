@@ -33,13 +33,13 @@ class Bip143:
         write_tx_output(self.h_outputs, txo_bin)
 
     def get_prevouts_hash(self) -> bytes:
-        return get_tx_hash(self.h_prevouts, True)
+        return get_tx_hash(self.h_prevouts, double=True)
 
     def get_sequence_hash(self) -> bytes:
-        return get_tx_hash(self.h_sequence, True)
+        return get_tx_hash(self.h_sequence, double=True)
 
     def get_outputs_hash(self) -> bytes:
-        return get_tx_hash(self.h_outputs, True)
+        return get_tx_hash(self.h_outputs, double=True)
 
     def preimage_hash(self, coin: CoinInfo, tx: SignTx, txi: TxInputType, pubkeyhash: bytes, sighash: int) -> bytes:
         h_preimage = HashWriter(sha256)
@@ -63,7 +63,7 @@ class Bip143:
         write_uint32(h_preimage, tx.lock_time)                        # nLockTime
         write_uint32(h_preimage, sighash)                             # nHashType
 
-        return get_tx_hash(h_preimage, True)
+        return get_tx_hash(h_preimage, double=True)
 
     # see https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification
     # item 5 for details
