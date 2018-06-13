@@ -35,10 +35,6 @@
 ///     '''
 STATIC mp_obj_t mod_trezorconfig_init(void) {
     storage_init();
-    // wipe storage when debug build is used
-    if (MP_STATE_VM(mp_optimise_value) == 0) {
-        storage_wipe();
-    }
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_init_obj, mod_trezorconfig_init);

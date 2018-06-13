@@ -1,6 +1,6 @@
 if not __debug__:
     from trezor.utils import halt
-    halt("debug mode inactive")
+    halt('debug mode inactive')
 
 if __debug__:
     from trezor import loop
@@ -18,6 +18,7 @@ if __debug__:
     swipe_signal = loop.signal()
     input_signal = loop.signal()
 
+
     async def dispatch_DebugLinkDecision(ctx, msg):
         if msg.yes_no is not None:
             confirm_signal.send(confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED)
@@ -25,6 +26,7 @@ if __debug__:
             swipe_signal.send(swipe.SWIPE_DOWN if msg.up_down else swipe.SWIPE_UP)
         if msg.input is not None:
             input_signal.send(msg.input)
+
 
     async def dispatch_DebugLinkGetState(ctx, msg):
         m = DebugLinkState()
@@ -36,6 +38,10 @@ if __debug__:
             m.reset_word = ' '.join(reset_current_words)
         return m
 
+
     def boot():
+        # wipe storage when debug build is used
+        storage.wipe()
+
         register(wire_types.DebugLinkDecision, protobuf_workflow, dispatch_DebugLinkDecision)
         register(wire_types.DebugLinkGetState, protobuf_workflow, dispatch_DebugLinkGetState)

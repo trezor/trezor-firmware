@@ -13,8 +13,15 @@ from trezor.utils import model
 
 display = Display()
 
-# for desktop platforms, we need to refresh the display after each frame
-if model() == 'EMU':
+# in debug mode, display an indicator in top right corner
+if __debug__:
+    def debug_display_refresh():
+        display.bar(Display.WIDTH - 8, 0, 8, 8, 0xF800)
+        display.refresh()
+    loop.after_step_hook = debug_display_refresh
+
+# in both debug and production, emulator needs to draw the screen explicitly
+elif model() == 'EMU':
     loop.after_step_hook = display.refresh
 
 # import constants from modtrezorui

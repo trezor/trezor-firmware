@@ -70,9 +70,6 @@ int main(void)
     mp_obj_list_init(mp_sys_path, 0);
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); // current dir (or base dir of the script)
 
-    // Set optimization level
-    MP_STATE_VM(mp_optimise_value) = PYOPT;
-
     // Execute the main script
     printf("CORE: Executing main script\n");
     pyexec_frozen_module("main.py");

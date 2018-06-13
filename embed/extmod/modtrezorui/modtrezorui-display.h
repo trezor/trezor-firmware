@@ -58,10 +58,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_clear_obj, mod_trezorui_Di
 ///     Refresh display (update screen).
 ///     '''
 STATIC mp_obj_t mod_trezorui_Display_refresh(mp_obj_t self) {
-    // draw red square in upper-right corner when debug build is used
-    if (MP_STATE_VM(mp_optimise_value) == 0) {
-        display_bar(DISPLAY_RESX - 8, 0, 8, 8, 0xF800);
-    }
     display_refresh();
     return mp_const_none;
 }
