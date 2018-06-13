@@ -152,7 +152,7 @@ def update(client, fp):
 
     # TREZORv1 method
     if isinstance(resp, proto.Success):
-        fingerprint = hashlib.sha256(data[256:]).hexdigest()
+        # fingerprint = hashlib.sha256(data[256:]).hexdigest()
         # LOG.debug("Firmware fingerprint: " + fingerprint)
         resp = client.call(proto.FirmwareUpload(payload=data))
         if isinstance(resp, proto.Success):

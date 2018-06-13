@@ -460,7 +460,6 @@ class ProtocolMixin(object):
     def clear_session(self):
         return self.call(proto.ClearSession())
 
-
     # Device functionality
     self_test = MovedTo(device.self_test)
 
@@ -516,7 +515,7 @@ class ProtocolMixin(object):
     stellar_get_address = MovedTo(stellar.get_address)
     stellar_sign_transaction = MovedTo(stellar.sign_tx)
 
-    # Miscellaneous cryptography
+    # Miscellaneous cryptographic functionality
     get_entropy = MovedTo(misc.get_entropy)
     sign_identity = MovedTo(misc.sign_identity)
     get_ecdh_session_key = MovedTo(misc.get_ecdh_session_key)

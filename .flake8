@@ -19,4 +19,6 @@ ignore =
     # E722: do not use bare except
     E722,
     # E741: ambiguous variable name
-    E741
+    E741,
+    ##### E266: too many leading '#' for block comment
+    E266,

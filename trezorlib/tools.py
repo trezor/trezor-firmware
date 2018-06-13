@@ -162,7 +162,6 @@ def parse_path(nstr: str) -> Address:
         raise ValueError('Invalid BIP32 path', nstr)
 
 
-
 def normalize_nfc(txt):
     '''
     Normalize message to NFC and return bytes suitable for protobuf.

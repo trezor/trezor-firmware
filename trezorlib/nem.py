@@ -188,4 +188,3 @@ def sign_tx(client, n, transaction):
     assert msg.transaction is not None
     msg.transaction.address_n = n
     return client.call(msg)
-

@@ -183,10 +183,10 @@ def load_device_by_mnemonic(client, mnemonic, pin, passphrase_protection, label,
         raise RuntimeError("Device is initialized already. Call wipe_device() and try again.")
 
     resp = client.call(proto.LoadDevice(mnemonic=mnemonic, pin=pin,
-                                      passphrase_protection=passphrase_protection,
-                                      language=language,
-                                      label=label,
-                                      skip_checksum=skip_checksum))
+                                        passphrase_protection=passphrase_protection,
+                                        language=language,
+                                        label=label,
+                                        skip_checksum=skip_checksum))
     client.init_device()
     return resp
 
@@ -228,10 +228,10 @@ def load_device_by_xprv(client, xprv, pin, passphrase_protection, label, languag
     node.private_key = binascii.unhexlify(data[92:156])  # skip 0x00 indicating privkey
 
     resp = client.call(proto.LoadDevice(node=node,
-                                      pin=pin,
-                                      passphrase_protection=passphrase_protection,
-                                      language=language,
-                                      label=label))
+                                        pin=pin,
+                                        passphrase_protection=passphrase_protection,
+                                        language=language,
+                                        label=label))
     client.init_device()
     return resp
 
