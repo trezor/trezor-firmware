@@ -17,6 +17,7 @@
 import binascii
 import json
 from . import messages as proto
+from .tools import expect, field, CallException
 
 TYPE_TRANSACTION_TRANSFER = 0x0101
 TYPE_IMPORTANCE_TRANSFER = 0x0801
@@ -164,3 +165,27 @@ def create_sign_tx(transaction):
         raise ValueError("Unknown transaction type")
 
     return msg
+
+
+### Client functions ###
+
+
+@field("address")
+@expect(proto.NEMAddress)
+def get_address(client, n, network, show_display=False):
+    n = client._convert_prime(n)
+    return client.call(proto.NEMGetAddress(address_n=n, network=network, show_display=show_display))
+
+
+@expect(proto.NEMSignedTx)
+def sign_tx(client, n, transaction):
+    n = client._convert_prime(n)
+    try:
+        msg = create_sign_tx(transaction)
+    except ValueError as e:
+        raise CallException(e.args)
+
+    assert msg.transaction is not None
+    msg.transaction.address_n = n
+    return client.call(msg)
+

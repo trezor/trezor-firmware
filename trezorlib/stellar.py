@@ -19,6 +19,7 @@ import struct
 import xdrlib
 
 from . import messages
+from .tools import field, expect, CallException
 
 # Memo types
 MEMO_TYPE_NONE = 0
@@ -49,6 +50,7 @@ OP_BUMP_SEQUENCE = 11
 
 DEFAULT_BIP32_PATH = "m/44h/148h/0h"
 # Stellar's BIP32 differs to Bitcoin's see https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md
+DEFAULT_NETWORK_PASSPHRASE = "Public Global Stellar Network ; September 2015"
 
 
 def address_from_public_key(pk_bytes):
@@ -336,3 +338,48 @@ def _crc16_checksum(bytes):
                 crc ^= polynomial
 
     return crc & 0xffff
+
+
+### Client functions ###
+
+
+@field('public_key')
+@expect(messages.StellarPublicKey)
+def get_public_key(client, address_n, show_display=False):
+    return client.call(messages.StellarGetPublicKey(address_n=address_n, show_display=show_display))
+
+
+@field('address')
+@expect(messages.StellarAddress)
+def get_address(client, address_n, show_display=False):
+    return client.call(messages.StellarGetAddress(address_n=address_n, show_display=show_display))
+
+
+def sign_tx(client, tx, operations, address_n, network_passphrase=DEFAULT_NETWORK_PASSPHRASE):
+    tx.network_passphrase = network_passphrase
+    tx.address_n = address_n
+    tx.num_operations = len(operations)
+    # Signing loop works as follows:
+    #
+    # 1. Start with tx (header information for the transaction) and operations (an array of operation protobuf messagess)
+    # 2. Send the tx header to the device
+    # 3. Receive a StellarTxOpRequest message
+    # 4. Send operations one by one until all operations have been sent. If there are more operations to sign, the device will send a StellarTxOpRequest message
+    # 5. The final message received will be StellarSignedTx which is returned from this method
+    resp = client.call(tx)
+    try:
+        while isinstance(resp, messages.StellarTxOpRequest):
+            resp = client.call(operations.pop(0))
+    except IndexError:
+        # pop from empty list
+        raise CallException("Stellar.UnexpectedEndOfOperations",
+                            "Reached end of operations without a signature.") from None
+
+    if not isinstance(resp, messages.StellarSignedTx):
+        raise CallException(messages.FailureType.UnexpectedMessage, resp)
+
+    if operations:
+        raise CallException("Stellar.UnprocessedOperations",
+                            "Received a signature before processing all operations.")
+
+    return resp

@@ -19,6 +19,9 @@ from functools import reduce
 import binascii
 from typing import Iterable, Tuple
 
+from . import messages
+from .tools import expect
+
 from trezorlib import _ed25519
 
 # XXX, these could be NewType's, but that would infect users of the cosi module with these types as well.
@@ -86,3 +89,18 @@ def sign_with_privkey(digest: bytes, privkey: Ed25519PrivateKey,
     a = 2 ** (b - 2) + sum(2 ** i * _ed25519.bit(h, i) for i in range(3, b - 2))
     S = (nonce + _ed25519.Hint(global_commit + global_pubkey + digest) * a) % _ed25519.l
     return Ed25519Signature(_ed25519.encodeint(S))
+
+
+### Client functions ###
+
+
+@expect(messages.CosiCommitment)
+def commit(client, n, data):
+    n = client._convert_prime(n)
+    return client.call(messages.CosiCommit(address_n=n, data=data))
+
+
+@expect(messages.CosiSignature)
+def sign(client, n, data, global_commitment, global_pubkey):
+    n = client._convert_prime(n)
+    return client.call(messages.CosiSign(address_n=n, data=data, global_commitment=global_commitment, global_pubkey=global_pubkey))
