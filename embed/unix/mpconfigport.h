@@ -29,19 +29,19 @@
 #define MICROPY_ALLOC_PATH_MAX      (PATH_MAX)
 #define MICROPY_PERSISTENT_CODE_LOAD (1)
 #if !defined(MICROPY_EMIT_X64) && defined(__x86_64__)
-    #define MICROPY_EMIT_X64        (1)
+    #define MICROPY_EMIT_X64        (0)
 #endif
 #if !defined(MICROPY_EMIT_X86) && defined(__i386__)
-    #define MICROPY_EMIT_X86        (1)
+    #define MICROPY_EMIT_X86        (0)
 #endif
 #if !defined(MICROPY_EMIT_THUMB) && defined(__thumb2__)
-    #define MICROPY_EMIT_THUMB      (1)
+    #define MICROPY_EMIT_THUMB      (0)
     #define MICROPY_MAKE_POINTER_CALLABLE(p) ((void*)((mp_uint_t)(p) | 1))
 #endif
 // Some compilers define __thumb2__ and __arm__ at the same time, let
 // autodetected thumb2 emitter have priority.
 #if !defined(MICROPY_EMIT_ARM) && defined(__arm__) && !defined(__thumb2__)
-    #define MICROPY_EMIT_ARM        (1)
+    #define MICROPY_EMIT_ARM        (0)
 #endif
 #define MICROPY_COMP_MODULE_CONST   (1)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN (1)

@@ -133,8 +133,6 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/emitbc.c',
     'vendor/micropython/py/emitcommon.c',
     'vendor/micropython/py/emitglue.c',
-    'vendor/micropython/py/emitinlinethumb.c',
-    'vendor/micropython/py/emitinlinextensa.c',
     'vendor/micropython/py/formatfloat.c',
     'vendor/micropython/py/frozenmod.c',
     'vendor/micropython/py/gc.c',
@@ -231,9 +229,7 @@ SOURCE_UNIX = [
     'embed/unix/usb.c',
 ]
 
-SOURCE_EMIT_NATIVE = ['vendor/micropython/py/emitnative.c']
-
-SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX + SOURCE_EMIT_NATIVE
+SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX
 
 env = Environment(ENV=os.environ, CFLAGS=ARGUMENTS.get('CFLAGS', ''))
 
@@ -314,21 +310,6 @@ obj_program = []
 obj_program += env.Object(source=SOURCE_MOD)
 obj_program += env.Object(source=SOURCE_MICROPYTHON)
 obj_program += env.Object(source=SOURCE_UNIX)
-
-obj_program += env.Object(
-    source=SOURCE_EMIT_NATIVE,
-    target='vendor/micropython/py/emitnx64.o',
-    CPPDEFINES=[env['CPPDEFINES'], 'N_X64'], )
-
-obj_program += env.Object(
-    source=SOURCE_EMIT_NATIVE,
-    target='vendor/micropython/py/emitnx86.o',
-    CPPDEFINES=[env['CPPDEFINES'], 'N_X86'], )
-
-obj_program += env.Object(
-    source=SOURCE_EMIT_NATIVE,
-    target='vendor/micropython/py/emitnthumb.o',
-    CPPDEFINES=[env['CPPDEFINES'], 'N_THUMB'], )
 
 env.Depends(obj_program, qstr_generated)
 
