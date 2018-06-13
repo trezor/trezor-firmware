@@ -144,7 +144,6 @@ env.Replace(
     ] + CPPPATH_MOD,
     CPPDEFINES=[
         'TREZOR_MODEL_T',
-        'MCU_SERIES_F4',
         'STM32F427xx',
         'USE_HAL_DRIVER',
         ('STM32_HAL_H', '"<stm32f4xx.h>"'),
