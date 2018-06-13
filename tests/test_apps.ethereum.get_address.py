@@ -1,5 +1,6 @@
 from common import *
 from apps.ethereum.get_address import _ethereum_address_hex
+from apps.ethereum.networks import NetworkInfo
 
 
 class TestEthereumGetAddress(unittest.TestCase):
@@ -20,6 +21,34 @@ class TestEthereumGetAddress(unittest.TestCase):
             s = s[2:]
             b = bytes([int(s[i:i + 2], 16) for i in range(0, len(s), 2)])
             h = _ethereum_address_hex(b)
+            self.assertEqual(h, '0x' + s)
+
+
+    def test_ethereum_address_hex_rskip60(self):
+        # https://github.com/rsksmart/RSKIPs/blob/master/IPs/RSKIP60.md
+        rskip60_chain_30 = [
+            '0x5AaEb6053f3e94C9B9A09f33669435e7Ef1BeaeD',
+            '0xFb6916095ca1dF60BB79Ce92cE3EA74C37C5D359',
+            '0xdbf03b407C01e7cd3CbEA99509D93F8Dddc8c6fB',
+            '0xD1220A0cF47C7B9bE7a2E6ba89F429762e7b9aDB'
+        ]
+        rskip60_chain_31 = [
+            '0x5AAEb6053f3E94c9B9A09f33669435e7EF1BeaeD',
+            '0xfB6916095CA1Df60bb79ce92CE3Ea74c37C5D359',
+            '0xDBF03B407C01E7Cd3cBEa99509d93f8DddC8C6Fb',
+            '0xd1220a0cf47C7b9be7A2e6BA89f429762e7b9AdB'
+        ]
+        n = NetworkInfo(chain_id=30, slip44=1, shortcut='T', name='T', rskip60=True)
+        for s in rskip60_chain_30:
+            s = s[2:]
+            b = bytes([int(s[i:i + 2], 16) for i in range(0, len(s), 2)])
+            h = _ethereum_address_hex(b, n)
+            self.assertEqual(h, '0x' + s)
+        n.chain_id = 31
+        for s in rskip60_chain_31:
+            s = s[2:]
+            b = bytes([int(s[i:i + 2], 16) for i in range(0, len(s), 2)])
+            h = _ethereum_address_hex(b, n)
             self.assertEqual(h, '0x' + s)
 
 
