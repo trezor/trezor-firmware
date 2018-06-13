@@ -32,6 +32,8 @@
   "address_prefix": "groestlcoin:",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [],
+  "bitcore": [
+    "https://groestlsight-test.groestlcoin.org"
+  ],
   "blockbook": []
 }
