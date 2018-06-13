@@ -12,7 +12,7 @@ from apps.ethereum.get_address import _ethereum_address_hex
 
 async def require_confirm_tx(ctx, to, value, chain_id, token=None, tx_type=None):
     if to:
-        str_to = _ethereum_address_hex(to)
+        str_to = _ethereum_address_hex(to, networks.by_chain_id(chain_id))
     else:
         str_to = 'new contract?'
     content = Text('Confirm sending', ui.ICON_SEND,
