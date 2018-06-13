@@ -1039,7 +1039,7 @@ def stellar_get_public_key(connect, address, show_display):
 
 @cli.command(help='Sign a base64-encoded transaction envelope')
 @click.option('-n', '--address', required=False, help="BIP32 path. Always use hardened paths and the m/44'/148'/ prefix", default=stellar.DEFAULT_BIP32_PATH)
-@click.option('-n', '--network-passphrase', default='Public Global Stellar Network ; September 2015', required=False, help="Network passphrase (blank for public network). Testnet is: 'Test SDF Network ; September 2015'")
+@click.option('-n', '--network-passphrase', default=stellar.DEFAULT_NETWORK_PASSPHRASE, required=False, help="Network passphrase (blank for public network). Testnet is: 'Test SDF Network ; September 2015'")
 @click.argument('b64envelope')
 @click.pass_obj
 def stellar_sign_transaction(connect, b64envelope, address, network_passphrase):
