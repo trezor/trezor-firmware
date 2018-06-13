@@ -41,5 +41,9 @@ class TestMsgStellarGetPublicKey(TrezorTest):
         with pytest.raises(CallException) as exc:
             self.client.stellar_get_public_key(parse_path('m/0/1'))
 
-        assert exc.value.args[0] == proto.FailureType.ProcessError
-        assert exc.value.args[1].endswith('Failed to derive private key')
+        if TREZOR_VERSION == 1:
+            assert exc.value.args[0] == proto.FailureType.ProcessError
+            assert exc.value.args[1].endswith('Failed to derive private key')
+        else:
+            assert exc.value.args[0] == proto.FailureType.FirmwareError
+            assert exc.value.args[1].endswith('Firmware error')
