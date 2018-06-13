@@ -23,7 +23,6 @@ class TestEthereumGetAddress(unittest.TestCase):
             h = _ethereum_address_hex(b)
             self.assertEqual(h, '0x' + s)
 
-
     def test_ethereum_address_hex_rskip60(self):
         # https://github.com/rsksmart/RSKIPs/blob/master/IPs/RSKIP60.md
         rskip60_chain_30 = [
