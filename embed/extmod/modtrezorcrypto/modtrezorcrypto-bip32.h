@@ -191,7 +191,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_derive_path_obj, mod_tr
 
 STATIC mp_obj_t serialize_public_private(mp_obj_t self, bool use_public, uint32_t version) {
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
-    char xpub[XPUB_MAXLEN];
+    char xpub[XPUB_MAXLEN] = {0};
     int written;
     if (use_public) {
         hdnode_fill_public_key(&o->hdnode);
@@ -202,7 +202,7 @@ STATIC mp_obj_t serialize_public_private(mp_obj_t self, bool use_public, uint32_
     if (written <= 0) {
         mp_raise_ValueError("Failed to serialize");
     }
-    return mp_obj_new_str(xpub, written - 1, false);  // written includes 0 at the end
+    return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)xpub, written - 1);  // written includes 0 at the end
 }
 
 /// def serialize_public(self, version: int) -> str:
@@ -309,9 +309,9 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_address(mp_obj_t self, mp_obj_t version)
 
     uint32_t v = trezor_obj_get_uint(version);
 
-    char address[ADDRESS_MAXLEN];
+    char address[ADDRESS_MAXLEN] = {0};
     hdnode_get_address(&o->hdnode, v, address, ADDRESS_MAXLEN);
-    return mp_obj_new_str(address, strlen(address), false);
+    return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)address, strlen(address));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_address_obj, mod_trezorcrypto_HDNode_address);
 
@@ -324,11 +324,11 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_nem_address(mp_obj_t self, mp_obj_t netw
 
     uint8_t n = trezor_obj_get_uint8(network);
 
-    char address[NEM_ADDRESS_SIZE + 1]; // + 1 for the 0 byte
+    char address[NEM_ADDRESS_SIZE + 1] = {0}; // + 1 for the 0 byte
     if (!hdnode_get_nem_address(&o->hdnode, n, address)) {
         mp_raise_ValueError("Failed to compute a NEM address");
     }
-    return mp_obj_new_str_of_type(&mp_type_str, (const uint8_t *)address, strlen(address));
+    return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)address, strlen(address));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_nem_address_obj, mod_trezorcrypto_HDNode_nem_address);
 

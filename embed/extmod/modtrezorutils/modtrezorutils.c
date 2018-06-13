@@ -125,7 +125,7 @@ STATIC mp_obj_t mod_trezorutils_symbol(mp_obj_t name) {
     if (0 == strncmp(str.buf, "GITREV", str.len)) {
 #define XSTR(s) STR(s)
 #define STR(s) #s
-        return mp_obj_new_str(XSTR(GITREV), strlen(XSTR(GITREV)), false);
+        return mp_obj_new_str(XSTR(GITREV), strlen(XSTR(GITREV)));
     }
     if (0 == strncmp(str.buf, "VERSION_MAJOR", str.len)) {
         return mp_obj_new_int(VERSION_MAJOR);
@@ -151,7 +151,7 @@ STATIC mp_obj_t mod_trezorutils_model(void) {
 #elif defined TREZOR_MODEL_EMU
     model = "EMU";
 #endif
-    return model ? mp_obj_new_str(model, strlen(model), false) : mp_const_none;
+    return model ? mp_obj_new_str(model, strlen(model)) : mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_model_obj, mod_trezorutils_model);
 

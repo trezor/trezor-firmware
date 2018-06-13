@@ -34,7 +34,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_find_word(mp_obj_t prefix)
     }
     for (const char * const *w = mnemonic_wordlist(); *w != 0; w++) {
         if (strncmp(*w, pfx.buf, pfx.len) == 0) {
-            return mp_obj_new_str(*w, strlen(*w), false);
+            return mp_obj_new_str(*w, strlen(*w));
         }
     }
     return mp_const_none;
@@ -78,7 +78,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_generate(mp_obj_t strength) {
         mp_raise_ValueError("Invalid bit strength (only 128, 160, 192, 224 and 256 values are allowed)");
     }
     const char *mnemo = mnemonic_generate(bits);
-    return mp_obj_new_str(mnemo, strlen(mnemo), false);
+    return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)mnemo, strlen(mnemo));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_generate_obj, mod_trezorcrypto_bip39_generate);
 
@@ -93,7 +93,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_from_data(mp_obj_t data) {
         mp_raise_ValueError("Invalid data length (only 16, 20, 24, 28 and 32 bytes are allowed)");
     }
     const char *mnemo = mnemonic_from_data(bin.buf, bin.len);
-    return mp_obj_new_str(mnemo, strlen(mnemo), false);
+    return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)mnemo, strlen(mnemo));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_from_data_obj, mod_trezorcrypto_bip39_from_data);
 
