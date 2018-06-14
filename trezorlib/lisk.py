@@ -7,19 +7,16 @@ from .tools import field, expect, CallException, normalize_nfc
 @field('address')
 @expect(proto.LiskAddress)
 def get_address(client, n, show_display=False):
-    n = client._convert_prime(n)
     return client.call(proto.LiskGetAddress(address_n=n, show_display=show_display))
 
 
 @expect(proto.LiskPublicKey)
 def get_public_key(client, n, show_display=False):
-    n = client._convert_prime(n)
     return client.call(proto.LiskGetPublicKey(address_n=n, show_display=show_display))
 
 
 @expect(proto.LiskMessageSignature)
 def sign_message(client, n, message):
-    n = client._convert_prime(n)
     message = normalize_nfc(message)
     return client.call(proto.LiskSignMessage(address_n=n, message=message))
 
@@ -56,8 +53,6 @@ def _asset_to_proto(asset):
 
 @expect(proto.LiskSignedTx)
 def sign_tx(client, n, transaction):
-    n = client._convert_prime(n)
-
     msg = proto.LiskTransactionCommon()
 
     msg.type = transaction["type"]

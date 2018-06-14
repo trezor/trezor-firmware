@@ -96,11 +96,9 @@ def sign_with_privkey(digest: bytes, privkey: Ed25519PrivateKey,
 
 @expect(messages.CosiCommitment)
 def commit(client, n, data):
-    n = client._convert_prime(n)
     return client.call(messages.CosiCommit(address_n=n, data=data))
 
 
 @expect(messages.CosiSignature)
 def sign(client, n, data, global_commitment, global_pubkey):
-    n = client._convert_prime(n)
     return client.call(messages.CosiSign(address_n=n, data=data, global_commitment=global_commitment, global_pubkey=global_pubkey))

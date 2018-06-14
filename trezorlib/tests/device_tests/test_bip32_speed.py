@@ -19,6 +19,8 @@ import pytest
 
 from .common import TrezorTest
 
+from trezorlib.tools import H_
+
 
 class TestBip32Speed(TrezorTest):
 
@@ -42,7 +44,8 @@ class TestBip32Speed(TrezorTest):
 
         for depth in range(8):
             start = time.time()
-            self.client.get_address('Bitcoin', range(-depth, 0))
+            address_n = [H_(-i) for i in range(-depth, 0)]
+            self.client.get_address('Bitcoin', address_n)
             delay = time.time() - start
             expected = (depth + 1) * 0.26
             print("DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay)

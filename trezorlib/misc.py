@@ -21,7 +21,6 @@ def get_ecdh_session_key(client, identity, peer_public_key, ecdsa_curve_name=Non
 @field('value')
 @expect(proto.CipheredKeyValue)
 def encrypt_keyvalue(client, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True, iv=b''):
-    n = client._convert_prime(n)
     return client.call(proto.CipherKeyValue(address_n=n,
                                             key=key,
                                             value=value,
@@ -34,7 +33,6 @@ def encrypt_keyvalue(client, n, key, value, ask_on_encrypt=True, ask_on_decrypt=
 @field('value')
 @expect(proto.CipheredKeyValue)
 def decrypt_keyvalue(client, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True, iv=b''):
-    n = client._convert_prime(n)
     return client.call(proto.CipherKeyValue(address_n=n,
                                             key=key,
                                             value=value,

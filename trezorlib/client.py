@@ -411,11 +411,6 @@ class ProtocolMixin(object):
             raise RuntimeError("Unsupported device")
 
     @staticmethod
-    def _convert_prime(n: tools.Address) -> tools.Address:
-        # Convert minus signs to uint32 with flag
-        return [tools.H_(int(abs(x))) if x < 0 else x for x in n]
-
-    @staticmethod
     def expand_path(n):
         warnings.warn('expand_path is deprecated, use tools.parse_path', DeprecationWarning, stacklevel=2)
         return tools.parse_path(n)

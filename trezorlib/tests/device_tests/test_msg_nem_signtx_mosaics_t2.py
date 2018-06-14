@@ -184,7 +184,6 @@ class TestMsgNEMSignTxMosaics(TrezorTest):
 
     def _nem_sign(self, num_of_swipes, test_suite):
         n = parse_path("m/44'/1'/0'/0'/0'")
-        n = self.client._convert_prime(n)
         msg = nem.create_sign_tx(test_suite)
         assert msg.transaction is not None
         msg.transaction.address_n = n

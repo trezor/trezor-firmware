@@ -12,14 +12,11 @@ def int_to_big_endian(value):
 @field('address')
 @expect(proto.EthereumAddress)
 def get_address(client, n, show_display=False, multisig=None):
-    n = client._convert_prime(n)
     return client.call(proto.EthereumGetAddress(address_n=n, show_display=show_display))
 
 
 @session
 def sign_tx(client, n, nonce, gas_price, gas_limit, to, value, data=None, chain_id=None, tx_type=None):
-    n = client._convert_prime(n)
-
     msg = proto.EthereumSignTx(
         address_n=n,
         nonce=int_to_big_endian(nonce),
@@ -53,7 +50,6 @@ def sign_tx(client, n, nonce, gas_price, gas_limit, to, value, data=None, chain_
 
 @expect(proto.EthereumMessageSignature)
 def sign_message(client, n, message):
-    n = client._convert_prime(n)
     message = normalize_nfc(message)
     return client.call(proto.EthereumSignMessage(address_n=n, message=message))
 

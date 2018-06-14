@@ -20,7 +20,7 @@ from .common import TrezorTest
 from ..support import ckd_public as bip32
 from trezorlib import messages as proto
 
-from trezorlib.tools import parse_path
+from trezorlib.tools import parse_path, H_
 
 
 class TestMsgGetaddress(TrezorTest):
@@ -29,16 +29,16 @@ class TestMsgGetaddress(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
         assert self.client.get_address('Bitcoin', []) == '1EfKbQupktEMXf4gujJ9kCFo83k1iMqwqK'
         assert self.client.get_address('Bitcoin', [1]) == '1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb'
-        assert self.client.get_address('Bitcoin', [0, -1]) == '1JVq66pzRBvqaBRFeU9SPVvg3er4ZDgoMs'
-        assert self.client.get_address('Bitcoin', [-9, 0]) == '1F4YdQdL9ZQwvcNTuy5mjyQxXkyCfMcP2P'
+        assert self.client.get_address('Bitcoin', [0, H_(1)]) == '1JVq66pzRBvqaBRFeU9SPVvg3er4ZDgoMs'
+        assert self.client.get_address('Bitcoin', [H_(9), 0]) == '1F4YdQdL9ZQwvcNTuy5mjyQxXkyCfMcP2P'
         assert self.client.get_address('Bitcoin', [0, 9999999]) == '1GS8X3yc7ntzwGw9vXwj9wqmBWZkTFewBV'
 
     def test_ltc(self):
         self.setup_mnemonic_nopin_nopassphrase()
         assert self.client.get_address('Litecoin', []) == 'LYtGrdDeqYUQnTkr5sHT2DKZLG7Hqg7HTK'
         assert self.client.get_address('Litecoin', [1]) == 'LKRGNecThFP3Q6c5fosLVA53Z2hUDb1qnE'
-        assert self.client.get_address('Litecoin', [0, -1]) == 'LcinMK8pVrAtpz7Qpc8jfWzSFsDLgLYfG6'
-        assert self.client.get_address('Litecoin', [-9, 0]) == 'LZHVtcwAEDf1BR4d67551zUijyLUpDF9EX'
+        assert self.client.get_address('Litecoin', [0, H_(1)]) == 'LcinMK8pVrAtpz7Qpc8jfWzSFsDLgLYfG6'
+        assert self.client.get_address('Litecoin', [H_(9), 0]) == 'LZHVtcwAEDf1BR4d67551zUijyLUpDF9EX'
         assert self.client.get_address('Litecoin', [0, 9999999]) == 'Laf5nGHSCT94C5dK6fw2RxuXPiw2ZuRR9S'
 
     def test_tbtc(self):

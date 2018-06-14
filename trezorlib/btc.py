@@ -6,14 +6,12 @@ from .tools import expect, field, CallException, normalize_nfc, session
 
 @expect(proto.PublicKey)
 def get_public_node(client, n, ecdsa_curve_name=None, show_display=False, coin_name=None):
-    n = client._convert_prime(n)
     return client.call(proto.GetPublicKey(address_n=n, ecdsa_curve_name=ecdsa_curve_name, show_display=show_display, coin_name=coin_name))
 
 
 @field('address')
 @expect(proto.Address)
 def get_address(client, coin_name, n, show_display=False, multisig=None, script_type=proto.InputScriptType.SPENDADDRESS):
-    n = client._convert_prime(n)
     if multisig:
         return client.call(proto.GetAddress(address_n=n, coin_name=coin_name, show_display=show_display, multisig=multisig, script_type=script_type))
     else:
@@ -22,7 +20,6 @@ def get_address(client, coin_name, n, show_display=False, multisig=None, script_
 
 @expect(proto.MessageSignature)
 def sign_message(client, coin_name, n, message, script_type=proto.InputScriptType.SPENDADDRESS):
-    n = client._convert_prime(n)
     message = normalize_nfc(message)
     return client.call(proto.SignMessage(coin_name=coin_name, address_n=n, message=message, script_type=script_type))
 
@@ -39,7 +36,6 @@ def verify_message(client, coin_name, address, signature, message):
 @expect(proto.EncryptedMessage)
 def encrypt_message(client, pubkey, message, display_only, coin_name, n):
     if coin_name and n:
-        n = client._convert_prime(n)
         return client.call(proto.EncryptMessage(pubkey=pubkey, message=message, display_only=display_only, coin_name=coin_name, address_n=n))
     else:
         return client.call(proto.EncryptMessage(pubkey=pubkey, message=message, display_only=display_only))
@@ -47,7 +43,6 @@ def encrypt_message(client, pubkey, message, display_only, coin_name, n):
 
 @expect(proto.DecryptedMessage)
 def decrypt_message(client, n, nonce, message, msg_hmac):
-    n = client._convert_prime(n)
     return client.call(proto.DecryptMessage(address_n=n, nonce=nonce, message=message, hmac=msg_hmac))
 
 
