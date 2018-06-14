@@ -38,16 +38,16 @@ void hasher_Init(Hasher *hasher, HasherType type) {
 		groestl512_Init(&hasher->ctx.groestl);
 		break;
 	case HASHER_OVERWINTER_PREVOUTS:
-		blake2b_InitKey(&hasher->ctx.blake2b, 32, "ZcashPrevoutHash", 16);
+		blake2b_InitPersonal(&hasher->ctx.blake2b, 32, "ZcashPrevoutHash");
 		break;
 	case HASHER_OVERWINTER_SEQUENCE:
-		blake2b_InitKey(&hasher->ctx.blake2b, 32, "ZcashSequencHash", 16);
+		blake2b_InitPersonal(&hasher->ctx.blake2b, 32, "ZcashSequencHash");
 		break;
 	case HASHER_OVERWINTER_OUTPUTS:
-		blake2b_InitKey(&hasher->ctx.blake2b, 32, "ZcashOutputsHash", 16);
+		blake2b_InitPersonal(&hasher->ctx.blake2b, 32, "ZcashOutputsHash");
 		break;
 	case HASHER_OVERWINTER_PREIMAGE:
-		blake2b_InitKey(&hasher->ctx.blake2b, 32, "ZcashSigHash\x19\x1b\xa8\x5b", 16);  // BRANCH_ID = 0x5ba81b19
+		blake2b_InitPersonal(&hasher->ctx.blake2b, 32, "ZcashSigHash\x19\x1b\xa8\x5b");  // BRANCH_ID = 0x5ba81b19
 		break;
 	}
 }
