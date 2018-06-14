@@ -481,8 +481,8 @@ class ProtocolMixin(object):
     sign_tx = MovedTo(btc.sign_tx)
     sign_message = MovedTo(btc.sign_message)
     verify_message = MovedTo(btc.verify_message)
-    encrypt_message = MovedTo(btc.encrypt_message)
-    decrypt_message = MovedTo(btc.decrypt_message)
+    # encrypt_message = MovedTo(btc.encrypt_message)
+    # decrypt_message = MovedTo(btc.decrypt_message)
 
     # CoSi functionality
     cosi_commit = MovedTo(cosi.commit)
