@@ -1,16 +1,15 @@
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.stellar import consts
-from apps.stellar import helpers
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
 from trezor import utils
 
 
-async def require_confirm_init(ctx, pubkey: bytes, network_passphrase: str):
+async def require_confirm_init(ctx, address: str, network_passphrase: str):
     content = Text('Confirm Stellar', ui.ICON_SEND,
                    ui.NORMAL, 'Initialize singing with',
-                   ui.MONO, *split(format_address(pubkey)),
+                   ui.MONO, *split(address),
                    icon_color=ui.GREEN)
     await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
     network = get_network_warning(network_passphrase)
@@ -60,10 +59,6 @@ def format_amount(amount: int, ticker=True) -> str:
     if ticker:
         t = ' XLM'
     return utils.format_amount(amount, consts.AMOUNT_DIVISIBILITY) + t
-
-
-def format_address(pubkey: bytes) -> str:
-    return helpers.address_from_public_key(pubkey)
 
 
 # todo merge with nem

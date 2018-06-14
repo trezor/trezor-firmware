@@ -1,8 +1,10 @@
 from apps.common import seed
 from apps.stellar import writers
 from apps.stellar.operations import operation
+from apps.stellar import helpers
 from apps.stellar import layout
 from apps.stellar import consts
+from trezor.wire import ProcessError
 from trezor.messages.StellarSignTx import StellarSignTx
 from trezor.messages.StellarTxOpRequest import StellarTxOpRequest
 from trezor.messages.StellarSignedTx import StellarSignedTx
@@ -45,14 +47,15 @@ async def _init(ctx, w: bytearray, pubkey: bytes, msg: StellarSignTx):
     writers.write_bytes(w, network_passphrase_hash)
     writers.write_bytes(w, consts.TX_TYPE)
 
-    writers.write_pubkey(w, pubkey)
-    if msg.source_account != pubkey:
-        raise ValueError('Stellar: source account does not match address_n')
+    address = helpers.address_from_public_key(pubkey)
+    writers.write_pubkey(w, address)
+    if helpers.public_key_from_address(msg.source_account) != pubkey:
+        raise ProcessError('Stellar: source account does not match address_n')
     writers.write_uint32(w, msg.fee)
     writers.write_uint64(w, msg.sequence_number)
 
     # confirm init
-    await layout.require_confirm_init(ctx, pubkey, msg.network_passphrase)
+    await layout.require_confirm_init(ctx, address, msg.network_passphrase)
 
 
 def _timebounds(w: bytearray, start: int, end: int):

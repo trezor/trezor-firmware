@@ -1,4 +1,4 @@
-from apps.stellar.layout import split, format_address, format_amount, ui, trim_to_rows, require_confirm
+from apps.stellar.layout import split, format_amount, ui, trim_to_rows, require_confirm
 from apps.stellar import consts
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
@@ -20,7 +20,7 @@ from ubinascii import hexlify
 async def confirm_source_account(ctx, source_account: bytes):
     content = Text('Confirm operation', ui.ICON_CONFIRM,
                    ui.BOLD, 'Source account:',
-                   ui.MONO, *split(format_address(source_account)),
+                   ui.MONO, *split(source_account),
                    icon_color=ui.GREEN)
     await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
@@ -33,7 +33,7 @@ async def confirm_allow_trust_op(ctx, op: StellarAllowTrustOp):
     content = Text('Confirm operation', ui.ICON_CONFIRM,
                    ui.BOLD, text,
                    ui.NORMAL, 'of %s by:' % op.asset_code,
-                   ui.MONO, *split(trim_to_rows(format_address(op.trusted_account), 3)),
+                   ui.MONO, *split(trim_to_rows(op.trusted_account, 3)),
                    icon_color=ui.GREEN)
 
     await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
@@ -43,7 +43,7 @@ async def confirm_account_merge_op(ctx, op: StellarAccountMergeOp):
     content = Text('Confirm operation', ui.ICON_CONFIRM,
                    ui.BOLD, 'Account Merge',
                    ui.NORMAL, 'All XLM will be sent to:',
-                   ui.MONO, *split(trim_to_rows(format_address(op.destination_account), 3)),
+                   ui.MONO, *split(trim_to_rows(op.destination_account, 3)),
                    icon_color=ui.GREEN)
     await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
@@ -75,7 +75,7 @@ async def confirm_create_account_op(ctx, op: StellarCreateAccountOp):
     content = Text('Confirm operation', ui.ICON_CONFIRM,
                    ui.BOLD, 'Create Account',
                    ui.NORMAL, 'with %s' % format_amount(op.starting_balance),
-                   ui.MONO, *split(trim_to_rows(format_address(op.new_account), 3)),
+                   ui.MONO, *split(trim_to_rows(op.new_account, 3)),
                    icon_color=ui.GREEN)
     await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
@@ -137,7 +137,7 @@ async def confirm_path_payment_op(ctx, op: StellarPathPaymentOp):
     content = Text('Confirm operation', ui.ICON_CONFIRM,
                    ui.BOLD, 'Path Pay %s' % format_amount(op.destination_amount, ticker=False),
                    ui.BOLD, '%s to:' % format_asset_code(op.destination_asset),
-                   ui.MONO, *split(trim_to_rows(format_address(op.destination_account), 3)),
+                   ui.MONO, *split(trim_to_rows(op.destination_account, 3)),
                    icon_color=ui.GREEN)
     await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
     await confirm_asset_issuer(ctx, op.destination_asset)
@@ -157,7 +157,7 @@ async def confirm_payment_op(ctx, op: StellarPaymentOp):
     content = Text('Confirm operation', ui.ICON_CONFIRM,
                    ui.BOLD, 'Pay %s' % format_amount(op.amount, ticker=False),
                    ui.BOLD, '%s to:' % format_asset_code(op.asset),
-                   ui.MONO, *split(trim_to_rows(format_address(op.destination_account), 3)),
+                   ui.MONO, *split(trim_to_rows(op.destination_account, 3)),
                    icon_color=ui.GREEN)
     await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
     await confirm_asset_issuer(ctx, op.asset)
@@ -167,7 +167,7 @@ async def confirm_set_options_op(ctx, op: StellarSetOptionsOp):
     if op.inflation_destination_account:
         content = Text('Confirm operation', ui.ICON_CONFIRM,
                        ui.BOLD, 'Set Inflation Destination',
-                       ui.MONO, *split(format_address(op.inflation_destination_account)),
+                       ui.MONO, *split(op.inflation_destination_account),
                        icon_color=ui.GREEN)
         await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
     if op.clear_flags:
@@ -205,7 +205,7 @@ async def confirm_set_options_op(ctx, op: StellarSetOptionsOp):
         if op.signer_type == consts.SIGN_TYPE_ACCOUNT:
             content = Text('Confirm operation', ui.ICON_CONFIRM,
                            ui.BOLD, text % 'acc',
-                           ui.MONO, *split(format_address(op.signer_key)),
+                           ui.MONO, *split(op.signer_key),
                            icon_color=ui.GREEN)
             await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
         elif op.signer_type in (consts.SIGN_TYPE_PRE_AUTH, consts.SIGN_TYPE_HASH):
@@ -259,6 +259,6 @@ async def confirm_asset_issuer(ctx, asset: StellarAssetType):
         return
     content = Text('Confirm issuer', ui.ICON_CONFIRM,
                    ui.BOLD, '%s issuer:' % asset.code,
-                   ui.MONO, *split(format_address(asset.issuer)),
+                   ui.MONO, *split(asset.issuer),
                    icon_color=ui.GREEN)
     await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)

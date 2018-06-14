@@ -135,7 +135,7 @@ def serialize_set_options_op(w, msg: StellarSetOptionsOp):
         writers.write_uint32(w, msg.signer_weight)
 
 
-def serialize_account(w, source_account: bytes):
+def serialize_account(w, source_account: str):
     if source_account is None:
         writers.write_bool(w, False)
         return
