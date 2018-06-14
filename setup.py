@@ -20,6 +20,7 @@ install_requires = [
     'click>=6.2',
     'pyblake2>=0.9.3',
     'libusb1>=1.6.4',
+    'construct>=2.9',
 ]
 
 CWD = os.path.dirname(os.path.realpath(__file__))
