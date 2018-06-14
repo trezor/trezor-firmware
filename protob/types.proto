@@ -435,7 +435,7 @@ enum NEMImportanceTransferMode {
 message StellarAssetType {
 	optional uint32 type = 1;	// 0 = native asset (XLM), 1 = alphanum 4, 2 = alphanum 12
 	optional string code = 2;	// for non-native assets, string describing the code
-	optional bytes issuer = 3;	// 32-byte issuing address
+	optional string issuer = 3;	// issuing address
 }
 
 /**
