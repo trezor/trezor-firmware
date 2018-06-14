@@ -25,6 +25,7 @@ CPPDEFINES_MOD += [
     'AES_192',
     ('USE_KECCAK', '1'),
     ('USE_ETHEREUM', '1'),
+    ('USE_CARDANO', '1'),
     ('USE_NEM', '1'),
 ]
 SOURCE_MOD += [

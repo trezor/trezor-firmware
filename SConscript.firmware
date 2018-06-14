@@ -27,6 +27,7 @@ CPPDEFINES_MOD += [
     'RAND_PLATFORM_INDEPENDENT',
     ('USE_KECCAK', '1'),
     ('USE_ETHEREUM', '1'),
+    ('USE_CARDANO', '1'),
     ('USE_NEM', '1'),
 ]
 SOURCE_MOD += [

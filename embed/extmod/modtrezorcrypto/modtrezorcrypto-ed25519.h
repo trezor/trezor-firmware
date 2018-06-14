@@ -91,6 +91,33 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args, const mp_obj_t *arg
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_ed25519_sign_obj, 2, 3, mod_trezorcrypto_ed25519_sign);
 
+/// def sign_ext(secret_key: bytes, secret_extension: bytes, message: bytes) -> bytes:
+///     '''
+///     Uses secret key to produce the cardano signature of message.
+///     '''
+STATIC mp_obj_t mod_trezorcrypto_ed25519_sign_ext(mp_obj_t secret_key, mp_obj_t secret_extension, mp_obj_t message) {
+    mp_buffer_info_t sk, skext, msg;
+    mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
+    mp_get_buffer_raise(secret_extension, &skext, MP_BUFFER_READ);
+    mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
+    if (sk.len != 32) {
+        mp_raise_ValueError("Invalid length of secret key");
+    }
+    if (skext.len != 32) {
+        mp_raise_ValueError("Invalid length of secret key extension");
+    }
+    if (msg.len == 0) {
+        mp_raise_ValueError("Empty data to sign");
+    }
+    ed25519_public_key pk;
+
+    ed25519_publickey_ext(*(const ed25519_secret_key *)sk.buf, *(const ed25519_secret_key *)skext.buf, pk);
+    uint8_t out[64];
+    ed25519_sign_ext(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf, *(const ed25519_secret_key *)skext.buf, pk, *(ed25519_signature *)out);
+    return mp_obj_new_bytes(out, sizeof(out));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_ed25519_sign_ext_obj, mod_trezorcrypto_ed25519_sign_ext);
+
 /// def verify(public_key: bytes, signature: bytes, message: bytes) -> bool:
 ///     '''
 ///     Uses public key to verify the signature of the message.
@@ -207,6 +234,7 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_ed25519_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_generate_secret), MP_ROM_PTR(&mod_trezorcrypto_ed25519_generate_secret_obj) },
     { MP_ROM_QSTR(MP_QSTR_publickey), MP_ROM_PTR(&mod_trezorcrypto_ed25519_publickey_obj) },
     { MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_trezorcrypto_ed25519_sign_obj) },
+    { MP_ROM_QSTR(MP_QSTR_sign_ext), MP_ROM_PTR(&mod_trezorcrypto_ed25519_sign_ext_obj) },
     { MP_ROM_QSTR(MP_QSTR_verify), MP_ROM_PTR(&mod_trezorcrypto_ed25519_verify_obj) },
     { MP_ROM_QSTR(MP_QSTR_cosi_combine_publickeys), MP_ROM_PTR(&mod_trezorcrypto_ed25519_cosi_combine_publickeys_obj) },
     { MP_ROM_QSTR(MP_QSTR_cosi_combine_signatures), MP_ROM_PTR(&mod_trezorcrypto_ed25519_cosi_combine_signatures_obj) },
