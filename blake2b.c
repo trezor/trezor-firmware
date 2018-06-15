@@ -131,11 +131,12 @@ int blake2b_Init( blake2b_state *S, size_t outlen )
   return blake2b_init_param( S, P );
 }
 
-int blake2b_InitPersonal( blake2b_state *S, size_t outlen, const void *personal )
+int blake2b_InitPersonal( blake2b_state *S, size_t outlen, const void *personal, size_t personal_len)
 {
   blake2b_param P[1];
 
   if ( ( !outlen ) || ( outlen > BLAKE2B_OUTBYTES ) ) return -1;
+  if ( ( !personal ) || ( personal_len != BLAKE2B_PERSONALBYTES ) ) return -1;
 
   P->digest_length = (uint8_t)outlen;
   P->key_length    = 0;

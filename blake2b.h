@@ -30,7 +30,7 @@ typedef struct __blake2b_state
 #define BLAKE2B_KEY_LENGTH     BLAKE2B_KEYBYTES
 
 int blake2b_Init(blake2b_state *S, size_t outlen);
-int blake2b_InitPersonal(blake2b_state *S, size_t outlen, const void *personal);
+int blake2b_InitPersonal(blake2b_state *S, size_t outlen, const void *personal, size_t personal_len);
 int blake2b_InitKey(blake2b_state *S, size_t outlen, const void *key, size_t keylen);
 int blake2b_Update(blake2b_state *S, const void *pin, size_t inlen);
 int blake2b_Final(blake2b_state *S, void *out, size_t outlen);
