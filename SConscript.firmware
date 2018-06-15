@@ -62,6 +62,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/ed25519-donna/ed25519-keccak.c',
     'vendor/trezor-crypto/ed25519-donna/ed25519-sha3.c',
     'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
+    'vendor/trezor-crypto/groestl.c',
     'vendor/trezor-crypto/hasher.c',
     'vendor/trezor-crypto/hmac.c',
     'vendor/trezor-crypto/memzero.c',

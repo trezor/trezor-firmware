@@ -49,7 +49,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2b_make_new(const mp_obj_type_t *type, siz
         size_t outlen = trezor_obj_get_uint(args[1]);
         mp_buffer_info_t personal;
         mp_get_buffer_raise(args[2], &personal, MP_BUFFER_READ);
-        res = blake2b_InitPersonal(&(o->ctx), outlen, personal.buf);
+        res = blake2b_InitPersonal(&(o->ctx), outlen, personal.buf, personal.len);
     } else if (n_args == 2) {
         size_t outlen = trezor_obj_get_uint(args[1]);
         res = blake2b_Init(&(o->ctx), outlen);
