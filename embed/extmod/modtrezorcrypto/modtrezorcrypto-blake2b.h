@@ -35,7 +35,7 @@ typedef struct _mp_obj_Blake2b_t {
 
 STATIC mp_obj_t mod_trezorcrypto_Blake2b_update(mp_obj_t self, mp_obj_t data);
 
-/// def __init__(self, data: bytes = None, outlen: int = Blake2b.digest_size, key: bytes = None) -> None:
+/// def __init__(self, data: bytes = None, outlen: int = Blake2b.digest_size, personal: bytes = None) -> None:
 ///     '''
 ///     Creates a hash context object.
 ///     '''
@@ -44,12 +44,12 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2b_make_new(const mp_obj_type_t *type, siz
     mp_obj_Blake2b_t *o = m_new_obj(mp_obj_Blake2b_t);
     o->base.type = type;
     int res = 0;
-    // constructor called with key argument set
+    // constructor called with personal argument set
     if (n_args == 3) {
         size_t outlen = trezor_obj_get_uint(args[1]);
-        mp_buffer_info_t key;
-        mp_get_buffer_raise(args[2], &key, MP_BUFFER_READ);
-        res = blake2b_InitKey(&(o->ctx), outlen, key.buf, key.len);
+        mp_buffer_info_t personal;
+        mp_get_buffer_raise(args[2], &personal, MP_BUFFER_READ);
+        res = blake2b_InitPersonal(&(o->ctx), outlen, personal.buf);
     } else if (n_args == 2) {
         size_t outlen = trezor_obj_get_uint(args[1]);
         res = blake2b_Init(&(o->ctx), outlen);
