@@ -37,7 +37,7 @@ def _ethereum_address_hex(address, network=None):
 
     hx = hexlify(address).decode()
 
-    prefix = str(network.chain_id) + '|' if rskip60 else ''
+    prefix = str(network.chain_id) + '0x' if rskip60 else ''
     hs = sha3_256(prefix + hx).digest(True)
     h = ''
 
