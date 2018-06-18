@@ -12,7 +12,7 @@ from ubinascii import hexlify
 
 async def get_public_key(ctx, msg: StellarGetPublicKey):
     node = await seed.derive_node(ctx, msg.address_n, helpers.STELLAR_CURVE)
-    pubkey = seed.remove_ed25519_public_key_prefix(node.public_key())  # todo better?
+    pubkey = seed.remove_ed25519_prefix(node.public_key())
 
     if msg.show_display:
         while True:

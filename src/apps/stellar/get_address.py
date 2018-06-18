@@ -7,7 +7,7 @@ from trezor.messages.StellarGetAddress import StellarGetAddress
 
 async def get_address(ctx, msg: StellarGetAddress):
     node = await seed.derive_node(ctx, msg.address_n, helpers.STELLAR_CURVE)
-    pubkey = seed.remove_ed25519_public_key_prefix(node.public_key())  # todo better?
+    pubkey = seed.remove_ed25519_prefix(node.public_key())
     address = helpers.address_from_public_key(pubkey)
 
     if msg.show_display:

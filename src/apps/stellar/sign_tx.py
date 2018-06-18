@@ -18,7 +18,7 @@ async def sign_tx(ctx, msg: StellarSignTx):
         raise ValueError('Stellar: At least one operation is required')
 
     node = await seed.derive_node(ctx, msg.address_n, consts.STELLAR_CURVE)
-    pubkey = seed.remove_ed25519_public_key_prefix(node.public_key())
+    pubkey = seed.remove_ed25519_prefix(node.public_key())
 
     w = bytearray()
     await _init(ctx, w, pubkey, msg)

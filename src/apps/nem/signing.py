@@ -18,7 +18,7 @@ async def sign_tx(ctx, msg: NEMSignTx):
         await multisig.ask(ctx, msg)
         common = msg.multisig
     else:
-        public_key = _get_public_key(node)
+        public_key = seed.remove_ed25519_prefix(node.public_key())
         common = msg.transaction
 
     if msg.transfer:
@@ -48,10 +48,15 @@ async def sign_tx(ctx, msg: NEMSignTx):
         # wrap transaction in multisig wrapper
         if msg.cosigning:
             tx = multisig.cosign(
-                _get_public_key(node), msg.transaction, tx, msg.multisig.signer
+                seed.remove_ed25519_prefix(node.public_key()),
+                msg.transaction,
+                tx,
+                msg.multisig.signer,
             )
         else:
-            tx = multisig.initiate(_get_public_key(node), msg.transaction, tx)
+            tx = multisig.initiate(
+                seed.remove_ed25519_prefix(node.public_key()), msg.transaction, tx
+            )
 
     signature = ed25519.sign(node.private_key(), tx, NEM_HASH_ALG)
 
@@ -59,8 +64,3 @@ async def sign_tx(ctx, msg: NEMSignTx):
     resp.data = tx
     resp.signature = signature
     return resp
-
-
-def _get_public_key(node) -> bytes:
-    # 0x01 prefix is not part of the actual public key, hence removed
-    return node.public_key()[1:]
