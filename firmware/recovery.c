@@ -295,7 +295,7 @@ static void display_choices(bool twoColumn, char choices[9][12], int num)
 
 	/* avoid picking out of range numbers */
 	for (int i = 0; i < displayedChoices; i++) {
-		if (word_matrix[i] > num)
+		if (word_matrix[i] >= num)
 			word_matrix[i] = 0;
 	}
 	/* two column layout: middle column = right column */
@@ -405,11 +405,13 @@ static void recovery_digit(const char digit) {
 		/* received final word */
 
 		/* Mark the chosen word for 250 ms */
-		int y = 54 - ((digit - '1')/3)*11;
+		int y = 54 - ((digit - '1') / 3) * 11;
 		int x = 64 * (((digit - '1') % 3) > 0);
 		oledInvert(x + 1, y, x + 62, y + 9);
 		oledRefresh();
+		usbTiny(1);
 		usbSleep(250);
+		usbTiny(0);
 
 		/* index of the chosen word */
 		int idx = TABLE2(TABLE1(word_pincode / 9) + (word_pincode % 9)) + choice;

@@ -42,11 +42,10 @@ const uint8_t *msg_debug_out_data(void);
 
 #endif
 
-void msg_read_common(char type, const uint8_t *buf, int len);
+void msg_read_common(char type, const uint8_t *buf, uint32_t len);
 bool msg_write_common(char type, uint16_t msg_id, const void *msg_ptr);
 
 void msg_read_tiny(const uint8_t *buf, int len);
-void msg_debug_read_tiny(const uint8_t *buf, int len);
 extern uint8_t msg_tiny[128];
 extern uint16_t msg_tiny_id;
 

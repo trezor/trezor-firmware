@@ -233,7 +233,7 @@ void msg_process(char type, uint16_t msg_id, const pb_field_t *fields, uint8_t *
 	}
 }
 
-void msg_read_common(char type, const uint8_t *buf, int len)
+void msg_read_common(char type, const uint8_t *buf, uint32_t len)
 {
 	static char read_state = READSTATE_IDLE;
 	static CONFIDENTIAL uint8_t msg_in[MSG_IN_SIZE];
@@ -271,8 +271,12 @@ void msg_read_common(char type, const uint8_t *buf, int len)
 			read_state = READSTATE_IDLE;
 			return;
 		}
-		memcpy(msg_in + msg_pos, buf + 1, len - 1);
-		msg_pos += len - 1;
+		/* raw data starts at buf + 1 with len - 1 bytes */
+		buf++;
+		len = MIN(len - 1, MSG_IN_SIZE - msg_pos);
+
+		memcpy(msg_in + msg_pos, buf, len);
+		msg_pos += len;
 	}
 
 	if (msg_pos >= msg_size) {
@@ -329,8 +333,7 @@ void msg_read_tiny(const uint8_t *buf, int len)
 	}
 
 	const pb_field_t *fields = 0;
-	// upstream nanopb is missing const qualifier, so we have to cast :-/
-	pb_istream_t stream = pb_istream_from_buffer((uint8_t *)buf + 9, msg_size);
+	pb_istream_t stream = pb_istream_from_buffer(buf + 9, msg_size);
 
 	switch (msg_id) {
 		case MessageType_MessageType_PinMatrixAck:
