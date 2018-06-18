@@ -9,8 +9,9 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 ## [0.10.2] - Unreleased
 [0.10.2]: https://github.com/trezor/python-trezor/compare/v0.10.1...master
 
-### Changed
-- trezorctl: `stellar_get_public` now outputs the key hex-encoded
+### Added
+- `stellar_get_address` and `_public_key` functions support `show_display` parameter
+- trezorctl: `stellar_get_address` and `_public_key` commands for the respective functionality
 
 ### Removed
 - trezorctl: `list_coins` is removed because we no longer parse the relevant protobuf field
