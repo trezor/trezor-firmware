@@ -4,7 +4,7 @@ from trezor import ui
 TEXT_HEADER_HEIGHT = const(48)
 TEXT_LINE_HEIGHT = const(26)
 TEXT_MARGIN_LEFT = const(14)
-TEXT_MAX_LINES = const(4)
+TEXT_MAX_LINES = const(5)
 
 # needs to be different from all colors and font ids
 BR = const(-256)
@@ -25,11 +25,13 @@ def render_words(words: list, new_lines: bool, max_lines: int) -> None:
     DASH = ui.display.text_width('-', ui.BOLD)
     ELLIPSIS = ui.display.text_width('...', ui.BOLD)
 
-    for word in words:
+    for word_index, word in enumerate(words):
+        has_next_word = word_index < len(words) - 1
+
         if isinstance(word, int):
             if word == BR:
                 # line break
-                if not offset_y < OFFSET_Y_MAX:
+                if offset_y >= OFFSET_Y_MAX:
                     ui.display.text(offset_x, offset_y, '...', ui.BOLD, ui.GREY, bg)
                     return
                 offset_x = TEXT_MARGIN_LEFT
@@ -44,16 +46,16 @@ def render_words(words: list, new_lines: bool, max_lines: int) -> None:
 
         width = ui.display.text_width(word, font)
 
-        while offset_x + width + SPACE + ELLIPSIS > OFFSET_X_MAX:
-            space_for_another_line = offset_y < OFFSET_Y_MAX
+        while offset_x + width > OFFSET_X_MAX or (has_next_word and offset_y >= OFFSET_Y_MAX):
+            beginning_of_line = offset_x == TEXT_MARGIN_LEFT
             word_fits_in_one_line = width < (OFFSET_X_MAX - TEXT_MARGIN_LEFT)
-            if space_for_another_line and word_fits_in_one_line:
+            if offset_y < OFFSET_Y_MAX and word_fits_in_one_line and not beginning_of_line:
                 # line break
                 offset_x = TEXT_MARGIN_LEFT
                 offset_y += TEXT_LINE_HEIGHT
                 break
             # word split
-            if space_for_another_line:
+            if offset_y < OFFSET_Y_MAX:
                 split = '-'
                 splitw = DASH
             else:
@@ -72,7 +74,7 @@ def render_words(words: list, new_lines: bool, max_lines: int) -> None:
             ui.display.text(offset_x, offset_y, span, font, fg, bg)
             ui.display.text(offset_x + width, offset_y, split, ui.BOLD, ui.GREY, bg)
             # line break
-            if not space_for_another_line:
+            if offset_y >= OFFSET_Y_MAX:
                 return
             offset_x = TEXT_MARGIN_LEFT
             offset_y += TEXT_LINE_HEIGHT
@@ -82,16 +84,18 @@ def render_words(words: list, new_lines: bool, max_lines: int) -> None:
 
         # render word
         ui.display.text(offset_x, offset_y, word, font, fg, bg)
-        offset_x += width
-        offset_x += SPACE
 
-        # line break
-        if new_lines:
-            if not offset_y < OFFSET_Y_MAX:
+        if new_lines and has_next_word:
+            # line break
+            if offset_y >= OFFSET_Y_MAX:
                 ui.display.text(offset_x, offset_y, '...', ui.BOLD, ui.GREY, bg)
                 return
             offset_x = TEXT_MARGIN_LEFT
             offset_y += TEXT_LINE_HEIGHT
+        else:
+            # shift cursor
+            offset_x += width
+            offset_x += SPACE
 
 
 class Text(ui.Widget):
