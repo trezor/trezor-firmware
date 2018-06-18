@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 _At the moment, the project does __not__ adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
 
+## [0.10.2] - Unreleased
+[0.10.2]: https://github.com/trezor/python-trezor/compare/v0.10.1...master
+
+### Changed
+- trezorctl: `stellar_get_public` now outputs the key hex-encoded
+
+### Fixed
+- test support module was not included in the release, so code relying on the deprecated `ckd_public` module would fail [#280]
+
 ## [0.10.1] - 2018-06-11
 [0.10.1]: https://github.com/trezor/python-trezor/compare/v0.10.0...v0.10.1
 
@@ -107,3 +116,4 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 [#268]: https://github.com/trezor/python-trezor/issues/268
 [#269]: https://github.com/trezor/python-trezor/issues/269
 [#274]: https://github.com/trezor/python-trezor/issues/274
+[#280]: https://github.com/trezor/python-trezor/issues/280
