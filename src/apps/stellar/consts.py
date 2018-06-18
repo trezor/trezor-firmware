@@ -51,14 +51,14 @@ NETWORK_PASSPHRASE_TESTNET = 'Test SDF Network ; September 2015'
 FLAG_AUTH_REQUIRED = const(1)
 FLAG_AUTH_REVOCABLE = const(2)
 FLAG_AUTH_IMMUTABLE = const(4)
-FLAGS_MAX_SIZE = 7
+FLAGS_MAX_SIZE = const(7)
 
 # https://github.com/stellar/go/blob/e0ffe19f58879d3c31e2976b97a5bf10e13a337b/xdr/Stellar-transaction.x#L275
-MEMO_TYPE_NONE = 0
-MEMO_TYPE_TEXT = 1
-MEMO_TYPE_ID = 2
-MEMO_TYPE_HASH = 3
-MEMO_TYPE_RETURN = 4
+MEMO_TYPE_NONE = const(0)
+MEMO_TYPE_TEXT = const(1)
+MEMO_TYPE_ID = const(2)
+MEMO_TYPE_HASH = const(3)
+MEMO_TYPE_RETURN = const(4)
 
 # https://github.com/stellar/go/blob/3d2c1defe73dbfed00146ebe0e8d7e07ce4bb1b6/xdr/xdr_generated.go#L156
 SIGN_TYPE_ACCOUNT = const(0)
