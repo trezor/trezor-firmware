@@ -14,6 +14,7 @@ from trezor.messages.StellarManageOfferOp import StellarManageOfferOp
 from trezor.messages.StellarPathPaymentOp import StellarPathPaymentOp
 from trezor.messages.StellarPaymentOp import StellarPaymentOp
 from trezor.messages.StellarSetOptionsOp import StellarSetOptionsOp
+from trezor.wire import ProcessError
 from ubinascii import hexlify
 
 
@@ -219,7 +220,7 @@ async def confirm_set_options_op(ctx, op: StellarSetOptionsOp):
                            icon_color=ui.GREEN)
             await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
         else:
-            raise ValueError('Stellar: invalid signer type')
+            raise ProcessError('Stellar: invalid signer type')
 
 
 def _format_thresholds(op: StellarSetOptionsOp) -> tuple:
@@ -237,7 +238,7 @@ def _format_thresholds(op: StellarSetOptionsOp) -> tuple:
 
 def _format_flags(flags: int) -> tuple:
     if flags > consts.FLAGS_MAX_SIZE:
-        raise ValueError('Stellar: invalid')
+        raise ProcessError('Stellar: invalid flags')
     text = ()
     if flags & consts.FLAG_AUTH_REQUIRED:
         text += ('AUTH_REQUIRED', )

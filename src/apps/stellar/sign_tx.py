@@ -15,7 +15,7 @@ from ubinascii import hexlify
 
 async def sign_tx(ctx, msg: StellarSignTx):
     if msg.num_operations == 0:
-        raise ValueError('Stellar: At least one operation is required')
+        raise ProcessError('Stellar: At least one operation is required')
 
     node = await seed.derive_node(ctx, msg.address_n, consts.STELLAR_CURVE)
     pubkey = seed.remove_ed25519_prefix(node.public_key())
@@ -84,7 +84,7 @@ async def _memo(ctx, w: bytearray, msg: StellarSignTx):
     elif msg.memo_type == consts.MEMO_TYPE_TEXT:
         # Text: 4 bytes (size) + up to 28 bytes
         if len(msg.memo_text) > 28:
-            raise ValueError('Stellar: max length of a memo text is 28 bytes')
+            raise ProcessError('Stellar: max length of a memo text is 28 bytes')
         writers.write_string(w, msg.memo_text)
         memo_confirm_text = msg.memo_text
     elif msg.memo_type == consts.MEMO_TYPE_ID:
@@ -96,7 +96,7 @@ async def _memo(ctx, w: bytearray, msg: StellarSignTx):
         writers.write_bytes(w, bytearray(msg.memo_hash))
         memo_confirm_text = hexlify(msg.memo_hash).decode()
     else:
-        raise ValueError('Stellar invalid memo type')
+        raise ProcessError('Stellar invalid memo type')
     await layout.require_confirm_memo(ctx, msg.memo_type, memo_confirm_text)
 
 

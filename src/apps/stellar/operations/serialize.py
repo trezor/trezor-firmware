@@ -12,6 +12,7 @@ from trezor.messages.StellarManageOfferOp import StellarManageOfferOp
 from trezor.messages.StellarPathPaymentOp import StellarPathPaymentOp
 from trezor.messages.StellarPaymentOp import StellarPaymentOp
 from trezor.messages.StellarSetOptionsOp import StellarSetOptionsOp
+from trezor.wire import ProcessError
 
 
 def serialize_account_merge_op(w, msg: StellarAccountMergeOp):
@@ -51,7 +52,7 @@ def serialize_create_passive_offer_op(w, msg: StellarCreatePassiveOfferOp):
 
 def serialize_manage_data_op(w, msg: StellarManageDataOp):
     if len(msg.key) > 64:
-        raise ValueError('Stellar: max length of a key is 64 bytes')
+        raise ProcessError('Stellar: max length of a key is 64 bytes')
     writers.write_string(w, msg.key)
     writers.write_bool(w, bool(msg.value))
     if msg.value:
@@ -123,7 +124,7 @@ def serialize_set_options_op(w, msg: StellarSetOptionsOp):
     writers.write_bool(w, bool(msg.home_domain))
     if msg.home_domain:
         if len(msg.home_domain) > 32:
-            raise ValueError('Stellar: max length of a home domain is 32 bytes')
+            raise ProcessError('Stellar: max length of a home domain is 32 bytes')
         writers.write_string(w, msg.home_domain)
 
     # signer
@@ -153,7 +154,7 @@ def _serialize_asset_code(w, asset_type: int, asset_code: str):
         # pad with zeros to 12 chars
         writers.write_bytes(w, code + bytearray([0] * (12 - len(code))))
     else:
-        raise ValueError('Stellar: invalid asset type')
+        raise ProcessError('Stellar: invalid asset type')
 
 
 def _serialize_asset(w, asset: StellarAssetType):
