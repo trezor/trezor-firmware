@@ -5,7 +5,7 @@ import subprocess
 import sys
 import tempfile
 
-from setuptools import setup, Command
+from setuptools import setup, Command, find_packages
 from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
 
@@ -79,14 +79,7 @@ setup(
     author_email='info@trezor.io',
     description='Python library for communicating with TREZOR Hardware Wallet',
     url='https://github.com/trezor/python-trezor',
-    packages=[
-        'trezorlib',
-        'trezorlib.transport',
-        'trezorlib.messages',
-        'trezorlib.qt',
-        'trezorlib.tests.device_tests',
-        'trezorlib.tests.unit_tests',
-    ],
+    packages=find_packages(),
     package_data={
         'trezorlib': ['coins.json'],
     },
