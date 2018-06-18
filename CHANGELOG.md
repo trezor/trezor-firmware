@@ -12,6 +12,10 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 ### Changed
 - trezorctl: `stellar_get_public` now outputs the key hex-encoded
 
+### Removed
+- trezorctl: `list_coins` is removed because we no longer parse the relevant protobuf field
+  (and newer Trezor firmwares don't send it) [#277]
+
 ### Fixed
 - test support module was not included in the release, so code relying on the deprecated `ckd_public` module would fail [#280]
 
@@ -116,4 +120,5 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 [#268]: https://github.com/trezor/python-trezor/issues/268
 [#269]: https://github.com/trezor/python-trezor/issues/269
 [#274]: https://github.com/trezor/python-trezor/issues/274
+[#277]: https://github.com/trezor/python-trezor/issues/277
 [#280]: https://github.com/trezor/python-trezor/issues/280

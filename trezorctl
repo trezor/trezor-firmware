@@ -172,12 +172,6 @@ def get_features(connect):
     return connect().features
 
 
-@cli.command(help='List all supported coin types by the device.')
-@click.pass_obj
-def list_coins(connect):
-    return [coin.coin_name for coin in connect().features.coins]
-
-
 #
 # Device management functions
 #
