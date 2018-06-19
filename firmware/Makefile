@@ -87,10 +87,11 @@ OBJS += protob/types.pb.o
 
 OPTFLAGS ?= -Os
 
-../vendor/trezor-crypto/%.o: OPTFLAGS = -O3
-../vendor/trezor-crypto/aes/%.o: OPTFLAGS = -O3
-../vendor/trezor-crypto/ed25519-donna/%.o: OPTFLAGS = -O3
-../vendor/nanopb/%.o: OPTFLAGS = -O3
+../vendor/trezor-crypto/bip32.o: OPTFLAGS = -O3
+../vendor/trezor-crypto/bip39.o: OPTFLAGS = -O3
+../vendor/trezor-crypto/ecdsa.o: OPTFLAGS = -O3
+../vendor/trezor-crypto/sha2.o: OPTFLAGS = -O3
+../vendor/trezor-crypto/secp256k1.o: OPTFLAGS = -O3
 
 include ../Makefile.include
 
