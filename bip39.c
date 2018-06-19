@@ -136,6 +136,67 @@ const uint16_t *mnemonic_from_data_indexes(const uint8_t *data, int len)
 	return mnemo;
 }
 
+int mnemonic_to_entropy(const char *mnemonic, uint8_t *entropy){
+	if (!mnemonic) {
+		return 0;
+	}
+
+	uint32_t i, n;
+
+	i = 0; n = 0;
+	while (mnemonic[i]) {
+		if (mnemonic[i] == ' ') {
+			n++;
+		}
+		i++;
+	}
+	n++;
+	// check number of words
+	if (n != 12 && n != 18 && n != 24) {
+		return 0;
+	}
+
+	char current_word[10];
+	uint32_t j, k, ki, bi;
+	uint8_t bits[32 + 1];
+
+	memzero(bits, sizeof(bits));
+	i = 0; bi = 0;
+	while (mnemonic[i]) {
+		j = 0;
+		while (mnemonic[i] != ' ' && mnemonic[i] != 0) {
+			if (j >= sizeof(current_word) - 1) {
+				return 0;
+			}
+			current_word[j] = mnemonic[i];
+			i++; j++;
+		}
+		current_word[j] = 0;
+		if (mnemonic[i] != 0) i++;
+		k = 0;
+		for (;;) {
+			if (!wordlist[k]) { // word not found
+				return 0;
+			}
+			if (strcmp(current_word, wordlist[k]) == 0) { // word found on index k
+				for (ki = 0; ki < 11; ki++) {
+					if (k & (1 << (10 - ki))) {
+						bits[bi / 8] |= 1 << (7 - (bi % 8));
+					}
+					bi++;
+				}
+				break;
+			}
+			k++;
+		}
+	}
+	if (bi != n * 11) {
+		return 0;
+	}
+	memcpy(entropy,bits,sizeof(bits));
+	return (n*11);
+}
+
 int mnemonic_check(const char *mnemonic)
 {
 	if (!mnemonic) {

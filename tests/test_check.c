@@ -1872,6 +1872,141 @@ START_TEST(test_bip32_decred_vector_2)
 }
 END_TEST
 
+// https://github.com/input-output-hk/cardano-crypto/blob/master/tests/goldens/cardano/crypto/wallet/BIP39-128
+START_TEST(test_bip32_cardano_hdnode_vector_1)
+{
+	HDNode node;
+
+	uint8_t seed[66];
+	int seed_len = mnemonic_to_entropy("ring crime symptom enough erupt lady behave ramp apart settle citizen junk", seed + 2);
+	hdnode_from_seed_cardano(seed, seed_len / 8, &node);
+
+	ck_assert_mem_eq(node.chain_code,  fromhex("739f4b3caca4c9ad4fcd4bdc2ef42c8601af8d6946999ef85ef6ae84f66e72eb"), 32);
+	ck_assert_mem_eq(node.private_key, fromhex("6065a956b1b34145c4416fdc3ba3276801850e91a77a31a7be782463288aea53"), 32);
+	ck_assert_mem_eq(node.private_key_extension, fromhex("60ba6e25b1a02157fb69c5d1d7b96c4619736e545447069a6a6f0ba90844bc8e"), 32);
+	hdnode_fill_public_key(&node);
+	ck_assert_mem_eq(node.public_key + 1,  fromhex("64b20fa082b3143d6b5eed42c6ef63f99599d0888afe060620abc1b319935fe1"), 32);
+}
+END_TEST
+
+START_TEST(test_bip32_cardano_hdnode_vector_2)
+{
+	HDNode node;
+
+	uint8_t seed[66];
+	int seed_len = mnemonic_to_entropy("ring crime symptom enough erupt lady behave ramp apart settle citizen junk", seed + 2);
+	hdnode_from_seed_cardano(seed, seed_len / 8, &node);
+
+	hdnode_private_ckd_cardano(&node, 0x80000000);
+
+	ck_assert_mem_eq(node.chain_code,  fromhex("6755cb82e892d6614c007a5efbceb21d95a5244e269d0e206b48b9a495390b03"), 32);
+	ck_assert_mem_eq(node.private_key, fromhex("e7d27516538403a53a8b041656a3f570909df641a0ab811fe7d87c9ba02a830c"), 32);
+	ck_assert_mem_eq(node.private_key_extension, fromhex("794a2c54ad8b525b781773c87d38cbf4197636bc427a9d551368286fe4c294a4"), 32);
+	hdnode_fill_public_key(&node);
+	ck_assert_mem_eq(node.public_key + 1,  fromhex("95bb82ffd5707716bc65170ab4e8dafeed90fbe0ce9258713b7751e962d931df"), 32);
+}
+END_TEST
+
+START_TEST(test_bip32_cardano_hdnode_vector_3)
+{
+	HDNode node;
+
+	uint8_t seed[66];
+	int seed_len = mnemonic_to_entropy("ring crime symptom enough erupt lady behave ramp apart settle citizen junk", seed + 2);
+	hdnode_from_seed_cardano(seed, seed_len / 8, &node);
+
+	hdnode_private_ckd_cardano(&node, 0x80000001);
+
+	ck_assert_mem_eq(node.chain_code,  fromhex("47a242713bd18608231147c066b6083bfc1e9066fec9f621844c84fed6228a34"), 32);
+	ck_assert_mem_eq(node.private_key, fromhex("9b5a3d9a4c60bcd49bb64b72c082b164314d0f61d842f2575fd1d4fb30a28a0c"), 32);
+	ck_assert_mem_eq(node.private_key_extension, fromhex("b093e376f41eb7bf80abcd0073a52455d25b5d21815bc758e5f6f81536aedebb"), 32);
+	hdnode_fill_public_key(&node);
+	ck_assert_mem_eq(node.public_key + 1,  fromhex("79fc8154554b97e4c56ef2f9dbb4c1421ff19509688931a1e964bda5dec0f19f"), 32);
+}
+END_TEST
+
+START_TEST(test_bip32_cardano_hdnode_vector_4)
+{
+	HDNode node;
+
+	uint8_t seed[66];
+	int seed_len = mnemonic_to_entropy("ring crime symptom enough erupt lady behave ramp apart settle citizen junk", seed + 2);
+	hdnode_from_seed_cardano(seed, seed_len / 8, &node);
+
+	hdnode_private_ckd_cardano(&node, 0x80000000);
+	hdnode_private_ckd_cardano(&node, 0x80000001);
+
+	ck_assert_mem_eq(node.chain_code,  fromhex("d6798491b9fa4612370ae5ef3c623a0b6872f3ad8f26970885fa67c83bdc425e"), 32);
+	ck_assert_mem_eq(node.private_key, fromhex("52e0c98aa600cfdcd1ff28fcda5227ed87063f4a98547a78b771052cf102b40c"), 32);
+	ck_assert_mem_eq(node.private_key_extension, fromhex("6c18d9f8075b1a6a1833540607479bd58b7beb8a83d2bb01ca7ae02452a25803"), 32);
+	hdnode_fill_public_key(&node);
+	ck_assert_mem_eq(node.public_key + 1,  fromhex("dc907c7c06e6314eedd9e18c9f6c6f9cc4e205fb1c70da608234c319f1f7b0d6"), 32);
+}
+END_TEST
+
+START_TEST(test_bip32_cardano_hdnode_vector_5)
+{
+	HDNode node;
+
+	uint8_t seed[66];
+	int seed_len = mnemonic_to_entropy("ring crime symptom enough erupt lady behave ramp apart settle citizen junk", seed + 2);
+	hdnode_from_seed_cardano(seed, seed_len / 8, &node);
+
+	hdnode_private_ckd_cardano(&node, 0x80000000);
+	hdnode_private_ckd_cardano(&node, 0x80000001);
+	hdnode_private_ckd_cardano(&node, 0x80000002);
+	
+	ck_assert_mem_eq(node.chain_code,  fromhex("4169a2a32e3618a903e930bd1a713033a38f92389093408394e29ac37a1752ea"), 32);
+	ck_assert_mem_eq(node.private_key, fromhex("11fd6462a3a92b35c22703f6f1c124ddcf36b7c2b09cc2784f320e1cfa12ec04"), 32);
+	ck_assert_mem_eq(node.private_key_extension, fromhex("c2785803c61c46aeca192a1bb1b7b20a8c4cc7fa01db57fc5d1d8a5473402352"), 32);
+	hdnode_fill_public_key(&node);
+	ck_assert_mem_eq(node.public_key + 1,  fromhex("839775a41876e328986aa26168958bba1176e67819b357eea84afceab8b1db78"), 32);
+}
+END_TEST
+
+START_TEST(test_bip32_cardano_hdnode_vector_6)
+{
+	HDNode node;
+
+	uint8_t seed[66];
+	int seed_len = mnemonic_to_entropy("ring crime symptom enough erupt lady behave ramp apart settle citizen junk", seed + 2);
+	hdnode_from_seed_cardano(seed, seed_len / 8, &node);
+
+	hdnode_private_ckd_cardano(&node, 0x80000000);
+	hdnode_private_ckd_cardano(&node, 0x80000001);
+	hdnode_private_ckd_cardano(&node, 0x80000002);
+	hdnode_private_ckd_cardano(&node, 0x80000002);
+
+	ck_assert_mem_eq(node.chain_code,  fromhex("3ae9c99a5925cba2dcf121baf3a0254f3dea23c129f9eb70a8a7e8897c5199ba"), 32);
+	ck_assert_mem_eq(node.private_key, fromhex("5b1e5cad02274ba461f4708d8598d3497faf8fe3e894a379573aa6ac3a03e505"), 32);
+	ck_assert_mem_eq(node.private_key_extension, fromhex("ba179d2e3c67aabb486c48d16002b51ad32eab434c738a1550962313b07098cd"), 32);
+	hdnode_fill_public_key(&node);
+	ck_assert_mem_eq(node.public_key + 1,  fromhex("75eb8d197ec8627c85af88e66aa1e49065dd8ac98ed8991db52ece01635dfb76"), 32);
+}
+END_TEST
+
+START_TEST(test_bip32_cardano_hdnode_vector_7)
+{
+	HDNode node;
+
+	uint8_t seed[66];
+	int seed_len = mnemonic_to_entropy("ring crime symptom enough erupt lady behave ramp apart settle citizen junk", seed + 2);
+	hdnode_from_seed_cardano(seed, seed_len / 8, &node);
+
+	hdnode_private_ckd_cardano(&node, 0x80000000);
+	hdnode_private_ckd_cardano(&node, 0x80000001);
+	hdnode_private_ckd_cardano(&node, 0x80000002);
+	hdnode_private_ckd_cardano(&node, 0x80000002);
+	hdnode_private_ckd_cardano(&node, 0xBB9ACA00);
+
+	ck_assert_mem_eq(node.chain_code,  fromhex("15c450b86dd7dd83b31951d9ee03eb1a7925161d817bd517c69cf09e3671f1ca"), 32);
+	ck_assert_mem_eq(node.private_key, fromhex("624b47150f58dfa44284fbc63c9f99b9b79f808c4955a461f0e2be44eb0be50d"), 32);
+	ck_assert_mem_eq(node.private_key_extension, fromhex("097aa006d694b165ef37cf23562e5967c96e49255d2f20faae478dee83aa5b02"), 32);
+	hdnode_fill_public_key(&node);
+	ck_assert_mem_eq(node.public_key + 1,  fromhex("0588589cd9b51dfc028cf225674069cbe52e0e70deb02dc45b79b26ee3548b00"), 32);
+}
+END_TEST
+
 START_TEST(test_ecdsa_signature)
 {
 	int res;
@@ -2772,6 +2907,74 @@ START_TEST(test_mnemonic_check)
 }
 END_TEST
 
+START_TEST(test_mnemonic_to_entropy)
+{
+	static const char *vectors[] = {
+		"00000000000000000000000000000000",
+		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+		"7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
+		"legal winner thank year wave sausage worth useful legal winner thank yellow",
+		"80808080808080808080808080808080",
+		"letter advice cage absurd amount doctor acoustic avoid letter advice cage above",
+		"ffffffffffffffffffffffffffffffff",
+		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong",
+		"000000000000000000000000000000000000000000000000",
+		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon agent",
+		"7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
+		"legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth useful legal will",
+		"808080808080808080808080808080808080808080808080",
+		"letter advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic avoid letter always",
+		"ffffffffffffffffffffffffffffffffffffffffffffffff",
+		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo when",
+		"0000000000000000000000000000000000000000000000000000000000000000",
+		"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+		"7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f",
+		"legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth title",
+		"8080808080808080808080808080808080808080808080808080808080808080",
+		"letter advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic avoid letter advice cage absurd amount doctor acoustic bless",
+		"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+		"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo vote",
+		"77c2b00716cec7213839159e404db50d",
+		"jelly better achieve collect unaware mountain thought cargo oxygen act hood bridge",
+		"b63a9c59a6e641f288ebc103017f1da9f8290b3da6bdef7b",
+		"renew stay biology evidence goat welcome casual join adapt armor shuffle fault little machine walk stumble urge swap",
+		"3e141609b97933b66a060dcddc71fad1d91677db872031e85f4c015c5e7e8982",
+		"dignity pass list indicate nasty swamp pool script soccer toe leaf photo multiply desk host tomato cradle drill spread actor shine dismiss champion exotic",
+		"0460ef47585604c5660618db2e6a7e7f",
+		"afford alter spike radar gate glance object seek swamp infant panel yellow",
+		"72f60ebac5dd8add8d2a25a797102c3ce21bc029c200076f",
+		"indicate race push merry suffer human cruise dwarf pole review arch keep canvas theme poem divorce alter left",
+		"2c85efc7f24ee4573d2b81a6ec66cee209b2dcbd09d8eddc51e0215b0b68e416",
+		"clutch control vehicle tonight unusual clog visa ice plunge glimpse recipe series open hour vintage deposit universe tip job dress radar refuse motion taste",
+		"eaebabb2383351fd31d703840b32e9e2",
+		"turtle front uncle idea crush write shrug there lottery flower risk shell",
+		"7ac45cfe7722ee6c7ba84fbc2d5bd61b45cb2fe5eb65aa78",
+		"kiss carry display unusual confirm curtain upgrade antique rotate hello void custom frequent obey nut hole price segment",
+		"4fa1a8bc3e6d80ee1316050e862c1812031493212b7ec3f3bb1b08f168cabeef",
+		"exile ask congress lamp submit jacket era scheme attend cousin alcohol catch course end lucky hurt sentence oven short ball bird grab wing top",
+		"18ab19a9f54a9274f03e5209a2ac8a91",
+		"board flee heavy tunnel powder denial science ski answer betray cargo cat",
+		"18a2e1d81b8ecfb2a333adcb0c17a5b9eb76cc5d05db91a4",
+		"board blade invite damage undo sun mimic interest slam gaze truly inherit resist great inject rocket museum chief",
+		"15da872c95a13dd738fbf50e427583ad61f18fd99f628c417a61cf8343c90419",
+		"beyond stage sleep clip because twist token leaf atom beauty genius food business side grid unable middle armed observe pair crouch tonight away coconut",
+		0,
+		0,
+	};
+
+	const char **a, **b;
+	uint8_t entropy[64];
+
+	a = vectors;
+	b = vectors + 1;
+	while (*a && *b) {
+		mnemonic_to_entropy(*b,entropy);
+		ck_assert_mem_eq(entropy, fromhex(*a), strlen(*a) / 2);
+		a += 2; b += 2;
+	}
+}
+END_TEST
+
 START_TEST(test_address)
 {
 	char address[36];
@@ -3603,6 +3806,81 @@ START_TEST(test_ge25519_double_scalarmult_vartime2)
 		ge25519_double_scalarmult_vartime2(&R, &A, a, &B, b);
 		ge25519_pack(buff, &R);
 		ck_assert_mem_eq(buff, fromhex(tests[i][4]), 32);
+	}
+}
+END_TEST
+
+// https://github.com/input-output-hk/cardano-crypto/blob/master/tests/goldens/cardano/crypto/wallet/BIP39-128
+START_TEST(test_ed25519_cardano_sign_vectors)
+{
+	ed25519_public_key public_key;
+	ed25519_secret_key secret_key;
+	ed25519_secret_key secret_key_extension;
+	ed25519_signature signature;
+
+	static const char *vectors[] = {
+		"6065a956b1b34145c4416fdc3ba3276801850e91a77a31a7be782463288aea53", // private key
+		"60ba6e25b1a02157fb69c5d1d7b96c4619736e545447069a6a6f0ba90844bc8e", // private key extension
+		"64b20fa082b3143d6b5eed42c6ef63f99599d0888afe060620abc1b319935fe1", // public key
+		"45b1a75fe3119e13c6f60ab9ba674b42f946fdc558e07c83dfa0751c2eba69c79331bd8a4a975662b23628a438a0eba76367e44c12ca91b39ec59063f860f10d", // signature
+
+		"e7d27516538403a53a8b041656a3f570909df641a0ab811fe7d87c9ba02a830c", // private key
+		"794a2c54ad8b525b781773c87d38cbf4197636bc427a9d551368286fe4c294a4", // private key extension
+		"95bb82ffd5707716bc65170ab4e8dafeed90fbe0ce9258713b7751e962d931df", // public key
+		"f2c9171782e7df7665126ac545ae53b05964b0160536efdb545e2460dbbec2b19ec6b338b8f1bf4dfee94360ed024b115e37b1d7e6f3f9ae4beb79539428560f", // signature
+
+		"9b5a3d9a4c60bcd49bb64b72c082b164314d0f61d842f2575fd1d4fb30a28a0c", // private key
+		"b093e376f41eb7bf80abcd0073a52455d25b5d21815bc758e5f6f81536aedebb", // private key extension
+		"79fc8154554b97e4c56ef2f9dbb4c1421ff19509688931a1e964bda5dec0f19f", // public key
+		"2ba1439ae648a7e8da7c9ab1ee6da94fd4ebe37abd0978306e8fba2afa8f111a88a993dbf008bedae9167f4f68409e4c9ddaf02cba12418447b1848907ad800f", // signature
+
+		"52e0c98aa600cfdcd1ff28fcda5227ed87063f4a98547a78b771052cf102b40c", // private key
+		"6c18d9f8075b1a6a1833540607479bd58b7beb8a83d2bb01ca7ae02452a25803", // private key extension
+		"dc907c7c06e6314eedd9e18c9f6c6f9cc4e205fb1c70da608234c319f1f7b0d6", // public key
+		"0cd34f84e0d2fcb1800bdb0e869b9041349955ced66aedbe6bda187ebe8d36a62a05b39647e92fcc42aa7a7368174240afba08b8c81f981a22f942d6bd781602", // signature
+
+		"11fd6462a3a92b35c22703f6f1c124ddcf36b7c2b09cc2784f320e1cfa12ec04", // private key
+		"c2785803c61c46aeca192a1bb1b7b20a8c4cc7fa01db57fc5d1d8a5473402352", // private key extension
+		"839775a41876e328986aa26168958bba1176e67819b357eea84afceab8b1db78", // public key
+		"e41f73db2f8d2896a687802b2be76b7cabb73dfbb4891494883a0cbd9bbb9e5f9d3e14d2d0b06c6674333508496db660936737c0efd9511514147dac79fa4905", // signature
+
+		"5b1e5cad02274ba461f4708d8598d3497faf8fe3e894a379573aa6ac3a03e505", // private key
+		"ba179d2e3c67aabb486c48d16002b51ad32eab434c738a1550962313b07098cd", // private key extension
+		"75eb8d197ec8627c85af88e66aa1e49065dd8ac98ed8991db52ece01635dfb76", // public key
+		"631015357cee3051116b4c2ff4d1c5beb13b6e5023635aa1eeb0563cadf0d4fbc10bd5e31b4a4220c67875558c41b5cc0328104ae39cc7ff20ff0c2bda598906", // signature
+
+		"624b47150f58dfa44284fbc63c9f99b9b79f808c4955a461f0e2be44eb0be50d", // private key
+		"097aa006d694b165ef37cf23562e5967c96e49255d2f20faae478dee83aa5b02", // private key extension
+		"0588589cd9b51dfc028cf225674069cbe52e0e70deb02dc45b79b26ee3548b00", // public key
+		"1de1d275428ba9491a433cd473cd076c027f61e7a8b5391df9dea5cb4bc88d8a57b095906a30b13e68259851a8dd3f57b6f0ffa37a5d3ffc171240f2d404f901", // signature
+
+		0, 0,
+	};
+
+	const char **test_data;
+	test_data = vectors;
+	while (*test_data) {
+		memcpy(secret_key, fromhex(*test_data), 32);
+		MARK_SECRET_DATA(secret_key, sizeof(secret_key));
+
+		memcpy(secret_key_extension, fromhex(*(test_data + 1)), 32);
+		MARK_SECRET_DATA(secret_key_extension, sizeof(secret_key_extension));
+
+		ed25519_publickey_ext(secret_key, secret_key_extension, public_key);
+		UNMARK_SECRET_DATA(public_key, sizeof(public_key));
+
+		ck_assert_mem_eq(public_key, fromhex(*(test_data + 2)), 32);
+
+		const uint8_t * message = (const uint8_t *) "Hello World";
+		ed25519_sign_ext(message, 11, secret_key, secret_key_extension, public_key, signature);
+		UNMARK_SECRET_DATA(signature, sizeof(signature));
+
+		ck_assert_mem_eq(signature, fromhex(*(test_data + 3)), 64);
+
+		UNMARK_SECRET_DATA(secret_key, sizeof(secret_key));
+		UNMARK_SECRET_DATA(secret_key_extension, sizeof(secret_key_extension));
+
+		test_data += 4;
 	}
 }
 END_TEST
@@ -4762,6 +5040,16 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bip32_decred_vector_2);
 	suite_add_tcase(s, tc);
 
+	tc = tcase_create("bip32-cardano");
+	tcase_add_test(tc, test_bip32_cardano_hdnode_vector_1);
+	tcase_add_test(tc, test_bip32_cardano_hdnode_vector_2);
+	tcase_add_test(tc, test_bip32_cardano_hdnode_vector_3);
+	tcase_add_test(tc, test_bip32_cardano_hdnode_vector_4);
+	tcase_add_test(tc, test_bip32_cardano_hdnode_vector_5);
+	tcase_add_test(tc, test_bip32_cardano_hdnode_vector_6);
+	tcase_add_test(tc, test_bip32_cardano_hdnode_vector_7);
+	suite_add_tcase(s,tc);
+
 	tc = tcase_create("ecdsa");
 	tcase_add_test(tc, test_ecdsa_signature);
 	suite_add_tcase(s, tc);
@@ -4829,6 +5117,10 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_mnemonic_check);
 	suite_add_tcase(s, tc);
 
+	tc = tcase_create("bip39-cardano");
+	tcase_add_test(tc, test_mnemonic_to_entropy);
+	suite_add_tcase(s,tc);	
+
 	tc = tcase_create("pubkey_validity");
 	tcase_add_test(tc, test_pubkey_validity);
 	suite_add_tcase(s, tc);
@@ -4883,6 +5175,10 @@ Suite *test_suite(void)
 	tc = tcase_create("ed25519_ge");
 	tcase_add_test(tc, test_ge25519_double_scalarmult_vartime2);
 	suite_add_tcase(s, tc);
+
+	tc = tcase_create("ed25519-cardano");
+	tcase_add_test(tc, test_ed25519_cardano_sign_vectors);
+	suite_add_tcase(s,tc);
 
 	tc = tcase_create("script");
 	tcase_add_test(tc, test_output_script);

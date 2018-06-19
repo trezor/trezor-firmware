@@ -36,6 +36,8 @@ const uint16_t *mnemonic_from_data_indexes(const uint8_t *data, int len);
 
 int mnemonic_check(const char *mnemonic);
 
+int mnemonic_to_entropy(const char *mnemonic, uint8_t *entropy);
+
 // passphrase must be at most 256 characters or code may crash
 void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed[512 / 8], void (*progress_callback)(uint32_t current, uint32_t total));
 
