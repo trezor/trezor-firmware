@@ -31,6 +31,7 @@ typedef struct __blake2s_state
 
 int blake2s_Init(blake2s_state *S, size_t outlen);
 int blake2s_InitKey(blake2s_state *S, size_t outlen, const void *key, size_t keylen);
+int blake2s_InitPersonal(blake2s_state *S, size_t outlen, const void *personal, size_t personal_len);
 int blake2s_Update(blake2s_state *S, const void *pin, size_t inlen);
 int blake2s_Final(blake2s_state *S, void *out, size_t outlen);
 

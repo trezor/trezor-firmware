@@ -126,6 +126,29 @@ int blake2s_Init( blake2s_state *S, size_t outlen )
   return blake2s_init_param( S, P );
 }
 
+int blake2s_InitPersonal( blake2s_state *S, size_t outlen, const void *personal, size_t personal_len)
+{
+  blake2s_param P[1];
+
+  if ( ( !outlen ) || ( outlen > BLAKE2S_OUTBYTES ) ) return -1;
+  if ( ( !personal ) || ( personal_len != BLAKE2S_PERSONALBYTES ) ) return -1;
+
+  P->digest_length = (uint8_t)outlen;
+  P->key_length    = 0;
+  P->fanout        = 1;
+  P->depth         = 1;
+  store32( &P->leaf_length, 0 );
+  store32( &P->node_offset, 0 );
+  store16( &P->xof_length, 0 );
+  P->node_depth    = 0;
+  P->inner_length  = 0;
+  /* memset(P->reserved, 0, sizeof(P->reserved) ); */
+  memset( P->salt,     0, sizeof( P->salt ) );
+  memcpy( P->personal, personal, BLAKE2S_PERSONALBYTES );
+  return blake2s_init_param( S, P );
+}
+
+
 int blake2s_InitKey( blake2s_state *S, size_t outlen, const void *key, size_t keylen )
 {
   blake2s_param P[1];
