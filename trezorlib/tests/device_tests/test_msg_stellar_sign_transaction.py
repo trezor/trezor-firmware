@@ -56,6 +56,7 @@ import pytest
 
 
 @pytest.mark.stellar
+@pytest.mark.xfail(TREZOR_VERSION == 1, reason="T1 support is not yet finished")
 @pytest.mark.xfail(TREZOR_VERSION == 2, reason="T2 support is not yet finished")
 class TestMsgStellarSignTransaction(TrezorTest):
 
