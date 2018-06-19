@@ -12,7 +12,7 @@ PYTHON ?= python
 	protoc -I/usr/include -I. $< --python_out=.
 
 messages_map.h: messages_map.py messages_pb2.py types_pb2.py
-	$(PYTHON) $< | grep -v MessageType_Lisk > $@
+	$(PYTHON) $< | grep -v -e MessageType_Lisk -e MessageType_Stellar > $@
 
 clean:
 	rm -f *.pb *.o *.d *.pb.c *.pb.h *_pb2.py messages_map.h

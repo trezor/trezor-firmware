@@ -28,7 +28,7 @@ OBJS += ethereum.o
 OBJS += ethereum_tokens.o
 OBJS += nem2.o
 OBJS += nem_mosaics.o
-OBJS += stellar.o
+# OBJS += stellar.o
 
 OBJS += debug.o
 
