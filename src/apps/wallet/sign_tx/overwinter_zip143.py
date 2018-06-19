@@ -23,9 +23,9 @@ class Zip143Error(ValueError):
 class Zip143:
 
     def __init__(self):
-        self.h_prevouts = HashWriter(blake2b, b'', 32, b'ZcashPrevoutHash')
-        self.h_sequence = HashWriter(blake2b, b'', 32, b'ZcashSequencHash')
-        self.h_outputs = HashWriter(blake2b, b'', 32, b'ZcashOutputsHash')
+        self.h_prevouts = HashWriter(blake2b, outlen=32, personal=b'ZcashPrevoutHash')
+        self.h_sequence = HashWriter(blake2b, outlen=32, personal=b'ZcashSequencHash')
+        self.h_outputs = HashWriter(blake2b, outlen=32, personal=b'ZcashOutputsHash')
 
     def add_prevouts(self, txi: TxInputType):
         write_bytes_rev(self.h_prevouts, txi.prev_hash)
@@ -47,7 +47,7 @@ class Zip143:
         return get_tx_hash(self.h_outputs)
 
     def preimage_hash(self, coin: CoinInfo, tx: SignTx, txi: TxInputType, pubkeyhash: bytes, sighash: int) -> bytes:
-        h_preimage = HashWriter(blake2b, b'', 32, b'ZcashSigHash\x19\x1b\xa8\x5b')  # BRANCH_ID = 0x5ba81b19
+        h_preimage = HashWriter(blake2b, outlen=32, personal=b'ZcashSigHash\x19\x1b\xa8\x5b')  # BRANCH_ID = 0x5ba81b19
 
         assert tx.overwintered
 

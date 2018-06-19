@@ -40,29 +40,49 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2b_update(mp_obj_t self, mp_obj_t data);
 ///     Creates a hash context object.
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_Blake2b_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
-    mp_arg_check_num(n_args, n_kw, 0, 3, false);
+
+    STATIC const mp_arg_t allowed_args[] = {
+        { MP_QSTR_data,                      MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
+        { MP_QSTR_outlen,   MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = BLAKE2B_DIGEST_LENGTH} },
+        { MP_QSTR_key,      MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
+        { MP_QSTR_personal, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes} },
+    };
+    mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
+    mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, vals);
+
+    size_t data_len;
+    const uint8_t *data = (const uint8_t *)mp_obj_str_get_data(vals[0].u_obj, &data_len);
+    const mp_int_t outlen = vals[1].u_int;
+    size_t key_len;
+    const uint8_t *key = (const uint8_t *)mp_obj_str_get_data(vals[2].u_obj, &key_len);
+    size_t personal_len;
+    const uint8_t *personal = (const uint8_t *)mp_obj_str_get_data(vals[3].u_obj, &personal_len);
+
+    if (key_len > 0 && personal_len > 0) {
+        mp_raise_ValueError("Invalid Blake2b parameters: cannot use key and personal at the same time");
+    }
+
     mp_obj_Blake2b_t *o = m_new_obj(mp_obj_Blake2b_t);
     o->base.type = type;
     int res = 0;
-    // constructor called with personal argument set
-    if (n_args == 3) {
-        size_t outlen = trezor_obj_get_uint(args[1]);
-        mp_buffer_info_t personal;
-        mp_get_buffer_raise(args[2], &personal, MP_BUFFER_READ);
-        res = blake2b_InitPersonal(&(o->ctx), outlen, personal.buf, personal.len);
-    } else if (n_args == 2) {
-        size_t outlen = trezor_obj_get_uint(args[1]);
-        res = blake2b_Init(&(o->ctx), outlen);
+
+    if (key_len > 0) {
+        res = blake2b_InitKey(&(o->ctx), outlen, key, key_len);
+    } else if (personal_len > 0) {
+        res = blake2b_InitPersonal(&(o->ctx), outlen, personal, personal_len);
     } else {
-        res = blake2b_Init(&(o->ctx), BLAKE2B_DIGEST_LENGTH);
+        res = blake2b_Init(&(o->ctx), outlen);
     }
+
     if (res < 0) {
         mp_raise_ValueError("Invalid Blake2b parameters");
     }
+
     // constructor called with data argument set
-    if (n_args >= 1) {
-        mod_trezorcrypto_Blake2b_update(MP_OBJ_FROM_PTR(o), args[0]);
+    if (data_len > 0) {
+        blake2b_Update(&(o->ctx), data, data_len);
     }
+
     return MP_OBJ_FROM_PTR(o);
 }
 

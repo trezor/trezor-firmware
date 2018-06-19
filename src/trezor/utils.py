@@ -73,8 +73,8 @@ def format_ordinal(number):
 
 class HashWriter:
 
-    def __init__(self, hashfunc, *hashargs):
-        self.ctx = hashfunc(*hashargs)
+    def __init__(self, hashfunc, *hashargs, **hashkwargs):
+        self.ctx = hashfunc(*hashargs, **hashkwargs)
         self.buf = bytearray(1)  # used in append()
 
     def extend(self, buf: bytearray):

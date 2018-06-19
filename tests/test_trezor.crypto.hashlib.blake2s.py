@@ -19,11 +19,11 @@ class TestCryptoBlake2s(unittest.TestCase):
     def test_digest(self):
         key = unhexlify('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f')
         for d, h in self.vectors:
-            self.assertEqual(hashlib.blake2s(unhexlify(d), hashlib.blake2s.digest_size, key).digest(), unhexlify(h))
+            self.assertEqual(hashlib.blake2s(unhexlify(d), key=key).digest(), unhexlify(h))
 
     def test_update(self):
         key = unhexlify('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f')
-        x = hashlib.blake2s(b'', hashlib.blake2s.digest_size, key)
+        x = hashlib.blake2s(b'', key=key)
         x.update(bytes(range(10)))
         self.assertEqual(x.digest(), unhexlify('f5c4b2ba1a00781b13aba0425242c69cb1552f3f71a9a3bb22b4a6b4277b46dd'))
         x.update(bytes(range(10, 30)))
