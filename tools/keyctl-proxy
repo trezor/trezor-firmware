@@ -14,12 +14,8 @@ indexmap = {
 
 def get_trezor():
     from trezorlib.client import TrezorClient
-    from trezorlib.transport_hid import HidTransport
-    devices = HidTransport.enumerate()
-    if len(devices) > 0:
-        return TrezorClient(devices[0])
-    else:
-        raise Exception('No TREZOR found')
+    from trezorlib.transport import get_transport
+    return TrezorClient(get_transport())
 
 
 def get_path(index):
