@@ -50,7 +50,8 @@
 		"Dash": true,
 		"Litecoin": true,
 		"Zcash": true,
-		"Testnet": true
+		"Testnet": true,
+		"Zcash Testnet": true
 	},
 	"electrum": {
 		"Bitcoin": "https://electrum.org/",
