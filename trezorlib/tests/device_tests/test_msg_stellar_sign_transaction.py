@@ -77,8 +77,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         op = proto.StellarAccountMergeOp()
-        # GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V
-        op.destination_account = unhexlify('5d55642466b185b843152e9e219151dbc5892027ec40101a517bed5ca030c2e0')
+        op.destination_account = 'GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V'
 
         tx = self._create_msg()
 
@@ -92,7 +91,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         op = proto.StellarCreateAccountOp()
-        op.new_account = stellar.address_to_public_key("GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V")
+        op.new_account = 'GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V'
         op.starting_balance = 1000333000
 
         tx = self._create_msg()
@@ -107,7 +106,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
 
         op = proto.StellarPaymentOp()
         op.amount = 500111000
-        op.destination_account = stellar.address_to_public_key("GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V")
+        op.destination_account = 'GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V'
 
         tx = self._create_msg()
 
@@ -121,10 +120,9 @@ class TestMsgStellarSignTransaction(TrezorTest):
 
         op = proto.StellarPaymentOp()
         op.amount = 500111000
-        op.destination_account = stellar.address_to_public_key("GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V")
+        op.destination_account = 'GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V'
 
-        op.asset = proto.StellarAssetType(1, "X", stellar.address_to_public_key("GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"))
-
+        op.asset = proto.StellarAssetType(1, 'X', 'GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC')
         tx = self._create_msg()
 
         response = self.client.stellar_sign_transaction(tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE)
@@ -137,10 +135,9 @@ class TestMsgStellarSignTransaction(TrezorTest):
 
         op = proto.StellarPaymentOp()
         op.amount = 500111000
-        op.destination_account = stellar.address_to_public_key("GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V")
+        op.destination_account = 'GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V'
 
-        op.asset = proto.StellarAssetType(2, "ABCDEFGHIJKL", stellar.address_to_public_key("GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"))
-
+        op.asset = proto.StellarAssetType(2, 'ABCDEFGHIJKL', 'GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC')
         tx = self._create_msg()
 
         response = self.client.stellar_sign_transaction(tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE)
@@ -150,7 +147,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
     def _create_msg(self) -> proto.StellarSignTx:
         tx = proto.StellarSignTx()
         tx.protocol_version = 1
-        tx.source_account = unhexlify('15d648bfe4d36f196cfb5735ffd8ca54cd4b8233f743f22449de7cf301cdb469')
+        tx.source_account = 'GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW'
         tx.fee = 100
         tx.sequence_number = 0x100000000
         tx.memo_type = 0
