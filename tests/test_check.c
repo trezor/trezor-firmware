@@ -3802,7 +3802,45 @@ START_TEST(test_ethereum_address)
 	const char **vec = vectors;
 	while (*vec) {
 		memcpy(addr, fromhex(*vec), 20);
-		ethereum_address_checksum(addr, address);
+		ethereum_address_checksum(addr, address, false, 1);
+		ck_assert_str_eq(address, *vec);
+		vec++;
+	}
+}
+END_TEST
+
+// test vectors from https://github.com/rsksmart/RSKIPs/blob/master/IPs/RSKIP60.md
+START_TEST(test_rsk_address)
+{
+	uint8_t addr[20];
+	char address[41];
+
+	static const char *rskip60_chain30[] = {
+		"5aaEB6053f3e94c9b9a09f33669435E7ef1bEAeD",
+		"Fb6916095cA1Df60bb79ce92cE3EA74c37c5d359",
+		"DBF03B407c01E7CD3cBea99509D93F8Dddc8C6FB",
+		"D1220A0Cf47c7B9BE7a2e6ba89F429762E7B9adB",
+		0
+	};
+	const char **vec = rskip60_chain30;
+	while (*vec) {
+		memcpy(addr, fromhex(*vec), 20);
+		ethereum_address_checksum(addr, address, true, 30);
+		ck_assert_str_eq(address, *vec);
+		vec++;
+	}
+
+	static const char *rskip60_chain31[] = {
+		"5aAeb6053F3e94c9b9A09F33669435E7EF1BEaEd",
+		"Fb6916095CA1dF60bb79CE92ce3Ea74C37c5D359",
+		"dbF03B407C01E7cd3cbEa99509D93f8dDDc8C6fB",
+		"d1220a0CF47c7B9Be7A2E6Ba89f429762E7b9adB",
+		0
+	};
+	vec = rskip60_chain31;
+	while (*vec) {
+		memcpy(addr, fromhex(*vec), 20);
+		ethereum_address_checksum(addr, address, true, 31);
 		ck_assert_str_eq(address, *vec);
 		vec++;
 	}
@@ -4742,6 +4780,10 @@ Suite *test_suite(void)
 
 	tc = tcase_create("ethereum_address");
 	tcase_add_test(tc, test_ethereum_address);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("rsk_address");
+	tcase_add_test(tc, test_rsk_address);
 	suite_add_tcase(s, tc);
 
 	tc = tcase_create("wif");
