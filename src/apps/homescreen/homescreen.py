@@ -1,4 +1,4 @@
-from trezor import ui, res
+from trezor import ui, res, config
 from trezor.ui.swipe import Swipe, degrees
 from apps.common import storage
 
@@ -29,6 +29,10 @@ def display_homescreen():
     elif storage.is_initialized() and storage.needs_backup():
         ui.display.bar(0, 0, ui.WIDTH, 30, ui.YELLOW)
         ui.display.text_center(ui.WIDTH // 2, 22, 'NEEDS BACKUP!', ui.BOLD, ui.BLACK, ui.YELLOW)
+        ui.display.bar(0, 30, ui.WIDTH, ui.HEIGHT - 30, ui.BG)
+    elif not config.has_pin():
+        ui.display.bar(0, 0, ui.WIDTH, 30, ui.YELLOW)
+        ui.display.text_center(ui.WIDTH // 2, 22, 'PIN NOT SET!', ui.BOLD, ui.BLACK, ui.YELLOW)
         ui.display.bar(0, 30, ui.WIDTH, ui.HEIGHT - 30, ui.BG)
     else:
         ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
