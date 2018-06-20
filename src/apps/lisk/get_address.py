@@ -1,5 +1,5 @@
 from apps.common import seed
-from apps.wallet.get_address import _show_address, _show_qr
+from apps.common.display_address import show_address, show_qr
 from trezor.messages.LiskAddress import LiskAddress
 
 from .helpers import LISK_CURVE, get_address_from_public_key
@@ -15,9 +15,9 @@ async def layout_lisk_get_address(ctx, msg):
 
     if msg.show_display:
         while True:
-            if await _show_address(ctx, address):
+            if await show_address(ctx, address):
                 break
-            if await _show_qr(ctx, address):
+            if await show_qr(ctx, address):
                 break
 
     return LiskAddress(address=address)
