@@ -4,6 +4,7 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)  : ORIGIN = 0x08040000, LENGTH = 768K
+  FLASH2 (r)   : ORIGIN = 0x08120000, LENGTH = 896K
   CCMRAM (wal) : ORIGIN = 0x10000000, LENGTH = 64K
   SRAM   (wal) : ORIGIN = 0x20000000, LENGTH = 192K
 }
@@ -26,7 +27,7 @@ sram_end = ORIGIN(SRAM) + LENGTH(SRAM);
 _ram_start = sram_start;
 _ram_end = sram_end;
 
-_codelen = SIZEOF(.flash) + SIZEOF(.data);
+_codelen = LENGTH(FLASH) - SIZEOF(.vendorheader) - SIZEOF(.header) + SIZEOF(.flash2);
 _flash_start = ORIGIN(FLASH);
 _flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
 _heap_start = ADDR(.heap);
@@ -40,6 +41,11 @@ SECTIONS {
   .header : ALIGN(4) {
     KEEP(*(.header));
   } >FLASH AT>FLASH
+
+  .flash2 : ALIGN(512) {
+    build/firmware/frozen_mpy.o(.rodata*);
+    . = ALIGN(512);
+  } >FLASH2 AT>FLASH2
 
   .flash : ALIGN(512) {
     KEEP(*(.vector_table));

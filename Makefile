@@ -33,7 +33,9 @@ PRODTEST_START      = 0x08040000
 
 BOARDLOADER_MAXSIZE = 49152
 BOOTLOADER_MAXSIZE  = 131072
-FIRMWARE_MAXSIZE    = 786432
+FIRMWARE_P1_MAXSIZE = 786432
+FIRMWARE_P2_MAXSIZE = 917504
+FIRMWARE_MAXSIZE    = 1703936
 
 GITREV=$(shell git describe --always --dirty)
 CFLAGS += -DGITREV=$(GITREV)
@@ -187,6 +189,8 @@ bloaty: ## run bloaty size profiler
 sizecheck: ## check sizes of binary files
 	test $(BOARDLOADER_MAXSIZE) -ge $(shell wc -c < $(BOARDLOADER_BUILD_DIR)/boardloader.bin)
 	test $(BOOTLOADER_MAXSIZE) -ge $(shell wc -c < $(BOOTLOADER_BUILD_DIR)/bootloader.bin)
+	test $(FIRMWARE_P1_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin.p1)
+	test $(FIRMWARE_P2_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin.p2)
 	test $(FIRMWARE_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin)
 
 combine: ## combine boardloader + bootloader + prodtest into one combined image
