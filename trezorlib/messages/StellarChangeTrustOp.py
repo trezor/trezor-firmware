@@ -6,14 +6,14 @@ from .StellarAssetType import StellarAssetType
 class StellarChangeTrustOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 216
     FIELDS = {
-        1: ('source_account', p.BytesType, 0),
+        1: ('source_account', p.UnicodeType, 0),
         2: ('asset', StellarAssetType, 0),
         3: ('limit', p.UVarintType, 0),
     }
 
     def __init__(
         self,
-        source_account: bytes = None,
+        source_account: str = None,
         asset: StellarAssetType = None,
         limit: int = None
     ) -> None:

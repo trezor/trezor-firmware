@@ -6,7 +6,7 @@ from .StellarAssetType import StellarAssetType
 class StellarManageOfferOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 213
     FIELDS = {
-        1: ('source_account', p.BytesType, 0),
+        1: ('source_account', p.UnicodeType, 0),
         2: ('selling_asset', StellarAssetType, 0),
         3: ('buying_asset', StellarAssetType, 0),
         4: ('amount', p.SVarintType, 0),
@@ -17,7 +17,7 @@ class StellarManageOfferOp(p.MessageType):
 
     def __init__(
         self,
-        source_account: bytes = None,
+        source_account: str = None,
         selling_asset: StellarAssetType = None,
         buying_asset: StellarAssetType = None,
         amount: int = None,
