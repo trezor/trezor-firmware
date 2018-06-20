@@ -34,9 +34,11 @@ def format_vtrust(vtrust):
 
 # bootloader/firmware headers specification: https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md
 
-IMAGE_HEADER_SIZE = 1024
-IMAGE_SIG_SIZE    = 65
-IMAGE_CHUNK_SIZE  = 128 * 1024
+IMAGE_HEADER_SIZE           = 1024
+IMAGE_SIG_SIZE              = 65
+IMAGE_CHUNK_SIZE            = 128 * 1024
+BOOTLOADER_SECTORS_COUNT    = 1
+FIRMWARE_SECTORS_COUNT      = 6 + 7
 
 
 class BinImage(object):
@@ -152,7 +154,7 @@ class BinImage(object):
 class FirmwareImage(BinImage):
 
     def __init__(self, data, vhdrlen):
-        super(FirmwareImage, self).__init__(data[vhdrlen:], magic=b'TRZF', max_size=6 * IMAGE_CHUNK_SIZE)
+        super(FirmwareImage, self).__init__(data[vhdrlen:], magic=b'TRZF', max_size=FIRMWARE_SECTORS_COUNT * IMAGE_CHUNK_SIZE)
         self.vhdrlen = vhdrlen
         self.vheader = data[:vhdrlen]
 
@@ -166,7 +168,7 @@ class FirmwareImage(BinImage):
 class BootloaderImage(BinImage):
 
     def __init__(self, data):
-        super(BootloaderImage, self).__init__(data, magic=b'TRZB', max_size=1 * IMAGE_CHUNK_SIZE)
+        super(BootloaderImage, self).__init__(data, magic=b'TRZB', max_size=BOOTLOADER_SECTORS_COUNT * IMAGE_CHUNK_SIZE)
 
 
 class VendorHeader(object):
