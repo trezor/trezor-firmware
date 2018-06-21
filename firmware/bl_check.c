@@ -49,7 +49,7 @@ void check_bootloader(void)
 	int r = memory_bootloader_hash(hash);
 
 	if (!known_bootloader(r, hash)) {
-		layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Unknown bootloader", "detected.", NULL, "Unplug your TREZOR", "contact our support.", NULL);
+		layoutDialog(&bmp_icon_error, NULL, NULL, NULL, _("Unknown bootloader"), _("detected."), NULL, _("Unplug your TREZOR"), _("contact our support."), NULL);
 		shutdown();
 	}
 
@@ -66,24 +66,33 @@ void check_bootloader(void)
 	// ATTEMPTING TO OVERWRITE BOOTLOADER WITH UNSIGNED FIRMWARE MAY BRICK
 	// YOUR DEVICE.
 
-	layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Overwriting bootloader", NULL, NULL, "DON'T UNPLUG", "YOUR TREZOR", NULL);
+	layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, _("Updating bootloader"), NULL, NULL, _("DO NOT UNPLUG"), _("YOUR TREZOR!"), NULL);
 
 	// unlock sectors
 	memory_write_unlock();
 
-	// replace bootloader
-	flash_unlock();
-	for (int i = FLASH_BOOT_SECTOR_FIRST; i <= FLASH_BOOT_SECTOR_LAST; i++) {
-		flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
+	for (int tries = 0; tries < 10; tries++) {
+		// replace bootloader
+		flash_unlock();
+		for (int i = FLASH_BOOT_SECTOR_FIRST; i <= FLASH_BOOT_SECTOR_LAST; i++) {
+			flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
+		}
+		for (int i = 0; i < FLASH_BOOT_LEN / 4; i++) {
+			const uint32_t *w = (const uint32_t *)(bl_data + i * 4);
+			flash_program_word(FLASH_BOOT_START + i * 4, *w);
+		}
+		flash_lock();
+		// check whether the write was OK
+		r = memory_bootloader_hash(hash);
+		if (r == 32 && 0 == memcmp(hash, bl_hash, 32)) {
+			// OK -> show info and halt
+			layoutDialog(&bmp_icon_info, NULL, NULL, NULL, _("Update finished"), _("successfully."), NULL, _("Please reconnect"), _("the device."), NULL);
+			shutdown();
+			return;
+		}
 	}
-	for (int i = 0; i < FLASH_BOOT_LEN / 4; i++) {
-		const uint32_t *w = (const uint32_t *)(bl_data + i * 4);
-		flash_program_word(FLASH_BOOT_START + i * 4, *w);
-	}
-	flash_lock();
-
 	// show info and halt
-	layoutDialog(&bmp_icon_info, NULL, NULL, NULL, _("Update finished"), _("successfully."), NULL, _("Please reconnect"), _("the device."), NULL);
+	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, _("Bootloader update"), _("broken."), NULL, _("Unplug your TREZOR"), _("contact our support."), NULL);
 	shutdown();
 #endif
 }
