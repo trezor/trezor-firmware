@@ -21,6 +21,7 @@
 #define __UTIL_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <setup.h>
 
 #if !EMULATOR
@@ -85,6 +86,13 @@ static inline bool is_mode_unprivileged(void)
 	uint32_t r0;
 	__asm__ volatile("mrs %0, control" : "=r" (r0));
 	return r0 & 1;
+}
+
+#else /* EMULATOR */
+
+static inline bool is_mode_unprivileged(void)
+{
+	return true;
 }
 #endif
 
