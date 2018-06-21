@@ -83,6 +83,7 @@ setup(
     version=VERSION,
     author='TREZOR',
     author_email='info@trezor.io',
+    license='LGPLv3',
     description='Python library for communicating with TREZOR Hardware Wallet',
     long_description='{}\n\n{}'.format(
         read('README.md'),

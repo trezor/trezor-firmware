@@ -1,9 +1,9 @@
 recursive-include bash_completion.d *.sh
 include tools/*
-include trezorlib/tests/txcache/*.json
+recursive-include trezorlib *
 
 recursive-include vendor/trezor-common *
 exclude vendor/trezor-common/.*
 
-include COPYING CHANGELOG.md
+include AUTHORS README.md COPYING CHANGELOG.md
 include requirements*.txt
