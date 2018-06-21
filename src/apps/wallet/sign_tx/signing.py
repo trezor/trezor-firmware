@@ -617,10 +617,11 @@ def node_derive(root: bip32.HDNode, address_n: list) -> bip32.HDNode:
 
 
 def address_n_matches_coin(address_n: list, coin: CoinInfo) -> bool:
-    bip44 = const(44 | 0x80000000)
-    if len(address_n) < 2 or address_n[0] != bip44 or address_n[1] == coin.slip44 | 0x80000000:
-        return True  # path is not BIP44 or matches the coin
-    return False  # path is BIP44 and does not match the coin
+    if len(address_n) < 2:
+        return True  # path is too short
+    if address_n[0] not in (44 | 0x80000000, 49 | 0x80000000, 84 | 0x80000000):
+        return True  # path is not BIP44/49/84
+    return address_n[1] == (coin.slip44 | 0x80000000)  # check whether coin_type matches slip44 value
 
 
 def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
