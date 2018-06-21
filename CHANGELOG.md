@@ -6,8 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 _At the moment, the project does __not__ adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
 
-## [0.10.2] - Unreleased
-[0.10.2]: https://github.com/trezor/python-trezor/compare/v0.10.1...master
+## [0.10.2] - 2018-06-21
+[0.10.2]: https://github.com/trezor/python-trezor/compare/v0.10.1...v0.10.2
 
 ### Added
 - `stellar_get_address` and `_public_key` functions support `show_display` parameter
