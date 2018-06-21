@@ -84,8 +84,16 @@
 	},
 	"electrum": {
 		"Bitcoin": "https://electrum.org",
-		"Litecoin": "https://electrum-ltc.org",
 		"Bcash": "https://electroncash.org",
-		"Dash": "https://electrum.dash.org"
+		"Bgold": "https://github.com/BTCGPU/electrum",
+		"Bprivate": "https://github.com/BTCPrivate/electrum-btcp",
+		"Dash": "https://electrum.dash.org",
+		"Groestlcoin": "https://www.groestlcoin.org/groestlcoin-electrum-wallet/",
+		"Koto": "https://electrum.kotocoin.info",
+		"Litecoin": "https://electrum-ltc.org",
+		"Monacoin": "https://electrum-mona.org",
+		"Namecoin": "https://github.com/namecoin/electrum-nmc",
+		"Viacoin": "https://vialectrum.org",
+		"Zcoin": "https://github.com/zcoinofficial/electrum-xzc"
 	}
 }
