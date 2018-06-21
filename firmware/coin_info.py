@@ -12,11 +12,7 @@ HEADER_TEMPLATE = """
 
 #include "coins.h"
 
-#if DEBUG_LINK
-#define COINS_COUNT ({stable} + {debug})
-#else
-#define COINS_COUNT ({stable})
-#endif
+#define COINS_COUNT ({count})
 
 extern const CoinInfo coins[COINS_COUNT];
 
@@ -32,10 +28,7 @@ CODE_TEMPLATE = """
 #include "secp256k1.h"
 
 const CoinInfo coins[COINS_COUNT] = {{
-{stable}
-#if DEBUG_LINK
-{debug}
-#endif
+{coins}
 }};
 """.lstrip()
 
@@ -117,25 +110,20 @@ def format_coins(coins):
 if __name__ == "__main__":
     os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
-    coins = collections.defaultdict(list)
+    coins = []
 
     support = json.load(open('defs/support.json', 'r'), object_pairs_hook=collections.OrderedDict)
     defs = support['trezor1'].keys()
 
     for c in defs:
         name = c.replace(' ', '_').lower()
-        firmware = 'debug' if name.endswith('_testnet') else 'stable'
         if name == 'testnet':
             name = 'bitcoin_testnet'
         data = json.load(open('defs/coins/%s.json' % name, 'r'))
-        coins[firmware].append(data)
+        coins.append(data)
 
     with open("coin_info.h", "w+") as f:
-        f.write(HEADER_TEMPLATE.format(**{
-            k: format_number(len(v)) for k, v in coins.items()
-        }))
+        f.write(HEADER_TEMPLATE.format(count=len(coins)))
 
     with open("coin_info.c", "w+") as f:
-        f.write(CODE_TEMPLATE.format(**{
-            k: format_coins(v) for k, v in coins.items()
-        }))
+        f.write(CODE_TEMPLATE.format(coins=format_coins(coins)))
