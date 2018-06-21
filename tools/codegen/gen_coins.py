@@ -11,6 +11,7 @@ fields = [
     'xpub_magic',
     'bech32_prefix',
     'cashaddr_prefix',
+    'slip44',
     'segwit',
     'fork_id',
     'force_bip143',
