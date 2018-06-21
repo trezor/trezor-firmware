@@ -9,13 +9,14 @@
 		"Dash": "1.5.2",
 		"Zcash": "1.6.2",
 		"Bgold": "1.6.2",
+		"Decred": "1.6.2",
 		"DigiByte": "1.6.0",
 		"Monacoin": "1.6.0",
 		"Fujicoin": "1.6.1",
 		"Vertcoin": "1.6.1",
 		"Bcash Testnet": "1.6.2",
 		"Zcash Testnet": "1.6.2",
-		"Decred Testnet": "1.6.1"
+		"Decred Testnet": "1.6.2"
 	},
 	"trezor2": {
 		"Bitcoin": "2.0.5",
@@ -55,7 +56,7 @@
 		"Zcash Testnet": true
 	},
 	"electrum": {
-		"Bitcoin": "https://electrum.org/",
+		"Bitcoin": "https://electrum.org",
 		"Litecoin": "https://electrum-ltc.org",
 		"Bcash": "https://electroncash.org",
 		"Dash": "https://electrum.dash.org"
