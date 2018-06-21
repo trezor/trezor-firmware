@@ -7,7 +7,7 @@ def get_tokens():
     tokens = []
     for s, i in networks:
         try:
-            files = os.scandir('defs/ethereum/tokens/tokens/%s' % s)
+            files = os.scandir('../defs/ethereum/tokens/tokens/%s' % s)
         except FileNotFoundError:
             continue
 

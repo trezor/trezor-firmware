@@ -5,6 +5,7 @@ import json
 import requests
 import pprint
 import ethereum_tokens_gen
+import build_coins
 
 COINS = {}
 
@@ -68,8 +69,8 @@ def update_info(details):
     details['info']['updated_at'] = int(time.time())
     details['info']['updated_at_readable'] = time.asctime()
 
-    details['info']['t1_coins'] = len([True for _, c in details['coins'].items() if c['t1_enabled'] == 'yes' and not c.get('hidden', False)])
-    details['info']['t2_coins'] = len([True for _, c in details['coins'].items() if c['t2_enabled'] == 'yes' and not c.get('hidden', False)])
+    details['info']['t1_coins'] = len([True for _, c in details['coins'].items() if c.get('t1_enabled') == 'yes' and not c.get('hidden', False)])
+    details['info']['t2_coins'] = len([True for _, c in details['coins'].items() if c.get('t2_enabled') == 'yes' and not c.get('hidden', False)])
 
     try:
         details['info']['total_marketcap_usd'] = int(coinmarketcap_global()['data']['quotes']['USD']['total_market_cap'])
@@ -90,12 +91,13 @@ def check_unsupported(details, prefix, supported):
             print("%s not supported by Trezor? (Possible manual entry)" % k)
 
 def update_coins(details):
-    coins = json.load(open('coins.json', 'r'))
+    (coins, _) = build_coins.process(None)
+    firmware = json.load(open('../defs/support.json', 'r'))
 
     supported = []
-    for coin in coins:
-        if coin['firmware'] != 'stable':
-            continue
+    for key, coin in coins.items():
+        t1_enabled = key in firmware['trezor1']
+        t2_enabled = key in firmware['trezor2']
 
         # print("Updating", coin['coin_label'], coin['coin_shortcut'])
         key = "coin:%s" % coin['coin_shortcut']
@@ -105,8 +107,11 @@ def update_coins(details):
         set_default(out, 'shortcut', coin['coin_shortcut'])
         set_default(out, 'name', coin['coin_label'])
         set_default(out, 'links', {})
-        set_default(out, 't1_enabled', 'yes')
-        set_default(out, 't2_enabled', 'yes')
+        set_default(out['links'], 'Homepage', coin['website'])
+        set_default(out['links'], 'Github', coin['github'])
+        set_default(out, 't1_enabled', 'yes' if t1_enabled else 'no')
+        set_default(out, 't2_enabled', 'yes' if t2_enabled else 'no')
+
         update_marketcap(out, coin.get('coinmarketcap_alias', coin['coin_label']))
 
     check_unsupported(details, 'coin:', supported)
@@ -235,7 +240,7 @@ def update_ethereum(details):
     set_default(out, 't2_enabled', 'yes')
     update_marketcap(out, 'etsc')
 
-    ut = details['coins'].setdefault('coin2:EOSC', {})
+    out = details['coins'].setdefault('coin2:EOSC', {})
     out['type'] = 'coin'
     set_default(out, 'shortcut', 'EOSC')
     set_default(out, 'name', 'EOS Classic')
@@ -244,7 +249,7 @@ def update_ethereum(details):
     update_marketcap(out, 'eosc')
 
 def update_mosaics(details):
-    d = json.load(open('defs/nem/nem_mosaics.json'))
+    d = json.load(open('../defs/nem/nem_mosaics.json'))
     supported = []
     for mosaic in d:
         # print('Updating', mosaic['name'], mosaic['ticker'])
@@ -270,7 +275,7 @@ def check_missing_details(details):
         if 'links' not in coin:
             print("%s: Missing links" % k)
             hide = True
-        if 'Homepage' not in coin['links']:
+        if 'Homepage' not in coin.get('links', {}):
             print("%s: Missing homepage" % k)
             hide = True
         if coin['t1_enabled'] not in ('yes', 'no', 'planned', 'soon'):
@@ -279,11 +284,11 @@ def check_missing_details(details):
         if coin['t2_enabled'] not in ('yes', 'no', 'planned', 'soon'):
             print("%s: Unknown t2_enabled" % k)
             hide = True
-        if 'TREZOR Wallet' in coin['links'] and coin['links']['TREZOR Wallet'] != 'https://wallet.trezor.io':
-            print("%s: Strange URL for TREZOR Wallet" % k)
+        if 'Trezor Wallet' in coin.get('links', {}) and coin['links']['Trezor Wallet'] != 'https://wallet.trezor.io':
+            print("%s: Strange URL for Trezor Wallet" % k)
             hide = True
 
-        for w in [ x.lower() for x in coin['links'].keys() ]:
+        for w in [ x.lower() for x in coin.get('links', {}).keys() ]:
             if 'wallet' in w or 'electrum' in w:
                 break
         else:
@@ -294,6 +299,9 @@ def check_missing_details(details):
                 print("%s: Missing wallet, but not hiding" % k)
 
         if hide:
+            if coin.get('hidden') != 1:
+                print("%s: HIDING COIN!" % k)
+
             # If any of important detail is missing, hide coin from list
             coin['hidden'] = 1
 
@@ -306,7 +314,7 @@ def check_missing_details(details):
 
 if __name__ == '__main__':
     try:
-        details = json.load(open('coins_details.json', 'r'))
+        details = json.load(open('../defs/coins_details.json', 'r'))
     except FileNotFoundError:
         details = {'coins': {}, 'info': {}}
 
@@ -319,4 +327,4 @@ if __name__ == '__main__':
     check_missing_details(details)
 
     print(json.dumps(details['info'], sort_keys=True, indent=4))
-    json.dump(details, open('coins_details.json', 'w'), sort_keys=True, indent=4)
+    json.dump(details, open('../defs/coins_details.json', 'w'), sort_keys=True, indent=4)
