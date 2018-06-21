@@ -122,12 +122,6 @@ async def send_signature(ctx, msg: EthereumSignTx, digest):
     return req
 
 
-def node_derive(root, address_n: list):
-    node = root.clone()
-    node.derive_path(address_n)
-    return node
-
-
 def check(msg: EthereumSignTx):
     if msg.tx_type not in [1, 6, None]:
         raise wire.DataError('tx_type out of bounds')
