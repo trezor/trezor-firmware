@@ -4,6 +4,7 @@ from trezor.utils import chunks, format_amount
 from trezor.ui.text import Text
 from trezor.messages import ButtonRequestType
 from trezor.messages import OutputScriptType
+from apps.common import coins
 from apps.common.confirm import confirm
 from apps.common.confirm import hold_to_confirm
 
@@ -53,3 +54,12 @@ async def confirm_feeoverthreshold(ctx, fee, coin):
                    'Continue?', icon_color=ui.GREEN)
 
     return await confirm(ctx, content, ButtonRequestType.FeeOverThreshold)
+
+
+async def confirm_foreign_address(ctx, address_n, coin):
+    content = Text('Confirm sending', ui.ICON_SEND,
+                   'Trying to spend',
+                   'coins from another chain.',
+                   'Continue?', icon_color=ui.RED)
+
+    return await confirm(ctx, content, ButtonRequestType.SignTx)

@@ -86,6 +86,9 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
         hash143.add_prevouts(txi)  # all inputs are included (non-segwit as well)
         hash143.add_sequence(txi)
 
+        if not address_n_matches_coin(txi.address_n, coin):
+            await confirm_foreign_address(txi.address_n, coin)
+
         if txi.multisig:
             multifp.add(txi.multisig)
 
@@ -607,10 +610,17 @@ def input_check_wallet_path(txi: TxInputType, wallet_path: list) -> list:
                            'Transaction has changed during signing')
 
 
-def node_derive(root: bip32.HDNode, address_n: list):
+def node_derive(root: bip32.HDNode, address_n: list) -> bip32.HDNode:
     node = root.clone()
     node.derive_path(address_n)
     return node
+
+
+def address_n_matches_coin(address_n: list, coin: CoinInfo) -> bool:
+    bip44 = const(44 | 0x80000000)
+    if len(address_n) < 2 or address_n[0] != bip44 or address_n[1] == coin.slip44 | 0x80000000:
+        return True  # path is not BIP44 or matches the coin
+    return False  # path is BIP44 and does not match the coin
 
 
 def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
