@@ -3,11 +3,11 @@
 import time
 import json
 import requests
-import pprint
 import ethereum_tokens_gen
 import build_coins
 
 COINS = {}
+
 
 def coinmarketcap_init():
     global COINS
@@ -44,10 +44,11 @@ def coinmarketcap_info(shortcut):
 
     for _id in COINS:
         coin = COINS[_id]
-        #print(shortcut, coin['website_slug'])
+        # print(shortcut, coin['website_slug'])
         if shortcut == coin['website_slug']:
-            #print(coin)
+            # print(coin)
             return coin
+
 
 def update_marketcap(obj, shortcut):
     try:
@@ -56,14 +57,17 @@ def update_marketcap(obj, shortcut):
         pass
         # print("Marketcap info not found for", shortcut)
 
+
 def coinmarketcap_global():
     url = 'https://api.coinmarketcap.com/v2/global'
     ret = requests.get(url)
     data = ret.json()
     return data
 
+
 def set_default(obj, key, default_value):
     obj[key] = obj.setdefault(key, default_value)
+
 
 def update_info(details):
     details['info']['updated_at'] = int(time.time())
@@ -83,12 +87,14 @@ def update_info(details):
             marketcap += details['coins'][k].setdefault('marketcap_usd', 0)
     details['info']['marketcap_usd'] = marketcap
 
+
 def check_unsupported(details, prefix, supported):
     for k in details['coins'].keys():
         if not k.startswith(prefix):
             continue
         if k not in supported:
             print("%s not supported by Trezor? (Possible manual entry)" % k)
+
 
 def update_coins(details):
     (coins, _) = build_coins.process(None)
@@ -116,16 +122,9 @@ def update_coins(details):
 
     check_unsupported(details, 'coin:', supported)
 
+
 def update_erc20(details):
-    networks = ['eth',
-        'exp',
-        # 'rop',
-        # 'rin',
-        'ubq',
-        # 'rsk',
-        # 'kov',
-        'etc',
-    ]
+    networks = [x[0] for x in ethereum_tokens_gen.networks]
 
     LATEST_T1 = 'https://raw.githubusercontent.com/trezor/trezor-mcu/v1.6.1/firmware/ethereum_tokens.c'
     LATEST_T2 = 'https://raw.githubusercontent.com/trezor/trezor-core/v2.0.6/src/apps/ethereum/tokens.py'
@@ -174,6 +173,7 @@ def update_erc20(details):
         update_marketcap(out, out.get('coinmarketcap_alias', t['symbol']))
 
     check_unsupported(details, 'erc20:', supported)
+
 
 def update_ethereum(details):
     out = details['coins'].setdefault('coin2:ETH', {})
@@ -248,6 +248,7 @@ def update_ethereum(details):
     set_default(out, 't2_enabled', 'yes')
     update_marketcap(out, 'eosc')
 
+
 def update_mosaics(details):
     d = json.load(open('../defs/nem/nem_mosaics.json'))
     supported = []
@@ -266,6 +267,7 @@ def update_mosaics(details):
         update_marketcap(out, out.get('coinmarketcap_alias', out['name']))
 
     check_unsupported(details, 'mosaic:', supported)
+
 
 def check_missing_details(details):
     for k in details['coins'].keys():
@@ -288,7 +290,7 @@ def check_missing_details(details):
             print("%s: Strange URL for Trezor Wallet" % k)
             hide = True
 
-        for w in [ x.lower() for x in coin.get('links', {}).keys() ]:
+        for w in [x.lower() for x in coin.get('links', {}).keys()]:
             if 'wallet' in w or 'electrum' in w:
                 break
         else:
@@ -311,6 +313,7 @@ def check_missing_details(details):
     for k in details['coins'].keys():
         if details['coins'][k].get('hidden') == 1:
             print("%s: Coin is hidden" % k)
+
 
 if __name__ == '__main__':
     try:
