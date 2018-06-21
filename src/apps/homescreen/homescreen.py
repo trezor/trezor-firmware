@@ -30,7 +30,7 @@ def display_homescreen():
         ui.display.bar(0, 0, ui.WIDTH, 30, ui.YELLOW)
         ui.display.text_center(ui.WIDTH // 2, 22, 'NEEDS BACKUP!', ui.BOLD, ui.BLACK, ui.YELLOW)
         ui.display.bar(0, 30, ui.WIDTH, ui.HEIGHT - 30, ui.BG)
-    elif not config.has_pin():
+    elif storage.is_initialized() and not config.has_pin():
         ui.display.bar(0, 0, ui.WIDTH, 30, ui.YELLOW)
         ui.display.text_center(ui.WIDTH // 2, 22, 'PIN NOT SET!', ui.BOLD, ui.BLACK, ui.YELLOW)
         ui.display.bar(0, 30, ui.WIDTH, ui.HEIGHT - 30, ui.BG)
