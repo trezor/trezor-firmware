@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 
-#define TOKENS_COUNT 125
+#define TOKENS_COUNT 716
 
 typedef struct {
     uint8_t chain_id;
