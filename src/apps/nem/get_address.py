@@ -35,9 +35,4 @@ async def _show_address(ctx, address: str, network: int):
         ui.NORMAL, '%s network' % get_network_str(network),
         ui.MONO, *lines,
         icon_color=ui.GREEN)
-    return await confirm(
-            ctx,
-            content,
-            code=ButtonRequestType.Address,
-            cancel='QR',
-            cancel_style=ui.BTN_KEY)
+    return await confirm(ctx, content, code=ButtonRequestType.Address, cancel='QR', cancel_style=ui.BTN_KEY)

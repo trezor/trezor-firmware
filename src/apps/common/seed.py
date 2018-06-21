@@ -1,4 +1,3 @@
-from micropython import const
 from trezor import wire
 from trezor.crypto import bip32, bip39
 from apps.common import cache, storage

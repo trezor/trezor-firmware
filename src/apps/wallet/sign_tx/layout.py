@@ -4,7 +4,6 @@ from trezor.utils import chunks, format_amount
 from trezor.ui.text import Text
 from trezor.messages import ButtonRequestType
 from trezor.messages import OutputScriptType
-from apps.common import coins
 from apps.common.confirm import confirm
 from apps.common.confirm import hold_to_confirm
 
