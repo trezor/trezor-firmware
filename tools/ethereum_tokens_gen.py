@@ -34,6 +34,7 @@ def print_tokens(tokens, python=False):
         ascii_only = re.match(r'^[ -\x7F]+$', symbol) is not None
         if not ascii_only:  # skip Unicode symbols, they are stupid
             continue
+        name = name.strip()
         count += 1
         if python:
             print("    (%d, b'%s', '%s', %d),  # %s / %s" % (chain_id, address, symbol, decimal, chain, name))  # noqa:E501
