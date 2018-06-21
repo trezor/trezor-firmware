@@ -24,20 +24,17 @@ Get first receiving address of first account for Bitcoin (Legacy / non-SegWit):
 
   trezorctl get_address --coin Bitcoin --script-type address --address "m/44'/0'/0'/0/0"
 
-
-Get first receiving address of first account for Bitcoin (Bech32 native SegWit P2WPKH):
-
-.. code::
-
-  trezorctl get_address --coin Bitcoin --script-type segwit --address "m/49'/0'/0'/0/0"
-
-
 Get first receiving address of first account for Bitcoin (SegWit-in-P2SH):
 
 .. code::
 
   trezorctl get_address --coin Bitcoin --script-type p2shsegwit --address "m/49'/0'/0'/0/0"
 
+Get first receiving address of first account for Bitcoin (Bech32 native SegWit P2WPKH):
+
+.. code::
+
+  trezorctl get_address --coin Bitcoin --script-type segwit --address "m/84'/0'/0'/0/0"
 
 Get Legacy Bitcoin ``xpub`` (can be used to create a watch-only wallet):
 
@@ -100,19 +97,17 @@ The final broadcast and mined transaction can be seen here: https://blockchain.i
 Litecoin examples
 -----------------
 
-Get first receiving address of first account for Litecoin (Bech32 native SegWit P2WPKH):
-
-.. code::
-
-  trezorctl get_address --coin Litecoin --script-type segwit --address "m/49'/2'/0'/0/0"
-
-
 Get first receiving address of first account for Litecoin (SegWit-in-P2SH):
 
 .. code::
 
   trezorctl get_address --coin Litecoin --script-type p2shsegwit --address "m/49'/2'/0'/0/0"
 
+Get first receiving address of first account for Litecoin (Bech32 native SegWit P2WPKH):
+
+.. code::
+
+  trezorctl get_address --coin Litecoin --script-type segwit --address "m/84'/2'/0'/0/0"
 
 Notes
 -----
