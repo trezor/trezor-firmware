@@ -53,6 +53,10 @@ void check_bootloader(void)
 		shutdown();
 	}
 
+	if (is_mode_unprivileged()) {
+		return;
+	}
+
 	if (r == 32 && 0 == memcmp(hash, bl_hash, 32)) {
 		// all OK -> done
 		return;
@@ -61,6 +65,8 @@ void check_bootloader(void)
 	// ENABLE THIS AT YOUR OWN RISK
 	// ATTEMPTING TO OVERWRITE BOOTLOADER WITH UNSIGNED FIRMWARE MAY BRICK
 	// YOUR DEVICE.
+
+	layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Overwriting bootloader", NULL, NULL, "DON'T UNPLUG", "YOUR TREZOR", NULL);
 
 	// unlock sectors
 	memory_write_unlock();
