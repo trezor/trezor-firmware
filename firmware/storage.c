@@ -849,6 +849,7 @@ void storage_applyFlags(uint32_t flags)
 	}
 	storageUpdate.has_flags = true;
 	storageUpdate.flags |= flags;
+	storage_update();
 }
 
 uint32_t storage_getFlags(void)
