@@ -30,7 +30,7 @@ import trezorlib.messages as m
         show_display=True
     ),
 ])
-def test_cancel_message(client, message):
+def test_cancel_message_via_cancel(client, message):
     resp = client.call_raw(message)
     assert isinstance(resp, m.ButtonRequest)
 
@@ -41,3 +41,25 @@ def test_cancel_message(client, message):
 
     assert isinstance(resp, m.Failure)
     assert resp.code == m.FailureType.ActionCancelled
+
+
+@setup_client()
+@pytest.mark.parametrize("message", [
+    m.Ping(message="hello", button_protection=True),
+    m.GetAddress(
+        address_n=[0],
+        coin_name="Bitcoin",
+        script_type=m.InputScriptType.SPENDADDRESS,
+        show_display=True
+    ),
+])
+def test_cancel_message_via_initialize(client, message):
+    resp = client.call_raw(message)
+    assert isinstance(resp, m.ButtonRequest)
+
+    client.transport.write(m.ButtonAck())
+    client.transport.write(m.Initialize())
+
+    resp = client.transport.read()
+
+    assert isinstance(resp, m.Features)
