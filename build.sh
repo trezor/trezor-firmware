@@ -44,10 +44,16 @@ from __future__ import print_function
 import hashlib
 import sys
 for arg in sys.argv[1:]:
-  (fn, max_size) = arg.split(':')
+  (fn, fprint_start, hashing, max_size) = arg.split(':')
+  fprint_start = int(fprint_start)
+  max_size = int(max_size)
   data = open(fn, 'rb').read()
+  if hashing == 'd':
+      fprint = hashlib.sha256(hashlib.sha256(data[fprint_start:]).digest()).hexdigest()
+  else:
+      fprint = hashlib.sha256(data[fprint_start:]).hexdigest()
   print('\n\n')
   print('Filename    :', fn)
-  print('Fingerprint :', hashlib.sha256(hashlib.sha256(data).digest()).hexdigest())
-  print('Size        : %d bytes (out of %d maximum)' % (len(data), int(max_size, 10)))
-" $BOOTLOADER_BINFILE:32768 $FIRMWARE_BINFILE:491520
+  print('Fingerprint :', fprint)
+  print('Size        : %d bytes (out of %d maximum)' % (len(data), max_size))
+" $BOOTLOADER_BINFILE:0:d:32768 $FIRMWARE_BINFILE:256:s:491520
