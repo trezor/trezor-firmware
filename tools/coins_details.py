@@ -151,6 +151,7 @@ def update_erc20(details):
         set_default(out, 'shortcut', t['symbol'])
         set_default(out, 'name', t['name'])
         set_default(out, 'links', {})
+        set_default(out, 'wallet', {})
 
         if "\" %s\"" % t['symbol'] in tokens_t1:
             out['t1_enabled'] = 'yes'
@@ -162,8 +163,8 @@ def update_erc20(details):
         else:
             out['t2_enabled'] = 'soon'
 
-        out['links']['MyCrypto Wallet'] = 'https://mycrypto.com'
-        out['links']['MyEtherWallet'] = 'https://www.myetherwallet.com'
+        out['wallet']['MyCrypto'] = 'https://mycrypto.com'
+        out['wallet']['MyEtherWallet'] = 'https://www.myetherwallet.com'
 
         if t['website']:
             out['links']['Homepage'] = t['website']
@@ -286,19 +287,12 @@ def check_missing_details(details):
         if coin['t2_enabled'] not in ('yes', 'no', 'planned', 'soon'):
             print("%s: Unknown t2_enabled" % k)
             hide = True
-        if 'Trezor Wallet' in coin.get('links', {}) and coin['links']['Trezor Wallet'] != 'https://wallet.trezor.io':
+        if 'Trezor' in coin.get('wallet', {}) and coin['wallet']['Trezor'] != 'https://wallet.trezor.io':
             print("%s: Strange URL for Trezor Wallet" % k)
             hide = True
 
-        for w in [x.lower() for x in coin.get('links', {}).keys()]:
-            if 'wallet' in w or 'electrum' in w:
-                break
-        else:
-            if coin['t1_enabled'] == 'yes' or coin['t2_enabled'] == 'yes':
-                print("%s: Missing wallet" % k)
-                hide = True
-            else:
-                print("%s: Missing wallet, but not hiding" % k)
+        if len(coin.get('wallet', {})) == 0:
+            print("%s: Missing wallet" % k)
 
         if hide:
             if coin.get('hidden') != 1:
