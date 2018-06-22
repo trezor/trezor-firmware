@@ -25,6 +25,12 @@ CWD = os.path.dirname(os.path.realpath(__file__))
 TREZOR_COMMON = os.path.join(CWD, 'vendor', 'trezor-common')
 
 
+def read(name):
+    filename = os.path.join(CWD, name)
+    with open(filename, 'r') as f:
+        return f.read()
+
+
 class PrebuildCommand(Command):
     description = 'update vendored files (coins.json, protobuf messages)'
     user_options = []
@@ -77,7 +83,13 @@ setup(
     version=VERSION,
     author='TREZOR',
     author_email='info@trezor.io',
+    license='LGPLv3',
     description='Python library for communicating with TREZOR Hardware Wallet',
+    long_description='{}\n\n{}'.format(
+        read('README.md'),
+        read('CHANGELOG.md'),
+    ),
+    long_description_content_type='text/markdown',
     url='https://github.com/trezor/python-trezor',
     packages=find_packages(),
     package_data={
