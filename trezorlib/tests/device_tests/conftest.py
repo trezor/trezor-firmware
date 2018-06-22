@@ -56,6 +56,11 @@ def client():
 
     client.transport.session_end()
 
+    # XXX debuglink session must also be closed
+    # client.close accomplishes that for now; going forward, there should
+    # also be proper session handling for debuglink
+    client.close()
+
 
 def setup_client(mnemonic=None, pin='', passphrase=False):
     if mnemonic is None:
