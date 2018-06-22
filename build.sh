@@ -5,6 +5,13 @@ IMAGE=trezor-mcu-build
 
 BOOTLOADER_TAG=${1:-master}
 FIRMWARE_TAG=${2:-master}
+REPOSITORY=${3:-trezor}
+
+if [ "$REPOSITORY" = "local" ]; then
+	REPOSITORY=file:///local/
+else
+	REPOSITORY=https://github.com/$REPOSITORY/trezor-mcu.git
+fi
 
 BOOTLOADER_BINFILE=build/bootloader-$BOOTLOADER_TAG.bin
 BOOTLOADER_ELFFILE=build/bootloader-$BOOTLOADER_TAG.elf
@@ -13,9 +20,9 @@ FIRMWARE_BINFILE=build/trezor-$FIRMWARE_TAG.bin
 FIRMWARE_ELFFILE=build/trezor-$FIRMWARE_TAG.elf
 
 docker build -t $IMAGE .
-docker run -t -v $(pwd)/build:/build:z $IMAGE /bin/sh -c "\
+docker run -i -t -v $(pwd):/local -v $(pwd)/build:/build:z $IMAGE /bin/sh -c "\
 	cd /tmp && \
-	git clone https://github.com/trezor/trezor-mcu.git trezor-mcu-bl && \
+	git clone $REPOSITORY trezor-mcu-bl && \
 	cd trezor-mcu-bl && \
 	git checkout $BOOTLOADER_TAG && \
 	git submodule update --init --recursive && \
@@ -25,7 +32,7 @@ docker run -t -v $(pwd)/build:/build:z $IMAGE /bin/sh -c "\
 	cp bootloader/bootloader.bin /$BOOTLOADER_BINFILE && \
 	cp bootloader/bootloader.elf /$BOOTLOADER_ELFFILE && \
 	cd /tmp && \
-	git clone https://github.com/trezor/trezor-mcu.git trezor-mcu-fw && \
+	git clone $REPOSITORY trezor-mcu-fw && \
 	cd trezor-mcu-fw && \
 	git checkout $FIRMWARE_TAG && \
 	git submodule update --init --recursive && \
