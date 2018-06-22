@@ -8,10 +8,8 @@ class TestCoins(unittest.TestCase):
     def test_coins(self):
         ref = [
             ('BTC', 'Bitcoin', 0),
-            ('TEST', 'Testnet', 111),
             ('NMC', 'Namecoin', 52),
             ('LTC', 'Litecoin', 48),
-            ('DOGE', 'Dogecoin', 30),
             ('DASH', 'Dash', 76),
             ('ZEC', 'Zcash', 7352),
             ('TAZ', 'Zcash Testnet', 7461),
