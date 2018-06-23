@@ -1,3 +1,14 @@
+Version 1.6.2
+* Stable release, optional update
+* Add possibility to set custom auto-lock delay
+* Bitcoin Cash cashaddr support
+* Zcash Overwinter hardfork support
+* Support for new coins:
+  - Decred, Bitcoin Private, Fujicoin, Groestlcoin, Vertcoin, Viacoin, Zcoin
+* Support for new Ethereum networks:
+  - EOS Classic, Ethereum Social, Ellaism, Callisto, EtherGem, Wanchain
+* Support for 500+ new Ethereum tokens
+
 Version 1.6.1
 * Stable release, optional update
 * Use fixed-width font for addresses
