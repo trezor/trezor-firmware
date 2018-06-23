@@ -17,7 +17,7 @@ install:
 
 script:
     - jsonlint defs/*.json
-    - cd defs/coins/tools && python build_coins.py
+    - python tools/build_coins.py --defs
 
 notifications:
   webhooks:

@@ -173,6 +173,7 @@ def process_json(fn):
         print('OK')
         return j, None
 
+
 def process(for_device=None):
     scriptdir = os.path.dirname(os.path.realpath(__file__))
 
@@ -189,19 +190,20 @@ def process(for_device=None):
         n = c['coin_name']
         c['support'] = {}
         for s in support_json.keys():
-            c['support'][s] = support_json[s][n] if n in support_json[s] else None
+            c['support'][s] = support_json[s][n] if n in support_json[s] else None  # noqa:E501
         if support_list is None or n in support_list:
             coins[n] = c
             defs[n] = d
 
     return (coins, defs)
 
+
 if __name__ == '__main__':
     if len(sys.argv) > 1 and not sys.argv[1].startswith('-'):
         for_device = sys.argv[1]
     else:
         for_device = None
-    
+
     (coins, defs) = process(for_device)
 
     json.dump(coins, open('coins.json', 'w'), indent=4, sort_keys=True)
