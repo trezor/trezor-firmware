@@ -304,15 +304,15 @@ def _xdr_read_asset(unpacker):
 
 
 def _xdr_read_address(unpacker):
-    """Reads a stellar address and returns the 32-byte
-    data representing the address
+    """Reads a stellar address and returns the string representing the address
+    This method assumes the encoded address is a public address (starting with G)
     """
     # First 4 bytes are the address type
     address_type = unpacker.unpack_uint()
     if address_type != 0:
         raise ValueError("Unsupported address type")
 
-    return unpacker.unpack_fopaque(32)
+    return address_from_public_key(unpacker.unpack_fopaque(32))
 
 
 def _crc16_checksum(bytes):
