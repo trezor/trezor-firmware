@@ -145,7 +145,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
         assert b64encode(response.signature) == b'QZIP4XKPfe4OpZtuJiyrMZBX9YBzvGpHGcngdgFfHn2kcdONreF384/pCF80xfEnGm8grKaoOnUEKxqcMKvxAA=='
 
     def test_sign_tx_set_options_op_inflation(self):
-        """Set inflation destination to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
+        """Set inflation destination"""
         self.setup_mnemonic_nopin_nopassphrase()
 
         op = proto.StellarSetOptionsOp()
