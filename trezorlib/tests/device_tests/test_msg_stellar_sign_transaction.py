@@ -144,6 +144,18 @@ class TestMsgStellarSignTransaction(TrezorTest):
 
         assert b64encode(response.signature) == b'QZIP4XKPfe4OpZtuJiyrMZBX9YBzvGpHGcngdgFfHn2kcdONreF384/pCF80xfEnGm8grKaoOnUEKxqcMKvxAA=='
 
+    def test_sign_tx_set_options_op_inflation(self):
+        """Set inflation destination to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        op = proto.StellarSetOptionsOp()
+        op.inflation_destination_account = 'GAFXTC5OV5XQD66T7WGOB2HUVUC3ZVJDJMBDPTVQYV3G3K7TUHC6CLBR'
+
+        tx = self._create_msg()
+        response = self.client.stellar_sign_transaction(tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE)
+
+        assert b64encode(response.signature) == b'dveWhKY8x7b0YqGHWH6Fo1SskxaHP11NXd2n6oHKGiv+T/LqB+CCzbmJA0tplZ+0HNPJbHD7L3Bsg/y462qLDA=='
+
     def _create_msg(self) -> proto.StellarSignTx:
         tx = proto.StellarSignTx()
         tx.protocol_version = 1
