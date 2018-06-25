@@ -1,0 +1,93 @@
+#!/bin/bash
+
+# script/build: Build the TREZOR firmware in a clean working tree.
+#
+
+set -eu
+
+cd "$(dirname "$0")/.."
+
+readonly ARTIFACT_EXTENSIONS=(bin elf)
+readonly BUILD_DIR="$(readlink -f build)"
+
+readonly BOOTLOADER_DIR="$BUILD_DIR/bootloader"
+readonly BOOTLOADER_FILENAME="bootloader/bootloader.bin"
+readonly BOOTLOADER_PATH="$BOOTLOADER_DIR/$BOOTLOADER_FILENAME"
+
+readonly FIRMWARE_DIR="$BUILD_DIR/firmware"
+readonly FIRMWARE_FILENAME="firmware/trezor.bin"
+readonly FIRMWARE_PATH="$FIRMWARE_DIR/$FIRMWARE_FILENAME"
+
+worktree_setup() {
+    local path="$1"
+    local commit="$2"
+
+    rm -rf "$path"
+    git clone -n --reference=. . "$path" --recurse-submodules
+
+    # Use `git rev-parse` so that we can use any reference from the working repository.
+    git -C "$path" checkout "$(git rev-parse "$commit")"
+
+    ( cd "$path" && script/setup )
+}
+
+worktree_build() {
+    local path="$1"
+
+    ( cd "$path" && script/cibuild )
+}
+
+worktree_copy() {
+    local path="$1"
+    local filename="$2"
+    local pattern="$3"
+
+    local describe="$(git -C "$path" describe --tags --match "$pattern")"
+
+    local src="$path/$filename"
+
+    local basename="$(basename "$filename")"
+    local dest="$BUILD_DIR/${basename%.*}-$describe.${basename##*.}"
+
+    for extension in "${ARTIFACT_EXTENSIONS[@]}"; do
+	install -Dm0644 \
+	    "${src%.*}.$extension" \
+	    "${dest%.*}.$extension"
+    done
+
+    printf "%s" "$dest"
+}
+
+main() {
+    local bootloader_commit="$1"
+    local firmware_commit="$2"
+
+    worktree_setup "$BOOTLOADER_DIR" "$bootloader_commit"
+    worktree_build "$BOOTLOADER_DIR"
+
+    local bootloader_path="$(worktree_copy \
+	"$BOOTLOADER_DIR" \
+	"$BOOTLOADER_FILENAME" \
+	"bl*")"
+
+    worktree_setup "$FIRMWARE_DIR" "$firmware_commit"
+    cp "$BOOTLOADER_PATH" "$FIRMWARE_DIR/$BOOTLOADER_FILENAME"
+    worktree_build "$FIRMWARE_DIR"
+
+    local firmware_path="$(worktree_copy \
+	"$FIRMWARE_DIR" \
+	"$FIRMWARE_FILENAME" \
+	"v*")"
+
+    printf "\n\n"; script/fingerprint \
+	"$bootloader_path" \
+	--max-size 32768 \
+	--double
+
+    printf "\n\n"; script/fingerprint \
+	"$firmware_path" \
+	--offset 256 \
+	--max-size 491520
+}
+
+main "$@"

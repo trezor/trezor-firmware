@@ -14,9 +14,11 @@ else
 fi
 
 make
+
 if [ "$EMULATOR" != 1 ]; then
-    make -C bootloader
+    make -C bootloader align
 fi
+
 make -C vendor/nanopb/generator/proto
 make -C firmware/protob
 

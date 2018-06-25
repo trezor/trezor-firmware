@@ -10,7 +10,10 @@ RUN apt-get update && \
 
 ENV PROTOBUF_VERSION=3.4.0
 RUN curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
-RUN unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d /usr
+
+# use zipfile module to extract files world-readable
+RUN python3 -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/local && chmod 755 /usr/local/bin/protoc
+
 RUN pip3 install "protobuf==${PROTOBUF_VERSION}" ecdsa
 
 RUN ln -s python3 /usr/bin/python
