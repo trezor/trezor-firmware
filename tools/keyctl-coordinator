@@ -52,23 +52,26 @@ def sign(index, filename, participants):
         proxy.append(Pyro4.Proxy(uri))
     # collect commits
     pks, Rs = [], []
-    for p in proxy:
+    for i, p in enumerate(proxy):
         pk, R = p.get_commit(index, digest)
         pk, R = serpent.tobytes(pk), serpent.tobytes(R)
         pks.append(pk)
         Rs.append(R)
+        print('collected commit #%d from %s' % (i, p._pyroUri.host))
     # compute global commit
     global_pk = cosi.combine_keys(pks)
     global_R = cosi.combine_keys(Rs)
     # collect signatures
     sigs = []
-    for p in proxy:
+    for i, p in enumerate(proxy):
         sig = p.get_signature(index, digest, global_R, global_pk)
         sig = serpent.tobytes(sig)
         sigs.append(sig)
+        print('collected signature #%d from %s' % (i, p._pyroUri.host))
     # compute global signature
     sig = cosi.combine_sig(global_R, sigs)
     cosi.verify(sig, digest, global_pk)
+    print('global signature:')
     print(binascii.hexlify(sig).decode())
 
 
