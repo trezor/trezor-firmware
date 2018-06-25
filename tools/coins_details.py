@@ -126,8 +126,8 @@ def update_coins(details):
 def update_erc20(details):
     networks = [x[0] for x in ethereum_tokens_gen.networks]
 
-    LATEST_T1 = 'https://raw.githubusercontent.com/trezor/trezor-mcu/v1.6.1/firmware/ethereum_tokens.c'
-    LATEST_T2 = 'https://raw.githubusercontent.com/trezor/trezor-core/v2.0.6/src/apps/ethereum/tokens.py'
+    LATEST_T1 = 'https://raw.githubusercontent.com/trezor/trezor-mcu/v1.6.2/firmware/ethereum_tokens.c'
+    LATEST_T2 = 'https://raw.githubusercontent.com/trezor/trezor-core/v2.0.7/src/apps/ethereum/tokens.py'
 
     tokens = ethereum_tokens_gen.get_tokens()
     tokens_t1 = requests.get(LATEST_T1).text
