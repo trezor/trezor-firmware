@@ -10,7 +10,7 @@ Version 1.6.2
 * Support for 500+ new Ethereum tokens
 
 Version 1.6.1
-* Stable release, optional update
+* Stable release, required update
 * Use fixed-width font for addresses
 * Lots of under-the-hood improvements
 * Fixed issue with write-protection settings
