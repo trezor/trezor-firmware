@@ -6,7 +6,7 @@ Version 2.0.7
 * Lisk support
 * Show warning on home screen if PIN is not set
 * Support for new coins:
-  - Decred, Bitcoin Private, Fujicoin, Groestlcoin, Vertcoin, Viacoin, Zcoin
+  - Bitcoin Private, Fujicoin, Vertcoin, Viacoin, Zcoin
 * Support for new Ethereum networks:
   - EOS Classic, Ethereum Social, Ellaism, Callisto, EtherGem, Wanchain
 * Support for 500+ new Ethereum tokens
