@@ -370,7 +370,6 @@
             "type": "coin"
         },
         "coin:GRS": {
-            "hidden": 1,
             "links": {
                 "Github": "https://github.com/Groestlcoin/groestlcoin",
                 "Homepage": "https://www.groestlcoin.org"
@@ -4925,6 +4924,7 @@
         },
         "erc20:eth:E\u20b9": {
             "address": "0xb67734521eAbBE9C773729dB73E16CC2dfb20A58",
+            "hidden": 1,
             "links": {
                 "Github": "https://github.com/eRupee",
                 "Homepage": "https://erupee.wordpress.com"
@@ -5996,6 +5996,7 @@
         },
         "erc20:eth:Hdp.\u0444": {
             "address": "0x84543F868eC1b1FAC510d49d13C069f64cD2d5f9",
+            "hidden": 1,
             "links": {
                 "Github": "https://github.com/HEDPAY",
                 "Homepage": "http://hedpay.com"
@@ -12764,11 +12765,11 @@
         }
     },
     "info": {
-        "marketcap_usd": 190921126329,
-        "t1_coins": 685,
+        "marketcap_usd": 191456100947,
+        "t1_coins": 686,
         "t2_coins": 686,
-        "total_marketcap_usd": 258400377510,
-        "updated_at": 1529950637,
-        "updated_at_readable": "Mon Jun 25 20:17:17 2018"
+        "total_marketcap_usd": 258211270341,
+        "updated_at": 1529951420,
+        "updated_at_readable": "Mon Jun 25 20:30:20 2018"
     }
 }
