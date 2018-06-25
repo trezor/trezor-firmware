@@ -214,7 +214,6 @@
             }
         },
         "coin:BTCP": {
-            "hidden": 1,
             "links": {
                 "Github": "https://github.com/BTCPrivate/BitcoinPrivate",
                 "Homepage": "https://btcprivate.org"
@@ -293,7 +292,6 @@
             "type": "coin"
         },
         "coin:DGB": {
-            "hidden": 1,
             "links": {
                 "Github": "https://github.com/digibyte/digibyte",
                 "Homepage": "https://www.digibyte.co"
@@ -567,7 +565,6 @@
             "type": "coin"
         },
         "coin:XZC": {
-            "hidden": 1,
             "links": {
                 "Github": "https://github.com/zcoinofficial/zcoin",
                 "Homepage": "https://zcoin.io"
@@ -12766,10 +12763,10 @@
     },
     "info": {
         "marketcap_usd": 191456100947,
-        "t1_coins": 686,
-        "t2_coins": 686,
-        "total_marketcap_usd": 258211270341,
-        "updated_at": 1529951420,
-        "updated_at_readable": "Mon Jun 25 20:30:20 2018"
+        "t1_coins": 689,
+        "t2_coins": 689,
+        "total_marketcap_usd": 258211684605,
+        "updated_at": 1529951560,
+        "updated_at_readable": "Mon Jun 25 20:32:40 2018"
     }
 }
