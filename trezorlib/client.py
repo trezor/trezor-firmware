@@ -415,8 +415,7 @@ class ProtocolMixin(object):
         warnings.warn('expand_path is deprecated, use tools.parse_path', DeprecationWarning, stacklevel=2)
         return tools.parse_path(n)
 
-    @tools.field('message')
-    @tools.expect(proto.Success)
+    @tools.expect(proto.Success, field="message")
     def ping(self, msg, button_protection=False, pin_protection=False, passphrase_protection=False):
         msg = proto.Ping(message=msg,
                          button_protection=button_protection,
@@ -450,8 +449,7 @@ class ProtocolMixin(object):
 
         return txes
 
-    @tools.field('message')
-    @tools.expect(proto.Success)
+    @tools.expect(proto.Success, field="message")
     def clear_session(self):
         return self.call(proto.ClearSession())
 

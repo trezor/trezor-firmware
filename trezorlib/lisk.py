@@ -1,11 +1,10 @@
 import binascii
 
 from . import messages as proto
-from .tools import field, expect, CallException, normalize_nfc
+from .tools import expect, CallException, normalize_nfc
 
 
-@field('address')
-@expect(proto.LiskAddress)
+@expect(proto.LiskAddress, field="address")
 def get_address(client, n, show_display=False):
     return client.call(proto.LiskGetAddress(address_n=n, show_display=show_display))
 

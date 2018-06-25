@@ -21,7 +21,7 @@ from mnemonic import Mnemonic
 
 from . import messages as proto
 from . import tools
-from .tools import field, expect, session
+from .tools import expect, session
 
 from .transport import enumerate_devices, get_transport
 
@@ -44,8 +44,7 @@ class TrezorDevice:
         return get_transport(path, prefix_search=False)
 
 
-@field('message')
-@expect(proto.Success)
+@expect(proto.Success, field="message")
 def apply_settings(client, label=None, language=None, use_passphrase=None, homescreen=None, passphrase_source=None, auto_lock_delay_ms=None):
     settings = proto.ApplySettings()
     if label is not None:
@@ -66,39 +65,34 @@ def apply_settings(client, label=None, language=None, use_passphrase=None, homes
     return out
 
 
-@field('message')
-@expect(proto.Success)
+@expect(proto.Success, field="message")
 def apply_flags(client, flags):
     out = client.call(proto.ApplyFlags(flags=flags))
     client.init_device()  # Reload Features
     return out
 
 
-@field('message')
-@expect(proto.Success)
+@expect(proto.Success, field="message")
 def change_pin(client, remove=False):
     ret = client.call(proto.ChangePin(remove=remove))
     client.init_device()  # Re-read features
     return ret
 
 
-@field('message')
-@expect(proto.Success)
+@expect(proto.Success, field="message")
 def set_u2f_counter(client, u2f_counter):
     ret = client.call(proto.SetU2FCounter(u2f_counter=u2f_counter))
     return ret
 
 
-@field('message')
-@expect(proto.Success)
+@expect(proto.Success, field="message")
 def wipe_device(client):
     ret = client.call(proto.WipeDevice())
     client.init_device()
     return ret
 
 
-@field('message')
-@expect(proto.Success)
+@expect(proto.Success, field="message")
 def recovery_device(client, word_count, passphrase_protection, pin_protection, label, language, type=proto.RecoveryDeviceType.ScrambledWords, expand=False, dry_run=False):
     if client.features.initialized and not dry_run:
         raise RuntimeError("Device is initialized already. Call wipe_device() and try again.")
@@ -127,8 +121,7 @@ def recovery_device(client, word_count, passphrase_protection, pin_protection, l
     return res
 
 
-@field('message')
-@expect(proto.Success)
+@expect(proto.Success, field="message")
 @session
 def reset_device(client, display_random, strength, passphrase_protection, pin_protection, label, language, u2f_counter=0, skip_backup=False):
     if client.features.initialized:
@@ -155,15 +148,13 @@ def reset_device(client, display_random, strength, passphrase_protection, pin_pr
     return ret
 
 
-@field('message')
-@expect(proto.Success)
+@expect(proto.Success, field="message")
 def backup_device(client):
     ret = client.call(proto.BackupDevice())
     return ret
 
 
-@field('message')
-@expect(proto.Success)
+@expect(proto.Success, field="message")
 def load_device_by_mnemonic(client, mnemonic, pin, passphrase_protection, label, language='english', skip_checksum=False, expand=False):
     # Convert mnemonic to UTF8 NKFD
     mnemonic = Mnemonic.normalize_string(mnemonic)
@@ -191,8 +182,7 @@ def load_device_by_mnemonic(client, mnemonic, pin, passphrase_protection, label,
     return resp
 
 
-@field('message')
-@expect(proto.Success)
+@expect(proto.Success, field="message")
 def load_device_by_xprv(client, xprv, pin, passphrase_protection, label, language):
     if client.features.initialized:
         raise RuntimeError("Device is initialized already. Call wipe_device() and try again.")
@@ -236,8 +226,7 @@ def load_device_by_xprv(client, xprv, pin, passphrase_protection, label, languag
     return resp
 
 
-@field('message')
-@expect(proto.Success)
+@expect(proto.Success, field="message")
 def self_test(client):
     if client.features.bootloader_mode is False:
         raise RuntimeError("Device must be in bootloader mode")

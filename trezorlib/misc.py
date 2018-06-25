@@ -1,9 +1,8 @@
 from . import messages as proto
-from .tools import field, expect
+from .tools import expect
 
 
-@field('entropy')
-@expect(proto.Entropy)
+@expect(proto.Entropy, field="entropy")
 def get_entropy(client, size):
     return client.call(proto.GetEntropy(size=size))
 
@@ -18,8 +17,7 @@ def get_ecdh_session_key(client, identity, peer_public_key, ecdsa_curve_name=Non
     return client.call(proto.GetECDHSessionKey(identity=identity, peer_public_key=peer_public_key, ecdsa_curve_name=ecdsa_curve_name))
 
 
-@field('value')
-@expect(proto.CipheredKeyValue)
+@expect(proto.CipheredKeyValue, field="value")
 def encrypt_keyvalue(client, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True, iv=b''):
     return client.call(proto.CipherKeyValue(address_n=n,
                                             key=key,
@@ -30,8 +28,7 @@ def encrypt_keyvalue(client, n, key, value, ask_on_encrypt=True, ask_on_decrypt=
                                             iv=iv))
 
 
-@field('value')
-@expect(proto.CipheredKeyValue)
+@expect(proto.CipheredKeyValue, field="value")
 def decrypt_keyvalue(client, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True, iv=b''):
     return client.call(proto.CipherKeyValue(address_n=n,
                                             key=key,

@@ -157,7 +157,7 @@ def parse_path(nstr: str) -> Address:
             return int(x)
 
     try:
-        return list(str_to_harden(x) for x in n)
+        return [str_to_harden(x) for x in n]
     except Exception:
         raise ValueError('Invalid BIP32 path', nstr)
 
@@ -176,27 +176,13 @@ class CallException(Exception):
     pass
 
 
-class field:
-    # Decorator extracts single value from
-    # protobuf object. If the field is not
-    # present, raises an exception.
-    def __init__(self, field):
-        self.field = field
-
-    def __call__(self, f):
-        @functools.wraps(f)
-        def wrapped_f(*args, **kwargs):
-            ret = f(*args, **kwargs)
-            return getattr(ret, self.field)
-        return wrapped_f
-
-
 class expect:
     # Decorator checks if the method
     # returned one of expected protobuf messages
     # or raises an exception
-    def __init__(self, *expected):
+    def __init__(self, expected, field=None):
         self.expected = expected
+        self.field = field
 
     def __call__(self, f):
         @functools.wraps(f)
@@ -204,7 +190,11 @@ class expect:
             ret = f(*args, **kwargs)
             if not isinstance(ret, self.expected):
                 raise RuntimeError("Got %s, expected %s" % (ret.__class__, self.expected))
-            return ret
+            if self.field is not None:
+                return getattr(ret, self.field)
+            else:
+                return ret
+
         return wrapped_f
 
 

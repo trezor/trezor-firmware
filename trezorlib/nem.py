@@ -17,7 +17,7 @@
 import binascii
 import json
 from . import messages as proto
-from .tools import expect, field, CallException
+from .tools import expect, CallException
 
 TYPE_TRANSACTION_TRANSFER = 0x0101
 TYPE_IMPORTANCE_TRANSFER = 0x0801
@@ -170,8 +170,7 @@ def create_sign_tx(transaction):
 ### Client functions ###
 
 
-@field("address")
-@expect(proto.NEMAddress)
+@expect(proto.NEMAddress, field="address")
 def get_address(client, n, network, show_display=False):
     return client.call(proto.NEMGetAddress(address_n=n, network=network, show_display=show_display))
 

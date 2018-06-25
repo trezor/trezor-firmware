@@ -19,7 +19,7 @@ import struct
 import xdrlib
 
 from . import messages
-from .tools import field, expect, CallException
+from .tools import expect, CallException
 
 # Memo types
 MEMO_TYPE_NONE = 0
@@ -343,14 +343,12 @@ def _crc16_checksum(bytes):
 ### Client functions ###
 
 
-@field('public_key')
-@expect(messages.StellarPublicKey)
+@expect(messages.StellarPublicKey, field="public_key")
 def get_public_key(client, address_n, show_display=False):
     return client.call(messages.StellarGetPublicKey(address_n=address_n, show_display=show_display))
 
 
-@field('address')
-@expect(messages.StellarAddress)
+@expect(messages.StellarAddress, field="address")
 def get_address(client, address_n, show_display=False):
     return client.call(messages.StellarGetAddress(address_n=address_n, show_display=show_display))
 

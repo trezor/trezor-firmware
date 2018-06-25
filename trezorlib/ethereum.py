@@ -1,5 +1,5 @@
 from . import messages as proto
-from .tools import field, expect, CallException, normalize_nfc, session
+from .tools import expect, CallException, normalize_nfc, session
 
 
 def int_to_big_endian(value):
@@ -9,8 +9,7 @@ def int_to_big_endian(value):
 ### Client functions ###
 
 
-@field('address')
-@expect(proto.EthereumAddress)
+@expect(proto.EthereumAddress, field="address")
 def get_address(client, n, show_display=False, multisig=None):
     return client.call(proto.EthereumGetAddress(address_n=n, show_display=show_display))
 

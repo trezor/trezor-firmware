@@ -1,7 +1,5 @@
 from . import messages as proto
-from .tools import expect, field, CallException, normalize_nfc, session
-
-### Client functions ###
+from .tools import expect, CallException, normalize_nfc, session
 
 
 @expect(proto.PublicKey)
@@ -9,8 +7,7 @@ def get_public_node(client, n, ecdsa_curve_name=None, show_display=False, coin_n
     return client.call(proto.GetPublicKey(address_n=n, ecdsa_curve_name=ecdsa_curve_name, show_display=show_display, coin_name=coin_name))
 
 
-@field('address')
-@expect(proto.Address)
+@expect(proto.Address, field="address")
 def get_address(client, coin_name, n, show_display=False, multisig=None, script_type=proto.InputScriptType.SPENDADDRESS):
     if multisig:
         return client.call(proto.GetAddress(address_n=n, coin_name=coin_name, show_display=show_display, multisig=multisig, script_type=script_type))
