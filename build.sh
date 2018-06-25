@@ -20,6 +20,13 @@ FIRMWARE_BINFILE=build/trezor-$FIRMWARE_TAG.bin
 FIRMWARE_ELFFILE=build/trezor-$FIRMWARE_TAG.elf
 
 docker build -t $IMAGE .
+
+echo
+echo "STARTING BUILD:"
+echo
+echo "Building bootloader '$BOOTLOADER_TAG' + firmware '$FIRMWARE_TAG' from repo: $REPOSITORY"
+echo
+
 docker run -i -t -v $(pwd):/local -v $(pwd)/build:/build:z $IMAGE /bin/sh -c "\
 	cd /tmp && \
 	git clone $REPOSITORY trezor-mcu-bl && \
@@ -46,6 +53,10 @@ docker run -i -t -v $(pwd):/local -v $(pwd)/build:/build:z $IMAGE /bin/sh -c "\
 	cp firmware/trezor.elf /$FIRMWARE_ELFFILE
 	"
 
+echo
+echo "FINISHED BUILD"
+echo
+
 /usr/bin/env python -c "
 from __future__ import print_function
 import hashlib
@@ -59,7 +70,6 @@ for arg in sys.argv[1:]:
       fprint = hashlib.sha256(hashlib.sha256(data[fprint_start:]).digest()).hexdigest()
   else:
       fprint = hashlib.sha256(data[fprint_start:]).hexdigest()
-  print('\n\n')
   print('Filename    :', fn)
   print('Fingerprint :', fprint)
   print('Size        : %d bytes (out of %d maximum)' % (len(data), max_size))
