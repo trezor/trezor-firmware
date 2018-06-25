@@ -32,9 +32,6 @@
   "address_prefix": "bitcoin:",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [
-    "https://testnet-bitcore1.trezor.io",
-    "https://testnet-bitcore2.trezor.io"
-  ],
+  "bitcore": [],
   "blockbook": []
 }

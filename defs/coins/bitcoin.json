@@ -35,13 +35,12 @@
   "address_prefix": "bitcoin:",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [
-    "https://btc-bitcore1.trezor.io",
-    "https://btc-bitcore2.trezor.io",
-    "https://btc-bitcore3.trezor.io",
-    "https://btc-bitcore4.trezor.io",
-    "https://btc-bitcore5.trezor.io",
-    "https://btc-bitcore6.trezor.io"
-  ],
-  "blockbook": []
+  "bitcore": [],
+  "blockbook": [
+    "https://btc1.trezor.io",
+    "https://btc2.trezor.io",
+    "https://btc3.trezor.io",
+    "https://btc4.trezor.io",
+    "https://btc5.trezor.io"
+  ]
 }

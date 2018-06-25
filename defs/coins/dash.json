@@ -32,9 +32,12 @@
   "address_prefix": "dash:",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [
-    "https://dash-bitcore1.trezor.io",
-    "https://dash-bitcore3.trezor.io"
-  ],
-  "blockbook": []
+  "bitcore": [],
+  "blockbook": [
+    "https://dash1.trezor.io",
+    "https://dash2.trezor.io",
+    "https://dash3.trezor.io",
+    "https://dash4.trezor.io",
+    "https://dash5.trezor.io"
+  ]
 }

@@ -32,8 +32,12 @@
   "address_prefix": "litecoin:",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [
-    "https://ltc-bitcore3.trezor.io"
-  ],
-  "blockbook": []
+  "bitcore": [],
+  "blockbook": [
+    "https://ltc1.trezor.io",
+    "https://ltc2.trezor.io",
+    "https://ltc3.trezor.io",
+    "https://ltc4.trezor.io",
+    "https://ltc5.trezor.io"
+  ]
 }

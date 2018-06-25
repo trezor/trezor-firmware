@@ -32,8 +32,12 @@
   "address_prefix": "zcash:",
   "min_address_length": 35,
   "max_address_length": 95,
-  "bitcore": [
-    "https://zec-bitcore1.trezor.io"
-  ],
-  "blockbook": []
+  "bitcore": [],
+  "blockbook": [
+    "https://zec1.trezor.io",
+    "https://zec2.trezor.io",
+    "https://zec3.trezor.io",
+    "https://zec4.trezor.io",
+    "https://zec5.trezor.io"
+  ]
 }

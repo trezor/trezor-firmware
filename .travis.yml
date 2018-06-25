@@ -17,6 +17,7 @@ install:
 
 script:
     - jsonlint defs/*.json
+    - jsonlint defs/*/*.json
     - python tools/build_coins.py --defs
 
 notifications:
