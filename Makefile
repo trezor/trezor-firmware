@@ -24,9 +24,12 @@ OBJS += gen/bitmaps.o
 OBJS += gen/fonts.o
 
 libtrezor.a: $(OBJS)
-	$(AR) rcs libtrezor.a $(OBJS)
 
 include Makefile.include
+
+libtrezor.a:
+	@printf "  AR      $@\n"
+	$(Q)$(AR) rcs $@ $^
 
 .PHONY: vendor
 

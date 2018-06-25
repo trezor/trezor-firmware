@@ -114,7 +114,8 @@ define GENERATE_CODE
 # $(3) - Additional output files
 
 $(1).h $(3): $(1).py $(2)
-	$(PYTHON) $(1).py
+	@printf "  PYTHON  $(1).py\n"
+	$(Q)$(PYTHON) $(1).py
 
 # Serialize build for parallel Make
 $(1).h: $(3)

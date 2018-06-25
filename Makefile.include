@@ -1,6 +1,10 @@
 TOP_DIR       := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 TOOLCHAIN_DIR ?= $(TOP_DIR)vendor/libopencm3
 
+ifneq ($(V),1)
+Q := @
+endif
+
 PYTHON ?= python
 
 ifeq ($(EMULATOR),1)
@@ -152,34 +156,44 @@ release: $(NAME).bin
 	xxd -p $(NAME)-$(APPVER).bin | tr -d '\n' > $(NAME)-$(APPVER).bin.hex
 
 $(NAME).bin: $(NAME).elf
-	$(OBJCOPY) -Obinary $(NAME).elf $(NAME).bin
+	@printf "  OBJCOPY $@\n"
+	$(Q)$(OBJCOPY) -Obinary $(NAME).elf $(NAME).bin
 
 $(NAME).hex: $(NAME).elf
-	$(OBJCOPY) -Oihex $(NAME).elf $(NAME).hex
+	@printf "  OBJCOPY $@\n"
+	$(Q)$(OBJCOPY) -Oihex $(NAME).elf $(NAME).hex
 
 $(NAME).srec: $(NAME).elf
-	$(OBJCOPY) -Osrec $(NAME).elf $(NAME).srec
+	@printf "  OBJCOPY $@\n"
+	$(Q)$(OBJCOPY) -Osrec $(NAME).elf $(NAME).srec
 
 $(NAME).list: $(NAME).elf
-	$(OBJDUMP) -S $(NAME).elf > $(NAME).list
+	@printf "  OBJDUMP $@\n"
+	$(Q)$(OBJDUMP) -S $(NAME).elf > $(NAME).list
 
 $(NAME).elf: $(OBJS) $(LDSCRIPT) $(LIBDEPS)
-	$(LD) -o $(NAME).elf $(OBJS) $(LDLIBS) $(LDFLAGS)
+	@printf "  LD      $@\n"
+	$(Q)$(LD) -o $(NAME).elf $(OBJS) $(LDLIBS) $(LDFLAGS)
 
 %.o: %.s Makefile
-	$(AS) $(CPUFLAGS) -o $@ $<
+	@printf "  AS      $@\n"
+	$(Q)$(AS) $(CPUFLAGS) -o $@ $<
 
 %.o: %.c Makefile
-	$(CC) $(CFLAGS) -MMD -MP -o $@ -c $<
+	@printf "  CC      $@\n"
+	$(Q)$(CC) $(CFLAGS) -MMD -MP -o $@ -c $<
 
 %.small.o: %.c Makefile
-	$(CC) $(CFLAGS) -MMD -MP -o $@ -c $<
+	@printf "  CC      $@\n"
+	$(Q)$(CC) $(CFLAGS) -MMD -MP -o $@ -c $<
 
 %.d: %.c Makefile
-	@$(CC) $(CFLAGS) -MM -MP -MG -o $@ $<
+	@printf "  DEP     $@\n"
+	$(Q)$(CC) $(CFLAGS) -MM -MP -MG -o $@ $<
 
 %.small.d: %.c Makefile
-	@$(CC) $(CFLAGS) -MM -MP -MG -o $@ $<
+	@printf "  DEP     $@\n"
+	$(Q)$(CC) $(CFLAGS) -MM -MP -MG -o $@ $<
 
 clean::
 	rm -f $(OBJS)
