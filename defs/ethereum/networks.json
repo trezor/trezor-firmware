@@ -80,6 +80,14 @@
     "url": "https://www.ethereum.org"
   },
   {
+    "chain_id": 60,
+    "slip44": 6060,
+    "shortcut": "GO",
+    "name": "GoChain",
+    "rskip60": false,
+    "url": "https://gochain.io"
+  },
+  {
     "chain_id": 61,
     "slip44": 61,
     "shortcut": "ETC",
