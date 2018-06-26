@@ -1082,6 +1082,13 @@ class ProtocolMixin(object):
 
         return self.call(proto.SelfTest(payload=b'\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC'))
 
+    @field('address')
+    @expect(proto.RippleAddress)
+    def ripple_get_address(self, address_n, show_display=False):
+        return self.call(
+            proto.RippleGetAddress(
+                address_n=address_n, show_display=show_display))
+
     @field('public_key')
     @expect(proto.StellarPublicKey)
     def stellar_get_public_key(self, address_n, show_display=False):

@@ -1050,6 +1050,19 @@ def stellar_sign_transaction(connect, b64envelope, address, network_passphrase):
 
     return base64.b64encode(resp.signature)
 
+
+#
+# Ripple functions
+#
+@cli.command(help='Get Ripple address')
+@click.option('-n', '--address', required=True, help="BIP-32 path to key, e.g. m/44'/144'/0'/0/0")
+@click.option('-d', '--show-display', is_flag=True)
+@click.pass_obj
+def ripple_get_address(connect, address, show_display):
+    client = connect()
+    address_n = tools.parse_path(address)
+    return client.ripple_get_address(address_n, show_display)
+
 #
 # Main
 #
