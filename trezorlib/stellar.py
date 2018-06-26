@@ -47,6 +47,7 @@ OP_BUMP_SEQUENCE = 11
 
 
 DEFAULT_BIP32_PATH = "m/44h/148h/0h"
+# Stellar's BIP32 differs to Bitcoin's see https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md
 
 
 def address_from_public_key(pk_bytes):

@@ -33,9 +33,23 @@ class TestMsgStellarGetAddress(TrezorTest):
     def test_stellar_get_address(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        # GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW
         address = self.client.stellar_get_address(parse_path(stellar.DEFAULT_BIP32_PATH))
         assert address == 'GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW'
+
+    def test_stellar_get_address_sep(self):
+        # data from https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md
+        self.client.load_device_by_mnemonic(
+            mnemonic='illness spike retreat truth genius clock brain pass fit cave bargain toe',
+            pin='',
+            passphrase_protection=False,
+            label='test',
+            language='english')
+
+        address = self.client.stellar_get_address(parse_path(stellar.DEFAULT_BIP32_PATH))
+        assert address == 'GDRXE2BQUC3AZNPVFSCEZ76NJ3WWL25FYFK6RGZGIEKWE4SOOHSUJUJ6'
+
+        address = self.client.stellar_get_address(parse_path("m/44h/148h/1h"))
+        assert address == 'GBAW5XGWORWVFE2XTJYDTLDHXTY2Q2MO73HYCGB3XMFMQ562Q2W2GJQX'
 
     def test_stellar_get_address_get_pubkey(self):
         self.setup_mnemonic_nopin_nopassphrase()
