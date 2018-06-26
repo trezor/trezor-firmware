@@ -34,5 +34,6 @@
 	"max_address_length": 95,
 	"bitcore": [
 		"https://explorer.zen-solutions.io"
-	]
+	],
+	"blockbook": []
 }

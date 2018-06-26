@@ -100,6 +100,9 @@ def validate_coin(coin):
     assert check_type(coin['bitcore'], list, empty=True)
     for bc in coin['bitcore']:
         assert not bc.endswith('/')
+    assert check_type(coin['blockbook'], list, empty=True)
+    for bb in coin['blockbook']:
+        assert not bb.endswith('/')
 
 
 def validate_icon(icon):
@@ -160,9 +163,9 @@ def convert_icon(icon):
 def process_json(fn):
     print(os.path.basename(fn), end=' ... ')
     j = json.load(open(fn))
+    validate_coin(j)
     if BUILD_DEFS:
         i = Image.open(fn.replace('.json', '.png'))
-        validate_coin(j)
         validate_icon(i)
         ser = serialize(j, convert_icon(i))
         sig = sign(ser)

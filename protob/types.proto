@@ -187,8 +187,8 @@ message TxInputType {
 	optional uint64 amount = 8;						// amount of previous transaction output (for segwit only)
 	optional uint32 decred_tree = 9;
 	optional uint32 decred_script_version = 10;
-	optional bytes prev_block_hash_bip115 = 11;     //block hash of previous transaction output (for bip115 implementation)
-	optional bytes prev_block_height_bip115 = 12;	//block height of previous transaction output (for bip115 implementation)
+	optional bytes prev_block_hash_bip115 = 11;				// block hash of previous transaction output (for bip115 implementation)
+	optional bytes prev_block_height_bip115 = 12;				// block height of previous transaction output (for bip115 implementation)
 }
 
 /**
@@ -204,8 +204,8 @@ message TxOutputType {
 	optional MultisigRedeemScriptType multisig = 5; // defines multisig address; script_type must be PAYTOMULTISIG
 	optional bytes op_return_data = 6;		// defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
 	optional uint32 decred_script_version = 7;
-	optional bytes block_hash_bip115 = 8;    //block hash of existing block (recommended current_block - 300) (for bip115 implementation)
-	optional bytes block_height_bip115 = 9;	 //block height of existing block (recommended current_block - 300) (for bip115 implementation)
+	optional bytes block_hash_bip115 = 8;		// block hash of existing block (recommended current_block - 300) (for bip115 implementation)
+	optional bytes block_height_bip115 = 9;		// block height of existing block (recommended current_block - 300) (for bip115 implementation)
 }
 
 /**
