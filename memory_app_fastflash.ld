@@ -1,4 +1,5 @@
-/* STM32F205RE - 512K Flash, 128K RAM */
+/* STM32F205RG - 1024K Flash, 128K RAM */
+
 MEMORY
 {
 	rom (rx)  : ORIGIN = 0x20000000, LENGTH = 32K
