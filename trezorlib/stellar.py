@@ -284,7 +284,7 @@ def _parse_operation_bytes(unpacker):
             bump_to=unpacker.unpack_uhyper()
         )
 
-    raise ValueError("Unknown operation type: " + type)
+    raise ValueError("Unknown operation type: " + str(type))
 
 
 def _xdr_read_asset(unpacker):
