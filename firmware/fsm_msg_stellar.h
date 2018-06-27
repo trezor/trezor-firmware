@@ -96,7 +96,7 @@ void fsm_msgStellarSignTx(StellarSignTx *msg)
 
 void fsm_msgStellarCreateAccountOp(StellarCreateAccountOp *msg)
 {
-    stellar_confirmCreateAccountOp(msg);
+    if (!stellar_confirmCreateAccountOp(msg)) return;
 
     if (stellar_allOperationsConfirmed()) {
         RESP_INIT(StellarSignedTx);
@@ -116,7 +116,7 @@ void fsm_msgStellarCreateAccountOp(StellarCreateAccountOp *msg)
 void fsm_msgStellarPaymentOp(StellarPaymentOp *msg)
 {
     // This will display additional dialogs to the user
-    stellar_confirmPaymentOp(msg);
+    if (!stellar_confirmPaymentOp(msg)) return;
 
     // Last operation was confirmed, send a StellarSignedTx
     if (stellar_allOperationsConfirmed()) {
@@ -136,7 +136,7 @@ void fsm_msgStellarPaymentOp(StellarPaymentOp *msg)
 
 void fsm_msgStellarPathPaymentOp(StellarPathPaymentOp *msg)
 {
-    stellar_confirmPathPaymentOp(msg);
+    if (!stellar_confirmPathPaymentOp(msg)) return;
 
     if (stellar_allOperationsConfirmed()) {
         RESP_INIT(StellarSignedTx);
@@ -155,7 +155,7 @@ void fsm_msgStellarPathPaymentOp(StellarPathPaymentOp *msg)
 
 void fsm_msgStellarManageOfferOp(StellarManageOfferOp *msg)
 {
-    stellar_confirmManageOfferOp(msg);
+    if (!stellar_confirmManageOfferOp(msg)) return;
 
     if (stellar_allOperationsConfirmed()) {
         RESP_INIT(StellarSignedTx);
@@ -174,7 +174,7 @@ void fsm_msgStellarManageOfferOp(StellarManageOfferOp *msg)
 
 void fsm_msgStellarCreatePassiveOfferOp(StellarCreatePassiveOfferOp *msg)
 {
-    stellar_confirmCreatePassiveOfferOp(msg);
+    if (!stellar_confirmCreatePassiveOfferOp(msg)) return;
 
     if (stellar_allOperationsConfirmed()) {
         RESP_INIT(StellarSignedTx);
@@ -193,7 +193,7 @@ void fsm_msgStellarCreatePassiveOfferOp(StellarCreatePassiveOfferOp *msg)
 
 void fsm_msgStellarSetOptionsOp(StellarSetOptionsOp *msg)
 {
-    stellar_confirmSetOptionsOp(msg);
+    if (!stellar_confirmSetOptionsOp(msg)) return;
 
     if (stellar_allOperationsConfirmed()) {
         RESP_INIT(StellarSignedTx);
@@ -212,7 +212,7 @@ void fsm_msgStellarSetOptionsOp(StellarSetOptionsOp *msg)
 
 void fsm_msgStellarChangeTrustOp(StellarChangeTrustOp *msg)
 {
-    stellar_confirmChangeTrustOp(msg);
+    if (!stellar_confirmChangeTrustOp(msg)) return;
 
     if (stellar_allOperationsConfirmed()) {
         RESP_INIT(StellarSignedTx);
@@ -231,7 +231,7 @@ void fsm_msgStellarChangeTrustOp(StellarChangeTrustOp *msg)
 
 void fsm_msgStellarAllowTrustOp(StellarAllowTrustOp *msg)
 {
-    stellar_confirmAllowTrustOp(msg);
+    if (!stellar_confirmAllowTrustOp(msg)) return;
 
     if (stellar_allOperationsConfirmed()) {
         RESP_INIT(StellarSignedTx);
@@ -250,7 +250,7 @@ void fsm_msgStellarAllowTrustOp(StellarAllowTrustOp *msg)
 
 void fsm_msgStellarAccountMergeOp(StellarAccountMergeOp *msg)
 {
-    stellar_confirmAccountMergeOp(msg);
+    if (!stellar_confirmAccountMergeOp(msg)) return;
 
     if (stellar_allOperationsConfirmed()) {
         RESP_INIT(StellarSignedTx);
@@ -269,7 +269,7 @@ void fsm_msgStellarAccountMergeOp(StellarAccountMergeOp *msg)
 
 void fsm_msgStellarManageDataOp(StellarManageDataOp *msg)
 {
-    stellar_confirmManageDataOp(msg);
+    if (!stellar_confirmManageDataOp(msg)) return;
 
     if (stellar_allOperationsConfirmed()) {
         RESP_INIT(StellarSignedTx);
@@ -288,7 +288,7 @@ void fsm_msgStellarManageDataOp(StellarManageDataOp *msg)
 
 void fsm_msgStellarBumpSequenceOp(StellarBumpSequenceOp *msg)
 {
-    stellar_confirmBumpSequenceOp(msg);
+    if (!stellar_confirmBumpSequenceOp(msg)) return;
 
     if (stellar_allOperationsConfirmed()) {
         RESP_INIT(StellarSignedTx);

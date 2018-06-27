@@ -23,6 +23,14 @@
 #include "crypto.h"
 #include "messages.pb.h"
 #include "fsm.h"
+#include "base32.h"
+
+// 56 character base-32 encoded string
+#define STELLAR_ADDRESS_SIZE 56
+// Decodes to 35 bytes
+#define STELLAR_ADDRESS_SIZE_RAW 35
+// Raw key size is 32 bytes
+#define STELLAR_KEY_SIZE 32
 
 typedef struct {
     // BIP32 path to the address being used for signing
@@ -44,18 +52,19 @@ typedef struct {
 
 // Signing process
 void stellar_signingInit(StellarSignTx *tx);
-void stellar_signingAbort(void);
-void stellar_confirmCreateAccountOp(StellarCreateAccountOp *msg);
-void stellar_confirmPaymentOp(StellarPaymentOp *msg);
-void stellar_confirmPathPaymentOp(StellarPathPaymentOp *msg);
-void stellar_confirmManageOfferOp(StellarManageOfferOp *msg);
-void stellar_confirmCreatePassiveOfferOp(StellarCreatePassiveOfferOp *msg);
-void stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg);
-void stellar_confirmChangeTrustOp(StellarChangeTrustOp *msg);
-void stellar_confirmAllowTrustOp(StellarAllowTrustOp *msg);
-void stellar_confirmAccountMergeOp(StellarAccountMergeOp *msg);
-void stellar_confirmManageDataOp(StellarManageDataOp *msg);
-void stellar_confirmBumpSequenceOp(StellarBumpSequenceOp *msg);
+void stellar_signingAbort(const char *reason);
+bool stellar_confirmSourceAccount(bool has_source_account, char *str_account);
+bool stellar_confirmCreateAccountOp(StellarCreateAccountOp *msg);
+bool stellar_confirmPaymentOp(StellarPaymentOp *msg);
+bool stellar_confirmPathPaymentOp(StellarPathPaymentOp *msg);
+bool stellar_confirmManageOfferOp(StellarManageOfferOp *msg);
+bool stellar_confirmCreatePassiveOfferOp(StellarCreatePassiveOfferOp *msg);
+bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg);
+bool stellar_confirmChangeTrustOp(StellarChangeTrustOp *msg);
+bool stellar_confirmAllowTrustOp(StellarAllowTrustOp *msg);
+bool stellar_confirmAccountMergeOp(StellarAccountMergeOp *msg);
+bool stellar_confirmManageDataOp(StellarManageDataOp *msg);
+bool stellar_confirmBumpSequenceOp(StellarBumpSequenceOp *msg);
 
 // Layout
 void stellar_layoutTransactionDialog(const char *line1, const char *line2, const char *line3, const char *line4, const char *line5);
@@ -87,6 +96,8 @@ void stellar_format_stroops(uint64_t number, char *out, size_t outlen);
 void stellar_format_asset(StellarAssetType *asset, char *str_formatted, size_t len);
 void stellar_format_price(uint32_t numerator, uint32_t denominator, char *out, size_t outlen);
 
+bool stellar_validateAddress(const char *str_address);
+bool stellar_getAddressBytes(char* str_address, uint8_t *out_bytes);
 uint16_t stellar_crc16(uint8_t *bytes, uint32_t length);
 
 #endif

@@ -70,7 +70,7 @@ NEMCosignatoryModification.public_key	max_size:32
 NEMImportanceTransfer.public_key	max_size:32
 
 StellarAssetType.code			max_size:13
-StellarAssetType.issuer			max_size:32
+StellarAssetType.issuer			max_size:57
 
 # Lisk will be supported later
 
