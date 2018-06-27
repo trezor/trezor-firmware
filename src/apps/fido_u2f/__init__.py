@@ -356,12 +356,12 @@ class ConfirmState:
         if self.action != action or self.checksum != checksum:
             return False
         if utime.ticks_ms() >= self.deadline:
+            if self.workflow is not None:
+                loop.close(self.workflow)
             return False
         return True
 
     def setup(self, action: int, checksum: bytes, app_id: bytes) -> None:
-        if self.workflow is not None:
-            loop.close(self.workflow)
         if workflow.workflows:
             return False
 
