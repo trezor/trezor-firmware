@@ -21,9 +21,10 @@ import xdrlib
 from . import messages as proto
 
 # Memo types
-MEMO_TYPE_TEXT = 0
-MEMO_TYPE_ID = 1
-MEMO_TYPE_HASH = 2
+MEMO_TYPE_NONE = 0
+MEMO_TYPE_TEXT = 1
+MEMO_TYPE_ID = 2
+MEMO_TYPE_HASH = 3
 MEMO_TYPE_RETURN = 4
 
 # Asset types
@@ -104,7 +105,7 @@ def parse_transaction_bytes(tx_bytes):
     tx.memo_type = unpacker.unpack_uint()
 
     # text
-    if tx.memo_type == MEMO_TYPE_HASH:
+    if tx.memo_type == MEMO_TYPE_TEXT:
         tx.memo_text = unpacker.unpack_string()
     # id (64-bit uint)
     if tx.memo_type == MEMO_TYPE_ID:
