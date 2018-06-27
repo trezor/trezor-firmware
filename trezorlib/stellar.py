@@ -158,6 +158,7 @@ def _parse_operation_bytes(unpacker):
             send_max=unpacker.unpack_hyper(),
             destination_account=_xdr_read_address(unpacker),
             destination_asset=_xdr_read_asset(unpacker),
+            destination_amount=unpacker.unpack_hyper(),
             paths=[]
         )
 
