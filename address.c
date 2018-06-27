@@ -22,8 +22,6 @@
  */
 
 #include "address.h"
-#include <stdio.h>
-#include <string.h>
 #include "bignum.h"
 
 size_t address_prefix_bytes_len(uint32_t address_type)
@@ -59,7 +57,7 @@ bool address_check_prefix(const uint8_t *addr, uint32_t address_type)
 #if USE_ETHEREUM
 #include "sha3.h"
 
-void ethereum_address_checksum(const uint8_t *addr, char *address, bool rskip60, uint8_t chain_id)
+void ethereum_address_checksum(const uint8_t *addr, char *address, bool rskip60, uint32_t chain_id)
 {
 	const char *hex = "0123456789abcdef";
 	for (int i = 0; i < 20; i++) {
@@ -71,8 +69,7 @@ void ethereum_address_checksum(const uint8_t *addr, char *address, bool rskip60,
 	SHA3_CTX ctx;
 	uint8_t hash[32];
 	keccak_256_Init(&ctx);
-	if(rskip60)
-	{
+	if (rskip60) {
 		char prefix[16];
 		int prefix_size = bn_format_uint64(chain_id, NULL, "0x", 0, 0, false, prefix, sizeof(prefix));
 		keccak_Update(&ctx, (const uint8_t *)prefix, prefix_size);

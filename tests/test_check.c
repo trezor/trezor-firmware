@@ -3802,7 +3802,7 @@ START_TEST(test_ethereum_address)
 	const char **vec = vectors;
 	while (*vec) {
 		memcpy(addr, fromhex(*vec), 20);
-		ethereum_address_checksum(addr, address, false, 1);
+		ethereum_address_checksum(addr, address, false, 0);
 		ck_assert_str_eq(address, *vec);
 		vec++;
 	}
