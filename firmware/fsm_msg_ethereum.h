@@ -36,7 +36,7 @@ void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
 		strlcpy(desc, "Address:", sizeof(desc));
 
 		char address[43] = { '0', 'x' };
-		ethereum_address_checksum(resp->address.bytes, address + 2);
+		ethereum_address_checksum(resp->address.bytes, address + 2, false, 0);
 
 		if (!fsm_layoutAddress(address, desc, false, 0, msg->address_n, msg->address_n_count)) {
 			return;
@@ -80,7 +80,7 @@ void fsm_msgEthereumVerifyMessage(EthereumVerifyMessage *msg)
 	}
 
 	char address[43] = { '0', 'x' };
-	ethereum_address_checksum(msg->address.bytes, address + 2);
+	ethereum_address_checksum(msg->address.bytes, address + 2, false, 0);
 	layoutVerifyAddress(address);
 	if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
 		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
