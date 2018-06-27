@@ -14,7 +14,7 @@ import "types.proto";
  * Mapping between Trezor wire identifier (uint) and a protobuf message
  */
 enum MessageType {
-	MessageType_Initialize = 0 [(wire_in) = true];
+	MessageType_Initialize = 0 [(wire_in) = true, (wire_tiny) = true];
 	MessageType_Ping = 1 [(wire_in) = true];
 	MessageType_Success = 2 [(wire_out) = true];
 	MessageType_Failure = 3 [(wire_out) = true];
@@ -33,15 +33,15 @@ enum MessageType {
 	MessageType_SimpleSignTx = 16 [(wire_in) = true, deprecated = true];
 	MessageType_Features = 17 [(wire_out) = true];
 	MessageType_PinMatrixRequest = 18 [(wire_out) = true];
-	MessageType_PinMatrixAck = 19 [(wire_in) = true, (wire_tiny) = true];
-	MessageType_Cancel = 20 [(wire_in) = true];
+	MessageType_PinMatrixAck = 19 [(wire_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
+	MessageType_Cancel = 20 [(wire_in) = true, (wire_tiny) = true];
 	MessageType_TxRequest = 21 [(wire_out) = true];
 	MessageType_TxAck = 22 [(wire_in) = true];
 	MessageType_CipherKeyValue = 23 [(wire_in) = true];
 	MessageType_ClearSession = 24 [(wire_in) = true];
 	MessageType_ApplySettings = 25 [(wire_in) = true];
 	MessageType_ButtonRequest = 26 [(wire_out) = true];
-	MessageType_ButtonAck = 27 [(wire_in) = true, (wire_tiny) = true];
+	MessageType_ButtonAck = 27 [(wire_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
 	MessageType_ApplyFlags = 28 [(wire_in) = true];
 	MessageType_GetAddress = 29 [(wire_in) = true];
 	MessageType_Address = 30 [(wire_out) = true];
@@ -53,9 +53,9 @@ enum MessageType {
 	MessageType_VerifyMessage = 39 [(wire_in) = true];
 	MessageType_MessageSignature = 40 [(wire_out) = true];
 	MessageType_PassphraseRequest = 41 [(wire_out) = true];
-	MessageType_PassphraseAck = 42 [(wire_in) = true, (wire_tiny) = true];
+	MessageType_PassphraseAck = 42 [(wire_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
 	MessageType_PassphraseStateRequest = 77 [(wire_out) = true];
-	MessageType_PassphraseStateAck = 78 [(wire_in) = true, (wire_tiny) = true];
+	MessageType_PassphraseStateAck = 78 [(wire_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
 	MessageType_EstimateTxSize = 43 [(wire_in) = true, deprecated = true];
 	MessageType_TxSize = 44 [(wire_out) = true, deprecated = true];
 	MessageType_RecoveryDevice = 45 [(wire_in) = true];
@@ -90,8 +90,8 @@ enum MessageType {
 	MessageType_CosiSignature = 74 [(wire_out) = true];
 	MessageType_NEMDecryptMessage = 75 [(wire_in) = true];
 	MessageType_NEMDecryptedMessage = 76 [(wire_out) = true];
-	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true, (wire_tiny) = true];
-	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true];
+	MessageType_DebugLinkDecision = 100 [(wire_debug_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
+	MessageType_DebugLinkGetState = 101 [(wire_debug_in) = true, (wire_tiny) = true];
 	MessageType_DebugLinkState = 102 [(wire_debug_out) = true];
 	MessageType_DebugLinkStop = 103 [(wire_debug_in) = true];
 	MessageType_DebugLinkLog = 104 [(wire_debug_out) = true];
