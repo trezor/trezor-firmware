@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # script/toolchain-download: Download and extract the GNU Arm Embedded toolchain
-#			     for building the TREZOR firmware.
+#                            for building the TREZOR firmware.
 
 set -e
 
@@ -37,8 +37,8 @@ extract_download() {
 
 if [ ! -d "$DIRECTORY" ]; then
     if ! validate_download; then
-	download_file
-	validate_download
+        download_file
+        validate_download
     fi
 
     extract_download

@@ -50,9 +50,9 @@ worktree_copy() {
     local dest="$BUILD_DIR/${basename%.*}-$describe.${basename##*.}"
 
     for extension in "${ARTIFACT_EXTENSIONS[@]}"; do
-	install -Dm0644 \
-	    "${src%.*}.$extension" \
-	    "${dest%.*}.$extension"
+        install -Dm0644 \
+            "${src%.*}.$extension" \
+            "${dest%.*}.$extension"
     done
 
     printf "%s" "$dest"
@@ -66,28 +66,28 @@ main() {
     worktree_build "$BOOTLOADER_DIR"
 
     local bootloader_path="$(worktree_copy \
-	"$BOOTLOADER_DIR" \
-	"$BOOTLOADER_FILENAME" \
-	"bl*")"
+        "$BOOTLOADER_DIR" \
+        "$BOOTLOADER_FILENAME" \
+        "bl*")"
 
     worktree_setup "$FIRMWARE_DIR" "$firmware_commit"
     cp "$BOOTLOADER_PATH" "$FIRMWARE_DIR/$BOOTLOADER_FILENAME"
     worktree_build "$FIRMWARE_DIR"
 
     local firmware_path="$(worktree_copy \
-	"$FIRMWARE_DIR" \
-	"$FIRMWARE_FILENAME" \
-	"v*")"
+        "$FIRMWARE_DIR" \
+        "$FIRMWARE_FILENAME" \
+        "v*")"
 
     printf "\n\n"; script/fingerprint \
-	"$bootloader_path" \
-	--max-size 32768 \
-	--double
+        "$bootloader_path" \
+        --max-size 32768 \
+        --double
 
     printf "\n\n"; script/fingerprint \
-	"$firmware_path" \
-	--offset 256 \
-	--max-size 491520
+        "$firmware_path" \
+        --offset 256 \
+        --max-size 491520
 }
 
 main "$@"
