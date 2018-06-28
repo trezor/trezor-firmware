@@ -294,7 +294,15 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len, const ui
 
 	if (to_len) {
 		char to_str[41];
-		ethereum_address_checksum(to, to_str, false, 0);
+
+		bool rskip60 = false;
+		// constants from trezor-common/defs/ethereum/networks.json
+		switch (chain_id) {
+			case 30: rskip60 = true; break;
+			case 31: rskip60 = true; break;
+		}
+
+		ethereum_address_checksum(to, to_str, rskip60, chain_id);
 		memcpy(_to1 + 5, to_str, 10);
 		memcpy(_to2, to_str + 10, 15);
 		memcpy(_to3, to_str + 25, 15);
