@@ -377,7 +377,10 @@
             "shortcut": "GRS",
             "t1_enabled": "yes",
             "t2_enabled": "no",
-            "type": "coin"
+            "type": "coin",
+            "wallet": {
+                "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet/"
+            }            
         },
         "coin:KOTO": {
             "links": {
