@@ -98,7 +98,7 @@ def render_words(words: list, new_lines: bool, max_lines: int) -> None:
             offset_x += SPACE
 
 
-class Text(ui.Widget):
+class Text(ui.LazyWidget):
     def __init__(self,
                  header_text: str,
                  header_icon: bytes,

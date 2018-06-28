@@ -1,7 +1,7 @@
 from micropython import const
 from trezor import loop, res, ui
 from trezor.ui import Widget
-from trezor.ui.button import BTN_ACTIVE, BTN_CLICKED, BTN_STARTED, Button
+from trezor.ui.button import BTN_ACTIVE, BTN_CLICKED, Button
 from trezor.ui.loader import Loader
 
 if __debug__:
@@ -70,14 +70,16 @@ class HoldToConfirmDialog(Widget):
 
     def touch(self, event, pos):
         button = self.button
-        was_started = button.state & BTN_STARTED and button.state & BTN_ACTIVE
+        was_active = button.state == BTN_ACTIVE
         button.touch(event, pos)
-        is_started = button.state & BTN_STARTED and button.state & BTN_ACTIVE
-        if is_started and not was_started:
+        is_active = button.state == BTN_ACTIVE
+        if is_active and not was_active:
             ui.display.clear()
             self.loader.start()
             return _STARTED
-        if was_started and not is_started:
+        if was_active and not is_active:
+            if isinstance(self.content, ui.LazyWidget):
+                self.content.taint()
             if self.loader.stop():
                 return CONFIRMED
             else:

@@ -6,57 +6,53 @@ from trezor import ui
 from trezor.ui import contains
 from trezor.ui import display
 from trezor.ui import rotate
-from trezor.ui import Widget
+from trezor.ui import LazyWidget
 
+# button events
 BTN_CLICKED = const(1)
 
-BTN_STARTED = const(1)
-BTN_ACTIVE = const(2)
-BTN_DIRTY = const(4)
-BTN_DISABLED = const(8)
+# button states
+BTN_INITIAL = const(0)
+BTN_DISABLED = const(1)
+BTN_FOCUSED = const(2)
+BTN_ACTIVE = const(3)
 
+# constants
 ICON = const(16)  # icon size in pixels
 BORDER = const(4)  # border size in pixels
 
 
-class Button(Widget):
+class Button(LazyWidget):
 
-    def __init__(self, area, content, style=ui.BTN_KEY, absolute=False):
+    def __init__(self, area: tuple, content: str, style: dict = ui.BTN_KEY):
         self.area = area
         self.content = content
         self.normal_style = style['normal'] or ui.BTN_KEY['normal']
         self.active_style = style['active'] or ui.BTN_KEY['active']
         self.disabled_style = style['disabled'] or ui.BTN_KEY['disabled']
-        self.absolute = absolute
-        self.state = BTN_DIRTY
+        self.state = BTN_INITIAL
 
     def enable(self):
-        if self.state & BTN_DISABLED:
-            self.state &= ~BTN_DISABLED
-            self.state |= BTN_DIRTY
+        if self.state == BTN_DISABLED:
+            self.state = BTN_INITIAL
+            self.render_next_frame = True
 
     def disable(self):
-        if not self.state & BTN_DISABLED:
-            self.state |= BTN_DISABLED | BTN_DIRTY
-
-    def taint(self):
-        self.state |= BTN_DIRTY
+        if self.state != BTN_DISABLED:
+            self.state = BTN_DISABLED
+            self.render_next_frame = True
 
     def render(self):
-        if not self.state & BTN_DIRTY:
-            return
-        state = self.state & ~BTN_DIRTY
-        if state & BTN_DISABLED:
+        state = self.state
+        if state == BTN_DISABLED:
             s = self.disabled_style
-        elif state & BTN_ACTIVE:
+        elif state == BTN_ACTIVE:
             s = self.active_style
         else:
             s = self.normal_style
         ax, ay, aw, ah = self.area
-
         self.render_background(s, ax, ay, aw, ah)
         self.render_content(s, ax, ay, aw, ah)
-        self.state = state
 
     def render_background(self, s, ax, ay, aw, ah):
         radius = s['radius']
@@ -94,25 +90,29 @@ class Button(Widget):
                 tx - ICON // 2, ty - ICON, c, s['fg-color'], s['bg-color'])
 
     def touch(self, event, pos):
+        pos = rotate(pos)
+
         state = self.state
-        if state & BTN_DISABLED:
+        if state == BTN_DISABLED:
             return
-        if not self.absolute:
-            pos = rotate(pos)
 
         if event == io.TOUCH_START:
             if contains(self.area, pos):
-                self.state = BTN_STARTED | BTN_DIRTY | BTN_ACTIVE
+                self.state = BTN_ACTIVE
+                self.render_next_frame = True
 
-        elif event == io.TOUCH_MOVE and state & BTN_STARTED:
+        elif event == io.TOUCH_MOVE:
             if contains(self.area, pos):
-                if not state & BTN_ACTIVE:
-                    self.state = BTN_STARTED | BTN_DIRTY | BTN_ACTIVE
+                if state == BTN_FOCUSED:
+                    self.state = BTN_ACTIVE
+                    self.render_next_frame = True
             else:
-                if state & BTN_ACTIVE:
-                    self.state = BTN_STARTED | BTN_DIRTY
+                if state == BTN_ACTIVE:
+                    self.state = BTN_FOCUSED
+                    self.render_next_frame = True
 
-        elif event == io.TOUCH_END and state & BTN_STARTED:
-            self.state = BTN_DIRTY
-            if contains(self.area, pos):
+        elif event == io.TOUCH_END:
+            self.state = BTN_INITIAL
+            self.render_next_frame = True
+            if state == BTN_ACTIVE and contains(self.area, pos):
                 return BTN_CLICKED
