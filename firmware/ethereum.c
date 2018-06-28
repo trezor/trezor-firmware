@@ -261,6 +261,7 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token, 
 				case   64: suffix = " ELLA"; break;  // Ellaism
 				case  820: suffix = " CLO";  break;  // Callisto
 				case 1987: suffix = " EGEM"; break;  // EtherGem
+				case 31102: suffix = " ESN"; break;  // Ethersocial Network
 				default  : suffix = " UNKN"; break;  // unknown chain
 			}
 		}
