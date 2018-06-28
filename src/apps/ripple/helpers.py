@@ -1,9 +1,25 @@
+from micropython import const
+
 from trezor.crypto.hashlib import ripemd160, sha256
 
 from . import base58_ripple
 
+# HASH_TX_ID = const(0x54584E00)  # 'TXN'
+HASH_TX_SIGN = const(0x53545800)  # 'STX'
+# HASH_TX_SIGN_TESTNET = const(0x73747800)  # 'stx'
 
-def address_from_public_key(pubkey: bytes):
+# https://developers.ripple.com/basic-data-types.html#specifying-currency-amounts
+DIVISIBILITY = const(6)  # 1000000 drops equal 1 XRP
+
+# https://developers.ripple.com/transaction-cost.html
+MIN_FEE = const(10)
+# max is not defined officially but we check to make sure
+MAX_FEE = const(1000000)  # equals 1 XRP
+
+FLAG_FULLY_CANONICAL = 0x80000000
+
+
+def address_from_public_key(pubkey: bytes) -> str:
     """Extracts public key from an address
 
     Ripple address is in format:
@@ -23,3 +39,9 @@ def address_from_public_key(pubkey: bytes):
     address.append(0x00)  # 'r'
     address.extend(h)
     return base58_ripple.encode_check(bytes(address))
+
+
+def decode_address(address: str):
+    """Returns so called Account ID"""
+    adr = base58_ripple.decode_check(address)
+    return adr[1:]
