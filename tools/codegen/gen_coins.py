@@ -16,6 +16,7 @@ fields = [
     'fork_id',
     'force_bip143',
     'version_group_id',
+    'bip115',
 ]
 
 support = json.load(open('../../vendor/trezor-common/defs/support.json', 'r'))
