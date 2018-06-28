@@ -18,7 +18,7 @@ import base64
 import struct
 import xdrlib
 
-from . import messages as proto
+from . import messages
 
 # Memo types
 MEMO_TYPE_NONE = 0
@@ -81,7 +81,7 @@ def parse_transaction_bytes(tx_bytes):
         tx - a StellarSignTx describing the transaction header
         operations - an array of protobuf message objects for each operation
     """
-    tx = proto.StellarSignTx(
+    tx = messages.StellarSignTx(
         protocol_version=1
     )
     unpacker = xdrlib.Unpacker(tx_bytes)
@@ -137,14 +137,14 @@ def _parse_operation_bytes(unpacker):
     type = unpacker.unpack_uint()
 
     if type == OP_CREATE_ACCOUNT:
-        return proto.StellarCreateAccountOp(
+        return messages.StellarCreateAccountOp(
             source_account=source_account,
             new_account=_xdr_read_address(unpacker),
             starting_balance=unpacker.unpack_hyper()
         )
 
     if type == OP_PAYMENT:
-        return proto.StellarPaymentOp(
+        return messages.StellarPaymentOp(
             source_account=source_account,
             destination_account=_xdr_read_address(unpacker),
             asset=_xdr_read_asset(unpacker),
@@ -152,7 +152,7 @@ def _parse_operation_bytes(unpacker):
         )
 
     if type == OP_PATH_PAYMENT:
-        op = proto.StellarPathPaymentOp(
+        op = messages.StellarPathPaymentOp(
             source_account=source_account,
             send_asset=_xdr_read_asset(unpacker),
             send_max=unpacker.unpack_hyper(),
@@ -169,7 +169,7 @@ def _parse_operation_bytes(unpacker):
         return op
 
     if type == OP_MANAGE_OFFER:
-        return proto.StellarManageOfferOp(
+        return messages.StellarManageOfferOp(
             source_account=source_account,
             selling_asset=_xdr_read_asset(unpacker),
             buying_asset=_xdr_read_asset(unpacker),
@@ -180,7 +180,7 @@ def _parse_operation_bytes(unpacker):
         )
 
     if type == OP_CREATE_PASSIVE_OFFER:
-        return proto.StellarCreatePassiveOfferOp(
+        return messages.StellarCreatePassiveOfferOp(
             source_account=source_account,
             selling_asset=_xdr_read_asset(unpacker),
             buying_asset=_xdr_read_asset(unpacker),
@@ -190,7 +190,7 @@ def _parse_operation_bytes(unpacker):
         )
 
     if type == OP_SET_OPTIONS:
-        op = proto.StellarSetOptionsOp(
+        op = messages.StellarSetOptionsOp(
             source_account=source_account
         )
 
@@ -235,14 +235,14 @@ def _parse_operation_bytes(unpacker):
         return op
 
     if type == OP_CHANGE_TRUST:
-        return proto.StellarChangeTrustOp(
+        return messages.StellarChangeTrustOp(
             source_account=source_account,
             asset=_xdr_read_asset(unpacker),
             limit=unpacker.unpack_uhyper()
         )
 
     if type == OP_ALLOW_TRUST:
-        op = proto.StellarAllowTrustOp(
+        op = messages.StellarAllowTrustOp(
             source_account=source_account,
             trusted_account=_xdr_read_address(unpacker),
             asset_type=unpacker.unpack_uint()
@@ -258,7 +258,7 @@ def _parse_operation_bytes(unpacker):
         return op
 
     if type == OP_ACCOUNT_MERGE:
-        return proto.StellarAccountMergeOp(
+        return messages.StellarAccountMergeOp(
             source_account=source_account,
             destination_account=_xdr_read_address(unpacker)
         )
@@ -266,7 +266,7 @@ def _parse_operation_bytes(unpacker):
     # Inflation is not implemented since anyone can submit this operation to the network
 
     if type == OP_MANAGE_DATA:
-        op = proto.StellarManageDataOp(
+        op = messages.StellarManageDataOp(
             source_account=source_account,
             key=unpacker.unpack_string(),
         )
@@ -280,7 +280,7 @@ def _parse_operation_bytes(unpacker):
     # Bump Sequence
     # see: https://github.com/stellar/stellar-core/blob/master/src/xdr/Stellar-transaction.x#L269
     if type == OP_BUMP_SEQUENCE:
-        return proto.StellarBumpSequenceOp(
+        return messages.StellarBumpSequenceOp(
             source_account=source_account,
             bump_to=unpacker.unpack_uhyper()
         )
@@ -290,7 +290,7 @@ def _parse_operation_bytes(unpacker):
 
 def _xdr_read_asset(unpacker):
     """Reads a stellar Asset from unpacker"""
-    asset = proto.StellarAssetType(
+    asset = messages.StellarAssetType(
         type=unpacker.unpack_uint()
     )
 
