@@ -10,7 +10,7 @@ TEXT_MAX_LINES = const(5)
 BR = const(-256)
 
 
-def render_words(words: list, new_lines: bool, max_lines: int) -> None:
+def render_text(words: list, new_lines: bool, max_lines: int) -> None:
     # initial rendering state
     font = ui.NORMAL
     fg = ui.FG
@@ -102,17 +102,30 @@ class Text(ui.LazyWidget):
     def __init__(self,
                  header_text: str,
                  header_icon: bytes,
-                 *content: list,
+                 *content: str,
                  new_lines: bool = True,
                  max_lines: int = TEXT_MAX_LINES,
                  icon_color: int = ui.ORANGE_ICON):
         self.header_text = header_text
         self.header_icon = header_icon
-        self.content = content
+        self.content = list(content)
         self.new_lines = new_lines
         self.max_lines = max_lines
         self.icon_color = icon_color
 
+    def type(self, *content):
+        self.content.extend(content)
+
+    def bold(self, *content):
+        self.content.append(ui.BOLD)
+        self.content.extend(content)
+        self.content.append(ui.NORMAL)
+
+    def mono(self, *content):
+        self.content.append(ui.MONO)
+        self.content.extend(content)
+        self.content.append(ui.NORMAL)
+
     def render(self):
         ui.header(self.header_text, self.header_icon, ui.TITLE_GREY, ui.BG, self.icon_color)
-        render_words(self.content, self.new_lines, self.max_lines)
+        render_text(self.content, self.new_lines, self.max_lines)
