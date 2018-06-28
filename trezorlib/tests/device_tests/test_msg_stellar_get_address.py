@@ -57,7 +57,7 @@ class TestMsgStellarGetAddress(TrezorTest):
         # GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW
         address = self.client.stellar_get_address(parse_path(stellar.DEFAULT_BIP32_PATH))
 
-        assert stellar.address_from_public_key(pubkey).decode('utf8') == address
+        assert stellar.address_from_public_key(pubkey) == address
 
     def test_stellar_get_address_fail(self):
         self.setup_mnemonic_nopin_nopassphrase()

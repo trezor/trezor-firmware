@@ -35,7 +35,7 @@ class TestMsgStellarGetPublicKey(TrezorTest):
         # GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW
         response = self.client.stellar_get_public_key(parse_path(stellar.DEFAULT_BIP32_PATH))
         assert hexlify(response) == b'15d648bfe4d36f196cfb5735ffd8ca54cd4b8233f743f22449de7cf301cdb469'
-        assert stellar.address_from_public_key(response) == b'GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW'
+        assert stellar.address_from_public_key(response) == 'GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW'
 
     def test_stellar_get_public_key_fail(self):
         self.setup_mnemonic_nopin_nopassphrase()
