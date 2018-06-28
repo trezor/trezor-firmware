@@ -15,7 +15,8 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import base64
-from trezorlib import stellar, messages as proto
+from trezorlib import stellar
+from trezorlib import messages
 
 
 def test_stellar_parse_transaction_bytes_simple():
@@ -111,7 +112,7 @@ def test_stellar_parse_operation_bytes_create_account_simple():
     tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64))
     op = operations[0]
 
-    assert isinstance(op, proto.StellarCreateAccountOp)
+    assert isinstance(op, messages.StellarCreateAccountOp)
     assert op.source_account is None
     assert op.new_account == b'GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V'
     assert op.starting_balance == 1000333000
@@ -123,7 +124,7 @@ def test_stellar_parse_operation_bytes_payment_native():
     tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64))
     op = operations[0]
 
-    assert isinstance(op, proto.StellarPaymentOp)
+    assert isinstance(op, messages.StellarPaymentOp)
     assert op.source_account is None
     assert op.destination_account == b'GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V'
     assert op.asset.type == stellar.ASSET_TYPE_NATIVE
@@ -150,7 +151,7 @@ def test_stellar_parse_operation_bytes_payment_custom7():
     tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64))
     op = operations[0]
 
-    assert isinstance(op, proto.StellarPaymentOp)
+    assert isinstance(op, messages.StellarPaymentOp)
     assert op.source_account is None
     assert op.destination_account == b'GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V'
     assert op.asset.type == stellar.ASSET_TYPE_ALPHA12
@@ -166,7 +167,7 @@ def test_stellar_parse_operation_bytes_path_payment_none():
     tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64))
     op = operations[0]
 
-    assert isinstance(op, proto.StellarPathPaymentOp)
+    assert isinstance(op, messages.StellarPathPaymentOp)
     assert op.source_account is None
     assert op.destination_account == b'GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V'
 
@@ -188,7 +189,7 @@ def test_stellar_parse_operation_bytes_path_payment_one():
     tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64))
     op = operations[0]
 
-    assert isinstance(op, proto.StellarPathPaymentOp)
+    assert isinstance(op, messages.StellarPathPaymentOp)
     assert op.source_account is None
     assert op.destination_account == b'GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V'
 
@@ -214,7 +215,7 @@ def test_stellar_parse_operation_bytes_manage_offer_new():
     tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64))
     op = operations[0]
 
-    assert isinstance(op, proto.StellarManageOfferOp)
+    assert isinstance(op, messages.StellarManageOfferOp)
     assert op.source_account is None
 
     assert op.selling_asset.type == stellar.ASSET_TYPE_NATIVE
@@ -236,7 +237,7 @@ def test_stellar_parse_operation_bytes_passive_offer_new():
     tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64))
     op = operations[0]
 
-    assert isinstance(op, proto.StellarCreatePassiveOfferOp)
+    assert isinstance(op, messages.StellarCreatePassiveOfferOp)
     assert op.source_account is None
 
     assert op.selling_asset.type == stellar.ASSET_TYPE_NATIVE
@@ -257,7 +258,7 @@ def test_stellar_parse_operation_bytes_set_options_inflation():
     tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64))
     op = operations[0]
 
-    assert isinstance(op, proto.StellarSetOptionsOp)
+    assert isinstance(op, messages.StellarSetOptionsOp)
     assert op.source_account is None
 
     assert op.inflation_destination_account == b'GAFXTC5OV5XQD66T7WGOB2HUVUC3ZVJDJMBDPTVQYV3G3K7TUHC6CLBR'
@@ -269,7 +270,7 @@ def test_stellar_parse_operation_bytes_change_trust_add():
     tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64))
     op = operations[0]
 
-    assert isinstance(op, proto.StellarChangeTrustOp)
+    assert isinstance(op, messages.StellarChangeTrustOp)
     assert op.source_account is None
 
     assert op.asset.type == stellar.ASSET_TYPE_ALPHA4
@@ -285,7 +286,7 @@ def test_stellar_parse_operation_bytes_allow_trust_allow():
     tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64))
     op = operations[0]
 
-    assert isinstance(op, proto.StellarAllowTrustOp)
+    assert isinstance(op, messages.StellarAllowTrustOp)
     assert op.source_account is None
 
     assert op.asset_type == stellar.ASSET_TYPE_ALPHA4
@@ -300,7 +301,7 @@ def test_stellar_parse_operation_bytes_account_merge_simple():
     tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64))
     op = operations[0]
 
-    assert isinstance(op, proto.StellarAccountMergeOp)
+    assert isinstance(op, messages.StellarAccountMergeOp)
     assert op.source_account is None
 
     assert op.destination_account == b'GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V'
@@ -312,7 +313,7 @@ def test_stellar_parse_operation_bytes_manage_data_set_simple():
     tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64))
     op = operations[0]
 
-    assert isinstance(op, proto.StellarManageDataOp)
+    assert isinstance(op, messages.StellarManageDataOp)
     assert op.source_account is None
 
     assert op.key == b'test data'
@@ -325,7 +326,7 @@ def test_stellar_parse_operation_bytes_bump_sequence_simple():
     tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64))
     op = operations[0]
 
-    assert isinstance(op, proto.StellarBumpSequenceOp)
+    assert isinstance(op, messages.StellarBumpSequenceOp)
     assert op.source_account is None
 
     assert op.bump_to == 1234567890
