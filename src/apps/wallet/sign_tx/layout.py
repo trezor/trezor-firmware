@@ -6,6 +6,7 @@ from trezor.messages import ButtonRequestType
 from trezor.messages import OutputScriptType
 from apps.common.confirm import confirm
 from apps.common.confirm import hold_to_confirm
+from apps.wallet.sign_tx import addresses
 
 
 def format_coin_amount(amount, coin):
@@ -29,7 +30,7 @@ async def confirm_output(ctx, output, coin):
                        ui.MONO, *split_op_return(data), icon_color=ui.GREEN)
     else:
         address = output.address
-        address_short = address[len(coin.cashaddr_prefix) + 1:] if coin.cashaddr_prefix is not None and address.startswith(coin.cashaddr_prefix + ':') else address
+        address_short = addresses.address_short(coin, address)
         content = Text('Confirm sending', ui.ICON_SEND,
                        ui.NORMAL, format_coin_amount(output.amount, coin) + ' to',
                        ui.MONO, *split_address(address_short), icon_color=ui.GREEN)

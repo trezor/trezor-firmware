@@ -5,8 +5,8 @@ import protobuf as p
 class StellarSetOptionsOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 215
     FIELDS = {
-        1: ('source_account', p.BytesType, 0),
-        2: ('inflation_destination_account', p.BytesType, 0),
+        1: ('source_account', p.UnicodeType, 0),
+        2: ('inflation_destination_account', p.UnicodeType, 0),
         3: ('clear_flags', p.UVarintType, 0),
         4: ('set_flags', p.UVarintType, 0),
         5: ('master_weight', p.UVarintType, 0),
@@ -21,8 +21,8 @@ class StellarSetOptionsOp(p.MessageType):
 
     def __init__(
         self,
-        source_account: bytes = None,
-        inflation_destination_account: bytes = None,
+        source_account: str = None,
+        inflation_destination_account: str = None,
         clear_flags: int = None,
         set_flags: int = None,
         master_weight: int = None,

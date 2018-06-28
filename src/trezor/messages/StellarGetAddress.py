@@ -7,8 +7,8 @@ if __debug__:
         List = None
 
 
-class StellarGetPublicKey(p.MessageType):
-    MESSAGE_WIRE_TYPE = 200
+class StellarGetAddress(p.MessageType):
+    MESSAGE_WIRE_TYPE = 207
     FIELDS = {
         1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
         2: ('show_display', p.BoolType, 0),

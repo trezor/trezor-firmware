@@ -5,8 +5,8 @@ import protobuf as p
 class StellarAllowTrustOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 217
     FIELDS = {
-        1: ('source_account', p.BytesType, 0),
-        2: ('trusted_account', p.BytesType, 0),
+        1: ('source_account', p.UnicodeType, 0),
+        2: ('trusted_account', p.UnicodeType, 0),
         3: ('asset_type', p.UVarintType, 0),
         4: ('asset_code', p.UnicodeType, 0),
         5: ('is_authorized', p.UVarintType, 0),
@@ -14,8 +14,8 @@ class StellarAllowTrustOp(p.MessageType):
 
     def __init__(
         self,
-        source_account: bytes = None,
-        trusted_account: bytes = None,
+        source_account: str = None,
+        trusted_account: str = None,
         asset_type: int = None,
         asset_code: str = None,
         is_authorized: int = None

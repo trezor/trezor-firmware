@@ -7,7 +7,7 @@ from apps.common import coins
 from apps.common.confirm import require_confirm
 from apps.common.display_address import split_address
 from apps.common.signverify import message_digest, split_message
-from apps.wallet.sign_tx.addresses import address_pkh, address_p2wpkh_in_p2sh, address_p2wpkh, address_to_cashaddr
+from apps.wallet.sign_tx.addresses import address_pkh, address_p2wpkh_in_p2sh, address_p2wpkh, address_to_cashaddr, address_short
 
 
 async def verify_message(ctx, msg):
@@ -51,9 +51,7 @@ async def verify_message(ctx, msg):
     if addr != address:
         raise wire.ProcessError('Invalid signature')
 
-    address_short = address[len(coin.cashaddr_prefix) + 1:] if coin.cashaddr_prefix is not None else address
-
-    await require_confirm_verify_message(ctx, address_short, message)
+    await require_confirm_verify_message(ctx, address_short(coin, address), message)
 
     return Success(message='Message verified')
 

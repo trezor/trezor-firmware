@@ -11,10 +11,10 @@ from .StellarAssetType import StellarAssetType
 class StellarPathPaymentOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 212
     FIELDS = {
-        1: ('source_account', p.BytesType, 0),
+        1: ('source_account', p.UnicodeType, 0),
         2: ('send_asset', StellarAssetType, 0),
         3: ('send_max', p.SVarintType, 0),
-        4: ('destination_account', p.BytesType, 0),
+        4: ('destination_account', p.UnicodeType, 0),
         5: ('destination_asset', StellarAssetType, 0),
         6: ('destination_amount', p.SVarintType, 0),
         7: ('paths', StellarAssetType, p.FLAG_REPEATED),
@@ -22,10 +22,10 @@ class StellarPathPaymentOp(p.MessageType):
 
     def __init__(
         self,
-        source_account: bytes = None,
+        source_account: str = None,
         send_asset: StellarAssetType = None,
         send_max: int = None,
-        destination_account: bytes = None,
+        destination_account: str = None,
         destination_asset: StellarAssetType = None,
         destination_amount: int = None,
         paths: List[StellarAssetType] = None

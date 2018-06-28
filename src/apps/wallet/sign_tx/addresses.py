@@ -174,3 +174,10 @@ def ecdsa_hash_pubkey(pubkey: bytes) -> bytes:
     h = sha256(pubkey).digest()
     h = ripemd160(h).digest()
     return h
+
+
+def address_short(coin: CoinInfo, address: str) -> str:
+    if coin.cashaddr_prefix is not None and address.startswith(coin.cashaddr_prefix + ':'):
+        return address[len(coin.cashaddr_prefix) + 1:]
+    else:
+        return address

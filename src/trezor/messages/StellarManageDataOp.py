@@ -5,14 +5,14 @@ import protobuf as p
 class StellarManageDataOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 220
     FIELDS = {
-        1: ('source_account', p.BytesType, 0),
+        1: ('source_account', p.UnicodeType, 0),
         2: ('key', p.UnicodeType, 0),
         3: ('value', p.BytesType, 0),
     }
 
     def __init__(
         self,
-        source_account: bytes = None,
+        source_account: str = None,
         key: str = None,
         value: bytes = None
     ) -> None:
