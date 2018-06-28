@@ -574,7 +574,11 @@
             "shortcut": "XZC",
             "t1_enabled": "yes",
             "t2_enabled": "yes",
-            "type": "coin"
+            "type": "coin",
+            "wallet": {
+                "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
+                "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"
+            }
         },
         "coin:ZEC": {
             "links": {
