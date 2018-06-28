@@ -46,7 +46,8 @@
 		"Zcash": "2.0.7",
 		"Zcash Testnet": "2.0.7",
 		"Zcoin": "2.0.7",
-		"Zcoin Testnet": "2.0.7"
+		"Zcoin Testnet": "2.0.7",
+		"Zencash": "2.0.8"
 	},
 	"connect": {
 		"Bitcoin": true,
