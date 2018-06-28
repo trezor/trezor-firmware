@@ -86,6 +86,7 @@ def validate_coin(coin):
     assert check_type(coin['decred'], bool)
     assert check_type(coin['fork_id'], int, nullable=True)
     assert check_type(coin['force_bip143'], bool)
+    assert check_type(coin['bip115'], bool)
     assert check_type(coin['version_group_id'], int, nullable=True)
     assert check_type(coin['default_fee_b'], dict)
     assert check_type(coin['dust_limit'], int)

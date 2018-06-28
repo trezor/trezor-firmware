@@ -24,6 +24,7 @@
   "fork_id": null,
   "force_bip143": false,
   "version_group_id": null,
+  "bip115": false,
   "default_fee_b": {
     "Low": 10,
     "Economy": 70,

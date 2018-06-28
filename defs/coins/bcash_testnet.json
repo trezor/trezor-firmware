@@ -23,6 +23,7 @@
   "decred": false,
   "fork_id": 0,
   "force_bip143": true,
+  "bip115": false,
   "version_group_id": null,
   "default_fee_b": {
     "Normal": 10
