@@ -63,7 +63,7 @@ def address_from_public_key(pk_bytes):
     # checksum
     final_bytes.extend(struct.pack("<H", _crc16_checksum(final_bytes)))
 
-    return base64.b32encode(final_bytes)
+    return str(base64.b32encode(final_bytes), 'utf-8')
 
 
 def address_to_public_key(address_str):
