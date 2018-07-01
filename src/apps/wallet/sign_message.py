@@ -18,7 +18,7 @@ async def sign_message(ctx, msg):
 
     await require_confirm_sign_message(ctx, message)
 
-    node = await seed.derive_node(ctx, address_n)
+    node = await seed.derive_node(ctx, address_n, curve_name=coin.curve_name)
     seckey = node.private_key()
 
     address = get_address(script_type, coin, node)

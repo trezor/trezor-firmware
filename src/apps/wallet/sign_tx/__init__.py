@@ -2,7 +2,7 @@ from trezor import ui, wire
 from trezor.messages.MessageType import TxAck
 from trezor.messages.TxRequest import TxRequest
 from trezor.messages.RequestType import TXFINISHED
-from apps.common import seed
+from apps.common import seed, coins
 from apps.wallet.sign_tx.helpers import UiConfirmOutput, UiConfirmTotal, UiConfirmFeeOverThreshold, UiConfirmForeignAddress
 
 
@@ -10,8 +10,10 @@ from apps.wallet.sign_tx.helpers import UiConfirmOutput, UiConfirmTotal, UiConfi
 async def sign_tx(ctx, msg):
     from apps.wallet.sign_tx import layout, progress, signing
 
+    coin_name = msg.coin_name or 'Bitcoin'
+    coin = coins.by_name(coin_name)
     # TODO: rework this so we don't have to pass root to signing.sign_tx
-    root = await seed.derive_node(ctx, [])
+    root = await seed.derive_node(ctx, [], curve_name=coin.curve_name)
 
     signer = signing.sign_tx(msg, root)
     res = None

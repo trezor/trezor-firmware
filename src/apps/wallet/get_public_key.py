@@ -11,13 +11,12 @@ from ubinascii import hexlify
 
 async def get_public_key(ctx, msg):
     coin_name = msg.coin_name or 'Bitcoin'
+    coin = coins.by_name(coin_name)
 
     curve_name = msg.ecdsa_curve_name
     if not curve_name:
-        node = await seed.derive_node(ctx, msg.address_n)
-    else:
-        node = await seed.derive_node(ctx, msg.address_n, curve_name=curve_name)
-    coin = coins.by_name(coin_name)
+        curve_name = coin.curve_name
+    node = await seed.derive_node(ctx, msg.address_n, curve_name=curve_name)
 
     node_xpub = node.serialize_public(coin.xpub_magic)
     pubkey = node.public_key()

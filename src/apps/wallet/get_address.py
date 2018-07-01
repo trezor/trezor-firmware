@@ -9,7 +9,7 @@ async def get_address(ctx, msg):
     coin_name = msg.coin_name or 'Bitcoin'
     coin = coins.by_name(coin_name)
 
-    node = await seed.derive_node(ctx, msg.address_n)
+    node = await seed.derive_node(ctx, msg.address_n, curve_name=coin.curve_name)
     address = addresses.get_address(msg.script_type, coin, node, msg.multisig)
     address_short = addresses.address_short(coin, address)
 
