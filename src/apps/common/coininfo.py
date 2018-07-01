@@ -35,6 +35,10 @@ class CoinInfo:
         self.version_group_id = version_group_id
         self.bip115 = bip115
         self.curve_name = curve_name
+        if curve_name == 'secp256k1-groestl':
+            self.sign_hash_double = False
+        else:
+            self.sign_hash_double = True
 
 
 # the following list is generated using tools/codegen/gen_coins.py

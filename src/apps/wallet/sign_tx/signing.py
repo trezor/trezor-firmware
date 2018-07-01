@@ -312,7 +312,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                 multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
 
             # compute the signature from the tx digest
-            signature = ecdsa_sign(key_sign, get_tx_hash(h_sign, double=True))
+            signature = ecdsa_sign(key_sign, get_tx_hash(h_sign, double=coin.sign_hash_double))
             tx_ser.signature_index = i_sign
             tx_ser.signature = signature
 
@@ -437,7 +437,7 @@ async def get_prevtx_output_value(coin: CoinInfo, tx_req: TxRequest, prev_hash: 
         write_bytes(txh, data)
         ofs += len(data)
 
-    if get_tx_hash(txh, double=True, reverse=True) != prev_hash:
+    if get_tx_hash(txh, double=coin.sign_hash_double, reverse=True) != prev_hash:
         raise SigningError(FailureType.ProcessError,
                            'Encountered invalid prev_hash')
 

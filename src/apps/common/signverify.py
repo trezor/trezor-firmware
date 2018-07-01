@@ -12,7 +12,10 @@ def message_digest(coin, message):
     h.extend(coin.signed_message_header)
     write_varint(h, len(message))
     h.extend(message)
-    return sha256(h.get_digest()).digest()
+    ret = h.get_digest()
+    if coin.sign_hash_double:
+        ret = sha256(ret).digest()
+    return ret
 
 
 def split_message(message):
