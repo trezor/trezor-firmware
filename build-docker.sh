@@ -3,11 +3,18 @@ set -e
 
 IMAGE=trezor-core-build
 TAG=${1:-master}
+REPOSITORY=${2:-trezor}
+
+if [ "$REPOSITORY" = "local" ]; then
+	REPOSITORY=file:///local/
+else
+	REPOSITORY=https://github.com/$REPOSITORY/trezor-core.git
+fi
 
 docker build -t $IMAGE .
 
-docker run -t -v $(pwd)/build-docker:/build:z $IMAGE /bin/sh -c "\
-	git clone https://github.com/trezor/trezor-core && \
+docker run -t -v $(pwd):/local -v $(pwd)/build-docker:/build:z $IMAGE /bin/sh -c "\
+	git clone $REPOSITORY trezor-core && \
 	cd trezor-core && \
 	ln -s /build build &&
 	git checkout $TAG && \
