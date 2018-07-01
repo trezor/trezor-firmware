@@ -17,6 +17,7 @@ fields = [
     'force_bip143',
     'version_group_id',
     'bip115',
+    'curve_name',
 ]
 
 support = json.load(open('../../vendor/trezor-common/defs/support.json', 'r'))
@@ -35,6 +36,8 @@ for c in coins:
             v = '0x%08x' % data[n] if data[n] is not None else 'None'
         else:
             v = repr(data[n])
+        if n == 'curve_name':
+            v = v.replace('_', '-')
         print('        %s=%s,' % (n, v))
     print('    ),')
 
