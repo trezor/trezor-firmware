@@ -1,3 +1,5 @@
+from trezor.crypto.base58 import groestl512d_32, sha256d_32
+
 class CoinInfo:
 
     def __init__(
@@ -36,8 +38,10 @@ class CoinInfo:
         self.bip115 = bip115
         self.curve_name = curve_name
         if curve_name == 'secp256k1-groestl':
+            self.b58_hash = groestl512d_32
             self.sign_hash_double = False
         else:
+            self.b58_hash = sha256d_32
             self.sign_hash_double = True
 
 

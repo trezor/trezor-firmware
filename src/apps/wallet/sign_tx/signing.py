@@ -509,7 +509,7 @@ def output_derive_script(o: TxOutputType, coin: CoinInfo, root: bip32.HDNode) ->
             raise ValueError('Unknown cashaddr address type')
         raw_address = bytes([version]) + data
     else:
-        raw_address = base58.decode_check(o.address)
+        raw_address = base58.decode_check(o.address, coin.b58_hash)
 
     if address_type.check(coin.address_type, raw_address):
         # p2pkh

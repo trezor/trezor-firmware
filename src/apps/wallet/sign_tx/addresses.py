@@ -34,7 +34,7 @@ def get_address(script_type: InputScriptType, coin: CoinInfo, node, multisig=Non
                                    'Multisig not enabled on this coin')
 
             pubkeys = multisig_get_pubkeys(multisig)
-            address = address_multisig_p2sh(pubkeys, multisig.m, coin.address_type_p2sh)
+            address = address_multisig_p2sh(pubkeys, multisig.m, coin)
             if coin.cashaddr_prefix is not None:
                 address = address_to_cashaddr(address, coin)
             return address
@@ -67,32 +67,32 @@ def get_address(script_type: InputScriptType, coin: CoinInfo, node, multisig=Non
         # p2wsh multisig nested in p2sh
         if multisig is not None:
             pubkeys = multisig_get_pubkeys(multisig)
-            return address_multisig_p2wsh_in_p2sh(pubkeys, multisig.m, coin.address_type_p2sh)
+            return address_multisig_p2wsh_in_p2sh(pubkeys, multisig.m, coin)
 
         # p2wpkh nested in p2sh
-        return address_p2wpkh_in_p2sh(node.public_key(), coin.address_type_p2sh)
+        return address_p2wpkh_in_p2sh(node.public_key(), coin)
 
     else:
         raise AddressError(FailureType.ProcessError,
                            'Invalid script type')
 
 
-def address_multisig_p2sh(pubkeys: bytes, m: int, addrtype: int):
-    if addrtype is None:
+def address_multisig_p2sh(pubkeys: bytes, m: int, coin: CoinInfo):
+    if coin.address_type_p2sh is None:
         raise AddressError(FailureType.ProcessError,
                            'Multisig not enabled on this coin')
     redeem_script = output_script_multisig(pubkeys, m)
     redeem_script_hash = sha256_ripemd160_digest(redeem_script)
-    return address_p2sh(redeem_script_hash, addrtype)
+    return address_p2sh(redeem_script_hash, coin)
 
 
-def address_multisig_p2wsh_in_p2sh(pubkeys: bytes, m: int, addrtype: int):
-    if addrtype is None:
+def address_multisig_p2wsh_in_p2sh(pubkeys: bytes, m: int, coin: CoinInfo):
+    if coin.address_type_p2sh is None:
         raise AddressError(FailureType.ProcessError,
                            'Multisig not enabled on this coin')
     witness_script = output_script_multisig(pubkeys, m)
     witness_script_hash = sha256(witness_script).digest()
-    return address_p2wsh_in_p2sh(witness_script_hash, addrtype)
+    return address_p2wsh_in_p2sh(witness_script_hash, coin)
 
 
 def address_multisig_p2wsh(pubkeys: bytes, m: int, hrp: str):
@@ -104,27 +104,27 @@ def address_multisig_p2wsh(pubkeys: bytes, m: int, hrp: str):
     return address_p2wsh(witness_script_hash, hrp)
 
 
-def address_pkh(pubkey: bytes, addrtype: int) -> str:
-    s = addrtype_bytes(addrtype) + sha256_ripemd160_digest(pubkey)
-    return base58.encode_check(bytes(s))
+def address_pkh(pubkey: bytes, coin: CoinInfo) -> str:
+    s = addrtype_bytes(coin.address_type) + sha256_ripemd160_digest(pubkey)
+    return base58.encode_check(bytes(s), coin.b58_hash)
 
 
-def address_p2sh(redeem_script_hash: bytes, addrtype: int) -> str:
-    s = addrtype_bytes(addrtype) + redeem_script_hash
-    return base58.encode_check(bytes(s))
+def address_p2sh(redeem_script_hash: bytes, coin: CoinInfo) -> str:
+    s = addrtype_bytes(coin.address_type_p2sh) + redeem_script_hash
+    return base58.encode_check(bytes(s), coin.b58_hash)
 
 
-def address_p2wpkh_in_p2sh(pubkey: bytes, addrtype: int) -> str:
+def address_p2wpkh_in_p2sh(pubkey: bytes, coin: CoinInfo) -> str:
     pubkey_hash = ecdsa_hash_pubkey(pubkey)
     redeem_script = output_script_native_p2wpkh_or_p2wsh(pubkey_hash)
     redeem_script_hash = sha256_ripemd160_digest(redeem_script)
-    return address_p2sh(redeem_script_hash, addrtype)
+    return address_p2sh(redeem_script_hash, coin)
 
 
-def address_p2wsh_in_p2sh(witness_script_hash: bytes, addrtype: int) -> str:
+def address_p2wsh_in_p2sh(witness_script_hash: bytes, coin: CoinInfo) -> str:
     redeem_script = output_script_native_p2wpkh_or_p2wsh(witness_script_hash)
     redeem_script_hash = sha256_ripemd160_digest(redeem_script)
-    return address_p2sh(redeem_script_hash, addrtype)
+    return address_p2sh(redeem_script_hash, coin)
 
 
 def address_p2wpkh(pubkey: bytes, hrp: str) -> str:
@@ -153,7 +153,7 @@ def decode_bech32_address(prefix: str, address: str) -> bytes:
 
 
 def address_to_cashaddr(address: str, coin: CoinInfo) -> str:
-    raw = base58.decode_check(address)
+    raw = base58.decode_check(address, coin.b58_hash)
     version, data = raw[0], raw[1:]
     if version == coin.address_type:
         version = cashaddr.ADDRESS_TYPE_P2KH

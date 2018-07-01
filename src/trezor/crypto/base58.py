@@ -59,19 +59,22 @@ def decode(string: str) -> bytes:
     return bytes((b for b in reversed(result + [0] * (origlen - newlen))))
 
 
-def _dsha256_32(data: bytes) -> bytes:
+def sha256d_32(data: bytes) -> bytes:
     from .hashlib import sha256
     return sha256(sha256(data).digest()).digest()[:4]
 
+def groestl512d_32(data: bytes) -> bytes:
+    from .hashlib import groestl512
+    return groestl512(groestl512(data).digest()).digest()[:4]
 
-def encode_check(data: bytes, digestfunc=_dsha256_32) -> str:
+def encode_check(data: bytes, digestfunc=sha256d_32) -> str:
     '''
     Convert bytes to base58 encoded string, append checksum.
     '''
     return encode(data + digestfunc(data))
 
 
-def decode_check(string: str, digestfunc=_dsha256_32) -> bytes:
+def decode_check(string: str, digestfunc=sha256d_32) -> bytes:
     '''
     Convert base58 encoded string to bytes and verify checksum.
     '''
