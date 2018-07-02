@@ -91,7 +91,7 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
 
 
 async def send_request_chunk(ctx, data_left: int):
-    from trezor.messages.wire_types import EthereumTxAck
+    from trezor.messages.MessageType import EthereumTxAck
     # TODO: layoutProgress ?
     req = EthereumTxRequest()
     if data_left <= 1024:

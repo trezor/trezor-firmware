@@ -1,7 +1,7 @@
 from micropython import const
 from trezor import config, ui, wire
 from trezor.crypto import bip39, hashlib, random
-from trezor.messages import ButtonRequestType, wire_types
+from trezor.messages import ButtonRequestType, MessageType
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
@@ -42,7 +42,7 @@ async def reset_device(ctx, msg):
         await show_entropy(ctx, internal_ent)
 
     # request external entropy and compute mnemonic
-    ent_ack = await ctx.call(EntropyRequest(), wire_types.EntropyAck)
+    ent_ack = await ctx.call(EntropyRequest(), MessageType.EntropyAck)
     mnemonic = generate_mnemonic(msg.strength, internal_ent, ent_ack.entropy)
 
     if not msg.skip_backup:
@@ -143,7 +143,7 @@ async def show_entropy(ctx, entropy: bytes):
 
 async def show_mnemonic(ctx, mnemonic: str):
     await ctx.call(
-        ButtonRequest(code=ButtonRequestType.ResetDevice), wire_types.ButtonAck)
+        ButtonRequest(code=ButtonRequestType.ResetDevice), MessageType.ButtonAck)
     first_page = const(0)
     words_per_page = const(4)
     words = list(enumerate(mnemonic.split()))

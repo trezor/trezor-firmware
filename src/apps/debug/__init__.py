@@ -4,7 +4,7 @@ if not __debug__:
 
 if __debug__:
     from trezor import loop
-    from trezor.messages import wire_types
+    from trezor.messages import MessageType
     from trezor.messages.DebugLinkState import DebugLinkState
     from trezor.ui import confirm, swipe
     from trezor.wire import register, protobuf_workflow
@@ -40,5 +40,5 @@ if __debug__:
         # wipe storage when debug build is used
         storage.wipe()
 
-        register(wire_types.DebugLinkDecision, protobuf_workflow, dispatch_DebugLinkDecision)
-        register(wire_types.DebugLinkGetState, protobuf_workflow, dispatch_DebugLinkGetState)
+        register(MessageType.DebugLinkDecision, protobuf_workflow, dispatch_DebugLinkDecision)
+        register(MessageType.DebugLinkGetState, protobuf_workflow, dispatch_DebugLinkGetState)

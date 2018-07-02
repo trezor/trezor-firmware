@@ -1,6 +1,6 @@
 from trezor import config, utils, wire
 from trezor.wire import register, protobuf_workflow
-from trezor.messages import wire_types
+from trezor.messages import MessageType
 from trezor.messages.Features import Features
 from trezor.messages.Success import Success
 
@@ -64,8 +64,8 @@ async def handle_Ping(ctx, msg):
 
 
 def boot():
-    register(wire_types.Initialize, protobuf_workflow, handle_Initialize)
-    register(wire_types.GetFeatures, protobuf_workflow, handle_GetFeatures)
-    register(wire_types.Cancel, protobuf_workflow, handle_Cancel)
-    register(wire_types.ClearSession, protobuf_workflow, handle_ClearSession)
-    register(wire_types.Ping, protobuf_workflow, handle_Ping)
+    register(MessageType.Initialize, protobuf_workflow, handle_Initialize)
+    register(MessageType.GetFeatures, protobuf_workflow, handle_GetFeatures)
+    register(MessageType.Cancel, protobuf_workflow, handle_Cancel)
+    register(MessageType.ClearSession, protobuf_workflow, handle_ClearSession)
+    register(MessageType.Ping, protobuf_workflow, handle_Ping)

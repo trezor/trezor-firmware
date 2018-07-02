@@ -1,5 +1,5 @@
 from trezor.wire import register, protobuf_workflow
-from trezor.messages.wire_types import NEMGetAddress, NEMSignTx
+from trezor.messages.MessageType import NEMGetAddress, NEMSignTx
 
 
 def dispatch_NemGetAddress(*args, **kwargs):

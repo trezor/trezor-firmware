@@ -1,4 +1,4 @@
-from trezor.messages import wire_types
+from trezor.messages import MessageType
 
 if __debug__:
     from trezor import log
@@ -28,5 +28,5 @@ def get_type(wire_type):
 
 
 # build reverse table of wire types
-for msg_name in dir(wire_types):
-    type_to_name[getattr(wire_types, msg_name)] = msg_name
+for msg_name in dir(MessageType):
+    type_to_name[getattr(MessageType, msg_name)] = msg_name

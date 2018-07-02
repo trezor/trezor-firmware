@@ -1,5 +1,5 @@
 from trezor import ui, wire
-from trezor.messages import ButtonRequestType, wire_types
+from trezor.messages import ButtonRequestType, MessageType
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.ui.confirm import CONFIRMED, ConfirmDialog, HoldToConfirmDialog
 
@@ -8,7 +8,7 @@ from trezor.ui.confirm import CONFIRMED, ConfirmDialog, HoldToConfirmDialog
 async def confirm(ctx, content, code=None, *args, **kwargs):
     if code is None:
         code = ButtonRequestType.Other
-    await ctx.call(ButtonRequest(code=code), wire_types.ButtonAck)
+    await ctx.call(ButtonRequest(code=code), MessageType.ButtonAck)
 
     dialog = ConfirmDialog(content, *args, **kwargs)
 
@@ -19,7 +19,7 @@ async def confirm(ctx, content, code=None, *args, **kwargs):
 async def hold_to_confirm(ctx, content, code=None, *args, **kwargs):
     if code is None:
         code = ButtonRequestType.Other
-    await ctx.call(ButtonRequest(code=code), wire_types.ButtonAck)
+    await ctx.call(ButtonRequest(code=code), MessageType.ButtonAck)
 
     dialog = HoldToConfirmDialog(content, 'Hold to confirm', *args, **kwargs)
 

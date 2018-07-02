@@ -1,5 +1,5 @@
 from trezor import ui, wire
-from trezor.messages.wire_types import TxAck
+from trezor.messages.MessageType import TxAck
 from trezor.messages.TxRequest import TxRequest
 from trezor.messages.RequestType import TXFINISHED
 from apps.common import seed

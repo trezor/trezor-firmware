@@ -1,5 +1,5 @@
 from trezor import ui, wire
-from trezor.messages import ButtonRequestType, wire_types
+from trezor.messages import ButtonRequestType, MessageType
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages import PassphraseSourceType
 from trezor.messages.PassphraseRequest import PassphraseRequest
@@ -20,9 +20,9 @@ async def request_passphrase_entry(ctx):
 
     ack = await ctx.call(
         ButtonRequest(code=ButtonRequestType.PassphraseType),
-        wire_types.ButtonAck,
-        wire_types.Cancel)
-    if ack.MESSAGE_WIRE_TYPE == wire_types.Cancel:
+        MessageType.ButtonAck,
+        MessageType.Cancel)
+    if ack.MESSAGE_WIRE_TYPE == MessageType.Cancel:
         raise wire.ActionCancelled('Passphrase cancelled')
 
     selector = EntrySelector(text)
@@ -38,8 +38,8 @@ async def request_passphrase_ack(ctx, on_device):
         text.render()
 
     req = PassphraseRequest(on_device=on_device)
-    ack = await ctx.call(req, wire_types.PassphraseAck, wire_types.Cancel)
-    if ack.MESSAGE_WIRE_TYPE == wire_types.Cancel:
+    ack = await ctx.call(req, MessageType.PassphraseAck, MessageType.Cancel)
+    if ack.MESSAGE_WIRE_TYPE == MessageType.Cancel:
         raise wire.ActionCancelled('Passphrase cancelled')
 
     if on_device:
@@ -55,7 +55,7 @@ async def request_passphrase_ack(ctx, on_device):
         passphrase = ack.passphrase
 
     req = PassphraseStateRequest(state=get_state(prev_state=ack.state, passphrase=passphrase))
-    ack = await ctx.call(req, wire_types.PassphraseStateAck, wire_types.Cancel)
+    ack = await ctx.call(req, MessageType.PassphraseStateAck, MessageType.Cancel)
 
     return passphrase
 

@@ -3,7 +3,7 @@ from trezor.crypto import bip39
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.ButtonRequestType import MnemonicWordCount, MnemonicInput
 from trezor.messages.Success import Success
-from trezor.messages.wire_types import ButtonAck
+from trezor.messages.MessageType import ButtonAck
 from trezor.pin import pin_to_int
 from trezor.ui.mnemonic import MnemonicKeyboard
 from trezor.ui.text import Text

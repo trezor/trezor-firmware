@@ -5,5 +5,3 @@ set -e
     --no-init-py \
     -o ../src/trezor/messages \
     ../vendor/trezor-common/protob/{types,messages}.proto
-
-cp ../src/trezor/messages/MessageType.py ../src/trezor/messages/wire_types.py

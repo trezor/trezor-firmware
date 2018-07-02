@@ -1,6 +1,6 @@
 from trezor.wire import register, protobuf_workflow
-from trezor.messages.wire_types import EthereumGetAddress, EthereumSignTx
-from trezor.messages.wire_types import EthereumSignMessage, EthereumVerifyMessage
+from trezor.messages.MessageType import EthereumGetAddress, EthereumSignTx
+from trezor.messages.MessageType import EthereumSignMessage, EthereumVerifyMessage
 
 
 def dispatch_EthereumGetAddress(*args, **kwargs):

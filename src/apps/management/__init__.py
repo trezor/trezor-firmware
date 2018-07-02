@@ -1,5 +1,5 @@
 from trezor.wire import register, protobuf_workflow
-from trezor.messages.wire_types import \
+from trezor.messages.MessageType import \
     LoadDevice, ResetDevice, BackupDevice, WipeDevice, RecoveryDevice, ApplySettings, ApplyFlags, ChangePin, SetU2FCounter
 
 
