@@ -20,7 +20,7 @@ async def cipher_key_value(ctx, msg):
             title = 'Encrypt value'
         else:
             title = 'Decrypt value'
-        text = Text(title, ui.ICON_DEFAULT)
+        text = Text(title)
         text.type(msg.key)
         await require_confirm(ctx, text)
 

@@ -37,6 +37,6 @@ async def ethereum_sign_message(ctx, msg):
 
 async def require_confirm_sign_message(ctx, message):
     message = split_message(message)
-    text = Text('Sign ETH message', ui.ICON_DEFAULT)
+    text = Text('Sign ETH message')
     text.type(*message)
     await require_confirm(ctx, text)

@@ -53,7 +53,7 @@ async def require_confirm_sign_identity(ctx, identity, challenge_visual):
     lines.extend(chunks(serialize_identity_without_proto(identity), 18))
 
     proto = identity.proto.upper() if identity.proto else 'identity'
-    text = Text('Sign %s' % proto, ui.ICON_DEFAULT)
+    text = Text('Sign %s' % proto)
     text.type(*lines)
     await require_confirm(ctx, text)
 

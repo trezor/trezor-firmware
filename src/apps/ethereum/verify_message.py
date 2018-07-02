@@ -32,10 +32,10 @@ async def ethereum_verify_message(ctx, msg):
 
 
 async def require_confirm_verify_message(ctx, address, message):
-    text = Text('Confirm address', ui.ICON_DEFAULT)
+    text = Text('Confirm address')
     text.mono(*split_address(address))
     await require_confirm(ctx, text)
 
-    text = Text('Verify message', ui.ICON_DEFAULT)
+    text = Text('Verify message')
     text.mono(*split_message(message))
     await require_confirm(ctx, text)

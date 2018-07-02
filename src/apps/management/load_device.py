@@ -18,7 +18,7 @@ async def load_device(ctx, msg):
     if not msg.skip_checksum and not bip39.check(msg.mnemonic):
         raise wire.ProcessError('Mnemonic is not valid')
 
-    text = Text('Loading seed', ui.ICON_DEFAULT)
+    text = Text('Loading seed')
     text.bold('Loading private seed', 'is not recommended.')
     text.type('Continue only if you', 'know what you are doing!')
     await require_confirm(ctx, text)

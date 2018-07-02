@@ -30,7 +30,7 @@ async def get_ecdh_session_key(ctx, msg):
 async def require_confirm_ecdh_session_key(ctx, identity):
     lines = chunks(serialize_identity_without_proto(identity), 18)
     proto = identity.proto.upper() if identity.proto else 'identity'
-    text = Text('Decrypt %s' % proto, ui.ICON_DEFAULT)
+    text = Text('Decrypt %s' % proto)
     text.mono(*lines)
     await require_confirm(ctx, text)
 
