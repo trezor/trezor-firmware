@@ -163,6 +163,7 @@ void display_save(const char *prefix)
     char fname[256];
     snprintf(fname, sizeof(fname), "%s%08d.png", prefix, cnt);
     IMG_SavePNG(BUFFER, fname);
+    fprintf(stderr, "Saved display buffer to %s\n", fname);
     cnt++;
 #endif
 }

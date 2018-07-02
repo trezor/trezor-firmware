@@ -28,6 +28,7 @@ extern int sdl_display_res_x, sdl_display_res_y;
 extern int sdl_touch_offset_x, sdl_touch_offset_y;
 
 extern void __shutdown(void);
+extern void display_save(const char *prefix);
 
 uint32_t touch_read(void)
 {
@@ -68,6 +69,9 @@ uint32_t touch_read(void)
             case SDL_KEYUP:
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
                     __shutdown();
+                }
+                if (event.key.keysym.sym == SDLK_p) {
+                    display_save("emu");
                 }
                 break;
             case SDL_QUIT:
