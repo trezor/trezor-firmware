@@ -72,7 +72,7 @@ def _get_mosaic_properties(definition: NEMMosaicDefinition):
     if definition.description:
         t = Text('Confirm properties', ui.ICON_SEND)
         t.bold('Description:')
-        t.type(*split_words(trim(definition.description, 70), 22))
+        t.normal(*split_words(trim(definition.description, 70), 22))
         properties.append(t)
 
     # transferable
@@ -82,7 +82,7 @@ def _get_mosaic_properties(definition: NEMMosaicDefinition):
         transferable = 'No'
     t = Text('Confirm properties', ui.ICON_SEND)
     t.bold('Transferable?')
-    t.type(transferable)
+    t.normal(transferable)
     properties.append(t)
 
     # mutable_supply
@@ -93,11 +93,11 @@ def _get_mosaic_properties(definition: NEMMosaicDefinition):
     if definition.supply:
         t = Text('Confirm properties', ui.ICON_SEND)
         t.bold('Initial supply:')
-        t.type(str(definition.supply), imm)
+        t.normal(str(definition.supply), imm)
     else:
         t = Text('Confirm properties', ui.ICON_SEND)
         t.bold('Initial supply:')
-        t.type(imm)
+        t.normal(imm)
     properties.append(t)
 
     # levy
@@ -110,16 +110,16 @@ def _get_mosaic_properties(definition: NEMMosaicDefinition):
 
         t = Text('Confirm properties', ui.ICON_SEND)
         t.bold('Levy fee:')
-        t.type(str(definition.fee))
+        t.normal(str(definition.fee))
         t.bold('Levy divisibility:')
-        t.type(str(definition.divisibility))
+        t.normal(str(definition.divisibility))
         properties.append(t)
 
         t = Text('Confirm properties', ui.ICON_SEND)
         t.bold('Levy namespace:')
-        t.type(definition.levy_namespace)
+        t.normal(definition.levy_namespace)
         t.bold('Levy mosaic:')
-        t.type(definition.levy_mosaic)
+        t.normal(definition.levy_mosaic)
         properties.append(t)
 
         if definition.levy == NEMMosaicLevy.MosaicLevy_Absolute:
@@ -128,7 +128,7 @@ def _get_mosaic_properties(definition: NEMMosaicDefinition):
             levy_type = 'percentile'
         t = Text('Confirm properties', ui.ICON_SEND)
         t.bold('Levy type:')
-        t.type(levy_type)
+        t.normal(levy_type)
         properties.append(t)
 
     return properties

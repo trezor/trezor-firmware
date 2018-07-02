@@ -32,31 +32,31 @@ async def confirm_output(ctx, output, coin):
         address = output.address
         address_short = addresses.address_short(coin, address)
         text = Text('Confirm sending', ui.ICON_SEND, icon_color=ui.GREEN)
-        text.type(format_coin_amount(output.amount, coin) + ' to')
+        text.normal(format_coin_amount(output.amount, coin) + ' to')
         text.mono(*split_address(address_short))
     return await confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
 async def confirm_total(ctx, spending, fee, coin):
     text = Text('Confirm transaction', ui.ICON_SEND, icon_color=ui.GREEN)
-    text.type('Total amount:')
+    text.normal('Total amount:')
     text.bold(format_coin_amount(spending, coin))
-    text.type('including fee:')
+    text.normal('including fee:')
     text.bold(format_coin_amount(fee, coin))
     return await hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def confirm_feeoverthreshold(ctx, fee, coin):
     text = Text('High fee', ui.ICON_SEND, icon_color=ui.GREEN)
-    text.type('The fee of')
+    text.normal('The fee of')
     text.bold(format_coin_amount(fee, coin))
-    text.type('is unexpectedly high.', 'Continue?')
+    text.normal('is unexpectedly high.', 'Continue?')
     return await confirm(ctx, text, ButtonRequestType.FeeOverThreshold)
 
 
 async def confirm_foreign_address(ctx, address_n, coin):
     text = Text('Confirm sending', ui.ICON_SEND, icon_color=ui.RED)
-    text.type(
+    text.normal(
         'Trying to spend',
         'coins from another chain.',
         'Continue?')

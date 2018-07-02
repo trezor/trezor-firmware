@@ -112,7 +112,7 @@ class Text(ui.LazyWidget):
         self.new_lines = new_lines
         self.content = []
 
-    def type(self, *content):
+    def normal(self, *content):
         self.content.extend(content)
 
     def bold(self, *content):

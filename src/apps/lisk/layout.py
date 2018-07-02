@@ -11,22 +11,22 @@ from .helpers import get_vote_tx_text
 async def require_confirm_tx(ctx, to, value):
     text = Text('Confirm sending', ui.ICON_SEND, icon_color=ui.GREEN)
     text.bold(format_amount(value))
-    text.type('to')
+    text.normal('to')
     text.mono(*split_address(to))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_delegate_registration(ctx, delegate_name):
     text = Text('Confirm transaction', ui.ICON_SEND, icon_color=ui.GREEN)
-    text.type('Do you really want to')
-    text.type('register a delegate?')
+    text.normal('Do you really want to')
+    text.normal('register a delegate?')
     text.bold(*chunks(delegate_name, 20))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_vote_tx(ctx, votes):
     text = Text('Confirm transaction', ui.ICON_SEND, icon_color=ui.GREEN)
-    text.type(*get_vote_tx_text(votes))
+    text.normal(*get_vote_tx_text(votes))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
@@ -36,16 +36,16 @@ async def require_confirm_public_key(ctx, public_key):
 
 async def require_confirm_multisig(ctx, multisignature):
     text = Text('Confirm transaction', ui.ICON_SEND, icon_color=ui.GREEN)
-    text.type('Keys group length: %s' % len(multisignature.keys_group))
-    text.type('Life time: %s' % multisignature.life_time)
-    text.type('Min: %s' % multisignature.min)
+    text.normal('Keys group length: %s' % len(multisignature.keys_group))
+    text.normal('Life time: %s' % multisignature.life_time)
+    text.normal('Min: %s' % multisignature.min)
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_fee(ctx, value, fee):
     text = Text('Confirm transaction', ui.ICON_SEND, icon_color=ui.GREEN)
     text.bold(format_amount(value))
-    text.type('fee:')
+    text.normal('fee:')
     text.bold(format_amount(fee))
     await require_hold_to_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 

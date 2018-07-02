@@ -21,7 +21,7 @@ async def cipher_key_value(ctx, msg):
         else:
             title = 'Decrypt value'
         text = Text(title)
-        text.type(msg.key)
+        text.normal(msg.key)
         await require_confirm(ctx, text)
 
     node = await seed.derive_node(ctx, msg.address_n)

@@ -392,7 +392,7 @@ class ConfirmState:
 
         if bytes(self.app_id) == _BOGUS_APPID:
             text = Text('U2F mismatch', ui.ICON_WRONG, icon_color=ui.RED)
-            text.type('Another U2F device', 'was used to register', 'in this application.')
+            text.normal('Another U2F device', 'was used to register', 'in this application.')
             text.render()
             await loop.sleep(3 * 1000 * 1000)
             self.confirmed = True

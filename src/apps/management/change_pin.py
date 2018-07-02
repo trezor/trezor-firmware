@@ -43,19 +43,19 @@ def require_confirm_change_pin(ctx, msg):
 
     if msg.remove and has_pin:  # removing pin
         text = Text('Remove PIN', ui.ICON_CONFIG)
-        text.type('Do you really want to')
+        text.normal('Do you really want to')
         text.bold('remove current PIN?')
         return require_confirm(ctx, text)
 
     if not msg.remove and has_pin:  # changing pin
         text = Text('Remove PIN', ui.ICON_CONFIG)
-        text.type('Do you really want to')
+        text.normal('Do you really want to')
         text.bold('change current PIN?')
         return require_confirm(ctx, text)
 
     if not msg.remove and not has_pin:  # setting new pin
         text = Text('Remove PIN', ui.ICON_CONFIG)
-        text.type('Do you really want to')
+        text.normal('Do you really want to')
         text.bold('set new PIN?')
         return require_confirm(ctx, text)
 
@@ -80,8 +80,8 @@ async def request_pin_ack(ctx, *args, **kwargs):
 @ui.layout
 async def pin_mismatch():
     text = Text('PIN mismatch', ui.ICON_WRONG, icon_color=ui.RED)
-    text.type('Entered PINs do not', 'match each other.')
-    text.type('')
-    text.type('Please, try again...')
+    text.normal('Entered PINs do not', 'match each other.')
+    text.normal('')
+    text.normal('Please, try again...')
     text.render()
     await loop.sleep(3 * 1000 * 1000)

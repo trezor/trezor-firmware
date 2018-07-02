@@ -54,7 +54,7 @@ async def require_confirm_sign_identity(ctx, identity, challenge_visual):
 
     proto = identity.proto.upper() if identity.proto else 'identity'
     text = Text('Sign %s' % proto)
-    text.type(*lines)
+    text.normal(*lines)
     await require_confirm(ctx, text)
 
 

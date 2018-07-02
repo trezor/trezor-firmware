@@ -9,7 +9,7 @@ from apps.common.confirm import require_hold_to_confirm
 async def wipe_device(ctx, msg):
 
     text = Text('Wipe device', ui.ICON_WIPE, icon_color=ui.RED)
-    text.type('Do you really want to', 'wipe the device?', '')
+    text.normal('Do you really want to', 'wipe the device?', '')
     text.bold('All data will be lost.')
 
     await require_hold_to_confirm(ctx, text,

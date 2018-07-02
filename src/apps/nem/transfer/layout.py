@@ -31,29 +31,29 @@ async def ask_transfer_mosaic(ctx, common: NEMTransactionCommon, transfer: NEMTr
 
     if definition:
         msg = Text('Confirm mosaic', ui.ICON_SEND, icon_color=ui.GREEN)
-        msg.type('Confirm transfer of')
+        msg.normal('Confirm transfer of')
         msg.bold(format_amount(mosaic_quantity, definition['divisibility']) + definition['ticker'])
-        msg.type('of')
+        msg.normal('of')
         msg.bold(definition['name'])
         await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
         if 'levy' in definition and 'fee' in definition:
             levy_msg = _get_levy_msg(definition, mosaic_quantity, common.network)
             msg = Text('Confirm mosaic', ui.ICON_SEND, icon_color=ui.GREEN)
-            msg.type('Confirm mosaic', 'levy fee of')
+            msg.normal('Confirm mosaic', 'levy fee of')
             msg.bold(levy_msg)
             await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
     else:
         msg = Text('Confirm mosaic', ui.ICON_SEND, icon_color=ui.RED)
         msg.bold('Unknown mosaic!')
-        msg.type(*split_words('Divisibility and levy cannot be shown for unknown mosaics', 22))
+        msg.normal(*split_words('Divisibility and levy cannot be shown for unknown mosaics', 22))
         await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
         msg = Text('Confirm mosaic', ui.ICON_SEND, icon_color=ui.GREEN)
-        msg.type('Confirm transfer of')
+        msg.normal('Confirm transfer of')
         msg.bold('%s raw units' % mosaic_quantity)
-        msg.type('of')
+        msg.normal('of')
         msg.bold('%s.%s' % (mosaic.namespace, mosaic.mosaic))
         await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
@@ -97,7 +97,7 @@ async def ask_importance_transfer(ctx, common: NEMTransactionCommon, imp: NEMImp
 async def _require_confirm_transfer(ctx, recipient, value):
     text = Text('Confirm transfer', ui.ICON_SEND, icon_color=ui.GREEN)
     text.bold('Send %s XEM' % format_amount(value, NEM_MAX_DIVISIBILITY))
-    text.type('to')
+    text.normal('to')
     text.mono(*split_address(recipient))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
@@ -110,9 +110,9 @@ async def _require_confirm_payload(ctx, payload: bytes, encrypt=False):
     if encrypt:
         text = Text('Confirm payload', ui.ICON_SEND, icon_color=ui.GREEN)
         text.bold('Encrypted:')
-        text.type(*split_words(payload, 22))
+        text.normal(*split_words(payload, 22))
     else:
         text = Text('Confirm payload', ui.ICON_SEND, icon_color=ui.RED)
         text.bold('Unencrypted:')
-        text.type(*split_words(payload, 22))
+        text.normal(*split_words(payload, 22))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)

@@ -40,5 +40,5 @@ async def lisk_sign_message(ctx, msg):
 
 async def require_confirm_sign_message(ctx, message):
     text = Text('Sign Lisk message')
-    text.type(*split_message(message))
+    text.normal(*split_message(message))
     await require_confirm(ctx, text)

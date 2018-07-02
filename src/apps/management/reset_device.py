@@ -89,7 +89,7 @@ def generate_mnemonic(strength: int,
 
 async def show_warning(ctx):
     text = Text('Backup your seed', ui.ICON_NOCOPY)
-    text.type(
+    text.normal(
         'Never make a digital',
         'copy of your recovery',
         'seed and never upload',
@@ -104,7 +104,7 @@ async def show_warning(ctx):
 
 async def show_wrong_entry(ctx):
     text = Text('Wrong entry!', ui.ICON_WRONG, icon_color=ui.RED)
-    text.type(
+    text.normal(
         'You have entered',
         'wrong seed word.',
         'Please check again.')
@@ -118,7 +118,7 @@ async def show_wrong_entry(ctx):
 
 async def show_success(ctx):
     text = Text('Backup is done!', ui.ICON_CONFIRM, icon_color=ui.GREEN)
-    text.type(
+    text.normal(
         'Never make a digital',
         'copy of your recovery',
         'seed and never upload',

@@ -62,5 +62,5 @@ async def require_confirm_verify_message(ctx, address, message):
     await require_confirm(ctx, text)
 
     text = Text('Verify message')
-    text.type(*split_message(message))
+    text.normal(*split_message(message))
     await require_confirm(ctx, text)

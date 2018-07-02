@@ -20,7 +20,7 @@ async def load_device(ctx, msg):
 
     text = Text('Loading seed')
     text.bold('Loading private seed', 'is not recommended.')
-    text.type('Continue only if you', 'know what you are doing!')
+    text.normal('Continue only if you', 'know what you are doing!')
     await require_confirm(ctx, text)
 
     storage.load_mnemonic(
