@@ -36,13 +36,15 @@ class TestSegwitBip143(unittest.TestCase):
 
         bip143 = Bip143()
         bip143.add_prevouts(self.inp1)
-        self.assertEqual(hexlify(bip143.get_prevouts_hash()), b'b0287b4a252ac05af83d2dcef00ba313af78a3e9c329afa216eb3aa2a7b4613a')
+        coin = coins.by_name(self.tx.coin_name)
+        self.assertEqual(hexlify(bip143.get_prevouts_hash(coin)), b'b0287b4a252ac05af83d2dcef00ba313af78a3e9c329afa216eb3aa2a7b4613a')
 
     def test_bip143_sequence(self):
 
         bip143 = Bip143()
         bip143.add_sequence(self.inp1)
-        self.assertEqual(hexlify(bip143.get_sequence_hash()), b'18606b350cd8bf565266bc352f0caddcf01e8fa789dd8a15386327cf8cabe198')
+        coin = coins.by_name(self.tx.coin_name)
+        self.assertEqual(hexlify(bip143.get_sequence_hash(coin)), b'18606b350cd8bf565266bc352f0caddcf01e8fa789dd8a15386327cf8cabe198')
 
     def test_bip143_outputs(self):
 
@@ -58,7 +60,7 @@ class TestSegwitBip143(unittest.TestCase):
             txo_bin.script_pubkey = output_derive_script(txo, coin, root)
             bip143.add_output(txo_bin)
 
-        self.assertEqual(hexlify(bip143.get_outputs_hash()),
+        self.assertEqual(hexlify(bip143.get_outputs_hash(coin)),
                          b'de984f44532e2173ca0d64314fcefe6d30da6f8cf27bafa706da61df8a226c83')
 
     def test_bip143_preimage_testdata(self):

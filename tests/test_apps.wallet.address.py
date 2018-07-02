@@ -12,7 +12,7 @@ class TestAddress(unittest.TestCase):
         coin = coins.by_name('Testnet')
         address = address_p2wpkh_in_p2sh(
             unhexlify('03a1af804ac108a8a51782198c2d034b28bf90c8803f5a53f76276fa69a4eae77f'),
-            coin.address_type_p2sh
+            coin
         )
         self.assertEqual(address, '2Mww8dCYPUpKHofjgcXcBCEGmniw9CoaiD2')
 
@@ -22,17 +22,17 @@ class TestAddress(unittest.TestCase):
         root = bip32.from_seed(seed, 'secp256k1')
 
         node = node_derive(root, [49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0])
-        address = address_p2wpkh_in_p2sh(node.public_key(), coin.address_type_p2sh)
+        address = address_p2wpkh_in_p2sh(node.public_key(), coin)
 
         self.assertEqual(address, '2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX')
 
         node = node_derive(root, [49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 1])
-        address = address_p2wpkh_in_p2sh(node.public_key(), coin.address_type_p2sh)
+        address = address_p2wpkh_in_p2sh(node.public_key(), coin)
 
         self.assertEqual(address, '2NFWLCJQBSpz1oUJwwLpX8ECifFWGznBVqs')
 
         node = node_derive(root, [49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 0, 0])
-        address = address_p2wpkh_in_p2sh(node.public_key(), coin.address_type_p2sh)
+        address = address_p2wpkh_in_p2sh(node.public_key(), coin)
 
         self.assertEqual(address, '2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp')
 
@@ -50,7 +50,7 @@ class TestAddress(unittest.TestCase):
 
         address = address_p2sh(
             unhexlify('7a55d61848e77ca266e79a39bfc85c580a6426c9'),
-            coin.address_type_p2sh
+            coin
         )
         self.assertEqual(address, '2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp')
 
@@ -74,7 +74,7 @@ class TestAddress(unittest.TestCase):
         # test data from Mastering Bitcoin
         address = address_p2wsh_in_p2sh(
             unhexlify('9592d601848d04b172905e0ddb0adde59f1590f1e553ffc81ddc4b0ed927dd73'),
-            coin.address_type_p2sh
+            coin
         )
         self.assertEqual(address, '3Dwz1MXhM6EfFoJChHCxh1jWHb8GQqRenG')
 
@@ -96,7 +96,7 @@ class TestAddress(unittest.TestCase):
             unhexlify('02fe6f0a5a297eb38c391581c4413e084773ea23954d93f7753db7dc0adc188b2f'),
             unhexlify('02ff12471208c14bd580709cb2358d98975247d8765f92bc25eab3b2763ed605f8'),
         ]
-        address = address_multisig_p2sh(pubkeys, 2, coin.address_type_p2sh)
+        address = address_multisig_p2sh(pubkeys, 2, coin)
         self.assertEqual(address, '39bgKC7RFbpoCRbtD5KEdkYKtNyhpsNa3Z')
 
     def test_multisig_address_p2wsh_in_p2sh(self):
@@ -108,7 +108,7 @@ class TestAddress(unittest.TestCase):
             unhexlify('0320ce424c6d61f352ccfea60d209651672cfb03b2dc77d1d64d3ba519aec756ae'),
         ]
 
-        address = address_multisig_p2wsh_in_p2sh(pubkeys, 2, coin.address_type_p2sh)
+        address = address_multisig_p2wsh_in_p2sh(pubkeys, 2, coin)
         self.assertEqual(address, '2MsZ2fpGKUydzY62v6trPHR8eCx5JTy1Dpa')
 
     # def test_multisig_address_p2wsh(self):
