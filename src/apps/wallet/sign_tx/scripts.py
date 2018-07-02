@@ -42,6 +42,16 @@ def output_script_p2sh(scripthash: bytes) -> bytearray:
     return s
 
 
+def script_replay_protection_bip115(block_hash: bytes, block_height: bytes) -> bytearray:
+    block_height_size = len(block_height)  # SIZE in bytes block heigh (should be 3)
+    s = bytearray(38)
+    s[0] = 0x20  # 32 bytes for block hash
+    s[1:33] = block_hash  # block hash
+    s[33] = 0x03  # 3 bytes for block height
+    s[34:37] = (block_height if (block_height_size == 3) else block_height[:3 - block_height_size])  # MUST BE ONLY 3 BYTES FOR BLOCKHEIGHT
+    s[37] = 0xB4  # OP_CHECKBLOCKHIGHT
+    return s
+
 # SegWit: Native P2WPKH or P2WSH
 # ===
 # https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#p2wpkh

@@ -20,6 +20,7 @@ from apps.wallet.sign_tx import signing
 
 class TestSignTx(unittest.TestCase):
     # pylint: disable=C0301
+        #    signer.send(None)
 
     def test_one_one_fee(self):
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
@@ -97,7 +98,9 @@ class TestSignTx(unittest.TestCase):
 
         signer = signing.sign_tx(tx, root)
         for request, response in chunks(messages, 2):
-            self.assertEqualEx(signer.send(request), response)
+            req = signer.send(request)
+            self.assertEqualEx(req, response)
+        #    print(req.details.tx_hash,response.details.tx_hash )
         with self.assertRaises(StopIteration):
             signer.send(None)
 
