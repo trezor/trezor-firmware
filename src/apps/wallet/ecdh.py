@@ -30,9 +30,9 @@ async def get_ecdh_session_key(ctx, msg):
 async def require_confirm_ecdh_session_key(ctx, identity):
     lines = chunks(serialize_identity_without_proto(identity), 18)
     proto = identity.proto.upper() if identity.proto else 'identity'
-    header = 'Decrypt %s' % (proto,)
-    content = Text(header, ui.ICON_DEFAULT, ui.MONO, *lines, max_lines=5)
-    await require_confirm(ctx, content)
+    text = Text('Decrypt %s' % proto, ui.ICON_DEFAULT)
+    text.mono(*lines)
+    await require_confirm(ctx, text)
 
 
 def get_ecdh_path(identity: str, index: int):

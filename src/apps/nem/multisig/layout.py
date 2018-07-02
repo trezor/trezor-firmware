@@ -42,8 +42,7 @@ async def ask_aggregate_modification(ctx, common: NEMTransactionCommon, mod: NEM
 
 
 async def _require_confirm_address(ctx, action: str, address: str):
-    content = Text('Confirm address', ui.ICON_SEND,
-                   ui.NORMAL, action,
-                   ui.MONO, *split_address(address),
-                   icon_color=ui.GREEN)
-    await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
+    text = Text('Confirm address', ui.ICON_SEND, icon_color=ui.GREEN)
+    text.type(action)
+    text.mono(*split_address(address))
+    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)

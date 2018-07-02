@@ -13,9 +13,8 @@ from apps.common.cache import get_state
 
 @ui.layout
 async def request_passphrase_entry(ctx):
-    text = Text(
-        'Enter passphrase', ui.ICON_CONFIG,
-        'Where to enter your', 'passphrase?')
+    text = Text('Enter passphrase', ui.ICON_CONFIG)
+    text.type('Where to enter your', 'passphrase?')
     text.render()
 
     ack = await ctx.call(
@@ -32,9 +31,8 @@ async def request_passphrase_entry(ctx):
 @ui.layout
 async def request_passphrase_ack(ctx, on_device):
     if not on_device:
-        text = Text(
-            'Passphrase entry', ui.ICON_CONFIG,
-            'Please, type passphrase', 'on connected host.')
+        text = Text('Passphrase entry', ui.ICON_CONFIG)
+        text.type('Please, type passphrase', 'on connected host.')
         text.render()
 
     req = PassphraseRequest(on_device=on_device)

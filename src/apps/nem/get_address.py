@@ -30,9 +30,7 @@ async def get_address(ctx, msg):
 
 async def _show_address(ctx, address: str, network: int):
     lines = split_address(address)
-    content = Text(
-        'Confirm address', ui.ICON_RECEIVE,
-        ui.NORMAL, '%s network' % get_network_str(network),
-        ui.MONO, *lines,
-        icon_color=ui.GREEN)
-    return await confirm(ctx, content, code=ButtonRequestType.Address, cancel='QR', cancel_style=ui.BTN_KEY)
+    text = Text('Confirm address', ui.ICON_RECEIVE, icon_color=ui.GREEN)
+    text.type('%s network' % get_network_str(network))
+    text.mono(*lines)
+    return await confirm(ctx, text, code=ButtonRequestType.Address, cancel='QR', cancel_style=ui.BTN_KEY)

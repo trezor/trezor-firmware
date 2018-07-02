@@ -67,57 +67,68 @@ async def _show_page(page: int, page_count: int, content):
 
 def _get_mosaic_properties(definition: NEMMosaicDefinition):
     properties = []
+
+    # description
     if definition.description:
-        t = Text('Confirm properties', ui.ICON_SEND,
-                 ui.BOLD, 'Description:',
-                 ui.NORMAL, *split_words(trim(definition.description, 70), 22))
+        t = Text('Confirm properties', ui.ICON_SEND)
+        t.bold('Description:')
+        t.type(*split_words(trim(definition.description, 70), 22))
         properties.append(t)
+
+    # transferable
     if definition.transferable:
         transferable = 'Yes'
     else:
         transferable = 'No'
-    t = Text('Confirm properties', ui.ICON_SEND,
-             ui.BOLD, 'Transferable?',
-             ui.NORMAL, transferable)
+    t = Text('Confirm properties', ui.ICON_SEND)
+    t.bold('Transferable?')
+    t.type(transferable)
     properties.append(t)
+
+    # mutable_supply
     if definition.mutable_supply:
         imm = 'mutable'
     else:
         imm = 'immutable'
     if definition.supply:
-        t = Text('Confirm properties', ui.ICON_SEND,
-                 ui.BOLD, 'Initial supply:',
-                 ui.NORMAL, str(definition.supply),
-                 ui.NORMAL, imm)
+        t = Text('Confirm properties', ui.ICON_SEND)
+        t.bold('Initial supply:')
+        t.type(str(definition.supply), imm)
     else:
-        t = Text('Confirm properties', ui.ICON_SEND,
-                 ui.BOLD, 'Initial supply:',
-                 ui.NORMAL, imm)
+        t = Text('Confirm properties', ui.ICON_SEND)
+        t.bold('Initial supply:')
+        t.type(imm)
     properties.append(t)
+
+    # levy
     if definition.levy:
-        t = Text('Confirm properties', ui.ICON_SEND,
-                 ui.BOLD, 'Levy recipient:',
-                 ui.MONO, *split_address(definition.levy_address))
+
+        t = Text('Confirm properties', ui.ICON_SEND)
+        t.bold('Levy recipient:')
+        t.mono(*split_address(definition.levy_address))
         properties.append(t)
-        t = Text('Confirm properties', ui.ICON_SEND,
-                 ui.BOLD, 'Levy fee:',
-                 ui.NORMAL, str(definition.fee),
-                 ui.BOLD, 'Levy divisibility:',
-                 ui.NORMAL, str(definition.divisibility))
+
+        t = Text('Confirm properties', ui.ICON_SEND)
+        t.bold('Levy fee:')
+        t.type(str(definition.fee))
+        t.bold('Levy divisibility:')
+        t.type(str(definition.divisibility))
         properties.append(t)
-        t = Text('Confirm properties', ui.ICON_SEND,
-                 ui.BOLD, 'Levy namespace:',
-                 ui.NORMAL, definition.levy_namespace,
-                 ui.BOLD, 'Levy mosaic:',
-                 ui.NORMAL, definition.levy_mosaic)
+
+        t = Text('Confirm properties', ui.ICON_SEND)
+        t.bold('Levy namespace:')
+        t.type(definition.levy_namespace)
+        t.bold('Levy mosaic:')
+        t.type(definition.levy_mosaic)
         properties.append(t)
+
         if definition.levy == NEMMosaicLevy.MosaicLevy_Absolute:
             levy_type = 'absolute'
         else:
             levy_type = 'percentile'
-        t = Text('Confirm properties', ui.ICON_SEND,
-                 ui.BOLD, 'Levy type:',
-                 ui.NORMAL, levy_type)
+        t = Text('Confirm properties', ui.ICON_SEND)
+        t.bold('Levy type:')
+        t.type(levy_type)
         properties.append(t)
 
     return properties

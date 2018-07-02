@@ -10,10 +10,11 @@ from trezor.utils import chunks
 
 async def show_address(ctx, address: str):
     lines = split_address(address)
-    content = Text('Confirm address', ui.ICON_RECEIVE, ui.MONO, *lines, icon_color=ui.GREEN)
+    text = Text('Confirm address', ui.ICON_RECEIVE, icon_color=ui.GREEN)
+    text.mono(*lines)
     return await confirm(
         ctx,
-        content,
+        text,
         code=ButtonRequestType.Address,
         cancel='QR',
         cancel_style=ui.BTN_KEY)
@@ -24,9 +25,9 @@ async def show_qr(ctx, address: str):
     qr_y = const(115)
     qr_coef = const(4)
 
-    content = Container(
-        Qr(address, (qr_x, qr_y), qr_coef),
-        Text('Confirm address', ui.ICON_RECEIVE, ui.MONO, icon_color=ui.GREEN))
+    qr = Qr(address, (qr_x, qr_y), qr_coef)
+    text = Text('Confirm address', ui.ICON_RECEIVE, icon_color=ui.GREEN)
+    content = Container(qr, text)
     return await confirm(
         ctx,
         content,

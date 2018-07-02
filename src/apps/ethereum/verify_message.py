@@ -32,10 +32,10 @@ async def ethereum_verify_message(ctx, msg):
 
 
 async def require_confirm_verify_message(ctx, address, message):
-    lines = split_address(address)
-    content = Text('Confirm address', ui.ICON_DEFAULT, ui.MONO, *lines)
-    await require_confirm(ctx, content)
+    text = Text('Confirm address', ui.ICON_DEFAULT)
+    text.mono(*split_address(address))
+    await require_confirm(ctx, text)
 
-    message = split_message(message)
-    content = Text('Verify message', ui.ICON_DEFAULT, max_lines=5, *message)
-    await require_confirm(ctx, content)
+    text = Text('Verify message', ui.ICON_DEFAULT)
+    text.mono(*split_message(message))
+    await require_confirm(ctx, text)

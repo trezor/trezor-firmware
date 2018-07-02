@@ -8,11 +8,10 @@ from apps.common.confirm import require_confirm
 
 async def get_entropy(ctx, msg):
 
-    await require_confirm(ctx, Text(
-        'Confirm entropy', ui.ICON_DEFAULT,
-        ui.BOLD, 'Do you really want', 'to send entropy?',
-        ui.NORMAL, 'Continue only if you', 'know what you are doing!'),
-        code=ButtonRequestType.ProtectCall)
+    text = Text('Confirm entropy', ui.ICON_DEFAULT)
+    text.bold('Do you really want', 'to send entropy?')
+    text.type('Continue only if you', 'know what you are doing!')
+    await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)
 
     size = min(msg.size, 1024)
     entropy = random.bytes(size)

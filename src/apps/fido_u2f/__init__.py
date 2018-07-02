@@ -391,12 +391,8 @@ class ConfirmState:
         from trezor.ui.text import Text
 
         if bytes(self.app_id) == _BOGUS_APPID:
-            text = Text(
-                'U2F mismatch', ui.ICON_WRONG,
-                'Another U2F device',
-                'was used to register',
-                'in this application.',
-                icon_color=ui.RED)
+            text = Text('U2F mismatch', ui.ICON_WRONG, icon_color=ui.RED)
+            text.type('Another U2F device', 'was used to register', 'in this application.')
             text.render()
             await loop.sleep(3 * 1000 * 1000)
             self.confirmed = True

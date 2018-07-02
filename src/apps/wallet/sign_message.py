@@ -39,5 +39,6 @@ async def sign_message(ctx, msg):
 
 async def require_confirm_sign_message(ctx, message):
     message = split_message(message)
-    content = Text('Sign message', ui.ICON_DEFAULT, max_lines=5, *message)
-    await require_confirm(ctx, content)
+    text = Text('Sign message', ui.ICON_DEFAULT)
+    text.type(*message)
+    await require_confirm(ctx, text)

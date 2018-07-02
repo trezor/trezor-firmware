@@ -61,9 +61,9 @@ async def recovery_device(ctx, msg):
 async def request_wordcount(ctx):
     await ctx.call(ButtonRequest(code=MnemonicWordCount), ButtonAck)
 
-    content = Text('Device recovery', ui.ICON_RECOVERY, 'Number of words?')
-    select = WordSelector(content)
-    count = await ctx.wait(select)
+    text = Text('Device recovery', ui.ICON_RECOVERY)
+    text.type('Number of words?')
+    count = await ctx.wait(WordSelector(text))
 
     return count
 

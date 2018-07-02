@@ -12,26 +12,25 @@ from apps.ethereum.get_address import _ethereum_address_hex
 
 async def require_confirm_tx(ctx, to, value, chain_id, token=None, tx_type=None):
     if to:
-        str_to = _ethereum_address_hex(to, networks.by_chain_id(chain_id))
+        to_str = _ethereum_address_hex(to, networks.by_chain_id(chain_id))
     else:
-        str_to = 'new contract?'
-    content = Text('Confirm sending', ui.ICON_SEND,
-                   ui.BOLD, format_ethereum_amount(value, token, chain_id, tx_type),
-                   ui.NORMAL, 'to',
-                   ui.MONO, *split_address(str_to),
-                   icon_color=ui.GREEN)
-    await require_confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
+        to_str = 'new contract?'
+    text = Text('Confirm sending', ui.ICON_SEND, icon_color=ui.GREEN)
+    text.bold(format_ethereum_amount(value, token, chain_id, tx_type))
+    text.type('to')
+    text.mono(*split_address(to_str))
+    # we use SignTx, not ConfirmOutput, for compatibility with T1
+    await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_fee(ctx, spending, gas_price, gas_limit, chain_id, token=None, tx_type=None):
-    content = Text('Confirm transaction', ui.ICON_SEND,
-                   ui.BOLD, format_ethereum_amount(spending, token, chain_id, tx_type),
-                   ui.NORMAL, 'Gas price:',
-                   ui.BOLD, format_ethereum_amount(gas_price, None, chain_id, tx_type),
-                   ui.NORMAL, 'Maximum fee:',
-                   ui.BOLD, format_ethereum_amount(gas_price * gas_limit, None, chain_id, tx_type),
-                   icon_color=ui.GREEN)
-    await require_hold_to_confirm(ctx, content, ButtonRequestType.SignTx)
+    text = Text('Confirm transaction', ui.ICON_SEND, icon_color=ui.GREEN)
+    text.bold(format_ethereum_amount(spending, token, chain_id, tx_type))
+    text.type('Gas price:')
+    text.bold(format_ethereum_amount(gas_price, None, chain_id, tx_type))
+    text.type('Maximum fee:')
+    text.bold(format_ethereum_amount(gas_price * gas_limit, None, chain_id, tx_type))
+    await require_hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 def split_data(data):
@@ -39,14 +38,14 @@ def split_data(data):
 
 
 async def require_confirm_data(ctx, data, data_total):
-    str_data = hexlify(data[:36]).decode()
+    data_str = hexlify(data[:36]).decode()
     if data_total > 36:
-        str_data = str_data[:-2] + '..'
-    content = Text('Confirm data', ui.ICON_SEND,
-                   ui.BOLD, 'Size: %d bytes' % data_total,
-                   ui.MONO, *split_data(str_data),
-                   icon_color=ui.GREEN)
-    await require_confirm(ctx, content, ButtonRequestType.SignTx)  # we use SignTx, not ConfirmOutput, for compatibility with T1
+        data_str = data_str[:-2] + '..'
+    text = Text('Confirm data', ui.ICON_SEND, icon_color=ui.GREEN)
+    text.bold('Size: %d bytes' % data_total)
+    text.mono(*split_data(data_str))
+    # we use SignTx, not ConfirmOutput, for compatibility with T1
+    await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 def split_address(address):

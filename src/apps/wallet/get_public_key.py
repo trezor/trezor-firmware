@@ -38,8 +38,9 @@ async def get_public_key(ctx, msg):
 
 async def _show_pubkey(ctx, pubkey: bytes):
     lines = chunks(hexlify(pubkey).decode(), 18)
-    content = Text('Confirm public key', ui.ICON_RECEIVE, ui.MONO, *lines, icon_color=ui.GREEN)
+    text = Text('Confirm public key', ui.ICON_RECEIVE, icon_color=ui.GREEN)
+    text.mono(*lines)
     return await require_confirm(
         ctx,
-        content,
+        text,
         code=ButtonRequestType.PublicKey)

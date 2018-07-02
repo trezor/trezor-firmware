@@ -10,12 +10,10 @@ async def set_u2f_counter(ctx, msg):
     if msg.u2f_counter is None:
         raise wire.ProcessError('No value provided')
 
-    await require_confirm(ctx, Text(
-        'Set U2F counter', ui.ICON_CONFIG,
-        'Do you really want to',
-        'set the U2F counter',
-        ui.BOLD, 'to %d?' % msg.u2f_counter),
-        code=ButtonRequestType.ProtectCall)
+    text = Text('Set U2F counter', ui.ICON_CONFIG)
+    text.type('Do you really want to', 'set the U2F counter')
+    text.bold('to %d?' % msg.u2f_counter)
+    await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)
 
     storage.set_u2f_counter(msg.u2f_counter)
 

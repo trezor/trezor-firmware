@@ -88,56 +88,57 @@ def generate_mnemonic(strength: int,
 
 
 async def show_warning(ctx):
-    content = Text(
-        'Backup your seed', ui.ICON_NOCOPY,
+    text = Text('Backup your seed', ui.ICON_NOCOPY)
+    text.type(
         'Never make a digital',
         'copy of your recovery',
         'seed and never upload',
         'it online!')
     await require_confirm(
         ctx,
-        content,
+        text,
         ButtonRequestType.ResetDevice,
         confirm='I understand',
         cancel=None)
 
 
 async def show_wrong_entry(ctx):
-    content = Text(
-        'Wrong entry!', ui.ICON_WRONG,
+    text = Text('Wrong entry!', ui.ICON_WRONG, icon_color=ui.RED)
+    text.type(
         'You have entered',
         'wrong seed word.',
-        'Please check again.', icon_color=ui.RED)
+        'Please check again.')
     await require_confirm(
         ctx,
-        content,
+        text,
         ButtonRequestType.ResetDevice,
         confirm='Check again',
         cancel=None)
 
 
 async def show_success(ctx):
-    content = Text(
-        'Backup is done!', ui.ICON_CONFIRM,
+    text = Text('Backup is done!', ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text.type(
         'Never make a digital',
         'copy of your recovery',
         'seed and never upload',
-        'it online!', icon_color=ui.GREEN)
+        'it online!')
     await require_confirm(
         ctx,
-        content,
+        text,
         ButtonRequestType.ResetDevice,
         confirm='Finish setup',
         cancel=None)
 
 
 async def show_entropy(ctx, entropy: bytes):
-    estr = hexlify(entropy).decode()
-    lines = chunks(estr, 16)
-    content = Text('Internal entropy', ui.ICON_RESET, ui.MONO, *lines)
+    entropy_str = hexlify(entropy).decode()
+    lines = chunks(entropy_str, 16)
+    text = Text('Internal entropy', ui.ICON_RESET)
+    text.mono(*lines)
     await require_confirm(
         ctx,
-        content,
+        text,
         ButtonRequestType.ResetDevice)
 
 
@@ -158,8 +159,9 @@ async def show_mnemonic_page(page: int, page_count: int, pages: list):
         debug.reset_current_words = [word for _, word in pages[page]]
 
     lines = ['%2d. %s' % (wi + 1, word) for wi, word in pages[page]]
-    content = Text('Recovery seed', ui.ICON_RESET, ui.MONO, *lines)
-    content = Scrollpage(content, page, page_count)
+    text = Text('Recovery seed', ui.ICON_RESET)
+    text.mono(*lines)
+    content = Scrollpage(text, page, page_count)
 
     if page + 1 == page_count:
         await HoldToConfirmDialog(content)
