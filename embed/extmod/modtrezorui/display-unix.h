@@ -162,8 +162,12 @@ void display_save(const char *prefix)
     static uint32_t cnt = 0;
     char fname[256];
     snprintf(fname, sizeof(fname), "%s%08d.png", prefix, cnt);
-    IMG_SavePNG(BUFFER, fname);
-    fprintf(stderr, "Saved display buffer to %s\n", fname);
+    const SDL_Rect rect = {0, 0, DISPLAY_RESX, DISPLAY_RESY};
+    SDL_Surface *crop = SDL_CreateRGBSurface(BUFFER->flags, rect.w, rect.h, BUFFER->format->BitsPerPixel, BUFFER->format->Rmask, BUFFER->format->Gmask, BUFFER->format->Bmask, BUFFER->format->Amask);
+    SDL_BlitSurface(BUFFER, &rect, crop, NULL);
+    IMG_SavePNG(crop, fname);
+    SDL_FreeSurface(crop);
+    fprintf(stderr, "Saved screenshot to %s\n", fname);
     cnt++;
 #endif
 }
