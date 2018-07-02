@@ -101,17 +101,16 @@ def render_text(words: list, new_lines: bool, max_lines: int) -> None:
 class Text(ui.LazyWidget):
     def __init__(self,
                  header_text: str,
-                 header_icon: bytes,
-                 *content: str,
-                 new_lines: bool = True,
+                 header_icon: str = ui.ICON_DEFAULT,
+                 icon_color: int = ui.ORANGE_ICON,
                  max_lines: int = TEXT_MAX_LINES,
-                 icon_color: int = ui.ORANGE_ICON):
+                 new_lines: bool = True):
         self.header_text = header_text
         self.header_icon = header_icon
-        self.content = list(content)
-        self.new_lines = new_lines
-        self.max_lines = max_lines
         self.icon_color = icon_color
+        self.max_lines = max_lines
+        self.new_lines = new_lines
+        self.content = []
 
     def type(self, *content):
         self.content.extend(content)
