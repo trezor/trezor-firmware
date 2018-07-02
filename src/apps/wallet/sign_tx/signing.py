@@ -276,7 +276,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                             txi_sign.multisig.m)
                     elif txi_sign.script_type == InputScriptType.SPENDADDRESS:
                         txi_sign.script_sig = output_script_p2pkh(ecdsa_hash_pubkey(key_sign_pub))
-                        if(coin.bip115 and txi_sign.prev_block_hash_bip115 is not None):
+                        if coin.bip115:
                             txi_sign.script_sig += script_replay_protection_bip115(txi_sign.prev_block_hash_bip115, txi_sign.prev_block_height_bip115)
                     else:
                         raise SigningError(FailureType.ProcessError,
@@ -514,12 +514,18 @@ def output_derive_script(o: TxOutputType, coin: CoinInfo, root: bip32.HDNode) ->
     if address_type.check(coin.address_type, raw_address):
         # p2pkh
         pubkeyhash = address_type.strip(coin.address_type, raw_address)
-        return (output_script_p2pkh(pubkeyhash) + script_replay_protection_bip115(o.block_hash_bip115, o.block_height_bip115) if coin.bip115 else output_script_p2pkh(pubkeyhash))
+        script = output_script_p2pkh(pubkeyhash)
+        if coin.bip115:
+            script += script_replay_protection_bip115(o.block_hash_bip115, o.block_height_bip115)
+        return script
 
     elif address_type.check(coin.address_type_p2sh, raw_address):
         # p2sh
         scripthash = address_type.strip(coin.address_type_p2sh, raw_address)
-        return (output_script_p2sh(scripthash) + script_replay_protection_bip115(o.block_hash_bip115, o.block_height_bip115) if coin.bip115 else output_script_p2sh(scripthash))
+        script = output_script_p2sh(scripthash)
+        if coin.bip115:
+            script += script_replay_protection_bip115(o.block_hash_bip115, o.block_height_bip115)
+        return script
 
     raise SigningError(FailureType.DataError, 'Invalid address type')
 
