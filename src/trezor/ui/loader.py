@@ -1,5 +1,6 @@
 import utime
 from micropython import const
+
 from trezor import loop, res, ui
 
 _TARGET_MS = const(1000)

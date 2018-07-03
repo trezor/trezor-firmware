@@ -1,9 +1,7 @@
-from micropython import const
 import ustruct
+from micropython import const
 
-from trezor import io
-from trezor import loop
-from trezor import utils
+from trezor import io, loop, utils
 
 _REP_LEN = const(64)
 

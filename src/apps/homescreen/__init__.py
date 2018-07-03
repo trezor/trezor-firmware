@@ -1,10 +1,10 @@
 from trezor import config, utils, wire
-from trezor.wire import register, protobuf_workflow
 from trezor.messages import MessageType
 from trezor.messages.Features import Features
 from trezor.messages.Success import Success
+from trezor.wire import protobuf_workflow, register
 
-from apps.common import storage, cache
+from apps.common import cache, storage
 
 
 def get_features():

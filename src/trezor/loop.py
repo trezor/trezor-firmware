@@ -10,8 +10,8 @@ See `schedule`, `run`, and syscalls `sleep`, `wait`, `signal` and `spawn`.
 import utime
 import utimeq
 from micropython import const
-from trezor import log
-from trezor import io
+
+from trezor import io, log
 
 after_step_hook = None  # function, called after each task step
 

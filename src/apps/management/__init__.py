@@ -1,6 +1,15 @@
-from trezor.wire import register, protobuf_workflow
-from trezor.messages.MessageType import \
-    LoadDevice, ResetDevice, BackupDevice, WipeDevice, RecoveryDevice, ApplySettings, ApplyFlags, ChangePin, SetU2FCounter
+from trezor.messages.MessageType import (
+    ApplyFlags,
+    ApplySettings,
+    BackupDevice,
+    ChangePin,
+    LoadDevice,
+    RecoveryDevice,
+    ResetDevice,
+    SetU2FCounter,
+    WipeDevice,
+)
+from trezor.wire import protobuf_workflow, register
 
 
 def dispatch_LoadDevice(*args, **kwargs):

@@ -1,7 +1,3 @@
-from apps.common import seed
-from apps.common.confirm import require_confirm
-from apps.common.signverify import split_message
-from apps.wallet.sign_tx.signing import write_varint
 from trezor.crypto.curve import ed25519
 from trezor.crypto.hashlib import sha256
 from trezor.messages.LiskMessageSignature import LiskMessageSignature
@@ -9,6 +5,11 @@ from trezor.ui.text import Text
 from trezor.utils import HashWriter
 
 from .helpers import LISK_CURVE
+
+from apps.common import seed
+from apps.common.confirm import require_confirm
+from apps.common.signverify import split_message
+from apps.wallet.sign_tx.signing import write_varint
 
 
 def message_digest(message):

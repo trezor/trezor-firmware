@@ -2,7 +2,6 @@ from trezor.crypto.hashlib import sha256
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
 
-
 # TX Serialization
 # ===
 

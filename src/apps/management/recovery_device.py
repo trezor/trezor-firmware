@@ -1,14 +1,15 @@
 from trezor import config, ui, wire
 from trezor.crypto import bip39
 from trezor.messages.ButtonRequest import ButtonRequest
-from trezor.messages.ButtonRequestType import MnemonicWordCount, MnemonicInput
-from trezor.messages.Success import Success
+from trezor.messages.ButtonRequestType import MnemonicInput, MnemonicWordCount
 from trezor.messages.MessageType import ButtonAck
+from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
 from trezor.ui.mnemonic import MnemonicKeyboard
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
 from trezor.utils import format_ordinal
+
 from apps.common import storage
 from apps.management.change_pin import request_pin_confirm
 

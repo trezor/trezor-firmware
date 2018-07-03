@@ -1,11 +1,12 @@
 from trezor.crypto.curve import ed25519
 from trezor.messages.NEMSignedTx import NEMSignedTx
 from trezor.messages.NEMSignTx import NEMSignTx
-from apps.common import seed
 
 from . import mosaic, multisig, namespace, transfer
 from .helpers import NEM_CURVE, NEM_HASH_ALG
 from .validators import validate
+
+from apps.common import seed
 
 
 async def sign_tx(ctx, msg: NEMSignTx):

@@ -1,10 +1,11 @@
-from apps.wallet.verify_message import require_confirm_verify_message
 from trezor import wire
 from trezor.crypto.curve import ed25519
 from trezor.messages.Success import Success
 
 from .helpers import get_address_from_public_key
 from .sign_message import message_digest
+
+from apps.wallet.verify_message import require_confirm_verify_message
 
 
 async def lisk_verify_message(ctx, msg):

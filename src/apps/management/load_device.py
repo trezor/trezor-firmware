@@ -3,6 +3,7 @@ from trezor.crypto import bip39
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
 from trezor.ui.text import Text
+
 from apps.common import storage
 from apps.common.confirm import require_confirm
 

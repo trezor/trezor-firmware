@@ -1,7 +1,14 @@
 from trezor.crypto.hashlib import ripemd160, sha256
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
+
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
-from apps.wallet.sign_tx.writers import bytearray_with_cap, write_bytes, write_varint, write_op_push, write_scriptnum
+from apps.wallet.sign_tx.writers import (
+    bytearray_with_cap,
+    write_bytes,
+    write_op_push,
+    write_scriptnum,
+    write_varint,
+)
 
 
 class ScriptsError(ValueError):
@@ -13,7 +20,9 @@ class ScriptsError(ValueError):
 # https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki
 
 
-def input_script_p2pkh_or_p2sh(pubkey: bytes, signature: bytes, sighash: int) -> bytearray:
+def input_script_p2pkh_or_p2sh(
+    pubkey: bytes, signature: bytes, sighash: int
+) -> bytearray:
     w = bytearray_with_cap(5 + len(signature) + 1 + 5 + len(pubkey))
     append_signature(w, signature, sighash)
     append_pubkey(w, pubkey)
@@ -116,7 +125,7 @@ def input_script_p2wsh_in_p2sh(script_hash: bytes) -> bytearray:
     # Signature is moved to the witness.
 
     if len(script_hash) != 32:
-        raise ScriptsError('Redeem script hash should be 32 bytes long')
+        raise ScriptsError("Redeem script hash should be 32 bytes long")
 
     w = bytearray_with_cap(3 + len(script_hash))
     w.append(0x22)  # length of the data
@@ -138,10 +147,15 @@ def witness_p2wpkh(signature: bytes, pubkey: bytes, sighash: int):
     return w
 
 
-def witness_p2wsh(multisig: MultisigRedeemScriptType, signature: bytes, signature_index: int, sighash: int):
+def witness_p2wsh(
+    multisig: MultisigRedeemScriptType,
+    signature: bytes,
+    signature_index: int,
+    sighash: int,
+):
     signatures = multisig.signatures  # other signatures
     if len(signatures[signature_index]) > 0:
-        raise ScriptsError('Invalid multisig parameters')
+        raise ScriptsError("Invalid multisig parameters")
     signatures[signature_index] = signature  # our signature
 
     # filter empty
@@ -171,10 +185,15 @@ def witness_p2wsh(multisig: MultisigRedeemScriptType, signature: bytes, signatur
 # Used either as P2SH, P2WSH, or P2WSH nested in P2SH.
 
 
-def input_script_multisig(multisig: MultisigRedeemScriptType, signature: bytes, signature_index: int, sighash: int):
+def input_script_multisig(
+    multisig: MultisigRedeemScriptType,
+    signature: bytes,
+    signature_index: int,
+    sighash: int,
+):
     signatures = multisig.signatures  # other signatures
     if len(signatures[signature_index]) > 0:
-        raise ScriptsError('Invalid multisig parameters')
+        raise ScriptsError("Invalid multisig parameters")
     signatures[signature_index] = signature  # our signature
 
     w = bytearray()
@@ -199,10 +218,10 @@ def input_script_multisig(multisig: MultisigRedeemScriptType, signature: bytes, 
 def output_script_multisig(pubkeys, m: int) -> bytearray:
     n = len(pubkeys)
     if n < 1 or n > 15 or m < 1 or m > 15:
-        raise ScriptsError('Invalid multisig parameters')
+        raise ScriptsError("Invalid multisig parameters")
     for pubkey in pubkeys:
         if len(pubkey) != 33:
-            raise ScriptsError('Invalid multisig parameters')
+            raise ScriptsError("Invalid multisig parameters")
 
     w = bytearray()
     w.append(0x50 + m)  # numbers 1 to 16 are pushed as 0x50 + value

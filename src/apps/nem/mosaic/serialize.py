@@ -2,10 +2,11 @@ from trezor.messages.NEMMosaicCreation import NEMMosaicCreation
 from trezor.messages.NEMMosaicSupplyChange import NEMMosaicSupplyChange
 from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 
-from ..helpers import (NEM_TRANSACTION_TYPE_MOSAIC_CREATION,
-                       NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE)
-from ..writers import (write_bytes_with_length, write_common, write_uint32,
-                       write_uint64)
+from ..helpers import (
+    NEM_TRANSACTION_TYPE_MOSAIC_CREATION,
+    NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE,
+)
+from ..writers import write_bytes_with_length, write_common, write_uint32, write_uint64
 
 
 def serialize_mosaic_creation(common: NEMTransactionCommon, creation: NEMMosaicCreation, public_key: bytes):

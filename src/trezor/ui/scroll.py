@@ -1,6 +1,7 @@
 from micropython import const
-from trezor import loop, ui, res
-from trezor.ui.swipe import Swipe, SWIPE_UP, SWIPE_DOWN, SWIPE_VERTICAL
+
+from trezor import loop, res, ui
+from trezor.ui.swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
 
 if __debug__:
     from apps.debug import swipe_signal

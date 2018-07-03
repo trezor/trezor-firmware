@@ -1,10 +1,9 @@
-from trezor.crypto.hashlib import sha256
 from trezor.crypto import bip32
-from trezor.utils import HashWriter
-
-from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
-from trezor.messages.HDNodePathType import HDNodePathType
+from trezor.crypto.hashlib import sha256
 from trezor.messages import FailureType
+from trezor.messages.HDNodePathType import HDNodePathType
+from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
+from trezor.utils import HashWriter
 
 from apps.wallet.sign_tx.writers import write_bytes, write_uint32
 

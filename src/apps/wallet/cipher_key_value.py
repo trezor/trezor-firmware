@@ -4,6 +4,7 @@ from trezor.crypto.aes import AES_CBC_Decrypt, AES_CBC_Encrypt
 from trezor.crypto.hashlib import sha512
 from trezor.messages.CipheredKeyValue import CipheredKeyValue
 from trezor.ui.text import Text
+
 from apps.common import seed
 from apps.common.confirm import require_confirm
 

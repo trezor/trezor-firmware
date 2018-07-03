@@ -1,7 +1,8 @@
 from trezor.messages import InputScriptType
 from trezor.messages.Address import Address
+
 from apps.common import coins, seed
-from apps.common.display_address import show_qr, show_address
+from apps.common.display_address import show_address, show_qr
 from apps.wallet.sign_tx import addresses
 
 

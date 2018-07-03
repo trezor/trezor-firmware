@@ -1,11 +1,17 @@
-from trezor.messages.TxOutputType import TxOutputType
-from trezor.messages.TxOutputBinType import TxOutputBinType
-from trezor.messages.TxInputType import TxInputType
-from trezor.messages.SignTx import SignTx
-from trezor.messages.TxRequest import TxRequest
-from trezor.messages.TransactionType import TransactionType
-from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXMETA, TXEXTRADATA, TXFINISHED
 from trezor.messages import InputScriptType
+from trezor.messages.RequestType import (
+    TXEXTRADATA,
+    TXFINISHED,
+    TXINPUT,
+    TXMETA,
+    TXOUTPUT,
+)
+from trezor.messages.SignTx import SignTx
+from trezor.messages.TransactionType import TransactionType
+from trezor.messages.TxInputType import TxInputType
+from trezor.messages.TxOutputBinType import TxOutputBinType
+from trezor.messages.TxOutputType import TxOutputType
+from trezor.messages.TxRequest import TxRequest
 
 from apps.common.coininfo import CoinInfo
 

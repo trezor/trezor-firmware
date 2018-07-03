@@ -1,8 +1,10 @@
+from ubinascii import hexlify
+
 from trezor import ui
 from trezor.crypto.hashlib import sha256
 from trezor.ui.text import TEXT_MARGIN_LEFT
 from trezor.utils import HashWriter, chunks, split_words
-from ubinascii import hexlify
+
 from apps.wallet.sign_tx.signing import write_varint
 
 

@@ -1,12 +1,15 @@
-from trezor.wire import register, protobuf_workflow
-from trezor.messages.MessageType import \
-    GetPublicKey, GetAddress, \
-    GetEntropy, \
-    SignTx, \
-    SignMessage, VerifyMessage, \
-    SignIdentity, \
-    GetECDHSessionKey, \
-    CipherKeyValue
+from trezor.messages.MessageType import (
+    CipherKeyValue,
+    GetAddress,
+    GetECDHSessionKey,
+    GetEntropy,
+    GetPublicKey,
+    SignIdentity,
+    SignMessage,
+    SignTx,
+    VerifyMessage,
+)
+from trezor.wire import protobuf_workflow, register
 
 
 def dispatch_GetPublicKey(*args, **kwargs):

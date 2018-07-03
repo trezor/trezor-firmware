@@ -1,5 +1,6 @@
 from trezor import config, loop, res, ui
 from trezor.pin import pin_to_int, show_pin_timeout
+
 from apps.common.request_pin import request_pin
 
 

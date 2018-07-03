@@ -1,10 +1,10 @@
 from trezor import config, loop, ui, wire
-from trezor.messages import MessageType
-from trezor.messages import ButtonRequestType
+from trezor.messages import ButtonRequestType, MessageType
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int, show_pin_timeout
 from trezor.ui.text import Text
+
 from apps.common.confirm import require_confirm
 from apps.common.request_pin import PinCancelled, request_pin
 

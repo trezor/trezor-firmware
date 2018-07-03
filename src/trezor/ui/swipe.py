@@ -1,4 +1,5 @@
 from micropython import const
+
 from trezor import io, ui
 from trezor.ui import contains, rotate
 

@@ -1,16 +1,18 @@
 from micropython import const
 
-from trezor.crypto.hashlib import sha256, ripemd160
 from trezor.crypto import base58, bech32, cashaddr
+from trezor.crypto.hashlib import ripemd160, sha256
+from trezor.messages import FailureType, InputScriptType
 from trezor.utils import ensure
 
-from trezor.messages import FailureType
-from trezor.messages import InputScriptType
-
-from apps.common.coininfo import CoinInfo
 from apps.common.address_type import addrtype_bytes
-from apps.wallet.sign_tx.scripts import output_script_multisig, sha256_ripemd160_digest, output_script_native_p2wpkh_or_p2wsh
-from apps.wallet.sign_tx.multisig import multisig_pubkey_index, multisig_get_pubkeys
+from apps.common.coininfo import CoinInfo
+from apps.wallet.sign_tx.multisig import multisig_get_pubkeys, multisig_pubkey_index
+from apps.wallet.sign_tx.scripts import (
+    output_script_multisig,
+    output_script_native_p2wpkh_or_p2wsh,
+    sha256_ripemd160_digest,
+)
 
 # supported witness version for bech32 addresses
 _BECH32_WITVER = const(0x00)

@@ -1,4 +1,5 @@
 from micropython import const
+
 from trezor import ui
 
 TEXT_HEADER_HEIGHT = const(48)

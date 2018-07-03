@@ -1,4 +1,5 @@
 from trezor.messages.Success import Success
+
 from apps.common import storage
 
 

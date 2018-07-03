@@ -1,12 +1,7 @@
 from micropython import const
 
-from trezor import io
-from trezor import ui
-
-from trezor.ui import contains
-from trezor.ui import display
-from trezor.ui import rotate
-from trezor.ui import LazyWidget
+from trezor import io, ui
+from trezor.ui import LazyWidget, contains, display, rotate
 
 # button events
 BTN_CLICKED = const(1)

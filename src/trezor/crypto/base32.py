@@ -5,7 +5,6 @@
 from ubinascii import unhexlify
 from ustruct import unpack
 
-
 _b32alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
 
 _b32tab = [ord(c) for c in _b32alphabet]

@@ -1,6 +1,6 @@
 from micropython import const
-from trezor.ui import rgb
-from trezor.ui import NORMAL, BOLD, MONO
+
+from trezor.ui import BOLD, MONO, NORMAL, rgb
 
 # radius for buttons and other elements
 RADIUS = const(2)

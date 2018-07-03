@@ -1,26 +1,28 @@
 from micropython import const
 
-from trezor.crypto import base58, bip32, der, cashaddr
+from trezor.crypto import base58, bip32, cashaddr, der
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
-from trezor.utils import HashWriter
-
 from trezor.messages import OutputScriptType
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
+from trezor.utils import HashWriter
 
 from apps.common import address_type, coins
 from apps.common.coininfo import CoinInfo
+from apps.wallet.sign_tx import progress
 from apps.wallet.sign_tx.addresses import *
 from apps.wallet.sign_tx.helpers import *
 from apps.wallet.sign_tx.multisig import *
+from apps.wallet.sign_tx.overwinter_zip143 import (  # noqa:F401
+    OVERWINTERED,
+    Zip143,
+    Zip143Error,
+)
 from apps.wallet.sign_tx.scripts import *
 from apps.wallet.sign_tx.segwit_bip143 import Bip143, Bip143Error  # noqa:F401
-from apps.wallet.sign_tx.overwinter_zip143 import Zip143, Zip143Error, OVERWINTERED  # noqa:F401
 from apps.wallet.sign_tx.tx_weight_calculator import *
 from apps.wallet.sign_tx.writers import *
-from apps.wallet.sign_tx import progress
-
 
 # the number of bip32 levels used in a wallet (chain and address)
 _BIP32_WALLET_DEPTH = const(2)

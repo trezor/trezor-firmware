@@ -1,6 +1,6 @@
-from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 from trezor.messages.NEMMosaicCreation import NEMMosaicCreation
 from trezor.messages.NEMMosaicSupplyChange import NEMMosaicSupplyChange
+from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 
 from . import layout, serialize
 

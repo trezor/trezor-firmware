@@ -1,17 +1,24 @@
 from micropython import const
 
 from trezor.crypto.hashlib import blake2b
+from trezor.messages import FailureType, InputScriptType
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
-from trezor.messages import InputScriptType, FailureType
 from trezor.utils import HashWriter
 
 from apps.common.coininfo import CoinInfo
-from apps.wallet.sign_tx.writers import write_bytes, write_bytes_rev, write_uint32, write_uint64, write_varint, write_tx_output, get_tx_hash
-from apps.wallet.sign_tx.scripts import output_script_p2pkh, output_script_multisig
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
-
+from apps.wallet.sign_tx.scripts import output_script_multisig, output_script_p2pkh
+from apps.wallet.sign_tx.writers import (
+    get_tx_hash,
+    write_bytes,
+    write_bytes_rev,
+    write_tx_output,
+    write_uint32,
+    write_uint64,
+    write_varint,
+)
 
 OVERWINTERED = const(0x80000000)
 

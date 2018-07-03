@@ -1,12 +1,14 @@
-from trezor.messages.HDNodeType import HDNodeType
-from trezor.messages.PublicKey import PublicKey
+from ubinascii import hexlify
+
 from trezor import ui
 from trezor.messages import ButtonRequestType
+from trezor.messages.HDNodeType import HDNodeType
+from trezor.messages.PublicKey import PublicKey
 from trezor.ui.text import Text
 from trezor.utils import chunks
+
 from apps.common import coins, seed
 from apps.common.confirm import require_confirm
-from ubinascii import hexlify
 
 
 async def get_public_key(ctx, msg):

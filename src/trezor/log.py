@@ -1,6 +1,6 @@
-from micropython import const
 import sys
 import utime
+from micropython import const
 
 NOTSET = const(0)
 DEBUG = const(10)

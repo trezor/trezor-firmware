@@ -1,4 +1,5 @@
 from micropython import const
+
 from trezor import loop, res, ui
 from trezor.ui import Widget
 from trezor.ui.button import BTN_ACTIVE, BTN_CLICKED, Button

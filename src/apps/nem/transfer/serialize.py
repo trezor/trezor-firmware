@@ -4,9 +4,12 @@ from trezor.messages.NEMMosaic import NEMMosaic
 from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 from trezor.messages.NEMTransfer import NEMTransfer
 
-from ..helpers import (AES_BLOCK_SIZE, NEM_SALT_SIZE,
-                       NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER,
-                       NEM_TRANSACTION_TYPE_TRANSFER)
+from ..helpers import (
+    AES_BLOCK_SIZE,
+    NEM_SALT_SIZE,
+    NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER,
+    NEM_TRANSACTION_TYPE_TRANSFER,
+)
 from ..writers import write_bytes_with_length, write_common, write_uint32, write_uint64
 
 

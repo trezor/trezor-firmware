@@ -1,5 +1,6 @@
 from trezor import wire
 from trezor.messages.Success import Success
+
 from apps.common import storage
 from apps.management.reset_device import (
     check_mnemonic,

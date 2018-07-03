@@ -1,5 +1,6 @@
 from trezor import wire
 from trezor.crypto import bip32, bip39
+
 from apps.common import cache, storage
 from apps.common.request_passphrase import protect_by_passphrase
 

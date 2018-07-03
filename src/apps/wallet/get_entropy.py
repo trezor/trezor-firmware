@@ -2,6 +2,7 @@ from trezor.crypto import random
 from trezor.messages import ButtonRequestType
 from trezor.messages.Entropy import Entropy
 from trezor.ui.text import Text
+
 from apps.common.confirm import require_confirm
 
 

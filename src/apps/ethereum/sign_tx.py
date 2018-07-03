@@ -1,10 +1,15 @@
 from trezor import wire
+from trezor.crypto import rlp
 from trezor.messages.EthereumSignTx import EthereumSignTx
 from trezor.messages.EthereumTxRequest import EthereumTxRequest
 from trezor.utils import HashWriter
-from trezor.crypto import rlp
+
 from apps.ethereum import tokens
-from apps.ethereum.layout import require_confirm_tx, require_confirm_data, require_confirm_fee
+from apps.ethereum.layout import (
+    require_confirm_data,
+    require_confirm_fee,
+    require_confirm_tx,
+)
 
 # maximum supported chain id
 MAX_CHAIN_ID = 2147483630

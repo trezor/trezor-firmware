@@ -1,8 +1,8 @@
 from micropython import const
-from trezor import loop
-from trezor import ui
+
+from trezor import loop, ui
 from trezor.ui import Widget
-from trezor.ui.button import Button, BTN_CLICKED
+from trezor.ui.button import BTN_CLICKED, Button
 
 DEVICE = const(0)
 HOST = const(1)

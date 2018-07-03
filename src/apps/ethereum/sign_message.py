@@ -1,8 +1,9 @@
+from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
-from trezor.utils import HashWriter
 from trezor.messages.EthereumMessageSignature import EthereumMessageSignature
 from trezor.ui.text import Text
-from trezor.crypto.curve import secp256k1
+from trezor.utils import HashWriter
+
 from apps.common import seed
 from apps.common.confirm import require_confirm
 from apps.common.signverify import split_message

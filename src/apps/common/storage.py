@@ -1,7 +1,9 @@
 from micropython import const
 from ubinascii import hexlify
+
 from trezor import config
 from trezor.crypto import random
+
 from apps.common import cache
 
 HOMESCREEN_MAXSIZE = 16384

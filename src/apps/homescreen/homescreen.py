@@ -1,5 +1,6 @@
-from trezor import ui, res, config
+from trezor import config, res, ui
 from trezor.ui.swipe import Swipe, degrees
+
 from apps.common import storage
 
 

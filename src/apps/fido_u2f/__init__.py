@@ -1,22 +1,13 @@
-from micropython import const
-
 import uctypes
 import ustruct
 import utime
+from micropython import const
 
-from trezor import log
-from trezor import loop
-from trezor import io
-from trezor import ui
-from trezor import utils
-from trezor import workflow
-from trezor.crypto import der
-from trezor.crypto import hashlib
-from trezor.crypto import hmac
-from trezor.crypto import random
+from trezor import io, log, loop, ui, utils, workflow
+from trezor.crypto import der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
-from apps.common import storage, HARDENED
 
+from apps.common import HARDENED, storage
 
 _HID_RPT_SIZE = const(64)
 _CID_BROADCAST = const(0xffffffff)  # broadcast channel id

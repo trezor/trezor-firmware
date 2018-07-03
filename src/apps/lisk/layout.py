@@ -1,11 +1,12 @@
-from apps.common.confirm import require_confirm, require_hold_to_confirm
-from apps.wallet.get_public_key import _show_pubkey
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
 from trezor.utils import chunks
 
 from .helpers import get_vote_tx_text
+
+from apps.common.confirm import require_confirm, require_hold_to_confirm
+from apps.wallet.get_public_key import _show_pubkey
 
 
 async def require_confirm_tx(ctx, to, value):

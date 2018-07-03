@@ -1,11 +1,11 @@
 from ubinascii import hexlify
+
 from trezor import ui
-from trezor.utils import chunks, format_amount
+from trezor.messages import ButtonRequestType, OutputScriptType
 from trezor.ui.text import Text
-from trezor.messages import ButtonRequestType
-from trezor.messages import OutputScriptType
-from apps.common.confirm import confirm
-from apps.common.confirm import hold_to_confirm
+from trezor.utils import chunks, format_amount
+
+from apps.common.confirm import confirm, hold_to_confirm
 from apps.wallet.sign_tx import addresses
 
 

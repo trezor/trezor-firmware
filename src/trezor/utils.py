@@ -1,7 +1,6 @@
-import sys
 import gc
-
-from trezorutils import halt, memcpy, set_mode_unprivileged, symbol, model  # noqa: F401
+import sys
+from trezorutils import halt, memcpy, model, set_mode_unprivileged, symbol  # noqa: F401
 
 
 def unimport_begin():

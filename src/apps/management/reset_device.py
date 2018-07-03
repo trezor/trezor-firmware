@@ -1,18 +1,19 @@
 from micropython import const
-from trezor import config, ui, wire
+from ubinascii import hexlify
+
+from trezor import config, ui, wire, workflow
 from trezor.crypto import bip39, hashlib, random
 from trezor.messages import ButtonRequestType, MessageType
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
-from trezor import workflow
 from trezor.pin import pin_to_int
 from trezor.ui.confirm import HoldToConfirmDialog
 from trezor.ui.mnemonic import MnemonicKeyboard
 from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
 from trezor.ui.text import Text
 from trezor.utils import chunks, format_ordinal
-from ubinascii import hexlify
+
 from apps.common import storage
 from apps.common.confirm import require_confirm
 from apps.management.change_pin import request_pin_confirm

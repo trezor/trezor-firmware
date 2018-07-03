@@ -1,12 +1,16 @@
+from ustruct import pack, unpack
+
 from trezor.crypto.hashlib import sha256
 from trezor.messages.ECDHSessionKey import ECDHSessionKey
-from ustruct import pack, unpack
-from trezor.utils import chunks
-from apps.common.confirm import require_confirm
-from apps.wallet.sign_identity import serialize_identity, serialize_identity_without_proto
 from trezor.ui.text import Text
+from trezor.utils import chunks
 
-from apps.common import seed, HARDENED
+from apps.common import HARDENED, seed
+from apps.common.confirm import require_confirm
+from apps.wallet.sign_identity import (
+    serialize_identity,
+    serialize_identity_without_proto,
+)
 
 
 async def get_ecdh_session_key(ctx, msg):

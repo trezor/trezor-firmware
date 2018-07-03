@@ -1,11 +1,13 @@
 from micropython import const
-from apps.common.confirm import confirm
+
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.container import Container
 from trezor.ui.qr import Qr
 from trezor.ui.text import Text
 from trezor.utils import chunks
+
+from apps.common.confirm import confirm
 
 
 async def show_address(ctx, address: str):

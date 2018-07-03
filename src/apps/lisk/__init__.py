@@ -1,6 +1,11 @@
-from trezor.wire import register, protobuf_workflow
-from trezor.messages.MessageType import \
-    LiskGetAddress, LiskSignTx, LiskGetPublicKey, LiskSignMessage, LiskVerifyMessage
+from trezor.messages.MessageType import (
+    LiskGetAddress,
+    LiskGetPublicKey,
+    LiskSignMessage,
+    LiskSignTx,
+    LiskVerifyMessage,
+)
+from trezor.wire import protobuf_workflow, register
 
 
 def dispatch_LiskGetAddress(*args, **kwargs):

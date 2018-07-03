@@ -3,13 +3,13 @@ from trezor.messages import ButtonRequestType
 from trezor.messages.NEMAddress import NEMAddress
 from trezor.ui.text import Text
 
+from .helpers import NEM_CURVE, get_network_str
+from .layout import split_address
+from .validators import validate_network
+
 from apps.common import seed
 from apps.common.confirm import confirm
 from apps.common.display_address import show_qr
-
-from .layout import split_address
-from .helpers import get_network_str, NEM_CURVE
-from .validators import validate_network
 
 
 async def get_address(ctx, msg):

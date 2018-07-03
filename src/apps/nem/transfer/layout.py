@@ -1,16 +1,25 @@
 from trezor import ui
-from trezor.messages import (ButtonRequestType, NEMImportanceTransfer,
-                             NEMImportanceTransferMode, NEMMosaic,
-                             NEMMosaicLevy, NEMTransactionCommon, NEMTransfer)
+from trezor.messages import (
+    ButtonRequestType,
+    NEMImportanceTransfer,
+    NEMImportanceTransferMode,
+    NEMMosaic,
+    NEMMosaicLevy,
+    NEMTransactionCommon,
+    NEMTransfer,
+)
 from trezor.ui.text import Text
 from trezor.utils import format_amount, split_words
 
-from apps.common.confirm import require_confirm
-
-from ..helpers import (NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE,
-                       NEM_MAX_DIVISIBILITY, NEM_MOSAIC_AMOUNT_DIVISOR)
+from ..helpers import (
+    NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE,
+    NEM_MAX_DIVISIBILITY,
+    NEM_MOSAIC_AMOUNT_DIVISOR,
+)
 from ..layout import require_confirm_final, require_confirm_text, split_address
 from ..mosaic.helpers import get_mosaic_definition, is_nem_xem_mosaic
+
+from apps.common.confirm import require_confirm
 
 
 async def ask_transfer(ctx, common: NEMTransactionCommon, transfer: NEMTransfer, payload: bytes, encrypted: bool):

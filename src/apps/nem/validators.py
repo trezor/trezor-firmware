@@ -1,18 +1,27 @@
 from trezor.crypto import nem
+from trezor.messages import NEMModificationType, NEMSupplyChangeType
+from trezor.messages.NEMSignTx import (
+    NEMAggregateModification,
+    NEMImportanceTransfer,
+    NEMMosaicCreation,
+    NEMMosaicSupplyChange,
+    NEMProvisionNamespace,
+    NEMSignTx,
+    NEMTransactionCommon,
+    NEMTransfer,
+)
 from trezor.wire import ProcessError
-from trezor.messages import NEMModificationType
-from trezor.messages import NEMSupplyChangeType
-from trezor.messages.NEMSignTx import (NEMAggregateModification,
-                                       NEMImportanceTransfer,
-                                       NEMMosaicCreation,
-                                       NEMMosaicSupplyChange,
-                                       NEMProvisionNamespace, NEMSignTx,
-                                       NEMTransactionCommon, NEMTransfer)
 
-from .helpers import (NEM_MAX_DIVISIBILITY, NEM_MAX_ENCRYPTED_PAYLOAD_SIZE,
-                      NEM_MAX_PLAIN_PAYLOAD_SIZE, NEM_MAX_SUPPLY,
-                      NEM_NETWORK_MAINNET, NEM_NETWORK_MIJIN,
-                      NEM_NETWORK_TESTNET, NEM_PUBLIC_KEY_SIZE)
+from .helpers import (
+    NEM_MAX_DIVISIBILITY,
+    NEM_MAX_ENCRYPTED_PAYLOAD_SIZE,
+    NEM_MAX_PLAIN_PAYLOAD_SIZE,
+    NEM_MAX_SUPPLY,
+    NEM_NETWORK_MAINNET,
+    NEM_NETWORK_MIJIN,
+    NEM_NETWORK_TESTNET,
+    NEM_PUBLIC_KEY_SIZE,
+)
 
 
 def validate(msg: NEMSignTx):

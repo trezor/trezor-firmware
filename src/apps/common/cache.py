@@ -1,4 +1,5 @@
 from trezor.crypto import hashlib, hmac, random
+
 from apps.common import storage
 
 _cached_seed = None

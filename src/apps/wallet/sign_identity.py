@@ -3,10 +3,10 @@ from ustruct import pack, unpack
 from trezor import ui
 from trezor.crypto.hashlib import sha256
 from trezor.messages.SignedIdentity import SignedIdentity
-from trezor.utils import chunks
 from trezor.ui.text import Text
+from trezor.utils import chunks
 
-from apps.common import coins, seed, HARDENED
+from apps.common import HARDENED, coins, seed
 from apps.common.confirm import require_confirm
 
 

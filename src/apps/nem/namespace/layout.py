@@ -1,8 +1,7 @@
 from trezor import ui
 from trezor.messages import NEMProvisionNamespace, NEMTransactionCommon
 
-from ..layout import (require_confirm_content, require_confirm_fee,
-                      require_confirm_final)
+from ..layout import require_confirm_content, require_confirm_fee, require_confirm_final
 
 
 async def ask_provision_namespace(ctx, common: NEMTransactionCommon, namespace: NEMProvisionNamespace):

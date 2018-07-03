@@ -1,8 +1,10 @@
 from ubinascii import hexlify
+
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
-from trezor.ui.text import Text
 from trezor.messages.Success import Success
+from trezor.ui.text import Text
+
 from apps.common.confirm import require_confirm
 from apps.common.display_address import split_address
 from apps.common.signverify import split_message

@@ -1,8 +1,9 @@
 from micropython import const
+
 from trezor import ui
 from trezor.crypto import random
 from trezor.ui import display
-from trezor.ui.button import Button, BTN_CLICKED
+from trezor.ui.button import BTN_CLICKED, Button
 
 
 def digit_area(i):

@@ -1,5 +1,5 @@
 import ustruct
-from apps.common import seed
+
 from trezor import wire
 from trezor.crypto.curve import ed25519
 from trezor.crypto.hashlib import sha256
@@ -9,6 +9,8 @@ from trezor.utils import HashWriter
 
 from . import layout
 from .helpers import LISK_CURVE, get_address_from_public_key
+
+from apps.common import seed
 
 
 async def lisk_sign_tx(ctx, msg):

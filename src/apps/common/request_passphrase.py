@@ -1,12 +1,12 @@
 from trezor import ui, wire
-from trezor.messages import ButtonRequestType, MessageType
+from trezor.messages import ButtonRequestType, MessageType, PassphraseSourceType
 from trezor.messages.ButtonRequest import ButtonRequest
-from trezor.messages import PassphraseSourceType
 from trezor.messages.PassphraseRequest import PassphraseRequest
 from trezor.messages.PassphraseStateRequest import PassphraseStateRequest
 from trezor.ui.entry_select import DEVICE, EntrySelector
 from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard
 from trezor.ui.text import Text
+
 from apps.common import storage
 from apps.common.cache import get_state
 

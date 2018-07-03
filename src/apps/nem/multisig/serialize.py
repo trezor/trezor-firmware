@@ -2,9 +2,11 @@ from trezor.crypto import hashlib, nem
 from trezor.messages.NEMAggregateModification import NEMAggregateModification
 from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 
-from ..helpers import (NEM_TRANSACTION_TYPE_AGGREGATE_MODIFICATION,
-                       NEM_TRANSACTION_TYPE_MULTISIG,
-                       NEM_TRANSACTION_TYPE_MULTISIG_SIGNATURE)
+from ..helpers import (
+    NEM_TRANSACTION_TYPE_AGGREGATE_MODIFICATION,
+    NEM_TRANSACTION_TYPE_MULTISIG,
+    NEM_TRANSACTION_TYPE_MULTISIG_SIGNATURE,
+)
 from ..writers import write_bytes_with_length, write_common, write_uint32
 
 
