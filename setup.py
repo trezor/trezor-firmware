@@ -8,6 +8,7 @@ import tempfile
 from setuptools import setup, Command, find_packages
 from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
+from distutils.errors import DistutilsError
 
 install_requires = [
     'setuptools>=19.0',
@@ -45,7 +46,7 @@ class PrebuildCommand(Command):
         # check for existence of the submodule directory
         common_defs = os.path.join(TREZOR_COMMON, 'defs')
         if not os.path.exists(common_defs):
-            raise Exception('trezor-common submodule seems to be missing.\n' +
+            raise DistutilsError('trezor-common submodule seems to be missing.\n' +
                             'Use "git submodule update --init" to retrieve it.')
 
         # generate and copy coins.json to the tree
@@ -56,11 +57,14 @@ class PrebuildCommand(Command):
 
         # regenerate messages
         try:
-            subprocess.check_call([os.path.join(CWD, 'tools', 'build_protobuf'), '--no-core'])
+            proto_srcs = [os.path.join(TREZOR_COMMON, "protob", name + ".proto") for name in ("messages", "types")]
+            subprocess.check_call([
+                os.path.join(TREZOR_COMMON, "protob", "pb2py"),
+                "-o", os.path.join(CWD, "trezorlib", "messages"),
+                "-P", "..protobuf",
+            ] + proto_srcs)
         except Exception as e:
-            print(e)
-            print("Generating protobuf failed. Maybe you don't have 'protoc', or maybe you are on Windows?")
-            print("Using pre-generated files.")
+            raise DistutilsError("Generating protobuf failed. Make sure you have 'protoc' in your PATH.") from e
 
 
 def _patch_prebuild(cls):
