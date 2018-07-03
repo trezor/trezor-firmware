@@ -8,6 +8,7 @@ HOMESCREEN_MAXSIZE = 16384
 
 _STORAGE_VERSION = b'\x01'
 
+# fmt: off
 _APP                = const(0x01)  # app namespace
 _DEVICE_ID          = const(0x00)  # bytes
 _VERSION            = const(0x01)  # int
@@ -22,6 +23,7 @@ _U2F_COUNTER        = const(0x09)  # int
 _PASSPHRASE_SOURCE  = const(0x0A)  # int
 _UNFINISHED_BACKUP  = const(0x0B)  # bool (0x01 or empty)
 _AUTOLOCK_DELAY_MS  = const(0x0C)  # int
+# fmt: on
 
 
 def _new_device_id() -> str:

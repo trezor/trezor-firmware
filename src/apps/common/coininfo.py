@@ -45,8 +45,9 @@ class CoinInfo:
             self.sign_hash_double = True
 
 
-# the following list is generated using tools/codegen/gen_coins.py
+# generated using tools/codegen/gen_coins.py
 # do not edit manually!
+# fmt: off
 COINS = [
     CoinInfo(
         coin_name='Bitcoin',

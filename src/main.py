@@ -1,3 +1,5 @@
+# isort:skip_file
+
 # unlock the device
 import boot  # noqa: F401
 
