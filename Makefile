@@ -78,6 +78,12 @@ style: ## run code style check on application sources and tests
 	flake8 $(shell find src -name *.py)
 	flake8 $(shell find tests -name *.py)
 
+isort:
+	isort $(shell find src -name *.py ! -path 'src/trezor/messages/*')
+
+black:
+	black $(shell find src -name *.py ! -path 'src/trezor/messages/*')
+
 ## build commands:
 
 build: build_boardloader build_bootloader build_firmware build_prodtest build_unix ## build all
