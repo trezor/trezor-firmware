@@ -2,7 +2,6 @@ from apps.common import seed
 from apps.common.confirm import require_confirm
 from apps.common.signverify import split_message
 from apps.wallet.sign_tx.signing import write_varint
-from trezor import ui
 from trezor.crypto.curve import ed25519
 from trezor.crypto.hashlib import sha256
 from trezor.messages.LiskMessageSignature import LiskMessageSignature

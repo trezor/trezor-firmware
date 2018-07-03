@@ -1,4 +1,4 @@
-from trezor import ui, wire
+from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
 from trezor.messages.Success import Success

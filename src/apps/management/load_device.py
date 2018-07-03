@@ -1,4 +1,4 @@
-from trezor import config, ui, wire
+from trezor import config, wire
 from trezor.crypto import bip39
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int

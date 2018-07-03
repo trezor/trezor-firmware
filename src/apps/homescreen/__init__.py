@@ -55,7 +55,6 @@ async def handle_Ping(ctx, msg):
         from apps.common.confirm import require_confirm
         from trezor.messages.ButtonRequestType import ProtectCall
         from trezor.ui.text import Text
-        from trezor import ui
         await require_confirm(ctx, Text('Confirm'), ProtectCall)
     if msg.passphrase_protection:
         from apps.common.request_passphrase import protect_by_passphrase

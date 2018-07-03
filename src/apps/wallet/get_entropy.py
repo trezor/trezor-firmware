@@ -1,4 +1,3 @@
-from trezor import ui
 from trezor.crypto import random
 from trezor.messages import ButtonRequestType
 from trezor.messages.Entropy import Entropy

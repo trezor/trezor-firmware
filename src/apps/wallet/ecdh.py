@@ -1,4 +1,3 @@
-from trezor import ui
 from trezor.crypto.hashlib import sha256
 from trezor.messages.ECDHSessionKey import ECDHSessionKey
 from ustruct import pack, unpack

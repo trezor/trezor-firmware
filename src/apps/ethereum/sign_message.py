@@ -1,4 +1,3 @@
-from trezor import ui
 from trezor.crypto.hashlib import sha3_256
 from trezor.utils import HashWriter
 from trezor.messages.EthereumMessageSignature import EthereumMessageSignature
