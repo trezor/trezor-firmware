@@ -12,9 +12,9 @@ async def lisk_verify_message(ctx, msg):
     digest = message_digest(msg.message)
     verified = ed25519.verify(msg.public_key, msg.signature, digest)
     if not verified:
-        raise wire.ProcessError('Invalid signature')
+        raise wire.ProcessError("Invalid signature")
 
     address = get_address_from_public_key(msg.public_key)
     await require_confirm_verify_message(ctx, address, msg.message)
 
-    return Success(message='Message verified')
+    return Success(message="Message verified")

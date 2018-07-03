@@ -51,7 +51,9 @@ def output_script_p2sh(scripthash: bytes) -> bytearray:
     return s
 
 
-def script_replay_protection_bip115(block_hash: bytes, block_height: int) -> bytearray:
+def script_replay_protection_bip115(
+    block_hash: bytes, block_height: bytes
+) -> bytearray:
     if block_hash is None or block_height is None:
         return bytearray()
     assert len(block_hash) == 32

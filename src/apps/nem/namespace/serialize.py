@@ -5,10 +5,12 @@ from ..helpers import NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE
 from ..writers import write_bytes_with_length, write_common, write_uint32, write_uint64
 
 
-def serialize_provision_namespace(common: NEMTransactionCommon, namespace: NEMProvisionNamespace, public_key: bytes) -> bytearray:
-    tx = write_common(common,
-                      bytearray(public_key),
-                      NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE)
+def serialize_provision_namespace(
+    common: NEMTransactionCommon, namespace: NEMProvisionNamespace, public_key: bytes
+) -> bytearray:
+    tx = write_common(
+        common, bytearray(public_key), NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE
+    )
 
     write_bytes_with_length(tx, bytearray(namespace.sink))
     write_uint64(tx, namespace.fee)

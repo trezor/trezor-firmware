@@ -21,7 +21,6 @@ def message_digest(coin, message):
 
 
 def split_message(message):
-
     def measure(s):
         return ui.display.text_width(s, ui.NORMAL)
 

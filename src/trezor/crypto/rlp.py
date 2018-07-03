@@ -1,7 +1,6 @@
-
 def int_to_bytes(x: int) -> bytes:
     if x == 0:
-        return b''
+        return b""
     r = bytearray()
     while x:
         r.append(x % 256)
@@ -17,7 +16,7 @@ def encode_length(l: int, is_list: bool) -> bytes:
         bl = int_to_bytes(l)
         return bytes([len(bl) + offset + 55]) + bl
     else:
-        raise ValueError('Input too long')
+        raise ValueError("Input too long")
 
 
 def encode(data, include_length=True) -> bytes:
@@ -31,7 +30,7 @@ def encode(data, include_length=True) -> bytes:
         else:
             return encode_length(len(data), is_list=False) + data
     elif isinstance(data, list):
-        output = b''
+        output = b""
         for item in data:
             output += encode(item)
         if include_length:
@@ -39,7 +38,7 @@ def encode(data, include_length=True) -> bytes:
         else:
             return output
     else:
-        raise TypeError('Invalid input of type ' + str(type(data)))
+        raise TypeError("Invalid input of type " + str(type(data)))
 
 
 def field_length(length: int, first_byte: bytearray) -> int:

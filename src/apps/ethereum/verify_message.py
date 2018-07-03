@@ -18,25 +18,25 @@ async def ethereum_verify_message(ctx, msg):
     pubkey = secp256k1.verify_recover(sig, digest)
 
     if not pubkey:
-        raise ValueError('Invalid signature')
+        raise ValueError("Invalid signature")
 
     pkh = sha3_256(pubkey[1:]).digest(True)[-20:]
 
     if msg.address != pkh:
-        raise ValueError('Invalid signature')
+        raise ValueError("Invalid signature")
 
-    address = '0x' + hexlify(msg.address).decode()
+    address = "0x" + hexlify(msg.address).decode()
 
     await require_confirm_verify_message(ctx, address, msg.message)
 
-    return Success(message='Message verified')
+    return Success(message="Message verified")
 
 
 async def require_confirm_verify_message(ctx, address, message):
-    text = Text('Confirm address')
+    text = Text("Confirm address")
     text.mono(*split_address(address))
     await require_confirm(ctx, text)
 
-    text = Text('Verify message')
+    text = Text("Verify message")
     text.mono(*split_message(message))
     await require_confirm(ctx, text)

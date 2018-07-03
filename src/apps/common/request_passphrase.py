@@ -13,16 +13,17 @@ from apps.common.cache import get_state
 
 @ui.layout
 async def request_passphrase_entry(ctx):
-    text = Text('Enter passphrase', ui.ICON_CONFIG)
-    text.normal('Where to enter your', 'passphrase?')
+    text = Text("Enter passphrase", ui.ICON_CONFIG)
+    text.normal("Where to enter your", "passphrase?")
     text.render()
 
     ack = await ctx.call(
         ButtonRequest(code=ButtonRequestType.PassphraseType),
         MessageType.ButtonAck,
-        MessageType.Cancel)
+        MessageType.Cancel,
+    )
     if ack.MESSAGE_WIRE_TYPE == MessageType.Cancel:
-        raise wire.ActionCancelled('Passphrase cancelled')
+        raise wire.ActionCancelled("Passphrase cancelled")
 
     selector = EntrySelector(text)
     return await ctx.wait(selector)
@@ -31,28 +32,30 @@ async def request_passphrase_entry(ctx):
 @ui.layout
 async def request_passphrase_ack(ctx, on_device):
     if not on_device:
-        text = Text('Passphrase entry', ui.ICON_CONFIG)
-        text.normal('Please, type passphrase', 'on connected host.')
+        text = Text("Passphrase entry", ui.ICON_CONFIG)
+        text.normal("Please, type passphrase", "on connected host.")
         text.render()
 
     req = PassphraseRequest(on_device=on_device)
     ack = await ctx.call(req, MessageType.PassphraseAck, MessageType.Cancel)
     if ack.MESSAGE_WIRE_TYPE == MessageType.Cancel:
-        raise wire.ActionCancelled('Passphrase cancelled')
+        raise wire.ActionCancelled("Passphrase cancelled")
 
     if on_device:
         if ack.passphrase is not None:
-            raise wire.ProcessError('Passphrase provided when it should not be')
-        keyboard = PassphraseKeyboard('Enter passphrase')
+            raise wire.ProcessError("Passphrase provided when it should not be")
+        keyboard = PassphraseKeyboard("Enter passphrase")
         passphrase = await ctx.wait(keyboard)
         if passphrase == CANCELLED:
-            raise wire.ActionCancelled('Passphrase cancelled')
+            raise wire.ActionCancelled("Passphrase cancelled")
     else:
         if ack.passphrase is None:
-            raise wire.ProcessError('Passphrase not provided')
+            raise wire.ProcessError("Passphrase not provided")
         passphrase = ack.passphrase
 
-    req = PassphraseStateRequest(state=get_state(prev_state=ack.state, passphrase=passphrase))
+    req = PassphraseStateRequest(
+        state=get_state(prev_state=ack.state, passphrase=passphrase)
+    )
     ack = await ctx.call(req, MessageType.PassphraseStateAck, MessageType.Cancel)
 
     return passphrase
@@ -71,4 +74,4 @@ async def protect_by_passphrase(ctx):
     if storage.has_passphrase():
         return await request_passphrase(ctx)
     else:
-        return ''
+        return ""

@@ -1,6 +1,7 @@
 if not __debug__:
     from trezor.utils import halt
-    halt('debug mode inactive')
+
+    halt("debug mode inactive")
 
 if __debug__:
     from trezor import loop
@@ -33,12 +34,16 @@ if __debug__:
         m.reset_word_pos = reset_word_index
         m.reset_entropy = reset_internal_entropy
         if reset_current_words:
-            m.reset_word = ' '.join(reset_current_words)
+            m.reset_word = " ".join(reset_current_words)
         return m
 
     def boot():
         # wipe storage when debug build is used
         storage.wipe()
 
-        register(MessageType.DebugLinkDecision, protobuf_workflow, dispatch_DebugLinkDecision)
-        register(MessageType.DebugLinkGetState, protobuf_workflow, dispatch_DebugLinkGetState)
+        register(
+            MessageType.DebugLinkDecision, protobuf_workflow, dispatch_DebugLinkDecision
+        )
+        register(
+            MessageType.DebugLinkGetState, protobuf_workflow, dispatch_DebugLinkGetState
+        )

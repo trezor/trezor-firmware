@@ -14,7 +14,7 @@ from apps.wallet.sign_tx.signing import write_varint
 
 def message_digest(message):
     h = HashWriter(sha256)
-    signed_message_header = 'Lisk Signed Message:\n'
+    signed_message_header = "Lisk Signed Message:\n"
     write_varint(h, len(signed_message_header))
     h.extend(signed_message_header)
     write_varint(h, len(message))
@@ -39,6 +39,6 @@ async def lisk_sign_message(ctx, msg):
 
 
 async def require_confirm_sign_message(ctx, message):
-    text = Text('Sign Lisk message')
+    text = Text("Sign Lisk message")
     text.normal(*split_message(message))
     await require_confirm(ctx, text)

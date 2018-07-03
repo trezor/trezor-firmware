@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l'
+CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 ADDRESS_TYPE_P2KH = 0
 ADDRESS_TYPE_P2SH = 8
 
@@ -60,7 +60,7 @@ def b32decode(inputs):
 
 
 def b32encode(inputs):
-    out = ''
+    out = ""
     for char_code in inputs:
         out += CHARSET[char_code]
     return out
@@ -92,13 +92,13 @@ def encode(prefix, version, payload):
     payload = bytes([version]) + payload
     payload = convertbits(payload, 8, 5)
     checksum = calculate_checksum(prefix, payload)
-    return prefix + ':' + b32encode(payload + checksum)
+    return prefix + ":" + b32encode(payload + checksum)
 
 
 def decode(prefix, addr):
     addr = addr.lower()
     decoded = b32decode(addr)
     if not verify_checksum(prefix, decoded):
-        raise ValueError('Bad cashaddr checksum')
+        raise ValueError("Bad cashaddr checksum")
     data = bytes(convertbits(decoded, 5, 8))
     return data[0], data[1:-6]

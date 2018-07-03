@@ -6,7 +6,7 @@ from trezor.ui.button import BTN_CLICKED, ICON, Button
 if __debug__:
     from apps.debug import input_signal
 
-MNEMONIC_KEYS = ('abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vwx', 'yz')
+MNEMONIC_KEYS = ("abc", "def", "ghi", "jkl", "mno", "pqr", "stu", "vwx", "yz")
 
 
 def key_buttons(keys):
@@ -24,7 +24,7 @@ def compute_mask(text: str) -> int:
 
 
 class Input(Button):
-    def __init__(self, area: tuple, content: str='', word: str=''):
+    def __init__(self, area: tuple, content: str = "", word: str = ""):
         super().__init__(area, content)
         self.word = word
         self.icon = None
@@ -37,26 +37,26 @@ class Input(Button):
         self.taint()
         if content == word:  # confirm button
             self.enable()
-            self.normal_style = ui.BTN_KEY_CONFIRM['normal']
-            self.active_style = ui.BTN_KEY_CONFIRM['active']
+            self.normal_style = ui.BTN_KEY_CONFIRM["normal"]
+            self.active_style = ui.BTN_KEY_CONFIRM["active"]
             self.icon = ui.ICON_CONFIRM
         elif word:  # auto-complete button
             self.enable()
-            self.normal_style = ui.BTN_KEY['normal']
-            self.active_style = ui.BTN_KEY['active']
+            self.normal_style = ui.BTN_KEY["normal"]
+            self.active_style = ui.BTN_KEY["active"]
             self.icon = ui.ICON_CLICK
         else:  # disabled button
             self.disable()
             self.icon = None
 
     def render_content(self, s, ax, ay, aw, ah):
-        text_style = s['text-style']
-        fg_color = s['fg-color']
-        bg_color = s['bg-color']
+        text_style = s["text-style"]
+        fg_color = s["fg-color"]
+        bg_color = s["bg-color"]
 
         p = self.pending  # should we draw the pending marker?
         t = self.content  # input content
-        w = self.word[len(t):]  # suggested word
+        w = self.word[len(t) :]  # suggested word
         i = self.icon  # rendered icon
 
         tx = ax + 24  # x-offset of the content
@@ -79,12 +79,12 @@ class Input(Button):
 
 
 class MnemonicKeyboard(ui.Widget):
-    def __init__(self, prompt: str=''):
+    def __init__(self, prompt: str = ""):
         self.prompt = prompt
-        self.input = Input(ui.grid(1, n_x=4, n_y=4, cells_x=3), '', '')
-        self.back = Button(ui.grid(0, n_x=4, n_y=4),
-                           res.load(ui.ICON_BACK),
-                           style=ui.BTN_CLEAR)
+        self.input = Input(ui.grid(1, n_x=4, n_y=4, cells_x=3), "", "")
+        self.back = Button(
+            ui.grid(0, n_x=4, n_y=4), res.load(ui.ICON_BACK), style=ui.BTN_CLEAR
+        )
         self.keys = key_buttons(MNEMONIC_KEYS)
         self.pbutton = None  # pending key button
         self.pindex = 0  # index of current pending char in pbutton
@@ -114,7 +114,7 @@ class MnemonicKeyboard(ui.Widget):
         if self.input.touch(event, pos) == BTN_CLICKED:
             # input press, either auto-complete or confirm
             if word and content == word:
-                self.edit('')
+                self.edit("")
                 return content
             else:
                 self.edit(word)
@@ -133,7 +133,7 @@ class MnemonicKeyboard(ui.Widget):
                 return
 
     def edit(self, content, button=None, index=0):
-        word = bip39.find_word(content) or ''
+        word = bip39.find_word(content) or ""
         mask = bip39.complete_word(content)
 
         self.pbutton = button

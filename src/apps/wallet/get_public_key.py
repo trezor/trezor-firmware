@@ -12,7 +12,7 @@ from apps.common.confirm import require_confirm
 
 
 async def get_public_key(ctx, msg):
-    coin_name = msg.coin_name or 'Bitcoin'
+    coin_name = msg.coin_name or "Bitcoin"
     coin = coins.by_name(coin_name)
 
     curve_name = msg.ecdsa_curve_name
@@ -23,13 +23,14 @@ async def get_public_key(ctx, msg):
     node_xpub = node.serialize_public(coin.xpub_magic)
     pubkey = node.public_key()
     if pubkey[0] == 1:
-        pubkey = b'\x00' + pubkey[1:]
+        pubkey = b"\x00" + pubkey[1:]
     node_type = HDNodeType(
         depth=node.depth(),
         child_num=node.child_num(),
         fingerprint=node.fingerprint(),
         chain_code=node.chain_code(),
-        public_key=pubkey)
+        public_key=pubkey,
+    )
 
     if msg.show_display:
         await _show_pubkey(ctx, pubkey)
@@ -39,9 +40,6 @@ async def get_public_key(ctx, msg):
 
 async def _show_pubkey(ctx, pubkey: bytes):
     lines = chunks(hexlify(pubkey).decode(), 18)
-    text = Text('Confirm public key', ui.ICON_RECEIVE, icon_color=ui.GREEN)
+    text = Text("Confirm public key", ui.ICON_RECEIVE, icon_color=ui.GREEN)
     text.mono(*lines)
-    return await require_confirm(
-        ctx,
-        text,
-        code=ButtonRequestType.PublicKey)
+    return await require_confirm(ctx, text, code=ButtonRequestType.PublicKey)

@@ -12,7 +12,7 @@ from apps.common.signverify import split_message
 def message_digest(message):
 
     h = HashWriter(sha3_256)
-    signed_message_header = '\x19Ethereum Signed Message:\n'
+    signed_message_header = "\x19Ethereum Signed Message:\n"
     h.extend(signed_message_header)
     h.extend(str(len(message)))
     h.extend(message)
@@ -37,6 +37,6 @@ async def ethereum_sign_message(ctx, msg):
 
 async def require_confirm_sign_message(ctx, message):
     message = split_message(message)
-    text = Text('Sign ETH message')
+    text = Text("Sign ETH message")
     text.normal(*message)
     await require_confirm(ctx, text)

@@ -7,7 +7,7 @@ workflow_handlers = {}
 
 
 def register(mtype, handler, *args):
-    '''Register `handler` to get scheduled after `mtype` message is received.'''
+    """Register `handler` to get scheduled after `mtype` message is received."""
     if isinstance(mtype, type) and issubclass(mtype, protobuf.MessageType):
         mtype = mtype.MESSAGE_WIRE_TYPE
     if mtype in workflow_handlers:
@@ -16,7 +16,7 @@ def register(mtype, handler, *args):
 
 
 def setup(iface):
-    '''Initialize the wire stack on passed USB interface.'''
+    """Initialize the wire stack on passed USB interface."""
     loop.schedule(session_handler(iface, codec_v1.SESSION_ID))
 
 
@@ -26,24 +26,25 @@ class Context:
         self.sid = sid
 
     async def call(self, msg, *types):
-        '''
+        """
         Reply with `msg` and wait for one of `types`. See `self.write()` and
         `self.read()`.
-        '''
+        """
         await self.write(msg)
         return await self.read(types)
 
     async def read(self, types):
-        '''
+        """
         Wait for incoming message on this wire context and return it.  Raises
         `UnexpectedMessageError` if the message type does not match one of
         `types`; and caller should always make sure to re-raise it.
-        '''
+        """
         reader = self.getreader()
 
         if __debug__:
-            log.debug(__name__, '%s:%x read: %s',
-                      self.iface.iface_num(), self.sid, types)
+            log.debug(
+                __name__, "%s:%x read: %s", self.iface.iface_num(), self.sid, types
+            )
 
         await reader.aopen()  # wait for the message header
 
@@ -57,14 +58,15 @@ class Context:
         return await protobuf.load_message(reader, pbtype)
 
     async def write(self, msg):
-        '''
+        """
         Write a protobuf message to this wire context.
-        '''
+        """
         writer = self.getwriter()
 
         if __debug__:
-            log.debug(__name__, '%s:%x write: %s',
-                      self.iface.iface_num(), self.sid, msg)
+            log.debug(
+                __name__, "%s:%x write: %s", self.iface.iface_num(), self.sid, msg
+            )
 
         # get the message size
         counter = protobuf.CountingWriter()
@@ -76,11 +78,11 @@ class Context:
         await writer.aclose()
 
     def wait(self, *tasks):
-        '''
+        """
         Wait until one of the passed tasks finishes, and return the result,
         while servicing the wire context.  If a message comes until one of the
         tasks ends, `UnexpectedMessageError` is raised.
-        '''
+        """
         return loop.spawn(self.read(()), *tasks)
 
     def getreader(self):
@@ -125,7 +127,7 @@ async def session_handler(iface, sid):
             continue
         except Error as exc:
             # we log wire.Error as warning, not as exception
-            log.warning(__name__, 'failure: %s', exc.message)
+            log.warning(__name__, "failure: %s", exc.message)
         except Exception as exc:
             # sessions are never closed by raised exceptions
             log.exception(__name__, exc)
@@ -149,7 +151,9 @@ async def protobuf_workflow(ctx, reader, handler, *args):
         raise
     except Exception as exc:
         # respond with a generic code and message
-        await ctx.write(Failure(code=FailureType.FirmwareError, message='Firmware error'))
+        await ctx.write(
+            Failure(code=FailureType.FirmwareError, message="Firmware error")
+        )
         raise
     if res:
         # respond with a specific response
@@ -165,4 +169,6 @@ async def unexpected_msg(ctx, reader):
         await reader.areadinto(buf)
 
     # respond with an unknown message error
-    await ctx.write(Failure(code=FailureType.UnexpectedMessage, message='Unexpected message'))
+    await ctx.write(
+        Failure(code=FailureType.UnexpectedMessage, message="Unexpected message")
+    )

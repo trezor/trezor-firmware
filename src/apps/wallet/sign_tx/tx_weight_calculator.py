@@ -34,14 +34,14 @@ _TXSIZE_WITNESSSCRIPT = const(34)
 
 
 class TxWeightCalculator:
-
     def __init__(self, inputs_count: int, outputs_count: int):
         self.inputs_count = inputs_count
         self.counter = 4 * (
-            _TXSIZE_HEADER +
-            _TXSIZE_FOOTER +
-            self.ser_length_size(inputs_count) +
-            self.ser_length_size(outputs_count))
+            _TXSIZE_HEADER
+            + _TXSIZE_FOOTER
+            + self.ser_length_size(inputs_count)
+            + self.ser_length_size(outputs_count)
+        )
         self.segwit = False
 
     def add_witness_header(self):
@@ -53,26 +53,31 @@ class TxWeightCalculator:
     def add_input(self, i: TxInputType):
 
         if i.multisig:
-            multisig_script_size = (
-                _TXSIZE_MULTISIGSCRIPT +
-                len(i.multisig.pubkeys) * (1 + _TXSIZE_PUBKEY))
+            multisig_script_size = _TXSIZE_MULTISIGSCRIPT + len(i.multisig.pubkeys) * (
+                1 + _TXSIZE_PUBKEY
+            )
             input_script_size = (
-                1 +  # the OP_FALSE bug in multisig
-                i.multisig.m * (1 + _TXSIZE_SIGNATURE) +
-                self.op_push_size(multisig_script_size) +
-                multisig_script_size)
+                1
+                + i.multisig.m * (1 + _TXSIZE_SIGNATURE)  # the OP_FALSE bug in multisig
+                + self.op_push_size(multisig_script_size)
+                + multisig_script_size
+            )
         else:
             input_script_size = 1 + _TXSIZE_SIGNATURE + 1 + _TXSIZE_PUBKEY
 
         self.counter += 4 * _TXSIZE_INPUT
 
-        if (i.script_type == InputScriptType.SPENDADDRESS or
-                i.script_type == InputScriptType.SPENDMULTISIG):
+        if (
+            i.script_type == InputScriptType.SPENDADDRESS
+            or i.script_type == InputScriptType.SPENDMULTISIG
+        ):
             input_script_size += self.ser_length_size(input_script_size)
             self.counter += 4 * input_script_size
 
-        elif (i.script_type == InputScriptType.SPENDWITNESS or
-                i.script_type == InputScriptType.SPENDP2SHWITNESS):
+        elif (
+            i.script_type == InputScriptType.SPENDWITNESS
+            or i.script_type == InputScriptType.SPENDP2SHWITNESS
+        ):
             self.add_witness_header()
             if i.script_type == InputScriptType.SPENDP2SHWITNESS:
                 if i.multisig:

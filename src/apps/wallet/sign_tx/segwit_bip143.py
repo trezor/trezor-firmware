@@ -24,7 +24,6 @@ class Bip143Error(ValueError):
 
 
 class Bip143:
-
     def __init__(self):
         self.h_prevouts = HashWriter(sha256)
         self.h_sequence = HashWriter(sha256)
@@ -49,27 +48,34 @@ class Bip143:
     def get_outputs_hash(self, coin: CoinInfo) -> bytes:
         return get_tx_hash(self.h_outputs, double=coin.sign_hash_double)
 
-    def preimage_hash(self, coin: CoinInfo, tx: SignTx, txi: TxInputType, pubkeyhash: bytes, sighash: int) -> bytes:
+    def preimage_hash(
+        self,
+        coin: CoinInfo,
+        tx: SignTx,
+        txi: TxInputType,
+        pubkeyhash: bytes,
+        sighash: int,
+    ) -> bytes:
         h_preimage = HashWriter(sha256)
 
         assert not tx.overwintered
 
-        write_uint32(h_preimage, tx.version)                          # nVersion
+        write_uint32(h_preimage, tx.version)  # nVersion
         write_bytes(h_preimage, bytearray(self.get_prevouts_hash(coin)))  # hashPrevouts
         write_bytes(h_preimage, bytearray(self.get_sequence_hash(coin)))  # hashSequence
 
-        write_bytes_rev(h_preimage, txi.prev_hash)                    # outpoint
-        write_uint32(h_preimage, txi.prev_index)                      # outpoint
+        write_bytes_rev(h_preimage, txi.prev_hash)  # outpoint
+        write_uint32(h_preimage, txi.prev_index)  # outpoint
 
-        script_code = self.derive_script_code(txi, pubkeyhash)        # scriptCode
+        script_code = self.derive_script_code(txi, pubkeyhash)  # scriptCode
         write_varint(h_preimage, len(script_code))
         write_bytes(h_preimage, script_code)
 
-        write_uint64(h_preimage, txi.amount)                          # amount
-        write_uint32(h_preimage, txi.sequence)                        # nSequence
-        write_bytes(h_preimage, bytearray(self.get_outputs_hash(coin)))   # hashOutputs
-        write_uint32(h_preimage, tx.lock_time)                        # nLockTime
-        write_uint32(h_preimage, sighash)                             # nHashType
+        write_uint64(h_preimage, txi.amount)  # amount
+        write_uint32(h_preimage, txi.sequence)  # nSequence
+        write_bytes(h_preimage, bytearray(self.get_outputs_hash(coin)))  # hashOutputs
+        write_uint32(h_preimage, tx.lock_time)  # nLockTime
+        write_uint32(h_preimage, sighash)  # nHashType
 
         return get_tx_hash(h_preimage, double=coin.sign_hash_double)
 
@@ -78,16 +84,22 @@ class Bip143:
     def derive_script_code(self, txi: TxInputType, pubkeyhash: bytes) -> bytearray:
 
         if txi.multisig:
-            return output_script_multisig(multisig_get_pubkeys(txi.multisig), txi.multisig.m)
+            return output_script_multisig(
+                multisig_get_pubkeys(txi.multisig), txi.multisig.m
+            )
 
-        p2pkh = (txi.script_type == InputScriptType.SPENDWITNESS or
-                 txi.script_type == InputScriptType.SPENDP2SHWITNESS or
-                 txi.script_type == InputScriptType.SPENDADDRESS)
+        p2pkh = (
+            txi.script_type == InputScriptType.SPENDWITNESS
+            or txi.script_type == InputScriptType.SPENDP2SHWITNESS
+            or txi.script_type == InputScriptType.SPENDADDRESS
+        )
         if p2pkh:
             # for p2wpkh in p2sh or native p2wpkh
             # the scriptCode is a classic p2pkh
             return output_script_p2pkh(pubkeyhash)
 
         else:
-            raise Bip143Error(FailureType.DataError,
-                              'Unknown input script type for bip143 script code')
+            raise Bip143Error(
+                FailureType.DataError,
+                "Unknown input script type for bip143 script code",
+            )

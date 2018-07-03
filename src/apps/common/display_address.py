@@ -12,14 +12,11 @@ from apps.common.confirm import confirm
 
 async def show_address(ctx, address: str):
     lines = split_address(address)
-    text = Text('Confirm address', ui.ICON_RECEIVE, icon_color=ui.GREEN)
+    text = Text("Confirm address", ui.ICON_RECEIVE, icon_color=ui.GREEN)
     text.mono(*lines)
     return await confirm(
-        ctx,
-        text,
-        code=ButtonRequestType.Address,
-        cancel='QR',
-        cancel_style=ui.BTN_KEY)
+        ctx, text, code=ButtonRequestType.Address, cancel="QR", cancel_style=ui.BTN_KEY
+    )
 
 
 async def show_qr(ctx, address: str):
@@ -28,14 +25,15 @@ async def show_qr(ctx, address: str):
     qr_coef = const(4)
 
     qr = Qr(address, (qr_x, qr_y), qr_coef)
-    text = Text('Confirm address', ui.ICON_RECEIVE, icon_color=ui.GREEN)
+    text = Text("Confirm address", ui.ICON_RECEIVE, icon_color=ui.GREEN)
     content = Container(qr, text)
     return await confirm(
         ctx,
         content,
         code=ButtonRequestType.Address,
-        cancel='Address',
-        cancel_style=ui.BTN_KEY)
+        cancel="Address",
+        cancel_style=ui.BTN_KEY,
+    )
 
 
 def split_address(address: str):
