@@ -35,10 +35,10 @@
   "max_address_length": 34,
   "bitcore": [],
   "blockbook": [
-    "https://vtc1.trezor.io",
-    "https://vtc2.trezor.io",
-    "https://vtc3.trezor.io",
-    "https://vtc4.trezor.io",
-    "https://vtc5.trezor.io"
+    "https://vtc1.trezor.io/api",
+    "https://vtc2.trezor.io/api",
+    "https://vtc3.trezor.io/api",
+    "https://vtc4.trezor.io/api",
+    "https://vtc5.trezor.io/api"
   ]
 }

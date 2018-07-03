@@ -37,7 +37,7 @@
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [
-    "https://explorer.digibyteprojects.com"
+    "https://explorer.digibyteprojects.com/api"
   ],
   "blockbook": []
 }

@@ -35,10 +35,10 @@
   "max_address_length": 34,
   "bitcore": [],
   "blockbook": [
-    "https://dash1.trezor.io",
-    "https://dash2.trezor.io",
-    "https://dash3.trezor.io",
-    "https://dash4.trezor.io",
-    "https://dash5.trezor.io"
+    "https://dash1.trezor.io/api",
+    "https://dash2.trezor.io/api",
+    "https://dash3.trezor.io/api",
+    "https://dash4.trezor.io/api",
+    "https://dash5.trezor.io/api"
   ]
 }

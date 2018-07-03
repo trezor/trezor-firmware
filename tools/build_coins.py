@@ -16,7 +16,9 @@ import re
 import os
 import sys
 
-if '--defs' in sys.argv:
+
+BUILD_DEFS = '--defs' in sys.argv
+if BUILD_DEFS:
     from binascii import unhexlify
     from hashlib import sha256
     import ed25519
@@ -24,8 +26,10 @@ if '--defs' in sys.argv:
     from trezorlib.protobuf import dump_message
     from coindef import CoinDef
     BUILD_DEFS = True
-else:
-    BUILD_DEFS = False
+
+TEST_BACKEND = '--test-backend' in sys.argv
+if TEST_BACKEND:
+    import requests
 
 
 def check_type(val, types, nullable=False, empty=False, regex=None, choice=None):  # noqa:E501
@@ -54,6 +58,12 @@ def check_type(val, types, nullable=False, empty=False, regex=None, choice=None)
         return True in [isinstance(val, t) for t in types]
     else:
         return isinstance(val, types)
+
+
+def get_hash_genesis_block(api):
+    r = requests.get(api + '/block-index/0')
+    j = r.json()
+    return j['blockHash']
 
 
 def validate_coin(coin):
@@ -101,9 +111,13 @@ def validate_coin(coin):
     assert check_type(coin['bitcore'], list, empty=True)
     for bc in coin['bitcore']:
         assert not bc.endswith('/')
+        if TEST_BACKEND:
+            assert get_hash_genesis_block(bc) == coin['hash_genesis_block']
     assert check_type(coin['blockbook'], list, empty=True)
     for bb in coin['blockbook']:
         assert not bb.endswith('/')
+        if TEST_BACKEND:
+            assert get_hash_genesis_block(bb) == coin['hash_genesis_block']
 
 
 def validate_icon(icon):

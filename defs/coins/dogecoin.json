@@ -35,10 +35,10 @@
   "max_address_length": 34,
   "bitcore": [],
   "blockbook": [
-    "https://doge1.trezor.io",
-    "https://doge2.trezor.io",
-    "https://doge3.trezor.io",
-    "https://doge4.trezor.io",
-    "https://doge5.trezor.io"
+    "https://doge1.trezor.io/api",
+    "https://doge2.trezor.io/api",
+    "https://doge3.trezor.io/api",
+    "https://doge4.trezor.io/api",
+    "https://doge5.trezor.io/api"
   ]
 }

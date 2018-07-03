@@ -26,7 +26,7 @@
   "bip115": false,
   "version_group_id": null,
   "default_fee_b": {
-    "Normal": 100000
+    "Normal": 1000
   },
   "dust_limit": 54600,
   "blocktime_seconds": 90,
@@ -34,7 +34,9 @@
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [
-    "https://mona.chainsight.info"
+    "https://mona.chainsight.info/api",
+    "https://mona.insight.monaco-ex.org/insight-api-monacoin",
+    "https://insight.electrum-mona.org/api"
   ],
   "blockbook": []
 }
