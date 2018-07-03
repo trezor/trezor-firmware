@@ -1,23 +1,20 @@
 .project
 .pydevproject
 MANIFEST
-build/
-dist/
-python_trezor.egg-info/
-trezor.egg-info/
+/build
+/dist
+/trezor.egg-info
 *.pyc
+__pycache__
 *.bin
 *.py.cache
-distribute-*.egg
-distribute-*.tar.gz
-docs/_build
-docs/.docs-build-environment
-.tox/
-.cache/
-.pytest_cache/
-.mypy_cache/
+/.tox
+/.cache
+/.pytest_cache
+/.mypy_cache
 
-.idea/
-.vscode/
+/.idea
+/.vscode
 
-trezorlib/coins.json
+/trezorlib/coins.json
+/trezorlib/messages/*
