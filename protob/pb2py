@@ -33,14 +33,25 @@ FIELD_TYPES = {
 }
 # fmt: on
 
+PROTOC = shutil.which("protoc")
+if not PROTOC:
+    print("protoc command not found")
+    sys.exit(1)
 
-def protoc(files, additional_include_dirs=()):
+PROTOC_PREFIX = os.path.dirname(os.path.dirname(PROTOC))
+PROTOC_INCLUDE = os.path.join(PROTOC_PREFIX, "include")
+
+
+def protoc(files, additional_includes=()):
     """Compile code with protoc and return the data."""
-    include_dirs = set(additional_include_dirs)
+    include_dirs = set()
+    include_dirs.add(PROTOC_INCLUDE)
+    include_dirs.update(additional_includes)
+
     for file in files:
         dirname = os.path.dirname(file) or "."
         include_dirs.add(dirname)
-    protoc_includes = ["-I" + dir for dir in include_dirs]
+    protoc_includes = ["-I" + dir for dir in include_dirs if dir]
 
     # Note that we could avoid creating temp files if protoc let us write to stdout
     # directly. this is currently only possible on Unix, by passing /dev/stdout as
@@ -49,7 +60,7 @@ def protoc(files, additional_include_dirs=()):
     with tempfile.TemporaryDirectory() as tmpdir:
         outfile = os.path.join(tmpdir, "DESCRIPTOR_SET")
         subprocess.check_call(
-            ["protoc", "--descriptor_set_out={}".format(outfile)]
+            [PROTOC, "--descriptor_set_out={}".format(outfile)]
             + protoc_includes
             + files
         )
@@ -312,11 +323,12 @@ if __name__ == "__main__":
     parser.add_argument("-P", "--protobuf-module", default="protobuf", help="Name of protobuf module")
     parser.add_argument("-l", "--no-init-py", action="store_true", help="Do not generate __init__.py with list of modules")
     parser.add_argument("--message-type", default="MessageType", help="Name of enum with message IDs")
-    parser.add_argument("--protobuf-default-include", default="/usr/include", help="Location of protobuf's default .proto files.")
+    parser.add_argument("-I", "--protoc-include", action="append", help="protoc include path")
     # fmt: on
     args = parser.parse_args()
 
-    descriptor_proto = protoc(args.proto, (args.protobuf_default_include,))
+    protoc_includes = args.protoc_include or (os.environ.get("PROTOC_INCLUDE"),)
+    descriptor_proto = protoc(args.proto, protoc_includes)
     descriptor = Descriptor(descriptor_proto, args.message_type, args.protobuf_module)
 
     with tempfile.TemporaryDirectory() as tmpdir:
