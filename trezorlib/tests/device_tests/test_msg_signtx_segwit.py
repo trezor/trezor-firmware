@@ -21,12 +21,12 @@ from ..support.ckd_public import deserialize
 from .conftest import TREZOR_VERSION
 from .common import TrezorTest
 
-from trezorlib import coins
 from trezorlib import messages as proto
 from trezorlib.client import CallException
 from trezorlib.tools import parse_path
+from trezorlib.tx_api import TxApiInsight
 
-TxApiTestnet = coins.tx_api["Testnet"]
+TxApiTestnet = TxApiInsight("insight_testnet")
 
 
 class TestMsgSigntxSegwit(TrezorTest):

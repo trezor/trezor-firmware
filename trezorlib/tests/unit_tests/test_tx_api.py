@@ -20,7 +20,7 @@ from trezorlib import coins
 from trezorlib import tx_api
 
 TxApiBitcoin = coins.tx_api['Bitcoin']
-TxApiTestnet = coins.tx_api['Testnet']
+TxApiTestnet = tx_api.TxApiInsight("insight_testnet")
 
 tests_dir = os.path.dirname(os.path.abspath(__file__))
 

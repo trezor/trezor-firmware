@@ -19,15 +19,17 @@ from binascii import hexlify, unhexlify
 from .common import TrezorTest
 from ..support import ckd_public as bip32
 from trezorlib import messages as proto
-from trezorlib.coins import tx_api
 from trezorlib.tools import parse_path
+from trezorlib.tx_api import TxApiInsight
+
+TxApiTestnet = TxApiInsight("insight_testnet")
 
 
 class TestMultisigChange(TrezorTest):
 
     def setup_method(self, method):
         super(TestMultisigChange, self).setup_method(method)
-        self.client.set_tx_api(tx_api['Testnet'])
+        self.client.set_tx_api(TxApiTestnet)
 
     node_ext1 = bip32.deserialize('tpubDADHV9u9Y6gkggintTdMjJE3be58zKNLhpxBQyuEM6Pwx3sN9JVLmMCMN4DNVwL9AKec27z5TaWcWuHzMXiGAtcra5DjwWbvppGX4gaEGVN')
     # m/1 => 02c0d0c5fee952620757c6128dbf327c996cd72ed3358d15d6518a1186099bc15e

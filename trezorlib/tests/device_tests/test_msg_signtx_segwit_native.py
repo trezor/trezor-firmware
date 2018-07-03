@@ -18,11 +18,11 @@ from binascii import hexlify, unhexlify
 
 from .common import TrezorTest
 from ..support.ckd_public import deserialize
-from trezorlib import coins
 from trezorlib import messages as proto
 from trezorlib.tools import parse_path
+from trezorlib.tx_api import TxApiInsight
 
-TxApiTestnet = coins.tx_api['Testnet']
+TxApiTestnet = TxApiInsight("insight_testnet")
 
 
 class TestMsgSigntxSegwitNative(TrezorTest):

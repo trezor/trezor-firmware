@@ -20,12 +20,12 @@ import pytest
 from .common import TrezorTest
 from .conftest import TREZOR_VERSION
 
-from trezorlib import coins
 from trezorlib import messages as proto
 from trezorlib.client import CallException
 from trezorlib.tools import parse_path
+from trezorlib.tx_api import TxApiInsight
 
-TxApiTestnet = coins.tx_api['Testnet']
+TxApiTestnet = TxApiInsight("insight_testnet")
 
 
 TXHASH_157041 = unhexlify('1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6')

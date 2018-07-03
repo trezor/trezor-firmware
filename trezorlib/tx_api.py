@@ -25,10 +25,9 @@ cache_dir = None
 
 class TxApi(object):
 
-    def __init__(self, network, url):
+    def __init__(self, network, url=None):
         self.network = network
         self.url = url
-        self.pushtx_url = url
 
     def get_url(self, resource, resourceid):
         url = '%s%s/%s' % (self.url, resource, resourceid)
@@ -43,6 +42,9 @@ class TxApi(object):
                 return j
             except:
                 pass
+
+        if not self.url:
+            raise RuntimeError("No URL specified and tx not in cache")
 
         try:
             url = self.get_url(resource, resourceid)
@@ -63,10 +65,11 @@ class TxApi(object):
 
 class TxApiInsight(TxApi):
 
-    def __init__(self, network, url, zcash=None):
-        super(TxApiInsight, self).__init__(network, url)
+    def __init__(self, network, url=None, zcash=None):
+        super().__init__(network, url)
         self.zcash = zcash
-        self.pushtx_url = url.replace('/api/', '/tx/send')
+        if url:
+            self.pushtx_url = url.replace('/api/', '/tx/send')
 
     def get_tx(self, txhash):
 
@@ -110,40 +113,5 @@ class TxApiInsight(TxApi):
                     raw = self.fetch_json('rawtx', txhash)
                     raw = binascii.unhexlify(raw['rawtx'])
                     t.extra_data = raw[-extra_data_len:]
-
-        return t
-
-
-class TxApiBlockCypher(TxApi):
-
-    def __init__(self, network, url, zcash=None):
-        super(TxApiBlockCypher, self).__init__(network, url)
-        self.pushtx_url = url.replace('//api.', '//live.').replace('/v1/', '/').replace('/main/', '/pushtx/')
-
-    def get_tx(self, txhash):
-
-        data = self.fetch_json('txs', txhash)
-
-        t = proto.TransactionType()
-        t.version = data['ver']
-        t.lock_time = data.get('lock_time', 0)
-
-        for vin in data['inputs']:
-            i = t._add_inputs()
-            if 'prev_hash' not in vin:
-                i.prev_hash = b"\0" * 32
-                i.prev_index = 0xffffffff  # signed int -1
-                i.script_sig = binascii.unhexlify(vin['script'])
-                i.sequence = vin['sequence']
-            else:
-                i.prev_hash = binascii.unhexlify(vin['prev_hash'])
-                i.prev_index = vin['output_index']
-                i.script_sig = binascii.unhexlify(vin['script'])
-                i.sequence = vin['sequence']
-
-        for vout in data['outputs']:
-            o = t._add_bin_outputs()
-            o.amount = int(str(vout['value']), 10)
-            o.script_pubkey = binascii.unhexlify(vout['script'])
 
         return t
