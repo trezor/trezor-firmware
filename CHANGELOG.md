@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 _At the moment, the project does __not__ adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
 
+## [Unreleased]
+[Unreleased]: https://github.com/trezor/python-trezor/compare/v0.10.2...master
+
+### Added
+- `tx_api` now supports Blockbook backend servers
+- `TxApiInsight` can work purely on cached files, without specifying a URL
+
+### Changed
+- protobuf classes are no longer part of the source distribution and must be compiled locally
+- Stellar: addresses are always strings
+
+### Fixed:
+- Stellar: several bugs in the XDR parser were fixed
+
 ## [0.10.2] - 2018-06-21
 [0.10.2]: https://github.com/trezor/python-trezor/compare/v0.10.1...v0.10.2
 
