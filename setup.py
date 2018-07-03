@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os.path
+import re
 import shutil
 import subprocess
 import sys
@@ -20,16 +21,23 @@ install_requires = [
     'libusb1>=1.6.4',
 ]
 
-from trezorlib import __version__ as VERSION
-
 CWD = os.path.dirname(os.path.realpath(__file__))
 TREZOR_COMMON = os.path.join(CWD, 'vendor', 'trezor-common')
 
 
-def read(name):
-    filename = os.path.join(CWD, name)
+def read(*path):
+    filename = os.path.join(CWD, *path)
     with open(filename, 'r') as f:
         return f.read()
+
+
+def find_version():
+    version_file = read("trezorlib", "__init__.py")
+    version_match = re.search(r"^__version__ = \"(.*)\"$", version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    else:
+        raise RuntimeError("Version string not found")
 
 
 class PrebuildCommand(Command):
@@ -47,11 +55,11 @@ class PrebuildCommand(Command):
         common_defs = os.path.join(TREZOR_COMMON, 'defs')
         if not os.path.exists(common_defs):
             raise DistutilsError('trezor-common submodule seems to be missing.\n' +
-                            'Use "git submodule update --init" to retrieve it.')
+                                 'Use "git submodule update --init" to retrieve it.')
 
         # generate and copy coins.json to the tree
         with tempfile.TemporaryDirectory() as tmpdir:
-            build_coins = os.path.join(TREZOR_COMMON, 'defs', 'coins', 'tools', 'build_coins.py')
+            build_coins = os.path.join(TREZOR_COMMON, 'tools', 'build_coins.py')
             subprocess.check_call([sys.executable, build_coins], cwd=tmpdir)
             shutil.copy(os.path.join(tmpdir, 'coins.json'), os.path.join(CWD, 'trezorlib', 'coins.json'))
 
@@ -84,7 +92,7 @@ _patch_prebuild(develop)
 
 setup(
     name='trezor',
-    version=VERSION,
+    version=find_version(),
     author='TREZOR',
     author_email='info@trezor.io',
     license='LGPLv3',
