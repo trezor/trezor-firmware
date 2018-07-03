@@ -46,6 +46,8 @@ before_script:
     - test "$GOAL" != "stm32" || export PATH=$PWD/$TOOLCHAIN_LONGVER/bin:$PATH
 
 script:
+  - test "$GOAL" != "src" || pipenv run make style
+
   - test "$GOAL" != "stm32" || pipenv run make build_cross
   - test "$GOAL" != "stm32" || pipenv run make build_boardloader
   - test "$GOAL" != "stm32" || pipenv run make build_bootloader
@@ -56,8 +58,6 @@ script:
   - test "$GOAL" != "unix" || pipenv run make build_unix_noui
   - test "$GOAL" != "unix" || pipenv run make test
   - test "$GOAL" != "unix" || pipenv run make test_emu
-
-  # - test "$GOAL" != "src" || make style
 
 notifications:
   webhooks:
