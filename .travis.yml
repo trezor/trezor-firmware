@@ -23,16 +23,20 @@ matrix:
 
 addons:
   apt:
+    sources:
+    - deadsnakes
     packages:
     - build-essential
     - gcc-multilib
     - libusb-1.0-0-dev
     - libudev-dev
-    - python3
-    - python3-pip
+    - python3.6
+    - python3.6-dev
+    - python3.6-venv
 
 before_install:
-    - pip3 install --user pipenv
+    - python3.6 -m ensurepip --user
+    - python3.6 -m pip install --user pipenv
 
 install:
     - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
