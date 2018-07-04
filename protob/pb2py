@@ -116,6 +116,8 @@ class Descriptor:
         for file in self.files:
             self.messages += file.message_type
             self.enums += file.enum_type
+            for message in file.message_type:
+                self._nested_types_from_message(message)
 
         if not self.messages and not self.enums:
             raise RuntimeError("No messages and no enums found.")
@@ -124,6 +126,12 @@ class Descriptor:
         self.protobuf_import = import_statement_from_path(import_path)
 
         self.out_dir = None
+
+    def _nested_types_from_message(self, message):
+        self.messages += message.nested_type
+        self.enums += message.enum_type
+        for nested in message.nested_type:
+            self._nested_types_from_message(nested)
 
     def find_message_types(self, message_type):
         message_types = {}
