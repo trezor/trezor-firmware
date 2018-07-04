@@ -1,4 +1,4 @@
-check: config.pb messages.pb storage.pb types.pb
+check: messages.pb
 
 %.pb: %.proto
 	protoc -I/usr/include -I. $< -o $@

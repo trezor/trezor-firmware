@@ -8,7 +8,601 @@ syntax = "proto2";
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessage";
 
-import "types.proto";
+import "google/protobuf/descriptor.proto";
+
+/**
+ * Options for specifying message direction and type of wire (normal/debug)
+ */
+extend google.protobuf.EnumValueOptions {
+	optional bool wire_in = 50002;		// message can be transmitted via wire from PC to TREZOR
+	optional bool wire_out = 50003;		// message can be transmitted via wire from TREZOR to PC
+	optional bool wire_debug_in = 50004;	// message can be transmitted via debug wire from PC to TREZOR
+	optional bool wire_debug_out = 50005;	// message can be transmitted via debug wire from TREZOR to PC
+	optional bool wire_tiny = 50006;	// message is handled by TREZOR when the USB stack is in tiny mode
+	optional bool wire_bootloader = 50007;  // message is only handled by TREZOR Bootloader
+	optional bool wire_no_fsm = 50008;	// message is not handled by TREZOR unless the USB stack is in tiny mode
+}
+
+/**
+ * Type of failures returned by Failure message
+ * @used_in Failure
+ */
+enum FailureType {
+	Failure_UnexpectedMessage = 1;
+	Failure_ButtonExpected = 2;
+	Failure_DataError = 3;
+	Failure_ActionCancelled = 4;
+	Failure_PinExpected = 5;
+	Failure_PinCancelled = 6;
+	Failure_PinInvalid = 7;
+	Failure_InvalidSignature = 8;
+	Failure_ProcessError = 9;
+	Failure_NotEnoughFunds = 10;
+	Failure_NotInitialized = 11;
+	Failure_PinMismatch = 12;
+	Failure_FirmwareError = 99;
+}
+
+/**
+ * Type of script which will be used for transaction output
+ * @used_in TxOutputType
+ */
+enum OutputScriptType {
+	PAYTOADDRESS = 0;	// used for all addresses (bitcoin, p2sh, witness)
+	PAYTOSCRIPTHASH = 1;	// p2sh address (deprecated; use PAYTOADDRESS)
+	PAYTOMULTISIG = 2;	// only for change output
+	PAYTOOPRETURN = 3;	// op_return
+	PAYTOWITNESS = 4;	// only for change output
+	PAYTOP2SHWITNESS = 5;	// only for change output
+}
+
+/**
+ * Type of script which will be used for transaction output
+ * @used_in TxInputType
+ */
+enum InputScriptType {
+	SPENDADDRESS = 0;		// standard p2pkh address
+	SPENDMULTISIG = 1;		// p2sh multisig address
+	EXTERNAL = 2;			// reserved for external inputs (coinjoin)
+	SPENDWITNESS = 3;		// native segwit
+	SPENDP2SHWITNESS = 4;		// segwit over p2sh (backward compatible)
+}
+
+/**
+ * Type of information required by transaction signing process
+ * @used_in TxRequest
+ */
+enum RequestType {
+	TXINPUT = 0;
+	TXOUTPUT = 1;
+	TXMETA = 2;
+	TXFINISHED = 3;
+	TXEXTRADATA = 4;
+}
+
+/**
+ * Type of button request
+ * @used_in ButtonRequest
+ */
+enum ButtonRequestType {
+	ButtonRequest_Other = 1;
+	ButtonRequest_FeeOverThreshold = 2;
+	ButtonRequest_ConfirmOutput = 3;
+	ButtonRequest_ResetDevice = 4;
+	ButtonRequest_ConfirmWord = 5;
+	ButtonRequest_WipeDevice = 6;
+	ButtonRequest_ProtectCall = 7;
+	ButtonRequest_SignTx = 8;
+	ButtonRequest_FirmwareCheck = 9;
+	ButtonRequest_Address = 10;
+	ButtonRequest_PublicKey = 11;
+	ButtonRequest_MnemonicWordCount = 12;
+	ButtonRequest_MnemonicInput = 13;
+	ButtonRequest_PassphraseType = 14;
+}
+
+/**
+ * Type of PIN request
+ * @used_in PinMatrixRequest
+ */
+enum PinMatrixRequestType {
+	PinMatrixRequestType_Current = 1;
+	PinMatrixRequestType_NewFirst = 2;
+	PinMatrixRequestType_NewSecond = 3;
+}
+
+/**
+ * Type of recovery procedure. These should be used as bitmask, e.g.,
+ * `RecoveryDeviceType_ScrambledWords | RecoveryDeviceType_Matrix`
+ * listing every method supported by the host computer.
+ *
+ * Note that ScrambledWords must be supported by every implementation
+ * for backward compatibility; there is no way to not support it.
+ *
+ * @used_in RecoveryDevice
+ */
+enum RecoveryDeviceType {
+	// use powers of two when extending this field
+	RecoveryDeviceType_ScrambledWords = 0;		// words in scrambled order
+	RecoveryDeviceType_Matrix = 1;				// matrix recovery type
+}
+
+/**
+ * Type of Recovery Word request
+ * @used_in WordRequest
+ */
+enum WordRequestType {
+	WordRequestType_Plain = 0;
+	WordRequestType_Matrix9 = 1;
+	WordRequestType_Matrix6 = 2;
+}
+
+/**
+ * Structure representing BIP32 (hierarchical deterministic) node
+ * Used for imports of private key into the device and exporting public key out of device
+ * @used_in PublicKey
+ * @used_in LoadDevice
+ * @used_in DebugLinkState
+ * @used_in Storage
+ */
+message HDNodeType {
+	required uint32 depth = 1;
+	required uint32 fingerprint = 2;
+	required uint32 child_num = 3;
+	required bytes chain_code = 4;
+	optional bytes private_key = 5;
+	optional bytes public_key = 6;
+}
+
+message HDNodePathType {
+	required HDNodeType node = 1;						// BIP-32 node in deserialized form
+	repeated uint32 address_n = 2;						// BIP-32 path to derive the key from node
+}
+
+/**
+ * Type of redeem script used in input
+ * @used_in TxInputType
+ */
+message MultisigRedeemScriptType {
+	repeated HDNodePathType pubkeys = 1;					// pubkeys from multisig address (sorted lexicographically)
+	repeated bytes signatures = 2;						// existing signatures for partially signed input
+	optional uint32 m = 3;							// "m" from n, how many valid signatures is necessary for spending
+}
+
+/**
+ * Structure representing transaction input
+ * @used_in SimpleSignTx
+ * @used_in TransactionType
+ */
+message TxInputType {
+	repeated uint32 address_n = 1;						// BIP-32 path to derive the key from master node
+	required bytes prev_hash = 2;						// hash of previous transaction output to spend by this input
+	required uint32 prev_index = 3;						// index of previous output to spend
+	optional bytes script_sig = 4;						// script signature, unset for tx to sign
+	optional uint32 sequence = 5 [default=4294967295];			// sequence (default=0xffffffff)
+	optional InputScriptType script_type = 6 [default=SPENDADDRESS];	// defines template of input script
+	optional MultisigRedeemScriptType multisig = 7;				// Filled if input is going to spend multisig tx
+	optional uint64 amount = 8;						// amount of previous transaction output (for segwit only)
+	optional uint32 decred_tree = 9;
+	optional uint32 decred_script_version = 10;
+	optional bytes prev_block_hash_bip115 = 11;				// block hash of previous transaction output (for bip115 implementation)
+	optional bytes prev_block_height_bip115 = 12;				// block height of previous transaction output (for bip115 implementation)
+}
+
+/**
+ * Structure representing transaction output
+ * @used_in SimpleSignTx
+ * @used_in TransactionType
+ */
+message TxOutputType {
+	optional string address = 1;			// target coin address in Base58 encoding
+	repeated uint32 address_n = 2;			// BIP-32 path to derive the key from master node; has higher priority than "address"
+	required uint64 amount = 3;			// amount to spend in satoshis
+	required OutputScriptType script_type = 4;	// output script type
+	optional MultisigRedeemScriptType multisig = 5; // defines multisig address; script_type must be PAYTOMULTISIG
+	optional bytes op_return_data = 6;		// defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
+	optional uint32 decred_script_version = 7;
+	optional bytes block_hash_bip115 = 8;		// block hash of existing block (recommended current_block - 300) (for bip115 implementation)
+	optional bytes block_height_bip115 = 9;		// block height of existing block (recommended current_block - 300) (for bip115 implementation)
+}
+
+/**
+ * Structure representing compiled transaction output
+ * @used_in TransactionType
+ */
+message TxOutputBinType {
+	required uint64 amount = 1;
+	required bytes script_pubkey = 2;
+	optional uint32 decred_script_version = 3;
+}
+
+/**
+ * Structure representing transaction
+ * @used_in TxAck
+ */
+message TransactionType {
+	optional uint32 version = 1;
+	repeated TxInputType inputs = 2;
+	repeated TxOutputBinType bin_outputs = 3;
+	repeated TxOutputType outputs = 5;
+	optional uint32 lock_time = 4;
+	optional uint32 inputs_cnt = 6;
+	optional uint32 outputs_cnt = 7;
+	optional bytes extra_data = 8;			// only for Zcash
+	optional uint32 extra_data_len = 9;		// only for Zcash
+	optional uint32 expiry = 10;			// only for Decred and Zcash
+	optional bool overwintered = 11;		// only for Zcash
+}
+
+/**
+ * Structure representing request details
+ * @used_in TxRequest
+ */
+message TxRequestDetailsType {
+	optional uint32 request_index = 1;	// device expects TxAck message from the computer
+	optional bytes tx_hash = 2;		// tx_hash of requested transaction
+	optional uint32 extra_data_len = 3;	// length of requested extra data
+	optional uint32 extra_data_offset = 4;	// offset of requested extra data
+}
+
+/**
+ * Structure representing serialized data
+ * @used_in TxRequest
+ */
+message TxRequestSerializedType {
+	optional uint32 signature_index = 1;	// 'signature' field contains signed input of this index
+	optional bytes signature = 2;		// signature of the signature_index input
+	optional bytes serialized_tx = 3;	// part of serialized and signed transaction
+}
+
+/**
+ * Structure representing identity data
+ * @used_in IdentityType
+ */
+message IdentityType {
+	optional string proto = 1;			// proto part of URI
+	optional string user = 2;			// user part of URI
+	optional string host = 3;			// host part of URI
+	optional string port = 4;			// port part of URI
+	optional string path = 5;			// path part of URI
+	optional uint32 index = 6 [default=0];		// identity index
+}
+
+/**
+ * Structure representing passphrase source
+ * @used_in ApplySettings
+ */
+enum PassphraseSourceType {
+	ASK = 0;
+	DEVICE = 1;
+	HOST = 2;
+}
+
+/**
+ * Structure representing the common part for NEM transactions
+ * @used_in NEMSignTx
+ */
+message NEMTransactionCommon {
+	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
+	optional uint32 network = 2;			// Network ID (0x68 = Mainnet, 0x98 = Testnet, 0x60 = Mijin)
+	optional uint32 timestamp = 3;			// Number of seconds elapsed since the creation of the nemesis block
+	optional uint64 fee = 4;			// Fee for the transaction
+	optional uint32 deadline = 5;			// Deadline of the transaction
+	optional bytes signer = 6;			// Public key of the account (for multisig transactions)
+}
+
+/**
+ * Structure representing the transfer transaction part for NEM transactions
+ * @used_in NEMSignTx
+ */
+message NEMTransfer {
+	optional string recipient = 1;			// Address of the recipient
+	optional uint64 amount = 2;			// Amount of micro NEM that is transferred
+	optional bytes payload = 3;			// Actual message data (unencrypted)
+	optional bytes public_key = 4;			// Public key of the recipient (for encrypted payloads)
+	repeated NEMMosaic mosaics = 5;			// Attached mosaics
+}
+
+/**
+ * Structure representing the mosaic attachment for NEM transfer transactions
+ * @used_in NEMTransfer
+ */
+message NEMMosaic {
+	optional string namespace = 1;			// Fully qualified name of the namespace
+	optional string mosaic = 2;			// Name of the mosaic definition
+	optional uint64 quantity = 3;			// Mosaic quantity, always given in smallest units
+}
+
+/**
+ * Structure representing the provision namespace part for NEM transactions
+ * @used_in NEMSignTx
+ */
+message NEMProvisionNamespace {
+	optional string namespace = 1;			// New part concatenated to the parent
+	optional string parent = 2;			// Parent namespace (for child namespaces)
+	optional string sink = 3;			// Rental fee sink address
+	optional uint64 fee = 4;			// Rental fee
+}
+
+/**
+ * Type of levy which will be used for mosaic
+ * @used_in NEMMosaicDefinition
+ */
+enum NEMMosaicLevy {
+	MosaicLevy_Absolute = 1;
+	MosaicLevy_Percentile = 2;
+}
+
+/**
+ * Structure representing the mosaic definition creation part for NEM transactions
+ * @used_in NEMSignTx
+ */
+message NEMMosaicCreation {
+	optional NEMMosaicDefinition definition = 1;	// Mosaic definition
+	optional string sink = 2;			// Creation fee sink address
+	optional uint64 fee = 3;			// Creation fee
+}
+
+/**
+ * Structure representing a mosaic definition
+ * @used_in NEMMosaicCreation
+ */
+message NEMMosaicDefinition {
+	optional string name = 1;			// User-friendly name of the mosaic (for whitelisted mosaics)
+	optional string ticker = 2;			// Ticker of the mosaic (for whitelisted mosaics)
+	optional string namespace = 3;			// Fully qualified name of the namespace
+	optional string mosaic = 4;			// Name of the mosaic definition
+	optional uint32 divisibility = 5;		// Number of decimal places that a mosaic can be divided into
+	optional NEMMosaicLevy levy = 6;		// Levy type
+	optional uint64 fee = 7;			// Levy fee (interpretation depends on levy type)
+	optional string levy_address = 8;		// Levy address
+	optional string levy_namespace = 9;		// Fully qualified name of the namespace of the levy mosaic
+	optional string levy_mosaic = 10;		// Name of the levy mosaic
+	optional uint64 supply = 11;			// Initial supply to create, always given in entire units
+	optional bool mutable_supply = 12;		// Mutable supply
+	optional bool transferable = 13;		// Mosaic allows transfers among accounts other than the creator
+	optional string description = 14;		// Mosaic description
+	repeated uint32 networks = 15;			// Networks that the mosaic is valid on (for whitelisted mosaics)
+}
+
+/**
+ * Structure representing the mosaic supply change part for NEM transactions
+ * @used_in NEMSignTx
+ */
+message NEMMosaicSupplyChange {
+	optional string namespace = 1;			// Fully qualified name of the namespace
+	optional string mosaic = 2;			// Name of the mosaic definition
+	optional NEMSupplyChangeType type = 3;		// Type of supply change
+	optional uint64 delta = 4;			// Supply delta
+}
+
+/**
+ * Type of supply change which will be applied to mosaic
+ * @used_in NEMMosaicSupplyChange
+ */
+enum NEMSupplyChangeType {
+	SupplyChange_Increase = 1;
+	SupplyChange_Decrease = 2;
+}
+
+/**
+ * Structure representing the aggregate modification part for NEM transactions
+ * @used_in NEMSignTx
+ */
+message NEMAggregateModification {
+	repeated NEMCosignatoryModification modifications = 1;	// Cosignatory modifications
+	optional sint32 relative_change = 2;			// Relative change of the minimum cosignatories
+}
+
+/**
+ * Structure representing the cosignatory modification for aggregate modification transactions
+ * @used_in NEMAggregateMdofiication
+ */
+message NEMCosignatoryModification {
+	optional NEMModificationType type = 1;		// Type of cosignatory modification
+	optional bytes public_key = 2;			// Public key of the cosignatory
+}
+
+/**
+ * Type of cosignatory modification
+ * @used_in NEMCosignatoryModification
+ */
+enum NEMModificationType {
+	CosignatoryModification_Add = 1;
+	CosignatoryModification_Delete = 2;
+}
+
+/**
+ * Structure representing the importance transfer part for NEM transactions
+ * @used_in NEMSignTx
+ */
+message NEMImportanceTransfer {
+	optional NEMImportanceTransferMode mode = 1;	// Mode of importance transfer
+	optional bytes public_key = 2;			// Public key of the remote account
+}
+
+/**
+ * Mode of importance transfer
+ * @used_in NEMModificationType
+ */
+enum NEMImportanceTransferMode {
+	ImportanceTransfer_Activate = 1;
+	ImportanceTransfer_Deactivate = 2;
+}
+
+/**
+ * Describes a Stellar asset
+ * @used_in StellarTxOpAck
+ */
+message StellarAssetType {
+	optional uint32 type = 1;	// 0 = native asset (XLM), 1 = alphanum 4, 2 = alphanum 12
+	optional string code = 2;	// for non-native assets, string describing the code
+	optional string issuer = 3;	// issuing address
+}
+
+/**
+* Type of Lisk transaction
+* @used_in LiskTransactionCommon
+*/
+enum LiskTransactionType {
+	Transfer = 0;
+	RegisterSecondPassphrase = 1;
+	RegisterDelegate = 2;
+	CastVotes = 3;
+	RegisterMultisignatureAccount = 4;
+	CreateDapp = 5;
+	TransferIntoDapp = 6;
+	TransferOutOfDapp = 7;
+}
+
+/**
+* Structure representing the common part for Lisk transactions
+* @used_in LiskSignTx
+*/
+message LiskTransactionCommon {
+	optional LiskTransactionType type = 1;
+	optional uint64 amount = 2 [default=0];
+	optional uint64 fee = 3;
+	optional string recipient_id = 4;
+	optional bytes sender_public_key = 5;
+	optional bytes requester_public_key = 6;
+	optional bytes signature = 7;
+	optional uint32 timestamp = 8;
+	optional LiskTransactionAsset asset = 9;
+}
+
+/**
+* Structure representing the asset field in the Lisk transaction
+* @used_in LiskTransactionCommon
+*/
+message LiskTransactionAsset {
+	optional LiskSignatureType signature = 1;
+	optional LiskDelegateType delegate = 2;
+	repeated string votes = 3;
+	optional LiskMultisignatureType multisignature = 4;
+	optional string data = 5;
+}
+
+/**
+* Structure representing the signature field in the Lisk transaction asset field
+* @used_in LiskTransactionAsset
+*/
+message LiskSignatureType {
+	optional bytes public_key = 1;
+}
+
+/**
+* Structure representing the delegate field in the Lisk transaction asset field
+* @used_in LiskTransactionAsset
+*/
+message LiskDelegateType {
+	optional string username  = 1;
+}
+
+/**
+* Structure representing the multisignature field in the Lisk transaction asset field
+* @used_in LiskTransactionAsset
+*/
+message LiskMultisignatureType {
+	optional uint32 min = 1;
+	optional uint32 life_time = 2;
+	repeated string keys_group = 3;
+}
+
+/*
+* Type of Tezos operation
+* @used_in TezosOperationCommon
+*/
+enum TezosOperationType {
+	Transaction = 8;
+	Origination = 9;
+	Delegation = 10;
+}
+
+/*
+* Type of Tezos Contract type
+* @used_in TezosContractID
+*/
+enum TezosContractType {
+	Implicit = 0;
+	Originated = 1;
+}
+
+/*
+* Tezos contract ID
+* @used_in TezosOperationCommon
+* @used_in TezosTransactionType
+*/
+message TezosContractID {
+	optional TezosContractType tag = 1;
+	optional bytes hash = 2;		// Implicit = 21B, originated = 20B + 1B padding
+}
+
+/*
+* Structure representing the common part for Tezos operations
+* @used_in TezosSignTx
+*/
+message TezosOperationCommon {
+	optional bytes branch = 1;
+	optional TezosOperationType tag = 2;
+	optional TezosContractID source = 3;
+	optional uint64 fee = 4;
+	optional uint64 counter = 5;
+	optional uint64 gas_limit = 6;
+	optional uint64 storage_limit = 7;
+}
+
+/*
+* Structure representing additional information for transaction
+* @used_in TezosSignTx
+*/
+message TezosTransactionType {
+	optional uint64 amount = 1;
+	optional TezosContractID destination = 2;
+	optional bytes parameters = 3;
+}
+
+/*
+* Structure representing additional information for origination
+* @used_in TezosSignTx
+*/
+message TezosOriginationType {
+	optional bytes manager_pubkey = 1;
+	optional uint64 balance = 2;
+	optional bool spendable = 3;
+	optional bool delegatable = 4;
+	optional bytes delegate = 5;		// 1B tag + 20B public key hash
+	optional bytes script = 6;
+}
+
+/*
+* Structure representing additional information for delegation
+* @used_in TezosSignTx
+*/
+message TezosDelegationType {
+	optional bytes delegate = 1;		// 1B tag + 20B public key hash
+}
+
+/**
+ * Structure representing cardano transaction input
+ * @used_in CardanoSignTransacion
+ */
+message CardanoTxInputType {
+	repeated uint32 address_n = 1;				// BIP-32 path to derive the key from master node
+	optional bytes prev_hash = 2;				// hash of previous transaction output to spend by this input
+	optional uint32 prev_index = 3;				// index of previous output to spend
+	optional uint32 type = 4;				// input type, defaults to 0
+}
+
+/**
+ * Structure representing cardano transaction output
+ * @used_in CardanoSignTransacion
+ */
+message CardanoTxOutputType {
+	optional string address = 1;				// target coin address in Base58 encoding
+	repeated uint32 address_n = 2;				// BIP-32 path to derive the key from master node; has higher priority than "address"
+	optional uint64 amount = 3;				// amount to spend
+}
 
 /**
  * Mapping between Trezor wire identifier (uint) and a protobuf message
@@ -1310,7 +1904,7 @@ message LiskPublicKey {
  * @next LiskAddress
  * @next Failure
  */
- message LiskGetAddress {
+message LiskGetAddress {
 	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
 	optional bool show_display = 2;			// Optionally show on display before sending the result
 }
@@ -1319,7 +1913,7 @@ message LiskPublicKey {
  * Response: Contains Lisk address derived from device private seed
  * @prev LiskGetAddress
  */
- message LiskAddress {
+message LiskAddress {
 	optional string address = 1;		// Lisk address
 }
 
@@ -1327,7 +1921,7 @@ message LiskPublicKey {
  * Request: Ask device to sign Lisk transaction
  * @next LiskSignedTx
  */
- message LiskSignTx {
+message LiskSignTx {
 	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
 	optional LiskTransactionCommon transaction = 2; // Lisk transaction structure
 }
@@ -1523,7 +2117,7 @@ message DebugLinkFlashErase {
  * @next CardanoAddress
  * @next Failure
  */
- message CardanoGetAddress {
+message CardanoGetAddress {
 	repeated uint32 address_n = 1;		// BIP-32-style path to derive the key from master node
 	optional bool show_display = 2;		// optionally prompt for confirmation on trezor display
 }
@@ -1533,7 +2127,7 @@ message DebugLinkFlashErase {
  * @next CardanoAddress
  * @next Failure
  */
- message CardanoAddress {
+message CardanoAddress {
 	optional string address = 1;		// Base58 cardano address
 }
 
@@ -1552,7 +2146,7 @@ message CardanoSignMessage {
  * @next CardanoPublicKey
  * @next Failure
  */
- message CardanoGetPublicKey {
+message CardanoGetPublicKey {
 	repeated uint32 address_n = 1;				// BIP-32 path to derive the key from master node
 }
 
@@ -1560,7 +2154,7 @@ message CardanoSignMessage {
  * Response: Contains public key derived from device private seed
  * @prev CardanoGetPublicKey
  */
- message CardanoPublicKey {
+message CardanoPublicKey {
 	optional string xpub = 1;				// Xpub key
 	optional HDNodeType node = 2;				// BIP-32 public node
 	optional string root_hd_passphrase = 3;			// Hd passphrase for root in hex format
