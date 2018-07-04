@@ -5,7 +5,7 @@ from trezor.crypto.hashlib import ripemd160, sha256
 from trezor.messages import FailureType, InputScriptType
 from trezor.utils import ensure
 
-from apps.common.address_type import addrtype_bytes
+from apps.common import address_type
 from apps.common.coininfo import CoinInfo
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys, multisig_pubkey_index
 from apps.wallet.sign_tx.scripts import (
@@ -117,12 +117,12 @@ def address_multisig_p2wsh(pubkeys: bytes, m: int, hrp: str):
 
 
 def address_pkh(pubkey: bytes, coin: CoinInfo) -> str:
-    s = addrtype_bytes(coin.address_type) + sha256_ripemd160_digest(pubkey)
+    s = address_type.tobytes(coin.address_type) + sha256_ripemd160_digest(pubkey)
     return base58.encode_check(bytes(s), coin.b58_hash)
 
 
 def address_p2sh(redeem_script_hash: bytes, coin: CoinInfo) -> str:
-    s = addrtype_bytes(coin.address_type_p2sh) + redeem_script_hash
+    s = address_type.tobytes(coin.address_type_p2sh) + redeem_script_hash
     return base58.encode_check(bytes(s), coin.b58_hash)
 
 
