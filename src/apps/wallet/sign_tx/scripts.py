@@ -1,7 +1,7 @@
 from trezor.crypto.hashlib import ripemd160, sha256
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
-from apps.wallet.sign_tx.writers import bytearray_with_cap, write_bytes, write_varint, write_op_push
+from apps.wallet.sign_tx.writers import bytearray_with_cap, write_bytes, write_varint, write_op_push, write_scriptnum
 
 
 class ScriptsError(ValueError):

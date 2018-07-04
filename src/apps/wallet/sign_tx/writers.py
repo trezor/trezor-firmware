@@ -85,7 +85,7 @@ def write_scriptnum(w, n: int):
         w.append(n & 0xFF)
         w.append((n >> 8) & 0xFF)
         w.append((n >> 16) & 0xFF)
-    elif:
+    else:
         w.append(4)
         w.append(n & 0xFF)
         w.append((n >> 8) & 0xFF)
