@@ -1,3 +1,4 @@
 hidapi >= 0.7.99.post20
-rlp >= 0.4.4
+rlp == 0.4.4; python_version < '3.5'
+rlp >= 0.4.4; python_version >= '3.5'
 ethjsonrpc >= 0.3.0
