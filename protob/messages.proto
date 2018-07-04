@@ -126,6 +126,14 @@ enum MessageType {
 	MessageType_LiskGetPublicKey = 121 [(wire_in) = true];
 	MessageType_LiskPublicKey = 122 [(wire_out) = true];
 
+	// Tezos
+	MessageType_TezosGetAddress = 150 [(wire_in) = true];
+	MessageType_TezosAddress = 151 [(wire_out) = true];
+	MessageType_TezosSignTx = 152 [(wire_in) = true];
+	MessageType_TezosSignedTx = 153 [(wire_out) = true];
+	MessageType_TezosGetPublicKey = 154 [(wire_in) = true];
+	MessageType_TezosPublicKey = 155 [(wire_out) = true];
+
 	// Stellar
 	MessageType_StellarGetPublicKey = 200 [(wire_in) = true];
 	MessageType_StellarPublicKey = 201 [(wire_out) = true];
@@ -1362,6 +1370,65 @@ message LiskVerifyMessage {
 	optional bytes public_key = 1;
 	optional bytes signature = 2;
 	optional bytes message = 3;
+}
+
+
+/**
+ * Request: Ask device for Tezos address corresponding to address_n path
+ * @next PassphraseRequest
+ * @next TezosAddress
+ * @next Failure
+ */
+message TezosGetAddress {
+	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
+	optional bool show_display = 2;			// optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains Tezos address derived from device private seed
+ * @prev TezosGetAddress
+ */
+message TezosAddress {
+	optional string address = 1;			// Coin address in Base58 encoding
+}
+
+/**
+ * Request: Ask device to sign Tezos transaction
+ * @next TezosSignedTx
+ */
+message TezosSignTx {
+	repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
+	optional TezosOperationCommon operation = 2;	// Tezos operation structure
+	optional TezosTransactionType transaction = 3;	// Tezos transaction part
+	optional TezosOriginationType origination = 4;	// Tezos origination part
+	optional TezosDelegationType delegation = 5;	// Tezos delegation part
+}
+
+/**
+* Response: Contains Tezos transaction signature
+* @prev TezosSignTx
+*/
+message TezosSignedTx {
+	optional bytes signature = 1;			// Tezos transaction signature
+	optional bytes sig_op_contents = 2;		// Signed operation contents
+	optional string operation_hash = 3;		// b58 check encoded blake2b hashed operation contents
+}
+
+/**
+ * Request: Ask device for Tezos public key corresponding to address_n path
+ * @next TezosPublicKey
+ */
+message TezosGetPublicKey {
+	repeated uint32 address_n = 1; 			// BIP-32 path to derive the key from master node
+	optional bool show_display = 2;			// Optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains Tezos public key derived from device private seed
+ * @prev TezosGetPublicKey
+*/
+message TezosPublicKey {
+	optional bytes public_key = 1;			// Tezos public key
 }
 
 /////////////////////////////////////////////////////////////

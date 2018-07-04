@@ -512,6 +512,79 @@ message LiskMultisignatureType {
 	repeated string keys_group = 3;
 }
 
+/*
+* Type of Tezos operation
+* @used_in TezosOperationCommon
+*/
+enum TezosOperationType {
+	Transaction = 8;
+	Origination = 9;
+	Delegation = 10;
+}
+
+/*
+* Type of Tezos Contract type
+* @used_in TezosContractID
+*/
+enum TezosContractType {
+	Implicit = 0;
+	Originated = 1;
+}
+
+/*
+* Tezos contract ID
+* @used_in TezosOperationCommon
+* @used_in TezosTransactionType
+*/
+message TezosContractID {
+	optional TezosContractType tag = 1;
+	optional bytes hash = 2;		// Implicit = 21B, originated = 20B + 1B padding
+}
+
+/*
+* Structure representing the common part for Tezos operations
+* @used_in TezosSignTx
+*/
+message TezosOperationCommon {
+	optional bytes branch = 1;
+	optional TezosOperationType tag = 2;
+	optional TezosContractID source = 3;
+	optional uint64 fee = 4;
+	optional uint64 counter = 5;
+	optional uint64 gas_limit = 6;
+	optional uint64 storage_limit = 7;
+}
+
+/*
+* Structure representing additional information for transaction
+* @used_in TezosSignTx
+*/
+message TezosTransactionType {
+	optional uint64 amount = 1;
+	optional TezosContractID destination = 2;
+	optional bytes parameters = 3;
+}
+
+/*
+* Structure representing additional information for origination
+* @used_in TezosSignTx
+*/
+message TezosOriginationType {
+	optional bytes manager_pubkey = 1;
+	optional uint64 balance = 2;
+	optional bool spendable = 3;
+	optional bool delegatable = 4;
+	optional bytes delegate = 5;		// 1B tag + 20B public key hash
+	optional bytes script = 6;
+}
+
+/*
+* Structure representing additional information for delegation
+* @used_in TezosSignTx
+*/
+message TezosDelegationType {
+	optional bytes delegate = 1;		// 1B tag + 20B public key hash
+
 /**
  * Structure representing cardano transaction input
  * @used_in CardanoSignTransacion
@@ -531,4 +604,5 @@ message CardanoTxOutputType {
 	optional string address = 1;				// target coin address in Base58 encoding
 	repeated uint32 address_n = 2;				// BIP-32 path to derive the key from master node; has higher priority than "address"
 	optional uint64 amount = 3;				// amount to spend
+
 }
