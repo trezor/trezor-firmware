@@ -8,23 +8,17 @@ if __debug__:
         List = None  # type: ignore
 
 
-class DecryptMessage(p.MessageType):
-    MESSAGE_WIRE_TYPE = 51
+class CardanoGetAddress(p.MessageType):
+    MESSAGE_WIRE_TYPE = 307
     FIELDS = {
         1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('nonce', p.BytesType, 0),
-        3: ('message', p.BytesType, 0),
-        4: ('hmac', p.BytesType, 0),
+        2: ('show_display', p.BoolType, 0),
     }
 
     def __init__(
         self,
         address_n: List[int] = None,
-        nonce: bytes = None,
-        message: bytes = None,
-        hmac: bytes = None,
+        show_display: bool = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
-        self.nonce = nonce
-        self.message = message
-        self.hmac = hmac
+        self.show_display = show_display
