@@ -46,8 +46,7 @@ Use `make upload` to upload the firmware to a production device. Do not forget t
 
 ## Flashing
 
-For flashing firmware to blank device (without bootloader) use `make flash`,
-or `make flash STLINK_VER=v2-1` if using a ST-LINK/V2.1 interface.
+For flashing firmware to blank device (without bootloader) use `make flash`.
 You need to have OpenOCD installed.
 
 ## Building in debug mode
