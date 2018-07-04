@@ -204,7 +204,7 @@ message TxAck {
             optional uint32 decred_tree = 9;
             optional uint32 decred_script_version = 10;
             optional bytes prev_block_hash_bip115 = 11;                         // block hash of previous transaction output (for bip115 implementation)
-            optional bytes prev_block_height_bip115 = 12;                       // block height of previous transaction output (for bip115 implementation)
+            optional uint32 prev_block_height_bip115 = 12;                      // block height of previous transaction output (for bip115 implementation)
         }
         /**
         * Structure representing compiled transaction output
@@ -226,7 +226,7 @@ message TxAck {
             optional bytes op_return_data = 6;              // defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
             optional uint32 decred_script_version = 7;
             optional bytes block_hash_bip115 = 8;           // block hash of existing block (recommended current_block - 300) (for bip115 implementation)
-            optional bytes block_height_bip115 = 9;         // block height of existing block (recommended current_block - 300) (for bip115 implementation)
+            optional uint32 block_height_bip115 = 9;        // block height of existing block (recommended current_block - 300) (for bip115 implementation)
             enum OutputScriptType {
                 PAYTOADDRESS = 0;       // used for all addresses (bitcoin, p2sh, witness)
                 PAYTOSCRIPTHASH = 1;    // p2sh address (deprecated; use PAYTOADDRESS)
