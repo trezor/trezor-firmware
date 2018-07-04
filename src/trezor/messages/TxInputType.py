@@ -22,7 +22,7 @@ class TxInputType(p.MessageType):
         9: ('decred_tree', p.UVarintType, 0),
         10: ('decred_script_version', p.UVarintType, 0),
         11: ('prev_block_hash_bip115', p.BytesType, 0),
-        12: ('prev_block_height_bip115', p.BytesType, 0),
+        12: ('prev_block_height_bip115', p.UVarintType, 0),
     }
 
     def __init__(
@@ -38,7 +38,7 @@ class TxInputType(p.MessageType):
         decred_tree: int = None,
         decred_script_version: int = None,
         prev_block_hash_bip115: bytes = None,
-        prev_block_height_bip115: bytes = None,
+        prev_block_height_bip115: int = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.prev_hash = prev_hash

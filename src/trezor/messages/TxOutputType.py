@@ -19,7 +19,7 @@ class TxOutputType(p.MessageType):
         6: ('op_return_data', p.BytesType, 0),
         7: ('decred_script_version', p.UVarintType, 0),
         8: ('block_hash_bip115', p.BytesType, 0),
-        9: ('block_height_bip115', p.BytesType, 0),
+        9: ('block_height_bip115', p.UVarintType, 0),
     }
 
     def __init__(
@@ -32,7 +32,7 @@ class TxOutputType(p.MessageType):
         op_return_data: bytes = None,
         decred_script_version: int = None,
         block_hash_bip115: bytes = None,
-        block_height_bip115: bytes = None,
+        block_height_bip115: int = None,
     ) -> None:
         self.address = address
         self.address_n = address_n if address_n is not None else []

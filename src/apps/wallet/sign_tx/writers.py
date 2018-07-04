@@ -59,12 +59,34 @@ def write_varint(w, n: int):
     assert n >= 0 and n <= 0xFFFFFFFF
     if n < 253:
         w.append(n & 0xFF)
-    elif n < 65536:
+    elif n < 0x10000:
         w.append(253)
         w.append(n & 0xFF)
         w.append((n >> 8) & 0xFF)
     else:
         w.append(254)
+        w.append(n & 0xFF)
+        w.append((n >> 8) & 0xFF)
+        w.append((n >> 16) & 0xFF)
+        w.append((n >> 24) & 0xFF)
+
+
+def write_scriptnum(w, n: int):
+    assert n >= 0 and n <= 0xFFFFFFFF
+    if n < 0x100:
+        w.append(1)
+        w.append(n & 0xFF)
+    elif n < 0x10000:
+        w.append(2)
+        w.append(n & 0xFF)
+        w.append((n >> 8) & 0xFF)
+    elif n < 0x1000000:
+        w.append(3)
+        w.append(n & 0xFF)
+        w.append((n >> 8) & 0xFF)
+        w.append((n >> 16) & 0xFF)
+    elif:
+        w.append(4)
         w.append(n & 0xFF)
         w.append((n >> 8) & 0xFF)
         w.append((n >> 16) & 0xFF)
