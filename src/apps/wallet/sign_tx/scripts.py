@@ -43,6 +43,8 @@ def output_script_p2sh(scripthash: bytes) -> bytearray:
 
 
 def script_replay_protection_bip115(block_hash: bytes, block_height: bytes) -> bytearray:
+    if block_hash is None or block_height is None:
+        return bytearray()
     block_height_size = len(block_height)  # size in bytes of block_height (should be 3)
     s = bytearray(38)
     s[0] = 0x20  # 32 bytes for block hash
