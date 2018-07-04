@@ -100,7 +100,6 @@ enum MessageType {
 	MessageType_DebugLinkMemoryWrite = 112 [(wire_debug_in) = true];
 	MessageType_DebugLinkFlashErase = 113 [(wire_debug_in) = true];
 
-
 	// Cardano
 	MessageType_CardanoSignMessage = 300 [(wire_in) = true];
 	MessageType_CardanoMessageSignature = 301 [(wire_out) = true];
@@ -113,7 +112,6 @@ enum MessageType {
 	MessageType_CardanoAddress = 308 [(wire_out) = true];
 	MessageType_CardanoTxAck = 309 [(wire_in) = true];
 	MessageType_CardanoSignedTransaction = 310 [(wire_out) = true];
-	
 
 	// Lisk
 	MessageType_LiskGetAddress = 114 [(wire_in) = true];
@@ -1626,6 +1624,6 @@ message CardanoSignedTransaction {
  * @prev CardanoTxRequest
  * @next CardanoTxRequest
  */
- message CardanoTxAck {
+message CardanoTxAck {
 	optional bytes transaction = 1;
 }

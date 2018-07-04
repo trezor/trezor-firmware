@@ -604,5 +604,4 @@ message CardanoTxOutputType {
 	optional string address = 1;				// target coin address in Base58 encoding
 	repeated uint32 address_n = 2;				// BIP-32 path to derive the key from master node; has higher priority than "address"
 	optional uint64 amount = 3;				// amount to spend
-
 }
