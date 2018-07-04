@@ -236,7 +236,7 @@ def update_ethereum(details):
     out = details['coins'].setdefault('coin2:ETSC', {})
     out['type'] = 'coin'
     set_default(out, 'shortcut', 'ETSC')
-    set_default(out, 'name', 'EthereumSocial')
+    set_default(out, 'name', 'Ethereum Social')
     set_default(out, 't1_enabled', 'yes')
     set_default(out, 't2_enabled', 'yes')
     update_marketcap(out, 'etsc')
