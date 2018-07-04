@@ -1,0 +1,14 @@
+syntax = "proto2";
+
+/**
+ * Structure representing BIP32 (hierarchical deterministic) node
+ * Used for imports of private key into the device and exporting public key out of device
+ */
+message HDNodeType {
+    required uint32 depth = 1;
+    required uint32 fingerprint = 2;
+    required uint32 child_num = 3;
+    required bytes chain_code = 4;
+    optional bytes private_key = 5;
+    optional bytes public_key = 6;
+}
