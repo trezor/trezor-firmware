@@ -43,6 +43,16 @@ void touch_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
+    // configure the CTP circuitry on/off pin
+    GPIO_InitStructure.Mode  = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull  = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Pin   = GPIO_PIN_10;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET); // CTP_ON/PB10
+    HAL_Delay(50);
+
     // Enable I2C clock
     __HAL_RCC_I2C1_CLK_ENABLE();
 
