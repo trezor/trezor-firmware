@@ -51,3 +51,30 @@ void contract256_modm(unsigned char out[32], const bignum256modm in);
 void contract256_window4_modm(signed char r[64], const bignum256modm in);
 
 void contract256_slidingwindow_modm(signed char r[256], const bignum256modm s, int windowsize);
+
+/* 64bit uint to scalar value */
+void set256_modm(bignum256modm r, uint64_t v);
+
+/* scalar value to 64bit uint */
+int get256_modm(uint64_t * v, const bignum256modm r);
+
+/* equality test on two reduced scalar values */
+int eq256_modm(const bignum256modm x, const bignum256modm y);
+
+/* comparison of two reduced scalar values */
+int cmp256_modm(const bignum256modm x, const bignum256modm y);
+
+/* scalar null check, has to be reduced */
+int iszero256_modm(const bignum256modm x);
+
+/* simple copy, no reduction */
+void copy256_modm(bignum256modm r, const bignum256modm x);
+
+/* check if nonzero && same after reduction */
+int check256_modm(const bignum256modm x);
+
+/* (cc - aa * bb) % l */
+void mulsub256_modm(bignum256modm r, const bignum256modm a, const bignum256modm b, const bignum256modm c);
+
+/* (cc + aa * bb) % l */
+void muladd256_modm(bignum256modm r, const bignum256modm a, const bignum256modm b, const bignum256modm c);

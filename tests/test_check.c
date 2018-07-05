@@ -58,11 +58,13 @@
 #include "ed25519-donna/ed25519.h"
 #include "ed25519-donna/ed25519-donna.h"
 #include "ed25519-donna/ed25519-keccak.h"
+#include "ed25519-donna/ge25519.h"
 #include "script.h"
 #include "rfc6979.h"
 #include "address.h"
 #include "rc4.h"
 #include "nem.h"
+#include "monero/monero.h"
 
 #if VALGRIND
 /*
@@ -4808,6 +4810,10 @@ END_TEST
 #include "test_check_cardano.h"
 #endif
 
+#if USE_MONERO
+#include "test_check_monero.h"
+#endif
+
 // define test suite and cases
 Suite *test_suite(void)
 {
@@ -5008,9 +5014,11 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_ed25519_modl_sub);
 	suite_add_tcase(s, tc);
 
+#if USE_MONERO
 	tc = tcase_create("ed25519_ge");
 	tcase_add_test(tc, test_ge25519_double_scalarmult_vartime2);
 	suite_add_tcase(s, tc);
+#endif
 
 	tc = tcase_create("script");
 	tcase_add_test(tc, test_output_script);
@@ -5067,6 +5075,47 @@ Suite *test_suite(void)
 	suite_add_tcase(s,tc);
 #endif
 
+#if USE_MONERO
+	tc = tcase_create("xmr_base58");
+	tcase_add_test(tc, test_xmr_base58);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("xmr_crypto");
+	tcase_add_test(tc, test_xmr_getset256_modm);
+	tcase_add_test(tc, test_xmr_cmp256_modm);
+	tcase_add_test(tc, test_xmr_copy_check_modm);
+	tcase_add_test(tc, test_xmr_mulsub256_modm);
+	tcase_add_test(tc, test_xmr_muladd256_modm);
+	tcase_add_test(tc, test_xmr_curve25519_set);
+	tcase_add_test(tc, test_xmr_curve25519_consts);
+	tcase_add_test(tc, test_xmr_curve25519_tests);
+	tcase_add_test(tc, test_xmr_curve25519_expand_reduce);
+	tcase_add_test(tc, test_xmr_ge25519_base);
+	tcase_add_test(tc, test_xmr_ge25519_check);
+	tcase_add_test(tc, test_xmr_ge25519_scalarmult_base_wrapper);
+	tcase_add_test(tc, test_xmr_ge25519_scalarmult_wrapper);
+	tcase_add_test(tc, test_xmr_ge25519_ops);
+	suite_add_tcase(s, tc);
+
+	tc = tcase_create("xmr_xmr");
+	tcase_add_test(tc, test_xmr_check_point);
+	tcase_add_test(tc, test_xmr_h);
+	tcase_add_test(tc, test_xmr_fast_hash);
+	tcase_add_test(tc, test_xmr_hasher);
+	tcase_add_test(tc, test_xmr_hash_to_scalar);
+	tcase_add_test(tc, test_xmr_hash_to_ec);
+	tcase_add_test(tc, test_xmr_derivation_to_scalar);
+	tcase_add_test(tc, test_xmr_generate_key_derivation);
+	tcase_add_test(tc, test_xmr_derive_private_key);
+	tcase_add_test(tc, test_xmr_derive_public_key);
+	tcase_add_test(tc, test_xmr_add_keys2);
+	tcase_add_test(tc, test_xmr_add_keys3);
+	tcase_add_test(tc, test_xmr_get_subaddress_secret_key);
+	tcase_add_test(tc, test_xmr_gen_c);
+	tcase_add_test(tc, test_xmr_varint);
+	tcase_add_test(tc, test_xmr_gen_range_sig);
+	suite_add_tcase(s, tc);
+#endif
 	return s;
 }
 
