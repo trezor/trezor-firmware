@@ -87,7 +87,7 @@ def main():
         label = input()
 
         sys.stderr.write('Computer asked TREZOR for new strong password.\n')
-        sys.stderr.write('Please confirm action on your device.\n')
+        sys.stderr.write('Please confirm the action on your device ...\n')
 
         # 32 bytes, good for AES
         trezor_entropy = client.get_entropy(32)
@@ -109,7 +109,7 @@ def main():
     # Let's load password
     data = json.load(open(passw_file, 'r'))
 
-    sys.stderr.write('Please confirm action on your device.\n')
+    sys.stderr.write('Please confirm the action on your device ...\n')
     passw = client.decrypt_keyvalue(data['bip32_path'],
                                     data['label'],
                                     binascii.unhexlify(data['password_encrypted_hex']),

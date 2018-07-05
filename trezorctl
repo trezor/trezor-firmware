@@ -285,7 +285,7 @@ def wipe_device(connect, bootloader):
             click.echo('Please switch your device to bootloader mode.')
             sys.exit(1)
         else:
-            click.echo('Wiping user data and firmware. Please confirm on your device.')
+            click.echo('Wiping user data and firmware! Please confirm the action on your device ...')
     else:
         if client.features.bootloader_mode:
             click.echo('Your device is in bootloader mode. This operation would also erase firmware.')
@@ -293,7 +293,7 @@ def wipe_device(connect, bootloader):
             click.echo('Aborting.')
             sys.exit(1)
         else:
-            click.echo('Wiping user data. Please confirm on your device.')
+            click.echo('Wiping user data! Please confirm the action on your device ...')
 
     try:
         return connect().wipe_device()
@@ -470,7 +470,7 @@ def firmware_update(connect, filename, url, version, skip_check, fingerprint):
                 click.echo("Fingerprints do not match, aborting.")
                 sys.exit(5)
 
-    click.echo('Please confirm action on device...')
+    click.echo('If asked, please confirm the action on your device ...')
 
     try:
         return client.firmware_update(fp=io.BytesIO(fp))
