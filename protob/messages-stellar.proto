@@ -52,7 +52,6 @@ message StellarAddress {
  * @next StellarTxOpRequest
  */
 message StellarSignTx {
-    optional uint32 protocol_version = 1;   // version of the protofbuf messaging protocol the client is using
     repeated uint32 address_n = 2;          // BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
     optional string network_passphrase = 3; // passphrase for signing messages on the destination network
     optional string source_account = 4;     // source account address
