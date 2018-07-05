@@ -33,6 +33,7 @@ from . import mapping
 from . import nem
 from . import protobuf
 from . import stellar
+from . import ripple
 from .debuglink import DebugLink
 
 if sys.version_info.major < 3:
@@ -1088,6 +1089,14 @@ class ProtocolMixin(object):
         return self.call(
             proto.RippleGetAddress(
                 address_n=address_n, show_display=show_display))
+
+    @expect(proto.RippleSignedTx)
+    def ripple_sign_tx(self, n, transaction):
+        ripple.validate(transaction)
+        n = self._convert_prime(n)
+        msg = ripple.create_sign_tx(transaction)
+        msg.address_n = n
+        return self.call(msg)
 
     @field('public_key')
     @expect(proto.StellarPublicKey)
