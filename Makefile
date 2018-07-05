@@ -28,7 +28,8 @@ OPENOCD = openocd -f interface/stlink-$(STLINK_VER).cfg -c "transport select hla
 
 BOARDLOADER_START   = 0x08000000
 BOOTLOADER_START    = 0x08020000
-FIRMWARE_START      = 0x08040000
+FIRMWARE_P1_START   = 0x08040000
+FIRMWARE_P2_START   = 0x08120000
 PRODTEST_START      = 0x08040000
 
 BOARDLOADER_MAXSIZE = 49152
@@ -143,10 +144,10 @@ flash_bootloader: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader usi
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOOTLOADER_START); exit"
 
 flash_prodtest: $(PRODTEST_BUILD_DIR)/prodtest.bin ## flash prodtest using OpenOCD
-	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_START); exit"
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(PRODTEST_START); exit"
 
 flash_firmware: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using OpenOCD
-	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_START); exit"
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $<.p1 $(FIRMWARE_P1_START); flash write_image erase $<.p2 $(FIRMWARE_P2_START); exit"
 
 flash_combine: $(PRODTEST_BUILD_DIR)/combined.bin ## flash combined using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOARDLOADER_START); exit"
