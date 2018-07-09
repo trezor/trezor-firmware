@@ -7,3 +7,4 @@ verify_ssl = true
 trezor = {git = "https://github.com/trezor/python-trezor", editable = true, ref = "master"}
 pytest = "*"
 mock = "*"
+protobuf = "==3.4.0"

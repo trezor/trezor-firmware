@@ -7,9 +7,12 @@ compiler:
   - gcc
 
 env:
-  - GOAL=stm32 TOOLCHAIN_SHORTVER=7-2017q4 TOOLCHAIN_LONGVER=gcc-arm-none-eabi-7-2017-q4-major
-  - GOAL=unix
-  - GOAL=src
+  global:
+    - PROTOBUF_VERSION=3.4.0
+  matrix:
+    - GOAL=stm32 TOOLCHAIN_SHORTVER=7-2017q4 TOOLCHAIN_LONGVER=gcc-arm-none-eabi-7-2017-q4-major
+    - GOAL=unix
+    - GOAL=src
 
 matrix:
   exclude:
@@ -32,6 +35,9 @@ before_install:
     - pip3 install --user pipenv
 
 install:
+    - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
+    - unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d protoc
+    - export PATH="$(pwd)/protoc/bin:$PATH"
     - pipenv install
 
 before_script:
