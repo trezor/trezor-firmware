@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import glob
 import os.path
 import re
 import shutil
@@ -65,7 +66,7 @@ class PrebuildCommand(Command):
 
         # regenerate messages
         try:
-            proto_srcs = [os.path.join(TREZOR_COMMON, "protob", name + ".proto") for name in ("messages", "types")]
+            proto_srcs = glob.glob(os.path.join(TREZOR_COMMON, "protob", "*.proto"))
             subprocess.check_call([
                 os.path.join(TREZOR_COMMON, "protob", "pb2py"),
                 "-o", os.path.join(CWD, "trezorlib", "messages"),
