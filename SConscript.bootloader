@@ -120,7 +120,8 @@ env.Replace(
     OBJCOPY='arm-none-eabi-objcopy', )
 
 env.Replace(
-    CCFLAGS=env.get('ENV').get('OPTIMIZE', '-Os') + ' '
+    COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
+    CCFLAGS='$COPT '
     '-g3 '
     '-nostdlib '
     '-std=gnu99 -Wall -Werror -Wdouble-promotion -Wpointer-arith -fno-common '

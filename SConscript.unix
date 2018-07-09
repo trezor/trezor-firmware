@@ -246,7 +246,8 @@ env.Replace(
     OBJCOPY='objcopy', )
 
 env.Replace(
-    CCFLAGS='-Os '
+    COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
+    CCFLAGS='$COPT '
     '-g3 '
     '-std=gnu99 -Wall -Werror -Wuninitialized '
     '-fdata-sections -ffunction-sections ' + CCFLAGS_MOD,
