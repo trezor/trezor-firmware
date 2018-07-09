@@ -39,6 +39,20 @@
 
 static I2C_HandleTypeDef i2c_handle;
 
+static void touch_power_on(void)
+{
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET); // CTP_ON/PB10
+    HAL_Delay(50);
+}
+
+/*
+static void touch_power_off(void)
+{
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET); // CTP_ON/PB10
+    HAL_Delay(50);
+}
+*/
+
 void touch_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -48,10 +62,10 @@ void touch_init(void)
     GPIO_InitStructure.Pull  = GPIO_NOPULL;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStructure.Pin   = GPIO_PIN_10;
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
     HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET); // CTP_ON/PB10
-    HAL_Delay(50);
+    touch_power_on();
 
     // Enable I2C clock
     __HAL_RCC_I2C1_CLK_ENABLE();

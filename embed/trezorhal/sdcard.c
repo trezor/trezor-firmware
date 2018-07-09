@@ -89,6 +89,7 @@ void sdcard_init(void) {
     GPIO_InitStructure.Pull  = GPIO_NOPULL;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStructure.Pin   = GPIO_PIN_0;
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
 
     sdcard_default_pin_state();
