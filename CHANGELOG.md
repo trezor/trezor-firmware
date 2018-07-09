@@ -17,6 +17,9 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 - protobuf classes are no longer part of the source distribution and must be compiled locally
 - Stellar: addresses are always strings
 
+### Removed
+- `EncryptMessage` and `DecryptMessage` actions are gone
+
 ### Fixed:
 - Stellar: several bugs in the XDR parser were fixed
 

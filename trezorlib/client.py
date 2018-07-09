@@ -728,19 +728,6 @@ class ProtocolMixin(object):
             return True
         return False
 
-    @expect(proto.EncryptedMessage)
-    def encrypt_message(self, pubkey, message, display_only, coin_name, n):
-        if coin_name and n:
-            n = self._convert_prime(n)
-            return self.call(proto.EncryptMessage(pubkey=pubkey, message=message, display_only=display_only, coin_name=coin_name, address_n=n))
-        else:
-            return self.call(proto.EncryptMessage(pubkey=pubkey, message=message, display_only=display_only))
-
-    @expect(proto.DecryptedMessage)
-    def decrypt_message(self, n, nonce, message, msg_hmac):
-        n = self._convert_prime(n)
-        return self.call(proto.DecryptMessage(address_n=n, nonce=nonce, message=message, hmac=msg_hmac))
-
     @field('value')
     @expect(proto.CipheredKeyValue)
     def encrypt_keyvalue(self, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True, iv=b''):
