@@ -158,7 +158,6 @@ class TestMsgStellarSignTransaction(TrezorTest):
 
     def _create_msg(self) -> proto.StellarSignTx:
         tx = proto.StellarSignTx()
-        tx.protocol_version = 1
         tx.source_account = 'GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW'
         tx.fee = 100
         tx.sequence_number = 0x100000000

@@ -81,9 +81,7 @@ def parse_transaction_bytes(tx_bytes):
         tx - a StellarSignTx describing the transaction header
         operations - an array of protobuf message objects for each operation
     """
-    tx = messages.StellarSignTx(
-        protocol_version=1
-    )
+    tx = messages.StellarSignTx()
     unpacker = xdrlib.Unpacker(tx_bytes)
 
     tx.source_account = _xdr_read_address(unpacker)
