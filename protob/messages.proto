@@ -172,4 +172,10 @@ enum MessageType {
     MessageType_CardanoAddress = 308 [(wire_out) = true];
     MessageType_CardanoTxAck = 309 [(wire_in) = true];
     MessageType_CardanoSignedTransaction = 310 [(wire_out) = true];
+
+    // Ripple
+    MessageType_RippleGetAddress = 400 [(wire_in) = true];
+    MessageType_RippleAddress = 401 [(wire_out) = true];
+    MessageType_RippleSignTx = 402 [(wire_in) = true];
+    MessageType_RippleSignedTx = 403 [(wire_in) = true];
 }
