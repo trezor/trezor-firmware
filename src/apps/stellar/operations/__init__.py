@@ -1,7 +1,5 @@
-from apps.stellar.operations import serialize
-from apps.stellar.operations import layout
-from apps.stellar import consts
-from apps.stellar import writers
+from apps.stellar import consts, writers
+from apps.stellar.operations import layout, serialize
 
 
 async def operation(ctx, w, op):
@@ -43,4 +41,4 @@ async def operation(ctx, w, op):
         await layout.confirm_set_options_op(ctx, op)
         serialize.serialize_set_options_op(w, op)
     else:
-        raise ValueError('serialize.Stellar: unknown operation')
+        raise ValueError("serialize.Stellar: unknown operation")

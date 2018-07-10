@@ -1,13 +1,14 @@
 import ustruct
+
 from .helpers import public_key_from_address
 
 
 def write_uint32(w, n: int):
-    write_bytes(w, ustruct.pack('>L', n))
+    write_bytes(w, ustruct.pack(">L", n))
 
 
 def write_uint64(w, n: int):
-    write_bytes(w, ustruct.pack('>Q', n))
+    write_bytes(w, ustruct.pack(">Q", n))
 
 
 def write_string(w, s: str):

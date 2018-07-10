@@ -1,21 +1,20 @@
-from apps.common import seed
-from apps.stellar import writers
-from apps.stellar.operations import operation
-from apps.stellar import helpers
-from apps.stellar import layout
-from apps.stellar import consts
-from trezor.wire import ProcessError
-from trezor.messages.StellarSignTx import StellarSignTx
-from trezor.messages.StellarTxOpRequest import StellarTxOpRequest
-from trezor.messages.StellarSignedTx import StellarSignedTx
+from ubinascii import hexlify
+
 from trezor.crypto.curve import ed25519
 from trezor.crypto.hashlib import sha256
-from ubinascii import hexlify
+from trezor.messages.StellarSignedTx import StellarSignedTx
+from trezor.messages.StellarSignTx import StellarSignTx
+from trezor.messages.StellarTxOpRequest import StellarTxOpRequest
+from trezor.wire import ProcessError
+
+from apps.common import seed
+from apps.stellar import consts, helpers, layout, writers
+from apps.stellar.operations import operation
 
 
 async def sign_tx(ctx, msg: StellarSignTx):
     if msg.num_operations == 0:
-        raise ProcessError('Stellar: At least one operation is required')
+        raise ProcessError("Stellar: At least one operation is required")
 
     node = await seed.derive_node(ctx, msg.address_n, consts.STELLAR_CURVE)
     pubkey = seed.remove_ed25519_prefix(node.public_key())
@@ -50,7 +49,7 @@ async def _init(ctx, w: bytearray, pubkey: bytes, msg: StellarSignTx):
     address = helpers.address_from_public_key(pubkey)
     writers.write_pubkey(w, address)
     if helpers.public_key_from_address(msg.source_account) != pubkey:
-        raise ProcessError('Stellar: source account does not match address_n')
+        raise ProcessError("Stellar: source account does not match address_n")
     writers.write_uint32(w, msg.fee)
     writers.write_uint64(w, msg.sequence_number)
 
@@ -80,11 +79,11 @@ async def _memo(ctx, w: bytearray, msg: StellarSignTx):
     writers.write_uint32(w, msg.memo_type)
     if msg.memo_type == consts.MEMO_TYPE_NONE:
         # nothing is serialized
-        memo_confirm_text = ''
+        memo_confirm_text = ""
     elif msg.memo_type == consts.MEMO_TYPE_TEXT:
         # Text: 4 bytes (size) + up to 28 bytes
         if len(msg.memo_text) > 28:
-            raise ProcessError('Stellar: max length of a memo text is 28 bytes')
+            raise ProcessError("Stellar: max length of a memo text is 28 bytes")
         writers.write_string(w, msg.memo_text)
         memo_confirm_text = msg.memo_text
     elif msg.memo_type == consts.MEMO_TYPE_ID:
@@ -96,7 +95,7 @@ async def _memo(ctx, w: bytearray, msg: StellarSignTx):
         writers.write_bytes(w, bytearray(msg.memo_hash))
         memo_confirm_text = hexlify(msg.memo_hash).decode()
     else:
-        raise ProcessError('Stellar invalid memo type')
+        raise ProcessError("Stellar invalid memo type")
     await layout.require_confirm_memo(ctx, msg.memo_type, memo_confirm_text)
 
 

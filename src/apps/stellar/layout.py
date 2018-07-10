@@ -1,63 +1,59 @@
-from apps.common.confirm import require_confirm, require_hold_to_confirm
-from apps.stellar import consts
-from trezor import ui
+from trezor import ui, utils
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
-from trezor import utils
+
+from apps.common.confirm import require_confirm, require_hold_to_confirm
+from apps.stellar import consts
 
 
 async def require_confirm_init(ctx, address: str, network_passphrase: str):
-    content = Text('Confirm Stellar', ui.ICON_SEND,
-                   ui.NORMAL, 'Initialize singing with',
-                   ui.MONO, *split(address),
-                   icon_color=ui.GREEN)
-    await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
+    text = Text("Confirm Stellar", ui.ICON_SEND, icon_color=ui.GREEN)
+    text.normal("Initialize singing with")
+    text.mono(*split(address))
+    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
     network = get_network_warning(network_passphrase)
     if network:
-        content = Text('Confirm network', ui.ICON_CONFIRM,
-                       ui.NORMAL, 'Transaction is on',
-                       ui.BOLD, network,
-                       icon_color=ui.GREEN)
-        await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
+        text = Text("Confirm network", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+        text.normal("Transaction is on")
+        text.bold(network)
+        await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
 async def require_confirm_memo(ctx, memo_type: int, memo_text: str):
     if memo_type == consts.MEMO_TYPE_TEXT:
-        title = 'Memo (TEXT)'
+        title = "Memo (TEXT)"
     elif memo_type == consts.MEMO_TYPE_ID:
-        title = 'Memo (ID)'
+        title = "Memo (ID)"
     elif memo_type == consts.MEMO_TYPE_HASH:
-        title = 'Memo (HASH)'
+        title = "Memo (HASH)"
     elif memo_type == consts.MEMO_TYPE_RETURN:
-        title = 'Memo (RETURN)'
+        title = "Memo (RETURN)"
     else:  # MEMO_TYPE_NONE
-        title = 'No memo set!'  # todo format this as ui.NORMAL not MONO
-        memo_text = 'Important: Many exchanges require a memo when depositing'
-    content = Text('Confirm memo', ui.ICON_CONFIRM,
-                   ui.BOLD, title,
-                   ui.MONO, *split(memo_text),
-                   icon_color=ui.GREEN)
-    await require_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
+        title = "No memo set!"  # todo format this as ui.NORMAL not MONO
+        memo_text = "Important: Many exchanges require a memo when depositing"
+    text = Text("Confirm memo", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text.bold(title)
+    text.mono(*split(memo_text))
+    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
 async def require_confirm_final(ctx, fee: int, num_operations: int):
-    op_str = str(num_operations) + ' operation'
+    op_str = str(num_operations) + " operation"
     if num_operations > 1:
-        op_str += 's'
-    content = Text('Final confirm', ui.ICON_SEND,
-                   ui.NORMAL, 'Sign this transaction',
-                   ui.NORMAL, 'made up of ' + op_str,
-                   ui.BOLD, 'and pay ' + format_amount(fee),
-                   ui.NORMAL, 'for fee?',
-                   icon_color=ui.GREEN)
+        op_str += "s"
+    text = Text("Final confirm", ui.ICON_SEND, icon_color=ui.GREEN)
+    text.normal("Sign this transaction")
+    text.normal("made up of " + op_str)
+    text.bold("and pay " + format_amount(fee))
+    text.normal("for fee?")
     # we use SignTx, not ConfirmOutput, for compatibility with T1
-    await require_hold_to_confirm(ctx, content, ButtonRequestType.SignTx)
+    await require_hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 def format_amount(amount: int, ticker=True) -> str:
-    t = ''
+    t = ""
     if ticker:
-        t = ' XLM'
+        t = " XLM"
     return utils.format_amount(amount, consts.AMOUNT_DIVISIBILITY) + t
 
 
@@ -70,13 +66,13 @@ def split(text):
 def trim(payload: str, length: int, dots=True) -> str:
     if len(payload) > length:
         if dots:
-            return payload[:length - 2] + '..'
-        return payload[:length - 2]
+            return payload[: length - 2] + ".."
+        return payload[: length - 2]
     return payload
 
 
 # todo merge with nem
-def trim_to_rows(payload: str, rows: int=1) -> str:
+def trim_to_rows(payload: str, rows: int = 1) -> str:
     return trim(payload, rows * 17)
 
 
@@ -84,5 +80,5 @@ def get_network_warning(network_passphrase: str):
     if network_passphrase == consts.NETWORK_PASSPHRASE_PUBLIC:
         return None
     if network_passphrase == consts.NETWORK_PASSPHRASE_TESTNET:
-        return 'testnet network'
-    return 'private network'
+        return "testnet network"
+    return "private network"

@@ -1,8 +1,9 @@
-from trezor.crypto import base32
-from trezor.wire import ProcessError
 import ustruct
 
-STELLAR_CURVE = 'ed25519'
+from trezor.crypto import base32
+from trezor.wire import ProcessError
+
+STELLAR_CURVE = "ed25519"
 
 
 def public_key_from_address(address: str) -> bytes:
@@ -27,7 +28,7 @@ def address_from_public_key(pubkey: bytes):
 
 def _crc16_checksum_verify(data: bytes, checksum: bytes):
     if _crc16_checksum(data) != checksum:
-        raise ProcessError('Invalid address checksum')
+        raise ProcessError("Invalid address checksum")
 
 
 def _crc16_checksum(data: bytes) -> bytes:
@@ -42,8 +43,8 @@ def _crc16_checksum(data: bytes) -> bytes:
 
     for byte in data:
         for i in range(8):
-            bit = ((byte >> (7 - i) & 1) == 1)
-            c15 = ((crc >> 15 & 1) == 1)
+            bit = (byte >> (7 - i) & 1) == 1
+            c15 = (crc >> 15 & 1) == 1
             crc <<= 1
             if c15 ^ bit:
                 crc ^= polynomial
