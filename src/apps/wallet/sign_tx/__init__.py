@@ -1,16 +1,22 @@
 from trezor import ui, wire
 from trezor.messages.MessageType import TxAck
-from trezor.messages.TxRequest import TxRequest
 from trezor.messages.RequestType import TXFINISHED
-from apps.common import seed, coins
-from apps.wallet.sign_tx.helpers import UiConfirmOutput, UiConfirmTotal, UiConfirmFeeOverThreshold, UiConfirmForeignAddress
+from trezor.messages.TxRequest import TxRequest
+
+from apps.common import coins, seed
+from apps.wallet.sign_tx.helpers import (
+    UiConfirmFeeOverThreshold,
+    UiConfirmForeignAddress,
+    UiConfirmOutput,
+    UiConfirmTotal,
+)
 
 
 @ui.layout
 async def sign_tx(ctx, msg):
     from apps.wallet.sign_tx import layout, progress, signing
 
-    coin_name = msg.coin_name or 'Bitcoin'
+    coin_name = msg.coin_name or "Bitcoin"
     coin = coins.by_name(coin_name)
     # TODO: rework this so we don't have to pass root to signing.sign_tx
     root = await seed.derive_node(ctx, [], curve_name=coin.curve_name)
@@ -46,5 +52,5 @@ async def sign_tx(ctx, msg):
         elif isinstance(req, UiConfirmForeignAddress):
             res = await layout.confirm_foreign_address(ctx, req.address_n, req.coin)
         else:
-            raise TypeError('Invalid signing instruction')
+            raise TypeError("Invalid signing instruction")
     return req

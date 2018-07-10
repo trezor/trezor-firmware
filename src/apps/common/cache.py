@@ -1,4 +1,5 @@
 from trezor.crypto import hashlib, hmac, random
+
 from apps.common import storage
 
 _cached_seed = None
@@ -52,6 +53,6 @@ def set_passphrase(passphrase):
 def clear(skip_passphrase: bool = False):
     set_seed(None)
     if skip_passphrase:
-        set_passphrase('')
+        set_passphrase("")
     else:
         set_passphrase(None)

@@ -1,4 +1,5 @@
 from micropython import const
+
 from trezor import ui
 
 TEXT_HEADER_HEIGHT = const(48)
@@ -21,9 +22,9 @@ def render_text(words: list, new_lines: bool, max_lines: int) -> None:
     OFFSET_Y_MAX = TEXT_HEADER_HEIGHT + TEXT_LINE_HEIGHT * max_lines
 
     # sizes of common glyphs
-    SPACE = ui.display.text_width(' ', font)
-    DASH = ui.display.text_width('-', ui.BOLD)
-    ELLIPSIS = ui.display.text_width('...', ui.BOLD)
+    SPACE = ui.display.text_width(" ", font)
+    DASH = ui.display.text_width("-", ui.BOLD)
+    ELLIPSIS = ui.display.text_width("...", ui.BOLD)
 
     for word_index, word in enumerate(words):
         has_next_word = word_index < len(words) - 1
@@ -32,7 +33,7 @@ def render_text(words: list, new_lines: bool, max_lines: int) -> None:
             if word == BR:
                 # line break
                 if offset_y >= OFFSET_Y_MAX:
-                    ui.display.text(offset_x, offset_y, '...', ui.BOLD, ui.GREY, bg)
+                    ui.display.text(offset_x, offset_y, "...", ui.BOLD, ui.GREY, bg)
                     return
                 offset_x = TEXT_MARGIN_LEFT
                 offset_y += TEXT_LINE_HEIGHT
@@ -46,20 +47,26 @@ def render_text(words: list, new_lines: bool, max_lines: int) -> None:
 
         width = ui.display.text_width(word, font)
 
-        while offset_x + width > OFFSET_X_MAX or (has_next_word and offset_y >= OFFSET_Y_MAX):
+        while offset_x + width > OFFSET_X_MAX or (
+            has_next_word and offset_y >= OFFSET_Y_MAX
+        ):
             beginning_of_line = offset_x == TEXT_MARGIN_LEFT
             word_fits_in_one_line = width < (OFFSET_X_MAX - TEXT_MARGIN_LEFT)
-            if offset_y < OFFSET_Y_MAX and word_fits_in_one_line and not beginning_of_line:
+            if (
+                offset_y < OFFSET_Y_MAX
+                and word_fits_in_one_line
+                and not beginning_of_line
+            ):
                 # line break
                 offset_x = TEXT_MARGIN_LEFT
                 offset_y += TEXT_LINE_HEIGHT
                 break
             # word split
             if offset_y < OFFSET_Y_MAX:
-                split = '-'
+                split = "-"
                 splitw = DASH
             else:
-                split = '...'
+                split = "..."
                 splitw = ELLIPSIS
             # find span that fits
             for index in range(len(word) - 1, 0, -1):
@@ -88,7 +95,7 @@ def render_text(words: list, new_lines: bool, max_lines: int) -> None:
         if new_lines and has_next_word:
             # line break
             if offset_y >= OFFSET_Y_MAX:
-                ui.display.text(offset_x, offset_y, '...', ui.BOLD, ui.GREY, bg)
+                ui.display.text(offset_x, offset_y, "...", ui.BOLD, ui.GREY, bg)
                 return
             offset_x = TEXT_MARGIN_LEFT
             offset_y += TEXT_LINE_HEIGHT
@@ -99,12 +106,14 @@ def render_text(words: list, new_lines: bool, max_lines: int) -> None:
 
 
 class Text(ui.LazyWidget):
-    def __init__(self,
-                 header_text: str,
-                 header_icon: str = ui.ICON_DEFAULT,
-                 icon_color: int = ui.ORANGE_ICON,
-                 max_lines: int = TEXT_MAX_LINES,
-                 new_lines: bool = True):
+    def __init__(
+        self,
+        header_text: str,
+        header_icon: str = ui.ICON_DEFAULT,
+        icon_color: int = ui.ORANGE_ICON,
+        max_lines: int = TEXT_MAX_LINES,
+        new_lines: bool = True,
+    ):
         self.header_text = header_text
         self.header_icon = header_icon
         self.icon_color = icon_color
@@ -126,5 +135,7 @@ class Text(ui.LazyWidget):
         self.content.append(ui.NORMAL)
 
     def render(self):
-        ui.header(self.header_text, self.header_icon, ui.TITLE_GREY, ui.BG, self.icon_color)
+        ui.header(
+            self.header_text, self.header_icon, ui.TITLE_GREY, ui.BG, self.icon_color
+        )
         render_text(self.content, self.new_lines, self.max_lines)

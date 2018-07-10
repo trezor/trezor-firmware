@@ -1,4 +1,5 @@
 from micropython import const
+
 from trezor import loop, ui
 from trezor.ui import Widget
 from trezor.ui.button import BTN_CLICKED, Button
@@ -13,15 +14,17 @@ _W24 = const(24)
 
 
 class WordSelector(Widget):
-
     def __init__(self, content):
         self.content = content
-        self.w12 = Button(ui.grid(6, n_y=4, n_x=3, cells_y=2), str(_W12),
-                          style=ui.BTN_KEY)
-        self.w18 = Button(ui.grid(7, n_y=4, n_x=3, cells_y=2), str(_W18),
-                          style=ui.BTN_KEY)
-        self.w24 = Button(ui.grid(8, n_y=4, n_x=3, cells_y=2), str(_W24),
-                          style=ui.BTN_KEY)
+        self.w12 = Button(
+            ui.grid(6, n_y=4, n_x=3, cells_y=2), str(_W12), style=ui.BTN_KEY
+        )
+        self.w18 = Button(
+            ui.grid(7, n_y=4, n_x=3, cells_y=2), str(_W18), style=ui.BTN_KEY
+        )
+        self.w24 = Button(
+            ui.grid(8, n_y=4, n_x=3, cells_y=2), str(_W24), style=ui.BTN_KEY
+        )
 
     def render(self):
         self.w12.render()

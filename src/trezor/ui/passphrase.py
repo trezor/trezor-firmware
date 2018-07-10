@@ -1,5 +1,6 @@
 from micropython import const
-from trezor import io, loop, ui, res
+
+from trezor import io, loop, res, ui
 from trezor.ui import display
 from trezor.ui.button import BTN_CLICKED, Button
 from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, Swipe
@@ -7,10 +8,11 @@ from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, Swipe
 SPACE = res.load(ui.ICON_SPACE)
 
 KEYBOARD_KEYS = (
-    ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0'),
-    (SPACE, 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz', '*#'),
-    (SPACE, 'ABC', 'DEF', 'GHI', 'JKL', 'MNO', 'PQRS', 'TUV', 'WXYZ', '*#'),
-    ('_<>', '.:@', '/|\\', '!()', '+%&', '-[]', '?{}', ',\'`', ';"~', '$^='))
+    ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"),
+    (SPACE, "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz", "*#"),
+    (SPACE, "ABC", "DEF", "GHI", "JKL", "MNO", "PQRS", "TUV", "WXYZ", "*#"),
+    ("_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ';"~', "$^="),
+)
 
 
 def digit_area(i):
@@ -38,13 +40,13 @@ def render_scrollbar(page):
     for i in range(0, page_count):
         if i != page:
             ui.display.bar_radius(
-                x + i * padding, y, size, size, ui.DARK_GREY, ui.BG, size // 2)
-    ui.display.bar_radius(
-        x + page * padding, y, size, size, ui.FG, ui.BG, size // 2)
+                x + i * padding, y, size, size, ui.DARK_GREY, ui.BG, size // 2
+            )
+    ui.display.bar_radius(x + page * padding, y, size, size, ui.FG, ui.BG, size // 2)
 
 
 class Input(Button):
-    def __init__(self, area: tuple, content: str=''):
+    def __init__(self, area: tuple, content: str = ""):
         super().__init__(area, content)
         self.pending = False
         self.disable()
@@ -55,9 +57,9 @@ class Input(Button):
         self.taint()
 
     def render_content(self, s, ax, ay, aw, ah):
-        text_style = s['text-style']
-        fg_color = s['fg-color']
-        bg_color = s['bg-color']
+        text_style = s["text-style"]
+        fg_color = s["fg-color"]
+        bg_color = s["bg-color"]
 
         p = self.pending  # should we draw the pending marker?
         t = self.content  # input content
@@ -68,7 +70,7 @@ class Input(Button):
 
         # input content
         if len(t) > maxlen:
-            t = '<' + t[-maxlen:]  # too long, align to the right
+            t = "<" + t[-maxlen:]  # too long, align to the right
         width = display.text_width(t, text_style)
         display.text(tx, ty, t, text_style, fg_color, bg_color)
 
@@ -101,7 +103,7 @@ class PassphraseKeyboard(ui.Widget):
     def __init__(self, prompt, page=1):
         self.prompt = Prompt(prompt)
         self.page = page
-        self.input = Input(ui.grid(0, n_x=1, n_y=6), '')
+        self.input = Input(ui.grid(0, n_x=1, n_y=6), "")
         self.back = Button(ui.grid(12), res.load(ui.ICON_BACK), style=ui.BTN_CLEAR)
         self.done = Button(ui.grid(14), res.load(ui.ICON_CONFIRM), style=ui.BTN_CONFIRM)
         self.keys = key_buttons(KEYBOARD_KEYS[self.page])
@@ -146,7 +148,7 @@ class PassphraseKeyboard(ui.Widget):
                         content += btn.content[0]
                 else:
                     index = 0
-                    content += ' '
+                    content += " "
 
                 self.edit(content, btn, index)
                 return

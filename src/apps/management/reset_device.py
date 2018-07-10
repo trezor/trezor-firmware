@@ -1,18 +1,19 @@
 from micropython import const
-from trezor import config, ui, wire
+from ubinascii import hexlify
+
+from trezor import config, ui, wire, workflow
 from trezor.crypto import bip39, hashlib, random
 from trezor.messages import ButtonRequestType, MessageType
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
-from trezor import workflow
 from trezor.pin import pin_to_int
 from trezor.ui.confirm import HoldToConfirmDialog
 from trezor.ui.mnemonic import MnemonicKeyboard
 from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
 from trezor.ui.text import Text
 from trezor.utils import chunks, format_ordinal
-from ubinascii import hexlify
+
 from apps.common import storage
 from apps.common.confirm import require_confirm
 from apps.management.change_pin import request_pin_confirm
@@ -24,15 +25,15 @@ if __debug__:
 async def reset_device(ctx, msg):
     # validate parameters and device state
     if msg.strength not in (128, 192, 256):
-        raise wire.ProcessError('Invalid strength (has to be 128, 192 or 256 bits)')
+        raise wire.ProcessError("Invalid strength (has to be 128, 192 or 256 bits)")
     if storage.is_initialized():
-        raise wire.UnexpectedMessage('Already initialized')
+        raise wire.UnexpectedMessage("Already initialized")
 
     # request new PIN
     if msg.pin_protection:
         newpin = await request_pin_confirm(ctx)
     else:
-        newpin = ''
+        newpin = ""
 
     # generate and display internal entropy
     internal_ent = random.bytes(32)
@@ -57,14 +58,12 @@ async def reset_device(ctx, msg):
             await show_wrong_entry(ctx)
 
     # write PIN into storage
-    if not config.change_pin(pin_to_int(''), pin_to_int(newpin), None):
-        raise wire.ProcessError('Could not change PIN')
+    if not config.change_pin(pin_to_int(""), pin_to_int(newpin), None):
+        raise wire.ProcessError("Could not change PIN")
 
     # write settings and mnemonic into storage
-    storage.load_settings(
-        label=msg.label, use_passphrase=msg.passphrase_protection)
-    storage.load_mnemonic(
-        mnemonic=mnemonic, needs_backup=msg.skip_backup)
+    storage.load_settings(label=msg.label, use_passphrase=msg.passphrase_protection)
+    storage.load_mnemonic(mnemonic=mnemonic, needs_backup=msg.skip_backup)
 
     # show success message.  if we skipped backup, it's possible that homescreen
     # is still running, uninterrupted.  restart it to pick up new label.
@@ -73,78 +72,64 @@ async def reset_device(ctx, msg):
     else:
         workflow.restartdefault()
 
-    return Success(message='Initialized')
+    return Success(message="Initialized")
 
 
-def generate_mnemonic(strength: int,
-                      int_entropy: bytes,
-                      ext_entropy: bytes) -> bytes:
+def generate_mnemonic(strength: int, int_entropy: bytes, ext_entropy: bytes) -> bytes:
     ehash = hashlib.sha256()
     ehash.update(int_entropy)
     ehash.update(ext_entropy)
     entropy = ehash.digest()
-    mnemonic = bip39.from_data(entropy[:strength // 8])
+    mnemonic = bip39.from_data(entropy[: strength // 8])
     return mnemonic
 
 
 async def show_warning(ctx):
-    text = Text('Backup your seed', ui.ICON_NOCOPY)
+    text = Text("Backup your seed", ui.ICON_NOCOPY)
     text.normal(
-        'Never make a digital',
-        'copy of your recovery',
-        'seed and never upload',
-        'it online!')
+        "Never make a digital",
+        "copy of your recovery",
+        "seed and never upload",
+        "it online!",
+    )
     await require_confirm(
-        ctx,
-        text,
-        ButtonRequestType.ResetDevice,
-        confirm='I understand',
-        cancel=None)
+        ctx, text, ButtonRequestType.ResetDevice, confirm="I understand", cancel=None
+    )
 
 
 async def show_wrong_entry(ctx):
-    text = Text('Wrong entry!', ui.ICON_WRONG, icon_color=ui.RED)
-    text.normal(
-        'You have entered',
-        'wrong seed word.',
-        'Please check again.')
+    text = Text("Wrong entry!", ui.ICON_WRONG, icon_color=ui.RED)
+    text.normal("You have entered", "wrong seed word.", "Please check again.")
     await require_confirm(
-        ctx,
-        text,
-        ButtonRequestType.ResetDevice,
-        confirm='Check again',
-        cancel=None)
+        ctx, text, ButtonRequestType.ResetDevice, confirm="Check again", cancel=None
+    )
 
 
 async def show_success(ctx):
-    text = Text('Backup is done!', ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Backup is done!", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.normal(
-        'Never make a digital',
-        'copy of your recovery',
-        'seed and never upload',
-        'it online!')
+        "Never make a digital",
+        "copy of your recovery",
+        "seed and never upload",
+        "it online!",
+    )
     await require_confirm(
-        ctx,
-        text,
-        ButtonRequestType.ResetDevice,
-        confirm='Finish setup',
-        cancel=None)
+        ctx, text, ButtonRequestType.ResetDevice, confirm="Finish setup", cancel=None
+    )
 
 
 async def show_entropy(ctx, entropy: bytes):
     entropy_str = hexlify(entropy).decode()
     lines = chunks(entropy_str, 16)
-    text = Text('Internal entropy', ui.ICON_RESET)
+    text = Text("Internal entropy", ui.ICON_RESET)
     text.mono(*lines)
-    await require_confirm(
-        ctx,
-        text,
-        ButtonRequestType.ResetDevice)
+    await require_confirm(ctx, text, ButtonRequestType.ResetDevice)
 
 
 async def show_mnemonic(ctx, mnemonic: str):
     await ctx.call(
-        ButtonRequest(code=ButtonRequestType.ResetDevice), MessageType.ButtonAck)
+        ButtonRequest(code=ButtonRequestType.ResetDevice), MessageType.ButtonAck
+    )
     first_page = const(0)
     words_per_page = const(4)
     words = list(enumerate(mnemonic.split()))
@@ -158,8 +143,8 @@ async def show_mnemonic_page(page: int, page_count: int, pages: list):
     if __debug__:
         debug.reset_current_words = [word for _, word in pages[page]]
 
-    lines = ['%2d. %s' % (wi + 1, word) for wi, word in pages[page]]
-    text = Text('Recovery seed', ui.ICON_RESET)
+    lines = ["%2d. %s" % (wi + 1, word) for wi, word in pages[page]]
+    text = Text("Recovery seed", ui.ICON_RESET)
     text.mono(*lines)
     content = Scrollpage(text, page, page_count)
 
@@ -191,6 +176,6 @@ async def check_word(ctx, words: list, index: int):
     if __debug__:
         debug.reset_word_index = index
 
-    keyboard = MnemonicKeyboard('Type the %s word:' % format_ordinal(index + 1))
+    keyboard = MnemonicKeyboard("Type the %s word:" % format_ordinal(index + 1))
     result = await ctx.wait(keyboard)
     return result == words[index]

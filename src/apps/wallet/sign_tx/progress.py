@@ -20,7 +20,7 @@ def advance():
 
 def report_init():
     ui.display.clear()
-    ui.header('Signing transaction')
+    ui.header("Signing transaction")
 
 
 def report():

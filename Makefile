@@ -71,12 +71,18 @@ test_emu: ## run selected device tests from python-trezor
 	cd tests ; ./run_tests_device_emu.sh $(TESTOPTS)
 
 pylint: ## run pylint on application sources and tests
-	pylint -E $(shell find src -name *.py)
-	pylint -E $(shell find tests -name *.py)
+	pylint -E $(shell find src tests -name *.py)
 
 style: ## run code style check on application sources and tests
 	flake8 $(shell find src -name *.py)
-	flake8 $(shell find tests -name *.py)
+	isort --check-only $(shell find src -name *.py ! -path 'src/trezor/messages/*')
+	black --check $(shell find src -name *.py ! -path 'src/trezor/messages/*')
+
+isort:
+	isort $(shell find src -name *.py ! -path 'src/trezor/messages/*')
+
+black:
+	black $(shell find src -name *.py ! -path 'src/trezor/messages/*')
 
 ## build commands:
 

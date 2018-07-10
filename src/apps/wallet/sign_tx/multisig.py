@@ -1,10 +1,9 @@
-from trezor.crypto.hashlib import sha256
 from trezor.crypto import bip32
-from trezor.utils import HashWriter
-
-from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
-from trezor.messages.HDNodePathType import HDNodePathType
+from trezor.crypto.hashlib import sha256
 from trezor.messages import FailureType
+from trezor.messages.HDNodePathType import HDNodePathType
+from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
+from trezor.utils import HashWriter
 
 from apps.wallet.sign_tx.writers import write_bytes, write_uint32
 
@@ -41,12 +40,12 @@ def multisig_fingerprint(multisig: MultisigRedeemScriptType) -> bytes:
     n = len(pubkeys)
 
     if n < 1 or n > 15 or m < 1 or m > 15:
-        raise MultisigError(FailureType.DataError, 'Invalid multisig parameters')
+        raise MultisigError(FailureType.DataError, "Invalid multisig parameters")
 
     for hd in pubkeys:
         d = hd.node
         if len(d.public_key) != 33 or len(d.chain_code) != 32:
-            raise MultisigError(FailureType.DataError, 'Invalid multisig parameters')
+            raise MultisigError(FailureType.DataError, "Invalid multisig parameters")
 
     # casting to bytes(), sorting on bytearray() is not supported in MicroPython
     pubkeys = sorted(pubkeys, key=lambda hd: bytes(hd.node.public_key))
@@ -69,8 +68,7 @@ def multisig_pubkey_index(multisig: MultisigRedeemScriptType, pubkey: bytes) -> 
     for i, hd in enumerate(multisig.pubkeys):
         if multisig_get_pubkey(hd) == pubkey:
             return i
-    raise MultisigError(FailureType.DataError,
-                        'Pubkey not found in multisig script')
+    raise MultisigError(FailureType.DataError, "Pubkey not found in multisig script")
 
 
 def multisig_get_pubkey(hd: HDNodePathType) -> bytes:
@@ -81,7 +79,8 @@ def multisig_get_pubkey(hd: HDNodePathType) -> bytes:
         fingerprint=n.fingerprint,
         child_num=n.child_num,
         chain_code=n.chain_code,
-        public_key=n.public_key)
+        public_key=n.public_key,
+    )
     for i in p:
         node.derive(i, True)
     return node.public_key()

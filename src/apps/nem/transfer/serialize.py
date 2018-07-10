@@ -4,20 +4,28 @@ from trezor.messages.NEMMosaic import NEMMosaic
 from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 from trezor.messages.NEMTransfer import NEMTransfer
 
-from ..helpers import (AES_BLOCK_SIZE, NEM_SALT_SIZE,
-                       NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER,
-                       NEM_TRANSACTION_TYPE_TRANSFER)
+from ..helpers import (
+    AES_BLOCK_SIZE,
+    NEM_SALT_SIZE,
+    NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER,
+    NEM_TRANSACTION_TYPE_TRANSFER,
+)
 from ..writers import write_bytes_with_length, write_common, write_uint32, write_uint64
 
 
-def serialize_transfer(common: NEMTransactionCommon,
-                       transfer: NEMTransfer,
-                       public_key: bytes,
-                       payload: bytes = None,
-                       encrypted: bool = False) -> bytearray:
-    tx = write_common(common, bytearray(public_key),
-                      NEM_TRANSACTION_TYPE_TRANSFER,
-                      _get_version(common.network, transfer.mosaics))
+def serialize_transfer(
+    common: NEMTransactionCommon,
+    transfer: NEMTransfer,
+    public_key: bytes,
+    payload: bytes = None,
+    encrypted: bool = False,
+) -> bytearray:
+    tx = write_common(
+        common,
+        bytearray(public_key),
+        NEM_TRANSACTION_TYPE_TRANSFER,
+        _get_version(common.network, transfer.mosaics),
+    )
 
     write_bytes_with_length(tx, bytearray(transfer.recipient))
     write_uint64(tx, transfer.amount)
@@ -49,11 +57,12 @@ def serialize_mosaic(w: bytearray, namespace: str, mosaic: str, quantity: int):
     write_uint64(w, quantity)
 
 
-def serialize_importance_transfer(common: NEMTransactionCommon,
-                                  imp: NEMImportanceTransfer,
-                                  public_key: bytes) -> bytearray:
-    w = write_common(common, bytearray(public_key),
-                     NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER)
+def serialize_importance_transfer(
+    common: NEMTransactionCommon, imp: NEMImportanceTransfer, public_key: bytes
+) -> bytearray:
+    w = write_common(
+        common, bytearray(public_key), NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER
+    )
 
     write_uint32(w, imp.mode)
     write_bytes_with_length(w, bytearray(imp.public_key))
@@ -65,7 +74,7 @@ def get_transfer_payload(transfer: NEMTransfer, node) -> [bytes, bool]:
     encrypted = False
     if transfer.public_key is not None:
         if payload is None:
-            raise ValueError('Public key provided but no payload to encrypt')
+            raise ValueError("Public key provided but no payload to encrypt")
         payload = _encrypt(node, transfer.public_key, transfer.payload)
         encrypted = True
 

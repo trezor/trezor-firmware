@@ -1,35 +1,31 @@
-from micropython import const
-
 import math
 import utime
-
+from micropython import const
 from trezorui import Display
 
-from trezor import io
-from trezor import loop
-from trezor import res
-from trezor import workflow
+from trezor import io, loop, res, workflow
 from trezor.utils import model
 
 display = Display()
 
 # in debug mode, display an indicator in top right corner
 if __debug__:
+
     def debug_display_refresh():
         display.bar(Display.WIDTH - 8, 0, 8, 8, 0xF800)
         display.refresh()
+
     loop.after_step_hook = debug_display_refresh
 
 # in both debug and production, emulator needs to draw the screen explicitly
-elif model() == 'EMU':
+elif model() == "EMU":
     loop.after_step_hook = display.refresh
 
-# import constants from modtrezorui
-
-SIZE = Display.FONT_SIZE
+# re-export constants from modtrezorui
 NORMAL = Display.FONT_NORMAL
 BOLD = Display.FONT_BOLD
 MONO = Display.FONT_MONO
+SIZE = Display.FONT_SIZE
 WIDTH = Display.WIDTH
 HEIGHT = Display.HEIGHT
 
@@ -46,10 +42,12 @@ def blend(ca: int, cb: int, t: float) -> int:
     return rgb(
         lerpi((ca >> 8) & 0xF8, (cb >> 8) & 0xF8, t),
         lerpi((ca >> 3) & 0xFC, (cb >> 3) & 0xFC, t),
-        lerpi((ca << 3) & 0xF8, (cb << 3) & 0xF8, t))
+        lerpi((ca << 3) & 0xF8, (cb << 3) & 0xF8, t),
+    )
 
 
-from trezor.ui.style import *
+# import style definitions
+from trezor.ui.style import *  # isort:skip
 
 
 def contains(area: tuple, pos: tuple) -> bool:
@@ -77,7 +75,7 @@ def pulse(delay: int):
         yield 0.5 + 0.5 * math.sin(utime.ticks_us() / delay)
 
 
-async def alert(count: int=3):
+async def alert(count: int = 3):
     short_sleep = loop.sleep(20000)
     long_sleep = loop.sleep(80000)
     current = display.backlight()
@@ -104,7 +102,7 @@ async def click() -> tuple:
     return pos
 
 
-async def backlight_slide(val: int, delay: int=35000, step: int=20):
+async def backlight_slide(val: int, delay: int = 35000, step: int = 20):
     sleep = loop.sleep(delay)
     current = display.backlight()
     for i in range(current, val, -step if current > val else step):
@@ -129,11 +127,9 @@ def layout(f):
     return inner
 
 
-def header(title: str,
-           icon: bytes=ICON_DEFAULT,
-           fg: int=FG,
-           bg: int=BG,
-           ifg: int=GREEN):
+def header(
+    title: str, icon: bytes = ICON_DEFAULT, fg: int = FG, bg: int = BG, ifg: int = GREEN
+):
     if icon is not None:
         display.icon(14, 15, res.load(icon), ifg, bg)
     display.text(44, 35, title, BOLD, fg, bg)
@@ -143,16 +139,18 @@ VIEWX = const(6)
 VIEWY = const(9)
 
 
-def grid(i: int,
-         n_x: int=3,
-         n_y: int=5,
-         start_x: int=VIEWX,
-         start_y: int=VIEWY,
-         end_x: int=(WIDTH - VIEWX),
-         end_y: int=(HEIGHT - VIEWY),
-         cells_x: int=1,
-         cells_y: int=1,
-         spacing: int=0):
+def grid(
+    i: int,
+    n_x: int = 3,
+    n_y: int = 5,
+    start_x: int = VIEWX,
+    start_y: int = VIEWY,
+    end_x: int = (WIDTH - VIEWX),
+    end_y: int = (HEIGHT - VIEWY),
+    cells_x: int = 1,
+    cells_y: int = 1,
+    spacing: int = 0,
+):
     w = (end_x - start_x) // n_x
     h = (end_y - start_y) // n_y
     x = (i % n_x) * w

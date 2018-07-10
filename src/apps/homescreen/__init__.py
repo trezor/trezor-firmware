@@ -1,23 +1,23 @@
 from trezor import config, utils, wire
-from trezor.wire import register, protobuf_workflow
 from trezor.messages import MessageType
 from trezor.messages.Features import Features
 from trezor.messages.Success import Success
+from trezor.wire import protobuf_workflow, register
 
-from apps.common import storage, cache
+from apps.common import cache, storage
 
 
 def get_features():
     f = Features()
-    f.vendor = 'trezor.io'
-    f.language = 'english'
-    f.major_version = utils.symbol('VERSION_MAJOR')
-    f.minor_version = utils.symbol('VERSION_MINOR')
-    f.patch_version = utils.symbol('VERSION_PATCH')
-    f.revision = utils.symbol('GITREV')
+    f.vendor = "trezor.io"
+    f.language = "english"
+    f.major_version = utils.symbol("VERSION_MAJOR")
+    f.minor_version = utils.symbol("VERSION_MINOR")
+    f.patch_version = utils.symbol("VERSION_PATCH")
+    f.revision = utils.symbol("GITREV")
     f.model = utils.model()
-    if f.model == 'EMU':
-        f.model = 'T'  # emulator currently emulates model T
+    if f.model == "EMU":
+        f.model = "T"  # emulator currently emulates model T
     f.device_id = storage.get_device_id()
     f.label = storage.get_label()
     f.initialized = storage.is_initialized()
@@ -42,12 +42,12 @@ async def handle_GetFeatures(ctx, msg):
 
 
 async def handle_Cancel(ctx, msg):
-    raise wire.ActionCancelled('Cancelled')
+    raise wire.ActionCancelled("Cancelled")
 
 
 async def handle_ClearSession(ctx, msg):
     cache.clear()
-    return Success(message='Session cleared')
+    return Success(message="Session cleared")
 
 
 async def handle_Ping(ctx, msg):
@@ -55,10 +55,11 @@ async def handle_Ping(ctx, msg):
         from apps.common.confirm import require_confirm
         from trezor.messages.ButtonRequestType import ProtectCall
         from trezor.ui.text import Text
-        from trezor import ui
-        await require_confirm(ctx, Text('Confirm'), ProtectCall)
+
+        await require_confirm(ctx, Text("Confirm"), ProtectCall)
     if msg.passphrase_protection:
         from apps.common.request_passphrase import protect_by_passphrase
+
         await protect_by_passphrase(ctx)
     return Success(message=msg.message)
 

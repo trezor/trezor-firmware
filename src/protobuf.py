@@ -70,6 +70,7 @@ async def dump_uvarint(writer, n):
 # But this is harder in Python because we don't natively know the bit size of the number.
 # So we have to branch on whether the number is negative.
 
+
 def sint_to_uint(sint):
     res = sint << 1
     if sint < 0:
@@ -114,11 +115,10 @@ class MessageType:
             setattr(self, kw, kwargs[kw])
 
     def __eq__(self, rhs):
-        return (self.__class__ is rhs.__class__ and
-                self.__dict__ == rhs.__dict__)
+        return self.__class__ is rhs.__class__ and self.__dict__ == rhs.__dict__
 
     def __repr__(self):
-        return '<%s>' % self.__class__.__name__
+        return "<%s>" % self.__class__.__name__
 
 
 class LimitedReader:
@@ -191,7 +191,7 @@ async def load_message(reader, msg_type):
         elif ftype is UnicodeType:
             fvalue = bytearray(ivalue)
             await reader.areadinto(fvalue)
-            fvalue = str(fvalue, 'utf8')
+            fvalue = str(fvalue, "utf8")
         elif issubclass(ftype, MessageType):
             fvalue = await load_message(LimitedReader(reader, ivalue), ftype)
         else:
@@ -247,7 +247,7 @@ async def dump_message(writer, msg):
                 await writer.awrite(svalue)
 
             elif ftype is UnicodeType:
-                bvalue = bytes(svalue, 'utf8')
+                bvalue = bytes(svalue, "utf8")
                 await dump_uvarint(writer, len(bvalue))
                 await writer.awrite(bvalue)
 

@@ -21,7 +21,7 @@ async def hold_to_confirm(ctx, content, code=None, *args, **kwargs):
         code = ButtonRequestType.Other
     await ctx.call(ButtonRequest(code=code), MessageType.ButtonAck)
 
-    dialog = HoldToConfirmDialog(content, 'Hold to confirm', *args, **kwargs)
+    dialog = HoldToConfirmDialog(content, "Hold to confirm", *args, **kwargs)
 
     return await ctx.wait(dialog) == CONFIRMED
 
@@ -29,10 +29,10 @@ async def hold_to_confirm(ctx, content, code=None, *args, **kwargs):
 async def require_confirm(*args, **kwargs):
     confirmed = await confirm(*args, **kwargs)
     if not confirmed:
-        raise wire.ActionCancelled('Cancelled')
+        raise wire.ActionCancelled("Cancelled")
 
 
 async def require_hold_to_confirm(*args, **kwargs):
     confirmed = await hold_to_confirm(*args, **kwargs)
     if not confirmed:
-        raise wire.ActionCancelled('Cancelled')
+        raise wire.ActionCancelled("Cancelled")

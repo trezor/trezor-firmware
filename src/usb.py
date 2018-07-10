@@ -2,6 +2,8 @@ from trezor import io
 
 from apps.common.storage import get_device_id
 
+# fmt: off
+
 # interface used for trezor wire protocol
 iface_wire = io.WebUSB(
     iface_num=0,

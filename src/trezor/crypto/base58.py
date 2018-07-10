@@ -14,15 +14,15 @@
 #
 
 # 58 character alphabet used
-_alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+_alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
 def encode(data: bytes) -> str:
-    '''
+    """
     Convert bytes to base58 encoded string.
-    '''
+    """
     origlen = len(data)
-    data = data.lstrip(b'\0')
+    data = data.lstrip(b"\0")
     newlen = len(data)
 
     p, acc = 1, 0
@@ -30,18 +30,18 @@ def encode(data: bytes) -> str:
         acc += p * c
         p = p << 8
 
-    result = ''
+    result = ""
     while acc > 0:
         acc, mod = divmod(acc, 58)
         result += _alphabet[mod]
 
-    return ''.join((c for c in reversed(result + _alphabet[0] * (origlen - newlen))))
+    return "".join((c for c in reversed(result + _alphabet[0] * (origlen - newlen))))
 
 
 def decode(string: str) -> bytes:
-    '''
+    """
     Convert base58 encoded string to bytes.
-    '''
+    """
     origlen = len(string)
     string = string.lstrip(_alphabet[0])
     newlen = len(string)
@@ -61,28 +61,32 @@ def decode(string: str) -> bytes:
 
 def sha256d_32(data: bytes) -> bytes:
     from .hashlib import sha256
+
     return sha256(sha256(data).digest()).digest()[:4]
+
 
 def groestl512d_32(data: bytes) -> bytes:
     from .hashlib import groestl512
+
     return groestl512(groestl512(data).digest()).digest()[:4]
 
+
 def encode_check(data: bytes, digestfunc=sha256d_32) -> str:
-    '''
+    """
     Convert bytes to base58 encoded string, append checksum.
-    '''
+    """
     return encode(data + digestfunc(data))
 
 
 def decode_check(string: str, digestfunc=sha256d_32) -> bytes:
-    '''
+    """
     Convert base58 encoded string to bytes and verify checksum.
-    '''
+    """
     result = decode(string)
-    digestlen = len(digestfunc(b''))
+    digestlen = len(digestfunc(b""))
     result, check = result[:-digestlen], result[-digestlen:]
 
     if check != digestfunc(result):
-        raise ValueError('Invalid checksum')
+        raise ValueError("Invalid checksum")
 
     return result

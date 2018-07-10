@@ -1,12 +1,28 @@
-class NetworkInfo:
+def shortcut_by_chain_id(chain_id, tx_type=None):
+    if tx_type in [1, 6] and chain_id in [1, 3]:
+        return "WAN"
+    else:
+        n = by_chain_id(chain_id)
+        return n.shortcut if n is not None else "UNKN"
 
+
+def by_chain_id(chain_id):
+    for n in NETWORKS:
+        if n.chain_id == chain_id:
+            return n
+    return None
+
+
+def by_slip44(slip44):
+    for n in NETWORKS:
+        if n.slip44 == slip44:
+            return n
+    return None
+
+
+class NetworkInfo:
     def __init__(
-        self,
-        chain_id: int,
-        slip44: int,
-        shortcut: str,
-        name: str,
-        rskip60: bool
+        self, chain_id: int, slip44: int, shortcut: str, name: str, rskip60: bool
     ):
         self.chain_id = chain_id
         self.slip44 = slip44
@@ -15,8 +31,9 @@ class NetworkInfo:
         self.rskip60 = rskip60
 
 
-# the following list is generated using tools/codegen/gen_eth_networks.py
+# generated using tools/codegen/gen_eth_networks.py
 # do not edit manually!
+# fmt: off
 NETWORKS = [
     NetworkInfo(
         chain_id=1,
@@ -124,25 +141,3 @@ NETWORKS = [
         rskip60=False,
     ),
 ]
-
-
-def shortcut_by_chain_id(chain_id, tx_type=None):
-    if tx_type in [1, 6] and chain_id in [1, 3]:
-        return 'WAN'
-    else:
-        n = by_chain_id(chain_id)
-        return n.shortcut if n is not None else 'UNKN'
-
-
-def by_chain_id(chain_id):
-    for n in NETWORKS:
-        if n.chain_id == chain_id:
-            return n
-    return None
-
-
-def by_slip44(slip44):
-    for n in NETWORKS:
-        if n.slip44 == slip44:
-            return n
-    return None

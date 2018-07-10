@@ -28,10 +28,12 @@ def write_bytes_with_length(w, buf: bytearray):
     write_bytes(w, buf)
 
 
-def write_common(common: NEMTransactionCommon,
-                 public_key: bytearray,
-                 transaction_type: int,
-                 version: int = None) -> bytearray:
+def write_common(
+    common: NEMTransactionCommon,
+    public_key: bytearray,
+    transaction_type: int,
+    version: int = None,
+) -> bytearray:
     ret = bytearray()
 
     write_uint32(ret, transaction_type)

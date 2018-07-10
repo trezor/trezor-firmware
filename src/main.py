@@ -1,3 +1,5 @@
+# isort:skip_file
+
 # unlock the device
 import boot  # noqa: F401
 
@@ -13,6 +15,7 @@ import apps.wallet
 import apps.ethereum
 import apps.lisk
 import apps.nem
+
 if __debug__:
     import apps.debug
 else:
@@ -41,5 +44,6 @@ utils.set_mode_unprivileged()
 
 # run main event loop and specify which screen is the default
 from apps.homescreen.homescreen import homescreen
+
 workflow.startdefault(homescreen)
 loop.run()

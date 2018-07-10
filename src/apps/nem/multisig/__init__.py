@@ -13,15 +13,19 @@ def initiate(public_key, common: NEMTransactionCommon, inner_tx: bytes) -> bytes
     return serialize.serialize_multisig(common, public_key, inner_tx)
 
 
-def cosign(public_key, common: NEMTransactionCommon, inner_tx: bytes, signer: bytes) -> bytes:
+def cosign(
+    public_key, common: NEMTransactionCommon, inner_tx: bytes, signer: bytes
+) -> bytes:
     return serialize.serialize_multisig_signature(common, public_key, inner_tx, signer)
 
 
-async def aggregate_modification(ctx,
-                                 public_key: bytes,
-                                 common: NEMTransactionCommon,
-                                 aggr: NEMAggregateModification,
-                                 multisig: bool):
+async def aggregate_modification(
+    ctx,
+    public_key: bytes,
+    common: NEMTransactionCommon,
+    aggr: NEMAggregateModification,
+    multisig: bool,
+):
     await layout.ask_aggregate_modification(ctx, common, aggr, multisig)
     w = serialize.serialize_aggregate_modification(common, aggr, public_key)
 

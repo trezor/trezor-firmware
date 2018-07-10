@@ -1,4 +1,5 @@
 from micropython import const
+
 from trezor import io, ui
 from trezor.ui import contains, rotate
 
@@ -25,7 +26,6 @@ def degrees(swipe: int) -> int:
 
 
 class Swipe(ui.Widget):
-
     def __init__(self, area=None, absolute=False, directions=SWIPE_ALL, treshold=30):
         self.area = area or (0, 0, ui.WIDTH, ui.HEIGHT)
         self.absolute = absolute
@@ -48,18 +48,28 @@ class Swipe(ui.Widget):
             pdya = abs(pdy)
             if pdxa > pdya and self.directions & SWIPE_HORIZONTAL:
                 # Horizontal direction
-                if (pdx > 0 and self.directions & SWIPE_RIGHT) or (pdx < 0 and self.directions & SWIPE_LEFT):
-                    ui.display.backlight(ui.lerpi(
-                        self.light_origin,
-                        self.light_target,
-                        pdxa / _SWIPE_DISTANCE if pdxa < _SWIPE_DISTANCE else 1))
+                if (pdx > 0 and self.directions & SWIPE_RIGHT) or (
+                    pdx < 0 and self.directions & SWIPE_LEFT
+                ):
+                    ui.display.backlight(
+                        ui.lerpi(
+                            self.light_origin,
+                            self.light_target,
+                            pdxa / _SWIPE_DISTANCE if pdxa < _SWIPE_DISTANCE else 1,
+                        )
+                    )
             elif pdxa < pdya and self.directions & SWIPE_VERTICAL:
                 # Vertical direction
-                if (pdy > 0 and self.directions & SWIPE_DOWN) or (pdy < 0 and self.directions & SWIPE_UP):
-                    ui.display.backlight(ui.lerpi(
-                        self.light_origin,
-                        self.light_target,
-                        pdya / _SWIPE_DISTANCE if pdya < _SWIPE_DISTANCE else 1))
+                if (pdy > 0 and self.directions & SWIPE_DOWN) or (
+                    pdy < 0 and self.directions & SWIPE_UP
+                ):
+                    ui.display.backlight(
+                        ui.lerpi(
+                            self.light_origin,
+                            self.light_target,
+                            pdya / _SWIPE_DISTANCE if pdya < _SWIPE_DISTANCE else 1,
+                        )
+                    )
 
         elif event == io.TOUCH_START and contains(self.area, pos):
             self.start_pos = pos

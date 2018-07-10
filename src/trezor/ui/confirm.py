@@ -1,4 +1,5 @@
 from micropython import const
+
 from trezor import loop, res, ui
 from trezor.ui import Widget
 from trezor.ui.button import BTN_ACTIVE, BTN_CLICKED, Button
@@ -14,21 +15,20 @@ DEFAULT_CANCEL = res.load(ui.ICON_CANCEL)
 
 
 class ConfirmDialog(Widget):
-    def __init__(self,
-                 content,
-                 confirm=DEFAULT_CONFIRM,
-                 cancel=DEFAULT_CANCEL,
-                 confirm_style=ui.BTN_CONFIRM,
-                 cancel_style=ui.BTN_CANCEL):
+    def __init__(
+        self,
+        content,
+        confirm=DEFAULT_CONFIRM,
+        cancel=DEFAULT_CANCEL,
+        confirm_style=ui.BTN_CONFIRM,
+        cancel_style=ui.BTN_CANCEL,
+    ):
         self.content = content
         if cancel is not None:
-            self.confirm = Button(
-                ui.grid(9, n_x=2), confirm, style=confirm_style)
-            self.cancel = Button(
-                ui.grid(8, n_x=2), cancel, style=cancel_style)
+            self.confirm = Button(ui.grid(9, n_x=2), confirm, style=confirm_style)
+            self.cancel = Button(ui.grid(8, n_x=2), cancel, style=cancel_style)
         else:
-            self.confirm = Button(
-                ui.grid(4, n_x=1), confirm, style=confirm_style)
+            self.confirm = Button(ui.grid(4, n_x=1), confirm, style=confirm_style)
             self.cancel = None
 
     def render(self):
@@ -55,12 +55,13 @@ _STOPPED = const(-2)
 
 
 class HoldToConfirmDialog(Widget):
-
-    def __init__(self,
-                 content,
-                 hold='Hold to confirm',
-                 button_style=ui.BTN_CONFIRM,
-                 loader_style=ui.LDR_DEFAULT):
+    def __init__(
+        self,
+        content,
+        hold="Hold to confirm",
+        button_style=ui.BTN_CONFIRM,
+        loader_style=ui.LDR_DEFAULT,
+    ):
         self.content = content
         self.button = Button(ui.grid(4, n_x=1), hold, style=button_style)
         self.loader = Loader(style=loader_style)

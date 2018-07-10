@@ -1,17 +1,17 @@
-'''
+"""
 Implements an event loop with cooperative multitasking and async I/O.  Tasks in
 the form of python coroutines (either plain generators or `async` functions) are
 stepped through until completion, and can get asynchronously blocked by
 `yield`ing or `await`ing a syscall.
 
 See `schedule`, `run`, and syscalls `sleep`, `wait`, `signal` and `spawn`.
-'''
+"""
 
 import utime
 import utimeq
 from micropython import const
-from trezor import log
-from trezor import io
+
+from trezor import io, log
 
 after_step_hook = None  # function, called after each task step
 
@@ -22,16 +22,17 @@ _paused = {}
 if __debug__:
     # for performance stats
     import array
+
     log_delay_pos = 0
     log_delay_rb_len = const(10)
-    log_delay_rb = array.array('i', [0] * log_delay_rb_len)
+    log_delay_rb = array.array("i", [0] * log_delay_rb_len)
 
 
 def schedule(task, value=None, deadline=None):
-    '''
+    """
     Schedule task to be executed with `value` on given `deadline` (in
     microseconds).  Does not start the event loop itself, see `run`.
-    '''
+    """
     if deadline is None:
         deadline = utime.ticks_us()
     _queue.push(deadline, task, value)
@@ -52,12 +53,12 @@ def close(task):
 
 
 def run():
-    '''
+    """
     Loop forever, stepping through scheduled tasks and awaiting I/O events
     inbetween.  Use `schedule` first to add a coroutine to the task queue.
     Tasks yield back to the scheduler on any I/O, usually by calling `await` on
     a `Syscall`.
-    '''
+    """
 
     if __debug__:
         global log_delay_pos
@@ -98,7 +99,7 @@ def _step(task, value):
             result = task.send(value)
     except StopIteration as e:
         if __debug__:
-            log.debug(__name__, 'finish: %s', task)
+            log.debug(__name__, "finish: %s", task)
     except Exception as e:
         if __debug__:
             log.exception(__name__, e)
@@ -109,16 +110,16 @@ def _step(task, value):
             schedule(task)
         else:
             if __debug__:
-                log.error(__name__, 'unknown syscall: %s', result)
+                log.error(__name__, "unknown syscall: %s", result)
         if after_step_hook:
             after_step_hook()
 
 
 class Syscall:
-    '''
+    """
     When tasks want to perform any I/O, or do any sort of communication with the
     scheduler, they do so through instances of a class derived from `Syscall`.
-    '''
+    """
 
     def __iter__(self):
         # support `yield from` or `await` on syscalls
@@ -126,7 +127,7 @@ class Syscall:
 
 
 class sleep(Syscall):
-    '''
+    """
     Pause current task and resume it after given delay.  Although the delay is
     given in microseconds, sub-millisecond precision is not guaranteed.  Result
     value is the calculated deadline.
@@ -135,7 +136,7 @@ class sleep(Syscall):
 
     >>> planned = await loop.sleep(1000 * 1000)  # sleep for 1ms
     >>> print('missed by %d us', utime.ticks_diff(utime.ticks_us(), planned))
-    '''
+    """
 
     def __init__(self, delay_us):
         self.delay_us = delay_us
@@ -146,7 +147,7 @@ class sleep(Syscall):
 
 
 class wait(Syscall):
-    '''
+    """
     Pause current task, and resume only after a message on `msg_iface` is
     received.  Messages are received either from an USB interface, or the
     touch display.  Result value a tuple of message values.
@@ -155,7 +156,7 @@ class wait(Syscall):
 
     >>> hid_report, = await loop.wait(0xABCD)  # await USB HID report
     >>> event, x, y = await loop.wait(io.TOUCH)  # await touch event
-    '''
+    """
 
     def __init__(self, msg_iface):
         self.msg_iface = msg_iface
@@ -168,7 +169,7 @@ _NO_VALUE = ()
 
 
 class signal(Syscall):
-    '''
+    """
     Pause current task, and let other running task to resume it later with a
     result value or an exception.
 
@@ -181,7 +182,7 @@ class signal(Syscall):
     >>> # in task #2:
     >>> signal.send('hello from task #2')
     >>> # prints in the next iteration of the event loop
-    '''
+    """
 
     def __init__(self):
         self.value = _NO_VALUE
@@ -210,7 +211,7 @@ class signal(Syscall):
 
 
 class spawn(Syscall):
-    '''
+    """
     Execute one or more children tasks and wait until one of them exits.
     Return value of `spawn` is the return value of task that triggered the
     completion.  By default, `spawn` returns after the first child completes, and
@@ -232,7 +233,7 @@ class spawn(Syscall):
 
     Note: You should not directly `yield` a `spawn` instance, see logic in
     `spawn.__iter__` for explanation.  Always use `await`.
-    '''
+    """
 
     def __init__(self, *children, exit_others=True):
         self.children = children
@@ -281,7 +282,6 @@ class spawn(Syscall):
 
 
 class put(Syscall):
-
     def __init__(self, ch, value=None):
         self.ch = ch
         self.value = value
@@ -295,7 +295,6 @@ class put(Syscall):
 
 
 class take(Syscall):
-
     def __init__(self, ch):
         self.ch = ch
 
@@ -308,7 +307,6 @@ class take(Syscall):
 
 
 class chan:
-
     def __init__(self, id=None):
         self.id = id
         self.putters = []

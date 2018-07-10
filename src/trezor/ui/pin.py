@@ -1,8 +1,9 @@
 from micropython import const
+
 from trezor import ui
 from trezor.crypto import random
 from trezor.ui import display
-from trezor.ui.button import Button, BTN_CLICKED
+from trezor.ui.button import BTN_CLICKED, Button
 
 
 def digit_area(i):
@@ -18,8 +19,7 @@ def generate_digits():
 
 
 class PinMatrix(ui.Widget):
-
-    def __init__(self, label, pin='', maxlength=9):
+    def __init__(self, label, pin="", maxlength=9):
         self.label = label
         self.pin = pin
         self.maxlength = maxlength
@@ -29,8 +29,9 @@ class PinMatrix(ui.Widget):
         # digits is defined as bottom-left to top-right (on numpad)
         reordered_digits = self.digits[6:] + self.digits[3:6] + self.digits[:3]
 
-        self.pin_buttons = [Button(digit_area(i), str(d))
-                            for i, d in enumerate(reordered_digits)]
+        self.pin_buttons = [
+            Button(digit_area(i), str(d)) for i, d in enumerate(reordered_digits)
+        ]
         self.onchange = None
 
     def render(self):

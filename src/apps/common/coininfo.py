@@ -1,7 +1,7 @@
 from trezor.crypto.base58 import groestl512d_32, sha256d_32
 
-class CoinInfo:
 
+class CoinInfo:
     def __init__(
         self,
         coin_name: str,
@@ -37,7 +37,7 @@ class CoinInfo:
         self.version_group_id = version_group_id
         self.bip115 = bip115
         self.curve_name = curve_name
-        if curve_name == 'secp256k1-groestl':
+        if curve_name == "secp256k1-groestl":
             self.b58_hash = groestl512d_32
             self.sign_hash_double = False
         else:
@@ -45,8 +45,9 @@ class CoinInfo:
             self.sign_hash_double = True
 
 
-# the following list is generated using tools/codegen/gen_coins.py
+# generated using tools/codegen/gen_coins.py
 # do not edit manually!
+# fmt: off
 COINS = [
     CoinInfo(
         coin_name='Bitcoin',

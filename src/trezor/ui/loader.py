@@ -1,5 +1,6 @@
 import utime
 from micropython import const
+
 from trezor import loop, res, ui
 
 _TARGET_MS = const(1000)
@@ -7,11 +8,10 @@ _SHRINK_BY = const(2)
 
 
 class Loader(ui.Widget):
-
     def __init__(self, style=ui.LDR_DEFAULT):
         self.target_ms = _TARGET_MS
-        self.normal_style = style['normal'] or ui.LDR_DEFAULT['normal']
-        self.active_style = style['active'] or ui.LDR_DEFAULT['active']
+        self.normal_style = style["normal"] or ui.LDR_DEFAULT["normal"]
+        self.active_style = style["active"] or ui.LDR_DEFAULT["active"]
         self.start_ms = None
         self.stop_ms = None
 
@@ -46,15 +46,19 @@ class Loader(ui.Widget):
             s = self.active_style
         else:
             s = self.normal_style
-        if s['icon'] is None:
-            ui.display.loader(
-                r, -24, s['fg-color'], s['bg-color'])
-        elif s['icon-fg-color'] is None:
-            ui.display.loader(
-                r, -24, s['fg-color'], s['bg-color'], res.load(s['icon']))
+        if s["icon"] is None:
+            ui.display.loader(r, -24, s["fg-color"], s["bg-color"])
+        elif s["icon-fg-color"] is None:
+            ui.display.loader(r, -24, s["fg-color"], s["bg-color"], res.load(s["icon"]))
         else:
             ui.display.loader(
-                r, -24, s['fg-color'], s['bg-color'], res.load(s['icon']), s['icon-fg-color'])
+                r,
+                -24,
+                s["fg-color"],
+                s["bg-color"],
+                res.load(s["icon"]),
+                s["icon-fg-color"],
+            )
 
     def __iter__(self):
         sleep = loop.sleep(1000000 // 30)  # 30 fps

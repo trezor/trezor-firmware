@@ -1,11 +1,13 @@
-from trezor.messages.NEMTransfer import NEMTransfer
-from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 from trezor.messages.NEMImportanceTransfer import NEMImportanceTransfer
+from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+from trezor.messages.NEMTransfer import NEMTransfer
 
 from . import layout, serialize
 
 
-async def transfer(ctx, public_key: bytes, common: NEMTransactionCommon, transfer: NEMTransfer, node):
+async def transfer(
+    ctx, public_key: bytes, common: NEMTransactionCommon, transfer: NEMTransfer, node
+):
     transfer.mosaics = serialize.canonicalize_mosaics(transfer.mosaics)
     payload, encrypted = serialize.get_transfer_payload(transfer, node)
 
@@ -17,6 +19,8 @@ async def transfer(ctx, public_key: bytes, common: NEMTransactionCommon, transfe
     return w
 
 
-async def importance_transfer(ctx, public_key: bytes, common: NEMTransactionCommon, imp: NEMImportanceTransfer):
+async def importance_transfer(
+    ctx, public_key: bytes, common: NEMTransactionCommon, imp: NEMImportanceTransfer
+):
     await layout.ask_importance_transfer(ctx, common, imp)
     return serialize.serialize_importance_transfer(common, imp, public_key)
