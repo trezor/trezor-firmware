@@ -42,6 +42,7 @@ for name in os.listdir('apps/'):
 resfile = 'trezor/res/resources.py'
 
 bio = io.StringIO()
+bio.write('# fmt: off\n')
 bio.write('resdata = {\n')
 for k in sorted(resources.keys()):
     bio.write("    '%s': %s,\n" % (k, resources[k]))
