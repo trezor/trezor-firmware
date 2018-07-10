@@ -152,47 +152,10 @@ void stellar_signingInit(StellarSignTx *msg)
     }
 }
 
-bool stellar_confirmSourceAccount(bool has_source_account, char *str_account)
-{
-    if (!has_source_account) {
-        stellar_hashupdate_bool(false);
-        return true;
-    }
-
-    // Convert account string to public key bytes
-    uint8_t bytes[32];
-    if (!stellar_getAddressBytes(str_account, bytes)) {
-        return false;
-    }
-
-    const char **str_addr_rows = stellar_lineBreakAddress(bytes);
-
-    stellar_layoutTransactionDialog(
-        _("Op src account OK?"),
-        NULL,
-        str_addr_rows[0],
-        str_addr_rows[1],
-        str_addr_rows[2]
-    );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-        stellar_signingAbort(_("User canceled"));
-        return false;
-    }
-
-    // Hash: source account
-    stellar_hashupdate_address(bytes);
-
-    return true;
-}
-
 bool stellar_confirmCreateAccountOp(StellarCreateAccountOp *msg)
 {
     if (!stellar_signing) return false;
-
-    if (!stellar_confirmSourceAccount(msg->has_source_account, msg->source_account)) {
-        stellar_signingAbort(_("Source account error"));
-        return false;
-    }
+    stellar_hashupdate_bool(false); // stellar_hashupdate_address(stellar_activeTx.signing_pubkey);
 
     // Hash: operation type
     stellar_hashupdate_uint32(0);
@@ -239,11 +202,7 @@ bool stellar_confirmCreateAccountOp(StellarCreateAccountOp *msg)
 bool stellar_confirmPaymentOp(StellarPaymentOp *msg)
 {
     if (!stellar_signing) return false;
-
-    if (!stellar_confirmSourceAccount(msg->has_source_account, msg->source_account)) {
-        stellar_signingAbort(_("Source account error"));
-        return false;
-    }
+    stellar_hashupdate_bool(false); // stellar_hashupdate_address(stellar_activeTx.signing_pubkey);
 
     // Hash: operation type
     stellar_hashupdate_uint32(1);
@@ -300,11 +259,7 @@ bool stellar_confirmPaymentOp(StellarPaymentOp *msg)
 bool stellar_confirmPathPaymentOp(StellarPathPaymentOp *msg)
 {
     if (!stellar_signing) return false;
-
-    if (!stellar_confirmSourceAccount(msg->has_source_account, msg->source_account)) {
-        stellar_signingAbort(_("Source account error"));
-        return false;
-    }
+    stellar_hashupdate_bool(false); // stellar_hashupdate_address(stellar_activeTx.signing_pubkey);
 
     // Hash: operation type
     stellar_hashupdate_uint32(2);
@@ -400,11 +355,7 @@ bool stellar_confirmPathPaymentOp(StellarPathPaymentOp *msg)
 bool stellar_confirmManageOfferOp(StellarManageOfferOp *msg)
 {
     if (!stellar_signing) return false;
-
-    if (!stellar_confirmSourceAccount(msg->has_source_account, msg->source_account)) {
-        stellar_signingAbort(_("Source account error"));
-        return false;
-    }
+    stellar_hashupdate_bool(false); // stellar_hashupdate_address(stellar_activeTx.signing_pubkey);
 
     // Hash: operation type
     stellar_hashupdate_uint32(3);
@@ -490,11 +441,7 @@ bool stellar_confirmManageOfferOp(StellarManageOfferOp *msg)
 bool stellar_confirmCreatePassiveOfferOp(StellarCreatePassiveOfferOp *msg)
 {
     if (!stellar_signing) return false;
-
-    if (!stellar_confirmSourceAccount(msg->has_source_account, msg->source_account)) {
-        stellar_signingAbort(_("Source account error"));
-        return false;
-    }
+    stellar_hashupdate_bool(false); // stellar_hashupdate_address(stellar_activeTx.signing_pubkey);
 
     // Hash: operation type
     stellar_hashupdate_uint32(4);
@@ -568,11 +515,7 @@ bool stellar_confirmCreatePassiveOfferOp(StellarCreatePassiveOfferOp *msg)
 bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg)
 {
     if (!stellar_signing) return false;
-
-    if (!stellar_confirmSourceAccount(msg->has_source_account, msg->source_account)) {
-        stellar_signingAbort(_("Source account error"));
-        return false;
-    }
+    stellar_hashupdate_bool(false); // stellar_hashupdate_address(stellar_activeTx.signing_pubkey);
 
     // Hash: operation type
     stellar_hashupdate_uint32(5);
@@ -892,11 +835,7 @@ bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg)
 bool stellar_confirmChangeTrustOp(StellarChangeTrustOp *msg)
 {
     if (!stellar_signing) return false;
-
-    if (!stellar_confirmSourceAccount(msg->has_source_account, msg->source_account)) {
-        stellar_signingAbort(_("Source account error"));
-        return false;
-    }
+    stellar_hashupdate_bool(false); // stellar_hashupdate_address(stellar_activeTx.signing_pubkey);
 
     // Hash: operation type
     stellar_hashupdate_uint32(6);
@@ -960,11 +899,7 @@ bool stellar_confirmChangeTrustOp(StellarChangeTrustOp *msg)
 bool stellar_confirmAllowTrustOp(StellarAllowTrustOp *msg)
 {
     if (!stellar_signing) return false;
-
-    if (!stellar_confirmSourceAccount(msg->has_source_account, msg->source_account)) {
-        stellar_signingAbort(_("Source account error"));
-        return false;
-    }
+    stellar_hashupdate_bool(false); // stellar_hashupdate_address(stellar_activeTx.signing_pubkey);
 
     // Hash: operation type
     stellar_hashupdate_uint32(7);
@@ -1036,11 +971,7 @@ bool stellar_confirmAllowTrustOp(StellarAllowTrustOp *msg)
 bool stellar_confirmAccountMergeOp(StellarAccountMergeOp *msg)
 {
     if (!stellar_signing) return false;
-
-    if (!stellar_confirmSourceAccount(msg->has_source_account, msg->source_account)) {
-        stellar_signingAbort(_("Source account error"));
-        return false;
-    }
+    stellar_hashupdate_bool(false); // stellar_hashupdate_address(stellar_activeTx.signing_pubkey);
 
     // Hash: operation type
     stellar_hashupdate_uint32(8);
@@ -1077,11 +1008,7 @@ bool stellar_confirmAccountMergeOp(StellarAccountMergeOp *msg)
 bool stellar_confirmManageDataOp(StellarManageDataOp *msg)
 {
     if (!stellar_signing) return false;
-
-    if (!stellar_confirmSourceAccount(msg->has_source_account, msg->source_account)) {
-        stellar_signingAbort(_("Source account error"));
-        return false;
-    }
+    stellar_hashupdate_bool(false); // stellar_hashupdate_address(stellar_activeTx.signing_pubkey);
 
     // Hash: operation type
     stellar_hashupdate_uint32(10);
@@ -1151,11 +1078,7 @@ bool stellar_confirmManageDataOp(StellarManageDataOp *msg)
 bool stellar_confirmBumpSequenceOp(StellarBumpSequenceOp *msg)
 {
     if (!stellar_signing) return false;
-
-    if (!stellar_confirmSourceAccount(msg->has_source_account, msg->source_account)) {
-        stellar_signingAbort(_("Source account error"));
-        return false;
-    }
+    stellar_hashupdate_bool(false); // stellar_hashupdate_address(stellar_activeTx.signing_pubkey);
 
     // Hash: operation type
     stellar_hashupdate_uint32(11);
@@ -1194,44 +1117,10 @@ void stellar_signingAbort(const char *reason)
     layoutHome();
 }
 
-/**
- * Populates the fields of resp with the signature of the active transaction
- */
-void stellar_fillSignedTx(StellarSignedTx *resp)
-{
-    StellarTransaction *activeTx = stellar_getActiveTx();
-
-    // Finalize the transaction by hashing 4 null bytes representing a (currently unused) empty union
-    stellar_hashupdate_uint32(0);
-
-    // Add the public key for verification that the right account was used for signing
-    memcpy(resp->public_key.bytes, &(activeTx->signing_pubkey), 32);
-    resp->public_key.size = 32;
-    resp->has_public_key = true;
-
-    // Add the signature (note that this does not include the 4-byte hint since it can be calculated from the public key)
-    uint8_t signature[64];
-    // Note: this calls sha256_Final on the hash context
-    stellar_getSignatureForActiveTx(signature);
-    memcpy(resp->signature.bytes, signature, sizeof(signature));
-    resp->signature.size = sizeof(signature);
-    resp->has_signature = true;
-}
-
-uint8_t stellar_allOperationsConfirmed()
-{
-    return stellar_activeTx.confirmed_operations == stellar_activeTx.num_operations;
-}
-
-StellarTransaction *stellar_getActiveTx()
-{
-    return &stellar_activeTx;
-}
-
 /*
  * Calculates and sets the signature for the active transaction
  */
-void stellar_getSignatureForActiveTx(uint8_t *out_signature)
+static void stellar_getSignatureForActiveTx(uint8_t *out_signature)
 {
     HDNode *node = stellar_deriveNode(stellar_activeTx.address_n, stellar_activeTx.address_n_count);
 
@@ -1244,6 +1133,33 @@ void stellar_getSignatureForActiveTx(uint8_t *out_signature)
     ed25519_sign(to_sign, sizeof(to_sign), node->private_key, node->public_key + 1, signature);
 
     memcpy(out_signature, signature, sizeof(signature));
+}
+
+/**
+ * Populates the fields of resp with the signature of the active transaction
+ */
+void stellar_fillSignedTx(StellarSignedTx *resp)
+{
+    // Finalize the transaction by hashing 4 null bytes representing a (currently unused) empty union
+    stellar_hashupdate_uint32(0);
+
+    // Add the public key for verification that the right account was used for signing
+    memcpy(resp->public_key.bytes, stellar_activeTx.signing_pubkey, 32);
+    resp->public_key.size = 32;
+    resp->has_public_key = true;
+
+    // Add the signature (note that this does not include the 4-byte hint since it can be calculated from the public key)
+    uint8_t signature[64];
+    // Note: this calls sha256_Final on the hash context
+    stellar_getSignatureForActiveTx(signature);
+    memcpy(resp->signature.bytes, signature, sizeof(signature));
+    resp->signature.size = sizeof(signature);
+    resp->has_signature = true;
+}
+
+bool stellar_allOperationsConfirmed()
+{
+    return stellar_activeTx.confirmed_operations == stellar_activeTx.num_operations;
 }
 
 /*
