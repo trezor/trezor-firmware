@@ -1,17 +1,13 @@
-python-trezor
-=============
+# python-trezor
 
-[![image](https://travis-ci.org/trezor/python-trezor.svg?branch=master)](https://travis-ci.org/trezor/python-trezor)
-
-[![image](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
+[![image](https://travis-ci.org/trezor/python-trezor.svg?branch=master)](https://travis-ci.org/trezor/python-trezor) [![repology](https://repology.org/badge/tiny-repos/python:trezor.svg)](https://repology.org/metapackage/python:trezor) [![image](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
 
 Python library and commandline client for communicating with TREZOR
 Hardware Wallet
 
 See <https://trezor.io> for more information
 
-Install
--------
+## Install
 
 Python-trezor requires Python 3.3 or higher, and libusb 1.0. The easiest
 way to install it is with `pip`. The rest of this guide assumes you have
@@ -79,8 +75,7 @@ cd /usr/ports/security/py-trezor
 make install clean
 ```
 
-Command line client (trezorctl)
-------------------------------
+## Command line client (trezorctl)
 
 The included `trezorctl` python script can perform various tasks such as
 changing setting in the Trezor, signing transactions, retrieving account
@@ -91,38 +86,35 @@ NOTE: An older version of the `trezorctl` command is [available for
 Debian Stretch](https://packages.debian.org/en/stretch/python-trezor)
 (and comes pre-installed on [Tails OS](https://tails.boum.org/)).
 
-Python Library
---------------
+## Python Library
 
 You can use this python library to interact with a Bitcoin Trezor and
 use its capabilities in your application. See examples here in the
 [tools/](tools/) sub folder.
 
-PIN Entering
-------------
+## PIN Entering
 
 When you are asked for PIN, you have to enter scrambled PIN. Follow the
 numbers shown on TREZOR display and enter the their positions using the
 numeric keyboard mapping:
 
-<table>
-<tr><td>7<td>8<td>9
-<tr><td>4<td>5<td>6
-<tr><td>1<td>2<td>3
-</table>
+|   |   |   |
+|---|---|---|
+| 7 | 8 | 9 |
+| 4 | 5 | 6 |
+| 1 | 2 | 3 |
 
 Example: your PIN is **1234** and TREZOR is displaying the following:
 
-<table>
-<tr><td>2<td>8<td>3
-<tr><td>5<td>4<td>6
-<tr><td>7<td>9<td>1
-</table>
+|   |   |   |
+|---|---|---|
+| 2 | 8 | 3 |
+| 5 | 4 | 6 |
+| 7 | 9 | 1 |
 
 You have to enter: **3795**
 
-Contributing
-------------
+## Contributing
 
 Python-trezor pulls coins info and protobuf messages from
 [trezor-common](https://github.com/trezor/trezor-common) repository. If
