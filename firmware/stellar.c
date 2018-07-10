@@ -174,7 +174,7 @@ bool stellar_confirmSourceAccount(bool has_source_account, char *str_account)
         str_addr_rows[1],
         str_addr_rows[2]
     );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
         stellar_signingAbort(_("User canceled"));
         return false;
     }
@@ -1199,13 +1199,11 @@ void stellar_signingAbort(const char *reason)
  */
 void stellar_fillSignedTx(StellarSignedTx *resp)
 {
-    StellarTransaction *activeTx = stellar_getActiveTx();
-
     // Finalize the transaction by hashing 4 null bytes representing a (currently unused) empty union
     stellar_hashupdate_uint32(0);
 
     // Add the public key for verification that the right account was used for signing
-    memcpy(resp->public_key.bytes, &(activeTx->signing_pubkey), 32);
+    memcpy(resp->public_key.bytes, stellar_activeTx.signing_pubkey, 32);
     resp->public_key.size = 32;
     resp->has_public_key = true;
 
@@ -1218,14 +1216,9 @@ void stellar_fillSignedTx(StellarSignedTx *resp)
     resp->has_signature = true;
 }
 
-uint8_t stellar_allOperationsConfirmed()
+bool stellar_allOperationsConfirmed()
 {
     return stellar_activeTx.confirmed_operations == stellar_activeTx.num_operations;
-}
-
-StellarTransaction *stellar_getActiveTx()
-{
-    return &stellar_activeTx;
 }
 
 /*

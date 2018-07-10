@@ -85,9 +85,8 @@ void stellar_hashupdate_address(uint8_t *address_bytes);
 void stellar_hashupdate_asset(StellarAssetType *asset);
 void stellar_hashupdate_bytes(uint8_t *data, size_t len);
 
-StellarTransaction *stellar_getActiveTx(void);
 void stellar_fillSignedTx(StellarSignedTx *resp);
-uint8_t stellar_allOperationsConfirmed(void);
+bool stellar_allOperationsConfirmed(void);
 void stellar_getSignatureForActiveTx(uint8_t *out_signature);
 
 void stellar_format_uint32(uint32_t number, char *out, size_t outlen);
