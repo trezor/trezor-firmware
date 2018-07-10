@@ -9,3 +9,4 @@ trezor = {git = "https://github.com/trezor/python-trezor", editable = true, ref 
 pytest = "*"
 mock = "*"
 typing = "*"
+protobuf = "==3.4.0"
