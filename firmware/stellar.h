@@ -53,6 +53,7 @@ typedef struct {
 // Signing process
 void stellar_signingInit(StellarSignTx *tx);
 void stellar_signingAbort(const char *reason);
+bool stellar_confirmSourceAccount(bool has_source_account, char *str_account);
 bool stellar_confirmCreateAccountOp(StellarCreateAccountOp *msg);
 bool stellar_confirmPaymentOp(StellarPaymentOp *msg);
 bool stellar_confirmPathPaymentOp(StellarPathPaymentOp *msg);
@@ -84,8 +85,10 @@ void stellar_hashupdate_address(uint8_t *address_bytes);
 void stellar_hashupdate_asset(StellarAssetType *asset);
 void stellar_hashupdate_bytes(uint8_t *data, size_t len);
 
+StellarTransaction *stellar_getActiveTx(void);
 void stellar_fillSignedTx(StellarSignedTx *resp);
-bool stellar_allOperationsConfirmed(void);
+uint8_t stellar_allOperationsConfirmed(void);
+void stellar_getSignatureForActiveTx(uint8_t *out_signature);
 
 void stellar_format_uint32(uint32_t number, char *out, size_t outlen);
 void stellar_format_uint64(uint64_t number, char *out, size_t outlen);
