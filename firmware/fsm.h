@@ -20,18 +20,24 @@
 #ifndef __FSM_H__
 #define __FSM_H__
 
-#include "messages.pb.h"
+#include "messages-bitcoin.pb.h"
+#include "messages-crypto.pb.h"
+#include "messages-debug.pb.h"
+#include "messages-ethereum.pb.h"
+#include "messages-management.pb.h"
+#include "messages-nem.pb.h"
+#include "messages-stellar.pb.h"
 
 // message functions
 
 void fsm_sendSuccess(const char *text);
 
 #if DEBUG_LINK
-void fsm_sendFailureDebug(FailureType code, const char *text, const char *source);
+void fsm_sendFailureDebug(Failure_FailureType code, const char *text, const char *source);
 
 #define fsm_sendFailure(code, text) fsm_sendFailureDebug((code), (text), __FILE__ ":" VERSTR(__LINE__) ":")
 #else
-void fsm_sendFailure(FailureType code, const char *text);
+void fsm_sendFailure(Failure_FailureType code, const char *text);
 #endif
 
 void fsm_msgInitialize(Initialize *msg);

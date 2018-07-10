@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "bip32.h"
-#include "messages.pb.h"
+#include "messages-ethereum.pb.h"
 
 void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node);
 void ethereum_signing_abort(void);

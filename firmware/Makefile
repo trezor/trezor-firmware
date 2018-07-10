@@ -82,8 +82,15 @@ OBJS += ../vendor/nanopb/pb_common.o
 OBJS += ../vendor/nanopb/pb_decode.o
 OBJS += ../vendor/nanopb/pb_encode.o
 
+OBJS += protob/common.pb.o
 OBJS += protob/messages.pb.o
-OBJS += protob/types.pb.o
+OBJS += protob/messages-bitcoin.pb.o
+OBJS += protob/messages-crypto.pb.o
+OBJS += protob/messages-debug.pb.o
+OBJS += protob/messages-ethereum.pb.o
+OBJS += protob/messages-management.pb.o
+OBJS += protob/messages-nem.pb.o
+OBJS += protob/messages-stellar.pb.o
 
 OPTFLAGS ?= -Os
 

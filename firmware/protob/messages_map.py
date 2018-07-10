@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 from collections import defaultdict
 from messages_pb2 import MessageType
-
-from types_pb2 import wire_in, wire_out
-from types_pb2 import wire_debug_in, wire_debug_out
-from types_pb2 import wire_bootloader, wire_tiny
+from messages_pb2 import wire_in, wire_out
+from messages_pb2 import wire_debug_in, wire_debug_out
+from messages_pb2 import wire_bootloader, wire_no_fsm
 
 # len("MessageType_MessageType_") - len("_fields") == 17
 TEMPLATE = "\t{{ {type} {dir} {msg_id:46} {fields:29} {process_func} }},"
@@ -27,14 +26,14 @@ def handle_message(message, extension):
 
     options = message.GetOptions()
     bootloader = options.Extensions[wire_bootloader]
-    tiny = options.Extensions[wire_tiny] and direction == "i"
+    no_fsm = options.Extensions[wire_no_fsm]
 
     if getattr(options, 'deprecated', None):
         return '\t// Message %s is deprecated' % short_name
     if bootloader:
         return '\t// Message %s is used in bootloader mode only' % short_name
-    if tiny:
-        return '\t// Message %s is used in tiny mode' % short_name
+    if no_fsm:
+        return '\t// Message %s is not used in FSM' % short_name
 
     if direction == "i":
         process_func = "(void (*)(void *)) fsm_msg%s" % short_name

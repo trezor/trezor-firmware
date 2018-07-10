@@ -21,9 +21,9 @@
 #define __PROTECT_H__
 
 #include <stdbool.h>
-#include "types.pb.h"
+#include "messages-management.pb.h"
 
-bool protectButton(ButtonRequestType type, bool confirm_only);
+bool protectButton(ButtonRequest_ButtonRequestType type, bool confirm_only);
 bool protectPin(bool use_cached);
 bool protectChangePin(void);
 bool protectPassphrase(void);

@@ -63,8 +63,8 @@ void fsm_msgEthereumSignMessage(EthereumSignMessage *msg)
 	CHECK_INITIALIZED
 
 	layoutSignMessage(msg->message.bytes, msg->message.size);
-	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+	if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();
 		return;
 	}
@@ -84,21 +84,21 @@ void fsm_msgEthereumVerifyMessage(EthereumVerifyMessage *msg)
 	CHECK_PARAM(msg->has_message, _("No message provided"));
 
 	if (ethereum_message_verify(msg) != 0) {
-		fsm_sendFailure(FailureType_Failure_DataError, _("Invalid signature"));
+		fsm_sendFailure(Failure_FailureType_Failure_DataError, _("Invalid signature"));
 		return;
 	}
 
 	char address[43] = { '0', 'x' };
 	ethereum_address_checksum(msg->address.bytes, address + 2, false, 0);
 	layoutVerifyAddress(address);
-	if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+	if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_Other, false)) {
+		fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();
 		return;
 	}
 	layoutVerifyMessage(msg->message.bytes, msg->message.size);
-	if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+	if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_Other, false)) {
+		fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();
 		return;
 	}

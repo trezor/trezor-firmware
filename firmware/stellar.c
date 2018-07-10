@@ -222,7 +222,7 @@ bool stellar_confirmCreateAccountOp(StellarCreateAccountOp *msg)
         str_addr_rows[2],
         str_amount_line
     );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
         stellar_signingAbort(_("User canceled"));
         return false;
     }
@@ -280,7 +280,7 @@ bool stellar_confirmPaymentOp(StellarPaymentOp *msg)
         str_addr_rows[1],
         str_addr_rows[2]
     );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
         stellar_signingAbort(_("User canceled"));
         return false;
     }
@@ -349,7 +349,7 @@ bool stellar_confirmPathPaymentOp(StellarPathPaymentOp *msg)
         str_dest_rows[1],
         str_dest_rows[2]
     );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
         stellar_signingAbort(_("User canceled"));
         return false;
     }
@@ -369,7 +369,7 @@ bool stellar_confirmPathPaymentOp(StellarPathPaymentOp *msg)
         _("This is the amount debited"),
         _("from your account.")
     );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
         stellar_signingAbort(_("User canceled"));
         return false;
     }
@@ -464,7 +464,7 @@ bool stellar_confirmManageOfferOp(StellarManageOfferOp *msg)
         str_buying,
         str_buying_asset
     );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
         stellar_signingAbort(_("User canceled"));
         return false;
     }
@@ -544,7 +544,7 @@ bool stellar_confirmCreatePassiveOfferOp(StellarCreatePassiveOfferOp *msg)
         str_buying,
         str_buying_asset
     );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
         stellar_signingAbort(_("User canceled"));
         return false;
     }
@@ -603,7 +603,7 @@ bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg)
             str_addr_rows[1],
             str_addr_rows[2]
         );
-        if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+        if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
             stellar_signingAbort(_("User canceled"));
             return false;
         }
@@ -635,7 +635,7 @@ bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg)
             rows[2],
             rows[3]
         );
-        if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+        if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
             stellar_signingAbort(_("User canceled"));
             return false;
         }
@@ -669,7 +669,7 @@ bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg)
             rows[2],
             rows[3]
         );
-        if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+        if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
             stellar_signingAbort(_("User canceled"));
             return false;
         }
@@ -742,7 +742,7 @@ bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg)
             rows[2],
             rows[3]
         );
-        if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+        if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
             stellar_signingAbort(_("User canceled"));
             return false;
         }
@@ -772,7 +772,7 @@ bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg)
             NULL,
             NULL
         );
-        if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+        if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
             stellar_signingAbort(_("User canceled"));
             return false;
         }
@@ -814,7 +814,7 @@ bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg)
                 str_addr_rows[1],
                 str_addr_rows[2]
             );
-            if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+            if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
                 stellar_signingAbort(_("User canceled"));
                 return false;
             }
@@ -831,7 +831,7 @@ bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg)
                 _("(confirm hash on next"),
                 _("screen)")
             );
-            if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+            if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
                 stellar_signingAbort(_("User canceled"));
                 return false;
             }
@@ -848,7 +848,7 @@ bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg)
                 _("(confirm hash on next"),
                 _("screen)")
             );
-            if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+            if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
                 stellar_signingAbort(_("User canceled"));
                 return false;
             }
@@ -868,7 +868,7 @@ bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg)
                 rows[2],
                 rows[3]
             );
-            if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+            if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
                 stellar_signingAbort(_("User canceled"));
                 return false;
             }
@@ -928,7 +928,7 @@ bool stellar_confirmChangeTrustOp(StellarChangeTrustOp *msg)
     uint8_t asset_issuer_bytes[STELLAR_KEY_SIZE];
     if (!stellar_getAddressBytes(msg->asset.issuer, asset_issuer_bytes)) {
         stellar_signingAbort(_("User canceled"));
-        fsm_sendFailure(FailureType_Failure_ProcessError, _("Invalid asset issuer"));
+        fsm_sendFailure(Failure_FailureType_Failure_ProcessError, _("Invalid asset issuer"));
         return false;
     }
 
@@ -942,7 +942,7 @@ bool stellar_confirmChangeTrustOp(StellarChangeTrustOp *msg)
         str_addr_rows[1],
         str_addr_rows[2]
     );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
         stellar_signingAbort(_("User canceled"));
         return false;
     }
@@ -1003,7 +1003,7 @@ bool stellar_confirmAllowTrustOp(StellarAllowTrustOp *msg)
         str_trustor_rows[1],
         str_trustor_rows[2]
     );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
         stellar_signingAbort(_("User canceled"));
         return false;
     }
@@ -1061,7 +1061,7 @@ bool stellar_confirmAccountMergeOp(StellarAccountMergeOp *msg)
         str_destination_rows[1],
         str_destination_rows[2]
     );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
         stellar_signingAbort(_("User canceled"));
         return false;
     }
@@ -1104,7 +1104,7 @@ bool stellar_confirmManageDataOp(StellarManageDataOp *msg)
         str_key_lines[2],
         str_key_lines[3]
     );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
         stellar_signingAbort(_("User canceled"));
         return false;
     }
@@ -1124,7 +1124,7 @@ bool stellar_confirmManageDataOp(StellarManageDataOp *msg)
             str_hash_lines[2],
             str_hash_lines[3]
         );
-        if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+        if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
             stellar_signingAbort(_("User canceled"));
             return false;
         }
@@ -1170,7 +1170,7 @@ bool stellar_confirmBumpSequenceOp(StellarBumpSequenceOp *msg)
         NULL,
         NULL
     );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
         stellar_signingAbort(_("User canceled"));
         return false;
     }
@@ -1190,7 +1190,7 @@ void stellar_signingAbort(const char *reason)
     }
 
     stellar_signing = false;
-    fsm_sendFailure(FailureType_Failure_ProcessError, reason);
+    fsm_sendFailure(Failure_FailureType_Failure_ProcessError, reason);
     layoutHome();
 }
 
@@ -1680,7 +1680,7 @@ void stellar_layoutTransactionSummary(StellarSignTx *msg)
         str_addr_rows[1],
         str_addr_rows[2]
     );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
         stellar_signingAbort(_("User canceled"));
         return;
     }
@@ -1734,7 +1734,7 @@ void stellar_layoutTransactionSummary(StellarSignTx *msg)
         str_lines[3],
         str_lines[4]
     );
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
         stellar_signingAbort(_("User canceled"));
         return;
     }
@@ -1782,7 +1782,7 @@ void stellar_layoutTransactionSummary(StellarSignTx *msg)
             str_lines[2],
             str_lines[3]
         );
-        if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+        if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
             stellar_signingAbort(_("User canceled"));
             return;
         }

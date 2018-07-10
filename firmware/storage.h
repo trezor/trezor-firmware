@@ -20,9 +20,8 @@
 #ifndef __STORAGE_H__
 #define __STORAGE_H__
 
-#include "types.pb.h"
-#include "messages.pb.h"
 #include "bip32.h"
+#include "messages-management.pb.h"
 
 #define STORAGE_FIELD(TYPE, NAME) \
     bool has_##NAME; \

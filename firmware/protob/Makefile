@@ -2,7 +2,7 @@ ifneq ($(V),1)
 Q := @
 endif
 
-all: messages.pb.c types.pb.c messages_map.h
+all: messages_map.h common.pb.c messages-bitcoin.pb.c messages-crypto.pb.c messages-debug.pb.c messages-ethereum.pb.c messages-management.pb.c messages-nem.pb.c messages.pb.c messages-stellar.pb.c messages_nem_pb2.py
 
 PYTHON ?= python
 
@@ -14,12 +14,16 @@ PYTHON ?= python
 	@printf "  PROTOC  $@\n"
 	$(Q)protoc -I/usr/include -I. $< -o $@
 
+messages_%_pb2.py: messages-%.proto
+	@printf "  PROTOC  $@\n"
+	$(Q)protoc -I/usr/include -I. $< --python_out=.
+
 %_pb2.py: %.proto
 	@printf "  PROTOC  $@\n"
 	$(Q)protoc -I/usr/include -I. $< --python_out=.
 
-messages_map.h: messages_map.py messages_pb2.py types_pb2.py
-	$(Q)$(PYTHON) $< | grep -v -e MessageType_Lisk > $@
+messages_map.h: messages_map.py messages_pb2.py
+	$(Q)$(PYTHON) $< | grep -v -e MessageType_Cardano -e MessageType_Lisk -e MessageType_Tezos > $@
 
 clean:
 	rm -f *.pb *.o *.d *.pb.c *.pb.h *_pb2.py messages_map.h

@@ -29,7 +29,8 @@
 #include <pb.h>
 #include "coins.h"
 #include "hasher.h"
-#include "types.pb.h"
+#include "messages-bitcoin.pb.h"
+#include "messages-crypto.pb.h"
 
 #define ser_length_size(len) ((len) < 253 ? 1 : (len) < 0x10000 ? 3 : 5)
 
@@ -51,7 +52,7 @@ int cryptoMessageEncrypt(curve_point *pubkey, const uint8_t *msg, size_t msg_siz
 int cryptoMessageDecrypt(curve_point *nonce, uint8_t *payload, size_t payload_len, const uint8_t *hmac, size_t hmac_len, const uint8_t *privkey, uint8_t *msg, size_t *msg_len, bool *display_only, bool *signing, uint8_t *address_raw);
 */
 
-uint8_t *cryptoHDNodePathToPubkey(const CoinInfo *coin, const HDNodePathType *hdnodepath);
+uint8_t *cryptoHDNodePathToPubkey(const CoinInfo *coin, const MultisigRedeemScriptType_HDNodePathType *hdnodepath);
 
 int cryptoMultisigPubkeyIndex(const CoinInfo *coin, const MultisigRedeemScriptType *multisig, const uint8_t *pubkey);
 

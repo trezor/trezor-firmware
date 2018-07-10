@@ -1,0 +1,38 @@
+CipherKeyValue.address_n                max_count:8
+CipherKeyValue.key                      max_size:256
+CipherKeyValue.value                    max_size:1024
+CipherKeyValue.iv                       max_size:16
+
+CipheredKeyValue.value                  max_size:1024
+
+CosiCommit.address_n                    max_count:8
+CosiCommit.data                         max_size:32
+
+CosiCommitment.commitment               max_size:32
+CosiCommitment.pubkey                   max_size:32
+
+CosiSign.address_n                      max_count:8
+CosiSign.data                           max_size:32
+CosiSign.global_commitment              max_size:32
+CosiSign.global_pubkey                  max_size:32
+
+CosiSignature.signature                 max_size:32
+
+SignIdentity.challenge_hidden           max_size:256
+SignIdentity.challenge_visual           max_size:256
+SignIdentity.ecdsa_curve_name           max_size:32
+
+SignedIdentity.address                  max_size:130
+SignedIdentity.public_key               max_size:33
+SignedIdentity.signature                max_size:65
+
+IdentityType.proto                      max_size:9
+IdentityType.user                       max_size:64
+IdentityType.host                       max_size:64
+IdentityType.port                       max_size:6
+IdentityType.path                       max_size:256
+
+GetECDHSessionKey.peer_public_key       max_size:65
+GetECDHSessionKey.ecdsa_curve_name      max_size:32
+
+ECDHSessionKey.session_key              max_size:65

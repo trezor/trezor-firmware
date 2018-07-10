@@ -20,12 +20,12 @@ HEADER_TEMPLATE = """
 #ifndef __NEM_MOSAICS_H__
 #define __NEM_MOSAICS_H__
 
-#include "types.pb.h"
+#include "messages-nem.pb.h"
 
 #define NEM_MOSAIC_DEFINITIONS_COUNT ({count})
 
-extern const NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT];
-extern const NEMMosaicDefinition *NEM_MOSAIC_DEFINITION_XEM;
+extern const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT];
+extern const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition *NEM_MOSAIC_DEFINITION_XEM;
 
 #endif
 """.lstrip()  # noqa: E501
@@ -35,9 +35,9 @@ CODE_TEMPLATE = """
 
 #include "nem_mosaics.h"
 
-const NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT] = {code};
+const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT] = {code};
 
-const NEMMosaicDefinition *NEM_MOSAIC_DEFINITION_XEM = NEM_MOSAIC_DEFINITIONS;
+const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition *NEM_MOSAIC_DEFINITION_XEM = NEM_MOSAIC_DEFINITIONS;
 """.lstrip()  # noqa: E501
 
 
@@ -67,7 +67,7 @@ def format_field(field, value):
     if field.message_type is not None:
         raise TypeError
     elif field.enum_type:
-        type_name = field.enum_type.name
+        type_name = field.enum_type.full_name.replace('.', '_')
         enum_name = field.enum_type.values_by_number[value].name
         return "{0}_{1}".format(type_name, enum_name)
     elif hasattr(value, "_values"):
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
     sys.path.insert(0, "protob")
-    import types_pb2 as types
+    import messages_nem_pb2
 
     messages = json.load(open("defs/nem/nem_mosaics.json"))
 
@@ -118,5 +118,5 @@ if __name__ == "__main__":
 
     with open("nem_mosaics.c", "w+") as f:
         f.write(CODE_TEMPLATE.format(
-            code=format_messages(messages, types.NEMMosaicDefinition))
+            code=format_messages(messages, messages_nem_pb2.NEMSignTx.NEMMosaicCreation.NEMMosaicDefinition))
         )

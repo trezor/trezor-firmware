@@ -8,7 +8,7 @@ void fsm_msgStellarGetAddress(StellarGetAddress *msg)
 
     HDNode *node = stellar_deriveNode(msg->address_n, msg->address_n_count);
     if (!node) {
-        fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to derive private key"));
+        fsm_sendFailure(Failure_FailureType_Failure_ProcessError, _("Failed to derive private key"));
         return;
     }
 
@@ -21,8 +21,8 @@ void fsm_msgStellarGetAddress(StellarGetAddress *msg)
             NULL,
             NULL, NULL
             );
-        if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-            fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+        if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+            fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
             layoutHome();
             return;
         }
@@ -46,7 +46,7 @@ void fsm_msgStellarGetPublicKey(StellarGetPublicKey *msg)
 
     HDNode *node = stellar_deriveNode(msg->address_n, msg->address_n_count);
     if (!node) {
-        fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to derive private key"));
+        fsm_sendFailure(Failure_FailureType_Failure_ProcessError, _("Failed to derive private key"));
         return;
     }
 
@@ -61,8 +61,8 @@ void fsm_msgStellarGetPublicKey(StellarGetPublicKey *msg)
             str_pubkey_rows[3],
             NULL, NULL
             );
-        if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-            fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+        if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+            fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
             layoutHome();
             return;
         }
