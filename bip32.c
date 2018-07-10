@@ -268,12 +268,11 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 	return 1;
 }
 
-#ifdef USE_CARDANO
+#if USE_CARDANO
 static void multiply8(uint8_t *dst, uint8_t *src, int bytes)
 {
-	int i;
 	uint8_t prev_acc = 0;
-	for (i = 0; i < bytes; i++) {
+	for (int i = 0; i < bytes; i++) {
 		dst[i] = (src[i] << 3) + (prev_acc & 0x8);
 		prev_acc = src[i] >> 5;
 	}
@@ -281,8 +280,7 @@ static void multiply8(uint8_t *dst, uint8_t *src, int bytes)
 
 static void add_256bits(uint8_t *dst, uint8_t *src1, uint8_t *src2)
 {
-	int i;
-	for (i = 0; i < 32; i++) {
+	for (int i = 0; i < 32; i++) {
 		uint8_t a = src1[i];
 		uint8_t b = src2[i];
 		uint16_t r = a + b;
@@ -290,7 +288,7 @@ static void add_256bits(uint8_t *dst, uint8_t *src1, uint8_t *src2)
 	}
 }
 
-int ed25519_scalar_add(const uint8_t *sk1, const uint8_t *sk2, uint8_t *res)
+static int ed25519_scalar_add(const uint8_t *sk1, const uint8_t *sk2, uint8_t *res)
 {
 	bignum256modm s1, s2;
 	expand256_modm(s1, sk1, 32);
@@ -302,9 +300,9 @@ int ed25519_scalar_add(const uint8_t *sk1, const uint8_t *sk2, uint8_t *res)
 
 int hdnode_private_ckd_cardano(HDNode *inout, uint32_t i)
 {
-	//checks for hardened/non-hardened derivation, keysize 32 means we are dealing with public key and thus non-h, keysize 64 is for private key
+	// checks for hardened/non-hardened derivation, keysize 32 means we are dealing with public key and thus non-h, keysize 64 is for private key
 	int keysize = 32;
-	if(i & 0x80000000){
+	if (i & 0x80000000) {
 		keysize = 64;
 	}
 
@@ -342,10 +340,10 @@ int hdnode_private_ckd_cardano(HDNode *inout, uint32_t i)
 	memcpy(inout->private_key, res_key, 32);
 	memcpy(inout->private_key_extension, res_key + 32, 32);
 
-	if(keysize == 64){
-		data[0]=1;
-	}else{
-		data[0]=3;
+	if (keysize == 64) {
+		data[0] = 1;
+	} else {
+		data[0] = 3;
 	}
 	hmac_sha512_Init(&ctx, inout->chain_code, 32);
 	hmac_sha512_Update(&ctx, data, 1 + keysize + 4);
@@ -366,28 +364,24 @@ int hdnode_private_ckd_cardano(HDNode *inout, uint32_t i)
 	return 1;
 }
 
-void decitoa(int val, char * out){
-    
-    static char buf[32] = {0};
-    
-    int i = 30;
-    
-    for(; val && i ; --i, val /= 10){
-        buf[i] = "0123456789"[val % 10];
-    }
-    
-    memcpy(out,&buf[i+1],strlen(&buf[i+1])+1);    
+static void decitoa(int val, char *out) {
+	static char buf[32] = {0};
+	int i = 30;
+	for (; val && i; --i, val /= 10) {
+		buf[i] = "0123456789"[val % 10];
+	}
+	memcpy(out, &buf[i + 1], strlen(&buf[i + 1]) + 1);
 }
 
-int hdnode_from_seed_cardano(uint8_t *seed, int seed_len, HDNode *out){
+int hdnode_from_seed_cardano(uint8_t *seed, int seed_len, HDNode *out) {
 	uint8_t hash[32];
 	uint8_t cbor[32+2];
 
-	if(seed_len < 24){
+	if (seed_len < 24) {
 		// cbor encodes length directly into first byte if its smaller than 24
 		seed[1] = 64 | seed_len; 
 		blake2b(seed + 1, seed_len + 1, hash, 32);
-	}else{
+	} else {
 		seed[0] = 88;
 		seed[1] = seed_len;
 		blake2b(seed, seed_len + 2, hash, 32);
@@ -410,7 +404,7 @@ int hdnode_from_seed_cardano(uint8_t *seed, int seed_len, HDNode *out){
 	out->curve = get_curve_by_name(ED25519_CARDANO_NAME);
 
 	static CONFIDENTIAL HMAC_SHA512_CTX ctx;
-	for(int i = 1; i <= 1000; i++){
+	for (int i = 1; i <= 1000; i++){
 		hmac_sha512_Init(&ctx, cbor, 34);
 		decitoa(i, c);
 		memcpy(salt + 16, c, strlen(c) + 1);
@@ -434,7 +428,7 @@ int hdnode_from_seed_cardano(uint8_t *seed, int seed_len, HDNode *out){
 	memzero(salt, strlen(salt) + 1);
 	memzero(c, strlen(c) + 1);
 
-	if(failed){
+	if (failed) {
 		memzero(seed, sizeof(seed));
 		memzero(secret, sizeof(secret));
 		memzero(chain_code, sizeof(chain_code));
@@ -642,8 +636,8 @@ void hdnode_fill_public_key(HDNode *node)
 #endif
 		} else if (node->curve == &curve25519_info) {
 			curve25519_scalarmult_basepoint(node->public_key + 1, node->private_key);
-#ifdef USE_CARDANO
-		} else if (node->curve == &ed25519_cardano_info){
+#if USE_CARDANO
+		} else if (node->curve == &ed25519_cardano_info) {
 			ed25519_publickey_ext(node->private_key, node->private_key_extension, node->public_key + 1);
 #endif
 		}

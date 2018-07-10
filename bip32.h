@@ -62,7 +62,7 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, const char *curve, HDNod
 #define hdnode_private_ckd_prime(X, I) hdnode_private_ckd((X), ((I) | 0x80000000))
 
 int hdnode_private_ckd(HDNode *inout, uint32_t i);
-#ifdef USE_CARDANO
+#if USE_CARDANO
 int hdnode_private_ckd_cardano(HDNode *inout, uint32_t i);
 int hdnode_from_seed_cardano(uint8_t *seed, int seed_len, HDNode *out);
 #endif

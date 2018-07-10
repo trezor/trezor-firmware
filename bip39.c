@@ -136,76 +136,14 @@ const uint16_t *mnemonic_from_data_indexes(const uint8_t *data, int len)
 	return mnemo;
 }
 
-int mnemonic_to_entropy(const char *mnemonic, uint8_t *entropy){
-	if (!mnemonic) {
-		return 0;
-	}
-
-	uint32_t i, n;
-
-	i = 0; n = 0;
-	while (mnemonic[i]) {
-		if (mnemonic[i] == ' ') {
-			n++;
-		}
-		i++;
-	}
-	n++;
-	// check number of words
-	if (n != 12 && n != 18 && n != 24) {
-		return 0;
-	}
-
-	char current_word[10];
-	uint32_t j, k, ki, bi;
-	uint8_t bits[32 + 1];
-
-	memzero(bits, sizeof(bits));
-	i = 0; bi = 0;
-	while (mnemonic[i]) {
-		j = 0;
-		while (mnemonic[i] != ' ' && mnemonic[i] != 0) {
-			if (j >= sizeof(current_word) - 1) {
-				return 0;
-			}
-			current_word[j] = mnemonic[i];
-			i++; j++;
-		}
-		current_word[j] = 0;
-		if (mnemonic[i] != 0) i++;
-		k = 0;
-		for (;;) {
-			if (!wordlist[k]) { // word not found
-				return 0;
-			}
-			if (strcmp(current_word, wordlist[k]) == 0) { // word found on index k
-				for (ki = 0; ki < 11; ki++) {
-					if (k & (1 << (10 - ki))) {
-						bits[bi / 8] |= 1 << (7 - (bi % 8));
-					}
-					bi++;
-				}
-				break;
-			}
-			k++;
-		}
-	}
-	if (bi != n * 11) {
-		return 0;
-	}
-	memcpy(entropy,bits,sizeof(bits));
-	return (n*11);
-}
-
-int mnemonic_check(const char *mnemonic)
+int mnemonic_to_entropy(const char *mnemonic, uint8_t *entropy)
 {
 	if (!mnemonic) {
 		return 0;
 	}
 
-	uint32_t i, n;
+	uint32_t i = 0, n = 0;
 
-	i = 0; n = 0;
 	while (mnemonic[i]) {
 		if (mnemonic[i] == ' ') {
 			n++;
@@ -213,17 +151,18 @@ int mnemonic_check(const char *mnemonic)
 		i++;
 	}
 	n++;
+
 	// check number of words
 	if (n != 12 && n != 18 && n != 24) {
 		return 0;
 	}
 
 	char current_word[10];
-	uint32_t j, k, ki, bi;
+	uint32_t j, k, ki, bi = 0;
 	uint8_t bits[32 + 1];
 
 	memzero(bits, sizeof(bits));
-	i = 0; bi = 0;
+	i = 0;
 	while (mnemonic[i]) {
 		j = 0;
 		while (mnemonic[i] != ' ' && mnemonic[i] != 0) {
@@ -234,7 +173,9 @@ int mnemonic_check(const char *mnemonic)
 			i++; j++;
 		}
 		current_word[j] = 0;
-		if (mnemonic[i] != 0) i++;
+		if (mnemonic[i] != 0) {
+			i++;
+		}
 		k = 0;
 		for (;;) {
 			if (!wordlist[k]) { // word not found
@@ -255,16 +196,27 @@ int mnemonic_check(const char *mnemonic)
 	if (bi != n * 11) {
 		return 0;
 	}
-	bits[32] = bits[n * 4 / 3];
-	sha256_Raw(bits, n * 4 / 3, bits);
-	if (n == 12) {
-		return (bits[0] & 0xF0) == (bits[32] & 0xF0); // compare first 4 bits
-	} else
-	if (n == 18) {
-		return (bits[0] & 0xFC) == (bits[32] & 0xFC); // compare first 6 bits
-	} else
-	if (n == 24) {
-		return bits[0] == bits[32]; // compare 8 bits
+	memcpy(entropy, bits, sizeof(bits));
+	return n * 11;
+}
+
+int mnemonic_check(const char *mnemonic)
+{
+	uint8_t bits[32 + 1];
+	int seed_len = mnemonic_to_entropy(mnemonic, bits);
+	if (seed_len != (12 * 11) && seed_len != (18 * 11) && seed_len != (24 * 11)) {
+		return 0;
+	}
+	int words = seed_len / 11;
+
+	uint8_t checksum = bits[words * 4 / 3];
+	sha256_Raw(bits, words * 4 / 3, bits);
+	if (words == 12) {
+		return (bits[0] & 0xF0) == (checksum & 0xF0); // compare first 4 bits
+	} else if (words == 18) {
+		return (bits[0] & 0xFC) == (checksum & 0xFC); // compare first 6 bits
+	} else if (words == 24) {
+		return bits[0] == checksum; // compare 8 bits
 	}
 	return 0;
 }

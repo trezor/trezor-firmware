@@ -1,8 +1,3 @@
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#include <check.h>
-
 #include "segwit_addr.h"
 
 static const char* valid_checksum[] = {
@@ -187,4 +182,3 @@ START_TEST(test_segwit)
 	}
 }
 END_TEST
-

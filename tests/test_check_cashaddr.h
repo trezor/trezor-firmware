@@ -1,8 +1,3 @@
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#include <check.h>
-
 #include "cash_addr.h"
 
 static const char* valid_cashchecksum[] = {
@@ -79,4 +74,3 @@ START_TEST(test_cashaddr)
 	}
 }
 END_TEST
-
