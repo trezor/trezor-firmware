@@ -1,13 +1,14 @@
-from apps.common import seed
 from trezor.crypto import der
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha512
-from trezor.messages.RippleSignTx import RippleSignTx
 from trezor.messages.RippleSignedTx import RippleSignedTx
+from trezor.messages.RippleSignTx import RippleSignTx
 from trezor.wire import ProcessError
+
+from . import helpers, layout
 from .serialize import serialize
-from . import helpers
-from . import layout
+
+from apps.common import seed
 
 
 async def sign_tx(ctx, msg: RippleSignTx):
@@ -30,12 +31,12 @@ async def sign_tx(ctx, msg: RippleSignTx):
 
 def check_fee(fee: int):
     if fee < helpers.MIN_FEE or fee > helpers.MAX_FEE:
-        raise ProcessError('Fee must be in the range of 10 to 10,000 drops')
+        raise ProcessError("Fee must be in the range of 10 to 10,000 drops")
 
 
 def get_network_prefix():
     """Network prefix is prepended before the transaction and public key is included"""
-    return helpers.HASH_TX_SIGN.to_bytes(4, 'big')
+    return helpers.HASH_TX_SIGN.to_bytes(4, "big")
 
 
 def first_half_of_sha512(b):
@@ -64,5 +65,13 @@ def set_canonical_flag(msg: RippleSignTx):
 
 
 def validate(msg: RippleSignTx):
-    if None in (msg.fee, msg.sequence, msg.payment, msg.payment.amount, msg.payment.destination):
-        raise ProcessError("Some of the required fields are missing (fee, sequence, payment.amount, payment.destination)")
+    if None in (
+        msg.fee,
+        msg.sequence,
+        msg.payment,
+        msg.payment.amount,
+        msg.payment.destination,
+    ):
+        raise ProcessError(
+            "Some of the required fields are missing (fee, sequence, payment.amount, payment.destination)"
+        )

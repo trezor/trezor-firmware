@@ -9,6 +9,7 @@
 # transaction type and the fields that are required for it.
 #
 from trezor.messages.RippleSignTx import RippleSignTx
+
 from . import helpers
 
 FIELD_TYPE_INT16 = 1
@@ -18,66 +19,34 @@ FIELD_TYPE_VL = 7
 FIELD_TYPE_ACCOUNT = 8
 
 FIELDS_MAP = {
-    'account': {
-        'type': FIELD_TYPE_ACCOUNT,
-        'key': 1,
-    },
-    'amount': {
-        'type': FIELD_TYPE_AMOUNT,
-        'key': 1,
-    },
-    'destination': {
-        'type': FIELD_TYPE_ACCOUNT,
-        'key': 3,
-    },
-    'fee': {
-        'type': FIELD_TYPE_AMOUNT,
-        'key': 8,
-    },
-    'sequence': {
-        'type': FIELD_TYPE_INT32,
-        'key': 4,
-    },
-    'type': {
-        'type': FIELD_TYPE_INT16,
-        'key': 2,
-    },
-    'signingPubKey': {
-        'type': FIELD_TYPE_VL,
-        'key': 3,
-    },
-    'flags': {
-        'type': FIELD_TYPE_INT32,
-        'key': 2,
-    },
-    'txnSignature': {
-        'type': FIELD_TYPE_VL,
-        'key': 4,
-    },
-    'lastLedgerSequence': {
-        'type': FIELD_TYPE_INT32,
-        'key': 27,
-    },
+    "account": {"type": FIELD_TYPE_ACCOUNT, "key": 1},
+    "amount": {"type": FIELD_TYPE_AMOUNT, "key": 1},
+    "destination": {"type": FIELD_TYPE_ACCOUNT, "key": 3},
+    "fee": {"type": FIELD_TYPE_AMOUNT, "key": 8},
+    "sequence": {"type": FIELD_TYPE_INT32, "key": 4},
+    "type": {"type": FIELD_TYPE_INT16, "key": 2},
+    "signingPubKey": {"type": FIELD_TYPE_VL, "key": 3},
+    "flags": {"type": FIELD_TYPE_INT32, "key": 2},
+    "txnSignature": {"type": FIELD_TYPE_VL, "key": 4},
+    "lastLedgerSequence": {"type": FIELD_TYPE_INT32, "key": 27},
 }
 
-TRANSACTION_TYPES = {
-    'Payment': 0,
-}
+TRANSACTION_TYPES = {"Payment": 0}
 
 
 def serialize(msg: RippleSignTx, source_address: str, pubkey=None, signature=None):
     w = bytearray()
     # must be sorted numerically first by type and then by name
-    write(w, FIELDS_MAP['type'], TRANSACTION_TYPES['Payment'])
-    write(w, FIELDS_MAP['flags'], msg.flags)
-    write(w, FIELDS_MAP['sequence'], msg.sequence)
-    write(w, FIELDS_MAP['lastLedgerSequence'], msg.last_ledger_sequence)
-    write(w, FIELDS_MAP['amount'], msg.payment.amount)
-    write(w, FIELDS_MAP['fee'], msg.fee)
-    write(w, FIELDS_MAP['signingPubKey'], pubkey)
-    write(w, FIELDS_MAP['txnSignature'], signature)
-    write(w, FIELDS_MAP['account'], source_address)
-    write(w, FIELDS_MAP['destination'], msg.payment.destination)
+    write(w, FIELDS_MAP["type"], TRANSACTION_TYPES["Payment"])
+    write(w, FIELDS_MAP["flags"], msg.flags)
+    write(w, FIELDS_MAP["sequence"], msg.sequence)
+    write(w, FIELDS_MAP["lastLedgerSequence"], msg.last_ledger_sequence)
+    write(w, FIELDS_MAP["amount"], msg.payment.amount)
+    write(w, FIELDS_MAP["fee"], msg.fee)
+    write(w, FIELDS_MAP["signingPubKey"], pubkey)
+    write(w, FIELDS_MAP["txnSignature"], signature)
+    write(w, FIELDS_MAP["account"], source_address)
+    write(w, FIELDS_MAP["destination"], msg.payment.destination)
     return w
 
 
@@ -85,36 +54,36 @@ def write(w: bytearray, field: dict, value):
     if value is None:
         return
     write_type(w, field)
-    if field['type'] == FIELD_TYPE_INT16:
-        w.extend(value.to_bytes(2, 'big'))
-    elif field['type'] == FIELD_TYPE_INT32:
-        w.extend(value.to_bytes(4, 'big'))
-    elif field['type'] == FIELD_TYPE_AMOUNT:
+    if field["type"] == FIELD_TYPE_INT16:
+        w.extend(value.to_bytes(2, "big"))
+    elif field["type"] == FIELD_TYPE_INT32:
+        w.extend(value.to_bytes(4, "big"))
+    elif field["type"] == FIELD_TYPE_AMOUNT:
         w.extend(serialize_amount(value))
-    elif field['type'] == FIELD_TYPE_ACCOUNT:
+    elif field["type"] == FIELD_TYPE_ACCOUNT:
         write_bytes(w, helpers.decode_address(value))
-    elif field['type'] == FIELD_TYPE_VL:
+    elif field["type"] == FIELD_TYPE_VL:
         write_bytes(w, value)
     else:
-        raise ValueError('Unknown field type')
+        raise ValueError("Unknown field type")
 
 
 def write_type(w: bytearray, field: dict):
-    if field['key'] <= 0xf:
-        w.append((field['type'] << 4) | field['key'])
+    if field["key"] <= 0xf:
+        w.append((field["type"] << 4) | field["key"])
     else:
         # this concerns two-bytes fields such as lastLedgerSequence
-        w.append(field['type'] << 4)
-        w.append(field['key'])
+        w.append(field["type"] << 4)
+        w.append(field["key"])
 
 
 def serialize_amount(value: int) -> bytearray:
     if value < 0 or isinstance(value, float):
-        raise ValueError('Only positive integers are supported')
+        raise ValueError("Only positive integers are supported")
     if value > 100000000000:  # max allowed value
-        raise ValueError('Value is larger than 100000000000')
+        raise ValueError("Value is larger than 100000000000")
 
-    b = bytearray(value.to_bytes(8, 'big'))
+    b = bytearray(value.to_bytes(8, "big"))
     # Clear first bit to indicate XRP
     b[0] &= 0x7f
     # Set second bit to indicate positive number
@@ -145,12 +114,8 @@ def serialize_varint(w, val):
         b.extend([193 + rshift(val, 8), val & 0xff])
     elif val <= 918744:
         val -= 12481
-        b.extend([
-            241 + rshift(val, 16),
-            rshift(val, 8) & 0xff,
-            val & 0xff
-        ])
+        b.extend([241 + rshift(val, 16), rshift(val, 8) & 0xff, val & 0xff])
     else:
-        raise ValueError('Variable integer overflow.')
+        raise ValueError("Variable integer overflow.")
 
     w.extend(b)
