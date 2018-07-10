@@ -364,15 +364,6 @@ int hdnode_private_ckd_cardano(HDNode *inout, uint32_t i)
 	return 1;
 }
 
-static void decitoa(int val, char *out) {
-	static char buf[32] = {0};
-	int i = 30;
-	for (; val && i; --i, val /= 10) {
-		buf[i] = "0123456789"[val % 10];
-	}
-	memcpy(out, &buf[i + 1], strlen(&buf[i + 1]) + 1);
-}
-
 int hdnode_from_seed_cardano(uint8_t *seed, int seed_len, HDNode *out) {
 	uint8_t hash[32];
 	uint8_t cbor[32+2];
@@ -390,9 +381,8 @@ int hdnode_from_seed_cardano(uint8_t *seed, int seed_len, HDNode *out) {
 	cbor[0] = 88; // 64 means its byte array, 24 means its length has 8 bits
 	cbor[1] = 32; // length of the byte array
 	memcpy(cbor + 2, hash, 32);
-	char salt[21];
-	memcpy(salt, "Root Seed Chain xyzw", 16);
-	char c[21];
+	uint8_t salt[21];
+	memcpy(salt, "Root Seed Chain ", 16);
 	uint8_t hmac[64];
 	uint8_t secret[64];
 	uint8_t public[32];
@@ -403,12 +393,30 @@ int hdnode_from_seed_cardano(uint8_t *seed, int seed_len, HDNode *out) {
 	out->child_num = 0;
 	out->curve = get_curve_by_name(ED25519_CARDANO_NAME);
 
+	int saltlen;
 	static CONFIDENTIAL HMAC_SHA512_CTX ctx;
 	for (int i = 1; i <= 1000; i++){
 		hmac_sha512_Init(&ctx, cbor, 34);
-		decitoa(i, c);
-		memcpy(salt + 16, c, strlen(c) + 1);
-		hmac_sha512_Update(&ctx, (unsigned char *)salt, strlen(salt));
+		if (i < 10) {
+			salt[16] = '0' + (i);
+			saltlen = 16 + 1;
+		} else if (i < 100) {
+			salt[16] = '0' + (i / 10);
+			salt[17] = '0' + (i % 10);
+			saltlen = 16 + 2;
+		} else if (i < 1000) {
+			salt[16] = '0' + (i / 100);
+			salt[17] = '0' + ((i / 10) % 10);
+			salt[18] = '0' + (i % 10);
+			saltlen = 16 + 3;
+		} else {
+			salt[16] = '0' + (i / 1000);
+			salt[17] = '0' + ((i / 100) % 10);
+			salt[18] = '0' + ((i / 10) % 10);
+			salt[19] = '0' + (i % 10);
+			saltlen = 16 + 4;
+		}
+		hmac_sha512_Update(&ctx, salt, saltlen);
 		hmac_sha512_Final(&ctx, hmac);
 		ed25519_publickey(hmac, public);
 		sha512_Raw(hmac, 32, secret);
@@ -423,10 +431,9 @@ int hdnode_from_seed_cardano(uint8_t *seed, int seed_len, HDNode *out) {
 		break;
 	}
 
-	memzero(hash, 32);
-	memzero(cbor, 34);
-	memzero(salt, strlen(salt) + 1);
-	memzero(c, strlen(c) + 1);
+	memzero(hash, sizeof(hash));
+	memzero(cbor, sizeof(cbor));
+	memzero(salt, sizeof(salt));
 
 	if (failed) {
 		memzero(seed, sizeof(seed));
