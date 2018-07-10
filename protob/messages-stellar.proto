@@ -54,7 +54,6 @@ message StellarAddress {
 message StellarSignTx {
     repeated uint32 address_n = 2;          // BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
     optional string network_passphrase = 3; // passphrase for signing messages on the destination network
-    optional string source_account = 4;     // source account address
     optional uint32 fee = 5;                // Fee (in stroops) for the transaction
     optional uint64 sequence_number = 6;    // transaction sequence number
     optional uint32 timebounds_start = 8;   // unix timestamp (client must truncate this to 32 bytes)
@@ -91,7 +90,6 @@ message StellarTxOpRequest {
  * @next StellarSignedTx
  */
 message StellarPaymentOp {
-    optional string source_account = 1;         // (optional) source account address
     optional string destination_account = 2;    // destination account address
     optional StellarAssetType asset = 3;        // asset involved in the operation
     optional sint64 amount = 4;                 // amount of the given asset to pay
@@ -104,7 +102,6 @@ message StellarPaymentOp {
  * @next StellarSignedTx
  */
 message StellarCreateAccountOp {
-    optional string source_account = 1;     // (optional) source account address
     optional string new_account = 2;        // account address to create
     optional sint64 starting_balance = 3;   // initial starting balance for the new account
 }
@@ -116,7 +113,6 @@ message StellarCreateAccountOp {
  * @next StellarSignedTx
  */
 message StellarPathPaymentOp {
-    optional string source_account = 1;         // (optional) source address
     optional StellarAssetType send_asset = 2;
     optional sint64 send_max = 3;
     optional string destination_account = 4;
@@ -132,7 +128,6 @@ message StellarPathPaymentOp {
  * @next StellarSignedTx
  */
 message StellarManageOfferOp {
-    optional string source_account = 1;             // (optional) source account address
     optional StellarAssetType selling_asset = 2;
     optional StellarAssetType buying_asset = 3;
     optional sint64 amount = 4;
@@ -148,7 +143,6 @@ message StellarManageOfferOp {
  * @next StellarSignedTx
  */
 message StellarCreatePassiveOfferOp {
-    optional string source_account = 1;             // (optional) source account address
     optional StellarAssetType selling_asset = 2;
     optional StellarAssetType buying_asset = 3;
     optional sint64 amount = 4;
@@ -163,7 +157,6 @@ message StellarCreatePassiveOfferOp {
  * @next StellarSignedTx
  */
 message StellarSetOptionsOp {
-    optional string source_account = 1;                 // (optional) source account address
     optional string inflation_destination_account = 2;  // (optional) inflation destination address
     optional uint32 clear_flags = 3;
     optional uint32 set_flags = 4;
@@ -184,7 +177,6 @@ message StellarSetOptionsOp {
  * @next StellarSignedTx
  */
 message StellarChangeTrustOp {
-    optional string source_account = 1;     // (optional) source account address
     optional StellarAssetType asset = 2;
     optional uint64 limit = 3;
 }
@@ -196,7 +188,6 @@ message StellarChangeTrustOp {
  * @next StellarSignedTx
  */
 message StellarAllowTrustOp {
-    optional string source_account = 1;     // (optional) source account address
     optional string trusted_account = 2;    // The account being allowed to hold the asset
     optional uint32 asset_type = 3;         // 1 = 4-character, 2 = 12-character
     optional string asset_code = 4;         // human-readable asset code
@@ -210,7 +201,6 @@ message StellarAllowTrustOp {
  * @next StellarSignedTx
  */
 message StellarAccountMergeOp {
-    optional string source_account = 1;         // (optional) source account address
     optional string destination_account = 2;    // destination account address
 }
 
@@ -221,7 +211,6 @@ message StellarAccountMergeOp {
  * @next StellarSignedTx
  */
 message StellarManageDataOp {
-    optional string source_account = 1; // (optional) source account address
     optional string key = 2;
     optional bytes value = 3;           // 64 bytes of arbitrary data
 }
@@ -233,7 +222,6 @@ message StellarManageDataOp {
  * @next StellarSignedTx
  */
 message StellarBumpSequenceOp {
-    optional string source_account = 1; // (optional) source account address
     optional uint64 bump_to = 2;        // new sequence number
 }
 
