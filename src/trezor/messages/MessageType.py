@@ -122,3 +122,7 @@ CardanoGetAddress = 307
 CardanoAddress = 308
 CardanoTxAck = 309
 CardanoSignedTransaction = 310
+RippleGetAddress = 400
+RippleAddress = 401
+RippleSignTx = 402
+RippleSignedTx = 403

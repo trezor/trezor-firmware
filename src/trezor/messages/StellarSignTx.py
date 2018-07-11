@@ -11,7 +11,6 @@ if __debug__:
 class StellarSignTx(p.MessageType):
     MESSAGE_WIRE_TYPE = 202
     FIELDS = {
-        1: ('protocol_version', p.UVarintType, 0),
         2: ('address_n', p.UVarintType, p.FLAG_REPEATED),
         3: ('network_passphrase', p.UnicodeType, 0),
         4: ('source_account', p.UnicodeType, 0),
@@ -28,7 +27,6 @@ class StellarSignTx(p.MessageType):
 
     def __init__(
         self,
-        protocol_version: int = None,
         address_n: List[int] = None,
         network_passphrase: str = None,
         source_account: str = None,
@@ -42,7 +40,6 @@ class StellarSignTx(p.MessageType):
         memo_hash: bytes = None,
         num_operations: int = None,
     ) -> None:
-        self.protocol_version = protocol_version
         self.address_n = address_n if address_n is not None else []
         self.network_passphrase = network_passphrase
         self.source_account = source_account
