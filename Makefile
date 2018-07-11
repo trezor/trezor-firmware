@@ -23,7 +23,10 @@ CFLAGS   += $(OPTFLAGS) \
             -Wformat-security \
             -Werror
 
+VALGRIND ?= 1
+
 CFLAGS += -I.
+CFLAGS += -DVALGRIND=$(VALGRIND)
 CFLAGS += -DUSE_ETHEREUM=1
 CFLAGS += -DUSE_GRAPHENE=1
 CFLAGS += -DUSE_NEM=1
