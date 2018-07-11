@@ -431,5 +431,5 @@ program_bin = env.Command(
         '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
         '$BINCTL $TARGET -h',
         '$BINCTL $TARGET -s 1:2 `$KEYCTL sign firmware $TARGET 4747474747474747474747474747474747474747474747474747474747474747 4848484848484848484848484848484848484848484848484848484848484848`' if ARGUMENTS.get('PRODUCTION', '0') == '0' else '',
-        '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128K count=6',
+        '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
     ], )
