@@ -26,16 +26,9 @@ async def get_public_key(ctx, msg: StellarGetPublicKey):
 
 async def _show(ctx, pubkey: bytes):
     lines = split_address(hexlify(pubkey))
-    content = Text(
-        "Export Stellar ID",
-        ui.ICON_RECEIVE,
-        ui.NORMAL,
-        "Share public account ID?",  # todo only two lines are displayed
-        ui.MONO,
-        *lines,
-        icon_color=ui.GREEN
-    )
+    text = Text("Export Stellar ID", ui.ICON_RECEIVE, icon_color=ui.GREEN)
+    text.mono(*lines)
 
     return await confirm(
-        ctx, content, code=ButtonRequestType.Address, cancel_style=ui.BTN_KEY
+        ctx, text, code=ButtonRequestType.Address, cancel_style=ui.BTN_KEY
     )
