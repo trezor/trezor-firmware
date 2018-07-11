@@ -20,20 +20,20 @@ async def require_confirm_init(ctx, address: str, network_passphrase: str):
 
 
 async def require_confirm_memo(ctx, memo_type: int, memo_text: str):
-    if memo_type == consts.MEMO_TYPE_TEXT:
-        title = "Memo (TEXT)"
-    elif memo_type == consts.MEMO_TYPE_ID:
-        title = "Memo (ID)"
-    elif memo_type == consts.MEMO_TYPE_HASH:
-        title = "Memo (HASH)"
-    elif memo_type == consts.MEMO_TYPE_RETURN:
-        title = "Memo (RETURN)"
-    else:  # MEMO_TYPE_NONE
-        title = "No memo set!"  # todo format this as ui.NORMAL not MONO
-        memo_text = "Important: Many exchanges require a memo when depositing"
     text = Text("Confirm memo", ui.ICON_CONFIRM, icon_color=ui.GREEN)
-    text.bold(title)
-    text.mono(*split(memo_text))
+    if memo_type == consts.MEMO_TYPE_TEXT:
+        text.bold("Memo (TEXT)")
+    elif memo_type == consts.MEMO_TYPE_ID:
+        text.bold("Memo (ID)")
+    elif memo_type == consts.MEMO_TYPE_HASH:
+        text.bold("Memo (HASH)")
+    elif memo_type == consts.MEMO_TYPE_RETURN:
+        text.bold("Memo (RETURN)")
+    else:  # MEMO_TYPE_NONE
+        text.bold("No memo set!")
+        text.normal("Important: Many exchanges require a memo when depositing")
+    if memo_type != consts.MEMO_TYPE_NONE:
+        text.mono(*split(memo_text))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
@@ -57,12 +57,10 @@ def format_amount(amount: int, ticker=True) -> str:
     return utils.format_amount(amount, consts.AMOUNT_DIVISIBILITY) + t
 
 
-# todo merge with nem
 def split(text):
     return utils.chunks(text, 17)
 
 
-# todo merge with nem
 def trim(payload: str, length: int, dots=True) -> str:
     if len(payload) > length:
         if dots:
@@ -71,7 +69,6 @@ def trim(payload: str, length: int, dots=True) -> str:
     return payload
 
 
-# todo merge with nem
 def trim_to_rows(payload: str, rows: int = 1) -> str:
     return trim(payload, rows * 17)
 

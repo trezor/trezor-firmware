@@ -97,9 +97,3 @@ async def _memo(ctx, w: bytearray, msg: StellarSignTx):
     else:
         raise ProcessError("Stellar invalid memo type")
     await layout.require_confirm_memo(ctx, msg.memo_type, memo_confirm_text)
-
-
-def node_derive(root, address_n: list):
-    node = root.clone()
-    node.derive_path(address_n)
-    return node
