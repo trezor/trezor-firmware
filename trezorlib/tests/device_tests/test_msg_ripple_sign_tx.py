@@ -80,5 +80,5 @@ class TestMsgRippleSignTx(TrezorTest):
         })
         with pytest.raises(CallException) as exc:
             ripple.sign_tx(self.client, parse_path("m/44'/144'/0'/0/2"), msg)
-            assert exc.value.args[0] == messages.FailureType.ProcessError
-            assert exc.value.args[1].endswith('Fee must be in the range of 10 to 10,000 drops')
+        assert exc.value.args[0] == messages.FailureType.ProcessError
+        assert exc.value.args[1].endswith('Fee must be in the range of 10 to 10,000 drops')
