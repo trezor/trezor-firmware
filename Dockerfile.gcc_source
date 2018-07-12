@@ -11,8 +11,8 @@ RUN apt-get update && apt-get install -y \
 
 # download toolchain
 
-ENV TOOLCHAIN_SHORTVER=7-2017q4
-ENV TOOLCHAIN_LONGVER=gcc-arm-none-eabi-7-2017-q4-major
+ENV TOOLCHAIN_SHORTVER=7-2018q2
+ENV TOOLCHAIN_LONGVER=gcc-arm-none-eabi-7-2018-q2-update
 ENV TOOLCHAIN_FLAVOR=src
 ENV TOOLCHAIN_URL=https://developer.arm.com/-/media/Files/downloads/gnu-rm/$TOOLCHAIN_SHORTVER/$TOOLCHAIN_LONGVER-$TOOLCHAIN_FLAVOR.tar.bz2
 

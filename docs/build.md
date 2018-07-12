@@ -76,7 +76,7 @@ sudo apt-get install scons gcc-arm-none-eabi libnewlib-arm-none-eabi
 
 #### OS X
 
-1. Download [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q3-update/)
+1. Download [gcc-arm-none-eabi](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads)
 2. Follow the [install instructions](https://launchpadlibrarian.net/287100883/readme.txt)
 3. To install OpenOCD, run `brew install open-ocd`
 4. Run `make vendor build_boardloader build_bootloader build_firmware`
