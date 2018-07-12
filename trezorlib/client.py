@@ -33,7 +33,6 @@ from . import mapping
 from . import nem
 from . import protobuf
 from . import stellar
-from . import ripple
 from .debuglink import DebugLink
 
 if sys.version_info.major < 3:
@@ -1082,19 +1081,6 @@ class ProtocolMixin(object):
             raise RuntimeError("Device must be in bootloader mode")
 
         return self.call(proto.SelfTest(payload=b'\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC'))
-
-    @field('address')
-    @expect(proto.RippleAddress)
-    def ripple_get_address(self, address_n, show_display=False):
-        return self.call(
-            proto.RippleGetAddress(
-                address_n=address_n, show_display=show_display))
-
-    @expect(proto.RippleSignedTx)
-    def ripple_sign_tx(self, n, transaction):
-        msg = ripple.create_sign_tx(transaction)
-        msg.address_n = tools.parse_path(n)
-        return self.call(msg)
 
     @field('public_key')
     @expect(proto.StellarPublicKey)

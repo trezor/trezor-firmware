@@ -38,6 +38,7 @@ from trezorlib import messages as proto
 from trezorlib import protobuf
 from trezorlib import stellar
 from trezorlib import tools
+from trezorlib import ripple
 
 
 class ChoiceType(click.Choice):
@@ -1060,8 +1061,16 @@ def stellar_sign_transaction(connect, b64envelope, address, network_passphrase):
 @click.pass_obj
 def ripple_get_address(connect, address, show_display):
     client = connect()
-    address_n = tools.parse_path(address)
-    return client.ripple_get_address(address_n, show_display)
+    return ripple.ripple_get_address(client, address, show_display)
+
+
+@cli.command(help='Sign Ripple transaction')
+@click.option('-n', '--address', required=True, help="BIP-32 path to key, e.g. m/44'/144'/0'/0/0")
+@click.pass_obj
+def ripple_sign_transaction(connect, address, show_display):
+    client = connect()
+    # todo load from json
+    return ripple.ripple_sign_tx(client, address, show_display)
 
 #
 # Main

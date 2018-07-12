@@ -20,6 +20,7 @@ from .common import TrezorTest
 from .conftest import TREZOR_VERSION
 from binascii import hexlify
 from trezorlib.client import CallException
+from trezorlib.ripple import ripple_get_address
 from trezorlib.tools import parse_path
 
 
@@ -32,11 +33,11 @@ class TestMsgRippleGetAddress(TrezorTest):
         # data from https://iancoleman.io/bip39/#english
         self.setup_mnemonic_allallall()
 
-        address = self.client.ripple_get_address(parse_path("m/44'/144'/0'/0/0"))
+        address = ripple_get_address(self.client, parse_path("m/44'/144'/0'/0/0"))
         assert address == 'rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H'
-        address = self.client.ripple_get_address(parse_path("m/44'/144'/0'/0/1"))
+        address = ripple_get_address(self.client, parse_path("m/44'/144'/0'/0/1"))
         assert address == 'rBKz5MC2iXdoS3XgnNSYmF69K1Yo4NS3Ws'
-        address = self.client.ripple_get_address(parse_path("m/44'/144'/1'/0/0"))
+        address = ripple_get_address(self.client, parse_path("m/44'/144'/1'/0/0"))
         assert address == 'rJX2KwzaLJDyFhhtXKi3htaLfaUH2tptEX'
 
     def test_ripple_get_address_other(self):
@@ -47,7 +48,7 @@ class TestMsgRippleGetAddress(TrezorTest):
             passphrase_protection=False,
             label='test',
             language='english')
-        address = self.client.ripple_get_address(parse_path("m/44'/144'/0'/0/0"))
+        address = ripple_get_address(self.client, parse_path("m/44'/144'/0'/0/0"))
         assert address == 'r4ocGE47gm4G4LkA9mriVHQqzpMLBTgnTY'
-        address = self.client.ripple_get_address(parse_path("m/44'/144'/0'/0/1"))
+        address = ripple_get_address(self.client, parse_path("m/44'/144'/0'/0/1"))
         assert address == 'rUt9ULSrUvfCmke8HTFU1szbmFpWzVbBXW'
