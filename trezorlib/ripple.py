@@ -25,14 +25,14 @@ from .client import expect
 
 @field('address')
 @expect(messages.RippleAddress)
-def ripple_get_address(client, address_n, show_display=False):
+def get_address(client, address_n, show_display=False):
     return client.call(
         messages.RippleGetAddress(
             address_n=address_n, show_display=show_display))
 
 
 @expect(messages.RippleSignedTx)
-def ripple_sign_tx(client, address_n, msg: messages.RippleSignTx):
+def sign_tx(client, address_n, msg: messages.RippleSignTx):
     msg.address_n = address_n
     return client.call(msg)
 

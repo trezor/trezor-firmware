@@ -41,7 +41,7 @@ class TestMsgRippleSignTx(TrezorTest):
             "Fee": 100000,
             "Sequence": 25,
         })
-        resp = ripple.ripple_sign_tx(self.client, parse_path("m/44'/144'/0'/0/0"), msg)
+        resp = ripple.sign_tx(self.client, parse_path("m/44'/144'/0'/0/0"), msg)
         assert resp.signature == unhexlify('3045022100e243ef623675eeeb95965c35c3e06d63a9fc68bb37e17dc87af9c0af83ec057e02206ca8aa5eaab8396397aef6d38d25710441faf7c79d292ee1d627df15ad9346c0')
         assert resp.serialized_tx == unhexlify('12000022800000002400000019614000000005f5e1006840000000000186a0732102131facd1eab748d6cddc492f54b04e8c35658894f4add2232ebc5afe7521dbe474473045022100e243ef623675eeeb95965c35c3e06d63a9fc68bb37e17dc87af9c0af83ec057e02206ca8aa5eaab8396397aef6d38d25710441faf7c79d292ee1d627df15ad9346c081148fb40e1ffa5d557ce9851a535af94965e0dd098883147148ebebf7304ccdf1676fefcf9734cf1e780826')
 
@@ -52,7 +52,7 @@ class TestMsgRippleSignTx(TrezorTest):
             "Fee": 10,
             "Sequence": 1,
         })
-        resp = ripple.ripple_sign_tx(self.client, parse_path("m/44'/144'/0'/0/2"), msg)
+        resp = ripple.sign_tx(self.client, parse_path("m/44'/144'/0'/0/2"), msg)
         assert resp.signature == unhexlify('3044022069900e6e578997fad5189981b74b16badc7ba8b9f1052694033fa2779113ddc002206c8006ada310edf099fb22c0c12073550c8fc73247b236a974c5f1144831dd5f')
         assert resp.serialized_tx == unhexlify('1200002280000000240000000161400000000000000168400000000000000a732103dbed1e77cb91a005e2ec71afbccce5444c9be58276665a3859040f692de8fed274463044022069900e6e578997fad5189981b74b16badc7ba8b9f1052694033fa2779113ddc002206c8006ada310edf099fb22c0c12073550c8fc73247b236a974c5f1144831dd5f8114bdf86f3ae715ba346b7772ea0e133f48828b766483148fb40e1ffa5d557ce9851a535af94965e0dd0988')
 
@@ -65,7 +65,7 @@ class TestMsgRippleSignTx(TrezorTest):
             "Sequence": 100,
             "LastLedgerSequence": 333111,
         })
-        resp = ripple.ripple_sign_tx(self.client, parse_path("m/44'/144'/0'/0/2"), msg)
+        resp = ripple.sign_tx(self.client, parse_path("m/44'/144'/0'/0/2"), msg)
         assert resp.signature == unhexlify('30440220025a9cc2809527799e6ea5eb029488dc46c6632a8ca1ed7d3ca2d9211e80403a02202cfe8604e6c6d1d3c64246626cc1a1a9bd8a2163b969e561c6adda5dca8fc2a5')
         assert resp.serialized_tx == unhexlify('12000022800000002400000064201b00051537614000000005f5e109684000000000000064732103dbed1e77cb91a005e2ec71afbccce5444c9be58276665a3859040f692de8fed2744630440220025a9cc2809527799e6ea5eb029488dc46c6632a8ca1ed7d3ca2d9211e80403a02202cfe8604e6c6d1d3c64246626cc1a1a9bd8a2163b969e561c6adda5dca8fc2a58114bdf86f3ae715ba346b7772ea0e133f48828b766483148fb40e1ffa5d557ce9851a535af94965e0dd0988')
 
@@ -79,6 +79,6 @@ class TestMsgRippleSignTx(TrezorTest):
             "Sequence": 1,
         })
         with pytest.raises(CallException) as exc:
-            ripple.ripple_sign_tx(self.client, parse_path("m/44'/144'/0'/0/2"), msg)
+            ripple.sign_tx(self.client, parse_path("m/44'/144'/0'/0/2"), msg)
             assert exc.value.args[0] == messages.FailureType.ProcessError
             assert exc.value.args[1].endswith('Fee must be in the range of 10 to 10,000 drops')

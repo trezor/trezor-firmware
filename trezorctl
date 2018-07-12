@@ -1062,7 +1062,7 @@ def stellar_sign_transaction(connect, b64envelope, address, network_passphrase):
 def ripple_get_address(connect, address, show_display):
     client = connect()
     address_n = tools.parse_path(address)
-    return ripple.ripple_get_address(client, address_n, show_display)
+    return ripple.get_address(client, address_n, show_display)
 
 
 @cli.command(help='Sign Ripple transaction')
@@ -1074,7 +1074,7 @@ def ripple_sign_tx(connect, address, file):
     address_n = tools.parse_path(address)
     msg = ripple.create_sign_tx_msg(json.load(file))
 
-    result = ripple.ripple_sign_tx(client, address_n, msg)
+    result = ripple.sign_tx(client, address_n, msg)
     click.echo("Signature:")
     click.echo(binascii.hexlify(result.signature))
     click.echo()
