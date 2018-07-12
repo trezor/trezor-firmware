@@ -32,13 +32,12 @@ def ripple_get_address(client, address_n, show_display=False):
 
 
 @expect(messages.RippleSignedTx)
-def ripple_sign_tx(client, address_n, transaction):
-    msg = _create_sign_tx(transaction)
+def ripple_sign_tx(client, address_n, msg: messages.RippleSignTx):
     msg.address_n = address_n
     return client.call(msg)
 
 
-def _create_sign_tx(transaction) -> messages.RippleSignTx:
+def create_sign_tx_msg(transaction) -> messages.RippleSignTx:
     if not all(transaction.get(k) for k in ("Fee", "Sequence", "TransactionType", "Amount", "Destination")):
         raise ValueError("Some of the required fields missing (Fee, Sequence, TransactionType, Amount, Destination")
     if transaction["TransactionType"] != "Payment":

@@ -1061,16 +1061,25 @@ def stellar_sign_transaction(connect, b64envelope, address, network_passphrase):
 @click.pass_obj
 def ripple_get_address(connect, address, show_display):
     client = connect()
-    return ripple.ripple_get_address(client, address, show_display)
+    address_n = tools.parse_path(address)
+    return ripple.ripple_get_address(client, address_n, show_display)
 
 
 @cli.command(help='Sign Ripple transaction')
 @click.option('-n', '--address', required=True, help="BIP-32 path to key, e.g. m/44'/144'/0'/0/0")
+@click.option('-f', '--file', type=click.File('r'), default='-', help='Transaction in JSON format')
 @click.pass_obj
-def ripple_sign_transaction(connect, address, show_display):
+def ripple_sign_tx(connect, address, file):
     client = connect()
-    # todo load from json
-    return ripple.ripple_sign_tx(client, address, show_display)
+    address_n = tools.parse_path(address)
+    msg = ripple.create_sign_tx_msg(json.load(file))
+
+    result = ripple.ripple_sign_tx(client, address_n, msg)
+    click.echo("Signature:")
+    click.echo(binascii.hexlify(result.signature))
+    click.echo()
+    click.echo("Serialized tx including the signature:")
+    click.echo(binascii.hexlify(result.serialized_tx))
 
 #
 # Main
