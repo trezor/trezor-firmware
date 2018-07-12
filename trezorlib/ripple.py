@@ -16,33 +16,27 @@
 
 import base64
 import struct
-import xdrlib
 
-from . import messages as proto
+from . import messages
 
 
-def validate(transaction):
-    if False in (k in transaction for k in ("Fee", "Sequence", "TransactionType", "Amount", "Destination")):
+def create_sign_tx(transaction) -> messages.RippleSignTx:
+    if not all(transaction.get(k) for k in ("Fee", "Sequence", "TransactionType", "Amount", "Destination")):
         raise ValueError("Some of the required fields missing (Fee, Sequence, TransactionType, Amount, Destination")
     if transaction["TransactionType"] != "Payment":
         raise ValueError("Only Payment transaction type is supported")
 
-
-def create_sign_tx(transaction) -> proto.RippleSignTx:
-    msg = proto.RippleSignTx()
-    msg.fee = transaction["Fee"]
-    msg.sequence = transaction["Sequence"]
-    if "Flags" in transaction:
-        msg.flags = transaction["Flags"]
-    if "LastLedgerSequence" in transaction:
-        msg.last_ledger_sequence = transaction["LastLedgerSequence"]
-
-    msg.payment = create_payment(transaction)
-    return msg
+    return messages.RippleSignTx(
+        fee=transaction.get("Fee"),
+        sequence=transaction.get("Sequence"),
+        flags=transaction.get("Flags"),
+        last_ledger_sequence=transaction.get("LastLedgerSequence"),
+        payment=create_payment(transaction),
+    )
 
 
-def create_payment(transaction) -> proto.RipplePayment:
-    msg = proto.RipplePayment()
-    msg.amount = transaction["Amount"]
-    msg.destination = transaction["Destination"]
-    return msg
+def create_payment(transaction) -> messages.RipplePayment:
+    return messages.RipplePayment(
+        amount=transaction.get("Amount"),
+        destination=transaction.get("Destination")
+    )

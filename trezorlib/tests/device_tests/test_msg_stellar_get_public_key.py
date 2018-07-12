@@ -20,7 +20,7 @@ from .common import TrezorTest
 from .conftest import TREZOR_VERSION
 from binascii import hexlify
 from trezorlib import stellar
-from trezorlib import messages as proto
+from trezorlib import messages
 from trezorlib.client import CallException
 from trezorlib.tools import parse_path
 
@@ -43,8 +43,8 @@ class TestMsgStellarGetPublicKey(TrezorTest):
             self.client.stellar_get_public_key(parse_path('m/0/1'))
 
         if TREZOR_VERSION == 1:
-            assert exc.value.args[0] == proto.FailureType.ProcessError
+            assert exc.value.args[0] == messages.FailureType.ProcessError
             assert exc.value.args[1].endswith('Failed to derive private key')
         else:
-            assert exc.value.args[0] == proto.FailureType.FirmwareError
+            assert exc.value.args[0] == messages.FailureType.FirmwareError
             assert exc.value.args[1].endswith('Firmware error')

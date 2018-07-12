@@ -1092,10 +1092,8 @@ class ProtocolMixin(object):
 
     @expect(proto.RippleSignedTx)
     def ripple_sign_tx(self, n, transaction):
-        ripple.validate(transaction)
-        n = self._convert_prime(n)
         msg = ripple.create_sign_tx(transaction)
-        msg.address_n = n
+        msg.address_n = tools.parse_path(n)
         return self.call(msg)
 
     @field('public_key')
