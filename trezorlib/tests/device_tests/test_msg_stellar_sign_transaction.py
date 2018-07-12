@@ -57,7 +57,6 @@ import pytest
 
 
 @pytest.mark.stellar
-@pytest.mark.xfail(TREZOR_VERSION == 2, reason="T2 support is not yet finished")
 class TestMsgStellarSignTransaction(TrezorTest):
 
     ADDRESS_N = parse_path(stellar.DEFAULT_BIP32_PATH)

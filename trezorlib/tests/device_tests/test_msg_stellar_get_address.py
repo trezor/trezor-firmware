@@ -26,7 +26,6 @@ from trezorlib.tools import parse_path
 
 
 @pytest.mark.stellar
-@pytest.mark.xfail(TREZOR_VERSION == 2, reason="T2 support is not yet finished")
 class TestMsgStellarGetAddress(TrezorTest):
 
     def test_stellar_get_address(self):
