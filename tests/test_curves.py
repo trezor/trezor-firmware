@@ -40,7 +40,8 @@ points = [
 
 random_iters = int(os.environ.get('ITERS', 1))
 
-lib = c.cdll.LoadLibrary('./libtrezor-crypto.so')
+DIR = os.path.abspath(os.path.dirname(__file__))
+lib = c.cdll.LoadLibrary(os.path.join(DIR, 'libtrezor-crypto.so'))
 
 class curve_info(c.Structure):
     _fields_ = [("bip32_name", c.c_char_p),

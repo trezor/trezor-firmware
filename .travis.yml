@@ -27,7 +27,7 @@ script:
   - ./tests/test_check
   - CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./tests/test_check
   - ./tests/test_openssl 1000
-  - cd ./tests ; ITERS=10 $PYTHON -m pytest ; cd ..
+  - ITERS=10 $PYTHON -m pytest tests/
 
 notifications:
   webhooks:
