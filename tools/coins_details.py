@@ -5,9 +5,12 @@ import json
 import requests
 import ethereum_tokens_gen
 import build_coins
+from distutils.version import LooseVersion
+
+T1_LATEST='1.6.2'
+T2_LATEST='2.0.7'
 
 COINS = {}
-
 
 def coinmarketcap_init():
     global COINS
@@ -26,7 +29,7 @@ def coinmarketcap_init():
     COINS = {}
 
     while total is None or len(COINS) < total:
-        url = 'https://api.coinmarketcap.com/v2/ticker/?start=%d&convert=USD&limit=100' % (len(COINS)+1)
+        url = 'https://api.coinmarketcap.com/v2/ticker/?start=%d&convert=USD&limit=100' % (len(COINS))
         data = requests.get(url).json()
         COINS.update(data['data'])
         if total is None:
@@ -102,22 +105,34 @@ def update_coins(details):
 
     supported = []
     for key, coin in coins.items():
-        t1_enabled = key in firmware['trezor1']
-        t2_enabled = key in firmware['trezor2']
+
+        t1_enabled = 'no'
+        if key in firmware['trezor1']:
+            if LooseVersion(firmware['trezor1'][key]) <= LooseVersion(T1_LATEST):
+                t1_enabled = 'yes'
+            else:
+                t1_enabled = 'soon'
+
+        t2_enabled = 'no'
+        if key in firmware['trezor2']:
+            if LooseVersion(firmware['trezor2'][key]) <= LooseVersion(T2_LATEST):
+                t2_enabled = 'yes'
+            else:
+                t2_enabled = 'soon'
 
         # print("Updating", coin['coin_label'], coin['coin_shortcut'])
         key = "coin:%s" % coin['coin_shortcut']
         supported.append(key)
         out = details['coins'].setdefault(key, {})
         out['type'] = 'coin'
+        out['t1_enabled'] = t1_enabled
+        out['t2_enabled'] = t2_enabled
+
         set_default(out, 'shortcut', coin['coin_shortcut'])
         set_default(out, 'name', coin['coin_label'])
         set_default(out, 'links', {})
         set_default(out['links'], 'Homepage', coin['website'])
         set_default(out['links'], 'Github', coin['github'])
-        set_default(out, 't1_enabled', 'yes' if t1_enabled else 'no')
-        set_default(out, 't2_enabled', 'yes' if t2_enabled else 'no')
-
         update_marketcap(out, coin.get('coinmarketcap_alias', coin['coin_label']))
 
     check_unsupported(details, 'coin:', supported)
@@ -126,8 +141,8 @@ def update_coins(details):
 def update_erc20(details):
     networks = [x[0] for x in ethereum_tokens_gen.networks]
 
-    LATEST_T1 = 'https://raw.githubusercontent.com/trezor/trezor-mcu/v1.6.2/firmware/ethereum_tokens.c'
-    LATEST_T2 = 'https://raw.githubusercontent.com/trezor/trezor-core/v2.0.7/src/apps/ethereum/tokens.py'
+    LATEST_T1 = 'https://raw.githubusercontent.com/trezor/trezor-mcu/v%s/firmware/ethereum_tokens.c' % T1_LATEST
+    LATEST_T2 = 'https://raw.githubusercontent.com/trezor/trezor-core/v%s/src/apps/ethereum/tokens.py' % T2_LATEST
 
     tokens = ethereum_tokens_gen.get_tokens()
     tokens_t1 = requests.get(LATEST_T1).text
@@ -248,6 +263,22 @@ def update_ethereum(details):
     set_default(out, 't1_enabled', 'yes')
     set_default(out, 't2_enabled', 'yes')
     update_marketcap(out, 'eosc')
+
+    out = details['coins'].setdefault('coin2:ADA', {})
+    out['type'] = 'coin'
+    set_default(out, 'shortcut', 'ADA')
+    set_default(out, 'name', 'Cardano')
+    set_default(out, 't1_enabled', 'no')
+    set_default(out, 't2_enabled', 'soon')
+    update_marketcap(out, 'cardano')
+
+    out = details['coins'].setdefault('coin2:XTZ', {})
+    out['type'] = 'coin'
+    set_default(out, 'shortcut', 'XTZ')
+    set_default(out, 'name', 'Tezos')
+    set_default(out, 't1_enabled', 'no')
+    set_default(out, 't2_enabled', 'soon')
+    update_marketcap(out, 'tezos')
 
 
 def update_mosaics(details):
