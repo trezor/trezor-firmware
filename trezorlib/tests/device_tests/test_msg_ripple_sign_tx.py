@@ -70,6 +70,8 @@ class TestMsgRippleSignTx(TrezorTest):
         assert resp.serialized_tx == unhexlify('12000022800000002400000064201b00051537614000000005f5e109684000000000000064732103dbed1e77cb91a005e2ec71afbccce5444c9be58276665a3859040f692de8fed2744630440220025a9cc2809527799e6ea5eb029488dc46c6632a8ca1ed7d3ca2d9211e80403a02202cfe8604e6c6d1d3c64246626cc1a1a9bd8a2163b969e561c6adda5dca8fc2a58114bdf86f3ae715ba346b7772ea0e133f48828b766483148fb40e1ffa5d557ce9851a535af94965e0dd0988')
 
     def test_ripple_sign_invalid_fee(self):
+        self.setup_mnemonic_allallall()
+
         msg = ripple.create_sign_tx_msg({
             "TransactionType": "Payment",
             "Destination": "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H",
