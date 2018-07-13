@@ -1,5 +1,15 @@
 {
     "coins": {
+        "coin2:ADA": {
+            "links": {
+                "Homepage": "https://www.cardano.org"
+            },
+            "name": "Cardano",
+            "shortcut": "ADA",
+            "t1_enabled": "no",
+            "t2_enabled": "soon",
+            "type": "coin"
+        },
         "coin2:EGEM": {
             "links": {
                 "Homepage": "https://egem.io"
@@ -181,6 +191,16 @@
             "t2_enabled": "soon",
             "type": "coin"
         },
+        "coin2:XTZ": {
+            "links": {
+                "Homepage": "https://tezos.com"
+            },
+            "name": "Tezos",
+            "shortcut": "XTZ",
+            "t1_enabled": "no",
+            "t2_enabled": "soon",
+            "type": "coin"
+        },
         "coin:BCH": {
             "links": {
                 "Github": "https://github.com/Bitcoin-ABC/bitcoin-abc",
@@ -288,7 +308,7 @@
             "name": "Decred",
             "shortcut": "DCR",
             "t1_enabled": "yes",
-            "t2_enabled": "yes",
+            "t2_enabled": "no",
             "type": "coin"
         },
         "coin:DGB": {
@@ -376,11 +396,11 @@
             "name": "Groestlcoin",
             "shortcut": "GRS",
             "t1_enabled": "yes",
-            "t2_enabled": "no",
+            "t2_enabled": "soon",
             "type": "coin",
             "wallet": {
                 "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet/"
-            }            
+            }
         },
         "coin:KOTO": {
             "links": {
@@ -449,6 +469,17 @@
             "wallet": {
                 "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
             }
+        },
+        "coin:PTC": {
+            "links": {
+                "Github": "https://github.com/FundacionPesetacoin/PesetacoinCore",
+                "Homepage": "http://pesetacoin.info"
+            },
+            "name": "Pesetacoin",
+            "shortcut": "PTC",
+            "t1_enabled": "no",
+            "t2_enabled": "no",
+            "type": "coin"
         },
         "coin:TAZ": {
             "hidden": 1,
@@ -598,6 +629,18 @@
                 "Trezor": "https://wallet.trezor.io"
             }
         },
+        "coin:ZEN": {
+            "links": {
+                "Github": "https://github.com/ZencashOfficial/zen",
+                "Homepage": "https://zencash.com"
+            },
+            "marketcap_usd": 0,
+            "name": "Zencash",
+            "shortcut": "ZEN",
+            "t1_enabled": "no",
+            "t2_enabled": "soon",
+            "type": "coin"
+        },
         "coin:tDASH": {
             "hidden": 1,
             "links": {
@@ -621,7 +664,7 @@
             "name": "Groestlcoin Testnet",
             "shortcut": "tGRS",
             "t1_enabled": "yes",
-            "t2_enabled": "no",
+            "t2_enabled": "soon",
             "type": "coin"
         },
         "coin:tXZC": {
@@ -12771,9 +12814,9 @@
     "info": {
         "marketcap_usd": 191456100947,
         "t1_coins": 689,
-        "t2_coins": 689,
-        "total_marketcap_usd": 258211684605,
-        "updated_at": 1529951560,
-        "updated_at_readable": "Mon Jun 25 20:32:40 2018"
+        "t2_coins": 688,
+        "total_marketcap_usd": 249918599444,
+        "updated_at": 1531492040,
+        "updated_at_readable": "Fri Jul 13 16:27:20 2018"
     }
 }
