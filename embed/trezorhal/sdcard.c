@@ -115,7 +115,7 @@ secbool sdcard_power_on(void) {
     HAL_Delay(50);
 
     if (sectrue != sdcard_is_present()) {
-        return secfalse;
+        goto error;
     }
     if (sd_handle.Instance) {
         return sectrue;
@@ -147,17 +147,15 @@ secbool sdcard_power_on(void) {
     return sectrue;
 
 error:
-    sd_handle.Instance = NULL;
+    sdcard_power_off();
     return secfalse;
 }
 
 void sdcard_power_off(void) {
-    if (NULL == sd_handle.Instance) {
-        return;
+    if (sd_handle.Instance != NULL) {
+        HAL_SD_DeInit(&sd_handle);
+        sd_handle.Instance = NULL;
     }
-    HAL_SD_DeInit(&sd_handle);
-    sd_handle.Instance = NULL;
-
     // turn off SD card circuitry
     HAL_Delay(50);
     sdcard_default_pin_state();
