@@ -30,7 +30,7 @@
   },
   "dust_limit": 54600,
   "blocktime_seconds": 30,
-  "address_prefix": "denarius:",
+  "uri_prefix": "denarius",
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [],

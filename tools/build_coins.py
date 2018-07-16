@@ -102,12 +102,12 @@ def validate_coin(coin):
     assert check_type(coin['dust_limit'], int)
     assert check_type(coin['blocktime_seconds'], int)
     assert check_type(coin['signed_message_header'], str)
-    assert check_type(coin['address_prefix'], str, regex=r'^.*:$')
+    assert check_type(coin['uri_prefix'], str, regex=r'^[a-z]+$')
     assert check_type(coin['min_address_length'], int)
     assert check_type(coin['max_address_length'], int)
     assert coin['max_address_length'] >= coin['min_address_length']
-    assert check_type(coin['bech32_prefix'], str, nullable=True)
-    assert check_type(coin['cashaddr_prefix'], str, nullable=True)
+    assert check_type(coin['bech32_prefix'], str, regex=r'^[a-z]+$', nullable=True)
+    assert check_type(coin['cashaddr_prefix'], str, regex=r'^[a-z]+$', nullable=True)
     assert check_type(coin['bitcore'], list, empty=True)
     for bc in coin['bitcore']:
         assert not bc.endswith('/')

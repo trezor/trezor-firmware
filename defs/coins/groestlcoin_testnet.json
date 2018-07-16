@@ -30,7 +30,7 @@
   },
   "dust_limit": 546,
   "blocktime_seconds": 60,
-  "address_prefix": "groestlcoin:",
+  "uri_prefix": "groestlcoin",
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [

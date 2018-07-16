@@ -30,7 +30,7 @@
   },
   "dust_limit": 546,
   "blocktime_seconds": 150,
-  "address_prefix": "zcash:",
+  "uri_prefix": "zcash",
   "min_address_length": 35,
   "max_address_length": 95,
   "bitcore": [

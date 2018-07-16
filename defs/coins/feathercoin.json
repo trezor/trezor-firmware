@@ -30,7 +30,7 @@
   },
   "dust_limit": 54600,
   "blocktime_seconds": 60,
-  "address_prefix": "feathercoin:",
+  "uri_prefix": "feathercoin",
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [

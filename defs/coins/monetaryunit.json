@@ -30,7 +30,7 @@
   },
   "dust_limit": 5460,
   "blocktime_seconds": 40,
-  "address_prefix": "monetaryunit:",
+  "uri_prefix": "monetaryunit",
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [],

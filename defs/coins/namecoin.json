@@ -30,7 +30,7 @@
   },
   "dust_limit": 2940,
   "blocktime_seconds": 600,
-  "address_prefix": "namecoin:",
+  "uri_prefix": "namecoin",
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [],

@@ -33,7 +33,7 @@
   },
   "dust_limit": 546,
   "blocktime_seconds": 600,
-  "address_prefix": "bitcoingold:",
+  "uri_prefix": "bitcoingold",
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [],

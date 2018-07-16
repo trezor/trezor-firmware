@@ -30,7 +30,7 @@
   },
   "dust_limit": 5460,
   "blocktime_seconds": 120,
-  "address_prefix": "terracoin:",
+  "uri_prefix": "terracoin",
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [

@@ -33,7 +33,7 @@
   },
   "dust_limit": 546,
   "blocktime_seconds": 60,
-  "address_prefix": "fujicoin:",
+  "uri_prefix": "fujicoin",
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [

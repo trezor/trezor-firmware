@@ -30,7 +30,7 @@
   },
   "dust_limit": 546,
   "blocktime_seconds": 150,
-  "address_prefix": "bitcore:",
+  "uri_prefix": "bitcore",
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [

@@ -33,7 +33,7 @@
   },
   "dust_limit": 54600,
   "blocktime_seconds": 24,
-  "address_prefix": "viacoin:",
+  "uri_prefix": "viacoin",
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [
