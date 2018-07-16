@@ -8,6 +8,7 @@ import "messages-common.proto";
 
 /**
  * Request: Ask device for Cardano address
+ * @start
  * @next CardanoAddress
  * @next Failure
  */
@@ -18,15 +19,35 @@ message CardanoGetAddress {
 
 /**
  * Request: Ask device for Cardano address
- * @next CardanoAddress
- * @next Failure
+ * @end
  */
 message CardanoAddress {
     optional string address = 1;    // Base58 cardano address
 }
 
 /**
+ * Request: Ask device for public key corresponding to address_n path
+ * @start
+ * @next CardanoPublicKey
+ * @next Failure
+ */
+ message CardanoGetPublicKey {
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+}
+
+/**
+ * Response: Contains public key derived from device private seed
+ * @end
+ */
+message CardanoPublicKey {
+    optional string xpub = 1;               // Xpub key
+    optional HDNodeType node = 2;           // BIP-32 public node
+    optional string root_hd_passphrase = 3; // HD passphrase for root in hex format
+}
+
+/**
  * Request: Ask device to sign Cardano message
+ * @start
  * @next CardanoMessageSignature
  * @next Failure
  */
@@ -36,38 +57,8 @@ message CardanoSignMessage {
 }
 
 /**
- * Request: Ask device for public key corresponding to address_n path
- * @next CardanoPublicKey
- * @next Failure
- */
-message CardanoGetPublicKey {
-    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
-}
-
-/**
- * Response: Contains public key derived from device private seed
- * @prev CardanoGetPublicKey
- */
-message CardanoPublicKey {
-    optional string xpub = 1;               // Xpub key
-    optional HDNodeType node = 2;           // BIP-32 public node
-    optional string root_hd_passphrase = 3; // HD passphrase for root in hex format
-}
-
-/**
- * Request: Ask device to verify Cardano message
- * @next Success
- * @next Failure
- */
-message CardanoVerifyMessage {
-    optional bytes public_key = 1;  // Public key which was used to sign message
-    optional bytes signature = 2;   // signature to verify
-    optional bytes message = 3;     // message to verify
-}
-
-/**
  * Response: Signed Cardano message
- * @prev CardanoSignMessage
+ * @end
  */
 message CardanoMessageSignature {
     optional bytes public_key = 1;  // public key which was used to sign mesage
@@ -75,7 +66,20 @@ message CardanoMessageSignature {
 }
 
 /**
+ * Request: Ask device to verify Cardano message
+ * @start
+ * @next Success
+ * @next Failure
+ */
+ message CardanoVerifyMessage {
+    optional bytes public_key = 1;  // Public key which was used to sign message
+    optional bytes signature = 2;   // signature to verify
+    optional bytes message = 3;     // message to verify
+}
+
+/**
  * Request: Ask device to sign Cardano transaction
+ * @start
  * @next CardanoSignedTransaction
  * @next CardanoTxRequest
  * @next Failure
@@ -106,7 +110,6 @@ message CardanoSignTransaction {
 /**
  * Response: Serialised signed cardano transaction if tx_index is not specified.
  *              If tx_index is specified, trezor will wait for transaction
- * @prev CardanoSignTransaction
  * @next CardanoTxAck
  */
 message CardanoTxRequest {
@@ -117,7 +120,7 @@ message CardanoTxRequest {
 
 /**
  * Response: Serialised signed cardano transaction
- * @prev CardanoSignTransaction
+ * @end
  */
 message CardanoSignedTransaction {
     optional bytes tx_hash = 1; // hash of the signed transaction
@@ -126,7 +129,6 @@ message CardanoSignedTransaction {
 
 /**
  * Request: Reported transaction data
- * @prev CardanoTxRequest
  * @next CardanoTxRequest
  */
 message CardanoTxAck {

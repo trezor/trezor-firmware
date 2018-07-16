@@ -6,6 +6,7 @@ option java_outer_classname = "TrezorMessageRipple";
 
 /**
  * Request: Address at the specified index
+ * @start
  * @next RippleAddress
  */
 message RippleGetAddress {
@@ -15,7 +16,7 @@ message RippleGetAddress {
 
 /**
  * Response: Address for the given index
- * @prev RippleGetAddress
+ * @end
  */
 message RippleAddress {
 	optional string address = 1;	// Address in Ripple format (base58 of a pubkey with checksum)
@@ -23,6 +24,7 @@ message RippleAddress {
 
 /**
  * Request: ask device to sign Ripple transaction
+ * @start
  * @next RippleSignedTx
  */
 message RippleSignTx {
@@ -47,7 +49,7 @@ message RippleSignTx {
 
 /**
  * Response: signature for transaction
- * @prev RippleSignTx
+ * @end
  */
 message RippleSignedTx {
 	optional bytes signature = 1;

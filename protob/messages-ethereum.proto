@@ -6,7 +6,7 @@ option java_outer_classname = "TrezorMessageEthereum";
 
 /**
  * Request: Ask device for Ethereum address corresponding to address_n path
- * @next PassphraseRequest
+ * @start
  * @next EthereumAddress
  * @next Failure
  */
@@ -17,7 +17,7 @@ message EthereumGetAddress {
 
 /**
  * Response: Contains an Ethereum address derived from device private seed
- * @prev EthereumGetAddress
+ * @end
  */
 message EthereumAddress {
     required bytes address = 1;     // Coin address as an Ethereum 160 bit hash
@@ -27,8 +27,7 @@ message EthereumAddress {
  * Request: Ask device to sign transaction
  * All fields are optional from the protocol's point of view. Each field defaults to value `0` if missing.
  * Note: the first at most 1024 bytes of data MUST be transmitted as part of this message.
- * @next PassphraseRequest
- * @next PinMatrixRequest
+ * @start
  * @next EthereumTxRequest
  * @next Failure
  */
@@ -49,7 +48,7 @@ message EthereumSignTx {
  * Response: Device asks for more data from transaction payload, or returns the signature.
  * If data_length is set, device awaits that many more bytes of payload.
  * Otherwise, the signature_* fields contain the computed transaction signature. All three fields will be present.
- * @prev EthereumSignTx
+ * @end
  * @next EthereumTxAck
  */
 message EthereumTxRequest {
@@ -61,7 +60,6 @@ message EthereumTxRequest {
 
 /**
  * Request: Transaction payload data.
- * @prev EthereumTxRequest
  * @next EthereumTxRequest
  */
 message EthereumTxAck {
@@ -70,6 +68,7 @@ message EthereumTxAck {
 
 /**
  * Request: Ask device to sign message
+ * @start
  * @next EthereumMessageSignature
  * @next Failure
  */
@@ -79,21 +78,22 @@ message EthereumSignMessage {
 }
 
 /**
- * Request: Ask device to verify message
- * @next Success
- * @next Failure
- */
-message EthereumVerifyMessage {
-    optional bytes address = 1;     // address to verify
-    optional bytes signature = 2;   // signature to verify
-    optional bytes message = 3;     // message to verify
-}
-
-/**
  * Response: Signed message
- * @prev EthereumSignMessage
+ * @end
  */
 message EthereumMessageSignature {
     optional bytes address = 1;     // address used to sign the message
     optional bytes signature = 2;   // signature of the message
+}
+
+/**
+ * Request: Ask device to verify message
+ * @start
+ * @next Success
+ * @next Failure
+ */
+ message EthereumVerifyMessage {
+    optional bytes address = 1;     // address to verify
+    optional bytes signature = 2;   // signature to verify
+    optional bytes message = 3;     // message to verify
 }

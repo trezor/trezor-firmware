@@ -19,6 +19,7 @@ enum InputScriptType {
 
 /**
  * Type of redeem script used in input
+ * @embed
  */
 message MultisigRedeemScriptType {
     repeated HDNodePathType pubkeys = 1;    // pubkeys from multisig address (sorted lexicographically)
@@ -35,7 +36,7 @@ message MultisigRedeemScriptType {
 
 /**
  * Request: Ask device for public key corresponding to address_n path
- * @next PassphraseRequest
+ * @start
  * @next PublicKey
  * @next Failure
  */
@@ -48,7 +49,7 @@ message GetPublicKey {
 
 /**
  * Response: Contains public key derived from device private seed
- * @prev GetPublicKey
+ * @end
  */
 message PublicKey {
     required HDNodeType node = 1;        // BIP32 public node
@@ -57,7 +58,6 @@ message PublicKey {
 
 /**
  * Request: Ask device for address corresponding to address_n path
- * @next PassphraseRequest
  * @next Address
  * @next Failure
  */
@@ -71,7 +71,7 @@ message GetAddress {
 
 /**
  * Response: Contains address derived from device private seed
- * @prev GetAddress
+ * @end
  */
 message Address {
     required string address = 1;    // Coin address in Base58 encoding
@@ -79,6 +79,7 @@ message Address {
 
 /**
  * Request: Ask device to sign message
+ * @start
  * @next MessageSignature
  * @next Failure
  */
@@ -90,7 +91,17 @@ message SignMessage {
 }
 
 /**
+ * Response: Signed message
+ * @end
+ */
+ message MessageSignature {
+    optional string address = 1;    // address used to sign the message
+    optional bytes signature = 2;   // signature of the message
+}
+
+/**
  * Request: Ask device to verify message
+ * @start
  * @next Success
  * @next Failure
  */
@@ -102,18 +113,8 @@ message VerifyMessage {
 }
 
 /**
- * Response: Signed message
- * @prev SignMessage
- */
-message MessageSignature {
-    optional string address = 1;    // address used to sign the message
-    optional bytes signature = 2;   // signature of the message
-}
-
-/**
  * Request: Ask device to sign transaction
- * @next PassphraseRequest
- * @next PinMatrixRequest
+ * @start
  * @next TxRequest
  * @next Failure
  */
@@ -131,8 +132,8 @@ message SignTx {
  * Response: Device asks for information for signing transaction or returns the last result
  * If request_index is set, device awaits TxAck message (with fields filled in according to request_type)
  * If signature_index is set, 'signature' contains signed input of signature_index's input
- * @prev SignTx
- * @prev TxAck
+ * @end
+ * @next TxAck
  */
 message TxRequest {
     optional RequestType request_type = 1;              // what should be filled in TxAck message?
@@ -169,7 +170,6 @@ message TxRequest {
 
 /**
  * Request: Reported transaction data
- * @prev TxRequest
  * @next TxRequest
  */
 message TxAck {

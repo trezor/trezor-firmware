@@ -6,7 +6,7 @@ option java_outer_classname = "TrezorMessageNem";
 
 /**
  * Request: Ask device for NEM address corresponding to address_n path
- * @next PassphraseRequest
+ * @start
  * @next NEMAddress
  * @next Failure
  */
@@ -18,7 +18,7 @@ message NEMGetAddress {
 
 /**
  * Response: Contains NEM address derived from device private seed
- * @prev NEMGetAddress
+ * @end
  */
 message NEMAddress {
     required string address = 1;    // NEM address in Base32 encoding
@@ -26,6 +26,7 @@ message NEMAddress {
 
 /**
  * Request: Ask device to sign transaction
+ * @start
  * @next NEMSignedTx
  * @next Failure
  */
@@ -167,7 +168,7 @@ message NEMSignTx {
 
 /**
  * Response: Contains NEM transaction data and signature
- * @prev NEMSignTx
+ * @end
  */
 message NEMSignedTx {
     optional bytes data = 1;        // Transaction data
@@ -176,6 +177,7 @@ message NEMSignedTx {
 
 /**
  * Request: Ask device to decrypt NEM transaction payload
+ * @start
  * @next NEMDecryptedMessage
  * @next Failure
  */
@@ -188,7 +190,7 @@ message NEMDecryptMessage {
 
 /**
  * Response: Contains decrypted NEM transaction payload
- * @prev NEMDecryptMessage
+ * @end
  */
 message NEMDecryptedMessage {
     optional bytes payload = 1;     // Actual message data (unencrypted)

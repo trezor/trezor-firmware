@@ -155,7 +155,7 @@ enum MessageType {
     MessageType_StellarChangeTrustOp = 216 [(wire_in) = true];
     MessageType_StellarAllowTrustOp = 217 [(wire_in) = true];
     MessageType_StellarAccountMergeOp = 218 [(wire_in) = true];
-    // Omitted: inflation is not a supported operation, would be 219
+    // omitted: StellarInflationOp is not a supported operation, would be 219
     MessageType_StellarManageDataOp = 220 [(wire_in) = true];
     MessageType_StellarBumpSequenceOp = 221 [(wire_in) = true];
     MessageType_StellarSignedTx = 230 [(wire_out) = true];

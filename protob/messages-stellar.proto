@@ -6,6 +6,7 @@ option java_outer_classname = "TrezorMessageStellar";
 
 /**
  * Describes a Stellar asset
+ * @embed
  */
 message StellarAssetType {
     optional uint32 type = 1;       // 0 = native asset (XLM), 1 = alphanum 4, 2 = alphanum 12
@@ -14,24 +15,8 @@ message StellarAssetType {
 }
 
 /**
- * Request: Public key at the specified index
- * @next StellarPublicKey
- */
-message StellarGetPublicKey {
-    repeated uint32 address_n = 1;  // BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
-    optional bool show_display = 2; // optionally show on display before sending the result
-}
-
-/**
- * Response: Public key for the given index
- * @prev StellarGetPublicKey
- */
-message StellarPublicKey {
-    optional bytes public_key = 1;  // Raw bytes of the public key (no version or checksum)
-}
-
-/**
  * Request: Address at the specified index
+ * @start
  * @next StellarAddress
  */
 message StellarGetAddress {
@@ -41,10 +26,28 @@ message StellarGetAddress {
 
 /**
  * Response: Address for the given index
- * @prev StellarGetAddress
+ * @end
  */
 message StellarAddress {
     optional string address = 1;    // Address in Stellar format (base32 of a pubkey with checksum)
+}
+
+/**
+ * Request: Public key at the specified index
+ * @start
+ * @next StellarPublicKey
+ */
+ message StellarGetPublicKey {
+    repeated uint32 address_n = 1;  // BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
+    optional bool show_display = 2; // optionally show on display before sending the result
+}
+
+/**
+ * Response: Public key for the given index
+ * @end
+ */
+message StellarPublicKey {
+    optional bytes public_key = 1;  // Raw bytes of the public key (no version or checksum)
 }
 
 /**
@@ -68,7 +71,6 @@ message StellarSignTx {
 
 /**
  * Response: device is ready for client to send the next operation
- * @prev StellarSignTx
  * @next StellarPaymentOp
  * @next StellarCreateAccountOp
  * @next StellarPathPaymentOp
@@ -86,7 +88,6 @@ message StellarTxOpRequest {
 
 /**
  * Request: ask device to confirm this operation type
- * @prev StellarTxOpRequest
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
@@ -99,7 +100,6 @@ message StellarPaymentOp {
 
 /**
  * Request: ask device to confirm this operation type
- * @prev StellarTxOpRequest
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
@@ -111,7 +111,6 @@ message StellarCreateAccountOp {
 
 /**
  * Request: ask device to confirm this operation type
- * @prev StellarTxOpRequest
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
@@ -127,7 +126,6 @@ message StellarPathPaymentOp {
 
 /**
  * Request: ask device to confirm this operation type
- * @prev StellarTxOpRequest
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
@@ -143,7 +141,6 @@ message StellarManageOfferOp {
 
 /**
  * Request: ask device to confirm this operation type
- * @prev StellarTxOpRequest
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
@@ -158,7 +155,6 @@ message StellarCreatePassiveOfferOp {
 
 /**
  * Request: ask device to confirm this operation type
- * @prev StellarTxOpRequest
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
@@ -179,7 +175,6 @@ message StellarSetOptionsOp {
 
 /**
  * Request: ask device to confirm this operation type
- * @prev StellarTxOpRequest
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
@@ -191,7 +186,6 @@ message StellarChangeTrustOp {
 
 /**
  * Request: ask device to confirm this operation type
- * @prev StellarTxOpRequest
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
@@ -205,7 +199,6 @@ message StellarAllowTrustOp {
 
 /**
  * Request: ask device to confirm this operation type
- * @prev StellarTxOpRequest
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
@@ -216,7 +209,6 @@ message StellarAccountMergeOp {
 
 /**
  * Request: ask device to confirm this operation type
- * @prev StellarTxOpRequest
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
@@ -228,7 +220,6 @@ message StellarManageDataOp {
 
 /**
  * Request: ask device to confirm this operation type
- * @prev StellarTxOpRequest
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
@@ -239,17 +230,7 @@ message StellarBumpSequenceOp {
 
 /**
  * Response: signature for transaction
- * @prev StellarPaymentOp
- * @prev StellarCreateAccountOp
- * @prev StellarPathPaymentOp
- * @prev StellarManageOfferOp
- * @prev StellarCreatePassiveOfferOp
- * @prev StellarSetOptionsOp
- * @prev StellarChangeTrustOp
- * @prev StellarAllowTrustOp
- * @prev StellarAccountMergeOp
- * @prev StellarManageDataOp
- * @prev StellarBumpSequenceOp
+ * @end
  */
 message StellarSignedTx {
     optional bytes public_key = 1;  // public key for the private key used to sign data

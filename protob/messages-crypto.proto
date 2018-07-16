@@ -6,6 +6,7 @@ option java_outer_classname = "TrezorMessageCrypto";
 
 /**
  * Request: Ask device to encrypt or decrypt value of given key
+ * @start
  * @next CipheredKeyValue
  * @next Failure
  */
@@ -21,15 +22,16 @@ message CipherKeyValue {
 
 /**
  * Response: Return ciphered/deciphered value
- * @prev CipherKeyValue
+ * @end
  */
 message CipheredKeyValue {
     optional bytes value = 1;           // ciphered/deciphered value
 }
 
 /**
-* Structure representing identity data
-*/
+ * Structure representing identity data
+ * @embed
+ */
 message IdentityType {
     optional string proto = 1;              // proto part of URI
     optional string user = 2;               // user part of URI
@@ -41,6 +43,7 @@ message IdentityType {
 
 /**
  * Request: Ask device to sign identity
+ * @start
  * @next SignedIdentity
  * @next Failure
  */
@@ -53,7 +56,7 @@ message SignIdentity {
 
 /**
  * Response: Device provides signed identity
- * @prev SignIdentity
+ * @end
  */
 message SignedIdentity {
     optional string address = 1;    // identity address
@@ -63,6 +66,7 @@ message SignedIdentity {
 
 /**
  * Request: Ask device to generate ECDH session key
+ * @start
  * @next ECDHSessionKey
  * @next Failure
  */
@@ -74,7 +78,7 @@ message GetECDHSessionKey {
 
 /**
  * Response: Device provides ECDH session key
- * @prev GetECDHSessionKey
+ * @end
  */
 message ECDHSessionKey {
     optional bytes session_key = 1;     // ECDH session key
@@ -82,6 +86,7 @@ message ECDHSessionKey {
 
 /**
  * Request: Ask device to commit to CoSi signing
+ * @start
  * @next CosiCommitment
  * @next Failure
  */
@@ -92,7 +97,7 @@ message CosiCommit {
 
 /**
  * Response: Contains a CoSi commitment
- * @prev CosiCommit
+ * @end
  */
 message CosiCommitment {
     optional bytes commitment = 1;  // Commitment
@@ -101,6 +106,7 @@ message CosiCommitment {
 
 /**
  * Request: Ask device to sign using CoSi
+ * @start
  * @next CosiSignature
  * @next Failure
  */
@@ -113,7 +119,7 @@ message CosiSign {
 
 /**
  * Response: Contains a CoSi signature
- * @prev CosiSign
+ * @end
  */
 message CosiSignature {
     optional bytes signature = 1;   // Signature

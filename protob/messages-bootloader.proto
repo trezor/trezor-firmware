@@ -6,9 +6,8 @@ option java_outer_classname = "TrezorMessageBootloader";
 
 /**
  * Request: Ask device to erase its firmware (so it can be replaced via FirmwareUpload)
- * @next Success
+ * @start
  * @next FirmwareRequest
- * @next Failure
  */
 message FirmwareErase {
     optional uint32 length = 1; // length of new firmware
@@ -25,6 +24,7 @@ message FirmwareRequest {
 
 /**
  * Request: Send firmware in binary form to the device
+ * @next FirmwareRequest
  * @next Success
  * @next Failure
  */

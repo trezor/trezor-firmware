@@ -8,6 +8,7 @@ import "messages-common.proto";
 
 /**
  * Request: "Press" the button on the device
+ * @start
  * @next Success
  */
 message DebugLinkDecision {
@@ -18,6 +19,7 @@ message DebugLinkDecision {
 
 /**
  * Request: Computer asks for device state
+ * @start
  * @next DebugLinkState
  */
 message DebugLinkGetState {
@@ -25,7 +27,7 @@ message DebugLinkGetState {
 
 /**
  * Response: Device current state
- * @prev DebugLinkGetState
+ * @end
  */
 message DebugLinkState {
     optional bytes layout = 1;                  // raw buffer of display
@@ -43,6 +45,7 @@ message DebugLinkState {
 
 /**
  * Request: Ask device to restart
+ * @start
  */
 message DebugLinkStop {
 }
@@ -58,6 +61,7 @@ message DebugLinkLog {
 
 /**
  * Request: Read memory from device
+ * @start
  * @next DebugLinkMemory
  */
 message DebugLinkMemoryRead {
@@ -67,7 +71,7 @@ message DebugLinkMemoryRead {
 
 /**
  * Response: Device sends memory back
- * @prev DebugLinkMemoryRead
+ * @end
  */
 message DebugLinkMemory {
     optional bytes memory = 1;
@@ -76,6 +80,9 @@ message DebugLinkMemory {
 /**
  * Request: Write memory to device.
  * WARNING: Writing to the wrong location can irreparably break the device.
+ * @start
+ * @next Success
+ * @next Failure
  */
 message DebugLinkMemoryWrite {
     optional uint32 address = 1;
@@ -86,6 +93,9 @@ message DebugLinkMemoryWrite {
 /**
  * Request: Erase block of flash on device
  * WARNING: Writing to the wrong location can irreparably break the device.
+ * @start
+ * @next Success
+ * @next Failure
  */
 message DebugLinkFlashErase {
     optional uint32 sector = 1;
