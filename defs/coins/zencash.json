@@ -21,7 +21,7 @@
   "slip44": 121,
   "segwit": false,
   "decred": false,
-  "fork_id": 0,
+  "fork_id": null,
   "force_bip143": false,
   "bip115": true,
   "version_group_id": null,
