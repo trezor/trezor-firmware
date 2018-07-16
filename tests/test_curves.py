@@ -326,7 +326,7 @@ def to_POINT(p):
 
 
 def from_POINT(p):
-    return lambda p: (bn2int(p[0]), bn2int(p[1]))
+    return (bn2int(p[0]), bn2int(p[1]))
 
 
 JACOBIAN = BIGNUM * 3
