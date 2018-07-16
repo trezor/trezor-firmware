@@ -58,8 +58,6 @@
 #include "supervise.h"
 #include "stellar.h"
 
-#include "messages-management.pb.h"
-
 // message methods
 
 static uint8_t msg_resp[MSG_OUT_SIZE] __attribute__ ((aligned));

@@ -2,7 +2,7 @@ ifneq ($(V),1)
 Q := @
 endif
 
-all: messages_map.h common.pb.c messages-bitcoin.pb.c messages-crypto.pb.c messages-debug.pb.c messages-ethereum.pb.c messages-management.pb.c messages-nem.pb.c messages.pb.c messages-stellar.pb.c messages_nem_pb2.py
+all: messages_map.h messages-bitcoin.pb.c messages-common.pb.c messages-crypto.pb.c messages-debug.pb.c messages-ethereum.pb.c messages-management.pb.c messages-nem.pb.c messages.pb.c messages-stellar.pb.c messages_nem_pb2.py
 
 PYTHON ?= python
 

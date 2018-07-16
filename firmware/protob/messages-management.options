@@ -16,19 +16,6 @@ ApplySettings.homescreen                max_size:1024
 
 Ping.message                            max_size:256
 
-Success.message                         max_size:256
-
-Failure.message                         max_size:256
-
-ButtonRequest.data                      max_size:256
-
-PinMatrixAck.pin                        max_size:10
-
-PassphraseAck.passphrase                max_size:51
-PassphraseAck.state                     max_size:64
-
-PassphraseStateRequest.state            max_size:64
-
 LoadDevice.mnemonic                     max_size:241
 LoadDevice.pin                          max_size:10
 LoadDevice.language                     max_size:17
