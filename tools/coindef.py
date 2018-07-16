@@ -25,7 +25,7 @@ class CoinDef(p.MessageType):
         20: ('fork_id', p.UVarintType, 0),
         21: ('force_bip143', p.BoolType, 0),
         22: ('dust_limit', p.UVarintType, 0),
-        23: ('address_prefix', p.UnicodeType, 0),
+        23: ('uri_prefix', p.UnicodeType, 0),
         24: ('min_address_length', p.UVarintType, 0),
         25: ('max_address_length', p.UVarintType, 0),
         26: ('icon', p.BytesType, 0),
@@ -62,7 +62,7 @@ class CoinDef(p.MessageType):
         force_bip143: bool = None,
         bip115: bool = None,
         dust_limit: int = None,
-        address_prefix: str = None,
+        uri_prefix: str = None,
         min_address_length: int = None,
         max_address_length: int = None,
         icon: bytes = None,
@@ -98,7 +98,7 @@ class CoinDef(p.MessageType):
         self.force_bip143 = force_bip143
         self.bip115 = bip115
         self.dust_limit = dust_limit
-        self.address_prefix = address_prefix
+        self.uri_prefix = uri_prefix
         self.min_address_length = min_address_length
         self.max_address_length = max_address_length
         self.icon = icon
