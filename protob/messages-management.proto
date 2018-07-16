@@ -123,6 +123,7 @@ message Ping {
 /**
  * Request: Abort last operation that required user interaction
  * @start
+ * @next Failure
  */
 message Cancel {
 }

@@ -4,7 +4,7 @@ syntax = "proto2";
  * Response: Success of the previous request
  * @end
  */
- message Success {
+message Success {
     optional string message = 1;    // human readable description of action or request-specific payload
 }
 
@@ -98,7 +98,7 @@ message PinMatrixAck {
  * @auxstart
  * @next PassphraseAck
  */
- message PassphraseRequest {
+message PassphraseRequest {
     optional bool on_device = 1;    // passphrase is being entered on the device
 }
 
@@ -123,7 +123,7 @@ message PassphraseStateRequest {
  * Request: Send passphrase state back
  * @auxend
  */
- message PassphraseStateAck {
+message PassphraseStateAck {
 }
 
 /**

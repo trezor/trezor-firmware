@@ -31,7 +31,7 @@ message CardanoAddress {
  * @next CardanoPublicKey
  * @next Failure
  */
- message CardanoGetPublicKey {
+message CardanoGetPublicKey {
     repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
 }
 
@@ -71,7 +71,7 @@ message CardanoMessageSignature {
  * @next Success
  * @next Failure
  */
- message CardanoVerifyMessage {
+message CardanoVerifyMessage {
     optional bytes public_key = 1;  // Public key which was used to sign message
     optional bytes signature = 2;   // signature to verify
     optional bytes message = 3;     // message to verify
@@ -119,18 +119,19 @@ message CardanoTxRequest {
 }
 
 /**
+ * Request: Reported transaction data
+ * @next CardanoSignedTransaction
+ * @next CardanoTxRequest
+ */
+message CardanoTxAck {
+    optional bytes transaction = 1;
+}
+
+/**
  * Response: Serialised signed cardano transaction
  * @end
  */
 message CardanoSignedTransaction {
     optional bytes tx_hash = 1; // hash of the signed transaction
     optional bytes tx_body = 2; // serialised body of the signed transaction
-}
-
-/**
- * Request: Reported transaction data
- * @next CardanoTxRequest
- */
-message CardanoTxAck {
-    optional bytes transaction = 1;
 }

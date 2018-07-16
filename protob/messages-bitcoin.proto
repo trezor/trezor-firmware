@@ -58,6 +58,7 @@ message PublicKey {
 
 /**
  * Request: Ask device for address corresponding to address_n path
+ * @start
  * @next Address
  * @next Failure
  */
@@ -94,7 +95,7 @@ message SignMessage {
  * Response: Signed message
  * @end
  */
- message MessageSignature {
+message MessageSignature {
     optional string address = 1;    // address used to sign the message
     optional bytes signature = 2;   // signature of the message
 }

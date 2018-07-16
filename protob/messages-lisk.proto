@@ -10,7 +10,7 @@ option java_outer_classname = "TrezorMessageLisk";
  * @next LiskAddress
  * @next Failure
  */
- message LiskGetAddress {
+message LiskGetAddress {
     repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
     optional bool show_display = 2; // Optionally show on display before sending the result
 }

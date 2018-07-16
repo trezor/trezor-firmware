@@ -52,6 +52,7 @@ message DebugLinkStop {
 
 /**
  * Response: Device wants host to log event
+ * @ignore
  */
 message DebugLinkLog {
     optional uint32 level = 1;

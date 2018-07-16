@@ -92,7 +92,7 @@ message EthereumMessageSignature {
  * @next Success
  * @next Failure
  */
- message EthereumVerifyMessage {
+message EthereumVerifyMessage {
     optional bytes address = 1;     // address to verify
     optional bytes signature = 2;   // signature to verify
     optional bytes message = 3;     // message to verify
