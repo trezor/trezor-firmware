@@ -19,7 +19,7 @@ env:
     - PYTHON=python3
 
 install:
-  - $PYTHON -m pip install --user pytest ecdsa curve25519-donna
+  - $PYTHON -m pip install --user pytest ecdsa curve25519-donna pyasn1
 
 script:
   - make
