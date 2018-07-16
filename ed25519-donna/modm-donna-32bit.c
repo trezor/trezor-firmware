@@ -310,6 +310,18 @@ void expand_raw256_modm(bignum256modm out, const unsigned char in[32]) {
 	out[8] = ((x[ 7] >> 16)                ) & 0x0000ffff;
 }
 
+int is_reduced256_modm(const bignum256modm in)
+{
+	int i;
+	uint32_t res1 = 0;
+	uint32_t res2 = 0;
+	for (i = 8; i >= 0; i--) {
+		res1 = (res1 << 1) | (in[i] < modm_m[i]);
+		res2 = (res2 << 1) | (in[i] > modm_m[i]);
+	}
+	return res1 > res2;
+}
+
 void contract256_modm(unsigned char out[32], const bignum256modm in) {
 	U32TO8_LE(out +  0, (in[0]      ) | (in[1] << 30));
 	U32TO8_LE(out +  4, (in[1] >>  2) | (in[2] << 28));

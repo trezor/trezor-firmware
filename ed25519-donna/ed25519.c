@@ -189,7 +189,9 @@ ED25519_FN(ed25519_sign_open) (const unsigned char *m, size_t mlen, const ed2551
 	expand256_modm(hram, hash, 64);
 
 	/* S */
-	expand256_modm(S, RS + 32, 32);
+	expand_raw256_modm(S, RS + 32);
+	if (!is_reduced256_modm(S))
+	  return -1;
 
 	/* SB - H(R,A,m)A */
 	ge25519_double_scalarmult_vartime(&R, &A, hram, S);

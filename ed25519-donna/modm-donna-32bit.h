@@ -44,6 +44,8 @@ void expand256_modm(bignum256modm out, const unsigned char *in, size_t len);
 
 void expand_raw256_modm(bignum256modm out, const unsigned char in[32]);
 
+int is_reduced256_modm(const bignum256modm in);
+
 void contract256_modm(unsigned char out[32], const bignum256modm in);
 
 void contract256_window4_modm(signed char r[64], const bignum256modm in);
