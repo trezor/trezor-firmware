@@ -34,4 +34,4 @@ libtrezor.a:
 .PHONY: vendor
 
 vendor:
-	git submodule update --init
+	git submodule update --init --recursive
