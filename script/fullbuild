@@ -62,6 +62,8 @@ main() {
     local bootloader_commit="$1"
     local firmware_commit="$2"
 
+    script/bootstrap
+
     worktree_setup "$BOOTLOADER_DIR" "$bootloader_commit"
     worktree_build "$BOOTLOADER_DIR"
 
