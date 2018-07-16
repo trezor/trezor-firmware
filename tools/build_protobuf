@@ -4,6 +4,5 @@ set -e
 ../vendor/trezor-common/protob/pb2py \
     --no-init-py \
     -o ../src/trezor/messages \
-    ../vendor/trezor-common/protob/common.proto \
     ../vendor/trezor-common/protob/messages.proto \
     ../vendor/trezor-common/protob/messages-*.proto
