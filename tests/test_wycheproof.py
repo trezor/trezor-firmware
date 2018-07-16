@@ -1,46 +1,47 @@
 #!/usr/bin/python
+import ctypes
+import json
 import os
+from binascii import hexlify, unhexlify
+
+import pytest
+from pyasn1.codec.ber.decoder import decode as ber_decode
 from pyasn1.codec.der.decoder import decode as der_decode
 from pyasn1.codec.der.encoder import encode as der_encode
-from pyasn1.codec.ber.decoder import decode as ber_decode
-from pyasn1.type import univ, namedtype
-from binascii import unhexlify, hexlify
-import json
-import ctypes
-import pytest
+from pyasn1.type import namedtype, univ
 
 
 class EcSignature(univ.Sequence):
     componentType = namedtype.NamedTypes(
-        namedtype.NamedType('r', univ.Integer()),
-        namedtype.NamedType('s', univ.Integer())
+        namedtype.NamedType("r", univ.Integer()),
+        namedtype.NamedType("s", univ.Integer()),
     )
 
 
 class EcKeyInfo(univ.Sequence):
     componentType = namedtype.NamedTypes(
-        namedtype.NamedType('key_type', univ.ObjectIdentifier()),
-        namedtype.NamedType('curve_name', univ.ObjectIdentifier())
+        namedtype.NamedType("key_type", univ.ObjectIdentifier()),
+        namedtype.NamedType("curve_name", univ.ObjectIdentifier()),
     )
 
 
 class EcPublicKey(univ.Sequence):
     componentType = namedtype.NamedTypes(
-        namedtype.NamedType('key_info', EcKeyInfo()),
-        namedtype.NamedType('public_key', univ.BitString())
+        namedtype.NamedType("key_info", EcKeyInfo()),
+        namedtype.NamedType("public_key", univ.BitString()),
     )
 
 
 class EdKeyInfo(univ.Sequence):
     componentType = namedtype.NamedTypes(
-        namedtype.NamedType('key_type', univ.ObjectIdentifier()),
+        namedtype.NamedType("key_type", univ.ObjectIdentifier())
     )
 
 
 class EdPublicKey(univ.Sequence):
     componentType = namedtype.NamedTypes(
-        namedtype.NamedType('key_info', EdKeyInfo()),
-        namedtype.NamedType('public_key', univ.BitString())
+        namedtype.NamedType("key_info", EdKeyInfo()),
+        namedtype.NamedType("public_key", univ.BitString()),
     )
 
 
@@ -73,12 +74,12 @@ def parse_eddsa_signature(signature):
 def parse_ecdh256_privkey(private_key):
     if private_key < 0 or private_key.bit_length() > 256:
         raise ParseError("Not a valid 256 bit ECDH private key")
-    return private_key.to_bytes(32, byteorder='big')
+    return private_key.to_bytes(32, byteorder="big")
 
 
 def parse_signed_hex(string):
     if len(string) % 2 == 1:
-        string = '0' + string
+        string = "0" + string
     number = int(string, 16)
     if int(string[0], 16) & 8:
         return -number
@@ -111,10 +112,10 @@ def parse_ed_pubkey(public_key):
     except Exception:
         raise ParseError("Not a BER encoded Edwards curve public key")
 
-    if not public_key['key_info']['key_type'] == univ.ObjectIdentifier('1.3.101.112'):
+    if not public_key["key_info"]["key_type"] == univ.ObjectIdentifier("1.3.101.112"):
         raise ParseError("Not a BER encoded Edwards curve public key")
 
-    public_key = bytes(public_key['public_key'].asOctets())
+    public_key = bytes(public_key["public_key"].asOctets())
 
     return public_key
 
@@ -125,16 +126,20 @@ def parse_ec_pubkey(public_key):
     except Exception:
         raise ParseError("Not a BER encoded named elliptic curve public key")
 
-    if not public_key['key_info']['key_type'] == univ.ObjectIdentifier('1.2.840.10045.2.1'):
+    if not public_key["key_info"]["key_type"] == univ.ObjectIdentifier(
+        "1.2.840.10045.2.1"
+    ):
         raise ParseError("Not a BER encoded named elliptic curve public key")
-    curve_identifier = public_key['key_info']['curve_name']
+    curve_identifier = public_key["key_info"]["curve_name"]
     curve_name = get_curve_name_by_identifier(curve_identifier)
 
     if curve_name is None:
-        raise NotSupported('Unsupported named elliptic curve: {}'.format(curve_identifier))
+        raise NotSupported(
+            "Unsupported named elliptic curve: {}".format(curve_identifier)
+        )
 
     try:
-        public_key = bytes(public_key['public_key'].asOctets())
+        public_key = bytes(public_key["public_key"].asOctets())
     except:
         raise ParseError("Not a BER encoded named elliptic curve public key")
 
@@ -150,8 +155,8 @@ def parse_ecdsa256_signature(signature):
     except:
         raise ParseError("Not a valid DER encoded ECDSA signature")
     try:
-        r = int(signature['r']).to_bytes(32, byteorder='big')
-        s = int(signature['s']).to_bytes(32, byteorder='big')
+        r = int(signature["r"]).to_bytes(32, byteorder="big")
+        s = int(signature["s"]).to_bytes(32, byteorder="big")
         signature = r + s
     except:
         raise ParseError("Not a valid DER encoded 256 bit ECDSA signature")
@@ -167,29 +172,29 @@ def parse_digest(name):
 
 def get_curve_by_name(name):
     lib.get_curve_by_name.restype = ctypes.c_void_p
-    curve = lib.get_curve_by_name(bytes(name, 'ascii'))
-    if curve == None:
+    curve = lib.get_curve_by_name(bytes(name, "ascii"))
+    if curve is None:
         return None
     curve = ctypes.cast(curve, ctypes.POINTER(curve_info))
     return ctypes.c_void_p(curve.contents.params)
 
 
 def parse_curve_name(name):
-    if name == 'secp256r1':
-        return 'nist256p1'
-    elif name == 'secp256k1':
-        return 'secp256k1'
-    elif name == 'curve25519':
-        return 'curve25519'
+    if name == "secp256r1":
+        return "nist256p1"
+    elif name == "secp256k1":
+        return "secp256k1"
+    elif name == "curve25519":
+        return "curve25519"
     else:
         return None
 
 
 def get_curve_name_by_identifier(identifier):
-    if identifier == univ.ObjectIdentifier('1.3.132.0.10'):
-        return 'secp256k1'
-    elif identifier == univ.ObjectIdentifier('1.2.840.10045.3.1.7'):
-        return 'nist256p1'
+    if identifier == univ.ObjectIdentifier("1.3.132.0.10"):
+        return "secp256k1"
+    elif identifier == univ.ObjectIdentifier("1.2.840.10045.3.1.7"):
+        return "nist256p1"
     else:
         return None
 
@@ -218,26 +223,29 @@ def chacha_poly_decrypt(key, iv, associated_data, ciphertext, tag):
 
 def add_pkcs_padding(data):
     padding_length = 16 - len(data) % 16
-    return data + bytes([padding_length]*padding_length)
+    return data + bytes([padding_length] * padding_length)
 
 
 def remove_pkcs_padding(data):
     padding_length = data[-1]
-    if not (0 < padding_length <= 16 and data[-padding_length:] == bytes([padding_length]*padding_length)):
+    if not (
+        0 < padding_length <= 16
+        and data[-padding_length:] == bytes([padding_length] * padding_length)
+    ):
         return False
     else:
         return data[:-padding_length]
 
 
 def aes_encrypt_initialise(key, context):
-    if len(key) == (128/8):
+    if len(key) == (128 / 8):
         lib.aes_encrypt_key128(key, context)
-    elif len(key) == (192/8):
+    elif len(key) == (192 / 8):
         lib.aes_encrypt_key192(key, context)
-    elif len(key) == (256/8):
+    elif len(key) == (256 / 8):
         lib.aes_encrypt_key256(key, context)
     else:
-        raise NotSupported("Unsupported key length: {}".format(len(key)*8))
+        raise NotSupported("Unsupported key length: {}".format(len(key) * 8))
 
 
 def aes_cbc_encrypt(key, iv, plaintext):
@@ -245,19 +253,21 @@ def aes_cbc_encrypt(key, iv, plaintext):
     context = bytes(context_structure_length)
     ciphertext = bytes(len(plaintext))
     aes_encrypt_initialise(key, context)
-    lib.aes_cbc_encrypt(plaintext, ciphertext, len(plaintext), bytes(bytearray(iv)), context)
+    lib.aes_cbc_encrypt(
+        plaintext, ciphertext, len(plaintext), bytes(bytearray(iv)), context
+    )
     return ciphertext
 
 
 def aes_decrypt_initialise(key, context):
-    if len(key) == (128/8):
+    if len(key) == (128 / 8):
         lib.aes_decrypt_key128(key, context)
-    elif len(key) == (192/8):
+    elif len(key) == (192 / 8):
         lib.aes_decrypt_key192(key, context)
-    elif len(key) == (256/8):
+    elif len(key) == (256 / 8):
         lib.aes_decrypt_key256(key, context)
     else:
-        raise NotSupported("Unsupported AES key length: {}".format(len(key)*8))
+        raise NotSupported("Unsupported AES key length: {}".format(len(key) * 8))
 
 
 def aes_cbc_decrypt(key, iv, ciphertext):
@@ -281,35 +291,43 @@ def generate_aes(filename):
 
     data = load_json_testvectors(filename)
 
-    if not keys_in_dict(data, {'algorithm', 'testGroups'}):
+    if not keys_in_dict(data, {"algorithm", "testGroups"}):
         raise DataError()
 
-    if data['algorithm'] != 'AES-CBC-PKCS5':
+    if data["algorithm"] != "AES-CBC-PKCS5":
         raise DataError()
 
-    for test_group in data['testGroups']:
-        if not keys_in_dict(test_group, {'tests'}):
+    for test_group in data["testGroups"]:
+        if not keys_in_dict(test_group, {"tests"}):
             raise DataError()
 
-        for test in test_group['tests']:
-            if not keys_in_dict(test, {'key', 'iv', 'msg', 'ct', 'result'}):
+        for test in test_group["tests"]:
+            if not keys_in_dict(test, {"key", "iv", "msg", "ct", "result"}):
                 raise DataError()
             try:
-                key = unhexlify(test['key'])
-                iv = unhexlify(test['iv'])
-                plaintext = unhexlify(test['msg'])
-                ciphertext = unhexlify(test['ct'])
-                result = parse_result(test['result'])
+                key = unhexlify(test["key"])
+                iv = unhexlify(test["iv"])
+                plaintext = unhexlify(test["msg"])
+                ciphertext = unhexlify(test["ct"])
+                result = parse_result(test["result"])
             except:
                 raise DataError()
 
-            if len(key) not in [128/8, 192/8, 256/8]:
+            if len(key) not in [128 / 8, 192 / 8, 256 / 8]:
                 continue
 
             if result is None:
                 continue
 
-            vectors.append((hexlify(key), hexlify(iv), hexlify(plaintext), hexlify(ciphertext), result))
+            vectors.append(
+                (
+                    hexlify(key),
+                    hexlify(iv),
+                    hexlify(plaintext),
+                    hexlify(ciphertext),
+                    result,
+                )
+            )
     return vectors
 
 
@@ -318,34 +336,46 @@ def generate_chacha_poly(filename):
 
     data = load_json_testvectors(filename)
 
-    if not keys_in_dict(data, {'algorithm', 'testGroups'}):
+    if not keys_in_dict(data, {"algorithm", "testGroups"}):
         raise DataError()
 
-    if data['algorithm'] != 'CHACHA20-POLY1305':
+    if data["algorithm"] != "CHACHA20-POLY1305":
         raise DataError()
 
-    for test_group in data['testGroups']:
-        if not keys_in_dict(test_group, {'tests'}):
+    for test_group in data["testGroups"]:
+        if not keys_in_dict(test_group, {"tests"}):
             raise DataError()
 
-        for test in test_group['tests']:
-            if not keys_in_dict(test, {'key', 'iv', 'aad', 'msg', 'ct', 'tag', 'result'}):
+        for test in test_group["tests"]:
+            if not keys_in_dict(
+                test, {"key", "iv", "aad", "msg", "ct", "tag", "result"}
+            ):
                 raise DataError()
             try:
-                key = unhexlify(test['key'])
-                iv = unhexlify(test['iv'])
-                associated_data = unhexlify(test['aad'])
-                plaintext = unhexlify(test['msg'])
-                ciphertext = unhexlify(test['ct'])
-                tag = unhexlify(test['tag'])
-                result = parse_result(test['result'])
+                key = unhexlify(test["key"])
+                iv = unhexlify(test["iv"])
+                associated_data = unhexlify(test["aad"])
+                plaintext = unhexlify(test["msg"])
+                ciphertext = unhexlify(test["ct"])
+                tag = unhexlify(test["tag"])
+                result = parse_result(test["result"])
             except:
                 raise DataError()
 
             if result is None:
                 continue
 
-            vectors.append((hexlify(key), hexlify(iv), hexlify(associated_data), hexlify(plaintext), hexlify(ciphertext), hexlify(tag), result))
+            vectors.append(
+                (
+                    hexlify(key),
+                    hexlify(iv),
+                    hexlify(associated_data),
+                    hexlify(plaintext),
+                    hexlify(ciphertext),
+                    hexlify(tag),
+                    result,
+                )
+            )
     return vectors
 
 
@@ -354,63 +384,70 @@ def generate_curve25519_dh(filename):
 
     data = load_json_testvectors(filename)
 
-    if not keys_in_dict(data, {'algorithm', 'testGroups'}):
+    if not keys_in_dict(data, {"algorithm", "testGroups"}):
         raise DataError()
 
-    if data['algorithm'] != 'X25519':
+    if data["algorithm"] != "X25519":
         raise DataError()
 
-    for test_group in data['testGroups']:
-        if not keys_in_dict(test_group, {'tests'}):
+    for test_group in data["testGroups"]:
+        if not keys_in_dict(test_group, {"tests"}):
             raise DataError()
 
-        for test in test_group['tests']:
-            if not keys_in_dict(test, {'public', 'private', 'shared', 'result', 'curve'}):
+        for test in test_group["tests"]:
+            if not keys_in_dict(
+                test, {"public", "private", "shared", "result", "curve"}
+            ):
                 raise DataError()
 
             try:
-                public_key = unhexlify(test['public'])
-                curve_name = parse_curve_name(test['curve'])
-                private_key = unhexlify(test['private'])
-                shared = unhexlify(test['shared'])
-                result = parse_result(test['result'])
+                public_key = unhexlify(test["public"])
+                curve_name = parse_curve_name(test["curve"])
+                private_key = unhexlify(test["private"])
+                shared = unhexlify(test["shared"])
+                result = parse_result(test["result"])
             except:
                 raise DataError()
 
-            if curve_name != 'curve25519':
+            if curve_name != "curve25519":
                 continue
             if result is None:
                 continue
 
-            vectors.append((hexlify(public_key), hexlify(private_key), hexlify(shared), result))
+            vectors.append(
+                (hexlify(public_key), hexlify(private_key), hexlify(shared), result)
+            )
 
     return vectors
+
 
 def generate_ecdh(filename):
     vectors = []
 
     data = load_json_testvectors(filename)
 
-    if not keys_in_dict(data, {'algorithm', 'testGroups'}):
+    if not keys_in_dict(data, {"algorithm", "testGroups"}):
         raise DataError()
 
-    if data['algorithm'] != 'ECDH':
+    if data["algorithm"] != "ECDH":
         raise DataError()
 
-    for test_group in data['testGroups']:
-        if not keys_in_dict(test_group, {'tests'}):
+    for test_group in data["testGroups"]:
+        if not keys_in_dict(test_group, {"tests"}):
             raise DataError()
 
-        for test in test_group['tests']:
-            if not keys_in_dict(test, {'public', 'private', 'shared', 'result', 'curve'}):
+        for test in test_group["tests"]:
+            if not keys_in_dict(
+                test, {"public", "private", "shared", "result", "curve"}
+            ):
                 raise DataError()
 
             try:
-                public_key = unhexlify(test['public'])
-                curve_name = parse_curve_name(test['curve'])
-                private_key = parse_signed_hex(test['private'])
-                shared = unhexlify(test['shared'])
-                result = parse_result(test['result'])
+                public_key = unhexlify(test["public"])
+                curve_name = parse_curve_name(test["curve"])
+                private_key = parse_signed_hex(test["private"])
+                shared = unhexlify(test["shared"])
+                result = parse_result(test["result"])
             except:
                 raise DataError()
 
@@ -431,7 +468,15 @@ def generate_ecdh(filename):
             if result is None:
                 continue
 
-            vectors.append((curve_name, hexlify(public_key), hexlify(private_key), hexlify(shared), result))
+            vectors.append(
+                (
+                    curve_name,
+                    hexlify(public_key),
+                    hexlify(private_key),
+                    hexlify(shared),
+                    result,
+                )
+            )
 
     return vectors
 
@@ -441,18 +486,18 @@ def generate_ecdsa(filename):
 
     data = load_json_testvectors(filename)
 
-    if not keys_in_dict(data, {'algorithm', 'testGroups'}):
+    if not keys_in_dict(data, {"algorithm", "testGroups"}):
         raise DataError()
 
-    if data['algorithm'] != 'ECDSA':
+    if data["algorithm"] != "ECDSA":
         raise DataError()
 
-    for test_group in data['testGroups']:
-        if not keys_in_dict(test_group, {'tests', 'keyDer', 'sha'}):
+    for test_group in data["testGroups"]:
+        if not keys_in_dict(test_group, {"tests", "keyDer", "sha"}):
             raise DataError()
 
         try:
-            public_key = unhexlify(test_group['keyDer'])
+            public_key = unhexlify(test_group["keyDer"])
         except:
             raise DataError()
 
@@ -464,18 +509,18 @@ def generate_ecdsa(filename):
             continue
 
         try:
-            hasher = parse_digest(test_group['sha'])
+            hasher = parse_digest(test_group["sha"])
         except NotSupported:
             continue
 
-        for test in test_group['tests']:
-            if not keys_in_dict(test, {'sig', 'msg', 'result'}):
+        for test in test_group["tests"]:
+            if not keys_in_dict(test, {"sig", "msg", "result"}):
                 raise DataError()
 
             try:
-                signature = unhexlify(test['sig'])
-                message = unhexlify(test['msg'])
-                result = parse_result(test['result'])
+                signature = unhexlify(test["sig"])
+                message = unhexlify(test["msg"])
+                result = parse_result(test["result"])
             except:
                 raise DataError()
 
@@ -487,7 +532,16 @@ def generate_ecdsa(filename):
             except ParseError:
                 continue
 
-            vectors.append((curve_name, hexlify(public_key), hasher, hexlify(message), hexlify(signature), result))
+            vectors.append(
+                (
+                    curve_name,
+                    hexlify(public_key),
+                    hasher,
+                    hexlify(message),
+                    hexlify(signature),
+                    result,
+                )
+            )
 
     return vectors
 
@@ -497,19 +551,18 @@ def generate_eddsa(filename):
 
     data = load_json_testvectors(filename)
 
-
-    if not keys_in_dict(data, {'algorithm', 'testGroups'}):
+    if not keys_in_dict(data, {"algorithm", "testGroups"}):
         raise DataError()
 
-    if data['algorithm'] != 'EDDSA':
+    if data["algorithm"] != "EDDSA":
         raise DataError()
 
-    for test_group in data['testGroups']:
-        if not keys_in_dict(test_group, {'tests', 'keyDer'}):
+    for test_group in data["testGroups"]:
+        if not keys_in_dict(test_group, {"tests", "keyDer"}):
             raise DataError()
 
         try:
-            public_key = unhexlify(test_group['keyDer'])
+            public_key = unhexlify(test_group["keyDer"])
         except:
             raise DataError()
 
@@ -518,14 +571,14 @@ def generate_eddsa(filename):
         except ParseError:
             continue
 
-        for test in test_group['tests']:
-            if not keys_in_dict(test, {'sig', 'msg', 'result'}):
+        for test in test_group["tests"]:
+            if not keys_in_dict(test, {"sig", "msg", "result"}):
                 raise DataError()
 
             try:
-                signature = unhexlify(test['sig'])
-                message = unhexlify(test['msg'])
-                result = parse_result(test['result'])
+                signature = unhexlify(test["sig"])
+                message = unhexlify(test["msg"])
+                result = parse_result(test["result"])
             except:
                 raise DataError()
 
@@ -537,21 +590,31 @@ def generate_eddsa(filename):
             except ParseError:
                 continue
 
-            vectors.append((hexlify(public_key), hexlify(message), hexlify(signature), result))
+            vectors.append(
+                (hexlify(public_key), hexlify(message), hexlify(signature), result)
+            )
 
     return vectors
 
 
 dir = os.path.abspath(os.path.dirname(__file__))
-lib = ctypes.cdll.LoadLibrary(os.path.join(dir, 'libtrezor-crypto.so'))
-testvectors_directory = os.path.join(dir, 'wycheproof/testvectors')
+lib = ctypes.cdll.LoadLibrary(os.path.join(dir, "libtrezor-crypto.so"))
+testvectors_directory = os.path.join(dir, "wycheproof/testvectors")
 context_structure_length = 1024
 
 ecdh_vectors = generate_ecdh("ecdh_test.json")
 curve25519_dh_vectors = generate_curve25519_dh("x25519_test.json")
 eddsa_vectors = generate_eddsa("eddsa_test.json")
-ecdsa_vectors = generate_ecdsa("ecdsa_test.json") + generate_ecdsa("ecdsa_secp256k1_sha256_test.json") + generate_ecdsa("ecdsa_secp256r1_sha256_test.json")
-ecdh_vectors = generate_ecdh("ecdh_test.json") + generate_ecdh("ecdh_secp256k1_test.json") + generate_ecdh("ecdh_secp256r1_test.json")
+ecdsa_vectors = (
+    generate_ecdsa("ecdsa_test.json")
+    + generate_ecdsa("ecdsa_secp256k1_sha256_test.json")
+    + generate_ecdsa("ecdsa_secp256r1_sha256_test.json")
+)
+ecdh_vectors = (
+    generate_ecdh("ecdh_test.json")
+    + generate_ecdh("ecdh_secp256k1_test.json")
+    + generate_ecdh("ecdh_secp256r1_test.json")
+)
 chacha_poly_vectors = generate_chacha_poly("chacha20_poly1305_test.json")
 aes_vectors = generate_aes("aes_cbc_pkcs5_test.json")
 
@@ -562,37 +625,48 @@ def test_eddsa(public_key, message, signature, result):
     signature = unhexlify(signature)
     message = unhexlify(message)
 
-    computed_result = lib.ed25519_sign_open(message, len(message), public_key, signature) == 0
+    computed_result = (
+        lib.ed25519_sign_open(message, len(message), public_key, signature) == 0
+    )
     assert result == computed_result
 
 
-@pytest.mark.parametrize("curve_name, public_key, hasher, message, signature, result", ecdsa_vectors)
+@pytest.mark.parametrize(
+    "curve_name, public_key, hasher, message, signature, result", ecdsa_vectors
+)
 def test_ecdsa(curve_name, public_key, hasher, message, signature, result):
     curve = get_curve_by_name(curve_name)
     if curve is None:
-        raise NotSupported("Curve not supported: {}".format(curve_Name))
+        raise NotSupported("Curve not supported: {}".format(curve_name))
 
     public_key = unhexlify(public_key)
     signature = unhexlify(signature)
     message = unhexlify(message)
 
-    computed_result = lib.ecdsa_verify(curve, hasher, public_key, signature, message, len(message)) == 0
+    computed_result = (
+        lib.ecdsa_verify(curve, hasher, public_key, signature, message, len(message))
+        == 0
+    )
     assert result == computed_result
 
 
-@pytest.mark.parametrize("public_key, private_key, shared, result", curve25519_dh_vectors)
+@pytest.mark.parametrize(
+    "public_key, private_key, shared, result", curve25519_dh_vectors
+)
 def test_curve25519_dh(public_key, private_key, shared, result):
     public_key = unhexlify(public_key)
     private_key = unhexlify(private_key)
     shared = unhexlify(shared)
 
-    computed_shared = bytes([0]*32)
+    computed_shared = bytes([0] * 32)
     lib.curve25519_scalarmult(computed_shared, private_key, public_key)
     computed_result = shared == computed_shared
     assert result == computed_result
 
 
-@pytest.mark.parametrize("curve_name, public_key, private_key, shared, result", ecdh_vectors)
+@pytest.mark.parametrize(
+    "curve_name, public_key, private_key, shared, result", ecdh_vectors
+)
 def test_ecdh(curve_name, public_key, private_key, shared, result):
     curve = get_curve_by_name(curve_name)
     if curve is None:
@@ -602,14 +676,16 @@ def test_ecdh(curve_name, public_key, private_key, shared, result):
     private_key = unhexlify(private_key)
     shared = unhexlify(shared)
 
-    computed_shared = bytes([0]*2*32)
+    computed_shared = bytes([0] * 2 * 32)
     lib.ecdh_multiply(curve, private_key, public_key, computed_shared)
     computed_shared = computed_shared[1:33]
     computed_result = shared == computed_shared
     assert result == computed_result
 
 
-@pytest.mark.parametrize("key, iv, associated_data, plaintext, ciphertext, tag, result", chacha_poly_vectors)
+@pytest.mark.parametrize(
+    "key, iv, associated_data, plaintext, ciphertext, tag, result", chacha_poly_vectors
+)
 def test_chacha_poly(key, iv, associated_data, plaintext, ciphertext, tag, result):
     key = unhexlify(key)
     iv = unhexlify(iv)
@@ -618,7 +694,9 @@ def test_chacha_poly(key, iv, associated_data, plaintext, ciphertext, tag, resul
     ciphertext = unhexlify(ciphertext)
     tag = unhexlify(tag)
 
-    computed_ciphertext, computed_tag = chacha_poly_encrypt(key, iv, associated_data, plaintext)
+    computed_ciphertext, computed_tag = chacha_poly_encrypt(
+        key, iv, associated_data, plaintext
+    )
     computed_result = ciphertext == computed_ciphertext and tag == computed_tag
     assert result == computed_result
 
