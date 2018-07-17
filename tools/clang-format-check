@@ -1,0 +1,10 @@
+#!/bin/sh
+error=0
+for f in $*; do
+    changes=$(clang-format -output-replacements-xml "$f" | grep -c '^<replacement ')
+    if test "$changes" -gt 0; then
+        echo "$f ... $changes changes needed"
+        error=1
+    fi
+done
+exit $error

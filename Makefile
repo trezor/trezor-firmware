@@ -73,6 +73,8 @@ test_emu: ## run selected device tests from python-trezor
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 
+## style commands:
+
 style: ## run code style check on application sources and tests
 	flake8 $(shell find src -name *.py)
 	isort --check-only $(shell find src -name *.py ! -path 'src/trezor/messages/*')
@@ -83,6 +85,9 @@ isort:
 
 black:
 	black $(shell find src -name *.py ! -path 'src/trezor/messages/*')
+
+cstyle: ## run code style check on low-level C code
+	./tools/clang-format-check $(shell find embed -type f -name *.[ch])
 
 ## build commands:
 
