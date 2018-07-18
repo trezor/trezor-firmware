@@ -28,7 +28,7 @@
   "default_fee_b": {
     "Normal": 1000
   },
-  "dust_limit": 54600,
+  "dust_limit": 546,
   "blocktime_seconds": 150,
   "uri_prefix": "litecoin",
   "min_address_length": 27,
