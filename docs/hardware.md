@@ -8,27 +8,27 @@
 
 ### Photo of assembled board (top)
 
-![Assembled Board Top](hardware/model-t-top-v12.png)
+![Assembled Board Top](hardware/model-t-top-v12.jpg)
 
 ### Photo of assembled board (bottom)
 
-![Assembled Board Bottom](hardware/model-t-bottom-v12.png)
+![Assembled Board Bottom](hardware/model-t-bottom-v12.jpg)
 
 ### Photo of assembled TFT LCD display + capacitive touch panel module (top)
 
-![Display Module Top](hardware/model-t-display-module-top.png)
+![Display Module Top](hardware/model-t-display-module-top.jpg)
 
 ### Photo of assembled TFT LCD display + capacitive touch panel module (bottom)
 
-![Display Module Bottom](hardware/model-t-display-module-bottom.png)
+![Display Module Bottom](hardware/model-t-display-module-bottom.jpg)
 
 ### Photo of disassembled TFT LCD display + capacitive touch panel module (top) (CTPM on left) (TFT LCD broken glass removed)
 
-![Display Module Disassembled Top](hardware/model-t-display-module-disassembled-top.png)
+![Display Module Disassembled Top](hardware/model-t-display-module-disassembled-top.jpg)
 
 ### Photo of disassembled TFT LCD display + capacitive touch panel module (bottom) (CTPM on left) (TFT LCD broken glass removed)
 
-![Display Module Disassembled Bottom](hardware/model-t-display-module-disassembled-bottom.png)
+![Display Module Disassembled Bottom](hardware/model-t-display-module-disassembled-bottom.jpg)
 
 ### Bill of Materials / BOM
 
@@ -140,11 +140,11 @@ The metal tray is attached to the board with double stick tape. You just have to
 
 ### Photo of dev board before modifications (top)
 
-![Dev Board Top Before](hardware/dev-board-top-before.png)
+![Dev Board Top Before](hardware/dev-board-top-before.jpg)
 
 ### Photo of dev board before modifications (bottom)
 
-![Dev Board Bottom Before](hardware/dev-board-bottom-before.png)
+![Dev Board Bottom Before](hardware/dev-board-bottom-before.jpg)
 
 Minimum MCU requirements:
 
