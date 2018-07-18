@@ -1,3 +1,4 @@
+// clang-format off
 static const uint8_t toi_icon_safeplace[] = {
     // magic
     'T', 'O', 'I', 'g',

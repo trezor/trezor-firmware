@@ -75,6 +75,7 @@ def process_image(ifn, savefiles=False):
             f.write(('%s = %s\n' % (bname, data)).encode())
             print('Written %s ... %d bytes' % (ofn_py, len(data)))
         with open(ofn_h, 'wt') as f:
+            f.write('// clang-format off\n')
             f.write('static const uint8_t toi_%s[] = {\n' % bname)
             f.write('    // magic\n')
             if im.mode == 'RGB':

@@ -20,12 +20,14 @@ def process_face(name, style, size):
     fontname = '%s_%s_%d' % (name.lower(), style.lower(), size)
     with open('font_%s.h' % fontname, 'wt') as f:
         f.write('#include <stdint.h>\n\n')
-        f.write('extern const uint8_t * const Font_%s_%s_%d[%d + 1 - %d];\n' % (name, style, size, MAX_GLYPH, MIN_GLYPH))
+        f.write('extern const uint8_t* const Font_%s_%s_%d[%d + 1 - %d];\n' % (name, style, size, MAX_GLYPH, MIN_GLYPH))
     with open('font_%s.c' % fontname, 'wt') as f:
         f.write('#include "font_%s.h"\n\n' % fontname)
         f.write('// first two bytes are width and height of the glyph\n')
-        f.write('// third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph\n')
+        f.write('// third, fourth and fifth bytes are advance\n')
+        f.write('// bearingX and bearingY of the horizontal metrics of the glyph\n')
         f.write('// rest is packed 4-bit glyph data\n\n')
+        f.write('// clang-format off\n\n')
         for i in range(MIN_GLYPH, MAX_GLYPH + 1):
             c = chr(i)
             face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)
