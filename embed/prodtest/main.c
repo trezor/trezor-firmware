@@ -208,6 +208,8 @@ static void test_touch(const char *args)
     }
     display_refresh();
 
+    touch_power_on();
+
     uint32_t evt = 0;
     if (touch_click_timeout(&evt, timeout * 1000)) {
         uint16_t x = touch_get_x(evt);
@@ -218,6 +220,8 @@ static void test_touch(const char *args)
     }
     display_clear();
     display_refresh();
+
+    touch_power_off();
 }
 
 static void test_pwm(const char *args)
@@ -253,6 +257,7 @@ static void test_sd(void)
             vcp_printf("ERROR sdcard_write_blocks (%d)", j);
             goto power_off;
         }
+        HAL_Delay(1000);
         if (sectrue != sdcard_read_blocks(buf2, 0, BLOCK_SIZE / SDCARD_BLOCK_SIZE)) {
             vcp_printf("ERROR sdcard_read_blocks (%d)", j);
             goto power_off;

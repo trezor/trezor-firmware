@@ -39,19 +39,13 @@
 
 static I2C_HandleTypeDef i2c_handle;
 
-static void touch_power_on(void)
-{
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET); // CTP_ON/PB10
-    HAL_Delay(50);
+static void touch_default_pin_state(void) {
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // CTP_ON/PB10
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);   // CTP_I2C_SCL/PB6
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);   // CTP_I2C_SDA/PB7
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_RESET);   // CTPM_REST/PC5
+    // don't touch CTPM_INT = leave in High Z
 }
-
-/*
-static void touch_power_off(void)
-{
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET); // CTP_ON/PB10
-    HAL_Delay(50);
-}
-*/
 
 void touch_init(void)
 {
@@ -65,19 +59,56 @@ void touch_init(void)
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
     HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-    touch_power_on();
-
-    // Enable I2C clock
-    __HAL_RCC_I2C1_CLK_ENABLE();
-
-    // Init SCL and SDA GPIO lines (PB6 & PB7)
-    GPIO_InitStructure.Pin = GPIO_PIN_6 | GPIO_PIN_7;
+    // configure CTP I2C SCL and SDA GPIO lines (PB6 & PB7)
     GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStructure.Pull = GPIO_NOPULL;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW; // I2C is a KHz bus and low speed is still good into the low MHz
     GPIO_InitStructure.Alternate = GPIO_AF4_I2C1;
+    GPIO_InitStructure.Pin = GPIO_PIN_6 | GPIO_PIN_7;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
 
+    // PC4 capacitive touch panel module (CTPM) interrupt (INT) input
+    /*
+    GPIO_InitStructure.Pin = GPIO_PIN_4;
+    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Pull = GPIO_PULLUP;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStructure.Alternate = 0;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+    */
+
+    // PC5 capacitive touch panel module (CTPM) reset (RSTN)
+    GPIO_InitStructure.Pin = GPIO_PIN_5;
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStructure.Alternate = 0;
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET); // set the pin value before driving it out
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure); // switch the pin to be an output
+
+    touch_default_pin_state();
+}
+
+void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c) {
+    // enable I2C clock
+    __HAL_RCC_I2C1_CLK_ENABLE();
+    // GPIO have already been initialised by touch_init
+}
+
+void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c) {
+    __HAL_RCC_I2C1_CLK_DISABLE();
+}
+
+void touch_power_on(void) {
+    if (i2c_handle.Instance) {
+        return;
+    }
+
+    // turn on CTP circuitry
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET); // CTP_ON/PB10
+    HAL_Delay(50);
+
+    // I2C device interface configuration
     i2c_handle.Instance = I2C1;
     i2c_handle.Init.ClockSpeed = 400000;
     i2c_handle.Init.DutyCycle = I2C_DUTYCYCLE_16_9;
@@ -88,32 +119,31 @@ void touch_init(void)
     i2c_handle.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
     i2c_handle.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 
-    ensure(sectrue * (HAL_OK == HAL_I2C_Init(&i2c_handle)), NULL);
+    if (HAL_OK != HAL_I2C_Init(&i2c_handle)) {
+        ensure(secfalse, NULL);
+        return;
+    }
 
-    // PC4 capacitive touch panel module (CTPM) interrupt (INT) input
-    //GPIO_InitStructure.Pin = GPIO_PIN_4;
-    //GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-    //GPIO_InitStructure.Pull = GPIO_PULLUP;
-    //GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-    //GPIO_InitStructure.Alternate = 0;
-    //HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
-
-    // PC5 capacitive touch panel module (CTPM) reset (RSTN)
-    GPIO_InitStructure.Pin = GPIO_PIN_5;
-    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStructure.Pull = GPIO_NOPULL;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStructure.Alternate = 0;
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_RESET); // set the pin value before driving it out
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure); // switch the pin to be an output
     // reset the touch panel by keeping its reset line low (active low) low for a minimum of 5ms
     HAL_Delay(10); // being conservative, min is 5ms
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET); // release CTPM reset
     HAL_Delay(310); // "Time of starting to report point after resetting" min is 300ms, giving an extra 10ms
 
     // set register 0xA4 G_MODE to interrupt polling mode (0x00). basically, CTPM keeps this input line (to PC4) low while a finger is on the screen.
-    //uint8_t touch_panel_config[] = {0xA4, 0x00};
-    //ensure(sectrue * (HAL_OK == HAL_I2C_Master_Transmit(&i2c_handle, TOUCH_ADDRESS, touch_panel_config, sizeof(touch_panel_config), 10)), NULL);
+    /*
+    uint8_t touch_panel_config[] = {0xA4, 0x00};
+    ensure(sectrue * (HAL_OK == HAL_I2C_Master_Transmit(&i2c_handle, TOUCH_ADDRESS, touch_panel_config, sizeof(touch_panel_config), 10)), NULL);
+    */
+}
+
+void touch_power_off(void) {
+    if (i2c_handle.Instance != NULL) {
+        HAL_I2C_DeInit(&i2c_handle);
+        i2c_handle.Instance = NULL;
+    }
+    // turn off CTP circuitry
+    HAL_Delay(50);
+    touch_default_pin_state();
 }
 
 uint32_t touch_read(void)

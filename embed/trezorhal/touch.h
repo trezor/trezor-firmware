@@ -27,6 +27,8 @@
 #define TOUCH_END   (4U << 24)
 
 void touch_init(void);
+void touch_power_on(void);
+void touch_power_off(void);
 uint32_t touch_read(void);
 uint32_t touch_click(void);
 inline uint16_t touch_get_x(uint32_t evt) { return (evt >> 12) & 0xFFF; }

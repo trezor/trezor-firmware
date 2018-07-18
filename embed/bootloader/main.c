@@ -233,6 +233,7 @@ main_start:
 #endif
 
     touch_init();
+    touch_power_on();
 
     // delay to detect touch
     uint32_t touched = 0;
