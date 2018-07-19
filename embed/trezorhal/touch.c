@@ -43,8 +43,8 @@ static inline void touch_default_pin_state(void) {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // CTP_ON/PB10
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);   // CTP_I2C_SCL/PB6
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);   // CTP_I2C_SDA/PB7
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);     // CTPM_REST/PC5
-    // don't touch CTPM_INT = leave in High Z
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);     // CTP_REST/PC5
+    // don't touch CTP_INT = leave in High Z
 
     // set above pins to OUTPUT / NOPULL
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -60,16 +60,9 @@ static inline void touch_default_pin_state(void) {
 
 static inline void touch_active_pin_state(void) {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);  // CTP_ON/PB10
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);     // CTPM_REST/PC5
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);     // CTP_REST/PC5
 
     GPIO_InitTypeDef GPIO_InitStructure;
-
-    // configure the CTP circuitry on/off pin
-    GPIO_InitStructure.Mode  = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStructure.Pull  = GPIO_NOPULL;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStructure.Pin   = GPIO_PIN_10;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
 
     // configure CTP I2C SCL and SDA GPIO lines (PB6 & PB7)
     GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
