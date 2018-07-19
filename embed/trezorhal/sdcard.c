@@ -62,6 +62,8 @@ static void sdcard_default_pin_state(void) {
 }
 
 void sdcard_init(void) {
+    sdcard_default_pin_state();
+
     GPIO_InitTypeDef GPIO_InitStructure;
 
     // configure the SD card circuitry on/off pin
@@ -69,7 +71,6 @@ void sdcard_init(void) {
     GPIO_InitStructure.Pull  = GPIO_NOPULL;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStructure.Pin   = GPIO_PIN_0;
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
 
     // configure SD GPIO
@@ -88,8 +89,6 @@ void sdcard_init(void) {
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStructure.Pin   = GPIO_PIN_13;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
-
-    sdcard_default_pin_state();
 }
 
 void HAL_SD_MspInit(SD_HandleTypeDef *hsd) {

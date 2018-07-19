@@ -43,12 +43,14 @@ static void touch_default_pin_state(void) {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // CTP_ON/PB10
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);   // CTP_I2C_SCL/PB6
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);   // CTP_I2C_SDA/PB7
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_RESET);   // CTPM_REST/PC5
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);     // CTPM_REST/PC5
     // don't touch CTPM_INT = leave in High Z
 }
 
 void touch_init(void)
 {
+    touch_default_pin_state();
+
     GPIO_InitTypeDef GPIO_InitStructure;
 
     // configure the CTP circuitry on/off pin
@@ -56,7 +58,6 @@ void touch_init(void)
     GPIO_InitStructure.Pull  = GPIO_NOPULL;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStructure.Pin   = GPIO_PIN_10;
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
     HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
 
     // configure CTP I2C SCL and SDA GPIO lines (PB6 & PB7)
@@ -83,10 +84,7 @@ void touch_init(void)
     GPIO_InitStructure.Pull = GPIO_NOPULL;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStructure.Alternate = 0;
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET); // set the pin value before driving it out
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure); // switch the pin to be an output
-
-    touch_default_pin_state();
 }
 
 void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c) {
@@ -125,6 +123,7 @@ void touch_power_on(void) {
     }
 
     // reset the touch panel by keeping its reset line low (active low) low for a minimum of 5ms
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_RESET);
     HAL_Delay(10); // being conservative, min is 5ms
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET); // release CTPM reset
     HAL_Delay(310); // "Time of starting to report point after resetting" min is 300ms, giving an extra 10ms
