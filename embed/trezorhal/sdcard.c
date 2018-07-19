@@ -51,7 +51,7 @@
 
 static SD_HandleTypeDef sd_handle;
 
-static void sdcard_default_pin_state(void) {
+static inline void sdcard_default_pin_state(void) {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0,  GPIO_PIN_SET);    // SD_ON/PC0
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8,  GPIO_PIN_RESET);  // SD_DAT0/PC8
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9,  GPIO_PIN_RESET);  // SD_DAT1/PC9
@@ -59,17 +59,28 @@ static void sdcard_default_pin_state(void) {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_11, GPIO_PIN_RESET);  // SD_DAT3/PC11
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_RESET);  // SD_CLK/PC12
     HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2,  GPIO_PIN_RESET);  // SD_CMD/PD2
+
+    // set above pins to OUTPUT / NOPULL
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    GPIO_InitStructure.Mode  = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull  = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStructure.Pin   = GPIO_PIN_0 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin   = GPIO_PIN_2;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
 
-void sdcard_init(void) {
-    sdcard_default_pin_state();
+static inline void sdcard_active_pin_state(void) {
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0,  GPIO_PIN_RESET);  // SD_ON/PC0
 
     GPIO_InitTypeDef GPIO_InitStructure;
 
     // configure the SD card circuitry on/off pin
     GPIO_InitStructure.Mode  = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStructure.Pull  = GPIO_NOPULL;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStructure.Pin   = GPIO_PIN_0;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
 
@@ -91,6 +102,11 @@ void sdcard_init(void) {
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
+
+void sdcard_init(void) {
+    sdcard_default_pin_state();
+}
+
 void HAL_SD_MspInit(SD_HandleTypeDef *hsd) {
     // enable SDIO clock
     __HAL_RCC_SDIO_CLK_ENABLE();
@@ -109,7 +125,7 @@ secbool sdcard_power_on(void) {
         return sectrue;
     }
     // turn on SD card circuitry
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_RESET); // SD_ON/PC0
+    sdcard_active_pin_state();
     HAL_Delay(50);
 
     // SD device interface configuration
