@@ -70,6 +70,13 @@ static inline void sdcard_default_pin_state(void) {
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
     GPIO_InitStructure.Pin   = GPIO_PIN_2;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+    // configure the SD card detect pin
+    GPIO_InitStructure.Mode  = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Pull  = GPIO_PULLUP;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStructure.Pin   = GPIO_PIN_13;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
 static inline void sdcard_active_pin_state(void) {
@@ -93,13 +100,6 @@ static inline void sdcard_active_pin_state(void) {
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
     GPIO_InitStructure.Pin       = GPIO_PIN_2;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
-
-    // configure the SD card detect pin
-    GPIO_InitStructure.Mode  = GPIO_MODE_INPUT;
-    GPIO_InitStructure.Pull  = GPIO_PULLUP;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStructure.Pin   = GPIO_PIN_13;
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
 
