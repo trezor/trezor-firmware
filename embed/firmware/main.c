@@ -50,6 +50,7 @@ int main(void)
     pendsv_init();
     sdcard_init();
     touch_init();
+    touch_power_on();
 
     display_clear();
 
