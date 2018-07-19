@@ -98,7 +98,15 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
         length += rlp.field_length(len(field), field[:1])
 
     if msg.chain_id:  # forks replay protection
-        length += rlp.field_length(1, [msg.chain_id])
+        if msg.chain_id < 0x100:
+            l = 1
+        elif msg.chain_id < 0x10000:
+            l = 2
+        elif msg.chain_id < 0x1000000:
+            l = 3
+        else:
+            l = 4
+        length += rlp.field_length(l, [msg.chain_id])
         length += rlp.field_length(0, 0)
         length += rlp.field_length(0, 0)
 
