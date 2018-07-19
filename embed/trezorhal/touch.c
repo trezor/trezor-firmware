@@ -144,7 +144,7 @@ void touch_power_on(void) {
 }
 
 void touch_power_off(void) {
-    if (i2c_handle.Instance != NULL) {
+    if (i2c_handle.Instance) {
         HAL_I2C_DeInit(&i2c_handle);
         i2c_handle.Instance = NULL;
     }

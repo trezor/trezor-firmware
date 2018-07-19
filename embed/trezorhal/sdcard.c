@@ -151,7 +151,7 @@ error:
 }
 
 void sdcard_power_off(void) {
-    if (sd_handle.Instance != NULL) {
+    if (sd_handle.Instance) {
         HAL_SD_DeInit(&sd_handle);
         sd_handle.Instance = NULL;
     }
