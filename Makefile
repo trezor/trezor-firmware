@@ -86,7 +86,7 @@ tests/test_openssl: tests/test_openssl.o $(OBJS)
 	$(CC) tests/test_openssl.o $(OBJS) $(TESTSSLLIBS) -o tests/test_openssl
 
 tests/libtrezor-crypto.so: $(SRCS)
-	$(CC) $(CFLAGS) -DAES_VAR -fPIC -shared $(SRCS) -o tests/libtrezor-crypto.so
+	$(CC) $(CFLAGS) -DAES_128 -DAES_192 -fPIC -shared $(SRCS) -o tests/libtrezor-crypto.so
 
 tools: tools/xpubaddrgen tools/mktable tools/bip39bruteforce
 
