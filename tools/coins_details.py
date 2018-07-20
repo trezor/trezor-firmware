@@ -53,11 +53,13 @@ def coinmarketcap_info(shortcut):
             return coin
 
 
-def update_marketcap(obj, shortcut):
-    try:
-        obj['marketcap_usd'] = int(float(coinmarketcap_info(shortcut)['quotes']['USD']['market_cap']))
-    except:
-        pass
+def update_marketcap(obj, *shortcuts):
+    for sym in shortcuts:
+        try:
+            obj['marketcap_usd'] = int(float(coinmarketcap_info(sym)['quotes']['USD']['market_cap']))
+            return
+        except:
+            pass
         # print("Marketcap info not found for", shortcut)
 
 
@@ -133,6 +135,7 @@ def update_coins(details):
         set_default(out, 'links', {})
         set_default(out['links'], 'Homepage', coin['website'])
         set_default(out['links'], 'Github', coin['github'])
+        set_default(out, 'wallet', {})
         update_marketcap(out, coin.get('coinmarketcap_alias', coin['coin_label']))
 
     check_unsupported(details, 'coin:', supported)
@@ -181,12 +184,12 @@ def update_erc20(details):
         out['wallet']['MyCrypto'] = 'https://mycrypto.com'
         out['wallet']['MyEtherWallet'] = 'https://www.myetherwallet.com'
 
-        if t['website']:
+        if t.get('website'):
             out['links']['Homepage'] = t['website']
         if t.get('social', {}).get('github', None):
             out['links']['Github'] = t['social']['github']
 
-        update_marketcap(out, out.get('coinmarketcap_alias', t['symbol']))
+        update_marketcap(out, out.get('coinmarketcap_alias'), t['name'], t['symbol'])
 
     check_unsupported(details, 'erc20:', supported)
 
