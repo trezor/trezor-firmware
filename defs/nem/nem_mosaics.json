@@ -1,14 +1,20 @@
 [
   {
-    "name": "XEM",
-    "ticker": " XEM",
+    "name": "NEM",
+    "ticker": "XEM",
     "namespace": "nem",
     "mosaic": "xem",
-    "divisibility": 6
+    "divisibility": 6,
+    "links": {
+      "Homepage": "https://nem.io"
+    },
+    "wallet": {
+      "Nano Wallet": "https://nem.io/downloads/"
+    }
   },
   {
     "name": "DIMCOIN",
-    "ticker": " DIM",
+    "ticker": "DIM",
     "namespace": "dim",
     "mosaic": "coin",
     "divisibility": 6,
@@ -18,41 +24,65 @@
     "levy_mosaic": "coin",
     "networks": [
       104
-    ]
+    ],
+    "links": {
+      "Homepage": "https://www.dimcoin.io"
+    },
+    "wallet": {
+      "Nano Wallet": "https://nem.io/downloads/"
+    }
   },
   {
     "name": "DIM TOKEN",
-    "ticker": " DIMTOK",
+    "ticker": "DIMTOK",
     "namespace": "dim",
     "mosaic": "token",
     "divisibility": 6,
     "networks": [
       104
-    ]
+    ],
+    "links": {
+      "Homepage": "https://www.dimcoin.io"
+    },
+    "wallet": {
+      "Nano Wallet": "https://nem.io/downloads/"
+    }
   },
   {
     "name": "Breeze Token",
-    "ticker": " BREEZE",
+    "ticker": "BREEZE",
     "namespace": "breeze",
     "mosaic": "breeze-token",
     "divisibility": 0,
     "networks": [
       104
-    ]
+    ],
+    "links": {
+      "Homepage": "https://breeze.chat"
+    },
+    "wallet": {
+      "Nano Wallet": "https://nem.io/downloads/"
+    }
   },
   {
     "name": "PacNEM Game Credits",
-    "ticker": " PAC:HRT",
+    "ticker": "PAC:HRT",
     "namespace": "pacnem",
     "mosaic": "heart",
     "divisibility": 0,
     "networks": [
       104
-    ]
+    ],
+    "links": {
+      "Homepage": "https://pacnem.com"
+    },
+    "wallet": {
+      "Nano Wallet": "https://nem.io/downloads/"
+    }
   },
   {
     "name": "PacNEM Score Tokens",
-    "ticker": " PAC:CHS",
+    "ticker": "PAC:CHS",
     "namespace": "pacnem",
     "mosaic": "cheese",
     "divisibility": 6,
@@ -62,6 +92,12 @@
     "levy_mosaic": "xem",
     "networks": [
       104
-    ]
+    ],
+    "links": {
+      "Homepage": "https://pacnem.com"
+    },
+    "wallet": {
+      "Nano Wallet": "https://nem.io/downloads/"
+    }
   }
 ]

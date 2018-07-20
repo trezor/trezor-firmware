@@ -1,0 +1,8 @@
+{
+    "mosaic:DIMTOK": {
+        "coinmarketcap_alias": "dimcoin"
+    },
+    "erc20:eth:GNT": {
+        "coinmarketcap_alias": "golem-network-tokens"
+    }
+}

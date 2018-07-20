@@ -1,0 +1,47 @@
+[
+    {
+        "name": "Lisk",
+        "shortcut": "LSK",
+        "links": {
+            "Homepage": "https://lisk.io/"
+        }
+    },
+    {
+        "name": "Stellar",
+        "notes": "In development",
+        "shortcut": "XLM",
+        "links": {
+            "Homepage": "https://www.stellar.org"
+        }
+    },
+    {
+        "name": "Monero",
+        "shortcut": "XMR",
+        "notes": "In development",
+        "links": {
+            "Homepage": "https://getmonero.org"
+        }
+    },
+    {
+        "name": "Ripple",
+        "shortcut": "XRP",
+        "notes": "In development",
+        "links": {
+            "Homepage": "https://ripple.com"
+        }
+    },
+    {
+        "name": "Cardano",
+        "shortcut": "ADA",
+        "links": {
+            "Homepage": "https://www.cardano.org"
+        }
+    },
+    {
+        "name": "Tezos",
+        "shortcut": "XTZ",
+        "links": {
+            "Homepage": "https://tezos.com"
+        }
+    }
+]
