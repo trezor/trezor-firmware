@@ -60,13 +60,27 @@ static inline void sdcard_default_pin_state(void) {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_RESET);  // SD_CLK/PC12
     HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2,  GPIO_PIN_RESET);  // SD_CMD/PD2
 
-    // set above pins to OUTPUT / NOPULL
     GPIO_InitTypeDef GPIO_InitStructure;
 
+    // configure the SD card circuitry on/off pin
     GPIO_InitStructure.Mode  = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStructure.Pull  = GPIO_NOPULL;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStructure.Pin   = GPIO_PIN_0 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12;
+    GPIO_InitStructure.Pin   = GPIO_PIN_0;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+    // configure SD GPIO
+#if 1
+    GPIO_InitStructure.Mode  = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull  = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+#else
+    GPIO_InitStructure.Mode      = GPIO_MODE_AF_PP;
+    GPIO_InitStructure.Pull      = GPIO_PULLUP;
+    GPIO_InitStructure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStructure.Alternate = GPIO_AF12_SDIO;
+#endif
+    GPIO_InitStructure.Pin   = GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
     GPIO_InitStructure.Pin   = GPIO_PIN_2;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
