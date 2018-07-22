@@ -178,4 +178,26 @@ enum MessageType {
     MessageType_RippleAddress = 401 [(wire_out) = true];
     MessageType_RippleSignTx = 402 [(wire_in) = true];
     MessageType_RippleSignedTx = 403 [(wire_in) = true];
+
+    // Monero
+    MessageType_MoneroTransactionSignRequest = 501 [(wire_in) = true];
+    MessageType_MoneroTransactionInitAck = 502 [(wire_out) = true];
+    MessageType_MoneroTransactionSetInputAck = 503 [(wire_out) = true];
+    MessageType_MoneroTransactionInputsPermutationAck = 504 [(wire_out) = true];
+    MessageType_MoneroTransactionInputViniAck = 505 [(wire_out) = true];
+    MessageType_MoneroTransactionSetOutputAck = 506 [(wire_out) = true];
+    MessageType_MoneroTransactionAllOutSetAck = 507 [(wire_out) = true];
+    MessageType_MoneroTransactionMlsagDoneAck = 508 [(wire_out) = true];
+    MessageType_MoneroTransactionSignInputAck = 509 [(wire_out) = true];
+    MessageType_MoneroTransactionFinalAck = 510 [(wire_out) = true];
+    MessageType_MoneroKeyImageSyncRequest = 511 [(wire_in) = true];
+    MessageType_MoneroKeyImageExportInitAck = 520 [(wire_out) = true];
+    MessageType_MoneroKeyImageSyncStepAck = 521 [(wire_out) = true];
+    MessageType_MoneroKeyImageSyncFinalAck = 522 [(wire_out) = true];
+    MessageType_MoneroGetAddressRequest = 530 [(wire_in) = true];
+    MessageType_MoneroAddressAck = 531 [(wire_out) = true];
+    MessageType_MoneroGetWatchKeyRequest = 532 [(wire_in) = true];
+    MessageType_MoneroWatchKeyAck = 533 [(wire_out) = true];
+    MessageType_DebugMoneroDiagRequest = 536 [(wire_in) = true];
+    MessageType_DebugMoneroDiagAck = 537 [(wire_out) = true];
 }
