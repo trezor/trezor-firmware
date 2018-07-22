@@ -7,6 +7,8 @@ from graphviz import Digraph
 class Message(object):
     def __init__(self, name, attrs):
         self.name = name
+        if len(attrs) == 0:
+            raise ValueError("message '%s' has no attributes" % name)
         t = attrs[0][0]
         if t in ["start", "end", "auxstart", "auxend", "embed", "ignore"]:
             self.typ = t
@@ -14,12 +16,18 @@ class Message(object):
         elif t == "next":
             self.typ = "normal"
             attrs = attrs
+        elif t == "wrap":
+            self.typ = "normal"
+            attrs = attrs
         else:
-            raise ValueError("wrong message type in message '%s'" % m.name)
+            raise ValueError("wrong message type in message '%s'" % name)
         self.next = []
+        self.wrap = []
         for a in attrs:
             if a[0] == "next":
                 self.next.append(a[1])
+            elif a[0] == "wrap":
+                self.wrap.append(a[1])
 
 
 def generate_messages(files):
@@ -54,6 +62,8 @@ def generate_graph(msgs, fn):
 
     for m in msgs.values():
         for n in m.next:
+            dot.edge(m.name, n)
+        for n in m.wrap:
             dot.edge(m.name, n)
     dot.render(fn)
 

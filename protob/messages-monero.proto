@@ -94,6 +94,7 @@ message MoneroTransactionInitRequest {
 
 /**
  * Response: Response to transaction signing initialization.
+ * @next MoneroTransactionSignRequest
  */
 message MoneroTransactionInitAck {
     optional uint32 version = 1;
@@ -115,6 +116,7 @@ message MoneroTransactionSetInputRequest {
 
 /**
  * Response: Response to setting UTXO for signature. Contains sealed values needed for further protocol steps.
+ * @next MoneroTransactionSignRequest
  */
 message MoneroTransactionSetInputAck {
     optional bytes vini = 1;      // xmrtypes.TxinToKey
@@ -135,6 +137,7 @@ message MoneroTransactionInputsPermutationRequest {
 
 /**
  * Response: Response to setting permutation on key images
+ * @next MoneroTransactionSignRequest
  */
 message MoneroTransactionInputsPermutationAck {
 }
@@ -153,6 +156,7 @@ message MoneroTransactionInputViniRequest {
 
 /**
  * Response: Response to setting UTXO to the device
+ * @next MoneroTransactionSignRequest
  */
 message MoneroTransactionInputViniAck {
 }
@@ -168,6 +172,7 @@ message MoneroTransactionSetOutputRequest {
 
 /**
  * Response: Response to setting transaction destination. Contains sealed values needed for further protocol steps.
+ * @next MoneroTransactionSignRequest
  */
 message MoneroTransactionSetOutputAck {
     optional bytes tx_out = 1;  // xmrtypes.TxOut
@@ -186,6 +191,7 @@ message MoneroTransactionAllOutSetRequest {
 
 /**
  * Response: After all outputs are sent the initial RCT signature fields are sent.
+ * @next MoneroTransactionSignRequest
  */
 message MoneroTransactionAllOutSetAck {
     optional bytes extra = 1;
@@ -210,6 +216,7 @@ message MoneroTransactionMlsagDoneRequest {
 
 /**
  * Response: Contains full message hash needed for the signature
+ * @next MoneroTransactionSignRequest
  */
 message MoneroTransactionMlsagDoneAck {
     optional bytes full_message_hash = 1;
@@ -231,6 +238,7 @@ message MoneroTransactionSignInputRequest {
 
 /**
  * Response: Contains full MG signature of the UTXO + multisig data if applicable.
+ * @next MoneroTransactionSignRequest
  */
 message MoneroTransactionSignInputAck {
     optional bytes signature = 1;
@@ -257,15 +265,15 @@ message MoneroTransactionFinalAck {
 
 /**
  * Request: Wrapping request for transaction signature protocol.
- * @next MoneroTransactionInitAck
- * @next MoneroTransactionSetInputAck
- * @next MoneroTransactionInputsPermutationAck
- * @next MoneroTransactionInputViniAck
- * @next MoneroTransactionSetOutputAck
- * @next MoneroTransactionAllOutSetAck
- * @next MoneroTransactionMlsagDoneAck
- * @next MoneroTransactionSignInputAck
- * @next MoneroTransactionFinalAck
+ * @wrap MoneroTransactionInitRequest
+ * @wrap MoneroTransactionSetInputRequest
+ * @wrap MoneroTransactionInputsPermutationRequest
+ * @wrap MoneroTransactionInputViniRequest
+ * @wrap MoneroTransactionSetOutputRequest
+ * @wrap MoneroTransactionAllOutSetRequest
+ * @wrap MoneroTransactionMlsagDoneRequest
+ * @wrap MoneroTransactionSignInputRequest
+ * @wrap MoneroTransactionFinalRequest
  */
 message MoneroTransactionSignRequest {
     optional MoneroTransactionInitRequest init = 1;
@@ -281,6 +289,7 @@ message MoneroTransactionSignRequest {
 
 /**
  * Request: Sub request of MoneroKeyImageSync. Initializing key image sync.
+ * @start
  * @next MoneroKeyImageExportInitAck
  */
 message MoneroKeyImageExportInitRequest {
@@ -300,9 +309,9 @@ message MoneroKeyImageExportInitRequest {
 
 /**
  * Response: Response to key image sync initialization.
+ * @next MoneroKeyImageSyncRequest
  */
 message MoneroKeyImageExportInitAck {
-
 }
 
 /**
@@ -324,6 +333,7 @@ message MoneroKeyImageSyncStepRequest {
 
 /**
  * Response: Response to key image sync step. Contains encrypted exported key image.
+ * @next MoneroKeyImageSyncRequest
  */
 message MoneroKeyImageSyncStepAck {
     repeated MoneroExportedKeyImage kis = 1;
@@ -346,6 +356,7 @@ message MoneroKeyImageSyncFinalRequest {
 
 /**
  * Response: Response to key image sync step. Contains encryption keys for exported key images.
+ * @end
  */
 message MoneroKeyImageSyncFinalAck {
     optional bytes enc_key = 1;
@@ -353,9 +364,9 @@ message MoneroKeyImageSyncFinalAck {
 
 /**
  * Request: Wrapping request for key image sync protocol.
- * @next MoneroKeyImageExportInitAck
- * @next MoneroKeyImageSyncStepAck
- * @next MoneroKeyImageSyncFinalAck
+ * @wrap MoneroKeyImageExportInitRequest
+ * @wrap MoneroKeyImageSyncStepRequest
+ * @wrap MoneroKeyImageSyncFinalRequest
  */
 message MoneroKeyImageSyncRequest {
     optional MoneroKeyImageExportInitRequest init = 1;
@@ -365,6 +376,7 @@ message MoneroKeyImageSyncRequest {
 
 /**
  * Request: Universal Monero protocol implementation diagnosis request.
+ * @start
  * @next DebugMoneroDiagAck
  */
 message DebugMoneroDiagRequest {
