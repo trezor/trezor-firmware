@@ -60,6 +60,8 @@ static inline void touch_default_pin_state(void) {
 
 static inline void touch_active_pin_state(void) {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);  // CTP_ON/PB10
+    HAL_Delay(10); // we need to wait until the circuit fully kicks-in
+
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);     // CTP_REST/PC5
 
     GPIO_InitTypeDef GPIO_InitStructure;

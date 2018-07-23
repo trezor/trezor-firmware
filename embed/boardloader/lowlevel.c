@@ -32,6 +32,7 @@
     #define WANT_WRP_SECTORS (0)
 #endif
 
+// BOR LEVEL 3: Reset level threshold is around 2.5 V
 #define WANT_BOR_LEVEL (OB_BOR_LEVEL3)
 
 // reference RM0090 section 3.9.10; SPRMOD is 0 meaning PCROP disabled.; DB1M is 0 because we use 2MB dual-bank; BFB2 is 0 allowing boot from flash;
