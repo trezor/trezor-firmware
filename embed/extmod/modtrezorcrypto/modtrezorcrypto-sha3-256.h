@@ -29,7 +29,7 @@
 typedef struct _mp_obj_Sha3_256_t {
     mp_obj_base_t base;
     SHA3_CTX ctx;
-    int keccak;
+    bool keccak;
 } mp_obj_Sha3_256_t;
 
 STATIC mp_obj_t mod_trezorcrypto_Sha3_256_update(mp_obj_t self, mp_obj_t data);
@@ -52,7 +52,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_256_make_new(const mp_obj_type_t *type, si
     mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, vals);
     if (vals[1].u_obj != MP_OBJ_NULL){
-        o->keccak = mp_obj_is_true(vals[1].u_obj) ? 1 : -1;
+        o->keccak = mp_obj_is_true(vals[1].u_obj);
     }
 
     if (vals[0].u_obj != mp_const_none){
@@ -76,17 +76,16 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_256_update(mp_obj_t self, mp_obj_t data) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Sha3_256_update_obj, mod_trezorcrypto_Sha3_256_update);
 
-/// def digest(self, keccak: bool = False) -> bytes:
+/// def digest(self) -> bytes:
 ///     '''
 ///     Returns the digest of hashed data.
 ///     '''
-STATIC mp_obj_t mod_trezorcrypto_Sha3_256_digest(size_t n_args, const mp_obj_t *args) {
-    mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(args[0]);
+STATIC mp_obj_t mod_trezorcrypto_Sha3_256_digest(mp_obj_t self) {
+    mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(self);
     uint8_t out[SHA3_256_DIGEST_LENGTH];
     SHA3_CTX ctx;
-    bool use_keccak = n_args > 1 ? args[1] == mp_const_true : o->keccak == 1;
     memcpy(&ctx, &(o->ctx), sizeof(SHA3_CTX));
-    if (use_keccak) {
+    if (o->keccak) {
         keccak_Final(&ctx, out);
     } else {
         sha3_Final(&ctx, out);
@@ -94,7 +93,8 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_256_digest(size_t n_args, const mp_obj_t *
     memset(&ctx, 0, sizeof(SHA3_CTX));
     return mp_obj_new_bytes(out, sizeof(out));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_Sha3_256_digest_obj, 1, 2, mod_trezorcrypto_Sha3_256_digest);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha3_256_digest_obj, mod_trezorcrypto_Sha3_256_digest);
+
 
 /// def copy(self) -> sha3:
 ///     '''

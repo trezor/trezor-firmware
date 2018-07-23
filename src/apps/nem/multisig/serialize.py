@@ -26,7 +26,7 @@ def serialize_multisig_signature(
     w = write_common(
         common, bytearray(public_key), NEM_TRANSACTION_TYPE_MULTISIG_SIGNATURE
     )
-    digest = hashlib.sha3_256(inner).digest(True)
+    digest = hashlib.sha3_256(inner, keccak=True).digest()
 
     write_uint32(w, 4 + len(digest))
     write_bytes_with_length(w, digest)

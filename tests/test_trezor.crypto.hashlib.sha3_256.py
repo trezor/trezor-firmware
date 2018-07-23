@@ -26,7 +26,7 @@ class TestCryptoSha3_256(unittest.TestCase):
 
     def test_digest_keccak(self):
         for b, d in self.vectors_keccak:
-            self.assertEqual(hashlib.sha3_256(b).digest(True), unhexlify(d))
+            self.assertEqual(hashlib.sha3_256(b, keccak=True).digest(), unhexlify(d))
 
     def test_update(self):
         for b, d in self.vectors:
@@ -48,9 +48,9 @@ class TestCryptoSha3_256(unittest.TestCase):
 
     def test_update_keccak(self):
         for b, d in self.vectors_keccak:
-            x = hashlib.sha3_256()
+            x = hashlib.sha3_256(keccak=True)
             x.update(b)
-            self.assertEqual(x.digest(True), unhexlify(d))
+            self.assertEqual(x.digest(), unhexlify(d))
 
     def test_digest_multi(self):
         x = hashlib.sha3_256()
@@ -61,10 +61,10 @@ class TestCryptoSha3_256(unittest.TestCase):
         self.assertEqual(d0, d2)
 
     def test_digest_multi_keccak(self):
-        x = hashlib.sha3_256()
-        d0 = x.digest(True)
-        d1 = x.digest(True)
-        d2 = x.digest(True)
+        x = hashlib.sha3_256(keccak=True)
+        d0 = x.digest()
+        d1 = x.digest()
+        d2 = x.digest()
         self.assertEqual(d0, d1)
         self.assertEqual(d0, d2)
 

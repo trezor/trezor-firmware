@@ -84,5 +84,5 @@ class HashWriter:
         self.buf[0] = b
         self.ctx.update(self.buf)
 
-    def get_digest(self, *args) -> bytes:
-        return self.ctx.digest(*args)
+    def get_digest(self) -> bytes:
+        return self.ctx.digest()

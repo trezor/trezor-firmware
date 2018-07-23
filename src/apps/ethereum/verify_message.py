@@ -20,7 +20,7 @@ async def ethereum_verify_message(ctx, msg):
     if not pubkey:
         raise ValueError("Invalid signature")
 
-    pkh = sha3_256(pubkey[1:]).digest(True)[-20:]
+    pkh = sha3_256(pubkey[1:], keccak=True).digest()[-20:]
 
     if msg.address != pkh:
         raise ValueError("Invalid signature")

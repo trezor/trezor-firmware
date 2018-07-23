@@ -28,7 +28,7 @@ class TestNemMultisigAggregateModification(unittest.TestCase):
         serialize_cosignatory_modification(t, 1, unhexlify(
             "c54d6e33ed1446eedd7f7a80a588dd01857f723687a09200c1917d5524752f8b"))
 
-        self.assertEqual(hashlib.sha3_256(t).digest(True),
+        self.assertEqual(hashlib.sha3_256(t, keccak=True).digest(),
                          unhexlify("6a55471b17159e5b6cd579c421e95a4e39d92e3f78b0a55ee337e785a601d3a2"))
 
         # http://chain.nem.ninja/#/aggregate/cc64ca69bfa95db2ff7ac1e21fe6d27ece189c603200ebc9778d8bb80ca25c3c
@@ -51,7 +51,7 @@ class TestNemMultisigAggregateModification(unittest.TestCase):
         serialize_cosignatory_modification(t, 1, unhexlify(
             "43aa69177018fc3e2bdbeb259c81cddf24be50eef9c5386db51d82386c41475a"))
 
-        self.assertEqual(hashlib.sha3_256(t).digest(True),
+        self.assertEqual(hashlib.sha3_256(t, keccak=True).digest(),
                          unhexlify("cc64ca69bfa95db2ff7ac1e21fe6d27ece189c603200ebc9778d8bb80ca25c3c"))
 
     def test_nem_transaction_aggregate_modification_relative_change(self):
@@ -74,7 +74,7 @@ class TestNemMultisigAggregateModification(unittest.TestCase):
             "d88c6ee2a2cd3929d0d76b6b14ecb549d21296ab196a2b3a4cb2536bcce32e87"))
         serialize_minimum_cosignatories(t, 2)
 
-        self.assertEqual(hashlib.sha3_256(t).digest(True),
+        self.assertEqual(hashlib.sha3_256(t, keccak=True).digest(),
                          unhexlify("1fbdae5ba753e68af270930413ae90f671eb8ab58988116684bac0abd5726584"))
 
 
