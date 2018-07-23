@@ -194,10 +194,10 @@ enum MessageType {
     MessageType_MoneroKeyImageExportInitAck = 520 [(wire_out) = true];
     MessageType_MoneroKeyImageSyncStepAck = 521 [(wire_out) = true];
     MessageType_MoneroKeyImageSyncFinalAck = 522 [(wire_out) = true];
-    MessageType_MoneroGetAddressRequest = 530 [(wire_in) = true];
-    MessageType_MoneroAddressAck = 531 [(wire_out) = true];
-    MessageType_MoneroGetWatchKeyRequest = 532 [(wire_in) = true];
-    MessageType_MoneroWatchKeyAck = 533 [(wire_out) = true];
+    MessageType_MoneroGetAddress = 530 [(wire_in) = true];
+    MessageType_MoneroAddress = 531 [(wire_out) = true];
+    MessageType_MoneroGetWatchKey = 532 [(wire_in) = true];
+    MessageType_MoneroWatchKey = 533 [(wire_out) = true];
     MessageType_DebugMoneroDiagRequest = 536 [(wire_in) = true];
     MessageType_DebugMoneroDiagAck = 537 [(wire_out) = true];
 }
