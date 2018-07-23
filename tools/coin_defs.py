@@ -20,6 +20,7 @@ DEFS_DIR = os.path.abspath(
 
 
 def load_json(*path):
+    """Convenience function to load a JSON file from DEFS_DIR."""
     if len(path) == 1 and path[0].startswith("/"):
         filename = path[0]
     else:
@@ -72,7 +73,7 @@ def check_key(key, types, **kwargs):
     return do_check
 
 
-COIN_CHECKS = [
+BTC_CHECKS = [
     check_key("coin_name", str, regex=r"^[A-Z]"),
     check_key("coin_shortcut", str, regex=r"^t?[A-Z]{3,}$"),
     check_key("coin_label", str, regex=r"^[A-Z]"),
@@ -112,9 +113,9 @@ COIN_CHECKS = [
 ]
 
 
-def validate_coin(coin):
+def validate_btc(coin):
     errors = []
-    for check in COIN_CHECKS:
+    for check in BTC_CHECKS:
         try:
             check(coin)
         except Exception as e:
@@ -154,29 +155,32 @@ def validate_coin(coin):
 # ======= Coin json loaders =======
 
 
-def get_coins():
+def _load_btc_coins():
+    """Load btc-like coins from `coins/*.json`"""
     coins = []
     for filename in glob.glob(os.path.join(DEFS_DIR, "coins", "*.json")):
         coin = load_json(filename)
         coin.update(
             name=coin["coin_name"],
             shortcut=coin["coin_shortcut"],
-            key="btc:{}".format(coin["coin_shortcut"]),
+            key="coin:{}".format(coin["coin_shortcut"]),
         )
         coins.append(coin)
 
     return coins
 
 
-def get_ethereum_networks():
+def _load_ethereum_networks():
+    """Load ethereum networks from `ethereum/networks.json`"""
     networks = load_json("ethereum", "networks.json")
     for network in networks:
         network.update(key="eth:{}".format(network["shortcut"]))
     return networks
 
 
-def get_erc20_tokens():
-    networks = get_ethereum_networks()
+def _load_erc20_tokens():
+    """Load ERC20 tokens from `ethereum/tokens` submodule."""
+    networks = _load_ethereum_networks()
     tokens = []
     for network in networks:
         if network["name"].startswith("Ethereum Testnet "):
@@ -203,7 +207,8 @@ def get_erc20_tokens():
     return tokens
 
 
-def get_nem_mosaics():
+def _load_nem_mosaics():
+    """Loads NEM mosaics from `nem/nem_mosaics.json`"""
     mosaics = load_json("nem", "nem_mosaics.json")
     for mosaic in mosaics:
         shortcut = mosaic["ticker"].strip()
@@ -211,10 +216,11 @@ def get_nem_mosaics():
     return mosaics
 
 
-def get_others():
-    others = load_json("others.json")
+def _load_misc():
+    """Loads miscellaneous networks from `misc/misc.json`"""
+    others = load_json("misc/misc.json")
     for other in others:
-        other.update(key="network:{}".format(other["shortcut"]))
+        other.update(key="misc:{}".format(other["shortcut"]))
     return others
 
 
@@ -233,6 +239,7 @@ TOKEN_MATCH = {
 
 
 def latest_releases():
+    """Get latest released firmware versions for Trezor 1 and 2"""
     if not requests:
         raise RuntimeError("requests library is required for getting release info")
 
@@ -244,6 +251,20 @@ def latest_releases():
 
 
 def support_info_erc20(coins, versions):
+    """Generate support info for ERC20 tokens.
+
+    Takes a dict of Trezor versions as returned from `latest_releases`
+    and a list of coins as returned from `_get_erc20_tokens` and creates
+    a supportinfo entry for each listed token.
+
+    Support status is determined by downloading and parsing the definition file
+    from the appropriate firmware version. If a given token is listed, the support
+    is marked as "yes". If not, support is marked as "soon", assuming that
+    it will be included in next release.
+
+    This is currently the only way to get the list of supported tokens. We don't want
+    to track support individually in support.json.
+    """
     supported_tokens = {}
     for trezor, version in versions.items():
         tokens = set()
@@ -273,7 +294,31 @@ def support_info_erc20(coins, versions):
     return support
 
 
-def support_info(coins, erc20_versions=None):
+def support_info(coins, erc20_versions=None, skip_missing=False):
+    """Generate Trezor support information.
+
+    Takes a dict of coins and generates a support-info entry for each.
+    The support-info is a dict with a number of known keys:
+    `trezor1`, `trezor2`, `webwallet`, `connect`. An optional `other` entry
+    is a dict of name-url pairs for third-party software.
+
+    For btc-like coins and misc networks, this is taken from `support.json`.
+    For NEM mosaics and ethereum networks, the support is presumed to be "yes"
+    for both Trezors. Webwallet and Connect info is not filled out.
+
+    ERC20 tokens are ignored by this function, as if `skip_missing` was true
+    (see below). However, if you pass the optional `erc20_versions` argument,
+    it will call `support_info_erc20` for you with given versions.
+
+    In all cases, if the coin is explicitly listed in `support.json`, the info
+    takes precedence over any other source (be it assumed "yes" for nem/eth,
+    or downloaded info for erc20).
+
+    If `skip_missing` is `True`, coins for which no support information is available
+    will not be included in the output. Otherwise, an empty dict will be included
+    and a warning emitted. "No support information" means that the coin is not
+    listed in `support.json` and we have no heuristic to determine the support.
+    """
     support_data = load_json("support.json")
     support = {}
     for coin in coins:
@@ -289,7 +334,7 @@ def support_info(coins, erc20_versions=None):
             # you must call a separate function to get that
             continue
 
-        else:
+        elif not skip_missing:
             log.warning("support info missing for {}".format(key))
             support[key] = {}
 
@@ -305,6 +350,10 @@ def support_info(coins, erc20_versions=None):
 
 
 def find_address_collisions(coins):
+    """Detects collisions in:
+    - SLIP44 path prefixes
+    - address type numbers, both for p2pkh and p2sh
+    """
     slip44 = defaultdict(list)
     at_p2pkh = defaultdict(list)
     at_p2sh = defaultdict(list)
@@ -336,13 +385,17 @@ def find_address_collisions(coins):
     )
 
 
-def ensure_mandatory_values(coins):
+def _ensure_mandatory_values(coins):
+    """Checks that every coin has the mandatory fields: name, shortcut, key"""
     for coin in coins:
         if not all(coin.get(k) for k in ("name", "shortcut", "key")):
             raise ValueError(coin)
 
 
-def filter_duplicate_shortcuts(coins):
+def _filter_duplicate_shortcuts(coins):
+    """Removes coins with identical `shortcut`s.
+    This is used to drop colliding ERC20 tokens.
+    """
     dup_keys = set()
     retained_coins = OrderedDict()
 
@@ -370,23 +423,33 @@ def _btc_sort_key(coin):
 
 
 def get_all():
+    """Returns all definition as dict organized by coin type.
+    `coins` for btc-like coins,
+    `eth` for ethereum networks,
+    `erc20` for ERC20 tokens,
+    `nem` for NEM mosaics,
+    `misc` for other networks.
+    """
     all_coins = dict(
-        btc=get_coins(),
-        eth=get_ethereum_networks(),
-        erc20=get_erc20_tokens(),
-        nem=get_nem_mosaics(),
-        other=get_others(),
+        coins=_load_btc_coins(),
+        eth=_load_ethereum_networks(),
+        erc20=_load_erc20_tokens(),
+        nem=_load_nem_mosaics(),
+        misc=_load_misc(),
     )
 
     for k, coins in all_coins.items():
-        if k == "btc":
+        if k == "coins":
             coins.sort(key=_btc_sort_key)
+        elif k == "nem":
+            # do not sort nem
+            pass
         else:
             coins.sort(key=lambda c: c["key"].upper())
 
-        ensure_mandatory_values(coins)
+        _ensure_mandatory_values(coins)
         if k != "eth":
-            dup_keys = filter_duplicate_shortcuts(coins)
+            dup_keys = _filter_duplicate_shortcuts(coins)
             if dup_keys:
                 log.warning(
                     "{}: removing duplicate symbols: {}".format(k, ", ".join(dup_keys))
@@ -396,9 +459,11 @@ def get_all():
 
 
 def get_list():
+    """Return all definitions as a single list of coins."""
     all_coins = get_all()
     return sum(all_coins.values(), [])
 
 
 def get_dict():
+    """Return all definitions as a dict indexed by coin keys."""
     return {coin["key"]: coin for coin in get_list()}

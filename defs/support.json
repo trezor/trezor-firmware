@@ -1,5 +1,5 @@
 {
-    "btc:BCH": {
+    "coin:BCH": {
         "trezor1": "1.6.2",
         "trezor2": "2.0.7",
         "connect": true,
@@ -8,7 +8,7 @@
             "Electron Cash": "https://electroncash.org"
         }
     },
-    "btc:BTC": {
+    "coin:BTC": {
         "trezor1": "1.5.2",
         "trezor2": "2.0.5",
         "connect": true,
@@ -17,7 +17,7 @@
             "Electrum": "https://electrum.org"
         }
     },
-    "btc:BTCP": {
+    "coin:BTCP": {
         "trezor1": "1.6.2",
         "trezor2": "2.0.7",
         "connect": null,
@@ -26,7 +26,7 @@
             "BTCP Electrum": "https://github.com/BTCPrivate/electrum-btcp"
         }
     },
-    "btc:BTG": {
+    "coin:BTG": {
         "trezor1": "1.6.2",
         "trezor2": "2.0.7",
         "connect": true,
@@ -35,7 +35,7 @@
             "ElectrumG": "https://github.com/BTCGPU/electrum"
         }
     },
-    "btc:DASH": {
+    "coin:DASH": {
         "trezor1": "1.5.2",
         "trezor2": "2.0.5",
         "connect": true,
@@ -44,28 +44,25 @@
             "Dash Electrum": "https://electrum.dash.org"
         }
     },
-    "btc:DCR": {
-        "connect": null,
-        "electrum": null,
+    "coin:DCR": {
         "trezor1": "1.6.2",
         "trezor2": null,
+        "connect": null,
         "webwallet": true
     },
-    "btc:DGB": {
-        "connect": null,
-        "electrum": null,
+    "coin:DGB": {
         "trezor1": "1.6.0",
         "trezor2": "2.0.5",
+        "connect": null,
         "webwallet": true
     },
-    "btc:DOGE": {
-        "connect": null,
-        "electrum": null,
+    "coin:DOGE": {
         "trezor1": "1.5.2",
         "trezor2": "2.0.5",
+        "connect": null,
         "webwallet": true
     },
-    "btc:FJC": {
+    "coin:FJC": {
         "trezor1": "1.6.1",
         "trezor2": "2.0.5",
         "connect": null,
@@ -74,7 +71,7 @@
             "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
         }
     },
-    "btc:GRS": {
+    "coin:GRS": {
         "trezor1": "1.6.2",
         "trezor2": "2.0.8",
         "connect": null,
@@ -83,7 +80,7 @@
             "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet/"
         }
     },
-    "btc:LTC": {
+    "coin:LTC": {
         "trezor1": "1.5.2",
         "trezor2": "2.0.5",
         "connect": true,
@@ -92,7 +89,7 @@
             "Electrum-LTC": "https://electrum-ltc.org"
         }
     },
-    "btc:MONA": {
+    "coin:MONA": {
         "trezor1": "1.6.0",
         "trezor2": "2.0.5",
         "connect": null,
@@ -101,7 +98,7 @@
             "Electrum-MONA": "https://electrum-mona.org"
         }
     },
-    "btc:NMC": {
+    "coin:NMC": {
         "trezor1": "1.5.2",
         "trezor2": "2.0.5",
         "connect": null,
@@ -110,42 +107,37 @@
             "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
         }
     },
-    "btc:TAZ": {
-        "connect": null,
-        "electrum": null,
+    "coin:TAZ": {
         "trezor1": "1.6.2",
         "trezor2": "2.0.7",
+        "connect": null,
         "webwallet": true
     },
-    "btc:TBCH": {
-        "connect": null,
-        "electrum": null,
+    "coin:TBCH": {
         "trezor1": "1.6.2",
         "trezor2": "2.0.7",
+        "connect": null,
         "webwallet": null
     },
-    "btc:TDCR": {
-        "connect": null,
-        "electrum": null,
+    "coin:TDCR": {
         "trezor1": "1.6.2",
         "trezor2": null,
+        "connect": null,
         "webwallet": true
     },
-    "btc:TEST": {
-        "connect": true,
-        "electrum": null,
+    "coin:TEST": {
         "trezor1": "1.5.2",
         "trezor2": "2.0.5",
+        "connect": true,
         "webwallet": true
     },
-    "btc:TLTC": {
-        "connect": null,
-        "electrum": null,
+    "coin:TLTC": {
         "trezor1": "1.6.2",
         "trezor2": "2.0.7",
+        "connect": null,
         "webwallet": true
     },
-    "btc:VIA": {
+    "coin:VIA": {
         "trezor1": "1.6.2",
         "trezor2": "2.0.7",
         "connect": null,
@@ -154,14 +146,13 @@
             "Vialectrum": "https://vialectrum.org"
         }
     },
-    "btc:VTC": {
-        "connect": null,
-        "electrum": null,
+    "coin:VTC": {
         "trezor1": "1.6.1",
         "trezor2": "2.0.5",
+        "connect": null,
         "webwallet": true
     },
-    "btc:XZC": {
+    "coin:XZC": {
         "trezor1": "1.6.2",
         "trezor2": "2.0.7",
         "connect": null,
@@ -171,72 +162,67 @@
             "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"
         }
     },
-    "btc:ZEC": {
-        "connect": true,
-        "electrum": null,
+    "coin:ZEC": {
         "trezor1": "1.6.2",
         "trezor2": "2.0.7",
+        "connect": true,
         "webwallet": true
     },
-    "btc:ZEN": {
-        "connect": null,
-        "electrum": null,
+    "coin:ZEN": {
         "trezor1": null,
         "trezor2": "2.0.8",
+        "connect": null,
         "webwallet": null
     },
-    "btc:tDASH": {
-        "connect": null,
-        "electrum": null,
+    "coin:tDASH": {
         "trezor1": "1.6.2",
         "trezor2": null,
+        "connect": null,
         "webwallet": null
     },
-    "btc:tGRS": {
-        "connect": null,
-        "electrum": null,
+    "coin:tGRS": {
         "trezor1": "1.6.2",
         "trezor2": "2.0.8",
+        "connect": null,
         "webwallet": true
     },
-    "btc:tXZC": {
-        "connect": null,
-        "electrum": null,
+    "coin:tXZC": {
         "trezor1": "1.6.2",
         "trezor2": "2.0.7",
+        "connect": null,
         "webwallet": null
     },
-    "network:LSK": {
+    "misc:LSK": {
         "trezor1": null,
         "trezor2": "2.0.7",
         "connect": null,
         "webwallet": null
     },
-    "network:XLM": {
+    "misc:XLM": {
         "trezor1": "soon",
         "trezor2": "soon",
         "connect": null,
         "webwallet": null
     },
-    "network:XTZ": {
+    "misc:XTZ": {
         "trezor1": null,
         "trezor2": "soon",
         "connect": null,
         "webwallet": null
     },
-    "network:ADA": {
+    "misc:ADA": {
         "trezor1": null,
         "trezor2": "soon",
         "connect": null,
         "webwallet": null
     },
-    "network:XMR": {
+    "misc:XMR": {
         "trezor1": null,
         "trezor2": "soon",
         "connect": null,
         "webwallet": null
     },
-    "network:XRP": {
+    "misc:XRP": {
         "trezor1": null,
         "trezor2": "soon",
         "connect": null,
