@@ -61,10 +61,13 @@ def check_type(val, types, nullable=False, empty=False, regex=None, choice=None)
         raise ValueError("Value not allowed, use one of: {}".format(", ".join(choice)))
 
 
-def check_key(key, types, **kwargs):
+def check_key(key, types, optional=False, **kwargs):
     def do_check(coin):
-        if not key in coin:
-            raise KeyError("{}: Missing key".format(key))
+        if key not in coin:
+            if optional:
+                return
+            else:
+                raise KeyError("{}: Missing key".format(key))
         try:
             check_type(coin[key], types, **kwargs)
         except Exception as e:
@@ -103,11 +106,11 @@ BTC_CHECKS = [
     check_key("dust_limit", int),
     check_key("blocktime_seconds", int),
     check_key("signed_message_header", str),
-    check_key("address_prefix", str, regex=r":$"),
+    check_key("uri_prefix", str, regex=r"^[a-z]+$"),
     check_key("min_address_length", int),
     check_key("max_address_length", int),
-    check_key("bech32_prefix", str, nullable=True),
-    check_key("cashaddr_prefix", str, nullable=True),
+    check_key("bech32_prefix", str, regex=r"^[a-z]+$", nullable=True),
+    check_key("cashaddr_prefix", str, regex=r"^[a-z]+$", nullable=True),
     check_key("bitcore", list, empty=True),
     check_key("blockbook", list, empty=True),
 ]
@@ -149,6 +152,25 @@ def validate_btc(coin):
         if bc.endswith("/"):
             errors.append("make sure URLs don't end with '/'")
 
+    return errors
+
+
+SUPPORT_CHECKS = [
+    check_key("trezor1", str, nullable=True, regex=r"^soon|planned|\d+\.\d+\.\d+$"),
+    check_key("trezor2", str, nullable=True, regex=r"^soon|planned|\d+\.\d+\.\d+$"),
+    check_key("webwallet", bool, nullable=True),
+    check_key("connect", bool, nullable=True),
+    check_key("other", dict, optional=True, empty=False),
+]
+
+
+def validate_support(support):
+    errors = []
+    for check in SUPPORT_CHECKS:
+        try:
+            check(support)
+        except Exception as e:
+            errors.append(str(e))
     return errors
 
 
@@ -238,6 +260,11 @@ TOKEN_MATCH = {
 }
 
 
+def get_support_data():
+    """Get raw support data from `support.json`."""
+    return load_json("support.json")
+
+
 def latest_releases():
     """Get latest released firmware versions for Trezor 1 and 2"""
     if not requests:
@@ -319,7 +346,7 @@ def support_info(coins, erc20_versions=None, skip_missing=False):
     and a warning emitted. "No support information" means that the coin is not
     listed in `support.json` and we have no heuristic to determine the support.
     """
-    support_data = load_json("support.json")
+    support_data = get_support_data()
     support = {}
     for coin in coins:
         key = coin["key"]
@@ -358,11 +385,12 @@ def find_address_collisions(coins):
     at_p2pkh = defaultdict(list)
     at_p2sh = defaultdict(list)
 
-    for name, coin in coins.items():
+    for coin in coins:
+        name = coin["name"]
         s = coin["slip44"]
         # ignore m/1 testnets
         if not (name.endswith("Testnet") and s == 1):
-            slip44[s].append(s)
+            slip44[s].append(name)
 
         # skip address types on cashaddr currencies
         if coin["cashaddr_prefix"]:
@@ -373,7 +401,7 @@ def find_address_collisions(coins):
 
     def prune(d):
         ret = d.copy()
-        for key in d.keys():
+        for key in d:
             if len(d[key]) < 2:
                 del ret[key]
         return ret
