@@ -382,18 +382,20 @@ class ConfirmState:
         from trezor.ui.confirm import ConfirmDialog, CONFIRMED
         from trezor.ui.text import Text
 
-        if bytes(self.app_id) == _BOGUS_APPID:
-            text = Text("U2F mismatch", ui.ICON_WRONG, icon_color=ui.RED)
+        app_id = bytes(self.app_id)  # could be bytearray, which doesn't have __hash__
+
+        if app_id == _BOGUS_APPID and self.action == _CONFIRM_REGISTER:
+            text = Text("U2F", ui.ICON_WRONG, icon_color=ui.RED)
             text.normal(
                 "Another U2F device", "was used to register", "in this application."
             )
             text.render()
-            await loop.sleep(3 * 1000 * 1000)
-            self.confirmed = True
+            dialog = ConfirmDialog(text)
         else:
-            content = ConfirmContent(self.action, self.app_id)
+            content = ConfirmContent(self.action, app_id)
             dialog = ConfirmDialog(content)
-            self.confirmed = await dialog == CONFIRMED
+
+        self.confirmed = await dialog == CONFIRMED
 
 
 class ConfirmContent(ui.Widget):
@@ -409,24 +411,17 @@ class ConfirmContent(ui.Widget):
         from trezor import res
         from apps.fido_u2f import knownapps
 
-        app_id = bytes(self.app_id)  # could be bytearray, which doesn't have __hash__
-
-        if app_id == _BOGUS_APPID:
-            # TODO: display a warning dialog for bogus app ids
-            name = "Another U2F device"
-            icon = res.load("apps/fido_u2f/res/u2f_generic.toif")  # TODO: warning icon
-        elif app_id in knownapps.knownapps:
-            name = knownapps.knownapps[app_id]
+        if self.app_id in knownapps.knownapps:
+            name = knownapps.knownapps[self.app_id]
             try:
-                icon = res.load(
-                    "apps/fido_u2f/res/u2f_%s.toif" % name.lower().replace(" ", "_")
-                )
+                namepart = name.lower().replace(" ", "_")
+                icon = res.load("apps/fido_u2f/res/u2f_%s.toif" % namepart)
             except Exception:
                 icon = res.load("apps/fido_u2f/res/u2f_generic.toif")
         else:
             name = "%s...%s" % (
-                hexlify(app_id[:4]).decode(),
-                hexlify(app_id[-4:]).decode(),
+                hexlify(self.app_id[:4]).decode(),
+                hexlify(self.app_id[-4:]).decode(),
             )
             icon = res.load("apps/fido_u2f/res/u2f_generic.toif")
         self.app_name = name
