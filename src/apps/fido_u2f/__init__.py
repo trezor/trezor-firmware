@@ -565,7 +565,7 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     pubkey = nist256p1.publickey(node.private_key(), False)
 
     # first half of keyhandle is keypath
-    keybuf = ustruct.pack(">8L", *keypath)
+    keybuf = ustruct.pack("<8L", *keypath)
 
     # second half of keyhandle is a hmac of app_id and keypath
     keybase = hmac.Hmac(node.private_key(), app_id, hashlib.sha256)
@@ -626,7 +626,12 @@ def msg_authenticate(req: Msg, state: ConfirmState) -> Cmd:
     auth = overlay_struct(req.data, req_cmd_authenticate(khlen))
 
     # check the keyHandle and generate the signing key
-    node = msg_authenticate_genkey(auth.appId, auth.keyHandle)
+    node = msg_authenticate_genkey(auth.appId, auth.keyHandle, "<8L")
+    if node is None:
+        # prior to firmware version 2.0.8, keypath was serialized in a
+        # big-endian manner, instead of little endian, like in trezor-mcu.
+        # try to parse it as big-endian now and check the HMAC.
+        node = msg_authenticate_genkey(auth.appId, auth.keyHandle, ">8L")
     if node is None:
         # specific error logged in msg_authenticate_genkey
         return msg_error(req.cid, _SW_WRONG_DATA)
@@ -665,12 +670,12 @@ def msg_authenticate(req: Msg, state: ConfirmState) -> Cmd:
     return Cmd(req.cid, _CMD_MSG, buf)
 
 
-def msg_authenticate_genkey(app_id: bytes, keyhandle: bytes):
+def msg_authenticate_genkey(app_id: bytes, keyhandle: bytes, pathformat: str):
     from apps.common import seed
 
     # unpack the keypath from the first half of keyhandle
     keybuf = keyhandle[:32]
-    keypath = ustruct.unpack(">8L", keybuf)
+    keypath = ustruct.unpack(pathformat, keybuf)
 
     # check high bit for hardened keys
     for i in keypath:
