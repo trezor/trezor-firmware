@@ -153,6 +153,7 @@ void touch_power_off(void) {
     // turn off CTP circuitry
     HAL_Delay(50);
     touch_default_pin_state();
+    HAL_Delay(100);
 }
 
 uint32_t touch_read(void)

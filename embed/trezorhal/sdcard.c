@@ -166,6 +166,7 @@ void sdcard_power_off(void) {
     // turn off SD card circuitry
     HAL_Delay(50);
     sdcard_default_pin_state();
+    HAL_Delay(100);
 }
 
 secbool sdcard_is_present(void) {
