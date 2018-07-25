@@ -45,11 +45,9 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 
 static uint32_t check_sdcard(void)
 {
-    if (sectrue != sdcard_is_present()) {
+    if (sectrue != sdcard_power_on()) {
         return 0;
     }
-
-    ensure(sdcard_power_on(), NULL);
 
     uint64_t cap = sdcard_get_capacity_in_bytes();
     if (cap < 1024 * 1024) {
