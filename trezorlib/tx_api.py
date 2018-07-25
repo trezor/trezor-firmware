@@ -33,6 +33,18 @@ class TxApi(object):
         url = '%s%s/%s' % (self.url, resource, resourceid)
         return url
 
+    def current_height(self):
+        r = requests.get(self.url + '/status?q=getBlockCount')
+        j = r.json(parse_float=str)
+        block_height = j['info']['blocks']
+        return block_height
+
+    def get_block_hash(self, block_number):
+        r = requests.get(self.url + '/block-index/' + str(block_number))
+        j = r.json(parse_float=str)
+        block_hash = binascii.unhexlify(j['blockHash'])
+        return block_hash
+
     def fetch_json(self, resource, resourceid):
         global cache_dir
         if cache_dir:
@@ -65,11 +77,13 @@ class TxApi(object):
 
 class TxApiInsight(TxApi):
 
-    def __init__(self, network, url=None, zcash=None):
+    def __init__(self, network, url=None, zcash=None, bip115=False):
         super().__init__(network, url)
         self.zcash = zcash
+        self.bip115 = bip115
         if url:
-            self.pushtx_url = url.replace('/api/', '/tx/send')
+            prefix, suffix = url.rsplit('/', maxsplit=1)
+            self.pushtx_url = prefix + '/tx/send'
 
     def get_tx(self, txhash):
 
@@ -97,6 +111,12 @@ class TxApiInsight(TxApi):
             o = t._add_bin_outputs()
             o.amount = int(Decimal(vout['value']) * 100000000)
             o.script_pubkey = binascii.unhexlify(vout['scriptPubKey']['hex'])
+            if self.bip115 and o.script_pubkey[-1] == 0xb4:
+                # Verify if coin implements replay protection bip115 and script includes checkblockatheight opcode. 0xb4 - is op_code (OP_CHECKBLOCKATHEIGHT)
+                # <OP_32> <32-byte block hash> <OP_3> <3-byte block height> <OP_CHECKBLOCKATHEIGHT>
+                tail = o.script_pubkey[-38:]
+                o.block_hash = tail[1:33]  # <32-byte block hash>
+                o.block_height = int.from_bytes(tail[34:37], byteorder='little')  # <3-byte block height>
 
         if self.zcash:
             t.overwintered = data.get('fOverwintered', False)

@@ -576,6 +576,10 @@ def sign_tx(connect, coin):
         sequence = click.prompt('Sequence Number to use (RBF opt-in enabled by default)', type=int, default=0xfffffffd)
         script_type = click.prompt('Input type', type=CHOICE_INPUT_SCRIPT_TYPE, default=default_script_type(address_n))
         script_type = script_type if isinstance(script_type, int) else CHOICE_INPUT_SCRIPT_TYPE.typemap[script_type]
+        if txapi.bip115:
+            prev_output = txapi.get_tx(binascii.hexlify(prev_hash).decode("utf-8")).bin_outputs[prev_index]
+            prev_blockhash = prev_output.block_hash
+            prev_blockheight = prev_output.block_height
         inputs.append(proto.TxInputType(
             address_n=address_n,
             prev_hash=prev_hash,
@@ -583,7 +587,14 @@ def sign_tx(connect, coin):
             amount=amount,
             script_type=script_type,
             sequence=sequence,
+            prev_block_hash_bip115=prev_blockhash,
+            prev_block_height_bip115=prev_blockheight,
         ))
+
+    if txapi.bip115:
+        current_block_height = txapi.current_height()
+        block_height = current_block_height - 300  # Zencash recommendation for the better protection
+        block_hash = txapi.get_block_hash(block_height)
 
     outputs = []
     while True:
@@ -604,6 +615,8 @@ def sign_tx(connect, coin):
             address=address,
             amount=amount,
             script_type=script_type,
+            block_hash_bip115=block_hash[::-1],  # Blockhash passed in reverse order
+            block_height_bip115=block_height
         ))
 
     tx_version = click.prompt('Transaction version', type=int, default=2)

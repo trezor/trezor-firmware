@@ -39,8 +39,9 @@ def _insight_for_coin(coin):
     if not url:
         return None
     zcash = coin['coin_name'].lower().startswith('zcash')
+    bip115 = coin['bip115']
     network = 'insight_{}'.format(coin['coin_name'].lower().replace(' ', '_'))
-    return TxApiInsight(network=network, url=url, zcash=zcash)
+    return TxApiInsight(network=network, url=url, zcash=zcash, bip115=bip115)
 
 
 # exported variables
