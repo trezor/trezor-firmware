@@ -36,5 +36,6 @@
   "bitcore": [
     "https://mainnet.decred.org"
   ],
-  "blockbook": []
+  "blockbook": [],
+  "cooldown": 100
 }

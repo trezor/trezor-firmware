@@ -40,5 +40,6 @@
     "https://doge3.trezor.io",
     "https://doge4.trezor.io",
     "https://doge5.trezor.io"
-  ]
+  ],
+  "cooldown": 100
 }

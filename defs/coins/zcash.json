@@ -40,5 +40,6 @@
     "https://zec3.trezor.io",
     "https://zec4.trezor.io",
     "https://zec5.trezor.io"
-  ]
+  ],
+  "cooldown": 100
 }

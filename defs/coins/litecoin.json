@@ -40,5 +40,6 @@
     "https://ltc3.trezor.io",
     "https://ltc4.trezor.io",
     "https://ltc5.trezor.io"
-  ]
+  ],
+  "cooldown": 100
 }

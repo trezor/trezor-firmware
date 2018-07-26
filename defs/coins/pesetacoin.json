@@ -25,7 +25,7 @@
   "force_bip143": false,
   "bip115": false,
   "version_group_id": null,
-  "default_fee_b":  {
+  "default_fee_b": {
     "Normal": 10
   },
   "dust_limit": 10000000,
@@ -36,5 +36,6 @@
   "bitcore": [
     "http://live.pesetacoin.info"
   ],
-  "blockbook": []
+  "blockbook": [],
+  "cooldown": 100
 }

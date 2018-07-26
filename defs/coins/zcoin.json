@@ -39,5 +39,6 @@
   "bitcore": [
     "https://insight.zcoin.io"
   ],
-  "blockbook": []
+  "blockbook": [],
+  "cooldown": 100
 }

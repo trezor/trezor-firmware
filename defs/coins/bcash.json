@@ -43,5 +43,6 @@
     "https://bch3.trezor.io",
     "https://bch4.trezor.io",
     "https://bch5.trezor.io"
-  ]
+  ],
+  "cooldown": 100
 }

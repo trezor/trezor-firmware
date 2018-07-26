@@ -43,5 +43,6 @@
     "https://btg3.trezor.io",
     "https://btg4.trezor.io",
     "https://btg5.trezor.io"
-  ]
+  ],
+  "cooldown": 100
 }

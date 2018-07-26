@@ -36,5 +36,6 @@
   "bitcore": [
     "https://explorer.zensystem.io"
   ],
-  "blockbook": []
+  "blockbook": [],
+  "cooldown": 100
 }

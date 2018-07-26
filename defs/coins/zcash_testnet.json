@@ -36,5 +36,6 @@
   "bitcore": [
     "https://explorer.testnet.z.cash"
   ],
-  "blockbook": []
+  "blockbook": [],
+  "cooldown": 100
 }

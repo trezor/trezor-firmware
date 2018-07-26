@@ -37,5 +37,6 @@
     "https://testnet-bitcore1.trezor.io",
     "https://testnet-bitcore2.trezor.io"
   ],
-  "blockbook": []
+  "blockbook": [],
+  "cooldown": 100
 }

@@ -40,5 +40,6 @@
     "https://dash3.trezor.io",
     "https://dash4.trezor.io",
     "https://dash5.trezor.io"
-  ]
+  ],
+  "cooldown": 100
 }

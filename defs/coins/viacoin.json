@@ -39,5 +39,6 @@
   "bitcore": [
     "https://explorer.viacoin.org"
   ],
-  "blockbook": []
+  "blockbook": [],
+  "cooldown": 100
 }

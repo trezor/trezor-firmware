@@ -37,5 +37,6 @@
     "https://crw-bitcore.crown.tech",
     "https://crw2-bitcore.crown.tech"
   ],
-  "blockbook": []
+  "blockbook": [],
+  "cooldown": 100
 }

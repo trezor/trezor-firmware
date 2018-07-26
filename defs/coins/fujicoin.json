@@ -39,5 +39,6 @@
   "bitcore": [
     "http://explorer.fujicoin.org"
   ],
-  "blockbook": []
+  "blockbook": [],
+  "cooldown": 100
 }

@@ -36,5 +36,6 @@
   "bitcore": [
     "https://testnet.decred.org"
   ],
-  "blockbook": []
+  "blockbook": [],
+  "cooldown": 100
 }

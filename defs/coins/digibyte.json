@@ -39,5 +39,6 @@
   "bitcore": [
     "https://explorer.digibyteprojects.com"
   ],
-  "blockbook": []
+  "blockbook": [],
+  "cooldown": 100
 }

@@ -40,5 +40,6 @@
     "https://vtc3.trezor.io",
     "https://vtc4.trezor.io",
     "https://vtc5.trezor.io"
-  ]
+  ],
+  "cooldown": 100
 }

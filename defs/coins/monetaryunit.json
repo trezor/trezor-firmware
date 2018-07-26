@@ -12,8 +12,8 @@
   "minfee_kb": 1000,
   "signed_message_header": "MonetaryUnit Signed Message:\n",
   "hash_genesis_block": "000002acd994a815401fbaae0e52404b32857efd0b7b0c77b8e0715ccdd6d437",
-  "xprv_magic": 76066276, 
-  "xpub_magic": 76067358, 
+  "xprv_magic": 76066276,
+  "xpub_magic": 76067358,
   "xpub_magic_segwit_p2sh": null,
   "xpub_magic_segwit_native": null,
   "bech32_prefix": null,
@@ -34,5 +34,6 @@
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [],
-  "blockbook": []
+  "blockbook": [],
+  "cooldown": 100
 }
