@@ -61,7 +61,7 @@ def check_type(val, types, nullable=False, empty=False, regex=None, choice=None)
 
 
 def get_hash_genesis_block(api):
-    r = requests.get(api + '/block-index/0')
+    r = requests.get(api + '/api/block-index/0')
     j = r.json()
     return j['blockHash']
 
