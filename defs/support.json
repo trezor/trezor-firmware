@@ -58,7 +58,9 @@
 		"Bgold": true,
 		"Dash": true,
 		"Litecoin": true,
-		"Zcash": true
+		"Zcash": true,
+		"Dogecoin": true,
+		"Vertcoin": true
 	},
 	"webwallet": {
 		"Bitcoin": true,
