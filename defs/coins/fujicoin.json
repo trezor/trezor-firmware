@@ -37,7 +37,7 @@
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [
-    "http://explorer.fujicoin.org/api"
+    "http://explorer.fujicoin.org"
   ],
   "blockbook": []
 }

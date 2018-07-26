@@ -35,10 +35,10 @@
   "max_address_length": 34,
   "bitcore": [],
   "blockbook": [
-    "https://ltc1.trezor.io/api",
-    "https://ltc2.trezor.io/api",
-    "https://ltc3.trezor.io/api",
-    "https://ltc4.trezor.io/api",
-    "https://ltc5.trezor.io/api"
+    "https://ltc1.trezor.io",
+    "https://ltc2.trezor.io",
+    "https://ltc3.trezor.io",
+    "https://ltc4.trezor.io",
+    "https://ltc5.trezor.io"
   ]
 }

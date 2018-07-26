@@ -38,10 +38,10 @@
   "max_address_length": 34,
   "bitcore": [],
   "blockbook": [
-    "https://btg1.trezor.io/api",
-    "https://btg2.trezor.io/api",
-    "https://btg3.trezor.io/api",
-    "https://btg4.trezor.io/api",
-    "https://btg5.trezor.io/api"
+    "https://btg1.trezor.io",
+    "https://btg2.trezor.io",
+    "https://btg3.trezor.io",
+    "https://btg4.trezor.io",
+    "https://btg5.trezor.io"
   ]
 }

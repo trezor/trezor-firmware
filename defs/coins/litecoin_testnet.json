@@ -34,7 +34,7 @@
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [
-    "https://testnet.litecore.io/api"
+    "https://testnet.litecore.io"
   ],
   "blockbook": []
 }

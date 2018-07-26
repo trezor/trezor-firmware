@@ -34,9 +34,9 @@
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [
-    "https://mona.chainsight.info/api",
-    "https://mona.insight.monaco-ex.org/insight-api-monacoin",
-    "https://insight.electrum-mona.org/api"
+    "https://mona.chainsight.info",
+    "https://insight.electrum-mona.org",
+    "https://mona.insight.monaco-ex.org"
   ],
   "blockbook": []
 }

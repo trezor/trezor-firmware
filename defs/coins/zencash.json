@@ -34,7 +34,7 @@
   "min_address_length": 35,
   "max_address_length": 95,
   "bitcore": [
-    "https://explorer.zensystem.io/insight-api-zen"
+    "https://explorer.zensystem.io"
   ],
   "blockbook": []
 }
