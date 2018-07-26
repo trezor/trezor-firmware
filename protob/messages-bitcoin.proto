@@ -41,10 +41,11 @@ message MultisigRedeemScriptType {
  * @next Failure
  */
 message GetPublicKey {
-    repeated uint32 address_n = 1;                      // BIP-32 path to derive the key from master node
-    optional string ecdsa_curve_name = 2;               // ECDSA curve name to use
-    optional bool show_display = 3;                     // optionally show on display before sending the result
-    optional string coin_name = 4 [default='Bitcoin'];  // coin to use for verifying
+    repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
+    optional string ecdsa_curve_name = 2;                               // ECDSA curve name to use
+    optional bool show_display = 3;                                     // optionally show on display before sending the result
+    optional string coin_name = 4 [default='Bitcoin'];                  // coin to use for verifying
+    optional InputScriptType script_type = 5 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
 }
 
 /**
