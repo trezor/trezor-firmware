@@ -39,12 +39,13 @@
 
 static I2C_HandleTypeDef i2c_handle;
 
-static inline void touch_default_pin_state(void) {
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // CTP_ON/PB10
+static void touch_default_pin_state(void) {
+    // set power off and other pins as per section 3.5 of FT6236 datasheet
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // CTP_ON/PB10 (active low) i.e.- CTPM power off when set/high/log 1
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);   // CTP_I2C_SCL/PB6
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);   // CTP_I2C_SDA/PB7
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);     // CTP_REST/PC5
-    // don't touch CTP_INT = leave in High Z
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);   // CTP_INT/PC4 normally an input, but drive low as an output while powered off
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_RESET);   // CTP_REST/PC5 (active low) i.e.- CTPM held in reset until released
 
     // set above pins to OUTPUT / NOPULL
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -54,15 +55,18 @@ static inline void touch_default_pin_state(void) {
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStructure.Pin   = GPIO_PIN_10 | GPIO_PIN_6 | GPIO_PIN_7;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
-    GPIO_InitStructure.Pin   = GPIO_PIN_5;
+    GPIO_InitStructure.Pin   = GPIO_PIN_4 | GPIO_PIN_5;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+    // in-case power was on, or CTPM was active make sure to wait long enough
+    // for these changes to take effect. a reset needs to be low for
+    // a minimum of 5ms. also wait for power circuitry to stabilize (if it changed).
+    HAL_Delay(100); // 100ms (being conservative)
 }
 
-static inline void touch_active_pin_state(void) {
+static void touch_active_pin_state(void) {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);  // CTP_ON/PB10
     HAL_Delay(10); // we need to wait until the circuit fully kicks-in
-
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);     // CTP_REST/PC5
 
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -75,22 +79,14 @@ static inline void touch_active_pin_state(void) {
     HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
 
     // PC4 capacitive touch panel module (CTPM) interrupt (INT) input
-    /*
-    GPIO_InitStructure.Pin = GPIO_PIN_4;
-    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStructure.Pull = GPIO_PULLUP;
+    GPIO_InitStructure.Mode  = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Pull  = GPIO_PULLUP;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStructure.Alternate = 0;
+    GPIO_InitStructure.Pin   = GPIO_PIN_4;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
-    */
 
-    // PC5 capacitive touch panel module (CTPM) reset (RSTN)
-    GPIO_InitStructure.Pin = GPIO_PIN_5;
-    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStructure.Pull = GPIO_NOPULL;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStructure.Alternate = 0;
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure); // switch the pin to be an output
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET); // release CTPM reset
+    HAL_Delay(310); // "Time of starting to report point after resetting" min is 300ms, giving an extra 10ms
 }
 
 void touch_init(void) {
@@ -132,17 +128,9 @@ void touch_power_on(void) {
         return;
     }
 
-    // reset the touch panel by keeping its reset line low (active low) low for a minimum of 5ms
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_RESET);
-    HAL_Delay(10); // being conservative, min is 5ms
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET); // release CTPM reset
-    HAL_Delay(310); // "Time of starting to report point after resetting" min is 300ms, giving an extra 10ms
-
     // set register 0xA4 G_MODE to interrupt polling mode (0x00). basically, CTPM keeps this input line (to PC4) low while a finger is on the screen.
-    /*
     uint8_t touch_panel_config[] = {0xA4, 0x00};
     ensure(sectrue * (HAL_OK == HAL_I2C_Master_Transmit(&i2c_handle, TOUCH_ADDRESS, touch_panel_config, sizeof(touch_panel_config), 10)), NULL);
-    */
 }
 
 void touch_power_off(void) {
@@ -153,14 +141,11 @@ void touch_power_off(void) {
     // turn off CTP circuitry
     HAL_Delay(50);
     touch_default_pin_state();
-    HAL_Delay(100);
 }
 
 uint32_t touch_read(void)
 {
     static uint8_t touch_data[TOUCH_PACKET_SIZE], previous_touch_data[TOUCH_PACKET_SIZE];
-
-    //const GPIO_PinState ctpm_interrupt_line = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_4);
 
     uint8_t outgoing[] = {0x00}; // start reading from address 0x00
     if (HAL_OK != HAL_I2C_Master_Transmit(&i2c_handle, TOUCH_ADDRESS, outgoing, sizeof(outgoing), 1)) {
@@ -206,4 +191,13 @@ uint32_t touch_click(void)
     while (touch_read()) { }
     // return last touch coordinate
     return r;
+}
+
+uint32_t touch_is_detected(void)
+{
+    // check the interrupt line coming in from the CTPM.
+    // the line goes low when a touch event is actively detected.
+    // reference section 1.2 of "Application Note for FT6x06 CTPM".
+    // we configure the touch controller to use "interrupt polling mode".
+    return GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_4);
 }
