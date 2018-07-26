@@ -24,7 +24,7 @@
 #endif
 
 #ifndef DISPLAY_ST7789V
-#define DISPLAY_ST7789V  1
+#define DISPLAY_ST7789V 1
 #endif
 
 // FSMC/FMC Bank 1 - NOR/PSRAM 1
@@ -78,8 +78,7 @@ void display_set_orientation(int degrees)
     #define MY  (1 << 7)
     // MADCTL: Memory Data Access Control
     // reference section 9.3 in the ILI9341 manual; 8.12 in the ST7789V manual
-    BUFFER_OFFSET.x = 0;
-    BUFFER_OFFSET.y = 0;
+    char BX = 0, BY = 0;
     uint8_t display_command_parameter = 0;
     switch (degrees) {
         case 0:
@@ -90,16 +89,18 @@ void display_set_orientation(int degrees)
             break;
         case 180:
             display_command_parameter = MX | MY;
-            BUFFER_OFFSET.y = MAX_DISPLAY_RESY - DISPLAY_RESY;
+            BY = 1;
             break;
         case 270:
             display_command_parameter = MV | MY;
-            BUFFER_OFFSET.x = MAX_DISPLAY_RESY - DISPLAY_RESX;
+            BX = 1;
             break;
     }
     CMD(0x36); DATA(display_command_parameter);
     display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1); // reset the column and page extents
 #endif
+    BUFFER_OFFSET.x = BX ? (MAX_DISPLAY_RESY - DISPLAY_RESY) : 0;
+    BUFFER_OFFSET.y = BY ? (MAX_DISPLAY_RESY - DISPLAY_RESY) : 0;
 }
 
 void display_set_backlight(int val)
