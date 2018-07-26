@@ -23,6 +23,7 @@
 #include "common.h"
 #include "image.h"
 #include "flash.h"
+#include "display.h"
 #include "mini_printf.h"
 #include "rng.h"
 #include "secbool.h"
@@ -228,6 +229,8 @@ static void check_bootloader_version(void)
 int main(void)
 {
 main_start:
+    display_clear();
+
 #if PRODUCTION
     check_bootloader_version();
 #endif

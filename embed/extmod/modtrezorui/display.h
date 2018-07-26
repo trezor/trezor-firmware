@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 
-// ILI9341V and ST7789V drivers both support 240px x 320px display resolution
+// ILI9341V, GC9307 and ST7789V drivers support 240px x 320px display resolution
 #define MAX_DISPLAY_RESX 240
 #define MAX_DISPLAY_RESY 320
 // X and Y display resolution used
