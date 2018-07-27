@@ -106,6 +106,13 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=60,
+        slip44=6060,
+        shortcut='GO',
+        name='GoChain',
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=61,
         slip44=61,
         shortcut='ETC',
@@ -138,6 +145,20 @@ NETWORKS = [
         slip44=1987,
         shortcut='EGEM',
         name='EtherGem',
+        rskip60=False,
+    ),
+    NetworkInfo(
+        chain_id=31102,
+        slip44=31102,
+        shortcut='ESN',
+        name='Ethersocial Network',
+        rskip60=False,
+    ),
+    NetworkInfo(
+        chain_id=200625,
+        slip44=200625,
+        shortcut='AKA',
+        name='Akroma',
         rskip60=False,
     ),
 ]
