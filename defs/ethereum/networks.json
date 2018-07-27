@@ -134,5 +134,13 @@
     "name": "Ethersocial Network",
     "rskip60": false,
     "url": "https://ethersocial.org"
+  },
+  {
+    "chain_id": 200625,
+    "slip44": 200625,
+    "shortcut": "AKA",
+    "name": "Akroma",
+    "rskip60": false,
+    "url": "https://akroma.io"
   }
 ]
