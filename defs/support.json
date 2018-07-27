@@ -59,7 +59,7 @@
     "coin:DOGE": {
         "trezor1": "1.5.2",
         "trezor2": "2.0.5",
-        "connect": null,
+        "connect": true,
         "webwallet": true
     },
     "coin:FJC": {
@@ -149,7 +149,7 @@
     "coin:VTC": {
         "trezor1": "1.6.1",
         "trezor2": "2.0.5",
-        "connect": null,
+        "connect": true,
         "webwallet": true
     },
     "coin:XZC": {
