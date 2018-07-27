@@ -1,131 +1,118 @@
 #!/usr/bin/env python3
 """Fetch information about coins and tokens supported by Trezor and update it in coins_details.json."""
+import os
 import time
 import json
 import logging
 import requests
 import coin_defs
 
-OPTIONAL_KEYS = ("links", "notes", "wallet")
-OVERRIDES = coin_defs.load_json("coins_details.override.json")
+LOG = logging.getLogger(__name__)
 
+OPTIONAL_KEYS = ("links", "notes", "wallet")
+ALLOWED_SUPPORT_STATUS = ("yes", "no", "planned", "soon")
+
+OVERRIDES = coin_defs.load_json("coins_details.override.json")
 VERSIONS = coin_defs.latest_releases()
 
-COINS = {}
+COINMAKETCAP_CACHE = os.path.join(os.path.dirname(__file__), "coinmarketcap.json")
 
-log = logging.getLogger(__name__)
+COINMARKETCAP_TICKERS_URL = (
+    "https://api.coinmarketcap.com/v2/ticker/?start={}&convert=USD&limit=100"
+)
+COINMARKETCAP_GLOBAL_URL = "https://api.coinmarketcap.com/v2/global"
 
 
 def coinmarketcap_init():
-    global COINS
-
     try:
-        marketcap_json = json.load(open("coinmarketcap.json", "r"))
-    except FileNotFoundError:
+        mtime = os.path.getmtime(COINMAKETCAP_CACHE)
+        if mtime > time.time() - 3600:
+            print("Using cached market cap data")
+            with open(COINMAKETCAP_CACHE) as f:
+                return json.load(f)
+    except Exception:
         pass
-    else:
-        pass
-        # if COINS["1"]["last_updated"] > time.time() - 3600:
-        #     print("Using local cache of coinmarketcap")
-        #     return
-
-    for coin in marketcap_json.values():
-        slug = coin["website_slug"]
-        market_cap = coin["quotes"]["USD"]["market_cap"]
-        if market_cap is not None:
-            COINS[slug] = int(float(market_cap))
-
-    return
 
     print("Updating coins from coinmarketcap")
     total = None
-    COINS = {}
+    ctr = 0
+    coin_data = {}
 
-    while total is None or len(COINS) < total:
-        url = (
-            "https://api.coinmarketcap.com/v2/ticker/?start=%d&convert=USD&limit=100"
-            % (len(COINS) + 1)
-        )
+    while total is None or ctr < total:
+        url = COINMARKETCAP_TICKERS_URL.format(ctr + 1)
         data = requests.get(url).json()
-        COINS.update(data["data"])
+
         if total is None:
             total = data["metadata"]["num_cryptocurrencies"]
+        ctr += len(data["data"])
 
-        print("Fetched %d of %d coins" % (len(COINS), total))
+        for coin in data["data"].values():
+            slug = coin["website_slug"]
+            market_cap = coin["quotes"]["USD"]["market_cap"]
+            if market_cap is not None:
+                coin_data[slug] = int(market_cap)
+
+        print("Fetched {} of {} coins".format(ctr, total))
         time.sleep(1)
 
-    json.dump(COINS, open("coinmarketcap.json", "w"), sort_keys=True, indent=4)
+    with open(COINMAKETCAP_CACHE, "w") as f:
+        json.dump(coin_data, f)
+
+    return coin_data
+
+
+MARKET_CAPS = coinmarketcap_init()
 
 
 def marketcap(coin):
     cap = None
-
     if "coinmarketcap_alias" in coin:
-        cap = COINS.get(coin["coinmarketcap_alias"])
-    
-    if not cap:
+        cap = MARKET_CAPS.get(coin["coinmarketcap_alias"])
+    if cap is None:
         slug = coin["name"].replace(" ", "-").lower()
-        cap = COINS.get(slug)
-    
-    if not cap:
-        cap = COINS.get(coin["shortcut"].lower())
-    
+        cap = MARKET_CAPS.get(slug)
+    if cap is None:
+        cap = MARKET_CAPS.get(coin["shortcut"].lower())
     return cap
 
 
-def update_marketcap(coins):
+def update_marketcaps(coins):
     for coin in coins.values():
-        cap = marketcap(coin)
-        if cap:
-            coin["marketcap_usd"] = cap
+        coin["marketcap_usd"] = marketcap(coin) or 0
 
 
-def coinmarketcap_global():
-    url = "https://api.coinmarketcap.com/v2/global"
-    ret = requests.get(url)
-    data = ret.json()
-    return data
+def summary(coins):
+    t1_coins = 0
+    t2_coins = 0
+    supported_marketcap = 0
+    for coin in coins.values():
+        if coin.get("hidden"):
+            continue
 
+        t1_enabled = coin["t1_enabled"] == "yes"
+        t2_enabled = coin["t2_enabled"] == "yes"
+        if t1_enabled:
+            t1_coins += 1
+        if t2_enabled:
+            t2_coins += 1
+        if t1_enabled or t2_enabled:
+            supported_marketcap += coin.get("marketcap_usd", 0)
 
-def update_info(details):
-    details["info"]["updated_at"] = int(time.time())
-    details["info"]["updated_at_readable"] = time.asctime()
-
-    details["info"]["t1_coins"] = len(
-        [
-            True
-            for _, c in details["coins"].items()
-            if c.get("t1_enabled") == "yes" and not c.get("hidden", False)
-        ]
-    )
-    details["info"]["t2_coins"] = len(
-        [
-            True
-            for _, c in details["coins"].items()
-            if c.get("t2_enabled") == "yes" and not c.get("hidden", False)
-        ]
-    )
-
+    total_marketcap = None
     try:
-        details["info"]["total_marketcap_usd"] = int(
-            coinmarketcap_global()["data"]["quotes"]["USD"]["total_market_cap"]
-        )
+        ret = requests.get(COINMARKETCAP_GLOBAL_URL).json()
+        total_marketcap = int(ret["data"]["quotes"]["USD"]["total_market_cap"])
     except:
         pass
 
-    marketcap = 0
-    for k, c in details["coins"].items():
-        if c["t1_enabled"] == "yes" or c["t2_enabled"] == "yes":
-            marketcap += details["coins"][k].setdefault("marketcap_usd", 0)
-    details["info"]["marketcap_usd"] = marketcap
-
-
-def check_unsupported(details, prefix, supported):
-    for k in details["coins"].keys():
-        if not k.startswith(prefix):
-            continue
-        if k not in supported:
-            print("%s not supported by Trezor? (Possible manual entry)" % k)
+    return dict(
+        updated_at=int(time.time()),
+        updated_at_readable=time.asctime(),
+        t1_coins=t1_coins,
+        t2_coins=t2_coins,
+        marketcap_usd=supported_marketcap,
+        total_marketcap_usd=total_marketcap,
+    )
 
 
 def _is_supported(support, trezor_version):
@@ -174,8 +161,7 @@ def update_coins(coins, support_info):
         if support.get("other"):
             details["wallet"].update(support["other"])
 
-        # XXX get rid of this in favor of res[key]
-        res["coin:{}".format(coin["shortcut"])] = details
+        res[key] = details
 
     return res
 
@@ -216,12 +202,6 @@ def update_simple(coins, support_info, type):
         key = coin["key"]
         support = support_info[key]
 
-        # XXX drop newkey
-        if type == "mosaic":
-            newkey = "mosaic:{}".format(coin["shortcut"])
-        else:
-            newkey = "coin2:{}".format(coin["shortcut"])
-
         details = dict(
             name=coin["name"],
             shortcut=coin["shortcut"],
@@ -229,11 +209,11 @@ def update_simple(coins, support_info, type):
             t1_enabled=_is_supported(support, 1),
             t2_enabled=_is_supported(support, 2),
         )
-        for key in OPTIONAL_KEYS:
-            if key in coin:
-                details[key] = coin[key]
+        for k in OPTIONAL_KEYS:
+            if k in coin:
+                details[k] = coin[k]
 
-        res[newkey] = details
+        res[key] = details
 
     return res
 
@@ -241,30 +221,27 @@ def update_simple(coins, support_info, type):
 def update_ethereum_networks(coins, support_info):
     res = update_simple(coins, support_info, "coin")
     for coin in coins:
-        newkey = "coin2:{}".format(coin["shortcut"])
-        res[newkey]["wallet"] = dict(
-            MyCrypto="https://mycrypto.com",
-            MyEtherWallet="https://www.myetherwallet.com",
+        res[coin["key"]].update(
+            wallet=dict(
+                MyCrypto="https://mycrypto.com",
+                MyEtherWallet="https://www.myetherwallet.com",
+            ),
+            links=dict(Homepage=coin.get("url")),
         )
-        res[newkey]["links"] = dict(Homepage=coin.get("url"))
     return res
 
 
-def check_missing_details(details):
-    for k in details["coins"].keys():
-        coin = details["coins"][k]
+def check_missing_data(coins):
+    for k, coin in coins.items():
         hide = False
 
-        if "links" not in coin:
-            print("%s: Missing links" % k)
-            hide = True
         if "Homepage" not in coin.get("links", {}):
             print("%s: Missing homepage" % k)
             hide = True
-        if coin["t1_enabled"] not in ("yes", "no", "planned", "soon"):
+        if coin["t1_enabled"] not in ALLOWED_SUPPORT_STATUS:
             print("%s: Unknown t1_enabled" % k)
             hide = True
-        if coin["t2_enabled"] not in ("yes", "no", "planned", "soon"):
+        if coin["t2_enabled"] not in ALLOWED_SUPPORT_STATUS:
             print("%s: Unknown t2_enabled" % k)
             hide = True
         if (
@@ -291,15 +268,16 @@ def check_missing_details(details):
         if not hide and coin.get("hidden"):
             print("%s: Details are OK, but coin is still hidden" % k)
 
-    for k in details["coins"].keys():
-        if details["coins"][k].get("hidden") == 1:
+    # summary of hidden coins
+    for k, coin in coins.items():
+        if coin.get("hidden") == 1:
             print("%s: Coin is hidden" % k)
 
 
 def apply_overrides(coins):
     for key, override in OVERRIDES.items():
         if key not in coins:
-            log.warning("override without coin: {}".format(key))
+            LOG.warning("override without coin: {}".format(key))
             continue
 
         def recursive_update(orig, new):
@@ -314,31 +292,24 @@ def apply_overrides(coins):
 
 
 if __name__ == "__main__":
-    # try:
-    #     details = json.load(open('../defs/coins_details.json', 'r'))
-    # except FileNotFoundError:
-    #     details = {'coins': {}, 'info': {}}
-
-    coinmarketcap_init()
-
     defs = coin_defs.get_all()
     all_coins = sum(defs.values(), [])
     support_info = coin_defs.support_info(all_coins, erc20_versions=VERSIONS)
 
     coins = {}
-    coins.update(update_coins(defs["btc"], support_info))
+    coins.update(update_coins(defs["coins"], support_info))
     coins.update(update_erc20(defs["erc20"], support_info))
     coins.update(update_ethereum_networks(defs["eth"], support_info))
     coins.update(update_simple(defs["nem"], support_info, "mosaic"))
-    coins.update(update_simple(defs["other"], support_info, "coin"))
+    coins.update(update_simple(defs["misc"], support_info, "coin"))
 
     apply_overrides(coins)
-    update_marketcap(coins)
+    update_marketcaps(coins)
+    check_missing_data(coins)
 
-    details = dict(coins=coins, info={})
-    update_info(details)
-    check_missing_details(details)
+    info = summary(coins)
+    details = dict(coins=coins, info=info)
 
-    print(json.dumps(details["info"], sort_keys=True, indent=4))
-    json.dump(details, open("../defs/coins_details.json", "w"), sort_keys=True, indent=4)
-
+    print(json.dumps(info, sort_keys=True, indent=4))
+    with open(os.path.join(coin_defs.DEFS_DIR, "coins_details.json"), "w") as f:
+        json.dump(details, f, sort_keys=True, indent=4)
