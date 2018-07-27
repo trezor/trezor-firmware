@@ -3,5 +3,10 @@ check: messages.pb messages-bitcoin.pb messages-bootloader.pb messages-cardano.p
 %.pb: %.proto
 	protoc -I/usr/include -I. $< -o $@
 
+combine:
+	echo 'syntax = "proto2";' > combined.proto
+	echo 'import "google/protobuf/descriptor.proto";' >> combined.proto
+	grep -hv -e '^import ' -e '^syntax' -e 'option java_' messages*.proto >> combined.proto
+
 clean:
 	rm -f *.pb
