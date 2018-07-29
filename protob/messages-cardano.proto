@@ -1,4 +1,5 @@
 syntax = "proto2";
+package hw.trezor.messages.cardano;
 
 // Sugar for easier handling in Java
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
@@ -40,9 +41,9 @@ message CardanoGetPublicKey {
  * @end
  */
 message CardanoPublicKey {
-    optional string xpub = 1;               // Xpub key
-    optional HDNodeType node = 2;           // BIP-32 public node
-    optional string root_hd_passphrase = 3; // HD passphrase for root in hex format
+    optional string xpub = 1;                               // Xpub key
+    optional hw.trezor.messages.common.HDNodeType node = 2; // BIP-32 public node
+    optional string root_hd_passphrase = 3;                 // HD passphrase for root in hex format
 }
 
 /**

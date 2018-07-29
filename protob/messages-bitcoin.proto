@@ -1,4 +1,5 @@
 syntax = "proto2";
+package hw.trezor.messages.bitcoin;
 
 // Sugar for easier handling in Java
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
@@ -29,8 +30,8 @@ message MultisigRedeemScriptType {
     * Structure representing HDNode + Path
     */
     message HDNodePathType {
-        required HDNodeType node = 1;       // BIP-32 node in deserialized form
-        repeated uint32 address_n = 2;      // BIP-32 path to derive the key from node
+        required hw.trezor.messages.common.HDNodeType node = 1; // BIP-32 node in deserialized form
+        repeated uint32 address_n = 2;                          // BIP-32 path to derive the key from node
     }
 }
 
@@ -53,7 +54,7 @@ message GetPublicKey {
  * @end
  */
 message PublicKey {
-    required HDNodeType node = 1;        // BIP32 public node
+    required hw.trezor.messages.common.HDNodeType node = 1;        // BIP32 public node
     optional string xpub = 2;        // serialized form of public node
 }
 
