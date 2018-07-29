@@ -834,7 +834,7 @@ START_TEST(test_bignum_divmod)
 }
 END_TEST
 
-// test vector 1 from https://en.bitcoin.it/wiki/BIP_0032_TestVectors
+// test vector 1 from https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#test-vector-1
 START_TEST(test_bip32_vector_1)
 {
 	HDNode node, node2, node3;
@@ -966,7 +966,7 @@ START_TEST(test_bip32_vector_1)
 }
 END_TEST
 
-// test vector 2 from https://en.bitcoin.it/wiki/BIP_0032_TestVectors
+// test vector 2 from https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#test-vector-2
 START_TEST(test_bip32_vector_2)
 {
 	HDNode node, node2, node3;
@@ -1114,6 +1114,52 @@ START_TEST(test_bip32_vector_2)
 	ck_assert_mem_eq(node.private_key, fromhex("0000000000000000000000000000000000000000000000000000000000000000"), 32);
 	hdnode_fill_public_key(&node);
 	ck_assert_mem_eq(node.public_key,  fromhex("02fc9e5af0ac8d9b3cecfe2a888e2117ba3d089d8585886c9c826b6b22a98d12ea"), 33);
+}
+END_TEST
+
+// test vector 3 from https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#test-vector-3
+START_TEST(test_bip32_vector_3)
+{
+	HDNode node, node2, node3;
+	uint32_t fingerprint;
+	char str[112];
+	int r;
+
+	// init m
+	hdnode_from_seed(fromhex("4b381541583be4423346c643850da4b320e46a87ae3d2a4e6da11eba819cd4acba45d239319ac14f863b8d5ab5a0d0c64d2e8a1e7d1457df2e5a3c51c73235be"), 64, SECP256K1_NAME, &node);
+
+	// [Chain m]
+	fingerprint = 0;
+	ck_assert_int_eq(fingerprint, 0x00000000);
+	hdnode_fill_public_key(&node);
+	hdnode_serialize_private(&node, fingerprint, VERSION_PRIVATE, str, sizeof(str));
+	ck_assert_str_eq(str,  "xprv9s21ZrQH143K25QhxbucbDDuQ4naNntJRi4KUfWT7xo4EKsHt2QJDu7KXp1A3u7Bi1j8ph3EGsZ9Xvz9dGuVrtHHs7pXeTzjuxBrCmmhgC6");
+	r = hdnode_deserialize(str, VERSION_PUBLIC, VERSION_PRIVATE, SECP256K1_NAME, &node2, NULL); ck_assert_int_eq(r, 0);
+	hdnode_fill_public_key(&node2);
+	ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
+	hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
+	ck_assert_str_eq(str,  "xpub661MyMwAqRbcEZVB4dScxMAdx6d4nFc9nvyvH3v4gJL378CSRZiYmhRoP7mBy6gSPSCYk6SzXPTf3ND1cZAceL7SfJ1Z3GC8vBgp2epUt13");
+	r = hdnode_deserialize(str, VERSION_PUBLIC, VERSION_PRIVATE, SECP256K1_NAME, &node2, NULL); ck_assert_int_eq(r, 0);
+	memcpy(&node3, &node, sizeof(HDNode));
+	memset(&node3.private_key, 0, 32);
+	ck_assert_mem_eq(&node2, &node3, sizeof(HDNode));
+
+	// [Chain m/0']
+	fingerprint = hdnode_fingerprint(&node);
+	r = hdnode_private_ckd_prime(&node, 0);
+	ck_assert_int_eq(r, 1);
+	hdnode_fill_public_key(&node);
+	hdnode_serialize_private(&node, fingerprint, VERSION_PRIVATE, str, sizeof(str));
+	ck_assert_str_eq(str,  "xprv9uPDJpEQgRQfDcW7BkF7eTya6RPxXeJCqCJGHuCJ4GiRVLzkTXBAJMu2qaMWPrS7AANYqdq6vcBcBUdJCVVFceUvJFjaPdGZ2y9WACViL4L");
+	r = hdnode_deserialize(str, VERSION_PUBLIC, VERSION_PRIVATE, SECP256K1_NAME, &node2, NULL); ck_assert_int_eq(r, 0);
+	hdnode_fill_public_key(&node2);
+	ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
+	hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
+	ck_assert_str_eq(str,  "xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y");
+	r = hdnode_deserialize(str, VERSION_PUBLIC, VERSION_PRIVATE, SECP256K1_NAME, &node2, NULL); ck_assert_int_eq(r, 0);
+	memcpy(&node3, &node, sizeof(HDNode));
+	memset(&node3.private_key, 0, 32);
+	ck_assert_mem_eq(&node2, &node3, sizeof(HDNode));
 }
 END_TEST
 
@@ -4812,6 +4858,7 @@ Suite *test_suite(void)
 	tc = tcase_create("bip32");
 	tcase_add_test(tc, test_bip32_vector_1);
 	tcase_add_test(tc, test_bip32_vector_2);
+	tcase_add_test(tc, test_bip32_vector_3);
 	tcase_add_test(tc, test_bip32_compare);
 	tcase_add_test(tc, test_bip32_optimized);
 	tcase_add_test(tc, test_bip32_cache_1);
