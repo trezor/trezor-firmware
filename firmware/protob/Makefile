@@ -23,7 +23,7 @@ messages_%_pb2.py: messages-%.proto
 	$(Q)protoc -I/usr/include -I. $< --python_out=.
 
 messages_map.h: messages_map.py messages_pb2.py
-	$(Q)$(PYTHON) $< | grep -v -e MessageType_Cardano -e MessageType_Lisk -e MessageType_Tezos -e MessageType_Ripple -e MessageType_Stellar > $@
+	$(Q)$(PYTHON) $< | grep -v -e MessageType_Cardano -e MessageType_Lisk -e MessageType_Tezos -e MessageType_Ripple -e MessageType_Stellar -e MessageType_Monero -e MessageType_DebugMonero > $@
 
 clean:
 	rm -f *.pb *.o *.d *.pb.c *.pb.h *_pb2.py messages_map.h
