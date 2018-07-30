@@ -5,10 +5,16 @@ import re
 import sys
 import os
 import glob
+import binascii
+import struct
+import zlib
+from hashlib import sha256
 
 import click
 
 import coin_info
+from coindef import CoinDef
+
 
 try:
     import mako
@@ -25,15 +31,9 @@ except ImportError:
     requests = None
 
 try:
-    import binascii
-    import struct
-    import zlib
-    from hashlib import sha256
     import ed25519
     from PIL import Image
     from trezorlib import protobuf
-    from coindef import CoinDef
-
     CAN_BUILD_DEFS = True
 except ImportError:
     CAN_BUILD_DEFS = False
@@ -159,6 +159,29 @@ def check_backends(coins):
     return check_passed
 
 
+def check_icons(coins):
+    check_passed = True
+    for coin in coins:
+        key = coin["key"]
+        icon_file = coin.get("icon")
+        if not icon_file:
+            print(key, ": missing icon")
+            check_passed = False
+            continue
+
+        try:
+            icon = Image.open(icon_file)
+        except Exception:
+            print(key, ": failed to open icon file", icon_file)
+            check_passed = False
+            continue
+
+        if icon.size != (96, 96) or icon.mode != "RGBA":
+            print(key, ": bad icon format (must be RGBA 96x96)")
+            check_passed = False
+    return check_passed
+
+
 # ====== coindefs generators ======
 
 
@@ -222,23 +245,33 @@ def cli():
 
 @cli.command()
 @click.option(
-    "--check-missing-support/--no-check-missing-support",
+    "--missing-support/--no-missing-support",
     "-s",
+    default=False,
     help="Fail if support info for a coin is missing",
 )
 @click.option(
-    "--backend-check/--no-backend-check",
+    "--backend/--no-backend",
     "-b",
-    help="Also check blockbook/bitcore responses",
+    default=False,
+    help="Check blockbook/bitcore responses",
 )
-def check(check_missing_support, backend_check):
+@click.option(
+    "--icons/--no-icons",
+    default=True,
+    help="Check icon files"
+)
+def check(missing_support, backend, icons):
     """Validate coin definitions.
 
     Checks that every btc-like coin is properly filled out, reports address collisions
     and missing support information.
     """
-    if backend_check and requests is None:
+    if backend and requests is None:
         raise click.ClickException("You must install requests for backend check")
+
+    if icons and not CAN_BUILD_DEFS:
+        raise click.ClickException("Missing requirements for icon check")
 
     defs = coin_info.get_all()
     all_checks_passed = True
@@ -249,10 +282,15 @@ def check(check_missing_support, backend_check):
 
     print("Checking support data...")
     support_data = coin_info.get_support_data()
-    if not check_support(defs, support_data, fail_missing=check_missing_support):
+    if not check_support(defs, support_data, fail_missing=missing_support):
         all_checks_passed = False
 
-    if backend_check:
+    if icons:
+        print("Checking icon files...")
+        if not check_icons(defs.coins):
+            all_checks_passed = False
+
+    if backend:
         print("Checking backend responses...")
         if not check_backends(defs.coins):
             all_checks_passed = False
@@ -335,7 +373,7 @@ def render(paths):
     versions = coin_info.latest_releases()
     support_info = coin_info.support_info(defs, erc20_versions=versions)
 
-    # munch dicts - make them attribute-accessable
+    # munch dicts - make them attribute-accessible
     for key, value in defs.items():
         defs[key] = [Munch(coin) for coin in value]
     for key, value in support_info.items():
