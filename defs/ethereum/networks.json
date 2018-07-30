@@ -142,5 +142,13 @@
     "name": "Akroma",
     "rskip60": false,
     "url": "https://akroma.io"
+  },
+  {
+    "chain_id": 7762959,
+    "slip44": 184,
+    "shortcut": "MUSIC",
+    "name": "Musicoin",
+    "rskip60": false,
+    "url": "https://musicoin.org"
   }
 ]
