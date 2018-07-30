@@ -35,6 +35,7 @@ class CoinDef(p.MessageType):
         30: ('maintainer', p.UnicodeType, 0),
         31: ('blocktime_seconds', p.UVarintType, 0),
         32: ('bip115', p.BoolType, 0),
+        33: ('cooldown', p.UVarintType, 0),
     }
 
     def __init__(
@@ -73,7 +74,8 @@ class CoinDef(p.MessageType):
         blocktime_seconds: int = None,
         default_fee_b: dict = None,
         bitcore: dict = None,
-        blockbook: dict = None
+        blockbook: dict = None,
+        cooldown: int = None
     ):
         self.coin_name = coin_name
         self.coin_shortcut = coin_shortcut
@@ -110,4 +112,5 @@ class CoinDef(p.MessageType):
         self.default_fee_b = default_fee_b
         self.bitcore = bitcore
         self.blockbook = blockbook
+        self.cooldown = cooldown
         p.MessageType.__init__(self)
