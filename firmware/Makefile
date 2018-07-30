@@ -115,22 +115,14 @@ CFLAGS += -DUSE_ETHEREUM=1
 CFLAGS += -DUSE_NEM=1
 CFLAGS += -DUSE_MONERO=0
 
-define GENERATE_CODE
-# $(1) - Basename for script and output header file
-# $(2) - Dependencies
-# $(3) - Additional output files
+%:: %.mako defs
+	@printf "  MAKO  $@\n"
+	$(Q)$(PYTHON) ../vendor/trezor-common/tools/cointool.py render $@.mako
 
-$(1).h $(3): $(1).py $(2)
-	@printf "  PYTHON  $(1).py\n"
-	$(Q)$(PYTHON) $(1).py
-
-# Serialize build for parallel Make
-$(1).h: $(3)
+bl_data.h: bl_data.py ../bootloader/bootloader.bin
+	@printf "  PYTHON  bl_data.py\n"
+	$(Q)$(PYTHON) bl_data.py
 
 clean::
-	rm -f $(1).h $(3)
-endef
-
-$(eval $(call GENERATE_CODE,coin_info,defs,coin_info.c))
-$(eval $(call GENERATE_CODE,nem_mosaics,defs/nem/nem_mosaics.json,nem_mosaics.c))
-$(eval $(call GENERATE_CODE,bl_data,../bootloader/bootloader.bin))
+	rm -f bl_data.h
+	find -maxdepth 1 -name "*.mako" | sed 's/.mako$$//' | xargs rm -f

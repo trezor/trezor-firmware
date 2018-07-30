@@ -1,4 +1,6 @@
 coin_info.[ch]
 nem_mosaics.[ch]
+ethereum_networks.h
+ethereum_tokens.[ch]
 
 bl_data.h
