@@ -264,6 +264,7 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token, 
 				case 1987: suffix = " EGEM"; break;  // EtherGem
 				case 31102: suffix = " ESN"; break;  // Ethersocial Network
 				case 200625: suffix = " AKA"; break; // Akroma
+				case 7762959: suffix = " MUSI"; break; // Musicoin
 				default  : suffix = " UNKN"; break;  // unknown chain
 			}
 		}
