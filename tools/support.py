@@ -2,10 +2,10 @@
 import os
 import sys
 import click
-import coin_defs
+import coin_info
 import json
 
-SUPPORT_INFO = coin_defs.get_support_data()
+SUPPORT_INFO = coin_info.get_support_data()
 
 MANDATORY_ENTRIES = ("trezor1", "trezor2", "connect", "webwallet")
 
@@ -36,7 +36,7 @@ def update_support(key, entry, value):
 
 
 def write_support_info():
-    with open(os.path.join(coin_defs.DEFS_DIR, "support.json"), "w") as f:
+    with open(os.path.join(coin_info.DEFS_DIR, "support.json"), "w") as f:
         json.dump(SUPPORT_INFO, f, indent=4)
         f.write("\n")
 
@@ -69,11 +69,11 @@ def check():
     here for convenience and because it makes sense. But it's preferable to run it
     as part of 'coin_gen.py check'.
     """
-    defs = coin_defs.get_all()
-    support_data = coin_defs.get_support_data()
+    defs = coin_info.get_all()
+    support_data = coin_info.get_support_data()
     import coin_gen
 
-    if not coin_gen.check_support(defs, support_data):
+    if not coin_gen.check_support(defs, support_data, fail_missing=True):
         sys.exit(1)
 
 
@@ -88,7 +88,7 @@ def show(keyword):
     Only coins listed in support.json are considered "supported". That means that
     Ethereum networks, ERC20 tokens and NEM mosaics will probably show up wrong.
     """
-    defs = coin_defs.get_list()
+    defs = coin_info.get_all().as_list()
 
     if keyword:
         for coin in defs:
@@ -138,7 +138,7 @@ def set(support_key, entries, dry_run):
     Entries with other names will be inserted into "others". This is a good place
     to store links to 3rd party software, such as Electrum forks or claim tools.
     """
-    coins = coin_defs.get_dict()
+    coins = coin_info.get_all().as_dict()
     if support_key not in coins:
         click.echo("Failed to find key {}".format(support_key))
         click.echo("Use 'support.py show' to search for the right one.")

@@ -30,6 +30,35 @@ def load_json(*path):
         return json.load(f, object_pairs_hook=OrderedDict)
 
 
+# ====== CoinsInfo ======
+
+
+class CoinsInfo(dict):
+    """Collection of information about all known kinds of coins.
+
+    It contains the following lists:
+    `coins` for btc-like coins,
+    `eth` for ethereum networks,
+    `erc20` for ERC20 tokens,
+    `nem` for NEM mosaics,
+    `misc` for other networks.
+
+    Accessible as a dict or by attribute: `info["coins"] == info.coins`
+    """
+
+    def as_list(self):
+        return sum(self.values(), [])
+
+    def as_dict(self):
+        return {coin["key"]: coin for coin in self.as_list()}
+
+    def __getattr__(self, attr):
+        if attr in self:
+            return self[attr]
+        else:
+            raise AttributeError(attr)
+
+
 # ====== coin validation ======
 
 
@@ -186,6 +215,7 @@ def _load_btc_coins():
             name=coin["coin_name"],
             shortcut=coin["coin_shortcut"],
             key="coin:{}".format(coin["coin_shortcut"]),
+            icon=filename.replace(".json", ".png"),
         )
         coins.append(coin)
 
@@ -324,10 +354,13 @@ def support_info_erc20(coins, versions):
 def support_info(coins, erc20_versions=None, skip_missing=False):
     """Generate Trezor support information.
 
-    Takes a dict of coins and generates a support-info entry for each.
+    Takes a collection of coins and generates a support-info entry for each.
     The support-info is a dict with a number of known keys:
     `trezor1`, `trezor2`, `webwallet`, `connect`. An optional `other` entry
     is a dict of name-url pairs for third-party software.
+
+    The `coins` argument can be a `CoinsInfo` object, a list or a dict of
+    coin items.
 
     For btc-like coins and misc networks, this is taken from `support.json`.
     For NEM mosaics and ethereum networks, the support is presumed to be "yes"
@@ -346,6 +379,11 @@ def support_info(coins, erc20_versions=None, skip_missing=False):
     and a warning emitted. "No support information" means that the coin is not
     listed in `support.json` and we have no heuristic to determine the support.
     """
+    if isinstance(coins, CoinsInfo):
+        coins = coins.as_list()
+    elif isinstance(coins, dict):
+        coins = coins.values()
+
     support_data = get_support_data()
     support = {}
     for coin in coins:
@@ -428,6 +466,10 @@ def _filter_duplicate_shortcuts(coins):
     retained_coins = OrderedDict()
 
     for coin in coins:
+        if "Testnet" in coin["name"] and coin["shortcut"] == "tETH":
+            # special case for Ethereum testnets
+            continue
+
         key = coin["shortcut"]
         if key in dup_keys:
             pass
@@ -458,7 +500,7 @@ def get_all():
     `nem` for NEM mosaics,
     `misc` for other networks.
     """
-    all_coins = dict(
+    all_coins = CoinsInfo(
         coins=_load_btc_coins(),
         eth=_load_ethereum_networks(),
         erc20=_load_erc20_tokens(),
@@ -476,22 +518,13 @@ def get_all():
             coins.sort(key=lambda c: c["key"].upper())
 
         _ensure_mandatory_values(coins)
-        if k != "eth":
-            dup_keys = _filter_duplicate_shortcuts(coins)
-            if dup_keys:
-                log.warning(
-                    "{}: removing duplicate symbols: {}".format(k, ", ".join(dup_keys))
-                )
+        dup_keys = _filter_duplicate_shortcuts(coins)
+        if dup_keys:
+            if k == "erc20":
+                severity = logging.INFO
+            else:
+                severity = logging.WARNING
+            dup_str = ", ".join(dup_keys)
+            log.log(severity, "{}: removing duplicate symbols: {}".format(k, dup_str))
 
     return all_coins
-
-
-def get_list():
-    """Return all definitions as a single list of coins."""
-    all_coins = get_all()
-    return sum(all_coins.values(), [])
-
-
-def get_dict():
-    """Return all definitions as a dict indexed by coin keys."""
-    return {coin["key"]: coin for coin in get_list()}

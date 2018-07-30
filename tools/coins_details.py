@@ -5,15 +5,15 @@ import time
 import json
 import logging
 import requests
-import coin_defs
+import coin_info
 
 LOG = logging.getLogger(__name__)
 
 OPTIONAL_KEYS = ("links", "notes", "wallet")
 ALLOWED_SUPPORT_STATUS = ("yes", "no", "planned", "soon")
 
-OVERRIDES = coin_defs.load_json("coins_details.override.json")
-VERSIONS = coin_defs.latest_releases()
+OVERRIDES = coin_info.load_json("coins_details.override.json")
+VERSIONS = coin_info.latest_releases()
 
 COINMAKETCAP_CACHE = os.path.join(os.path.dirname(__file__), "coinmarketcap.json")
 
@@ -292,16 +292,15 @@ def apply_overrides(coins):
 
 
 if __name__ == "__main__":
-    defs = coin_defs.get_all()
-    all_coins = sum(defs.values(), [])
-    support_info = coin_defs.support_info(all_coins, erc20_versions=VERSIONS)
+    defs = coin_info.get_all()
+    support_info = coin_info.support_info(defs, erc20_versions=VERSIONS)
 
     coins = {}
-    coins.update(update_coins(defs["coins"], support_info))
-    coins.update(update_erc20(defs["erc20"], support_info))
-    coins.update(update_ethereum_networks(defs["eth"], support_info))
-    coins.update(update_simple(defs["nem"], support_info, "mosaic"))
-    coins.update(update_simple(defs["misc"], support_info, "coin"))
+    coins.update(update_coins(defs.coins, support_info))
+    coins.update(update_erc20(defs.erc20, support_info))
+    coins.update(update_ethereum_networks(defs.eth, support_info))
+    coins.update(update_simple(defs.nem, support_info, "mosaic"))
+    coins.update(update_simple(defs.misc, support_info, "coin"))
 
     apply_overrides(coins)
     update_marketcaps(coins)
@@ -311,5 +310,5 @@ if __name__ == "__main__":
     details = dict(coins=coins, info=info)
 
     print(json.dumps(info, sort_keys=True, indent=4))
-    with open(os.path.join(coin_defs.DEFS_DIR, "coins_details.json"), "w") as f:
+    with open(os.path.join(coin_info.DEFS_DIR, "coins_details.json"), "w") as f:
         json.dump(details, f, sort_keys=True, indent=4)

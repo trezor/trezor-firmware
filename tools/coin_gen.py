@@ -8,7 +8,7 @@ import glob
 
 import click
 
-import coin_defs
+import coin_info
 
 try:
     import mako
@@ -25,10 +25,13 @@ except ImportError:
     requests = None
 
 try:
+    import binascii
+    import struct
+    import zlib
     from hashlib import sha256
     import ed25519
     from PIL import Image
-    from trezorlib.protobuf import dump_message
+    from trezorlib import protobuf
     from coindef import CoinDef
 
     CAN_BUILD_DEFS = True
@@ -36,7 +39,7 @@ except ImportError:
     CAN_BUILD_DEFS = False
 
 
-# ======= Jinja2 management ======
+# ======= Mako management ======
 
 
 def c_str_filter(b):
@@ -70,26 +73,36 @@ def render_file(filename, coins, support_info):
 # ====== validation functions ======
 
 
-def check_support(defs, support_data):
+def check_support(defs, support_data, fail_missing=False):
     check_passed = True
+    coin_list = defs.as_list()
+    coin_names = {coin["key"]: coin["name"] for coin in coin_list}
+
+    def coin_name(key):
+        if key in coin_names:
+            return "{} ({})".format(key, coin_names[key])
+        else:
+            return "{} <unknown key>".format(key)
 
     for key, support in support_data.items():
-        errors = coin_defs.validate_support(support)
+        errors = coin_info.validate_support(support)
         if errors:
             check_passed = False
-            print("ERR:", "invalid definition for", key)
+            print("ERR:", "invalid definition for", coin_name(key))
             print("\n".join(errors))
 
-    expected_coins = set(coin["key"] for coin in defs["coins"] + defs["misc"])
+    expected_coins = set(coin["key"] for coin in defs.coins + defs.misc)
 
     # detect missing support info for expected
     for coin in expected_coins:
         if coin not in support_data:
-            check_passed = False
-            print("ERR: Missing support info for", coin)
+            if fail_missing:
+                check_passed = False
+                print("ERR: Missing support info for", coin_name(coin))
+            else:
+                print("WARN: Missing support info for", coin_name(coin))
 
     # detect non-matching support info
-    coin_list = sum(defs.values(), [])
     coin_set = set(coin["key"] for coin in coin_list)
     for key in support_data:
         # detect non-matching support info
@@ -97,9 +110,9 @@ def check_support(defs, support_data):
             check_passed = False
             print("ERR: Support info found for unknown coin", key)
 
-        # detect override - info only, doesn't fail check
+        # detect override - doesn't fail check
         if key not in expected_coins:
-            print("INFO: Override present for coin", key)
+            print("INFO: Override present for coin", coin_name(key))
 
     return check_passed
 
@@ -108,13 +121,13 @@ def check_btc(coins):
     check_passed = True
 
     for coin in coins:
-        errors = coin_defs.validate_btc(coin)
+        errors = coin_info.validate_btc(coin)
         if errors:
             check_passed = False
             print("ERR:", "invalid definition for", coin["name"])
             print("\n".join(errors))
 
-    collisions = coin_defs.find_address_collisions(coins)
+    collisions = coin_info.find_address_collisions(coins)
     # warning only
     for key, dups in collisions.items():
         if dups:
@@ -135,7 +148,7 @@ def check_backends(coins):
         for backend in backends:
             print("checking", backend, "... ", end="", flush=True)
             try:
-                j = requests.get(backend + "/block-index/0").json()
+                j = requests.get(backend + "/api/block-index/0").json()
                 if j["blockHash"] != genesis_block:
                     raise RuntimeError("genesis block mismatch")
             except Exception as e:
@@ -144,6 +157,59 @@ def check_backends(coins):
             else:
                 print("OK")
     return check_passed
+
+
+# ====== coindefs generators ======
+
+
+def convert_icon(icon):
+    """Convert PIL icon to TOIF format"""
+    # TODO: move this to python-trezor at some point
+    DIM = 32
+    icon = icon.resize((DIM, DIM), Image.LANCZOS)
+    # remove alpha channel, replace with black
+    bg = Image.new("RGBA", icon.size, (0, 0, 0, 255))
+    icon = Image.alpha_composite(bg, icon)
+    # process pixels
+    pix = icon.load()
+    data = bytes()
+    for y in range(DIM):
+        for x in range(DIM):
+            r, g, b, _ = pix[x, y]
+            c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
+            data += struct.pack(">H", c)
+    z = zlib.compressobj(level=9, wbits=10)
+    zdata = z.compress(data) + z.flush()
+    zdata = zdata[2:-4]  # strip header and checksum
+    return zdata
+
+
+def coindef_from_dict(coin):
+    proto = CoinDef()
+    for fname, _, fflags in CoinDef.FIELDS.values():
+        val = coin.get(fname)
+        if val is None and fflags & protobuf.FLAG_REPEATED:
+            val = []
+        elif fname == "signed_message_header":
+            val = val.encode("utf-8")
+        elif fname == "hash_genesis_block":
+            val = binascii.unhexlify(val)
+        setattr(proto, fname, val)
+
+    return proto
+
+
+def serialize_coindef(proto, icon):
+    proto.icon = icon
+    buf = io.BytesIO()
+    protobuf.dump_message(buf, proto)
+    return buf.getvalue()
+
+
+def sign(data):
+    h = sha256(data).digest()
+    sign_key = ed25519.SigningKey(b"A" * 32)
+    return sign_key.sign(h)
 
 
 # ====== click command handlers ======
@@ -156,11 +222,16 @@ def cli():
 
 @cli.command()
 @click.option(
+    "--check-missing-support/--no-check-missing-support",
+    "-s",
+    help="Fail if support info for a coin is missing",
+)
+@click.option(
     "--backend-check/--no-backend-check",
     "-b",
     help="Also check blockbook/bitcore responses",
 )
-def check(backend_check):
+def check(check_missing_support, backend_check):
     """Validate coin definitions.
 
     Checks that every btc-like coin is properly filled out, reports address collisions
@@ -169,20 +240,21 @@ def check(backend_check):
     if backend_check and requests is None:
         raise click.ClickException("You must install requests for backend check")
 
-    defs = coin_defs.get_all()
+    defs = coin_info.get_all()
     all_checks_passed = True
 
     print("Checking BTC-like coins...")
-    if not check_btc(defs["coins"]):
+    if not check_btc(defs.coins):
         all_checks_passed = False
 
     print("Checking support data...")
-    if not check_support(defs, coin_defs.get_support_data()):
+    support_data = coin_info.get_support_data()
+    if not check_support(defs, support_data, fail_missing=check_missing_support):
         all_checks_passed = False
 
     if backend_check:
         print("Checking backend responses...")
-        if not check_backends(defs["coins"]):
+        if not check_backends(defs.coins):
             all_checks_passed = False
 
     if not all_checks_passed:
@@ -196,9 +268,8 @@ def check(backend_check):
 @click.option("-o", "--outfile", type=click.File(mode="w"), default="./coins.json")
 def coins_json(outfile):
     """Generate coins.json for consumption in python-trezor and Connect/Wallet"""
-    defs = coin_defs.get_all()
-    coins = defs["coins"]
-    support_info = coin_defs.support_info(coins)
+    coins = coin_info.get_all().coins
+    support_info = coin_info.support_info(coins)
     by_name = {}
     for coin in coins:
         coin["support"] = support_info[coin["key"]]
@@ -206,6 +277,30 @@ def coins_json(outfile):
 
     with outfile:
         json.dump(by_name, outfile, indent=4, sort_keys=True)
+        outfile.write("\n")
+
+
+@cli.command()
+@click.option("-o", "--outfile", type=click.File(mode="w"), default="./coindefs.json")
+def coindefs(outfile):
+    """Generate signed coin definitions for python-trezor and others
+
+    This is currently unused but should enable us to add new coins without having to
+    update firmware.
+    """
+    coins = coin_info.get_all().coins
+    coindefs = {}
+    for coin in coins:
+        key = coin["key"]
+        icon = Image.open(coin["icon"])
+        ser = serialize_coindef(coindef_from_dict(coin), convert_icon(icon))
+        sig = sign(ser)
+        definition = binascii.hexlify(sig + ser).decode("ascii")
+        coindefs[key] = definition
+
+    with outfile:
+        json.dump(coindefs, outfile, indent=4, sort_keys=True)
+        outfile.write("\n")
 
 
 @cli.command()
@@ -236,10 +331,9 @@ def render(paths):
         else:
             files.append(path)
 
-    defs = coin_defs.get_all()
-    all_coins = sum(defs.values(), [])
-    versions = coin_defs.latest_releases()
-    support_info = coin_defs.support_info(all_coins, erc20_versions=versions)
+    defs = coin_info.get_all()
+    versions = coin_info.latest_releases()
+    support_info = coin_info.support_info(defs, erc20_versions=versions)
 
     # munch dicts - make them attribute-accessable
     for key, value in defs.items():
