@@ -62,4 +62,4 @@ following subcommands:
 List of Python requiremens for all tools in `pip` format. Set up your environment with
 `pip3 install -r requirements.txt`, or `pipenv install -r requirements.txt`.
 
-Python 3 is required, recommended is 3.6 or higher.
+Python 3.6 or higher is required.
