@@ -17,7 +17,7 @@
 _alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
-def encode(data: bytes) -> str:
+def encode(data: bytes, alphabet=_alphabet) -> str:
     """
     Convert bytes to base58 encoded string.
     """
@@ -33,22 +33,22 @@ def encode(data: bytes) -> str:
     result = ""
     while acc > 0:
         acc, mod = divmod(acc, 58)
-        result += _alphabet[mod]
+        result += alphabet[mod]
 
-    return "".join((c for c in reversed(result + _alphabet[0] * (origlen - newlen))))
+    return "".join((c for c in reversed(result + alphabet[0] * (origlen - newlen))))
 
 
-def decode(string: str) -> bytes:
+def decode(string: str, alphabet=_alphabet) -> bytes:
     """
     Convert base58 encoded string to bytes.
     """
     origlen = len(string)
-    string = string.lstrip(_alphabet[0])
+    string = string.lstrip(alphabet[0])
     newlen = len(string)
 
     p, acc = 1, 0
     for c in reversed(string):
-        acc += p * _alphabet.index(c)
+        acc += p * alphabet.index(c)
         p *= 58
 
     result = []
@@ -83,8 +83,12 @@ def decode_check(string: str, digestfunc=sha256d_32) -> bytes:
     Convert base58 encoded string to bytes and verify checksum.
     """
     result = decode(string)
+    return verify_checksum(result, digestfunc)
+
+
+def verify_checksum(data: bytes, digestfunc) -> bytes:
     digestlen = len(digestfunc(b""))
-    result, check = result[:-digestlen], result[-digestlen:]
+    result, check = data[:-digestlen], data[-digestlen:]
 
     if check != digestfunc(result):
         raise ValueError("Invalid checksum")
