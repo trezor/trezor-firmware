@@ -400,7 +400,7 @@ def support_info(coins, erc20_versions=None, skip_missing=False):
             continue
 
         elif not skip_missing:
-            log.warning("support info missing for {}".format(key))
+            log.info("support info missing for {}".format(key))
             support[key] = {}
 
     if erc20_versions:
