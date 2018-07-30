@@ -5,6 +5,7 @@ import time
 import json
 import logging
 import requests
+import sys
 import coin_info
 
 LOG = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ COINMAKETCAP_CACHE = os.path.join(os.path.dirname(__file__), "coinmarketcap.json
 COINMARKETCAP_TICKERS_URL = (
     "https://api.coinmarketcap.com/v2/ticker/?start={}&convert=USD&limit=100"
 )
-COINMARKETCAP_GLOBAL_URL = "https://api.coinmarketcap.com/v2/global"
+COINMARKETCAP_GLOBAL_URL = "https://api.coinmarketcap.com/v2/global/"
 
 
 def coinmarketcap_init():
@@ -292,6 +293,13 @@ def apply_overrides(coins):
 
 
 if __name__ == "__main__":
+    # setup logging
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    root.addHandler(handler)
+
     defs = coin_info.get_all()
     support_info = coin_info.support_info(defs, erc20_versions=VERSIONS)
 
