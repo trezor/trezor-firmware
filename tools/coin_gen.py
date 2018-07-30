@@ -34,6 +34,7 @@ try:
     import ed25519
     from PIL import Image
     from trezorlib import protobuf
+
     CAN_BUILD_DEFS = True
 except ImportError:
     CAN_BUILD_DEFS = False
@@ -59,13 +60,26 @@ def ascii_filter(s):
     return re.sub("[^ -\x7e]", "_", s)
 
 
+def make_support_filter(support_info):
+    def supported_on(device, coins):
+        for coin in coins:
+            if support_info[coin.key].get(device):
+                yield coin
+    return supported_on
+
+
 MAKO_FILTERS = {"c_str": c_str_filter, "ascii": ascii_filter}
 
 
 def render_file(filename, coins, support_info):
     """Opens `filename.j2`, renders the template and stores the result in `filename`."""
     template = mako.template.Template(filename=filename + ".mako")
-    result = template.render(support_info=support_info, **coins, **MAKO_FILTERS)
+    result = template.render(
+        support_info=support_info,
+        supported_on=make_support_filter(support_info),
+        **coins,
+        **MAKO_FILTERS
+    )
     with open(filename, "w") as f:
         f.write(result)
 
@@ -256,11 +270,7 @@ def cli():
     default=False,
     help="Check blockbook/bitcore responses",
 )
-@click.option(
-    "--icons/--no-icons",
-    default=True,
-    help="Check icon files"
-)
+@click.option("--icons/--no-icons", default=True, help="Check icon files")
 def check(missing_support, backend, icons):
     """Validate coin definitions.
 
@@ -343,7 +353,10 @@ def coindefs(outfile):
 
 @cli.command()
 @click.argument("paths", metavar="[path]...", nargs=-1)
-def render(paths):
+@click.option(
+    "--erc20-support/--no-erc20-support", "-e", help="Download ERC20 support info"
+)
+def render(paths, erc20_support):
     """Generate source code from Jinja2 templates.
 
     For every "foo.bar.j2" filename passed, runs the template and
@@ -370,7 +383,10 @@ def render(paths):
             files.append(path)
 
     defs = coin_info.get_all()
-    versions = coin_info.latest_releases()
+    if erc20_support:
+        versions = coin_info.latest_releases()
+    else:
+        versions = None
     support_info = coin_info.support_info(defs, erc20_versions=versions)
 
     # munch dicts - make them attribute-accessible
