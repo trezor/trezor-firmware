@@ -8,6 +8,9 @@
 		Bo-Yin Yang
 */
 
+#ifndef ED25519_DONNA_H
+#define ED25519_DONNA_H
+
 #include "ed25519-donna-portable.h"
 
 #include "curve25519-donna-32bit.h"
@@ -45,3 +48,5 @@ typedef struct ge25519_pniels_t {
 #include "ed25519-donna-32bit-tables.h"
 
 #include "ed25519-donna-impl-base.h"
+
+#endif
