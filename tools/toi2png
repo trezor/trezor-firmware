@@ -25,62 +25,64 @@ def process_grayscale(w, h, data):
 
 def process_image(ifn, ofn):
 
-    data = open(ifn, 'rb').read()
+    data = open(ifn, "rb").read()
 
-    if ifn.endswith('.toif'):
-        if data[:4] != b'TOIf':
-            print('Unknown TOIF header')
+    if ifn.endswith(".toif"):
+        if data[:4] != b"TOIf":
+            print("Unknown TOIF header")
             return 1
-    elif ifn.endswith('.toig'):
-        if data[:4] != b'TOIg':
-            print('Unknown TOIG header')
+    elif ifn.endswith(".toig"):
+        if data[:4] != b"TOIg":
+            print("Unknown TOIG header")
             return 2
     else:
-        print('Unsupported format')
+        print("Unsupported format")
         return 3
     if ofn is None:
-        ofn = '%s.png' % ifn[:-5]
+        ofn = "%s.png" % ifn[:-5]
 
-    w, h = struct.unpack('<HH', data[4:8])
+    w, h = struct.unpack("<HH", data[4:8])
 
-    print('Opened %s ... %d x %d' % (ifn, w, h))
+    print("Opened %s ... %d x %d" % (ifn, w, h))
 
-    l = struct.unpack('<I', data[8:12])[0]
+    l = struct.unpack("<I", data[8:12])[0]
     data = data[12:]
     if len(data) != l:
-        print('Compressed data length mismatch (%d vs %d)' % (len(data), l))
+        print("Compressed data length mismatch (%d vs %d)" % (len(data), l))
         return 4
     data = zlib.decompress(data, -10)
 
-    if ifn.endswith('.toif'):
+    if ifn.endswith(".toif"):
         if len(data) != w * h * 2:
-            print('Uncompressed data length mismatch (%d vs %d)' %
-                  (len(data), w * h * 2))
+            print(
+                "Uncompressed data length mismatch (%d vs %d)" % (len(data), w * h * 2)
+            )
             return 5
         pix = process_rgb(w, h, data)
-        img = Image.frombuffer('RGB', (w, h), pix, 'raw', 'RGB', 0, 1)
+        img = Image.frombuffer("RGB", (w, h), pix, "raw", "RGB", 0, 1)
         img.save(ofn)
-        print('Written %s ...' % ofn)
+        print("Written %s ..." % ofn)
 
-    if ifn.endswith('.toig'):
+    if ifn.endswith(".toig"):
         if len(data) != w * h // 2:
-            print('Uncompressed data length mismatch (%d vs %d)' %
-                  (len(data), w * h // 2))
+            print(
+                "Uncompressed data length mismatch (%d vs %d)" % (len(data), w * h // 2)
+            )
             return 6
         pix = process_grayscale(w, h, data)
-        img = Image.frombuffer('L', (w, h), pix, 'raw', 'L', 0, 1)
+        img = Image.frombuffer("L", (w, h), pix, "raw", "L", 0, 1)
         img.save(ofn)
-        print('Written %s ...' % ofn)
+        print("Written %s ..." % ofn)
 
 
 def main():
     if len(sys.argv) < 2:
-        print('Usage: toi2png image.toi[fg] [output]')
+        print("Usage: toi2png image.toi[fg] [output]")
         return 1
 
     ifn = sys.argv[1]
-    if not ifn.endswith('.toif') and not ifn.endswith('.toig'):
-        print('Must provide TOIF/TOIG file')
+    if not ifn.endswith(".toif") and not ifn.endswith(".toig"):
+        print("Must provide TOIF/TOIG file")
         return 2
 
     ofn = sys.argv[2] if len(sys.argv) > 2 else None

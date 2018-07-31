@@ -3,16 +3,15 @@
 # script used to generate /embed/extmod/modtrezorui/loader.h
 
 import math
-import sys
 
 outer = 60
 inner = 42
 
-with open('loader.h', 'wt') as f:
-    f.write('static const int img_loader_size = %d;\n' % outer)
-    f.write('static const uint16_t img_loader[%d][%d] = {\n' % (outer, outer))
+with open("loader.h", "wt") as f:
+    f.write("static const int img_loader_size = %d;\n" % outer)
+    f.write("static const uint16_t img_loader[%d][%d] = {\n" % (outer, outer))
     for y in range(outer):
-        f.write('    {')
+        f.write("    {")
         for x in range(outer):
             d = math.sqrt((outer - 1 - x) ** 2 + (outer - 1 - y) ** 2)
             c = {}
@@ -33,6 +32,6 @@ with open('loader.h', 'wt') as f:
                 c[i] = max(0, min(int(c[i]), 15))
             a = int(math.atan2((outer - 1 - x), (outer - 1 - y)) * 2 * 249 / math.pi)
             v = (a << 8) | (c[15] << 4) | c[5]
-            f.write('%d,' % v)
-        f.write('},\n')
-    f.write('};\n')
+            f.write("%d," % v)
+        f.write("},\n")
+    f.write("};\n")

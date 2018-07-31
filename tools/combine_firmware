@@ -16,11 +16,11 @@ out = bytearray()
 
 for addr, fn in files:
     addr = int(addr, 16) - offset
-    data = open(fn, 'rb').read()
+    data = open(fn, "rb").read()
     if len(out) < addr:
-        out += b'\x00' * (addr - len(out))
+        out += b"\x00" * (addr - len(out))
     if len(out) != addr:
-        raise Exception('Alignment failed')
+        raise Exception("Alignment failed")
     out += data
 
 sys.stdout.buffer.write(out)

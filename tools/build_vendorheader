@@ -3,58 +3,62 @@ import sys
 import struct
 import binascii
 
+
 # encode vendor name, add length byte and padding to multiple of 4
 def encode_vendor(vname):
     vbin = vname.encode()
-    vbin = struct.pack('<B', len(vbin)) + vbin
-    vbin += b'\0' * (-len(vbin) & 3)
+    vbin = struct.pack("<B", len(vbin)) + vbin
+    vbin += b"\0" * (-len(vbin) & 3)
     return vbin
 
 
 def encode_pubkey(pubkey):
     if len(pubkey) != 64:
-        raise Exception('Wrong public key length')
+        raise Exception("Wrong public key length")
     return binascii.unhexlify(pubkey)
 
 
 def decode_vtrust(vtrust):
     t = 0xFFFF
     for i, b in enumerate(reversed(vtrust)):
-        if b != '.':
+        if b != ".":
             t &= ~(1 << i)
     return t
 
 
 def main():
     if len(sys.argv) < 7:
-        print('Usage build_vendorheader "pubkey1hex:pubkey2hex:..." m version vendortrust vendorname vendorimage.toif vendorheader.bin')
+        print(
+            'Usage build_vendorheader "pubkey1hex:pubkey2hex:..." m version vendortrust vendorname vendorimage.toif vendorheader.bin'
+        )
         return 1
 
-    keys = [encode_pubkey(x) for x in sys.argv[1].split(':')]
+    keys = [encode_pubkey(x) for x in sys.argv[1].split(":")]
     m = int(sys.argv[2])
-    (vmajor, vminor) = [int(x) for x in sys.argv[3].split('.')]
+    (vmajor, vminor) = [int(x) for x in sys.argv[3].split(".")]
     vtrust = decode_vtrust(sys.argv[4])
     vname = sys.argv[5]
     ifn = sys.argv[6]
     ofn = sys.argv[7]
-    if not ifn.endswith('.toif'):
-        print('Must provide TOIF file')
+    if not ifn.endswith(".toif"):
+        print("Must provide TOIF file")
         return 2
 
     expiry = 0
-    vheader = b'TRZV' + \
-        struct.pack('<IIBBBBH', 0, expiry, vmajor, vminor, m, len(keys), vtrust)
-    vheader += 14 * b'\0'
+    vheader = b"TRZV" + struct.pack(
+        "<IIBBBBH", 0, expiry, vmajor, vminor, m, len(keys), vtrust
+    )
+    vheader += 14 * b"\0"
     for k in keys:
         vheader += k
-    vheader += encode_vendor(vname) + open(ifn, 'rb').read()
+    vheader += encode_vendor(vname) + open(ifn, "rb").read()
     padding = 65 + (-len(vheader) - 65) & 511
-    vheader += b'\0' * padding
+    vheader += b"\0" * padding
 
     # put in length
-    vheader = vheader[0:4] + struct.pack('<I', len(vheader)) + vheader[8:]
+    vheader = vheader[0:4] + struct.pack("<I", len(vheader)) + vheader[8:]
 
-    with open(ofn, 'wb') as f:
+    with open(ofn, "wb") as f:
         f.write(vheader)
 
 

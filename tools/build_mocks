@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 
-COMMENT_PREFIX = '/// '
+COMMENT_PREFIX = "/// "
 
 current_indent = 0
 current_class = None
@@ -14,24 +14,24 @@ def split_to_parts(line, mod_desc=None):
     global current_class
     global current_method
 
-    if line.startswith('class '):
-        current_class = line[6:].split('(')[0].strip(':')
+    if line.startswith("class "):
+        current_class = line[6:].split("(")[0].strip(":")
         current_indent = 0
 
         yield (current_package, "\n")
-        yield (current_package, '# ' + mod_desc + "\n")
+        yield (current_package, "# " + mod_desc + "\n")
 
-    elif line.startswith('def '):
-        current_method = line[4:].split('(')[0]
+    elif line.startswith("def "):
+        current_method = line[4:].split("(")[0]
 
         yield (current_package, "\n")
 
         if current_class is None:
-            yield (current_package, '# ' + mod_desc + "\n")
+            yield (current_package, "# " + mod_desc + "\n")
         else:
             current_indent = 4
 
-    line = current_indent * ' ' + line
+    line = current_indent * " " + line
 
     yield (current_package, line)
 
@@ -43,16 +43,16 @@ def store_to_file(dest, parts):
 
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
-            open(os.path.join(dirpath, '__init__.py'), 'w').close()
-            open(os.path.join(dirpath, '.mock-generated'), 'w').close()
+            open(os.path.join(dirpath, "__init__.py"), "w").close()
+            open(os.path.join(dirpath, ".mock-generated"), "w").close()
 
-        filepath = os.path.join(dirpath, filename + '.py')
+        filepath = os.path.join(dirpath, filename + ".py")
 
         if not os.path.exists(filepath):
-            with open(filepath, 'a') as f:
-                f.write('from typing import *\n')
+            with open(filepath, "a") as f:
+                f.write("from typing import *\n")
 
-        with open(filepath, 'a') as f:
+        with open(filepath, "a") as f:
             f.write(line)
 
 
@@ -61,24 +61,23 @@ def build_module(mod_file, dest):
     global current_class
     global current_package
 
-    if not (mod_file.endswith('.h') or mod_file.endswith('.c')):
+    if not (mod_file.endswith(".h") or mod_file.endswith(".c")):
         return
-    if not os.path.basename(mod_file).startswith('mod'):
+    if not os.path.basename(mod_file).startswith("mod"):
         return
 
     current_indent = 0
     current_class = None
-    current_package = os.path.basename(mod_file) \
-        .split('.')[0] \
-        .split('-')[0] \
-        .replace('mod', '')
-    mod_desc = mod_file.replace('../embed/extmod', 'extmod')
+    current_package = (
+        os.path.basename(mod_file).split(".")[0].split("-")[0].replace("mod", "")
+    )
+    mod_desc = mod_file.replace("../embed/extmod", "extmod")
 
     for l in open(mod_file):
         if not l.startswith(COMMENT_PREFIX):
             continue
 
-        l = l[len(COMMENT_PREFIX):]  # .strip()
+        l = l[len(COMMENT_PREFIX) :]  # .strip()
         store_to_file(dest, split_to_parts(l, mod_desc))
 
 
@@ -92,7 +91,7 @@ def build_directory(dir, dest):
 def clear_directory(top_dir):
     print("Clearing up directory", top_dir)
     for root, dirs, files in os.walk(top_dir, topdown=False):
-        if '.mock-generated' not in files:
+        if ".mock-generated" not in files:
             # print("Not a mock directory", root)
             continue
         for name in files:
@@ -108,6 +107,6 @@ def clear_directory(top_dir):
         os.rmdir(root)
 
 
-if __name__ == '__main__':
-    clear_directory('../mocks/generated')
-    build_directory('../embed/extmod', '../mocks/generated')
+if __name__ == "__main__":
+    clear_directory("../mocks/generated")
+    build_directory("../embed/extmod", "../mocks/generated")

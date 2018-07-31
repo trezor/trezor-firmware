@@ -2,43 +2,43 @@
 import json
 
 fields = [
-    'coin_name',
-    'coin_shortcut',
-    'address_type',
-    'address_type_p2sh',
-    'maxfee_kb',
-    'signed_message_header',
-    'xpub_magic',
-    'bech32_prefix',
-    'cashaddr_prefix',
-    'slip44',
-    'segwit',
-    'fork_id',
-    'force_bip143',
-    'version_group_id',
-    'bip115',
-    'curve_name',
+    "coin_name",
+    "coin_shortcut",
+    "address_type",
+    "address_type_p2sh",
+    "maxfee_kb",
+    "signed_message_header",
+    "xpub_magic",
+    "bech32_prefix",
+    "cashaddr_prefix",
+    "slip44",
+    "segwit",
+    "fork_id",
+    "force_bip143",
+    "version_group_id",
+    "bip115",
+    "curve_name",
 ]
 
-support = json.load(open('../../vendor/trezor-common/defs/support.json', 'r'))
-coins = support['trezor2'].keys()
+support = json.load(open("../../vendor/trezor-common/defs/support.json", "r"))
+coins = support["trezor2"].keys()
 
-print('COINS = [')
+print("COINS = [")
 
 for c in coins:
-    print('    CoinInfo(')
-    name = c.replace(' ', '_').lower()
-    if name == 'testnet':
-        name = 'bitcoin_testnet'
-    data = json.load(open('../../vendor/trezor-common/defs/coins/%s.json' % name, 'r'))
+    print("    CoinInfo(")
+    name = c.replace(" ", "_").lower()
+    if name == "testnet":
+        name = "bitcoin_testnet"
+    data = json.load(open("../../vendor/trezor-common/defs/coins/%s.json" % name, "r"))
     for n in fields:
-        if n in ['xpub_magic', 'version_group_id']:
-            v = '0x%08x' % data[n] if data[n] is not None else 'None'
+        if n in ["xpub_magic", "version_group_id"]:
+            v = "0x%08x" % data[n] if data[n] is not None else "None"
         else:
             v = repr(data[n])
-        if n == 'curve_name':
-            v = v.replace('_', '-')
-        print('        %s=%s,' % (n, v))
-    print('    ),')
+        if n == "curve_name":
+            v = v.replace("_", "-")
+        print("        %s=%s," % (n, v))
+    print("    ),")
 
-print(']')
+print("]")

@@ -5,16 +5,13 @@ import Pyro4
 import serpent
 
 PORT = 5001
-indexmap = {
-    'bootloader': 0,
-    'vendorheader': 1,
-    'firmware': 2,
-}
+indexmap = {"bootloader": 0, "vendorheader": 1, "firmware": 2}
 
 
 def get_trezor():
     from trezorlib.client import TrezorClient
     from trezorlib.transport import get_transport
+
     return TrezorClient(get_transport())
 
 
@@ -24,7 +21,6 @@ def get_path(index):
 
 @Pyro4.expose
 class KeyctlProxy(object):
-
     def get_commit(self, index, digest):
         digest = serpent.tobytes(digest)
         path = get_path(index)
@@ -32,41 +28,53 @@ class KeyctlProxy(object):
         while commit is None:
             try:
                 t = get_trezor()
-                print('\n\n\nCommiting to hash %s with path %s:' % (binascii.hexlify(digest).decode(), path))
+                print(
+                    "\n\n\nCommiting to hash %s with path %s:"
+                    % (binascii.hexlify(digest).decode(), path)
+                )
                 commit = t.cosi_commit(t.expand_path(path), digest)
             except Exception as e:
                 print(e)
-                print('Trying again ...')
+                print("Trying again ...")
         pk = commit.pubkey
         R = commit.commitment
-        print('Commitment sent!')
+        print("Commitment sent!")
         return (pk, R)
 
     def get_signature(self, index, digest, global_R, global_pk):
-        digest, global_R, global_pk = serpent.tobytes(digest), serpent.tobytes(global_R), serpent.tobytes(global_pk)
+        digest, global_R, global_pk = (
+            serpent.tobytes(digest),
+            serpent.tobytes(global_R),
+            serpent.tobytes(global_pk),
+        )
         path = get_path(index)
         signature = None
         while signature is None:
             try:
                 t = get_trezor()
-                print('\n\n\nSigning hash %s with path %s:' % (binascii.hexlify(digest).decode(), path))
-                signature = t.cosi_sign(t.expand_path(path), digest, global_R, global_pk)
+                print(
+                    "\n\n\nSigning hash %s with path %s:"
+                    % (binascii.hexlify(digest).decode(), path)
+                )
+                signature = t.cosi_sign(
+                    t.expand_path(path), digest, global_R, global_pk
+                )
             except Exception as e:
                 print(e)
-                print('Trying again ...')
+                print("Trying again ...")
         sig = signature.signature
-        print('Signature sent!')
+        print("Signature sent!")
         return sig
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) > 1:
         ipaddr = sys.argv[1]
     else:
-        print('Usage: keyctl-proxy ipaddress')
+        print("Usage: keyctl-proxy ipaddress")
         sys.exit(1)
     daemon = Pyro4.Daemon(host=ipaddr, port=PORT)
     proxy = KeyctlProxy()
-    uri = daemon.register(proxy, 'keyctl')
+    uri = daemon.register(proxy, "keyctl")
     print('keyctl-proxy running at URI: "%s"' % uri)
     daemon.requestLoop()

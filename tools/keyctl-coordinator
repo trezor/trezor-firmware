@@ -8,23 +8,19 @@ import serpent
 from trezorlib import cosi
 
 PORT = 5001
-indexmap = {
-    'bootloader': 0,
-    'vendorheader': 1,
-    'firmware': 2,
-}
+indexmap = {"bootloader": 0, "vendorheader": 1, "firmware": 2}
 
 
 def header_digest(index, filename):
-    data = open(filename, 'rb').read()
+    data = open(filename, "rb").read()
     z = bytes(65 * [0x00])
-    if index == 'bootloader':
+    if index == "bootloader":
         header = data[:0x03BF] + z
-    elif index == 'vendorheader':
+    elif index == "vendorheader":
         header = data[:-65] + z
-    elif index == 'firmware':
-        vhdrlen = struct.unpack('<I', data[4:8])[0]
-        header = data[vhdrlen:vhdrlen + 0x03BF] + z
+    elif index == "firmware":
+        vhdrlen = struct.unpack("<I", data[4:8])[0]
+        header = data[vhdrlen : vhdrlen + 0x03BF] + z
     else:
         raise ValueError('Unknown index "%s"' % index)
     return pyblake2.blake2s(header).digest()
@@ -35,20 +31,20 @@ def cli():
     pass
 
 
-@cli.command(help='')
-@click.argument('index', type=click.Choice(indexmap.keys()))
-@click.argument('filename')
-@click.argument('participants', nargs=-1)
+@cli.command(help="")
+@click.argument("index", type=click.Choice(indexmap.keys()))
+@click.argument("filename")
+@click.argument("participants", nargs=-1)
 def sign(index, filename, participants):
     # compute header digest
     digest = header_digest(index, filename)
     # create participant proxies
     if len(participants) < 1:
-        raise ValueError('Not enough participants')
-    print('connecting to %d participants:' % len(participants))
+        raise ValueError("Not enough participants")
+    print("connecting to %d participants:" % len(participants))
     proxy = []
     for p in participants:
-        uri = 'PYRO:keyctl@%s:%d' % (p, PORT)
+        uri = "PYRO:keyctl@%s:%d" % (p, PORT)
         proxy.append(Pyro4.Proxy(uri))
     # collect commits
     pks, Rs = [], []
@@ -57,7 +53,7 @@ def sign(index, filename, participants):
         pk, R = serpent.tobytes(pk), serpent.tobytes(R)
         pks.append(pk)
         Rs.append(R)
-        print('collected commit #%d from %s' % (i, p._pyroUri.host))
+        print("collected commit #%d from %s" % (i, p._pyroUri.host))
     # compute global commit
     global_pk = cosi.combine_keys(pks)
     global_R = cosi.combine_keys(Rs)
@@ -67,13 +63,13 @@ def sign(index, filename, participants):
         sig = p.get_signature(index, digest, global_R, global_pk)
         sig = serpent.tobytes(sig)
         sigs.append(sig)
-        print('collected signature #%d from %s' % (i, p._pyroUri.host))
+        print("collected signature #%d from %s" % (i, p._pyroUri.host))
     # compute global signature
     sig = cosi.combine_sig(global_R, sigs)
     cosi.verify(sig, digest, global_pk)
-    print('global signature:')
+    print("global signature:")
     print(binascii.hexlify(sig).decode())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

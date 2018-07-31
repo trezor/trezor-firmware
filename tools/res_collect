@@ -6,20 +6,20 @@ resources = {}
 resources_size = 0
 
 os.chdir(os.path.dirname(__file__))
-os.chdir('../src/')
+os.chdir("../src/")
 
 
 def process_file(name):
-    if name.endswith('.gitignore'):
+    if name.endswith(".gitignore"):
         return
-    if name.endswith('.py'):
+    if name.endswith(".py"):
         return
-    if os.path.basename(name).startswith('.'):
+    if os.path.basename(name).startswith("."):
         return
-    with open(name, 'rb') as f:
+    with open(name, "rb") as f:
         data = f.read()
         resources[name] = data
-        print('processing file %s (%d bytes)' % (name, len(data)))
+        print("processing file %s (%d bytes)" % (name, len(data)))
         global resources_size
         resources_size += len(data)
 
@@ -33,33 +33,35 @@ def process_dir_rec(dir):
             process_dir_rec(path)
 
 
-process_dir_rec('trezor/res/')
-for name in os.listdir('apps/'):
-    path = os.path.join('apps/', name, 'res/')
+process_dir_rec("trezor/res/")
+for name in os.listdir("apps/"):
+    path = os.path.join("apps/", name, "res/")
     if os.path.isdir(path):
         process_dir_rec(path)
 
-resfile = 'trezor/res/resources.py'
+resfile = "trezor/res/resources.py"
 
 bio = io.StringIO()
-bio.write('# fmt: off\n')
-bio.write('resdata = {\n')
+bio.write("# fmt: off\n")
+bio.write("resdata = {\n")
 for k in sorted(resources.keys()):
     bio.write("    '%s': %s,\n" % (k, resources[k]))
-bio.write('}\n')
+bio.write("}\n")
 
 try:
-    with open(resfile, 'r') as f:
+    with open(resfile, "r") as f:
         stale = f.read()
-except:
+except FileNotFoundError:
     stale = None
 
 fresh = bio.getvalue()
 
 if stale != fresh:
-    with open(resfile, 'wt') as f:
+    with open(resfile, "wt") as f:
         f.write(fresh)
-    print('written %s with %d entries (total %d bytes)' %
-          (resfile, len(resources), resources_size))
+    print(
+        "written %s with %d entries (total %d bytes)"
+        % (resfile, len(resources), resources_size)
+    )
 else:
-    print('continuing with %s, no changes detected' % (resfile))
+    print("continuing with %s, no changes detected" % (resfile))
