@@ -37,6 +37,7 @@
 typedef enum {
     HASHER_SHA2,
     HASHER_SHA2D,
+    HASHER_SHA2_RIPEMD,
 
     HASHER_SHA3,
 #if USE_KECCAK
@@ -45,6 +46,7 @@ typedef enum {
 
     HASHER_BLAKE,
     HASHER_BLAKED,
+    HASHER_BLAKE_RIPEMD,
 
     HASHER_GROESTLD_TRUNC, /* Double Groestl512 hasher truncated to 256 bits */
 

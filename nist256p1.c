@@ -58,8 +58,7 @@ const ecdsa_curve nist256p1 = {
 const curve_info nist256p1_info = {
 	.bip32_name = "Nist256p1 seed",
 	.params = &nist256p1,
-	.hasher_bip32 = HASHER_SHA2,
 	.hasher_base58 = HASHER_SHA2D,
 	.hasher_sign = HASHER_SHA2D,
-	.hasher_pubkey = HASHER_SHA2,
+	.hasher_pubkey = HASHER_SHA2_RIPEMD,
 };

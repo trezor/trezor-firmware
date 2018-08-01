@@ -30,8 +30,6 @@
 #include "address.h"
 #include "bignum.h"
 #include "rand.h"
-#include "sha2.h"
-#include "ripemd160.h"
 #include "hmac.h"
 #include "ecdsa.h"
 #include "base58.h"
@@ -878,7 +876,7 @@ void ecdsa_get_pubkeyhash(const uint8_t *pub_key, HasherType hasher_pubkey, uint
 	} else { // expecting compressed format
 		hasher_Raw(hasher_pubkey, pub_key, 33, h);
 	}
-	ripemd160(h, HASHER_DIGEST_LENGTH, pubkeyhash);
+	memcpy(pubkeyhash, h, 20);
 	memzero(h, sizeof(h));
 }
 
@@ -901,14 +899,13 @@ void ecdsa_get_address(const uint8_t *pub_key, uint32_t version, HasherType hash
 
 void ecdsa_get_address_segwit_p2sh_raw(const uint8_t *pub_key, uint32_t version, HasherType hasher_pubkey, uint8_t *addr_raw)
 {
+	uint8_t buf[32 + 2];
+	buf[0] = 0; // version byte
+	buf[1] = 20; // push 20 bytes
+	ecdsa_get_pubkeyhash(pub_key, hasher_pubkey, buf + 2);
 	size_t prefix_len = address_prefix_bytes_len(version);
-	uint8_t digest[32];
-	addr_raw[0] = 0; // version byte
-	addr_raw[1] = 20; // push 20 bytes
-	ecdsa_get_pubkeyhash(pub_key, hasher_pubkey, addr_raw + 2);
-	hasher_Raw(hasher_pubkey, addr_raw, 22, digest);
 	address_write_prefix_bytes(version, addr_raw);
-	ripemd160(digest, 32, addr_raw + prefix_len);
+	hasher_Raw(hasher_pubkey, buf, 22, addr_raw + prefix_len);
 }
 
 void ecdsa_get_address_segwit_p2sh(const uint8_t *pub_key, uint32_t version, HasherType hasher_pubkey, HasherType hasher_base58, char *addr, int addrsize)

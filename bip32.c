@@ -33,7 +33,6 @@
 #include "bip32.h"
 #include "sha2.h"
 #include "sha3.h"
-#include "ripemd160.h"
 #include "base58.h"
 #include "curves.h"
 #include "secp256k1.h"
@@ -56,48 +55,43 @@
 const curve_info ed25519_info = {
 	.bip32_name = "ed25519 seed",
 	.params = NULL,
-	.hasher_bip32 = HASHER_SHA2,
 	.hasher_base58 = HASHER_SHA2D,
 	.hasher_sign = HASHER_SHA2D,
-	.hasher_pubkey = HASHER_SHA2,
+	.hasher_pubkey = HASHER_SHA2_RIPEMD,
 };
 
 const curve_info ed25519_cardano_info = {
 	.bip32_name = "ed25519 cardano seed",
 	.params = NULL,
-	.hasher_bip32 = HASHER_SHA2,
 	.hasher_base58 = HASHER_SHA2D,
 	.hasher_sign = HASHER_SHA2D,
-	.hasher_pubkey = HASHER_SHA2,
+	.hasher_pubkey = HASHER_SHA2_RIPEMD,
 };
 
 const curve_info ed25519_sha3_info = {
 	.bip32_name = "ed25519-sha3 seed",
 	.params = NULL,
-	.hasher_bip32 = HASHER_SHA2,
 	.hasher_base58 = HASHER_SHA2D,
 	.hasher_sign = HASHER_SHA2D,
-	.hasher_pubkey = HASHER_SHA2,
+	.hasher_pubkey = HASHER_SHA2_RIPEMD,
 };
 
 #if USE_KECCAK
 const curve_info ed25519_keccak_info = {
 	.bip32_name = "ed25519-keccak seed",
 	.params = NULL,
-	.hasher_bip32 = HASHER_SHA2,
 	.hasher_base58 = HASHER_SHA2D,
 	.hasher_sign = HASHER_SHA2D,
-	.hasher_pubkey = HASHER_SHA2,
+	.hasher_pubkey = HASHER_SHA2_RIPEMD,
 };
 #endif
 
 const curve_info curve25519_info = {
 	.bip32_name = "curve25519 seed",
 	.params = NULL,
-	.hasher_bip32 = HASHER_SHA2,
 	.hasher_base58 = HASHER_SHA2D,
 	.hasher_sign = HASHER_SHA2D,
-	.hasher_pubkey = HASHER_SHA2,
+	.hasher_pubkey = HASHER_SHA2_RIPEMD,
 };
 
 int hdnode_from_xpub(uint32_t depth, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, const char* curve, HDNode *out)
@@ -194,8 +188,7 @@ uint32_t hdnode_fingerprint(HDNode *node)
 	uint32_t fingerprint;
 
 	hdnode_fill_public_key(node);
-	hasher_Raw(node->curve->hasher_bip32, node->public_key, 33, digest);
-	ripemd160(digest, 32, digest);
+	hasher_Raw(node->curve->hasher_pubkey, node->public_key, 33, digest);
 	fingerprint = ((uint32_t) digest[0] << 24) + (digest[1] << 16) + (digest[2] << 8) + digest[3];
 	memzero(digest, sizeof(digest));
 	return fingerprint;

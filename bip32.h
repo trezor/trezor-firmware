@@ -35,7 +35,6 @@ typedef struct {
 	const char *bip32_name;    // string for generating BIP32 xprv from seed
 	const ecdsa_curve *params; // ecdsa curve parameters, null for ed25519
 
-	HasherType hasher_bip32;
 	HasherType hasher_base58;
 	HasherType hasher_sign;
 	HasherType hasher_pubkey;
