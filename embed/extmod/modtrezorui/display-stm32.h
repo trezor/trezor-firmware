@@ -32,10 +32,25 @@
 #define DISPLAY_MEMORY_PIN   16
 
 #define CMD(X)          (*((__IO uint8_t *)((uint32_t)(DISPLAY_MEMORY_BASE))) = (X))
-#define DATA(X)         (*((__IO uint8_t *)((uint32_t)(DISPLAY_MEMORY_BASE | (1 << DISPLAY_MEMORY_PIN)))) = (X))
+#define ADDR            (*((__IO uint8_t *)((uint32_t)(DISPLAY_MEMORY_BASE | (1 << DISPLAY_MEMORY_PIN)))))
+#define DATA(X)         (ADDR) = (X)
 #define PIXELDATA(X)    DATA((X) >> 8); DATA((X) & 0xFF)
 
 #define LED_PWM_TIM_PERIOD (10000)
+
+static uint32_t __attribute__((unused)) display_identify(void)
+{
+    uint8_t c;
+    uint32_t id = 0;
+
+    CMD(0x04);  // RDDID: Read Display ID
+    c = ADDR; id |= (c << 24);
+    c = ADDR; id |= (c << 16);
+    c = ADDR; id |= (c << 8);
+    c = ADDR; id |= c;
+
+    return id;
+}
 
 static void __attribute__((unused)) display_sleep(void)
 {

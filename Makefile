@@ -93,6 +93,8 @@ cstyle: ## run code style check on low-level C code
 
 build: build_boardloader build_bootloader build_firmware build_prodtest build_unix ## build all
 
+build_embed: build_boardloader build_bootloader build_firmware # build boardloader, bootloader, firmware
+
 build_boardloader: ## build boardloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(BOARDLOADER_BUILD_DIR)/boardloader.bin
 
