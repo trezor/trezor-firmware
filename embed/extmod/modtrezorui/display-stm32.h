@@ -332,9 +332,11 @@ void display_init(void)
 
 void display_refresh(void)
 {
+#if ! DISPLAY_GC9307
     // synchronize with the panel synchronization signal in order to avoid visual tearing effects
     while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) { }
     while (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) { }
+#endif
 }
 
 void display_save(const char *prefix)
