@@ -20,10 +20,14 @@
 #include <string.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include "memory.h"
 
-void flash_lock(void) {}
+void flash_lock(void) {
+	sync();
+}
+
 void flash_unlock(void) {}
 
 void flash_clear_status_flags(void) {}
@@ -131,5 +135,6 @@ void svc_flash_erase_sector(uint16_t sector) {
 uint32_t svc_flash_lock(void) {
 	assert (!flash_locked);
 	flash_locked = true;
+	sync();
 	return 0;
 }
