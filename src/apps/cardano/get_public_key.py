@@ -39,10 +39,10 @@ async def cardano_get_public_key(ctx, msg):
 def _get_public_key(root_node, derivation_path: list):
     _, node = derive_address_and_node(root_node, derivation_path)
 
-    public_key = hexlify(seed.remove_ed25519_prefix(node.public_key())).decode("utf8")
-    chain_code = hexlify(node.chain_code()).decode("utf8")
+    public_key = hexlify(seed.remove_ed25519_prefix(node.public_key())).decode()
+    chain_code = hexlify(node.chain_code()).decode()
     xpub_key = public_key + chain_code
-    root_hd_passphrase = hexlify(_derive_hd_passphrase(root_node)).decode("utf8")
+    root_hd_passphrase = hexlify(_derive_hd_passphrase(root_node)).decode()
 
     node_type = HDNodeType(
         depth=node.depth(),

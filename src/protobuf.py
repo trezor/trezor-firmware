@@ -191,7 +191,7 @@ async def load_message(reader, msg_type):
         elif ftype is UnicodeType:
             fvalue = bytearray(ivalue)
             await reader.areadinto(fvalue)
-            fvalue = str(fvalue, "utf8")
+            fvalue = bytes(fvalue).decode()
         elif issubclass(ftype, MessageType):
             fvalue = await load_message(LimitedReader(reader, ivalue), ftype)
         else:
@@ -247,7 +247,7 @@ async def dump_message(writer, msg):
                 await writer.awrite(svalue)
 
             elif ftype is UnicodeType:
-                bvalue = bytes(svalue, "utf8")
+                bvalue = svalue.encode()
                 await dump_uvarint(writer, len(bvalue))
                 await writer.awrite(bvalue)
 

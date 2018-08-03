@@ -129,8 +129,8 @@ async def _require_confirm_transfer(ctx, recipient, value):
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
-async def _require_confirm_payload(ctx, payload: bytes, encrypt=False):
-    payload = str(payload, "utf-8")
+async def _require_confirm_payload(ctx, payload: bytearray, encrypt=False):
+    payload = bytes(payload).decode()
 
     if len(payload) > 48:
         payload = payload[:48] + ".."

@@ -121,15 +121,15 @@ def _get_asset_data_bytes(msg):
     if msg.type == LiskTransactionType.Transfer:
         # Transfer transaction have optional data field
         if msg.asset.data is not None:
-            return bytes(msg.asset.data, "utf8")
+            return msg.asset.data.encode()
         else:
             return b""
 
     if msg.type == LiskTransactionType.RegisterDelegate:
-        return bytes(msg.asset.delegate.username, "utf8")
+        return msg.asset.delegate.username.encode()
 
     if msg.type == LiskTransactionType.CastVotes:
-        return bytes("".join(msg.asset.votes), "utf8")
+        return ("".join(msg.asset.votes)).encode()
 
     if msg.type == LiskTransactionType.RegisterSecondPassphrase:
         return msg.asset.signature.public_key
@@ -138,7 +138,7 @@ def _get_asset_data_bytes(msg):
         data = b""
         data += ustruct.pack("<b", msg.asset.multisignature.min)
         data += ustruct.pack("<b", msg.asset.multisignature.life_time)
-        data += bytes("".join(msg.asset.multisignature.keys_group), "utf8")
+        data += ("".join(msg.asset.multisignature.keys_group)).encode()
         return data
 
     raise wire.DataError("Invalid transaction type")
