@@ -215,6 +215,7 @@ class Descriptor:
 
         # "from .. import protobuf as p"
         yield self.protobuf_import + " as p"
+        yield ""
 
         fields = [self.parse_field(field) for field in message.field]
 
