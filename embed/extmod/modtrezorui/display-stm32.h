@@ -44,7 +44,8 @@
 
 // ST7789V  => 00 85 85 52
 // GC9307   => 00 00 93 07
-// ILI9341V => 00 00 00 00 (or unspecified)
+// ILI9341V => 00 00 80 00
+// some of the modules return "00 00 00 00", which means the vendor did not set the value
 static uint32_t __attribute__((unused)) display_identify(void)
 {
     volatile uint8_t c;
