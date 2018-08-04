@@ -44,8 +44,7 @@
 
 // ST7789V  => 00 85 85 52
 // GC9307   => 00 00 93 07
-// ILI9341V => 00 00 80 00
-// some of the modules return "00 00 00 00", which means the vendor did not set the value
+// ILI9341V => 00 00 93 41
 static uint32_t __attribute__((unused)) display_identify(void)
 {
     volatile uint8_t c;
@@ -56,6 +55,21 @@ static uint32_t __attribute__((unused)) display_identify(void)
     c = ADDR; id |= (c << 16);  // ID1 - manufacturer ID
     c = ADDR; id |= (c << 8);   // ID2 - module/driver version ID
     c = ADDR; id |= c;          // ID3 - module/drive ID
+
+    // the default RDDID for ILI9341 should be 0x8000.
+    // some display modules return 0x0.
+    // the ILI9341 has an extra id, let's check it here.
+    if ((id != 0x858552U) && (id != 0x9307U)) { // if not ST7789V and not GC9307
+        uint32_t id4 = 0;
+        CMD(0xD3);                   // Read ID4
+        c = ADDR;                    // dummy data - discard
+        c = ADDR; id4 |= (c << 16);  // IC version
+        c = ADDR; id4 |= (c << 8);   // IC model name byte 1
+        c = ADDR; id4 |= c;          // IC model name byte 2
+        if (id4 == 0x9341U) {        // definitely found a ILI9341
+            id = id4;
+        }
+    }
 
     return id;
 }
