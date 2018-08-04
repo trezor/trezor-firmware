@@ -42,35 +42,33 @@
 
 #define LED_PWM_TIM_PERIOD (10000)
 
-// ST7789V  => 00 85 85 52
-// GC9307   => 00 00 93 07
-// ILI9341V => 00 00 93 41
-static uint32_t __attribute__((unused)) display_identify(void)
-{
+#define DISPLAY_ID_ST7789V  0x858552U   // section "9.1.3 RDDID (04h): Read Display ID" of ST7789V datasheet
+#define DISPLAY_ID_GC9307   0x009307U   // section "6.2.1. Read display identification information (04h)" of GC9307 datasheet
+#define DISPLAY_ID_ILI9341V 0x009341U   // section "8.3.23 Read ID4 (D3h)" of ILI9341V datasheet
+
+static uint32_t read_display_id(uint8_t command) {
     volatile uint8_t c;
     uint32_t id = 0;
+    CMD(command);
+    c = ADDR;
+    c = ADDR; id |= (c << 16);
+    c = ADDR; id |= (c << 8);
+    c = ADDR; id |= c;
+    return id;
+}
 
-    CMD(0x04);                  // RDDID: Read Display ID
-    c = ADDR;                   // dummy data - discard
-    c = ADDR; id |= (c << 16);  // ID1 - manufacturer ID
-    c = ADDR; id |= (c << 8);   // ID2 - module/driver version ID
-    c = ADDR; id |= c;          // ID3 - module/drive ID
-
+static uint32_t __attribute__((unused)) display_identify(void)
+{
+    uint32_t id = read_display_id(0x04);    // RDDID: Read Display ID
     // the default RDDID for ILI9341 should be 0x8000.
     // some display modules return 0x0.
     // the ILI9341 has an extra id, let's check it here.
-    if ((id != 0x858552U) && (id != 0x9307U)) { // if not ST7789V and not GC9307
-        uint32_t id4 = 0;
-        CMD(0xD3);                   // Read ID4
-        c = ADDR;                    // dummy data - discard
-        c = ADDR; id4 |= (c << 16);  // IC version
-        c = ADDR; id4 |= (c << 8);   // IC model name byte 1
-        c = ADDR; id4 |= c;          // IC model name byte 2
-        if (id4 == 0x9341U) {        // definitely found a ILI9341
+    if ((id != DISPLAY_ID_ST7789V) && (id != DISPLAY_ID_GC9307)) { // if not ST7789V and not GC9307
+        uint32_t id4 = read_display_id(0xD3);   // Read ID4
+        if (id4 == DISPLAY_ID_ILI9341V) {       // definitely found a ILI9341
             id = id4;
         }
     }
-
     return id;
 }
 
