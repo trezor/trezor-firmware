@@ -105,7 +105,7 @@ static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y
 #endif
 }
 
-void display_set_orientation(int degrees)
+static void display_set_orientation(int degrees)
 {
 #if DISPLAY_ILI9341V || DISPLAY_GC9307 || DISPLAY_ST7789V
     #define RGB (1 << 3)
@@ -154,12 +154,12 @@ void display_set_orientation(int degrees)
     BUFFER_OFFSET.y = BY ? (MAX_DISPLAY_RESY - DISPLAY_RESY) : 0;
 }
 
-void display_set_backlight(int val)
+static void display_set_backlight(int val)
 {
     TIM1->CCR1 = LED_PWM_TIM_PERIOD * val / 255;
 }
 
-void display_hardware_reset(void)
+static void display_hardware_reset(void)
 {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET); // LCD_RST/PC14
     // wait 10 milliseconds. only needs to be low for 10 microseconds.
@@ -324,7 +324,6 @@ void display_init(void)
     CMD(0xF1); DATA(0x59); DATA(0xCF); DATA(0xCF); DATA(0x35); DATA(0x37); DATA(0x8F);
     // SET_GAMMA4
     CMD(0xF3); DATA(0x58); DATA(0xCF); DATA(0xCF); DATA(0x35); DATA(0x37); DATA(0x8F);
-
 #endif
 #if DISPLAY_ST7789V
     CMD(0x35); DATA(0x00); // TEON: Tearing Effect Line On; V-blanking only
