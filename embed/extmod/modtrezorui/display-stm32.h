@@ -34,8 +34,6 @@
 #define DISPLAY_ID_GC9307   0x009307U   // section "6.2.1. Read display identification information (04h)" of GC9307 datasheet
 #define DISPLAY_ID_ILI9341V 0x009341U   // section "8.3.23 Read ID4 (D3h)" of ILI9341V datasheet
 
-static uint32_t DISPLAY_ID = 0x000000U;
-
 static uint32_t read_display_id(uint8_t command) {
     volatile uint8_t c;
     uint32_t id = 0;
@@ -49,7 +47,12 @@ static uint32_t read_display_id(uint8_t command) {
 
 static uint32_t display_identify(void)
 {
-    uint32_t id = read_display_id(0x04);    // RDDID: Read Display ID
+    static uint32_t id = 0x000000U;
+    static char id_set = 0;
+
+    if (id_set) return id;  // return if id has been already set
+
+    id = read_display_id(0x04);    // RDDID: Read Display ID
     // the default RDDID for ILI9341 should be 0x8000.
     // some display modules return 0x0.
     // the ILI9341 has an extra id, let's check it here.
@@ -59,12 +62,14 @@ static uint32_t display_identify(void)
             id = id4;
         }
     }
+    id_set = 1;
     return id;
 }
 
 static void __attribute__((unused)) display_sleep(void)
 {
-    if ((DISPLAY_ID == DISPLAY_ID_ILI9341V) || (DISPLAY_ID == DISPLAY_ID_GC9307) || (DISPLAY_ID == DISPLAY_ID_ST7789V)) {
+    uint32_t id = display_identify();
+    if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) || (id == DISPLAY_ID_ST7789V)) {
         CMD(0x28); // DISPOFF: Display Off
         CMD(0x10); // SLPIN: Sleep in
         HAL_Delay(5); // need to wait 5 milliseconds after "sleep in" before sending any new commands
@@ -73,7 +78,8 @@ static void __attribute__((unused)) display_sleep(void)
 
 static void display_unsleep(void)
 {
-    if ((DISPLAY_ID == DISPLAY_ID_ILI9341V) || (DISPLAY_ID == DISPLAY_ID_GC9307) || (DISPLAY_ID == DISPLAY_ID_ST7789V)) {
+    uint32_t id = display_identify();
+    if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) || (id == DISPLAY_ID_ST7789V)) {
         CMD(0x11); // SLPOUT: Sleep Out
         HAL_Delay(5); // need to wait 5 milliseconds after "sleep out" before sending any new commands
         CMD(0x29); // DISPON: Display On
@@ -88,7 +94,8 @@ static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y
 {
     x0 += BUFFER_OFFSET.x; x1 += BUFFER_OFFSET.x;
     y0 += BUFFER_OFFSET.y; y1 += BUFFER_OFFSET.y;
-    if ((DISPLAY_ID == DISPLAY_ID_ILI9341V) || (DISPLAY_ID == DISPLAY_ID_GC9307) || (DISPLAY_ID == DISPLAY_ID_ST7789V)) {
+    uint32_t id = display_identify();
+    if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) || (id == DISPLAY_ID_ST7789V)) {
         CMD(0x2A); DATA(x0 >> 8); DATA(x0 & 0xFF); DATA(x1 >> 8); DATA(x1 & 0xFF); // column addr set
         CMD(0x2B); DATA(y0 >> 8); DATA(y0 & 0xFF); DATA(y1 >> 8); DATA(y1 & 0xFF); // row addr set
         CMD(0x2C);
@@ -98,7 +105,8 @@ static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y
 static void display_set_orientation(int degrees)
 {
     char BX = 0, BY = 0;
-    if ((DISPLAY_ID == DISPLAY_ID_ILI9341V) || (DISPLAY_ID == DISPLAY_ID_GC9307) || (DISPLAY_ID == DISPLAY_ID_ST7789V)) {
+    uint32_t id = display_identify();
+    if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) || (id == DISPLAY_ID_ST7789V)) {
         #define RGB (1 << 3)
         #define MV  (1 << 5)
         #define MX  (1 << 6)
@@ -111,22 +119,22 @@ static void display_set_orientation(int degrees)
         switch (degrees) {
             case 0:
                 display_command_parameter = 0;
-                BY = (DISPLAY_ID == DISPLAY_ID_GC9307);
+                BY = (id == DISPLAY_ID_GC9307);
                 break;
             case 90:
                 display_command_parameter = MV | MX;
-                BX = (DISPLAY_ID == DISPLAY_ID_GC9307);
+                BX = (id == DISPLAY_ID_GC9307);
                 break;
             case 180:
                 display_command_parameter = MX | MY;
-                BY = (DISPLAY_ID != DISPLAY_ID_GC9307);
+                BY = (id != DISPLAY_ID_GC9307);
                 break;
             case 270:
                 display_command_parameter = MV | MY;
-                BX = (DISPLAY_ID != DISPLAY_ID_GC9307);
+                BX = (id != DISPLAY_ID_GC9307);
                 break;
         }
-        if (DISPLAY_ID == DISPLAY_ID_GC9307) {
+        if (id == DISPLAY_ID_GC9307) {
             display_command_parameter ^= RGB | MY;  // XOR RGB and MY settings
         }
         CMD(0x36); DATA(display_command_parameter);
@@ -151,7 +159,6 @@ static void display_hardware_reset(void)
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET); // LCD_RST/PC14
     HAL_Delay(120); // max wait time for hardware reset is 120 milliseconds (experienced display flakiness using only 5ms wait before sending commands)
     // identify the controller we will communicate with
-    DISPLAY_ID = display_identify();
 }
 
 void display_init(void)
@@ -261,7 +268,8 @@ void display_init(void)
 
     display_hardware_reset();
 
-    if (DISPLAY_ID == DISPLAY_ID_GC9307) {
+    uint32_t id = display_identify();
+    if (id == DISPLAY_ID_GC9307) {
         CMD(0xFE);  // Inter Register Enable1
         CMD(0xEF);  // Inter Register Enable2
         CMD(0x35); DATA(0x00); // TEON: Tearing Effect Line On; V-blanking only
@@ -287,7 +295,7 @@ void display_init(void)
         // SET_GAMMA4
         CMD(0xF3); DATA(0x58); DATA(0xCF); DATA(0xCF); DATA(0x35); DATA(0x37); DATA(0x8F);
     } else
-    if (DISPLAY_ID == DISPLAY_ID_ST7789V) {
+    if (id == DISPLAY_ID_ST7789V) {
         CMD(0x35); DATA(0x00); // TEON: Tearing Effect Line On; V-blanking only
         CMD(0x3A); DATA(0x55); // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits input)
         CMD(0xDF); DATA(0x5A); DATA(0x69); DATA(0x02); DATA(0x01); // CMD2EN: Commands in command table 2 can be executed when EXTC level is Low
@@ -300,7 +308,7 @@ void display_init(void)
         // gamma curve 2
         // CMD(0xE1); DATA(0x70); DATA(0x2C); DATA(0x2E); DATA(0x15); DATA(0x10); DATA(0x09); DATA(0x48); DATA(0x33); DATA(0x53); DATA(0x0B); DATA(0x19); DATA(0x18); DATA(0x20); DATA(0x25);
     } else
-    if (DISPLAY_ID == DISPLAY_ID_ILI9341V) {
+    if (id == DISPLAY_ID_ILI9341V) {
         // most recent manual: https://www.newhavendisplay.com/app_notes/ILI9341.pdf
         CMD(0x35); DATA(0x00); // TEON: Tearing Effect Line On; V-blanking only
         CMD(0x3A); DATA(0x55); // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits input)
@@ -330,7 +338,8 @@ void display_init(void)
 
 void display_refresh(void)
 {
-    if (DISPLAY_ID && (DISPLAY_ID != DISPLAY_ID_GC9307)) {
+    uint32_t id = display_identify();
+    if (id && (id != DISPLAY_ID_GC9307)) {
         // synchronize with the panel synchronization signal in order to avoid visual tearing effects
         while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) { }
         while (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) { }
