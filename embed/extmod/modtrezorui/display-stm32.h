@@ -50,7 +50,7 @@ static uint32_t read_display_id(uint8_t command) {
     volatile uint8_t c;
     uint32_t id = 0;
     CMD(command);
-    c = ADDR;
+    c = ADDR;   // first returned value is a dummy value and should be discarded
     c = ADDR; id |= (c << 16);
     c = ADDR; id |= (c << 8);
     c = ADDR; id |= c;
