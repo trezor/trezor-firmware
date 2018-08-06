@@ -23,6 +23,8 @@
 
 #include "rand.h"
 
+/// package: trezorcrypto.curve25519
+
 /// def generate_secret() -> bytes:
 ///     '''
 ///     Generate secret key.

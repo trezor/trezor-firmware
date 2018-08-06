@@ -73,13 +73,6 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
-        chain_id=20,
-        slip44=2018,
-        shortcut="EOSC",
-        name="EOS Classic",
-        rskip60=False,
-    ),
-    NetworkInfo(
         chain_id=28,
         slip44=1128,
         shortcut="ETSC",
@@ -154,6 +147,13 @@ NETWORKS = [
         slip44=1987,
         shortcut="EGEM",
         name="EtherGem",
+        rskip60=False,
+    ),
+    NetworkInfo(
+        chain_id=2018,
+        slip44=2018,
+        shortcut="EOSC",
+        name="EOS Classic",
         rskip60=False,
     ),
     NetworkInfo(

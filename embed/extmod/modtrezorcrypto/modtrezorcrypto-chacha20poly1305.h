@@ -22,6 +22,8 @@
 #include "chacha20poly1305/rfc7539.h"
 #include "memzero.h"
 
+/// package: trezorcrypto.__init__
+
 /// class ChaCha20Poly1305:
 ///     '''
 ///     ChaCha20Poly1305 context.

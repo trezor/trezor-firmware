@@ -22,6 +22,8 @@
 #include "sha2.h"
 #include "memzero.h"
 
+/// package: trezorcrypto.__init__
+
 /// class Sha512:
 ///     '''
 ///     SHA512 context.

@@ -63,11 +63,20 @@ def format_ordinal(number):
 
 class HashWriter:
     def __init__(self, hashfunc, *hashargs, **hashkwargs):
-        self.ctx = hashfunc(*hashargs, **hashkwargs)
+        if callable(hashfunc):
+            self.ctx = hashfunc(*hashargs, **hashkwargs)
+        else:
+            self.ctx = hashfunc
         self.buf = bytearray(1)  # used in append()
 
     def extend(self, buf: bytearray):
         self.ctx.update(buf)
+
+    def write(self, buf: bytearray):  # alias for extend()
+        self.ctx.update(buf)
+
+    async def awrite(self, buf: bytearray):  # AsyncWriter interface
+        return self.ctx.update(buf)
 
     def append(self, b: int):
         self.buf[0] = b
@@ -75,3 +84,36 @@ class HashWriter:
 
     def get_digest(self) -> bytes:
         return self.ctx.digest()
+
+
+def obj_eq(l, r):
+    """
+    Compares object contents, supports __slots__.
+    """
+    if l.__class__ is not r.__class__:
+        return False
+    if hasattr(l, "__slots__"):
+        return obj_slots_dict(l) == obj_slots_dict(r)
+    else:
+        return l.__dict__ == r.__dict__
+
+
+def obj_repr(o):
+    """
+    Returns a string representation of object, supports __slots__.
+    """
+    if hasattr(o, "__slots__"):
+        d = obj_slots_dict(o)
+    else:
+        d = o.__dict__
+    return "<%s: %s>" % (o.__class__.__name__, d)
+
+
+def obj_slots_dict(o):
+    """
+    Builds dict for o from defined __slots__.
+    """
+    d = {}
+    for f in o.__slots__:
+        d[f] = getattr(o, f, None)
+    return d

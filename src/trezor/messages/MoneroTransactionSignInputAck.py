@@ -4,19 +4,16 @@ import protobuf as p
 
 
 class MoneroTransactionSignInputAck(p.MessageType):
-    MESSAGE_WIRE_TYPE = 518
+    MESSAGE_WIRE_TYPE = 516
 
     def __init__(
         self,
         signature: bytes = None,
-        cout: bytes = None,
     ) -> None:
         self.signature = signature
-        self.cout = cout
 
     @classmethod
     def get_fields(cls):
         return {
             1: ('signature', p.BytesType, 0),
-            2: ('cout', p.BytesType, 0),
         }

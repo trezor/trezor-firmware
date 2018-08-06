@@ -30,6 +30,8 @@ enum AESMode {
     CTR = 0x04,
 };
 
+/// package: trezorcrypto.__init__
+
 /// class AES:
 ///     '''
 ///     AES context.

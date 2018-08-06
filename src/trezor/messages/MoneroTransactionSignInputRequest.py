@@ -6,7 +6,7 @@ from .MoneroTransactionSourceEntry import MoneroTransactionSourceEntry
 
 
 class MoneroTransactionSignInputRequest(p.MessageType):
-    MESSAGE_WIRE_TYPE = 517
+    MESSAGE_WIRE_TYPE = 515
 
     def __init__(
         self,
@@ -15,16 +15,16 @@ class MoneroTransactionSignInputRequest(p.MessageType):
         vini_hmac: bytes = None,
         pseudo_out: bytes = None,
         pseudo_out_hmac: bytes = None,
-        alpha_enc: bytes = None,
-        spend_enc: bytes = None,
+        pseudo_out_alpha: bytes = None,
+        spend_key: bytes = None,
     ) -> None:
         self.src_entr = src_entr
         self.vini = vini
         self.vini_hmac = vini_hmac
         self.pseudo_out = pseudo_out
         self.pseudo_out_hmac = pseudo_out_hmac
-        self.alpha_enc = alpha_enc
-        self.spend_enc = spend_enc
+        self.pseudo_out_alpha = pseudo_out_alpha
+        self.spend_key = spend_key
 
     @classmethod
     def get_fields(cls):
@@ -34,6 +34,6 @@ class MoneroTransactionSignInputRequest(p.MessageType):
             3: ('vini_hmac', p.BytesType, 0),
             4: ('pseudo_out', p.BytesType, 0),
             5: ('pseudo_out_hmac', p.BytesType, 0),
-            6: ('alpha_enc', p.BytesType, 0),
-            7: ('spend_enc', p.BytesType, 0),
+            6: ('pseudo_out_alpha', p.BytesType, 0),
+            7: ('spend_key', p.BytesType, 0),
         }

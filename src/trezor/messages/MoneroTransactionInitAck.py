@@ -16,30 +16,15 @@ class MoneroTransactionInitAck(p.MessageType):
 
     def __init__(
         self,
-        version: int = None,
-        status: int = None,
-        in_memory: bool = None,
         hmacs: List[bytes] = None,
-        many_inputs: bool = None,
-        many_outputs: bool = None,
         rsig_data: MoneroTransactionRsigData = None,
     ) -> None:
-        self.version = version
-        self.status = status
-        self.in_memory = in_memory
         self.hmacs = hmacs if hmacs is not None else []
-        self.many_inputs = many_inputs
-        self.many_outputs = many_outputs
         self.rsig_data = rsig_data
 
     @classmethod
     def get_fields(cls):
         return {
-            1: ('version', p.UVarintType, 0),
-            2: ('status', p.UVarintType, 0),
-            3: ('in_memory', p.BoolType, 0),
-            4: ('hmacs', p.BytesType, p.FLAG_REPEATED),
-            5: ('many_inputs', p.BoolType, 0),
-            6: ('many_outputs', p.BoolType, 0),
-            7: ('rsig_data', MoneroTransactionRsigData, 0),
+            1: ('hmacs', p.BytesType, p.FLAG_REPEATED),
+            2: ('rsig_data', MoneroTransactionRsigData, 0),
         }

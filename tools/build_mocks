@@ -13,6 +13,16 @@ def split_to_parts(line, mod_desc=None):
     global current_indent
     global current_class
     global current_method
+    global current_package
+
+    if line.startswith("package: "):
+        current_package = line[9:].strip()
+        return
+
+    if line.startswith("mock:global"):
+        current_indent = 0
+        current_class = None
+        return
 
     if line.startswith("class "):
         current_class = line[6:].split("(")[0].strip(":")
@@ -38,15 +48,16 @@ def split_to_parts(line, mod_desc=None):
 
 def store_to_file(dest, parts):
     for package, line in parts:
-        dirpath = os.path.abspath(dest)
-        filename = package
+        package = package.replace(".", "/")
+        dirpath = os.path.join(os.path.abspath(dest), os.path.dirname(package))
+        filename = os.path.basename(package) + ".py"
 
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
             open(os.path.join(dirpath, "__init__.py"), "w").close()
             open(os.path.join(dirpath, ".mock-generated"), "w").close()
 
-        filepath = os.path.join(dirpath, filename + ".py")
+        filepath = os.path.join(dirpath, filename)
 
         if not os.path.exists(filepath):
             with open(filepath, "a") as f:
@@ -83,7 +94,9 @@ def build_module(mod_file, dest):
 
 def build_directory(dir, dest):
     print("Building mocks for", dir, "to", dest)
-    for pkg in sorted([x for x in os.listdir(dir) if os.path.isdir(os.path.join(dir, x))]):
+    for pkg in sorted(
+        [x for x in os.listdir(dir) if os.path.isdir(os.path.join(dir, x))]
+    ):
         for mod in sorted(os.listdir(os.path.join(dir, pkg))):
             build_module(os.path.join(dir, pkg, mod), dest)
 

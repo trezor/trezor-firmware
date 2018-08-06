@@ -30,6 +30,10 @@ addons:
     - python3.6-dev
     - python3.6-venv
 
+cache:
+  directories:
+    - $HOME/libsodium
+
 before_install:
     - python3.6 -m ensurepip --user
     - python3.6 -m pip install --user pipenv
@@ -38,6 +42,10 @@ install:
     - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
     - unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d protoc
     - export PATH="$(pwd)/protoc/bin:$PATH"
+    - ./travis-install-libsodium.sh
+    - export PKG_CONFIG_PATH=$HOME/libsodium/lib/pkgconfig:$PKG_CONFIG_PATH
+    - export LD_LIBRARY_PATH=$HOME/libsodium/lib:$LD_LIBRARY_PATH
+    - pipenv run pip install pip==18.0
     - pipenv install
 
 before_script:
@@ -59,6 +67,7 @@ script:
   - test "$GOAL" != "unix" || pipenv run make build_unix_noui
   - test "$GOAL" != "unix" || pipenv run make test
   - test "$GOAL" != "unix" || test "$TREZOR_MODEL" = "1" || pipenv run make test_emu
+  - test "$GOAL" != "unix" || test "$TREZOR_MODEL" = "1" || pipenv run make test_emu_monero
 
 notifications:
   webhooks:

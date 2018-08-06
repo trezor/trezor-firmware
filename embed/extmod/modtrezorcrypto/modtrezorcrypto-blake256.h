@@ -22,6 +22,8 @@
 #include "blake256.h"
 #include "memzero.h"
 
+/// package: trezorcrypto.__init__
+
 /// class Blake256:
 ///     '''
 ///     Blake256 context.

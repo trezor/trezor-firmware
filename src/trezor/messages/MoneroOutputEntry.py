@@ -2,7 +2,7 @@
 # fmt: off
 import protobuf as p
 
-from .MoneroRctKey import MoneroRctKey
+from .MoneroRctKeyPublic import MoneroRctKeyPublic
 
 
 class MoneroOutputEntry(p.MessageType):
@@ -10,7 +10,7 @@ class MoneroOutputEntry(p.MessageType):
     def __init__(
         self,
         idx: int = None,
-        key: MoneroRctKey = None,
+        key: MoneroRctKeyPublic = None,
     ) -> None:
         self.idx = idx
         self.key = key
@@ -19,5 +19,5 @@ class MoneroOutputEntry(p.MessageType):
     def get_fields(cls):
         return {
             1: ('idx', p.UVarintType, 0),
-            2: ('key', MoneroRctKey, 0),
+            2: ('key', MoneroRctKeyPublic, 0),
         }

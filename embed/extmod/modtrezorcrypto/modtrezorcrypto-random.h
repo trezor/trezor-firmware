@@ -23,6 +23,8 @@
 
 #include "rand.h"
 
+/// package: trezorcrypto.random
+
 /// def uniform(n: int) -> int:
 ///     '''
 ///     Compute uniform random number from interval 0 ... n - 1.

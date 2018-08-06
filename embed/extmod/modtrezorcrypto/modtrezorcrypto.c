@@ -48,6 +48,7 @@
 #include "modtrezorcrypto-sha512.h"
 #include "modtrezorcrypto-sha3-256.h"
 #include "modtrezorcrypto-sha3-512.h"
+#include "modtrezorcrypto-monero.h"
 
 STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorcrypto) },
@@ -61,6 +62,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_crc), MP_ROM_PTR(&mod_trezorcrypto_crc_module) },
     { MP_ROM_QSTR(MP_QSTR_curve25519), MP_ROM_PTR(&mod_trezorcrypto_curve25519_module) },
     { MP_ROM_QSTR(MP_QSTR_ed25519), MP_ROM_PTR(&mod_trezorcrypto_ed25519_module) },
+    { MP_ROM_QSTR(MP_QSTR_monero), MP_ROM_PTR(&mod_trezorcrypto_monero_module) },
     { MP_ROM_QSTR(MP_QSTR_nist256p1), MP_ROM_PTR(&mod_trezorcrypto_nist256p1_module) },
     { MP_ROM_QSTR(MP_QSTR_groestl512), MP_ROM_PTR(&mod_trezorcrypto_Groestl512_type) },
     { MP_ROM_QSTR(MP_QSTR_nem), MP_ROM_PTR(&mod_trezorcrypto_nem_module) },

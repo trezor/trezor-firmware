@@ -2,8 +2,6 @@
 # fmt: off
 import protobuf as p
 
-from .MoneroTransactionDestinationEntry import MoneroTransactionDestinationEntry
-
 if __debug__:
     try:
         from typing import List
@@ -15,45 +13,27 @@ class MoneroTransactionRsigData(p.MessageType):
 
     def __init__(
         self,
-        version: int = None,
         rsig_type: int = None,
         offload_type: int = None,
         grouping: List[int] = None,
-        step: int = None,
-        operation: int = None,
-        seed: bytes = None,
         mask: bytes = None,
-        amount: bytes = None,
         rsig: bytes = None,
         rsig_parts: List[bytes] = None,
-        outputs: List[MoneroTransactionDestinationEntry] = None,
     ) -> None:
-        self.version = version
         self.rsig_type = rsig_type
         self.offload_type = offload_type
         self.grouping = grouping if grouping is not None else []
-        self.step = step
-        self.operation = operation
-        self.seed = seed
         self.mask = mask
-        self.amount = amount
         self.rsig = rsig
         self.rsig_parts = rsig_parts if rsig_parts is not None else []
-        self.outputs = outputs if outputs is not None else []
 
     @classmethod
     def get_fields(cls):
         return {
-            1: ('version', p.UVarintType, 0),
-            2: ('rsig_type', p.UVarintType, 0),
-            3: ('offload_type', p.UVarintType, 0),
-            4: ('grouping', p.UVarintType, p.FLAG_REPEATED),
-            5: ('step', p.UVarintType, 0),
-            6: ('operation', p.UVarintType, 0),
-            7: ('seed', p.BytesType, 0),
-            8: ('mask', p.BytesType, 0),
-            9: ('amount', p.BytesType, 0),
-            10: ('rsig', p.BytesType, 0),
-            11: ('rsig_parts', p.BytesType, p.FLAG_REPEATED),
-            12: ('outputs', MoneroTransactionDestinationEntry, p.FLAG_REPEATED),
+            1: ('rsig_type', p.UVarintType, 0),
+            2: ('offload_type', p.UVarintType, 0),
+            3: ('grouping', p.UVarintType, p.FLAG_REPEATED),
+            4: ('mask', p.BytesType, 0),
+            5: ('rsig', p.BytesType, 0),
+            6: ('rsig_parts', p.BytesType, p.FLAG_REPEATED),
         }

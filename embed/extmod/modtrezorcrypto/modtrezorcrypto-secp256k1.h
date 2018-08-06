@@ -22,6 +22,8 @@
 #include "ecdsa.h"
 #include "secp256k1.h"
 
+/// package: trezorcrypto.secp256k1
+
 /// def generate_secret() -> bytes:
 ///     '''
 ///     Generate secret key.

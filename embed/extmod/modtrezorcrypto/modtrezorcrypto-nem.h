@@ -23,6 +23,8 @@
 
 #include "nem.h"
 
+/// package: trezorcrypto.nem
+
 /// def validate_address(address: str, network: int) -> bool:
 ///     '''
 ///     Validate a NEM address
