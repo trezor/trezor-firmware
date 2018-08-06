@@ -150,5 +150,13 @@
     "name": "Musicoin",
     "rskip60": false,
     "url": "https://musicoin.org"
+  },
+  {
+    "chain_id": 1313114,
+    "slip44": 1313114,
+    "shortcut": "ETHO",
+    "name": "Ether-1",
+    "rskip60": false,
+    "url": "https://ether1.org"
   }
 ]
