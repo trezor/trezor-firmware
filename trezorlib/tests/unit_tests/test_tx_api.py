@@ -18,9 +18,11 @@ import os
 
 from trezorlib import coins
 from trezorlib import tx_api
+import binascii
 
 TxApiBitcoin = coins.tx_api['Bitcoin']
 TxApiTestnet = tx_api.TxApiInsight("insight_testnet")
+TxApiZencash = coins.tx_api['Zencash']
 
 tests_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -42,3 +44,13 @@ def test_tx_api_gettx():
 
     TxApiTestnet.get_tx('6f90f3c7cbec2258b0971056ef3fe34128dbde30daa9c0639a898f9977299d54')
     TxApiTestnet.get_tx('d6da21677d7cca5f42fbc7631d062c9ae918a0254f7c6c22de8e8cb7fd5b8236')
+
+
+def test_tx_api_current_block():
+    height = TxApiZencash.current_height()
+    assert height > 347041
+
+
+def test_tx_api_get_block_hash():
+    hash = TxApiZencash.get_block_hash(110000)
+    assert hash == binascii.unhexlify('000000003f5d6ba1385c6cd2d4f836dfc5adf7f98834309ad67e26faef462454')

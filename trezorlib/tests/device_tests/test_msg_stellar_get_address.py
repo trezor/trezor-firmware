@@ -26,7 +26,6 @@ from trezorlib.tools import parse_path
 
 
 @pytest.mark.stellar
-@pytest.mark.xfail(TREZOR_VERSION == 2, reason="T2 support is not yet finished")
 class TestMsgStellarGetAddress(TrezorTest):
 
     def test_stellar_get_address(self):
@@ -47,7 +46,7 @@ class TestMsgStellarGetAddress(TrezorTest):
         address = self.client.stellar_get_address(parse_path(stellar.DEFAULT_BIP32_PATH))
         assert address == 'GDRXE2BQUC3AZNPVFSCEZ76NJ3WWL25FYFK6RGZGIEKWE4SOOHSUJUJ6'
 
-        address = self.client.stellar_get_address(parse_path("m/44h/148h/1h"))
+        address = self.client.stellar_get_address(parse_path("m/44h/148h/1h"), show_display=True)
         assert address == 'GBAW5XGWORWVFE2XTJYDTLDHXTY2Q2MO73HYCGB3XMFMQ562Q2W2GJQX'
 
     def test_stellar_get_address_get_pubkey(self):

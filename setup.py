@@ -69,6 +69,7 @@ class PrebuildCommand(Command):
         try:
             proto_srcs = glob.glob(os.path.join(TREZOR_COMMON, "protob", "*.proto"))
             subprocess.check_call([
+                sys.executable,
                 os.path.join(TREZOR_COMMON, "protob", "pb2py"),
                 "-o", os.path.join(CWD, "trezorlib", "messages"),
                 "-P", "..protobuf",
