@@ -511,13 +511,13 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 	multisig_fp_mismatch = false;
 	next_nonsegwit_input = 0xffffffff;
 
-	tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered);
+	tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, coin->version_group_id);
 
 	if (coin->decred) {
 		to.version |= (DECRED_SERIALIZE_FULL << 16);
 		to.is_decred = true;
 
-		tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered);
+		tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, coin->version_group_id);
 		ti.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
 		ti.is_decred = true;
 	}
@@ -1046,7 +1046,7 @@ void signing_txack(TxAck_TransactionType *tx)
 				signing_abort();
 				return;
 			}
-			tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time, tx->expiry, tx->extra_data_len, coin->curve->hasher_sign, overwintered);
+			tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time, tx->expiry, tx->extra_data_len, coin->curve->hasher_sign, overwintered, coin->version_group_id);
 			if (coin->decred) {
 				tp.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
 				tp.is_decred = true;
@@ -1129,7 +1129,7 @@ void signing_txack(TxAck_TransactionType *tx)
 		case STAGE_REQUEST_4_INPUT:
 			progress = 500 + ((signatures * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION);
 			if (idx2 == 0) {
-				tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered);
+				tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, coin->version_group_id);
 				hasher_Reset(&hasher_check);
 			}
 			// check prevouts and script type
@@ -1328,12 +1328,12 @@ void signing_txack(TxAck_TransactionType *tx)
 			progress = 500 + ((signatures * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION);
 			if (idx1 == 0) {
 				// witness
-				tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered);
+				tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, coin->version_group_id);
 				to.is_decred = true;
 			}
 
 			// witness hash
-			tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered);
+			tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, coin->version_group_id);
 			ti.version |= (DECRED_SERIALIZE_WITNESS_SIGNING << 16);
 			ti.is_decred = true;
 			if (!compile_input_script_sig(&tx->inputs[0])) {

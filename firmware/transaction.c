@@ -467,8 +467,7 @@ uint32_t tx_serialize_header(TxStruct *tx, uint8_t *out)
 	if (tx->overwintered) {
 		uint32_t ver = tx->version | TX_OVERWINTERED;
 		memcpy(out, &ver, 4);
-		uint32_t version_group_id = 0x03c48270;
-		memcpy(out + 4, &version_group_id, 4);
+		memcpy(out + 4, &(tx->version_group_id), 4);
 		r += 4;
 	} else {
 		memcpy(out, &(tx->version), 4);
@@ -486,8 +485,7 @@ uint32_t tx_serialize_header_hash(TxStruct *tx)
 	if (tx->overwintered) {
 		uint32_t ver = tx->version | TX_OVERWINTERED;
 		hasher_Update(&(tx->hasher), (const uint8_t *)&ver, 4);
-		uint32_t version_group_id = 0x03c48270;
-		hasher_Update(&(tx->hasher), (const uint8_t *)&version_group_id, 4);
+		hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->version_group_id), 4);
 		r += 4;
 	} else {
 		hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->version), 4);
@@ -713,7 +711,7 @@ uint32_t tx_serialize_extra_data_hash(TxStruct *tx, const uint8_t *data, uint32_
 	return datalen;
 }
 
-void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t version, uint32_t lock_time, uint32_t expiry, uint32_t extra_data_len, HasherType hasher_sign, bool overwintered)
+void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t version, uint32_t lock_time, uint32_t expiry, uint32_t extra_data_len, HasherType hasher_sign, bool overwintered, uint32_t version_group_id)
 {
 	tx->inputs_len = inputs_len;
 	tx->outputs_len = outputs_len;
@@ -728,6 +726,7 @@ void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len, uint32_t v
 	tx->is_segwit = false;
 	tx->is_decred = false;
 	tx->overwintered = overwintered;
+	tx->version_group_id = version_group_id;
 	hasher_Init(&(tx->hasher), hasher_sign);
 }
 
