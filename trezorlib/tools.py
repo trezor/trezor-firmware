@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import functools
 import hashlib
 import struct
 import unicodedata

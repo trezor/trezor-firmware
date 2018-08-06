@@ -19,9 +19,8 @@ import pytest
 from .common import TrezorTest
 from .conftest import TREZOR_VERSION
 from binascii import hexlify
-from trezorlib.client import CallException
 from trezorlib.ripple import get_address
-from trezorlib.tools import parse_path
+from trezorlib.tools import parse_path, CallException
 
 
 @pytest.mark.ripple

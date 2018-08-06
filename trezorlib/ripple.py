@@ -18,13 +18,10 @@ import base64
 import struct
 
 from . import messages
-from . import tools
-from .client import field
-from .client import expect
+from .tools import expect
 
 
-@field('address')
-@expect(messages.RippleAddress)
+@expect(messages.RippleAddress, field="address")
 def get_address(client, address_n, show_display=False):
     return client.call(
         messages.RippleGetAddress(

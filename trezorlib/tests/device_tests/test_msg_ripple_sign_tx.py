@@ -21,8 +21,7 @@ from .conftest import TREZOR_VERSION
 from binascii import unhexlify
 from trezorlib import messages
 from trezorlib import ripple
-from trezorlib.client import CallException
-from trezorlib.tools import parse_path
+from trezorlib.tools import parse_path, CallException
 
 
 @pytest.mark.ripple

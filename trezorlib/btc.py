@@ -30,19 +30,6 @@ def verify_message(client, coin_name, address, signature, message):
     return isinstance(resp, proto.Success)
 
 
-# @expect(proto.EncryptedMessage)
-# def encrypt_message(client, pubkey, message, display_only, coin_name, n):
-#     if coin_name and n:
-#         return client.call(proto.EncryptMessage(pubkey=pubkey, message=message, display_only=display_only, coin_name=coin_name, address_n=n))
-#     else:
-#         return client.call(proto.EncryptMessage(pubkey=pubkey, message=message, display_only=display_only))
-
-
-# @expect(proto.DecryptedMessage)
-# def decrypt_message(client, n, nonce, message, msg_hmac):
-#    return client.call(proto.DecryptMessage(address_n=n, nonce=nonce, message=message, hmac=msg_hmac))
-
-
 @session
 def sign_tx(client, coin_name, inputs, outputs, version=None, lock_time=None, expiry=None, overwintered=None, debug_processor=None):
     # start = time.time()

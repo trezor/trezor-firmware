@@ -21,8 +21,7 @@ from .conftest import TREZOR_VERSION
 from binascii import hexlify
 from trezorlib import stellar
 from trezorlib import messages
-from trezorlib.client import CallException
-from trezorlib.tools import parse_path
+from trezorlib.tools import parse_path, CallException
 
 
 @pytest.mark.stellar
