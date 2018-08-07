@@ -65,23 +65,26 @@ def make_support_filter(support_info):
         for coin in coins:
             if support_info[coin.key].get(device):
                 yield coin
+
     return supported_on
 
 
 MAKO_FILTERS = {"c_str": c_str_filter, "ascii": ascii_filter}
 
 
-def render_file(filename, coins, support_info):
-    """Opens `filename.j2`, renders the template and stores the result in `filename`."""
-    template = mako.template.Template(filename=filename + ".mako")
+def render_file(src, dst, coins, support_info):
+    """Renders `src` template into `dst`.
+
+    `src` is a filename, `dst` is an open file object.
+    """
+    template = mako.template.Template(filename=src)
     result = template.render(
         support_info=support_info,
         supported_on=make_support_filter(support_info),
         **coins,
         **MAKO_FILTERS
     )
-    with open(filename, "w") as f:
-        f.write(result)
+    dst.write(result)
 
 
 # ====== validation functions ======
@@ -353,35 +356,29 @@ def coindefs(outfile):
 
 @cli.command()
 @click.argument("paths", metavar="[path]...", nargs=-1)
+@click.option("-o", "--outfile", type=click.File("w"), help="Alternate output file")
+@click.option("-v", "--verbose", is_flag=True, help="Print rendered file names")
 @click.option(
     "--erc20-support/--no-erc20-support", "-e", help="Download ERC20 support info"
 )
-def render(paths, erc20_support):
-    """Generate source code from Jinja2 templates.
+def render(paths, outfile, verbose, erc20_support):
+    """Generate source code from Mako templates.
 
-    For every "foo.bar.j2" filename passed, runs the template and
-    saves the result as "foo.bar".
+    For every "foo.bar.mako" filename passed, runs the template and
+    saves the result as "foo.bar". For every directory name passed,
+    processes all ".mako" files found in that directory.
 
-    For every directory name passed, processes all ".j2" files found
-    in that directory.
+    If `-o` is specified, renders a single file into the specified outfile.
 
     If no arguments are given, processes the current directory.
     """
     if not CAN_RENDER:
         raise click.ClickException("Please install 'mako' and 'munch'")
 
-    if not paths:
-        paths = ["."]
+    if outfile and (len(paths) != 1 or not os.path.isfile(paths[0])):
+        raise click.ClickException("Option -o can only be used with single input file")
 
-    files = []
-    for path in paths:
-        if not os.path.exists(path):
-            click.echo("Path {} does not exist".format(path))
-        elif os.path.isdir(path):
-            files += glob.glob(os.path.join(path, "*.mako"))
-        else:
-            files.append(path)
-
+    # prepare defs
     defs = coin_info.get_all()
     if erc20_support:
         versions = coin_info.latest_releases()
@@ -395,17 +392,37 @@ def render(paths, erc20_support):
     for key, value in support_info.items():
         support_info[key] = Munch(value)
 
+    def do_render(src, dst):
+        if verbose:
+            click.echo("Rendering {} => {}".format(src, dst))
+        render_file(src, dst, defs, support_info)
+
+    # single in-out case
+    if outfile:
+        do_render(paths[0], outfile)
+        return
+
+    # find files in directories
+    if not paths:
+        paths = ["."]
+
+    files = []
+    for path in paths:
+        if not os.path.exists(path):
+            click.echo("Path {} does not exist".format(path))
+        elif os.path.isdir(path):
+            files += glob.glob(os.path.join(path, "*.mako"))
+        else:
+            files.append(path)
+
+    # render each file
     for file in files:
         if not file.endswith(".mako"):
             click.echo("File {} does not end with .mako".format(file))
         else:
             target = file[: -len(".mako")]
-            click.echo("Rendering {} => {}".format(file, target))
-            try:
-                render_file(target, defs, support_info)
-            except Exception as e:
-                click.echo("Error occured: {}".format(e))
-                raise
+            with open(target, "w") as dst:
+                do_render(file, dst)
 
 
 if __name__ == "__main__":
