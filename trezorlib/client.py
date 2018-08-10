@@ -456,10 +456,10 @@ class ProtocolMixin(object):
     # Device functionality
     self_test = MovedTo(device.self_test)
 
-    wipe_device = MovedTo(device.wipe_device)
-    recovery_device = MovedTo(device.recovery_device)
-    reset_device = MovedTo(device.reset_device)
-    backup_device = MovedTo(device.backup_device)
+    wipe_device = MovedTo(device.wipe)
+    recovery_device = MovedTo(device.recover)
+    reset_device = MovedTo(device.reset)
+    backup_device = MovedTo(device.backup)
 
     load_device_by_mnemonic = MovedTo(device.load_device_by_mnemonic)
     load_device_by_xprv = MovedTo(device.load_device_by_xprv)

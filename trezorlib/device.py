@@ -86,14 +86,14 @@ def set_u2f_counter(client, u2f_counter):
 
 
 @expect(proto.Success, field="message")
-def wipe_device(client):
+def wipe(client):
     ret = client.call(proto.WipeDevice())
     client.init_device()
     return ret
 
 
 @expect(proto.Success, field="message")
-def recovery_device(client, word_count, passphrase_protection, pin_protection, label, language, type=proto.RecoveryDeviceType.ScrambledWords, expand=False, dry_run=False):
+def recover(client, word_count, passphrase_protection, pin_protection, label, language, type=proto.RecoveryDeviceType.ScrambledWords, expand=False, dry_run=False):
     if client.features.initialized and not dry_run:
         raise RuntimeError("Device is initialized already. Call wipe_device() and try again.")
 
@@ -123,7 +123,7 @@ def recovery_device(client, word_count, passphrase_protection, pin_protection, l
 
 @expect(proto.Success, field="message")
 @session
-def reset_device(client, display_random, strength, passphrase_protection, pin_protection, label, language, u2f_counter=0, skip_backup=False):
+def reset(client, display_random, strength, passphrase_protection, pin_protection, label, language, u2f_counter=0, skip_backup=False):
     if client.features.initialized:
         raise RuntimeError("Device is initialized already. Call wipe_device() and try again.")
 
@@ -149,7 +149,7 @@ def reset_device(client, display_random, strength, passphrase_protection, pin_pr
 
 
 @expect(proto.Success, field="message")
-def backup_device(client):
+def backup(client):
     ret = client.call(proto.BackupDevice())
     return ret
 
