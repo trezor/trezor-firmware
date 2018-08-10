@@ -29,7 +29,7 @@ PUBLIC_KEY = unhexlify(
 
 
 @pytest.mark.lisk
-@pytest.mark.skip_t1
+@pytest.mark.xfail(TREZOR_VERSION == 1, reason="waiting for PR#351")
 class TestMsgLiskSignTx(TrezorTest):
     def test_lisk_sign_tx_send(self):
         self.setup_mnemonic_nopin_nopassphrase()

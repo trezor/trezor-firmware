@@ -24,7 +24,7 @@ from .common import TrezorTest
 
 
 @pytest.mark.lisk
-@pytest.mark.skip_t1
+@pytest.mark.xfail(TREZOR_VERSION == 1, reason="waiting for PR#351")
 class TestMsgLiskVerifymessage(TrezorTest):
     def test_verify(self):
         self.setup_mnemonic_nopin_nopassphrase()
