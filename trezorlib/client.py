@@ -31,7 +31,7 @@ from . import messages as proto
 from . import btc, cosi, device, ethereum, firmware, lisk, misc, nem, stellar
 from . import mapping
 from . import tools
-from .debuglink import DebugLink
+from . import debuglink
 
 if sys.version_info.major < 3:
     raise Exception("Trezorlib does not support Python 2 anymore.")
@@ -273,7 +273,7 @@ class DebugLinkMixin(object):
             self.debug.close()
 
     def set_debuglink(self, debug_transport):
-        self.debug = DebugLink(debug_transport)
+        self.debug = debuglink.DebugLink(debug_transport)
 
     def set_buttonwait(self, secs):
         self.button_wait = secs
@@ -454,15 +454,15 @@ class ProtocolMixin(object):
         return self.call(proto.ClearSession())
 
     # Device functionality
-    self_test = MovedTo(device.self_test)
-
     wipe_device = MovedTo(device.wipe)
     recovery_device = MovedTo(device.recover)
     reset_device = MovedTo(device.reset)
     backup_device = MovedTo(device.backup)
 
-    load_device_by_mnemonic = MovedTo(device.load_device_by_mnemonic)
-    load_device_by_xprv = MovedTo(device.load_device_by_xprv)
+    # debugging
+    load_device_by_mnemonic = MovedTo(debuglink.load_device_by_mnemonic)
+    load_device_by_xprv = MovedTo(debuglink.load_device_by_xprv)
+    self_test = MovedTo(debuglink.self_test)
 
     set_u2f_counter = MovedTo(device.set_u2f_counter)
 
