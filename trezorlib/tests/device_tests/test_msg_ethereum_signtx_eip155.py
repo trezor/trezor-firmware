@@ -20,6 +20,7 @@ import pytest
 from .common import TrezorTest
 from trezorlib import messages as proto
 from trezorlib import ethereum
+from trezorlib.tools import H_
 
 
 @pytest.mark.ethereum
@@ -165,7 +166,7 @@ class TestMsgEthereumSigntxChainId(TrezorTest):
         for ci, n, sv, sr, ss, v, gl, d in VECTORS:
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 self.client,
-                n=[0x80000000 | 44, 0x80000000 | 1, 0x80000000, 0, 0],
+                n=[H_(44), H_(1), H_(0), 0, 0],
                 nonce=n,
                 gas_price=20000000000,
                 gas_limit=gl,

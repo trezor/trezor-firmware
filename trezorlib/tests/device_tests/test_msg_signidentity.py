@@ -21,6 +21,7 @@ from .common import TrezorTest
 
 from trezorlib import messages as proto
 from trezorlib import misc
+from trezorlib.tools import H_
 
 
 def check_path(identity):
@@ -41,7 +42,7 @@ def check_path(identity):
     m.update(uri)
     print('hash:', m.hexdigest())
     (a, b, c, d, _, _, _, _) = struct.unpack('<8I', m.digest())
-    address_n = [0x80000000 | 13, 0x80000000 | a, 0x80000000 | b, 0x80000000 | c, 0x80000000 | d]
+    address_n = [H_(13), H_(a), H_(b), H_(c), H_(d)]
     print('path:', 'm/' + '/'.join([str(x) for x in address_n]))
 
 

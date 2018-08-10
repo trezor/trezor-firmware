@@ -21,7 +21,7 @@ from .common import TrezorTest
 from ..support.ckd_public import deserialize
 from trezorlib import coins
 from trezorlib import messages as proto
-from trezorlib.tools import parse_path, CallException
+from trezorlib.tools import parse_path, CallException, H_
 from trezorlib import btc
 
 TxApiBcash = coins.tx_api['Bcash']
@@ -268,7 +268,7 @@ class TestMsgSigntxBch(TrezorTest):
             if attack_ctr <= 1:
                 return msg
 
-            msg.inputs[0].address_n[2] = 1 + 0x80000000
+            msg.inputs[0].address_n[2] = H_(1)
             return msg
 
         with self.client:
@@ -395,7 +395,7 @@ class TestMsgSigntxBch(TrezorTest):
             prev_index=0,
             script_type=proto.InputScriptType.SPENDMULTISIG,
         )
-        out2.address_n[2] = 1 + 0x80000000
+        out2.address_n[2] = H_(1)
 
         with self.client:
             self.client.set_expected_responses([

@@ -22,7 +22,7 @@ from .conftest import TREZOR_VERSION
 
 from trezorlib import messages as proto
 from trezorlib.tx_api import TxApiInsight
-from trezorlib.tools import parse_path, CallException
+from trezorlib.tools import parse_path, CallException, H_
 from trezorlib import btc
 
 TxApiTestnet = TxApiInsight("insight_testnet")
@@ -673,7 +673,7 @@ class TestMsgSigntx(TrezorTest):
             if not run_attack:
                 return msg
 
-            msg.inputs[0].address_n[2] = 12345 + 0x80000000
+            msg.inputs[0].address_n[2] = H_(12345)
             run_attack = False
             return msg
 

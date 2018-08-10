@@ -19,7 +19,7 @@ from binascii import hexlify, unhexlify
 from .common import TrezorTest
 from ..support.ckd_public import deserialize
 from trezorlib import messages as proto
-from trezorlib.tools import parse_path
+from trezorlib.tools import parse_path, H_
 from trezorlib.tx_api import TxApiInsight
 from trezorlib import btc
 
@@ -284,7 +284,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             # store signature
             inp1.multisig.signatures[0] = signatures1[0]
             # sign with third key
-            inp1.address_n[2] = 0x80000003
+            inp1.address_n[2] = H_(3)
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
@@ -340,7 +340,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             # store signature
             inp1.multisig.signatures[1] = signatures1[0]
             # sign with first key
-            inp1.address_n[2] = 0x80000001
+            inp1.address_n[2] = H_(1)
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
@@ -401,8 +401,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             # store signature
             inp1.multisig.signatures[0] = signatures1[0]
             # sign with third key
-            inp1.address_n[2] = 0x80000003
-            out1.address_n[2] = 0x80000003
+            inp1.address_n[2] = H_(3)
+            out1.address_n[2] = H_(3)
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
@@ -462,8 +462,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             # store signature
             inp1.multisig.signatures[0] = signatures1[0]
             # sign with third key
-            inp1.address_n[2] = 0x80000003
-            out1.address_n[2] = 0x80000003
+            inp1.address_n[2] = H_(3)
+            out1.address_n[2] = H_(3)
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),

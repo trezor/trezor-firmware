@@ -23,7 +23,7 @@ from .common import TrezorTest
 
 from trezorlib import messages as proto
 from trezorlib.tx_api import TxApiInsight
-from trezorlib.tools import parse_path, CallException
+from trezorlib.tools import parse_path, CallException, H_
 from trezorlib import btc
 
 TxApiTestnet = TxApiInsight("insight_testnet")
@@ -146,7 +146,7 @@ class TestMsgSigntxSegwit(TrezorTest):
             # store signature
             inp1.multisig.signatures[0] = signatures1[0]
             # sign with third key
-            inp1.address_n[2] = 0x80000003
+            inp1.address_n[2] = H_(3)
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
@@ -204,7 +204,7 @@ class TestMsgSigntxSegwit(TrezorTest):
             if not run_attack:
                 return msg
 
-            msg.inputs[0].address_n[2] = 12345 + 0x80000000
+            msg.inputs[0].address_n[2] = H_(12345)
             run_attack = False
             return msg
 

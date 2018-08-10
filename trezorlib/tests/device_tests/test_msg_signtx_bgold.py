@@ -21,7 +21,7 @@ from .common import TrezorTest
 from ..support.ckd_public import deserialize
 from trezorlib import coins
 from trezorlib import messages as proto
-from trezorlib.tools import parse_path, CallException
+from trezorlib.tools import parse_path, CallException, H_
 from trezorlib import btc
 
 TxApiBitcoinGold = coins.tx_api["Bgold"]
@@ -143,7 +143,7 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
             if attack_ctr <= 1:
                 return msg
 
-            msg.inputs[0].address_n[2] = 1 + 0x80000000
+            msg.inputs[0].address_n[2] = H_(1)
             return msg
 
         with self.client:
@@ -217,7 +217,7 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
             prev_index=0,
             script_type=proto.InputScriptType.SPENDMULTISIG,
         )
-        out2.address_n[2] = 1 + 0x80000000
+        out2.address_n[2] = H_(1)
 
         with self.client:
             self.client.set_expected_responses([
@@ -351,7 +351,7 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
             # store signature
             inp1.multisig.signatures[0] = signatures1[0]
             # sign with third key
-            inp1.address_n[2] = 0x80000003
+            inp1.address_n[2] = H_(3)
             self.client.set_expected_responses([
                 proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),

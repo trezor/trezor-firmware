@@ -19,7 +19,7 @@ from binascii import hexlify, unhexlify
 from .common import TrezorTest
 from ..support import ckd_public as bip32
 from trezorlib import messages as proto
-from trezorlib.tools import parse_path
+from trezorlib.tools import parse_path, H_
 from trezorlib.tx_api import TxApiInsight
 from trezorlib import btc
 
@@ -98,7 +98,7 @@ class TestMultisigChange(TrezorTest):
 
     # 2N9W4z9AhAPaHghtqVQPbaTAGHdbrhKeBQw
     inp1 = proto.TxInputType(
-        address_n=[45 | 0x80000000, 0, 0, 0],
+        address_n=[H_(45), 0, 0, 0],
         prev_hash=unhexlify('16c6c8471b8db7a628f2b2bb86bfeefae1766463ce8692438c7fd3fce3f43ce5'),
         prev_index=1,
         script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -107,7 +107,7 @@ class TestMultisigChange(TrezorTest):
 
     # 2NDBG6QXQLtnQ3jRGkrqo53BiCeXfQXLdj4
     inp2 = proto.TxInputType(
-        address_n=[45 | 0x80000000, 0, 0, 1],
+        address_n=[H_(45), 0, 0, 1],
         prev_hash=unhexlify('d80c34ee14143a8bf61125102b7ef594118a3796cad670fa8ee15080ae155318'),
         prev_index=0,
         script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -116,7 +116,7 @@ class TestMultisigChange(TrezorTest):
 
     # 2MvwPWfp2XPU3S1cMwgEMKBPUw38VP5SBE4
     inp3 = proto.TxInputType(
-        address_n=[45 | 0x80000000, 0, 0, 1],
+        address_n=[H_(45), 0, 0, 1],
         prev_hash=unhexlify('b0946dc27ba308a749b11afecc2018980af18f79e89ad6b080b58220d856f739'),
         prev_index=0,
         script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -267,7 +267,7 @@ class TestMultisigChange(TrezorTest):
         )
 
         out1 = proto.TxOutputType(
-            address_n=[0x80000000 | 45, 0, 1, 0],
+            address_n=[H_(45), 0, 1, 0],
             multisig=multisig_out1,
             amount=40000000,
             script_type=proto.OutputScriptType.PAYTOMULTISIG
@@ -306,7 +306,7 @@ class TestMultisigChange(TrezorTest):
         )
 
         out2 = proto.TxOutputType(
-            address_n=[0x80000000 | 45, 0, 1, 1],
+            address_n=[H_(45), 0, 1, 1],
             multisig=multisig_out2,
             amount=44000000,
             script_type=proto.OutputScriptType.PAYTOMULTISIG
@@ -339,7 +339,7 @@ class TestMultisigChange(TrezorTest):
         )
 
         out2 = proto.TxOutputType(
-            address_n=[0x80000000 | 45, 0, 1, 0],
+            address_n=[H_(45), 0, 1, 0],
             multisig=multisig_out2,
             amount=44000000,
             script_type=proto.OutputScriptType.PAYTOMULTISIG
@@ -366,7 +366,7 @@ class TestMultisigChange(TrezorTest):
         )
 
         out1 = proto.TxOutputType(
-            address_n=[0x80000000 | 45, 0, 1, 0],
+            address_n=[H_(45), 0, 1, 0],
             multisig=multisig_out1,
             amount=40000000,
             script_type=proto.OutputScriptType.PAYTOMULTISIG
