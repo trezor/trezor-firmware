@@ -34,11 +34,15 @@
 
 #define EMULATOR_FLASH_FILE "emulator.img"
 
+#ifndef RANDOM_DEV_FILE
+#define RANDOM_DEV_FILE "/dev/urandom"
+#endif
+
 uint8_t *emulator_flash_base = NULL;
 
 uint32_t __stack_chk_guard;
 
-static int urandom = -1;
+static int random_fd = -1;
 
 static void setup_urandom(void);
 static void setup_flash(void);
@@ -53,17 +57,21 @@ void __attribute__((noreturn)) shutdown(void) {
 }
 
 void emulatorRandom(void *buffer, size_t size) {
-	ssize_t n = read(urandom, buffer, size);
-	if (n < 0 || ((size_t) n) != size) {
-		perror("Failed to read /dev/urandom");
-		exit(1);
-	}
+	ssize_t n, len = 0;
+	do {
+		n = read(random_fd, (char*)buffer + len, size - len);
+		if (n < 0) {
+			perror("Failed to read " RANDOM_DEV_FILE);
+			exit(1);
+		}
+		len += n;
+	} while (len != (ssize_t)size);
 }
 
 static void setup_urandom(void) {
-	urandom = open("/dev/urandom", O_RDONLY);
-	if (urandom < 0) {
-		perror("Failed to open /dev/urandom");
+	random_fd = open(RANDOM_DEV_FILE, O_RDONLY);
+	if (random_fd < 0) {
+		perror("Failed to open " RANDOM_DEV_FILE);
 		exit(1);
 	}
 }
