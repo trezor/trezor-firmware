@@ -95,7 +95,7 @@ class UdpTransport(Transport):
         try:
             self.socket.sendall(b'PINGPING')
             resp = self.socket.recv(8)
-        except:
+        except Exception:
             pass
         return resp == b'PONGPONG'
 

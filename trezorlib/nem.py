@@ -167,7 +167,7 @@ def create_sign_tx(transaction):
     return msg
 
 
-### Client functions ###
+# ====== Client functions ====== #
 
 
 @expect(proto.NEMAddress, field="address")

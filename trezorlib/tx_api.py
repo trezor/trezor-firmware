@@ -52,7 +52,7 @@ class TxApi(object):
             try:  # looking into cache first
                 j = json.load(open(cache_file), parse_float=str)
                 return j
-            except:
+            except Exception:
                 pass
 
         if not self.url:
@@ -62,12 +62,12 @@ class TxApi(object):
             url = self.get_url(resource, resourceid)
             r = requests.get(url, headers={'User-agent': 'Mozilla/5.0'})
             j = r.json(parse_float=str)
-        except:
+        except Exception:
             raise RuntimeError('URL error: %s' % url)
         if cache_dir and cache_file:
             try:  # saving into cache
                 json.dump(j, open(cache_file, 'w'))
-            except:
+            except Exception:
                 pass
         return j
 

@@ -130,12 +130,12 @@ def validate_firmware(filename):
     try:
         cosi.verify(header.signature, digest, global_pk)
         print("Signature OK")
-    except:
+    except Exception:
         print("Signature FAILED")
         raise
 
 
-### Client functions ###
+# ====== Client functions ====== #
 
 
 @tools.session

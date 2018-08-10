@@ -6,7 +6,7 @@ def int_to_big_endian(value):
     return value.to_bytes((value.bit_length() + 7) // 8, 'big')
 
 
-### Client functions ###
+# ====== Client functions ====== #
 
 
 @expect(proto.EthereumAddress, field="address")

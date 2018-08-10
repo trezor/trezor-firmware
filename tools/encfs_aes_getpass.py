@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import print_function
-
 '''
 Use TREZOR as a hardware key for opening EncFS filesystem!
 
@@ -62,7 +60,7 @@ def choose_device(devices):
     try:
         device_id = int(input())
         return devices[device_id]
-    except:
+    except Exception:
         raise ValueError("Invalid choice, exiting...")
 
 

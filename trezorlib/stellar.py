@@ -338,7 +338,7 @@ def _crc16_checksum(bytes):
     return crc & 0xffff
 
 
-### Client functions ###
+# ====== Client functions ====== #
 
 
 @expect(messages.StellarPublicKey, field="public_key")

@@ -21,7 +21,7 @@ from typing import Iterable, Tuple
 from . import messages
 from .tools import expect
 
-from trezorlib import _ed25519
+from . import _ed25519
 
 # XXX, these could be NewType's, but that would infect users of the cosi module with these types as well.
 # Unsure if we want that.
@@ -90,7 +90,7 @@ def sign_with_privkey(digest: bytes, privkey: Ed25519PrivateKey,
     return Ed25519Signature(_ed25519.encodeint(S))
 
 
-### Client functions ###
+# ====== Client functions ====== #
 
 
 @expect(messages.CosiCommitment)

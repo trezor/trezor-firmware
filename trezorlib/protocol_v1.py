@@ -14,8 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from __future__ import absolute_import
-
 from io import BytesIO
 import logging
 import struct
@@ -79,7 +77,7 @@ class ProtocolV1:
         try:
             headerlen = struct.calcsize('>HL')
             msg_type, datalen = struct.unpack('>HL', chunk[3:3 + headerlen])
-        except:
+        except Exception:
             raise RuntimeError('Cannot parse header')
 
         data = chunk[3 + headerlen:]

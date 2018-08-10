@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from __future__ import print_function
 import sys
 import math
 
@@ -22,7 +21,7 @@ try:
     from PyQt4.QtGui import (QPushButton, QLineEdit, QSizePolicy, QRegExpValidator, QLabel,
                              QApplication, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout)
     from PyQt4.QtCore import QObject, SIGNAL, QRegExp, Qt, QT_VERSION_STR
-except:
+except ImportError:
     from PyQt5.QtWidgets import (QPushButton, QLineEdit, QSizePolicy, QLabel,
                                  QApplication, QWidget, QGridLayout, QVBoxLayout, QHBoxLayout)
     from PyQt5.QtGui import QRegExpValidator

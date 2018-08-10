@@ -96,10 +96,10 @@ def cli(ctx, path, verbose, is_json):
     def get_device():
         try:
             device = get_transport(path, prefix_search=False)
-        except:
+        except Exception:
             try:
                 device = get_transport(path, prefix_search=True)
-            except:
+            except Exception:
                 click.echo("Failed to find a TREZOR device.")
                 if path is not None:
                     click.echo("Using path: {}".format(path))

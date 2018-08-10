@@ -14,8 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from __future__ import absolute_import
-
 from io import BytesIO
 import logging
 import struct
@@ -110,7 +108,7 @@ class ProtocolV2:
         try:
             headerlen = struct.calcsize('>BLLL')
             magic, session, msg_type, datalen = struct.unpack('>BLLL', chunk[:headerlen])
-        except:
+        except Exception:
             raise RuntimeError('Cannot parse header')
         if magic != 0x01:
             raise RuntimeError('Unexpected magic character')
@@ -122,7 +120,7 @@ class ProtocolV2:
         try:
             headerlen = struct.calcsize('>BLL')
             magic, session, sequence = struct.unpack('>BLL', chunk[:headerlen])
-        except:
+        except Exception:
             raise RuntimeError('Cannot parse header')
         if magic != 0x02:
             raise RuntimeError('Unexpected magic characters')
@@ -134,7 +132,7 @@ class ProtocolV2:
         try:
             headerlen = struct.calcsize('>BL')
             magic, session = struct.unpack('>BL', chunk[:headerlen])
-        except:
+        except Exception:
             raise RuntimeError('Cannot parse header')
         if magic != 0x03:
             raise RuntimeError('Unexpected magic character')

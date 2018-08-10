@@ -59,7 +59,7 @@ class BridgeTransport(Transport):
             if r.status_code != 200:
                 raise TransportException('trezord: Could not enumerate devices' + get_error(r))
             return [BridgeTransport(dev) for dev in r.json()]
-        except:
+        except Exception:
             return []
 
     def open(self):
