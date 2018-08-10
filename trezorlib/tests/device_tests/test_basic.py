@@ -17,6 +17,7 @@
 from .common import TrezorTest
 
 from trezorlib import messages
+from trezorlib import device
 
 
 class TestBasic(TrezorTest):
@@ -43,7 +44,7 @@ class TestBasic(TrezorTest):
 
     def test_device_id_different(self):
         id1 = self.client.get_device_id()
-        self.client.wipe_device()
+        device.wipe(self.client)
         id2 = self.client.get_device_id()
 
         # Device ID must be fresh after every reset

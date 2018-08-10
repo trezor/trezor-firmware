@@ -31,7 +31,7 @@ class TestMsgStellarGetPublicKey(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         # GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW
-        response = self.client.stellar_get_public_key(parse_path(stellar.DEFAULT_BIP32_PATH), show_display=True)
+        response = stellar.get_public_key(self.client, parse_path(stellar.DEFAULT_BIP32_PATH), show_display=True)
         assert hexlify(response) == b'15d648bfe4d36f196cfb5735ffd8ca54cd4b8233f743f22449de7cf301cdb469'
         assert stellar.address_from_public_key(response) == 'GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW'
 
@@ -39,7 +39,7 @@ class TestMsgStellarGetPublicKey(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         with pytest.raises(CallException) as exc:
-            self.client.stellar_get_public_key(parse_path('m/0/1'))
+            stellar.get_public_key(self.client, parse_path('m/0/1'))
 
         if TREZOR_VERSION == 1:
             assert exc.value.args[0] == messages.FailureType.ProcessError

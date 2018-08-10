@@ -21,6 +21,7 @@ from .common import TrezorTest
 from ..support import ckd_public as bip32
 from trezorlib import messages as proto
 from trezorlib.tools import CallException
+from trezorlib import btc
 
 TXHASH_c6091a = unhexlify('c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52')
 
@@ -101,7 +102,7 @@ class TestMultisig(TrezorTest):
             ])
 
             # Now we have first signature
-            (signatures1, _) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
+            (signatures1, _) = btc.sign_tx(self.client, 'Bitcoin', [inp1, ], [out1, ])
 
         assert hexlify(signatures1[0]) == b'3045022100985cc1ba316d140eb4b2d4028d8cd1c451f87bff8ff679858732e516ad04cd3402207af6edda99972af0baa7702a3b7448517c8242e7bca669f6861771cdd16ee058'
 
@@ -142,7 +143,7 @@ class TestMultisig(TrezorTest):
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
                 proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
             ])
-            (signatures2, serialized_tx) = self.client.sign_tx('Bitcoin', [inp3, ], [out1, ])
+            (signatures2, serialized_tx) = btc.sign_tx(self.client, 'Bitcoin', [inp3, ], [out1, ])
 
         assert hexlify(signatures2[0]) == b'3045022100f5428fe0531b3095675b40d87cab607ee036fac823b22e8dcec35b65aff6e52b022032129b4577ff923d321a1c70db5a6cec5bcc142cb2c51901af8b989cced23e0d'
 
@@ -197,7 +198,7 @@ class TestMultisig(TrezorTest):
             )
 
             with self.client:
-                (sig, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
+                (sig, serialized_tx) = btc.sign_tx(self.client, 'Bitcoin', [inp1, ], [out1, ])
                 signatures[x] = sig[0]
 
         # Accepted as tx id dd320786d1f58c095be0509dc56b277b6de8f2fb5517f519c6e6708414e3300b
@@ -248,7 +249,7 @@ class TestMultisig(TrezorTest):
         )
 
         with pytest.raises(CallException) as exc:
-            self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
+            btc.sign_tx(self.client, 'Bitcoin', [inp1, ], [out1, ])
 
         assert exc.value.args[0] == proto.FailureType.DataError
         assert exc.value.args[1].endswith('Pubkey not found in multisig script')

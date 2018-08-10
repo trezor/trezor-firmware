@@ -30,7 +30,7 @@ class TestMsgNEMSignTxMultisig(TrezorTest):
     def test_nem_signtx_aggregate_modification(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        tx = self.client.nem_sign_tx(parse_path("m/44'/1'/0'/0'/0'"), {
+        tx = nem.sign_tx(self.client, parse_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 74649215,
             "fee": 2000000,
             "type": nem.TYPE_AGGREGATE_MODIFICATION,
@@ -54,7 +54,7 @@ class TestMsgNEMSignTxMultisig(TrezorTest):
     def test_nem_signtx_multisig(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        tx = self.client.nem_sign_tx(parse_path("m/44'/1'/0'/0'/0'"), {
+        tx = nem.sign_tx(self.client, parse_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 1,
             "fee": 10000,
             "type": nem.TYPE_MULTISIG,
@@ -79,7 +79,7 @@ class TestMsgNEMSignTxMultisig(TrezorTest):
         assert hexlify(tx.data) == b'04100000010000980100000020000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b40620841027000000000000ff5f74049900000001010000010000980200000020000000c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f87844983a000000000000320901002800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a80841e000000000025000000010000001d000000746573745f6e656d5f7472616e73616374696f6e5f7472616e73666572'
         assert hexlify(tx.signature) == b'0cab2fddf2f02b5d7201675b9a71869292fe25ed33a366c7d2cbea7676fed491faaa03310079b7e17884b6ba2e3ea21c4f728d1cca8f190b8288207f6514820a'
 
-        tx = self.client.nem_sign_tx(parse_path("m/44'/1'/0'/0'/0'"), {
+        tx = nem.sign_tx(self.client, parse_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 74649215,
             "fee": 150,
             "type": nem.TYPE_MULTISIG,
@@ -107,7 +107,7 @@ class TestMsgNEMSignTxMultisig(TrezorTest):
     def test_nem_signtx_multisig_signer(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        tx = self.client.nem_sign_tx(parse_path("m/44'/1'/0'/0'/0'"), {
+        tx = nem.sign_tx(self.client, parse_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 333,
             "fee": 200,
             "type": nem.TYPE_MULTISIG_SIGNATURE,
@@ -132,7 +132,7 @@ class TestMsgNEMSignTxMultisig(TrezorTest):
         assert hexlify(tx.data) == b'02100000010000984d01000020000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b4062084c800000000000000bc010000240000002000000087923cd4805f3babe6b5af9cbb2b08be4458e39531618aed73c911f160c8e38528000000544444324354364c514c49595135364b49584933454e544d36454b3344343450354b5a50464d4b32'
         assert hexlify(tx.signature) == b'286358a16ae545bff798feab93a713440c7c2f236d52ac0e995669d17a1915b0903667c97fa04418eccb42333cba95b19bccc8ac1faa8224dcfaeb41890ae807'
 
-        tx = self.client.nem_sign_tx(parse_path("m/44'/1'/0'/0'/0'"), {
+        tx = nem.sign_tx(self.client, parse_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 900000,
             "fee": 200000,
             "type": nem.TYPE_MULTISIG_SIGNATURE,

@@ -21,6 +21,7 @@ from .common import TrezorTest
 from .conftest import TREZOR_VERSION
 from trezorlib import messages as proto
 from trezorlib.tools import CallException
+from trezorlib import btc
 
 TXHASH_d5f65e = unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
 
@@ -71,7 +72,7 @@ class TestOpReturn(TrezorTest):
                 proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=1)),
                 proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
             ])
-            (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, out2])
+            (signatures, serialized_tx) = btc.sign_tx(self.client, 'Bitcoin', [inp1, ], [out1, out2])
 
         assert hexlify(serialized_tx) == b'010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006a4730440220187b7b9c340a32fc8445418ad11fb3827d2e8bac7d730e1c9ad800353e7ba62f02206c0c5820ba8882c82923a39aee8d36d6d32e13daed73f7a3d6199de5f8e7ddfd0121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0260cc0500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000000000001c6a1a74657374206f6620746865206f705f72657475726e206461746100000000'
 
@@ -106,7 +107,7 @@ class TestOpReturn(TrezorTest):
             ])
 
             with pytest.raises(CallException) as exc:
-                self.client.sign_tx('Bitcoin', [inp1], [out1])
+                btc.sign_tx(self.client, 'Bitcoin', [inp1], [out1])
 
             if TREZOR_VERSION == 1:
                 assert exc.value.args[0] == proto.FailureType.ProcessError

@@ -31,7 +31,7 @@ class TestMsgNEMSignTxOther(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         with self.client:
-            tx = self.client.nem_sign_tx(parse_path("m/44'/1'/0'/0'/0'"), {
+            tx = nem.sign_tx(self.client, parse_path("m/44'/1'/0'/0'/0'"), {
                 "timeStamp": 12349215,
                 "fee": 9900,
                 "type": nem.TYPE_IMPORTANCE_TRANSFER,
@@ -52,7 +52,7 @@ class TestMsgNEMSignTxOther(TrezorTest):
 
         self.setup_mnemonic_nopin_nopassphrase()
 
-        tx = self.client.nem_sign_tx(parse_path("m/44'/1'/0'/0'/0'"), {
+        tx = nem.sign_tx(self.client, parse_path("m/44'/1'/0'/0'/0'"), {
             "timeStamp": 74649215,
             "fee": 2000000,
             "type": nem.TYPE_PROVISION_NAMESPACE,

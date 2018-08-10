@@ -21,6 +21,7 @@ from .conftest import TREZOR_VERSION
 from binascii import hexlify
 from trezorlib.ripple import get_address
 from trezorlib.tools import parse_path, CallException
+from trezorlib import debuglink
 
 
 @pytest.mark.ripple
@@ -41,7 +42,8 @@ class TestMsgRippleGetAddress(TrezorTest):
 
     def test_ripple_get_address_other(self):
         # data from https://github.com/you21979/node-ripple-bip32/blob/master/test/test.js
-        self.client.load_device_by_mnemonic(
+        debuglink.load_device_by_mnemonic(
+            self.client,
             mnemonic='armed bundle pudding lazy strategy impulse where identify submit weekend physical antenna flight social acoustic absurd whip snack decide blur unfold fiction pumpkin athlete',
             pin='',
             passphrase_protection=False,

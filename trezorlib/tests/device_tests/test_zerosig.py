@@ -18,6 +18,7 @@ from binascii import unhexlify
 
 from .common import TrezorTest
 from trezorlib import messages as proto
+from trezorlib import btc
 
 
 TXHASH_d5f65e = unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
@@ -75,7 +76,7 @@ class TestZerosig(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
+        (signatures, serialized_tx) = btc.sign_tx(self.client, 'Bitcoin', [inp1, ], [out1, ])
         siglen = serialized_tx[44]
 
         # TREZOR must strip leading zero from signature
@@ -98,7 +99,7 @@ class TestZerosig(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
+        (signatures, serialized_tx) = btc.sign_tx(self.client, 'Bitcoin', [inp1, ], [out1, ])
         siglen = serialized_tx[44]
 
         # TREZOR must strip leading zero from signature

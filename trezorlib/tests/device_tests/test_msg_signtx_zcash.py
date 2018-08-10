@@ -22,6 +22,7 @@ from .common import TrezorTest
 from trezorlib import coins
 from trezorlib import messages as proto
 from trezorlib.tools import parse_path
+from trezorlib import btc
 
 TxApiZcashTestnet = coins.tx_api['Zcash Testnet']
 
@@ -62,7 +63,7 @@ class TestMsgSigntxZcash(TrezorTest):
                 proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
             ])
 
-            (signatures, serialized_tx) = self.client.sign_tx('Zcash Testnet', [inp1, ], [out1, ], version=3, overwintered=True)
+            (signatures, serialized_tx) = btc.sign_tx(self.client, 'Zcash Testnet', [inp1, ], [out1, ], version=3, overwintered=True)
 
         # Accepted by network: tx eda9b772c47f0c29310759960e0081c98707aa67a0a2738bcc71439fcf360675
         assert hexlify(serialized_tx) == b'030000807082c40301dc754d63eff4698ee321476872519c53f14cfe58c9425c7ee464c206461ef5aa010000006a47304402207e45f303b4e42be824513855eb21653e1d2749cd94dcd0f0613d3f85d4efd1e20220699ffbdbcad889af7ede5ce9febf7a5ef8f5619b2464824529974c400cffaebc0121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffff016c9be111000000001976a9145b157a678a10021243307e4bb58f36375aa80e1088ac000000000000000000'

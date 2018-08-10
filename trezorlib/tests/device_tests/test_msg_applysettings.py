@@ -20,6 +20,7 @@ from .common import TrezorTest
 
 import time
 from trezorlib import messages as proto
+from trezorlib import device
 
 
 class TestMsgApplysettings(TrezorTest):
@@ -35,7 +36,7 @@ class TestMsgApplysettings(TrezorTest):
                                                 proto.Features()])
             if self.client.features.major_version >= 2:
                 self.client.expected_responses.pop(0)  # skip PinMatrixRequest
-            self.client.apply_settings(label='new label')
+            device.apply_settings(self.client, label='new label')
 
         assert self.client.features.label == 'new label'
 
@@ -49,7 +50,7 @@ class TestMsgApplysettings(TrezorTest):
                                                 proto.ButtonRequest(),
                                                 proto.Success(),
                                                 proto.Features()])
-            self.client.apply_settings(language='nonexistent')
+            device.apply_settings(self.client, language='nonexistent')
 
         assert self.client.features.language == 'english'
 
@@ -65,7 +66,7 @@ class TestMsgApplysettings(TrezorTest):
                                                 proto.Features()])
             if self.client.features.major_version >= 2:
                 self.client.expected_responses.pop(0)  # skip PinMatrixRequest
-            self.client.apply_settings(use_passphrase=True)
+            device.apply_settings(self.client, use_passphrase=True)
 
         assert self.client.features.passphrase_protection is True
 
@@ -73,7 +74,7 @@ class TestMsgApplysettings(TrezorTest):
             self.client.set_expected_responses([proto.ButtonRequest(),
                                                 proto.Success(),
                                                 proto.Features()])
-            self.client.apply_settings(use_passphrase=False)
+            device.apply_settings(self.client, use_passphrase=False)
 
         assert self.client.features.passphrase_protection is False
 
@@ -81,7 +82,7 @@ class TestMsgApplysettings(TrezorTest):
             self.client.set_expected_responses([proto.ButtonRequest(),
                                                 proto.Success(),
                                                 proto.Features()])
-            self.client.apply_settings(use_passphrase=True)
+            device.apply_settings(self.client, use_passphrase=True)
 
         assert self.client.features.passphrase_protection is True
 
@@ -96,7 +97,7 @@ class TestMsgApplysettings(TrezorTest):
                                                 proto.ButtonRequest(),
                                                 proto.Success(),
                                                 proto.Features()])
-            self.client.apply_settings(homescreen=img)
+            device.apply_settings(self.client, homescreen=img)
 
     @pytest.mark.skip_t2
     def test_apply_auto_lock_delay(self):
@@ -107,7 +108,7 @@ class TestMsgApplysettings(TrezorTest):
                                                 proto.ButtonRequest(),
                                                 proto.Success(),
                                                 proto.Features()])
-            self.client.apply_settings(auto_lock_delay_ms=int(10e3))  # 10 secs
+            device.apply_settings(self.client, auto_lock_delay_ms=int(10e3))  # 10 secs
 
         time.sleep(0.1)  # sleep less than auto-lock delay
         with self.client:
@@ -135,7 +136,7 @@ class TestMsgApplysettings(TrezorTest):
                                                 proto.Success(),
                                                 proto.Features()])
             # Note: the actual delay will be 10 secs (see above).
-            self.client.apply_settings(auto_lock_delay_ms=int(1e3))
+            device.apply_settings(self.client, auto_lock_delay_ms=int(1e3))
 
         time.sleep(0.1)  # sleep less than auto-lock delay
         with self.client:

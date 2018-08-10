@@ -17,15 +17,16 @@
 from .common import TrezorTest
 from ..support import ckd_public as bip32
 from trezorlib import messages as proto
+from trezorlib import btc
 
 
 class TestMsgGetaddressShow(TrezorTest):
 
     def test_show(self):
         self.setup_mnemonic_nopin_nopassphrase()
-        assert self.client.get_address('Bitcoin', [1], show_display=True) == '1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb'
-        assert self.client.get_address('Bitcoin', [2], show_display=True) == '15AeAhtNJNKyowK8qPHwgpXkhsokzLtUpG'
-        assert self.client.get_address('Bitcoin', [3], show_display=True) == '1CmzyJp9w3NafXMSEFH4SLYUPAVCSUrrJ5'
+        assert btc.get_address(self.client, 'Bitcoin', [1], show_display=True) == '1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb'
+        assert btc.get_address(self.client, 'Bitcoin', [2], show_display=True) == '15AeAhtNJNKyowK8qPHwgpXkhsokzLtUpG'
+        assert btc.get_address(self.client, 'Bitcoin', [3], show_display=True) == '1CmzyJp9w3NafXMSEFH4SLYUPAVCSUrrJ5'
 
     def test_show_multisig_3(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -42,7 +43,7 @@ class TestMsgGetaddressShow(TrezorTest):
         )
 
         for i in [1, 2, 3]:
-            assert self.client.get_address('Bitcoin', [i], show_display=True, multisig=multisig) == '3E7GDtuHqnqPmDgwH59pVC7AvySiSkbibz'
+            assert btc.get_address(self.client, 'Bitcoin', [i], show_display=True, multisig=multisig) == '3E7GDtuHqnqPmDgwH59pVC7AvySiSkbibz'
 
     def test_show_multisig_15(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -60,4 +61,4 @@ class TestMsgGetaddressShow(TrezorTest):
         )
 
         for i in range(15):
-            assert self.client.get_address('Bitcoin', [i], show_display=True, multisig=multisig) == '3QaKF8zobqcqY8aS6nxCD5ZYdiRfL3RCmU'
+            assert btc.get_address(self.client, 'Bitcoin', [i], show_display=True, multisig=multisig) == '3QaKF8zobqcqY8aS6nxCD5ZYdiRfL3RCmU'

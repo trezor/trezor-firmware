@@ -19,6 +19,7 @@ import pytest
 
 from .common import TrezorTest
 from trezorlib import messages as proto
+from trezorlib import ethereum
 
 
 @pytest.mark.ethereum
@@ -43,7 +44,8 @@ class TestMsgEthereumSigntx(TrezorTest):
             data.extend(unhexlify('000000000000000000000000000000000000000000000000000000000bebc200'))
             # 200 000 000 in dec, divisibility of ADT = 9, trezor1 displays 0.2 ADT, Trezor T 200 000 000 Wei ADT
 
-            sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+            sig_v, sig_r, sig_s = ethereum.sign_tx(
+                self.client,
                 n=[0, 0],
                 nonce=0,
                 gas_price=20,
@@ -78,7 +80,8 @@ class TestMsgEthereumSigntx(TrezorTest):
             data.extend(unhexlify('0000000000000000000000000000000000000000000000000000000000000123'))
             # since this token is unknown trezor should display "unknown token value"
 
-            sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+            sig_v, sig_r, sig_s = ethereum.sign_tx(
+                self.client,
                 n=[0, 0],
                 nonce=0,
                 gas_price=20,
@@ -104,7 +107,8 @@ class TestMsgEthereumSigntx(TrezorTest):
                 proto.EthereumTxRequest(data_length=None),  # v,r,s checked with assert
             ])
 
-            sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+            sig_v, sig_r, sig_s = ethereum.sign_tx(
+                self.client,
                 n=[0, 0],
                 nonce=0,
                 gas_price=20,
@@ -123,7 +127,8 @@ class TestMsgEthereumSigntx(TrezorTest):
                 proto.EthereumTxRequest(data_length=None),
             ])
 
-            sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+            sig_v, sig_r, sig_s = ethereum.sign_tx(
+                self.client,
                 n=[0, 0],
                 nonce=123456,
                 gas_price=20000,
@@ -145,7 +150,8 @@ class TestMsgEthereumSigntx(TrezorTest):
                 proto.EthereumTxRequest(data_length=None),
             ])
 
-            sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+            sig_v, sig_r, sig_s = ethereum.sign_tx(
+                self.client,
                 n=[0, 0],
                 nonce=0,
                 gas_price=20,
@@ -169,7 +175,8 @@ class TestMsgEthereumSigntx(TrezorTest):
                 proto.EthereumTxRequest(),
             ])
 
-            sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+            sig_v, sig_r, sig_s = ethereum.sign_tx(
+                self.client,
                 n=[0, 0],
                 nonce=123456,
                 gas_price=20000,
@@ -196,7 +203,8 @@ class TestMsgEthereumSigntx(TrezorTest):
                 proto.EthereumTxRequest(),
             ])
 
-            sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+            sig_v, sig_r, sig_s = ethereum.sign_tx(
+                self.client,
                 n=[0, 0],
                 nonce=0,
                 gas_price=20000,
@@ -213,7 +221,8 @@ class TestMsgEthereumSigntx(TrezorTest):
 
         # contract creation without data should fail.
         with pytest.raises(Exception):
-            self.client.ethereum_sign_tx(
+            ethereum.sign_tx(
+                self.client,
                 n=[0, 0],
                 nonce=123456,
                 gas_price=20000,
@@ -234,7 +243,8 @@ class TestMsgEthereumSigntx(TrezorTest):
                 proto.EthereumTxRequest(),
             ])
 
-            sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
+            sig_v, sig_r, sig_s = ethereum.sign_tx(
+                self.client,
                 n=[0, 0],
                 nonce=0,
                 gas_price=20000,
@@ -249,7 +259,8 @@ class TestMsgEthereumSigntx(TrezorTest):
     def test_ethereum_sanity_checks(self):
         # gas overflow
         with pytest.raises(Exception):
-            self.client.ethereum_sign_tx(
+            ethereum.sign_tx(
+                self.client,
                 n=[0, 0],
                 nonce=123456,
                 gas_price=0xffffffffffffffffffffffffffffffff,
@@ -260,7 +271,8 @@ class TestMsgEthereumSigntx(TrezorTest):
 
         # no gas price
         with pytest.raises(Exception):
-            self.client.ethereum_sign_tx(
+            ethereum.sign_tx(
+                self.client,
                 n=[0, 0],
                 nonce=123456,
                 gas_limit=10000,
@@ -270,7 +282,8 @@ class TestMsgEthereumSigntx(TrezorTest):
 
         # no gas limit
         with pytest.raises(Exception):
-            self.client.ethereum_sign_tx(
+            ethereum.sign_tx(
+                self.client,
                 n=[0, 0],
                 nonce=123456,
                 gas_price=10000,
@@ -280,7 +293,8 @@ class TestMsgEthereumSigntx(TrezorTest):
 
         # no nonce
         with pytest.raises(Exception):
-            self.client.ethereum_sign_tx(
+            ethereum.sign_tx(
+                self.client,
                 n=[0, 0],
                 gas_price=10000,
                 gas_limit=123456,

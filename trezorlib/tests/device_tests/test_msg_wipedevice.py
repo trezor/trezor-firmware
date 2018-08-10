@@ -17,6 +17,7 @@
 from .common import TrezorTest
 
 from trezorlib import messages as proto
+from trezorlib import device
 
 
 class TestMsgWipedevice(TrezorTest):
@@ -30,7 +31,7 @@ class TestMsgWipedevice(TrezorTest):
         assert features.passphrase_protection is True
         device_id = features.device_id
 
-        self.client.wipe_device()
+        device.wipe(self.client)
         features = self.client.call_raw(proto.Initialize())
 
         assert features.initialized is False

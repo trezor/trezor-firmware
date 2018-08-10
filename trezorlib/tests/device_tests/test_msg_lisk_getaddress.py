@@ -17,6 +17,7 @@
 import pytest
 
 from .common import TrezorTest
+from trezorlib import lisk
 
 
 @pytest.mark.lisk
@@ -25,7 +26,7 @@ class TestMsgLiskGetaddress(TrezorTest):
 
     def test_lisk_getaddress(self):
         self.setup_mnemonic_nopin_nopassphrase()
-        assert self.client.lisk_get_address([2147483692, 2147483782]) == '1431530009238518937L'
-        assert self.client.lisk_get_address([2147483692, 2147483782, 2147483648]) == '17563781916205589679L'
-        assert self.client.lisk_get_address([2147483692, 2147483782, 2147483648, 2147483649]) == '1874186517773691964L'
-        assert self.client.lisk_get_address([2147483692, 2147483782, 2147484647, 2147484647]) == '16295203558710684671L'
+        assert lisk.get_address(self.client, [2147483692, 2147483782]) == '1431530009238518937L'
+        assert lisk.get_address(self.client, [2147483692, 2147483782, 2147483648]) == '17563781916205589679L'
+        assert lisk.get_address(self.client, [2147483692, 2147483782, 2147483648, 2147483649]) == '1874186517773691964L'
+        assert lisk.get_address(self.client, [2147483692, 2147483782, 2147484647, 2147484647]) == '16295203558710684671L'

@@ -18,6 +18,7 @@ from binascii import hexlify
 import pytest
 
 from .common import TrezorTest
+from trezorlib import lisk
 
 
 @pytest.mark.lisk
@@ -26,5 +27,5 @@ class TestMsgLiskGetPublicKey(TrezorTest):
 
     def test_lisk_get_public_key(self):
         self.setup_mnemonic_nopin_nopassphrase()
-        sig = self.client.lisk_get_public_key([2147483692, 2147483782, 2147483648, 2147483648])
+        sig = lisk.get_public_key(self.client, [2147483692, 2147483782, 2147483648, 2147483648])
         assert hexlify(sig.public_key) == b'eb56d7bbb5e8ea9269405f7a8527fe126023d1db2c973cfac6f760b60ae27294'

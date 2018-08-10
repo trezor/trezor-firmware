@@ -20,6 +20,7 @@ import pytest
 
 from .common import TrezorTest
 from trezorlib import messages as proto
+from trezorlib import device
 
 
 @pytest.mark.skip_t1
@@ -100,4 +101,4 @@ class TestMsgRecoverydeviceT2(TrezorTest):
     def test_already_initialized(self):
         self.setup_mnemonic_nopin_nopassphrase()
         with pytest.raises(Exception):
-            self.client.recovery_device(12, False, False, 'label', 'english')
+            device.recover(self.client, 12, False, False, 'label', 'english')

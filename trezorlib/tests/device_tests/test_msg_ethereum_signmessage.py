@@ -18,6 +18,7 @@ from binascii import hexlify
 import pytest
 
 from .common import TrezorTest
+from trezorlib import ethereum
 
 
 @pytest.mark.ethereum
@@ -33,6 +34,6 @@ class TestMsgEthereumSignmessage(TrezorTest):
     def test_sign(self):
         self.setup_mnemonic_nopin_nopassphrase()
         for msg, sig in self.VECTORS:
-            res = self.client.ethereum_sign_message(self.PATH, msg)
+            res = ethereum.sign_message(self.client, self.PATH, msg)
             assert hexlify(res.address) == self.ADDRESS
             assert hexlify(res.signature) == sig

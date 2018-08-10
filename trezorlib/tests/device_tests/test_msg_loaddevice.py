@@ -17,6 +17,9 @@
 import pytest
 
 from .common import TrezorTest
+from trezorlib import btc
+from trezorlib import debuglink
+from trezorlib import device
 
 
 @pytest.mark.skip_t2
@@ -33,7 +36,7 @@ class TestDeviceLoad(TrezorTest):
         passphrase_protection = self.client.debug.read_passphrase_protection()
         assert passphrase_protection is False
 
-        address = self.client.get_address('Bitcoin', [])
+        address = btc.get_address(self.client, 'Bitcoin', [])
         assert address == '1EfKbQupktEMXf4gujJ9kCFo83k1iMqwqK'
 
     def test_load_device_2(self):
@@ -49,7 +52,7 @@ class TestDeviceLoad(TrezorTest):
         passphrase_protection = self.client.debug.read_passphrase_protection()
         assert passphrase_protection is True
 
-        address = self.client.get_address('Bitcoin', [])
+        address = btc.get_address(self.client, 'Bitcoin', [])
         assert address == '15fiTDFwZd2kauHYYseifGi9daH2wniDHH'
 
     def test_load_device_utf(self):
@@ -63,25 +66,25 @@ class TestDeviceLoad(TrezorTest):
         passphrase_nfkc = u'Neuv\u011b\u0159iteln\u011b bezpe\u010dn\xe9 hesl\xed\u010dko'
         passphrase_nfd = u'Neuve\u030cr\u030citelne\u030c bezpec\u030cne\u0301 hesli\u0301c\u030cko'
 
-        self.client.wipe_device()
-        self.client.load_device_by_mnemonic(mnemonic=words_nfkd, pin='', passphrase_protection=True, label='test', language='english', skip_checksum=True)
+        device.wipe(self.client)
+        debuglink.load_device_by_mnemonic(self.client, mnemonic=words_nfkd, pin='', passphrase_protection=True, label='test', language='english', skip_checksum=True)
         self.client.set_passphrase(passphrase_nfkd)
-        address_nfkd = self.client.get_address('Bitcoin', [])
+        address_nfkd = btc.get_address(self.client, 'Bitcoin', [])
 
-        self.client.wipe_device()
-        self.client.load_device_by_mnemonic(mnemonic=words_nfc, pin='', passphrase_protection=True, label='test', language='english', skip_checksum=True)
+        device.wipe(self.client)
+        debuglink.load_device_by_mnemonic(self.client, mnemonic=words_nfc, pin='', passphrase_protection=True, label='test', language='english', skip_checksum=True)
         self.client.set_passphrase(passphrase_nfc)
-        address_nfc = self.client.get_address('Bitcoin', [])
+        address_nfc = btc.get_address(self.client, 'Bitcoin', [])
 
-        self.client.wipe_device()
-        self.client.load_device_by_mnemonic(mnemonic=words_nfkc, pin='', passphrase_protection=True, label='test', language='english', skip_checksum=True)
+        device.wipe(self.client)
+        debuglink.load_device_by_mnemonic(self.client, mnemonic=words_nfkc, pin='', passphrase_protection=True, label='test', language='english', skip_checksum=True)
         self.client.set_passphrase(passphrase_nfkc)
-        address_nfkc = self.client.get_address('Bitcoin', [])
+        address_nfkc = btc.get_address(self.client, 'Bitcoin', [])
 
-        self.client.wipe_device()
-        self.client.load_device_by_mnemonic(mnemonic=words_nfd, pin='', passphrase_protection=True, label='test', language='english', skip_checksum=True)
+        device.wipe(self.client)
+        debuglink.load_device_by_mnemonic(self.client, mnemonic=words_nfd, pin='', passphrase_protection=True, label='test', language='english', skip_checksum=True)
         self.client.set_passphrase(passphrase_nfd)
-        address_nfd = self.client.get_address('Bitcoin', [])
+        address_nfd = btc.get_address(self.client, 'Bitcoin', [])
 
         assert address_nfkd == address_nfc
         assert address_nfkd == address_nfkc

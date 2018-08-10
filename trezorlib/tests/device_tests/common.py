@@ -21,12 +21,23 @@ from . import conftest
 from trezorlib import coins
 from trezorlib import tx_api
 from trezorlib.client import TrezorClientDebugLink
+from trezorlib import debuglink
+from trezorlib import device
 
 tests_dir = os.path.dirname(os.path.abspath(__file__))
 tx_api.cache_dir = os.path.join(tests_dir, '../txcache')
 
 
 class TrezorTest:
+    #                1      2     3    4      5      6      7     8      9    10    11    12
+    mnemonic12 = 'alcohol woman abuse must during monitor noble actual mixed trade anger aisle'
+    mnemonic18 = 'owner little vague addict embark decide pink prosper true fork panda embody mixture exchange choose canoe electric jewel'
+    mnemonic24 = 'dignity pass list indicate nasty swamp pool script soccer toe leaf photo multiply desk host tomato cradle drill spread actor shine dismiss champion exotic'
+    mnemonic_all = ' '.join(['all'] * 12)
+
+    pin4 = '1234'
+    pin6 = '789456'
+    pin8 = '45678978'
 
     def setup_method(self, method):
         wirelink = conftest.get_device()
@@ -36,37 +47,39 @@ class TrezorTest:
         self.client.set_tx_api(coins.tx_api['Bitcoin'])
         # self.client.set_buttonwait(3)
 
-        #                     1      2     3    4      5      6      7     8      9    10    11    12
-        self.mnemonic12 = 'alcohol woman abuse must during monitor noble actual mixed trade anger aisle'
-        self.mnemonic18 = 'owner little vague addict embark decide pink prosper true fork panda embody mixture exchange choose canoe electric jewel'
-        self.mnemonic24 = 'dignity pass list indicate nasty swamp pool script soccer toe leaf photo multiply desk host tomato cradle drill spread actor shine dismiss champion exotic'
-        self.mnemonic_all = ' '.join(['all'] * 12)
-
-        self.pin4 = '1234'
-        self.pin6 = '789456'
-        self.pin8 = '45678978'
-
-        self.client.wipe_device()
+        device.wipe(self.client)
         self.client.transport.session_begin()
 
     def teardown_method(self, method):
         self.client.transport.session_end()
         self.client.close()
 
+    def _setup_mnemonic(self, mnemonic=None, pin='', passphrase=False):
+        if mnemonic is None:
+            mnemonic = TrezorTest.mnemonic12
+        debuglink.load_device_by_mnemonic(
+            self.client,
+            mnemonic=mnemonic,
+            pin=pin,
+            passphrase_protection=passphrase,
+            label="test",
+            language="english",
+        )
+
     def setup_mnemonic_allallall(self):
-        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic_all, pin='', passphrase_protection=False, label='test', language='english')
+        self._setup_mnemonic(mnemonic=TrezorTest.mnemonic_all)
 
     def setup_mnemonic_nopin_nopassphrase(self):
-        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic12, pin='', passphrase_protection=False, label='test', language='english')
+        self._setup_mnemonic()
 
     def setup_mnemonic_nopin_passphrase(self):
-        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic12, pin='', passphrase_protection=True, label='test', language='english')
+        self._setup_mnemonic(passphrase=True)
 
     def setup_mnemonic_pin_nopassphrase(self):
-        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic12, pin=self.pin4, passphrase_protection=False, label='test', language='english')
+        self._setup_mnemonic(pin=TrezorTest.pin4)
 
     def setup_mnemonic_pin_passphrase(self):
-        self.client.load_device_by_mnemonic(mnemonic=self.mnemonic12, pin=self.pin4, passphrase_protection=True, label='test', language='english')
+        self._setup_mnemonic(pin=TrezorTest.pin4, passphrase=True)
 
 
 def generate_entropy(strength, internal_entropy, external_entropy):

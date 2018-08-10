@@ -20,6 +20,7 @@ import pytest
 from .common import TrezorTest, generate_entropy
 
 from trezorlib import messages as proto
+from trezorlib import device
 from mnemonic import Mnemonic
 
 
@@ -203,4 +204,4 @@ class TestMsgResetDeviceT2(TrezorTest):
     def test_already_initialized(self):
         self.setup_mnemonic_nopin_nopassphrase()
         with pytest.raises(Exception):
-            self.client.reset_device(False, 128, True, True, 'label', 'english')
+            device.reset(self.client, False, 128, True, True, 'label', 'english')
