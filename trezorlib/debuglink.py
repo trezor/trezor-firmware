@@ -218,7 +218,7 @@ def load_device_by_xprv(client, xprv, pin, passphrase_protection, label, languag
 
 @expect(proto.Success, field="message")
 def self_test(client):
-    if client.features.bootloader_mode is False:
+    if client.features.bootloader_mode is not True:
         raise RuntimeError("Device must be in bootloader mode")
 
     return client.call(proto.SelfTest(payload=b'\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC'))
