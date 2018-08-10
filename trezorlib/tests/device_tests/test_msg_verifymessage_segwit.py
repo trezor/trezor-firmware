@@ -41,7 +41,7 @@ class TestMsgVerifymessageSegwit(TrezorTest):
             '2N4VkePSzKH2sv5YBikLHGvzUYvfPxV6zS9',
             unhexlify('249e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
             'This is an example of a signed message.'
-            )
+        )
         assert ret is True
 
     def test_message_verify(self):
@@ -54,7 +54,7 @@ class TestMsgVerifymessageSegwit(TrezorTest):
             '3CwYaeWxhpXXiHue3ciQez1DLaTEAXcKa1',
             unhexlify('249e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
             'This is an example of a signed message.'
-            )
+        )
         assert res is True
 
         # trezor pubkey - FAIL - wrong sig
@@ -64,7 +64,7 @@ class TestMsgVerifymessageSegwit(TrezorTest):
             '3CwYaeWxhpXXiHue3ciQez1DLaTEAXcKa1',
             unhexlify('249e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be00'),
             'This is an example of a signed message.'
-            )
+        )
         assert res is False
 
         # trezor pubkey - FAIL - wrong msg
@@ -74,7 +74,7 @@ class TestMsgVerifymessageSegwit(TrezorTest):
             '3CwYaeWxhpXXiHue3ciQez1DLaTEAXcKa1',
             unhexlify('249e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
             'This is an example of a signed message!'
-            )
+        )
         assert res is False
 
     def test_verify_utf(self):

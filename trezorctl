@@ -348,7 +348,7 @@ def load_device(connect, mnemonic, expand, xprv, pin, passphrase_protection, lab
             passphrase_protection,
             label,
             'english'
-            )
+        )
     if slip0014:
         return debuglink.load_device_by_mnemonic(
             client,
@@ -356,7 +356,7 @@ def load_device(connect, mnemonic, expand, xprv, pin, passphrase_protection, lab
             pin,
             passphrase_protection,
             'SLIP-0014'
-            )
+        )
 
 
 @cli.command(help='Start safe recovery workflow.')

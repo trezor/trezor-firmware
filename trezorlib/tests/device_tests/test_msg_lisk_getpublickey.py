@@ -23,6 +23,7 @@ from trezorlib.tools import parse_path
 
 LISK_PATH = parse_path("m/44h/134h/0h/0h")
 
+
 @pytest.mark.lisk
 @pytest.mark.skip_t1
 class TestMsgLiskGetPublicKey(TrezorTest):

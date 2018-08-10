@@ -39,7 +39,7 @@ class TestMsgLiskVerifymessage(TrezorTest):
                 unhexlify('eb56d7bbb5e8ea9269405f7a8527fe126023d1db2c973cfac6f760b60ae27294'),
                 unhexlify('7858ae7cd52ea6d4b17e800ca60144423db5560bfd618b663ffbf26ab66758563df45cbffae8463db22dc285dd94309083b8c807776085b97d05374d79867d05'),
                 'This is an example of a signed message.'
-                )
+            )
 
     def test_verify_long(self):
         self.setup_mnemonic_nopin_nopassphrase()
