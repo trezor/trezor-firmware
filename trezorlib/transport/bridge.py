@@ -21,7 +21,6 @@ from io import BytesIO
 import struct
 
 from .. import mapping
-from .. import messages
 from .. import protobuf
 from . import Transport, TransportException
 

@@ -20,8 +20,6 @@ import os
 import sys
 import time
 import binascii
-import hashlib
-import unicodedata
 import getpass
 import warnings
 

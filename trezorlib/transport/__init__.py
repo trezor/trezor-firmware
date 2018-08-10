@@ -17,7 +17,7 @@
 import importlib
 import logging
 
-from typing import Iterable, Type, List, Set
+from typing import Iterable, Type
 
 LOG = logging.getLogger(__name__)
 

@@ -17,7 +17,6 @@
 import struct
 import hmac
 import hashlib
-import sys
 
 import ecdsa
 from ecdsa.util import string_to_number, number_to_string

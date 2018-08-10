@@ -48,8 +48,7 @@
 
 from base64 import b64encode
 from .common import TrezorTest
-from .conftest import TREZOR_VERSION
-from binascii import hexlify, unhexlify
+from binascii import hexlify
 from trezorlib import messages as proto
 from trezorlib import stellar
 from trezorlib.tools import parse_path

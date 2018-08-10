@@ -15,7 +15,6 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from . import messages
-from . import protobuf
 
 map_type_to_class = {}
 map_class_to_type = {}

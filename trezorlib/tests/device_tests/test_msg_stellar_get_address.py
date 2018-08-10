@@ -18,7 +18,6 @@ import pytest
 
 from .common import TrezorTest
 from .conftest import TREZOR_VERSION
-from binascii import hexlify
 from trezorlib import stellar
 from trezorlib import messages as proto
 from trezorlib.tools import parse_path, CallException

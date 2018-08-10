@@ -1,6 +1,5 @@
 import binascii
 import construct as c
-import hashlib
 import pyblake2
 
 from . import cosi

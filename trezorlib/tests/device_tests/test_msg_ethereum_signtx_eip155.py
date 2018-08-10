@@ -18,7 +18,6 @@ from binascii import unhexlify, hexlify
 import pytest
 
 from .common import TrezorTest
-from trezorlib import messages as proto
 from trezorlib import ethereum
 from trezorlib.tools import H_
 

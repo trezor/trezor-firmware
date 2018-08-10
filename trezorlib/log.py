@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import logging
-from typing import Set, Type, Optional
+from typing import Optional
 
 from . import protobuf
 

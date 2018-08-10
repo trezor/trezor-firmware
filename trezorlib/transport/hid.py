@@ -16,7 +16,6 @@
 
 import time
 import hid
-import os
 import sys
 
 from ..protocol_v1 import ProtocolV1

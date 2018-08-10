@@ -14,11 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import os
 import socket
 
 from ..protocol_v1 import ProtocolV1
-from ..protocol_v2 import ProtocolV2
 from . import Transport, TransportException
 
 

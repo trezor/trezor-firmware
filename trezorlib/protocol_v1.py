@@ -19,7 +19,7 @@ from __future__ import absolute_import
 from io import BytesIO
 import logging
 import struct
-from typing import Tuple, Type
+from typing import Tuple
 
 from . import mapping
 from . import protobuf

@@ -14,13 +14,11 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import binascii
 import os
 import warnings
 from mnemonic import Mnemonic
 
 from . import messages as proto
-from . import tools
 from .tools import expect, session
 
 from .transport import enumerate_devices, get_transport
