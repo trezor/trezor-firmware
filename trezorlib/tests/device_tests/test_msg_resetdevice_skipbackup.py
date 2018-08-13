@@ -15,29 +15,31 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import pytest
+from mnemonic import Mnemonic
+
+from trezorlib import messages as proto
 
 from .common import TrezorTest, generate_entropy
-from trezorlib import messages as proto
-from mnemonic import Mnemonic
 
 
 @pytest.mark.skip_t2
 class TestMsgResetDeviceSkipbackup(TrezorTest):
-
     def test_reset_device_skip_backup(self):
 
-        external_entropy = b'zlutoucky kun upel divoke ody' * 2
+        external_entropy = b"zlutoucky kun upel divoke ody" * 2
         strength = 128
 
-        ret = self.client.call_raw(proto.ResetDevice(
-            display_random=False,
-            strength=strength,
-            passphrase_protection=False,
-            pin_protection=False,
-            language='english',
-            label='test',
-            skip_backup=True
-        ))
+        ret = self.client.call_raw(
+            proto.ResetDevice(
+                display_random=False,
+                strength=strength,
+                passphrase_protection=False,
+                pin_protection=False,
+                language="english",
+                label="test",
+                skip_backup=True,
+            )
+        )
 
         # Provide entropy
         assert isinstance(ret, proto.EntropyRequest)
@@ -52,7 +54,7 @@ class TestMsgResetDeviceSkipbackup(TrezorTest):
 
         # Generate mnemonic locally
         entropy = generate_entropy(strength, internal_entropy, external_entropy)
-        expected_mnemonic = Mnemonic('english').to_mnemonic(entropy)
+        expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
 
         # start Backup workflow
         ret = self.client.call_raw(proto.BackupDevice())
@@ -64,7 +66,7 @@ class TestMsgResetDeviceSkipbackup(TrezorTest):
             self.client.debug.press_yes()
             self.client.call_raw(proto.ButtonAck())
 
-        mnemonic = ' '.join(mnemonic)
+        mnemonic = " ".join(mnemonic)
 
         # Compare that device generated proper mnemonic for given entropies
         assert mnemonic == expected_mnemonic
@@ -78,7 +80,7 @@ class TestMsgResetDeviceSkipbackup(TrezorTest):
 
         assert isinstance(resp, proto.Success)
 
-        mnemonic = ' '.join(mnemonic)
+        mnemonic = " ".join(mnemonic)
 
         # Compare that second pass printed out the same mnemonic once again
         assert mnemonic == expected_mnemonic
@@ -89,18 +91,20 @@ class TestMsgResetDeviceSkipbackup(TrezorTest):
 
     def test_reset_device_skip_backup_break(self):
 
-        external_entropy = b'zlutoucky kun upel divoke ody' * 2
+        external_entropy = b"zlutoucky kun upel divoke ody" * 2
         strength = 128
 
-        ret = self.client.call_raw(proto.ResetDevice(
-            display_random=False,
-            strength=strength,
-            passphrase_protection=False,
-            pin_protection=False,
-            language='english',
-            label='test',
-            skip_backup=True
-        ))
+        ret = self.client.call_raw(
+            proto.ResetDevice(
+                display_random=False,
+                strength=strength,
+                passphrase_protection=False,
+                pin_protection=False,
+                language="english",
+                label="test",
+                skip_backup=True,
+            )
+        )
 
         # Provide entropy
         assert isinstance(ret, proto.EntropyRequest)

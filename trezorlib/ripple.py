@@ -18,12 +18,14 @@
 from . import messages
 from .tools import expect
 
+REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType", "Amount", "Destination")
+
 
 @expect(messages.RippleAddress, field="address")
 def get_address(client, address_n, show_display=False):
     return client.call(
-        messages.RippleGetAddress(
-            address_n=address_n, show_display=show_display))
+        messages.RippleGetAddress(address_n=address_n, show_display=show_display)
+    )
 
 
 @expect(messages.RippleSignedTx)
@@ -33,8 +35,8 @@ def sign_tx(client, address_n, msg: messages.RippleSignTx):
 
 
 def create_sign_tx_msg(transaction) -> messages.RippleSignTx:
-    if not all(transaction.get(k) for k in ("Fee", "Sequence", "TransactionType", "Amount", "Destination")):
-        raise ValueError("Some of the required fields missing (Fee, Sequence, TransactionType, Amount, Destination")
+    if not all(transaction.get(k) for k in REQUIRED_FIELDS):
+        raise ValueError("Some of the required fields missing")
     if transaction["TransactionType"] != "Payment":
         raise ValueError("Only Payment transaction type is supported")
 
@@ -49,6 +51,5 @@ def create_sign_tx_msg(transaction) -> messages.RippleSignTx:
 
 def _create_payment(transaction) -> messages.RipplePayment:
     return messages.RipplePayment(
-        amount=transaction.get("Amount"),
-        destination=transaction.get("Destination")
+        amount=transaction.get("Amount"), destination=transaction.get("Destination")
     )

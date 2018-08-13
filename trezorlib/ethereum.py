@@ -1,9 +1,9 @@
 from . import messages as proto
-from .tools import expect, CallException, normalize_nfc, session
+from .tools import CallException, expect, normalize_nfc, session
 
 
 def int_to_big_endian(value):
-    return value.to_bytes((value.bit_length() + 7) // 8, 'big')
+    return value.to_bytes((value.bit_length() + 7) // 8, "big")
 
 
 # ====== Client functions ====== #
@@ -15,13 +15,25 @@ def get_address(client, n, show_display=False, multisig=None):
 
 
 @session
-def sign_tx(client, n, nonce, gas_price, gas_limit, to, value, data=None, chain_id=None, tx_type=None):
+def sign_tx(
+    client,
+    n,
+    nonce,
+    gas_price,
+    gas_limit,
+    to,
+    value,
+    data=None,
+    chain_id=None,
+    tx_type=None,
+):
     msg = proto.EthereumSignTx(
         address_n=n,
         nonce=int_to_big_endian(nonce),
         gas_price=int_to_big_endian(gas_price),
         gas_limit=int_to_big_endian(gas_limit),
-        value=int_to_big_endian(value))
+        value=int_to_big_endian(value),
+    )
 
     if to:
         msg.to = to
@@ -56,7 +68,11 @@ def sign_message(client, n, message):
 def verify_message(client, address, signature, message):
     message = normalize_nfc(message)
     try:
-        resp = client.call(proto.EthereumVerifyMessage(address=address, signature=signature, message=message))
+        resp = client.call(
+            proto.EthereumVerifyMessage(
+                address=address, signature=signature, message=message
+            )
+        )
     except CallException as e:
         resp = e
     if isinstance(resp, proto.Success):

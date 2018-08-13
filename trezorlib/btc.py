@@ -1,37 +1,91 @@
 from . import messages as proto
-from .tools import expect, CallException, normalize_nfc, session
+from .tools import CallException, expect, normalize_nfc, session
 
 
 @expect(proto.PublicKey)
-def get_public_node(client, n, ecdsa_curve_name=None, show_display=False, coin_name=None):
-    return client.call(proto.GetPublicKey(address_n=n, ecdsa_curve_name=ecdsa_curve_name, show_display=show_display, coin_name=coin_name))
+def get_public_node(
+    client, n, ecdsa_curve_name=None, show_display=False, coin_name=None
+):
+    return client.call(
+        proto.GetPublicKey(
+            address_n=n,
+            ecdsa_curve_name=ecdsa_curve_name,
+            show_display=show_display,
+            coin_name=coin_name,
+        )
+    )
 
 
 @expect(proto.Address, field="address")
-def get_address(client, coin_name, n, show_display=False, multisig=None, script_type=proto.InputScriptType.SPENDADDRESS):
+def get_address(
+    client,
+    coin_name,
+    n,
+    show_display=False,
+    multisig=None,
+    script_type=proto.InputScriptType.SPENDADDRESS,
+):
     if multisig:
-        return client.call(proto.GetAddress(address_n=n, coin_name=coin_name, show_display=show_display, multisig=multisig, script_type=script_type))
+        return client.call(
+            proto.GetAddress(
+                address_n=n,
+                coin_name=coin_name,
+                show_display=show_display,
+                multisig=multisig,
+                script_type=script_type,
+            )
+        )
     else:
-        return client.call(proto.GetAddress(address_n=n, coin_name=coin_name, show_display=show_display, script_type=script_type))
+        return client.call(
+            proto.GetAddress(
+                address_n=n,
+                coin_name=coin_name,
+                show_display=show_display,
+                script_type=script_type,
+            )
+        )
 
 
 @expect(proto.MessageSignature)
-def sign_message(client, coin_name, n, message, script_type=proto.InputScriptType.SPENDADDRESS):
+def sign_message(
+    client, coin_name, n, message, script_type=proto.InputScriptType.SPENDADDRESS
+):
     message = normalize_nfc(message)
-    return client.call(proto.SignMessage(coin_name=coin_name, address_n=n, message=message, script_type=script_type))
+    return client.call(
+        proto.SignMessage(
+            coin_name=coin_name, address_n=n, message=message, script_type=script_type
+        )
+    )
 
 
 def verify_message(client, coin_name, address, signature, message):
     message = normalize_nfc(message)
     try:
-        resp = client.call(proto.VerifyMessage(address=address, signature=signature, message=message, coin_name=coin_name))
+        resp = client.call(
+            proto.VerifyMessage(
+                address=address,
+                signature=signature,
+                message=message,
+                coin_name=coin_name,
+            )
+        )
     except CallException as e:
         resp = e
     return isinstance(resp, proto.Success)
 
 
 @session
-def sign_tx(client, coin_name, inputs, outputs, version=None, lock_time=None, expiry=None, overwintered=None, debug_processor=None):
+def sign_tx(
+    client,
+    coin_name,
+    inputs,
+    outputs,
+    version=None,
+    lock_time=None,
+    expiry=None,
+    overwintered=None,
+    debug_processor=None,
+):
     # start = time.time()
     txes = client._prepare_sign_tx(inputs, outputs)
 
@@ -52,7 +106,7 @@ def sign_tx(client, coin_name, inputs, outputs, version=None, lock_time=None, ex
 
     # Prepare structure for signatures
     signatures = [None] * len(inputs)
-    serialized_tx = b''
+    serialized_tx = b""
 
     counter = 0
     while True:
@@ -71,7 +125,10 @@ def sign_tx(client, coin_name, inputs, outputs, version=None, lock_time=None, ex
 
         if res.serialized and res.serialized.signature_index is not None:
             if signatures[res.serialized.signature_index] is not None:
-                raise ValueError("Signature for index %d already filled" % res.serialized.signature_index)
+                raise ValueError(
+                    "Signature for index %d already filled"
+                    % res.serialized.signature_index
+                )
             signatures[res.serialized.signature_index] = res.serialized.signature
 
         if res.request_type == proto.RequestType.TXFINISHED:
@@ -93,7 +150,9 @@ def sign_tx(client, coin_name, inputs, outputs, version=None, lock_time=None, ex
                 msg.outputs_cnt = len(current_tx.bin_outputs)
             else:
                 msg.outputs_cnt = len(current_tx.outputs)
-            msg.extra_data_len = len(current_tx.extra_data) if current_tx.extra_data else 0
+            msg.extra_data_len = (
+                len(current_tx.extra_data) if current_tx.extra_data else 0
+            )
             res = client.call(proto.TxAck(tx=msg))
             continue
 
@@ -104,6 +163,7 @@ def sign_tx(client, coin_name, inputs, outputs, version=None, lock_time=None, ex
                 # msg needs to be deep copied so when it's modified
                 # the other messages stay intact
                 from copy import deepcopy
+
                 msg = deepcopy(msg)
                 # If debug_processor function is provided,
                 # pass thru it the request and prepared response.
@@ -124,6 +184,7 @@ def sign_tx(client, coin_name, inputs, outputs, version=None, lock_time=None, ex
                 # msg needs to be deep copied so when it's modified
                 # the other messages stay intact
                 from copy import deepcopy
+
                 msg = deepcopy(msg)
                 # If debug_processor function is provided,
                 # pass thru it the request and prepared response.
@@ -136,7 +197,7 @@ def sign_tx(client, coin_name, inputs, outputs, version=None, lock_time=None, ex
         elif res.request_type == proto.RequestType.TXEXTRADATA:
             o, l = res.details.extra_data_offset, res.details.extra_data_len
             msg = proto.TransactionType()
-            msg.extra_data = current_tx.extra_data[o:o + l]
+            msg.extra_data = current_tx.extra_data[o : o + l]
             res = client.call(proto.TxAck(tx=msg))
             continue
 

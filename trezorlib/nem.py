@@ -16,8 +16,9 @@
 
 import binascii
 import json
+
 from . import messages as proto
-from .tools import expect, CallException
+from .tools import CallException, expect
 
 TYPE_TRANSACTION_TRANSFER = 0x0101
 TYPE_IMPORTANCE_TRANSFER = 0x0801
@@ -54,21 +55,27 @@ def create_transfer(transaction):
             msg.public_key = binascii.unhexlify(transaction["message"]["publicKey"])
 
     if "mosaics" in transaction:
-        msg.mosaics = [proto.NEMMosaic(
-            namespace=mosaic["mosaicId"]["namespaceId"],
-            mosaic=mosaic["mosaicId"]["name"],
-            quantity=mosaic["quantity"],
-        ) for mosaic in transaction["mosaics"]]
+        msg.mosaics = [
+            proto.NEMMosaic(
+                namespace=mosaic["mosaicId"]["namespaceId"],
+                mosaic=mosaic["mosaicId"]["name"],
+                quantity=mosaic["quantity"],
+            )
+            for mosaic in transaction["mosaics"]
+        ]
 
     return msg
 
 
 def create_aggregate_modification(transactions):
     msg = proto.NEMAggregateModification()
-    msg.modifications = [proto.NEMCosignatoryModification(
-        type=modification["modificationType"],
-        public_key=binascii.unhexlify(modification["cosignatoryAccount"]),
-    ) for modification in transactions["modifications"]]
+    msg.modifications = [
+        proto.NEMCosignatoryModification(
+            type=modification["modificationType"],
+            public_key=binascii.unhexlify(modification["cosignatoryAccount"]),
+        )
+        for modification in transactions["modifications"]
+    ]
 
     if "minCosignatories" in transactions:
         msg.relative_change = transactions["minCosignatories"]["relativeChange"]
@@ -141,7 +148,7 @@ def create_importance_transfer(transaction):
 def create_sign_tx(transaction):
     msg = proto.NEMSignTx()
     msg.transaction = create_transaction_common(transaction)
-    msg.cosigning = (transaction["type"] == TYPE_MULTISIG_SIGNATURE)
+    msg.cosigning = transaction["type"] == TYPE_MULTISIG_SIGNATURE
 
     if transaction["type"] in (TYPE_MULTISIG_SIGNATURE, TYPE_MULTISIG):
         transaction = transaction["otherTrans"]
@@ -172,7 +179,9 @@ def create_sign_tx(transaction):
 
 @expect(proto.NEMAddress, field="address")
 def get_address(client, n, network, show_display=False):
-    return client.call(proto.NEMGetAddress(address_n=n, network=network, show_display=show_display))
+    return client.call(
+        proto.NEMGetAddress(address_n=n, network=network, show_display=show_display)
+    )
 
 
 @expect(proto.NEMSignedTx)

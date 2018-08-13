@@ -16,22 +16,25 @@
 
 import pytest
 
+from trezorlib import device, messages as proto
+
 from .common import TrezorTest
-from trezorlib import messages as proto
-from trezorlib import device
 
 
 @pytest.mark.skip_t2
 class TestMsgRecoverydevice(TrezorTest):
-
     def test_pin_passphrase(self):
-        mnemonic = self.mnemonic12.split(' ')
-        ret = self.client.call_raw(proto.RecoveryDevice(word_count=12,
-                                   passphrase_protection=True,
-                                   pin_protection=True,
-                                   label='label',
-                                   language='english',
-                                   enforce_wordlist=True))
+        mnemonic = self.mnemonic12.split(" ")
+        ret = self.client.call_raw(
+            proto.RecoveryDevice(
+                word_count=12,
+                passphrase_protection=True,
+                pin_protection=True,
+                label="label",
+                language="english",
+                enforce_wordlist=True,
+            )
+        )
 
         # click through confirmation
         assert isinstance(ret, proto.ButtonRequest)
@@ -88,13 +91,17 @@ class TestMsgRecoverydevice(TrezorTest):
         self.client.call_raw(proto.Cancel())
 
     def test_nopin_nopassphrase(self):
-        mnemonic = self.mnemonic12.split(' ')
-        ret = self.client.call_raw(proto.RecoveryDevice(word_count=12,
-                                   passphrase_protection=False,
-                                   pin_protection=False,
-                                   label='label',
-                                   language='english',
-                                   enforce_wordlist=True))
+        mnemonic = self.mnemonic12.split(" ")
+        ret = self.client.call_raw(
+            proto.RecoveryDevice(
+                word_count=12,
+                passphrase_protection=False,
+                pin_protection=False,
+                label="label",
+                language="english",
+                enforce_wordlist=True,
+            )
+        )
 
         # click through confirmation
         assert isinstance(ret, proto.ButtonRequest)
@@ -138,12 +145,16 @@ class TestMsgRecoverydevice(TrezorTest):
         assert isinstance(resp, proto.Success)
 
     def test_word_fail(self):
-        ret = self.client.call_raw(proto.RecoveryDevice(word_count=12,
-                                   passphrase_protection=False,
-                                   pin_protection=False,
-                                   label='label',
-                                   language='english',
-                                   enforce_wordlist=True))
+        ret = self.client.call_raw(
+            proto.RecoveryDevice(
+                word_count=12,
+                passphrase_protection=False,
+                pin_protection=False,
+                label="label",
+                language="english",
+                enforce_wordlist=True,
+            )
+        )
 
         # click through confirmation
         assert isinstance(ret, proto.ButtonRequest)
@@ -154,19 +165,23 @@ class TestMsgRecoverydevice(TrezorTest):
         for _ in range(int(12 * 2)):
             (word, pos) = self.client.debug.read_recovery_word()
             if pos != 0:
-                ret = self.client.call_raw(proto.WordAck(word='kwyjibo'))
+                ret = self.client.call_raw(proto.WordAck(word="kwyjibo"))
                 assert isinstance(ret, proto.Failure)
                 break
             else:
                 self.client.call_raw(proto.WordAck(word=word))
 
     def test_pin_fail(self):
-        ret = self.client.call_raw(proto.RecoveryDevice(word_count=12,
-                                   passphrase_protection=True,
-                                   pin_protection=True,
-                                   label='label',
-                                   language='english',
-                                   enforce_wordlist=True))
+        ret = self.client.call_raw(
+            proto.RecoveryDevice(
+                word_count=12,
+                passphrase_protection=True,
+                pin_protection=True,
+                label="label",
+                language="english",
+                enforce_wordlist=True,
+            )
+        )
 
         # click through confirmation
         assert isinstance(ret, proto.ButtonRequest)
@@ -190,4 +205,4 @@ class TestMsgRecoverydevice(TrezorTest):
     def test_already_initialized(self):
         self.setup_mnemonic_nopin_nopassphrase()
         with pytest.raises(Exception):
-            device.recover(self.client, 12, False, False, 'label', 'english')
+            device.recover(self.client, 12, False, False, "label", "english")

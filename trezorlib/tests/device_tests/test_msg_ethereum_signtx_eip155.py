@@ -14,12 +14,14 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from binascii import unhexlify, hexlify
+from binascii import hexlify, unhexlify
+
 import pytest
 
-from .common import TrezorTest
 from trezorlib import ethereum
 from trezorlib.tools import H_
+
+from .common import TrezorTest
 
 
 @pytest.mark.ethereum

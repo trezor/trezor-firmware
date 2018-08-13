@@ -1,12 +1,16 @@
 import binascii
+
 import construct as c
 import pyblake2
 
-from . import cosi
-from . import messages as proto
-from . import tools
+from . import cosi, messages as proto, tools
 
 
+def bytes_not(data):
+    return bytes(~b & 0xff for b in data)
+
+
+# fmt: off
 Toif = c.Struct(
     "magic" / c.Const(b"TOI"),
     "format" / c.Enum(c.Byte, full_color=b"f", grayscale=b"g"),
@@ -14,10 +18,6 @@ Toif = c.Struct(
     "height" / c.Int16ul,
     "data" / c.Prefixed(c.Int32ul, c.GreedyBytes),
 )
-
-
-def bytes_not(data):
-    return bytes(~b & 0xff for b in data)
 
 
 VendorTrust = c.Transformed(c.BitStruct(
@@ -87,7 +87,10 @@ FirmwareHeader = c.Struct(
     "signature" / c.Bytes(64),
 
     "_end_offset" / c.Tell,
-    "header_len" / c.Pointer(c.this._start_offset + 4, c.Rebuild(c.Int32ul, c.this._end_offset - c.this._start_offset)),
+    "header_len" / c.Pointer(
+        c.this._start_offset + 4,
+        c.Rebuild(c.Int32ul, c.this._end_offset - c.this._start_offset)
+    ),
 )
 
 
@@ -97,12 +100,13 @@ Firmware = c.Struct(
     "code" / c.Bytes(c.this.firmware_header.code_length),
     c.Terminated,
 )
+# fmt: on
 
 
 def validate_firmware(filename):
     with open(filename, "rb") as f:
         data = f.read()
-    if data[:6] == b'54525a':
+    if data[:6] == b"54525a":
         data = binascii.unhexlify(data)
 
     try:
@@ -113,19 +117,29 @@ def validate_firmware(filename):
     vendor = fw.vendor_header
     header = fw.firmware_header
 
-    print("Vendor header from {}, version {}.{}".format(vendor.vendor_string, vendor.version.major, vendor.version.minor))
-    print("Firmware version {v.major}.{v.minor}.{v.patch} build {v.build}".format(v=header.version))
+    print(
+        "Vendor header from {}, version {}.{}".format(
+            vendor.vendor_string, vendor.version.major, vendor.version.minor
+        )
+    )
+    print(
+        "Firmware version {v.major}.{v.minor}.{v.patch} build {v.build}".format(
+            v=header.version
+        )
+    )
 
     # rebuild header without signatures
     stripped_header = header.copy()
     stripped_header.sigmask = 0
-    stripped_header.signature = b'\0' * 64
+    stripped_header.signature = b"\0" * 64
     header_bytes = FirmwareHeader.build(stripped_header)
     digest = pyblake2.blake2s(header_bytes).digest()
 
     print("Fingerprint: {}".format(binascii.hexlify(digest).decode("ascii")))
 
-    global_pk = cosi.combine_keys(vendor.pubkeys[i] for i in range(8) if header.sigmask & (1 << i))
+    global_pk = cosi.combine_keys(
+        vendor.pubkeys[i] for i in range(8) if header.sigmask & (1 << i)
+    )
 
     try:
         cosi.verify(header.signature, digest, global_pk)
@@ -156,22 +170,29 @@ def update(client, fp):
         resp = client.call(proto.FirmwareUpload(payload=data))
         if isinstance(resp, proto.Success):
             return True
-        elif isinstance(resp, proto.Failure) and resp.code == proto.FailureType.FirmwareError:
+        elif (
+            isinstance(resp, proto.Failure)
+            and resp.code == proto.FailureType.FirmwareError
+        ):
             return False
         raise RuntimeError("Unexpected result %s" % resp)
 
     # TREZORv2 method
     if isinstance(resp, proto.FirmwareRequest):
         import pyblake2
+
         while True:
-            payload = data[resp.offset:resp.offset + resp.length]
+            payload = data[resp.offset : resp.offset + resp.length]
             digest = pyblake2.blake2s(payload).digest()
             resp = client.call(proto.FirmwareUpload(payload=payload, hash=digest))
             if isinstance(resp, proto.FirmwareRequest):
                 continue
             elif isinstance(resp, proto.Success):
                 return True
-            elif isinstance(resp, proto.Failure) and resp.code == proto.FailureType.FirmwareError:
+            elif (
+                isinstance(resp, proto.Failure)
+                and resp.code == proto.FailureType.FirmwareError
+            ):
                 return False
             raise RuntimeError("Unexpected result %s" % resp)
 

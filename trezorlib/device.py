@@ -16,34 +16,42 @@
 
 import os
 import warnings
+
 from mnemonic import Mnemonic
 
 from . import messages as proto
 from .tools import expect, session
-
 from .transport import enumerate_devices, get_transport
 
 
 class TrezorDevice:
-    '''
+    """
     This class is deprecated. (There is no reason for it to exist in the first
     place, it is nothing but a collection of two functions.)
     Instead, please use functions from the ``trezorlib.transport`` module.
-    '''
+    """
 
     @classmethod
     def enumerate(cls):
-        warnings.warn('TrezorDevice is deprecated.', DeprecationWarning)
+        warnings.warn("TrezorDevice is deprecated.", DeprecationWarning)
         return enumerate_devices()
 
     @classmethod
     def find_by_path(cls, path):
-        warnings.warn('TrezorDevice is deprecated.', DeprecationWarning)
+        warnings.warn("TrezorDevice is deprecated.", DeprecationWarning)
         return get_transport(path, prefix_search=False)
 
 
 @expect(proto.Success, field="message")
-def apply_settings(client, label=None, language=None, use_passphrase=None, homescreen=None, passphrase_source=None, auto_lock_delay_ms=None):
+def apply_settings(
+    client,
+    label=None,
+    language=None,
+    use_passphrase=None,
+    homescreen=None,
+    passphrase_source=None,
+    auto_lock_delay_ms=None,
+):
     settings = proto.ApplySettings()
     if label is not None:
         settings.label = label
@@ -91,9 +99,21 @@ def wipe(client):
 
 
 @expect(proto.Success, field="message")
-def recover(client, word_count, passphrase_protection, pin_protection, label, language, type=proto.RecoveryDeviceType.ScrambledWords, expand=False, dry_run=False):
+def recover(
+    client,
+    word_count,
+    passphrase_protection,
+    pin_protection,
+    label,
+    language,
+    type=proto.RecoveryDeviceType.ScrambledWords,
+    expand=False,
+    dry_run=False,
+):
     if client.features.initialized and not dry_run:
-        raise RuntimeError("Device is initialized already. Call wipe_device() and try again.")
+        raise RuntimeError(
+            "Device is initialized already. Call wipe_device() and try again."
+        )
 
     if word_count not in (12, 18, 24):
         raise ValueError("Invalid word count. Use 12/18/24")
@@ -103,17 +123,20 @@ def recover(client, word_count, passphrase_protection, pin_protection, label, la
     client.expand = expand
     if client.expand:
         # optimization to load the wordlist once, instead of for each recovery word
-        client.mnemonic_wordlist = Mnemonic('english')
+        client.mnemonic_wordlist = Mnemonic("english")
 
-    res = client.call(proto.RecoveryDevice(
-        word_count=int(word_count),
-        passphrase_protection=bool(passphrase_protection),
-        pin_protection=bool(pin_protection),
-        label=label,
-        language=language,
-        enforce_wordlist=True,
-        type=type,
-        dry_run=dry_run))
+    res = client.call(
+        proto.RecoveryDevice(
+            word_count=int(word_count),
+            passphrase_protection=bool(passphrase_protection),
+            pin_protection=bool(pin_protection),
+            label=label,
+            language=language,
+            enforce_wordlist=True,
+            type=type,
+            dry_run=dry_run,
+        )
+    )
 
     client.init_device()
     return res
@@ -121,19 +144,33 @@ def recover(client, word_count, passphrase_protection, pin_protection, label, la
 
 @expect(proto.Success, field="message")
 @session
-def reset(client, display_random, strength, passphrase_protection, pin_protection, label, language, u2f_counter=0, skip_backup=False):
+def reset(
+    client,
+    display_random,
+    strength,
+    passphrase_protection,
+    pin_protection,
+    label,
+    language,
+    u2f_counter=0,
+    skip_backup=False,
+):
     if client.features.initialized:
-        raise RuntimeError("Device is initialized already. Call wipe_device() and try again.")
+        raise RuntimeError(
+            "Device is initialized already. Call wipe_device() and try again."
+        )
 
     # Begin with device reset workflow
-    msg = proto.ResetDevice(display_random=display_random,
-                            strength=strength,
-                            passphrase_protection=bool(passphrase_protection),
-                            pin_protection=bool(pin_protection),
-                            language=language,
-                            label=label,
-                            u2f_counter=u2f_counter,
-                            skip_backup=bool(skip_backup))
+    msg = proto.ResetDevice(
+        display_random=display_random,
+        strength=strength,
+        passphrase_protection=bool(passphrase_protection),
+        pin_protection=bool(pin_protection),
+        language=language,
+        label=label,
+        u2f_counter=u2f_counter,
+        skip_backup=bool(skip_backup),
+    )
 
     resp = client.call(msg)
     if not isinstance(resp, proto.EntropyRequest):

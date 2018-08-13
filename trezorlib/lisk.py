@@ -1,7 +1,7 @@
 import binascii
 
 from . import messages as proto
-from .tools import expect, CallException, normalize_nfc
+from .tools import CallException, expect, normalize_nfc
 
 
 @expect(proto.LiskAddress, field="address")
@@ -23,7 +23,11 @@ def sign_message(client, n, message):
 def verify_message(client, pubkey, signature, message):
     message = normalize_nfc(message)
     try:
-        resp = client.call(proto.LiskVerifyMessage(signature=signature, public_key=pubkey, message=message))
+        resp = client.call(
+            proto.LiskVerifyMessage(
+                signature=signature, public_key=pubkey, message=message
+            )
+        )
     except CallException as e:
         resp = e
     return isinstance(resp, proto.Success)
@@ -55,7 +59,9 @@ def sign_tx(client, n, transaction):
     msg = proto.LiskTransactionCommon()
 
     msg.type = transaction["type"]
-    msg.fee = int(transaction["fee"])  # Lisk use strings for big numbers (javascript issue)
+    msg.fee = int(
+        transaction["fee"]
+    )  # Lisk use strings for big numbers (javascript issue)
     msg.amount = int(transaction["amount"])  # And we convert it back to number
     msg.timestamp = transaction["timestamp"]
 

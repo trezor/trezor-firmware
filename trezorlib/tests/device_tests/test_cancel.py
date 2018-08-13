@@ -16,20 +16,24 @@
 
 import pytest
 
-from .conftest import setup_client
 import trezorlib.messages as m
+
+from .conftest import setup_client
 
 
 @setup_client()
-@pytest.mark.parametrize("message", [
-    m.Ping(message="hello", button_protection=True),
-    m.GetAddress(
-        address_n=[0],
-        coin_name="Bitcoin",
-        script_type=m.InputScriptType.SPENDADDRESS,
-        show_display=True
-    ),
-])
+@pytest.mark.parametrize(
+    "message",
+    [
+        m.Ping(message="hello", button_protection=True),
+        m.GetAddress(
+            address_n=[0],
+            coin_name="Bitcoin",
+            script_type=m.InputScriptType.SPENDADDRESS,
+            show_display=True,
+        ),
+    ],
+)
 def test_cancel_message_via_cancel(client, message):
     resp = client.call_raw(message)
     assert isinstance(resp, m.ButtonRequest)
@@ -44,15 +48,18 @@ def test_cancel_message_via_cancel(client, message):
 
 
 @setup_client()
-@pytest.mark.parametrize("message", [
-    m.Ping(message="hello", button_protection=True),
-    m.GetAddress(
-        address_n=[0],
-        coin_name="Bitcoin",
-        script_type=m.InputScriptType.SPENDADDRESS,
-        show_display=True
-    ),
-])
+@pytest.mark.parametrize(
+    "message",
+    [
+        m.Ping(message="hello", button_protection=True),
+        m.GetAddress(
+            address_n=[0],
+            coin_name="Bitcoin",
+            script_type=m.InputScriptType.SPENDADDRESS,
+            show_display=True,
+        ),
+    ],
+)
 def test_cancel_message_via_initialize(client, message):
     resp = client.call_raw(message)
     assert isinstance(resp, m.ButtonRequest)

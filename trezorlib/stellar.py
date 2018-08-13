@@ -19,7 +19,7 @@ import struct
 import xdrlib
 
 from . import messages
-from .tools import expect, CallException
+from .tools import CallException, expect
 
 # Memo types
 MEMO_TYPE_NONE = 0
@@ -65,7 +65,7 @@ def address_from_public_key(pk_bytes):
     # checksum
     final_bytes.extend(struct.pack("<H", _crc16_checksum(final_bytes)))
 
-    return str(base64.b32encode(final_bytes), 'utf-8')
+    return str(base64.b32encode(final_bytes), "utf-8")
 
 
 def address_to_public_key(address_str):
@@ -92,14 +92,21 @@ def parse_transaction_bytes(tx_bytes):
 
     # Timebounds is an optional field
     if unpacker.unpack_bool():
-        max_timebound = 2**32 - 1  # max unsigned 32-bit int (trezor does not support the full 64-bit time value)
+        max_timebound = 2 ** 32 - 1  # max unsigned 32-bit int
+        # (trezor does not support the full 64-bit time value)
+
         tx.timebounds_start = unpacker.unpack_uhyper()
         tx.timebounds_end = unpacker.unpack_uhyper()
 
         if tx.timebounds_start > max_timebound or tx.timebounds_start < 0:
-            raise ValueError("Starting timebound out of range (must be between 0 and " + max_timebound)
+            raise ValueError(
+                "Starting timebound out of range (must be between 0 and "
+                + max_timebound
+            )
         if tx.timebounds_end > max_timebound or tx.timebounds_end < 0:
-            raise ValueError("Ending timebound out of range (must be between 0 and " + max_timebound)
+            raise ValueError(
+                "Ending timebound out of range (must be between 0 and " + max_timebound
+            )
 
     # memo type determines what optional fields are set
     tx.memo_type = unpacker.unpack_uint()
@@ -117,7 +124,7 @@ def parse_transaction_bytes(tx_bytes):
     tx.num_operations = unpacker.unpack_uint()
 
     operations = []
-    for i in range(tx.num_operations):
+    for _ in range(tx.num_operations):
         operations.append(_parse_operation_bytes(unpacker))
 
     return tx, operations
@@ -140,7 +147,7 @@ def _parse_operation_bytes(unpacker):
         return messages.StellarCreateAccountOp(
             source_account=source_account,
             new_account=_xdr_read_address(unpacker),
-            starting_balance=unpacker.unpack_hyper()
+            starting_balance=unpacker.unpack_hyper(),
         )
 
     if type == OP_PAYMENT:
@@ -148,7 +155,7 @@ def _parse_operation_bytes(unpacker):
             source_account=source_account,
             destination_account=_xdr_read_address(unpacker),
             asset=_xdr_read_asset(unpacker),
-            amount=unpacker.unpack_hyper()
+            amount=unpacker.unpack_hyper(),
         )
 
     if type == OP_PATH_PAYMENT:
@@ -159,11 +166,11 @@ def _parse_operation_bytes(unpacker):
             destination_account=_xdr_read_address(unpacker),
             destination_asset=_xdr_read_asset(unpacker),
             destination_amount=unpacker.unpack_hyper(),
-            paths=[]
+            paths=[],
         )
 
         num_paths = unpacker.unpack_uint()
-        for i in range(num_paths):
+        for _ in range(num_paths):
             op.paths.append(_xdr_read_asset(unpacker))
 
         return op
@@ -176,7 +183,7 @@ def _parse_operation_bytes(unpacker):
             amount=unpacker.unpack_hyper(),
             price_n=unpacker.unpack_uint(),
             price_d=unpacker.unpack_uint(),
-            offer_id=unpacker.unpack_uhyper()
+            offer_id=unpacker.unpack_uhyper(),
         )
 
     if type == OP_CREATE_PASSIVE_OFFER:
@@ -186,13 +193,11 @@ def _parse_operation_bytes(unpacker):
             buying_asset=_xdr_read_asset(unpacker),
             amount=unpacker.unpack_hyper(),
             price_n=unpacker.unpack_uint(),
-            price_d=unpacker.unpack_uint()
+            price_d=unpacker.unpack_uint(),
         )
 
     if type == OP_SET_OPTIONS:
-        op = messages.StellarSetOptionsOp(
-            source_account=source_account
-        )
+        op = messages.StellarSetOptionsOp(source_account=source_account)
 
         # Inflation destination
         if unpacker.unpack_bool():
@@ -238,14 +243,14 @@ def _parse_operation_bytes(unpacker):
         return messages.StellarChangeTrustOp(
             source_account=source_account,
             asset=_xdr_read_asset(unpacker),
-            limit=unpacker.unpack_uhyper()
+            limit=unpacker.unpack_uhyper(),
         )
 
     if type == OP_ALLOW_TRUST:
         op = messages.StellarAllowTrustOp(
             source_account=source_account,
             trusted_account=_xdr_read_address(unpacker),
-            asset_type=unpacker.unpack_uint()
+            asset_type=unpacker.unpack_uint(),
         )
 
         if op.asset_type == ASSET_TYPE_ALPHA4:
@@ -260,15 +265,14 @@ def _parse_operation_bytes(unpacker):
     if type == OP_ACCOUNT_MERGE:
         return messages.StellarAccountMergeOp(
             source_account=source_account,
-            destination_account=_xdr_read_address(unpacker)
+            destination_account=_xdr_read_address(unpacker),
         )
 
     # Inflation is not implemented since anyone can submit this operation to the network
 
     if type == OP_MANAGE_DATA:
         op = messages.StellarManageDataOp(
-            source_account=source_account,
-            key=unpacker.unpack_string(),
+            source_account=source_account, key=unpacker.unpack_string()
         )
 
         # Only set value if the field is present
@@ -281,8 +285,7 @@ def _parse_operation_bytes(unpacker):
     # see: https://github.com/stellar/stellar-core/blob/master/src/xdr/Stellar-transaction.x#L269
     if type == OP_BUMP_SEQUENCE:
         return messages.StellarBumpSequenceOp(
-            source_account=source_account,
-            bump_to=unpacker.unpack_uhyper()
+            source_account=source_account, bump_to=unpacker.unpack_uhyper()
         )
 
     raise ValueError("Unknown operation type: " + str(type))
@@ -290,9 +293,7 @@ def _parse_operation_bytes(unpacker):
 
 def _xdr_read_asset(unpacker):
     """Reads a stellar Asset from unpacker"""
-    asset = messages.StellarAssetType(
-        type=unpacker.unpack_uint()
-    )
+    asset = messages.StellarAssetType(type=unpacker.unpack_uint())
 
     if asset.type == ASSET_TYPE_ALPHA4:
         asset.code = unpacker.unpack_fstring(4)
@@ -329,8 +330,8 @@ def _crc16_checksum(bytes):
 
     for byte in bytes:
         for i in range(8):
-            bit = ((byte >> (7 - i) & 1) == 1)
-            c15 = ((crc >> 15 & 1) == 1)
+            bit = (byte >> (7 - i) & 1) == 1
+            c15 = (crc >> 15 & 1) == 1
             crc <<= 1
             if c15 ^ bit:
                 crc ^= polynomial
@@ -343,15 +344,21 @@ def _crc16_checksum(bytes):
 
 @expect(messages.StellarPublicKey, field="public_key")
 def get_public_key(client, address_n, show_display=False):
-    return client.call(messages.StellarGetPublicKey(address_n=address_n, show_display=show_display))
+    return client.call(
+        messages.StellarGetPublicKey(address_n=address_n, show_display=show_display)
+    )
 
 
 @expect(messages.StellarAddress, field="address")
 def get_address(client, address_n, show_display=False):
-    return client.call(messages.StellarGetAddress(address_n=address_n, show_display=show_display))
+    return client.call(
+        messages.StellarGetAddress(address_n=address_n, show_display=show_display)
+    )
 
 
-def sign_tx(client, tx, operations, address_n, network_passphrase=DEFAULT_NETWORK_PASSPHRASE):
+def sign_tx(
+    client, tx, operations, address_n, network_passphrase=DEFAULT_NETWORK_PASSPHRASE
+):
     tx.network_passphrase = network_passphrase
     tx.address_n = address_n
     tx.num_operations = len(operations)
@@ -368,14 +375,18 @@ def sign_tx(client, tx, operations, address_n, network_passphrase=DEFAULT_NETWOR
             resp = client.call(operations.pop(0))
     except IndexError:
         # pop from empty list
-        raise CallException("Stellar.UnexpectedEndOfOperations",
-                            "Reached end of operations without a signature.") from None
+        raise CallException(
+            "Stellar.UnexpectedEndOfOperations",
+            "Reached end of operations without a signature.",
+        ) from None
 
     if not isinstance(resp, messages.StellarSignedTx):
         raise CallException(messages.FailureType.UnexpectedMessage, resp)
 
     if operations:
-        raise CallException("Stellar.UnprocessedOperations",
-                            "Received a signature before processing all operations.")
+        raise CallException(
+            "Stellar.UnprocessedOperations",
+            "Received a signature before processing all operations.",
+        )
 
     return resp

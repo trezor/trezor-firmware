@@ -16,15 +16,15 @@
 
 import socket
 
-from ..protocol_v1 import ProtocolV1
 from . import Transport, TransportException
+from ..protocol_v1 import ProtocolV1
 
 
 class UdpTransport(Transport):
 
-    DEFAULT_HOST = '127.0.0.1'
+    DEFAULT_HOST = "127.0.0.1"
     DEFAULT_PORT = 21324
-    PATH_PREFIX = 'udp'
+    PATH_PREFIX = "udp"
 
     def __init__(self, device=None, protocol=None):
         super(UdpTransport, self).__init__()
@@ -33,7 +33,7 @@ class UdpTransport(Transport):
             host = UdpTransport.DEFAULT_HOST
             port = UdpTransport.DEFAULT_PORT
         else:
-            devparts = device.split(':')
+            devparts = device.split(":")
             host = devparts[0]
             port = int(devparts[1]) if len(devparts) > 1 else UdpTransport.DEFAULT_PORT
         if not protocol:
@@ -47,7 +47,7 @@ class UdpTransport(Transport):
 
     def find_debug(self):
         host, port = self.device
-        return UdpTransport('{}:{}'.format(host, port + 1), self.protocol)
+        return UdpTransport("{}:{}".format(host, port + 1), self.protocol)
 
     @classmethod
     def _try_path(cls, path):
@@ -57,13 +57,15 @@ class UdpTransport(Transport):
             if d._ping():
                 return d
             else:
-                raise TransportException('No TREZOR device found at address {}'.format(path))
+                raise TransportException(
+                    "No TREZOR device found at address {}".format(path)
+                )
         finally:
             d.close()
 
     @classmethod
     def enumerate(cls):
-        default_path = '{}:{}'.format(cls.DEFAULT_HOST, cls.DEFAULT_PORT)
+        default_path = "{}:{}".format(cls.DEFAULT_HOST, cls.DEFAULT_PORT)
         try:
             return [cls._try_path(default_path)]
         except TransportException:
@@ -74,7 +76,7 @@ class UdpTransport(Transport):
         if prefix_search:
             return super().find_by_path(path, prefix_search)
         else:
-            path = path.replace('{}:'.format(cls.PATH_PREFIX), '')
+            path = path.replace("{}:".format(cls.PATH_PREFIX), "")
             return cls._try_path(path)
 
     def open(self):
@@ -90,14 +92,14 @@ class UdpTransport(Transport):
             self.socket = None
 
     def _ping(self):
-        '''Test if the device is listening.'''
+        """Test if the device is listening."""
         resp = None
         try:
-            self.socket.sendall(b'PINGPING')
+            self.socket.sendall(b"PINGPING")
             resp = self.socket.recv(8)
         except Exception:
             pass
-        return resp == b'PONGPONG'
+        return resp == b"PONGPONG"
 
     def read(self):
         return self.protocol.read(self)
@@ -107,7 +109,7 @@ class UdpTransport(Transport):
 
     def write_chunk(self, chunk):
         if len(chunk) != 64:
-            raise TransportException('Unexpected data length')
+            raise TransportException("Unexpected data length")
         self.socket.sendall(chunk)
 
     def read_chunk(self):
@@ -118,7 +120,7 @@ class UdpTransport(Transport):
             except socket.timeout:
                 continue
         if len(chunk) != 64:
-            raise TransportException('Unexpected chunk size: %d' % len(chunk))
+            raise TransportException("Unexpected chunk size: %d" % len(chunk))
         return bytearray(chunk)
 
 

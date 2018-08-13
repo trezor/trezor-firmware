@@ -14,14 +14,12 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from .common import TrezorTest
+from trezorlib import device, messages as proto
 
-from trezorlib import messages as proto
-from trezorlib import device
+from .common import TrezorTest
 
 
 class TestMsgWipedevice(TrezorTest):
-
     def test_wipe_device(self):
         self.setup_mnemonic_pin_passphrase()
         features = self.client.call_raw(proto.Initialize())

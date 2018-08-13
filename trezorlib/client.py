@@ -14,22 +14,32 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import binascii
 import functools
+import getpass
 import logging
 import os
 import sys
 import time
-import binascii
-import getpass
 import warnings
 
 from mnemonic import Mnemonic
 
-from . import messages as proto
-from . import btc, cosi, device, ethereum, firmware, lisk, misc, nem, stellar
-from . import mapping
-from . import tools
-from . import debuglink
+from . import (
+    btc,
+    cosi,
+    debuglink,
+    device,
+    ethereum,
+    firmware,
+    lisk,
+    mapping,
+    messages as proto,
+    misc,
+    nem,
+    stellar,
+    tools,
+)
 
 if sys.version_info.major < 3:
     raise Exception("Trezorlib does not support Python 2 anymore.")
@@ -42,6 +52,7 @@ LOG = logging.getLogger(__name__)
 try:
     import termios
     import tty
+
     # POSIX system. Create and return a getch that manipulates the tty.
     # On Windows, termios will fail to import.
 
@@ -55,6 +66,7 @@ try:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch
 
+
 except ImportError:
     # Windows system.
     # Use msvcrt's getch function.
@@ -67,12 +79,16 @@ except ImportError:
                 # skip special keys: read the scancode and repeat
                 msvcrt.getch()
                 continue
-            return key.decode('latin1')
+            return key.decode("latin1")
 
 
 def get_buttonrequest_value(code):
     # Converts integer code to its string representation of ButtonRequestType
-    return [k for k in dir(proto.ButtonRequestType) if getattr(proto.ButtonRequestType, k) == code][0]
+    return [
+        k
+        for k in dir(proto.ButtonRequestType)
+        if getattr(proto.ButtonRequestType, k) == code
+    ][0]
 
 
 class PinException(tools.CallException):
@@ -81,13 +97,18 @@ class PinException(tools.CallException):
 
 class MovedTo:
     """Deprecation redirector for methods that were formerly part of TrezorClient"""
+
     def __init__(self, where):
         self.where = where
-        self.name = where.__module__ + '.' + where.__name__
+        self.name = where.__module__ + "." + where.__name__
 
     def _deprecated_redirect(self, client, *args, **kwargs):
         """Redirector for a deprecated method on TrezorClient"""
-        warnings.warn("Function has been moved to %s" % self.name, DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            "Function has been moved to %s" % self.name,
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.where(client, *args, **kwargs)
 
     def __get__(self, instance, cls):
@@ -113,7 +134,7 @@ class BaseClient(object):
 
     @tools.session
     def call_raw(self, msg):
-        __tracebackhide__ = True  # pytest traceback hiding - this function won't appear in tracebacks
+        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         self.transport.write(msg)
         return self.transport.read()
 
@@ -126,20 +147,25 @@ class BaseClient(object):
         if handler is not None:
             msg = handler(resp)
             if msg is None:
-                raise ValueError("Callback %s must return protobuf message, not None" % handler)
+                raise ValueError(
+                    "Callback %s must return protobuf message, not None" % handler
+                )
             resp = self.call(msg)
 
         return resp
 
     def callback_Failure(self, msg):
-        if msg.code in (proto.FailureType.PinInvalid,
-                        proto.FailureType.PinCancelled, proto.FailureType.PinExpected):
+        if msg.code in (
+            proto.FailureType.PinInvalid,
+            proto.FailureType.PinCancelled,
+            proto.FailureType.PinExpected,
+        ):
             raise PinException(msg.code, msg.message)
 
         raise tools.CallException(msg.code, msg.message)
 
     def register_message(self, msg):
-        '''Allow application to register custom protobuf message type'''
+        """Allow application to register custom protobuf message type"""
         mapping.register_message(msg)
 
 
@@ -164,21 +190,27 @@ class TextUIMixin(object):
     def callback_RecoveryMatrix(self, msg):
         if self.recovery_matrix_first_pass:
             self.recovery_matrix_first_pass = False
-            self.print("Use the numeric keypad to describe positions.  For the word list use only left and right keys.")
+            self.print(
+                "Use the numeric keypad to describe positions.  For the word list use only left and right keys."
+            )
             self.print("Use backspace to correct an entry.  The keypad layout is:")
             self.print("    7 8 9     7 | 9")
             self.print("    4 5 6     4 | 6")
             self.print("    1 2 3     1 | 3")
         while True:
             character = getch()
-            if character in ('\x03', '\x04'):
+            if character in ("\x03", "\x04"):
                 return proto.Cancel()
 
-            if character in ('\x08', '\x7f'):
-                return proto.WordAck(word='\x08')
+            if character in ("\x08", "\x7f"):
+                return proto.WordAck(word="\x08")
 
             # ignore middle column if only 6 keys requested.
-            if msg.type == proto.WordRequestType.Matrix6 and character in ('2', '5', '8'):
+            if msg.type == proto.WordRequestType.Matrix6 and character in (
+                "2",
+                "5",
+                "8",
+            ):
                 continue
 
             if character.isdigit():
@@ -186,22 +218,24 @@ class TextUIMixin(object):
 
     def callback_PinMatrixRequest(self, msg):
         if msg.type == proto.PinMatrixRequestType.Current:
-            desc = 'current PIN'
+            desc = "current PIN"
         elif msg.type == proto.PinMatrixRequestType.NewFirst:
-            desc = 'new PIN'
+            desc = "new PIN"
         elif msg.type == proto.PinMatrixRequestType.NewSecond:
-            desc = 'new PIN again'
+            desc = "new PIN again"
         else:
-            desc = 'PIN'
+            desc = "PIN"
 
-        self.print("Use the numeric keypad to describe number positions. The layout is:")
+        self.print(
+            "Use the numeric keypad to describe number positions. The layout is:"
+        )
         self.print("    7 8 9")
         self.print("    4 5 6")
         self.print("    1 2 3")
         self.print("Please enter %s: " % desc)
-        pin = getpass.getpass('')
+        pin = getpass.getpass("")
         if not pin.isdigit():
-            raise ValueError('Non-numerical PIN provided')
+            raise ValueError("Non-numerical PIN provided")
         return proto.PinMatrixAck(pin=pin)
 
     def callback_PassphraseRequest(self, msg):
@@ -214,9 +248,9 @@ class TextUIMixin(object):
             return proto.PassphraseAck(passphrase=passphrase)
 
         self.print("Passphrase required: ")
-        passphrase = getpass.getpass('')
+        passphrase = getpass.getpass("")
         self.print("Confirm your Passphrase: ")
-        if passphrase == getpass.getpass(''):
+        if passphrase == getpass.getpass(""):
             passphrase = Mnemonic.normalize_string(passphrase)
             return proto.PassphraseAck(passphrase=passphrase)
         else:
@@ -227,8 +261,7 @@ class TextUIMixin(object):
         return proto.PassphraseStateAck()
 
     def callback_WordRequest(self, msg):
-        if msg.type in (proto.WordRequestType.Matrix9,
-                        proto.WordRequestType.Matrix6):
+        if msg.type in (proto.WordRequestType.Matrix9, proto.WordRequestType.Matrix6):
             return self.callback_RecoveryMatrix(msg)
         self.print("Enter one word of mnemonic: ")
         word = input()
@@ -247,7 +280,7 @@ class DebugLinkMixin(object):
     # of unit testing, because it will fail to work
     # without special DebugLink interface provided
     # by the device.
-    DEBUG = LOG.getChild('debug_link').debug
+    DEBUG = LOG.getChild("debug_link").debug
 
     def __init__(self, *args, **kwargs):
         super(DebugLinkMixin, self).__init__(*args, **kwargs)
@@ -263,7 +296,7 @@ class DebugLinkMixin(object):
         self.expected_responses = None
 
         # Use blank passphrase
-        self.set_passphrase('')
+        self.set_passphrase("")
 
     def close(self):
         super(DebugLinkMixin, self).close()
@@ -291,8 +324,10 @@ class DebugLinkMixin(object):
         # return isinstance(value, TypeError)
         # Evaluate missed responses in 'with' statement
         if self.expected_responses is not None and len(self.expected_responses):
-            raise RuntimeError("Some of expected responses didn't come from device: %s" %
-                               [repr(x) for x in self.expected_responses])
+            raise RuntimeError(
+                "Some of expected responses didn't come from device: %s"
+                % [repr(x) for x in self.expected_responses]
+            )
 
         # Cleanup
         self.expected_responses = None
@@ -311,13 +346,14 @@ class DebugLinkMixin(object):
         self.passphrase = Mnemonic.normalize_string(passphrase)
 
     def set_mnemonic(self, mnemonic):
-        self.mnemonic = Mnemonic.normalize_string(mnemonic).split(' ')
+        self.mnemonic = Mnemonic.normalize_string(mnemonic).split(" ")
 
     def call_raw(self, msg):
-        __tracebackhide__ = True  # pytest traceback hiding - this function won't appear in tracebacks
+        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
         if SCREENSHOT and self.debug:
             from PIL import Image
+
             layout = self.debug.read_layout()
             im = Image.new("RGB", (128, 64))
             pix = im.load()
@@ -326,7 +362,7 @@ class DebugLinkMixin(object):
                     rx, ry = 127 - x, 63 - y
                     if (ord(layout[rx + (ry / 8) * 128]) & (1 << (ry % 8))) > 0:
                         pix[x, y] = (255, 255, 255)
-            im.save('scr%05d.png' % self.screenshot_id)
+            im.save("scr%05d.png" % self.screenshot_id)
             self.screenshot_id += 1
 
         resp = super(DebugLinkMixin, self).call_raw(msg)
@@ -334,25 +370,31 @@ class DebugLinkMixin(object):
         return resp
 
     def _check_request(self, msg):
-        __tracebackhide__ = True  # pytest traceback hiding - this function won't appear in tracebacks
+        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
         if self.expected_responses is not None:
             try:
                 expected = self.expected_responses.pop(0)
             except IndexError:
-                raise AssertionError(proto.FailureType.UnexpectedMessage,
-                                     "Got %s, but no message has been expected" % repr(msg))
+                raise AssertionError(
+                    proto.FailureType.UnexpectedMessage,
+                    "Got %s, but no message has been expected" % repr(msg),
+                )
 
             if msg.__class__ != expected.__class__:
-                raise AssertionError(proto.FailureType.UnexpectedMessage,
-                                     "Expected %s, got %s" % (repr(expected), repr(msg)))
+                raise AssertionError(
+                    proto.FailureType.UnexpectedMessage,
+                    "Expected %s, got %s" % (repr(expected), repr(msg)),
+                )
 
             for field, value in expected.__dict__.items():
                 if value is None or value == []:
                     continue
                 if getattr(msg, field) != value:
-                    raise AssertionError(proto.FailureType.UnexpectedMessage,
-                                         "Expected %s, got %s" % (repr(expected), repr(msg)))
+                    raise AssertionError(
+                        proto.FailureType.UnexpectedMessage,
+                        "Expected %s, got %s" % (repr(expected), repr(msg)),
+                    )
 
     def callback_ButtonRequest(self, msg):
         self.DEBUG("ButtonRequest code: " + get_buttonrequest_value(msg.code))
@@ -368,7 +410,7 @@ class DebugLinkMixin(object):
         if self.pin_correct:
             pin = self.debug.read_pin_encoded()
         else:
-            pin = '444222'
+            pin = "444222"
         return proto.PinMatrixAck(pin=pin)
 
     def callback_PassphraseRequest(self, msg):
@@ -380,7 +422,7 @@ class DebugLinkMixin(object):
 
     def callback_WordRequest(self, msg):
         (word, pos) = self.debug.read_recovery_word()
-        if word != '':
+        if word != "":
             return proto.WordAck(word=word)
         if pos != 0:
             return proto.WordAck(word=self.mnemonic[pos - 1])
@@ -389,7 +431,7 @@ class DebugLinkMixin(object):
 
 
 class ProtocolMixin(object):
-    VENDORS = ('bitcointrezor.com', 'trezor.io')
+    VENDORS = ("bitcointrezor.com", "trezor.io")
 
     def __init__(self, state=None, *args, **kwargs):
         super(ProtocolMixin, self).__init__(*args, **kwargs)
@@ -410,15 +452,27 @@ class ProtocolMixin(object):
 
     @staticmethod
     def expand_path(n):
-        warnings.warn('expand_path is deprecated, use tools.parse_path', DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            "expand_path is deprecated, use tools.parse_path",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return tools.parse_path(n)
 
     @tools.expect(proto.Success, field="message")
-    def ping(self, msg, button_protection=False, pin_protection=False, passphrase_protection=False):
-        msg = proto.Ping(message=msg,
-                         button_protection=button_protection,
-                         pin_protection=pin_protection,
-                         passphrase_protection=passphrase_protection)
+    def ping(
+        self,
+        msg,
+        button_protection=False,
+        pin_protection=False,
+        passphrase_protection=False,
+    ):
+        msg = proto.Ping(
+            message=msg,
+            button_protection=button_protection,
+            pin_protection=pin_protection,
+            passphrase_protection=passphrase_protection,
+        )
         return self.call(msg)
 
     def get_device_id(self):
@@ -435,14 +489,18 @@ class ProtocolMixin(object):
             if inp.prev_hash in txes:
                 continue
 
-            if inp.script_type in (proto.InputScriptType.SPENDP2SHWITNESS,
-                                   proto.InputScriptType.SPENDWITNESS):
+            if inp.script_type in (
+                proto.InputScriptType.SPENDP2SHWITNESS,
+                proto.InputScriptType.SPENDWITNESS,
+            ):
                 continue
 
             if not self.tx_api:
-                raise RuntimeError('TX_API not defined')
+                raise RuntimeError("TX_API not defined")
 
-            prev_tx = self.tx_api.get_tx(binascii.hexlify(inp.prev_hash).decode('utf-8'))
+            prev_tx = self.tx_api.get_tx(
+                binascii.hexlify(inp.prev_hash).decode("utf-8")
+            )
             txes[inp.prev_hash] = prev_tx
 
         return txes

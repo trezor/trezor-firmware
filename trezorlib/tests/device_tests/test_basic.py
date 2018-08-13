@@ -14,22 +14,20 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from .common import TrezorTest
+from trezorlib import device, messages
 
-from trezorlib import messages
-from trezorlib import device
+from .common import TrezorTest
 
 
 class TestBasic(TrezorTest):
-
     def test_features(self):
         f0 = self.client.features
         f1 = self.client.call(messages.Initialize())
         assert f0 == f1
 
     def test_ping(self):
-        ping = self.client.call(messages.Ping(message='ahoj!'))
-        assert ping == messages.Success(message='ahoj!')
+        ping = self.client.call(messages.Ping(message="ahoj!"))
+        assert ping == messages.Success(message="ahoj!")
 
     def test_device_id_same(self):
         id1 = self.client.get_device_id()

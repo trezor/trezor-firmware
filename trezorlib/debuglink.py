@@ -18,8 +18,7 @@ import binascii
 
 from mnemonic import Mnemonic
 
-from . import messages as proto
-from . import tools
+from . import messages as proto, tools
 from .tools import expect
 
 
@@ -69,7 +68,7 @@ class DebugLink(object):
         # We have to encode that into encoded pin,
         # because application must send back positions
         # on keypad, not a real PIN.
-        pin_encoded = ''.join([str(matrix.index(p) + 1) for p in pin])
+        pin_encoded = "".join([str(matrix.index(p) + 1) for p in pin])
 
         print("Encoded PIN:", pin_encoded)
         return pin_encoded
@@ -138,21 +137,33 @@ class DebugLink(object):
         return obj.memory
 
     def memory_write(self, address, memory, flash=False):
-        self._call(proto.DebugLinkMemoryWrite(address=address, memory=memory, flash=flash), nowait=True)
+        self._call(
+            proto.DebugLinkMemoryWrite(address=address, memory=memory, flash=flash),
+            nowait=True,
+        )
 
     def flash_erase(self, sector):
         self._call(proto.DebugLinkFlashErase(sector=sector), nowait=True)
 
 
 @expect(proto.Success, field="message")
-def load_device_by_mnemonic(client, mnemonic, pin, passphrase_protection, label, language='english', skip_checksum=False, expand=False):
+def load_device_by_mnemonic(
+    client,
+    mnemonic,
+    pin,
+    passphrase_protection,
+    label,
+    language="english",
+    skip_checksum=False,
+    expand=False,
+):
     # Convert mnemonic to UTF8 NKFD
     mnemonic = Mnemonic.normalize_string(mnemonic)
 
     # Convert mnemonic to ASCII stream
-    mnemonic = mnemonic.encode('utf-8')
+    mnemonic = mnemonic.encode("utf-8")
 
-    m = Mnemonic('english')
+    m = Mnemonic("english")
 
     if expand:
         mnemonic = m.expand(mnemonic)
@@ -161,13 +172,20 @@ def load_device_by_mnemonic(client, mnemonic, pin, passphrase_protection, label,
         raise ValueError("Invalid mnemonic checksum")
 
     if client.features.initialized:
-        raise RuntimeError("Device is initialized already. Call wipe_device() and try again.")
+        raise RuntimeError(
+            "Device is initialized already. Call wipe_device() and try again."
+        )
 
-    resp = client.call(proto.LoadDevice(mnemonic=mnemonic, pin=pin,
-                                        passphrase_protection=passphrase_protection,
-                                        language=language,
-                                        label=label,
-                                        skip_checksum=skip_checksum))
+    resp = client.call(
+        proto.LoadDevice(
+            mnemonic=mnemonic,
+            pin=pin,
+            passphrase_protection=passphrase_protection,
+            language=language,
+            label=label,
+            skip_checksum=skip_checksum,
+        )
+    )
     client.init_device()
     return resp
 
@@ -175,9 +193,11 @@ def load_device_by_mnemonic(client, mnemonic, pin, passphrase_protection, label,
 @expect(proto.Success, field="message")
 def load_device_by_xprv(client, xprv, pin, passphrase_protection, label, language):
     if client.features.initialized:
-        raise RuntimeError("Device is initialized already. Call wipe_device() and try again.")
+        raise RuntimeError(
+            "Device is initialized already. Call wipe_device() and try again."
+        )
 
-    if xprv[0:4] not in ('xprv', 'tprv'):
+    if xprv[0:4] not in ("xprv", "tprv"):
         raise ValueError("Unknown type of xprv")
 
     if not 100 < len(xprv) < 112:  # yes this is correct in Python
@@ -186,7 +206,7 @@ def load_device_by_xprv(client, xprv, pin, passphrase_protection, label, languag
     node = proto.HDNodeType()
     data = binascii.hexlify(tools.b58decode(xprv, None))
 
-    if data[90:92] != b'00':
+    if data[90:92] != b"00":
         raise ValueError("Contain invalid private key")
 
     checksum = binascii.hexlify(tools.btc_hash(binascii.unhexlify(data[:156]))[:4])
@@ -207,11 +227,15 @@ def load_device_by_xprv(client, xprv, pin, passphrase_protection, label, languag
     node.chain_code = binascii.unhexlify(data[26:90])
     node.private_key = binascii.unhexlify(data[92:156])  # skip 0x00 indicating privkey
 
-    resp = client.call(proto.LoadDevice(node=node,
-                                        pin=pin,
-                                        passphrase_protection=passphrase_protection,
-                                        language=language,
-                                        label=label))
+    resp = client.call(
+        proto.LoadDevice(
+            node=node,
+            pin=pin,
+            passphrase_protection=passphrase_protection,
+            language=language,
+            label=label,
+        )
+    )
     client.init_device()
     return resp
 
@@ -221,4 +245,8 @@ def self_test(client):
     if client.features.bootloader_mode is not True:
         raise RuntimeError("Device must be in bootloader mode")
 
-    return client.call(proto.SelfTest(payload=b'\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC'))
+    return client.call(
+        proto.SelfTest(
+            payload=b"\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC"
+        )
+    )

@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from io import BytesIO
+
 import pytest
 
 from trezorlib import protobuf
@@ -42,20 +43,20 @@ def dump_uvarint(value):
 
 
 def test_dump_uvarint():
-    assert dump_uvarint(0) == b'\x00'
-    assert dump_uvarint(1) == b'\x01'
-    assert dump_uvarint(0xff) == b'\xff\x01'
-    assert dump_uvarint(123456) == b'\xc0\xc4\x07'
+    assert dump_uvarint(0) == b"\x00"
+    assert dump_uvarint(1) == b"\x01"
+    assert dump_uvarint(0xff) == b"\xff\x01"
+    assert dump_uvarint(123456) == b"\xc0\xc4\x07"
 
     with pytest.raises(ValueError):
         dump_uvarint(-1)
 
 
 def test_load_uvarint():
-    assert load_uvarint(b'\x00') == 0
-    assert load_uvarint(b'\x01') == 1
-    assert load_uvarint(b'\xff\x01') == 0xff
-    assert load_uvarint(b'\xc0\xc4\x07') == 123456
+    assert load_uvarint(b"\x00") == 0
+    assert load_uvarint(b"\x01") == 1
+    assert load_uvarint(b"\xff\x01") == 0xff
+    assert load_uvarint(b"\xc0\xc4\x07") == 123456
 
 
 def test_sint_uint():
@@ -75,12 +76,8 @@ def test_sint_uint():
     assert protobuf.uint_to_sint(2) == 1
 
     # roundtrip:
-    assert protobuf.uint_to_sint(
-        protobuf.sint_to_uint(1234567891011)
-    ) == 1234567891011
-    assert protobuf.uint_to_sint(
-        protobuf.sint_to_uint(- 2 ** 32)
-    ) == - 2 ** 32
+    assert protobuf.uint_to_sint(protobuf.sint_to_uint(1234567891011)) == 1234567891011
+    assert protobuf.uint_to_sint(protobuf.sint_to_uint(-2 ** 32)) == -2 ** 32
 
 
 def test_simple_message():
@@ -88,7 +85,7 @@ def test_simple_message():
         uvarint=12345678910,
         svarint=-12345678910,
         bool=True,
-        bytes=b'\xDE\xAD\xCA\xFE',
+        bytes=b"\xDE\xAD\xCA\xFE",
         unicode="Příliš žluťoučký kůň úpěl ďábelské ódy 😊",
     )
 
@@ -102,5 +99,5 @@ def test_simple_message():
     assert retr.uvarint == 12345678910
     assert retr.svarint == -12345678910
     assert retr.bool is True
-    assert retr.bytes == b'\xDE\xAD\xCA\xFE'
+    assert retr.bytes == b"\xDE\xAD\xCA\xFE"
     assert retr.unicode == "Příliš žluťoučký kůň úpěl ďábelské ódy 😊"

@@ -2,7 +2,7 @@
 # modified for Python 3 by Jochen Hoenicke <hoenicke@gmail.com>
 
 import hashlib
-from typing import Tuple, NewType
+from typing import NewType, Tuple
 
 Point = NewType("Point", Tuple[int, int])
 
@@ -17,7 +17,7 @@ def H(m: bytes) -> bytes:
 
 def expmod(b: int, e: int, m: int) -> int:
     if e < 0:
-        raise ValueError('negative exponent')
+        raise ValueError("negative exponent")
     if e == 0:
         return 1
     t = expmod(b, e >> 1, m) ** 2 % m
@@ -123,18 +123,18 @@ def decodepoint(s: bytes) -> Point:
         x = q - x
     P = Point((x, y))
     if not isoncurve(P):
-        raise ValueError('decoding point that is not on curve')
+        raise ValueError("decoding point that is not on curve")
     return P
 
 
 def checkvalid(s: bytes, m: bytes, pk: bytes) -> None:
     if len(s) != b >> 2:
-        raise ValueError('signature length is wrong')
+        raise ValueError("signature length is wrong")
     if len(pk) != b >> 3:
-        raise ValueError('public-key length is wrong')
-    R = decodepoint(s[0:b >> 3])
+        raise ValueError("public-key length is wrong")
+    R = decodepoint(s[0 : b >> 3])
     A = decodepoint(pk)
-    S = decodeint(s[b >> 3:b >> 2])
+    S = decodeint(s[b >> 3 : b >> 2])
     h = Hint(encodepoint(R) + pk + m)
     if scalarmult(B, S) != edwards(R, scalarmult(A, h)):
-        raise ValueError('signature does not pass verification')
+        raise ValueError("signature does not pass verification")
