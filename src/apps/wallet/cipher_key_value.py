@@ -1,6 +1,5 @@
 from trezor import wire
-from trezor.crypto import hmac
-from trezor.crypto.aes import AES_CBC_Decrypt, AES_CBC_Encrypt
+from trezor.crypto import aes, hmac
 from trezor.crypto.hashlib import sha512
 from trezor.messages.CipheredKeyValue import CipheredKeyValue
 from trezor.ui.text import Text
@@ -40,9 +39,8 @@ def compute_cipher_key_value(msg, seckey: bytes) -> bytes:
     else:
         iv = data[32:48]
 
+    ctx = aes(aes.CBC, key, iv)
     if msg.encrypt:
-        aes = AES_CBC_Encrypt(key=key, iv=iv)
+        return ctx.encrypt(msg.value)
     else:
-        aes = AES_CBC_Decrypt(key=key, iv=iv)
-
-    return aes.update(msg.value)
+        return ctx.decrypt(msg.value)
