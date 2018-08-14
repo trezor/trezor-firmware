@@ -78,8 +78,8 @@ Issue Date: 20/12/2007
 #define do_enc(a,b,c,d) f_enc_blk(a, b, c)
 #define do_dec(a,b,c,d) f_dec_blk(a, b, c)
 #else
-#define do_enc(a,b,c,d) f_ecb_enc(a, b, c, AES_BLOCK_SIZE)
-#define do_dec(a,b,c,d) f_ecb_dec(a, b, c, AES_BLOCK_SIZE)
+#define do_enc(a,b,c,d) f_ecb_enc(a, b, c, 1)
+#define do_dec(a,b,c,d) f_ecb_dec(a, b, c, 1)
 #endif
 
 #endif

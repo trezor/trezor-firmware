@@ -15,7 +15,7 @@ This software is provided 'as is' with no explicit or implied warranties
 in respect of its operation, including, but not limited to, correctness
 and fitness for purpose.
 ---------------------------------------------------------------------------
-Issue Date: 20/12/2007
+Issue Date: 02/08/2018
 
  This file contains the definitions required to use AES in C. See aesopt.h
  for optimisation details.
@@ -25,32 +25,43 @@ Issue Date: 20/12/2007
 #define _AES_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
-/*  This include is used to find 8 & 32 bit unsigned integer types  */
-#include "brg_types.h"
+#define VOID_RETURN         void
+#define INT_RETURN          int
+#define ALIGN_OFFSET(x,n)   (((intptr_t)(x)) & ((n) - 1))
+#define ALIGN_FLOOR(x,n)    ((uint8_t*)(x) - ( ((intptr_t)(x)) & ((n) - 1)))
+#define ALIGN_CEIL(x,n)     ((uint8_t*)(x) + (-((intptr_t)(x)) & ((n) - 1)))
 
 #if defined(__cplusplus)
 extern "C"
 {
 #endif
 
-// #define AES_128     /* if a fast 128 bit key scheduler is needed    */
-// #define AES_192     /* if a fast 192 bit key scheduler is needed    */
-#define AES_256     /* if a fast 256 bit key scheduler is needed    */
-// #define AES_VAR     /* if variable key size scheduler is needed     */
-#define AES_MODES   /* if support is needed for modes               */
+// #define AES_128     /* if a fast 128 bit key scheduler is needed     */
+// #define AES_192     /* if a fast 192 bit key scheduler is needed     */
+#define AES_256     /* if a fast 256 bit key scheduler is needed     */
+// #define AES_VAR     /* if variable key size scheduler is needed      */
+#if 1
+#  define AES_MODES /* if support is needed for modes in the C code  */
+#endif              /* (these will use AES_NI if it is present)      */
+#if 0               /* add this to make direct calls to the AES_NI   */
+#                   /* implemented CBC and CTR modes available       */
+#   define ADD_AESNI_MODE_CALLS
+#endif
 
-/* The following must also be set in assembler files if being used  */
+/* The following must also be set in assembler files if being used   */
 
-#define AES_ENCRYPT /* if support for encryption is needed          */
-#define AES_DECRYPT /* if support for decryption is needed          */
+#define AES_ENCRYPT /* if support for encryption is needed           */
+#define AES_DECRYPT /* if support for decryption is needed           */
 
-#define AES_BLOCK_SIZE  16  /* the AES block size in bytes          */
-#define N_COLS           4  /* the number of columns in the state   */
+#define AES_BLOCK_SIZE_P2  4  /* AES block size as a power of 2      */
+#define AES_BLOCK_SIZE    (1 << AES_BLOCK_SIZE_P2) /* AES block size */
+#define N_COLS             4  /* the number of columns in the state  */
 
-/* The key schedule length is 11, 13 or 15 16-byte blocks for 128,  */
-/* 192 or 256-bit keys respectively. That is 176, 208 or 240 bytes  */
-/* or 44, 52 or 60 32-bit words.                                    */
+/* The key schedule length is 11, 13 or 15 16-byte blocks for 128,   */
+/* 192 or 256-bit keys respectively. That is 176, 208 or 240 bytes   */
+/* or 44, 52 or 60 32-bit words.                                     */
 
 #if defined( AES_VAR ) || defined( AES_256 )
 #define KS_LENGTH       60
@@ -62,10 +73,10 @@ extern "C"
 
 #define AES_RETURN INT_RETURN
 
-/* the character array 'inf' in the following structures is used    */
-/* to hold AES context information. This AES code uses cx->inf.b[0] */
-/* to hold the number of rounds multiplied by 16. The other three   */
-/* elements can be used by code that implements additional modes    */
+/* the character array 'inf' in the following structures is used     */
+/* to hold AES context information. This AES code uses cx->inf.b[0]  */
+/* to hold the number of rounds multiplied by 16. The other three    */
+/* elements can be used by code that implements additional modes     */
 
 typedef union
 {   uint32_t l;

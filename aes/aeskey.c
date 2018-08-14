@@ -101,7 +101,7 @@ AES_RETURN aes_xi(encrypt_key128)(const unsigned char *key, aes_encrypt_ctx cx[1
 #endif
     ke4(cx->ks, 9);
     cx->inf.l = 0;
-    cx->inf.b[0] = 10 * 16;
+    cx->inf.b[0] = 10 * AES_BLOCK_SIZE;
 
 #ifdef USE_VIA_ACE_IF_PRESENT
     if(VIA_ACE_AVAILABLE)
@@ -150,7 +150,7 @@ AES_RETURN aes_xi(encrypt_key192)(const unsigned char *key, aes_encrypt_ctx cx[1
 #endif
     kef6(cx->ks, 7);
     cx->inf.l = 0;
-    cx->inf.b[0] = 12 * 16;
+    cx->inf.b[0] = 12 * AES_BLOCK_SIZE;
 
 #ifdef USE_VIA_ACE_IF_PRESENT
     if(VIA_ACE_AVAILABLE)
@@ -202,7 +202,7 @@ AES_RETURN aes_xi(encrypt_key256)(const unsigned char *key, aes_encrypt_ctx cx[1
 #endif
     kef8(cx->ks, 6);
     cx->inf.l = 0;
-    cx->inf.b[0] = 14 * 16;
+    cx->inf.b[0] = 14 * AES_BLOCK_SIZE;
 
 #ifdef USE_VIA_ACE_IF_PRESENT
     if(VIA_ACE_AVAILABLE)
@@ -329,7 +329,7 @@ AES_RETURN aes_xi(decrypt_key128)(const unsigned char *key, aes_decrypt_ctx cx[1
     }
 #endif
     cx->inf.l = 0;
-    cx->inf.b[0] = 10 * 16;
+    cx->inf.b[0] = 10 * AES_BLOCK_SIZE;
 
 #ifdef USE_VIA_ACE_IF_PRESENT
     if(VIA_ACE_AVAILABLE)
@@ -395,7 +395,6 @@ AES_RETURN aes_xi(decrypt_key192)(const unsigned char *key, aes_decrypt_ctx cx[1
 #ifdef DEC_KS_UNROLL
     ss[4] = word_in(key, 4);
     ss[5] = word_in(key, 5);
-
     cx->ks[v(48,(4))] = ff(ss[4]);
     cx->ks[v(48,(5))] = ff(ss[5]);
     kdf6(cx->ks, 0); kd6(cx->ks, 1);
@@ -417,7 +416,7 @@ AES_RETURN aes_xi(decrypt_key192)(const unsigned char *key, aes_decrypt_ctx cx[1
     }
 #endif
     cx->inf.l = 0;
-    cx->inf.b[0] = 12 * 16;
+    cx->inf.b[0] = 12 * AES_BLOCK_SIZE;
 
 #ifdef USE_VIA_ACE_IF_PRESENT
     if(VIA_ACE_AVAILABLE)
@@ -492,7 +491,6 @@ AES_RETURN aes_xi(decrypt_key256)(const unsigned char *key, aes_decrypt_ctx cx[1
     ss[5] = word_in(key, 5);
     ss[6] = word_in(key, 6);
     ss[7] = word_in(key, 7);
-
     cx->ks[v(56,(4))] = ff(ss[4]);
     cx->ks[v(56,(5))] = ff(ss[5]);
     cx->ks[v(56,(6))] = ff(ss[6]);
@@ -518,7 +516,7 @@ AES_RETURN aes_xi(decrypt_key256)(const unsigned char *key, aes_decrypt_ctx cx[1
     }
 #endif
     cx->inf.l = 0;
-    cx->inf.b[0] = 14 * 16;
+    cx->inf.b[0] = 14 * AES_BLOCK_SIZE;
 
 #ifdef USE_VIA_ACE_IF_PRESENT
     if(VIA_ACE_AVAILABLE)

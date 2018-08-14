@@ -64,7 +64,7 @@ Issue Date: 20/12/2007
 
      Class AESencrypt  for encryption
 
-      Construtors:
+      Constructors:
           AESencrypt(void)
           AESencrypt(const unsigned char *key) - 128 bit key
       Members:
@@ -74,7 +74,7 @@ Issue Date: 20/12/2007
           AES_RETURN encrypt(const unsigned char *in, unsigned char *out) const
 
       Class AESdecrypt  for encryption
-      Construtors:
+      Constructors:
           AESdecrypt(void)
           AESdecrypt(const unsigned char *key) - 128 bit key
       Members:
@@ -165,16 +165,21 @@ Issue Date: 20/12/2007
 
 /*  2. Intel AES AND VIA ACE SUPPORT */
 
-#if defined( __GNUC__ ) && defined( __i386__ ) \
+#if defined( __GNUC__ ) && defined( __i386__ ) && !defined(__BEOS__)  \
  || defined( _WIN32 ) && defined( _M_IX86 ) && !(defined( _WIN64 ) \
  || defined( _WIN32_WCE ) || defined( _MSC_VER ) && ( _MSC_VER <= 800 ))
 #  define VIA_ACE_POSSIBLE
 #endif
 
-#if (defined( _WIN64 ) && defined( _MSC_VER )) \
- || (defined( __GNUC__ ) && defined( __x86_64__ )) \
- && !(defined( INTEL_AES_POSSIBLE ))
-#  define INTEL_AES_POSSIBLE
+/* AESNI is supported by all Windows x64 compilers, but for Linux/GCC
+   we have to test for SSE 2, SSE 3, and AES to before enabling it; */
+#if !defined( INTEL_AES_POSSIBLE )
+#  if defined( _WIN64 ) && defined( _MSC_VER ) \
+   || defined( __GNUC__ ) && defined( __x86_64__ ) && \
+	  defined( __SSE2__ ) && defined( __SSE3__ ) && \
+	  defined( __AES__ )
+#    define INTEL_AES_POSSIBLE
+#  endif
 #endif
 
 /*  Define this option if support for the Intel AESNI is required
@@ -184,10 +189,11 @@ Issue Date: 20/12/2007
 	AESNI uses a decryption key schedule with the first decryption
 	round key at the high end of the key scedule with the following
 	round keys at lower positions in memory.  So AES_REV_DKS must NOT
-	be defined when AESNI will be used.  ALthough it is unlikely that
+	be defined when AESNI will be used.  Although it is unlikely that
 	assembler code will be used with an AESNI build, if it is then
 	AES_REV_DKS must NOT be defined when the assembler files are
-	built
+	built (the definition of USE_INTEL_AES_IF_PRESENT in the assembler
+	code files must match that here if they are used). 
 */
 
 #if 0 && defined( INTEL_AES_POSSIBLE ) && !defined( USE_INTEL_AES_IF_PRESENT )
