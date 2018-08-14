@@ -22,9 +22,13 @@ RUN cd /opt && wget $TOOLCHAIN_URL && tar xfj $TOOLCHAIN_LONGVER-$TOOLCHAIN_FLAV
 
 ENV PATH=/opt/$TOOLCHAIN_LONGVER/bin:$PATH
 
+# install additional tools
+
+RUN apt-get install -y protobuf-compiler libprotobuf-dev
+
 # install python tools
 
-RUN pip3 install click pyblake2 scons
+RUN pip3 install click pyblake2 scons protobuf
 RUN pip3 install --no-deps git+https://github.com/trezor/python-trezor.git@master
 
 # workarounds for weird default install
