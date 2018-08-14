@@ -5,8 +5,9 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageOntology";
 
 /**
-* Ontology Transaction
-*/
+ * Ontology Transaction
+ * @embed
+ */
 message OntologyTransaction {
     optional uint32 version = 1;
     optional uint32 type = 2;
@@ -16,8 +17,8 @@ message OntologyTransaction {
     optional string payer = 6;
     repeated OntologyTxAttribute tx_attributes = 7;
     /**
-    * Attribute of Ontology transaction
-    */
+     * Attribute of Ontology transaction
+     */
     message OntologyTxAttribute {
         optional uint32 usage = 1;
         optional bytes data = 2;
@@ -28,7 +29,7 @@ message OntologyTransaction {
  * Request: Ask device for Ontology public key corresponding to address_n path
  * @start
  * @next OntologyPublicKey
-*/
+ */
 message OntologyGetPublicKey {
     repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
     optional bool show_display = 2; // Optionally show on display before sending the result
@@ -37,7 +38,7 @@ message OntologyGetPublicKey {
 /**
  * Response: Contains Ontology public key derived from device private seed
  * @end
-*/
+ */
 message OntologyPublicKey {
     optional bytes public_key = 1;  // Ontology public key
 }
@@ -65,21 +66,21 @@ message OntologyAddress {
  * @start
  * @next OntologySignedTransfer
  */
- message OntologySignTransfer {
+message OntologySignTransfer {
     repeated uint32 address_n = 1;                  // BIP-32 path to derive the key from master node
     optional OntologyTransaction transaction = 2;
     optional OntologyTransfer transfer = 3;
     /**
-    * Ontology Transfer
-    */
+     * Ontology Transfer
+     */
     message OntologyTransfer {
         optional OntologyAsset asset = 1;
         optional uint64 amount = 2;
         optional string from_address = 3;
         optional string to_address = 4;
         /**
-        * Ontology Asset
-        */
+         * Ontology Asset
+         */
         enum OntologyAsset {
             ONT = 1;
             ONG = 2;
@@ -88,9 +89,9 @@ message OntologyAddress {
 }
 
 /**
-* Response: Contains Ontology transfer signature
-* @end
-*/
+ * Response: Contains Ontology transfer signature
+ * @end
+ */
 message OntologySignedTransfer {
     optional bytes signature = 1;
     optional bytes payload = 2;
@@ -101,7 +102,7 @@ message OntologySignedTransfer {
  * @start
  * @next OntologySignedWithdrawOng
  */
- message OntologySignWithdrawOng {
+message OntologySignWithdrawOng {
     repeated uint32 address_n = 1;                  // BIP-32 path to derive the key from master node
     optional OntologyTransaction transaction = 2;
     optional OntologyWithdrawOng withdraw_ong = 3;
@@ -116,9 +117,9 @@ message OntologySignedTransfer {
 }
 
 /**
-* Response: Contains Ontology ONG withdrawal signature
-* @end
-*/
+ * Response: Contains Ontology ONG withdrawal signature
+ * @end
+ */
 message OntologySignedWithdrawOng {
     optional bytes signature = 1;
     optional bytes payload = 2;
@@ -129,13 +130,13 @@ message OntologySignedWithdrawOng {
  * @start
  * @next OntologySignedOntIdRegister
  */
- message OntologySignOntIdRegister {
+message OntologySignOntIdRegister {
     repeated uint32 address_n = 1;                  // BIP-32 path to derive the key from master node
     optional OntologyTransaction transaction = 2;
     optional OntologyOntIdRegister ont_id_register = 3;
     /**
-    * Ontology ONT ID registration
-    */
+     * Ontology ONT ID registration
+     */
     message OntologyOntIdRegister {
         optional string ont_id = 1;
         optional bytes public_key = 2;
@@ -143,9 +144,9 @@ message OntologySignedWithdrawOng {
 }
 
 /**
-* Response: Contains Ontology ONT ID registration signature
-* @end
-*/
+ * Response: Contains Ontology ONT ID registration signature
+ * @end
+ */
 message OntologySignedOntIdRegister {
     optional bytes signature = 1;
     optional bytes payload = 2;
@@ -156,20 +157,20 @@ message OntologySignedOntIdRegister {
  * @start
  * @next OntologySignedOntIdAddAttributes
  */
- message OntologySignOntIdAddAttributes {
+message OntologySignOntIdAddAttributes {
     repeated uint32 address_n = 1;                  // BIP-32 path to derive the key from master node
     optional OntologyTransaction transaction = 2;
     optional OntologyOntIdAddAttributes ont_id_add_attributes = 3;
     /**
-    * Ontology ONT ID attributes adding
-    */
+     * Ontology ONT ID attributes adding
+     */
     message OntologyOntIdAddAttributes {
         optional string ont_id = 1;
         optional bytes public_key = 2;
         repeated OntologyOntIdAttribute ont_id_attributes = 3;
         /**
-        * Attribute of Ontology ONT ID
-        */
+         * Attribute of Ontology ONT ID
+         */
         message OntologyOntIdAttribute {
             optional string key = 1;
             optional string type = 2;
@@ -179,9 +180,9 @@ message OntologySignedOntIdRegister {
 }
 
 /**
-* Response: Contains Ontology ONT ID attributes adding signature
-* @end
-*/
+ * Response: Contains Ontology ONT ID attributes adding signature
+ * @end
+ */
 message OntologySignedOntIdAddAttributes {
     optional bytes signature = 1;
     optional bytes payload = 2;
