@@ -25,7 +25,7 @@
 #define TOKENS_COUNT 716
 
 typedef struct {
-    uint8_t chain_id;
+    uint32_t chain_id;
     const char * const address;
     const char * const ticker;
     int decimals;
@@ -35,6 +35,6 @@ extern const TokenType tokens[TOKENS_COUNT];
 
 extern const TokenType *UnknownToken;
 
-const TokenType *tokenByChainAddress(uint8_t chain_id, const uint8_t *address);
+const TokenType *tokenByChainAddress(uint32_t chain_id, const uint8_t *address);
 
 #endif
