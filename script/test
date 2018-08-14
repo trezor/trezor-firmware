@@ -10,7 +10,6 @@ if [ "$EMULATOR" = 1 ]; then
     trap "kill %1" EXIT
 
     firmware/trezor.elf &
-    sleep 1
     export TREZOR_PATH=udp:127.0.0.1:21324
     "${PYTHON:-python}" script/wait_for_emulator.py
 fi
