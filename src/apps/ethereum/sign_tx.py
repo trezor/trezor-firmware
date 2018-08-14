@@ -138,7 +138,9 @@ async def send_signature(ctx, msg: EthereumSignTx, digest):
 
     req = EthereumTxRequest()
     req.signature_v = signature[0]
-    if msg.chain_id:
+    if msg.chain_id > MAX_CHAIN_ID:
+        req.signature_v -= 27
+    elif msg.chain_id:
         req.signature_v += 2 * msg.chain_id + 8
 
     req.signature_r = signature[1:33]
@@ -151,7 +153,7 @@ def check(msg: EthereumSignTx):
     if msg.tx_type not in [1, 6, None]:
         raise wire.DataError("tx_type out of bounds")
 
-    if msg.chain_id < 0 or msg.chain_id > MAX_CHAIN_ID:
+    if msg.chain_id < 0:
         raise wire.DataError("chain_id out of bounds")
 
     if msg.data_length > 0:
