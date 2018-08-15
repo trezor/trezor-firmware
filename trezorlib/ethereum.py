@@ -56,6 +56,11 @@ def sign_tx(
         data, chunk = data[data_length:], data[:data_length]
         response = client.call(proto.EthereumTxAck(data_chunk=chunk))
 
+    # https://github.com/trezor/trezor-mcu/pull/399
+    # only signature bit returned. recalculate signature_v
+    if response.signature_v <= 1:
+        response.signature_v += 2 * chain_id + 35
+
     return response.signature_v, response.signature_r, response.signature_s
 
 
