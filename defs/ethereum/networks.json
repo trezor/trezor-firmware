@@ -142,5 +142,29 @@
     "name": "Akroma",
     "rskip60": false,
     "url": "https://akroma.io"
+  },
+  {
+    "chain_id": 7762959,
+    "slip44": 184,
+    "shortcut": "MUSIC",
+    "name": "Musicoin",
+    "rskip60": false,
+    "url": "https://musicoin.org"
+  },
+  {
+    "chain_id": 1313114,
+    "slip44": 1313114,
+    "shortcut": "ETHO",
+    "name": "Ether-1",
+    "rskip60": false,
+    "url": "https://ether1.org"
+  },
+  {
+    "chain_id": 3125659152,
+    "slip44": 164,
+    "shortcut": "PIRL",
+    "name": "Pirl",
+    "rskip60": false,
+    "url": "https://pirl.io"
   }
 ]

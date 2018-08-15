@@ -37,6 +37,8 @@
     "https://mona.chainsight.info",
     "https://insight.electrum-mona.org"
   ],
-  "blockbook": [],
+  "blockbook": [
+    "https://blockbook.electrum-mona.org"
+  ],
   "cooldown": 100
 }

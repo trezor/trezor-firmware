@@ -1,4 +1,5 @@
 syntax = "proto2";
+package hw.trezor.messages.debug;
 
 // Sugar for easier handling in Java
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
@@ -30,17 +31,17 @@ message DebugLinkGetState {
  * @end
  */
 message DebugLinkState {
-    optional bytes layout = 1;                  // raw buffer of display
-    optional string pin = 2;                    // current PIN, blank if PIN is not set/enabled
-    optional string matrix = 3;                 // current PIN matrix
-    optional string mnemonic = 4;               // current BIP-39 mnemonic
-    optional HDNodeType node = 5;               // current BIP-32 node
-    optional bool passphrase_protection = 6;    // is node/mnemonic encrypted using passphrase?
-    optional string reset_word = 7;             // word on device display during ResetDevice workflow
-    optional bytes reset_entropy = 8;           // current entropy during ResetDevice workflow
-    optional string recovery_fake_word = 9;     // (fake) word on display during RecoveryDevice workflow
-    optional uint32 recovery_word_pos = 10;     // index of mnemonic word the device is expecting during RecoveryDevice workflow
-    optional uint32 reset_word_pos = 11;        // index of mnemonic word the device is expecting during ResetDevice workflow
+    optional bytes layout = 1;                              // raw buffer of display
+    optional string pin = 2;                                // current PIN, blank if PIN is not set/enabled
+    optional string matrix = 3;                             // current PIN matrix
+    optional string mnemonic = 4;                           // current BIP-39 mnemonic
+    optional hw.trezor.messages.common.HDNodeType node = 5; // current BIP-32 node
+    optional bool passphrase_protection = 6;                // is node/mnemonic encrypted using passphrase?
+    optional string reset_word = 7;                         // word on device display during ResetDevice workflow
+    optional bytes reset_entropy = 8;                       // current entropy during ResetDevice workflow
+    optional string recovery_fake_word = 9;                 // (fake) word on display during RecoveryDevice workflow
+    optional uint32 recovery_word_pos = 10;                 // index of mnemonic word the device is expecting during RecoveryDevice workflow
+    optional uint32 reset_word_pos = 11;                    // index of mnemonic word the device is expecting during ResetDevice workflow
 }
 
 /**

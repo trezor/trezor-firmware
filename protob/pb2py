@@ -189,6 +189,8 @@ class Descriptor:
             if field.orig.type == field.orig.TYPE_MESSAGE
         )
 
+        if len(imports) > 0:
+            yield ""  # make isort happy
         for name in sorted(imports):
             yield self.create_message_import(name)
 
@@ -218,14 +220,15 @@ class Descriptor:
 
         fields = [self.parse_field(field) for field in message.field]
 
+        yield from self.process_message_imports(fields)
+
         if any(field.repeated for field in fields):
+            yield ""
             yield "if __debug__:"
             yield "    try:"
             yield "        from typing import List"
             yield "    except ImportError:"
             yield "        List = None  # type: ignore"
-
-        yield from self.process_message_imports(fields)
 
         yield ""
         yield ""

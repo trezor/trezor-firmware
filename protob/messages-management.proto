@@ -1,4 +1,5 @@
 syntax = "proto2";
+package hw.trezor.messages.management;
 
 // Sugar for easier handling in Java
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
@@ -162,14 +163,14 @@ message WipeDevice {
  * @next Failure
  */
 message LoadDevice {
-    optional string mnemonic = 1;                       // seed encoded as BIP-39 mnemonic (12, 18 or 24 words)
-    optional HDNodeType node = 2;                       // BIP-32 node
-    optional string pin = 3;                            // set PIN protection
-    optional bool passphrase_protection = 4;            // enable master node encryption using passphrase
-    optional string language = 5 [default='english'];   // device language
-    optional string label = 6;                          // device label
-    optional bool skip_checksum = 7;                    // do not test mnemonic for valid BIP-39 checksum
-    optional uint32 u2f_counter = 8;                    // U2F counter
+    optional string mnemonic = 1;                           // seed encoded as BIP-39 mnemonic (12, 18 or 24 words)
+    optional hw.trezor.messages.common.HDNodeType node = 2; // BIP-32 node
+    optional string pin = 3;                                // set PIN protection
+    optional bool passphrase_protection = 4;                // enable master node encryption using passphrase
+    optional string language = 5 [default='english'];       // device language
+    optional string label = 6;                              // device label
+    optional bool skip_checksum = 7;                        // do not test mnemonic for valid BIP-39 checksum
+    optional uint32 u2f_counter = 8;                        // U2F counter
 }
 
 /**
