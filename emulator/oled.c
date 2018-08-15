@@ -31,8 +31,18 @@ void emulatorPoll(void) {}
 
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
+static SDL_Rect dstrect;
 
+#define ENV_OLED_FULLSCREEN "TREZOR_OLED_FULLSCREEN"
 #define ENV_OLED_SCALE "TREZOR_OLED_SCALE"
+
+static int emulatorFullscreen(void) {
+	const char *variable = getenv(ENV_OLED_FULLSCREEN);
+	if (!variable) {
+		return 0;
+	}
+	return atoi(variable);
+}
 
 static int emulatorScale(void) {
 	const char *variable = getenv(ENV_OLED_SCALE);
@@ -54,13 +64,14 @@ void oledInit(void) {
 	atexit(SDL_Quit);
 
 	int scale = emulatorScale();
+	int fullscreen = emulatorFullscreen();
 
 	SDL_Window *window = SDL_CreateWindow("TREZOR",
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
 		OLED_WIDTH * scale,
 		OLED_HEIGHT * scale,
-		0);
+		fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
 
 	if (window == NULL) {
 		fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
@@ -72,9 +83,27 @@ void oledInit(void) {
 		fprintf(stderr, "Failed to create renderer: %s\n", SDL_GetError());
 		exit(1);
 	}
+	if (fullscreen) {
+		SDL_DisplayMode current_mode;
+		if (SDL_GetCurrentDisplayMode(0, &current_mode) != 0)
+		{
+			fprintf(stderr, "Failed to get current display mode: %s\n", SDL_GetError());
+			exit(1);
+		}
 
-	/* Use unscaled coordinate system */
-	SDL_RenderSetLogicalSize(renderer, OLED_WIDTH, OLED_HEIGHT);
+		dstrect.x = (current_mode.w - OLED_WIDTH * scale) / 2;
+		dstrect.y = (current_mode.h - OLED_HEIGHT * scale) / 2;
+
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+		SDL_RenderClear(renderer);
+		SDL_ShowCursor(SDL_DISABLE);
+	} else {
+		dstrect.x = 0;
+		dstrect.y = 0;
+	}
+
+	dstrect.w = OLED_WIDTH * scale;
+	dstrect.h = OLED_HEIGHT * scale;
 
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, OLED_WIDTH, OLED_HEIGHT);
 
@@ -101,7 +130,7 @@ void oledRefresh(void) {
 	}
 
 	SDL_UpdateTexture(texture, NULL, data, OLED_WIDTH * sizeof(uint32_t));
-	SDL_RenderCopy(renderer, texture, NULL, NULL);
+	SDL_RenderCopy(renderer, texture, NULL, &dstrect);
 	SDL_RenderPresent(renderer);
 
 	/* Return it back */
