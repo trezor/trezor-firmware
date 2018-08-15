@@ -56,6 +56,18 @@ def c_str_filter(b):
         return json.dumps(b)
 
 
+def black_repr_filter(val):
+    if isinstance(val, str):
+        if '"' in val:
+            return repr(val)
+        else:
+            return c_str_filter(val)
+    elif isinstance(val, bytes):
+        return "b" + c_str_filter(val)
+    else:
+        return repr(val)
+
+
 def ascii_filter(s):
     return re.sub("[^ -\x7e]", "_", s)
 
@@ -69,7 +81,11 @@ def make_support_filter(support_info):
     return supported_on
 
 
-MAKO_FILTERS = {"c_str": c_str_filter, "ascii": ascii_filter}
+MAKO_FILTERS = {
+    "c_str": c_str_filter,
+    "ascii": ascii_filter,
+    "black_repr": black_repr_filter,
+}
 
 
 def render_file(src, dst, coins, support_info):
@@ -82,7 +98,7 @@ def render_file(src, dst, coins, support_info):
         support_info=support_info,
         supported_on=make_support_filter(support_info),
         **coins,
-        **MAKO_FILTERS
+        **MAKO_FILTERS,
     )
     dst.write(result)
 
