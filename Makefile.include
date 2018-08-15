@@ -94,8 +94,8 @@ CFLAGS   += -DHEADLESS=1
 else
 CFLAGS   += -DHEADLESS=0
 
-CFLAGS   += -I/usr/include/SDL2 -D_REENTRANT
-LDLIBS   += -lSDL2
+CFLAGS   += $(shell pkg-config --cflags sdl2)
+LDLIBS   += $(shell pkg-config --libs sdl2)
 endif
 
 ifdef RANDOM_DEV_FILE
