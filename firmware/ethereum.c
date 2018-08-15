@@ -268,6 +268,7 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token, 
 				case 200625: suffix = " AKA"; break; // Akroma
 				case 1313114: suffix = " ETHO"; break; // Ether-1
 				case 7762959: suffix = " MUSI"; break; // Musicoin
+				case 3125659152: suffix = " PIRL"; break; // Pirl
 				default  : suffix = " UNKN"; break;  // unknown chain
 			}
 		}
