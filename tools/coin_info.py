@@ -185,25 +185,6 @@ def validate_btc(coin):
     return errors
 
 
-SUPPORT_CHECKS = [
-    check_key("trezor1", str, nullable=True, regex=r"^soon|planned|\d+\.\d+\.\d+$"),
-    check_key("trezor2", str, nullable=True, regex=r"^soon|planned|\d+\.\d+\.\d+$"),
-    check_key("webwallet", bool, nullable=True),
-    check_key("connect", bool, nullable=True),
-    check_key("other", dict, optional=True, empty=False),
-]
-
-
-def validate_support(support):
-    errors = []
-    for check in SUPPORT_CHECKS:
-        try:
-            check(support)
-        except Exception as e:
-            errors.append(str(e))
-    return errors
-
-
 # ======= Coin json loaders =======
 
 
@@ -280,15 +261,6 @@ def _load_misc():
 # ====== support info ======
 
 RELEASES_URL = "https://wallet.trezor.io/data/firmware/{}/releases.json"
-ETHEREUM_TOKENS = {
-    "1": "https://raw.githubusercontent.com/trezor/trezor-mcu/v{}/firmware/ethereum_tokens.c",
-    "2": "https://raw.githubusercontent.com/trezor/trezor-core/v{}/src/apps/ethereum/tokens.py",
-}
-
-TOKEN_MATCH = {
-    "1": re.compile(r'\{.*" ([^"]+)".*\},'),
-    "2": re.compile(r'\(.*["\']([^"\']+)["\'].*\),'),
-}
 
 
 def get_support_data():
@@ -308,77 +280,46 @@ def latest_releases():
     return latest
 
 
-def support_info_erc20(coins, versions):
-    """Generate support info for ERC20 tokens.
+def support_info_single(support_data, coin):
+    """Extract a support dict from `support.json` data.
 
-    Takes a dict of Trezor versions as returned from `latest_releases`
-    and a list of coins as returned from `_get_erc20_tokens` and creates
-    a supportinfo entry for each listed token.
+    Returns a dict of support values for each "device", i.e., `support.json`
+    top-level key.
 
-    Support status is determined by downloading and parsing the definition file
-    from the appropriate firmware version. If a given token is listed, the support
-    is marked as "yes". If not, support is marked as "soon", assuming that
-    it will be included in next release.
-
-    This is currently the only way to get the list of supported tokens. We don't want
-    to track support individually in support.json.
+    The support value for each device is determined in order of priority:
+    * if the coin is marked as duplicate, all support values are `None`
+    * if the coin has an entry in `unsupported`, its support is `None`
+    * if the coin has an entry in `supported` its support is that entry
+      (usually a version string, or `True` for connect/webwallet)
+    * otherwise support is presumed "soon"
     """
-    supported_tokens = {}
-    for trezor, version in versions.items():
-        tokens = set()
-        version_str = ".".join(map(str, version))
-
-        token_file = requests.get(ETHEREUM_TOKENS[trezor].format(version_str)).text
-        token_match = TOKEN_MATCH[trezor]
-
-        for line in token_file.split("\n"):
-            m = token_match.search(line)
-            if m:
-                tokens.add(m.group(1))
-
-        supported_tokens[trezor] = tokens
-
-    support = {}
-    for coin in coins:
-        key = coin["key"]
-        if not key.startswith("erc20:"):
-            continue
-
-        support[key] = dict(
-            trezor1="yes" if coin["shortcut"] in supported_tokens["1"] else "soon",
-            trezor2="yes" if coin["shortcut"] in supported_tokens["2"] else "soon",
-        )
-
-    return support
+    support_info = {}
+    key = coin["key"]
+    dup = coin.get("duplicate")
+    for device, values in support_data.items():
+        if dup:
+            support_value = None
+        elif key in values["unsupported"]:
+            support_value = None
+        elif key in values["supported"]:
+            support_value = values["supported"][key]
+        else:
+            support_value = "soon"
+        support_info[device] = support_value
+    return support_info
 
 
-def support_info(coins, erc20_versions=None, skip_missing=False):
+def support_info(coins):
     """Generate Trezor support information.
 
     Takes a collection of coins and generates a support-info entry for each.
-    The support-info is a dict with a number of known keys:
-    `trezor1`, `trezor2`, `webwallet`, `connect`. An optional `other` entry
-    is a dict of name-url pairs for third-party software.
+    The support-info is a dict with keys based on `support.json` keys.
+    These are usually: "trezor1", "trezor2", "connect" and "webwallet".
 
     The `coins` argument can be a `CoinsInfo` object, a list or a dict of
     coin items.
 
-    For btc-like coins and misc networks, this is taken from `support.json`.
-    For NEM mosaics and ethereum networks, the support is presumed to be "yes"
-    for both Trezors. Webwallet and Connect info is not filled out.
-
-    ERC20 tokens are ignored by this function, as if `skip_missing` was true
-    (see below). However, if you pass the optional `erc20_versions` argument,
-    it will call `support_info_erc20` for you with given versions.
-
-    In all cases, if the coin is explicitly listed in `support.json`, the info
-    takes precedence over any other source (be it assumed "yes" for nem/eth,
-    or downloaded info for erc20).
-
-    If `skip_missing` is `True`, coins for which no support information is available
-    will not be included in the output. Otherwise, an empty dict will be included
-    and a warning emitted. "No support information" means that the coin is not
-    listed in `support.json` and we have no heuristic to determine the support.
+    Support information is taken from `support.json`.
     """
     if isinstance(coins, CoinsInfo):
         coins = coins.as_list()
@@ -388,28 +329,9 @@ def support_info(coins, erc20_versions=None, skip_missing=False):
     support_data = get_support_data()
     support = {}
     for coin in coins:
-        key = coin["key"]
-        typ = key.split(":", maxsplit=1)[0]
-        if key in support_data:
-            support[key] = support_data[key]
+        support[coin["key"]] = support_info_single(support_data, coin)
 
-        elif typ in ("nem", "eth"):
-            support[key] = dict(trezor1="yes", trezor2="yes")
-
-        elif typ == "erc20":
-            # you must call a separate function to get that
-            continue
-
-        elif not skip_missing:
-            log.info("support info missing for {}".format(key))
-            support[key] = {}
-
-    if erc20_versions:
-        erc20 = support_info_erc20(coins, erc20_versions)
-        erc20.update(support)
-        return erc20
-    else:
-        return support
+    return support
 
 
 # ====== data cleanup functions ======
@@ -459,31 +381,38 @@ def _ensure_mandatory_values(coins):
             raise ValueError(coin)
 
 
-def _filter_duplicate_shortcuts(coins):
-    """Removes coins with identical `shortcut`s.
-    This is used to drop colliding ERC20 tokens.
+def mark_duplicate_shortcuts(coins):
+    """Finds coins with identical `shortcut`s.
+    Updates their keys and sets a `duplicate` field.
     """
-    dup_keys = set()
-    retained_coins = OrderedDict()
+    dup_symbols = defaultdict(list)
+    dup_keys = defaultdict(list)
+
+    def dups_only(dups):
+        return {k: v for k, v in dups.items() if len(v) > 1}
 
     for coin in coins:
-        if "Testnet" in coin["name"] and coin["shortcut"] == "tETH":
-            # special case for Ethereum testnets
-            continue
+        symsplit = coin["shortcut"].split(" ", maxsplit=1)
+        symbol = symsplit[0]
+        dup_symbols[symbol].append(coin)
+        dup_keys[coin["key"]].append(coin)
 
-        key = coin["shortcut"]
-        if key in dup_keys:
-            pass
-        elif key in retained_coins:
-            dup_keys.add(key)
-            del retained_coins[key]
-        else:
-            retained_coins[key] = coin
+    dup_symbols = dups_only(dup_symbols)
+    dup_keys = dups_only(dup_keys)
 
-    # modify original list
-    coins[:] = retained_coins.values()
-    # return duplicates
-    return dup_keys
+    # mark duplicate symbols
+    for values in dup_symbols.values():
+        for coin in values:
+            coin["duplicate"] = True
+
+    # deduplicate keys
+    for values in dup_keys.values():
+        for i, coin in enumerate(values):
+            # presumably only duplicate symbols can have duplicate keys
+            assert coin.get("duplicate")
+            coin["key"] += f":{i}"
+
+    return dup_symbols
 
 
 def _btc_sort_key(coin):
@@ -493,13 +422,15 @@ def _btc_sort_key(coin):
         return coin["name"]
 
 
-def get_all():
+def get_all(deduplicate=True):
     """Returns all definition as dict organized by coin type.
     `coins` for btc-like coins,
     `eth` for ethereum networks,
     `erc20` for ERC20 tokens,
     `nem` for NEM mosaics,
     `misc` for other networks.
+
+    Automatically removes duplicate symbols from the result.
     """
     all_coins = CoinsInfo(
         coins=_load_btc_coins(),
@@ -515,17 +446,18 @@ def get_all():
         elif k == "nem":
             # do not sort nem
             pass
+        elif k == "eth":
+            # sort ethereum networks by chain_id
+            coins.sort(key=lambda c: c["chain_id"])
         else:
             coins.sort(key=lambda c: c["key"].upper())
 
         _ensure_mandatory_values(coins)
-        dup_keys = _filter_duplicate_shortcuts(coins)
-        if dup_keys:
-            if k == "erc20":
-                severity = logging.INFO
-            else:
-                severity = logging.WARNING
-            dup_str = ", ".join(dup_keys)
-            log.log(severity, "{}: removing duplicate symbols: {}".format(k, dup_str))
+
+    if deduplicate:
+        mark_duplicate_shortcuts(all_coins.as_list())
+        all_coins["erc20"] = [
+            coin for coin in all_coins["erc20"] if not coin.get("duplicate")
+        ]
 
     return all_coins
