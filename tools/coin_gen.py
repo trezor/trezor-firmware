@@ -106,50 +106,6 @@ def render_file(src, dst, coins, support_info):
 # ====== validation functions ======
 
 
-def check_support(defs, support_data, fail_missing=False):
-    check_passed = True
-    coin_list = defs.as_list()
-    coin_names = {coin["key"]: coin["name"] for coin in coin_list}
-
-    def coin_name(key):
-        if key in coin_names:
-            return "{} ({})".format(key, coin_names[key])
-        else:
-            return "{} <unknown key>".format(key)
-
-    for key, support in support_data.items():
-        errors = coin_info.validate_support(support)
-        if errors:
-            check_passed = False
-            print("ERR:", "invalid definition for", coin_name(key))
-            print("\n".join(errors))
-
-    expected_coins = set(coin["key"] for coin in defs.coins + defs.misc)
-
-    # detect missing support info for expected
-    for coin in expected_coins:
-        if coin not in support_data:
-            if fail_missing:
-                check_passed = False
-                print("ERR: Missing support info for", coin_name(coin))
-            else:
-                print("WARN: Missing support info for", coin_name(coin))
-
-    # detect non-matching support info
-    coin_set = set(coin["key"] for coin in coin_list)
-    for key in support_data:
-        # detect non-matching support info
-        if key not in coin_set:
-            check_passed = False
-            print("ERR: Support info found for unknown coin", key)
-
-        # detect override - doesn't fail check
-        if key not in expected_coins:
-            print("INFO: Override present for coin", coin_name(key))
-
-    return check_passed
-
-
 def check_btc(coins):
     check_passed = True
 
@@ -309,10 +265,11 @@ def check(missing_support, backend, icons):
     if not check_btc(defs.coins):
         all_checks_passed = False
 
-    print("Checking support data...")
-    support_data = coin_info.get_support_data()
-    if not check_support(defs, support_data, fail_missing=missing_support):
-        all_checks_passed = False
+    # XXX support.py is responsible for checking support data
+    # print("Checking support data...")
+    # support_data = coin_info.get_support_data()
+    # if not check_support(defs, support_data, fail_missing=missing_support):
+    #     all_checks_passed = False
 
     if icons:
         print("Checking icon files...")
