@@ -1,0 +1,231 @@
+{
+    "coin:BCH": {
+        "trezor1": "1.6.2",
+        "trezor2": "2.0.7",
+        "connect": true,
+        "webwallet": true,
+        "other": {
+            "Electron Cash": "https://electroncash.org"
+        }
+    },
+    "coin:BTC": {
+        "trezor1": "1.5.2",
+        "trezor2": "2.0.5",
+        "connect": true,
+        "webwallet": true,
+        "other": {
+            "Electrum": "https://electrum.org"
+        }
+    },
+    "coin:BTCP": {
+        "trezor1": "1.6.2",
+        "trezor2": "2.0.7",
+        "connect": null,
+        "webwallet": true,
+        "other": {
+            "BTCP Electrum": "https://github.com/BTCPrivate/electrum-btcp"
+        }
+    },
+    "coin:BTG": {
+        "trezor1": "1.6.2",
+        "trezor2": "2.0.7",
+        "connect": true,
+        "webwallet": true,
+        "other": {
+            "ElectrumG": "https://github.com/BTCGPU/electrum"
+        }
+    },
+    "coin:DASH": {
+        "trezor1": "1.5.2",
+        "trezor2": "2.0.5",
+        "connect": true,
+        "webwallet": true,
+        "other": {
+            "Dash Electrum": "https://electrum.dash.org"
+        }
+    },
+    "coin:DCR": {
+        "trezor1": "1.6.2",
+        "trezor2": null,
+        "connect": null,
+        "webwallet": true
+    },
+    "coin:DGB": {
+        "trezor1": "1.6.0",
+        "trezor2": "2.0.5",
+        "connect": null,
+        "webwallet": true
+    },
+    "coin:DOGE": {
+        "trezor1": "1.5.2",
+        "trezor2": "2.0.5",
+        "connect": true,
+        "webwallet": true
+    },
+    "coin:FJC": {
+        "trezor1": "1.6.1",
+        "trezor2": "2.0.5",
+        "connect": null,
+        "webwallet": true,
+        "other": {
+            "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
+        }
+    },
+    "coin:GRS": {
+        "trezor1": "1.6.2",
+        "trezor2": "2.0.8",
+        "connect": null,
+        "webwallet": true,
+        "other": {
+            "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet/"
+        }
+    },
+    "coin:LTC": {
+        "trezor1": "1.5.2",
+        "trezor2": "2.0.5",
+        "connect": true,
+        "webwallet": true,
+        "other": {
+            "Electrum-LTC": "https://electrum-ltc.org"
+        }
+    },
+    "coin:MONA": {
+        "trezor1": "1.6.0",
+        "trezor2": "2.0.5",
+        "connect": null,
+        "webwallet": true,
+        "other": {
+            "Electrum-MONA": "https://electrum-mona.org"
+        }
+    },
+    "coin:NMC": {
+        "trezor1": "1.5.2",
+        "trezor2": "2.0.5",
+        "connect": null,
+        "webwallet": null,
+        "other": {
+            "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
+        }
+    },
+    "coin:TAZ": {
+        "trezor1": "1.6.2",
+        "trezor2": "2.0.7",
+        "connect": null,
+        "webwallet": true
+    },
+    "coin:TBCH": {
+        "trezor1": "1.6.2",
+        "trezor2": "2.0.7",
+        "connect": null,
+        "webwallet": null
+    },
+    "coin:TDCR": {
+        "trezor1": "1.6.2",
+        "trezor2": null,
+        "connect": null,
+        "webwallet": true
+    },
+    "coin:TEST": {
+        "trezor1": "1.5.2",
+        "trezor2": "2.0.5",
+        "connect": true,
+        "webwallet": true
+    },
+    "coin:TLTC": {
+        "trezor1": "1.6.2",
+        "trezor2": "2.0.7",
+        "connect": null,
+        "webwallet": true
+    },
+    "coin:VIA": {
+        "trezor1": "1.6.2",
+        "trezor2": "2.0.7",
+        "connect": null,
+        "webwallet": true,
+        "other": {
+            "Vialectrum": "https://vialectrum.org"
+        }
+    },
+    "coin:VTC": {
+        "trezor1": "1.6.1",
+        "trezor2": "2.0.5",
+        "connect": true,
+        "webwallet": true
+    },
+    "coin:XZC": {
+        "trezor1": "1.6.2",
+        "trezor2": "2.0.7",
+        "connect": null,
+        "webwallet": true,
+        "other": {
+            "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
+            "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"
+        }
+    },
+    "coin:ZEC": {
+        "trezor1": "1.6.2",
+        "trezor2": "2.0.7",
+        "connect": true,
+        "webwallet": true
+    },
+    "coin:ZEN": {
+        "trezor1": null,
+        "trezor2": "2.0.8",
+        "connect": null,
+        "webwallet": null
+    },
+    "coin:tDASH": {
+        "trezor1": "1.6.2",
+        "trezor2": null,
+        "connect": null,
+        "webwallet": null
+    },
+    "coin:tGRS": {
+        "trezor1": "1.6.2",
+        "trezor2": "2.0.8",
+        "connect": null,
+        "webwallet": true
+    },
+    "coin:tXZC": {
+        "trezor1": "1.6.2",
+        "trezor2": "2.0.7",
+        "connect": null,
+        "webwallet": null
+    },
+    "misc:LSK": {
+        "trezor1": null,
+        "trezor2": "2.0.7",
+        "connect": null,
+        "webwallet": null
+    },
+    "misc:XLM": {
+        "trezor1": "soon",
+        "trezor2": "soon",
+        "connect": null,
+        "webwallet": null
+    },
+    "misc:XTZ": {
+        "trezor1": null,
+        "trezor2": "soon",
+        "connect": null,
+        "webwallet": null
+    },
+    "misc:ADA": {
+        "trezor1": null,
+        "trezor2": "soon",
+        "connect": null,
+        "webwallet": null
+    },
+    "misc:XMR": {
+        "trezor1": null,
+        "trezor2": "soon",
+        "connect": null,
+        "webwallet": null
+    },
+    "misc:XRP": {
+        "trezor1": null,
+        "trezor2": "soon",
+        "connect": null,
+        "webwallet": null
+    }
+}

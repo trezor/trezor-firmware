@@ -43,5 +43,12 @@
         "links": {
             "Homepage": "https://tezos.com"
         }
+    },
+    {
+        "name": "Ontology",
+        "shortcut": "ONT",
+        "links": {
+            "Homepage": "https://ont.io"
+        }
     }
 ]
