@@ -331,10 +331,7 @@ def coindefs(outfile):
 @click.argument("paths", metavar="[path]...", nargs=-1)
 @click.option("-o", "--outfile", type=click.File("w"), help="Alternate output file")
 @click.option("-v", "--verbose", is_flag=True, help="Print rendered file names")
-@click.option(
-    "--erc20-support/--no-erc20-support", "-e", help="Download ERC20 support info"
-)
-def render(paths, outfile, verbose, erc20_support):
+def render(paths, outfile, verbose):
     """Generate source code from Mako templates.
 
     For every "foo.bar.mako" filename passed, runs the template and
@@ -353,11 +350,7 @@ def render(paths, outfile, verbose, erc20_support):
 
     # prepare defs
     defs = coin_info.get_all()
-    if erc20_support:
-        versions = coin_info.latest_releases()
-    else:
-        versions = None
-    support_info = coin_info.support_info(defs, erc20_versions=versions)
+    support_info = coin_info.support_info(defs)
 
     # munch dicts - make them attribute-accessible
     for key, value in defs.items():
