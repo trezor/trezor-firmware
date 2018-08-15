@@ -127,6 +127,28 @@ def check_btc(coins):
     return check_passed
 
 
+def check_dups(buckets):
+    check_passed = True
+    for bucket in buckets.values():
+        nontokens = [coin for coin in bucket if not coin["key"].startswith("erc20")]
+        token_list = [coin["key"] for coin in bucket if coin["key"].startswith("erc20")]
+        if not nontokens:
+            continue
+        if len(nontokens) == 1:
+            coin = nontokens[0]
+            print(
+                f"Coin {coin['key']} ({coin['name']}) is duplicate with",
+                ", ".join(token_list),
+                "and that is OK.",
+            )
+        else:
+            nontoken_list = [f"{coin['key']} ({coin['name']})" for coin in nontokens]
+            print("Duplicate shortcuts for", ", ".join(nontoken_list))
+            check_passed = False
+
+    return check_passed
+
+
 def check_backends(coins):
     check_passed = True
     for coin in coins:
@@ -250,7 +272,8 @@ def check(missing_support, backend, icons):
     if icons and not CAN_BUILD_DEFS:
         raise click.ClickException("Missing requirements for icon check")
 
-    defs = coin_info.get_all()
+    defs = coin_info.get_all(deduplicate=False)
+    buckets = coin_info.mark_duplicate_shortcuts(defs.as_list())
     all_checks_passed = True
 
     print("Checking BTC-like coins...")
@@ -262,6 +285,10 @@ def check(missing_support, backend, icons):
     # support_data = coin_info.get_support_data()
     # if not check_support(defs, support_data, fail_missing=missing_support):
     #     all_checks_passed = False
+
+    print("Checking unexpected duplicates...")
+    if not check_dups(buckets):
+        all_checks_passed = False
 
     if icons:
         print("Checking icon files...")

@@ -42,11 +42,14 @@ def print_support(coin):
     key, name, shortcut = coin["key"], coin["name"], coin["shortcut"]
     print(f"{key} - {name} ({shortcut})")
     if coin.get("duplicate"):
-        print(" * DUPLICATE SYMBOL (no support)")
-    else:
-        for dev, where in SUPPORT_INFO.items():
-            missing_means_no = dev in MISSING_MEANS_NO
-            print(" *", dev, ":", support_value(where, key, missing_means_no))
+        if key.startswith("erc20:"):
+            print(" * DUPLICATE SYMBOL (no support)")
+            return
+        else:
+            print(" * DUPLICATE SYMBOL")
+    for dev, where in SUPPORT_INFO.items():
+        missing_means_no = dev in MISSING_MEANS_NO
+        print(" *", dev, ":", support_value(where, key, missing_means_no))
 
 
 # ====== validation functions ====== #
