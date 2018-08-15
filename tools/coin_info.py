@@ -72,7 +72,7 @@ def check_type(val, types, nullable=False, empty=False, regex=None, choice=None)
 
     # check type
     if not isinstance(val, types):
-        raise TypeError("Wrong type (expected: {})".format(types))
+        raise TypeError(f"Wrong type (expected: {types})")
 
     # check empty
     if isinstance(val, (list, dict)) and not empty and not val:
@@ -83,11 +83,12 @@ def check_type(val, types, nullable=False, empty=False, regex=None, choice=None)
         if types is not str:
             raise TypeError("Wrong type for regex check")
         if not re.search(regex, val):
-            raise ValueError("Value does not match regex {}".format(regex))
+            raise ValueError(f"Value does not match regex {regex}")
 
     # check choice
     if choice is not None and val not in choice:
-        raise ValueError("Value not allowed, use one of: {}".format(", ".join(choice)))
+        choice_str = ", ".join(choice)
+        raise ValueError(f"Value not allowed, use one of: {choice_str}")
 
 
 def check_key(key, types, optional=False, **kwargs):
@@ -96,11 +97,11 @@ def check_key(key, types, optional=False, **kwargs):
             if optional:
                 return
             else:
-                raise KeyError("{}: Missing key".format(key))
+                raise KeyError(f"{key}: Missing key")
         try:
             check_type(coin[key], types, **kwargs)
         except Exception as e:
-            raise ValueError("{}: {}".format(key, e)) from e
+            raise ValueError(f"{key}: {e}") from e
 
     return do_check
 
