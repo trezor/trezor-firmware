@@ -48,6 +48,23 @@ message MoneroWatchKey {
 }
 
 /**
+ * Structure representing Monero transaction destination entry
+ */
+message MoneroTransactionDestinationEntry {
+	optional uint64 amount = 1;
+	optional MoneroAccountPublicAddress addr = 2;
+	optional bool is_subaddress = 3;
+	
+	/**
+	 * Structure representing Monero public address
+	 */
+	message MoneroAccountPublicAddress {
+		optional bytes spend_public_key = 1;
+		optional bytes view_public_key = 2;
+	}
+}
+
+/**
  * Request: Sub request of MoneroTransactionSign. Initializes transaction signing.
  * @start
  * @next MoneroTransactionInitAck
@@ -75,21 +92,6 @@ message MoneroTransactionInitRequest {
         optional bytes exp_tx_prefix_hash = 12;
         repeated bytes use_tx_keys = 13;
         optional bool is_bulletproof = 14;
-        /**
-        * Structure representing Monero transaction destination entry
-        */
-        message MoneroTransactionDestinationEntry {
-            optional uint64 amount = 1;
-            optional MoneroAccountPublicAddress addr = 2;
-            optional bool is_subaddress = 3;
-            /**
-            * Structure representing Monero public address
-            */
-            message MoneroAccountPublicAddress {
-                optional bytes spend_public_key = 1;
-                optional bytes view_public_key = 2;
-            }
-        }
     }
 }
 
@@ -107,12 +109,44 @@ message MoneroTransactionInitAck {
 }
 
 /**
+ * Structure representing Monero transaction source entry, UTXO
+ */
+message MoneroTransactionSourceEntry {
+	repeated MoneroOutputEntry outputs = 1;
+	optional uint64 real_output = 2;
+	optional bytes real_out_tx_key = 3;
+	repeated bytes real_out_additional_tx_keys = 4;
+	optional uint64 real_output_in_tx_index = 5;
+	optional uint64 amount = 6;
+	optional bool rct = 7;
+	optional bytes mask = 8;
+	optional MoneroMultisigKLRki multisig_kLRki = 9;
+	
+	message MoneroRctKey {
+		optional bytes dest = 1;
+		optional bytes mask = 2;
+	}
+	
+	message MoneroOutputEntry {
+		optional uint64 idx = 1;
+		optional MoneroRctKey key = 2;
+	}
+	
+	message MoneroMultisigKLRki {
+		optional bytes K = 1;
+		optional bytes L = 2;
+		optional bytes R = 3;
+		optional bytes ki = 4;
+	}
+}
+
+/**
  * Request: Sub request of MoneroTransactionSign. Sends one UTXO to device
  * @next MoneroTransactionSetInputAck
  */
 message MoneroTransactionSetInputRequest {
     optional uint32 version = 1;
-    optional bytes src_entr = 2;  // xmrtypes.TxSourceEntry
+    optional MoneroTransactionSourceEntry src_entr = 2;
 }
 
 /**
@@ -148,7 +182,7 @@ message MoneroTransactionInputsPermutationAck {
  * @next MoneroTransactionInputViniAck
  */
 message MoneroTransactionInputViniRequest {
-    optional bytes src_entr = 1;  // xmrtypes.TxSourceEntry
+    optional MoneroTransactionSourceEntry src_entr = 1; 
     optional bytes vini = 2;      // xmrtypes.TxinToKey
     optional bytes vini_hmac = 3;
     optional bytes pseudo_out = 4;
@@ -167,7 +201,7 @@ message MoneroTransactionInputViniAck {
  * @next MoneroTransactionSetOutputAck
  */
 message MoneroTransactionSetOutputRequest {
-    optional bytes dst_entr = 1;  // xmrtypes.TxDestinationEntry
+    optional MoneroTransactionDestinationEntry dst_entr = 1;
     optional bytes dst_entr_hmac = 2;
 }
 
@@ -228,7 +262,7 @@ message MoneroTransactionMlsagDoneAck {
  * @next MoneroTransactionSignInputAck
  */
 message MoneroTransactionSignInputRequest {
-    optional bytes src_entr = 1; // xmrtypes.TxSourceEntry
+    optional MoneroTransactionSourceEntry src_entr = 1;
     optional bytes vini = 2;     // xmrtypes.TxinToKey
     optional bytes vini_hmac = 3;
     optional bytes pseudo_out = 4;
