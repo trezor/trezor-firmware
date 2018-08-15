@@ -5,7 +5,7 @@
 Central module that extracts information from jsons in `defs/` directory.
 Its most important function is `get_all()`.
 
-### `coin_gen.py`
+### `cointool.py`
 
 Code and data generator. Has the following functions:
 
@@ -13,7 +13,6 @@ Code and data generator. Has the following functions:
   * schema validity in `defs/coins/*.json`
   * availability of bitcore/blockbook backends
   * icon format
-  * support data, i.e., that `support.json` matches the rest of data
 
 * __`coins_json`__: generates `coins.json` for use in python-trezor, connect
   and wallet. By default outputs to current directory.
@@ -39,12 +38,9 @@ If needed, any value can be overriden in `coins_details.override.json`.
 Support info management. Ensures `support.json` is in the proper format. Has the
 following subcommands:
 
-* __`rewrite`__: regenerates `support.json` in a canonical format, i.e., only
-  mandatory fields in fixed order.
-
-* __`check`__: checks validity of support data. This is the same check
-  that runs as part of `coin_gen.py check`, except missing support data is always
-  an error.
+* __`check`__: checks validity of support data. Ensures that data is valid,
+  there are no orphaned keys in `support.json`, no known coins have missing
+  support info, etc.
 
 * __`show <keyword>`__: searches coin database, matching key (`coin:BTC`),
   name ("Bitcoin") or shortcut / ticker symbol ("BTC"). Displays all coins that match

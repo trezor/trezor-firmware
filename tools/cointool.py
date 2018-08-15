@@ -233,19 +233,11 @@ def cli():
 
 
 @cli.command()
-@click.option(
-    "--missing-support/--no-missing-support",
-    "-s",
-    default=False,
-    help="Fail if support info for a coin is missing",
-)
-@click.option(
-    "--backend/--no-backend",
-    "-b",
-    default=False,
-    help="Check blockbook/bitcore responses",
-)
+# fmt: off
+@click.option("--missing-support/--no-missing-support", "-s", default=False, help="Fail if support info for a coin is missing")
+@click.option("--backend/--no-backend", "-b", default=False, help="Check blockbook/bitcore responses")
 @click.option("--icons/--no-icons", default=True, help="Check icon files")
+# fmt: on
 def check(missing_support, backend, icons):
     """Validate coin definitions.
 
@@ -328,9 +320,11 @@ def coindefs(outfile):
 
 
 @cli.command()
+# fmt: off
 @click.argument("paths", metavar="[path]...", nargs=-1)
 @click.option("-o", "--outfile", type=click.File("w"), help="Alternate output file")
 @click.option("-v", "--verbose", is_flag=True, help="Print rendered file names")
+# fmt: on
 def render(paths, outfile, verbose):
     """Generate source code from Mako templates.
 
