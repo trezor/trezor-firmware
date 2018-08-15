@@ -4,5 +4,86 @@
     },
     "erc20:eth:GNT": {
         "coinmarketcap_alias": "golem-network-tokens"
+    },
+    "eth:ESN": {
+        "t1_support": "soon",
+        "t2_support": "soon"
+    },
+    "eth:AKA": {
+        "t1_support": "soon",
+        "t2_support": "soon"
+    },
+    "eth:ETHO": {
+        "t1_support": "soon",
+        "t2_support": "soon"
+    },
+    "eth:MUSI": {
+        "t1_support": "soon",
+        "t2_support": "soon"
+    },
+    "eth:PIRL": {
+        "t1_support": "soon",
+        "t2_support": "soon"
+    },
+    "coin:BCH": {
+        "wallet": {
+            "Electron Cash": "https://electroncash.org"
+        }
+    },
+    "coin:BTC": {
+        "wallet": {
+            "Electrum": "https://electrum.org"
+        }
+    },
+    "coin:BTCP": {
+        "wallet": {
+            "BTCP Electrum": "https://github.com/BTCPrivate/electrum-btcp"
+        }
+    },
+    "coin:BTG": {
+        "wallet": {
+            "ElectrumG": "https://github.com/BTCGPU/electrum"
+        }
+    },
+    "coin:DASH": {
+        "wallet": {
+            "Dash Electrum": "https://electrum.dash.org"
+        }
+    },
+    "coin:FJC": {
+        "wallet": {
+            "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
+        }
+    },
+    "coin:GRS": {
+        "wallet": {
+            "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet/"
+        }
+    },
+    "coin:LTC": {
+        "wallet": {
+            "Electrum-LTC": "https://electrum-ltc.org"
+        }
+    },
+    "coin:MONA": {
+        "wallet": {
+            "Electrum-MONA": "https://electrum-mona.org"
+        }
+    },
+    "coin:NMC": {
+        "wallet": {
+            "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
+        }
+    },
+    "coin:VIA": {
+        "wallet": {
+            "Vialectrum": "https://vialectrum.org"
+        }
+    },
+    "coin:XZC": {
+        "wallet": {
+            "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
+            "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"
+        }
     }
 }
