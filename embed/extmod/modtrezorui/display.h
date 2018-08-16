@@ -32,14 +32,17 @@
 #define FONT_BPP    4
 #define FONT_SIZE   20
 
-#ifdef TREZOR_FONT_MONO_ENABLE
-#define FONT_MONO   1
-#endif
 #ifdef TREZOR_FONT_NORMAL_ENABLE
-#define FONT_NORMAL 2
+#define FONT_NORMAL 1
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
-#define FONT_BOLD   3
+#define FONT_BOLD   2
+#endif
+#ifdef TREZOR_FONT_MONO_ENABLE
+#define FONT_MONO   3
+#endif
+#ifdef TREZOR_FONT_MONO_BOLD_ENABLE
+#define FONT_MONO_BOLD  4
 #endif
 
 #define AVATAR_IMAGE_SIZE  144

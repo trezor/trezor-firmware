@@ -19,14 +19,17 @@
 
 #include "inflate.h"
 #include "font_bitmap.h"
-#ifdef TREZOR_FONT_MONO_ENABLE
-#include "font_robotomono_regular_20.h"
-#endif
 #ifdef TREZOR_FONT_NORMAL_ENABLE
 #include "font_roboto_regular_20.h"
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
 #include "font_roboto_bold_20.h"
+#endif
+#ifdef TREZOR_FONT_MONO_ENABLE
+#include "font_robotomono_regular_20.h"
+#endif
+#ifdef TREZOR_FONT_MONO_BOLD_ENABLE
+#include "font_robotomono_bold_20.h"
 #endif
 
 #include "trezor-qrenc/qr_encode.h"
@@ -294,10 +297,6 @@ static const uint8_t *get_glyph(uint8_t font, uint8_t c)
         return 0;
     }
     switch (font) {
-#ifdef TREZOR_FONT_MONO_ENABLE
-        case FONT_MONO:
-            return Font_RobotoMono_Regular_20[c - ' '];
-#endif
 #ifdef TREZOR_FONT_NORMAL_ENABLE
         case FONT_NORMAL:
             return Font_Roboto_Regular_20[c - ' '];
@@ -305,6 +304,14 @@ static const uint8_t *get_glyph(uint8_t font, uint8_t c)
 #ifdef TREZOR_FONT_BOLD_ENABLE
         case FONT_BOLD:
             return Font_Roboto_Bold_20[c - ' '];
+#endif
+#ifdef TREZOR_FONT_MONO_ENABLE
+        case FONT_MONO:
+            return Font_RobotoMono_Regular_20[c - ' '];
+#endif
+#ifdef TREZOR_FONT_MONO_BOLD_ENABLE
+        case FONT_MONO_BOLD:
+            return Font_RobotoMono_Bold_20[c - ' '];
 #endif
     }
     return 0;

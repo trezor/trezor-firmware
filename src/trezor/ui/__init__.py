@@ -25,6 +25,7 @@ elif model() == "EMU":
 NORMAL = Display.FONT_NORMAL
 BOLD = Display.FONT_BOLD
 MONO = Display.FONT_MONO
+MONO_BOLD = Display.FONT_MONO_BOLD
 SIZE = Display.FONT_SIZE
 WIDTH = Display.WIDTH
 HEIGHT = Display.HEIGHT

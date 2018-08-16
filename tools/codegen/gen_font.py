@@ -112,3 +112,4 @@ def process_face(name, style, size):
 process_face("Roboto", "Regular", 20)
 process_face("Roboto", "Bold", 20)
 process_face("RobotoMono", "Regular", 20)
+process_face("RobotoMono", "Bold", 20)
