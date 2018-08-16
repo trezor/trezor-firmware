@@ -21,9 +21,6 @@
 
 #include "display.h"
 
-#define FONT_PY_TO_C(f) (-(f))
-#define FONT_C_TO_PY(f) (-(f))
-
 /// class Display:
 ///     '''
 ///     Provide access to device display.
@@ -205,7 +202,7 @@ STATIC mp_obj_t mod_trezorui_Display_text(size_t n_args, const mp_obj_t *args) {
     mp_int_t y = mp_obj_get_int(args[2]);
     mp_buffer_info_t text;
     mp_get_buffer_raise(args[3], &text, MP_BUFFER_READ);
-    mp_int_t font = FONT_PY_TO_C(mp_obj_get_int(args[4]));
+    mp_int_t font = mp_obj_get_int(args[4]);
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
     mp_int_t minwidth = (n_args > 7) ? mp_obj_get_int(args[7]) : 0;
@@ -231,7 +228,7 @@ STATIC mp_obj_t mod_trezorui_Display_text_center(size_t n_args, const mp_obj_t *
     mp_int_t y = mp_obj_get_int(args[2]);
     mp_buffer_info_t text;
     mp_get_buffer_raise(args[3], &text, MP_BUFFER_READ);
-    mp_int_t font = FONT_PY_TO_C(mp_obj_get_int(args[4]));
+    mp_int_t font = mp_obj_get_int(args[4]);
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
     mp_int_t minwidth = (n_args > 7) ? mp_obj_get_int(args[7]) : 0;
@@ -257,7 +254,7 @@ STATIC mp_obj_t mod_trezorui_Display_text_right(size_t n_args, const mp_obj_t *a
     mp_int_t y = mp_obj_get_int(args[2]);
     mp_buffer_info_t text;
     mp_get_buffer_raise(args[3], &text, MP_BUFFER_READ);
-    mp_int_t font = FONT_PY_TO_C(mp_obj_get_int(args[4]));
+    mp_int_t font = mp_obj_get_int(args[4]);
     mp_int_t fgcolor = mp_obj_get_int(args[5]);
     mp_int_t bgcolor = mp_obj_get_int(args[6]);
     mp_int_t minwidth = (n_args > 7) ? mp_obj_get_int(args[7]) : 0;
@@ -278,7 +275,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_right_obj, 
 STATIC mp_obj_t mod_trezorui_Display_text_width(mp_obj_t self, mp_obj_t text, mp_obj_t font) {
     mp_buffer_info_t txt;
     mp_get_buffer_raise(text, &txt, MP_BUFFER_READ);
-    mp_int_t f = FONT_PY_TO_C(mp_obj_get_int(font));
+    mp_int_t f = mp_obj_get_int(font);
     int w = display_text_width(txt.buf, txt.len, f);
     return mp_obj_new_int(w);
 }
@@ -455,10 +452,10 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_WIDTH), MP_OBJ_NEW_SMALL_INT(DISPLAY_RESX) },
     { MP_ROM_QSTR(MP_QSTR_HEIGHT), MP_OBJ_NEW_SMALL_INT(DISPLAY_RESY) },
     { MP_ROM_QSTR(MP_QSTR_FONT_SIZE), MP_OBJ_NEW_SMALL_INT(FONT_SIZE) },
-    { MP_ROM_QSTR(MP_QSTR_FONT_NORMAL), MP_OBJ_NEW_SMALL_INT(FONT_C_TO_PY(FONT_NORMAL)) },
-    { MP_ROM_QSTR(MP_QSTR_FONT_BOLD), MP_OBJ_NEW_SMALL_INT(FONT_C_TO_PY(FONT_BOLD)) },
-    { MP_ROM_QSTR(MP_QSTR_FONT_MONO), MP_OBJ_NEW_SMALL_INT(FONT_C_TO_PY(FONT_MONO)) },
-    { MP_ROM_QSTR(MP_QSTR_FONT_MONO_BOLD), MP_OBJ_NEW_SMALL_INT(FONT_C_TO_PY(FONT_MONO_BOLD)) },
+    { MP_ROM_QSTR(MP_QSTR_FONT_NORMAL), MP_OBJ_NEW_SMALL_INT(FONT_NORMAL) },
+    { MP_ROM_QSTR(MP_QSTR_FONT_BOLD), MP_OBJ_NEW_SMALL_INT(FONT_BOLD) },
+    { MP_ROM_QSTR(MP_QSTR_FONT_MONO), MP_OBJ_NEW_SMALL_INT(FONT_MONO) },
+    { MP_ROM_QSTR(MP_QSTR_FONT_MONO_BOLD), MP_OBJ_NEW_SMALL_INT(FONT_MONO_BOLD) },
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorui_Display_locals_dict, mod_trezorui_Display_locals_dict_table);
 

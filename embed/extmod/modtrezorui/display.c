@@ -283,7 +283,7 @@ void display_icon(int x, int y, int w, int h, const void *data, int datalen, uin
     sinf_inflate(data, datalen, inflate_callback_icon, userdata);
 }
 
-static const uint8_t *get_glyph(uint8_t font, uint8_t c)
+static const uint8_t *get_glyph(int font, uint8_t c)
 {
     if (c >= ' ' && c <= '~') {
     // do nothing - valid ASCII
@@ -416,7 +416,7 @@ void display_printf(const char *fmt, ...)
 
 #endif // TREZOR_PRINT_DISABLE
 
-static void display_text_render(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
+static void display_text_render(int x, int y, const char *text, int textlen, int font, uint16_t fgcolor, uint16_t bgcolor)
 {
     // determine text length if not provided
     if (textlen < 0) {
@@ -461,14 +461,14 @@ static void display_text_render(int x, int y, const char *text, int textlen, uin
     }
 }
 
-void display_text(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
+void display_text(int x, int y, const char *text, int textlen, int font, uint16_t fgcolor, uint16_t bgcolor)
 {
     x += DISPLAY_OFFSET.x;
     y += DISPLAY_OFFSET.y;
     display_text_render(x, y, text, textlen, font, fgcolor, bgcolor);
 }
 
-void display_text_center(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
+void display_text_center(int x, int y, const char *text, int textlen, int font, uint16_t fgcolor, uint16_t bgcolor)
 {
     x += DISPLAY_OFFSET.x;
     y += DISPLAY_OFFSET.y;
@@ -476,7 +476,7 @@ void display_text_center(int x, int y, const char *text, int textlen, uint8_t fo
     display_text_render(x - w / 2, y, text, textlen, font, fgcolor, bgcolor);
 }
 
-void display_text_right(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor)
+void display_text_right(int x, int y, const char *text, int textlen, int font, uint16_t fgcolor, uint16_t bgcolor)
 {
     x += DISPLAY_OFFSET.x;
     y += DISPLAY_OFFSET.y;
@@ -485,7 +485,7 @@ void display_text_right(int x, int y, const char *text, int textlen, uint8_t fon
 }
 
 // compute the width of the text (in pixels)
-int display_text_width(const char *text, int textlen, uint8_t font)
+int display_text_width(const char *text, int textlen, int font)
 {
     int width = 0;
     // determine text length if not provided

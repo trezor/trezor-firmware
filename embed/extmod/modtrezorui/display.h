@@ -33,16 +33,16 @@
 #define FONT_SIZE   20
 
 #ifdef TREZOR_FONT_NORMAL_ENABLE
-#define FONT_NORMAL 1
+#define FONT_NORMAL (-1)
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
-#define FONT_BOLD   2
+#define FONT_BOLD   (-2)
 #endif
 #ifdef TREZOR_FONT_MONO_ENABLE
-#define FONT_MONO   3
+#define FONT_MONO   (-3)
 #endif
 #ifdef TREZOR_FONT_MONO_BOLD_ENABLE
-#define FONT_MONO_BOLD  4
+#define FONT_MONO_BOLD  (-4)
 #endif
 
 #define AVATAR_IMAGE_SIZE  144
@@ -76,10 +76,10 @@ void display_print(const char *text, int textlen);
 void display_printf(const char *fmt, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 #endif
 
-void display_text(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor);
-void display_text_center(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor);
-void display_text_right(int x, int y, const char *text, int textlen, uint8_t font, uint16_t fgcolor, uint16_t bgcolor);
-int display_text_width(const char *text, int textlen, uint8_t font);
+void display_text(int x, int y, const char *text, int textlen, int font, uint16_t fgcolor, uint16_t bgcolor);
+void display_text_center(int x, int y, const char *text, int textlen, int font, uint16_t fgcolor, uint16_t bgcolor);
+void display_text_right(int x, int y, const char *text, int textlen, int font, uint16_t fgcolor, uint16_t bgcolor);
+int display_text_width(const char *text, int textlen, int font);
 
 void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale);
 void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint32_t iconlen, uint16_t iconfgcolor);
