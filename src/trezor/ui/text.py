@@ -20,6 +20,7 @@ def render_text(words: list, new_lines: bool, max_lines: int) -> None:
     offset_y = TEXT_HEADER_HEIGHT + TEXT_LINE_HEIGHT
     OFFSET_X_MAX = ui.WIDTH
     OFFSET_Y_MAX = TEXT_HEADER_HEIGHT + TEXT_LINE_HEIGHT * max_lines
+    FONTS = (ui.NORMAL, ui.BOLD, ui.MONO, ui.MONO_BOLD)
 
     # sizes of common glyphs
     SPACE = ui.display.text_width(" ", font)
@@ -37,7 +38,7 @@ def render_text(words: list, new_lines: bool, max_lines: int) -> None:
                     return
                 offset_x = TEXT_MARGIN_LEFT
                 offset_y += TEXT_LINE_HEIGHT
-            elif word in [ui.NORMAL, ui.BOLD, ui.MONO, ui.MONO_BOLD]:
+            elif word in FONTS:
                 # change of font style
                 font = word
             else:
