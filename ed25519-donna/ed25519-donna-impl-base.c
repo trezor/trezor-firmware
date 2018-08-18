@@ -425,12 +425,12 @@ void ge25519_scalarmult(ge25519 *r, const ge25519 *p1, const bignum256modm s1) {
 
 	contract256_window4_modm(slide1, s1);
 
-	/* set neutral */
-	ge25519_set_neutral(r);
-
-	ge25519_full_to_pniels(pre1, r);
 	ge25519_full_to_pniels(pre1+1, p1);
 	ge25519_double(&d1, p1);
+
+	ge25519_set_neutral(r);
+	ge25519_full_to_pniels(pre1, r);
+
 	ge25519_full_to_pniels(pre1+2, &d1);
 	for (i = 1; i < 7; i++) {
 		ge25519_pnielsadd(&pre1[i+2], &d1, &pre1[i]);
@@ -447,6 +447,7 @@ void ge25519_scalarmult(ge25519 *r, const ge25519 *p1, const bignum256modm s1) {
 		ge25519_pnielsadd_p1p1(&t, r, &pre, (unsigned char)slide1[i] >> 7);
 		ge25519_p1p1_to_partial(r, &t);
 	}
+	curve25519_mul(r->t, t.x, t.y);
 }
 
 void ge25519_scalarmult_base_choose_niels(ge25519_niels *t, const uint8_t table[256][96], uint32_t pos, signed char b) {
