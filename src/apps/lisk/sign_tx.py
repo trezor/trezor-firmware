@@ -47,7 +47,9 @@ async def _get_keys(ctx, msg):
 
 
 def _update_raw_tx(transaction, pubkey):
-    transaction.sender_public_key = pubkey
+    # If device is using for second signature sender_public_key must be exist in transaction
+    if not transaction.sender_public_key:
+        transaction.sender_public_key = pubkey
 
     # For CastVotes transactions, recipientId should be equal to transaction
     # creator address.
