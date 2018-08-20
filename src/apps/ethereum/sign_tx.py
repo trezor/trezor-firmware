@@ -12,7 +12,7 @@ from apps.ethereum.layout import (
 )
 
 # maximum supported chain id
-MAX_CHAIN_ID = 2147483630
+MAX_CHAIN_ID = 2147483629
 
 
 async def ethereum_sign_tx(ctx, msg):
@@ -134,7 +134,7 @@ async def send_signature(ctx, msg: EthereumSignTx, digest):
     address_n = msg.address_n or ()
     node = await seed.derive_node(ctx, address_n)
 
-    signature = secp256k1.sign(node.private_key(), digest, False)
+    signature = secp256k1.sign(node.private_key(), digest, False, True)
 
     req = EthereumTxRequest()
     req.signature_v = signature[0]

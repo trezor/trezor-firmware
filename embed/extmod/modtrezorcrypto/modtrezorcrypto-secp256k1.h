@@ -62,7 +62,13 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_publickey(size_t n_args, const mp_obj
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_secp256k1_publickey_obj, 1, 2, mod_trezorcrypto_secp256k1_publickey);
 
-/// def sign(secret_key: bytes, digest: bytes, compressed: bool = True) -> bytes:
+static int ethereum_is_canonic(uint8_t v, uint8_t signature[64])
+{
+	(void) signature;
+	return (v & 2) == 0;
+}
+
+/// def sign(secret_key: bytes, digest: bytes, compressed: bool = True, ethereum_canonical: bool = False) -> bytes:
 ///     '''
 ///     Uses secret key to produce the signature of the digest.
 ///     '''
@@ -70,7 +76,12 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign(size_t n_args, const mp_obj_t *a
     mp_buffer_info_t sk, dig;
     mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
     mp_get_buffer_raise(args[1], &dig, MP_BUFFER_READ);
-    bool compressed = n_args < 3 || args[2] == mp_const_true;
+    bool compressed = (n_args < 3) || (args[2] == mp_const_true);
+    bool ethereum_canonical = (n_args > 3) && (args[3] == mp_const_true);
+    int (*is_canonical)(uint8_t by, uint8_t sig[64]) = NULL;
+    if (ethereum_canonical) {
+        is_canonical = ethereum_is_canonic;
+    }
     if (sk.len != 32) {
         mp_raise_ValueError("Invalid length of secret key");
     }
@@ -78,13 +89,13 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign(size_t n_args, const mp_obj_t *a
         mp_raise_ValueError("Invalid length of digest");
     }
     uint8_t out[65], pby;
-    if (0 != ecdsa_sign_digest(&secp256k1, (const uint8_t *)sk.buf, (const uint8_t *)dig.buf, out + 1, &pby, NULL)) {
+    if (0 != ecdsa_sign_digest(&secp256k1, (const uint8_t *)sk.buf, (const uint8_t *)dig.buf, out + 1, &pby, is_canonical)) {
         mp_raise_ValueError("Signing failed");
     }
     out[0] = 27 + pby + compressed * 4;
     return mp_obj_new_bytes(out, sizeof(out));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_secp256k1_sign_obj, 2, 3, mod_trezorcrypto_secp256k1_sign);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_secp256k1_sign_obj, 2, 4, mod_trezorcrypto_secp256k1_sign);
 
 /// def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
 ///     '''
