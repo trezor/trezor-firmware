@@ -37,7 +37,7 @@
 #include "messages.pb.h"
 
 /* maximum supported chain id.  v must fit in an uint32_t. */
-#define MAX_CHAIN_ID 2147483630
+#define MAX_CHAIN_ID 2147483629
 
 static bool ethereum_signing = false;
 static uint32_t data_total, data_left;
