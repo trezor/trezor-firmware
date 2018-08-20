@@ -8,7 +8,7 @@ from trezor.ui.text import Text
 
 from apps.common import seed
 from apps.common.confirm import confirm
-from apps.common.display_address import split_address
+from apps.common.show import split_address
 from apps.stellar import helpers
 
 

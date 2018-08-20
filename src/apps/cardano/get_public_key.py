@@ -7,7 +7,7 @@ from trezor.messages.HDNodeType import HDNodeType
 
 from .address import _derive_hd_passphrase, derive_address_and_node
 
-from apps.common import seed, storage
+from apps.common import seed, show, storage
 
 
 async def cardano_get_public_key(ctx, msg):

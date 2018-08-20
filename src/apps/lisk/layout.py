@@ -6,7 +6,7 @@ from trezor.utils import chunks
 from .helpers import get_vote_tx_text
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm
-from apps.common.display_address import show_pubkey
+from apps.common.show import show_pubkey
 
 
 async def require_confirm_tx(ctx, to, value):

@@ -6,7 +6,7 @@ from trezor.messages.Success import Success
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
-from apps.common.display_address import split_address
+from apps.common.show import split_address
 from apps.common.signverify import split_message
 from apps.ethereum.sign_message import message_digest
 

@@ -2,7 +2,7 @@ from trezor.messages.StellarAddress import StellarAddress
 from trezor.messages.StellarGetAddress import StellarGetAddress
 
 from apps.common import seed
-from apps.common.display_address import show_address, show_qr
+from apps.common.show import show_address, show_qr
 from apps.stellar import helpers
 
 

@@ -4,7 +4,7 @@ from trezor.messages.RippleGetAddress import RippleGetAddress
 from . import helpers
 
 from apps.common import seed
-from apps.common.display_address import show_address, show_qr
+from apps.common.show import show_address, show_qr
 
 
 async def get_address(ctx, msg: RippleGetAddress):

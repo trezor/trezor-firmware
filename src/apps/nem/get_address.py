@@ -9,7 +9,7 @@ from .validators import validate_network
 
 from apps.common import seed
 from apps.common.confirm import confirm
-from apps.common.display_address import show_qr
+from apps.common.show import show_qr
 
 
 async def get_address(ctx, msg):

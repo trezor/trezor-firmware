@@ -8,8 +8,7 @@ from trezor.ui.qr import Qr
 from trezor.ui.text import Text
 from trezor.utils import chunks
 
-from apps.common.confirm import confirm
-from apps.common.confirm import require_confirm
+from apps.common.confirm import confirm, require_confirm
 
 
 async def show_address(ctx, address: str):
