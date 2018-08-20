@@ -243,6 +243,7 @@ void ge25519_double_scalarmult_vartime(ge25519 *r, const ge25519 *p1, const bign
 	ge25519_p1p1 t;
 	int32_t i;
 
+	memset(&t, 0, sizeof(ge25519_p1p1));
 	contract256_slidingwindow_modm(slide1, s1, S1_SWINDOWSIZE);
 	contract256_slidingwindow_modm(slide2, s2, S2_SWINDOWSIZE);
 
@@ -283,6 +284,7 @@ void ge25519_double_scalarmult_vartime(ge25519 *r, const ge25519 *p1, const bign
 
 		ge25519_p1p1_to_partial(r, &t);
 	}
+	curve25519_mul(r->t, t.x, t.y);
 }
 
 /* computes [s1]p1 + [s2]p2 */
@@ -295,6 +297,7 @@ void ge25519_double_scalarmult_vartime2(ge25519 *r, const ge25519 *p1, const big
 	ge25519_p1p1 t;
 	int32_t i;
 
+	memset(&t, 0, sizeof(ge25519_p1p1));
 	contract256_slidingwindow_modm(slide1, s1, S1_SWINDOWSIZE);
 	contract256_slidingwindow_modm(slide2, s2, S1_SWINDOWSIZE);
 
@@ -329,6 +332,7 @@ void ge25519_double_scalarmult_vartime2(ge25519 *r, const ge25519 *p1, const big
 
 		ge25519_p1p1_to_partial(r, &t);
 	}
+	curve25519_mul(r->t, t.x, t.y);
 }
 #endif
 
