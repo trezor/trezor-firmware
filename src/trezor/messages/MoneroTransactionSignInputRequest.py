@@ -2,10 +2,12 @@
 # fmt: off
 import protobuf as p
 
+from .MoneroTransactionSourceEntry import MoneroTransactionSourceEntry
+
 
 class MoneroTransactionSignInputRequest(p.MessageType):
     FIELDS = {
-        1: ('src_entr', p.BytesType, 0),
+        1: ('src_entr', MoneroTransactionSourceEntry, 0),
         2: ('vini', p.BytesType, 0),
         3: ('vini_hmac', p.BytesType, 0),
         4: ('pseudo_out', p.BytesType, 0),
@@ -16,7 +18,7 @@ class MoneroTransactionSignInputRequest(p.MessageType):
 
     def __init__(
         self,
-        src_entr: bytes = None,
+        src_entr: MoneroTransactionSourceEntry = None,
         vini: bytes = None,
         vini_hmac: bytes = None,
         pseudo_out: bytes = None,

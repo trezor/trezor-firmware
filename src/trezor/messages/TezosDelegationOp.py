@@ -5,31 +5,28 @@ import protobuf as p
 from .TezosContractID import TezosContractID
 
 
-class TezosOperationCommon(p.MessageType):
+class TezosDelegationOp(p.MessageType):
     FIELDS = {
-        1: ('branch', p.BytesType, 0),
-        2: ('tag', p.UVarintType, 0),
-        3: ('source', TezosContractID, 0),
-        4: ('fee', p.UVarintType, 0),
-        5: ('counter', p.UVarintType, 0),
-        6: ('gas_limit', p.UVarintType, 0),
-        7: ('storage_limit', p.UVarintType, 0),
+        1: ('source', TezosContractID, 0),
+        2: ('fee', p.UVarintType, 0),
+        3: ('counter', p.UVarintType, 0),
+        4: ('gas_limit', p.UVarintType, 0),
+        5: ('storage_limit', p.UVarintType, 0),
+        6: ('delegate', p.BytesType, 0),
     }
 
     def __init__(
         self,
-        branch: bytes = None,
-        tag: int = None,
         source: TezosContractID = None,
         fee: int = None,
         counter: int = None,
         gas_limit: int = None,
         storage_limit: int = None,
+        delegate: bytes = None,
     ) -> None:
-        self.branch = branch
-        self.tag = tag
         self.source = source
         self.fee = fee
         self.counter = counter
         self.gas_limit = gas_limit
         self.storage_limit = storage_limit
+        self.delegate = delegate

@@ -3,14 +3,14 @@
 import protobuf as p
 
 
-class TezosPublicKey(p.MessageType):
-    MESSAGE_WIRE_TYPE = 155
+class OntologyPublicKey(p.MessageType):
+    MESSAGE_WIRE_TYPE = 353
     FIELDS = {
-        1: ('public_key', p.UnicodeType, 0),
+        1: ('public_key', p.BytesType, 0),
     }
 
     def __init__(
         self,
-        public_key: str = None,
+        public_key: bytes = None,
     ) -> None:
         self.public_key = public_key

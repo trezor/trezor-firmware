@@ -2,10 +2,10 @@
 # fmt: off
 import protobuf as p
 
-from .TezosDelegationType import TezosDelegationType
-from .TezosOperationCommon import TezosOperationCommon
-from .TezosOriginationType import TezosOriginationType
-from .TezosTransactionType import TezosTransactionType
+from .TezosDelegationOp import TezosDelegationOp
+from .TezosOriginationOp import TezosOriginationOp
+from .TezosRevealOp import TezosRevealOp
+from .TezosTransactionOp import TezosTransactionOp
 
 if __debug__:
     try:
@@ -18,22 +18,28 @@ class TezosSignTx(p.MessageType):
     MESSAGE_WIRE_TYPE = 152
     FIELDS = {
         1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('operation', TezosOperationCommon, 0),
-        3: ('transaction', TezosTransactionType, 0),
-        4: ('origination', TezosOriginationType, 0),
-        5: ('delegation', TezosDelegationType, 0),
+        2: ('curve', p.UVarintType, 0),  # default=Ed25519
+        3: ('branch', p.BytesType, 0),
+        4: ('reveal', TezosRevealOp, 0),
+        5: ('transaction', TezosTransactionOp, 0),
+        6: ('origination', TezosOriginationOp, 0),
+        7: ('delegation', TezosDelegationOp, 0),
     }
 
     def __init__(
         self,
         address_n: List[int] = None,
-        operation: TezosOperationCommon = None,
-        transaction: TezosTransactionType = None,
-        origination: TezosOriginationType = None,
-        delegation: TezosDelegationType = None,
+        curve: int = None,
+        branch: bytes = None,
+        reveal: TezosRevealOp = None,
+        transaction: TezosTransactionOp = None,
+        origination: TezosOriginationOp = None,
+        delegation: TezosDelegationOp = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
-        self.operation = operation
+        self.curve = curve
+        self.branch = branch
+        self.reveal = reveal
         self.transaction = transaction
         self.origination = origination
         self.delegation = delegation

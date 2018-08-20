@@ -6,14 +6,14 @@ import protobuf as p
 class TezosSignedTx(p.MessageType):
     MESSAGE_WIRE_TYPE = 153
     FIELDS = {
-        1: ('signature', p.BytesType, 0),
+        1: ('signature', p.UnicodeType, 0),
         2: ('sig_op_contents', p.BytesType, 0),
         3: ('operation_hash', p.UnicodeType, 0),
     }
 
     def __init__(
         self,
-        signature: bytes = None,
+        signature: str = None,
         sig_op_contents: bytes = None,
         operation_hash: str = None,
     ) -> None:
