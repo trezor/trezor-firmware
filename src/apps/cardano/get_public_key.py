@@ -23,6 +23,8 @@ async def cardano_get_public_key(ctx, msg):
     mnemonic = None
     root_node = None
 
+    if msg.show_display:
+        await show.show_pubkey(ctx, key.node.public_key)
     return key
 
 
