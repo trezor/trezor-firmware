@@ -1,4 +1,5 @@
 from trezor.utils import ensure
+from utest import assert_async
 
 
 class SkipTest(Exception):
@@ -178,12 +179,16 @@ def run_class(c, test_result):
     print('class', c.__qualname__)
     for name in dir(o):
         if name.startswith("test"):
+            is_async = name.startswith("test_async")
             print(' ', name, end=' ...')
             m = getattr(o, name)
             try:
                 set_up()
                 test_result.testsRun += 1
-                m()
+                if is_async:
+                    assert_async(m(), [(None, StopIteration()), ])
+                else:
+                    m()
                 tear_down()
                 print(" ok")
             except SkipTest as e:
