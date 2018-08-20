@@ -163,7 +163,7 @@ class TestMsgEthereumSigntxChainId(TrezorTest):
             (
                 2147483630,
                 1,
-                4294967295,
+                4294967296,
                 b"fd0377ff429a51ae284c4b09b7d7c26c78944c86bb311b5988d70be4fc59eeba",
                 b"2ad183858ac6b1efa820b9ee2c2dbf6659a73cc5b714d32c380b263d024f2ee9",
                 0,
