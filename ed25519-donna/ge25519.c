@@ -369,10 +369,4 @@ int ge25519_unpack_vartime(ge25519 *r, const unsigned char *s){
 
 void ge25519_scalarmult_base_wrapper(ge25519 *r, const bignum256modm s){
 	ge25519_scalarmult_base_niels(r, ge25519_niels_base_multiples, s);
-	ge25519_norm(r, r);
-}
-
-void ge25519_scalarmult_wrapper(ge25519 *r, const ge25519 *P, const bignum256modm a){
-	ge25519_scalarmult(r, P, a);
-	ge25519_norm(r, r);
 }

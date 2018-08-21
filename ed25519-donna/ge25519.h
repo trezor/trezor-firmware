@@ -71,7 +71,4 @@ int ge25519_unpack_vartime(ge25519 *r, const unsigned char *s);
 /* aG, wrapper for niels base mult. */
 void ge25519_scalarmult_base_wrapper(ge25519 *r, const bignum256modm s);
 
-/* aP, wrapper. General purpose, normalizes after multiplication */
-void ge25519_scalarmult_wrapper(ge25519 *r, const ge25519 *P, const bignum256modm a);
-
 #endif

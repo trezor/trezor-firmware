@@ -511,7 +511,7 @@ START_TEST(test_xmr_ge25519_scalarmult_base_wrapper)
 END_TEST
 
 
-START_TEST(test_xmr_ge25519_scalarmult_wrapper)
+START_TEST(test_xmr_ge25519_scalarmult)
 {
 	static const struct {
 		char *sc;
@@ -562,7 +562,7 @@ START_TEST(test_xmr_ge25519_scalarmult_wrapper)
 		expand256_modm(sc, fromhex(tests[i].sc), 32);
 		ge25519_unpack_vartime(&pt, fromhex(tests[i].pt));
 		ge25519_unpack_vartime(&pt2, fromhex(tests[i].pt2));
-		ge25519_scalarmult_wrapper(&pt3, &pt, sc);
+		ge25519_scalarmult(&pt3, &pt, sc);
 		ck_assert_int_eq(ge25519_eq(&pt3, &pt2), 1);
 	}
 }
@@ -574,18 +574,27 @@ START_TEST(test_xmr_ge25519_ops)
 	int tests[] = {1, 2, 7, 8, 637, 9912, 12345};
 	for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
 		struct ge25519_t a, b, c, d;
-		bignum256modm s1 = {0}, s2 = {0}, s3 = {0};
+		bignum256modm s1 = {0}, s2 = {0}, s3 = {0}, s4 = {0};
 
 		set256_modm(s1, tests[i]);
 		set256_modm(s2, 8 * tests[i]);
 		set256_modm(s3, 8);
+		set256_modm(s4, 2);
+
+		ge25519_scalarmult_base_niels(&a, ge25519_niels_base_multiples, s1);
+		ge25519_scalarmult_base_niels(&b, ge25519_niels_base_multiples, s2);
+		ge25519_scalarmult(&c, &a, s4);
+		ge25519_scalarmult(&c, &c, s4);
+		ge25519_scalarmult(&c, &c, s4);
+		ck_assert_int_eq(ge25519_eq(&c, &b), 1);
+		ck_assert_int_eq(ge25519_eq(&a, &b), 0);
 
 		ge25519_scalarmult_base_wrapper(&a, s1);
 		ge25519_mul8(&b, &a);
 		ge25519_scalarmult_base_wrapper(&c, s2);
 		ck_assert_int_eq(ge25519_eq(&b, &c), 1);
 
-		ge25519_scalarmult_wrapper(&d, &a, s3);
+		ge25519_scalarmult(&d, &a, s3);
 		ck_assert_int_eq(ge25519_eq(&d, &c), 1);
 
 		ge25519_copy(&a, &b);

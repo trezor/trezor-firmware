@@ -71,7 +71,6 @@ void xmr_derivation_to_scalar(bignum256modm s, const ge25519 * p, uint32_t outpu
 void xmr_generate_key_derivation(ge25519 * r, const ge25519 * A, const bignum256modm b){
 	ge25519 bA;
 	ge25519_scalarmult(&bA, A, b);
-	ge25519_norm(&bA, &bA);
 	ge25519_mul8(r, &bA);
 }
 
@@ -83,58 +82,36 @@ void xmr_derive_private_key(bignum256modm s, const ge25519 * deriv, uint32_t idx
 void xmr_derive_public_key(ge25519 * r, const ge25519 * deriv, uint32_t idx, const ge25519 * base){
 	bignum256modm s={0};
 	ge25519 p2;
-	ge25519_pniels Bp;
-	ge25519_p1p1 p1;
 
 	xmr_derivation_to_scalar(s, deriv, idx);
 	ge25519_scalarmult_base_niels(&p2, ge25519_niels_base_multiples, s);
-	ge25519_norm(&p2, &p2);
-
-	ge25519_full_to_pniels(&Bp, base);
-	ge25519_pnielsadd_p1p1(&p1, &p2, &Bp, 0);
-	ge25519_p1p1_to_full(r, &p1);
+	ge25519_add(r, base, &p2, 0);
 }
 
 void xmr_add_keys2(ge25519 * r, const bignum256modm a, const bignum256modm b, const ge25519 * B){
 	// aG + bB, G is basepoint
 	ge25519 aG, bB;
-	ge25519_pniels bBn;
-	ge25519_p1p1 p1;
 	ge25519_scalarmult_base_niels(&aG, ge25519_niels_base_multiples, a);
 	ge25519_scalarmult(&bB, B, b);
-	ge25519_norm(&bB, &bB);
-	ge25519_norm(&aG, &aG);
-
-	ge25519_full_to_pniels(&bBn, &bB);
-	ge25519_pnielsadd_p1p1(&p1, &aG, &bBn, 0);
-	ge25519_p1p1_to_full(r, &p1);
+	ge25519_add(r, &aG, &bB, 0);
 }
 
 void xmr_add_keys2_vartime(ge25519 * r, const bignum256modm a, const bignum256modm b, const ge25519 * B){
 	// aG + bB, G is basepoint
 	ge25519_double_scalarmult_vartime(r, B, b, a);
-	ge25519_norm(r, r);
 }
 
 void xmr_add_keys3(ge25519 * r, const bignum256modm a, const ge25519 * A, const bignum256modm b, const ge25519 * B){
 	// aA + bB
 	ge25519 aA, bB;
-	ge25519_pniels bBn;
-	ge25519_p1p1 p1;
 	ge25519_scalarmult(&aA, A, a);
 	ge25519_scalarmult(&bB, B, b);
-	ge25519_norm(&bB, &bB);
-	ge25519_norm(&aA, &aA);
-
-	ge25519_full_to_pniels(&bBn, &bB);
-	ge25519_pnielsadd_p1p1(&p1, &aA, &bBn, 0);
-	ge25519_p1p1_to_full(r, &p1);
+	ge25519_add(r, &aA, &bB, 0);
 }
 
 void xmr_add_keys3_vartime(ge25519 * r, const bignum256modm a, const ge25519 * A, const bignum256modm b, const ge25519 * B){
 	// aA + bB
 	ge25519_double_scalarmult_vartime2(r, A, a, B, b);
-	ge25519_norm(r, r);
 }
 
 void xmr_get_subaddress_secret_key(bignum256modm r, uint32_t major, uint32_t minor, const bignum256modm m){

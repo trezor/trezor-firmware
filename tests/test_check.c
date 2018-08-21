@@ -5093,7 +5093,7 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_xmr_ge25519_base);
 	tcase_add_test(tc, test_xmr_ge25519_check);
 	tcase_add_test(tc, test_xmr_ge25519_scalarmult_base_wrapper);
-	tcase_add_test(tc, test_xmr_ge25519_scalarmult_wrapper);
+	tcase_add_test(tc, test_xmr_ge25519_scalarmult);
 	tcase_add_test(tc, test_xmr_ge25519_ops);
 	suite_add_tcase(s, tc);
 
