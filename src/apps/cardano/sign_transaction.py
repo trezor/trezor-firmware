@@ -1,6 +1,7 @@
 from trezor import log, ui, wire
 from trezor.crypto import base58, bip32, hashlib
 from trezor.crypto.curve import ed25519
+from trezor.messages.CardanoSignedTx import CardanoSignedTx
 from trezor.messages.CardanoTxRequest import CardanoTxRequest
 from trezor.messages.MessageType import CardanoTxAck
 from trezor.ui.text import BR
@@ -91,7 +92,7 @@ async def cardano_sign_transaction(ctx, msg):
         # sign the transaction bundle and prepare the result
         transaction = Transaction(msg.inputs, msg.outputs, transactions, root_node)
         tx_body, tx_hash = transaction.serialise_tx()
-        tx = CardanoTxRequest(tx_body=tx_body, tx_hash=tx_hash)
+        tx = CardanoSignedTx(tx_body=tx_body, tx_hash=tx_hash)
 
     except ValueError as e:
         if __debug__:
