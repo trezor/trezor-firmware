@@ -49,15 +49,6 @@ class TestMsgStellarGetAddress(TrezorTest):
         address = self.client.stellar_get_address(parse_path("m/44h/148h/1h"), show_display=True)
         assert address == 'GBAW5XGWORWVFE2XTJYDTLDHXTY2Q2MO73HYCGB3XMFMQ562Q2W2GJQX'
 
-    def test_stellar_get_address_get_pubkey(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
-        pubkey = self.client.stellar_get_public_key(parse_path(stellar.DEFAULT_BIP32_PATH))
-        # GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW
-        address = self.client.stellar_get_address(parse_path(stellar.DEFAULT_BIP32_PATH))
-
-        assert stellar.address_from_public_key(pubkey) == address
-
     def test_stellar_get_address_fail(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
