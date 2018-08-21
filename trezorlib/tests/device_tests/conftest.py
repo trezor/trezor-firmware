@@ -18,14 +18,23 @@ import functools
 import os
 import pytest
 
-from trezorlib.transport import get_transport
+from trezorlib.transport import get_transport, enumerate_devices
 from trezorlib.client import TrezorClient, TrezorClientDebugLink
 from trezorlib import log, coins
+
+TREZOR_VERSION = None
 
 
 def get_device():
     path = os.environ.get("TREZOR_PATH")
-    return get_transport(path)
+    if path:
+        return get_transport(path)
+    else:
+        devices = enumerate_devices()
+        for device in devices:
+            if hasattr(device, "find_debug"):
+                return device
+        raise RuntimeError("No debuggable device found")
 
 
 def device_version():
@@ -37,9 +46,6 @@ def device_version():
         return 2
     else:
         return 1
-
-
-TREZOR_VERSION = device_version()
 
 
 @pytest.fixture(scope="function")
@@ -86,6 +92,9 @@ def setup_client(mnemonic=None, pin="", passphrase=False):
 
 
 def pytest_configure(config):
+    global TREZOR_VERSION
+    TREZOR_VERSION = device_version()
+
     if config.getoption("verbose"):
         log.enable_debug_output()
 
