@@ -21,44 +21,9 @@
 #define ECRYPT_PORTABLE
 
 #include "ecrypt-config.h"
+#include "ecrypt-types.h"
 
 /* ------------------------------------------------------------------------- */
-
-/*
- * The following types are defined (if available):
- *
- * u8:  unsigned integer type, at least 8 bits
- * u16: unsigned integer type, at least 16 bits
- * u32: unsigned integer type, at least 32 bits
- * u64: unsigned integer type, at least 64 bits
- *
- * s8, s16, s32, s64 -> signed counterparts of u8, u16, u32, u64
- *
- * The selection of minimum-width integer types is taken care of by
- * 'ecrypt-config.h'. Note: to enable 64-bit types on 32-bit
- * compilers, it might be necessary to switch from ISO C90 mode to ISO
- * C99 mode (e.g., gcc -std=c99).
- */
-
-#ifdef I8T
-typedef signed I8T s8;
-typedef unsigned I8T u8;
-#endif
-
-#ifdef I16T
-typedef signed I16T s16;
-typedef unsigned I16T u16;
-#endif
-
-#ifdef I32T
-typedef signed I32T s32;
-typedef unsigned I32T u32;
-#endif
-
-#ifdef I64T
-typedef signed I64T s64;
-typedef unsigned I64T u64;
-#endif
 
 /*
  * The following macros are used to obtain exact-width results.

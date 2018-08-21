@@ -3,6 +3,7 @@
 // than performance.
 
 #include "chacha20poly1305.h"
+#include "ecrypt-portable.h"
 
 void hchacha20(ECRYPT_ctx *x,u8 *c);
 
