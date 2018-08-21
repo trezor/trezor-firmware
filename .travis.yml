@@ -19,7 +19,6 @@ env:
         PROTOBUF_VERSION=3.4.0
 
 python:
-    - "3.3"
     - "3.4"
     - "3.5"
     - "3.6"
@@ -28,7 +27,6 @@ install:
     # Optimisation: build requirements as wheels, which get cached by Travis
     - pip install "pip>=9.0" wheel  # pip 9.0 understands `python_requires` constraints
     - pip install "setuptools>=38"  # setuptools >= 38 are capable of using prebuilt wheels
-    - pip install "virtualenv<16.0.0"  # virtualenv 16.0.0 drops support for py33 without properly declaring it
     - pip install tox-travis
     - pip install -r requirements-dev.txt
     # protobuf-related dependencies
