@@ -241,7 +241,7 @@ main_start:
     // delay to detect touch
     uint32_t touched = 0;
     for (int i = 0; i < 100; i++) {
-        touched = touch_read();
+        touched = touch_is_detected() | touch_read();
         if (touched) {
             break;
         }
