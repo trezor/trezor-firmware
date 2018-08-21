@@ -342,13 +342,6 @@ def _crc16_checksum(bytes):
 # ====== Client functions ====== #
 
 
-@expect(messages.StellarPublicKey, field="public_key")
-def get_public_key(client, address_n, show_display=False):
-    return client.call(
-        messages.StellarGetPublicKey(address_n=address_n, show_display=show_display)
-    )
-
-
 @expect(messages.StellarAddress, field="address")
 def get_address(client, address_n, show_display=False):
     return client.call(
