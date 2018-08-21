@@ -6,7 +6,7 @@ from trezor.utils import chunks
 from .helpers import get_vote_tx_text
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm
-from apps.wallet.get_public_key import _show_pubkey
+from apps.common.display_address import show_pubkey
 
 
 async def require_confirm_tx(ctx, to, value):
@@ -32,7 +32,7 @@ async def require_confirm_vote_tx(ctx, votes):
 
 
 async def require_confirm_public_key(ctx, public_key):
-    return await _show_pubkey(ctx, public_key)
+    return await show_pubkey(ctx, public_key)
 
 
 async def require_confirm_multisig(ctx, multisignature):

@@ -1,4 +1,5 @@
 from micropython import const
+from ubinascii import hexlify
 
 from trezor import ui
 from trezor.messages import ButtonRequestType
@@ -8,6 +9,7 @@ from trezor.ui.text import Text
 from trezor.utils import chunks
 
 from apps.common.confirm import confirm
+from apps.common.confirm import require_confirm
 
 
 async def show_address(ctx, address: str):
@@ -38,3 +40,10 @@ async def show_qr(ctx, address: str):
 
 def split_address(address: str):
     return chunks(address, 17)
+
+
+async def show_pubkey(ctx, pubkey: bytes):
+    lines = chunks(hexlify(pubkey).decode(), 18)
+    text = Text("Confirm public key", ui.ICON_RECEIVE, icon_color=ui.GREEN)
+    text.mono(*lines)
+    return await require_confirm(ctx, text, code=ButtonRequestType.PublicKey)

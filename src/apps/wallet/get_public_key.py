@@ -1,14 +1,7 @@
-from ubinascii import hexlify
-
-from trezor import ui
-from trezor.messages import ButtonRequestType
 from trezor.messages.HDNodeType import HDNodeType
 from trezor.messages.PublicKey import PublicKey
-from trezor.ui.text import Text
-from trezor.utils import chunks
 
-from apps.common import coins, seed
-from apps.common.confirm import require_confirm
+from apps.common import coins, seed, display_address
 
 
 async def get_public_key(ctx, msg):
@@ -33,13 +26,6 @@ async def get_public_key(ctx, msg):
     )
 
     if msg.show_display:
-        await _show_pubkey(ctx, pubkey)
+        await display_address.show_pubkey(ctx, pubkey)
 
     return PublicKey(node=node_type, xpub=node_xpub)
-
-
-async def _show_pubkey(ctx, pubkey: bytes):
-    lines = chunks(hexlify(pubkey).decode(), 18)
-    text = Text("Confirm public key", ui.ICON_RECEIVE, icon_color=ui.GREEN)
-    text.mono(*lines)
-    return await require_confirm(ctx, text, code=ButtonRequestType.PublicKey)
