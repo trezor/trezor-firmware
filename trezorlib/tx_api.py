@@ -30,21 +30,8 @@ class TxApi(object):
         self.network = network
         self.url = url
 
-    def get_url(self, resource, resourceid):
-        url = "%s%s/%s" % (self.url, resource, resourceid)
-        return url
-
-    def current_height(self):
-        r = requests.get(self.url + "/status?q=getBlockCount")
-        j = r.json(parse_float=str)
-        block_height = j["info"]["blocks"]
-        return block_height
-
-    def get_block_hash(self, block_number):
-        r = requests.get(self.url + "/block-index/" + str(block_number))
-        j = r.json(parse_float=str)
-        block_hash = binascii.unhexlify(j["blockHash"])
-        return block_hash
+    def get_url(self, *args):
+        return "/".join(map(str, [self.url, "api", *args]))
 
     def fetch_json(self, resource, resourceid):
         global cache_dir
@@ -87,8 +74,17 @@ class TxApiInsight(TxApi):
         self.zcash = zcash
         self.bip115 = bip115
         if url:
-            prefix, suffix = url.rsplit("/", maxsplit=1)
-            self.pushtx_url = prefix + "/tx/send"
+            self.pushtx_url = self.url + "/tx/send"
+
+    def get_block_hash(self, block_number):
+        j = self.fetch_json("block-index", block_number)
+        return binascii.unhexlify(j["blockHash"])
+
+    def current_height(self):
+        r = requests.get(self.get_url("status?q=getBlockCount"))
+        j = r.json(parse_float=str)
+        block_height = j["info"]["blocks"]
+        return block_height
 
     def get_tx(self, txhash):
 
