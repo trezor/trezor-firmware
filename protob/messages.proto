@@ -141,8 +141,6 @@ enum MessageType {
     MessageType_TezosPublicKey = 155 [(wire_out) = true];
 
     // Stellar
-    MessageType_StellarGetPublicKey = 200 [(wire_in) = true];
-    MessageType_StellarPublicKey = 201 [(wire_out) = true];
     MessageType_StellarSignTx = 202 [(wire_in) = true];
     MessageType_StellarTxOpRequest = 203 [(wire_out) = true];
     MessageType_StellarGetAddress = 207 [(wire_in) = true];
