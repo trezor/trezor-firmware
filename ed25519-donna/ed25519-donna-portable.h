@@ -7,8 +7,6 @@
 #define DONNA_INLINE
 #undef ALIGN
 #define ALIGN(x) __attribute__((aligned(x)))
-#define ROTL32(a,b) (((a) << (b)) | ((a) >> (32 - b)))
-#define ROTR32(a,b) (((a) >> (b)) | ((a) << (32 - b)))
 
 static inline void U32TO8_LE(unsigned char *p, const uint32_t v) {
 	p[0] = (unsigned char)(v      );
