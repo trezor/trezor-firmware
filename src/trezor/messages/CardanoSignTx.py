@@ -12,7 +12,7 @@ if __debug__:
         List = None  # type: ignore
 
 
-class CardanoSignTransaction(p.MessageType):
+class CardanoSignTx(p.MessageType):
     MESSAGE_WIRE_TYPE = 303
     FIELDS = {
         1: ('inputs', CardanoTxInputType, p.FLAG_REPEATED),
