@@ -172,7 +172,7 @@ enum MessageType {
     MessageType_CardanoGetAddress = 307 [(wire_in) = true];
     MessageType_CardanoAddress = 308 [(wire_out) = true];
     MessageType_CardanoTxAck = 309 [(wire_in) = true];
-    MessageType_CardanoSignedTransaction = 310 [(wire_out) = true];
+    MessageType_CardanoSignedTx = 310 [(wire_out) = true];
 
     // Ontology
     MessageType_OntologyGetAddress = 350 [(wire_in) = true];

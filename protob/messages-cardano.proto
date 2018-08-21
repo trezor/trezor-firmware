@@ -82,7 +82,7 @@ message CardanoVerifyMessage {
 /**
  * Request: Ask device to sign Cardano transaction
  * @start
- * @next CardanoSignedTransaction
+ * @next CardanoSignedTx
  * @next CardanoTxRequest
  * @next Failure
  */
@@ -122,7 +122,7 @@ message CardanoTxRequest {
 
 /**
  * Request: Reported transaction data
- * @next CardanoSignedTransaction
+ * @next CardanoSignedTx
  * @next CardanoTxRequest
  */
 message CardanoTxAck {
@@ -133,7 +133,7 @@ message CardanoTxAck {
  * Response: Serialised signed cardano transaction
  * @end
  */
-message CardanoSignedTransaction {
+message CardanoSignedTx {
     optional bytes tx_hash = 1; // hash of the signed transaction
     optional bytes tx_body = 2; // serialised body of the signed transaction
 }
