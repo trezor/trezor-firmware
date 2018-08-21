@@ -16,6 +16,7 @@
 
 import functools
 import hashlib
+import re
 import struct
 import unicodedata
 from typing import List, NewType
@@ -215,3 +216,37 @@ def session(f):
             client.transport.session_end()
 
     return wrapped_f
+
+
+# de-camelcasifier
+# https://stackoverflow.com/a/1176023/222189
+
+FIRST_CAP_RE = re.compile("(.)([A-Z][a-z]+)")
+ALL_CAP_RE = re.compile("([a-z0-9])([A-Z])")
+
+
+def from_camelcase(s):
+    s = FIRST_CAP_RE.sub(r"\1_\2", s)
+    return ALL_CAP_RE.sub(r"\1_\2", s).lower()
+
+
+def dict_from_camelcase(d, renames=None):
+    if not isinstance(d, dict):
+        return d
+
+    if renames is None:
+        renames = {}
+
+    res = {}
+    for key, value in d.items():
+        newkey = from_camelcase(key)
+        renamed_key = renames.get(newkey) or renames.get(key)
+        if renamed_key:
+            newkey = renamed_key
+
+        if isinstance(value, list):
+            res[newkey] = [dict_from_camelcase(v, renames) for v in value]
+        else:
+            res[newkey] = dict_from_camelcase(value, renames)
+
+    return res

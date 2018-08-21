@@ -398,3 +398,50 @@ def format_message(
         size=pb.ByteSize(),
         content=pformat_value(pb.__dict__, indent),
     )
+
+
+def value_to_proto(ftype, value):
+    if issubclass(ftype, MessageType):
+        raise TypeError("value_to_proto only converts simple values")
+
+    if ftype in (UVarintType, SVarintType):
+        return int(value)
+
+    if ftype is BoolType:
+        return bool(value)
+
+    if ftype is UnicodeType:
+        return str(value)
+
+    if ftype is BytesType:
+        if isinstance(value, str):
+            return binascii.unhexlify(value)
+        elif isinstance(value, bytes):
+            return value
+        else:
+            raise TypeError("can't convert {} value to bytes".format(type(value)))
+
+
+def dict_to_proto(message_type, d):
+    params = {}
+    for fname, ftype, fflags in message_type.FIELDS.values():
+        repeated = fflags & FLAG_REPEATED
+        value = d.get(fname)
+        if value is None:
+            continue
+
+        if not repeated:
+            value = [value]
+
+        if issubclass(ftype, MessageType):
+            function = dict_to_proto
+        else:
+            function = value_to_proto
+
+        newvalue = [function(ftype, v) for v in value]
+
+        if not repeated:
+            newvalue = newvalue[0]
+
+        params[fname] = newvalue
+    return message_type(**params)

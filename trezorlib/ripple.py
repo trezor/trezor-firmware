@@ -16,7 +16,8 @@
 
 
 from . import messages
-from .tools import expect
+from .tools import expect, dict_from_camelcase
+from .protobuf import dict_to_proto
 
 REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType", "Amount", "Destination")
 
@@ -40,16 +41,5 @@ def create_sign_tx_msg(transaction) -> messages.RippleSignTx:
     if transaction["TransactionType"] != "Payment":
         raise ValueError("Only Payment transaction type is supported")
 
-    return messages.RippleSignTx(
-        fee=transaction.get("Fee"),
-        sequence=transaction.get("Sequence"),
-        flags=transaction.get("Flags"),
-        last_ledger_sequence=transaction.get("LastLedgerSequence"),
-        payment=_create_payment(transaction),
-    )
-
-
-def _create_payment(transaction) -> messages.RipplePayment:
-    return messages.RipplePayment(
-        amount=transaction.get("Amount"), destination=transaction.get("Destination")
-    )
+    converted = dict_from_camelcase(transaction)
+    return dict_to_proto(messages.RippleSignTx, converted)
