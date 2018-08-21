@@ -86,7 +86,7 @@ message CardanoVerifyMessage {
  * @next CardanoTxRequest
  * @next Failure
  */
-message CardanoSignTransaction {
+message CardanoSignTx {
     repeated CardanoTxInputType inputs = 1;     // inputs to be used in transaction
     repeated CardanoTxOutputType outputs = 2;   // outputs to be used in transaction
     optional uint32 transactions_count = 3;     // transactions count
