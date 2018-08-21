@@ -16,8 +16,8 @@
 
 
 from . import messages
-from .tools import expect, dict_from_camelcase
 from .protobuf import dict_to_proto
+from .tools import dict_from_camelcase, expect
 
 REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType", "Amount", "Destination")
 

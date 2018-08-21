@@ -22,33 +22,34 @@
 
 import base64
 import binascii
-import click
 import hashlib
 import io
 import json
 import os
 import sys
 
-from trezorlib.client import TrezorClient
-from trezorlib.transport import get_transport, enumerate_devices
-from trezorlib import coins
-from trezorlib import log
-from trezorlib import messages as proto
+import click
+
 from trezorlib import (
     btc,
+    coins,
     cosi,
     debuglink,
     device,
     ethereum,
     firmware,
     lisk,
+    log,
+    messages as proto,
     misc,
     nem,
+    protobuf,
     ripple,
     stellar,
+    tools,
 )
-from trezorlib import protobuf
-from trezorlib import tools
+from trezorlib.client import TrezorClient
+from trezorlib.transport import enumerate_devices, get_transport
 
 
 class ChoiceType(click.Choice):

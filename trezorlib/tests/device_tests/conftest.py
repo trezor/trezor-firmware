@@ -16,11 +16,12 @@
 
 import functools
 import os
+
 import pytest
 
-from trezorlib.transport import get_transport, enumerate_devices
+from trezorlib import coins, log
 from trezorlib.client import TrezorClient, TrezorClientDebugLink
-from trezorlib import log, coins
+from trezorlib.transport import enumerate_devices, get_transport
 
 TREZOR_VERSION = None
 

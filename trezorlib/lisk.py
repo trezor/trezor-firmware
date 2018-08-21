@@ -1,8 +1,7 @@
-import binascii
 
 from . import messages as proto
-from .tools import CallException, expect, normalize_nfc, dict_from_camelcase
 from .protobuf import dict_to_proto
+from .tools import CallException, dict_from_camelcase, expect, normalize_nfc
 
 
 @expect(proto.LiskAddress, field="address")
