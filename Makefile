@@ -23,5 +23,5 @@ style:
 
 stylecheck:
 	black --check $(STYLE_TARGETS)
-	isort --check-only --recursive $(STYLE_TARGETS) --skip-glob "*/$(EXCLUDE_TARGETS)/*"
+	isort --diff --check-only --recursive $(STYLE_TARGETS) --skip-glob "*/$(EXCLUDE_TARGETS)/*"
 	flake8
