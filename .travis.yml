@@ -41,7 +41,7 @@ before_script:
 
 script:
     - python setup.py install
-    - make stylecheck
+    - if [ $TRAVIS_PYTHON_VERSION == 3.6 ]; then make stylecheck; fi
     - tox
 
 notifications:

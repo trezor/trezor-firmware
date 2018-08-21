@@ -5,5 +5,5 @@ mock>=2.0.0
 flake8
 protobuf
 isort
-black
+black; python_version >= "3.6"
 autoflake
