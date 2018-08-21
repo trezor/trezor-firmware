@@ -2,7 +2,7 @@ from trezor.messages.MessageType import (
     CardanoGetAddress,
     CardanoGetPublicKey,
     CardanoSignMessage,
-    CardanoSignTransaction,
+    CardanoSignTx,
     CardanoVerifyMessage,
 )
 from trezor.wire import protobuf_workflow, register
@@ -43,4 +43,4 @@ def boot():
     register(CardanoGetPublicKey, protobuf_workflow, dispatch_CardanoGetPublicKey)
     register(CardanoSignMessage, protobuf_workflow, dispatch_CardanoSignMessage)
     register(CardanoVerifyMessage, protobuf_workflow, dispatch_CardanoVerifyMessage)
-    register(CardanoSignTransaction, protobuf_workflow, dispatch_CardanoSignTransaction)
+    register(CardanoSignTx, protobuf_workflow, dispatch_CardanoSignTransaction)
