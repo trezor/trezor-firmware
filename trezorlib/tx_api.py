@@ -31,7 +31,7 @@ class TxApi(object):
         self.url = url
 
     def get_url(self, *args):
-        return "/".join(map(str, [self.url, "api", *args]))
+        return "/".join(map(str, [self.url, "api"] + list(args)))
 
     def fetch_json(self, resource, resourceid):
         global cache_dir
