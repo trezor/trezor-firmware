@@ -145,17 +145,7 @@ def create_importance_transfer(transaction):
     return msg
 
 
-def create_sign_tx(transaction):
-    msg = proto.NEMSignTx()
-    msg.transaction = create_transaction_common(transaction)
-    msg.cosigning = transaction["type"] == TYPE_MULTISIG_SIGNATURE
-
-    if transaction["type"] in (TYPE_MULTISIG_SIGNATURE, TYPE_MULTISIG):
-        transaction = transaction["otherTrans"]
-        msg.multisig = create_transaction_common(transaction)
-    elif "otherTrans" in transaction:
-        raise ValueError("Transaction does not support inner transaction")
-
+def fill_transaction_by_type(msg, transaction):
     if transaction["type"] == TYPE_TRANSACTION_TRANSFER:
         msg.transfer = create_transfer(transaction)
     elif transaction["type"] == TYPE_AGGREGATE_MODIFICATION:
@@ -170,6 +160,21 @@ def create_sign_tx(transaction):
         msg.importance_transfer = create_importance_transfer(transaction)
     else:
         raise ValueError("Unknown transaction type")
+
+
+def create_sign_tx(transaction):
+    msg = proto.NEMSignTx()
+    msg.transaction = create_transaction_common(transaction)
+    msg.cosigning = transaction["type"] == TYPE_MULTISIG_SIGNATURE
+
+    if transaction["type"] in (TYPE_MULTISIG_SIGNATURE, TYPE_MULTISIG):
+        other_trans = transaction["otherTrans"]
+        msg.multisig = create_transaction_common(other_trans)
+        fill_transaction_by_type(msg, other_trans)
+    elif "otherTrans" in transaction:
+        raise ValueError("Transaction does not support inner transaction")
+    else:
+        fill_transaction_by_type(msg, transaction)
 
     return msg
 
