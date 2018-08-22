@@ -155,7 +155,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
         if not await confirm_feeoverthreshold(fee, coin):
             raise SigningError(FailureType.ActionCancelled, "Signing cancelled")
 
-    if not await confirm_total(total_out - change_out, fee, coin):
+    if not await confirm_total(total_in - change_out, fee, coin):
         raise SigningError(FailureType.ActionCancelled, "Total cancelled")
 
     return h_first, hash143, segwit, total_in, wallet_path
