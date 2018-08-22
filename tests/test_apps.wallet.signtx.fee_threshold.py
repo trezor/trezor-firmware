@@ -73,7 +73,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
             True,
             signing.UiConfirmFeeOverThreshold(100000, coin_bitcoin),
             True,
-            signing.UiConfirmTotal(290000, 100000, coin_bitcoin),
+            signing.UiConfirmTotal(290000 + 100000, 100000, coin_bitcoin),
             True,
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
         ]
@@ -135,7 +135,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
             TxAck(tx=TransactionType(outputs=[out1])),
             signing.UiConfirmOutput(out1, coin_bitcoin),
             True,
-            signing.UiConfirmTotal(300000, 90000, coin_bitcoin),
+            signing.UiConfirmTotal(300000 + 90000, 90000, coin_bitcoin),
             True,
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
         ]

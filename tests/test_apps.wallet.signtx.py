@@ -72,7 +72,7 @@ class TestSignTx(unittest.TestCase):
             TxAck(tx=TransactionType(outputs=[out1])),
             signing.UiConfirmOutput(out1, coin_bitcoin),
             True,
-            signing.UiConfirmTotal(380000, 10000, coin_bitcoin),
+            signing.UiConfirmTotal(380000 + 10000, 10000, coin_bitcoin),
             True,
             # ButtonRequest(code=ButtonRequest_ConfirmOutput),
             # ButtonRequest(code=ButtonRequest_SignTx),

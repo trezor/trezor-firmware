@@ -64,7 +64,7 @@ class TestSignTx_GRS(unittest.TestCase):
             TxAck(tx=TransactionType(outputs=[out1])),
             signing.UiConfirmOutput(out1, coin),
             True,
-            signing.UiConfirmTotal(210016 - 192, 192, coin),
+            signing.UiConfirmTotal(210016, 192, coin),
             True,
             # ButtonRequest(code=ButtonRequest_ConfirmOutput),
             # ButtonRequest(code=ButtonRequest_SignTx),

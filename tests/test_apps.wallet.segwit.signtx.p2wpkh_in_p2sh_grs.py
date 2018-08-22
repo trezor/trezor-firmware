@@ -73,7 +73,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             signing.UiConfirmOutput(out2, coin),
             True,
 
-            signing.UiConfirmTotal(123445789, 11000, coin),
+            signing.UiConfirmTotal(123445789 + 11000, 11000, coin),
             True,
 
             # sign tx
@@ -167,7 +167,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                       serialized=None),
             TxAck(tx=TransactionType(outputs=[out2])),
 
-            signing.UiConfirmTotal(12300000, 11000, coin),
+            signing.UiConfirmTotal(12300000 + 11000, 11000, coin),
             True,
 
             # sign tx
