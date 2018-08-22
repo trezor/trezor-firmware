@@ -18,6 +18,8 @@ Ripple has different transaction types, see the [documentation](https://develope
 
 We do not support transaction types other than the [Payment](https://developers.ripple.com/payment.html) transaction, which represents the simple "A pays to B" scenario. Other transaction types might be added later on.
 
+We currently sign transactions using ECDSA and the secp256k1 curve same as in Bitcoin. Ripple also supports ed25519, which is currently not supported by Trezor, although the implementation would be quite straightforward.
+
 Non-XRP currencies are not supported. Float and negative amounts are not supported.
 
 #### Transactions Explorer
