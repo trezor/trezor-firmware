@@ -1,0 +1,26 @@
+#!/bin/sh
+set -e
+
+CWD=`dirname "$0"`
+RENDER="$CWD/../vendor/trezor-common/tools/cointool.py render"
+
+FIND_TEMPLATES="find $CWD/../src -name *.mako"
+
+check_results() {
+    CHECK_FAIL=0
+    for filename in $($FIND_TEMPLATES); do
+        TMP=`mktemp`
+        TARGET="${filename%%.mako}"
+        $RENDER "$filename" -o $TMP
+        if ! diff -q "$TARGET" "$TMP"; then
+            CHECK_FAIL=1
+        fi
+    done
+    exit $CHECK_FAIL
+}
+
+if [ "$1" = "--check" ]; then
+    check_results
+else
+    $FIND_TEMPLATES | xargs $RENDER
+fi

@@ -1,8 +1,9 @@
-# generated using gen_nem_mosaics.py from trezor-common nem_mosaics.json - do not edit directly!
+# generated from nem_mosaics.py.mako
+# do not edit manually!
 
 mosaics = [
     {
-        "name": "XEM",
+        "name": "NEM",
         "ticker": " XEM",
         "namespace": "nem",
         "mosaic": "xem",
