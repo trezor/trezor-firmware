@@ -143,6 +143,7 @@ def render_file(src, dst, coins, support_info):
 
 
 def highlight_key(coin, color):
+    """Return a colorful string where the SYMBOL part is bold."""
     keylist = coin["key"].split(":")
     if keylist[-1].isdigit():
         keylist[-2] = crayon(color, keylist[-2], bold=True)
@@ -166,6 +167,7 @@ def check_btc(coins):
     check_passed = True
     support_infos = coin_info.support_info(coins)
 
+    # validate individual coin data
     for coin in coins:
         errors = coin_info.validate_btc(coin)
         if errors:
@@ -174,6 +176,7 @@ def check_btc(coins):
             print("\n".join(errors))
 
     def collision_str(bucket):
+        """Generate a colorful string out of a bucket of colliding coins."""
         coin_strings = []
         for coin in bucket:
             name = coin["name"]
@@ -192,6 +195,13 @@ def check_btc(coins):
         return ", ".join(coin_strings)
 
     def print_collision_buckets(buckets, prefix):
+        """Intelligently print collision buckets.
+
+        For each bucket, if there are any collision with a mainnet, print it.
+        If the collision is with unsupported networks or testnets, it's just INFO.
+        If the collision is with supported mainnets, it's WARNING.
+        If the collision with any supported network includes Bitcoin, it's an ERROR.
+        """
         failed = False
         for key, bucket in buckets.items():
             mainnets = [c for c in bucket if not c["name"].endswith("Testnet")]
@@ -227,6 +237,7 @@ def check_btc(coins):
     if print_collision_buckets(slip44, "key"):
         check_passed = False
 
+    # only check address_type on coins that don't use cashaddr
     nocashaddr = [coin for coin in coins if not coin.get("cashaddr_prefix")]
     
     print("Checking address_type collisions...")
@@ -242,8 +253,20 @@ def check_btc(coins):
     return check_passed
 
 
-def check_dups(buckets, show_tok_notok, show_erc20):
+def check_dups(buckets, print_at_level=logging.ERROR):
+    """Analyze and pretty-print results of `coin_info.mark_duplicate_shortcuts`.
+
+    `print_at_level` can be one of logging levels.
+
+    The results are buckets of colliding symbols.
+    If the collision is only between ERC20 tokens, it's DEBUG.
+    If the collision includes one non-token, it's INFO.
+    If the collision includes more than one non-token, it's ERROR and printed always.
+    """
     def coin_str(coin):
+        """Colorize coins. Tokens are cyan, nontokens are red. Coins that are NOT
+        marked duplicate get a green asterisk.
+        """
         if coin_info.is_token(coin):
             color = "cyan"
         else:
@@ -275,9 +298,7 @@ def check_dups(buckets, show_tok_notok, show_erc20):
             check_passed = False
 
         # deciding whether to print
-        if not nontokens and not show_erc20:
-            continue
-        if len(nontokens) == 1 and not show_tok_notok:
+        if level < print_at_level:
             continue
 
         if symbol == "_override":
@@ -433,13 +454,12 @@ def cli(colors):
 
 @cli.command()
 # fmt: off
-@click.option("--missing-support/--no-missing-support", "-s", default=False, help="Fail if support info for a coin is missing")
 @click.option("--backend/--no-backend", "-b", default=False, help="Check blockbook/bitcore responses")
 @click.option("--icons/--no-icons", default=True, help="Check icon files")
 @click.option("-d", "--show-duplicates", type=click.Choice(("all", "nontoken", "errors")),
     default="errors", help="How much information about duplicate shortcuts should be shown.")
 # fmt: on
-def check(missing_support, backend, icons, show_duplicates):
+def check(backend, icons, show_duplicates):
     """Validate coin definitions.
 
     Checks that every btc-like coin is properly filled out, reports duplicate symbols,
@@ -450,18 +470,21 @@ def check(missing_support, backend, icons, show_duplicates):
     expected.
 
     The `--show-duplicates` option can be set to:
-    * all: all shortcut collisions are shown, including colliding ERC20 tokens
-    * nontoken: only collisions that affect non-ERC20 coins are shown
-    * errors: only collisions between non-ERC20 tokens are shown. This is the default,
-      as a collision between two or more non-ERC20 tokens is an error.
+
+    - all: all shortcut collisions are shown, including colliding ERC20 tokens
+
+    - nontoken: only collisions that affect non-ERC20 coins are shown
+
+    - errors: only collisions between non-ERC20 tokens are shown. This is the default,
+    as a collision between two or more non-ERC20 tokens is an error.
 
     In the output, duplicate ERC tokens will be shown in cyan; duplicate non-tokens
     in red. An asterisk (*) next to symbol name means that even though it was detected
     as duplicate, it is still included in results.
 
-    The code checks that SLIP44 numbers don't collide between different mainnets
-    (testnet collisions are allowed), that `address_prefix` doesn't collide with
-    Bitcoin (other collisions are reported as warnings). `address_prefix_p2sh`
+    The collision detection checks that SLIP44 numbers don't collide between different
+    mainnets (testnet collisions are allowed), that `address_prefix` doesn't collide
+    with Bitcoin (other collisions are reported as warnings). `address_prefix_p2sh`
     is also checked but we have a bunch of collisions there and can't do much
     about them, so it's not an error.
 
@@ -484,16 +507,13 @@ def check(missing_support, backend, icons, show_duplicates):
         all_checks_passed = False
 
     if show_duplicates == "all":
-        show_tok_notok = True
-        show_erc20 = True
+        dup_level = logging.DEBUG
     elif show_duplicates == "nontoken":
-        show_tok_notok = True
-        show_erc20 = False
+        dup_level = logging.INFO
     else:
-        show_tok_notok = False
-        show_erc20 = False
+        dup_level = logging.ERROR
     print("Checking unexpected duplicates...")
-    if not check_dups(buckets, show_tok_notok, show_erc20):
+    if not check_dups(buckets, dup_level):
         all_checks_passed = False
 
     if icons:
