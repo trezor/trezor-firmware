@@ -5,26 +5,6 @@
     "erc20:eth:GNT": {
         "coinmarketcap_alias": "golem-network-tokens"
     },
-    "eth:ESN": {
-        "t1_support": "soon",
-        "t2_support": "soon"
-    },
-    "eth:AKA": {
-        "t1_support": "soon",
-        "t2_support": "soon"
-    },
-    "eth:ETHO": {
-        "t1_support": "soon",
-        "t2_support": "soon"
-    },
-    "eth:MUSI": {
-        "t1_support": "soon",
-        "t2_support": "soon"
-    },
-    "eth:PIRL": {
-        "t1_support": "soon",
-        "t2_support": "soon"
-    },
     "coin:BCH": {
         "wallet": {
             "Electron Cash": "https://electroncash.org"

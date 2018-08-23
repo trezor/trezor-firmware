@@ -143,60 +143,6 @@ def _webwallet_support(coin, support):
     return any(".trezor.io" in url for url in coin["blockbook"] + coin["bitcore"])
 
 
-def update_coins(coins, support_info):
-    res = {}
-    for coin in coins:
-        key = coin["key"]
-        support = support_info[key]
-        details = dict(
-            type="coin",
-            shortcut=coin["shortcut"],
-            name=coin["coin_label"],
-            links=dict(Homepage=coin["website"], Github=coin["github"]),
-            t1_enabled=_is_supported(support, 1),
-            t2_enabled=_is_supported(support, 2),
-            wallet={},
-        )
-        if _webwallet_support(coin, support):
-            details["wallet"]["Trezor"] = "https://wallet.trezor.io"
-        if support.get("other"):
-            details["wallet"].update(support["other"])
-
-        res[key] = details
-
-    return res
-
-
-def update_erc20(coins, support_info):
-    # TODO skip disabled networks?
-    res = {}
-    for coin in coins:
-        key = coin["key"]
-        support = support_info[key]
-        details = dict(
-            type="erc20",
-            network=coin["chain"],
-            address=coin["address"],
-            shortcut=coin["shortcut"],
-            name=coin["name"],
-            links={},
-            wallet=dict(
-                MyCrypto="https://mycrypto.com",
-                MyEtherWallet="https://www.myetherwallet.com",
-            ),
-            t1_enabled=support["trezor1"],
-            t2_enabled=support["trezor2"],
-        )
-        if coin.get("website"):
-            details["links"]["Homepage"] = coin["website"]
-        if coin.get("social", {}).get("github"):
-            details["links"]["Github"] = coin["social"]["github"]
-
-        res[key] = details
-
-    return res
-
-
 def update_simple(coins, support_info, type):
     res = {}
     for coin in coins:
@@ -219,16 +165,62 @@ def update_simple(coins, support_info, type):
     return res
 
 
+def update_coins(coins, support_info):
+    res = update_simple(coins, support_info, "coin")
+    for coin in coins:
+        key = coin["key"]
+        support = support_info[key]
+        details = dict(
+            name=coin["coin_label"],
+            links=dict(Homepage=coin["website"], Github=coin["github"]),
+            wallet={},
+        )
+        if _webwallet_support(coin, support):
+            details["wallet"]["Trezor"] = "https://wallet.trezor.io"
+
+        res[key].update(details)
+
+    return res
+
+
+def update_erc20(coins, support_info):
+    # TODO skip disabled networks?
+    res = update_simple(coins, support_info, "erc20")
+    for coin in coins:
+        key = coin["key"]
+        details = dict(
+            network=coin["chain"],
+            address=coin["address"],
+            shortcut=coin["shortcut"],
+            links={},
+            wallet=dict(
+                MyCrypto="https://mycrypto.com",
+                MyEtherWallet="https://www.myetherwallet.com",
+            ),
+        )
+        if coin.get("website"):
+            details["links"]["Homepage"] = coin["website"]
+        if coin.get("social", {}).get("github"):
+            details["links"]["Github"] = coin["social"]["github"]
+
+        res[key].update(details)
+
+    return res
+
+
 def update_ethereum_networks(coins, support_info):
     res = update_simple(coins, support_info, "coin")
     for coin in coins:
-        res[coin["key"]].update(
+        key = coin["key"]
+        details = dict(
             wallet=dict(
                 MyCrypto="https://mycrypto.com",
                 MyEtherWallet="https://www.myetherwallet.com",
             ),
             links=dict(Homepage=coin.get("url")),
         )
+        res[key].update(details)
+
     return res
 
 
@@ -236,6 +228,7 @@ def check_missing_data(coins):
     for k, coin in coins.items():
         hide = False
 
+        print(coin)
         if "Homepage" not in coin.get("links", {}):
             print("%s: Missing homepage" % k)
             hide = True
@@ -285,6 +278,7 @@ def apply_overrides(coins):
             if isinstance(new, dict) and isinstance(orig, dict):
                 for k, v in new.items():
                     orig[k] = recursive_update(orig.get(k), v)
+                return orig
             else:
                 return new
 
@@ -301,7 +295,7 @@ if __name__ == "__main__":
     root.addHandler(handler)
 
     defs = coin_info.get_all()
-    support_info = coin_info.support_info(defs, erc20_versions=VERSIONS)
+    support_info = coin_info.support_info(defs)
 
     coins = {}
     coins.update(update_coins(defs.coins, support_info))
