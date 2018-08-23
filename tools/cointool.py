@@ -332,6 +332,37 @@ def check_icons(coins):
     return check_passed
 
 
+IGNORE_NONUNIFORM_KEYS = frozenset(("unsupported", "duplicate", "notes"))
+
+
+def check_key_uniformity(coins):
+    keysets = defaultdict(list)
+    for coin in coins:
+        keyset = frozenset(coin.keys()) | IGNORE_NONUNIFORM_KEYS
+        keysets[keyset].append(coin)
+
+    if len(keysets) <= 1:
+        return True
+
+    buckets = list(keysets.values())
+    buckets.sort(key=lambda x: len(x))
+    majority = buckets[-1]
+    rest = sum(buckets[:-1], [])
+    reference_keyset = set(majority[0].keys())
+
+    for coin in rest:
+        key = coin["key"]
+        keyset = set(coin.keys())
+        missing = ", ".join(reference_keyset - keyset)
+        if missing:
+            print_log(logging.ERROR, f"coin {key} has missing keys: {missing}")
+        additional = ", ".join(keyset - reference_keyset)
+        if additional:
+            print_log(logging.ERROR, f"coin {key} has superfluous keys: {additional}")
+
+    return False
+
+
 # ====== coindefs generators ======
 
 
@@ -411,8 +442,12 @@ def cli(colors):
 def check(missing_support, backend, icons, show_duplicates):
     """Validate coin definitions.
 
-    Checks that every btc-like coin is properly filled out, reports address collisions
-    and missing support information.
+    Checks that every btc-like coin is properly filled out, reports duplicate symbols,
+    missing or invalid icons, backend responses, and uniform key information --
+    i.e., that all coins of the same type have the same fields in their JSON data.
+
+    Uniformity check ignores NEM mosaics and ERC20 tokens, where non-uniformity is
+    expected.
 
     The `--show-duplicates` option can be set to:
     * all: all shortcut collisions are shown, including colliding ERC20 tokens
@@ -469,6 +504,13 @@ def check(missing_support, backend, icons, show_duplicates):
     if backend:
         print("Checking backend responses...")
         if not check_backends(defs.coins):
+            all_checks_passed = False
+
+    print("Checking key uniformity...")
+    for cointype, coinlist in defs.items():
+        if cointype in ("erc20", "nem"):
+            continue
+        if not check_key_uniformity(coinlist):
             all_checks_passed = False
 
     if not all_checks_passed:
