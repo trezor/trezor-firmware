@@ -11,3 +11,6 @@ requests>=2.19
 # for rendering templates:
 Mako>=1.0.7
 munch>=2.3.2
+
+# for pretty colors in checks
+termcolor >= 0.1.2

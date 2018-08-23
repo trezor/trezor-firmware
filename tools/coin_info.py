@@ -261,6 +261,8 @@ def _load_misc():
 # ====== support info ======
 
 RELEASES_URL = "https://wallet.trezor.io/data/firmware/{}/releases.json"
+MISSING_SUPPORT_MEANS_NO = ("connect", "webwallet")
+VERSIONED_SUPPORT_INFO = ("trezor1", "trezor2")
 
 
 def get_support_data():
@@ -280,6 +282,10 @@ def latest_releases():
     return latest
 
 
+def is_token(coin):
+    return coin["key"].startswith("erc20:")
+
+
 def support_info_single(support_data, coin):
     """Extract a support dict from `support.json` data.
 
@@ -287,7 +293,7 @@ def support_info_single(support_data, coin):
     top-level key.
 
     The support value for each device is determined in order of priority:
-    * if the coin is marked as duplicate, all support values are `None`
+    * if the coin is a duplicate ERC20 token, all support values are `None`
     * if the coin has an entry in `unsupported`, its support is `None`
     * if the coin has an entry in `supported` its support is that entry
       (usually a version string, or `True` for connect/webwallet)
@@ -297,12 +303,14 @@ def support_info_single(support_data, coin):
     key = coin["key"]
     dup = coin.get("duplicate")
     for device, values in support_data.items():
-        if dup:
+        if dup and is_token(coin):
             support_value = None
         elif key in values["unsupported"]:
             support_value = None
         elif key in values["supported"]:
             support_value = values["supported"][key]
+        elif device in MISSING_SUPPORT_MEANS_NO:
+            support_value = None
         else:
             support_value = "soon"
         support_info[device] = support_value
@@ -337,43 +345,6 @@ def support_info(coins):
 # ====== data cleanup functions ======
 
 
-def find_address_collisions(coins):
-    """Detects collisions in:
-    - SLIP44 path prefixes
-    - address type numbers, both for p2pkh and p2sh
-    """
-    slip44 = defaultdict(list)
-    at_p2pkh = defaultdict(list)
-    at_p2sh = defaultdict(list)
-
-    for coin in coins:
-        name = coin["name"]
-        s = coin["slip44"]
-        # ignore m/1 testnets
-        if not (name.endswith("Testnet") and s == 1):
-            slip44[s].append(name)
-
-        # skip address types on cashaddr currencies
-        if coin["cashaddr_prefix"]:
-            continue
-
-        at_p2pkh[coin["address_type"]].append(name)
-        at_p2sh[coin["address_type_p2sh"]].append(name)
-
-    def prune(d):
-        ret = d.copy()
-        for key in d:
-            if len(d[key]) < 2:
-                del ret[key]
-        return ret
-
-    return dict(
-        slip44=prune(slip44),
-        address_type=prune(at_p2pkh),
-        address_type_p2sh=prune(at_p2sh),
-    )
-
-
 def _ensure_mandatory_values(coins):
     """Checks that every coin has the mandatory fields: name, shortcut, key"""
     for coin in coins:
@@ -381,9 +352,33 @@ def _ensure_mandatory_values(coins):
             raise ValueError(coin)
 
 
+def symbol_from_shortcut(shortcut):
+    symsplit = shortcut.split(" ", maxsplit=1)
+    return symsplit[0], symsplit[1] if len(symsplit) > 1 else ""
+
+
 def mark_duplicate_shortcuts(coins):
     """Finds coins with identical `shortcut`s.
     Updates their keys and sets a `duplicate` field.
+
+    The logic is a little crazy.
+
+    The result of this function is a dictionary of _buckets_, each of which is
+    indexed by the duplicated symbol, or `_override`. The `_override` bucket will
+    contain all coins that are set to `true` in `duplicity_overrides.json`. These
+    will _always_ be marked as duplicate (and later possibly deleted if they're ERC20).
+
+    The rest will disambiguate based on the full shortcut.
+    (i.e., when `shortcut` is `BTL (Battle)`, the `symbol` is just `BTL`).
+    If _all tokens_ in the bucket have shortcuts with distinct suffixes, e.g.,
+    `CAT (BitClave)` and `CAT (Blockcat)`, we DO NOT mark them as duplicate.
+    These will then be supported and included in outputs.
+
+    If even one token in the bucket _does not_ have a distinct suffix, e.g.,
+    `MIT` and `MIT (Mychatcoin)`, the whole bucket is marked as duplicate.
+
+    If a token is set to `false` in `duplicity_overrides.json`, it will NOT
+    be marked as duplicate in this step, even if it is part of a "bad" bucket.
     """
     dup_symbols = defaultdict(list)
     dup_keys = defaultdict(list)
@@ -392,26 +387,50 @@ def mark_duplicate_shortcuts(coins):
         return {k: v for k, v in dups.items() if len(v) > 1}
 
     for coin in coins:
-        symsplit = coin["shortcut"].split(" ", maxsplit=1)
-        symbol = symsplit[0]
+        symbol, _ = symbol_from_shortcut(coin["shortcut"])
         dup_symbols[symbol].append(coin)
         dup_keys[coin["key"]].append(coin)
 
     dup_symbols = dups_only(dup_symbols)
     dup_keys = dups_only(dup_keys)
 
-    # mark duplicate symbols
-    for values in dup_symbols.values():
-        for coin in values:
-            coin["duplicate"] = True
-
-    # deduplicate keys
+    # first deduplicate keys so that we can identify overrides
     for values in dup_keys.values():
         for i, coin in enumerate(values):
-            # presumably only duplicate symbols can have duplicate keys
-            assert coin.get("duplicate")
             coin["key"] += f":{i}"
 
+    # load overrides and put them into their own bucket
+    overrides = load_json("duplicity_overrides.json")
+    override_bucket = []
+    for coin in coins:
+        if overrides.get(coin["key"], False):
+            coin["duplicate"] = True
+            override_bucket.append(coin)
+
+    # mark duplicate symbols
+    for values in dup_symbols.values():
+        splits = (symbol_from_shortcut(coin["shortcut"]) for coin in values)
+        suffixes = {suffix for _, suffix in splits}
+        # if 1. all suffixes are distinct and 2. none of them are empty
+        if len(suffixes) == len(values) and all(suffixes):
+            # Allow the whole bucket.
+            # For all intents and purposes these should be considered non-dups
+            # So we won't mark them as dups here
+            # But they still have their own bucket, and also overrides can
+            # explicitly mark them as duplicate one step before, in which case
+            # they *still* keep duplicate status (and possibly are deleted).
+            continue
+
+        nontokens = [coin for coin in values if not is_token(coin)]
+
+        for coin in values:
+            # allow overrides to skip this; if not listed in overrides, assume True
+            is_dup = overrides.get(coin["key"], True)
+            if is_dup:
+                coin["duplicate"] = True
+            # again: still in dups, but not marked as duplicate and not deleted
+
+    dup_symbols["_override"] = override_bucket
     return dup_symbols
 
 
@@ -461,3 +480,20 @@ def get_all(deduplicate=True):
         ]
 
     return all_coins
+
+
+def search(coins, keyword):
+    kwl = keyword.lower()
+    for coin in coins:
+        key = coin["key"].lower()
+        name = coin["name"].lower()
+        shortcut = coin["shortcut"].lower()
+        symbol, suffix = symbol_from_shortcut(shortcut)
+        if (
+            kwl == key
+            or kwl in name
+            or kwl == shortcut
+            or kwl == symbol
+            or kwl in suffix
+        ):
+            yield coin

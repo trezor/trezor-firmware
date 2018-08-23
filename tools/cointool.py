@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import io
 import json
+import logging
 import re
 import sys
 import os
@@ -8,6 +9,7 @@ import glob
 import binascii
 import struct
 import zlib
+from collections import defaultdict
 from hashlib import sha256
 
 import click
@@ -15,6 +17,10 @@ import click
 import coin_info
 from coindef import CoinDef
 
+try:
+    import termcolor
+except ImportError:
+    termcolor = None
 
 try:
     import mako
@@ -38,6 +44,36 @@ try:
     CAN_BUILD_DEFS = True
 except ImportError:
     CAN_BUILD_DEFS = False
+
+
+# ======= Crayon colors ======
+USE_COLORS = False
+
+
+def crayon(color, string, bold=False, dim=False):
+    if not termcolor or not USE_COLORS:
+        return string
+    else:
+        if bold:
+            attrs = ["bold"]
+        elif dim:
+            attrs = ["dark"]
+        else:
+            attrs = []
+        return termcolor.colored(string, color, attrs=attrs)
+
+
+def print_log(level, *args, **kwargs):
+    prefix = logging.getLevelName(level)
+    if level == logging.DEBUG:
+        prefix = crayon("blue", prefix, bold=False)
+    elif level == logging.INFO:
+        prefix = crayon("blue", prefix, bold=True)
+    elif level == logging.WARNING:
+        prefix = crayon("red", prefix, bold=False)
+    elif level == logging.ERROR:
+        prefix = crayon("red", prefix, bold=True)
+    print(prefix, *args, **kwargs)
 
 
 # ======= Mako management ======
@@ -106,45 +142,145 @@ def render_file(src, dst, coins, support_info):
 # ====== validation functions ======
 
 
+def highlight_key(coin, color):
+    keylist = coin["key"].split(":")
+    if keylist[-1].isdigit():
+        keylist[-2] = crayon(color, keylist[-2], bold=True)
+    else:
+        keylist[-1] = crayon(color, keylist[-1], bold=True)
+    key = crayon(color, ":".join(keylist))
+    name = crayon(None, f"({coin['name']})", dim=True)
+    return f"{key} {name}"
+
+
+def find_address_collisions(coins, field):
+    """Detects collisions in a given field. Returns buckets of colliding coins."""
+    collisions = defaultdict(list)
+    for coin in coins:
+        value = coin[field]
+        collisions[value].append(coin)
+    return {k: v for k, v in collisions.items() if len(v) > 1}
+
+
 def check_btc(coins):
     check_passed = True
+    support_infos = coin_info.support_info(coins)
 
     for coin in coins:
         errors = coin_info.validate_btc(coin)
         if errors:
             check_passed = False
-            print("ERR:", "invalid definition for", coin["name"])
+            print_log(logging.ERROR, "invalid definition for", coin["name"])
             print("\n".join(errors))
 
-    collisions = coin_info.find_address_collisions(coins)
-    # warning only
-    for key, dups in collisions.items():
-        if dups:
-            print("WARN: collisions found in", key)
-            for k, v in dups.items():
-                print("-", k, ":", ", ".join(map(str, v)))
+    def collision_str(bucket):
+        coin_strings = []
+        for coin in bucket:
+            name = coin["name"]
+            prefix = ""
+            if name.endswith("Testnet"):
+                color = "green"
+            elif name == "Bitcoin":
+                color = "red"
+            elif coin.get("unsupported"):
+                color = "grey"
+                prefix = crayon("blue", "(X)", bold=True)
+            else:
+                color = "blue"
+            hl = highlight_key(coin, color)
+            coin_strings.append(prefix + hl)
+        return ", ".join(coin_strings)
+
+    def print_collision_buckets(buckets, prefix):
+        failed = False
+        for key, bucket in buckets.items():
+            mainnets = [c for c in bucket if not c["name"].endswith("Testnet")]
+
+            have_bitcoin = False
+            for coin in mainnets:
+                if coin["name"] == "Bitcoin":
+                    have_bitcoin = True
+                if all(v is None for k,v in support_infos[coin["key"]].items()):
+                    coin["unsupported"] = True
+
+            supported_mainnets = [c for c in mainnets if not c.get("unsupported")]
+
+            if len(mainnets) > 1:
+                if len(supported_mainnets) > 1:
+                    if have_bitcoin:
+                        level = logging.ERROR
+                        failed = True
+                    else:
+                        level = logging.WARNING
+                else:
+                    level = logging.INFO
+                print_log(level, f"prefix {key}:", collision_str(bucket))
+
+        return failed
+
+    # slip44 collisions
+    print("Checking SLIP44 prefix collisions...")
+    slip44 = find_address_collisions(coins, "slip44")
+    if print_collision_buckets(slip44, "key"):
+        check_passed = False
+
+    nocashaddr = [coin for coin in coins if not coin.get("cashaddr_prefix")]
+    
+    print("Checking address_type collisions...")
+    address_type = find_address_collisions(nocashaddr, "address_type")
+    if print_collision_buckets(address_type, "address type"):
+        check_passed = False
+
+    print("Checking address_type_p2sh collisions...")
+    address_type_p2sh = find_address_collisions(nocashaddr, "address_type_p2sh")
+    # we ignore failed checks on P2SH, because reasons
+    print_collision_buckets(address_type_p2sh, "address type")
 
     return check_passed
 
 
-def check_dups(buckets):
-    check_passed = True
-    for bucket in buckets.values():
-        nontokens = [coin for coin in bucket if not coin["key"].startswith("erc20")]
-        token_list = [coin["key"] for coin in bucket if coin["key"].startswith("erc20")]
-        if not nontokens:
-            continue
-        if len(nontokens) == 1:
-            coin = nontokens[0]
-            print(
-                f"Coin {coin['key']} ({coin['name']}) is duplicate with",
-                ", ".join(token_list),
-                "and that is OK.",
-            )
+def check_dups(buckets, show_tok_notok, show_erc20):
+    def coin_str(coin):
+        if coin_info.is_token(coin):
+            color = "cyan"
         else:
-            nontoken_list = [f"{coin['key']} ({coin['name']})" for coin in nontokens]
-            print("Duplicate shortcuts for", ", ".join(nontoken_list))
+            color = "red"
+        highlighted = highlight_key(coin, color)
+        if not coin.get("duplicate"):
+            prefix = crayon("green", "*", bold=True)
+        else:
+            prefix = ""
+        return f"{prefix}{highlighted}"
+
+    check_passed = True
+
+    for symbol in sorted(buckets.keys()):
+        bucket = buckets[symbol]
+        if not bucket:
+            continue
+
+        nontokens = [coin for coin in bucket if not coin_info.is_token(coin)]
+
+        # string generation
+        dup_str = ", ".join(coin_str(coin) for coin in bucket)
+        if not nontokens:
+            level = logging.DEBUG
+        elif len(nontokens) == 1:
+            level = logging.INFO
+        else:
+            level = logging.ERROR
             check_passed = False
+
+        # deciding whether to print
+        if not nontokens and not show_erc20:
+            continue
+        if len(nontokens) == 1 and not show_tok_notok:
+            continue
+
+        if symbol == "_override":
+            print_log(level, "force-set duplicates:", dup_str)
+        else:
+            print_log(level, f"duplicate symbol {symbol}:", dup_str)
 
     return check_passed
 
@@ -250,8 +386,15 @@ def sign(data):
 
 
 @click.group()
-def cli():
-    pass
+@click.option(
+    "--colors/--no-colors",
+    "-c/-C",
+    default=sys.stdout.isatty(),
+    help="Force colored output on/off",
+)
+def cli(colors):
+    global USE_COLORS
+    USE_COLORS = colors
 
 
 @cli.command()
@@ -259,12 +402,24 @@ def cli():
 @click.option("--missing-support/--no-missing-support", "-s", default=False, help="Fail if support info for a coin is missing")
 @click.option("--backend/--no-backend", "-b", default=False, help="Check blockbook/bitcore responses")
 @click.option("--icons/--no-icons", default=True, help="Check icon files")
+@click.option("-d", "--show-duplicates", type=click.Choice(("all", "nontoken", "errors")),
+    default="errors", help="How much information about duplicate shortcuts should be shown.")
 # fmt: on
-def check(missing_support, backend, icons):
+def check(missing_support, backend, icons, show_duplicates):
     """Validate coin definitions.
 
     Checks that every btc-like coin is properly filled out, reports address collisions
     and missing support information.
+
+    The `--show-duplicates` option can be set to:
+    * all: all shortcut collisions are shown, including colliding ERC20 tokens
+    * nontoken: only collisions that affect non-ERC20 coins are shown
+    * errors: only collisions between non-ERC20 tokens are shown. This is the default,
+      as a collision between two or more non-ERC20 tokens is an error.
+
+    In the output, duplicate ERC tokens will be shown in cyan; duplicate non-tokens
+    in red. An asterisk (*) next to symbol name means that even though it was detected
+    as duplicate, it is still included in results.
     """
     if backend and requests is None:
         raise click.ClickException("You must install requests for backend check")
@@ -286,8 +441,17 @@ def check(missing_support, backend, icons):
     # if not check_support(defs, support_data, fail_missing=missing_support):
     #     all_checks_passed = False
 
+    if show_duplicates == "all":
+        show_tok_notok = True
+        show_erc20 = True
+    elif show_duplicates == "nontoken":
+        show_tok_notok = True
+        show_erc20 = False
+    else:
+        show_tok_notok = False
+        show_erc20 = False
     print("Checking unexpected duplicates...")
-    if not check_dups(buckets):
+    if not check_dups(buckets, show_tok_notok, show_erc20):
         all_checks_passed = False
 
     if icons:
