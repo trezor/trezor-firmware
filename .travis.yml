@@ -9,7 +9,7 @@ cache:
     - $HOME/.cache/pip
 
 python:
-    - "3.5"
+    - "3.6"
 
 install:
     - pip install demjson
@@ -18,7 +18,8 @@ install:
 script:
     - jsonlint defs/*.json
     - jsonlint defs/*/*.json
-    - python tools/coin_gen.py check
+    - python tools/cointool.py check
+    - python tools/support.py check --ignore-tokens --ignore-missing
 
 notifications:
   webhooks:
