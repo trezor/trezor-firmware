@@ -10,7 +10,12 @@ from ..helpers import (
     NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER,
     NEM_TRANSACTION_TYPE_TRANSFER,
 )
-from ..writers import write_bytes_with_length, write_common, write_uint32, write_uint64
+from ..writers import (
+    serialize_tx_common,
+    write_bytes_with_len,
+    write_uint32_le,
+    write_uint64_le,
+)
 
 
 def serialize_transfer(
@@ -20,52 +25,54 @@ def serialize_transfer(
     payload: bytes = None,
     encrypted: bool = False,
 ) -> bytearray:
-    tx = write_common(
+    tx = serialize_tx_common(
         common,
-        bytearray(public_key),
+        public_key,
         NEM_TRANSACTION_TYPE_TRANSFER,
         _get_version(common.network, transfer.mosaics),
     )
 
-    write_bytes_with_length(tx, bytearray(transfer.recipient))
-    write_uint64(tx, transfer.amount)
+    write_bytes_with_len(tx, transfer.recipient.encode())
+    write_uint64_le(tx, transfer.amount)
 
     if payload:
         # payload + payload size (u32) + encryption flag (u32)
-        write_uint32(tx, len(payload) + 2 * 4)
+        write_uint32_le(tx, len(payload) + 2 * 4)
         if encrypted:
-            write_uint32(tx, 0x02)
+            write_uint32_le(tx, 0x02)
         else:
-            write_uint32(tx, 0x01)
-        write_bytes_with_length(tx, bytearray(payload))
+            write_uint32_le(tx, 0x01)
+        write_bytes_with_len(tx, payload)
     else:
-        write_uint32(tx, 0)
+        write_uint32_le(tx, 0)
 
     if transfer.mosaics:
-        write_uint32(tx, len(transfer.mosaics))
+        write_uint32_le(tx, len(transfer.mosaics))
 
     return tx
 
 
 def serialize_mosaic(w: bytearray, namespace: str, mosaic: str, quantity: int):
-    identifier_length = 4 + len(namespace) + 4 + len(mosaic)
-    # indentifier length (u32) + quantity (u64) + identifier size
-    write_uint32(w, 4 + 8 + identifier_length)
-    write_uint32(w, identifier_length)
-    write_bytes_with_length(w, bytearray(namespace))
-    write_bytes_with_length(w, bytearray(mosaic))
-    write_uint64(w, quantity)
+    identifier_w = bytearray()
+    write_bytes_with_len(identifier_w, namespace.encode())
+    write_bytes_with_len(identifier_w, mosaic.encode())
+
+    mosaic_w = bytearray()
+    write_bytes_with_len(mosaic_w, identifier_w)
+    write_uint64_le(mosaic_w, quantity)
+
+    write_bytes_with_len(w, mosaic_w)
 
 
 def serialize_importance_transfer(
     common: NEMTransactionCommon, imp: NEMImportanceTransfer, public_key: bytes
 ) -> bytearray:
-    w = write_common(
-        common, bytearray(public_key), NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER
+    w = serialize_tx_common(
+        common, public_key, NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER
     )
 
-    write_uint32(w, imp.mode)
-    write_bytes_with_length(w, bytearray(imp.public_key))
+    write_uint32_le(w, imp.mode)
+    write_bytes_with_len(w, imp.public_key)
     return w
 
 
@@ -109,8 +116,8 @@ def are_mosaics_equal(a: NEMMosaic, b: NEMMosaic) -> bool:
 
 def merge_mosaics(mosaics: list) -> list:
     if not mosaics:
-        return list()
-    ret = list()
+        return []
+    ret = []
     for i in mosaics:
         found = False
         for k, y in enumerate(ret):

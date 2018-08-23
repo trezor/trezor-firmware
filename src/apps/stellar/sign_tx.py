@@ -9,7 +9,7 @@ from trezor.wire import ProcessError
 
 from apps.common import seed
 from apps.stellar import consts, helpers, layout, writers
-from apps.stellar.operations import operation
+from apps.stellar.operations import process_operation
 
 
 async def sign_tx(ctx, msg: StellarSignTx):
@@ -72,7 +72,7 @@ async def _operations(ctx, w: bytearray, num_operations: int):
     writers.write_uint32(w, num_operations)
     for i in range(num_operations):
         op = await ctx.call(StellarTxOpRequest(), *consts.op_wire_types)
-        await operation(ctx, w, op)
+        await process_operation(ctx, w, op)
 
 
 async def _memo(ctx, w: bytearray, msg: StellarSignTx):

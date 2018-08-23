@@ -30,8 +30,8 @@ async def aggregate_modification(
     w = serialize.serialize_aggregate_modification(common, aggr, public_key)
 
     for m in aggr.modifications:
-        serialize.serialize_cosignatory_modification(w, m.type, m.public_key)
+        serialize.write_cosignatory_modification(w, m.type, m.public_key)
 
     if aggr.relative_change:
-        serialize.serialize_minimum_cosignatories(w, aggr.relative_change)
+        serialize.write_minimum_cosignatories(w, aggr.relative_change)
     return w

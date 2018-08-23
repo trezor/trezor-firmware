@@ -11,7 +11,7 @@ from apps.wallet.sign_tx.scripts import output_script_multisig, output_script_p2
 from apps.wallet.sign_tx.writers import (
     get_tx_hash,
     write_bytes,
-    write_bytes_rev,
+    write_bytes_reversed,
     write_tx_output,
     write_uint32,
     write_uint64,
@@ -30,7 +30,7 @@ class Bip143:
         self.h_outputs = HashWriter(sha256)
 
     def add_prevouts(self, txi: TxInputType):
-        write_bytes_rev(self.h_prevouts, txi.prev_hash)
+        write_bytes_reversed(self.h_prevouts, txi.prev_hash)
         write_uint32(self.h_prevouts, txi.prev_index)
 
     def add_sequence(self, txi: TxInputType):
@@ -64,7 +64,7 @@ class Bip143:
         write_bytes(h_preimage, bytearray(self.get_prevouts_hash(coin)))  # hashPrevouts
         write_bytes(h_preimage, bytearray(self.get_sequence_hash(coin)))  # hashSequence
 
-        write_bytes_rev(h_preimage, txi.prev_hash)  # outpoint
+        write_bytes_reversed(h_preimage, txi.prev_hash)  # outpoint
         write_uint32(h_preimage, txi.prev_index)  # outpoint
 
         script_code = self.derive_script_code(txi, pubkeyhash)  # scriptCode

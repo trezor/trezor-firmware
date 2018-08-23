@@ -24,7 +24,7 @@ class TestNemMultisig(unittest.TestCase):
                         0)
         base_tx = serialize_aggregate_modification(m.transaction, m.aggregate_modification, unhexlify("abac2ee3d4aaa7a3bfb65261a00cc04c761521527dd3f2cf741e2815cbba83ac"))
 
-        base_tx = serialize_cosignatory_modification(base_tx, 2, unhexlify("e6cff9b3725a91f31089c3acca0fac3e341c00b1c8c6e9578f66c4514509c3b3"))
+        base_tx = write_cosignatory_modification(base_tx, 2, unhexlify("e6cff9b3725a91f31089c3acca0fac3e341c00b1c8c6e9578f66c4514509c3b3"))
         m = _create_common_msg(NEM_NETWORK_TESTNET,
                                3939039,
                                6000000,

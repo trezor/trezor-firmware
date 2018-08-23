@@ -15,8 +15,8 @@ async def sign_tx(ctx, msg: NEMSignTx):
 
     if msg.multisig:
         public_key = msg.multisig.signer
-        await multisig.ask(ctx, msg)
         common = msg.multisig
+        await multisig.ask(ctx, msg)
     else:
         public_key = seed.remove_ed25519_prefix(node.public_key())
         common = msg.transaction

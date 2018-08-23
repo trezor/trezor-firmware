@@ -7,7 +7,9 @@
 # the other four the record type (amount, fee, destination..) and then
 # the actual data follow. This currently only supports the Payment
 # transaction type and the fields that are required for it.
-#
+
+from micropython import const
+
 from trezor.messages.RippleSignTx import RippleSignTx
 
 from . import helpers
@@ -78,44 +80,50 @@ def write_type(w: bytearray, field: dict):
 
 
 def serialize_amount(value: int) -> bytearray:
-    if value < 0 or isinstance(value, float):
-        raise ValueError("Only positive integers are supported")
-    if value > 100000000000:  # max allowed value
-        raise ValueError("Value is larger than 100000000000")
+    MAX_ALLOWED_AMOUNT = const(100000000000)
+
+    if value < 0:
+        raise ValueError("Only non-negative integers are supported")
+    if value > MAX_ALLOWED_AMOUNT:
+        raise ValueError("Value is too large")
 
     b = bytearray(value.to_bytes(8, "big"))
-    # Clear first bit to indicate XRP
-    b[0] &= 0x7f
-    # Set second bit to indicate positive number
-    b[0] |= 0x40
+    b[0] &= 0x7f  # clear first bit to indicate XRP
+    b[0] |= 0x40  # set second bit to indicate positive number
     return b
 
 
 def write_bytes(w: bytearray, value: bytes):
     """Serialize a variable length bytes."""
-    serialize_varint(w, len(value))
+    write_varint(w, len(value))
     w.extend(value)
 
 
-def serialize_varint(w, val):
-    """https://ripple.com/wiki/Binary_Format#Variable_Length_Data_Encoding"""
-
-    def rshift(val, n):
-        # http://stackoverflow.com/a/5833119/15677
-        return (val % 0x100000000) >> n
-
-    assert val >= 0
-
-    b = bytearray()
-    if val < 192:
-        b.append(val)
+def write_varint(w: bytearray, val: int):
+    """
+    Implements variable-length int encoding from Ripple.
+    See: https://ripple.com/wiki/Binary_Format#Variable_Length_Data_Encoding
+    """
+    if val < 0:
+        raise ValueError("Only non-negative integers are supported")
+    elif val < 192:
+        w.append(val)
     elif val <= 12480:
         val -= 193
-        b.extend([193 + rshift(val, 8), val & 0xff])
+        w.append(193 + rshift(val, 8))
+        w.append(val & 0xff)
     elif val <= 918744:
         val -= 12481
-        b.extend([241 + rshift(val, 16), rshift(val, 8) & 0xff, val & 0xff])
+        w.append(241 + rshift(val, 16))
+        w.append(rshift(val, 8) & 0xff)
+        w.append(val & 0xff)
     else:
-        raise ValueError("Variable integer overflow.")
+        raise ValueError("Value is too large")
 
-    w.extend(b)
+
+def rshift(val, n):
+    """
+    Implements signed right-shift.
+    See: http://stackoverflow.com/a/5833119/15677
+    """
+    return (val % 0x100000000) >> n

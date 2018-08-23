@@ -10,6 +10,7 @@ from trezor.utils import HashWriter
 
 from apps.common import address_type, coins
 from apps.common.coininfo import CoinInfo
+from apps.common.writers import empty_bytearray
 from apps.wallet.sign_tx import progress
 from apps.wallet.sign_tx.addresses import *
 from apps.wallet.sign_tx.helpers import *
@@ -206,7 +207,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             key_sign_pub = key_sign.public_key()
             txi_sign.script_sig = input_derive_script(coin, txi_sign, key_sign_pub)
 
-            w_txi = bytearray_with_cap(
+            w_txi = empty_bytearray(
                 7 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
             )
             if i_sign == 0:  # serializing first input => prepend headers
@@ -248,7 +249,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             txi_sign.script_sig = input_derive_script(
                 coin, txi_sign, key_sign_pub, signature
             )
-            w_txi_sign = bytearray_with_cap(
+            w_txi_sign = empty_bytearray(
                 5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
             )
             if i_sign == 0:  # serializing first input => prepend headers
@@ -344,7 +345,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             txi_sign.script_sig = input_derive_script(
                 coin, txi_sign, key_sign_pub, signature
             )
-            w_txi_sign = bytearray_with_cap(
+            w_txi_sign = empty_bytearray(
                 5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
             )
             if i_sign == 0:  # serializing first input => prepend headers
@@ -362,7 +363,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
 
         # serialize output
-        w_txo_bin = bytearray_with_cap(5 + 8 + 5 + len(txo_bin.script_pubkey) + 4)
+        w_txo_bin = empty_bytearray(5 + 8 + 5 + len(txo_bin.script_pubkey) + 4)
         if o == 0:  # serializing first output => prepend outputs count
             write_varint(w_txo_bin, tx.outputs_count)
         write_tx_output(w_txo_bin, txo_bin)

@@ -1,9 +1,9 @@
 from trezor.crypto.hashlib import ripemd160, sha256
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
 
+from apps.common.writers import empty_bytearray
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
 from apps.wallet.sign_tx.writers import (
-    bytearray_with_cap,
     write_bytes,
     write_op_push,
     write_scriptnum,
@@ -23,7 +23,7 @@ class ScriptsError(ValueError):
 def input_script_p2pkh_or_p2sh(
     pubkey: bytes, signature: bytes, sighash: int
 ) -> bytearray:
-    w = bytearray_with_cap(5 + len(signature) + 1 + 5 + len(pubkey))
+    w = empty_bytearray(5 + len(signature) + 1 + 5 + len(pubkey))
     append_signature(w, signature, sighash)
     append_pubkey(w, pubkey)
     return w
@@ -87,7 +87,7 @@ def output_script_native_p2wpkh_or_p2wsh(witprog: bytes) -> bytearray:
     # 00 14 <20-byte-key-hash>
     # 00 20 <32-byte-script-hash>
 
-    w = bytearray_with_cap(3 + len(witprog))
+    w = empty_bytearray(3 + len(witprog))
     w.append(0x00)  # witness version byte
     w.append(len(witprog))  # pub key hash length is 20 (P2WPKH) or 32 (P2WSH) bytes
     write_bytes(w, witprog)  # pub key hash
@@ -106,7 +106,7 @@ def input_script_p2wpkh_in_p2sh(pubkeyhash: bytes) -> bytearray:
     # 16 00 14 <pubkeyhash>
     # Signature is moved to the witness.
 
-    w = bytearray_with_cap(3 + len(pubkeyhash))
+    w = empty_bytearray(3 + len(pubkeyhash))
     w.append(0x16)  # length of the data
     w.append(0x00)  # witness version byte
     w.append(0x14)  # P2WPKH witness program (pub key hash length)
@@ -129,7 +129,7 @@ def input_script_p2wsh_in_p2sh(script_hash: bytes) -> bytearray:
     if len(script_hash) != 32:
         raise ScriptsError("Redeem script hash should be 32 bytes long")
 
-    w = bytearray_with_cap(3 + len(script_hash))
+    w = empty_bytearray(3 + len(script_hash))
     w.append(0x22)  # length of the data
     w.append(0x00)  # witness version byte
     w.append(0x20)  # P2WSH witness program (redeem script hash length)
@@ -142,7 +142,7 @@ def input_script_p2wsh_in_p2sh(script_hash: bytes) -> bytearray:
 
 
 def witness_p2wpkh(signature: bytes, pubkey: bytes, sighash: int):
-    w = bytearray_with_cap(1 + 5 + len(signature) + 1 + 5 + len(pubkey))
+    w = empty_bytearray(1 + 5 + len(signature) + 1 + 5 + len(pubkey))
     write_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
     append_signature(w, signature, sighash)
     append_pubkey(w, pubkey)
@@ -239,7 +239,7 @@ def output_script_multisig(pubkeys, m: int) -> bytearray:
 
 
 def output_script_paytoopreturn(data: bytes) -> bytearray:
-    w = bytearray_with_cap(1 + 5 + len(data))
+    w = empty_bytearray(1 + 5 + len(data))
     w.append(0x6A)  # OP_RETURN
     write_op_push(w, len(data))
     w.extend(data)

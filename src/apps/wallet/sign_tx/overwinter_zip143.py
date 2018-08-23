@@ -13,7 +13,7 @@ from apps.wallet.sign_tx.scripts import output_script_multisig, output_script_p2
 from apps.wallet.sign_tx.writers import (
     get_tx_hash,
     write_bytes,
-    write_bytes_rev,
+    write_bytes_reversed,
     write_tx_output,
     write_uint32,
     write_uint64,
@@ -34,7 +34,7 @@ class Zip143:
         self.h_outputs = HashWriter(blake2b, outlen=32, personal=b"ZcashOutputsHash")
 
     def add_prevouts(self, txi: TxInputType):
-        write_bytes_rev(self.h_prevouts, txi.prev_hash)
+        write_bytes_reversed(self.h_prevouts, txi.prev_hash)
         write_uint32(self.h_prevouts, txi.prev_index)
 
     def add_sequence(self, txi: TxInputType):
@@ -78,7 +78,7 @@ class Zip143:
         write_uint32(h_preimage, tx.expiry)  # 8. expiryHeight
         write_uint32(h_preimage, sighash)  # 9. nHashType
 
-        write_bytes_rev(h_preimage, txi.prev_hash)  # 10a. outpoint
+        write_bytes_reversed(h_preimage, txi.prev_hash)  # 10a. outpoint
         write_uint32(h_preimage, txi.prev_index)
 
         script_code = self.derive_script_code(txi, pubkeyhash)  # 10b. scriptCode

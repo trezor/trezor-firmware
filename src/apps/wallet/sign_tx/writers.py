@@ -2,12 +2,19 @@ from trezor.crypto.hashlib import sha256
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
 
-# TX Serialization
-# ===
+from apps.common.writers import (
+    write_bytes,
+    write_bytes_reversed,
+    write_uint32_le,
+    write_uint64_le,
+)
+
+write_uint32 = write_uint32_le
+write_uint64 = write_uint64_le
 
 
 def write_tx_input(w, i: TxInputType):
-    write_bytes_rev(w, i.prev_hash)
+    write_bytes_reversed(w, i.prev_hash)
     write_uint32(w, i.prev_index)
     write_varint(w, len(i.script_sig))
     write_bytes(w, i.script_sig)
@@ -50,10 +57,6 @@ def write_op_push(w, n: int):
         w.append((n >> 24) & 0xFF)
 
 
-# Buffer IO & Serialization
-# ===
-
-
 def write_varint(w, n: int):
     assert n >= 0 and n <= 0xFFFFFFFF
     if n < 253:
@@ -90,44 +93,6 @@ def write_scriptnum(w, n: int):
         w.append((n >> 8) & 0xFF)
         w.append((n >> 16) & 0xFF)
         w.append((n >> 24) & 0xFF)
-
-
-def write_uint32(w, n: int):
-    assert n >= 0 and n <= 0xFFFFFFFF
-    w.append(n & 0xFF)
-    w.append((n >> 8) & 0xFF)
-    w.append((n >> 16) & 0xFF)
-    w.append((n >> 24) & 0xFF)
-
-
-def write_uint64(w, n: int):
-    assert n >= 0 and n <= 0xFFFFFFFFFFFFFFFF
-    w.append(n & 0xFF)
-    w.append((n >> 8) & 0xFF)
-    w.append((n >> 16) & 0xFF)
-    w.append((n >> 24) & 0xFF)
-    w.append((n >> 32) & 0xFF)
-    w.append((n >> 40) & 0xFF)
-    w.append((n >> 48) & 0xFF)
-    w.append((n >> 56) & 0xFF)
-
-
-def write_bytes(w, buf: bytearray):
-    w.extend(buf)
-
-
-def write_bytes_rev(w, buf: bytearray):
-    w.extend(bytearray(reversed(buf)))
-
-
-def bytearray_with_cap(cap: int) -> bytearray:
-    b = bytearray(cap)
-    b[:] = bytes()
-    return b
-
-
-# Hashes
-# ===
 
 
 def get_tx_hash(w, double: bool = False, reverse: bool = False) -> bytes:

@@ -1,49 +1,29 @@
 from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 
-
-def write_uint32(w, n: int):
-    w.append(n & 0xFF)
-    w.append((n >> 8) & 0xFF)
-    w.append((n >> 16) & 0xFF)
-    w.append((n >> 24) & 0xFF)
+from apps.common.writers import write_bytes, write_uint32_le, write_uint64_le
 
 
-def write_uint64(w, n: int):
-    w.append(n & 0xFF)
-    w.append((n >> 8) & 0xFF)
-    w.append((n >> 16) & 0xFF)
-    w.append((n >> 24) & 0xFF)
-    w.append((n >> 32) & 0xFF)
-    w.append((n >> 40) & 0xFF)
-    w.append((n >> 48) & 0xFF)
-    w.append((n >> 56) & 0xFF)
-
-
-def write_bytes(w, buf: bytearray):
-    w.extend(buf)
-
-
-def write_bytes_with_length(w, buf: bytearray):
-    write_uint32(w, len(buf))
-    write_bytes(w, buf)
-
-
-def write_common(
+def serialize_tx_common(
     common: NEMTransactionCommon,
     public_key: bytearray,
     transaction_type: int,
     version: int = None,
 ) -> bytearray:
-    ret = bytearray()
+    w = bytearray()
 
-    write_uint32(ret, transaction_type)
+    write_uint32_le(w, transaction_type)
     if version is None:
         version = common.network << 24 | 1
-    write_uint32(ret, version)
-    write_uint32(ret, common.timestamp)
+    write_uint32_le(w, version)
+    write_uint32_le(w, common.timestamp)
 
-    write_bytes_with_length(ret, public_key)
-    write_uint64(ret, common.fee)
-    write_uint32(ret, common.deadline)
+    write_bytes_with_len(w, public_key)
+    write_uint64_le(w, common.fee)
+    write_uint32_le(w, common.deadline)
 
-    return ret
+    return w
+
+
+def write_bytes_with_len(w, buf: bytes):
+    write_uint32_le(w, len(buf))
+    write_bytes(w, buf)
