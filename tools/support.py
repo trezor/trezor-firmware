@@ -226,21 +226,25 @@ def fix():
 @cli.command()
 # fmt: off
 @click.option("-t", "--ignore-tokens", is_flag=True, help="Ignore unsupported ERC20 tokens")
+@click.option("-m", "--ignore-missing", is_flag=True, help="Do not fail on missing supportinfo")
 # fmt: on
-def check(ignore_tokens):
+def check(ignore_tokens, ignore_missing):
     """Check validity of support information.
 
     Ensures that `support.json` data is well formed, there are no keys without
     corresponding coins, and there are no coins without corresponding keys.
 
-    If `--prune-orphans` is specified, orphaned keys (no corresponding coin)
-    will be deleted from `support.json`.
-
     If `--ignore-tokens` is specified, the check will ignore ERC20 tokens
     without support info. This is useful because there is usually a lot of ERC20
     tokens.
+
+    If `--ignore-missing` is specified, the check will display coins with missing
+    support info, but will not fail when missing coins are found. This is
+    useful in Travis.
     """
-    coins_dict = coin_info.get_all(deduplicate=False).as_dict()
+    all_coins = coin_info.get_all(deduplicate=False)
+    coin_info.mark_duplicate_shortcuts(all_coins.as_list())
+    coins_dict = all_coins.as_dict()
     checks_ok = True
 
     errors = check_support_values()
@@ -259,7 +263,8 @@ def check(ignore_tokens):
         if ignore_tokens:
             values = [coin for coin in values if not coin_info.is_token(coin)]
         if values:
-            checks_ok = False
+            if not ignore_missing:
+                checks_ok = False
             print(f"Device {device} has missing support infos:")
             for coin in values:
                 print(f"{coin['key']} - {coin['name']}")
