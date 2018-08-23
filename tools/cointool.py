@@ -204,15 +204,18 @@ def check_btc(coins):
                     coin["unsupported"] = True
 
             supported_mainnets = [c for c in mainnets if not c.get("unsupported")]
+            supported_networks = [c for c in bucket if not c.get("unsupported")]
 
             if len(mainnets) > 1:
-                if len(supported_mainnets) > 1:
-                    if have_bitcoin:
-                        level = logging.ERROR
-                        failed = True
-                    else:
-                        level = logging.WARNING
+                if have_bitcoin and len(supported_networks) > 1:
+                    # ANY collision with Bitcoin is bad
+                    level = logging.ERROR
+                    failed = True
+                elif len(supported_mainnets) > 1:
+                    # collision between supported networks is still pretty bad
+                    level = logging.WARNING
                 else:
+                    # collision between some unsupported networks is OK
                     level = logging.INFO
                 print_log(level, f"prefix {key}:", collision_str(bucket))
 
@@ -420,6 +423,16 @@ def check(missing_support, backend, icons, show_duplicates):
     In the output, duplicate ERC tokens will be shown in cyan; duplicate non-tokens
     in red. An asterisk (*) next to symbol name means that even though it was detected
     as duplicate, it is still included in results.
+
+    The code checks that SLIP44 numbers don't collide between different mainnets
+    (testnet collisions are allowed), that `address_prefix` doesn't collide with
+    Bitcoin (other collisions are reported as warnings). `address_prefix_p2sh`
+    is also checked but we have a bunch of collisions there and can't do much
+    about them, so it's not an error.
+
+    In the collision checks, Bitcoin is shown in red, other mainnets in blue,
+    testnets in green and unsupported networks in gray, marked with `(X)` for
+    non-colored output.
     """
     if backend and requests is None:
         raise click.ClickException("You must install requests for backend check")
@@ -434,12 +447,6 @@ def check(missing_support, backend, icons, show_duplicates):
     print("Checking BTC-like coins...")
     if not check_btc(defs.coins):
         all_checks_passed = False
-
-    # XXX support.py is responsible for checking support data
-    # print("Checking support data...")
-    # support_data = coin_info.get_support_data()
-    # if not check_support(defs, support_data, fail_missing=missing_support):
-    #     all_checks_passed = False
 
     if show_duplicates == "all":
         show_tok_notok = True
