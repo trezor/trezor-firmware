@@ -7,16 +7,43 @@ import coin_info
 import json
 
 SUPPORT_INFO = coin_info.get_support_data()
-MISSING_MEANS_NO = ("connect", "webwallet")
-VERSIONED_SUPPORT_INFO = ("trezor1", "trezor2")
 
 VERSION_RE = re.compile(r"\d+.\d+.\d+")
+
+ERC20_DUPLICATE_KEY = "(AUTO) duplicate key"
 
 
 def write_support_info():
     with open(os.path.join(coin_info.DEFS_DIR, "support.json"), "w") as f:
         json.dump(SUPPORT_INFO, f, indent=2, sort_keys=True)
         f.write("\n")
+
+
+def support_dicts(device):
+    return SUPPORT_INFO[device]["supported"], SUPPORT_INFO[device]["unsupported"]
+
+
+def all_support_dicts():
+    for device in SUPPORT_INFO:
+        yield (device, *support_dicts(device))
+
+
+def clear_support(device, key):
+    supported, unsupported = support_dicts(device)
+    supported.pop(key, None)
+    unsupported.pop(key, None)
+
+
+def set_supported(device, key, value):
+    clear_support(device, key)
+    supported, _ = support_dicts(device)
+    supported[key] = value
+
+
+def set_unsupported(device, key, value):
+    clear_support(device, key)
+    _, unsupported = support_dicts(device)
+    unsupported[key] = value
 
 
 def print_support(coin):
@@ -42,13 +69,13 @@ def print_support(coin):
     key, name, shortcut = coin["key"], coin["name"], coin["shortcut"]
     print(f"{key} - {name} ({shortcut})")
     if coin.get("duplicate"):
-        if key.startswith("erc20:"):
+        if coin_info.is_token(coin):
             print(" * DUPLICATE SYMBOL (no support)")
             return
         else:
             print(" * DUPLICATE SYMBOL")
     for dev, where in SUPPORT_INFO.items():
-        missing_means_no = dev in MISSING_MEANS_NO
+        missing_means_no = dev in coin_info.MISSING_SUPPORT_MEANS_NO
         print(" *", dev, ":", support_value(where, key, missing_means_no))
 
 
@@ -73,7 +100,7 @@ def check_support_values():
         else:
             for key, value in supported.items():
                 try:
-                    if device in VERSIONED_SUPPORT_INFO:
+                    if device in coin_info.VERSIONED_SUPPORT_INFO:
                         _check_value_version_soon(value)
                     else:
                         if value is not True:
@@ -94,35 +121,81 @@ def check_support_values():
 
 def find_unsupported_coins(coins_dict):
     result = {}
-    for device in VERSIONED_SUPPORT_INFO:
-        values = SUPPORT_INFO[device]
-        support_set = set()
-        support_set.update(values["supported"].keys())
-        support_set.update(values["unsupported"].keys())
+    for device in coin_info.VERSIONED_SUPPORT_INFO:
+        supported, unsupported = support_dicts(device)
+        support_set = set(supported.keys())
+        support_set.update(unsupported.keys())
 
-        result[device] = unsupported = []
+        result[device] = []
         for key, coin in coins_dict.items():
             if coin.get("duplicate"):
                 continue
             if key not in support_set:
-                unsupported.append(coin)
+                result[device].append(coin)
 
     return result
 
 
 def find_orphaned_support_keys(coins_dict):
-    result = {}
-    for device, values in SUPPORT_INFO.items():
-        device_res = {}
-        for supkey, supvalues in values.items():
-            orphans = set()
-            for coin_key in supvalues.keys():
-                if coin_key not in coins_dict:
-                    orphans.add(coin_key)
-            device_res[supkey] = orphans
-        result[device] = device_res
+    orphans = set()
+    for _, supported, unsupported in all_support_dicts():
+        orphans.update(key for key in supported if key not in coins_dict)
+        orphans.update(key for key in unsupported if key not in coins_dict)
 
+    return orphans
+
+
+def find_supported_duplicate_tokens(coins_dict):
+    result = []
+    for _, supported, _ in all_support_dicts():
+        for key in supported:
+            if not key.startswith("erc20:"):
+                continue
+            if coins_dict.get(key, {}).get("duplicate"):
+                result.append(key)
     return result
+
+
+def process_erc20(coins_dict):
+    """Make sure that:
+    * orphaned ERC20 support info is cleared out
+    * duplicate ERC20 tokens are not listed as supported
+    * non-duplicate ERC20 tokens are cleared out from the unsupported list
+    """
+    erc20_dict = {
+        key: coin.get("duplicate", False)
+        for key, coin in coins_dict.items()
+        if coin_info.is_token(coin)
+    }
+    for device, supported, unsupported in all_support_dicts():
+        nondups = set()
+        dups = set(key for key, value in erc20_dict.items() if value)
+        for key in supported:
+            if key not in erc20_dict:
+                continue
+            if not erc20_dict[key]:
+                dups.discard(key)
+
+        for key in unsupported:
+            if key not in erc20_dict:
+                continue
+            # ignore dups that are unsupported now
+            dups.discard(key)
+
+            if not erc20_dict[key] and unsupported[key] == ERC20_DUPLICATE_KEY:
+                # remove duplicate status
+                nondups.add(key)
+
+        for key in dups:
+            if device in coin_info.MISSING_SUPPORT_MEANS_NO:
+                clear_support(device, key)
+            else:
+                print(f"ERC20 on {device}: adding duplicate {key}")
+                set_unsupported(device, key, ERC20_DUPLICATE_KEY)
+
+        for key in nondups:
+            print(f"ERC20 on {device}: clearing non-duplicate {key}")
+            clear_support(device, key)
 
 
 @click.group()
@@ -131,11 +204,30 @@ def cli():
 
 
 @cli.command()
+def fix():
+    """Fix expected problems.
+
+    Prunes orphaned keys and ensures that ERC20 duplicate info matches support info.
+    """
+    all_coins = coin_info.get_all(deduplicate=False)
+    coin_info.mark_duplicate_shortcuts(all_coins.as_list())
+    coins_dict = all_coins.as_dict()
+
+    orphaned = find_orphaned_support_keys(coins_dict)
+    for orphan in orphaned:
+        print(f"pruning orphan {orphan}")
+        for device in SUPPORT_INFO:
+            clear_support(device, orphan)
+
+    process_erc20(coins_dict)
+    write_support_info()
+
+
+@cli.command()
 # fmt: off
-@click.option("-p", "--prune-orphans", is_flag=True, help="Remove orphaned keys for which there is no corresponding coin info")
 @click.option("-t", "--ignore-tokens", is_flag=True, help="Ignore unsupported ERC20 tokens")
 # fmt: on
-def check(prune_orphans, ignore_tokens):
+def check(ignore_tokens):
     """Check validity of support information.
 
     Ensures that `support.json` data is well formed, there are no keys without
@@ -158,27 +250,24 @@ def check(prune_orphans, ignore_tokens):
         checks_ok = False
 
     orphaned = find_orphaned_support_keys(coins_dict)
-    for device, values in orphaned.items():
-        for supkey, supvalues in values.items():
-            for key in supvalues:
-                print(f"orphaned key {device} -> {supkey} -> {key}")
-                if prune_orphans:
-                    del SUPPORT_INFO[device][supkey][key]
-                else:
-                    checks_ok = False
-
-    if prune_orphans:
-        write_support_info()
+    for orphan in orphaned:
+        print(f"orphaned key {orphan}")
+        checks_ok = False
 
     missing = find_unsupported_coins(coins_dict)
     for device, values in missing.items():
         if ignore_tokens:
-            values = [coin for coin in values if not coin["key"].startswith("erc20:")]
+            values = [coin for coin in values if not coin_info.is_token(coin)]
         if values:
             checks_ok = False
             print(f"Device {device} has missing support infos:")
             for coin in values:
                 print(f"{coin['key']} - {coin['name']}")
+
+    supported_dups = find_supported_duplicate_tokens(coins_dict)
+    for coin in supported_dups:
+        checks_ok = False
+        print(f"Token {coin['key']} ({coin['name']}) is duplicate but supported")
 
     if not checks_ok:
         print("Some checks have failed")
@@ -189,11 +278,12 @@ def check(prune_orphans, ignore_tokens):
 # fmt: off
 @click.argument("version")
 @click.option("--git-tag/--no-git-tag", "-g", default=False, help="create a corresponding Git tag")
-@click.option("--soon/--no-soon", default=True, help="Release coins marked 'soon'")
-@click.option("--missing/--no-missing", default=True, help="Release coins with missing support info")
+@click.option("--release-soon/--no-release-soon", default=True, help="Release coins marked 'soon'")
+@click.option("--release-missing/--no-release-missing", default=True, help="Release coins with missing support info")
 @click.option("-n", "--dry-run", is_flag=True, help="Do not write changes")
+@click.option("-s", "--soon", is_flag=True, help="Only set missing support-infos to be released 'soon'.")
 # fmt: on
-def release(version, git_tag, soon, missing, dry_run):
+def release(version, git_tag, release_soon, release_missing, dry_run, soon):
     """Release a new Trezor firmware.
 
     Update support infos so that all coins have a clear support status.
@@ -206,33 +296,43 @@ def release(version, git_tag, soon, missing, dry_run):
     version_tuple = list(map(int, version.split(".")))
     device = f"trezor{version_tuple[0]}"
 
-    print(f"Releasing {device} firmware version {version}")
+    if soon and git_tag:
+        raise click.ClickException("Cannot git-tag a 'soon' revision")
+
+    if soon:
+        version = "soon"
+        print(f"Moving {device} missing infos to 'soon'")
+    else:
+        print(f"Releasing {device} firmware version {version}")
 
     defs = coin_info.get_all(deduplicate=False)
     coin_info.mark_duplicate_shortcuts(defs.as_list())
     coins_dict = defs.as_dict()
 
-    if missing:
+    # process those darned ERC20 duplicates
+
+    if release_missing:
         missing_list = find_unsupported_coins(coins_dict)[device]
         for coin in missing_list:
             key = coin["key"]
-            if coin.get("duplicate"):
+            if coin.get("duplicate") and coin_info.is_token(coin):
                 print(f"UNsupporting duplicate coin {key} ({coin['name']})")
-                SUPPORT_INFO[device]["unsupported"][key] = "duplicate key"
+                set_unsupported(device, key, ERC20_DUPLICATE_KEY)
             else:
                 print(f"Adding missing {key} ({coin['name']})")
-                SUPPORT_INFO[device]["supported"][key] = version
+                set_supported(device, key, version)
 
-    if soon:
+    if not soon and release_soon:
+        supported, _ = support_dicts(device)
         soon_list = [
             coins_dict[key]
-            for key, val in SUPPORT_INFO[device]["supported"].items()
+            for key, val in supported
             if val == "soon" and key in coins_dict
         ]
         for coin in soon_list:
             key = coin["key"]
             print(f"Adding soon-released {key} ({coin['name']})")
-            SUPPORT_INFO[device]["supported"][key] = version
+            set_supported(device, key, version)
 
     if git_tag:
         print("git tag not supported yet")
@@ -253,23 +353,9 @@ def show(keyword):
     defs = coin_info.get_all(deduplicate=False).as_list()
     coin_info.mark_duplicate_shortcuts(defs)
 
-    for coin in defs:
-        key = coin["key"].lower()
-        name = coin["name"].lower()
-        shortcut = coin["shortcut"].lower()
-        symsplit = shortcut.split(" ", maxsplit=1)
-        symbol = symsplit[0]
-        suffix = symsplit[1] if len(symsplit) > 1 else ""
-        for kw in keyword:
-            kwl = kw.lower()
-            if (
-                kwl == key
-                or kwl in name
-                or kwl == shortcut
-                or kwl == symbol
-                or kwl in suffix
-            ):
-                print_support(coin)
+    for kw in keyword:
+        for coin in coin_info.search(defs, kw):
+            print_support(coin)
 
 
 @cli.command(name="set")
@@ -304,7 +390,7 @@ def set_support_value(key, entries, reason):
         click.echo("Use 'support.py show' to search for the right one.")
         sys.exit(1)
 
-    if coins[key].get("duplicate"):
+    if coins[key].get("duplicate") and coin_info.is_token(coins[key]):
         shortcut = coins[key]["shortcut"]
         click.echo(f"Note: shortcut {shortcut} is a duplicate.")
         click.echo(f"Coin will NOT be listed regardless of support.json status.")
@@ -319,26 +405,20 @@ def set_support_value(key, entries, reason):
         if device not in SUPPORT_INFO:
             raise click.ClickException(f"unknown device: {device}")
 
-        where = SUPPORT_INFO[device]
-        # clear existing info
-        where["supported"].pop(key, None)
-        where["unsupported"].pop(key, None)
-
         if value in ("yes", "true", "1"):
-            where["supported"][key] = True
+            set_supported(device, key, True)
         elif value in ("no", "false", "0"):
-            if device in MISSING_MEANS_NO:
+            if device in coin_info.MISSING_SUPPORT_MEANS_NO:
                 click.echo("Setting explicitly unsupported for {device}.")
                 click.echo("Perhaps you meant removing support, i.e., '{device}=' ?")
             if not reason:
                 reason = click.prompt(f"Enter reason for not supporting on {device}:")
-            where["unsupported"][key] = reason
+            set_unsupported(device, key, reason)
         elif value == "":
-            # do nothing, existing info is cleared
-            pass
+            clear_support(device, key)
         else:
-            # arbitrary string?
-            where["supported"][key] = value
+            # arbitrary string
+            set_supported(device, key, value)
 
     print_support(coins[key])
     write_support_info()
