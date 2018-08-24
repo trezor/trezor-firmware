@@ -166,5 +166,13 @@
     "name": "Pirl",
     "rskip60": false,
     "url": "https://pirl.io"
+  },
+  {
+    "chain_id": 1620,
+    "slip44": 1620,
+    "shortcut": "ATH",
+    "name": "Atheios",
+    "rskip60": false,
+    "url": "https://atheios.com"
   }
 ]
