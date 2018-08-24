@@ -129,7 +129,7 @@ def find_unsupported_coins(coins_dict):
 
         result[device] = []
         for key, coin in coins_dict.items():
-            if coin.get("duplicate"):
+            if coin.get("duplicate") and coin_info.is_token(coin):
                 continue
             if key not in support_set:
                 result[device].append(coin)

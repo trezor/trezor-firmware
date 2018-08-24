@@ -12641,6 +12641,21 @@
                 "MyEtherWallet": "https://www.myetherwallet.com"
             }
         },
+        "eth:ATH": {
+            "links": {
+                "Homepage": "https://atheios.com"
+            },
+            "marketcap_usd": 0,
+            "name": "Atheios",
+            "shortcut": "ATH",
+            "t1_enabled": "soon",
+            "t2_enabled": "soon",
+            "type": "coin",
+            "wallet": {
+                "MyCrypto": "https://mycrypto.com",
+                "MyEtherWallet": "https://www.myetherwallet.com"
+            }
+        },
         "eth:CLO": {
             "links": {
                 "Homepage": "https://callisto.network"
@@ -13116,8 +13131,8 @@
         "marketcap_usd": 168706565383,
         "t1_coins": 635,
         "t2_coins": 634,
-        "total_marketcap_usd": 210960655566,
-        "updated_at": 1535122394,
-        "updated_at_readable": "Fri Aug 24 16:53:14 2018"
+        "total_marketcap_usd": 210612300355,
+        "updated_at": 1535123434,
+        "updated_at_readable": "Fri Aug 24 17:10:34 2018"
     }
 }
