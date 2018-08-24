@@ -34,6 +34,7 @@ message CardanoAddress {
  */
 message CardanoGetPublicKey {
     repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+    optional bool show_display = 2; // optionally show on display before sending the result
 }
 
 /**
@@ -81,11 +82,11 @@ message CardanoVerifyMessage {
 /**
  * Request: Ask device to sign Cardano transaction
  * @start
- * @next CardanoSignedTransaction
+ * @next CardanoSignedTx
  * @next CardanoTxRequest
  * @next Failure
  */
-message CardanoSignTransaction {
+message CardanoSignTx {
     repeated CardanoTxInputType inputs = 1;     // inputs to be used in transaction
     repeated CardanoTxOutputType outputs = 2;   // outputs to be used in transaction
     optional uint32 transactions_count = 3;     // transactions count
@@ -121,7 +122,7 @@ message CardanoTxRequest {
 
 /**
  * Request: Reported transaction data
- * @next CardanoSignedTransaction
+ * @next CardanoSignedTx
  * @next CardanoTxRequest
  */
 message CardanoTxAck {
@@ -132,7 +133,7 @@ message CardanoTxAck {
  * Response: Serialised signed cardano transaction
  * @end
  */
-message CardanoSignedTransaction {
+message CardanoSignedTx {
     optional bytes tx_hash = 1; // hash of the signed transaction
     optional bytes tx_body = 2; // serialised body of the signed transaction
 }

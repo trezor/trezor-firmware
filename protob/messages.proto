@@ -141,8 +141,6 @@ enum MessageType {
     MessageType_TezosPublicKey = 155 [(wire_out) = true];
 
     // Stellar
-    MessageType_StellarGetPublicKey = 200 [(wire_in) = true];
-    MessageType_StellarPublicKey = 201 [(wire_out) = true];
     MessageType_StellarSignTx = 202 [(wire_in) = true];
     MessageType_StellarTxOpRequest = 203 [(wire_out) = true];
     MessageType_StellarGetAddress = 207 [(wire_in) = true];
@@ -165,14 +163,14 @@ enum MessageType {
     MessageType_CardanoSignMessage = 300 [(wire_in) = true];
     MessageType_CardanoMessageSignature = 301 [(wire_out) = true];
     MessageType_CardanoVerifyMessage = 302 [(wire_in) = true];
-    MessageType_CardanoSignTransaction = 303 [(wire_in) = true];
+    MessageType_CardanoSignTx = 303 [(wire_in) = true];
     MessageType_CardanoTxRequest = 304 [(wire_out) = true];
     MessageType_CardanoGetPublicKey = 305 [(wire_in) = true];
     MessageType_CardanoPublicKey = 306 [(wire_out) = true];
     MessageType_CardanoGetAddress = 307 [(wire_in) = true];
     MessageType_CardanoAddress = 308 [(wire_out) = true];
     MessageType_CardanoTxAck = 309 [(wire_in) = true];
-    MessageType_CardanoSignedTransaction = 310 [(wire_out) = true];
+    MessageType_CardanoSignedTx = 310 [(wire_out) = true];
 
     // Ontology
     MessageType_OntologyGetAddress = 350 [(wire_in) = true];
