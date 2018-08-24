@@ -6,7 +6,7 @@ from trezor.utils import chunks
 from .helpers import get_vote_tx_text
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm
-from apps.common.show import show_pubkey
+from apps.common.show import show_pubkey, split_address
 
 
 async def require_confirm_tx(ctx, to, value):
@@ -53,7 +53,3 @@ async def require_confirm_fee(ctx, value, fee):
 
 def format_amount(value):
     return "%s LSK" % (int(value) / 100000000)
-
-
-def split_address(address):
-    return chunks(address, 16)

@@ -11,10 +11,11 @@ from trezor.utils import chunks
 from apps.common.confirm import confirm, require_confirm
 
 
-async def show_address(ctx, address: str):
-    lines = split_address(address)
+async def show_address(ctx, address: str, network: str = None):
     text = Text("Confirm address", ui.ICON_RECEIVE, icon_color=ui.GREEN)
-    text.mono(*lines)
+    if network:
+        text.normal("%s network" % network)
+    text.mono(*split_address(address))
     return await confirm(
         ctx, text, code=ButtonRequestType.Address, cancel="QR", cancel_style=ui.BTN_KEY
     )

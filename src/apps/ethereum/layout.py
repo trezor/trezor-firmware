@@ -6,6 +6,7 @@ from trezor.ui.text import Text
 from trezor.utils import chunks, format_amount
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm
+from apps.common.show import split_address
 from apps.ethereum import networks, tokens
 from apps.ethereum.get_address import _ethereum_address_hex
 
@@ -48,10 +49,6 @@ async def require_confirm_data(ctx, data, data_total):
     text.mono(*split_data(data_str))
     # we use SignTx, not ConfirmOutput, for compatibility with T1
     await require_confirm(ctx, text, ButtonRequestType.SignTx)
-
-
-def split_address(address):
-    return chunks(address, 17)
 
 
 def format_ethereum_amount(value: int, token, chain_id: int, tx_type=None):

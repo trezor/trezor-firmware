@@ -19,9 +19,10 @@ from ..layout import (
     require_confirm_fee,
     require_confirm_final,
     require_confirm_text,
-    split_address,
     trim,
 )
+
+from apps.common.show import split_address
 
 
 async def ask_mosaic_creation(
