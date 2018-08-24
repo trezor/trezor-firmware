@@ -278,7 +278,7 @@ def latest_releases():
     latest = {}
     for v in ("1", "2"):
         releases = requests.get(RELEASES_URL.format(v)).json()
-        latest[v] = max(tuple(r["version"]) for r in releases)
+        latest["trezor" + v] = max(tuple(r["version"]) for r in releases)
     return latest
 
 
@@ -421,8 +421,6 @@ def mark_duplicate_shortcuts(coins):
             # they *still* keep duplicate status (and possibly are deleted).
             continue
 
-        nontokens = [coin for coin in values if not is_token(coin)]
-
         for coin in values:
             # allow overrides to skip this; if not listed in overrides, assume True
             is_dup = overrides.get(coin["key"], True)
@@ -441,7 +439,7 @@ def _btc_sort_key(coin):
         return coin["name"]
 
 
-def get_all(deduplicate=True):
+def collect_coin_info():
     """Returns all definition as dict organized by coin type.
     `coins` for btc-like coins,
     `eth` for ethereum networks,
@@ -473,17 +471,35 @@ def get_all(deduplicate=True):
 
         _ensure_mandatory_values(coins)
 
-    if deduplicate:
-        mark_duplicate_shortcuts(all_coins.as_list())
-        all_coins["erc20"] = [
-            coin for coin in all_coins["erc20"] if not coin.get("duplicate")
-        ]
+    return all_coins
 
+
+def coin_info_with_duplicates():
+    """Collects coin info, detects duplicates but does not remove them.
+
+    Returns the CoinsInfo object and duplicate buckets.
+    """
+    all_coins = collect_coin_info()
+    buckets = mark_duplicate_shortcuts(all_coins.as_list())
+    return all_coins, buckets
+
+
+def coin_info():
+    """Collects coin info, marks and prunes duplicate ERC20 symbols, fills out support
+    info and returns the result.
+    """
+    all_coins, _ = coin_info_with_duplicates()
+    all_coins["erc20"] = [
+        coin for coin in all_coins["erc20"] if not coin.get("duplicate")
+    ]
     return all_coins
 
 
 def search(coins, keyword):
     kwl = keyword.lower()
+    if isinstance(coins, CoinsInfo):
+        coins = coins.as_list()
+
     for coin in coins:
         key = coin["key"].lower()
         name = coin["name"].lower()

@@ -153,8 +153,8 @@ def update_simple(coins, support_info, type):
             name=coin["name"],
             shortcut=coin["shortcut"],
             type=type,
-            t1_enabled=_is_supported(support, 1),
-            t2_enabled=_is_supported(support, 2),
+            t1_enabled=_is_supported(support, "trezor1"),
+            t2_enabled=_is_supported(support, "trezor2"),
         )
         for k in OPTIONAL_KEYS:
             if k in coin:
@@ -294,7 +294,7 @@ if __name__ == "__main__":
     handler.setLevel(logging.DEBUG)
     root.addHandler(handler)
 
-    defs = coin_info.get_all()
+    defs = coin_info.coin_info()
     support_info = coin_info.support_info(defs)
 
     coins = {}

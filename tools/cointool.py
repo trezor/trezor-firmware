@@ -498,8 +498,7 @@ def check(backend, icons, show_duplicates):
     if icons and not CAN_BUILD_DEFS:
         raise click.ClickException("Missing requirements for icon check")
 
-    defs = coin_info.get_all(deduplicate=False)
-    buckets = coin_info.mark_duplicate_shortcuts(defs.as_list())
+    defs, buckets = coin_info.coin_info_with_duplicates()
     all_checks_passed = True
 
     print("Checking BTC-like coins...")
@@ -544,7 +543,7 @@ def check(backend, icons, show_duplicates):
 @click.option("-o", "--outfile", type=click.File(mode="w"), default="./coins.json")
 def coins_json(outfile):
     """Generate coins.json for consumption in python-trezor and Connect/Wallet"""
-    coins = coin_info.get_all().coins
+    coins = coin_info.coin_info().coins
     support_info = coin_info.support_info(coins)
     by_name = {}
     for coin in coins:
@@ -564,7 +563,7 @@ def coindefs(outfile):
     This is currently unused but should enable us to add new coins without having to
     update firmware.
     """
-    coins = coin_info.get_all().coins
+    coins = coin_info.coin_info().coins
     coindefs = {}
     for coin in coins:
         key = coin["key"]
@@ -603,7 +602,7 @@ def render(paths, outfile, verbose):
         raise click.ClickException("Option -o can only be used with single input file")
 
     # prepare defs
-    defs = coin_info.get_all()
+    defs = coin_info.coin_info()
     support_info = coin_info.support_info(defs)
 
     # munch dicts - make them attribute-accessible
