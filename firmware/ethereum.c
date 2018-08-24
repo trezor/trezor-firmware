@@ -263,6 +263,7 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token, 
 				case   62: suffix = " tETC"; break;  // Ethereum Classic Testnet
 				case   64: suffix = " ELLA"; break;  // Ellaism
 				case  820: suffix = " CLO";  break;  // Callisto
+				case 1620: suffix = " ATH";  break;  // Atheios
 				case 1987: suffix = " EGEM"; break;  // EtherGem
 				case 31102: suffix = " ESN"; break;  // Ethersocial Network
 				case 200625: suffix = " AKA"; break; // Akroma
