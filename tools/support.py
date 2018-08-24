@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import re
 import os
+import subprocess
 import sys
 import click
 import coin_info
@@ -204,13 +205,13 @@ def cli():
 
 
 @cli.command()
-def fix():
+@click.option("-n", "--dry-run", is_flag=True, help="Do not write changes")
+def fix(dry_run):
     """Fix expected problems.
 
     Prunes orphaned keys and ensures that ERC20 duplicate info matches support info.
     """
-    all_coins = coin_info.get_all(deduplicate=False)
-    coin_info.mark_duplicate_shortcuts(all_coins.as_list())
+    all_coins, _ = coin_info.coin_info_with_duplicates()
     coins_dict = all_coins.as_dict()
 
     orphaned = find_orphaned_support_keys(coins_dict)
@@ -220,7 +221,8 @@ def fix():
             clear_support(device, orphan)
 
     process_erc20(coins_dict)
-    write_support_info()
+    if not dry_run:
+        write_support_info()
 
 
 @cli.command()
@@ -242,8 +244,7 @@ def check(ignore_tokens, ignore_missing):
     support info, but will not fail when missing coins are found. This is
     useful in Travis.
     """
-    all_coins = coin_info.get_all(deduplicate=False)
-    coin_info.mark_duplicate_shortcuts(all_coins.as_list())
+    all_coins, _ = coin_info.coin_info_with_duplicates()
     coins_dict = all_coins.as_dict()
     checks_ok = True
 
@@ -281,14 +282,27 @@ def check(ignore_tokens, ignore_missing):
 
 @cli.command()
 # fmt: off
-@click.argument("version")
-@click.option("--git-tag/--no-git-tag", "-g", default=False, help="create a corresponding Git tag")
+@click.argument("device")
+@click.option("-r", "--version", help="Set explicit version string (default: guess from latest release)")
+@click.option("--git-tag/--no-git-tag", "-g", default=False, help="Create a corresponding Git tag")
 @click.option("--release-soon/--no-release-soon", default=True, help="Release coins marked 'soon'")
 @click.option("--release-missing/--no-release-missing", default=True, help="Release coins with missing support info")
 @click.option("-n", "--dry-run", is_flag=True, help="Do not write changes")
-@click.option("-s", "--soon", is_flag=True, help="Only set missing support-infos to be released 'soon'.")
+@click.option("-s", "--soon", is_flag=True, help="Only set missing support-infos to be released 'soon'")
+@click.option("-f", "--force", is_flag=True, help="Proceed even with bad version/device info")
 # fmt: on
-def release(version, git_tag, release_soon, release_missing, dry_run, soon):
+@click.pass_context
+def release(
+    ctx,
+    device: str,
+    version,
+    git_tag,
+    release_soon,
+    release_missing,
+    dry_run,
+    soon,
+    force,
+):
     """Release a new Trezor firmware.
 
     Update support infos so that all coins have a clear support status.
@@ -297,12 +311,55 @@ def release(version, git_tag, release_soon, release_missing, dry_run, soon):
     released firmware version.
 
     Optionally tags the repository with the given version.
-    """
-    version_tuple = list(map(int, version.split(".")))
-    device = f"trezor{version_tuple[0]}"
 
+    `device` can be "1", "2", or a string matching `support.json` key. Version
+    is autodetected by downloading a list of latest releases and incrementing
+    micro version by one, or you can specify `--version` explicitly.
+    """
+    # check condition(s)
     if soon and git_tag:
         raise click.ClickException("Cannot git-tag a 'soon' revision")
+
+    # process `device`
+    if device.isnumeric():
+        device = f"trezor{device}"
+
+    if not force and device not in coin_info.VERSIONED_SUPPORT_INFO:
+        raise click.ClickException(
+            f"Non-releasable device {device} (support info is not versioned). "
+            "Use --force to proceed anyway."
+        )
+
+    if not soon:
+        # guess `version` if not given
+        if not version:
+            versions = coin_info.latest_releases()
+            latest_version = versions.get(device)
+            if latest_version is None:
+                raise click.ClickException(
+                    "Failed to guess version. "
+                    "Please use --version to specify it explicitly."
+                )
+            else:
+                latest_version = list(latest_version)
+            latest_version[-1] += 1
+            version = ".".join(str(n) for n in latest_version)
+
+        # process `version`
+        try:
+            version_numbers = list(map(int, version.split(".")))
+            expected_device = f"trezor{version_numbers[0]}"
+            if not force and device != expected_device:
+                raise click.ClickException(
+                    f"Device {device} should not be version {version}. "
+                    "Use --force to proceed anyway."
+                )
+        except ValueError as e:
+            if not force:
+                raise click.ClickException(
+                    f"Failed to parse '{version}' as a version. "
+                    "Use --force to proceed anyway."
+                ) from e
 
     if soon:
         version = "soon"
@@ -310,28 +367,31 @@ def release(version, git_tag, release_soon, release_missing, dry_run, soon):
     else:
         print(f"Releasing {device} firmware version {version}")
 
-    defs = coin_info.get_all(deduplicate=False)
-    coin_info.mark_duplicate_shortcuts(defs.as_list())
+    defs, _ = coin_info.coin_info_with_duplicates()
     coins_dict = defs.as_dict()
 
-    # process those darned ERC20 duplicates
+    # Invoke data fixup as dry-run. That will modify data internally but won't write
+    # changes. We will write changes at the end based on our own `dry_run` value.
+    print("Fixing up data...")
+    ctx.invoke(fix, dry_run=True)
 
+    # process missing (not listed) supportinfos
     if release_missing:
         missing_list = find_unsupported_coins(coins_dict)[device]
         for coin in missing_list:
             key = coin["key"]
-            if coin.get("duplicate") and coin_info.is_token(coin):
-                print(f"UNsupporting duplicate coin {key} ({coin['name']})")
-                set_unsupported(device, key, ERC20_DUPLICATE_KEY)
-            else:
-                print(f"Adding missing {key} ({coin['name']})")
-                set_supported(device, key, version)
+            # we should have no unprocessed dup tokens at this point
+            assert not (coin.get("duplicate") and coin_info.is_token(coin))
+            print(f"Adding missing {key} ({coin['name']})")
+            set_supported(device, key, version)
 
+    # if we're releasing, process coins marked "soon"
+    # (`not soon` because `soon` means set release version to "soon")
     if not soon and release_soon:
         supported, _ = support_dicts(device)
         soon_list = [
             coins_dict[key]
-            for key, val in supported
+            for key, val in supported.items()
             if val == "soon" and key in coins_dict
         ]
         for coin in soon_list:
@@ -339,8 +399,13 @@ def release(version, git_tag, release_soon, release_missing, dry_run, soon):
             print(f"Adding soon-released {key} ({coin['name']})")
             set_supported(device, key, version)
 
+    tagname = f"{device}-{version}"
     if git_tag:
-        print("git tag not supported yet")
+        if dry_run:
+            print(f"Would tag current commit with {tagname}")
+        else:
+            print(f"Tagging current commit with {tagname}")
+            subprocess.check_call(["git", "tag", tagname])
 
     if not dry_run:
         write_support_info()
@@ -355,8 +420,7 @@ def show(keyword):
 
     Keywords match against key, name or shortcut (ticker symbol) of coin.
     """
-    defs = coin_info.get_all(deduplicate=False).as_list()
-    coin_info.mark_duplicate_shortcuts(defs)
+    defs = coin_info.coin_info_with_duplicates()
 
     for kw in keyword:
         for coin in coin_info.search(defs, kw):
@@ -388,8 +452,8 @@ def set_support_value(key, entries, reason):
     Entries with other names will be inserted into "others". This is a good place
     to store links to 3rd party software, such as Electrum forks or claim tools.
     """
-    coins = coin_info.get_all(deduplicate=False).as_dict()
-    coin_info.mark_duplicate_shortcuts(coins.values())
+    defs, _ = coin_info.coin_info_with_duplicates()
+    coins = defs.as_dict()
     if key not in coins:
         click.echo(f"Failed to find key {key}")
         click.echo("Use 'support.py show' to search for the right one.")
