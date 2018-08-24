@@ -33,7 +33,9 @@
   "uri_prefix": "monetaryunit",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [],
+  "bitcore": [
+    "https://explorer.monetaryunit.org"
+  ],
   "blockbook": [],
   "cooldown": 100
 }
