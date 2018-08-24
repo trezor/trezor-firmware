@@ -420,7 +420,7 @@ def show(keyword):
 
     Keywords match against key, name or shortcut (ticker symbol) of coin.
     """
-    defs = coin_info.coin_info_with_duplicates()
+    defs, _ = coin_info.coin_info_with_duplicates()
 
     for kw in keyword:
         for coin in coin_info.search(defs, kw):
