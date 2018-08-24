@@ -502,7 +502,7 @@ def check(backend, icons, show_duplicates):
     all_checks_passed = True
 
     print("Checking BTC-like coins...")
-    if not check_btc(defs.coins):
+    if not check_btc(defs.bitcoin):
         all_checks_passed = False
 
     if show_duplicates == "all":
@@ -517,12 +517,12 @@ def check(backend, icons, show_duplicates):
 
     if icons:
         print("Checking icon files...")
-        if not check_icons(defs.coins):
+        if not check_icons(defs.bitcoin):
             all_checks_passed = False
 
     if backend:
         print("Checking backend responses...")
-        if not check_backends(defs.coins):
+        if not check_backends(defs.bitcoin):
             all_checks_passed = False
 
     print("Checking key uniformity...")
@@ -543,7 +543,7 @@ def check(backend, icons, show_duplicates):
 @click.option("-o", "--outfile", type=click.File(mode="w"), default="./coins.json")
 def coins_json(outfile):
     """Generate coins.json for consumption in python-trezor and Connect/Wallet"""
-    coins = coin_info.coin_info().coins
+    coins = coin_info.coin_info().bitcoin
     support_info = coin_info.support_info(coins)
     by_name = {}
     for coin in coins:
@@ -563,7 +563,7 @@ def coindefs(outfile):
     This is currently unused but should enable us to add new coins without having to
     update firmware.
     """
-    coins = coin_info.coin_info().coins
+    coins = coin_info.coin_info().bitcoin
     coindefs = {}
     for coin in coins:
         key = coin["key"]

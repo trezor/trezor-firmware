@@ -37,13 +37,13 @@ class CoinsInfo(dict):
     """Collection of information about all known kinds of coins.
 
     It contains the following lists:
-    `coins` for btc-like coins,
+    `bitcoin` for btc-like coins,
     `eth` for ethereum networks,
     `erc20` for ERC20 tokens,
     `nem` for NEM mosaics,
     `misc` for other networks.
 
-    Accessible as a dict or by attribute: `info["coins"] == info.coins`
+    Accessible as a dict or by attribute: `info["misc"] == info.misc`
     """
 
     def as_list(self):
@@ -196,7 +196,7 @@ def _load_btc_coins():
         coin.update(
             name=coin["coin_name"],
             shortcut=coin["coin_shortcut"],
-            key="coin:{}".format(coin["coin_shortcut"]),
+            key="bitcoin:{}".format(coin["coin_shortcut"]),
             icon=filename.replace(".json", ".png"),
         )
         coins.append(coin)
@@ -450,7 +450,7 @@ def collect_coin_info():
     Automatically removes duplicate symbols from the result.
     """
     all_coins = CoinsInfo(
-        coins=_load_btc_coins(),
+        bitcoin=_load_btc_coins(),
         eth=_load_ethereum_networks(),
         erc20=_load_erc20_tokens(),
         nem=_load_nem_mosaics(),
@@ -458,7 +458,7 @@ def collect_coin_info():
     )
 
     for k, coins in all_coins.items():
-        if k == "coins":
+        if k == "bitcoin":
             coins.sort(key=_btc_sort_key)
         elif k == "nem":
             # do not sort nem

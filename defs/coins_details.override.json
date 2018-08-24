@@ -5,62 +5,62 @@
     "erc20:eth:GNT": {
         "coinmarketcap_alias": "golem-network-tokens"
     },
-    "coin:BCH": {
+    "bitcoin:BCH": {
         "wallet": {
             "Electron Cash": "https://electroncash.org"
         }
     },
-    "coin:BTC": {
+    "bitcoin:BTC": {
         "wallet": {
             "Electrum": "https://electrum.org"
         }
     },
-    "coin:BTCP": {
+    "bitcoin:BTCP": {
         "wallet": {
             "BTCP Electrum": "https://github.com/BTCPrivate/electrum-btcp"
         }
     },
-    "coin:BTG": {
+    "bitcoin:BTG": {
         "wallet": {
             "ElectrumG": "https://github.com/BTCGPU/electrum"
         }
     },
-    "coin:DASH": {
+    "bitcoin:DASH": {
         "wallet": {
             "Dash Electrum": "https://electrum.dash.org"
         }
     },
-    "coin:FJC": {
+    "bitcoin:FJC": {
         "wallet": {
             "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
         }
     },
-    "coin:GRS": {
+    "bitcoin:GRS": {
         "wallet": {
             "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet/"
         }
     },
-    "coin:LTC": {
+    "bitcoin:LTC": {
         "wallet": {
             "Electrum-LTC": "https://electrum-ltc.org"
         }
     },
-    "coin:MONA": {
+    "bitcoin:MONA": {
         "wallet": {
             "Electrum-MONA": "https://electrum-mona.org"
         }
     },
-    "coin:NMC": {
+    "bitcoin:NMC": {
         "wallet": {
             "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
         }
     },
-    "coin:VIA": {
+    "bitcoin:VIA": {
         "wallet": {
             "Vialectrum": "https://vialectrum.org"
         }
     },
-    "coin:XZC": {
+    "bitcoin:XZC": {
         "wallet": {
             "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
             "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"
