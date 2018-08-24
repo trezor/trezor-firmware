@@ -5,7 +5,7 @@ from .helpers import LISK_CURVE
 from apps.common import seed, show
 
 
-async def lisk_get_public_key(ctx, msg):
+async def get_public_key(ctx, msg):
     address_n = msg.address_n or ()
 
     node = await seed.derive_node(ctx, address_n, LISK_CURVE)

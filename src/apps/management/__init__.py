@@ -1,80 +1,16 @@
-from trezor.messages.MessageType import (
-    ApplyFlags,
-    ApplySettings,
-    BackupDevice,
-    ChangePin,
-    LoadDevice,
-    RecoveryDevice,
-    ResetDevice,
-    SetU2FCounter,
-    WipeDevice,
-)
-from trezor.wire import protobuf_workflow, register
-
-
-def dispatch_LoadDevice(*args, **kwargs):
-    from .load_device import load_device
-
-    return load_device(*args, **kwargs)
-
-
-def dispatch_ResetDevice(*args, **kwargs):
-    from .reset_device import reset_device
-
-    return reset_device(*args, **kwargs)
-
-
-def dispatch_BackupDevice(*args, **kwargs):
-    from .backup_device import backup_device
-
-    return backup_device(*args, **kwargs)
-
-
-def dispatch_WipeDevice(*args, **kwargs):
-    from .wipe_device import wipe_device
-
-    return wipe_device(*args, **kwargs)
-
-
-def dispatch_RecoveryDevice(*args, **kwargs):
-    from .recovery_device import recovery_device
-
-    return recovery_device(*args, **kwargs)
-
-
-def dispatch_ApplySettings(*args, **kwargs):
-    from .apply_settings import apply_settings
-
-    return apply_settings(*args, **kwargs)
-
-
-def dispatch_ApplyFlags(*args, **kwargs):
-    from .apply_flags import apply_flags
-
-    return apply_flags(*args, **kwargs)
-
-
-def dispatch_ChangePin(*args, **kwargs):
-    from .change_pin import change_pin
-
-    return change_pin(*args, **kwargs)
-
-
-def dispatch_SetU2FCounter(*args, **kwargs):
-    from .set_u2f_counter import set_u2f_counter
-
-    return set_u2f_counter(*args, **kwargs)
+from trezor import wire
+from trezor.messages import MessageType
 
 
 def boot():
     # only enable LoadDevice in debug builds
     if __debug__:
-        register(LoadDevice, protobuf_workflow, dispatch_LoadDevice)
-    register(ResetDevice, protobuf_workflow, dispatch_ResetDevice)
-    register(BackupDevice, protobuf_workflow, dispatch_BackupDevice)
-    register(WipeDevice, protobuf_workflow, dispatch_WipeDevice)
-    register(RecoveryDevice, protobuf_workflow, dispatch_RecoveryDevice)
-    register(ApplySettings, protobuf_workflow, dispatch_ApplySettings)
-    register(ApplyFlags, protobuf_workflow, dispatch_ApplyFlags)
-    register(ChangePin, protobuf_workflow, dispatch_ChangePin)
-    register(SetU2FCounter, protobuf_workflow, dispatch_SetU2FCounter)
+        wire.add(MessageType.LoadDevice, __name__, "load_device")
+    wire.add(MessageType.ResetDevice, __name__, "reset_device")
+    wire.add(MessageType.BackupDevice, __name__, "backup_device")
+    wire.add(MessageType.WipeDevice, __name__, "wipe_device")
+    wire.add(MessageType.RecoveryDevice, __name__, "recovery_device")
+    wire.add(MessageType.ApplySettings, __name__, "apply_settings")
+    wire.add(MessageType.ApplyFlags, __name__, "apply_flags")
+    wire.add(MessageType.ChangePin, __name__, "change_pin")
+    wire.add(MessageType.SetU2FCounter, __name__, "set_u2f_counter")

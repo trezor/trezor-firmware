@@ -6,7 +6,7 @@ from apps.common import seed
 from apps.common.show import show_address, show_qr
 
 
-async def layout_lisk_get_address(ctx, msg):
+async def get_address(ctx, msg):
     address_n = msg.address_n or ()
 
     node = await seed.derive_node(ctx, address_n, LISK_CURVE)

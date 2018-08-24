@@ -2,7 +2,7 @@ from apps.common.show import show_address, show_qr
 from apps.ethereum import networks
 
 
-async def ethereum_get_address(ctx, msg):
+async def get_address(ctx, msg):
     from trezor.messages.EthereumAddress import EthereumAddress
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha3_256

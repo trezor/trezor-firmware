@@ -13,7 +13,7 @@ from .helpers import LISK_CURVE, get_address_from_public_key
 from apps.common import seed
 
 
-async def lisk_sign_tx(ctx, msg):
+async def sign_tx(ctx, msg):
     pubkey, seckey = await _get_keys(ctx, msg)
     transaction = _update_raw_tx(msg.transaction, pubkey)
 

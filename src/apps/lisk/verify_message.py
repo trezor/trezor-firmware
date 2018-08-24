@@ -8,7 +8,7 @@ from .sign_message import message_digest
 from apps.wallet.verify_message import require_confirm_verify_message
 
 
-async def lisk_verify_message(ctx, msg):
+async def verify_message(ctx, msg):
     digest = message_digest(msg.message)
     verified = ed25519.verify(msg.public_key, msg.signature, digest)
     if not verified:

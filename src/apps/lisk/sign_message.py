@@ -22,7 +22,7 @@ def message_digest(message):
     return sha256(h.get_digest()).digest()
 
 
-async def lisk_sign_message(ctx, msg):
+async def sign_message(ctx, msg):
     message = msg.message
     address_n = msg.address_n or ()
 

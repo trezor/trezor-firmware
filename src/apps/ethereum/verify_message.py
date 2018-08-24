@@ -11,8 +11,7 @@ from apps.common.signverify import split_message
 from apps.ethereum.sign_message import message_digest
 
 
-async def ethereum_verify_message(ctx, msg):
-
+async def verify_message(ctx, msg):
     digest = message_digest(msg.message)
     sig = bytearray([msg.signature[64]]) + msg.signature[:64]
     pubkey = secp256k1.verify_recover(sig, digest)

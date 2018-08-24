@@ -1,38 +1,9 @@
-from trezor.messages.MessageType import (
-    EthereumGetAddress,
-    EthereumSignMessage,
-    EthereumSignTx,
-    EthereumVerifyMessage,
-)
-from trezor.wire import protobuf_workflow, register
-
-
-def dispatch_EthereumGetAddress(*args, **kwargs):
-    from .get_address import ethereum_get_address
-
-    return ethereum_get_address(*args, **kwargs)
-
-
-def dispatch_EthereumSignTx(*args, **kwargs):
-    from .sign_tx import ethereum_sign_tx
-
-    return ethereum_sign_tx(*args, **kwargs)
-
-
-def dispatch_EthereumSignMessage(*args, **kwargs):
-    from .sign_message import ethereum_sign_message
-
-    return ethereum_sign_message(*args, **kwargs)
-
-
-def dispatch_EthereumVerifyMessage(*args, **kwargs):
-    from .verify_message import ethereum_verify_message
-
-    return ethereum_verify_message(*args, **kwargs)
+from trezor import wire
+from trezor.messages import MessageType
 
 
 def boot():
-    register(EthereumGetAddress, protobuf_workflow, dispatch_EthereumGetAddress)
-    register(EthereumSignTx, protobuf_workflow, dispatch_EthereumSignTx)
-    register(EthereumSignMessage, protobuf_workflow, dispatch_EthereumSignMessage)
-    register(EthereumVerifyMessage, protobuf_workflow, dispatch_EthereumVerifyMessage)
+    wire.add(MessageType.EthereumGetAddress, __name__, "get_address")
+    wire.add(MessageType.EthereumSignTx, __name__, "sign_tx")
+    wire.add(MessageType.EthereumSignMessage, __name__, "sign_message")
+    wire.add(MessageType.EthereumVerifyMessage, __name__, "verify_message")

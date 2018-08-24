@@ -10,18 +10,15 @@ from apps.common.signverify import split_message
 
 
 def message_digest(message):
-
     h = HashWriter(sha3_256, keccak=True)
     signed_message_header = "\x19Ethereum Signed Message:\n"
     h.extend(signed_message_header)
     h.extend(str(len(message)))
     h.extend(message)
-
     return h.get_digest()
 
 
-async def ethereum_sign_message(ctx, msg):
-
+async def sign_message(ctx, msg):
     await require_confirm_sign_message(ctx, msg.message)
 
     address_n = msg.address_n or ()

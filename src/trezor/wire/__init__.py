@@ -6,6 +6,11 @@ from trezor.wire.errors import *
 workflow_handlers = {}
 
 
+def add(mtype, pkgname, modname, *args):
+    """Shortcut for registering a dynamically-imported Protobuf workflow."""
+    register(mtype, protobuf_workflow, import_workflow, pkgname, modname, *args)
+
+
 def register(mtype, handler, *args):
     """Register `handler` to get scheduled after `mtype` message is received."""
     if isinstance(mtype, type) and issubclass(mtype, protobuf.MessageType):
@@ -158,6 +163,13 @@ async def protobuf_workflow(ctx, reader, handler, *args):
     if res:
         # respond with a specific response
         await ctx.write(res)
+
+
+def import_workflow(ctx, req, pkgname, modname):
+    modpath = "%s.%s" % (pkgname, modname)
+    module = __import__(modpath, None, None, (modname,), 0)
+    handler = getattr(module, modname)
+    return handler(ctx, req)
 
 
 async def unexpected_msg(ctx, reader):

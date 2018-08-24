@@ -1,9 +1,13 @@
 from trezor import wire
 from trezor.crypto import rlp
+from trezor.crypto.curve import secp256k1
+from trezor.crypto.hashlib import sha3_256
 from trezor.messages.EthereumSignTx import EthereumSignTx
 from trezor.messages.EthereumTxRequest import EthereumTxRequest
+from trezor.messages.MessageType import EthereumTxAck
 from trezor.utils import HashWriter
 
+from apps.common import seed
 from apps.ethereum import tokens
 from apps.ethereum.layout import (
     require_confirm_data,
@@ -15,9 +19,7 @@ from apps.ethereum.layout import (
 MAX_CHAIN_ID = 2147483629
 
 
-async def ethereum_sign_tx(ctx, msg):
-    from trezor.crypto.hashlib import sha3_256
-
+async def sign_tx(ctx, msg):
     msg = sanitize(msg)
     check(msg)
 
@@ -115,8 +117,6 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
 
 
 async def send_request_chunk(ctx, data_left: int):
-    from trezor.messages.MessageType import EthereumTxAck
-
     # TODO: layoutProgress ?
     req = EthereumTxRequest()
     if data_left <= 1024:
@@ -128,9 +128,6 @@ async def send_request_chunk(ctx, data_left: int):
 
 
 async def send_signature(ctx, msg: EthereumSignTx, digest):
-    from trezor.crypto.curve import secp256k1
-    from apps.common import seed
-
     address_n = msg.address_n or ()
     node = await seed.derive_node(ctx, address_n)
 
