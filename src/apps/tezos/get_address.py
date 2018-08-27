@@ -2,7 +2,7 @@ from trezor.crypto import hashlib
 from trezor.messages.TezosAddress import TezosAddress
 
 from apps.common import seed
-from apps.common.display_address import show_address, show_qr
+from apps.common.show import show_address, show_qr
 from apps.tezos.helpers import (
     b58cencode,
     get_address_prefix,
