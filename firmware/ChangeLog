@@ -1,3 +1,8 @@
+Version 1.6.3 [unreleased]
+* Stable release, optional update
+* implement RSKIP-60 Ethereum checksum encoding
+* add support for new Ethereum networks (ESN, AKA, ETHO, MUSI, PIRL, ATH)
+
 Version 1.6.2
 * Stable release, optional update
 * Add possibility to set custom auto-lock delay
