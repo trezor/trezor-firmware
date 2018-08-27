@@ -1,0 +1,69 @@
+{
+    "nem:DIMTOK": {
+        "coinmarketcap_alias": "dimcoin"
+    },
+    "erc20:eth:GNT": {
+        "coinmarketcap_alias": "golem-network-tokens"
+    },
+    "bitcoin:BCH": {
+        "wallet": {
+            "Electron Cash": "https://electroncash.org"
+        }
+    },
+    "bitcoin:BTC": {
+        "wallet": {
+            "Electrum": "https://electrum.org"
+        }
+    },
+    "bitcoin:BTCP": {
+        "wallet": {
+            "BTCP Electrum": "https://github.com/BTCPrivate/electrum-btcp"
+        }
+    },
+    "bitcoin:BTG": {
+        "wallet": {
+            "ElectrumG": "https://github.com/BTCGPU/electrum"
+        }
+    },
+    "bitcoin:DASH": {
+        "wallet": {
+            "Dash Electrum": "https://electrum.dash.org"
+        }
+    },
+    "bitcoin:FJC": {
+        "wallet": {
+            "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
+        }
+    },
+    "bitcoin:GRS": {
+        "wallet": {
+            "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet/"
+        }
+    },
+    "bitcoin:LTC": {
+        "wallet": {
+            "Electrum-LTC": "https://electrum-ltc.org"
+        }
+    },
+    "bitcoin:MONA": {
+        "wallet": {
+            "Electrum-MONA": "https://electrum-mona.org"
+        }
+    },
+    "bitcoin:NMC": {
+        "wallet": {
+            "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
+        }
+    },
+    "bitcoin:VIA": {
+        "wallet": {
+            "Vialectrum": "https://vialectrum.org"
+        }
+    },
+    "bitcoin:XZC": {
+        "wallet": {
+            "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
+            "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"
+        }
+    }
+}

@@ -9,16 +9,17 @@ cache:
     - $HOME/.cache/pip
 
 python:
-    - "3.5"
+    - "3.6"
 
 install:
-    - pip install ed25519 Pillow demjson
-    - pip install --no-deps trezor
+    - pip install demjson
+    - pip install -r tools/requirements.txt
 
 script:
     - jsonlint defs/*.json
     - jsonlint defs/*/*.json
-    - python tools/build_coins.py --defs
+    - python tools/cointool.py check
+    - python tools/support.py check --ignore-tokens --ignore-missing
 
 notifications:
   webhooks:
