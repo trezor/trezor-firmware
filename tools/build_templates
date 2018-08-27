@@ -12,7 +12,7 @@ check_results() {
         TMP=`mktemp`
         TARGET="${filename%%.mako}"
         $RENDER "$filename" -o $TMP
-        if ! diff -q "$TARGET" "$TMP"; then
+        if ! diff -u "$TARGET" "$TMP"; then
             CHECK_FAIL=1
         fi
     done
