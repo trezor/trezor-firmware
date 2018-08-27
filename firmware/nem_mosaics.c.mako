@@ -5,7 +5,7 @@ ATTRIBUTES = (
 	("namespace", c_str),
 	("mosaic", c_str),
 	("divisibility", int),
-	("levy", lambda s: "NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition_NEMMosaicLevy_" + s),
+	("levy", lambda s: "NEMMosaicLevy_" + s),
 	("fee", int),
 	("levy_namespace", c_str),
 	("levy_mosaic", c_str),
@@ -16,7 +16,7 @@ ATTRIBUTES = (
 
 #include "nem_mosaics.h"
 
-const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT] = {
+const NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM_MOSAIC_DEFINITIONS_COUNT] = {
 % for m in supported_on("trezor1", nem):
 {
 	% for attr, func in ATTRIBUTES:
@@ -33,4 +33,4 @@ const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition NEM_MOSAIC_DEFINITIONS[NEM
 % endfor
 };
 
-const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition *NEM_MOSAIC_DEFINITION_XEM = NEM_MOSAIC_DEFINITIONS;
+const NEMMosaicDefinition *NEM_MOSAIC_DEFINITION_XEM = NEM_MOSAIC_DEFINITIONS;

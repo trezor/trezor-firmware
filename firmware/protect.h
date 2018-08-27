@@ -23,7 +23,7 @@
 #include <stdbool.h>
 #include "messages-common.pb.h"
 
-bool protectButton(ButtonRequest_ButtonRequestType type, bool confirm_only);
+bool protectButton(ButtonRequestType type, bool confirm_only);
 bool protectPin(bool use_cached);
 bool protectChangePin(void);
 bool protectPassphrase(void);

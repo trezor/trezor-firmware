@@ -286,7 +286,7 @@ static void render_address_dialog(const CoinInfo *coin, const char *address, con
 	oledRefresh();
 }
 
-void layoutConfirmOutput(const CoinInfo *coin, const TxAck_TransactionType_TxOutputType *out)
+void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out)
 {
 	char str_out[32 + 3];
 	bn_format_uint64(out->amount, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out) - 3);
@@ -718,7 +718,7 @@ void layoutNEMNetworkFee(const char *desc, bool confirm, const char *fee1_desc, 
 		NULL);
 }
 
-void layoutNEMTransferMosaic(const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, uint8_t network) {
+void layoutNEMTransferMosaic(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, uint8_t network) {
 	char str_out[32], str_levy[32];
 
 	nem_mosaicFormatAmount(definition, quantity, multiplier, str_out, sizeof(str_out));
@@ -787,8 +787,8 @@ void layoutNEMMosaicDescription(const char *description) {
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
 
-void layoutNEMLevy(const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition *definition, uint8_t network) {
-	const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition *mosaic;
+void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network) {
+	const NEMMosaicDefinition *mosaic;
 	if (nem_mosaicMatches(definition, definition->levy_namespace, definition->levy_mosaic, network)) {
 		mosaic = definition;
 	} else {
@@ -803,7 +803,7 @@ void layoutNEMLevy(const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition *defini
 	char str_out[32];
 
 	switch (definition->levy) {
-	case NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition_NEMMosaicLevy_MosaicLevy_Percentile:
+	case NEMMosaicLevy_MosaicLevy_Percentile:
 		bn_format_uint64(definition->fee, NULL, NULL, 0, 0, false, str_out, sizeof(str_out));
 
 		layoutDialogSwipe(&bmp_icon_question,
@@ -818,7 +818,7 @@ void layoutNEMLevy(const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition *defini
 			NULL);
 		break;
 
-	case NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition_NEMMosaicLevy_MosaicLevy_Absolute:
+	case NEMMosaicLevy_MosaicLevy_Absolute:
 	default:
 		nem_mosaicFormatAmount(mosaic, definition->fee, NULL, str_out, sizeof(str_out));
 		layoutDialogSwipe(&bmp_icon_question,

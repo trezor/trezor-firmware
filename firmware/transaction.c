@@ -186,22 +186,22 @@ bool compute_address(const CoinInfo *coin,
 	return 1;
 }
 
-int compile_output(const CoinInfo *coin, const HDNode *root, TxAck_TransactionType_TxOutputType *in, TxAck_TransactionType_TxOutputBinType *out, bool needs_confirm)
+int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, TxOutputBinType *out, bool needs_confirm)
 {
-	memset(out, 0, sizeof(TxAck_TransactionType_TxOutputBinType));
+	memset(out, 0, sizeof(TxOutputBinType));
 	out->amount = in->amount;
 	out->decred_script_version = in->decred_script_version;
 	uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
 	size_t addr_raw_len;
 
-	if (in->script_type == TxAck_TransactionType_TxOutputType_OutputScriptType_PAYTOOPRETURN) {
+	if (in->script_type == OutputScriptType_PAYTOOPRETURN) {
 		// only 0 satoshi allowed for OP_RETURN
 		if (in->amount != 0) {
 			return 0; // failed to compile output
 		}
 		if (needs_confirm) {
 			layoutConfirmOpReturn(in->op_return_data.bytes, in->op_return_data.size);
-			if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
 				return -1; // user aborted
 			}
 		}
@@ -218,16 +218,16 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxAck_TransactionTy
 		InputScriptType input_script_type;
 
 		switch (in->script_type) {
-			case TxAck_TransactionType_TxOutputType_OutputScriptType_PAYTOADDRESS:
+			case OutputScriptType_PAYTOADDRESS:
 				input_script_type = InputScriptType_SPENDADDRESS;
 				break;
-			case TxAck_TransactionType_TxOutputType_OutputScriptType_PAYTOMULTISIG:
+			case OutputScriptType_PAYTOMULTISIG:
 				input_script_type = InputScriptType_SPENDMULTISIG;
 				break;
-			case TxAck_TransactionType_TxOutputType_OutputScriptType_PAYTOWITNESS:
+			case OutputScriptType_PAYTOWITNESS:
 				input_script_type = InputScriptType_SPENDWITNESS;
 				break;
-			case TxAck_TransactionType_TxOutputType_OutputScriptType_PAYTOP2SHWITNESS:
+			case OutputScriptType_PAYTOP2SHWITNESS:
 				input_script_type = InputScriptType_SPENDP2SHWITNESS;
 				break;
 			default:
@@ -307,7 +307,7 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxAck_TransactionTy
 
 	if (needs_confirm) {
 		layoutConfirmOutput(coin, in);
-		if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+		if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
 			return -1; // user aborted
 		}
 	}
@@ -420,7 +420,7 @@ uint32_t serialize_script_multisig(const CoinInfo *coin, const MultisigRedeemScr
 
 // tx methods
 
-uint32_t tx_prevout_hash(Hasher *hasher, const TxAck_TransactionType_TxInputType *input)
+uint32_t tx_prevout_hash(Hasher *hasher, const TxInputType *input)
 {
 	for (int i = 0; i < 32; i++) {
 		hasher_Update(hasher, &(input->prev_hash.bytes[31 - i]), 1);
@@ -436,13 +436,13 @@ uint32_t tx_script_hash(Hasher *hasher, uint32_t size, const uint8_t *data)
 	return r + size;
 }
 
-uint32_t tx_sequence_hash(Hasher *hasher, const TxAck_TransactionType_TxInputType *input)
+uint32_t tx_sequence_hash(Hasher *hasher, const TxInputType *input)
 {
 	hasher_Update(hasher, (const uint8_t *)&input->sequence, 4);
 	return 4;
 }
 
-uint32_t tx_output_hash(Hasher *hasher, const TxAck_TransactionType_TxOutputBinType *output, bool decred)
+uint32_t tx_output_hash(Hasher *hasher, const TxOutputBinType *output, bool decred)
 {
 	uint32_t r = 0;
 	hasher_Update(hasher, (const uint8_t *)&output->amount, 8); r += 8;
@@ -497,7 +497,7 @@ uint32_t tx_serialize_header_hash(TxStruct *tx)
 	return r + ser_length_hash(&(tx->hasher), tx->inputs_len);
 }
 
-uint32_t tx_serialize_input(TxStruct *tx, const TxAck_TransactionType_TxInputType *input, uint8_t *out)
+uint32_t tx_serialize_input(TxStruct *tx, const TxInputType *input, uint8_t *out)
 {
 	if (tx->have_inputs >= tx->inputs_len) {
 		// already got all inputs
@@ -526,7 +526,7 @@ uint32_t tx_serialize_input(TxStruct *tx, const TxAck_TransactionType_TxInputTyp
 	return r;
 }
 
-uint32_t tx_serialize_input_hash(TxStruct *tx, const TxAck_TransactionType_TxInputType *input)
+uint32_t tx_serialize_input_hash(TxStruct *tx, const TxInputType *input)
 {
 	if (tx->have_inputs >= tx->inputs_len) {
 		// already got all inputs
@@ -551,7 +551,7 @@ uint32_t tx_serialize_input_hash(TxStruct *tx, const TxAck_TransactionType_TxInp
 	return r;
 }
 
-uint32_t tx_serialize_decred_witness(TxStruct *tx, const TxAck_TransactionType_TxInputType *input, uint8_t *out)
+uint32_t tx_serialize_decred_witness(TxStruct *tx, const TxInputType *input, uint8_t *out)
 {
 	static const uint64_t amount = 0;
 	static const uint32_t block_height = 0x00000000;
@@ -576,7 +576,7 @@ uint32_t tx_serialize_decred_witness(TxStruct *tx, const TxAck_TransactionType_T
 	return r;
 }
 
-uint32_t tx_serialize_decred_witness_hash(TxStruct *tx, const TxAck_TransactionType_TxInputType *input)
+uint32_t tx_serialize_decred_witness_hash(TxStruct *tx, const TxInputType *input)
 {
 	if (tx->have_inputs >= tx->inputs_len) {
 		// already got all inputs
@@ -638,7 +638,7 @@ uint32_t tx_serialize_footer_hash(TxStruct *tx)
 	return 4;
 }
 
-uint32_t tx_serialize_output(TxStruct *tx, const TxAck_TransactionType_TxOutputBinType *output, uint8_t *out)
+uint32_t tx_serialize_output(TxStruct *tx, const TxOutputBinType *output, uint8_t *out)
 {
 	if (tx->have_inputs < tx->inputs_len) {
 		// not all inputs provided
@@ -667,7 +667,7 @@ uint32_t tx_serialize_output(TxStruct *tx, const TxAck_TransactionType_TxOutputB
 	return r;
 }
 
-uint32_t tx_serialize_output_hash(TxStruct *tx, const TxAck_TransactionType_TxOutputBinType *output)
+uint32_t tx_serialize_output_hash(TxStruct *tx, const TxOutputBinType *output)
 {
 	if (tx->have_inputs < tx->inputs_len) {
 		// not all inputs provided
@@ -741,7 +741,7 @@ void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse)
 	}
 }
 
-static uint32_t tx_input_script_size(const TxAck_TransactionType_TxInputType *txinput) {
+static uint32_t tx_input_script_size(const TxInputType *txinput) {
 	uint32_t input_script_size;
 	if (txinput->has_multisig) {
 		uint32_t multisig_script_size = TXSIZE_MULTISIGSCRIPT
@@ -756,7 +756,7 @@ static uint32_t tx_input_script_size(const TxAck_TransactionType_TxInputType *tx
 	return input_script_size;
 }
 
-uint32_t tx_input_weight(const CoinInfo *coin, const TxAck_TransactionType_TxInputType *txinput) {
+uint32_t tx_input_weight(const CoinInfo *coin, const TxInputType *txinput) {
 	if (coin->decred) {
 		return 4 * (TXSIZE_INPUT + 1); // Decred tree
 	}
@@ -780,16 +780,16 @@ uint32_t tx_input_weight(const CoinInfo *coin, const TxAck_TransactionType_TxInp
 	return weight;
 }
 
-uint32_t tx_output_weight(const CoinInfo *coin, const TxAck_TransactionType_TxOutputType *txoutput) {
+uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput) {
 	uint32_t output_script_size = 0;
-	if (txoutput->script_type == TxAck_TransactionType_TxOutputType_OutputScriptType_PAYTOOPRETURN) {
+	if (txoutput->script_type == OutputScriptType_PAYTOOPRETURN) {
 		output_script_size = 1 + op_push_size(txoutput->op_return_data.size)
 			+ txoutput->op_return_data.size;
 	} else if (txoutput->address_n_count > 0) {
-		if (txoutput->script_type == TxAck_TransactionType_TxOutputType_OutputScriptType_PAYTOWITNESS) {
+		if (txoutput->script_type == OutputScriptType_PAYTOWITNESS) {
 			output_script_size = txoutput->has_multisig
 				? TXSIZE_WITNESSSCRIPT : TXSIZE_WITNESSPKHASH;
-		} else if (txoutput->script_type == TxAck_TransactionType_TxOutputType_OutputScriptType_PAYTOP2SHWITNESS) {
+		} else if (txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS) {
 			output_script_size = TXSIZE_P2SCRIPT;
 		} else {
 			output_script_size = txoutput->has_multisig
@@ -832,7 +832,7 @@ uint32_t tx_output_weight(const CoinInfo *coin, const TxAck_TransactionType_TxOu
 	return 4 * (size + output_script_size);
 }
 
-uint32_t tx_decred_witness_weight(const TxAck_TransactionType_TxInputType *txinput) {
+uint32_t tx_decred_witness_weight(const TxInputType *txinput) {
 	uint32_t input_script_size = tx_input_script_size(txinput);
 	uint32_t size = TXSIZE_DECRED_WITNESS + ser_length_size(input_script_size) + input_script_size;
 

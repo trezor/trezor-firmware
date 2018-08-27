@@ -33,11 +33,11 @@
 void fsm_sendSuccess(const char *text);
 
 #if DEBUG_LINK
-void fsm_sendFailureDebug(Failure_FailureType code, const char *text, const char *source);
+void fsm_sendFailureDebug(FailureType code, const char *text, const char *source);
 
 #define fsm_sendFailure(code, text) fsm_sendFailureDebug((code), (text), __FILE__ ":" VERSTR(__LINE__) ":")
 #else
-void fsm_sendFailure(Failure_FailureType code, const char *text);
+void fsm_sendFailure(FailureType code, const char *text);
 #endif
 
 void fsm_msgInitialize(Initialize *msg);
@@ -89,7 +89,6 @@ void fsm_msgCosiSign(CosiSign *msg);
 // Stellar
 /*
 void fsm_msgStellarGetAddress(StellarGetAddress *msg);
-void fsm_msgStellarGetPublicKey(StellarGetPublicKey *msg);
 void fsm_msgStellarSignTx(StellarSignTx *msg);
 void fsm_msgStellarPaymentOp(StellarPaymentOp *msg);
 void fsm_msgStellarCreateAccountOp(StellarCreateAccountOp *msg);

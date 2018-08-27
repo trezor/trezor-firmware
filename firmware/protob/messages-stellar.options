@@ -4,9 +4,6 @@ StellarGetAddress.address_n                             max_count:10
 
 StellarAddress.address                                  max_size:57
 
-StellarGetPublicKey.address_n                           max_count:10
-
-StellarPublicKey.public_key                             max_size:32
 
 StellarSignTx.source_account                            max_size:57
 StellarSignTx.address_n                                 max_count:10

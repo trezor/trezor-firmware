@@ -27,7 +27,7 @@ void fsm_msgStellarGetAddress(StellarGetAddress *msg)
 
     HDNode *node = stellar_deriveNode(msg->address_n, msg->address_n_count);
     if (!node) {
-        fsm_sendFailure(Failure_FailureType_Failure_ProcessError, _("Failed to derive private key"));
+        fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to derive private key"));
         return;
     }
 
@@ -40,8 +40,8 @@ void fsm_msgStellarGetAddress(StellarGetAddress *msg)
             NULL,
             NULL, NULL
             );
-        if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-            fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+        if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+            fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
             layoutHome();
             return;
         }
@@ -55,47 +55,47 @@ void fsm_msgStellarGetAddress(StellarGetAddress *msg)
     layoutHome();
 }
 
-void fsm_msgStellarGetPublicKey(StellarGetPublicKey *msg)
-{
-    RESP_INIT(StellarPublicKey);
+// void fsm_msgStellarGetPublicKey(StellarGetPublicKey *msg)
+// {
+//     RESP_INIT(StellarPublicKey);
 
-    CHECK_INITIALIZED
+//     CHECK_INITIALIZED
 
-    CHECK_PIN
+//     CHECK_PIN
 
-    HDNode *node = stellar_deriveNode(msg->address_n, msg->address_n_count);
-    if (!node) {
-        fsm_sendFailure(Failure_FailureType_Failure_ProcessError, _("Failed to derive private key"));
-        return;
-    }
+//     HDNode *node = stellar_deriveNode(msg->address_n, msg->address_n_count);
+//     if (!node) {
+//         fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to derive private key"));
+//         return;
+//     }
 
-    if (msg->has_show_display && msg->show_display) {
-        char hex[32 * 2 + 1];
-        data2hex(node->public_key + 1, 32, hex);
-        const char **str_pubkey_rows = split_message((const uint8_t *)hex, 32 * 2, 16);
-        layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), _("Share public account ID?"),
-            str_pubkey_rows[0],
-            str_pubkey_rows[1],
-            str_pubkey_rows[2],
-            str_pubkey_rows[3],
-            NULL, NULL
-            );
-        if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-            fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
-            layoutHome();
-            return;
-        }
-    }
+//     if (msg->has_show_display && msg->show_display) {
+//         char hex[32 * 2 + 1];
+//         data2hex(node->public_key + 1, 32, hex);
+//         const char **str_pubkey_rows = split_message((const uint8_t *)hex, 32 * 2, 16);
+//         layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), _("Share public account ID?"),
+//             str_pubkey_rows[0],
+//             str_pubkey_rows[1],
+//             str_pubkey_rows[2],
+//             str_pubkey_rows[3],
+//             NULL, NULL
+//             );
+//         if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+//             fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+//             layoutHome();
+//             return;
+//         }
+//     }
 
-    // Read public key and write it to the response
-    resp->has_public_key = true;
-    resp->public_key.size = 32;
-    memcpy(resp->public_key.bytes, node->public_key + 1, 32);
+//     // Read public key and write it to the response
+//     resp->has_public_key = true;
+//     resp->public_key.size = 32;
+//     memcpy(resp->public_key.bytes, node->public_key + 1, 32);
 
-    msg_write(MessageType_MessageType_StellarPublicKey, resp);
+//     msg_write(MessageType_MessageType_StellarPublicKey, resp);
 
-    layoutHome();
-}
+//     layoutHome();
+// }
 
 void fsm_msgStellarSignTx(StellarSignTx *msg)
 {

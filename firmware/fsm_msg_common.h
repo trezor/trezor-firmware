@@ -80,8 +80,8 @@ void fsm_msgPing(Ping *msg)
 
 	if (msg->has_button_protection && msg->button_protection) {
 		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("answer to ping?"), NULL, NULL, NULL, NULL);
-		if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			layoutHome();
 			return;
 		}
@@ -93,7 +93,7 @@ void fsm_msgPing(Ping *msg)
 
 	if (msg->has_passphrase_protection && msg->passphrase_protection) {
 		if (!protectPassphrase()) {
-			fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			return;
 		}
 	}
@@ -123,8 +123,8 @@ void fsm_msgChangePin(ChangePin *msg)
 			layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("set new PIN?"), NULL, NULL, NULL, NULL);
 		}
 	}
-	if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();
 		return;
 	}
@@ -139,7 +139,7 @@ void fsm_msgChangePin(ChangePin *msg)
 		if (protectChangePin()) {
 			fsm_sendSuccess(_("PIN changed"));
 		} else {
-			fsm_sendFailure(Failure_FailureType_Failure_PinMismatch, NULL);
+			fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
 		}
 	}
 	layoutHome();
@@ -149,8 +149,8 @@ void fsm_msgWipeDevice(WipeDevice *msg)
 {
 	(void)msg;
 	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("wipe the device?"), NULL, _("All data will be lost."), NULL, NULL);
-	if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_WipeDevice, false)) {
-		fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_WipeDevice, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();
 		return;
 	}
@@ -165,8 +165,8 @@ void fsm_msgGetEntropy(GetEntropy *msg)
 {
 #if !DEBUG_RNG
 	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("send entropy?"), NULL, NULL, NULL, NULL);
-	if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();
 		return;
 	}
@@ -187,15 +187,15 @@ void fsm_msgLoadDevice(LoadDevice *msg)
 	CHECK_NOT_INITIALIZED
 
 	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("I take the risk"), NULL, _("Loading private seed"), _("is not recommended."), _("Continue only if you"), _("know what you are"), _("doing!"), NULL);
-	if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();
 		return;
 	}
 
 	if (msg->has_mnemonic && !(msg->has_skip_checksum && msg->skip_checksum) ) {
 		if (!mnemonic_check(msg->mnemonic)) {
-			fsm_sendFailure(Failure_FailureType_Failure_DataError, _("Mnemonic with wrong checksum provided"));
+			fsm_sendFailure(FailureType_Failure_DataError, _("Mnemonic with wrong checksum provided"));
 			layoutHome();
 			return;
 		}
@@ -249,7 +249,7 @@ void fsm_msgCancel(Cancel *msg)
 	recovery_abort();
 	signing_abort();
 	ethereum_signing_abort();
-	fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+	fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 }
 
 void fsm_msgClearSession(ClearSession *msg)
@@ -269,32 +269,32 @@ void fsm_msgApplySettings(ApplySettings *msg)
 
 	if (msg->has_label) {
 		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("change name to"), msg->label, "?", NULL, NULL);
-		if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			layoutHome();
 			return;
 		}
 	}
 	if (msg->has_language) {
 		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("change language to"), msg->language, "?", NULL, NULL);
-		if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			layoutHome();
 			return;
 		}
 	}
 	if (msg->has_use_passphrase) {
 		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), msg->use_passphrase ? _("enable passphrase") : _("disable passphrase"), _("protection?"), NULL, NULL, NULL);
-		if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			layoutHome();
 			return;
 		}
 	}
 	if (msg->has_homescreen) {
 		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("change the home"), _("screen?"), NULL, NULL, NULL);
-		if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			layoutHome();
 			return;
 		}
@@ -302,8 +302,8 @@ void fsm_msgApplySettings(ApplySettings *msg)
 
 	if (msg->has_auto_lock_delay_ms) {
 		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("change auto-lock"), _("delay?"), NULL, NULL, NULL);
-		if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			layoutHome();
 			return;
 		}
@@ -350,8 +350,8 @@ void fsm_msgRecoveryDevice(RecoveryDevice *msg)
 
 	if (!dry_run) {
 		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("recover the device?"), NULL, NULL, NULL, NULL);
-		if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			layoutHome();
 			return;
 		}
@@ -378,8 +378,8 @@ void fsm_msgWordAck(WordAck *msg)
 void fsm_msgSetU2FCounter(SetU2FCounter *msg)
 {
 	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you want to set"), _("the U2F counter?"), NULL, NULL, NULL, NULL);
-	if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();
 		return;
 	}

@@ -38,7 +38,7 @@
 bool protectAbortedByCancel = false;
 bool protectAbortedByInitialize = false;
 
-bool protectButton(ButtonRequest_ButtonRequestType type, bool confirm_only)
+bool protectButton(ButtonRequestType type, bool confirm_only)
 {
 	ButtonRequest resp;
 	bool result = false;
@@ -111,7 +111,7 @@ bool protectButton(ButtonRequest_ButtonRequestType type, bool confirm_only)
 	return result;
 }
 
-const char *requestPin(PinMatrixRequest_PinMatrixRequestType type, const char *text)
+const char *requestPin(PinMatrixRequestType type, const char *text)
 {
 	PinMatrixRequest resp;
 	memset(&resp, 0, sizeof(PinMatrixRequest));
@@ -187,20 +187,20 @@ bool protectPin(bool use_cached)
 			protectAbortedByInitialize = true;
 			msg_tiny_id = 0xFFFF;
 			usbTiny(0);
-			fsm_sendFailure(Failure_FailureType_Failure_PinCancelled, NULL);
+			fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
 			return false;
 		}
 		wait--;
 	}
 	usbTiny(0);
 	const char *pin;
-	pin = requestPin(PinMatrixRequest_PinMatrixRequestType_PinMatrixRequestType_Current, _("Please enter current PIN:"));
+	pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current, _("Please enter current PIN:"));
 	if (!pin) {
-		fsm_sendFailure(Failure_FailureType_Failure_PinCancelled, NULL);
+		fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
 		return false;
 	}
 	if (!storage_increasePinFails(fails)) {
-		fsm_sendFailure(Failure_FailureType_Failure_PinInvalid, NULL);
+		fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
 		return false;
 	}
 	if (storage_containsPin(pin)) {
@@ -209,7 +209,7 @@ bool protectPin(bool use_cached)
 		return true;
 	} else {
 		protectCheckMaxTry(storage_getPinWait(fails));
-		fsm_sendFailure(Failure_FailureType_Failure_PinInvalid, NULL);
+		fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
 		return false;
 	}
 }
@@ -218,7 +218,7 @@ bool protectChangePin(void)
 {
 	static CONFIDENTIAL char pin_compare[17];
 
-	const char *pin = requestPin(PinMatrixRequest_PinMatrixRequestType_PinMatrixRequestType_NewFirst, _("Please enter new PIN:"));
+	const char *pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewFirst, _("Please enter new PIN:"));
 
 	if (!pin) {
 		return false;
@@ -226,7 +226,7 @@ bool protectChangePin(void)
 
 	strlcpy(pin_compare, pin, sizeof(pin_compare));
 
-	pin = requestPin(PinMatrixRequest_PinMatrixRequestType_PinMatrixRequestType_NewSecond, _("Please re-enter new PIN:"));
+	pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewSecond, _("Please re-enter new PIN:"));
 
 	const bool result = pin && (strncmp(pin_compare, pin, sizeof(pin_compare)) == 0);
 

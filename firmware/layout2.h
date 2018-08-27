@@ -43,7 +43,7 @@ void layoutProgressSwipe(const char *desc, int permil);
 
 void layoutScreensaver(void);
 void layoutHome(void);
-void layoutConfirmOutput(const CoinInfo *coin, const TxAck_TransactionType_TxOutputType *out);
+void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out);
 void layoutConfirmOpReturn(const uint8_t *data, uint32_t size);
 void layoutConfirmTx(const CoinInfo *coin, uint64_t amount_out, uint64_t amount_fee);
 void layoutFeeOverThreshold(const CoinInfo *coin, uint64_t fee);
@@ -63,11 +63,11 @@ void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appico
 void layoutNEMDialog(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *address);
 void layoutNEMTransferXEM(const char *desc, uint64_t quantity, const bignum256 *multiplier, uint64_t fee);
 void layoutNEMNetworkFee(const char *desc, bool confirm, const char *fee1_desc, uint64_t fee1, const char *fee2_desc, uint64_t fee2);
-void layoutNEMTransferMosaic(const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, uint8_t network);
+void layoutNEMTransferMosaic(const NEMMosaicDefinition *definition, uint64_t quantity, const bignum256 *multiplier, uint8_t network);
 void layoutNEMTransferUnknownMosaic(const char *namespace, const char *mosaic, uint64_t quantity, const bignum256 *multiplier);
 void layoutNEMTransferPayload(const uint8_t *payload, size_t length, bool encrypted);
 void layoutNEMMosaicDescription(const char *description);
-void layoutNEMLevy(const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition *definition, uint8_t network);
+void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network);
 
 void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count, const uint8_t *data, uint32_t len, bool final_sign);
 

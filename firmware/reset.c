@@ -52,15 +52,15 @@ void reset_init(bool display_random, uint32_t _strength, bool passphrase_protect
 
 	if (display_random) {
 		layoutDialogSwipe(&bmp_icon_info, _("Cancel"), _("Continue"), NULL, _("Internal entropy:"), ent_str[0], ent_str[1], ent_str[2], ent_str[3], NULL);
-		if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ResetDevice, false)) {
-			fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ResetDevice, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			layoutHome();
 			return;
 		}
 	}
 
 	if (pin_protection && !protectChangePin()) {
-		fsm_sendFailure(Failure_FailureType_Failure_PinMismatch, NULL);
+		fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
 		layoutHome();
 		return;
 	}
@@ -80,7 +80,7 @@ void reset_init(bool display_random, uint32_t _strength, bool passphrase_protect
 void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 {
 	if (!awaiting_entropy) {
-		fsm_sendFailure(Failure_FailureType_Failure_UnexpectedMessage, _("Not in Reset mode"));
+		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Not in Reset mode"));
 		return;
 	}
 	SHA256_CTX ctx;
@@ -109,7 +109,7 @@ static char current_word[10];
 void reset_backup(bool separated)
 {
 	if (!storage_needsBackup()) {
-		fsm_sendFailure(Failure_FailureType_Failure_UnexpectedMessage, _("Seed already backed up"));
+		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Seed already backed up"));
 		return;
 	}
 
@@ -136,13 +136,13 @@ void reset_backup(bool separated)
 				i++;
 			}
 			layoutResetWord(current_word, pass, word_pos, mnemonic[i] == 0);
-			if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ConfirmWord, true)) {
+			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmWord, true)) {
 				if (!separated) {
 					storage_clear_update();
 					session_clear(true);
 				}
 				layoutHome();
-				fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+				fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 				return;
 			}
 			word_pos++;

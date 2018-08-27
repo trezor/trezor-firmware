@@ -335,7 +335,7 @@ int cryptoMessageDecrypt(curve_point *nonce, uint8_t *payload, size_t payload_le
 }
 */
 
-uint8_t *cryptoHDNodePathToPubkey(const CoinInfo *coin, const MultisigRedeemScriptType_HDNodePathType *hdnodepath)
+uint8_t *cryptoHDNodePathToPubkey(const CoinInfo *coin, const HDNodePathType *hdnodepath)
 {
 	if (!hdnodepath->node.has_public_key || hdnodepath->node.public_key.size != 33) return 0;
 	static HDNode node;
@@ -365,7 +365,7 @@ int cryptoMultisigPubkeyIndex(const CoinInfo *coin, const MultisigRedeemScriptTy
 
 int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig, uint8_t *hash)
 {
-	static const MultisigRedeemScriptType_HDNodePathType *ptr[15], *swap;
+	static const HDNodePathType *ptr[15], *swap;
 	const uint32_t n = multisig->pubkeys_count;
 	if (n < 1 || n > 15) {
 		return 0;

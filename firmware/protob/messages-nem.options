@@ -8,41 +8,41 @@ NEMDecryptMessage.payload                                                   max_
 
 NEMDecryptedMessage.payload                                                 max_size:1024
 
-NEMSignTx.NEMTransactionCommon.address_n                                    max_count:8
-NEMSignTx.NEMTransactionCommon.signer                                       max_size:32
+NEMTransactionCommon.address_n                                              max_count:8
+NEMTransactionCommon.signer                                                 max_size:32
 
-NEMSignTx.NEMTransfer.recipient                                             max_size:41
-NEMSignTx.NEMTransfer.public_key                                            max_size:32
-NEMSignTx.NEMTransfer.payload                                               max_size:1024
-NEMSignTx.NEMTransfer.mosaics                                               max_count:16
+NEMTransfer.recipient                                                       max_size:41
+NEMTransfer.public_key                                                      max_size:32
+NEMTransfer.payload                                                         max_size:1024
+NEMTransfer.mosaics                                                         max_count:16
 
-NEMSignTx.NEMTransfer.NEMMosaic.namespace                                   max_size:145
-NEMSignTx.NEMTransfer.NEMMosaic.mosaic                                      max_size:33
+NEMMosaic.namespace                                                         max_size:145
+NEMMosaic.mosaic                                                            max_size:33
 
-NEMSignTx.NEMProvisionNamespace.namespace                                   max_size:65
-NEMSignTx.NEMProvisionNamespace.parent                                      max_size:81
-NEMSignTx.NEMProvisionNamespace.sink                                        max_size:41
+NEMProvisionNamespace.namespace                                             max_size:65
+NEMProvisionNamespace.parent                                                max_size:81
+NEMProvisionNamespace.sink                                                  max_size:41
 
-NEMSignTx.NEMMosaicCreation.sink                                            max_size:41
+NEMMosaicCreation.sink                                                      max_size:41
 
-NEMSignTx.NEMMosaicCreation.NEMMosaicDefinition.name                        max_size:32
-NEMSignTx.NEMMosaicCreation.NEMMosaicDefinition.ticker                      max_size:16
-NEMSignTx.NEMMosaicCreation.NEMMosaicDefinition.namespace                   max_size:145
-NEMSignTx.NEMMosaicCreation.NEMMosaicDefinition.mosaic                      max_size:33
-NEMSignTx.NEMMosaicCreation.NEMMosaicDefinition.levy_address                max_size:41
-NEMSignTx.NEMMosaicCreation.NEMMosaicDefinition.levy_namespace              max_size:145
-NEMSignTx.NEMMosaicCreation.NEMMosaicDefinition.levy_mosaic                 max_size:33
-NEMSignTx.NEMMosaicCreation.NEMMosaicDefinition.description                 max_size:513
-NEMSignTx.NEMMosaicCreation.NEMMosaicDefinition.networks                    max_count:8
+NEMMosaicDefinition.name                                                    max_size:32
+NEMMosaicDefinition.ticker                                                  max_size:16
+NEMMosaicDefinition.namespace                                               max_size:145
+NEMMosaicDefinition.mosaic                                                  max_size:33
+NEMMosaicDefinition.levy_address                                            max_size:41
+NEMMosaicDefinition.levy_namespace                                          max_size:145
+NEMMosaicDefinition.levy_mosaic                                             max_size:33
+NEMMosaicDefinition.description                                             max_size:513
+NEMMosaicDefinition.networks                                                max_count:8
 
-NEMSignTx.NEMMosaicSupplyChange.namespace                                   max_size:145
-NEMSignTx.NEMMosaicSupplyChange.mosaic                                      max_size:33
+NEMMosaicSupplyChange.namespace                                             max_size:145
+NEMMosaicSupplyChange.mosaic                                                max_size:33
 
-NEMSignTx.NEMAggregateModification.modifications                            max_count:16
+NEMAggregateModification.modifications                                      max_count:16
 
-NEMSignTx.NEMAggregateModification.NEMCosignatoryModification.public_key    max_size:32
+NEMCosignatoryModification.public_key                                       max_size:32
 
-NEMSignTx.NEMImportanceTransfer.public_key                                  max_size:32
+NEMImportanceTransfer.public_key                                            max_size:32
 
 NEMSignedTx.data                                                            max_size:2048
 NEMSignedTx.signature                                                       max_size:64

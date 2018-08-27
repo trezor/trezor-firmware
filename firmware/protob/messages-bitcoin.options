@@ -23,29 +23,29 @@ VerifyMessage.coin_name                                     max_size:21
 MessageSignature.address                                    max_size:130
 MessageSignature.signature                                  max_size:65
 
-TxAck.TransactionType.inputs                                max_count:1
-TxAck.TransactionType.bin_outputs                           max_count:1
-TxAck.TransactionType.outputs                               max_count:1
-TxAck.TransactionType.extra_data                            max_size:1024
+TransactionType.inputs                                      max_count:1
+TransactionType.bin_outputs                                 max_count:1
+TransactionType.outputs                                     max_count:1
+TransactionType.extra_data                                  max_size:1024
 
-TxAck.TransactionType.TxInputType.address_n                 max_count:8
-TxAck.TransactionType.TxInputType.prev_hash                 max_size:32
-TxAck.TransactionType.TxInputType.script_sig                max_size:1650
-TxAck.TransactionType.TxInputType.prev_block_hash_bip115    max_size:32
+TxInputType.address_n                                       max_count:8
+TxInputType.prev_hash                                       max_size:32
+TxInputType.script_sig                                      max_size:1650
+TxInputType.prev_block_hash_bip115                          max_size:32
 
-TxAck.TransactionType.TxOutputType.address                  max_size:130
-TxAck.TransactionType.TxOutputType.address_n                max_count:8
-TxAck.TransactionType.TxOutputType.op_return_data           max_size:80
-TxAck.TransactionType.TxOutputType.block_hash_bip115        max_size:32
+TxOutputType.address                                        max_size:130
+TxOutputType.address_n                                      max_count:8
+TxOutputType.op_return_data                                 max_size:80
+TxOutputType.block_hash_bip115                              max_size:32
 
-TxAck.TransactionType.TxOutputBinType.script_pubkey         max_size:520
+TxOutputBinType.script_pubkey                               max_size:520
 
-TxRequest.TxRequestDetailsType.tx_hash                      max_size:32
+TxRequestDetailsType.tx_hash                                max_size:32
 
-TxRequest.TxRequestSerializedType.signature                 max_size:73
-TxRequest.TxRequestSerializedType.serialized_tx             max_size:2048
+TxRequestSerializedType.signature                           max_size:73
+TxRequestSerializedType.serialized_tx                       max_size:2048
 
 MultisigRedeemScriptType.pubkeys                            max_count:15
 MultisigRedeemScriptType.signatures                         max_count:15 max_size:73
 
-MultisigRedeemScriptType.HDNodePathType.address_n           max_count:8
+HDNodePathType.address_n           max_count:8

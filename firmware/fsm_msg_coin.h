@@ -39,8 +39,8 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 
 	if (msg->has_show_display && msg->show_display) {
 		layoutPublicKey(node->public_key);
-		if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_PublicKey, true)) {
-			fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			layoutHome();
 			return;
 		}
@@ -184,7 +184,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 		layoutProgress(_("Computing address"), 0);
 	}
 	if (!compute_address(coin, msg->script_type, node, msg->has_multisig, &msg->multisig, address)) {
-		fsm_sendFailure(Failure_FailureType_Failure_DataError, _("Can't encode address"));
+		fsm_sendFailure(FailureType_Failure_DataError, _("Can't encode address"));
 		layoutHome();
 		return;
 	}
@@ -207,8 +207,8 @@ void fsm_msgGetAddress(GetAddress *msg)
 
 		if (mismatch) {
 			layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL, _("Wrong address path"), _("for selected coin."), NULL, _("Continue at your"), _("own risk!"), NULL);
-			if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_Other, false)) {
-				fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+			if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+				fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 				layoutHome();
 				return;
 			}
@@ -235,8 +235,8 @@ void fsm_msgSignMessage(SignMessage *msg)
 	CHECK_INITIALIZED
 
 	layoutSignMessage(msg->message.bytes, msg->message.size);
-	if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();
 		return;
 	}
@@ -253,7 +253,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 		resp->has_address = true;
 		hdnode_fill_public_key(node);
 		if (!compute_address(coin, msg->script_type, node, false, NULL, resp->address)) {
-			fsm_sendFailure(Failure_FailureType_Failure_ProcessError, _("Error computing address"));
+			fsm_sendFailure(FailureType_Failure_ProcessError, _("Error computing address"));
 			layoutHome();
 			return;
 		}
@@ -261,7 +261,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 		resp->signature.size = 65;
 		msg_write(MessageType_MessageType_MessageSignature, resp);
 	} else {
-		fsm_sendFailure(Failure_FailureType_Failure_ProcessError, _("Error signing message"));
+		fsm_sendFailure(FailureType_Failure_ProcessError, _("Error signing message"));
 	}
 	layoutHome();
 }
@@ -276,20 +276,20 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 	layoutProgressSwipe(_("Verifying"), 0);
 	if (msg->signature.size == 65 && cryptoMessageVerify(coin, msg->message.bytes, msg->message.size, msg->address, msg->signature.bytes) == 0) {
 		layoutVerifyAddress(coin, msg->address);
-		if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_Other, false)) {
-			fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			layoutHome();
 			return;
 		}
 		layoutVerifyMessage(msg->message.bytes, msg->message.size);
-		if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_Other, false)) {
-			fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 			layoutHome();
 			return;
 		}
 		fsm_sendSuccess(_("Message verified"));
 	} else {
-		fsm_sendFailure(Failure_FailureType_Failure_DataError, _("Invalid signature"));
+		fsm_sendFailure(FailureType_Failure_DataError, _("Invalid signature"));
 	}
 	layoutHome();
 }
