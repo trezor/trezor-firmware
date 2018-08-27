@@ -16,7 +16,7 @@ from ..layout import (
     require_confirm_text,
 )
 
-from apps.common.show import split_address
+from apps.common.layout import split_address
 
 
 async def ask_multisig(ctx, msg: NEMSignTx):

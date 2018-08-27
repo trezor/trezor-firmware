@@ -4,7 +4,7 @@ from trezor.crypto.curve import ed25519
 from trezor.messages.CardanoMessageSignature import CardanoMessageSignature
 
 from .address import _break_address_n_to_lines, derive_address_and_node
-from .ui import show_swipable_with_confirmation
+from .layout import confirm_with_pagination
 
 from apps.common import seed, storage
 
@@ -22,12 +22,12 @@ async def cardano_sign_message(ctx, msg):
     mnemonic = None
     root_node = None
 
-    if not await show_swipable_with_confirmation(
+    if not await confirm_with_pagination(
         ctx, msg.message, "Signing message", ui.ICON_RECEIVE, ui.GREEN
     ):
         raise wire.ActionCancelled("Signing cancelled")
 
-    if not await show_swipable_with_confirmation(
+    if not await confirm_with_pagination(
         ctx,
         _break_address_n_to_lines(msg.address_n),
         "With address",

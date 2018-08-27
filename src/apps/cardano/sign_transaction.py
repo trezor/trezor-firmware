@@ -7,7 +7,7 @@ from trezor.messages.MessageType import CardanoTxAck
 from trezor.ui.text import BR
 
 from .address import _break_address_n_to_lines, derive_address_and_node
-from .ui import progress, show_swipable_with_confirmation
+from .ui import confirm_with_pagination, progress
 
 from apps.cardano import cbor
 from apps.common import seed, storage
@@ -24,18 +24,18 @@ async def show_tx(
     tx_size: float,
 ) -> bool:
     lines = ("%s ADA" % _micro_ada_to_ada(fee), BR, "Tx size:", "%s bytes" % tx_size)
-    if not await show_swipable_with_confirmation(
+    if not await confirm_with_pagination(
         ctx, lines, "Confirm fee", ui.ICON_SEND, ui.GREEN
     ):
         return False
 
     for index, output in enumerate(outputs):
-        if not await show_swipable_with_confirmation(
+        if not await confirm_with_pagination(
             ctx, output, "Confirm output", ui.ICON_SEND, ui.GREEN
         ):
             return False
 
-        if not await show_swipable_with_confirmation(
+        if not await confirm_with_pagination(
             ctx,
             "%s ADA" % _micro_ada_to_ada(outcoins[index]),
             "Confirm amount",
@@ -45,7 +45,7 @@ async def show_tx(
             return False
 
     for index, change in enumerate(change_derivation_paths):
-        if not await show_swipable_with_confirmation(
+        if not await confirm_with_pagination(
             ctx,
             _break_address_n_to_lines(change),
             "Confirm change",
@@ -54,7 +54,7 @@ async def show_tx(
         ):
             return False
 
-        if not await show_swipable_with_confirmation(
+        if not await confirm_with_pagination(
             ctx,
             "%s ADA" % _micro_ada_to_ada(change_coins[index]),
             "Confirm amount",

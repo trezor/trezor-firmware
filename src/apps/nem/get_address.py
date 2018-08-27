@@ -4,7 +4,7 @@ from .helpers import NEM_CURVE, get_network_str
 from .validators import validate_network
 
 from apps.common import seed
-from apps.common.show import show_address, show_qr
+from apps.common.layout import show_address, show_qr
 
 
 async def get_address(ctx, msg):

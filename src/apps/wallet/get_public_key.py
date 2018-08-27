@@ -1,7 +1,7 @@
 from trezor.messages.HDNodeType import HDNodeType
 from trezor.messages.PublicKey import PublicKey
 
-from apps.common import coins, seed, show
+from apps.common import coins, layout, seed
 
 
 async def get_public_key(ctx, msg):
@@ -26,6 +26,6 @@ async def get_public_key(ctx, msg):
     )
 
     if msg.show_display:
-        await show.show_pubkey(ctx, pubkey)
+        await layout.show_pubkey(ctx, pubkey)
 
     return PublicKey(node=node_type, xpub=node_xpub)

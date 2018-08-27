@@ -6,7 +6,7 @@ from trezor.utils import format_amount
 from . import helpers
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm
-from apps.common.show import split_address
+from apps.common.layout import split_address
 
 
 async def require_confirm_fee(ctx, fee):

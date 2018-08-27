@@ -22,7 +22,7 @@ from ..layout import (
     trim,
 )
 
-from apps.common.show import split_address
+from apps.common.layout import split_address
 
 
 async def ask_mosaic_creation(

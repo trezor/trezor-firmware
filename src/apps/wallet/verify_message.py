@@ -6,7 +6,7 @@ from trezor.ui.text import Text
 
 from apps.common import coins
 from apps.common.confirm import require_confirm
-from apps.common.show import split_address
+from apps.common.layout import split_address
 from apps.common.signverify import message_digest, split_message
 from apps.wallet.sign_tx.addresses import (
     address_p2wpkh,

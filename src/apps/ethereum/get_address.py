@@ -1,4 +1,4 @@
-from apps.common.show import show_address, show_qr
+from apps.common.layout import show_address, show_qr
 from apps.ethereum import networks
 
 

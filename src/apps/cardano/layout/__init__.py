@@ -9,7 +9,7 @@ from trezor.ui.text import Text
 from trezor.utils import chunks
 
 
-async def show_swipable_with_confirmation(
+async def confirm_with_pagination(
     ctx, content, title: str, icon=ui.ICON_RESET, icon_color=ui.ORANGE
 ):
     first_page = const(0)
