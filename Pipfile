@@ -6,11 +6,24 @@ verify_ssl = true
 [packages]
 trezor = {git = "https://github.com/trezor/python-trezor", editable = true, ref = "master"}
 protobuf = "==3.4.0"
+
+# python-trezor tests
 pytest = "*"
 mock = "*"
+
+# make style
 isort = "*"
 flake8 = "*"
 black = "*"
+
+# trezor-common cointool
+click = ">=6"
+"ed25519" = ">=1.4"
+requests = ">=2.19"
+munch = ">=2.3.2"
+termcolor = ">=0.1.2"
+Pillow = ">=5.2.0"
+Mako = ">=1.0.7"
 
 [pipenv]
 allow_prereleases = true

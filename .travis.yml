@@ -51,6 +51,7 @@ before_script:
 
 script:
   - test "$GOAL" != "src" || pipenv run make style
+  - test "$GOAL" != "src" || pipenv run make templates_check
 
   - test "$GOAL" != "stm32" || pipenv run make build_cross
   - test "$GOAL" != "stm32" || pipenv run make build_boardloader
