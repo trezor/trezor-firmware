@@ -61,7 +61,7 @@ message TezosPublicKey {
 message TezosSignTx {
     repeated uint32 address_n = 1;                  // BIP-32 path to derive the key from master node
     optional TezosCurveType curve = 2 [default=Ed25519];  // Curve to use in trezor
-    optional bytes branch = 3;                      // b58 encoded branch with prefix
+    optional bytes branch = 3;
 
     optional TezosRevealOp reveal = 4;              // Tezos reveal operation (may be bundled with other op)
     optional TezosTransactionOp transaction = 5;    // Tezos transaction operation
