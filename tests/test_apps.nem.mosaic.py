@@ -9,7 +9,7 @@ class TestNemMosaic(unittest.TestCase):
 
     def test_get_mosaic_definition(self):
         m = get_mosaic_definition("nem", "xem", 104)
-        self.assertEqual(m["name"], "XEM")
+        self.assertEqual(m["name"], "NEM")
         self.assertEqual(m["ticker"], " XEM")
 
         m = get_mosaic_definition("nem", "xxx", 104)
