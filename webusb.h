@@ -16,35 +16,16 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef USB21_STANDARD_H_INCLUDED
-#define USB21_STANDARD_H_INCLUDED
+#ifndef WEBUSB_H_INCLUDED
+#define WEBUSB_H_INCLUDED
 
 #include <libopencm3/usb/usbd.h>
+#include "webusb_defs.h"
 
-/* USB 3.1 Descriptor Types - Table 9-6 */
-#define USB_DT_BOS						15
-#define USB_DT_DEVICE_CAPABILITY		16
+// Arbitrary
+#define WEBUSB_VENDOR_CODE 0x01
 
-struct usb_device_capability_descriptor {
-	uint8_t bLength;
-	uint8_t bDescriptorType;
-	uint8_t bDevCapabilityType;
-} __attribute__((packed));
-
-struct usb_bos_descriptor {
-	uint8_t bLength;
-	uint8_t bDescriptorType;
-	uint16_t wTotalLength;
-	uint8_t bNumDeviceCaps;
-	/* Descriptor ends here.  The following are used internally: */
-	const struct usb_device_capability_descriptor **capabilities;
-} __attribute__((packed));
-
-#define USB_DT_BOS_SIZE 5
-
-/* USB Device Capability Types - USB 3.1 Table 9-14 */
-#define USB_DC_PLATFORM					5
-
-extern void usb21_setup(usbd_device* usbd_dev, const struct usb_bos_descriptor* binary_object_store);
+extern const struct webusb_platform_descriptor webusb_platform_capability_descriptor;
+extern void webusb_setup(usbd_device* usbd_dev, const char* https_url);
 
 #endif
