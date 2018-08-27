@@ -387,7 +387,7 @@ def mark_duplicate_shortcuts(coins):
         return {k: v for k, v in dups.items() if len(v) > 1}
 
     for coin in coins:
-        symbol, _ = symbol_from_shortcut(coin["shortcut"])
+        symbol, _ = symbol_from_shortcut(coin["shortcut"].lower())
         dup_symbols[symbol].append(coin)
         dup_keys[coin["key"]].append(coin)
 
