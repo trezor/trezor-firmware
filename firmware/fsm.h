@@ -26,7 +26,7 @@
 #include "messages-ethereum.pb.h"
 #include "messages-management.pb.h"
 #include "messages-nem.pb.h"
-// #include "messages-stellar.pb.h"
+#include "messages-stellar.pb.h"
 
 // message functions
 
@@ -87,7 +87,6 @@ void fsm_msgCosiCommit(CosiCommit *msg);
 void fsm_msgCosiSign(CosiSign *msg);
 
 // Stellar
-/*
 void fsm_msgStellarGetAddress(StellarGetAddress *msg);
 void fsm_msgStellarGetPublicKey(StellarGetPublicKey *msg);
 void fsm_msgStellarSignTx(StellarSignTx *msg);
@@ -102,7 +101,6 @@ void fsm_msgStellarAllowTrustOp(StellarAllowTrustOp *msg);
 void fsm_msgStellarAccountMergeOp(StellarAccountMergeOp *msg);
 void fsm_msgStellarManageDataOp(StellarManageDataOp *msg);
 void fsm_msgStellarBumpSequenceOp(StellarBumpSequenceOp *msg);
-*/
 
 // debug message functions
 #if DEBUG_LINK

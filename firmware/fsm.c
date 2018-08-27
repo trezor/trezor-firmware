@@ -56,7 +56,7 @@
 #include "rfc6979.h"
 #include "gettext.h"
 #include "supervise.h"
-// #include "stellar.h"
+#include "stellar.h"
 #include "messages.pb.h"
 
 // message methods
@@ -248,5 +248,5 @@ static bool fsm_layoutAddress(const char *address, const char *desc, bool ignore
 #include "fsm_msg_ethereum.h"
 #include "fsm_msg_crypto.h"
 #include "fsm_msg_nem.h"
-// #include "fsm_msg_stellar.h"
+#include "fsm_msg_stellar.h"
 #include "fsm_msg_debug.h"
