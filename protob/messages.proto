@@ -198,7 +198,9 @@ enum MessageType {
     MessageType_MoneroTransactionSetInputAck = 503 [(wire_out) = true];
     MessageType_MoneroTransactionInputsPermutationAck = 504 [(wire_out) = true];
     MessageType_MoneroTransactionInputViniAck = 505 [(wire_out) = true];
+    MessageType_MoneroTransactionAllInputsSetAck = 513 [(wire_out) = true];
     MessageType_MoneroTransactionSetOutputAck = 506 [(wire_out) = true];
+    MessageType_MoneroTransactionRangeSigAck = 514 [(wire_out) = true];
     MessageType_MoneroTransactionAllOutSetAck = 507 [(wire_out) = true];
     MessageType_MoneroTransactionMlsagDoneAck = 508 [(wire_out) = true];
     MessageType_MoneroTransactionSignInputAck = 509 [(wire_out) = true];

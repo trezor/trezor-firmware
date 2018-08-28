@@ -53,6 +53,24 @@ message MoneroTransactionDestinationEntry {
 }
 
 /**
+ * Range sig parameters / data.
+ */
+message MoneroTransactionRsigData {
+    optional uint32 version = 1;
+    optional uint32 rsig_type = 2;
+    optional uint32 offload_type = 3;
+    repeated uint64 grouping = 4;  // aggregation scheme for BP
+
+    optional uint32 step = 5;
+    optional uint64 operation = 6;
+    optional bytes seed = 7;       // determ. mask seed
+    optional bytes mask = 8;       // mask vector
+    optional bytes amount = 9;     // amount vector
+    optional bytes rsig = 10;       // range sig, full or partial
+    repeated MoneroTransactionDestinationEntry outputs = 11;
+}
+
+/**
  * Request: Ask device for public address derived from seed and address_n
  * @start
  * @next MoneroAddress
@@ -121,7 +139,7 @@ message MoneroTransactionInitRequest {
         optional bool is_multisig = 11;
         optional bytes exp_tx_prefix_hash = 12;
         repeated bytes use_tx_keys = 13;
-        optional bool is_bulletproof = 14;
+        optional MoneroTransactionRsigData rsig_data = 14;
     }
 }
 
@@ -136,6 +154,7 @@ message MoneroTransactionInitAck {
     repeated bytes hmacs = 4;
     optional bool many_inputs = 5;
     optional bool many_outputs = 6;
+    optional MoneroTransactionRsigData rsig_data = 7;
 }
 
 /**
@@ -195,12 +214,29 @@ message MoneroTransactionInputViniAck {
 }
 
 /**
+ * Request: Sub request of MoneroTransactionSign. Sent after all inputs have been sent. Useful for rangeisg offloading.
+ * @next MoneroTransactionAllInputsSetAck
+ */
+message MoneroTransactionAllInputsSetRequest {
+    optional MoneroTransactionRsigData rsig_data = 1;
+}
+
+/**
+ * Response: Response to after all inputs have been set.
+ * @next MoneroTransactionSignRequest
+ */
+message MoneroTransactionAllInputsSetAck {
+    optional MoneroTransactionRsigData rsig_data = 1;
+}
+
+/**
  * Request: Sub request of MoneroTransactionSign. Sends one transaction destination to device (HMACed)
  * @next MoneroTransactionSetOutputAck
  */
 message MoneroTransactionSetOutputRequest {
     optional MoneroTransactionDestinationEntry dst_entr = 1;
     optional bytes dst_entr_hmac = 2;
+    optional MoneroTransactionRsigData rsig_data = 3;
 }
 
 /**
@@ -210,9 +246,25 @@ message MoneroTransactionSetOutputRequest {
 message MoneroTransactionSetOutputAck {
     optional bytes tx_out = 1;  // xmrtypes.TxOut
     optional bytes vouti_hmac = 2;
-    optional bytes rsig = 3;    // byte-encoded range signature
+    optional MoneroTransactionRsigData rsig_data = 3;
     optional bytes out_pk = 4;
     optional bytes ecdh_info = 5;
+}
+
+/**
+ * Request: Sub request of MoneroTransactionSign. Rangesig offloading roundtrips.
+ * @next MoneroTransactionAllInputsSetAck
+ */
+message MoneroTransactionRangeSigRequest {
+    optional MoneroTransactionRsigData rsig_data = 1;
+}
+
+/**
+ * Response: Response to rangesig offloading request
+ * @next MoneroTransactionSignRequest
+ */
+message MoneroTransactionRangeSigAck {
+    optional MoneroTransactionRsigData rsig_data = 1;
 }
 
 /**
@@ -220,6 +272,7 @@ message MoneroTransactionSetOutputAck {
  * @next MoneroTransactionAllOutSetAck
  */
 message MoneroTransactionAllOutSetRequest {
+    optional MoneroTransactionRsigData rsig_data = 1;
 }
 
 /**
@@ -229,7 +282,8 @@ message MoneroTransactionAllOutSetRequest {
 message MoneroTransactionAllOutSetAck {
     optional bytes extra = 1;
     optional bytes tx_prefix_hash = 2;
-    optional MoneroRingCtSig rv = 3;  // xmrtypes.RctSig
+    optional MoneroTransactionRsigData rsig_data = 3;
+    optional MoneroRingCtSig rv = 4;  // xmrtypes.RctSig
     /*
      * Structure represents initial fields of the Monero RCT signature
      */
@@ -302,7 +356,9 @@ message MoneroTransactionFinalAck {
  * @wrap MoneroTransactionSetInputRequest
  * @wrap MoneroTransactionInputsPermutationRequest
  * @wrap MoneroTransactionInputViniRequest
+ * @wrap MoneroTransactionAllInputsSetRequest
  * @wrap MoneroTransactionSetOutputRequest
+ * @wrap MoneroTransactionRangeSigRequest
  * @wrap MoneroTransactionAllOutSetRequest
  * @wrap MoneroTransactionMlsagDoneRequest
  * @wrap MoneroTransactionSignInputRequest
@@ -313,11 +369,13 @@ message MoneroTransactionSignRequest {
     optional MoneroTransactionSetInputRequest set_input = 2;
     optional MoneroTransactionInputsPermutationRequest input_permutation = 3;
     optional MoneroTransactionInputViniRequest input_vini = 4;
-    optional MoneroTransactionSetOutputRequest set_output = 5;
-    optional MoneroTransactionAllOutSetRequest all_out_set = 6;
-    optional MoneroTransactionMlsagDoneRequest mlsag_done = 7;
-    optional MoneroTransactionSignInputRequest sign_input = 8;
-    optional MoneroTransactionFinalRequest final_msg = 9;
+    optional MoneroTransactionAllInputsSetRequest all_in_set = 5;
+    optional MoneroTransactionSetOutputRequest set_output = 6;
+    optional MoneroTransactionRangeSigRequest rsig = 7;
+    optional MoneroTransactionAllOutSetRequest all_out_set = 8;
+    optional MoneroTransactionMlsagDoneRequest mlsag_done = 9;
+    optional MoneroTransactionSignInputRequest sign_input = 10;
+    optional MoneroTransactionFinalRequest final_msg = 11;
 }
 
 /**
