@@ -36,9 +36,3 @@ async def require_confirm_final(ctx, fee: int):
     text.normal("for network fee?")
     # we use SignTx, not ConfirmOutput, for compatibility with T1
     await require_hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
-
-
-def trim(payload: str, length: int) -> str:
-    if len(payload) > length:
-        return payload[:length] + ".."
-    return payload

@@ -133,8 +133,6 @@ async def _require_confirm_transfer(ctx, recipient, value):
 async def _require_confirm_payload(ctx, payload: bytearray, encrypt=False):
     payload = bytes(payload).decode()
 
-    if len(payload) > 48:
-        payload = payload[:48] + ".."
     if encrypt:
         text = Text("Confirm payload", ui.ICON_SEND, icon_color=ui.GREEN)
         text.bold("Encrypted:")
