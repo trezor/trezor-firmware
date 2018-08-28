@@ -194,7 +194,7 @@ def check_btc(coins):
             coin_strings.append(prefix + hl)
         return ", ".join(coin_strings)
 
-    def print_collision_buckets(buckets, prefix):
+    def print_collision_buckets(buckets, prefix, maxlevel=logging.ERROR):
         """Intelligently print collision buckets.
 
         For each bucket, if there are any collision with a mainnet, print it.
@@ -210,7 +210,7 @@ def check_btc(coins):
             for coin in mainnets:
                 if coin["name"] == "Bitcoin":
                     have_bitcoin = True
-                if all(v is None for k,v in support_infos[coin["key"]].items()):
+                if all(v is False for k, v in support_infos[coin["key"]].items()):
                     coin["unsupported"] = True
 
             supported_mainnets = [c for c in mainnets if not c.get("unsupported")]
@@ -219,7 +219,7 @@ def check_btc(coins):
             if len(mainnets) > 1:
                 if have_bitcoin and len(supported_networks) > 1:
                     # ANY collision with Bitcoin is bad
-                    level = logging.ERROR
+                    level = maxlevel
                     failed = True
                 elif len(supported_mainnets) > 1:
                     # collision between supported networks is still pretty bad
@@ -239,7 +239,7 @@ def check_btc(coins):
 
     # only check address_type on coins that don't use cashaddr
     nocashaddr = [coin for coin in coins if not coin.get("cashaddr_prefix")]
-    
+
     print("Checking address_type collisions...")
     address_type = find_address_collisions(nocashaddr, "address_type")
     if print_collision_buckets(address_type, "address type"):
@@ -248,7 +248,7 @@ def check_btc(coins):
     print("Checking address_type_p2sh collisions...")
     address_type_p2sh = find_address_collisions(nocashaddr, "address_type_p2sh")
     # we ignore failed checks on P2SH, because reasons
-    print_collision_buckets(address_type_p2sh, "address type")
+    print_collision_buckets(address_type_p2sh, "address type", logging.WARNING)
 
     return check_passed
 
@@ -263,6 +263,7 @@ def check_dups(buckets, print_at_level=logging.ERROR):
     If the collision includes one non-token, it's INFO.
     If the collision includes more than one non-token, it's ERROR and printed always.
     """
+
     def coin_str(coin):
         """Colorize coins. Tokens are cyan, nontokens are red. Coins that are NOT
         marked duplicate get a green asterisk.

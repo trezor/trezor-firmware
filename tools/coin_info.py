@@ -304,15 +304,18 @@ def support_info_single(support_data, coin):
     dup = coin.get("duplicate")
     for device, values in support_data.items():
         if dup and is_token(coin):
-            support_value = None
+            support_value = False
         elif key in values["unsupported"]:
-            support_value = None
+            support_value = False
         elif key in values["supported"]:
             support_value = values["supported"][key]
         elif device in MISSING_SUPPORT_MEANS_NO:
-            support_value = None
-        else:
+            support_value = False
+        elif is_token(coin):
+            # tokens are implicitly supported in next release
             support_value = "soon"
+        else:
+            support_value = None
         support_info[device] = support_value
     return support_info
 
