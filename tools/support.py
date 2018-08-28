@@ -285,11 +285,12 @@ def check(ignore_tokens, ignore_missing):
 @click.argument("device")
 @click.option("-r", "--version", help="Set explicit version string (default: guess from latest release)")
 @click.option("--git-tag/--no-git-tag", "-g", default=False, help="Create a corresponding Git tag")
-@click.option("--release-soon/--no-release-soon", default=True, help="Release coins marked 'soon'")
 @click.option("--release-missing/--no-release-missing", default=True, help="Release coins with missing support info")
 @click.option("-n", "--dry-run", is_flag=True, help="Do not write changes")
 @click.option("-s", "--soon", is_flag=True, help="Only set missing support-infos to be released 'soon'")
 @click.option("-f", "--force", is_flag=True, help="Proceed even with bad version/device info")
+@click.option("-y", "--add-all", is_flag=True, help="Do not ask for confirmation, add all selected coins")
+@click.option("-v", "--verbose", is_flag=True, help="Be more verbose")
 # fmt: on
 @click.pass_context
 def release(
@@ -297,11 +298,12 @@ def release(
     device: str,
     version,
     git_tag,
-    release_soon,
     release_missing,
     dry_run,
     soon,
     force,
+    add_all,
+    verbose,
 ):
     """Release a new Trezor firmware.
 
@@ -315,6 +317,9 @@ def release(
     `device` can be "1", "2", or a string matching `support.json` key. Version
     is autodetected by downloading a list of latest releases and incrementing
     micro version by one, or you can specify `--version` explicitly.
+
+    Unless `--add-all` is specified, the tool will ask you to confirm each added
+    coin. ERC20 tokens are added automatically. Use `--verbose` to see them.
     """
     # check condition(s)
     if soon and git_tag:
@@ -375,19 +380,18 @@ def release(
     print("Fixing up data...")
     ctx.invoke(fix, dry_run=True)
 
-    # process missing (not listed) supportinfos
-    if release_missing:
-        missing_list = find_unsupported_coins(coins_dict)[device]
-        for coin in missing_list:
-            key = coin["key"]
-            # we should have no unprocessed dup tokens at this point
-            assert not (coin.get("duplicate") and coin_info.is_token(coin))
-            print(f"Adding missing {key} ({coin['name']})")
-            set_supported(device, key, version)
+    def maybe_add(coin, label):
+        add = False
+        if add_all:
+            add = True
+        else:
+            text = f"Add {label} coin {coin['key']} ({coin['name']})?"
+            add = click.confirm(text, default=True)
+        if add:
+            set_supported(device, coin["key"], version)
 
     # if we're releasing, process coins marked "soon"
-    # (`not soon` because `soon` means set release version to "soon")
-    if not soon and release_soon:
+    if not soon:
         supported, _ = support_dicts(device)
         soon_list = [
             coins_dict[key]
@@ -396,8 +400,23 @@ def release(
         ]
         for coin in soon_list:
             key = coin["key"]
-            print(f"Adding soon-released {key} ({coin['name']})")
+            print(f"Releasing {key} ({coin['name']}) marked 'soon'")
             set_supported(device, key, version)
+
+    # process missing (not listed) supportinfos
+    if release_missing:
+        missing_list = find_unsupported_coins(coins_dict)[device]
+        tokens = [coin for coin in missing_list if coin_info.is_token(coin)]
+        nontokens = [coin for coin in missing_list if not coin_info.is_token(coin)]
+        for coin in tokens:
+            key = coin["key"]
+            assert not coin.get("duplicate")
+            if verbose:
+                print(f"Adding missing {key} ({coin['name']})")
+            set_supported(device, key, version)
+
+        for coin in nontokens:
+            maybe_add(coin, "missing")
 
     tagname = f"{device}-{version}"
     if git_tag:
