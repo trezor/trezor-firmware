@@ -50,6 +50,8 @@ def coinmarketcap_init(api_key, refresh=None):
                 api_key,
                 params={"limit": 5000, "convert": "USD"},
             )
+            with open(COINMAKETCAP_CACHE, "w") as f:
+                json.dump(coinmarketcap_data, f)
     except Exception as e:
         raise RuntimeError("market cap data unavailable") from e
 
@@ -61,9 +63,6 @@ def coinmarketcap_init(api_key, refresh=None):
             coin_data[slug] = int(market_cap)
 
     MARKET_CAPS = coin_data
-
-    with open(COINMAKETCAP_CACHE, "w") as f:
-        json.dump(coinmarketcap_data, f)
 
     return coin_data
 
@@ -232,42 +231,45 @@ def check_missing_data(coins):
         hide = False
 
         if "Homepage" not in coin.get("links", {}):
-            print("%s: Missing homepage" % k)
+            level = logging.WARNING
+            if k.startswith("erc20:"):
+                level = logging.INFO
+            LOG.log(level, f"{k}: Missing homepage")
             hide = True
         if coin["t1_enabled"] not in ALLOWED_SUPPORT_STATUS:
-            print("%s: Unknown t1_enabled" % k)
+            LOG.warning(f"{k}: Unknown t1_enabled")
             hide = True
         if coin["t2_enabled"] not in ALLOWED_SUPPORT_STATUS:
-            print("%s: Unknown t2_enabled" % k)
+            LOG.warning(f"{k}: Unknown t2_enabled")
             hide = True
         if (
             "Trezor" in coin.get("wallet", {})
             and coin["wallet"]["Trezor"] != "https://wallet.trezor.io"
         ):
-            print("%s: Strange URL for Trezor Wallet" % k)
+            LOG.warning(f"{k}: Strange URL for Trezor Wallet")
+            hide = True
+
+        if coin["t1_enabled"] == "no" and coin["t2_enabled"] == "no":
+            LOG.info(f"{k}: Coin not enabled on either device")
             hide = True
 
         if len(coin.get("wallet", {})) == 0:
-            print("%s: Missing wallet" % k)
+            LOG.debug(f"{k}: Missing wallet")
 
         if "Testnet" in coin["name"]:
-            print("%s: Hiding testnet" % k)
+            LOG.debug(f"{k}: Hiding testnet")
             hide = True
 
-        if hide:
-            if coin.get("hidden") != 1:
-                print("%s: HIDING COIN!" % k)
-
-            # If any of important detail is missing, hide coin from list
-            coin["hidden"] = 1
-
         if not hide and coin.get("hidden"):
-            print("%s: Details are OK, but coin is still hidden" % k)
+            LOG.info(f"{k}: Details are OK, but coin is still hidden")
+
+        if hide:
+            coin["hidden"] = 1
 
     # summary of hidden coins
     for k, coin in coins.items():
-        if coin.get("hidden") == 1:
-            print("%s: Coin is hidden" % k)
+        if coin.get("hidden"):
+            LOG.debug(f"{k}: Coin is hidden")
 
 
 def apply_overrides(coins):
@@ -293,13 +295,15 @@ def apply_overrides(coins):
 @click.option("-r", "--refresh", "refresh", flag_value=True, help="Force refresh market cap info")
 @click.option("-R", "--no-refresh", "refresh", flag_value=False, help="Force use cached market cap info")
 @click.option("-A", "--api-key", required=True, envvar="COINMARKETCAP_API_KEY", help="Coinmarketcap API key")
+@click.option("-v", "--verbose", is_flag=True, help="Display more info")
 # fmt: on
-def main(refresh, api_key):
+def main(refresh, api_key, verbose):
     # setup logging
+    log_level = logging.DEBUG if verbose else logging.WARNING
     root = logging.getLogger()
-    root.setLevel(logging.DEBUG)
+    root.setLevel(log_level)
     handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel(logging.DEBUG)
+    handler.setLevel(log_level)
     root.addHandler(handler)
 
     coinmarketcap_init(api_key, refresh=refresh)
