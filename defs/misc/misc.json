@@ -2,6 +2,7 @@
     {
         "name": "Lisk",
         "shortcut": "LSK",
+        "slip44": 134,
         "links": {
             "Homepage": "https://lisk.io/"
         }
@@ -9,6 +10,7 @@
     {
         "name": "Stellar",
         "notes": "In development",
+        "slip44": 148,
         "shortcut": "XLM",
         "links": {
             "Homepage": "https://www.stellar.org"
@@ -17,6 +19,7 @@
     {
         "name": "Monero",
         "shortcut": "XMR",
+        "slip44": 128,
         "notes": "In development",
         "links": {
             "Homepage": "https://getmonero.org"
@@ -25,6 +28,7 @@
     {
         "name": "Ripple",
         "shortcut": "XRP",
+        "slip44": 144,
         "notes": "In development",
         "links": {
             "Homepage": "https://ripple.com"
@@ -33,6 +37,7 @@
     {
         "name": "Cardano",
         "shortcut": "ADA",
+        "slip44": 1815,
         "links": {
             "Homepage": "https://www.cardano.org"
         }
@@ -40,6 +45,8 @@
     {
         "name": "Tezos",
         "shortcut": "XTZ",
+        "slip44": 1729,
+        "notes": "In development",
         "links": {
             "Homepage": "https://tezos.com"
         }
@@ -47,6 +54,8 @@
     {
         "name": "Ontology",
         "shortcut": "ONT",
+        "slip44": 1024,
+        "notes": "In development",
         "links": {
             "Homepage": "https://ont.io"
         }
