@@ -1,6 +1,4 @@
-
-List of used BIP-44 derivation paths
-------------------------------------
+# List of used BIP-44 derivation paths
 
 | coin           | curve          | getPublicKey   | getAddress       | sign             | derivation      | note         |
 |----------------|----------------|----------------|------------------|------------------|-----------------|--------------|
@@ -13,9 +11,7 @@ List of used BIP-44 derivation paths
 | NEM            | ed25519        |       -        | 44'/43'/a'/0'/0' | 44'/43'/a'/0'/0' | SLIP-0010         | [5](#NEM)  |
 | Monero         | ed25519        | 44'/128'/a'<sup>[6](#Monero)</sup> | 44'/128'/a'      | 44'/128'/a'      | SLIP-0010         | |
 
-
 ## Notes
-
 
 1. <a name="ETHPublicKey"></a> This should probably be `44'/60'/a'`, but unfortunately MyEtherWallet sends `44'/60'/a'/0`. So for backwards compatibility we allow both options. trezor.wallet.io sends `44'/60'/a'/0` for MEW compatibility.
 
@@ -31,7 +27,4 @@ List of used BIP-44 derivation paths
 
 7. <a name="BitcoinDiagram"></a> With some exceptions. The following diagram shows a path should be validated for Bitcoin-like coins:
 
-![](bitcoin-path-check.svg)
-
-
-
+![bitcoin-path-check](bitcoin-path-check.svg)
