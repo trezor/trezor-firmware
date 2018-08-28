@@ -2,5 +2,7 @@
     "erc20:eth:BTL (Battle)": true,
     "erc20:eth:BTL (Bitlle)": true,
     "erc20:eth:LINK Platform": true,
-    "erc20:eth:NXX": false
+    "erc20:eth:NXX": false,
+    "erc20:eth:Hdp": true,
+    "erc20:eth:Hdp.ф": true
 }
