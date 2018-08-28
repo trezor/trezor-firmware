@@ -819,6 +819,7 @@
       "erc20:rop:NONE": "(AUTO) duplicate key",
       "misc:ADA": "not implemented on T1",
       "misc:LSK": "not implemented on T1",
+      "misc:ONT": "not planned on T1",
       "misc:XMR": "not implemented on T1",
       "misc:XRP": "not implemented on T1",
       "misc:XTZ": "not implemented on T1"
