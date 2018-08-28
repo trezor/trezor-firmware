@@ -19,7 +19,6 @@ from ..layout import (
     require_confirm_fee,
     require_confirm_final,
     require_confirm_text,
-    trim,
 )
 
 from apps.common.layout import split_address
@@ -100,7 +99,7 @@ def _get_mosaic_properties(definition: NEMMosaicDefinition):
     if definition.description:
         t = Text("Confirm properties", ui.ICON_SEND)
         t.bold("Description:")
-        t.normal(*split_words(trim(definition.description, 70), 22))
+        t.normal(*split_words(definition.description, 22))
         properties.append(t)
 
     # transferable
