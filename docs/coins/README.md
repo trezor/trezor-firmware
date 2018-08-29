@@ -1,6 +1,6 @@
 # BIP-44 derivation paths
 
-Each coin uses [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) derivation path scheme. If the coin supports normal derivation we use [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki). If not (because the underlying curve does not support it for example) we're using Stellar's  [SEP-0005](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md). In a nutshell, these paths are derived using [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md) and have only three-part BIP-44 path `44'/c'/a'`.
+Each coin uses [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) derivation path scheme. If the coin is UTXO-based the path should have all five parts, precisely as defined in [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki). If it is account-based we follow Stellar's [SEP-0005](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md) - paths have only three parts `44'/c'/a'`. Unfortunately, lot of exceptions occur due to compatibility reasons.
 
 ## List of used derivation paths
 
@@ -19,11 +19,11 @@ Paths that do not conform to this table are allowed, but user needs to confirm a
 
 ## Notes
 
-1. <a name="Ethereum"></a> We believe we should use `44'/60'/a'` for Ethereum, because it is account-based, rather than UTXO-based. Unfortunately, lot of Ethereum tools (MEW, Metamask) do not use such scheme and set `a = 0` and then iterate the address index `i`. Therefore for compatibility reasons we use the same scheme: `44'/60'/0'/0/i` and only the `i` is being iterated.
+1. <a name="Ethereum"></a> We believe this should be `44'/60'/a'`, because Ethereum is account-based, rather than UTXO-based. Unfortunately, lot of Ethereum tools (MEW, Metamask) do not use such scheme and set `a = 0` and then iterate the address index `i`. Therefore for compatibility reasons we use the same scheme: `44'/60'/0'/0/i` and only the `i` is being iterated.
 
 2. <a name="Ripple"></a> Similar to Ethereum this should be `44'/144'/a'`. But for compatibility with other HW vendors we use `44'/144'/a'/0/0`.
 
-3. <a name="Cardano"></a> Which allows normal derivation on ed25519.
+3. <a name="Cardano"></a> Which allows non-hardened derivation on ed25519.
 
 4. <a name="NEM"></a> NEM's path should be `44'/60'/a'` as per SEP-0005, but we allow `44'/60'/a'/0'/0'` as well for compatibility reasons with NanoWallet.
 
