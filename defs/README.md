@@ -92,7 +92,7 @@ You can use `./tools/cointool.py check -d all` to inspect duplicate detection in
 
 The file [`coins_details.json`](coins_details.json) is a list of all known coins
 with support status, market cap information and relevant links. This is the source
-file for [https://trezor.io/coins].
+file for https://trezor.io/coins.
 
 You should never make changes to `coins_details.json` directly. Use `./tools/coins_details.py`
 to regenerate it from known data.
@@ -110,7 +110,7 @@ External contributors should not touch this file unless asked to.
 
 We keep track of support status of each coin over our devices. That is
 `trezor1` for Trezor One, `trezor2` for Trezor T, `connect` for [Connect](https://github.com/trezor/connect)
-and `webwallet` for [https://wallet.trezor.io/]. In further description, the word "device"
+and `webwallet` for [Trezor Wallet](https://wallet.trezor.io/). In further description, the word "device"
 applies to Connect and webwallet as well.
 
 This information is stored in [`support.json`](support.json).
