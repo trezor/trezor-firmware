@@ -165,11 +165,11 @@ async def protobuf_workflow(ctx, reader, handler, *args):
         await ctx.write(res)
 
 
-def import_workflow(ctx, req, pkgname, modname):
+def import_workflow(ctx, req, pkgname, modname, *args):
     modpath = "%s.%s" % (pkgname, modname)
     module = __import__(modpath, None, None, (modname,), 0)
     handler = getattr(module, modname)
-    return handler(ctx, req)
+    return handler(ctx, req, *args)
 
 
 async def unexpected_msg(ctx, reader):
