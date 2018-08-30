@@ -114,7 +114,7 @@ BTC_CHECKS = [
     check_key("github", str, regex=r"^https://github.com/.*[^/]$"),
     check_key("maintainer", str),
     check_key(
-        "curve_name", str, choice=["secp256k1", "secp256k1_decred", "secp256k1_groestl"]
+        "curve_name", str, choice=["secp256k1", "secp256k1_decred", "secp256k1_groestl", "secp256k1_smart"]
     ),
     check_key("address_type", int),
     check_key("address_type_p2sh", int),

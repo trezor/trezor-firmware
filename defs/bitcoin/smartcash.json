@@ -5,7 +5,7 @@
   "website": "https://smarcash.cc",
   "github": "https://github.com/SmartCash/Core-Smart",
   "maintainer": "Leandro Reinaux <leoreinaux@gmail.com>",
-  "curve_name": "secp256k1",
+  "curve_name": "secp256k1_smart",
   "address_type": 63,
   "address_type_p2sh": 18,
   "maxfee_kb": 1000000,
