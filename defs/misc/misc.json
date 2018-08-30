@@ -59,5 +59,13 @@
         "links": {
             "Homepage": "https://ont.io"
         }
+    },
+    {
+        "name": "Wanchain",
+        "shortcut": "WAN",
+        "slip44": 5718350,
+        "links": {
+            "Homepage": "https://wanchain.org"
+        }
     }
 ]
