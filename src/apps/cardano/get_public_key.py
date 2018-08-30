@@ -10,7 +10,7 @@ from .address import _derive_hd_passphrase, derive_address_and_node
 from apps.common import layout, seed, storage
 
 
-async def cardano_get_public_key(ctx, msg):
+async def get_public_key(ctx, msg):
     mnemonic = storage.get_mnemonic()
     root_node = bip32.from_mnemonic_cardano(mnemonic)
 

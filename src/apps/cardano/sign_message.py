@@ -9,7 +9,7 @@ from .layout import confirm_with_pagination
 from apps.common import seed, storage
 
 
-async def cardano_sign_message(ctx, msg):
+async def sign_message(ctx, msg):
     mnemonic = storage.get_mnemonic()
     root_node = bip32.from_mnemonic_cardano(mnemonic)
 

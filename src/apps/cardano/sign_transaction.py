@@ -71,7 +71,7 @@ async def request_transaction(ctx, tx_req: CardanoTxRequest, index: int):
     return await ctx.call(tx_req, CardanoTxAck)
 
 
-async def cardano_sign_transaction(ctx, msg):
+async def sign_transaction(ctx, msg):
     mnemonic = storage.get_mnemonic()
     root_node = bip32.from_mnemonic_cardano(mnemonic)
 

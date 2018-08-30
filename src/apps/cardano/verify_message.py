@@ -8,7 +8,7 @@ from trezor.messages.Success import Success
 from .layout import confirm_with_pagination
 
 
-async def cardano_verify_message(ctx, msg):
+async def verify_message(ctx, msg):
     try:
         res = _verify_message(msg.public_key, msg.signature, msg.message)
     except ValueError as e:
