@@ -1,8 +1,9 @@
-Version 1.6.3 [unreleased]
-* Stable release, optional update
-* implement RSKIP-60 Ethereum checksum encoding
-* add support for new Ethereum networks (ESN, AKA, ETHO, MUSI, PIRL, ATH, GO)
-* add support for new 80 Ethereum tokens
+Version 1.6.3
+* Stable release, required update
+* Implement RSKIP-60 Ethereum checksum encoding
+* Add support for new Ethereum networks (ESN, AKA, ETHO, MUSI, PIRL, ATH, GO)
+* Add support for new 80 Ethereum tokens
+* Improve MPU configuration
 
 Version 1.6.2
 * Stable release, optional update
