@@ -57,8 +57,11 @@ class TestSignTxFeeThreshold(unittest.TestCase):
 
         messages = [
             None,
+
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
             TxAck(tx=TransactionType(inputs=[inp1])),
+            signing.UiConfirmForeignAddress(address_n=inp1.address_n),
+            True,
             TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=None),
             TxAck(tx=ptx1),
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=None),
@@ -121,8 +124,11 @@ class TestSignTxFeeThreshold(unittest.TestCase):
 
         messages = [
             None,
+
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
             TxAck(tx=TransactionType(inputs=[inp1])),
+            signing.UiConfirmForeignAddress(address_n=inp1.address_n),
+            True,
             TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=None),
             TxAck(tx=ptx1),
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=None),
@@ -151,6 +157,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
         # hack to avoid adding __eq__ to signing.Ui* classes
         if ((isinstance(a, signing.UiConfirmOutput) and isinstance(b, signing.UiConfirmOutput)) or
                 (isinstance(a, signing.UiConfirmTotal) and isinstance(b, signing.UiConfirmTotal)) or
+                (isinstance(a, signing.UiConfirmForeignAddress) and isinstance(b, signing.UiConfirmForeignAddress)) or
                 (isinstance(a, signing.UiConfirmFeeOverThreshold) and isinstance(b, signing.UiConfirmFeeOverThreshold))):
             return self.assertEqual(a.__dict__, b.__dict__)
         else:

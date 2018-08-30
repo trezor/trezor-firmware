@@ -8,12 +8,12 @@ from trezor.utils import chunks, format_amount
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.common.layout import split_address
 from apps.ethereum import networks, tokens
-from apps.ethereum.get_address import _ethereum_address_hex
+from apps.ethereum.address import ethereum_address_hex
 
 
 async def require_confirm_tx(ctx, to, value, chain_id, token=None, tx_type=None):
     if to:
-        to_str = _ethereum_address_hex(to, networks.by_chain_id(chain_id))
+        to_str = ethereum_address_hex(to, networks.by_chain_id(chain_id))
     else:
         to_str = "new contract?"
     text = Text("Confirm sending", ui.ICON_SEND, icon_color=ui.GREEN, new_lines=False)

@@ -39,9 +39,8 @@ class UiConfirmFeeOverThreshold:
 
 
 class UiConfirmForeignAddress:
-    def __init__(self, address_n: list, coin: CoinInfo):
+    def __init__(self, address_n: list):
         self.address_n = address_n
-        self.coin = coin
 
 
 def confirm_output(output: TxOutputType, coin: CoinInfo):
@@ -56,8 +55,8 @@ def confirm_feeoverthreshold(fee: int, coin: CoinInfo):
     return (yield UiConfirmFeeOverThreshold(fee, coin))
 
 
-def confirm_foreign_address(address_n: list, coin: CoinInfo):
-    return (yield UiConfirmForeignAddress(address_n, coin))
+def confirm_foreign_address(address_n: list):
+    return (yield UiConfirmForeignAddress(address_n))
 
 
 def request_tx_meta(tx_req: TxRequest, tx_hash: bytes = None):

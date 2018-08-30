@@ -1,9 +1,10 @@
 from common import *
-from apps.stellar.helpers import address_from_public_key, public_key_from_address
+from apps.common.paths import HARDENED
+from apps.stellar.helpers import address_from_public_key, public_key_from_address, validate_full_path
 from trezor.wire import ProcessError
 
 
-class TestStellarAddressToPubkey(unittest.TestCase):
+class TestStellarAddress(unittest.TestCase):
 
     def test_address_to_pubkey(self):
         self.assertEqual(public_key_from_address('GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V'),
@@ -32,6 +33,32 @@ class TestStellarAddressToPubkey(unittest.TestCase):
     def test_invalid_address(self):
         with self.assertRaises(ProcessError):
             public_key_from_address('GCN2K2HG53AWX2SP5UHRPMJUUHLJF2XBTGSXROTPWRGAYJCDDP63J2AA')  # invalid checksum
+
+    def test_paths(self):
+        # 44'/148'/a' is correct
+        incorrect_paths = [
+            [44 | HARDENED],
+            [44 | HARDENED, 148 | HARDENED],
+            [44 | HARDENED, 148 | HARDENED, 0],
+            [44 | HARDENED, 148 | HARDENED, 0 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 148 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 148 | HARDENED, 0 | HARDENED, 1, 0],
+            [44 | HARDENED, 148 | HARDENED, 0 | HARDENED, 0, 0],
+            [44 | HARDENED, 148 | HARDENED, 9999000 | HARDENED],
+            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 0],
+            [1 | HARDENED, 1 | HARDENED, 1 | HARDENED],
+        ]
+        correct_paths = [
+            [44 | HARDENED, 148 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 148 | HARDENED, 3 | HARDENED],
+            [44 | HARDENED, 148 | HARDENED, 9 | HARDENED],
+        ]
+
+        for path in incorrect_paths:
+            self.assertFalse(validate_full_path(path))
+
+        for path in correct_paths:
+            self.assertTrue(validate_full_path(path))
 
 
 if __name__ == '__main__':

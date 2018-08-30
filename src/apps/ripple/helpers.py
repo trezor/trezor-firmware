@@ -4,6 +4,8 @@ from trezor.crypto.hashlib import ripemd160, sha256
 
 from . import base58_ripple
 
+from apps.common import HARDENED
+
 # HASH_TX_ID = const(0x54584E00)  # 'TXN'
 HASH_TX_SIGN = const(0x53545800)  # 'STX'
 # HASH_TX_SIGN_TESTNET = const(0x73747800)  # 'stx'
@@ -45,3 +47,25 @@ def decode_address(address: str):
     """Returns so called Account ID"""
     adr = base58_ripple.decode_check(address)
     return adr[1:]
+
+
+def validate_full_path(path: list) -> bool:
+    """
+    Validates derivation path to equal 44'/144'/a'/0/0,
+    where `a` is an account index from 0 to 1 000 000.
+    Similar to Ethereum this should be 44'/144'/a', but for
+    compatibility with other HW vendors we use 44'/144'/a'/0/0.
+    """
+    if len(path) != 5:
+        return False
+    if path[0] != 44 | HARDENED:
+        return False
+    if path[1] != 144 | HARDENED:
+        return False
+    if path[2] < HARDENED or path[2] > 1000000 | HARDENED:
+        return False
+    if path[3] != 0:
+        return False
+    if path[4] != 0:
+        return False
+    return True

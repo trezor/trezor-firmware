@@ -1,3 +1,6 @@
+from apps.common import HARDENED
+
+
 async def get_creds(ctx, address_n=None, network_type=None):
     from apps.common import seed
     from apps.monero.xmr import crypto, monero
@@ -19,3 +22,19 @@ async def get_creds(ctx, address_n=None, network_type=None):
 
     creds = AccountCreds.new_wallet(view_sec, spend_sec, network_type)
     return creds
+
+
+def validate_full_path(path: list) -> bool:
+    """
+    Validates derivation path to equal 44'/128'/a',
+    where `a` is an account index from 0 to 1 000 000.
+    """
+    if len(path) != 3:
+        return False
+    if path[0] != 44 | HARDENED:
+        return False
+    if path[1] != 128 | HARDENED:
+        return False
+    if path[2] < HARDENED or path[2] > 1000000 | HARDENED:
+        return False
+    return True

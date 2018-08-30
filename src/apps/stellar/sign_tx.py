@@ -7,7 +7,7 @@ from trezor.messages.StellarSignTx import StellarSignTx
 from trezor.messages.StellarTxOpRequest import StellarTxOpRequest
 from trezor.wire import ProcessError
 
-from apps.common import seed
+from apps.common import paths, seed
 from apps.stellar import consts, helpers, layout, writers
 from apps.stellar.operations import process_operation
 
@@ -15,6 +15,8 @@ from apps.stellar.operations import process_operation
 async def sign_tx(ctx, msg: StellarSignTx):
     if msg.num_operations == 0:
         raise ProcessError("Stellar: At least one operation is required")
+
+    await paths.validate_path(ctx, helpers.validate_full_path, path=msg.address_n)
 
     node = await seed.derive_node(ctx, msg.address_n, consts.STELLAR_CURVE)
     pubkey = seed.remove_ed25519_prefix(node.public_key())

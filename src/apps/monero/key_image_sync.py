@@ -7,6 +7,7 @@ from trezor.messages.MoneroKeyImageExportInitAck import MoneroKeyImageExportInit
 from trezor.messages.MoneroKeyImageSyncFinalAck import MoneroKeyImageSyncFinalAck
 from trezor.messages.MoneroKeyImageSyncStepAck import MoneroKeyImageSyncStepAck
 
+from apps.common import paths
 from apps.monero import misc
 from apps.monero.layout import confirms
 from apps.monero.xmr import crypto, key_image, monero
@@ -46,6 +47,8 @@ class KeyImageSync:
 
 
 async def _init_step(s, ctx, msg):
+    await paths.validate_path(ctx, misc.validate_full_path, path=msg.address_n)
+
     s.creds = await misc.get_creds(ctx, msg.address_n, msg.network_type)
 
     await confirms.require_confirm_keyimage_sync(ctx)

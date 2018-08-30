@@ -3,14 +3,19 @@ from trezor.messages.NEMSignedTx import NEMSignedTx
 from trezor.messages.NEMSignTx import NEMSignTx
 
 from . import mosaic, multisig, namespace, transfer
-from .helpers import NEM_CURVE, NEM_HASH_ALG
+from .helpers import NEM_CURVE, NEM_HASH_ALG, check_path
 from .validators import validate
 
 from apps.common import seed
+from apps.common.paths import validate_path
 
 
 async def sign_tx(ctx, msg: NEMSignTx):
     validate(msg)
+    await validate_path(
+        ctx, check_path, path=msg.transaction.address_n, network=msg.transaction.network
+    )
+
     node = await seed.derive_node(ctx, msg.transaction.address_n, NEM_CURVE)
 
     if msg.multisig:

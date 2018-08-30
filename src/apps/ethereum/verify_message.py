@@ -5,6 +5,9 @@ from trezor.crypto.hashlib import sha3_256
 from trezor.messages.Success import Success
 from trezor.ui.text import Text
 
+from .address import validate_full_path
+
+from apps.common import paths
 from apps.common.confirm import require_confirm
 from apps.common.layout import split_address
 from apps.common.signverify import split_message
@@ -12,6 +15,8 @@ from apps.ethereum.sign_message import message_digest
 
 
 async def verify_message(ctx, msg):
+    await paths.validate_path(ctx, validate_full_path, path=msg.address)
+
     digest = message_digest(msg.message)
     sig = bytearray([msg.signature[64]]) + msg.signature[:64]
     pubkey = secp256k1.verify_recover(sig, digest)

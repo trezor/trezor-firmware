@@ -6,12 +6,13 @@ from trezor.messages.CardanoTxRequest import CardanoTxRequest
 from trezor.messages.MessageType import CardanoTxAck
 from trezor.ui.text import BR
 
-from .address import derive_address_and_node
+from .address import derive_address_and_node, validate_full_path
 from .layout import confirm_with_pagination, progress
 
 from apps.cardano import cbor
 from apps.common import seed, storage
 from apps.common.layout import address_n_to_str, split_address
+from apps.common.paths import validate_path
 from apps.homescreen.homescreen import display_homescreen
 
 
@@ -96,6 +97,9 @@ async def sign_tx(ctx, msg):
 
         # clear progress bar
         display_homescreen()
+
+        for i in msg.inputs:
+            await validate_path(ctx, validate_full_path, path=i.address_n)
 
         # sign the transaction bundle and prepare the result
         transaction = Transaction(

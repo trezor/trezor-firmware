@@ -1,4 +1,3 @@
-from trezor import wire
 from trezor.crypto import base58, crc, hashlib
 
 from . import cbor
@@ -6,14 +5,27 @@ from . import cbor
 from apps.common import HARDENED, seed
 
 
-def validate_derivation_path(path: list):
-    if len(path) < 2 or len(path) > 5:
-        raise wire.ProcessError("Derivation path must be composed from 2-5 indices")
-
-    if path[0] != HARDENED | 44 or path[1] != HARDENED | 1815:
-        raise wire.ProcessError("This is not cardano derivation path")
-
-    return path
+def validate_full_path(path: list) -> bool:
+    """
+    Validates derivation path to fit 44'/1815'/a'/{0,1}/i,
+    where `a` is an account number and i an address index.
+    The max value for `a` is 20, 1 000 000 for `i`.
+    The derivation scheme v1 allowed a'/0/i only,
+    but in v2 it can be a'/1/i as well.
+    """
+    if len(path) != 5:
+        return False
+    if path[0] != 44 | HARDENED:
+        return False
+    if path[1] != 1815 | HARDENED:
+        return False
+    if path[2] < HARDENED or path[2] > 20 | HARDENED:
+        return False
+    if path[3] != 0 and path[3] != 1:
+        return False
+    if path[4] > 1000000:
+        return False
+    return True
 
 
 def _address_hash(data) -> bytes:
@@ -33,8 +45,6 @@ def _get_address_root(node, payload):
 
 
 def derive_address_and_node(root_node, path: list):
-    validate_derivation_path(path)
-
     derived_node = root_node.clone()
 
     address_payload = None

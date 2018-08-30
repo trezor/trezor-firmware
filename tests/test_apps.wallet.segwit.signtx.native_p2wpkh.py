@@ -61,6 +61,9 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
+            signing.UiConfirmForeignAddress(address_n=inp1.address_n),
+            True,
+
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out1])),
 
@@ -156,6 +159,9 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
+            signing.UiConfirmForeignAddress(address_n=inp1.address_n),
+            True,
+
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out1])),
 
@@ -212,7 +218,8 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
     def assertEqualEx(self, a, b):
         # hack to avoid adding __eq__ to signing.Ui* classes
         if ((isinstance(a, signing.UiConfirmOutput) and isinstance(b, signing.UiConfirmOutput)) or
-                (isinstance(a, signing.UiConfirmTotal) and isinstance(b, signing.UiConfirmTotal))):
+                (isinstance(a, signing.UiConfirmTotal) and isinstance(b, signing.UiConfirmTotal)) or
+                (isinstance(a, signing.UiConfirmForeignAddress) and isinstance(b, signing.UiConfirmForeignAddress))):
             return self.assertEqual(a.__dict__, b.__dict__)
         else:
             return self.assertEqual(a, b)

@@ -5,6 +5,8 @@ from trezor.messages import TezosContractType
 from trezor.messages.TezosContractID import TezosContractID
 
 from apps.tezos.sign_tx import _get_address_from_contract
+from apps.tezos.helpers import validate_full_path
+from apps.common.paths import HARDENED
 
 
 class TestTezosAddress(unittest.TestCase):
@@ -37,6 +39,32 @@ class TestTezosAddress(unittest.TestCase):
 
         for i, contract in enumerate(contracts):
             self.assertEqual(_get_address_from_contract(contract), outputs[i])
+
+    def test_paths(self):
+        # 44'/1729'/a' is correct
+        incorrect_paths = [
+            [44 | HARDENED],
+            [44 | HARDENED, 1729 | HARDENED],
+            [44 | HARDENED, 1729 | HARDENED, 0],
+            [44 | HARDENED, 1729 | HARDENED, 0 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 1729 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 1729 | HARDENED, 0 | HARDENED, 1, 0],
+            [44 | HARDENED, 1729 | HARDENED, 0 | HARDENED, 0, 0],
+            [44 | HARDENED, 1729 | HARDENED, 9999000 | HARDENED],
+            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 0],
+            [1 | HARDENED, 1 | HARDENED, 1 | HARDENED],
+        ]
+        correct_paths = [
+            [44 | HARDENED, 1729 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 1729 | HARDENED, 3 | HARDENED],
+            [44 | HARDENED, 1729 | HARDENED, 9 | HARDENED],
+        ]
+
+        for path in incorrect_paths:
+            self.assertFalse(validate_full_path(path))
+
+        for path in correct_paths:
+            self.assertTrue(validate_full_path(path))
 
 
 if __name__ == "__main__":

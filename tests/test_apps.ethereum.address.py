@@ -1,5 +1,6 @@
 from common import *
-from apps.ethereum.get_address import _ethereum_address_hex
+from apps.common.paths import HARDENED
+from apps.ethereum.address import ethereum_address_hex, validate_full_path
 from apps.ethereum.networks import NetworkInfo
 
 
@@ -20,7 +21,7 @@ class TestEthereumGetAddress(unittest.TestCase):
         for s in eip55:
             s = s[2:]
             b = bytes([int(s[i:i + 2], 16) for i in range(0, len(s), 2)])
-            h = _ethereum_address_hex(b)
+            h = ethereum_address_hex(b)
             self.assertEqual(h, '0x' + s)
 
     def test_ethereum_address_hex_rskip60(self):
@@ -41,14 +42,38 @@ class TestEthereumGetAddress(unittest.TestCase):
         for s in rskip60_chain_30:
             s = s[2:]
             b = bytes([int(s[i:i + 2], 16) for i in range(0, len(s), 2)])
-            h = _ethereum_address_hex(b, n)
+            h = ethereum_address_hex(b, n)
             self.assertEqual(h, '0x' + s)
         n.chain_id = 31
         for s in rskip60_chain_31:
             s = s[2:]
             b = bytes([int(s[i:i + 2], 16) for i in range(0, len(s), 2)])
-            h = _ethereum_address_hex(b, n)
+            h = ethereum_address_hex(b, n)
             self.assertEqual(h, '0x' + s)
+
+    def test_paths(self):
+        # 44'/60'/0'/0/i is correct
+        incorrect_paths = [
+            [44 | HARDENED],
+            [44 | HARDENED, 60 | HARDENED],
+            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 0, 0],
+            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 1, 0],
+            [44 | HARDENED, 60 | HARDENED, 1 | HARDENED, 0, 0],
+            [44 | HARDENED, 160 | HARDENED, 0 | HARDENED, 0, 0],
+        ]
+        correct_paths = [
+            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 0],
+            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 9],
+            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 9999],
+        ]
+
+        for path in incorrect_paths:
+            self.assertFalse(validate_full_path(path))
+
+        for path in correct_paths:
+            self.assertTrue(validate_full_path(path))
 
 
 if __name__ == '__main__':

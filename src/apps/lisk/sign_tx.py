@@ -8,12 +8,14 @@ from trezor.messages.LiskSignedTx import LiskSignedTx
 from trezor.utils import HashWriter
 
 from . import layout
-from .helpers import LISK_CURVE, get_address_from_public_key
+from .helpers import LISK_CURVE, get_address_from_public_key, validate_full_path
 
-from apps.common import seed
+from apps.common import paths, seed
 
 
 async def sign_tx(ctx, msg):
+    await paths.validate_path(ctx, validate_full_path, path=msg.address_n)
+
     pubkey, seckey = await _get_keys(ctx, msg)
     transaction = _update_raw_tx(msg.transaction, pubkey)
 
