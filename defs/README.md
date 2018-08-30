@@ -38,7 +38,7 @@ Supported coins that are not derived from Bitcoin, Ethereum or NEM are currently
 and listed in separate file [`misc/misc.json`](misc/misc.json). Each coin must also have
 an icon in `misc/<short>.png`, where `short` is lowercased `shortcut` field from the JSON.
 
-## Keys and Duplicate Detection
+## Keys
 
 Throughout the system, coins are identified by a _key_ - a colon-separated string
 generated from the coin's type and shortcut:
@@ -53,14 +53,18 @@ generated from the coin's type and shortcut:
 If a token shortcut has a suffix, such as `CAT (BlockCat)`, the whole thing is part
 of the key (so the key is `erc20:eth:CAT (BlockCat)`).
 
-Sometimes coins end up with duplicate symbols. Especially in the ERC20 world this is
-common occurence. In such cases, keys are deduplicated by adding a counter at end,
-e.g.: `erc20:eth:SMT:0`, `erc20:eth:SMT:1`. Note that the suffix _is not stable_, so
-these coins can't be reliably uniquely identified.
+Sometimes coins end up with duplicate symbols, which in case of ERC20 tokens leads to
+key collisions. We do not allow duplicate symbols in the data, so this doesn't affect
+everyday use (see below). However, for validation purposes, it is sometimes useful
+to work with unfiltered data that includes the duplicates. In such cases, keys are
+deduplicated by adding a counter at end, e.g.: `erc20:eth:SMT:0`, `erc20:eth:SMT:1`.
+Note that the suffix _is not stable_, so these coins can't be reliably uniquely identified.
 
-This doesn't matter, because **duplicate symbols are not allowed** in our data. Tokens
-that have symbol collisions are removed from the data set before processing. The duplicate
-status is mentioned in `support.json` (see below), but it is impossible to override.
+## Duplicate Detection
+
+**Duplicate symbols are not allowed** in our data. Tokens that have symbol collisions
+are removed from the data set before processing. The duplicate status is mentioned
+in `support.json` (see below), but it is impossible to override from there.
 
 Duplicate detection works as follows:
 
