@@ -33,5 +33,6 @@ extern const ecdsa_curve secp256k1;
 extern const curve_info secp256k1_info;
 extern const curve_info secp256k1_decred_info;
 extern const curve_info secp256k1_groestl_info;
+extern const curve_info secp256k1_smart_info;
 
 #endif
