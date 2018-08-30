@@ -141,7 +141,7 @@
             "marketcap_usd": 0,
             "name": "Denarius",
             "shortcut": "DNR",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "soon",
             "type": "coin",
             "wallet": {}
@@ -184,7 +184,7 @@
             "marketcap_usd": 6483801,
             "name": "Flashcoin",
             "shortcut": "FLASH",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "soon",
             "type": "coin",
             "wallet": {}
@@ -197,7 +197,7 @@
             "marketcap_usd": 11541343,
             "name": "Feathercoin",
             "shortcut": "FTC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "soon",
             "type": "coin",
             "wallet": {}
@@ -225,7 +225,7 @@
             "marketcap_usd": 0,
             "name": "Koto",
             "shortcut": "KOTO",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "soon",
             "type": "coin",
             "wallet": {}
@@ -269,7 +269,7 @@
             "marketcap_usd": 0,
             "name": "MUE",
             "shortcut": "MUE",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "soon",
             "type": "coin",
             "wallet": {}
@@ -297,7 +297,7 @@
             "marketcap_usd": 2522620,
             "name": "Pesetacoin",
             "shortcut": "PTC",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "soon",
             "type": "coin",
             "wallet": {}
@@ -310,7 +310,7 @@
             "marketcap_usd": 41874199,
             "name": "SmartCash",
             "shortcut": "SMART",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "soon",
             "type": "coin",
             "wallet": {}
@@ -352,7 +352,7 @@
             "marketcap_usd": 0,
             "name": "Bitcoin Gold Testnet",
             "shortcut": "TBTG",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "soon",
             "type": "coin",
             "wallet": {}
@@ -453,7 +453,7 @@
             "marketcap_usd": 4399423,
             "name": "Myriad",
             "shortcut": "XMY",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "soon",
             "type": "coin",
             "wallet": {}
@@ -539,7 +539,7 @@
             "marketcap_usd": 0,
             "name": "SmartCash Testnet",
             "shortcut": "tSMART",
-            "t1_enabled": "yes",
+            "t1_enabled": "soon",
             "t2_enabled": "soon",
             "type": "coin",
             "wallet": {}
@@ -13043,11 +13043,11 @@
         }
     },
     "info": {
-        "marketcap_usd": 171555032734,
-        "t1_coins": 698,
+        "marketcap_usd": 171488211348,
+        "t1_coins": 690,
         "t2_coins": 628,
-        "total_marketcap_usd": 222214294535,
-        "updated_at": 1535646827,
-        "updated_at_readable": "Thu Aug 30 18:33:47 2018"
+        "total_marketcap_usd": 221847925234,
+        "updated_at": 1535648346,
+        "updated_at_readable": "Thu Aug 30 18:59:06 2018"
     }
 }
