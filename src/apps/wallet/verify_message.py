@@ -68,6 +68,6 @@ async def require_confirm_verify_message(ctx, address, message):
     text.mono(*split_address(address))
     await require_confirm(ctx, text)
 
-    text = Text("Verify message")
+    text = Text("Verify message", new_lines=False)
     text.normal(*split_message(message))
     await require_confirm(ctx, text)

@@ -47,27 +47,6 @@ def chunks(items, size):
         yield items[i : i + size]
 
 
-def split_words(sentence, width, metric=len):
-    line = []
-    for w in sentence.split(" "):
-        # empty word  -> skip
-        if not w:
-            continue
-        # new word will not fit -> break the line
-        if metric(" ".join(line + [w])) >= width:
-            yield " ".join(line)
-            line = []
-        # word is too wide -> split the word
-        while metric(w) >= width:
-            for i in range(1, len(w) + 1):
-                if metric(w[:-i]) < width:
-                    yield w[:-i] + "-"
-                    w = w[-i:]
-                    break
-        line.append(w)
-    yield " ".join(line)
-
-
 def format_amount(amount, decimals):
     d = pow(10, decimals)
     amount = ("%d.%0*d" % (amount // d, decimals, amount % d)).rstrip("0")

@@ -140,6 +140,9 @@ class Text(ui.LazyWidget):
         self.content.extend(content)
         self.content.append(ui.NORMAL)
 
+    def br(self):
+        self.content.append(BR)
+
     def render(self):
         ui.header(
             self.header_text, self.header_icon, ui.TITLE_GREY, ui.BG, self.icon_color

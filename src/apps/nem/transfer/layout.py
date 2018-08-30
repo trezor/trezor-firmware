@@ -9,7 +9,7 @@ from trezor.messages import (
     NEMTransfer,
 )
 from trezor.ui.text import Text
-from trezor.utils import format_amount, split_words
+from trezor.utils import format_amount
 
 from ..helpers import (
     NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE,
@@ -68,11 +68,9 @@ async def ask_transfer_mosaic(
     else:
         msg = Text("Confirm mosaic", ui.ICON_SEND, icon_color=ui.RED)
         msg.bold("Unknown mosaic!")
-        msg.normal(
-            *split_words(
-                "Divisibility and levy cannot be shown for unknown mosaics", 22
-            )
-        )
+        msg.normal("Divisibility and levy")
+        msg.normal("cannot be shown for")
+        msg.normal("unknown mosaics")
         await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
         msg = Text("Confirm mosaic", ui.ICON_SEND, icon_color=ui.GREEN)
@@ -136,9 +134,9 @@ async def _require_confirm_payload(ctx, payload: bytearray, encrypt=False):
     if encrypt:
         text = Text("Confirm payload", ui.ICON_SEND, icon_color=ui.GREEN)
         text.bold("Encrypted:")
-        text.normal(*split_words(payload, 22))
+        text.normal(*payload.split(" "))
     else:
         text = Text("Confirm payload", ui.ICON_SEND, icon_color=ui.RED)
         text.bold("Unencrypted:")
-        text.normal(*split_words(payload, 22))
+        text.normal(*payload.split(" "))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)

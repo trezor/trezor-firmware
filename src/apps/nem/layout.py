@@ -1,7 +1,7 @@
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
-from trezor.utils import format_amount, split_words
+from trezor.utils import format_amount
 
 from .helpers import NEM_MAX_DIVISIBILITY
 
@@ -9,8 +9,10 @@ from apps.common.confirm import require_confirm, require_hold_to_confirm
 
 
 async def require_confirm_text(ctx, action: str):
-    words = split_words(action, 18)
-    await require_confirm_content(ctx, "Confirm action", words)
+    content = action.split(" ")
+    text = Text("Confirm action", ui.ICON_SEND, icon_color=ui.GREEN, new_lines=False)
+    text.normal(*content)
+    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
 async def require_confirm_fee(ctx, action: str, fee: int):

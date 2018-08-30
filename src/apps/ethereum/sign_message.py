@@ -34,6 +34,6 @@ async def sign_message(ctx, msg):
 
 async def require_confirm_sign_message(ctx, message):
     message = split_message(message)
-    text = Text("Sign ETH message")
+    text = Text("Sign ETH message", new_lines=False)
     text.normal(*message)
     await require_confirm(ctx, text)
