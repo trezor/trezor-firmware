@@ -292,8 +292,8 @@ def apply_overrides(coins):
 
 @click.command()
 # fmt: off
-@click.option("-r", "--refresh", "refresh", flag_value=True, help="Force refresh market cap info")
-@click.option("-R", "--no-refresh", "refresh", flag_value=False, help="Force use cached market cap info")
+@click.option("-r", "--refresh", "refresh", flag_value=True, default=None, help="Force refresh market cap info")
+@click.option("-R", "--no-refresh", "refresh", flag_value=False, default=None, help="Force use cached market cap info")
 @click.option("-A", "--api-key", required=True, envvar="COINMARKETCAP_API_KEY", help="Coinmarketcap API key")
 @click.option("-v", "--verbose", is_flag=True, help="Display more info")
 # fmt: on
