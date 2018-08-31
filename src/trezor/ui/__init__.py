@@ -3,7 +3,7 @@ import utime
 from micropython import const
 from trezorui import Display
 
-from trezor import io, loop, res, workflow, utils
+from trezor import io, loop, res, utils, workflow
 
 display = Display()
 

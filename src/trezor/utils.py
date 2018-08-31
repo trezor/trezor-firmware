@@ -1,7 +1,16 @@
 import gc
 import sys
-from trezorutils import halt, memcpy, set_mode_unprivileged # noqa: F401
-from trezorutils import GITREV, VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, MODEL, EMULATOR    # noqa: F401
+from trezorutils import (  # noqa: F401
+    EMULATOR,
+    GITREV,
+    MODEL,
+    VERSION_MAJOR,
+    VERSION_MINOR,
+    VERSION_PATCH,
+    halt,
+    memcpy,
+    set_mode_unprivileged,
+)
 
 
 def unimport_begin():
