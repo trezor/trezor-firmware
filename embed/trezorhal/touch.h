@@ -22,9 +22,11 @@
 
 #include <stdint.h>
 
-#define TOUCH_START (1U << 24)
-#define TOUCH_MOVE  (2U << 24)
-#define TOUCH_END   (4U << 24)
+#define TOUCH_START     (1U << 24)
+#define TOUCH_MOVE      (1U << 25)
+#define TOUCH_END       (1U << 26)
+#define TOUCH_CONFIRM   (1U << 27)
+#define TOUCH_CANCEL    (1U << 28)
 
 void touch_init(void);
 void touch_power_on(void);

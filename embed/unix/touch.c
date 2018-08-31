@@ -67,11 +67,17 @@ uint32_t touch_read(void)
                 }
                 break;
             case SDL_KEYUP:
-                if (event.key.keysym.sym == SDLK_ESCAPE) {
-                    __shutdown();
-                }
-                if (event.key.keysym.sym == SDLK_p) {
-                    display_save("emu");
+                switch (event.key.keysym.sym) {
+                    case SDLK_ESCAPE:
+                        __shutdown();
+                        break;
+                    case SDLK_p:
+                        display_save("emu");
+                        break;
+                    case SDLK_RIGHT:
+                        return TOUCH_CONFIRM;
+                    case SDLK_LEFT:
+                        return TOUCH_CANCEL;
                 }
                 break;
             case SDL_QUIT:
