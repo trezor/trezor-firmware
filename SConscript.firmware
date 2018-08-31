@@ -324,7 +324,7 @@ env.Replace(
         'vendor/micropython/ports/stm32',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
-        'TREZOR_MODEL_T',
+        ('TREZOR_MODEL', 'T'),
         'STM32F427xx',
         'USE_HAL_DRIVER',
         ('STM32_HAL_H', '"<stm32f4xx.h>"'),

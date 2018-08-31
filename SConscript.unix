@@ -265,8 +265,8 @@ env.Replace(
         'vendor/micropython/lib/mp-readline',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
-        'UNIX',
-        'TREZOR_MODEL_EMU',
+        'TREZOR_EMULATOR',
+        ('TREZOR_MODEL', 'T'),
         'MICROPY_USE_READLINE',
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
     ] + CPPDEFINES_MOD,

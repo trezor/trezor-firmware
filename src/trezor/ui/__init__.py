@@ -3,8 +3,7 @@ import utime
 from micropython import const
 from trezorui import Display
 
-from trezor import io, loop, res, workflow
-from trezor.utils import model
+from trezor import io, loop, res, workflow, utils
 
 display = Display()
 
@@ -18,7 +17,7 @@ if __debug__:
     loop.after_step_hook = debug_display_refresh
 
 # in both debug and production, emulator needs to draw the screen explicitly
-elif model() == "EMU":
+elif utils.symbol("EMULATOR"):
     loop.after_step_hook = display.refresh
 
 # re-export constants from modtrezorui

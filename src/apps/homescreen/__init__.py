@@ -15,9 +15,7 @@ def get_features():
     f.minor_version = utils.symbol("VERSION_MINOR")
     f.patch_version = utils.symbol("VERSION_PATCH")
     f.revision = utils.symbol("GITREV")
-    f.model = utils.model()
-    if f.model == "EMU":
-        f.model = "T"  # emulator currently emulates model T
+    f.model = utils.symbol("MODEL")
     f.device_id = storage.get_device_id()
     f.label = storage.get_label()
     f.initialized = storage.is_initialized()
