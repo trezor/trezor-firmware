@@ -11,11 +11,11 @@ def get_features():
     f = Features()
     f.vendor = "trezor.io"
     f.language = "english"
-    f.major_version = utils.symbol("VERSION_MAJOR")
-    f.minor_version = utils.symbol("VERSION_MINOR")
-    f.patch_version = utils.symbol("VERSION_PATCH")
-    f.revision = utils.symbol("GITREV")
-    f.model = utils.symbol("MODEL")
+    f.major_version = utils.VERSION_MAJOR
+    f.minor_version = utils.VERSION_MINOR
+    f.patch_version = utils.VERSION_PATCH
+    f.revision = utils.GITREV
+    f.model = utils.MODEL
     f.device_id = storage.get_device_id()
     f.label = storage.get_label()
     f.initialized = storage.is_initialized()

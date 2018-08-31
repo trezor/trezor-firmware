@@ -17,7 +17,7 @@ if __debug__:
     loop.after_step_hook = debug_display_refresh
 
 # in both debug and production, emulator needs to draw the screen explicitly
-elif utils.symbol("EMULATOR"):
+elif utils.EMULATOR:
     loop.after_step_hook = display.refresh
 
 # re-export constants from modtrezorui

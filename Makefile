@@ -33,7 +33,7 @@ FIRMWARE_P1_MAXSIZE = 786432
 FIRMWARE_P2_MAXSIZE = 917504
 FIRMWARE_MAXSIZE    = 1703936
 
-GITREV=$(shell git describe --always --dirty)
+GITREV=$(shell git describe --always --dirty | tr '-' '_')
 CFLAGS += -DGITREV=$(GITREV)
 
 ## help commands:

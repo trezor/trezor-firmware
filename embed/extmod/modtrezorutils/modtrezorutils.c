@@ -115,40 +115,8 @@ STATIC mp_obj_t mod_trezorutils_set_mode_unprivileged(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_set_mode_unprivileged_obj, mod_trezorutils_set_mode_unprivileged);
 
-/// def symbol(name: str) -> str/int/None:
-///     '''
-///     Retrieve internal symbol.
-///     '''
-STATIC mp_obj_t mod_trezorutils_symbol(mp_obj_t name) {
-#define XSTR(s) STR(s)
-#define STR(s) #s
-    mp_buffer_info_t str;
-    mp_get_buffer_raise(name, &str, MP_BUFFER_READ);
-    if (0 == strncmp(str.buf, "GITREV", str.len)) {
-        return mp_obj_new_str(XSTR(GITREV), strlen(XSTR(GITREV)));
-    }
-    if (0 == strncmp(str.buf, "VERSION_MAJOR", str.len)) {
-        return mp_obj_new_int(VERSION_MAJOR);
-    }
-    if (0 == strncmp(str.buf, "VERSION_MINOR", str.len)) {
-        return mp_obj_new_int(VERSION_MINOR);
-    }
-    if (0 == strncmp(str.buf, "VERSION_PATCH", str.len)) {
-        return mp_obj_new_int(VERSION_PATCH);
-    }
-    if (0 == strncmp(str.buf, "MODEL", str.len)) {
-        return mp_obj_new_str(XSTR(TREZOR_MODEL), strlen(XSTR(TREZOR_MODEL)));
-    }
-    if (0 == strncmp(str.buf, "EMULATOR", str.len)) {
-#ifdef TREZOR_EMULATOR
-        return mp_const_true;
-#else
-        return mp_const_false;
-#endif
-    }
-    return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_symbol_obj, mod_trezorutils_symbol);
+#define PASTER(s) MP_QSTR_ ## s
+#define MP_QSTR(s) PASTER(s)
 
 STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorutils) },
@@ -156,7 +124,17 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_memcpy), MP_ROM_PTR(&mod_trezorutils_memcpy_obj) },
     { MP_ROM_QSTR(MP_QSTR_halt), MP_ROM_PTR(&mod_trezorutils_halt_obj) },
     { MP_ROM_QSTR(MP_QSTR_set_mode_unprivileged), MP_ROM_PTR(&mod_trezorutils_set_mode_unprivileged_obj) },
-    { MP_ROM_QSTR(MP_QSTR_symbol), MP_ROM_PTR(&mod_trezorutils_symbol_obj) },
+    // various built-in constants
+    { MP_ROM_QSTR(MP_QSTR_GITREV), MP_ROM_QSTR(MP_QSTR(GITREV)) },
+    { MP_ROM_QSTR(MP_QSTR_VERSION_MAJOR), MP_OBJ_NEW_SMALL_INT(VERSION_MAJOR) },
+    { MP_ROM_QSTR(MP_QSTR_VERSION_MINOR), MP_OBJ_NEW_SMALL_INT(VERSION_MINOR) },
+    { MP_ROM_QSTR(MP_QSTR_VERSION_PATCH), MP_OBJ_NEW_SMALL_INT(VERSION_PATCH) },
+    { MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MP_QSTR(TREZOR_MODEL)) },
+#ifdef TREZOR_EMULATOR
+    { MP_ROM_QSTR(MP_QSTR_EMULATOR), mp_const_true },
+#else
+    { MP_ROM_QSTR(MP_QSTR_EMULATOR), mp_const_false },
+#endif
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorutils_globals, mp_module_trezorutils_globals_table);
