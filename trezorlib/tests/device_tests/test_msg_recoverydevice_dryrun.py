@@ -16,21 +16,25 @@
 
 import pytest
 
-from .common import TrezorTest
 from trezorlib import messages as proto
+
+from .common import TrezorTest
 
 
 @pytest.mark.skip_t2
 class TestMsgRecoverydeviceDryrun(TrezorTest):
-
     def recovery_loop(self, mnemonic, result):
-        ret = self.client.call_raw(proto.RecoveryDevice(word_count=12,
-                                   passphrase_protection=False,
-                                   pin_protection=False,
-                                   label='label',
-                                   language='english',
-                                   enforce_wordlist=True,
-                                   dry_run=True))
+        ret = self.client.call_raw(
+            proto.RecoveryDevice(
+                word_count=12,
+                passphrase_protection=False,
+                pin_protection=False,
+                label="label",
+                language="english",
+                enforce_wordlist=True,
+                dry_run=True,
+            )
+        )
 
         fakes = 0
         for _ in range(int(12 * 2)):
@@ -54,15 +58,15 @@ class TestMsgRecoverydeviceDryrun(TrezorTest):
 
     def test_correct_notsame(self):
         self.setup_mnemonic_nopin_nopassphrase()
-        mnemonic = ['all'] * 12
+        mnemonic = ["all"] * 12
         self.recovery_loop(mnemonic, proto.Failure)
 
     def test_correct_same(self):
         self.setup_mnemonic_nopin_nopassphrase()
-        mnemonic = self.mnemonic12.split(' ')
+        mnemonic = self.mnemonic12.split(" ")
         self.recovery_loop(mnemonic, proto.Success)
 
     def test_incorrect(self):
         self.setup_mnemonic_nopin_nopassphrase()
-        mnemonic = ['stick'] * 12
+        mnemonic = ["stick"] * 12
         self.recovery_loop(mnemonic, proto.Failure)

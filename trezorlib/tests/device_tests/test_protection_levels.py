@@ -15,18 +15,20 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from binascii import unhexlify
+
 import pytest
 
+from trezorlib import btc, debuglink, device, messages as proto, misc
+
 from .common import TrezorTest
-from trezorlib import messages as proto
 
-
-TXHASH_d5f65e = unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
+TXHASH_d5f65e = unhexlify(
+    "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
+)
 
 
 @pytest.mark.skip_t2
 class TestProtectionLevels(TrezorTest):
-
     def test_initialize(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
@@ -36,130 +38,156 @@ class TestProtectionLevels(TrezorTest):
     def test_apply_settings(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([
-                proto.PinMatrixRequest(),
-                proto.ButtonRequest(),
-                proto.Success(),
-                proto.Features()
-            ])  # TrezorClient reinitializes device
-            self.client.apply_settings(label='nazdar')
+            self.client.set_expected_responses(
+                [
+                    proto.PinMatrixRequest(),
+                    proto.ButtonRequest(),
+                    proto.Success(),
+                    proto.Features(),
+                ]
+            )  # TrezorClient reinitializes device
+            device.apply_settings(self.client, label="nazdar")
 
     def test_change_pin(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([
-                proto.ButtonRequest(),
-                proto.PinMatrixRequest(),
-                proto.PinMatrixRequest(),
-                proto.PinMatrixRequest(),
-                proto.Success(),
-                proto.Features()
-            ])
-            self.client.change_pin()
+            self.client.set_expected_responses(
+                [
+                    proto.ButtonRequest(),
+                    proto.PinMatrixRequest(),
+                    proto.PinMatrixRequest(),
+                    proto.PinMatrixRequest(),
+                    proto.Success(),
+                    proto.Features(),
+                ]
+            )
+            device.change_pin(self.client)
 
     def test_ping(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([
-                proto.ButtonRequest(),
-                proto.PinMatrixRequest(),
-                proto.PassphraseRequest(),
-                proto.Success()
-            ])
-            self.client.ping('msg', True, True, True)
+            self.client.set_expected_responses(
+                [
+                    proto.ButtonRequest(),
+                    proto.PinMatrixRequest(),
+                    proto.PassphraseRequest(),
+                    proto.Success(),
+                ]
+            )
+            self.client.ping("msg", True, True, True)
 
     def test_get_entropy(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([
-                proto.ButtonRequest(),
-                proto.Entropy()
-            ])
-            self.client.get_entropy(10)
+            self.client.set_expected_responses([proto.ButtonRequest(), proto.Entropy()])
+            misc.get_entropy(self.client, 10)
 
     def test_get_public_key(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([
-                proto.PinMatrixRequest(),
-                proto.PassphraseRequest(),
-                proto.PublicKey()
-            ])
-            self.client.get_public_node([])
+            self.client.set_expected_responses(
+                [proto.PinMatrixRequest(), proto.PassphraseRequest(), proto.PublicKey()]
+            )
+            btc.get_public_node(self.client, [])
 
     def test_get_address(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([
-                proto.PinMatrixRequest(),
-                proto.PassphraseRequest(),
-                proto.Address()
-            ])
-            self.client.get_address('Bitcoin', [])
+            self.client.set_expected_responses(
+                [proto.PinMatrixRequest(), proto.PassphraseRequest(), proto.Address()]
+            )
+            btc.get_address(self.client, "Bitcoin", [])
 
     def test_wipe_device(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([
-                proto.ButtonRequest(),
-                proto.Success(),
-                proto.Features()
-            ])
-            self.client.wipe_device()
+            self.client.set_expected_responses(
+                [proto.ButtonRequest(), proto.Success(), proto.Features()]
+            )
+            device.wipe(self.client)
 
     def test_load_device(self):
         with self.client:
-            self.client.set_expected_responses([proto.ButtonRequest(),
-                                                proto.Success(),
-                                                proto.Features()])
-            self.client.load_device_by_mnemonic('this is mnemonic', '1234', True, 'label', 'english', skip_checksum=True)
+            self.client.set_expected_responses(
+                [proto.ButtonRequest(), proto.Success(), proto.Features()]
+            )
+            debuglink.load_device_by_mnemonic(
+                self.client,
+                "this is mnemonic",
+                "1234",
+                True,
+                "label",
+                "english",
+                skip_checksum=True,
+            )
 
         # This must fail, because device is already initialized
         with pytest.raises(Exception):
-            self.client.load_device_by_mnemonic('this is mnemonic', '1234', True, 'label', 'english', skip_checksum=True)
+            debuglink.load_device_by_mnemonic(
+                self.client,
+                "this is mnemonic",
+                "1234",
+                True,
+                "label",
+                "english",
+                skip_checksum=True,
+            )
 
     def test_reset_device(self):
         with self.client:
-            self.client.set_expected_responses([proto.EntropyRequest()] + [proto.ButtonRequest()] * 24 + [proto.Success(), proto.Features()])
-            self.client.reset_device(False, 128, True, False, 'label', 'english')
+            self.client.set_expected_responses(
+                [proto.EntropyRequest()]
+                + [proto.ButtonRequest()] * 24
+                + [proto.Success(), proto.Features()]
+            )
+            device.reset(self.client, False, 128, True, False, "label", "english")
 
         # This must fail, because device is already initialized
         with pytest.raises(Exception):
-            self.client.reset_device(False, 128, True, False, 'label', 'english')
+            device.reset(self.client, False, 128, True, False, "label", "english")
 
     def test_recovery_device(self):
         with self.client:
             self.client.set_mnemonic(self.mnemonic12)
             self.client.set_expected_responses(
-                [proto.ButtonRequest()] +
-                [proto.WordRequest()] * 24 +
-                [proto.Success(), proto.Features()])
-            self.client.recovery_device(12, False, False, 'label', 'english')
+                [proto.ButtonRequest()]
+                + [proto.WordRequest()] * 24
+                + [proto.Success(), proto.Features()]
+            )
+            device.recover(self.client, 12, False, False, "label", "english")
 
         # This must fail, because device is already initialized
         with pytest.raises(Exception):
-            self.client.recovery_device(12, False, False, 'label', 'english')
+            device.recover(self.client, 12, False, False, "label", "english")
 
     def test_sign_message(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([
-                proto.ButtonRequest(),
-                proto.PinMatrixRequest(),
-                proto.PassphraseRequest(),
-                proto.MessageSignature()
-            ])
-            self.client.sign_message('Bitcoin', [], 'testing message')
+            self.client.set_expected_responses(
+                [
+                    proto.ButtonRequest(),
+                    proto.PinMatrixRequest(),
+                    proto.PassphraseRequest(),
+                    proto.MessageSignature(),
+                ]
+            )
+            btc.sign_message(self.client, "Bitcoin", [], "testing message")
 
     def test_verify_message(self):
         with self.client:
             self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.ButtonRequest(), proto.ButtonRequest(), proto.Success()])
-            self.client.verify_message(
-                'Bitcoin',
-                '14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e',
-                unhexlify('209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80'),
-                'This is an example of a signed message.')
+            self.client.set_expected_responses(
+                [proto.ButtonRequest(), proto.ButtonRequest(), proto.Success()]
+            )
+            btc.verify_message(
+                self.client,
+                "Bitcoin",
+                "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
+                unhexlify(
+                    "209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
+                ),
+                "This is an example of a signed message.",
+            )
 
     def test_signtx(self):
         self.setup_mnemonic_pin_passphrase()
@@ -171,30 +199,65 @@ class TestProtectionLevels(TrezorTest):
         )
 
         out1 = proto.TxOutputType(
-            address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
+            address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
             amount=390000 - 10000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
         with self.client:
 
-            self.client.set_expected_responses([
-                proto.PinMatrixRequest(),
-                proto.PassphraseRequest(),
-                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto.RequestType.TXMETA, details=proto.TxRequestDetailsType(tx_hash=TXHASH_d5f65e)),
-                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_d5f65e)),
-                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=1, tx_hash=TXHASH_d5f65e)),
-                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0, tx_hash=TXHASH_d5f65e)),
-                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                proto.TxRequest(request_type=proto.RequestType.TXINPUT, details=proto.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto.RequestType.TXOUTPUT, details=proto.TxRequestDetailsType(request_index=0)),
-                proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
-            ])
-            self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
+            self.client.set_expected_responses(
+                [
+                    proto.PinMatrixRequest(),
+                    proto.PassphraseRequest(),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXINPUT,
+                        details=proto.TxRequestDetailsType(request_index=0),
+                    ),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXMETA,
+                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_d5f65e),
+                    ),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXINPUT,
+                        details=proto.TxRequestDetailsType(
+                            request_index=0, tx_hash=TXHASH_d5f65e
+                        ),
+                    ),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXINPUT,
+                        details=proto.TxRequestDetailsType(
+                            request_index=1, tx_hash=TXHASH_d5f65e
+                        ),
+                    ),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXOUTPUT,
+                        details=proto.TxRequestDetailsType(
+                            request_index=0, tx_hash=TXHASH_d5f65e
+                        ),
+                    ),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXOUTPUT,
+                        details=proto.TxRequestDetailsType(request_index=0),
+                    ),
+                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXINPUT,
+                        details=proto.TxRequestDetailsType(request_index=0),
+                    ),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXOUTPUT,
+                        details=proto.TxRequestDetailsType(request_index=0),
+                    ),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXOUTPUT,
+                        details=proto.TxRequestDetailsType(request_index=0),
+                    ),
+                    proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
+                ]
+            )
+            btc.sign_tx(self.client, "Bitcoin", [inp1], [out1])
 
     # def test_firmware_erase(self):
     #    pass

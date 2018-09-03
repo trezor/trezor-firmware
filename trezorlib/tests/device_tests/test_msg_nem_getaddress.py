@@ -16,14 +16,21 @@
 
 import pytest
 
-from .common import TrezorTest
+from trezorlib import nem
 from trezorlib.tools import parse_path
+
+from .common import TrezorTest
 
 
 @pytest.mark.nem
 class TestMsgNEMGetaddress(TrezorTest):
-
     def test_nem_getaddress(self):
         self.setup_mnemonic_nopin_nopassphrase()
-        assert self.client.nem_get_address(parse_path("m/44'/1'/0'/0'/0'"), 0x68) == "NB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQGHUBWQN"
-        assert self.client.nem_get_address(parse_path("m/44'/1'/0'/0'/0'"), 0x98) == "TB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQHSBNBMF"
+        assert (
+            nem.get_address(self.client, parse_path("m/44'/1'/0'/0'/0'"), 0x68)
+            == "NB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQGHUBWQN"
+        )
+        assert (
+            nem.get_address(self.client, parse_path("m/44'/1'/0'/0'/0'"), 0x98)
+            == "TB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQHSBNBMF"
+        )

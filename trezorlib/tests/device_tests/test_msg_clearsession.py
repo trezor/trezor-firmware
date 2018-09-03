@@ -16,38 +16,81 @@
 
 import pytest
 
-from .common import TrezorTest
-
 from trezorlib import messages as proto
+
+from .common import TrezorTest
 
 
 @pytest.mark.skip_t2
 class TestMsgClearsession(TrezorTest):
-
     def test_clearsession(self):
         self.setup_mnemonic_pin_passphrase()
 
         with self.client:
-            self.client.set_expected_responses([proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall), proto.PinMatrixRequest(), proto.PassphraseRequest(), proto.Success()])
-            res = self.client.ping('random data', button_protection=True, pin_protection=True, passphrase_protection=True)
-            assert res == 'random data'
+            self.client.set_expected_responses(
+                [
+                    proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
+                    proto.PinMatrixRequest(),
+                    proto.PassphraseRequest(),
+                    proto.Success(),
+                ]
+            )
+            res = self.client.ping(
+                "random data",
+                button_protection=True,
+                pin_protection=True,
+                passphrase_protection=True,
+            )
+            assert res == "random data"
 
         with self.client:
             # pin and passphrase are cached
-            self.client.set_expected_responses([proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall), proto.Success()])
-            res = self.client.ping('random data', button_protection=True, pin_protection=True, passphrase_protection=True)
-            assert res == 'random data'
+            self.client.set_expected_responses(
+                [
+                    proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
+                    proto.Success(),
+                ]
+            )
+            res = self.client.ping(
+                "random data",
+                button_protection=True,
+                pin_protection=True,
+                passphrase_protection=True,
+            )
+            assert res == "random data"
 
         self.client.clear_session()
 
         # session cache is cleared
         with self.client:
-            self.client.set_expected_responses([proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall), proto.PinMatrixRequest(), proto.PassphraseRequest(), proto.Success()])
-            res = self.client.ping('random data', button_protection=True, pin_protection=True, passphrase_protection=True)
-            assert res == 'random data'
+            self.client.set_expected_responses(
+                [
+                    proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
+                    proto.PinMatrixRequest(),
+                    proto.PassphraseRequest(),
+                    proto.Success(),
+                ]
+            )
+            res = self.client.ping(
+                "random data",
+                button_protection=True,
+                pin_protection=True,
+                passphrase_protection=True,
+            )
+            assert res == "random data"
 
         with self.client:
             # pin and passphrase are cached
-            self.client.set_expected_responses([proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall), proto.Success()])
-            res = self.client.ping('random data', button_protection=True, pin_protection=True, passphrase_protection=True)
-            assert res == 'random data'
+            self.client.set_expected_responses(
+                [
+                    proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
+                    proto.Success(),
+                ]
+            )
+            res = self.client.ping(
+                "random data",
+                button_protection=True,
+                pin_protection=True,
+                passphrase_protection=True,
+            )
+            assert res == "random data"

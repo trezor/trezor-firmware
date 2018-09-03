@@ -16,14 +16,13 @@
 
 import pytest
 
-from .common import TrezorTest
-
 from trezorlib import messages as proto
+
+from .common import TrezorTest
 
 
 @pytest.mark.skip_t2
 class TestMsgChangepin(TrezorTest):
-
     def test_set_pin(self):
         self.setup_mnemonic_nopin_nopassphrase()
         features = self.client.call_raw(proto.Initialize())
@@ -206,7 +205,7 @@ class TestMsgChangepin(TrezorTest):
 
         # Send the PIN for second time, but with typo
         assert isinstance(ret, proto.PinMatrixRequest)
-        pin_encoded = self.client.debug.encode_pin(self.pin6 + '3')
+        pin_encoded = self.client.debug.encode_pin(self.pin6 + "3")
         ret = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
 
         # Now it should fail, because pins are different

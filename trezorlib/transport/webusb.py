@@ -14,15 +14,15 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import time
-import os
 import atexit
-import usb1
 import sys
+import time
 
+import usb1
+
+from . import Transport, TransportException
 from ..protocol_v1 import ProtocolV1
 from ..protocol_v2 import ProtocolV2
-from . import Transport, TransportException
 
 DEV_TREZOR1 = (0x534c, 0x0001)
 DEV_TREZOR2 = (0x1209, 0x53c1)
@@ -35,7 +35,6 @@ DEBUG_ENDPOINT = 2
 
 
 class WebUsbHandle:
-
     def __init__(self, device):
         self.device = device
         self.count = 0
@@ -45,11 +44,13 @@ class WebUsbHandle:
         if self.count == 0:
             self.handle = self.device.open()
             if self.handle is None:
-                if sys.platform.startswith('linux'):
-                    args = ('Do you have udev rules installed? https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules', )
+                if sys.platform.startswith("linux"):
+                    args = (
+                        "Do you have udev rules installed? https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules",
+                    )
                 else:
                     args = ()
-                raise IOError('Cannot open device', *args)
+                raise IOError("Cannot open device", *args)
             self.handle.claimInterface(interface)
             self.count += 1
 
@@ -62,11 +63,11 @@ class WebUsbHandle:
 
 
 class WebUsbTransport(Transport):
-    '''
+    """
     WebUsbTransport implements transport over WebUSB interface.
-    '''
+    """
 
-    PATH_PREFIX = 'webusb'
+    PATH_PREFIX = "webusb"
     context = None
 
     def __init__(self, device, protocol=None, handle=None, debug=False):
@@ -128,7 +129,7 @@ class WebUsbTransport(Transport):
             protocol = ProtocolV1()
             debug = WebUsbTransport(self.device, protocol, None, True)
             return debug
-        raise TransportException('Debug WebUSB device not found')
+        raise TransportException("Debug WebUSB device not found")
 
     def open(self):
         interface = DEBUG_INTERFACE if self.debug else INTERFACE
@@ -149,7 +150,7 @@ class WebUsbTransport(Transport):
     def write_chunk(self, chunk):
         endpoint = DEBUG_ENDPOINT if self.debug else ENDPOINT
         if len(chunk) != 64:
-            raise TransportException('Unexpected chunk size: %d' % len(chunk))
+            raise TransportException("Unexpected chunk size: %d" % len(chunk))
         self.handle.handle.interruptWrite(endpoint, chunk)
 
     def read_chunk(self):
@@ -162,7 +163,7 @@ class WebUsbTransport(Transport):
             else:
                 time.sleep(0.001)
         if len(chunk) != 64:
-            raise TransportException('Unexpected chunk size: %d' % len(chunk))
+            raise TransportException("Unexpected chunk size: %d" % len(chunk))
         return bytearray(chunk)
 
 
@@ -181,11 +182,16 @@ def is_trezor2_bl(dev):
 def is_vendor_class(dev):
     configurationId = 0
     altSettingId = 0
-    return dev[configurationId][INTERFACE][altSettingId].getClass() == usb1.libusb1.LIBUSB_CLASS_VENDOR_SPEC
+    return (
+        dev[configurationId][INTERFACE][altSettingId].getClass()
+        == usb1.libusb1.LIBUSB_CLASS_VENDOR_SPEC
+    )
 
 
 def dev_to_str(dev):
-    return ':'.join(str(x) for x in ['%03i' % (dev.getBusNumber(), )] + dev.getPortNumberList())
+    return ":".join(
+        str(x) for x in ["%03i" % (dev.getBusNumber(),)] + dev.getPortNumberList()
+    )
 
 
 TRANSPORT = WebUsbTransport

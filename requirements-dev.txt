@@ -4,3 +4,6 @@ pytest>=3.2.5
 mock>=2.0.0
 flake8
 protobuf
+isort
+black; python_version >= "3.6"
+autoflake

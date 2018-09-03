@@ -14,14 +14,14 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import time
-import hid
-import os
 import sys
+import time
 
+import hid
+
+from . import Transport, TransportException
 from ..protocol_v1 import ProtocolV1
 from ..protocol_v2 import ProtocolV2
-from . import Transport, TransportException
 
 DEV_TREZOR1 = (0x534c, 0x0001)
 DEV_TREZOR2 = (0x1209, 0x53c1)
@@ -29,7 +29,6 @@ DEV_TREZOR2_BL = (0x1209, 0x53c0)
 
 
 class HidHandle:
-
     def __init__(self, path):
         self.path = path
         self.count = 0
@@ -41,8 +40,10 @@ class HidHandle:
             try:
                 self.handle.open_path(self.path)
             except (IOError, OSError) as e:
-                if sys.platform.startswith('linux'):
-                    e.args = e.args + ('Do you have udev rules installed? https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules', )
+                if sys.platform.startswith("linux"):
+                    e.args = e.args + (
+                        "Do you have udev rules installed? https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules",
+                    )
                 raise e
             self.handle.set_nonblocking(True)
         self.count += 1
@@ -55,17 +56,17 @@ class HidHandle:
 
 
 class HidTransport(Transport):
-    '''
+    """
     HidTransport implements transport over USB HID interface.
-    '''
+    """
 
-    PATH_PREFIX = 'hid'
+    PATH_PREFIX = "hid"
 
     def __init__(self, device, protocol=None, hid_handle=None):
         super(HidTransport, self).__init__()
 
         if hid_handle is None:
-            hid_handle = HidHandle(device['path'])
+            hid_handle = HidHandle(device["path"])
 
         if protocol is None:
             # force_v1 = os.environ.get('TREZOR_TRANSPORT_V1', '0')
@@ -82,7 +83,7 @@ class HidTransport(Transport):
         self.hid_version = None
 
     def get_path(self):
-        return "%s:%s" % (self.PATH_PREFIX, self.device['path'].decode())
+        return "%s:%s" % (self.PATH_PREFIX, self.device["path"].decode())
 
     @staticmethod
     def enumerate(debug=False):
@@ -108,9 +109,9 @@ class HidTransport(Transport):
         if isinstance(self.protocol, ProtocolV1):
             # For v1 protocol, find debug USB interface for the same serial number
             for debug in HidTransport.enumerate(debug=True):
-                if debug.device['serial_number'] == self.device['serial_number']:
+                if debug.device["serial_number"] == self.device["serial_number"]:
                     return debug
-        raise TransportException('Debug HID device not found')
+        raise TransportException("Debug HID device not found")
 
     def open(self):
         self.hid.open()
@@ -133,9 +134,9 @@ class HidTransport(Transport):
 
     def write_chunk(self, chunk):
         if len(chunk) != 64:
-            raise TransportException('Unexpected chunk size: %d' % len(chunk))
+            raise TransportException("Unexpected chunk size: %d" % len(chunk))
         if self.hid_version == 2:
-            self.hid.handle.write(b'\0' + bytearray(chunk))
+            self.hid.handle.write(b"\0" + bytearray(chunk))
         else:
             self.hid.handle.write(chunk)
 
@@ -147,7 +148,7 @@ class HidTransport(Transport):
             else:
                 time.sleep(0.001)
         if len(chunk) != 64:
-            raise TransportException('Unexpected chunk size: %d' % len(chunk))
+            raise TransportException("Unexpected chunk size: %d" % len(chunk))
         return bytearray(chunk)
 
     def probe_hid_version(self):
@@ -157,27 +158,27 @@ class HidTransport(Transport):
         n = self.hid.handle.write([63] + [0xFF] * 63)
         if n == 64:
             return 1
-        raise TransportException('Unknown HID version')
+        raise TransportException("Unknown HID version")
 
 
 def is_trezor1(dev):
-    return (dev['vendor_id'], dev['product_id']) == DEV_TREZOR1
+    return (dev["vendor_id"], dev["product_id"]) == DEV_TREZOR1
 
 
 def is_trezor2(dev):
-    return (dev['vendor_id'], dev['product_id']) == DEV_TREZOR2
+    return (dev["vendor_id"], dev["product_id"]) == DEV_TREZOR2
 
 
 def is_trezor2_bl(dev):
-    return (dev['vendor_id'], dev['product_id']) == DEV_TREZOR2_BL
+    return (dev["vendor_id"], dev["product_id"]) == DEV_TREZOR2_BL
 
 
 def is_wirelink(dev):
-    return (dev['usage_page'] == 0xFF00 or dev['interface_number'] == 0)
+    return dev["usage_page"] == 0xFF00 or dev["interface_number"] == 0
 
 
 def is_debuglink(dev):
-    return (dev['usage_page'] == 0xFF01 or dev['interface_number'] == 1)
+    return dev["usage_page"] == 0xFF01 or dev["interface_number"] == 1
 
 
 TRANSPORT = HidTransport

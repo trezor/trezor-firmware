@@ -14,11 +14,14 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from binascii import unhexlify, hexlify
+from binascii import hexlify, unhexlify
+
 import pytest
 
+from trezorlib import ethereum
+from trezorlib.tools import H_
+
 from .common import TrezorTest
-from trezorlib import messages as proto
 
 
 @pytest.mark.ethereum
@@ -202,8 +205,9 @@ class TestMsgEthereumSigntxChainId(TrezorTest):
         self.setup_mnemonic_allallall()
 
         for ci, n, sv, sr, ss, v, gl, d in VECTORS:
-            sig_v, sig_r, sig_s = self.client.ethereum_sign_tx(
-                n=[0x80000000 | 44, 0x80000000 | 1, 0x80000000, 0, 0],
+            sig_v, sig_r, sig_s = ethereum.sign_tx(
+                self.client,
+                n=[H_(44), H_(1), H_(0), 0, 0],
                 nonce=n,
                 gas_price=20000000000,
                 gas_limit=gl,

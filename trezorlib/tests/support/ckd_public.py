@@ -14,18 +14,16 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import struct
-import hmac
 import hashlib
-import sys
+import hmac
+import struct
 
 import ecdsa
-from ecdsa.util import string_to_number, number_to_string
 from ecdsa.curves import SECP256k1
-from ecdsa.ellipticcurve import Point, INFINITY
+from ecdsa.ellipticcurve import INFINITY, Point
+from ecdsa.util import number_to_string, string_to_number
 
-from trezorlib import tools
-from trezorlib import messages
+from trezorlib import messages, tools
 
 
 def point_to_pubkey(point):
@@ -33,14 +31,14 @@ def point_to_pubkey(point):
     x_str = number_to_string(point.x(), order)
     y_str = number_to_string(point.y(), order)
     vk = x_str + y_str
-    return struct.pack('B', (vk[63] & 1) + 2) + vk[0:32]  # To compressed key
+    return struct.pack("B", (vk[63] & 1) + 2) + vk[0:32]  # To compressed key
 
 
 def sec_to_public_pair(pubkey):
     """Convert a public key in sec binary format to a public pair."""
     x = string_to_number(pubkey[1:33])
     sec0 = pubkey[:1]
-    if sec0 not in (b'\2', b'\3'):
+    if sec0 not in (b"\2", b"\3"):
         raise ValueError("Compressed pubkey expected")
 
     def public_pair_for_x(generator, x, is_even):
@@ -52,7 +50,9 @@ def sec_to_public_pair(pubkey):
             return (x, p - beta)
         return (x, beta)
 
-    return public_pair_for_x(ecdsa.ecdsa.generator_secp256k1, x, is_even=(sec0 == b'\2'))
+    return public_pair_for_x(
+        ecdsa.ecdsa.generator_secp256k1, x, is_even=(sec0 == b"\2")
+    )
 
 
 def is_prime(n):
@@ -69,7 +69,7 @@ def get_address(public_node, address_type):
 
 def public_ckd(public_node, n):
     if not isinstance(n, list):
-        raise ValueError('Parameter must be a list')
+        raise ValueError("Parameter must be a list")
 
     node = messages.HDNodeType()
     node.CopyFrom(public_node)
@@ -101,7 +101,9 @@ def get_subnode(node, i):
 
     # BIP32 magic converts old public key to new public point
     x, y = sec_to_public_pair(node.public_key)
-    point = I_left_as_exponent * SECP256k1.generator + Point(SECP256k1.curve, x, y, SECP256k1.order)
+    point = I_left_as_exponent * SECP256k1.generator + Point(
+        SECP256k1.curve, x, y, SECP256k1.order
+    )
 
     if point == INFINITY:
         raise ValueError("Point cannot be INFINITY")
@@ -113,14 +115,14 @@ def get_subnode(node, i):
 
 
 def serialize(node, version=0x0488B21E):
-    s = b''
-    s += struct.pack('>I', version)
-    s += struct.pack('>B', node.depth)
-    s += struct.pack('>I', node.fingerprint)
-    s += struct.pack('>I', node.child_num)
+    s = b""
+    s += struct.pack(">I", version)
+    s += struct.pack(">B", node.depth)
+    s += struct.pack(">I", node.fingerprint)
+    s += struct.pack(">I", node.child_num)
     s += node.chain_code
     if node.private_key:
-        s += b'\x00' + node.private_key
+        s += b"\x00" + node.private_key
     else:
         s += node.public_key
     s += tools.btc_hash(s)[:4]
@@ -134,9 +136,9 @@ def deserialize(xpub):
         raise ValueError("Checksum failed")
 
     node = messages.HDNodeType()
-    node.depth = struct.unpack('>B', data[4:5])[0]
-    node.fingerprint = struct.unpack('>I', data[5:9])[0]
-    node.child_num = struct.unpack('>I', data[9:13])[0]
+    node.depth = struct.unpack(">B", data[4:5])[0]
+    node.fingerprint = struct.unpack(">I", data[5:9])[0]
+    node.child_num = struct.unpack(">I", data[9:13])[0]
     node.chain_code = data[13:45]
 
     key = data[45:-4]

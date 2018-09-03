@@ -14,12 +14,12 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import os.path
 import json
+import os.path
 
 from .tx_api import TxApiInsight
 
-COINS_JSON = os.path.join(os.path.dirname(__file__), 'coins.json')
+COINS_JSON = os.path.join(os.path.dirname(__file__), "coins.json")
 
 
 def _load_coins_json():
@@ -35,24 +35,26 @@ def _load_coins_json():
 
 
 def _insight_for_coin(coin):
-    url = next(iter(coin['blockbook'] + coin['bitcore']), None)
+    url = next(iter(coin["blockbook"] + coin["bitcore"]), None)
     if not url:
         return None
-    zcash = coin['coin_name'].lower().startswith('zcash')
-    bip115 = coin['bip115']
-    network = 'insight_{}'.format(coin['coin_name'].lower().replace(' ', '_'))
+    zcash = coin["coin_name"].lower().startswith("zcash")
+    bip115 = coin["bip115"]
+    network = "insight_{}".format(coin["coin_name"].lower().replace(" ", "_"))
     return TxApiInsight(network=network, url=url, zcash=zcash, bip115=bip115)
 
 
 # exported variables
-__all__ = ['by_name', 'slip44', 'tx_api']
+__all__ = ["by_name", "slip44", "tx_api"]
 
 try:
     by_name = _load_coins_json()
 except Exception as e:
     raise ImportError("Failed to load coins.json. Check your installation.") from e
 
-slip44 = {name: coin['slip44'] for name, coin in by_name.items()}
-tx_api = {name: _insight_for_coin(coin)
-          for name, coin in by_name.items()
-          if coin["blockbook"] or coin["bitcore"]}
+slip44 = {name: coin["slip44"] for name, coin in by_name.items()}
+tx_api = {
+    name: _insight_for_coin(coin)
+    for name, coin in by_name.items()
+    if coin["blockbook"] or coin["bitcore"]
+}

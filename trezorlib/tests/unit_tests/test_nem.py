@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import binascii
+
 from trezorlib import nem
 
 
@@ -27,18 +28,9 @@ def test_nem_basic():
         "type": nem.TYPE_TRANSACTION_TRANSFER,
         "deadline": 76895615,
         "version": (0x98 << 24),
-        "message": {
-            "payload": binascii.hexlify(b'hello world'),
-            "type": 1,
-        },
+        "message": {"payload": binascii.hexlify(b"hello world"), "type": 1},
         "mosaics": [
-            {
-                "mosaicId": {
-                    "namespaceId": "nem",
-                    "name": "xem",
-                },
-                "quantity": 1000000,
-            },
+            {"mosaicId": {"namespaceId": "nem", "name": "xem"}, "quantity": 1000000}
         ],
     }
 

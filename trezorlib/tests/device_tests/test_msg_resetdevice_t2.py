@@ -15,29 +15,31 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import time
+
 import pytest
+from mnemonic import Mnemonic
+
+from trezorlib import device, messages as proto
 
 from .common import TrezorTest, generate_entropy
-
-from trezorlib import messages as proto
-from mnemonic import Mnemonic
 
 
 @pytest.mark.skip_t1
 class TestMsgResetDeviceT2(TrezorTest):
-
     def test_reset_device(self):
 
         # No PIN, no passphrase, don't display random
-        external_entropy = b'zlutoucky kun upel divoke ody' * 2
+        external_entropy = b"zlutoucky kun upel divoke ody" * 2
         strength = 128
-        ret = self.client.call_raw(proto.ResetDevice(
-            display_random=False,
-            strength=strength,
-            passphrase_protection=False,
-            pin_protection=False,
-            label='test'
-        ))
+        ret = self.client.call_raw(
+            proto.ResetDevice(
+                display_random=False,
+                strength=strength,
+                passphrase_protection=False,
+                pin_protection=False,
+                label="test",
+            )
+        )
 
         # Provide entropy
         assert isinstance(ret, proto.EntropyRequest)
@@ -46,7 +48,7 @@ class TestMsgResetDeviceT2(TrezorTest):
 
         # Generate mnemonic locally
         entropy = generate_entropy(strength, internal_entropy, external_entropy)
-        expected_mnemonic = Mnemonic('english').to_mnemonic(entropy)
+        expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
 
         # Safety warning
         assert isinstance(ret, proto.ButtonRequest)
@@ -68,7 +70,7 @@ class TestMsgResetDeviceT2(TrezorTest):
         words.extend(self.client.debug.read_reset_word().split())
 
         # Compare that device generated proper mnemonic for given entropies
-        assert ' '.join(words) == expected_mnemonic
+        assert " ".join(words) == expected_mnemonic
 
         # Confirm the mnemonic
         self.client.debug.press_yes()
@@ -98,24 +100,26 @@ class TestMsgResetDeviceT2(TrezorTest):
     def test_reset_device_pin(self):
 
         # PIN, passphrase, display random
-        external_entropy = b'zlutoucky kun upel divoke ody' * 2
+        external_entropy = b"zlutoucky kun upel divoke ody" * 2
         strength = 128
-        ret = self.client.call_raw(proto.ResetDevice(
-            display_random=True,
-            strength=strength,
-            passphrase_protection=True,
-            pin_protection=True,
-            label='test'
-        ))
+        ret = self.client.call_raw(
+            proto.ResetDevice(
+                display_random=True,
+                strength=strength,
+                passphrase_protection=True,
+                pin_protection=True,
+                label="test",
+            )
+        )
 
         # Enter PIN for first time
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.input('654')
+        self.client.debug.input("654")
         ret = self.client.call_raw(proto.ButtonAck())
 
         # Enter PIN for second time
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.input('654')
+        self.client.debug.input("654")
         ret = self.client.call_raw(proto.ButtonAck())
 
         # Confirm entropy
@@ -130,7 +134,7 @@ class TestMsgResetDeviceT2(TrezorTest):
 
         # Generate mnemonic locally
         entropy = generate_entropy(strength, internal_entropy, external_entropy)
-        expected_mnemonic = Mnemonic('english').to_mnemonic(entropy)
+        expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
 
         # Safety warning
         assert isinstance(ret, proto.ButtonRequest)
@@ -152,7 +156,7 @@ class TestMsgResetDeviceT2(TrezorTest):
         words.extend(self.client.debug.read_reset_word().split())
 
         # Compare that device generated proper mnemonic for given entropies
-        assert ' '.join(words) == expected_mnemonic
+        assert " ".join(words) == expected_mnemonic
 
         # Confirm the mnemonic
         self.client.debug.press_yes()
@@ -182,20 +186,18 @@ class TestMsgResetDeviceT2(TrezorTest):
     def test_failed_pin(self):
         # external_entropy = b'zlutoucky kun upel divoke ody' * 2
         strength = 128
-        ret = self.client.call_raw(proto.ResetDevice(
-            strength=strength,
-            pin_protection=True,
-            label='test'
-        ))
+        ret = self.client.call_raw(
+            proto.ResetDevice(strength=strength, pin_protection=True, label="test")
+        )
 
         # Enter PIN for first time
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.input('654')
+        self.client.debug.input("654")
         ret = self.client.call_raw(proto.ButtonAck())
 
         # Enter PIN for second time
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.input('456')
+        self.client.debug.input("456")
         ret = self.client.call_raw(proto.ButtonAck())
 
         assert isinstance(ret, proto.ButtonRequest)
@@ -203,4 +205,4 @@ class TestMsgResetDeviceT2(TrezorTest):
     def test_already_initialized(self):
         self.setup_mnemonic_nopin_nopassphrase()
         with pytest.raises(Exception):
-            self.client.reset_device(False, 128, True, True, 'label', 'english')
+            device.reset(self.client, False, 128, True, True, "label", "english")

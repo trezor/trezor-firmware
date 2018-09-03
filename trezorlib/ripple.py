@@ -14,21 +14,19 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import base64
-import struct
 
 from . import messages
-from . import tools
-from .client import field
-from .client import expect
+from .protobuf import dict_to_proto
+from .tools import dict_from_camelcase, expect
+
+REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType", "Amount", "Destination")
 
 
-@field('address')
-@expect(messages.RippleAddress)
+@expect(messages.RippleAddress, field="address")
 def get_address(client, address_n, show_display=False):
     return client.call(
-        messages.RippleGetAddress(
-            address_n=address_n, show_display=show_display))
+        messages.RippleGetAddress(address_n=address_n, show_display=show_display)
+    )
 
 
 @expect(messages.RippleSignedTx)
@@ -38,22 +36,10 @@ def sign_tx(client, address_n, msg: messages.RippleSignTx):
 
 
 def create_sign_tx_msg(transaction) -> messages.RippleSignTx:
-    if not all(transaction.get(k) for k in ("Fee", "Sequence", "TransactionType", "Amount", "Destination")):
-        raise ValueError("Some of the required fields missing (Fee, Sequence, TransactionType, Amount, Destination")
+    if not all(transaction.get(k) for k in REQUIRED_FIELDS):
+        raise ValueError("Some of the required fields missing")
     if transaction["TransactionType"] != "Payment":
         raise ValueError("Only Payment transaction type is supported")
 
-    return messages.RippleSignTx(
-        fee=transaction.get("Fee"),
-        sequence=transaction.get("Sequence"),
-        flags=transaction.get("Flags"),
-        last_ledger_sequence=transaction.get("LastLedgerSequence"),
-        payment=_create_payment(transaction),
-    )
-
-
-def _create_payment(transaction) -> messages.RipplePayment:
-    return messages.RipplePayment(
-        amount=transaction.get("Amount"),
-        destination=transaction.get("Destination")
-    )
+    converted = dict_from_camelcase(transaction)
+    return dict_to_proto(messages.RippleSignTx, converted)

@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import logging
-from typing import Set, Type, Optional
+from typing import Optional
 
 from . import protobuf
 
@@ -23,14 +23,15 @@ OMITTED_MESSAGES = set()  # type: Set[Type[protobuf.MessageType]]
 
 
 class PrettyProtobufFormatter(logging.Formatter):
-
     def format(self, record: logging.LogRecord) -> str:
         time = self.formatTime(record)
-        message = '[{time}] {source} {level}: {msg}'.format(
-            time=time, level=record.levelname.upper(),
+        message = "[{time}] {source} {level}: {msg}".format(
+            time=time,
+            level=record.levelname.upper(),
             source=record.name,
-            msg=super().format(record))
-        if hasattr(record, 'protobuf'):
+            msg=super().format(record),
+        )
+        if hasattr(record, "protobuf"):
             if type(record.protobuf) in OMITTED_MESSAGES:
                 message += " ({} bytes)".format(record.protobuf.ByteSize())
             else:
@@ -45,6 +46,6 @@ def enable_debug_output(handler: Optional[logging.Handler] = None):
     formatter = PrettyProtobufFormatter()
     handler.setFormatter(formatter)
 
-    logger = logging.getLogger('trezorlib')
+    logger = logging.getLogger("trezorlib")
     logger.setLevel(logging.DEBUG)
     logger.addHandler(handler)

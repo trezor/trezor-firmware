@@ -14,9 +14,12 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from __future__ import print_function
+import binascii
 
-from . import messages as proto
+from mnemonic import Mnemonic
+
+from . import messages as proto, tools
+from .tools import expect
 
 
 def pin_info(pin):
@@ -65,7 +68,7 @@ class DebugLink(object):
         # We have to encode that into encoded pin,
         # because application must send back positions
         # on keypad, not a real PIN.
-        pin_encoded = ''.join([str(matrix.index(p) + 1) for p in pin])
+        pin_encoded = "".join([str(matrix.index(p) + 1) for p in pin])
 
         print("Encoded PIN:", pin_encoded)
         return pin_encoded
@@ -134,7 +137,116 @@ class DebugLink(object):
         return obj.memory
 
     def memory_write(self, address, memory, flash=False):
-        self._call(proto.DebugLinkMemoryWrite(address=address, memory=memory, flash=flash), nowait=True)
+        self._call(
+            proto.DebugLinkMemoryWrite(address=address, memory=memory, flash=flash),
+            nowait=True,
+        )
 
     def flash_erase(self, sector):
         self._call(proto.DebugLinkFlashErase(sector=sector), nowait=True)
+
+
+@expect(proto.Success, field="message")
+def load_device_by_mnemonic(
+    client,
+    mnemonic,
+    pin,
+    passphrase_protection,
+    label,
+    language="english",
+    skip_checksum=False,
+    expand=False,
+):
+    # Convert mnemonic to UTF8 NKFD
+    mnemonic = Mnemonic.normalize_string(mnemonic)
+
+    # Convert mnemonic to ASCII stream
+    mnemonic = mnemonic.encode("utf-8")
+
+    m = Mnemonic("english")
+
+    if expand:
+        mnemonic = m.expand(mnemonic)
+
+    if not skip_checksum and not m.check(mnemonic):
+        raise ValueError("Invalid mnemonic checksum")
+
+    if client.features.initialized:
+        raise RuntimeError(
+            "Device is initialized already. Call wipe_device() and try again."
+        )
+
+    resp = client.call(
+        proto.LoadDevice(
+            mnemonic=mnemonic,
+            pin=pin,
+            passphrase_protection=passphrase_protection,
+            language=language,
+            label=label,
+            skip_checksum=skip_checksum,
+        )
+    )
+    client.init_device()
+    return resp
+
+
+@expect(proto.Success, field="message")
+def load_device_by_xprv(client, xprv, pin, passphrase_protection, label, language):
+    if client.features.initialized:
+        raise RuntimeError(
+            "Device is initialized already. Call wipe_device() and try again."
+        )
+
+    if xprv[0:4] not in ("xprv", "tprv"):
+        raise ValueError("Unknown type of xprv")
+
+    if not 100 < len(xprv) < 112:  # yes this is correct in Python
+        raise ValueError("Invalid length of xprv")
+
+    node = proto.HDNodeType()
+    data = binascii.hexlify(tools.b58decode(xprv, None))
+
+    if data[90:92] != b"00":
+        raise ValueError("Contain invalid private key")
+
+    checksum = binascii.hexlify(tools.btc_hash(binascii.unhexlify(data[:156]))[:4])
+    if checksum != data[156:]:
+        raise ValueError("Checksum doesn't match")
+
+    # version 0488ade4
+    # depth 00
+    # fingerprint 00000000
+    # child_num 00000000
+    # chaincode 873dff81c02f525623fd1fe5167eac3a55a049de3d314bb42ee227ffed37d508
+    # privkey   00e8f32e723decf4051aefac8e2c93c9c5b214313817cdb01a1494b917c8436b35
+    # checksum e77e9d71
+
+    node.depth = int(data[8:10], 16)
+    node.fingerprint = int(data[10:18], 16)
+    node.child_num = int(data[18:26], 16)
+    node.chain_code = binascii.unhexlify(data[26:90])
+    node.private_key = binascii.unhexlify(data[92:156])  # skip 0x00 indicating privkey
+
+    resp = client.call(
+        proto.LoadDevice(
+            node=node,
+            pin=pin,
+            passphrase_protection=passphrase_protection,
+            language=language,
+            label=label,
+        )
+    )
+    client.init_device()
+    return resp
+
+
+@expect(proto.Success, field="message")
+def self_test(client):
+    if client.features.bootloader_mode is not True:
+        raise RuntimeError("Device must be in bootloader mode")
+
+    return client.call(
+        proto.SelfTest(
+            payload=b"\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC"
+        )
+    )

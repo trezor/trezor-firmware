@@ -15,31 +15,34 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import math
-from .common import TrezorTest
 
-import trezorlib.messages as proto
+import pytest
+
+from trezorlib import messages as m, misc
+
+ENTROPY_LENGTHS_POW2 = [2 ** l for l in range(10)]
+ENTROPY_LENGTHS_POW2_1 = [2 ** l + 1 for l in range(10)]
+
+ENTROPY_LENGTHS = ENTROPY_LENGTHS_POW2 + ENTROPY_LENGTHS_POW2_1
 
 
 def entropy(data):
     counts = {}
     for c in data:
-        if c in counts:
-            counts[c] += 1
-        else:
-            counts[c] = 1
+        counts[c] = counts.get(c, 0) + 1
     e = 0
-    for _, v in counts.items():
-        p = 1.0 * v / len(data)
+    for v in counts.values():
+        p = v / len(data)
         e -= p * math.log(p, 256)
     return e
 
 
-class TestMsgGetentropy(TrezorTest):
-
-    def test_entropy(self):
-        for l in [0, 1, 2, 3, 4, 5, 8, 9, 16, 17, 32, 33, 64, 65, 128, 129, 256, 257, 512, 513, 1024]:
-            with self.client:
-                self.client.set_expected_responses([proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall), proto.Entropy()])
-                ent = self.client.get_entropy(l)
-                assert len(ent) == l
-                print('entropy = ', entropy(ent))
+@pytest.mark.parametrize("entropy_length", ENTROPY_LENGTHS)
+def test_entropy(client, entropy_length):
+    with client:
+        client.set_expected_responses(
+            [m.ButtonRequest(code=m.ButtonRequestType.ProtectCall), m.Entropy()]
+        )
+        ent = misc.get_entropy(client, entropy_length)
+        assert len(ent) == entropy_length
+        print("{} bytes: entropy = {}".format(entropy_length, entropy(ent)))

@@ -16,8 +16,7 @@
 
 import importlib
 import logging
-
-from typing import Iterable, Type, List, Set
+from typing import Iterable, Type
 
 LOG = logging.getLogger(__name__)
 
@@ -27,7 +26,6 @@ class TransportException(Exception):
 
 
 class Transport(object):
-
     def __init__(self):
         self.session_counter = 0
 
@@ -35,7 +33,7 @@ class Transport(object):
         return self.get_path()
 
     def get_path(self):
-        return '{}:{}'.format(self.PATH_PREFIX, self.device)
+        return "{}:{}".format(self.PATH_PREFIX, self.device)
 
     def session_begin(self):
         if self.session_counter == 0:
@@ -60,11 +58,16 @@ class Transport(object):
     @classmethod
     def find_by_path(cls, path, prefix_search=False):
         for device in cls.enumerate():
-            if path is None or device.get_path() == path \
-                    or (prefix_search and device.get_path().startswith(path)):
+            if (
+                path is None
+                or device.get_path() == path
+                or (prefix_search and device.get_path().startswith(path))
+            ):
                 return device
 
-        raise TransportException('{} device not found: {}'.format(cls.PATH_PREFIX, path))
+        raise TransportException(
+            "{} device not found: {}".format(cls.PATH_PREFIX, path)
+        )
 
 
 def all_transports() -> Iterable[Type[Transport]]:
@@ -90,12 +93,22 @@ def enumerate_devices() -> Iterable[Transport]:
     for transport in all_transports():
         try:
             found = transport.enumerate()
-            LOG.info("Enumerating {}: found {} devices".format(transport.__name__, len(found)))
+            LOG.info(
+                "Enumerating {}: found {} devices".format(
+                    transport.__name__, len(found)
+                )
+            )
             devices.extend(found)
         except NotImplementedError:
-            LOG.error("{} does not implement device enumeration".format(transport.__name__))
+            LOG.error(
+                "{} does not implement device enumeration".format(transport.__name__)
+            )
         except Exception as e:
-            LOG.error("Failed to enumerate {}. {}: {}".format(transport.__name__, e.__class__.__name__, e))
+            LOG.error(
+                "Failed to enumerate {}. {}: {}".format(
+                    transport.__name__, e.__class__.__name__, e
+                )
+            )
     return devices
 
 
@@ -112,7 +125,11 @@ def get_transport(path: str = None, prefix_search: bool = False) -> Transport:
     def match_prefix(a: str, b: str) -> bool:
         return a.startswith(b) or b.startswith(a)
 
-    LOG.info("looking for device by {}: {}".format("prefix" if prefix_search else "full path", path))
+    LOG.info(
+        "looking for device by {}: {}".format(
+            "prefix" if prefix_search else "full path", path
+        )
+    )
     transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
     if transports:
         return transports[0].find_by_path(path, prefix_search=prefix_search)

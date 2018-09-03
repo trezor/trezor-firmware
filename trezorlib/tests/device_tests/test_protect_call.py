@@ -15,27 +15,28 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import time
+
 import pytest
 
-from .common import TrezorTest
 from trezorlib import messages as proto
-from trezorlib.client import PinException, CallException
+from trezorlib.client import PinException
+
+from .common import TrezorTest
 
 # FIXME TODO Add passphrase tests
 
 
 @pytest.mark.skip_t2
 class TestProtectCall(TrezorTest):
-
     def _some_protected_call(self, button, pin, passphrase):
         # This method perform any call which have protection in the device
         res = self.client.ping(
-            'random data',
+            "random data",
             button_protection=button,
             pin_protection=pin,
-            passphrase_protection=passphrase
+            passphrase_protection=passphrase,
         )
-        assert res == 'random data'
+        assert res == "random data"
 
     """
     def test_expected_responses(self):
@@ -98,9 +99,9 @@ class TestProtectCall(TrezorTest):
         with self.client:
             assert self.client.debug.read_pin()[0] == self.pin4
             self.client.setup_debuglink(button=True, pin_correct=True)
-            self.client.set_expected_responses([proto.ButtonRequest(),
-                                                proto.PinMatrixRequest(),
-                                                proto.Success()])
+            self.client.set_expected_responses(
+                [proto.ButtonRequest(), proto.PinMatrixRequest(), proto.Success()]
+            )
             self._some_protected_call(True, True, False)
 
     def test_incorrect_pin(self):
@@ -127,7 +128,10 @@ class TestProtectCall(TrezorTest):
                 expected = (2 ** (attempts - 1)) - 1
             got = round(time.time() - start, 2)
 
-            msg = "Pin delay expected to be at least %s seconds, got %s" % (expected, got)
+            msg = "Pin delay expected to be at least %s seconds, got %s" % (
+                expected,
+                got,
+            )
             print(msg)
             assert got >= expected
 

@@ -18,23 +18,28 @@ import time
 
 import pytest
 
+from trezorlib import device, messages as proto
+
 from .common import TrezorTest
-from trezorlib import messages as proto
 
 
 @pytest.mark.skip_t1
 class TestMsgRecoverydeviceT2(TrezorTest):
-
     def test_pin_passphrase(self):
-        mnemonic = self.mnemonic12.split(' ')
-        ret = self.client.call_raw(proto.RecoveryDevice(
-                                   passphrase_protection=True,
-                                   pin_protection=True,
-                                   label='label',
-                                   enforce_wordlist=True))
+        mnemonic = self.mnemonic12.split(" ")
+        ret = self.client.call_raw(
+            proto.RecoveryDevice(
+                passphrase_protection=True,
+                pin_protection=True,
+                label="label",
+                enforce_wordlist=True,
+            )
+        )
 
         # Enter word count
-        assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.MnemonicWordCount)
+        assert ret == proto.ButtonRequest(
+            code=proto.ButtonRequestType.MnemonicWordCount
+        )
         self.client.debug.input(str(len(mnemonic)))
         ret = self.client.call_raw(proto.ButtonAck())
 
@@ -48,16 +53,16 @@ class TestMsgRecoverydeviceT2(TrezorTest):
 
         # Enter PIN for first time
         assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
-        self.client.debug.input('654')
+        self.client.debug.input("654")
         ret = self.client.call_raw(proto.ButtonAck())
 
         # Enter PIN for second time
         assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
-        self.client.debug.input('654')
+        self.client.debug.input("654")
         ret = self.client.call_raw(proto.ButtonAck())
 
         # Workflow succesfully ended
-        assert ret == proto.Success(message='Device recovered')
+        assert ret == proto.Success(message="Device recovered")
 
         # Mnemonic is the same
         self.client.init_device()
@@ -67,15 +72,20 @@ class TestMsgRecoverydeviceT2(TrezorTest):
         assert self.client.features.passphrase_protection is True
 
     def test_nopin_nopassphrase(self):
-        mnemonic = self.mnemonic12.split(' ')
-        ret = self.client.call_raw(proto.RecoveryDevice(
-                                   passphrase_protection=False,
-                                   pin_protection=False,
-                                   label='label',
-                                   enforce_wordlist=True))
+        mnemonic = self.mnemonic12.split(" ")
+        ret = self.client.call_raw(
+            proto.RecoveryDevice(
+                passphrase_protection=False,
+                pin_protection=False,
+                label="label",
+                enforce_wordlist=True,
+            )
+        )
 
         # Enter word count
-        assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.MnemonicWordCount)
+        assert ret == proto.ButtonRequest(
+            code=proto.ButtonRequestType.MnemonicWordCount
+        )
         self.client.debug.input(str(len(mnemonic)))
         ret = self.client.call_raw(proto.ButtonAck())
 
@@ -88,7 +98,7 @@ class TestMsgRecoverydeviceT2(TrezorTest):
         ret = self.client.transport.read()
 
         # Workflow succesfully ended
-        assert ret == proto.Success(message='Device recovered')
+        assert ret == proto.Success(message="Device recovered")
 
         # Mnemonic is the same
         self.client.init_device()
@@ -100,4 +110,4 @@ class TestMsgRecoverydeviceT2(TrezorTest):
     def test_already_initialized(self):
         self.setup_mnemonic_nopin_nopassphrase()
         with pytest.raises(Exception):
-            self.client.recovery_device(12, False, False, 'label', 'english')
+            device.recover(self.client, 12, False, False, "label", "english")

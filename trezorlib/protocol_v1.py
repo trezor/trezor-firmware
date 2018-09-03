@@ -14,15 +14,12 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from __future__ import absolute_import
-
-from io import BytesIO
 import logging
 import struct
-from typing import Tuple, Type
+from io import BytesIO
+from typing import Tuple
 
-from . import mapping
-from . import protobuf
+from . import mapping, protobuf
 from .transport import Transport
 
 REPLEN = 64
@@ -31,7 +28,6 @@ LOG = logging.getLogger(__name__)
 
 
 class ProtocolV1:
-
     def session_begin(self, transport: Transport) -> None:
         pass
 
@@ -39,8 +35,10 @@ class ProtocolV1:
         pass
 
     def write(self, transport: Transport, msg: protobuf.MessageType) -> None:
-        LOG.debug("sending message: {}".format(msg.__class__.__name__),
-                  extra={'protobuf': msg})
+        LOG.debug(
+            "sending message: {}".format(msg.__class__.__name__),
+            extra={"protobuf": msg},
+        )
         data = BytesIO()
         protobuf.dump_message(data, msg)
         ser = data.getvalue()
@@ -49,8 +47,8 @@ class ProtocolV1:
 
         while data:
             # Report ID, data padded to 63 bytes
-            chunk = b'?' + data[:REPLEN - 1]
-            chunk = chunk.ljust(REPLEN, b'\x00')
+            chunk = b"?" + data[: REPLEN - 1]
+            chunk = chunk.ljust(REPLEN, b"\x00")
             transport.write_chunk(chunk)
             data = data[63:]
 
@@ -69,23 +67,25 @@ class ProtocolV1:
 
         # Parse to protobuf
         msg = protobuf.load_message(data, mapping.get_class(msg_type))
-        LOG.debug("received message: {}".format(msg.__class__.__name__),
-                  extra={'protobuf': msg})
+        LOG.debug(
+            "received message: {}".format(msg.__class__.__name__),
+            extra={"protobuf": msg},
+        )
         return msg
 
     def parse_first(self, chunk: bytes) -> Tuple[int, int, bytes]:
-        if chunk[:3] != b'?##':
-            raise RuntimeError('Unexpected magic characters')
+        if chunk[:3] != b"?##":
+            raise RuntimeError("Unexpected magic characters")
         try:
-            headerlen = struct.calcsize('>HL')
-            msg_type, datalen = struct.unpack('>HL', chunk[3:3 + headerlen])
-        except:
-            raise RuntimeError('Cannot parse header')
+            headerlen = struct.calcsize(">HL")
+            msg_type, datalen = struct.unpack(">HL", chunk[3 : 3 + headerlen])
+        except Exception:
+            raise RuntimeError("Cannot parse header")
 
-        data = chunk[3 + headerlen:]
+        data = chunk[3 + headerlen :]
         return msg_type, datalen, data
 
     def parse_next(self, chunk: bytes) -> bytes:
-        if chunk[:1] != b'?':
-            raise RuntimeError('Unexpected magic characters')
+        if chunk[:1] != b"?":
+            raise RuntimeError("Unexpected magic characters")
         return chunk[1:]

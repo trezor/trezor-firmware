@@ -4,7 +4,6 @@
 # that has DEBUG_RNG == 1 as that will disable the user button
 # push confirmation
 
-from __future__ import print_function
 import io
 import sys
 from trezorlib.client import TrezorClient

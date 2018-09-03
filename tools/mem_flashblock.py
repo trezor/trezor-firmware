@@ -2,7 +2,6 @@
 from trezorlib.debuglink import DebugLink
 from trezorlib.client import TrezorClient
 from trezorlib.transport import enumerate_devices
-import binascii
 import sys
 
 sectoraddrs = [0x8000000, 0x8004000, 0x8008000, 0x800c000,

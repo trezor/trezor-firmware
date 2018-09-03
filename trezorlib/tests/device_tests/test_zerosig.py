@@ -16,18 +16,20 @@
 
 from binascii import unhexlify
 
+from trezorlib import btc, messages as proto
+
 from .common import TrezorTest
-from trezorlib import messages as proto
 
-
-TXHASH_d5f65e = unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')
+TXHASH_d5f65e = unhexlify(
+    "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
+)
 
 
 # address_n = [177] < 68
 # address_n = [16518] < 66
 class TestZerosig(TrezorTest):
 
-    '''
+    """
     def test_mine_zero_signature(self):
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
         # input 0: 0.0039 BTC
@@ -56,7 +58,7 @@ class TestZerosig(TrezorTest):
                 print("!!!!", n)
                 print(hexlify(tx.serialized_tx))
                 return
-    '''
+    """
 
     def test_one_zero_signature(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -75,7 +77,9 @@ class TestZerosig(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
+        (signatures, serialized_tx) = btc.sign_tx(
+            self.client, "Bitcoin", [inp1], [out1]
+        )
         siglen = serialized_tx[44]
 
         # TREZOR must strip leading zero from signature
@@ -98,7 +102,9 @@ class TestZerosig(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        (signatures, serialized_tx) = self.client.sign_tx('Bitcoin', [inp1, ], [out1, ])
+        (signatures, serialized_tx) = btc.sign_tx(
+            self.client, "Bitcoin", [inp1], [out1]
+        )
         siglen = serialized_tx[44]
 
         # TREZOR must strip leading zero from signature
