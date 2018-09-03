@@ -98,8 +98,8 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/modtrezorui.c',
     'embed/extmod/modtrezorui/trezor-qrenc/qr_encode.c',
 ]
-if ARGUMENTS.get('TREZOR_NOUI', 0):
-    CPPDEFINES_MOD += ['TREZOR_NOUI']
+if ARGUMENTS.get('TREZOR_EMULATOR_NOUI', 0):
+    CPPDEFINES_MOD += ['TREZOR_EMULATOR_NOUI']
 else:
     LIBS_MOD += ['SDL2', 'SDL2_image']
 

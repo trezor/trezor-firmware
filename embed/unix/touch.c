@@ -18,7 +18,7 @@
  */
 
 #include <stdint.h>
-#ifndef TREZOR_NOUI
+#ifndef TREZOR_EMULATOR_NOUI
 #include <SDL2/SDL.h>
 #endif
 
@@ -32,7 +32,7 @@ extern void display_save(const char *prefix);
 
 uint32_t touch_read(void)
 {
-#ifndef TREZOR_NOUI
+#ifndef TREZOR_EMULATOR_NOUI
     SDL_Event event;
     int x, y;
     SDL_PumpEvents();

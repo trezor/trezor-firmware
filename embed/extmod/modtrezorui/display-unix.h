@@ -18,7 +18,7 @@
  */
 
 #include <stdlib.h>
-#ifndef TREZOR_NOUI
+#ifndef TREZOR_EMULATOR_NOUI
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
@@ -68,7 +68,7 @@ void PIXELDATA(uint16_t c) {
 
 void display_init(void)
 {
-#ifndef TREZOR_NOUI
+#ifndef TREZOR_EMULATOR_NOUI
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("%s\n", SDL_GetError());
         ensure(secfalse, "SDL_Init error");
@@ -108,7 +108,7 @@ void display_init(void)
 
 static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
-#ifndef TREZOR_NOUI
+#ifndef TREZOR_EMULATOR_NOUI
     if (!RENDERER) {
         display_init();
     }
@@ -120,7 +120,7 @@ static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y
 
 void display_refresh(void)
 {
-#ifndef TREZOR_NOUI
+#ifndef TREZOR_EMULATOR_NOUI
     if (!RENDERER) {
         display_init();
     }
@@ -155,7 +155,7 @@ static void display_set_backlight(int val)
 
 void display_save(const char *prefix)
 {
-#ifndef TREZOR_NOUI
+#ifndef TREZOR_EMULATOR_NOUI
     if (!RENDERER) {
         display_init();
     }
