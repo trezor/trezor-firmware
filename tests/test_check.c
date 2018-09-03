@@ -58,7 +58,6 @@
 #include "ed25519-donna/ed25519.h"
 #include "ed25519-donna/ed25519-donna.h"
 #include "ed25519-donna/ed25519-keccak.h"
-#include "ed25519-donna/ge25519.h"
 #include "script.h"
 #include "rfc6979.h"
 #include "address.h"

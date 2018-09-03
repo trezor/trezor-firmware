@@ -63,3 +63,42 @@ void ge25519_scalarmult_base_choose_niels(ge25519_niels *t, const uint8_t table[
 
 /* computes [s]basepoint */
 void ge25519_scalarmult_base_niels(ge25519 *r, const uint8_t basepoint_table[256][96], const bignum256modm s);
+
+/* check if r is on curve */
+int ge25519_check(const ge25519 *r);
+
+/* a == b */
+int ge25519_eq(const ge25519 *a, const ge25519 *b);
+
+/* copies one point to another */
+void ge25519_copy(ge25519 *dst, const ge25519 *src);
+
+/* sets B point to r */
+void ge25519_set_base(ge25519 *r);
+
+/* 8*P */
+void ge25519_mul8(ge25519 *r, const ge25519 *t);
+
+/* -P */
+void ge25519_neg_partial(ge25519 *r);
+
+/* -P */
+void ge25519_neg_full(ge25519 *r);
+
+/* reduce all coords */
+void ge25519_reduce(ge25519 *r, const ge25519 *t);
+
+/* normalizes coords. (x, y, 1, x*y) */
+void ge25519_norm(ge25519 *r, const ge25519 * t);
+
+/* Simple addition */
+void ge25519_add(ge25519 *r, const ge25519 *a, const ge25519 *b, unsigned char signbit);
+
+/* point from bytes, used in H_p() */
+void ge25519_fromfe_frombytes_vartime(ge25519 *r, const unsigned char *s);
+
+/* point from bytes */
+int ge25519_unpack_vartime(ge25519 *r, const unsigned char *s);
+
+/* aG, wrapper for niels base mult. */
+void ge25519_scalarmult_base_wrapper(ge25519 *r, const bignum256modm s);

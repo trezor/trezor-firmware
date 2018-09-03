@@ -51,3 +51,29 @@ void curve25519_contract(unsigned char out[32], const bignum25519 in);
 
 /* if (iswap) swap(a, b) */
 void curve25519_swap_conditional(bignum25519 a, bignum25519 b, uint32_t iswap);
+
+/* uint32_t to Zmod(2^255-19) */
+void curve25519_set(bignum25519 r, uint32_t x);
+
+/* set d */
+void curve25519_set_d(bignum25519 r);
+
+/* set 2d */
+void curve25519_set_2d(bignum25519 r);
+
+/* set sqrt(-1) */
+void curve25519_set_sqrtneg1(bignum25519 r);
+
+/* constant time Zmod(2^255-19) negative test */
+int curve25519_isnegative(const bignum25519 f);
+
+/* constant time Zmod(2^255-19) non-zero test */
+int curve25519_isnonzero(const bignum25519 f);
+
+/* reduce Zmod(2^255-19) */
+void curve25519_reduce(bignum25519 r, const bignum25519 in);
+
+void curve25519_divpowm1(bignum25519 r, const bignum25519 u, const bignum25519 v);
+
+/* Zmod(2^255-19) from byte array to bignum25519 expansion with modular reduction */
+void curve25519_expand_reduce(bignum25519 out, const unsigned char in[32]);

@@ -51,7 +51,6 @@ SRCS  += aes/aescrypt.c aes/aeskey.c aes/aestab.c aes/aes_modes.c
 SRCS  += ed25519-donna/curve25519-donna-32bit.c ed25519-donna/curve25519-donna-helpers.c ed25519-donna/modm-donna-32bit.c
 SRCS  += ed25519-donna/ed25519-donna-basepoint-table.c ed25519-donna/ed25519-donna-32bit-tables.c ed25519-donna/ed25519-donna-impl-base.c
 SRCS  += ed25519-donna/ed25519.c ed25519-donna/curve25519-donna-scalarmult-base.c ed25519-donna/ed25519-sha3.c ed25519-donna/ed25519-keccak.c
-SRCS  += ed25519-donna/ge25519.c
 SRCS  += monero/base58.c
 SRCS  += monero/serialize.c
 SRCS  += monero/xmr.c
