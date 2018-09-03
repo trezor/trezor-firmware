@@ -159,6 +159,12 @@ enum MessageType {
     MessageType_StellarBumpSequenceOp = 221 [(wire_in) = true];
     MessageType_StellarSignedTx = 230 [(wire_out) = true];
 
+    // TRON
+    MessageType_TronGetAddress = 250 [(wire_in) = true];
+    MessageType_TronAddress = 251 [(wire_out) = true];
+    MessageType_TronSignTx = 252 [(wire_in) = true];
+    MessageType_TronSignedTx = 253 [(wire_out) = true];
+
     // Cardano
     // dropped Sign/VerifyMessage ids 300-302
     MessageType_CardanoSignTx = 303 [(wire_in) = true];
