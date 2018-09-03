@@ -40,8 +40,7 @@ async def tezos_sign_tx(ctx, msg):
         delegate = _get_address_by_tag(msg.delegation.delegate)
 
         if source != delegate:
-            to = _get_address_by_tag(msg.delegation.delegate)
-            await require_confirm_delegation_baker(ctx, to)
+            await require_confirm_delegation_baker(ctx, delegate)
             await require_confirm_set_delegate(ctx, msg.delegation.fee)
         # if account registers itself as a delegate
         else:
