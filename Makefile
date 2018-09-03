@@ -19,9 +19,11 @@ clean:
 style:
 	black $(STYLE_TARGETS)
 	isort --apply --recursive $(STYLE_TARGETS) --skip-glob "*/$(EXCLUDE_TARGETS)/*"
-	autoflake -i --remove-all-unused-imports -r $(STYLE_TARGETS)
+	autoflake -i --remove-all-unused-imports -r $(STYLE_TARGETS) --exclude "$(EXCLUDE_TARGETS)"
 
 stylecheck:
 	black --check $(STYLE_TARGETS)
 	isort --diff --check-only --recursive $(STYLE_TARGETS) --skip-glob "*/$(EXCLUDE_TARGETS)/*"
 	flake8
+
+.PHONY: all build install clean style stylecheck
