@@ -2,7 +2,7 @@ PYTHON=python3
 SETUP=$(PYTHON) setup.py
 
 EXCLUDES=.vscode
-STYLE_TARGETS=trezorlib trezorctl
+STYLE_TARGETS=trezorlib trezorctl setup.py
 EXCLUDE_TARGETS=trezorlib/messages
 
 all: build
