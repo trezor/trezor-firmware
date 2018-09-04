@@ -558,7 +558,6 @@ class ProtocolMixin(object):
     nem_sign_tx = MovedTo(nem.sign_tx)
 
     # Stellar functionality
-    stellar_get_public_key = MovedTo(stellar.get_public_key)
     stellar_get_address = MovedTo(stellar.get_address)
     stellar_sign_transaction = MovedTo(stellar.sign_tx)
 
