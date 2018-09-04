@@ -140,6 +140,7 @@ message MoneroTransactionInitRequest {
         optional bytes exp_tx_prefix_hash = 12;
         repeated bytes use_tx_keys = 13;
         optional MoneroTransactionRsigData rsig_data = 14;
+        repeated uint32 integrated_indices = 15;
     }
 }
 
