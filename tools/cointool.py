@@ -542,17 +542,33 @@ def check(backend, icons, show_duplicates):
 
 @cli.command()
 @click.option("-o", "--outfile", type=click.File(mode="w"), default="./coins.json")
-def coins_json(outfile):
-    """Generate coins.json for consumption in python-trezor and Connect/Wallet"""
-    coins = coin_info.coin_info().bitcoin
-    support_info = coin_info.support_info(coins)
-    by_name = {}
-    for coin in coins:
-        coin["support"] = support_info[coin["key"]]
-        by_name[coin["name"]] = coin
+def dump(outfile):
+    """Dump all coin data in a single JSON file.
+
+    This file is structured the same as the internal data. That is, top-level object
+    is a dict with keys: 'bitcoin', 'eth', 'erc20', 'nem' and 'misc'. Value for each
+    key is a list of dicts, each describing a known coin.
+
+    \b
+    Fields are category-specific, except for four common ones:
+    - 'name' - human-readable name
+    - 'shortcut' - currency symbol
+    - 'key' - unique identifier, e.g., 'bitcoin:BTC'
+    - 'support' - a dict with entries per known device
+    """
+    coins = coin_info.coin_info()
+    support_info = coin_info.support_info(coins.as_list())
+
+    for category in coins.values():
+        for coin in category:
+            coin["support"] = support_info[coin["key"]]
+
+    # get rid of address_bytes which are bytes which can't be JSON encoded
+    for coin in coins.erc20:
+        coin.pop("address_bytes", None)
 
     with outfile:
-        json.dump(by_name, outfile, indent=4, sort_keys=True)
+        json.dump(coins, outfile, indent=4, sort_keys=True)
         outfile.write("\n")
 
 
