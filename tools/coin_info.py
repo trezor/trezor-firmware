@@ -72,7 +72,7 @@ def check_type(val, types, nullable=False, empty=False, regex=None, choice=None)
 
     # check type
     if not isinstance(val, types):
-        raise TypeError(f"Wrong type (expected: {types})")
+        raise TypeError("Wrong type (expected: {})".format(types))
 
     # check empty
     if isinstance(val, (list, dict)) and not empty and not val:
@@ -83,12 +83,12 @@ def check_type(val, types, nullable=False, empty=False, regex=None, choice=None)
         if types is not str:
             raise TypeError("Wrong type for regex check")
         if not re.search(regex, val):
-            raise ValueError(f"Value does not match regex {regex}")
+            raise ValueError("Value does not match regex {}".format(regex))
 
     # check choice
     if choice is not None and val not in choice:
         choice_str = ", ".join(choice)
-        raise ValueError(f"Value not allowed, use one of: {choice_str}")
+        raise ValueError("Value not allowed, use one of: {}".format(choice_str))
 
 
 def check_key(key, types, optional=False, **kwargs):
@@ -97,11 +97,11 @@ def check_key(key, types, optional=False, **kwargs):
             if optional:
                 return
             else:
-                raise KeyError(f"{key}: Missing key")
+                raise KeyError("{}: Missing key".format(key))
         try:
             check_type(coin[key], types, **kwargs)
         except Exception as e:
-            raise ValueError(f"{key}: {e}") from e
+            raise ValueError("{}: {}".format(key, e)) from e
 
     return do_check
 
@@ -400,7 +400,7 @@ def mark_duplicate_shortcuts(coins):
     # first deduplicate keys so that we can identify overrides
     for values in dup_keys.values():
         for i, coin in enumerate(values):
-            coin["key"] += f":{i}"
+            coin["key"] += ":" + str(i)
 
     # load overrides and put them into their own bucket
     overrides = load_json("duplicity_overrides.json")
