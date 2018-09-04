@@ -1,9 +1,16 @@
+Version 1.7.0 [unreleased]
+* Stable release, optional update
+* Switch from HID to WebUSB
+* Add support for Stellar
+* Included bootloader 1.6.0
+
 Version 1.6.3
 * Stable release, required update
 * Implement RSKIP-60 Ethereum checksum encoding
 * Add support for new Ethereum networks (ESN, AKA, ETHO, MUSI, PIRL, ATH, GO)
 * Add support for new 80 Ethereum tokens
 * Improve MPU configuration
+* Included bootloader 1.5.1
 
 Version 1.6.2
 * Stable release, optional update
@@ -15,12 +22,14 @@ Version 1.6.2
 * Support for new Ethereum networks:
   - EOS Classic, Ethereum Social, Ellaism, Callisto, EtherGem, Wanchain
 * Support for 500+ new Ethereum tokens
+* Included bootloader 1.5.0
 
 Version 1.6.1
 * Stable release, required update
 * Use fixed-width font for addresses
 * Lots of under-the-hood improvements
 * Fixed issue with write-protection settings
+* Included bootloader 1.4.0
 
 Version 1.6.0
 * Stable release, optional update

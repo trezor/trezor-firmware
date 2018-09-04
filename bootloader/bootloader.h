@@ -21,15 +21,15 @@
 #define __BOOTLOADER_H__
 
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 5
-#define VERSION_PATCH 1
+#define VERSION_MINOR 6
+#define VERSION_PATCH 0
 
 #define STR(X) #X
 #define VERSTR(X) STR(X)
 
 #define VERSION_MAJOR_CHAR "\x01"
-#define VERSION_MINOR_CHAR "\x05"
-#define VERSION_PATCH_CHAR "\x01"
+#define VERSION_MINOR_CHAR "\x06"
+#define VERSION_PATCH_CHAR "\x00"
 
 #include <stdbool.h>
 #include "memory.h"

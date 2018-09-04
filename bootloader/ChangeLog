@@ -1,3 +1,6 @@
+Version 1.6.0 [unreleased]
+* Switch from HID to WebUSB
+
 Version 1.5.1
 * Improve MPU configuration
 
