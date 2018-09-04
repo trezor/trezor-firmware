@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 import glob
+import json
 import os.path
 import re
-import shutil
 import subprocess
 import sys
-import tempfile
 from distutils.errors import DistutilsError
 
 from setuptools import Command, find_packages, setup
@@ -42,6 +41,22 @@ def find_version():
         raise RuntimeError("Version string not found")
 
 
+def build_coins_json(dst):
+    TOOLS_PATH = os.path.join(TREZOR_COMMON, "tools")
+    sys.path.insert(0, TOOLS_PATH)
+    import coin_info
+
+    coins = coin_info.coin_info().bitcoin
+    support = coin_info.support_info(coins)
+    for coin in coins:
+        coin["support"] = support[coin["key"]]
+
+    with open(dst, "w") as f:
+        json.dump(coins, f, indent=2, sort_keys=True)
+
+    del sys.path[0]
+
+
 class PrebuildCommand(Command):
     description = "update vendored files (coins.json, protobuf messages)"
     user_options = []
@@ -58,17 +73,12 @@ class PrebuildCommand(Command):
         if not os.path.exists(common_defs):
             raise DistutilsError(
                 "trezor-common submodule seems to be missing.\n"
-                + 'Use "git submodule update --init" to retrieve it.'
+                + "Use 'git submodule update --init' to retrieve it."
             )
 
         # generate and copy coins.json to the tree
-        with tempfile.TemporaryDirectory() as tmpdir:
-            build_coins = os.path.join(TREZOR_COMMON, "tools", "cointool.py")
-            subprocess.check_call([sys.executable, build_coins], cwd=tmpdir)
-            shutil.copy(
-                os.path.join(tmpdir, "coins.json"),
-                os.path.join(CWD, "trezorlib", "coins.json"),
-            )
+        coins_json = os.path.join(CWD, "trezorlib", "coins.json")
+        build_coins_json(coins_json)
 
         # regenerate messages
         try:
