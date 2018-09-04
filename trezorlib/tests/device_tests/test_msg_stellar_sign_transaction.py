@@ -55,9 +55,11 @@ from trezorlib import messages as proto, stellar
 from trezorlib.tools import parse_path
 
 from .common import TrezorTest
+from .conftest import TREZOR_VERSION
 
 
 @pytest.mark.stellar
+@pytest.mark.xfail(TREZOR_VERSION == 1, reason="Stellar currently disabled on T1")
 class TestMsgStellarSignTransaction(TrezorTest):
 
     ADDRESS_N = parse_path(stellar.DEFAULT_BIP32_PATH)
