@@ -59,6 +59,7 @@ message ButtonRequest {
         ButtonRequest_MnemonicWordCount = 12;
         ButtonRequest_MnemonicInput = 13;
         ButtonRequest_PassphraseType = 14;
+        ButtonRequest_UnknownDerivationPath = 15;
     }
 }
 
