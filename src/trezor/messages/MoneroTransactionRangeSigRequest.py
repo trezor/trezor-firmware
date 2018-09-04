@@ -5,7 +5,7 @@ import protobuf as p
 from .MoneroTransactionRsigData import MoneroTransactionRsigData
 
 
-class MoneroTransactionAllOutSetRequest(p.MessageType):
+class MoneroTransactionRangeSigRequest(p.MessageType):
     FIELDS = {
         1: ('rsig_data', MoneroTransactionRsigData, 0),
     }

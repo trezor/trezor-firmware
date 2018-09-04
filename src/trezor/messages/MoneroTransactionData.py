@@ -3,6 +3,7 @@
 import protobuf as p
 
 from .MoneroTransactionDestinationEntry import MoneroTransactionDestinationEntry
+from .MoneroTransactionRsigData import MoneroTransactionRsigData
 
 if __debug__:
     try:
@@ -26,7 +27,7 @@ class MoneroTransactionData(p.MessageType):
         11: ('is_multisig', p.BoolType, 0),
         12: ('exp_tx_prefix_hash', p.BytesType, 0),
         13: ('use_tx_keys', p.BytesType, p.FLAG_REPEATED),
-        14: ('is_bulletproof', p.BoolType, 0),
+        14: ('rsig_data', MoneroTransactionRsigData, 0),
     }
 
     def __init__(
@@ -44,7 +45,7 @@ class MoneroTransactionData(p.MessageType):
         is_multisig: bool = None,
         exp_tx_prefix_hash: bytes = None,
         use_tx_keys: List[bytes] = None,
-        is_bulletproof: bool = None,
+        rsig_data: MoneroTransactionRsigData = None,
     ) -> None:
         self.version = version
         self.payment_id = payment_id
@@ -59,4 +60,4 @@ class MoneroTransactionData(p.MessageType):
         self.is_multisig = is_multisig
         self.exp_tx_prefix_hash = exp_tx_prefix_hash
         self.use_tx_keys = use_tx_keys if use_tx_keys is not None else []
-        self.is_bulletproof = is_bulletproof
+        self.rsig_data = rsig_data

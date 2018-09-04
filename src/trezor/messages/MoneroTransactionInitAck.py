@@ -2,6 +2,8 @@
 # fmt: off
 import protobuf as p
 
+from .MoneroTransactionRsigData import MoneroTransactionRsigData
+
 if __debug__:
     try:
         from typing import List
@@ -18,6 +20,7 @@ class MoneroTransactionInitAck(p.MessageType):
         4: ('hmacs', p.BytesType, p.FLAG_REPEATED),
         5: ('many_inputs', p.BoolType, 0),
         6: ('many_outputs', p.BoolType, 0),
+        7: ('rsig_data', MoneroTransactionRsigData, 0),
     }
 
     def __init__(
@@ -28,6 +31,7 @@ class MoneroTransactionInitAck(p.MessageType):
         hmacs: List[bytes] = None,
         many_inputs: bool = None,
         many_outputs: bool = None,
+        rsig_data: MoneroTransactionRsigData = None,
     ) -> None:
         self.version = version
         self.status = status
@@ -35,3 +39,4 @@ class MoneroTransactionInitAck(p.MessageType):
         self.hmacs = hmacs if hmacs is not None else []
         self.many_inputs = many_inputs
         self.many_outputs = many_outputs
+        self.rsig_data = rsig_data
