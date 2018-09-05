@@ -35,8 +35,10 @@ class TestMsgRippleSignTx(TrezorTest):
         msg = ripple.create_sign_tx_msg(
             {
                 "TransactionType": "Payment",
-                "Destination": "rBKz5MC2iXdoS3XgnNSYmF69K1Yo4NS3Ws",
-                "Amount": 100000000,
+                "Payment": {
+                    "Amount": 100000000,
+                    "Destination": "rBKz5MC2iXdoS3XgnNSYmF69K1Yo4NS3Ws",
+                },
                 "Flags": 0x80000000,
                 "Fee": 100000,
                 "Sequence": 25,
@@ -53,8 +55,10 @@ class TestMsgRippleSignTx(TrezorTest):
         msg = ripple.create_sign_tx_msg(
             {
                 "TransactionType": "Payment",
-                "Destination": "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H",
-                "Amount": 1,
+                "Payment": {
+                    "Amount": 1,
+                    "Destination": "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H",
+                },
                 "Fee": 10,
                 "Sequence": 1,
             }
@@ -70,8 +74,10 @@ class TestMsgRippleSignTx(TrezorTest):
         msg = ripple.create_sign_tx_msg(
             {
                 "TransactionType": "Payment",
-                "Destination": "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H",
-                "Amount": 100000009,
+                "Payment": {
+                    "Amount": 100000009,
+                    "Destination": "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H",
+                },
                 "Flags": 0,
                 "Fee": 100,
                 "Sequence": 100,
@@ -92,8 +98,10 @@ class TestMsgRippleSignTx(TrezorTest):
         msg = ripple.create_sign_tx_msg(
             {
                 "TransactionType": "Payment",
-                "Destination": "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H",
-                "Amount": 1,
+                "Payment": {
+                    "Amount": 1,
+                    "Destination": "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H",
+                },
                 "Flags": 1,
                 "Fee": 1,
                 "Sequence": 1,
