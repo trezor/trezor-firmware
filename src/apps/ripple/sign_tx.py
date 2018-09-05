@@ -65,13 +65,8 @@ def set_canonical_flag(msg: RippleSignTx):
 
 
 def validate(msg: RippleSignTx):
-    if None in (
-        msg.fee,
-        msg.sequence,
-        msg.payment,
-    ) or msg.payment and None in (
-        msg.payment.amount,
-        msg.payment.destination,
+    if None in (msg.fee, msg.sequence, msg.payment) or (
+        msg.payment and None in (msg.payment.amount, msg.payment.destination)
     ):
         raise ProcessError(
             "Some of the required fields are missing (fee, sequence, payment.amount, payment.destination)"
