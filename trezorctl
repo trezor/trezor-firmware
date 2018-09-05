@@ -597,9 +597,10 @@ def get_address(connect, coin, address, script_type, show_display):
 @click.option("-c", "--coin", default="Bitcoin")
 @click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/0'/0'")
 @click.option("-e", "--curve")
+@click.option("-t", "--script-type", type=CHOICE_INPUT_SCRIPT_TYPE, default="address")
 @click.option("-d", "--show-display", is_flag=True)
 @click.pass_obj
-def get_public_node(connect, coin, address, curve, show_display):
+def get_public_node(connect, coin, address, curve, script_type, show_display):
     client = connect()
     address_n = tools.parse_path(address)
     result = btc.get_public_node(
@@ -608,6 +609,7 @@ def get_public_node(connect, coin, address, curve, show_display):
         ecdsa_curve_name=curve,
         show_display=show_display,
         coin_name=coin,
+        script_type=script_type,
     )
     return {
         "node": {

@@ -4,7 +4,12 @@ from .tools import CallException, expect, normalize_nfc, session
 
 @expect(proto.PublicKey)
 def get_public_node(
-    client, n, ecdsa_curve_name=None, show_display=False, coin_name=None
+    client,
+    n,
+    ecdsa_curve_name=None,
+    show_display=False,
+    coin_name=None,
+    script_type=proto.InputScriptType.SPENDADDRESS,
 ):
     return client.call(
         proto.GetPublicKey(
@@ -12,6 +17,7 @@ def get_public_node(
             ecdsa_curve_name=ecdsa_curve_name,
             show_display=show_display,
             coin_name=coin_name,
+            script_type=script_type,
         )
     )
 
