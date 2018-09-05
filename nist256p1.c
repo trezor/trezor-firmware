@@ -61,4 +61,5 @@ const curve_info nist256p1_info = {
 	.hasher_base58 = HASHER_SHA2D,
 	.hasher_sign = HASHER_SHA2D,
 	.hasher_pubkey = HASHER_SHA2_RIPEMD,
+	.hasher_multisig = HASHER_SHA2,
 };

@@ -56,6 +56,7 @@ const curve_info ed25519_info = {
 	.hasher_base58 = HASHER_SHA2D,
 	.hasher_sign = HASHER_SHA2D,
 	.hasher_pubkey = HASHER_SHA2_RIPEMD,
+	.hasher_multisig = HASHER_SHA2,
 };
 
 const curve_info ed25519_cardano_info = {
@@ -64,6 +65,7 @@ const curve_info ed25519_cardano_info = {
 	.hasher_base58 = HASHER_SHA2D,
 	.hasher_sign = HASHER_SHA2D,
 	.hasher_pubkey = HASHER_SHA2_RIPEMD,
+	.hasher_multisig = HASHER_SHA2,
 };
 
 const curve_info ed25519_sha3_info = {
@@ -72,6 +74,7 @@ const curve_info ed25519_sha3_info = {
 	.hasher_base58 = HASHER_SHA2D,
 	.hasher_sign = HASHER_SHA2D,
 	.hasher_pubkey = HASHER_SHA2_RIPEMD,
+	.hasher_multisig = HASHER_SHA2,
 };
 
 #if USE_KECCAK
@@ -81,6 +84,7 @@ const curve_info ed25519_keccak_info = {
 	.hasher_base58 = HASHER_SHA2D,
 	.hasher_sign = HASHER_SHA2D,
 	.hasher_pubkey = HASHER_SHA2_RIPEMD,
+	.hasher_multisig = HASHER_SHA2,
 };
 #endif
 
@@ -90,6 +94,7 @@ const curve_info curve25519_info = {
 	.hasher_base58 = HASHER_SHA2D,
 	.hasher_sign = HASHER_SHA2D,
 	.hasher_pubkey = HASHER_SHA2_RIPEMD,
+	.hasher_multisig = HASHER_SHA2,
 };
 
 int hdnode_from_xpub(uint32_t depth, uint32_t child_num, const uint8_t *chain_code, const uint8_t *public_key, const char* curve, HDNode *out)

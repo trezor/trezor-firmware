@@ -61,6 +61,7 @@ const curve_info secp256k1_info = {
 	.hasher_base58 = HASHER_SHA2D,
 	.hasher_sign = HASHER_SHA2D,
 	.hasher_pubkey = HASHER_SHA2_RIPEMD,
+	.hasher_multisig = HASHER_SHA2,
 };
 
 const curve_info secp256k1_decred_info = {
@@ -69,6 +70,7 @@ const curve_info secp256k1_decred_info = {
 	.hasher_base58 = HASHER_BLAKED,
 	.hasher_sign = HASHER_BLAKE,
 	.hasher_pubkey = HASHER_BLAKE_RIPEMD,
+	.hasher_multisig = HASHER_BLAKE,
 };
 
 const curve_info secp256k1_groestl_info = {
@@ -77,6 +79,7 @@ const curve_info secp256k1_groestl_info = {
 	.hasher_base58 = HASHER_GROESTLD_TRUNC,
 	.hasher_sign = HASHER_SHA2,
 	.hasher_pubkey = HASHER_SHA2_RIPEMD,
+	.hasher_multisig = HASHER_SHA2,
 };
 
 const curve_info secp256k1_smart_info = {
@@ -85,4 +88,5 @@ const curve_info secp256k1_smart_info = {
 	.hasher_base58 = HASHER_SHA3K,
 	.hasher_sign = HASHER_SHA2,
 	.hasher_pubkey = HASHER_SHA2_RIPEMD,
+	.hasher_multisig = HASHER_SHA2,
 };
