@@ -38,7 +38,7 @@ typedef struct {
 	HasherType hasher_base58;
 	HasherType hasher_sign;
 	HasherType hasher_pubkey;
-	HasherType hasher_multisig;
+	HasherType hasher_script;
 } curve_info;
 
 typedef struct {
