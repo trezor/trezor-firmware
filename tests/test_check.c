@@ -1209,9 +1209,9 @@ START_TEST(test_bip32_optimized)
 		memcpy(&node, &root, sizeof(HDNode));
 		hdnode_public_ckd(&node, i);
 		hdnode_fill_public_key(&node);
-		ecdsa_get_address(node.public_key, 0, HASHER_SHA2, HASHER_SHA2D, addr1, sizeof(addr1));
+		ecdsa_get_address(node.public_key, 0, HASHER_SHA2_RIPEMD, HASHER_SHA2D, addr1, sizeof(addr1));
 		// optimized
-		hdnode_public_ckd_address_optimized(&pub, root.chain_code, i, 0, HASHER_SHA2, HASHER_SHA2D, addr2, sizeof(addr2), 0);
+		hdnode_public_ckd_address_optimized(&pub, root.chain_code, i, 0, HASHER_SHA2_RIPEMD, HASHER_SHA2D, addr2, sizeof(addr2), 0);
 		// check
 		ck_assert_str_eq(addr1, addr2);
 	}
