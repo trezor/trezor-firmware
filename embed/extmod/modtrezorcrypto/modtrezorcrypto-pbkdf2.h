@@ -62,11 +62,11 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type, size
 
     o->prf = 0;
     if (prf.len == 11 && memcmp(prf.buf, "hmac-sha256", prf.len) == 0) {
-        pbkdf2_hmac_sha256_Init(&(o->ctx256), password.buf, password.len, salt.buf, salt.len);
+        pbkdf2_hmac_sha256_Init(&(o->ctx256), password.buf, password.len, salt.buf, salt.len, 1);
         o->prf = 256;
     } else
     if (prf.len == 11 && memcmp(prf.buf, "hmac-sha512", prf.len) == 0) {
-        pbkdf2_hmac_sha512_Init(&(o->ctx512), password.buf, password.len, salt.buf, salt.len);
+        pbkdf2_hmac_sha512_Init(&(o->ctx512), password.buf, password.len, salt.buf, salt.len, 1);
         o->prf = 512;
     } else
     if (o->prf == 0) {

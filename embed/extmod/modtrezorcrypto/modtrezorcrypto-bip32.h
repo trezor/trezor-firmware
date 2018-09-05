@@ -517,7 +517,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(mp_obj_t mnemonic) 
         mp_raise_ValueError("Invalid mnemonic");
     }
 
-    const int res = hdnode_from_seed_cardano(entropy, entropy_len / 8, &hdnode);
+    const int res = hdnode_from_seed_cardano((const uint8_t *)"", 0, entropy, entropy_len / 8, &hdnode);
     if (!res) {
         mp_raise_ValueError("Secret key generation from mnemonic is looping forever");
     }else if(res == -1){
