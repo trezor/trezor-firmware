@@ -3,8 +3,10 @@
 
 /* sqrt(x) is such an integer y that 0 <= y <= p - 1, y % 2 = 0, and y^2 = x (mod p). */
 /* d = -121665 / 121666 */
+#if !defined(NDEBUG)
 static const bignum25519 ALIGN(16) fe_d = {
 		0x35978a3, 0x0d37284, 0x3156ebd, 0x06a0a0e, 0x001c029, 0x179e898, 0x3a03cbb, 0x1ce7198, 0x2e2b6ff, 0x1480db3}; /* d */
+#endif
 static const bignum25519 ALIGN(16) fe_sqrtm1 = {
 		0x20ea0b0, 0x186c9d2, 0x08f189d, 0x035697f, 0x0bd0c60, 0x1fbd7a7, 0x2804c9e, 0x1e16569, 0x004fc1d, 0x0ae0c92}; /* sqrt(-1) */
 //static const bignum25519 ALIGN(16) fe_d2 = {
