@@ -27,8 +27,6 @@
 #include "sha2.h"
 #include "memzero.h"
 
-#define CEILING_POS(X) ((X-(uint32_t)(X)) > 0 ? (uint32_t)(X+1) : (uint32_t)(X))
-
 void pbkdf2_hmac_sha256_Init(PBKDF2_HMAC_SHA256_CTX *pctx, const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t blocknr)
 {
 	SHA256_CTX ctx;
@@ -81,7 +79,7 @@ void pbkdf2_hmac_sha256_Final(PBKDF2_HMAC_SHA256_CTX *pctx, uint8_t *key)
 
 void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen)
 {
-	uint32_t blocks_count = (uint32_t) CEILING_POS((float) keylen / SHA256_DIGEST_LENGTH);
+	uint32_t blocks_count = (keylen + SHA256_DIGEST_LENGTH - 1) / SHA256_DIGEST_LENGTH;
 
 	int unfinished_key_size = keylen;
 	for (uint32_t blocknr = 1; blocknr <= blocks_count; blocknr++) {
@@ -157,7 +155,7 @@ void pbkdf2_hmac_sha512_Final(PBKDF2_HMAC_SHA512_CTX *pctx, uint8_t *key)
 
 void pbkdf2_hmac_sha512(const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen)
 {
-	uint32_t blocks_count = (uint32_t) CEILING_POS((float) keylen / SHA512_DIGEST_LENGTH);
+	uint32_t blocks_count = (keylen + SHA512_DIGEST_LENGTH - 1) / SHA512_DIGEST_LENGTH;
 
 	int unfinished_key_size = keylen;
 	for (uint32_t blocknr = 1; blocknr <= blocks_count; blocknr++) {
