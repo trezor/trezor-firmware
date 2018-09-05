@@ -28,6 +28,7 @@ class MoneroTransactionData(p.MessageType):
         12: ('exp_tx_prefix_hash', p.BytesType, 0),
         13: ('use_tx_keys', p.BytesType, p.FLAG_REPEATED),
         14: ('rsig_data', MoneroTransactionRsigData, 0),
+        15: ('integrated_indices', p.UVarintType, p.FLAG_REPEATED),
     }
 
     def __init__(
@@ -46,6 +47,7 @@ class MoneroTransactionData(p.MessageType):
         exp_tx_prefix_hash: bytes = None,
         use_tx_keys: List[bytes] = None,
         rsig_data: MoneroTransactionRsigData = None,
+        integrated_indices: List[int] = None,
     ) -> None:
         self.version = version
         self.payment_id = payment_id
@@ -61,3 +63,4 @@ class MoneroTransactionData(p.MessageType):
         self.exp_tx_prefix_hash = exp_tx_prefix_hash
         self.use_tx_keys = use_tx_keys if use_tx_keys is not None else []
         self.rsig_data = rsig_data
+        self.integrated_indices = integrated_indices if integrated_indices is not None else []

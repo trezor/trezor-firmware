@@ -18,18 +18,16 @@ class TezosSignTx(p.MessageType):
     MESSAGE_WIRE_TYPE = 152
     FIELDS = {
         1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('curve', p.UVarintType, 0),  # default=Ed25519
-        3: ('branch', p.BytesType, 0),
-        4: ('reveal', TezosRevealOp, 0),
-        5: ('transaction', TezosTransactionOp, 0),
-        6: ('origination', TezosOriginationOp, 0),
-        7: ('delegation', TezosDelegationOp, 0),
+        2: ('branch', p.BytesType, 0),
+        3: ('reveal', TezosRevealOp, 0),
+        4: ('transaction', TezosTransactionOp, 0),
+        5: ('origination', TezosOriginationOp, 0),
+        6: ('delegation', TezosDelegationOp, 0),
     }
 
     def __init__(
         self,
         address_n: List[int] = None,
-        curve: int = None,
         branch: bytes = None,
         reveal: TezosRevealOp = None,
         transaction: TezosTransactionOp = None,
@@ -37,7 +35,6 @@ class TezosSignTx(p.MessageType):
         delegation: TezosDelegationOp = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
-        self.curve = curve
         self.branch = branch
         self.reveal = reveal
         self.transaction = transaction
