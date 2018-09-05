@@ -304,7 +304,7 @@
         "trezor": {
             "editable": true,
             "git": "https://github.com/trezor/python-trezor",
-            "ref": "b5ef996b1d95cbdd8a18776c5eea854c8917e16d"
+            "ref": "master"
         },
         "urllib3": {
             "hashes": [
