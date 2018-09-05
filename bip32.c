@@ -260,38 +260,23 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i)
 }
 
 #if USE_CARDANO
-/* sk1 is zl8 and contains only 29 bytes of active data,
- * so it's not going to overflow when adding to sk2 */
-void scalar_add_no_overflow(const uint8_t * sk1, const uint8_t * sk2, uint8_t * res)
+static void scalar_multiply8(const uint8_t *src, int bytes, uint8_t *dst)
 {
-    uint16_t r = 0; int i;
-    for (i = 0; i < 32; i++) {
-	    r = (uint16_t) sk1[i] + (uint16_t) sk2[i] + r;
-	    res[i] = (uint8_t) r;
-	    r >>= 8;
-    }
-}
-
-static void multiply8(uint8_t *dst, uint8_t *src, int bytes)
-{
-	int i;
 	uint8_t prev_acc = 0;
-	for (i = 0; i < bytes; i++) {
+	for (int i = 0; i < bytes; i++) {
 		dst[i] = (src[i] << 3) + (prev_acc & 0x7);
 		prev_acc = src[i] >> 5;
 	}
-	dst[bytes] = src[bytes-1] >> 5;
+	dst[bytes] = src[bytes - 1] >> 5;
 }
 
-static void add_256bits(uint8_t *dst, uint8_t *src1, uint8_t *src2)
+static void scalar_add_256bits(const uint8_t *src1, const uint8_t *src2, uint8_t *dst)
 {
-	int i; uint8_t carry = 0;
-	for (i = 0; i < 32; i++) {
-		uint8_t a = src1[i];
-		uint8_t b = src2[i];
-		uint16_t r = (uint16_t) a + (uint16_t) b + (uint16_t) carry;
+	uint16_t r = 0;
+	for (int i = 0; i < 32; i++) {
+		r = r + (uint16_t)src1[i] + (uint16_t)src2[i];
 		dst[i] = r & 0xff;
-		carry = (r >= 0x100) ? 1 : 0;
+		r >>= 8;
 	}
 }
 
@@ -332,12 +317,12 @@ int hdnode_private_ckd_cardano(HDNode *inout, uint32_t index)
 	memset(zl8, 0, 32);
 
 	/* get 8 * Zl */
-	multiply8(zl8, z, 28);
+	scalar_multiply8(z, 28, zl8);
 	/* Kl = 8*Zl + parent(K)l */
-	scalar_add_no_overflow(zl8, priv_key, res_key);
+	scalar_add_256bits(zl8, priv_key, res_key);
 
 	/* Kr = Zr + parent(K)r */
-	add_256bits(res_key + 32, z+32, priv_key+32);
+	scalar_add_256bits(z + 32, priv_key + 32, res_key + 32);
 
 	memcpy(inout->private_key, res_key, 32);
 	memcpy(inout->private_key_extension, res_key + 32, 32);
