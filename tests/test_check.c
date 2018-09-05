@@ -2586,19 +2586,19 @@ START_TEST(test_pbkdf2_hmac_sha256)
 	uint8_t k[40], s[40];
 
 	strcpy((char *)s, "salt");
-	pbkdf2_hmac_sha256((uint8_t *)"password", 8, s, 4, 1, k);
+	pbkdf2_hmac_sha256((uint8_t *)"password", 8, s, 4, 1, k, 32);
 	ck_assert_mem_eq(k, fromhex("120fb6cffcf8b32c43e7225256c4f837a86548c92ccc35480805987cb70be17b"), 32);
 
 	strcpy((char *)s, "salt");
-	pbkdf2_hmac_sha256((uint8_t *)"password", 8, s, 4, 2, k);
+	pbkdf2_hmac_sha256((uint8_t *)"password", 8, s, 4, 2, k, 32);
 	ck_assert_mem_eq(k, fromhex("ae4d0c95af6b46d32d0adff928f06dd02a303f8ef3c251dfd6e2d85a95474c43"), 32);
 
 	strcpy((char *)s, "salt");
-	pbkdf2_hmac_sha256((uint8_t *)"password", 8, s, 4, 4096, k);
+	pbkdf2_hmac_sha256((uint8_t *)"password", 8, s, 4, 4096, k, 32);
 	ck_assert_mem_eq(k, fromhex("c5e478d59288c841aa530db6845c4c8d962893a001ce4e11a4963873aa98134a"), 32);
 
 	strcpy((char *)s, "saltSALTsaltSALTsaltSALTsaltSALTsalt");
-	pbkdf2_hmac_sha256((uint8_t *)"passwordPASSWORDpassword", 3*8, s, 9*4, 4096, k);
+	pbkdf2_hmac_sha256((uint8_t *)"passwordPASSWORDpassword", 3*8, s, 9*4, 4096, k, 32);
 	ck_assert_mem_eq(k, fromhex("348c89dbcbd32b2f32d814b8116e84cf2b17347ebc1800181c4e2a1fb8dd53e1"), 32);
 }
 END_TEST
@@ -2609,19 +2609,19 @@ START_TEST(test_pbkdf2_hmac_sha512)
 	uint8_t k[64], s[40];
 
 	strcpy((char *)s, "salt");
-	pbkdf2_hmac_sha512((uint8_t *)"password", 8, s, 4, 1, k);
+	pbkdf2_hmac_sha512((uint8_t *)"password", 8, s, 4, 1, k, 64);
 	ck_assert_mem_eq(k, fromhex("867f70cf1ade02cff3752599a3a53dc4af34c7a669815ae5d513554e1c8cf252c02d470a285a0501bad999bfe943c08f050235d7d68b1da55e63f73b60a57fce"), 64);
 
 	strcpy((char *)s, "salt");
-	pbkdf2_hmac_sha512((uint8_t *)"password", 8, s, 4, 2, k);
+	pbkdf2_hmac_sha512((uint8_t *)"password", 8, s, 4, 2, k, 64);
 	ck_assert_mem_eq(k, fromhex("e1d9c16aa681708a45f5c7c4e215ceb66e011a2e9f0040713f18aefdb866d53cf76cab2868a39b9f7840edce4fef5a82be67335c77a6068e04112754f27ccf4e"), 64);
 
 	strcpy((char *)s, "salt");
-	pbkdf2_hmac_sha512((uint8_t *)"password", 8, s, 4, 4096, k);
+	pbkdf2_hmac_sha512((uint8_t *)"password", 8, s, 4, 4096, k, 64);
 	ck_assert_mem_eq(k, fromhex("d197b1b33db0143e018b12f3d1d1479e6cdebdcc97c5c0f87f6902e072f457b5143f30602641b3d55cd335988cb36b84376060ecd532e039b742a239434af2d5"), 64);
 
 	strcpy((char *)s, "saltSALTsaltSALTsaltSALTsaltSALTsalt");
-	pbkdf2_hmac_sha512((uint8_t *)"passwordPASSWORDpassword", 3*8, s, 9*4, 4096, k);
+	pbkdf2_hmac_sha512((uint8_t *)"passwordPASSWORDpassword", 3*8, s, 9*4, 4096, k, 64);
 	ck_assert_mem_eq(k, fromhex("8c0511f4c6e597c6ac6315d8f0362e225f3c501495ba23b868c005174dc4ee71115b59f9e60cd9532fa33e0f75aefe30225c583a186cd82bd4daea9724a3d3b8"), 64);
 }
 END_TEST
@@ -5063,6 +5063,7 @@ Suite *test_suite(void)
 
 #if USE_CARDANO
 	tc = tcase_create("bip32-cardano");
+
 	tcase_add_test(tc, test_bip32_cardano_hdnode_vector_1);
 	tcase_add_test(tc, test_bip32_cardano_hdnode_vector_2);
 	tcase_add_test(tc, test_bip32_cardano_hdnode_vector_3);
@@ -5070,6 +5071,7 @@ Suite *test_suite(void)
 	tcase_add_test(tc, test_bip32_cardano_hdnode_vector_5);
 	tcase_add_test(tc, test_bip32_cardano_hdnode_vector_6);
 	tcase_add_test(tc, test_bip32_cardano_hdnode_vector_7);
+
 	tcase_add_test(tc, test_ed25519_cardano_sign_vectors);
 	suite_add_tcase(s,tc);
 #endif
