@@ -69,6 +69,7 @@ def validate(msg: RippleSignTx):
         msg.fee,
         msg.sequence,
         msg.payment,
+    ) or msg.payment and None in (
         msg.payment.amount,
         msg.payment.destination,
     ):
