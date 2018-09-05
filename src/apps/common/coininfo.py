@@ -515,7 +515,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
-        curve_name='secp256k1',
+        curve_name='secp256k1-smart',
     ),
     CoinInfo(
         coin_name="SmartCash Testnet",
@@ -533,7 +533,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
-        curve_name='secp256k1',
+        curve_name='secp256k1-smart',
     ),
     CoinInfo(
         coin_name="Vertcoin",
