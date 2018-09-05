@@ -81,6 +81,11 @@
 #define USE_MONERO 0
 #endif
 
+// support CARDANO operations
+#ifndef USE_CARDANO
+#define USE_CARDANO 0
+#endif
+
 // support Keccak hashing
 #ifndef USE_KECCAK
 #define USE_KECCAK 1
