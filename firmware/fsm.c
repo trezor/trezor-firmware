@@ -47,7 +47,6 @@
 #include "crypto.h"
 #include "base58.h"
 #include "bip39.h"
-#include "ripemd160.h"
 #include "curves.h"
 #include "secp256k1.h"
 #include "ethereum.h"

@@ -566,7 +566,7 @@ bool storage_getRootNode(HDNode *node, const char *curve, bool usePassphrase)
 			uint8_t secret[64];
 			PBKDF2_HMAC_SHA512_CTX pctx;
 			char oldTiny = usbTiny(1);
-			pbkdf2_hmac_sha512_Init(&pctx, (const uint8_t *)sessionPassphrase, strlen(sessionPassphrase), (const uint8_t *)"TREZORHD", 8);
+			pbkdf2_hmac_sha512_Init(&pctx, (const uint8_t *)sessionPassphrase, strlen(sessionPassphrase), (const uint8_t *)"TREZORHD", 8, 1);
 			get_root_node_callback(0, BIP39_PBKDF2_ROUNDS);
 			for (int i = 0; i < 8; i++) {
 				pbkdf2_hmac_sha512_Update(&pctx, BIP39_PBKDF2_ROUNDS / 8);

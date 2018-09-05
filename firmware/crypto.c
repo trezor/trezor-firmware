@@ -20,7 +20,6 @@
 #include <string.h>
 #include "crypto.h"
 #include "sha2.h"
-#include "ripemd160.h"
 #include "pbkdf2.h"
 #include "aes/aes.h"
 #include "hmac.h"
