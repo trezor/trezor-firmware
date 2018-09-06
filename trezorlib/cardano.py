@@ -42,10 +42,14 @@ def sign_tx(
     inputs: List[messages.CardanoTxInputType],
     outputs: List[messages.CardanoTxOutputType],
     transactions: List[bytes],
+    network,
 ):
     response = client.call(
         messages.CardanoSignTx(
-            inputs=inputs, outputs=outputs, transactions_count=len(transactions)
+            inputs=inputs,
+            outputs=outputs,
+            transactions_count=len(transactions),
+            network=network,
         )
     )
 

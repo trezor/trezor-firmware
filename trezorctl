@@ -1095,8 +1095,9 @@ def ethereum_sign_tx(
     required=True,
     help="Transaction in JSON format",
 )
+@click.option("-N", "--network", type=int, default=1)
 @click.pass_obj
-def cardano_sign_tx(connect, file):
+def cardano_sign_tx(connect, file, network):
     client = connect()
 
     transaction = json.load(file)
@@ -1105,7 +1106,7 @@ def cardano_sign_tx(connect, file):
     outputs = [cardano.create_output(output) for output in transaction["outputs"]]
     transactions = transaction["transactions"]
 
-    signed_transaction = cardano.sign_tx(client, inputs, outputs, transactions)
+    signed_transaction = cardano.sign_tx(client, inputs, outputs, transactions, network)
 
     return {
         "tx_hash": binascii.hexlify(signed_transaction.tx_hash).decode(),
