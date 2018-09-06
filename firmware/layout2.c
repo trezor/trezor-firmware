@@ -244,43 +244,39 @@ void layoutHome(void)
 	system_millis_lock_start = timer_ms();
 }
 
-void layoutConfirmOutput(const CoinInfo *coin, const TxAck_TransactionType_TxOutputType *out)
+static void render_address_dialog(const CoinInfo *coin, const char *address, const char *line1, const char *line2, const char *extra_line)
 {
-	char str_out[32 + 3];
-	bn_format_uint64(out->amount, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out) - 3);
-	strlcat(str_out, " to", sizeof(str_out));
-	const char *addr = out->address;
-	if (coin->cashaddr_prefix) {
+	if (coin && coin->cashaddr_prefix) {
 		/* If this is a cashaddr address, remove the prefix from the
 		 * string presented to the user
 		 */
 		int prefix_len = strlen(coin->cashaddr_prefix);
-		if (strncmp(addr, coin->cashaddr_prefix, prefix_len) == 0
-			&& addr[prefix_len] == ':') {
-			addr += prefix_len + 1;
+		if (strncmp(address, coin->cashaddr_prefix, prefix_len) == 0
+			&& address[prefix_len] == ':') {
+			address += prefix_len + 1;
 		}
 	}
-	int addrlen = strlen(addr);
+	int addrlen = strlen(address);
 	int numlines = addrlen <= 42 ? 2 : 3;
 	int linelen = (addrlen - 1) / numlines + 1;
 	if (linelen > 21) {
 		linelen = 21;
 	}
-	const char **str = split_message((const uint8_t *)addr, addrlen, linelen);
+	const char **str = split_message((const uint8_t *)address, addrlen, linelen);
 	layoutLast = layoutDialogSwipe;
 	layoutSwipe();
 	oledClear();
 	oledDrawBitmap(0, 0, &bmp_icon_question);
-	oledDrawString(20, 0 * 9, _("Confirm sending"), FONT_STANDARD);
-	oledDrawString(20, 1 * 9, str_out, FONT_STANDARD);
+	oledDrawString(20, 0 * 9, line1, FONT_STANDARD);
+	oledDrawString(20, 1 * 9, line2, FONT_STANDARD);
 	int left = linelen > 18 ? 0 : 20;
 	oledDrawString(left, 2 * 9, str[0], FONT_FIXED);
 	oledDrawString(left, 3 * 9, str[1], FONT_FIXED);
 	oledDrawString(left, 4 * 9, str[2], FONT_FIXED);
 	oledDrawString(left, 5 * 9, str[3], FONT_FIXED);
 	if (!str[3][0]) {
-		if (out->address_n_count > 0) {
-			oledDrawString(0, 5*9, address_n_str(out->address_n, out->address_n_count), FONT_STANDARD);
+		if (extra_line) {
+			oledDrawString(0, 5 * 9, extra_line, FONT_STANDARD);
 		} else {
 			oledHLine(OLED_HEIGHT - 13);
 		}
@@ -288,6 +284,16 @@ void layoutConfirmOutput(const CoinInfo *coin, const TxAck_TransactionType_TxOut
 	layoutButtonNo(_("Cancel"));
 	layoutButtonYes(_("Confirm"));
 	oledRefresh();
+}
+
+void layoutConfirmOutput(const CoinInfo *coin, const TxAck_TransactionType_TxOutputType *out)
+{
+	char str_out[32 + 3];
+	bn_format_uint64(out->amount, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out) - 3);
+	strlcat(str_out, " to", sizeof(str_out));
+	const char *address = out->address;
+	const char *extra_line = (out->address_n_count > 0) ? address_n_str(out->address_n, out->address_n_count) : 0;
+	render_address_dialog(coin, address, _("Confirm sending"), str_out, extra_line);
 }
 
 void layoutConfirmOpReturn(const uint8_t *data, uint32_t size)
@@ -364,13 +370,9 @@ void layoutSignMessage(const uint8_t *msg, uint32_t len)
 		str[0], str[1], str[2], str[3], NULL, NULL);
 }
 
-void layoutVerifyAddress(const char *address)
+void layoutVerifyAddress(const CoinInfo *coin, const char *address)
 {
-	const char **str = split_message((const uint8_t *)address, strlen(address), 17);
-	layoutDialogSwipe(&bmp_icon_info, _("Cancel"), _("Confirm"),
-		_("Confirm address?"),
-		_("Message signed by:"),
-		str[0], str[1], str[2], NULL, NULL);
+	render_address_dialog(coin, address, _("Confirm address?"), _("Message signed by:"), 0);
 }
 
 void layoutVerifyMessage(const uint8_t *msg, uint32_t len)

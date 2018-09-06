@@ -90,7 +90,7 @@ void fsm_msgEthereumVerifyMessage(EthereumVerifyMessage *msg)
 
 	char address[43] = { '0', 'x' };
 	ethereum_address_checksum(msg->address.bytes, address + 2, false, 0);
-	layoutVerifyAddress(address);
+	layoutVerifyAddress(NULL, address);
 	if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_Other, false)) {
 		fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
 		layoutHome();

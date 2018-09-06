@@ -254,7 +254,7 @@ void fsm_msgVerifyMessage(VerifyMessage *msg)
 	if (!coin) return;
 	layoutProgressSwipe(_("Verifying"), 0);
 	if (msg->signature.size == 65 && cryptoMessageVerify(coin, msg->message.bytes, msg->message.size, msg->address, msg->signature.bytes) == 0) {
-		layoutVerifyAddress(msg->address);
+		layoutVerifyAddress(coin, msg->address);
 		if (!protectButton(ButtonRequest_ButtonRequestType_ButtonRequest_Other, false)) {
 			fsm_sendFailure(Failure_FailureType_Failure_ActionCancelled, NULL);
 			layoutHome();
