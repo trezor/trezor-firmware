@@ -498,9 +498,7 @@ class ProtocolMixin(object):
             if not self.tx_api:
                 raise RuntimeError("TX_API not defined")
 
-            prev_tx = self.tx_api.get_tx(
-                binascii.hexlify(inp.prev_hash).decode()
-            )
+            prev_tx = self.tx_api.get_tx(binascii.hexlify(inp.prev_hash).decode())
             txes[inp.prev_hash] = prev_tx
 
         return txes
