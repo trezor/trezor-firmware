@@ -1,5 +1,7 @@
 /*
- * This file is part of the TREZOR project.
+ * This file is part of the TREZOR project, https://trezor.io/
+ *
+ * Copyright (C) 2018 ZuluCrypto <zulucrypto@protonmail.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -13,15 +15,16 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Stellar signing workflow:
- *  1. Client sends a StellarSignTx method to the device with transaction header information
- *  2. Device confirms transaction details with the user and requests first operation
- *  3. Client sends protobuf message with details about the operation to sign
- *  4. Device confirms operation with user
- *  5a. If there are more operations in the transaction, device responds with StellarTxOpRequest. Go to 3
- *  5b. If the operation is the last one, device responds with StellarSignedTx
  */
+
+// Stellar signing workflow:
+//
+// 1.  Client sends a StellarSignTx method to the device with transaction header information
+// 2.  Device confirms transaction details with the user and requests first operation
+// 3.  Client sends protobuf message with details about the operation to sign
+// 4.  Device confirms operation with user
+// 5a. If there are more operations in the transaction, device responds with StellarTxOpRequest. Go to 3
+// 5b. If the operation is the last one, device responds with StellarSignedTx
 
 #include <stdbool.h>
 #include <time.h>

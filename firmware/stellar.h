@@ -1,5 +1,7 @@
 /*
- * This file is part of the TREZOR project.
+ * This file is part of the TREZOR project, https://trezor.io/
+ *
+ * Copyright (C) 2018 ZuluCrypto <zulucrypto@protonmail.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
