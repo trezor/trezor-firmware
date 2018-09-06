@@ -209,6 +209,8 @@ void fsm_msgGetAddress(GetAddress *msg)
 
 void fsm_msgSignMessage(SignMessage *msg)
 {
+	// CHECK_PARAM(is_ascii_only(msg->message.bytes, msg->message.size), _("Cannot sign non-ASCII strings"));
+
 	RESP_INIT(MessageSignature);
 
 	CHECK_INITIALIZED

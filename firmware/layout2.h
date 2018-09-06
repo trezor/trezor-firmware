@@ -72,5 +72,6 @@ void layoutNEMLevy(const NEMSignTx_NEMMosaicCreation_NEMMosaicDefinition *defini
 void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count, const uint8_t *data, uint32_t len, bool final_sign);
 
 const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen);
+bool is_valid_ascii(const uint8_t *data, uint32_t size);
 
 #endif

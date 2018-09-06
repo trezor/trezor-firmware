@@ -296,17 +296,20 @@ void layoutConfirmOutput(const CoinInfo *coin, const TxAck_TransactionType_TxOut
 	render_address_dialog(coin, address, _("Confirm sending"), str_out, extra_line);
 }
 
-void layoutConfirmOpReturn(const uint8_t *data, uint32_t size)
+bool is_valid_ascii(const uint8_t *data, uint32_t size)
 {
-	bool ascii_only = true;
 	for (uint32_t i = 0; i < size; i++) {
 		if (data[i] < ' ' || data[i] > '~') {
-			ascii_only = false;
-			break;
+			return false;
 		}
 	}
+	return true;
+}
+
+void layoutConfirmOpReturn(const uint8_t *data, uint32_t size)
+{
 	const char **str;
-	if (!ascii_only) {
+	if (!is_valid_ascii(data, size)) {
 		char hex[65];
 		memset(hex, 0, sizeof(hex));
 		data2hex(data, (size > 32) ? 32 : size, hex);
