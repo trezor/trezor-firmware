@@ -691,7 +691,7 @@ def sign_tx(connect, coin):
         )
         if txapi.bip115:
             prev_output = txapi.get_tx(
-                binascii.hexlify(prev_hash).decode("utf-8")
+                binascii.hexlify(prev_hash).decode()
             ).bin_outputs[prev_index]
             prev_blockhash = prev_output.block_hash
             prev_blockheight = prev_output.block_height

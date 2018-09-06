@@ -135,7 +135,7 @@ def validate_firmware(filename):
     header_bytes = FirmwareHeader.build(stripped_header)
     digest = pyblake2.blake2s(header_bytes).digest()
 
-    print("Fingerprint: {}".format(binascii.hexlify(digest).decode("ascii")))
+    print("Fingerprint: {}".format(binascii.hexlify(digest).decode()))
 
     global_pk = cosi.combine_keys(
         vendor.pubkeys[i] for i in range(8) if header.sigmask & (1 << i)

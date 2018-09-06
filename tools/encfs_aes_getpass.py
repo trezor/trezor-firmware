@@ -100,7 +100,7 @@ def main():
 
         data = {'label': label,
                 'bip32_path': bip32_path,
-                'password_encrypted_hex': binascii.hexlify(passw_encrypted).decode('ascii')}
+                'password_encrypted_hex': binascii.hexlify(passw_encrypted).decode()}
 
         json.dump(data, open(passw_file, 'w'))
 

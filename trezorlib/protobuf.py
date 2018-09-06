@@ -329,7 +329,7 @@ def dump_message(writer, msg):
 
             elif ftype is UnicodeType:
                 if not isinstance(svalue, bytes):
-                    svalue = svalue.encode("utf-8")
+                    svalue = svalue.encode()
 
                 dump_uvarint(writer, len(svalue))
                 writer.write(svalue)
@@ -388,7 +388,7 @@ def format_message(
             if mostly_printable(value):
                 output = repr(value)
             else:
-                output = "0x" + binascii.hexlify(value).decode("ascii")
+                output = "0x" + binascii.hexlify(value).decode()
             return "{} bytes {}{}".format(length, output, suffix)
 
         return repr(value)

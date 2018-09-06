@@ -61,7 +61,7 @@ class TestMsgCardanoGetPublicKey(TrezorTest):
 
         key = get_public_key(self.client, parse_path(path))
 
-        assert hexlify(key.node.public_key).decode("utf8") == public_key
-        assert hexlify(key.node.chain_code).decode("utf8") == chain_code
+        assert hexlify(key.node.public_key).decode() == public_key
+        assert hexlify(key.node.chain_code).decode() == chain_code
         assert key.xpub == public_key + chain_code
         assert key.root_hd_passphrase == root_hd_passphrase

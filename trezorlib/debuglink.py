@@ -161,7 +161,7 @@ def load_device_by_mnemonic(
     mnemonic = Mnemonic.normalize_string(mnemonic)
 
     # Convert mnemonic to ASCII stream
-    mnemonic = mnemonic.encode("utf-8")
+    mnemonic = mnemonic.encode()
 
     m = Mnemonic("english")
 

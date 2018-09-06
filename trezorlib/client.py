@@ -79,7 +79,7 @@ except ImportError:
                 # skip special keys: read the scancode and repeat
                 msvcrt.getch()
                 continue
-            return key.decode("latin1")
+            return key.decode()
 
 
 def get_buttonrequest_value(code):
@@ -499,7 +499,7 @@ class ProtocolMixin(object):
                 raise RuntimeError("TX_API not defined")
 
             prev_tx = self.tx_api.get_tx(
-                binascii.hexlify(inp.prev_hash).decode("utf-8")
+                binascii.hexlify(inp.prev_hash).decode()
             )
             txes[inp.prev_hash] = prev_tx
 
