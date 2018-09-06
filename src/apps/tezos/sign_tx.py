@@ -2,26 +2,24 @@ import ustruct
 
 from trezor import wire
 from trezor.crypto import hashlib
+from trezor.crypto.curve import ed25519
 from trezor.messages import TezosContractType
 from trezor.messages.TezosSignedTx import TezosSignedTx
 
 from apps.common import seed
 from apps.tezos.helpers import (
+    TEZOS_CURVE,
+    TEZOS_ORIGINATED_ADDRESS_PREFIX,
+    TEZOS_SIGNATURE_PREFIX,
     b58cencode,
-    check_sig_remove_first_byte,
-    get_address_prefix,
-    get_curve_module,
-    get_curve_name,
-    get_sig_prefix,
+    tezos_get_address_prefix,
 )
 from apps.tezos.layout import *
 
 
-async def tezos_sign_tx(ctx, msg):
+async def sign_tx(ctx, msg):
     address_n = msg.address_n or ()
-    curve = msg.curve or 0
-
-    node = await seed.derive_node(ctx, address_n, get_curve_name(curve))
+    node = await seed.derive_node(ctx, address_n, TEZOS_CURVE)
 
     if msg.transaction is not None:
         to = _get_address_from_contract(msg.transaction.destination)
@@ -37,9 +35,12 @@ async def tezos_sign_tx(ctx, msg):
 
     elif msg.delegation is not None:
         source = _get_address_from_contract(msg.delegation.source)
-        delegate = _get_address_by_tag(msg.delegation.delegate)
 
-        if source != delegate:
+        delegate = None
+        if msg.delegation.delegate is not None:
+            delegate = _get_address_by_tag(msg.delegation.delegate)
+
+        if delegate is not None and source != delegate:
             await require_confirm_delegation_baker(ctx, delegate)
             await require_confirm_set_delegate(ctx, msg.delegation.fee)
         # if account registers itself as a delegate
@@ -55,17 +56,13 @@ async def tezos_sign_tx(ctx, msg):
     wm_opbytes = watermark + opbytes
     wm_opbytes_hash = hashlib.blake2b(wm_opbytes, outlen=32).digest()
 
-    curve_module = get_curve_module(curve)
-    signature = curve_module.sign(node.private_key(), wm_opbytes_hash)
-
-    if check_sig_remove_first_byte(curve):
-        signature = signature[1:]
+    signature = ed25519.sign(node.private_key(), wm_opbytes_hash)
 
     sig_op_contents = opbytes + signature
     sig_op_contents_hash = hashlib.blake2b(sig_op_contents, outlen=32).digest()
     ophash = b58cencode(sig_op_contents_hash, prefix="o")
 
-    sig_prefixed = b58cencode(signature, prefix=get_sig_prefix(curve))
+    sig_prefixed = b58cencode(signature, prefix=TEZOS_SIGNATURE_PREFIX)
 
     return TezosSignedTx(
         signature=sig_prefixed, sig_op_contents=sig_op_contents, operation_hash=ophash
@@ -74,7 +71,7 @@ async def tezos_sign_tx(ctx, msg):
 
 def _get_address_by_tag(address_hash):
     tag = int(address_hash[0])
-    return b58cencode(address_hash[1:], prefix=get_address_prefix(tag))
+    return b58cencode(address_hash[1:], prefix=tezos_get_address_prefix(tag))
 
 
 def _get_address_from_contract(address):
@@ -82,7 +79,7 @@ def _get_address_from_contract(address):
         return _get_address_by_tag(address.hash)
 
     elif address.tag == TezosContractType.Originated:
-        return b58cencode(address.hash[:-1], prefix="KT1")
+        return b58cencode(address.hash[:-1], prefix=TEZOS_ORIGINATED_ADDRESS_PREFIX)
 
     raise wire.DataError("Invalid contract type")
 

@@ -1,4 +1,5 @@
 from trezor import ui
+from trezor.crypto.curve import ed25519
 from trezor.messages import ButtonRequestType
 from trezor.messages.TezosPublicKey import TezosPublicKey
 from trezor.ui.text import Text
@@ -6,22 +7,16 @@ from trezor.utils import chunks
 
 from apps.common import seed
 from apps.common.confirm import require_confirm
-from apps.tezos.helpers import (
-    b58cencode,
-    get_curve_module,
-    get_curve_name,
-    get_pk_prefix,
-)
+from apps.tezos.helpers import TEZOS_CURVE, TEZOS_PUBLICKEY_PREFIX, b58cencode
 
 
-async def tezos_get_public_key(ctx, msg):
+async def get_public_key(ctx, msg):
     address_n = msg.address_n or ()
-    curve = msg.curve or 0
-    node = await seed.derive_node(ctx, address_n, get_curve_name(curve))
+    node = await seed.derive_node(ctx, address_n, TEZOS_CURVE)
 
     sk = node.private_key()
-    pk = get_curve_module(curve).publickey(sk)
-    pk_prefixed = b58cencode(pk, prefix=get_pk_prefix(curve))
+    pk = ed25519.publickey(sk)
+    pk_prefixed = b58cencode(pk, prefix=TEZOS_PUBLICKEY_PREFIX)
 
     if msg.show_display:
         await _show_tezos_pubkey(ctx, pk_prefixed)

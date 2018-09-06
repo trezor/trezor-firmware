@@ -1,25 +1,20 @@
 from trezor.crypto import hashlib
+from trezor.crypto.curve import ed25519
 from trezor.messages.TezosAddress import TezosAddress
 
 from apps.common import seed
-from apps.common.show import show_address, show_qr
-from apps.tezos.helpers import (
-    b58cencode,
-    get_address_prefix,
-    get_curve_module,
-    get_curve_name,
-)
+from apps.common.layout import show_address, show_qr
+from apps.tezos.helpers import TEZOS_CURVE, b58cencode, tezos_get_address_prefix
 
 
-async def tezos_get_address(ctx, msg):
+async def get_address(ctx, msg):
     address_n = msg.address_n or ()
-    curve = msg.curve or 0
-    node = await seed.derive_node(ctx, address_n, get_curve_name(curve))
+    node = await seed.derive_node(ctx, address_n, TEZOS_CURVE)
 
     sk = node.private_key()
-    pk = get_curve_module(curve).publickey(sk)
+    pk = ed25519.publickey(sk)
     pkh = hashlib.blake2b(pk, outlen=20).digest()
-    address = b58cencode(pkh, prefix=get_address_prefix(curve))
+    address = b58cencode(pkh, prefix=tezos_get_address_prefix(0))
 
     if msg.show_display:
         while True:
