@@ -1137,30 +1137,6 @@ def cardano_get_public_key(connect, address):
     return cardano.get_public_key(client, address_n)
 
 
-@cli.command(help="Sign Cardano message.")
-@click.option(
-    "-n", "--address", required=True, help="BIP-32 path to key, e.g. m/44'/1815'/0'/0/0"
-)
-@click.option("-m", "--message", required=True, help="String message to sign")
-@click.pass_obj
-def cardano_sign_message(connect, address, message):
-    client = connect()
-    address_n = tools.parse_path(address)
-
-    return cardano.sign_message(client, address_n, message)
-
-
-@cli.command(help="Verify Cardano message.")
-@click.option("-p", "--public_key", required=True, help="Public key as hex string")
-@click.option("-s", "--signature", required=True, help="Signature as hex string")
-@click.option("-m", "--message", required=True, help="String message which was signed")
-@click.pass_obj
-def cardano_verify_message(connect, public_key, signature, message):
-    client = connect()
-
-    return cardano.verify_message(client, public_key, signature, message)
-
-
 #
 # NEM functions
 #

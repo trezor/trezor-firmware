@@ -18,7 +18,7 @@ import binascii
 from typing import List
 
 from . import messages, tools
-from .tools import CallException, expect, session
+from .tools import expect, session
 
 REQUIRED_FIELDS_TRANSACTION = ("inputs", "outputs", "transactions")
 REQUIRED_FIELDS_INPUT = ("path", "prev_hash", "prev_index", "type")
@@ -34,32 +34,6 @@ def get_address(client, address_n, show_display=False):
 @expect(messages.CardanoPublicKey)
 def get_public_key(client, address_n):
     return client.call(messages.CardanoGetPublicKey(address_n=address_n))
-
-
-@expect(messages.CardanoMessageSignature)
-def sign_message(client, address_n, message):
-    return client.call(
-        messages.CardanoSignMessage(address_n=address_n, message=message.encode())
-    )
-
-
-def verify_message(client, public_key, signature, message):
-    try:
-        response = client.call(
-            messages.CardanoVerifyMessage(
-                public_key=binascii.unhexlify(public_key),
-                signature=binascii.unhexlify(signature),
-                message=message.encode(),
-            )
-        )
-
-    except CallException as error:
-        response = error
-
-    if isinstance(response, messages.Success):
-        return True
-
-    return False
 
 
 @session
