@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from trezorlib import btc
+from trezorlib import btc, messages as proto
 from trezorlib.tools import H_
 
 from ..support import ckd_public as bip32
@@ -131,4 +131,38 @@ class TestMsgGetpublickey(TrezorTest):
         assert (
             btc.get_public_node(self.client, [111, 42], coin_name="Testnet").xpub
             == "tpubDAgixSyai5PWbc8N1mBkHDR5nLgAnHFtY7r4y5EzxqAxrt9YUDpZL3kaRoHVvCfrcwNo31c2isBP2uTHcZxEosuKbyJhCAbrvGoPuLUZ7Mz"
+        )
+
+    def test_script_type(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+        assert (
+            btc.get_public_node(self.client, [], coin_name="Bitcoin").xpub
+            == "xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy"
+        )
+        assert (
+            btc.get_public_node(
+                self.client,
+                [],
+                coin_name="Bitcoin",
+                script_type=proto.InputScriptType.SPENDADDRESS,
+            ).xpub
+            == "xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy"
+        )
+        assert (
+            btc.get_public_node(
+                self.client,
+                [],
+                coin_name="Bitcoin",
+                script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+            ).xpub
+            == "ypub6QqdH2c5z7966KBPZ5yDEQCTKWrkLK4dsw8RRjpMLMtyvvZmJ3nNv7pKdQw6fnQkUrLm6XEeheSCGVSpoJCQGm6fofpt9RoHVJYH72ecmVm"
+        )
+        assert (
+            btc.get_public_node(
+                self.client,
+                [],
+                coin_name="Bitcoin",
+                script_type=proto.InputScriptType.SPENDWITNESS,
+            ).xpub
+            == "zpub6jftahH18ngZwcNWPSkqSVHxVV1CGw48o3eeD8iEiNGrz2NzYhwwYBUTectgfh4ftVTZqzqDAJnk9n4PWzcR4znGg1XJjLcmm2bvVc3Honv"
         )
