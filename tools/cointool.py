@@ -417,7 +417,7 @@ def coindef_from_dict(coin):
         if val is None and fflags & protobuf.FLAG_REPEATED:
             val = []
         elif fname == "signed_message_header":
-            val = val.encode("utf-8")
+            val = val.encode()
         elif fname == "hash_genesis_block":
             val = binascii.unhexlify(val)
         setattr(proto, fname, val)
@@ -587,7 +587,7 @@ def coindefs(outfile):
         icon = Image.open(coin["icon"])
         ser = serialize_coindef(coindef_from_dict(coin), convert_icon(icon))
         sig = sign(ser)
-        definition = binascii.hexlify(sig + ser).decode("ascii")
+        definition = binascii.hexlify(sig + ser).decode()
         coindefs[key] = definition
 
     with outfile:
