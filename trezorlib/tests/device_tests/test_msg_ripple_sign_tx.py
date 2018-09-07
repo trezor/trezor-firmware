@@ -22,12 +22,10 @@ from trezorlib import messages, ripple
 from trezorlib.tools import CallException, parse_path
 
 from .common import TrezorTest
-from .conftest import TREZOR_VERSION
 
 
 @pytest.mark.ripple
 @pytest.mark.skip_t1  # T1 support is not planned
-@pytest.mark.xfail(TREZOR_VERSION == 2, reason="T2 support is not yet finished")
 class TestMsgRippleSignTx(TrezorTest):
     def test_ripple_sign_simple_tx(self):
         self.setup_mnemonic_allallall()

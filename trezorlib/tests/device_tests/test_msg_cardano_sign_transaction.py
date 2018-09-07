@@ -23,12 +23,10 @@ from trezorlib import messages
 from trezorlib.cardano import create_input, create_output
 
 from .common import TrezorTest
-from .conftest import TREZOR_VERSION
 
 
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
-@pytest.mark.xfail(TREZOR_VERSION == 2, reason="T2 support is not yet finished")
 class TestMsgCardanoSignTx(TrezorTest):
     def test_cardano_sign_tx_mainnet(self):
         self.setup_mnemonic_allallall()

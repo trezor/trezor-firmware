@@ -21,12 +21,10 @@ from trezorlib.cardano import get_address
 from trezorlib.tools import parse_path
 
 from .common import TrezorTest
-from .conftest import TREZOR_VERSION
 
 
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
-@pytest.mark.xfail(TREZOR_VERSION == 2, reason="T2 support is not yet finished")
 class TestMsgCardanoGetAddress(TrezorTest):
     @pytest.mark.parametrize(
         "path,expected_address",
