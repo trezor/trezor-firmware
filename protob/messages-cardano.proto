@@ -44,7 +44,6 @@ message CardanoGetPublicKey {
 message CardanoPublicKey {
     optional string xpub = 1;                               // Xpub key
     optional hw.trezor.messages.common.HDNodeType node = 2; // BIP-32 public node
-    optional string root_hd_passphrase = 3;                 // HD passphrase for root in hex format
 }
 
 /**
