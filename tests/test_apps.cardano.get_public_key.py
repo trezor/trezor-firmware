@@ -6,8 +6,8 @@ from ubinascii import hexlify
 
 
 class TestCardanoGetPublicKey(unittest.TestCase):
-    def test_get_public_key(self):
-        mnemonic = "plastic that delay conduct police ticket swim gospel intact harsh obtain entire"
+    def test_get_public_key_scheme(self):
+        mnemonic = "all all all all all all all all all all all all"
         node = bip32.from_mnemonic_cardano(mnemonic)
 
         derivation_paths = [
@@ -17,27 +17,27 @@ class TestCardanoGetPublicKey(unittest.TestCase):
             [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0],
         ]
 
-        root_hd_passphrase = '8ee689a22e1ec569d2ada515c4ee712ad089901b7fe0afb94fe196de944ee814'
+        root_hd_passphrase = None
 
         public_keys = [
-            '2df46e04ebf0816e242bfaa1c73e5ebe8863d05d7a96c8aac16f059975e63f30',
-            '7d1de3f22f53904d007ff833fadd7cd6482ea1e83918b985b4ea33e63c16d183',
-            'f59a28d704df090d8fc641248bdb27d0d001da13ddb332a79cfba8a9fa7233e7',
-            '723fdc0eb1300fe7f2b9b6989216a831835a88695ba2c2d5c50c8470b7d1b239',
+            'a938c8554ae04616cfaae7cd0eb557475082c4e910242ce774967e0bd7492408',
+            '8c47ebce34234d04fd3dfbac33feaba6133e4e3d77c4b5ab18120ec6878ad4ce',
+            '17cc0bf978756d0d5c76f931629036a810c61801b78beecb44555773d13e3791',
+            'b90fb812a2268e9569ff1172e8daed1da3dc7e72c7bded7c5bcb7282039f90d5',
         ]
 
         chain_codes = [
-            '057658de1308930ad4a5663e4f77477014b04954a9d488e62d73b04fc659a35c',
-            '7a04a6aab0ed12af562a26db4d10344454274d0bfa6e3581df1dc02f13c5fbe5',
-            '7f01fc65468ed420e135535261b03845d97b9098f8f08245197c9526d80994f6',
-            'ae09010e921de259b02f34ce7fd76f9c09ad224d436fe8fa38aa212177937ffe',
+            'cbf6ab47c8eb1a0477fc40b25dbb6c4a99454edb97d6fe5acedd3e238ef46fe0',
+            '02ac67c59a8b0264724a635774ca2c242afa10d7ab70e2bf0a8f7d4bb10f1f7a',
+            '646ac4a6295326bae6831be05921edfbcb362de48dfd37b12e74c227dfad768d',
+            'fd8e71c1543de2cdc7f7623130c5f2cceb53549055fa1f5bc88199989e08cce7',
         ]
 
         xpub_keys = [
-            '2df46e04ebf0816e242bfaa1c73e5ebe8863d05d7a96c8aac16f059975e63f30057658de1308930ad4a5663e4f77477014b04954a9d488e62d73b04fc659a35c',
-            '7d1de3f22f53904d007ff833fadd7cd6482ea1e83918b985b4ea33e63c16d1837a04a6aab0ed12af562a26db4d10344454274d0bfa6e3581df1dc02f13c5fbe5',
-            'f59a28d704df090d8fc641248bdb27d0d001da13ddb332a79cfba8a9fa7233e77f01fc65468ed420e135535261b03845d97b9098f8f08245197c9526d80994f6',
-            '723fdc0eb1300fe7f2b9b6989216a831835a88695ba2c2d5c50c8470b7d1b239ae09010e921de259b02f34ce7fd76f9c09ad224d436fe8fa38aa212177937ffe',
+            'a938c8554ae04616cfaae7cd0eb557475082c4e910242ce774967e0bd7492408cbf6ab47c8eb1a0477fc40b25dbb6c4a99454edb97d6fe5acedd3e238ef46fe0',
+            '8c47ebce34234d04fd3dfbac33feaba6133e4e3d77c4b5ab18120ec6878ad4ce02ac67c59a8b0264724a635774ca2c242afa10d7ab70e2bf0a8f7d4bb10f1f7a',
+            '17cc0bf978756d0d5c76f931629036a810c61801b78beecb44555773d13e3791646ac4a6295326bae6831be05921edfbcb362de48dfd37b12e74c227dfad768d',
+            'b90fb812a2268e9569ff1172e8daed1da3dc7e72c7bded7c5bcb7282039f90d5fd8e71c1543de2cdc7f7623130c5f2cceb53549055fa1f5bc88199989e08cce7',
         ]
 
         for index, derivation_path in enumerate(derivation_paths):

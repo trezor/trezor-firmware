@@ -7,7 +7,7 @@ from trezor.messages.MessageType import CardanoTxAck
 from trezor.ui.text import BR
 
 from .address import _break_address_n_to_lines, derive_address_and_node
-from .ui import confirm_with_pagination, progress
+from .layout import confirm_with_pagination, progress
 
 from apps.cardano import cbor
 from apps.common import seed, storage
@@ -22,10 +22,16 @@ async def show_tx(
     change_coins: list,
     fee: float,
     tx_size: float,
+    network_name: str,
 ) -> bool:
     lines = ("%s ADA" % _micro_ada_to_ada(fee), BR, "Tx size:", "%s bytes" % tx_size)
     if not await confirm_with_pagination(
         ctx, lines, "Confirm fee", ui.ICON_SEND, ui.GREEN
+    ):
+        return False
+
+    if not await confirm_with_pagination(
+        ctx, "%s network" % network_name, "Confirm network", ui.ICON_SEND, ui.GREEN
     ):
         return False
 
@@ -71,7 +77,7 @@ async def request_transaction(ctx, tx_req: CardanoTxRequest, index: int):
     return await ctx.call(tx_req, CardanoTxAck)
 
 
-async def sign_transaction(ctx, msg):
+async def sign_tx(ctx, msg):
     mnemonic = storage.get_mnemonic()
     root_node = bip32.from_mnemonic_cardano(mnemonic)
 
@@ -90,7 +96,9 @@ async def sign_transaction(ctx, msg):
         display_homescreen()
 
         # sign the transaction bundle and prepare the result
-        transaction = Transaction(msg.inputs, msg.outputs, transactions, root_node)
+        transaction = Transaction(
+            msg.inputs, msg.outputs, transactions, root_node, msg.network
+        )
         tx_body, tx_hash = transaction.serialise_tx()
         tx = CardanoSignedTx(tx_body=tx_body, tx_hash=tx_hash)
 
@@ -108,6 +116,7 @@ async def sign_transaction(ctx, msg):
         transaction.change_coins,
         transaction.fee,
         len(tx_body),
+        transaction.network.get("name"),
     ):
         raise wire.ActionCancelled("Signing cancelled")
 
@@ -119,16 +128,33 @@ def _micro_ada_to_ada(amount: float) -> float:
 
 
 class Transaction:
-    CARDANO_WITNESS_MAGIC_PREFIX = b"\x01\x1a\x2d\x96\x4a\x09\x58\x20"
-
-    def __init__(self, inputs: list, outputs: list, transactions: list, root_node):
+    def __init__(
+        self, inputs: list, outputs: list, transactions: list, root_node, network
+    ):
         self.inputs = inputs
         self.outputs = outputs
         self.transactions = transactions
         self.root_node = root_node
+        self.network = None
+
+        self._set_network(network)
 
         # attributes have to be always empty in current Cardano
         self.attributes = {}
+
+    def _set_network(self, network):
+        if network == 1:
+            self.network = {
+                "name": "Testnet",
+                "magic_prefix": b"\x01\x1a\x41\x70\xcb\x17\x58\x20",
+            }
+        elif network == 2:
+            self.network = {
+                "name": "Mainnet",
+                "magic_prefix": b"\x01\x1a\x2d\x96\x4a\x09\x58\x20",
+            }
+        else:
+            raise wire.ProcessError("Unknown network index " + str(network))
 
     def _process_inputs(self):
         input_coins = []
@@ -198,7 +224,7 @@ class Transaction:
     def _build_witnesses(self, tx_aux_hash: str):
         witnesses = []
         for index, node in enumerate(self.nodes):
-            message = self.CARDANO_WITNESS_MAGIC_PREFIX + tx_aux_hash
+            message = self.network.get("magic_prefix") + tx_aux_hash
             signature = ed25519.sign_ext(
                 node.private_key(), node.private_key_ext(), message
             )

@@ -165,6 +165,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_derive_cardano(mp_obj_t self, mp_obj_t i
     mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
     uint32_t i = mp_obj_get_int_truncated(index);
     uint32_t fp = hdnode_fingerprint(&o->hdnode);
+
     int res;
     // same as in derive
     if (0 == memcmp(o->hdnode.private_key, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32)) {
@@ -510,14 +511,16 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(mp_obj_t mnemonic) 
     mp_get_buffer_raise(mnemonic, &mnemo, MP_BUFFER_READ);
     HDNode hdnode;
     const char *pmnemonic = mnemo.len > 0 ? mnemo.buf : "";
-    uint8_t entropy[66];
-    int entropy_len = mnemonic_to_entropy(pmnemonic, entropy + 2);
+
+    uint8_t entropy[64];
+    int entropy_len = mnemonic_to_entropy(pmnemonic, entropy);
 
     if (entropy_len == 0) {
         mp_raise_ValueError("Invalid mnemonic");
     }
 
-    const int res = hdnode_from_seed_cardano((const uint8_t *)"", 0, entropy, entropy_len / 8, &hdnode);
+    int res = hdnode_from_seed_cardano((const uint8_t *)"", 0, entropy, entropy_len / 8, &hdnode);
+
     if (!res) {
         mp_raise_ValueError("Secret key generation from mnemonic is looping forever");
     }else if(res == -1){

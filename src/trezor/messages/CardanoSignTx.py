@@ -18,6 +18,7 @@ class CardanoSignTx(p.MessageType):
         1: ('inputs', CardanoTxInputType, p.FLAG_REPEATED),
         2: ('outputs', CardanoTxOutputType, p.FLAG_REPEATED),
         3: ('transactions_count', p.UVarintType, 0),
+        4: ('network', p.UVarintType, 0),
     }
 
     def __init__(
@@ -25,7 +26,9 @@ class CardanoSignTx(p.MessageType):
         inputs: List[CardanoTxInputType] = None,
         outputs: List[CardanoTxOutputType] = None,
         transactions_count: int = None,
+        network: int = None,
     ) -> None:
         self.inputs = inputs if inputs is not None else []
         self.outputs = outputs if outputs is not None else []
         self.transactions_count = transactions_count
+        self.network = network

@@ -1,7 +1,7 @@
 from micropython import const
 
 from trezor import wire
-from trezor.crypto import base58, chacha20poly1305, crc, hashlib, pbkdf2
+from trezor.crypto import base58, crc, hashlib
 
 from . import cbor
 
@@ -16,14 +16,6 @@ def validate_derivation_path(path: list):
         raise wire.ProcessError("This is not cardano derivation path")
 
     return path
-
-
-def _derive_hd_passphrase(node) -> bytes:
-    iterations = const(500)
-    length = const(32)
-    passwd = seed.remove_ed25519_prefix(node.public_key()) + node.chain_code()
-    x = pbkdf2("hmac-sha512", passwd, b"address-hashing", iterations)
-    return x.key()[:length]
 
 
 def _address_hash(data) -> bytes:
@@ -42,34 +34,16 @@ def _get_address_root(node, payload):
     return _address_hash([0, [0, extpubkey], payload])
 
 
-def _encrypt_derivation_path(path: list, hd_passphrase: bytes) -> bytes:
-    serialized = cbor.encode(cbor.IndefiniteLengthArray(path))
-    ctx = chacha20poly1305(hd_passphrase, b"serokellfore")
-    data = ctx.encrypt(serialized)
-    tag = ctx.finish()
-    return data + tag
-
-
 def derive_address_and_node(root_node, path: list):
     validate_derivation_path(path)
 
     derived_node = root_node.clone()
 
-    # this means empty derivation path m/44'/1815'
-    if len(path) == 2:
-        address_payload = None
-        address_attributes = {}
-    else:
-        if len(path) == 5:
-            p = [path[2], path[4]]
-        else:
-            p = [path[2]]
-        for indice in p:
-            derived_node.derive_cardano(indice)
+    address_payload = None
+    address_attributes = {}
 
-        hd_passphrase = _derive_hd_passphrase(root_node)
-        address_payload = _encrypt_derivation_path(p, hd_passphrase)
-        address_attributes = {1: cbor.encode(address_payload)}
+    for indice in path:
+        derived_node.derive_cardano(indice)
 
     address_root = _get_address_root(derived_node, address_payload)
     address_type = 0
