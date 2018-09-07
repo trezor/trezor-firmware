@@ -54,7 +54,6 @@ class TestMsgOntologySignOntIdAddAttributes(TrezorTest):
             ],
         )
 
-        self.client.debug.swipe_down()
         # not using ontology.sign_add_attr() because of swiping
         signature = self._ontology_sign(
             2, parse_path("m/44'/1024'/0'/0/0"), transaction, ont_id_add_attributes
