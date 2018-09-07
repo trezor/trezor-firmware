@@ -116,7 +116,7 @@ async def sign_tx(ctx, msg):
         transaction.change_coins,
         transaction.fee,
         len(tx_body),
-        transaction.network.get("name"),
+        transaction.network_name,
     ):
         raise wire.ActionCancelled("Signing cancelled")
 
@@ -129,32 +129,22 @@ def _micro_ada_to_ada(amount: float) -> float:
 
 class Transaction:
     def __init__(
-        self, inputs: list, outputs: list, transactions: list, root_node, network
+        self, inputs: list, outputs: list, transactions: list, root_node, network: int
     ):
         self.inputs = inputs
         self.outputs = outputs
         self.transactions = transactions
         self.root_node = root_node
-        self.network = None
-
-        self._set_network(network)
-
         # attributes have to be always empty in current Cardano
         self.attributes = {}
-
-    def _set_network(self, network):
         if network == 1:
-            self.network = {
-                "name": "Testnet",
-                "magic_prefix": b"\x01\x1a\x41\x70\xcb\x17\x58\x20",
-            }
+            self.network_name = "Testnet"
+            self.network_magic = b"\x01\x1a\x41\x70\xcb\x17\x58\x20"
         elif network == 2:
-            self.network = {
-                "name": "Mainnet",
-                "magic_prefix": b"\x01\x1a\x2d\x96\x4a\x09\x58\x20",
-            }
+            self.network_name = "Mainnet"
+            self.network_magic = b"\x01\x1a\x2d\x96\x4a\x09\x58\x20"
         else:
-            raise wire.ProcessError("Unknown network index " + str(network))
+            raise wire.ProcessError("Unknown network index %d" % network)
 
     def _process_inputs(self):
         input_coins = []
@@ -224,7 +214,7 @@ class Transaction:
     def _build_witnesses(self, tx_aux_hash: str):
         witnesses = []
         for index, node in enumerate(self.nodes):
-            message = self.network.get("magic_prefix") + tx_aux_hash
+            message = self.network_magic + tx_aux_hash
             signature = ed25519.sign_ext(
                 node.private_key(), node.private_key_ext(), message
             )

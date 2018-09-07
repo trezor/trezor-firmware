@@ -35,9 +35,6 @@ def _get_public_key(root_node, derivation_path: list):
     chain_code = hexlify(node.chain_code()).decode()
     xpub_key = public_key + chain_code
 
-    # In derivation scheme v2 the passphrase is not used
-    root_hd_passphrase = None
-
     node_type = HDNodeType(
         depth=node.depth(),
         child_num=node.child_num(),
@@ -46,6 +43,4 @@ def _get_public_key(root_node, derivation_path: list):
         public_key=seed.remove_ed25519_prefix(node.public_key()),
     )
 
-    return CardanoPublicKey(
-        node=node_type, xpub=xpub_key, root_hd_passphrase=root_hd_passphrase
-    )
+    return CardanoPublicKey(node=node_type, xpub=xpub_key)
