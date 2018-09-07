@@ -6,7 +6,10 @@
     "shortcut": "ETH",
     "name": "Ethereum",
     "rskip60": false,
-    "url": "https://www.ethereum.org"
+    "url": "https://www.ethereum.org",
+    "blockbook": [
+      "https://eth1.trezor.io"
+    ]
   },
   {
     "chain": "exp",
@@ -15,7 +18,8 @@
     "shortcut": "EXP",
     "name": "Expanse",
     "rskip60": false,
-    "url": "https://expanse.tech"
+    "url": "https://expanse.tech",
+    "blockbook": []
   },
   {
     "chain": "rop",
@@ -24,7 +28,10 @@
     "shortcut": "tROP",
     "name": "Ethereum Testnet Ropsten",
     "rskip60": false,
-    "url": "https://www.ethereum.org"
+    "url": "https://www.ethereum.org",
+    "blockbook": [
+      "https://ropsten1.trezor.io"
+    ]
   },
   {
     "chain": "rin",
@@ -33,7 +40,8 @@
     "shortcut": "tRIN",
     "name": "Ethereum Testnet Rinkeby",
     "rskip60": false,
-    "url": "https://www.ethereum.org"
+    "url": "https://www.ethereum.org",
+    "blockbook": []
   },
   {
     "chain": "ubq",
@@ -42,7 +50,8 @@
     "shortcut": "UBQ",
     "name": "Ubiq",
     "rskip60": false,
-    "url": "https://ubiqsmart.com"
+    "url": "https://ubiqsmart.com",
+    "blockbook": []
   },
   {
     "chain": "eosc",
@@ -51,7 +60,8 @@
     "shortcut": "EOSC",
     "name": "EOS Classic",
     "rskip60": false,
-    "url": "https://eos-classic.io"
+    "url": "https://eos-classic.io",
+    "blockbook": []
   },
   {
     "chain": "etsc",
@@ -60,7 +70,8 @@
     "shortcut": "ETSC",
     "name": "Ethereum Social",
     "rskip60": false,
-    "url": "https://ethereumsocial.kr"
+    "url": "https://ethereumsocial.kr",
+    "blockbook": []
   },
   {
     "chain": "rsk",
@@ -69,7 +80,8 @@
     "shortcut": "RSK",
     "name": "RSK",
     "rskip60": true,
-    "url": "https://www.rsk.co"
+    "url": "https://www.rsk.co",
+    "blockbook": []
   },
   {
     "chain": "trsk",
@@ -78,7 +90,8 @@
     "shortcut": "tRSK",
     "name": "RSK Testnet",
     "rskip60": true,
-    "url": "https://www.rsk.co"
+    "url": "https://www.rsk.co",
+    "blockbook": []
   },
   {
     "chain": "kov",
@@ -87,7 +100,8 @@
     "shortcut": "tKOV",
     "name": "Ethereum Testnet Kovan",
     "rskip60": false,
-    "url": "https://www.ethereum.org"
+    "url": "https://www.ethereum.org",
+    "blockbook": []
   },
   {
     "chain": "go",
@@ -96,7 +110,8 @@
     "shortcut": "GO",
     "name": "GoChain",
     "rskip60": false,
-    "url": "https://gochain.io"
+    "url": "https://gochain.io",
+    "blockbook": []
   },
   {
     "chain": "etc",
@@ -105,7 +120,10 @@
     "shortcut": "ETC",
     "name": "Ethereum Classic",
     "rskip60": false,
-    "url": "https://ethereumclassic.github.io"
+    "url": "https://ethereumclassic.github.io",
+    "blockbook": [
+      "https://etc1.trezor.io"
+    ]
   },
   {
     "chain": "tetc",
@@ -114,7 +132,8 @@
     "shortcut": "tETC",
     "name": "Ethereum Classic Testnet",
     "rskip60": false,
-    "url": "https://ethereumclassic.github.io"
+    "url": "https://ethereumclassic.github.io",
+    "blockbook": []
   },
   {
     "chain": "ella",
@@ -123,7 +142,8 @@
     "shortcut": "ELLA",
     "name": "Ellaism",
     "rskip60": false,
-    "url": "https://ellaism.org"
+    "url": "https://ellaism.org",
+    "blockbook": []
   },
   {
     "chain": "clo",
@@ -132,7 +152,8 @@
     "shortcut": "CLO",
     "name": "Callisto",
     "rskip60": false,
-    "url": "https://callisto.network"
+    "url": "https://callisto.network",
+    "blockbook": []
   },
   {
     "chain": "ath",
@@ -141,7 +162,8 @@
     "shortcut": "ATH",
     "name": "Atheios",
     "rskip60": false,
-    "url": "https://atheios.com"
+    "url": "https://atheios.com",
+    "blockbook": []
   },
   {
     "chain": "egem",
@@ -150,7 +172,8 @@
     "shortcut": "EGEM",
     "name": "EtherGem",
     "rskip60": false,
-    "url": "https://egem.io"
+    "url": "https://egem.io",
+    "blockbook": []
   },
   {
     "chain": "esn",
@@ -159,7 +182,8 @@
     "shortcut": "ESN",
     "name": "Ethersocial Network",
     "rskip60": false,
-    "url": "https://ethersocial.org"
+    "url": "https://ethersocial.org",
+    "blockbook": []
   },
   {
     "chain": "akroma",
@@ -168,7 +192,8 @@
     "shortcut": "AKA",
     "name": "Akroma",
     "rskip60": false,
-    "url": "https://akroma.io"
+    "url": "https://akroma.io",
+    "blockbook": []
   },
   {
     "chain": "music",
@@ -177,7 +202,8 @@
     "shortcut": "MUSIC",
     "name": "Musicoin",
     "rskip60": false,
-    "url": "https://musicoin.org"
+    "url": "https://musicoin.org",
+    "blockbook": []
   },
   {
     "chain": "etho",
@@ -186,7 +212,8 @@
     "shortcut": "ETHO",
     "name": "Ether-1",
     "rskip60": false,
-    "url": "https://ether1.org"
+    "url": "https://ether1.org",
+    "blockbook": []
   },
   {
     "chain": "pirl",
@@ -195,6 +222,7 @@
     "shortcut": "PIRL",
     "name": "Pirl",
     "rskip60": false,
-    "url": "https://pirl.io"
+    "url": "https://pirl.io",
+    "blockbook": []
   }
 ]
