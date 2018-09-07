@@ -154,13 +154,24 @@ def highlight_key(coin, color):
     return f"{key} {name}"
 
 
-def find_address_collisions(coins, field):
+def find_collisions(coins, field):
     """Detects collisions in a given field. Returns buckets of colliding coins."""
     collisions = defaultdict(list)
     for coin in coins:
         value = coin[field]
         collisions[value].append(coin)
     return {k: v for k, v in collisions.items() if len(v) > 1}
+
+
+def check_eth(coins):
+    check_passed = True
+    chains = find_collisions(coins, "chain")
+    for key, bucket in chains.items():
+        bucket_str = ", ".join(f"{coin['key']} ({coin['name']})" for coin in bucket)
+        chain_name_str = "colliding chain name " + crayon(None, key, bold=True) + ":"
+        print_log(logging.ERROR, chain_name_str, bucket_str)
+        check_passed = False
+    return check_passed
 
 
 def check_btc(coins):
@@ -233,7 +244,7 @@ def check_btc(coins):
 
     # slip44 collisions
     print("Checking SLIP44 prefix collisions...")
-    slip44 = find_address_collisions(coins, "slip44")
+    slip44 = find_collisions(coins, "slip44")
     if print_collision_buckets(slip44, "key"):
         check_passed = False
 
@@ -241,12 +252,12 @@ def check_btc(coins):
     nocashaddr = [coin for coin in coins if not coin.get("cashaddr_prefix")]
 
     print("Checking address_type collisions...")
-    address_type = find_address_collisions(nocashaddr, "address_type")
+    address_type = find_collisions(nocashaddr, "address_type")
     if print_collision_buckets(address_type, "address type"):
         check_passed = False
 
     print("Checking address_type_p2sh collisions...")
-    address_type_p2sh = find_address_collisions(nocashaddr, "address_type_p2sh")
+    address_type_p2sh = find_collisions(nocashaddr, "address_type_p2sh")
     # we ignore failed checks on P2SH, because reasons
     print_collision_buckets(address_type_p2sh, "address type", logging.WARNING)
 
@@ -504,6 +515,10 @@ def check(backend, icons, show_duplicates):
 
     print("Checking BTC-like coins...")
     if not check_btc(defs.bitcoin):
+        all_checks_passed = False
+
+    print("Checking Ethereum networks...")
+    if not check_eth(defs.eth):
         all_checks_passed = False
 
     if show_duplicates == "all":
