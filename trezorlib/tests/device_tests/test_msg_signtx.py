@@ -19,13 +19,11 @@ from binascii import hexlify, unhexlify
 import pytest
 
 from trezorlib import btc, messages as proto
+from trezorlib.coins import tx_api
 from trezorlib.tools import H_, CallException, parse_path
-from trezorlib.tx_api import TxApiInsight
 
 from .common import TrezorTest
 from .conftest import TREZOR_VERSION
-
-TxApiTestnet = TxApiInsight("insight_testnet")
 
 # fmt: off
 TXHASH_157041 = unhexlify('1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6')
@@ -42,6 +40,83 @@ TXHASH_d2dcda = unhexlify('d2dcdaf547ea7f57a713c607f15e883ddc4a98167ee2c43ed953c
 TXHASH_e5040e = unhexlify('e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd')
 TXHASH_50f6f1 = unhexlify('50f6f1209ca92d7359564be803cb2c932cde7d370f7cee50fd1fad6790f6206d')
 # fmt: on
+
+
+def check_sign_tx(client, coin_name, inputs, outputs, fee_too_high=False, failure=None):
+    __tracebackhide__ = True
+    expected_responses = []
+
+    txes = tx_api[coin_name]
+
+    t = proto.RequestType
+    b = proto.ButtonRequestType
+
+    def tx_request(request_type, **kwargs):
+        if kwargs:
+            details = proto.TxRequestDetailsType(**kwargs)
+        else:
+            details = None
+        return proto.TxRequest(request_type=request_type, details=details)
+
+    def btn(code):
+        return proto.ButtonRequest(code=code)
+
+    for i, inp in enumerate(inputs):
+        expected_responses += [
+            tx_request(t.TXINPUT, request_index=i),
+            tx_request(t.TXMETA, tx_hash=inp.prev_hash),
+        ]
+
+        if inp.script_type in (
+            proto.InputScriptType.SPENDP2SHWITNESS,
+            proto.InputScriptType.SPENDWITNESS,
+        ):
+            continue
+
+        prev_hash = hexlify(inp.prev_hash).decode()
+        prev_tx = txes.get_tx(prev_hash)
+        for pi in range(len(prev_tx.inputs)):
+            r = tx_request(t.TXINPUT, request_index=pi, tx_hash=inp.prev_hash)
+            expected_responses.append(r)
+
+        for po in range(len(prev_tx.bin_outputs)):
+            r = tx_request(t.TXOUTPUT, request_index=po, tx_hash=inp.prev_hash)
+            expected_responses.append(r)
+
+    for i, outp in enumerate(outputs):
+        expected_responses.append(tx_request(t.TXOUTPUT, request_index=i))
+        if outp.address is not None or hasattr(outp, "force_confirm"):
+            expected_responses.append(btn(b.ConfirmOutput))
+
+    if fee_too_high:
+        expected_responses.append(btn(b.FeeOverThreshold))
+
+    if failure is not None:
+        expected_responses.append(proto.Failure(code=failure))
+
+    else:
+        expected_responses.append(btn(b.SignTx))
+
+        input_requests = [
+            tx_request(t.TXINPUT, request_index=i) for i in range(len(inputs))
+        ]
+        output_requests = [
+            tx_request(t.TXOUTPUT, request_index=i) for i in range(len(outputs))
+        ]
+
+        # No idea why the flow is like this. But it is.
+        for _ in range(len(inputs)):
+            expected_responses.extend(input_requests)
+            expected_responses.extend(output_requests)
+
+        # and once more for good measure
+        expected_responses.extend(output_requests)
+
+        expected_responses.append(tx_request(t.TXFINISHED))
+
+    with client:
+        client.set_expected_responses(expected_responses)
+        return btc.sign_tx(client, coin_name, inputs, outputs)
 
 
 class TestMsgSigntx(TrezorTest):
@@ -64,60 +139,7 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
-                [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_d5f65e),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_d5f65e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_d5f65e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_d5f65e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
-                ]
-            )
-
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Bitcoin", [inp1], [out1]
-            )
+        _, serialized_tx = check_sign_tx(self.client, "Bitcoin", [inp1], [out1])
 
         # Accepted by network: tx fd79435246dee76b2f159d2db08032d666c95adc544de64c8c49f474df4a7fee
         assert (
@@ -127,6 +149,7 @@ class TestMsgSigntx(TrezorTest):
 
     def test_testnet_one_two_fee(self):
         self.setup_mnemonic_allallall()
+        self.client.set_tx_api(tx_api["Testnet"])
         # see 87be0736f202f7c2bff0781b42bad3e0cdcb54761939da69ea793a3735552c56
 
         # tx: e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd
@@ -150,72 +173,7 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_tx_api(TxApiTestnet)
-            self.client.set_expected_responses(
-                [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_e5040e),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_e5040e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_e5040e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_e5040e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
-                ]
-            )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1, out2]
-            )
+        _, serialized_tx = check_sign_tx(self.client, "Testnet", [inp1], [out1, out2])
 
         assert (
             hexlify(serialized_tx)
@@ -224,6 +182,7 @@ class TestMsgSigntx(TrezorTest):
 
     def test_testnet_fee_too_high(self):
         self.setup_mnemonic_nopin_nopassphrase()
+        self.client.set_tx_api(tx_api["Testnet"])
 
         # tx: 6f90f3c7cbec2258b0971056ef3fe34128dbde30daa9c0639a898f9977299d54
         # input 1: 10.00000000 BTC
@@ -246,80 +205,11 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_tx_api(TxApiTestnet)
-            self.client.set_expected_responses(
-                [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_6f90f3),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_6f90f3
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_6f90f3
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_6f90f3
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_6f90f3
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.FeeOverThreshold),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
-                ]
-            )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1, out2]
-            )
+        out2.force_confirm = True
+
+        _, serialized_tx = check_sign_tx(
+            self.client, "Testnet", [inp1], [out1, out2], fee_too_high=True
+        )
 
         assert (
             hexlify(serialized_tx)
@@ -354,71 +244,7 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
-                [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_50f6f1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_50f6f1
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_50f6f1
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_50f6f1
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
-                ]
-            )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Bitcoin", [inp1], [out1, out2]
-            )
+        _, serialized_tx = check_sign_tx(self.client, "Bitcoin", [inp1], [out1, out2])
 
         assert (
             hexlify(serialized_tx)
@@ -454,85 +280,11 @@ class TestMsgSigntx(TrezorTest):
             address_n=[1], amount=80000, script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
-        with self.client:
-            self.client.set_expected_responses(
-                [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_d5f65e),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_d5f65e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_d5f65e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_d5f65e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=2),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=2),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=2),
-                    ),
-                    proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
-                ]
-            )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Bitcoin", [inp1], [out1, out2, out3]
-            )
+        out3.force_confirm = True
+
+        _, serialized_tx = check_sign_tx(
+            self.client, "Bitcoin", [inp1], [out1, out2, out3]
+        )
 
         assert (
             hexlify(serialized_tx)
@@ -573,118 +325,11 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
-                [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_c6be22),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_c6be22
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_c6be22
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_c6be22
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_58497a),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_58497a
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_58497a
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_58497a
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
-                ]
-            )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Bitcoin", [inp1, inp2], [out1, out2]
-            )
+        out2.force_confirm = True
+
+        _, serialized_tx = check_sign_tx(
+            self.client, "Bitcoin", [inp1, inp2], [out1, out2]
+        )
 
         # Accepted by network: tx c63e24ed820c5851b60c54613fbc4bcb37df6cd49b4c96143e99580a472f79fb
         assert (
@@ -745,143 +390,15 @@ class TestMsgSigntx(TrezorTest):
             )
             outputs.append(out)
 
-        with self.client:
-            self.client.set_expected_responses(
-                [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_c63e24),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_c63e24
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_c63e24
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_c63e24
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_c63e24
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_39a29e),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_39a29e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_39a29e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_39a29e
-                        ),
-                    ),
-                ]
-                + [
-                    item
-                    for items in zip(
-                        [
-                            proto.TxRequest(
-                                request_type=proto.RequestType.TXOUTPUT,
-                                details=proto.TxRequestDetailsType(request_index=I),
-                            )
-                            for I in range(cnt)
-                        ],
-                        [
-                            proto.ButtonRequest(
-                                code=proto.ButtonRequestType.ConfirmOutput
-                            )
-                        ]
-                        * cnt,
-                    )
-                    for item in items
-                ]
-                + [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                ]
-                + [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=I),
-                    )
-                    for I in range(cnt)
-                ]
-                + [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                ]
-                + [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=I),
-                    )
-                    for I in range(cnt)
-                ]
-                + [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=I),
-                    )
-                    for I in range(cnt)
-                ]
-                + [proto.TxRequest(request_type=proto.RequestType.TXFINISHED)]
-            )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Bitcoin", [inp1, inp2], outputs
-            )
+        _, serialized_tx = check_sign_tx(self.client, "Bitcoin", [inp1, inp2], outputs)
 
-        if cnt == 255:
-            assert (
-                hexlify(serialized_tx)
-                == b"0100000002fb792f470a58993e14964c9bd46cdf37cb4bbc3f61540cb651580c82ed243ec6010000006b483045022100969da46f94a81f34f3717b014e0c3e1826eda1b0022ec2f9ce39f3d750ab9235022026da269770993211a1503413566a339bbb4389a482fffcf8e1f76713fc3b94f5012103477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a7902ffffffffe56582d2119100cb1d3da8232291e053f71e25fb669c87b32a667749959ea239010000006a473044022052e1419bb237b9db400ab5e3df16db6355619d545fde9030924a360763ae9ad40220704beab04d72ecaeb42eca7d98faca7a0941e65f2e1341f183be2b83e6b09e1c012103477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a7902fffffffffdff00"
-                + b"d8270000000000001976a914f0a2b64e56ee2ff57126232f84af6e3a41d4055088ac"
-                * cnt
-                + b"00000000"
-            )
+        assert (
+            hexlify(serialized_tx)
+            == b"0100000002fb792f470a58993e14964c9bd46cdf37cb4bbc3f61540cb651580c82ed243ec6010000006b483045022100969da46f94a81f34f3717b014e0c3e1826eda1b0022ec2f9ce39f3d750ab9235022026da269770993211a1503413566a339bbb4389a482fffcf8e1f76713fc3b94f5012103477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a7902ffffffffe56582d2119100cb1d3da8232291e053f71e25fb669c87b32a667749959ea239010000006a473044022052e1419bb237b9db400ab5e3df16db6355619d545fde9030924a360763ae9ad40220704beab04d72ecaeb42eca7d98faca7a0941e65f2e1341f183be2b83e6b09e1c012103477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a7902fffffffffdff00"
+            + b"d8270000000000001976a914f0a2b64e56ee2ff57126232f84af6e3a41d4055088ac"
+            * cnt
+            + b"00000000"
+        )
 
     def test_fee_too_high(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -902,60 +419,9 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
-                [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_157041),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_157041
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_157041
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_157041
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.FeeOverThreshold),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
-                ]
-            )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Bitcoin", [inp1], [out1]
-            )
+        _, serialized_tx = check_sign_tx(
+            self.client, "Bitcoin", [inp1], [out1], fee_too_high=True
+        )
 
         assert (
             hexlify(serialized_tx)
@@ -981,47 +447,15 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
-                [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_d5f65e),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_d5f65e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_d5f65e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_d5f65e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.Failure(code=proto.FailureType.NotEnoughFunds),
-                ]
+        with pytest.raises(CallException) as exc:
+            check_sign_tx(
+                self.client,
+                "Bitcoin",
+                [inp1],
+                [out1],
+                failure=proto.FailureType.NotEnoughFunds,
             )
-
-            with pytest.raises(CallException) as exc:
-                btc.sign_tx(self.client, "Bitcoin", [inp1], [out1])
-            assert exc.value.args[0] == proto.FailureType.NotEnoughFunds
+        assert exc.value.args[0] == proto.FailureType.NotEnoughFunds
 
     def test_p2sh(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -1039,59 +473,7 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOSCRIPTHASH,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
-                [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_54aa56),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_54aa56
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_54aa56
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_54aa56
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
-                ]
-            )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Bitcoin", [inp1], [out1]
-            )
+        _, serialized_tx = check_sign_tx(self.client, "Bitcoin", [inp1], [out1])
 
         # Accepted by network: tx 8cc1f4adf7224ce855cf535a5104594a0004cb3b640d6714fdb00b9128832dd5
         assert (
@@ -1189,7 +571,7 @@ class TestMsgSigntx(TrezorTest):
         # that it matches the change output
 
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiTestnet)
+        self.client.set_tx_api(tx_api["Testnet"])
 
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/1'/4'/0/0"),
@@ -1312,6 +694,7 @@ class TestMsgSigntx(TrezorTest):
         # input 0: 25.0027823 BTC
 
         self.setup_mnemonic_nopin_nopassphrase()
+        self.client.set_tx_api(tx_api["Testnet"])
 
         inp1 = proto.TxInputType(
             address_n=[1],  # mfiGQVPcRcaEvQPYDErR34DcCovtxYvUUV
@@ -1326,54 +709,7 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_tx_api(TxApiTestnet)
-            self.client.set_expected_responses(
-                [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_d6da21),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_d6da21
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_d6da21
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
-                ]
-            )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1]
-            )
+        _, serialized_tx = check_sign_tx(self.client, "Testnet", [inp1], [out1])
 
         # Accepted by network: tx
         assert (
@@ -1383,6 +719,7 @@ class TestMsgSigntx(TrezorTest):
 
     def test_two_changes(self):
         self.setup_mnemonic_allallall()
+        self.client.set_tx_api(tx_api["Testnet"])
         # see 87be0736f202f7c2bff0781b42bad3e0cdcb54761939da69ea793a3735552c56
 
         # tx: e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd
@@ -1412,89 +749,13 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_tx_api(TxApiTestnet)
-            self.client.set_expected_responses(
-                [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_e5040e),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_e5040e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_e5040e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_e5040e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=2),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=2),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=2),
-                    ),
-                    proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
-                ]
-            )
+        out_change2.force_confirm = True
 
-            btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1, out_change1, out_change2]
-            )
+        check_sign_tx(self.client, "Testnet", [inp1], [out1, out_change1, out_change2])
 
     def test_change_on_main_chain_allowed(self):
         self.setup_mnemonic_allallall()
+        self.client.set_tx_api(tx_api["Testnet"])
         # see 87be0736f202f7c2bff0781b42bad3e0cdcb54761939da69ea793a3735552c56
 
         # tx: e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd
@@ -1519,68 +780,4 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_tx_api(TxApiTestnet)
-            self.client.set_expected_responses(
-                [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_e5040e),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_e5040e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_e5040e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_e5040e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
-                ]
-            )
-
-            btc.sign_tx(self.client, "Testnet", [inp1], [out1, out_change])
+        check_sign_tx(self.client, "Testnet", [inp1], [out1, out_change])
