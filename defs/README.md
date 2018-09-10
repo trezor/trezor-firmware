@@ -18,12 +18,13 @@ We will not support coins that have `address_type` 0, i.e., same as Bitcoin.
 #### `eth`
 
 The file [`ethereum/networks.json`](ethereum/networks.json) has a list of descriptions
-of Ethereum networks. Each network must also have a PNG icon in `ethereum/<short>.png`
-file, where `short` is lowercased `shortcut` field from the JSON.
+of Ethereum networks. Each network must also have a PNG icon in `ethereum/<chain>.png`
+file.
 
 #### `erc20`
 
-`ethereum/tokens` is a submodule linking to [Ethereum Lists](https://github.com/ethereum-lists/tokens) project with descriptions of ERC20 tokens. If you want to add or update a token
+`ethereum/tokens` is a submodule linking to [Ethereum Lists](https://github.com/ethereum-lists/tokens)
+project with descriptions of ERC20 tokens. If you want to add or update a token
 definition in Trezor, you need to get your change to the `tokens` repository first.
 
 Trezor will only support tokens that have a unique symbol.
@@ -45,8 +46,7 @@ generated from the coin's type and shortcut:
 
 * for Bitcoin-likes, key is `bitcoin:XYZ`
 * for Ethereum networks, key is `eth:XYZ`
-* for ERC20 tokens, key is `erc20:<net>:XYZ`, where `net` is a lowercase shortcut
-  of the Ethereum network on which the token lives (e.g., `eth`, `ella`, `pirl`)
+* for ERC20 tokens, key is `erc20:<chain>:XYZ`
 * for NEM mosaic, key is `nem:XYZ`
 * for others, key is `misc:XYZ`
 
