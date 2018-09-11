@@ -91,7 +91,7 @@ void display_init(void)
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX, DISPLAY_RESY);
     SDL_SetTextureBlendMode(TEXTURE, SDL_BLENDMODE_BLEND);
     // TODO: find better way how to embed/distribute background image
-    BACKGROUND = IMG_LoadTexture(RENDERER, "../embed/unix/background.jpg");
+    BACKGROUND = IMG_LoadTexture(RENDERER, "../embed/unix/background_" XSTR(TREZOR_MODEL) ".jpg");
     if (BACKGROUND) {
         SDL_SetTextureBlendMode(BACKGROUND, SDL_BLENDMODE_NONE);
         sdl_touch_offset_x = DISPLAY_TOUCH_OFFSET_X;

@@ -23,6 +23,9 @@
 #include <stdint.h>
 #include "secbool.h"
 
+#define XSTR(s) STR(s)
+#define STR(s) #s
+
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif

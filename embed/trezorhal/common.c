@@ -45,8 +45,6 @@ void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, 
         display_printf("func: %s\n", func);
     }
 #ifdef GITREV
-#define XSTR(s) STR(s)
-#define STR(s) #s
     display_printf("rev : %s\n", XSTR(GITREV));
 #endif
     shutdown();
