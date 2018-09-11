@@ -79,25 +79,24 @@ void pbkdf2_hmac_sha256_Final(PBKDF2_HMAC_SHA256_CTX *pctx, uint8_t *key)
 
 void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen)
 {
-	uint32_t blocks_count = (keylen + SHA256_DIGEST_LENGTH - 1) / SHA256_DIGEST_LENGTH;
-
-	int unfinished_key_size = keylen;
+	uint32_t last_block_size = keylen % SHA256_DIGEST_LENGTH;
+	uint32_t blocks_count = keylen / SHA256_DIGEST_LENGTH;
+	if (last_block_size) {
+		blocks_count++;
+	} else {
+		last_block_size = SHA256_DIGEST_LENGTH;
+	}
 	for (uint32_t blocknr = 1; blocknr <= blocks_count; blocknr++) {
 		PBKDF2_HMAC_SHA256_CTX pctx;
 		pbkdf2_hmac_sha256_Init(&pctx, pass, passlen, salt, saltlen, blocknr);
 		pbkdf2_hmac_sha256_Update(&pctx, iterations);
-
-		unsigned int key_offset = (blocknr - 1) * SHA256_DIGEST_LENGTH;
-		uint8_t diggest[SHA256_DIGEST_LENGTH];
-
-		pbkdf2_hmac_sha256_Final(&pctx, diggest);
-
-		if (unfinished_key_size > SHA256_DIGEST_LENGTH) {
-			memcpy(key + key_offset, diggest, SHA256_DIGEST_LENGTH);
-			unfinished_key_size -= SHA256_DIGEST_LENGTH;
+		uint8_t digest[SHA256_DIGEST_LENGTH];
+		pbkdf2_hmac_sha256_Final(&pctx, digest);
+		uint32_t key_offset = (blocknr - 1) * SHA256_DIGEST_LENGTH;
+		if (blocknr < blocks_count) {
+			memcpy(key + key_offset, digest, SHA256_DIGEST_LENGTH);
 		} else {
-			memcpy(key + key_offset, diggest, unfinished_key_size);
-			unfinished_key_size = 0;
+			memcpy(key + key_offset, digest, last_block_size);
 		}
 	}
 }
@@ -155,24 +154,24 @@ void pbkdf2_hmac_sha512_Final(PBKDF2_HMAC_SHA512_CTX *pctx, uint8_t *key)
 
 void pbkdf2_hmac_sha512(const uint8_t *pass, int passlen, const uint8_t *salt, int saltlen, uint32_t iterations, uint8_t *key, int keylen)
 {
-	uint32_t blocks_count = (keylen + SHA512_DIGEST_LENGTH - 1) / SHA512_DIGEST_LENGTH;
-
-	int unfinished_key_size = keylen;
+	uint32_t last_block_size = keylen % SHA512_DIGEST_LENGTH;
+	uint32_t blocks_count = keylen / SHA512_DIGEST_LENGTH;
+	if (last_block_size) {
+		blocks_count++;
+	} else {
+		last_block_size = SHA512_DIGEST_LENGTH;
+	}
 	for (uint32_t blocknr = 1; blocknr <= blocks_count; blocknr++) {
 		PBKDF2_HMAC_SHA512_CTX pctx;
 		pbkdf2_hmac_sha512_Init(&pctx, pass, passlen, salt, saltlen, blocknr);
 		pbkdf2_hmac_sha512_Update(&pctx, iterations);
-
-		unsigned int key_offset = (blocknr - 1) * SHA512_DIGEST_LENGTH;
-		uint8_t diggest[SHA512_DIGEST_LENGTH];
-		pbkdf2_hmac_sha512_Final(&pctx, diggest);
-
-		if (unfinished_key_size > SHA512_DIGEST_LENGTH) {
-			memcpy(key + key_offset, diggest, SHA512_DIGEST_LENGTH);
-			unfinished_key_size -= SHA512_DIGEST_LENGTH;
+		uint8_t digest[SHA512_DIGEST_LENGTH];
+		pbkdf2_hmac_sha512_Final(&pctx, digest);
+		uint32_t key_offset = (blocknr - 1) * SHA512_DIGEST_LENGTH;
+		if (blocknr < blocks_count) {
+			memcpy(key + key_offset, digest, SHA512_DIGEST_LENGTH);
 		} else {
-			memcpy(key + key_offset, diggest, unfinished_key_size);
-			unfinished_key_size = 0;
+			memcpy(key + key_offset, digest, last_block_size);
 		}
 	}
 }
