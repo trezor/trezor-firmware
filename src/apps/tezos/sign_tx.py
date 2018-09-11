@@ -1,5 +1,3 @@
-import ustruct
-
 from trezor import wire
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
@@ -7,12 +5,12 @@ from trezor.messages import TezosContractType
 from trezor.messages.TezosSignedTx import TezosSignedTx
 
 from apps.common import seed
+from apps.common.writers import write_bytes, write_uint8
 from apps.tezos.helpers import (
     TEZOS_CURVE,
     TEZOS_ORIGINATED_ADDRESS_PREFIX,
     TEZOS_SIGNATURE_PREFIX,
-    b58cencode,
-    tezos_get_address_prefix,
+    base58_encode_check,
 )
 from apps.tezos.layout import *
 
@@ -50,8 +48,12 @@ async def sign_tx(ctx, msg):
     else:
         raise wire.DataError("Invalid operation")
 
-    opbytes = _get_operation_bytes(msg)
+    w = bytearray()
+    _get_operation_bytes(w, msg)
 
+    opbytes = bytes(w)
+
+    # watermark 0x03 is prefix for transactions, delegations, originations, reveals...
     watermark = bytes([3])
     wm_opbytes = watermark + opbytes
     wm_opbytes_hash = hashlib.blake2b(wm_opbytes, outlen=32).digest()
@@ -60,9 +62,9 @@ async def sign_tx(ctx, msg):
 
     sig_op_contents = opbytes + signature
     sig_op_contents_hash = hashlib.blake2b(sig_op_contents, outlen=32).digest()
-    ophash = b58cencode(sig_op_contents_hash, prefix="o")
+    ophash = base58_encode_check(sig_op_contents_hash, prefix="o")
 
-    sig_prefixed = b58cencode(signature, prefix=TEZOS_SIGNATURE_PREFIX)
+    sig_prefixed = base58_encode_check(signature, prefix=TEZOS_SIGNATURE_PREFIX)
 
     return TezosSignedTx(
         signature=sig_prefixed, sig_op_contents=sig_op_contents, operation_hash=ophash
@@ -70,8 +72,12 @@ async def sign_tx(ctx, msg):
 
 
 def _get_address_by_tag(address_hash):
+    prefixes = ["tz1", "tz2", "tz3"]
     tag = int(address_hash[0])
-    return b58cencode(address_hash[1:], prefix=tezos_get_address_prefix(tag))
+
+    if 0 <= tag < len(prefixes):
+        return base58_encode_check(address_hash[1:], prefix=prefixes[tag])
+    raise wire.DataError("Invalid tag in address hash")
 
 
 def _get_address_from_contract(address):
@@ -79,77 +85,80 @@ def _get_address_from_contract(address):
         return _get_address_by_tag(address.hash)
 
     elif address.tag == TezosContractType.Originated:
-        return b58cencode(address.hash[:-1], prefix=TEZOS_ORIGINATED_ADDRESS_PREFIX)
+        return base58_encode_check(
+            address.hash[:-1], prefix=TEZOS_ORIGINATED_ADDRESS_PREFIX
+        )
 
     raise wire.DataError("Invalid contract type")
 
 
-def _get_operation_bytes(msg):
-    result = msg.branch
+def _get_operation_bytes(w: bytearray, msg):
+    write_bytes(w, msg.branch)
 
     # when the account sends first operation in lifetime,
     # we need to reveal its publickey
     if msg.reveal is not None:
-        result += _encode_common(msg.reveal, "reveal")
-        result += msg.reveal.public_key
+        _encode_common(w, msg.reveal, "reveal")
+        write_bytes(w, msg.reveal.public_key)
 
     # transaction operation
     if msg.transaction is not None:
-        result += _encode_common(msg.transaction, "transaction")
-        result += _encode_zarith(msg.transaction.amount)
-        result += _encode_contract_id(msg.transaction.destination)
-        result += _encode_data_with_bool_prefix(msg.transaction.parameters)
+        _encode_common(w, msg.transaction, "transaction")
+        _encode_zarith(w, msg.transaction.amount)
+        _encode_contract_id(w, msg.transaction.destination)
+        _encode_data_with_bool_prefix(w, msg.transaction.parameters)
     # origination operation
     elif msg.origination is not None:
-        result += _encode_common(msg.origination, "origination")
-        result += msg.origination.manager_pubkey
-        result += _encode_zarith(msg.origination.balance)
-        result += _encode_bool(msg.origination.spendable)
-        result += _encode_bool(msg.origination.delegatable)
-        result += _encode_data_with_bool_prefix(msg.origination.delegate)
-        result += _encode_data_with_bool_prefix(msg.origination.script)
+        _encode_common(w, msg.origination, "origination")
+        write_bytes(w, msg.origination.manager_pubkey)
+        _encode_zarith(w, msg.origination.balance)
+        _encode_bool(w, msg.origination.spendable)
+        _encode_bool(w, msg.origination.delegatable)
+        _encode_data_with_bool_prefix(w, msg.origination.delegate)
+        _encode_data_with_bool_prefix(w, msg.origination.script)
     # delegation operation
     elif msg.delegation is not None:
-        result += _encode_common(msg.delegation, "delegation")
-        result += _encode_data_with_bool_prefix(msg.delegation.delegate)
-
-    return bytes(result)
+        _encode_common(w, msg.delegation, "delegation")
+        _encode_data_with_bool_prefix(w, msg.delegation.delegate)
 
 
-def _encode_common(operation, str_operation):
+def _encode_common(w: bytearray, operation, str_operation):
     operation_tags = {"reveal": 7, "transaction": 8, "origination": 9, "delegation": 10}
-    result = ustruct.pack("<b", operation_tags[str_operation])
-    result += _encode_contract_id(operation.source)
-    result += _encode_zarith(operation.fee)
-    result += _encode_zarith(operation.counter)
-    result += _encode_zarith(operation.gas_limit)
-    result += _encode_zarith(operation.storage_limit)
-    return result
+    write_uint8(w, operation_tags[str_operation])
+    _encode_contract_id(w, operation.source)
+    _encode_zarith(w, operation.fee)
+    _encode_zarith(w, operation.counter)
+    _encode_zarith(w, operation.gas_limit)
+    _encode_zarith(w, operation.storage_limit)
 
 
-def _encode_contract_id(contract_id):
-    return ustruct.pack("<b", contract_id.tag) + contract_id.hash
+def _encode_contract_id(w: bytearray, contract_id):
+    write_uint8(w, contract_id.tag)
+    write_bytes(w, contract_id.hash)
 
 
-def _encode_bool(boolean):
-    return ustruct.pack("<b", 255) if boolean else ustruct.pack("<b", 0)
+def _encode_bool(w: bytearray, boolean):
+    if boolean:
+        write_uint8(w, 255)
+    else:
+        write_uint8(w, 0)
 
 
-def _encode_data_with_bool_prefix(data):
-    return _encode_bool(True) + data if data is not None else _encode_bool(False)
+def _encode_data_with_bool_prefix(w: bytearray, data):
+    if data:
+        _encode_bool(w, True)
+        write_bytes(w, data)
+    else:
+        _encode_bool(w, False)
 
 
-def _encode_zarith(num):
-    result = bytes()
-
+def _encode_zarith(w: bytearray, num):
     while True:
         byte = num & 127
         num = num >> 7
 
         if num == 0:
-            result += ustruct.pack("<b", byte)
+            write_uint8(w, byte)
             break
 
-        result += ustruct.pack("<b", 128 | byte)
-
-    return result
+        write_uint8(w, 128 | byte)
