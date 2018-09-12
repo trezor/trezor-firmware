@@ -26,11 +26,19 @@ env:
 
 matrix:
   include:
-      env:
-        - EMULATOR=1 HEADLESS=1
-        - DEBUG_LINK=1
-      script:
-        - pipenv run ./script/cibuild && pipenv run script/test
+    compiler:
+      - clang
+    env:
+      - EMULATOR=1 HEADLESS=1 DEBUG_LINK=1
+    script:
+      - pipenv run ./script/cibuild && pipenv run script/test
+  include:
+    compiler:
+      - gcc
+    env:
+      - EMULATOR=1 HEADLESS=1 DEBUG_LINK=1
+    script:
+      - pipenv run ./script/cibuild && pipenv run script/test
 
 install:
   - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
