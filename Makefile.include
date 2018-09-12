@@ -37,7 +37,7 @@ endif
 
 CFLAGS   += $(OPTFLAGS) \
             $(DBGFLAGS) \
-            -std=gnu99 \
+            -std=gnu11 \
             -W \
             -Wall \
             -Wextra \
