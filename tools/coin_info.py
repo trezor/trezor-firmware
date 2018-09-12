@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from binascii import unhexlify
 from collections import defaultdict, OrderedDict
 import re
 import os
@@ -232,7 +231,7 @@ def _load_erc20_tokens():
             token.update(
                 chain=chain,
                 chain_id=network["chain_id"],
-                address_bytes=unhexlify(token["address"][2:]),
+                address_bytes=bytes.fromhex(token["address"][2:]),
                 shortcut=token["symbol"],
                 key="erc20:{}:{}".format(chain, token["symbol"]),
             )

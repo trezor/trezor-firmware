@@ -6,7 +6,6 @@ import re
 import sys
 import os
 import glob
-import binascii
 import struct
 import zlib
 from collections import defaultdict
@@ -430,7 +429,7 @@ def coindef_from_dict(coin):
         elif fname == "signed_message_header":
             val = val.encode()
         elif fname == "hash_genesis_block":
-            val = binascii.unhexlify(val)
+            val = bytes.fromhex(val)
         setattr(proto, fname, val)
 
     return proto
@@ -629,7 +628,7 @@ def coindefs(outfile):
         icon = Image.open(coin["icon"])
         ser = serialize_coindef(coindef_from_dict(coin), convert_icon(icon))
         sig = sign(ser)
-        definition = binascii.hexlify(sig + ser).decode()
+        definition = (sig + ser).hex()
         coindefs[key] = definition
 
     with outfile:
