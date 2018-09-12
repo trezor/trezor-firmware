@@ -25,17 +25,21 @@
 #define EMULATOR_BORDER 16
 
 #if TREZOR_MODEL == T
+
 #define WINDOW_WIDTH    400
 #define WINDOW_HEIGHT   600
 #define TOUCH_OFFSET_X  80
 #define TOUCH_OFFSET_Y  110
+
 #elif TREZOR_MODEL == 1
+
 #define WINDOW_WIDTH    200
 #define WINDOW_HEIGHT   340
 #define TOUCH_OFFSET_X  36
 #define TOUCH_OFFSET_Y  92
+
 #else
-#error Unknown TREZOR model
+#error Unknown TREZOR Model
 #endif
 
 static SDL_Renderer *RENDERER;

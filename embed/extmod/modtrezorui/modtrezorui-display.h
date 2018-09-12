@@ -174,7 +174,49 @@ STATIC mp_obj_t mod_trezorui_Display_icon(size_t n_args, const mp_obj_t *args) {
     display_icon(x, y, w, h, data + 12, icon.len - 12, fgcolor, bgcolor);
     return mp_const_none;
 }
+
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_icon_obj, 6, 6, mod_trezorui_Display_icon);
+/// def loader(self, progress: int, yoffset: int, fgcolor: int, bgcolor: int, icon: bytes = None, iconfgcolor: int = None) -> None:
+///     '''
+///     Renders a rotating loader graphic.
+///     Progress determines its position (0-1000), fgcolor is used as foreground color, bgcolor as background.
+///     When icon and iconfgcolor are provided, an icon is drawn in the middle using the color specified in iconfgcolor.
+///     Icon needs to be of exactly LOADER_ICON_SIZE x LOADER_ICON_SIZE pixels size.
+///     '''
+STATIC mp_obj_t mod_trezorui_Display_loader(size_t n_args, const mp_obj_t *args) {
+    mp_int_t progress = mp_obj_get_int(args[1]);
+    mp_int_t yoffset = mp_obj_get_int(args[2]);
+    mp_int_t fgcolor = mp_obj_get_int(args[3]);
+    mp_int_t bgcolor = mp_obj_get_int(args[4]);
+    if (n_args > 5) { // icon provided
+        mp_buffer_info_t icon;
+        mp_get_buffer_raise(args[5], &icon, MP_BUFFER_READ);
+        const uint8_t *data = icon.buf;
+        if (icon.len < 8 || memcmp(data, "TOIg", 4) != 0) {
+            mp_raise_ValueError("Invalid image format");
+        }
+        mp_int_t w = *(uint16_t *)(data + 4);
+        mp_int_t h = *(uint16_t *)(data + 6);
+        mp_int_t datalen = *(uint32_t *)(data + 8);
+        if (w != LOADER_ICON_SIZE || h != LOADER_ICON_SIZE) {
+            mp_raise_ValueError("Invalid icon size");
+        }
+        if (datalen != icon.len - 12) {
+            mp_raise_ValueError("Invalid size of data");
+        }
+        uint16_t iconfgcolor;
+        if (n_args > 6) { // icon color provided
+            iconfgcolor = mp_obj_get_int(args[6]);
+        } else {
+            iconfgcolor = ~bgcolor; // invert
+        }
+        display_loader(progress, yoffset, fgcolor, bgcolor, icon.buf, icon.len, iconfgcolor);
+    } else {
+        display_loader(progress, yoffset, fgcolor, bgcolor, NULL, 0, 0);
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_loader_obj, 5, 7, mod_trezorui_Display_loader);
 
 /// def print(self, text: str) -> None:
 ///     '''
@@ -302,48 +344,6 @@ STATIC mp_obj_t mod_trezorui_Display_qrcode(size_t n_args, const mp_obj_t *args)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_qrcode_obj, 5, 5, mod_trezorui_Display_qrcode);
 
-/// def loader(self, progress: int, yoffset: int, fgcolor: int, bgcolor: int, icon: bytes = None, iconfgcolor: int = None) -> None:
-///     '''
-///     Renders a rotating loader graphic.
-///     Progress determines its position (0-1000), fgcolor is used as foreground color, bgcolor as background.
-///     When icon and iconfgcolor are provided, an icon is drawn in the middle using the color specified in iconfgcolor.
-///     Icon needs to be of exactly LOADER_ICON_SIZE x LOADER_ICON_SIZE pixels size.
-///     '''
-STATIC mp_obj_t mod_trezorui_Display_loader(size_t n_args, const mp_obj_t *args) {
-    mp_int_t progress = mp_obj_get_int(args[1]);
-    mp_int_t yoffset = mp_obj_get_int(args[2]);
-    mp_int_t fgcolor = mp_obj_get_int(args[3]);
-    mp_int_t bgcolor = mp_obj_get_int(args[4]);
-    if (n_args > 5) { // icon provided
-        mp_buffer_info_t icon;
-        mp_get_buffer_raise(args[5], &icon, MP_BUFFER_READ);
-        const uint8_t *data = icon.buf;
-        if (icon.len < 8 || memcmp(data, "TOIg", 4) != 0) {
-            mp_raise_ValueError("Invalid image format");
-        }
-        mp_int_t w = *(uint16_t *)(data + 4);
-        mp_int_t h = *(uint16_t *)(data + 6);
-        mp_int_t datalen = *(uint32_t *)(data + 8);
-        if (w != LOADER_ICON_SIZE || h != LOADER_ICON_SIZE) {
-            mp_raise_ValueError("Invalid icon size");
-        }
-        if (datalen != icon.len - 12) {
-            mp_raise_ValueError("Invalid size of data");
-        }
-        uint16_t iconfgcolor;
-        if (n_args > 6) { // icon color provided
-            iconfgcolor = mp_obj_get_int(args[6]);
-        } else {
-            iconfgcolor = ~bgcolor; // invert
-        }
-        display_loader(progress, yoffset, fgcolor, bgcolor, icon.buf, icon.len, iconfgcolor);
-    } else {
-        display_loader(progress, yoffset, fgcolor, bgcolor, NULL, 0, 0);
-    }
-    return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_loader_obj, 5, 7, mod_trezorui_Display_loader);
-
 /// def orientation(self, degrees: int = None) -> int:
 ///     '''
 ///     Sets display orientation to 0, 90, 180 or 270 degrees.
@@ -438,13 +438,13 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&mod_trezorui_Display_image_obj) },
     { MP_ROM_QSTR(MP_QSTR_avatar), MP_ROM_PTR(&mod_trezorui_Display_avatar_obj) },
     { MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_trezorui_Display_icon_obj) },
+    { MP_ROM_QSTR(MP_QSTR_loader), MP_ROM_PTR(&mod_trezorui_Display_loader_obj) },
     { MP_ROM_QSTR(MP_QSTR_print), MP_ROM_PTR(&mod_trezorui_Display_print_obj) },
     { MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&mod_trezorui_Display_text_obj) },
     { MP_ROM_QSTR(MP_QSTR_text_center), MP_ROM_PTR(&mod_trezorui_Display_text_center_obj) },
     { MP_ROM_QSTR(MP_QSTR_text_right), MP_ROM_PTR(&mod_trezorui_Display_text_right_obj) },
     { MP_ROM_QSTR(MP_QSTR_text_width), MP_ROM_PTR(&mod_trezorui_Display_text_width_obj) },
     { MP_ROM_QSTR(MP_QSTR_qrcode), MP_ROM_PTR(&mod_trezorui_Display_qrcode_obj) },
-    { MP_ROM_QSTR(MP_QSTR_loader), MP_ROM_PTR(&mod_trezorui_Display_loader_obj) },
     { MP_ROM_QSTR(MP_QSTR_orientation), MP_ROM_PTR(&mod_trezorui_Display_orientation_obj) },
     { MP_ROM_QSTR(MP_QSTR_backlight), MP_ROM_PTR(&mod_trezorui_Display_backlight_obj) },
     { MP_ROM_QSTR(MP_QSTR_offset), MP_ROM_PTR(&mod_trezorui_Display_offset_obj) },

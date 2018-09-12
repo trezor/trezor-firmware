@@ -281,6 +281,76 @@ void display_icon(int x, int y, int w, int h, const void *data, int datalen, uin
     sinf_inflate(data, datalen, inflate_callback_icon, userdata);
 }
 
+#include "loader.h"
+
+static void inflate_callback_loader(uint8_t byte, uint32_t pos, void *userdata)
+{
+    uint8_t *out = (uint8_t *)userdata;
+    out[pos] = byte;
+}
+
+void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint32_t iconlen, uint16_t iconfgcolor)
+{
+    uint16_t colortable[16], iconcolortable[16];
+    set_color_table(colortable, fgcolor, bgcolor);
+    if (icon) {
+        set_color_table(iconcolortable, iconfgcolor, bgcolor);
+    }
+    if ((DISPLAY_RESY / 2 - img_loader_size + yoffset < 0) ||
+        (DISPLAY_RESY / 2 + img_loader_size - 1 + yoffset >= DISPLAY_RESY)) {
+       return;
+    }
+    display_set_window(DISPLAY_RESX / 2 - img_loader_size, DISPLAY_RESY / 2 - img_loader_size + yoffset, DISPLAY_RESX / 2 + img_loader_size - 1, DISPLAY_RESY / 2 + img_loader_size - 1 + yoffset);
+    if (icon && memcmp(icon, "TOIg", 4) == 0 && LOADER_ICON_SIZE == *(uint16_t *)(icon + 4) && LOADER_ICON_SIZE == *(uint16_t *)(icon + 6) && iconlen == 12 + *(uint32_t *)(icon + 8)) {
+        uint8_t icondata[LOADER_ICON_SIZE * LOADER_ICON_SIZE / 2];
+        sinf_inflate(icon + 12, iconlen - 12, inflate_callback_loader, icondata);
+        icon = icondata;
+    } else {
+        icon = NULL;
+    }
+    for (int y = 0; y < img_loader_size * 2; y++) {
+        for (int x = 0; x < img_loader_size * 2; x++) {
+            int mx = x, my = y;
+            uint16_t a;
+            if ((mx >= img_loader_size) && (my >= img_loader_size)) {
+                mx = img_loader_size * 2 - 1 - x;
+                my = img_loader_size * 2 - 1 - y;
+                a = 499 - (img_loader[my][mx] >> 8);
+            } else
+            if (mx >= img_loader_size) {
+                mx = img_loader_size * 2 - 1 - x;
+                a = img_loader[my][mx] >> 8;
+            } else
+            if (my >= img_loader_size) {
+                my = img_loader_size * 2 - 1 - y;
+                a = 500 + (img_loader[my][mx] >> 8);
+            } else {
+                a = 999 - (img_loader[my][mx] >> 8);
+            }
+            // inside of circle - draw glyph
+            #define LOADER_ICON_CORNER_CUT 2
+            if (icon && mx + my > (((LOADER_ICON_SIZE / 2) + LOADER_ICON_CORNER_CUT) * 2) && mx >= img_loader_size - (LOADER_ICON_SIZE / 2) && my >= img_loader_size - (LOADER_ICON_SIZE / 2)) {
+                int i = (x - (img_loader_size - (LOADER_ICON_SIZE / 2))) + (y - (img_loader_size - (LOADER_ICON_SIZE / 2))) * LOADER_ICON_SIZE;
+                uint8_t c;
+                if (i % 2) {
+                    c = icon[i / 2] & 0x0F;
+                } else {
+                    c = (icon[i / 2] & 0xF0) >> 4;
+                }
+                PIXELDATA(iconcolortable[c]);
+            } else {
+                uint8_t c;
+                if (progress > a) {
+                    c = (img_loader[my][mx] & 0x00F0) >> 4;
+                } else {
+                    c = img_loader[my][mx] & 0x000F;
+                }
+                PIXELDATA(colortable[c]);
+            }
+        }
+    }
+}
+
 static const uint8_t *get_glyph(int font, uint8_t c)
 {
     if (c >= ' ' && c <= '~') {
@@ -538,76 +608,6 @@ void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale)
     }
 }
 
-#include "loader.h"
-
-static void inflate_callback_loader(uint8_t byte, uint32_t pos, void *userdata)
-{
-    uint8_t *out = (uint8_t *)userdata;
-    out[pos] = byte;
-}
-
-void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint32_t iconlen, uint16_t iconfgcolor)
-{
-    uint16_t colortable[16], iconcolortable[16];
-    set_color_table(colortable, fgcolor, bgcolor);
-    if (icon) {
-        set_color_table(iconcolortable, iconfgcolor, bgcolor);
-    }
-    if ((DISPLAY_RESY / 2 - img_loader_size + yoffset < 0) ||
-        (DISPLAY_RESY / 2 + img_loader_size - 1 + yoffset >= DISPLAY_RESY)) {
-       return;
-    }
-    display_set_window(DISPLAY_RESX / 2 - img_loader_size, DISPLAY_RESY / 2 - img_loader_size + yoffset, DISPLAY_RESX / 2 + img_loader_size - 1, DISPLAY_RESY / 2 + img_loader_size - 1 + yoffset);
-    if (icon && memcmp(icon, "TOIg", 4) == 0 && LOADER_ICON_SIZE == *(uint16_t *)(icon + 4) && LOADER_ICON_SIZE == *(uint16_t *)(icon + 6) && iconlen == 12 + *(uint32_t *)(icon + 8)) {
-        uint8_t icondata[LOADER_ICON_SIZE * LOADER_ICON_SIZE / 2];
-        sinf_inflate(icon + 12, iconlen - 12, inflate_callback_loader, icondata);
-        icon = icondata;
-    } else {
-        icon = NULL;
-    }
-    for (int y = 0; y < img_loader_size * 2; y++) {
-        for (int x = 0; x < img_loader_size * 2; x++) {
-            int mx = x, my = y;
-            uint16_t a;
-            if ((mx >= img_loader_size) && (my >= img_loader_size)) {
-                mx = img_loader_size * 2 - 1 - x;
-                my = img_loader_size * 2 - 1 - y;
-                a = 499 - (img_loader[my][mx] >> 8);
-            } else
-            if (mx >= img_loader_size) {
-                mx = img_loader_size * 2 - 1 - x;
-                a = img_loader[my][mx] >> 8;
-            } else
-            if (my >= img_loader_size) {
-                my = img_loader_size * 2 - 1 - y;
-                a = 500 + (img_loader[my][mx] >> 8);
-            } else {
-                a = 999 - (img_loader[my][mx] >> 8);
-            }
-            // inside of circle - draw glyph
-            #define LOADER_ICON_CORNER_CUT 2
-            if (icon && mx + my > (((LOADER_ICON_SIZE / 2) + LOADER_ICON_CORNER_CUT) * 2) && mx >= img_loader_size - (LOADER_ICON_SIZE / 2) && my >= img_loader_size - (LOADER_ICON_SIZE / 2)) {
-                int i = (x - (img_loader_size - (LOADER_ICON_SIZE / 2))) + (y - (img_loader_size - (LOADER_ICON_SIZE / 2))) * LOADER_ICON_SIZE;
-                uint8_t c;
-                if (i % 2) {
-                    c = icon[i / 2] & 0x0F;
-                } else {
-                    c = (icon[i / 2] & 0xF0) >> 4;
-                }
-                PIXELDATA(iconcolortable[c]);
-            } else {
-                uint8_t c;
-                if (progress > a) {
-                    c = (img_loader[my][mx] & 0x00F0) >> 4;
-                } else {
-                    c = img_loader[my][mx] & 0x000F;
-                }
-                PIXELDATA(colortable[c]);
-            }
-        }
-    }
-}
-
 void display_offset(int set_xy[2], int *get_x, int *get_y)
 {
     if (set_xy) {
@@ -621,7 +621,13 @@ void display_offset(int set_xy[2], int *get_x, int *get_y)
 int display_orientation(int degrees)
 {
     if (degrees != DISPLAY_ORIENTATION) {
+#if TREZOR_MODEL == T
         if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
+#elif TREZOR_MODEL == 1
+        if (degrees == 0 || degrees == 180) {
+#else
+#error Unknown TREZOR model
+#endif
             DISPLAY_ORIENTATION = degrees;
             display_set_orientation(degrees);
         }

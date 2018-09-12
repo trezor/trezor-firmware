@@ -22,36 +22,46 @@
 
 #include <stdint.h>
 
-// ILI9341V, GC9307 and ST7789V drivers support 240px x 320px display resolution
-#define MAX_DISPLAY_RESX 240
-#define MAX_DISPLAY_RESY 320
-// X and Y display resolution used
-#define DISPLAY_RESX 240
-#define DISPLAY_RESY 240
+#if TREZOR_MODEL == T
 
-#define FONT_BPP    4
-#define FONT_SIZE   20
+// ILI9341V, GC9307 and ST7789V drivers support 240px x 320px display resolution
+#define MAX_DISPLAY_RESX    240
+#define MAX_DISPLAY_RESY    320
+#define DISPLAY_RESX        240
+#define DISPLAY_RESY        240
+
+#elif TREZOR_MODEL == 1
+
+#define MAX_DISPLAY_RESX    128
+#define MAX_DISPLAY_RESY    64
+#define DISPLAY_RESX        128
+#define DISPLAY_RESY        64
+
+#else
+#error Unknown TREZOR Model
+#endif
+
+#define FONT_BPP            4
+#define FONT_SIZE           20
+#define AVATAR_IMAGE_SIZE   144
+#define LOADER_ICON_SIZE    64
+
+#define RGB16(R, G, B)      ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | ((B & 0xF8) >> 3)
+#define COLOR_WHITE         0xFFFF
+#define COLOR_BLACK         0x0000
 
 #ifdef TREZOR_FONT_NORMAL_ENABLE
-#define FONT_NORMAL (-1)
+#define FONT_NORMAL         (-1)
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
-#define FONT_BOLD   (-2)
+#define FONT_BOLD           (-2)
 #endif
 #ifdef TREZOR_FONT_MONO_ENABLE
-#define FONT_MONO   (-3)
+#define FONT_MONO           (-3)
 #endif
 #ifdef TREZOR_FONT_MONO_BOLD_ENABLE
-#define FONT_MONO_BOLD  (-4)
+#define FONT_MONO_BOLD      (-4)
 #endif
-
-#define AVATAR_IMAGE_SIZE  144
-#define LOADER_ICON_SIZE   64
-
-#define RGB16(R, G, B) ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | ((B & 0xF8) >> 3)
-
-#define COLOR_WHITE      RGB16(0xFF, 0xFF, 0xFF)
-#define COLOR_BLACK      RGB16(0x00, 0x00, 0x00)
 
 // provided by port
 
@@ -69,6 +79,7 @@ void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b, uint
 void display_image(int x, int y, int w, int h, const void *data, int datalen);
 void display_avatar(int x, int y, const void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor);
 void display_icon(int x, int y, int w, int h, const void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor);
+void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint32_t iconlen, uint16_t iconfgcolor);
 
 #ifndef TREZOR_PRINT_DISABLE
 void display_print_color(uint16_t fgcolor, uint16_t bgcolor);
@@ -82,7 +93,6 @@ void display_text_right(int x, int y, const char *text, int textlen, int font, u
 int display_text_width(const char *text, int textlen, int font);
 
 void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale);
-void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint32_t iconlen, uint16_t iconfgcolor);
 
 void display_offset(int set_xy[2], int *get_x, int *get_y);
 int display_orientation(int degrees);
