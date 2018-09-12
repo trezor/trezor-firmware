@@ -135,7 +135,7 @@ class TestProtectCall(TrezorTest):
             print(msg)
             assert got >= expected
 
-        for attempt in range(1, 6):
+        for attempt in range(1, 4):
             start = time.time()
             with pytest.raises(PinException):
                 self._some_protected_call(False, True, False)
