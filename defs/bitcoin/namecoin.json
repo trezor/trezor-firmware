@@ -34,6 +34,9 @@
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [],
-  "blockbook": [],
+  "blockbook": [
+    "https://nmc1.trezor.io",
+    "https://nmc2.trezor.io"
+  ],
   "cooldown": 100
 }
