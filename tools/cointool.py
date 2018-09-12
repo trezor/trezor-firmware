@@ -556,8 +556,13 @@ def check(backend, icons, show_duplicates):
 
 
 @cli.command()
+# fmt: off
 @click.option("-o", "--outfile", type=click.File(mode="w"), default="./coins.json")
-def dump(outfile):
+@click.option("-s/-S", "--support/--no-support", default=True, help="Include support data for each coin")
+@click.option("-p", "--pretty", is_flag=True, help="Generate nicely formatted JSON")
+@click.option("-t", "--tokens", type=click.Choice(["full", "stripped", "none"]), default="full", help="Filter token data")
+# fmt: on
+def dump(outfile, support, pretty, tokens):
     """Dump all coin data in a single JSON file.
 
     This file is structured the same as the internal data. That is, top-level object
@@ -570,21 +575,43 @@ def dump(outfile):
     - 'shortcut' - currency symbol
     - 'key' - unique identifier, e.g., 'bitcoin:BTC'
     - 'support' - a dict with entries per known device
+
+    To control the size and properties of the resulting file, you can specify whether
+    or not you want pretty-printing, whether or not to include support data with
+    each coin, and whether to include information about ERC20 tokens, which takes up
+    several hundred kB of space.
+
+    \b
+    The option '--tokens' can have one of three values:
+    'full': include all token data
+    'stripped': exclude 'social' links and 'logo' data from tokens
+    'none': exclude the 'erc20' category altogether.
     """
     coins = coin_info.coin_info()
-    support_info = coin_info.support_info(coins.as_list())
 
-    for category in coins.values():
-        for coin in category:
-            coin["support"] = support_info[coin["key"]]
+    if support:
+        support_info = coin_info.support_info(coins.as_list())
+
+        for category in coins.values():
+            for coin in category:
+                coin["support"] = support_info[coin["key"]]
 
     # get rid of address_bytes which are bytes which can't be JSON encoded
     for coin in coins.erc20:
         coin.pop("address_bytes", None)
+        if tokens == "stripped":
+            coin.pop("social", None)
+            coin.pop("logo", None)
+
+    if tokens == "none":
+        del coins["erc20"]
 
     with outfile:
-        json.dump(coins, outfile, indent=4, sort_keys=True)
-        outfile.write("\n")
+        if pretty:
+            json.dump(coins, outfile, indent=4, sort_keys=True)
+            outfile.write("\n")
+        else:
+            json.dump(coins, outfile)
 
 
 @cli.command()
