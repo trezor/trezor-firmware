@@ -2,6 +2,10 @@ sudo: false
 dist: trusty
 language: c
 
+compiler:
+  - clang
+  - gcc
+
 addons:
   apt:
     sources:
@@ -26,13 +30,15 @@ env:
 
 matrix:
   include:
-    compiler:
-      - clang
-      - gcc
     env:
       - EMULATOR=1 HEADLESS=1 DEBUG_LINK=1
     script:
       - pipenv run ./script/cibuild && pipenv run script/test
+  exclude:
+    - compiler: clang
+      env: DEBUG_LINK=0
+    - compiler: clang
+      env: DEBUG_LINK=1
 
 install:
   - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
