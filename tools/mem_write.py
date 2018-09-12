@@ -2,7 +2,6 @@
 from trezorlib.debuglink import DebugLink
 from trezorlib.client import TrezorClient
 from trezorlib.transport import enumerate_devices
-import binascii
 import sys
 
 
@@ -23,7 +22,7 @@ def main():
     client = TrezorClient(transport)
     debug = DebugLink(debug_transport)
 
-    debug.memory_write(int(sys.argv[1], 16), binascii.unhexlify(sys.argv[2]), flash=True)
+    debug.memory_write(int(sys.argv[1], 16), bytes.fromhex(sys.argv[2]), flash=True)
     client.close()
 
 

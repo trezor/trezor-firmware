@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from binascii import hexlify, unhexlify
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 import hmac
@@ -21,15 +20,15 @@ BIP32_PATH = parse_path("10016h/0")
 def getMasterKey(client):
     bip32_path = BIP32_PATH
     ENC_KEY = 'Activate TREZOR Password Manager?'
-    ENC_VALUE = unhexlify('2d650551248d792eabf628f451200d7f51cb63e46aadcbb1038aacb05e8c8aee2d650551248d792eabf628f451200d7f51cb63e46aadcbb1038aacb05e8c8aee')
-    key = hexlify(client.encrypt_keyvalue(
+    ENC_VALUE = bytes.fromhex('2d650551248d792eabf628f451200d7f51cb63e46aadcbb1038aacb05e8c8aee2d650551248d792eabf628f451200d7f51cb63e46aadcbb1038aacb05e8c8aee')
+    key = client.encrypt_keyvalue(
         bip32_path,
         ENC_KEY,
         ENC_VALUE,
         True,
         True
-    ))
-    return key
+    )
+    return key.hex()
 
 
 # Deriving file name and encryption key
@@ -43,7 +42,7 @@ def getFileEncKey(key):
 
 # File level decryption and file reading
 def decryptStorage(path, key):
-    cipherkey = unhexlify(key)
+    cipherkey = bytes.fromhex(key)
     with open(path, 'rb') as f:
         iv = f.read(12)
         tag = f.read(16)
@@ -63,7 +62,7 @@ def decryptStorage(path, key):
 
 
 def decryptEntryValue(nonce, val):
-    cipherkey = unhexlify(nonce)
+    cipherkey = bytes.fromhex(nonce)
     iv = val[:12]
     tag = val[12:28]
     cipher = Cipher(algorithms.AES(cipherkey), modes.GCM(iv, tag), backend=default_backend())
@@ -98,14 +97,14 @@ def getDecryptedNonce(client, entry):
 
     ENC_KEY = 'Unlock %s for user %s?' % (item, entry['username'])
     ENC_VALUE = entry['nonce']
-    decrypted_nonce = hexlify(client.decrypt_keyvalue(
+    decrypted_nonce = client.decrypt_keyvalue(
         BIP32_PATH,
         ENC_KEY,
-        unhexlify(ENC_VALUE),
+        bytes.fromhex(ENC_VALUE),
         False,
         True
-    ))
-    return decrypted_nonce
+    )
+    return decrypted_nonce.hex()
 
 
 # Pretty print of list
@@ -163,11 +162,11 @@ def main():
 
     pwdArr = entries[entry_id]['password']['data']
     pwdHex = ''.join([hex(x)[2:].zfill(2) for x in pwdArr])
-    print('password: ', decryptEntryValue(plain_nonce, unhexlify(pwdHex)))
+    print('password: ', decryptEntryValue(plain_nonce, bytes.fromhex(pwdHex)))
 
     safeNoteArr = entries[entry_id]['safe_note']['data']
     safeNoteHex = ''.join([hex(x)[2:].zfill(2) for x in safeNoteArr])
-    print('safe_note:', decryptEntryValue(plain_nonce, unhexlify(safeNoteHex)))
+    print('safe_note:', decryptEntryValue(plain_nonce, bytes.fromhex(safeNoteHex)))
 
     return
 

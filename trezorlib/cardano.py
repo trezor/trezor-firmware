@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import binascii
 from typing import List
 
 from . import messages, tools
@@ -56,7 +55,7 @@ def sign_tx(
     while isinstance(response, messages.CardanoTxRequest):
         tx_index = response.tx_index
 
-        transaction_data = binascii.unhexlify(transactions[tx_index])
+        transaction_data = bytes.fromhex(transactions[tx_index])
         ack_message = messages.CardanoTxAck(transaction=transaction_data)
         response = client.call(ack_message)
 
@@ -71,7 +70,7 @@ def create_input(input) -> messages.CardanoTxInputType:
 
     return messages.CardanoTxInputType(
         address_n=tools.parse_path(path),
-        prev_hash=binascii.unhexlify(input["prev_hash"]),
+        prev_hash=bytes.fromhex(input["prev_hash"]),
         prev_index=input["prev_index"],
         type=input["type"],
     )

@@ -21,7 +21,6 @@
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 import base64
-import binascii
 import hashlib
 import io
 import json
@@ -197,7 +196,7 @@ def clear_session(connect):
 @click.argument("size", type=int)
 @click.pass_obj
 def get_entropy(connect, size):
-    return binascii.hexlify(misc.get_entropy(connect(), size))
+    return misc.get_entropy(connect(), size).hex()
 
 
 @cli.command(help="Retrieve device features and settings.")
@@ -538,7 +537,7 @@ def firmware_update(connect, filename, url, version, skip_check, fingerprint):
 
     if not skip_check:
         if fp[:8] == b"54525a52" or fp[:8] == b"54525a56":
-            fp = binascii.unhexlify(fp)
+            fp = bytes.fromhex(fp.decode())
         if fp[:4] != b"TRZR" and fp[:4] != b"TRZV":
             click.echo("Trezor firmware header expected.")
             sys.exit(2)
@@ -618,8 +617,8 @@ def get_public_node(connect, coin, address, curve, script_type, show_display):
             "depth": result.node.depth,
             "fingerprint": "%08x" % result.node.fingerprint,
             "child_num": result.node.child_num,
-            "chain_code": binascii.hexlify(result.node.chain_code),
-            "public_key": binascii.hexlify(result.node.public_key),
+            "chain_code": result.node.chain_code.hex(),
+            "public_key": result.node.public_key.hex(),
         },
         "xpub": result.xpub,
     }
@@ -662,7 +661,7 @@ def sign_tx(connect, coin):
 
     def outpoint(s):
         txid, vout = s.split(":")
-        return binascii.unhexlify(txid), int(vout)
+        return bytes.fromhex(txid), int(vout)
 
     inputs = []
     while True:
@@ -691,9 +690,7 @@ def sign_tx(connect, coin):
             else CHOICE_INPUT_SCRIPT_TYPE.typemap[script_type]
         )
         if txapi.bip115:
-            prev_output = txapi.get_tx(
-                binascii.hexlify(prev_hash).decode()
-            ).bin_outputs[prev_index]
+            prev_output = txapi.get_tx(prev_hash.hex()).bin_outputs[prev_index]
             prev_blockhash = prev_output.block_hash
             prev_blockheight = prev_output.block_height
         inputs.append(
@@ -762,7 +759,7 @@ def sign_tx(connect, coin):
 
     click.echo()
     click.echo("Signed Transaction:")
-    click.echo(binascii.hexlify(serialized_tx))
+    click.echo(serialized_tx.hex())
     click.echo()
     click.echo("Use the following form to broadcast it to the network:")
     click.echo(txapi.pushtx_url)
@@ -826,17 +823,17 @@ def ethereum_sign_message(connect, address, message):
     ret = ethereum.sign_message(client, address_n, message)
     output = {
         "message": message,
-        "address": "0x%s" % binascii.hexlify(ret.address).decode(),
-        "signature": "0x%s" % binascii.hexlify(ret.signature).decode(),
+        "address": "0x%s" % ret.address.hex(),
+        "signature": "0x%s" % ret.signature.hex(),
     }
     return output
 
 
 def ethereum_decode_hex(value):
     if value.startswith("0x") or value.startswith("0X"):
-        return binascii.unhexlify(value[2:])
+        return bytes.fromhex(value[2:])
     else:
-        return binascii.unhexlify(value)
+        return bytes.fromhex(value)
 
 
 @cli.command(help="Verify message signed with Ethereum address.")
@@ -859,7 +856,7 @@ def encrypt_keyvalue(connect, address, key, value):
     client = connect()
     address_n = tools.parse_path(address)
     res = misc.encrypt_keyvalue(client, address_n, key, value.encode())
-    return binascii.hexlify(res)
+    return res.hex()
 
 
 @cli.command(help="Decrypt value by given key and path.")
@@ -870,7 +867,7 @@ def encrypt_keyvalue(connect, address, key, value):
 def decrypt_keyvalue(connect, address, key, value):
     client = connect()
     address_n = tools.parse_path(address)
-    return misc.decrypt_keyvalue(client, address_n, key, binascii.unhexlify(value))
+    return misc.decrypt_keyvalue(client, address_n, key, bytes.fromhex(value))
 
 
 # @cli.command(help='Encrypt message.')
@@ -882,13 +879,13 @@ def decrypt_keyvalue(connect, address, key, value):
 # @click.pass_obj
 # def encrypt_message(connect, coin, display_only, address, pubkey, message):
 #     client = connect()
-#     pubkey = binascii.unhexlify(pubkey)
+#     pubkey = bytes.fromhex(pubkey)
 #     address_n = tools.parse_path(address)
 #     res = client.encrypt_message(pubkey, message, display_only, coin, address_n)
 #     return {
-#         'nonce': binascii.hexlify(res.nonce),
-#         'message': binascii.hexlify(res.message),
-#         'hmac': binascii.hexlify(res.hmac),
+#         'nonce': res.nonce.hex(),
+#         'message': res.message.hex(),
+#         'hmac': res.hmac.hex(),
 #         'payload': base64.b64encode(res.nonce + res.message + res.hmac),
 #     }
 
@@ -920,7 +917,7 @@ def ethereum_get_address(connect, address, show_display):
     client = connect()
     address_n = tools.parse_path(address)
     address = ethereum.get_address(client, address_n, show_display)
-    return "0x%s" % binascii.hexlify(address).decode()
+    return "0x%s" % address.hex()
 
 
 @cli.command(
@@ -1027,9 +1024,7 @@ def ethereum_sign_tx(
 
     client = connect()
     address_n = tools.parse_path(address)
-    address = "0x%s" % (
-        binascii.hexlify(ethereum.get_address(client, address_n)).decode()
-    )
+    address = "0x%s" % ethereum.get_address(client, address_n).hex()
 
     if gas_price is None or gas_limit is None or nonce is None or publish:
         host, port = host.split(":")
@@ -1047,7 +1042,7 @@ def ethereum_sign_tx(
             to_address=to,
             from_address=address,
             value=("0x%x" % value),
-            data="0x%s" % (binascii.hexlify(data).decode()),
+            data="0x%s" % data.hex(),
         )
 
     if nonce is None:
@@ -1074,7 +1069,7 @@ def ethereum_sign_tx(
         transaction = rlp.encode(
             (tx_type, nonce, gas_price, gas_limit, to_address, value, data) + sig
         )
-    tx_hex = "0x%s" % binascii.hexlify(transaction).decode()
+    tx_hex = "0x%s" % transaction.hex()
 
     if publish:
         tx_hash = eth.eth_sendRawTransaction(tx_hex)
@@ -1110,8 +1105,8 @@ def cardano_sign_tx(connect, file, network):
     signed_transaction = cardano.sign_tx(client, inputs, outputs, transactions, network)
 
     return {
-        "tx_hash": binascii.hexlify(signed_transaction.tx_hash).decode(),
-        "tx_body": binascii.hexlify(signed_transaction.tx_body).decode(),
+        "tx_hash": signed_transaction.tx_hash.hex(),
+        "tx_body": signed_transaction.tx_body.hex(),
     }
 
 
@@ -1174,10 +1169,7 @@ def nem_sign_tx(connect, address, file, broadcast):
     address_n = tools.parse_path(address)
     transaction = nem.sign_tx(client, address_n, json.load(file))
 
-    payload = {
-        "data": binascii.hexlify(transaction.data).decode(),
-        "signature": binascii.hexlify(transaction.signature).decode(),
-    }
+    payload = {"data": transaction.data.hex(), "signature": transaction.signature.hex()}
 
     if broadcast:
         import requests
@@ -1216,7 +1208,7 @@ def lisk_get_public_key(connect, address, show_display):
     client = connect()
     address_n = tools.parse_path(address)
     res = lisk.get_public_key(client, address_n, show_display)
-    output = {"public_key": binascii.hexlify(res.public_key).decode()}
+    output = {"public_key": res.public_key.hex()}
     return output
 
 
@@ -1237,7 +1229,7 @@ def lisk_sign_tx(connect, address, file):
     address_n = tools.parse_path(address)
     transaction = lisk.sign_tx(client, address_n, json.load(file))
 
-    payload = {"signature": binascii.hexlify(transaction.signature).decode()}
+    payload = {"signature": transaction.signature.hex()}
 
     return payload
 
@@ -1254,8 +1246,8 @@ def lisk_sign_message(connect, address, message):
     res = lisk.sign_message(client, address_n, message)
     output = {
         "message": message,
-        "public_key": binascii.hexlify(res.public_key).decode(),
-        "signature": binascii.hexlify(res.signature).decode(),
+        "public_key": res.public_key.hex(),
+        "signature": res.signature.hex(),
     }
     return output
 
@@ -1285,7 +1277,7 @@ def lisk_verify_message(connect, pubkey, signature, message):
 def cosi_commit(connect, address, data):
     client = connect()
     address_n = tools.parse_path(address)
-    return cosi.commit(client, address_n, binascii.unhexlify(data))
+    return cosi.commit(client, address_n, bytes.fromhex(data))
 
 
 @cli.command(help="Ask device to sign using CoSi.")
@@ -1302,9 +1294,9 @@ def cosi_sign(connect, address, data, global_commitment, global_pubkey):
     return cosi.sign(
         client,
         address_n,
-        binascii.unhexlify(data),
-        binascii.unhexlify(global_commitment),
-        binascii.unhexlify(global_pubkey),
+        bytes.fromhex(data),
+        bytes.fromhex(global_commitment),
+        bytes.fromhex(global_pubkey),
     )
 
 
@@ -1383,10 +1375,10 @@ def ripple_sign_tx(connect, address, file):
 
     result = ripple.sign_tx(client, address_n, msg)
     click.echo("Signature:")
-    click.echo(binascii.hexlify(result.signature))
+    click.echo(result.signature.hex())
     click.echo()
     click.echo("Serialized tx including the signature:")
-    click.echo(binascii.hexlify(result.serialized_tx))
+    click.echo(result.serialized_tx.hex())
 
 
 #
@@ -1457,7 +1449,7 @@ def ontology_get_public_key(connect, address, show_display):
     address_n = tools.parse_path(address)
     result = ontology.get_public_key(client, address_n, show_display)
 
-    return binascii.hexlify(result.public_key).decode()
+    return result.public_key.hex()
 
 
 @cli.command(help="Sign Ontology transfer.")
@@ -1492,10 +1484,7 @@ def ontology_sign_transfer(connect, address, transaction_f, transfer_f):
 
     result = ontology.sign_transfer(client, address_n, transaction, transfer)
 
-    output = {
-        "payload": binascii.hexlify(result.payload).decode(),
-        "signature": binascii.hexlify(result.signature).decode(),
-    }
+    output = {"payload": result.payload.hex(), "signature": result.signature.hex()}
 
     return output
 
@@ -1534,10 +1523,7 @@ def ontology_sign_withdraw_ong(connect, address, transaction_f, withdraw_ong_f):
 
     result = ontology.sign_withdrawal(client, address_n, transaction, withdraw_ong)
 
-    output = {
-        "payload": binascii.hexlify(result.payload).decode(),
-        "signature": binascii.hexlify(result.signature).decode(),
-    }
+    output = {"payload": result.payload.hex(), "signature": result.signature.hex()}
 
     return output
 
@@ -1578,10 +1564,7 @@ def ontology_sign_ont_id_register(connect, address, transaction_f, ont_id_regist
 
     result = ontology.sign_register(client, address_n, transaction, ont_id_register)
 
-    output = {
-        "payload": binascii.hexlify(result.payload).decode(),
-        "signature": binascii.hexlify(result.signature).decode(),
-    }
+    output = {"payload": result.payload.hex(), "signature": result.signature.hex()}
 
     return output
 
@@ -1624,10 +1607,7 @@ def ontology_sign_ont_id_add_attributes(
         client, address_n, transaction, ont_id_add_attributes
     )
 
-    output = {
-        "payload": binascii.hexlify(result.payload).decode(),
-        "signature": binascii.hexlify(result.signature).decode(),
-    }
+    output = {"payload": result.payload.hex(), "signature": result.signature.hex()}
 
     return output
 

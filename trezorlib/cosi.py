@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import binascii
 from functools import reduce
 from typing import Iterable, Tuple
 
@@ -63,7 +62,7 @@ def get_nonce(
     r = _ed25519.Hint(
         bytes([h[i] for i in range(b >> 3, b >> 2)])
         + data
-        + binascii.unhexlify("%08x" % ctr)
+        + bytes.fromhex("%08x" % ctr)
     )
     R = _ed25519.scalarmult(_ed25519.B, r)
     return r, Ed25519PublicPoint(_ed25519.encodepoint(R))

@@ -11,7 +11,6 @@ import os
 import sys
 import json
 import hashlib
-import binascii
 
 from trezorlib.client import TrezorClient
 from trezorlib.transport import enumerate_devices
@@ -100,7 +99,7 @@ def main():
 
         data = {'label': label,
                 'bip32_path': bip32_path,
-                'password_encrypted_hex': binascii.hexlify(passw_encrypted).decode()}
+                'password_encrypted_hex': passw_encrypted.hex()}
 
         json.dump(data, open(passw_file, 'w'))
 
@@ -110,7 +109,7 @@ def main():
     sys.stderr.write('Please confirm the action on your device ...\n')
     passw = client.decrypt_keyvalue(data['bip32_path'],
                                     data['label'],
-                                    binascii.unhexlify(data['password_encrypted_hex']),
+                                    bytes.fromhex(data['password_encrypted_hex']),
                                     False, True)
 
     print(passw)

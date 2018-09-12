@@ -37,7 +37,6 @@ required:
 >>>         """
 '''
 
-import binascii
 from io import BytesIO
 from typing import Any, Optional
 
@@ -391,7 +390,7 @@ def format_message(
             if mostly_printable(value):
                 output = repr(value)
             else:
-                output = "0x" + binascii.hexlify(value).decode()
+                output = "0x" + value.hex()
             return "{} bytes {}{}".format(length, output, suffix)
 
         return repr(value)
@@ -418,7 +417,7 @@ def value_to_proto(ftype, value):
 
     if ftype is BytesType:
         if isinstance(value, str):
-            return binascii.unhexlify(value)
+            return bytes.fromhex(value)
         elif isinstance(value, bytes):
             return value
         else:

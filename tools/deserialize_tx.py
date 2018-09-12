@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import binascii
 import os
 import sys
 
@@ -17,7 +16,7 @@ if os.isatty(sys.stdin.fileno()):
 else:
     tx_hex = sys.stdin.read().strip()
 
-tx_bin = binascii.unhexlify(tx_hex)
+tx_bin = bytes.fromhex(tx_hex)
 
 
 CompactUintStruct = c.Struct(

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import binascii
 import hashlib
+
 import mnemonic
 
 __doc__ = '''
@@ -48,8 +48,8 @@ def generate_entropy(strength, internal_entropy, external_entropy):
 def main():
     print(__doc__)
 
-    comp = binascii.unhexlify(input("Please enter computer-generated entropy (in hex): ").strip())
-    trzr = binascii.unhexlify(input("Please enter TREZOR-generated entropy (in hex): ").strip())
+    comp = bytes.fromhex(input("Please enter computer-generated entropy (in hex): ").strip())
+    trzr = bytes.fromhex(input("Please enter TREZOR-generated entropy (in hex): ").strip())
     word_count = int(input("How many words your mnemonic has? "))
 
     strength = word_count * 32 // 3

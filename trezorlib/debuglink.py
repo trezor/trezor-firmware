@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import binascii
 
 from mnemonic import Mnemonic
 
@@ -204,12 +203,12 @@ def load_device_by_xprv(client, xprv, pin, passphrase_protection, label, languag
         raise ValueError("Invalid length of xprv")
 
     node = proto.HDNodeType()
-    data = binascii.hexlify(tools.b58decode(xprv, None))
+    data = tools.b58decode(xprv, None).hex()
 
-    if data[90:92] != b"00":
+    if data[90:92] != "00":
         raise ValueError("Contain invalid private key")
 
-    checksum = binascii.hexlify(tools.btc_hash(binascii.unhexlify(data[:156]))[:4])
+    checksum = (tools.btc_hash(bytes.fromhex(data[:156]))[:4]).hex()
     if checksum != data[156:]:
         raise ValueError("Checksum doesn't match")
 
@@ -224,8 +223,8 @@ def load_device_by_xprv(client, xprv, pin, passphrase_protection, label, languag
     node.depth = int(data[8:10], 16)
     node.fingerprint = int(data[10:18], 16)
     node.child_num = int(data[18:26], 16)
-    node.chain_code = binascii.unhexlify(data[26:90])
-    node.private_key = binascii.unhexlify(data[92:156])  # skip 0x00 indicating privkey
+    node.chain_code = bytes.fromhex(data[26:90])
+    node.private_key = bytes.fromhex(data[92:156])  # skip 0x00 indicating privkey
 
     resp = client.call(
         proto.LoadDevice(

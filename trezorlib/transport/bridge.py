@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import binascii
 import logging
 import struct
 from io import BytesIO
@@ -96,7 +95,7 @@ class BridgeTransport(Transport):
         protobuf.dump_message(data, msg)
         ser = data.getvalue()
         header = struct.pack(">HL", mapping.get_type(msg), len(ser))
-        data = binascii.hexlify(header + ser).decode()
+        data = (header + ser).hex()
         r = self.conn.post(
             TREZORD_HOST + "/call/%s" % self.session, data=data, headers=self.HEADERS
         )
@@ -107,7 +106,7 @@ class BridgeTransport(Transport):
     def read(self):
         if self.response is None:
             raise TransportException("No response stored")
-        data = binascii.unhexlify(self.response)
+        data = bytes.fromhex(self.response)
         headerlen = struct.calcsize(">HL")
         (msg_type, datalen) = struct.unpack(">HL", data[:headerlen])
         data = BytesIO(data[headerlen : headerlen + datalen])

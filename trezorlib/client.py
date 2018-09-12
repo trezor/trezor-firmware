@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import binascii
 import functools
 import getpass
 import logging
@@ -498,7 +497,7 @@ class ProtocolMixin(object):
             if not self.tx_api:
                 raise RuntimeError("TX_API not defined")
 
-            prev_tx = self.tx_api.get_tx(binascii.hexlify(inp.prev_hash).decode())
+            prev_tx = self.tx_api.get_tx(inp.prev_hash.hex())
             txes[inp.prev_hash] = prev_tx
 
         return txes

@@ -1,4 +1,3 @@
-import binascii
 
 import construct as c
 import pyblake2
@@ -107,7 +106,7 @@ def validate_firmware(filename):
     with open(filename, "rb") as f:
         data = f.read()
     if data[:6] == b"54525a":
-        data = binascii.unhexlify(data)
+        data = bytes.fromhex(data.decode())
 
     try:
         fw = Firmware.parse(data)
@@ -135,7 +134,7 @@ def validate_firmware(filename):
     header_bytes = FirmwareHeader.build(stripped_header)
     digest = pyblake2.blake2s(header_bytes).digest()
 
-    print("Fingerprint: {}".format(binascii.hexlify(digest).decode()))
+    print("Fingerprint: {}".format(digest.hex()))
 
     global_pk = cosi.combine_keys(
         vendor.pubkeys[i] for i in range(8) if header.sigmask & (1 << i)

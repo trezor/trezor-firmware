@@ -177,7 +177,7 @@ def reset(
         raise RuntimeError("Invalid response, expected EntropyRequest")
 
     external_entropy = os.urandom(32)
-    # LOG.debug("Computer generated entropy: " + binascii.hexlify(external_entropy).decode())
+    # LOG.debug("Computer generated entropy: " + external_entropy.hex())
     ret = client.call(proto.EntropyAck(entropy=external_entropy))
     client.init_device()
     return ret

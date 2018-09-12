@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import binascii
 import json
 
 from . import messages as proto
@@ -38,7 +37,7 @@ def create_transaction_common(transaction):
     msg.deadline = transaction["deadline"]
 
     if "signer" in transaction:
-        msg.signer = binascii.unhexlify(transaction["signer"])
+        msg.signer = bytes.fromhex(transaction["signer"])
 
     return msg
 
@@ -49,10 +48,10 @@ def create_transfer(transaction):
     msg.amount = transaction["amount"]
 
     if "payload" in transaction["message"]:
-        msg.payload = binascii.unhexlify(transaction["message"]["payload"])
+        msg.payload = bytes.fromhex(transaction["message"]["payload"])
 
         if transaction["message"]["type"] == 0x02:
-            msg.public_key = binascii.unhexlify(transaction["message"]["publicKey"])
+            msg.public_key = bytes.fromhex(transaction["message"]["publicKey"])
 
     if "mosaics" in transaction:
         msg.mosaics = [
@@ -72,7 +71,7 @@ def create_aggregate_modification(transactions):
     msg.modifications = [
         proto.NEMCosignatoryModification(
             type=modification["modificationType"],
-            public_key=binascii.unhexlify(modification["cosignatoryAccount"]),
+            public_key=bytes.fromhex(modification["cosignatoryAccount"]),
         )
         for modification in transactions["modifications"]
     ]
@@ -141,7 +140,7 @@ def create_supply_change(transaction):
 def create_importance_transfer(transaction):
     msg = proto.NEMImportanceTransfer()
     msg.mode = transaction["importanceTransfer"]["mode"]
-    msg.public_key = binascii.unhexlify(transaction["importanceTransfer"]["publicKey"])
+    msg.public_key = bytes.fromhex(transaction["importanceTransfer"]["publicKey"])
     return msg
 
 
