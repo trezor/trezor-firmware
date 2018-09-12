@@ -3,69 +3,85 @@
         "name": "Lisk",
         "shortcut": "LSK",
         "slip44": 134,
+        "curve": "ed25519",
         "links": {
-            "Homepage": "https://lisk.io/"
+            "Homepage": "https://lisk.io/",
+            "Github": "https://github.com/LiskHQ/lisk"
         }
     },
     {
         "name": "Stellar",
         "notes": "In development",
         "slip44": 148,
+        "curve": "ed25519",
         "shortcut": "XLM",
         "links": {
-            "Homepage": "https://www.stellar.org"
+            "Homepage": "https://www.stellar.org",
+            "Github": "https://github.com/stellar/stellar-core"
         }
     },
     {
         "name": "Monero",
         "shortcut": "XMR",
         "slip44": 128,
+        "curve": "secp256k1",
         "notes": "In development",
         "links": {
-            "Homepage": "https://getmonero.org"
+            "Homepage": "https://getmonero.org",
+            "Github": "https://github.com/monero-project/monero"
         }
     },
     {
         "name": "Ripple",
         "shortcut": "XRP",
         "slip44": 144,
+        "curve": "secp256k1",
         "notes": "In development",
         "links": {
-            "Homepage": "https://ripple.com"
+            "Homepage": "https://ripple.com",
+            "Github": "https://github.com/ripple/rippled"
         }
     },
     {
         "name": "Cardano",
         "shortcut": "ADA",
         "slip44": 1815,
+        "curve": "ed25519",
         "links": {
-            "Homepage": "https://www.cardano.org"
+            "Homepage": "https://www.cardano.org",
+            "Github": "https://github.com/input-output-hk/cardano-sl"
         }
     },
     {
         "name": "Tezos",
         "shortcut": "XTZ",
         "slip44": 1729,
+        "curve": "ed25519",
         "notes": "In development",
         "links": {
-            "Homepage": "https://tezos.com"
+            "Homepage": "https://tezos.com",
+            "Github": "https://github.com/tezos/tezos"
         }
     },
     {
         "name": "Ontology",
         "shortcut": "ONT",
         "slip44": 1024,
+        "curve": "nist256p1",
         "notes": "In development",
         "links": {
-            "Homepage": "https://ont.io"
+            "Homepage": "https://ont.io",
+            "Github": "https://github.com/ontio/ontology"
         }
     },
     {
         "name": "Wanchain",
         "shortcut": "WAN",
         "slip44": 5718350,
+        "curve": "secp256k1",
         "links": {
-            "Homepage": "https://wanchain.org"
+            "Homepage": "https://wanchain.org",
+            "Github": "https://github.com/wanchain/go-wanchain"
         }
     }
 ]
