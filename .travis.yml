@@ -28,12 +28,6 @@ matrix:
   include:
     compiler:
       - clang
-    env:
-      - EMULATOR=1 HEADLESS=1 DEBUG_LINK=1
-    script:
-      - pipenv run ./script/cibuild && pipenv run script/test
-  include:
-    compiler:
       - gcc
     env:
       - EMULATOR=1 HEADLESS=1 DEBUG_LINK=1
