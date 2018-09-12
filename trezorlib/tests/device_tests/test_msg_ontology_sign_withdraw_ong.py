@@ -14,8 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from binascii import unhexlify
-
 import pytest
 
 from trezorlib import messages, ontology
@@ -50,9 +48,11 @@ class TestMsgOntologySignWithdraw(TrezorTest):
         signature = ontology.sign_withdrawal(
             self.client, parse_path("m/44'/1024'/0'/0/0"), transaction, withdraw_ong
         )
-        assert signature.payload == unhexlify(
-            "9300c66b140b045b101bc9fabaf181e251a38e76b73962111b6a7cc81400000000000000000000000000000000000000016a7cc814e885e849e7f545ea84e8c555b86c70e4f751c4ec6a7cc808001bb700000000006a7cc86c0c7472616e7366657246726f6d1400000000000000000000000000000000000000020068164f6e746f6c6f67792e4e61746976652e496e766f6b65"
+        assert (
+            signature.payload.hex()
+            == "9300c66b140b045b101bc9fabaf181e251a38e76b73962111b6a7cc81400000000000000000000000000000000000000016a7cc814e885e849e7f545ea84e8c555b86c70e4f751c4ec6a7cc808001bb700000000006a7cc86c0c7472616e7366657246726f6d1400000000000000000000000000000000000000020068164f6e746f6c6f67792e4e61746976652e496e766f6b65"
         )
-        assert signature.signature == unhexlify(
-            "01a44355ac4549a021ecc571eb85ffb6ae4ff50cffc416ec55df40cad538fa55c64386167df2fb6b3fa9e698ebe265088839667b88da7e599ce7df679b0d5dfe60"
+        assert (
+            signature.signature.hex()
+            == "01a44355ac4549a021ecc571eb85ffb6ae4ff50cffc416ec55df40cad538fa55c64386167df2fb6b3fa9e698ebe265088839667b88da7e599ce7df679b0d5dfe60"
         )

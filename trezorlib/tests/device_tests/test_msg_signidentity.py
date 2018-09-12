@@ -15,7 +15,6 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import struct
-from binascii import hexlify, unhexlify
 
 from trezorlib import messages as proto, misc
 from trezorlib.tools import H_
@@ -50,7 +49,7 @@ class TestMsgSignidentity(TrezorTest):
     def test_sign(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
-        hidden = unhexlify(
+        hidden = bytes.fromhex(
             "cd8552569d6e4509266ef137584d1e62c7579b5b8ed69bbafa4b864c6521e7c2"
         )
         visual = "2015-03-23 17:39:22"
@@ -69,12 +68,12 @@ class TestMsgSignidentity(TrezorTest):
         sig = misc.sign_identity(self.client, identity, hidden, visual)
         assert sig.address == "17F17smBTX9VTZA9Mj8LM5QGYNZnmziCjL"
         assert (
-            hexlify(sig.public_key)
-            == b"023a472219ad3327b07c18273717bb3a40b39b743756bf287fbd5fa9d263237f45"
+            sig.public_key.hex()
+            == "023a472219ad3327b07c18273717bb3a40b39b743756bf287fbd5fa9d263237f45"
         )
         assert (
-            hexlify(sig.signature)
-            == b"20f2d1a42d08c3a362be49275c3ffeeaa415fc040971985548b9f910812237bb41770bf2c8d488428799fbb7e52c11f1a3404011375e4080e077e0e42ab7a5ba02"
+            sig.signature.hex()
+            == "20f2d1a42d08c3a362be49275c3ffeeaa415fc040971985548b9f910812237bb41770bf2c8d488428799fbb7e52c11f1a3404011375e4080e077e0e42ab7a5ba02"
         )
 
         # URI  : ftp://satoshi@bitcoin.org:2323/pub
@@ -91,12 +90,12 @@ class TestMsgSignidentity(TrezorTest):
         sig = misc.sign_identity(self.client, identity, hidden, visual)
         assert sig.address == "1KAr6r5qF2kADL8bAaRQBjGKYEGxn9WrbS"
         assert (
-            hexlify(sig.public_key)
-            == b"0266cf12d2ba381c5fd797da0d64f59c07a6f1b034ad276cca6bf2729e92b20d9c"
+            sig.public_key.hex()
+            == "0266cf12d2ba381c5fd797da0d64f59c07a6f1b034ad276cca6bf2729e92b20d9c"
         )
         assert (
-            hexlify(sig.signature)
-            == b"20bbd12dc657d534fc0f7e40186e22c447e0866a016f654f380adffa9a84e9faf412a1bb0ae908296537838cf91145e77da08681c63d07b7dca40728b9e6cb17cf"
+            sig.signature.hex()
+            == "20bbd12dc657d534fc0f7e40186e22c447e0866a016f654f380adffa9a84e9faf412a1bb0ae908296537838cf91145e77da08681c63d07b7dca40728b9e6cb17cf"
         )
 
         # URI  : ssh://satoshi@bitcoin.org
@@ -110,12 +109,12 @@ class TestMsgSignidentity(TrezorTest):
         )
         assert sig.address is None
         assert (
-            hexlify(sig.public_key)
-            == b"0373f21a3da3d0e96fc2189f81dd826658c3d76b2d55bd1da349bc6c3573b13ae4"
+            sig.public_key.hex()
+            == "0373f21a3da3d0e96fc2189f81dd826658c3d76b2d55bd1da349bc6c3573b13ae4"
         )
         assert (
-            hexlify(sig.signature)
-            == b"005122cebabb852cdd32103b602662afa88e54c0c0c1b38d7099c64dcd49efe908288114e66ed2d8c82f23a70b769a4db723173ec53840c08aafb840d3f09a18d3"
+            sig.signature.hex()
+            == "005122cebabb852cdd32103b602662afa88e54c0c0c1b38d7099c64dcd49efe908288114e66ed2d8c82f23a70b769a4db723173ec53840c08aafb840d3f09a18d3"
         )
 
         # URI  : ssh://satoshi@bitcoin.org
@@ -129,10 +128,10 @@ class TestMsgSignidentity(TrezorTest):
         )
         assert sig.address is None
         assert (
-            hexlify(sig.public_key)
-            == b"000fac2a491e0f5b871dc48288a4cae551bac5cb0ed19df0764d6e721ec5fade18"
+            sig.public_key.hex()
+            == "000fac2a491e0f5b871dc48288a4cae551bac5cb0ed19df0764d6e721ec5fade18"
         )
         assert (
-            hexlify(sig.signature)
-            == b"00f05e5085e666429de397c70a081932654369619c0bd2a6579ea6c1ef2af112ef79998d6c862a16b932d44b1ac1b83c8cbcd0fbda228274fde9e0d0ca6e9cb709"
+            sig.signature.hex()
+            == "00f05e5085e666429de397c70a081932654369619c0bd2a6579ea6c1ef2af112ef79998d6c862a16b932d44b1ac1b83c8cbcd0fbda228274fde9e0d0ca6e9cb709"
         )

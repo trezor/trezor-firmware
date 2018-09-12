@@ -47,7 +47,6 @@
 #
 
 from base64 import b64encode
-from binascii import hexlify
 
 import pytest
 
@@ -95,8 +94,8 @@ class TestMsgStellarSignTransaction(TrezorTest):
         )
 
         assert (
-            hexlify(response.public_key)
-            == b"15d648bfe4d36f196cfb5735ffd8ca54cd4b8233f743f22449de7cf301cdb469"
+            response.public_key.hex()
+            == "15d648bfe4d36f196cfb5735ffd8ca54cd4b8233f743f22449de7cf301cdb469"
         )
         assert (
             b64encode(response.signature)

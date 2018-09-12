@@ -14,8 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from binascii import hexlify
-
 from trezorlib import btc, messages as proto
 
 from .common import TrezorTest
@@ -33,8 +31,8 @@ class TestMsgSignmessageSegwitNative(TrezorTest):
         )
         assert sig.address == "bc1qyjjkmdpu7metqt5r36jf872a34syws33s82q2j"
         assert (
-            hexlify(sig.signature)
-            == b"289e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
+            sig.signature.hex()
+            == "289e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
         )
 
     def test_sign_testnet(self):
@@ -48,8 +46,8 @@ class TestMsgSignmessageSegwitNative(TrezorTest):
         )
         assert sig.address == "tb1qyjjkmdpu7metqt5r36jf872a34syws336p3n3p"
         assert (
-            hexlify(sig.signature)
-            == b"289e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
+            sig.signature.hex()
+            == "289e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
         )
 
     def test_sign_long(self):
@@ -63,8 +61,8 @@ class TestMsgSignmessageSegwitNative(TrezorTest):
         )
         assert sig.address == "bc1qyjjkmdpu7metqt5r36jf872a34syws33s82q2j"
         assert (
-            hexlify(sig.signature)
-            == b"285ff795c29aef7538f8b3bdb2e8add0d0722ad630a140b6aefd504a5a895cbd867cbb00981afc50edd0398211e8d7c304bb8efa461181bc0afa67ea4a720a89ed"
+            sig.signature.hex()
+            == "285ff795c29aef7538f8b3bdb2e8add0d0722ad630a140b6aefd504a5a895cbd867cbb00981afc50edd0398211e8d7c304bb8efa461181bc0afa67ea4a720a89ed"
         )
 
     def test_sign_utf(self):
@@ -82,8 +80,8 @@ class TestMsgSignmessageSegwitNative(TrezorTest):
         )
         assert sig_nfkd.address == "bc1qyjjkmdpu7metqt5r36jf872a34syws33s82q2j"
         assert (
-            hexlify(sig_nfkd.signature)
-            == b"28d0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda41c6a771b13d495dd225b13b0a9d0f915a984ee3d0703f92287bf8009fbb9f7d6"
+            sig_nfkd.signature.hex()
+            == "28d0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda41c6a771b13d495dd225b13b0a9d0f915a984ee3d0703f92287bf8009fbb9f7d6"
         )
 
         sig_nfc = btc.sign_message(
@@ -95,6 +93,6 @@ class TestMsgSignmessageSegwitNative(TrezorTest):
         )
         assert sig_nfc.address == "bc1qyjjkmdpu7metqt5r36jf872a34syws33s82q2j"
         assert (
-            hexlify(sig_nfc.signature)
-            == b"28d0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda41c6a771b13d495dd225b13b0a9d0f915a984ee3d0703f92287bf8009fbb9f7d6"
+            sig_nfc.signature.hex()
+            == "28d0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda41c6a771b13d495dd225b13b0a9d0f915a984ee3d0703f92287bf8009fbb9f7d6"
         )

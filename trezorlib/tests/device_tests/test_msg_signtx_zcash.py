@@ -14,8 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from binascii import hexlify, unhexlify
-
 import pytest
 
 from trezorlib import btc, coins, messages as proto
@@ -25,7 +23,7 @@ from .common import TrezorTest
 
 TxApiZcashTestnet = coins.tx_api["Zcash Testnet"]
 
-TXHASH_aaf51e = unhexlify(
+TXHASH_aaf51e = bytes.fromhex(
     "aaf51e4606c264e47e5c42c958fe4cf1539c5172684721e38e69f4ef634d75dc"
 )
 
@@ -90,6 +88,6 @@ class TestMsgSigntxZcash(TrezorTest):
 
         # Accepted by network: tx eda9b772c47f0c29310759960e0081c98707aa67a0a2738bcc71439fcf360675
         assert (
-            hexlify(serialized_tx)
-            == b"030000807082c40301dc754d63eff4698ee321476872519c53f14cfe58c9425c7ee464c206461ef5aa010000006a47304402207e45f303b4e42be824513855eb21653e1d2749cd94dcd0f0613d3f85d4efd1e20220699ffbdbcad889af7ede5ce9febf7a5ef8f5619b2464824529974c400cffaebc0121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffff016c9be111000000001976a9145b157a678a10021243307e4bb58f36375aa80e1088ac000000000000000000"
+            serialized_tx.hex()
+            == "030000807082c40301dc754d63eff4698ee321476872519c53f14cfe58c9425c7ee464c206461ef5aa010000006a47304402207e45f303b4e42be824513855eb21653e1d2749cd94dcd0f0613d3f85d4efd1e20220699ffbdbcad889af7ede5ce9febf7a5ef8f5619b2464824529974c400cffaebc0121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffff016c9be111000000001976a9145b157a678a10021243307e4bb58f36375aa80e1088ac000000000000000000"
         )

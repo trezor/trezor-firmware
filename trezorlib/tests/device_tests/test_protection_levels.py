@@ -14,15 +14,13 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from binascii import unhexlify
-
 import pytest
 
 from trezorlib import btc, debuglink, device, messages as proto, misc
 
 from .common import TrezorTest
 
-TXHASH_d5f65e = unhexlify(
+TXHASH_d5f65e = bytes.fromhex(
     "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
 )
 
@@ -183,7 +181,7 @@ class TestProtectionLevels(TrezorTest):
                 self.client,
                 "Bitcoin",
                 "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
-                unhexlify(
+                bytes.fromhex(
                     "209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
                 ),
                 "This is an example of a signed message.",

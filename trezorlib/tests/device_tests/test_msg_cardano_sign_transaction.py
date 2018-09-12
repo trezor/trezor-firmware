@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import binascii
 import time
 
 import pytest
@@ -69,7 +68,7 @@ class TestMsgCardanoSignTx(TrezorTest):
         assert response.tx_index == 0
 
         # Upload first transaction
-        transaction_data = binascii.unhexlify(transactions[0])
+        transaction_data = bytes.fromhex(transactions[0])
         ack_message = messages.CardanoTxAck(transaction=transaction_data)
         self.client.transport.write(ack_message)
 
@@ -114,12 +113,12 @@ class TestMsgCardanoSignTx(TrezorTest):
         assert isinstance(response, messages.CardanoSignedTx)
 
         assert (
-            binascii.hexlify(response.tx_hash)
-            == b"799c65e8a2c0b1dc4232611728c09d3f3eb0d811c077f8e9798f84605ef1b23d"
+            response.tx_hash.hex()
+            == "799c65e8a2c0b1dc4232611728c09d3f3eb0d811c077f8e9798f84605ef1b23d"
         )
         assert (
-            binascii.hexlify(response.tx_body)
-            == b"82839f8200d81858248258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00ff9f8282d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c25611a002dd2e8ffa0818200d818588582584089053545a6c254b0d9b1464e48d2b5fcf91d4e25c128afb1fcfc61d0843338ea26308151516f3b0e02bb1638142747863c520273ce9bd3e5cd91e1d46fe2a6355840312c01c27317415b0b8acc86aa789da877fe7e15c65b7ea4c4565d8739117f5f6d9d38bf5d058f7be809b2b9b06c1d79fc6b20f9a4d76d8c89bae333edf5680c"
+            response.tx_body.hex()
+            == "82839f8200d81858248258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00ff9f8282d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c25611a002dd2e8ffa0818200d818588582584089053545a6c254b0d9b1464e48d2b5fcf91d4e25c128afb1fcfc61d0843338ea26308151516f3b0e02bb1638142747863c520273ce9bd3e5cd91e1d46fe2a6355840312c01c27317415b0b8acc86aa789da877fe7e15c65b7ea4c4565d8739117f5f6d9d38bf5d058f7be809b2b9b06c1d79fc6b20f9a4d76d8c89bae333edf5680c"
         )
 
     def test_cardano_sign_tx_testnet(self):
@@ -163,7 +162,7 @@ class TestMsgCardanoSignTx(TrezorTest):
         assert response.tx_index == 0
 
         # Upload first transaction
-        transaction_data = binascii.unhexlify(transactions[0])
+        transaction_data = bytes.fromhex(transactions[0])
         ack_message = messages.CardanoTxAck(transaction=transaction_data)
         self.client.transport.write(ack_message)
 
@@ -208,10 +207,10 @@ class TestMsgCardanoSignTx(TrezorTest):
         assert isinstance(response, messages.CardanoSignedTx)
 
         assert (
-            binascii.hexlify(response.tx_hash)
-            == b"799c65e8a2c0b1dc4232611728c09d3f3eb0d811c077f8e9798f84605ef1b23d"
+            response.tx_hash.hex()
+            == "799c65e8a2c0b1dc4232611728c09d3f3eb0d811c077f8e9798f84605ef1b23d"
         )
         assert (
-            binascii.hexlify(response.tx_body)
-            == b"82839f8200d81858248258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00ff9f8282d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c25611a002dd2e8ffa0818200d818588582584089053545a6c254b0d9b1464e48d2b5fcf91d4e25c128afb1fcfc61d0843338ea26308151516f3b0e02bb1638142747863c520273ce9bd3e5cd91e1d46fe2a63558403594ee7e2bfe4c84f886a8336cecb7c42983ce9a057345ebb6294a436087d8db93ca78cf514c7c48edff4c8435f690a5817951e2b55d2db729875ee7cc0f7d08"
+            response.tx_body.hex()
+            == "82839f8200d81858248258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00ff9f8282d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c25611a002dd2e8ffa0818200d818588582584089053545a6c254b0d9b1464e48d2b5fcf91d4e25c128afb1fcfc61d0843338ea26308151516f3b0e02bb1638142747863c520273ce9bd3e5cd91e1d46fe2a63558403594ee7e2bfe4c84f886a8336cecb7c42983ce9a057345ebb6294a436087d8db93ca78cf514c7c48edff4c8435f690a5817951e2b55d2db729875ee7cc0f7d08"
         )

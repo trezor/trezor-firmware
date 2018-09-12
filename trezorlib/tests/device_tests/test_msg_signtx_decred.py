@@ -14,8 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from binascii import unhexlify
-
 import pytest
 
 from trezorlib import btc, coins, messages as proto
@@ -26,22 +24,22 @@ from .common import TrezorTest
 TxApiDecredTestnet = coins.tx_api["Decred Testnet"]
 
 
-TXHASH_e16248 = unhexlify(
+TXHASH_e16248 = bytes.fromhex(
     "e16248f0b39a0a0c0e53d6f2f84c2a944f0d50e017a82701e8e02e46e979d5ed"
 )
-TXHASH_5e6e35 = unhexlify(
+TXHASH_5e6e35 = bytes.fromhex(
     "5e6e3500a333c53c02f523db5f1a9b17538a8850b4c2c24ecb9b7ba48059b970"
 )
-TXHASH_ccf95b = unhexlify(
+TXHASH_ccf95b = bytes.fromhex(
     "ccf95b0fd220ef59ae2e5b17005a81e222758122682d522eff8ae1fcbc93bc74"
 )
-TXHASH_f395ef = unhexlify(
+TXHASH_f395ef = bytes.fromhex(
     "f395ef3e72a831a766db15e7a38bc28025d4ee02234d68bdea2d8353b47a3113"
 )
-TXHASH_3f7c39 = unhexlify(
+TXHASH_3f7c39 = bytes.fromhex(
     "3f7c395521d38387e7617565fe17628723ef6635a08537ad9c46cfb1619e4c3f"
 )
-TXHASH_16da18 = unhexlify(
+TXHASH_16da18 = bytes.fromhex(
     "16da185052740d85a630e79c140558215b64e26c500212b90e16b55d13ca06a8"
 )
 

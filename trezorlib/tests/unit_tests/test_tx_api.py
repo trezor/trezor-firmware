@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import binascii
 import os
 
 from trezorlib import coins, tx_api
@@ -78,6 +77,6 @@ def test_tx_api_current_block():
 
 def test_tx_api_get_block_hash():
     hash = TxApiZencash.get_block_hash(110000)
-    assert hash == binascii.unhexlify(
-        "000000003f5d6ba1385c6cd2d4f836dfc5adf7f98834309ad67e26faef462454"
+    assert (
+        hash.hex() == "000000003f5d6ba1385c6cd2d4f836dfc5adf7f98834309ad67e26faef462454"
     )

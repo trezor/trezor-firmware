@@ -14,8 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from binascii import unhexlify
-
 from trezorlib import btc
 
 from .common import TrezorTest
@@ -28,7 +26,7 @@ class TestMsgVerifymessageSegwitNative(TrezorTest):
             self.client,
             "Bitcoin",
             "bc1qyjjkmdpu7metqt5r36jf872a34syws33s82q2j",
-            unhexlify(
+            bytes.fromhex(
                 "285ff795c29aef7538f8b3bdb2e8add0d0722ad630a140b6aefd504a5a895cbd867cbb00981afc50edd0398211e8d7c304bb8efa461181bc0afa67ea4a720a89ed"
             ),
             "VeryLongMessage!" * 64,
@@ -41,7 +39,7 @@ class TestMsgVerifymessageSegwitNative(TrezorTest):
             self.client,
             "Testnet",
             "tb1qyjjkmdpu7metqt5r36jf872a34syws336p3n3p",
-            unhexlify(
+            bytes.fromhex(
                 "289e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
             ),
             "This is an example of a signed message.",
@@ -56,7 +54,7 @@ class TestMsgVerifymessageSegwitNative(TrezorTest):
             self.client,
             "Bitcoin",
             "bc1qyjjkmdpu7metqt5r36jf872a34syws33s82q2j",
-            unhexlify(
+            bytes.fromhex(
                 "289e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
             ),
             "This is an example of a signed message.",
@@ -68,7 +66,7 @@ class TestMsgVerifymessageSegwitNative(TrezorTest):
             self.client,
             "Bitcoin",
             "bc1qyjjkmdpu7metqt5r36jf872a34syws33s82q2j",
-            unhexlify(
+            bytes.fromhex(
                 "289e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be00"
             ),
             "This is an example of a signed message.",
@@ -80,7 +78,7 @@ class TestMsgVerifymessageSegwitNative(TrezorTest):
             self.client,
             "Bitcoin",
             "bc1qyjjkmdpu7metqt5r36jf872a34syws33s82q2j",
-            unhexlify(
+            bytes.fromhex(
                 "289e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
             ),
             "This is an example of a signed message!",
@@ -97,7 +95,7 @@ class TestMsgVerifymessageSegwitNative(TrezorTest):
             self.client,
             "Bitcoin",
             "bc1qyjjkmdpu7metqt5r36jf872a34syws33s82q2j",
-            unhexlify(
+            bytes.fromhex(
                 "28d0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda41c6a771b13d495dd225b13b0a9d0f915a984ee3d0703f92287bf8009fbb9f7d6"
             ),
             words_nfkd,
@@ -107,7 +105,7 @@ class TestMsgVerifymessageSegwitNative(TrezorTest):
             self.client,
             "Bitcoin",
             "bc1qyjjkmdpu7metqt5r36jf872a34syws33s82q2j",
-            unhexlify(
+            bytes.fromhex(
                 "28d0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda41c6a771b13d495dd225b13b0a9d0f915a984ee3d0703f92287bf8009fbb9f7d6"
             ),
             words_nfc,

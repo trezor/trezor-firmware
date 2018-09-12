@@ -14,8 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from binascii import hexlify
-
 import pytest
 
 from trezorlib.cardano import get_public_key
@@ -57,6 +55,6 @@ class TestMsgCardanoGetPublicKey(TrezorTest):
 
         key = get_public_key(self.client, parse_path(path))
 
-        assert hexlify(key.node.public_key) == public_key
-        assert hexlify(key.node.chain_code) == chain_code
+        assert key.node.public_key.hex() == public_key
+        assert key.node.chain_code.hex() == chain_code
         assert key.xpub.encode() == public_key + chain_code
