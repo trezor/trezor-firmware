@@ -637,6 +637,9 @@ int display_orientation(int degrees)
 
 int display_backlight(int val)
 {
+#if TREZOR_MODEL == 1
+    val = 255;
+#endif
     if (DISPLAY_BACKLIGHT != val && val >= 0 && val <= 255) {
         DISPLAY_BACKLIGHT = val;
         display_set_backlight(val);

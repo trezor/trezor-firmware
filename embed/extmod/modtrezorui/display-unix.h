@@ -62,6 +62,12 @@ static struct {
 } PIXELWINDOW;
 
 void PIXELDATA(uint16_t c) {
+#if TREZOR_MODEL == 1
+    // set to white if highest bits of all R, G, B values are set to 1
+    // bin(10000 100000 10000) = hex(0x8410)
+    // otherwise set to black
+    c = (c & 0x8410) ? 0xFFFF : 0x0000;
+#endif
     if (!RENDERER) {
         display_init();
     }
