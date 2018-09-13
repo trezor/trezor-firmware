@@ -299,7 +299,7 @@ static void u2f_rx_callback(usbd_device *dev, uint8_t ep)
 static void debug_rx_callback(usbd_device *dev, uint8_t ep)
 {
 	(void)ep;
-	static CONFIDENTIAL uint8_t buf[64] __attribute__ ((aligned(4)));
+	static uint8_t buf[64] __attribute__ ((aligned(4)));
 	if ( usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_DEBUG_OUT, buf, 64) != 64) return;
 	debugLog(0, "", "debug_rx_callback");
 	if (!tiny) {
