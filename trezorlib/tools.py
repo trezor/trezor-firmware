@@ -22,6 +22,9 @@ import unicodedata
 from typing import List, NewType
 
 from .coins import slip44
+from .exceptions import TrezorException
+
+CallException = TrezorException
 
 HARDENED_FLAG = 1 << 31
 
@@ -172,10 +175,6 @@ def normalize_nfc(txt):
     if isinstance(txt, bytes):
         txt = txt.decode()
     return unicodedata.normalize("NFC", txt).encode()
-
-
-class CallException(Exception):
-    pass
 
 
 class expect:

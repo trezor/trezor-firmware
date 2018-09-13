@@ -25,15 +25,10 @@ from .common import TrezorTest
 class TestDeviceLoad(TrezorTest):
     def test_load_device_1(self):
         self.setup_mnemonic_nopin_nopassphrase()
-
-        mnemonic = self.client.debug.read_mnemonic()
-        assert mnemonic == self.mnemonic12
-
-        pin = self.client.debug.read_pin()[0]
-        assert pin is None
-
-        passphrase_protection = self.client.debug.read_passphrase_protection()
-        assert passphrase_protection is False
+        state = self.client.debug.state()
+        assert state.mnemonic == self.mnemonic12
+        assert state.pin is None
+        assert state.passphrase_protection is False
 
         address = btc.get_address(self.client, "Bitcoin", [])
         assert address == "1EfKbQupktEMXf4gujJ9kCFo83k1iMqwqK"
@@ -41,15 +36,10 @@ class TestDeviceLoad(TrezorTest):
     def test_load_device_2(self):
         self.setup_mnemonic_pin_passphrase()
         self.client.set_passphrase("passphrase")
-
-        mnemonic = self.client.debug.read_mnemonic()
-        assert mnemonic == self.mnemonic12
-
-        pin = self.client.debug.read_pin()[0]
-        assert pin == self.pin4
-
-        passphrase_protection = self.client.debug.read_passphrase_protection()
-        assert passphrase_protection is True
+        state = self.client.debug.state()
+        assert state.mnemonic == self.mnemonic12
+        assert state.pin == self.pin4
+        assert state.passphrase_protection is True
 
         address = btc.get_address(self.client, "Bitcoin", [])
         assert address == "15fiTDFwZd2kauHYYseifGi9daH2wniDHH"

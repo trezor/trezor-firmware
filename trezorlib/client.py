@@ -30,6 +30,7 @@ from . import (
     debuglink,
     device,
     ethereum,
+    exceptions,
     firmware,
     lisk,
     mapping,
@@ -47,38 +48,7 @@ if sys.version_info.major < 3:
 SCREENSHOT = False
 LOG = logging.getLogger(__name__)
 
-# make a getch function
-try:
-    import termios
-    import tty
-
-    # POSIX system. Create and return a getch that manipulates the tty.
-    # On Windows, termios will fail to import.
-
-    def getch():
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        try:
-            tty.setraw(fd)
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
-
-
-except ImportError:
-    # Windows system.
-    # Use msvcrt's getch function.
-    import msvcrt
-
-    def getch():
-        while True:
-            key = msvcrt.getch()
-            if key in (0x00, 0xE0):
-                # skip special keys: read the scancode and repeat
-                msvcrt.getch()
-                continue
-            return key.decode()
+PinException = exceptions.PinException
 
 
 def get_buttonrequest_value(code):
@@ -88,10 +58,6 @@ def get_buttonrequest_value(code):
         for k in dir(proto.ButtonRequestType)
         if getattr(proto.ButtonRequestType, k) == code
     ][0]
-
-
-class PinException(tools.CallException):
-    pass
 
 
 class MovedTo:
@@ -120,9 +86,10 @@ class MovedTo:
 class BaseClient(object):
     # Implements very basic layer of sending raw protobuf
     # messages to device and getting its response back.
-    def __init__(self, transport, **kwargs):
+    def __init__(self, transport, ui, **kwargs):
         LOG.info("creating client instance for device: {}".format(transport.get_path()))
         self.transport = transport
+        self.ui = ui
         super(BaseClient, self).__init__()  # *args, **kwargs)
 
     def close(self):
@@ -137,296 +104,58 @@ class BaseClient(object):
         self.transport.write(msg)
         return self.transport.read()
 
-    @tools.session
-    def call(self, msg):
-        resp = self.call_raw(msg)
-        handler_name = "callback_%s" % resp.__class__.__name__
-        handler = getattr(self, handler_name, None)
+    def callback_PinMatrixRequest(self, msg):
+        pin = self.ui.get_pin(msg.type)
+        if not pin.isdigit():
+            raise ValueError("Non-numeric PIN provided")
 
-        if handler is not None:
-            msg = handler(resp)
-            if msg is None:
-                raise ValueError(
-                    "Callback %s must return protobuf message, not None" % handler
-                )
-            resp = self.call(msg)
-
-        return resp
-
-    def callback_Failure(self, msg):
-        if msg.code in (
+        resp = self.call_raw(proto.PinMatrixAck(pin=pin))
+        if isinstance(resp, proto.Failure) and resp.code in (
             proto.FailureType.PinInvalid,
             proto.FailureType.PinCancelled,
             proto.FailureType.PinExpected,
         ):
-            raise PinException(msg.code, msg.message)
+            raise exceptions.PinException(msg.code, msg.message)
+        else:
+            return resp
 
-        raise tools.CallException(msg.code, msg.message)
+    def callback_PassphraseRequest(self, msg):
+        if msg.on_device:
+            passphrase = None
+        else:
+            passphrase = self.ui.get_passphrase()
+        return self.call_raw(proto.PassphraseAck(passphrase=passphrase))
+
+    def callback_PassphraseStateRequest(self, msg):
+        self.state = msg.state
+        return self.call_raw(proto.PassphraseStateAck())
+
+    def callback_ButtonRequest(self, msg):
+        # do this raw - send ButtonAck first, notify UI later
+        self.transport.write(proto.ButtonAck())
+        self.ui.button_request(msg.code)
+        return self.transport.read()
+
+    @tools.session
+    def call(self, msg):
+        resp = self.call_raw(msg)
+        while True:
+            handler_name = "callback_{}".format(resp.__class__.__name__)
+            handler = getattr(self, handler_name, None)
+            if handler is None:
+                break
+            resp = handler(resp)  # pylint: disable=E1102
+
+        if isinstance(resp, proto.Failure):
+            if resp.code == proto.FailureType.ActionCancelled:
+                raise exceptions.Cancelled
+            raise exceptions.TrezorException(resp.code, resp.message)
+
+        return resp
 
     def register_message(self, msg):
         """Allow application to register custom protobuf message type"""
         mapping.register_message(msg)
-
-
-class TextUIMixin(object):
-    # This class demonstrates easy test-based UI
-    # integration between the device and wallet.
-    # You can implement similar functionality
-    # by implementing your own GuiMixin with
-    # graphical widgets for every type of these callbacks.
-
-    def __init__(self, *args, **kwargs):
-        super(TextUIMixin, self).__init__(*args, **kwargs)
-
-    @staticmethod
-    def print(text):
-        print(text, file=sys.stderr)
-
-    def callback_ButtonRequest(self, msg):
-        # log("Sending ButtonAck for %s " % get_buttonrequest_value(msg.code))
-        return proto.ButtonAck()
-
-    def callback_RecoveryMatrix(self, msg):
-        if self.recovery_matrix_first_pass:
-            self.recovery_matrix_first_pass = False
-            self.print(
-                "Use the numeric keypad to describe positions.  For the word list use only left and right keys."
-            )
-            self.print("Use backspace to correct an entry.  The keypad layout is:")
-            self.print("    7 8 9     7 | 9")
-            self.print("    4 5 6     4 | 6")
-            self.print("    1 2 3     1 | 3")
-        while True:
-            character = getch()
-            if character in ("\x03", "\x04"):
-                return proto.Cancel()
-
-            if character in ("\x08", "\x7f"):
-                return proto.WordAck(word="\x08")
-
-            # ignore middle column if only 6 keys requested.
-            if msg.type == proto.WordRequestType.Matrix6 and character in (
-                "2",
-                "5",
-                "8",
-            ):
-                continue
-
-            if character.isdigit():
-                return proto.WordAck(word=character)
-
-    def callback_PinMatrixRequest(self, msg):
-        if msg.type == proto.PinMatrixRequestType.Current:
-            desc = "current PIN"
-        elif msg.type == proto.PinMatrixRequestType.NewFirst:
-            desc = "new PIN"
-        elif msg.type == proto.PinMatrixRequestType.NewSecond:
-            desc = "new PIN again"
-        else:
-            desc = "PIN"
-
-        self.print(
-            "Use the numeric keypad to describe number positions. The layout is:"
-        )
-        self.print("    7 8 9")
-        self.print("    4 5 6")
-        self.print("    1 2 3")
-        self.print("Please enter %s: " % desc)
-        pin = getpass.getpass("")
-        if not pin.isdigit():
-            raise ValueError("Non-numerical PIN provided")
-        return proto.PinMatrixAck(pin=pin)
-
-    def callback_PassphraseRequest(self, msg):
-        if msg.on_device is True:
-            return proto.PassphraseAck()
-
-        if os.getenv("PASSPHRASE") is not None:
-            self.print("Passphrase required. Using PASSPHRASE environment variable.")
-            passphrase = Mnemonic.normalize_string(os.getenv("PASSPHRASE"))
-            return proto.PassphraseAck(passphrase=passphrase)
-
-        self.print("Passphrase required: ")
-        passphrase = getpass.getpass("")
-        self.print("Confirm your Passphrase: ")
-        if passphrase == getpass.getpass(""):
-            passphrase = Mnemonic.normalize_string(passphrase)
-            return proto.PassphraseAck(passphrase=passphrase)
-        else:
-            self.print("Passphrase did not match! ")
-            exit()
-
-    def callback_PassphraseStateRequest(self, msg):
-        return proto.PassphraseStateAck()
-
-    def callback_WordRequest(self, msg):
-        if msg.type in (proto.WordRequestType.Matrix9, proto.WordRequestType.Matrix6):
-            return self.callback_RecoveryMatrix(msg)
-        self.print("Enter one word of mnemonic: ")
-        word = input()
-        if self.expand:
-            word = self.mnemonic_wordlist.expand_word(word)
-        return proto.WordAck(word=word)
-
-
-class DebugLinkMixin(object):
-    # This class implements automatic responses
-    # and other functionality for unit tests
-    # for various callbacks, created in order
-    # to automatically pass unit tests.
-    #
-    # This mixing should be used only for purposes
-    # of unit testing, because it will fail to work
-    # without special DebugLink interface provided
-    # by the device.
-    DEBUG = LOG.getChild("debug_link").debug
-
-    def __init__(self, *args, **kwargs):
-        super(DebugLinkMixin, self).__init__(*args, **kwargs)
-        self.debug = None
-        self.in_with_statement = 0
-        self.button_wait = 0
-        self.screenshot_id = 0
-
-        # Always press Yes and provide correct pin
-        self.setup_debuglink(True, True)
-
-        # Do not expect any specific response from device
-        self.expected_responses = None
-
-        # Use blank passphrase
-        self.set_passphrase("")
-
-    def close(self):
-        super(DebugLinkMixin, self).close()
-        if self.debug:
-            self.debug.close()
-
-    def set_debuglink(self, debug_transport):
-        self.debug = debuglink.DebugLink(debug_transport)
-
-    def set_buttonwait(self, secs):
-        self.button_wait = secs
-
-    def __enter__(self):
-        # For usage in with/expected_responses
-        self.in_with_statement += 1
-        return self
-
-    def __exit__(self, _type, value, traceback):
-        self.in_with_statement -= 1
-
-        if _type is not None:
-            # Another exception raised
-            return False
-
-        # return isinstance(value, TypeError)
-        # Evaluate missed responses in 'with' statement
-        if self.expected_responses is not None and len(self.expected_responses):
-            raise RuntimeError(
-                "Some of expected responses didn't come from device: %s"
-                % [repr(x) for x in self.expected_responses]
-            )
-
-        # Cleanup
-        self.expected_responses = None
-        return False
-
-    def set_expected_responses(self, expected):
-        if not self.in_with_statement:
-            raise RuntimeError("Must be called inside 'with' statement")
-        self.expected_responses = expected
-
-    def setup_debuglink(self, button, pin_correct):
-        self.button = button  # True -> YES button, False -> NO button
-        self.pin_correct = pin_correct
-
-    def set_passphrase(self, passphrase):
-        self.passphrase = Mnemonic.normalize_string(passphrase)
-
-    def set_mnemonic(self, mnemonic):
-        self.mnemonic = Mnemonic.normalize_string(mnemonic).split(" ")
-
-    def call_raw(self, msg):
-        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-
-        if SCREENSHOT and self.debug:
-            from PIL import Image
-
-            layout = self.debug.read_layout()
-            im = Image.new("RGB", (128, 64))
-            pix = im.load()
-            for x in range(128):
-                for y in range(64):
-                    rx, ry = 127 - x, 63 - y
-                    if (ord(layout[rx + (ry / 8) * 128]) & (1 << (ry % 8))) > 0:
-                        pix[x, y] = (255, 255, 255)
-            im.save("scr%05d.png" % self.screenshot_id)
-            self.screenshot_id += 1
-
-        resp = super(DebugLinkMixin, self).call_raw(msg)
-        self._check_request(resp)
-        return resp
-
-    def _check_request(self, msg):
-        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-
-        if self.expected_responses is not None:
-            try:
-                expected = self.expected_responses.pop(0)
-            except IndexError:
-                raise AssertionError(
-                    proto.FailureType.UnexpectedMessage,
-                    "Got %s, but no message has been expected" % repr(msg),
-                )
-
-            if msg.__class__ != expected.__class__:
-                raise AssertionError(
-                    proto.FailureType.UnexpectedMessage,
-                    "Expected %s, got %s" % (repr(expected), repr(msg)),
-                )
-
-            for field, value in expected.__dict__.items():
-                if value is None or value == []:
-                    continue
-                if getattr(msg, field) != value:
-                    raise AssertionError(
-                        proto.FailureType.UnexpectedMessage,
-                        "Expected %s, got %s" % (repr(expected), repr(msg)),
-                    )
-
-    def callback_ButtonRequest(self, msg):
-        self.DEBUG("ButtonRequest code: " + get_buttonrequest_value(msg.code))
-
-        self.DEBUG("Pressing button " + str(self.button))
-        if self.button_wait:
-            self.DEBUG("Waiting %d seconds " % self.button_wait)
-            time.sleep(self.button_wait)
-        self.debug.press_button(self.button)
-        return proto.ButtonAck()
-
-    def callback_PinMatrixRequest(self, msg):
-        if self.pin_correct:
-            pin = self.debug.read_pin_encoded()
-        else:
-            pin = "444222"
-        return proto.PinMatrixAck(pin=pin)
-
-    def callback_PassphraseRequest(self, msg):
-        self.DEBUG("Provided passphrase: '%s'" % self.passphrase)
-        return proto.PassphraseAck(passphrase=self.passphrase)
-
-    def callback_PassphraseStateRequest(self, msg):
-        return proto.PassphraseStateAck()
-
-    def callback_WordRequest(self, msg):
-        (word, pos) = self.debug.read_recovery_word()
-        if word != "":
-            return proto.WordAck(word=word)
-        if pos != 0:
-            return proto.WordAck(word=self.mnemonic[pos - 1])
-
-        raise RuntimeError("Unexpected call")
 
 
 class ProtocolMixin(object):
@@ -442,10 +171,11 @@ class ProtocolMixin(object):
         self.tx_api = tx_api
 
     def init_device(self):
-        init_msg = proto.Initialize()
-        if self.state is not None:
-            init_msg.state = self.state
-        self.features = tools.expect(proto.Features)(self.call)(init_msg)
+        resp = self.call(proto.Initialize(state=self.state))
+        if not isinstance(resp, proto.Features):
+            raise exceptions.TrezorException("Unexpected initial response")
+        else:
+            self.features = resp
         if str(self.features.vendor) not in self.VENDORS:
             raise RuntimeError("Unsupported device")
 
@@ -512,11 +242,6 @@ class ProtocolMixin(object):
     reset_device = MovedTo(device.reset)
     backup_device = MovedTo(device.backup)
 
-    # debugging
-    load_device_by_mnemonic = MovedTo(debuglink.load_device_by_mnemonic)
-    load_device_by_xprv = MovedTo(debuglink.load_device_by_xprv)
-    self_test = MovedTo(debuglink.self_test)
-
     set_u2f_counter = MovedTo(device.set_u2f_counter)
 
     apply_settings = MovedTo(device.apply_settings)
@@ -566,7 +291,7 @@ class ProtocolMixin(object):
     decrypt_keyvalue = MovedTo(misc.decrypt_keyvalue)
 
 
-class TrezorClient(ProtocolMixin, TextUIMixin, BaseClient):
+class TrezorClient(ProtocolMixin, BaseClient):
     def __init__(self, transport, *args, **kwargs):
         super().__init__(transport=transport, *args, **kwargs)
 

@@ -22,6 +22,9 @@ from mnemonic import Mnemonic
 from . import messages as proto
 from .tools import expect, session
 from .transport import enumerate_devices, get_transport
+from .exceptions import Cancelled
+
+RECOVERY_BACK = "\x08"  # backspace character, sent literally
 
 
 class TrezorDevice:
@@ -106,24 +109,17 @@ def recover(
     pin_protection,
     label,
     language,
+    input_callback,
     type=proto.RecoveryDeviceType.ScrambledWords,
-    expand=False,
     dry_run=False,
 ):
-    if client.features.initialized and not dry_run:
-        raise RuntimeError(
-            "Device is initialized already. Call wipe_device() and try again."
-        )
-
     if word_count not in (12, 18, 24):
         raise ValueError("Invalid word count. Use 12/18/24")
 
-    client.recovery_matrix_first_pass = True
-
-    client.expand = expand
-    if client.expand:
-        # optimization to load the wordlist once, instead of for each recovery word
-        client.mnemonic_wordlist = Mnemonic("english")
+    if client.features.initialized and not dry_run:
+        raise RuntimeError(
+            "Device already initialized. Call device.wipe() and try again."
+        )
 
     res = client.call(
         proto.RecoveryDevice(
@@ -137,6 +133,13 @@ def recover(
             dry_run=dry_run,
         )
     )
+
+    while isinstance(res, proto.WordRequest):
+        try:
+            inp = input_callback(res.type)
+            res = client.call(proto.WordAck(word=inp))
+        except Cancelled:
+            res = client.call(proto.Cancel())
 
     client.init_device()
     return res

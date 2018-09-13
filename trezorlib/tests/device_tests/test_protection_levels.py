@@ -145,18 +145,35 @@ class TestProtectionLevels(TrezorTest):
             device.reset(self.client, False, 128, True, False, "label", "english")
 
     def test_recovery_device(self):
+        self.client.set_mnemonic(self.mnemonic12)
         with self.client:
-            self.client.set_mnemonic(self.mnemonic12)
             self.client.set_expected_responses(
                 [proto.ButtonRequest()]
                 + [proto.WordRequest()] * 24
                 + [proto.Success(), proto.Features()]
             )
-            device.recover(self.client, 12, False, False, "label", "english")
+
+            device.recover(
+                self.client,
+                12,
+                False,
+                False,
+                "label",
+                "english",
+                self.client.mnemonic_callback,
+            )
 
         # This must fail, because device is already initialized
-        with pytest.raises(Exception):
-            device.recover(self.client, 12, False, False, "label", "english")
+        with pytest.raises(RuntimeError):
+            device.recover(
+                self.client,
+                12,
+                False,
+                False,
+                "label",
+                "english",
+                self.client.mnemonic_callback,
+            )
 
     def test_sign_message(self):
         with self.client:

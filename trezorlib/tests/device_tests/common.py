@@ -17,7 +17,8 @@
 import os
 
 from trezorlib import coins, debuglink, device, tx_api
-from trezorlib.client import TrezorClientDebugLink
+from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
+from trezorlib.debuglink import TrezorClientDebugLink
 
 from . import conftest
 
@@ -40,9 +41,7 @@ class TrezorTest:
 
     def setup_method(self, method):
         wirelink = conftest.get_device()
-        debuglink = wirelink.find_debug()
         self.client = TrezorClientDebugLink(wirelink)
-        self.client.set_debuglink(debuglink)
         self.client.set_tx_api(coins.tx_api["Bitcoin"])
         # self.client.set_buttonwait(3)
 
@@ -64,6 +63,8 @@ class TrezorTest:
             label="test",
             language="english",
         )
+        if passphrase:
+            device.apply_settings(self.client, passphrase_source=PASSPHRASE_ON_HOST)
 
     def setup_mnemonic_allallall(self):
         self._setup_mnemonic(mnemonic=TrezorTest.mnemonic_all)

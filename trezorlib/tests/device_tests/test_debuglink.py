@@ -24,12 +24,12 @@ from .common import TrezorTest
 @pytest.mark.skip_t2
 class TestDebuglink(TrezorTest):
     def test_layout(self):
-        layout = self.client.debug.read_layout()
+        layout = self.client.debug.state().layout
         assert len(layout) == 1024
 
     def test_mnemonic(self):
         self.setup_mnemonic_nopin_nopassphrase()
-        mnemonic = self.client.debug.read_mnemonic()
+        mnemonic = self.client.debug.state().mnemonic
         assert mnemonic == self.mnemonic12
 
     def test_pin(self):
@@ -39,9 +39,9 @@ class TestDebuglink(TrezorTest):
         resp = self.client.call_raw(proto.Ping(message="test", pin_protection=True))
         assert isinstance(resp, proto.PinMatrixRequest)
 
-        pin = self.client.debug.read_pin()
-        assert pin[0] == "1234"
-        assert pin[1] != ""
+        pin, matrix = self.client.debug.read_pin()
+        assert pin == "1234"
+        assert matrix != ""
 
         pin_encoded = self.client.debug.read_pin_encoded()
         resp = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))

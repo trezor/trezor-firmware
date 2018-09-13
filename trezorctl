@@ -49,6 +49,7 @@ from trezorlib import (
     stellar,
     tezos,
     tools,
+    ui,
 )
 from trezorlib.client import TrezorClient
 from trezorlib.transport import enumerate_devices, get_transport
@@ -120,7 +121,7 @@ def cli(ctx, path, verbose, is_json):
                 if path is not None:
                     click.echo("Using path: {}".format(path))
                 sys.exit(1)
-        return TrezorClient(transport=device)
+        return TrezorClient(transport=device, ui=ui.ClickUI)
 
     ctx.obj = get_device
 
@@ -214,6 +215,7 @@ def get_features(connect):
 @click.option("-r", "--remove", is_flag=True)
 @click.pass_obj
 def change_pin(connect, remove):
+    click.echo(ui.PIN_MATRIX_DESCRIPTION)
     return device.change_pin(connect(), remove)
 
 
@@ -326,7 +328,7 @@ def wipe_device(connect, bootloader):
             sys.exit(1)
         else:
             click.echo(
-                "Wiping user data and firmware! Please confirm the action on your device ..."
+                "Wiping user data and firmware!"
             )
     else:
         if client.features.bootloader_mode:
@@ -339,7 +341,7 @@ def wipe_device(connect, bootloader):
             click.echo("Aborting.")
             sys.exit(1)
         else:
-            click.echo("Wiping user data! Please confirm the action on your device ...")
+            click.echo("Wiping user data!")
 
     try:
         return device.wipe(connect())
@@ -417,6 +419,12 @@ def recovery_device(
     rec_type,
     dry_run,
 ):
+    if rec_type == proto.RecoveryDeviceType.ScrambledWords:
+        input_callback = ui.mnemonic_words(expand)
+    else:
+        input_callback = ui.matrix_words
+        click.echo(ui.RECOVERY_MATRIX_DESCRIPTION)
+
     return device.recover(
         connect(),
         int(words),
@@ -424,8 +432,8 @@ def recovery_device(
         pin_protection,
         label,
         "english",
+        input_callback,
         rec_type,
-        expand,
         dry_run,
     )
 
