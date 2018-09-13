@@ -1936,55 +1936,55 @@ START_TEST(test_ecdsa_signature)
 	// sha2(sha2("\x18Bitcoin Signed Message:\n\x0cHello World!"))
 	memcpy(digest, fromhex("de4e9524586d6fce45667f9ff12f661e79870c4105fa0fb58af976619bb11432"), 32);
 	// r = 2:  Four points should exist
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("00000000000000000000000000000000000000000000000000000000000000020123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 0);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("00000000000000000000000000000000000000000000000000000000000000020123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 0);
 	ck_assert_int_eq(res, 0);
 	ck_assert_mem_eq(pubkey,  fromhex("043fc5bf5fec35b6ffe6fd246226d312742a8c296bfa57dd22da509a2e348529b7ddb9faf8afe1ecda3c05e7b2bda47ee1f5a87e952742b22afca560b29d972fcf"), 65);
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("00000000000000000000000000000000000000000000000000000000000000020123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 1);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("00000000000000000000000000000000000000000000000000000000000000020123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 1);
 	ck_assert_int_eq(res, 0);
 	ck_assert_mem_eq(pubkey,  fromhex("0456d8089137b1fd0d890f8c7d4a04d0fd4520a30b19518ee87bd168ea12ed8090329274c4c6c0d9df04515776f2741eeffc30235d596065d718c3973e19711ad0"), 65);
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("00000000000000000000000000000000000000000000000000000000000000020123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 2);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("00000000000000000000000000000000000000000000000000000000000000020123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 2);
 	ck_assert_int_eq(res, 0);
 	ck_assert_mem_eq(pubkey,  fromhex("04cee0e740f41aab39156844afef0182dea2a8026885b10454a2d539df6f6df9023abfcb0f01c50bef3c0fa8e59a998d07441e18b1c60583ef75cc8b912fb21a15"), 65);
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("00000000000000000000000000000000000000000000000000000000000000020123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 3);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("00000000000000000000000000000000000000000000000000000000000000020123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 3);
 	ck_assert_int_eq(res, 0);
 	ck_assert_mem_eq(pubkey,  fromhex("0490d2bd2e9a564d6e1d8324fc6ad00aa4ae597684ecf4abea58bdfe7287ea4fa72968c2e5b0b40999ede3d7898d94e82c3f8dc4536a567a4bd45998c826a4c4b2"), 65);
 
 	memcpy(digest, fromhex("0000000000000000000000000000000000000000000000000000000000000000"), 32);
 	// r = 7:  No point P with P.x = 7,  but P.x = (order + 7) exists
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("00000000000000000000000000000000000000000000000000000000000000070123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 2);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("00000000000000000000000000000000000000000000000000000000000000070123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 2);
 	ck_assert_int_eq(res, 0);
 	ck_assert_mem_eq(pubkey,  fromhex("044d81bb47a31ffc6cf1f780ecb1e201ec47214b651650867c07f13ad06e12a1b040de78f8dbda700f4d3cd7ee21b3651a74c7661809699d2be7ea0992b0d39797"), 65);
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("00000000000000000000000000000000000000000000000000000000000000070123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 3);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("00000000000000000000000000000000000000000000000000000000000000070123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 3);
 	ck_assert_int_eq(res, 0);
 	ck_assert_mem_eq(pubkey,  fromhex("044d81bb47a31ffc6cf1f780ecb1e201ec47214b651650867c07f13ad06e12a1b0bf21870724258ff0b2c32811de4c9ae58b3899e7f69662d41815f66c4f2c6498"), 65);
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("00000000000000000000000000000000000000000000000000000000000000070123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 0);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("00000000000000000000000000000000000000000000000000000000000000070123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 0);
 	ck_assert_int_eq(res, 1);
 
 	memcpy(digest, fromhex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), 32);
 	// r = 1:  Two points P with P.x = 1,  but P.x = (order + 7) doesn't exist
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("00000000000000000000000000000000000000000000000000000000000000010123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 0);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("00000000000000000000000000000000000000000000000000000000000000010123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 0);
 	ck_assert_int_eq(res, 0);
 	ck_assert_mem_eq(pubkey,  fromhex("045d330b2f89dbfca149828277bae852dd4aebfe136982cb531a88e9e7a89463fe71519f34ea8feb9490c707f14bc38c9ece51762bfd034ea014719b7c85d2871b"), 65);
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("00000000000000000000000000000000000000000000000000000000000000010123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 1);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("00000000000000000000000000000000000000000000000000000000000000010123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 1);
 	ck_assert_int_eq(res, 0);
 	ck_assert_mem_eq(pubkey,  fromhex("049e609c3950e70d6f3e3f3c81a473b1d5ca72739d51debdd80230ae80cab05134a94285375c834a417e8115c546c41da83a263087b79ef1cae25c7b3c738daa2b"), 65);
 
 	// r = 0 is always invalid
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("00000000000000000000000000000000000000000000000000000000000000010123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 2);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("00000000000000000000000000000000000000000000000000000000000000010123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 2);
 	ck_assert_int_eq(res, 1);
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("00000000000000000000000000000000000000000000000000000000000000000123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 0);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("00000000000000000000000000000000000000000000000000000000000000000123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 0);
 	ck_assert_int_eq(res, 1);
 	// r >= order is always invalid
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd03641410123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 0);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd03641410123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 0);
 	ck_assert_int_eq(res, 1);
 	// check that overflow of r is handled
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("000000000000000000000000000000014551231950B75FC4402DA1722FC9BAEE0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 2);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("000000000000000000000000000000014551231950B75FC4402DA1722FC9BAEE0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), digest, 2);
 	ck_assert_int_eq(res, 1);
 	// s = 0 is always invalid
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000"), digest, 0);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000"), digest, 0);
 	ck_assert_int_eq(res, 1);
 	// s >= order is always invalid
-	res = ecdsa_verify_digest_recover(curve, pubkey, fromhex("0000000000000000000000000000000000000000000000000000000000000002fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"), digest, 0);
+	res = ecdsa_recover_pub_from_sig (curve, pubkey, fromhex ("0000000000000000000000000000000000000000000000000000000000000002fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"), digest, 0);
 	ck_assert_int_eq(res, 1);
 }
 END_TEST
