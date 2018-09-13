@@ -132,7 +132,7 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_verify_recover(mp_obj_t signature, mp
     bool compressed = (recid >= 4);
     recid &= 3;
     uint8_t out[65];
-    if (0 == ecdsa_verify_digest_recover(&nist256p1, out, (const uint8_t *)sig.buf + 1, (const uint8_t *)dig.buf, recid)) {
+    if (0 == ecdsa_recover_pub_from_sig(&nist256p1, out, (const uint8_t *)sig.buf + 1, (const uint8_t *)dig.buf, recid)) {
         if (compressed) {
             out[0] = 0x02 | (out[64] & 1);
             return mp_obj_new_bytes(out, 33);
