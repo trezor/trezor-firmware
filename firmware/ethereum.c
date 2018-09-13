@@ -687,7 +687,7 @@ int ethereum_message_verify(EthereumVerifyMessage *msg)
 		v -= 27;
 	}
 	if (v >= 2 ||
-		ecdsa_verify_digest_recover(&secp256k1, pubkey, msg->signature.bytes, hash, v) != 0) {
+		ecdsa_recover_pub_from_sig(&secp256k1, pubkey, msg->signature.bytes, hash, v) != 0) {
 		return 2;
 	}
 
