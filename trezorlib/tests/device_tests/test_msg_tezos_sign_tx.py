@@ -29,7 +29,6 @@ TEZOS_PATH = parse_path("m/44'/1729'/0'")
 
 @pytest.mark.tezos
 @pytest.mark.skip_t1
-@pytest.mark.xfail
 class TestMsgTezosSignTx(TrezorTest):
     def test_tezos_sign_tx_transaction(self):
         self.setup_mnemonic_allallall()

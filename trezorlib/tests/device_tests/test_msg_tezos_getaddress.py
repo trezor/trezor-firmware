@@ -24,7 +24,6 @@ from .common import TrezorTest
 
 @pytest.mark.tezos
 @pytest.mark.skip_t1
-@pytest.mark.xfail
 class TestMsgTezosGetAddress(TrezorTest):
     def test_tezos_get_address(self):
         self.setup_mnemonic_allallall()
