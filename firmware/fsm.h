@@ -27,6 +27,7 @@
 #include "messages-management.pb.h"
 #include "messages-nem.pb.h"
 #include "messages-stellar.pb.h"
+#include "messages-lisk.pb.h"
 
 // message functions
 
@@ -100,6 +101,13 @@ void fsm_msgStellarAllowTrustOp(StellarAllowTrustOp *msg);
 void fsm_msgStellarAccountMergeOp(StellarAccountMergeOp *msg);
 void fsm_msgStellarManageDataOp(StellarManageDataOp *msg);
 void fsm_msgStellarBumpSequenceOp(StellarBumpSequenceOp *msg);
+
+// Lisk
+void fsm_msgLiskGetAddress(LiskGetAddress *msg);
+void fsm_msgLiskGetPublicKey(LiskGetPublicKey *msg);
+void fsm_msgLiskSignMessage(LiskSignMessage *msg);
+void fsm_msgLiskVerifyMessage(LiskVerifyMessage *msg);
+void fsm_msgLiskSignTx(LiskSignTx *msg);
 
 // debug message functions
 #if DEBUG_LINK
