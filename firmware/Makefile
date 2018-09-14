@@ -118,7 +118,7 @@ CFLAGS += -DUSE_NEM=1
 CFLAGS += -DUSE_MONERO=0
 
 %:: %.mako defs
-	@printf "  MAKO  $@\n"
+	@printf "  MAKO    $@\n"
 	$(Q)$(PYTHON) ../vendor/trezor-common/tools/cointool.py render $@.mako
 
 bl_data.h: bl_data.py ../bootloader/bootloader.bin
