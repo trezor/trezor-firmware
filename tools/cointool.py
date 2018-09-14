@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import fnmatch
 import io
 import json
 import logging
@@ -556,17 +557,40 @@ def check(backend, icons, show_duplicates):
 
 @cli.command()
 # fmt: off
-@click.option("-o", "--outfile", type=click.File(mode="w"), default="./coins.json")
+@click.option("-o", "--outfile", type=click.File(mode="w"), default="-")
 @click.option("-s/-S", "--support/--no-support", default=True, help="Include support data for each coin")
 @click.option("-p", "--pretty", is_flag=True, help="Generate nicely formatted JSON")
-@click.option("-t", "--tokens", type=click.Choice(["full", "stripped", "none"]), default="full", help="Filter token data")
+@click.option("-l", "--list", "--flat-list", is_flag=True, help="Output a flat list of coins")
+@click.option("-i", "--include", metavar="FIELD", multiple=True, help="Include only these fields")
+@click.option("-e", "--exclude", metavar="FIELD", multiple=True, help="Exclude these fields")
+@click.option("-I", "--include-type", metavar="TYPE", multiple=True, help="Include only these categories")
+@click.option("-E", "--exclude-type", metavar="TYPE", multiple=True, help="Exclude these categories")
+@click.option("-f", "--filter", metavar="FIELD=FILTER", multiple=True, help="Include only coins that match a filter")
+@click.option("-F", "--filter-exclude", metavar="FIELD=FILTER", multiple=True, help="Exclude coins that match a filter")
+@click.option("-t", "--exclude-tokens", is_flag=True, help="Exclude ERC20 tokens. Equivalent to '-E erc20'")
+@click.option("-d", "--device", metavar="NAME", help="Only include coins supported on a given device")
 # fmt: on
-def dump(outfile, support, pretty, tokens):
-    """Dump all coin data in a single JSON file.
+def dump(
+    outfile,
+    support,
+    pretty,
+    flat_list,
+    include,
+    exclude,
+    include_type,
+    exclude_type,
+    filter,
+    filter_exclude,
+    exclude_tokens,
+    device,
+):
+    """Dump coin data in JSON format
 
     This file is structured the same as the internal data. That is, top-level object
     is a dict with keys: 'bitcoin', 'eth', 'erc20', 'nem' and 'misc'. Value for each
     key is a list of dicts, each describing a known coin.
+
+    If '--list' is specified, the top-level object is instead a flat list of coins.
 
     \b
     Fields are category-specific, except for four common ones:
@@ -576,41 +600,87 @@ def dump(outfile, support, pretty, tokens):
     - 'support' - a dict with entries per known device
 
     To control the size and properties of the resulting file, you can specify whether
-    or not you want pretty-printing, whether or not to include support data with
-    each coin, and whether to include information about ERC20 tokens, which takes up
-    several hundred kB of space.
+    or not you want pretty-printing and whether or not to include support data with
+    each coin.
 
-    \b
-    The option '--tokens' can have one of three values:
-    'full': include all token data
-    'stripped': exclude 'social' links and 'logo' data from tokens
-    'none': exclude the 'erc20' category altogether.
+    You can specify which categories and which fields will be included or excluded.
+    You cannot specify both include and exclude at the same time. Include is "stronger"
+    than exclude, in that _only_ the specified fields are included.
+
+    You can also specify filters, in the form '-f field=value' (or '-F' for inverse
+    filter). Filter values are case-insensitive and support shell-style wildcards,
+    so '-f name=bit*' finds all coins whose names start with "bit" or "Bit".
     """
+    if exclude_tokens:
+        exclude_type = ("erc20",)
+
+    if include and exclude:
+        raise click.ClickException(
+            "You cannot specify --include and --exclude at the same time."
+        )
+    if include_type and exclude_type:
+        raise click.ClickException(
+            "You cannot specify --include-type and --exclude-type at the same time."
+        )
+
     coins = coin_info.coin_info()
+    support_info = coin_info.support_info(coins.as_list())
 
     if support:
-        support_info = coin_info.support_info(coins.as_list())
-
         for category in coins.values():
             for coin in category:
                 coin["support"] = support_info[coin["key"]]
 
-    # get rid of address_bytes which are bytes which can't be JSON encoded
-    for coin in coins.erc20:
-        coin.pop("address_bytes", None)
-        if tokens == "stripped":
-            coin.pop("social", None)
-            coin.pop("logo", None)
+    # filter types
+    if include_type:
+        coins_dict = {k: v for k, v in coins.items() if k in include_type}
+    else:
+        coins_dict = {k: v for k, v in coins.items() if k not in exclude_type}
 
-    if tokens == "none":
-        del coins["erc20"]
+    # filter individual coins
+    include_filters = [f.split("=", maxsplit=1) for f in filter]
+    exclude_filters = [f.split("=", maxsplit=1) for f in filter_exclude]
+
+    # always exclude 'address_bytes', not encodable in JSON
+    exclude += ("address_bytes",)
+
+    def should_include_coin(coin):
+        for field, filter in include_filters:
+            filter = filter.lower()
+            if field not in coin:
+                return False
+            if not fnmatch.fnmatch(coin[field].lower(), filter):
+                return False
+        for field, filter in exclude_filters:
+            filter = filter.lower()
+            if field not in coin:
+                continue
+            if fnmatch.fnmatch(coin[field].lower(), filter):
+                return False
+        if device:
+            is_supported = support_info[coin["key"]].get(device, None)
+            if not is_supported:
+                return False
+        return True
+
+    def modify_coin(coin):
+        if include:
+            return {k: v for k, v in coin.items() if k in include}
+        else:
+            return {k: v for k, v in coin.items() if k not in exclude}
+
+    for key, coinlist in coins_dict.items():
+        coins_dict[key] = [modify_coin(c) for c in coinlist if should_include_coin(c)]
+
+    if flat_list:
+        output = sum(coins_dict.values(), [])
+    else:
+        output = coins_dict
 
     with outfile:
-        if pretty:
-            json.dump(coins, outfile, indent=4, sort_keys=True)
-            outfile.write("\n")
-        else:
-            json.dump(coins, outfile)
+        indent = 4 if pretty else None
+        json.dump(output, outfile, indent=indent, sort_keys=True)
+        outfile.write("\n")
 
 
 @cli.command()

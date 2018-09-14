@@ -19,7 +19,8 @@ the following commands:
   template. By default, `cointool.py render foo.bar.mako` will put its result into
   file `foo.bar` in the same directory. See [usage in `trezor-core`](https://github.com/trezor/trezor-core/commit/348b99b8dc5bcfc4ab85e1e7faad3fb4ef3e8763).
 * **`check`**: check validity of json definitions and associated data. Used in CI.
-* **`dump`**: dump all coin information, including support status, in JSON format.
+* **`dump`**: dump coin information, including support status, in JSON format. Various
+  filtering options are available, check help for details.
 * **`coindefs`**: generate signed protobuf descriptions of coins. This is for future use
   and could allow us to not need to store coin data in Trezor itself.
 
