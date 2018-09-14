@@ -14,23 +14,15 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from binascii import unhexlify
-
 import pytest
 
 from trezorlib import lisk, messages as proto
 from trezorlib.tools import parse_path
 
 from .common import TrezorTest
-from .conftest import TREZOR_VERSION
-
-PUBLIC_KEY = unhexlify(
-    "eb56d7bbb5e8ea9269405f7a8527fe126023d1db2c973cfac6f760b60ae27294"
-)
 
 
 @pytest.mark.lisk
-@pytest.mark.xfail(TREZOR_VERSION == 1, reason="waiting for PR#351")
 class TestMsgLiskSignTx(TrezorTest):
     def test_lisk_sign_tx_send(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -41,7 +33,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
-                        signature=unhexlify(
+                        signature=bytes.fromhex(
                             "b62717d581e5713bca60b758b661e6cfa091addc6caedd57534e06cda805943ee80797b9fb9a1e1b2bd584e292d2a7f832a4d1b3f15f00e1ee1b72de7e195a08"
                         )
                     ),
@@ -70,7 +62,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
-                        signature=unhexlify(
+                        signature=bytes.fromhex(
                             "5dd0dbb87ee46f3e985b1ef2df85cb0bec481e8601d150388f73e198cdd57a698eab076c7cd5b281fbb6a83dd3dc64d91a6eccd1614dffd46f101194ffa3a004"
                         )
                     ),
@@ -99,7 +91,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.PublicKey),
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
-                        signature=unhexlify(
+                        signature=bytes.fromhex(
                             "f02bdc40a7599c21d29db4080ff1ff8934f76eedf5b0c4fa695c8a64af2f0b40a5c4f92db203863eebbbfad8f0611a23f451ed8bb711490234cdfb034728fd01"
                         )
                     ),
@@ -131,7 +123,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
-                        signature=unhexlify(
+                        signature=bytes.fromhex(
                             "5ac02b2882b9d7d0f944e48baadc27de1296cc08c3533f7c8e380fbbb9fb4a6ac81b5dc57060d7d8c68912eea24eb6e39024801bccc0d55020e2052b0c2bb701"
                         )
                     ),
@@ -159,7 +151,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
-                        signature=unhexlify(
+                        signature=bytes.fromhex(
                             "1d0599a8387edaa4a6d309b8a78accd1ceaff20ff9d87136b01cba0efbcb9781c13dc2b0bab5a1ea4f196d8dcc9dbdbd2d56dbffcc088fc77686b2e2c2fe560f"
                         )
                     ),
@@ -192,7 +184,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
-                        signature=unhexlify(
+                        signature=bytes.fromhex(
                             "88923866c2d500a6927715699ab41a0f58ea4b52e552d90e923bc24ac9da240f2328c93f9ce043a1da4937d4b61c7f57c02fc931f9824d06b24731e7be23c506"
                         )
                     ),

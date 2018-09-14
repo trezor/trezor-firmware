@@ -20,13 +20,11 @@ from trezorlib import lisk
 from trezorlib.tools import parse_path
 
 from .common import TrezorTest
-from .conftest import TREZOR_VERSION
 
 LISK_PATH = parse_path("m/44h/134h/0h/1h")
 
 
 @pytest.mark.lisk
-@pytest.mark.xfail(TREZOR_VERSION == 1, reason="waiting for PR#351")
 class TestMsgLiskGetaddress(TrezorTest):
     def test_lisk_getaddress(self):
         self.setup_mnemonic_nopin_nopassphrase()

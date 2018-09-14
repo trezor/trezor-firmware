@@ -19,7 +19,6 @@ env:
         PROTOBUF_VERSION=3.4.0
 
 python:
-    - "3.4"
     - "3.5"
     - "3.6"
 

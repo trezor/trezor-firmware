@@ -14,26 +14,22 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from binascii import hexlify
-
 import pytest
 
 from trezorlib import lisk
 from trezorlib.tools import parse_path
 
 from .common import TrezorTest
-from .conftest import TREZOR_VERSION
 
 LISK_PATH = parse_path("m/44h/134h/0h/0h")
 
 
 @pytest.mark.lisk
-@pytest.mark.xfail(TREZOR_VERSION == 1, reason="waiting for PR#351")
 class TestMsgLiskGetPublicKey(TrezorTest):
     def test_lisk_get_public_key(self):
         self.setup_mnemonic_nopin_nopassphrase()
         sig = lisk.get_public_key(self.client, LISK_PATH)
         assert (
-            hexlify(sig.public_key)
-            == b"eb56d7bbb5e8ea9269405f7a8527fe126023d1db2c973cfac6f760b60ae27294"
+            sig.public_key.hex()
+            == "eb56d7bbb5e8ea9269405f7a8527fe126023d1db2c973cfac6f760b60ae27294"
         )
