@@ -19,7 +19,7 @@
 
 #if DEBUG_LINK
 
-void fsm_msgDebugLinkGetState(DebugLinkGetState *msg)
+void fsm_msgDebugLinkGetState(const DebugLinkGetState *msg)
 {
 	(void)msg;
 
@@ -68,12 +68,12 @@ void fsm_msgDebugLinkGetState(DebugLinkGetState *msg)
 	msg_debug_write(MessageType_MessageType_DebugLinkState, &resp);
 }
 
-void fsm_msgDebugLinkStop(DebugLinkStop *msg)
+void fsm_msgDebugLinkStop(const DebugLinkStop *msg)
 {
 	(void)msg;
 }
 
-void fsm_msgDebugLinkMemoryRead(DebugLinkMemoryRead *msg)
+void fsm_msgDebugLinkMemoryRead(const DebugLinkMemoryRead *msg)
 {
 	RESP_INIT(DebugLinkMemory);
 
@@ -86,7 +86,7 @@ void fsm_msgDebugLinkMemoryRead(DebugLinkMemoryRead *msg)
 	msg_debug_write(MessageType_MessageType_DebugLinkMemory, resp);
 }
 
-void fsm_msgDebugLinkMemoryWrite(DebugLinkMemoryWrite *msg)
+void fsm_msgDebugLinkMemoryWrite(const DebugLinkMemoryWrite *msg)
 {
 	uint32_t length = msg->memory.size;
 	if (msg->flash) {
@@ -106,7 +106,7 @@ void fsm_msgDebugLinkMemoryWrite(DebugLinkMemoryWrite *msg)
 	}
 }
 
-void fsm_msgDebugLinkFlashErase(DebugLinkFlashErase *msg)
+void fsm_msgDebugLinkFlashErase(const DebugLinkFlashErase *msg)
 {
 	svc_flash_unlock();
 	svc_flash_erase_sector(msg->sector);

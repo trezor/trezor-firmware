@@ -422,7 +422,7 @@ void storage_dumpNode(HDNodeType *node) {
 }
 #endif
 
-void storage_loadDevice(LoadDevice *msg)
+void storage_loadDevice(const LoadDevice *msg)
 {
 	session_clear(true);
 

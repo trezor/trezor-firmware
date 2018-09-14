@@ -17,7 +17,7 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void fsm_msgLiskGetAddress(LiskGetAddress *msg)
+void fsm_msgLiskGetAddress(const LiskGetAddress *msg)
 {
 	CHECK_INITIALIZED
 
@@ -43,7 +43,7 @@ void fsm_msgLiskGetAddress(LiskGetAddress *msg)
 	layoutHome();
 }
 
-void fsm_msgLiskGetPublicKey(LiskGetPublicKey *msg)
+void fsm_msgLiskGetPublicKey(const LiskGetPublicKey *msg)
 {
 	CHECK_INITIALIZED
 
@@ -75,7 +75,7 @@ void fsm_msgLiskGetPublicKey(LiskGetPublicKey *msg)
 	layoutHome();
 }
 
-void fsm_msgLiskSignMessage(LiskSignMessage *msg)
+void fsm_msgLiskSignMessage(const LiskSignMessage *msg)
 {
 	CHECK_INITIALIZED
 
@@ -95,7 +95,7 @@ void fsm_msgLiskSignMessage(LiskSignMessage *msg)
 	layoutHome();
 }
 
-void fsm_msgLiskVerifyMessage(LiskVerifyMessage *msg)
+void fsm_msgLiskVerifyMessage(const LiskVerifyMessage *msg)
 {
 	if (lisk_verify_message(msg)) {
 		char address[MAX_LISK_ADDRESS_SIZE];

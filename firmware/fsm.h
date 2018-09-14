@@ -41,82 +41,86 @@ void fsm_sendFailureDebug(FailureType code, const char *text, const char *source
 void fsm_sendFailure(FailureType code, const char *text);
 #endif
 
-void fsm_msgInitialize(Initialize *msg);
-void fsm_msgGetFeatures(GetFeatures *msg);
-void fsm_msgPing(Ping *msg);
-void fsm_msgChangePin(ChangePin *msg);
-void fsm_msgWipeDevice(WipeDevice *msg);
-void fsm_msgGetEntropy(GetEntropy *msg);
-void fsm_msgGetPublicKey(GetPublicKey *msg);
-void fsm_msgLoadDevice(LoadDevice *msg);
-void fsm_msgResetDevice(ResetDevice *msg);
-void fsm_msgBackupDevice(BackupDevice *msg);
-void fsm_msgSignTx(SignTx *msg);
-//void fsm_msgPinMatrixAck(PinMatrixAck *msg);
-void fsm_msgCancel(Cancel *msg);
-void fsm_msgTxAck(TxAck *msg);
-void fsm_msgCipherKeyValue(CipherKeyValue *msg);
-void fsm_msgClearSession(ClearSession *msg);
-void fsm_msgApplySettings(ApplySettings *msg);
-void fsm_msgApplyFlags(ApplyFlags *msg);
-//void fsm_msgButtonAck(ButtonAck *msg);
-void fsm_msgGetAddress(GetAddress *msg);
-void fsm_msgEntropyAck(EntropyAck *msg);
-void fsm_msgSignMessage(SignMessage *msg);
-void fsm_msgVerifyMessage(VerifyMessage *msg);
-void fsm_msgSignIdentity(SignIdentity *msg);
-void fsm_msgGetECDHSessionKey(GetECDHSessionKey *msg);
-/* ECIES disabled
-void fsm_msgEncryptMessage(EncryptMessage *msg);
-void fsm_msgDecryptMessage(DecryptMessage *msg);
-*/
-//void fsm_msgPassphraseAck(PassphraseAck *msg);
-void fsm_msgRecoveryDevice(RecoveryDevice *msg);
-void fsm_msgWordAck(WordAck *msg);
-void fsm_msgSetU2FCounter(SetU2FCounter *msg);
-void fsm_msgEthereumGetAddress(EthereumGetAddress *msg);
-void fsm_msgEthereumSignTx(EthereumSignTx *msg);
-void fsm_msgEthereumTxAck(EthereumTxAck *msg);
-void fsm_msgEthereumSignMessage(EthereumSignMessage *msg);
-void fsm_msgEthereumVerifyMessage(EthereumVerifyMessage *msg);
+// void fsm_msgPinMatrixAck(const PinMatrixAck *msg);   // tiny
+// void fsm_msgButtonAck(const ButtonAck *msg);         // tiny
+// void fsm_msgPassphraseAck(const PassphraseAck *msg); // tiny
 
-void fsm_msgNEMGetAddress(NEMGetAddress *msg);
-void fsm_msgNEMSignTx(NEMSignTx *msg);
-void fsm_msgNEMDecryptMessage(NEMDecryptMessage *msg);
+// common
+void fsm_msgInitialize(const Initialize *msg);
+void fsm_msgGetFeatures(const GetFeatures *msg);
+void fsm_msgPing(const Ping *msg);
+void fsm_msgChangePin(const ChangePin *msg);
+void fsm_msgWipeDevice(const WipeDevice *msg);
+void fsm_msgGetEntropy(const GetEntropy *msg);
+void fsm_msgLoadDevice(const LoadDevice *msg);
+void fsm_msgResetDevice(const ResetDevice *msg);
+void fsm_msgEntropyAck(const EntropyAck *msg);
+void fsm_msgBackupDevice(const BackupDevice *msg);
+void fsm_msgCancel(const Cancel *msg);
+void fsm_msgClearSession(const ClearSession *msg);
+void fsm_msgApplySettings(const ApplySettings *msg);
+void fsm_msgApplyFlags(const ApplyFlags *msg);
+void fsm_msgRecoveryDevice(const RecoveryDevice *msg);
+void fsm_msgWordAck(const WordAck *msg);
+void fsm_msgSetU2FCounter(const SetU2FCounter *msg);
 
-void fsm_msgCosiCommit(CosiCommit *msg);
-void fsm_msgCosiSign(CosiSign *msg);
+// coin
+void fsm_msgGetPublicKey(const GetPublicKey *msg);
+void fsm_msgSignTx(const SignTx *msg);
+void fsm_msgTxAck(TxAck *msg);    // not const because we mutate input/output scripts
+void fsm_msgGetAddress(const GetAddress *msg);
+void fsm_msgSignMessage(const SignMessage *msg);
+void fsm_msgVerifyMessage(const VerifyMessage *msg);
 
-// Stellar
-void fsm_msgStellarGetAddress(StellarGetAddress *msg);
-void fsm_msgStellarSignTx(StellarSignTx *msg);
-void fsm_msgStellarPaymentOp(StellarPaymentOp *msg);
-void fsm_msgStellarCreateAccountOp(StellarCreateAccountOp *msg);
-void fsm_msgStellarPathPaymentOp(StellarPathPaymentOp *msg);
-void fsm_msgStellarManageOfferOp(StellarManageOfferOp *msg);
-void fsm_msgStellarCreatePassiveOfferOp(StellarCreatePassiveOfferOp *msg);
-void fsm_msgStellarSetOptionsOp(StellarSetOptionsOp *msg);
-void fsm_msgStellarChangeTrustOp(StellarChangeTrustOp *msg);
-void fsm_msgStellarAllowTrustOp(StellarAllowTrustOp *msg);
-void fsm_msgStellarAccountMergeOp(StellarAccountMergeOp *msg);
-void fsm_msgStellarManageDataOp(StellarManageDataOp *msg);
-void fsm_msgStellarBumpSequenceOp(StellarBumpSequenceOp *msg);
+// crypto
+void fsm_msgCipherKeyValue(CipherKeyValue *msg);    // not const because we mutate msg->iv
+void fsm_msgSignIdentity(const SignIdentity *msg);
+void fsm_msgGetECDHSessionKey(const GetECDHSessionKey *msg);
+void fsm_msgCosiCommit(const CosiCommit *msg);
+void fsm_msgCosiSign(const CosiSign *msg);
 
-// Lisk
-void fsm_msgLiskGetAddress(LiskGetAddress *msg);
-void fsm_msgLiskGetPublicKey(LiskGetPublicKey *msg);
-void fsm_msgLiskSignMessage(LiskSignMessage *msg);
-void fsm_msgLiskVerifyMessage(LiskVerifyMessage *msg);
-void fsm_msgLiskSignTx(LiskSignTx *msg);
-
-// debug message functions
+// debug
 #if DEBUG_LINK
-//void fsm_msgDebugLinkDecision(DebugLinkDecision *msg);
-void fsm_msgDebugLinkGetState(DebugLinkGetState *msg);
-void fsm_msgDebugLinkStop(DebugLinkStop *msg);
-void fsm_msgDebugLinkMemoryWrite(DebugLinkMemoryWrite *msg);
-void fsm_msgDebugLinkMemoryRead(DebugLinkMemoryRead *msg);
-void fsm_msgDebugLinkFlashErase(DebugLinkFlashErase *msg);
+// void fsm_msgDebugLinkDecision(const DebugLinkDecision *msg); // tiny
+void fsm_msgDebugLinkGetState(const DebugLinkGetState *msg);
+void fsm_msgDebugLinkStop(const DebugLinkStop *msg);
+void fsm_msgDebugLinkMemoryWrite(const DebugLinkMemoryWrite *msg);
+void fsm_msgDebugLinkMemoryRead(const DebugLinkMemoryRead *msg);
+void fsm_msgDebugLinkFlashErase(const DebugLinkFlashErase *msg);
 #endif
+
+// ethereum
+void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg);
+void fsm_msgEthereumSignTx(EthereumSignTx *msg);  // not const because we mutate transaction
+void fsm_msgEthereumTxAck(const EthereumTxAck *msg);
+void fsm_msgEthereumSignMessage(const EthereumSignMessage *msg);
+void fsm_msgEthereumVerifyMessage(const EthereumVerifyMessage *msg);
+
+// lisk
+void fsm_msgLiskGetAddress(const LiskGetAddress *msg);
+void fsm_msgLiskGetPublicKey(const LiskGetPublicKey *msg);
+void fsm_msgLiskSignMessage(const LiskSignMessage *msg);
+void fsm_msgLiskVerifyMessage(const LiskVerifyMessage *msg);
+void fsm_msgLiskSignTx(LiskSignTx *msg);  // // not const because we mutate transaction
+
+// nem
+void fsm_msgNEMGetAddress(NEMGetAddress *msg);          // not const because we mutate msg->network
+void fsm_msgNEMSignTx(NEMSignTx *msg);                  // not const because we mutate msg->network
+void fsm_msgNEMDecryptMessage(NEMDecryptMessage *msg);  // not const because we mutate msg->payload
+
+// stellar
+void fsm_msgStellarGetAddress(const StellarGetAddress *msg);
+void fsm_msgStellarSignTx(const StellarSignTx *msg);
+void fsm_msgStellarPaymentOp(const StellarPaymentOp *msg);
+void fsm_msgStellarCreateAccountOp(const StellarCreateAccountOp *msg);
+void fsm_msgStellarPathPaymentOp(const StellarPathPaymentOp *msg);
+void fsm_msgStellarManageOfferOp(const StellarManageOfferOp *msg);
+void fsm_msgStellarCreatePassiveOfferOp(const StellarCreatePassiveOfferOp *msg);
+void fsm_msgStellarSetOptionsOp(const StellarSetOptionsOp *msg);
+void fsm_msgStellarChangeTrustOp(const StellarChangeTrustOp *msg);
+void fsm_msgStellarAllowTrustOp(const StellarAllowTrustOp *msg);
+void fsm_msgStellarAccountMergeOp(const StellarAccountMergeOp *msg);
+void fsm_msgStellarManageDataOp(const StellarManageDataOp *msg);
+void fsm_msgStellarBumpSequenceOp(const StellarBumpSequenceOp *msg);
 
 #endif

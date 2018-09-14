@@ -17,7 +17,7 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void fsm_msgStellarGetAddress(StellarGetAddress *msg)
+void fsm_msgStellarGetAddress(const StellarGetAddress *msg)
 {
     RESP_INIT(StellarAddress);
 
@@ -55,49 +55,7 @@ void fsm_msgStellarGetAddress(StellarGetAddress *msg)
     layoutHome();
 }
 
-// void fsm_msgStellarGetPublicKey(StellarGetPublicKey *msg)
-// {
-//     RESP_INIT(StellarPublicKey);
-
-//     CHECK_INITIALIZED
-
-//     CHECK_PIN
-
-//     HDNode *node = stellar_deriveNode(msg->address_n, msg->address_n_count);
-//     if (!node) {
-//         fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to derive private key"));
-//         return;
-//     }
-
-//     if (msg->has_show_display && msg->show_display) {
-//         char hex[32 * 2 + 1];
-//         data2hex(node->public_key + 1, 32, hex);
-//         const char **str_pubkey_rows = split_message((const uint8_t *)hex, 32 * 2, 16);
-//         layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), _("Share public account ID?"),
-//             str_pubkey_rows[0],
-//             str_pubkey_rows[1],
-//             str_pubkey_rows[2],
-//             str_pubkey_rows[3],
-//             NULL, NULL
-//             );
-//         if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-//             fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-//             layoutHome();
-//             return;
-//         }
-//     }
-
-//     // Read public key and write it to the response
-//     resp->has_public_key = true;
-//     resp->public_key.size = 32;
-//     memcpy(resp->public_key.bytes, node->public_key + 1, 32);
-
-//     msg_write(MessageType_MessageType_StellarPublicKey, resp);
-
-//     layoutHome();
-// }
-
-void fsm_msgStellarSignTx(StellarSignTx *msg)
+void fsm_msgStellarSignTx(const StellarSignTx *msg)
 {
     CHECK_INITIALIZED
     CHECK_PIN
@@ -113,7 +71,7 @@ void fsm_msgStellarSignTx(StellarSignTx *msg)
     msg_write(MessageType_MessageType_StellarTxOpRequest, resp);
 }
 
-void fsm_msgStellarCreateAccountOp(StellarCreateAccountOp *msg)
+void fsm_msgStellarCreateAccountOp(const StellarCreateAccountOp *msg)
 {
     if (!stellar_confirmCreateAccountOp(msg)) return;
 
@@ -132,7 +90,7 @@ void fsm_msgStellarCreateAccountOp(StellarCreateAccountOp *msg)
     }
 }
 
-void fsm_msgStellarPaymentOp(StellarPaymentOp *msg)
+void fsm_msgStellarPaymentOp(const StellarPaymentOp *msg)
 {
     // This will display additional dialogs to the user
     if (!stellar_confirmPaymentOp(msg)) return;
@@ -153,7 +111,7 @@ void fsm_msgStellarPaymentOp(StellarPaymentOp *msg)
     }
 }
 
-void fsm_msgStellarPathPaymentOp(StellarPathPaymentOp *msg)
+void fsm_msgStellarPathPaymentOp(const StellarPathPaymentOp *msg)
 {
     if (!stellar_confirmPathPaymentOp(msg)) return;
 
@@ -172,7 +130,7 @@ void fsm_msgStellarPathPaymentOp(StellarPathPaymentOp *msg)
     }
 }
 
-void fsm_msgStellarManageOfferOp(StellarManageOfferOp *msg)
+void fsm_msgStellarManageOfferOp(const StellarManageOfferOp *msg)
 {
     if (!stellar_confirmManageOfferOp(msg)) return;
 
@@ -191,7 +149,7 @@ void fsm_msgStellarManageOfferOp(StellarManageOfferOp *msg)
     }
 }
 
-void fsm_msgStellarCreatePassiveOfferOp(StellarCreatePassiveOfferOp *msg)
+void fsm_msgStellarCreatePassiveOfferOp(const StellarCreatePassiveOfferOp *msg)
 {
     if (!stellar_confirmCreatePassiveOfferOp(msg)) return;
 
@@ -210,7 +168,7 @@ void fsm_msgStellarCreatePassiveOfferOp(StellarCreatePassiveOfferOp *msg)
     }
 }
 
-void fsm_msgStellarSetOptionsOp(StellarSetOptionsOp *msg)
+void fsm_msgStellarSetOptionsOp(const StellarSetOptionsOp *msg)
 {
     if (!stellar_confirmSetOptionsOp(msg)) return;
 
@@ -229,7 +187,7 @@ void fsm_msgStellarSetOptionsOp(StellarSetOptionsOp *msg)
     }
 }
 
-void fsm_msgStellarChangeTrustOp(StellarChangeTrustOp *msg)
+void fsm_msgStellarChangeTrustOp(const StellarChangeTrustOp *msg)
 {
     if (!stellar_confirmChangeTrustOp(msg)) return;
 
@@ -248,7 +206,7 @@ void fsm_msgStellarChangeTrustOp(StellarChangeTrustOp *msg)
     }
 }
 
-void fsm_msgStellarAllowTrustOp(StellarAllowTrustOp *msg)
+void fsm_msgStellarAllowTrustOp(const StellarAllowTrustOp *msg)
 {
     if (!stellar_confirmAllowTrustOp(msg)) return;
 
@@ -267,7 +225,7 @@ void fsm_msgStellarAllowTrustOp(StellarAllowTrustOp *msg)
     }
 }
 
-void fsm_msgStellarAccountMergeOp(StellarAccountMergeOp *msg)
+void fsm_msgStellarAccountMergeOp(const StellarAccountMergeOp *msg)
 {
     if (!stellar_confirmAccountMergeOp(msg)) return;
 
@@ -286,7 +244,7 @@ void fsm_msgStellarAccountMergeOp(StellarAccountMergeOp *msg)
     }
 }
 
-void fsm_msgStellarManageDataOp(StellarManageDataOp *msg)
+void fsm_msgStellarManageDataOp(const StellarManageDataOp *msg)
 {
     if (!stellar_confirmManageDataOp(msg)) return;
 
@@ -305,7 +263,7 @@ void fsm_msgStellarManageDataOp(StellarManageDataOp *msg)
     }
 }
 
-void fsm_msgStellarBumpSequenceOp(StellarBumpSequenceOp *msg)
+void fsm_msgStellarBumpSequenceOp(const StellarBumpSequenceOp *msg)
 {
     if (!stellar_confirmBumpSequenceOp(msg)) return;
 

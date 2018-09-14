@@ -584,7 +584,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	}
 }
 
-void ethereum_signing_txack(EthereumTxAck *tx)
+void ethereum_signing_txack(const EthereumTxAck *tx)
 {
 	if (!ethereum_signing) {
 		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Not in Ethereum signing mode"));
@@ -644,7 +644,7 @@ static void ethereum_message_hash(const uint8_t *message, size_t message_len, ui
 	keccak_Final(&ctx, hash);
 }
 
-void ethereum_message_sign(EthereumSignMessage *msg, const HDNode *node, EthereumMessageSignature *resp)
+void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node, EthereumMessageSignature *resp)
 {
 	uint8_t hash[32];
 
@@ -667,7 +667,7 @@ void ethereum_message_sign(EthereumSignMessage *msg, const HDNode *node, Ethereu
 	msg_write(MessageType_MessageType_EthereumMessageSignature, resp);
 }
 
-int ethereum_message_verify(EthereumVerifyMessage *msg)
+int ethereum_message_verify(const EthereumVerifyMessage *msg)
 {
 	if (msg->signature.size != 65 || msg->address.size != 20) {
 		fsm_sendFailure(FailureType_Failure_DataError, _("Malformed data"));

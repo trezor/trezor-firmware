@@ -17,7 +17,7 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void fsm_msgGetPublicKey(GetPublicKey *msg)
+void fsm_msgGetPublicKey(const GetPublicKey *msg)
 {
 	RESP_INIT(PublicKey);
 
@@ -81,7 +81,7 @@ void fsm_msgGetPublicKey(GetPublicKey *msg)
 	layoutHome();
 }
 
-void fsm_msgSignTx(SignTx *msg)
+void fsm_msgSignTx(const SignTx *msg)
 {
 	CHECK_INITIALIZED
 
@@ -181,7 +181,7 @@ static bool path_mismatched(const CoinInfo *coin, const GetAddress *msg)
 	return false;
 }
 
-void fsm_msgGetAddress(GetAddress *msg)
+void fsm_msgGetAddress(const GetAddress *msg)
 {
 	RESP_INIT(Address);
 
@@ -242,7 +242,7 @@ void fsm_msgGetAddress(GetAddress *msg)
 	layoutHome();
 }
 
-void fsm_msgSignMessage(SignMessage *msg)
+void fsm_msgSignMessage(const SignMessage *msg)
 {
 	// CHECK_PARAM(is_ascii_only(msg->message.bytes, msg->message.size), _("Cannot sign non-ASCII strings"));
 
@@ -282,7 +282,7 @@ void fsm_msgSignMessage(SignMessage *msg)
 	layoutHome();
 }
 
-void fsm_msgVerifyMessage(VerifyMessage *msg)
+void fsm_msgVerifyMessage(const VerifyMessage *msg)
 {
 	CHECK_PARAM(msg->has_address, _("No address provided"));
 	CHECK_PARAM(msg->has_message, _("No message provided"));

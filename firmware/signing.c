@@ -544,7 +544,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 
-static bool signing_check_input(TxInputType *txinput) {
+static bool signing_check_input(const TxInputType *txinput) {
 	/* compute multisig fingerprint */
 	/* (if all input share the same fingerprint, outputs having the same fingerprint will be considered as change outputs) */
 	if (txinput->has_multisig && !multisig_fp_mismatch) {

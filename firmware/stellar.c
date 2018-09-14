@@ -52,7 +52,7 @@ static StellarTransaction stellar_activeTx;
 /*
  * Starts the signing process and parses the transaction header
  */
-void stellar_signingInit(StellarSignTx *msg)
+void stellar_signingInit(const StellarSignTx *msg)
 {
     memset(&stellar_activeTx, 0, sizeof(StellarTransaction));
     stellar_signing = true;
@@ -155,7 +155,7 @@ void stellar_signingInit(StellarSignTx *msg)
     }
 }
 
-bool stellar_confirmSourceAccount(bool has_source_account, char *str_account)
+bool stellar_confirmSourceAccount(bool has_source_account, const char *str_account)
 {
     if (!has_source_account) {
         stellar_hashupdate_bool(false);
@@ -188,7 +188,7 @@ bool stellar_confirmSourceAccount(bool has_source_account, char *str_account)
     return true;
 }
 
-bool stellar_confirmCreateAccountOp(StellarCreateAccountOp *msg)
+bool stellar_confirmCreateAccountOp(const StellarCreateAccountOp *msg)
 {
     if (!stellar_signing) return false;
 
@@ -239,7 +239,7 @@ bool stellar_confirmCreateAccountOp(StellarCreateAccountOp *msg)
     return true;
 }
 
-bool stellar_confirmPaymentOp(StellarPaymentOp *msg)
+bool stellar_confirmPaymentOp(const StellarPaymentOp *msg)
 {
     if (!stellar_signing) return false;
 
@@ -300,7 +300,7 @@ bool stellar_confirmPaymentOp(StellarPaymentOp *msg)
     return true;
 }
 
-bool stellar_confirmPathPaymentOp(StellarPathPaymentOp *msg)
+bool stellar_confirmPathPaymentOp(const StellarPathPaymentOp *msg)
 {
     if (!stellar_signing) return false;
 
@@ -400,7 +400,7 @@ bool stellar_confirmPathPaymentOp(StellarPathPaymentOp *msg)
     return true;
 }
 
-bool stellar_confirmManageOfferOp(StellarManageOfferOp *msg)
+bool stellar_confirmManageOfferOp(const StellarManageOfferOp *msg)
 {
     if (!stellar_signing) return false;
 
@@ -490,7 +490,7 @@ bool stellar_confirmManageOfferOp(StellarManageOfferOp *msg)
     return true;
 }
 
-bool stellar_confirmCreatePassiveOfferOp(StellarCreatePassiveOfferOp *msg)
+bool stellar_confirmCreatePassiveOfferOp(const StellarCreatePassiveOfferOp *msg)
 {
     if (!stellar_signing) return false;
 
@@ -568,7 +568,7 @@ bool stellar_confirmCreatePassiveOfferOp(StellarCreatePassiveOfferOp *msg)
     return true;
 }
 
-bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg)
+bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg)
 {
     if (!stellar_signing) return false;
 
@@ -892,7 +892,7 @@ bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg)
     return true;
 }
 
-bool stellar_confirmChangeTrustOp(StellarChangeTrustOp *msg)
+bool stellar_confirmChangeTrustOp(const StellarChangeTrustOp *msg)
 {
     if (!stellar_signing) return false;
 
@@ -960,7 +960,7 @@ bool stellar_confirmChangeTrustOp(StellarChangeTrustOp *msg)
     return true;
 }
 
-bool stellar_confirmAllowTrustOp(StellarAllowTrustOp *msg)
+bool stellar_confirmAllowTrustOp(const StellarAllowTrustOp *msg)
 {
     if (!stellar_signing) return false;
 
@@ -1036,7 +1036,7 @@ bool stellar_confirmAllowTrustOp(StellarAllowTrustOp *msg)
     return true;
 }
 
-bool stellar_confirmAccountMergeOp(StellarAccountMergeOp *msg)
+bool stellar_confirmAccountMergeOp(const StellarAccountMergeOp *msg)
 {
     if (!stellar_signing) return false;
 
@@ -1077,7 +1077,7 @@ bool stellar_confirmAccountMergeOp(StellarAccountMergeOp *msg)
     return true;
 }
 
-bool stellar_confirmManageDataOp(StellarManageDataOp *msg)
+bool stellar_confirmManageDataOp(const StellarManageDataOp *msg)
 {
     if (!stellar_signing) return false;
 
@@ -1151,7 +1151,7 @@ bool stellar_confirmManageDataOp(StellarManageDataOp *msg)
     return true;
 }
 
-bool stellar_confirmBumpSequenceOp(StellarBumpSequenceOp *msg)
+bool stellar_confirmBumpSequenceOp(const StellarBumpSequenceOp *msg)
 {
     if (!stellar_signing) return false;
 
@@ -1312,7 +1312,7 @@ void stellar_format_uint64(uint64_t number, char *out, size_t outlen)
  * Breaks a 56 character address into 3 lines of lengths 16, 20, 20
  * This is to allow a small label to be prepended to the first line
  */
-const char **stellar_lineBreakAddress(uint8_t *addrbytes)
+const char **stellar_lineBreakAddress(const uint8_t *addrbytes)
 {
     char str_fulladdr[56+1];
     static char rows[3][20+1];
@@ -1339,7 +1339,7 @@ const char **stellar_lineBreakAddress(uint8_t *addrbytes)
  *  MOBI (G123456789000)
  *  ALPHA12EXAMP (G0987)
  */
-void stellar_format_asset(StellarAssetType *asset, char *str_formatted, size_t len)
+void stellar_format_asset(const StellarAssetType *asset, char *str_formatted, size_t len)
 {
     char str_asset_code[12 + 1];
     // truncated asset issuer, final length depends on length of asset code
@@ -1383,7 +1383,7 @@ void stellar_format_asset(StellarAssetType *asset, char *str_formatted, size_t l
     }
 }
 
-size_t stellar_publicAddressAsStr(uint8_t *bytes, char *out, size_t outlen)
+size_t stellar_publicAddressAsStr(const uint8_t *bytes, char *out, size_t outlen)
 {
     // version + key bytes + checksum
     uint8_t keylen = 1 + 32 + 2;
@@ -1446,7 +1446,7 @@ bool stellar_validateAddress(const char *str_address)
 /**
  * Converts a string address (G...) to the 32-byte raw address
  */
-bool stellar_getAddressBytes(char* str_address, uint8_t *out_bytes)
+bool stellar_getAddressBytes(const char* str_address, uint8_t *out_bytes)
 {
     uint8_t decoded[STELLAR_ADDRESS_SIZE_RAW];
 
@@ -1497,7 +1497,7 @@ uint16_t stellar_crc16(uint8_t *bytes, uint32_t length)
  *
  * All paths must be hardened
  */
-HDNode *stellar_deriveNode(uint32_t *address_n, size_t address_n_count)
+HDNode *stellar_deriveNode(const uint32_t *address_n, size_t address_n_count)
 {
     static CONFIDENTIAL HDNode node;
     const char *curve = "ed25519";
@@ -1597,7 +1597,7 @@ void stellar_hashupdate_address(uint8_t *address_bytes)
  * so if "TEST" is the asset code then the hashed value needs to be 4 bytes and not include the null
  * at the end of the string
  */
-void stellar_hashupdate_asset(StellarAssetType *asset)
+void stellar_hashupdate_asset(const StellarAssetType *asset)
 {
     stellar_hashupdate_uint32(asset->type);
 
@@ -1629,7 +1629,7 @@ void stellar_hashupdate_asset(StellarAssetType *asset)
     }
 }
 
-void stellar_hashupdate_bytes(uint8_t *data, size_t len)
+void stellar_hashupdate_bytes(const uint8_t *data, size_t len)
 {
     sha256_Update(&(stellar_activeTx.sha256_ctx), data, len);
 }
@@ -1637,7 +1637,7 @@ void stellar_hashupdate_bytes(uint8_t *data, size_t len)
 /*
  * Displays a summary of the overall transaction
  */
-void stellar_layoutTransactionSummary(StellarSignTx *msg)
+void stellar_layoutTransactionSummary(const StellarSignTx *msg)
 {
     char str_lines[5][32];
     memset(str_lines, 0, sizeof(str_lines));

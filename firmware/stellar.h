@@ -53,39 +53,39 @@ typedef struct {
 } StellarTransaction;
 
 // Signing process
-void stellar_signingInit(StellarSignTx *tx);
+void stellar_signingInit(const StellarSignTx *tx);
 void stellar_signingAbort(const char *reason);
-bool stellar_confirmSourceAccount(bool has_source_account, char *str_account);
-bool stellar_confirmCreateAccountOp(StellarCreateAccountOp *msg);
-bool stellar_confirmPaymentOp(StellarPaymentOp *msg);
-bool stellar_confirmPathPaymentOp(StellarPathPaymentOp *msg);
-bool stellar_confirmManageOfferOp(StellarManageOfferOp *msg);
-bool stellar_confirmCreatePassiveOfferOp(StellarCreatePassiveOfferOp *msg);
-bool stellar_confirmSetOptionsOp(StellarSetOptionsOp *msg);
-bool stellar_confirmChangeTrustOp(StellarChangeTrustOp *msg);
-bool stellar_confirmAllowTrustOp(StellarAllowTrustOp *msg);
-bool stellar_confirmAccountMergeOp(StellarAccountMergeOp *msg);
-bool stellar_confirmManageDataOp(StellarManageDataOp *msg);
-bool stellar_confirmBumpSequenceOp(StellarBumpSequenceOp *msg);
+bool stellar_confirmSourceAccount(bool has_source_account, const char *str_account);
+bool stellar_confirmCreateAccountOp(const StellarCreateAccountOp *msg);
+bool stellar_confirmPaymentOp(const StellarPaymentOp *msg);
+bool stellar_confirmPathPaymentOp(const StellarPathPaymentOp *msg);
+bool stellar_confirmManageOfferOp(const StellarManageOfferOp *msg);
+bool stellar_confirmCreatePassiveOfferOp(const StellarCreatePassiveOfferOp *msg);
+bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg);
+bool stellar_confirmChangeTrustOp(const StellarChangeTrustOp *msg);
+bool stellar_confirmAllowTrustOp(const StellarAllowTrustOp *msg);
+bool stellar_confirmAccountMergeOp(const StellarAccountMergeOp *msg);
+bool stellar_confirmManageDataOp(const StellarManageDataOp *msg);
+bool stellar_confirmBumpSequenceOp(const StellarBumpSequenceOp *msg);
 
 // Layout
 void stellar_layoutTransactionDialog(const char *line1, const char *line2, const char *line3, const char *line4, const char *line5);
-void stellar_layoutTransactionSummary(StellarSignTx *msg);
+void stellar_layoutTransactionSummary(const StellarSignTx *msg);
 void stellar_layoutSigningDialog(const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, uint32_t *address_n, size_t address_n_count, const char *warning, bool is_final_step);
 
 // Helpers
-HDNode *stellar_deriveNode(uint32_t *address_n, size_t address_n_count);
+HDNode *stellar_deriveNode(const uint32_t *address_n, size_t address_n_count);
 
-size_t stellar_publicAddressAsStr(uint8_t *bytes, char *out, size_t outlen);
-const char **stellar_lineBreakAddress(uint8_t *addrbytes);
+size_t stellar_publicAddressAsStr(const uint8_t *bytes, char *out, size_t outlen);
+const char **stellar_lineBreakAddress(const uint8_t *addrbytes);
 
 void stellar_hashupdate_uint32(uint32_t value);
 void stellar_hashupdate_uint64(uint64_t value);
 void stellar_hashupdate_bool(bool value);
 void stellar_hashupdate_string(uint8_t *data, size_t len);
 void stellar_hashupdate_address(uint8_t *address_bytes);
-void stellar_hashupdate_asset(StellarAssetType *asset);
-void stellar_hashupdate_bytes(uint8_t *data, size_t len);
+void stellar_hashupdate_asset(const StellarAssetType *asset);
+void stellar_hashupdate_bytes(const uint8_t *data, size_t len);
 
 void stellar_fillSignedTx(StellarSignedTx *resp);
 bool stellar_allOperationsConfirmed(void);
@@ -94,11 +94,11 @@ void stellar_getSignatureForActiveTx(uint8_t *out_signature);
 void stellar_format_uint32(uint32_t number, char *out, size_t outlen);
 void stellar_format_uint64(uint64_t number, char *out, size_t outlen);
 void stellar_format_stroops(uint64_t number, char *out, size_t outlen);
-void stellar_format_asset(StellarAssetType *asset, char *str_formatted, size_t len);
+void stellar_format_asset(const StellarAssetType *asset, char *str_formatted, size_t len);
 void stellar_format_price(uint32_t numerator, uint32_t denominator, char *out, size_t outlen);
 
 bool stellar_validateAddress(const char *str_address);
-bool stellar_getAddressBytes(char* str_address, uint8_t *out_bytes);
+bool stellar_getAddressBytes(const char* str_address, uint8_t *out_bytes);
 uint16_t stellar_crc16(uint8_t *bytes, uint32_t length);
 
 #endif

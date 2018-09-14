@@ -26,8 +26,8 @@
 
 #define MAX_LISK_ADDRESS_SIZE 23
 
-void lisk_sign_message(const HDNode *node, LiskSignMessage *msg, LiskMessageSignature *resp);
-bool lisk_verify_message(LiskVerifyMessage *msg);
+void lisk_sign_message(const HDNode *node, const LiskSignMessage *msg, LiskMessageSignature *resp);
+bool lisk_verify_message(const LiskVerifyMessage *msg);
 void lisk_sign_tx(const HDNode *node, LiskSignTx *msg, LiskSignedTx *resp);
 
 // Helpers

@@ -29,12 +29,12 @@ void fsm_msgEthereumSignTx(EthereumSignTx *msg)
 	ethereum_signing_init(msg, node);
 }
 
-void fsm_msgEthereumTxAck(EthereumTxAck *msg)
+void fsm_msgEthereumTxAck(const EthereumTxAck *msg)
 {
 	ethereum_signing_txack(msg);
 }
 
-void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
+void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg)
 {
 	RESP_INIT(EthereumAddress);
 
@@ -75,7 +75,7 @@ void fsm_msgEthereumGetAddress(EthereumGetAddress *msg)
 	layoutHome();
 }
 
-void fsm_msgEthereumSignMessage(EthereumSignMessage *msg)
+void fsm_msgEthereumSignMessage(const EthereumSignMessage *msg)
 {
 	RESP_INIT(EthereumMessageSignature);
 
@@ -97,7 +97,7 @@ void fsm_msgEthereumSignMessage(EthereumSignMessage *msg)
 	layoutHome();
 }
 
-void fsm_msgEthereumVerifyMessage(EthereumVerifyMessage *msg)
+void fsm_msgEthereumVerifyMessage(const EthereumVerifyMessage *msg)
 {
 	CHECK_PARAM(msg->has_address, _("No address provided"));
 	CHECK_PARAM(msg->has_message, _("No message provided"));

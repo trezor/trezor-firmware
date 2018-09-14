@@ -46,7 +46,7 @@ void lisk_message_hash(const uint8_t *message, size_t message_len, uint8_t hash[
 	sha256_Raw(hash, 32, hash);
 }
 
-void lisk_sign_message(const HDNode *node, LiskSignMessage *msg, LiskMessageSignature *resp)
+void lisk_sign_message(const HDNode *node, const LiskSignMessage *msg, LiskMessageSignature *resp)
 {
 	layoutSignMessage(msg->message.bytes, msg->message.size);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
@@ -72,7 +72,7 @@ void lisk_sign_message(const HDNode *node, LiskSignMessage *msg, LiskMessageSign
 	resp->public_key.size = 32;
 }
 
-bool lisk_verify_message(LiskVerifyMessage *msg)
+bool lisk_verify_message(const LiskVerifyMessage *msg)
 {
 	uint8_t hash[32];
 	lisk_message_hash(msg->message.bytes, msg->message.size, hash);
