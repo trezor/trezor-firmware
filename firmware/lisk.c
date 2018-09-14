@@ -1,7 +1,7 @@
 /*
  * This file is part of the TREZOR project, https://trezor.io/
  *
- * Copyright (C) 2017 Saleem Rashid <trezor@saleemrashid.com>
+ * Copyright (C) 2018 alepop <alepooop@gmail.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <stdio.h>
 
 #include "lisk.h"
+#include "fsm.h"
 #include "curves.h"
 #include "layout2.h"
 #include "bitmaps.h"
@@ -28,33 +28,10 @@
 #include "protect.h"
 #include "messages.pb.h"
 
-int hdnode_get_lisk_address(HDNode *node, char *address) {
-	if (node->curve != get_curve_by_name(ED25519_NAME)) {
-		return 0;
-	}
-	hdnode_fill_public_key(node);
-	lisk_get_address_from_public_key(&node->public_key[1], address);
-	return 1;
-}
-
-void lisk_get_address_from_public_key(const uint8_t* public_key, char *address) {
-	uint8_t digest[32];
-	uint8_t address_bytes[8];
-
-	sha256_Raw(public_key, 32, digest);
-
-	uint8_t i;
-	for (i = 0; i < 8; i++) {
-		address_bytes[i] = digest[ 7 - i];
-	}
-
-	uint64_t encodedAddress = 0;
-	for (i = 0; i < 8; i++ ) {
-		encodedAddress = encodedAddress << 8;
-		encodedAddress += address_bytes[i];
-	}
-
-	bn_format_uint64(encodedAddress, NULL, "L", 0, 0, false, address, 23);
+void lisk_get_address_from_public_key(const uint8_t *public_key, char *address) {
+	uint64_t digest[4];
+	sha256_Raw(public_key, 32, (uint8_t *)digest);
+	bn_format_uint64(digest[0], NULL, "L", 0, 0, false, address, MAX_LISK_ADDRESS_SIZE);
 }
 
 void lisk_message_hash(const uint8_t *message, size_t message_len, uint8_t hash[32]) {
@@ -69,7 +46,7 @@ void lisk_message_hash(const uint8_t *message, size_t message_len, uint8_t hash[
 	sha256_Raw(hash, 32, hash);
 }
 
-void lisk_sign_message(HDNode *node, LiskSignMessage *msg, LiskMessageSignature *resp)
+void lisk_sign_message(const HDNode *node, LiskSignMessage *msg, LiskMessageSignature *resp)
 {
 	layoutSignMessage(msg->message.bytes, msg->message.size);
 	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
@@ -84,9 +61,9 @@ void lisk_sign_message(HDNode *node, LiskSignMessage *msg, LiskMessageSignature 
 	uint8_t hash[32];
 	lisk_message_hash(msg->message.bytes, msg->message.size, hash);
 
-    ed25519_sign(hash, 32, node->private_key, &node->public_key[1], signature);
+	ed25519_sign(hash, 32, node->private_key, &node->public_key[1], signature);
 
-    memcpy(resp->signature.bytes, signature, sizeof(signature));
+	memcpy(resp->signature.bytes, signature, sizeof(signature));
 	memcpy(resp->public_key.bytes, &node->public_key[1], 32);
 
 	resp->has_signature = true;
@@ -99,16 +76,10 @@ bool lisk_verify_message(LiskVerifyMessage *msg)
 {
 	uint8_t hash[32];
 	lisk_message_hash(msg->message.bytes, msg->message.size, hash);
-
-    return ed25519_sign_open(
-        hash,
-        32,
-        msg->public_key.bytes,
-        msg->signature.bytes
-        ) == 0;
+	return 0 == ed25519_sign_open(hash, 32, msg->public_key.bytes, msg->signature.bytes );
 }
 
-void lisk_update_raw_tx(HDNode *node, LiskSignTx *msg)
+static void lisk_update_raw_tx(const HDNode *node, LiskSignTx *msg)
 {
 	if(!msg->transaction.has_sender_public_key) {
 		memcpy(msg->transaction.sender_public_key.bytes, &node->public_key[1], 32);
@@ -116,105 +87,86 @@ void lisk_update_raw_tx(HDNode *node, LiskSignTx *msg)
 
 	// For CastVotes transactions, recipientId should be equal to transaction creator address.
 	if(msg->transaction.type == LiskTransactionType_CastVotes && !msg->transaction.has_recipient_id) {
-		char address[23];
+		char address[MAX_LISK_ADDRESS_SIZE];
 		lisk_get_address_from_public_key(&node->public_key[1], address);
 		memcpy(msg->transaction.recipient_id, address, sizeof(address));
 		msg->transaction.has_recipient_id = true;
 	}
 }
 
-void lisk_hashupdate_uint32(SHA256_CTX* ctx, uint32_t value)
+static void lisk_hashupdate_uint32(SHA256_CTX *ctx, uint32_t value)
 {
 	uint8_t data[4];
 	write_le(data, value);
 	sha256_Update(ctx, data, sizeof(data));
 }
 
-void lisk_hashupdate_uint64(SHA256_CTX* ctx, uint64_t value, bool i)
+static void lisk_hashupdate_uint64_le(SHA256_CTX *ctx, uint64_t value)
+{
+	sha256_Update(ctx, (uint8_t *)&value, sizeof(uint64_t));
+}
+
+static void lisk_hashupdate_uint64_be(SHA256_CTX *ctx, uint64_t value)
 {
 	uint8_t data[8];
-	// i = true ? big-endian : little-endian
-	data[i ? 0 : 7] = (value >> 56);
-	data[i ? 1 : 6] = (value >> 48);
-	data[i ? 2 : 5] = (value >> 40);
-	data[i ? 3 : 4] = (value >> 32);
-	data[i ? 4 : 3] = (value >> 24);
-	data[i ? 5 : 2] = (value >> 16);
-	data[i ? 6 : 1] = (value >> 8);
-	data[i ? 7 : 0] = value;
+	data[0] = value >> 56;
+	data[1] = value >> 48;
+	data[2] = value >> 40;
+	data[3] = value >> 32;
+	data[4] = value >> 24;
+	data[5] = value >> 16;
+	data[6] = value >> 8;
+	data[7] = value;
 	sha256_Update(ctx, data, sizeof(data));
 }
 
-void lisk_hashupdate_asset(SHA256_CTX* ctx, LiskTransactionType type, LiskTransactionAsset *asset)
+static void lisk_hashupdate_asset(SHA256_CTX *ctx, LiskTransactionType type, LiskTransactionAsset *asset)
 {
 	switch (type) {
 		case LiskTransactionType_Transfer:
 			if (asset->has_data) {
 				sha256_Update(ctx, (const uint8_t *)asset->data, strlen(asset->data));
 			}
-		break;
+			break;
 		case LiskTransactionType_RegisterDelegate:
 			if (asset->has_delegate && asset->delegate.has_username) {
 				sha256_Update(ctx, (const uint8_t *)asset->delegate.username, strlen(asset->delegate.username));
 			}
-		break;
+			break;
 		case LiskTransactionType_CastVotes: {
-			char str[asset->votes_count * 66];
-			strlcpy(str, asset->votes[0], sizeof(str));
-			for (int i = 1; i < asset->votes_count; i++) {
-				strlcat(str, asset->votes[i], sizeof(str));
-			};
-			sha256_Update(ctx, (const uint8_t *)str, strlen(str));
-		break;
+			for (int i = 0; i < asset->votes_count; i++) {
+				sha256_Update(ctx, (uint8_t *)asset->votes[i], strlen(asset->votes[i]));
+			}
+			break;
 		}
 		case LiskTransactionType_RegisterSecondPassphrase:
 			if (asset->has_signature && asset->signature.has_public_key) {
 				sha256_Update(ctx, asset->signature.public_key.bytes, asset->signature.public_key.size);
 			}
-		break;
-		case LiskTransactionType_RegisterMultisignatureAccount: {
+			break;
+		case LiskTransactionType_RegisterMultisignatureAccount:
 			if (asset->has_multisignature) {
-				char str[asset->multisignature.keys_group_count * 66 + 4 + 4];
-				uint8_t min[4];
-				uint8_t life_time[4];
-
-				// convert uint32_t to uint8_t
-				write_le(min, asset->multisignature.min);
-				write_le(life_time, asset->multisignature.life_time);
-
-				// calculate sha from min + life_time + keys_group
-				strlcpy(str, (const char *)min, sizeof(str));
-				strlcat(str, (const char *)life_time, sizeof(str));
+				sha256_Update(ctx, (uint8_t *)&(asset->multisignature.min), 1);
+				sha256_Update(ctx, (uint8_t *)&(asset->multisignature.life_time), 1);
 				for (int i = 0; i < asset->multisignature.keys_group_count; i++) {
-					strlcat(str, asset->multisignature.keys_group[i], sizeof(str));
+					sha256_Update(ctx, (uint8_t *)asset->multisignature.keys_group[i], strlen(asset->multisignature.keys_group[i]));
 				};
-
-				sha256_Update(ctx, (const uint8_t *)str, strlen(str));
 			}
-		break;
-		}
+			break;
 		default:
 			fsm_sendFailure(FailureType_Failure_DataError, _("Invalid transaction type"));
-		break;
+			break;
 	}
 }
 
-void lisk_format_value(uint64_t value, char *formated_value)
+#define MAX_LISK_VALUE_SIZE 20
+
+static void lisk_format_value(uint64_t value, char *formated_value)
 {
-	bn_format_uint64(value, NULL, " LSK", 8, 0, false, formated_value, 20);
+	bn_format_uint64(value, NULL, " LSK", 8, 0, false, formated_value, MAX_LISK_VALUE_SIZE);
 }
 
-void liks_get_vote_txt(char *prefix, int num, char *txt, size_t size)
-{
-	char buffer[4];
-	sprintf(buffer, "%d", num);
-
-	strlcpy(txt, prefix, size);
-	strlcat(txt, buffer, size);
-	strlcat(txt, (num != 1) ? " votes" : " vote", size);
-}
-
-void lisk_sign_tx(HDNode *node, LiskSignTx *msg, LiskSignedTx *resp)
+void lisk_sign_tx(const HDNode *node, LiskSignTx *msg, LiskSignedTx *resp)
 {
 	lisk_update_raw_tx(node, msg);
 
@@ -233,7 +185,7 @@ void lisk_sign_tx(HDNode *node, LiskSignTx *msg, LiskSignedTx *resp)
 				layoutRequireConfirmCastVotes(&msg->transaction.asset);
 			break;
 			case LiskTransactionType_RegisterSecondPassphrase:
-				layoutLiskPublicKey(msg->transaction.asset.signature.public_key.bytes );
+				layoutLiskPublicKey(msg->transaction.asset.signature.public_key.bytes);
 			break;
 			case LiskTransactionType_RegisterMultisignatureAccount:
 				layoutRequireConfirmMultisig(&msg->transaction.asset);
@@ -248,14 +200,14 @@ void lisk_sign_tx(HDNode *node, LiskSignTx *msg, LiskSignedTx *resp)
 				ButtonRequestType_ButtonRequest_PublicKey :
 				ButtonRequestType_ButtonRequest_SignTx),
 			false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing Canceled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled");
 			layoutHome();
 			return;
 		}
 
 		layoutRequireConfirmFee(msg->transaction.fee, msg->transaction.amount);
 		if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing Canceled");
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled");
 			layoutHome();
 			return;
 		}
@@ -273,11 +225,19 @@ void lisk_sign_tx(HDNode *node, LiskSignTx *msg, LiskSignedTx *resp)
 
 		uint64_t recipient_id = 0;
 		if (msg->transaction.has_recipient_id) {
-			// parse integer from lisk address (string -> number)
-			sscanf(msg->transaction.recipient_id, "%llu", (long long unsigned int *)&recipient_id );
+			// parse integer from lisk address ("123L" -> 123)
+			for (size_t i = 0; i < strlen(msg->transaction.recipient_id) - 1; i++) {
+				if (msg->transaction.recipient_id[i] < '0' || msg->transaction.recipient_id[i] > '9') {
+					fsm_sendFailure(FailureType_Failure_DataError, _("Invalid recipient_id"));
+					layoutHome();
+					return;
+				}
+				recipient_id *= 10;
+				recipient_id += (msg->transaction.recipient_id[i] - '0');
+			}
 		}
-		lisk_hashupdate_uint64(&ctx, recipient_id, true);
-		lisk_hashupdate_uint64(&ctx, msg->transaction.amount, false);
+		lisk_hashupdate_uint64_be(&ctx, recipient_id);
+		lisk_hashupdate_uint64_le(&ctx, msg->transaction.amount);
 
 		lisk_hashupdate_asset(&ctx, msg->transaction.type, &msg->transaction.asset);
 
@@ -286,13 +246,10 @@ void lisk_sign_tx(HDNode *node, LiskSignTx *msg, LiskSignedTx *resp)
 			sha256_Update(&ctx, msg->transaction.signature.bytes, msg->transaction.signature.size);
 		}
 
-		uint8_t signature[64];
 		uint8_t hash[32];
-
 		sha256_Final(&ctx, hash);
-    	ed25519_sign(hash, 32, node->private_key, &node->public_key[1], signature);
+		ed25519_sign(hash, 32, node->private_key, &node->public_key[1], resp->signature.bytes);
 
-	    memcpy(resp->signature.bytes, signature, sizeof(signature));
 		resp->has_signature = true;
 		resp->signature.size = 64;
 	}
@@ -301,12 +258,11 @@ void lisk_sign_tx(HDNode *node, LiskSignTx *msg, LiskSignedTx *resp)
 // Layouts
 void layoutLiskPublicKey(const uint8_t *pubkey)
 {
-	char hex[32 * 2 + 1], desc[13];
-	strlcpy(desc, "Public Key:", sizeof(desc));
+	char hex[32 * 2 + 1];
 	data2hex(pubkey, 32, hex);
 	const char **str = split_message((const uint8_t *)hex, 32 * 2, 16);
 	layoutDialogSwipe(&bmp_icon_question, NULL, _("Continue"), NULL,
-		desc, str[0], str[1], str[2], str[3], NULL);
+		_("Public Key:"), str[0], str[1], str[2], str[3], NULL);
 }
 
 void layoutLiskVerifyAddress(const char *address)
@@ -320,7 +276,7 @@ void layoutLiskVerifyAddress(const char *address)
 
 void layoutRequireConfirmTx(char *recipient_id, uint64_t amount)
 {
-	char formated_amount[20];
+	char formated_amount[MAX_LISK_VALUE_SIZE];
 	const char **str = split_message((const uint8_t *)recipient_id, strlen(recipient_id), 16);
 	lisk_format_value(amount, formated_amount);
 	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
@@ -336,8 +292,8 @@ void layoutRequireConfirmTx(char *recipient_id, uint64_t amount)
 
 void layoutRequireConfirmFee(uint64_t fee, uint64_t amount)
 {
-	char formated_amount[20];
-	char formated_fee[20];
+	char formated_amount[MAX_LISK_VALUE_SIZE];
+	char formated_fee[MAX_LISK_VALUE_SIZE];
 	lisk_format_value(amount, formated_amount);
 	lisk_format_value(fee, formated_fee);
 	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
@@ -375,15 +331,15 @@ void layoutRequireConfirmCastVotes(LiskTransactionAsset *asset)
 	char remove_votes_txt[16];
 
 	for (int i = 0; i < asset->votes_count; i++) {
-		if (strncmp(asset->votes[i], "+", 1) == 0) {
+		if (asset->votes[i][0] == '+') {
 			plus += 1;
 		} else {
 			minus += 1;
 		}
 	}
 
-	liks_get_vote_txt("Add ", plus, add_votes_txt, sizeof(add_votes_txt));
-	liks_get_vote_txt("Remove ", minus, remove_votes_txt, sizeof(remove_votes_txt));
+	bn_format_uint64(plus, "Add ", NULL, 0, 0, false, add_votes_txt, sizeof(add_votes_txt));
+	bn_format_uint64(minus, "Remove ", NULL, 0, 0, false, remove_votes_txt, sizeof(remove_votes_txt));
 
 	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
 		NULL,
@@ -398,23 +354,13 @@ void layoutRequireConfirmCastVotes(LiskTransactionAsset *asset)
 
 void layoutRequireConfirmMultisig(LiskTransactionAsset *asset)
 {
-	char keys_group_str[22];
+	char keys_group_str[25];
 	char life_time_str[14];
 	char min_str[8];
-	char buffer[8];
 
-	strlcpy(keys_group_str, "Keys group length: ", sizeof(keys_group_str));
-	strlcpy(life_time_str, "Life time: ", sizeof(life_time_str));
-	strlcpy(min_str, "Min: ", sizeof(min_str));
-
-	sprintf(buffer, "%u", (unsigned int)asset->multisignature.keys_group_count);
-	strlcat(keys_group_str, buffer, sizeof(keys_group_str));
-
-	sprintf(buffer, "%u", (unsigned int)asset->multisignature.life_time);
-	strlcat(life_time_str, buffer, sizeof(life_time_str));
-
-	sprintf(buffer, "%u", (unsigned int)asset->multisignature.min);
-	strlcat(min_str, buffer, sizeof(min_str));
+	bn_format_uint64(asset->multisignature.keys_group_count, "Keys group length: ", NULL, 0, 0, false, keys_group_str, sizeof(keys_group_str));
+	bn_format_uint64(asset->multisignature.life_time, "Life time: ", NULL, 0, 0, false, life_time_str, sizeof(life_time_str));
+	bn_format_uint64(asset->multisignature.min, "Min: ", NULL, 0, 0, false, min_str, sizeof(min_str));
 
 	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
 		NULL,

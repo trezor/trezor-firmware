@@ -1,11 +1,11 @@
-LiskGetAddress.address_n	                max_count:8
-LiskAddress.address			                max_size:23
+LiskGetAddress.address_n                    max_count:8
+LiskAddress.address                         max_size:23
 
 LiskGetPublicKey.address_n                  max_count:8
 LiskPublicKey.public_key                    max_size:32
 
-LiskSignMessage.address_n		            max_count:8
-LiskSignMessage.message			            max_size:1024
+LiskSignMessage.address_n                   max_count:8
+LiskSignMessage.message                     max_size:1024
 LiskMessageSignature.public_key             max_size:32
 LiskMessageSignature.signature              max_size:64
 

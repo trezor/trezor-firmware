@@ -1,5 +1,7 @@
 /*
- * This file is part of the TREZOR project.
+ * This file is part of the TREZOR project, https://trezor.io/
+ *
+ * Copyright (C) 2018 alepop <alepooop@gmail.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -20,23 +22,16 @@
 
 #include <stdbool.h>
 #include "bip32.h"
-#include "fsm.h"
 #include "messages-lisk.pb.h"
 
-// Main
-int hdnode_get_lisk_address(HDNode *node, char *address);
+#define MAX_LISK_ADDRESS_SIZE 23
 
-void lisk_sign_message(HDNode *node, LiskSignMessage *msg, LiskMessageSignature *resp);
+void lisk_sign_message(const HDNode *node, LiskSignMessage *msg, LiskMessageSignature *resp);
 bool lisk_verify_message(LiskVerifyMessage *msg);
-void lisk_sign_tx(HDNode *node, LiskSignTx *msg, LiskSignedTx *resp);
+void lisk_sign_tx(const HDNode *node, LiskSignTx *msg, LiskSignedTx *resp);
 
 // Helpers
 void lisk_get_address_from_public_key(const uint8_t *public_key, char *address);
-void lisk_format_value(uint64_t value, char *formated_value);
-void lisk_update_raw_tx(HDNode *node, LiskSignTx *msg);
-void lisk_hashupdate_uint64(SHA256_CTX* ctx, uint64_t value, bool i);
-void lisk_hashupdate_uint32(SHA256_CTX* ctx, uint32_t value);
-void lisk_hashupdate_asset(SHA256_CTX* ctx, LiskTransactionType type, LiskTransactionAsset *asset);
 
 // Layout
 void layoutLiskPublicKey(const uint8_t *pubkey);
