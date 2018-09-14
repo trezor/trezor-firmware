@@ -21,6 +21,7 @@ import pytest
 from trezorlib import lisk, messages as proto
 
 from .common import TrezorTest
+from .conftest import TREZOR_VERSION
 
 
 @pytest.mark.lisk

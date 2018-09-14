@@ -20,6 +20,7 @@ from trezorlib import lisk
 from trezorlib.tools import parse_path
 
 from .common import TrezorTest
+from .conftest import TREZOR_VERSION
 
 LISK_PATH = parse_path("m/44h/134h/0h/1h")
 
