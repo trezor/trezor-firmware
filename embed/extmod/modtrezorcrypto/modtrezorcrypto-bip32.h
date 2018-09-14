@@ -505,7 +505,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_seed_obj, mod_trezo
 /// def from_mnemonic_cardano(mnemonic: str) -> bytes:
 ///     '''
 ///     Convert mnemonic to hdnode
-//      '''
+///     '''
 STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(mp_obj_t mnemonic) {
     mp_buffer_info_t mnemo;
     mp_get_buffer_raise(mnemonic, &mnemo, MP_BUFFER_READ);
