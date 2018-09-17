@@ -66,8 +66,9 @@ message MoneroTransactionRsigData {
     optional bytes seed = 7;       // determ. mask seed
     optional bytes mask = 8;       // mask vector
     optional bytes amount = 9;     // amount vector
-    optional bytes rsig = 10;       // range sig, full or partial
-    repeated MoneroTransactionDestinationEntry outputs = 11;
+    optional bytes rsig = 10;      // range sig, full or partial
+    repeated bytes rsig_parts = 11;
+    repeated MoneroTransactionDestinationEntry outputs = 12;
 }
 
 /**
