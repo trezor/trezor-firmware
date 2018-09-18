@@ -158,7 +158,7 @@ def _write_asset_code(w, asset_type: int, asset_code: str):
 
 
 def _write_asset(w, asset: StellarAssetType):
-    if asset is None:
+    if asset is None or asset.type == consts.ASSET_TYPE_NATIVE:
         writers.write_uint32(w, 0)
         return
     writers.write_uint32(w, asset.type)
