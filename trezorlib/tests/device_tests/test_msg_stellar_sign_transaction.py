@@ -143,6 +143,30 @@ class TestMsgStellarSignTransaction(TrezorTest):
             == b"pDc6ghKCLNoYbt3h4eBw+533237m0BB0Jp/d/TxJCA83mF3o5Fr4l5vwAWBR62hdTWAP9MhVluY0cd5i54UwDg=="
         )
 
+    def test_sign_tx_payment_op_native_explicit_asset(self):
+        """Native payment of 50.0111 XLM to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        op = proto.StellarPaymentOp()
+        op.amount = 500111000
+        op.destination_account = (
+            "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
+        )
+        op.asset = proto.StellarAssetType(
+            0
+        )
+
+        tx = self._create_msg()
+
+        response = stellar.sign_tx(
+            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+        )
+
+        assert (
+            b64encode(response.signature)
+            == b"pDc6ghKCLNoYbt3h4eBw+533237m0BB0Jp/d/TxJCA83mF3o5Fr4l5vwAWBR62hdTWAP9MhVluY0cd5i54UwDg=="
+        )
+
     def test_sign_tx_payment_op_custom_asset1(self):
         """Custom asset payment (code length 1) of 50.0111 X to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
         self.setup_mnemonic_nopin_nopassphrase()
