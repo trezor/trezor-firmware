@@ -211,6 +211,39 @@ class Descriptor:
                 yield "        self.{0} = {0}".format(field.name)
         # fmt: on
 
+    def create_fields_method(self, fields):
+        # fmt: off
+        yield "    @classmethod"
+        yield "    def get_fields(cls):"
+        yield "        return {"
+        for field in fields:
+            comments = []
+            if field.required:
+                comments.append("required")
+            if field.orig.HasField("default_value"):
+                comments.append("default={}".format(field.orig.default_value))
+
+            if comments:
+                comment = "  # " + " ".join(comments)
+            else:
+                comment = ""
+
+            if field.repeated:
+                flags = "p.FLAG_REPEATED"
+            else:
+                flags = "0"
+
+            yield "            {num}: ('{name}', {type}, {flags}),{comment}".format(
+                num=field.number,
+                name=field.name,
+                type=field.proto_type,
+                flags=flags,
+                comment=comment,
+            )
+
+        yield "        }"
+        # fmt: on
+
     def process_message(self, message):
         logging.debug("Processing message {}".format(message.name))
         msg_id = self.message_types.get(message.name)
@@ -238,35 +271,10 @@ class Descriptor:
             yield "    MESSAGE_WIRE_TYPE = {}".format(msg_id)
 
         if fields:
-            yield "    FIELDS = {"
-            for field in fields:
-                comments = []
-                if field.required:
-                    comments.append("required")
-                if field.orig.HasField("default_value"):
-                    comments.append("default={}".format(field.orig.default_value))
-
-                if comments:
-                    comment = "  # " + " ".join(comments)
-                else:
-                    comment = ""
-
-                if field.repeated:
-                    flags = "p.FLAG_REPEATED"
-                else:
-                    flags = "0"
-
-                yield "        {num}: ('{name}', {type}, {flags}),{comment}".format(
-                    num=field.number,
-                    name=field.name,
-                    type=field.proto_type,
-                    flags=flags,
-                    comment=comment,
-                )
-
-            yield "    }"
             yield ""
             yield from self.create_init_method(fields)
+            yield ""
+            yield from self.create_fields_method(fields)
 
         if not fields and not msg_id:
             yield "    pass"
