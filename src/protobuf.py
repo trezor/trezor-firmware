@@ -108,7 +108,10 @@ class UnicodeType:
 
 class MessageType:
     WIRE_TYPE = 2
-    FIELDS = {}
+
+    @classmethod
+    def get_fields(cls):
+        return {}
 
     def __init__(self, **kwargs):
         for kw in kwargs:
@@ -149,7 +152,7 @@ FLAG_REPEATED = const(1)
 
 
 async def load_message(reader, msg_type):
-    fields = msg_type.FIELDS
+    fields = msg_type.get_fields()
     msg = msg_type()
 
     while True:
@@ -204,8 +207,8 @@ async def load_message(reader, msg_type):
         setattr(msg, fname, fvalue)
 
     # fill missing fields
-    for tag in msg.FIELDS:
-        field = msg.FIELDS[tag]
+    for tag in fields:
+        field = fields[tag]
         if not hasattr(msg, field[0]):
             setattr(msg, field[0], None)
 
@@ -215,7 +218,7 @@ async def load_message(reader, msg_type):
 async def dump_message(writer, msg):
     repvalue = [0]
     mtype = msg.__class__
-    fields = mtype.FIELDS
+    fields = mtype.get_fields()
 
     for ftag in fields:
         fname, ftype, fflags = fields[ftag]
