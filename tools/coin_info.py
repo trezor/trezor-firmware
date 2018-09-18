@@ -193,7 +193,7 @@ def _load_btc_coins():
     for filename in glob.glob(os.path.join(DEFS_DIR, "coins", "*.json")):
         coin = load_json(filename)
         coin.update(
-            name=coin["coin_name"],
+            name=coin["coin_label"],
             shortcut=coin["coin_shortcut"],
             key="bitcoin:{}".format(coin["coin_shortcut"]),
             icon=filename.replace(".json", ".png"),
