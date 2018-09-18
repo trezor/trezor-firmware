@@ -152,9 +152,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
         op.destination_account = (
             "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
         )
-        op.asset = proto.StellarAssetType(
-            0
-        )
+        op.asset = proto.StellarAssetType(0)
 
         tx = self._create_msg()
 
