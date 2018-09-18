@@ -4,11 +4,6 @@ import protobuf as p
 
 
 class OntologyWithdrawOng(p.MessageType):
-    FIELDS = {
-        1: ('amount', p.UVarintType, 0),
-        2: ('from_address', p.UnicodeType, 0),
-        3: ('to_address', p.UnicodeType, 0),
-    }
 
     def __init__(
         self,
@@ -19,3 +14,11 @@ class OntologyWithdrawOng(p.MessageType):
         self.amount = amount
         self.from_address = from_address
         self.to_address = to_address
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('amount', p.UVarintType, 0),
+            2: ('from_address', p.UnicodeType, 0),
+            3: ('to_address', p.UnicodeType, 0),
+        }

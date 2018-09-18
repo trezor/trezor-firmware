@@ -5,11 +5,6 @@ import protobuf as p
 
 class DebugLinkDecision(p.MessageType):
     MESSAGE_WIRE_TYPE = 100
-    FIELDS = {
-        1: ('yes_no', p.BoolType, 0),
-        2: ('up_down', p.BoolType, 0),
-        3: ('input', p.UnicodeType, 0),
-    }
 
     def __init__(
         self,
@@ -20,3 +15,11 @@ class DebugLinkDecision(p.MessageType):
         self.yes_no = yes_no
         self.up_down = up_down
         self.input = input
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('yes_no', p.BoolType, 0),
+            2: ('up_down', p.BoolType, 0),
+            3: ('input', p.UnicodeType, 0),
+        }

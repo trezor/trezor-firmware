@@ -6,10 +6,6 @@ from .MoneroRctKey import MoneroRctKey
 
 
 class MoneroOutputEntry(p.MessageType):
-    FIELDS = {
-        1: ('idx', p.UVarintType, 0),
-        2: ('key', MoneroRctKey, 0),
-    }
 
     def __init__(
         self,
@@ -18,3 +14,10 @@ class MoneroOutputEntry(p.MessageType):
     ) -> None:
         self.idx = idx
         self.key = key
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('idx', p.UVarintType, 0),
+            2: ('key', MoneroRctKey, 0),
+        }

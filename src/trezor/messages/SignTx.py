@@ -5,15 +5,6 @@ import protobuf as p
 
 class SignTx(p.MessageType):
     MESSAGE_WIRE_TYPE = 15
-    FIELDS = {
-        1: ('outputs_count', p.UVarintType, 0),  # required
-        2: ('inputs_count', p.UVarintType, 0),  # required
-        3: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
-        4: ('version', p.UVarintType, 0),  # default=1
-        5: ('lock_time', p.UVarintType, 0),  # default=0
-        6: ('expiry', p.UVarintType, 0),
-        7: ('overwintered', p.BoolType, 0),
-    }
 
     def __init__(
         self,
@@ -32,3 +23,15 @@ class SignTx(p.MessageType):
         self.lock_time = lock_time
         self.expiry = expiry
         self.overwintered = overwintered
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('outputs_count', p.UVarintType, 0),  # required
+            2: ('inputs_count', p.UVarintType, 0),  # required
+            3: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
+            4: ('version', p.UVarintType, 0),  # default=1
+            5: ('lock_time', p.UVarintType, 0),  # default=0
+            6: ('expiry', p.UVarintType, 0),
+            7: ('overwintered', p.BoolType, 0),
+        }

@@ -4,10 +4,6 @@ import protobuf as p
 
 
 class MoneroRctKey(p.MessageType):
-    FIELDS = {
-        1: ('dest', p.BytesType, 0),
-        2: ('mask', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -16,3 +12,10 @@ class MoneroRctKey(p.MessageType):
     ) -> None:
         self.dest = dest
         self.mask = mask
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('dest', p.BytesType, 0),
+            2: ('mask', p.BytesType, 0),
+        }

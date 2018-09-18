@@ -6,11 +6,6 @@ from .MoneroAccountPublicAddress import MoneroAccountPublicAddress
 
 
 class MoneroTransactionDestinationEntry(p.MessageType):
-    FIELDS = {
-        1: ('amount', p.UVarintType, 0),
-        2: ('addr', MoneroAccountPublicAddress, 0),
-        3: ('is_subaddress', p.BoolType, 0),
-    }
 
     def __init__(
         self,
@@ -21,3 +16,11 @@ class MoneroTransactionDestinationEntry(p.MessageType):
         self.amount = amount
         self.addr = addr
         self.is_subaddress = is_subaddress
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('amount', p.UVarintType, 0),
+            2: ('addr', MoneroAccountPublicAddress, 0),
+            3: ('is_subaddress', p.BoolType, 0),
+        }

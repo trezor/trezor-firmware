@@ -7,16 +7,6 @@ from .HDNodeType import HDNodeType
 
 class LoadDevice(p.MessageType):
     MESSAGE_WIRE_TYPE = 13
-    FIELDS = {
-        1: ('mnemonic', p.UnicodeType, 0),
-        2: ('node', HDNodeType, 0),
-        3: ('pin', p.UnicodeType, 0),
-        4: ('passphrase_protection', p.BoolType, 0),
-        5: ('language', p.UnicodeType, 0),  # default=english
-        6: ('label', p.UnicodeType, 0),
-        7: ('skip_checksum', p.BoolType, 0),
-        8: ('u2f_counter', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -37,3 +27,16 @@ class LoadDevice(p.MessageType):
         self.label = label
         self.skip_checksum = skip_checksum
         self.u2f_counter = u2f_counter
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('mnemonic', p.UnicodeType, 0),
+            2: ('node', HDNodeType, 0),
+            3: ('pin', p.UnicodeType, 0),
+            4: ('passphrase_protection', p.BoolType, 0),
+            5: ('language', p.UnicodeType, 0),  # default=english
+            6: ('label', p.UnicodeType, 0),
+            7: ('skip_checksum', p.BoolType, 0),
+            8: ('u2f_counter', p.UVarintType, 0),
+        }

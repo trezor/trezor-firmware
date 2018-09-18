@@ -7,12 +7,6 @@ from .IdentityType import IdentityType
 
 class SignIdentity(p.MessageType):
     MESSAGE_WIRE_TYPE = 53
-    FIELDS = {
-        1: ('identity', IdentityType, 0),
-        2: ('challenge_hidden', p.BytesType, 0),
-        3: ('challenge_visual', p.UnicodeType, 0),
-        4: ('ecdsa_curve_name', p.UnicodeType, 0),
-    }
 
     def __init__(
         self,
@@ -25,3 +19,12 @@ class SignIdentity(p.MessageType):
         self.challenge_hidden = challenge_hidden
         self.challenge_visual = challenge_visual
         self.ecdsa_curve_name = ecdsa_curve_name
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('identity', IdentityType, 0),
+            2: ('challenge_hidden', p.BytesType, 0),
+            3: ('challenge_visual', p.UnicodeType, 0),
+            4: ('ecdsa_curve_name', p.UnicodeType, 0),
+        }

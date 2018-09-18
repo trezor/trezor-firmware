@@ -4,11 +4,6 @@ import protobuf as p
 
 
 class TxOutputBinType(p.MessageType):
-    FIELDS = {
-        1: ('amount', p.UVarintType, 0),  # required
-        2: ('script_pubkey', p.BytesType, 0),  # required
-        3: ('decred_script_version', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -19,3 +14,11 @@ class TxOutputBinType(p.MessageType):
         self.amount = amount
         self.script_pubkey = script_pubkey
         self.decred_script_version = decred_script_version
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('amount', p.UVarintType, 0),  # required
+            2: ('script_pubkey', p.BytesType, 0),  # required
+            3: ('decred_script_version', p.UVarintType, 0),
+        }

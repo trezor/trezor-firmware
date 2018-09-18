@@ -11,12 +11,6 @@ if __debug__:
 
 class NEMDecryptMessage(p.MessageType):
     MESSAGE_WIRE_TYPE = 75
-    FIELDS = {
-        1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('network', p.UVarintType, 0),
-        3: ('public_key', p.BytesType, 0),
-        4: ('payload', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -29,3 +23,12 @@ class NEMDecryptMessage(p.MessageType):
         self.network = network
         self.public_key = public_key
         self.payload = payload
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            2: ('network', p.UVarintType, 0),
+            3: ('public_key', p.BytesType, 0),
+            4: ('payload', p.BytesType, 0),
+        }

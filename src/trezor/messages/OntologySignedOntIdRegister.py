@@ -5,10 +5,6 @@ import protobuf as p
 
 class OntologySignedOntIdRegister(p.MessageType):
     MESSAGE_WIRE_TYPE = 359
-    FIELDS = {
-        1: ('signature', p.BytesType, 0),
-        2: ('payload', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -17,3 +13,10 @@ class OntologySignedOntIdRegister(p.MessageType):
     ) -> None:
         self.signature = signature
         self.payload = payload
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('signature', p.BytesType, 0),
+            2: ('payload', p.BytesType, 0),
+        }

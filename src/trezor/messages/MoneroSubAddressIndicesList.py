@@ -10,10 +10,6 @@ if __debug__:
 
 
 class MoneroSubAddressIndicesList(p.MessageType):
-    FIELDS = {
-        1: ('account', p.UVarintType, 0),
-        2: ('minor_indices', p.UVarintType, p.FLAG_REPEATED),
-    }
 
     def __init__(
         self,
@@ -22,3 +18,10 @@ class MoneroSubAddressIndicesList(p.MessageType):
     ) -> None:
         self.account = account
         self.minor_indices = minor_indices if minor_indices is not None else []
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('account', p.UVarintType, 0),
+            2: ('minor_indices', p.UVarintType, p.FLAG_REPEATED),
+        }

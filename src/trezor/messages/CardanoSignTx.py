@@ -14,12 +14,6 @@ if __debug__:
 
 class CardanoSignTx(p.MessageType):
     MESSAGE_WIRE_TYPE = 303
-    FIELDS = {
-        1: ('inputs', CardanoTxInputType, p.FLAG_REPEATED),
-        2: ('outputs', CardanoTxOutputType, p.FLAG_REPEATED),
-        3: ('transactions_count', p.UVarintType, 0),
-        4: ('network', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -32,3 +26,12 @@ class CardanoSignTx(p.MessageType):
         self.outputs = outputs if outputs is not None else []
         self.transactions_count = transactions_count
         self.network = network
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('inputs', CardanoTxInputType, p.FLAG_REPEATED),
+            2: ('outputs', CardanoTxOutputType, p.FLAG_REPEATED),
+            3: ('transactions_count', p.UVarintType, 0),
+            4: ('network', p.UVarintType, 0),
+        }

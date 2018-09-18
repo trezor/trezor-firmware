@@ -13,15 +13,6 @@ if __debug__:
 
 class StellarPathPaymentOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 212
-    FIELDS = {
-        1: ('source_account', p.UnicodeType, 0),
-        2: ('send_asset', StellarAssetType, 0),
-        3: ('send_max', p.SVarintType, 0),
-        4: ('destination_account', p.UnicodeType, 0),
-        5: ('destination_asset', StellarAssetType, 0),
-        6: ('destination_amount', p.SVarintType, 0),
-        7: ('paths', StellarAssetType, p.FLAG_REPEATED),
-    }
 
     def __init__(
         self,
@@ -40,3 +31,15 @@ class StellarPathPaymentOp(p.MessageType):
         self.destination_asset = destination_asset
         self.destination_amount = destination_amount
         self.paths = paths if paths is not None else []
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('source_account', p.UnicodeType, 0),
+            2: ('send_asset', StellarAssetType, 0),
+            3: ('send_max', p.SVarintType, 0),
+            4: ('destination_account', p.UnicodeType, 0),
+            5: ('destination_asset', StellarAssetType, 0),
+            6: ('destination_amount', p.SVarintType, 0),
+            7: ('paths', StellarAssetType, p.FLAG_REPEATED),
+        }

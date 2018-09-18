@@ -10,12 +10,6 @@ if __debug__:
 
 
 class MoneroTransferDetails(p.MessageType):
-    FIELDS = {
-        1: ('out_key', p.BytesType, 0),
-        2: ('tx_pub_key', p.BytesType, 0),
-        3: ('additional_tx_pub_keys', p.BytesType, p.FLAG_REPEATED),
-        4: ('internal_output_index', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -28,3 +22,12 @@ class MoneroTransferDetails(p.MessageType):
         self.tx_pub_key = tx_pub_key
         self.additional_tx_pub_keys = additional_tx_pub_keys if additional_tx_pub_keys is not None else []
         self.internal_output_index = internal_output_index
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('out_key', p.BytesType, 0),
+            2: ('tx_pub_key', p.BytesType, 0),
+            3: ('additional_tx_pub_keys', p.BytesType, p.FLAG_REPEATED),
+            4: ('internal_output_index', p.UVarintType, 0),
+        }

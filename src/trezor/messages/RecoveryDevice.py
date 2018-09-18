@@ -5,17 +5,6 @@ import protobuf as p
 
 class RecoveryDevice(p.MessageType):
     MESSAGE_WIRE_TYPE = 45
-    FIELDS = {
-        1: ('word_count', p.UVarintType, 0),
-        2: ('passphrase_protection', p.BoolType, 0),
-        3: ('pin_protection', p.BoolType, 0),
-        4: ('language', p.UnicodeType, 0),  # default=english
-        5: ('label', p.UnicodeType, 0),
-        6: ('enforce_wordlist', p.BoolType, 0),
-        8: ('type', p.UVarintType, 0),
-        9: ('u2f_counter', p.UVarintType, 0),
-        10: ('dry_run', p.BoolType, 0),
-    }
 
     def __init__(
         self,
@@ -38,3 +27,17 @@ class RecoveryDevice(p.MessageType):
         self.type = type
         self.u2f_counter = u2f_counter
         self.dry_run = dry_run
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('word_count', p.UVarintType, 0),
+            2: ('passphrase_protection', p.BoolType, 0),
+            3: ('pin_protection', p.BoolType, 0),
+            4: ('language', p.UnicodeType, 0),  # default=english
+            5: ('label', p.UnicodeType, 0),
+            6: ('enforce_wordlist', p.BoolType, 0),
+            8: ('type', p.UVarintType, 0),
+            9: ('u2f_counter', p.UVarintType, 0),
+            10: ('dry_run', p.BoolType, 0),
+        }

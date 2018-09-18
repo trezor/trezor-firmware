@@ -12,10 +12,6 @@ if __debug__:
 
 
 class HDNodePathType(p.MessageType):
-    FIELDS = {
-        1: ('node', HDNodeType, 0),  # required
-        2: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-    }
 
     def __init__(
         self,
@@ -24,3 +20,10 @@ class HDNodePathType(p.MessageType):
     ) -> None:
         self.node = node
         self.address_n = address_n if address_n is not None else []
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('node', HDNodeType, 0),  # required
+            2: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+        }

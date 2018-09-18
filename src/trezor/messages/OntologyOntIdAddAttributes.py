@@ -12,11 +12,6 @@ if __debug__:
 
 
 class OntologyOntIdAddAttributes(p.MessageType):
-    FIELDS = {
-        1: ('ont_id', p.UnicodeType, 0),
-        2: ('public_key', p.BytesType, 0),
-        3: ('ont_id_attributes', OntologyOntIdAttribute, p.FLAG_REPEATED),
-    }
 
     def __init__(
         self,
@@ -27,3 +22,11 @@ class OntologyOntIdAddAttributes(p.MessageType):
         self.ont_id = ont_id
         self.public_key = public_key
         self.ont_id_attributes = ont_id_attributes if ont_id_attributes is not None else []
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('ont_id', p.UnicodeType, 0),
+            2: ('public_key', p.BytesType, 0),
+            3: ('ont_id_attributes', OntologyOntIdAttribute, p.FLAG_REPEATED),
+        }

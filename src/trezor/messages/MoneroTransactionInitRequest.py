@@ -12,12 +12,7 @@ if __debug__:
 
 
 class MoneroTransactionInitRequest(p.MessageType):
-    FIELDS = {
-        1: ('version', p.UVarintType, 0),
-        2: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        3: ('network_type', p.UVarintType, 0),
-        4: ('tsx_data', MoneroTransactionData, 0),
-    }
+    MESSAGE_WIRE_TYPE = 501
 
     def __init__(
         self,
@@ -30,3 +25,12 @@ class MoneroTransactionInitRequest(p.MessageType):
         self.address_n = address_n if address_n is not None else []
         self.network_type = network_type
         self.tsx_data = tsx_data
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('version', p.UVarintType, 0),
+            2: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            3: ('network_type', p.UVarintType, 0),
+            4: ('tsx_data', MoneroTransactionData, 0),
+        }

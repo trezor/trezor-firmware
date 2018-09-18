@@ -12,20 +12,6 @@ if __debug__:
 
 
 class TxInputType(p.MessageType):
-    FIELDS = {
-        1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('prev_hash', p.BytesType, 0),  # required
-        3: ('prev_index', p.UVarintType, 0),  # required
-        4: ('script_sig', p.BytesType, 0),
-        5: ('sequence', p.UVarintType, 0),  # default=4294967295
-        6: ('script_type', p.UVarintType, 0),  # default=SPENDADDRESS
-        7: ('multisig', MultisigRedeemScriptType, 0),
-        8: ('amount', p.UVarintType, 0),
-        9: ('decred_tree', p.UVarintType, 0),
-        10: ('decred_script_version', p.UVarintType, 0),
-        11: ('prev_block_hash_bip115', p.BytesType, 0),
-        12: ('prev_block_height_bip115', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -54,3 +40,20 @@ class TxInputType(p.MessageType):
         self.decred_script_version = decred_script_version
         self.prev_block_hash_bip115 = prev_block_hash_bip115
         self.prev_block_height_bip115 = prev_block_height_bip115
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            2: ('prev_hash', p.BytesType, 0),  # required
+            3: ('prev_index', p.UVarintType, 0),  # required
+            4: ('script_sig', p.BytesType, 0),
+            5: ('sequence', p.UVarintType, 0),  # default=4294967295
+            6: ('script_type', p.UVarintType, 0),  # default=SPENDADDRESS
+            7: ('multisig', MultisigRedeemScriptType, 0),
+            8: ('amount', p.UVarintType, 0),
+            9: ('decred_tree', p.UVarintType, 0),
+            10: ('decred_script_version', p.UVarintType, 0),
+            11: ('prev_block_hash_bip115', p.BytesType, 0),
+            12: ('prev_block_height_bip115', p.UVarintType, 0),
+        }

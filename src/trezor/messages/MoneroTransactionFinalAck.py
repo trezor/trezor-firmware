@@ -4,13 +4,7 @@ import protobuf as p
 
 
 class MoneroTransactionFinalAck(p.MessageType):
-    MESSAGE_WIRE_TYPE = 510
-    FIELDS = {
-        1: ('cout_key', p.BytesType, 0),
-        2: ('salt', p.BytesType, 0),
-        3: ('rand_mult', p.BytesType, 0),
-        4: ('tx_enc_keys', p.BytesType, 0),
-    }
+    MESSAGE_WIRE_TYPE = 520
 
     def __init__(
         self,
@@ -23,3 +17,12 @@ class MoneroTransactionFinalAck(p.MessageType):
         self.salt = salt
         self.rand_mult = rand_mult
         self.tx_enc_keys = tx_enc_keys
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('cout_key', p.BytesType, 0),
+            2: ('salt', p.BytesType, 0),
+            3: ('rand_mult', p.BytesType, 0),
+            4: ('tx_enc_keys', p.BytesType, 0),
+        }

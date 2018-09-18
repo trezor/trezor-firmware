@@ -5,34 +5,6 @@ import protobuf as p
 
 class Features(p.MessageType):
     MESSAGE_WIRE_TYPE = 17
-    FIELDS = {
-        1: ('vendor', p.UnicodeType, 0),
-        2: ('major_version', p.UVarintType, 0),
-        3: ('minor_version', p.UVarintType, 0),
-        4: ('patch_version', p.UVarintType, 0),
-        5: ('bootloader_mode', p.BoolType, 0),
-        6: ('device_id', p.UnicodeType, 0),
-        7: ('pin_protection', p.BoolType, 0),
-        8: ('passphrase_protection', p.BoolType, 0),
-        9: ('language', p.UnicodeType, 0),
-        10: ('label', p.UnicodeType, 0),
-        12: ('initialized', p.BoolType, 0),
-        13: ('revision', p.BytesType, 0),
-        14: ('bootloader_hash', p.BytesType, 0),
-        15: ('imported', p.BoolType, 0),
-        16: ('pin_cached', p.BoolType, 0),
-        17: ('passphrase_cached', p.BoolType, 0),
-        18: ('firmware_present', p.BoolType, 0),
-        19: ('needs_backup', p.BoolType, 0),
-        20: ('flags', p.UVarintType, 0),
-        21: ('model', p.UnicodeType, 0),
-        22: ('fw_major', p.UVarintType, 0),
-        23: ('fw_minor', p.UVarintType, 0),
-        24: ('fw_patch', p.UVarintType, 0),
-        25: ('fw_vendor', p.UnicodeType, 0),
-        26: ('fw_vendor_keys', p.BytesType, 0),
-        27: ('unfinished_backup', p.BoolType, 0),
-    }
 
     def __init__(
         self,
@@ -89,3 +61,34 @@ class Features(p.MessageType):
         self.fw_vendor = fw_vendor
         self.fw_vendor_keys = fw_vendor_keys
         self.unfinished_backup = unfinished_backup
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('vendor', p.UnicodeType, 0),
+            2: ('major_version', p.UVarintType, 0),
+            3: ('minor_version', p.UVarintType, 0),
+            4: ('patch_version', p.UVarintType, 0),
+            5: ('bootloader_mode', p.BoolType, 0),
+            6: ('device_id', p.UnicodeType, 0),
+            7: ('pin_protection', p.BoolType, 0),
+            8: ('passphrase_protection', p.BoolType, 0),
+            9: ('language', p.UnicodeType, 0),
+            10: ('label', p.UnicodeType, 0),
+            12: ('initialized', p.BoolType, 0),
+            13: ('revision', p.BytesType, 0),
+            14: ('bootloader_hash', p.BytesType, 0),
+            15: ('imported', p.BoolType, 0),
+            16: ('pin_cached', p.BoolType, 0),
+            17: ('passphrase_cached', p.BoolType, 0),
+            18: ('firmware_present', p.BoolType, 0),
+            19: ('needs_backup', p.BoolType, 0),
+            20: ('flags', p.UVarintType, 0),
+            21: ('model', p.UnicodeType, 0),
+            22: ('fw_major', p.UVarintType, 0),
+            23: ('fw_minor', p.UVarintType, 0),
+            24: ('fw_patch', p.UVarintType, 0),
+            25: ('fw_vendor', p.UnicodeType, 0),
+            26: ('fw_vendor_keys', p.BytesType, 0),
+            27: ('unfinished_backup', p.BoolType, 0),
+        }

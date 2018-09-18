@@ -5,11 +5,6 @@ import protobuf as p
 
 class EthereumVerifyMessage(p.MessageType):
     MESSAGE_WIRE_TYPE = 65
-    FIELDS = {
-        1: ('address', p.BytesType, 0),
-        2: ('signature', p.BytesType, 0),
-        3: ('message', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -20,3 +15,11 @@ class EthereumVerifyMessage(p.MessageType):
         self.address = address
         self.signature = signature
         self.message = message
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address', p.BytesType, 0),
+            2: ('signature', p.BytesType, 0),
+            3: ('message', p.BytesType, 0),
+        }

@@ -4,10 +4,6 @@ import protobuf as p
 
 
 class RipplePayment(p.MessageType):
-    FIELDS = {
-        1: ('amount', p.UVarintType, 0),
-        2: ('destination', p.UnicodeType, 0),
-    }
 
     def __init__(
         self,
@@ -16,3 +12,10 @@ class RipplePayment(p.MessageType):
     ) -> None:
         self.amount = amount
         self.destination = destination
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('amount', p.UVarintType, 0),
+            2: ('destination', p.UnicodeType, 0),
+        }

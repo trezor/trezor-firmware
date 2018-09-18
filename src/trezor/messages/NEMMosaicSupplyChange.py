@@ -4,12 +4,6 @@ import protobuf as p
 
 
 class NEMMosaicSupplyChange(p.MessageType):
-    FIELDS = {
-        1: ('namespace', p.UnicodeType, 0),
-        2: ('mosaic', p.UnicodeType, 0),
-        3: ('type', p.UVarintType, 0),
-        4: ('delta', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -22,3 +16,12 @@ class NEMMosaicSupplyChange(p.MessageType):
         self.mosaic = mosaic
         self.type = type
         self.delta = delta
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('namespace', p.UnicodeType, 0),
+            2: ('mosaic', p.UnicodeType, 0),
+            3: ('type', p.UVarintType, 0),
+            4: ('delta', p.UVarintType, 0),
+        }

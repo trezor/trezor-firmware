@@ -7,19 +7,6 @@ from .HDNodeType import HDNodeType
 
 class DebugLinkState(p.MessageType):
     MESSAGE_WIRE_TYPE = 102
-    FIELDS = {
-        1: ('layout', p.BytesType, 0),
-        2: ('pin', p.UnicodeType, 0),
-        3: ('matrix', p.UnicodeType, 0),
-        4: ('mnemonic', p.UnicodeType, 0),
-        5: ('node', HDNodeType, 0),
-        6: ('passphrase_protection', p.BoolType, 0),
-        7: ('reset_word', p.UnicodeType, 0),
-        8: ('reset_entropy', p.BytesType, 0),
-        9: ('recovery_fake_word', p.UnicodeType, 0),
-        10: ('recovery_word_pos', p.UVarintType, 0),
-        11: ('reset_word_pos', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -46,3 +33,19 @@ class DebugLinkState(p.MessageType):
         self.recovery_fake_word = recovery_fake_word
         self.recovery_word_pos = recovery_word_pos
         self.reset_word_pos = reset_word_pos
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('layout', p.BytesType, 0),
+            2: ('pin', p.UnicodeType, 0),
+            3: ('matrix', p.UnicodeType, 0),
+            4: ('mnemonic', p.UnicodeType, 0),
+            5: ('node', HDNodeType, 0),
+            6: ('passphrase_protection', p.BoolType, 0),
+            7: ('reset_word', p.UnicodeType, 0),
+            8: ('reset_entropy', p.BytesType, 0),
+            9: ('recovery_fake_word', p.UnicodeType, 0),
+            10: ('recovery_word_pos', p.UVarintType, 0),
+            11: ('reset_word_pos', p.UVarintType, 0),
+        }

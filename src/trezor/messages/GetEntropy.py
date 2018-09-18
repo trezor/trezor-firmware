@@ -5,12 +5,15 @@ import protobuf as p
 
 class GetEntropy(p.MessageType):
     MESSAGE_WIRE_TYPE = 9
-    FIELDS = {
-        1: ('size', p.UVarintType, 0),  # required
-    }
 
     def __init__(
         self,
         size: int = None,
     ) -> None:
         self.size = size
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('size', p.UVarintType, 0),  # required
+        }

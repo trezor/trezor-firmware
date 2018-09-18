@@ -10,11 +10,6 @@ if __debug__:
 
 
 class CardanoTxOutputType(p.MessageType):
-    FIELDS = {
-        1: ('address', p.UnicodeType, 0),
-        2: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        3: ('amount', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -25,3 +20,11 @@ class CardanoTxOutputType(p.MessageType):
         self.address = address
         self.address_n = address_n if address_n is not None else []
         self.amount = amount
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address', p.UnicodeType, 0),
+            2: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            3: ('amount', p.UVarintType, 0),
+        }

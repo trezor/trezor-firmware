@@ -4,12 +4,6 @@ import protobuf as p
 
 
 class TxRequestDetailsType(p.MessageType):
-    FIELDS = {
-        1: ('request_index', p.UVarintType, 0),
-        2: ('tx_hash', p.BytesType, 0),
-        3: ('extra_data_len', p.UVarintType, 0),
-        4: ('extra_data_offset', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -22,3 +16,12 @@ class TxRequestDetailsType(p.MessageType):
         self.tx_hash = tx_hash
         self.extra_data_len = extra_data_len
         self.extra_data_offset = extra_data_offset
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('request_index', p.UVarintType, 0),
+            2: ('tx_hash', p.BytesType, 0),
+            3: ('extra_data_len', p.UVarintType, 0),
+            4: ('extra_data_offset', p.UVarintType, 0),
+        }

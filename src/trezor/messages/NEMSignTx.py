@@ -13,17 +13,6 @@ from .NEMTransfer import NEMTransfer
 
 class NEMSignTx(p.MessageType):
     MESSAGE_WIRE_TYPE = 69
-    FIELDS = {
-        1: ('transaction', NEMTransactionCommon, 0),
-        2: ('multisig', NEMTransactionCommon, 0),
-        3: ('transfer', NEMTransfer, 0),
-        4: ('cosigning', p.BoolType, 0),
-        5: ('provision_namespace', NEMProvisionNamespace, 0),
-        6: ('mosaic_creation', NEMMosaicCreation, 0),
-        7: ('supply_change', NEMMosaicSupplyChange, 0),
-        8: ('aggregate_modification', NEMAggregateModification, 0),
-        9: ('importance_transfer', NEMImportanceTransfer, 0),
-    }
 
     def __init__(
         self,
@@ -46,3 +35,17 @@ class NEMSignTx(p.MessageType):
         self.supply_change = supply_change
         self.aggregate_modification = aggregate_modification
         self.importance_transfer = importance_transfer
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('transaction', NEMTransactionCommon, 0),
+            2: ('multisig', NEMTransactionCommon, 0),
+            3: ('transfer', NEMTransfer, 0),
+            4: ('cosigning', p.BoolType, 0),
+            5: ('provision_namespace', NEMProvisionNamespace, 0),
+            6: ('mosaic_creation', NEMMosaicCreation, 0),
+            7: ('supply_change', NEMMosaicSupplyChange, 0),
+            8: ('aggregate_modification', NEMAggregateModification, 0),
+            9: ('importance_transfer', NEMImportanceTransfer, 0),
+        }

@@ -5,12 +5,15 @@ import protobuf as p
 
 class CardanoTxAck(p.MessageType):
     MESSAGE_WIRE_TYPE = 309
-    FIELDS = {
-        1: ('transaction', p.BytesType, 0),
-    }
 
     def __init__(
         self,
         transaction: bytes = None,
     ) -> None:
         self.transaction = transaction
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('transaction', p.BytesType, 0),
+        }

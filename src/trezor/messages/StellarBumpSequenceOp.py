@@ -5,10 +5,6 @@ import protobuf as p
 
 class StellarBumpSequenceOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 221
-    FIELDS = {
-        1: ('source_account', p.UnicodeType, 0),
-        2: ('bump_to', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -17,3 +13,10 @@ class StellarBumpSequenceOp(p.MessageType):
     ) -> None:
         self.source_account = source_account
         self.bump_to = bump_to
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('source_account', p.UnicodeType, 0),
+            2: ('bump_to', p.UVarintType, 0),
+        }

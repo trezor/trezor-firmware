@@ -5,10 +5,6 @@ import protobuf as p
 
 class ButtonRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 26
-    FIELDS = {
-        1: ('code', p.UVarintType, 0),
-        2: ('data', p.UnicodeType, 0),
-    }
 
     def __init__(
         self,
@@ -17,3 +13,10 @@ class ButtonRequest(p.MessageType):
     ) -> None:
         self.code = code
         self.data = data
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('code', p.UVarintType, 0),
+            2: ('data', p.UnicodeType, 0),
+        }

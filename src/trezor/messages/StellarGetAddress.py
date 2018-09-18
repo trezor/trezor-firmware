@@ -11,10 +11,6 @@ if __debug__:
 
 class StellarGetAddress(p.MessageType):
     MESSAGE_WIRE_TYPE = 207
-    FIELDS = {
-        1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('show_display', p.BoolType, 0),
-    }
 
     def __init__(
         self,
@@ -23,3 +19,10 @@ class StellarGetAddress(p.MessageType):
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.show_display = show_display
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            2: ('show_display', p.BoolType, 0),
+        }

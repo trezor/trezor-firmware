@@ -5,12 +5,6 @@ import protobuf as p
 
 class Ping(p.MessageType):
     MESSAGE_WIRE_TYPE = 1
-    FIELDS = {
-        1: ('message', p.UnicodeType, 0),
-        2: ('button_protection', p.BoolType, 0),
-        3: ('pin_protection', p.BoolType, 0),
-        4: ('passphrase_protection', p.BoolType, 0),
-    }
 
     def __init__(
         self,
@@ -23,3 +17,12 @@ class Ping(p.MessageType):
         self.button_protection = button_protection
         self.pin_protection = pin_protection
         self.passphrase_protection = passphrase_protection
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('message', p.UnicodeType, 0),
+            2: ('button_protection', p.BoolType, 0),
+            3: ('pin_protection', p.BoolType, 0),
+            4: ('passphrase_protection', p.BoolType, 0),
+        }

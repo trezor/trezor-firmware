@@ -5,12 +5,6 @@ import protobuf as p
 
 class EthereumTxRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 59
-    FIELDS = {
-        1: ('data_length', p.UVarintType, 0),
-        2: ('signature_v', p.UVarintType, 0),
-        3: ('signature_r', p.BytesType, 0),
-        4: ('signature_s', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -23,3 +17,12 @@ class EthereumTxRequest(p.MessageType):
         self.signature_v = signature_v
         self.signature_r = signature_r
         self.signature_s = signature_s
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('data_length', p.UVarintType, 0),
+            2: ('signature_v', p.UVarintType, 0),
+            3: ('signature_r', p.BytesType, 0),
+            4: ('signature_s', p.BytesType, 0),
+        }

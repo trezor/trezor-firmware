@@ -11,12 +11,6 @@ if __debug__:
 
 class CosiSign(p.MessageType):
     MESSAGE_WIRE_TYPE = 73
-    FIELDS = {
-        1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('data', p.BytesType, 0),
-        3: ('global_commitment', p.BytesType, 0),
-        4: ('global_pubkey', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -29,3 +23,12 @@ class CosiSign(p.MessageType):
         self.data = data
         self.global_commitment = global_commitment
         self.global_pubkey = global_pubkey
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            2: ('data', p.BytesType, 0),
+            3: ('global_commitment', p.BytesType, 0),
+            4: ('global_pubkey', p.BytesType, 0),
+        }

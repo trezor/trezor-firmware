@@ -4,11 +4,6 @@ import protobuf as p
 
 
 class MoneroExportedKeyImage(p.MessageType):
-    FIELDS = {
-        1: ('iv', p.BytesType, 0),
-        2: ('tag', p.BytesType, 0),
-        3: ('blob', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -19,3 +14,11 @@ class MoneroExportedKeyImage(p.MessageType):
         self.iv = iv
         self.tag = tag
         self.blob = blob
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('iv', p.BytesType, 0),
+            2: ('tag', p.BytesType, 0),
+            3: ('blob', p.BytesType, 0),
+        }

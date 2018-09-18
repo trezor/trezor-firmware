@@ -6,16 +6,6 @@ from .TezosContractID import TezosContractID
 
 
 class TezosTransactionOp(p.MessageType):
-    FIELDS = {
-        1: ('source', TezosContractID, 0),
-        2: ('fee', p.UVarintType, 0),
-        3: ('counter', p.UVarintType, 0),
-        4: ('gas_limit', p.UVarintType, 0),
-        5: ('storage_limit', p.UVarintType, 0),
-        6: ('amount', p.UVarintType, 0),
-        7: ('destination', TezosContractID, 0),
-        8: ('parameters', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -36,3 +26,16 @@ class TezosTransactionOp(p.MessageType):
         self.amount = amount
         self.destination = destination
         self.parameters = parameters
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('source', TezosContractID, 0),
+            2: ('fee', p.UVarintType, 0),
+            3: ('counter', p.UVarintType, 0),
+            4: ('gas_limit', p.UVarintType, 0),
+            5: ('storage_limit', p.UVarintType, 0),
+            6: ('amount', p.UVarintType, 0),
+            7: ('destination', TezosContractID, 0),
+            8: ('parameters', p.BytesType, 0),
+        }

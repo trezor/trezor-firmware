@@ -4,10 +4,6 @@ import protobuf as p
 
 
 class OntologyOntIdRegister(p.MessageType):
-    FIELDS = {
-        1: ('ont_id', p.UnicodeType, 0),
-        2: ('public_key', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -16,3 +12,10 @@ class OntologyOntIdRegister(p.MessageType):
     ) -> None:
         self.ont_id = ont_id
         self.public_key = public_key
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('ont_id', p.UnicodeType, 0),
+            2: ('public_key', p.BytesType, 0),
+        }

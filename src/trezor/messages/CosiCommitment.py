@@ -5,10 +5,6 @@ import protobuf as p
 
 class CosiCommitment(p.MessageType):
     MESSAGE_WIRE_TYPE = 72
-    FIELDS = {
-        1: ('commitment', p.BytesType, 0),
-        2: ('pubkey', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -17,3 +13,10 @@ class CosiCommitment(p.MessageType):
     ) -> None:
         self.commitment = commitment
         self.pubkey = pubkey
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('commitment', p.BytesType, 0),
+            2: ('pubkey', p.BytesType, 0),
+        }

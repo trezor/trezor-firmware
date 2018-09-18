@@ -6,14 +6,7 @@ from .MoneroTransactionRsigData import MoneroTransactionRsigData
 
 
 class MoneroTransactionSetOutputAck(p.MessageType):
-    MESSAGE_WIRE_TYPE = 506
-    FIELDS = {
-        1: ('tx_out', p.BytesType, 0),
-        2: ('vouti_hmac', p.BytesType, 0),
-        3: ('rsig_data', MoneroTransactionRsigData, 0),
-        4: ('out_pk', p.BytesType, 0),
-        5: ('ecdh_info', p.BytesType, 0),
-    }
+    MESSAGE_WIRE_TYPE = 512
 
     def __init__(
         self,
@@ -28,3 +21,13 @@ class MoneroTransactionSetOutputAck(p.MessageType):
         self.rsig_data = rsig_data
         self.out_pk = out_pk
         self.ecdh_info = ecdh_info
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('tx_out', p.BytesType, 0),
+            2: ('vouti_hmac', p.BytesType, 0),
+            3: ('rsig_data', MoneroTransactionRsigData, 0),
+            4: ('out_pk', p.BytesType, 0),
+            5: ('ecdh_info', p.BytesType, 0),
+        }

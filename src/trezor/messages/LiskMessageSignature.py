@@ -5,10 +5,6 @@ import protobuf as p
 
 class LiskMessageSignature(p.MessageType):
     MESSAGE_WIRE_TYPE = 119
-    FIELDS = {
-        1: ('public_key', p.BytesType, 0),
-        2: ('signature', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -17,3 +13,10 @@ class LiskMessageSignature(p.MessageType):
     ) -> None:
         self.public_key = public_key
         self.signature = signature
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('public_key', p.BytesType, 0),
+            2: ('signature', p.BytesType, 0),
+        }

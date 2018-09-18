@@ -7,10 +7,6 @@ from .HDNodeType import HDNodeType
 
 class PublicKey(p.MessageType):
     MESSAGE_WIRE_TYPE = 12
-    FIELDS = {
-        1: ('node', HDNodeType, 0),  # required
-        2: ('xpub', p.UnicodeType, 0),
-    }
 
     def __init__(
         self,
@@ -19,3 +15,10 @@ class PublicKey(p.MessageType):
     ) -> None:
         self.node = node
         self.xpub = xpub
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('node', HDNodeType, 0),  # required
+            2: ('xpub', p.UnicodeType, 0),
+        }

@@ -5,10 +5,6 @@ import protobuf as p
 
 class StellarAccountMergeOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 218
-    FIELDS = {
-        1: ('source_account', p.UnicodeType, 0),
-        2: ('destination_account', p.UnicodeType, 0),
-    }
 
     def __init__(
         self,
@@ -17,3 +13,10 @@ class StellarAccountMergeOp(p.MessageType):
     ) -> None:
         self.source_account = source_account
         self.destination_account = destination_account
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('source_account', p.UnicodeType, 0),
+            2: ('destination_account', p.UnicodeType, 0),
+        }

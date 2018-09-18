@@ -7,13 +7,7 @@ from .MoneroTransactionRsigData import MoneroTransactionRsigData
 
 
 class MoneroTransactionAllOutSetAck(p.MessageType):
-    MESSAGE_WIRE_TYPE = 507
-    FIELDS = {
-        1: ('extra', p.BytesType, 0),
-        2: ('tx_prefix_hash', p.BytesType, 0),
-        3: ('rsig_data', MoneroTransactionRsigData, 0),
-        4: ('rv', MoneroRingCtSig, 0),
-    }
+    MESSAGE_WIRE_TYPE = 514
 
     def __init__(
         self,
@@ -26,3 +20,12 @@ class MoneroTransactionAllOutSetAck(p.MessageType):
         self.tx_prefix_hash = tx_prefix_hash
         self.rsig_data = rsig_data
         self.rv = rv
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('extra', p.BytesType, 0),
+            2: ('tx_prefix_hash', p.BytesType, 0),
+            3: ('rsig_data', MoneroTransactionRsigData, 0),
+            4: ('rv', MoneroRingCtSig, 0),
+        }

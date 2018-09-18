@@ -13,14 +13,6 @@ if __debug__:
 
 class RippleSignTx(p.MessageType):
     MESSAGE_WIRE_TYPE = 402
-    FIELDS = {
-        1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('fee', p.UVarintType, 0),
-        3: ('flags', p.UVarintType, 0),
-        4: ('sequence', p.UVarintType, 0),
-        5: ('last_ledger_sequence', p.UVarintType, 0),
-        6: ('payment', RipplePayment, 0),
-    }
 
     def __init__(
         self,
@@ -37,3 +29,14 @@ class RippleSignTx(p.MessageType):
         self.sequence = sequence
         self.last_ledger_sequence = last_ledger_sequence
         self.payment = payment
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            2: ('fee', p.UVarintType, 0),
+            3: ('flags', p.UVarintType, 0),
+            4: ('sequence', p.UVarintType, 0),
+            5: ('last_ledger_sequence', p.UVarintType, 0),
+            6: ('payment', RipplePayment, 0),
+        }

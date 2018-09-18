@@ -13,17 +13,6 @@ if __debug__:
 
 
 class MoneroTransactionSourceEntry(p.MessageType):
-    FIELDS = {
-        1: ('outputs', MoneroOutputEntry, p.FLAG_REPEATED),
-        2: ('real_output', p.UVarintType, 0),
-        3: ('real_out_tx_key', p.BytesType, 0),
-        4: ('real_out_additional_tx_keys', p.BytesType, p.FLAG_REPEATED),
-        5: ('real_output_in_tx_index', p.UVarintType, 0),
-        6: ('amount', p.UVarintType, 0),
-        7: ('rct', p.BoolType, 0),
-        8: ('mask', p.BytesType, 0),
-        9: ('multisig_kLRki', MoneroMultisigKLRki, 0),
-    }
 
     def __init__(
         self,
@@ -46,3 +35,17 @@ class MoneroTransactionSourceEntry(p.MessageType):
         self.rct = rct
         self.mask = mask
         self.multisig_kLRki = multisig_kLRki
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('outputs', MoneroOutputEntry, p.FLAG_REPEATED),
+            2: ('real_output', p.UVarintType, 0),
+            3: ('real_out_tx_key', p.BytesType, 0),
+            4: ('real_out_additional_tx_keys', p.BytesType, p.FLAG_REPEATED),
+            5: ('real_output_in_tx_index', p.UVarintType, 0),
+            6: ('amount', p.UVarintType, 0),
+            7: ('rct', p.BoolType, 0),
+            8: ('mask', p.BytesType, 0),
+            9: ('multisig_kLRki', MoneroMultisigKLRki, 0),
+        }

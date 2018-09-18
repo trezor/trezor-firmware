@@ -12,13 +12,16 @@ if __debug__:
 
 
 class MoneroKeyImageSyncStepAck(p.MessageType):
-    MESSAGE_WIRE_TYPE = 521
-    FIELDS = {
-        1: ('kis', MoneroExportedKeyImage, p.FLAG_REPEATED),
-    }
+    MESSAGE_WIRE_TYPE = 533
 
     def __init__(
         self,
         kis: List[MoneroExportedKeyImage] = None,
     ) -> None:
         self.kis = kis if kis is not None else []
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('kis', MoneroExportedKeyImage, p.FLAG_REPEATED),
+        }

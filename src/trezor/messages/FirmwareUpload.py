@@ -5,10 +5,6 @@ import protobuf as p
 
 class FirmwareUpload(p.MessageType):
     MESSAGE_WIRE_TYPE = 7
-    FIELDS = {
-        1: ('payload', p.BytesType, 0),  # required
-        2: ('hash', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -17,3 +13,10 @@ class FirmwareUpload(p.MessageType):
     ) -> None:
         self.payload = payload
         self.hash = hash
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('payload', p.BytesType, 0),  # required
+            2: ('hash', p.BytesType, 0),
+        }

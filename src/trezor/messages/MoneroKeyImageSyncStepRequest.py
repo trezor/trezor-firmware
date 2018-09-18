@@ -12,12 +12,16 @@ if __debug__:
 
 
 class MoneroKeyImageSyncStepRequest(p.MessageType):
-    FIELDS = {
-        1: ('tdis', MoneroTransferDetails, p.FLAG_REPEATED),
-    }
+    MESSAGE_WIRE_TYPE = 532
 
     def __init__(
         self,
         tdis: List[MoneroTransferDetails] = None,
     ) -> None:
         self.tdis = tdis if tdis is not None else []
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('tdis', MoneroTransferDetails, p.FLAG_REPEATED),
+        }

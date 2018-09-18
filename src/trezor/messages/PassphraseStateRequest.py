@@ -5,12 +5,15 @@ import protobuf as p
 
 class PassphraseStateRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 77
-    FIELDS = {
-        1: ('state', p.BytesType, 0),
-    }
 
     def __init__(
         self,
         state: bytes = None,
     ) -> None:
         self.state = state
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('state', p.BytesType, 0),
+        }

@@ -5,12 +5,6 @@ import protobuf as p
 
 class VerifyMessage(p.MessageType):
     MESSAGE_WIRE_TYPE = 39
-    FIELDS = {
-        1: ('address', p.UnicodeType, 0),
-        2: ('signature', p.BytesType, 0),
-        3: ('message', p.BytesType, 0),
-        4: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
-    }
 
     def __init__(
         self,
@@ -23,3 +17,12 @@ class VerifyMessage(p.MessageType):
         self.signature = signature
         self.message = message
         self.coin_name = coin_name
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address', p.UnicodeType, 0),
+            2: ('signature', p.BytesType, 0),
+            3: ('message', p.BytesType, 0),
+            4: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
+        }

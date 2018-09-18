@@ -5,10 +5,6 @@ import protobuf as p
 
 class Initialize(p.MessageType):
     MESSAGE_WIRE_TYPE = 0
-    FIELDS = {
-        1: ('state', p.BytesType, 0),
-        2: ('skip_passphrase', p.BoolType, 0),
-    }
 
     def __init__(
         self,
@@ -17,3 +13,10 @@ class Initialize(p.MessageType):
     ) -> None:
         self.state = state
         self.skip_passphrase = skip_passphrase
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('state', p.BytesType, 0),
+            2: ('skip_passphrase', p.BoolType, 0),
+        }

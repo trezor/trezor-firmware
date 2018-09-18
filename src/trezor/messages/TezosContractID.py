@@ -4,10 +4,6 @@ import protobuf as p
 
 
 class TezosContractID(p.MessageType):
-    FIELDS = {
-        1: ('tag', p.UVarintType, 0),
-        2: ('hash', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -16,3 +12,10 @@ class TezosContractID(p.MessageType):
     ) -> None:
         self.tag = tag
         self.hash = hash
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('tag', p.UVarintType, 0),
+            2: ('hash', p.BytesType, 0),
+        }

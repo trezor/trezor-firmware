@@ -13,10 +13,6 @@ if __debug__:
 
 class LiskSignTx(p.MessageType):
     MESSAGE_WIRE_TYPE = 116
-    FIELDS = {
-        1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('transaction', LiskTransactionCommon, 0),
-    }
 
     def __init__(
         self,
@@ -25,3 +21,10 @@ class LiskSignTx(p.MessageType):
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.transaction = transaction
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            2: ('transaction', LiskTransactionCommon, 0),
+        }

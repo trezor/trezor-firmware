@@ -5,11 +5,6 @@ import protobuf as p
 
 class StellarCreateAccountOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 210
-    FIELDS = {
-        1: ('source_account', p.UnicodeType, 0),
-        2: ('new_account', p.UnicodeType, 0),
-        3: ('starting_balance', p.SVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -20,3 +15,11 @@ class StellarCreateAccountOp(p.MessageType):
         self.source_account = source_account
         self.new_account = new_account
         self.starting_balance = starting_balance
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('source_account', p.UnicodeType, 0),
+            2: ('new_account', p.UnicodeType, 0),
+            3: ('starting_balance', p.SVarintType, 0),
+        }

@@ -4,10 +4,6 @@ import protobuf as p
 
 
 class NEMCosignatoryModification(p.MessageType):
-    FIELDS = {
-        1: ('type', p.UVarintType, 0),
-        2: ('public_key', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -16,3 +12,10 @@ class NEMCosignatoryModification(p.MessageType):
     ) -> None:
         self.type = type
         self.public_key = public_key
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('type', p.UVarintType, 0),
+            2: ('public_key', p.BytesType, 0),
+        }

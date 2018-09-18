@@ -4,4 +4,4 @@ import protobuf as p
 
 
 class MoneroTransactionMlsagDoneRequest(p.MessageType):
-    pass
+    MESSAGE_WIRE_TYPE = 515

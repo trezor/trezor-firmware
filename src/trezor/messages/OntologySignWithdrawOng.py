@@ -14,11 +14,6 @@ if __debug__:
 
 class OntologySignWithdrawOng(p.MessageType):
     MESSAGE_WIRE_TYPE = 356
-    FIELDS = {
-        1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('transaction', OntologyTransaction, 0),
-        3: ('withdraw_ong', OntologyWithdrawOng, 0),
-    }
 
     def __init__(
         self,
@@ -29,3 +24,11 @@ class OntologySignWithdrawOng(p.MessageType):
         self.address_n = address_n if address_n is not None else []
         self.transaction = transaction
         self.withdraw_ong = withdraw_ong
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            2: ('transaction', OntologyTransaction, 0),
+            3: ('withdraw_ong', OntologyWithdrawOng, 0),
+        }

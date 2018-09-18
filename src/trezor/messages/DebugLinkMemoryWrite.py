@@ -5,11 +5,6 @@ import protobuf as p
 
 class DebugLinkMemoryWrite(p.MessageType):
     MESSAGE_WIRE_TYPE = 112
-    FIELDS = {
-        1: ('address', p.UVarintType, 0),
-        2: ('memory', p.BytesType, 0),
-        3: ('flash', p.BoolType, 0),
-    }
 
     def __init__(
         self,
@@ -20,3 +15,11 @@ class DebugLinkMemoryWrite(p.MessageType):
         self.address = address
         self.memory = memory
         self.flash = flash
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address', p.UVarintType, 0),
+            2: ('memory', p.BytesType, 0),
+            3: ('flash', p.BoolType, 0),
+        }

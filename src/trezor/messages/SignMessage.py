@@ -11,12 +11,6 @@ if __debug__:
 
 class SignMessage(p.MessageType):
     MESSAGE_WIRE_TYPE = 38
-    FIELDS = {
-        1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('message', p.BytesType, 0),  # required
-        3: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
-        4: ('script_type', p.UVarintType, 0),  # default=SPENDADDRESS
-    }
 
     def __init__(
         self,
@@ -29,3 +23,12 @@ class SignMessage(p.MessageType):
         self.message = message
         self.coin_name = coin_name
         self.script_type = script_type
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            2: ('message', p.BytesType, 0),  # required
+            3: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
+            4: ('script_type', p.UVarintType, 0),  # default=SPENDADDRESS
+        }

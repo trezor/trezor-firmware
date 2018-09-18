@@ -12,10 +12,6 @@ if __debug__:
 
 
 class NEMAggregateModification(p.MessageType):
-    FIELDS = {
-        1: ('modifications', NEMCosignatoryModification, p.FLAG_REPEATED),
-        2: ('relative_change', p.SVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -24,3 +20,10 @@ class NEMAggregateModification(p.MessageType):
     ) -> None:
         self.modifications = modifications if modifications is not None else []
         self.relative_change = relative_change
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('modifications', NEMCosignatoryModification, p.FLAG_REPEATED),
+            2: ('relative_change', p.SVarintType, 0),
+        }

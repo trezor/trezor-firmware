@@ -12,15 +12,6 @@ if __debug__:
 
 
 class OntologyTransaction(p.MessageType):
-    FIELDS = {
-        1: ('version', p.UVarintType, 0),
-        2: ('type', p.UVarintType, 0),
-        3: ('nonce', p.UVarintType, 0),
-        4: ('gas_price', p.UVarintType, 0),
-        5: ('gas_limit', p.UVarintType, 0),
-        6: ('payer', p.UnicodeType, 0),
-        7: ('tx_attributes', OntologyTxAttribute, p.FLAG_REPEATED),
-    }
 
     def __init__(
         self,
@@ -39,3 +30,15 @@ class OntologyTransaction(p.MessageType):
         self.gas_limit = gas_limit
         self.payer = payer
         self.tx_attributes = tx_attributes if tx_attributes is not None else []
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('version', p.UVarintType, 0),
+            2: ('type', p.UVarintType, 0),
+            3: ('nonce', p.UVarintType, 0),
+            4: ('gas_price', p.UVarintType, 0),
+            5: ('gas_limit', p.UVarintType, 0),
+            6: ('payer', p.UnicodeType, 0),
+            7: ('tx_attributes', OntologyTxAttribute, p.FLAG_REPEATED),
+        }

@@ -4,11 +4,6 @@ import protobuf as p
 
 
 class MoneroRingCtSig(p.MessageType):
-    FIELDS = {
-        1: ('txn_fee', p.UVarintType, 0),
-        2: ('message', p.BytesType, 0),
-        3: ('rv_type', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -19,3 +14,11 @@ class MoneroRingCtSig(p.MessageType):
         self.txn_fee = txn_fee
         self.message = message
         self.rv_type = rv_type
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('txn_fee', p.UVarintType, 0),
+            2: ('message', p.BytesType, 0),
+            3: ('rv_type', p.UVarintType, 0),
+        }

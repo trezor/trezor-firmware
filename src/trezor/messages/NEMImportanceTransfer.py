@@ -4,10 +4,6 @@ import protobuf as p
 
 
 class NEMImportanceTransfer(p.MessageType):
-    FIELDS = {
-        1: ('mode', p.UVarintType, 0),
-        2: ('public_key', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -16,3 +12,10 @@ class NEMImportanceTransfer(p.MessageType):
     ) -> None:
         self.mode = mode
         self.public_key = public_key
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('mode', p.UVarintType, 0),
+            2: ('public_key', p.BytesType, 0),
+        }

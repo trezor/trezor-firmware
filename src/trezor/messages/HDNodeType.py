@@ -4,14 +4,6 @@ import protobuf as p
 
 
 class HDNodeType(p.MessageType):
-    FIELDS = {
-        1: ('depth', p.UVarintType, 0),  # required
-        2: ('fingerprint', p.UVarintType, 0),  # required
-        3: ('child_num', p.UVarintType, 0),  # required
-        4: ('chain_code', p.BytesType, 0),  # required
-        5: ('private_key', p.BytesType, 0),
-        6: ('public_key', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -28,3 +20,14 @@ class HDNodeType(p.MessageType):
         self.chain_code = chain_code
         self.private_key = private_key
         self.public_key = public_key
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('depth', p.UVarintType, 0),  # required
+            2: ('fingerprint', p.UVarintType, 0),  # required
+            3: ('child_num', p.UVarintType, 0),  # required
+            4: ('chain_code', p.BytesType, 0),  # required
+            5: ('private_key', p.BytesType, 0),
+            6: ('public_key', p.BytesType, 0),
+        }

@@ -6,17 +6,6 @@ from .LiskTransactionAsset import LiskTransactionAsset
 
 
 class LiskTransactionCommon(p.MessageType):
-    FIELDS = {
-        1: ('type', p.UVarintType, 0),
-        2: ('amount', p.UVarintType, 0),  # default=0
-        3: ('fee', p.UVarintType, 0),
-        4: ('recipient_id', p.UnicodeType, 0),
-        5: ('sender_public_key', p.BytesType, 0),
-        6: ('requester_public_key', p.BytesType, 0),
-        7: ('signature', p.BytesType, 0),
-        8: ('timestamp', p.UVarintType, 0),
-        9: ('asset', LiskTransactionAsset, 0),
-    }
 
     def __init__(
         self,
@@ -39,3 +28,17 @@ class LiskTransactionCommon(p.MessageType):
         self.signature = signature
         self.timestamp = timestamp
         self.asset = asset
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('type', p.UVarintType, 0),
+            2: ('amount', p.UVarintType, 0),  # default=0
+            3: ('fee', p.UVarintType, 0),
+            4: ('recipient_id', p.UnicodeType, 0),
+            5: ('sender_public_key', p.BytesType, 0),
+            6: ('requester_public_key', p.BytesType, 0),
+            7: ('signature', p.BytesType, 0),
+            8: ('timestamp', p.UVarintType, 0),
+            9: ('asset', LiskTransactionAsset, 0),
+        }

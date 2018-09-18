@@ -10,15 +10,7 @@ if __debug__:
 
 
 class DebugMoneroDiagRequest(p.MessageType):
-    MESSAGE_WIRE_TYPE = 536
-    FIELDS = {
-        1: ('ins', p.UVarintType, 0),
-        2: ('p1', p.UVarintType, 0),
-        3: ('p2', p.UVarintType, 0),
-        4: ('pd', p.UVarintType, p.FLAG_REPEATED),
-        5: ('data1', p.BytesType, 0),
-        6: ('data2', p.BytesType, 0),
-    }
+    MESSAGE_WIRE_TYPE = 546
 
     def __init__(
         self,
@@ -35,3 +27,14 @@ class DebugMoneroDiagRequest(p.MessageType):
         self.pd = pd if pd is not None else []
         self.data1 = data1
         self.data2 = data2
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('ins', p.UVarintType, 0),
+            2: ('p1', p.UVarintType, 0),
+            3: ('p2', p.UVarintType, 0),
+            4: ('pd', p.UVarintType, p.FLAG_REPEATED),
+            5: ('data1', p.BytesType, 0),
+            6: ('data2', p.BytesType, 0),
+        }

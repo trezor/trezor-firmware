@@ -5,11 +5,6 @@ import protobuf as p
 
 class SignedIdentity(p.MessageType):
     MESSAGE_WIRE_TYPE = 54
-    FIELDS = {
-        1: ('address', p.UnicodeType, 0),
-        2: ('public_key', p.BytesType, 0),
-        3: ('signature', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -20,3 +15,11 @@ class SignedIdentity(p.MessageType):
         self.address = address
         self.public_key = public_key
         self.signature = signature
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address', p.UnicodeType, 0),
+            2: ('public_key', p.BytesType, 0),
+            3: ('signature', p.BytesType, 0),
+        }

@@ -5,11 +5,6 @@ import protobuf as p
 
 class StellarManageDataOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 220
-    FIELDS = {
-        1: ('source_account', p.UnicodeType, 0),
-        2: ('key', p.UnicodeType, 0),
-        3: ('value', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -20,3 +15,11 @@ class StellarManageDataOp(p.MessageType):
         self.source_account = source_account
         self.key = key
         self.value = value
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('source_account', p.UnicodeType, 0),
+            2: ('key', p.UnicodeType, 0),
+            3: ('value', p.BytesType, 0),
+        }

@@ -5,12 +5,15 @@ import protobuf as p
 
 class SetU2FCounter(p.MessageType):
     MESSAGE_WIRE_TYPE = 63
-    FIELDS = {
-        1: ('u2f_counter', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
         u2f_counter: int = None,
     ) -> None:
         self.u2f_counter = u2f_counter
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('u2f_counter', p.UVarintType, 0),
+        }

@@ -4,12 +4,6 @@ import protobuf as p
 
 
 class NEMProvisionNamespace(p.MessageType):
-    FIELDS = {
-        1: ('namespace', p.UnicodeType, 0),
-        2: ('parent', p.UnicodeType, 0),
-        3: ('sink', p.UnicodeType, 0),
-        4: ('fee', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -22,3 +16,12 @@ class NEMProvisionNamespace(p.MessageType):
         self.parent = parent
         self.sink = sink
         self.fee = fee
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('namespace', p.UnicodeType, 0),
+            2: ('parent', p.UnicodeType, 0),
+            3: ('sink', p.UnicodeType, 0),
+            4: ('fee', p.UVarintType, 0),
+        }

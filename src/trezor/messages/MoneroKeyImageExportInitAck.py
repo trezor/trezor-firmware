@@ -4,4 +4,4 @@ import protobuf as p
 
 
 class MoneroKeyImageExportInitAck(p.MessageType):
-    MESSAGE_WIRE_TYPE = 520
+    MESSAGE_WIRE_TYPE = 531

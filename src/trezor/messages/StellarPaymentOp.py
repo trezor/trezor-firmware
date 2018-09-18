@@ -7,12 +7,6 @@ from .StellarAssetType import StellarAssetType
 
 class StellarPaymentOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 211
-    FIELDS = {
-        1: ('source_account', p.UnicodeType, 0),
-        2: ('destination_account', p.UnicodeType, 0),
-        3: ('asset', StellarAssetType, 0),
-        4: ('amount', p.SVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -25,3 +19,12 @@ class StellarPaymentOp(p.MessageType):
         self.destination_account = destination_account
         self.asset = asset
         self.amount = amount
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('source_account', p.UnicodeType, 0),
+            2: ('destination_account', p.UnicodeType, 0),
+            3: ('asset', StellarAssetType, 0),
+            4: ('amount', p.SVarintType, 0),
+        }

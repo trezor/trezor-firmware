@@ -4,15 +4,7 @@ import protobuf as p
 
 
 class MoneroTransactionSetInputAck(p.MessageType):
-    MESSAGE_WIRE_TYPE = 503
-    FIELDS = {
-        1: ('vini', p.BytesType, 0),
-        2: ('vini_hmac', p.BytesType, 0),
-        3: ('pseudo_out', p.BytesType, 0),
-        4: ('pseudo_out_hmac', p.BytesType, 0),
-        5: ('alpha_enc', p.BytesType, 0),
-        6: ('spend_enc', p.BytesType, 0),
-    }
+    MESSAGE_WIRE_TYPE = 504
 
     def __init__(
         self,
@@ -29,3 +21,14 @@ class MoneroTransactionSetInputAck(p.MessageType):
         self.pseudo_out_hmac = pseudo_out_hmac
         self.alpha_enc = alpha_enc
         self.spend_enc = spend_enc
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('vini', p.BytesType, 0),
+            2: ('vini_hmac', p.BytesType, 0),
+            3: ('pseudo_out', p.BytesType, 0),
+            4: ('pseudo_out_hmac', p.BytesType, 0),
+            5: ('alpha_enc', p.BytesType, 0),
+            6: ('spend_enc', p.BytesType, 0),
+        }

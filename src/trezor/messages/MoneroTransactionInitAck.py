@@ -13,15 +13,6 @@ if __debug__:
 
 class MoneroTransactionInitAck(p.MessageType):
     MESSAGE_WIRE_TYPE = 502
-    FIELDS = {
-        1: ('version', p.UVarintType, 0),
-        2: ('status', p.UVarintType, 0),
-        3: ('in_memory', p.BoolType, 0),
-        4: ('hmacs', p.BytesType, p.FLAG_REPEATED),
-        5: ('many_inputs', p.BoolType, 0),
-        6: ('many_outputs', p.BoolType, 0),
-        7: ('rsig_data', MoneroTransactionRsigData, 0),
-    }
 
     def __init__(
         self,
@@ -40,3 +31,15 @@ class MoneroTransactionInitAck(p.MessageType):
         self.many_inputs = many_inputs
         self.many_outputs = many_outputs
         self.rsig_data = rsig_data
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('version', p.UVarintType, 0),
+            2: ('status', p.UVarintType, 0),
+            3: ('in_memory', p.BoolType, 0),
+            4: ('hmacs', p.BytesType, p.FLAG_REPEATED),
+            5: ('many_inputs', p.BoolType, 0),
+            6: ('many_outputs', p.BoolType, 0),
+            7: ('rsig_data', MoneroTransactionRsigData, 0),
+        }

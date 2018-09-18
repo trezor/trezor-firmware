@@ -11,13 +11,6 @@ if __debug__:
 
 class GetPublicKey(p.MessageType):
     MESSAGE_WIRE_TYPE = 11
-    FIELDS = {
-        1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('ecdsa_curve_name', p.UnicodeType, 0),
-        3: ('show_display', p.BoolType, 0),
-        4: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
-        5: ('script_type', p.UVarintType, 0),  # default=SPENDADDRESS
-    }
 
     def __init__(
         self,
@@ -32,3 +25,13 @@ class GetPublicKey(p.MessageType):
         self.show_display = show_display
         self.coin_name = coin_name
         self.script_type = script_type
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            2: ('ecdsa_curve_name', p.UnicodeType, 0),
+            3: ('show_display', p.BoolType, 0),
+            4: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
+            5: ('script_type', p.UVarintType, 0),  # default=SPENDADDRESS
+        }

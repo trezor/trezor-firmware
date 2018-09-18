@@ -12,11 +12,6 @@ if __debug__:
 
 
 class MultisigRedeemScriptType(p.MessageType):
-    FIELDS = {
-        1: ('pubkeys', HDNodePathType, p.FLAG_REPEATED),
-        2: ('signatures', p.BytesType, p.FLAG_REPEATED),
-        3: ('m', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -27,3 +22,11 @@ class MultisigRedeemScriptType(p.MessageType):
         self.pubkeys = pubkeys if pubkeys is not None else []
         self.signatures = signatures if signatures is not None else []
         self.m = m
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('pubkeys', HDNodePathType, p.FLAG_REPEATED),
+            2: ('signatures', p.BytesType, p.FLAG_REPEATED),
+            3: ('m', p.UVarintType, 0),
+        }

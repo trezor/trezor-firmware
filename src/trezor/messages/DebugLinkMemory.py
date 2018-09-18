@@ -5,12 +5,15 @@ import protobuf as p
 
 class DebugLinkMemory(p.MessageType):
     MESSAGE_WIRE_TYPE = 111
-    FIELDS = {
-        1: ('memory', p.BytesType, 0),
-    }
 
     def __init__(
         self,
         memory: bytes = None,
     ) -> None:
         self.memory = memory
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('memory', p.BytesType, 0),
+        }

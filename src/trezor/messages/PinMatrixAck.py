@@ -5,12 +5,15 @@ import protobuf as p
 
 class PinMatrixAck(p.MessageType):
     MESSAGE_WIRE_TYPE = 19
-    FIELDS = {
-        1: ('pin', p.UnicodeType, 0),  # required
-    }
 
     def __init__(
         self,
         pin: str = None,
     ) -> None:
         self.pin = pin
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('pin', p.UnicodeType, 0),  # required
+        }

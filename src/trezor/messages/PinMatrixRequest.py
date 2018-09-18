@@ -5,12 +5,15 @@ import protobuf as p
 
 class PinMatrixRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 18
-    FIELDS = {
-        1: ('type', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
         type: int = None,
     ) -> None:
         self.type = type
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('type', p.UVarintType, 0),
+        }

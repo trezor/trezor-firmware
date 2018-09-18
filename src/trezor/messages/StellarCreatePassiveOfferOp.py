@@ -7,14 +7,6 @@ from .StellarAssetType import StellarAssetType
 
 class StellarCreatePassiveOfferOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 214
-    FIELDS = {
-        1: ('source_account', p.UnicodeType, 0),
-        2: ('selling_asset', StellarAssetType, 0),
-        3: ('buying_asset', StellarAssetType, 0),
-        4: ('amount', p.SVarintType, 0),
-        5: ('price_n', p.UVarintType, 0),
-        6: ('price_d', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -31,3 +23,14 @@ class StellarCreatePassiveOfferOp(p.MessageType):
         self.amount = amount
         self.price_n = price_n
         self.price_d = price_d
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('source_account', p.UnicodeType, 0),
+            2: ('selling_asset', StellarAssetType, 0),
+            3: ('buying_asset', StellarAssetType, 0),
+            4: ('amount', p.SVarintType, 0),
+            5: ('price_n', p.UVarintType, 0),
+            6: ('price_d', p.UVarintType, 0),
+        }

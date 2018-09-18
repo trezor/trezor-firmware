@@ -4,11 +4,6 @@ import protobuf as p
 
 
 class NEMMosaic(p.MessageType):
-    FIELDS = {
-        1: ('namespace', p.UnicodeType, 0),
-        2: ('mosaic', p.UnicodeType, 0),
-        3: ('quantity', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -19,3 +14,11 @@ class NEMMosaic(p.MessageType):
         self.namespace = namespace
         self.mosaic = mosaic
         self.quantity = quantity
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('namespace', p.UnicodeType, 0),
+            2: ('mosaic', p.UnicodeType, 0),
+            3: ('quantity', p.UVarintType, 0),
+        }

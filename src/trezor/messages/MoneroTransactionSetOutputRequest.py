@@ -7,11 +7,7 @@ from .MoneroTransactionRsigData import MoneroTransactionRsigData
 
 
 class MoneroTransactionSetOutputRequest(p.MessageType):
-    FIELDS = {
-        1: ('dst_entr', MoneroTransactionDestinationEntry, 0),
-        2: ('dst_entr_hmac', p.BytesType, 0),
-        3: ('rsig_data', MoneroTransactionRsigData, 0),
-    }
+    MESSAGE_WIRE_TYPE = 511
 
     def __init__(
         self,
@@ -22,3 +18,11 @@ class MoneroTransactionSetOutputRequest(p.MessageType):
         self.dst_entr = dst_entr
         self.dst_entr_hmac = dst_entr_hmac
         self.rsig_data = rsig_data
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('dst_entr', MoneroTransactionDestinationEntry, 0),
+            2: ('dst_entr_hmac', p.BytesType, 0),
+            3: ('rsig_data', MoneroTransactionRsigData, 0),
+        }

@@ -10,12 +10,6 @@ if __debug__:
 
 
 class CardanoTxInputType(p.MessageType):
-    FIELDS = {
-        1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('prev_hash', p.BytesType, 0),
-        3: ('prev_index', p.UVarintType, 0),
-        4: ('type', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -28,3 +22,12 @@ class CardanoTxInputType(p.MessageType):
         self.prev_hash = prev_hash
         self.prev_index = prev_index
         self.type = type
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            2: ('prev_hash', p.BytesType, 0),
+            3: ('prev_index', p.UVarintType, 0),
+            4: ('type', p.UVarintType, 0),
+        }

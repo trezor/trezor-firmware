@@ -4,11 +4,6 @@ import protobuf as p
 
 
 class OntologyOntIdAttribute(p.MessageType):
-    FIELDS = {
-        1: ('key', p.UnicodeType, 0),
-        2: ('type', p.UnicodeType, 0),
-        3: ('value', p.UnicodeType, 0),
-    }
 
     def __init__(
         self,
@@ -19,3 +14,11 @@ class OntologyOntIdAttribute(p.MessageType):
         self.key = key
         self.type = type
         self.value = value
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('key', p.UnicodeType, 0),
+            2: ('type', p.UnicodeType, 0),
+            3: ('value', p.UnicodeType, 0),
+        }

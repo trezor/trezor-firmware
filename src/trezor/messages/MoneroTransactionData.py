@@ -13,23 +13,6 @@ if __debug__:
 
 
 class MoneroTransactionData(p.MessageType):
-    FIELDS = {
-        1: ('version', p.UVarintType, 0),
-        2: ('payment_id', p.BytesType, 0),
-        3: ('unlock_time', p.UVarintType, 0),
-        4: ('outputs', MoneroTransactionDestinationEntry, p.FLAG_REPEATED),
-        5: ('change_dts', MoneroTransactionDestinationEntry, 0),
-        6: ('num_inputs', p.UVarintType, 0),
-        7: ('mixin', p.UVarintType, 0),
-        8: ('fee', p.UVarintType, 0),
-        9: ('account', p.UVarintType, 0),
-        10: ('minor_indices', p.UVarintType, p.FLAG_REPEATED),
-        11: ('is_multisig', p.BoolType, 0),
-        12: ('exp_tx_prefix_hash', p.BytesType, 0),
-        13: ('use_tx_keys', p.BytesType, p.FLAG_REPEATED),
-        14: ('rsig_data', MoneroTransactionRsigData, 0),
-        15: ('integrated_indices', p.UVarintType, p.FLAG_REPEATED),
-    }
 
     def __init__(
         self,
@@ -64,3 +47,23 @@ class MoneroTransactionData(p.MessageType):
         self.use_tx_keys = use_tx_keys if use_tx_keys is not None else []
         self.rsig_data = rsig_data
         self.integrated_indices = integrated_indices if integrated_indices is not None else []
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('version', p.UVarintType, 0),
+            2: ('payment_id', p.BytesType, 0),
+            3: ('unlock_time', p.UVarintType, 0),
+            4: ('outputs', MoneroTransactionDestinationEntry, p.FLAG_REPEATED),
+            5: ('change_dts', MoneroTransactionDestinationEntry, 0),
+            6: ('num_inputs', p.UVarintType, 0),
+            7: ('mixin', p.UVarintType, 0),
+            8: ('fee', p.UVarintType, 0),
+            9: ('account', p.UVarintType, 0),
+            10: ('minor_indices', p.UVarintType, p.FLAG_REPEATED),
+            11: ('is_multisig', p.BoolType, 0),
+            12: ('exp_tx_prefix_hash', p.BytesType, 0),
+            13: ('use_tx_keys', p.BytesType, p.FLAG_REPEATED),
+            14: ('rsig_data', MoneroTransactionRsigData, 0),
+            15: ('integrated_indices', p.UVarintType, p.FLAG_REPEATED),
+        }

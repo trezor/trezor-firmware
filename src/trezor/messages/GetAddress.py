@@ -13,13 +13,6 @@ if __debug__:
 
 class GetAddress(p.MessageType):
     MESSAGE_WIRE_TYPE = 29
-    FIELDS = {
-        1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
-        3: ('show_display', p.BoolType, 0),
-        4: ('multisig', MultisigRedeemScriptType, 0),
-        5: ('script_type', p.UVarintType, 0),  # default=SPENDADDRESS
-    }
 
     def __init__(
         self,
@@ -34,3 +27,13 @@ class GetAddress(p.MessageType):
         self.show_display = show_display
         self.multisig = multisig
         self.script_type = script_type
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            2: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
+            3: ('show_display', p.BoolType, 0),
+            4: ('multisig', MultisigRedeemScriptType, 0),
+            5: ('script_type', p.UVarintType, 0),  # default=SPENDADDRESS
+        }

@@ -10,11 +10,6 @@ if __debug__:
 
 
 class LiskMultisignatureType(p.MessageType):
-    FIELDS = {
-        1: ('min', p.UVarintType, 0),
-        2: ('life_time', p.UVarintType, 0),
-        3: ('keys_group', p.UnicodeType, p.FLAG_REPEATED),
-    }
 
     def __init__(
         self,
@@ -25,3 +20,11 @@ class LiskMultisignatureType(p.MessageType):
         self.min = min
         self.life_time = life_time
         self.keys_group = keys_group if keys_group is not None else []
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('min', p.UVarintType, 0),
+            2: ('life_time', p.UVarintType, 0),
+            3: ('keys_group', p.UnicodeType, p.FLAG_REPEATED),
+        }

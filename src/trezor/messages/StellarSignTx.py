@@ -11,20 +11,6 @@ if __debug__:
 
 class StellarSignTx(p.MessageType):
     MESSAGE_WIRE_TYPE = 202
-    FIELDS = {
-        2: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        3: ('network_passphrase', p.UnicodeType, 0),
-        4: ('source_account', p.UnicodeType, 0),
-        5: ('fee', p.UVarintType, 0),
-        6: ('sequence_number', p.UVarintType, 0),
-        8: ('timebounds_start', p.UVarintType, 0),
-        9: ('timebounds_end', p.UVarintType, 0),
-        10: ('memo_type', p.UVarintType, 0),
-        11: ('memo_text', p.UnicodeType, 0),
-        12: ('memo_id', p.UVarintType, 0),
-        13: ('memo_hash', p.BytesType, 0),
-        14: ('num_operations', p.UVarintType, 0),
-    }
 
     def __init__(
         self,
@@ -53,3 +39,20 @@ class StellarSignTx(p.MessageType):
         self.memo_id = memo_id
         self.memo_hash = memo_hash
         self.num_operations = num_operations
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            2: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            3: ('network_passphrase', p.UnicodeType, 0),
+            4: ('source_account', p.UnicodeType, 0),
+            5: ('fee', p.UVarintType, 0),
+            6: ('sequence_number', p.UVarintType, 0),
+            8: ('timebounds_start', p.UVarintType, 0),
+            9: ('timebounds_end', p.UVarintType, 0),
+            10: ('memo_type', p.UVarintType, 0),
+            11: ('memo_text', p.UnicodeType, 0),
+            12: ('memo_id', p.UVarintType, 0),
+            13: ('memo_hash', p.BytesType, 0),
+            14: ('num_operations', p.UVarintType, 0),
+        }

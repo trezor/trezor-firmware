@@ -4,10 +4,6 @@ import protobuf as p
 
 
 class OntologyTxAttribute(p.MessageType):
-    FIELDS = {
-        1: ('usage', p.UVarintType, 0),
-        2: ('data', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -16,3 +12,10 @@ class OntologyTxAttribute(p.MessageType):
     ) -> None:
         self.usage = usage
         self.data = data
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('usage', p.UVarintType, 0),
+            2: ('data', p.BytesType, 0),
+        }

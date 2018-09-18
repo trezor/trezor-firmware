@@ -7,11 +7,6 @@ from .IdentityType import IdentityType
 
 class GetECDHSessionKey(p.MessageType):
     MESSAGE_WIRE_TYPE = 61
-    FIELDS = {
-        1: ('identity', IdentityType, 0),
-        2: ('peer_public_key', p.BytesType, 0),
-        3: ('ecdsa_curve_name', p.UnicodeType, 0),
-    }
 
     def __init__(
         self,
@@ -22,3 +17,11 @@ class GetECDHSessionKey(p.MessageType):
         self.identity = identity
         self.peer_public_key = peer_public_key
         self.ecdsa_curve_name = ecdsa_curve_name
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('identity', IdentityType, 0),
+            2: ('peer_public_key', p.BytesType, 0),
+            3: ('ecdsa_curve_name', p.UnicodeType, 0),
+        }

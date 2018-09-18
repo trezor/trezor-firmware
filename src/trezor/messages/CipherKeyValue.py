@@ -11,15 +11,6 @@ if __debug__:
 
 class CipherKeyValue(p.MessageType):
     MESSAGE_WIRE_TYPE = 23
-    FIELDS = {
-        1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('key', p.UnicodeType, 0),
-        3: ('value', p.BytesType, 0),
-        4: ('encrypt', p.BoolType, 0),
-        5: ('ask_on_encrypt', p.BoolType, 0),
-        6: ('ask_on_decrypt', p.BoolType, 0),
-        7: ('iv', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -38,3 +29,15 @@ class CipherKeyValue(p.MessageType):
         self.ask_on_encrypt = ask_on_encrypt
         self.ask_on_decrypt = ask_on_decrypt
         self.iv = iv
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            2: ('key', p.UnicodeType, 0),
+            3: ('value', p.BytesType, 0),
+            4: ('encrypt', p.BoolType, 0),
+            5: ('ask_on_encrypt', p.BoolType, 0),
+            6: ('ask_on_decrypt', p.BoolType, 0),
+            7: ('iv', p.BytesType, 0),
+        }

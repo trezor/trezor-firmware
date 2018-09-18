@@ -16,14 +16,6 @@ if __debug__:
 
 class TezosSignTx(p.MessageType):
     MESSAGE_WIRE_TYPE = 152
-    FIELDS = {
-        1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-        2: ('branch', p.BytesType, 0),
-        3: ('reveal', TezosRevealOp, 0),
-        4: ('transaction', TezosTransactionOp, 0),
-        5: ('origination', TezosOriginationOp, 0),
-        6: ('delegation', TezosDelegationOp, 0),
-    }
 
     def __init__(
         self,
@@ -40,3 +32,14 @@ class TezosSignTx(p.MessageType):
         self.transaction = transaction
         self.origination = origination
         self.delegation = delegation
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            2: ('branch', p.BytesType, 0),
+            3: ('reveal', TezosRevealOp, 0),
+            4: ('transaction', TezosTransactionOp, 0),
+            5: ('origination', TezosOriginationOp, 0),
+            6: ('delegation', TezosDelegationOp, 0),
+        }

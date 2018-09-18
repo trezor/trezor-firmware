@@ -6,19 +6,6 @@ from .TezosContractID import TezosContractID
 
 
 class TezosOriginationOp(p.MessageType):
-    FIELDS = {
-        1: ('source', TezosContractID, 0),
-        2: ('fee', p.UVarintType, 0),
-        3: ('counter', p.UVarintType, 0),
-        4: ('gas_limit', p.UVarintType, 0),
-        5: ('storage_limit', p.UVarintType, 0),
-        6: ('manager_pubkey', p.BytesType, 0),
-        7: ('balance', p.UVarintType, 0),
-        8: ('spendable', p.BoolType, 0),
-        9: ('delegatable', p.BoolType, 0),
-        10: ('delegate', p.BytesType, 0),
-        11: ('script', p.BytesType, 0),
-    }
 
     def __init__(
         self,
@@ -45,3 +32,19 @@ class TezosOriginationOp(p.MessageType):
         self.delegatable = delegatable
         self.delegate = delegate
         self.script = script
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('source', TezosContractID, 0),
+            2: ('fee', p.UVarintType, 0),
+            3: ('counter', p.UVarintType, 0),
+            4: ('gas_limit', p.UVarintType, 0),
+            5: ('storage_limit', p.UVarintType, 0),
+            6: ('manager_pubkey', p.BytesType, 0),
+            7: ('balance', p.UVarintType, 0),
+            8: ('spendable', p.BoolType, 0),
+            9: ('delegatable', p.BoolType, 0),
+            10: ('delegate', p.BytesType, 0),
+            11: ('script', p.BytesType, 0),
+        }
