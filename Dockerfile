@@ -14,6 +14,7 @@ RUN curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_V
 # use zipfile module to extract files world-readable
 RUN python3 -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/local && chmod 755 /usr/local/bin/protoc
 
-RUN pip3 install "protobuf==${PROTOBUF_VERSION}" ecdsa
+RUN pip3 install pipenv
+
 
 RUN ln -s python3 /usr/bin/python

@@ -3,6 +3,10 @@
 # script/build: Build the TREZOR firmware in a clean working tree.
 #
 
+# this needs to be there, otherwise python click installer vomits an error
+export LC_ALL=C.UTF-8
+export LANG=C.UTF-8
+
 set -eu
 
 cd "$(dirname "$0")/.."
@@ -34,7 +38,7 @@ worktree_setup() {
 worktree_build() {
     local path="$1"
 
-    ( cd "$path" && script/cibuild )
+    ( cd "$path" && pipenv install && pipenv run script/cibuild )
 }
 
 worktree_copy() {
