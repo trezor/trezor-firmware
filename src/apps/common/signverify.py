@@ -23,6 +23,6 @@ def split_message(message):
         m = bytes(message).decode()
         words = m.split(" ")
     except UnicodeError:
-        m = hexlify(message)
+        m = "hex(%s)" % hexlify(message).decode()
         words = [m]
     return words
