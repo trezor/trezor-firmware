@@ -149,8 +149,8 @@ def highlight_key(coin, color):
     else:
         keylist[-1] = crayon(color, keylist[-1], bold=True)
     key = crayon(color, ":".join(keylist))
-    name = crayon(None, f"({coin['name']})", dim=True)
-    return f"{key} {name}"
+    name = crayon(None, "({})".format(coin['name']), dim=True)
+    return "{} {}".format(key, name)
 
 
 def find_collisions(coins, field):
@@ -166,7 +166,7 @@ def check_eth(coins):
     check_passed = True
     chains = find_collisions(coins, "chain")
     for key, bucket in chains.items():
-        bucket_str = ", ".join(f"{coin['key']} ({coin['name']})" for coin in bucket)
+        bucket_str = ", ".join("{} ({})".format(coin['key'], coin['name']) for coin in bucket)
         chain_name_str = "colliding chain name " + crayon(None, key, bold=True) + ":"
         print_log(logging.ERROR, chain_name_str, bucket_str)
         check_passed = False
@@ -237,7 +237,7 @@ def check_btc(coins):
                 else:
                     # collision between some unsupported networks is OK
                     level = logging.INFO
-                print_log(level, f"prefix {key}:", collision_str(bucket))
+                print_log(level, "prefix {}:".format(key), collision_str(bucket))
 
         return failed
 
@@ -287,7 +287,7 @@ def check_dups(buckets, print_at_level=logging.ERROR):
             prefix = crayon("green", "*", bold=True)
         else:
             prefix = ""
-        return f"{prefix}{highlighted}"
+        return "{}{}".format(prefix, highlighted)
 
     check_passed = True
 
@@ -315,7 +315,7 @@ def check_dups(buckets, print_at_level=logging.ERROR):
         if symbol == "_override":
             print_log(level, "force-set duplicates:", dup_str)
         else:
-            print_log(level, f"duplicate symbol {symbol}:", dup_str)
+            print_log(level, "duplicate symbol {}:".format(symbol), dup_str)
 
     return check_passed
 
@@ -387,10 +387,10 @@ def check_key_uniformity(coins):
         keyset = set(coin.keys())
         missing = ", ".join(reference_keyset - keyset)
         if missing:
-            print_log(logging.ERROR, f"coin {key} has missing keys: {missing}")
+            print_log(logging.ERROR, "coin {} has missing keys: {}".format(key, missing))
         additional = ", ".join(keyset - reference_keyset)
         if additional:
-            print_log(logging.ERROR, f"coin {key} has superfluous keys: {additional}")
+            print_log(logging.ERROR, "coin {} has superfluous keys: {}".format(key, additional))
 
     return False
 
