@@ -179,6 +179,22 @@ const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen)
 	return ret;
 }
 
+const char **split_message_hex(const uint8_t *msg, uint32_t len)
+{
+	char hex[32 * 2 + 1];
+	memset(hex, 0, sizeof(hex));
+	uint32_t size = len;
+	if (len > 32) {
+		size = 32;
+	}
+	data2hex(msg, size, hex);
+	if (len > 32) {
+		hex[63] = '.';
+		hex[62] = '.';
+	}
+	return split_message((const uint8_t *)hex, size * 2, 16);
+}
+
 void *layoutLast = layoutHome;
 
 void layoutDialogSwipe(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6)
@@ -310,10 +326,7 @@ void layoutConfirmOpReturn(const uint8_t *data, uint32_t size)
 {
 	const char **str;
 	if (!is_valid_ascii(data, size)) {
-		char hex[65];
-		memset(hex, 0, sizeof(hex));
-		data2hex(data, (size > 32) ? 32 : size, hex);
-		str = split_message((const uint8_t *)hex, size * 2, 16);
+		str = split_message_hex(data, size);
 	} else {
 		str = split_message(data, size, 20);
 	}
@@ -367,23 +380,39 @@ void layoutFeeOverThreshold(const CoinInfo *coin, uint64_t fee)
 
 void layoutSignMessage(const uint8_t *msg, uint32_t len)
 {
-	const char **str = split_message(msg, len, 16);
-	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
-		_("Sign message?"),
-		str[0], str[1], str[2], str[3], NULL, NULL);
+	const char **str;
+	if (!is_valid_ascii(msg, len)) {
+		str = split_message_hex(msg, len);
+		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
+			_("Sign binary message?"),
+			str[0], str[1], str[2], str[3], NULL, NULL);
+	} else {
+		str = split_message(msg, len, 20);
+		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
+			_("Sign message?"),
+			str[0], str[1], str[2], str[3], NULL, NULL);
+	}
+}
+
+void layoutVerifyMessage(const uint8_t *msg, uint32_t len)
+{
+	const char **str;
+	if (!is_valid_ascii(msg, len)) {
+		str = split_message_hex(msg, len);
+		layoutDialogSwipe(&bmp_icon_info, _("Cancel"), _("Confirm"),
+			_("Verified binary message"),
+			str[0], str[1], str[2], str[3], NULL, NULL);
+	} else {
+		str = split_message(msg, len, 20);
+		layoutDialogSwipe(&bmp_icon_info, _("Cancel"), _("Confirm"),
+			_("Verified message"),
+			str[0], str[1], str[2], str[3], NULL, NULL);
+	}
 }
 
 void layoutVerifyAddress(const CoinInfo *coin, const char *address)
 {
 	render_address_dialog(coin, address, _("Confirm address?"), _("Message signed by:"), 0);
-}
-
-void layoutVerifyMessage(const uint8_t *msg, uint32_t len)
-{
-	const char **str = split_message(msg, len, 16);
-	layoutDialogSwipe(&bmp_icon_info, _("Cancel"), _("Confirm"),
-		_("Verified message"),
-		str[0], str[1], str[2], str[3], NULL, NULL);
 }
 
 void layoutCipherKeyValue(bool encrypt, const char *key)
@@ -530,7 +559,7 @@ void layoutAddress(const char *address, const char *desc, bool qrcode, bool igno
 
 void layoutPublicKey(const uint8_t *pubkey)
 {
-	char hex[32 * 2 + 1], desc[16];
+	char desc[16];
 	strlcpy(desc, "Public Key: 00", sizeof(desc));
 	if (pubkey[0] == 1) {
 		/* ed25519 public key */
@@ -538,8 +567,7 @@ void layoutPublicKey(const uint8_t *pubkey)
 	} else {
 		data2hex(pubkey, 1, desc + 12);
 	}
-	data2hex(pubkey + 1, 32, hex);
-	const char **str = split_message((const uint8_t *)hex, 32 * 2, 16);
+	const char **str = split_message_hex(pubkey + 1, 32 * 2);
 	layoutDialogSwipe(&bmp_icon_question, NULL, _("Continue"), NULL,
 		desc, str[0], str[1], str[2], str[3], NULL);
 }

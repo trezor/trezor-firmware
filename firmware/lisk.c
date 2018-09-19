@@ -258,9 +258,7 @@ void lisk_sign_tx(const HDNode *node, LiskSignTx *msg, LiskSignedTx *resp)
 // Layouts
 void layoutLiskPublicKey(const uint8_t *pubkey)
 {
-	char hex[32 * 2 + 1];
-	data2hex(pubkey, 32, hex);
-	const char **str = split_message((const uint8_t *)hex, 32 * 2, 16);
+	const char **str = split_message_hex(pubkey, 32);
 	layoutDialogSwipe(&bmp_icon_question, NULL, _("Continue"), NULL,
 		_("Public Key:"), str[0], str[1], str[2], str[3], NULL);
 }
