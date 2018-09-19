@@ -11,10 +11,11 @@ RUN apt-get update && \
 ENV PROTOBUF_VERSION=3.4.0
 RUN curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
 
+ENV PYTHON=python3
+
 # use zipfile module to extract files world-readable
-RUN python3 -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/local && chmod 755 /usr/local/bin/protoc
+RUN $PYTHON -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/local && chmod 755 /usr/local/bin/protoc
 
-RUN pip3 install pipenv
+ENV WORKON_HOME=/tmp/.venvs
 
-
-RUN ln -s python3 /usr/bin/python
+RUN $PYTHON -m pip install pipenv
