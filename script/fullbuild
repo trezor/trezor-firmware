@@ -85,12 +85,12 @@ main() {
         "$FIRMWARE_FILENAME" \
         "v*")"
 
-    printf "\n\n"; script/fingerprint \
+    printf "\n\n"; $PYTHON script/fingerprint \
         "$bootloader_path" \
         --max-size 32768 \
         --double
 
-    printf "\n\n"; script/fingerprint \
+    printf "\n\n"; $PYTHON script/fingerprint \
         "$firmware_path" \
         --offset 256 \
         --max-size 491520
