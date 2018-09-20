@@ -67,7 +67,7 @@ void fsm_msgGetFeatures(const GetFeatures *msg)
 	resp->has_pin_cached = true; resp->pin_cached = session_isPinCached();
 	resp->has_passphrase_cached = true; resp->passphrase_cached = session_isPassphraseCached();
 	resp->has_needs_backup = true; resp->needs_backup = storage_needsBackup();
-	resp->unfinished_backup = true; resp->unfinished_backup = storage_unfinishedBackup();
+	resp->has_unfinished_backup = true; resp->unfinished_backup = storage_unfinishedBackup();
 	resp->has_flags = true; resp->flags = storage_getFlags();
 	resp->has_model = true; strlcpy(resp->model, "1", sizeof(resp->model));
 
