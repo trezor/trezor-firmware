@@ -127,7 +127,10 @@ class UnicodeType:
 
 class MessageType:
     WIRE_TYPE = 2
-    FIELDS = {}
+
+    @classmethod
+    def get_fields(cls):
+        return {}
 
     def __init__(self, **kwargs):
         for kw in kwargs:
@@ -171,7 +174,7 @@ class MessageType:
 
     def _additem(self, attr):
         # Add new item for repeated field type
-        for v in self.FIELDS.values():
+        for v in self.get_fields().values():
             if v[0] != attr:
                 continue
             if not (v[2] & FLAG_REPEATED):
@@ -191,7 +194,7 @@ class MessageType:
 
     def _fill_missing(self):
         # fill missing fields
-        for fname, ftype, fflags in self.FIELDS.values():
+        for fname, ftype, fflags in self.get_fields().values():
             if not hasattr(self, fname):
                 if fflags & FLAG_REPEATED:
                     setattr(self, fname, [])
@@ -235,7 +238,7 @@ FLAG_REPEATED = 1
 
 
 def load_message(reader, msg_type):
-    fields = msg_type.FIELDS
+    fields = msg_type.get_fields()
     msg = msg_type()
 
     while True:
@@ -296,7 +299,7 @@ def load_message(reader, msg_type):
 def dump_message(writer, msg):
     repvalue = [0]
     mtype = msg.__class__
-    fields = mtype.FIELDS
+    fields = mtype.get_fields()
 
     for ftag in fields:
         fname, ftype, fflags = fields[ftag]
@@ -424,7 +427,7 @@ def value_to_proto(ftype, value):
 
 def dict_to_proto(message_type, d):
     params = {}
-    for fname, ftype, fflags in message_type.FIELDS.values():
+    for fname, ftype, fflags in message_type.get_fields().values():
         repeated = fflags & FLAG_REPEATED
         value = d.get(fname)
         if value is None:
