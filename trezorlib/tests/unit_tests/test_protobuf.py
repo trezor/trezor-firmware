@@ -22,13 +22,15 @@ from trezorlib import protobuf
 
 
 class PrimitiveMessage(protobuf.MessageType):
-    FIELDS = {
-        0: ("uvarint", protobuf.UVarintType, 0),
-        1: ("svarint", protobuf.SVarintType, 0),
-        2: ("bool", protobuf.BoolType, 0),
-        3: ("bytes", protobuf.BytesType, 0),
-        4: ("unicode", protobuf.UnicodeType, 0),
-    }
+    @classmethod
+    def get_fields(cls):
+        return {
+            0: ("uvarint", protobuf.UVarintType, 0),
+            1: ("svarint", protobuf.SVarintType, 0),
+            2: ("bool", protobuf.BoolType, 0),
+            3: ("bytes", protobuf.BytesType, 0),
+            4: ("unicode", protobuf.UnicodeType, 0),
+        }
 
 
 def load_uvarint(buffer):
