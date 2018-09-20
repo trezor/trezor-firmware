@@ -164,6 +164,8 @@ void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b, uint
     }
 }
 
+#if TREZOR_MODEL == T
+
 static void inflate_callback_image(uint8_t byte1, uint32_t pos, void *userdata)
 {
     static uint8_t byte0;
@@ -183,8 +185,11 @@ static void inflate_callback_image(uint8_t byte1, uint32_t pos, void *userdata)
     }
 }
 
+#endif
+
 void display_image(int x, int y, int w, int h, const void *data, int datalen)
 {
+#if TREZOR_MODEL == T
     x += DISPLAY_OFFSET.x;
     y += DISPLAY_OFFSET.y;
     int x0, y0, x1, y1;
@@ -192,7 +197,10 @@ void display_image(int x, int y, int w, int h, const void *data, int datalen)
     display_set_window(x0, y0, x1, y1);
     int userdata[5] = {w, x0 - x, x1 - x, y0 - y, y1 - y};
     sinf_inflate(data, datalen, inflate_callback_image, userdata);
+#endif
 }
+
+#if TREZOR_MODEL == T
 
 static void inflate_callback_avatar(uint8_t byte1, uint32_t pos, void *userdata)
 {
@@ -241,8 +249,11 @@ static void inflate_callback_avatar(uint8_t byte1, uint32_t pos, void *userdata)
     }
 }
 
+#endif
+
 void display_avatar(int x, int y, const void *data, int datalen, uint16_t fgcolor, uint16_t bgcolor)
 {
+#if TREZOR_MODEL == T
     x += DISPLAY_OFFSET.x;
     y += DISPLAY_OFFSET.y;
     int x0, y0, x1, y1;
@@ -250,6 +261,7 @@ void display_avatar(int x, int y, const void *data, int datalen, uint16_t fgcolo
     display_set_window(x0, y0, x1, y1);
     int userdata[7] = {AVATAR_IMAGE_SIZE, x0 - x, x1 - x, y0 - y, y1 - y, fgcolor, bgcolor};
     sinf_inflate(data, datalen, inflate_callback_avatar, userdata);
+#endif
 }
 
 static void inflate_callback_icon(uint8_t byte, uint32_t pos, void *userdata)
@@ -281,6 +293,8 @@ void display_icon(int x, int y, int w, int h, const void *data, int datalen, uin
     sinf_inflate(data, datalen, inflate_callback_icon, userdata);
 }
 
+#if TREZOR_MODEL == T
+
 #include "loader.h"
 
 static void inflate_callback_loader(uint8_t byte, uint32_t pos, void *userdata)
@@ -289,8 +303,11 @@ static void inflate_callback_loader(uint8_t byte, uint32_t pos, void *userdata)
     out[pos] = byte;
 }
 
+#endif
+
 void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon, uint32_t iconlen, uint16_t iconfgcolor)
 {
+#if TREZOR_MODEL == T
     uint16_t colortable[16], iconcolortable[16];
     set_color_table(colortable, fgcolor, bgcolor);
     if (icon) {
@@ -349,40 +366,7 @@ void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor, uint16_t b
             }
         }
     }
-}
-
-static const uint8_t *get_glyph(int font, uint8_t c)
-{
-    if (c >= ' ' && c <= '~') {
-    // do nothing - valid ASCII
-    } else
-    // UTF-8 handling: https://en.wikipedia.org/wiki/UTF-8#Description
-    if (c >= 0xC0) {
-        // bytes 11xxxxxx are first byte of UTF-8 characters
-        c = '_';
-    } else {
-        // bytes 10xxxxxx are successive UTF-8 characters
-        return 0;
-    }
-    switch (font) {
-#ifdef TREZOR_FONT_NORMAL_ENABLE
-        case FONT_NORMAL:
-            return Font_Roboto_Regular_20[c - ' '];
 #endif
-#ifdef TREZOR_FONT_BOLD_ENABLE
-        case FONT_BOLD:
-            return Font_Roboto_Bold_20[c - ' '];
-#endif
-#ifdef TREZOR_FONT_MONO_ENABLE
-        case FONT_MONO:
-            return Font_RobotoMono_Regular_20[c - ' '];
-#endif
-#ifdef TREZOR_FONT_MONO_BOLD_ENABLE
-        case FONT_MONO_BOLD:
-            return Font_RobotoMono_Bold_20[c - ' '];
-#endif
-    }
-    return 0;
 }
 
 #ifndef TREZOR_PRINT_DISABLE
@@ -484,6 +468,46 @@ void display_printf(const char *fmt, ...)
 
 #endif // TREZOR_PRINT_DISABLE
 
+#if TREZOR_MODEL == T
+
+static const uint8_t *get_glyph(int font, uint8_t c)
+{
+    if (c >= ' ' && c <= '~') {
+    // do nothing - valid ASCII
+    } else
+    // UTF-8 handling: https://en.wikipedia.org/wiki/UTF-8#Description
+    if (c >= 0xC0) {
+        // bytes 11xxxxxx are first byte of UTF-8 characters
+        c = '_';
+    } else {
+        // bytes 10xxxxxx are successive UTF-8 characters
+        return 0;
+    }
+    switch (font) {
+#ifdef TREZOR_FONT_NORMAL_ENABLE
+        case FONT_NORMAL:
+            return Font_Roboto_Regular_20[c - ' '];
+#endif
+#ifdef TREZOR_FONT_BOLD_ENABLE
+        case FONT_BOLD:
+            return Font_Roboto_Bold_20[c - ' '];
+#endif
+#ifdef TREZOR_FONT_MONO_ENABLE
+        case FONT_MONO:
+            return Font_RobotoMono_Regular_20[c - ' '];
+#endif
+#ifdef TREZOR_FONT_MONO_BOLD_ENABLE
+        case FONT_MONO_BOLD:
+            return Font_RobotoMono_Bold_20[c - ' '];
+#endif
+    }
+    return 0;
+}
+
+#endif
+
+#if TREZOR_MODEL == T
+
 static void display_text_render(int x, int y, const char *text, int textlen, int font, uint16_t fgcolor, uint16_t bgcolor)
 {
     // determine text length if not provided
@@ -529,33 +553,42 @@ static void display_text_render(int x, int y, const char *text, int textlen, int
     }
 }
 
+#endif
+
 void display_text(int x, int y, const char *text, int textlen, int font, uint16_t fgcolor, uint16_t bgcolor)
 {
+#if TREZOR_MODEL == T
     x += DISPLAY_OFFSET.x;
     y += DISPLAY_OFFSET.y;
     display_text_render(x, y, text, textlen, font, fgcolor, bgcolor);
+#endif
 }
 
 void display_text_center(int x, int y, const char *text, int textlen, int font, uint16_t fgcolor, uint16_t bgcolor)
 {
+#if TREZOR_MODEL == T
     x += DISPLAY_OFFSET.x;
     y += DISPLAY_OFFSET.y;
     int w = display_text_width(text, textlen, font);
     display_text_render(x - w / 2, y, text, textlen, font, fgcolor, bgcolor);
+#endif
 }
 
 void display_text_right(int x, int y, const char *text, int textlen, int font, uint16_t fgcolor, uint16_t bgcolor)
 {
+#if TREZOR_MODEL == T
     x += DISPLAY_OFFSET.x;
     y += DISPLAY_OFFSET.y;
     int w = display_text_width(text, textlen, font);
     display_text_render(x - w, y, text, textlen, font, fgcolor, bgcolor);
+#endif
 }
 
 // compute the width of the text (in pixels)
 int display_text_width(const char *text, int textlen, int font)
 {
     int width = 0;
+#if TREZOR_MODEL == T
     // determine text length if not provided
     if (textlen < 0) {
         textlen = strlen(text);
@@ -576,6 +609,7 @@ int display_text_width(const char *text, int textlen, int font)
         }
         */
     }
+#endif
     return width;
 }
 

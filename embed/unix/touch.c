@@ -34,15 +34,15 @@ uint32_t touch_read(void)
 {
 #ifndef TREZOR_EMULATOR_NOUI
     SDL_Event event;
-    int x, y;
     SDL_PumpEvents();
     if (SDL_PollEvent(&event) > 0) {
         switch (event.type) {
+#if TREZOR_MODEL == T
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEMOTION:
-            case SDL_MOUSEBUTTONUP:
-                x = event.button.x - sdl_touch_offset_x;
-                y = event.button.y - sdl_touch_offset_y;
+            case SDL_MOUSEBUTTONUP: {
+                int x = event.button.x - sdl_touch_offset_x;
+                int y = event.button.y - sdl_touch_offset_y;
                 if (x < 0 || y < 0 || x >= sdl_display_res_x || y >= sdl_display_res_y) {
                     if (event.motion.state) {
                         int clamp_x = (x < 0) ? 0 : ((x >= sdl_display_res_x) ? sdl_display_res_x - 1 : x);
@@ -66,6 +66,8 @@ uint32_t touch_read(void)
                         return TOUCH_END | touch_pack_xy(x, y);
                 }
                 break;
+            }
+#endif
             case SDL_KEYUP:
                 switch (event.key.keysym.sym) {
                     case SDLK_ESCAPE:
@@ -74,10 +76,12 @@ uint32_t touch_read(void)
                     case SDLK_p:
                         display_save("emu");
                         break;
+#if TREZOR_MODEL == 1
                     case SDLK_RIGHT:
                         return TOUCH_CONFIRM;
                     case SDLK_LEFT:
                         return TOUCH_CANCEL;
+#endif
                 }
                 break;
             case SDL_QUIT:
