@@ -41,12 +41,12 @@ uint32_t touch_read(void)
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEMOTION:
             case SDL_MOUSEBUTTONUP: {
-                int x = event.button.x - sdl_touch_offset_x;
-                int y = event.button.y - sdl_touch_offset_y;
+                const int x = event.button.x - sdl_touch_offset_x;
+                const int y = event.button.y - sdl_touch_offset_y;
                 if (x < 0 || y < 0 || x >= sdl_display_res_x || y >= sdl_display_res_y) {
                     if (event.motion.state) {
-                        int clamp_x = (x < 0) ? 0 : ((x >= sdl_display_res_x) ? sdl_display_res_x - 1 : x);
-                        int clamp_y = (y < 0) ? 0 : ((y >= sdl_display_res_y) ? sdl_display_res_y - 1 : y);
+                        const int clamp_x = (x < 0) ? 0 : ((x >= sdl_display_res_x) ? sdl_display_res_x - 1 : x);
+                        const int clamp_y = (y < 0) ? 0 : ((y >= sdl_display_res_y) ? sdl_display_res_y - 1 : y);
                         return TOUCH_END | touch_pack_xy(clamp_x, clamp_y);
                     } else {
                         break;

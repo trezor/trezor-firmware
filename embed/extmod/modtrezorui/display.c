@@ -429,11 +429,18 @@ void display_print(const char *text, int textlen)
     for (int i = 0; i < DISPLAY_RESX * DISPLAY_RESY; i++) {
         int x = (i % DISPLAY_RESX);
         int y = (i / DISPLAY_RESX);
-        int j = y % 8; y /= 8;
-        int k = x % 6; x /= 6;
-        char c = display_print_buf[y][x] & 0x7F;
-        // char invert = display_print_buf[y][x] & 0x80;
-        if (c < ' ') c = ' ';
+        const int j = y % 8; y /= 8;
+        const int k = x % 6; x /= 6;
+        char c;
+        if (x < DISPLAY_PRINT_COLS && y < DISPLAY_PRINT_ROWS) {
+            c = display_print_buf[y][x] & 0x7F;
+            // char invert = display_print_buf[y][x] & 0x80;
+        } else {
+            c = ' ';
+        }
+        if (c < ' ') {
+            c = ' ';
+        }
         const uint8_t *g = Font_Bitmap + (5 * (c - ' '));
         if (k < 5 && (g[k] & (1 << j))) {
             PIXELDATA(display_print_fgcolor);
