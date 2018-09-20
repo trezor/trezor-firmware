@@ -300,6 +300,7 @@ env.Replace(
     OBJCOPY='arm-none-eabi-objcopy', )
 
 env.Replace(
+    TREZOR_MODEL=env.get('ENV').get('TREZOR_MODEL', 'T'),
     COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
     CCFLAGS='$COPT '
     '-g3 '
@@ -311,7 +312,7 @@ env.Replace(
     '-fstack-protector-all '
     + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/firmware/memory.ld -Wl,--gc-sections -Wl,-Map=build/firmware/firmware.map -Wl,--warn-common',
+    LINKFLAGS='-T embed/firmware/memory_${TREZOR_MODEL}.ld -Wl,--gc-sections -Wl,-Map=build/firmware/firmware.map -Wl,--warn-common',
     CPPPATH=[
         '.',
         'embed/firmware',
@@ -324,7 +325,7 @@ env.Replace(
         'vendor/micropython/ports/stm32',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
-        ('TREZOR_MODEL', 'T'),
+        ('TREZOR_MODEL', '$TREZOR_MODEL'),
         'STM32F427xx',
         'USE_HAL_DRIVER',
         ('STM32_HAL_H', '"<stm32f4xx.h>"'),

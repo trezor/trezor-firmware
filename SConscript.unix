@@ -249,6 +249,7 @@ env.Replace(
     OBJCOPY='objcopy', )
 
 env.Replace(
+    TREZOR_MODEL=env.get('ENV').get('TREZOR_MODEL', 'T'),
     COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
     CCFLAGS='$COPT '
     '-g3 '
@@ -266,7 +267,7 @@ env.Replace(
     ] + CPPPATH_MOD,
     CPPDEFINES=[
         'TREZOR_EMULATOR',
-        ('TREZOR_MODEL', 'T'),
+        ('TREZOR_MODEL', '$TREZOR_MODEL'),
         'MICROPY_USE_READLINE',
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
     ] + CPPDEFINES_MOD,
