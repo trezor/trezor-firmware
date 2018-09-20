@@ -413,14 +413,22 @@ program_elf = env.Command(
     '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lm -lgcc',
 )
 
-program_bin = env.Command(
-    target='firmware.bin',
-    source=program_elf,
-    action=[
+if env.get('TREZOR_MODEL') == 'T':
+    action_bin=[
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
         '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
         '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
         '$BINCTL $TARGET -h',
         '$BINCTL $TARGET -s 1:2 `$KEYCTL sign firmware $TARGET 4747474747474747474747474747474747474747474747474747474747474747 4848484848484848484848484848484848484848484848484848484848484848`' if ARGUMENTS.get('PRODUCTION', '0') == '0' else '',
         '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
-    ], )
+    ]
+else:
+    action_bin=[
+        '$OBJCOPY -O binary -j .flash -j .data $SOURCE $TARGET',
+    ]
+
+program_bin = env.Command(
+    target='firmware.bin',
+    source=program_elf,
+    action=action_bin,
+)
