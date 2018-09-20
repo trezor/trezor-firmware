@@ -7,10 +7,11 @@ PYOPT="${PYOPT:-1}"
 MAIN="${MAIN:-main.py}"
 BROWSER="${BROWSER:-chromium}"
 HEAPSIZE="${HEAPSIZE:-800K}"
+SOURCE_PY_DIR="${SOURCE_PY_DIR:-src}"
 
 ARGS="-O${PYOPT} -X heapsize=${HEAPSIZE}"
 
-cd `dirname $0`/src
+cd `dirname $0`/$SOURCE_PY_DIR
 
 case "$1" in
     "-d")

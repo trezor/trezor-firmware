@@ -276,12 +276,12 @@ SOURCE_TREZORHAL = [
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 
 # TODO: recursive Glob
-SOURCE_PY = Glob('src/*.py')
-SOURCE_PY.extend(Glob('src/*/*.py'))
-SOURCE_PY.extend(Glob('src/*/*/*.py'))
-SOURCE_PY.extend(Glob('src/*/*/*/*.py'))
-SOURCE_PY.extend(Glob('src/*/*/*/*/*.py'))
 SOURCE_PY_DIR = 'src/'
+SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
+SOURCE_PY.extend(Glob(SOURCE_PY_DIR+'*/*.py'))
+SOURCE_PY.extend(Glob(SOURCE_PY_DIR+'*/*/*.py'))
+SOURCE_PY.extend(Glob(SOURCE_PY_DIR+'*/*/*/*.py'))
+SOURCE_PY.extend(Glob(SOURCE_PY_DIR+'*/*/*/*/*.py'))
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s -DPYOPT=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0'), PYOPT))
 
