@@ -23,6 +23,7 @@ class CoinInfo:
         force_bip143: bool,
         version_group_id: int,
         bip115: bool,
+        decred: bool,
         curve_name: str,
     ):
         self.coin_name = coin_name
@@ -42,6 +43,7 @@ class CoinInfo:
         self.force_bip143 = force_bip143
         self.version_group_id = version_group_id
         self.bip115 = bip115
+        self.decred = decred
         self.curve_name = curve_name
         if curve_name == "secp256k1-groestl":
             self.b58_hash = groestl512d_32
@@ -77,6 +79,7 @@ ATTRIBUTES = (
     ("force_bip143", bool),
     ("version_group_id", hexfmt),
     ("bip115", bool),
+    ("decred", bool),
     ("curve_name", lambda r: repr(r.replace("_", "-"))),
 )
 %>\

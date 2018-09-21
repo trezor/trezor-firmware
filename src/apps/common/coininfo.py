@@ -23,6 +23,7 @@ class CoinInfo:
         force_bip143: bool,
         version_group_id: int,
         bip115: bool,
+        decred: bool,
         curve_name: str,
     ):
         self.coin_name = coin_name
@@ -42,6 +43,7 @@ class CoinInfo:
         self.force_bip143 = force_bip143
         self.version_group_id = version_group_id
         self.bip115 = bip115
+        self.decred = decred
         self.curve_name = curve_name
         if curve_name == "secp256k1-groestl":
             self.b58_hash = groestl512d_32
@@ -71,6 +73,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -91,6 +94,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -111,6 +115,7 @@ COINS = [
         force_bip143=True,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -131,6 +136,7 @@ COINS = [
         force_bip143=True,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -151,6 +157,7 @@ COINS = [
         force_bip143=True,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -171,6 +178,7 @@ COINS = [
         force_bip143=True,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -191,6 +199,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -211,6 +220,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -231,7 +241,50 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
+    ),
+    CoinInfo(
+        coin_name="Decred",
+        coin_shortcut="DCR",
+        address_type=1855,
+        address_type_p2sh=1818,
+        maxfee_kb=1000000,
+        signed_message_header="Decred Signed Message:\n",
+        xpub_magic=0x02fda926,
+        xpub_magic_segwit_p2sh=None,
+        xpub_magic_segwit_native=None,
+        bech32_prefix=None,
+        cashaddr_prefix=None,
+        slip44=42,
+        segwit=False,
+        fork_id=None,
+        force_bip143=False,
+        version_group_id=None,
+        bip115=False,
+        decred=True,
+        curve_name='secp256k1-decred',
+    ),
+    CoinInfo(
+        coin_name="Decred Testnet",
+        coin_shortcut="TDCR",
+        address_type=3873,
+        address_type_p2sh=3836,
+        maxfee_kb=10000000,
+        signed_message_header="Decred Signed Message:\n",
+        xpub_magic=0x043587d1,
+        xpub_magic_segwit_p2sh=None,
+        xpub_magic_segwit_native=None,
+        bech32_prefix=None,
+        cashaddr_prefix=None,
+        slip44=1,
+        segwit=False,
+        fork_id=None,
+        force_bip143=False,
+        version_group_id=None,
+        bip115=False,
+        decred=True,
+        curve_name='secp256k1-decred',
     ),
     CoinInfo(
         coin_name="Denarius",
@@ -251,6 +304,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -271,6 +325,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -291,6 +346,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -311,6 +367,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -331,6 +388,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -351,6 +409,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -371,6 +430,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1-groestl',
     ),
     CoinInfo(
@@ -391,6 +451,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1-groestl',
     ),
     CoinInfo(
@@ -411,6 +472,7 @@ COINS = [
         force_bip143=False,
         version_group_id=0x02e7d970,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -431,6 +493,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -451,6 +514,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -471,6 +535,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -491,6 +556,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -511,6 +577,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -531,6 +598,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -551,6 +619,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -571,6 +640,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1-smart',
     ),
     CoinInfo(
@@ -591,6 +661,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1-smart',
     ),
     CoinInfo(
@@ -611,6 +682,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -631,6 +703,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -651,6 +724,7 @@ COINS = [
         force_bip143=False,
         version_group_id=0x03c48270,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -671,6 +745,7 @@ COINS = [
         force_bip143=False,
         version_group_id=0x03c48270,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -691,6 +766,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -711,6 +787,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=False,
+        decred=False,
         curve_name='secp256k1',
     ),
     CoinInfo(
@@ -731,6 +808,7 @@ COINS = [
         force_bip143=False,
         version_group_id=None,
         bip115=True,
+        decred=False,
         curve_name='secp256k1',
     ),
 ]
