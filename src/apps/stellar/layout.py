@@ -8,7 +8,7 @@ from apps.stellar import consts
 
 async def require_confirm_init(ctx, address: str, network_passphrase: str):
     text = Text("Confirm Stellar", ui.ICON_SEND, icon_color=ui.GREEN)
-    text.normal("Initialize singing with")
+    text.normal("Initialize signing with")
     text.mono(*split(address))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
     network = get_network_warning(network_passphrase)
