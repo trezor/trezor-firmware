@@ -124,7 +124,7 @@ of 512 bytes.
 | ?      | 1      | vstr_len | vendor string length |
 | ?      | ?      | vstr | vendor string |
 | ?      | ?      | vstrpad | padding to a multiple of 4 bytes |
-| ?      | ?      | vimg | vendor image (in [TOIf format](toif.md)) |
+| ?      | ?      | vimg | vendor image (120x120 pixels in [TOIf format](toif.md)) |
 | ?      | ?      | reserved | padding to an address that is -65 modulo 512 (zeroed) |
 | ?      | 1      | sigmask | SatoshiLabs signature indexes (bitmap) |
 | ?      | 64     | sig | SatoshiLabs aggregated signature of the vendor header |
