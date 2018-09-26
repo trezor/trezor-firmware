@@ -11,7 +11,9 @@ env:
     - PROTOBUF_VERSION=3.4.0
   matrix:
     - GOAL=stm32 TOOLCHAIN_SHORTVER=7-2018q2 TOOLCHAIN_LONGVER=gcc-arm-none-eabi-7-2018-q2-update
+    - GOAL=stm32 TREZOR_MODEL=1 TOOLCHAIN_SHORTVER=7-2018q2 TOOLCHAIN_LONGVER=gcc-arm-none-eabi-7-2018-q2-update
     - GOAL=unix
+    - GOAL=unix TREZOR_MODEL=1
     - GOAL=src
 
 matrix:

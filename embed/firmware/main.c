@@ -43,16 +43,30 @@
 
 int main(void)
 {
+    // reinitialize HAL for Trezor One
+#if TREZOR_MODEL == 1
+    HAL_Init();
+#endif
+
+#if TREZOR_MODEL == T
     // Enable MPU
     mpu_config();
+#endif
 
     // Init peripherals
     pendsv_init();
+
+#if TREZOR_MODEL == 1
+    display_init();
+#endif
+
+#if TREZOR_MODEL == T
     sdcard_init();
     touch_init();
     touch_power_on();
 
     display_clear();
+#endif
 
     printf("CORE: Preparing stack\n");
     // Stack limit should be less than real stack size, so we have a chance

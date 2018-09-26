@@ -50,7 +50,11 @@ static struct {
 #ifdef TREZOR_EMULATOR
 #include "display-unix.h"
 #else
-#include "display-stm32.h"
+#if TREZOR_MODEL == T
+#include "display-stm32_t.h"
+#elif TREZOR_MODEL == 1
+#include "display-stm32_1.h"
+#endif
 #endif
 
 // common display functions

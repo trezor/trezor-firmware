@@ -3,7 +3,7 @@
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)  : ORIGIN = 0x08040000, LENGTH = 768K
+  FLASH  (rx)  : ORIGIN = 0x08010000, LENGTH = 1024K - 64K
   SRAM   (wal) : ORIGIN = 0x20000000, LENGTH = 128K
 }
 
@@ -16,8 +16,9 @@ data_vma = ADDR(.data);
 data_size = SIZEOF(.data);
 
 /* used by the startup code to wipe memory */
-ccmram_start = 0;
-ccmram_end = 0;
+/* we have no CCMRAM, so erase the first word of SRAM as hack */
+ccmram_start = ORIGIN(SRAM);
+ccmram_end = ORIGIN(SRAM) + 4;
 
 /* used by the startup code to wipe memory */
 sram_start = ORIGIN(SRAM);
