@@ -57,13 +57,12 @@ def get_nonce(
     `R` should be combined with other partial signatures through :func:`combine_keys`
     to obtain a "global commitment".
     """
+    # r = hash(hash(sk)[b .. 2b] + M + ctr)
+    # R = rB
     h = _ed25519.H(sk)
-    b = _ed25519.b
-    r = _ed25519.Hint(
-        bytes([h[i] for i in range(b >> 3, b >> 2)])
-        + data
-        + bytes.fromhex("%08x" % ctr)
-    )
+    bytesize = _ed25519.b // 8
+    assert len(h) == bytesize * 2
+    r = _ed25519.Hint(h[bytesize:] + data + ctr.to_bytes(4, "big"))
     R = _ed25519.scalarmult(_ed25519.B, r)
     return r, Ed25519PublicPoint(_ed25519.encodepoint(R))
 
@@ -93,9 +92,16 @@ def sign_with_privkey(
     """Create a CoSi signature of `digest` with the supplied private key.
     This function needs to know the global public key and global commitment.
     """
-    h = _ed25519.H(privkey)
     b = _ed25519.b
-    a = 2 ** (b - 2) + sum(2 ** i * _ed25519.bit(h, i) for i in range(3, b - 2))
+    h = _ed25519.H(privkey)
+    a = int.from_bytes(h, "little")
+    # curvepoint preparation:
+    # 1. clear lowest three and highest bit
+    bitmask = 1 + 2 + 4 + (1 << b - 1)
+    a &= ~bitmask
+    # 2. set next-highest bit
+    a |= 1 << b - 2
+
     S = (nonce + _ed25519.Hint(global_commit + global_pubkey + digest) * a) % _ed25519.l
     return Ed25519Signature(_ed25519.encodeint(S))
 
