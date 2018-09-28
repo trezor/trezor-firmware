@@ -87,10 +87,8 @@ static void lisk_update_raw_tx(const HDNode *node, LiskSignTx *msg)
 
 	// For CastVotes transactions, recipientId should be equal to transaction creator address.
 	if(msg->transaction.type == LiskTransactionType_CastVotes && !msg->transaction.has_recipient_id) {
-		char address[MAX_LISK_ADDRESS_SIZE];
-		lisk_get_address_from_public_key(&node->public_key[1], address);
-		memcpy(msg->transaction.recipient_id, address, sizeof(address));
 		msg->transaction.has_recipient_id = true;
+		lisk_get_address_from_public_key(&node->public_key[1], msg->transaction.recipient_id);
 	}
 }
 
