@@ -54,7 +54,8 @@ def _update_raw_tx(transaction, pubkey):
     # For CastVotes transactions, recipientId should be equal to transaction
     # creator address.
     if transaction.type == LiskTransactionType.CastVotes:
-        transaction.recipient_id = get_address_from_public_key(pubkey)
+        if not transaction.recipient_id:
+            transaction.recipient_id = get_address_from_public_key(pubkey)
 
     return transaction
 
