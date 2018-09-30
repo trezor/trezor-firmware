@@ -62,7 +62,7 @@ script:
 
   - test "$GOAL" != "unix" || pipenv run make build_unix_noui
   - test "$GOAL" != "unix" || pipenv run make test
-  - test "$GOAL" != "unix" || pipenv run make test_emu
+  - test "$GOAL" != "unix" || test "$TREZOR_MODEL" = "1" || pipenv run make test_emu
 
 notifications:
   webhooks:
