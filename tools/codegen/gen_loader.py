@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 # script used to generate /embed/extmod/modtrezorui/loader.h
 
