@@ -2,10 +2,6 @@ sudo: false
 dist: trusty
 language: c
 
-compiler:
-  - clang
-  - gcc
-
 env:
   global:
     - PROTOBUF_VERSION=3.4.0
@@ -17,11 +13,11 @@ env:
     - GOAL=src
 
 matrix:
-  exclude:
+  include:
     - compiler: clang
-      env: GOAL=stm32
+      env: GOAL=unix
     - compiler: clang
-      env: GOAL=src
+      env: GOAL=unix TREZOR_MODEL=1
 
 addons:
   apt:
