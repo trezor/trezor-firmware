@@ -58,7 +58,7 @@ script:
   - test "$GOAL" != "stm32" || pipenv run make build_bootloader
   - test "$GOAL" != "stm32" || pipenv run make build_prodtest
   - test "$GOAL" != "stm32" || pipenv run make build_firmware
-  - test "$GOAL" != "stm32" || pipenv run make sizecheck
+  - test "$GOAL" != "stm32" || test "$TREZOR_MODEL" = "1" || pipenv run make sizecheck
 
   - test "$GOAL" != "unix" || pipenv run make build_unix_noui
   - test "$GOAL" != "unix" || pipenv run make test
