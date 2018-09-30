@@ -247,7 +247,9 @@ env.Replace(
     OBJCOPY='objcopy', )
 
 env.Replace(
-    TREZOR_MODEL=env.get('ENV').get('TREZOR_MODEL', 'T'),
+    TREZOR_MODEL=env.get('ENV').get('TREZOR_MODEL', 'T'), )
+
+env.Replace(
     COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
     CCFLAGS='$COPT '
     '-g3 '
