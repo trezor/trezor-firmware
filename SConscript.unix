@@ -274,7 +274,7 @@ env.Replace(
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
 if not ARGUMENTS.get('TREZOR_EMULATOR_NOUI', 0):
-    env.ParseConfig('pkg-config --cflags --libs sdl2 SDL2_image')
+    env.ParseConfig('pkg-config --cflags --libs sdl2 SDL2_image || :')
 
 env.Replace(
     PYTHON='python',

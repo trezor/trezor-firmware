@@ -44,14 +44,10 @@ class TestDisplay(unittest.TestCase):
     def test_orientation(self):
         for o in [0, 90, 180, 270]:
             display.orientation(o)
-            o2 = display.orientation()
-            self.assertEqual(o, o2)
 
     def test_backlight(self):
         for b in range(256):
             display.backlight(b)
-            b2 = display.backlight()
-            self.assertEqual(b, b2)
 
     def test_offset(self):
         for x in range(-4, 5):
