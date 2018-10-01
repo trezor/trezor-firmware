@@ -1,7 +1,7 @@
 with import <nixpkgs> {};
 
 let
-  myPython = python36.withPackages(p: [p.trezor]);
+  myPython = python36.withPackages(ps: [ps.trezor ps.pytest]);
 in
   stdenv.mkDerivation {
     name = "trezor-core-dev";
