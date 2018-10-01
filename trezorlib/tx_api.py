@@ -97,7 +97,7 @@ class TxApiInsight(TxApi):
             i = t._add_inputs()
             if "coinbase" in vin.keys():
                 i.prev_hash = b"\0" * 32
-                i.prev_index = 0xffffffff  # signed int -1
+                i.prev_index = 0xFFFFFFFF  # signed int -1
                 i.script_sig = bytes.fromhex(vin["coinbase"])
                 i.sequence = vin["sequence"]
 
@@ -111,7 +111,7 @@ class TxApiInsight(TxApi):
             o = t._add_bin_outputs()
             o.amount = int(Decimal(vout["value"]) * 100000000)
             o.script_pubkey = bytes.fromhex(vout["scriptPubKey"]["hex"])
-            if self.bip115 and o.script_pubkey[-1] == 0xb4:
+            if self.bip115 and o.script_pubkey[-1] == 0xB4:
                 # Verify if coin implements replay protection bip115 and script includes checkblockatheight opcode. 0xb4 - is op_code (OP_CHECKBLOCKATHEIGHT)
                 # <OP_32> <32-byte block hash> <OP_3> <3-byte block height> <OP_CHECKBLOCKATHEIGHT>
                 tail = o.script_pubkey[-38:]

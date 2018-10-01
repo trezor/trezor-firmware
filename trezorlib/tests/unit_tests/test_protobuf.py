@@ -47,7 +47,7 @@ def dump_uvarint(value):
 def test_dump_uvarint():
     assert dump_uvarint(0) == b"\x00"
     assert dump_uvarint(1) == b"\x01"
-    assert dump_uvarint(0xff) == b"\xff\x01"
+    assert dump_uvarint(0xFF) == b"\xff\x01"
     assert dump_uvarint(123456) == b"\xc0\xc4\x07"
 
     with pytest.raises(ValueError):
@@ -57,7 +57,7 @@ def test_dump_uvarint():
 def test_load_uvarint():
     assert load_uvarint(b"\x00") == 0
     assert load_uvarint(b"\x01") == 1
-    assert load_uvarint(b"\xff\x01") == 0xff
+    assert load_uvarint(b"\xff\x01") == 0xFF
     assert load_uvarint(b"\xc0\xc4\x07") == 123456
 
 

@@ -68,7 +68,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         op = proto.StellarBumpSequenceOp()
-        op.bump_to = 0x7fffffffffffffff
+        op.bump_to = 0x7FFFFFFFFFFFFFFF
         tx = self._create_msg()
 
         response = stellar.sign_tx(

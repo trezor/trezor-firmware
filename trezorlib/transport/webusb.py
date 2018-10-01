@@ -24,9 +24,9 @@ from . import Transport, TransportException
 from ..protocol_v1 import ProtocolV1
 from ..protocol_v2 import ProtocolV2
 
-DEV_TREZOR1 = (0x534c, 0x0001)
-DEV_TREZOR2 = (0x1209, 0x53c1)
-DEV_TREZOR2_BL = (0x1209, 0x53c0)
+DEV_TREZOR1 = (0x534C, 0x0001)
+DEV_TREZOR2 = (0x1209, 0x53C1)
+DEV_TREZOR2_BL = (0x1209, 0x53C0)
 
 INTERFACE = 0
 ENDPOINT = 1

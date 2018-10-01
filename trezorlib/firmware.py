@@ -1,4 +1,3 @@
-
 import construct as c
 import pyblake2
 
@@ -6,7 +5,7 @@ from . import cosi, messages as proto, tools
 
 
 def bytes_not(data):
-    return bytes(~b & 0xff for b in data)
+    return bytes(~b & 0xFF for b in data)
 
 
 # fmt: off

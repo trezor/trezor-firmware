@@ -1,4 +1,3 @@
-
 from . import messages as proto
 from .protobuf import dict_to_proto
 from .tools import CallException, dict_from_camelcase, expect, normalize_nfc

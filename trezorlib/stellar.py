@@ -336,7 +336,7 @@ def _crc16_checksum(bytes):
             if c15 ^ bit:
                 crc ^= polynomial
 
-    return crc & 0xffff
+    return crc & 0xFFFF
 
 
 # ====== Client functions ====== #

@@ -356,7 +356,7 @@ def format_message(
     def mostly_printable(bytes):
         if not bytes:
             return True
-        printable = sum(1 for byte in bytes if 0x20 <= byte <= 0x7e)
+        printable = sum(1 for byte in bytes if 0x20 <= byte <= 0x7E)
         return printable / len(bytes) > 0.8
 
     def pformat_value(value: Any, indent: int) -> str:

@@ -677,7 +677,7 @@ def sign_tx(connect, coin):
         sequence = click.prompt(
             "Sequence Number to use (RBF opt-in enabled by default)",
             type=int,
-            default=0xfffffffd,
+            default=0xFFFFFFFD,
         )
         script_type = click.prompt(
             "Input type",

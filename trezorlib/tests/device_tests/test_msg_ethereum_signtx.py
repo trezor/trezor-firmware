@@ -366,8 +366,8 @@ class TestMsgEthereumSigntx(TrezorTest):
                 self.client,
                 n=[0, 0],
                 nonce=123456,
-                gas_price=0xffffffffffffffffffffffffffffffff,
-                gas_limit=0xffffffffffffffffffffffffffffff,
+                gas_price=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+                gas_limit=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
                 to=TO_ADDR,
                 value=12345678901234567890,
             )

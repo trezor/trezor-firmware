@@ -31,8 +31,8 @@ class TestMsgOntologySigntx(TrezorTest):
 
         transaction = messages.OntologyTransaction(
             version=0x00,
-            nonce=0x7f7f1ceb,
-            type=0xd1,
+            nonce=0x7F7F1CEB,
+            type=0xD1,
             gas_price=500,
             gas_limit=30000,
             payer="AGn8JFPGM5S4jkWhTC89Xtz1Y76sPz29Rc",
@@ -63,8 +63,8 @@ class TestMsgOntologySigntx(TrezorTest):
 
         transaction = messages.OntologyTransaction(
             version=0x00,
-            nonce=0x7f7f1ceb,
-            type=0xd1,
+            nonce=0x7F7F1CEB,
+            type=0xD1,
             gas_price=500,
             gas_limit=30000,
             payer="AGn8JFPGM5S4jkWhTC89Xtz1Y76sPz29Rc",

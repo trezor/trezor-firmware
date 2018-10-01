@@ -70,4 +70,4 @@ class TestBip32Speed(TrezorTest):
         print("CACHED TIME", cache_time)
 
         # Cached time expected to be at least 2x faster
-        assert cache_time <= nocache_time / 2.
+        assert cache_time <= nocache_time / 2.0

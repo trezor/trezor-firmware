@@ -74,7 +74,7 @@ except ImportError:
     def getch():
         while True:
             key = msvcrt.getch()
-            if key in (0x00, 0xe0):
+            if key in (0x00, 0xE0):
                 # skip special keys: read the scancode and repeat
                 msvcrt.getch()
                 continue
