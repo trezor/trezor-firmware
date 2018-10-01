@@ -294,8 +294,3 @@ class ProtocolMixin(object):
 class TrezorClient(ProtocolMixin, BaseClient):
     def __init__(self, transport, *args, **kwargs):
         super().__init__(transport=transport, *args, **kwargs)
-
-
-class TrezorClientDebugLink(ProtocolMixin, DebugLinkMixin, BaseClient):
-    def __init__(self, transport, *args, **kwargs):
-        super().__init__(transport=transport, *args, **kwargs)
