@@ -21,7 +21,13 @@ env:
 python:
     - "3.5"
     - "3.6"
-    - "3.7"
+
+# workaround for https://github.com/travis-ci/travis-ci/issues/9815
+matrix:
+    include:
+        - python: 3.7
+          dist: xenial
+          sudo: true
 
 install:
     # Optimisation: build requirements as wheels, which get cached by Travis
