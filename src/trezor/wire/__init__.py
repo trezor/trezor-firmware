@@ -36,6 +36,7 @@ class Context:
         `self.read()`.
         """
         await self.write(msg)
+        del msg
         return await self.read(types)
 
     async def read(self, types):
@@ -74,12 +75,12 @@ class Context:
             )
 
         # get the message size
-        counter = protobuf.CountingWriter()
-        await protobuf.dump_message(counter, msg)
+        fields = msg.get_fields()
+        size = protobuf.count_message(msg, fields)
 
         # write the message
-        writer.setheader(msg.MESSAGE_WIRE_TYPE, counter.size)
-        await protobuf.dump_message(writer, msg)
+        writer.setheader(msg.MESSAGE_WIRE_TYPE, size)
+        await protobuf.dump_message(writer, msg, fields)
         await writer.aclose()
 
     def wait(self, *tasks):
