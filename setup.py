@@ -130,11 +130,10 @@ setup(
     scripts=["trezorctl"],
     install_requires=install_requires,
     extras_require={
-        ':python_version < "3.5"': ["typing>=3.0.0"],
         "hidapi": ["hidapi>=0.7.99.post20"],
         "ethereum": ["rlp>=0.4.4", "ethjsonrpc>=0.3.0"],
     },
-    python_requires=">=3.3",
+    python_requires=">=3.5",
     include_package_data=True,
     zip_safe=False,
     classifiers=[

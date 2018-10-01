@@ -21,6 +21,7 @@ env:
 python:
     - "3.5"
     - "3.6"
+    - "3.7"
 
 install:
     # Optimisation: build requirements as wheels, which get cached by Travis
@@ -38,7 +39,7 @@ before_script:
 
 script:
     - python setup.py install
-    - if [ $TRAVIS_PYTHON_VERSION == 3.6 ]; then make stylecheck; fi
+    - if [ $TRAVIS_PYTHON_VERSION != 3.5 ]; then make stylecheck; fi
     - tox
 
 notifications:
