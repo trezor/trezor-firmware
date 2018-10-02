@@ -1,6 +1,11 @@
 #define BTN_PIN_LEFT    GPIO_PIN_5
 #define BTN_PIN_RIGHT   GPIO_PIN_2
 
+#define DISPLAY_RESX        128
+#define DISPLAY_RESY        64
+#define BTN_LEFT_COORDS     touch_pack_xy(0, DISPLAY_RESY - 1)
+#define BTN_RIGHT_COORDS    touch_pack_xy(DISPLAY_RESX - 1, DISPLAY_RESY - 1)
+
 void touch_init(void) {
     __HAL_RCC_GPIOC_CLK_ENABLE();
 
@@ -26,17 +31,17 @@ uint32_t touch_read(void)
     if (last_left != left) {
         last_left = left;
         if (left) {
-            return TOUCH_START | touch_pack_xy(0, 63);
+            return TOUCH_START | BTN_LEFT_COORDS;
         } else {
-            return TOUCH_END | touch_pack_xy(0, 63);
+            return TOUCH_END | BTN_LEFT_COORDS;
         }
     }
     if (last_right != right) {
         last_right = right;
         if (right) {
-            return TOUCH_START | touch_pack_xy(127, 63);
+            return TOUCH_START | BTN_RIGHT_COORDS;
         } else {
-            return TOUCH_END | touch_pack_xy(127, 63);
+            return TOUCH_END | BTN_RIGHT_COORDS;
         }
     }
     return 0;

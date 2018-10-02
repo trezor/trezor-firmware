@@ -24,6 +24,8 @@
 #include "touch_t.h"
 #elif TREZOR_MODEL == 1
 #include "touch_1.h"
+#else
+#error Unknown TREZOR Model
 #endif
 
 uint32_t touch_click(void)
