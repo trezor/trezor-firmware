@@ -19,8 +19,8 @@ from mnemonic import Mnemonic
 
 from . import messages as proto, tools
 from .client import TrezorClient
-from .tools import expect
 from .protobuf import format_message
+from .tools import expect
 
 
 class DebugLink:

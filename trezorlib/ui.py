@@ -3,9 +3,9 @@ import os
 import click
 from mnemonic import Mnemonic
 
-from .messages import WordRequestType, PinMatrixRequestType
 from . import device
 from .exceptions import Cancelled
+from .messages import PinMatrixRequestType, WordRequestType
 
 PIN_MATRIX_DESCRIPTION = """
 Use the numeric keypad to describe number positions. The layout is:
@@ -110,7 +110,7 @@ try:
             key = msvcrt.getwch()
             if key == "\x03":
                 raise KeyboardInterrupt
-            if key in (0x00, 0xe0):
+            if key in (0x00, 0xE0):
                 # skip special keys: read the scancode and repeat
                 msvcrt.getwch()
                 continue
@@ -138,4 +138,3 @@ def matrix_words(type):
             return ch
         if type == WordRequestType.Matrix9 and ch in "123456789":
             return ch
-

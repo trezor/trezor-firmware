@@ -19,10 +19,10 @@ import os
 
 import pytest
 
-from trezorlib import coins, log
+from trezorlib import coins, debuglink, log
 from trezorlib.debuglink import TrezorClientDebugLink
+from trezorlib.device import wipe as wipe_device
 from trezorlib.transport import enumerate_devices, get_transport
-from trezorlib import device, debuglink
 
 TREZOR_VERSION = None
 
@@ -55,7 +55,7 @@ def client():
     wirelink = get_device()
     client = TrezorClientDebugLink(wirelink)
     client.set_tx_api(coins.tx_api["Bitcoin"])
-    device.wipe(client)
+    wipe_device(client)
     client.transport.session_begin()
 
     yield client

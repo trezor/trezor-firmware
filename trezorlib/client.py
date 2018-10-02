@@ -15,14 +15,9 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import functools
-import getpass
 import logging
-import os
 import sys
-import time
 import warnings
-
-from mnemonic import Mnemonic
 
 from . import (
     btc,

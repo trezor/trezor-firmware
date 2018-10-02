@@ -327,9 +327,7 @@ def wipe_device(connect, bootloader):
             click.echo("Please switch your device to bootloader mode.")
             sys.exit(1)
         else:
-            click.echo(
-                "Wiping user data and firmware!"
-            )
+            click.echo("Wiping user data and firmware!")
     else:
         if client.features.bootloader_mode:
             click.echo(

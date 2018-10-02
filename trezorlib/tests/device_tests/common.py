@@ -17,8 +17,8 @@
 import os
 
 from trezorlib import coins, debuglink, device, tx_api
-from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 from trezorlib.debuglink import TrezorClientDebugLink
+from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 
 from . import conftest
 

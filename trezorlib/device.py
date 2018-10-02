@@ -17,12 +17,10 @@
 import os
 import warnings
 
-from mnemonic import Mnemonic
-
 from . import messages as proto
+from .exceptions import Cancelled
 from .tools import expect, session
 from .transport import enumerate_devices, get_transport
-from .exceptions import Cancelled
 
 RECOVERY_BACK = "\x08"  # backspace character, sent literally
 
