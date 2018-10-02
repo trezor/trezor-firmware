@@ -276,14 +276,6 @@ SOURCE_TREZORHAL = [
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 
-# TODO: recursive Glob
-SOURCE_PY_DIR = 'src/'
-SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
-SOURCE_PY.extend(Glob(SOURCE_PY_DIR+'*/*.py'))
-SOURCE_PY.extend(Glob(SOURCE_PY_DIR+'*/*/*.py'))
-SOURCE_PY.extend(Glob(SOURCE_PY_DIR+'*/*/*/*.py'))
-SOURCE_PY.extend(Glob(SOURCE_PY_DIR+'*/*/*/*/*.py'))
-
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s -DPYOPT=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0'), PYOPT))
 
 env.Tool('micropython')
@@ -384,6 +376,18 @@ env.Ignore(qstr_collected, qstr_generated)
 #
 # Frozen modules
 #
+
+if env.get('TREZOR_MODEL') == '1':
+    SOURCE_PY_DIR = 'src1/'
+else:
+    SOURCE_PY_DIR = 'src/'
+
+# TODO: recursive Glob
+SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
+SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*.py'))
+SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*.py'))
+SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*/*.py'))
+SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*/*/*.py'))
 
 source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR)
 
