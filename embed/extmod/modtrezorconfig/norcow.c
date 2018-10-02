@@ -24,8 +24,12 @@
 #include "common.h"
 #include "flash.h"
 
-#ifndef NORCOW_SECTORS
-#define NORCOW_SECTORS {FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_2}
+#if TREZOR_MODEL == T
+#define NORCOW_SECTORS  {FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_2}
+#elif TREZOR_MODEL == 1
+#define NORCOW_SECTORS  {2, 3}
+#else
+#error Unknown TREZOR Model
 #endif
 
 // NRCW = 4e524357
