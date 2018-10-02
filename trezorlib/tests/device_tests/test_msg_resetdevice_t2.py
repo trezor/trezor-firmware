@@ -15,80 +15,87 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import time
+from unittest import mock
 
 import pytest
 from mnemonic import Mnemonic
 
 from trezorlib import device, messages as proto
+from trezorlib.messages import ButtonRequestType as B
 
 from .common import TrezorTest, generate_entropy
+
+EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 
 @pytest.mark.skip_t1
 class TestMsgResetDeviceT2(TrezorTest):
     def test_reset_device(self):
-
-        # No PIN, no passphrase, don't display random
-        external_entropy = b"zlutoucky kun upel divoke ody" * 2
+        words = []
         strength = 128
-        ret = self.client.call_raw(
-            proto.ResetDevice(
+
+        def input_flow():
+            # Backup your seed
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
+            # mnemonic phrases
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            # 12 words, 3 pages
+            for i in range(3):
+                time.sleep(0.3)
+                words.extend(self.client.debug.state().reset_word.split())
+                if i < 2:
+                    self.client.debug.swipe_down()
+                else:
+                    # last page is confirmation
+                    self.client.debug.press_yes()
+
+            # check backup words
+            for _ in range(2):
+                time.sleep(0.3)
+                index = self.client.debug.state().reset_word_pos
+                self.client.debug.input(words[index])
+
+            # safety warning
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
+        os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
+        with mock.patch("os.urandom", os_urandom), self.client:
+            self.client.set_expected_responses(
+                [
+                    proto.EntropyRequest(),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.Success(),
+                    proto.Features(),
+                ]
+            )
+            self.client.set_input_flow(input_flow)
+
+            # No PIN, no passphrase, don't display random
+            device.reset(
+                self.client,
                 display_random=False,
                 strength=strength,
                 passphrase_protection=False,
                 pin_protection=False,
                 label="test",
+                language="english",
             )
-        )
 
-        # Provide entropy
-        assert isinstance(ret, proto.EntropyRequest)
-        internal_entropy = self.client.debug.read_reset_entropy()
-        ret = self.client.call_raw(proto.EntropyAck(entropy=external_entropy))
-
-        # Generate mnemonic locally
-        entropy = generate_entropy(strength, internal_entropy, external_entropy)
+        # generate mnemonic locally
+        internal_entropy = self.client.debug.state().reset_entropy
+        entropy = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
         expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
-
-        # Safety warning
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
-
-        # List through mnemonic pages
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.transport.write(proto.ButtonAck())
-        self.client.debug.press_yes()
-        words = []
-        time.sleep(1)
-        words.extend(self.client.debug.read_reset_word().split())
-        self.client.debug.swipe_down()
-        time.sleep(1)
-        words.extend(self.client.debug.read_reset_word().split())
-        self.client.debug.swipe_down()
-        time.sleep(1)
-        words.extend(self.client.debug.read_reset_word().split())
 
         # Compare that device generated proper mnemonic for given entropies
         assert " ".join(words) == expected_mnemonic
-
-        # Confirm the mnemonic
-        self.client.debug.press_yes()
-
-        # Check mnemonic words
-        time.sleep(1)
-        index = self.client.debug.read_reset_word_pos()
-        self.client.debug.input(words[index])
-        time.sleep(1)
-        index = self.client.debug.read_reset_word_pos()
-        self.client.debug.input(words[index])
-        ret = self.client.transport.read()
-
-        # Safety warning
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
-        assert isinstance(ret, proto.Success)
 
         # Check if device is properly initialized
         resp = self.client.call_raw(proto.Initialize())
@@ -98,83 +105,87 @@ class TestMsgResetDeviceT2(TrezorTest):
         assert resp.passphrase_protection is False
 
     def test_reset_device_pin(self):
-
-        # PIN, passphrase, display random
-        external_entropy = b"zlutoucky kun upel divoke ody" * 2
+        words = []
         strength = 128
-        ret = self.client.call_raw(
-            proto.ResetDevice(
+
+        def input_flow():
+            # Enter new PIN
+            yield
+            self.client.debug.input("654")
+
+            # Confirm PIN
+            yield
+            self.client.debug.input("654")
+
+            # Confirm entropy
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
+            # Backup your seed
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
+            # mnemonic phrases
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            # 12 words, 3 pages
+            for i in range(3):
+                time.sleep(0.3)
+                words.extend(self.client.debug.state().reset_word.split())
+                if i < 2:
+                    self.client.debug.swipe_down()
+                else:
+                    # last page is confirmation
+                    self.client.debug.press_yes()
+
+            # check backup words
+            for _ in range(2):
+                time.sleep(0.3)
+                index = self.client.debug.state().reset_word_pos
+                self.client.debug.input(words[index])
+
+            # safety warning
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
+        os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
+        with mock.patch("os.urandom", os_urandom), self.client:
+            self.client.set_expected_responses(
+                [
+                    proto.ButtonRequest(code=B.Other),
+                    proto.ButtonRequest(code=B.Other),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.EntropyRequest(),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.Success(),
+                    proto.Features(),
+                ]
+            )
+            self.client.set_input_flow(input_flow)
+
+            # PIN, passphrase, display random
+            device.reset(
+                self.client,
                 display_random=True,
                 strength=strength,
                 passphrase_protection=True,
                 pin_protection=True,
                 label="test",
+                language="english",
             )
-        )
 
-        # Enter PIN for first time
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.input("654")
-        ret = self.client.call_raw(proto.ButtonAck())
-
-        # Enter PIN for second time
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.input("654")
-        ret = self.client.call_raw(proto.ButtonAck())
-
-        # Confirm entropy
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
-
-        # Provide entropy
-        assert isinstance(ret, proto.EntropyRequest)
-        internal_entropy = self.client.debug.read_reset_entropy()
-        ret = self.client.call_raw(proto.EntropyAck(entropy=external_entropy))
-
-        # Generate mnemonic locally
-        entropy = generate_entropy(strength, internal_entropy, external_entropy)
+        # generate mnemonic locally
+        internal_entropy = self.client.debug.state().reset_entropy
+        entropy = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
         expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
-
-        # Safety warning
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
-
-        # List through mnemonic pages
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.transport.write(proto.ButtonAck())
-        self.client.debug.press_yes()
-        words = []
-        time.sleep(1)
-        words.extend(self.client.debug.read_reset_word().split())
-        self.client.debug.swipe_down()
-        time.sleep(1)
-        words.extend(self.client.debug.read_reset_word().split())
-        self.client.debug.swipe_down()
-        time.sleep(1)
-        words.extend(self.client.debug.read_reset_word().split())
 
         # Compare that device generated proper mnemonic for given entropies
         assert " ".join(words) == expected_mnemonic
-
-        # Confirm the mnemonic
-        self.client.debug.press_yes()
-
-        # Check mnemonic words
-        time.sleep(1)
-        index = self.client.debug.read_reset_word_pos()
-        self.client.debug.input(words[index])
-        time.sleep(1)
-        index = self.client.debug.read_reset_word_pos()
-        self.client.debug.input(words[index])
-        ret = self.client.transport.read()
-
-        # Safety warning
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
-        assert isinstance(ret, proto.Success)
 
         # Check if device is properly initialized
         resp = self.client.call_raw(proto.Initialize())
