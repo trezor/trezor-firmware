@@ -188,6 +188,7 @@ class expect:
     def __call__(self, f):
         @functools.wraps(f)
         def wrapped_f(*args, **kwargs):
+            __tracebackhide__ = True  # for pytest # pylint: disable=W0612
             ret = f(*args, **kwargs)
             if not isinstance(ret, self.expected):
                 raise RuntimeError(

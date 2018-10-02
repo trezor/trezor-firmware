@@ -20,8 +20,9 @@ import os
 import pytest
 
 from trezorlib import coins, log
-from trezorlib.client import TrezorClient, TrezorClientDebugLink
+from trezorlib.debuglink import TrezorClientDebugLink
 from trezorlib.transport import enumerate_devices, get_transport
+from trezorlib import device, debuglink
 
 TREZOR_VERSION = None
 
@@ -42,7 +43,7 @@ def device_version():
     device = get_device()
     if not device:
         raise RuntimeError()
-    client = TrezorClient(device)
+    client = TrezorClientDebugLink(device)
     if client.features.model == "T":
         return 2
     else:
@@ -52,11 +53,9 @@ def device_version():
 @pytest.fixture(scope="function")
 def client():
     wirelink = get_device()
-    debuglink = wirelink.find_debug()
     client = TrezorClientDebugLink(wirelink)
-    client.set_debuglink(debuglink)
     client.set_tx_api(coins.tx_api["Bitcoin"])
-    client.wipe_device()
+    device.wipe(client)
     client.transport.session_begin()
 
     yield client
@@ -78,7 +77,8 @@ def setup_client(mnemonic=None, pin="", passphrase=False):
     def client_decorator(function):
         @functools.wraps(function)
         def wrapper(client, *args, **kwargs):
-            client.load_device_by_mnemonic(
+            debuglink.load_device_by_mnemonic(
+                client,
                 mnemonic=mnemonic,
                 pin=pin,
                 passphrase_protection=passphrase,

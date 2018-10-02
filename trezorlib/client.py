@@ -27,7 +27,6 @@ from mnemonic import Mnemonic
 from . import (
     btc,
     cosi,
-    debuglink,
     device,
     ethereum,
     exceptions,
@@ -96,12 +95,20 @@ class BaseClient(object):
         pass
 
     def cancel(self):
-        self.transport.write(proto.Cancel())
+        self._raw_write(proto.Cancel())
 
     @tools.session
     def call_raw(self, msg):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
+        self._raw_write(msg)
+        return self._raw_read()
+
+    def _raw_write(self, msg):
+        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         self.transport.write(msg)
+
+    def _raw_read(self):
+        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         return self.transport.read()
 
     def callback_PinMatrixRequest(self, msg):
@@ -115,7 +122,7 @@ class BaseClient(object):
             proto.FailureType.PinCancelled,
             proto.FailureType.PinExpected,
         ):
-            raise exceptions.PinException(msg.code, msg.message)
+            raise exceptions.PinException(resp.code, resp.message)
         else:
             return resp
 
@@ -131,10 +138,11 @@ class BaseClient(object):
         return self.call_raw(proto.PassphraseStateAck())
 
     def callback_ButtonRequest(self, msg):
+        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         # do this raw - send ButtonAck first, notify UI later
-        self.transport.write(proto.ButtonAck())
+        self._raw_write(proto.ButtonAck())
         self.ui.button_request(msg.code)
-        return self.transport.read()
+        return self._raw_read()
 
     @tools.session
     def call(self, msg):

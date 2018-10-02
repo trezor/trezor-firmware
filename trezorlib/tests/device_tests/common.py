@@ -63,7 +63,7 @@ class TrezorTest:
             label="test",
             language="english",
         )
-        if passphrase:
+        if conftest.TREZOR_VERSION > 1 and passphrase:
             device.apply_settings(self.client, passphrase_source=PASSPHRASE_ON_HOST)
 
     def setup_mnemonic_allallall(self):
