@@ -1,3 +1,7 @@
+import usb
+
+usb.bus.open()
+
 import trezorio as io
 from trezorui import Display
 
