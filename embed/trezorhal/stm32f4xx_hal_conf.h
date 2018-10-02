@@ -46,9 +46,14 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 
-// #define USE_USB_FS
+#ifdef STM32F427xx
 #define USE_USB_HS
 #define USE_USB_HS_IN_FS
+#elif STM32F405xx
+#define USE_USB_FS
+#else
+#error Unsupported MCU
+#endif
 
 /* ########################## Module Selection ############################## */
 /**
@@ -56,10 +61,10 @@
   */
 #define HAL_MODULE_ENABLED
 #define HAL_ADC_MODULE_ENABLED
-#define HAL_CAN_MODULE_ENABLED
+/* #define HAL_CAN_MODULE_ENABLED */
 /* #define HAL_CRC_MODULE_ENABLED */
 /* #define HAL_CRYP_MODULE_ENABLED */
-#define HAL_DAC_MODULE_ENABLED
+/* #define HAL_DAC_MODULE_ENABLED */
 /* #define HAL_DCMI_MODULE_ENABLED */
 #define HAL_DMA_MODULE_ENABLED
 /* #define HAL_DMA2D_MODULE_ENABLED */
