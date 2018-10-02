@@ -94,12 +94,13 @@ def sign_with_privkey(
     """
     b = _ed25519.b
     h = _ed25519.H(privkey)
-    a = int.from_bytes(h, "little")
     # curvepoint preparation:
-    # 1. clear lowest three and highest bit
+    # 1. take lowest b bits of h
+    a = int.from_bytes(h[: b // 8], "little")
+    # 2. clear lowest three and highest bit
     bitmask = 1 + 2 + 4 + (1 << b - 1)
     a &= ~bitmask
-    # 2. set next-highest bit
+    # 3. set next-highest bit
     a |= 1 << b - 2
 
     S = (nonce + _ed25519.Hint(global_commit + global_pubkey + digest) * a) % _ed25519.l
