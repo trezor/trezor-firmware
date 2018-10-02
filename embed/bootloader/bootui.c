@@ -300,8 +300,8 @@ int ui_user_input(int zones)
 {
     for (;;) {
         uint32_t evt = touch_click();
-        uint16_t x = touch_get_x(evt);
-        uint16_t y = touch_get_y(evt);
+        uint16_t x = touch_unpack_x(evt);
+        uint16_t y = touch_unpack_y(evt);
         // clicked on Cancel button
         if ((zones & INPUT_CANCEL) && x >= 9 && x < 9 + 108 && y > 184 && y < 184 + 50) {
             return INPUT_CANCEL;

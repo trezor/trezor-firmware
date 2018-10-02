@@ -68,7 +68,23 @@ uint32_t touch_read(void)
                 break;
             }
 #endif
+#if TREZOR_MODEL == 1
+            case SDL_KEYDOWN:
+                if (event.key.repeat) {
+                    break;
+                }
+                switch (event.key.keysym.sym) {
+                    case SDLK_LEFT:
+                        return TOUCH_START | touch_pack_xy(0, sdl_display_res_y - 1);
+                    case SDLK_RIGHT:
+                        return TOUCH_START | touch_pack_xy(sdl_display_res_x - 1, sdl_display_res_y - 1);
+                }
+                break;
+#endif
             case SDL_KEYUP:
+                if (event.key.repeat) {
+                    break;
+                }
                 switch (event.key.keysym.sym) {
                     case SDLK_ESCAPE:
                         __shutdown();
@@ -77,10 +93,10 @@ uint32_t touch_read(void)
                         display_save("emu");
                         break;
 #if TREZOR_MODEL == 1
-                    case SDLK_RIGHT:
-                        return TOUCH_CONFIRM;
                     case SDLK_LEFT:
-                        return TOUCH_CANCEL;
+                        return TOUCH_END | touch_pack_xy(0, sdl_display_res_y - 1);
+                    case SDLK_RIGHT:
+                        return TOUCH_END | touch_pack_xy(sdl_display_res_x - 1, sdl_display_res_y - 1);
 #endif
                 }
                 break;

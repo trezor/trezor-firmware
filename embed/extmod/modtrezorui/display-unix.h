@@ -46,7 +46,7 @@ static SDL_Renderer *RENDERER;
 static SDL_Surface *BUFFER;
 static SDL_Texture *TEXTURE, *BACKGROUND;
 
-int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESX;
+int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
 
 static struct {
