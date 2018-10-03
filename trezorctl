@@ -96,6 +96,7 @@ class UnderscoreAgnosticGroup(click.Group):
     This implementation of `click.Group` responds to underscore_commands by invoking
     the respective dash-command.
     """
+
     def get_command(self, ctx, cmd_name):
         cmd = super().get_command(ctx, cmd_name)
         if cmd is None:
@@ -522,18 +523,14 @@ def firmware_update(connect, filename, url, version, skip_check, fingerprint):
     elif url:
         import requests
 
-        click.echo("Downloading from", url)
+        click.echo("Downloading from {}".format(url))
         r = requests.get(url)
         fp = r.content
     else:
         import requests
 
-        r = requests.get(
-            "https://wallet.trezor.io/data/firmware/{}/releases.json".format(
-                firmware_version
-            )
-        )
-        releases = r.json()
+        url = "https://wallet.trezor.io/data/firmware/{}/releases.json"
+        releases = requests.get(url.format(firmware_version)).json()
 
         def version_func(r):
             return r["version"]
