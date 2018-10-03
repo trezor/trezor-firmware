@@ -101,30 +101,10 @@ def mnemonic_words(expand=False, language="english"):
     return get_word
 
 
-try:
-    # workaround for Click issue https://github.com/pallets/click/pull/1108
-    import msvcrt
-
-    def getchar():
-        while True:
-            key = msvcrt.getwch()
-            if key == "\x03":
-                raise KeyboardInterrupt
-            if key in (0x00, 0xE0):
-                # skip special keys: read the scancode and repeat
-                msvcrt.getwch()
-                continue
-            return key
-
-
-except ImportError:
-    getchar = click.getchar
-
-
 def matrix_words(type):
     while True:
         try:
-            ch = getchar()
+            ch = click.getchar()
         except (KeyboardInterrupt, EOFError):
             raise Cancelled from None
 

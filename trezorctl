@@ -89,12 +89,26 @@ CHOICE_OUTPUT_SCRIPT_TYPE = ChoiceType(
 )
 
 
+class UnderscoreAgnosticGroup(click.Group):
+    """Command group that normalizes dashes and underscores.
+
+    Click 7.0 silently switched all underscore_commands to dash-commands.
+    This implementation of `click.Group` responds to underscore_commands by invoking
+    the respective dash-command.
+    """
+    def get_command(self, ctx, cmd_name):
+        cmd = super().get_command(ctx, cmd_name)
+        if cmd is None:
+            cmd = super().get_command(ctx, cmd_name.replace("_", "-"))
+        return cmd
+
+
 def enable_logging():
     log.enable_debug_output()
     log.OMITTED_MESSAGES.add(proto.Features)
 
 
-@click.group(context_settings={"max_content_width": 400})
+@click.command(cls=UnderscoreAgnosticGroup, context_settings={"max_content_width": 400})
 @click.option(
     "-p",
     "--path",

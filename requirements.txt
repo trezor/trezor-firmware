@@ -1,7 +1,7 @@
 ecdsa>=0.9
 mnemonic>=0.17
 requests>=2.4.0
-click>=6.2
+click>=7,<8
 pyblake2>=0.9.3
 libusb1>=1.6.4
 construct>=2.9
