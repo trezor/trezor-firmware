@@ -18,20 +18,6 @@ import math
 import sys
 
 try:
-    from PyQt4.QtGui import (
-        QPushButton,
-        QLineEdit,
-        QSizePolicy,
-        QRegExpValidator,
-        QLabel,
-        QApplication,
-        QWidget,
-        QGridLayout,
-        QVBoxLayout,
-        QHBoxLayout,
-    )
-    from PyQt4.QtCore import QObject, SIGNAL, QRegExp, Qt, QT_VERSION_STR
-except ImportError:
     from PyQt5.QtWidgets import (
         QPushButton,
         QLineEdit,
@@ -46,6 +32,20 @@ except ImportError:
     from PyQt5.QtGui import QRegExpValidator
     from PyQt5.QtCore import QRegExp, Qt
     from PyQt5.Qt import QT_VERSION_STR
+except Exception:
+    from PyQt4.QtGui import (
+        QPushButton,
+        QLineEdit,
+        QSizePolicy,
+        QRegExpValidator,
+        QLabel,
+        QApplication,
+        QWidget,
+        QGridLayout,
+        QVBoxLayout,
+        QHBoxLayout,
+    )
+    from PyQt4.QtCore import QObject, SIGNAL, QRegExp, Qt, QT_VERSION_STR
 
 
 class PinButton(QPushButton):
