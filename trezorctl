@@ -709,22 +709,21 @@ def sign_tx(connect, coin):
             if isinstance(script_type, int)
             else CHOICE_INPUT_SCRIPT_TYPE.typemap[script_type]
         )
+
+        new_input = proto.TxInputType(
+            address_n=address_n,
+            prev_hash=prev_hash,
+            prev_index=prev_index,
+            amount=amount,
+            script_type=script_type,
+            sequence=sequence,
+        )
         if txapi.bip115:
             prev_output = txapi.get_tx(prev_hash.hex()).bin_outputs[prev_index]
-            prev_blockhash = prev_output.block_hash
-            prev_blockheight = prev_output.block_height
-        inputs.append(
-            proto.TxInputType(
-                address_n=address_n,
-                prev_hash=prev_hash,
-                prev_index=prev_index,
-                amount=amount,
-                script_type=script_type,
-                sequence=sequence,
-                prev_block_hash_bip115=prev_blockhash,
-                prev_block_height_bip115=prev_blockheight,
-            )
-        )
+            new_input.prev_block_hash_bip115 = prev_output.block_hash
+            new_input.prev_block_height_bip115 = prev_output.block_height
+
+        inputs.append(new_input)
 
     if txapi.bip115:
         current_block_height = txapi.current_height()
