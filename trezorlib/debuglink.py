@@ -214,6 +214,10 @@ class TrezorClientDebugLink(TrezorClient):
             # Another exception raised
             return False
 
+        if self.expected_responses is None:
+            # no need to check anything else
+            return False
+
         # return isinstance(value, TypeError)
         # Evaluate missed responses in 'with' statement
         if self.current_response < len(self.expected_responses):
