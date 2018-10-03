@@ -18,7 +18,7 @@ async def get_address(ctx, msg):
 
     if msg.show_display:
         if len(address_n) > 1:  # path has slip44 network identifier
-            network = networks.by_slip44(address_n[1] & 0x7fffffff)
+            network = networks.by_slip44(address_n[1] & 0x7FFFFFFF)
         else:
             network = None
         hex_addr = _ethereum_address_hex(address, network)

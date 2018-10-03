@@ -19,11 +19,11 @@ _CBOR_PRIMITIVE = const(0b111 << 5)
 
 _CBOR_UINT8_FOLLOWS = const(0x18)
 _CBOR_UINT16_FOLLOWS = const(0x19)
-_CBOR_UINT32_FOLLOWS = const(0x1a)
-_CBOR_UINT64_FOLLOWS = const(0x1b)
-_CBOR_VAR_FOLLOWS = const(0x1f)
+_CBOR_UINT32_FOLLOWS = const(0x1A)
+_CBOR_UINT64_FOLLOWS = const(0x1B)
+_CBOR_VAR_FOLLOWS = const(0x1F)
 
-_CBOR_BREAK = const(0x1f)
+_CBOR_BREAK = const(0x1F)
 _CBOR_RAW_TAG = const(0x18)
 
 

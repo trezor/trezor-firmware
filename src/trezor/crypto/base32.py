@@ -30,13 +30,13 @@ def encode(s: bytes) -> str:
         encoded += bytes(
             [
                 _b32tab[c1 >> 11],  # bits 1 - 5
-                _b32tab[(c1 >> 6) & 0x1f],  # bits 6 - 10
-                _b32tab[(c1 >> 1) & 0x1f],  # bits 11 - 15
+                _b32tab[(c1 >> 6) & 0x1F],  # bits 6 - 10
+                _b32tab[(c1 >> 1) & 0x1F],  # bits 11 - 15
                 _b32tab[c2 >> 12],  # bits 16 - 20 (1 - 5)
-                _b32tab[(c2 >> 7) & 0x1f],  # bits 21 - 25 (6 - 10)
-                _b32tab[(c2 >> 2) & 0x1f],  # bits 26 - 30 (11 - 15)
+                _b32tab[(c2 >> 7) & 0x1F],  # bits 21 - 25 (6 - 10)
+                _b32tab[(c2 >> 2) & 0x1F],  # bits 26 - 30 (11 - 15)
                 _b32tab[c3 >> 5],  # bits 31 - 35 (1 - 5)
-                _b32tab[c3 & 0x1f],  # bits 36 - 40 (1 - 5)
+                _b32tab[c3 & 0x1F],  # bits 36 - 40 (1 - 5)
             ]
         )
     # Adjust for any leftover partial quanta

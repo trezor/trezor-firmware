@@ -141,7 +141,7 @@ def sanitize_tx_input(tx: TransactionType) -> TxInputType:
     if txi.script_type is None:
         txi.script_type = InputScriptType.SPENDADDRESS
     if txi.sequence is None:
-        txi.sequence = 0xffffffff
+        txi.sequence = 0xFFFFFFFF
     return txi
 
 

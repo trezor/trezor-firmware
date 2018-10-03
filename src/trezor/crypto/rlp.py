@@ -42,12 +42,12 @@ def encode(data, include_length=True) -> bytes:
 
 
 def field_length(length: int, first_byte: bytearray) -> int:
-    if length == 1 and first_byte[0] <= 0x7f:
+    if length == 1 and first_byte[0] <= 0x7F:
         return 1
     elif length <= 55:
         return 1 + length
-    elif length <= 0xff:
+    elif length <= 0xFF:
         return 2 + length
-    elif length <= 0xffff:
+    elif length <= 0xFFFF:
         return 3 + length
     return 4 + length

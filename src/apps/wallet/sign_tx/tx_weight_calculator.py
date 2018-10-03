@@ -105,7 +105,7 @@ class TxWeightCalculator:
 
     @staticmethod
     def op_push_size(length: int):
-        if length < 0x4c:
+        if length < 0x4C:
             return 1
         if length < 0x100:
             return 2

@@ -23,6 +23,6 @@ def serialize_provision_namespace(
     if namespace.parent:
         write_bytes_with_len(tx, namespace.parent.encode())
     else:
-        write_uint32_le(tx, 0xffffffff)
+        write_uint32_le(tx, 0xFFFFFFFF)
 
     return tx

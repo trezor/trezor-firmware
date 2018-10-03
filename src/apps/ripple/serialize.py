@@ -71,7 +71,7 @@ def write(w: bytearray, field: dict, value):
 
 
 def write_type(w: bytearray, field: dict):
-    if field["key"] <= 0xf:
+    if field["key"] <= 0xF:
         w.append((field["type"] << 4) | field["key"])
     else:
         # this concerns two-bytes fields such as lastLedgerSequence
@@ -88,7 +88,7 @@ def serialize_amount(value: int) -> bytearray:
         raise ValueError("Value is too large")
 
     b = bytearray(value.to_bytes(8, "big"))
-    b[0] &= 0x7f  # clear first bit to indicate XRP
+    b[0] &= 0x7F  # clear first bit to indicate XRP
     b[0] |= 0x40  # set second bit to indicate positive number
     return b
 
@@ -111,12 +111,12 @@ def write_varint(w: bytearray, val: int):
     elif val <= 12480:
         val -= 193
         w.append(193 + rshift(val, 8))
-        w.append(val & 0xff)
+        w.append(val & 0xFF)
     elif val <= 918744:
         val -= 12481
         w.append(241 + rshift(val, 16))
-        w.append(rshift(val, 8) & 0xff)
-        w.append(val & 0xff)
+        w.append(rshift(val, 8) & 0xFF)
+        w.append(val & 0xFF)
     else:
         raise ValueError("Value is too large")
 

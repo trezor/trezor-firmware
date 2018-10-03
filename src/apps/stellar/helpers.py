@@ -49,4 +49,4 @@ def _crc16_checksum(data: bytes) -> bytes:
             if c15 ^ bit:
                 crc ^= polynomial
 
-    return ustruct.pack("<H", crc & 0xffff)
+    return ustruct.pack("<H", crc & 0xFFFF)

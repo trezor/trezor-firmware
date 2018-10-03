@@ -10,7 +10,7 @@ from trezor.crypto.curve import nist256p1
 from apps.common import HARDENED, storage
 
 _HID_RPT_SIZE = const(64)
-_CID_BROADCAST = const(0xffffffff)  # broadcast channel id
+_CID_BROADCAST = const(0xFFFFFFFF)  # broadcast channel id
 
 # types of frame
 _TYPE_MASK = const(0x80)  # frame type mask
@@ -23,7 +23,7 @@ _CMD_MSG = const(0x83)  # send U2F message frame
 _CMD_LOCK = const(0x84)  # send lock channel command
 _CMD_INIT = const(0x86)  # channel initialization
 _CMD_WINK = const(0x88)  # send device identification wink
-_CMD_ERROR = const(0xbf)  # error response
+_CMD_ERROR = const(0xBF)  # error response
 
 # types for the msg cmd
 _MSG_REGISTER = const(0x01)  # registration command
@@ -38,18 +38,18 @@ _ERR_INVALID_LEN = const(0x03)  # invalid message length
 _ERR_INVALID_SEQ = const(0x04)  # invalid message sequencing
 _ERR_MSG_TIMEOUT = const(0x05)  # message has timed out
 _ERR_CHANNEL_BUSY = const(0x06)  # channel busy
-_ERR_LOCK_REQUIRED = const(0x0a)  # command requires channel lock
-_ERR_INVALID_CID = const(0x0b)  # command not allowed on this cid
-_ERR_OTHER = const(0x7f)  # other unspecified error
+_ERR_LOCK_REQUIRED = const(0x0A)  # command requires channel lock
+_ERR_INVALID_CID = const(0x0B)  # command not allowed on this cid
+_ERR_OTHER = const(0x7F)  # other unspecified error
 
 # command status responses
 _SW_NO_ERROR = const(0x9000)
 _SW_WRONG_LENGTH = const(0x6700)
 _SW_DATA_INVALID = const(0x6984)
 _SW_CONDITIONS_NOT_SATISFIED = const(0x6985)
-_SW_WRONG_DATA = const(0x6a80)
-_SW_INS_NOT_SUPPORTED = const(0x6d00)
-_SW_CLA_NOT_SUPPORTED = const(0x6e00)
+_SW_WRONG_DATA = const(0x6A80)
+_SW_INS_NOT_SUPPORTED = const(0x6D00)
+_SW_CLA_NOT_SUPPORTED = const(0x6E00)
 
 # init response
 _CAPFLAG_WINK = const(0x01)  # device supports _CMD_WINK
@@ -491,7 +491,7 @@ def cmd_init(req: Cmd) -> Cmd:
         return cmd_error(req.cid, _ERR_INVALID_CID)
     elif req.cid == _CID_BROADCAST:
         # uint32_t except 0 and 0xffffffff
-        resp_cid = random.uniform(0xfffffffe) + 1
+        resp_cid = random.uniform(0xFFFFFFFE) + 1
     else:
         resp_cid = req.cid
 
@@ -552,7 +552,7 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     from apps.common import seed
 
     # derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
-    keypath = [HARDENED | random.uniform(0xf0000000) for _ in range(0, 8)]
+    keypath = [HARDENED | random.uniform(0xF0000000) for _ in range(0, 8)]
     nodepath = [_U2F_KEY_PATH] + keypath
 
     # prepare signing key from random path, compute decompressed public key

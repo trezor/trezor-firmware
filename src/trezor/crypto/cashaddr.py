@@ -26,25 +26,25 @@ ADDRESS_TYPE_P2SH = 8
 
 
 def cashaddr_polymod(values):
-    generator = [0x98f2bc8e61, 0x79b76d99e2, 0xf33e5fb3c4, 0xae2eabe2a8, 0x1e4f43e470]
+    generator = [0x98F2BC8E61, 0x79B76D99E2, 0xF33E5FB3C4, 0xAE2EABE2A8, 0x1E4F43E470]
     chk = 1
     for value in values:
         top = chk >> 35
-        chk = ((chk & 0x07ffffffff) << 5) ^ value
+        chk = ((chk & 0x07FFFFFFFF) << 5) ^ value
         for i in range(5):
             chk ^= generator[i] if (top & (1 << i)) else 0
     return chk ^ 1
 
 
 def prefix_expand(prefix):
-    return [ord(x) & 0x1f for x in prefix] + [0]
+    return [ord(x) & 0x1F for x in prefix] + [0]
 
 
 def calculate_checksum(prefix, payload):
     poly = cashaddr_polymod(prefix_expand(prefix) + payload + [0, 0, 0, 0, 0, 0, 0, 0])
     out = list()
     for i in range(8):
-        out.append((poly >> 5 * (7 - i)) & 0x1f)
+        out.append((poly >> 5 * (7 - i)) & 0x1F)
     return out
 
 
