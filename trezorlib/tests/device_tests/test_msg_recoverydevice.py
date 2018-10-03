@@ -204,5 +204,13 @@ class TestMsgRecoverydevice(TrezorTest):
 
     def test_already_initialized(self):
         self.setup_mnemonic_nopin_nopassphrase()
-        with pytest.raises(Exception):
-            device.recover(self.client, 12, False, False, "label", "english")
+        with pytest.raises(RuntimeError):
+            device.recover(
+                self.client,
+                12,
+                False,
+                False,
+                "label",
+                "english",
+                self.client.mnemonic_callback,
+            )
