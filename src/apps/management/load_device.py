@@ -24,7 +24,7 @@ async def load_device(ctx, msg):
     text.normal("Continue only if you", "know what you are doing!")
     await require_confirm(ctx, text)
 
-    storage.load_mnemonic(mnemonic=msg.mnemonic, needs_backup=True)
+    storage.load_mnemonic(mnemonic=msg.mnemonic, needs_backup=True, no_backup=False)
     storage.load_settings(use_passphrase=msg.passphrase_protection, label=msg.label)
     if msg.pin:
         config.change_pin(pin_to_int(""), pin_to_int(msg.pin), None)
