@@ -28,10 +28,6 @@ LOG = logging.getLogger(__name__)
 TREZORD_HOST = "http://127.0.0.1:21325"
 
 
-def get_error(resp):
-    return " (error=%d str=%s)" % (resp.status_code, resp.json()["error"])
-
-
 class BridgeTransport(Transport):
     """
     BridgeTransport implements transport through TREZOR Bridge (aka trezord).
@@ -46,77 +42,85 @@ class BridgeTransport(Transport):
         self.device = device
         self.conn = requests.Session()
         self.session = None
-        self.response = None
+        self.request = None
 
     def get_path(self):
         return "%s:%s" % (self.PATH_PREFIX, self.device["path"])
 
     @classmethod
+    def _call(cls, action, data=None, uri_suffix=None, session=None):
+        if uri_suffix is not None:
+            uri_suffix = "/" + uri_suffix
+        elif session is not None:
+            uri_suffix = "/{}".format(session)
+        else:
+            uri_suffix = ""
+
+        url = "{}/{}{}".format(TREZORD_HOST, action, uri_suffix)
+        r = requests.post(url, headers=cls.HEADERS, data=data)
+
+        if r.status_code != 200:
+            raise TransportException(
+                "trezord: '{}' action failed with code {}: {}".format(
+                    action, r.status_code, r.json().get("error", "(no error message)")
+                )
+            )
+        return r
+
+    @classmethod
     def enumerate(cls):
         try:
-            r = requests.post(TREZORD_HOST + "/enumerate", headers=cls.HEADERS)
-            if r.status_code != 200:
-                raise TransportException(
-                    "trezord: Could not enumerate devices" + get_error(r)
-                )
+            r = cls._call("enumerate")
             return [BridgeTransport(dev) for dev in r.json()]
         except Exception:
             return []
 
     def open(self):
-        r = self.conn.post(
-            TREZORD_HOST + "/acquire/%s/null" % self.device["path"],
-            headers=self.HEADERS,
-        )
-        if r.status_code != 200:
-            raise TransportException(
-                "trezord: Could not acquire session" + get_error(r)
-            )
+        r = self._call("acquire", uri_suffix="{}/null".format(self.device["path"]))
         self.session = r.json()["session"]
 
     def close(self):
         if not self.session:
             return
-        r = self.conn.post(
-            TREZORD_HOST + "/release/%s" % self.session, headers=self.HEADERS
-        )
-        if r.status_code != 200:
-            raise TransportException(
-                "trezord: Could not release session" + get_error(r)
-            )
+        self._call("release", session=self.session)
         self.session = None
 
     def write(self, msg):
+        if self.request is not None:
+            raise TransportException("trezord can't perform two writes without a read")
+
         LOG.debug(
-            "sending message: {}".format(msg.__class__.__name__),
+            "preparing message: {}".format(msg.__class__.__name__),
             extra={"protobuf": msg},
         )
+        # encode the message
         data = BytesIO()
         protobuf.dump_message(data, msg)
         ser = data.getvalue()
         header = struct.pack(">HL", mapping.get_type(msg), len(ser))
-        data = (header + ser).hex()
-        r = self.conn.post(
-            TREZORD_HOST + "/call/%s" % self.session, data=data, headers=self.HEADERS
-        )
-        if r.status_code != 200:
-            raise TransportException("trezord: Could not write message" + get_error(r))
-        self.response = r.text
+        # store for later
+        self.request = (header + ser).hex()
 
     def read(self):
-        if self.response is None:
-            raise TransportException("No response stored")
-        data = bytes.fromhex(self.response)
-        headerlen = struct.calcsize(">HL")
-        (msg_type, datalen) = struct.unpack(">HL", data[:headerlen])
-        data = BytesIO(data[headerlen : headerlen + datalen])
-        msg = protobuf.load_message(data, mapping.get_class(msg_type))
-        LOG.debug(
-            "received message: {}".format(msg.__class__.__name__),
-            extra={"protobuf": msg},
-        )
-        self.response = None
-        return msg
+        if self.request is None:
+            raise TransportException("trezord: no request in queue")
+
+        try:
+            LOG.debug("sending prepared message")
+            r = self._call("call", data=self.request, session=self.session)
+
+            data = bytes.fromhex(r.text)
+            headerlen = struct.calcsize(">HL")
+            msg_type, datalen = struct.unpack(">HL", data[:headerlen])
+            data = BytesIO(data[headerlen : headerlen + datalen])
+            msg = protobuf.load_message(data, mapping.get_class(msg_type))
+            LOG.debug(
+                "received message: {}".format(msg.__class__.__name__),
+                extra={"protobuf": msg},
+            )
+            return msg
+        finally:
+            self.request = None
 
 
 TRANSPORT = BridgeTransport
