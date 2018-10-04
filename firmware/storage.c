@@ -344,6 +344,14 @@ static void storage_commit_locked(bool update)
 			storageUpdate.has_needs_backup = storageRom->has_needs_backup;
 			storageUpdate.needs_backup = storageRom->needs_backup;
 		}
+		if (!storageUpdate.has_unfinished_backup) {
+			storageUpdate.has_unfinished_backup = storageRom->has_unfinished_backup;
+			storageUpdate.unfinished_backup = storageRom->unfinished_backup;
+		}
+		if (!storageUpdate.has_no_backup) {
+			storageUpdate.has_no_backup = storageRom->has_no_backup;
+			storageUpdate.no_backup = storageRom->no_backup;
+		}
 		if (!storageUpdate.has_flags) {
 			storageUpdate.has_flags = storageRom->has_flags;
 			storageUpdate.flags = storageRom->flags;
@@ -842,6 +850,18 @@ void storage_setUnfinishedBackup(bool unfinished_backup)
 {
 	storageUpdate.has_unfinished_backup = true;
 	storageUpdate.unfinished_backup = unfinished_backup;
+}
+
+bool storage_noBackup(void)
+{
+	return storageUpdate.has_no_backup ? storageUpdate.no_backup
+		: storageRom->has_no_backup && storageRom->no_backup;
+}
+
+void storage_setNoBackup(bool no_backup)
+{
+	storageUpdate.has_no_backup = true;
+	storageUpdate.no_backup = no_backup;
 }
 
 void storage_applyFlags(uint32_t flags)

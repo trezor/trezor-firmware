@@ -68,6 +68,7 @@ void fsm_msgGetFeatures(const GetFeatures *msg)
 	resp->has_passphrase_cached = true; resp->passphrase_cached = session_isPassphraseCached();
 	resp->has_needs_backup = true; resp->needs_backup = storage_needsBackup();
 	resp->has_unfinished_backup = true; resp->unfinished_backup = storage_unfinishedBackup();
+	resp->has_no_backup = true; resp->no_backup = storage_noBackup();
 	resp->has_flags = true; resp->flags = storage_getFlags();
 	resp->has_model = true; strlcpy(resp->model, "1", sizeof(resp->model));
 
@@ -220,7 +221,8 @@ void fsm_msgResetDevice(const ResetDevice *msg)
 		msg->has_language ? msg->language : 0,
 		msg->has_label ? msg->label : 0,
 		msg->has_u2f_counter ? msg->u2f_counter : 0,
-		msg->has_skip_backup ? msg->skip_backup : false
+		msg->has_skip_backup ? msg->skip_backup : false,
+		msg->has_no_backup ? msg->no_backup : false
 	);
 }
 

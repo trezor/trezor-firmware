@@ -34,13 +34,15 @@ static uint32_t strength;
 static uint8_t  int_entropy[32];
 static bool     awaiting_entropy = false;
 static bool     skip_backup = false;
+static bool     no_backup = false;
 
-void reset_init(bool display_random, uint32_t _strength, bool passphrase_protection, bool pin_protection, const char *language, const char *label, uint32_t u2f_counter, bool _skip_backup)
+void reset_init(bool display_random, uint32_t _strength, bool passphrase_protection, bool pin_protection, const char *language, const char *label, uint32_t u2f_counter, bool _skip_backup, bool _no_backup)
 {
 	if (_strength != 128 && _strength != 192 && _strength != 256) return;
 
 	strength = _strength;
 	skip_backup = _skip_backup;
+	no_backup = _no_backup;
 
 	random_buffer(int_entropy, 32);
 
@@ -88,12 +90,17 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 	sha256_Update(&ctx, int_entropy, 32);
 	sha256_Update(&ctx, ext_entropy, len);
 	sha256_Final(&ctx, int_entropy);
-	storage_setNeedsBackup(true);
+	if (no_backup) {
+		storage_setNoBackup(true);
+	} else
+	if (skip_backup) {
+		storage_setNeedsBackup(true);
+	}
 	storage_setMnemonic(mnemonic_from_data(int_entropy, strength / 8));
 	memset(int_entropy, 0, 32);
 	awaiting_entropy = false;
 
-	if (skip_backup) {
+	if (skip_backup || no_backup) {
 		storage_update();
 		fsm_sendSuccess(_("Device successfully initialized"));
 		layoutHome();

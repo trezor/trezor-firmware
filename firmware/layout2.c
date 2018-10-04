@@ -250,6 +250,10 @@ void layoutHome(void)
 		oledBox(0, 0, 127, 8, false);
 		oledDrawStringCenter(0, "BACKUP FAILED!", FONT_STANDARD);
 	} else
+	if (storage_noBackup()) {
+		oledBox(0, 0, 127, 8, false);
+		oledDrawStringCenter(0, "NO BACKUP!", FONT_STANDARD);
+	}
 	if (storage_needsBackup()) {
 		oledBox(0, 0, 127, 8, false);
 		oledDrawStringCenter(0, "NEEDS BACKUP!", FONT_STANDARD);
