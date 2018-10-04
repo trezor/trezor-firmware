@@ -25,6 +25,7 @@ def get_features():
     f.passphrase_cached = cache.has_passphrase()
     f.needs_backup = storage.needs_backup()
     f.unfinished_backup = storage.unfinished_backup()
+    f.no_backup = storage.no_backup()
     f.flags = storage.get_flags()
     return f
 

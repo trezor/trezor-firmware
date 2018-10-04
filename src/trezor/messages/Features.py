@@ -34,6 +34,7 @@ class Features(p.MessageType):
         fw_vendor: str = None,
         fw_vendor_keys: bytes = None,
         unfinished_backup: bool = None,
+        no_backup: bool = None,
     ) -> None:
         self.vendor = vendor
         self.major_version = major_version
@@ -61,6 +62,7 @@ class Features(p.MessageType):
         self.fw_vendor = fw_vendor
         self.fw_vendor_keys = fw_vendor_keys
         self.unfinished_backup = unfinished_backup
+        self.no_backup = no_backup
 
     @classmethod
     def get_fields(cls):
@@ -91,4 +93,5 @@ class Features(p.MessageType):
             25: ('fw_vendor', p.UnicodeType, 0),
             26: ('fw_vendor_keys', p.BytesType, 0),
             27: ('unfinished_backup', p.BoolType, 0),
+            28: ('no_backup', p.BoolType, 0),
         }

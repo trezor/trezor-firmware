@@ -25,6 +25,7 @@ _U2F_COUNTER        = const(0x09)  # int
 _PASSPHRASE_SOURCE  = const(0x0A)  # int
 _UNFINISHED_BACKUP  = const(0x0B)  # bool (0x01 or empty)
 _AUTOLOCK_DELAY_MS  = const(0x0C)  # int
+_NO_BACKUP          = const(0x0D)  # bool (0x01 or empty)
 # fmt: on
 
 
@@ -60,13 +61,17 @@ def get_homescreen() -> bytes:
     return config.get(_APP, _HOMESCREEN, True)  # public
 
 
-def load_mnemonic(mnemonic: str, needs_backup: bool) -> None:
+def load_mnemonic(mnemonic: str, needs_backup: bool, no_backup: bool) -> None:
     config.set(_APP, _MNEMONIC, mnemonic.encode())
     config.set(_APP, _VERSION, _STORAGE_VERSION)
-    if needs_backup:
-        config.set(_APP, _NEEDS_BACKUP, b"\x01")
+    if no_backup:
+        config.set(_APP, _NO_BACKUP, b"\x01")
     else:
-        config.set(_APP, _NEEDS_BACKUP, b"")
+        config.set(_APP, _NO_BACKUP, b"")
+        if needs_backup:
+            config.set(_APP, _NEEDS_BACKUP, b"\x01")
+        else:
+            config.set(_APP, _NEEDS_BACKUP, b"")
 
 
 def needs_backup() -> bool:
@@ -86,6 +91,10 @@ def set_unfinished_backup(state: bool) -> None:
         config.set(_APP, _UNFINISHED_BACKUP, b"\x01")
     else:
         config.set(_APP, _UNFINISHED_BACKUP, b"")
+
+
+def no_backup() -> bool:
+    return bool(config.get(_APP, _NO_BACKUP))
 
 
 def get_passphrase_source() -> int:
