@@ -14,8 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import pytest
-
 from trezorlib import messages as proto
 
 from .common import TrezorTest
@@ -41,7 +39,6 @@ class TestMsgResetDeviceNobackup(TrezorTest):
 
         # Provide entropy
         assert isinstance(ret, proto.EntropyRequest)
-        internal_entropy = self.client.debug.read_reset_entropy()
         ret = self.client.call_raw(proto.EntropyAck(entropy=external_entropy))
         assert isinstance(ret, proto.Success)
 
