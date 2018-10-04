@@ -858,10 +858,10 @@ bool storage_noBackup(void)
 		: storageRom->has_no_backup && storageRom->no_backup;
 }
 
-void storage_setNoBackup(bool no_backup)
+void storage_setNoBackup(void)
 {
 	storageUpdate.has_no_backup = true;
-	storageUpdate.no_backup = no_backup;
+	storageUpdate.no_backup = true;
 }
 
 void storage_applyFlags(uint32_t flags)

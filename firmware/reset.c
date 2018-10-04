@@ -91,7 +91,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 	sha256_Update(&ctx, ext_entropy, len);
 	sha256_Final(&ctx, int_entropy);
 	if (no_backup) {
-		storage_setNoBackup(true);
+		storage_setNoBackup();
 	} else
 	if (skip_backup) {
 		storage_setNeedsBackup(true);

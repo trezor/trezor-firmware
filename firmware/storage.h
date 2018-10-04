@@ -144,7 +144,7 @@ bool storage_unfinishedBackup(void);
 void storage_setUnfinishedBackup(bool unfinished_backup);
 
 bool storage_noBackup(void);
-void storage_setNoBackup(bool no_backup);
+void storage_setNoBackup(void);
 
 void storage_applyFlags(uint32_t flags);
 uint32_t storage_getFlags(void);
