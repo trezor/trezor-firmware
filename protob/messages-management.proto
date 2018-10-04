@@ -56,6 +56,7 @@ message Features {
     optional string fw_vendor = 25;             // reported firmware vendor if in bootloader mode
     optional bytes fw_vendor_keys = 26;         // reported firmware vendor keys (their hash)
     optional bool unfinished_backup = 27;       // report unfinished backup (equals to Storage.unfinished_backup)
+    optional bool no_backup = 28;               // report no backup (equals to Storage.no_backup)
 }
 
 /**
@@ -188,6 +189,7 @@ message ResetDevice {
     optional string label = 6;                          // device label
     optional uint32 u2f_counter = 7;                    // U2F counter
     optional bool skip_backup = 8;                      // postpone seed backup to BackupDevice workflow
+    optional bool no_backup = 9;                        // indicate that no backup is going to be made
 }
 
 /**
