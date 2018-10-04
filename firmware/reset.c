@@ -92,8 +92,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 	sha256_Final(&ctx, int_entropy);
 	if (no_backup) {
 		storage_setNoBackup();
-	} else
-	if (skip_backup) {
+	} else {
 		storage_setNeedsBackup(true);
 	}
 	storage_setMnemonic(mnemonic_from_data(int_entropy, strength / 8));
