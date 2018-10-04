@@ -48,9 +48,11 @@ class TestMsgResetDeviceSkipbackup(TrezorTest):
         assert isinstance(ret, proto.Success)
 
         # Check if device is properly initialized
-        resp = self.client.call_raw(proto.Initialize())
-        assert resp.initialized is True
-        assert resp.needs_backup is True
+        ret = self.client.call_raw(proto.Initialize())
+        assert ret.initialized is True
+        assert ret.needs_backup is True
+        assert ret.unfinished_backup is False
+        assert ret.no_backup is False
 
         # Generate mnemonic locally
         entropy = generate_entropy(strength, internal_entropy, external_entropy)
@@ -76,9 +78,9 @@ class TestMsgResetDeviceSkipbackup(TrezorTest):
             assert isinstance(ret, proto.ButtonRequest)
             mnemonic.append(self.client.debug.read_reset_word())
             self.client.debug.press_yes()
-            resp = self.client.call_raw(proto.ButtonAck())
+            ret = self.client.call_raw(proto.ButtonAck())
 
-        assert isinstance(resp, proto.Success)
+        assert isinstance(ret, proto.Success)
 
         mnemonic = " ".join(mnemonic)
 
@@ -112,20 +114,34 @@ class TestMsgResetDeviceSkipbackup(TrezorTest):
         assert isinstance(ret, proto.Success)
 
         # Check if device is properly initialized
-        resp = self.client.call_raw(proto.Initialize())
-        assert resp.initialized is True
-        assert resp.needs_backup is True
+        ret = self.client.call_raw(proto.Initialize())
+        assert ret.initialized is True
+        assert ret.needs_backup is True
+        assert ret.unfinished_backup is False
+        assert ret.no_backup is False
 
         # start Backup workflow
         ret = self.client.call_raw(proto.BackupDevice())
 
         # send Initialize -> break workflow
         ret = self.client.call_raw(proto.Initialize())
-        assert isinstance(resp, proto.Features)
+        assert isinstance(ret, proto.Features)
+        assert ret.initialized is True
+        assert ret.needs_backup is False
+        assert ret.unfinished_backup is True
+        assert ret.no_backup is False
 
         # start backup again - should fail
         ret = self.client.call_raw(proto.BackupDevice())
         assert isinstance(ret, proto.Failure)
+
+        # read Features again
+        ret = self.client.call_raw(proto.Initialize())
+        assert isinstance(ret, proto.Features)
+        assert ret.initialized is True
+        assert ret.needs_backup is False
+        assert ret.unfinished_backup is True
+        assert ret.no_backup is False
 
     def test_initialized_device_backup_fail(self):
         self.setup_mnemonic_nopin_nopassphrase()
