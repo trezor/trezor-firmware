@@ -484,7 +484,7 @@ def backup_device(connect):
 @click.pass_obj
 def firmware_update(connect, filename, url, version, skip_check, fingerprint):
     if sum(bool(x) for x in (filename, url, version)) > 1:
-        click.echo("You can use only one of: firmware, url, version.")
+        click.echo("You can use only one of: filename, url, version.")
         sys.exit(1)
 
     client = connect()
