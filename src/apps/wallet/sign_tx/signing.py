@@ -144,6 +144,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
             raise SigningError(FailureType.ActionCancelled, "Output cancelled")
 
         if coin.decred:
+            txo.decred_script_version = txo.decred_script_version or 0
             if txo.decred_script_version != 0:
                 raise SigningError(
                     FailureType.ActionCancelled,
@@ -398,7 +399,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
         # STAGE_REQUEST_5_OUTPUT
         txo = await request_tx_output(tx_req, o)
         txo_bin.amount = txo.amount
-        txo_bin.decred_script_version = txo.decred_script_version
+        txo_bin.decred_script_version = txo.decred_script_version or 0
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
 
         # serialize output
@@ -585,6 +586,7 @@ async def get_prevtx_output_value(
     for o in range(tx.outputs_cnt):
         # STAGE_REQUEST_2_PREV_OUTPUT
         txo_bin = await request_tx_output(tx_req, o, prev_hash)
+        txo_bin.decred_script_version = txo_bin.decred_script_version or 0
         write_tx_output(txh, txo_bin)
         if o == prev_index:
             total_out += txo_bin.amount

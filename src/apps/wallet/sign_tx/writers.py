@@ -37,8 +37,8 @@ def write_tx_input_check(w, i: TxInputType):
 
 def write_tx_input_decred(w, i: TxInputType):
     write_bytes_reversed(w, i.prev_hash)
-    write_uint32(w, i.prev_index)
-    write_uint8(w, i.decred_tree)
+    write_uint32(w, i.prev_index or 0)
+    write_uint8(w, i.decred_tree or 0)
     write_uint32(w, i.sequence)
 
 
