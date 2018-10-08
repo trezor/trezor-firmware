@@ -20,15 +20,16 @@ from .common import TrezorTest
 
 
 class TestMsgResetDeviceNobackup(TrezorTest):
-    def test_reset_device_no_backup(self):
 
-        external_entropy = b"zlutoucky kun upel divoke ody" * 2
-        strength = 128
+    external_entropy = b"zlutoucky kun upel divoke ody" * 2
+    strength = 128
+
+    def test_reset_device_no_backup(self):
 
         ret = self.client.call_raw(
             proto.ResetDevice(
                 display_random=False,
-                strength=strength,
+                strength=self.strength,
                 passphrase_protection=False,
                 pin_protection=False,
                 language="english",
@@ -39,7 +40,7 @@ class TestMsgResetDeviceNobackup(TrezorTest):
 
         # Provide entropy
         assert isinstance(ret, proto.EntropyRequest)
-        ret = self.client.call_raw(proto.EntropyAck(entropy=external_entropy))
+        ret = self.client.call_raw(proto.EntropyAck(entropy=self.external_entropy))
         assert isinstance(ret, proto.Success)
 
         # Check if device is properly initialized
@@ -51,4 +52,18 @@ class TestMsgResetDeviceNobackup(TrezorTest):
 
         # start backup - should fail
         ret = self.client.call_raw(proto.BackupDevice())
+        assert isinstance(ret, proto.Failure)
+
+    def test_reset_device_no_backup_show_entropy_fail(self):
+        ret = self.client.call_raw(
+            proto.ResetDevice(
+                display_random=True,
+                strength=self.strength,
+                passphrase_protection=False,
+                pin_protection=False,
+                language="english",
+                label="test",
+                no_backup=True,
+            )
+        )
         assert isinstance(ret, proto.Failure)
