@@ -440,6 +440,7 @@ def recovery_device(
 @click.option("-l", "--label")
 @click.option("-u", "--u2f-counter", default=0)
 @click.option("-s", "--skip-backup", is_flag=True)
+@click.option("-n", "--no-backup", is_flag=True)
 @click.pass_obj
 def reset_device(
     connect,
@@ -450,6 +451,7 @@ def reset_device(
     label,
     u2f_counter,
     skip_backup,
+    no_backup,
 ):
     return device.reset(
         connect(),
@@ -461,6 +463,7 @@ def reset_device(
         "english",
         u2f_counter,
         skip_backup,
+        no_backup,
     )
 
 

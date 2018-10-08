@@ -154,6 +154,7 @@ def reset(
     language,
     u2f_counter=0,
     skip_backup=False,
+    no_backup=False,
 ):
     if client.features.initialized:
         raise RuntimeError(
@@ -170,6 +171,7 @@ def reset(
         label=label,
         u2f_counter=u2f_counter,
         skip_backup=bool(skip_backup),
+        no_backup=bool(no_backup),
     )
 
     resp = client.call(msg)
