@@ -44,6 +44,12 @@ void reset_init(bool display_random, uint32_t _strength, bool passphrase_protect
 	skip_backup = _skip_backup;
 	no_backup = _no_backup;
 
+	if (display_random && no_backup) {
+		fsm_sendFailure(FailureType_Failure_ProcessError, "Can't show internal entropy when no_backup is used");
+		layoutHome();
+		return;
+	}
+
 	random_buffer(int_entropy, 32);
 
 	char ent_str[4][17];
