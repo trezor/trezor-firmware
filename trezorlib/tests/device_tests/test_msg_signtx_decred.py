@@ -44,6 +44,7 @@ TXHASH_16da18 = bytes.fromhex(
 )
 
 
+@pytest.mark.skip_t2
 @pytest.mark.decred
 class TestMsgSigntxDecred(TrezorTest):
     def test_send_decred(self):
