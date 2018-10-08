@@ -51,7 +51,7 @@ async def verify_message(ctx, msg):
     elif script_type == SPENDP2SHWITNESS:
         addr = address_p2wpkh_in_p2sh(pubkey, coin)
     elif script_type == SPENDWITNESS:
-        addr = address_p2wpkh(pubkey, coin.bech32_prefix)
+        addr = address_p2wpkh(pubkey, coin)
     else:
         raise wire.ProcessError("Invalid signature")
 

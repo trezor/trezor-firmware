@@ -9,6 +9,7 @@ from apps.common import address_type
 from apps.common.coininfo import CoinInfo
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys, multisig_pubkey_index
 from apps.wallet.sign_tx.scripts import (
+    blake256_ripemd160_digest,
     output_script_multisig,
     output_script_native_p2wpkh_or_p2wsh,
     sha256_ripemd160_digest,
@@ -65,7 +66,7 @@ def get_address(
             return address_multisig_p2wsh(pubkeys, multisig.m, coin.bech32_prefix)
 
         # native p2wpkh
-        return address_p2wpkh(node.public_key(), coin.bech32_prefix)
+        return address_p2wpkh(node.public_key(), coin)
 
     elif (
         script_type == InputScriptType.SPENDP2SHWITNESS
@@ -92,7 +93,10 @@ def address_multisig_p2sh(pubkeys: bytes, m: int, coin: CoinInfo):
             FailureType.ProcessError, "Multisig not enabled on this coin"
         )
     redeem_script = output_script_multisig(pubkeys, m)
-    redeem_script_hash = sha256_ripemd160_digest(redeem_script)
+    if coin.decred:
+        redeem_script_hash = blake256_ripemd160_digest(redeem_script)
+    else:
+        redeem_script_hash = sha256_ripemd160_digest(redeem_script)
     return address_p2sh(redeem_script_hash, coin)
 
 
@@ -127,7 +131,7 @@ def address_p2sh(redeem_script_hash: bytes, coin: CoinInfo) -> str:
 
 
 def address_p2wpkh_in_p2sh(pubkey: bytes, coin: CoinInfo) -> str:
-    pubkey_hash = ecdsa_hash_pubkey(pubkey)
+    pubkey_hash = ecdsa_hash_pubkey(pubkey, coin)
     redeem_script = output_script_native_p2wpkh_or_p2wsh(pubkey_hash)
     redeem_script_hash = sha256_ripemd160_digest(redeem_script)
     return address_p2sh(redeem_script_hash, coin)
@@ -139,9 +143,9 @@ def address_p2wsh_in_p2sh(witness_script_hash: bytes, coin: CoinInfo) -> str:
     return address_p2sh(redeem_script_hash, coin)
 
 
-def address_p2wpkh(pubkey: bytes, hrp: str) -> str:
-    pubkeyhash = ecdsa_hash_pubkey(pubkey)
-    address = bech32.encode(hrp, _BECH32_WITVER, pubkeyhash)
+def address_p2wpkh(pubkey: bytes, coin: CoinInfo) -> str:
+    pubkeyhash = ecdsa_hash_pubkey(pubkey, coin)
+    address = bech32.encode(coin.bech32_prefix, _BECH32_WITVER, pubkeyhash)
     if address is None:
         raise AddressError(FailureType.ProcessError, "Invalid address")
     return address
@@ -173,13 +177,17 @@ def address_to_cashaddr(address: str, coin: CoinInfo) -> str:
     return cashaddr.encode(coin.cashaddr_prefix, version, data)
 
 
-def ecdsa_hash_pubkey(pubkey: bytes) -> bytes:
+def ecdsa_hash_pubkey(pubkey: bytes, coin: CoinInfo) -> bytes:
     if pubkey[0] == 0x04:
         ensure(len(pubkey) == 65)  # uncompressed format
     elif pubkey[0] == 0x00:
         ensure(len(pubkey) == 1)  # point at infinity
     else:
         ensure(len(pubkey) == 33)  # compresssed format
+
+    if coin.decred:
+        return blake256_ripemd160_digest(pubkey)
+
     h = sha256(pubkey).digest()
     h = ripemd160(h).digest()
     return h

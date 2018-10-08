@@ -41,7 +41,7 @@ class TestAddress(unittest.TestCase):
         coin = coins.by_name('Testnet')
         address = address_p2wpkh(
             unhexlify('0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'),
-            coin.bech32_prefix
+            coin
         )
         self.assertEqual(address, 'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx')
 
