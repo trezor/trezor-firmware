@@ -5,13 +5,10 @@ from trezor.messages.TxOutputBinType import TxOutputBinType
 from apps.common.writers import (
     write_bytes,
     write_bytes_reversed,
-    write_uint8,
-    write_uint16_le,
     write_uint32_le,
     write_uint64_le,
 )
 
-write_uint16 = write_uint16_le
 write_uint32 = write_uint32_le
 write_uint64 = write_uint64_le
 
@@ -35,25 +32,8 @@ def write_tx_input_check(w, i: TxInputType):
     write_uint32(w, i.amount or 0)
 
 
-def write_tx_input_decred(w, i: TxInputType):
-    write_bytes_reversed(w, i.prev_hash)
-    write_uint32(w, i.prev_index or 0)
-    write_uint8(w, i.decred_tree or 0)
-    write_uint32(w, i.sequence)
-
-
-def write_tx_input_decred_witness(w, i: TxInputType):
-    write_uint64(w, i.amount)
-    write_uint32(w, 0)  # block height fraud proof
-    write_uint32(w, 0xFFFFFFFF)  # block index fraud proof
-    write_varint(w, len(i.script_sig))
-    write_bytes(w, i.script_sig)
-
-
 def write_tx_output(w, o: TxOutputBinType):
     write_uint64(w, o.amount)
-    if o.decred_script_version is not None:
-        write_uint16_le(w, o.decred_script_version)
     write_varint(w, len(o.script_pubkey))
     write_bytes(w, o.script_pubkey)
 
