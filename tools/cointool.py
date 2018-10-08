@@ -560,7 +560,7 @@ def check(backend, icons, show_duplicates):
 @click.option("-o", "--outfile", type=click.File(mode="w"), default="-")
 @click.option("-s/-S", "--support/--no-support", default=True, help="Include support data for each coin")
 @click.option("-p", "--pretty", is_flag=True, help="Generate nicely formatted JSON")
-@click.option("-l", "--list", "--flat-list", is_flag=True, help="Output a flat list of coins")
+@click.option("-l", "--list", "flat_list", is_flag=True, help="Output a flat list of coins")
 @click.option("-i", "--include", metavar="FIELD", multiple=True, help="Include only these fields")
 @click.option("-e", "--exclude", metavar="FIELD", multiple=True, help="Exclude these fields")
 @click.option("-I", "--include-type", metavar="TYPE", multiple=True, help="Include only these categories")
