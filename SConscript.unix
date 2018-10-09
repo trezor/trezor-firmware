@@ -246,11 +246,19 @@ env.Replace(
     STRIP='strip',
     OBJCOPY='objcopy', )
 
+if env.get('ENV').get('DEBUG_BUILD', 0):
+    import platform
+    platsys = platform.system()
+    env.Replace(
+        OPTIMIZE='-O0',
+        LINKFLAGS='-Wl,-no_pie' if platsys == "Darwin" else '-Wl,-no-pie'
+    )
+
 env.Replace(
     TREZOR_MODEL=env.get('ENV').get('TREZOR_MODEL', 'T'), )
 
 env.Replace(
-    COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
+    COPT=env.get('OPTIMIZE', env.get('ENV').get('OPTIMIZE', '-Os')),
     CCFLAGS='$COPT '
     '-g3 '
     '-std=gnu99 -Wall -Werror -Wuninitialized '

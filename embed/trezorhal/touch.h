@@ -32,8 +32,8 @@ void touch_power_off(void);
 uint32_t touch_read(void);
 uint32_t touch_click(void);
 uint32_t touch_is_detected(void);
-inline uint16_t touch_unpack_x(uint32_t evt) { return (evt >> 12) & 0xFFF; }
-inline uint16_t touch_unpack_y(uint32_t evt) { return (evt >> 0) & 0xFFF; }
-inline uint32_t touch_pack_xy(uint16_t x, uint16_t y) { return ((x & 0xFFF) << 12) | (y & 0xFFF); }
+static inline uint16_t touch_unpack_x(uint32_t evt) { return (evt >> 12) & 0xFFF; }
+static inline uint16_t touch_unpack_y(uint32_t evt) { return (evt >> 0) & 0xFFF; }
+static inline uint32_t touch_pack_xy(uint16_t x, uint16_t y) { return ((x & 0xFFF) << 12) | (y & 0xFFF); }
 
 #endif

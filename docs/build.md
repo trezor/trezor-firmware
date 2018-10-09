@@ -98,3 +98,15 @@ Use `make upload` to upload the firmware to a production device (with a bootload
 For flashing firmware to blank device (without bootloader) use `make flash`,
 or `make flash STLINK_VER=v2-1` if using a ST-LINK/V2.1 interface.
 You need to have OpenOCD installed.
+
+
+## Building for debugging and hacking in Emulator (Unix port)
+
+Build the debuggable unix binary so you can attach the gdb or lldb.
+This removes optimizations and reduces address space randomizaiton.
+Beware that this will significantly bloat the final binary
+and the firmware runtime memory limit HEAPSIZE may have to be increased.
+
+```sh
+DEBUG_BUILD=1 make build_unix
+```

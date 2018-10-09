@@ -4,9 +4,9 @@ source emu.config 2>/dev/null
 
 EXE=build/unix/micropython
 PYOPT="${PYOPT:-1}"
-MAIN="${MAIN:-main.py}"
+MAIN="${MAIN:-${PWD}/src/main.py}"
 BROWSER="${BROWSER:-chromium}"
-HEAPSIZE="${HEAPSIZE:-800K}"
+HEAPSIZE="${HEAPSIZE:-50M}"
 SOURCE_PY_DIR="${SOURCE_PY_DIR:-src}"
 
 ARGS="-O${PYOPT} -X heapsize=${HEAPSIZE}"
@@ -16,7 +16,12 @@ cd `dirname $0`/$SOURCE_PY_DIR
 case "$1" in
     "-d")
         shift
-        gdb --args ../$EXE $ARGS $* $MAIN
+        OPERATING_SYSTEM=$(uname)
+        if [ $OPERATING_SYSTEM == "Darwin" ]; then
+            PATH=/usr/bin /usr/bin/lldb -f ../$EXE -- $ARGS $* $MAIN
+        else
+            gdb --args ../$EXE $ARGS $* $MAIN
+        fi
         ;;
     "-r")
         shift
