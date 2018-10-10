@@ -4,7 +4,7 @@ if not __debug__:
     halt("debug mode inactive")
 
 if __debug__:
-    from trezor import loop
+    from trezor import loop, utils
     from trezor.messages import MessageType
     from trezor.messages.DebugLinkState import DebugLinkState
     from trezor.ui import confirm, swipe
@@ -38,8 +38,9 @@ if __debug__:
         return m
 
     def boot():
-        # wipe storage when debug build is used
-        storage.wipe()
+        # wipe storage when debug build is used on real hardware
+        if not utils.EMULATOR:
+            storage.wipe()
 
         register(
             MessageType.DebugLinkDecision, protobuf_workflow, dispatch_DebugLinkDecision
