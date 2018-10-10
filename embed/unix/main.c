@@ -48,6 +48,7 @@
 #include "extmod/misc.h"
 #include "genhdr/mpversion.h"
 #include "input.h"
+#include "profile.h"
 
 // Command line options, with their defaults
 STATIC bool compile_only = false;
@@ -404,6 +405,10 @@ STATIC void set_sys_argv(char *argv[], int argc, int start_arg) {
 MP_NOINLINE int main_(int argc, char **argv);
 
 int main(int argc, char **argv) {
+    
+    // Through TREZOR_PROFILE you can set the directory for trezor.flash file.
+    profile_init();
+
     #if MICROPY_PY_THREAD
     mp_thread_init();
     #endif

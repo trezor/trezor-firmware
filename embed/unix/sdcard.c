@@ -27,9 +27,10 @@
 
 #include "common.h"
 #include "sdcard.h"
+#include "profile.h"
 
 #ifndef SDCARD_FILE
-#define SDCARD_FILE "/var/tmp/trezor.sdcard"
+#define SDCARD_FILE profile_sdcard_path()
 #endif
 
 #define SDCARD_SIZE (32 * 1024 * 1024)

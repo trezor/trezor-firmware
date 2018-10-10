@@ -27,9 +27,10 @@
 
 #include "common.h"
 #include "flash.h"
+#include "profile.h"
 
 #ifndef FLASH_FILE
-#define FLASH_FILE "/var/tmp/trezor.flash"
+#define FLASH_FILE profile_flash_path()
 #endif
 
 #define SECTOR_COUNT 24

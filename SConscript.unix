@@ -221,6 +221,7 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/input.c',
     'vendor/micropython/ports/unix/alloc.c',
     'embed/unix/common.c',
+    'embed/unix/profile.c',
     'embed/unix/flash.c',
     'embed/unix/main.c',
     'embed/unix/rng.c',
