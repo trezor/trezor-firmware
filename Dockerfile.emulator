@@ -11,7 +11,15 @@ RUN apt-get update && \
 
 ENV PROTOBUF_VERSION=3.4.0
 RUN curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
-RUN unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d /usr
-RUN pip3 install "protobuf==${PROTOBUF_VERSION}" ecdsa
 
-RUN ln -s python3 /usr/bin/python
+ENV PYTHON=python3
+
+# use zipfile module to extract files world-readable
+RUN $PYTHON -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/local && chmod 755 /usr/local/bin/protoc
+
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
+ENV WORKON_HOME=/tmp/.venvs
+
+RUN $PYTHON -m pip install "protobuf==${PROTOBUF_VERSION}" ecdsa click trezor mako munch
