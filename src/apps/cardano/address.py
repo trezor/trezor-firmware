@@ -1,5 +1,3 @@
-from micropython import const
-
 from trezor import wire
 from trezor.crypto import base58, crc, hashlib
 
@@ -56,23 +54,3 @@ def derive_address_and_node(root_node, path: list):
         )
     )
     return (address, derived_node)
-
-
-def _break_address_n_to_lines(address_n: list) -> list:
-    def path_item(i: int):
-        if i & HARDENED:
-            return str(i ^ HARDENED) + "'"
-        else:
-            return str(i)
-
-    lines = []
-    path_str = "m/" + "/".join([path_item(i) for i in address_n])
-
-    per_line = const(17)
-    while len(path_str) > per_line:
-        i = path_str[:per_line].rfind("/")
-        lines.append(path_str[:i])
-        path_str = path_str[i:]
-    lines.append(path_str)
-
-    return lines

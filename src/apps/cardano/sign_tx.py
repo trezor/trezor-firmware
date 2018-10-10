@@ -6,11 +6,12 @@ from trezor.messages.CardanoTxRequest import CardanoTxRequest
 from trezor.messages.MessageType import CardanoTxAck
 from trezor.ui.text import BR
 
-from .address import _break_address_n_to_lines, derive_address_and_node
+from .address import derive_address_and_node
 from .layout import confirm_with_pagination, progress
 
 from apps.cardano import cbor
 from apps.common import seed, storage
+from apps.common.layout import address_n_to_str, split_address
 from apps.homescreen.homescreen import display_homescreen
 
 
@@ -53,7 +54,7 @@ async def show_tx(
     for index, change in enumerate(change_derivation_paths):
         if not await confirm_with_pagination(
             ctx,
-            _break_address_n_to_lines(change),
+            split_address(address_n_to_str(change)),
             "Confirm change",
             ui.ICON_SEND,
             ui.GREEN,

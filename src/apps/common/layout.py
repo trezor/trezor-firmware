@@ -8,11 +8,13 @@ from trezor.ui.qr import Qr
 from trezor.ui.text import Text
 from trezor.utils import chunks
 
+from apps.common import HARDENED
 from apps.common.confirm import confirm, require_confirm
 
 
-async def show_address(ctx, address: str, network: str = None):
+async def show_address(ctx, address: str, address_n: list, network: str = None):
     text = Text("Confirm address", ui.ICON_RECEIVE, icon_color=ui.GREEN)
+    # TODO: print address_n via address_n_to_str(address_n)
     if network:
         text.normal("%s network" % network)
     text.mono(*split_address(address))
@@ -38,12 +40,22 @@ async def show_qr(ctx, address: str):
     )
 
 
-def split_address(address: str):
-    return chunks(address, 17)
-
-
 async def show_pubkey(ctx, pubkey: bytes):
     lines = chunks(hexlify(pubkey).decode(), 18)
     text = Text("Confirm public key", ui.ICON_RECEIVE, icon_color=ui.GREEN)
     text.mono(*lines)
     return await require_confirm(ctx, text, code=ButtonRequestType.PublicKey)
+
+
+def split_address(address: str):
+    return chunks(address, 17)
+
+
+def address_n_to_str(address_n: list) -> str:
+    def path_item(i: int):
+        if i & HARDENED:
+            return str(i ^ HARDENED) + "'"
+        else:
+            return str(i)
+
+    return "m/" + "/".join([path_item(i) for i in address_n])

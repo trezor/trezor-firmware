@@ -14,7 +14,9 @@ async def get_address(ctx, msg):
 
     if msg.show_display:
         while True:
-            if await show_address(ctx, address, get_network_str(network)):
+            if await show_address(
+                ctx, address, msg.address_n, network=get_network_str(network)
+            ):
                 break
             if await show_qr(ctx, address.upper()):
                 break

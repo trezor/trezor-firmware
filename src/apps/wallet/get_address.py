@@ -16,7 +16,7 @@ async def get_address(ctx, msg):
 
     if msg.show_display:
         while True:
-            if await show_address(ctx, address_short):
+            if await show_address(ctx, address_short, msg.address_n):
                 break
             if await show_qr(
                 ctx,

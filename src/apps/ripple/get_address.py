@@ -14,7 +14,7 @@ async def get_address(ctx, msg: RippleGetAddress):
 
     if msg.show_display:
         while True:
-            if await show_address(ctx, address):
+            if await show_address(ctx, address, msg.address_n):
                 break
             if await show_qr(ctx, address.upper()):
                 break

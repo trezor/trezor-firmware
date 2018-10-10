@@ -24,7 +24,7 @@ async def get_address(ctx, msg):
         hex_addr = _ethereum_address_hex(address, network)
 
         while True:
-            if await show_address(ctx, hex_addr):
+            if await show_address(ctx, hex_addr, address_n):
                 break
             if await show_qr(ctx, hex_addr):
                 break
