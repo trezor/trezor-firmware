@@ -1,7 +1,7 @@
 from micropython import const
 
 from trezor.crypto import base58, bech32, cashaddr
-from trezor.crypto.hashlib import ripemd160, sha256
+from trezor.crypto.hashlib import sha256
 from trezor.messages import FailureType, InputScriptType
 from trezor.utils import ensure
 
@@ -9,10 +9,8 @@ from apps.common import address_type
 from apps.common.coininfo import CoinInfo
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys, multisig_pubkey_index
 from apps.wallet.sign_tx.scripts import (
-    blake256_ripemd160_digest,
     output_script_multisig,
     output_script_native_p2wpkh_or_p2wsh,
-    sha256_ripemd160_digest,
 )
 
 # supported witness version for bech32 addresses
@@ -93,10 +91,7 @@ def address_multisig_p2sh(pubkeys: bytes, m: int, coin: CoinInfo):
             FailureType.ProcessError, "Multisig not enabled on this coin"
         )
     redeem_script = output_script_multisig(pubkeys, m)
-    if coin.decred:
-        redeem_script_hash = blake256_ripemd160_digest(redeem_script)
-    else:
-        redeem_script_hash = sha256_ripemd160_digest(redeem_script)
+    redeem_script_hash = coin.script_hash(redeem_script)
     return address_p2sh(redeem_script_hash, coin)
 
 
@@ -121,7 +116,7 @@ def address_multisig_p2wsh(pubkeys: bytes, m: int, hrp: str):
 
 
 def address_pkh(pubkey: bytes, coin: CoinInfo) -> str:
-    s = address_type.tobytes(coin.address_type) + sha256_ripemd160_digest(pubkey)
+    s = address_type.tobytes(coin.address_type) + coin.script_hash(pubkey)
     return base58.encode_check(bytes(s), coin.b58_hash)
 
 
@@ -133,13 +128,13 @@ def address_p2sh(redeem_script_hash: bytes, coin: CoinInfo) -> str:
 def address_p2wpkh_in_p2sh(pubkey: bytes, coin: CoinInfo) -> str:
     pubkey_hash = ecdsa_hash_pubkey(pubkey, coin)
     redeem_script = output_script_native_p2wpkh_or_p2wsh(pubkey_hash)
-    redeem_script_hash = sha256_ripemd160_digest(redeem_script)
+    redeem_script_hash = coin.script_hash(redeem_script)
     return address_p2sh(redeem_script_hash, coin)
 
 
 def address_p2wsh_in_p2sh(witness_script_hash: bytes, coin: CoinInfo) -> str:
     redeem_script = output_script_native_p2wpkh_or_p2wsh(witness_script_hash)
-    redeem_script_hash = sha256_ripemd160_digest(redeem_script)
+    redeem_script_hash = coin.script_hash(redeem_script)
     return address_p2sh(redeem_script_hash, coin)
 
 
@@ -185,12 +180,7 @@ def ecdsa_hash_pubkey(pubkey: bytes, coin: CoinInfo) -> bytes:
     else:
         ensure(len(pubkey) == 33)  # compresssed format
 
-    if coin.decred:
-        return blake256_ripemd160_digest(pubkey)
-
-    h = sha256(pubkey).digest()
-    h = ripemd160(h).digest()
-    return h
+    return coin.script_hash(pubkey)
 
 
 def address_short(coin: CoinInfo, address: str) -> str:
