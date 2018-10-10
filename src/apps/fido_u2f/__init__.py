@@ -416,8 +416,10 @@ class ConfirmContent(ui.Widget):
             try:
                 namepart = name.lower().replace(" ", "_")
                 icon = res.load("apps/fido_u2f/res/u2f_%s.toif" % namepart)
-            except Exception:
+            except Exception as e:
                 icon = res.load("apps/fido_u2f/res/u2f_generic.toif")
+                if __debug__:
+                    log.exception(__name__, e)
         else:
             name = "%s...%s" % (
                 hexlify(self.app_id[:4]).decode(),

@@ -1,4 +1,4 @@
-from trezor import config, loop, res, ui
+from trezor import config, log, loop, res, ui
 from trezor.pin import pin_to_int, show_pin_timeout
 
 from apps.common.request_pin import request_pin
@@ -18,8 +18,9 @@ async def bootscreen():
                     return
                 else:
                     label = "Wrong PIN, enter again"
-        except:  # noqa: E722
-            pass
+        except Exception as e:
+            if __debug__:
+                log.exception(__name__, e)
 
 
 async def lockscreen():

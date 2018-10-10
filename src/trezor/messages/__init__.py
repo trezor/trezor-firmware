@@ -29,4 +29,8 @@ def get_type(wire_type):
 
 # build reverse table of wire types
 for msg_name in dir(MessageType):
+    # Modules contain internal variables that may cause exception here.
+    # No Message begins with underscore so it's safe to skip those.
+    if (msg_name[0] == '_'):
+        continue
     type_to_name[getattr(MessageType, msg_name)] = msg_name

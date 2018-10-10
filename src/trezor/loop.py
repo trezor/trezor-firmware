@@ -261,6 +261,8 @@ class spawn(Syscall):
             result = await child
         except Exception as e:
             self._finish(child, index, e)
+            if __debug__:
+                log.exception(__name__, e)
         else:
             self._finish(child, index, result)
 
