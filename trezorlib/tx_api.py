@@ -68,10 +68,11 @@ class TxApi(object):
 
 
 class TxApiInsight(TxApi):
-    def __init__(self, network, url=None, zcash=None, bip115=False):
+    def __init__(self, network, url=None, zcash=None, bip115=False, decred=False):
         super().__init__(network, url)
         self.zcash = zcash
         self.bip115 = bip115
+        self.decred = decred
         if url:
             self.pushtx_url = self.url + "/tx/send"
 
@@ -93,6 +94,9 @@ class TxApiInsight(TxApi):
         t.version = data["version"]
         t.lock_time = data["locktime"]
 
+        if self.decred:
+            t.expiry = data["expiry"]
+
         for vin in data["vin"]:
             i = t._add_inputs()
             if "coinbase" in vin.keys():
@@ -107,6 +111,10 @@ class TxApiInsight(TxApi):
                 i.script_sig = bytes.fromhex(vin["scriptSig"]["hex"])
                 i.sequence = vin["sequence"]
 
+            if self.decred:
+                i.decred_tree = vin["tree"]
+                # TODO: support amountIn, blockHeight, blockIndex
+
         for vout in data["vout"]:
             o = t._add_bin_outputs()
             o.amount = int(Decimal(vout["value"]) * 100000000)
@@ -119,6 +127,8 @@ class TxApiInsight(TxApi):
                 o.block_height = int.from_bytes(
                     tail[34:37], byteorder="little"
                 )  # <3-byte block height>
+            if self.decred:
+                o.decred_script_version = vout["version"]
 
         if self.zcash:
             t.overwintered = data.get("fOverwintered", False)
