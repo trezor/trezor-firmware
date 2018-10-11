@@ -9,17 +9,13 @@ env:
     - TOOLCHAIN_LONGVER=gcc-arm-none-eabi-7-2018-q2-update
   matrix:
     - GOAL=stm32
-    - GOAL=stm32 TREZOR_MODEL=1
     - GOAL=unix
-    - GOAL=unix TREZOR_MODEL=1
     - GOAL=src
 
 matrix:
   include:
     - compiler: clang
       env: GOAL=unix
-    - compiler: clang
-      env: GOAL=unix TREZOR_MODEL=1
 
 addons:
   apt:
