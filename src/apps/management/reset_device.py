@@ -26,8 +26,8 @@ async def reset_device(ctx, msg):
     # validate parameters and device state
     if msg.strength not in (128, 192, 256):
         raise wire.ProcessError("Invalid strength (has to be 128, 192 or 256 bits)")
-    if msg.display_random and msg.no_backup:
-        raise wire.ProcessError("Can't show internal entropy when no_backup is used")
+    if msg.display_random and (msg.skip_backup or msg.no_backup):
+        raise wire.ProcessError("Can't show internal entropy when backup is skipped")
     if storage.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
