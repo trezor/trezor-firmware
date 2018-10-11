@@ -147,3 +147,17 @@ class TestMsgResetDeviceSkipbackup(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
         ret = self.client.call_raw(proto.BackupDevice())
         assert isinstance(ret, proto.Failure)
+
+    def test_reset_device_skip_backup_show_entropy_fail(self):
+        ret = self.client.call_raw(
+            proto.ResetDevice(
+                display_random=True,
+                strength=self.strength,
+                passphrase_protection=False,
+                pin_protection=False,
+                language="english",
+                label="test",
+                skip_backup=True,
+            )
+        )
+        assert isinstance(ret, proto.Failure)
