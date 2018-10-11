@@ -4,23 +4,40 @@
 
 https://trezor.io/
 
-## How to build the TREZOR bootloader and firmware?
+## How to build the TREZOR bootloader, firmware and emulator
 
-1. [Install Docker](https://docs.docker.com/engine/installation/)
-2. `git clone https://github.com/trezor/trezor-mcu.git`
-3. `cd trezor-mcu`
-4. `./build.sh BOOTLOADER_TAG FIRMWARE_TAG` (where BOOTLOADER_TAG is bl1.5.0 and FIRMWARE_TAG is v1.7.0 for example, if left blank the script builds latest commit in master branch)
+Ensure that you have Docker installed. You can follow [Docker's installation instructions](https://docs.docker.com/engine/installation/).
 
-This creates the files `build/bootloader-BOOTLOADER_TAG.bin` and `build/trezor-FIRMWARE_TAG.bin` and prints their fingerprints and sizes at the end of the build log.
+Clone this repository:
+```sh
+git clone https://github.com/trezor/trezor-mcu.git`
+cd trezor-mcu
+```
 
-## How to build TREZOR emulator for Linux?
+Use the `build.sh` command to build the images.
 
-1. [Install Docker](https://docs.docker.com/engine/installation/)
-2. `git clone https://github.com/trezor/trezor-mcu.git`
-3. `cd trezor-mcu`
-4. `./build-emulator.sh TAG` (where TAG is v1.5.0 for example, if left blank the script builds latest commit in master branch)
+* to build bootloader 1.6.0 and firmware 1.7.0:
+  ```sh
+  ./build.sh bl1.6.0 v1.7.0
+  ```
+* to build latest firmware from master:
+  ```sh
+  ./build.sh
+  ```
+* to build the emulator from master:
+  ```sh
+  ./build.sh EMU
+  ```
+* to build the emulator for version 1.7.0:
+  ```sh
+  ./build.sh EMU v1.7.0
+  ```
 
-This creates binary file `build/trezor-emulator-TAG`, which can be run and works as a trezor emulator. (Use `TREZOR_OLED_SCALE` env. variable to make screen bigger.)
+Build results are stored in the `build/` directory. File `bootloader-<tag>.bin` represents
+the bootloader, `trezor-<tag>.bin` is the firmware image, and `trezor-emulator-<tag>.elf`
+is the emulator executable.
+
+You can use `TREZOR_OLED_SCALE` environment variable to make emulator screen bigger.
 
 ## How to get fingerprint of firmware signed and distributed by SatoshiLabs?
 
