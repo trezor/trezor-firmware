@@ -1,10 +1,34 @@
+import hashlib
+from enum import Enum
+from typing import NewType, Tuple
+
 import construct as c
+import ecdsa
 import pyblake2
 
-from . import cosi, messages as proto, tools
+from . import cosi, messages, tools
+
+V1_SIGNATURE_SLOTS = 3
+V1_BOOTLOADER_KEYS = {
+    1: "04d571b7f148c5e4232c3814f777d8faeaf1a84216c78d569b71041ffc768a5b2d810fc3bb134dd026b57e65005275aedef43e155f48fc11a32ec790a93312bd58",
+    2: "0463279c0c0866e50c05c799d32bd6bab0188b6de06536d1109d2ed9ce76cb335c490e55aee10cc901215132e853097d5432eda06b792073bd7740c94ce4516cb1",
+    3: "0443aedbb6f7e71c563f8ed2ef64ec9981482519e7ef4f4aa98b27854e8c49126d4956d300ab45fdc34cd26bc8710de0a31dbdf6de7435fd0b492be70ac75fde58",
+    4: "04877c39fd7c62237e038235e9c075dab261630f78eeb8edb92487159fffedfdf6046c6f8b881fa407c4a4ce6c28de0b19c1f4e29f1fcbc5a58ffd1432a3e0938a",
+    5: "047384c51ae81add0a523adbb186c91b906ffb64c2c765802bf26dbd13bdf12c319e80c2213a136c8ee03d7874fd22b70d68e7dee469decfbbb510ee9a460cda45",
+}
+
+V2_BOOTLOADER_KEYS = [
+    bytes.fromhex("c2c87a49c5a3460977fbb2ec9dfe60f06bd694db8244bd4981fe3b7a26307f3f"),
+    bytes.fromhex("80d036b08739b846f4cb77593078deb25dc9487aedcf52e30b4fb7cd7024178a"),
+    bytes.fromhex("b8307a71f552c60a4cbb317ff48b82cdbf6b6bb5f04c920fec7badf017883751"),
+]
+V2_BOOTLOADER_M = 2
+V2_BOOTLOADER_N = 3
+
+V2_CHUNK_SIZE = 1024 * 128
 
 
-def bytes_not(data):
+def bytes_not(data: bytes) -> bytes:
     return bytes(~b & 0xFF for b in data)
 
 
@@ -74,7 +98,8 @@ FirmwareHeader = c.Struct(
         c.Int32ul,
         lambda this:
             len(this._.code) if "code" in this._
-            else (this.code_length or 0)),
+            else (this.code_length or 0)
+    ),
     "version" / VersionLong,
     "fix_version" / VersionLong,
     "reserved" / c.Padding(8),
@@ -95,103 +120,176 @@ FirmwareHeader = c.Struct(
 Firmware = c.Struct(
     "vendor_header" / VendorHeader,
     "firmware_header" / FirmwareHeader,
+    "_code_offset" / c.Tell,
     "code" / c.Bytes(c.this.firmware_header.code_length),
     c.Terminated,
 )
+
+
+FirmwareV1 = c.Struct(
+    "magic" / c.Const(b"TRZR"),
+    "code_length" / c.Rebuild(c.Int32ul, c.len_(c.this.code)),
+    "key_indexes" / c.Int8ul[V1_SIGNATURE_SLOTS],  # pylint: disable=E1136
+    "flags" / c.BitStruct(
+        c.Padding(7),
+        "restore_storage" / c.Flag,
+    ),
+    "reserved" / c.Padding(52),
+    "signatures" / c.Bytes(64)[V1_SIGNATURE_SLOTS],
+    "code" / c.Bytes(c.this.code_length),
+    c.Terminated,
+)
+
 # fmt: on
 
 
-def validate_firmware(filename):
-    with open(filename, "rb") as f:
-        data = f.read()
-    if data[:6] == b"54525a":
-        data = bytes.fromhex(data.decode())
+class FirmwareFormat(Enum):
+    TREZOR_ONE = 1
+    TREZOR_T = 2
+
+
+FirmwareType = NewType("FirmwareType", c.Container)
+ParsedFirmware = Tuple[FirmwareFormat, FirmwareType]
+
+
+def parse(data: bytes) -> ParsedFirmware:
+    if data[:4] == b"TRZR":
+        version = FirmwareFormat.TREZOR_ONE
+        cls = FirmwareV1
+    elif data[:4] == b"TRZV":
+        version = FirmwareFormat.TREZOR_T
+        cls = Firmware
+    else:
+        raise ValueError("Unrecognized firmware image type")
 
     try:
-        fw = Firmware.parse(data)
+        fw = cls.parse(data)
     except Exception as e:
-        raise ValueError("Invalid firmware image format") from e
+        raise ValueError("Invalid firmware image") from e
+    return version, FirmwareType(fw)
 
-    vendor = fw.vendor_header
-    header = fw.firmware_header
 
-    print(
-        "Vendor header from {}, version {}.{}".format(
-            vendor.vendor_string, vendor.version.major, vendor.version.minor
-        )
+def digest_v1(fw: FirmwareType) -> bytes:
+    return hashlib.sha256(fw.code).digest()
+
+
+def check_sig_v1(fw: FirmwareType, idx: int) -> bool:
+    key_idx = fw.key_indexes[idx]
+    signature = fw.signatures[idx]
+
+    if key_idx == 0:
+        # no signature = invalid signature
+        return False
+
+    if key_idx not in V1_BOOTLOADER_KEYS:
+        # unknown pubkey
+        return False
+
+    pubkey = bytes.fromhex(V1_BOOTLOADER_KEYS[key_idx])[1:]
+    verify = ecdsa.VerifyingKey.from_string(
+        pubkey, curve=ecdsa.curves.SECP256k1, hashfunc=hashlib.sha256
     )
-    print(
-        "Firmware version {v.major}.{v.minor}.{v.patch} build {v.build}".format(
-            v=header.version
-        )
-    )
+    try:
+        verify.verify(signature, fw.code)
+        return True
+    except ecdsa.BadSignatureError:
+        return False
 
-    # rebuild header without signatures
+
+def _header_digest(header: c.Container, header_type: c.Construct) -> bytes:
     stripped_header = header.copy()
     stripped_header.sigmask = 0
     stripped_header.signature = b"\0" * 64
-    header_bytes = FirmwareHeader.build(stripped_header)
-    digest = pyblake2.blake2s(header_bytes).digest()
+    header_bytes = header_type.build(stripped_header)
+    return pyblake2.blake2s(header_bytes).digest()
 
-    print("Fingerprint: {}".format(digest.hex()))
 
-    global_pk = cosi.combine_keys(
-        vendor.pubkeys[i] for i in range(8) if header.sigmask & (1 << i)
-    )
+def digest(fw: FirmwareType) -> bytes:
+    return _header_digest(fw.firmware_header, FirmwareHeader)
+
+
+def validate(fw: FirmwareType, skip_vendor_header=False) -> bool:
+    vendor_fingerprint = _header_digest(fw.vendor_header, VendorHeader)
+    fingerprint = digest(fw)
+
+    if not skip_vendor_header:
+        try:
+            cosi.verify_m_of_n(
+                fw.vendor_header.signature,
+                vendor_fingerprint,
+                V2_BOOTLOADER_M,
+                V2_BOOTLOADER_N,
+                fw.vendor_header.sigmask,
+                V2_BOOTLOADER_KEYS,
+            )
+            # TODO support
+        except Exception:
+            raise ValueError("Invalid vendor header signature.")
+
+        # XXX expiry is not used now
+        # now = time.gmtime()
+        # if time.gmtime(fw.vendor_header.expiry) < now:
+        #     raise ValueError("Vendor header expired.")
 
     try:
-        cosi.verify(header.signature, digest, global_pk)
-        print("Signature OK")
+        cosi.verify_m_of_n(
+            fw.firmware_header.signature,
+            fingerprint,
+            fw.vendor_header.vendor_sigs_required,
+            fw.vendor_header.vendor_sigs_n,
+            fw.firmware_header.sigmask,
+            fw.vendor_header.pubkeys,
+        )
     except Exception:
-        print("Signature FAILED")
-        raise
+        raise ValueError("Invalid firmware signature.")
+
+    # XXX expiry is not used now
+    # if time.gmtime(fw.firmware_header.expiry) < now:
+    #     raise ValueError("Firmware header expired.")
+
+    for i, expected_hash in enumerate(fw.firmware_header.hashes):
+        if i == 0:
+            # Because first chunk is sent along with headers, there is less code in it.
+            chunk = fw.code[: V2_CHUNK_SIZE - fw._code_offset]
+        else:
+            # Subsequent chunks are shifted by the "missing header" size.
+            ptr = i * V2_CHUNK_SIZE - fw._code_offset
+            chunk = fw.code[ptr : ptr + V2_CHUNK_SIZE]
+
+        if not chunk and expected_hash == b"\0" * 32:
+            continue
+        chunk_hash = pyblake2.blake2s(chunk).digest()
+        if chunk_hash != expected_hash:
+            raise ValueError("Invalid firmware data.")
+
+    return True
 
 
 # ====== Client functions ====== #
 
 
 @tools.session
-def update(client, fp):
+def update(client, data):
     if client.features.bootloader_mode is False:
         raise RuntimeError("Device must be in bootloader mode")
 
-    data = fp.read()
-
-    resp = client.call(proto.FirmwareErase(length=len(data)))
-    if isinstance(resp, proto.Failure) and resp.code == proto.FailureType.FirmwareError:
-        return False
+    resp = client.call(messages.FirmwareErase(length=len(data)))
 
     # TREZORv1 method
-    if isinstance(resp, proto.Success):
-        # fingerprint = hashlib.sha256(data[256:]).hexdigest()
-        # LOG.debug("Firmware fingerprint: " + fingerprint)
-        resp = client.call(proto.FirmwareUpload(payload=data))
-        if isinstance(resp, proto.Success):
-            return True
-        elif (
-            isinstance(resp, proto.Failure)
-            and resp.code == proto.FailureType.FirmwareError
-        ):
-            return False
-        raise RuntimeError("Unexpected result %s" % resp)
-
-    # TREZORv2 method
-    if isinstance(resp, proto.FirmwareRequest):
-        import pyblake2
-
-        while True:
-            payload = data[resp.offset : resp.offset + resp.length]
-            digest = pyblake2.blake2s(payload).digest()
-            resp = client.call(proto.FirmwareUpload(payload=payload, hash=digest))
-            if isinstance(resp, proto.FirmwareRequest):
-                continue
-            elif isinstance(resp, proto.Success):
-                return True
-            elif (
-                isinstance(resp, proto.Failure)
-                and resp.code == proto.FailureType.FirmwareError
-            ):
-                return False
+    if isinstance(resp, messages.Success):
+        resp = client.call(messages.FirmwareUpload(payload=data))
+        if isinstance(resp, messages.Success):
+            return
+        else:
             raise RuntimeError("Unexpected result %s" % resp)
 
-    raise RuntimeError("Unexpected message %s" % resp)
+    # TREZORv2 method
+    while isinstance(resp, messages.FirmwareRequest):
+        payload = data[resp.offset : resp.offset + resp.length]
+        digest = pyblake2.blake2s(payload).digest()
+        resp = client.call(messages.FirmwareUpload(payload=payload, hash=digest))
+
+    if isinstance(resp, messages.Success):
+        return
+    else:
+        raise RuntimeError("Unexpected message %s" % resp)

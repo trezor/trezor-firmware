@@ -21,13 +21,12 @@
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 import base64
-import hashlib
-import io
 import json
 import os
 import sys
 
 import click
+import requests
 
 from trezorlib import (
     btc,
@@ -37,6 +36,7 @@ from trezorlib import (
     debuglink,
     device,
     ethereum,
+    exceptions,
     firmware,
     lisk,
     log,
@@ -499,14 +499,144 @@ def backup_device(connect):
 #
 
 
-@cli.command(help="Upload new firmware to device (must be in bootloader mode).")
+def validate_firmware_v1(fw, expected_fingerprint=None):
+    click.echo("Trezor One firmware image.")
+    distinct_sig_slots = set(i for i in fw.key_indexes if i != 0)
+    if not distinct_sig_slots:
+        if not click.confirm("No signatures found. Continue?", default=False):
+            sys.exit(1)
+    elif len(distinct_sig_slots) < 3:
+        click.echo("Badly signed image (need 3 distinct signatures), aborting.")
+        sys.exit(1)
+    else:
+        all_valid = True
+        for i in range(len(fw.key_indexes)):
+            if not firmware.check_sig_v1(fw, i):
+                click.echo("INVALID signature in slot {}".format(i))
+                all_valid = False
+
+        if all_valid:
+            click.echo("Signatures are valid.")
+        else:
+            click.echo("Invalid signature detected, aborting.")
+            sys.exit(4)
+
+    fingerprint = firmware.digest_v1(fw).hex()
+    click.echo("Firmware fingerprint: {}".format(fingerprint))
+    if expected_fingerprint and fingerprint != expected_fingerprint:
+        click.echo("Expected fingerprint: {}".format(expected_fingerprint))
+        click.echo("Fingerprints do not match, aborting.")
+        sys.exit(5)
+
+
+def validate_firmware_v2(fw, expected_fingerprint=None, skip_vendor_header=False):
+    click.echo("Trezor T firmware image.")
+    vendor = fw.vendor_header.vendor_string
+    vendor_version = "{major}.{minor}".format(**fw.vendor_header.version)
+    version = fw.firmware_header.version
+    click.echo("Vendor header from {}, version {}".format(vendor, vendor_version))
+    click.echo(
+        "Firmware version {major}.{minor}.{patch} build {build}".format(**version)
+    )
+    try:
+        firmware.validate(fw, skip_vendor_header)
+        click.echo("Signatures are valid.")
+    except Exception as e:
+        click.echo(e)
+        sys.exit(4)
+
+    fingerprint = firmware.digest(fw).hex()
+    click.echo("Firmware fingerprint: {}".format(fingerprint))
+    if expected_fingerprint and fingerprint != expected_fingerprint:
+        click.echo("Expected fingerprint: {}".format(expected_fingerprint))
+        click.echo("Fingerprints do not match, aborting.")
+        sys.exit(5)
+
+
+def find_best_firmware_version(bootloader_version, requested_version=None):
+    url = "https://wallet.trezor.io/data/firmware/{}/releases.json"
+    releases = requests.get(url.format(bootloader_version[0])).json()
+    if not releases:
+        raise click.ClickException("Failed to get list of releases")
+
+    releases.sort(key=lambda r: r["version"], reverse=True)
+
+    def version_str(version):
+        return ".".join(map(str, version))
+
+    want_version = requested_version
+
+    if want_version is None:
+        want_version = releases[0]["version"]
+        click.echo("Best available version: {}".format(version_str(want_version)))
+
+    confirm_different_version = False
+    while True:
+        want_version_str = version_str(want_version)
+        try:
+            release = next(r for r in releases if r["version"] == want_version)
+        except StopIteration:
+            click.echo("Version {} not found.".format(want_version_str))
+            sys.exit(1)
+
+        if (
+            "min_bootloader_version" in release
+            and release["min_bootloader_version"] > bootloader_version
+        ):
+            need_version_str = version_str(release["min_firmware_version"])
+            click.echo(
+                "Version {} is required before upgrading to {}.".format(
+                    need_version_str, want_version_str
+                )
+            )
+            want_version = release["min_firmware_version"]
+            confirm_different_version = True
+        else:
+            break
+
+    if confirm_different_version:
+        installing_different = "Installing version {} instead.".format(want_version_str)
+        if requested_version is None:
+            click.echo(installing_different)
+        else:
+            ok = click.confirm(installing_different + " Continue?", default=True)
+            if not ok:
+                sys.exit(1)
+
+    url = "https://wallet.trezor.io/" + release["url"]
+    if url.endswith(".hex"):
+        url = url[:-4]
+
+    return url, release["fingerprint"]
+
+
+@cli.command()
 @click.option("-f", "--filename")
 @click.option("-u", "--url")
 @click.option("-v", "--version")
 @click.option("-s", "--skip-check", is_flag=True)
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
+@click.option("--skip-vendor-header", help="Skip vendor header validation on Trezor T")
 @click.pass_obj
-def firmware_update(connect, filename, url, version, skip_check, fingerprint):
+def firmware_update(
+    connect, filename, url, version, skip_check, fingerprint, skip_vendor_header
+):
+    """Upload new firmware to device.
+
+    Device must be in bootloader mode.
+
+    You can specify a filename or URL from which the firmware can be downloaded.
+    You can also explicitly specify a firmware version that you want.
+    Otherwise, trezorctl will attempt to find latest available version
+    from wallet.trezor.io.
+
+    If you provide a fingerprint via the --fingerprint option, it will be checked
+    against downloaded firmware fingerprint. Otherwise fingerprint is checked
+    against wallet.trezor.io information, if available.
+
+    If you are customizing Model T bootloader and providing your own vendor header,
+    you can use --skip-vendor-header to ignore vendor header signatures.
+    """
     if sum(bool(x) for x in (filename, url, version)) > 1:
         click.echo("You can use only one of: filename, url, version.")
         sys.exit(1)
@@ -519,71 +649,47 @@ def firmware_update(connect, filename, url, version, skip_check, fingerprint):
     firmware_version = client.features.major_version
 
     if filename:
-        fp = open(filename, "rb").read()
-    elif url:
-        import requests
+        data = open(filename, "rb").read()
+    else:
+        if not url:
+            f = client.features
+            bootloader_version = [f.major_version, f.minor_version, f.patch_version]
+            version_list = [int(x) for x in version.split(".")] if version else None
+            url, fp = find_best_firmware_version(bootloader_version, version_list)
+            if not fingerprint:
+                fingerprint = fp
 
         click.echo("Downloading from {}".format(url))
         r = requests.get(url)
-        fp = r.content
-    else:
-        import requests
-
-        url = "https://wallet.trezor.io/data/firmware/{}/releases.json"
-        releases = requests.get(url.format(firmware_version)).json()
-
-        def version_func(r):
-            return r["version"]
-
-        def version_string(r):
-            return ".".join(map(str, version_func(r)))
-
-        if version:
-            try:
-                release = next(r for r in releases if version_string(r) == version)
-            except StopIteration:
-                click.echo("Version {} not found.".format(version))
-                sys.exit(1)
-        else:
-            release = max(releases, key=version_func)
-            click.echo("Fetching version: %s" % version_string(release))
-
-        if not fingerprint:
-            fingerprint = release["fingerprint"]
-        url = "https://wallet.trezor.io/" + release["url"]
-        click.echo("Downloading from %s" % url)
-        r = requests.get(url)
-        fp = r.content
+        data = r.content
 
     if not skip_check:
-        if fp[:8] == b"54525a52" or fp[:8] == b"54525a56":
-            fp = bytes.fromhex(fp.decode())
-        if fp[:4] != b"TRZR" and fp[:4] != b"TRZV":
-            click.echo("Trezor firmware header expected.")
+        try:
+            version, fw = firmware.parse(data)
+        except Exception as e:
+            click.echo(e)
             sys.exit(2)
 
-        if fingerprint and firmware_version > 1:
-            click.echo("Checking Trezor T fingerprint is not supported yet.")
-        elif firmware_version == 1:
-            calculated_fingerprint = hashlib.sha256(fp[256:]).hexdigest()
-            click.echo("Firmware fingerprint: {}".format(calculated_fingerprint))
-            if fingerprint and fingerprint != calculated_fingerprint:
-                click.echo("Expected fingerprint: {}".format(fingerprint))
-                click.echo("Fingerprints do not match, aborting.")
-                sys.exit(5)
+        if version == firmware.FirmwareFormat.TREZOR_ONE:
+            validate_firmware_v1(fw, fingerprint)
+        elif version == firmware.FirmwareFormat.TREZOR_T:
+            validate_firmware_v2(fw, fingerprint)
+        else:
+            click.echo("Unrecognized firmware version.")
 
-    click.echo("If asked, please confirm the action on your device ...")
+        if firmware_version != version.value:
+            click.echo("Firmware does not match your device, aborting.")
+            sys.exit(3)
 
     try:
-        return firmware.update(client, fp=io.BytesIO(fp))
-    except tools.CallException as e:
-        if e.args[0] in (
-            proto.FailureType.FirmwareError,
-            proto.FailureType.ActionCancelled,
-        ):
-            click.echo("Update aborted on device.")
-        else:
-            click.echo("Update failed: {} {}".format(*e.args))
+        if firmware_version == 1:
+            # Trezor One does not send ButtonRequest
+            click.echo("Please confirm action on your Trezor device")
+        return firmware.update(client, data)
+    except exceptions.Cancelled:
+        click.echo("Update aborted on device.")
+    except exceptions.TrezorException as e:
+        click.echo("Update failed: {}".format(e))
         sys.exit(3)
 
 
@@ -1191,8 +1297,6 @@ def nem_sign_tx(connect, address, file, broadcast):
     payload = {"data": transaction.data.hex(), "signature": transaction.signature.hex()}
 
     if broadcast:
-        import requests
-
         return requests.post(
             "{}/transaction/announce".format(broadcast), json=payload
         ).json()
