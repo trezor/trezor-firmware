@@ -2,21 +2,38 @@
 
 FROM debian:9
 
+ARG TOOLCHAIN_FLAVOR=linux
+ENV TOOLCHAIN_FLAVOR=$TOOLCHAIN_FLAVOR
+
 # install build tools and dependencies
 
 RUN apt-get update && apt-get install -y \
     build-essential wget git python3-pip gcc-multilib
 
+# install dependencies from toolchain source build
+
+RUN [ "$TOOLCHAIN_FLAVOR" = "src" ] && \
+    apt-get install -y autoconf autogen bison dejagnu \
+                       flex flip gawk git gperf gzip nsis \
+                       openssh-client p7zip-full perl python-dev \
+                       libisl-dev tcl tofrodos zip \
+                       texinfo texlive texlive-extra-utils
+
 # download toolchain
 
 ENV TOOLCHAIN_SHORTVER=7-2018q2
 ENV TOOLCHAIN_LONGVER=gcc-arm-none-eabi-7-2018-q2-update
-ENV TOOLCHAIN_FLAVOR=linux
 ENV TOOLCHAIN_URL=https://developer.arm.com/-/media/Files/downloads/gnu-rm/$TOOLCHAIN_SHORTVER/$TOOLCHAIN_LONGVER-$TOOLCHAIN_FLAVOR.tar.bz2
 
 # extract toolchain
 
 RUN cd /opt && wget $TOOLCHAIN_URL && tar xfj $TOOLCHAIN_LONGVER-$TOOLCHAIN_FLAVOR.tar.bz2
+
+# build toolchain (if required)
+
+RUN [ "$TOOLCHAIN_FLAVOR" = "src" ] && cd /opt/$TOOLCHAIN_LONGVER && ./install-sources.sh --skip_steps=mingw32
+RUN [ "$TOOLCHAIN_FLAVOR" = "src" ] && cd /opt/$TOOLCHAIN_LONGVER && ./build-prerequisites.sh  --skip_steps=mingw32
+RUN [ "$TOOLCHAIN_FLAVOR" = "src" ] && cd /opt/$TOOLCHAIN_LONGVER && ./build-toolchain.sh  --skip_steps=mingw32,manual
 
 # install additional tools
 
