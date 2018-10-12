@@ -152,7 +152,7 @@ class BaseClient(object):
         if isinstance(resp, proto.Failure):
             if resp.code == proto.FailureType.ActionCancelled:
                 raise exceptions.Cancelled
-            raise exceptions.TrezorException(resp.code, resp.message)
+            raise exceptions.TrezorFailure(resp)
 
         return resp
 
