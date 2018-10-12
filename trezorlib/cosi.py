@@ -83,6 +83,8 @@ def verify_m_of_n(
     mask: int,
     keys: List[Ed25519PublicPoint],
 ) -> None:
+    if m < 1:
+        raise ValueError("At least 1 signer must be specified")
     selected_keys = [keys[i] for i in range(n) if mask & (1 << i)]
     if len(selected_keys) < m:
         raise ValueError(

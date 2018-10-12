@@ -149,5 +149,51 @@ def test_cosi_combination(keyset):
 
     try:
         cosi.verify(global_sig, message, global_pk)
-    except ValueError:
+    except Exception:
         pytest.fail("Failed to validate global signature")
+
+
+def test_m_of_n():
+    privkeys, pubkeys, _, _ = zip(*RFC8032_VECTORS)
+    message = hashlib.sha512(b"My hovercraft is full of eels!").digest()
+
+    signer_ids = 0, 2, 3
+    signers = [privkeys[i] for i in signer_ids]
+    signer_pubkeys = [pubkeys[i] for i in signer_ids]
+    sigmask = sum(1 << i for i in signer_ids)
+
+    # generate multisignature
+    nonce_pairs = [cosi.get_nonce(pk, message) for pk in signers]
+    nonces, commits = zip(*nonce_pairs)
+    global_pk = cosi.combine_keys(signer_pubkeys)
+    global_commit = cosi.combine_keys(commits)
+    signatures = [
+        cosi.sign_with_privkey(message, privkey, global_pk, nonce, global_commit)
+        for privkey, nonce in zip(signers, nonces)
+    ]
+    global_sig = cosi.combine_sig(global_commit, signatures)
+
+    try:
+        # this is what we are actually doing
+        cosi.verify_m_of_n(global_sig, message, 3, 4, sigmask, pubkeys)
+        # we can require less signers too
+        cosi.verify_m_of_n(global_sig, message, 1, 4, sigmask, pubkeys)
+    except Exception:
+        pytest.fail("Failed to validate by sigmask")
+
+    # and now for various ways that should fail
+    with pytest.raises(ValueError) as e:
+        cosi.verify_m_of_n(global_sig, message, 4, 4, sigmask, pubkeys)
+    assert "Not enough signers" in e.value.args[0]
+
+    with pytest.raises(_ed25519.SignatureMismatch):
+        # when N < number of possible signers, the topmost signers will be ignored
+        cosi.verify_m_of_n(global_sig, message, 2, 3, sigmask, pubkeys)
+
+    with pytest.raises(_ed25519.SignatureMismatch):
+        # wrong sigmask
+        cosi.verify_m_of_n(global_sig, message, 1, 4, 5, pubkeys)
+
+    with pytest.raises(ValueError):
+        # can't use "0 of N" scheme
+        cosi.verify_m_of_n(global_sig, message, 0, 4, sigmask, pubkeys)
