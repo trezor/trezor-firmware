@@ -6,6 +6,7 @@ import ustruct as struct
 from micropython import const
 
 from trezor import log
+from trezor.utils import ensure
 
 _CBOR_TYPE_MASK = const(0xE0)
 _CBOR_INFO_BITS = const(0x1F)
@@ -167,7 +168,7 @@ class Raw:
 
 class IndefiniteLengthArray:
     def __init__(self, array):
-        assert isinstance(array, list)
+        ensure(isinstance(array, list))
         self.array = array
 
 

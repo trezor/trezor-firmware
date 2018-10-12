@@ -15,6 +15,7 @@ class SignTx(p.MessageType):
         lock_time: int = None,
         expiry: int = None,
         overwintered: bool = None,
+        version_group_id: int = None,
     ) -> None:
         self.outputs_count = outputs_count
         self.inputs_count = inputs_count
@@ -23,6 +24,7 @@ class SignTx(p.MessageType):
         self.lock_time = lock_time
         self.expiry = expiry
         self.overwintered = overwintered
+        self.version_group_id = version_group_id
 
     @classmethod
     def get_fields(cls):
@@ -34,4 +36,5 @@ class SignTx(p.MessageType):
             5: ('lock_time', p.UVarintType, 0),  # default=0
             6: ('expiry', p.UVarintType, 0),
             7: ('overwintered', p.BoolType, 0),
+            8: ('version_group_id', p.UVarintType, 0),
         }

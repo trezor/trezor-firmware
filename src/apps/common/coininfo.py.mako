@@ -22,7 +22,6 @@ class CoinInfo:
         segwit: bool,
         fork_id: int,
         force_bip143: bool,
-        version_group_id: int,
         bip115: bool,
         decred: bool,
         curve_name: str,
@@ -42,7 +41,6 @@ class CoinInfo:
         self.segwit = segwit
         self.fork_id = fork_id
         self.force_bip143 = force_bip143
-        self.version_group_id = version_group_id
         self.bip115 = bip115
         self.decred = decred
         self.curve_name = curve_name
@@ -88,7 +86,6 @@ ATTRIBUTES = (
     ("segwit", bool),
     ("fork_id", black_repr),
     ("force_bip143", bool),
-    ("version_group_id", hexfmt),
     ("bip115", bool),
     ("decred", bool),
     ("curve_name", lambda r: repr(r.replace("_", "-"))),

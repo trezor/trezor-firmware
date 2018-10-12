@@ -1,4 +1,5 @@
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
+from trezor.utils import ensure
 
 from apps.common.coininfo import CoinInfo
 from apps.common.writers import empty_bytearray
@@ -56,7 +57,7 @@ def script_replay_protection_bip115(
 ) -> bytearray:
     if block_hash is None or block_height is None:
         return bytearray()
-    assert len(block_hash) == 32
+    ensure(len(block_hash) == 32)
     s = bytearray(33)
     s[0] = 0x20  # 32 bytes for block hash
     s[1:33] = block_hash  # block hash

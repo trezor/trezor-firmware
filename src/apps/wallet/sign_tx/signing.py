@@ -21,15 +21,16 @@ from apps.wallet.sign_tx.decred_prefix_hasher import (
 )
 from apps.wallet.sign_tx.helpers import *
 from apps.wallet.sign_tx.multisig import *
-from apps.wallet.sign_tx.overwinter_zip143 import (  # noqa:F401
-    OVERWINTERED,
-    Zip143,
-    Zip143Error,
-)
 from apps.wallet.sign_tx.scripts import *
 from apps.wallet.sign_tx.segwit_bip143 import Bip143, Bip143Error  # noqa:F401
 from apps.wallet.sign_tx.tx_weight_calculator import *
 from apps.wallet.sign_tx.writers import *
+from apps.wallet.sign_tx.zcash import (  # noqa:F401
+    OVERWINTERED,
+    ZcashError,
+    Zip143,
+    Zip243,
+)
 
 # the number of bip32 levels used in a wallet (chain and address)
 _BIP32_WALLET_DEPTH = const(2)
@@ -379,7 +380,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                 write_uint32(
                     h_sign, tx.version | OVERWINTERED
                 )  # nVersion | fOverwintered
-                write_uint32(h_sign, coin.version_group_id)  # nVersionGroupId
+                write_uint32(h_sign, tx.version_group_id)  # nVersionGroupId
             else:
                 write_uint32(h_sign, tx.version)  # nVersion
 
@@ -560,7 +561,7 @@ async def get_prevtx_output_value(
 
     if tx.overwintered:
         write_uint32(txh, tx.version | OVERWINTERED)  # nVersion | fOverwintered
-        write_uint32(txh, coin.version_group_id)  # nVersionGroupId
+        write_uint32(txh, tx.version_group_id)  # nVersionGroupId
     elif coin.decred:
         write_uint32(txh, tx.version | DECRED_SERIALIZE_NO_WITNESS)
     else:
@@ -629,7 +630,7 @@ def get_tx_header(coin: CoinInfo, tx: SignTx, segwit: bool = False):
     w_txi = bytearray()
     if tx.overwintered:
         write_uint32(w_txi, tx.version | OVERWINTERED)  # nVersion | fOverwintered
-        write_uint32(w_txi, coin.version_group_id)  # nVersionGroupId
+        write_uint32(w_txi, tx.version_group_id)  # nVersionGroupId
     else:
         write_uint32(w_txi, tx.version)  # nVersion
     if segwit:

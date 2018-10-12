@@ -1,6 +1,7 @@
 from trezor.crypto.hashlib import sha256
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
+from trezor.utils import ensure
 
 from apps.common.writers import (
     write_bytes,
@@ -59,7 +60,7 @@ def write_tx_output(w, o: TxOutputBinType):
 
 
 def write_op_push(w, n: int):
-    assert n >= 0 and n <= 0xFFFFFFFF
+    ensure(n >= 0 and n <= 0xFFFFFFFF)
     if n < 0x4C:
         w.append(n & 0xFF)
     elif n < 0xFF:
@@ -78,7 +79,7 @@ def write_op_push(w, n: int):
 
 
 def write_varint(w, n: int):
-    assert n >= 0 and n <= 0xFFFFFFFF
+    ensure(n >= 0 and n <= 0xFFFFFFFF)
     if n < 253:
         w.append(n & 0xFF)
     elif n < 0x10000:
@@ -94,7 +95,7 @@ def write_varint(w, n: int):
 
 
 def write_scriptnum(w, n: int):
-    assert n >= 0 and n <= 0xFFFFFFFF
+    ensure(n >= 0 and n <= 0xFFFFFFFF)
     if n < 0x100:
         w.append(1)
         w.append(n & 0xFF)

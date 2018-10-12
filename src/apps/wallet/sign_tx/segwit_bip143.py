@@ -3,7 +3,7 @@ from trezor.messages import FailureType, InputScriptType
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
-from trezor.utils import HashWriter
+from trezor.utils import HashWriter, ensure
 
 from apps.common.coininfo import CoinInfo
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
@@ -58,7 +58,7 @@ class Bip143:
     ) -> bytes:
         h_preimage = HashWriter(sha256)
 
-        assert not tx.overwintered
+        ensure(not tx.overwintered)
 
         write_uint32(h_preimage, tx.version)  # nVersion
         write_bytes(h_preimage, bytearray(self.get_prevouts_hash(coin)))  # hashPrevouts

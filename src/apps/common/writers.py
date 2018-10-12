@@ -1,3 +1,6 @@
+from trezor.utils import ensure
+
+
 def empty_bytearray(preallocate: int) -> bytearray:
     """
     Returns bytearray that won't allocate for at least `preallocate` bytes.
@@ -9,20 +12,20 @@ def empty_bytearray(preallocate: int) -> bytearray:
 
 
 def write_uint8(w: bytearray, n: int) -> int:
-    assert 0 <= n <= 0xFF
+    ensure(0 <= n <= 0xFF)
     w.append(n)
     return 1
 
 
 def write_uint16_le(w: bytearray, n: int) -> int:
-    assert 0 <= n <= 0xFFFF
+    ensure(0 <= n <= 0xFFFF)
     w.append(n & 0xFF)
     w.append((n >> 8) & 0xFF)
     return 2
 
 
 def write_uint32_le(w: bytearray, n: int) -> int:
-    assert 0 <= n <= 0xFFFFFFFF
+    ensure(0 <= n <= 0xFFFFFFFF)
     w.append(n & 0xFF)
     w.append((n >> 8) & 0xFF)
     w.append((n >> 16) & 0xFF)
@@ -31,7 +34,7 @@ def write_uint32_le(w: bytearray, n: int) -> int:
 
 
 def write_uint32_be(w: bytearray, n: int) -> int:
-    assert 0 <= n <= 0xFFFFFFFF
+    ensure(0 <= n <= 0xFFFFFFFF)
     w.append((n >> 24) & 0xFF)
     w.append((n >> 16) & 0xFF)
     w.append((n >> 8) & 0xFF)
@@ -40,7 +43,7 @@ def write_uint32_be(w: bytearray, n: int) -> int:
 
 
 def write_uint64_le(w: bytearray, n: int) -> int:
-    assert 0 <= n <= 0xFFFFFFFFFFFFFFFF
+    ensure(0 <= n <= 0xFFFFFFFFFFFFFFFF)
     w.append(n & 0xFF)
     w.append((n >> 8) & 0xFF)
     w.append((n >> 16) & 0xFF)
@@ -53,7 +56,7 @@ def write_uint64_le(w: bytearray, n: int) -> int:
 
 
 def write_uint64_be(w: bytearray, n: int) -> int:
-    assert 0 <= n <= 0xFFFFFFFFFFFFFFFF
+    ensure(0 <= n <= 0xFFFFFFFFFFFFFFFF)
     w.append((n >> 56) & 0xFF)
     w.append((n >> 48) & 0xFF)
     w.append((n >> 40) & 0xFF)
