@@ -214,6 +214,8 @@ def validate(fw: FirmwareType, skip_vendor_header=False) -> bool:
 
     if not skip_vendor_header:
         try:
+            # if you want to validate a custom vendor header, you can modify
+            # the global variables to match your keys and m-of-n scheme
             cosi.verify_m_of_n(
                 fw.vendor_header.signature,
                 vendor_fingerprint,
@@ -222,7 +224,6 @@ def validate(fw: FirmwareType, skip_vendor_header=False) -> bool:
                 fw.vendor_header.sigmask,
                 V2_BOOTLOADER_KEYS,
             )
-            # TODO support
         except Exception:
             raise ValueError("Invalid vendor header signature.")
 
