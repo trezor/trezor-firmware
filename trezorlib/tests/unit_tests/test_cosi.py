@@ -18,22 +18,7 @@ import hashlib
 
 import pytest
 
-from trezorlib import cosi
-
-# These tests calculate Ed25519 signatures in pure Python.
-# In addition to being Python, this is also DJB's proof-of-concept, unoptimized code.
-# As a result, it is actually very noticeably slow. On a gen8 Core i5, this takes around 40 seconds.
-# To skip the test, run `pytest -m "not slow_cosi"`.
-
-# Therefore, the tests are skipped by default.
-# Run `pytest -m slow_cosi` to explicitly enable.
-
-pytestmark = pytest.mark.slow_cosi
-if "slow_cosi" not in pytest.config.getoption("-m"):
-    pytestmark = pytest.mark.skip(
-        "Skipping slow CoSi tests. 'pytest -m slow_cosi' to run."
-    )
-
+from trezorlib import _ed25519, cosi
 
 RFC8032_VECTORS = (
     (  # test 1
@@ -123,8 +108,8 @@ def test_single_eddsa_vector(privkey, pubkey, message, signature):
     except ValueError:
         pytest.fail("Signature does not verify.")
 
-    fake_signature = b"\xf1" + signature[1:]
-    with pytest.raises(ValueError):
+    fake_signature = signature[:37] + b"\xf0" + signature[38:]
+    with pytest.raises(_ed25519.SignatureMismatch):
         cosi.verify(fake_signature, message, pubkey)
 
 

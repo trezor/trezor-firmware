@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from functools import reduce
-from typing import Iterable, Tuple
+from typing import Iterable, List, Tuple
 
 from . import _ed25519, messages
 from .tools import expect
@@ -30,7 +30,7 @@ Ed25519Signature = bytes
 def combine_keys(pks: Iterable[Ed25519PublicPoint]) -> Ed25519PublicPoint:
     """Combine a list of Ed25519 points into a "global" CoSi key."""
     P = [_ed25519.decodepoint(pk) for pk in pks]
-    combine = reduce(_ed25519.edwards, P)
+    combine = reduce(_ed25519.edwards_add, P)
     return Ed25519PublicPoint(_ed25519.encodepoint(combine))
 
 
@@ -75,11 +75,28 @@ def verify(
     _ed25519.checkvalid(signature, digest, pub_key)
 
 
+def verify_m_of_n(
+    signature: Ed25519Signature,
+    digest: bytes,
+    m: int,
+    n: int,
+    mask: int,
+    keys: List[Ed25519PublicPoint],
+) -> None:
+    selected_keys = [keys[i] for i in range(n) if mask & (1 << i)]
+    if len(selected_keys) < m:
+        raise ValueError(
+            "Not enough signers ({} required, {} found)".format(m, len(selected_keys))
+        )
+    global_pk = combine_keys(selected_keys)
+    return verify(signature, digest, global_pk)
+
+
 def pubkey_from_privkey(privkey: Ed25519PrivateKey) -> Ed25519PublicPoint:
     """Interpret 32 bytes of data as an Ed25519 private key.
      Calculate and return the corresponding public key.
      """
-    return Ed25519PublicPoint(_ed25519.publickey(privkey))
+    return Ed25519PublicPoint(_ed25519.publickey_unsafe(privkey))
 
 
 def sign_with_privkey(
@@ -92,16 +109,8 @@ def sign_with_privkey(
     """Create a CoSi signature of `digest` with the supplied private key.
     This function needs to know the global public key and global commitment.
     """
-    b = _ed25519.b
     h = _ed25519.H(privkey)
-    # curvepoint preparation:
-    # 1. take lowest b bits of h
-    a = int.from_bytes(h[: b // 8], "little")
-    # 2. clear lowest three and highest bit
-    bitmask = 1 + 2 + 4 + (1 << b - 1)
-    a &= ~bitmask
-    # 3. set next-highest bit
-    a |= 1 << b - 2
+    a = _ed25519.decodecoord(h)
 
     S = (nonce + _ed25519.Hint(global_commit + global_pubkey + digest) * a) % _ed25519.l
     return Ed25519Signature(_ed25519.encodeint(S))
