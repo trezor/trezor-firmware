@@ -26,13 +26,17 @@ RUN cd /opt/$TOOLCHAIN_LONGVER && ./install-sources.sh --skip_steps=mingw32
 RUN cd /opt/$TOOLCHAIN_LONGVER && ./build-prerequisites.sh  --skip_steps=mingw32
 RUN cd /opt/$TOOLCHAIN_LONGVER && ./build-toolchain.sh  --skip_steps=mingw32,manual
 
+# install additional tools
+
+RUN apt-get install -y protobuf-compiler libprotobuf-dev
+
 # setup toolchain
 
 ENV PATH=/opt/$TOOLCHAIN_LONGVER/bin:$PATH
 
 # install python tools
 
-RUN pip3 install click pyblake2 scons
+RUN pip3 install click pyblake2 scons protobuf
 RUN pip3 install --no-deps git+https://github.com/trezor/python-trezor.git@master
 
 # workarounds for weird default install

@@ -18,13 +18,13 @@ ENV TOOLCHAIN_URL=https://developer.arm.com/-/media/Files/downloads/gnu-rm/$TOOL
 
 RUN cd /opt && wget $TOOLCHAIN_URL && tar xfj $TOOLCHAIN_LONGVER-$TOOLCHAIN_FLAVOR.tar.bz2
 
-# setup toolchain
-
-ENV PATH=/opt/$TOOLCHAIN_LONGVER/bin:$PATH
-
 # install additional tools
 
 RUN apt-get install -y protobuf-compiler libprotobuf-dev
+
+# setup toolchain
+
+ENV PATH=/opt/$TOOLCHAIN_LONGVER/bin:$PATH
 
 # install python tools
 
