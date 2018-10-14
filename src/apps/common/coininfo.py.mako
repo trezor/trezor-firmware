@@ -1,6 +1,6 @@
 # generated from coininfo.py.mako
 # do not edit manually!
-from trezor.crypto.base58 import blake256_32, groestl512d_32, sha3k_256, sha256d_32
+from trezor.crypto.base58 import blake256d_32, groestl512d_32, keccak_32, sha256d_32
 from trezor.crypto.scripts import blake256_ripemd160_digest, sha256_ripemd160_digest
 
 
@@ -51,11 +51,11 @@ class CoinInfo:
             self.sign_hash_double = False
             self.script_hash = sha256_ripemd160_digest
         elif curve_name == "secp256k1-decred":
-            self.b58_hash = blake256_32
+            self.b58_hash = blake256d_32
             self.sign_hash_double = False
             self.script_hash = blake256_ripemd160_digest
         elif curve_name == "secp256k1-smart":
-            self.b58_hash = sha3k_256
+            self.b58_hash = keccak_32
             self.sign_hash_double = False
             self.script_hash = sha256_ripemd160_digest
         else:
