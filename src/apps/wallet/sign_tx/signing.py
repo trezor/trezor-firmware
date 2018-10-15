@@ -70,9 +70,14 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
         hash143 = DecredPrefixHasher(tx)  # pseudo bip143 prefix hashing
         tx_ser = TxRequestSerializedType()
     elif tx.overwintered:
-        hash143 = Zip143()  # zip143 transaction hashing
+        if tx.version == 3:
+            hash143 = Zip143()  # ZIP-0143 transaction hashing
+        elif tx.version == 4:
+            hash143 = Zip243()  # ZIP-0243 transaction hashing
+        else:
+            raise SigningError(FailureType.DataError, "Unsupported version for overwintered transaction")
     else:
-        hash143 = Bip143()  # bip143 transaction hashing
+        hash143 = Bip143()  # BIP-0143 transaction hashing
 
     multifp = MultisigFingerprint()  # control checksum of multisig inputs
     weight = TxWeightCalculator(tx.inputs_count, tx.outputs_count)
@@ -126,7 +131,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
             if coin.force_bip143 or tx.overwintered:
                 if not txi.amount:
                     raise SigningError(
-                        FailureType.DataError, "BIP/ZIP 143 input without amount"
+                        FailureType.DataError, "Expected input with amount"
                     )
                 segwit[i] = False
                 segwit_in += txi.amount
