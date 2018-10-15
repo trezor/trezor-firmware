@@ -75,7 +75,10 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
         elif tx.version == 4:
             hash143 = Zip243()  # ZIP-0243 transaction hashing
         else:
-            raise SigningError(FailureType.DataError, "Unsupported version for overwintered transaction")
+            raise SigningError(
+                FailureType.DataError,
+                "Unsupported version for overwintered transaction",
+            )
     else:
         hash143 = Bip143()  # BIP-0143 transaction hashing
 
