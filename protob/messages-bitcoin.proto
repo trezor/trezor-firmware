@@ -129,6 +129,7 @@ message SignTx {
     optional uint32 lock_time = 5 [default=0];          // transaction lock_time
     optional uint32 expiry = 6;                         // only for Decred and Zcash
     optional bool overwintered = 7;                     // only for Zcash
+    optional uint32 version_group_id = 4;               // only for Zcash, nVersionGroupId when overwintered is set
 }
 
 /**
@@ -192,6 +193,7 @@ message TxAck {
         optional uint32 extra_data_len = 9;     // only for Zcash
         optional uint32 expiry = 10;            // only for Decred and Zcash
         optional bool overwintered = 11;        // only for Zcash
+        optional uint32 version_group_id = 12;  // only for Zcash, nVersionGroupId when overwintered is set
         /**
         * Structure representing transaction input
         */
