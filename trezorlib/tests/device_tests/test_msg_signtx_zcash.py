@@ -84,6 +84,7 @@ class TestMsgSigntxZcash(TrezorTest):
                 [out1],
                 version=3,
                 overwintered=True,
+                version_group_id=0x3C48270,
             )
 
         # Accepted by network: tx eda9b772c47f0c29310759960e0081c98707aa67a0a2738bcc71439fcf360675

@@ -97,6 +97,11 @@ class TxApiInsight(TxApi):
         if self.decred:
             t.expiry = data["expiry"]
 
+        if self.zcash:
+            t.overwintered = data.get("fOverwintered", False)
+            t.expiry = data.get("nExpiryHeight", None)
+            t.version_group_id = data.get("nVersionGroupId", None)
+
         for vin in data["vin"]:
             i = t._add_inputs()
             if "coinbase" in vin.keys():
@@ -131,8 +136,6 @@ class TxApiInsight(TxApi):
                 o.decred_script_version = vout["version"]
 
         if self.zcash:
-            t.overwintered = data.get("fOverwintered", False)
-            t.expiry = data.get("nExpiryHeight", False)
             if t.version >= 2:
                 joinsplit_cnt = len(data["vjoinsplit"])
                 if joinsplit_cnt == 0:

@@ -90,6 +90,7 @@ def sign_tx(
     lock_time=None,
     expiry=None,
     overwintered=None,
+    version_group_id=None,
     debug_processor=None,
 ):
     # start = time.time()
@@ -108,6 +109,8 @@ def sign_tx(
         tx.expiry = expiry
     if overwintered is not None:
         tx.overwintered = overwintered
+    if version_group_id is not None:
+        tx.version_group_id = version_group_id
     res = client.call(tx)
 
     # Prepare structure for signatures
