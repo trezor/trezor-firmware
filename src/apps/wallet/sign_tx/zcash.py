@@ -137,19 +137,22 @@ class Zip243(Zip143):
         write_bytes(h_preimage, bytearray(self.get_sequence_hash()))  # 4. hashSequence
         write_bytes(h_preimage, bytearray(self.get_outputs_hash()))  # 5. hashOutputs
         write_bytes(h_preimage, b"\x00" * 32)  # 6. hashJoinSplits
-        write_uint32(h_preimage, tx.lock_time)  # 7. nLockTime
-        write_uint32(h_preimage, tx.expiry)  # 8. expiryHeight
-        write_uint32(h_preimage, sighash)  # 9. nHashType
+        write_bytes(h_preimage, b"\x00" * 32)  # 7. hashShieldedSpends
+        write_bytes(h_preimage, b"\x00" * 32)  # 8. hashShieldedOutputs
+        write_uint32(h_preimage, tx.lock_time)  # 9. nLockTime
+        write_uint32(h_preimage, tx.expiry)  # 10. expiryHeight
+        write_uint64(h_preimage, 0)  # 11. valueBalance
+        write_uint32(h_preimage, sighash)  # 12. nHashType
 
-        write_bytes_reversed(h_preimage, txi.prev_hash)  # 10a. outpoint
+        write_bytes_reversed(h_preimage, txi.prev_hash)  # 13a. outpoint
         write_uint32(h_preimage, txi.prev_index)
 
-        script_code = derive_script_code(txi, pubkeyhash)  # 10b. scriptCode
+        script_code = derive_script_code(txi, pubkeyhash)  # 13b. scriptCode
         write_varint(h_preimage, len(script_code))
         write_bytes(h_preimage, script_code)
 
-        write_uint64(h_preimage, txi.amount)  # 10c. value
+        write_uint64(h_preimage, txi.amount)  # 13c. value
 
-        write_uint32(h_preimage, txi.sequence)  # 10d. nSequence
+        write_uint32(h_preimage, txi.sequence)  # 13d. nSequence
 
         return get_tx_hash(h_preimage)

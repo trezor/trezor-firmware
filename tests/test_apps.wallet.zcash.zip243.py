@@ -36,7 +36,7 @@ class TestZcashZip243(unittest.TestCase):
             "prevouts_hash": b"bd4318eecf841a0cf01c2be532cf4bc3303e881e2aface159f1882f153152688",
             "sequence_hash": b"9ac6a31952ff626bf5a0a30d3d8ac63a0d4298d33d7bc38854bfa5860695e30a",
             "outputs_hash": b"d0cadf116b4441f5e1e17814908dee509ec262a79f3c88f7f3389e8200658992",
-            "preimage_hash": b"80b3cdfbefc9cea6818e148b5af6133dfac7d9ff8435b256ef1958b906b3647f",
+            "preimage_hash": b"53a12bca557c27defa366c2b4c0e46ede01f81ef3dd3aa3750db62a5505c1d06",
         },
         {
             "expiry": 231041495,
@@ -73,7 +73,7 @@ class TestZcashZip243(unittest.TestCase):
             "prevouts_hash": b"8e286c6c0dde3119271c9c1398ef46614b0253c502b00a3691cec2e9047da35b",
             "sequence_hash": b"58477fd9ecd5faf3e08159e0ab5fdaab66cab364d081498ddcef41de0af3624e",
             "outputs_hash": b"c518797fc6f2c08fc22aa3f66122047b360e1db4df5c3feb28573c00cdf45fa1",
-            "preimage_hash": b"25769ee5a943f0e1fd165c2b049de2732ea88f059658f63932f12b16087337fd",
+            "preimage_hash": b"d1bc60986cc5c4d57f91002e48459a50f72bdb96b8f5889cf8f467a7d968b97c",
         },
         {
             "expiry": 186996458,
@@ -97,7 +97,7 @@ class TestZcashZip243(unittest.TestCase):
             "prevouts_hash": b"445bc6328cd33b3c86259953dd674bded341ff1e1104dc21856919e9761036dd",
             "sequence_hash": b"42e1d5c2636f165afaa954afa6d7a50779eb145e947bf668f1a40dd771c711fc",
             "outputs_hash": b"869eda84eecf7257f9979a4848bbf52f4969a5736594ab7ba41452e7bb906824",
-            "preimage_hash": b"e2d5a735f8f4c3f6e382405a214daa520a7f80200c177d8daafe1c0344db9dd3",
+            "preimage_hash": b"7536cdb202a30bf09c45e1a2f775c4efd41b9e67557b62abe12b64d367a2316e",
         },
         {
             "expiry": 254788522,
@@ -133,7 +133,7 @@ class TestZcashZip243(unittest.TestCase):
             "prevouts_hash": b"509abdfafcc75265037f1ce6a4658ac9ecadd7b82378c3fbaeb48ab437ff6898",
             "sequence_hash": b"2b13f671cd1a9aa04c1e250eef74a316d7d2b049360d20604514ddc2dfacfd23",
             "outputs_hash": b"4f01b8785e80779290aa86c16b24952f9b7f8bc09da44e68f760ab1920ab8f2a",
-            "preimage_hash": b"74908bfb31d1ce68f1b82c12e96fb7799669293d92da84a689a1dd1f9ed74d8d",
+            "preimage_hash": b"df1359c0aacc05e88ae6bbecfc54fef50bd31f21f543c49f95a321dd835263be",
         },
     ]
 
