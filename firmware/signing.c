@@ -66,6 +66,7 @@ static uint32_t version = 1;
 static uint32_t lock_time = 0;
 static uint32_t expiry = 0;
 static bool overwintered = false;
+static uint32_t version_group_id = 0;
 static uint32_t next_nonsegwit_input;
 static uint32_t progress, progress_step, progress_meta_step;
 static bool multisig_fp_set, multisig_fp_mismatch;
@@ -482,6 +483,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 	lock_time = msg->lock_time;
 	expiry = msg->expiry;
 	overwintered = msg->has_overwintered && msg->overwintered;
+	version_group_id = msg->version_group_id;
 
 	uint32_t size = TXSIZE_HEADER + TXSIZE_FOOTER + ser_length_size(inputs_count) + ser_length_size(outputs_count);
 	if (coin->decred) {
@@ -511,13 +513,13 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 	multisig_fp_mismatch = false;
 	next_nonsegwit_input = 0xffffffff;
 
-	tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, coin->version_group_id);
+	tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, version_group_id);
 
 	if (coin->decred) {
 		to.version |= (DECRED_SERIALIZE_FULL << 16);
 		to.is_decred = true;
 
-		tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, coin->version_group_id);
+		tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, version_group_id);
 		ti.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
 		ti.is_decred = true;
 	}
@@ -769,7 +771,7 @@ static void signing_hash_zip143(const TxInputType *txinput, uint8_t *hash) {
 	hasher_Reset(&hasher_preimage);
 	uint32_t ver = version | TX_OVERWINTERED;												// 1. nVersion | fOverwintered
 	hasher_Update(&hasher_preimage, (const uint8_t *)&ver, 4);
-	hasher_Update(&hasher_preimage, (const uint8_t *)&coin->version_group_id, 4);			// 2. nVersionGroupId
+	hasher_Update(&hasher_preimage, (const uint8_t *)&version_group_id, 4);					// 2. nVersionGroupId
 	hasher_Update(&hasher_preimage, hash_prevouts, 32);										// 3. hashPrevouts
 	hasher_Update(&hasher_preimage, hash_sequence, 32);										// 4. hashSequence
 	hasher_Update(&hasher_preimage, hash_outputs, 32);										// 5. hashOutputs
@@ -1046,7 +1048,7 @@ void signing_txack(TransactionType *tx)
 				signing_abort();
 				return;
 			}
-			tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time, tx->expiry, tx->extra_data_len, coin->curve->hasher_sign, overwintered, coin->version_group_id);
+			tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time, tx->expiry, tx->extra_data_len, coin->curve->hasher_sign, overwintered, version_group_id);
 			if (coin->decred) {
 				tp.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
 				tp.is_decred = true;
@@ -1129,7 +1131,7 @@ void signing_txack(TransactionType *tx)
 		case STAGE_REQUEST_4_INPUT:
 			progress = 500 + ((signatures * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION);
 			if (idx2 == 0) {
-				tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, coin->version_group_id);
+				tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, version_group_id);
 				hasher_Reset(&hasher_check);
 			}
 			// check prevouts and script type
@@ -1328,12 +1330,12 @@ void signing_txack(TransactionType *tx)
 			progress = 500 + ((signatures * progress_step + idx2 * progress_meta_step) >> PROGRESS_PRECISION);
 			if (idx1 == 0) {
 				// witness
-				tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, coin->version_group_id);
+				tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, version_group_id);
 				to.is_decred = true;
 			}
 
 			// witness hash
-			tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, coin->version_group_id);
+			tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0, coin->curve->hasher_sign, overwintered, version_group_id);
 			ti.version |= (DECRED_SERIALIZE_WITNESS_SIGNING << 16);
 			ti.is_decred = true;
 			if (!compile_input_script_sig(&tx->inputs[0])) {

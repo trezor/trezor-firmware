@@ -44,7 +44,6 @@ typedef struct _CoinInfo {
 	uint32_t xpub_magic_segwit_p2sh;
 	uint32_t xpub_magic_segwit_native;
 	uint32_t fork_id;
-	uint32_t version_group_id;
 	const char *bech32_prefix;
 	const char *cashaddr_prefix;
 	uint32_t coin_type;

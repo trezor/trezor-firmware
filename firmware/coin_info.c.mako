@@ -41,7 +41,6 @@ const CoinInfo coins[COINS_COUNT] = {
 	.xpub_magic_segwit_p2sh = ${hex(c.xpub_magic_segwit_p2sh)},
 	.xpub_magic_segwit_native = ${hex(c.xpub_magic_segwit_native)},
 	.fork_id = ${c_int(c.fork_id)},
-	.version_group_id = ${hex(c.version_group_id)},
 	.bech32_prefix = ${c_str(c.bech32_prefix)},
 	.cashaddr_prefix = ${c_str(c.cashaddr_prefix)},
 	.coin_type = (${c_int(c.slip44)} | 0x80000000),
