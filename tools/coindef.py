@@ -29,7 +29,6 @@ class CoinDef(p.MessageType):
         24: ('min_address_length', p.UVarintType, 0),
         25: ('max_address_length', p.UVarintType, 0),
         26: ('icon', p.BytesType, 0),
-        27: ('version_group_id', p.UVarintType, 0),
         28: ('website', p.UnicodeType, 0),
         29: ('github', p.UnicodeType, 0),
         30: ('maintainer', p.UnicodeType, 0),
@@ -67,7 +66,6 @@ class CoinDef(p.MessageType):
         min_address_length: int = None,
         max_address_length: int = None,
         icon: bytes = None,
-        version_group_id: int = None,
         website: str = None,
         github: str = None,
         maintainer: str = None,
@@ -104,7 +102,6 @@ class CoinDef(p.MessageType):
         self.min_address_length = min_address_length
         self.max_address_length = max_address_length
         self.icon = icon
-        self.version_group_id = version_group_id
         self.website = website
         self.github = github
         self.maintainer = maintainer
