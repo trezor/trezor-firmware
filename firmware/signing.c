@@ -55,7 +55,7 @@ static TxRequest resp;
 static TxInputType input;
 static TxOutputBinType bin_output;
 static TxStruct to, tp, ti;
-static Hasher hasher_prevouts, hasher_sequence, hasher_outputs, hasher_check, hasher_preimage;
+static Hasher hasher_prevouts, hasher_sequence, hasher_outputs, hasher_check;
 static uint8_t CONFIDENTIAL privkey[32];
 static uint8_t pubkey[33], sig[64];
 static uint8_t hash_prevouts[32], hash_sequence[32],hash_outputs[32];
@@ -529,13 +529,11 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 		hasher_Init(&hasher_prevouts, HASHER_OVERWINTER_PREVOUTS);
 		hasher_Init(&hasher_sequence, HASHER_OVERWINTER_SEQUENCE);
 		hasher_Init(&hasher_outputs, HASHER_OVERWINTER_OUTPUTS);
-		hasher_Init(&hasher_preimage, HASHER_OVERWINTER_PREIMAGE);
 		hasher_Init(&hasher_check, coin->curve->hasher_sign);
 	} else {
 		hasher_Init(&hasher_prevouts, coin->curve->hasher_sign);
 		hasher_Init(&hasher_sequence, coin->curve->hasher_sign);
 		hasher_Init(&hasher_outputs, coin->curve->hasher_sign);
-		hasher_Init(&hasher_preimage, coin->curve->hasher_sign);
 		hasher_Init(&hasher_check, coin->curve->hasher_sign);
 	}
 
@@ -752,7 +750,8 @@ static void phase1_request_next_output(void) {
 
 static void signing_hash_bip143(const TxInputType *txinput, uint8_t *hash) {
 	uint32_t hash_type = signing_hash_type();
-	hasher_Reset(&hasher_preimage);
+	Hasher hasher_preimage;
+	hasher_Init(&hasher_preimage, coin->curve->hasher_sign);
 	hasher_Update(&hasher_preimage, (const uint8_t *)&version, 4);							// nVersion
 	hasher_Update(&hasher_preimage, hash_prevouts, 32);										// hashPrevouts
 	hasher_Update(&hasher_preimage, hash_sequence, 32);										// hashSequence
@@ -768,7 +767,8 @@ static void signing_hash_bip143(const TxInputType *txinput, uint8_t *hash) {
 
 static void signing_hash_zip143(const TxInputType *txinput, uint8_t *hash) {
 	uint32_t hash_type = signing_hash_type();
-	hasher_Reset(&hasher_preimage);
+	Hasher hasher_preimage;
+	hasher_Init(&hasher_preimage, HASHER_OVERWINTER_PREIMAGE);
 	uint32_t ver = version | TX_OVERWINTERED;												// 1. nVersion | fOverwintered
 	hasher_Update(&hasher_preimage, (const uint8_t *)&ver, 4);
 	hasher_Update(&hasher_preimage, (const uint8_t *)&version_group_id, 4);					// 2. nVersionGroupId
@@ -789,9 +789,39 @@ static void signing_hash_zip143(const TxInputType *txinput, uint8_t *hash) {
 	hasher_Final(&hasher_preimage, hash);
 }
 
+static void signing_hash_zip243(const TxInputType *txinput, uint8_t *hash) {
+	uint32_t hash_type = signing_hash_type();
+	Hasher hasher_preimage;
+	hasher_Init(&hasher_preimage, HASHER_SAPLING_PREIMAGE);
+	uint32_t ver = version | TX_OVERWINTERED;													// 1. nVersion | fOverwintered
+	hasher_Update(&hasher_preimage, (const uint8_t *)&ver, 4);
+	hasher_Update(&hasher_preimage, (const uint8_t *)&version_group_id, 4);						// 2. nVersionGroupId
+	hasher_Update(&hasher_preimage, hash_prevouts, 32);											// 3. hashPrevouts
+	hasher_Update(&hasher_preimage, hash_sequence, 32);											// 4. hashSequence
+	hasher_Update(&hasher_preimage, hash_outputs, 32);											// 5. hashOutputs
+																								// 6. hashJoinSplits
+	hasher_Update(&hasher_preimage, (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32);
+																								// 7. hashShieldedSpends
+	hasher_Update(&hasher_preimage, (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32);
+																								// 8. hashShieldedOutputs
+	hasher_Update(&hasher_preimage, (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32);
+	hasher_Update(&hasher_preimage, (const uint8_t*)&lock_time, 4);								// 9. nLockTime
+	hasher_Update(&hasher_preimage, (const uint8_t*)&expiry, 4);								// 10. expiryHeight
+	hasher_Update(&hasher_preimage, (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00", 8);	// 11. valueBalance
+	hasher_Update(&hasher_preimage, (const uint8_t*)&hash_type, 4);								// 12. nHashType
+
+	tx_prevout_hash(&hasher_preimage, txinput);												// 13a. outpoint
+	tx_script_hash(&hasher_preimage, txinput->script_sig.size, txinput->script_sig.bytes);	// 13b. scriptCode
+	hasher_Update(&hasher_preimage, (const uint8_t*)&txinput->amount, 8);					// 13c. value
+	tx_sequence_hash(&hasher_preimage, txinput);											// 13d. nSequence
+
+	hasher_Final(&hasher_preimage, hash);
+}
+
 static void signing_hash_decred(const uint8_t *hash_witness, uint8_t *hash) {
 	uint32_t hash_type = signing_hash_type();
-	hasher_Reset(&hasher_preimage);
+	Hasher hasher_preimage;
+	hasher_Init(&hasher_preimage, coin->curve->hasher_sign);
 	hasher_Update(&hasher_preimage, (const uint8_t*) &hash_type, 4);
 	hasher_Update(&hasher_preimage, hash_prefix, 32);
 	hasher_Update(&hasher_preimage, hash_witness, 32);
@@ -972,7 +1002,7 @@ void signing_txack(TransactionType *tx)
 
 				if (coin->force_bip143 || overwintered) {
 					if (!tx->inputs[0].has_amount) {
-						fsm_sendFailure(FailureType_Failure_DataError, _("BIP/ZIP 143 input without amount"));
+						fsm_sendFailure(FailureType_Failure_DataError, _("Expected input with amount"));
 						signing_abort();
 						return;
 					}
@@ -1237,7 +1267,18 @@ void signing_txack(TransactionType *tx)
 
 				uint8_t hash[32];
 				if (overwintered) {
-					signing_hash_zip143(&tx->inputs[0], hash);
+					switch (version) {
+						case 3:
+							signing_hash_zip143(&tx->inputs[0], hash);
+							break;
+						case 4:
+							signing_hash_zip243(&tx->inputs[0], hash);
+							break;
+						default:
+							fsm_sendFailure(FailureType_Failure_DataError, _("Unsupported version for overwintered transaction"));
+							signing_abort();
+							return;
+					}
 				} else {
 					signing_hash_bip143(&tx->inputs[0], hash);
 				}
