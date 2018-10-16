@@ -54,6 +54,7 @@ typedef enum {
     HASHER_OVERWINTER_SEQUENCE,
     HASHER_OVERWINTER_OUTPUTS,
     HASHER_OVERWINTER_PREIMAGE,
+    HASHER_SAPLING_PREIMAGE,
 } HasherType;
 
 typedef struct {
@@ -64,7 +65,7 @@ typedef struct {
         SHA3_CTX sha3;          // for HASHER_SHA3{,K}
         BLAKE256_CTX blake;     // for HASHER_BLAKE{,D}
         GROESTL512_CTX groestl; // for HASHER_GROESTLD_TRUNC
-        BLAKE2B_CTX blake2b;    // for HASHER_OVERWINTER_*
+        BLAKE2B_CTX blake2b;    // for HASHER_OVERWINTER_*, HASHER_SAPLING_*
     } ctx;
 } Hasher;
 
