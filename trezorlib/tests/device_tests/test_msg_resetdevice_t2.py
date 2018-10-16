@@ -45,7 +45,7 @@ class TestMsgResetDeviceT2(TrezorTest):
             assert btn_code == B.ResetDevice
             # 12 words, 3 pages
             for i in range(3):
-                time.sleep(0.3)
+                time.sleep(1)
                 words.extend(self.client.debug.state().reset_word.split())
                 if i < 2:
                     self.client.debug.swipe_down()
@@ -55,7 +55,7 @@ class TestMsgResetDeviceT2(TrezorTest):
 
             # check backup words
             for _ in range(2):
-                time.sleep(0.3)
+                time.sleep(1)
                 index = self.client.debug.state().reset_word_pos
                 self.client.debug.input(words[index])
 
@@ -132,7 +132,7 @@ class TestMsgResetDeviceT2(TrezorTest):
             assert btn_code == B.ResetDevice
             # 12 words, 3 pages
             for i in range(3):
-                time.sleep(0.3)
+                time.sleep(1)
                 words.extend(self.client.debug.state().reset_word.split())
                 if i < 2:
                     self.client.debug.swipe_down()
@@ -142,7 +142,7 @@ class TestMsgResetDeviceT2(TrezorTest):
 
             # check backup words
             for _ in range(2):
-                time.sleep(0.3)
+                time.sleep(1)
                 index = self.client.debug.state().reset_word_pos
                 self.client.debug.input(words[index])
 
