@@ -548,8 +548,20 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
     write_uint32(tx_ser.serialized_tx, tx.lock_time)
 
     if tx.overwintered:
-        write_uint32(tx_ser.serialized_tx, tx.expiry)  # expiryHeight
-        write_varint(tx_ser.serialized_tx, 0)  # nJoinSplit
+        if tx.version == 3:
+            write_uint32(tx_ser.serialized_tx, tx.expiry)  # expiryHeight
+            write_varint(tx_ser.serialized_tx, 0)  # nJoinSplit
+        elif tx.version == 4:
+            write_uint32(tx_ser.serialized_tx, tx.expiry)  # expiryHeight
+            write_uint64(tx_ser.serialized_tx, 0)  # valueBalance
+            write_varint(tx_ser.serialized_tx, 0)  # nShieldedSpend
+            write_varint(tx_ser.serialized_tx, 0)  # nShieldedOutput
+            write_varint(tx_ser.serialized_tx, 0)  # nJoinSplit
+        else:
+            raise SigningError(
+                FailureType.DataError,
+                "Unsupported version for overwintered transaction",
+            )
 
     await request_tx_finish(tx_req)
 
