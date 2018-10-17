@@ -55,7 +55,7 @@
   },
   {
     "chain": "eosc",
-    "chain_id": 20,
+    "chain_id": 2018,
     "slip44": 2018,
     "shortcut": "EOSC",
     "name": "EOS Classic",
