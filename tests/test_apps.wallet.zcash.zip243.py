@@ -135,6 +135,40 @@ class TestZcashZip243(unittest.TestCase):
             "outputs_hash": b"4f01b8785e80779290aa86c16b24952f9b7f8bc09da44e68f760ab1920ab8f2a",
             "preimage_hash": b"df1359c0aacc05e88ae6bbecfc54fef50bd31f21f543c49f95a321dd835263be",
         },
+        # "Test vector 3" from https://github.com/zcash/zips/blob/master/zip-0243.rst
+        {
+            "expiry": 0x0004b048,
+            "inputs": [
+                {
+                    "amount": 0x02faf080,
+                    "prevout": [
+                        "d9042195d9a1b65b2f1f79d68ceb1a5ea6459c9651a6ad4dc1f465824785c6a8",
+                        1,
+                    ],
+                    "script_type": InputScriptType.SPENDADDRESS,
+                    "pubkeyhash": "507173527b4c3318a2aecd793bf1cfed705950cf",
+                    "sequence": 0xfffffffe,
+                }
+            ],
+            "lock_time": 0x0004b029,
+            "outputs": [
+                {
+                    "script_pubkey": "76a9148132712c3ff19f3a151234616777420a6d7ef22688ac",
+                    "amount": 0x02625a00,
+                },
+                {
+                    "script_pubkey": "76a9145453e4698f02a38abdaa521cd1ff2dee6fac187188ac",
+                    "amount": 0x0098958b,
+                },
+            ],
+            "version": 4,
+            "version_group_id": 0x892f2085,
+            "hash_type": 1,
+            "prevouts_hash": b"fae31b8dec7b0b77e2c8d6b6eb0e7e4e55abc6574c26dd44464d9408a8e33f11",
+            "sequence_hash": b"6c80d37f12d89b6f17ff198723e7db1247c4811d1a695d74d930f99e98418790",
+            "outputs_hash": b"d2b04118469b7810a0d1cc59568320aad25a84f407ecac40b4f605a4e6868454",
+            "preimage_hash": b"f3148f80dfab5e573d5edfe7a850f5fd39234f80b5429d3a57edcc11e34c585b",
+        },
     ]
 
     def test_zip243(self):
