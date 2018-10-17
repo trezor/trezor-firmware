@@ -612,9 +612,19 @@ uint32_t tx_serialize_footer(TxStruct *tx, uint8_t *out)
 {
 	memcpy(out, &(tx->lock_time), 4);
 	if (tx->overwintered) {
-		memcpy(out + 4, &(tx->expiry), 4);
-		out[8] = 0x00; // nJoinSplit
-		return 9;
+		if (tx->version == 3) {
+			memcpy(out + 4, &(tx->expiry), 4);
+			out[8] = 0x00; // nJoinSplit
+			return 9;
+		} else
+		if (tx->version == 4) {
+			memcpy(out + 4, &(tx->expiry), 4);
+			memset(out + 8, 0, 8); // valueBalance
+			out[16] = 0x00; // nShieldedSpend
+			out[17] = 0x00; // nShieldedOutput
+			out[18] = 0x00; // nJoinSplit
+			return 19;
+		}
 	}
 	if (tx->is_decred) {
 		memcpy(out + 4, &(tx->expiry), 4);
