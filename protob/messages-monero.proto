@@ -10,13 +10,13 @@ option java_outer_classname = "TrezorMessageMonero";
  * @embed
  */
 message MoneroTransactionSourceEntry {
-    repeated MoneroOutputEntry outputs = 1;
-    optional uint64 real_output = 2;
-    optional bytes real_out_tx_key = 3;
-    repeated bytes real_out_additional_tx_keys = 4;
-    optional uint64 real_output_in_tx_index = 5;
+    repeated MoneroOutputEntry outputs = 1;  // all outputs including decoys (forms the ring)
+    optional uint64 real_output = 2;  // index denoting which item in `outputs` is our real output (not a decoy)
+    optional bytes real_out_tx_key = 3;  // tx key located in the real output's tx
+    repeated bytes real_out_additional_tx_keys = 4;  // additional tx keys if applicable
+    optional uint64 real_output_in_tx_index = 5;  // index of our real output in the tx (aka which output was it in the transaction)
     optional uint64 amount = 6;
-    optional bool rct = 7;
+    optional bool rct = 7;  // is RingCT used (true for newer UTXOs)
     optional bytes mask = 8;
     optional MoneroMultisigKLRki multisig_kLRki = 9;
     message MoneroOutputEntry {
