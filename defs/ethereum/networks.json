@@ -8,6 +8,7 @@
     "rskip60": false,
     "url": "https://www.ethereum.org",
     "blockbook": [
+      "https://eth1.trezor.io",
       "https://eth2.trezor.io"
     ]
   },
@@ -122,6 +123,7 @@
     "rskip60": false,
     "url": "https://ethereumclassic.github.io",
     "blockbook": [
+      "https://etc1.trezor.io",
       "https://etc2.trezor.io"
     ]
   },
