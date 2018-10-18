@@ -21,10 +21,10 @@ message MoneroTransactionSourceEntry {
     optional MoneroMultisigKLRki multisig_kLRki = 9;
     message MoneroOutputEntry {
         optional uint64 idx = 1;
-        optional MoneroRctKey key = 2;
-        message MoneroRctKey {
+        optional MoneroRctKeyPublic key = 2;
+        message MoneroRctKeyPublic {
             optional bytes dest = 1;
-            optional bytes mask = 2;
+            optional bytes commitment = 2;
         }
     }
     message MoneroMultisigKLRki {
@@ -56,19 +56,13 @@ message MoneroTransactionDestinationEntry {
  * Range sig parameters / data.
  */
 message MoneroTransactionRsigData {
-    optional uint32 version = 1;
-    optional uint32 rsig_type = 2;
-    optional uint32 offload_type = 3;
-    repeated uint64 grouping = 4;  // aggregation scheme for BP
+    optional uint32 rsig_type = 1;  // range signature (aka proof) type
+    optional uint32 offload_type = 2;
+    repeated uint64 grouping = 3;  // aggregation scheme for BP
 
-    optional uint32 step = 5;
-    optional uint64 operation = 6;
-    optional bytes seed = 7;       // determ. mask seed
-    optional bytes mask = 8;       // mask vector
-    optional bytes amount = 9;     // amount vector
-    optional bytes rsig = 10;      // range sig, full or partial
-    repeated bytes rsig_parts = 11;
-    repeated MoneroTransactionDestinationEntry outputs = 12;
+    optional bytes mask = 4;       // mask vector
+    optional bytes rsig = 5;       // range sig data, all of it or partial (based on rsig_parts)
+    repeated bytes rsig_parts = 6;
 }
 
 /**
@@ -137,11 +131,8 @@ message MoneroTransactionInitRequest {
         optional uint64 fee = 8;
         optional uint32 account = 9;
         repeated uint32 minor_indices = 10;
-        optional bool is_multisig = 11;
-        optional bytes exp_tx_prefix_hash = 12;
-        repeated bytes use_tx_keys = 13;
-        optional MoneroTransactionRsigData rsig_data = 14;
-        repeated uint32 integrated_indices = 15;
+        optional MoneroTransactionRsigData rsig_data = 11;
+        repeated uint32 integrated_indices = 12;
     }
 }
 
@@ -150,13 +141,8 @@ message MoneroTransactionInitRequest {
  * @next MoneroTransactionSetInputRequest
  */
 message MoneroTransactionInitAck {
-    optional uint32 version = 1;
-    optional uint32 status = 2;
-    optional bool in_memory = 3;
-    repeated bytes hmacs = 4;
-    optional bool many_inputs = 5;
-    optional bool many_outputs = 6;
-    optional MoneroTransactionRsigData rsig_data = 7;
+    repeated bytes hmacs = 1;
+    optional MoneroTransactionRsigData rsig_data = 2;
 }
 
 /**
@@ -164,8 +150,7 @@ message MoneroTransactionInitAck {
  * @next MoneroTransactionSetInputAck
  */
 message MoneroTransactionSetInputRequest {
-    optional uint32 version = 1;
-    optional MoneroTransactionSourceEntry src_entr = 2;
+    optional MoneroTransactionSourceEntry src_entr = 1;
 }
 
 /**
@@ -178,8 +163,8 @@ message MoneroTransactionSetInputAck {
     optional bytes vini_hmac = 2;
     optional bytes pseudo_out = 3;
     optional bytes pseudo_out_hmac = 4;
-    optional bytes alpha_enc = 5;
-    optional bytes spend_enc = 6;
+    optional bytes pseudo_out_alpha = 5;
+    optional bytes spend_key = 6;
 }
 
 /**
@@ -222,7 +207,6 @@ message MoneroTransactionInputViniAck {
  * @next MoneroTransactionAllInputsSetAck
  */
 message MoneroTransactionAllInputsSetRequest {
-    optional MoneroTransactionRsigData rsig_data = 1;
 }
 
 /**
@@ -266,13 +250,14 @@ message MoneroTransactionAllOutSetRequest {
 
 /**
  * Response: After all outputs are sent the initial RCT signature fields are sent.
- * @next MoneroTransactionMlsagDoneRequest
+ * @next MoneroTransactionSignInputRequest
  */
 message MoneroTransactionAllOutSetAck {
     optional bytes extra = 1;
     optional bytes tx_prefix_hash = 2;
-    optional MoneroTransactionRsigData rsig_data = 3;
     optional MoneroRingCtSig rv = 4;  // xmrtypes.RctSig
+    optional bytes full_message_hash = 5;
+
     /*
      * Structure represents initial fields of the Monero RCT signature
      */
@@ -281,21 +266,6 @@ message MoneroTransactionAllOutSetAck {
         optional bytes message = 2;
         optional uint32 rv_type = 3;
     }
-}
-
-/**
- * Request: Sub request of MoneroTransactionSign.
- * @next MoneroTransactionMlsagDoneAck
- */
-message MoneroTransactionMlsagDoneRequest {
-}
-
-/**
- * Response: Contains full message hash needed for the signature
- * @next MoneroTransactionSignInputRequest
- */
-message MoneroTransactionMlsagDoneAck {
-    optional bytes full_message_hash = 1;
 }
 
 /**
@@ -308,8 +278,8 @@ message MoneroTransactionSignInputRequest {
     optional bytes vini_hmac = 3;
     optional bytes pseudo_out = 4;
     optional bytes pseudo_out_hmac = 5;
-    optional bytes alpha_enc = 6;
-    optional bytes spend_enc = 7;
+    optional bytes pseudo_out_alpha = 6;
+    optional bytes spend_key = 7;
 }
 
 /**
@@ -319,7 +289,6 @@ message MoneroTransactionSignInputRequest {
  */
 message MoneroTransactionSignInputAck {
     optional bytes signature = 1;
-    optional bytes cout = 2;
 }
 
 /**
@@ -396,7 +365,6 @@ message MoneroKeyImageSyncStepAck {
      */
     message MoneroExportedKeyImage {
         optional bytes iv = 1;
-        optional bytes tag = 2;
         optional bytes blob = 3;
     }
 }

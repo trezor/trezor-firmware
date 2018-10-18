@@ -211,12 +211,10 @@ enum MessageType {
     MessageType_MoneroTransactionSetOutputAck = 512 [(wire_out) = true];
     MessageType_MoneroTransactionAllOutSetRequest = 513 [(wire_out) = true];
     MessageType_MoneroTransactionAllOutSetAck = 514 [(wire_out) = true];
-    MessageType_MoneroTransactionMlsagDoneRequest = 515 [(wire_out) = true];
-    MessageType_MoneroTransactionMlsagDoneAck = 516 [(wire_out) = true];
-    MessageType_MoneroTransactionSignInputRequest = 517 [(wire_out) = true];
-    MessageType_MoneroTransactionSignInputAck = 518 [(wire_out) = true];
-    MessageType_MoneroTransactionFinalRequest = 519 [(wire_out) = true];
-    MessageType_MoneroTransactionFinalAck = 520 [(wire_out) = true];
+    MessageType_MoneroTransactionSignInputRequest = 515 [(wire_out) = true];
+    MessageType_MoneroTransactionSignInputAck = 516 [(wire_out) = true];
+    MessageType_MoneroTransactionFinalRequest = 517 [(wire_out) = true];
+    MessageType_MoneroTransactionFinalAck = 518 [(wire_out) = true];
     MessageType_MoneroKeyImageExportInitRequest = 530 [(wire_out) = true];
     MessageType_MoneroKeyImageExportInitAck = 531 [(wire_out) = true];
     MessageType_MoneroKeyImageSyncStepRequest = 532 [(wire_out) = true];
