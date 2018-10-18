@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import sys
+from os.path import basename
 
 from graphviz import Digraph
 
 
 class Message(object):
-    def __init__(self, name, attrs):
+    def __init__(self, fname, name, attrs):
+        self.fname = basename(fname)
         self.name = name
         if len(attrs) == 0:
             raise ValueError("message '%s' has no attributes" % name)
@@ -16,18 +18,20 @@ class Message(object):
         elif t == "next":
             self.typ = "normal"
             attrs = attrs
-        elif t == "wrap":
-            self.typ = "normal"
-            attrs = attrs
         else:
             raise ValueError("wrong message type in message '%s'" % name)
         self.next = []
-        self.wrap = []
         for a in attrs:
             if a[0] == "next":
                 self.next.append(a[1])
-            elif a[0] == "wrap":
-                self.wrap.append(a[1])
+
+    def __repr__(self):
+        return '%s(type=%s, fname="%s", next=%s)' % (
+            self.name,
+            self.typ,
+            self.fname,
+            self.next,
+        )
 
 
 def generate_messages(files):
@@ -40,13 +44,13 @@ def generate_messages(files):
                 attrs.append(line[4:].split(" "))
             elif line.startswith("message "):
                 name = line[8:-2]
-                msgs[name] = Message(name, attrs)
+                msgs[name] = Message(f, name, attrs)
                 attrs = []
     return msgs
 
 
 def generate_graph(msgs, fn):
-    dot = Digraph(format="png")
+    dot = Digraph()
     dot.attr(rankdir="LR")
     for m in msgs.values():
         if m.typ == "start":
@@ -63,10 +67,15 @@ def generate_graph(msgs, fn):
     for m in msgs.values():
         for n in m.next:
             dot.edge(m.name, n)
-        for n in m.wrap:
-            dot.edge(m.name, n)
     dot.render(fn)
 
 
-msgs = generate_messages(sys.argv)
-generate_graph(msgs, "graph.gv")
+def main():
+    proto_files = sys.argv
+
+    msgs = generate_messages(proto_files)
+    generate_graph(msgs, "proto.gv")
+
+
+if __name__ == "__main__":
+    main()

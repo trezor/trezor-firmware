@@ -54,6 +54,7 @@ message MoneroTransactionDestinationEntry {
 
 /**
  * Range sig parameters / data.
+ * @embed
  */
 message MoneroTransactionRsigData {
     optional uint32 rsig_type = 1;  // range signature (aka proof) type

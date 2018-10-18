@@ -6,7 +6,7 @@ option java_outer_classname = "TrezorMessageTron";
 
 /**
  * Request: Ask device for Tron address corresponding to address_n path
- * @next PassphraseRequest
+ * @start
  * @next TronAddress
  * @next Failure
  */
@@ -17,7 +17,7 @@ message TronGetAddress {
 
 /**
  * Response: Contains Tron address derived from device private seed
- * @prev TronGetAddress
+ * @end
  */
 message TronAddress {
     optional string address = 1;                                // Tron address (base58)
@@ -25,12 +25,13 @@ message TronAddress {
 
 /**
  * Request: Ask device to sign Tron transaction
+ * @start
  * @next TronSignedTx
  */
 message TronSignTx {
     repeated uint32 address_n = 1;                              // BIP-32 path to derive the key from master node
     // Common part of transaction
-    optional bytes ref_block_bytes = 2;                         // Reference block number 
+    optional bytes ref_block_bytes = 2;                         // Reference block number
     optional bytes ref_block_hash = 3;                          // Reference block hash
     optional uint64 expiration = 4;                             // Transaction expiration
     optional string data = 5;                                   // Extra transaction info
@@ -90,13 +91,13 @@ message TronSignTx {
             optional string description = 10;                   // Asset description
             optional string url = 11;                           // Asset URL
         }
-        // Participate in an asset 
+        // Participate in an asset
         message TronParticipateAssetIssueContract {
             optional bytes to_address = 1;                      // Asset issuer address - decoded base 58
             optional string asset_name = 2;                     // The name of target asset
             optional uint64 amount = 3;                         // TRX amount in sun
         }
-        // Freeze TRX balance                        
+        // Freeze TRX balance
         message TronFreezeBalanceContract {
             optional uint64 frozen_balance = 1;                 // Amount to freeze
             optional uint64 frozen_duration = 2;                // Freeze minimal duration in days
@@ -118,7 +119,7 @@ message TronSignTx {
         // Network proposal contract
         message TronProposalCreateContract {
             message TronProposalParameters {
-                optional uint64 key = 1;                        // Paramter key
+                optional uint64 key = 1;                        // Parameter key
                 optional uint64 value = 2;                      // Parameter value
             }
             repeated TronProposalParameters parameters = 1;     // Parameter to be changed
@@ -132,7 +133,6 @@ message TronSignTx {
         message TronProposalDeleteContract {
             optional uint64 proposal_id = 1;                    // Proposal ID
         }
-        
         optional TronTransferContract transfer_contract = 1;
         optional TronTransferAssetContract transfer_asset_contract = 2;
         optional TronVoteWitnessContract vote_witness_contract = 4;
@@ -153,9 +153,9 @@ message TronSignTx {
 }
 
 /**
-* Response: Contains Tron transaction signature
-* @prev TronSignTx
-*/
+ * Response: Contains Tron transaction signature
+ * @end
+ */
 message TronSignedTx {
     optional bytes signature = 1;                               // Transaction signature
     optional bytes serialized_tx = 2;                           // Serialized transaction

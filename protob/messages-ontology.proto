@@ -63,7 +63,7 @@ message OntologyAddress {
 
 /**
  * Request: Ask device to sign Ontology transfer
- * @start
+ * @start
  * @next OntologySignedTransfer
  */
 message OntologySignTransfer {
@@ -99,7 +99,7 @@ message OntologySignedTransfer {
 
 /**
  * Request: Ask device to sign Ontology ONG withdrawal
- * @start
+ * @start
  * @next OntologySignedWithdrawOng
  */
 message OntologySignWithdrawOng {
@@ -127,7 +127,7 @@ message OntologySignedWithdrawOng {
 
 /**
  * Request: Ask device to sign Ontology ONT ID registration
- * @start
+ * @start
  * @next OntologySignedOntIdRegister
  */
 message OntologySignOntIdRegister {
@@ -154,7 +154,7 @@ message OntologySignedOntIdRegister {
 
 /**
  * Request: Ask device to sign Ontology ONT ID attributes adding
- * @start
+ * @start
  * @next OntologySignedOntIdAddAttributes
  */
 message OntologySignOntIdAddAttributes {
