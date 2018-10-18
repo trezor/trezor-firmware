@@ -8,6 +8,11 @@ cache:
   directories:
     - $HOME/.cache/pip
 
+addons:
+    apt:
+        packages:
+            - graphviz
+
 python:
     - "3.6"
 
