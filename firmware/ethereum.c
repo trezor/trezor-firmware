@@ -159,6 +159,24 @@ static int rlp_calculate_length(int length, uint8_t firstbyte)
 	}
 }
 
+static int rlp_calculate_number_length(uint32_t number)
+{
+	if (number <= 0x7f) {
+		return 1;
+	}
+	else if (number <= 0xff) {
+		return 2;
+	}
+	else if (number <= 0xffff) {
+		return 3;
+	}
+	else if (number <= 0xffffff) {
+		return 4;
+	} else {
+		return 5;
+	}
+}
+
 static void send_request_chunk(void)
 {
 	int progress = 1000 - (data_total > 1000000
@@ -549,11 +567,10 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	rlp_length += rlp_calculate_length(msg->value.size, msg->value.bytes[0]);
 	rlp_length += rlp_calculate_length(data_total, msg->data_initial_chunk.bytes[0]);
 	if (tx_type) {
-		rlp_length += rlp_calculate_length(1, tx_type);
+		rlp_length += rlp_calculate_number_length(tx_type);
 	}
 	if (chain_id) {
-		int length = chain_id < 0x100 ? 1: chain_id < 0x10000 ? 2: chain_id < 0x1000000 ? 3 : 4;
-		rlp_length += rlp_calculate_length(length, chain_id);
+		rlp_length += rlp_calculate_number_length(chain_id);
 		rlp_length += rlp_calculate_length(0, 0);
 		rlp_length += rlp_calculate_length(0, 0);
 	}
