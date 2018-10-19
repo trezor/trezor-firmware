@@ -35,6 +35,8 @@
   "bitcore": [
     "https://groestlsight-test.groestlcoin.org"
   ],
-  "blockbook": [],
+  "blockbook": [
+    "https://blockbook-test.groestlcoin.org"
+  ],
   "cooldown": 100
 }
