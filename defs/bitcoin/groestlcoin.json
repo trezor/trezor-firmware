@@ -34,7 +34,7 @@
   "max_address_length": 34,
   "bitcore": [
     "https://groestlsight.groestlcoin.org",
-    "https://grsblocks.com/"
+    "https://grsblocks.com"
   ],
   "blockbook": [
     "https://blockbook.groestlcoin.org"
