@@ -222,7 +222,7 @@ void lisk_sign_tx(const HDNode *node, LiskSignTx *msg, LiskSignedTx *resp)
 		}
 
 		uint64_t recipient_id = 0;
-		if (msg->transaction.has_recipient_id) {
+		if (msg->transaction.has_recipient_id && msg->transaction.recipient_id[0] != 0) {
 			// parse integer from lisk address ("123L" -> 123)
 			for (size_t i = 0; i < strlen(msg->transaction.recipient_id) - 1; i++) {
 				if (msg->transaction.recipient_id[i] < '0' || msg->transaction.recipient_id[i] > '9') {
