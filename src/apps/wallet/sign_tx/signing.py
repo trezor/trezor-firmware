@@ -391,6 +391,8 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                 write_uint32(h_sign, tx.version_group_id)  # nVersionGroupId
             else:
                 write_uint32(h_sign, tx.version)  # nVersion
+                if tx.timestamp:
+                    write_uint32(h_sign, tx.timestamp)
 
             write_varint(h_sign, tx.inputs_count)
 
@@ -586,6 +588,8 @@ async def get_prevtx_output_value(
         write_uint32(txh, tx.version | DECRED_SERIALIZE_NO_WITNESS)
     else:
         write_uint32(txh, tx.version)  # nVersion
+        if tx.timestamp:
+            write_uint32(txh, tx.timestamp)
 
     write_varint(txh, tx.inputs_cnt)
 
@@ -653,6 +657,8 @@ def get_tx_header(coin: CoinInfo, tx: SignTx, segwit: bool = False):
         write_uint32(w_txi, tx.version_group_id)  # nVersionGroupId
     else:
         write_uint32(w_txi, tx.version)  # nVersion
+        if tx.timestamp:
+            write_uint32(w_txi, tx.timestamp)
     if segwit:
         write_varint(w_txi, 0x00)  # segwit witness marker
         write_varint(w_txi, 0x01)  # segwit witness flag

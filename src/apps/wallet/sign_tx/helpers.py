@@ -122,6 +122,7 @@ def sanitize_sign_tx(tx: SignTx) -> SignTx:
     tx.coin_name = tx.coin_name if tx.coin_name is not None else "Bitcoin"
     tx.expiry = tx.expiry if tx.expiry is not None else 0
     tx.overwintered = tx.overwintered if tx.overwintered is not None else False
+    tx.timestamp = tx.timestamp if tx.timestamp is not None else 0
     return tx
 
 
@@ -133,6 +134,7 @@ def sanitize_tx_meta(tx: TransactionType) -> TransactionType:
     tx.extra_data_len = tx.extra_data_len if tx.extra_data_len is not None else 0
     tx.expiry = tx.expiry if tx.expiry is not None else 0
     tx.overwintered = tx.overwintered if tx.overwintered is not None else False
+    tx.timestamp = tx.timestamp if tx.timestamp is not None else 0
     return tx
 
 
