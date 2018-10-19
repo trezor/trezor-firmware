@@ -33,7 +33,7 @@ const char *nem_validate_common(NEMTransactionCommon *common, bool inner) {
 		common->network = NEM_NETWORK_MAINNET;
 	}
 
-	if (nem_network_name(common->network) == NULL) {
+	if (common->network > 0xFF || nem_network_name(common->network) == NULL) {
 		return inner ? _("Invalid NEM network in inner transaction") : _("Invalid NEM network");
 	}
 
