@@ -44,9 +44,9 @@ typedef struct {
     uint8_t network_type;
 
     // Total number of operations expected
-    uint8_t num_operations;
+    uint32_t num_operations;
     // Number that have been confirmed by the user
-    uint8_t confirmed_operations;
+    uint32_t confirmed_operations;
 
     // sha256 context that will eventually be signed
     SHA256_CTX sha256_ctx;
