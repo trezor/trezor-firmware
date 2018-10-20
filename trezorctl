@@ -833,10 +833,14 @@ def sign_tx(connect, coin):
 
     if txapi.bip115:
         current_block_height = txapi.current_height()
-        block_height = (
-            current_block_height - 300
-        )  # Zencash recommendation for the better protection
+        # Zencash recommendation for the better protection
+        block_height = current_block_height - 300
         block_hash = txapi.get_block_hash(block_height)
+        # Blockhash passed in reverse order
+        block_hash = block_hash[::-1]
+    else:
+        block_height = None
+        block_hash = None
 
     outputs = []
     while True:
@@ -868,7 +872,7 @@ def sign_tx(connect, coin):
                 address=address,
                 amount=amount,
                 script_type=script_type,
-                block_hash_bip115=block_hash[::-1],  # Blockhash passed in reverse order
+                block_hash_bip115=block_hash,
                 block_height_bip115=block_height,
             )
         )
