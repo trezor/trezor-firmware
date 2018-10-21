@@ -24,7 +24,12 @@ async def sign_message(ctx, msg):
     address_n = msg.address_n or ()
     node = await seed.derive_node(ctx, address_n)
 
-    signature = secp256k1.sign(node.private_key(), message_digest(msg.message), False, secp256k1.CANONICAL_SIG_ETHEREUM)
+    signature = secp256k1.sign(
+        node.private_key(),
+        message_digest(msg.message),
+        False,
+        secp256k1.CANONICAL_SIG_ETHEREUM,
+    )
 
     sig = EthereumMessageSignature()
     sig.address = node.ethereum_pubkeyhash()
