@@ -50,6 +50,13 @@ void reset_init(bool display_random, uint32_t _strength, bool passphrase_protect
 		return;
 	}
 
+	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("create a new wallet?"), NULL, NULL, NULL, NULL);
+	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+		layoutHome();
+		return;
+	}
+
 	random_buffer(int_entropy, 32);
 
 	char ent_str[4][17];

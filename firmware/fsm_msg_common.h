@@ -213,13 +213,6 @@ void fsm_msgResetDevice(const ResetDevice *msg)
 
 	CHECK_PARAM(!msg->has_strength || msg->strength == 128 || msg->strength == 192 || msg->strength == 256, _("Invalid seed strength"));
 
-	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("create a new wallet?"), NULL, NULL, NULL, NULL);
-	if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-		fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-		layoutHome();
-		return;
-	}
-
 	reset_init(
 		msg->has_display_random && msg->display_random,
 		msg->has_strength ? msg->strength : 128,
@@ -356,15 +349,6 @@ void fsm_msgRecoveryDevice(const RecoveryDevice *msg)
 	}
 
 	CHECK_PARAM(!msg->has_word_count || msg->word_count == 12 || msg->word_count == 18 || msg->word_count == 24, _("Invalid word count"));
-
-	if (!dry_run) {
-		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("recover the device?"), NULL, NULL, NULL, NULL);
-		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-			layoutHome();
-			return;
-		}
-	}
 
 	recovery_init(
 		msg->has_word_count ? msg->word_count : 12,

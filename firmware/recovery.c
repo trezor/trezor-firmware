@@ -457,6 +457,15 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_pr
 	dry_run = _dry_run;
 
 	if (!dry_run) {
+		layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("recover the device?"), NULL, NULL, NULL, NULL);
+		if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+			layoutHome();
+			return;
+		}
+	}
+
+	if (!dry_run) {
 		if (pin_protection && !protectChangePin()) {
 			fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
 			layoutHome();
