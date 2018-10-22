@@ -31,10 +31,18 @@ PIN_NEW = PinMatrixRequestType.NewFirst
 PIN_CONFIRM = PinMatrixRequestType.NewSecond
 
 
+def echo(*args, **kwargs):
+    return click.echo(*args, err=True, **kwargs)
+
+
+def prompt(*args, **kwargs):
+    return click.prompt(*args, err=True, **kwargs)
+
+
 class ClickUI:
     @staticmethod
     def button_request(code):
-        click.echo("Please confirm action on your Trezor device")
+        echo("Please confirm action on your Trezor device")
 
     @staticmethod
     def get_pin(code=None):
@@ -46,28 +54,28 @@ class ClickUI:
             desc = "new PIN again"
         else:
             desc = "PIN"
-            click.echo(PIN_MATRIX_DESCRIPTION)
+            echo(PIN_MATRIX_DESCRIPTION)
 
         while True:
-            pin = click.prompt("Please enter {}".format(desc), hide_input=True)
+            pin = prompt("Please enter {}".format(desc), hide_input=True)
             if not pin.isdigit():
-                click.echo("Non-numerical PIN provided, please try again")
+                echo("Non-numerical PIN provided, please try again")
             else:
                 return pin
 
     @staticmethod
     def get_passphrase():
         if os.getenv("PASSPHRASE") is not None:
-            click.echo("Passphrase required. Using PASSPHRASE environment variable.")
+            echo("Passphrase required. Using PASSPHRASE environment variable.")
             return os.getenv("PASSPHRASE")
 
         while True:
-            passphrase = click.prompt("Passphrase required", hide_input=True)
-            second = click.prompt("Confirm your passphrase", hide_input=True)
+            passphrase = prompt("Passphrase required", hide_input=True)
+            second = prompt("Confirm your passphrase", hide_input=True)
             if passphrase == second:
                 return passphrase
             else:
-                click.echo("Passphrase did not match. Please try again.")
+                echo("Passphrase did not match. Please try again.")
 
 
 def mnemonic_words(expand=False, language="english"):
@@ -84,14 +92,14 @@ def mnemonic_words(expand=False, language="english"):
         matches = [w for w in wordlist if w.startswith(word)]
         if len(matches) == 1:
             return word
-        click.echo("Choose one of: " + ", ".join(matches))
+        echo("Choose one of: " + ", ".join(matches))
         raise KeyError(word)
 
     def get_word(type):
         assert type == WordRequestType.Plain
         while True:
             try:
-                word = click.prompt("Enter one word of mnemonic")
+                word = prompt("Enter one word of mnemonic")
                 return expand_word(word)
             except KeyError:
                 pass
