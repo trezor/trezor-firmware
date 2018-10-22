@@ -14,12 +14,24 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import pytest
 
 from trezorlib import btc, messages as proto
-from trezorlib.tools import H_, parse_path
+from trezorlib.tools import CallException, H_, parse_path
 
 from ..support import ckd_public as bip32
 from .common import TrezorTest
+
+
+def getmultisig(chain, nr, xpubs, signatures=[b"", b"", b""]):
+    return proto.MultisigRedeemScriptType(
+        pubkeys=[
+            proto.HDNodePathType(node=bip32.deserialize(xpub), address_n=[chain, nr])
+            for xpub in xpubs
+        ],
+        signatures=signatures,
+        m=2,
+    )
 
 
 class TestMsgGetaddress(TrezorTest):
@@ -91,39 +103,77 @@ class TestMsgGetaddress(TrezorTest):
             == "bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw"
         )
 
+    def test_multisig(self):
+        self.setup_mnemonic_allallall()
+        xpubs = []
+        for n in range(1, 4):
+            node = btc.get_public_node(self.client, parse_path("44'/0'/%d'" % n))
+            xpubs.append(node.xpub)
+
+        for nr in range(1, 4):
+            assert (
+                btc.get_address(
+                    self.client,
+                    "Bitcoin",
+                    parse_path("44'/0'/%d'/0/0" % nr),
+                    show_display=(nr == 1),
+                    multisig=getmultisig(0, 0, xpubs=xpubs),
+                )
+                == "3Pdz86KtfJBuHLcSv4DysJo4aQfanTqCzG"
+            )
+            assert (
+                btc.get_address(
+                    self.client,
+                    "Bitcoin",
+                    parse_path("44'/0'/%d'/1/0" % nr),
+                    show_display=(nr == 1),
+                    multisig=getmultisig(1, 0, xpubs=xpubs),
+                )
+                == "36gP3KVx1ooStZ9quZDXbAF3GCr42b2zzd"
+            )
+
+    def test_multisig_missing(self):
+        self.setup_mnemonic_allallall()
+        xpubs = []
+        for n in range(1, 4):
+            # shift account numbers by 10 to create valid multisig,
+            # but not containing the keys used below
+            n = n + 10
+            node = btc.get_public_node(self.client, parse_path("44'/0'/%d'" % n))
+            xpubs.append(node.xpub)
+        for nr in range(1, 4):
+            with pytest.raises(CallException) as exc:
+                btc.get_address(
+                    self.client,
+                    "Bitcoin",
+                    parse_path("44'/0'/%d'/0/0" % nr),
+                    show_display=(nr == 1),
+                    multisig=getmultisig(0, 0, xpubs=xpubs),
+                )
+            with pytest.raises(CallException) as exc:
+                btc.get_address(
+                    self.client,
+                    "Bitcoin",
+                    parse_path("44'/0'/%d'/1/0" % nr),
+                    show_display=(nr == 1),
+                    multisig=getmultisig(1, 0, xpubs=xpubs),
+                )
+
     def test_bch_multisig(self):
         self.setup_mnemonic_allallall()
         xpubs = []
-        for n in map(
-            lambda index: btc.get_public_node(
-                self.client, parse_path("44'/145'/%d'" % index)
-            ),
-            range(1, 4),
-        ):
-            xpubs.append(n.xpub)
-
-        def getmultisig(chain, nr, signatures=[b"", b"", b""], xpubs=xpubs):
-            return proto.MultisigRedeemScriptType(
-                pubkeys=list(
-                    map(
-                        lambda xpub: proto.HDNodePathType(
-                            node=bip32.deserialize(xpub), address_n=[chain, nr]
-                        ),
-                        xpubs,
-                    )
-                ),
-                signatures=signatures,
-                m=2,
-            )
+        for n in range(1, 4):
+            node = btc.get_public_node(self.client, parse_path("44'/145'/%d'" % n))
+            xpubs.append(node.xpub)
 
         for nr in range(1, 4):
             assert (
                 btc.get_address(
                     self.client,
                     "Bcash",
-                    parse_path("44'/145'/" + str(nr) + "'/0/0"),
+                    parse_path("44'/145'/%d'/0/0" % nr),
                     show_display=(nr == 1),
-                    multisig=getmultisig(0, 0),
+                    multisig=getmultisig(0, 0, xpubs=xpubs),
                 )
                 == "bitcoincash:pqguz4nqq64jhr5v3kvpq4dsjrkda75hwy86gq0qzw"
             )
@@ -131,9 +181,9 @@ class TestMsgGetaddress(TrezorTest):
                 btc.get_address(
                     self.client,
                     "Bcash",
-                    parse_path("44'/145'/" + str(nr) + "'/1/0"),
+                    parse_path("44'/145'/%d'/1/0" % nr),
                     show_display=(nr == 1),
-                    multisig=getmultisig(1, 0),
+                    multisig=getmultisig(1, 0, xpubs=xpubs),
                 )
                 == "bitcoincash:pp6kcpkhua7789g2vyj0qfkcux3yvje7euhyhltn0a"
             )
