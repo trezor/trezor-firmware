@@ -96,7 +96,7 @@ class TestMsgGetaddress(TrezorTest):
         xpubs = []
         for n in map(
             lambda index: btc.get_public_node(
-                self.client, parse_path("44'/145'/" + str(index) + "'")
+                self.client, parse_path("44'/145'/%d'" % index)
             ),
             range(1, 4),
         ):

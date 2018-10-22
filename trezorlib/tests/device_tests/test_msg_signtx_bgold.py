@@ -234,13 +234,13 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
                     debug_processor=attack_processor,
                 )
 
-    def test_send_bch_multisig_change(self):
+    def test_send_btg_multisig_change(self):
         self.setup_mnemonic_allallall()
         self.client.set_tx_api(TxApiBitcoinGold)
         xpubs = []
         for n in map(
             lambda index: btc.get_public_node(
-                self.client, parse_path("44'/156'/" + str(index) + "'")
+                self.client, parse_path("44'/156'/%d'" % index)
             ),
             range(1, 4),
         ):
