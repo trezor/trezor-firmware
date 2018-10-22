@@ -33,7 +33,7 @@ void fsm_msgLiskGetAddress(const LiskGetAddress *msg)
 	lisk_get_address_from_public_key(&node->public_key[1], resp->address);
 
 	if (msg->has_show_display && msg->show_display) {
-		if (!fsm_layoutAddress(resp->address, _("Address:"), true, 0, msg->address_n, msg->address_n_count)) {
+		if (!fsm_layoutAddress(resp->address, _("Address:"), true, 0, msg->address_n, msg->address_n_count, false)) {
 			return;
 		}
 	}

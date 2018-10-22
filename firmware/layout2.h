@@ -54,7 +54,7 @@ void layoutCipherKeyValue(bool encrypt, const char *key);
 void layoutEncryptMessage(const uint8_t *msg, uint32_t len, bool signing);
 void layoutDecryptMessage(const uint8_t *msg, uint32_t len, const char *address);
 void layoutResetWord(const char *word, int pass, int word_pos, bool last);
-void layoutAddress(const char *address, const char *desc, bool qrcode, bool ignorecase, const uint32_t *address_n, size_t address_n_count);
+void layoutAddress(const char *address, const char *desc, bool qrcode, bool ignorecase, const uint32_t *address_n, size_t address_n_count, bool address_is_account);
 void layoutPublicKey(const uint8_t *pubkey);
 void layoutSignIdentity(const IdentityType *identity, const char *challenge);
 void layoutDecryptIdentity(const IdentityType *identity);

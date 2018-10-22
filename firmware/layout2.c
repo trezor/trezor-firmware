@@ -55,7 +55,7 @@ static const char *slip44_extras(uint32_t coin_type)
 
 #define BIP32_MAX_LAST_ELEMENT 1000000
 
-static const char *address_n_str(const uint32_t *address_n, size_t address_n_count)
+static const char *address_n_str(const uint32_t *address_n, size_t address_n_count, bool address_is_account)
 {
 	if (address_n_count > 8) {
 		return _("Unknown long path");
@@ -96,7 +96,7 @@ static const char *address_n_str(const uint32_t *address_n, size_t address_n_cou
 					abbr = slip44_extras(address_n[1]);
 				}
 			}
-			uint32_t accnum = (address_n[2] & 0x7fffffff) + 1;
+			const uint32_t accnum = address_is_account ? ((address_n[4] & 0x7fffffff) + 1) : (address_n[2] & 0x7fffffff) + 1;
 			if (abbr && accnum < 100) {
 				memset(path, 0, sizeof(path));
 				strlcpy(path, abbr, sizeof(path));
@@ -312,7 +312,7 @@ void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out)
 	bn_format_uint64(out->amount, NULL, coin->coin_shortcut, BITCOIN_DIVISIBILITY, 0, false, str_out, sizeof(str_out) - 3);
 	strlcat(str_out, " to", sizeof(str_out));
 	const char *address = out->address;
-	const char *extra_line = (out->address_n_count > 0) ? address_n_str(out->address_n, out->address_n_count) : 0;
+	const char *extra_line = (out->address_n_count > 0) ? address_n_str(out->address_n, out->address_n_count, false) : 0;
 	render_address_dialog(coin, address, _("Confirm sending"), str_out, extra_line);
 }
 
@@ -496,7 +496,7 @@ void layoutResetWord(const char *word, int pass, int word_pos, bool last)
 	oledRefresh();
 }
 
-void layoutAddress(const char *address, const char *desc, bool qrcode, bool ignorecase, const uint32_t *address_n, size_t address_n_count)
+void layoutAddress(const char *address, const char *desc, bool qrcode, bool ignorecase, const uint32_t *address_n, size_t address_n_count, bool address_is_account)
 {
 	if (layoutLast != layoutAddress) {
 		layoutSwipe();
@@ -550,7 +550,7 @@ void layoutAddress(const char *address, const char *desc, bool qrcode, bool igno
 		for (int i = 0; i < 4; i++) {
 			oledDrawString(0, (i + 1) * 9 + 4, str[i], FONT_FIXED);
 		}
-		oledDrawString(0, 42, address_n_str(address_n, address_n_count), FONT_STANDARD);
+		oledDrawString(0, 42, address_n_str(address_n, address_n_count, address_is_account), FONT_STANDARD);
 	}
 
 	if (!qrcode) {

@@ -232,7 +232,7 @@ void fsm_msgGetAddress(const GetAddress *msg)
 
 		bool is_cashaddr = coin->cashaddr_prefix != NULL;
 		bool is_bech32 = msg->script_type == InputScriptType_SPENDWITNESS;
-		if (!fsm_layoutAddress(address, desc, is_cashaddr || is_bech32, is_cashaddr ? strlen(coin->cashaddr_prefix) + 1 : 0, msg->address_n, msg->address_n_count)) {
+		if (!fsm_layoutAddress(address, desc, is_cashaddr || is_bech32, is_cashaddr ? strlen(coin->cashaddr_prefix) + 1 : 0, msg->address_n, msg->address_n_count, false)) {
 			return;
 		}
 	}

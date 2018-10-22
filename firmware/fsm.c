@@ -222,7 +222,7 @@ static HDNode *fsm_getDerivedNode(const char *curve, const uint32_t *address_n, 
 	return &node;
 }
 
-static bool fsm_layoutAddress(const char *address, const char *desc, bool ignorecase, size_t prefixlen, const uint32_t *address_n, size_t address_n_count)
+static bool fsm_layoutAddress(const char *address, const char *desc, bool ignorecase, size_t prefixlen, const uint32_t *address_n, size_t address_n_count, bool address_is_account)
 {
 	bool qrcode = false;
 	for (;;) {
@@ -230,7 +230,7 @@ static bool fsm_layoutAddress(const char *address, const char *desc, bool ignore
 		if (prefixlen && !qrcode) {
 			display_addr += prefixlen;
 		}
-		layoutAddress(display_addr, desc, qrcode, ignorecase, address_n, address_n_count);
+		layoutAddress(display_addr, desc, qrcode, ignorecase, address_n, address_n_count, address_is_account);
 		if (protectButton(ButtonRequestType_ButtonRequest_Address, false)) {
 			return true;
 		}

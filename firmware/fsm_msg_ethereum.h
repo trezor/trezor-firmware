@@ -66,7 +66,7 @@ void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg)
 		char address[43] = { '0', 'x' };
 		ethereum_address_checksum(resp->address.bytes, address + 2, rskip60, chain_id);
 
-		if (!fsm_layoutAddress(address, desc, false, 0, msg->address_n, msg->address_n_count)) {
+		if (!fsm_layoutAddress(address, desc, false, 0, msg->address_n, msg->address_n_count, true)) {
 			return;
 		}
 	}
