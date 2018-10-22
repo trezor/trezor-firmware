@@ -1,3 +1,16 @@
+Version 2.0.8 [unreleased]
+* stable release, optional update
+* Monero support
+* Cardano support
+* Stellar support
+* Ripple support
+* Tezos support
+* Decred support
+* Groestlcoin support
+* Zencash support
+* Zcash sapling hardfork support
+* Implemented seedless setup
+
 Version 2.0.7
 * stable release, optional update
 * Bitcoin Cash cashaddr support
