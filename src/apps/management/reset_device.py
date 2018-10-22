@@ -31,6 +31,11 @@ async def reset_device(ctx, msg):
     if storage.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
+    text = Text("Create a new wallet", ui.ICON_RESET)
+    text.normal("Do you really want to", "create a new wallet?", "")
+
+    await require_confirm(ctx, text, code=ButtonRequestType.ResetDevice)
+
     # request new PIN
     if msg.pin_protection:
         newpin = await request_pin_confirm(ctx)
