@@ -109,7 +109,11 @@ static const char *address_n_str(const uint32_t *address_n, size_t address_n_cou
 				if (native_segwit) {
 					strlcat(path, " segwit", sizeof(path));
 				}
-				strlcat(path, " account #", sizeof(path));
+				if (address_is_account) {
+					strlcat(path, " address #", sizeof(path));
+				} else {
+					strlcat(path, " account #", sizeof(path));
+				}
 				char acc[3];
 				memset(acc, 0, sizeof(acc));
 				if (accnum < 10) {
