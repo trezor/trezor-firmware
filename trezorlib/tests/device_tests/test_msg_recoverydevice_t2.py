@@ -36,6 +36,11 @@ class TestMsgRecoverydeviceT2(TrezorTest):
             )
         )
 
+        # Confirm Recovery
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
         # Enter word count
         assert ret == proto.ButtonRequest(
             code=proto.ButtonRequestType.MnemonicWordCount
@@ -81,6 +86,11 @@ class TestMsgRecoverydeviceT2(TrezorTest):
                 enforce_wordlist=True,
             )
         )
+
+        # Confirm Recovery
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
 
         # Enter word count
         assert ret == proto.ButtonRequest(

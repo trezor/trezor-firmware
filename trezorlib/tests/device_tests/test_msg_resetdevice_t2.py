@@ -35,6 +35,11 @@ class TestMsgResetDeviceT2(TrezorTest):
         strength = 128
 
         def input_flow():
+            # Confirm Reset
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
             # Backup your seed
             btn_code = yield
             assert btn_code == B.ResetDevice
@@ -68,6 +73,7 @@ class TestMsgResetDeviceT2(TrezorTest):
         with mock.patch("os.urandom", os_urandom), self.client:
             self.client.set_expected_responses(
                 [
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.EntropyRequest(),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
@@ -109,6 +115,11 @@ class TestMsgResetDeviceT2(TrezorTest):
         strength = 128
 
         def input_flow():
+            # Confirm Reset
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
             # Enter new PIN
             yield
             self.client.debug.input("654")
@@ -155,6 +166,7 @@ class TestMsgResetDeviceT2(TrezorTest):
         with mock.patch("os.urandom", os_urandom), self.client:
             self.client.set_expected_responses(
                 [
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Other),
                     proto.ButtonRequest(code=B.Other),
                     proto.ButtonRequest(code=B.ResetDevice),
@@ -200,6 +212,11 @@ class TestMsgResetDeviceT2(TrezorTest):
         ret = self.client.call_raw(
             proto.ResetDevice(strength=strength, pin_protection=True, label="test")
         )
+
+        # Confirm Reset
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
 
         # Enter PIN for first time
         assert isinstance(ret, proto.ButtonRequest)

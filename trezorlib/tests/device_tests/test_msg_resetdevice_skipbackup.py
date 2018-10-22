@@ -42,6 +42,10 @@ class TestMsgResetDeviceSkipbackup(TrezorTest):
             )
         )
 
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
         # Provide entropy
         assert isinstance(ret, proto.EntropyRequest)
         internal_entropy = self.client.debug.read_reset_entropy()
@@ -107,6 +111,10 @@ class TestMsgResetDeviceSkipbackup(TrezorTest):
                 skip_backup=True,
             )
         )
+
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
 
         # Provide entropy
         assert isinstance(ret, proto.EntropyRequest)

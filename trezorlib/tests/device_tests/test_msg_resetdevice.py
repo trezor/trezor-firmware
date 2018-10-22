@@ -41,6 +41,10 @@ class TestMsgResetDevice(TrezorTest):
             )
         )
 
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
         # Provide entropy
         assert isinstance(ret, proto.EntropyRequest)
         internal_entropy = self.client.debug.read_reset_entropy()
@@ -105,6 +109,10 @@ class TestMsgResetDevice(TrezorTest):
                 label="test",
             )
         )
+
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
 
         assert isinstance(ret, proto.ButtonRequest)
         self.client.debug.press_yes()
@@ -187,6 +195,10 @@ class TestMsgResetDevice(TrezorTest):
                 label="test",
             )
         )
+
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
 
         assert isinstance(ret, proto.ButtonRequest)
         self.client.debug.press_yes()
