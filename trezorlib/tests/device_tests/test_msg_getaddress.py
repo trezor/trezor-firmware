@@ -142,7 +142,7 @@ class TestMsgGetaddress(TrezorTest):
             node = btc.get_public_node(self.client, parse_path("44'/0'/%d'" % n))
             xpubs.append(node.xpub)
         for nr in range(1, 4):
-            with pytest.raises(CallException) as exc:
+            with pytest.raises(CallException):
                 btc.get_address(
                     self.client,
                     "Bitcoin",
@@ -150,7 +150,7 @@ class TestMsgGetaddress(TrezorTest):
                     show_display=(nr == 1),
                     multisig=getmultisig(0, 0, xpubs=xpubs),
                 )
-            with pytest.raises(CallException) as exc:
+            with pytest.raises(CallException):
                 btc.get_address(
                     self.client,
                     "Bitcoin",

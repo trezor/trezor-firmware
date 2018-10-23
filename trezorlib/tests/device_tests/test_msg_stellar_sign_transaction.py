@@ -54,7 +54,6 @@ from trezorlib import messages as proto, stellar
 from trezorlib.tools import parse_path
 
 from .common import TrezorTest
-from .conftest import TREZOR_VERSION
 
 
 @pytest.mark.stellar
