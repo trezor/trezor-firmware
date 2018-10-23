@@ -123,22 +123,20 @@ class Text(ui.LazyWidget):
         self.content = []
 
     def normal(self, *content):
+        self.content.append(ui.NORMAL)
         self.content.extend(content)
 
     def bold(self, *content):
         self.content.append(ui.BOLD)
         self.content.extend(content)
-        self.content.append(ui.NORMAL)
 
     def mono(self, *content):
         self.content.append(ui.MONO)
         self.content.extend(content)
-        self.content.append(ui.NORMAL)
 
     def mono_bold(self, *content):
         self.content.append(ui.MONO_BOLD)
         self.content.extend(content)
-        self.content.append(ui.NORMAL)
 
     def br(self):
         self.content.append(BR)
