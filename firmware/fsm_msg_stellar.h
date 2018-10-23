@@ -25,7 +25,7 @@ void fsm_msgStellarGetAddress(const StellarGetAddress *msg)
 
     CHECK_PIN
 
-    HDNode *node = stellar_deriveNode(msg->address_n, msg->address_n_count);
+    const HDNode *node = stellar_deriveNode(msg->address_n, msg->address_n_count);
     if (!node) {
         fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to derive private key"));
         return;
@@ -60,7 +60,11 @@ void fsm_msgStellarSignTx(const StellarSignTx *msg)
     CHECK_INITIALIZED
     CHECK_PIN
 
-    stellar_signingInit(msg);
+    if (!stellar_signingInit(msg)) {
+        fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to derive private key"));
+        layoutHome();
+        return;
+    }
 
     // Confirm transaction basics
     stellar_layoutTransactionSummary(msg);

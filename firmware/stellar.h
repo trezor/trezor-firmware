@@ -53,7 +53,7 @@ typedef struct {
 } StellarTransaction;
 
 // Signing process
-void stellar_signingInit(const StellarSignTx *tx);
+bool stellar_signingInit(const StellarSignTx *tx);
 void stellar_signingAbort(const char *reason);
 bool stellar_confirmSourceAccount(bool has_source_account, const char *str_account);
 bool stellar_confirmCreateAccountOp(const StellarCreateAccountOp *msg);
@@ -74,7 +74,7 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg);
 void stellar_layoutSigningDialog(const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, uint32_t *address_n, size_t address_n_count, const char *warning, bool is_final_step);
 
 // Helpers
-HDNode *stellar_deriveNode(const uint32_t *address_n, size_t address_n_count);
+const HDNode *stellar_deriveNode(const uint32_t *address_n, size_t address_n_count);
 
 size_t stellar_publicAddressAsStr(const uint8_t *bytes, char *out, size_t outlen);
 const char **stellar_lineBreakAddress(const uint8_t *addrbytes);
@@ -82,8 +82,8 @@ const char **stellar_lineBreakAddress(const uint8_t *addrbytes);
 void stellar_hashupdate_uint32(uint32_t value);
 void stellar_hashupdate_uint64(uint64_t value);
 void stellar_hashupdate_bool(bool value);
-void stellar_hashupdate_string(uint8_t *data, size_t len);
-void stellar_hashupdate_address(uint8_t *address_bytes);
+void stellar_hashupdate_string(const uint8_t *data, size_t len);
+void stellar_hashupdate_address(const uint8_t *address_bytes);
 void stellar_hashupdate_asset(const StellarAssetType *asset);
 void stellar_hashupdate_bytes(const uint8_t *data, size_t len);
 
