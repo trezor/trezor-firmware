@@ -24,7 +24,6 @@ from .conftest import TREZOR_VERSION
 
 
 @pytest.mark.stellar
-@pytest.mark.xfail(TREZOR_VERSION == 1, reason="Stellar currently disabled on T1")
 class TestMsgStellarGetAddress(TrezorTest):
     def test_stellar_get_address(self):
         self.setup_mnemonic_nopin_nopassphrase()
