@@ -448,7 +448,7 @@ bool stellar_confirmManageOfferOp(const StellarManageOfferOp *msg)
 
     char str_buying[32];
     char str_buying_asset[32];
-    char str_price[17];
+    char str_price[32];
 
     stellar_format_asset(&(msg->buying_asset), str_buying_asset, sizeof(str_buying_asset));
     stellar_format_price(msg->price_n, msg->price_d, str_price, sizeof(str_price));
@@ -528,7 +528,7 @@ bool stellar_confirmCreatePassiveOfferOp(const StellarCreatePassiveOfferOp *msg)
 
     char str_buying[32];
     char str_buying_asset[32];
-    char str_price[17];
+    char str_price[32];
 
     stellar_format_asset(&(msg->buying_asset), str_buying_asset, sizeof(str_buying_asset));
     stellar_format_price(msg->price_n, msg->price_d, str_price, sizeof(str_price));
@@ -1273,27 +1273,32 @@ void stellar_format_price(uint32_t numerator, uint32_t denominator, char *out, s
 {
     memset(out, 0, outlen);
 
-    // early exist for invalid denominator
+    // early exit for invalid denominator
     if (denominator == 0) {
         strlcpy(out, _("[Invalid Price]"), outlen);
         return;
     }
 
-    int scale = 0;
-    double dbl_value = (double)numerator / (double)denominator;
+    // early exit for zero
+    if (numerator == 0) {
+        strlcpy(out, "0", outlen);
+        return;
+    }
 
-    // Multiply by 10 until the value is larger than the largest possible offer size
-    // Largest possible offer size is UINT32_MAX (4294967296)
-    while (dbl_value < UINT32_MAX) {
-        dbl_value *= (double)10;
+    int scale = 0;
+    uint64_t value = numerator;
+    while (value < (UINT64_MAX / 10)) {
+        value *= 10;
+        scale++;
+    }
+    value /= denominator;
+    while (value < (UINT64_MAX / 10)) {
+        value *= 10;
         scale++;
     }
 
-    // Cast back to an integer
-    uint64_t scaled_value = (uint64_t) dbl_value;
-
     // Format with bn_format_uint64
-    bn_format_uint64(scaled_value, NULL, NULL, scale, 0, false, out, outlen);
+    bn_format_uint64(value, NULL, NULL, scale, 0, false, out, outlen);
 }
 
 /*
