@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages as proto
-from trezorlib.tools import CallException, H_, parse_path
+from trezorlib.tools import H_, CallException, parse_path
 
 from ..support import ckd_public as bip32
 from .common import TrezorTest
