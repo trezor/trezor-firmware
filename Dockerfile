@@ -12,12 +12,13 @@ RUN apt-get update && apt-get install -y \
 
 # install dependencies from toolchain source build
 
-RUN [ "$TOOLCHAIN_FLAVOR" = "src" ] && \
-    apt-get install -y autoconf autogen bison dejagnu \
-                       flex flip gawk git gperf gzip nsis \
-                       openssh-client p7zip-full perl python-dev \
-                       libisl-dev tcl tofrodos zip \
-                       texinfo texlive texlive-extra-utils
+RUN if [ "$TOOLCHAIN_FLAVOR" = "src" ]; then \
+        apt-get install -y autoconf autogen bison dejagnu \
+                           flex flip gawk git gperf gzip nsis \
+                           openssh-client p7zip-full perl python-dev \
+                           libisl-dev tcl tofrodos zip \
+                           texinfo texlive texlive-extra-utils; \
+    fi
 
 # download toolchain
 
@@ -31,9 +32,13 @@ RUN cd /opt && wget $TOOLCHAIN_URL && tar xfj $TOOLCHAIN_LONGVER-$TOOLCHAIN_FLAV
 
 # build toolchain (if required)
 
-RUN [ "$TOOLCHAIN_FLAVOR" = "src" ] && cd /opt/$TOOLCHAIN_LONGVER && ./install-sources.sh --skip_steps=mingw32
-RUN [ "$TOOLCHAIN_FLAVOR" = "src" ] && cd /opt/$TOOLCHAIN_LONGVER && ./build-prerequisites.sh  --skip_steps=mingw32
-RUN [ "$TOOLCHAIN_FLAVOR" = "src" ] && cd /opt/$TOOLCHAIN_LONGVER && ./build-toolchain.sh  --skip_steps=mingw32,manual
+RUN if [ "$TOOLCHAIN_FLAVOR" = "src" ]; then \
+        pushd /opt/$TOOLCHAIN_LONGVER ; \
+        ./install-sources.sh --skip_steps=mingw32 ; \
+        ./build-prerequisites.sh --skip_steps=mingw32 ; \
+        ./build-toolchain.sh --skip_steps=mingw32,manual ; \
+        popd ; \
+    fi
 
 # install additional tools
 
@@ -43,10 +48,9 @@ RUN apt-get install -y protobuf-compiler libprotobuf-dev
 
 ENV PATH=/opt/$TOOLCHAIN_LONGVER/bin:$PATH
 
-# install python tools
+# install python dependencies
 
-RUN pip3 install click pyblake2 scons protobuf
-RUN pip3 install --no-deps git+https://github.com/trezor/python-trezor.git@master
+RUN pip3 install scons trezor
 
 # workarounds for weird default install
 
