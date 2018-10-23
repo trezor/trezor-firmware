@@ -44,6 +44,11 @@ const int8_t b58digits_map[] = {
 bool b58tobin(void *bin, size_t *binszp, const char *b58)
 {
 	size_t binsz = *binszp;
+
+	if (binsz == 0) {
+		return false;
+	}
+
 	const unsigned char *b58u = (const unsigned char*)b58;
 	unsigned char *binu = bin;
 	size_t outisz = (binsz + 3) / 4;
