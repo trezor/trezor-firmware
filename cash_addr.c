@@ -101,7 +101,7 @@ int cash_decode(char* hrp, uint8_t *data, size_t *data_len, const char *input) {
         ++(*data_len);
     }
     hrp_len = input_len - (1 + *data_len);
-    if (hrp_len < 1 || hrp_len > MAX_HRP_SIZE ||
+    if (1 + *data_len >= input_len || hrp_len > MAX_HRP_SIZE ||
         *data_len < CHECKSUM_SIZE || *data_len > CHECKSUM_SIZE + MAX_BASE32_SIZE) {
         return 0;
     }
