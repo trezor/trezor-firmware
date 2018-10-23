@@ -134,7 +134,8 @@ class TestProtectionLevels(TrezorTest):
     def test_reset_device(self):
         with self.client:
             self.client.set_expected_responses(
-                [proto.EntropyRequest()]
+                [proto.ButtonRequest()]
+                + [proto.EntropyRequest()]
                 + [proto.ButtonRequest()] * 24
                 + [proto.Success(), proto.Features()]
             )
