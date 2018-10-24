@@ -92,7 +92,7 @@ class TxApiInsight(TxApi):
 
         t = proto.TransactionType()
         t.version = data["version"]
-        t.lock_time = data["locktime"]
+        t.lock_time = data.get("locktime")
 
         if self.decred:
             t.expiry = data["expiry"]
