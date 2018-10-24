@@ -36,7 +36,7 @@ cache:
 
 before_install:
     - python3.6 -m ensurepip --user
-    - python3.6 -m pip install --user pipenv
+    - python3.6 -m pip install --user "pipenv<2018.10"
 
 install:
     - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
