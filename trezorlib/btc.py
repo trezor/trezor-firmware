@@ -92,6 +92,7 @@ def sign_tx(
     overwintered=None,
     version_group_id=None,
     debug_processor=None,
+    timestamp=None,
 ):
     # start = time.time()
     txes = client._prepare_sign_tx(inputs, outputs)
@@ -111,6 +112,8 @@ def sign_tx(
         tx.overwintered = overwintered
     if version_group_id is not None:
         tx.version_group_id = version_group_id
+    if timestamp is not None:
+        tx.timestamp = timestamp
     res = client.call(tx)
 
     # Prepare structure for signatures
@@ -155,6 +158,7 @@ def sign_tx(
             msg.version = current_tx.version
             msg.lock_time = current_tx.lock_time
             msg.inputs_cnt = len(current_tx.inputs)
+            msg.timestamp = current_tx.timestamp
             if res.details.tx_hash:
                 msg.outputs_cnt = len(current_tx.bin_outputs)
             else:

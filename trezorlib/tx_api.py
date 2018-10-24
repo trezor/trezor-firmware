@@ -94,6 +94,9 @@ class TxApiInsight(TxApi):
         t.version = data["version"]
         t.lock_time = data.get("locktime")
 
+        if self.network == "insight_capricoin":
+            t.timestamp = data["time"]
+
         if self.decred:
             t.expiry = data["expiry"]
 

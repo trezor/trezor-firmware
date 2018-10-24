@@ -879,9 +879,12 @@ def sign_tx(connect, coin):
 
     tx_version = click.prompt("Transaction version", type=int, default=2)
     tx_locktime = click.prompt("Transaction locktime", type=int, default=0)
+    tx_timestamp = click.prompt(
+        "Transaction timestamp (Capricoin)", type=int, default=None
+    )
 
     _, serialized_tx = btc.sign_tx(
-        client, coin, inputs, outputs, tx_version, tx_locktime
+        client, coin, inputs, outputs, tx_version, tx_locktime, timestamp=tx_timestamp
     )
 
     client.close()
