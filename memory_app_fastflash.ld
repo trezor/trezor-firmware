@@ -11,7 +11,7 @@ SECTIONS
 {
 	.confidential (NOLOAD) : {
 		*(confidential)
-		ASSERT ((SIZEOF(.confidential) <= 33K), "Error: Confidential section too big!");
+		ASSERT ((SIZEOF(.confidential) <= 32K), "Error: Confidential section too big!");
 	} >ram
 }
 
