@@ -54,7 +54,7 @@ async def show_tx(
     for index, change in enumerate(change_derivation_paths):
         if not await confirm_with_pagination(
             ctx,
-            split_address(address_n_to_str(change)),
+            list(split_address(address_n_to_str(change))),
             "Confirm change",
             ui.ICON_SEND,
             ui.GREEN,
