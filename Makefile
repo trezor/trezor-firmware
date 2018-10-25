@@ -65,6 +65,9 @@ test: ## run unit tests
 test_emu: ## run selected device tests from python-trezor
 	cd tests ; ./run_tests_device_emu.sh $(TESTOPTS)
 
+test_emu_monero: ## run selected monero device tests from monero-agent
+	cd tests ; ./run_tests_device_emu_monero.sh $(TESTOPTS)
+
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 

@@ -14,6 +14,7 @@ import apps.management
 import apps.wallet
 import apps.ethereum
 import apps.lisk
+import apps.monero
 import apps.nem
 import apps.stellar
 import apps.ripple
@@ -31,6 +32,7 @@ apps.management.boot()
 apps.wallet.boot()
 apps.ethereum.boot()
 apps.lisk.boot()
+apps.monero.boot()
 apps.nem.boot()
 apps.stellar.boot()
 apps.ripple.boot()

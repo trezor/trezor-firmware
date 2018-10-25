@@ -51,27 +51,41 @@ class Display:
         The icon needs to be in TREZOR Optimized Image Format (TOIF) - gray-scale mode.
         '''
 
+    def loader(self, progress: int, yoffset: int, fgcolor: int, bgcolor: int, icon: bytes = None, iconfgcolor: int = None) -> None:
+        '''
+        Renders a rotating loader graphic.
+        Progress determines its position (0-1000), fgcolor is used as foreground color, bgcolor as background.
+        When icon and iconfgcolor are provided, an icon is drawn in the middle using the color specified in iconfgcolor.
+        Icon needs to be of exactly LOADER_ICON_SIZE x LOADER_ICON_SIZE pixels size.
+        '''
+
     def print(self, text: str) -> None:
         '''
         Renders text using 5x8 bitmap font (using special text mode).
         '''
 
-    def text(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int, minwidth: int=None) -> None:
+    def text(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int, minwidth: int=None) -> int:
         '''
         Renders left-aligned text at position (x,y) where x is left position and y is baseline.
         Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
+        Fills at least minwidth pixels with bgcolor.
+        Returns width of rendered text in pixels.
         '''
 
-    def text_center(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int, minwidth: int=None) -> None:
+    def text_center(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int, minwidth: int=None) -> int:
         '''
         Renders text centered at position (x,y) where x is text center and y is baseline.
         Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
+        Fills at least minwidth pixels with bgcolor.
+        Returns width of rendered text in pixels.
         '''
 
-    def text_right(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int, minwidth: int=None) -> None:
+    def text_right(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor: int, minwidth: int=None) -> int:
         '''
         Renders right-aligned text at position (x,y) where x is right position and y is baseline.
         Font font is used for rendering, fgcolor is used as foreground color, bgcolor as background.
+        Fills at least minwidth pixels with bgcolor.
+        Returns width of rendered text in pixels.
         '''
 
     def text_width(self, text: str, font: int) -> int:
@@ -83,14 +97,6 @@ class Display:
         '''
         Renders data encoded as a QR code centered at position (x,y).
         Scale determines a zoom factor.
-        '''
-
-    def loader(self, progress: int, yoffset: int, fgcolor: int, bgcolor: int, icon: bytes = None, iconfgcolor: int = None) -> None:
-        '''
-        Renders a rotating loader graphic.
-        Progress determines its position (0-1000), fgcolor is used as foreground color, bgcolor as background.
-        When icon and iconfgcolor are provided, an icon is drawn in the middle using the color specified in iconfgcolor.
-        Icon needs to be of exactly LOADER_ICON_SIZE x LOADER_ICON_SIZE pixels size.
         '''
 
     def orientation(self, degrees: int = None) -> int:

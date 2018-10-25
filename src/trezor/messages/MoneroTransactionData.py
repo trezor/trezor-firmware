@@ -26,9 +26,6 @@ class MoneroTransactionData(p.MessageType):
         fee: int = None,
         account: int = None,
         minor_indices: List[int] = None,
-        is_multisig: bool = None,
-        exp_tx_prefix_hash: bytes = None,
-        use_tx_keys: List[bytes] = None,
         rsig_data: MoneroTransactionRsigData = None,
         integrated_indices: List[int] = None,
     ) -> None:
@@ -42,9 +39,6 @@ class MoneroTransactionData(p.MessageType):
         self.fee = fee
         self.account = account
         self.minor_indices = minor_indices if minor_indices is not None else []
-        self.is_multisig = is_multisig
-        self.exp_tx_prefix_hash = exp_tx_prefix_hash
-        self.use_tx_keys = use_tx_keys if use_tx_keys is not None else []
         self.rsig_data = rsig_data
         self.integrated_indices = integrated_indices if integrated_indices is not None else []
 
@@ -61,9 +55,6 @@ class MoneroTransactionData(p.MessageType):
             8: ('fee', p.UVarintType, 0),
             9: ('account', p.UVarintType, 0),
             10: ('minor_indices', p.UVarintType, p.FLAG_REPEATED),
-            11: ('is_multisig', p.BoolType, 0),
-            12: ('exp_tx_prefix_hash', p.BytesType, 0),
-            13: ('use_tx_keys', p.BytesType, p.FLAG_REPEATED),
-            14: ('rsig_data', MoneroTransactionRsigData, 0),
-            15: ('integrated_indices', p.UVarintType, p.FLAG_REPEATED),
+            11: ('rsig_data', MoneroTransactionRsigData, 0),
+            12: ('integrated_indices', p.UVarintType, p.FLAG_REPEATED),
         }

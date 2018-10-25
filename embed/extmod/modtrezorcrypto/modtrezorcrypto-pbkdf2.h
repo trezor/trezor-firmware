@@ -25,6 +25,8 @@
 #define PRF_HMAC_SHA256 256
 #define PRF_HMAC_SHA512 512
 
+/// package: trezorcrypto.__init__
+
 /// class Pbkdf2:
 ///     '''
 ///     PBKDF2 context.

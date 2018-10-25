@@ -21,6 +21,8 @@
 
 #include "bip39.h"
 
+/// package: trezorcrypto.bip39
+
 /// def find_word(prefix: str) -> Optional[str]:
 ///     '''
 ///     Return the first word from the wordlist starting with prefix.

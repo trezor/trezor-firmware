@@ -24,6 +24,8 @@
 
 #include "rand.h"
 
+/// package: trezorcrypto.ed25519
+
 /// def generate_secret() -> bytes:
 ///     '''
 ///     Generate secret key.

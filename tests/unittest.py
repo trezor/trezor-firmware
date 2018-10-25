@@ -126,6 +126,15 @@ class TestCase:
                 return
             raise
 
+    def assertListEqual(self, x, y, msg=''):
+        if len(x) != len(y):
+            if not msg:
+                msg = "List lengths not equal"
+            ensure(False, msg)
+
+        for i in range(len(x)):
+            self.assertEqual(x[i], y[i], msg)
+
 
 def skip(msg):
     def _decor(fun):

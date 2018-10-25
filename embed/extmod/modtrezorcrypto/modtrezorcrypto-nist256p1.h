@@ -22,6 +22,8 @@
 #include "ecdsa.h"
 #include "nist256p1.h"
 
+/// package: trezorcrypto.nist256p1
+
 /// def generate_secret() -> bytes:
 ///     '''
 ///     Generate secret key.

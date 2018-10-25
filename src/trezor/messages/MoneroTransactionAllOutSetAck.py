@@ -3,7 +3,6 @@
 import protobuf as p
 
 from .MoneroRingCtSig import MoneroRingCtSig
-from .MoneroTransactionRsigData import MoneroTransactionRsigData
 
 
 class MoneroTransactionAllOutSetAck(p.MessageType):
@@ -13,19 +12,19 @@ class MoneroTransactionAllOutSetAck(p.MessageType):
         self,
         extra: bytes = None,
         tx_prefix_hash: bytes = None,
-        rsig_data: MoneroTransactionRsigData = None,
         rv: MoneroRingCtSig = None,
+        full_message_hash: bytes = None,
     ) -> None:
         self.extra = extra
         self.tx_prefix_hash = tx_prefix_hash
-        self.rsig_data = rsig_data
         self.rv = rv
+        self.full_message_hash = full_message_hash
 
     @classmethod
     def get_fields(cls):
         return {
             1: ('extra', p.BytesType, 0),
             2: ('tx_prefix_hash', p.BytesType, 0),
-            3: ('rsig_data', MoneroTransactionRsigData, 0),
             4: ('rv', MoneroRingCtSig, 0),
+            5: ('full_message_hash', p.BytesType, 0),
         }

@@ -25,6 +25,8 @@
 #define GROESTL512_DIGEST_LENGTH 64
 #define GROESTL512_BLOCK_LENGTH 128
 
+/// package: trezorcrypto.__init__
+
 /// class Groestl512:
 ///     '''
 ///     GROESTL512 context.

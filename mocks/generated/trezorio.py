@@ -138,7 +138,8 @@ class USB:
                  product: str='',
                  serial_number: str='',
                  interface: str='',
-                 usb21_enabled: bool=True) -> None:
+                 usb21_enabled: bool=True,
+                 usb21_landing: bool=True) -> None:
         '''
         '''
 

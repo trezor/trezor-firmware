@@ -27,6 +27,8 @@
 #include "memzero.h"
 #include "nem.h"
 
+/// package: trezorcrypto.bip32
+
 /// class HDNode:
 ///     '''
 ///     BIP0032 HD node structure.

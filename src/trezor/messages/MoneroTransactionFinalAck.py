@@ -4,7 +4,7 @@ import protobuf as p
 
 
 class MoneroTransactionFinalAck(p.MessageType):
-    MESSAGE_WIRE_TYPE = 520
+    MESSAGE_WIRE_TYPE = 518
 
     def __init__(
         self,

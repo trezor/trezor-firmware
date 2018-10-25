@@ -27,6 +27,7 @@ CPPDEFINES_MOD += [
     'RAND_PLATFORM_INDEPENDENT',
     ('USE_KECCAK', '1'),
     ('USE_ETHEREUM', '1'),
+    ('USE_MONERO', '1'),
     ('USE_CARDANO', '1'),
     ('USE_NEM', '1'),
 ]
@@ -63,6 +64,9 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/ed25519-donna/ed25519-keccak.c',
     'vendor/trezor-crypto/ed25519-donna/ed25519-sha3.c',
     'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
+    'vendor/trezor-crypto/monero/base58.c',
+    'vendor/trezor-crypto/monero/serialize.c',
+    'vendor/trezor-crypto/monero/xmr.c',
     'vendor/trezor-crypto/groestl.c',
     'vendor/trezor-crypto/hasher.c',
     'vendor/trezor-crypto/hmac.c',

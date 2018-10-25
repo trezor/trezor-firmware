@@ -21,6 +21,8 @@
 
 #include "rfc6979.h"
 
+/// package: trezorcrypto.__init__
+
 /// class Rfc6979:
 ///     '''
 ///     RFC6979 context.

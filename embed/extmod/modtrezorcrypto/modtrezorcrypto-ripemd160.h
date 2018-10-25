@@ -22,6 +22,8 @@
 #include "ripemd160.h"
 #include "memzero.h"
 
+/// package: trezorcrypto.__init__
+
 /// class Ripemd160:
 ///     '''
 ///     RIPEMD160 context.

@@ -3,19 +3,19 @@
 import protobuf as p
 
 
-class MoneroRctKey(p.MessageType):
+class MoneroRctKeyPublic(p.MessageType):
 
     def __init__(
         self,
         dest: bytes = None,
-        mask: bytes = None,
+        commitment: bytes = None,
     ) -> None:
         self.dest = dest
-        self.mask = mask
+        self.commitment = commitment
 
     @classmethod
     def get_fields(cls):
         return {
             1: ('dest', p.BytesType, 0),
-            2: ('mask', p.BytesType, 0),
+            2: ('commitment', p.BytesType, 0),
         }
