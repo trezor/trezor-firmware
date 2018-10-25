@@ -132,7 +132,7 @@ int cash_decode(char* hrp, uint8_t *data, size_t *data_len, const char *input) {
             return 0;
         }
         chk = cashaddr_polymod_step(chk) ^ v;
-        if (i + 6 < input_len) {
+        if (i + CHECKSUM_SIZE < input_len) {
             data[i - (1 + hrp_len)] = v;
         }
         ++i;
