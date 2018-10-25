@@ -27,6 +27,12 @@ async def sign_tx(ctx, msg):
     elif msg.origination is not None:
         source = _get_address_from_contract(msg.origination.source)
         await require_confirm_origination(ctx, source)
+
+        # if we are immediately delegating contract
+        if msg.origination.delegate is not None:
+            delegate = _get_address_by_tag(msg.origination.delegate)
+            await require_confirm_delegation_baker(ctx, delegate)
+
         await require_confirm_origination_fee(
             ctx, msg.origination.balance, msg.origination.fee
         )
