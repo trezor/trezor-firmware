@@ -2,7 +2,7 @@
   "coin_name": "Dogecoin",
   "coin_shortcut": "DOGE",
   "coin_label": "Dogecoin",
-  "website": "http://dogecoin.com",
+  "website": "https://dogecoin.com",
   "github": "https://github.com/dogecoin/dogecoin",
   "maintainer": "Karel Bilek <karel.bilek@satoshilabs.com>",
   "curve_name": "secp256k1",

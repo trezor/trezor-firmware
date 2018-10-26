@@ -109,7 +109,7 @@ BTC_CHECKS = [
     check_key("coin_name", str, regex=r"^[A-Z]"),
     check_key("coin_shortcut", str, regex=r"^t?[A-Z]{3,}$"),
     check_key("coin_label", str, regex=r"^[A-Z]"),
-    check_key("website", str, regex=r"^http.*[^/]$"),
+    check_key("website", str, regex=r"^https://.*[^/]$"),
     check_key("github", str, regex=r"^https://github.com/.*[^/]$"),
     check_key("maintainer", str),
     check_key(

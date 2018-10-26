@@ -2,7 +2,7 @@
   "coin_name": "Pesetacoin",
   "coin_shortcut": "PTC",
   "coin_label": "Pesetacoin",
-  "website": "http://pesetacoin.info",
+  "website": "https://pesetacoin.info",
   "github": "https://github.com/FundacionPesetacoin/PesetacoinCore",
   "maintainer": "Rw <info@pesetacoin.info>",
   "curve_name": "secp256k1",

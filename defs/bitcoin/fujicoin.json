@@ -2,7 +2,7 @@
   "coin_name": "Fujicoin",
   "coin_shortcut": "FJC",
   "coin_label": "Fujicoin",
-  "website": "http://fujicoin.org",
+  "website": "https://fujicoin.org",
   "github": "https://github.com/fujicoin/fujicoin",
   "maintainer": "motty <admin@fujicoin.org>",
   "curve_name": "secp256k1",

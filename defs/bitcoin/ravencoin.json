@@ -2,7 +2,7 @@
   "coin_name": "Ravencoin",
   "coin_shortcut": "RVN",
   "coin_label": "Ravencoin",
-  "website": "https://ravencoin.org/",
+  "website": "https://ravencoin.org",
   "github": "https://github.com/RavenProject/Ravencoin",
   "maintainer": "Tron Black <TronBlack@gmail.com>",
   "curve_name": "secp256k1",
