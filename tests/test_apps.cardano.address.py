@@ -14,7 +14,8 @@ from trezor.crypto import bip32
 class TestCardanoAddress(unittest.TestCase):
     def test_hardened_address_derivation_scheme(self):
         mnemonic = "all all all all all all all all all all all all"
-        node = bip32.from_mnemonic_cardano(mnemonic)
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
 
         addresses = [
             "Ae2tdPwUPEZ98eHFwxSsPBDz73amioKpr58Vw85mP1tMkzq8siaftiejJ3j",
@@ -57,7 +58,8 @@ class TestCardanoAddress(unittest.TestCase):
 
     def test_non_hardened_address_derivation_scheme(self):
         mnemonic = "all all all all all all all all all all all all"
-        node = bip32.from_mnemonic_cardano(mnemonic)
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
 
         addresses = [
             "Ae2tdPwUPEZ5YUb8sM3eS8JqKgrRLzhiu71crfuH2MFtqaYr5ACNRdsswsZ",
@@ -101,7 +103,8 @@ class TestCardanoAddress(unittest.TestCase):
 
     def test_root_address_derivation_scheme(self):
         mnemonic = "all all all all all all all all all all all all"
-        node = bip32.from_mnemonic_cardano(mnemonic)
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
 
         # 44'/1815'
         address, _ = derive_address_and_node(node, [0x80000000 | 44, 0x80000000 | 1815])
@@ -152,7 +155,8 @@ class TestCardanoAddress(unittest.TestCase):
 
     def test_get_address_root_scheme(self):
         mnemonic = "all all all all all all all all all all all all"
-        root_node = bip32.from_mnemonic_cardano(mnemonic)
+        passphrase = ""
+        root_node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
 
         address_root = _get_address_root(root_node, {1: b'X\x1cr,zu\x81?\xaf\xde\x9f\xf9\xe4\xd4\x90\xadH$\xe9\xf3\x88\x16\xcb\xd2)\x02M\x0c#\xde'})
         self.assertEqual(address_root, b'\xb3\xbbS\xa8;uN:E=\xe8\xe5\x9c\x18\xbcn\xcf\xd0c\xba\x0e\xba\xaelL}\xba\xbb')

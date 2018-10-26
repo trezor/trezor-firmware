@@ -10,7 +10,7 @@ from apps.common import storage
 
 async def get_address(ctx, msg):
     mnemonic = storage.get_mnemonic()
-    root_node = bip32.from_mnemonic_cardano(mnemonic)
+    root_node = bip32.from_mnemonic_cardano(mnemonic, "")
 
     try:
         address, _ = derive_address_and_node(root_node, msg.address_n)

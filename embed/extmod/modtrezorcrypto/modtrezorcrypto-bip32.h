@@ -504,15 +504,17 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed, mp_obj_t curve_n
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_seed_obj, mod_trezorcrypto_bip32_from_seed);
 
-/// def from_mnemonic_cardano(mnemonic: str) -> bytes:
+/// def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> bytes:
 ///     '''
 ///     Convert mnemonic to hdnode
 ///     '''
-STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(mp_obj_t mnemonic) {
-    mp_buffer_info_t mnemo;
+STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(mp_obj_t mnemonic, mp_obj_t passphrase) {
+    mp_buffer_info_t mnemo, phrase;
     mp_get_buffer_raise(mnemonic, &mnemo, MP_BUFFER_READ);
+    mp_get_buffer_raise(passphrase, &phrase, MP_BUFFER_READ);
     HDNode hdnode;
     const char *pmnemonic = mnemo.len > 0 ? mnemo.buf : "";
+    const char *ppassphrase = phrase.len > 0 ? phrase.buf : "";
 
     uint8_t entropy[64];
     int entropy_len = mnemonic_to_entropy(pmnemonic, entropy);
@@ -521,7 +523,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(mp_obj_t mnemonic) 
         mp_raise_ValueError("Invalid mnemonic");
     }
 
-    const int res = hdnode_from_seed_cardano((const uint8_t *)"", 0, entropy, entropy_len / 8, &hdnode);
+    const int res = hdnode_from_seed_cardano((const uint8_t *)ppassphrase, phrase.len, entropy, entropy_len / 8, &hdnode);
 
     if (!res) {
         mp_raise_ValueError("Secret key generation from mnemonic is looping forever");
@@ -536,7 +538,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(mp_obj_t mnemonic) 
     return MP_OBJ_FROM_PTR(o);
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip32_from_mnemonic_cardano_obj,
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_mnemonic_cardano_obj,
         mod_trezorcrypto_bip32_from_mnemonic_cardano);
 
 

@@ -80,7 +80,7 @@ async def request_transaction(ctx, tx_req: CardanoTxRequest, index: int):
 
 async def sign_tx(ctx, msg):
     mnemonic = storage.get_mnemonic()
-    root_node = bip32.from_mnemonic_cardano(mnemonic)
+    root_node = bip32.from_mnemonic_cardano(mnemonic, "")
 
     progress.init(msg.transactions_count, "Loading data")
 

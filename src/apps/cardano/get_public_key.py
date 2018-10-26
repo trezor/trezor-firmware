@@ -12,7 +12,7 @@ from apps.common import layout, seed, storage
 
 async def get_public_key(ctx, msg):
     mnemonic = storage.get_mnemonic()
-    root_node = bip32.from_mnemonic_cardano(mnemonic)
+    root_node = bip32.from_mnemonic_cardano(mnemonic, "")
 
     try:
         key = _get_public_key(root_node, msg.address_n)

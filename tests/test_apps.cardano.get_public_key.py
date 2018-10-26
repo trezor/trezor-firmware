@@ -8,7 +8,8 @@ from ubinascii import hexlify
 class TestCardanoGetPublicKey(unittest.TestCase):
     def test_get_public_key_scheme(self):
         mnemonic = "all all all all all all all all all all all all"
-        node = bip32.from_mnemonic_cardano(mnemonic)
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
 
         derivation_paths = [
             [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000],
