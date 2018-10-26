@@ -29,7 +29,7 @@
   },
   "dust_limit": 546,
   "blocktime_seconds": 60,
-  "uri_prefix": "ravencoin",
+  "uri_prefix": "raven",
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [
