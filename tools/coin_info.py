@@ -177,6 +177,9 @@ def validate_btc(coin):
         errors.append("max address length must not be smaller than min address length")
 
     for bc in coin["bitcore"] + coin["blockbook"]:
+        if not bc.startswith("https://"):
+            errors.append("make sure URLs start with https://")
+
         if bc.endswith("/"):
             errors.append("make sure URLs don't end with '/'")
 
