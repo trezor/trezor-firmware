@@ -22,7 +22,9 @@
 
 #include <stddef.h>
 
+#if (!defined __APPLE__) && (!defined HAVE_STRLCPY)
 size_t strlcpy(char *dst, const char *src, size_t size);
 size_t strlcat(char *dst, const char *src, size_t size);
+#endif
 
 #endif
