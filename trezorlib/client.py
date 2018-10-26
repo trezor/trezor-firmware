@@ -126,10 +126,11 @@ class BaseClient(object):
             passphrase = None
         else:
             passphrase = self.ui.get_passphrase()
-        return self.call_raw(proto.PassphraseAck(passphrase=passphrase))
 
-    def callback_PassphraseStateRequest(self, msg):
-        self.state = msg.state
+        state_request = self.call_raw(proto.PassphraseAck(passphrase=passphrase))
+        if not isinstance(state_request, proto.PassphraseStateRequest):
+            raise exceptions.TrezorException("Passphrase state missing")
+        self.state = state_request.state
         return self.call_raw(proto.PassphraseStateAck())
 
     def callback_ButtonRequest(self, msg):
