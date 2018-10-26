@@ -54,23 +54,23 @@ async def dump_uvarint(writer, n):
 def count_uvarint(n):
     if n < 0:
         raise ValueError("Cannot dump signed value, convert it to unsigned first.")
-    if n <= 0x7f:
+    if n <= 0x7F:
         return 1
-    if n <= 0x3fff:
+    if n <= 0x3FFF:
         return 2
-    if n <= 0x1fffff:
+    if n <= 0x1FFFFF:
         return 3
-    if n <= 0xfffffff:
+    if n <= 0xFFFFFFF:
         return 4
-    if n <= 0x7ffffffff:
+    if n <= 0x7FFFFFFFF:
         return 5
-    if n <= 0x3ffffffffff:
+    if n <= 0x3FFFFFFFFFF:
         return 6
-    if n <= 0x1ffffffffffff:
+    if n <= 0x1FFFFFFFFFFFF:
         return 7
-    if n <= 0xffffffffffffff:
+    if n <= 0xFFFFFFFFFFFFFF:
         return 8
-    if n <= 0x7fffffffffffffff:
+    if n <= 0x7FFFFFFFFFFFFFFF:
         return 9
     raise ValueError
 
