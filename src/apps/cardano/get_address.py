@@ -5,12 +5,13 @@ from trezor.messages.CardanoAddress import CardanoAddress
 from .address import derive_address_and_node
 from .layout import confirm_with_pagination
 
-from apps.common import storage
+from apps.common import seed, storage
 
 
 async def get_address(ctx, msg):
     mnemonic = storage.get_mnemonic()
-    root_node = bip32.from_mnemonic_cardano(mnemonic, "")
+    passphrase = await seed._get_cached_passphrase(ctx)
+    root_node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
 
     try:
         address, _ = derive_address_and_node(root_node, msg.address_n)

@@ -80,7 +80,8 @@ async def request_transaction(ctx, tx_req: CardanoTxRequest, index: int):
 
 async def sign_tx(ctx, msg):
     mnemonic = storage.get_mnemonic()
-    root_node = bip32.from_mnemonic_cardano(mnemonic, "")
+    passphrase = await seed._get_cached_passphrase(ctx)
+    root_node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
 
     progress.init(msg.transactions_count, "Loading data")
 
