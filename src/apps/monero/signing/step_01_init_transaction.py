@@ -353,6 +353,9 @@ def _get_key_for_payment_id_encryption(destinations: list, change_addr=None):
         addr = dest.addr
         count += 1
 
+    if count == 0 and change_addr:
+        return change_addr.view_public_key
+
     if addr.view_public_key == crypto.NULL_KEY_ENC:
         raise ValueError("Invalid key")
 
