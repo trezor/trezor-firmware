@@ -22,6 +22,6 @@
 
 #include <stdint.h>
 
-uint32_t crc32(const uint8_t *data, uint32_t length, uint32_t crc);
+uint32_t checksum_crc32(const uint8_t *data, uint32_t length, uint32_t crc);
 
 #endif

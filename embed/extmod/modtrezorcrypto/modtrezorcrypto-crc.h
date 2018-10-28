@@ -27,7 +27,7 @@ mp_obj_t mod_trezorcrypto_crc_crc32(size_t n_args, const mp_obj_t *args) {
     mp_buffer_info_t bufinfo;
     mp_get_buffer_raise(args[0], &bufinfo, MP_BUFFER_READ);
     uint32_t crc = (n_args > 1) ? trezor_obj_get_uint(args[1]) : 0;
-    crc = crc32(bufinfo.buf, bufinfo.len, crc ^ 0xffffffff);
+    crc = checksum_crc32(bufinfo.buf, bufinfo.len, crc ^ 0xffffffff);
     return mp_obj_new_int_from_uint(crc ^ 0xffffffff);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_crc_crc32_obj, 1, 2, mod_trezorcrypto_crc_crc32);

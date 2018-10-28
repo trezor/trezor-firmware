@@ -65,7 +65,7 @@ static const uint32_t crc32tab[16] = {
 };
 
 /* crc is previous value for incremental computation, 0xffffffff initially */
-uint32_t crc32(const uint8_t *data, uint32_t length, uint32_t crc)
+uint32_t checksum_crc32(const uint8_t *data, uint32_t length, uint32_t crc)
 {
    for (uint32_t i = 0; i < length; ++i) {
       crc ^= data[i];
