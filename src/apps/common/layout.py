@@ -12,9 +12,10 @@ from apps.common import HARDENED
 from apps.common.confirm import confirm, require_confirm
 
 
-async def show_address(ctx, address: str, address_n: list, network: str = None):
-    text = Text("Confirm address", ui.ICON_RECEIVE, icon_color=ui.GREEN)
-    # TODO: print address_n via address_n_to_str(address_n)
+async def show_address(ctx, address: str, desc: str = None, network: str = None):
+    text = Text(
+        desc if desc else "Confirm address", ui.ICON_RECEIVE, icon_color=ui.GREEN
+    )
     if network:
         text.normal("%s network" % network)
     text.mono(*split_address(address))
@@ -23,13 +24,15 @@ async def show_address(ctx, address: str, address_n: list, network: str = None):
     )
 
 
-async def show_qr(ctx, address: str):
+async def show_qr(ctx, address: str, desc: str = None):
     qr_x = const(120)
     qr_y = const(115)
     qr_coef = const(4)
 
     qr = Qr(address, (qr_x, qr_y), qr_coef)
-    text = Text("Confirm address", ui.ICON_RECEIVE, icon_color=ui.GREEN)
+    text = Text(
+        desc if desc else "Confirm address", ui.ICON_RECEIVE, icon_color=ui.GREEN
+    )
     content = Container(qr, text)
     return await confirm(
         ctx,
@@ -57,5 +60,8 @@ def address_n_to_str(address_n: list) -> str:
             return str(i ^ HARDENED) + "'"
         else:
             return str(i)
+
+    if not address_n:
+        return "m"
 
     return "m/" + "/".join([path_item(i) for i in address_n])

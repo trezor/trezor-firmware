@@ -3,7 +3,7 @@ from trezor.messages.LiskAddress import LiskAddress
 from .helpers import LISK_CURVE, get_address_from_public_key
 
 from apps.common import seed
-from apps.common.layout import show_address, show_qr
+from apps.common.layout import address_n_to_str, show_address, show_qr
 
 
 async def get_address(ctx, msg):
@@ -15,10 +15,11 @@ async def get_address(ctx, msg):
     address = get_address_from_public_key(pubkey)
 
     if msg.show_display:
+        desc = address_n_to_str(address_n)
         while True:
-            if await show_address(ctx, address, address_n):
+            if await show_address(ctx, address, desc=desc):
                 break
-            if await show_qr(ctx, address):
+            if await show_qr(ctx, address, desc=desc):
                 break
 
     return LiskAddress(address=address)

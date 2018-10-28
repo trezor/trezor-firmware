@@ -1,4 +1,4 @@
-from apps.common.layout import show_address, show_qr
+from apps.common.layout import address_n_to_str, show_address, show_qr
 from apps.ethereum import networks
 
 
@@ -22,11 +22,11 @@ async def get_address(ctx, msg):
         else:
             network = None
         hex_addr = _ethereum_address_hex(address, network)
-
+        desc = address_n_to_str(address_n)
         while True:
-            if await show_address(ctx, hex_addr, address_n):
+            if await show_address(ctx, hex_addr, desc=desc):
                 break
-            if await show_qr(ctx, hex_addr):
+            if await show_qr(ctx, hex_addr, desc=desc):
                 break
 
     return EthereumAddress(address=address)

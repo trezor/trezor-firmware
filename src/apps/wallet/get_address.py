@@ -2,7 +2,7 @@ from trezor.messages import InputScriptType
 from trezor.messages.Address import Address
 
 from apps.common import coins, seed
-from apps.common.layout import show_address, show_qr
+from apps.common.layout import address_n_to_str, show_address, show_qr
 from apps.wallet.sign_tx import addresses
 
 
@@ -15,14 +15,19 @@ async def get_address(ctx, msg):
     address_short = addresses.address_short(coin, address)
 
     if msg.show_display:
+        if msg.multisig:
+            desc = "Multisig %d of %d" % (msg.multisig.m, len(msg.multisig.pubkeys))
+        else:
+            desc = address_n_to_str(msg.address_n)
         while True:
-            if await show_address(ctx, address_short, msg.address_n):
+            if await show_address(ctx, address_short, desc=desc):
                 break
             if await show_qr(
                 ctx,
                 address.upper()
                 if msg.script_type == InputScriptType.SPENDWITNESS
                 else address,
+                desc=desc,
             ):
                 break
 

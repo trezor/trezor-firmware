@@ -4,7 +4,7 @@ from trezor.messages.RippleGetAddress import RippleGetAddress
 from . import helpers
 
 from apps.common import seed
-from apps.common.layout import show_address, show_qr
+from apps.common.layout import address_n_to_str, show_address, show_qr
 
 
 async def get_address(ctx, msg: RippleGetAddress):
@@ -13,10 +13,11 @@ async def get_address(ctx, msg: RippleGetAddress):
     address = helpers.address_from_public_key(pubkey)
 
     if msg.show_display:
+        desc = address_n_to_str(msg.address_n)
         while True:
-            if await show_address(ctx, address, msg.address_n):
+            if await show_address(ctx, address, desc=desc):
                 break
-            if await show_qr(ctx, address.upper()):
+            if await show_qr(ctx, address.upper(), desc=desc):
                 break
 
     return RippleAddress(address=address)
