@@ -1,4 +1,7 @@
-Version 2.0.8 [unreleased]
+Version 2.0.9 [unreleased]
+* stable release, optional update
+
+Version 2.0.8
 * stable release, optional update
 * Monero support
 * Cardano support
