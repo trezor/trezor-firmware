@@ -115,6 +115,9 @@ def summary(coins, api_key):
         t2_coins=t2_coins,
         marketcap_usd=supported_marketcap,
         total_marketcap_usd=total_marketcap,
+        marketcap_supported="{:.02f} %".format(
+            100 * supported_marketcap / total_marketcap
+        ),
     )
 
 
@@ -267,9 +270,10 @@ def check_missing_data(coins):
             coin["hidden"] = 1
 
     # summary of hidden coins
-    for k, coin in coins.items():
-        if coin.get("hidden"):
-            LOG.debug(f"{k}: Coin is hidden")
+    hidden_coins = [k for k, coin in coins.items() if coin.get("hidden")]
+    for key in hidden_coins:
+        del coins[key]
+        LOG.debug(f"{k}: Coin is hidden")
 
 
 def apply_overrides(coins):
