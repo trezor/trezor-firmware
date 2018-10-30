@@ -104,7 +104,7 @@ async def _validate(state: State, dst_entr, dst_entr_hmac):
         raise ValueError("Invalid number of inputs")
     if state.current_output_index >= state.output_count:
         raise ValueError("Invalid output index")
-    if dst_entr.amount <= 0:
+    if dst_entr.amount < 0:
         raise ValueError("Destination with wrong amount: %s" % dst_entr.amount)
 
     # HMAC check of the destination
