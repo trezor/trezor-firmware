@@ -34,7 +34,7 @@ async def set_input(state: State, src_entr: MoneroTransactionSourceEntry):
     state.current_input_index += 1
 
     await confirms.transaction_step(
-        state.STEP_INP, state.current_input_index, state.input_count
+        state.ctx, state.STEP_INP, state.current_input_index, state.input_count
     )
 
     if state.current_input_index >= state.input_count:
