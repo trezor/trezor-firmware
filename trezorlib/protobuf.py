@@ -150,46 +150,11 @@ class MessageType:
     def __iter__(self):
         return self.__dict__.__iter__()
 
-    def __getattr__(self, attr):
-        if attr.startswith("_add_"):
-            return self._additem(attr[5:])
+    def keys(self):
+        return (name for name, _, _ in self.get_fields().values())
 
-        if attr.startswith("_extend_"):
-            return self._extenditem(attr[8:])
-
-        raise AttributeError(attr)
-
-    def _extenditem(self, attr):
-        def f(param):
-            try:
-                l = getattr(self, attr)
-            except AttributeError:
-                l = []
-                setattr(self, attr, l)
-
-            l += param
-
-        return f
-
-    def _additem(self, attr):
-        # Add new item for repeated field type
-        for v in self.get_fields().values():
-            if v[0] != attr:
-                continue
-            if not (v[2] & FLAG_REPEATED):
-                raise AttributeError
-
-            try:
-                l = getattr(self, v[0])
-            except AttributeError:
-                l = []
-                setattr(self, v[0], l)
-
-            item = v[1]()
-            l.append(item)
-            return lambda: item
-
-        raise AttributeError
+    def __getitem__(self, key):
+        return getattr(self, key)
 
     def _fill_missing(self):
         # fill missing fields
