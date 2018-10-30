@@ -61,7 +61,7 @@ async def sign_tx(ctx, msg):
 
     total_length = get_total_length(msg, data_total)
 
-    sha = HashWriter(sha3_256, keccak=True)
+    sha = HashWriter(sha3_256(keccak=True))
     sha.extend(rlp.encode_length(total_length, True))  # total length
 
     if msg.tx_type is not None:

@@ -30,7 +30,7 @@ class DecredPrefixHasher:
     """
 
     def __init__(self, tx: SignTx):
-        self.h_prefix = HashWriter(blake256)
+        self.h_prefix = HashWriter(blake256())
         self.last_output_bytes = None
         write_uint32(self.h_prefix, tx.version | DECRED_SERIALIZE_NO_WITNESS)
         write_varint(self.h_prefix, tx.inputs_count)

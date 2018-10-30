@@ -13,7 +13,7 @@ from apps.wallet.sign_tx.signing import write_varint
 
 
 def message_digest(message):
-    h = HashWriter(sha256)
+    h = HashWriter(sha256())
     signed_message_header = "Lisk Signed Message:\n"
     write_varint(h, len(signed_message_header))
     h.extend(signed_message_header)

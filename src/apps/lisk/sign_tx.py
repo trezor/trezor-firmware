@@ -25,7 +25,7 @@ async def sign_tx(ctx, msg):
     await layout.require_confirm_fee(ctx, transaction.amount, transaction.fee)
 
     txbytes = _get_transaction_bytes(transaction)
-    txhash = HashWriter(sha256)
+    txhash = HashWriter(sha256())
     for field in txbytes:
         txhash.extend(field)
     digest = txhash.get_digest()

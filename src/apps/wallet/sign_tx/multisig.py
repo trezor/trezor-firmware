@@ -50,7 +50,7 @@ def multisig_fingerprint(multisig: MultisigRedeemScriptType) -> bytes:
     # casting to bytes(), sorting on bytearray() is not supported in MicroPython
     pubkeys = sorted(pubkeys, key=lambda hd: bytes(hd.node.public_key))
 
-    h = HashWriter(sha256)
+    h = HashWriter(sha256())
     write_uint32(h, m)
     write_uint32(h, n)
     for hd in pubkeys:

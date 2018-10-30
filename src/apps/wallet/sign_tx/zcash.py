@@ -46,9 +46,9 @@ def derive_script_code(txi: TxInputType, pubkeyhash: bytes) -> bytearray:
 
 class Zip143:
     def __init__(self):
-        self.h_prevouts = HashWriter(blake2b, outlen=32, personal=b"ZcashPrevoutHash")
-        self.h_sequence = HashWriter(blake2b, outlen=32, personal=b"ZcashSequencHash")
-        self.h_outputs = HashWriter(blake2b, outlen=32, personal=b"ZcashOutputsHash")
+        self.h_prevouts = HashWriter(blake2b(outlen=32, personal=b"ZcashPrevoutHash"))
+        self.h_sequence = HashWriter(blake2b(outlen=32, personal=b"ZcashSequencHash"))
+        self.h_outputs = HashWriter(blake2b(outlen=32, personal=b"ZcashOutputsHash"))
 
     def add_prevouts(self, txi: TxInputType):
         write_bytes_reversed(self.h_prevouts, txi.prev_hash)
@@ -78,7 +78,7 @@ class Zip143:
         sighash: int,
     ) -> bytes:
         h_preimage = HashWriter(
-            blake2b, outlen=32, personal=b"ZcashSigHash\x19\x1b\xa8\x5b"
+            blake2b(outlen=32, personal=b"ZcashSigHash\x19\x1b\xa8\x5b")
         )  # BRANCH_ID = 0x5ba81b19 / Overwinter
 
         ensure(tx.overwintered)
@@ -123,7 +123,7 @@ class Zip243(Zip143):
         sighash: int,
     ) -> bytes:
         h_preimage = HashWriter(
-            blake2b, outlen=32, personal=b"ZcashSigHash\xbb\x09\xb8\x76"
+            blake2b(outlen=32, personal=b"ZcashSigHash\xbb\x09\xb8\x76")
         )  # BRANCH_ID = 0x76b809bb / Sapling
 
         ensure(tx.overwintered)

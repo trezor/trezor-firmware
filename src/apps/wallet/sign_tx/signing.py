@@ -64,7 +64,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
     # h_first is used to make sure the inputs and outputs streamed in Phase 1
     # are the same as in Phase 2.  it is thus not required to fully hash the
     # tx, as the SignTx info is streamed only once
-    h_first = HashWriter(sha256)  # not a real tx hash
+    h_first = HashWriter(sha256())  # not a real tx hash
 
     if coin.decred:
         hash143 = DecredPrefixHasher(tx)  # pseudo bip143 prefix hashing
@@ -333,7 +333,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             else:
                 raise ValueError("Unknown input script type")
 
-            h_witness = HashWriter(blake256)
+            h_witness = HashWriter(blake256())
             write_uint32(h_witness, tx.version | DECRED_SERIALIZE_WITNESS_SIGNING)
             write_varint(h_witness, tx.inputs_count)
 
@@ -348,7 +348,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                 h_witness, double=coin.sign_hash_double, reverse=False
             )
 
-            h_sign = HashWriter(blake256)
+            h_sign = HashWriter(blake256())
             write_uint32(h_sign, DECRED_SIGHASHALL)
             write_bytes(h_sign, prefix_hash)
             write_bytes(h_sign, witness_hash)
@@ -380,9 +380,9 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
 
         else:
             # hash of what we are signing with this input
-            h_sign = HashWriter(sha256)
+            h_sign = HashWriter(sha256())
             # same as h_first, checked before signing the digest
-            h_second = HashWriter(sha256)
+            h_second = HashWriter(sha256())
 
             if tx.overwintered:
                 write_uint32(
@@ -575,9 +575,9 @@ async def get_prevtx_output_value(
     tx = await request_tx_meta(tx_req, prev_hash)
 
     if coin.decred:
-        txh = HashWriter(blake256)
+        txh = HashWriter(blake256())
     else:
-        txh = HashWriter(sha256)
+        txh = HashWriter(sha256())
 
     if tx.overwintered:
         write_uint32(txh, tx.version | OVERWINTERED)  # nVersion | fOverwintered

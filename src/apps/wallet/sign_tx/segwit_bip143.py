@@ -25,9 +25,9 @@ class Bip143Error(ValueError):
 
 class Bip143:
     def __init__(self):
-        self.h_prevouts = HashWriter(sha256)
-        self.h_sequence = HashWriter(sha256)
-        self.h_outputs = HashWriter(sha256)
+        self.h_prevouts = HashWriter(sha256())
+        self.h_sequence = HashWriter(sha256())
+        self.h_outputs = HashWriter(sha256())
 
     def add_prevouts(self, txi: TxInputType):
         write_bytes_reversed(self.h_prevouts, txi.prev_hash)
@@ -56,7 +56,7 @@ class Bip143:
         pubkeyhash: bytes,
         sighash: int,
     ) -> bytes:
-        h_preimage = HashWriter(sha256)
+        h_preimage = HashWriter(sha256())
 
         ensure(not tx.overwintered)
 

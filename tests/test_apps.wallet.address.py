@@ -1,8 +1,8 @@
 from common import *
-
-from apps.wallet.sign_tx.signing import *
-from apps.common import coins
 from trezor.crypto import bip32, bip39
+
+from apps.common import coins
+from apps.wallet.sign_tx.signing import *
 
 
 class TestAddress(unittest.TestCase):
@@ -59,7 +59,7 @@ class TestAddress(unittest.TestCase):
 
         # pubkey OP_CHECKSIG
         script = unhexlify('210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac')
-        h = HashWriter(sha256)
+        h = HashWriter(sha256())
         write_bytes(h, script)
 
         address = address_p2wsh(
