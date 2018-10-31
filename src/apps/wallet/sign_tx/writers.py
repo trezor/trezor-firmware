@@ -33,7 +33,7 @@ def write_tx_input_check(w, i: TxInputType):
     for n in i.address_n:
         write_uint32(w, n)
     write_uint32(w, i.sequence)
-    write_uint32(w, i.amount or 0)
+    write_uint64(w, i.amount or 0)
 
 
 def write_tx_input_decred(w, i: TxInputType):
