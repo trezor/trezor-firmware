@@ -83,5 +83,15 @@
             "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
             "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"
         }
+    },
+    "misc:ADA": {
+        "wallet": {
+            "AdaLite": "https://adalite.io/app"
+        }
+    },
+    "misc:XLM": {
+        "wallet": {
+            "Account Viewer": "https://trezor.io/stellar/"
+        }
     }
 }

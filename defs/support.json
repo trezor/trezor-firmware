@@ -801,7 +801,7 @@
     "unsupported": {
       "bitcoin:CRW": "address_type collides with Bitcoin",
       "bitcoin:TRC": "address_type collides with Bitcoin",
-      "bitcoin:ZEN": "not implemented on T1",
+      "bitcoin:ZEN": "not implemented",
       "erc20:etc:PLAY": "(AUTO) duplicate key",
       "erc20:eth:A18:0": "(AUTO) duplicate key",
       "erc20:eth:A18:1": "(AUTO) duplicate key",
@@ -953,12 +953,12 @@
       "erc20:rin:NONE": "(AUTO) duplicate key",
       "erc20:rin:RDN": "(AUTO) duplicate key",
       "erc20:rop:NONE": "(AUTO) duplicate key",
-      "misc:ADA": "not implemented on T1",
-      "misc:LSK": "not implemented on T1",
-      "misc:ONT": "not implemented on T1",
-      "misc:XMR": "not implemented on T1",
-      "misc:XRP": "not implemented on T1",
-      "misc:XTZ": "not implemented on T1"
+      "misc:ADA": "not implemented",
+      "misc:LSK": "not implemented",
+      "misc:ONT": "not implemented",
+      "misc:XMR": "not implemented",
+      "misc:XRP": "not implemented",
+      "misc:XTZ": "not implemented"
     }
   },
   "trezor2": {
@@ -985,7 +985,7 @@
       "bitcoin:MUE": "2.0.8",
       "bitcoin:NMC": "2.0.5",
       "bitcoin:PTC": "2.0.8",
-      "bitcoin:RVN": "2.0.8",
+      "bitcoin:RVN": "soon",
       "bitcoin:SMART": "2.0.8",
       "bitcoin:TAZ": "2.0.7",
       "bitcoin:TBCH": "2.0.7",

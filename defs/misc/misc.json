@@ -11,7 +11,6 @@
     },
     {
         "name": "Stellar",
-        "notes": "In development",
         "slip44": 148,
         "curve": "ed25519",
         "shortcut": "XLM",
@@ -25,7 +24,6 @@
         "shortcut": "XMR",
         "slip44": 128,
         "curve": "secp256k1",
-        "notes": "In development",
         "links": {
             "Homepage": "https://getmonero.org",
             "Github": "https://github.com/monero-project/monero"
@@ -36,7 +34,6 @@
         "shortcut": "XRP",
         "slip44": 144,
         "curve": "secp256k1",
-        "notes": "In development",
         "links": {
             "Homepage": "https://ripple.com",
             "Github": "https://github.com/ripple/rippled"
@@ -57,7 +54,6 @@
         "shortcut": "XTZ",
         "slip44": 1729,
         "curve": "ed25519",
-        "notes": "In development",
         "links": {
             "Homepage": "https://tezos.com",
             "Github": "https://github.com/tezos/tezos"
@@ -68,7 +64,6 @@
         "shortcut": "ONT",
         "slip44": 1024,
         "curve": "nist256p1",
-        "notes": "In development",
         "links": {
             "Homepage": "https://ont.io",
             "Github": "https://github.com/ontio/ontology"
