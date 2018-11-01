@@ -101,13 +101,47 @@ def _validate(state: State):
 def _set_tx_extra(state: State):
     """
     Sets tx public keys into transaction's extra.
+    Extra field is supposed to be sorted (by sort_tx_extra() in the Monero)
+    Tag ordering: TX_EXTRA_TAG_PUBKEY, TX_EXTRA_TAG_ADDITIONAL_PUBKEYS, TX_EXTRA_NONCE
     """
-    state.tx.extra = _add_tx_pub_key_to_extra(state.tx.extra, state.tx_pub)
+    from apps.monero.xmr.serialize import int_serialize
+
+    # Extra buffer length computation
+    # TX_EXTRA_TAG_PUBKEY (1B) | tx_pub_key (32B)
+    extra_size = 33
+    offset = 0
+    num_keys = 0
+    len_size = 0
 
     if state.need_additional_txkeys:
-        state.tx.extra = _add_additional_tx_pub_keys_to_extra(
-            state.tx.extra, state.additional_tx_public_keys
-        )
+        num_keys = len(state.additional_tx_public_keys)
+        len_size = int_serialize.uvarint_size(num_keys)
+
+        # TX_EXTRA_TAG_ADDITIONAL_PUBKEYS (1B) | varint | keys
+        extra_size += 1 + len_size + 32 * num_keys
+
+    if state.extra_nonce:
+        extra_size += len(state.extra_nonce)
+
+    extra = bytearray(extra_size)
+    extra[0] = 1  # TX_EXTRA_TAG_PUBKEY
+    crypto.encodepoint_into(memoryview(extra)[1:], state.tx_pub)
+    offset += 33
+
+    if state.need_additional_txkeys:
+        extra[offset] = 0x4  # TX_EXTRA_TAG_ADDITIONAL_PUBKEYS
+        int_serialize.dump_uvarint_b_into(num_keys, extra, offset + 1)
+        offset += 1 + len_size
+
+        for idx in range(num_keys):
+            extra[offset : offset + 32] = state.additional_tx_public_keys[idx]
+            offset += 32
+
+    if state.extra_nonce:
+        utils.memcpy(extra, offset, state.extra_nonce, 0, len(state.extra_nonce))
+        state.extra_nonce = None
+
+    state.tx.extra = extra
 
 
 def _set_tx_prefix(state: State):
@@ -125,39 +159,6 @@ def _set_tx_prefix(state: State):
     state.tx_prefix_hasher = None
 
     state.full_message_hasher.set_message(state.tx_prefix_hash)
-
-
-def _add_tx_pub_key_to_extra(tx_extra, pub_key):
-    """
-    Adds public key to the extra
-    """
-    to_add = bytearray(33)
-    to_add[0] = 1  # TX_EXTRA_TAG_PUBKEY
-    crypto.encodepoint_into(memoryview(to_add)[1:], pub_key)
-    return tx_extra + to_add
-
-
-def _add_additional_tx_pub_keys_to_extra(tx_extra, pub_keys):
-    """
-    Adds all additional tx public keys to the extra buffer
-    """
-    from apps.monero.xmr.serialize import int_serialize
-
-    # format: variant_tag (0x4) | array len varint | 32B | 32B | ...
-    num_keys = len(pub_keys)
-    len_size = int_serialize.uvarint_size(num_keys)
-    buffer = bytearray(1 + len_size + 32 * num_keys)
-
-    buffer[0] = 0x4  # TX_EXTRA_TAG_ADDITIONAL_PUBKEYS
-    int_serialize.dump_uvarint_b_into(num_keys, buffer, 1)  # uvarint(num_keys)
-    offset = 1 + len_size
-
-    for idx in range(num_keys):
-        buffer[offset : offset + 32] = pub_keys[idx]
-        offset += 32
-
-    tx_extra += buffer
-    return tx_extra
 
 
 def _out_pk(state: State):
