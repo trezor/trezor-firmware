@@ -28,8 +28,17 @@ V2_BOOTLOADER_N = 3
 V2_CHUNK_SIZE = 1024 * 128
 
 
-def bytes_not(data: bytes) -> bytes:
-    return bytes(~b & 0xFF for b in data)
+def _transform_vendor_trust(data: bytes) -> bytes:
+    """Byte-swap and bit-invert the VendorTrust field.
+
+    Vendor trust is interpreted as a bitmask in a 16-bit little-endian integer,
+    with the added twist that 0 means set and 1 means unset.
+    We feed it to a `BitStruct` that expects a big-endian sequence where bits have
+    the traditional meaning. We must therefore do a bitwise negation of each byte,
+    and return them in reverse order. This is the same transformation both ways,
+    fortunately, so we don't need two separate functions.
+    """
+    return bytes(~b & 0xFF for b in data)[::-1]
 
 
 # fmt: off
@@ -43,12 +52,12 @@ Toif = c.Struct(
 
 
 VendorTrust = c.Transformed(c.BitStruct(
-    "reserved" / c.Padding(9),
+    "reserved" / c.Default(c.BitsInteger(9), 0),
     "show_vendor_string" / c.Flag,
     "require_user_click" / c.Flag,
     "red_background" / c.Flag,
     "delay" / c.BitsInteger(4),
-), bytes_not, 2, bytes_not, 2)
+), _transform_vendor_trust, 2, _transform_vendor_trust, 2)
 
 
 VendorHeader = c.Struct(
