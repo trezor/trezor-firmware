@@ -109,6 +109,8 @@ class State:
 
         # simple stub containing items hashed into tx prefix
         self.tx = TprefixStub(vin=[], vout=[], extra=b"")
+        # TX_EXTRA_NONCE extra field for tx.extra, due to sort_tx_extra()
+        self.extra_nonce = None
 
         # contains an array where each item denotes the input's position
         # (inputs are sorted by key images)

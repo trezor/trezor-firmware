@@ -324,7 +324,7 @@ def _process_payment_id(state: State, tsx_data: MoneroTransactionData):
     extra_buff[1] = lextra + 1
     extra_buff[2] = extra_prefix
     extra_buff[3:] = extra_nonce
-    state.tx.extra = extra_buff
+    state.extra_nonce = extra_buff
 
 
 def _get_key_for_payment_id_encryption(destinations: list, change_addr=None):
