@@ -37,7 +37,10 @@ def coinmarketcap_init(api_key, refresh=None):
     force_refresh = refresh is True
     disable_refresh = refresh is False
     try:
-        mtime = os.path.getmtime(COINMAKETCAP_CACHE)
+        try:
+            mtime = os.path.getmtime(COINMAKETCAP_CACHE)
+        except FileNotFoundError:
+            mtime = 0
         cache_is_fresh = mtime > time.time() - 3600
         if disable_refresh or (cache_is_fresh and not force_refresh):
             print("Using cached market cap data")
