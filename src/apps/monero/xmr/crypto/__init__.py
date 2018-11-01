@@ -107,6 +107,7 @@ def sc_init_into(r, x):
     return tcry.init256_modm(r, x)
 
 
+sc_copy = tcry.init256_modm
 sc_get64 = tcry.get256_modm
 sc_check = tcry.check256_modm
 check_sc = tcry.check256_modm
