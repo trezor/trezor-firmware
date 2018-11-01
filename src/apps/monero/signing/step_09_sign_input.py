@@ -10,7 +10,8 @@ from .state import State
 
 from apps.monero.layout import confirms
 from apps.monero.signing import RctType
-from apps.monero.xmr import crypto, serialize
+from apps.monero.xmr import crypto
+from apps.monero.xmr.serialize import int_serialize
 
 if False:
     from trezor.messages.MoneroTransactionSourceEntry import (
@@ -66,7 +67,7 @@ async def sign_input(
         raise ValueError("HMAC is not correct")
 
     gc.collect()
-    state.mem_trace(1)
+    state.mem_trace(1, True)
 
     if state.rct_type == RctType.Simple:
         # both pseudo_out and its mask were offloaded so we need to
@@ -78,8 +79,7 @@ async def sign_input(
         if not crypto.ct_equals(pseudo_out_hmac_comp, pseudo_out_hmac):
             raise ValueError("HMAC is not correct")
 
-        gc.collect()
-        state.mem_trace(2)
+        state.mem_trace(2, True)
 
         from apps.monero.xmr.crypto import chacha_poly
 
@@ -102,8 +102,7 @@ async def sign_input(
         )
     )
 
-    gc.collect()
-    state.mem_trace(3)
+    state.mem_trace(3, True)
 
     # Basic setup, sanity check
     index = src_entr.real_output
@@ -126,13 +125,15 @@ async def sign_input(
         "Real source entry's mask does not equal spend key's",
     )
 
-    gc.collect()
-    state.mem_trace(4)
+    state.mem_trace(4, True)
+    mg_buff = bytearray(_mg_size(len(src_entr.outputs)))
 
     from apps.monero.xmr import mlsag
 
     if state.rct_type == RctType.Simple:
         ring_pubkeys = [x.key for x in src_entr.outputs]
+        src_entr = None
+
         mg = mlsag.generate_mlsag_simple(
             state.full_message,
             ring_pubkeys,
@@ -143,10 +144,14 @@ async def sign_input(
             index,
         )
 
+        del (ring_pubkeys, input_secret_key, pseudo_out_alpha, pseudo_out_c)
+
     else:
         # Full RingCt, only one input
         txn_fee_key = crypto.scalarmult_h(state.fee)
         ring_pubkeys = [[x.key] for x in src_entr.outputs]
+        src_entr = None
+
         mg = mlsag.generate_mlsag_full(
             state.full_message,
             ring_pubkeys,
@@ -158,35 +163,70 @@ async def sign_input(
             txn_fee_key,
         )
 
-    gc.collect()
-    state.mem_trace(5)
+        del (ring_pubkeys, input_secret_key, txn_fee_key)
+
+    del (mlsag, src_entr)
+    state.mem_trace(5, True)
 
     # Encode
-    mgs = _recode_msg([mg])
-
-    gc.collect()
-    state.mem_trace(6)
+    mg_buffer = _mg_serialize(mg, mg_buff)
+    state.mem_trace(6, True)
 
     from trezor.messages.MoneroTransactionSignInputAck import (
         MoneroTransactionSignInputAck,
     )
 
-    return MoneroTransactionSignInputAck(
-        signature=serialize.dump_msg_gc(mgs[0], preallocate=488)
-    )
+    return MoneroTransactionSignInputAck(signature=mg_buffer)
 
 
-def _recode_msg(mgs):
+def _mg_size(num_outs):
     """
-    Recodes MGs signatures from raw forms to bytearrays so it works with serialization
+    Computes size of the MgSig
+    :param num_outs:
+    :return:
     """
-    for idx in range(len(mgs)):
-        mgs[idx].cc = crypto.encodeint(mgs[idx].cc)
-        if hasattr(mgs[idx], "II") and mgs[idx].II:
-            for i in range(len(mgs[idx].II)):
-                mgs[idx].II[i] = crypto.encodepoint(mgs[idx].II[i])
+    size = 32  # cc
+    mg_cols = num_outs
+    mg_rows = 2
+    cols_b_size = int_serialize.uvarint_size(mg_cols)
+    rows_b_size = 1
+    size += cols_b_size + mg_cols * (rows_b_size + mg_rows * 32)
+    return size
 
-        for i in range(len(mgs[idx].ss)):
-            for j in range(len(mgs[idx].ss[i])):
-                mgs[idx].ss[i][j] = crypto.encodeint(mgs[idx].ss[i][j])
-    return mgs
+
+def _mg_serialize(mg, buff):
+    """
+    Serializes MgSig structure: (("ss", KeyM), ("cc", ECKey))
+    :param mg:
+    :return:
+    """
+    size = len(buff)
+    mg_cols = len(mg.ss)
+    mg_rows = len(mg.ss[0])
+    cols_b_size = int_serialize.uvarint_size(mg_cols)
+    rows_b_size = int_serialize.uvarint_size(mg_rows)
+    offset = 0
+
+    int_serialize.dump_uvarint_b_into(mg_cols, buff, offset)
+    offset += cols_b_size
+
+    for i in range(mg_cols):
+        utils.ensure(len(mg.ss[i]) == mg_rows, "Irregular matrix shape")
+
+        int_serialize.dump_uvarint_b_into(mg_rows, buff, offset)
+        offset += rows_b_size
+
+        for j in range(mg_rows):
+            crypto.encodeint_into(buff, mg.ss[i][j], offset)
+            offset += 32
+
+        mg.ss[i] = None
+        gc.collect()
+
+    mg.ss = None
+
+    crypto.encodeint_into(buff, mg.cc, offset)
+    offset += 32
+
+    utils.ensure(offset == size, "Invalid mg size computation")
+    return buff
