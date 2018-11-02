@@ -126,7 +126,7 @@ async def sign_input(
     )
 
     state.mem_trace(4, True)
-    mg_buff = bytearray(_mg_size(len(src_entr.outputs)))
+    mg_buffer = bytearray(_mg_size(len(src_entr.outputs)))
 
     from apps.monero.xmr import mlsag
 
@@ -134,7 +134,7 @@ async def sign_input(
         ring_pubkeys = [x.key for x in src_entr.outputs]
         src_entr = None
 
-        mg = mlsag.generate_mlsag_simple(
+        mlsag.generate_mlsag_simple(
             state.full_message,
             ring_pubkeys,
             input_secret_key,
@@ -142,6 +142,7 @@ async def sign_input(
             pseudo_out_c,
             kLRki,
             index,
+            mg_buffer,
         )
 
         del (ring_pubkeys, input_secret_key, pseudo_out_alpha, pseudo_out_c)
@@ -152,7 +153,7 @@ async def sign_input(
         ring_pubkeys = [[x.key] for x in src_entr.outputs]
         src_entr = None
 
-        mg = mlsag.generate_mlsag_full(
+        mlsag.generate_mlsag_full(
             state.full_message,
             ring_pubkeys,
             [input_secret_key],
@@ -161,16 +162,13 @@ async def sign_input(
             kLRki,
             index,
             txn_fee_key,
+            mg_buffer,
         )
 
         del (ring_pubkeys, input_secret_key, txn_fee_key)
 
     del (mlsag, src_entr)
     state.mem_trace(5, True)
-
-    # Encode
-    mg_buffer = _mg_serialize(mg, mg_buff)
-    state.mem_trace(6, True)
 
     from trezor.messages.MoneroTransactionSignInputAck import (
         MoneroTransactionSignInputAck,
@@ -192,41 +190,3 @@ def _mg_size(num_outs):
     rows_b_size = 1
     size += cols_b_size + mg_cols * (rows_b_size + mg_rows * 32)
     return size
-
-
-def _mg_serialize(mg, buff):
-    """
-    Serializes MgSig structure: (("ss", KeyM), ("cc", ECKey))
-    :param mg:
-    :return:
-    """
-    size = len(buff)
-    mg_cols = len(mg.ss)
-    mg_rows = len(mg.ss[0])
-    cols_b_size = int_serialize.uvarint_size(mg_cols)
-    rows_b_size = int_serialize.uvarint_size(mg_rows)
-    offset = 0
-
-    int_serialize.dump_uvarint_b_into(mg_cols, buff, offset)
-    offset += cols_b_size
-
-    for i in range(mg_cols):
-        utils.ensure(len(mg.ss[i]) == mg_rows, "Irregular matrix shape")
-
-        int_serialize.dump_uvarint_b_into(mg_rows, buff, offset)
-        offset += rows_b_size
-
-        for j in range(mg_rows):
-            crypto.encodeint_into(buff, mg.ss[i][j], offset)
-            offset += 32
-
-        mg.ss[i] = None
-        gc.collect()
-
-    mg.ss = None
-
-    crypto.encodeint_into(buff, mg.cc, offset)
-    offset += 32
-
-    utils.ensure(offset == size, "Invalid mg size computation")
-    return buff

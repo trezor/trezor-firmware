@@ -45,11 +45,22 @@ Author: Dusan Klinec, ph4r05, 2018
 
 import gc
 
+from trezor import utils
+
 from apps.monero.xmr import crypto
+from apps.monero.xmr.serialize import int_serialize
 
 
 def generate_mlsag_full(
-    message, pubs, in_sk, out_sk_mask, out_pk_commitments, kLRki, index, txn_fee_key
+    message,
+    pubs,
+    in_sk,
+    out_sk_mask,
+    out_pk_commitments,
+    kLRki,
+    index,
+    txn_fee_key,
+    mg_buff,
 ):
     cols = len(pubs)
     if cols == 0:
@@ -110,10 +121,10 @@ def generate_mlsag_full(
     del (pubs, tmp_mi_rows, tmp_pt)
     gc.collect()
 
-    return generate_mlsag(message, M, sk, kLRki, index, rows)
+    return generate_mlsag(message, M, sk, kLRki, index, rows, mg_buff)
 
 
-def generate_mlsag_simple(message, pubs, in_sk, a, cout, kLRki, index):
+def generate_mlsag_simple(message, pubs, in_sk, a, cout, kLRki, index, mg_buff):
     """
     MLSAG for RctType.Simple
     :param message: the full message to be signed (actually its hash)
@@ -123,7 +134,7 @@ def generate_mlsag_simple(message, pubs, in_sk, a, cout, kLRki, index):
     :param cout: pseudo output commitment; point, decoded; better name: pseudo_out_c
     :param kLRki: used only in multisig, currently not implemented
     :param index: specifies corresponding public key to the `in_sk` in the pubs array
-    :return: MgSig
+    :param mg_buff: buffer to store the signature to
     """
     # Monero signs inputs separately, so `rows` always equals 2 (pubkey, commitment)
     # and `dsRows` is always 1 (denotes where the pubkeys "end")
@@ -152,7 +163,7 @@ def generate_mlsag_simple(message, pubs, in_sk, a, cout, kLRki, index):
     del (pubs)
     gc.collect()
 
-    return generate_mlsag(message, M, sk, kLRki, index, dsRows)
+    return generate_mlsag(message, M, sk, kLRki, index, dsRows, mg_buff)
 
 
 def gen_mlsag_assert(pk, xx, kLRki, index, dsRows):
@@ -183,13 +194,10 @@ def gen_mlsag_assert(pk, xx, kLRki, index, dsRows):
     return rows, cols
 
 
-def generate_first_c_and_key_images(
-    message, rv, pk, xx, kLRki, index, dsRows, rows, cols
-):
+def generate_first_c_and_key_images(message, pk, xx, kLRki, index, dsRows, rows, cols):
     """
     MLSAG computation - the part with secret keys
     :param message: the full message to be signed (actually its hash)
-    :param rv: MgSig
     :param pk: matrix of public keys and commitments
     :param xx: input secret array composed of a private key and commitment mask
     :param kLRki: used only in multisig, currently not implemented
@@ -198,7 +206,7 @@ def generate_first_c_and_key_images(
     :param rows: total number of rows
     :param cols: size of ring
     """
-    rv.II = _key_vector(dsRows)
+    II = _key_vector(dsRows)
     alpha = _key_vector(rows)
 
     tmp_buff = bytearray(32)
@@ -226,7 +234,7 @@ def generate_first_c_and_key_images(
             # Ri = alpha_i * H(P_i)
             crypto.scalarmult_into(aHPi, Hi, alpha[i])
             # key image
-            rv.II[i] = crypto.scalarmult(Hi, xx[i])
+            II[i] = crypto.scalarmult(Hi, xx[i])
             _hash_point(hasher, aGi, tmp_buff)
             _hash_point(hasher, aHPi, tmp_buff)
 
@@ -243,10 +251,10 @@ def generate_first_c_and_key_images(
     # the first c
     c_old = hasher.digest()
     c_old = crypto.decodeint(c_old)
-    return c_old, alpha
+    return c_old, II, alpha
 
 
-def generate_mlsag(message, pk, xx, kLRki, index, dsRows):
+def generate_mlsag(message, pk, xx, kLRki, index, dsRows, mg_buff):
     """
     Multilayered Spontaneous Anonymous Group Signatures (MLSAG signatures)
 
@@ -256,43 +264,57 @@ def generate_mlsag(message, pk, xx, kLRki, index, dsRows):
     :param kLRki: used only in multisig, currently not implemented
     :param index: specifies corresponding public key to the `xx`'s private key in the `pk` array
     :param dsRows: separates pubkeys from commitment
-    :return MgSig
+    :param mg_buff: mg signature buffer
     """
-    from apps.monero.xmr.serialize_messages.tx_full import MgSig
-
     rows, cols = gen_mlsag_assert(pk, xx, kLRki, index, dsRows)
+    rows_b_size = int_serialize.uvarint_size(rows)
+    cols_b_size = int_serialize.uvarint_size(cols)
+    int_serialize.dump_uvarint_b_into(cols, mg_buff)
 
-    rv = MgSig()
-    rv.cc = crypto.new_scalar()
+    # Computes offset to the mg_buffer
+    # mg_buffer format: (("ss", KeyM), ("cc", ECKey))
+    # ss[i][j], i over cols, j over rows
+    def buff_offset(col):
+        return cols_b_size + col * (rows_b_size + rows * 32)
+
+    cc = crypto.new_scalar()  # rv.cc
     c = crypto.new_scalar()
     L = crypto.new_point()
     R = crypto.new_point()
     Hi = crypto.new_point()
 
     # calculates the "first" c, key images and random scalars alpha
-    c_old, alpha = generate_first_c_and_key_images(
-        message, rv, pk, xx, kLRki, index, dsRows, rows, cols
+    c_old, II, alpha = generate_first_c_and_key_images(
+        message, pk, xx, kLRki, index, dsRows, rows, cols
     )
 
     i = (index + 1) % cols
     if i == 0:
-        crypto.sc_copy(rv.cc, c_old)
+        crypto.sc_copy(cc, c_old)
 
-    rv.ss = [None] * cols
+    ss = [crypto.new_scalar() for _ in range(rows)]
     tmp_buff = bytearray(32)
+
     while i != index:
-        rv.ss[i] = _generate_random_vector(rows)
         hasher = _hasher_message(message)
+
+        # Serialize size of the row
+        offset = buff_offset(i)
+        int_serialize.dump_uvarint_b_into(rows, mg_buff, offset)
+        offset += rows_b_size
+
+        for x in ss:
+            crypto.random_scalar(x)
 
         for j in range(dsRows):
             # L = rv.ss[i][j] * G + c_old * pk[i][j]
             crypto.add_keys2_into(
-                L, rv.ss[i][j], c_old, crypto.decodepoint_into(Hi, pk[i][j])
+                L, ss[j], c_old, crypto.decodepoint_into(Hi, pk[i][j])
             )
             crypto.hash_to_point_into(Hi, pk[i][j])
 
             # R = rv.ss[i][j] * H(pk[i][j]) + c_old * Ip[j]
-            crypto.add_keys3_into(R, rv.ss[i][j], Hi, c_old, rv.II[j])
+            crypto.add_keys3_into(R, ss[j], Hi, c_old, II[j])
 
             hasher.update(pk[i][j])
             _hash_point(hasher, L, tmp_buff)
@@ -301,10 +323,14 @@ def generate_mlsag(message, pk, xx, kLRki, index, dsRows):
         for j in range(dsRows, rows):
             # again, omitting R here as discussed above
             crypto.add_keys2_into(
-                L, rv.ss[i][j], c_old, crypto.decodepoint_into(Hi, pk[i][j])
+                L, ss[j], c_old, crypto.decodepoint_into(Hi, pk[i][j])
             )
             hasher.update(pk[i][j])
             _hash_point(hasher, L, tmp_buff)
+
+        for si in range(rows):
+            crypto.encodeint_into(tmp_buff, ss[si])
+            utils.memcpy(mg_buff, offset + 32 * si, tmp_buff, 0, 32)
 
         crypto.decodeint_into(c, hasher.digest())
         crypto.sc_copy(c_old, c)
@@ -312,16 +338,24 @@ def generate_mlsag(message, pk, xx, kLRki, index, dsRows):
         i = (i + 1) % cols
 
         if i == 0:
-            crypto.sc_copy(rv.cc, c_old)
+            crypto.sc_copy(cc, c_old)
         gc.collect()
 
-    del rv.II
+    del II
 
-    rv.ss[index] = [None] * rows
+    # Finalizing rv.ss by processing rv.ss[index]
+    offset = buff_offset(index)
+    int_serialize.dump_uvarint_b_into(rows, mg_buff, offset)
+    offset += rows_b_size
+
     for j in range(rows):
-        rv.ss[index][j] = crypto.sc_mulsub(c, xx[j], alpha[j])
+        crypto.sc_mulsub_into(ss[j], c, xx[j], alpha[j])
+        crypto.encodeint_into(tmp_buff, ss[j])
+        utils.memcpy(mg_buff, offset + 32 * j, tmp_buff, 0, 32)
 
-    return rv
+    # rv.cc
+    utils.memcpy(mg_buff, len(mg_buff) - 32, crypto.encodeint_into(tmp_buff, cc), 0, 32)
+    utils.ensure(buff_offset(cols) + 32 == len(mg_buff), "Invalid mg_buff size")
 
 
 def _key_vector(rows):
