@@ -14,6 +14,7 @@ import hashlib
 
 from trezorlib.client import TrezorClient
 from trezorlib.transport import enumerate_devices
+from trezorlib.ui import ClickUI
 
 
 def wait_for_devices():
@@ -41,7 +42,7 @@ def choose_device(devices):
     sys.stderr.write("Available devices:\n")
     for d in devices:
         try:
-            client = TrezorClient(d)
+            client = TrezorClient(d, ui=ClickUI)
         except IOError:
             sys.stderr.write("[-] <device is currently in use>\n")
             continue
@@ -72,7 +73,7 @@ def main():
 
     devices = wait_for_devices()
     transport = choose_device(devices)
-    client = TrezorClient(transport)
+    client = TrezorClient(transport, ui=ClickUI)
 
     rootdir = os.environ['encfs_root']  # Read "man encfs" for more
     passw_file = os.path.join(rootdir, 'password.dat')
