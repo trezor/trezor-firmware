@@ -123,3 +123,12 @@ async def transaction_step(ctx, step, sub_step=None, sub_step_total=None):
     text = Text("Signing transaction", ui.ICON_SEND, icon_color=ui.BLUE)
     text.normal(*info)
     text.render()
+
+
+@ui.layout
+async def keyimage_sync_step(ctx, current, total_num):
+    if current is None:
+        return
+    text = Text("Syncing", ui.ICON_SEND, icon_color=ui.BLUE)
+    text.normal("%d/%d" % (current + 1, total_num))
+    text.render()
