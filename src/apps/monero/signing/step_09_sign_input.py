@@ -11,7 +11,6 @@ from .state import State
 from apps.monero.layout import confirms
 from apps.monero.signing import RctType
 from apps.monero.xmr import crypto
-from apps.monero.xmr.serialize import int_serialize
 
 if False:
     from trezor.messages.MoneroTransactionSourceEntry import (
@@ -135,7 +134,7 @@ async def sign_input(
     )
 
     state.mem_trace(4, True)
-    mg_buffer = bytearray(_mg_size(len(src_entr.outputs)))
+    mg_buffer = []
 
     from apps.monero.xmr import mlsag
 
@@ -184,18 +183,3 @@ async def sign_input(
     )
 
     return MoneroTransactionSignInputAck(signature=mg_buffer)
-
-
-def _mg_size(num_outs):
-    """
-    Computes size of the MgSig
-    :param num_outs:
-    :return:
-    """
-    size = 32  # cc
-    mg_cols = num_outs
-    mg_rows = 2
-    cols_b_size = int_serialize.uvarint_size(mg_cols)
-    rows_b_size = 1
-    size += cols_b_size + mg_cols * (rows_b_size + mg_rows * 32)
-    return size

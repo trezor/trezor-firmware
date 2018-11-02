@@ -45,8 +45,6 @@ Author: Dusan Klinec, ph4r05, 2018
 
 import gc
 
-from trezor import utils
-
 from apps.monero.xmr import crypto
 from apps.monero.xmr.serialize import int_serialize
 
@@ -268,15 +266,12 @@ def generate_mlsag(message, pk, xx, kLRki, index, dsRows, mg_buff):
     """
     rows, cols = gen_mlsag_assert(pk, xx, kLRki, index, dsRows)
     rows_b_size = int_serialize.uvarint_size(rows)
-    cols_b_size = int_serialize.uvarint_size(cols)
-    int_serialize.dump_uvarint_b_into(cols, mg_buff)
 
-    # Computes offset to the mg_buffer
-    # mg_buffer format: (("ss", KeyM), ("cc", ECKey))
-    # ss[i][j], i over cols, j over rows
-    def buff_offset(col):
-        return cols_b_size + col * (rows_b_size + rows * 32)
+    # Preallocation of the chunked buffer, len + cols + cc
+    for _ in range(1 + cols + 1):
+        mg_buff.append(None)
 
+    mg_buff[0] = int_serialize.dump_uvarint_b(cols)
     cc = crypto.new_scalar()  # rv.cc
     c = crypto.new_scalar()
     L = crypto.new_point()
@@ -299,9 +294,8 @@ def generate_mlsag(message, pk, xx, kLRki, index, dsRows, mg_buff):
         hasher = _hasher_message(message)
 
         # Serialize size of the row
-        offset = buff_offset(i)
-        int_serialize.dump_uvarint_b_into(rows, mg_buff, offset)
-        offset += rows_b_size
+        mg_buff[i + 1] = bytearray(rows_b_size + 32 * rows)
+        int_serialize.dump_uvarint_b_into(rows, mg_buff[i + 1])
 
         for x in ss:
             crypto.random_scalar(x)
@@ -329,8 +323,7 @@ def generate_mlsag(message, pk, xx, kLRki, index, dsRows, mg_buff):
             _hash_point(hasher, L, tmp_buff)
 
         for si in range(rows):
-            crypto.encodeint_into(tmp_buff, ss[si])
-            utils.memcpy(mg_buff, offset + 32 * si, tmp_buff, 0, 32)
+            crypto.encodeint_into(mg_buff[i + 1], ss[si], rows_b_size + 32 * si)
 
         crypto.decodeint_into(c, hasher.digest())
         crypto.sc_copy(c_old, c)
@@ -344,18 +337,14 @@ def generate_mlsag(message, pk, xx, kLRki, index, dsRows, mg_buff):
     del II
 
     # Finalizing rv.ss by processing rv.ss[index]
-    offset = buff_offset(index)
-    int_serialize.dump_uvarint_b_into(rows, mg_buff, offset)
-    offset += rows_b_size
-
+    mg_buff[index + 1] = bytearray(rows_b_size + 32 * rows)
+    int_serialize.dump_uvarint_b_into(rows, mg_buff[index + 1])
     for j in range(rows):
         crypto.sc_mulsub_into(ss[j], c, xx[j], alpha[j])
-        crypto.encodeint_into(tmp_buff, ss[j])
-        utils.memcpy(mg_buff, offset + 32 * j, tmp_buff, 0, 32)
+        crypto.encodeint_into(mg_buff[index + 1], ss[j], rows_b_size + 32 * j)
 
     # rv.cc
-    utils.memcpy(mg_buff, len(mg_buff) - 32, crypto.encodeint_into(tmp_buff, cc), 0, 32)
-    utils.ensure(buff_offset(cols) + 32 == len(mg_buff), "Invalid mg_buff size")
+    mg_buff[-1] = crypto.encodeint(cc)
 
 
 def _key_vector(rows):
