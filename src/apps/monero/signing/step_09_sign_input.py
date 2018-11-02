@@ -134,14 +134,14 @@ async def sign_input(
     )
 
     state.mem_trace(4, True)
-    mg_buffer = []
 
     from apps.monero.xmr import mlsag
 
-    if state.rct_type == RctType.Simple:
-        ring_pubkeys = [x.key for x in src_entr.outputs]
-        src_entr = None
+    mg_buffer = []
+    ring_pubkeys = [x.key for x in src_entr.outputs]
+    del src_entr
 
+    if state.rct_type == RctType.Simple:
         mlsag.generate_mlsag_simple(
             state.full_message,
             ring_pubkeys,
@@ -153,18 +153,15 @@ async def sign_input(
             mg_buffer,
         )
 
-        del (ring_pubkeys, input_secret_key, pseudo_out_alpha, pseudo_out_c)
+        del (input_secret_key, pseudo_out_alpha, pseudo_out_c)
 
     else:
         # Full RingCt, only one input
         txn_fee_key = crypto.scalarmult_h(state.fee)
-        ring_pubkeys = [[x.key] for x in src_entr.outputs]
-        src_entr = None
-
         mlsag.generate_mlsag_full(
             state.full_message,
             ring_pubkeys,
-            [input_secret_key],
+            input_secret_key,
             state.output_sk_masks,
             state.output_pk_commitments,
             kLRki,
@@ -173,9 +170,9 @@ async def sign_input(
             mg_buffer,
         )
 
-        del (ring_pubkeys, input_secret_key, txn_fee_key)
+        del (input_secret_key, txn_fee_key)
 
-    del (mlsag, src_entr)
+    del (mlsag, ring_pubkeys)
     state.mem_trace(5, True)
 
     from trezor.messages.MoneroTransactionSignInputAck import (
