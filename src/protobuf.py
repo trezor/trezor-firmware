@@ -275,14 +275,14 @@ async def dump_message(writer, msg, fields=None):
             elif ftype is BoolType:
                 await dump_uvarint(writer, int(svalue))
 
-            elif ftype is BytesType and is_chunked(svalue):
-                await dump_uvarint(writer, len_list_bytes(svalue))
-                for sub_svalue in svalue:
-                    await writer.awrite(sub_svalue)
-
             elif ftype is BytesType:
-                await dump_uvarint(writer, len(svalue))
-                await writer.awrite(svalue)
+                if isinstance(svalue, list):
+                    await dump_uvarint(writer, _count_bytes_list(svalue))
+                    for sub_svalue in svalue:
+                        await writer.awrite(sub_svalue)
+                else:
+                    await dump_uvarint(writer, len(svalue))
+                    await writer.awrite(svalue)
 
             elif ftype is UnicodeType:
                 svalue = svalue.encode()
@@ -334,9 +334,10 @@ def count_message(msg, fields=None):
 
         elif ftype is BytesType:
             for svalue in fvalue:
-                svalue = (
-                    len(svalue) if not is_chunked(svalue) else len_list_bytes(svalue)
-                )
+                if isinstance(svalue, list):
+                    svalue = _count_bytes_list(svalue)
+                else:
+                    svalue = len(svalue)
                 nbytes += count_uvarint(svalue)
                 nbytes += svalue
 
@@ -360,15 +361,7 @@ def count_message(msg, fields=None):
     return nbytes
 
 
-def is_chunked(svalue):
-    return (
-        isinstance(svalue, list)
-        and len(svalue) > 0
-        and not isinstance(svalue[0], (int, bool))
-    )
-
-
-def len_list_bytes(svalue):
+def _count_bytes_list(svalue):
     res = 0
     for x in svalue:
         res += len(x)
