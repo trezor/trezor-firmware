@@ -169,10 +169,9 @@ class ProtocolMixin(object):
         super(ProtocolMixin, self).__init__(*args, **kwargs)
         self.state = state
         self.init_device()
-        self.tx_api = None
 
     def set_tx_api(self, tx_api):
-        self.tx_api = tx_api
+        warnings.warn("set_tx_api is deprecated, use new arguments to sign_tx")
 
     def init_device(self):
         resp = self.call(proto.Initialize(state=self.state))
@@ -210,31 +209,6 @@ class ProtocolMixin(object):
 
     def get_device_id(self):
         return self.features.device_id
-
-    def _prepare_sign_tx(self, inputs, outputs):
-        tx = proto.TransactionType()
-        tx.inputs = inputs
-        tx.outputs = outputs
-
-        txes = {None: tx}
-
-        for inp in inputs:
-            if inp.prev_hash in txes:
-                continue
-
-            if inp.script_type in (
-                proto.InputScriptType.SPENDP2SHWITNESS,
-                proto.InputScriptType.SPENDWITNESS,
-            ):
-                continue
-
-            if not self.tx_api:
-                raise RuntimeError("TX_API not defined")
-
-            prev_tx = self.tx_api.get_tx(inp.prev_hash.hex())
-            txes[inp.prev_hash] = prev_tx
-
-        return txes
 
     @tools.expect(proto.Success, field="message")
     def clear_session(self):

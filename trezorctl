@@ -21,6 +21,7 @@
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 import base64
+import decimal
 import json
 import os
 import sys
@@ -766,6 +767,7 @@ def get_public_node(connect, coin, address, curve, script_type, show_display):
 def sign_tx(connect, coin):
     client = connect()
     if coin in coins.tx_api:
+        coin_data = coins.by_name[coin]
         txapi = coins.tx_api[coin]
     else:
         click.echo('Coin "%s" is not recognized.' % coin, err=True)
@@ -773,8 +775,6 @@ def sign_tx(connect, coin):
             "Supported coin types: %s" % ", ".join(coins.tx_api.keys()), err=True
         )
         sys.exit(1)
-
-    client.set_tx_api(txapi)
 
     def default_script_type(address_n):
         script_type = "address"
@@ -791,6 +791,7 @@ def sign_tx(connect, coin):
         return bytes.fromhex(txid), int(vout)
 
     inputs = []
+    txes = {}
     while True:
         click.echo()
         prev = click.prompt(
@@ -800,7 +801,15 @@ def sign_tx(connect, coin):
             break
         prev_hash, prev_index = prev
         address_n = click.prompt("BIP-32 path to derive the key", type=tools.parse_path)
-        amount = click.prompt("Input amount (satoshis)", type=int, default=0)
+        try:
+            tx = txapi[prev_hash]
+            txes[prev_hash] = tx
+            amount = tx.bin_outputs[prev_index].amount
+            click.echo("Prefilling input amount: {}".format(amount))
+        except Exception as e:
+            print(e)
+            click.echo("Failed to fetch transation. This might bite you later.")
+            amount = click.prompt("Input amount (satoshis)", type=int, default=0)
         sequence = click.prompt(
             "Sequence Number to use (RBF opt-in enabled by default)",
             type=int,
@@ -825,14 +834,14 @@ def sign_tx(connect, coin):
             script_type=script_type,
             sequence=sequence,
         )
-        if txapi.bip115:
+        if coin_data["bip115"]:
             prev_output = txapi.get_tx(prev_hash.hex()).bin_outputs[prev_index]
             new_input.prev_block_hash_bip115 = prev_output.block_hash
             new_input.prev_block_height_bip115 = prev_output.block_height
 
         inputs.append(new_input)
 
-    if txapi.bip115:
+    if coin_data["bip115"]:
         current_block_height = txapi.current_height()
         # Zencash recommendation for the better protection
         block_height = current_block_height - 300
@@ -878,14 +887,14 @@ def sign_tx(connect, coin):
             )
         )
 
-    tx_version = click.prompt("Transaction version", type=int, default=2)
-    tx_locktime = click.prompt("Transaction locktime", type=int, default=0)
-    tx_timestamp = click.prompt(
-        "Transaction timestamp (Capricoin)", type=int, default=None
-    )
+    signtx = proto.SignTx()
+    signtx.version = click.prompt("Transaction version", type=int, default=2)
+    signtx.lock_time = click.prompt("Transaction locktime", type=int, default=0)
+    if coin == "Capricoin":
+        signtx.timestamp = click.prompt("Transaction timestamp", type=int)
 
     _, serialized_tx = btc.sign_tx(
-        client, coin, inputs, outputs, tx_version, tx_locktime, timestamp=tx_timestamp
+        client, coin, inputs, outputs, details=signtx, prev_txes=txes
     )
 
     client.close()

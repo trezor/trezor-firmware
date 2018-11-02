@@ -72,7 +72,22 @@ def verify_message(client, coin_name, address, signature, message):
 
 @session
 def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
-    my_tx = messages.TransactionType(inputs=inputs, outputs=outputs)
+    # set up a transactions dict
+    txes = {None: messages.TransactionType(inputs=inputs, outputs=outputs)}
+    # preload all relevant transactions ahead of time
+    for inp in inputs:
+        if inp.script_type not in (
+            messages.InputScriptType.SPENDP2SHWITNESS,
+            messages.InputScriptType.SPENDWITNESS,
+            messages.InputScriptType.EXTERNAL,
+        ):
+            try:
+                prev_tx = prev_txes[inp.prev_hash]
+            except Exception as e:
+                raise ValueError("Could not retrieve prev_tx") from e
+            if not isinstance(prev_tx, messages.TransactionType):
+                raise ValueError("Invalid value for prev_tx") from None
+            txes[inp.prev_hash] = prev_tx
 
     if details is None:
         signtx = messages.SignTx()
@@ -120,10 +135,7 @@ def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
             break
 
         # Device asked for one more information, let's process it.
-        if not res.details.tx_hash:
-            current_tx = my_tx
-        else:
-            current_tx = prev_txes[res.details.tx_hash]
+        current_tx = txes[res.details.tx_hash]
 
         if res.request_type == R.TXMETA:
             msg = copy_tx_meta(current_tx)
