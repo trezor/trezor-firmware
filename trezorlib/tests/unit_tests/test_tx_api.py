@@ -18,8 +18,10 @@ import os
 
 from trezorlib import coins, tx_api
 
+from ..support.tx_cache import tx_cache
+
 TxApiBitcoin = coins.tx_api["Bitcoin"]
-TxApiTestnet = tx_api.TxApiInsight("insight_testnet")
+TxApiTestnet = tx_cache("Testnet", allow_fetch=False)
 TxApiZencash = coins.tx_api["Zencash"]
 
 tests_dir = os.path.dirname(os.path.abspath(__file__))

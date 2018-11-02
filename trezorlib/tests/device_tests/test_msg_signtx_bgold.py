@@ -20,16 +20,16 @@ from trezorlib import btc, coins, messages as proto
 from trezorlib.tools import H_, CallException, parse_path
 
 from ..support.ckd_public import deserialize
+from ..support.tx_cache import tx_cache
 from .common import TrezorTest
 
-TxApiBitcoinGold = coins.tx_api["Bgold"]
+TX_API = tx_cache("Bgold")
 
 
 # All data taken from T1
 class TestMsgSigntxBitcoinGold(TrezorTest):
     def test_send_bitcoin_gold_change(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBitcoinGold)
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/156'/0'/0/0"),
             amount=1995344,
@@ -81,8 +81,8 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Bgold", [inp1], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Bgold", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -92,7 +92,6 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
 
     def test_send_bitcoin_gold_nochange(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBitcoinGold)
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/156'/0'/1/0"),
             amount=1896050,
@@ -149,8 +148,8 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Bgold", [inp1, inp2], [out1]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Bgold", [inp1, inp2], [out1], prev_txes=TX_API
             )
 
         assert (
@@ -160,7 +159,6 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
 
     def test_attack_change_input(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBitcoinGold)
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/156'/1000'/0/0"),
             # 1MH9KKcvdCTY44xVDC2k3fjBbX5Cz29N1q
@@ -182,25 +180,20 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        global attack_ctr
-        attack_ctr = 0
+        run_attack = False
 
-        def attack_processor(req, msg):
-            global attack_ctr
+        def attack_processor(msg):
+            nonlocal run_attack
 
-            if req.details.tx_hash is not None:
-                return msg
+            if msg.tx.inputs and msg.tx.inputs[0] == inp1:
+                if run_attack:
+                    msg.tx.inputs[0].address_n[2] = H_(1)
+                else:
+                    run_attack = True
 
-            if req.request_type != proto.RequestType.TXINPUT:
-                return msg
-
-            attack_ctr += 1
-            if attack_ctr <= 1:
-                return msg
-
-            msg.inputs[0].address_n[2] = H_(1)
             return msg
 
+        self.client.set_filter(proto.TxAck, attack_processor)
         with self.client:
             self.client.set_expected_responses(
                 [
@@ -227,16 +220,11 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
             )
             with pytest.raises(CallException):
                 btc.sign_tx(
-                    self.client,
-                    "Bgold",
-                    [inp1],
-                    [out1, out2],
-                    debug_processor=attack_processor,
+                    self.client, "Bgold", [inp1], [out1, out2], prev_txes=TX_API
                 )
 
     def test_send_btg_multisig_change(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBitcoinGold)
         xpubs = []
         for n in map(
             lambda index: btc.get_public_node(
@@ -314,18 +302,18 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures1, serialized_tx) = btc.sign_tx(
-                self.client, "Bgold", [inp1], [out1, out2]
+            signatures, serialized_tx = btc.sign_tx(
+                self.client, "Bgold", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
-            signatures1[0].hex()
+            signatures[0].hex()
             == "3045022100b1594f3b186d0dedbf61e53a1c407b1e0747098b7375941df85af045040f578e022013ba1893eb9e2fd854dd07073a83b261cf4beba76f66b07742e462b4088a7e4a"
         )
 
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/156'/1'/0/0"),
-            multisig=getmultisig(0, 0, [b"", b"", signatures1[0]]),
+            multisig=getmultisig(0, 0, [b"", b"", signatures[0]]),
             # 33Ju286QvonBz5N1V754ZekQv4GLJqcc5R
             amount=48490,
             prev_hash=bytes.fromhex(
@@ -368,12 +356,12 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures1, serialized_tx) = btc.sign_tx(
-                self.client, "Bgold", [inp1], [out1, out2]
+            signatures, serialized_tx = btc.sign_tx(
+                self.client, "Bgold", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
-            signatures1[0].hex()
+            signatures[0].hex()
             == "3044022006da8dbd14e6656ac8dcb956f4c0498574e88680eaeceb2cbafd8d2b2329d8cc02200972d076d444c5ff8f2ab18e14d8249ab661cb9c53335039bedcde037a40d747"
         )
         assert (
@@ -383,7 +371,6 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
 
     def test_send_p2sh(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBitcoinGold)
         inp1 = proto.TxInputType(
             address_n=parse_path("49'/156'/0'/1/0"),
             amount=123456789,
@@ -440,8 +427,8 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Bgold", [inp1], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Bgold", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -451,7 +438,6 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
 
     def test_send_p2sh_witness_change(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBitcoinGold)
         inp1 = proto.TxInputType(
             address_n=parse_path("49'/156'/0'/1/0"),
             amount=123456789,
@@ -507,8 +493,8 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Bgold", [inp1], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Bgold", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -518,7 +504,6 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
 
     def test_send_multisig_1(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBitcoinGold)
         nodes = map(
             lambda index: btc.get_public_node(
                 self.client, parse_path("999'/1'/%d'" % index)
@@ -583,9 +568,11 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures1, _) = btc.sign_tx(self.client, "Bgold", [inp1], [out1])
+            signatures, _ = btc.sign_tx(
+                self.client, "Bgold", [inp1], [out1], prev_txes=TX_API
+            )
             # store signature
-            inp1.multisig.signatures[0] = signatures1[0]
+            inp1.multisig.signatures[0] = signatures[0]
             # sign with third key
             inp1.address_n[2] = H_(3)
             self.client.set_expected_responses(
@@ -615,8 +602,8 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures2, serialized_tx) = btc.sign_tx(
-                self.client, "Bgold", [inp1], [out1]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Bgold", [inp1], [out1], prev_txes=TX_API
             )
 
         assert (

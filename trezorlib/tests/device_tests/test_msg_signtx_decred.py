@@ -16,12 +16,13 @@
 
 import pytest
 
-from trezorlib import btc, coins, messages as proto
+from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
 from .common import TrezorTest
+from ..support.tx_cache import tx_cache
 
-TxApiDecredTestnet = coins.tx_api["Decred Testnet"]
+TX_API = tx_cache("Decred Testnet")
 
 
 TXHASH_e16248 = bytes.fromhex(
@@ -48,7 +49,6 @@ TXHASH_16da18 = bytes.fromhex(
 class TestMsgSigntxDecred(TrezorTest):
     def test_send_decred(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiDecredTestnet)
 
         inp1 = proto.TxInputType(
             # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz
@@ -109,8 +109,8 @@ class TestMsgSigntxDecred(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Decred Testnet", [inp1], [out1]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Decred Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
         assert (
@@ -120,7 +120,6 @@ class TestMsgSigntxDecred(TrezorTest):
 
     def test_send_decred_change(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiDecredTestnet)
 
         inp1 = proto.TxInputType(
             # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz
@@ -264,8 +263,12 @@ class TestMsgSigntxDecred(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Decred Testnet", [inp1, inp2, inp3], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client,
+                "Decred Testnet",
+                [inp1, inp2, inp3],
+                [out1, out2],
+                prev_txes=TX_API,
             )
 
         assert (
@@ -275,7 +278,6 @@ class TestMsgSigntxDecred(TrezorTest):
 
     def test_decred_multisig_change(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiDecredTestnet)
 
         paths = [parse_path("m/48'/1'/%d'" % index) for index in range(3)]
         nodes = [
@@ -414,8 +416,12 @@ class TestMsgSigntxDecred(TrezorTest):
                         proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                     ]
                 )
-                (signature, serialized_tx) = btc.sign_tx(
-                    self.client, "Decred Testnet", [inp1, inp2], [out1, out2]
+                signature, serialized_tx = btc.sign_tx(
+                    self.client,
+                    "Decred Testnet",
+                    [inp1, inp2],
+                    [out1, out2],
+                    prev_txes=TX_API,
                 )
 
             signatures[0][index] = signature[0]

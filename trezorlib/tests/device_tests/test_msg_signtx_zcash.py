@@ -20,8 +20,9 @@ from trezorlib import btc, coins, messages as proto
 from trezorlib.tools import parse_path
 
 from .common import TrezorTest
+from ..support.tx_cache import tx_cache
 
-TxApiZcashTestnet = coins.tx_api["Zcash Testnet"]
+TX_API = tx_cache("Zcash Testnet")
 
 TXHASH_aaf51e = bytes.fromhex(
     "aaf51e4606c264e47e5c42c958fe4cf1539c5172684721e38e69f4ef634d75dc"
@@ -55,7 +56,6 @@ class TestMsgSigntxZcash(TrezorTest):
         )
 
         with self.client:
-            self.client.set_tx_api(TxApiZcashTestnet)
             self.client.set_expected_responses(
                 [
                     proto.TxRequest(
@@ -80,14 +80,16 @@ class TestMsgSigntxZcash(TrezorTest):
                 ]
             )
 
-            (signatures, serialized_tx) = btc.sign_tx(
+            details = proto.SignTx(
+                version=3, overwintered=True, version_group_id=0x3C48270
+            )
+            _, serialized_tx = btc.sign_tx(
                 self.client,
                 "Zcash Testnet",
                 [inp1],
                 [out1],
-                version=3,
-                overwintered=True,
-                version_group_id=0x3C48270,
+                details=details,
+                prev_txes=TX_API,
             )
 
         # Accepted by network: tx eda9b772c47f0c29310759960e0081c98707aa67a0a2738bcc71439fcf360675
@@ -118,7 +120,6 @@ class TestMsgSigntxZcash(TrezorTest):
         )
 
         with self.client:
-            self.client.set_tx_api(TxApiZcashTestnet)
             self.client.set_expected_responses(
                 [
                     proto.TxRequest(
@@ -143,14 +144,16 @@ class TestMsgSigntxZcash(TrezorTest):
                 ]
             )
 
-            (signatures, serialized_tx) = btc.sign_tx(
+            details = proto.SignTx(
+                version=4, overwintered=True, version_group_id=0x892F2085
+            )
+            _, serialized_tx = btc.sign_tx(
                 self.client,
                 "Zcash Testnet",
                 [inp1],
                 [out1],
-                version=4,
-                overwintered=True,
-                version_group_id=0x892F2085,
+                details=details,
+                prev_txes=TX_API,
             )
 
         # Accepted by network: tx 0cef132c1d6d67f11cfa48f7fca3209da29cf872ac782354bedb686e61a17a78

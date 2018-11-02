@@ -16,18 +16,17 @@
 
 from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, parse_path
-from trezorlib.tx_api import TxApiInsight
 
 from ..support.ckd_public import deserialize
+from ..support.tx_cache import tx_cache
 from .common import TrezorTest
 
-TxApiTestnet = TxApiInsight("insight_testnet")
+TX_API = tx_cache("Testnet")
 
 
 class TestMsgSigntxSegwitNative(TrezorTest):
     def test_send_p2sh(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiTestnet)
         inp1 = proto.TxInputType(
             address_n=parse_path("49'/1'/0'/1/0"),
             # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -85,8 +84,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -96,7 +95,6 @@ class TestMsgSigntxSegwitNative(TrezorTest):
 
     def test_send_p2sh_change(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiTestnet)
         inp1 = proto.TxInputType(
             address_n=parse_path("49'/1'/0'/1/0"),
             # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -153,8 +151,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -164,7 +162,6 @@ class TestMsgSigntxSegwitNative(TrezorTest):
 
     def test_send_native(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiTestnet)
         inp1 = proto.TxInputType(
             address_n=parse_path("49'/1'/0'/0/0"),
             # tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s
@@ -222,8 +219,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -233,7 +230,6 @@ class TestMsgSigntxSegwitNative(TrezorTest):
 
     def test_send_native_change(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiTestnet)
         inp1 = proto.TxInputType(
             address_n=parse_path("49'/1'/0'/0/0"),
             # tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s
@@ -290,8 +286,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -301,7 +297,6 @@ class TestMsgSigntxSegwitNative(TrezorTest):
 
     def test_send_both(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiTestnet)
         inp1 = proto.TxInputType(
             address_n=parse_path("49'/1'/0'/1/0"),
             # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -398,8 +393,12 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1, inp2], [out1, out2, out3]
+            _, serialized_tx = btc.sign_tx(
+                self.client,
+                "Testnet",
+                [inp1, inp2],
+                [out1, out2, out3],
+                prev_txes=TX_API,
             )
 
         # 0e480a97c7a545c85e101a2f13c9af0e115d43734e1448f0cac3e55fe8e7399d
@@ -410,7 +409,6 @@ class TestMsgSigntxSegwitNative(TrezorTest):
 
     def test_send_multisig_1(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiTestnet)
         nodes = [
             btc.get_public_node(self.client, parse_path("999'/1'/%d'" % index))
             for index in range(1, 4)
@@ -473,9 +471,11 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures1, _) = btc.sign_tx(self.client, "Testnet", [inp1], [out1])
+            signatures, _ = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
+            )
             # store signature
-            inp1.multisig.signatures[0] = signatures1[0]
+            inp1.multisig.signatures[0] = signatures[0]
             # sign with third key
             inp1.address_n[2] = H_(3)
             self.client.set_expected_responses(
@@ -505,8 +505,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures2, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
         # f41cbedd8becee05a830f418d13aa665125464547db5c7a6cd28f21639fe1228
@@ -517,7 +517,6 @@ class TestMsgSigntxSegwitNative(TrezorTest):
 
     def test_send_multisig_2(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiTestnet)
         nodes = [
             btc.get_public_node(self.client, parse_path("999'/1'/%d'" % index))
             for index in range(1, 4)
@@ -580,9 +579,11 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures1, _) = btc.sign_tx(self.client, "Testnet", [inp1], [out1])
+            signatures, _ = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
+            )
             # store signature
-            inp1.multisig.signatures[1] = signatures1[0]
+            inp1.multisig.signatures[1] = signatures[0]
             # sign with first key
             inp1.address_n[2] = H_(1)
             self.client.set_expected_responses(
@@ -612,8 +613,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures2, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
         # c9348040bbc2024e12dcb4a0b4806b0398646b91acf314da028c3f03dd0179fc
@@ -624,7 +625,6 @@ class TestMsgSigntxSegwitNative(TrezorTest):
 
     def test_send_multisig_3_change(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiTestnet)
         nodes = [
             btc.get_public_node(self.client, parse_path("999'/1'/%d'" % index))
             for index in range(1, 4)
@@ -699,9 +699,11 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures1, _) = btc.sign_tx(self.client, "Testnet", [inp1], [out1])
+            signatures, _ = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
+            )
             # store signature
-            inp1.multisig.signatures[0] = signatures1[0]
+            inp1.multisig.signatures[0] = signatures[0]
             # sign with third key
             inp1.address_n[2] = H_(3)
             out1.address_n[2] = H_(3)
@@ -731,8 +733,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures2, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
         # 31bc1c88ce6ae337a6b3057a16d5bad0b561ad1dfc047d0a7fbb8814668f91e5
@@ -743,7 +745,6 @@ class TestMsgSigntxSegwitNative(TrezorTest):
 
     def test_send_multisig_4_change(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiTestnet)
         nodes = [
             btc.get_public_node(self.client, parse_path("999'/1'/%d'" % index))
             for index in range(1, 4)
@@ -818,9 +819,11 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures1, _) = btc.sign_tx(self.client, "Testnet", [inp1], [out1])
+            signatures, _ = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
+            )
             # store signature
-            inp1.multisig.signatures[0] = signatures1[0]
+            inp1.multisig.signatures[0] = signatures[0]
             # sign with third key
             inp1.address_n[2] = H_(3)
             out1.address_n[2] = H_(3)
@@ -850,8 +853,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures2, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
         # c0bf56060a109624b4635222696d94a7d533cacea1b3f8245417a4348c045829

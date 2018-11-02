@@ -16,19 +16,15 @@
 
 from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, parse_path
-from trezorlib.tx_api import TxApiInsight
 
 from ..support import ckd_public as bip32
+from ..support.tx_cache import tx_cache
 from .common import TrezorTest
 
-TxApiTestnet = TxApiInsight("insight_testnet")
+TX_API = tx_cache("Testnet")
 
 
 class TestMultisigChange(TrezorTest):
-    def setup_method(self, method):
-        super(TestMultisigChange, self).setup_method(method)
-        self.client.set_tx_api(TxApiTestnet)
-
     node_ext1 = bip32.deserialize(
         "tpubDADHV9u9Y6gkggintTdMjJE3be58zKNLhpxBQyuEM6Pwx3sN9JVLmMCMN4DNVwL9AKec27z5TaWcWuHzMXiGAtcra5DjwWbvppGX4gaEGVN"
     )
@@ -267,8 +263,12 @@ class TestMultisigChange(TrezorTest):
 
         with self.client:
             self.client.set_expected_responses(self._responses(self.inp1, self.inp2))
-            (_, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [self.inp1, self.inp2], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client,
+                "Testnet",
+                [self.inp1, self.inp2],
+                [out1, out2],
+                prev_txes=TX_API,
             )
 
         assert (
@@ -296,8 +296,12 @@ class TestMultisigChange(TrezorTest):
             self.client.set_expected_responses(
                 self._responses(self.inp1, self.inp2, change=2)
             )
-            (_, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [self.inp1, self.inp2], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client,
+                "Testnet",
+                [self.inp1, self.inp2],
+                [out1, out2],
+                prev_txes=TX_API,
             )
 
         assert (
@@ -325,8 +329,12 @@ class TestMultisigChange(TrezorTest):
             self.client.set_expected_responses(
                 self._responses(self.inp1, self.inp2, change=1)
             )
-            (_, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [self.inp1, self.inp2], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client,
+                "Testnet",
+                [self.inp1, self.inp2],
+                [out1, out2],
+                prev_txes=TX_API,
             )
 
         assert (
@@ -352,8 +360,12 @@ class TestMultisigChange(TrezorTest):
 
         with self.client:
             self.client.set_expected_responses(self._responses(self.inp1, self.inp2))
-            (_, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [self.inp1, self.inp2], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client,
+                "Testnet",
+                [self.inp1, self.inp2],
+                [out1, out2],
+                prev_txes=TX_API,
             )
 
         assert (
@@ -392,8 +404,12 @@ class TestMultisigChange(TrezorTest):
             self.client.set_expected_responses(
                 self._responses(self.inp1, self.inp2, change=1)
             )
-            (_, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [self.inp1, self.inp2], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client,
+                "Testnet",
+                [self.inp1, self.inp2],
+                [out1, out2],
+                prev_txes=TX_API,
             )
 
         assert (
@@ -432,8 +448,12 @@ class TestMultisigChange(TrezorTest):
             self.client.set_expected_responses(
                 self._responses(self.inp1, self.inp2, change=2)
             )
-            (_, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [self.inp1, self.inp2], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client,
+                "Testnet",
+                [self.inp1, self.inp2],
+                [out1, out2],
+                prev_txes=TX_API,
             )
 
         assert (
@@ -470,8 +490,12 @@ class TestMultisigChange(TrezorTest):
 
         with self.client:
             self.client.set_expected_responses(self._responses(self.inp1, self.inp2))
-            (_, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [self.inp1, self.inp2], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client,
+                "Testnet",
+                [self.inp1, self.inp2],
+                [out1, out2],
+                prev_txes=TX_API,
             )
 
         assert (
@@ -508,8 +532,12 @@ class TestMultisigChange(TrezorTest):
 
         with self.client:
             self.client.set_expected_responses(self._responses(self.inp1, self.inp3))
-            (_, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [self.inp1, self.inp3], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client,
+                "Testnet",
+                [self.inp1, self.inp3],
+                [out1, out2],
+                prev_txes=TX_API,
             )
 
         assert (

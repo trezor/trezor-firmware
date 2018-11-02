@@ -18,19 +18,18 @@ import pytest
 
 from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, CallException, parse_path
-from trezorlib.tx_api import TxApiInsight
 
 from ..support.ckd_public import deserialize
+from ..support.tx_cache import tx_cache
 from .common import TrezorTest
 from .conftest import TREZOR_VERSION
 
-TxApiTestnet = TxApiInsight("insight_testnet")
+TX_API = tx_cache("Testnet")
 
 
 class TestMsgSigntxSegwit(TrezorTest):
     def test_send_p2sh(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiTestnet)
         inp1 = proto.TxInputType(
             address_n=parse_path("49'/1'/0'/1/0"),
             # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -88,8 +87,8 @@ class TestMsgSigntxSegwit(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -99,7 +98,6 @@ class TestMsgSigntxSegwit(TrezorTest):
 
     def test_send_p2sh_change(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiTestnet)
         inp1 = proto.TxInputType(
             address_n=parse_path("49'/1'/0'/1/0"),
             # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -156,8 +154,8 @@ class TestMsgSigntxSegwit(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -167,7 +165,6 @@ class TestMsgSigntxSegwit(TrezorTest):
 
     def test_send_multisig_1(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiTestnet)
         nodes = map(
             lambda index: btc.get_public_node(
                 self.client, parse_path("999'/1'/%d'" % index)
@@ -232,9 +229,11 @@ class TestMsgSigntxSegwit(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures1, _) = btc.sign_tx(self.client, "Testnet", [inp1], [out1])
+            signatures, _ = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
+            )
             # store signature
-            inp1.multisig.signatures[0] = signatures1[0]
+            inp1.multisig.signatures[0] = signatures[0]
             # sign with third key
             inp1.address_n[2] = H_(3)
             self.client.set_expected_responses(
@@ -264,8 +263,8 @@ class TestMsgSigntxSegwit(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures2, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
         assert (
@@ -278,7 +277,6 @@ class TestMsgSigntxSegwit(TrezorTest):
         # that it matches the change output
 
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiTestnet)
         inp1 = proto.TxInputType(
             address_n=parse_path("49'/1'/0'/1/0"),
             # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -299,28 +297,6 @@ class TestMsgSigntxSegwit(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
             amount=123456789 - 11000 - 12300000,
         )
-
-        global run_attack
-        run_attack = True
-
-        def attack_processor(req, msg):
-            global run_attack
-
-            if req.details.tx_hash is not None:
-                return msg
-
-            if req.request_type != proto.RequestType.TXINPUT:
-                return msg
-
-            if req.details.request_index != 0:
-                return msg
-
-            if not run_attack:
-                return msg
-
-            msg.inputs[0].address_n[2] = H_(12345)
-            run_attack = False
-            return msg
 
         # Test if the transaction can be signed normally
         with self.client:
@@ -360,8 +336,8 @@ class TestMsgSigntxSegwit(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -369,7 +345,19 @@ class TestMsgSigntxSegwit(TrezorTest):
             == "0100000000010137c361fb8f2d9056ba8c98c5611930fcb48cacfdd0fe2e0449d83eea982f91200000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff02e0aebb00000000001976a91414fdede0ddc3be652a0ce1afbc1b509a55b6b94888ac3df39f060000000017a914dae9e09a7fc3bbe5a716fffec1bbb340b82a4fb9870248304502210099b5c4f8fd4402c9c0136fee5f711137d64fc9f14587e01bfa7798f5428f845d0220253e21c98f5b1b64efae69bc2ea9799c5620a43450baa6762a0c3cf4fdc886e5012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7900000000"
         )
 
+        run_attack = True
+
+        def attack_processor(msg):
+            nonlocal run_attack
+
+            if run_attack and msg.tx.inputs and msg.tx.inputs[0] == inp1:
+                run_attack = False
+                msg.tx.inputs[0].address_n[2] = H_(12345)
+
+            return msg
+
         # Now run the attack, must trigger the exception
+        self.client.set_filter(proto.TxAck, attack_processor)
         with self.client:
             self.client.set_expected_responses(
                 [
@@ -396,11 +384,7 @@ class TestMsgSigntxSegwit(TrezorTest):
             )
             with pytest.raises(CallException) as exc:
                 btc.sign_tx(
-                    self.client,
-                    "Testnet",
-                    [inp1],
-                    [out1, out2],
-                    debug_processor=attack_processor,
+                    self.client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
                 )
             assert exc.value.args[0] == proto.FailureType.ProcessError
             if TREZOR_VERSION == 1:

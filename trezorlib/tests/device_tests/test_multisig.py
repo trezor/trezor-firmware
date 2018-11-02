@@ -20,7 +20,10 @@ from trezorlib import btc, messages as proto
 from trezorlib.tools import CallException
 
 from ..support import ckd_public as bip32
+from ..support.tx_cache import tx_cache
 from .common import TrezorTest
+
+TX_API = tx_cache("Bitcoin")
 
 TXHASH_c6091a = bytes.fromhex(
     "c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52"
@@ -139,7 +142,9 @@ class TestMultisig(TrezorTest):
             )
 
             # Now we have first signature
-            (signatures1, _) = btc.sign_tx(self.client, "Bitcoin", [inp1], [out1])
+            signatures1, _ = btc.sign_tx(
+                self.client, "Bitcoin", [inp1], [out1], prev_txes=TX_API
+            )
 
         assert (
             signatures1[0].hex()
@@ -222,8 +227,8 @@ class TestMultisig(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures2, serialized_tx) = btc.sign_tx(
-                self.client, "Bitcoin", [inp3], [out1]
+            signatures2, serialized_tx = btc.sign_tx(
+                self.client, "Bitcoin", [inp3], [out1], prev_txes=TX_API
             )
 
         assert (
@@ -287,8 +292,8 @@ class TestMultisig(TrezorTest):
             )
 
             with self.client:
-                (sig, serialized_tx) = btc.sign_tx(
-                    self.client, "Bitcoin", [inp1], [out1]
+                sig, serialized_tx = btc.sign_tx(
+                    self.client, "Bitcoin", [inp1], [out1], prev_txes=TX_API
                 )
                 signatures[x] = sig[0]
 
@@ -345,7 +350,7 @@ class TestMultisig(TrezorTest):
         )
 
         with pytest.raises(CallException) as exc:
-            btc.sign_tx(self.client, "Bitcoin", [inp1], [out1])
+            btc.sign_tx(self.client, "Bitcoin", [inp1], [out1], prev_txes=TX_API)
 
         assert exc.value.args[0] == proto.FailureType.DataError
         assert exc.value.args[1].endswith("Pubkey not found in multisig script")

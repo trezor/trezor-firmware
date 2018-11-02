@@ -20,15 +20,15 @@ from trezorlib import btc, coins, messages as proto
 from trezorlib.tools import H_, CallException, parse_path
 
 from ..support.ckd_public import deserialize
+from ..support.tx_cache import tx_cache
 from .common import TrezorTest
 
-TxApiBcash = coins.tx_api["Bcash"]
+TX_API = tx_cache("Bcash")
 
 
 class TestMsgSigntxBch(TrezorTest):
     def test_send_bch_change(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBcash)
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/145'/0'/0/0"),
             # bitcoincash:qr08q88p9etk89wgv05nwlrkm4l0urz4cyl36hh9sv
@@ -81,8 +81,8 @@ class TestMsgSigntxBch(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Bcash", [inp1], [out1, out2]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Bcash", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -92,7 +92,6 @@ class TestMsgSigntxBch(TrezorTest):
 
     def test_send_bch_nochange(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBcash)
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/145'/0'/1/0"),
             # bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw
@@ -150,8 +149,8 @@ class TestMsgSigntxBch(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Bcash", [inp1, inp2], [out1]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Bcash", [inp1, inp2], [out1], prev_txes=TX_API
             )
 
         assert (
@@ -161,7 +160,6 @@ class TestMsgSigntxBch(TrezorTest):
 
     def test_send_bch_oldaddr(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBcash)
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/145'/0'/1/0"),
             # bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw
@@ -219,8 +217,8 @@ class TestMsgSigntxBch(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            (signatures, serialized_tx) = btc.sign_tx(
-                self.client, "Bcash", [inp1, inp2], [out1]
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Bcash", [inp1, inp2], [out1], prev_txes=TX_API
             )
 
         assert (
@@ -230,7 +228,6 @@ class TestMsgSigntxBch(TrezorTest):
 
     def test_attack_amount(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBcash)
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/145'/0'/1/0"),
             # bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw
@@ -256,31 +253,6 @@ class TestMsgSigntxBch(TrezorTest):
             amount=200,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
-
-        global run_attack
-        run_attack = True
-
-        def attack_processor(req, msg):
-            global run_attack
-
-            if req.details.tx_hash is not None:
-                return msg
-
-            if req.request_type != proto.RequestType.TXINPUT:
-                return msg
-
-            if req.details.request_index != 0:
-                return msg
-
-            if not run_attack:
-                return msg
-
-            # 300 is lowered to 280 at the first run
-            # the user confirms 280 but the transaction
-            # is spending 300 => larger fee without the user knowing
-            msg.inputs[0].amount = 280
-            run_attack = False
-            return msg
 
         # test if passes without modifications
         with self.client:
@@ -315,9 +287,24 @@ class TestMsgSigntxBch(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            btc.sign_tx(self.client, "Bcash", [inp1, inp2], [out1])
+            btc.sign_tx(self.client, "Bcash", [inp1, inp2], [out1], prev_txes=TX_API)
+
+        run_attack = True
+
+        def attack_processor(msg):
+            nonlocal run_attack
+
+            if run_attack and msg.tx.inputs and msg.tx.inputs[0] == inp1:
+                # 300 is lowered to 280 at the first run
+                # the user confirms 280 but the transaction
+                # is spending 300 => larger fee without the user knowing
+                msg.tx.inputs[0].amount = 280
+                run_attack = False
+
+            return msg
 
         # now fails
+        self.client.set_filter(proto.TxAck, attack_processor)
         with self.client:
             self.client.set_expected_responses(
                 [
@@ -349,11 +336,7 @@ class TestMsgSigntxBch(TrezorTest):
 
             with pytest.raises(CallException) as exc:
                 btc.sign_tx(
-                    self.client,
-                    "Bcash",
-                    [inp1, inp2],
-                    [out1],
-                    debug_processor=attack_processor,
+                    self.client, "Bcash", [inp1, inp2], [out1], prev_txes=TX_API
                 )
 
             assert exc.value.args[0] in (
@@ -364,7 +347,6 @@ class TestMsgSigntxBch(TrezorTest):
 
     def test_attack_change_input(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBcash)
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/145'/1000'/0/0"),
             # bitcoincash:qr08q88p9etk89wgv05nwlrkm4l0urz4cyl36hh9sv
@@ -386,24 +368,20 @@ class TestMsgSigntxBch(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        global attack_ctr
-        attack_ctr = 0
+        run_attack = False
 
-        def attack_processor(req, msg):
-            global attack_ctr
+        def attack_processor(msg):
+            nonlocal run_attack
 
-            if req.details.tx_hash is not None:
-                return msg
+            if msg.tx.inputs and msg.tx.inputs[0] == inp1:
+                if not run_attack:
+                    run_attack = True
+                else:
+                    msg.tx.inputs[0].address_n[2] = H_(1)
 
-            if req.request_type != proto.RequestType.TXINPUT:
-                return msg
-
-            attack_ctr += 1
-            if attack_ctr <= 1:
-                return msg
-
-            msg.inputs[0].address_n[2] = H_(1)
             return msg
+
+        self.client.set_filter(proto.TxAck, attack_processor)
 
         with self.client:
             self.client.set_expected_responses(
@@ -431,16 +409,11 @@ class TestMsgSigntxBch(TrezorTest):
             )
             with pytest.raises(CallException):
                 btc.sign_tx(
-                    self.client,
-                    "Bcash",
-                    [inp1],
-                    [out1, out2],
-                    debug_processor=attack_processor,
+                    self.client, "Bcash", [inp1], [out1, out2], prev_txes=TX_API
                 )
 
     def test_send_bch_multisig_wrongchange(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBcash)
         xpubs = []
         for n in map(
             lambda index: btc.get_public_node(
@@ -528,7 +501,7 @@ class TestMsgSigntxBch(TrezorTest):
                 ]
             )
             (signatures1, serialized_tx) = btc.sign_tx(
-                self.client, "Bcash", [inp1], [out1]
+                self.client, "Bcash", [inp1], [out1], prev_txes=TX_API
             )
         assert (
             signatures1[0].hex()
@@ -541,7 +514,6 @@ class TestMsgSigntxBch(TrezorTest):
 
     def test_send_bch_multisig_change(self):
         self.setup_mnemonic_allallall()
-        self.client.set_tx_api(TxApiBcash)
         xpubs = []
         for n in map(
             lambda index: btc.get_public_node(
@@ -620,7 +592,7 @@ class TestMsgSigntxBch(TrezorTest):
                 ]
             )
             (signatures1, serialized_tx) = btc.sign_tx(
-                self.client, "Bcash", [inp1], [out1, out2]
+                self.client, "Bcash", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -674,7 +646,7 @@ class TestMsgSigntxBch(TrezorTest):
                 ]
             )
             (signatures1, serialized_tx) = btc.sign_tx(
-                self.client, "Bcash", [inp1], [out1, out2]
+                self.client, "Bcash", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (

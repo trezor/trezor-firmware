@@ -16,14 +16,11 @@
 
 import os
 
-from trezorlib import coins, debuglink, device, tx_api
+from trezorlib import coins, debuglink, device
 from trezorlib.debuglink import TrezorClientDebugLink
 from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 
 from . import conftest
-
-tests_dir = os.path.dirname(os.path.abspath(__file__))
-tx_api.cache_dir = os.path.join(tests_dir, "../txcache")
 
 
 class TrezorTest:
@@ -42,7 +39,6 @@ class TrezorTest:
     def setup_method(self, method):
         wirelink = conftest.get_device()
         self.client = TrezorClientDebugLink(wirelink)
-        self.client.set_tx_api(coins.tx_api["Bitcoin"])
         # self.client.set_buttonwait(3)
 
         device.wipe(self.client)
