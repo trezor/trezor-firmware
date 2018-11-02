@@ -275,6 +275,11 @@ async def dump_message(writer, msg, fields=None):
             elif ftype is BoolType:
                 await dump_uvarint(writer, int(svalue))
 
+            elif ftype is BytesType and is_chunked(svalue):
+                await dump_uvarint(writer, len_list_bytes(svalue))
+                for sub_svalue in svalue:
+                    await writer.awrite(sub_svalue)
+
             elif ftype is BytesType:
                 await dump_uvarint(writer, len(svalue))
                 await writer.awrite(svalue)
@@ -329,7 +334,9 @@ def count_message(msg, fields=None):
 
         elif ftype is BytesType:
             for svalue in fvalue:
-                svalue = len(svalue)
+                svalue = (
+                    len(svalue) if not is_chunked(svalue) else len_list_bytes(svalue)
+                )
                 nbytes += count_uvarint(svalue)
                 nbytes += svalue
 
@@ -351,3 +358,18 @@ def count_message(msg, fields=None):
             raise TypeError
 
     return nbytes
+
+
+def is_chunked(svalue):
+    return (
+        isinstance(svalue, list)
+        and len(svalue) > 0
+        and not isinstance(svalue[0], (int, bool))
+    )
+
+
+def len_list_bytes(svalue):
+    res = 0
+    for x in svalue:
+        res += len(x)
+    return res
