@@ -17,7 +17,7 @@
 import json
 import os.path
 
-from .tx_api import TxApiInsight
+from .tx_api import TxApi
 
 COINS_JSON = os.path.join(os.path.dirname(__file__), "coins.json")
 
@@ -34,19 +34,6 @@ def _load_coins_json():
         return json.load(coins_json)
 
 
-def _insight_for_coin(coin):
-    url = next(iter(coin["blockbook"] + coin["bitcore"]), None)
-    if not url:
-        return None
-    zcash = coin["coin_name"].lower().startswith("zcash")
-    bip115 = coin["bip115"]
-    decred = coin["decred"]
-    network = "insight_{}".format(coin["coin_name"].lower().replace(" ", "_"))
-    return TxApiInsight(
-        network=network, url=url, zcash=zcash, bip115=bip115, decred=decred
-    )
-
-
 # exported variables
 __all__ = ["by_name", "slip44", "tx_api"]
 
@@ -58,7 +45,7 @@ except Exception as e:
 
 slip44 = {name: coin["slip44"] for name, coin in by_name.items()}
 tx_api = {
-    name: _insight_for_coin(coin)
+    name: TxApi(coin)
     for name, coin in by_name.items()
     if coin["blockbook"] or coin["bitcore"]
 }
