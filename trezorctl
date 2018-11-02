@@ -21,7 +21,6 @@
 # along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 import base64
-import decimal
 import json
 import os
 import sys

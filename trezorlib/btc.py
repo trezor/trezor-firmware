@@ -1,4 +1,4 @@
-from . import messages, tools
+from . import messages
 from .tools import CallException, expect, normalize_nfc, session
 
 

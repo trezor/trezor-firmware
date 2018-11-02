@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, coins, messages as proto
+from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, CallException, parse_path
 
 from ..support.ckd_public import deserialize

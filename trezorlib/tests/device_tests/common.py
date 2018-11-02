@@ -14,9 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import os
 
-from trezorlib import coins, debuglink, device
+from trezorlib import debuglink, device
 from trezorlib.debuglink import TrezorClientDebugLink
 from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 

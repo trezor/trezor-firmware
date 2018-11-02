@@ -17,7 +17,7 @@ from copy import deepcopy
 
 from mnemonic import Mnemonic
 
-from . import messages as proto, tools, protobuf
+from . import messages as proto, protobuf, tools
 from .client import TrezorClient
 from .tools import expect
 

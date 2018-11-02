@@ -14,10 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import json
-from decimal import Decimal
 import random
-from typing import Mapping, Any
+from decimal import Decimal
 
 import requests
 
