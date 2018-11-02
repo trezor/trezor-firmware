@@ -10,7 +10,7 @@ from .state import State
 
 from apps.monero.layout import confirms
 from apps.monero.signing import RctType
-from apps.monero.xmr import crypto, serialize
+from apps.monero.xmr import crypto
 
 if False:
     from trezor.messages.MoneroTransactionSourceEntry import (
@@ -40,8 +40,6 @@ async def sign_input(
     :param spend_enc: one time address spending private key. Encrypted.
     :return: Generated signature MGs[i]
     """
-    from apps.monero.signing import offloading_keys
-
     await confirms.transaction_step(
         state.ctx, state.STEP_SIGN, state.current_input_index + 1, state.input_count
     )
@@ -57,8 +55,11 @@ async def sign_input(
         raise ValueError("Two and more inputs must imply SimpleRCT")
 
     input_position = state.source_permutation[state.current_input_index]
+    mods = utils.unimport_begin()
 
     # Check input's HMAC
+    from apps.monero.signing import offloading_keys
+
     vini_hmac_comp = await offloading_keys.gen_hmac_vini(
         state.key_hmac, src_entr, vini_bin, input_position
     )
@@ -66,7 +67,9 @@ async def sign_input(
         raise ValueError("HMAC is not correct")
 
     gc.collect()
-    state.mem_trace(1)
+    state.mem_trace(1, True)
+
+    from apps.monero.xmr.crypto import chacha_poly
 
     if state.rct_type == RctType.Simple:
         # both pseudo_out and its mask were offloaded so we need to
@@ -78,10 +81,7 @@ async def sign_input(
         if not crypto.ct_equals(pseudo_out_hmac_comp, pseudo_out_hmac):
             raise ValueError("HMAC is not correct")
 
-        gc.collect()
-        state.mem_trace(2)
-
-        from apps.monero.xmr.crypto import chacha_poly
+        state.mem_trace(2, True)
 
         pseudo_out_alpha = crypto.decodeint(
             chacha_poly.decrypt_pack(
@@ -92,9 +92,6 @@ async def sign_input(
         pseudo_out_c = crypto.decodepoint(pseudo_out)
 
     # Spending secret
-    from apps.monero.xmr.crypto import chacha_poly
-    from apps.monero.xmr.serialize_messages.ct_keys import CtKey
-
     spend_key = crypto.decodeint(
         chacha_poly.decrypt_pack(
             offloading_keys.enc_key_spend(state.key_enc, input_position),
@@ -102,8 +99,18 @@ async def sign_input(
         )
     )
 
-    gc.collect()
-    state.mem_trace(3)
+    del (
+        offloading_keys,
+        chacha_poly,
+        pseudo_out,
+        pseudo_out_hmac,
+        pseudo_out_alpha_enc,
+        spend_enc,
+    )
+    utils.unimport_end(mods)
+    state.mem_trace(3, True)
+
+    from apps.monero.xmr.serialize_messages.ct_keys import CtKey
 
     # Basic setup, sanity check
     index = src_entr.real_output
@@ -126,14 +133,16 @@ async def sign_input(
         "Real source entry's mask does not equal spend key's",
     )
 
-    gc.collect()
-    state.mem_trace(4)
+    state.mem_trace(4, True)
 
     from apps.monero.xmr import mlsag
 
+    mg_buffer = []
+    ring_pubkeys = [x.key for x in src_entr.outputs]
+    del src_entr
+
     if state.rct_type == RctType.Simple:
-        ring_pubkeys = [x.key for x in src_entr.outputs]
-        mg = mlsag.generate_mlsag_simple(
+        mlsag.generate_mlsag_simple(
             state.full_message,
             ring_pubkeys,
             input_secret_key,
@@ -141,52 +150,33 @@ async def sign_input(
             pseudo_out_c,
             kLRki,
             index,
+            mg_buffer,
         )
+
+        del (input_secret_key, pseudo_out_alpha, pseudo_out_c)
 
     else:
         # Full RingCt, only one input
         txn_fee_key = crypto.scalarmult_h(state.fee)
-        ring_pubkeys = [[x.key] for x in src_entr.outputs]
-        mg = mlsag.generate_mlsag_full(
+        mlsag.generate_mlsag_full(
             state.full_message,
             ring_pubkeys,
-            [input_secret_key],
+            input_secret_key,
             state.output_sk_masks,
             state.output_pk_commitments,
             kLRki,
             index,
             txn_fee_key,
+            mg_buffer,
         )
 
-    gc.collect()
-    state.mem_trace(5)
+        del (input_secret_key, txn_fee_key)
 
-    # Encode
-    mgs = _recode_msg([mg])
-
-    gc.collect()
-    state.mem_trace(6)
+    del (mlsag, ring_pubkeys)
+    state.mem_trace(5, True)
 
     from trezor.messages.MoneroTransactionSignInputAck import (
         MoneroTransactionSignInputAck,
     )
 
-    return MoneroTransactionSignInputAck(
-        signature=serialize.dump_msg_gc(mgs[0], preallocate=488)
-    )
-
-
-def _recode_msg(mgs):
-    """
-    Recodes MGs signatures from raw forms to bytearrays so it works with serialization
-    """
-    for idx in range(len(mgs)):
-        mgs[idx].cc = crypto.encodeint(mgs[idx].cc)
-        if hasattr(mgs[idx], "II") and mgs[idx].II:
-            for i in range(len(mgs[idx].II)):
-                mgs[idx].II[i] = crypto.encodepoint(mgs[idx].II[i])
-
-        for i in range(len(mgs[idx].ss)):
-            for j in range(len(mgs[idx].ss[i])):
-                mgs[idx].ss[i][j] = crypto.encodeint(mgs[idx].ss[i][j])
-    return mgs
+    return MoneroTransactionSignInputAck(signature=mg_buffer)
