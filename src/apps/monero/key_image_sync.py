@@ -70,6 +70,8 @@ async def _sync_step(s, ctx, tds):
     buff = bytearray(32 * 3)
     buff_mv = memoryview(buff)
 
+    await confirms.keyimage_sync_step(ctx, s.current_output, s.num_outputs)
+
     for td in tds.tdis:
         s.current_output += 1
         if s.current_output >= s.num_outputs:
