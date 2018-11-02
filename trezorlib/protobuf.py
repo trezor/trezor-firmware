@@ -148,7 +148,7 @@ class MessageType:
         return "<%s: %s>" % (self.__class__.__name__, d)
 
     def __iter__(self):
-        return self.__dict__.__iter__()
+        return iter(self.keys())
 
     def keys(self):
         return (name for name, _, _ in self.get_fields().values())
@@ -412,3 +412,14 @@ def dict_to_proto(message_type, d):
 
         params[fname] = newvalue
     return message_type(**params)
+
+
+def to_dict(msg):
+    res = {}
+    for key, value in msg.__dict__.items():
+        if value is None or value == []:
+            continue
+        if isinstance(value, MessageType):
+            value = to_dict(value)
+        res[key] = value
+    return res

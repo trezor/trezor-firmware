@@ -102,8 +102,11 @@ def b58encode(v):
     return (__b58chars[0] * nPad) + result
 
 
-def b58decode(v, length):
+def b58decode(v, length=None):
     """ decode v into a string of len bytes."""
+    if isinstance(v, bytes):
+        v = v.decode()
+
     long_value = 0
     for (i, c) in enumerate(v[::-1]):
         long_value += __b58chars.find(c) * (__b58base ** i)
@@ -127,6 +130,19 @@ def b58decode(v, length):
         return None
 
     return result
+
+
+def b58check_encode(v):
+    checksum = btc_hash(v)[:4]
+    return b58encode(v + checksum)
+
+
+def b58check_decode(v, length=None):
+    dec = b58decode(v, length)
+    data, checksum = dec[:-4], dec[-4:]
+    if btc_hash(data)[:4] != checksum:
+        raise ValueError("invalid checksum")
+    return data
 
 
 def parse_path(nstr: str) -> Address:
