@@ -41,8 +41,6 @@ async def sign_input(
     :param spend_enc: one time address spending private key. Encrypted.
     :return: Generated signature MGs[i]
     """
-    from apps.monero.signing import offloading_keys
-
     await confirms.transaction_step(
         state.ctx, state.STEP_SIGN, state.current_input_index + 1, state.input_count
     )
@@ -58,8 +56,11 @@ async def sign_input(
         raise ValueError("Two and more inputs must imply SimpleRCT")
 
     input_position = state.source_permutation[state.current_input_index]
+    mods = utils.unimport_begin()
 
     # Check input's HMAC
+    from apps.monero.signing import offloading_keys
+
     vini_hmac_comp = await offloading_keys.gen_hmac_vini(
         state.key_hmac, src_entr, vini_bin, input_position
     )
@@ -68,6 +69,8 @@ async def sign_input(
 
     gc.collect()
     state.mem_trace(1, True)
+
+    from apps.monero.xmr.crypto import chacha_poly
 
     if state.rct_type == RctType.Simple:
         # both pseudo_out and its mask were offloaded so we need to
@@ -81,8 +84,6 @@ async def sign_input(
 
         state.mem_trace(2, True)
 
-        from apps.monero.xmr.crypto import chacha_poly
-
         pseudo_out_alpha = crypto.decodeint(
             chacha_poly.decrypt_pack(
                 offloading_keys.enc_key_txin_alpha(state.key_enc, input_position),
@@ -92,9 +93,6 @@ async def sign_input(
         pseudo_out_c = crypto.decodepoint(pseudo_out)
 
     # Spending secret
-    from apps.monero.xmr.crypto import chacha_poly
-    from apps.monero.xmr.serialize_messages.ct_keys import CtKey
-
     spend_key = crypto.decodeint(
         chacha_poly.decrypt_pack(
             offloading_keys.enc_key_spend(state.key_enc, input_position),
@@ -102,7 +100,18 @@ async def sign_input(
         )
     )
 
+    del (
+        offloading_keys,
+        chacha_poly,
+        pseudo_out,
+        pseudo_out_hmac,
+        pseudo_out_alpha_enc,
+        spend_enc,
+    )
+    utils.unimport_end(mods)
     state.mem_trace(3, True)
+
+    from apps.monero.xmr.serialize_messages.ct_keys import CtKey
 
     # Basic setup, sanity check
     index = src_entr.real_output
