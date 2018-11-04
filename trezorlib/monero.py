@@ -10,7 +10,9 @@ from .tools import expect
 @expect(proto.MoneroAddress, field="address")
 def get_address(client, n, show_display=False, network_type=0):
     return client.call(
-        proto.MoneroGetAddress(address_n=n, show_display=show_display, network_type=network_type)
+        proto.MoneroGetAddress(
+            address_n=n, show_display=show_display, network_type=network_type
+        )
     )
 
 
