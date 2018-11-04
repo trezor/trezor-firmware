@@ -42,6 +42,7 @@ from trezorlib import (
     log,
     messages as proto,
     misc,
+    monero,
     nem,
     ontology,
     protobuf,
@@ -1391,6 +1392,40 @@ def lisk_verify_message(connect, pubkey, signature, message):
     signature = bytes.fromhex(signature)
     pubkey = bytes.fromhex(pubkey)
     return lisk.verify_message(connect(), pubkey, signature, message)
+
+
+#
+# Monero functions
+#
+
+
+@cli.command(help="Get Monero address for specified path.")
+@click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/128'/0'")
+@click.option("-d", "--show-display", is_flag=True)
+@click.option(
+    "-t", "--network-type", type=click.Choice(["0", "1", "2", "3"]), default="0"
+)
+@click.pass_obj
+def monero_get_address(connect, address, show_display, network_type):
+    client = connect()
+    address_n = tools.parse_path(address)
+    network_type = int(network_type)
+    return monero.get_address(client, address_n, show_display, network_type)
+
+
+@cli.command(help="Get Monero watch key for specified path.")
+@click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/128'/0'")
+@click.option(
+    "-t", "--network-type", type=click.Choice(["0", "1", "2", "3"]), default="0"
+)
+@click.pass_obj
+def monero_get_watch_key(connect, address, network_type):
+    client = connect()
+    address_n = tools.parse_path(address)
+    network_type = int(network_type)
+    res = monero.get_watch_key(client, address_n, network_type)
+    output = {"address": res.address.decode(), "watch_key": res.watch_key.hex()}
+    return output
 
 
 #
