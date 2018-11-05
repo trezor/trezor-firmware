@@ -18,6 +18,7 @@ import pytest
 
 from trezorlib import btc, debuglink, device, messages as proto, misc
 
+from ..support.tx_cache import tx_cache
 from .common import TrezorTest
 
 TXHASH_d5f65e = bytes.fromhex(
@@ -273,7 +274,9 @@ class TestProtectionLevels(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            btc.sign_tx(self.client, "Bitcoin", [inp1], [out1])
+            btc.sign_tx(
+                self.client, "Bitcoin", [inp1], [out1], prev_txes=tx_cache("Bitcoin")
+            )
 
     # def test_firmware_erase(self):
     #    pass
