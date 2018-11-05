@@ -1,9 +1,9 @@
-Version 1.7.1 [unreleased]
+Version 1.7.1
 * Add support for Lisk
 * Add support for Zcash Sapling hardfork
 * Implement seedless setup
 
-Version 1.7.0 [unreleased]
+Version 1.7.0
 * Stable release, optional update
 * Switch from HID to WebUSB
 * Add support for Stellar
