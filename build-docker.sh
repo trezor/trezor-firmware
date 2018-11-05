@@ -11,6 +11,7 @@ fi
 IMAGE=trezor-core-build.$TOOLCHAIN_FLAVOR
 TAG=${1:-master}
 REPOSITORY=${2:-trezor}
+PRODUCTION=${PRODUCTION:-0}
 
 if [ "$REPOSITORY" = "local" ]; then
 	REPOSITORY=file:///local/
@@ -28,4 +29,4 @@ docker run -t -v $(pwd):/local -v $(pwd)/build-docker:/build:z --user="$(stat -c
 	ln -s /build build &&
 	git checkout $TAG && \
 	git submodule update --init --recursive && \
-	make clean vendor build_boardloader build_bootloader build_prodtest build_firmware"
+	PRODUCTION=$PRODUCTION make clean vendor build_boardloader build_bootloader build_prodtest build_firmware"
