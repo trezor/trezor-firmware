@@ -26,7 +26,7 @@ def display_homescreen():
     if storage.is_initialized() and storage.no_backup():
         ui.display.bar(0, 0, ui.WIDTH, 30, ui.RED)
         ui.display.text_center(
-            ui.WIDTH // 2, 22, "NO BACKUP!", ui.BOLD, ui.WHITE, ui.RED
+            ui.WIDTH // 2, 22, "SEEDLESS", ui.BOLD, ui.WHITE, ui.RED
         )
         ui.display.bar(0, 30, ui.WIDTH, ui.HEIGHT - 30, ui.BG)
     elif storage.is_initialized() and storage.unfinished_backup():
