@@ -127,11 +127,12 @@ class BaseClient(object):
         else:
             passphrase = self.ui.get_passphrase()
 
-        state_request = self.call_raw(proto.PassphraseAck(passphrase=passphrase))
-        if not isinstance(state_request, proto.PassphraseStateRequest):
-            raise exceptions.TrezorException("Passphrase state missing")
-        self.state = state_request.state
-        return self.call_raw(proto.PassphraseStateAck())
+        resp = self.call_raw(proto.PassphraseAck(passphrase=passphrase))
+        if isinstance(resp, proto.PassphraseStateRequest):
+            self.state = resp.state
+            return self.call_raw(proto.PassphraseStateAck())
+        else:
+            return resp
 
     def callback_ButtonRequest(self, msg):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
