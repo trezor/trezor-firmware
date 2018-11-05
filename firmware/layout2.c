@@ -252,7 +252,7 @@ void layoutHome(void)
 	}
 	if (storage_noBackup()) {
 		oledBox(0, 0, 127, 8, false);
-		oledDrawStringCenter(0, "NO BACKUP!", FONT_STANDARD);
+		oledDrawStringCenter(0, "SEEDLESS", FONT_STANDARD);
 	} else
 	if (storage_unfinishedBackup()) {
 		oledBox(0, 0, 127, 8, false);
