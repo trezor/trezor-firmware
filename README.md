@@ -58,17 +58,17 @@ Step 3 should produce the same sha256 fingerprint like your local build (for the
 
 If you want to build device firmware, make sure you have the
 [GNU ARM Embedded toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) installed.
+You will also need Python 3.5 or later and [pipenv](https://pipenv.readthedocs.io/en/latest/install/).
 
 * If you want to build the emulator instead of the firmware, run `export EMULATOR=1 TREZOR_TRANSPORT_V1=1`
 * If you want to build with the debug link, run `export DEBUG_LINK=1`. Use this if you want to run the device tests.
 * When you change these variables, use `script/setup` to clean the repository
 
 1. To initialize the repository, run `script/setup`
-2. To build the firmware or emulator, run `script/cibuild`
+2. To initialize a Python environment, run `pipenv install`
+3. To build the firmware or emulator, run `pipenv run script/cibuild`
 
 If you are building device firmware, the firmware will be in `firmware/trezor.bin`.
 
 You can launch the emulator using `firmware/trezor.elf`. To use `trezorctl` with the emulator, use
-`trezorctl -t udp` (for example, `trezorctl -t udp get_features`).
-
-If `trezorctl -t udp` appears to hang, make sure you have run `export TREZOR_TRANSPORT_V1=1`.
+`trezorctl -p udp` (for example, `trezorctl -p udp get_features`).
