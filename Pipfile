@@ -4,7 +4,7 @@ name = "pypi"
 verify_ssl = true
 
 [packages]
-trezor = {git = "https://github.com/trezor/python-trezor", editable = true, ref = "master"}
+trezor = {git = "https://github.com/trezor/python-trezor", editable = true, ref = "tsusanka/paths"}
 protobuf = "==3.4.0"
 
 # python-trezor tests
