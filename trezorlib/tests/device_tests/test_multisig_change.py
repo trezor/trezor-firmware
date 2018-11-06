@@ -20,6 +20,7 @@ from trezorlib.tools import H_, parse_path
 from ..support import ckd_public as bip32
 from ..support.tx_cache import tx_cache
 from .common import TrezorTest
+from .conftest import TREZOR_VERSION
 
 TX_API = tx_cache("Testnet")
 
@@ -135,7 +136,15 @@ class TestMultisigChange(TrezorTest):
             proto.TxRequest(
                 request_type=proto.RequestType.TXINPUT,
                 details=proto.TxRequestDetailsType(request_index=0),
-            ),
+            )
+        ]
+        if TREZOR_VERSION != 1:
+            # trezor 1 does not have UnknownDerivationPath implemented
+            resp.append(
+                proto.ButtonRequest(code=proto.ButtonRequestType.UnknownDerivationPath)
+            )
+
+        resp += [
             proto.TxRequest(
                 request_type=proto.RequestType.TXMETA,
                 details=proto.TxRequestDetailsType(tx_hash=inp1.prev_hash),
@@ -162,6 +171,14 @@ class TestMultisigChange(TrezorTest):
                 request_type=proto.RequestType.TXINPUT,
                 details=proto.TxRequestDetailsType(request_index=1),
             ),
+        ]
+        if TREZOR_VERSION != 1:
+            # trezor 1 does not have UnknownDerivationPath implemented
+            resp.append(
+                proto.ButtonRequest(code=proto.ButtonRequestType.UnknownDerivationPath)
+            )
+
+        resp += [
             proto.TxRequest(
                 request_type=proto.RequestType.TXMETA,
                 details=proto.TxRequestDetailsType(tx_hash=inp2.prev_hash),

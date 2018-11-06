@@ -348,8 +348,7 @@ class TestMsgSigntxBch(TrezorTest):
     def test_attack_change_input(self):
         self.setup_mnemonic_allallall()
         inp1 = proto.TxInputType(
-            address_n=parse_path("44'/145'/1000'/0/0"),
-            # bitcoincash:qr08q88p9etk89wgv05nwlrkm4l0urz4cyl36hh9sv
+            address_n=parse_path("44'/145'/10'/0/0"),
             amount=1995344,
             prev_hash=bytes.fromhex(
                 "bc37c28dfb467d2ecb50261387bf752a3977d7e5337915071bb4151e6b711a78"
@@ -358,7 +357,7 @@ class TestMsgSigntxBch(TrezorTest):
             script_type=proto.InputScriptType.SPENDADDRESS,
         )
         out1 = proto.TxOutputType(
-            address_n=parse_path("44'/145'/1000'/1/0"),
+            address_n=parse_path("44'/145'/10'/1/0"),
             amount=1896050,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
@@ -417,7 +416,7 @@ class TestMsgSigntxBch(TrezorTest):
         xpubs = []
         for n in map(
             lambda index: btc.get_public_node(
-                self.client, parse_path("44'/145'/%d'" % index)
+                self.client, parse_path("48'/145'/%d'" % index)
             ),
             range(1, 4),
         ):
@@ -452,7 +451,7 @@ class TestMsgSigntxBch(TrezorTest):
             "304402207274b5a4d15e75f3df7319a375557b0efba9b27bc63f9f183a17da95a6125c94022000efac57629f1522e2d3958430e2ef073b0706cfac06cce492651b79858f09ae"
         )
         inp1 = proto.TxInputType(
-            address_n=parse_path("44'/145'/1'/1/0"),
+            address_n=parse_path("48'/145'/1'/1/0"),
             multisig=getmultisig(1, 0, [b"", sig, b""]),
             # bitcoincash:pp6kcpkhua7789g2vyj0qfkcux3yvje7euhyhltn0a
             amount=24000,
@@ -463,7 +462,7 @@ class TestMsgSigntxBch(TrezorTest):
             script_type=proto.InputScriptType.SPENDMULTISIG,
         )
         out1 = proto.TxOutputType(
-            address_n=parse_path("44'/145'/1'/1/1"),
+            address_n=parse_path("48'/145'/1'/1/1"),
             multisig=proto.MultisigRedeemScriptType(
                 pubkeys=[
                     proto.HDNodePathType(node=deserialize(xpubs[0]), address_n=[1, 1]),
@@ -505,11 +504,11 @@ class TestMsgSigntxBch(TrezorTest):
             )
         assert (
             signatures1[0].hex()
-            == "3044022052ccf022b3684ecce9f961ce8828387b97267c86bedf0ce16a24bf014e62e42c022035d315ddbeeef7ab3456bd09aed8b625ea58852216b60e4b84ba9f85827d305c"
+            == "304402201badcdcafef4855ed58621f95935efcbc72068510472140f4ec5e252faa0af93022003310a43488288f70aedee96a5af2643a255268a6858cda9ae3001ea5e3c7557"
         )
         assert (
             serialized_tx.hex()
-            == "01000000015f3d291cae106548f3be5ed0f4cbedc65668fa881d60347ab0d512df10af8cf601000000fc00473044022052ccf022b3684ecce9f961ce8828387b97267c86bedf0ce16a24bf014e62e42c022035d315ddbeeef7ab3456bd09aed8b625ea58852216b60e4b84ba9f85827d305c4147304402207274b5a4d15e75f3df7319a375557b0efba9b27bc63f9f183a17da95a6125c94022000efac57629f1522e2d3958430e2ef073b0706cfac06cce492651b79858f09ae414c69522103d62b2af2272bbd67cbe30eeaf4226c7f2d57d2a0ed1aab5ab736fb40bb2f5ffe21036d5e0d7ca3589465711eec91436249d7234d3a994c219024fc75cec98fc02ae221024f58378a69b68e89301a6ff882116e0fa35446ec9bfd86532eeb05941ec1f8c853aeffffffff01d85900000000000017a9140bb11de6558871f49fc241341992ece9986f7c5c8700000000"
+            == "01000000015f3d291cae106548f3be5ed0f4cbedc65668fa881d60347ab0d512df10af8cf601000000fc0047304402201badcdcafef4855ed58621f95935efcbc72068510472140f4ec5e252faa0af93022003310a43488288f70aedee96a5af2643a255268a6858cda9ae3001ea5e3c75574147304402207274b5a4d15e75f3df7319a375557b0efba9b27bc63f9f183a17da95a6125c94022000efac57629f1522e2d3958430e2ef073b0706cfac06cce492651b79858f09ae414c69522102245739b55787a27228a4fe78b3a324366cc645fbaa708cad45da351a334341192102debbdcb0b6970d5ade84a50fdbda1c701cdde5c9925d9b6cd8e05a9a15dbef352102ffe5fa04547b2b0c3cfbc21c08a1ddfb147025fee10274cdcd5c1bdeee88eae253aeffffffff01d85900000000000017a914a23eb2a1ed4003d357770120f5c370e199ee55468700000000"
         )
 
     def test_send_bch_multisig_change(self):
@@ -517,7 +516,7 @@ class TestMsgSigntxBch(TrezorTest):
         xpubs = []
         for n in map(
             lambda index: btc.get_public_node(
-                self.client, parse_path("44'/145'/%d'" % index)
+                self.client, parse_path("48'/145'/%d'" % index)
             ),
             range(1, 4),
         ):
@@ -538,9 +537,8 @@ class TestMsgSigntxBch(TrezorTest):
             )
 
         inp1 = proto.TxInputType(
-            address_n=parse_path("44'/145'/3'/0/0"),
+            address_n=parse_path("48'/145'/3'/0/0"),
             multisig=getmultisig(0, 0),
-            # bitcoincash:pqguz4nqq64jhr5v3kvpq4dsjrkda75hwy86gq0qzw
             amount=48490,
             prev_hash=bytes.fromhex(
                 "8b6db9b8ba24235d86b053ea2ccb484fc32b96f89c3c39f98d86f90db16076a0"
@@ -554,7 +552,7 @@ class TestMsgSigntxBch(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
         out2 = proto.TxOutputType(
-            address_n=parse_path("44'/145'/3'/1/0"),
+            address_n=parse_path("48'/145'/3'/1/0"),
             multisig=getmultisig(1, 0),
             script_type=proto.OutputScriptType.PAYTOMULTISIG,
             amount=24000,
@@ -597,11 +595,11 @@ class TestMsgSigntxBch(TrezorTest):
 
         assert (
             signatures1[0].hex()
-            == "3045022100bcb1a7134a13025a06052546ee1c6ac3640a0abd2d130190ed13ed7fcb43e9cd02207c381478e2ee123c850425bfbf6d3c691230eb37e333832cb32a1ed3f2cd9e85"
+            == "3045022100a05f77bb39515c21c43e6c4ba401f39ed5d409dc3cfcd90f9a8345a08cc4bc8202205faf8f3b0775748278495324fdd60f370460452e4995e546450209ec4804a0f3"
         )
 
         inp1 = proto.TxInputType(
-            address_n=parse_path("44'/145'/1'/0/0"),
+            address_n=parse_path("48'/145'/1'/0/0"),
             multisig=getmultisig(0, 0, [b"", b"", signatures1[0]]),
             # bitcoincash:pqguz4nqq64jhr5v3kvpq4dsjrkda75hwy86gq0qzw
             amount=48490,
@@ -651,9 +649,9 @@ class TestMsgSigntxBch(TrezorTest):
 
         assert (
             signatures1[0].hex()
-            == "3045022100f1153636371ba1f84389460e1265a8fa296569bc18e117c31f4e8f0fc0650c01022022932cc84766ff0c0f65ed9633ad311ae90d4c8fe71f5e1890b1e8f74dd516fa"
+            == "3044022006f239ef1f065a70873ab9d2c81a623a04ec7a37a0ec5299d3c585668f441f49022032b2f9ef13bc61230d14f6d79b9ad1bbebdf47b95e4757e9af1b1dcdf520d3ab"
         )
         assert (
             serialized_tx.hex()
-            == "0100000001a07660b10df9868df9393c9cf8962bc34f48cb2cea53b0865d2324bab8b96d8b00000000fdfe0000483045022100f1153636371ba1f84389460e1265a8fa296569bc18e117c31f4e8f0fc0650c01022022932cc84766ff0c0f65ed9633ad311ae90d4c8fe71f5e1890b1e8f74dd516fa41483045022100bcb1a7134a13025a06052546ee1c6ac3640a0abd2d130190ed13ed7fcb43e9cd02207c381478e2ee123c850425bfbf6d3c691230eb37e333832cb32a1ed3f2cd9e85414c69522102fcf63419c319ce1a42d69120a3599d6da8c5dd4caf2888220eccde5a1ff7c5d021036d7d5ef79370b7fabe2c058698a20219e97fc70868e65ecdd6b37cc18e8a88bd2103505dc649dab8cd1655a4c0daf0ec5f955881c9d7011478ea881fac11cab1e49953aeffffffff02c05d0000000000001976a91400741952f6a6eab5394f366db5cc5a54b0c2429f88acc05d00000000000017a914756c06d7e77de3950a6124f026d8e1a2464b3ecf8700000000"
+            == "0100000001a07660b10df9868df9393c9cf8962bc34f48cb2cea53b0865d2324bab8b96d8b00000000fdfd0000473044022006f239ef1f065a70873ab9d2c81a623a04ec7a37a0ec5299d3c585668f441f49022032b2f9ef13bc61230d14f6d79b9ad1bbebdf47b95e4757e9af1b1dcdf520d3ab41483045022100a05f77bb39515c21c43e6c4ba401f39ed5d409dc3cfcd90f9a8345a08cc4bc8202205faf8f3b0775748278495324fdd60f370460452e4995e546450209ec4804a0f3414c69522102f8ca0d9665af03de32a7c19a167a4f6e97e4e0ed9505f75d11f7a45ab60b1f4d2103263d87cefd687bc15b4ef7801f9f538267b66d46f18e9fccc41d54071cfdd1ce210388568bf42f02298308eb6fa2fa4b446d544600253b4409be27e2c0c1a71c424853aeffffffff02c05d0000000000001976a91400741952f6a6eab5394f366db5cc5a54b0c2429f88acc05d00000000000017a91478574751407449b97f8054be2e40e684ad07d3738700000000"
         )

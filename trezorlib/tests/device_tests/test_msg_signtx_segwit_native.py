@@ -163,8 +163,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
     def test_send_native(self):
         self.setup_mnemonic_allallall()
         inp1 = proto.TxInputType(
-            address_n=parse_path("49'/1'/0'/0/0"),
-            # tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s
+            address_n=parse_path("84'/1'/0'/0/0"),
             amount=12300000,
             prev_hash=bytes.fromhex(
                 "09144602765ce3dd8f4329445b20e3684e948709c5cdcaf12da3bb079c99448a"
@@ -225,14 +224,13 @@ class TestMsgSigntxSegwitNative(TrezorTest):
 
         assert (
             serialized_tx.hex()
-            == "010000000001018a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090000000000ffffffff02404b4c000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c987a8386f0000000000160014d16b8c0680c61fc6ed2e407455715055e41052f502483045022100a7ca8f097525f9044e64376dc0a0f5d4aeb8d15d66808ba97979a0475b06b66502200597c8ebcef63e047f9aeef1a8001d3560470cf896c12f6990eec4faec599b950121033add1f0e8e3c3136f7428dd4a4de1057380bd311f5b0856e2269170b4ffa65bf00000000"
+            == "010000000001018a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090000000000ffffffff02404b4c000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c987a8386f0000000000160014d16b8c0680c61fc6ed2e407455715055e41052f502473044022073ce72dcf2f6e42eeb44adbe7d5038cf3763f168d1c04bd8b873a19b53331f51022016b051725731e7f53a567021bcd9c370727f551c81e857ebae7c128472119652012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86200000000"
         )
 
     def test_send_native_change(self):
         self.setup_mnemonic_allallall()
         inp1 = proto.TxInputType(
-            address_n=parse_path("49'/1'/0'/0/0"),
-            # tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s
+            address_n=parse_path("84'/1'/0'/0/0"),
             amount=12300000,
             prev_hash=bytes.fromhex(
                 "09144602765ce3dd8f4329445b20e3684e948709c5cdcaf12da3bb079c99448a"
@@ -246,7 +244,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
         out2 = proto.TxOutputType(
-            address_n=parse_path("49'/1'/0'/1/0"),
+            address_n=parse_path("84'/1'/0'/1/0"),
             script_type=proto.OutputScriptType.PAYTOWITNESS,
             amount=12300000 - 11000 - 5000000,
         )
@@ -292,7 +290,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
 
         assert (
             serialized_tx.hex()
-            == "010000000001018a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090000000000ffffffff02404b4c000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c987a8386f0000000000160014d16b8c0680c61fc6ed2e407455715055e41052f502483045022100a7ca8f097525f9044e64376dc0a0f5d4aeb8d15d66808ba97979a0475b06b66502200597c8ebcef63e047f9aeef1a8001d3560470cf896c12f6990eec4faec599b950121033add1f0e8e3c3136f7428dd4a4de1057380bd311f5b0856e2269170b4ffa65bf00000000"
+            == "010000000001018a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090000000000ffffffff02404b4c000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c987a8386f0000000000160014cc8067093f6f843d6d3e22004a4290cd0c0f336b024730440220067675423ca6a0be3ddd5e13da00a9433775041e5cebc838873d2686f1d2840102201a5819e0312e6451d6b6180689101bce995685a51524cc4c3a5383f7bdab979a012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86200000000"
         )
 
     def test_send_both(self):
@@ -308,8 +306,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             script_type=proto.InputScriptType.SPENDP2SHWITNESS,
         )
         inp2 = proto.TxInputType(
-            address_n=parse_path("49'/1'/0'/1/0"),
-            # tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu
+            address_n=parse_path("84'/1'/0'/1/0"),
             amount=7289000,
             prev_hash=bytes.fromhex(
                 "65b811d3eca0fe6915d9f2d77c86c5a7f19bf66b1b1253c2c51cb4ae5f0c017b"
@@ -401,23 +398,22 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 prev_txes=TX_API,
             )
 
-        # 0e480a97c7a545c85e101a2f13c9af0e115d43734e1448f0cac3e55fe8e7399d
         assert (
             serialized_tx.hex()
-            == "010000000001028a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090100000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff7b010c5faeb41cc5c253121b6bf69bf1a7c5867cd7f2d91569fea0ecd311b8650100000000ffffffff03e0aebb0000000000160014a579388225827d9f2fe9014add644487808c695d00cdb7020000000017a91491233e24a9bf8dbb19c1187ad876a9380c12e787870d859b03000000001976a914a579388225827d9f2fe9014add644487808c695d88ac02483045022100ead79ee134f25bb585b48aee6284a4bb14e07f03cc130253e83450d095515e5202201e161e9402c8b26b666f2b67e5b668a404ef7e57858ae9a6a68c3837e65fdc69012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7902483045022100b4099ec4c7b3123795b3c080a86f4b745f3784eb3f77de79bef1d8da319cbee5022039766865d448a4a3e435a95d0df3ff56ebc6532bf538988a7e8a679b40ec41b6012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7900000000"
+            == "010000000001028a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090100000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff7b010c5faeb41cc5c253121b6bf69bf1a7c5867cd7f2d91569fea0ecd311b8650100000000ffffffff03e0aebb0000000000160014a579388225827d9f2fe9014add644487808c695d00cdb7020000000017a91491233e24a9bf8dbb19c1187ad876a9380c12e787870d859b03000000001976a914a579388225827d9f2fe9014add644487808c695d88ac02483045022100ead79ee134f25bb585b48aee6284a4bb14e07f03cc130253e83450d095515e5202201e161e9402c8b26b666f2b67e5b668a404ef7e57858ae9a6a68c3837e65fdc69012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7902463043021f585c54a84dc7326fa60e22729accd41153c7dd4725bd4c8f751aa3a8cd8d6a0220631bfd83fc312cc6d5d129572a25178696d81eaf50c8c3f16c6121be4f4c029d012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f00000000"
         )
 
     def test_send_multisig_1(self):
         self.setup_mnemonic_allallall()
         nodes = [
-            btc.get_public_node(self.client, parse_path("999'/1'/%d'" % index))
+            btc.get_public_node(self.client, parse_path("49'/1'/%d'" % index))
             for index in range(1, 4)
         ]
         multisig = proto.MultisigRedeemScriptType(
             pubkeys=list(
                 map(
                     lambda n: proto.HDNodePathType(
-                        node=deserialize(n.xpub), address_n=[2, 0]
+                        node=deserialize(n.xpub), address_n=[0, 0]
                     ),
                     nodes,
                 )
@@ -427,7 +423,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
         )
 
         inp1 = proto.TxInputType(
-            address_n=parse_path("999'/1'/1'/2/0"),
+            address_n=parse_path("49'/1'/1'/0/0"),
             prev_hash=bytes.fromhex(
                 "9c31922be756c06d02167656465c8dc83bb553bf386a3f478ae65b5c021002be"
             ),
@@ -509,23 +505,22 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
-        # f41cbedd8becee05a830f418d13aa665125464547db5c7a6cd28f21639fe1228
         assert (
             serialized_tx.hex()
-            == "01000000000101be0210025c5be68a473f6a38bf53b53bc88d5c46567616026dc056e72b92319c01000000232200201e8dda334f11171190b3da72e526d441491464769679a319a2f011da5ad312a1ffffffff01887d180000000000220020c5f4a0a4ea7c0392efe0a9670a73264cffa90b19107cd8a8e9750ff93c77fdfb0400483045022100a9b681f324ff4cf419ab06820d07248cc4e359c77334bf448ae7b5cdf3995ddf022039811f91f55b602368b4ba08a217b82bfd62d1a97dc635deb1457e7cfcc1550b0147304402201ad86a795c3d26881d696fa0a0619c24c4d505718132a82965cc2a609c9d8798022067cd490ce1366cde77e307ced5b13040bbc04991619ea6f49e06cece9a83268b01695221038e81669c085a5846e68e03875113ddb339ecbb7cb11376d4163bca5dc2e2a0c1210348c5c3be9f0e6cf1954ded1c0475beccc4d26aaa9d0cce2dd902538ff1018a112103931140ebe0fbbb7df0be04ed032a54e9589e30339ba7bbb8b0b71b15df1294da53ae00000000"
+            == "01000000000101be0210025c5be68a473f6a38bf53b53bc88d5c46567616026dc056e72b92319c01000000232200208d398cfb58a1d9cdb59ccbce81559c095e8c6f4a3e64966ca385078d9879f95effffffff01887d180000000000220020c5f4a0a4ea7c0392efe0a9670a73264cffa90b19107cd8a8e9750ff93c77fdfb0400483045022100dd6342c65197af27d7894d8b8b88b16b568ee3b5ebfdc55fdfb7caa9650e3b4c02200c7074a5bcb0068f63d9014c7cd2b0490aba75822d315d41aad444e9b86adf5201483045022100e7e6c2d21109512ba0609e93903e84bfb7731ac3962ee2c1cad54a7a30ff99a20220421497930226c39fc3834e8d6da3fc876516239518b0e82e2dc1e3c46271a17c01695221021630971f20fa349ba940a6ba3706884c41579cd760c89901374358db5dd545b92102f2ff4b353702d2bb03d4c494be19d77d0ab53d16161b53fbcaf1afeef4ad0cb52103e9b6b1c691a12ce448f1aedbbd588e064869c79fbd760eae3b8cd8a5f1a224db53ae00000000"
         )
 
     def test_send_multisig_2(self):
         self.setup_mnemonic_allallall()
         nodes = [
-            btc.get_public_node(self.client, parse_path("999'/1'/%d'" % index))
+            btc.get_public_node(self.client, parse_path("84'/1'/%d'" % index))
             for index in range(1, 4)
         ]
         multisig = proto.MultisigRedeemScriptType(
             pubkeys=list(
                 map(
                     lambda n: proto.HDNodePathType(
-                        node=deserialize(n.xpub), address_n=[2, 1]
+                        node=deserialize(n.xpub), address_n=[0, 1]
                     ),
                     nodes,
                 )
@@ -535,7 +530,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
         )
 
         inp1 = proto.TxInputType(
-            address_n=parse_path("999'/1'/2'/2/1"),
+            address_n=parse_path("84'/1'/2'/0/1"),
             prev_hash=bytes.fromhex(
                 "f41cbedd8becee05a830f418d13aa665125464547db5c7a6cd28f21639fe1228"
             ),
@@ -617,23 +612,22 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
-        # c9348040bbc2024e12dcb4a0b4806b0398646b91acf314da028c3f03dd0179fc
         assert (
             serialized_tx.hex()
-            == "010000000001012812fe3916f228cda6c7b57d5464541265a63ad118f430a805eeec8bddbe1cf40000000000ffffffff01a0791800000000002200201e8dda334f11171190b3da72e526d441491464769679a319a2f011da5ad312a10400483045022100cc97f21a7cabc543a9b4ac52424e8f7e420622903f2417a1c08a6af68058ec4a02200baca0b222fc825078d94e8e1b55f174c4828bed16697e4281cda2a0c799eecf01473044022009b8058dc30fa7a13310dd8f1a99c4341c4cd95f771c5a41c4381f956e2344c102205e829c560c0184fd4b4db8971f99711e2a87409afa4df0840b4f12a87b2c8afc0169522102740ec30d0af8591a0dd4a3e3b274e57f3f73bdc0638a9603f9ee6ade0475ba57210311aada919974e882abf0c67b5c0fba00000b26997312ca00345027d22359443021029382591271a79d4b12365fa27c67fad3753150d8eaa987e5a12dc5ba1bb2fa1653ae00000000"
+            == "010000000001012812fe3916f228cda6c7b57d5464541265a63ad118f430a805eeec8bddbe1cf40000000000ffffffff01a0791800000000002200201e8dda334f11171190b3da72e526d441491464769679a319a2f011da5ad312a10400473044022001b7f4f21a8ddcd5e0faaaee3b95515bf8b84f2a7cbfdf66996c64123617a5cf02202fc6a776a7225420dbca759ad4ac83a61d15bf8d2883b6bf1aa31de7437f9b6e0147304402206c4125c1189a3b3e93a77cdf54c60c0538b80e5a03ec74e6ac776dfa77706ee4022035be14de76259b9d8a24863131a06a65b95df02f7d3ace90d52b37e8d94b167f0169522103bab8ecdd9ae2c51a0dc858f4c751b27533143bf6013ba1725ba8a4ecebe7de8c21027d5e55696c875308b03f2ca3d8637f51d3e35da9456a5187aa14b3de8a89534f2103b78eabaea8b3a4868be4f4bb96d6f66973f7081faa7f1cafba321444611c241e53ae00000000"
         )
 
     def test_send_multisig_3_change(self):
         self.setup_mnemonic_allallall()
         nodes = [
-            btc.get_public_node(self.client, parse_path("999'/1'/%d'" % index))
+            btc.get_public_node(self.client, parse_path("84'/1'/%d'" % index))
             for index in range(1, 4)
         ]
         multisig = proto.MultisigRedeemScriptType(
             pubkeys=list(
                 map(
                     lambda n: proto.HDNodePathType(
-                        node=deserialize(n.xpub), address_n=[2, 0]
+                        node=deserialize(n.xpub), address_n=[1, 0]
                     ),
                     nodes,
                 )
@@ -655,7 +649,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
         )
 
         inp1 = proto.TxInputType(
-            address_n=parse_path("999'/1'/1'/2/0"),
+            address_n=parse_path("84'/1'/1'/1/0"),
             prev_hash=bytes.fromhex(
                 "c9348040bbc2024e12dcb4a0b4806b0398646b91acf314da028c3f03dd0179fc"
             ),
@@ -666,7 +660,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
         )
 
         out1 = proto.TxOutputType(
-            address_n=parse_path("999'/1'/1'/1/1"),
+            address_n=parse_path("84'/1'/1'/1/1"),
             amount=1603000,
             multisig=multisig2,
             script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
@@ -737,16 +731,15 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
-        # 31bc1c88ce6ae337a6b3057a16d5bad0b561ad1dfc047d0a7fbb8814668f91e5
         assert (
             serialized_tx.hex()
-            == "01000000000101fc7901dd033f8c02da14f3ac916b6498036b80b4a0b4dc124e02c2bb408034c90000000000ffffffff01b87518000000000017a914a8655acf68f785125561158b0f4db9b5d0044047870400473044022057b571986c07f8ccb231811334ad06ee6f87b722495def2e9511c1da46f3433202207b6e95bdd99e7fc7d319486437cb930d40a4af3cd753c4cb960b330badbf7f35014730440220517ecc6d0a2544276921d8fc2077aec4285ab83b1b21f5eb73cdb6187a0583e4022043fb5ab942f8981c04a54c66a57c4d291fad8514d4a8afea09f01f2db7a8f32901695221038e81669c085a5846e68e03875113ddb339ecbb7cb11376d4163bca5dc2e2a0c1210348c5c3be9f0e6cf1954ded1c0475beccc4d26aaa9d0cce2dd902538ff1018a112103931140ebe0fbbb7df0be04ed032a54e9589e30339ba7bbb8b0b71b15df1294da53ae00000000"
+            == "01000000000101fc7901dd033f8c02da14f3ac916b6498036b80b4a0b4dc124e02c2bb408034c90000000000ffffffff01b87518000000000017a914536250d41937e5b641082447580ff6a8e46c122a870400473044022003c26107a5a47f1f900ef8aa758977530cd13ea37a33971abae8d75cac2f9f34022039e2b8c2c1d0c24ff4fc026652e1f27ad8e3ed6c9bf485f61d9aa691cb57830801483045022100963b0dc0ab46e963a66ab6e69e5e41bac6c4fedc127cac12c560b029d54fe87402205b3bcdcf313dccd78e5dce0540e7d3c8cc1bf83f13c1f9f01811eb791fd35c8101695221039dba3a72f5dc3cad17aa924b5a03c34561465f997d0cb15993f2ca2c0be771c42103cd39f3f08bbd508dce4d307d57d0c70c258c285878bfda579fa260acc738c25d2102cd631ba95beca1d64766f5540885092d0bb384a3c13b6c3a5334d0ebacf51b9553ae00000000"
         )
 
     def test_send_multisig_4_change(self):
         self.setup_mnemonic_allallall()
         nodes = [
-            btc.get_public_node(self.client, parse_path("999'/1'/%d'" % index))
+            btc.get_public_node(self.client, parse_path("49'/1'/%d'" % index))
             for index in range(1, 4)
         ]
         multisig = proto.MultisigRedeemScriptType(
@@ -775,7 +768,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
         )
 
         inp1 = proto.TxInputType(
-            address_n=parse_path("999'/1'/1'/1/1"),
+            address_n=parse_path("49'/1'/1'/1/1"),
             prev_hash=bytes.fromhex(
                 "31bc1c88ce6ae337a6b3057a16d5bad0b561ad1dfc047d0a7fbb8814668f91e5"
             ),
@@ -786,7 +779,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
         )
 
         out1 = proto.TxOutputType(
-            address_n=parse_path("999'/1'/1'/1/2"),
+            address_n=parse_path("49'/1'/1'/1/2"),
             amount=1602000,
             multisig=multisig2,
             script_type=proto.OutputScriptType.PAYTOWITNESS,
@@ -857,8 +850,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
-        # c0bf56060a109624b4635222696d94a7d533cacea1b3f8245417a4348c045829
         assert (
             serialized_tx.hex()
-            == "01000000000101e5918f661488bb7f0a7d04fc1dad61b5d0bad5167a05b3a637e36ace881cbc3100000000232200205b9824093eaf5cdcf8247c00dc0b557a7720957828fcde8384ac11f80a91f403ffffffff01d071180000000000220020e77caf5fbef07b1e461475c02afd4aed877693263d69c81e14617304349b629a040047304402204832553b0da1009da496881e58e8e2e41010cfe5c0161623048093f1b1a817b7022020dad8bf887acf574af80bfe4b39cd24e95019fd5e6b8ae967471e21ddc67354014830450221009e5d60847e7275edcf4619ed8ee462c56a042eef75d17da2d44e6b13d78e50e50220665195492900ef87a5eb8a924fa0ac9afc4fc75ca704ff356dc3a213979970c80169522103f4040006e3561b3e76c6d4113225c84748ab9d55ffd23f9578ab4c18fb0c3b9721020975f2e6922897ff6b80da6412a8d6ebd67e33c9611d081656a53ef967964e5021026b0546f23a6ce6b756c2c30b4176ce6f1c3268744f7aca82668d5116c4f764e453ae00000000"
+            == "01000000000101e5918f661488bb7f0a7d04fc1dad61b5d0bad5167a05b3a637e36ace881cbc310000000023220020fa6c73de618ec134eeec0c16f6dd04d46d4347e9a4fd0a95fd7938403a4949f9ffffffff01d071180000000000220020bcea2324dacbcde5a9db90cc26b8df9cbc72010e05cb68cf034df6f0e05239a2040047304402206bbddb45f12e31e77610fd85b50a83bad4426433b1c4860b1c5ddc0a69f803720220087b0607daab14830f4b4941f16b953b38e606ad70029bac24af7267f93c4242014730440220551a0cb6b0d5b3fa0cfd0b07bb5d751494b827b1c6a08702186696cfbc18278302204f37c382876c4117cca656654599b508f2d55fc3b083dc938e3cd8491b29719601695221036a5ec3abd10501409092246fe59c6d7a15fff1a933479483c3ba98b866c5b9742103559be875179d44e438db2c74de26e0bc9842cbdefd16018eae8a2ed989e474722103067b56aad037cd8b5f569b21f9025b76470a72dc69457813d2b76e98dc0cd01a53ae00000000"
         )

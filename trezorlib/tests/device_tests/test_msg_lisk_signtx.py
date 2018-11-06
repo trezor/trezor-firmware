@@ -13,7 +13,6 @@
 #
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
-
 import pytest
 
 from trezorlib import lisk, messages as proto
@@ -34,7 +33,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
                         signature=bytes.fromhex(
-                            "b62717d581e5713bca60b758b661e6cfa091addc6caedd57534e06cda805943ee80797b9fb9a1e1b2bd584e292d2a7f832a4d1b3f15f00e1ee1b72de7e195a08"
+                            "6c96202c2271971917f9d8b752d6aa097084931bae2f2c92d2eeb3956310fb29c5bebeadf5707558b847d75a7f437998b9940aa76fb0d7b4fe40f09b4809970f"
                         )
                     ),
                 ]
@@ -42,7 +41,40 @@ class TestMsgLiskSignTx(TrezorTest):
 
             lisk.sign_tx(
                 self.client,
-                parse_path("m/44'/134'/0'/0'"),
+                parse_path("m/44'/134'/0'"),
+                {
+                    "amount": "10000000",
+                    "recipientId": "9971262264659915921L",
+                    "timestamp": 57525937,
+                    "type": 0,
+                    "fee": "10000000",
+                    "asset": {},
+                },
+            )
+
+    @pytest.mark.skip_t1
+    def test_lisk_sign_tx_send_wrong_path(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        with self.client:
+            self.client.set_expected_responses(
+                [
+                    proto.ButtonRequest(
+                        code=proto.ButtonRequestType.UnknownDerivationPath
+                    ),
+                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                    proto.LiskSignedTx(
+                        signature=bytes.fromhex(
+                            "2cb9ce4b5e5add3b445272dd0def4719fcabfb169177ce705e856602ee414fc1a45e8ea0d1ae45bdc4e8283285b13d7a2e8776afb0e3ab50eeffe2c9ca67cc06"
+                        )
+                    ),
+                ]
+            )
+
+            lisk.sign_tx(
+                self.client,
+                parse_path("m/44'/9999'/0'"),
                 {
                     "amount": "10000000",
                     "recipientId": "9971262264659915921L",
@@ -63,7 +95,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
                         signature=bytes.fromhex(
-                            "5dd0dbb87ee46f3e985b1ef2df85cb0bec481e8601d150388f73e198cdd57a698eab076c7cd5b281fbb6a83dd3dc64d91a6eccd1614dffd46f101194ffa3a004"
+                            "8c36cbb03461cd574db2e9183b85f354f14f8a9b797a082b622bbd93c3504992e80bfcb20d93671843932c2d672e072ebcc139bb829bbdafedcc359230321b02"
                         )
                     ),
                 ]
@@ -71,7 +103,7 @@ class TestMsgLiskSignTx(TrezorTest):
 
             lisk.sign_tx(
                 self.client,
-                parse_path("m/44'/134'/0'/0'"),
+                parse_path("m/44'/134'/0'"),
                 {
                     "amount": "10000000",
                     "recipientId": "9971262264659915921L",
@@ -92,7 +124,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
                         signature=bytes.fromhex(
-                            "f02bdc40a7599c21d29db4080ff1ff8934f76eedf5b0c4fa695c8a64af2f0b40a5c4f92db203863eebbbfad8f0611a23f451ed8bb711490234cdfb034728fd01"
+                            "6b8d4af2f31d94c187dd7059c3bbbf0e98d0b0a5a278a1a71d3f42ed81c92d6e122b4bcf2e8829af081098adefca990972b7765cecca70745030e07f61de7909"
                         )
                     ),
                 ]
@@ -100,7 +132,7 @@ class TestMsgLiskSignTx(TrezorTest):
 
             lisk.sign_tx(
                 self.client,
-                parse_path("m/44'/134'/0'/0'"),
+                parse_path("m/44'/134'/0'"),
                 {
                     "amount": "0",
                     "timestamp": 57525937,
@@ -124,7 +156,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
                         signature=bytes.fromhex(
-                            "5ac02b2882b9d7d0f944e48baadc27de1296cc08c3533f7c8e380fbbb9fb4a6ac81b5dc57060d7d8c68912eea24eb6e39024801bccc0d55020e2052b0c2bb701"
+                            "9187f8156e8fc0bfe934002f0630cf9e9ef94f8880c796b8680b67ddeb15421f2a7880c0e23fa405cf3ed06459b856b9004aec916df58654b025bf5167e5dc0f"
                         )
                     ),
                 ]
@@ -132,7 +164,7 @@ class TestMsgLiskSignTx(TrezorTest):
 
             lisk.sign_tx(
                 self.client,
-                parse_path("m/44'/134'/0'/0'"),
+                parse_path("m/44'/134'/0'"),
                 {
                     "amount": "0",
                     "timestamp": 57525937,
@@ -152,7 +184,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
                         signature=bytes.fromhex(
-                            "1d0599a8387edaa4a6d309b8a78accd1ceaff20ff9d87136b01cba0efbcb9781c13dc2b0bab5a1ea4f196d8dcc9dbdbd2d56dbffcc088fc77686b2e2c2fe560f"
+                            "dfe9a12e14a12e6d411dba6eab91f69f7389eb3b04055f57218b997ccf72059fe151dd065d055e4c11205aa357f9b733958502ad7e8ab97cfeeda9b2edfa6a0b"
                         )
                     ),
                 ]
@@ -160,7 +192,7 @@ class TestMsgLiskSignTx(TrezorTest):
 
             lisk.sign_tx(
                 self.client,
-                parse_path("m/44'/134'/0'/0'"),
+                parse_path("m/44'/134'/0'"),
                 {
                     "amount": "0",
                     "timestamp": 57525937,
@@ -185,7 +217,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
                         signature=bytes.fromhex(
-                            "88923866c2d500a6927715699ab41a0f58ea4b52e552d90e923bc24ac9da240f2328c93f9ce043a1da4937d4b61c7f57c02fc931f9824d06b24731e7be23c506"
+                            "c97c94a4e6426e0d280e8279833110c5d5204beabde49865d73e21866ee9764da7f654257977e68ec6a9c5aa71214dec29ca331e64ae70853968c25b730ca403"
                         )
                     ),
                 ]
@@ -193,7 +225,7 @@ class TestMsgLiskSignTx(TrezorTest):
 
             lisk.sign_tx(
                 self.client,
-                parse_path("m/44'/134'/0'/0'"),
+                parse_path("m/44'/134'/0'"),
                 {
                     "amount": "0",
                     "timestamp": 57525937,

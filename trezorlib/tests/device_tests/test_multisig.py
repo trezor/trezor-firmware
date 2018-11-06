@@ -17,9 +17,10 @@
 import pytest
 
 from trezorlib import btc, messages as proto
-from trezorlib.tools import CallException
+from trezorlib.tools import CallException, parse_path
 
 from ..support import ckd_public as bip32
+from ..support.ckd_public import deserialize
 from ..support.tx_cache import tx_cache
 from .common import TrezorTest
 
@@ -30,54 +31,29 @@ TXHASH_c6091a = bytes.fromhex(
 )
 
 
-# Multisig howto:
-#
-# https://sx.dyne.org/multisig.html
-#
-
-
 class TestMultisig(TrezorTest):
     def test_2_of_3(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
-        # key1 = self.client.get_public_node([1])
-        # key2 = self.client.get_public_node([2])
-        # key3 = self.client.get_public_node([3])
-
-        # xpub:
-        # print(bip32.serialize(self.client.get_public_node([]).node))
-        # xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy
-
-        # pubkeys:
-        #    xpub/1: 0338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6
-        #    xpub/2: 038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e3
-        #    xpub/3: 03477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a7902
-
-        # redeem script:
-        # 52210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a621038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e32103477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a790253ae
-
-        # multisig address: 3E7GDtuHqnqPmDgwH59pVC7AvySiSkbibz
-
-        # tx: c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52
-        # input 1: 0.001 BTC
-
-        node = bip32.deserialize(
-            "xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy"
-        )
+        self.setup_mnemonic_allallall()
+        nodes = [
+            btc.get_public_node(self.client, parse_path("48'/0'/%d'" % index))
+            for index in range(1, 4)
+        ]
 
         multisig = proto.MultisigRedeemScriptType(
-            pubkeys=[
-                proto.HDNodePathType(node=node, address_n=[1]),
-                proto.HDNodePathType(node=node, address_n=[2]),
-                proto.HDNodePathType(node=node, address_n=[3]),
-            ],
+            pubkeys=list(
+                map(
+                    lambda n: proto.HDNodePathType(
+                        node=deserialize(n.xpub), address_n=[0, 0]
+                    ),
+                    nodes,
+                )
+            ),
             signatures=[b"", b"", b""],
             m=2,
         )
-
         # Let's go to sign with key 1
         inp1 = proto.TxInputType(
-            address_n=[1],
+            address_n=parse_path("48'/0'/1'/0/0"),
             prev_hash=TXHASH_c6091a,
             prev_index=1,
             script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -148,18 +124,21 @@ class TestMultisig(TrezorTest):
 
         assert (
             signatures1[0].hex()
-            == "3045022100985cc1ba316d140eb4b2d4028d8cd1c451f87bff8ff679858732e516ad04cd3402207af6edda99972af0baa7702a3b7448517c8242e7bca669f6861771cdd16ee058"
+            == "3044022052f4a3dc5ca3e86ed66abb1e2b4d9b9ace7d96f5615944beea19e58280847c2902201bd3ff32a38366a4eed0373e27da26ebc0d2a4c2bbeffd83e8a60e313d95b9e3"
         )
 
         # ---------------------------------------
         # Let's do second signature using 3rd key
 
         multisig = proto.MultisigRedeemScriptType(
-            pubkeys=[
-                proto.HDNodePathType(node=node, address_n=[1]),
-                proto.HDNodePathType(node=node, address_n=[2]),
-                proto.HDNodePathType(node=node, address_n=[3]),
-            ],
+            pubkeys=list(
+                map(
+                    lambda n: proto.HDNodePathType(
+                        node=deserialize(n.xpub), address_n=[0, 0]
+                    ),
+                    nodes,
+                )
+            ),
             signatures=[
                 signatures1[0],
                 b"",
@@ -170,7 +149,7 @@ class TestMultisig(TrezorTest):
 
         # Let's do a second signature with key 3
         inp3 = proto.TxInputType(
-            address_n=[3],
+            address_n=parse_path("48'/0'/3'/0/0"),
             prev_hash=TXHASH_c6091a,
             prev_index=1,
             script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -233,13 +212,12 @@ class TestMultisig(TrezorTest):
 
         assert (
             signatures2[0].hex()
-            == "3045022100f5428fe0531b3095675b40d87cab607ee036fac823b22e8dcec35b65aff6e52b022032129b4577ff923d321a1c70db5a6cec5bcc142cb2c51901af8b989cced23e0d"
+            == "304402203828fd48540811be6a1b12967e7012587c46e6f05c78d42471e7b25c06bc7afc0220749274bc1aa698335b00400c5ba946a70b6b46c711324fbc4989279737a57f49"
         )
 
-        # Accepted by network: tx 8382a2b2e3ec8788800c1d46d285dfa9dd4051edddd75982fad166b9273e5ac6
         assert (
             serialized_tx.hex()
-            == "010000000152ba4dfcde9c4bed88f55479cdea03e711ae586e9a89352a98230c4cdf1a09c601000000fdfe0000483045022100985cc1ba316d140eb4b2d4028d8cd1c451f87bff8ff679858732e516ad04cd3402207af6edda99972af0baa7702a3b7448517c8242e7bca669f6861771cdd16ee05801483045022100f5428fe0531b3095675b40d87cab607ee036fac823b22e8dcec35b65aff6e52b022032129b4577ff923d321a1c70db5a6cec5bcc142cb2c51901af8b989cced23e0d014c6952210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a621038caebd6f753bbbd2bb1f3346a43cd32140648583673a31d62f2dfb56ad0ab9e32103477b9f0f34ae85434ce795f0c5e1e90c9420e5b5fad084d7cce9a487b94a790253aeffffffff01a0860100000000001976a91412e8391ad256dcdc023365978418d658dfecba1c88ac00000000"
+            == "010000000152ba4dfcde9c4bed88f55479cdea03e711ae586e9a89352a98230c4cdf1a09c601000000fc00473044022052f4a3dc5ca3e86ed66abb1e2b4d9b9ace7d96f5615944beea19e58280847c2902201bd3ff32a38366a4eed0373e27da26ebc0d2a4c2bbeffd83e8a60e313d95b9e30147304402203828fd48540811be6a1b12967e7012587c46e6f05c78d42471e7b25c06bc7afc0220749274bc1aa698335b00400c5ba946a70b6b46c711324fbc4989279737a57f49014c6952210203ed6187880ae932660086e55d4561a57952dd200aa3ed2aa66b73e5723a0ce7210360e7f32fd3c8dee27a166f6614c598929699ee66acdcbda5fb24571bf2ae1ca021037c4c7e5d3293ab0f97771dcfdf83caadab341f427f54713da8b2c590a834f03b53aeffffffff01a0860100000000001976a91412e8391ad256dcdc023365978418d658dfecba1c88ac00000000"
         )
 
     def test_15_of_15(self):

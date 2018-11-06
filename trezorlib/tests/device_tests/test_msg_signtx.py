@@ -67,7 +67,15 @@ TXHASH_2bac7a = bytes.fromhex(
 )
 
 
-def check_sign_tx(client, coin_name, inputs, outputs, fee_too_high=False, failure=None):
+def check_sign_tx(
+    client,
+    coin_name,
+    inputs,
+    outputs,
+    fee_too_high=False,
+    failure=None,
+    unknown_path=False,
+):
     __tracebackhide__ = True
     expected_responses = []
 
@@ -87,10 +95,10 @@ def check_sign_tx(client, coin_name, inputs, outputs, fee_too_high=False, failur
         return proto.ButtonRequest(code=code)
 
     for i, inp in enumerate(inputs):
-        expected_responses += [
-            tx_request(t.TXINPUT, request_index=i),
-            tx_request(t.TXMETA, tx_hash=inp.prev_hash),
-        ]
+        expected_responses.append(tx_request(t.TXINPUT, request_index=i))
+        if unknown_path and TREZOR_VERSION != 1:
+            expected_responses.append(btn(b.UnknownDerivationPath))
+        expected_responses.append(tx_request(t.TXMETA, tx_hash=inp.prev_hash))
 
         if inp.script_type in (
             proto.InputScriptType.SPENDP2SHWITNESS,
@@ -163,7 +171,9 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        _, serialized_tx = check_sign_tx(self.client, "Bitcoin", [inp1], [out1])
+        _, serialized_tx = check_sign_tx(
+            self.client, "Bitcoin", [inp1], [out1], unknown_path=True
+        )
 
         # Accepted by network: tx fd79435246dee76b2f159d2db08032d666c95adc544de64c8c49f474df4a7fee
         assert (
@@ -229,7 +239,12 @@ class TestMsgSigntx(TrezorTest):
         out2.force_confirm = True
 
         _, serialized_tx = check_sign_tx(
-            self.client, "Testnet", [inp1], [out1, out2], fee_too_high=True
+            self.client,
+            "Testnet",
+            [inp1],
+            [out1, out2],
+            fee_too_high=True,
+            unknown_path=True,
         )
 
         assert (
@@ -304,7 +319,7 @@ class TestMsgSigntx(TrezorTest):
         out3.force_confirm = True
 
         _, serialized_tx = check_sign_tx(
-            self.client, "Bitcoin", [inp1], [out1, out2, out3]
+            self.client, "Bitcoin", [inp1], [out1, out2, out3], unknown_path=True
         )
 
         assert (
@@ -349,7 +364,7 @@ class TestMsgSigntx(TrezorTest):
         out2.force_confirm = True
 
         _, serialized_tx = check_sign_tx(
-            self.client, "Bitcoin", [inp1, inp2], [out1, out2]
+            self.client, "Bitcoin", [inp1, inp2], [out1, out2], unknown_path=True
         )
 
         # Accepted by network: tx c63e24ed820c5851b60c54613fbc4bcb37df6cd49b4c96143e99580a472f79fb
@@ -378,7 +393,9 @@ class TestMsgSigntx(TrezorTest):
             amount=100 * 26000 - 15 * 10000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
-        _, serialized_tx = check_sign_tx(self.client, "Bitcoin", inputs, [out])
+        _, serialized_tx = check_sign_tx(
+            self.client, "Bitcoin", inputs, [out], unknown_path=True
+        )
         # Accepted by network: tx 23d9d8eecf3abf6c0f0f3f8b0976a04792d7f1c9a4ea9b0a8931734949e27c92
         # too big put in unit test, only check hash
         assert (
@@ -420,7 +437,9 @@ class TestMsgSigntx(TrezorTest):
             )
             outputs.append(out)
 
-        _, serialized_tx = check_sign_tx(self.client, "Bitcoin", [inp1, inp2], outputs)
+        _, serialized_tx = check_sign_tx(
+            self.client, "Bitcoin", [inp1, inp2], outputs, unknown_path=True
+        )
 
         assert (
             serialized_tx.hex()
@@ -450,7 +469,7 @@ class TestMsgSigntx(TrezorTest):
         )
 
         _, serialized_tx = check_sign_tx(
-            self.client, "Bitcoin", [inp1], [out1], fee_too_high=True
+            self.client, "Bitcoin", [inp1], [out1], fee_too_high=True, unknown_path=True
         )
 
         assert (
@@ -484,6 +503,7 @@ class TestMsgSigntx(TrezorTest):
                 [inp1],
                 [out1],
                 failure=proto.FailureType.NotEnoughFunds,
+                unknown_path=True,
             )
         assert exc.value.args[0] == proto.FailureType.NotEnoughFunds
 
@@ -503,7 +523,9 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOSCRIPTHASH,
         )
 
-        _, serialized_tx = check_sign_tx(self.client, "Bitcoin", [inp1], [out1])
+        _, serialized_tx = check_sign_tx(
+            self.client, "Bitcoin", [inp1], [out1], unknown_path=True
+        )
 
         # Accepted by network: tx 8cc1f4adf7224ce855cf535a5104594a0004cb3b640d6714fdb00b9128832dd5
         assert (
@@ -576,7 +598,7 @@ class TestMsgSigntx(TrezorTest):
         out2.force_confirm = True
         # Test if the transaction can be signed normally
         _, serialized_tx = check_sign_tx(
-            self.client, "Bitcoin", [inp1, inp2], [out1, out2]
+            self.client, "Bitcoin", [inp1, inp2], [out1, out2], unknown_path=True
         )
 
         # Accepted by network: tx c63e24ed820c5851b60c54613fbc4bcb37df6cd49b4c96143e99580a472f79fb
@@ -656,7 +678,7 @@ class TestMsgSigntx(TrezorTest):
                 if not run_attack:
                     run_attack = True
                 else:
-                    msg.tx.inputs[0].address_n[2] = H_(12345)
+                    msg.tx.inputs[0].address_n[2] = H_(12)
 
             return msg
 
@@ -746,7 +768,9 @@ class TestMsgSigntx(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        _, serialized_tx = check_sign_tx(self.client, "Testnet", [inp1], [out1])
+        _, serialized_tx = check_sign_tx(
+            self.client, "Testnet", [inp1], [out1], unknown_path=True
+        )
 
         # Accepted by network: tx
         assert (

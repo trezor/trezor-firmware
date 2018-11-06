@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import ethereum, messages as proto
+from trezorlib.tools import parse_path
 
 from .common import TrezorTest
 
@@ -56,7 +57,7 @@ class TestMsgEthereumSigntx(TrezorTest):
 
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 self.client,
-                n=[0, 0],
+                n=parse_path("44'/60'/0'/0/0"),
                 nonce=0,
                 gas_price=20,
                 gas_limit=20,
@@ -71,11 +72,11 @@ class TestMsgEthereumSigntx(TrezorTest):
             # taken from T1 might not be 100% correct but still better than nothing
             assert (
                 sig_r.hex()
-                == "75cf48fa173d8ceb68af9e4fb6b78ef69e6ed5e7679ba6f8e3e91d74b2fb0f96"
+                == "ec1df922115d256745410fbc2070296756583c8786e4d402a88d4e29ec513fa9"
             )
             assert (
                 sig_s.hex()
-                == "65de4a8c35263b2cfff3954b12146e8e568aa67a1c2461d6865e74ef75c7e190"
+                == "7001bfe3ba357e4a9f9e0d3a3f8a8962257615a4cf215db93e48b98999fc51b7"
             )
 
     def test_ethereum_signtx_unknown_erc20_token(self):
@@ -109,7 +110,7 @@ class TestMsgEthereumSigntx(TrezorTest):
 
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 self.client,
-                n=[0, 0],
+                n=parse_path("44'/60'/0'/0/1"),
                 nonce=0,
                 gas_price=20,
                 gas_limit=20,
@@ -124,11 +125,11 @@ class TestMsgEthereumSigntx(TrezorTest):
             # taken from T1 might not be 100% correct but still better than nothing
             assert (
                 sig_r.hex()
-                == "1707471fbf632e42d18144157aaf4cde101cd9aa9782ad8e30583cfc95ddeef6"
+                == "2559bbf1bcb80992b6eaa96f0074b19606d8ea7bf4219e1c9ac64a12855c0cce"
             )
             assert (
                 sig_s.hex()
-                == "3d2e52ba5904a4bf131abde3f79db826199f5d6f4d241d531d7e8a30a3b9cfd9"
+                == "633a74429eb6d3aeec4ed797542236a85daab3cab15e37736b87a45697541d7a"
             )
 
     def test_ethereum_signtx_nodata(self):
@@ -145,7 +146,7 @@ class TestMsgEthereumSigntx(TrezorTest):
 
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 self.client,
-                n=[0, 0],
+                n=parse_path("44'/60'/0'/0/100"),
                 nonce=0,
                 gas_price=20,
                 gas_limit=20,
@@ -156,11 +157,11 @@ class TestMsgEthereumSigntx(TrezorTest):
         assert sig_v == 27
         assert (
             sig_r.hex()
-            == "9b61192a161d056c66cfbbd331edb2d783a0193bd4f65f49ee965f791d898f72"
+            == "2f548f63ddb4cf19b6b9f922da58ff71833b967d590f3b4dcc2a70810338a982"
         )
         assert (
             sig_s.hex()
-            == "49c0bbe35131592c6ed5c871ac457feeb16a1493f64237387fab9b83c1a202f7"
+            == "428d35f0dca963b5196b63e7aa5e0405d8bff77d6aee1202183f1f68dacb4483"
         )
 
         with self.client:
@@ -174,21 +175,21 @@ class TestMsgEthereumSigntx(TrezorTest):
 
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 self.client,
-                n=[0, 0],
+                n=parse_path("44'/60'/0'/0/100"),
                 nonce=123456,
                 gas_price=20000,
                 gas_limit=20000,
                 to=TO_ADDR,
                 value=12345678901234567890,
             )
-        assert sig_v == 28
+        assert sig_v == 27
         assert (
             sig_r.hex()
-            == "6de597b8ec1b46501e5b159676e132c1aa78a95bd5892ef23560a9867528975a"
+            == "3bf0470cd7f5ad8d82613199f73deadc55c3c9f32f91b1a21b5ef644144ebd58"
         )
         assert (
             sig_s.hex()
-            == "6e33c4230b1ecf96a8dbb514b4aec0a6d6ba53f8991c8143f77812aa6daa993f"
+            == "48b3ef1b2502febdf35e9ff4df0ba1fda62f042fad639eb4852a297fc9872ebd"
         )
 
     def test_ethereum_signtx_data(self):
@@ -206,7 +207,7 @@ class TestMsgEthereumSigntx(TrezorTest):
 
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 self.client,
-                n=[0, 0],
+                n=parse_path("44'/60'/0'/0/0"),
                 nonce=0,
                 gas_price=20,
                 gas_limit=20,
@@ -214,14 +215,14 @@ class TestMsgEthereumSigntx(TrezorTest):
                 value=10,
                 data=b"abcdefghijklmnop" * 16,
             )
-        assert sig_v == 28
+        assert sig_v == 27
         assert (
             sig_r.hex()
-            == "6da89ed8627a491bedc9e0382f37707ac4e5102e25e7a1234cb697cedb7cd2c0"
+            == "e90f9e3dbfb34861d40d67570cb369049e675c6eebfdda6b08413a2283421b85"
         )
         assert (
             sig_s.hex()
-            == "691f73b145647623e2d115b208a7c3455a6a8a83e3b4db5b9c6d9bc75825038a"
+            == "763912b8801f76cbea7792d98123a245514beeab2f3afebb4bab637888e8393a"
         )
 
         with self.client:
@@ -245,7 +246,7 @@ class TestMsgEthereumSigntx(TrezorTest):
 
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 self.client,
-                n=[0, 0],
+                n=parse_path("44'/60'/0'/0/0"),
                 nonce=123456,
                 gas_price=20000,
                 gas_limit=20000,
@@ -253,14 +254,14 @@ class TestMsgEthereumSigntx(TrezorTest):
                 value=12345678901234567890,
                 data=b"ABCDEFGHIJKLMNOP" * 256 + b"!!!",
             )
-        assert sig_v == 28
+        assert sig_v == 27
         assert (
             sig_r.hex()
-            == "4e90b13c45c6a9bf4aaad0e5427c3e62d76692b36eb727c78d332441b7400404"
+            == "dd96d82d791118a55601dfcede237760d2e9734b76c373ede5362a447c42ac48"
         )
         assert (
             sig_s.hex()
-            == "3ff236e7d05f0f9b1ee3d70599bb4200638f28388a8faf6bb36db9e04dc544be"
+            == "60a77558f28d483d476f9507cd8a6a4bb47b86611aaff95fd5499b9ee9ebe7ee"
         )
 
     def test_ethereum_signtx_message(self):
@@ -287,7 +288,7 @@ class TestMsgEthereumSigntx(TrezorTest):
 
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 self.client,
-                n=[0, 0],
+                n=parse_path("44'/60'/0'/0/0"),
                 nonce=0,
                 gas_price=20000,
                 gas_limit=20000,
@@ -295,14 +296,14 @@ class TestMsgEthereumSigntx(TrezorTest):
                 value=0,
                 data=b"ABCDEFGHIJKLMNOP" * 256 + b"!!!",
             )
-        assert sig_v == 28
+        assert sig_v == 27
         assert (
             sig_r.hex()
-            == "070e9dafda4d9e733fa7b6747a75f8a4916459560efb85e3e73cd39f31aa160d"
+            == "81af16020d3c6ad820cab2e2b0834fa37f4a9b0c2443f151a4e2f12fe1081b09"
         )
         assert (
             sig_s.hex()
-            == "7842db33ef15c27049ed52741db41fe3238a6fa3a6a0888fcfb74d6917600e41"
+            == "7b34b5d8a43771d493cd9fa0c7b27a9563e2a31799fb9f0c2809539a848b9f47"
         )
 
     def test_ethereum_signtx_newcontract(self):
@@ -312,7 +313,7 @@ class TestMsgEthereumSigntx(TrezorTest):
         with pytest.raises(Exception):
             ethereum.sign_tx(
                 self.client,
-                n=[0, 0],
+                n=parse_path("44'/60'/0'/0/0"),
                 nonce=123456,
                 gas_price=20000,
                 gas_limit=20000,
@@ -341,7 +342,7 @@ class TestMsgEthereumSigntx(TrezorTest):
 
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 self.client,
-                n=[0, 0],
+                n=parse_path("44'/60'/0'/0/0"),
                 nonce=0,
                 gas_price=20000,
                 gas_limit=20000,
@@ -349,14 +350,14 @@ class TestMsgEthereumSigntx(TrezorTest):
                 value=12345678901234567890,
                 data=b"ABCDEFGHIJKLMNOP" * 256 + b"!!!",
             )
-        assert sig_v == 28
+        assert sig_v == 27
         assert (
             sig_r.hex()
-            == "b401884c10ae435a2e792303b5fc257a09f94403b2883ad8c0ac7a7282f5f1f9"
+            == "d043caa5f35e7676e0a9f9f0cd72a4055ae715309e8db8b3b6f1db928d276222"
         )
         assert (
             sig_s.hex()
-            == "4742fc9e6a5fa8db3db15c2d856914a7f3daab21603a6c1ce9e9927482f8352e"
+            == "08b91becc7c4ffbea18fe499fb3289bc7384880c2f7d86f4e831191a286553f6"
         )
 
     def test_ethereum_sanity_checks(self):
@@ -364,7 +365,7 @@ class TestMsgEthereumSigntx(TrezorTest):
         with pytest.raises(Exception):
             ethereum.sign_tx(
                 self.client,
-                n=[0, 0],
+                n=parse_path("44'/60'/0'/0/0"),
                 nonce=123456,
                 gas_price=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
                 gas_limit=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,

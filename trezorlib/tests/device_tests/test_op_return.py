@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages as proto
-from trezorlib.tools import CallException
+from trezorlib.tools import CallException, parse_path
 
 from ..support.tx_cache import tx_cache
 from .common import TrezorTest
@@ -32,16 +32,10 @@ TXHASH_d5f65e = bytes.fromhex(
 
 class TestOpReturn(TrezorTest):
     def test_opreturn(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
-        # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
-        # input 0: 0.0039 BTC
+        self.setup_mnemonic_allallall()
 
         inp1 = proto.TxInputType(
-            address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
-            # amount=390000,
-            prev_hash=TXHASH_d5f65e,
-            prev_index=0,
+            address_n=parse_path("44'/0'/0'/0/2"), prev_hash=TXHASH_d5f65e, prev_index=0
         )
 
         out1 = proto.TxOutputType(
@@ -125,18 +119,14 @@ class TestOpReturn(TrezorTest):
 
         assert (
             serialized_tx.hex()
-            == "010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006a4730440220187b7b9c340a32fc8445418ad11fb3827d2e8bac7d730e1c9ad800353e7ba62f02206c0c5820ba8882c82923a39aee8d36d6d32e13daed73f7a3d6199de5f8e7ddfd0121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0260cc0500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000000000001c6a1a74657374206f6620746865206f705f72657475726e206461746100000000"
+            == "010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b483045022100bc36e1227b334e856c532bbef86d30a96823a5f2461738f4dbf969dfbcf1b40b022078c5353ec9a4bce2bb05bd1ec466f2ab379c1aad926e208738407bba4e09784b012103330236b68aa6fdcaca0ea72e11b360c84ed19a338509aa527b678a7ec9076882ffffffff0260cc0500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000000000001c6a1a74657374206f6620746865206f705f72657475726e206461746100000000"
         )
 
     def test_nonzero_opreturn(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
-        # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
-        # input 0: 0.0039 BTC
+        self.setup_mnemonic_allallall()
 
         inp1 = proto.TxInputType(
-            address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
-            # amount=390000,
+            address_n=parse_path("44'/0'/10'/0/5"),
             prev_hash=TXHASH_d5f65e,
             prev_index=0,
         )
