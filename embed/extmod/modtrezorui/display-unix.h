@@ -26,10 +26,17 @@
 
 #if TREZOR_MODEL == T
 
+#ifdef TREZOR_EMULATOR_RASPI
+#define WINDOW_WIDTH    480
+#define WINDOW_HEIGHT   320
+#define TOUCH_OFFSET_X  110
+#define TOUCH_OFFSET_Y  40
+#else
 #define WINDOW_WIDTH    400
 #define WINDOW_HEIGHT   600
 #define TOUCH_OFFSET_X  80
 #define TOUCH_OFFSET_Y  110
+#endif
 
 #elif TREZOR_MODEL == 1
 
@@ -92,7 +99,13 @@ void display_init(void)
         ensure(secfalse, "SDL_Init error");
     }
     atexit(SDL_Quit);
-    SDL_Window *win = SDL_CreateWindow("TREZOR Emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+    SDL_Window *win = SDL_CreateWindow("TREZOR Emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT,
+#ifdef TREZOR_EMULATOR_RASPI
+        SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN
+#else
+        SDL_WINDOW_SHOWN
+#endif
+    );
     if (!win) {
         printf("%s\n", SDL_GetError());
         ensure(secfalse, "SDL_CreateWindow error");
@@ -109,7 +122,11 @@ void display_init(void)
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX, DISPLAY_RESY);
     SDL_SetTextureBlendMode(TEXTURE, SDL_BLENDMODE_BLEND);
     // TODO: find better way how to embed/distribute background image
+#ifdef TREZOR_EMULATOR_RASPI
+    BACKGROUND = IMG_LoadTexture(RENDERER, "../embed/unix/background_raspi.jpg");
+#else
     BACKGROUND = IMG_LoadTexture(RENDERER, "../embed/unix/background_" XSTR(TREZOR_MODEL) ".jpg");
+#endif
     if (BACKGROUND) {
         SDL_SetTextureBlendMode(BACKGROUND, SDL_BLENDMODE_NONE);
         sdl_touch_offset_x = TOUCH_OFFSET_X;
@@ -120,7 +137,12 @@ void display_init(void)
         sdl_touch_offset_y = EMULATOR_BORDER;
     }
     DISPLAY_BACKLIGHT = 0;
+#ifdef TREZOR_EMULATOR_RASPI
+    DISPLAY_ORIENTATION = 270;
+    SDL_ShowCursor(SDL_DISABLE);
+#else
     DISPLAY_ORIENTATION = 0;
+#endif
 #endif
 }
 
