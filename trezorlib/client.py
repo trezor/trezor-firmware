@@ -180,8 +180,11 @@ class ProtocolMixin(object):
             raise exceptions.TrezorException("Unexpected initial response")
         else:
             self.features = resp
-        if str(self.features.vendor) not in self.VENDORS:
+        if self.features.vendor not in self.VENDORS:
             raise RuntimeError("Unsupported device")
+            # A side-effect of this is a sanity check for broken protobuf definitions.
+            # If the `vendor` field doesn't exist, you probably have a mismatched
+            # checkout of trezor-common.
 
     @staticmethod
     def expand_path(n):
