@@ -5,7 +5,7 @@ from trezor.messages import OutputScriptType
 from trezor.crypto import bip32, bip39
 
 from apps.common import coins
-from apps.wallet.sign_tx.tx_weight_calculator import *
+from apps.wallet.sign_tx.tx_weight import *
 from apps.wallet.sign_tx import signing
 
 

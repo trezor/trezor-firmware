@@ -9,7 +9,7 @@ from .helpers import LISK_CURVE, validate_full_path
 from apps.common import paths, seed
 from apps.common.confirm import require_confirm
 from apps.common.signverify import split_message
-from apps.wallet.sign_tx.signing import write_varint
+from apps.wallet.sign_tx.writers import write_varint
 
 
 def message_digest(message):

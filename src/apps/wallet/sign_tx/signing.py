@@ -1,35 +1,30 @@
 from micropython import const
 
+from trezor import utils
 from trezor.crypto import base58, bip32, cashaddr, der
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import blake256, sha256
-from trezor.messages import OutputScriptType
+from trezor.messages import FailureType, InputScriptType, OutputScriptType
+from trezor.messages.SignTx import SignTx
+from trezor.messages.TxInputType import TxInputType
+from trezor.messages.TxOutputBinType import TxOutputBinType
+from trezor.messages.TxOutputType import TxOutputType
+from trezor.messages.TxRequest import TxRequest
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
-from trezor.utils import HashWriter
 
-from apps.common import address_type, coins
-from apps.common.coininfo import CoinInfo
-from apps.common.writers import empty_bytearray
-from apps.wallet.sign_tx import progress
-from apps.wallet.sign_tx.addresses import *
-from apps.wallet.sign_tx.decred_prefix_hasher import (
-    DECRED_SERIALIZE_NO_WITNESS,
-    DECRED_SERIALIZE_WITNESS_SIGNING,
-    DECRED_SIGHASHALL,
-    DecredPrefixHasher,
-)
-from apps.wallet.sign_tx.helpers import *
-from apps.wallet.sign_tx.multisig import *
-from apps.wallet.sign_tx.scripts import *
-from apps.wallet.sign_tx.segwit_bip143 import Bip143, Bip143Error  # noqa:F401
-from apps.wallet.sign_tx.tx_weight_calculator import *
-from apps.wallet.sign_tx.writers import *
-from apps.wallet.sign_tx.zcash import (  # noqa:F401
-    OVERWINTERED,
-    ZcashError,
-    Zip143,
-    Zip243,
+from apps.common import address_type, coininfo, coins
+from apps.wallet.sign_tx import (
+    addresses,
+    decred,
+    helpers,
+    multisig,
+    progress,
+    scripts,
+    segwit_bip143,
+    tx_weight,
+    writers,
+    zcash,
 )
 
 # the number of bip32 levels used in a wallet (chain and address)
@@ -64,26 +59,26 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
     # h_first is used to make sure the inputs and outputs streamed in Phase 1
     # are the same as in Phase 2.  it is thus not required to fully hash the
     # tx, as the SignTx info is streamed only once
-    h_first = HashWriter(sha256())  # not a real tx hash
+    h_first = utils.HashWriter(sha256())  # not a real tx hash
 
     if coin.decred:
-        hash143 = DecredPrefixHasher(tx)  # pseudo bip143 prefix hashing
+        hash143 = decred.DecredPrefixHasher(tx)  # pseudo BIP-0143 prefix hashing
         tx_ser = TxRequestSerializedType()
     elif tx.overwintered:
         if tx.version == 3:
-            hash143 = Zip143()  # ZIP-0143 transaction hashing
+            hash143 = zcash.Zip143()  # ZIP-0143 transaction hashing
         elif tx.version == 4:
-            hash143 = Zip243()  # ZIP-0243 transaction hashing
+            hash143 = zcash.Zip243()  # ZIP-0243 transaction hashing
         else:
             raise SigningError(
                 FailureType.DataError,
                 "Unsupported version for overwintered transaction",
             )
     else:
-        hash143 = Bip143()  # BIP-0143 transaction hashing
+        hash143 = segwit_bip143.Bip143()  # BIP-0143 transaction hashing
 
-    multifp = MultisigFingerprint()  # control checksum of multisig inputs
-    weight = TxWeightCalculator(tx.inputs_count, tx.outputs_count)
+    multifp = multisig.MultisigFingerprint()  # control checksum of multisig inputs
+    weight = tx_weight.TxWeightCalculator(tx.inputs_count, tx.outputs_count)
 
     total_in = 0  # sum of input amounts
     segwit_in = 0  # sum of segwit input amounts
@@ -100,15 +95,15 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
     for i in range(tx.inputs_count):
         progress.advance()
         # STAGE_REQUEST_1_INPUT
-        txi = await request_tx_input(tx_req, i)
+        txi = await helpers.request_tx_input(tx_req, i)
         wallet_path = input_extract_wallet_path(txi, wallet_path)
-        write_tx_input_check(h_first, txi)
+        writers.write_tx_input_check(h_first, txi)
         weight.add_input(txi)
         hash143.add_prevouts(txi)  # all inputs are included (non-segwit as well)
         hash143.add_sequence(txi)
 
-        if not validate_full_path(txi.address_n, coin, txi.script_type):
-            await confirm_foreign_address(txi.address_n)
+        if not addresses.validate_full_path(txi.address_n, coin, txi.script_type):
+            await helpers.confirm_foreign_address(txi.address_n, coin)
 
         if txi.multisig:
             multifp.add(txi.multisig)
@@ -149,10 +144,10 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
             raise SigningError(FailureType.DataError, "Wrong input script type")
 
         if coin.decred:
-            w_txi = empty_bytearray(8 if i == 0 else 0 + 9 + len(txi.prev_hash))
+            w_txi = writers.empty_bytearray(8 if i == 0 else 0 + 9 + len(txi.prev_hash))
             if i == 0:  # serializing first input => prepend headers
-                write_bytes(w_txi, get_tx_header(coin, tx))
-            write_tx_input_decred(w_txi, txi)
+                writers.write_bytes(w_txi, get_tx_header(coin, tx))
+            writers.write_tx_input_decred(w_txi, txi)
             tx_ser.serialized_tx = w_txi
             tx_req.serialized = tx_ser
 
@@ -161,7 +156,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
 
     for o in range(tx.outputs_count):
         # STAGE_REQUEST_3_OUTPUT
-        txo = await request_tx_output(tx_req, o)
+        txo = await helpers.request_tx_output(tx_req, o)
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
         weight.add_output(txo_bin.script_pubkey)
@@ -169,7 +164,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
         if change_out == 0 and is_change(txo, wallet_path, segwit_in, multifp):
             # output is change and does not need confirmation
             change_out = txo.amount
-        elif not await confirm_output(txo, coin):
+        elif not await helpers.confirm_output(txo, coin):
             raise SigningError(FailureType.ActionCancelled, "Output cancelled")
 
         if coin.decred:
@@ -180,15 +175,17 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
                 )
             txo_bin.decred_script_version = txo.decred_script_version
 
-            w_txo_bin = empty_bytearray(4 + 8 + 2 + 4 + len(txo_bin.script_pubkey))
+            w_txo_bin = writers.empty_bytearray(
+                4 + 8 + 2 + 4 + len(txo_bin.script_pubkey)
+            )
             if o == 0:  # serializing first output => prepend outputs count
-                write_varint(w_txo_bin, tx.outputs_count)
-            write_tx_output(w_txo_bin, txo_bin)
+                writers.write_varint(w_txo_bin, tx.outputs_count)
+            writers.write_tx_output(w_txo_bin, txo_bin)
             tx_ser.serialized_tx = w_txo_bin
             tx_req.serialized = tx_ser
             hash143.set_last_output_bytes(w_txo_bin)
 
-        write_tx_output(h_first, txo_bin)
+        writers.write_tx_output(h_first, txo_bin)
         hash143.add_output(txo_bin)
         total_out += txo_bin.amount
 
@@ -198,10 +195,10 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
 
     # fee > (coin.maxfee per byte * tx size)
     if fee > (coin.maxfee_kb / 1000) * (weight.get_total() / 4):
-        if not await confirm_feeoverthreshold(fee, coin):
+        if not await helpers.confirm_feeoverthreshold(fee, coin):
             raise SigningError(FailureType.ActionCancelled, "Signing cancelled")
 
-    if not await confirm_total(total_in - change_out, fee, coin):
+    if not await helpers.confirm_total(total_in - change_out, fee, coin):
         raise SigningError(FailureType.ActionCancelled, "Total cancelled")
 
     if coin.decred:
@@ -211,7 +208,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
 
 
 async def sign_tx(tx: SignTx, root: bip32.HDNode):
-    tx = sanitize_sign_tx(tx)
+    tx = helpers.sanitize_sign_tx(tx)
 
     progress.init(tx.inputs_count, tx.outputs_count)
 
@@ -242,7 +239,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
 
         if segwit[i_sign]:
             # STAGE_REQUEST_SEGWIT_INPUT
-            txi_sign = await request_tx_input(tx_req, i_sign)
+            txi_sign = await helpers.request_tx_input(tx_req, i_sign)
 
             is_segwit = (
                 txi_sign.script_type == InputScriptType.SPENDWITNESS
@@ -258,18 +255,18 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             key_sign_pub = key_sign.public_key()
             txi_sign.script_sig = input_derive_script(coin, txi_sign, key_sign_pub)
 
-            w_txi = empty_bytearray(
+            w_txi = writers.empty_bytearray(
                 7 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
             )
             if i_sign == 0:  # serializing first input => prepend headers
-                write_bytes(w_txi, get_tx_header(coin, tx, True))
-            write_tx_input(w_txi, txi_sign)
+                writers.write_bytes(w_txi, get_tx_header(coin, tx, True))
+            writers.write_tx_input(w_txi, txi_sign)
             tx_ser.serialized_tx = w_txi
             tx_req.serialized = tx_ser
 
         elif coin.force_bip143 or tx.overwintered:
             # STAGE_REQUEST_SEGWIT_INPUT
-            txi_sign = await request_tx_input(tx_req, i_sign)
+            txi_sign = await helpers.request_tx_input(tx_req, i_sign)
             input_check_wallet_path(txi_sign, wallet_path)
 
             is_bip143 = (
@@ -288,13 +285,13 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                 coin,
                 tx,
                 txi_sign,
-                ecdsa_hash_pubkey(key_sign_pub, coin),
+                addresses.ecdsa_hash_pubkey(key_sign_pub, coin),
                 get_hash_type(coin),
             )
 
             # if multisig, check if singing with a key that is included in multisig
             if txi_sign.multisig:
-                multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
+                multisig.multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
 
             signature = ecdsa_sign(key_sign, hash143_hash)
             tx_ser.signature_index = i_sign
@@ -304,18 +301,18 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             txi_sign.script_sig = input_derive_script(
                 coin, txi_sign, key_sign_pub, signature
             )
-            w_txi_sign = empty_bytearray(
+            w_txi_sign = writers.empty_bytearray(
                 5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
             )
             if i_sign == 0:  # serializing first input => prepend headers
-                write_bytes(w_txi_sign, get_tx_header(coin, tx))
-            write_tx_input(w_txi_sign, txi_sign)
+                writers.write_bytes(w_txi_sign, get_tx_header(coin, tx))
+            writers.write_tx_input(w_txi_sign, txi_sign)
             tx_ser.serialized_tx = w_txi_sign
 
             tx_req.serialized = tx_ser
 
         elif coin.decred:
-            txi_sign = await request_tx_input(tx_req, i_sign)
+            txi_sign = await helpers.request_tx_input(tx_req, i_sign)
 
             input_check_wallet_path(txi_sign, wallet_path)
 
@@ -323,37 +320,40 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             key_sign_pub = key_sign.public_key()
 
             if txi_sign.script_type == InputScriptType.SPENDMULTISIG:
-                prev_pkscript = output_script_multisig(
-                    multisig_get_pubkeys(txi_sign.multisig), txi_sign.multisig.m
+                prev_pkscript = scripts.output_script_multisig(
+                    multisig.multisig_get_pubkeys(txi_sign.multisig),
+                    txi_sign.multisig.m,
                 )
             elif txi_sign.script_type == InputScriptType.SPENDADDRESS:
-                prev_pkscript = output_script_p2pkh(
-                    ecdsa_hash_pubkey(key_sign_pub, coin)
+                prev_pkscript = scripts.output_script_p2pkh(
+                    addresses.ecdsa_hash_pubkey(key_sign_pub, coin)
                 )
             else:
                 raise ValueError("Unknown input script type")
 
-            h_witness = HashWriter(blake256())
-            write_uint32(h_witness, tx.version | DECRED_SERIALIZE_WITNESS_SIGNING)
-            write_varint(h_witness, tx.inputs_count)
+            h_witness = utils.HashWriter(blake256())
+            writers.write_uint32(
+                h_witness, tx.version | decred.DECRED_SERIALIZE_WITNESS_SIGNING
+            )
+            writers.write_varint(h_witness, tx.inputs_count)
 
             for ii in range(tx.inputs_count):
                 if ii == i_sign:
-                    write_varint(h_witness, len(prev_pkscript))
-                    write_bytes(h_witness, prev_pkscript)
+                    writers.write_varint(h_witness, len(prev_pkscript))
+                    writers.write_bytes(h_witness, prev_pkscript)
                 else:
-                    write_varint(h_witness, 0)
+                    writers.write_varint(h_witness, 0)
 
-            witness_hash = get_tx_hash(
+            witness_hash = writers.get_tx_hash(
                 h_witness, double=coin.sign_hash_double, reverse=False
             )
 
-            h_sign = HashWriter(blake256())
-            write_uint32(h_sign, DECRED_SIGHASHALL)
-            write_bytes(h_sign, prefix_hash)
-            write_bytes(h_sign, witness_hash)
+            h_sign = utils.HashWriter(blake256())
+            writers.write_uint32(h_sign, decred.DECRED_SIGHASHALL)
+            writers.write_bytes(h_sign, prefix_hash)
+            writers.write_bytes(h_sign, witness_hash)
 
-            sig_hash = get_tx_hash(h_sign, double=coin.sign_hash_double)
+            sig_hash = writers.get_tx_hash(h_sign, double=coin.sign_hash_double)
             signature = ecdsa_sign(key_sign, sig_hash)
             tx_ser.signature_index = i_sign
             tx_ser.signature = signature
@@ -362,45 +362,45 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             txi_sign.script_sig = input_derive_script(
                 coin, txi_sign, key_sign_pub, signature
             )
-            w_txi_sign = empty_bytearray(
+            w_txi_sign = writers.empty_bytearray(
                 8 + 4 + len(hash143.get_last_output_bytes())
                 if i_sign == 0
                 else 0 + 16 + 4 + len(txi_sign.script_sig)
             )
 
             if i_sign == 0:
-                write_bytes(w_txi_sign, hash143.get_last_output_bytes())
-                write_uint32(w_txi_sign, tx.lock_time)
-                write_uint32(w_txi_sign, tx.expiry)
-                write_varint(w_txi_sign, tx.inputs_count)
+                writers.write_bytes(w_txi_sign, hash143.get_last_output_bytes())
+                writers.write_uint32(w_txi_sign, tx.lock_time)
+                writers.write_uint32(w_txi_sign, tx.expiry)
+                writers.write_varint(w_txi_sign, tx.inputs_count)
 
-            write_tx_input_decred_witness(w_txi_sign, txi_sign)
+            writers.write_tx_input_decred_witness(w_txi_sign, txi_sign)
             tx_ser.serialized_tx = w_txi_sign
             tx_req.serialized = tx_ser
 
         else:
             # hash of what we are signing with this input
-            h_sign = HashWriter(sha256())
+            h_sign = utils.HashWriter(sha256())
             # same as h_first, checked before signing the digest
-            h_second = HashWriter(sha256())
+            h_second = utils.HashWriter(sha256())
 
             if tx.overwintered:
-                write_uint32(
-                    h_sign, tx.version | OVERWINTERED
+                writers.write_uint32(
+                    h_sign, tx.version | zcash.OVERWINTERED
                 )  # nVersion | fOverwintered
-                write_uint32(h_sign, tx.version_group_id)  # nVersionGroupId
+                writers.write_uint32(h_sign, tx.version_group_id)  # nVersionGroupId
             else:
-                write_uint32(h_sign, tx.version)  # nVersion
+                writers.write_uint32(h_sign, tx.version)  # nVersion
                 if tx.timestamp:
-                    write_uint32(h_sign, tx.timestamp)
+                    writers.write_uint32(h_sign, tx.timestamp)
 
-            write_varint(h_sign, tx.inputs_count)
+            writers.write_varint(h_sign, tx.inputs_count)
 
             for i in range(tx.inputs_count):
                 # STAGE_REQUEST_4_INPUT
-                txi = await request_tx_input(tx_req, i)
+                txi = await helpers.request_tx_input(tx_req, i)
                 input_check_wallet_path(txi, wallet_path)
-                write_tx_input_check(h_second, txi)
+                writers.write_tx_input_check(h_second, txi)
                 if i == i_sign:
                     txi_sign = txi
                     key_sign = node_derive(root, txi.address_n)
@@ -408,15 +408,16 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                     # for the signing process the script_sig is equal
                     # to the previous tx's scriptPubKey (P2PKH) or a redeem script (P2SH)
                     if txi_sign.script_type == InputScriptType.SPENDMULTISIG:
-                        txi_sign.script_sig = output_script_multisig(
-                            multisig_get_pubkeys(txi_sign.multisig), txi_sign.multisig.m
+                        txi_sign.script_sig = scripts.output_script_multisig(
+                            multisig.multisig_get_pubkeys(txi_sign.multisig),
+                            txi_sign.multisig.m,
                         )
                     elif txi_sign.script_type == InputScriptType.SPENDADDRESS:
-                        txi_sign.script_sig = output_script_p2pkh(
-                            ecdsa_hash_pubkey(key_sign_pub, coin)
+                        txi_sign.script_sig = scripts.output_script_p2pkh(
+                            addresses.ecdsa_hash_pubkey(key_sign_pub, coin)
                         )
                         if coin.bip115:
-                            txi_sign.script_sig += script_replay_protection_bip115(
+                            txi_sign.script_sig += scripts.script_replay_protection_bip115(
                                 txi_sign.prev_block_hash_bip115,
                                 txi_sign.prev_block_height_bip115,
                             )
@@ -426,38 +427,38 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                         )
                 else:
                     txi.script_sig = bytes()
-                write_tx_input(h_sign, txi)
+                writers.write_tx_input(h_sign, txi)
 
-            write_varint(h_sign, tx.outputs_count)
+            writers.write_varint(h_sign, tx.outputs_count)
 
             for o in range(tx.outputs_count):
                 # STAGE_REQUEST_4_OUTPUT
-                txo = await request_tx_output(tx_req, o)
+                txo = await helpers.request_tx_output(tx_req, o)
                 txo_bin.amount = txo.amount
                 txo_bin.script_pubkey = output_derive_script(txo, coin, root)
-                write_tx_output(h_second, txo_bin)
-                write_tx_output(h_sign, txo_bin)
+                writers.write_tx_output(h_second, txo_bin)
+                writers.write_tx_output(h_sign, txo_bin)
 
-            write_uint32(h_sign, tx.lock_time)
+            writers.write_uint32(h_sign, tx.lock_time)
             if tx.overwintered:
-                write_uint32(h_sign, tx.expiry)  # expiryHeight
-                write_varint(h_sign, 0)  # nJoinSplit
+                writers.write_uint32(h_sign, tx.expiry)  # expiryHeight
+                writers.write_varint(h_sign, 0)  # nJoinSplit
 
-            write_uint32(h_sign, get_hash_type(coin))
+            writers.write_uint32(h_sign, get_hash_type(coin))
 
             # check the control digests
-            if get_tx_hash(h_first, False) != get_tx_hash(h_second):
+            if writers.get_tx_hash(h_first, False) != writers.get_tx_hash(h_second):
                 raise SigningError(
                     FailureType.ProcessError, "Transaction has changed during signing"
                 )
 
             # if multisig, check if singing with a key that is included in multisig
             if txi_sign.multisig:
-                multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
+                multisig.multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
 
             # compute the signature from the tx digest
             signature = ecdsa_sign(
-                key_sign, get_tx_hash(h_sign, double=coin.sign_hash_double)
+                key_sign, writers.get_tx_hash(h_sign, double=coin.sign_hash_double)
             )
             tx_ser.signature_index = i_sign
             tx_ser.signature = signature
@@ -466,31 +467,31 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
             txi_sign.script_sig = input_derive_script(
                 coin, txi_sign, key_sign_pub, signature
             )
-            w_txi_sign = empty_bytearray(
+            w_txi_sign = writers.empty_bytearray(
                 5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
             )
             if i_sign == 0:  # serializing first input => prepend headers
-                write_bytes(w_txi_sign, get_tx_header(coin, tx))
-            write_tx_input(w_txi_sign, txi_sign)
+                writers.write_bytes(w_txi_sign, get_tx_header(coin, tx))
+            writers.write_tx_input(w_txi_sign, txi_sign)
             tx_ser.serialized_tx = w_txi_sign
 
             tx_req.serialized = tx_ser
 
     if coin.decred:
-        return await request_tx_finish(tx_req)
+        return await helpers.request_tx_finish(tx_req)
 
     for o in range(tx.outputs_count):
         progress.advance()
         # STAGE_REQUEST_5_OUTPUT
-        txo = await request_tx_output(tx_req, o)
+        txo = await helpers.request_tx_output(tx_req, o)
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, root)
 
         # serialize output
-        w_txo_bin = empty_bytearray(5 + 8 + 5 + len(txo_bin.script_pubkey) + 4)
+        w_txo_bin = writers.empty_bytearray(5 + 8 + 5 + len(txo_bin.script_pubkey) + 4)
         if o == 0:  # serializing first output => prepend outputs count
-            write_varint(w_txo_bin, tx.outputs_count)
-        write_tx_output(w_txo_bin, txo_bin)
+            writers.write_varint(w_txo_bin, tx.outputs_count)
+        writers.write_tx_output(w_txo_bin, txo_bin)
 
         tx_ser.signature_index = None
         tx_ser.signature = None
@@ -504,7 +505,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
         progress.advance()
         if segwit[i]:
             # STAGE_REQUEST_SEGWIT_WITNESS
-            txi = await request_tx_input(tx_req, i)
+            txi = await helpers.request_tx_input(tx_req, i)
             input_check_wallet_path(txi, wallet_path)
 
             is_segwit = (
@@ -523,19 +524,23 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                 coin,
                 tx,
                 txi,
-                ecdsa_hash_pubkey(key_sign_pub, coin),
+                addresses.ecdsa_hash_pubkey(key_sign_pub, coin),
                 get_hash_type(coin),
             )
 
             signature = ecdsa_sign(key_sign, hash143_hash)
             if txi.multisig:
                 # find out place of our signature based on the pubkey
-                signature_index = multisig_pubkey_index(txi.multisig, key_sign_pub)
-                witness = witness_p2wsh(
+                signature_index = multisig.multisig_pubkey_index(
+                    txi.multisig, key_sign_pub
+                )
+                witness = scripts.witness_p2wsh(
                     txi.multisig, signature, signature_index, get_hash_type(coin)
                 )
             else:
-                witness = witness_p2wpkh(signature, key_sign_pub, get_hash_type(coin))
+                witness = scripts.witness_p2wpkh(
+                    signature, key_sign_pub, get_hash_type(coin)
+                )
 
             tx_ser.serialized_tx = witness
             tx_ser.signature_index = i
@@ -547,66 +552,68 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
 
         tx_req.serialized = tx_ser
 
-    write_uint32(tx_ser.serialized_tx, tx.lock_time)
+    writers.write_uint32(tx_ser.serialized_tx, tx.lock_time)
 
     if tx.overwintered:
         if tx.version == 3:
-            write_uint32(tx_ser.serialized_tx, tx.expiry)  # expiryHeight
-            write_varint(tx_ser.serialized_tx, 0)  # nJoinSplit
+            writers.write_uint32(tx_ser.serialized_tx, tx.expiry)  # expiryHeight
+            writers.write_varint(tx_ser.serialized_tx, 0)  # nJoinSplit
         elif tx.version == 4:
-            write_uint32(tx_ser.serialized_tx, tx.expiry)  # expiryHeight
-            write_uint64(tx_ser.serialized_tx, 0)  # valueBalance
-            write_varint(tx_ser.serialized_tx, 0)  # nShieldedSpend
-            write_varint(tx_ser.serialized_tx, 0)  # nShieldedOutput
-            write_varint(tx_ser.serialized_tx, 0)  # nJoinSplit
+            writers.write_uint32(tx_ser.serialized_tx, tx.expiry)  # expiryHeight
+            writers.write_uint64(tx_ser.serialized_tx, 0)  # valueBalance
+            writers.write_varint(tx_ser.serialized_tx, 0)  # nShieldedSpend
+            writers.write_varint(tx_ser.serialized_tx, 0)  # nShieldedOutput
+            writers.write_varint(tx_ser.serialized_tx, 0)  # nJoinSplit
         else:
             raise SigningError(
                 FailureType.DataError,
                 "Unsupported version for overwintered transaction",
             )
 
-    await request_tx_finish(tx_req)
+    await helpers.request_tx_finish(tx_req)
 
 
 async def get_prevtx_output_value(
-    coin: CoinInfo, tx_req: TxRequest, prev_hash: bytes, prev_index: int
+    coin: coininfo.CoinInfo, tx_req: TxRequest, prev_hash: bytes, prev_index: int
 ) -> int:
     total_out = 0  # sum of output amounts
 
     # STAGE_REQUEST_2_PREV_META
-    tx = await request_tx_meta(tx_req, prev_hash)
+    tx = await helpers.request_tx_meta(tx_req, prev_hash)
 
     if coin.decred:
-        txh = HashWriter(blake256())
+        txh = utils.HashWriter(blake256())
     else:
-        txh = HashWriter(sha256())
+        txh = utils.HashWriter(sha256())
 
     if tx.overwintered:
-        write_uint32(txh, tx.version | OVERWINTERED)  # nVersion | fOverwintered
-        write_uint32(txh, tx.version_group_id)  # nVersionGroupId
+        writers.write_uint32(
+            txh, tx.version | zcash.OVERWINTERED
+        )  # nVersion | fOverwintered
+        writers.write_uint32(txh, tx.version_group_id)  # nVersionGroupId
     elif coin.decred:
-        write_uint32(txh, tx.version | DECRED_SERIALIZE_NO_WITNESS)
+        writers.write_uint32(txh, tx.version | decred.DECRED_SERIALIZE_NO_WITNESS)
     else:
-        write_uint32(txh, tx.version)  # nVersion
+        writers.write_uint32(txh, tx.version)  # nVersion
         if tx.timestamp:
-            write_uint32(txh, tx.timestamp)
+            writers.write_uint32(txh, tx.timestamp)
 
-    write_varint(txh, tx.inputs_cnt)
+    writers.write_varint(txh, tx.inputs_cnt)
 
     for i in range(tx.inputs_cnt):
         # STAGE_REQUEST_2_PREV_INPUT
-        txi = await request_tx_input(tx_req, i, prev_hash)
+        txi = await helpers.request_tx_input(tx_req, i, prev_hash)
         if coin.decred:
-            write_tx_input_decred(txh, txi)
+            writers.write_tx_input_decred(txh, txi)
         else:
-            write_tx_input(txh, txi)
+            writers.write_tx_input(txh, txi)
 
-    write_varint(txh, tx.outputs_cnt)
+    writers.write_varint(txh, tx.outputs_cnt)
 
     for o in range(tx.outputs_cnt):
         # STAGE_REQUEST_2_PREV_OUTPUT
-        txo_bin = await request_tx_output(tx_req, o, prev_hash)
-        write_tx_output(txh, txo_bin)
+        txo_bin = await helpers.request_tx_output(tx_req, o, prev_hash)
+        writers.write_tx_output(txh, txo_bin)
         if o == prev_index:
             total_out += txo_bin.amount
             if (
@@ -619,19 +626,22 @@ async def get_prevtx_output_value(
                     "Cannot use utxo that has script_version != 0",
                 )
 
-    write_uint32(txh, tx.lock_time)
+    writers.write_uint32(txh, tx.lock_time)
 
     if tx.overwintered or coin.decred:
-        write_uint32(txh, tx.expiry)
+        writers.write_uint32(txh, tx.expiry)
 
     ofs = 0
     while ofs < tx.extra_data_len:
         size = min(1024, tx.extra_data_len - ofs)
-        data = await request_tx_extra_data(tx_req, ofs, size, prev_hash)
-        write_bytes(txh, data)
+        data = await helpers.request_tx_extra_data(tx_req, ofs, size, prev_hash)
+        writers.write_bytes(txh, data)
         ofs += len(data)
 
-    if get_tx_hash(txh, double=coin.sign_hash_double, reverse=True) != prev_hash:
+    if (
+        writers.get_tx_hash(txh, double=coin.sign_hash_double, reverse=True)
+        != prev_hash
+    ):
         raise SigningError(FailureType.ProcessError, "Encountered invalid prev_hash")
 
     return total_out
@@ -641,7 +651,7 @@ async def get_prevtx_output_value(
 # ===
 
 
-def get_hash_type(coin: CoinInfo) -> int:
+def get_hash_type(coin: coininfo.CoinInfo) -> int:
     SIGHASH_FORKID = const(0x40)
     SIGHASH_ALL = const(0x01)
     hashtype = SIGHASH_ALL
@@ -650,19 +660,21 @@ def get_hash_type(coin: CoinInfo) -> int:
     return hashtype
 
 
-def get_tx_header(coin: CoinInfo, tx: SignTx, segwit: bool = False):
+def get_tx_header(coin: coininfo.CoinInfo, tx: SignTx, segwit: bool = False):
     w_txi = bytearray()
     if tx.overwintered:
-        write_uint32(w_txi, tx.version | OVERWINTERED)  # nVersion | fOverwintered
-        write_uint32(w_txi, tx.version_group_id)  # nVersionGroupId
+        writers.write_uint32(
+            w_txi, tx.version | zcash.OVERWINTERED
+        )  # nVersion | fOverwintered
+        writers.write_uint32(w_txi, tx.version_group_id)  # nVersionGroupId
     else:
-        write_uint32(w_txi, tx.version)  # nVersion
+        writers.write_uint32(w_txi, tx.version)  # nVersion
         if tx.timestamp:
-            write_uint32(w_txi, tx.timestamp)
+            writers.write_uint32(w_txi, tx.timestamp)
     if segwit:
-        write_varint(w_txi, 0x00)  # segwit witness marker
-        write_varint(w_txi, 0x01)  # segwit witness flag
-    write_varint(w_txi, tx.inputs_count)
+        writers.write_varint(w_txi, 0x00)  # segwit witness marker
+        writers.write_varint(w_txi, 0x01)  # segwit witness flag
+    writers.write_varint(w_txi, tx.inputs_count)
     return w_txi
 
 
@@ -670,7 +682,9 @@ def get_tx_header(coin: CoinInfo, tx: SignTx, segwit: bool = False):
 # ===
 
 
-def output_derive_script(o: TxOutputType, coin: CoinInfo, root: bip32.HDNode) -> bytes:
+def output_derive_script(
+    o: TxOutputType, coin: coininfo.CoinInfo, root: bip32.HDNode
+) -> bytes:
 
     if o.script_type == OutputScriptType.PAYTOOPRETURN:
         # op_return output
@@ -678,7 +692,7 @@ def output_derive_script(o: TxOutputType, coin: CoinInfo, root: bip32.HDNode) ->
             raise SigningError(
                 FailureType.DataError, "OP_RETURN output with non-zero amount"
             )
-        return output_script_paytoopreturn(o.op_return_data)
+        return scripts.output_script_paytoopreturn(o.op_return_data)
 
     if o.address_n:
         # change output
@@ -691,8 +705,8 @@ def output_derive_script(o: TxOutputType, coin: CoinInfo, root: bip32.HDNode) ->
 
     if coin.bech32_prefix and o.address.startswith(coin.bech32_prefix):
         # p2wpkh or p2wsh
-        witprog = decode_bech32_address(coin.bech32_prefix, o.address)
-        return output_script_native_p2wpkh_or_p2wsh(witprog)
+        witprog = addresses.decode_bech32_address(coin.bech32_prefix, o.address)
+        return scripts.output_script_native_p2wpkh_or_p2wsh(witprog)
 
     if coin.cashaddr_prefix is not None and o.address.startswith(
         coin.cashaddr_prefix + ":"
@@ -712,9 +726,9 @@ def output_derive_script(o: TxOutputType, coin: CoinInfo, root: bip32.HDNode) ->
     if address_type.check(coin.address_type, raw_address):
         # p2pkh
         pubkeyhash = address_type.strip(coin.address_type, raw_address)
-        script = output_script_p2pkh(pubkeyhash)
+        script = scripts.output_script_p2pkh(pubkeyhash)
         if coin.bip115:
-            script += script_replay_protection_bip115(
+            script += scripts.script_replay_protection_bip115(
                 o.block_hash_bip115, o.block_height_bip115
             )
         return script
@@ -722,9 +736,9 @@ def output_derive_script(o: TxOutputType, coin: CoinInfo, root: bip32.HDNode) ->
     elif address_type.check(coin.address_type_p2sh, raw_address):
         # p2sh
         scripthash = address_type.strip(coin.address_type_p2sh, raw_address)
-        script = output_script_p2sh(scripthash)
+        script = scripts.output_script_p2sh(scripthash)
         if coin.bip115:
-            script += script_replay_protection_bip115(
+            script += scripts.script_replay_protection_bip115(
                 o.block_hash_bip115, o.block_height_bip115
             )
         return script
@@ -732,7 +746,9 @@ def output_derive_script(o: TxOutputType, coin: CoinInfo, root: bip32.HDNode) ->
     raise SigningError(FailureType.DataError, "Invalid address type")
 
 
-def get_address_for_change(o: TxOutputType, coin: CoinInfo, root: bip32.HDNode):
+def get_address_for_change(
+    o: TxOutputType, coin: coininfo.CoinInfo, root: bip32.HDNode
+):
     if o.script_type == OutputScriptType.PAYTOADDRESS:
         input_script_type = InputScriptType.SPENDADDRESS
     elif o.script_type == OutputScriptType.PAYTOMULTISIG:
@@ -743,7 +759,7 @@ def get_address_for_change(o: TxOutputType, coin: CoinInfo, root: bip32.HDNode):
         input_script_type = InputScriptType.SPENDP2SHWITNESS
     else:
         raise SigningError(FailureType.DataError, "Invalid script type")
-    return get_address(
+    return addresses.get_address(
         input_script_type, coin, node_derive(root, o.address_n), o.multisig
     )
 
@@ -771,33 +787,37 @@ def output_is_change(o: TxOutputType, wallet_path: list, segwit_in: int) -> bool
 
 
 def input_derive_script(
-    coin: CoinInfo, i: TxInputType, pubkey: bytes, signature: bytes = None
+    coin: coininfo.CoinInfo, i: TxInputType, pubkey: bytes, signature: bytes = None
 ) -> bytes:
     if i.script_type == InputScriptType.SPENDADDRESS:
         # p2pkh or p2sh
-        return input_script_p2pkh_or_p2sh(pubkey, signature, get_hash_type(coin))
+        return scripts.input_script_p2pkh_or_p2sh(
+            pubkey, signature, get_hash_type(coin)
+        )
 
     if i.script_type == InputScriptType.SPENDP2SHWITNESS:
         # p2wpkh or p2wsh using p2sh
 
         if i.multisig:
             # p2wsh in p2sh
-            pubkeys = multisig_get_pubkeys(i.multisig)
-            witness_script = output_script_multisig(pubkeys, i.multisig.m)
+            pubkeys = multisig.multisig_get_pubkeys(i.multisig)
+            witness_script = scripts.output_script_multisig(pubkeys, i.multisig.m)
             witness_script_hash = sha256(witness_script).digest()
-            return input_script_p2wsh_in_p2sh(witness_script_hash)
+            return scripts.input_script_p2wsh_in_p2sh(witness_script_hash)
 
         # p2wpkh in p2sh
-        return input_script_p2wpkh_in_p2sh(ecdsa_hash_pubkey(pubkey, coin))
+        return scripts.input_script_p2wpkh_in_p2sh(
+            addresses.ecdsa_hash_pubkey(pubkey, coin)
+        )
 
     elif i.script_type == InputScriptType.SPENDWITNESS:
         # native p2wpkh or p2wsh
-        return input_script_native_p2wpkh_or_p2wsh()
+        return scripts.input_script_native_p2wpkh_or_p2wsh()
 
     elif i.script_type == InputScriptType.SPENDMULTISIG:
         # p2sh multisig
-        signature_index = multisig_pubkey_index(i.multisig, pubkey)
-        return input_script_multisig(
+        signature_index = multisig.multisig_pubkey_index(i.multisig, pubkey)
+        return scripts.input_script_multisig(
             i.multisig, signature, signature_index, get_hash_type(coin), coin
         )
 
@@ -841,7 +861,10 @@ def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
 
 
 def is_change(
-    txo: TxOutputType, wallet_path: list, segwit_in: int, multifp: MultisigFingerprint
+    txo: TxOutputType,
+    wallet_path: list,
+    segwit_in: int,
+    multifp: multisig.MultisigFingerprint,
 ) -> bool:
     if txo.multisig:
         if not multifp.matches(txo.multisig):

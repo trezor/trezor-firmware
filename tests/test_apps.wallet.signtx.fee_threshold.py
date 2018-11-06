@@ -14,7 +14,7 @@ from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages import OutputScriptType
 
 from apps.common import coins
-from apps.wallet.sign_tx import signing
+from apps.wallet.sign_tx import helpers, signing
 
 
 class TestSignTxFeeThreshold(unittest.TestCase):
@@ -72,11 +72,11 @@ class TestSignTxFeeThreshold(unittest.TestCase):
             TxAck(tx=TransactionType(bin_outputs=[pout1])),
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out1])),
-            signing.UiConfirmOutput(out1, coin_bitcoin),
+            helpers.UiConfirmOutput(out1, coin_bitcoin),
             True,
-            signing.UiConfirmFeeOverThreshold(100000, coin_bitcoin),
+            helpers.UiConfirmFeeOverThreshold(100000, coin_bitcoin),
             True,
-            signing.UiConfirmTotal(290000 + 100000, 100000, coin_bitcoin),
+            helpers.UiConfirmTotal(290000 + 100000, 100000, coin_bitcoin),
             True,
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
         ]
@@ -139,9 +139,9 @@ class TestSignTxFeeThreshold(unittest.TestCase):
             TxAck(tx=TransactionType(bin_outputs=[pout1])),
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out1])),
-            signing.UiConfirmOutput(out1, coin_bitcoin),
+            helpers.UiConfirmOutput(out1, coin_bitcoin),
             True,
-            signing.UiConfirmTotal(300000 + 90000, 90000, coin_bitcoin),
+            helpers.UiConfirmTotal(300000 + 90000, 90000, coin_bitcoin),
             True,
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
         ]
@@ -154,11 +154,10 @@ class TestSignTxFeeThreshold(unittest.TestCase):
             self.assertEqualEx(signer.send(request), response)
 
     def assertEqualEx(self, a, b):
-        # hack to avoid adding __eq__ to signing.Ui* classes
-        if ((isinstance(a, signing.UiConfirmOutput) and isinstance(b, signing.UiConfirmOutput)) or
-                (isinstance(a, signing.UiConfirmTotal) and isinstance(b, signing.UiConfirmTotal)) or
-                (isinstance(a, signing.UiConfirmForeignAddress) and isinstance(b, signing.UiConfirmForeignAddress)) or
-                (isinstance(a, signing.UiConfirmFeeOverThreshold) and isinstance(b, signing.UiConfirmFeeOverThreshold))):
+        # hack to avoid adding __eq__ to helpers.Ui* classes
+        if ((isinstance(a, helpers.UiConfirmOutput) and isinstance(b, helpers.UiConfirmOutput)) or
+                (isinstance(a, helpers.UiConfirmTotal) and isinstance(b, helpers.UiConfirmTotal)) or
+                (isinstance(a, helpers.UiConfirmForeignAddress) and isinstance(b, helpers.UiConfirmForeignAddress))):
             return self.assertEqual(a.__dict__, b.__dict__)
         else:
             return self.assertEqual(a, b)

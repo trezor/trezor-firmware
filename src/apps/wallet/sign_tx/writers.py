@@ -3,7 +3,8 @@ from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.utils import ensure
 
-from apps.common.writers import (
+from apps.common.writers import (  # noqa: F401
+    empty_bytearray,
     write_bytes,
     write_bytes_reversed,
     write_uint8,

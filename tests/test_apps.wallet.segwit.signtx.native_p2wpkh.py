@@ -15,7 +15,7 @@ from trezor.messages import InputScriptType
 from trezor.messages import OutputScriptType
 
 from apps.common import coins
-from apps.wallet.sign_tx import signing
+from apps.wallet.sign_tx import helpers, signing
 
 
 class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
@@ -67,16 +67,16 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out1])),
 
-            signing.UiConfirmOutput(out1, coin),
+            helpers.UiConfirmOutput(out1, coin),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out2])),
 
-            signing.UiConfirmOutput(out2, coin),
+            helpers.UiConfirmOutput(out2, coin),
             True,
 
-            signing.UiConfirmTotal(12300000, 11000, coin),
+            helpers.UiConfirmTotal(12300000, 11000, coin),
             True,
 
             # sign tx
@@ -165,13 +165,13 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out1])),
 
-            signing.UiConfirmOutput(out1, coin),
+            helpers.UiConfirmOutput(out1, coin),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out2])),
 
-            signing.UiConfirmTotal(5000000 + 11000, 11000, coin),
+            helpers.UiConfirmTotal(5000000 + 11000, 11000, coin),
             True,
 
             # sign tx
@@ -216,10 +216,10 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             signer.send(None)
 
     def assertEqualEx(self, a, b):
-        # hack to avoid adding __eq__ to signing.Ui* classes
-        if ((isinstance(a, signing.UiConfirmOutput) and isinstance(b, signing.UiConfirmOutput)) or
-                (isinstance(a, signing.UiConfirmTotal) and isinstance(b, signing.UiConfirmTotal)) or
-                (isinstance(a, signing.UiConfirmForeignAddress) and isinstance(b, signing.UiConfirmForeignAddress))):
+        # hack to avoid adding __eq__ to helpers.Ui* classes
+        if ((isinstance(a, helpers.UiConfirmOutput) and isinstance(b, helpers.UiConfirmOutput)) or
+                (isinstance(a, helpers.UiConfirmTotal) and isinstance(b, helpers.UiConfirmTotal)) or
+                (isinstance(a, helpers.UiConfirmForeignAddress) and isinstance(b, helpers.UiConfirmForeignAddress))):
             return self.assertEqual(a.__dict__, b.__dict__)
         else:
             return self.assertEqual(a, b)

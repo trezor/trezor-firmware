@@ -15,7 +15,7 @@ from trezor.messages import InputScriptType
 from trezor.messages import OutputScriptType
 
 from apps.common import coins
-from apps.wallet.sign_tx import signing
+from apps.wallet.sign_tx import helpers, signing
 
 # https://groestlsight-test.groestlcoin.org/api/tx/9b5c4859a8a31e69788cb4402812bb28f14ad71cbd8c60b09903478bc56f79a3
 class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
@@ -64,16 +64,16 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out1])),
 
-            signing.UiConfirmOutput(out1, coin),
+            helpers.UiConfirmOutput(out1, coin),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out2])),
 
-            signing.UiConfirmOutput(out2, coin),
+            helpers.UiConfirmOutput(out2, coin),
             True,
 
-            signing.UiConfirmTotal(12300000, 11000, coin),
+            helpers.UiConfirmTotal(12300000, 11000, coin),
             True,
 
             # sign tx
@@ -159,13 +159,13 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out1])),
 
-            signing.UiConfirmOutput(out1, coin),
+            helpers.UiConfirmOutput(out1, coin),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out2])),
 
-            signing.UiConfirmTotal(5000000 + 11000, 11000, coin),
+            helpers.UiConfirmTotal(5000000 + 11000, 11000, coin),
             True,
 
             # sign tx
@@ -210,9 +210,9 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
             signer.send(None)
 
     def assertEqualEx(self, a, b):
-        # hack to avoid adding __eq__ to signing.Ui* classes
-        if ((isinstance(a, signing.UiConfirmOutput) and isinstance(b, signing.UiConfirmOutput)) or
-                (isinstance(a, signing.UiConfirmTotal) and isinstance(b, signing.UiConfirmTotal))):
+        # hack to avoid adding __eq__ to helpers.Ui* classes
+        if ((isinstance(a, helpers.UiConfirmOutput) and isinstance(b, helpers.UiConfirmOutput)) or
+                (isinstance(a, helpers.UiConfirmTotal) and isinstance(b, helpers.UiConfirmTotal))):
             return self.assertEqual(a.__dict__, b.__dict__)
         else:
             return self.assertEqual(a, b)

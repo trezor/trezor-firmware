@@ -15,7 +15,7 @@ from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 from trezor.messages import OutputScriptType
 
 from apps.common import coins
-from apps.wallet.sign_tx import signing
+from apps.wallet.sign_tx import helpers, signing
 
 
 class TestSignTx_GRS(unittest.TestCase):
@@ -62,9 +62,9 @@ class TestSignTx_GRS(unittest.TestCase):
             TxAck(tx=TransactionType(bin_outputs=[pout1])),
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out1])),
-            signing.UiConfirmOutput(out1, coin),
+            helpers.UiConfirmOutput(out1, coin),
             True,
-            signing.UiConfirmTotal(210016, 192, coin),
+            helpers.UiConfirmTotal(210016, 192, coin),
             True,
             # ButtonRequest(code=ButtonRequest_ConfirmOutput),
             # ButtonRequest(code=ButtonRequest_SignTx),
@@ -94,9 +94,9 @@ class TestSignTx_GRS(unittest.TestCase):
             signer.send(None)
 
     def assertEqualEx(self, a, b):
-        # hack to avoid adding __eq__ to signing.Ui* classes
-        if ((isinstance(a, signing.UiConfirmOutput) and isinstance(b, signing.UiConfirmOutput)) or
-                (isinstance(a, signing.UiConfirmTotal) and isinstance(b, signing.UiConfirmTotal))):
+        # hack to avoid adding __eq__ to helpers.Ui* classes
+        if ((isinstance(a, helpers.UiConfirmOutput) and isinstance(b, helpers.UiConfirmOutput)) or
+                (isinstance(a, helpers.UiConfirmTotal) and isinstance(b, helpers.UiConfirmTotal))):
             return self.assertEqual(a.__dict__, b.__dict__)
         else:
             return self.assertEqual(a, b)
