@@ -48,9 +48,14 @@
             "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
         }
     },
+    "bitcoin:GAME": {
+        "wallet": {
+            "Electrum-GAME": "https://electrum-game.org"
+        }
+    },
     "bitcoin:GRS": {
         "wallet": {
-            "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet/"
+            "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet"
         }
     },
     "bitcoin:KOTO": {
