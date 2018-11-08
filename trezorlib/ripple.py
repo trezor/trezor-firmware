@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-
 from . import messages
 from .protobuf import dict_to_proto
 from .tools import dict_from_camelcase, expect
