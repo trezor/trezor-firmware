@@ -21,16 +21,12 @@ from typing import Iterable, Optional
 
 import usb1
 
-from . import TransportException
-from .protocol import ProtocolBasedTransport, get_protocol
+from . import TREZORS, UDEV_RULES_STR, TransportException
+from .protocol import ProtocolBasedTransport, ProtocolV1
 
 if False:
     # mark Optional as used, otherwise it only exists in comments
     Optional
-
-DEV_TREZOR1 = (0x534C, 0x0001)
-DEV_TREZOR2 = (0x1209, 0x53C1)
-DEV_TREZOR2_BL = (0x1209, 0x53C0)
 
 INTERFACE = 0
 ENDPOINT = 1
@@ -50,9 +46,7 @@ class WebUsbHandle:
         self.handle = self.device.open()
         if self.handle is None:
             if sys.platform.startswith("linux"):
-                args = (
-                    "Do you have udev rules installed? https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules",
-                )
+                args = (UDEV_RULES_STR,)
             else:
                 args = ()
             raise IOError("Cannot open device", *args)
@@ -102,8 +96,7 @@ class WebUsbTransport(ProtocolBasedTransport):
         self.handle = handle
         self.debug = debug
 
-        protocol = get_protocol(handle, is_trezor2(device))
-        super().__init__(protocol=protocol)
+        super().__init__(protocol=ProtocolV1(handle))
 
     def get_path(self) -> str:
         return "%s:%s" % (self.PATH_PREFIX, dev_to_str(self.device))
@@ -116,7 +109,8 @@ class WebUsbTransport(ProtocolBasedTransport):
             atexit.register(cls.context.close)
         devices = []
         for dev in cls.context.getDeviceIterator(skip_on_error=True):
-            if not (is_trezor1(dev) or is_trezor2(dev) or is_trezor2_bl(dev)):
+            usb_id = (dev.getVendorID(), dev.getProductID())
+            if usb_id not in TREZORS:
                 continue
             if not is_vendor_class(dev):
                 continue
@@ -141,18 +135,6 @@ class WebUsbTransport(ProtocolBasedTransport):
         else:
             # For v1 protocol, find debug USB interface for the same serial number
             return WebUsbTransport(self.device, debug=True)
-
-
-def is_trezor1(dev: usb1.USBDevice) -> bool:
-    return (dev.getVendorID(), dev.getProductID()) == DEV_TREZOR1
-
-
-def is_trezor2(dev: usb1.USBDevice) -> bool:
-    return (dev.getVendorID(), dev.getProductID()) == DEV_TREZOR2
-
-
-def is_trezor2_bl(dev: usb1.USBDevice) -> bool:
-    return (dev.getVendorID(), dev.getProductID()) == DEV_TREZOR2_BL
 
 
 def is_vendor_class(dev: usb1.USBDevice) -> bool:

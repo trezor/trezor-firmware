@@ -26,6 +26,18 @@ if False:
 
 LOG = logging.getLogger(__name__)
 
+# USB vendor/product IDs for Trezors
+DEV_TREZOR1 = (0x534C, 0x0001)
+DEV_TREZOR2 = (0x1209, 0x53C1)
+DEV_TREZOR2_BL = (0x1209, 0x53C0)
+
+TREZORS = {DEV_TREZOR1, DEV_TREZOR2, DEV_TREZOR2_BL}
+
+UDEV_RULES_STR = """
+Do you have udev rules installed?
+https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules
+""".strip()
+
 
 class TransportException(Exception):
     pass

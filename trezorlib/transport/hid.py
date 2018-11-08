@@ -20,12 +20,8 @@ from typing import Any, Dict, Iterable
 
 import hid
 
-from . import TransportException
-from .protocol import ProtocolBasedTransport, get_protocol
-
-DEV_TREZOR1 = (0x534C, 0x0001)
-DEV_TREZOR2 = (0x1209, 0x53C1)
-DEV_TREZOR2_BL = (0x1209, 0x53C0)
+from . import DEV_TREZOR1, UDEV_RULES_STR, TransportException
+from .protocol import ProtocolBasedTransport, ProtocolV1
 
 HidDevice = Dict[str, Any]
 HidDeviceHandle = Any
@@ -43,9 +39,7 @@ class HidHandle:
             self.handle.open_path(self.path)
         except (IOError, OSError) as e:
             if sys.platform.startswith("linux"):
-                e.args = e.args + (
-                    "Do you have udev rules installed? https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules",
-                )
+                e.args = e.args + (UDEV_RULES_STR)
             raise e
         self.handle.set_nonblocking(True)
 
@@ -75,7 +69,7 @@ class HidHandle:
                 time.sleep(0.001)
         if len(chunk) != 64:
             raise TransportException("Unexpected chunk size: %d" % len(chunk))
-        return chunk
+        return bytes(chunk)
 
     def probe_hid_version(self) -> int:
         n = self.handle.write([0, 63] + [0xFF] * 63)
@@ -101,7 +95,7 @@ class HidTransport(ProtocolBasedTransport):
         self.device = device
         self.hid = hid_handle
 
-        protocol = get_protocol(hid_handle, is_trezor2(device))
+        protocol = ProtocolV1(hid_handle)
         super().__init__(protocol=protocol)
 
     def get_path(self) -> str:
@@ -111,7 +105,8 @@ class HidTransport(ProtocolBasedTransport):
     def enumerate(cls, debug: bool = False) -> Iterable["HidTransport"]:
         devices = []
         for dev in hid.enumerate(0, 0):
-            if not (is_trezor1(dev) or is_trezor2(dev) or is_trezor2_bl(dev)):
+            usb_id = (dev["vendor_id"], dev["product_id"])
+            if usb_id != DEV_TREZOR1:
                 continue
             if debug:
                 if not is_debuglink(dev):
@@ -132,18 +127,6 @@ class HidTransport(ProtocolBasedTransport):
                 if debug.device["serial_number"] == self.device["serial_number"]:
                     return debug
             raise TransportException("Debug HID device not found")
-
-
-def is_trezor1(dev: HidDevice) -> bool:
-    return (dev["vendor_id"], dev["product_id"]) == DEV_TREZOR1
-
-
-def is_trezor2(dev: HidDevice) -> bool:
-    return (dev["vendor_id"], dev["product_id"]) == DEV_TREZOR2
-
-
-def is_trezor2_bl(dev: HidDevice) -> bool:
-    return (dev["vendor_id"], dev["product_id"]) == DEV_TREZOR2_BL
 
 
 def is_wirelink(dev: HidDevice) -> bool:
