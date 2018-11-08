@@ -55,11 +55,11 @@ def client():
     wirelink = get_device()
     client = TrezorClientDebugLink(wirelink)
     wipe_device(client)
-    client.transport.session_begin()
+    client.transport.begin_session()
 
     yield client
 
-    client.transport.session_end()
+    client.transport.end_session()
 
     # XXX debuglink session must also be closed
     # client.close accomplishes that for now; going forward, there should

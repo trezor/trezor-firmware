@@ -25,10 +25,10 @@ from .tools import expect
 class DebugLink:
     def __init__(self, transport):
         self.transport = transport
-        self.transport.session_begin()
+        self.transport.begin_session()
 
     def close(self):
-        self.transport.session_end()
+        self.transport.end_session()
 
     def _call(self, msg, nowait=False):
         self.transport.write(msg)

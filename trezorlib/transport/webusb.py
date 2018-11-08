@@ -17,12 +17,12 @@
 import atexit
 import sys
 import time
+from typing import Iterable
 
 import usb1
 
-from . import Transport, TransportException
-from ..protocol_v1 import ProtocolV1
-from ..protocol_v2 import ProtocolV2
+from . import TransportException
+from .protocol import ProtocolBasedTransport, get_protocol
 
 DEV_TREZOR1 = (0x534C, 0x0001)
 DEV_TREZOR2 = (0x1209, 0x53C1)
@@ -35,34 +35,52 @@ DEBUG_ENDPOINT = 2
 
 
 class WebUsbHandle:
-    def __init__(self, device):
+    def __init__(self, device: usb1.USBDevice, debug: bool = False) -> None:
         self.device = device
+        self.interface = DEBUG_INTERFACE if debug else INTERFACE
+        self.endpoint = DEBUG_ENDPOINT if debug else ENDPOINT
         self.count = 0
+        self.handle = None  # type: Optional[usb1.USBDeviceHandle]
+
+    def open(self) -> None:
+        self.handle = self.device.open()
+        if self.handle is None:
+            if sys.platform.startswith("linux"):
+                args = (
+                    "Do you have udev rules installed? https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules",
+                )
+            else:
+                args = ()
+            raise IOError("Cannot open device", *args)
+        self.handle.claimInterface(self.interface)
+
+    def close(self) -> None:
+        if self.handle is not None:
+            self.handle.releaseInterface(self.interface)
+            self.handle.close()
         self.handle = None
 
-    def open(self, interface):
-        if self.count == 0:
-            self.handle = self.device.open()
-            if self.handle is None:
-                if sys.platform.startswith("linux"):
-                    args = (
-                        "Do you have udev rules installed? https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules",
-                    )
-                else:
-                    args = ()
-                raise IOError("Cannot open device", *args)
-            self.handle.claimInterface(interface)
-            self.count += 1
+    def write_chunk(self, chunk: bytes) -> None:
+        assert self.handle is not None
+        if len(chunk) != 64:
+            raise TransportException("Unexpected chunk size: %d" % len(chunk))
+        self.handle.interruptWrite(self.endpoint, chunk)
 
-    def close(self, interface):
-        if self.count == 1:
-            self.handle.releaseInterface(interface)
-            self.handle.close()
-        if self.count > 0:
-            self.count -= 1
+    def read_chunk(self) -> bytes:
+        assert self.handle is not None
+        endpoint = 0x80 | self.endpoint
+        while True:
+            chunk = self.handle.interruptRead(endpoint, 64)
+            if chunk:
+                break
+            else:
+                time.sleep(0.001)
+        if len(chunk) != 64:
+            raise TransportException("Unexpected chunk size: %d" % len(chunk))
+        return chunk
 
 
-class WebUsbTransport(Transport):
+class WebUsbTransport(ProtocolBasedTransport):
     """
     WebUsbTransport implements transport over WebUSB interface.
     """
@@ -70,31 +88,24 @@ class WebUsbTransport(Transport):
     PATH_PREFIX = "webusb"
     context = None
 
-    def __init__(self, device, protocol=None, handle=None, debug=False):
-        super(WebUsbTransport, self).__init__()
-
+    def __init__(
+        self, device: str, handle: WebUsbHandle = None, debug: bool = False
+    ) -> None:
         if handle is None:
-            handle = WebUsbHandle(device)
-
-        if protocol is None:
-            # force_v1 = os.environ.get('TREZOR_TRANSPORT_V1', '0')
-            force_v1 = True
-
-            if is_trezor2(device) and not int(force_v1):
-                protocol = ProtocolV2()
-            else:
-                protocol = ProtocolV1()
+            handle = WebUsbHandle(device, debug)
 
         self.device = device
-        self.protocol = protocol
         self.handle = handle
         self.debug = debug
 
-    def get_path(self):
+        protocol = get_protocol(handle, is_trezor2(device))
+        super().__init__(protocol=protocol)
+
+    def get_path(self) -> str:
         return "%s:%s" % (self.PATH_PREFIX, dev_to_str(self.device))
 
     @classmethod
-    def enumerate(cls):
+    def enumerate(cls) -> Iterable["WebUsbTransport"]:
         if cls.context is None:
             cls.context = usb1.USBContext()
             cls.context.open()
@@ -117,69 +128,30 @@ class WebUsbTransport(Transport):
                 pass
         return devices
 
-    def find_debug(self):
-        if isinstance(self.protocol, ProtocolV2):
+    def find_debug(self) -> "WebUsbTransport":
+        if self.protocol.VERSION >= 2:
             # TODO test this
-            # For v2 protocol, lets use the same WebUSB interface, but with a different session
-            protocol = ProtocolV2()
-            debug = WebUsbTransport(self.device, protocol, self.handle)
-            return debug
-        if isinstance(self.protocol, ProtocolV1):
+            # XXX this is broken right now because sessions don't really work
+            # For v2 protocol, use the same WebUSB interface with a different session
+            return WebUsbTransport(self.device, self.handle)
+        else:
             # For v1 protocol, find debug USB interface for the same serial number
-            protocol = ProtocolV1()
-            debug = WebUsbTransport(self.device, protocol, None, True)
-            return debug
-        raise TransportException("Debug WebUSB device not found")
-
-    def open(self):
-        interface = DEBUG_INTERFACE if self.debug else INTERFACE
-        self.handle.open(interface)
-        self.protocol.session_begin(self)
-
-    def close(self):
-        interface = DEBUG_INTERFACE if self.debug else INTERFACE
-        self.protocol.session_end(self)
-        self.handle.close(interface)
-
-    def read(self):
-        return self.protocol.read(self)
-
-    def write(self, msg):
-        return self.protocol.write(self, msg)
-
-    def write_chunk(self, chunk):
-        endpoint = DEBUG_ENDPOINT if self.debug else ENDPOINT
-        if len(chunk) != 64:
-            raise TransportException("Unexpected chunk size: %d" % len(chunk))
-        self.handle.handle.interruptWrite(endpoint, chunk)
-
-    def read_chunk(self):
-        endpoint = DEBUG_ENDPOINT if self.debug else ENDPOINT
-        endpoint = 0x80 | endpoint
-        while True:
-            chunk = self.handle.handle.interruptRead(endpoint, 64)
-            if chunk:
-                break
-            else:
-                time.sleep(0.001)
-        if len(chunk) != 64:
-            raise TransportException("Unexpected chunk size: %d" % len(chunk))
-        return bytearray(chunk)
+            return WebUsbTransport(self.device, debug=True)
 
 
-def is_trezor1(dev):
+def is_trezor1(dev: usb1.USBDevice) -> bool:
     return (dev.getVendorID(), dev.getProductID()) == DEV_TREZOR1
 
 
-def is_trezor2(dev):
+def is_trezor2(dev: usb1.USBDevice) -> bool:
     return (dev.getVendorID(), dev.getProductID()) == DEV_TREZOR2
 
 
-def is_trezor2_bl(dev):
+def is_trezor2_bl(dev: usb1.USBDevice) -> bool:
     return (dev.getVendorID(), dev.getProductID()) == DEV_TREZOR2_BL
 
 
-def is_vendor_class(dev):
+def is_vendor_class(dev: usb1.USBDevice) -> bool:
     configurationId = 0
     altSettingId = 0
     return (
@@ -188,7 +160,7 @@ def is_vendor_class(dev):
     )
 
 
-def dev_to_str(dev):
+def dev_to_str(dev: usb1.USBDevice) -> str:
     return ":".join(
         str(x) for x in ["%03i" % (dev.getBusNumber(),)] + dev.getPortNumberList()
     )

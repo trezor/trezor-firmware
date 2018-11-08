@@ -41,10 +41,10 @@ class TrezorTest:
         # self.client.set_buttonwait(3)
 
         device.wipe(self.client)
-        self.client.transport.session_begin()
+        self.client.transport.begin_session()
 
     def teardown_method(self, method):
-        self.client.transport.session_end()
+        self.client.transport.end_session()
         self.client.close()
 
     def _setup_mnemonic(self, mnemonic=None, pin="", passphrase=False):

@@ -222,14 +222,13 @@ def session(f):
     # Decorator wraps a BaseClient method
     # with session activation / deactivation
     @functools.wraps(f)
-    def wrapped_f(*args, **kwargs):
+    def wrapped_f(client, *args, **kwargs):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-        client = args[0]
-        client.transport.session_begin()
+        client.transport.begin_session()
         try:
-            return f(*args, **kwargs)
+            return f(client, *args, **kwargs)
         finally:
-            client.transport.session_end()
+            client.transport.begin_session()
 
     return wrapped_f
 

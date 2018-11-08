@@ -15,20 +15,19 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import socket
+from typing import Iterable, cast
 
-from . import Transport, TransportException
-from ..protocol_v1 import ProtocolV1
+from . import TransportException
+from .protocol import ProtocolBasedTransport, get_protocol
 
 
-class UdpTransport(Transport):
+class UdpTransport(ProtocolBasedTransport):
 
     DEFAULT_HOST = "127.0.0.1"
     DEFAULT_PORT = 21324
     PATH_PREFIX = "udp"
 
-    def __init__(self, device=None, protocol=None):
-        super(UdpTransport, self).__init__()
-
+    def __init__(self, device: str = None) -> None:
         if not device:
             host = UdpTransport.DEFAULT_HOST
             port = UdpTransport.DEFAULT_PORT
@@ -36,21 +35,21 @@ class UdpTransport(Transport):
             devparts = device.split(":")
             host = devparts[0]
             port = int(devparts[1]) if len(devparts) > 1 else UdpTransport.DEFAULT_PORT
-        if not protocol:
-            protocol = ProtocolV1()
         self.device = (host, port)
-        self.protocol = protocol
-        self.socket = None
+        self.socket = None  # type: Optional[socket.socket]
 
-    def get_path(self):
-        return "%s:%s:%s" % ((self.PATH_PREFIX,) + self.device)
+        protocol = get_protocol(self, want_v2=False)
+        super().__init__(protocol=protocol)
 
-    def find_debug(self):
+    def get_path(self) -> str:
+        return "{}:{}:{}".format(self.PATH_PREFIX, *self.device)
+
+    def find_debug(self) -> "UdpTransport":
         host, port = self.device
-        return UdpTransport("{}:{}".format(host, port + 1), self.protocol)
+        return UdpTransport("{}:{}".format(host, port + 1))
 
     @classmethod
-    def _try_path(cls, path):
+    def _try_path(cls, path: str) -> "UdpTransport":
         d = cls(path)
         try:
             d.open()
@@ -64,7 +63,7 @@ class UdpTransport(Transport):
             d.close()
 
     @classmethod
-    def enumerate(cls):
+    def enumerate(cls) -> Iterable["UdpTransport"]:
         default_path = "{}:{}".format(cls.DEFAULT_HOST, cls.DEFAULT_PORT)
         try:
             return [cls._try_path(default_path)]
@@ -72,27 +71,29 @@ class UdpTransport(Transport):
             return []
 
     @classmethod
-    def find_by_path(cls, path, prefix_search=False):
+    def find_by_path(cls, path: str, prefix_search: bool = False) -> "UdpTransport":
         if prefix_search:
-            return super().find_by_path(path, prefix_search)
+            return cast(UdpTransport, super().find_by_path(path, prefix_search))
+            # This is *technically* type-able: mark `find_by_path` as returning
+            # the same type from which `cls` comes from.
+            # Mypy can't handle that though, so here we are.
         else:
             path = path.replace("{}:".format(cls.PATH_PREFIX), "")
             return cls._try_path(path)
 
-    def open(self):
+    def open(self) -> None:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.connect(self.device)
         self.socket.settimeout(10)
-        self.protocol.session_begin(self)
 
-    def close(self):
-        if self.socket:
-            self.protocol.session_end(self)
+    def close(self) -> None:
+        if self.socket is not None:
             self.socket.close()
-            self.socket = None
+        self.socket = None
 
-    def _ping(self):
+    def _ping(self) -> bool:
         """Test if the device is listening."""
+        assert self.socket is not None
         resp = None
         try:
             self.socket.sendall(b"PINGPING")
@@ -101,18 +102,14 @@ class UdpTransport(Transport):
             pass
         return resp == b"PONGPONG"
 
-    def read(self):
-        return self.protocol.read(self)
-
-    def write(self, msg):
-        return self.protocol.write(self, msg)
-
-    def write_chunk(self, chunk):
+    def write_chunk(self, chunk: bytes) -> None:
+        assert self.socket is not None
         if len(chunk) != 64:
             raise TransportException("Unexpected data length")
         self.socket.sendall(chunk)
 
-    def read_chunk(self):
+    def read_chunk(self) -> bytes:
+        assert self.socket is not None
         while True:
             try:
                 chunk = self.socket.recv(64)

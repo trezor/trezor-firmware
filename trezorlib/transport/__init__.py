@@ -18,6 +18,8 @@ import importlib
 import logging
 from typing import Iterable, Type
 
+from ..protobuf import MessageType
+
 LOG = logging.getLogger(__name__)
 
 
@@ -25,38 +27,49 @@ class TransportException(Exception):
     pass
 
 
-class Transport(object):
-    def __init__(self):
-        self.session_counter = 0
+class Transport:
+    """Raw connection to a Trezor device.
 
-    def __str__(self):
+    Transport subclass represents a kind of communication link: Trezor Bridge, WebUSB
+    or USB-HID connection, or UDP socket of listening emulator(s).
+    It can also enumerate devices available over this communication link, and return
+    them as instances.
+
+    Transport instance is a thing that:
+    - can be identified and requested by a string URI-like path
+    - can open and close sessions, which enclose related operations
+    - can read and write protobuf messages
+
+    You need to implement a new Transport subclass if you invent a new way to connect
+    a Trezor device to a computer.
+    """
+
+    PATH_PREFIX = None  # type: str
+
+    def __str__(self) -> str:
         return self.get_path()
 
-    def get_path(self):
-        return "{}:{}".format(self.PATH_PREFIX, self.device)
-
-    def session_begin(self):
-        if self.session_counter == 0:
-            self.open()
-        self.session_counter += 1
-
-    def session_end(self):
-        self.session_counter = max(self.session_counter - 1, 0)
-        if self.session_counter == 0:
-            self.close()
-
-    def open(self):
+    def get_path(self) -> str:
         raise NotImplementedError
 
-    def close(self):
+    def begin_session(self) -> None:
+        raise NotImplementedError
+
+    def end_session(self) -> None:
+        raise NotImplementedError
+
+    def read(self) -> MessageType:
+        raise NotImplementedError
+
+    def write(self, message: MessageType) -> None:
         raise NotImplementedError
 
     @classmethod
-    def enumerate(cls):
+    def enumerate(cls) -> Iterable["Transport"]:
         raise NotImplementedError
 
     @classmethod
-    def find_by_path(cls, path, prefix_search=False):
+    def find_by_path(cls, path: str, prefix_search: bool = False) -> "Transport":
         for device in cls.enumerate():
             if (
                 path is None
