@@ -104,24 +104,16 @@ def all_transports() -> Iterable[Type[Transport]]:
 def enumerate_devices() -> Iterable[Transport]:
     devices = []  # type: List[Transport]
     for transport in all_transports():
+        name = transport.__name__
         try:
             found = transport.enumerate()
-            LOG.info(
-                "Enumerating {}: found {} devices".format(
-                    transport.__name__, len(found)
-                )
-            )
+            LOG.info("Enumerating {}: found {} devices".format(name, len(found)))
             devices.extend(found)
         except NotImplementedError:
-            LOG.error(
-                "{} does not implement device enumeration".format(transport.__name__)
-            )
+            LOG.error("{} does not implement device enumeration".format(name))
         except Exception as e:
-            LOG.error(
-                "Failed to enumerate {}. {}: {}".format(
-                    transport.__name__, e.__class__.__name__, e
-                )
-            )
+            excname = e.__class__.__name__
+            LOG.error("Failed to enumerate {}. {}: {}".format(name, excname, e))
     return devices
 
 
