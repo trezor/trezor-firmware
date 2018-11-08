@@ -15,9 +15,9 @@ async def validate_path(ctx, validate_func, **kwargs):
 
 async def show_path_warning(ctx, path: list):
     text = Text("Confirm path", ui.ICON_WRONG, icon_color=ui.RED)
-    text.normal("The path")
+    text.normal("Path")
     text.mono(*break_address_n_to_lines(path))
-    text.normal("seems unusual.")
+    text.normal("is unknown.")
     text.normal("Are you sure?")
     return await require_confirm(
         ctx, text, code=ButtonRequestType.UnknownDerivationPath

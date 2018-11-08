@@ -6,7 +6,7 @@ from trezor.messages.TezosSignedTx import TezosSignedTx
 
 from apps.common import paths, seed
 from apps.common.writers import write_bytes, write_uint8
-from apps.tezos import layout, helpers
+from apps.tezos import helpers, layout
 
 
 async def sign_tx(ctx, msg):
