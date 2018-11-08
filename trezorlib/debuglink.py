@@ -25,6 +25,8 @@ from .tools import expect
 class DebugLink:
     def __init__(self, transport):
         self.transport = transport
+
+    def open(self):
         self.transport.begin_session()
 
     def close(self):
@@ -186,10 +188,13 @@ class TrezorClientDebugLink(TrezorClient):
         self.set_passphrase("")
         super().__init__(transport, ui=self.ui)
 
+    def open(self):
+        super().open()
+        self.debug.open()
+
     def close(self):
+        self.debug.close()
         super().close()
-        if self.debug:
-            self.debug.close()
 
     def set_filter(self, message_type, callback):
         self.filters[message_type] = callback

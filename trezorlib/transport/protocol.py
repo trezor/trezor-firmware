@@ -85,15 +85,16 @@ class Protocol:
         self.handle = handle
         self.session_counter = 0
 
+    # XXX we might be able to remove this now that TrezorClient does session handling
     def begin_session(self) -> None:
         if self.session_counter == 0:
             self.handle.open()
         self.session_counter += 1
 
     def end_session(self) -> None:
-        self.session_counter = max(self.session_counter - 1, 0)
-        if self.session_counter == 0:
+        if self.session_counter == 1:
             self.handle.close()
+        self.session_counter -= 1
 
     def read(self) -> protobuf.MessageType:
         raise NotImplementedError

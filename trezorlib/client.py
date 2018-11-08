@@ -84,15 +84,23 @@ class BaseClient(object):
         LOG.info("creating client instance for device: {}".format(transport.get_path()))
         self.transport = transport
         self.ui = ui
+
+        self.session_counter = 0
         super(BaseClient, self).__init__()  # *args, **kwargs)
 
+    def open(self):
+        if self.session_counter == 0:
+            self.transport.begin_session()
+        self.session_counter += 1
+
     def close(self):
-        pass
+        if self.session_counter == 1:
+            self.transport.end_session()
+        self.session_counter -= 1
 
     def cancel(self):
         self._raw_write(proto.Cancel())
 
-    @tools.session
     def call_raw(self, msg):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         self._raw_write(msg)
@@ -174,6 +182,7 @@ class ProtocolMixin(object):
     def set_tx_api(self, tx_api):
         warnings.warn("set_tx_api is deprecated, use new arguments to sign_tx")
 
+    @tools.session
     def init_device(self):
         resp = self.call(proto.Initialize(state=self.state))
         if not isinstance(resp, proto.Features):

@@ -224,11 +224,11 @@ def session(f):
     @functools.wraps(f)
     def wrapped_f(client, *args, **kwargs):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-        client.transport.begin_session()
+        client.open()
         try:
             return f(client, *args, **kwargs)
         finally:
-            client.transport.begin_session()
+            client.close()
 
     return wrapped_f
 
