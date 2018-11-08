@@ -17,12 +17,16 @@
 import atexit
 import sys
 import time
-from typing import Iterable
+from typing import Iterable, Optional
 
 import usb1
 
 from . import TransportException
 from .protocol import ProtocolBasedTransport, get_protocol
+
+if False:
+    # mark Optional as used, otherwise it only exists in comments
+    Optional
 
 DEV_TREZOR1 = (0x534C, 0x0001)
 DEV_TREZOR2 = (0x1209, 0x53C1)

@@ -17,12 +17,16 @@
 import logging
 import struct
 from io import BytesIO
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Optional
 
 import requests
 
 from . import Transport, TransportException
 from .. import mapping, protobuf
+
+if False:
+    # mark Optional as used, otherwise it only exists in comments
+    Optional
 
 LOG = logging.getLogger(__name__)
 

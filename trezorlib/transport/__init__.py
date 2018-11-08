@@ -16,9 +16,13 @@
 
 import importlib
 import logging
-from typing import Iterable, Type
+from typing import Iterable, List, Set, Type
 
 from ..protobuf import MessageType
+
+if False:
+    # mark Set and List as used, otherwise they only exist in comments
+    List, Set
 
 LOG = logging.getLogger(__name__)
 
@@ -106,7 +110,7 @@ def enumerate_devices() -> Iterable[Transport]:
     for transport in all_transports():
         name = transport.__name__
         try:
-            found = transport.enumerate()
+            found = list(transport.enumerate())
             LOG.info("Enumerating {}: found {} devices".format(name, len(found)))
             devices.extend(found)
         except NotImplementedError:
