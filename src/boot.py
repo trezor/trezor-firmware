@@ -8,13 +8,13 @@ async def bootscreen():
     while True:
         try:
             if not config.has_pin():
-                config.unlock(pin_to_int(""), show_pin_timeout)
+                config.unlock(pin_to_int(""))
                 return
             await lockscreen()
             label = None
             while True:
                 pin = await request_pin(label)
-                if config.unlock(pin_to_int(pin), show_pin_timeout):
+                if config.unlock(pin_to_int(pin)):
                     return
                 else:
                     label = "Wrong PIN, enter again"
@@ -52,7 +52,7 @@ async def lockscreen():
     await ui.click()
 
 
-config.init()
+config.init(show_pin_timeout)
 ui.display.backlight(ui.BACKLIGHT_NONE)
 loop.schedule(bootscreen())
 loop.run()

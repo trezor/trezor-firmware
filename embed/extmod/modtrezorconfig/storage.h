@@ -17,16 +17,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __STORAGE_H__
+#define __STORAGE_H__
+
 #include <stdint.h>
 #include <stddef.h>
 #include "secbool.h"
-#include "py/obj.h"
 
-void storage_init(void);
+typedef void (*PIN_UI_WAIT_CALLBACK)(uint32_t wait, uint32_t progress);
+
+void storage_init(PIN_UI_WAIT_CALLBACK callback);
 void storage_wipe(void);
-secbool storage_check_pin(uint32_t pin, mp_obj_t callback);
-secbool storage_unlock(const uint32_t pin, mp_obj_t callback);
+secbool storage_check_pin(uint32_t pin);
+secbool storage_unlock(const uint32_t pin);
 secbool storage_has_pin(void);
-secbool storage_change_pin(const uint32_t pin, const uint32_t newpin, mp_obj_t callback);
+secbool storage_change_pin(const uint32_t oldpin, const uint32_t newpin);
 secbool storage_get(uint16_t key, const void **val, uint16_t *len);
 secbool storage_set(uint16_t key, const void *val, uint16_t len);
+
+#endif

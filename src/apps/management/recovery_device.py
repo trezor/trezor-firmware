@@ -55,7 +55,7 @@ async def recovery_device(ctx, msg):
     # save into storage
     if not msg.dry_run:
         if msg.pin_protection:
-            config.change_pin(pin_to_int(""), pin_to_int(newpin), None)
+            config.change_pin(pin_to_int(""), pin_to_int(newpin))
         storage.load_settings(label=msg.label, use_passphrase=msg.passphrase_protection)
         storage.load_mnemonic(mnemonic=mnemonic, needs_backup=False, no_backup=False)
         return Success(message="Device recovered")

@@ -25,46 +25,58 @@
 
 #include "embed/extmod/trezorobj.h"
 
-#include "norcow.h"
 #include "storage.h"
 
-/// def init() -> None:
+STATIC mp_obj_t ui_wait_callback = mp_const_none;
+
+STATIC void wrapped_ui_wait_callback(uint32_t wait, uint32_t progress) {
+    if (mp_obj_is_callable(ui_wait_callback)) {
+        mp_call_function_2(ui_wait_callback, mp_obj_new_int(wait), mp_obj_new_int(progress));
+    }
+}
+
+/// def init(ui_wait_callback: (int, int -> None)=None) -> None:
 ///     '''
 ///     Initializes the storage.  Must be called before any other method is
 ///     called from this module!
 ///     '''
-STATIC mp_obj_t mod_trezorconfig_init(void) {
-    storage_init();
+STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
+    if (n_args > 0) {
+        ui_wait_callback = args[0];
+        storage_init(wrapped_ui_wait_callback);
+    } else {
+        storage_init(NULL);
+    }
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_init_obj, mod_trezorconfig_init);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_init_obj, 0, 1, mod_trezorconfig_init);
 
-/// def check_pin(pin: int, waitcallback: (int, int -> None)) -> bool:
+/// def check_pin(pin: int) -> bool:
 ///     '''
 ///     Check the given PIN. Returns True on success, False on failure.
 ///     '''
-STATIC mp_obj_t mod_trezorconfig_check_pin(mp_obj_t pin, mp_obj_t waitcallback) {
+STATIC mp_obj_t mod_trezorconfig_check_pin(mp_obj_t pin) {
     uint32_t pin_i = trezor_obj_get_uint(pin);
-    if (sectrue != storage_check_pin(pin_i, waitcallback)) {
+    if (sectrue != storage_check_pin(pin_i)) {
         return mp_const_false;
     }
     return mp_const_true;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_check_pin_obj, mod_trezorconfig_check_pin);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorconfig_check_pin_obj, mod_trezorconfig_check_pin);
 
-/// def unlock(pin: int, waitcallback: (int, int -> None)) -> bool:
+/// def unlock(pin: int) -> bool:
 ///     '''
 ///     Attempts to unlock the storage with given PIN.  Returns True on
 ///     success, False on failure.
 ///     '''
-STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin, mp_obj_t waitcallback) {
+STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin) {
     uint32_t pin_i = trezor_obj_get_uint(pin);
-    if (sectrue != storage_unlock(pin_i, waitcallback)) {
+    if (sectrue != storage_unlock(pin_i)) {
         return mp_const_false;
     }
     return mp_const_true;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_unlock_obj, mod_trezorconfig_unlock);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorconfig_unlock_obj, mod_trezorconfig_unlock);
 
 /// def has_pin() -> bool:
 ///     '''
@@ -78,19 +90,19 @@ STATIC mp_obj_t mod_trezorconfig_has_pin(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_pin_obj, mod_trezorconfig_has_pin);
 
-/// def change_pin(pin: int, newpin: int, waitcallback: (int, int -> None)) -> bool:
+/// def change_pin(pin: int, newpin: int) -> bool:
 ///     '''
 ///     Change PIN. Returns True on success, False on failure.
 ///     '''
-STATIC mp_obj_t mod_trezorconfig_change_pin(mp_obj_t pin, mp_obj_t newpin, mp_obj_t waitcallback) {
+STATIC mp_obj_t mod_trezorconfig_change_pin(mp_obj_t pin, mp_obj_t newpin) {
     uint32_t pin_i = trezor_obj_get_uint(pin);
     uint32_t newpin_i = trezor_obj_get_uint(newpin);
-    if (sectrue != storage_change_pin(pin_i, newpin_i, waitcallback)) {
+    if (sectrue != storage_change_pin(pin_i, newpin_i)) {
         return mp_const_false;
     }
     return mp_const_true;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorconfig_change_pin_obj, mod_trezorconfig_change_pin);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_change_pin_obj, mod_trezorconfig_change_pin);
 
 /// def get(app: int, key: int, public: bool=False) -> bytes:
 ///     '''

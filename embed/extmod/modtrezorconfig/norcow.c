@@ -20,17 +20,8 @@
 #include <string.h>
 
 #include "norcow.h"
-
-#include "common.h"
 #include "flash.h"
-
-#if TREZOR_MODEL == T
-#define NORCOW_SECTORS  {FLASH_SECTOR_STORAGE_1, FLASH_SECTOR_STORAGE_2}
-#elif TREZOR_MODEL == 1
-#define NORCOW_SECTORS  {2, 3}
-#else
-#error Unknown TREZOR Model
-#endif
+#include "common.h"
 
 // NRCW = 4e524357
 #define NORCOW_MAGIC      ((uint32_t)0x5743524e)
@@ -233,6 +224,7 @@ static void compact()
  */
 void norcow_init(void)
 {
+    flash_init();
     secbool found = secfalse;
     // detect active sector - starts with magic
     for (uint8_t i = 0; i < NORCOW_SECTOR_COUNT; i++) {

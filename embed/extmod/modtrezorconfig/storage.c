@@ -21,10 +21,7 @@
 
 #include "common.h"
 #include "norcow.h"
-#include "flash.h"
-
-#include "py/runtime.h"
-#include "py/obj.h"
+#include "storage.h"
 
 // Norcow storage key of configured PIN.
 #define PIN_KEY 0x0000
@@ -41,14 +38,15 @@
 
 static secbool initialized = secfalse;
 static secbool unlocked = secfalse;
+static PIN_UI_WAIT_CALLBACK ui_callback = NULL;
 
-void storage_init(void)
+void storage_init(PIN_UI_WAIT_CALLBACK callback)
 {
     initialized = secfalse;
     unlocked = secfalse;
-    flash_init();
     norcow_init();
     initialized = sectrue;
+    ui_callback = callback;
 }
 
 static secbool pin_fails_reset(uint16_t ofs)
@@ -131,7 +129,7 @@ static secbool pin_get_fails(const uint32_t **pinfail, uint32_t *pofs)
     return sectrue;
 }
 
-secbool storage_check_pin(uint32_t pin, mp_obj_t callback)
+secbool storage_check_pin(uint32_t pin)
 {
     const uint32_t *pinfail = NULL;
     uint32_t ofs;
@@ -151,20 +149,20 @@ secbool storage_check_pin(uint32_t pin, mp_obj_t callback)
     uint32_t progress;
     for (uint32_t wait = ~ctr; wait > 0; wait--) {
         for (int i = 0; i < 10; i++) {
-            if (mp_obj_is_callable(callback)) {
+            if (ui_callback) {
                 if ((~ctr) > 1000000) {  // precise enough
                     progress = (~ctr - wait) / ((~ctr) / 1000);
                 } else {
                     progress = ((~ctr - wait) * 10 + i) * 100 / (~ctr);
                 }
-                mp_call_function_2(callback, mp_obj_new_int(wait), mp_obj_new_int(progress));
+                ui_callback(wait, progress);
             }
             hal_delay(100);
         }
     }
     // Show last frame if we were waiting
-    if ((~ctr > 0) && mp_obj_is_callable(callback)) {
-        mp_call_function_2(callback, mp_obj_new_int(0), mp_obj_new_int(1000));
+    if ((~ctr > 0) && ui_callback) {
+        ui_callback(0, 1000);
     }
 
     // First, we increase PIN fail counter in storage, even before checking the
@@ -182,10 +180,10 @@ secbool storage_check_pin(uint32_t pin, mp_obj_t callback)
     return pin_fails_reset(ofs * sizeof(uint32_t));
 }
 
-secbool storage_unlock(const uint32_t pin, mp_obj_t callback)
+secbool storage_unlock(const uint32_t pin)
 {
     unlocked = secfalse;
-    if (sectrue == initialized && sectrue == storage_check_pin(pin, callback)) {
+    if (sectrue == initialized && sectrue == storage_check_pin(pin)) {
         unlocked = sectrue;
     }
     return unlocked;
@@ -223,12 +221,12 @@ secbool storage_has_pin(void)
     return sectrue == pin_cmp(1) ? secfalse : sectrue;
 }
 
-secbool storage_change_pin(const uint32_t pin, const uint32_t newpin, mp_obj_t callback)
+secbool storage_change_pin(const uint32_t oldpin, const uint32_t newpin)
 {
     if (sectrue != initialized || sectrue != unlocked) {
         return secfalse;
     }
-    if (sectrue != storage_check_pin(pin, callback)) {
+    if (sectrue != storage_check_pin(oldpin)) {
         return secfalse;
     }
     return norcow_set(PIN_KEY, &newpin, sizeof(uint32_t));

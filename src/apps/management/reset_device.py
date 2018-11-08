@@ -65,7 +65,7 @@ async def reset_device(ctx, msg):
             await show_wrong_entry(ctx)
 
     # write PIN into storage
-    if not config.change_pin(pin_to_int(""), pin_to_int(newpin), None):
+    if not config.change_pin(pin_to_int(""), pin_to_int(newpin)):
         raise wire.ProcessError("Could not change PIN")
 
     # write settings and mnemonic into storage

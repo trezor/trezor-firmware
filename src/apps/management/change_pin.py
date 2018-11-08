@@ -2,7 +2,7 @@ from trezor import config, loop, ui, wire
 from trezor.messages import ButtonRequestType, MessageType
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.Success import Success
-from trezor.pin import pin_to_int, show_pin_timeout
+from trezor.pin import pin_to_int
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
@@ -17,7 +17,7 @@ async def change_pin(ctx, msg):
     # get current pin, return failure if invalid
     if config.has_pin():
         curpin = await request_pin_ack(ctx)
-        if not config.check_pin(pin_to_int(curpin), show_pin_timeout):
+        if not config.check_pin(pin_to_int(curpin)):
             raise wire.PinInvalid("PIN invalid")
     else:
         curpin = ""
@@ -29,7 +29,7 @@ async def change_pin(ctx, msg):
         newpin = ""
 
     # write into storage
-    if not config.change_pin(pin_to_int(curpin), pin_to_int(newpin), show_pin_timeout):
+    if not config.change_pin(pin_to_int(curpin), pin_to_int(newpin)):
         raise wire.PinInvalid("PIN invalid")
 
     if newpin:
