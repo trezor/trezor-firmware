@@ -8,21 +8,19 @@ async def get_address(ctx, msg):
     from trezor.crypto.hashlib import sha3_256
     from apps.common import seed
 
-    address_n = msg.address_n or ()
-
-    node = await seed.derive_node(ctx, address_n)
+    node = await seed.derive_node(ctx, msg.address_n)
 
     seckey = node.private_key()
     public_key = secp256k1.publickey(seckey, False)  # uncompressed
     address = sha3_256(public_key[1:], keccak=True).digest()[12:]
 
     if msg.show_display:
-        if len(address_n) > 1:  # path has slip44 network identifier
-            network = networks.by_slip44(address_n[1] & 0x7FFFFFFF)
+        if len(msg.address_n) > 1:  # path has slip44 network identifier
+            network = networks.by_slip44(msg.address_n[1] & 0x7FFFFFFF)
         else:
             network = None
         hex_addr = _ethereum_address_hex(address, network)
-        desc = address_n_to_str(address_n)
+        desc = address_n_to_str(msg.address_n)
         while True:
             if await show_address(ctx, hex_addr, desc=desc):
                 break

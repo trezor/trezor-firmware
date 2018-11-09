@@ -16,8 +16,7 @@ from apps.tezos.helpers import (
 
 
 async def sign_tx(ctx, msg):
-    address_n = msg.address_n or ()
-    node = await seed.derive_node(ctx, address_n, TEZOS_CURVE)
+    node = await seed.derive_node(ctx, msg.address_n, TEZOS_CURVE)
 
     if msg.transaction is not None:
         to = _get_address_from_contract(msg.transaction.destination)

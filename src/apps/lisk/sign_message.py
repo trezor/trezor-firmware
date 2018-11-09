@@ -24,7 +24,7 @@ def message_digest(message):
 
 async def sign_message(ctx, msg):
     message = msg.message
-    address_n = msg.address_n or ()
+    address_n = msg.address_n
 
     await require_confirm_sign_message(ctx, message)
 

@@ -36,8 +36,7 @@ async def sign_tx(ctx, msg):
 
 
 async def _get_keys(ctx, msg):
-    address_n = msg.address_n or ()
-    node = await seed.derive_node(ctx, address_n, LISK_CURVE)
+    node = await seed.derive_node(ctx, msg.address_n, LISK_CURVE)
 
     seckey = node.private_key()
     pubkey = node.public_key()

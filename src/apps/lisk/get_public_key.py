@@ -6,9 +6,7 @@ from apps.common import layout, seed
 
 
 async def get_public_key(ctx, msg):
-    address_n = msg.address_n or ()
-
-    node = await seed.derive_node(ctx, address_n, LISK_CURVE)
+    node = await seed.derive_node(ctx, msg.address_n, LISK_CURVE)
     pubkey = node.public_key()
     pubkey = pubkey[1:]  # skip ed25519 pubkey marker
 
