@@ -6,13 +6,13 @@ from trezor.messages.TezosSignedTx import TezosSignedTx
 
 from apps.common import seed
 from apps.common.writers import write_bytes, write_uint8
+from apps.tezos import layout
 from apps.tezos.helpers import (
     TEZOS_CURVE,
     TEZOS_ORIGINATED_ADDRESS_PREFIX,
     TEZOS_SIGNATURE_PREFIX,
     base58_encode_check,
 )
-from apps.tezos.layout import *
 
 
 async def sign_tx(ctx, msg):
@@ -21,19 +21,21 @@ async def sign_tx(ctx, msg):
 
     if msg.transaction is not None:
         to = _get_address_from_contract(msg.transaction.destination)
-        await require_confirm_tx(ctx, to, msg.transaction.amount)
-        await require_confirm_fee(ctx, msg.transaction.amount, msg.transaction.fee)
+        await layout.require_confirm_tx(ctx, to, msg.transaction.amount)
+        await layout.require_confirm_fee(
+            ctx, msg.transaction.amount, msg.transaction.fee
+        )
 
     elif msg.origination is not None:
         source = _get_address_from_contract(msg.origination.source)
-        await require_confirm_origination(ctx, source)
+        await layout.require_confirm_origination(ctx, source)
 
         # if we are immediately delegating contract
         if msg.origination.delegate is not None:
             delegate = _get_address_by_tag(msg.origination.delegate)
-            await require_confirm_delegation_baker(ctx, delegate)
+            await layout.require_confirm_delegation_baker(ctx, delegate)
 
-        await require_confirm_origination_fee(
+        await layout.require_confirm_origination_fee(
             ctx, msg.origination.balance, msg.origination.fee
         )
 
@@ -45,11 +47,13 @@ async def sign_tx(ctx, msg):
             delegate = _get_address_by_tag(msg.delegation.delegate)
 
         if delegate is not None and source != delegate:
-            await require_confirm_delegation_baker(ctx, delegate)
-            await require_confirm_set_delegate(ctx, msg.delegation.fee)
+            await layout.require_confirm_delegation_baker(ctx, delegate)
+            await layout.require_confirm_set_delegate(ctx, msg.delegation.fee)
         # if account registers itself as a delegate
         else:
-            await require_confirm_register_delegate(ctx, source, msg.delegation.fee)
+            await layout.require_confirm_register_delegate(
+                ctx, source, msg.delegation.fee
+            )
 
     else:
         raise wire.DataError("Invalid operation")

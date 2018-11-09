@@ -3,7 +3,7 @@ from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
 from trezor.utils import chunks, format_amount
 
-from apps.common.confirm import *
+from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.tezos.helpers import TEZOS_AMOUNT_DIVISIBILITY
 
 
