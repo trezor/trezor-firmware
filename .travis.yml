@@ -24,7 +24,7 @@ script:
     - jsonlint defs/*.json
     - jsonlint defs/*/*.json
     - python tools/cointool.py check
-    - python tools/support.py check --ignore-tokens
+    - python tools/support.py check --ignore-tokens --ignore-missing
     - python protob/graph.py protob/*.proto
 
 notifications:
