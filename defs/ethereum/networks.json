@@ -226,5 +226,15 @@
     "rskip60": false,
     "url": "https://pirl.io",
     "blockbook": []
+  },
+  {
+    "chain": "mix",
+    "chain_id": 76,
+    "slip44": 76,
+    "shortcut": "MIX",
+    "name": "Mix",
+    "rskip60": false,
+    "url": "https://www.mix-blockchain.org",
+    "blockbook": []
   }
 ]
