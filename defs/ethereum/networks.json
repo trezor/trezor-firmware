@@ -55,16 +55,6 @@
     "blockbook": []
   },
   {
-    "chain": "eosc",
-    "chain_id": 2018,
-    "slip44": 2018,
-    "shortcut": "EOSC",
-    "name": "EOS Classic",
-    "rskip60": false,
-    "url": "https://eos-classic.io",
-    "blockbook": []
-  },
-  {
     "chain": "etsc",
     "chain_id": 28,
     "slip44": 1128,
@@ -148,6 +138,16 @@
     "blockbook": []
   },
   {
+    "chain": "mix",
+    "chain_id": 76,
+    "slip44": 76,
+    "shortcut": "MIX",
+    "name": "Mix",
+    "rskip60": false,
+    "url": "https://www.mix-blockchain.org",
+    "blockbook": []
+  },
+  {
     "chain": "clo",
     "chain_id": 820,
     "slip44": 820,
@@ -165,6 +165,16 @@
     "name": "Atheios",
     "rskip60": false,
     "url": "https://atheios.com",
+    "blockbook": []
+  },
+  {
+    "chain": "eosc",
+    "chain_id": 2018,
+    "slip44": 2018,
+    "shortcut": "EOSC",
+    "name": "EOS Classic",
+    "rskip60": false,
+    "url": "https://eos-classic.io",
     "blockbook": []
   },
   {
@@ -225,16 +235,6 @@
     "name": "Pirl",
     "rskip60": false,
     "url": "https://pirl.io",
-    "blockbook": []
-  },
-  {
-    "chain": "mix",
-    "chain_id": 76,
-    "slip44": 76,
-    "shortcut": "MIX",
-    "name": "Mix",
-    "rskip60": false,
-    "url": "https://www.mix-blockchain.org",
     "blockbook": []
   }
 ]
