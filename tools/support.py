@@ -271,7 +271,8 @@ def check(ignore_tokens, ignore_missing):
                 print(f"{coin['key']} - {coin['name']}")
 
     supported_dups = find_supported_duplicate_tokens(coins_dict)
-    for coin in supported_dups:
+    for key in supported_dups:
+        coin = coins_dict[key]
         checks_ok = False
         print(f"Token {coin['key']} ({coin['name']}) is duplicate but supported")
 
