@@ -227,18 +227,18 @@ def fix(dry_run):
 
 @cli.command()
 # fmt: off
-@click.option("-t", "--ignore-tokens", is_flag=True, help="Ignore unsupported ERC20 tokens")
+@click.option("-T", "--check-tokens", is_flag=True, help="Also check unsupported ERC20 tokens, ignored by default")
 @click.option("-m", "--ignore-missing", is_flag=True, help="Do not fail on missing supportinfo")
 # fmt: on
-def check(ignore_tokens, ignore_missing):
+def check(check_tokens, ignore_missing):
     """Check validity of support information.
 
     Ensures that `support.json` data is well formed, there are no keys without
     corresponding coins, and there are no coins without corresponding keys.
 
-    If `--ignore-tokens` is specified, the check will ignore ERC20 tokens
-    without support info. This is useful because there is usually a lot of ERC20
-    tokens.
+    If `--check-tokens` is specified, the check will also take into account ERC20 tokens
+    without support info. This is disabled by default, because support info for ERC20
+    tokens is not strictly required.
 
     If `--ignore-missing` is specified, the check will display coins with missing
     support info, but will not fail when missing coins are found. This is
@@ -261,7 +261,7 @@ def check(ignore_tokens, ignore_missing):
 
     missing = find_unsupported_coins(coins_dict)
     for device, values in missing.items():
-        if ignore_tokens:
+        if not check_tokens:
             values = [coin for coin in values if not coin_info.is_token(coin)]
         if values:
             if not ignore_missing:
