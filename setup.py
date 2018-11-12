@@ -20,6 +20,7 @@ install_requires = [
     "pyblake2>=0.9.3",
     "libusb1>=1.6.4",
     "construct>=2.9",
+    "typing_extensions>=3.6",
 ]
 
 CWD = os.path.dirname(os.path.realpath(__file__))
