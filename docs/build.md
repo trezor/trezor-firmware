@@ -44,7 +44,7 @@ Install the required packages, depending on your operating system.
 * __Mac OS X__:
 
   ```sh
-  brew install scons sdl2 sdl2_image
+  brew install scons sdl2 sdl2_image pkg-config
   ```
 
 * __Windows__: not supported yet, sorry.
