@@ -23,7 +23,7 @@
         "name": "Monero",
         "shortcut": "XMR",
         "slip44": 128,
-        "curve": "secp256k1",
+        "curve": "ed25519",
         "links": {
             "Homepage": "https://getmonero.org",
             "Github": "https://github.com/monero-project/monero"
@@ -77,6 +77,26 @@
         "links": {
             "Homepage": "https://wanchain.org",
             "Github": "https://github.com/wanchain/go-wanchain"
+        }
+    },
+    {
+        "name": "EOS",
+        "shortcut": "EOS",
+        "slip44": 194,
+        "curve": "secp256k1",
+        "links": {
+            "Homepage": "https://eos.io",
+            "Github": "https://github.com/EOSIO/eos"
+        }
+    },
+    {
+        "name": "Tron",
+        "shortcut": "TRX",
+        "slip44": 195,
+        "curve": "secp256k1",
+        "links": {
+            "Homepage": "https://tron.network",
+            "Github": "https://github.com/tronprotocol/java-tron"
         }
     }
 ]
