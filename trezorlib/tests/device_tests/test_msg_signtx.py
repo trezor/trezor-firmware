@@ -62,6 +62,9 @@ TXHASH_e5040e = bytes.fromhex(
 TXHASH_50f6f1 = bytes.fromhex(
     "50f6f1209ca92d7359564be803cb2c932cde7d370f7cee50fd1fad6790f6206d"
 )
+TXHASH_2bac7a = bytes.fromhex(
+    "2bac7ad1dec654579a71ea9555463f63ac7b7df9d8ba67b4682bba4e514d0f0c"
+)
 
 
 def check_sign_tx(client, coin_name, inputs, outputs, fee_too_high=False, failure=None):
@@ -506,6 +509,31 @@ class TestMsgSigntx(TrezorTest):
         assert (
             serialized_tx.hex()
             == "0100000001a3fb2d38322c3b327e54005cebc0686d52fcdf536e53bb5ef481a7de8056aa54010000006b4830450221009e020b0390ccad533b73b552f8a99a9d827212c558e4f755503674d07c92ad4502202d606f7316990e0461c51d4add25054f19c697aa3e3c2ced4d568f0b2c57e62f0121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0170f305000000000017a9147f844bdb0b8fd54b64e3d16c85dc1170f1ff97c18700000000"
+        )
+
+    def test_testnet_big_amount(self):
+        self.setup_mnemonic_allallall()
+
+        # This test is testing transaction with amount bigger than fits to uint32
+
+        # tx: 2bac7ad1dec654579a71ea9555463f63ac7b7df9d8ba67b4682bba4e514d0f0c:1
+        # input 1: 411102528330 Satoshi
+
+        inp1 = proto.TxInputType(
+            address_n=parse_path("m/44'/1'/0'/0/0"),
+            amount=411102528330,
+            prev_hash=TXHASH_2bac7a,
+            prev_index=1,
+        )
+        out1 = proto.TxOutputType(
+            address="mopZWqZZyQc3F2Sy33cvDtJchSAMsnLi7b",  # seed allallall, bip32: m/44'/1'/0'/0/1
+            amount=411102528330,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+        _, serialized_tx = check_sign_tx(self.client, "Testnet", [inp1], [out1])
+        assert (
+            serialized_tx.hex()
+            == "01000000010c0f4d514eba2b68b467bad8f97d7bac633f465595ea719a5754c6ded17aac2b010000006b4830450221008e3b926f04d8830bd5b67698af25c9e00c9db1b1ef3e5d69af794446753da94a02202d4a7509f26bba29ff643a7ac0d43fb128c1a632cc502b8f44eada8930fb9c9b0121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffff014ac39eb75f0000001976a9145b157a678a10021243307e4bb58f36375aa80e1088ac00000000"
         )
 
     def test_attack_change_outputs(self):
