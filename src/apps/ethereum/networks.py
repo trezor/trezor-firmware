@@ -129,6 +129,13 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=76,
+        slip44=76,
+        shortcut="MIX",
+        name="Mix",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=820,
         slip44=820,
         shortcut="CLO",
