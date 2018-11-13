@@ -114,7 +114,7 @@ class BaseClient(object):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         return self.transport.read()
 
-    def callback_PinMatrixRequest(self, msg):
+    def _callback_pin(self, msg):
         pin = self.ui.get_pin(msg.type)
         if not pin.isdigit():
             raise ValueError("Non-numeric PIN provided")
@@ -129,7 +129,7 @@ class BaseClient(object):
         else:
             return resp
 
-    def callback_PassphraseRequest(self, msg):
+    def _callback_passphrase(self, msg):
         if msg.on_device:
             passphrase = None
         else:
@@ -142,7 +142,7 @@ class BaseClient(object):
         else:
             return resp
 
-    def callback_ButtonRequest(self, msg):
+    def _callback_button(self, msg):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         # do this raw - send ButtonAck first, notify UI later
         self._raw_write(proto.ButtonAck())
@@ -153,22 +153,18 @@ class BaseClient(object):
     def call(self, msg):
         resp = self.call_raw(msg)
         while True:
-            handler_name = "callback_{}".format(resp.__class__.__name__)
-            handler = getattr(self, handler_name, None)
-            if handler is None:
-                break
-            resp = handler(resp)  # pylint: disable=E1102
-
-        if isinstance(resp, proto.Failure):
-            if resp.code == proto.FailureType.ActionCancelled:
-                raise exceptions.Cancelled
-            raise exceptions.TrezorFailure(resp)
-
-        return resp
-
-    def register_message(self, msg):
-        """Allow application to register custom protobuf message type"""
-        mapping.register_message(msg)
+            if isinstance(resp, proto.PinMatrixRequest):
+                resp = self._callback_pin(resp)
+            elif isinstance(resp, proto.PassphraseRequest):
+                resp = self._callback_passphrase(resp)
+            elif isinstance(resp, proto.ButtonRequest):
+                resp = self._callback_button(resp)
+            elif isinstance(resp, proto.Failure):
+                if resp.code == proto.FailureType.ActionCancelled:
+                    raise exceptions.Cancelled
+                raise exceptions.TrezorFailure(resp)
+            else:
+                return resp
 
 
 class ProtocolMixin(object):
