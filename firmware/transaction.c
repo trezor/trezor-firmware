@@ -200,7 +200,11 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, T
 			return 0; // failed to compile output
 		}
 		if (needs_confirm) {
-			layoutConfirmOpReturn(in->op_return_data.bytes, in->op_return_data.size);
+			if (in->op_return_data.size >= 8 && memcmp(in->op_return_data.bytes, "omni", 4) == 0) {  // OMNI transaction
+				layoutConfirmOmni(in->op_return_data.bytes, in->op_return_data.size);
+			} else {
+				layoutConfirmOpReturn(in->op_return_data.bytes, in->op_return_data.size);
+			}
 			if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
 				return -1; // user aborted
 			}
