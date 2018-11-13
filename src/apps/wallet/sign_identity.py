@@ -11,6 +11,8 @@ from apps.common.confirm import require_confirm
 
 
 async def sign_identity(ctx, msg):
+    keychain = await seed.get_keychain(ctx)
+
     if msg.ecdsa_curve_name is None:
         msg.ecdsa_curve_name = "secp256k1"
 
@@ -19,7 +21,7 @@ async def sign_identity(ctx, msg):
     await require_confirm_sign_identity(ctx, msg.identity, msg.challenge_visual)
 
     address_n = get_identity_path(identity, msg.identity.index or 0)
-    node = await seed.derive_node(ctx, address_n, msg.ecdsa_curve_name)
+    node = keychain.derive(address_n, msg.ecdsa_curve_name)
 
     coin = coins.by_name("Bitcoin")
     if msg.ecdsa_curve_name == "secp256k1":

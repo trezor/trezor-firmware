@@ -1,8 +1,27 @@
 from trezor.crypto import base58, crc, hashlib
 
-from . import cbor
+from apps.cardano import cbor
+from apps.common import HARDENED
+from apps.common.seed import remove_ed25519_prefix
 
-from apps.common import HARDENED, seed
+
+def derive_address_and_node(keychain, path: list):
+    node = keychain.derive(path)
+
+    address_payload = None
+    address_attributes = {}
+
+    address_root = _get_address_root(node, address_payload)
+    address_type = 0
+    address_data = [address_root, address_attributes, address_type]
+    address_data_encoded = cbor.encode(address_data)
+
+    address = base58.encode(
+        cbor.encode(
+            [cbor.Tagged(24, address_data_encoded), crc.crc32(address_data_encoded)]
+        )
+    )
+    return (address, node)
 
 
 def validate_full_path(path: list) -> bool:
@@ -36,31 +55,9 @@ def _address_hash(data) -> bytes:
 
 
 def _get_address_root(node, payload):
-    extpubkey = seed.remove_ed25519_prefix(node.public_key()) + node.chain_code()
+    extpubkey = remove_ed25519_prefix(node.public_key()) + node.chain_code()
     if payload:
         payload = {1: cbor.encode(payload)}
     else:
         payload = {}
     return _address_hash([0, [0, extpubkey], payload])
-
-
-def derive_address_and_node(root_node, path: list):
-    derived_node = root_node.clone()
-
-    address_payload = None
-    address_attributes = {}
-
-    for indice in path:
-        derived_node.derive_cardano(indice)
-
-    address_root = _get_address_root(derived_node, address_payload)
-    address_type = 0
-    address_data = [address_root, address_attributes, address_type]
-    address_data_encoded = cbor.encode(address_data)
-
-    address = base58.encode(
-        cbor.encode(
-            [cbor.Tagged(24, address_data_encoded), crc.crc32(address_data_encoded)]
-        )
-    )
-    return (address, derived_node)

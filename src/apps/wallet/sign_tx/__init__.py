@@ -19,7 +19,8 @@ async def sign_tx(ctx, msg):
     coin_name = msg.coin_name or "Bitcoin"
     coin = coins.by_name(coin_name)
     # TODO: rework this so we don't have to pass root to signing.sign_tx
-    root = await seed.derive_node(ctx, [], curve_name=coin.curve_name)
+    keychain = await seed.get_keychain(ctx)
+    root = keychain.derive([], coin.curve_name)
 
     signer = signing.sign_tx(msg, root)
     res = None

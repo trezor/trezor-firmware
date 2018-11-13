@@ -23,10 +23,12 @@ def message_digest(message):
 
 
 async def sign_message(ctx, msg):
+    keychain = await seed.get_keychain(ctx)
+
     await paths.validate_path(ctx, validate_full_path, path=msg.address_n)
     await require_confirm_sign_message(ctx, msg.message)
 
-    node = await seed.derive_node(ctx, msg.address_n, LISK_CURVE)
+    node = keychain.derive(msg.address_n, LISK_CURVE)
     seckey = node.private_key()
     pubkey = node.public_key()
     pubkey = pubkey[1:]  # skip ed25519 pubkey marker

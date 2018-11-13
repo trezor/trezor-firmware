@@ -10,8 +10,11 @@ from apps.tezos import helpers, layout
 
 
 async def sign_tx(ctx, msg):
+    keychain = await seed.get_keychain(ctx)
+
     await paths.validate_path(ctx, helpers.validate_full_path, path=msg.address_n)
-    node = await seed.derive_node(ctx, msg.address_n, helpers.TEZOS_CURVE)
+
+    node = keychain.derive(msg.address_n, helpers.TEZOS_CURVE)
 
     if msg.transaction is not None:
         to = _get_address_from_contract(msg.transaction.destination)

@@ -11,12 +11,15 @@ from apps.common.paths import validate_path
 
 
 async def sign_tx(ctx, msg: NEMSignTx):
+    keychain = await seed.get_keychain(ctx)
+
     validate(msg)
+
     await validate_path(
         ctx, check_path, path=msg.transaction.address_n, network=msg.transaction.network
     )
 
-    node = await seed.derive_node(ctx, msg.transaction.address_n, NEM_CURVE)
+    node = keychain.derive(msg.transaction.address_n, NEM_CURVE)
 
     if msg.multisig:
         public_key = msg.multisig.signer

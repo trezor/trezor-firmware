@@ -7,14 +7,14 @@ from apps.common import coins, layout, seed
 
 
 async def get_public_key(ctx, msg):
+    keychain = await seed.get_keychain(ctx)
+
     coin_name = msg.coin_name or "Bitcoin"
     coin = coins.by_name(coin_name)
+    curve_name = msg.ecdsa_curve_name or coin.curve_name
     script_type = msg.script_type or InputScriptType.SPENDADDRESS
 
-    curve_name = msg.ecdsa_curve_name
-    if not curve_name:
-        curve_name = coin.curve_name
-    node = await seed.derive_node(ctx, msg.address_n, curve_name=curve_name)
+    node = keychain.derive(msg.address_n, curve_name=curve_name)
 
     if (
         script_type in [InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG]

@@ -14,6 +14,8 @@ from apps.wallet.sign_identity import (
 
 
 async def get_ecdh_session_key(ctx, msg):
+    keychain = await seed.get_keychain(ctx)
+
     if msg.ecdsa_curve_name is None:
         msg.ecdsa_curve_name = "secp256k1"
 
@@ -22,7 +24,7 @@ async def get_ecdh_session_key(ctx, msg):
     await require_confirm_ecdh_session_key(ctx, msg.identity)
 
     address_n = get_ecdh_path(identity, msg.identity.index or 0)
-    node = await seed.derive_node(ctx, address_n, msg.ecdsa_curve_name)
+    node = keychain.derive(address_n, msg.ecdsa_curve_name)
 
     session_key = ecdh(
         seckey=node.private_key(),
