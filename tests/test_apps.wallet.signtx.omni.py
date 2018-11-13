@@ -6,7 +6,9 @@ class TestSignTxOmni(unittest.TestCase):
 
     def test_is_valid(self):
         VECTORS = {
-             "6f6d6e69000000000000001f000000002b752ee0": True,
+             "6f6d6e69": False,
+             "6f6d6e69000000": False,
+             "6f6d6e6900000000": True,
              "6f6d6e69000000000000001f0000000020c85580": True,
              "0f6d6e69000000000000001f0000000020c85580": False,
              "6f6d6e69000000000000001f0000000020c8558000": True,

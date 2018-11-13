@@ -6,7 +6,7 @@ currencies = {1: "OMNI", 2: "tOMNI", 3: "MAID", 31: "USDT"}
 
 
 def is_valid(data: bytes) -> bool:
-    return data[:4] == b"omni"
+    return len(data) >= 8 and data[:4] == b"omni"
 
 
 def parse(data: bytes) -> bool:
