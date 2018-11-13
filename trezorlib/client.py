@@ -77,16 +77,22 @@ class MovedTo:
             return functools.partial(self._deprecated_redirect, instance)
 
 
-class BaseClient(object):
+class TrezorClient:
+    VENDORS = ("bitcointrezor.com", "trezor.io")
     # Implements very basic layer of sending raw protobuf
     # messages to device and getting its response back.
-    def __init__(self, transport, ui, **kwargs):
+
+    def __init__(self, transport, ui=None, state=None):
         LOG.info("creating client instance for device: {}".format(transport.get_path()))
         self.transport = transport
         self.ui = ui
+        self.state = state
+
+        if ui is None:
+            warnings.warn("UI class not supplied. This will probably crash soon.")
 
         self.session_counter = 0
-        super(BaseClient, self).__init__()  # *args, **kwargs)
+        self.init_device()
 
     def open(self):
         if self.session_counter == 0:
@@ -166,21 +172,9 @@ class BaseClient(object):
             else:
                 return resp
 
-
-class ProtocolMixin(object):
-    VENDORS = ("bitcointrezor.com", "trezor.io")
-
-    def __init__(self, state=None, *args, **kwargs):
-        super(ProtocolMixin, self).__init__(*args, **kwargs)
-        self.state = state
-        self.init_device()
-
-    def set_tx_api(self, tx_api):
-        warnings.warn("set_tx_api is deprecated, use new arguments to sign_tx")
-
     @tools.session
     def init_device(self):
-        resp = self.call(proto.Initialize(state=self.state))
+        resp = self.call_raw(proto.Initialize(state=self.state))
         if not isinstance(resp, proto.Features):
             raise exceptions.TrezorException("Unexpected initial response")
         else:
@@ -190,15 +184,6 @@ class ProtocolMixin(object):
             # A side-effect of this is a sanity check for broken protobuf definitions.
             # If the `vendor` field doesn't exist, you probably have a mismatched
             # checkout of trezor-common.
-
-    @staticmethod
-    def expand_path(n):
-        warnings.warn(
-            "expand_path is deprecated, use tools.parse_path",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return tools.parse_path(n)
 
     @tools.expect(proto.Success, field="message")
     def ping(
@@ -221,7 +206,33 @@ class ProtocolMixin(object):
 
     @tools.expect(proto.Success, field="message")
     def clear_session(self):
-        return self.call(proto.ClearSession())
+        return self.call_raw(proto.ClearSession())
+
+
+class ProtocolMixin(object):
+    """Fake mixin for old-style software that constructed TrezorClient class
+    from separate mixins.
+
+    Now it only simulates existence of original attributes to prevent some early
+    crashes, and raises errors when any of the attributes are actually called.
+    """
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn("TrezorClient mixins are not supported anymore")
+        self.tx_api = None  # Electrum checks that this attribute exists
+        super().__init__(*args, **kwargs)
+
+    def set_tx_api(self, tx_api):
+        warnings.warn("set_tx_api is deprecated, use new arguments to sign_tx")
+
+    @staticmethod
+    def expand_path(n):
+        warnings.warn(
+            "expand_path is deprecated, use tools.parse_path",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return tools.parse_path(n)
 
     # Device functionality
     wipe_device = MovedTo(device.wipe)
@@ -277,7 +288,14 @@ class ProtocolMixin(object):
     encrypt_keyvalue = MovedTo(misc.encrypt_keyvalue)
     decrypt_keyvalue = MovedTo(misc.decrypt_keyvalue)
 
+class BaseClient:
+    """Compatibility proxy for original BaseClient class.
+    Prevents early crash in Electrum forks and possibly other software.
+    """
 
-class TrezorClient(ProtocolMixin, BaseClient):
-    def __init__(self, transport, *args, **kwargs):
-        super().__init__(transport=transport, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        warnings.warn("TrezorClient mixins are not supported anymore")
+        self.trezor_client = TrezorClient(*args, **kwargs)
+
+    def __getattr__(self, key):
+        return getattr(self.trezor_client, key)
