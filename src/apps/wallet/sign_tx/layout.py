@@ -6,7 +6,7 @@ from trezor.ui.text import Text
 from trezor.utils import chunks, format_amount
 
 from apps.common.confirm import confirm, hold_to_confirm
-from apps.wallet.sign_tx import addresses
+from apps.wallet.sign_tx import addresses, omni
 
 
 def format_coin_amount(amount, coin):
@@ -23,11 +23,18 @@ def split_op_return(data):
 
 async def confirm_output(ctx, output, coin):
     if output.script_type == OutputScriptType.PAYTOOPRETURN:
-        data = hexlify(output.op_return_data).decode()
-        if len(data) >= 18 * 5:
-            data = data[: (18 * 5 - 3)] + "..."
-        text = Text("OP_RETURN", ui.ICON_SEND, icon_color=ui.GREEN)
-        text.mono(*split_op_return(data))
+        data = output.op_return_data
+        if omni.is_valid(data):
+            # OMNI transaction
+            text = Text("OMNI transaction", ui.ICON_SEND, icon_color=ui.GREEN)
+            text.normal(omni.parse(data))
+        else:
+            # generic OP_RETURN
+            data = hexlify(data).decode()
+            if len(data) >= 18 * 5:
+                data = data[: (18 * 5 - 3)] + "..."
+            text = Text("OP_RETURN", ui.ICON_SEND, icon_color=ui.GREEN)
+            text.mono(*split_op_return(data))
     else:
         address = output.address
         address_short = addresses.address_short(coin, address)
