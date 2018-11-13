@@ -18,7 +18,7 @@ import logging
 import sys
 import warnings
 
-from . import exceptions, messages as proto, tools
+from . import exceptions, messages, tools
 
 if sys.version_info.major < 3:
     raise Exception("Trezorlib does not support Python 2 anymore.")
@@ -40,8 +40,8 @@ def get_buttonrequest_value(code):
     # Converts integer code to its string representation of ButtonRequestType
     return [
         k
-        for k in dir(proto.ButtonRequestType)
-        if getattr(proto.ButtonRequestType, k) == code
+        for k in dir(messages.ButtonRequestType)
+        if getattr(messages.ButtonRequestType, k) == code
     ][0]
 
 
@@ -73,7 +73,7 @@ class TrezorClient:
         self.session_counter -= 1
 
     def cancel(self):
-        self._raw_write(proto.Cancel())
+        self._raw_write(messages.Cancel())
 
     def call_raw(self, msg):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
@@ -93,11 +93,11 @@ class TrezorClient:
         if not pin.isdigit():
             raise ValueError("Non-numeric PIN provided")
 
-        resp = self.call_raw(proto.PinMatrixAck(pin=pin))
-        if isinstance(resp, proto.Failure) and resp.code in (
-            proto.FailureType.PinInvalid,
-            proto.FailureType.PinCancelled,
-            proto.FailureType.PinExpected,
+        resp = self.call_raw(messages.PinMatrixAck(pin=pin))
+        if isinstance(resp, messages.Failure) and resp.code in (
+            messages.FailureType.PinInvalid,
+            messages.FailureType.PinCancelled,
+            messages.FailureType.PinExpected,
         ):
             raise exceptions.PinException(resp.code, resp.message)
         else:
@@ -109,17 +109,17 @@ class TrezorClient:
         else:
             passphrase = self.ui.get_passphrase()
 
-        resp = self.call_raw(proto.PassphraseAck(passphrase=passphrase))
-        if isinstance(resp, proto.PassphraseStateRequest):
+        resp = self.call_raw(messages.PassphraseAck(passphrase=passphrase))
+        if isinstance(resp, messages.PassphraseStateRequest):
             self.state = resp.state
-            return self.call_raw(proto.PassphraseStateAck())
+            return self.call_raw(messages.PassphraseStateAck())
         else:
             return resp
 
     def _callback_button(self, msg):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         # do this raw - send ButtonAck first, notify UI later
-        self._raw_write(proto.ButtonAck())
+        self._raw_write(messages.ButtonAck())
         self.ui.button_request(msg.code)
         return self._raw_read()
 
@@ -127,14 +127,14 @@ class TrezorClient:
     def call(self, msg):
         resp = self.call_raw(msg)
         while True:
-            if isinstance(resp, proto.PinMatrixRequest):
+            if isinstance(resp, messages.PinMatrixRequest):
                 resp = self._callback_pin(resp)
-            elif isinstance(resp, proto.PassphraseRequest):
+            elif isinstance(resp, messages.PassphraseRequest):
                 resp = self._callback_passphrase(resp)
-            elif isinstance(resp, proto.ButtonRequest):
+            elif isinstance(resp, messages.ButtonRequest):
                 resp = self._callback_button(resp)
-            elif isinstance(resp, proto.Failure):
-                if resp.code == proto.FailureType.ActionCancelled:
+            elif isinstance(resp, messages.Failure):
+                if resp.code == messages.FailureType.ActionCancelled:
                     raise exceptions.Cancelled
                 raise exceptions.TrezorFailure(resp)
             else:
@@ -142,8 +142,8 @@ class TrezorClient:
 
     @tools.session
     def init_device(self):
-        resp = self.call_raw(proto.Initialize(state=self.state))
-        if not isinstance(resp, proto.Features):
+        resp = self.call_raw(messages.Initialize(state=self.state))
+        if not isinstance(resp, messages.Features):
             raise exceptions.TrezorException("Unexpected initial response")
         else:
             self.features = resp
@@ -153,7 +153,7 @@ class TrezorClient:
             # If the `vendor` field doesn't exist, you probably have a mismatched
             # checkout of trezor-common.
 
-    @tools.expect(proto.Success, field="message")
+    @tools.expect(messages.Success, field="message")
     def ping(
         self,
         msg,
@@ -161,7 +161,7 @@ class TrezorClient:
         pin_protection=False,
         passphrase_protection=False,
     ):
-        msg = proto.Ping(
+        msg = messages.Ping(
             message=msg,
             button_protection=button_protection,
             pin_protection=pin_protection,
@@ -172,9 +172,9 @@ class TrezorClient:
     def get_device_id(self):
         return self.features.device_id
 
-    @tools.expect(proto.Success, field="message")
+    @tools.expect(messages.Success, field="message")
     def clear_session(self):
-        return self.call_raw(proto.ClearSession())
+        return self.call_raw(messages.ClearSession())
 
 
 def MovedTo(where):
