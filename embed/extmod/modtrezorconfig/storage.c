@@ -129,7 +129,7 @@ static secbool pin_get_fails(const uint32_t **pinfail, uint32_t *pofs)
     return sectrue;
 }
 
-secbool storage_check_pin(uint32_t pin)
+secbool storage_check_pin(const uint32_t pin)
 {
     const uint32_t *pinfail = NULL;
     uint32_t ofs;
@@ -189,7 +189,7 @@ secbool storage_unlock(const uint32_t pin)
     return unlocked;
 }
 
-secbool storage_get(uint16_t key, const void **val, uint16_t *len)
+secbool storage_get(const uint16_t key, const void **val, uint16_t *len)
 {
     const uint8_t app = key >> 8;
     // APP == 0 is reserved for PIN related values
@@ -203,7 +203,7 @@ secbool storage_get(uint16_t key, const void **val, uint16_t *len)
     return norcow_get(key, val, len);
 }
 
-secbool storage_set(uint16_t key, const void *val, uint16_t len)
+secbool storage_set(const uint16_t key, const void *val, uint16_t len)
 {
     const uint8_t app = key >> 8;
     // APP == 0 is reserved for PIN related values
