@@ -17,13 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#include <string.h>
 
 #include "common.h"
 #include "flash.h"
@@ -33,11 +34,7 @@
 #define FLASH_FILE profile_flash_path()
 #endif
 
-#define SECTOR_COUNT 24
-
-#define FLASH_SIZE 0x200000
-
-static const uint32_t sector_table[SECTOR_COUNT + 1] = {
+static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
     [ 0] = 0x08000000, // - 0x08003FFF |  16 KiB
     [ 1] = 0x08004000, // - 0x08007FFF |  16 KiB
     [ 2] = 0x08008000, // - 0x0800BFFF |  16 KiB
@@ -65,21 +62,22 @@ static const uint32_t sector_table[SECTOR_COUNT + 1] = {
     [24] = 0x08200000, // last element - not a valid sector
 };
 
-static uint8_t *flash_buffer;
+static uint8_t *FLASH_BUFFER;
+static uint32_t FLASH_SIZE;
 
 static void flash_exit(void)
 {
-    int r = munmap(flash_buffer, FLASH_SIZE);
+    int r = munmap(FLASH_BUFFER, FLASH_SIZE);
     ensure(sectrue * (r == 0), "munmap failed");
 }
 
 void flash_init(void)
 {
-    int r;
+    FLASH_SIZE = FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT] - FLASH_SECTOR_TABLE[0];
 
     // check whether the file exists and it has the correct size
     struct stat sb;
-    r = stat(FLASH_FILE, &sb);
+    int r = stat(FLASH_FILE, &sb);
 
     // (re)create if non existant or wrong size
     if (r != 0 || sb.st_size != FLASH_SIZE) {
@@ -100,7 +98,7 @@ void flash_init(void)
     void *map = mmap(0, FLASH_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     ensure(sectrue * (map != MAP_FAILED), "mmap failed");
 
-    flash_buffer = (uint8_t *)map;
+    FLASH_BUFFER = (uint8_t *)map;
 
     atexit(flash_exit);
 }
@@ -117,15 +115,15 @@ secbool flash_lock(void)
 
 const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size)
 {
-    if (sector >= SECTOR_COUNT) {
+    if (sector >= FLASH_SECTOR_COUNT) {
         return NULL;
     }
-    const uint32_t sector_size = sector_table[sector + 1] - sector_table[sector];
-    if (offset + size > sector_size) {
+    const uint32_t addr = FLASH_SECTOR_TABLE[sector] + offset;
+    const uint32_t next = FLASH_SECTOR_TABLE[sector + 1];
+    if (addr + size > next) {
         return NULL;
     }
-    const uint32_t sector_offset = sector_table[sector] - sector_table[0];
-    return flash_buffer + sector_offset + offset;
+    return FLASH_BUFFER + addr - FLASH_SECTOR_TABLE[0];
 }
 
 secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len))
@@ -135,9 +133,9 @@ secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(in
     }
     for (int i = 0; i < len; i++) {
         const uint8_t sector = sectors[i];
-        const uint32_t offset = sector_table[sector] - sector_table[0];
-        const uint32_t size = sector_table[sector + 1] - sector_table[sector];
-        memset(flash_buffer + offset, 0xFF, size);
+        const uint32_t offset = FLASH_SECTOR_TABLE[sector] - FLASH_SECTOR_TABLE[0];
+        const uint32_t size = FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
+        memset(FLASH_BUFFER + offset, 0xFF, size);
         if (progress) {
             progress(i + 1, len);
         }
@@ -147,7 +145,7 @@ secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(in
 
 secbool flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data)
 {
-    uint8_t *flash = (uint8_t *)flash_get_address(sector, offset, sizeof(data));
+    uint8_t *flash = (uint8_t *)flash_get_address(sector, offset, 1);
     if (!flash) {
         return secfalse;
     }

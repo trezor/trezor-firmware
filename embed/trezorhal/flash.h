@@ -21,9 +21,12 @@
 #define TREZORHAL_FLASH_H
 
 #include <stdint.h>
+#include <stdlib.h>
 #include "secbool.h"
 
 // see docs/memory.md for more information
+
+#define FLASH_SECTOR_COUNT 24
 
 #define FLASH_SECTOR_BOARDLOADER_START       0
 //                                           1
@@ -56,8 +59,6 @@
 //                                          21
 //                                          22
 #define FLASH_SECTOR_FIRMWARE_EXTRA_END     23
-
-#define FLASH_SECTOR_COUNT 24
 
 // note: FLASH_SR_RDERR is STM32F42xxx and STM32F43xxx specific (STM32F427) (reference RM0090 section 3.7.5)
 #ifndef STM32F427xx
