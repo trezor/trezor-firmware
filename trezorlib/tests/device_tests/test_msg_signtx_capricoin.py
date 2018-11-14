@@ -31,8 +31,8 @@ TXHASH_f3a6e6 = bytes.fromhex(
 )
 
 
-@pytest.mark.xfail
 @pytest.mark.capricoin
+@pytest.mark.skip_t1  # T1 support is not planned
 @setup_client()
 def test_timestamp_included(client):
     # tx: 3bf506c81ce84eda891679ddc797d162c17c60b15d6c0ac23be5e31369e7235f
