@@ -1,5 +1,6 @@
 from common import *
 
+from apps.cardano.seed import Keychain
 from apps.cardano.get_public_key import _get_public_key
 from trezor.crypto import bip32
 from ubinascii import hexlify
@@ -10,6 +11,9 @@ class TestCardanoGetPublicKey(unittest.TestCase):
         mnemonic = "all all all all all all all all all all all all"
         passphrase = ""
         node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
+        node.derive_cardano(0x80000000 | 44)
+        node.derive_cardano(0x80000000 | 1815)
+        keychain = Keychain([0x80000000 | 44, 0x80000000 | 1815], node)
 
         derivation_paths = [
             [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000],
@@ -40,7 +44,7 @@ class TestCardanoGetPublicKey(unittest.TestCase):
         ]
 
         for index, derivation_path in enumerate(derivation_paths):
-            key = _get_public_key(node, derivation_path)
+            key = _get_public_key(keychain, derivation_path)
 
             self.assertEqual(hexlify(key.node.public_key), public_keys[index])
             self.assertEqual(hexlify(key.node.chain_code), chain_codes[index])
