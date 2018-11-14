@@ -16,6 +16,7 @@ class SignTx(p.MessageType):
         expiry: int = None,
         overwintered: bool = None,
         version_group_id: int = None,
+        timestamp: int = None,
     ) -> None:
         self.outputs_count = outputs_count
         self.inputs_count = inputs_count
@@ -25,6 +26,7 @@ class SignTx(p.MessageType):
         self.expiry = expiry
         self.overwintered = overwintered
         self.version_group_id = version_group_id
+        self.timestamp = timestamp
 
     @classmethod
     def get_fields(cls):
@@ -37,4 +39,5 @@ class SignTx(p.MessageType):
             6: ('expiry', p.UVarintType, 0),
             7: ('overwintered', p.BoolType, 0),
             8: ('version_group_id', p.UVarintType, 0),
+            9: ('timestamp', p.UVarintType, 0),
         }

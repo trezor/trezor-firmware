@@ -29,6 +29,7 @@ class TransactionType(p.MessageType):
         expiry: int = None,
         overwintered: bool = None,
         version_group_id: int = None,
+        timestamp: int = None,
     ) -> None:
         self.version = version
         self.inputs = inputs if inputs is not None else []
@@ -42,6 +43,7 @@ class TransactionType(p.MessageType):
         self.expiry = expiry
         self.overwintered = overwintered
         self.version_group_id = version_group_id
+        self.timestamp = timestamp
 
     @classmethod
     def get_fields(cls):
@@ -58,4 +60,5 @@ class TransactionType(p.MessageType):
             10: ('expiry', p.UVarintType, 0),
             11: ('overwintered', p.BoolType, 0),
             12: ('version_group_id', p.UVarintType, 0),
+            13: ('timestamp', p.UVarintType, 0),
         }
