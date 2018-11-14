@@ -4,7 +4,7 @@
   "coin_label": "Terracoin",
   "website": "https://terracoin.io",
   "github": "https://github.com/terracoin/terracoin",
-  "maintainer": "Justin F. Hallett <thesin@users.sf.net>",
+  "maintainer": "The Terracoin Foundation <support@terracoin.io>",
   "curve_name": "secp256k1",
   "address_type": 0,
   "address_type_p2sh": 5,
