@@ -23,11 +23,9 @@ from . import exceptions, messages, tools
 if sys.version_info.major < 3:
     raise Exception("Trezorlib does not support Python 2 anymore.")
 
-
-SCREENSHOT = False
 LOG = logging.getLogger(__name__)
 
-PinException = exceptions.PinException
+VENDORS = ("bitcointrezor.com", "trezor.io")
 
 DEPRECATION_ERROR = """
 Incompatible Trezor library detected.
@@ -46,9 +44,24 @@ def get_buttonrequest_value(code):
 
 
 class TrezorClient:
-    VENDORS = ("bitcointrezor.com", "trezor.io")
-    # Implements very basic layer of sending raw protobuf
-    # messages to device and getting its response back.
+    """Trezor client, a connection to a Trezor device.
+
+    This class allows you to manage connection state, send and receive protobuf
+    messages, handle user interactions, and perform some generic tasks
+    (send a cancel message, initialize or clear a session, ping the device).
+
+    You have to provide a transport, i.e., a raw connection to the device. You can use
+    `trezorlib.transport.get_transport` to find one.
+
+    You have to provide an UI implementation for the three kinds of interaction:
+    - button request (notify the user that their interaction is needed)
+    - PIN request (on T1, ask the user to input numbers for a PIN matrix)
+    - passphrase request (ask the user to enter a passphrase)
+    See `trezorlib.ui` for details.
+
+    You can supply a `state` you saved in the previous session. If you do,
+    the user might not need to enter their passphrase again.
+    """
 
     def __init__(self, transport, ui=None, state=None):
         LOG.info("creating client instance for device: {}".format(transport.get_path()))
@@ -147,7 +160,7 @@ class TrezorClient:
             raise exceptions.TrezorException("Unexpected initial response")
         else:
             self.features = resp
-        if self.features.vendor not in self.VENDORS:
+        if self.features.vendor not in VENDORS:
             raise RuntimeError("Unsupported device")
             # A side-effect of this is a sanity check for broken protobuf definitions.
             # If the `vendor` field doesn't exist, you probably have a mismatched

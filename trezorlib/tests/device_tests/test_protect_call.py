@@ -19,7 +19,7 @@ import time
 import pytest
 
 from trezorlib import messages as proto
-from trezorlib.client import PinException
+from trezorlib.exceptions import PinException
 
 from .common import TrezorTest
 
