@@ -63,7 +63,7 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg)
 	}
 	resp->has_xpub = true;
 
-	if (coin->xpub_magic && script_type == InputScriptType_SPENDADDRESS) {
+	if (coin->xpub_magic && (script_type == InputScriptType_SPENDADDRESS || script_type == InputScriptType_SPENDMULTISIG)) {
 		hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub, sizeof(resp->xpub));
 	} else
 	if (coin->has_segwit && coin->xpub_magic_segwit_p2sh && script_type == InputScriptType_SPENDP2SHWITNESS) {
