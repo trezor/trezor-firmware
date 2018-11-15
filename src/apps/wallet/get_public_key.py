@@ -16,7 +16,10 @@ async def get_public_key(ctx, msg):
         curve_name = coin.curve_name
     node = await seed.derive_node(ctx, msg.address_n, curve_name=curve_name)
 
-    if script_type == InputScriptType.SPENDADDRESS and coin.xpub_magic is not None:
+    if (
+        script_type in [InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG]
+        and coin.xpub_magic is not None
+    ):
         node_xpub = node.serialize_public(coin.xpub_magic)
     elif (
         coin.segwit
