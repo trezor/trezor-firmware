@@ -102,7 +102,12 @@ class TrezorClient:
         return self.transport.read()
 
     def _callback_pin(self, msg):
-        pin = self.ui.get_pin(msg.type)
+        try:
+            pin = self.ui.get_pin(msg.type)
+        except exceptions.Cancelled:
+            self.call_raw(messages.Cancel())
+            raise
+
         if not pin.isdigit():
             raise ValueError("Non-numeric PIN provided")
 
@@ -120,7 +125,11 @@ class TrezorClient:
         if msg.on_device:
             passphrase = None
         else:
-            passphrase = self.ui.get_passphrase()
+            try:
+                passphrase = self.ui.get_passphrase()
+            except exceptions.Cancelled:
+                self.call_raw(messages.Cancel())
+                raise
 
         resp = self.call_raw(messages.PassphraseAck(passphrase=passphrase))
         if isinstance(resp, messages.PassphraseStateRequest):

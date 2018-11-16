@@ -73,7 +73,10 @@ class ClickUI:
             echo(PIN_MATRIX_DESCRIPTION)
 
         while True:
-            pin = prompt("Please enter {}".format(desc), hide_input=True)
+            try:
+                pin = prompt("Please enter {}".format(desc), hide_input=True)
+            except click.Abort:
+                raise Cancelled from None
             if not pin.isdigit():
                 echo("Non-numerical PIN provided, please try again")
             else:
@@ -86,12 +89,15 @@ class ClickUI:
             return os.getenv("PASSPHRASE")
 
         while True:
-            passphrase = prompt("Passphrase required", hide_input=True)
-            second = prompt("Confirm your passphrase", hide_input=True)
-            if passphrase == second:
-                return passphrase
-            else:
-                echo("Passphrase did not match. Please try again.")
+            try:
+                passphrase = prompt("Passphrase required", hide_input=True)
+                second = prompt("Confirm your passphrase", hide_input=True)
+                if passphrase == second:
+                    return passphrase
+                else:
+                    echo("Passphrase did not match. Please try again.")
+            except click.Abort:
+                raise Cancelled from None
 
 
 def mnemonic_words(expand=False, language="english"):
@@ -119,7 +125,7 @@ def mnemonic_words(expand=False, language="english"):
                 return expand_word(word)
             except KeyError:
                 pass
-            except (KeyboardInterrupt, click.Abort):
+            except click.Abort:
                 raise Cancelled from None
 
     return get_word
