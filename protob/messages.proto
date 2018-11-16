@@ -104,6 +104,8 @@ enum MessageType {
     MessageType_DebugLinkFlashErase = 113 [(wire_debug_in) = true];
 
     // Ethereum
+    MessageType_EthereumGetPublicKey = 450 [(wire_in) = true];
+    MessageType_EthereumPublicKey = 451 [(wire_out) = true];
     MessageType_EthereumGetAddress = 56 [(wire_in) = true];
     MessageType_EthereumAddress = 57 [(wire_out) = true];
     MessageType_EthereumSignTx = 58 [(wire_in) = true];
