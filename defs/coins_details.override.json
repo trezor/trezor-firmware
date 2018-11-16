@@ -5,10 +5,6 @@
     "erc20:eth:GNT": {
         "coinmarketcap_alias": "golem-network-tokens"
     },
-    "erc20:eth:EOS": {
-        "hidden": 1,
-        "notes": "EOS has a mainnet now"
-    },
     "erc20:eth:VEN": {
         "links": {
             "Homepage": "https://www.vechain.com"
