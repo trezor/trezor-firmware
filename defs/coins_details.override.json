@@ -98,5 +98,10 @@
         "wallet": {
             "Account Viewer": "https://trezor.io/stellar/"
         }
+    },
+    "misc:XTZ": {
+        "wallet": {
+            "SimpleStaking": "https://simplestaking.com"
+        }
     }
 }
