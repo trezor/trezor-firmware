@@ -98,5 +98,34 @@
             "Homepage": "https://tron.network",
             "Github": "https://github.com/tronprotocol/java-tron"
         }
+    },
+    {
+        "name": "Omni",
+        "shortcut": "OMNI",
+        "slip44": 0,
+        "curve": "secp256k1",
+        "links": {
+            "Homepage": "https://www.omnilayer.org",
+            "Github": "https://github.com/OmniLayer"
+        }
+    },
+    {
+        "name": "MaidSafeCoin",
+        "shortcut": "MAID",
+        "slip44": 0,
+        "curve": "secp256k1",
+        "links": {
+            "Homepage": "https://maidsafe.net",
+            "Github": "https://github.com/maidsafe"
+        }
+    },
+    {
+        "name": "Tether",
+        "shortcut": "USDT",
+        "slip44": 0,
+        "curve": "secp256k1",
+        "links": {
+            "Homepage": "https://tether.to"
+        }
     }
 ]
