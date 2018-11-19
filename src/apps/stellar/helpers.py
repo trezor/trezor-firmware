@@ -3,6 +3,8 @@ import ustruct
 from trezor.crypto import base32
 from trezor.wire import ProcessError
 
+from apps.common import HARDENED
+
 STELLAR_CURVE = "ed25519"
 
 
@@ -24,6 +26,22 @@ def address_from_public_key(pubkey: bytes):
     address.extend(_crc16_checksum(bytes(address)))  # checksum
 
     return base32.encode(address)
+
+
+def validate_full_path(path: list) -> bool:
+    """
+    Validates derivation path to equal 44'/148'/a',
+    where `a` is an account index from 0 to 1 000 000.
+    """
+    if len(path) != 3:
+        return False
+    if path[0] != 44 | HARDENED:
+        return False
+    if path[1] != 148 | HARDENED:
+        return False
+    if path[2] < HARDENED or path[2] > 1000000 | HARDENED:
+        return False
+    return True
 
 
 def _crc16_checksum_verify(data: bytes, checksum: bytes):

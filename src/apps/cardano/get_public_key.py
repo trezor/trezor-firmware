@@ -7,10 +7,14 @@ from trezor.messages.HDNodeType import HDNodeType
 
 from .address import derive_address_and_node
 
-from apps.common import layout, seed, storage
+from apps.common import layout, paths, seed, storage
 
 
 async def get_public_key(ctx, msg):
+    await paths.validate_path(
+        ctx, paths.validate_path_for_get_public_key, path=msg.address_n, slip44_id=1815
+    )
+
     mnemonic = storage.get_mnemonic()
     passphrase = await seed._get_cached_passphrase(ctx)
     root_node = bip32.from_mnemonic_cardano(mnemonic, passphrase)

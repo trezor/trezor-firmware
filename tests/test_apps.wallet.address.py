@@ -1,6 +1,8 @@
 from common import *
 from trezor.crypto import bip32, bip39
 
+from apps.wallet.sign_tx.addresses import validate_full_path, validate_path_for_bitcoin_public_key
+from apps.common.paths import HARDENED
 from apps.common import coins
 from apps.wallet.sign_tx.signing import *
 
@@ -113,6 +115,133 @@ class TestAddress(unittest.TestCase):
 
     # def test_multisig_address_p2wsh(self):
     # todo couldn't find test data
+
+    def test_paths_btc(self):
+        incorrect_derivation_paths = [
+            ([49 | HARDENED], InputScriptType.SPENDP2SHWITNESS),  # invalid length
+            ([49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED], InputScriptType.SPENDP2SHWITNESS),  # too many HARDENED
+            ([49 | HARDENED, 0 | HARDENED], InputScriptType.SPENDP2SHWITNESS),  # invalid length
+            ([49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0, 0], InputScriptType.SPENDP2SHWITNESS),  # invalid length
+            ([49 | HARDENED, 123 | HARDENED, 0 | HARDENED, 0, 0, 0], InputScriptType.SPENDP2SHWITNESS),  # invalid slip44
+            ([49 | HARDENED, 0 | HARDENED, 1000 | HARDENED, 0, 0], InputScriptType.SPENDP2SHWITNESS),  # account too high
+            ([49 | HARDENED, 0 | HARDENED, 1 | HARDENED, 2, 0], InputScriptType.SPENDP2SHWITNESS),  # invalid y
+            ([49 | HARDENED, 0 | HARDENED, 1 | HARDENED, 0, 10000000], InputScriptType.SPENDP2SHWITNESS),  # address index too high
+            ([84 | HARDENED, 0 | HARDENED, 1 | HARDENED, 0, 10000000], InputScriptType.SPENDWITNESS),  # address index too high
+            ([49 | HARDENED, 0 | HARDENED, 1 | HARDENED, 0, 0], InputScriptType.SPENDWITNESS),  # invalid input type
+            ([84 | HARDENED, 0 | HARDENED, 1 | HARDENED, 0, 0], InputScriptType.SPENDP2SHWITNESS),  # invalid input type
+            ([49 | HARDENED, 0 | HARDENED, 5 | HARDENED, 0, 10], InputScriptType.SPENDMULTISIG),  # invalid input type
+        ]
+        correct_derivation_paths = [
+            ([44 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0], InputScriptType.SPENDADDRESS),  # btc is segwit coin, but non-segwit paths are allowed as well
+            ([44 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 1], InputScriptType.SPENDADDRESS),
+            ([44 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0], InputScriptType.SPENDADDRESS),
+            ([49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0], InputScriptType.SPENDP2SHWITNESS),
+            ([49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0], InputScriptType.SPENDP2SHWITNESS),
+            ([49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 1123], InputScriptType.SPENDP2SHWITNESS),
+            ([49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 44444], InputScriptType.SPENDP2SHWITNESS),
+            ([49 | HARDENED, 0 | HARDENED, 5 | HARDENED, 0, 0], InputScriptType.SPENDP2SHWITNESS),
+            ([84 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0], InputScriptType.SPENDWITNESS),
+            ([84 | HARDENED, 0 | HARDENED, 5 | HARDENED, 0, 0], InputScriptType.SPENDWITNESS),
+            ([84 | HARDENED, 0 | HARDENED, 5 | HARDENED, 0, 10], InputScriptType.SPENDWITNESS),
+            ([48 | HARDENED, 0 | HARDENED, 5 | HARDENED, 0, 10], InputScriptType.SPENDMULTISIG),
+        ]
+        coin = coins.by_shortcut('BTC')
+        for path, input_type in incorrect_derivation_paths:
+            self.assertFalse(validate_full_path(path, coin, input_type))
+
+        for path, input_type in correct_derivation_paths:
+            self.assertTrue(validate_full_path(path, coin, input_type))
+
+    def test_paths_bch(self):
+        incorrect_derivation_paths = [
+            ([44 | HARDENED], InputScriptType.SPENDADDRESS),  # invalid length
+            ([44 | HARDENED, 145 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED], InputScriptType.SPENDADDRESS),  # too many HARDENED
+            ([49 | HARDENED, 145 | HARDENED, 0 | HARDENED, 0, 0], InputScriptType.SPENDP2SHWITNESS),  # bch is not segwit coin so 49' is not allowed
+            ([84 | HARDENED, 145 | HARDENED, 1 | HARDENED, 0, 1], InputScriptType.SPENDWITNESS),  # and neither is 84'
+            ([44 | HARDENED, 145 | HARDENED], InputScriptType.SPENDADDRESS),  # invalid length
+            ([44 | HARDENED, 145 | HARDENED, 0 | HARDENED, 0, 0, 0], InputScriptType.SPENDADDRESS),  # invalid length
+            ([44 | HARDENED, 123 | HARDENED, 0 | HARDENED, 0, 0, 0], InputScriptType.SPENDADDRESS),  # invalid slip44
+            ([44 | HARDENED, 145 | HARDENED, 1000 | HARDENED, 0, 0], InputScriptType.SPENDADDRESS),  # account too high
+            ([44 | HARDENED, 145 | HARDENED, 1 | HARDENED, 2, 0], InputScriptType.SPENDADDRESS),  # invalid y
+            ([44 | HARDENED, 145 | HARDENED, 1 | HARDENED, 0, 10000000], InputScriptType.SPENDADDRESS),  # address index too high
+            ([84 | HARDENED, 145 | HARDENED, 1 | HARDENED, 0, 10000000], InputScriptType.SPENDWITNESS),  # address index too high
+            ([44 | HARDENED, 145 | HARDENED, 0 | HARDENED, 0, 0], InputScriptType.SPENDWITNESS),  # input type mismatch
+        ]
+        correct_derivation_paths = [
+            ([44 | HARDENED, 145 | HARDENED, 0 | HARDENED, 0, 0], InputScriptType.SPENDADDRESS),
+            ([44 | HARDENED, 145 | HARDENED, 0 | HARDENED, 1, 0], InputScriptType.SPENDADDRESS),
+            ([44 | HARDENED, 145 | HARDENED, 0 | HARDENED, 0, 1123], InputScriptType.SPENDADDRESS),
+            ([44 | HARDENED, 145 | HARDENED, 0 | HARDENED, 1, 44444], InputScriptType.SPENDADDRESS),
+            ([44 | HARDENED, 145 | HARDENED, 5 | HARDENED, 0, 0], InputScriptType.SPENDADDRESS),
+            ([48 | HARDENED, 145 | HARDENED, 0 | HARDENED, 0, 0], InputScriptType.SPENDMULTISIG),
+            ([48 | HARDENED, 145 | HARDENED, 5 | HARDENED, 0, 0], InputScriptType.SPENDMULTISIG),
+            ([48 | HARDENED, 145 | HARDENED, 5 | HARDENED, 0, 10], InputScriptType.SPENDMULTISIG),
+        ]
+        coin = coins.by_shortcut('BCH')  # segwit is disabled
+        for path, input_type in incorrect_derivation_paths:
+            self.assertFalse(validate_full_path(path, coin, input_type))
+
+        for path, input_type in correct_derivation_paths:
+            self.assertTrue(validate_full_path(path, coin, input_type))
+
+    def test_paths_other(self):
+        incorrect_derivation_paths = [
+            ([44 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0, 0], InputScriptType.SPENDMULTISIG),  # input type mismatch
+        ]
+        correct_derivation_paths = [
+            ([44 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0, 0], InputScriptType.SPENDADDRESS),
+            ([44 | HARDENED, 3 | HARDENED, 0 | HARDENED, 1, 0], InputScriptType.SPENDADDRESS),
+            ([44 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0, 1123], InputScriptType.SPENDADDRESS),
+            ([44 | HARDENED, 3 | HARDENED, 0 | HARDENED, 1, 44444], InputScriptType.SPENDADDRESS),
+        ]
+        coin = coins.by_shortcut('DOGE')  # segwit is disabled
+        for path, input_type in correct_derivation_paths:
+            self.assertTrue(validate_full_path(path, coin, input_type))
+
+        for path, input_type in incorrect_derivation_paths:
+            self.assertFalse(validate_full_path(path, coin, input_type))
+
+    def test_paths_public_key(self):
+        incorrect_derivation_paths = [
+            [49 | HARDENED],  # invalid length
+            [49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED],  # too many HARDENED
+            [49 | HARDENED, 0 | HARDENED],  # invalid length
+            [49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0, 0],  # invalid length
+            [49 | HARDENED, 123 | HARDENED, 0 | HARDENED, 0, 0, 0],  # invalid slip44
+            [49 | HARDENED, 0 | HARDENED, 1000 | HARDENED, 0, 0],  # account too high
+        ]
+        correct_derivation_paths = [
+            [44 | HARDENED, 0 | HARDENED, 0 | HARDENED],  # btc is segwit coin, but non-segwit paths are allowed as well
+            [44 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0],
+            [49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0],
+            [49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0],
+            [49 | HARDENED, 0 | HARDENED, 5 | HARDENED],
+            [84 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0],
+            [84 | HARDENED, 0 | HARDENED, 5 | HARDENED, 0, 0],
+            [84 | HARDENED, 0 | HARDENED, 5 | HARDENED, 0, 10],
+        ]
+        coin = coins.by_shortcut('BTC')
+        for path in correct_derivation_paths:
+            self.assertTrue(validate_path_for_bitcoin_public_key(path, coin))
+
+        for path in incorrect_derivation_paths:
+            self.assertFalse(validate_path_for_bitcoin_public_key(path, coin))
+
+        incorrect_derivation_paths = [
+            [49 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0, 0],  # no segwit
+        ]
+        correct_derivation_paths = [
+            [44 | HARDENED, 3 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 3 | HARDENED, 1 | HARDENED],
+            [44 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0],
+            [44 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0, 0],
+        ]
+        coin = coins.by_shortcut('DOGE')  # segwit is disabled
+        for path in correct_derivation_paths:
+            self.assertTrue(validate_path_for_bitcoin_public_key(path, coin))
+
+        for path in incorrect_derivation_paths:
+            self.assertFalse(validate_path_for_bitcoin_public_key(path, coin))
 
 
 if __name__ == '__main__':
