@@ -12,7 +12,7 @@ sleep 1
 export TREZOR_PATH=udp:127.0.0.1:21324
 
 # run tests
-cd ../tests
+cd ..
 error=0
 if ! pytest "$@"; then
     error=1
