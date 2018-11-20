@@ -365,7 +365,7 @@ def check_icons(coins):
     return check_passed
 
 
-IGNORE_NONUNIFORM_KEYS = frozenset(("unsupported", "duplicate", "notes"))
+IGNORE_NONUNIFORM_KEYS = frozenset(("unsupported", "duplicate"))
 
 
 def check_key_uniformity(coins):
@@ -381,11 +381,12 @@ def check_key_uniformity(coins):
     buckets.sort(key=lambda x: len(x))
     majority = buckets[-1]
     rest = sum(buckets[:-1], [])
-    reference_keyset = set(majority[0].keys())
+    reference_keyset = set(majority[0].keys()) | IGNORE_NONUNIFORM_KEYS
+    print(reference_keyset)
 
     for coin in rest:
         key = coin["key"]
-        keyset = set(coin.keys())
+        keyset = set(coin.keys()) | IGNORE_NONUNIFORM_KEYS
         missing = ", ".join(reference_keyset - keyset)
         if missing:
             print_log(logging.ERROR, "coin {} has missing keys: {}".format(key, missing))

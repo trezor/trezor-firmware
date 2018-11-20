@@ -7,7 +7,8 @@
         "links": {
             "Homepage": "https://lisk.io/",
             "Github": "https://github.com/LiskHQ/lisk"
-        }
+        },
+        "wallet": {}
     },
     {
         "name": "Stellar",
@@ -30,7 +31,8 @@
         "links": {
             "Homepage": "https://getmonero.org",
             "Github": "https://github.com/monero-project/monero"
-        }
+        },
+        "wallet": {}
     },
     {
         "name": "Ripple",
@@ -40,7 +42,8 @@
         "links": {
             "Homepage": "https://ripple.com",
             "Github": "https://github.com/ripple/rippled"
-        }
+        },
+        "wallet": {}
     },
     {
         "name": "Cardano",
@@ -76,7 +79,8 @@
         "links": {
             "Homepage": "https://ont.io",
             "Github": "https://github.com/ontio/ontology"
-        }
+        },
+        "wallet": {}
     },
     {
         "name": "Wanchain",
@@ -86,7 +90,8 @@
         "links": {
             "Homepage": "https://wanchain.org",
             "Github": "https://github.com/wanchain/go-wanchain"
-        }
+        },
+        "wallet": {}
     },
     {
         "name": "EOS",
@@ -96,7 +101,8 @@
         "links": {
             "Homepage": "https://eos.io",
             "Github": "https://github.com/EOSIO/eos"
-        }
+        },
+        "wallet": {}
     },
     {
         "name": "Tron",
@@ -106,7 +112,8 @@
         "links": {
             "Homepage": "https://tron.network",
             "Github": "https://github.com/tronprotocol/java-tron"
-        }
+        },
+        "wallet": {}
     },
     {
         "name": "Omni",
@@ -116,7 +123,8 @@
         "links": {
             "Homepage": "https://www.omnilayer.org",
             "Github": "https://github.com/OmniLayer"
-        }
+        },
+        "wallet": {}
     },
     {
         "name": "MaidSafeCoin",
@@ -126,7 +134,8 @@
         "links": {
             "Homepage": "https://maidsafe.net",
             "Github": "https://github.com/maidsafe"
-        }
+        },
+        "wallet": {}
     },
     {
         "name": "Tether",
@@ -135,6 +144,7 @@
         "curve": "secp256k1",
         "links": {
             "Homepage": "https://tether.to"
-        }
+        },
+        "wallet": {}
     }
 ]
