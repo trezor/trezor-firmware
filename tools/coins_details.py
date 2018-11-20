@@ -43,9 +43,6 @@ TREZORIO_KNOWN_URLS = (
     "https://trezor.io/stellar/",
 )
 
-# TODO: we should read this from support.json
-TREZOR_NEXT_ETH_NETWORKS = ("eth", "etc")
-
 
 def coinmarketcap_call(endpoint, api_key, params=None):
     url = COINMARKETCAP_API_BASE + endpoint
@@ -223,13 +220,14 @@ def update_bitcoin(coins, support_info):
     return res
 
 
-def update_erc20(coins, support_info):
+def update_erc20(coins, networks, support_info):
     # TODO skip disabled networks?
+    network_support = {n["chain"]: support_info.get(n["key"]) for n in networks}
     res = update_simple(coins, support_info, "erc20")
     for coin in coins:
         key = coin["key"]
         chain = coin["chain"]
-        if chain in TREZOR_NEXT_ETH_NETWORKS:
+        if network_support.get(chain, {}).get("webwallet"):
             wallets = WALLETS_ETH_NATIVE
         else:
             wallets = WALLETS_ETH_3RDPARTY
@@ -255,7 +253,7 @@ def update_ethereum_networks(coins, support_info):
     res = update_simple(coins, support_info, "coin")
     for coin in coins:
         key = coin["key"]
-        if coin["chain"] in TREZOR_NEXT_ETH_NETWORKS:
+        if support_info[key].get("webwallet"):
             wallets = WALLETS_ETH_NATIVE
         else:
             wallets = WALLETS_ETH_3RDPARTY
@@ -377,7 +375,7 @@ def main(refresh, api_key, verbose):
 
     coins = {}
     coins.update(update_bitcoin(defs.bitcoin, support_info))
-    coins.update(update_erc20(defs.erc20, support_info))
+    coins.update(update_erc20(defs.erc20, defs.eth, support_info))
     coins.update(update_ethereum_networks(defs.eth, support_info))
     coins.update(update_nem_mosaics(defs.nem, support_info))
     coins.update(update_simple(defs.misc, support_info, "coin"))
