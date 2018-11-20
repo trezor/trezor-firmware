@@ -17,6 +17,9 @@
         "links": {
             "Homepage": "https://www.stellar.org",
             "Github": "https://github.com/stellar/stellar-core"
+        },
+        "wallet": {
+            "Account Viewer": "https://trezor.io/stellar/"
         }
     },
     {
@@ -47,6 +50,9 @@
         "links": {
             "Homepage": "https://www.cardano.org",
             "Github": "https://github.com/input-output-hk/cardano-sl"
+        },
+        "wallet": {
+            "AdaLite": "https://adalite.io/app"
         }
     },
     {
@@ -57,6 +63,9 @@
         "links": {
             "Homepage": "https://tezos.com",
             "Github": "https://github.com/tezos/tezos"
+        },
+        "wallet": {
+            "SimpleStaking": "https://simplestaking.com"
         }
     },
     {

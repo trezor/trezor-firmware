@@ -2,9 +2,6 @@
     "nem:DIMTOK": {
         "coinmarketcap_alias": "dimcoin"
     },
-    "erc20:eth:GNT": {
-        "coinmarketcap_alias": "golem-network-tokens"
-    },
     "erc20:eth:VEN": {
         "links": {
             "Homepage": "https://www.vechain.com"
@@ -13,91 +10,5 @@
     "erc20:eth:YUPIE": {
         "hidden": 1,
         "notes": "Replaced by YUP"
-    },
-    "bitcoin:BCH": {
-        "wallet": {
-            "Electron Cash": "https://electroncash.org"
-        }
-    },
-    "bitcoin:BTC": {
-        "wallet": {
-            "Electrum": "https://electrum.org"
-        }
-    },
-    "bitcoin:BTCP": {
-        "wallet": {
-            "BTCP Electrum": "https://github.com/BTCPrivate/electrum-btcp"
-        }
-    },
-    "bitcoin:BTG": {
-        "wallet": {
-            "ElectrumG": "https://github.com/BTCGPU/electrum"
-        }
-    },
-    "bitcoin:DASH": {
-        "wallet": {
-            "Dash Electrum": "https://electrum.dash.org"
-        }
-    },
-    "bitcoin:FJC": {
-        "wallet": {
-            "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
-        }
-    },
-    "bitcoin:GAME": {
-        "wallet": {
-            "Electrum-GAME": "https://electrum-game.org"
-        }
-    },
-    "bitcoin:GRS": {
-        "wallet": {
-            "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet"
-        }
-    },
-    "bitcoin:KOTO": {
-        "wallet": {
-            "Electrum-KOTO": "https://electrum.kotocoin.info"
-        }
-    },
-    "bitcoin:LTC": {
-        "wallet": {
-            "Electrum-LTC": "https://electrum-ltc.org"
-        }
-    },
-    "bitcoin:MONA": {
-        "wallet": {
-            "Electrum-MONA": "https://electrum-mona.org"
-        }
-    },
-    "bitcoin:NMC": {
-        "wallet": {
-            "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
-        }
-    },
-    "bitcoin:VIA": {
-        "wallet": {
-            "Vialectrum": "https://vialectrum.org"
-        }
-    },
-    "bitcoin:XZC": {
-        "wallet": {
-            "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
-            "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"
-        }
-    },
-    "misc:ADA": {
-        "wallet": {
-            "AdaLite": "https://adalite.io/app"
-        }
-    },
-    "misc:XLM": {
-        "wallet": {
-            "Account Viewer": "https://trezor.io/stellar/"
-        }
-    },
-    "misc:XTZ": {
-        "wallet": {
-            "SimpleStaking": "https://simplestaking.com"
-        }
     }
 }

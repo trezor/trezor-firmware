@@ -1,0 +1,45 @@
+{
+    "bitcoin:BCH": {
+        "Electron Cash": "https://electroncash.org"
+    },
+    "bitcoin:BTC": {
+        "Electrum": "https://electrum.org"
+    },
+    "bitcoin:BTCP": {
+        "BTCP Electrum": "https://github.com/BTCPrivate/electrum-btcp"
+    },
+    "bitcoin:BTG": {
+        "ElectrumG": "https://github.com/BTCGPU/electrum"
+    },
+    "bitcoin:DASH": {
+        "Dash Electrum": "https://electrum.dash.org"
+    },
+    "bitcoin:FJC": {
+        "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
+    },
+    "bitcoin:GAME": {
+        "Electrum-GAME": "https://electrum-game.org"
+    },
+    "bitcoin:GRS": {
+        "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet"
+    },
+    "bitcoin:KOTO": {
+        "Electrum-KOTO": "https://electrum.kotocoin.info"
+    },
+    "bitcoin:LTC": {
+        "Electrum-LTC": "https://electrum-ltc.org"
+    },
+    "bitcoin:MONA": {
+        "Electrum-MONA": "https://electrum-mona.org"
+    },
+    "bitcoin:NMC": {
+        "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
+    },
+    "bitcoin:VIA": {
+        "Vialectrum": "https://vialectrum.org"
+    },
+    "bitcoin:XZC": {
+        "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
+        "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"
+    }
+}

@@ -7,9 +7,6 @@
     "divisibility": 6,
     "links": {
       "Homepage": "https://nem.io"
-    },
-    "wallet": {
-      "Nano Wallet": "https://nem.io/downloads/"
     }
   },
   {
@@ -27,9 +24,6 @@
     ],
     "links": {
       "Homepage": "https://www.dimcoin.io"
-    },
-    "wallet": {
-      "Nano Wallet": "https://nem.io/downloads/"
     }
   },
   {
@@ -43,9 +37,6 @@
     ],
     "links": {
       "Homepage": "https://www.dimcoin.io"
-    },
-    "wallet": {
-      "Nano Wallet": "https://nem.io/downloads/"
     }
   },
   {
@@ -59,9 +50,6 @@
     ],
     "links": {
       "Homepage": "https://breeze.chat"
-    },
-    "wallet": {
-      "Nano Wallet": "https://nem.io/downloads/"
     }
   },
   {
@@ -75,9 +63,6 @@
     ],
     "links": {
       "Homepage": "https://pacnem.com"
-    },
-    "wallet": {
-      "Nano Wallet": "https://nem.io/downloads/"
     }
   },
   {
@@ -95,9 +80,6 @@
     ],
     "links": {
       "Homepage": "https://pacnem.com"
-    },
-    "wallet": {
-      "Nano Wallet": "https://nem.io/downloads/"
     }
   }
 ]
