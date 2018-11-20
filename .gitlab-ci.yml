@@ -1,0 +1,12 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+build and push emulator image:
+  when: manual
+  before_script:
+    - docker login $CI_REGISTRY -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+  script:
+    - docker build -t ${CI_REGISTRY_IMAGE}/trezor-emulator:latest -f ./docker/emulator/Dockerfile .
+    - docker push ${CI_REGISTRY_IMAGE}/trezor-emulator:latest
