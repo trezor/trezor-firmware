@@ -307,7 +307,7 @@ class TestMsgEthereumSigntx(TrezorTest):
         )
 
     def test_ethereum_signtx_newcontract(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+        self.setup_mnemonic_allallall()
 
         # contract creation without data should fail.
         with pytest.raises(Exception):
@@ -350,14 +350,14 @@ class TestMsgEthereumSigntx(TrezorTest):
                 value=12345678901234567890,
                 data=b"ABCDEFGHIJKLMNOP" * 256 + b"!!!",
             )
-        assert sig_v == 27
+        assert sig_v == 28
         assert (
             sig_r.hex()
-            == "d043caa5f35e7676e0a9f9f0cd72a4055ae715309e8db8b3b6f1db928d276222"
+            == "c86bda9de238b1c602648996561e7270a3be208da96bbf23474cb8e4014b9f93"
         )
         assert (
             sig_s.hex()
-            == "08b91becc7c4ffbea18fe499fb3289bc7384880c2f7d86f4e831191a286553f6"
+            == "18742403f75a05e7fa9868c30b36f1e55628de02d01c03084c1ff6775a13137c"
         )
 
     def test_ethereum_sanity_checks(self):
