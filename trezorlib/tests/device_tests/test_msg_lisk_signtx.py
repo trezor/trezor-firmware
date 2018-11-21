@@ -24,7 +24,7 @@ from .common import TrezorTest
 @pytest.mark.lisk
 class TestMsgLiskSignTx(TrezorTest):
     def test_lisk_sign_tx_send(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+        self.setup_mnemonic_allallall()
 
         with self.client:
             self.client.set_expected_responses(
@@ -33,7 +33,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
                         signature=bytes.fromhex(
-                            "6c96202c2271971917f9d8b752d6aa097084931bae2f2c92d2eeb3956310fb29c5bebeadf5707558b847d75a7f437998b9940aa76fb0d7b4fe40f09b4809970f"
+                            "f48532d43e8c5abadf50bb7b82098b31eec3e67747e5328c0675203e86441899c246fa3aea6fc91043209431ce710c5aa34aa234546b85b88299d5a379bff202"
                         )
                     ),
                 ]
@@ -54,7 +54,7 @@ class TestMsgLiskSignTx(TrezorTest):
 
     @pytest.mark.skip_t1
     def test_lisk_sign_tx_send_wrong_path(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+        self.setup_mnemonic_allallall()
 
         with self.client:
             self.client.set_expected_responses(
@@ -66,7 +66,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
                         signature=bytes.fromhex(
-                            "2cb9ce4b5e5add3b445272dd0def4719fcabfb169177ce705e856602ee414fc1a45e8ea0d1ae45bdc4e8283285b13d7a2e8776afb0e3ab50eeffe2c9ca67cc06"
+                            "87b9789ed10fb93311b77d23e34484ee653b43206a7e416da70f8dd6b15231a8dfe05c66bcbca62ba841fdde8affdb04b3ee18300caa8560cd15f6a4942a870a"
                         )
                     ),
                 ]
@@ -86,7 +86,7 @@ class TestMsgLiskSignTx(TrezorTest):
             )
 
     def test_lisk_sign_tx_send_with_data(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+        self.setup_mnemonic_allallall()
 
         with self.client:
             self.client.set_expected_responses(
@@ -95,7 +95,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
                         signature=bytes.fromhex(
-                            "8c36cbb03461cd574db2e9183b85f354f14f8a9b797a082b622bbd93c3504992e80bfcb20d93671843932c2d672e072ebcc139bb829bbdafedcc359230321b02"
+                            "4e83a651e82f2f787a71a5f44a2911dd0429ee4001b80c79fb7d174ea63ceeefdfba55aa3a9f31fa14b8325a39ad973dcd7eadbaa77b0447a9893f84b60f210e"
                         )
                     ),
                 ]
@@ -115,7 +115,7 @@ class TestMsgLiskSignTx(TrezorTest):
             )
 
     def test_lisk_sign_tx_second_signature(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+        self.setup_mnemonic_allallall()
 
         with self.client:
             self.client.set_expected_responses(
@@ -124,7 +124,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
                         signature=bytes.fromhex(
-                            "6b8d4af2f31d94c187dd7059c3bbbf0e98d0b0a5a278a1a71d3f42ed81c92d6e122b4bcf2e8829af081098adefca990972b7765cecca70745030e07f61de7909"
+                            "e27d8997d0bdbc9ab4ad928fcf140edb25a217007987447270085c0872e4178c018847d1378a949ad2aa913692f10aeec340810fd9de02da9d4461c63b6b6c06"
                         )
                     ),
                 ]
@@ -147,7 +147,7 @@ class TestMsgLiskSignTx(TrezorTest):
             )
 
     def test_lisk_sign_tx_delegate_registration(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+        self.setup_mnemonic_allallall()
 
         with self.client:
             self.client.set_expected_responses(
@@ -156,7 +156,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
                         signature=bytes.fromhex(
-                            "9187f8156e8fc0bfe934002f0630cf9e9ef94f8880c796b8680b67ddeb15421f2a7880c0e23fa405cf3ed06459b856b9004aec916df58654b025bf5167e5dc0f"
+                            "e9f68b9961198f4e0d33d6ae95cbd90ab243c2c1f9fcc51db54eb54cc1491db53d237131e12da9485bfbfbd02255c431d08095076f926060c434edb01cf25807"
                         )
                     ),
                 ]
@@ -175,7 +175,7 @@ class TestMsgLiskSignTx(TrezorTest):
             )
 
     def test_lisk_sign_tx_cast_votes(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+        self.setup_mnemonic_allallall()
 
         with self.client:
             self.client.set_expected_responses(
@@ -184,7 +184,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
                         signature=bytes.fromhex(
-                            "dfe9a12e14a12e6d411dba6eab91f69f7389eb3b04055f57218b997ccf72059fe151dd065d055e4c11205aa357f9b733958502ad7e8ab97cfeeda9b2edfa6a0b"
+                            "18d7cb27276a83178427aab2abcb5ee1c8ae9e8e2d1231585dcae7a83dd7d5167eea5baca890169bc80dcaf187320cab47c2f65a20c6483fede0f059919e4106"
                         )
                     ),
                 ]
@@ -208,7 +208,7 @@ class TestMsgLiskSignTx(TrezorTest):
             )
 
     def test_lisk_sign_tx_multisignature(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+        self.setup_mnemonic_allallall()
 
         with self.client:
             self.client.set_expected_responses(
@@ -217,7 +217,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
                         signature=bytes.fromhex(
-                            "c97c94a4e6426e0d280e8279833110c5d5204beabde49865d73e21866ee9764da7f654257977e68ec6a9c5aa71214dec29ca331e64ae70853968c25b730ca403"
+                            "b84438ae3d419d270eacd0414fc8818d8f2c721602be54c3d705cf4cb3305de44e674f6dac9aac87379cce006cc97f2f635f296a48ab6a6adf62e2c11e08e409"
                         )
                     ),
                 ]
