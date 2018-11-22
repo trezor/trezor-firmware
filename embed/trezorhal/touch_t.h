@@ -121,9 +121,32 @@ void touch_power_off(void) {
     touch_default_pin_state();
 }
 
+uint32_t touch_is_detected(void)
+{
+    // check the interrupt line coming in from the CTPM.
+    // the line goes low when a touch event is actively detected.
+    // reference section 1.2 of "Application Note for FT6x06 CTPM".
+    // we configure the touch controller to use "interrupt polling mode".
+    return GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_4);
+}
+
 uint32_t touch_read(void)
 {
     static uint8_t touch_data[TOUCH_PACKET_SIZE], previous_touch_data[TOUCH_PACKET_SIZE];
+    static uint32_t xy;
+    static int touching;
+
+    int last_packet = 0;
+    if (!touch_is_detected()) {
+        // only poll when the touch interrupt is active.
+        // when it's inactive, we might need to read one last data packet to get to
+        // the TOUCH_END event, which clears the `touching` flag.
+        if (touching) {
+            last_packet = 1;
+        } else {
+            return 0;
+        }
+    }
 
     uint8_t outgoing[] = {0x00}; // start reading from address 0x00
     if (HAL_OK != HAL_I2C_Master_Transmit(&i2c_handle, TOUCH_ADDRESS, outgoing, sizeof(outgoing), 1)) {
@@ -143,24 +166,24 @@ uint32_t touch_read(void)
     const uint32_t number_of_touch_points = touch_data[2] & 0x0F; // valid values are 0, 1, 2 (invalid 0xF before first touch) (tested with FT6206)
     const uint32_t event_flag = touch_data[3] & 0xC0;
     if (touch_data[1] == GESTURE_NO_GESTURE) {
-        uint32_t xy = touch_pack_xy((X_POS_MSB << 8) | X_POS_LSB, (Y_POS_MSB << 8) | Y_POS_LSB);
+        xy = touch_pack_xy((X_POS_MSB << 8) | X_POS_LSB, (Y_POS_MSB << 8) | Y_POS_LSB);
         if ((number_of_touch_points == 1) && (event_flag == EVENT_PRESS_DOWN)) {
+            touching = 1;
             return TOUCH_START | xy;
         } else if ((number_of_touch_points == 1) && (event_flag == EVENT_CONTACT)) {
             return TOUCH_MOVE | xy;
         } else if ((number_of_touch_points == 0) && (event_flag == EVENT_LIFT_UP)) {
+            touching = 0;
             return TOUCH_END | xy;
         }
     }
 
-    return 0;
-}
+    if (last_packet) {
+        // interrupt line is inactive, we didn't read valid touch data, and as far as
+        // we know, we never sent a TOUCH_END event.
+        touching = 0;
+        return TOUCH_END | xy;
+    }
 
-uint32_t touch_is_detected(void)
-{
-    // check the interrupt line coming in from the CTPM.
-    // the line goes low when a touch event is actively detected.
-    // reference section 1.2 of "Application Note for FT6x06 CTPM".
-    // we configure the touch controller to use "interrupt polling mode".
-    return GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_4);
+    return 0;
 }
