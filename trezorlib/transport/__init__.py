@@ -14,10 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import importlib
 import logging
 from typing import Iterable, List, Set, Type
 
+from ..exceptions import TrezorException
 from ..protobuf import MessageType
 
 if False:
@@ -39,7 +39,7 @@ https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules
 """.strip()
 
 
-class TransportException(Exception):
+class TransportException(TrezorException):
     pass
 
 
