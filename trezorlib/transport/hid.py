@@ -14,14 +14,22 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import logging
 import sys
 import time
 from typing import Any, Dict, Iterable
 
-import hid
-
 from . import DEV_TREZOR1, UDEV_RULES_STR, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
+
+LOG = logging.getLogger(__name__)
+
+try:
+    import hid
+except Exception as e:
+    LOG.info("HID transport is disabled: {}".format(e))
+    hid = None
+
 
 HidDevice = Dict[str, Any]
 HidDeviceHandle = Any
@@ -87,6 +95,7 @@ class HidTransport(ProtocolBasedTransport):
     """
 
     PATH_PREFIX = "hid"
+    ENABLED = hid is not None
 
     def __init__(self, device: HidDevice, hid_handle: HidHandle = None) -> None:
         if hid_handle is None:
@@ -135,6 +144,3 @@ def is_wirelink(dev: HidDevice) -> bool:
 
 def is_debuglink(dev: HidDevice) -> bool:
     return dev["usage_page"] == 0xFF01 or dev["interface_number"] == 1
-
-
-TRANSPORT = HidTransport

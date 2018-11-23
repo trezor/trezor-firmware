@@ -30,6 +30,7 @@ class UdpTransport(ProtocolBasedTransport):
     DEFAULT_HOST = "127.0.0.1"
     DEFAULT_PORT = 21324
     PATH_PREFIX = "udp"
+    ENABLED = True
 
     def __init__(self, device: str = None) -> None:
         if not device:
@@ -123,6 +124,3 @@ class UdpTransport(ProtocolBasedTransport):
         if len(chunk) != 64:
             raise TransportException("Unexpected chunk size: %d" % len(chunk))
         return bytearray(chunk)
-
-
-TRANSPORT = UdpTransport

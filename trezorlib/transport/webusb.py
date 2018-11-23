@@ -15,14 +15,21 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import atexit
+import logging
 import sys
 import time
 from typing import Iterable, Optional
 
-import usb1
-
 from . import TREZORS, UDEV_RULES_STR, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
+
+LOG = logging.getLogger(__name__)
+
+try:
+    import usb1
+except Exception as e:
+    LOG.warning("WebUSB transport is disabled: {}".format(e))
+    usb1 = None
 
 if False:
     # mark Optional as used, otherwise it only exists in comments
@@ -84,6 +91,7 @@ class WebUsbTransport(ProtocolBasedTransport):
     """
 
     PATH_PREFIX = "webusb"
+    ENABLED = usb1 is not None
     context = None
 
     def __init__(
@@ -150,6 +158,3 @@ def dev_to_str(dev: usb1.USBDevice) -> str:
     return ":".join(
         str(x) for x in ["%03i" % (dev.getBusNumber(),)] + dev.getPortNumberList()
     )
-
-
-TRANSPORT = WebUsbTransport

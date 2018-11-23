@@ -61,6 +61,7 @@ class Transport:
     """
 
     PATH_PREFIX = None  # type: str
+    ENABLED = False
 
     def __str__(self) -> str:
         return self.get_path()
@@ -100,21 +101,16 @@ class Transport:
 
 
 def all_transports() -> Iterable[Type[Transport]]:
-    transports = set()  # type: Set[Type[Transport]]
-    for modname in ("bridge", "hid", "udp", "webusb"):
-        try:
-            # Import the module and find the Transport class.
-            # To avoid iterating over every item, the module should assign its Transport class
-            # to a constant named TRANSPORT.
-            module = importlib.import_module("." + modname, __name__)
-            try:
-                transports.add(getattr(module, "TRANSPORT"))
-            except AttributeError:
-                LOG.warning("Skipping broken module {}".format(modname))
-        except ImportError as e:
-            LOG.info("Failed to import module {}: {}".format(modname, e))
+    from .bridge import BridgeTransport
+    from .hid import HidTransport
+    from .udp import UdpTransport
+    from .webusb import WebUsbTransport
 
-    return transports
+    return set(
+        cls
+        for cls in (BridgeTransport, HidTransport, UdpTransport, WebUsbTransport)
+        if cls.ENABLED
+    )
 
 
 def enumerate_devices() -> Iterable[Transport]:
