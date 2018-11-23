@@ -555,7 +555,7 @@ def validate_firmware_v2(fw, expected_fingerprint=None, skip_vendor_header=False
 
 
 def find_best_firmware_version(bootloader_version, requested_version=None):
-    url = "https://wallet.trezor.io/data/firmware/{}/releases.json"
+    url = "https://beta-wallet.trezor.io/data/firmware/{}/releases.json"
     releases = requests.get(url.format(bootloader_version[0])).json()
     if not releases:
         raise click.ClickException("Failed to get list of releases")
@@ -604,7 +604,7 @@ def find_best_firmware_version(bootloader_version, requested_version=None):
             if not ok:
                 sys.exit(1)
 
-    url = "https://wallet.trezor.io/" + release["url"]
+    url = "https://beta-wallet.trezor.io/" + release["url"]
     if url.endswith(".hex"):
         url = url[:-4]
 
