@@ -137,7 +137,7 @@ def cli(ctx, path, verbose, is_json):
                 if path is not None:
                     click.echo("Using path: {}".format(path))
                 sys.exit(1)
-        return TrezorClient(transport=device, ui=ui.ClickUI)
+        return TrezorClient(transport=device, ui=ui.ClickUI())
 
     ctx.obj = get_device
 
@@ -231,7 +231,6 @@ def get_features(connect):
 @click.option("-r", "--remove", is_flag=True)
 @click.pass_obj
 def change_pin(connect, remove):
-    click.echo(ui.PIN_MATRIX_DESCRIPTION)
     return device.change_pin(connect(), remove)
 
 

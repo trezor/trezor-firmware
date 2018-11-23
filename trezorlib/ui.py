@@ -56,12 +56,18 @@ def prompt(*args, **kwargs):
 
 
 class ClickUI:
-    @staticmethod
-    def button_request(code):
-        echo("Please confirm action on your Trezor device")
+    def __init__(self, always_prompt=False):
+        self.pinmatrix_shown = False
+        self.prompt_shown = False
+        self.always_prompt = always_prompt
 
-    @staticmethod
-    def get_pin(code=None):
+    def button_request(self, code):
+        if not self.prompt_shown:
+            echo("Please confirm action on your Trezor device")
+        if not self.always_prompt:
+            self.prompt_shown = True
+
+    def get_pin(self, code=None):
         if code == PIN_CURRENT:
             desc = "current PIN"
         elif code == PIN_NEW:
@@ -70,7 +76,11 @@ class ClickUI:
             desc = "new PIN again"
         else:
             desc = "PIN"
+
+        if not self.pinmatrix_shown:
             echo(PIN_MATRIX_DESCRIPTION)
+            if not self.always_prompt:
+                self.pinmatrix_shown = True
 
         while True:
             try:
@@ -82,8 +92,7 @@ class ClickUI:
             else:
                 return pin
 
-    @staticmethod
-    def get_passphrase():
+    def get_passphrase(self):
         if os.getenv("PASSPHRASE") is not None:
             echo("Passphrase required. Using PASSPHRASE environment variable.")
             return os.getenv("PASSPHRASE")
