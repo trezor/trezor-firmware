@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-'''
+"""
 Use TREZOR as a hardware key for opening EncFS filesystem!
 
 Usage:
 
 encfs --standard --extpass=./encfs_aes_getpass.py ~/.crypt ~/crypt
-'''
+"""
 
 import os
 import sys
@@ -42,7 +42,7 @@ def choose_device(devices):
     sys.stderr.write("Available devices:\n")
     for d in devices:
         try:
-            client = TrezorClient(d, ui=ClickUI)
+            client = TrezorClient(d, ui=ClickUI())
         except IOError:
             sys.stderr.write("[-] <device is currently in use>\n")
             continue
@@ -66,26 +66,30 @@ def choose_device(devices):
 
 def main():
 
-    if 'encfs_root' not in os.environ:
-        sys.stderr.write('\nThis is not a standalone script and is not meant to be run independently.\n')
-        sys.stderr.write('\nUsage: encfs --standard --extpass=./encfs_aes_getpass.py ~/.crypt ~/crypt\n')
+    if "encfs_root" not in os.environ:
+        sys.stderr.write(
+            "\nThis is not a standalone script and is not meant to be run independently.\n"
+        )
+        sys.stderr.write(
+            "\nUsage: encfs --standard --extpass=./encfs_aes_getpass.py ~/.crypt ~/crypt\n"
+        )
         sys.exit(1)
 
     devices = wait_for_devices()
     transport = choose_device(devices)
     client = TrezorClient(transport, ui=ClickUI)
 
-    rootdir = os.environ['encfs_root']  # Read "man encfs" for more
-    passw_file = os.path.join(rootdir, 'password.dat')
+    rootdir = os.environ["encfs_root"]  # Read "man encfs" for more
+    passw_file = os.path.join(rootdir, "password.dat")
 
     if not os.path.exists(passw_file):
         # New encfs drive, let's generate password
 
-        sys.stderr.write('Please provide label for new drive: ')
+        sys.stderr.write("Please provide label for new drive: ")
         label = input()
 
-        sys.stderr.write('Computer asked TREZOR for new strong password.\n')
-        sys.stderr.write('Please confirm the action on your device ...\n')
+        sys.stderr.write("Computer asked TREZOR for new strong password.\n")
+        sys.stderr.write("Please confirm the action on your device ...\n")
 
         # 32 bytes, good for AES
         trezor_entropy = client.get_entropy(32)
@@ -98,23 +102,28 @@ def main():
         bip32_path = [10, 0]
         passw_encrypted = client.encrypt_keyvalue(bip32_path, label, passw, False, True)
 
-        data = {'label': label,
-                'bip32_path': bip32_path,
-                'password_encrypted_hex': passw_encrypted.hex()}
+        data = {
+            "label": label,
+            "bip32_path": bip32_path,
+            "password_encrypted_hex": passw_encrypted.hex(),
+        }
 
-        json.dump(data, open(passw_file, 'w'))
+        json.dump(data, open(passw_file, "w"))
 
     # Let's load password
-    data = json.load(open(passw_file, 'r'))
+    data = json.load(open(passw_file, "r"))
 
-    sys.stderr.write('Please confirm the action on your device ...\n')
-    passw = client.decrypt_keyvalue(data['bip32_path'],
-                                    data['label'],
-                                    bytes.fromhex(data['password_encrypted_hex']),
-                                    False, True)
+    sys.stderr.write("Please confirm the action on your device ...\n")
+    passw = client.decrypt_keyvalue(
+        data["bip32_path"],
+        data["label"],
+        bytes.fromhex(data["password_encrypted_hex"]),
+        False,
+        True,
+    )
 
     print(passw)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
