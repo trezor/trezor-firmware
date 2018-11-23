@@ -61,7 +61,9 @@ class HidHandle:
         if serial != self.serial:
             self.handle.close()
             self.handle = None
-            raise TransportException("Unexpected device on path %s" % self.path)
+            raise TransportException(
+                "Unexpected device {} on path {}".format(serial, self.path.decode())
+            )
 
         self.handle.set_nonblocking(True)
 
@@ -70,6 +72,8 @@ class HidHandle:
 
     def close(self) -> None:
         if self.handle is not None:
+            # reload serial, because device.wipe() can reset it
+            self.serial = self.handle.get_serial_number_string()
             self.handle.close()
         self.handle = None
 
