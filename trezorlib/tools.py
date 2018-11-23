@@ -22,9 +22,9 @@ import unicodedata
 from typing import List, NewType
 
 from .coins import slip44
-from .exceptions import TrezorException
+from .exceptions import TrezorFailure
 
-CallException = TrezorException
+CallException = TrezorFailure
 
 HARDENED_FLAG = 1 << 31
 
