@@ -441,22 +441,20 @@ def recovery_device(
 
     return device.recover(
         connect(),
-        int(words),
-        passphrase_protection,
-        pin_protection,
-        label,
-        "english",
-        input_callback,
-        rec_type,
-        dry_run,
+        word_count=int(words),
+        passphrase_protection=passphrase_protection,
+        pin_protection=pin_protection,
+        label=label,
+        language="english",
+        input_callback=input_callback,
+        type=rec_type,
+        dry_run=dry_run,
     )
 
 
 @cli.command(help="Perform device setup and generate new seed.")
-@click.option("-e", "--entropy", is_flag=True)
-@click.option(
-    "-t", "--strength", type=click.Choice(["128", "192", "256"]), default="256"
-)
+@click.option("-e", "--show-entropy", is_flag=True)
+@click.option("-t", "--strength", type=click.Choice(["128", "192", "256"]))
 @click.option("-r", "--passphrase-protection", is_flag=True)
 @click.option("-p", "--pin-protection", is_flag=True)
 @click.option("-l", "--label")
@@ -466,7 +464,7 @@ def recovery_device(
 @click.pass_obj
 def reset_device(
     connect,
-    entropy,
+    show_entropy,
     strength,
     passphrase_protection,
     pin_protection,
@@ -475,17 +473,19 @@ def reset_device(
     skip_backup,
     no_backup,
 ):
+    if strength:
+        strength = int(strength)
     return device.reset(
         connect(),
-        entropy,
-        int(strength),
-        passphrase_protection,
-        pin_protection,
-        label,
-        "english",
-        u2f_counter,
-        skip_backup,
-        no_backup,
+        display_random=show_entropy,
+        strength=strength,
+        passphrase_protection=passphrase_protection,
+        pin_protection=pin_protection,
+        label=label,
+        language="english",
+        u2f_counter=u2f_counter,
+        skip_backup=skip_backup,
+        no_backup=no_backup,
     )
 
 

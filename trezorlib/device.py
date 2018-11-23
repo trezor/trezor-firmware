@@ -102,15 +102,18 @@ def wipe(client):
 @expect(proto.Success, field="message")
 def recover(
     client,
-    word_count,
-    passphrase_protection,
-    pin_protection,
-    label,
-    language,
-    input_callback,
+    word_count=24,
+    passphrase_protection=False,
+    pin_protection=True,
+    label=None,
+    language="english",
+    input_callback=None,
     type=proto.RecoveryDeviceType.ScrambledWords,
     dry_run=False,
 ):
+    if client.features.model == "1" and input_callback is None:
+        raise RuntimeError("Input callback required for Trezor One")
+
     if word_count not in (12, 18, 24):
         raise ValueError("Invalid word count. Use 12/18/24")
 
@@ -121,7 +124,7 @@ def recover(
 
     res = client.call(
         proto.RecoveryDevice(
-            word_count=int(word_count),
+            word_count=word_count,
             passphrase_protection=bool(passphrase_protection),
             pin_protection=bool(pin_protection),
             label=label,
@@ -147,12 +150,12 @@ def recover(
 @session
 def reset(
     client,
-    display_random,
-    strength,
-    passphrase_protection,
-    pin_protection,
-    label,
-    language,
+    display_random=False,
+    strength=None,
+    passphrase_protection=False,
+    pin_protection=True,
+    label=None,
+    language="english",
     u2f_counter=0,
     skip_backup=False,
     no_backup=False,
@@ -162,9 +165,15 @@ def reset(
             "Device is initialized already. Call wipe_device() and try again."
         )
 
+    if strength is None:
+        if client.features.model == "1":
+            strength = 256
+        else:
+            strength = 128
+
     # Begin with device reset workflow
     msg = proto.ResetDevice(
-        display_random=display_random,
+        display_random=bool(display_random),
         strength=strength,
         passphrase_protection=bool(passphrase_protection),
         pin_protection=bool(pin_protection),
