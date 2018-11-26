@@ -121,6 +121,11 @@ void display_init(void)
     BUFFER = SDL_CreateRGBSurface(0, MAX_DISPLAY_RESX, MAX_DISPLAY_RESY, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
     TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, DISPLAY_RESX, DISPLAY_RESY);
     SDL_SetTextureBlendMode(TEXTURE, SDL_BLENDMODE_BLEND);
+#ifdef __APPLE__
+    // macOS Mojave SDL black screen workaround
+    SDL_PumpEvents();
+    SDL_SetWindowSize(win, WINDOW_WIDTH, WINDOW_HEIGHT);
+#endif
     // TODO: find better way how to embed/distribute background image
 #ifdef TREZOR_EMULATOR_RASPI
     BACKGROUND = IMG_LoadTexture(RENDERER, "../embed/unix/background_raspi.jpg");
