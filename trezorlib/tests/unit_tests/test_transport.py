@@ -14,16 +14,42 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import importlib
 from unittest import mock
 
 from trezorlib.transport import all_transports
+from trezorlib.transport.bridge import BridgeTransport
 
 
-def test_all_transports_without_hid():
-    # import all transports, assume this doesn't fail
-    transports_ref = all_transports()
-    # also shouldn't fail when bridge transport is missing
-    with mock.patch.dict("sys.modules", {"trezorlib.transport.bridge": None}):
-        transports = all_transports()
-        # there should now be less transports
-        assert len(transports_ref) > len(transports)
+def test_disabled_transport():
+    assert BridgeTransport.ENABLED
+    assert BridgeTransport in all_transports()
+
+    BridgeTransport.ENABLED = False
+    assert BridgeTransport not in all_transports()
+    # re-enable
+    BridgeTransport.ENABLED = True
+
+
+def test_import_all_transports():
+    from trezorlib.transport.bridge import BridgeTransport
+    from trezorlib.transport.hid import HidTransport
+    from trezorlib.transport.webusb import WebUsbTransport
+    from trezorlib.transport.udp import UdpTransport
+
+    assert BridgeTransport
+    assert HidTransport
+    assert WebUsbTransport
+    assert UdpTransport
+
+
+def test_transport_dependencies():
+    import trezorlib.transport.hid as hid_transport
+
+    with mock.patch.dict("sys.modules", {"hid": None}):
+        importlib.reload(hid_transport)
+        assert not hid_transport.HidTransport.ENABLED
+
+    with mock.patch.dict("sys.modules", {"hid": mock.Mock()}):
+        importlib.reload(hid_transport)
+        assert hid_transport.HidTransport.ENABLED
