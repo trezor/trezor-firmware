@@ -54,7 +54,7 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 
 ### Fixed:
 - `TrezorClient` can now detect when a HID device is removed and a different one is plugged in on the same path
-- trezorctl now works with Click 7.0 and considers "_" and "-" as same in command names [#314]
+- trezorctl now works with Click 7.0 and considers "`_`" and "`-`" as same in command names [#314]
 - bash completion fixed
 - Stellar: several bugs in the XDR parser were fixed
 
