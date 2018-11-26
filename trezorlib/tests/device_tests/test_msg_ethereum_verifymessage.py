@@ -47,5 +47,7 @@ class TestMsgEthereumVerifymessage(TrezorTest):
     def test_verify_invalid(self):
         self.setup_mnemonic_nopin_nopassphrase()
         signature = bytes.fromhex(self.VECTORS[0][1])
-        res = ethereum.verify_message(self.client, bytes.fromhex(self.ADDRESS), signature, "another message")
-        assert res == False
+        res = ethereum.verify_message(
+            self.client, bytes.fromhex(self.ADDRESS), signature, "another message"
+        )
+        assert res is False
