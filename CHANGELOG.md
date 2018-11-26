@@ -6,21 +6,56 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 _At the moment, the project does __not__ adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
 
-## [Unreleased]
-[Unreleased]: https://github.com/trezor/python-trezor/compare/v0.10.2...master
+## [0.11.0] - Unreleased
+[0.11.0]: https://github.com/trezor/python-trezor/compare/v0.10.2...master
+
+### Incompatible changes
+- removed support for Python 3.3 and 3.4
+- major refactor of `TrezorClient` and UI handling. Implementers must now provide a "UI" object instead of overriding callbacks [#307], [#314]
+- protobuf classes now use a `get_fields()` method instead of `FIELDS` field [#312]
+- all methods on `TrezorClient` class are now in separate modules and take a `TrezorClient` instance as argument [#276]
+- mixin classes are also removed, you are not supposed to extend `TrezorClient` anymore
+- `TrezorClientDebugLink` was moved to `debuglink` module
+- changed signature of `trezorlib.btc.sign_tx`
+- `@field` decorator was replaced by an argument to `@expect`
 
 ### Added
+- Ripple support [#286]
+- Zencash support [#287]
+- Cardano support [#300]
+- Ontology support [#301]
+- Tezos support [#302]
+- Capricoin support [#325]
+- limited Monero support (can only get address/watch key, monerowallet is required for signing)
+- support for input flow in tests makes it easier to control complex UI workflows [#314]
+- `protobuf.dict_to_proto` can create a protobuf instance from a plain dict
+- support for smarter methods in trezord 2.0.25 and up
+- support for seedless setup
+- trezorctl: firmware handling is greatly improved [#304], [#308]
+- trezorctl: Bitcoin-like signing flow is more user-friendly
 - `tx_api` now supports Blockbook backend servers
-- `TxApiInsight` can work purely on cached files, without specifying a URL
 
 ### Changed
-- protobuf classes are no longer part of the source distribution and must be compiled locally
+- better reporting for debuglink expected messages
+- replaced Ed25519 module with a cleaner, optimized version
+- further reorganization of transports makes them more robust when dependencies are missing
+- codebase now follows [Black](https://github.com/ambv/black) code style
+- in Qt modules, Qt5 is imported first [#315]
+- `TxApiInsight` is just `TxApi`
+- `device.reset` and `device.recover` now have reasonable defaults for all arguments
+- protobuf classes are no longer part of the source distribution and must be compiled locally [#284]
 - Stellar: addresses are always strings
 
 ### Removed
+- `set_tx_api` method on `TrezorClient` is replaced by an argument for `sign_tx`
+- caching functionality of `TxApi` was moved to a separate test-support class
+- Stellar: public key methods removed
 - `EncryptMessage` and `DecryptMessage` actions are gone
 
 ### Fixed:
+- `TrezorClient` can now detect when a HID device is removed and a different one is plugged in on the same path
+- trezorctl now works with Click 7.0 and considers "_" and "-" as same in command names [#314]
+- bash completion fixed
 - Stellar: several bugs in the XDR parser were fixed
 
 ## [0.10.2] - 2018-06-21
@@ -138,5 +173,19 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 [#268]: https://github.com/trezor/python-trezor/issues/268
 [#269]: https://github.com/trezor/python-trezor/issues/269
 [#274]: https://github.com/trezor/python-trezor/issues/274
+[#276]: https://github.com/trezor/python-trezor/issues/276
 [#277]: https://github.com/trezor/python-trezor/issues/277
 [#280]: https://github.com/trezor/python-trezor/issues/280
+[#284]: https://github.com/trezor/python-trezor/issues/284
+[#286]: https://github.com/trezor/python-trezor/issues/286
+[#287]: https://github.com/trezor/python-trezor/issues/287
+[#300]: https://github.com/trezor/python-trezor/issues/300
+[#301]: https://github.com/trezor/python-trezor/issues/301
+[#302]: https://github.com/trezor/python-trezor/issues/302
+[#304]: https://github.com/trezor/python-trezor/issues/304
+[#307]: https://github.com/trezor/python-trezor/issues/307
+[#308]: https://github.com/trezor/python-trezor/issues/308
+[#312]: https://github.com/trezor/python-trezor/issues/312
+[#314]: https://github.com/trezor/python-trezor/issues/314
+[#315]: https://github.com/trezor/python-trezor/issues/315
+[#325]: https://github.com/trezor/python-trezor/issues/325
