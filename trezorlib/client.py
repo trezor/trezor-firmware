@@ -195,6 +195,7 @@ class TrezorClient:
         return self.features.device_id
 
     @tools.expect(messages.Success, field="message")
+    @tools.session
     def clear_session(self):
         return self.call_raw(messages.ClearSession())
 
