@@ -1,7 +1,7 @@
 from micropython import const
 
 from trezor import io, ui
-from trezor.ui import LazyWidget, contains, display, rotate
+from trezor.ui import Widget, contains, display, rotate
 
 # button events
 BTN_CLICKED = const(1)
@@ -17,7 +17,7 @@ ICON = const(16)  # icon size in pixels
 BORDER = const(4)  # border size in pixels
 
 
-class Button(LazyWidget):
+class Button(Widget):
     def __init__(self, area: tuple, content: str, style: dict = ui.BTN_KEY):
         self.area = area
         self.content = content
@@ -29,14 +29,16 @@ class Button(LazyWidget):
     def enable(self):
         if self.state == BTN_DISABLED:
             self.state = BTN_INITIAL
-            self.render_next_frame = True
+            self.tainted = True
 
     def disable(self):
         if self.state != BTN_DISABLED:
             self.state = BTN_DISABLED
-            self.render_next_frame = True
+            self.tainted = True
 
     def render(self):
+        if not self.tainted:
+            return
         state = self.state
         if state == BTN_DISABLED:
             s = self.disabled_style
@@ -47,6 +49,7 @@ class Button(LazyWidget):
         ax, ay, aw, ah = self.area
         self.render_background(s, ax, ay, aw, ah)
         self.render_content(s, ax, ay, aw, ah)
+        self.tainted = False
 
     def render_background(self, s, ax, ay, aw, ah):
         radius = s["radius"]
@@ -89,20 +92,21 @@ class Button(LazyWidget):
         if event == io.TOUCH_START:
             if contains(self.area, pos):
                 self.state = BTN_ACTIVE
-                self.render_next_frame = True
+                self.tainted = True
 
         elif event == io.TOUCH_MOVE:
             if contains(self.area, pos):
                 if state == BTN_FOCUSED:
                     self.state = BTN_ACTIVE
-                    self.render_next_frame = True
+                    self.tainted = True
             else:
                 if state == BTN_ACTIVE:
                     self.state = BTN_FOCUSED
-                    self.render_next_frame = True
+                    self.tainted = True
 
         elif event == io.TOUCH_END:
-            self.state = BTN_INITIAL
-            self.render_next_frame = True
-            if state == BTN_ACTIVE and contains(self.area, pos):
-                return BTN_CLICKED
+            if state != BTN_INITIAL:
+                self.state = BTN_INITIAL
+                self.tainted = True
+                if state == BTN_ACTIVE and contains(self.area, pos):
+                    return BTN_CLICKED

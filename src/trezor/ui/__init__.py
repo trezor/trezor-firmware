@@ -159,6 +159,11 @@ def grid(
 
 
 class Widget:
+    tainted = True
+
+    def taint(self):
+        self.tainted = True
+
     def render(self):
         pass
 
@@ -170,24 +175,6 @@ class Widget:
         result = None
         while result is None:
             self.render()
-            event, *pos = yield touch
-            result = self.touch(event, pos)
-        return result
-
-
-class LazyWidget(Widget):
-    render_next_frame = True
-
-    def taint(self):
-        self.render_next_frame = True
-
-    def __iter__(self):
-        touch = loop.wait(io.TOUCH)
-        result = None
-        while result is None:
-            if self.render_next_frame:
-                self.render()
-                self.render_next_frame = False
             event, *pos = yield touch
             result = self.touch(event, pos)
         return result

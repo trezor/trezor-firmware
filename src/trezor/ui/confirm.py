@@ -79,8 +79,7 @@ class HoldToConfirmDialog(Widget):
             self.loader.start()
             return _STARTED
         if was_active and not is_active:
-            if isinstance(self.content, ui.LazyWidget):
-                self.content.taint()
+            self.content.taint()
             if self.loader.stop():
                 return CONFIRMED
             else:
