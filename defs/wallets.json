@@ -11,6 +11,9 @@
     "bitcoin:BTG": {
         "ElectrumG": "https://github.com/BTCGPU/electrum"
     },
+    "bitcoin:BTX": {
+        "Electrum-BTX": "https://github.com/LIMXTEC/electrum-btx"
+    },
     "bitcoin:DASH": {
         "Dash Electrum": "https://electrum.dash.org"
     },
