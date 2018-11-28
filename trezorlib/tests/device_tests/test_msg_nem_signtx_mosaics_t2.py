@@ -19,6 +19,7 @@ import time
 import pytest
 
 from trezorlib import messages as proto, nem
+from trezorlib.messages import ButtonRequestType as B
 from trezorlib.tools import parse_path
 
 from .common import TrezorTest
@@ -168,33 +169,38 @@ class TestMsgNEMSignTxMosaics(TrezorTest):
 
     def _nem_sign(self, num_of_swipes, test_suite):
         n = parse_path("m/44'/1'/0'/0'/0'")
-        msg = nem.create_sign_tx(test_suite)
-        assert msg.transaction is not None
-        msg.transaction.address_n = n
 
-        # Sending NEMSignTx message
-        self.client.transport.write(msg)
-        ret = self.client.transport.read()
+        def input_flow():
+            # Confirm Action
+            btn_code = yield
+            assert btn_code == B.ConfirmOutput
+            self.client.debug.press_yes()
 
-        # Confirm action
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        self.client.transport.write(proto.ButtonAck())
-        time.sleep(1)
-        for i in range(num_of_swipes):
-            self.client.debug.swipe_down()
+            # Swipe and confirm
             time.sleep(1)
-        self.client.debug.press_yes()
-        ret = self.client.transport.read()
+            for i in range(num_of_swipes):
+                self.client.debug.swipe_down()
+                time.sleep(1)
+            self.client.debug.press_yes()
 
-        # Confirm action
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        self.client.transport.write(proto.ButtonAck())
-        ret = self.client.transport.read()
+            # Confirm Action
+            btn_code = yield
+            assert btn_code == B.ConfirmOutput
+            self.client.debug.press_yes()
 
-        # Confirm tx
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        self.client.transport.write(proto.ButtonAck())
-        return self.client.transport.read()
+            # Sign Tx
+            btn_code = yield
+            assert btn_code == B.SignTx
+            self.client.debug.press_yes()
+
+        with self.client:
+            self.client.set_expected_responses(
+                [
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    proto.NEMSignedTx(),
+                ]
+            )
+            self.client.set_input_flow(input_flow)
+            return nem.sign_tx(self.client, n, test_suite)
