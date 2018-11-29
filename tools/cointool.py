@@ -111,7 +111,10 @@ def ascii_filter(s):
 def make_support_filter(support_info):
     def supported_on(device, coins):
         for coin in coins:
-            if support_info[coin.key].get(device):
+            supp = support_info[coin.key].get(device)
+            if not supp:
+                continue
+            if coin_info.is_token(coin) or supp != "soon":
                 yield coin
 
     return supported_on

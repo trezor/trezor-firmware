@@ -401,8 +401,7 @@ def release(
         ]
         for coin in soon_list:
             key = coin["key"]
-            print(f"Releasing {key} ({coin['name']}) marked 'soon'")
-            set_supported(device, key, version)
+            maybe_add(coin, "soon")
 
     # process missing (not listed) supportinfos
     if release_missing:
