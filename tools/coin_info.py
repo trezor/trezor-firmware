@@ -113,7 +113,14 @@ BTC_CHECKS = [
     check_key("github", str, regex=r"^https://github.com/.*[^/]$"),
     check_key("maintainer", str),
     check_key(
-        "curve_name", str, choice=["secp256k1", "secp256k1_decred", "secp256k1_groestl", "secp256k1_smart"]
+        "curve_name",
+        str,
+        choice=[
+            "secp256k1",
+            "secp256k1_decred",
+            "secp256k1_groestl",
+            "secp256k1_smart",
+        ],
     ),
     check_key("address_type", int),
     check_key("address_type_p2sh", int),
@@ -218,14 +225,7 @@ def _load_erc20_tokens():
     networks = _load_ethereum_networks()
     tokens = []
     for network in networks:
-        if network["name"].startswith("Ethereum Testnet "):
-            idx = len("Ethereum Testnet ")
-            chain = network["name"][idx : idx + 3]
-        else:
-            chain = network["shortcut"]
-        chain = chain.lower()
-        if not chain:
-            continue
+        chain = network["chain"]
 
         chain_path = os.path.join(DEFS_DIR, "ethereum", "tokens", "tokens", chain)
         for filename in glob.glob(os.path.join(chain_path, "*.json")):
@@ -362,46 +362,25 @@ def symbol_from_shortcut(shortcut):
 
 
 def mark_duplicate_shortcuts(coins):
-    """Finds coins with identical `shortcut`s.
-    Updates their keys and sets a `duplicate` field.
+    """Finds coins with identical symbols and sets their `duplicate` field.
 
-    The logic is a little crazy.
+    "Symbol" here means the first part of `shortcut` (separated by space),
+    so, e.g., "BTL (Battle)" and "BTL (Bitlle)" have the same symbol "BTL".
 
     The result of this function is a dictionary of _buckets_, each of which is
     indexed by the duplicated symbol, or `_override`. The `_override` bucket will
-    contain all coins that are set to `true` in `duplicity_overrides.json`. These
-    will _always_ be marked as duplicate (and later possibly deleted if they're ERC20).
+    contain all coins that are set to `true` in `duplicity_overrides.json`.
 
-    The rest will disambiguate based on the full shortcut.
-    (i.e., when `shortcut` is `BTL (Battle)`, the `symbol` is just `BTL`).
-    If _all tokens_ in the bucket have shortcuts with distinct suffixes, e.g.,
-    `CAT (BitClave)` and `CAT (Blockcat)`, we DO NOT mark them as duplicate.
-    These will then be supported and included in outputs.
-
-    If even one token in the bucket _does not_ have a distinct suffix, e.g.,
-    `MIT` and `MIT (Mychatcoin)`, the whole bucket is marked as duplicate.
-
-    If a token is set to `false` in `duplicity_overrides.json`, it will NOT
-    be marked as duplicate in this step, even if it is part of a "bad" bucket.
+    Each coin in every bucket will have its "duplicate" property set to True, unless
+    it's explicitly marked as `false` in `duplicity_overrides.json`.
     """
     dup_symbols = defaultdict(list)
-    dup_keys = defaultdict(list)
-
-    def dups_only(dups):
-        return {k: v for k, v in dups.items() if len(v) > 1}
 
     for coin in coins:
         symbol, _ = symbol_from_shortcut(coin["shortcut"].lower())
         dup_symbols[symbol].append(coin)
-        dup_keys[coin["key"]].append(coin)
 
-    dup_symbols = dups_only(dup_symbols)
-    dup_keys = dups_only(dup_keys)
-
-    # first deduplicate keys so that we can identify overrides
-    for values in dup_keys.values():
-        for i, coin in enumerate(values):
-            coin["key"] += ":" + str(i)
+    dup_symbols = {k: v for k, v in dup_symbols.items() if len(v) > 1}
 
     # load overrides and put them into their own bucket
     overrides = load_json("duplicity_overrides.json")
@@ -413,18 +392,6 @@ def mark_duplicate_shortcuts(coins):
 
     # mark duplicate symbols
     for values in dup_symbols.values():
-        splits = (symbol_from_shortcut(coin["shortcut"]) for coin in values)
-        suffixes = {suffix for _, suffix in splits}
-        # if 1. all suffixes are distinct and 2. none of them are empty
-        if len(suffixes) == len(values) and all(suffixes):
-            # Allow the whole bucket.
-            # For all intents and purposes these should be considered non-dups
-            # So we won't mark them as dups here
-            # But they still have their own bucket, and also overrides can
-            # explicitly mark them as duplicate one step before, in which case
-            # they *still* keep duplicate status (and possibly are deleted).
-            continue
-
         for coin in values:
             # allow overrides to skip this; if not listed in overrides, assume True
             is_dup = overrides.get(coin["key"], True)
@@ -434,6 +401,91 @@ def mark_duplicate_shortcuts(coins):
 
     dup_symbols["_override"] = override_bucket
     return dup_symbols
+
+
+def deduplicate_erc20(buckets, networks):
+    """Apply further processing to ERC20 duplicate buckets.
+
+    This function works on results of `mark_duplicate_shortcuts`.
+
+    Buckets that contain at least one non-token are ignored - symbol collisions
+    with non-tokens are always fatal.
+
+    Otherwise the following rules are applied:
+
+    1. If _all tokens_ in the bucket have shortcuts with distinct suffixes, e.g.,
+    `CAT (BitClave)` and `CAT (Blockcat)`, the bucket is cleared - all are considered
+    non-duplicate.
+
+    (If even one token in the bucket _does not_ have a distinct suffix, e.g.,
+    `MIT` and `MIT (Mychatcoin)`, this rule does not apply and ALL tokens in the bucket
+    are still considered duplicate.)
+
+    2. If there is only one "main" token in the bucket, the bucket is cleared.
+    That means that all other tokens must either be on testnets, or they must be marked
+    as deprecated, with a deprecation pointing to the "main" token.
+    """
+
+    testnet_networks = {n["chain"] for n in networks if "Testnet" in n["name"]}
+    overrides = buckets["_override"]
+
+    def clear_bucket(bucket):
+        # allow all coins, except those that are explicitly marked through overrides
+        for coin in bucket:
+            if coin not in overrides:
+                coin["duplicate"] = False
+
+    for bucket in buckets.values():
+        # Only check buckets that contain purely ERC20 tokens. Collision with
+        # a non-token is always forbidden.
+        if not all(is_token(c) for c in bucket):
+            continue
+
+        splits = (symbol_from_shortcut(coin["shortcut"]) for coin in bucket)
+        suffixes = {suffix for _, suffix in splits}
+        # if 1. all suffixes are distinct and 2. none of them are empty
+        if len(suffixes) == len(bucket) and all(suffixes):
+            clear_bucket(bucket)
+            continue
+
+        # protected categories:
+        testnets = [coin for coin in bucket if coin["chain"] in testnet_networks]
+        deprecated_by_same = [
+            coin
+            for coin in bucket
+            if "deprecation" in coin
+            and any(
+                other["address"] == coin["deprecation"]["new_address"]
+                for other in bucket
+            )
+        ]
+        remaining = [
+            coin
+            for coin in bucket
+            if coin not in testnets and coin not in deprecated_by_same
+        ]
+        if len(remaining) <= 1:
+            for coin in deprecated_by_same:
+                deprecated_symbol = "[deprecated] " + coin["symbol"]
+                coin["shortcut"] = coin["symbol"] = deprecated_symbol
+                coin["key"] += ":deprecated"
+            clear_bucket(bucket)
+
+
+def deduplicate_keys(all_coins):
+    dups = defaultdict(list)
+    for coin in all_coins:
+        dups[coin["key"]].append(coin)
+
+    for coins in dups.values():
+        if len(coins) <= 1:
+            continue
+        for i, coin in enumerate(coins):
+            if is_token(coin):
+                coin["key"] += ":" + coin["address"][2:6].lower()  # first 4 hex chars
+            else:
+                coin["key"] += ":{}".format(i)
+                coin["dup_key_nontoken"] = True
 
 
 def _btc_sort_key(coin):
@@ -485,6 +537,8 @@ def coin_info_with_duplicates():
     """
     all_coins = collect_coin_info()
     buckets = mark_duplicate_shortcuts(all_coins.as_list())
+    deduplicate_erc20(buckets, all_coins.eth)
+    deduplicate_keys(all_coins.as_list())
     return all_coins, buckets
 
 
