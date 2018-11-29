@@ -1,3 +1,5 @@
+from micropython import const
+
 from trezor import ui, wire
 from trezor.messages import ButtonRequestType, MessageType, PassphraseSourceType
 from trezor.messages.ButtonRequest import ButtonRequest
@@ -9,6 +11,8 @@ from trezor.ui.text import Text
 
 from apps.common import storage
 from apps.common.cache import get_state
+
+_MAX_PASSPHRASE_LEN = const(50)
 
 
 @ui.layout
@@ -67,6 +71,8 @@ async def request_passphrase(ctx):
     else:
         on_device = storage.get_passphrase_source() == PassphraseSourceType.DEVICE
     passphrase = await request_passphrase_ack(ctx, on_device)
+    if len(passphrase) > _MAX_PASSPHRASE_LEN:
+        raise wire.DataError("Maximum passphrase length is %d" % _MAX_PASSPHRASE_LEN)
     return passphrase
 
 
