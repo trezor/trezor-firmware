@@ -223,10 +223,18 @@ def update_bitcoin(coins, support_info):
 def update_erc20(coins, networks, support_info):
     # TODO skip disabled networks?
     network_support = {n["chain"]: support_info.get(n["key"]) for n in networks}
+    network_testnets = {n["chain"] for n in networks if "Testnet" in n["name"]}
     res = update_simple(coins, support_info, "erc20")
     for coin in coins:
         key = coin["key"]
         chain = coin["chain"]
+
+        hidden = False
+        if chain in network_testnets:
+            hidden = True
+        if "deprecation" in coin:
+            hidden = True
+
         if network_support.get(chain, {}).get("webwallet"):
             wallets = WALLETS_ETH_NATIVE
         else:
@@ -239,6 +247,8 @@ def update_erc20(coins, networks, support_info):
             links={},
             wallet=wallets,
         )
+        if hidden:
+            details["hidden"] = True
         if coin.get("website"):
             details["links"]["Homepage"] = coin["website"]
         if coin.get("social", {}).get("github"):
@@ -325,7 +335,7 @@ def check_missing_data(coins):
     hidden_coins = [k for k, coin in coins.items() if coin.get("hidden")]
     for key in hidden_coins:
         del coins[key]
-        LOG.debug(f"{k}: Coin is hidden")
+        LOG.debug(f"{key}: Coin is hidden")
 
 
 def apply_overrides(coins):
