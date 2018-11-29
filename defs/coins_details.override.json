@@ -1,6 +1,36 @@
 {
-    "nem:DIMTOK": {
-        "coinmarketcap_alias": "dimcoin"
+    "bitcoin:DNR": {
+        "coinmarketcap_alias": "denarius-dnr"
+    },
+    "bitcoin:MUE": {
+        "name": "MonetaryUnit"
+    },
+    "erc20:eth:BAT": {
+        "name": "Basic Attention Token"
+    },
+    "erc20:eth:BNB": {
+        "name": "Binance Coin"
+    },
+    "erc20:eth:GNT": {
+        "coinmarketcap_alias": "golem-network-tokens"
+    },
+    "erc20:eth:LINK (Chainlink)": {
+        "name": "Chainlink"
+    },
+    "erc20:eth:MKR": {
+        "coinmarketcap_alias": "maker"
+    },
+    "erc20:eth:NPXS": {
+        "coinmarketcap_alias": "pundi-x"
+    },
+    "erc20:eth:OMG": {
+        "name": "OmiseGO"
+    },
+    "erc20:eth:PAX": {
+        "coinmarketcap_alias": "paxos-standard-token"
+    },
+    "erc20:eth:USDC": {
+        "coinmarketcap_alias": "usd-coin"
     },
     "erc20:eth:VEN": {
         "links": {
@@ -10,5 +40,17 @@
     "erc20:eth:YUPIE": {
         "hidden": 1,
         "notes": "Replaced by YUP"
+    },
+    "erc20:eth:ZRX": {
+        "coinmarketcap_alias": "0x"
+    },
+    "eth:CLO": {
+        "coinmarketcap_alias": "callisto-network"
+    },
+    "eth:ESN": {
+        "coinmarketcap_alias": "ethersocial"
+    },
+    "nem:DIMTOK": {
+        "coinmarketcap_alias": "dimcoin"
     }
 }
