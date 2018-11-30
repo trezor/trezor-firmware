@@ -89,6 +89,13 @@ class MnemonicKeyboard(ui.Widget):
         self.pbutton = None  # pending key button
         self.pindex = 0  # index of current pending char in pbutton
 
+    def taint(self):
+        super().taint()
+        self.input.taint()
+        self.back.taint()
+        for btn in self.keys:
+            btn.taint()
+
     def render(self):
         if self.input.content:
             # content button and backspace

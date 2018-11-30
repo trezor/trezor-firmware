@@ -14,6 +14,11 @@ class EntrySelector(Widget):
         self.device = Button(ui.grid(8, n_y=4, n_x=4, cells_x=4), "Device")
         self.host = Button(ui.grid(12, n_y=4, n_x=4, cells_x=4), "Host")
 
+    def taint(self):
+        super().taint()
+        self.device.taint()
+        self.host.taint()
+
     def render(self):
         self.device.render()
         self.host.render()

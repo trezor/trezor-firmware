@@ -26,6 +26,12 @@ class WordSelector(Widget):
             ui.grid(8, n_y=4, n_x=3, cells_y=2), str(_W24), style=ui.BTN_KEY
         )
 
+    def taint(self):
+        super().taint()
+        self.w12.taint()
+        self.w18.taint()
+        self.w24.taint()
+
     def render(self):
         self.w12.render()
         self.w18.render()

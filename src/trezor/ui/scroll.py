@@ -75,6 +75,10 @@ class Scrollpage(ui.Widget):
         self.page = page
         self.page_count = page_count
 
+    def taint(self):
+        super().taint()
+        self.content.taint()
+
     def render(self):
         self.content.render()
         render_scrollbar(self.page, self.page_count)

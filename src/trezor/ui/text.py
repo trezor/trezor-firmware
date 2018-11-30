@@ -121,7 +121,6 @@ class Text(ui.Widget):
         self.max_lines = max_lines
         self.new_lines = new_lines
         self.content = []
-        self.tainted = True
 
     def normal(self, *content):
         self.content.append(ui.NORMAL)
@@ -143,10 +142,13 @@ class Text(ui.Widget):
         self.content.append(BR)
 
     def render(self):
-        if not self.tainted:
-            return
-        ui.header(
-            self.header_text, self.header_icon, ui.TITLE_GREY, ui.BG, self.icon_color
-        )
-        render_text(self.content, self.new_lines, self.max_lines)
-        self.tainted = False
+        if self.tainted:
+            ui.header(
+                self.header_text,
+                self.header_icon,
+                ui.TITLE_GREY,
+                ui.BG,
+                self.icon_color,
+            )
+            render_text(self.content, self.new_lines, self.max_lines)
+            self.tainted = False

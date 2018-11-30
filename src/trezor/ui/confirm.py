@@ -66,6 +66,11 @@ class HoldToConfirmDialog(Widget):
         self.button = Button(ui.grid(4, n_x=1), hold, style=button_style)
         self.loader = Loader(style=loader_style)
 
+    def taint(self):
+        super().taint()
+        self.button.taint()
+        self.content.taint()
+
     def render(self):
         self.button.render()
 

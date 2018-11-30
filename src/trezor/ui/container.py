@@ -5,6 +5,11 @@ class Container(Widget):
     def __init__(self, *children):
         self.children = children
 
+    def taint(self):
+        super().taint()
+        for child in self.children:
+            child.taint()
+
     def render(self):
         for child in self.children:
             child.render()

@@ -81,19 +81,15 @@ class Input(Button):
             display.bar(tx + width + 1, ty - 18, 2, 22, fg_color)
 
 
-class Prompt:
+class Prompt(ui.Widget):
     def __init__(self, text):
         self.text = text
-        self.dirty = True
-
-    def taint(self):
-        self.dirty = True
 
     def render(self):
-        if self.dirty:
+        if self.tainted:
             display.bar(0, 0, ui.WIDTH, 48, ui.BG)
             display.text_center(ui.WIDTH // 2, 32, self.text, ui.BOLD, ui.GREY, ui.BG)
-            self.dirty = False
+            self.tainted = False
 
 
 CANCELLED = const(0)
@@ -109,6 +105,15 @@ class PassphraseKeyboard(ui.Widget):
         self.keys = key_buttons(KEYBOARD_KEYS[self.page])
         self.pbutton = None  # pending key button
         self.pindex = 0  # index of current pending char in pbutton
+
+    def taint(self):
+        super().taint()
+        self.prompt.taint()
+        self.input.taint()
+        self.back.taint()
+        self.done.taint()
+        for btn in self.keys:
+            btn.taint()
 
     def render(self):
         # passphrase or prompt

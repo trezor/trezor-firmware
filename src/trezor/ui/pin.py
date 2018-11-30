@@ -34,6 +34,11 @@ class PinMatrix(ui.Widget):
         ]
         self.onchange = None
 
+    def taint(self):
+        super().taint()
+        for btn in self.pin_buttons:
+            btn.taint()
+
     def render(self):
         # pin matrix buttons
         for btn in self.pin_buttons:
