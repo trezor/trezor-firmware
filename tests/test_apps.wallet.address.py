@@ -152,6 +152,10 @@ class TestAddress(unittest.TestCase):
         for path, input_type in correct_derivation_paths:
             self.assertTrue(validate_full_path(path, coin, input_type))
 
+        self.assertTrue(validate_full_path([44 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0], coin, InputScriptType.SPENDADDRESS))
+        self.assertFalse(validate_full_path([44 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0], coin, InputScriptType.SPENDWITNESS))
+        self.assertTrue(validate_full_path([44 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0], coin, InputScriptType.SPENDWITNESS, validate_script_type=False))
+
     def test_paths_bch(self):
         incorrect_derivation_paths = [
             ([44 | HARDENED], InputScriptType.SPENDADDRESS),  # invalid length

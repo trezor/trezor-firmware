@@ -26,6 +26,7 @@ async def sign_message(ctx, msg):
         path=msg.address_n,
         coin=coin,
         script_type=msg.script_type,
+        validate_script_type=False,
     )
 
     node = await seed.derive_node(ctx, address_n, curve_name=coin.curve_name)

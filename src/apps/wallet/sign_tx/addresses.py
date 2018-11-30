@@ -193,7 +193,7 @@ def address_short(coin: CoinInfo, address: str) -> str:
 
 
 def validate_full_path(
-    path: list, coin: CoinInfo, script_type: InputScriptType
+    path: list, coin: CoinInfo, script_type: InputScriptType, validate_script_type=True
 ) -> bool:
     """
     Validates derivation path to fit Bitcoin-like coins. We mostly use
@@ -209,7 +209,9 @@ def validate_full_path(
 
     if not validate_purpose(path[0], coin):
         return False
-    if not validate_purpose_against_script_type(path[0], script_type):
+    if validate_script_type and not validate_purpose_against_script_type(
+        path[0], script_type
+    ):
         return False
 
     if path[1] != coin.slip44 | HARDENED:
