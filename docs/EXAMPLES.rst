@@ -12,7 +12,7 @@ Retrieve features, settings and coin types supported by your device:
 
 .. code::
 
-  trezorctl get_features
+  trezorctl get-features
 
 
 Bitcoin examples
@@ -22,25 +22,25 @@ Get first receiving address of first account for Bitcoin (Legacy / non-SegWit):
 
 .. code::
 
-  trezorctl get_address --coin Bitcoin --script-type address --address "m/44'/0'/0'/0/0"
+  trezorctl get-address --coin Bitcoin --script-type address --address "m/44'/0'/0'/0/0"
 
 Get first receiving address of first account for Bitcoin (SegWit-in-P2SH):
 
 .. code::
 
-  trezorctl get_address --coin Bitcoin --script-type p2shsegwit --address "m/49'/0'/0'/0/0"
+  trezorctl get-address --coin Bitcoin --script-type p2shsegwit --address "m/49'/0'/0'/0/0"
 
 Get first receiving address of first account for Bitcoin (Bech32 native SegWit P2WPKH):
 
 .. code::
 
-  trezorctl get_address --coin Bitcoin --script-type segwit --address "m/84'/0'/0'/0/0"
+  trezorctl get-address --coin Bitcoin --script-type segwit --address "m/84'/0'/0'/0/0"
 
 Get Legacy Bitcoin ``xpub`` (can be used to create a watch-only wallet):
 
 .. code::
 
-  trezorctl get_public_node --coin Bitcoin --address "m/44'/0'/0'"
+  trezorctl get-public-node --coin Bitcoin --address "m/44'/0'/0'"
 
 
 Transaction signing
@@ -63,7 +63,7 @@ After authenticating, open the "Send" tab, fill-out all details, then open the "
 
 .. code::
 
-  trezorctl sign_tx -c Bitcoin
+  trezorctl sign-tx -c Bitcoin
 
   Input (prevhash:previndex, empty to move on): a5ea715aa99ca30516f3af6f622dfe7399d883d49ad74b1fe33fdf73d201e64e:0
   Node path to sign with (e.g.- Bitcoin/0'/0/0): Bitcoin/0'/0/0
@@ -101,13 +101,13 @@ Get first receiving address of first account for Litecoin (SegWit-in-P2SH):
 
 .. code::
 
-  trezorctl get_address --coin Litecoin --script-type p2shsegwit --address "m/49'/2'/0'/0/0"
+  trezorctl get-address --coin Litecoin --script-type p2shsegwit --address "m/49'/2'/0'/0/0"
 
 Get first receiving address of first account for Litecoin (Bech32 native SegWit P2WPKH):
 
 .. code::
 
-  trezorctl get_address --coin Litecoin --script-type segwit --address "m/84'/2'/0'/0/0"
+  trezorctl get-address --coin Litecoin --script-type segwit --address "m/84'/2'/0'/0/0"
 
 Notes
 -----

@@ -23,47 +23,50 @@ Use the following command to see all options:
     --help                          Show this message and exit.
 
   Commands:
-    backup_device            Perform device seed backup.
-    change_pin               Change new PIN or remove existing.
-    clear_session            Clear session (remove cached PIN, passphrase,...
-    cosi_commit              Ask device to commit to CoSi signing.
-    cosi_sign                Ask device to sign using CoSi.
-    decrypt_keyvalue         Decrypt value by given key and path.
-    decrypt_message          Decrypt message.
-    disable_passphrase       Disable passphrase.
-    enable_passphrase        Enable passphrase.
-    encrypt_keyvalue         Encrypt value by given key and path.
-    encrypt_message          Encrypt message.
-    ethereum_get_address     Get Ethereum address in hex encoding.
-    ethereum_sign_message    Sign message with Ethereum address.
-    ethereum_sign_tx         Sign (and optionally publish) Ethereum...
-    ethereum_verify_message  Verify message signed with Ethereum address.
-    firmware_update          Upload new firmware to device (must be in...
-    get_address              Get address for specified path.
-    get_entropy              Get example entropy.
-    get_features             Retrieve device features and settings.
-    get_public_node          Get public node of given path.
-    list                     List connected TREZOR devices.
-    list_coins               List all supported coin types by the device.
-    load_device              Load custom configuration to the device.
-    nem_get_address          Get NEM address for specified path.
-    nem_sign_tx              Sign (and optionally broadcast) NEM...
-    ontology_get_address     Get Ontology address for specified path.
-    ontology_get_public_key  Get Ontology public key for specified path.
-    ontology_sign_transfer   Sign Ontology Transfer...
-    ontology_sign_withdraw   Sign Ontology Withdraw Ong...
-    ontology_sign_register   Sign Ontology ONT ID Registration...
-    ontology_sign_add_attr   Sign Ontology ONT ID Attributes adding...
-    ping                     Send ping message.
-    recovery_device          Start safe recovery workflow.
-    reset_device             Perform device setup and generate new seed.
-    self_test                Perform a self-test.
-    set_flags                Set device flags.
-    set_homescreen           Set new homescreen.
-    set_label                Set new device label.
-    set_u2f_counter          Set U2F counter.
-    sign_message             Sign message using address of given path.
-    sign_tx                  Sign transaction.
-    verify_message           Verify message.
-    version                  Show version of trezorctl/trezorlib.
-    wipe_device              Reset device to factory defaults and remove...
+    backup-device             Perform device seed backup.
+    change-pin                Change new PIN or remove existing.
+    clear-session             Clear session (remove cached PIN, passphrase,...
+    cosi-commit               Ask device to commit to CoSi signing.
+    cosi-sign                 Ask device to sign using CoSi.
+    decrypt-keyvalue          Decrypt value by given key and path.
+    decrypt-message           Decrypt message.
+    disable-passphrase        Disable passphrase.
+    enable-passphrase         Enable passphrase.
+    encrypt-keyvalue          Encrypt value by given key and path.
+    encrypt-message           Encrypt message.
+    ethereum-get-address      Get Ethereum address in hex encoding.
+    ethereum-sign-message     Sign message with Ethereum address.
+    ethereum-sign-tx          Sign (and optionally publish) Ethereum...
+    ethereum-verify-message   Verify message signed with Ethereum address.
+    firmware-update           Upload new firmware to device (must be in...
+    get-address               Get address for specified path.
+    get-entropy               Get example entropy.
+    get-features              Retrieve device features and settings.
+    get-public-node           Get public node of given path.
+    lisk-get-address          Get Lisk address for specified path.
+    lisk-get-public-key       Get Lisk public key for specified path.
+    lisk-sign-message         Sign message with Lisk address.
+    lisk-sign-tx              Sign Lisk transaction.
+    lisk-verify-message       Verify message signed with Lisk address.
+    list                      List connected TREZOR devices.
+    load-device               Load custom configuration to the device.
+    nem-get-address           Get NEM address for specified path.
+    nem-sign-tx               Sign (and optionally broadcast) NEM transaction.
+    ping                      Send ping message.
+    recovery-device           Start safe recovery workflow.
+    reset-device              Perform device setup and generate new seed.
+    self-test                 Perform a self-test.
+    set-auto-lock-delay       Set auto-lock delay (in seconds).
+    set-flags                 Set device flags.
+    set-homescreen            Set new homescreen.
+    set-label                 Set new device label.
+    set-passphrase-source     Set passphrase source.
+    set-u2f-counter           Set U2F counter.
+    sign-message              Sign message using address of given path.
+    sign-tx                   Sign transaction.
+    stellar-get-address       Get Stellar public address
+    stellar-get-public-key    Get Stellar public key
+    stellar-sign-transaction  Sign a base64-encoded transaction envelope
+    verify-message            Verify message.
+    version                   Show version of trezorctl/trezorlib.
+    wipe-device               Reset device to factory defaults and remove all...
