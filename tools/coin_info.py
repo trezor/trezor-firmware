@@ -228,7 +228,7 @@ def _load_erc20_tokens():
         chain = network["chain"]
 
         chain_path = os.path.join(DEFS_DIR, "ethereum", "tokens", "tokens", chain)
-        for filename in glob.glob(os.path.join(chain_path, "*.json")):
+        for filename in sorted(glob.glob(os.path.join(chain_path, "*.json"))):
             token = load_json(filename)
             token.update(
                 chain=chain,
@@ -514,6 +514,13 @@ def collect_coin_info():
     )
 
     for k, coins in all_coins.items():
+        _ensure_mandatory_values(coins)
+
+    return all_coins
+
+
+def sort_coin_infos(all_coins):
+    for k, coins in all_coins.items():
         if k == "bitcoin":
             coins.sort(key=_btc_sort_key)
         elif k == "nem":
@@ -525,10 +532,6 @@ def collect_coin_info():
         else:
             coins.sort(key=lambda c: c["key"].upper())
 
-        _ensure_mandatory_values(coins)
-
-    return all_coins
-
 
 def coin_info_with_duplicates():
     """Collects coin info, detects duplicates but does not remove them.
@@ -539,6 +542,8 @@ def coin_info_with_duplicates():
     buckets = mark_duplicate_shortcuts(all_coins.as_list())
     deduplicate_erc20(buckets, all_coins.eth)
     deduplicate_keys(all_coins.as_list())
+    sort_coin_infos(all_coins)
+
     return all_coins, buckets
 
 
