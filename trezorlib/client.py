@@ -303,3 +303,7 @@ class BaseClient:
 
     def __getattr__(self, key):
         return getattr(self.trezor_client, key)
+
+
+# further Electrum compatibility
+proto = None
