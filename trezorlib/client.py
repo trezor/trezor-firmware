@@ -18,6 +18,8 @@ import logging
 import sys
 import warnings
 
+from mnemonic import Mnemonic
+
 from . import exceptions, messages, tools
 
 if sys.version_info.major < 3:
@@ -26,6 +28,7 @@ if sys.version_info.major < 3:
 LOG = logging.getLogger(__name__)
 
 VENDORS = ("bitcointrezor.com", "trezor.io")
+MAX_PASSPHRASE_LENGTH = 50
 
 DEPRECATION_ERROR = """
 Incompatible Trezor library detected.
@@ -109,6 +112,7 @@ class TrezorClient:
             raise
 
         if not pin.isdigit():
+            self.call_raw(messages.Cancel())
             raise ValueError("Non-numeric PIN provided")
 
         resp = self.call_raw(messages.PinMatrixAck(pin=pin))
@@ -130,6 +134,11 @@ class TrezorClient:
             except exceptions.Cancelled:
                 self.call_raw(messages.Cancel())
                 raise
+
+        passphrase = Mnemonic.normalize_string(passphrase)
+        if len(passphrase) > MAX_PASSPHRASE_LENGTH:
+            self.call_raw(messages.Cancel())
+            raise ValueError("Passphrase too long")
 
         resp = self.call_raw(messages.PassphraseAck(passphrase=passphrase))
         if isinstance(resp, messages.PassphraseStateRequest):
