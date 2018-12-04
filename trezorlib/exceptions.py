@@ -45,3 +45,7 @@ class PinException(TrezorException):
 
 class Cancelled(TrezorException):
     pass
+
+
+class OutdatedFirmwareError(TrezorException):
+    pass

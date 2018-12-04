@@ -20,7 +20,7 @@ import warnings
 
 from mnemonic import Mnemonic
 
-from . import exceptions, messages, tools
+from . import MINIMUM_FIRMWARE_VERSION, exceptions, messages, tools
 
 if sys.version_info.major < 3:
     raise Exception("Trezorlib does not support Python 2 anymore.")
@@ -34,6 +34,12 @@ DEPRECATION_ERROR = """
 Incompatible Trezor library detected.
 
 (Original error: {})
+""".strip()
+
+OUTDATED_FIRMWARE_ERROR = """
+Your Trezor firmware is out of date. Update it with the following command:
+  trezorctl firmware-update
+Or visit https://wallet.trezor.io/
 """.strip()
 
 
@@ -156,6 +162,7 @@ class TrezorClient:
 
     @tools.session
     def call(self, msg):
+        self.check_firmware_version()
         resp = self.call_raw(msg)
         while True:
             if isinstance(resp, messages.PinMatrixRequest):
@@ -183,6 +190,25 @@ class TrezorClient:
             # A side-effect of this is a sanity check for broken protobuf definitions.
             # If the `vendor` field doesn't exist, you probably have a mismatched
             # checkout of trezor-common.
+        self.version = (
+            self.features.major_version,
+            self.features.minor_version,
+            self.features.patch_version,
+        )
+        self.check_firmware_version(warn_only=True)
+
+    def is_outdated(self):
+        if self.features.bootloader_mode:
+            return False
+        required_version = MINIMUM_FIRMWARE_VERSION[self.features.model]
+        return self.version < required_version
+
+    def check_firmware_version(self, warn_only=False):
+        if self.is_outdated():
+            if warn_only:
+                warnings.warn(OUTDATED_FIRMWARE_ERROR, stacklevel=2)
+            else:
+                raise exceptions.OutdatedFirmwareError(OUTDATED_FIRMWARE_ERROR)
 
     @tools.expect(messages.Success, field="message")
     def ping(
@@ -192,6 +218,13 @@ class TrezorClient:
         pin_protection=False,
         passphrase_protection=False,
     ):
+        # We would like ping to work on any valid TrezorClient instance, but
+        # due to the protection modes, we need to go through self.call, and that will
+        # raise an exception if the firmware is too old.
+        # So we short-circuit the simplest variant of ping with call_raw.
+        if not button_protection and not pin_protection and not passphrase_protection:
+            return self.call_raw(messages.Ping(message=msg))
+
         msg = messages.Ping(
             message=msg,
             button_protection=button_protection,
