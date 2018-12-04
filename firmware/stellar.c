@@ -204,7 +204,7 @@ bool stellar_confirmCreateAccountOp(const StellarCreateAccountOp *msg)
     // Validate new account and convert to bytes
     uint8_t new_account_bytes[STELLAR_KEY_SIZE];
     if (!stellar_getAddressBytes(msg->new_account, new_account_bytes)) {
-        stellar_signingAbort(_("Invalid destination account"));
+        stellar_signingAbort(_("Invalid new account address"));
         return false;
     }
 
