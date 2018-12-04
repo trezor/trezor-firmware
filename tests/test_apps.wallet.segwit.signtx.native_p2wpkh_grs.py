@@ -15,6 +15,7 @@ from trezor.messages import InputScriptType
 from trezor.messages import OutputScriptType
 
 from apps.common import coins
+from apps.common.seed import Keychain
 from apps.wallet.sign_tx import helpers, signing
 
 # https://groestlsight-test.groestlcoin.org/api/tx/9b5c4859a8a31e69788cb4402812bb28f14ad71cbd8c60b09903478bc56f79a3
@@ -110,9 +111,10 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
             )),
         ]
 
-        signer = signing.sign_tx(tx, root)
+        keychain = Keychain([[coin.curve_name]], [root])
+        signer = signing.sign_tx(tx, keychain)
         for request, response in chunks(messages, 2):
-            self.assertEqualEx(signer.send(request), response)
+            self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):
             signer.send(None)
 
@@ -203,19 +205,12 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
             )),
         ]
 
-        signer = signing.sign_tx(tx, root)
+        keychain = Keychain([[coin.curve_name]], [root])
+        signer = signing.sign_tx(tx, keychain)
         for request, response in chunks(messages, 2):
-            self.assertEqualEx(signer.send(request), response)
+            self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):
             signer.send(None)
-
-    def assertEqualEx(self, a, b):
-        # hack to avoid adding __eq__ to helpers.Ui* classes
-        if ((isinstance(a, helpers.UiConfirmOutput) and isinstance(b, helpers.UiConfirmOutput)) or
-                (isinstance(a, helpers.UiConfirmTotal) and isinstance(b, helpers.UiConfirmTotal))):
-            return self.assertEqual(a.__dict__, b.__dict__)
-        else:
-            return self.assertEqual(a, b)
 
 
 if __name__ == '__main__':

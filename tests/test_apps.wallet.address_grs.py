@@ -6,6 +6,12 @@ from apps.common import coins
 from trezor.crypto import bip32, bip39
 
 
+def node_derive(root, path):
+    node = root.clone()
+    node.derive_path(path)
+    return node
+
+
 class TestAddressGRS(unittest.TestCase):
     # pylint: disable=C0301
 

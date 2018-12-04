@@ -15,6 +15,7 @@ from trezor.messages import InputScriptType
 from trezor.messages import OutputScriptType
 
 from apps.common import coins
+from apps.common.seed import Keychain
 from apps.wallet.sign_tx import helpers, signing
 
 
@@ -110,9 +111,10 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             )),
         ]
 
-        signer = signing.sign_tx(tx, root)
+        keychain = Keychain([[coin.curve_name]], [root])
+        signer = signing.sign_tx(tx, keychain)
         for request, response in chunks(messages, 2):
-            self.assertEqualEx(signer.send(request), response)
+            self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):
             signer.send(None)
 
@@ -213,9 +215,10 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             )),
         ]
 
-        signer = signing.sign_tx(tx, root)
+        keychain = Keychain([[coin.curve_name]], [root])
+        signer = signing.sign_tx(tx, keychain)
         for request, response in chunks(messages, 2):
-            self.assertEqualEx(signer.send(request), response)
+            self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):
             signer.send(None)
 
@@ -322,25 +325,18 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             TxRequest(request_type=TXFINISHED, details=None)
         ]
 
-        signer = signing.sign_tx(tx, root)
+        keychain = Keychain([[coin.curve_name]], [root])
+        signer = signing.sign_tx(tx, keychain)
         i = 0
         messages_count = int(len(messages) / 2)
         for request, response in chunks(messages, 2):
             if i == messages_count - 1:  # last message should throw SigningError
                 self.assertRaises(signing.SigningError, signer.send, request)
             else:
-                self.assertEqualEx(signer.send(request), response)
+                self.assertEqual(signer.send(request), response)
             i += 1
         with self.assertRaises(StopIteration):
             signer.send(None)
-
-    def assertEqualEx(self, a, b):
-        # hack to avoid adding __eq__ to helpers.Ui* classes
-        if ((isinstance(a, helpers.UiConfirmOutput) and isinstance(b, helpers.UiConfirmOutput)) or
-                (isinstance(a, helpers.UiConfirmTotal) and isinstance(b, helpers.UiConfirmTotal))):
-            return self.assertEqual(a.__dict__, b.__dict__)
-        else:
-            return self.assertEqual(a, b)
 
 
 if __name__ == '__main__':

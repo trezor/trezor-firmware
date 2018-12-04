@@ -13,7 +13,7 @@ from trezor.messages.TxRequest import TxRequest
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 
-from apps.common import address_type, coininfo, coins
+from apps.common import address_type, coininfo, coins, seed
 from apps.wallet.sign_tx import (
     addresses,
     decred,
@@ -53,7 +53,7 @@ class SigningError(ValueError):
 # - check inputs, previous transactions, and outputs
 # - ask for confirmations
 # - check fee
-async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
+async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
     coin = coins.by_name(tx.coin_name)
 
     # h_first is used to make sure the inputs and outputs streamed in Phase 1
@@ -103,7 +103,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
         hash143.add_sequence(txi)
 
         if not addresses.validate_full_path(txi.address_n, coin, txi.script_type):
-            await helpers.confirm_foreign_address(txi.address_n, coin)
+            await helpers.confirm_foreign_address(txi.address_n)
 
         if txi.multisig:
             multifp.add(txi.multisig)
@@ -158,7 +158,7 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
         # STAGE_REQUEST_3_OUTPUT
         txo = await helpers.request_tx_output(tx_req, o)
         txo_bin.amount = txo.amount
-        txo_bin.script_pubkey = output_derive_script(txo, coin, root)
+        txo_bin.script_pubkey = output_derive_script(txo, coin, keychain)
         weight.add_output(txo_bin.script_pubkey)
 
         if change_out == 0 and output_is_change(txo, wallet_path, segwit_in, multifp):
@@ -207,14 +207,16 @@ async def check_tx_fee(tx: SignTx, root: bip32.HDNode):
     return h_first, hash143, segwit, total_in, wallet_path
 
 
-async def sign_tx(tx: SignTx, root: bip32.HDNode):
+async def sign_tx(tx: SignTx, keychain: seed.Keychain):
     tx = helpers.sanitize_sign_tx(tx)
 
     progress.init(tx.inputs_count, tx.outputs_count)
 
     # Phase 1
 
-    h_first, hash143, segwit, authorized_in, wallet_path = await check_tx_fee(tx, root)
+    h_first, hash143, segwit, authorized_in, wallet_path = await check_tx_fee(
+        tx, keychain
+    )
 
     # Phase 2
     # - sign inputs
@@ -247,7 +249,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                 )
             input_check_wallet_path(txi_sign, wallet_path)
 
-            key_sign = node_derive(root, txi_sign.address_n)
+            key_sign = keychain.derive(txi_sign.address_n, coin.curve_name)
             key_sign_pub = key_sign.public_key()
             txi_sign.script_sig = input_derive_script(coin, txi_sign, key_sign_pub)
 
@@ -275,7 +277,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                 )
             authorized_in -= txi_sign.amount
 
-            key_sign = node_derive(root, txi_sign.address_n)
+            key_sign = keychain.derive(txi_sign.address_n, coin.curve_name)
             key_sign_pub = key_sign.public_key()
             hash143_hash = hash143.preimage_hash(
                 coin,
@@ -312,7 +314,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
 
             input_check_wallet_path(txi_sign, wallet_path)
 
-            key_sign = node_derive(root, txi_sign.address_n)
+            key_sign = keychain.derive(txi_sign.address_n, coin.curve_name)
             key_sign_pub = key_sign.public_key()
 
             if txi_sign.script_type == InputScriptType.SPENDMULTISIG:
@@ -399,7 +401,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                 writers.write_tx_input_check(h_second, txi)
                 if i == i_sign:
                     txi_sign = txi
-                    key_sign = node_derive(root, txi.address_n)
+                    key_sign = keychain.derive(txi.address_n, coin.curve_name)
                     key_sign_pub = key_sign.public_key()
                     # for the signing process the script_sig is equal
                     # to the previous tx's scriptPubKey (P2PKH) or a redeem script (P2SH)
@@ -431,7 +433,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                 # STAGE_REQUEST_4_OUTPUT
                 txo = await helpers.request_tx_output(tx_req, o)
                 txo_bin.amount = txo.amount
-                txo_bin.script_pubkey = output_derive_script(txo, coin, root)
+                txo_bin.script_pubkey = output_derive_script(txo, coin, keychain)
                 writers.write_tx_output(h_second, txo_bin)
                 writers.write_tx_output(h_sign, txo_bin)
 
@@ -481,7 +483,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
         # STAGE_REQUEST_5_OUTPUT
         txo = await helpers.request_tx_output(tx_req, o)
         txo_bin.amount = txo.amount
-        txo_bin.script_pubkey = output_derive_script(txo, coin, root)
+        txo_bin.script_pubkey = output_derive_script(txo, coin, keychain)
 
         # serialize output
         w_txo_bin = writers.empty_bytearray(5 + 8 + 5 + len(txo_bin.script_pubkey) + 4)
@@ -510,7 +512,7 @@ async def sign_tx(tx: SignTx, root: bip32.HDNode):
                 )
             authorized_in -= txi.amount
 
-            key_sign = node_derive(root, txi.address_n)
+            key_sign = keychain.derive(txi.address_n, coin.curve_name)
             key_sign_pub = key_sign.public_key()
             hash143_hash = hash143.preimage_hash(
                 coin,
@@ -675,7 +677,7 @@ def get_tx_header(coin: coininfo.CoinInfo, tx: SignTx, segwit: bool = False):
 
 
 def output_derive_script(
-    o: TxOutputType, coin: coininfo.CoinInfo, root: bip32.HDNode
+    o: TxOutputType, coin: coininfo.CoinInfo, keychain: seed.Keychain
 ) -> bytes:
 
     if o.script_type == OutputScriptType.PAYTOOPRETURN:
@@ -690,7 +692,7 @@ def output_derive_script(
         # change output
         if o.address:
             raise SigningError(FailureType.DataError, "Address in change output")
-        o.address = get_address_for_change(o, coin, root)
+        o.address = get_address_for_change(o, coin, keychain)
     else:
         if not o.address:
             raise SigningError(FailureType.DataError, "Missing address")
@@ -739,7 +741,7 @@ def output_derive_script(
 
 
 def get_address_for_change(
-    o: TxOutputType, coin: coininfo.CoinInfo, root: bip32.HDNode
+    o: TxOutputType, coin: coininfo.CoinInfo, keychain: seed.Keychain
 ):
     if o.script_type == OutputScriptType.PAYTOADDRESS:
         input_script_type = InputScriptType.SPENDADDRESS
@@ -751,9 +753,8 @@ def get_address_for_change(
         input_script_type = InputScriptType.SPENDP2SHWITNESS
     else:
         raise SigningError(FailureType.DataError, "Invalid script type")
-    return addresses.get_address(
-        input_script_type, coin, node_derive(root, o.address_n), o.multisig
-    )
+    node = keychain.derive(o.address_n, coin.curve_name)
+    return addresses.get_address(input_script_type, coin, node, o.multisig)
 
 
 def output_is_change(
@@ -855,12 +856,6 @@ def input_check_wallet_path(txi: TxInputType, wallet_path: list) -> list:
         raise SigningError(
             FailureType.ProcessError, "Transaction has changed during signing"
         )
-
-
-def node_derive(root: bip32.HDNode, address_n: list) -> bip32.HDNode:
-    node = root.clone()
-    node.derive_path(address_n)
-    return node
 
 
 def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:

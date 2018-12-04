@@ -15,6 +15,7 @@ from trezor.messages import InputScriptType
 from trezor.messages import OutputScriptType
 
 from apps.common import coins
+from apps.common.seed import Keychain
 from apps.wallet.sign_tx import helpers, signing
 
 
@@ -61,7 +62,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
-            signing.UiConfirmForeignAddress(address_n=inp1.address_n),
+            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
@@ -113,9 +114,10 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             )),
         ]
 
-        signer = signing.sign_tx(tx, root)
+        keychain = Keychain([[coin.curve_name]], [root])
+        signer = signing.sign_tx(tx, keychain)
         for request, response in chunks(messages, 2):
-            self.assertEqualEx(signer.send(request), response)
+            self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):
             signer.send(None)
 
@@ -159,7 +161,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
-            signing.UiConfirmForeignAddress(address_n=inp1.address_n),
+            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
@@ -209,20 +211,12 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             )),
         ]
 
-        signer = signing.sign_tx(tx, root)
+        keychain = Keychain([[coin.curve_name]], [root])
+        signer = signing.sign_tx(tx, keychain)
         for request, response in chunks(messages, 2):
-            self.assertEqualEx(signer.send(request), response)
+            self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):
             signer.send(None)
-
-    def assertEqualEx(self, a, b):
-        # hack to avoid adding __eq__ to helpers.Ui* classes
-        if ((isinstance(a, helpers.UiConfirmOutput) and isinstance(b, helpers.UiConfirmOutput)) or
-                (isinstance(a, helpers.UiConfirmTotal) and isinstance(b, helpers.UiConfirmTotal)) or
-                (isinstance(a, helpers.UiConfirmForeignAddress) and isinstance(b, helpers.UiConfirmForeignAddress))):
-            return self.assertEqual(a.__dict__, b.__dict__)
-        else:
-            return self.assertEqual(a, b)
 
 
 if __name__ == '__main__':

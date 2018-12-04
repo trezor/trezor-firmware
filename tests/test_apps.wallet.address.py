@@ -10,6 +10,12 @@ from apps.wallet.sign_tx.signing import *
 from apps.wallet.sign_tx.writers import *
 
 
+def node_derive(root, path):
+    node = root.clone()
+    node.derive_path(path)
+    return node
+
+
 class TestAddress(unittest.TestCase):
     # pylint: disable=C0301
 

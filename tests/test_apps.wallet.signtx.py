@@ -15,6 +15,7 @@ from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 from trezor.messages import OutputScriptType
 
 from apps.common import coins
+from apps.common.seed import Keychain
 from apps.wallet.sign_tx import helpers, signing
 
 
@@ -61,7 +62,7 @@ class TestSignTx(unittest.TestCase):
 
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
             TxAck(tx=TransactionType(inputs=[inp1])),
-            signing.UiConfirmForeignAddress(address_n=inp1.address_n),
+            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
             True,
             TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=None),
             TxAck(tx=ptx1),
@@ -98,23 +99,15 @@ class TestSignTx(unittest.TestCase):
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
         root = bip32.from_seed(seed, 'secp256k1')
 
-        signer = signing.sign_tx(tx, root)
+        keychain = Keychain([[coin_bitcoin.curve_name]], [root])
+        signer = signing.sign_tx(tx, keychain)
 
         for request, response in chunks(messages, 2):
             res = signer.send(request)
-            self.assertEqualEx(res, response)
+            self.assertEqual(res, response)
 
         with self.assertRaises(StopIteration):
             signer.send(None)
-
-    def assertEqualEx(self, a, b):
-        # hack to avoid adding __eq__ to helpers.Ui* classes
-        if ((isinstance(a, helpers.UiConfirmOutput) and isinstance(b, helpers.UiConfirmOutput)) or
-                (isinstance(a, helpers.UiConfirmTotal) and isinstance(b, helpers.UiConfirmTotal)) or
-                (isinstance(a, helpers.UiConfirmForeignAddress) and isinstance(b, helpers.UiConfirmForeignAddress))):
-            return self.assertEqual(a.__dict__, b.__dict__)
-        else:
-            return self.assertEqual(a, b)
 
 
 if __name__ == '__main__':
