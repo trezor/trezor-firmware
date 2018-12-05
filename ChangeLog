@@ -1,6 +1,13 @@
-Version 2.0.10 [unreleased]
+Version 2.0.11 [unreleased]
 * stable release, optional update
+
+Version 2.0.10
+* stable release, optional update
+* Fix Monero payment ID computation
+* Fix issue with touch screen and flickering
 * Add support for OMNI layer: OMNI/MAID/USDT
+* Add support for new coins: BTX, CPC, GAME, RVN
+* Add support for new Ethereum tokens
 
 Version 2.0.9
 * stable release, optional update
