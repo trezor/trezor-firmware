@@ -82,14 +82,14 @@ NETWORKS = [
     NetworkInfo(
         chain_id=30,
         slip44=137,
-        shortcut="RSK",
+        shortcut="RBTC",
         name="RSK",
         rskip60=True,
     ),
     NetworkInfo(
         chain_id=31,
         slip44=37310,
-        shortcut="tRSK",
+        shortcut="tRBTC",
         name="RSK Testnet",
         rskip60=True,
     ),
