@@ -20,6 +20,9 @@
     "bitcoin:FJC": {
         "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
     },
+    "bitcoin:FTC": {
+        "Electrum-FTC": "https://github.com/Feathercoin-Foundation/electrum-ftc"
+    },
     "bitcoin:GAME": {
         "Electrum-GAME": "https://electrum-game.org"
     },
