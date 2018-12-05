@@ -42,7 +42,7 @@ DEBUG_ENDPOINT = 2
 
 
 class WebUsbHandle:
-    def __init__(self, device: usb1.USBDevice, debug: bool = False) -> None:
+    def __init__(self, device: "usb1.USBDevice", debug: bool = False) -> None:
         self.device = device
         self.interface = DEBUG_INTERFACE if debug else INTERFACE
         self.endpoint = DEBUG_ENDPOINT if debug else ENDPOINT
@@ -145,7 +145,7 @@ class WebUsbTransport(ProtocolBasedTransport):
             return WebUsbTransport(self.device, debug=True)
 
 
-def is_vendor_class(dev: usb1.USBDevice) -> bool:
+def is_vendor_class(dev: "usb1.USBDevice") -> bool:
     configurationId = 0
     altSettingId = 0
     return (
@@ -154,7 +154,7 @@ def is_vendor_class(dev: usb1.USBDevice) -> bool:
     )
 
 
-def dev_to_str(dev: usb1.USBDevice) -> str:
+def dev_to_str(dev: "usb1.USBDevice") -> str:
     return ":".join(
         str(x) for x in ["%03i" % (dev.getBusNumber(),)] + dev.getPortNumberList()
     )
