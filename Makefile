@@ -221,7 +221,7 @@ combine: ## combine boardloader + bootloader + prodtest into one combined image
 		$(BOARDLOADER_START) $(BOARDLOADER_BUILD_DIR)/boardloader.bin \
 		$(BOOTLOADER_START) $(BOOTLOADER_BUILD_DIR)/bootloader.bin \
 		$(PRODTEST_START) $(PRODTEST_BUILD_DIR)/prodtest.bin \
-		> $(PRODTEST_BUILD_DIR)/combined.bin \
+		> $(PRODTEST_BUILD_DIR)/combined.bin
 
 upload: ## upload firmware using trezorctl
 	trezorctl firmware_update -f $(FIRMWARE_BUILD_DIR)/firmware.bin
