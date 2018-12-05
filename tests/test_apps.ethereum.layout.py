@@ -45,7 +45,7 @@ class TestEthereumLayout(unittest.TestCase):
         text = format_ethereum_amount(1000000000000000000, None, 61)
         self.assertEqual(text, '1 ETC')
         text = format_ethereum_amount(1000000000000000000, None, 31)
-        self.assertEqual(text, '1 tRSK')
+        self.assertEqual(text, '1 tRBTC')
 
         text = format_ethereum_amount(1000000000000000001, None, 1)
         self.assertEqual(text, '1.000000000000000001 ETH')
@@ -54,7 +54,7 @@ class TestEthereumLayout(unittest.TestCase):
         text = format_ethereum_amount(10000000000000000001, None, 61)
         self.assertEqual(text, '10.000000000000000001 ETC')
         text = format_ethereum_amount(1000000000000000001, None, 31)
-        self.assertEqual(text, '1.000000000000000001 tRSK')
+        self.assertEqual(text, '1.000000000000000001 tRBTC')
 
         # unknown chain
         text = format_ethereum_amount(1, None, 9999)
