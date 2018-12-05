@@ -223,7 +223,12 @@ class TrezorClient:
         # raise an exception if the firmware is too old.
         # So we short-circuit the simplest variant of ping with call_raw.
         if not button_protection and not pin_protection and not passphrase_protection:
-            return self.call_raw(messages.Ping(message=msg))
+            # XXX this should be: `with self:`
+            try:
+                self.open()
+                return self.call_raw(messages.Ping(message=msg))
+            finally:
+                self.close()
 
         msg = messages.Ping(
             message=msg,
