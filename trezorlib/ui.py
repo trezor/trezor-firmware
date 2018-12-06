@@ -99,8 +99,18 @@ class ClickUI:
 
         while True:
             try:
-                passphrase = prompt("Passphrase required", hide_input=True)
-                second = prompt("Confirm your passphrase", hide_input=True)
+                passphrase = prompt(
+                    "Passphrase required",
+                    hide_input=True,
+                    default="",
+                    show_default=False,
+                )
+                second = prompt(
+                    "Confirm your passphrase",
+                    hide_input=True,
+                    default="",
+                    show_default=False,
+                )
                 if passphrase == second:
                     return passphrase
                 else:
