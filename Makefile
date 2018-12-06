@@ -13,6 +13,10 @@ build:
 install:
 	$(SETUP) install
 
+dist: clean
+	$(SETUP) sdist
+	$(SETUP) bdist_wheel
+
 clean:
 	git clean -dfx -e $(EXCLUDES)
 
