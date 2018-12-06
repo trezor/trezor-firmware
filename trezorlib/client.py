@@ -200,7 +200,8 @@ class TrezorClient:
     def is_outdated(self):
         if self.features.bootloader_mode:
             return False
-        required_version = MINIMUM_FIRMWARE_VERSION[self.features.model]
+        model = self.features.model or "1"
+        required_version = MINIMUM_FIRMWARE_VERSION[model]
         return self.version < required_version
 
     def check_firmware_version(self, warn_only=False):
