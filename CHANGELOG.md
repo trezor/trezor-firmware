@@ -177,6 +177,7 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 [#276]: https://github.com/trezor/python-trezor/issues/276
 [#277]: https://github.com/trezor/python-trezor/issues/277
 [#280]: https://github.com/trezor/python-trezor/issues/280
+[#283]: https://github.com/trezor/python-trezor/issues/283
 [#284]: https://github.com/trezor/python-trezor/issues/284
 [#286]: https://github.com/trezor/python-trezor/issues/286
 [#287]: https://github.com/trezor/python-trezor/issues/287
