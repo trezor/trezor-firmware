@@ -6,8 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 _At the moment, the project does __not__ adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
 
-## [0.11.0] - Unreleased
-[0.11.0]: https://github.com/trezor/python-trezor/compare/v0.10.2...master
+## [0.11.0] - 2018-12-06
+[0.11.0]: https://github.com/trezor/python-trezor/compare/v0.10.2...v0.11.0
 
 ### Incompatible changes
 - removed support for Python 3.3 and 3.4
@@ -20,6 +20,7 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 - `@field` decorator was replaced by an argument to `@expect`
 
 ### Added
+- trezorlib now has a hardcoded check preventing use of outdated firmware versions [#283]
 - Ripple support [#286]
 - Zencash support [#287]
 - Cardano support [#300]
