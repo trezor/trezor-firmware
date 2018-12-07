@@ -5,10 +5,10 @@ from apps.common.layout import address_n_to_str, show_address, show_qr
 from apps.monero import misc
 
 
-async def get_address(ctx, msg):
+async def get_address(ctx, msg, keychain):
     await paths.validate_path(ctx, misc.validate_full_path, path=msg.address_n)
 
-    creds = await misc.get_creds(ctx, msg.address_n, msg.network_type)
+    creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
 
     if msg.show_display:
         desc = address_n_to_str(msg.address_n)

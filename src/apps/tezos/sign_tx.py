@@ -4,14 +4,12 @@ from trezor.crypto.curve import ed25519
 from trezor.messages import TezosContractType
 from trezor.messages.TezosSignedTx import TezosSignedTx
 
-from apps.common import paths, seed
+from apps.common import paths
 from apps.common.writers import write_bytes, write_uint8
 from apps.tezos import helpers, layout
 
 
-async def sign_tx(ctx, msg):
-    keychain = await seed.get_keychain(ctx)
-
+async def sign_tx(ctx, msg, keychain):
     await paths.validate_path(ctx, helpers.validate_full_path, path=msg.address_n)
 
     node = keychain.derive(msg.address_n, helpers.TEZOS_CURVE)

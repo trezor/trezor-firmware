@@ -7,15 +7,16 @@ from trezor.messages import LiskTransactionType
 from trezor.messages.LiskSignedTx import LiskSignedTx
 from trezor.utils import HashWriter
 
-from . import layout
-from .helpers import LISK_CURVE, get_address_from_public_key, validate_full_path
+from apps.common import paths
+from apps.lisk import layout
+from apps.lisk.helpers import (
+    LISK_CURVE,
+    get_address_from_public_key,
+    validate_full_path,
+)
 
-from apps.common import paths, seed
 
-
-async def sign_tx(ctx, msg):
-    keychain = await seed.get_keychain(ctx)
-
+async def sign_tx(ctx, msg, keychain):
     await paths.validate_path(ctx, validate_full_path, path=msg.address_n)
 
     pubkey, seckey = _get_keys(keychain, msg)

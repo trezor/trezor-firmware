@@ -16,14 +16,18 @@ if False:
 
 
 async def init_transaction(
-    state: State, address_n: list, network_type: int, tsx_data: MoneroTransactionData
+    state: State,
+    address_n: list,
+    network_type: int,
+    tsx_data: MoneroTransactionData,
+    keychain,
 ):
     from apps.monero.signing import offloading_keys
     from apps.common import paths
 
     await paths.validate_path(state.ctx, misc.validate_full_path, path=address_n)
 
-    state.creds = await misc.get_creds(state.ctx, address_n, network_type)
+    state.creds = misc.get_creds(keychain, address_n, network_type)
     state.fee = state.fee if state.fee > 0 else 0
     state.tx_priv = crypto.random_scalar()
     state.tx_pub = crypto.scalarmult_base(state.tx_priv)

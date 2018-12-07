@@ -1,15 +1,12 @@
 from trezor.messages.RippleAddress import RippleAddress
 from trezor.messages.RippleGetAddress import RippleGetAddress
 
-from . import helpers
-
-from apps.common import paths, seed
+from apps.common import paths
 from apps.common.layout import address_n_to_str, show_address, show_qr
+from apps.ripple import helpers
 
 
-async def get_address(ctx, msg: RippleGetAddress):
-    keychain = await seed.get_keychain(ctx)
-
+async def get_address(ctx, msg: RippleGetAddress, keychain):
     await paths.validate_path(ctx, helpers.validate_full_path, path=msg.address_n)
 
     node = keychain.derive(msg.address_n)

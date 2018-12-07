@@ -4,16 +4,14 @@ from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPEN
 from trezor.messages.MessageSignature import MessageSignature
 from trezor.ui.text import Text
 
-from apps.common import coins, seed
+from apps.common import coins
 from apps.common.confirm import require_confirm
 from apps.common.paths import validate_path
 from apps.common.signverify import message_digest, split_message
 from apps.wallet.sign_tx.addresses import get_address, validate_full_path
 
 
-async def sign_message(ctx, msg):
-    keychain = await seed.get_keychain(ctx)
-
+async def sign_message(ctx, msg, keychain):
     message = msg.message
     address_n = msg.address_n
     coin_name = msg.coin_name or "Bitcoin"

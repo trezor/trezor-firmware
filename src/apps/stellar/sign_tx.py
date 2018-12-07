@@ -12,9 +12,7 @@ from apps.stellar import consts, helpers, layout, writers
 from apps.stellar.operations import process_operation
 
 
-async def sign_tx(ctx, msg: StellarSignTx):
-    keychain = await seed.get_keychain(ctx)
-
+async def sign_tx(ctx, msg: StellarSignTx, keychain):
     await paths.validate_path(ctx, helpers.validate_full_path, path=msg.address_n)
 
     node = keychain.derive(msg.address_n, consts.STELLAR_CURVE)

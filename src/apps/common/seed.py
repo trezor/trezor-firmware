@@ -34,7 +34,7 @@ class Keychain:
         return node
 
 
-async def get_keychain(ctx: wire.Context, paths: list = None) -> Keychain:
+async def get_keychain(ctx: wire.Context, paths: list) -> Keychain:
     if not storage.is_initialized():
         raise wire.ProcessError("Device is not initialized")
 
@@ -47,19 +47,6 @@ async def get_keychain(ctx: wire.Context, paths: list = None) -> Keychain:
             cache.set_passphrase(passphrase)
         seed = bip39.seed(storage.get_mnemonic(), passphrase)
         cache.set_seed(seed)
-
-    if paths is None:
-        # allow the whole keyspace by default
-        paths = [
-            ["curve25519"],
-            ["ed25519"],
-            ["ed25519-keccak"],
-            ["nist256p1"],
-            ["secp256k1"],
-            ["secp256k1-decred"],
-            ["secp256k1-groestl"],
-            ["secp256k1-smart"],
-        ]
 
     # derive namespaced root nodes
     roots = []

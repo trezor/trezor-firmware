@@ -1,15 +1,13 @@
 from trezor.messages import InputScriptType
 from trezor.messages.Address import Address
 
-from apps.common import coins, seed
+from apps.common import coins
 from apps.common.layout import address_n_to_str, show_address, show_qr
 from apps.common.paths import validate_path
 from apps.wallet.sign_tx import addresses
 
 
-async def get_address(ctx, msg):
-    keychain = await seed.get_keychain(ctx)
-
+async def get_address(ctx, msg, keychain):
     coin_name = msg.coin_name or "Bitcoin"
     coin = coins.by_name(coin_name)
 

@@ -6,7 +6,7 @@ from trezor.utils import HashWriter
 
 from .helpers import LISK_CURVE, validate_full_path
 
-from apps.common import paths, seed
+from apps.common import paths
 from apps.common.confirm import require_confirm
 from apps.common.signverify import split_message
 from apps.wallet.sign_tx.writers import write_varint
@@ -22,9 +22,7 @@ def message_digest(message):
     return sha256(h.get_digest()).digest()
 
 
-async def sign_message(ctx, msg):
-    keychain = await seed.get_keychain(ctx)
-
+async def sign_message(ctx, msg, keychain):
     await paths.validate_path(ctx, validate_full_path, path=msg.address_n)
     await require_confirm_sign_message(ctx, msg.message)
 

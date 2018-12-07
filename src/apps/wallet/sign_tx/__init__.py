@@ -3,7 +3,7 @@ from trezor.messages.MessageType import TxAck
 from trezor.messages.RequestType import TXFINISHED
 from trezor.messages.TxRequest import TxRequest
 
-from apps.common import paths, seed
+from apps.common import paths
 from apps.wallet.sign_tx import (
     addresses,
     helpers,
@@ -17,8 +17,7 @@ from apps.wallet.sign_tx import (
 
 
 @ui.layout
-async def sign_tx(ctx, msg):
-    keychain = await seed.get_keychain(ctx)
+async def sign_tx(ctx, msg, keychain):
     signer = signing.sign_tx(msg, keychain)
 
     res = None

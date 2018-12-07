@@ -14,10 +14,10 @@ from apps.monero.xmr import crypto, key_image, monero
 from apps.monero.xmr.crypto import chacha_poly
 
 
-async def key_image_sync(ctx, msg):
+async def key_image_sync(ctx, msg, keychain):
     state = KeyImageSync()
 
-    res = await _init_step(state, ctx, msg)
+    res = await _init_step(state, ctx, msg, keychain)
     while True:
         msg = await ctx.call(
             res,
@@ -46,10 +46,10 @@ class KeyImageSync:
         self.hasher = crypto.get_keccak()
 
 
-async def _init_step(s, ctx, msg):
+async def _init_step(s, ctx, msg, keychain):
     await paths.validate_path(ctx, misc.validate_full_path, path=msg.address_n)
 
-    s.creds = await misc.get_creds(ctx, msg.address_n, msg.network_type)
+    s.creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
 
     await confirms.require_confirm_keyimage_sync(ctx)
 

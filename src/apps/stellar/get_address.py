@@ -6,9 +6,7 @@ from apps.common.layout import address_n_to_str, show_address, show_qr
 from apps.stellar import helpers
 
 
-async def get_address(ctx, msg: StellarGetAddress):
-    keychain = await seed.get_keychain(ctx)
-
+async def get_address(ctx, msg: StellarGetAddress, keychain):
     await paths.validate_path(ctx, helpers.validate_full_path, path=msg.address_n)
 
     node = keychain.derive(msg.address_n, helpers.STELLAR_CURVE)

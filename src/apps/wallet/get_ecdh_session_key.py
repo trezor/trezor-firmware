@@ -5,7 +5,7 @@ from trezor.messages.ECDHSessionKey import ECDHSessionKey
 from trezor.ui.text import Text
 from trezor.utils import chunks
 
-from apps.common import HARDENED, seed
+from apps.common import HARDENED
 from apps.common.confirm import require_confirm
 from apps.wallet.sign_identity import (
     serialize_identity,
@@ -13,9 +13,7 @@ from apps.wallet.sign_identity import (
 )
 
 
-async def get_ecdh_session_key(ctx, msg):
-    keychain = await seed.get_keychain(ctx)
-
+async def get_ecdh_session_key(ctx, msg, keychain):
     if msg.ecdsa_curve_name is None:
         msg.ecdsa_curve_name = "secp256k1"
 

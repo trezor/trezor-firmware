@@ -2,17 +2,14 @@ from trezor.crypto.curve import ed25519
 from trezor.messages.NEMSignedTx import NEMSignedTx
 from trezor.messages.NEMSignTx import NEMSignTx
 
-from . import mosaic, multisig, namespace, transfer
-from .helpers import NEM_CURVE, NEM_HASH_ALG, check_path
-from .validators import validate
-
 from apps.common import seed
 from apps.common.paths import validate_path
+from apps.nem import mosaic, multisig, namespace, transfer
+from apps.nem.helpers import NEM_CURVE, NEM_HASH_ALG, check_path
+from apps.nem.validators import validate
 
 
-async def sign_tx(ctx, msg: NEMSignTx):
-    keychain = await seed.get_keychain(ctx)
-
+async def sign_tx(ctx, msg: NEMSignTx, keychain):
     validate(msg)
 
     await validate_path(

@@ -5,15 +5,12 @@ from trezor.messages.RippleSignedTx import RippleSignedTx
 from trezor.messages.RippleSignTx import RippleSignTx
 from trezor.wire import ProcessError
 
-from . import helpers, layout
-from .serialize import serialize
+from apps.common import paths
+from apps.ripple import helpers, layout
+from apps.ripple.serialize import serialize
 
-from apps.common import paths, seed
 
-
-async def sign_tx(ctx, msg: RippleSignTx):
-    keychain = await seed.get_keychain(ctx)
-
+async def sign_tx(ctx, msg: RippleSignTx, keychain):
     validate(msg)
 
     await paths.validate_path(ctx, helpers.validate_full_path, path=msg.address_n)

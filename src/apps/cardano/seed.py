@@ -1,7 +1,8 @@
 from trezor import wire
 from trezor.crypto import bip32
 
-from apps.common import HARDENED, cache, storage
+from apps.cardano import SEED_NAMESPACE
+from apps.common import cache, storage
 from apps.common.request_passphrase import protect_by_passphrase
 
 
@@ -34,11 +35,9 @@ async def get_keychain(ctx: wire.Context) -> Keychain:
         cache.set_passphrase(passphrase)
     root = bip32.from_mnemonic_cardano(storage.get_mnemonic(), passphrase)
 
-    path = [HARDENED | 44, HARDENED | 1815]
-
     # derive the namespaced root node
-    for i in path:
+    for i in SEED_NAMESPACE[0]:
         root.derive_cardano(i)
 
-    keychain = Keychain(path, root)
+    keychain = Keychain(SEED_NAMESPACE[0], root)
     return keychain

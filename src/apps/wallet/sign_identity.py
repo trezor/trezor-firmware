@@ -6,13 +6,11 @@ from trezor.messages.SignedIdentity import SignedIdentity
 from trezor.ui.text import Text
 from trezor.utils import chunks
 
-from apps.common import HARDENED, coins, seed
+from apps.common import HARDENED, coins
 from apps.common.confirm import require_confirm
 
 
-async def sign_identity(ctx, msg):
-    keychain = await seed.get_keychain(ctx)
-
+async def sign_identity(ctx, msg, keychain):
     if msg.ecdsa_curve_name is None:
         msg.ecdsa_curve_name = "secp256k1"
 
