@@ -31,8 +31,16 @@ async def reset_device(ctx, msg):
     if storage.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
-    text = Text("Create a new wallet", ui.ICON_RESET)
-    text.normal("Do you really want to", "create a new wallet?", "")
+    text = Text("Create a new wallet", ui.ICON_RESET, new_lines=False)
+    text.normal("Do you really want to")
+    text.br()
+    text.normal("create a new wallet?")
+    text.br()
+    text.br_half()
+    text.normal("By continuing you agree")
+    text.br()
+    text.normal("to")
+    text.bold("https://trezor.io/tos")
 
     await require_confirm(ctx, text, code=ButtonRequestType.ResetDevice)
 
