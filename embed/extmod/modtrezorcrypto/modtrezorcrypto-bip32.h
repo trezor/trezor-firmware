@@ -105,7 +105,6 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_make_new(const mp_obj_type_t *type, size
 
     mp_obj_HDNode_t *o = m_new_obj(mp_obj_HDNode_t);
     o->base.type = type;
-
     o->fingerprint = fingerprint;
     o->hdnode.depth = depth;
     o->hdnode.child_num = child_num;
@@ -500,6 +499,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed, mp_obj_t curve_n
     mp_obj_HDNode_t *o = m_new_obj(mp_obj_HDNode_t);
     o->base.type = &mod_trezorcrypto_HDNode_type;
     o->hdnode = hdnode;
+    o->fingerprint = 0;
     return MP_OBJ_FROM_PTR(o);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_seed_obj, mod_trezorcrypto_bip32_from_seed);
@@ -535,6 +535,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(mp_obj_t mnemonic, 
     mp_obj_HDNode_t *o = m_new_obj(mp_obj_HDNode_t);
     o->base.type = &mod_trezorcrypto_HDNode_type;
     o->hdnode = hdnode;
+    o->fingerprint = 0;
     return MP_OBJ_FROM_PTR(o);
 }
 
