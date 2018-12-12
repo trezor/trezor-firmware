@@ -122,6 +122,7 @@ bool storage_hasPin(void);
 const char *storage_getPin(void);
 void storage_setPin(const char *pin);
 void session_cachePin(void);
+void session_uncachePin(void);
 bool session_isPinCached(void);
 void storage_clearPinArea(void);
 void storage_resetPinFails(uint32_t flash_pinfails);

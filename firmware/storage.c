@@ -246,7 +246,7 @@ void session_clear(bool clear_pin)
 	sessionPassphraseCached = false;
 	memzero(&sessionPassphrase, sizeof(sessionPassphrase));
 	if (clear_pin) {
-		sessionPinCached = false;
+		session_uncachePin();
 	}
 }
 
@@ -289,9 +289,6 @@ static void storage_commit_locked(bool update)
 		if (storageUpdate.has_passphrase_protection) {
 			sessionSeedCached = false;
 			sessionPassphraseCached = false;
-		}
-		if (storageUpdate.has_pin) {
-			sessionPinCached = false;
 		}
 
 		storageUpdate.version = STORAGE_VERSION;
@@ -678,7 +675,7 @@ void storage_setPin(const char *pin)
 {
 	storageUpdate.has_pin = true;
 	strlcpy(storageUpdate.pin, pin, sizeof(storageUpdate.pin));
-	sessionPinCached = false;
+	session_cachePin();
 }
 
 const char *storage_getPin(void)
@@ -727,6 +724,11 @@ bool session_getState(const uint8_t *salt, uint8_t *state, const char *passphras
 void session_cachePin(void)
 {
 	sessionPinCached = true;
+}
+
+void session_uncachePin(void)
+{
+	sessionPinCached = false;
 }
 
 bool session_isPinCached(void)
