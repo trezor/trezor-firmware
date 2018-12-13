@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import ethereum
+from trezorlib.tools import H_
 
 from .common import TrezorTest
 
@@ -24,16 +25,16 @@ from .common import TrezorTest
 @pytest.mark.ethereum
 class TestMsgEthereumSignmessage(TrezorTest):
 
-    PATH = [0]
-    ADDRESS = "cb3864960e8db1a751212c580af27ee8867d688f"
+    PATH = [H_(44), H_(60), H_(0), 0]
+    ADDRESS = "ea53af85525b1779ee99ece1a5560c0b78537c3b"
     VECTORS = [
         (
             "This is an example of a signed message.",
-            "b7837058907192dbc9427bf57d93a0acca3816c92927a08be573b785f2d72dab65dad9c92fbe03a358acdb455eab2107b869945d11f4e353d9cc6ea957d08a871b",
+            "9bacd833b51fde010bab53bafd9d832eadd3b175d2af2e629bb2944fcc987dce7ff68bb3571ed25a720c220f2f9538bc8d04f582bee002c9af086590a49805901c",
         ),
         (
             "VeryLongMessage!" * 64,
-            "da2b73b0170479c2bfba3dd4839bf0d67732a44df8c873f3f3a2aca8a57d7bdc0b5d534f54c649e2d44135717001998b176d3cd1212366464db51f5838430fb31c",
+            "752d283b3aea1eb44fd09203f4d5c430a6544e399b8500b02722b54325f6d8d457fd83460a31045cb0d6e8356240954ba072fdfe5cdb3f16d416e2acf1a180a51c",
         ),
     ]
 

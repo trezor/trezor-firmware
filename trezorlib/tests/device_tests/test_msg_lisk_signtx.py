@@ -66,7 +66,7 @@ class TestMsgLiskSignTx(TrezorTest):
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.LiskSignedTx(
                         signature=bytes.fromhex(
-                            "87b9789ed10fb93311b77d23e34484ee653b43206a7e416da70f8dd6b15231a8dfe05c66bcbca62ba841fdde8affdb04b3ee18300caa8560cd15f6a4942a870a"
+                            "cdce9eba2ea8fa75f90fbc725f0d9de6152c7189a3044ab2fe307d9ff54754856e09125d7a15376eaf4bb5451b63881821948222ccd9ffb5da4d9b1aa8bd4904"
                         )
                     ),
                 ]
@@ -74,7 +74,7 @@ class TestMsgLiskSignTx(TrezorTest):
 
             lisk.sign_tx(
                 self.client,
-                parse_path("m/44'/9999'/0'"),
+                parse_path("m/44'/134'/123456'/123456'/123456'/123456'/123456'"),
                 {
                     "amount": "10000000",
                     "recipientId": "9971262264659915921L",

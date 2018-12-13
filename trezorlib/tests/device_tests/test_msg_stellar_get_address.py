@@ -64,5 +64,5 @@ class TestMsgStellarGetAddress(TrezorTest):
             assert exc.value.args[0] == proto.FailureType.ProcessError
             assert exc.value.args[1].endswith("Failed to derive private key")
         else:
-            assert exc.value.args[0] == proto.FailureType.FirmwareError
-            assert exc.value.args[1].endswith("Firmware error")
+            assert exc.value.args[0] == proto.FailureType.DataError
+            assert exc.value.args[1].endswith("Forbidden key path")
