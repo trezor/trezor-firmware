@@ -22,6 +22,8 @@ from . import messages as proto, protobuf, tools
 from .client import TrezorClient
 from .tools import expect
 
+EXPECTED_RESPONSES_CONTEXT_LINES = 3
+
 
 class DebugLink:
     def __init__(self, transport):
@@ -289,9 +291,17 @@ class TrezorClientDebugLink(TrezorClient):
     def _raise_unexpected_response(self, msg):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
+        start_at = max(self.current_response - EXPECTED_RESPONSES_CONTEXT_LINES, 0)
+        stop_at = min(
+            self.current_response + EXPECTED_RESPONSES_CONTEXT_LINES + 1,
+            len(self.expected_responses),
+        )
         output = []
         output.append("Expected responses:")
-        for i, exp in enumerate(self.expected_responses):
+        if start_at > 0:
+            output.append("    (...{} previous responses omitted)".format(start_at))
+        for i in range(start_at, stop_at):
+            exp = self.expected_responses[i]
             prefix = "    " if i != self.current_response else ">>> "
             set_fields = {
                 key: value
@@ -304,10 +314,15 @@ class TrezorClientDebugLink(TrezorClient):
                     "{}{}({})".format(prefix, exp.__class__.__name__, oneline_str)
                 )
             else:
-                output.append("{}{}(".format(prefix, exp.__class__.__name__))
+                item = []
+                item.append("{}{}(".format(prefix, exp.__class__.__name__))
                 for key, value in set_fields.items():
-                    output.append("{}    {}={!r}".format(prefix, key, value))
-                output.append("{})".format(prefix))
+                    item.append("{}    {}={!r}".format(prefix, key, value))
+                item.append("{})".format(prefix))
+                output.append("\n".join(item))
+        if stop_at < len(self.expected_responses):
+            omitted = len(self.expected_responses) - stop_at
+            output.append("    (...{} following responses omitted)".format(omitted))
 
         output.append("")
         if msg is not None:
