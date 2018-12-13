@@ -13,14 +13,22 @@ class Keychain:
     key-spaces.
     """
 
-    def __init__(self, paths: list, roots: list):
-        self.paths = paths
-        self.roots = roots
+    def __init__(self, seed: bytes, namespaces: list):
+        self.seed = seed
+        self.namespaces = namespaces
+        self.roots = [None] * len(namespaces)
+
+    def __del__(self):
+        for root in self.roots:
+            if root is not None:
+                root.__del__()
+        del self.roots
+        del self.seed
 
     def derive(self, node_path: list, curve_name: str = "secp256k1") -> bip32.HDNode:
-        # find the root node
+        # find the root node index
         root_index = 0
-        for curve, *path in self.paths:
+        for curve, *path in self.namespaces:
             prefix = node_path[: len(path)]
             suffix = node_path[len(path) :]
             if curve == curve_name and path == prefix:
@@ -28,13 +36,21 @@ class Keychain:
             root_index += 1
         else:
             raise wire.DataError("Forbidden key path")
+
+        # create the root node if not cached
+        root = self.roots[root_index]
+        if root is None:
+            root = bip32.from_seed(self.seed, curve_name)
+            root.derive_path(path)
+            self.roots[root_index] = root
+
         # derive child node from the root
-        node = self.roots[root_index].clone()
+        node = root.clone()
         node.derive_path(suffix)
         return node
 
 
-async def get_keychain(ctx: wire.Context, paths: list) -> Keychain:
+async def get_keychain(ctx: wire.Context, namespaces: list) -> Keychain:
     if not storage.is_initialized():
         raise wire.ProcessError("Device is not initialized")
 
@@ -48,14 +64,7 @@ async def get_keychain(ctx: wire.Context, paths: list) -> Keychain:
         seed = bip39.seed(storage.get_mnemonic(), passphrase)
         cache.set_seed(seed)
 
-    # derive namespaced root nodes
-    roots = []
-    for curve, *path in paths:
-        node = bip32.from_seed(seed, curve)
-        node.derive_path(path)
-        roots.append(node)
-
-    keychain = Keychain(paths, roots)
+    keychain = Keychain(seed, namespaces)
     return keychain
 
 

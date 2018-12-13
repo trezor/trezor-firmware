@@ -1,7 +1,7 @@
 from common import *
 
 from trezor.utils import chunks
-from trezor.crypto import bip32, bip39
+from trezor.crypto import bip39
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputType import TxOutputType
@@ -86,9 +86,7 @@ class TestSignTx_GRS(unittest.TestCase):
         ]
 
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        root = bip32.from_seed(seed, coin.curve_name)
-
-        keychain = Keychain([[coin.curve_name]], [root])
+        keychain = Keychain(seed, [[coin.curve_name]])
         signer = signing.sign_tx(tx, keychain)
         for request, response in chunks(messages, 2):
             self.assertEqual(signer.send(request), response)

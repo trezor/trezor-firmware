@@ -184,7 +184,10 @@ async def protobuf_workflow(ctx, reader, handler, *args):
 async def keychain_workflow(ctx, req, namespace, handler, *args):
     keychain = await seed.get_keychain(ctx, namespace)
     args += (keychain,)
-    return await handler(ctx, req, *args)
+    try:
+        return await handler(ctx, req, *args)
+    finally:
+        keychain.__del__()
 
 
 def import_workflow(ctx, req, pkgname, modname, *args):

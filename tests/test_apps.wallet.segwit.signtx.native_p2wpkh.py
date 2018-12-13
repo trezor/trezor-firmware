@@ -1,7 +1,7 @@
 from common import *
 
 from trezor.utils import chunks
-from trezor.crypto import bip32, bip39
+from trezor.crypto import bip39
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputType import TxOutputType
@@ -25,9 +25,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
     def test_send_native_p2wpkh(self):
 
         coin = coins.by_name('Testnet')
-
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        root = bip32.from_seed(seed, 'secp256k1')
 
         inp1 = TxInputType(
             # 49'/1'/0'/0/0" - tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s
@@ -114,7 +112,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             )),
         ]
 
-        keychain = Keychain([[coin.curve_name]], [root])
+        keychain = Keychain(seed, [[coin.curve_name]])
         signer = signing.sign_tx(tx, keychain)
         for request, response in chunks(messages, 2):
             self.assertEqual(signer.send(request), response)
@@ -124,9 +122,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
     def test_send_native_p2wpkh_change(self):
 
         coin = coins.by_name('Testnet')
-
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        root = bip32.from_seed(seed, 'secp256k1')
 
         inp1 = TxInputType(
             # 49'/1'/0'/0/0" - tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s
@@ -211,7 +207,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             )),
         ]
 
-        keychain = Keychain([[coin.curve_name]], [root])
+        keychain = Keychain(seed, [[coin.curve_name]])
         signer = signing.sign_tx(tx, keychain)
         for request, response in chunks(messages, 2):
             self.assertEqual(signer.send(request), response)
