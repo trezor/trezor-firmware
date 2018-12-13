@@ -1,6 +1,7 @@
 {
   "connect": {
     "supported": {
+      "bitcoin:AXE": true,
       "bitcoin:BCH": true,
       "bitcoin:BTC": true,
       "bitcoin:BTG": true,
@@ -31,9 +32,9 @@
       "eth:UBQ": true,
       "eth:tETC": true,
       "eth:tKOV": true,
+      "eth:tRBTC": true,
       "eth:tRIN": true,
       "eth:tROP": true,
-      "eth:tRBTC": true,
       "misc:ADA": true,
       "misc:LSK": true,
       "misc:XLM": true,
@@ -51,6 +52,7 @@
   "trezor1": {
     "supported": {
       "bitcoin:ACM": "1.7.2",
+      "bitcoin:AXE": "1.7.3",
       "bitcoin:BCH": "1.6.2",
       "bitcoin:BITC": "1.7.2",
       "bitcoin:BSD": "1.7.2",
@@ -787,9 +789,9 @@
       "eth:UBQ": "1.6.2",
       "eth:tETC": "1.6.2",
       "eth:tKOV": "1.6.2",
+      "eth:tRBTC": "1.6.2",
       "eth:tRIN": "1.6.2",
       "eth:tROP": "1.6.2",
-      "eth:tRBTC": "1.6.2",
       "misc:LSK": "1.7.1",
       "misc:MAID": "1.7.2",
       "misc:OMNI": "1.7.2",
@@ -956,6 +958,7 @@
   "trezor2": {
     "supported": {
       "bitcoin:ACM": "2.0.10",
+      "bitcoin:AXE": "2.0.11",
       "bitcoin:BCH": "2.0.7",
       "bitcoin:BITC": "2.0.10",
       "bitcoin:BSD": "2.0.10",
@@ -2069,9 +2072,9 @@
       "eth:UBQ": "2.0.7",
       "eth:tETC": "2.0.7",
       "eth:tKOV": "2.0.7",
+      "eth:tRBTC": "2.0.7",
       "eth:tRIN": "2.0.7",
       "eth:tROP": "2.0.7",
-      "eth:tRBTC": "2.0.7",
       "misc:ADA": "2.0.8",
       "misc:EOS": "soon",
       "misc:LSK": "2.0.7",
