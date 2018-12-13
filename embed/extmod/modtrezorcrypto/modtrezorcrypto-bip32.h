@@ -422,7 +422,16 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_ethereum_pubkeyhash(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_ethereum_pubkeyhash_obj, mod_trezorcrypto_HDNode_ethereum_pubkeyhash);
 
+STATIC mp_obj_t mod_trezorcrypto_HDNode___del__(mp_obj_t self) {
+    mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
+    o->fingerprint = 0;
+    memzero(&o->hdnode, sizeof(o->hdnode));
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode___del___obj, mod_trezorcrypto_HDNode___del__);
+
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_HDNode_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&mod_trezorcrypto_HDNode___del___obj) },
     { MP_ROM_QSTR(MP_QSTR_derive), MP_ROM_PTR(&mod_trezorcrypto_HDNode_derive_obj) },
     { MP_ROM_QSTR(MP_QSTR_derive_cardano), MP_ROM_PTR(&mod_trezorcrypto_HDNode_derive_cardano_obj) },
     { MP_ROM_QSTR(MP_QSTR_derive_path), MP_ROM_PTR(&mod_trezorcrypto_HDNode_derive_path_obj) },
@@ -539,9 +548,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(mp_obj_t mnemonic, 
     return MP_OBJ_FROM_PTR(o);
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_mnemonic_cardano_obj,
-        mod_trezorcrypto_bip32_from_mnemonic_cardano);
-
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_mnemonic_cardano_obj, mod_trezorcrypto_bip32_from_mnemonic_cardano);
 
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_bip32_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_bip32) },
