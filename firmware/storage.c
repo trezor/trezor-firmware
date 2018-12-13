@@ -107,7 +107,7 @@ static bool sessionSeedCached, sessionSeedUsesPassphrase;
 
 static uint8_t CONFIDENTIAL sessionSeed[64];
 
-static bool sessionPinCached;
+static bool sessionPinCached = false;
 
 static bool sessionPassphraseCached;
 static char CONFIDENTIAL sessionPassphrase[51];
