@@ -12,6 +12,7 @@ from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxRequest import TxRequest
+from trezor.utils import obj_eq
 
 from apps.common.coininfo import CoinInfo
 
@@ -24,6 +25,8 @@ class UiConfirmOutput:
         self.output = output
         self.coin = coin
 
+    __eq__ = obj_eq
+
 
 class UiConfirmTotal:
     def __init__(self, spending: int, fee: int, coin: CoinInfo):
@@ -31,16 +34,22 @@ class UiConfirmTotal:
         self.fee = fee
         self.coin = coin
 
+    __eq__ = obj_eq
+
 
 class UiConfirmFeeOverThreshold:
     def __init__(self, fee: int, coin: CoinInfo):
         self.fee = fee
         self.coin = coin
 
+    __eq__ = obj_eq
+
 
 class UiConfirmForeignAddress:
     def __init__(self, address_n: list):
         self.address_n = address_n
+
+    __eq__ = obj_eq
 
 
 def confirm_output(output: TxOutputType, coin: CoinInfo):

@@ -7,16 +7,19 @@ from trezor.messages import LiskTransactionType
 from trezor.messages.LiskSignedTx import LiskSignedTx
 from trezor.utils import HashWriter
 
-from . import layout
-from .helpers import LISK_CURVE, get_address_from_public_key, validate_full_path
+from apps.common import paths
+from apps.lisk import layout
+from apps.lisk.helpers import (
+    LISK_CURVE,
+    get_address_from_public_key,
+    validate_full_path,
+)
 
-from apps.common import paths, seed
 
-
-async def sign_tx(ctx, msg):
+async def sign_tx(ctx, msg, keychain):
     await paths.validate_path(ctx, validate_full_path, path=msg.address_n)
 
-    pubkey, seckey = await _get_keys(ctx, msg)
+    pubkey, seckey = _get_keys(keychain, msg)
     transaction = _update_raw_tx(msg.transaction, pubkey)
 
     try:
@@ -37,8 +40,8 @@ async def sign_tx(ctx, msg):
     return LiskSignedTx(signature=signature)
 
 
-async def _get_keys(ctx, msg):
-    node = await seed.derive_node(ctx, msg.address_n, LISK_CURVE)
+def _get_keys(keychain, msg):
+    node = keychain.derive(msg.address_n, LISK_CURVE)
 
     seckey = node.private_key()
     pubkey = node.public_key()

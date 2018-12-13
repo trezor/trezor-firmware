@@ -7,7 +7,6 @@ from apps.common.confirm import require_confirm
 
 
 async def get_entropy(ctx, msg):
-
     text = Text("Confirm entropy")
     text.bold("Do you really want", "to send entropy?")
     text.normal("Continue only if you", "know what you are doing!")

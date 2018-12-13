@@ -1,7 +1,7 @@
 from common import *
 
 from trezor.utils import chunks
-from trezor.crypto import bip32, bip39
+from trezor.crypto import bip39
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputType import TxOutputType
@@ -15,7 +15,8 @@ from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 from trezor.messages import OutputScriptType
 
 from apps.common import coins
-from apps.wallet.sign_tx import signing
+from apps.common.seed import Keychain
+from apps.wallet.sign_tx import helpers, signing
 
 
 class TestSignTx_GRS(unittest.TestCase):
@@ -62,9 +63,9 @@ class TestSignTx_GRS(unittest.TestCase):
             TxAck(tx=TransactionType(bin_outputs=[pout1])),
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out1])),
-            signing.UiConfirmOutput(out1, coin),
+            helpers.UiConfirmOutput(out1, coin),
             True,
-            signing.UiConfirmTotal(210016, 192, coin),
+            helpers.UiConfirmTotal(210016, 192, coin),
             True,
             # ButtonRequest(code=ButtonRequest_ConfirmOutput),
             # ButtonRequest(code=ButtonRequest_SignTx),
@@ -85,21 +86,12 @@ class TestSignTx_GRS(unittest.TestCase):
         ]
 
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        root = bip32.from_seed(seed, coin.curve_name)
-
-        signer = signing.sign_tx(tx, root)
+        keychain = Keychain(seed, [[coin.curve_name]])
+        signer = signing.sign_tx(tx, keychain)
         for request, response in chunks(messages, 2):
-            self.assertEqualEx(signer.send(request), response)
+            self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):
             signer.send(None)
-
-    def assertEqualEx(self, a, b):
-        # hack to avoid adding __eq__ to signing.Ui* classes
-        if ((isinstance(a, signing.UiConfirmOutput) and isinstance(b, signing.UiConfirmOutput)) or
-                (isinstance(a, signing.UiConfirmTotal) and isinstance(b, signing.UiConfirmTotal))):
-            return self.assertEqual(a.__dict__, b.__dict__)
-        else:
-            return self.assertEqual(a, b)
 
 
 if __name__ == '__main__':

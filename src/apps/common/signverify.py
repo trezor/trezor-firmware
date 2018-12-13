@@ -3,7 +3,7 @@ from ubinascii import hexlify
 from trezor.crypto.hashlib import blake256, sha256
 from trezor.utils import HashWriter
 
-from apps.wallet.sign_tx.signing import write_varint
+from apps.wallet.sign_tx.writers import write_varint
 
 
 def message_digest(coin, message):

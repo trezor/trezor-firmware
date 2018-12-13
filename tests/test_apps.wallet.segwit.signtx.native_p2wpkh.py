@@ -1,7 +1,7 @@
 from common import *
 
 from trezor.utils import chunks
-from trezor.crypto import bip32, bip39
+from trezor.crypto import bip39
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputType import TxOutputType
@@ -15,7 +15,8 @@ from trezor.messages import InputScriptType
 from trezor.messages import OutputScriptType
 
 from apps.common import coins
-from apps.wallet.sign_tx import signing
+from apps.common.seed import Keychain
+from apps.wallet.sign_tx import helpers, signing
 
 
 class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
@@ -24,9 +25,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
     def test_send_native_p2wpkh(self):
 
         coin = coins.by_name('Testnet')
-
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        root = bip32.from_seed(seed, 'secp256k1')
 
         inp1 = TxInputType(
             # 49'/1'/0'/0/0" - tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s
@@ -61,22 +60,22 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
-            signing.UiConfirmForeignAddress(address_n=inp1.address_n),
+            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out1])),
 
-            signing.UiConfirmOutput(out1, coin),
+            helpers.UiConfirmOutput(out1, coin),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out2])),
 
-            signing.UiConfirmOutput(out2, coin),
+            helpers.UiConfirmOutput(out2, coin),
             True,
 
-            signing.UiConfirmTotal(12300000, 11000, coin),
+            helpers.UiConfirmTotal(12300000, 11000, coin),
             True,
 
             # sign tx
@@ -113,18 +112,17 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             )),
         ]
 
-        signer = signing.sign_tx(tx, root)
+        keychain = Keychain(seed, [[coin.curve_name]])
+        signer = signing.sign_tx(tx, keychain)
         for request, response in chunks(messages, 2):
-            self.assertEqualEx(signer.send(request), response)
+            self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):
             signer.send(None)
 
     def test_send_native_p2wpkh_change(self):
 
         coin = coins.by_name('Testnet')
-
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        root = bip32.from_seed(seed, 'secp256k1')
 
         inp1 = TxInputType(
             # 49'/1'/0'/0/0" - tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s
@@ -159,19 +157,19 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
-            signing.UiConfirmForeignAddress(address_n=inp1.address_n),
+            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out1])),
 
-            signing.UiConfirmOutput(out1, coin),
+            helpers.UiConfirmOutput(out1, coin),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=None),
             TxAck(tx=TransactionType(outputs=[out2])),
 
-            signing.UiConfirmTotal(5000000 + 11000, 11000, coin),
+            helpers.UiConfirmTotal(5000000 + 11000, 11000, coin),
             True,
 
             # sign tx
@@ -209,20 +207,12 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             )),
         ]
 
-        signer = signing.sign_tx(tx, root)
+        keychain = Keychain(seed, [[coin.curve_name]])
+        signer = signing.sign_tx(tx, keychain)
         for request, response in chunks(messages, 2):
-            self.assertEqualEx(signer.send(request), response)
+            self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):
             signer.send(None)
-
-    def assertEqualEx(self, a, b):
-        # hack to avoid adding __eq__ to signing.Ui* classes
-        if ((isinstance(a, signing.UiConfirmOutput) and isinstance(b, signing.UiConfirmOutput)) or
-                (isinstance(a, signing.UiConfirmTotal) and isinstance(b, signing.UiConfirmTotal)) or
-                (isinstance(a, signing.UiConfirmForeignAddress) and isinstance(b, signing.UiConfirmForeignAddress))):
-            return self.assertEqual(a.__dict__, b.__dict__)
-        else:
-            return self.assertEqual(a, b)
 
 
 if __name__ == '__main__':

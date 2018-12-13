@@ -12,14 +12,14 @@ from apps.stellar import consts, helpers, layout, writers
 from apps.stellar.operations import process_operation
 
 
-async def sign_tx(ctx, msg: StellarSignTx):
-    if msg.num_operations == 0:
-        raise ProcessError("Stellar: At least one operation is required")
-
+async def sign_tx(ctx, msg: StellarSignTx, keychain):
     await paths.validate_path(ctx, helpers.validate_full_path, path=msg.address_n)
 
-    node = await seed.derive_node(ctx, msg.address_n, consts.STELLAR_CURVE)
+    node = keychain.derive(msg.address_n, consts.STELLAR_CURVE)
     pubkey = seed.remove_ed25519_prefix(node.public_key())
+
+    if msg.num_operations == 0:
+        raise ProcessError("Stellar: At least one operation is required")
 
     w = bytearray()
     await _init(ctx, w, pubkey, msg)

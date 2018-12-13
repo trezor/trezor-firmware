@@ -1,20 +1,17 @@
-from .address import ethereum_address_hex, validate_full_path
+from trezor.crypto.curve import secp256k1
+from trezor.crypto.hashlib import sha3_256
+from trezor.messages.EthereumAddress import EthereumAddress
 
 from apps.common import paths
 from apps.common.layout import address_n_to_str, show_address, show_qr
 from apps.ethereum import networks
+from apps.ethereum.address import ethereum_address_hex, validate_full_path
 
 
-async def get_address(ctx, msg):
-    from trezor.messages.EthereumAddress import EthereumAddress
-    from trezor.crypto.curve import secp256k1
-    from trezor.crypto.hashlib import sha3_256
-    from apps.common import seed
-
+async def get_address(ctx, msg, keychain):
     await paths.validate_path(ctx, validate_full_path, path=msg.address_n)
 
-    node = await seed.derive_node(ctx, msg.address_n)
-
+    node = keychain.derive(msg.address_n)
     seckey = node.private_key()
     public_key = secp256k1.publickey(seckey, False)  # uncompressed
     address = sha3_256(public_key[1:], keccak=True).digest()[12:]

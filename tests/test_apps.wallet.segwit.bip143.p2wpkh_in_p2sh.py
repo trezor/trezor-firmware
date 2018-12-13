@@ -1,6 +1,7 @@
 from common import *
 
 from apps.wallet.sign_tx.signing import *
+from apps.wallet.sign_tx.segwit_bip143 import *
 from apps.common import coins
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType

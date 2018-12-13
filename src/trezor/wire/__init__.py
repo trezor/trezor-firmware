@@ -3,12 +3,25 @@ from trezor import log, loop, messages, utils, workflow
 from trezor.wire import codec_v1
 from trezor.wire.errors import *
 
+from apps.common import seed
+
 workflow_handlers = {}
 
 
-def add(mtype, pkgname, modname, *args):
+def add(mtype, pkgname, modname, namespace=None):
     """Shortcut for registering a dynamically-imported Protobuf workflow."""
-    register(mtype, protobuf_workflow, import_workflow, pkgname, modname, *args)
+    if namespace is not None:
+        register(
+            mtype,
+            protobuf_workflow,
+            keychain_workflow,
+            namespace,
+            import_workflow,
+            pkgname,
+            modname,
+        )
+    else:
+        register(mtype, protobuf_workflow, import_workflow, pkgname, modname)
 
 
 def register(mtype, handler, *args):
@@ -133,10 +146,12 @@ async def session_handler(iface, sid):
             continue
         except Error as exc:
             # we log wire.Error as warning, not as exception
-            log.warning(__name__, "failure: %s", exc.message)
+            if __debug__:
+                log.warning(__name__, "failure: %s", exc.message)
         except Exception as exc:
             # sessions are never closed by raised exceptions
-            log.exception(__name__, exc)
+            if __debug__:
+                log.exception(__name__, exc)
 
         # read new message in next iteration
         reader = None
@@ -155,7 +170,7 @@ async def protobuf_workflow(ctx, reader, handler, *args):
         # respond with specific code and message
         await ctx.write(Failure(code=exc.code, message=exc.message))
         raise
-    except Exception:  # as exc:
+    except Exception:
         # respond with a generic code and message
         await ctx.write(
             Failure(code=FailureType.FirmwareError, message="Firmware error")
@@ -164,6 +179,15 @@ async def protobuf_workflow(ctx, reader, handler, *args):
     if res:
         # respond with a specific response
         await ctx.write(res)
+
+
+async def keychain_workflow(ctx, req, namespace, handler, *args):
+    keychain = await seed.get_keychain(ctx, namespace)
+    args += (keychain,)
+    try:
+        return await handler(ctx, req, *args)
+    finally:
+        keychain.__del__()
 
 
 def import_workflow(ctx, req, pkgname, modname, *args):

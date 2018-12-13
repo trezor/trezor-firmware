@@ -1,18 +1,17 @@
 from trezor import log, ui, wire
-from trezor.crypto import base58, bip32, hashlib
+from trezor.crypto import base58, hashlib
 from trezor.crypto.curve import ed25519
 from trezor.messages.CardanoSignedTx import CardanoSignedTx
 from trezor.messages.CardanoTxRequest import CardanoTxRequest
 from trezor.messages.MessageType import CardanoTxAck
 from trezor.ui.text import BR
 
-from .address import derive_address_and_node, validate_full_path
-from .layout import confirm_with_pagination, progress
-
-from apps.cardano import cbor
-from apps.common import seed, storage
+from apps.cardano import cbor, seed
+from apps.cardano.address import derive_address_and_node, validate_full_path
+from apps.cardano.layout import confirm_with_pagination, progress
 from apps.common.layout import address_n_to_str, split_address
 from apps.common.paths import validate_path
+from apps.common.seed import remove_ed25519_prefix
 from apps.homescreen.homescreen import display_homescreen
 
 
@@ -80,9 +79,7 @@ async def request_transaction(ctx, tx_req: CardanoTxRequest, index: int):
 
 
 async def sign_tx(ctx, msg):
-    mnemonic = storage.get_mnemonic()
-    passphrase = await seed._get_cached_passphrase(ctx)
-    root_node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
+    keychain = await seed.get_keychain(ctx)
 
     progress.init(msg.transactions_count, "Loading data")
 
@@ -103,7 +100,7 @@ async def sign_tx(ctx, msg):
 
         # sign the transaction bundle and prepare the result
         transaction = Transaction(
-            msg.inputs, msg.outputs, transactions, root_node, msg.network
+            msg.inputs, msg.outputs, transactions, keychain, msg.network
         )
         tx_body, tx_hash = transaction.serialise_tx()
         tx = CardanoSignedTx(tx_body=tx_body, tx_hash=tx_hash)
@@ -135,12 +132,12 @@ def _micro_ada_to_ada(amount: float) -> float:
 
 class Transaction:
     def __init__(
-        self, inputs: list, outputs: list, transactions: list, root_node, network: int
+        self, inputs: list, outputs: list, transactions: list, keychain, network: int
     ):
         self.inputs = inputs
         self.outputs = outputs
         self.transactions = transactions
-        self.root_node = root_node
+        self.keychain = keychain
         # attributes have to be always empty in current Cardano
         self.attributes = {}
         if network == 1:
@@ -170,7 +167,7 @@ class Transaction:
 
         nodes = []
         for input in self.inputs:
-            _, node = derive_address_and_node(self.root_node, input.address_n)
+            _, node = derive_address_and_node(self.keychain, input.address_n)
             nodes.append(node)
 
         for index, output_index in enumerate(output_indexes):
@@ -198,7 +195,7 @@ class Transaction:
 
         for output in self.outputs:
             if output.address_n:
-                address, _ = derive_address_and_node(self.root_node, output.address_n)
+                address, _ = derive_address_and_node(self.keychain, output.address_n)
                 change_addresses.append(address)
                 change_derivation_paths.append(output.address_n)
                 change_coins.append(output.amount)
@@ -225,7 +222,7 @@ class Transaction:
                 node.private_key(), node.private_key_ext(), message
             )
             extended_public_key = (
-                seed.remove_ed25519_prefix(node.public_key()) + node.chain_code()
+                remove_ed25519_prefix(node.public_key()) + node.chain_code()
             )
             witnesses.append(
                 [

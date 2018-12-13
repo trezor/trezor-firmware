@@ -4,14 +4,14 @@ from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPEN
 from trezor.messages.MessageSignature import MessageSignature
 from trezor.ui.text import Text
 
-from apps.common import coins, seed
+from apps.common import coins
 from apps.common.confirm import require_confirm
 from apps.common.paths import validate_path
 from apps.common.signverify import message_digest, split_message
 from apps.wallet.sign_tx.addresses import get_address, validate_full_path
 
 
-async def sign_message(ctx, msg):
+async def sign_message(ctx, msg, keychain):
     message = msg.message
     address_n = msg.address_n
     coin_name = msg.coin_name or "Bitcoin"
@@ -19,7 +19,6 @@ async def sign_message(ctx, msg):
     coin = coins.by_name(coin_name)
 
     await require_confirm_sign_message(ctx, message)
-
     await validate_path(
         ctx,
         validate_full_path,
@@ -29,7 +28,7 @@ async def sign_message(ctx, msg):
         validate_script_type=False,
     )
 
-    node = await seed.derive_node(ctx, address_n, curve_name=coin.curve_name)
+    node = keychain.derive(address_n, coin.curve_name)
     seckey = node.private_key()
 
     address = get_address(script_type, coin, node)

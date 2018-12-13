@@ -9,10 +9,10 @@ from apps.common.confirm import require_confirm
 from apps.tezos import helpers
 
 
-async def get_public_key(ctx, msg):
+async def get_public_key(ctx, msg, keychain):
     await paths.validate_path(ctx, helpers.validate_full_path, path=msg.address_n)
-    node = await seed.derive_node(ctx, msg.address_n, helpers.TEZOS_CURVE)
 
+    node = keychain.derive(msg.address_n, helpers.TEZOS_CURVE)
     pk = seed.remove_ed25519_prefix(node.public_key())
     pk_prefixed = helpers.base58_encode_check(pk, prefix=helpers.TEZOS_PUBLICKEY_PREFIX)
 

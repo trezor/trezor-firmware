@@ -4,11 +4,10 @@ from trezor.crypto.hashlib import sha512
 from trezor.messages.CipheredKeyValue import CipheredKeyValue
 from trezor.ui.text import Text
 
-from apps.common import seed
 from apps.common.confirm import require_confirm
 
 
-async def cipher_key_value(ctx, msg):
+async def cipher_key_value(ctx, msg, keychain):
     if len(msg.value) % 16 > 0:
         raise wire.DataError("Value length must be a multiple of 16")
 
@@ -23,7 +22,7 @@ async def cipher_key_value(ctx, msg):
         text.normal(msg.key)
         await require_confirm(ctx, text)
 
-    node = await seed.derive_node(ctx, msg.address_n)
+    node = keychain.derive(msg.address_n)
     value = compute_cipher_key_value(msg, node.private_key())
     return CipheredKeyValue(value=value)
 

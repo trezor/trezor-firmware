@@ -1,8 +1,7 @@
 from apps.common import HARDENED
 
 
-async def get_creds(ctx, address_n=None, network_type=None):
-    from apps.common import seed
+def get_creds(keychain, address_n=None, network_type=None):
     from apps.monero.xmr import crypto, monero
     from apps.monero.xmr.credentials import AccountCreds
 
@@ -12,7 +11,7 @@ async def get_creds(ctx, address_n=None, network_type=None):
         curve = "ed25519"
     else:
         curve = "secp256k1"
-    node = await seed.derive_node(ctx, address_n, curve)
+    node = keychain.derive(address_n, curve)
 
     if use_slip0010:
         key_seed = node.private_key()
