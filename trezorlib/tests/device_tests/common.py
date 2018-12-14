@@ -56,6 +56,9 @@ class TrezorTest:
             label="test",
             language="english",
         )
+        if conftest.TREZOR_VERSION == 1:
+            # remove cached PIN (introduced via load_device)
+            self.client.clear_session()
         if conftest.TREZOR_VERSION > 1 and passphrase:
             device.apply_settings(self.client, passphrase_source=PASSPHRASE_ON_HOST)
 

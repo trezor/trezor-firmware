@@ -176,11 +176,6 @@ class TestMsgResetDevice(TrezorTest):
         assert isinstance(resp, proto.PassphraseRequest)
         self.client.call_raw(proto.Cancel())
 
-        # Do PIN-protected action, PinRequest should be raised
-        resp = self.client.call_raw(proto.Ping(pin_protection=True))
-        assert isinstance(resp, proto.PinMatrixRequest)
-        self.client.call_raw(proto.Cancel())
-
     def test_failed_pin(self):
         # external_entropy = b'zlutoucky kun upel divoke ody' * 2
         strength = 128

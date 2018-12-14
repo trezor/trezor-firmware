@@ -56,9 +56,6 @@ class TestMsgChangepin(TrezorTest):
         # Check that there's PIN protection now
         features = self.client.call_raw(proto.Initialize())
         assert features.pin_protection is True
-        ret = self.client.call_raw(proto.Ping(pin_protection=True))
-        assert isinstance(ret, proto.PinMatrixRequest)
-        self.client.call_raw(proto.Cancel())
 
         # Check that the PIN is correct
         assert self.client.debug.read_pin()[0] == self.pin6
@@ -105,9 +102,6 @@ class TestMsgChangepin(TrezorTest):
         # Check that there's still PIN protection now
         features = self.client.call_raw(proto.Initialize())
         assert features.pin_protection is True
-        ret = self.client.call_raw(proto.Ping(pin_protection=True))
-        assert isinstance(ret, proto.PinMatrixRequest)
-        self.client.call_raw(proto.Cancel())
 
         # Check that the PIN is correct
         assert self.client.debug.read_pin()[0] == self.pin6

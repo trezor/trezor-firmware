@@ -85,11 +85,6 @@ class TestMsgRecoverydevice(TrezorTest):
         assert isinstance(resp, proto.PassphraseRequest)
         self.client.call_raw(proto.Cancel())
 
-        # Do PIN-protected action, PinRequest should be raised
-        resp = self.client.call_raw(proto.Ping(pin_protection=True))
-        assert isinstance(resp, proto.PinMatrixRequest)
-        self.client.call_raw(proto.Cancel())
-
     def test_nopin_nopassphrase(self):
         mnemonic = self.mnemonic12.split(" ")
         ret = self.client.call_raw(
