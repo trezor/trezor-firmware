@@ -42,7 +42,7 @@
 
 // About 1/2 Second according to values used in protect.c
 #define U2F_TIMEOUT (800000/2)
-#define U2F_OUT_PKT_BUFFER_LEN 128
+#define U2F_OUT_PKT_BUFFER_LEN 130
 
 // Initialise without a cid
 static uint32_t cid = 0;
@@ -100,8 +100,13 @@ uint32_t next_cid(void)
 	return cid;
 }
 
+// https://fidoalliance.org/specs/fido-u2f-v1.2-ps-20170411/fido-u2f-hid-protocol-v1.2-ps-20170411.html#message--and-packet-structure
+// states the following:
+// With a packet size of 64 bytes (max for full-speed devices), this means that
+// the maximum message payload length is 64 - 7 + 128 * (64 - 5) = 7609 bytes.
+#define U2F_MAXIMUM_PAYLOAD_LENGTH 7609
 typedef struct {
-	uint8_t buf[57+127*59];
+	uint8_t buf[U2F_MAXIMUM_PAYLOAD_LENGTH];
 	uint8_t *buf_ptr;
 	uint32_t len;
 	uint8_t seq;
@@ -282,7 +287,7 @@ void u2fhid_init(const U2FHID_FRAME *in)
 {
 	const U2FHID_INIT_REQ *init_req = (const U2FHID_INIT_REQ *)&in->init.data;
 	U2FHID_FRAME f;
-	U2FHID_INIT_RESP resp;
+	U2FHID_INIT_RESP resp = {0};
 
 	debugLog(0, "", "u2fhid_init");
 
@@ -295,7 +300,7 @@ void u2fhid_init(const U2FHID_FRAME *in)
 	f.cid = in->cid;
 	f.init.cmd = U2FHID_INIT;
 	f.init.bcnth = 0;
-	f.init.bcntl = U2FHID_INIT_RESP_SIZE;
+	f.init.bcntl = sizeof(resp);
 
 	memcpy(resp.nonce, init_req->nonce, sizeof(init_req->nonce));
 	resp.cid = in->cid == CID_BROADCAST ? next_cid() : in->cid;
@@ -363,6 +368,11 @@ void u2fhid_msg(const APDU *a, uint32_t len)
 
 void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data, const uint32_t len)
 {
+	if (len > U2F_MAXIMUM_PAYLOAD_LENGTH) {
+		debugLog(0, "", "send_u2fhid_msg failed");
+		return;
+	}
+
 	U2FHID_FRAME f;
 	uint8_t *p = (uint8_t *)data;
 	uint32_t l = len;
