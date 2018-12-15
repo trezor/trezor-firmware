@@ -112,7 +112,7 @@ static bool sessionPinCached = false;
 static bool sessionPassphraseCached = false;
 static char CONFIDENTIAL sessionPassphrase[51];
 
-#define STORAGE_VERSION 9
+#define STORAGE_VERSION 10
 
 void storage_show_error(void)
 {
@@ -146,6 +146,7 @@ bool storage_from_flash(void)
 	// version 7: since 1.5.1
 	// version 8: since 1.5.2
 	// version 9: since 1.6.1
+	// version 10: since 1.7.2
 	if (version > STORAGE_VERSION) {
 		// downgrade -> clear storage
 		return false;
@@ -175,6 +176,9 @@ bool storage_from_flash(void)
 	} else if (version <= 9) {
 		// added u2froot, unfinished_backup and auto_lock_delay_ms
 		old_storage_size = OLD_STORAGE_SIZE(auto_lock_delay_ms);
+	} else if (version <= 10) {
+		// added no_backup
+		old_storage_size = OLD_STORAGE_SIZE(no_backup);
 	}
 
 	// erase newly added fields
