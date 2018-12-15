@@ -1,74 +1,59 @@
-from trezor import log, ui, wire
+from micropython import const
+
+from trezor import log, wire
 from trezor.crypto import base58, hashlib
 from trezor.crypto.curve import ed25519
 from trezor.messages.CardanoSignedTx import CardanoSignedTx
 from trezor.messages.CardanoTxRequest import CardanoTxRequest
 from trezor.messages.MessageType import CardanoTxAck
-from trezor.ui.text import BR
 
 from apps.cardano import cbor, seed
 from apps.cardano.address import derive_address_and_node, validate_full_path
-from apps.cardano.layout import confirm_with_pagination, progress
-from apps.common.layout import address_n_to_str, split_address
+from apps.cardano.layout import confirm_sending, confirm_transaction, progress
 from apps.common.paths import validate_path
 from apps.common.seed import remove_ed25519_prefix
 from apps.homescreen.homescreen import display_homescreen
+
+# the maximum allowed change address.  this should be large enough for normal
+# use and still allow to quickly brute-force the correct bip32 path
+MAX_CHANGE_ADDRESS_INDEX = const(1000000)
+ACCOUNT_PREFIX_DEPTH = const(2)
+
+KNOWN_PROTOCOL_MAGICS = {764824073: "Mainnet", 1097911063: "Testnet"}
+
+
+# we consider addresses from the external chain as possible change addresses as well
+def is_change(output, inputs):
+    for input in inputs:
+        inp = input.address_n
+        if (
+            not output[:ACCOUNT_PREFIX_DEPTH] == inp[:ACCOUNT_PREFIX_DEPTH]
+            or not output[-2] < 2
+            or not output[-1] < MAX_CHANGE_ADDRESS_INDEX
+        ):
+            return False
+    return True
 
 
 async def show_tx(
     ctx,
     outputs: list,
     outcoins: list,
-    change_derivation_paths: list,
-    change_coins: list,
-    fee: float,
-    tx_size: float,
+    fee: int,
     network_name: str,
+    raw_inputs: list,
+    raw_outputs: list,
 ) -> bool:
-    lines = ("%s ADA" % _micro_ada_to_ada(fee), BR, "Tx size:", "%s bytes" % tx_size)
-    if not await confirm_with_pagination(
-        ctx, lines, "Confirm fee", ui.ICON_SEND, ui.GREEN
-    ):
-        return False
-
-    if not await confirm_with_pagination(
-        ctx, "%s network" % network_name, "Confirm network", ui.ICON_SEND, ui.GREEN
-    ):
-        return False
-
     for index, output in enumerate(outputs):
-        if not await confirm_with_pagination(
-            ctx, output, "Confirm output", ui.ICON_SEND, ui.GREEN
-        ):
+        if is_change(raw_outputs[index].address_n, raw_inputs):
+            continue
+
+        if not await confirm_sending(ctx, outcoins[index], output):
             return False
 
-        if not await confirm_with_pagination(
-            ctx,
-            "%s ADA" % _micro_ada_to_ada(outcoins[index]),
-            "Confirm amount",
-            ui.ICON_SEND,
-            ui.GREEN,
-        ):
-            return False
-
-    for index, change in enumerate(change_derivation_paths):
-        if not await confirm_with_pagination(
-            ctx,
-            list(split_address(address_n_to_str(change))),
-            "Confirm change",
-            ui.ICON_SEND,
-            ui.GREEN,
-        ):
-            return False
-
-        if not await confirm_with_pagination(
-            ctx,
-            "%s ADA" % _micro_ada_to_ada(change_coins[index]),
-            "Confirm amount",
-            ui.ICON_SEND,
-            ui.GREEN,
-        ):
-            return False
+    total_amount = sum(outcoins)
+    if not await confirm_transaction(ctx, total_amount, fee, network_name):
+        return False
 
     return True
 
@@ -100,7 +85,7 @@ async def sign_tx(ctx, msg):
 
         # sign the transaction bundle and prepare the result
         transaction = Transaction(
-            msg.inputs, msg.outputs, transactions, keychain, msg.network
+            msg.inputs, msg.outputs, transactions, keychain, msg.protocol_magic
         )
         tx_body, tx_hash = transaction.serialise_tx()
         tx = CardanoSignedTx(tx_body=tx_body, tx_hash=tx_hash)
@@ -115,24 +100,24 @@ async def sign_tx(ctx, msg):
         ctx,
         transaction.output_addresses,
         transaction.outgoing_coins,
-        transaction.change_derivation_paths,
-        transaction.change_coins,
         transaction.fee,
-        len(tx_body),
         transaction.network_name,
+        transaction.inputs,
+        transaction.outputs,
     ):
         raise wire.ActionCancelled("Signing cancelled")
 
     return tx
 
 
-def _micro_ada_to_ada(amount: float) -> float:
-    return amount / 1000000
-
-
 class Transaction:
     def __init__(
-        self, inputs: list, outputs: list, transactions: list, keychain, network: int
+        self,
+        inputs: list,
+        outputs: list,
+        transactions: list,
+        keychain,
+        protocol_magic: int,
     ):
         self.inputs = inputs
         self.outputs = outputs
@@ -140,14 +125,9 @@ class Transaction:
         self.keychain = keychain
         # attributes have to be always empty in current Cardano
         self.attributes = {}
-        if network == 1:
-            self.network_name = "Testnet"
-            self.network_magic = b"\x01\x1a\x41\x70\xcb\x17\x58\x20"
-        elif network == 2:
-            self.network_name = "Mainnet"
-            self.network_magic = b"\x01\x1a\x2d\x96\x4a\x09\x58\x20"
-        else:
-            raise wire.ProcessError("Unknown network index %d" % network)
+
+        self.network_name = KNOWN_PROTOCOL_MAGICS.get(protocol_magic, "Unknown")
+        self.protocol_magic = protocol_magic
 
     def _process_inputs(self):
         input_coins = []
@@ -217,7 +197,9 @@ class Transaction:
     def _build_witnesses(self, tx_aux_hash: str):
         witnesses = []
         for index, node in enumerate(self.nodes):
-            message = self.network_magic + tx_aux_hash
+            message = (
+                b"\x01" + cbor.encode(self.protocol_magic) + b"\x58\x20" + tx_aux_hash
+            )
             signature = ed25519.sign_ext(
                 node.private_key(), node.private_key_ext(), message
             )
