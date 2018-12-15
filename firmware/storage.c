@@ -109,7 +109,7 @@ static uint8_t CONFIDENTIAL sessionSeed[64];
 
 static bool sessionPinCached = false;
 
-static bool sessionPassphraseCached;
+static bool sessionPassphraseCached = false;
 static char CONFIDENTIAL sessionPassphrase[51];
 
 #define STORAGE_VERSION 9
