@@ -109,6 +109,8 @@ void touch_power_on(void) {
     // set register 0xA4 G_MODE to interrupt polling mode (0x00). basically, CTPM keeps this input line (to PC4) low while a finger is on the screen.
     uint8_t touch_panel_config[] = {0xA4, 0x00};
     ensure(sectrue * (HAL_OK == HAL_I2C_Master_Transmit(&i2c_handle, TOUCH_ADDRESS, touch_panel_config, sizeof(touch_panel_config), 10)), NULL);
+
+    touch_sensitivity(0x06);
 }
 
 void touch_power_off(void) {
@@ -119,6 +121,12 @@ void touch_power_off(void) {
     // turn off CTP circuitry
     HAL_Delay(50);
     touch_default_pin_state();
+}
+
+void touch_sensitivity(uint8_t value) {
+    // set panel threshold (TH_GROUP) - default value is 0x12
+    uint8_t touch_panel_threshold[] = {0x80, value};
+    ensure(sectrue * (HAL_OK == HAL_I2C_Master_Transmit(&i2c_handle, TOUCH_ADDRESS, touch_panel_threshold, sizeof(touch_panel_threshold), 10)), NULL);
 }
 
 uint32_t touch_is_detected(void)

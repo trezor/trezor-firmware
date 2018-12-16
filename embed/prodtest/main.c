@@ -226,6 +226,33 @@ static void test_touch(const char *args)
     touch_power_off();
 }
 
+static void test_sensitivity(const char *args)
+{
+    int v = atoi(args);
+
+    touch_power_on();
+    touch_sensitivity(v & 0xFF);
+
+    display_clear();
+    display_refresh();
+
+    for (;;) {
+        uint32_t evt = touch_read();
+        if (evt & TOUCH_START || evt & TOUCH_MOVE) {
+            int x = touch_unpack_x(evt);
+            int y = touch_unpack_y(evt);
+            display_clear();
+            display_bar(x - 48, y - 48, 96, 96, 0xFFFF);
+            display_refresh();
+        } else if (evt & TOUCH_END) {
+            display_clear();
+            display_refresh();
+        }
+    }
+
+    touch_power_off();
+}
+
 static void test_pwm(const char *args)
 {
     int v = atoi(args);
@@ -372,6 +399,9 @@ int main(void)
 
         } else if (startswith(line, "TOUCH ")) {
             test_touch(line + 6);
+
+        } else if (startswith(line, "SENS ")) {
+            test_sensitivity(line + 5);
 
         } else if (startswith(line, "PWM ")) {
             test_pwm(line + 4);

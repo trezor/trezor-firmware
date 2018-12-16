@@ -23,6 +23,8 @@ void touch_power_on(void) { }
 
 void touch_power_off(void) { }
 
+void touch_sensitivity(uint8_t value) { (void)value; }
+
 uint32_t touch_read(void)
 {
     static char last_left = 0, last_right = 0;
