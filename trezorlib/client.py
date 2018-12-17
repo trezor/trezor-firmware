@@ -141,10 +141,10 @@ class TrezorClient:
                 self.call_raw(messages.Cancel())
                 raise
 
-        passphrase = Mnemonic.normalize_string(passphrase)
-        if len(passphrase) > MAX_PASSPHRASE_LENGTH:
-            self.call_raw(messages.Cancel())
-            raise ValueError("Passphrase too long")
+            passphrase = Mnemonic.normalize_string(passphrase)
+            if len(passphrase) > MAX_PASSPHRASE_LENGTH:
+                self.call_raw(messages.Cancel())
+                raise ValueError("Passphrase too long")
 
         resp = self.call_raw(messages.PassphraseAck(passphrase=passphrase))
         if isinstance(resp, messages.PassphraseStateRequest):

@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 _At the moment, the project does __not__ adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
+## [0.11.1] - unreleased
+[0.11.1]: https://github.com/trezor/python-trezor/compare/v0.11.0...master
+
+### Fixed
+- crash when entering passphrase on device with Trezor T
 
 ## [0.11.0] - 2018-12-06
 [0.11.0]: https://github.com/trezor/python-trezor/compare/v0.10.2...v0.11.0
