@@ -164,6 +164,13 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=2894,
+        slip44=2894,
+        shortcut="REOSC",
+        name="REOSC Ecosystem",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=31102,
         slip44=31102,
         shortcut="ESN",
