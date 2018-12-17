@@ -210,7 +210,7 @@ def check_btc(coins):
             coin_strings.append(prefix + hl)
         return ", ".join(coin_strings)
 
-    def print_collision_buckets(buckets, prefix, maxlevel=logging.ERROR):
+    def print_collision_buckets(buckets, prefix, maxlevel=logging.ERROR, strict=False):
         """Intelligently print collision buckets.
 
         For each bucket, if there are any collision with a mainnet, print it.
@@ -233,7 +233,7 @@ def check_btc(coins):
             supported_networks = [c for c in bucket if not c.get("unsupported")]
 
             if len(mainnets) > 1:
-                if have_bitcoin and len(supported_networks) > 1:
+                if (have_bitcoin or strict) and len(supported_networks) > 1:
                     # ANY collision with Bitcoin is bad
                     level = maxlevel
                     failed = True
@@ -243,14 +243,14 @@ def check_btc(coins):
                 else:
                     # collision between some unsupported networks is OK
                     level = logging.INFO
-                print_log(level, "prefix {}:".format(key), collision_str(bucket))
+                print_log(level, "{} {}:".format(prefix, key), collision_str(bucket))
 
         return failed
 
     # slip44 collisions
-    print("Checking SLIP44 prefix collisions...")
+    print("Checking SLIP44 values collisions...")
     slip44 = find_collisions(coins, "slip44")
-    if print_collision_buckets(slip44, "key"):
+    if print_collision_buckets(slip44, "value", strict=True):
         check_passed = False
 
     # only check address_type on coins that don't use cashaddr
