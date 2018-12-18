@@ -35,22 +35,13 @@
 // You are supposed to replace the random8() and random32() function with your own secure code.
 // There is also a possibility to replace the random_buffer() function as it is defined as a weak symbol.
 
-static uint8_t random8(void)
-{
-    // Linear congruential generator used in glibc
-    // https://en.wikipedia.org/wiki/Linear_congruential_generator
-    static int seed = 0;
-    seed = (1103515245 * seed + 12345) & 0x7FFFFFFF;
-    return seed & 0xFF;
-}
-
 uint32_t random32(void)
 {
-    uint32_t r1 = random8();
-    uint32_t r2 = random8();
-    uint32_t r3 = random8();
-    uint32_t r4 = random8();
-    return ((r1 << 24) | (r2 << 16) | (r3 << 8) | r4);
+	// Linear congruential generator used in glibc
+	// https://en.wikipedia.org/wiki/Linear_congruential_generator
+	static uint32_t seed = 0;
+	seed = 1664525 * seed + 1013904223;
+	return seed;
 }
 
 #endif /* RAND_PLATFORM_INDEPENDENT */
