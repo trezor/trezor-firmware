@@ -287,7 +287,9 @@ void u2fhid_init(const U2FHID_FRAME *in)
 {
 	const U2FHID_INIT_REQ *init_req = (const U2FHID_INIT_REQ *)&in->init.data;
 	U2FHID_FRAME f;
-	U2FHID_INIT_RESP resp = {0};
+	U2FHID_INIT_RESP resp;
+
+	memset(&resp, 0, sizeof(resp));
 
 	debugLog(0, "", "u2fhid_init");
 
