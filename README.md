@@ -34,10 +34,22 @@ topic bigger than this README.
 In addition to the above, you need to install development headers for
 HIDAPI.
 
+#### Debian / Ubuntu
+
 On a Debian or Ubuntu based system, you can install these:
 
 ```sh
 sudo apt-get install python3-dev python3-pip cython3 libusb-1.0-0-dev libudev-dev
+```
+
+#### Windows
+
+On a Windows based system, you can install these (for more info on choco, refer to [this](https://chocolatey.org/install)):
+
+```sh
+choco install vcbuildtools python3 protoc
+refreshenv
+pip3 install protobuf
 ```
 
 When installing the trezor library, you need to specify that you want
