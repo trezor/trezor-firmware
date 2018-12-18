@@ -37,7 +37,7 @@
 
 uint32_t random32(void)
 {
-	// Linear congruential generator used in glibc
+	// Linear congruential generator from Numerical Recipes
 	// https://en.wikipedia.org/wiki/Linear_congruential_generator
 	static uint32_t seed = 0;
 	seed = 1664525 * seed + 1013904223;
