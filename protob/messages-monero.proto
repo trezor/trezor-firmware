@@ -386,6 +386,88 @@ message MoneroKeyImageSyncFinalAck {
 }
 
 /**
+ * Request: Decrypt tx private keys blob
+ * @next MoneroGetTxKeyAck
+ */
+message MoneroGetTxKeyRequest {
+    repeated uint32 address_n = 1;          // BIP-32 path to derive the key from master node
+    optional uint32 network_type = 2;       // Main-net / testnet / stagenet
+
+    optional bytes salt1 = 3;
+    optional bytes salt2 = 4;
+    optional bytes tx_enc_keys = 5;
+    optional bytes tx_prefix_hash = 6;
+    optional uint32 reason = 7;  // reason to display for user. e.g., tx_proof
+    optional bytes view_public_key = 8;   // addr for derivation
+}
+
+/**
+ * Response: Response with the re-encrypted private keys and derivations blob under view key
+ * @end
+ */
+message MoneroGetTxKeyAck {
+    optional bytes salt = 1;
+    optional bytes tx_keys = 2;
+    optional bytes tx_derivations = 3;
+}
+
+/**
+ * Request: Starts live refresh flow. Asks user permission, switches state
+ * @next MoneroLiveRefreshStartAck
+ */
+message MoneroLiveRefreshStartRequest {
+    repeated uint32 address_n = 1;          // BIP-32 path to derive the key from master node
+    optional uint32 network_type = 2;       // Main-net / testnet / stagenet
+}
+
+/**
+ * Response after user gave permission
+ * @next MoneroLiveRefreshStepRequest
+ * @next MoneroLiveRefreshFinalRequest
+ */
+message MoneroLiveRefreshStartAck {
+
+}
+
+/**
+ * Request: Request to compute a single key image during live sync
+ * @next MoneroLiveRefreshStepAck
+ */
+message MoneroLiveRefreshStepRequest {
+    optional bytes out_key = 1;
+    optional bytes recv_deriv = 2;
+    optional uint64 real_out_idx = 3;
+    optional uint32 sub_addr_major = 4;
+    optional uint32 sub_addr_minor = 5;
+}
+
+/**
+ * Response: Response with the encrypted key image + signature
+ * @next MoneroLiveRefreshStepRequest
+ * @next MoneroLiveRefreshFinishedRequest
+ */
+message MoneroLiveRefreshStepAck {
+    optional bytes salt = 1;
+    optional bytes key_image = 2;
+}
+
+/**
+ * Request: Request terminating live refresh mode.
+ * @next MoneroLiveRefreshFinishedAck
+ */
+message MoneroLiveRefreshFinalRequest {
+
+}
+
+/**
+ * Response: Response on termination of live refresh mode.
+ * @end
+ */
+message MoneroLiveRefreshFinalAck {
+
+}
+
+/**
  * Request: Universal Monero protocol implementation diagnosis request.
  * @start
  * @next DebugMoneroDiagAck
