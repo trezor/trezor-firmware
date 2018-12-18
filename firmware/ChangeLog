@@ -1,6 +1,8 @@
-Version 1.7.2 [unreleased]
+Version 1.7.2
 * Stable release, optional update
 * Add support for OMNI layer: OMNI/MAID/USDT
+* U2F fixes
+* Don't ask for PIN if it has been just set
 
 Version 1.7.1
 * Stable release, optional update
