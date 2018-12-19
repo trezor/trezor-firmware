@@ -21,6 +21,25 @@ async def require_confirm_keyimage_sync(ctx):
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
+async def require_confirm_live_refresh(ctx):
+    content = Text("Confirm ki sync", ui.ICON_SEND, icon_color=ui.GREEN)
+    content.normal("Do you really want to", "start refresh?")
+    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
+
+
+async def require_confirm_tx_key(ctx, export_key=False):
+    content = Text("Confirm export", ui.ICON_SEND, icon_color=ui.GREEN)
+    txt = ["Do you really want to"]
+    if export_key:
+        txt.append("export tx_key?")
+    else:
+        txt.append("export tx_der")
+        txt.append("for tx_proof?")
+
+    content.normal(*txt)
+    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
+
+
 async def require_confirm_transaction(ctx, tsx_data, network_type):
     """
     Ask for confirmation from user.
@@ -131,4 +150,13 @@ async def keyimage_sync_step(ctx, current, total_num):
         return
     text = Text("Syncing", ui.ICON_SEND, icon_color=ui.BLUE)
     text.normal("%d/%d" % (current + 1, total_num))
+    text.render()
+
+
+@ui.layout
+async def live_refresh_step(ctx, current):
+    if current is None:
+        return
+    text = Text("Refreshing", ui.ICON_SEND, icon_color=ui.BLUE)
+    text.normal("%d" % current)
     text.render()

@@ -12,6 +12,7 @@ from trezor.messages.MoneroTransactionFinalAck import MoneroTransactionFinalAck
 
 from .state import State
 
+from apps.monero import misc
 from apps.monero.xmr import crypto
 from apps.monero.xmr.crypto import chacha_poly
 
@@ -37,7 +38,5 @@ def _compute_tx_key(spend_key_private, tx_prefix_hash):
     rand_mult_num = crypto.random_scalar()
     rand_mult = crypto.encodeint(rand_mult_num)
 
-    rand_inp = crypto.sc_add(spend_key_private, rand_mult_num)
-    passwd = crypto.keccak_2hash(crypto.encodeint(rand_inp) + tx_prefix_hash)
-    tx_key = crypto.compute_hmac(salt, passwd)
+    tx_key = misc.compute_tx_key(spend_key_private, tx_prefix_hash, salt, rand_mult_num)
     return tx_key, salt, rand_mult
