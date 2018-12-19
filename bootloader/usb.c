@@ -118,7 +118,7 @@ static const struct usb_config_descriptor config = {
 static const char *usb_strings[] = {
 	"SatoshiLabs",
 	"TREZOR",
-	"", // empty serial
+	"000000000000000000000000",
 };
 
 enum {
