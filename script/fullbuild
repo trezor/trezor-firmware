@@ -125,7 +125,7 @@ main() {
     printf "\n\n"; $PYTHON script/fingerprint \
         "$firmware_path" \
         --offset 256 \
-        --max-size 491520
+        --max-size 983296  # 256 + 64*1024 + 3*128*1024 + 4*128*1024
 }
 
 main "$@"
