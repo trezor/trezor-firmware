@@ -32,7 +32,7 @@ color = {
 
 class Game:
     def __init__(self):
-        self.d = ui.Display()
+        self.d = ui.display
         self.d.backlight(ui.BACKLIGHT_NORMAL)
         self.d.bar(0, 0, ui.WIDTH, ui.HEIGHT, color["0"][1])
         self.m = [[0 for _ in range(4)] for _ in range(4)]
@@ -81,6 +81,7 @@ class Game:
     def update(self, d):
         for _ in range(4):
             self.compact(d)
+        self.add()
 
     def compact(self, d):
         if d == SWIPE_DOWN:
@@ -127,7 +128,6 @@ async def layout_game():
         game.render()
         swipe = await Swipe(absolute=True)
         game.update(swipe)
-        game.add()
 
 
 workflow.startdefault(layout_game)
