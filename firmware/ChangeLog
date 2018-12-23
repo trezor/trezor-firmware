@@ -1,3 +1,7 @@
+Version 1.7.3
+* Stable release, optional update
+* Fix USB issue on some Windows 10 installations
+
 Version 1.7.2
 * Stable release, optional update
 * Add support for OMNI layer: OMNI/MAID/USDT
