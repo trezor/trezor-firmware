@@ -30,8 +30,7 @@ try:
         QHBoxLayout,
     )
     from PyQt5.QtGui import QRegExpValidator
-    from PyQt5.QtCore import QRegExp, Qt
-    from PyQt5.Qt import QT_VERSION_STR
+    from PyQt5.QtCore import QRegExp, Qt, QT_VERSION_STR
 except Exception:
     from PyQt4.QtGui import (
         QPushButton,
