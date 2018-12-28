@@ -44,19 +44,19 @@ def require_confirm_change_pin(ctx, msg):
     if msg.remove and has_pin:  # removing pin
         text = Text("Remove PIN", ui.ICON_CONFIG)
         text.normal("Do you really want to")
-        text.bold("remove current PIN?")
+        text.bold("disable PIN protection?")
         return require_confirm(ctx, text)
 
     if not msg.remove and has_pin:  # changing pin
-        text = Text("Remove PIN", ui.ICON_CONFIG)
+        text = Text("Change PIN", ui.ICON_CONFIG)
         text.normal("Do you really want to")
-        text.bold("change current PIN?")
+        text.bold("change the current PIN?")
         return require_confirm(ctx, text)
 
     if not msg.remove and not has_pin:  # setting new pin
-        text = Text("Remove PIN", ui.ICON_CONFIG)
+        text = Text("Enable PIN", ui.ICON_CONFIG)
         text.normal("Do you really want to")
-        text.bold("set new PIN?")
+        text.bold("enable PIN protection?")
         return require_confirm(ctx, text)
 
 
