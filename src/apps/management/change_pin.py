@@ -16,7 +16,7 @@ async def change_pin(ctx, msg):
 
     # get current pin, return failure if invalid
     if config.has_pin():
-        curpin = await request_pin_ack(ctx)
+        curpin = await request_pin_ack(ctx, "Enter old PIN", config.get_pin_rem())
         if not config.check_pin(pin_to_int(curpin)):
             raise wire.PinInvalid("PIN invalid")
     else:

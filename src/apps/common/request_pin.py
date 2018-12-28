@@ -11,7 +11,7 @@ class PinCancelled(Exception):
 
 
 @ui.layout
-async def request_pin(label=None, cancellable: bool = True) -> str:
+async def request_pin(label=None, attempts_remaining=None, cancellable: bool = True) -> str:
     def onchange():
         c = dialog.cancel
         if matrix.pin:
@@ -36,7 +36,13 @@ async def request_pin(label=None, cancellable: bool = True) -> str:
 
     if label is None:
         label = "Enter your PIN"
-    matrix = PinMatrix(label)
+    sublabel = None
+    if attempts_remaining:
+        if attempts_remaining == 1:
+            sublabel = "This is your last attempt"
+        else:
+            sublabel = "{} attempts remaining".format(attempts_remaining)
+    matrix = PinMatrix(label, sublabel)
     matrix.onchange = onchange
     dialog = ConfirmDialog(matrix)
     dialog.cancel.area = ui.grid(12)

@@ -13,7 +13,7 @@ async def bootscreen():
             await lockscreen()
             label = None
             while True:
-                pin = await request_pin(label)
+                pin = await request_pin(label, config.get_pin_rem())
                 if config.unlock(pin_to_int(pin)):
                     return
                 else:

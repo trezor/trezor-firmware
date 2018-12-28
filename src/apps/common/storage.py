@@ -34,11 +34,11 @@ def _new_device_id() -> str:
 
 
 def get_device_id() -> str:
-    dev_id = config.get(_APP, _DEVICE_ID, True).decode()  # public
+    dev_id = config.get(_APP, _DEVICE_ID, True)  # public
     if not dev_id:
-        dev_id = _new_device_id()
-        config.set(_APP, _DEVICE_ID, dev_id.encode(), True)  # public
-    return dev_id
+        dev_id = _new_device_id().encode()
+        config.set(_APP, _DEVICE_ID, dev_id, True)  # public
+    return dev_id.decode()
 
 
 def is_initialized() -> bool:
