@@ -46,11 +46,17 @@ def is_initialized() -> bool:
 
 
 def get_label() -> str:
-    return config.get(_APP, _LABEL, True).decode()  # public
+    label = config.get(_APP, _LABEL, True) # public
+    if label is None:
+        return None
+    return label.decode()
 
 
 def get_mnemonic() -> str:
-    return config.get(_APP, _MNEMONIC).decode()
+    mnemonic = config.get(_APP, _MNEMONIC)
+    if mnemonic is None:
+        return None
+    return mnemonic.decode()
 
 
 def has_passphrase() -> bool:

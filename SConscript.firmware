@@ -10,10 +10,13 @@ SOURCE_MOD = []
 PYOPT = '1'
 
 # modtrezorconfig
+CPPPATH_MOD += [
+    'vendor/trezor-storage/c',
+]
 SOURCE_MOD += [
     'embed/extmod/modtrezorconfig/modtrezorconfig.c',
-    'embed/extmod/modtrezorconfig/norcow.c',
-    'embed/extmod/modtrezorconfig/storage.c',
+    'vendor/trezor-storage/c/norcow.c',
+    'vendor/trezor-storage/c/storage.c',
 ]
 
 # modtrezorcrypto

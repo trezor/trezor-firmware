@@ -37,8 +37,8 @@ class TestConfig(unittest.TestCase):
         config.wipe()
         v0 = config.get(1, 1)
         v1 = config.get(1, 2)
-        self.assertEqual(v0, bytes())
-        self.assertEqual(v1, bytes())
+        self.assertEqual(v0, None)
+        self.assertEqual(v1, None)
 
     def test_lock(self):
         for _ in range(128):
@@ -49,7 +49,7 @@ class TestConfig(unittest.TestCase):
             value = random.bytes(16)
             config.set(appid, key, value)
             config.init()
-            self.assertEqual(config.get(appid, key), bytes())
+            self.assertEqual(config.get(appid, key), None)
             with self.assertRaises(RuntimeError):
                 config.set(appid, key, bytes())
         config.init()
@@ -79,7 +79,7 @@ class TestConfig(unittest.TestCase):
         v1 = config.get(appid, key)
         v2 = config.get(appid, key, True)
         self.assertNotEqual(v1, v2)
-        self.assertEqual(v1, bytes())
+        self.assertEqual(v1, None)
         self.assertEqual(v2, value16)
 
     def test_change_pin(self):
@@ -90,7 +90,7 @@ class TestConfig(unittest.TestCase):
             config.set(PINAPP, PINKEY, b'value')
         self.assertEqual(config.change_pin(pin_to_int('000'), pin_to_int('666')), False)
         self.assertEqual(config.change_pin(pin_to_int(''), pin_to_int('000')), True)
-        self.assertEqual(config.get(PINAPP, PINKEY), bytes())
+        self.assertEqual(config.get(PINAPP, PINKEY), None)
         config.set(1, 1, b'value')
         config.init()
         self.assertEqual(config.unlock(pin_to_int('000')), True)
@@ -129,7 +129,7 @@ class TestConfig(unittest.TestCase):
         for _ in range(128):
             appid, key = random_entry()
             value = config.get(appid, key)
-            self.assertEqual(value, bytes())
+            self.assertEqual(value, None)
 
 
 if __name__ == '__main__':
