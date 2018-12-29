@@ -9,6 +9,8 @@ from apps.common import cache
 HOMESCREEN_MAXSIZE = 16384
 
 _STORAGE_VERSION = b"\x01"
+_FALSE_BYTE = b"\x00"
+_TRUE_BYTE = b"\x01"
 
 # fmt: off
 _APP                = const(0x01)  # app namespace
@@ -27,6 +29,16 @@ _UNFINISHED_BACKUP  = const(0x0B)  # bool (0x01 or empty)
 _AUTOLOCK_DELAY_MS  = const(0x0C)  # int
 _NO_BACKUP          = const(0x0D)  # bool (0x01 or empty)
 # fmt: on
+
+def _set_bool(app: int, key: int, value: bool, public: bool = False) -> None:
+    if value:
+        config.set(app, key, _TRUE_BYTE, public)
+    else:
+        config.set(app, key, _FALSE_BYTE, public)
+
+
+def _get_bool(app: int, key: int, public: bool = False) -> bool:
+    return config.get(app, key, public) == _TRUE_BYTE
 
 
 def _new_device_id() -> str:
@@ -60,7 +72,7 @@ def get_mnemonic() -> str:
 
 
 def has_passphrase() -> bool:
-    return bool(config.get(_APP, _USE_PASSPHRASE))
+    return _get_bool(_APP, _USE_PASSPHRASE)
 
 
 def get_homescreen() -> bytes:
@@ -70,18 +82,13 @@ def get_homescreen() -> bytes:
 def load_mnemonic(mnemonic: str, needs_backup: bool, no_backup: bool) -> None:
     config.set(_APP, _MNEMONIC, mnemonic.encode())
     config.set(_APP, _VERSION, _STORAGE_VERSION)
-    if no_backup:
-        config.set(_APP, _NO_BACKUP, b"\x01")
-    else:
-        config.set(_APP, _NO_BACKUP, b"")
-        if needs_backup:
-            config.set(_APP, _NEEDS_BACKUP, b"\x01")
-        else:
-            config.set(_APP, _NEEDS_BACKUP, b"")
+    _set_bool(_APP, _NO_BACKUP, no_backup)
+    if not no_backup:
+        _set_bool(_APP, _NEEDS_BACKUP, needs_backup)
 
 
 def needs_backup() -> bool:
-    return bool(config.get(_APP, _NEEDS_BACKUP))
+    return _get_bool(_APP, _NEEDS_BACKUP)
 
 
 def set_backed_up() -> None:
@@ -89,18 +96,15 @@ def set_backed_up() -> None:
 
 
 def unfinished_backup() -> bool:
-    return bool(config.get(_APP, _UNFINISHED_BACKUP))
+    return _get_bool(_APP, _UNFINISHED_BACKUP)
 
 
 def set_unfinished_backup(state: bool) -> None:
-    if state:
-        config.set(_APP, _UNFINISHED_BACKUP, b"\x01")
-    else:
-        config.set(_APP, _UNFINISHED_BACKUP, b"")
+    _set_bool(_APP, _UNFINISHED_BACKUP, state)
 
 
 def no_backup() -> bool:
-    return bool(config.get(_APP, _NO_BACKUP))
+    return _get_bool(_APP, _NO_BACKUP)
 
 
 def get_passphrase_source() -> int:
@@ -121,10 +125,7 @@ def load_settings(
 ) -> None:
     if label is not None:
         config.set(_APP, _LABEL, label.encode(), True)  # public
-    if use_passphrase is True:
-        config.set(_APP, _USE_PASSPHRASE, b"\x01")
-    if use_passphrase is False:
-        config.set(_APP, _USE_PASSPHRASE, b"")
+    _set_bool(_APP, _USE_PASSPHRASE, use_passphrase)
     if homescreen is not None:
         if homescreen[:8] == b"TOIf\x90\x00\x90\x00":
             if len(homescreen) <= HOMESCREEN_MAXSIZE:
