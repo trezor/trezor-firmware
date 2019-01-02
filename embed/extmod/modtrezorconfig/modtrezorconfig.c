@@ -26,6 +26,7 @@
 #include "embed/extmod/trezorobj.h"
 
 #include "storage.h"
+#include "utils.h"
 
 STATIC mp_obj_t ui_wait_callback = mp_const_none;
 
@@ -41,12 +42,18 @@ STATIC void wrapped_ui_wait_callback(uint32_t wait, uint32_t progress) {
 ///     called from this module!
 ///     '''
 STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
-    // TODO: Add salt.
+    uint32_t salt[] = {
+        utils_get_cpu_id(),
+        utils_get_flash_size(),
+        utils_get_uid_word0(),
+        utils_get_uid_word1(),
+        utils_get_uid_word2()
+    };
     if (n_args > 0) {
         ui_wait_callback = args[0];
-        storage_init(wrapped_ui_wait_callback, (const uint8_t*)"", 0);
+        storage_init(wrapped_ui_wait_callback, (const uint8_t*)salt, sizeof(salt));
     } else {
-        storage_init(NULL, (const uint8_t*)"", 0);
+        storage_init(NULL, (const uint8_t*)salt, sizeof(salt));
     }
     return mp_const_none;
 }

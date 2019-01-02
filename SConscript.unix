@@ -257,6 +257,7 @@ SOURCE_UNIX = [
     'embed/unix/sbu.c',
     'embed/unix/touch.c',
     'embed/unix/usb.c',
+    'embed/unix/utils.c',
 ]
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX
