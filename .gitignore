@@ -8,3 +8,4 @@ _attic/
 build/
 build-docker/
 emu.config
+compile_commands.json

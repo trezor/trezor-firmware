@@ -29,5 +29,8 @@ Mako = ">=1.0.7"
 monero_agent = {version = ">=1.7.1", extras = ["tcry", "dev"]}
 py_trezor_crypto_ph4 = {version = ">=0.1.1"}
 
+[dev-packages]
+scan-build = "*"
+
 [pipenv]
 allow_prereleases = true

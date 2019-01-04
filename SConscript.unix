@@ -262,10 +262,10 @@ env = Environment(ENV=os.environ, CFLAGS=ARGUMENTS.get('CFLAGS', ''))
 env.Tool('micropython')
 
 env.Replace(
+    CC=os.getenv('CC') or 'gcc',
     SED='sed',
     AS='as',
     AR='ar',
-    CC='gcc',
     LINK='ld',
     SIZE='size',
     STRIP='strip',
