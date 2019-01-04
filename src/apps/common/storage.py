@@ -8,7 +8,7 @@ from apps.common import cache
 
 HOMESCREEN_MAXSIZE = 16384
 
-_STORAGE_VERSION = b"\x01"
+_STORAGE_VERSION = b"\x02"
 _FALSE_BYTE = b"\x00"
 _TRUE_BYTE = b"\x01"
 _COUNTER_HEAD_LEN = 4
@@ -223,3 +223,15 @@ def set_u2f_counter(cntr: int) -> None:
 def wipe():
     config.wipe()
     cache.clear()
+
+
+def init_unlocked():
+    # Check for storage version upgrade.
+    version = config.get(_APP, _VERSION)
+    if version == b"\x01":
+        # Make the U2F counter public.
+        counter = config.get(_APP, _U2F_COUNTER)
+        if counter is not None:
+            _set_counter(_APP, _U2F_COUNTER, counter, True)
+            config.delete(_APP, _U2F_COUNTER)
+        config.set(_APP, _VERSION, _STORAGE_VERSION)
