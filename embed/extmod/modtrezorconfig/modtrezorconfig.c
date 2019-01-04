@@ -170,6 +170,24 @@ STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_obj, 3, 4, mod_trezorconfig_set);
 
+/// def delete(app: int, key: int, public: bool=False) -> bool:
+///     '''
+///     Deletes the given key of the given app.
+///     '''
+STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
+    uint8_t app = trezor_obj_get_uint8(args[0]) & 0x7F;
+    uint8_t key = trezor_obj_get_uint8(args[1]);
+    if (n_args > 2 && args[2] == mp_const_true) {
+        app |= 0x80;
+    }
+    uint16_t appkey = (app << 8) | key;
+    if (sectrue != storage_delete(appkey)) {
+        return mp_const_false;
+    }
+    return mp_const_true;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_delete_obj, 3, 4, mod_trezorconfig_delete);
+
 /// def wipe() -> None:
 ///     '''
 ///     Erases the whole config. Use with caution!
@@ -190,6 +208,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_change_pin), MP_ROM_PTR(&mod_trezorconfig_change_pin_obj) },
     { MP_ROM_QSTR(MP_QSTR_get), MP_ROM_PTR(&mod_trezorconfig_get_obj) },
     { MP_ROM_QSTR(MP_QSTR_set), MP_ROM_PTR(&mod_trezorconfig_set_obj) },
+    { MP_ROM_QSTR(MP_QSTR_delete), MP_ROM_PTR(&mod_trezorconfig_delete_obj) },
     { MP_ROM_QSTR(MP_QSTR_wipe), MP_ROM_PTR(&mod_trezorconfig_wipe_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorconfig_globals, mp_module_trezorconfig_globals_table);
