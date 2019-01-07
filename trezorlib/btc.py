@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from . import messages
+from . import coins, messages
 from .tools import CallException, expect, normalize_nfc, session
 
 
@@ -91,19 +91,24 @@ def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
     # set up a transactions dict
     txes = {None: messages.TransactionType(inputs=inputs, outputs=outputs)}
     # preload all relevant transactions ahead of time
-    for inp in inputs:
-        if inp.script_type not in (
-            messages.InputScriptType.SPENDP2SHWITNESS,
-            messages.InputScriptType.SPENDWITNESS,
-            messages.InputScriptType.EXTERNAL,
-        ):
-            try:
-                prev_tx = prev_txes[inp.prev_hash]
-            except Exception as e:
-                raise ValueError("Could not retrieve prev_tx") from e
-            if not isinstance(prev_tx, messages.TransactionType):
-                raise ValueError("Invalid value for prev_tx") from None
-            txes[inp.prev_hash] = prev_tx
+    if coin_name in coins.by_name:
+        load_prevtxes = not coins.by_name[coin_name]["force_bip143"]
+    else:
+        load_prevtxes = True
+    if load_prevtxes:
+        for inp in inputs:
+            if inp.script_type not in (
+                messages.InputScriptType.SPENDP2SHWITNESS,
+                messages.InputScriptType.SPENDWITNESS,
+                messages.InputScriptType.EXTERNAL,
+            ):
+                try:
+                    prev_tx = prev_txes[inp.prev_hash]
+                except Exception as e:
+                    raise ValueError("Could not retrieve prev_tx") from e
+                if not isinstance(prev_tx, messages.TransactionType):
+                    raise ValueError("Invalid value for prev_tx") from None
+                txes[inp.prev_hash] = prev_tx
 
     if details is None:
         signtx = messages.SignTx()
