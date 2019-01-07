@@ -31,6 +31,7 @@ FIELDS_MAP = {
     "flags": {"type": FIELD_TYPE_INT32, "key": 2},
     "txnSignature": {"type": FIELD_TYPE_VL, "key": 4},
     "lastLedgerSequence": {"type": FIELD_TYPE_INT32, "key": 27},
+    "destinationTag": {"type": FIELD_TYPE_INT32, "key": 14},
 }
 
 TRANSACTION_TYPES = {"Payment": 0}
@@ -42,6 +43,7 @@ def serialize(msg: RippleSignTx, source_address: str, pubkey=None, signature=Non
     write(w, FIELDS_MAP["type"], TRANSACTION_TYPES["Payment"])
     write(w, FIELDS_MAP["flags"], msg.flags)
     write(w, FIELDS_MAP["sequence"], msg.sequence)
+    write(w, FIELDS_MAP["destinationTag"], msg.payment.destination_tag)
     write(w, FIELDS_MAP["lastLedgerSequence"], msg.last_ledger_sequence)
     write(w, FIELDS_MAP["amount"], msg.payment.amount)
     write(w, FIELDS_MAP["fee"], msg.fee)

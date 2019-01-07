@@ -16,6 +16,13 @@ async def require_confirm_fee(ctx, fee):
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
+async def require_confirm_destination_tag(ctx, tag):
+    text = Text("Confirm tag", ui.ICON_SEND, icon_color=ui.GREEN)
+    text.normal("Destination tag:")
+    text.bold(str(tag))
+    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
+
+
 async def require_confirm_tx(ctx, to, value):
 
     text = Text("Confirm sending", ui.ICON_SEND, icon_color=ui.GREEN)
