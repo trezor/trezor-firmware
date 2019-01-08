@@ -9,13 +9,16 @@ class RipplePayment(p.MessageType):
         self,
         amount: int = None,
         destination: str = None,
+        destination_tag: int = None,
     ) -> None:
         self.amount = amount
         self.destination = destination
+        self.destination_tag = destination_tag
 
     @classmethod
     def get_fields(cls):
         return {
             1: ('amount', p.UVarintType, 0),
             2: ('destination', p.UnicodeType, 0),
+            3: ('destination_tag', p.UVarintType, 0),
         }
