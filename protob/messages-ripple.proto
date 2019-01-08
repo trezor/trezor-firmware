@@ -45,6 +45,7 @@ message RippleSignTx {
 	message RipplePayment {
 		optional uint64 amount = 1;				// only XRP is supported at the moment so this an integer
 		optional string destination = 2;		// destination account address
+		optional uint32 destination_tag = 3;	// destination tag to identify payments
 	}
 }
 
