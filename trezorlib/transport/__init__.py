@@ -133,8 +133,8 @@ def get_transport(path: str = None, prefix_search: bool = False) -> Transport:
     if path is None:
         try:
             return next(iter(enumerate_devices()))
-        except IndexError:
-            raise Exception("No TREZOR device found") from None
+        except StopIteration:
+            raise TransportException("No TREZOR device found") from None
 
     # Find whether B is prefix of A (transport name is part of the path)
     # or A is prefix of B (path is a prefix, or a name, of transport).
@@ -151,4 +151,4 @@ def get_transport(path: str = None, prefix_search: bool = False) -> Transport:
     if transports:
         return transports[0].find_by_path(path, prefix_search=prefix_search)
 
-    raise Exception("Could not find device by path: {}".format(path))
+    raise TransportException("Could not find device by path: {}".format(path))
