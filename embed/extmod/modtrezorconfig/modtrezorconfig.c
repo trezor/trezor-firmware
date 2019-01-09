@@ -43,8 +43,6 @@ STATIC void wrapped_ui_wait_callback(uint32_t wait, uint32_t progress) {
 ///     '''
 STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
     uint32_t salt[] = {
-        utils_get_cpu_id(),
-        utils_get_flash_size(),
         utils_get_uid_word0(),
         utils_get_uid_word1(),
         utils_get_uid_word2()
