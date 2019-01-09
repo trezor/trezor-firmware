@@ -87,6 +87,8 @@ def request_tx_extra_data(
     tx_req.details.request_index = None
     ack = yield tx_req
     tx_req.serialized = None
+    tx_req.details.extra_data_offset = None
+    tx_req.details.extra_data_len = None
     return ack.tx.extra_data
 
 

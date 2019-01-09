@@ -568,7 +568,7 @@
         "trezor": {
             "editable": true,
             "git": "https://github.com/trezor/python-trezor",
-            "ref": "369b704f6bf60e510e1fcb03b021ff1866894459"
+            "ref": "master"
         },
         "typing-extensions": {
             "hashes": [
