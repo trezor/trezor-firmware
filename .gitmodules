@@ -15,4 +15,4 @@
 	url = https://github.com/nanopb/nanopb.git
 [submodule "vendor/trezor-storage"]
 	path = vendor/trezor-storage
-	url = git@github.com:satoshilabs/trezor-storage.git
+	url = https://github.com/trezor/trezor-storage.git
