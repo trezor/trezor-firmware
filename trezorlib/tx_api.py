@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import random
+import struct
 from decimal import Decimal
 
 import requests
@@ -30,6 +31,21 @@ def is_zcash(coin):
 
 def is_capricoin(coin):
     return coin["coin_name"].lower().startswith("capricoin")
+
+
+def is_dash(coin):
+    return coin["coin_name"].lower().startswith("dash")
+
+
+def pack_varint(n):
+    if n < 253:
+        return struct.pack("<B", n)
+    elif n <= 0xFFFF:
+        return struct.pack("<BH", 253, n)
+    elif n <= 0xFFFFFFFF:
+        return struct.pack("<BL", 254, n)
+    else:
+        return struct.pack("<BQ", 255, n)
 
 
 def _json_to_input(coin, vin):
@@ -103,6 +119,25 @@ def json_to_tx(coin, data):
             rawtx = bytes.fromhex(data["hex"])
             extra_data_len = 1 + joinsplit_cnt * 1802 + 32 + 64
             t.extra_data = rawtx[-extra_data_len:]
+
+    if is_dash(coin):
+        dip2_type = data.get("type", 0)
+
+        if t.version == 3 and dip2_type != 0:
+            # It's a DIP2 special TX with payload
+
+            if "extraPayloadSize" not in data or "extraPayload" not in data:
+                raise ValueError("Payload data missing in DIP2 transaction")
+
+            if data["extraPayloadSize"] * 2 != len(data["extraPayload"]):
+                raise ValueError("length mismatch")
+            t.extra_data = pack_varint(data["extraPayloadSize"]) + bytes.fromhex(
+                data["extraPayload"]
+            )
+
+        # Trezor firmware doesn't understand the split of version and type, so let's mimic the
+        # old serialization format
+        t.version |= dip2_type << 16
 
     return t
 

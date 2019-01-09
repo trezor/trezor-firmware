@@ -23,6 +23,7 @@ from ..support.tx_cache import tx_cache
 TxApiBitcoin = coins.tx_api["Bitcoin"]
 TxApiTestnet = tx_cache("Testnet", allow_fetch=False)
 TxApiZencash = coins.tx_api["Zencash"]
+TxApiDash = tx_cache("Dash", allow_fetch=False)
 
 tests_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -82,3 +83,26 @@ def test_tx_api_get_block_hash():
     assert (
         hash.hex() == "000000003f5d6ba1385c6cd2d4f836dfc5adf7f98834309ad67e26faef462454"
     )
+
+
+def test_tx_api_dash_dip2():
+    # Test if pre-DIP2 TXs are still working as expected
+    tx = TxApiDash.get_tx(
+        "acb3b7f259429989fc9c51ae4a5e3e3eab0723dceb21577533ac7c4b4ba4db5d"
+    )
+    assert tx.version == 2  # pre-DIP2
+    assert tx.extra_data is None and tx.extra_data_len is None
+
+    # Test if version 3 TX with type=0 is treated as normal TX
+    tx = TxApiDash.get_tx(
+        "5579eaa64b2a0233e7d8d037f5a5afc957cedf48f1c4067e9e33ca6df22ab04f"
+    )
+    assert tx.version == 3
+    assert tx.extra_data is None and tx.extra_data_len is None
+
+    # Test if DIP2 payloads are initialized correctly
+    tx = TxApiDash.get_tx(
+        "15575a1c874bd60a819884e116c42e6791c8283ce1fc3b79f0d18531a61bbb8a"
+    )
+    assert tx.version == (3 | (5 << 16))  # DIP2 type 1 (ProRegTx)
+    assert len(tx.extra_data) == (38 + 1)  # real length + varint size
