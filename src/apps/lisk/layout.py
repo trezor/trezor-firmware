@@ -1,7 +1,7 @@
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
-from trezor.utils import chunks
+from trezor.utils import chunks, format_amount
 
 from .helpers import get_vote_tx_text
 
@@ -11,7 +11,7 @@ from apps.common.layout import show_pubkey, split_address
 
 async def require_confirm_tx(ctx, to, value):
     text = Text("Confirm sending", ui.ICON_SEND, icon_color=ui.GREEN)
-    text.bold(format_amount(value))
+    text.bold(format_coin_amount(value))
     text.normal("to")
     text.mono(*split_address(to))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
@@ -45,11 +45,11 @@ async def require_confirm_multisig(ctx, multisignature):
 
 async def require_confirm_fee(ctx, value, fee):
     text = Text("Confirm transaction", ui.ICON_SEND, icon_color=ui.GREEN)
-    text.bold(format_amount(value))
+    text.bold(format_coin_amount(value))
     text.normal("fee:")
-    text.bold(format_amount(fee))
+    text.bold(format_coin_amount(fee))
     await require_hold_to_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
-def format_amount(value):
-    return "%s LSK" % (int(value) / 100000000)
+def format_coin_amount(value):
+    return "%s LSK" % format_amount(value, 8)
