@@ -1,4 +1,4 @@
-from trezor import res, ui
+from trezor import res, ui, utils
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
 from trezor.utils import chunks
@@ -114,7 +114,7 @@ async def naive_pagination(
 
 
 def format_amount(value):
-    return "%f XMR" % (value / 1000000000000)
+    return "%s XMR" % utils.format_amount(value, 12)
 
 
 def split_address(address):
