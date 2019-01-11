@@ -9,9 +9,6 @@ SOURCE_MOD = []
 LIBS_MOD = []
 
 # modtrezorconfig
-CPPPATH_MOD += [
-    'vendor/trezor-storage/c',
-]
 SOURCE_MOD += [
     'embed/extmod/modtrezorconfig/modtrezorconfig.c',
     'vendor/trezor-storage/c/norcow.c',
@@ -299,6 +296,7 @@ env.Replace(
         '.',
         'embed/unix',
         'embed/extmod/modtrezorui',
+        'vendor/trezor-storage/c',
         'vendor/micropython',
         'vendor/micropython/ports/unix',
         'vendor/micropython/lib/mp-readline',

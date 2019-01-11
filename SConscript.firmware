@@ -10,9 +10,6 @@ SOURCE_MOD = []
 PYOPT = '1'
 
 # modtrezorconfig
-CPPPATH_MOD += [
-    'vendor/trezor-storage/c',
-]
 SOURCE_MOD += [
     'embed/extmod/modtrezorconfig/modtrezorconfig.c',
     'vendor/trezor-storage/c/norcow.c',
@@ -330,6 +327,7 @@ env.Replace(
         'embed/firmware',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
+        'vendor/trezor-storage/c',
         'vendor/micropython',
         'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',
         'vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include',
