@@ -19,7 +19,7 @@
 
 #include "utils.h"
 #include STM32_HAL_H
-#include "stm32l4xx_ll_utils.h"
+#include "stm32f4xx_ll_utils.h"
 
 /*
  * Returns the CPUID Base Register of the System Control Block.
