@@ -11,7 +11,9 @@ class PinCancelled(Exception):
 
 
 @ui.layout
-async def request_pin(label=None, attempts_remaining=None, cancellable: bool = True) -> str:
+async def request_pin(
+    label=None, attempts_remaining=None, cancellable: bool = True
+) -> str:
     def onchange():
         c = dialog.cancel
         if matrix.pin:

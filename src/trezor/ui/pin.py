@@ -64,7 +64,9 @@ class PinMatrix(ui.Widget):
         elif self.sublabel:
             # input line with header label and sublabel
             display.text_center(ui.WIDTH // 2, 20, self.label, ui.BOLD, ui.GREY, ui.BG)
-            display.text_center(ui.WIDTH // 2, 46, self.sublabel, ui.NORMAL, ui.GREY, ui.BG)
+            display.text_center(
+                ui.WIDTH // 2, 46, self.sublabel, ui.NORMAL, ui.GREY, ui.BG
+            )
         else:
             # input line with header label
             display.text_center(ui.WIDTH // 2, 36, self.label, ui.BOLD, ui.GREY, ui.BG)
