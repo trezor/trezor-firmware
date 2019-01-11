@@ -30,6 +30,13 @@ def get_address(client, n, show_display=False, multisig=None):
     return client.call(proto.EthereumGetAddress(address_n=n, show_display=show_display))
 
 
+@expect(proto.EthereumPublicKey)
+def get_public_node(client, n, show_display=False):
+    return client.call(
+        proto.EthereumGetPublicKey(address_n=n, show_display=show_display)
+    )
+
+
 @session
 def sign_tx(
     client,

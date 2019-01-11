@@ -1060,6 +1060,28 @@ def ethereum_get_address(connect, address, show_display):
     return "0x%s" % address.hex()
 
 
+@cli.command(help="Get Ethereum public node of given path.")
+@click.option(
+    "-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/60'/0'/0/0"
+)
+@click.option("-d", "--show-display", is_flag=True)
+@click.pass_obj
+def ethereum_get_public_node(connect, address, show_display):
+    client = connect()
+    address_n = tools.parse_path(address)
+    result = ethereum.get_public_node(client, address_n, show_display=show_display)
+    return {
+        "node": {
+            "depth": result.node.depth,
+            "fingerprint": "%08x" % result.node.fingerprint,
+            "child_num": result.node.child_num,
+            "chain_code": result.node.chain_code.hex(),
+            "public_key": result.node.public_key.hex(),
+        },
+        "xpub": result.xpub,
+    }
+
+
 @cli.command(
     help='Sign (and optionally publish) Ethereum transaction. Use TO as destination address or set TO to "" for contract creation.'
 )

@@ -46,3 +46,7 @@ class TestMsgEthereumGetaddress(TrezorTest):
             ethereum.get_address(self.client, [H_(44), H_(60), 0, 9999999]).hex()
             == "6b909b50d88c9a8e02453a87b3662e3e7a5e0cf1"
         )
+        assert (
+            ethereum.get_address(self.client, [H_(44), H_(6060), 0, 9999999]).hex()
+            == "98b8e926bd224764de2a0e4f4cbe1521474050af"
+        )
