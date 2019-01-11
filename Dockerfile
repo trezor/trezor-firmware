@@ -8,7 +8,7 @@ ENV TOOLCHAIN_FLAVOR=$TOOLCHAIN_FLAVOR
 # install build tools and dependencies
 
 RUN apt-get update && apt-get install -y \
-    build-essential wget git python3-pip gcc-multilib
+    build-essential wget git python3-pip
 
 # install dependencies from toolchain source build
 
@@ -46,20 +46,23 @@ RUN if [ "$TOOLCHAIN_FLAVOR" = "src" ]; then \
         popd ; \
     fi
 
-# install additional tools
+# download protobuf
 
-RUN apt-get install -y protobuf-compiler libprotobuf-dev
+ENV PROTOBUF_VERSION=3.4.0
+ENV PROTOBUF_HASH=e4b51de1b75813e62d6ecdde582efa798586e09b5beaebfb866ae7c9eaadace4
+RUN wget "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
+RUN echo "${PROTOBUF_HASH} protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" | sha256sum -c
 
 # setup toolchain
 
 ENV PATH=/opt/$TOOLCHAIN_LONGVER/bin:$PATH
 
+ENV PYTHON=python3
+ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
+
+# use zipfile module to extract files world-readable
+RUN $PYTHON -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/local && chmod 755 /usr/local/bin/protoc
+
 # install python dependencies
 
-RUN pip3 install scons trezor
-
-# workarounds for weird default install
-
-RUN ln -s python3 /usr/bin/python
-RUN ln -s dist-packages /usr/local/lib/python3.5/site-packages
-ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
+RUN $PYTHON -m pip install scons trezor
