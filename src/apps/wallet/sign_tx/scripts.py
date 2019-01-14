@@ -156,13 +156,17 @@ def witness_p2wsh(
     signature_index: int,
     sighash: int,
 ):
-    signatures = multisig.signatures  # other signatures
-    if len(signatures[signature_index]) > 0:
+    # get other signatures, stretch with None to the number of the pubkeys
+    signatures = multisig.signatures + [None] * (
+        len(multisig.pubkeys) - len(multisig.signatures)
+    )
+    # fill in our signature
+    if signatures[signature_index]:
         raise ScriptsError("Invalid multisig parameters")
-    signatures[signature_index] = signature  # our signature
+    signatures[signature_index] = signature
 
     # filter empty
-    signatures = [s for s in multisig.signatures if len(s) > 0]
+    signatures = [s for s in multisig.signatures if s]
 
     # witness program + signatures + redeem script
     num_of_witness_items = 1 + len(signatures) + 1
