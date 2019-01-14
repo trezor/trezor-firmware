@@ -25,7 +25,9 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg)
 
 	CHECK_PIN
 
-	const CoinInfo *coin = fsm_getCoin(true, "Bitcoin");  // we use Bitcoin-like format for ETH
+	// we use Bitcoin-like format for ETH
+	const CoinInfo *coin = fsm_getCoin(true, "Bitcoin");
+	if (!coin) return;
 
 	const char *curve = coin->curve_name;
 	uint32_t fingerprint;
