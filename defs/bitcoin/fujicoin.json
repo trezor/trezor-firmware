@@ -35,9 +35,9 @@
   "uri_prefix": "fujicoin",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [
+  "bitcore": [],
+  "blockbook": [
     "https://explorer.fujicoin.org"
   ],
-  "blockbook": [],
   "cooldown": 100
 }
