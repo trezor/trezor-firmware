@@ -72,11 +72,13 @@ async def get_keychain(ctx: wire.Context, namespaces: list) -> Keychain:
 def _start_bip39_progress():
     ui.display.clear()
     ui.header("Please wait")
+    ui.display.refresh()
 
 
 def _render_bip39_progress(progress: int, total: int):
     p = int(1000 * progress / total)
     ui.display.loader(p, 18, ui.WHITE, ui.BG)
+    ui.display.refresh()
 
 
 def derive_node_without_passphrase(
