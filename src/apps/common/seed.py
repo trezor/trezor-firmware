@@ -1,6 +1,5 @@
 from trezor import ui, wire
 from trezor.crypto import bip32, bip39
-from trezor.ui.text import Text
 
 from apps.common import cache, storage
 from apps.common.request_passphrase import protect_by_passphrase
@@ -62,19 +61,22 @@ async def get_keychain(ctx: wire.Context, namespaces: list) -> Keychain:
         if passphrase is None:
             passphrase = await protect_by_passphrase(ctx)
             cache.set_passphrase(passphrase)
-        await layout_waiting_screen()
-        seed = bip39.seed(storage.get_mnemonic(), passphrase)
+        _start_bip39_progress()
+        seed = bip39.seed(storage.get_mnemonic(), passphrase, _render_bip39_progress)
         cache.set_seed(seed)
 
     keychain = Keychain(seed, namespaces)
     return keychain
 
 
-@ui.layout
-async def layout_waiting_screen():
-    text = Text("Deriving seed")
-    text.bold("Please wait...")
-    text.render()
+def _start_bip39_progress():
+    ui.display.clear()
+    ui.header("Please wait")
+
+
+def _render_bip39_progress(progress: int, total: int):
+    p = int(1000 * progress / total)
+    ui.display.loader(p, 18, ui.WHITE, ui.BG)
 
 
 def derive_node_without_passphrase(

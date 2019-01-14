@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "py/runtime.h"
 #include "py/objstr.h"
 
 #include "bip39.h"
@@ -110,22 +111,38 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_check(mp_obj_t mnemonic) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_check_obj, mod_trezorcrypto_bip39_check);
 
-/// def seed(mnemonic: str, passphrase: str) -> bytes:
+STATIC mp_obj_t ui_wait_callback = mp_const_none;
+
+STATIC void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
+    if (mp_obj_is_callable(ui_wait_callback)) {
+        mp_call_function_2_protected(ui_wait_callback, mp_obj_new_int(current), mp_obj_new_int(total));
+    }
+}
+
+/// def seed(mnemonic: str, passphrase: str, callback: (int, int -> None)=None) -> bytes:
 ///     '''
 ///     Generate seed from mnemonic and passphrase.
 ///     '''
-STATIC mp_obj_t mod_trezorcrypto_bip39_seed(mp_obj_t mnemonic, mp_obj_t passphrase) {
+STATIC mp_obj_t mod_trezorcrypto_bip39_seed(size_t n_args, const mp_obj_t *args) {
     mp_buffer_info_t mnemo;
     mp_buffer_info_t phrase;
-    mp_get_buffer_raise(mnemonic, &mnemo, MP_BUFFER_READ);
-    mp_get_buffer_raise(passphrase, &phrase, MP_BUFFER_READ);
+    mp_get_buffer_raise(args[0], &mnemo, MP_BUFFER_READ);
+    mp_get_buffer_raise(args[1], &phrase, MP_BUFFER_READ);
     uint8_t seed[64];
     const char *pmnemonic = mnemo.len > 0 ? mnemo.buf : "";
     const char *ppassphrase = phrase.len > 0 ? phrase.buf : "";
-    mnemonic_to_seed(pmnemonic, ppassphrase, seed, NULL); // no callback for now
+    if (n_args > 2) {
+        // generate with a progress callback
+        ui_wait_callback = args[2];
+        mnemonic_to_seed(pmnemonic, ppassphrase, seed, wrapped_ui_wait_callback);
+        ui_wait_callback = mp_const_none;
+    } else {
+        // generate without callback
+        mnemonic_to_seed(pmnemonic, ppassphrase, seed, NULL);
+    }
     return mp_obj_new_bytes(seed, sizeof(seed));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip39_seed_obj, mod_trezorcrypto_bip39_seed);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_bip39_seed_obj, 2, 3, mod_trezorcrypto_bip39_seed);
 
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_bip39_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_bip39) },
