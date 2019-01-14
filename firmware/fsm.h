@@ -91,6 +91,7 @@ void fsm_msgDebugLinkFlashErase(const DebugLinkFlashErase *msg);
 
 // ethereum
 void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg);
+void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg);
 void fsm_msgEthereumSignTx(EthereumSignTx *msg);  // not const because we mutate transaction
 void fsm_msgEthereumTxAck(const EthereumTxAck *msg);
 void fsm_msgEthereumSignMessage(const EthereumSignMessage *msg);

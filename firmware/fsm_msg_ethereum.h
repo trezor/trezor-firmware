@@ -17,6 +17,52 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg)
+{
+	RESP_INIT(EthereumPublicKey);
+
+	CHECK_INITIALIZED
+
+	CHECK_PIN
+
+	const CoinInfo *coin = fsm_getCoin(true, "Bitcoin");  // we use Bitcoin-like format for ETH
+
+	const char *curve = coin->curve_name;
+	uint32_t fingerprint;
+	HDNode *node = node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count, &fingerprint);
+	if (!node) return;
+	hdnode_fill_public_key(node);
+
+	if (msg->has_show_display && msg->show_display) {
+		layoutPublicKey(node->public_key);
+		if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+			fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+			layoutHome();
+			return;
+		}
+	}
+
+	resp->node.depth = node->depth;
+	resp->node.fingerprint = fingerprint;
+	resp->node.child_num = node->child_num;
+	resp->node.chain_code.size = 32;
+	memcpy(resp->node.chain_code.bytes, node->chain_code, 32);
+	resp->node.has_private_key = false;
+	resp->node.has_public_key = true;
+	resp->node.public_key.size = 33;
+	memcpy(resp->node.public_key.bytes, node->public_key, 33);
+	if (node->public_key[0] == 1) {
+		/* ed25519 public key */
+		resp->node.public_key.bytes[0] = 0;
+	}
+	resp->has_xpub = true;
+
+	hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub, sizeof(resp->xpub));
+
+	msg_write(MessageType_MessageType_EthereumPublicKey, resp);
+	layoutHome();
+}
+
 void fsm_msgEthereumSignTx(EthereumSignTx *msg)
 {
 	CHECK_INITIALIZED
