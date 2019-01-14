@@ -54,11 +54,10 @@ class TestRippleSerializer(unittest.TestCase):
 
         # https://github.com/ripple/ripple-binary-codec/blob/4581f1b41e712f545ba08be15e188a557c731ecf/test/fixtures/data-driven-tests.json#L1732
         source_address = "r4BPgS7DHebQiU31xWELvZawwSG2fSPJ7C"
-        payment = RipplePayment(25000000, "rBqSFEFg2B6GBMobtxnU1eLA1zbNC9NDGM")
+        payment = RipplePayment(25000000, "rBqSFEFg2B6GBMobtxnU1eLA1zbNC9NDGM", 4146942154)
         common = RippleSignTx(None, 12, 0, 1, None, payment)
-        # 2ef72d50ca removed from the test vector because destination tag is not supported
         assert serialize(common, source_address) == unhexlify(
-            "120000220000000024000000016140000000017d784068400000000000000c8114e851bbbe79e328e43d68f43445368133df5fba5a831476dac5e814cd4aa74142c3ab45e69a900e637aa2"
+            "120000220000000024000000012ef72d50ca6140000000017d784068400000000000000c8114e851bbbe79e328e43d68f43445368133df5fba5a831476dac5e814cd4aa74142c3ab45e69a900e637aa2"
         )
 
     def test_transactions_for_signing(self):
