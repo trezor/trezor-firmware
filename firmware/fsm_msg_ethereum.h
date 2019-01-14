@@ -51,10 +51,6 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg)
 	resp->node.has_public_key = true;
 	resp->node.public_key.size = 33;
 	memcpy(resp->node.public_key.bytes, node->public_key, 33);
-	if (node->public_key[0] == 1) {
-		/* ed25519 public key */
-		resp->node.public_key.bytes[0] = 0;
-	}
 	resp->has_xpub = true;
 
 	hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub, sizeof(resp->xpub));
