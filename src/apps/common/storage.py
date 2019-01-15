@@ -45,6 +45,10 @@ def _get_bool(app: int, key: int, public: bool = False) -> bool:
 
 
 def _set_counter(app: int, key: int, count: int, public: bool = False) -> None:
+    if count is None:
+        config.delete(app, key, public)
+        return
+
     value = count.to_bytes(_COUNTER_HEAD_LEN, "big")
     if public:
         value += _COUNTER_TAIL_LEN * b"\xff"

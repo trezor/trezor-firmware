@@ -15,6 +15,10 @@ class TestConfig(unittest.TestCase):
         storage.set_u2f_counter(350)
         for i in range(351, 500):
             self.assertEqual(storage.next_u2f_counter(), i)
+        storage.set_u2f_counter(0)
+        self.assertEqual(storage.next_u2f_counter(), 1)
+        storage.set_u2f_counter(None)
+        self.assertEqual(storage.next_u2f_counter(), 0)
 
 
 if __name__ == '__main__':
