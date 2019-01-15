@@ -168,7 +168,8 @@ def load_settings(
 ) -> None:
     if label is not None:
         config.set(_APP, _LABEL, label.encode(), True)  # public
-    _set_bool(_APP, _USE_PASSPHRASE, use_passphrase)
+    if use_passphrase is not None:
+        _set_bool(_APP, _USE_PASSPHRASE, use_passphrase)
     if homescreen is not None:
         if homescreen[:8] == b"TOIf\x90\x00\x90\x00":
             if len(homescreen) <= HOMESCREEN_MAXSIZE:
