@@ -215,11 +215,11 @@ def set_autolock_delay_ms(delay_ms: int) -> None:
 
 
 def next_u2f_counter() -> int:
-    return _next_counter(_APP, _U2F_COUNTER)
+    return _next_counter(_APP, _U2F_COUNTER, True)  # public
 
 
 def set_u2f_counter(cntr: int) -> None:
-    _set_counter(_APP, _U2F_COUNTER, cntr)
+    _set_counter(_APP, _U2F_COUNTER, cntr, True)  # public
 
 
 def wipe():
@@ -234,6 +234,6 @@ def init_unlocked():
         # Make the U2F counter public.
         counter = config.get(_APP, _U2F_COUNTER)
         if counter is not None:
-            _set_counter(_APP, _U2F_COUNTER, counter, True)
+            _set_counter(_APP, _U2F_COUNTER, counter, True)  # public
             config.delete(_APP, _U2F_COUNTER)
         config.set(_APP, _VERSION, _STORAGE_VERSION)
