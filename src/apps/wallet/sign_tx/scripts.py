@@ -166,7 +166,7 @@ def witness_p2wsh(
     signatures[signature_index] = signature
 
     # filter empty
-    signatures = [s for s in multisig.signatures if s]
+    signatures = [s for s in signatures if s]
 
     # witness program + signatures + redeem script
     num_of_witness_items = 1 + len(signatures) + 1
