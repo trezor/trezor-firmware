@@ -39,7 +39,7 @@ CFLAGS += -DGITREV=$(GITREV)
 ## help commands:
 
 help: ## show this help
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {printf "\033[36m  make %-20s\033[0m %s\n", $$1, $$2} /^##(.*)/ {printf "\033[33m%s\n", substr($$0, 4)}' $(MAKEFILE_LIST)
+	@awk -f help.awk $(MAKEFILE_LIST)
 
 ## dependencies commands:
 
@@ -87,7 +87,7 @@ black:
 cstyle: ## run code style check on low-level C code
 	./tools/clang-format-check $(shell find embed -type f -name *.[ch])
 
-## code generation ##
+## code generation:
 
 templates: ## render Mako templates (for lists of coins, tokens, etc.)
 	./tools/build_templates
