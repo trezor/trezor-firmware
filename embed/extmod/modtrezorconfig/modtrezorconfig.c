@@ -184,7 +184,7 @@ STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
     }
     return mp_const_true;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_delete_obj, 3, 4, mod_trezorconfig_delete);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_delete_obj, 2, 3, mod_trezorconfig_delete);
 
 /// def wipe() -> None:
 ///     '''
