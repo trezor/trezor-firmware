@@ -20,9 +20,11 @@ from trezorlib import ethereum
 from trezorlib.tools import H_
 
 from .common import TrezorTest
+from .conftest import TREZOR_VERSION
 
 
 @pytest.mark.ethereum
+@pytest.mark.xfail(TREZOR_VERSION == 2, reason="Waiting for 2.0.12")
 class TestMsgEthereumGetPublicKey(TrezorTest):
     def test_ethereum_getpublickey(self):
         self.setup_mnemonic_nopin_nopassphrase()
