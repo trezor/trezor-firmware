@@ -1,13 +1,34 @@
-from apps.common import HARDENED
+from apps.common import HARDENED, paths
+from apps.ethereum import networks
 
 
 """
-We believe Ethereum should use 44'/60'/a' for everything,because it is
+We believe Ethereum should use 44'/60'/a' for everything, because it is
 account-based, rather than UTXO-based. Unfortunately, lot of Ethereum
 tools (MEW, Metamask) do not use such scheme and set a = 0 and then
 iterate the address index i. Therefore for compatibility reasons we use
 the same scheme: 44'/60'/0'/0/i and only the i is being iterated.
 """
+
+
+def validate_path_for_get_public_key(path: list) -> bool:
+    """
+    This should be 44'/60'/0', but other non-hardened items are allowed.
+    """
+    length = len(path)
+    if length < 3 or length > 5:
+        return False
+    if path[0] != 44 | HARDENED:
+        return False
+    if path[1] not in networks.all_slip44_ids_hardened():
+        return False
+    if path[2] != 0 | HARDENED:
+        return False
+    if length > 3 and paths.is_hardened(path[3]):
+        return False
+    if length > 4 and paths.is_hardened(path[4]):
+        return False
+    return True
 
 
 def validate_full_path(path: list) -> bool:
@@ -19,7 +40,7 @@ def validate_full_path(path: list) -> bool:
         return False
     if path[0] != 44 | HARDENED:
         return False
-    if path[1] != 60 | HARDENED:
+    if path[1] not in networks.all_slip44_ids_hardened():
         return False
     if path[2] != 0 | HARDENED:
         return False
