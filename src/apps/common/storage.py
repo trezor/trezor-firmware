@@ -165,7 +165,7 @@ def set_autolock_delay_ms(delay_ms: int) -> None:
 
 def next_u2f_counter() -> int:
     b = config.get(_APP, _U2F_COUNTER)
-    if b is None:
+    if not b:
         b = 0
     else:
         b = int.from_bytes(b, "big") + 1
@@ -174,7 +174,10 @@ def next_u2f_counter() -> int:
 
 
 def set_u2f_counter(cntr: int):
-    config.set(_APP, _U2F_COUNTER, cntr.to_bytes(4, "big"))
+    if cntr:
+        config.set(_APP, _U2F_COUNTER, cntr.to_bytes(4, "big"))
+    else:
+        config.set(_APP, _U2F_COUNTER, b"")
 
 
 def wipe():

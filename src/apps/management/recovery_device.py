@@ -52,14 +52,8 @@ async def recovery_device(ctx, msg):
     if msg.pin_protection:
         newpin = await request_pin_confirm(ctx, cancellable=False)
 
-    # save into storage
-    if not msg.dry_run:
-        if msg.pin_protection:
-            config.change_pin(pin_to_int(""), pin_to_int(newpin))
-        storage.load_settings(label=msg.label, use_passphrase=msg.passphrase_protection)
-        storage.load_mnemonic(mnemonic=mnemonic, needs_backup=False, no_backup=False)
-        return Success(message="Device recovered")
-    else:
+    # dry run
+    if msg.dry_run:
         if storage.get_mnemonic() == mnemonic:
             return Success(
                 message="The seed is valid and matches the one in the device"
@@ -68,6 +62,15 @@ async def recovery_device(ctx, msg):
             raise wire.ProcessError(
                 "The seed is valid but does not match the one in the device"
             )
+
+    # save into storage
+    if msg.pin_protection:
+        config.change_pin(pin_to_int(""), pin_to_int(newpin))
+    storage.set_u2f_counter(msg.u2f_counter)
+    storage.load_settings(label=msg.label, use_passphrase=msg.passphrase_protection)
+    storage.load_mnemonic(mnemonic=mnemonic, needs_backup=False, no_backup=False)
+
+    return Success(message="Device recovered")
 
 
 @ui.layout
