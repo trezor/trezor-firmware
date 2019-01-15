@@ -1,6 +1,8 @@
 # generated from networks.py.mako
 # do not edit manually!
 
+from apps.common import HARDENED
+
 
 def shortcut_by_chain_id(chain_id, tx_type=None):
     if tx_type in [1, 6] and chain_id in [1, 3]:
@@ -22,6 +24,11 @@ def by_slip44(slip44):
         if n.slip44 == slip44:
             return n
     return None
+
+
+def all_slip44_ids_hardened():
+    for n in NETWORKS:
+        yield n.slip44 | HARDENED
 
 
 class NetworkInfo:

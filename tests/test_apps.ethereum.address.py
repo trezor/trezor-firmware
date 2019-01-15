@@ -1,7 +1,7 @@
 from common import *
 from apps.common.paths import HARDENED
 from apps.ethereum.address import ethereum_address_hex, validate_full_path
-from apps.ethereum.networks import NetworkInfo
+from apps.ethereum.networks import NetworkInfo, by_chain_id
 
 
 class TestEthereumGetAddress(unittest.TestCase):
@@ -62,11 +62,14 @@ class TestEthereumGetAddress(unittest.TestCase):
             [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 1, 0],
             [44 | HARDENED, 60 | HARDENED, 1 | HARDENED, 0, 0],
             [44 | HARDENED, 160 | HARDENED, 0 | HARDENED, 0, 0],
+            [44 | HARDENED, 199 | HARDENED, 0 | HARDENED, 0, 9999],  # slip44 not one of ETH chains
         ]
         correct_paths = [
             [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 0],
             [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 9],
             [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 9999],
+            [44 | HARDENED, 6060 | HARDENED, 0 | HARDENED, 0, 0],
+            [44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 0, 0],
         ]
 
         for path in incorrect_paths:

@@ -261,7 +261,6 @@ def validate_purpose_against_script_type(
 def validate_path_for_bitcoin_public_key(path: list, coin: CoinInfo) -> bool:
     """
     Validates derivation path to fit Bitcoin-like coins for GetPublicKey.
-    Script type is omitted here because it is not usually sent.
     """
     length = len(path)
     if length < 3 or length > 5:
