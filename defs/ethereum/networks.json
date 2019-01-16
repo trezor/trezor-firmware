@@ -218,6 +218,26 @@
     "blockbook": []
   },
   {
+    "chain": "artis_sigma1",
+    "chain_id": 246529,
+    "slip44": 246529,
+    "shortcut": "ATS (ARTIS sigma1)",
+    "name": "ARTIS sigma1",
+    "rskip60": false,
+    "url": "https://artis.eco",
+    "blockbook": []
+  },
+  {
+    "chain": "artis_tau1",
+    "chain_id": 246785,
+    "slip44": 246785,
+    "shortcut": "tATS (ARTIS tau1)",
+    "name": "ARTIS tau1",
+    "rskip60": false,
+    "url": "https://artis.eco",
+    "blockbook": []
+  },
+  {
     "chain": "music",
     "chain_id": 7762959,
     "slip44": 184,
