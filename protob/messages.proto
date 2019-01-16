@@ -229,4 +229,12 @@ enum MessageType {
     MessageType_MoneroWatchKey = 543 [(wire_out) = true];
     MessageType_DebugMoneroDiagRequest = 546 [(wire_in) = true];
     MessageType_DebugMoneroDiagAck = 547 [(wire_out) = true];
+    MessageType_MoneroGetTxKeyRequest = 550 [(wire_in) = true];
+    MessageType_MoneroGetTxKeyAck = 551 [(wire_out) = true];
+    MessageType_MoneroLiveRefreshStartRequest = 552 [(wire_in) = true];
+    MessageType_MoneroLiveRefreshStartAck = 553 [(wire_out) = true];
+    MessageType_MoneroLiveRefreshStepRequest = 554 [(wire_in) = true];
+    MessageType_MoneroLiveRefreshStepAck = 555 [(wire_out) = true];
+    MessageType_MoneroLiveRefreshFinalRequest = 556 [(wire_in) = true];
+    MessageType_MoneroLiveRefreshFinalAck = 557 [(wire_out) = true];
 }
