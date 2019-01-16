@@ -5,6 +5,11 @@
     "bitcoin:MUE": {
         "name": "MonetaryUnit"
     },
+    "erc20:eth:AOA": {
+        "links": {
+            "Homepage": "https://www.aurorachain.io/"
+        }
+    },
     "erc20:eth:BAT": {
         "name": "Basic Attention Token"
     },
@@ -28,6 +33,11 @@
     },
     "erc20:eth:PAX": {
         "coinmarketcap_alias": "paxos-standard-token"
+    },
+    "erc20:eth:TUSD": {
+        "links": {
+            "Homepage": "https://www.trusttoken.com/"
+        }
     },
     "erc20:eth:USDC": {
         "coinmarketcap_alias": "usd-coin"
