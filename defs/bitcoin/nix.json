@@ -32,10 +32,7 @@
   "uri_prefix": "nix",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [
-    "https://blockchain.nixplatform.io"
-  ],
-  "blockbook": [
-  ],
+  "bitcore": [],
+  "blockbook": [],
   "cooldown": 100
 }
