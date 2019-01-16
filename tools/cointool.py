@@ -266,6 +266,10 @@ def check_btc(coins):
     # we ignore failed checks on P2SH, because reasons
     print_collision_buckets(address_type_p2sh, "address type", logging.WARNING)
 
+    print("Checking genesis block collisions...")
+    genesis = find_collisions(coins, "hash_genesis_block")
+    print_collision_buckets(genesis, "genesis block", logging.WARNING)
+
     return check_passed
 
 
