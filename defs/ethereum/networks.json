@@ -31,7 +31,8 @@
     "rskip60": false,
     "url": "https://www.ethereum.org",
     "blockbook": [
-      "https://ropsten1.trezor.io"
+      "https://ropsten1.trezor.io",
+      "https://ropsten2.trezor.io"
     ]
   },
   {

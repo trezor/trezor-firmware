@@ -35,9 +35,10 @@
   "uri_prefix": "digibyte",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [
-    "https://explorer.digibyteprojects.com"
+  "bitcore": [],
+  "blockbook": [
+    "https://dgb1.trezor.io",
+    "https://dgb2.trezor.io"
   ],
-  "blockbook": [],
   "cooldown": 100
 }
