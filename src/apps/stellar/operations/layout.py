@@ -16,7 +16,7 @@ from trezor.messages.StellarSetOptionsOp import StellarSetOptionsOp
 from trezor.ui.text import Text
 from trezor.wire import ProcessError
 
-from apps.stellar import consts
+from apps.stellar import consts, helpers
 from apps.stellar.layout import format_amount, require_confirm, split, trim_to_rows, ui
 
 
@@ -194,7 +194,7 @@ async def confirm_set_options_op(ctx, op: StellarSetOptionsOp):
         if op.signer_type == consts.SIGN_TYPE_ACCOUNT:
             text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
             text.bold(t % "acc")
-            text.mono(*split(op.signer_key))
+            text.mono(*split(helpers.address_from_public_key(op.signer_key)))
             await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
         elif op.signer_type in (consts.SIGN_TYPE_PRE_AUTH, consts.SIGN_TYPE_HASH):
             if op.signer_type == consts.SIGN_TYPE_PRE_AUTH:
