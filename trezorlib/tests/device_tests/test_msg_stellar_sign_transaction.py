@@ -234,7 +234,9 @@ class TestMsgStellarSignTransaction(TrezorTest):
 
         op = proto.StellarSetOptionsOp()
         op.signer_type = 0
-        op.signer_key = unhexlify("72187adb879c414346d77c71af8cce7b6eaa57b528e999fd91feae6b6418628e")
+        op.signer_key = unhexlify(
+            "72187adb879c414346d77c71af8cce7b6eaa57b528e999fd91feae6b6418628e"
+        )
         op.signer_weight = 2
 
         tx = self._create_msg()
