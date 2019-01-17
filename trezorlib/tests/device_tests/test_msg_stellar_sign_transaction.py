@@ -47,7 +47,6 @@
 #
 
 from base64 import b64encode
-from binascii import unhexlify
 
 import pytest
 
@@ -234,7 +233,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
 
         op = proto.StellarSetOptionsOp()
         op.signer_type = 0
-        op.signer_key = unhexlify(
+        op.signer_key = bytes.fromhex(
             "72187adb879c414346d77c71af8cce7b6eaa57b528e999fd91feae6b6418628e"
         )
         op.signer_weight = 2
