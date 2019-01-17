@@ -49,6 +49,7 @@ async def sign_tx(ctx, msg, keychain):
             progress.report_init()
         elif isinstance(req, helpers.UiConfirmForeignAddress):
             res = await paths.show_path_warning(ctx, req.address_n)
+            progress.report_init()
         else:
             raise TypeError("Invalid signing instruction")
     return req
