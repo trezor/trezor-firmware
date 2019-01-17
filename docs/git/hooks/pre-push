@@ -13,7 +13,7 @@ then
     exit 1
 fi
 
-if ! make style &> /dev/null
+if ! make style_check &> /dev/null
 then
     echo >&2 "Style invalid, run style make commands. Not pushing."
     exit 2

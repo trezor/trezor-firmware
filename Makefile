@@ -73,15 +73,13 @@ pylint: ## run pylint on application sources and tests
 
 ## style commands:
 
-style: ## run code style check on application sources and tests
+style_check: ## run code style check on application sources and tests
 	flake8 $(shell find src -name *.py)
 	isort --check-only $(shell find src -name *.py ! -path 'src/trezor/messages/*')
 	black --check $(shell find src -name *.py ! -path 'src/trezor/messages/*')
 
-isort:
+style:
 	isort $(shell find src -name *.py ! -path 'src/trezor/messages/*')
-
-black:
 	black $(shell find src -name *.py ! -path 'src/trezor/messages/*')
 
 cstyle: ## run code style check on low-level C code

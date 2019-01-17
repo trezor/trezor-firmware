@@ -53,7 +53,7 @@ before_script:
     - test "$GOAL" != "stm32" || export PATH=$PWD/$TOOLCHAIN_LONGVER/bin:$PATH
 
 script:
-  - test "$GOAL" != "src" || pipenv run make style
+  - test "$GOAL" != "src" || pipenv run make style_check
   - test "$GOAL" != "src" || pipenv run make templates_check
 
   - test "$GOAL" != "stm32" || pipenv run make build_cross
