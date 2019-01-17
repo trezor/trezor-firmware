@@ -46,9 +46,9 @@ style:
 	isort --apply --recursive $(STYLE_TARGETS) --skip-glob "*/$(EXCLUDE_TARGETS)/*"
 	autoflake -i --remove-all-unused-imports -r $(STYLE_TARGETS) --exclude "$(EXCLUDE_TARGETS)"
 
-stylecheck:
+style_check:
 	black --check $(STYLE_TARGETS)
 	isort --diff --check-only --recursive $(STYLE_TARGETS) --skip-glob "*/$(EXCLUDE_TARGETS)/*"
 	flake8
 
-.PHONY: all build install clean style stylecheck git-clean clean-build clean-pyc clean-test
+.PHONY: all build install clean style style_check git-clean clean-build clean-pyc clean-test
