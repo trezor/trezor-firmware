@@ -128,12 +128,13 @@ def write_set_options_op(w, msg: StellarSetOptionsOp):
         writers.write_string(w, msg.home_domain)
 
     # signer
-    writers.write_bool(w, bool(msg.signer_type))
-    if msg.signer_type:
-        # signer type
+    if msg.signer_type in consts.SIGN_TYPES:
+        writers.write_bool(w, True)
         writers.write_uint32(w, msg.signer_type)
         writers.write_bytes(w, msg.signer_key)
         writers.write_uint32(w, msg.signer_weight)
+    else:
+        writers.write_bool(w, False)
 
 
 def write_account(w, source_account: str):

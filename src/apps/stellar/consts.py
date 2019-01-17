@@ -66,6 +66,8 @@ SIGN_TYPE_ACCOUNT = const(0)
 SIGN_TYPE_PRE_AUTH = const(1)
 SIGN_TYPE_HASH = const(2)
 
+SIGN_TYPES = (SIGN_TYPE_ACCOUNT, SIGN_TYPE_HASH, SIGN_TYPE_PRE_AUTH)
+
 
 def get_op_code(msg) -> int:
     if msg.__qualname__ not in op_codes:
