@@ -89,52 +89,49 @@ def write_payment_op(w, msg: StellarPaymentOp):
 
 def write_set_options_op(w, msg: StellarSetOptionsOp):
     # inflation destination
-    writers.write_bool(w, bool(msg.inflation_destination_account))
-    if msg.inflation_destination_account:
+    if msg.inflation_destination_account is None:
+        writers.write_bool(w, False)
+    else:
+        writers.write_bool(w, True)
         writers.write_pubkey(w, msg.inflation_destination_account)
 
     # clear flags
-    writers.write_bool(w, bool(msg.clear_flags))
-    if msg.clear_flags:
-        writers.write_uint32(w, msg.clear_flags)
-
+    _write_set_options_int(w, msg.clear_flags)
     # set flags
-    writers.write_bool(w, bool(msg.set_flags))
-    if msg.set_flags:
-        writers.write_uint32(w, msg.set_flags)
-
+    _write_set_options_int(w, msg.set_flags)
     # account thresholds
-    writers.write_bool(w, bool(msg.master_weight))
-    if msg.master_weight:
-        writers.write_uint32(w, msg.master_weight)
-
-    writers.write_bool(w, bool(msg.low_threshold))
-    if msg.low_threshold:
-        writers.write_uint32(w, msg.low_threshold)
-
-    writers.write_bool(w, bool(msg.medium_threshold))
-    if msg.medium_threshold:
-        writers.write_uint32(w, msg.medium_threshold)
-
-    writers.write_bool(w, bool(msg.high_threshold))
-    if msg.high_threshold:
-        writers.write_uint32(w, msg.high_threshold)
+    _write_set_options_int(w, msg.master_weight)
+    _write_set_options_int(w, msg.low_threshold)
+    _write_set_options_int(w, msg.medium_threshold)
+    _write_set_options_int(w, msg.high_threshold)
 
     # home domain
-    writers.write_bool(w, bool(msg.home_domain))
-    if msg.home_domain:
+    if msg.home_domain is None:
+        writers.write_bool(w, False)
+    else:
+        writers.write_bool(w, True)
         if len(msg.home_domain) > 32:
             raise ProcessError("Stellar: max length of a home domain is 32 bytes")
         writers.write_string(w, msg.home_domain)
 
     # signer
-    if msg.signer_type in consts.SIGN_TYPES:
+    if msg.signer_type is None:
+        writers.write_bool(w, False)
+    elif msg.signer_type in consts.SIGN_TYPES:
         writers.write_bool(w, True)
         writers.write_uint32(w, msg.signer_type)
         writers.write_bytes(w, msg.signer_key)
         writers.write_uint32(w, msg.signer_weight)
     else:
+        raise ProcessError("Stellar: unknown signer type")
+
+
+def _write_set_options_int(w, value: int):
+    if value is None:
         writers.write_bool(w, False)
+    else:
+        writers.write_bool(w, True)
+        writers.write_uint32(w, value)
 
 
 def write_account(w, source_account: str):
