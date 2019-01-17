@@ -53,20 +53,23 @@ class Keychain:
 async def get_keychain(ctx: wire.Context, namespaces: list) -> Keychain:
     if not storage.is_initialized():
         raise wire.ProcessError("Device is not initialized")
-
     seed = cache.get_seed()
     if seed is None:
-        # derive seed from mnemonic and passphrase
-        passphrase = cache.get_passphrase()
-        if passphrase is None:
-            passphrase = await protect_by_passphrase(ctx)
-            cache.set_passphrase(passphrase)
-        _start_bip39_progress()
-        seed = bip39.seed(storage.get_mnemonic(), passphrase, _render_bip39_progress)
-        cache.set_seed(seed)
-
+        seed = await _compute_seed(ctx)
     keychain = Keychain(seed, namespaces)
     return keychain
+
+
+@ui.layout
+async def _compute_seed(ctx: wire.Context) -> bytes:
+    passphrase = cache.get_passphrase()
+    if passphrase is None:
+        passphrase = await protect_by_passphrase(ctx)
+        cache.set_passphrase(passphrase)
+    _start_bip39_progress()
+    seed = bip39.seed(storage.get_mnemonic(), passphrase, _render_bip39_progress)
+    cache.set_seed(seed)
+    return seed
 
 
 def _start_bip39_progress():
