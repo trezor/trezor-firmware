@@ -46,6 +46,9 @@ async def tx_dialog(
 
     await ctx.call(ButtonRequest(code=code), MessageType.ButtonAck)
 
+    if scroll_tuple and scroll_tuple[1] > 1:
+        content = Scrollpage(content, scroll_tuple[0], scroll_tuple[1])
+
     dialog = ConfirmDialog(
         content,
         cancel=cancel_btn,
@@ -53,9 +56,6 @@ async def tx_dialog(
         cancel_style=cancel_style,
         confirm_style=confirm_style,
     )
-    if scroll_tuple and scroll_tuple[1] > 1:
-        dialog = Scrollpage(dialog, scroll_tuple[0], scroll_tuple[1])
-
     return await ctx.wait(dialog)
 
 

@@ -75,6 +75,11 @@ class Scrollpage(ui.Widget):
         self.page = page
         self.page_count = page_count
 
+        if content.__class__.__iter__ is not ui.Widget.__iter__:
+            raise TypeError(
+                "Scrollpage does not support widgets with custom event loop"
+            )
+
     def taint(self):
         super().taint()
         self.content.taint()
@@ -83,5 +88,5 @@ class Scrollpage(ui.Widget):
         self.content.render()
         render_scrollbar(self.page, self.page_count)
 
-    async def __iter__(self):
-        return await loop.spawn(super().__iter__(), self.content)
+    def touch(self, event, pos):
+        return self.content.touch(event, pos)
