@@ -23,6 +23,7 @@ CPPPATH_MOD += [
 CPPDEFINES_MOD += [
     'AES_128',
     'AES_192',
+    ('USE_BIP39_CACHE', '0'),
     ('USE_KECCAK', '1'),
     ('USE_ETHEREUM', '1'),
     ('USE_MONERO', '1'),
