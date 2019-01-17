@@ -47,6 +47,7 @@
 #
 
 from base64 import b64encode
+from binascii import unhexlify
 
 import pytest
 
@@ -212,7 +213,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
             == b"QZIP4XKPfe4OpZtuJiyrMZBX9YBzvGpHGcngdgFfHn2kcdONreF384/pCF80xfEnGm8grKaoOnUEKxqcMKvxAA=="
         )
 
-    def test_sign_tx_set_options_op_inflation(self):
+    def test_sign_tx_set_options(self):
         """Set inflation destination"""
         self.setup_mnemonic_nopin_nopassphrase()
 
@@ -229,6 +230,60 @@ class TestMsgStellarSignTransaction(TrezorTest):
         assert (
             b64encode(response.signature)
             == b"dveWhKY8x7b0YqGHWH6Fo1SskxaHP11NXd2n6oHKGiv+T/LqB+CCzbmJA0tplZ+0HNPJbHD7L3Bsg/y462qLDA=="
+        )
+
+        op = proto.StellarSetOptionsOp()
+        op.signer_type = 0
+        op.signer_key = unhexlify("72187adb879c414346d77c71af8cce7b6eaa57b528e999fd91feae6b6418628e")
+        op.signer_weight = 2
+
+        tx = self._create_msg()
+        response = stellar.sign_tx(
+            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+        )
+        assert (
+            b64encode(response.signature)
+            == b"EAeihuFBhUnjH6Sgd/+uAHlvajfv944VEpNSCLsOULNxYWdo/S0lJdUZw/2kN6I+ztKL7ZPQ5gYPJRNUePTOCg=="
+        )
+
+        op = proto.StellarSetOptionsOp()
+        op.medium_threshold = 0
+
+        tx = self._create_msg()
+        response = stellar.sign_tx(
+            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+        )
+        assert (
+            b64encode(response.signature)
+            == b"E2pz06PFB5CvIT3peUcY0wxo7u9da2h6/+/qim1eRWLHC73ZtFqDtLMBaKnr63ZfjB/kDzZmCzHxiv5m+m6+AQ=="
+        )
+
+        op = proto.StellarSetOptionsOp()
+        op.low_threshold = 0
+        op.high_threshold = 3
+        op.clear_flags = 0
+
+        tx = self._create_msg()
+        response = stellar.sign_tx(
+            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+        )
+        assert (
+            b64encode(response.signature)
+            == b"ySQE4aS0TI+N1xjSwi/pABHpC+A6RrNPWDOuFYGJFQ5B4vIU2S+ql2gCGLE7bQiYZ5dK9021f+a30mZoYeFLDw=="
+        )
+
+        op = proto.StellarSetOptionsOp()
+        op.set_flags = 3
+        op.master_weight = 4
+        op.home_domain = "hello"
+
+        tx = self._create_msg()
+        response = stellar.sign_tx(
+            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+        )
+        assert (
+            b64encode(response.signature)
+            == b"22rfcOrxBiE5akpNsnWX8yPgAOpclbajVqXUaXMNeL000p1OhFhi050t1+GNRpoSNyfVsJGNvtlICGpH4ksDAQ=="
         )
 
     def _create_msg(self) -> proto.StellarSignTx:
