@@ -49,14 +49,16 @@ async def _init(ctx, w: bytearray, pubkey: bytes, msg: StellarSignTx):
     writers.write_bytes(w, consts.TX_TYPE)
 
     address = helpers.address_from_public_key(pubkey)
-    writers.write_pubkey(w, address)
-    if helpers.public_key_from_address(msg.source_account) != pubkey:
-        raise ProcessError("Stellar: source account does not match address_n")
+    accounts_match = msg.source_account == address
+
+    writers.write_pubkey(w, msg.source_account)
     writers.write_uint32(w, msg.fee)
     writers.write_uint64(w, msg.sequence_number)
 
     # confirm init
-    await layout.require_confirm_init(ctx, address, msg.network_passphrase)
+    await layout.require_confirm_init(
+        ctx, msg.source_account, msg.network_passphrase, accounts_match
+    )
 
 
 def _timebounds(w: bytearray, start: int, end: int):
@@ -78,6 +80,8 @@ async def _operations(ctx, w: bytearray, num_operations: int):
 
 
 async def _memo(ctx, w: bytearray, msg: StellarSignTx):
+    if msg.memo_type is None:
+        msg.memo_type = consts.MEMO_TYPE_NONE
     writers.write_uint32(w, msg.memo_type)
     if msg.memo_type == consts.MEMO_TYPE_NONE:
         # nothing is serialized

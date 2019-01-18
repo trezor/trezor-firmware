@@ -6,10 +6,16 @@ from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.stellar import consts
 
 
-async def require_confirm_init(ctx, address: str, network_passphrase: str):
+async def require_confirm_init(
+    ctx, address: str, network_passphrase: str, accounts_match: bool
+):
     text = Text("Confirm Stellar", ui.ICON_SEND, icon_color=ui.GREEN)
     text.normal("Initialize signing with")
-    text.mono(*split(address))
+    if accounts_match:
+        text.normal("your account")
+        text.mono(*split(trim_to_rows(address, 3)))
+    else:
+        text.mono(*split(address))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
     network = get_network_warning(network_passphrase)
     if network:
