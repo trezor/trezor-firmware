@@ -8,7 +8,11 @@ from trezor.messages.CardanoTxRequest import CardanoTxRequest
 from trezor.messages.MessageType import CardanoTxAck
 
 from apps.cardano import cbor, seed
-from apps.cardano.address import derive_address_and_node, validate_full_path
+from apps.cardano.address import (
+    derive_address_and_node,
+    is_safe_output_address,
+    validate_full_path,
+)
 from apps.cardano.layout import confirm_sending, confirm_transaction, progress
 from apps.common.paths import validate_path
 from apps.common.seed import remove_ed25519_prefix
@@ -184,6 +188,8 @@ class Transaction:
                     raise wire.ProcessError(
                         "Each output must have address or address_n field!"
                     )
+                if not is_safe_output_address(output.address):
+                    raise wire.ProcessError("Invalid output address!")
 
                 outgoing_coins.append(output.amount)
                 output_addresses.append(output.address)
