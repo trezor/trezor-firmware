@@ -240,15 +240,6 @@ static void send_msg_buttonrequest_firmwarecheck(usbd_device *dev)
 		, 64) != 64) {}
 }
 
-static void erase_metadata_sectors(void)
-{
-	flash_unlock();
-	for (int i = FLASH_META_SECTOR_FIRST; i <= FLASH_META_SECTOR_LAST; i++) {
-		flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
-	}
-	flash_lock();
-}
-
 static void backup_metadata(uint8_t *backup)
 {
 	memcpy(backup, FLASH_PTR(FLASH_META_START), FLASH_META_LEN);
@@ -330,86 +321,6 @@ static void rx_callback(usbd_device *dev, uint8_t ep)
 				layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Device wipe", "aborted.", NULL, "You may now", "unplug your TREZOR.", NULL);
 				send_msg_failure(dev);
 			}
-			return;
-		}
-		if (msg_id == 0x0020) {		// SelfTest message (id 32)
-
-			// USB TEST
-			layoutProgress("TESTING USB ...", 0);
-			bool status_usb = (buf[9] == 0x0a) && (buf[10] == 53) && (0 == memcmp(buf + 11, "\x00\xFF\x55\xAA\x66\x99\x33\xCC" "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!" "\x00\xFF\x55\xAA\x66\x99\x33\xCC", 53));
-
-			// RNG TEST
-			layoutProgress("TESTING RNG ...", 250);
-			uint32_t cnt[256];
-			memset(cnt, 0, sizeof(cnt));
-			for (int i = 0; i < (256 * 2000); i++) {
-				uint32_t r = random32();
-				cnt[r & 0xFF]++;
-				cnt[(r >> 8) & 0xFF]++;
-				cnt[(r >> 16) & 0xFF]++;
-				cnt[(r >> 24) & 0xFF]++;
-			}
-			bool status_rng = true;
-			for (int i = 0; i < 256; i++) {
-				status_rng = status_rng && (cnt[i] >= 7600) && (cnt[i] <= 8400);
-			}
-
-			// CPU TEST
-			layoutProgress("TESTING CPU ...", 500);
-			// privkey :   e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-			// pubkey  : 04a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd
-			//             5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235
-			// digest  :   c84a4cc264100070c8be2acf4072efaadaedfef3d6209c0fe26387e6b1262bbf
-			// sig:    :   f7869c679bbed1817052affd0264ccc6486795f6d06d0c187651b8f3863670c8
-			//             2ccf89be32a53eb65ea7c007859783d46717986fead0833ec60c5729cdc4a9ee
-			bool status_cpu = (0 == ecdsa_verify_digest(&secp256k1,
-				(const uint8_t *)"\x04\xa3\x4b\x99\xf2\x2c\x79\x0c\x4e\x36\xb2\xb3\xc2\xc3\x5a\x36\xdb\x06\x22\x6e\x41\xc6\x92\xfc\x82\xb8\xb5\x6a\xc1\xc5\x40\xc5\xbd\x5b\x8d\xec\x52\x35\xa0\xfa\x87\x22\x47\x6c\x77\x09\xc0\x25\x59\xe3\xaa\x73\xaa\x03\x91\x8b\xa2\xd4\x92\xee\xa7\x5a\xbe\xa2\x35",
-				(const uint8_t *)"\xf7\x86\x9c\x67\x9b\xbe\xd1\x81\x70\x52\xaf\xfd\x02\x64\xcc\xc6\x48\x67\x95\xf6\xd0\x6d\x0c\x18\x76\x51\xb8\xf3\x86\x36\x70\xc8\x2c\xcf\x89\xbe\x32\xa5\x3e\xb6\x5e\xa7\xc0\x07\x85\x97\x83\xd4\x67\x17\x98\x6f\xea\xd0\x83\x3e\xc6\x0c\x57\x29\xcd\xc4\xa9\xee",
-				(const uint8_t *)"\xc8\x4a\x4c\xc2\x64\x10\x00\x70\xc8\xbe\x2a\xcf\x40\x72\xef\xaa\xda\xed\xfe\xf3\xd6\x20\x9c\x0f\xe2\x63\x87\xe6\xb1\x26\x2b\xbf"));
-
-			// FLASH TEST
-			layoutProgress("TESTING FLASH ...", 750);
-
-			// backup metadata
-			backup_metadata(meta_backup);
-
-			// write test pattern
-			erase_metadata_sectors();
-			flash_unlock();
-			for (int i = 0; i < FLASH_META_LEN / 4; i++) {
-				flash_program_word(FLASH_META_START + i * 4, 0x3C695A0F);
-			}
-			flash_lock();
-
-			// compute hash of written test pattern
-			uint8_t hash[32];
-			sha256_Raw(FLASH_PTR(FLASH_META_START), FLASH_META_LEN, hash);
-
-			// restore metadata from backup
-			erase_metadata_sectors();
-			restore_metadata(meta_backup);
-			memzero(meta_backup, sizeof(meta_backup));
-
-			// compare against known hash computed via the following Python3 script:
-			// hashlib.sha256(binascii.unhexlify('0F5A693C' * 8192)).hexdigest()
-			bool status_flash = (0 == memcmp(hash, "\xa6\xc2\x25\xa4\x76\xa1\xde\x76\x09\xe0\xb0\x07\xf8\xe2\x5a\xec\x1d\x75\x8d\x5c\x36\xc8\x4a\x6b\x75\x4e\xd5\x3d\xe6\x99\x97\x64", 32));
-
-			bool status_all = status_usb && status_rng && status_cpu && status_flash;
-
-			if (status_all) {
-				send_msg_success(dev);
-			} else {
-				send_msg_failure(dev);
-			}
-			layoutDialog(status_all ? &bmp_icon_info : &bmp_icon_error,
-				NULL, NULL, NULL,
-				status_usb   ? "Test USB ... OK"   : "Test USB ... Failed",
-				status_rng   ? "Test RNG ... OK"   : "Test RNG ... Failed",
-				status_cpu   ? "Test CPU ... OK"   : "Test CPU ... Failed",
-				status_flash ? "Test FLASH ... OK" : "Test FLASH ... Failed",
-				NULL,
-				NULL
-			);
 			return;
 		}
 	}
