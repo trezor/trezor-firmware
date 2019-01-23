@@ -36,6 +36,8 @@
 
 #include "groestl_internal.h"
 #include "groestl.h"
+#include "memzero.h"
+
 
 #define C32e(x)     ((SPH_C32(x) >> 24) \
                     | ((SPH_C32(x) >>  8) & SPH_C32(0x0000FF00)) \
@@ -740,7 +742,7 @@ groestl_big_close(sph_groestl_big_context *sc,
 		pad_len = 256 - ptr;
 		count = SPH_T64(sc->count + 2);
 	}
-	memset(pad + 1, 0, pad_len - 9);
+	memzero(pad + 1, pad_len - 9);
 	sph_enc64be(pad + pad_len - 8, count);
 	groestl_big_core(sc, pad, pad_len);
 	READ_STATE_BIG(sc);

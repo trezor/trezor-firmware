@@ -43,6 +43,8 @@
 #include "nist256p1.h"
 #include "secp256k1.h"
 
+#include "memzero.h"
+
 void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve)
 {
 	uint8_t sig[64], pub_key33[33], pub_key65[65], priv_key[32], msg[256], hash[32];
@@ -67,7 +69,7 @@ void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve)
 		// copy key to buffer
 		const BIGNUM *K = EC_KEY_get0_private_key(eckey);
 		int bn_off = sizeof(priv_key) - BN_num_bytes(K);
-		memset(priv_key, 0, bn_off);
+		memzero(priv_key, bn_off);
 		BN_bn2bin(K, priv_key + bn_off);
 
 		// use our ECDSA signer to sign the message with the key

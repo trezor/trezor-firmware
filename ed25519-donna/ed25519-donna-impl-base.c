@@ -1,5 +1,6 @@
 #include <assert.h>
 #include "ed25519-donna.h"
+#include "memzero.h"
 
 /* sqrt(x) is such an integer y that 0 <= y <= p - 1, y % 2 = 0, and y^2 = x (mod p). */
 /* d = -121665 / 121666 */
@@ -245,7 +246,7 @@ int ge25519_unpack_negative_vartime(ge25519 *r, const unsigned char p[32]) {
 
 void ge25519_set_neutral(ge25519 *r)
 {
-	memset(r, 0, sizeof(ge25519));
+	memzero(r, sizeof(ge25519));
 	r->y[0] = 1;
 	r->z[0] = 1;
 }
@@ -270,7 +271,7 @@ void ge25519_double_scalarmult_vartime(ge25519 *r, const ge25519 *p1, const bign
 	ge25519_p1p1 t;
 	int32_t i;
 
-	memset(&t, 0, sizeof(ge25519_p1p1));
+	memzero(&t, sizeof(ge25519_p1p1));
 	contract256_slidingwindow_modm(slide1, s1, S1_SWINDOWSIZE);
 	contract256_slidingwindow_modm(slide2, s2, S2_SWINDOWSIZE);
 
@@ -324,7 +325,7 @@ void ge25519_double_scalarmult_vartime2(ge25519 *r, const ge25519 *p1, const big
 	ge25519_p1p1 t;
 	int32_t i;
 
-	memset(&t, 0, sizeof(ge25519_p1p1));
+	memzero(&t, sizeof(ge25519_p1p1));
 	contract256_slidingwindow_modm(slide1, s1, S1_SWINDOWSIZE);
 	contract256_slidingwindow_modm(slide2, s2, S1_SWINDOWSIZE);
 
@@ -512,7 +513,7 @@ void ge25519_scalarmult_base_niels(ge25519 *r, const uint8_t basepoint_table[256
 	ge25519_scalarmult_base_choose_niels(&t, basepoint_table, 0, b[1]);
 	curve25519_sub_reduce(r->x, t.xaddy, t.ysubx);
 	curve25519_add_reduce(r->y, t.xaddy, t.ysubx);
-	memset(r->z, 0, sizeof(bignum25519));
+	memzero(r->z, sizeof(bignum25519));
 	curve25519_copy(r->t, t.t2d);
 	r->z[0] = 2;	
 	for (i = 3; i < 64; i += 2) {

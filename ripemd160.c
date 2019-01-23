@@ -58,7 +58,7 @@
  */
 void ripemd160_Init(RIPEMD160_CTX *ctx)
 {
-    memset(ctx, 0, sizeof(RIPEMD160_CTX));
+    memzero(ctx, sizeof(RIPEMD160_CTX));
     ctx->total[0] = 0;
     ctx->total[1] = 0;
     ctx->state[0] = 0x67452301;

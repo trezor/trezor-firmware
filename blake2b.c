@@ -87,7 +87,7 @@ static void blake2b_increment_counter( blake2b_state *S, const uint64_t inc )
 static void blake2b_init0( blake2b_state *S )
 {
   size_t i;
-  memset( S, 0, sizeof( blake2b_state ) );
+  memzero( S, sizeof( blake2b_state ) );
 
   for( i = 0; i < 8; ++i ) S->h[i] = blake2b_IV[i];
 }
@@ -125,9 +125,9 @@ int blake2b_Init( blake2b_state *S, size_t outlen )
   store32( &P->xof_length, 0 );
   P->node_depth    = 0;
   P->inner_length  = 0;
-  memset( P->reserved, 0, sizeof( P->reserved ) );
-  memset( P->salt,     0, sizeof( P->salt ) );
-  memset( P->personal, 0, sizeof( P->personal ) );
+  memzero( P->reserved, sizeof( P->reserved ) );
+  memzero( P->salt,     sizeof( P->salt ) );
+  memzero( P->personal, sizeof( P->personal ) );
   return blake2b_init_param( S, P );
 }
 
@@ -147,8 +147,8 @@ int blake2b_InitPersonal( blake2b_state *S, size_t outlen, const void *personal,
   store32( &P->xof_length, 0 );
   P->node_depth    = 0;
   P->inner_length  = 0;
-  memset( P->reserved, 0, sizeof( P->reserved ) );
-  memset( P->salt,     0, sizeof( P->salt ) );
+  memzero( P->reserved, sizeof( P->reserved ) );
+  memzero( P->salt,     sizeof( P->salt ) );
   memcpy( P->personal, personal, BLAKE2B_PERSONALBYTES );
   return blake2b_init_param( S, P );
 }
@@ -170,15 +170,15 @@ int blake2b_InitKey( blake2b_state *S, size_t outlen, const void *key, size_t ke
   store32( &P->xof_length, 0 );
   P->node_depth    = 0;
   P->inner_length  = 0;
-  memset( P->reserved, 0, sizeof( P->reserved ) );
-  memset( P->salt,     0, sizeof( P->salt ) );
-  memset( P->personal, 0, sizeof( P->personal ) );
+  memzero( P->reserved, sizeof( P->reserved ) );
+  memzero( P->salt,     sizeof( P->salt ) );
+  memzero( P->personal, sizeof( P->personal ) );
 
   if( blake2b_init_param( S, P ) < 0 ) return -1;
 
   {
     uint8_t block[BLAKE2B_BLOCKBYTES];
-    memset( block, 0, BLAKE2B_BLOCKBYTES );
+    memzero( block, BLAKE2B_BLOCKBYTES );
     memcpy( block, key, keylen );
     blake2b_Update( S, block, BLAKE2B_BLOCKBYTES );
     memzero( block, BLAKE2B_BLOCKBYTES ); /* Burn the key from stack */
@@ -294,7 +294,7 @@ int blake2b_Final( blake2b_state *S, void *out, size_t outlen )
 
   blake2b_increment_counter( S, S->buflen );
   blake2b_set_lastblock( S );
-  memset( S->buf + S->buflen, 0, BLAKE2B_BLOCKBYTES - S->buflen ); /* Padding */
+  memzero( S->buf + S->buflen, BLAKE2B_BLOCKBYTES - S->buflen ); /* Padding */
   blake2b_compress( S, S->buf );
 
   for( i = 0; i < 8; ++i ) /* Output full hash to temp buffer */

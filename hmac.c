@@ -30,7 +30,7 @@
 void hmac_sha256_Init(HMAC_SHA256_CTX *hctx, const uint8_t *key, const uint32_t keylen)
 {
 	static CONFIDENTIAL uint8_t i_key_pad[SHA256_BLOCK_LENGTH];
-	memset(i_key_pad, 0, SHA256_BLOCK_LENGTH);
+	memzero(i_key_pad, SHA256_BLOCK_LENGTH);
 	if (keylen > SHA256_BLOCK_LENGTH) {
 		sha256_Raw(key, keylen, i_key_pad);
 	} else {
@@ -105,7 +105,7 @@ void hmac_sha256_prepare(const uint8_t *key, const uint32_t keylen, uint32_t *op
 void hmac_sha512_Init(HMAC_SHA512_CTX *hctx, const uint8_t *key, const uint32_t keylen)
 {
 	static CONFIDENTIAL uint8_t i_key_pad[SHA512_BLOCK_LENGTH];
-	memset(i_key_pad, 0, SHA512_BLOCK_LENGTH);
+	memzero(i_key_pad, SHA512_BLOCK_LENGTH);
 	if (keylen > SHA512_BLOCK_LENGTH) {
 		sha512_Raw(key, keylen, i_key_pad);
 	} else {

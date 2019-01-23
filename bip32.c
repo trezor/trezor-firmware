@@ -152,7 +152,7 @@ int hdnode_from_xprv(uint32_t depth, uint32_t child_num, const uint8_t *chain_co
 int hdnode_from_seed(const uint8_t *seed, int seed_len, const char* curve, HDNode *out)
 {
 	static CONFIDENTIAL uint8_t I[32 + 32];
-	memset(out, 0, sizeof(HDNode));
+	memzero(out, sizeof(HDNode));
 	out->depth = 0;
 	out->child_num = 0;
 	out->curve = get_curve_by_name(curve);
@@ -319,7 +319,7 @@ int hdnode_private_ckd_cardano(HDNode *inout, uint32_t index)
 	hmac_sha512_Final(&ctx, z);
 
 	static CONFIDENTIAL uint8_t zl8[32];
-	memset(zl8, 0, 32);
+	memzero(zl8, 32);
 
 	/* get 8 * Zl */
 	scalar_multiply8(z, 28, zl8);
@@ -362,7 +362,7 @@ int hdnode_from_seed_cardano(const uint8_t *pass, int pass_len, const uint8_t *s
 	secret[31] &= 31;
 	secret[31] |= 64;
 
-	memset(out, 0, sizeof(HDNode));
+	memzero(out, sizeof(HDNode));
 	out->depth = 0;
 	out->child_num = 0;
 	out->curve = get_curve_by_name(ED25519_CARDANO_NAME);
@@ -516,7 +516,7 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count, 
 			if (hdnode_private_ckd(inout, i[k]) == 0) return 0;
 		}
 		// and save it
-		memset(&(private_ckd_cache[private_ckd_cache_index]), 0, sizeof(private_ckd_cache[private_ckd_cache_index]));
+		memzero(&(private_ckd_cache[private_ckd_cache_index]), sizeof(private_ckd_cache[private_ckd_cache_index]));
 		private_ckd_cache[private_ckd_cache_index].set = true;
 		private_ckd_cache[private_ckd_cache_index].depth = i_count - 1;
 		memcpy(private_ckd_cache[private_ckd_cache_index].i, i, (i_count - 1) * sizeof(uint32_t));
@@ -782,7 +782,7 @@ int hdnode_serialize_private(const HDNode *node, uint32_t fingerprint, uint32_t 
 int hdnode_deserialize(const char *str, uint32_t version_public, uint32_t version_private, const char *curve, HDNode *node, uint32_t *fingerprint)
 {
 	uint8_t node_data[78];
-	memset(node, 0, sizeof(HDNode));
+	memzero(node, sizeof(HDNode));
 	node->curve = get_curve_by_name(curve);
 	if (base58_decode_check(str, node->curve->hasher_base58, node_data, sizeof(node_data)) != sizeof(node_data)) {
 		return -1;

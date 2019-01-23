@@ -63,7 +63,7 @@ bool b58tobin(void *bin, size_t *binszp, const char *b58)
 
 	b58sz = strlen(b58);
 
-	memset(outi, 0, outisz * sizeof(*outi));
+	memzero(outi, sizeof(outi));
 
 	// Leading zeros, just count
 	for (i = 0; i < b58sz && b58u[i] == '1'; ++i)
@@ -166,7 +166,7 @@ bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz)
 
 	size = (binsz - zcount) * 138 / 100 + 1;
 	uint8_t buf[size];
-	memset(buf, 0, size);
+	memzero(buf, size);
 
 	for (i = zcount, high = size - 1; i < (ssize_t)binsz; ++i, high = j)
 	{
