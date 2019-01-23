@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import os
+import time
 import warnings
 
 from . import messages as proto
@@ -110,6 +111,7 @@ def recover(
     input_callback=None,
     type=proto.RecoveryDeviceType.ScrambledWords,
     dry_run=False,
+    u2f_counter=None,
 ):
     if client.features.model == "1" and input_callback is None:
         raise RuntimeError("Input callback required for Trezor One")
@@ -122,6 +124,9 @@ def recover(
             "Device already initialized. Call device.wipe() and try again."
         )
 
+    if u2f_counter is None:
+        u2f_counter = int(time.time())
+
     res = client.call(
         proto.RecoveryDevice(
             word_count=word_count,
@@ -132,6 +137,7 @@ def recover(
             enforce_wordlist=True,
             type=type,
             dry_run=dry_run,
+            u2f_counter=u2f_counter,
         )
     )
 
