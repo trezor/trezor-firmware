@@ -58,6 +58,7 @@
 #include "messages.pb.h"
 #include "stellar.h"
 #include "lisk.h"
+#include "memzero.h"
 
 // message methods
 
@@ -66,7 +67,7 @@ static uint8_t msg_resp[MSG_OUT_SIZE] __attribute__ ((aligned));
 #define RESP_INIT(TYPE) \
 			TYPE *resp = (TYPE *) (void *) msg_resp; \
 			_Static_assert(sizeof(msg_resp) >= sizeof(TYPE), #TYPE " is too large"); \
-			memset(resp, 0, sizeof(TYPE));
+			memzero(resp, sizeof(TYPE));
 
 #define CHECK_INITIALIZED \
 	if (!storage_isInitialized()) { \

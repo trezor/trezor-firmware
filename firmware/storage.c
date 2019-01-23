@@ -446,13 +446,13 @@ void storage_loadDevice(const LoadDevice *msg)
 		storageUpdate.has_mnemonic = false;
 		storage_setNode(&(msg->node));
 		sessionSeedCached = false;
-		memset(&sessionSeed, 0, sizeof(sessionSeed));
+		memzero(&sessionSeed, sizeof(sessionSeed));
 	} else if (msg->has_mnemonic) {
 		storageUpdate.has_mnemonic = true;
 		storageUpdate.has_node = false;
 		strlcpy(storageUpdate.mnemonic, msg->mnemonic, sizeof(storageUpdate.mnemonic));
 		sessionSeedCached = false;
-		memset(&sessionSeed, 0, sizeof(sessionSeed));
+		memzero(&sessionSeed, sizeof(sessionSeed));
 	}
 
 	if (msg->has_language) {
@@ -508,7 +508,7 @@ void storage_setHomescreen(const uint8_t *data, uint32_t size)
 		memcpy(storageUpdate.homescreen.bytes, data, size);
 		storageUpdate.homescreen.size = size;
 	} else {
-		memset(storageUpdate.homescreen.bytes, 0, sizeof(storageUpdate.homescreen.bytes));
+		memzero(storageUpdate.homescreen.bytes, sizeof(storageUpdate.homescreen.bytes));
 		storageUpdate.homescreen.size = 0;
 	}
 }

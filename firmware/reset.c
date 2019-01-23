@@ -29,6 +29,7 @@
 #include "util.h"
 #include "gettext.h"
 #include "messages.pb.h"
+#include "memzero.h"
 
 static uint32_t strength;
 static uint8_t  int_entropy[32];
@@ -87,7 +88,7 @@ void reset_init(bool display_random, uint32_t _strength, bool passphrase_protect
 	storage_update();
 
 	EntropyRequest resp;
-	memset(&resp, 0, sizeof(EntropyRequest));
+	memzero(&resp, sizeof(EntropyRequest));
 	msg_write(MessageType_MessageType_EntropyRequest, &resp);
 	awaiting_entropy = true;
 }
@@ -109,7 +110,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 		storage_setNeedsBackup(true);
 	}
 	storage_setMnemonic(mnemonic_from_data(int_entropy, strength / 8));
-	memset(int_entropy, 0, 32);
+	memzero(int_entropy, 32);
 	awaiting_entropy = false;
 
 	if (skip_backup || no_backup) {

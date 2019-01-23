@@ -26,6 +26,7 @@
 #include "protect.h"
 #include "rng.h"
 #include "secp256k1.h"
+#include "memzero.h"
 
 const char *nem_validate_common(NEMTransactionCommon *common, bool inner) {
 	if (!common->has_network) {
@@ -733,7 +734,7 @@ size_t nem_canonicalizeMosaics(NEMMosaic *mosaics, size_t mosaics_count) {
 	size_t actual_count = 0;
 
 	bool skip[mosaics_count];
-	memset(skip, 0, sizeof(skip));
+	memzero(skip, sizeof(skip));
 
 	// Merge duplicates
 	for (size_t i = 0; i < mosaics_count; i++) {

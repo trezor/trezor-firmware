@@ -32,6 +32,7 @@
 #include "messages.pb.h"
 #include "segwit_addr.h"
 #include "cash_addr.h"
+#include "memzero.h"
 
 #define SEGWIT_VERSION_0 0
 
@@ -188,7 +189,7 @@ bool compute_address(const CoinInfo *coin,
 
 int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in, TxOutputBinType *out, bool needs_confirm)
 {
-	memset(out, 0, sizeof(TxOutputBinType));
+	memzero(out, sizeof(TxOutputBinType));
 	out->amount = in->amount;
 	out->decred_script_version = in->decred_script_version;
 	uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
@@ -623,7 +624,7 @@ uint32_t tx_serialize_footer(TxStruct *tx, uint8_t *out)
 		} else
 		if (tx->version == 4) {
 			memcpy(out + 4, &(tx->expiry), 4);
-			memset(out + 8, 0, 8); // valueBalance
+			memzero(out + 8, 8); // valueBalance
 			out[16] = 0x00; // nShieldedSpend
 			out[17] = 0x00; // nShieldedOutput
 			out[18] = 0x00; // nJoinSplit

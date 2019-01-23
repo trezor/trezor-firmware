@@ -33,6 +33,7 @@
 #include "secp256k1.h"
 #include "nem2.h"
 #include "gettext.h"
+#include "memzero.h"
 
 #define BITCOIN_DIVISIBILITY (8)
 
@@ -98,7 +99,7 @@ static const char *address_n_str(const uint32_t *address_n, size_t address_n_cou
 			}
 			const uint32_t accnum = address_is_account ? ((address_n[4] & 0x7fffffff) + 1) : (address_n[2] & 0x7fffffff) + 1;
 			if (abbr && accnum < 100) {
-				memset(path, 0, sizeof(path));
+				memzero(path, sizeof(path));
 				strlcpy(path, abbr, sizeof(path));
 				// TODO: how to name accounts?
 				// currently we have "legacy account", "account" and "segwit account"
@@ -115,7 +116,7 @@ static const char *address_n_str(const uint32_t *address_n, size_t address_n_cou
 					strlcat(path, " account #", sizeof(path));
 				}
 				char acc[3];
-				memset(acc, 0, sizeof(acc));
+				memzero(acc, sizeof(acc));
 				if (accnum < 10) {
 					acc[0] = '0' + accnum;
 				} else {
@@ -163,7 +164,7 @@ const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen)
 	if (rowlen > 32) {
 		rowlen = 32;
 	}
-	memset(str, 0, sizeof(str));
+	memzero(str, sizeof(str));
 	strlcpy(str[0], (char *)msg, rowlen + 1);
 	if (len > rowlen) {
 		strlcpy(str[1], (char *)msg + rowlen, rowlen + 1);
@@ -186,7 +187,7 @@ const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen)
 const char **split_message_hex(const uint8_t *msg, uint32_t len)
 {
 	char hex[32 * 2 + 1];
-	memset(hex, 0, sizeof(hex));
+	memzero(hex, sizeof(hex));
 	uint32_t size = len;
 	if (len > 32) {
 		size = 32;

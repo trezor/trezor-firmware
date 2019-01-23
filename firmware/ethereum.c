@@ -276,7 +276,7 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len, const ui
 {
 	bignum256 val;
 	uint8_t pad_val[32];
-	memset(pad_val, 0, sizeof(pad_val));
+	memzero(pad_val, sizeof(pad_val));
 	memcpy(pad_val + (32 - value_len), value, value_len);
 	bn_read_be(pad_val, &val);
 
@@ -377,18 +377,18 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
 	char tx_value[32];
 	char gas_value[32];
 
-	memset(pad_val, 0, sizeof(pad_val));
+	memzero(pad_val, sizeof(pad_val));
 	memcpy(pad_val + (32 - gas_price_len), gas_price, gas_price_len);
 	bn_read_be(pad_val, &val);
 
-	memset(pad_val, 0, sizeof(pad_val));
+	memzero(pad_val, sizeof(pad_val));
 	memcpy(pad_val + (32 - gas_limit_len), gas_limit, gas_limit_len);
 	bn_read_be(pad_val, &gas);
 	bn_multiply(&val, &gas, &secp256k1.prime);
 
 	ethereumFormatAmount(&gas, NULL, gas_value, sizeof(gas_value));
 
-	memset(pad_val, 0, sizeof(pad_val));
+	memzero(pad_val, sizeof(pad_val));
 	memcpy(pad_val + (32 - value_len), value, value_len);
 	bn_read_be(pad_val, &val);
 
@@ -450,7 +450,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	ethereum_signing = true;
 	sha3_256_Init(&keccak_ctx);
 
-	memset(&msg_tx_request, 0, sizeof(EthereumTxRequest));
+	memzero(&msg_tx_request, sizeof(EthereumTxRequest));
 	/* set fields to 0, to avoid conditions later */
 	if (!msg->has_value)
 		msg->value.size = 0;

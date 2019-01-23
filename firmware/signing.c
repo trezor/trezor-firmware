@@ -500,8 +500,8 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 	spending = 0;
 	change_spend = 0;
 	authorized_amount = 0;
-	memset(&input, 0, sizeof(TxInputType));
-	memset(&resp, 0, sizeof(TxRequest));
+	memzero(&input, sizeof(TxInputType));
+	memzero(&resp, sizeof(TxRequest));
 
 	signing = true;
 	progress = 0;
@@ -978,7 +978,7 @@ void signing_txack(TransactionType *tx)
 		update_ctr = 0;
 	}
 
-	memset(&resp, 0, sizeof(TxRequest));
+	memzero(&resp, sizeof(TxRequest));
 
 	switch (signing_stage) {
 		case STAGE_REQUEST_1_INPUT:

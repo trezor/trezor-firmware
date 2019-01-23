@@ -47,7 +47,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only)
 	bool debug_decided = false;
 #endif
 
-	memset(&resp, 0, sizeof(ButtonRequest));
+	memzero(&resp, sizeof(ButtonRequest));
 	resp.has_code = true;
 	resp.code = type;
 	usbTiny(1);
@@ -114,7 +114,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only)
 const char *requestPin(PinMatrixRequestType type, const char *text)
 {
 	PinMatrixRequest resp;
-	memset(&resp, 0, sizeof(PinMatrixRequest));
+	memzero(&resp, sizeof(PinMatrixRequest));
 	resp.has_type = true;
 	resp.type = type;
 	usbTiny(1);
@@ -247,7 +247,7 @@ bool protectPassphrase(void)
 	}
 
 	PassphraseRequest resp;
-	memset(&resp, 0, sizeof(PassphraseRequest));
+	memzero(&resp, sizeof(PassphraseRequest));
 	usbTiny(1);
 	msg_write(MessageType_MessageType_PassphraseRequest, &resp);
 

@@ -54,7 +54,7 @@ static StellarTransaction stellar_activeTx;
  */
 bool stellar_signingInit(const StellarSignTx *msg)
 {
-    memset(&stellar_activeTx, 0, sizeof(StellarTransaction));
+    memzero(&stellar_activeTx, sizeof(StellarTransaction));
     stellar_signing = true;
     // Initialize signing context
     sha256_Init(&(stellar_activeTx.sha256_ctx));
@@ -267,7 +267,7 @@ bool stellar_confirmPaymentOp(const StellarPaymentOp *msg)
     strlcat(str_to, str_addr_rows[0], sizeof(str_to));
 
     char str_asset_row[32];
-    memset(str_asset_row, 0, sizeof(str_asset_row));
+    memzero(str_asset_row, sizeof(str_asset_row));
     stellar_format_asset(&(msg->asset), str_asset_row, sizeof(str_asset_row));
 
     char str_pay_amount[32];
@@ -585,7 +585,7 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg)
     char str_title[32];
     char rows[4][32];
     int row_idx = 0;
-    memset(rows, 0, sizeof(rows));
+    memzero(rows, sizeof(rows));
 
     // Inflation destination
     stellar_hashupdate_bool(msg->has_inflation_destination_account);
@@ -643,7 +643,7 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg)
             stellar_signingAbort(_("User canceled"));
             return false;
         }
-        memset(rows, 0, sizeof(rows));
+        memzero(rows, sizeof(rows));
         row_idx = 0;
 
         // Hash flags
@@ -677,7 +677,7 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg)
             stellar_signingAbort(_("User canceled"));
             return false;
         }
-        memset(rows, 0, sizeof(rows));
+        memzero(rows, sizeof(rows));
         row_idx = 0;
 
         // Hash flags
@@ -750,7 +750,7 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg)
             stellar_signingAbort(_("User canceled"));
             return false;
         }
-        memset(rows, 0, sizeof(rows));
+        memzero(rows, sizeof(rows));
         row_idx = 0;
     }
 
@@ -780,7 +780,7 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg)
             stellar_signingAbort(_("User canceled"));
             return false;
         }
-        memset(rows, 0, sizeof(rows));
+        memzero(rows, sizeof(rows));
         row_idx = 0;
 
         stellar_hashupdate_string((unsigned char*)&(msg->home_domain), strnlen(msg->home_domain, 32));
@@ -876,7 +876,7 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg)
                 stellar_signingAbort(_("User canceled"));
                 return false;
             }
-            memset(rows, 0, sizeof(rows));
+            memzero(rows, sizeof(rows));
             row_idx = 0;
         }
 
@@ -1019,13 +1019,13 @@ bool stellar_confirmAllowTrustOp(const StellarAllowTrustOp *msg)
     // asset code
     if (msg->asset_type == 1) {
         char code4[4+1];
-        memset(code4, 0, sizeof(code4));
+        memzero(code4, sizeof(code4));
         strlcpy(code4, msg->asset_code, sizeof(code4));
         stellar_hashupdate_bytes((uint8_t *)code4, 4);
     }
     if (msg->asset_type == 2) {
         char code12[12+1];
-        memset(code12, 0, sizeof(code12));
+        memzero(code12, sizeof(code12));
         strlcpy(code12, msg->asset_code, sizeof(code12));
         stellar_hashupdate_bytes((uint8_t *)code12, 12);
     }
@@ -1233,7 +1233,7 @@ void stellar_getSignatureForActiveTx(uint8_t *out_signature)
     const HDNode *node = stellar_deriveNode(stellar_activeTx.address_n, stellar_activeTx.address_n_count);
     if (!node) {
         // return empty signature when we can't derive node
-        memset(out_signature, 0, 64);
+        memzero(out_signature, 64);
         return;
     }
 
@@ -1271,7 +1271,7 @@ void stellar_format_stroops(uint64_t number, char *out, size_t outlen)
  */
 void stellar_format_price(uint32_t numerator, uint32_t denominator, char *out, size_t outlen)
 {
-    memset(out, 0, outlen);
+    memzero(out, outlen);
 
     // early exit for invalid denominator
     if (denominator == 0) {
@@ -1328,7 +1328,7 @@ const char **stellar_lineBreakAddress(const uint8_t *addrbytes)
     char str_fulladdr[56+1];
     static char rows[3][20+1];
 
-    memset(rows, 0, sizeof(rows));
+    memzero(rows, sizeof(rows));
 
     // get full address string
     stellar_publicAddressAsStr(addrbytes, str_fulladdr, sizeof(str_fulladdr));
@@ -1356,9 +1356,9 @@ void stellar_format_asset(const StellarAssetType *asset, char *str_formatted, si
     // truncated asset issuer, final length depends on length of asset code
     char str_asset_issuer_trunc[13 + 1];
 
-    memset(str_formatted, 0, len);
-    memset(str_asset_code, 0, sizeof(str_asset_code));
-    memset(str_asset_issuer_trunc, 0, sizeof(str_asset_issuer_trunc));
+    memzero(str_formatted, len);
+    memzero(str_asset_code, sizeof(str_asset_code));
+    memzero(str_asset_issuer_trunc, sizeof(str_asset_issuer_trunc));
 
     // Validate issuer account for non-native assets
     if (asset->type != 0 && !stellar_validateAddress(asset->issuer)) {
@@ -1621,8 +1621,8 @@ void stellar_hashupdate_asset(const StellarAssetType *asset)
 
     // 4-character asset code
     if (asset->type == 1) {
-        char code4[4+1];
-        memset(code4, 0, sizeof(code4));
+        char code4[4 + 1];
+        memzero(code4, sizeof(code4));
         strlcpy(code4, asset->code, sizeof(code4));
 
         stellar_hashupdate_bytes((uint8_t *)code4, 4);
@@ -1631,8 +1631,8 @@ void stellar_hashupdate_asset(const StellarAssetType *asset)
 
     // 12-character asset code
     if (asset->type == 2) {
-        char code12[12+1];
-        memset(code12, 0, sizeof(code12));
+        char code12[12 + 1];
+        memzero(code12, sizeof(code12));
         strlcpy(code12, asset->code, sizeof(code12));
 
         stellar_hashupdate_bytes((uint8_t *)code12, 12);
@@ -1651,7 +1651,7 @@ void stellar_hashupdate_bytes(const uint8_t *data, size_t len)
 void stellar_layoutTransactionSummary(const StellarSignTx *msg)
 {
     char str_lines[5][32];
-    memset(str_lines, 0, sizeof(str_lines));
+    memzero(str_lines, sizeof(str_lines));
 
     char str_fee[12];
     char str_num_ops[12];
@@ -1693,7 +1693,7 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg)
     }
 
     // Reset lines for displaying memo
-    memset(str_lines, 0, sizeof(str_lines));
+    memzero(str_lines, sizeof(str_lines));
 
     // Memo: none
     if (msg->memo_type == 0) {
@@ -1747,7 +1747,7 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg)
     }
 
     // Verify timebounds, if present
-    memset(str_lines, 0, sizeof(str_lines));
+    memzero(str_lines, sizeof(str_lines));
 
     // Timebound: lower
     if (msg->timebounds_start || msg->timebounds_end) {
@@ -1767,7 +1767,7 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg)
         }
 
         // Reset for timebound_max
-        memset(str_timebound, 0, sizeof(str_timebound));
+        memzero(str_timebound, sizeof(str_timebound));
 
         timebound = (time_t)msg->timebounds_end;
         strlcpy(str_lines[0], _("Valid from:"), sizeof(str_lines[0]));
@@ -1817,22 +1817,22 @@ void stellar_layoutSigningDialog(const char *line1, const char *line2, const cha
     }
 
     char str_pubaddr_truncated[12]; // G???? + null
-    memset(str_pubaddr_truncated, 0, sizeof(str_pubaddr_truncated));
+    memzero(str_pubaddr_truncated, sizeof(str_pubaddr_truncated));
 
     layoutLast = layoutDialogSwipe;
     layoutSwipe();
     oledClear();
 
     // Load up public address
-    char str_pubaddr[56+1];
-    memset(str_pubaddr, 0, sizeof(str_pubaddr));
+    char str_pubaddr[56 + 1];
+    memzero(str_pubaddr, sizeof(str_pubaddr));
     stellar_publicAddressAsStr(node->public_key + 1, str_pubaddr, sizeof(str_pubaddr));
     memcpy(str_pubaddr_truncated, str_pubaddr, sizeof(str_pubaddr_truncated) - 1);
 
     // Header
     // Ends up as: Signing with GABCDEFGHIJKL
     char str_header[32];
-    memset(str_header, 0, sizeof(str_header));
+    memzero(str_header, sizeof(str_header));
     strlcpy(str_header, _("Signing with "), sizeof(str_header));
     strlcat(str_header, str_pubaddr_truncated, sizeof(str_header));
 
@@ -1896,7 +1896,7 @@ void stellar_layoutSigningDialog(const char *line1, const char *line2, const cha
 void stellar_layoutTransactionDialog(const char *line1, const char *line2, const char *line3, const char *line4, const char *line5)
 {
     char str_warning[16];
-    memset(str_warning, 0, sizeof(str_warning));
+    memzero(str_warning, sizeof(str_warning));
 
     if (stellar_activeTx.network_type == 2) {
         // Warning: testnet

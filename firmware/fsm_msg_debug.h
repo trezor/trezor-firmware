@@ -26,7 +26,7 @@ void fsm_msgDebugLinkGetState(const DebugLinkGetState *msg)
 	// Do not use RESP_INIT because it clears msg_resp, but another message
 	// might be being handled
 	DebugLinkState resp;
-	memset(&resp, 0, sizeof(resp));
+	memzero(&resp, sizeof(resp));
 
 	resp.has_layout = true;
 	resp.layout.size = OLED_BUFSIZE;
