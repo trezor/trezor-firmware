@@ -42,7 +42,7 @@ STATIC mp_obj_t mod_trezorio_SBU_make_new(const mp_obj_type_t *type, size_t n_ar
 ///     Sets SBU wires to sbu1 and sbu2 values respectively
 ///     '''
 STATIC mp_obj_t mod_trezorio_SBU_set(mp_obj_t self, mp_obj_t sbu1, mp_obj_t sbu2) {
-    sbu_set(mp_obj_is_true(sbu1), mp_obj_is_true(sbu2));
+    sbu_set(sectrue * mp_obj_is_true(sbu1), sectrue * mp_obj_is_true(sbu2));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_SBU_set_obj, mod_trezorio_SBU_set);
