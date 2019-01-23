@@ -58,17 +58,7 @@ const char *mnemonic_generate(int strength)
 	return r;
 }
 
-const uint16_t *mnemonic_generate_indexes(int strength)
-{
-	if (strength % 32 || strength < 128 || strength > 256) {
-		return 0;
-	}
-	uint8_t data[32];
-	random_buffer(data, 32);
-	const uint16_t *r = mnemonic_from_data_indexes(data, strength / 8);
-	memzero(data, sizeof(data));
-	return r;
-}
+static CONFIDENTIAL char mnemo[24 * 10];
 
 const char *mnemonic_from_data(const uint8_t *data, int len)
 {
@@ -85,7 +75,6 @@ const char *mnemonic_from_data(const uint8_t *data, int len)
 	memcpy(bits, data, len);
 
 	int mlen = len * 3 / 4;
-	static CONFIDENTIAL char mnemo[24 * 10];
 
 	int i, j, idx;
 	char *p = mnemo;
@@ -105,35 +94,9 @@ const char *mnemonic_from_data(const uint8_t *data, int len)
 	return mnemo;
 }
 
-const uint16_t *mnemonic_from_data_indexes(const uint8_t *data, int len)
+void mnemonic_clear(void)
 {
-	if (len % 4 || len < 16 || len > 32) {
-		return 0;
-	}
-
-	uint8_t bits[32 + 1];
-
-	sha256_Raw(data, len, bits);
-	// checksum
-	bits[len] = bits[0];
-	// data
-	memcpy(bits, data, len);
-
-	int mlen = len * 3 / 4;
-	static CONFIDENTIAL uint16_t mnemo[24];
-
-	int i, j, idx;
-	for (i = 0; i < mlen; i++) {
-		idx = 0;
-		for (j = 0; j < 11; j++) {
-			idx <<= 1;
-			idx += (bits[(i * 11 + j) / 8] & (1 << (7 - ((i * 11 + j) % 8)))) > 0;
-		}
-		mnemo[i] = idx;
-	}
-	memzero(bits, sizeof(bits));
-
-	return mnemo;
+	memzero(mnemo, sizeof(mnemo));
 }
 
 int mnemonic_to_entropy(const char *mnemonic, uint8_t *entropy)

@@ -29,10 +29,8 @@
 #define BIP39_PBKDF2_ROUNDS 2048
 
 const char *mnemonic_generate(int strength);	// strength in bits
-const uint16_t *mnemonic_generate_indexes(int strength);	// strength in bits
-
 const char *mnemonic_from_data(const uint8_t *data, int len);
-const uint16_t *mnemonic_from_data_indexes(const uint8_t *data, int len);
+void mnemonic_clear(void);
 
 int mnemonic_check(const char *mnemonic);
 
