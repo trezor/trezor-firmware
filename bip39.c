@@ -184,12 +184,12 @@ int mnemonic_check(const char *mnemonic)
 	return 0;
 }
 
-// passphrase must be at most 256 characters or code may crash
+// passphrase must be at most 256 characters otherwise it would be truncated
 void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed[512 / 8], void (*progress_callback)(uint32_t current, uint32_t total))
 {
-	int passphraselen = strlen(passphrase);
-#if USE_BIP39_CACHE
 	int mnemoniclen = strlen(mnemonic);
+	int passphraselen = strnlen(passphrase, 256);
+#if USE_BIP39_CACHE
 	// check cache
 	if (mnemoniclen < 256 && passphraselen < 64) {
 		for (int i = 0; i < BIP39_CACHE_SIZE; i++) {
@@ -206,7 +206,7 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed
 	memcpy(salt, "mnemonic", 8);
 	memcpy(salt + 8, passphrase, passphraselen);
 	static CONFIDENTIAL PBKDF2_HMAC_SHA512_CTX pctx;
-	pbkdf2_hmac_sha512_Init(&pctx, (const uint8_t *)mnemonic, strlen(mnemonic), salt, passphraselen + 8, 1);
+	pbkdf2_hmac_sha512_Init(&pctx, (const uint8_t *)mnemonic, mnemoniclen, salt, passphraselen + 8, 1);
 	if (progress_callback) {
 		progress_callback(0, BIP39_PBKDF2_ROUNDS);
 	}
