@@ -425,6 +425,7 @@ void bn_multiply_long(const bignum256 *k, const bignum256 *x, uint32_t res[18])
 
 // auxiliary function for multiplication.
 // reduces res modulo prime.
+// assumes i >= 8 and i <= 16
 // assumes    res normalized, res < 2^(30(i-7)) * 2 * prime
 // guarantees res normalized, res < 2^(30(i-8)) * 2 * prime
 void bn_multiply_reduce_step(uint32_t res[18], const bignum256 *prime, uint32_t i) {
@@ -436,6 +437,7 @@ void bn_multiply_reduce_step(uint32_t res[18], const bignum256 *prime, uint32_t 
 	// 0 <= coef < 2^31
 	// subtract (coef * 2^(30k) * prime) from res
 	// note that we unrolled the first iteration
+	assert(i >= 8 && i <= 16);
 	uint32_t j;
 	uint32_t coef = (res[i] >> 16) + (res[i + 1] << 14);
 	uint64_t temp = 0x2000000000000000ull + res[i - 8] - prime->val[0] * (uint64_t)coef;
