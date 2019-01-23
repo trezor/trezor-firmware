@@ -28,6 +28,8 @@
 #include "usb.h"
 #include "touch.h"
 
+#include "memzero.h"
+
 void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func);
 
 #define ensure(expr, msg) (((expr) == sectrue) ? (void)0 : __fatal_error(#expr, msg, __FILE__, __LINE__, __func__))
@@ -51,8 +53,8 @@ void usb_init(const usb_dev_info_t *dev_info) {
     for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
         usb_ifaces[i].type = USB_IFACE_TYPE_DISABLED;
         usb_ifaces[i].sock = -1;
-        memset(&usb_ifaces[i].si_me, 0, sizeof(struct sockaddr_in));
-        memset(&usb_ifaces[i].si_other, 0, sizeof(struct sockaddr_in));
+        memzero(&usb_ifaces[i].si_me, sizeof(struct sockaddr_in));
+        memzero(&usb_ifaces[i].si_other, sizeof(struct sockaddr_in));
         usb_ifaces[i].slen = 0;
     }
 }

@@ -34,6 +34,8 @@
 #include "bootui.h"
 #include "messages.h"
 
+#include "memzero.h"
+
 #define MSG_HEADER1_LEN 9
 #define MSG_HEADER2_LEN 1
 
@@ -96,7 +98,7 @@ static bool _usb_write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count)
             ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
             // prepare new packet
             state->packet_index++;
-            memset(state->buf, 0, USB_PACKET_SIZE);
+            memzero(state->buf, USB_PACKET_SIZE);
             state->buf[0] = '?';
             state->packet_pos = MSG_HEADER2_LEN;
         }
@@ -110,7 +112,7 @@ static void _usb_write_flush(usb_write_state *state)
     // if packet is not filled up completely
     if (state->packet_pos < USB_PACKET_SIZE) {
         // pad it with zeroes
-        memset(state->buf + state->packet_pos, 0, USB_PACKET_SIZE - state->packet_pos);
+        memzero(state->buf + state->packet_pos, USB_PACKET_SIZE - state->packet_pos);
     }
     // send packet
     int r = usb_webusb_write_blocking(state->iface_num, state->buf, USB_PACKET_SIZE, USB_TIMEOUT);
@@ -161,9 +163,9 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id, const pb_field_t fi
 
 #define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
 #define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) { msg_send.has_##FIELD = true; msg_send.FIELD = VALUE; }
-#define MSG_SEND_ASSIGN_STRING(FIELD, VALUE) { msg_send.has_##FIELD = true; memset(msg_send.FIELD, 0, sizeof(msg_send.FIELD)); strncpy(msg_send.FIELD, VALUE, sizeof(msg_send.FIELD) - 1); }
-#define MSG_SEND_ASSIGN_STRING_LEN(FIELD, VALUE, LEN) { msg_send.has_##FIELD = true; memset(msg_send.FIELD, 0, sizeof(msg_send.FIELD)); strncpy(msg_send.FIELD, VALUE, MIN(LEN, sizeof(msg_send.FIELD) - 1)); }
-#define MSG_SEND_ASSIGN_BYTES(FIELD, VALUE, LEN) { msg_send.has_##FIELD = true; memset(msg_send.FIELD.bytes, 0, sizeof(msg_send.FIELD.bytes)); memcpy(msg_send.FIELD.bytes, VALUE, MIN(LEN, sizeof(msg_send.FIELD.bytes))); msg_send.FIELD.size = MIN(LEN, sizeof(msg_send.FIELD.bytes)); }
+#define MSG_SEND_ASSIGN_STRING(FIELD, VALUE) { msg_send.has_##FIELD = true; memzero(msg_send.FIELD, sizeof(msg_send.FIELD)); strncpy(msg_send.FIELD, VALUE, sizeof(msg_send.FIELD) - 1); }
+#define MSG_SEND_ASSIGN_STRING_LEN(FIELD, VALUE, LEN) { msg_send.has_##FIELD = true; memzero(msg_send.FIELD, sizeof(msg_send.FIELD)); strncpy(msg_send.FIELD, VALUE, MIN(LEN, sizeof(msg_send.FIELD) - 1)); }
+#define MSG_SEND_ASSIGN_BYTES(FIELD, VALUE, LEN) { msg_send.has_##FIELD = true; memzero(msg_send.FIELD.bytes, sizeof(msg_send.FIELD.bytes)); memcpy(msg_send.FIELD.bytes, VALUE, MIN(LEN, sizeof(msg_send.FIELD.bytes))); msg_send.FIELD.size = MIN(LEN, sizeof(msg_send.FIELD.bytes)); }
 #define MSG_SEND(TYPE) _send_msg(iface_num, MessageType_MessageType_##TYPE, TYPE##_fields, &msg_send)
 
 typedef struct {

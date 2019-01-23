@@ -7,6 +7,14 @@ CPPPATH_MOD = []
 CPPDEFINES_MOD = []
 SOURCE_MOD = []
 
+# modtrezorcrypto
+CPPPATH_MOD += [
+    'vendor/trezor-crypto',
+]
+SOURCE_MOD += [
+    'vendor/trezor-crypto/memzero.c',
+]
+
 # modtrezorui
 CPPDEFINES_MOD += [
     'TREZOR_FONT_BOLD_ENABLE',

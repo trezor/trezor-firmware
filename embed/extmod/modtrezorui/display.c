@@ -40,6 +40,8 @@
 #include <string.h>
 #include <stdarg.h>
 
+#include "memzero.h"
+
 static int DISPLAY_BACKLIGHT = -1;
 static int DISPLAY_ORIENTATION = -1;
 
@@ -422,7 +424,7 @@ void display_print(const char *text, int textlen)
             for (int j = 0; j < DISPLAY_PRINT_ROWS - 1; j++) {
                 memcpy(display_print_buf[j], display_print_buf[j + 1], DISPLAY_PRINT_COLS);
             }
-            memset(display_print_buf[DISPLAY_PRINT_ROWS - 1], 0x00, DISPLAY_PRINT_COLS);
+            memzero(display_print_buf[DISPLAY_PRINT_ROWS - 1], DISPLAY_PRINT_COLS);
             row = DISPLAY_PRINT_ROWS - 1;
         }
 

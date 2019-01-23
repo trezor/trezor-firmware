@@ -78,7 +78,7 @@ STATIC mp_obj_t mod_trezorcrypto_Groestl512_digest(mp_obj_t self) {
     GROESTL512_CTX ctx;
     memcpy(&ctx, &(o->ctx), sizeof(GROESTL512_CTX));
     groestl512_Final(&ctx, out);
-    memset(&ctx, 0, sizeof(GROESTL512_CTX));
+    memzero(&ctx, sizeof(GROESTL512_CTX));
     return mp_obj_new_bytes(out, sizeof(out));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Groestl512_digest_obj, mod_trezorcrypto_Groestl512_digest);

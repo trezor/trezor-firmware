@@ -23,6 +23,7 @@
 
 #include "monero/monero.h"
 #include "bignum.h"
+#include "memzero.h"
 
 /// package: trezorcrypto.monero
 
@@ -1089,7 +1090,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_hasher_digest(size_t n_args, const mp_ob
 
     uint8_t out[SHA3_256_DIGEST_LENGTH];
     xmr_hasher_final(&ctx, out);
-    memset(&ctx, 0, sizeof(SHA3_CTX));
+    memzero(&ctx, sizeof(SHA3_CTX));
 
     if (n_args == 1 || args[1] == mp_const_none){
       return mp_obj_new_bytes(out, sizeof(out));

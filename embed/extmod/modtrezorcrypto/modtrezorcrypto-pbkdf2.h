@@ -112,7 +112,7 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_key(mp_obj_t self) {
         memcpy(&ctx, &(o->ctx256), sizeof(PBKDF2_HMAC_SHA256_CTX));
         uint8_t out[SHA256_DIGEST_LENGTH];
         pbkdf2_hmac_sha256_Final(&ctx, out);
-        memset(&ctx, 0, sizeof(PBKDF2_HMAC_SHA256_CTX));
+        memzero(&ctx, sizeof(PBKDF2_HMAC_SHA256_CTX));
         return mp_obj_new_bytes(out, sizeof(out));
     }
     if (o->prf == PRF_HMAC_SHA512) {
@@ -120,7 +120,7 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_key(mp_obj_t self) {
         memcpy(&ctx, &(o->ctx512), sizeof(PBKDF2_HMAC_SHA512_CTX));
         uint8_t out[SHA512_DIGEST_LENGTH];
         pbkdf2_hmac_sha512_Final(&ctx, out);
-        memset(&ctx, 0, sizeof(PBKDF2_HMAC_SHA512_CTX));
+        memzero(&ctx, sizeof(PBKDF2_HMAC_SHA512_CTX));
         return mp_obj_new_bytes(out, sizeof(out));
     }
     return mp_const_none;

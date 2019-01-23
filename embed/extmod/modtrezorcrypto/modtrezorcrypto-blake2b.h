@@ -113,7 +113,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2b_digest(mp_obj_t self) {
     BLAKE2B_CTX ctx;
     memcpy(&ctx, &(o->ctx), sizeof(BLAKE2B_CTX));
     blake2b_Final(&ctx, out, ctx.outlen);
-    memset(&ctx, 0, sizeof(BLAKE2B_CTX));
+    memzero(&ctx, sizeof(BLAKE2B_CTX));
     return mp_obj_new_bytes(out, o->ctx.outlen);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Blake2b_digest_obj, mod_trezorcrypto_Blake2b_digest);

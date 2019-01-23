@@ -92,7 +92,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_256_digest(mp_obj_t self) {
     } else {
         sha3_Final(&ctx, out);
     }
-    memset(&ctx, 0, sizeof(SHA3_CTX));
+    memzero(&ctx, sizeof(SHA3_CTX));
     return mp_obj_new_bytes(out, sizeof(out));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha3_256_digest_obj, mod_trezorcrypto_Sha3_256_digest);

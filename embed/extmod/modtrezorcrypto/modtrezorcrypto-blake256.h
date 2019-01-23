@@ -76,7 +76,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake256_digest(mp_obj_t self) {
     BLAKE256_CTX ctx;
     memcpy(&ctx, &(o->ctx), sizeof(BLAKE256_CTX));
     blake256_Final(&ctx, hash);
-    memset(&ctx, 0, sizeof(BLAKE256_CTX));
+    memzero(&ctx, sizeof(BLAKE256_CTX));
     return mp_obj_new_bytes(hash, sizeof(hash));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Blake256_digest_obj, mod_trezorcrypto_Blake256_digest);

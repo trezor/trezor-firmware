@@ -34,6 +34,8 @@
 #include "touch.h"
 #include "usb.h"
 
+#include "memzero.h"
+
 enum { VCP_IFACE = 0x00 };
 
 static void vcp_intr(void)
@@ -298,7 +300,7 @@ static void test_sbu(const char *args)
 static void test_otp_read(void)
 {
     uint8_t data[32];
-    memset(data, 0, sizeof(data));
+    memzero(data, sizeof(data));
     ensure(flash_otp_read(0, 0, data, sizeof(data)), NULL);
 
     // strip trailing 0xFF
@@ -320,7 +322,7 @@ static void test_otp_read(void)
 static void test_otp_write(const char *args)
 {
     char data[32];
-    memset(data, 0, sizeof(data));
+    memzero(data, sizeof(data));
     strncpy(data, args, sizeof(data) - 1);
     ensure(flash_otp_write(0, 0, (const uint8_t *) data, sizeof(data)), NULL);
     ensure(flash_otp_lock(0), NULL);

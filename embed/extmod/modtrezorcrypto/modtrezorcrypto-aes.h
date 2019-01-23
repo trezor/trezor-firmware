@@ -69,7 +69,7 @@ STATIC mp_obj_t mod_trezorcrypto_AES_make_new(const mp_obj_type_t *type, size_t 
         }
         memcpy(o->iv, iv.buf, AES_BLOCK_SIZE);
     } else {
-        memset(o->iv, 0, AES_BLOCK_SIZE);
+        memzero(o->iv, AES_BLOCK_SIZE);
     }
     switch (key.len) {
         case 16:

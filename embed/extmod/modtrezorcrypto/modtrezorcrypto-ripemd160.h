@@ -76,7 +76,7 @@ STATIC mp_obj_t mod_trezorcrypto_Ripemd160_digest(mp_obj_t self) {
     RIPEMD160_CTX ctx;
     memcpy(&ctx, &(o->ctx), sizeof(RIPEMD160_CTX));
     ripemd160_Final(&ctx, out);
-    memset(&ctx, 0, sizeof(RIPEMD160_CTX));
+    memzero(&ctx, sizeof(RIPEMD160_CTX));
     return mp_obj_new_bytes(out, sizeof(out));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Ripemd160_digest_obj, mod_trezorcrypto_Ripemd160_digest);

@@ -29,6 +29,8 @@
 #include "lowlevel.h"
 #include "version.h"
 
+#include "memzero.h"
+
 const uint8_t BOARDLOADER_KEY_M = 2;
 const uint8_t BOARDLOADER_KEY_N = 3;
 static const uint8_t * const BOARDLOADER_KEYS[] = {
@@ -57,7 +59,7 @@ static uint32_t check_sdcard(void)
 
     uint32_t buf[IMAGE_HEADER_SIZE / sizeof(uint32_t)];
 
-    memset(buf, 0, sizeof(buf));
+    memzero(buf, sizeof(buf));
 
     const secbool read_status = sdcard_read_blocks(buf, 0, IMAGE_HEADER_SIZE / SDCARD_BLOCK_SIZE);
 
