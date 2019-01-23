@@ -107,6 +107,10 @@ def b58decode(v, length=None):
     if isinstance(v, bytes):
         v = v.decode()
 
+    for c in v:
+        if c not in __b58chars:
+            raise ValueError("invalid Base58 string")
+
     long_value = 0
     for (i, c) in enumerate(v[::-1]):
         long_value += __b58chars.find(c) * (__b58base ** i)
