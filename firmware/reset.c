@@ -110,6 +110,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 		storage_setNeedsBackup(true);
 	}
 	storage_setMnemonic(mnemonic_from_data(int_entropy, strength / 8));
+	mnemonic_clear();
 	memzero(int_entropy, 32);
 	awaiting_entropy = false;
 
