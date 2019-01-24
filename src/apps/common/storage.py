@@ -63,7 +63,7 @@ def _next_counter(app: int, key: int, public: bool = False) -> int:
     # With each increment the tail is shifted to the right by one bit. Thus after
     # three increments the stored value is 000000001FFFFFFFFFFFFFFF. Once all the
     # bits in the tail are set to zero, the next counter value is stored as
-    # 00000021FFFFFFFFFFFFFFFF.
+    # 00000041FFFFFFFFFFFFFFFF.
 
     value = config.get(app, key, public)
     if value is None:
