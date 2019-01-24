@@ -103,7 +103,7 @@ void display_init(void)
 #ifdef TREZOR_EMULATOR_RASPI
         SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN
 #else
-        SDL_WINDOW_SHOWN
+        SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI
 #endif
     );
     if (!win) {
