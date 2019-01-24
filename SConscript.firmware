@@ -10,10 +10,14 @@ SOURCE_MOD = []
 PYOPT = '1'
 
 # modtrezorconfig
+CPPPATH_MOD += [
+    'embed/extmod/modtrezorconfig',
+    'vendor/trezor-storage',
+]
 SOURCE_MOD += [
     'embed/extmod/modtrezorconfig/modtrezorconfig.c',
-    'vendor/trezor-storage/c/norcow.c',
-    'vendor/trezor-storage/c/storage.c',
+    'vendor/trezor-storage/norcow.c',
+    'vendor/trezor-storage/storage.c',
 ]
 
 # modtrezorcrypto
@@ -275,8 +279,8 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/usbd_core.c',
     'embed/trezorhal/usbd_ctlreq.c',
     'embed/trezorhal/usbd_ioreq.c',
-    'embed/trezorhal/utils.c',
     'embed/trezorhal/util.s',
+    'embed/trezorhal/utils.c',
     'embed/trezorhal/vectortable.s',
 ]
 
@@ -327,7 +331,6 @@ env.Replace(
         'embed/firmware',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
-        'vendor/trezor-storage/c',
         'vendor/micropython',
         'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',
         'vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include',
