@@ -1,4 +1,7 @@
-Version 1.6.0 [unreleased]
+Version 1.6.1
+* Fix USB issue on some Windows 10 installations
+
+Version 1.6.0
 * Switch from HID to WebUSB
 
 Version 1.5.1
