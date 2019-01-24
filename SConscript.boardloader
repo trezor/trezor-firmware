@@ -115,7 +115,6 @@ env.Replace(
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython/stmhal',
-        'vendor/micropython/ports/stm32',
         'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',
         'vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include',
         'vendor/micropython/lib/cmsis/inc',

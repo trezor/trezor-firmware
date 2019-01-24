@@ -7,6 +7,14 @@ CPPPATH_MOD = []
 CPPDEFINES_MOD = []
 SOURCE_MOD = []
 
+# modtrezorcrypto
+CPPPATH_MOD += [
+    'vendor/trezor-crypto',
+]
+SOURCE_MOD += [
+    'vendor/trezor-crypto/memzero.c',
+]
+
 # modtrezorui
 CPPDEFINES_MOD += [
     'TREZOR_FONT_BOLD_ENABLE',
@@ -107,7 +115,6 @@ env.Replace(
         'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',
         'vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include',
         'vendor/micropython/lib/cmsis/inc',
-        'vendor/micropython/ports/stm32',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
         ('TREZOR_MODEL', '$TREZOR_MODEL'),

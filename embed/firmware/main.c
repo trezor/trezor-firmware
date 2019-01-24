@@ -30,8 +30,8 @@
 #include "py/mperrno.h"
 #include "lib/utils/pyexec.h"
 
-#include "gccollect.h"
-#include "pendsv.h"
+#include "ports/stm32/gccollect.h"
+#include "ports/stm32/pendsv.h"
 
 #include "common.h"
 #include "display.h"
