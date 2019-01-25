@@ -14,8 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import time
-
 import pytest
 
 from trezorlib import cardano, messages
@@ -136,12 +134,11 @@ def test_cardano_sign_tx(
     ]
 
     def input_flow():
-        client.debug.swipe_down()
         yield
+        client.debug.swipe_down()
         client.debug.press_yes()
-        time.sleep(1)
-        client.debug.swipe_down()
         yield
+        client.debug.swipe_down()
         client.debug.press_yes()
 
     with client:
