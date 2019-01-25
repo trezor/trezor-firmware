@@ -175,6 +175,12 @@ flash_combine: $(PRODTEST_BUILD_DIR)/combined.bin ## flash combined using OpenOC
 flash_erase: ## erase all sectors in flash bank 0
 	$(OPENOCD) -c "init; reset halt; flash info 0; flash erase_sector 0 0 last; flash erase_check 0; exit"
 
+flash_read_storage: ## read storage sectors from flash
+	$(OPENOCD) -c "init; flash read_bank 0 storage1.data 0x10000 65536; flash read_bank 0 storage2.data 0x110000 65536; exit"
+
+flash_erase_storage: ## erase storage sectors from flash
+	$(OPENOCD) -c "init; flash erase_sector 0 4 4; flash erase_sector 0 16 16; exit"
+
 ## openocd debug commands:
 
 openocd: ## start openocd which connects to the device
