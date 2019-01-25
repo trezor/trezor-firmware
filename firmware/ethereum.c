@@ -421,19 +421,21 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
  * - data (0 ..)
  */
 
-static bool ethereum_signing_check(EthereumSignTx *msg)
+static bool ethereum_signing_check(const EthereumSignTx *msg)
 {
 	if (!msg->has_gas_price || !msg->has_gas_limit) {
 		return false;
 	}
 	
-	if (msg->to.size != 20 && msg->to.size != 0) {
+	size_t tolen = msg->has_to ? strlen(msg->to) : 0;
+
+	if (tolen != 42 && tolen != 40 && tolen != 0) {
 		/* Address has wrong length */
 		return false;
 	}
 
 	// sending transaction to address 0 (contract creation) without a data field
-	if (msg->to.size == 0 && (!msg->has_data_length || msg->data_length == 0)) {
+	if (tolen == 0 && (!msg->has_data_length || msg->data_length == 0)) {
 		return false;
 	}
 
@@ -456,8 +458,15 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 		msg->value.size = 0;
 	if (!msg->has_data_initial_chunk)
 		msg->data_initial_chunk.size = 0;
-	if (!msg->has_to)
-		msg->to.size = 0;
+	bool toset;
+	uint8_t pubkeyhash[20];
+	if (msg->has_to && ethereum_parse(msg->to, pubkeyhash)) {
+		toset = true;
+	} else {
+		msg->to[0] = 0;
+		toset = false;
+		memzero(pubkeyhash, sizeof(pubkeyhash));
+	}
 	if (!msg->has_nonce)
 		msg->nonce.size = 0;
 
@@ -520,15 +529,15 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	const TokenType *token = NULL;
 
 	// detect ERC-20 token
-	if (msg->to.size == 20 && msg->value.size == 0 && data_total == 68 && msg->data_initial_chunk.size == 68
+	if (toset && msg->value.size == 0 && data_total == 68 && msg->data_initial_chunk.size == 68
 	    && memcmp(msg->data_initial_chunk.bytes, "\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 16) == 0) {
-		token = tokenByChainAddress(chain_id, msg->to.bytes);
+		token = tokenByChainAddress(chain_id, pubkeyhash);
 	}
 
 	if (token != NULL) {
 		layoutEthereumConfirmTx(msg->data_initial_chunk.bytes + 16, 20, msg->data_initial_chunk.bytes + 36, 32, token);
 	} else {
-		layoutEthereumConfirmTx(msg->to.bytes, msg->to.size, msg->value.bytes, msg->value.size, NULL);
+		layoutEthereumConfirmTx(pubkeyhash, 20, msg->value.bytes, msg->value.size, NULL);
 	}
 
 	if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
@@ -563,7 +572,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	rlp_length += rlp_calculate_length(msg->nonce.size, msg->nonce.bytes[0]);
 	rlp_length += rlp_calculate_length(msg->gas_price.size, msg->gas_price.bytes[0]);
 	rlp_length += rlp_calculate_length(msg->gas_limit.size, msg->gas_limit.bytes[0]);
-	rlp_length += rlp_calculate_length(msg->to.size, msg->to.bytes[0]);
+	rlp_length += rlp_calculate_length(toset ? 20 : 0, pubkeyhash[0]);
 	rlp_length += rlp_calculate_length(msg->value.size, msg->value.bytes[0]);
 	rlp_length += rlp_calculate_length(data_total, msg->data_initial_chunk.bytes[0]);
 	if (tx_type) {
@@ -586,7 +595,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node)
 	hash_rlp_field(msg->nonce.bytes, msg->nonce.size);
 	hash_rlp_field(msg->gas_price.bytes, msg->gas_price.size);
 	hash_rlp_field(msg->gas_limit.bytes, msg->gas_limit.size);
-	hash_rlp_field(msg->to.bytes, msg->to.size);
+	hash_rlp_field(pubkeyhash, toset ? 20 : 0);
 	hash_rlp_field(msg->value.bytes, msg->value.size);
 	hash_rlp_length(data_total, msg->data_initial_chunk.bytes[0]);
 	hash_data(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size);
@@ -663,13 +672,18 @@ static void ethereum_message_hash(const uint8_t *message, size_t message_len, ui
 
 void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node, EthereumMessageSignature *resp)
 {
-	uint8_t hash[32];
-
-	if (!hdnode_get_ethereum_pubkeyhash(node, resp->address.bytes)) {
+	uint8_t pubkeyhash[20];
+	if (!hdnode_get_ethereum_pubkeyhash(node, pubkeyhash)) {
 		return;
 	}
+
 	resp->has_address = true;
-	resp->address.size = 20;
+	resp->address[0] = '0';
+	resp->address[1] = 'x';
+	ethereum_address_checksum(pubkeyhash, resp->address + 2, false, 0);
+	// ethereum_address_checksum adds trailing zero
+
+	uint8_t hash[32];
 	ethereum_message_hash(msg->message.bytes, msg->message.size, hash);
 
 	uint8_t v;
@@ -686,8 +700,14 @@ void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node, E
 
 int ethereum_message_verify(const EthereumVerifyMessage *msg)
 {
-	if (msg->signature.size != 65 || msg->address.size != 20) {
-		fsm_sendFailure(FailureType_Failure_DataError, _("Malformed data"));
+	if (msg->signature.size != 65) {
+		fsm_sendFailure(FailureType_Failure_DataError, _("Malformed signature"));
+		return 1;
+	}
+
+	uint8_t pubkeyhash[20];
+	if (!ethereum_parse(msg->address, pubkeyhash)) {
+		fsm_sendFailure(FailureType_Failure_DataError, _("Malformed address"));
 		return 1;
 	}
 
@@ -714,8 +734,40 @@ int ethereum_message_verify(const EthereumVerifyMessage *msg)
 	keccak_Final(&ctx, hash);
 
 	/* result are the least significant 160 bits */
-	if (memcmp(msg->address.bytes, hash + 12, 20) != 0) {
+	if (memcmp(pubkeyhash, hash + 12, 20) != 0) {
 		return 2;
 	}
 	return 0;
+}
+
+bool ethereum_parse(const char *address, uint8_t pubkeyhash[20])
+{
+	memzero(pubkeyhash, 20);
+	size_t len = strlen(address);
+	if (len == 40) {
+		// do nothing
+	} else
+	if (len == 42) {
+		// check for "0x" prefix and strip it when required
+		if (address[0] != '0') return false;
+		if (address[1] != 'x' && address[1] != 'X') return false;
+		address += 2;
+		len -= 2;
+	} else {
+		return false;
+	}
+	for (size_t i = 0; i < len; i++) {
+		if (address[i] >= '0' && address[i] <= '9') {
+			pubkeyhash[i / 2] |= (address[i] - '0') << ((1 - (i % 2)) * 4);
+		} else
+		if (address[i] >= 'a' && address[i] <= 'f') {
+			pubkeyhash[i / 2] |= ((address[i] - 'a') + 10) << ((1 - (i % 2)) * 4);
+		} else
+		if (address[i] >= 'A' && address[i] <= 'F') {
+			pubkeyhash[i / 2] |= ((address[i] - 'A') + 10) << ((1 - (i % 2)) * 4);
+		} else {
+			return false;
+		}
+	}
+	return true;
 }

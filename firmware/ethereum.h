@@ -31,5 +31,6 @@ void ethereum_signing_txack(const EthereumTxAck *msg);
 
 void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node, EthereumMessageSignature *resp);
 int ethereum_message_verify(const EthereumVerifyMessage *msg);
+bool ethereum_parse(const char *address, uint8_t pubkeyhash[20]);
 
 #endif
