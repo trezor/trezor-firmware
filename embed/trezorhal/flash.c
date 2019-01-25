@@ -123,7 +123,16 @@ secbool flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data)
     if (address == 0) {
         return secfalse;
     }
-    return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, address, data));
+    if (data != (data & *((const uint8_t *)address))) {
+        return secfalse;
+    }
+    if (HAL_OK != HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, address, data)) {
+        return secfalse;
+    }
+    if (data != *((const uint8_t *)address)) {
+        return secfalse;
+    }
+    return sectrue;
 }
 
 secbool flash_write_word(uint8_t sector, uint32_t offset, uint32_t data)
@@ -135,7 +144,17 @@ secbool flash_write_word(uint8_t sector, uint32_t offset, uint32_t data)
     if (offset % 4 != 0) {
         return secfalse;
     }
-    return sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data));
+    if (data != (data & *((const uint32_t *)address))) {
+        return secfalse;
+    }
+    if (HAL_OK != HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data)) {
+        return secfalse;
+
+    }
+    if (data != *((const uint32_t *)address)) {
+        return secfalse;
+    }
+    return sectrue;
 }
 
 #define FLASH_OTP_LOCK_BASE       0x1FFF7A00U
