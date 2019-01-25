@@ -10,12 +10,6 @@ The PIN is no longer stored in the flash storage. A new entry is added to the fl
 
 ## Storage format
 
-The current format of the entries in the flash storage is:
-
-| Data           | KEY | APP | LEN | DATA |
-|----------------|-----|-----|-----|------|
-| Length (bytes) | 1   | 1   | 2   | LEN  |
-
 Entries fall into three categories:
 
 | Category  | Condition       | Read               | Write              |
@@ -24,33 +18,40 @@ Entries fall into three categories:
 | Protected | 1 ≤ APP ≤ 127   | Only when unlocked | Only when unlocked |
 | Public    | 128 ≤ APP ≤ 255 | Always             | Only when unlocked |
 
-Private values are used to store storage-specific information and cannot be directly accessed through the storage interface. Currently the above conditions are enforced only in software, but not cryptographically. We propose that protected entries shall have the following new format:z
+The format of public entries has remained unchanged, that is:
+
+| Data           | KEY | APP | LEN | DATA |
+|----------------|-----|-----|-----|------|
+| Length (bytes) | 1   | 1   | 2   | LEN  |
+
+Private values are used to store storage-specific information and cannot be directly accessed through the storage interface. Protected entries have the following new format:
 
 | Data           | KEY | APP | LEN | IV | ENCRDATA | TAG |
 |----------------|-----|-----|-----|----|----------|-----|
 | Length (bytes) | 1   | 1   | 2   | 12 | LEN - 28 | 16  |
 
-The LEN value thus indicates the total length of IV, ENCRDATA and TAG. The format of public entries shall remain unchanged.
+The LEN value thus indicates the total length of IV, ENCRDATA and TAG.
 
-The random salt (32 bits), EDEK (256 bits), ESAK (128 bits) and PVC (64 bits) will be stored in a single entry under APP=0, KEY=2:
+The random salt (32 bits), EDEK (256 bits), ESAK (128 bits) and PVC (64 bits) is stored in a single entry under APP=0, KEY=2:
 
 | Data           | KEY | APP | LEN   | SALT | EDEK | ESAK | PVC |
 |----------------|-----|-----|-------|------|------|------|-----|
 | Length (bytes) | 1   | 1   | 2     | 4    | 32   | 16   | 8   |
 | Value          | 02  | 00  | 3C 00 |      |      |      |     |
 
-The storage authentication tag (128 bits) will be stored in a single entry under APP=0, KEY=5:
+The storage authentication tag (128 bits) is stored in a single entry under APP=0, KEY=5:
 
 | Data           | KEY | APP | LEN   | TAG |
 |----------------|-----|-----|-------|-----|
 | Length (bytes) | 1   | 1   | 2     | 16  |
 | Value          | 05  | 00  | 20 00 |     |
 
-Furthermore, if any entry is overwritten, the old entry will be erased, i.e., overwritten with 0. We could then also use APP=0, KEY=0 as marker that the entry is erased (currently this is the marker for the PIN entry that we wouldn't need anymore).
+Furthermore, if any entry is overwritten, the old entry is erased, i.e., overwritten with 0. We are also using APP=0, KEY=0 as marker that the entry is erased (this was formerly used for the PIN entry, which is not needed anymore).
 
 ## PIN verification and decryption of protected entries in flash storage
 
 1. From the flash storage read the entry containing the random salt, EDEK and PVC.
+
 2. Gather constant data from various system resources such as the ProcessorID (aka Unique device ID) and any hardware serial numbers that are available. The concatenation of this data with the random salt will be referred to as *salt*.
 3. Prompt the user to enter the PIN. Prefix the entered PIN with a "1" digit in base 10 and convert the integer to 4 bytes in little endian byte order. Then compute:
 
@@ -71,6 +72,8 @@ Furthermore, if any entry is overwritten, the old entry will be erased, i.e., ov
     `(data, tag) = ChaCha20Poly1305Decrypt(dek, iv, (key || app), encrdata)`
 
     where the APP and KEY of the entry is used as two bytes of associated data. Compare the TAG read from the flash storage with the computed tag value. If there is a mismatch, then fail.
+
+![summary](docs/key-derivation.svg)
 
 ## Initializing the EDEK
 
@@ -104,31 +107,33 @@ Whenever the value of an entry needs to be updated, a fresh IV is generated usin
 
 The storage authentication key (SAK) will be used to generate a storage authentication tag (SAT) for the list of all (APP, KEY) values of protected entries (1 ≤ APP ≤ 127) that have been set in the storage. The SAT will be checked during every get operation. When a new protected entry is added to the storage or when a protected entry is deleted from the storage, the value of the SAT will be updated. The value of the SAT is defined as the first 16 bytes of
 
-`HMAC-SHA-256(SAK, ⨁i HMAC-SHA-256(SAK, KEYi || APPi))`
+`HMAC-SHA-256(SAK, ⨁i HMAC-SHA-256(SAK, KEY_i || APP_i))`
 
-where `⨁` denotes the n-ary bitwise XOR operation and KEYi || APPi is a two-byte encoding of the value of the i-th (APP, KEY) such that 1 ≤ APP ≤ 127.
+where `⨁` denotes the n-ary bitwise XOR operation and KEY_i || APP_i is a two-byte encoding of the value of the *i*-th (APP, KEY) such that 1 ≤ APP ≤ 127.
 
 ## Design rationale
 
 - The purpose of the PBKDF2 function is to thwart brute-force attacks in case the attacker is able to circumvent the PIN entry counter mechanism but does not have full access to the contents of the flash storage of the device, e.g. fault injection attacks. For an attacker that would be able to read the flash storage and obtain the salt, the PBKDF2 with 20000 iterations and a 4- to 9-digit PIN would not pose an obstacle.
 
-- The reason why we propose to use a separate data encryption key rather than using the output of PBKDF2 directly to encrypt the sensitive entries is so that when the user decides to change their PIN, only the EDEK needs to be reencrypted, but the remaining entries do not need to be updated.
+- The reason why we use a separate data encryption key rather than using the output of PBKDF2 directly to encrypt the sensitive entries is so that when the user decides to change their PIN, only the EDEK needs to be reencrypted, but the remaining entries do not need to be updated.
 
-- We propose to use ChaCha20 for encryption, because as a stream cipher it has no padding overhead and its implementation is readily available in trezor-crypto. A possible alternative to using ChaCha20Poly1305 for DEK encryption is to use AES-CTR with HMAC in an encrypt-then-MAC scheme. A possible alternative to using ChaCha20 for encryption of other data entries is to use AES-XTS (XEX-based tweaked-codebook mode with ciphertext stealing), which was designed specifically for disk-encryption. The APP || KEY value would be used as the tweak.
+- We se ChaCha20 for encryption, because as a stream cipher it has no padding overhead and its implementation is readily available in trezor-crypto. A possible alternative to using ChaCha20Poly1305 for DEK encryption is to use AES-CTR with HMAC in an encrypt-then-MAC scheme. A possible alternative to using ChaCha20 for encryption of other data entries is to use AES-XTS (XEX-based tweaked-codebook mode with ciphertext stealing), which was designed specifically for disk-encryption. The APP || KEY value would be used as the tweak.
   - Advantages of AES-XTS:
     - Does not require an initialization vector.
     - Ensures better diffusion than a stream cipher, which eliminates the above concerns about malleability and fault injection attacks.
   - Disadvantages of AES-XTS:
     - Not implemented in trezor-crypto.
     - Requires two keys of length at least 128 bits.
+
 - A 32-bit PVC would be sufficient to verify the PIN value, since there would be less than a 1 in 4 chance that there exists a false PIN, which has the same PVC as the correct PIN. Nevertheless, we decided to go with a 64-bit PVC to achieve a larger security margin. The chance that there exists a false PIN, which has the same PVC as the correct PIN, then drops below 1 in 10^10. The existence of a false PIN does not appear to pose a security weakness, since the false PIN cannot be used to decrypt the protected entries.
+
 - Instead of using separate IVs for each entry we considered using a single IV for the entire sector. Upon sector compaction a new IV would have to be generated and the encrypted data would have to be reencrypted under the new IV. A possible issue with this approach is that compaction cannot happen without the DEK, i.e. generally data could not be written to the flash storage without knowing the PIN. This property might not always be desirable.
 
 ## New measures for PIN entry counter protection
 
-Our current implementation of the PIN entry counter is vulnerable to fault injection attacks.
+The former implementation of the PIN entry counter was vulnerable to fault injection attacks.
 
-Under the current implementation the PIN counter storage entry consists of 32 words initialized to 0xFFFFFFFF. The first non-zero word in this area is the current PIN failure counter. Before verifying the PIN the lowest bit with value 1 is set to 0, i.e. a value of FFFFFFFC indicates two PIN entries. Upon successful PIN entry, the word is set to 0x00000000, indicating that the next word is the PIN failure counter. Allegedly, by manipulating the voltage on the USB input an attacker can convince the device to read the PIN entry counter as 0xFFFFFFFF even if some of the bits have been set to 0.
+Under the former implementation the PIN counter storage entry consisted of 32 words initialized to 0xFFFFFFFF. The first non-zero word in this area was the current PIN failure counter. Before verifying the PIN the lowest bit with value 1 was set to 0, i.e. a value of FFFFFFFC indicated two PIN entries. Upon successful PIN entry, the word was set to 0x00000000, indicating that the next word was the PIN failure counter. Allegedly, by manipulating the voltage on the USB input an attacker could convince the device to read the PIN entry counter as 0xFFFFFFFF even if some of the bits had been set to 0.
 
 ### Design goals
 
@@ -140,31 +145,34 @@ Under the current implementation the PIN counter storage entry consists of 32 wo
 
 ### Proposal summary
 
-Under the current implementation, for every unsuccessful PIN entry we discard one bit from the counter, while for every successful PIN entry we discard an entire word. In the new implementation we would like to optimize the counter operations for successful PIN entry.
+Under the former implementation, for every unsuccessful PIN entry we discarded one bit from the counter, while for every successful PIN entry we discard an entire word. In the new implementation we optimize the counter operations for successful PIN entry.
 
-The basic idea is that there will be two binary logs stored in the flash storage, e.g.:
+The basic idea is that there are two binary logs stored in the flash storage, e.g.:
 
 ```
 ...0001111111111111... pin_success_log
 ...0000001111111111... pin_entry_log
 ```
 
-Before every PIN verification the highest 1-bit in the pin_entry_log will be set to 0. If the verification succeeds, then the corresponding bit in the pin_success_log will also be set to 0. The example above shows the status of the logs when the last three PIN entries were not successful.
+Before every PIN verification the highest 1-bit in the pin_entry_log is set to 0. If the verification succeeds, then the corresponding bit in the pin_success_log is also set to 0. The example above shows the status of the logs when the last three PIN entries were not successful.
 
-In actual fact the logs will not be written to the flash storage exactly as shown above, but they will be stored in a form that should protect them against fault injection attacks. Only half of the stored bits will carry information, the other half will act as "guard bits". So a stored value ...001110... could look like ...0g0gg1g11g0g..., where g denotes a guard bit. The positions and the values of the guard bits will be determined by a guard key. The guard_key will be a randomly generated uint32 value stored as an entry in the flash memory in cleartext. The assumption behind this is that an attacker attempting to reset or decrement the PIN counter by a fault injection is not able to read the flash storage. However, the value of guard_key also needs to be protected against fault injection, so the set of valid guard_key values should be limited by some condition which is easy to verify, such as guard_key mod M == C, where M and C a suitably chosen constants. The constants should be chosen so that the binary representation of any valid guard_key value has Hamming weight between 8 and 24.
+In actual fact the logs are not written to the flash storage exactly as shown above, but they are stored in a form that should protect them against fault injection attacks. Only half of the stored bits carry information, the other half acts as "guard bits". So a stored value `...001110...` could look like `...0g0gg1g11g0g...`, where g denotes a guard bit. The positions and the values of the guard bits are determined by a guard key. The guard_key is a randomly generated uint32 value stored as an entry in the flash memory in cleartext. The assumption behind this is that an attacker attempting to reset or decrement the PIN counter by a fault injection is not able to read the flash storage. However, the value of guard_key also needs to be protected against fault injection, so the set of valid guard_key values should be limited by some condition which is easy to verify, such as guard_key mod M == C, where M and C a suitably chosen constants. The constants should be chosen so that the binary representation of any valid guard_key value has Hamming weight between 8 and 24. These conditions are discussed below.
 
 ### Storage format
 
-The PIN log will replace the current PIN_FAIL_KEY entry (APP = 0, KEY = 1). The DATA part of the entry will consist of 33 words (132 bytes, assuming 32-bit words):
-guard_key (1 word), pin_success_log (16 words), pin_entry_log (16 words)
+The PIN log has APP = 0 and KEY = 1. The DATA part of the entry consists of 33 words (132 bytes, assuming 32-bit words):
 
-Each log will be stored in big-endian word order. The byte order of each word is platform dependent.
+- guard_key (1 word)
+- pin_success_log (16 words)
+- pin_entry_log (16 words)
+
+Each log is stored in big-endian word order. The byte order of each word is platform dependent.
 
 ### Guard key validation
 
 The guard_key is said to be valid if the following three conditions hold true:
 
-1. Each byte of the binary representation of the guard_key has a balanced number of zeros and ones at the positions corresponding to the guard values (that is those bits in the mask 0xAAAAAAAA)
+1. Each byte of the binary representation of the guard_key has a balanced number of zeros and ones at the positions corresponding to the guard values (that is those bits in the mask 0xAAAAAAAA).
 2. The guard_key binary representation does not contain a run of 5 (or more) zeros or ones.
 3. The guard_key integer representation is congruent to 15 modulo 6311.
 
@@ -193,9 +201,9 @@ int key_validity(uint32_t guard_key)
 
 The guard_key may be generated in the following way:
 
-1. Generate a random integer r in such that 0 ≤ r ≤ 680552 with uniform probability.
-2. Set r = r * 6311 + 15.
-3. If key_validity(r) is not true go back to the step 1.
+1. Generate a random integer *r* in such that 0 ≤ *r* ≤ 680552 with uniform probability.
+2. Set *r* = *r* * 6311 + 15.
+3. If *key_validity(r)* is not true go back to the step 1.
 
 Note that on average steps 1 to 3 are repeated about one hundred times.
 
@@ -223,23 +231,24 @@ and the `y` bits to its corresponding complement:
 
 `(~guard_key) & LOW_MASK`
 
-That ensures that only one 1 bit is present in each pair xy. The guard value is equal to the bits labelled "v" in the guard_key but only at the positions indicated by the guard_mask. The guard value is therefore equal to:
+That ensures that only one 1 bit is present in each pair `xy`. The guard value is equal to the bits labelled `v` in the guard_key but only at the positions indicated by the guard_mask. The guard value is therefore equal to:
 
 ```
-	    --------- x bits mask -------- & -- guard_key --
+        -------- x bits mask --------- & -- guard_key --
 guard = (((guard_key & LOW_MASK) << 1) & guard_key) |
         ----- y bits mask ---- & - guard_key shifted to v bits
         (((~guard_key) & LOW_MASK) & (guard_key >> 1))
 ```
 
 ### Log initialization
-Each log will be stored as 16 consecutive words each initialized to:
+
+Each log is stored as 16 consecutive words each initialized to:
 
 `guard | ~guard_mask`
 
 ### Removing and adding guard bits
 
-After reading a word from the flash storage we will verify the format by checking the condition
+After reading a word from the flash storage we verify the format by checking the condition:
 
 `(word & guard_mask) == guard`
 
@@ -251,7 +260,7 @@ word = ((word  >> 1) | word ) & LOW_MASK
 word = word | (word << 1)
 ```
 
-This operation replaces each guard bit with the value of its neighbouring bit, e.g. ...0g0gg1g11g0g… is converted to ...000011111100… Thus each non-guard bit is duplicated.
+This operation replaces each guard bit with the value of its neighbouring bit, e.g. `…0g0gg1g11g0g…` is converted to `…000011111100…` Thus each non-guard bit is duplicated.
 
 The guard bits can be added back as follows:
 
@@ -259,7 +268,7 @@ The guard bits can be added back as follows:
 
 ### Determining the number of PIN failures
 
-Remove the guard bits from the words of the pin_entry_log using the operations described above and verify that the result has form 0*1* by checking the condition:
+Remove the guard bits from the words of the pin_entry_log using the operations described above and verify that the result has form 0\*1\* by checking the condition:
 
 `word & (word + 1) == 0`
 
