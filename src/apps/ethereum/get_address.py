@@ -14,19 +14,20 @@ async def get_address(ctx, msg, keychain):
     node = keychain.derive(msg.address_n)
     seckey = node.private_key()
     public_key = secp256k1.publickey(seckey, False)  # uncompressed
-    address = sha3_256(public_key[1:], keccak=True).digest()[12:]
+    address_bytes = sha3_256(public_key[1:], keccak=True).digest()[12:]
+
+    if len(msg.address_n) > 1:  # path has slip44 network identifier
+        network = networks.by_slip44(msg.address_n[1] & 0x7FFFFFFF)
+    else:
+        network = None
+    address = ethereum_address_hex(address_bytes, network)
 
     if msg.show_display:
-        if len(msg.address_n) > 1:  # path has slip44 network identifier
-            network = networks.by_slip44(msg.address_n[1] & 0x7FFFFFFF)
-        else:
-            network = None
-        hex_addr = ethereum_address_hex(address, network)
         desc = address_n_to_str(msg.address_n)
         while True:
-            if await show_address(ctx, hex_addr, desc=desc):
+            if await show_address(ctx, address, desc=desc):
                 break
-            if await show_qr(ctx, hex_addr, desc=desc):
+            if await show_qr(ctx, address, desc=desc):
                 break
 
-    return EthereumAddress(address=address)
+    return EthereumAddress(address)
