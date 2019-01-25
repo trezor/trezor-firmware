@@ -3,17 +3,16 @@
 import protobuf as p
 
 
-class EthereumAddress(p.MessageType):
-    MESSAGE_WIRE_TYPE = 57
+class EosActionRefund(p.MessageType):
 
     def __init__(
         self,
-        address: str = None,
+        owner: int = None,
     ) -> None:
-        self.address = address
+        self.owner = owner
 
     @classmethod
     def get_fields(cls):
         return {
-            2: ('address', p.UnicodeType, 0),
+            1: ('owner', p.UVarintType, 0),
         }

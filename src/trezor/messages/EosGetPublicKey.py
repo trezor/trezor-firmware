@@ -9,20 +9,20 @@ if __debug__:
         List = None  # type: ignore
 
 
-class EthereumSignMessage(p.MessageType):
-    MESSAGE_WIRE_TYPE = 64
+class EosGetPublicKey(p.MessageType):
+    MESSAGE_WIRE_TYPE = 600
 
     def __init__(
         self,
         address_n: List[int] = None,
-        message: bytes = None,
+        show_display: bool = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
-        self.message = message
+        self.show_display = show_display
 
     @classmethod
     def get_fields(cls):
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('message', p.BytesType, 0),
+            2: ('show_display', p.BoolType, 0),
         }

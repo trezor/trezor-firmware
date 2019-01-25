@@ -19,6 +19,6 @@ class EthereumPublicKey(p.MessageType):
     @classmethod
     def get_fields(cls):
         return {
-            1: ('node', HDNodeType, 0),  # required
+            1: ('node', HDNodeType, 0),
             2: ('xpub', p.UnicodeType, 0),
         }

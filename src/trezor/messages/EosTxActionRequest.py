@@ -3,17 +3,17 @@
 import protobuf as p
 
 
-class EthereumAddress(p.MessageType):
-    MESSAGE_WIRE_TYPE = 57
+class EosTxActionRequest(p.MessageType):
+    MESSAGE_WIRE_TYPE = 603
 
     def __init__(
         self,
-        address: str = None,
+        data_size: int = None,
     ) -> None:
-        self.address = address
+        self.data_size = data_size
 
     @classmethod
     def get_fields(cls):
         return {
-            2: ('address', p.UnicodeType, 0),
+            1: ('data_size', p.UVarintType, 0),
         }

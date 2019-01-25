@@ -8,15 +8,15 @@ class EthereumMessageSignature(p.MessageType):
 
     def __init__(
         self,
-        address: bytes = None,
         signature: bytes = None,
+        address: str = None,
     ) -> None:
-        self.address = address
         self.signature = signature
+        self.address = address
 
     @classmethod
     def get_fields(cls):
         return {
-            1: ('address', p.BytesType, 0),
             2: ('signature', p.BytesType, 0),
+            3: ('address', p.UnicodeType, 0),
         }
