@@ -60,7 +60,7 @@ message EthereumSignTx {
     optional bytes nonce = 2;               // <=256 bit unsigned big endian
     optional bytes gas_price = 3;           // <=256 bit unsigned big endian (in wei)
     optional bytes gas_limit = 4;           // <=256 bit unsigned big endian
-    optional bytes to = 5;                  // 160 bit address hash
+    optional string to = 11;                // recipient address
     optional bytes value = 6;               // <=256 bit unsigned big endian (in wei)
     optional bytes data_initial_chunk = 7;  // The initial data chunk (<= 1024 bytes)
     optional uint32 data_length = 8;        // Length of transaction payload
