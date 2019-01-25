@@ -44,7 +44,7 @@ message EthereumGetAddress {
  * @end
  */
 message EthereumAddress {
-    required bytes address = 1;     // Coin address as an Ethereum 160 bit hash
+    required string address = 2;     // Ethereum address as string
 }
 
 /**
