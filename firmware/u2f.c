@@ -21,7 +21,7 @@
 #include <ecdsa.h>
 
 #include "debug.h"
-#include "storage.h"
+#include "config.h"
 #include "bip32.h"
 #include "layout2.h"
 #include "usb.h"
@@ -460,7 +460,7 @@ static void getReadableAppId(const uint8_t appid[U2F_APPID_SIZE], const char **a
 static const HDNode *getDerivedNode(uint32_t *address_n, size_t address_n_count)
 {
 	static CONFIDENTIAL HDNode node;
-	if (!storage_getU2FRoot(&node)) {
+	if (!config_getU2FRoot(&node)) {
 		layoutHome();
 		debugLog(0, "", "ERR: Device not init");
 		return 0;
@@ -546,7 +546,7 @@ void u2f_register(const APDU *a)
 	static U2F_REGISTER_REQ last_req;
 	const U2F_REGISTER_REQ *req = (U2F_REGISTER_REQ *)a->data;
 
-	if (!storage_isInitialized()) {
+	if (!config_isInitialized()) {
 		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
 		return;
 	}
@@ -654,7 +654,7 @@ void u2f_authenticate(const APDU *a)
 	const U2F_AUTHENTICATE_REQ *req = (U2F_AUTHENTICATE_REQ *)a->data;
 	static U2F_AUTHENTICATE_REQ last_req;
 
-	if (!storage_isInitialized()) {
+	if (!config_isInitialized()) {
 		send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
 		return;
 	}
@@ -727,7 +727,7 @@ void u2f_authenticate(const APDU *a)
 		U2F_AUTHENTICATE_RESP *resp =
 			(U2F_AUTHENTICATE_RESP *)&buf;
 
-		const uint32_t ctr = storage_nextU2FCounter();
+		const uint32_t ctr = config_nextU2FCounter();
 		resp->flags = U2F_AUTH_FLAG_TUP;
 		resp->ctr[0] = ctr >> 24 & 0xff;
 		resp->ctr[1] = ctr >> 16 & 0xff;

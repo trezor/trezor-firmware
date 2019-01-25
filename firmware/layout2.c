@@ -22,7 +22,7 @@
 #include <ctype.h>
 
 #include "layout2.h"
-#include "storage.h"
+#include "config.h"
 #include "oled.h"
 #include "bitmaps.h"
 #include "string.h"
@@ -235,31 +235,36 @@ void layoutHome(void)
 		layoutSwipe();
 	}
 	layoutLast = layoutHome;
-	const char *label = storage_isInitialized() ? storage_getLabel() : _("Go to trezor.io/start");
-	const uint8_t *homescreen = storage_getHomescreen();
-	if (homescreen) {
+
+	char label[MAX_LABEL_LEN + 1] = _("Go to trezor.io/start");
+	if (config_isInitialized()) {
+	    config_getLabel(label, sizeof(label));
+	}
+
+	uint8_t homescreen[HOMESCREEN_SIZE];
+	if (config_getHomescreen(homescreen, sizeof(homescreen))) {
 		BITMAP b;
 		b.width = 128;
 		b.height = 64;
 		b.data = homescreen;
 		oledDrawBitmap(0, 0, &b);
 	} else {
-		if (label && strlen(label) > 0) {
+		if (label[0] != '\0') {
 			oledDrawBitmap(44, 4, &bmp_logo48);
 			oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, label, FONT_STANDARD);
 		} else {
 			oledDrawBitmap(40, 0, &bmp_logo64);
 		}
 	}
-	if (storage_noBackup()) {
+	if (config_noBackup()) {
 		oledBox(0, 0, 127, 8, false);
 		oledDrawStringCenter(OLED_WIDTH / 2, 0, "SEEDLESS", FONT_STANDARD);
 	} else
-	if (storage_unfinishedBackup()) {
+	if (config_unfinishedBackup()) {
 		oledBox(0, 0, 127, 8, false);
 		oledDrawStringCenter(OLED_WIDTH / 2, 0, "BACKUP FAILED!", FONT_STANDARD);
 	} else
-	if (storage_needsBackup()) {
+	if (config_needsBackup()) {
 		oledBox(0, 0, 127, 8, false);
 		oledDrawStringCenter(OLED_WIDTH / 2, 0, "NEEDS BACKUP!", FONT_STANDARD);
 	}

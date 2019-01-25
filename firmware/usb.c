@@ -25,7 +25,7 @@
 #include "debug.h"
 #include "messages.h"
 #include "u2f.h"
-#include "storage.h"
+#include "config.h"
 #include "util.h"
 #include "timer.h"
 
@@ -56,7 +56,7 @@
 #define USB_STRINGS \
 	X(MANUFACTURER, "SatoshiLabs") \
 	X(PRODUCT, "TREZOR") \
-	X(SERIAL_NUMBER, storage_uuid_str) \
+	X(SERIAL_NUMBER, config_uuid_str) \
 	X(INTERFACE_MAIN,  "TREZOR Interface") \
 	X(INTERFACE_DEBUG, "TREZOR Debug Link Interface") \
 	X(INTERFACE_U2F,   "TREZOR U2F Interface") \

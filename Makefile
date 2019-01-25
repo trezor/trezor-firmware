@@ -3,6 +3,8 @@ OBJS += startup.o
 endif
 
 OBJS += buttons.o
+OBJS += common.o
+OBJS += flash.o
 OBJS += layout.o
 OBJS += oled.o
 OBJS += rng.o

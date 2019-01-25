@@ -23,7 +23,7 @@
 #include "util.h"
 #include "usb.h"
 #include "setup.h"
-#include "storage.h"
+#include "config.h"
 #include "layout.h"
 #include "layout2.h"
 #include "rng.h"
@@ -76,7 +76,7 @@ void check_lock_screen(void)
 
 	// if homescreen is shown for too long
 	if (layoutLast == layoutHome) {
-		if ((timer_ms() - system_millis_lock_start) >= storage_getAutoLockDelayMs()) {
+		if ((timer_ms() - system_millis_lock_start) >= config_getAutoLockDelayMs()) {
 			// lock the screen
 			session_clear(true);
 			layoutScreensaver();
@@ -108,13 +108,13 @@ int main(void)
 
 #if DEBUG_LINK
 	oledSetDebugLink(1);
-	storage_wipe();
+	config_wipe();
 #endif
 
 	oledDrawBitmap(40, 0, &bmp_logo64);
 	oledRefresh();
 
-	storage_init();
+	config_init();
 	layoutHome();
 	usbInit();
 	for (;;) {

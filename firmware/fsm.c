@@ -23,12 +23,11 @@
 #include "fsm.h"
 #include "messages.h"
 #include "bip32.h"
-#include "storage.h"
+#include "config.h"
 #include "coins.h"
 #include "debug.h"
 #include "transaction.h"
 #include "rng.h"
-#include "storage.h"
 #include "oled.h"
 #include "protect.h"
 #include "pinmatrix.h"
@@ -70,13 +69,13 @@ static uint8_t msg_resp[MSG_OUT_SIZE] __attribute__ ((aligned));
 			memzero(resp, sizeof(TYPE));
 
 #define CHECK_INITIALIZED \
-	if (!storage_isInitialized()) { \
+	if (!config_isInitialized()) { \
 		fsm_sendFailure(FailureType_Failure_NotInitialized, NULL); \
 		return; \
 	}
 
 #define CHECK_NOT_INITIALIZED \
-	if (storage_isInitialized()) { \
+	if (config_isInitialized()) { \
 		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Device is already initialized. Use Wipe first.")); \
 		return; \
 	}
@@ -207,7 +206,7 @@ static HDNode *fsm_getDerivedNode(const char *curve, const uint32_t *address_n, 
 	if (fingerprint) {
 		*fingerprint = 0;
 	}
-	if (!storage_getRootNode(&node, curve, true)) {
+	if (!config_getRootNode(&node, curve, true)) {
 		fsm_sendFailure(FailureType_Failure_NotInitialized, _("Device not initialized or passphrase request cancelled or unsupported curve"));
 		layoutHome();
 		return 0;
