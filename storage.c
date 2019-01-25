@@ -117,8 +117,8 @@ static uint32_t norcow_active_version = 0;
 static const uint8_t TRUE_BYTE = 0x01;
 static const uint8_t FALSE_BYTE = 0x00;
 
-static void handle_fault();
-static secbool storage_upgrade();
+static void handle_fault(void);
+static secbool storage_upgrade(void);
 static secbool storage_set_encrypted(const uint16_t key, const void *val, const uint16_t len);
 static secbool storage_get_encrypted(const uint16_t key, void *val_dest, const uint16_t max_len, uint16_t *len);
 
@@ -149,7 +149,7 @@ static secbool is_protected(uint16_t key) {
 /*
  * Initialize the storage authentication tag for freshly wiped storage.
  */
-static secbool auth_init() {
+static secbool auth_init(void) {
     uint8_t tag[SHA256_DIGEST_LENGTH];
     memzero(authentication_sum, sizeof(authentication_sum));
     hmac_sha256(cached_sak, SAK_SIZE, authentication_sum, sizeof(authentication_sum), tag);
@@ -284,7 +284,7 @@ static secbool auth_get(uint16_t key, const void **val, uint16_t *len)
 /*
  *  Generates a delay of random length. Use this to protect sensitive code against fault injection.
  */
-static void wait_random()
+static void wait_random(void)
 {
 #ifndef TREZOR_STORAGE_TEST
     int wait = random32() & 0xff;
@@ -392,7 +392,7 @@ static secbool check_guard_key(const uint32_t guard_key)
     return sectrue;
 }
 
-static uint32_t generate_guard_key()
+static uint32_t generate_guard_key(void)
 {
     uint32_t guard_key = 0;
     do {
@@ -446,7 +446,7 @@ static secbool pin_logs_init(uint32_t fails)
  * Initializes the values of VERSION_KEY, EDEK_PVC_KEY, PIN_NOT_SET_KEY and PIN_LOGS_KEY using an empty PIN.
  * This function should be called to initialize freshly wiped storage.
  */
-static void init_wiped_storage()
+static void init_wiped_storage(void)
 {
     random_buffer(cached_keys, sizeof(cached_keys));
     uint32_t version = NORCOW_VERSION;
@@ -485,7 +485,7 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt, const uint
     memzero(cached_keys, sizeof(cached_keys));
 }
 
-static secbool pin_fails_reset()
+static secbool pin_fails_reset(void)
 {
     const void *logs = NULL;
     uint16_t len = 0;
@@ -517,7 +517,7 @@ static secbool pin_fails_reset()
     return pin_logs_init(0);
 }
 
-static secbool pin_fails_increase()
+static secbool pin_fails_increase(void)
 {
     const void *logs = NULL;
     uint16_t len = 0;
@@ -969,7 +969,7 @@ void storage_wipe(void)
     init_wiped_storage();
 }
 
-static void handle_fault()
+static void handle_fault(void)
 {
     static secbool in_progress = secfalse;
 
@@ -1031,7 +1031,7 @@ static secbool v0_pin_get_fails(uint32_t *ctr)
     return sectrue;
 }
 
-static secbool storage_upgrade()
+static secbool storage_upgrade(void)
 {
     const uint16_t V0_PIN_KEY = 0x0000;
     const uint16_t V0_PIN_FAIL_KEY = 0x0001;

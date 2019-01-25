@@ -248,7 +248,7 @@ static uint32_t find_free_offset(uint8_t sector)
 /*
  * Compacts active sector and sets new active sector
  */
-static void compact()
+static void compact(void)
 {
     uint32_t offsetr;
     uint32_t version;
@@ -551,7 +551,7 @@ secbool norcow_update_bytes(const uint16_t key, const uint16_t offset, const uin
 /*
  * Complete storage version upgrade
  */
-secbool norcow_upgrade_finish()
+secbool norcow_upgrade_finish(void)
 {
     erase_sector(norcow_active_sector, secfalse);
     norcow_active_sector = norcow_write_sector;
