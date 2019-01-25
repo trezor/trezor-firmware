@@ -24,7 +24,7 @@ from .common import TrezorTest
 @pytest.mark.ethereum
 class TestMsgEthereumVerifymessage(TrezorTest):
 
-    ADDRESS = "cb3864960e8db1a751212c580af27ee8867d688f"
+    ADDRESS = "0xCb3864960e8DB1A751212c580AF27Ee8867d688F"
     VECTORS = [
         (
             "This is an example of a signed message.",
@@ -40,7 +40,7 @@ class TestMsgEthereumVerifymessage(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
         for msg, sig in self.VECTORS:
             res = ethereum.verify_message(
-                self.client, bytes.fromhex(self.ADDRESS), bytes.fromhex(sig), msg
+                self.client, self.ADDRESS, bytes.fromhex(sig), msg
             )
             assert res is True
 
@@ -48,6 +48,6 @@ class TestMsgEthereumVerifymessage(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
         signature = bytes.fromhex(self.VECTORS[0][1])
         res = ethereum.verify_message(
-            self.client, bytes.fromhex(self.ADDRESS), signature, "another message"
+            self.client, self.ADDRESS, signature, "another message"
         )
         assert res is False

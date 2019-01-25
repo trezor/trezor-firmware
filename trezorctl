@@ -1073,8 +1073,7 @@ def decrypt_keyvalue(connect, address, key, value):
 def ethereum_get_address(connect, address, show_display):
     client = connect()
     address_n = tools.parse_path(address)
-    address = ethereum.get_address(client, address_n, show_display)
-    return "0x%s" % address.hex()
+    return ethereum.get_address(client, address_n, show_display)
 
 
 @cli.command(help="Get Ethereum public node of given path.")

@@ -21,7 +21,7 @@ from trezorlib.tools import parse_path
 
 from .common import TrezorTest
 
-TO_ADDR = bytes.fromhex("1d1c328764a41bda0492b66baa30c4a339ff85ef")
+TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
 
 
 @pytest.mark.ethereum
@@ -62,7 +62,7 @@ class TestMsgEthereumSigntx(TrezorTest):
                 gas_price=20,
                 gas_limit=20,
                 # ADT token address
-                to=b"\xd0\xd6\xd6\xc5\xfe\x4a\x67\x7d\x34\x3c\xc4\x33\x53\x6b\xb7\x17\xba\xe1\x67\xdd",
+                to="0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
                 chain_id=1,
                 # value needs to be 0, token value is set in the contract (data)
                 value=0,
@@ -115,7 +115,7 @@ class TestMsgEthereumSigntx(TrezorTest):
                 gas_price=20,
                 gas_limit=20,
                 # unknown token address (Grzegorz Brzęczyszczykiewicz Token)
-                to=b"\xfc\x6b\x5d\x6a\xf8\xa1\x32\x58\xf7\xcb\xd0\xd3\x9e\x11\xb3\x5e\x01\xa3\x2f\x93",
+                to="0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
                 chain_id=1,
                 # value needs to be 0, token value is set in the contract (data)
                 value=0,

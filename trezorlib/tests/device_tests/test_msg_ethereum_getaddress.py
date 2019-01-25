@@ -27,26 +27,26 @@ class TestMsgEthereumGetaddress(TrezorTest):
     def test_ethereum_getaddress(self):
         self.setup_mnemonic_nopin_nopassphrase()
         assert (
-            ethereum.get_address(self.client, [H_(44), H_(60)]).hex()
-            == "e025dfbe2c53638e547c6487ded34add7b8aafc1"
+            ethereum.get_address(self.client, [H_(44), H_(60)])
+            == "0xE025dfbE2C53638E547C6487DED34Add7b8Aafc1"
         )
         assert (
-            ethereum.get_address(self.client, [H_(44), H_(60), 1]).hex()
-            == "ed46c856d0c79661cf7d40ffe0c0c5077c00e898"
+            ethereum.get_address(self.client, [H_(44), H_(60), 1])
+            == "0xeD46C856D0c79661cF7d40FFE0C0C5077c00E898"
         )
         assert (
-            ethereum.get_address(self.client, [H_(44), H_(60), 0, H_(1)]).hex()
-            == "6682fa7f3ec58581b1e576268b5463b4b5c93839"
+            ethereum.get_address(self.client, [H_(44), H_(60), 0, H_(1)])
+            == "0x6682Fa7F3eC58581b1e576268b5463B4b5c93839"
         )
         assert (
-            ethereum.get_address(self.client, [H_(44), H_(60), H_(9), 0]).hex()
-            == "fb3be0f9717ff5fcf3c58eb49a9ed67f1bd89d4e"
+            ethereum.get_address(self.client, [H_(44), H_(60), H_(9), 0])
+            == "0xFb3BE0F9717fF5fCF3C58EB49a9Ed67F1BD89D4E"
         )
         assert (
-            ethereum.get_address(self.client, [H_(44), H_(60), 0, 9999999]).hex()
-            == "6b909b50d88c9a8e02453a87b3662e3e7a5e0cf1"
+            ethereum.get_address(self.client, [H_(44), H_(60), 0, 9999999])
+            == "0x6b909b50d88c9A8E02453A87b3662E3e7a5E0CF1"
         )
         assert (
-            ethereum.get_address(self.client, [H_(44), H_(6060), 0, 9999999]).hex()
-            == "98b8e926bd224764de2a0e4f4cbe1521474050af"
+            ethereum.get_address(self.client, [H_(44), H_(6060), 0, 9999999])
+            == "0x98b8e926bd224764De2A0E4f4CBe1521474050AF"
         )

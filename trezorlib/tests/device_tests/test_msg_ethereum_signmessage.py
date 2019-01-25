@@ -26,7 +26,7 @@ from .common import TrezorTest
 class TestMsgEthereumSignmessage(TrezorTest):
 
     PATH = [H_(44), H_(60), H_(0), 0]
-    ADDRESS = "ea53af85525b1779ee99ece1a5560c0b78537c3b"
+    ADDRESS = "0xEa53AF85525B1779eE99ece1a5560C0b78537C3b"
     VECTORS = [
         (
             "This is an example of a signed message.",
@@ -42,5 +42,5 @@ class TestMsgEthereumSignmessage(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
         for msg, sig in self.VECTORS:
             res = ethereum.sign_message(self.client, self.PATH, msg)
-            assert res.address.hex() == self.ADDRESS
+            assert res.address == self.ADDRESS
             assert res.signature.hex() == sig

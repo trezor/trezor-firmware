@@ -209,7 +209,7 @@ class TestMsgEthereumSigntxChainId(TrezorTest):
                 nonce=n,
                 gas_price=20000000000,
                 gas_limit=gl,
-                to=bytes.fromhex("8ea7a3fccc211ed48b763b4164884ddbcf3b0a98"),
+                to="0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
                 value=v,
                 chain_id=ci,
                 data=d,
