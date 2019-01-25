@@ -43,6 +43,10 @@ void clear_otg_hs_memory(void);
 
 extern uint32_t __stack_chk_guard;
 
+void collect_hw_entropy(void);
+#define HW_ENTROPY_LEN 12
+extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
+
 // the following functions are defined in util.s
 
 void memset_reg(volatile void *start, volatile void *stop, uint32_t val);

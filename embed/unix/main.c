@@ -50,6 +50,8 @@
 #include "input.h"
 #include "profile.h"
 
+#include "common.h"
+
 // Command line options, with their defaults
 STATIC bool compile_only = false;
 STATIC uint emit_opt = MP_EMIT_OPT_NONE;
@@ -408,6 +410,8 @@ int main(int argc, char **argv) {
     
     // Through TREZOR_PROFILE you can set the directory for trezor.flash file.
     profile_init();
+
+    collect_hw_entropy();
 
     #if MICROPY_PY_THREAD
     mp_thread_init();

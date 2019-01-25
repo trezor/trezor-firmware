@@ -23,6 +23,7 @@
 
 #include "common.h"
 #include "display.h"
+#include "memzero.h"
 
 void __shutdown(void)
 {
@@ -67,4 +68,11 @@ void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, 
 void hal_delay(uint32_t ms)
 {
     usleep(1000 * ms);
+}
+
+uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
+
+void collect_hw_entropy(void)
+{
+    memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
 }

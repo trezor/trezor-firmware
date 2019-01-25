@@ -39,4 +39,8 @@ void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, 
 
 void hal_delay(uint32_t ms);
 
+void collect_hw_entropy(void);
+#define HW_ENTROPY_LEN 12
+extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
+
 #endif

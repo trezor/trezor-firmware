@@ -280,7 +280,6 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/usbd_ctlreq.c',
     'embed/trezorhal/usbd_ioreq.c',
     'embed/trezorhal/util.s',
-    'embed/trezorhal/utils.c',
     'embed/trezorhal/vectortable.s',
 ]
 

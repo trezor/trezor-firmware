@@ -19,9 +19,13 @@
 
 #include STM32_HAL_H
 
+#include <string.h>
+
 #include "common.h"
 #include "display.h"
 #include "rng.h"
+
+#include "stm32f4xx_ll_utils.h"
 
 void shutdown(void);
 
@@ -79,4 +83,16 @@ uint32_t __stack_chk_guard = 0;
 void __attribute__((noreturn)) __stack_chk_fail(void)
 {
     ensure(secfalse, "Stack smashing detected");
+}
+
+uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
+
+void collect_hw_entropy(void)
+{
+    uint32_t w = LL_GetUID_Word0();
+    memcpy(HW_ENTROPY_DATA, &w, 4);
+    w = LL_GetUID_Word1();
+    memcpy(HW_ENTROPY_DATA + 4, &w, 4);
+    w = LL_GetUID_Word2();
+    memcpy(HW_ENTROPY_DATA + 8, &w, 4);
 }
