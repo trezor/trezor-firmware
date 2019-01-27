@@ -27,7 +27,6 @@
 #include "oled.h"
 #include "rng.h"
 #include "usb.h"
-#include "serialno.h"
 #include "layout.h"
 #include "util.h"
 #include "signatures.h"
@@ -174,7 +173,7 @@ static void send_msg_failure(usbd_device *dev)
 static void send_msg_features(usbd_device *dev)
 {
 	// response: Features message (id 17), payload len 30
-	//           - vendor = "bitcointrezor.com"
+	//           - vendor = "trezor.io"
 	//           - major_version = VERSION_MAJOR
 	//           - minor_version = VERSION_MINOR
 	//           - patch_version = VERSION_PATCH
@@ -188,9 +187,9 @@ static void send_msg_features(usbd_device *dev)
 			// msg_id
 			"\x00\x11"
 			// msg_size
-			"\x00\x00\x00\x1e"
+			"\x00\x00\x00\x16"
 			// data
-			"\x0a" "\x11" "bitcointrezor.com"
+			"\x0a" "\x09" "trezor.io"
 			"\x10" VERSION_MAJOR_CHAR
 			"\x18" VERSION_MINOR_CHAR
 			"\x20" VERSION_PATCH_CHAR
@@ -198,7 +197,7 @@ static void send_msg_features(usbd_device *dev)
 			"\x90\x01" "\x00"
 			"\xaa" "\x01" "1"
 			// padding
-			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 			, 64) != 64) {}
 	} else {
 		while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
@@ -207,9 +206,9 @@ static void send_msg_features(usbd_device *dev)
 			// msg_id
 			"\x00\x11"
 			// msg_size
-			"\x00\x00\x00\x1e"
+			"\x00\x00\x00\x16"
 			// data
-			"\x0a\x11" "bitcointrezor.com"
+			"\x0a" "\x09" "trezor.io"
 			"\x10" VERSION_MAJOR_CHAR
 			"\x18" VERSION_MINOR_CHAR
 			"\x20" VERSION_PATCH_CHAR
@@ -217,7 +216,7 @@ static void send_msg_features(usbd_device *dev)
 			"\x90\x01" "\x01"
 			"\xaa" "\x01" "1"
 			// padding
-			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 			, 64) != 64) {}
 	}
 }

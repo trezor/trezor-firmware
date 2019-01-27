@@ -246,22 +246,22 @@ void layoutHome(void)
 	} else {
 		if (label && strlen(label) > 0) {
 			oledDrawBitmap(44, 4, &bmp_logo48);
-			oledDrawStringCenter(OLED_HEIGHT - 8, label, FONT_STANDARD);
+			oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, label, FONT_STANDARD);
 		} else {
 			oledDrawBitmap(40, 0, &bmp_logo64);
 		}
 	}
 	if (storage_noBackup()) {
 		oledBox(0, 0, 127, 8, false);
-		oledDrawStringCenter(0, "SEEDLESS", FONT_STANDARD);
+		oledDrawStringCenter(OLED_WIDTH / 2, 0, "SEEDLESS", FONT_STANDARD);
 	} else
 	if (storage_unfinishedBackup()) {
 		oledBox(0, 0, 127, 8, false);
-		oledDrawStringCenter(0, "BACKUP FAILED!", FONT_STANDARD);
+		oledDrawStringCenter(OLED_WIDTH / 2, 0, "BACKUP FAILED!", FONT_STANDARD);
 	} else
 	if (storage_needsBackup()) {
 		oledBox(0, 0, 127, 8, false);
-		oledDrawStringCenter(0, "NEEDS BACKUP!", FONT_STANDARD);
+		oledDrawStringCenter(OLED_WIDTH / 2, 0, "NEEDS BACKUP!", FONT_STANDARD);
 	}
 	oledRefresh();
 

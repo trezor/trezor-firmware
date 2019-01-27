@@ -49,7 +49,7 @@ void layoutDialog(const BITMAP *icon, const char *btnNo, const char *btnYes, con
 	if (line3) oledDrawString(left, 2 * 9, line3, FONT_STANDARD);
 	if (line4) oledDrawString(left, 3 * 9, line4, FONT_STANDARD);
 	if (desc) {
-		oledDrawStringCenter(OLED_HEIGHT - 2 * 9 - 1, desc, FONT_STANDARD);
+		oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 2 * 9 - 1, desc, FONT_STANDARD);
 		if (btnYes || btnNo) {
 			oledHLine(OLED_HEIGHT - 21);
 		}
@@ -110,7 +110,7 @@ void layoutProgress(const char *desc, int permil)
 	// text
 	oledBox(0, OLED_HEIGHT - 16, OLED_WIDTH - 1, OLED_HEIGHT - 16 + 7, 0);
 	if (desc) {
-		oledDrawStringCenter(OLED_HEIGHT - 16, desc, FONT_STANDARD);
+		oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 16, desc, FONT_STANDARD);
 	}
 	oledRefresh();
 }

@@ -1870,7 +1870,7 @@ void stellar_layoutSigningDialog(const char *line1, const char *line2, const cha
 
     // Warnings (drawn centered between the buttons
     if (warning) {
-        oledDrawStringCenter(OLED_HEIGHT - 8, warning, FONT_STANDARD);
+        oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, warning, FONT_STANDARD);
     }
 
     // Next / sign button

@@ -46,7 +46,7 @@ void oledDrawChar(int x, int y, char c, int zoom);
 int oledStringWidth(const char *text, int font);
 
 void oledDrawString(int x, int y, const char* text, int font);
-void oledDrawStringCenter(int y, const char* text, int font);
+void oledDrawStringCenter(int x, int y, const char* text, int font);
 void oledDrawStringRight(int x, int y, const char* text, int font);
 void oledDrawBitmap(int x, int y, const BITMAP *bmp);
 void oledInvert(int x1, int y1, int x2, int y2);

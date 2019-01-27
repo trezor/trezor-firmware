@@ -6,7 +6,6 @@ OBJS += buttons.o
 OBJS += layout.o
 OBJS += oled.o
 OBJS += rng.o
-OBJS += serialno.o
 
 ifneq ($(EMULATOR),1)
 OBJS += setup.o
