@@ -28,6 +28,7 @@ OBJDUMP  := $(PREFIX)objdump
 AR       := $(PREFIX)ar
 AS       := $(PREFIX)as
 OPENOCD  := openocd -f interface/stlink-v2.cfg -c "transport select hla_swd" -f target/stm32f2x.cfg
+GDB      := $(PREFIX)gdb --nx -ex 'set remotetimeout unlimited' -ex 'set confirm off' -ex 'target remote 127.0.0.1:3333' -ex 'monitor reset halt'
 
 OPTFLAGS ?= -O3
 DBGFLAGS ?= -g -DNDEBUG
@@ -143,6 +144,15 @@ CFLAGS += -DDEBUG_RNG=0
 endif
 
 all: $(NAME).bin
+
+openocd:
+	$(OPENOCD)
+
+gdb_bootloader: bootloader/bootloader.elf
+	$(GDB) $<
+
+gdb_firmware: firmware/trezor.elf
+	$(GDB) $<
 
 flash: $(NAME).bin
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $(NAME).bin 0x8000000; exit"
