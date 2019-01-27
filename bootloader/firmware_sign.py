@@ -7,10 +7,6 @@ import struct
 
 import ecdsa
 
-try:
-    raw_input
-except:
-    raw_input = input
 
 SLOTS = 3
 
@@ -22,8 +18,9 @@ pubkeys = {
     5: "047384c51ae81add0a523adbb186c91b906ffb64c2c765802bf26dbd13bdf12c319e80c2213a136c8ee03d7874fd22b70d68e7dee469decfbbb510ee9a460cda45",
 }
 
-INDEXES_START = len("TRZR") + struct.calcsize("<I")
-SIG_START = INDEXES_START + SLOTS + 1 + 52
+FWHEADER_SIZE = 1024
+SIGNATURES_START = 6 * 4 + 8 + 512
+INDEXES_START = SIGNATURES_START + 3 * 64
 
 
 def parse_args():
@@ -52,47 +49,83 @@ def parse_args():
     return parser.parse_args()
 
 
-def prepare(data):
-    # Takes raw OR signed firmware and clean out metadata structure
-    # This produces 'clean' data for signing
+def pad_to_size(data, size):
+    if len(data) > size:
+        raise ValueError("Chunk too big already")
+    if len(data) == size:
+        return data
+    return data + b"\xFF" * (size - len(data))
 
-    meta = b"TRZR"  # magic
-    if data[:4] == b"TRZR":
-        meta += data[4 : 4 + struct.calcsize("<I")]
+
+# see memory.h for details
+
+
+def prepare_hashes(data):
+    # process chunks
+    start = 0
+    end = (64 - 1) * 1024
+    hashes = []
+    for i in range(16):
+        sector = data[start:end]
+        if len(sector) > 0:
+            chunk = pad_to_size(sector, end - start)
+            hashes.append(hashlib.sha256(chunk).digest())
+        else:
+            hashes.append(b"\x00" * 32)
+        start = end
+        end += 64 * 1024
+    return hashes
+
+
+def check_hashes(data):
+    expected_hashes = data[0x20 : 0x20 + 16 * 32]
+    hashes = b""
+    for h in prepare_hashes(data[FWHEADER_SIZE:]):
+        hashes += h
+
+    if expected_hashes == hashes:
+        print("HASHES OK")
     else:
-        meta += struct.pack("<I", len(data))  # length of the code
-    meta += b"\x00" * SLOTS  # signature index #1-#3
-    meta += b"\x01"  # flags
-    meta += b"\x00" * 52  # reserved
-    meta += b"\x00" * 64 * SLOTS  # signature #1-#3
+        print("HASHES NOT OK")
 
-    if data[:4] == b"TRZR":
-        # Replace existing header
-        out = meta + data[len(meta) :]
+
+def update_hashes_in_header(data):
+    # Store hashes in the firmware header
+    data = bytearray(data)
+    o = 0
+    for h in prepare_hashes(data[FWHEADER_SIZE:]):
+        data[0x20 + o:0x20 + o + 32] = h
+        o += 32
+    return bytes(data)
+
+
+def get_header(data, zero_signatures=False):
+    if not zero_signatures:
+        return data[:FWHEADER_SIZE]
     else:
-        # create data from meta + code
-        out = meta + data
+        data = bytearray(data[:FWHEADER_SIZE])
+        data[SIGNATURES_START : SIGNATURES_START + 3 * 64 + 3] = b"\x00" * (3 * 64 + 3)
+        return bytes(data)
 
-    return out
 
+def check_size(data):
+    size = struct.unpack("<L", data[12:16])[0]
+    assert size == len(data) - 1024
 
 def check_signatures(data):
     # Analyses given firmware and prints out
     # status of included signatures
 
-    try:
-        indexes = [ord(x) for x in data[INDEXES_START : INDEXES_START + SLOTS]]
-    except:
-        indexes = [x for x in data[INDEXES_START : INDEXES_START + SLOTS]]
+    indexes = [x for x in data[INDEXES_START : INDEXES_START + SLOTS]]
 
-    to_sign = prepare(data)[256:]  # without meta
+    to_sign = get_header(data, zero_signatures=True)
     fingerprint = hashlib.sha256(to_sign).hexdigest()
 
     print("Firmware fingerprint:", fingerprint)
 
     used = []
     for x in range(SLOTS):
-        signature = data[SIG_START + 64 * x : SIG_START + 64 * x + 64]
+        signature = data[SIGNATURES_START + 64 * x : SIGNATURES_START + 64 * x + 64]
 
         if indexes[x] == 0:
             print("Slot #%d" % (x + 1), "is empty")
@@ -118,25 +151,18 @@ def check_signatures(data):
 
 
 def modify(data, slot, index, signature):
-    # Replace signature in data
-
-    # Put index to data
-    data = (
-        data[: INDEXES_START + slot - 1] + bytes([index]) + data[INDEXES_START + slot :]
-    )
-
-    # Put signature to data
-    data = (
-        data[: SIG_START + 64 * (slot - 1)] + signature + data[SIG_START + 64 * slot :]
-    )
-
-    return data
+    data = bytearray(data)
+    # put index to data
+    data[INDEXES_START + slot - 1] = index
+    # put signature to data
+    data[SIGNATURES_START + 64 * (slot - 1) : SIGNATURES_START + 64 * slot] = signature
+    return bytes(data)
 
 
 def sign(data, is_pem):
     # Ask for index and private key and signs the firmware
 
-    slot = int(raw_input("Enter signature slot (1-%d): " % SLOTS))
+    slot = int(input("Enter signature slot (1-%d): " % SLOTS))
     if slot < 1 or slot > SLOTS:
         raise Exception("Invalid slot")
 
@@ -145,28 +171,28 @@ def sign(data, is_pem):
         print("(blank private key removes the signature on given index)")
         pem_key = ""
         while True:
-            key = raw_input()
+            key = input()
             pem_key += key + "\n"
             if key == "":
                 break
         if pem_key.strip() == "":
             # Blank key,let's remove existing signature from slot
-            return modify(data, slot, 0, "\x00" * 64)
+            return modify(data, slot, 0, b"\x00" * 64)
         key = ecdsa.SigningKey.from_pem(pem_key)
     else:
         print("Paste SECEXP (in hex) and press Enter:")
         print("(blank private key removes the signature on given index)")
-        secexp = raw_input()
+        secexp = input()
         if secexp.strip() == "":
             # Blank key,let's remove existing signature from slot
-            return modify(data, slot, 0, "\x00" * 64)
+            return modify(data, slot, 0, b"\x00" * 64)
         key = ecdsa.SigningKey.from_secret_exponent(
             secexp=int(secexp, 16),
             curve=ecdsa.curves.SECP256k1,
             hashfunc=hashlib.sha256,
         )
 
-    to_sign = prepare(data)[256:]  # without meta
+    to_sign = get_header(data, zero_signatures=True)
 
     # Locate proper index of current signing key
     pubkey = "04" + key.get_verifying_key().to_string().hex()
@@ -207,20 +233,21 @@ def main(args):
     data = open(args.path, "rb").read()
     assert len(data) % 4 == 0
 
-    if data[:4] != b"TRZR":
-        print("Metadata has been added...")
-        data = prepare(data)
-
-    if data[:4] != b"TRZR":
+    if data[:4] != b"TRZF":
         raise Exception("Firmware header expected")
+
+    data = update_hashes_in_header(data)
 
     print("Firmware size %d bytes" % len(data))
 
+    check_size(data)
     check_signatures(data)
+    check_hashes(data)
 
     if args.sign:
         data = sign(data, args.pem)
         check_signatures(data)
+        check_hashes(data)
 
     fp = open(args.path, "wb")
     fp.write(data)

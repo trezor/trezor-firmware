@@ -21,10 +21,7 @@
 #define __TREZOR_H__
 
 #include <stdint.h>
-
-#define VERSION_MAJOR 1
-#define VERSION_MINOR 8
-#define VERSION_PATCH 0
+#include "version.h"
 
 #define STR(X) #X
 #define VERSTR(X) STR(X)

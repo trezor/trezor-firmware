@@ -24,43 +24,37 @@
 
 /*
 
- flash memory layout:
+ Flash memory layout:
 
    name    |          range          |  size   |     function
 -----------+-------------------------+---------+------------------
- Sector  0 | 0x08000000 - 0x08003FFF |  16 KiB | bootloader code
- Sector  1 | 0x08004000 - 0x08007FFF |  16 KiB | bootloader code
+ Sector  0 | 0x08000000 - 0x08003FFF |  16 KiB | bootloader
+ Sector  1 | 0x08004000 - 0x08007FFF |  16 KiB | bootloader
 -----------+-------------------------+---------+------------------
- Sector  2 | 0x08008000 - 0x0800BFFF |  16 KiB | metadata area
- Sector  3 | 0x0800C000 - 0x0800FFFF |  16 KiB | metadata area
+ Sector  2 | 0x08008000 - 0x0800BFFF |  16 KiB | storage area
+ Sector  3 | 0x0800C000 - 0x0800FFFF |  16 KiB | storage area
 -----------+-------------------------+---------+------------------
- Sector  4 | 0x08010000 - 0x0801FFFF |  64 KiB | application code
- Sector  5 | 0x08020000 - 0x0803FFFF | 128 KiB | application code
- Sector  6 | 0x08040000 - 0x0805FFFF | 128 KiB | application code
- Sector  7 | 0x08060000 - 0x0807FFFF | 128 KiB | application code
-===========+=========================+============================
- Sector  8 | 0x08080000 - 0x0809FFFF | 128 KiB | application code
- Sector  9 | 0x080A0000 - 0x080BFFFF | 128 KiB | application code
- Sector 10 | 0x080C0000 - 0x080DFFFF | 128 KiB | application code
- Sector 11 | 0x080E0000 - 0x080FFFFF | 128 KiB | application code
+ Sector  4 | 0x08010000 - 0x0801FFFF |  64 KiB | firmware
+ Sector  5 | 0x08020000 - 0x0803FFFF | 128 KiB | firmware
+ Sector  6 | 0x08040000 - 0x0805FFFF | 128 KiB | firmware
+ Sector  7 | 0x08060000 - 0x0807FFFF | 128 KiB | firmware
+ Sector  8 | 0x08080000 - 0x0809FFFF | 128 KiB | firmware
+ Sector  9 | 0x080A0000 - 0x080BFFFF | 128 KiB | firmware
+ Sector 10 | 0x080C0000 - 0x080DFFFF | 128 KiB | firmware
+ Sector 11 | 0x080E0000 - 0x080FFFFF | 128 KiB | firmware
 
- metadata area:
+ firmware header (occupies first 1 KB of the firmware)
+ - very similar to trezor-core firmware header described in:
+   https://github.com/trezor/trezor-core/blob/master/docs/bootloader.md#firmware-header
+ - differences:
+   * we don't use sigmask or sig field (these are reserved and set to zero)
+   * we introduce new fields immediately following the hash16 field:
+     - sig1[64], sig2[64], sig3[64]
+     - sigindex1[1], sigindex2[1], sigindex3[1]
+   * reserved[415] area is reduced to reserved[220]
+ - see signatures.c for more details
 
- offset | type/length |  description
---------+-------------+-------------------------------
- 0x0000 |  4 bytes    |  magic = 'TRZR'
- 0x0004 |  uint32     |  length of the code (codelen)
- 0x0008 |  uint8      |  signature index #1
- 0x0009 |  uint8      |  signature index #2
- 0x000A |  uint8      |  signature index #3
- 0x000B |  uint8      |  flags
- 0x000C |  52 bytes   |  reserved
- 0x0040 |  64 bytes   |  signature #1
- 0x0080 |  64 bytes   |  signature #2
- 0x00C0 |  64 bytes   |  signature #3
- 0x0100 |  32K-256 B  |  persistent storage
-
- flags & 0x01 -> restore storage after flashing (if signatures are ok)
+ We pad the firmware chunks with zeroes if they are shorted.
 
  */
 
@@ -78,31 +72,20 @@ extern uint8_t *emulator_flash_base;
 #define FLASH_BOOT_START	(FLASH_ORIGIN)
 #define FLASH_BOOT_LEN		(0x8000)
 
-#define FLASH_META_START	(FLASH_BOOT_START + FLASH_BOOT_LEN)
-#define FLASH_META_LEN		(0x8000)
+#define FLASH_STORAGE_START	(FLASH_BOOT_START + FLASH_BOOT_LEN)
+#define FLASH_STORAGE_LEN	(0x8000)
 
-#define FLASH_APP_START		(FLASH_META_START + FLASH_META_LEN)
+#define FLASH_FWHEADER_START (FLASH_STORAGE_START + FLASH_STORAGE_LEN)
+#define FLASH_FWHEADER_LEN	(0x400)
 
-#define FLASH_META_MAGIC	(FLASH_META_START)
-#define FLASH_META_CODELEN	(FLASH_META_START + 0x0004)
-#define FLASH_META_SIGINDEX1	(FLASH_META_START + 0x0008)
-#define FLASH_META_SIGINDEX2	(FLASH_META_START + 0x0009)
-#define FLASH_META_SIGINDEX3	(FLASH_META_START + 0x000A)
-#define FLASH_META_FLAGS	(FLASH_META_START + 0x000B)
-#define FLASH_META_SIG1		(FLASH_META_START + 0x0040)
-#define FLASH_META_SIG2		(FLASH_META_START + 0x0080)
-#define FLASH_META_SIG3		(FLASH_META_START + 0x00C0)
-
-#define FLASH_META_DESC_LEN		(0x100)
-
-#define FLASH_STORAGE_START	(FLASH_META_START + FLASH_META_DESC_LEN)
-#define FLASH_STORAGE_LEN	(FLASH_APP_START - FLASH_STORAGE_START)
+#define FLASH_APP_START		(FLASH_FWHEADER_START + FLASH_FWHEADER_LEN)
+#define FLASH_APP_LEN		(FLASH_TOTAL_SIZE - (FLASH_APP_START - FLASH_ORIGIN))
 
 #define FLASH_BOOT_SECTOR_FIRST	0
 #define FLASH_BOOT_SECTOR_LAST	1
 
-#define FLASH_META_SECTOR_FIRST	2
-#define FLASH_META_SECTOR_LAST	3
+#define FLASH_STORAGE_SECTOR_FIRST	2
+#define FLASH_STORAGE_SECTOR_LAST	3
 
 #define FLASH_CODE_SECTOR_FIRST	4
 #define FLASH_CODE_SECTOR_LAST	11

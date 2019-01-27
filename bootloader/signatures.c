@@ -17,7 +17,6 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
 #include <string.h>
 
 #include "signatures.h"
@@ -25,6 +24,11 @@
 #include "secp256k1.h"
 #include "sha2.h"
 #include "bootloader.h"
+#include "memory.h"
+#include "memzero.h"
+
+const uint32_t FIRMWARE_MAGIC_OLD = 0x525a5254; // TRZR
+const uint32_t FIRMWARE_MAGIC_NEW = 0x465a5254; // TRZF
 
 #define PUBKEYS 5
 
@@ -38,18 +42,44 @@ static const uint8_t * const pubkey[PUBKEYS] = {
 
 #define SIGNATURES 3
 
-int signatures_ok(uint8_t *store_hash)
+#define FLASH_META_START       0x08008000
+#define FLASH_META_CODELEN     (FLASH_META_START + 0x0004)
+#define FLASH_META_SIGINDEX1   (FLASH_META_START + 0x0008)
+#define FLASH_META_SIGINDEX2   (FLASH_META_START + 0x0009)
+#define FLASH_META_SIGINDEX3   (FLASH_META_START + 0x000A)
+#define FLASH_OLD_APP_START    0x08010000
+#define FLASH_META_SIG1        (FLASH_META_START + 0x0040)
+#define FLASH_META_SIG2        (FLASH_META_START + 0x0080)
+#define FLASH_META_SIG3        (FLASH_META_START + 0x00C0)
+
+bool firmware_present_old(void)
+{
+	if (memcmp(FLASH_PTR(FLASH_META_START), &FIRMWARE_MAGIC_OLD, 4)) { // magic does not match
+		return false;
+	}
+	if (*((const uint32_t *)FLASH_PTR(FLASH_META_CODELEN)) < 8192) { // firmware reports smaller size than 8192
+		return false;
+	}
+	if (*((const uint32_t *)FLASH_PTR(FLASH_META_CODELEN)) > FLASH_APP_LEN) { // firmware reports bigger size than flash size
+		return false;
+	}
+
+	return true;
+}
+
+int signatures_old_ok(void)
 {
 	const uint32_t codelen = *((const uint32_t *)FLASH_META_CODELEN);
 	const uint8_t sigindex1 = *((const uint8_t *)FLASH_META_SIGINDEX1);
 	const uint8_t sigindex2 = *((const uint8_t *)FLASH_META_SIGINDEX2);
 	const uint8_t sigindex3 = *((const uint8_t *)FLASH_META_SIGINDEX3);
 
-	uint8_t hash[32];
-	sha256_Raw((const uint8_t *)FLASH_APP_START, codelen, hash);
-	if (store_hash) {
-		memcpy(store_hash, hash, 32);
+	if (codelen > FLASH_APP_LEN) {
+		return false;
 	}
+
+	uint8_t hash[32];
+	sha256_Raw(FLASH_PTR(FLASH_OLD_APP_START), codelen, hash);
 
 	if (sigindex1 < 1 || sigindex1 > PUBKEYS) return SIG_FAIL; // invalid index
 	if (sigindex2 < 1 || sigindex2 > PUBKEYS) return SIG_FAIL; // invalid index
@@ -69,5 +99,83 @@ int signatures_ok(uint8_t *store_hash)
 		return SIG_FAIL;
 	}
 
+	return SIG_OK;
+}
+
+void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32])
+{
+	image_header copy;
+	memcpy(&copy, hdr, sizeof(image_header));
+	memzero(copy.sig1, sizeof(copy.sig1));
+	memzero(copy.sig2, sizeof(copy.sig2));
+	memzero(copy.sig3, sizeof(copy.sig3));
+	copy.sigindex1 = 0;
+	copy.sigindex2 = 0;
+	copy.sigindex3 = 0;
+	sha256_Raw((const uint8_t *)&copy, sizeof(image_header), hash);
+}
+
+bool firmware_present_new(void)
+{
+	const image_header *hdr = (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
+	if (hdr->magic != FIRMWARE_MAGIC_NEW) return false;
+	if (hdr->hdrlen != FLASH_FWHEADER_LEN) return false;
+	if (hdr->codelen > FLASH_APP_LEN) return false;
+	if (hdr->codelen < 4096) return false;
+
+	return true;
+}
+
+int signatures_new_ok(const image_header *hdr, uint8_t store_fingerprint[32])
+{
+	uint8_t hash[32];
+	compute_firmware_fingerprint(hdr, hash);
+
+	if (store_fingerprint) {
+		memcpy(store_fingerprint, hash, 32);
+	}
+
+	if (hdr->sigindex1 < 1 || hdr->sigindex1 > PUBKEYS) return SIG_FAIL; // invalid index
+	if (hdr->sigindex2 < 1 || hdr->sigindex2 > PUBKEYS) return SIG_FAIL; // invalid index
+	if (hdr->sigindex3 < 1 || hdr->sigindex3 > PUBKEYS) return SIG_FAIL; // invalid index
+
+	if (hdr->sigindex1 == hdr->sigindex2) return SIG_FAIL; // duplicate use
+	if (hdr->sigindex1 == hdr->sigindex3) return SIG_FAIL; // duplicate use
+	if (hdr->sigindex2 == hdr->sigindex3) return SIG_FAIL; // duplicate use
+
+	if (0 != ecdsa_verify_digest(&secp256k1, pubkey[hdr->sigindex1 - 1], hdr->sig1, hash)) { // failure
+		return SIG_FAIL;
+	}
+	if (0 != ecdsa_verify_digest(&secp256k1, pubkey[hdr->sigindex2 - 1], hdr->sig2, hash)) { // failure
+		return SIG_FAIL;
+	}
+	if (0 != ecdsa_verify_digest(&secp256k1, pubkey[hdr->sigindex3 - 1], hdr->sig3, hash)) { // failure
+		return SIG_FAIL;
+	}
+
+	return SIG_OK;
+}
+
+int check_firmware_hashes(const image_header *hdr)
+{
+	uint8_t hash[32];
+	// check hash of the first code chunk
+	sha256_Raw(FLASH_PTR(FLASH_APP_START), (64 - 1) * 1024, hash);
+	if (0 != memcmp(hash, hdr->hashes, 32)) return SIG_FAIL;
+	// check remaining used chunks
+	uint32_t total_len = FLASH_FWHEADER_LEN + hdr->codelen;
+	int used_chunks = total_len / FW_CHUNK_SIZE;
+	if (total_len % FW_CHUNK_SIZE > 0) {
+		used_chunks++;
+	}
+	for (int i = 1; i < used_chunks; i++) {
+		sha256_Raw(FLASH_PTR(FLASH_FWHEADER_START + (64 * i) * 1024), 64 * 1024, hash);
+		if (0 != memcmp(hdr->hashes + 32 * i, hash, 32)) return SIG_FAIL;
+	}
+	// check unused chunks
+	for (int i = used_chunks; i < 16; i++) {
+		if (0 != memcmp(hdr->hashes + 32 * i, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32)) return SIG_FAIL;
+	}
+	// all OK
 	return SIG_OK;
 }

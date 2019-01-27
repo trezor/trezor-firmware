@@ -197,12 +197,15 @@ static secbool config_get_uint32(uint16_t key, uint32_t *value)
     return sectrue;
 }
 
+#define FLASH_META_START       0x08008000
+#define FLASH_META_LEN         0x100
+
 static secbool config_upgrade_v10(void)
 {
 #define OLD_STORAGE_SIZE(last_member) (((offsetof(Storage, last_member) + pb_membersize(Storage, last_member)) + 3) & ~3)
 
-    if (memcmp(FLASH_PTR(FLASH_META_MAGIC), &META_MAGIC_V10, sizeof(META_MAGIC_V10)) != 0 ||
-        memcmp(FLASH_PTR(FLASH_STORAGE_START), &CONFIG_MAGIC_V10, sizeof(CONFIG_MAGIC_V10)) != 0) {
+    if (memcmp(FLASH_PTR(FLASH_META_START), &META_MAGIC_V10, sizeof(META_MAGIC_V10)) != 0 ||
+        memcmp(FLASH_PTR(FLASH_META_START + FLASH_META_LEN), &CONFIG_MAGIC_V10, sizeof(CONFIG_MAGIC_V10)) != 0) {
         // wrong magic
         return secfalse;
     }
@@ -210,8 +213,8 @@ static secbool config_upgrade_v10(void)
     Storage config __attribute__((aligned(4)));
     _Static_assert((sizeof(config) & 3) == 0, "storage unaligned");
 
-    memcpy(config_uuid, FLASH_PTR(FLASH_STORAGE_START + sizeof(CONFIG_MAGIC_V10)), sizeof(config_uuid));
-    memcpy(&config, FLASH_PTR(FLASH_STORAGE_START + sizeof(CONFIG_MAGIC_V10) + sizeof(config_uuid)), sizeof(config));
+    memcpy(config_uuid, FLASH_PTR(FLASH_META_START + FLASH_META_LEN + sizeof(CONFIG_MAGIC_V10)), sizeof(config_uuid));
+    memcpy(&config, FLASH_PTR(FLASH_META_START + FLASH_META_LEN + sizeof(CONFIG_MAGIC_V10) + sizeof(config_uuid)), sizeof(config));
 
     // version 1: since 1.0.0
     // version 2: since 1.2.1

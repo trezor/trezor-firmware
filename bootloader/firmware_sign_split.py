@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-from __future__ import print_function
+#!/usr/bin/env python3
 import hashlib
 import os
 import subprocess
@@ -7,10 +6,7 @@ import ecdsa
 from binascii import hexlify, unhexlify
 
 print('master secret:', end='')
-try:
-    h = raw_input()
-except:
-    h = input()
+h = input()
 if h:
     h = unhexlify(h).encode('ascii')
 else:

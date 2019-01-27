@@ -128,8 +128,7 @@ void svc_flash_program(uint32_t size) {
 }
 void svc_flash_erase_sector(uint16_t sector) {
 	assert (!flash_locked);
-	assert (sector >= FLASH_META_SECTOR_FIRST &&
-			sector <= FLASH_META_SECTOR_LAST);
+	assert (sector >= FLASH_STORAGE_SECTOR_FIRST && sector <= FLASH_STORAGE_SECTOR_LAST);
 	flash_erase_sector(sector, 3);
 }
 uint32_t svc_flash_lock(void) {
