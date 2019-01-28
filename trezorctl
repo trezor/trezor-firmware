@@ -66,6 +66,15 @@ class ChoiceType(click.Choice):
         return self.typemap[value]
 
 
+CHOICE_PASSPHRASE_SOURCE_TYPE = ChoiceType(
+    {
+        "ask": proto.PassphraseSourceType.ASK,
+        "device": proto.PassphraseSourceType.DEVICE,
+        "host": proto.PassphraseSourceType.HOST,
+    }
+)
+
+
 CHOICE_RECOVERY_DEVICE_TYPE = ChoiceType(
     {
         "scrambled": proto.RecoveryDeviceType.ScrambledWords,
@@ -253,10 +262,18 @@ def set_label(connect, label):
     return device.apply_settings(connect(), label=label)
 
 
-@cli.command(help="Set passphrase source.")
-@click.argument("source", type=int)
+@cli.command()
+@click.argument("source", type=CHOICE_PASSPHRASE_SOURCE_TYPE)
 @click.pass_obj
 def set_passphrase_source(connect, source):
+    """Set passphrase source.
+
+    Configure how to enter passphrase on Trezor Model T. The options are:
+
+    ask - always ask where to enter passphrase
+    device - always enter passphrase on device
+    host - always enter passphrase on host
+    """
     return device.apply_settings(connect(), passphrase_source=source)
 
 
