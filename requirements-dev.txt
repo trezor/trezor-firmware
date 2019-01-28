@@ -1,6 +1,6 @@
 -r requirements.txt
 -r requirements-optional.txt
-pytest>=3.2.5
+pytest>=3.6
 flake8
 protobuf
 isort
