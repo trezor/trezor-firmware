@@ -114,7 +114,7 @@ static void erase_sector(uint8_t sector, secbool set_magic)
     memcpy(header_backup, sector_start, sizeof(header_backup));
 #endif
 
-    ensure(flash_erase_sector(norcow_sectors[sector]), "erase failed");
+    ensure(flash_erase(norcow_sectors[sector]), "erase failed");
 
 #if NORCOW_HEADER_LEN > 0
     // Copy the sector header back.
