@@ -1,5 +1,3 @@
-from ubinascii import hexlify
-
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
@@ -9,6 +7,7 @@ from trezor.ui.text import Text
 from apps.common.confirm import require_confirm
 from apps.common.layout import split_address
 from apps.common.signverify import split_message
+from apps.ethereum.address import address_from_bytes, bytes_from_address
 from apps.ethereum.sign_message import message_digest
 
 
@@ -28,10 +27,11 @@ async def verify_message(ctx, msg):
 
     pkh = sha3_256(pubkey[1:], keccak=True).digest()[-20:]
 
-    if msg.address != pkh:
+    address_bytes = bytes_from_address(msg.address)
+    if address_bytes != pkh:
         raise wire.DataError("Invalid signature")
 
-    address = "0x" + hexlify(msg.address).decode()
+    address = address_from_bytes(address_bytes)
 
     await require_confirm_verify_message(ctx, address, msg.message)
 

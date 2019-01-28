@@ -1,3 +1,7 @@
+from ubinascii import unhexlify
+
+from trezor import wire
+
 from apps.common import HARDENED, paths
 from apps.ethereum import networks
 
@@ -51,13 +55,17 @@ def validate_full_path(path: list) -> bool:
     return True
 
 
-def ethereum_address_hex(address, network=None):
+def address_from_bytes(address_bytes: bytes, network=None) -> str:
+    """
+    Converts address in bytes to a checksummed string as defined
+    in https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md
+    """
     from ubinascii import hexlify
     from trezor.crypto.hashlib import sha3_256
 
     rskip60 = network is not None and network.rskip60
 
-    hx = hexlify(address).decode()
+    hx = hexlify(address_bytes).decode()
 
     prefix = str(network.chain_id) + "0x" if rskip60 else ""
     hs = sha3_256(prefix + hx, keccak=True).digest()
@@ -74,3 +82,15 @@ def ethereum_address_hex(address, network=None):
         h += l
 
     return "0x" + h
+
+
+def bytes_from_address(address: str, network=None) -> bytes:
+    if len(address) == 40:
+        return unhexlify(address)
+
+    elif len(address) == 42:
+        if address[0:2] not in ("0x", "0X"):
+            raise wire.ProcessError("Ethereum: invalid beginning of an address")
+        return unhexlify(address[2:])
+
+    raise wire.ProcessError("Ethereum: Invalid address length")

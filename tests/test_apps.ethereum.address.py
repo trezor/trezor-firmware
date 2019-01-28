@@ -1,12 +1,12 @@
 from common import *
 from apps.common.paths import HARDENED
-from apps.ethereum.address import ethereum_address_hex, validate_full_path
+from apps.ethereum.address import address_from_bytes, bytes_from_address, validate_full_path
 from apps.ethereum.networks import NetworkInfo, by_chain_id
 
 
 class TestEthereumGetAddress(unittest.TestCase):
 
-    def test_ethereum_address_hex_eip55(self):
+    def test_address_from_bytes_eip55(self):
         # https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md
         eip55 = [
             '0x52908400098527886E0F7030069857D2E4169EE7',
@@ -21,10 +21,10 @@ class TestEthereumGetAddress(unittest.TestCase):
         for s in eip55:
             s = s[2:]
             b = bytes([int(s[i:i + 2], 16) for i in range(0, len(s), 2)])
-            h = ethereum_address_hex(b)
+            h = address_from_bytes(b)
             self.assertEqual(h, '0x' + s)
 
-    def test_ethereum_address_hex_rskip60(self):
+    def test_address_from_bytes_rskip60(self):
         # https://github.com/rsksmart/RSKIPs/blob/master/IPs/RSKIP60.md
         rskip60_chain_30 = [
             '0x5aaEB6053f3e94c9b9a09f33669435E7ef1bEAeD',
@@ -42,13 +42,13 @@ class TestEthereumGetAddress(unittest.TestCase):
         for s in rskip60_chain_30:
             s = s[2:]
             b = bytes([int(s[i:i + 2], 16) for i in range(0, len(s), 2)])
-            h = ethereum_address_hex(b, n)
+            h = address_from_bytes(b, n)
             self.assertEqual(h, '0x' + s)
         n.chain_id = 31
         for s in rskip60_chain_31:
             s = s[2:]
             b = bytes([int(s[i:i + 2], 16) for i in range(0, len(s), 2)])
-            h = ethereum_address_hex(b, n)
+            h = address_from_bytes(b, n)
             self.assertEqual(h, '0x' + s)
 
     def test_paths(self):
