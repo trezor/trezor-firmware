@@ -237,4 +237,12 @@ enum MessageType {
     MessageType_MoneroLiveRefreshStepAck = 555 [(wire_out) = true];
     MessageType_MoneroLiveRefreshFinalRequest = 556 [(wire_in) = true];
     MessageType_MoneroLiveRefreshFinalAck = 557 [(wire_out) = true];
+
+    // EOS
+    MessageType_EosGetPublicKey = 600 [(wire_in) = true];
+    MessageType_EosPublicKey = 601 [(wire_out) = true];
+    MessageType_EosSignTx = 602 [(wire_in) = true];
+    MessageType_EosTxActionRequest = 603 [(wire_out) = true];
+    MessageType_EosTxActionAck = 604 [(wire_in) = true];
+    MessageType_EosSignedTx = 605 [(wire_out) = true];
 }
