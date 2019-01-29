@@ -88,7 +88,7 @@ async def confirm_with_pagination(
         lines = list(chunks(content, 17))
     pages = list(chunks(lines, lines_per_page))
 
-    await ctx.call(ButtonRequest(code=ButtonRequestType.Other), MessageType.ButtonAck)
+    await ctx.call(ButtonRequest(code=ButtonRequestType.Address), MessageType.ButtonAck)
 
     paginator = paginate(
         show_text_page, len(pages), first_page, pages, title, icon, icon_color
