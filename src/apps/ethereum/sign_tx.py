@@ -8,7 +8,7 @@ from trezor.messages.MessageType import EthereumTxAck
 from trezor.utils import HashWriter
 
 from apps.common import paths
-from apps.ethereum import tokens
+from apps.ethereum import address, tokens
 from apps.ethereum.address import validate_full_path
 from apps.ethereum.layout import (
     require_confirm_data,
@@ -29,17 +29,17 @@ async def sign_tx(ctx, msg, keychain):
 
     # detect ERC - 20 token
     token = None
-    recipient = msg.to
+    address_bytes = recipient = address.bytes_from_address(msg.to)
     value = int.from_bytes(msg.value, "big")
     if (
-        len(msg.to) == 20
+        len(msg.to) in (40, 42)
         and len(msg.value) == 0
         and data_total == 68
         and len(msg.data_initial_chunk) == 68
         and msg.data_initial_chunk[:16]
         == b"\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     ):
-        token = tokens.token_by_chain_address(msg.chain_id, msg.to)
+        token = tokens.token_by_chain_address(msg.chain_id, address_bytes)
         recipient = msg.data_initial_chunk[16:36]
         value = int.from_bytes(msg.data_initial_chunk[36:68], "big")
 
@@ -69,7 +69,7 @@ async def sign_tx(ctx, msg, keychain):
     if msg.tx_type is not None:
         sha.extend(rlp.encode(msg.tx_type))
 
-    for field in [msg.nonce, msg.gas_price, msg.gas_limit, msg.to, msg.value]:
+    for field in (msg.nonce, msg.gas_price, msg.gas_limit, address_bytes, msg.value):
         sha.extend(rlp.encode(field))
 
     if data_left == 0:
@@ -100,8 +100,12 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     if msg.tx_type is not None:
         length += rlp.field_length(1, [msg.tx_type])
 
-    for field in [msg.nonce, msg.gas_price, msg.gas_limit, msg.to, msg.value]:
-        length += rlp.field_length(len(field), field[:1])
+    length += rlp.field_length(len(msg.nonce), msg.nonce[:1])
+    length += rlp.field_length(len(msg.gas_price), msg.gas_price)
+    length += rlp.field_length(len(msg.gas_limit), msg.gas_limit)
+    to = address.bytes_from_address(msg.to)
+    length += rlp.field_length(len(to), to)
+    length += rlp.field_length(len(msg.value), msg.value)
 
     if msg.chain_id:  # forks replay protection
         if msg.chain_id < 0x100:
@@ -182,12 +186,12 @@ def check_gas(msg: EthereumSignTx) -> bool:
 
 
 def check_to(msg: EthereumTxRequest) -> bool:
-    if msg.to == b"":
+    if msg.to == "":
         if msg.data_length == 0:
             # sending transaction to address 0 (contract creation) without a data field
             return False
     else:
-        if len(msg.to) != 20:
+        if len(msg.to) not in (40, 42):
             return False
     return True
 
@@ -200,7 +204,7 @@ def sanitize(msg):
     if msg.data_length is None:
         msg.data_length = 0
     if msg.to is None:
-        msg.to = b""
+        msg.to = ""
     if msg.nonce is None:
         msg.nonce = b""
     if msg.chain_id is None:

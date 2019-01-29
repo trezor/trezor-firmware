@@ -84,7 +84,7 @@ def address_from_bytes(address_bytes: bytes, network=None) -> str:
     return "0x" + h
 
 
-def bytes_from_address(address: str, network=None) -> bytes:
+def bytes_from_address(address: str) -> bytes:
     if len(address) == 40:
         return unhexlify(address)
 
@@ -92,5 +92,8 @@ def bytes_from_address(address: str, network=None) -> bytes:
         if address[0:2] not in ("0x", "0X"):
             raise wire.ProcessError("Ethereum: invalid beginning of an address")
         return unhexlify(address[2:])
+
+    elif len(address) == 0:
+        return bytes()
 
     raise wire.ProcessError("Ethereum: Invalid address length")
