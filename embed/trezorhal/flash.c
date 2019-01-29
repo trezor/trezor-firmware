@@ -58,14 +58,14 @@ void flash_init(void)
 {
 }
 
-secbool flash_unlock(void)
+secbool flash_unlock_write(void)
 {
     HAL_FLASH_Unlock();
     FLASH->SR |= FLASH_STATUS_ALL_FLAGS; // clear all status flags
     return sectrue;
 }
 
-secbool flash_lock(void)
+secbool flash_lock_write(void)
 {
     HAL_FLASH_Lock();
     return sectrue;
@@ -86,7 +86,7 @@ const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size)
 
 secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len))
 {
-    ensure(flash_unlock(), NULL);
+    ensure(flash_unlock_write(), NULL);
     FLASH_EraseInitTypeDef EraseInitStruct;
     EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
     EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
@@ -98,14 +98,14 @@ secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(in
         EraseInitStruct.Sector = sectors[i];
         uint32_t SectorError;
         if (HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError) != HAL_OK) {
-            ensure(flash_lock(), NULL);
+            ensure(flash_lock_write(), NULL);
             return secfalse;
         }
         // check whether the sector was really deleted (contains only 0xFF)
         const uint32_t addr_start = FLASH_SECTOR_TABLE[sectors[i]], addr_end = FLASH_SECTOR_TABLE[sectors[i] + 1];
         for (uint32_t addr = addr_start; addr < addr_end; addr += 4) {
             if (*((const uint32_t *)addr) != 0xFFFFFFFF) {
-                ensure(flash_lock(), NULL);
+                ensure(flash_lock_write(), NULL);
                 return secfalse;
             }
         }
@@ -113,7 +113,7 @@ secbool flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(in
             progress(i + 1, len);
         }
     }
-    ensure(flash_lock(), NULL);
+    ensure(flash_lock_write(), NULL);
     return sectrue;
 }
 
@@ -175,12 +175,12 @@ secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint
     if (block >= FLASH_OTP_NUM_BLOCKS || offset + datalen > FLASH_OTP_BLOCK_SIZE) {
         return secfalse;
     }
-    ensure(flash_unlock(), NULL);
+    ensure(flash_unlock_write(), NULL);
     for (uint8_t i = 0; i < datalen; i++) {
         uint32_t address = FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i;
         ensure(sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, address, data[i])), NULL);
     }
-    ensure(flash_lock(), NULL);
+    ensure(flash_lock_write(), NULL);
     return sectrue;
 }
 
@@ -189,9 +189,9 @@ secbool flash_otp_lock(uint8_t block)
     if (block >= FLASH_OTP_NUM_BLOCKS) {
         return secfalse;
     }
-    ensure(flash_unlock(), NULL);
+    ensure(flash_unlock_write(), NULL);
     HAL_StatusTypeDef ret = HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, FLASH_OTP_LOCK_BASE + block, 0x00);
-    ensure(flash_lock(), NULL);
+    ensure(flash_lock_write(), NULL);
     return sectrue * (ret == HAL_OK);
 }
 

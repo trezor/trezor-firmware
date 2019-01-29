@@ -69,13 +69,13 @@
 
 void flash_init(void);
 
-secbool __wur flash_unlock(void);
-secbool __wur flash_lock(void);
+secbool __wur flash_unlock_write(void);
+secbool __wur flash_lock_write(void);
 
 const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size);
 
 secbool __wur flash_erase_sectors(const uint8_t *sectors, int len, void (*progress)(int pos, int len));
-static inline secbool flash_erase_sector(uint8_t sector) { return flash_erase_sectors(&sector, 1, NULL); }
+static inline secbool flash_erase(uint8_t sector) { return flash_erase_sectors(&sector, 1, NULL); }
 secbool __wur flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data);
 secbool __wur flash_write_word(uint8_t sector, uint32_t offset, uint32_t data);
 

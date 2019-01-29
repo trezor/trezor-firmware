@@ -103,12 +103,12 @@ void flash_init(void)
     atexit(flash_exit);
 }
 
-secbool flash_unlock(void)
+secbool flash_unlock_write(void)
 {
     return sectrue;
 }
 
-secbool flash_lock(void)
+secbool flash_lock_write(void)
 {
     return sectrue;
 }

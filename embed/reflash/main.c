@@ -88,7 +88,7 @@ int main(void)
     display_printf("\n");
     display_printf("erased\n");
 
-    ensure(flash_unlock(), NULL);
+    ensure(flash_unlock_write(), NULL);
 
     ensure(sdcard_power_on(), NULL);
 
@@ -103,7 +103,7 @@ int main(void)
 
     display_printf("done\n");
     sdcard_power_off();
-    ensure(flash_lock(), NULL);
+    ensure(flash_lock_write(), NULL);
 
     return 0;
 }

@@ -305,11 +305,11 @@ power_off:
 static void test_wipe(void)
 {
     // erase start of the firmware (metadata) -> invalidate FW
-    ensure(flash_unlock(), NULL);
+    ensure(flash_unlock_write(), NULL);
     for (int i = 0; i < 1024 / sizeof(uint32_t); i++) {
         ensure(flash_write_word(FLASH_SECTOR_FIRMWARE_START, i * sizeof(uint32_t), 0x00000000), NULL);
     }
-    ensure(flash_lock(), NULL);
+    ensure(flash_lock_write(), NULL);
     display_clear();
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY / 2 + 10, "WIPED", -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
     display_refresh();
