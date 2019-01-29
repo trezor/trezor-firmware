@@ -28,8 +28,12 @@ def unimport_end(mods):
                 continue
             path = mod[:i]
             name = mod[i + 1 :]
-            if path in sys.modules:
+            try:
                 delattr(sys.modules[path], name)
+            except KeyError:
+                # either path is not present in sys.modules, or module is not
+                # referenced from the parent package. both is fine.
+                pass
     # collect removed modules
     gc.collect()
 
