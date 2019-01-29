@@ -20,7 +20,7 @@ import os
 import random
 import string
 
-from trezorlib import debuglink, device
+from trezorlib import device
 from trezorlib.debuglink import TrezorClientDebugLink
 from trezorlib.transport import enumerate_devices, get_transport
 
@@ -31,9 +31,9 @@ def get_device():
         return get_transport(path)
     else:
         devices = enumerate_devices()
-        for device in devices:
-            if hasattr(device, "find_debug"):
-                return device
+        for d in devices:
+            if hasattr(d, "find_debug"):
+                return d
         raise RuntimeError("No debuggable device found")
 
 
@@ -48,9 +48,9 @@ i = 0
 while True:
     # set private field
     device.apply_settings(client, use_passphrase=True)
-    assert client.features.passphrase_protection == True
+    assert client.features.passphrase_protection is True
     device.apply_settings(client, use_passphrase=False)
-    assert client.features.passphrase_protection == False
+    assert client.features.passphrase_protection is False
 
     # set public field
     label = "".join(random.choices(string.ascii_uppercase + string.digits, k=17))
