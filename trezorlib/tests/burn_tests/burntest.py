@@ -37,25 +37,26 @@ def get_device():
         raise RuntimeError("No debuggable device found")
 
 
-wirelink = get_device()
-client = TrezorClientDebugLink(wirelink)
-client.open()
-device.wipe(client)
-device.reset(client, no_backup=True)
+if __name__ == "__main__":
+    wirelink = get_device()
+    client = TrezorClientDebugLink(wirelink)
+    client.open()
+    device.wipe(client)
+    device.reset(client, no_backup=True)
 
-i = 0
+    i = 0
 
-while True:
-    # set private field
-    device.apply_settings(client, use_passphrase=True)
-    assert client.features.passphrase_protection is True
-    device.apply_settings(client, use_passphrase=False)
-    assert client.features.passphrase_protection is False
+    while True:
+        # set private field
+        device.apply_settings(client, use_passphrase=True)
+        assert client.features.passphrase_protection is True
+        device.apply_settings(client, use_passphrase=False)
+        assert client.features.passphrase_protection is False
 
-    # set public field
-    label = "".join(random.choices(string.ascii_uppercase + string.digits, k=17))
-    device.apply_settings(client, label=label)
-    assert client.features.label == label
+        # set public field
+        label = "".join(random.choices(string.ascii_uppercase + string.digits, k=17))
+        device.apply_settings(client, label=label)
+        assert client.features.label == label
 
-    print("iteration %d" % i)
-    i = i + 1
+        print("iteration %d" % i)
+        i = i + 1
