@@ -1,7 +1,7 @@
 with import <nixpkgs> {};
 
 let
-  myPython = python36.withPackages(p: [p.click p.graphviz p.trezor p.ed25519 p.pillow]) ;
+  myPython = python3.withPackages(p: [p.click p.graphviz p.trezor p.ed25519 p.pillow]) ;
 in
   stdenv.mkDerivation {
     name = "trezor-common-dev";
