@@ -1,8 +1,17 @@
+from trezor import log
 from trezor.crypto import base58, crc, hashlib
 
 from apps.cardano import cbor
 from apps.common import HARDENED
 from apps.common.seed import remove_ed25519_prefix
+
+
+def _encode_address_raw(address_data_encoded):
+    return base58.encode(
+        cbor.encode(
+            [cbor.Tagged(24, address_data_encoded), crc.crc32(address_data_encoded)]
+        )
+    )
 
 
 def derive_address_and_node(keychain, path: list):
@@ -16,12 +25,31 @@ def derive_address_and_node(keychain, path: list):
     address_data = [address_root, address_attributes, address_type]
     address_data_encoded = cbor.encode(address_data)
 
-    address = base58.encode(
-        cbor.encode(
-            [cbor.Tagged(24, address_data_encoded), crc.crc32(address_data_encoded)]
-        )
-    )
-    return (address, node)
+    return (_encode_address_raw(address_data_encoded), node)
+
+
+def is_safe_output_address(address) -> bool:
+    """
+    Determines whether it is safe to include the address as-is as
+    a tx output, preventing unintended side effects (e.g. CBOR injection)
+    """
+    try:
+        address_hex = base58.decode(address)
+        address_unpacked = cbor.decode(address_hex)
+    except ValueError as e:
+        if __debug__:
+            log.exception(__name__, e)
+        return False
+
+    if not isinstance(address_unpacked, list) or len(address_unpacked) != 2:
+        return False
+
+    address_data_encoded = address_unpacked[0]
+
+    if not isinstance(address_data_encoded, bytes):
+        return False
+
+    return _encode_address_raw(address_data_encoded) == address
 
 
 def validate_full_path(path: list) -> bool:

@@ -20,12 +20,12 @@ class CardanoSignTx(p.MessageType):
         inputs: List[CardanoTxInputType] = None,
         outputs: List[CardanoTxOutputType] = None,
         transactions_count: int = None,
-        network: int = None,
+        protocol_magic: int = None,
     ) -> None:
         self.inputs = inputs if inputs is not None else []
         self.outputs = outputs if outputs is not None else []
         self.transactions_count = transactions_count
-        self.network = network
+        self.protocol_magic = protocol_magic
 
     @classmethod
     def get_fields(cls):
@@ -33,5 +33,5 @@ class CardanoSignTx(p.MessageType):
             1: ('inputs', CardanoTxInputType, p.FLAG_REPEATED),
             2: ('outputs', CardanoTxOutputType, p.FLAG_REPEATED),
             3: ('transactions_count', p.UVarintType, 0),
-            4: ('network', p.UVarintType, 0),
+            5: ('protocol_magic', p.UVarintType, 0),
         }
