@@ -641,6 +641,13 @@ static secbool pin_get_fails(uint32_t *ctr)
     return sectrue;
 }
 
+void storage_lock(void)
+{
+    unlocked = secfalse;
+    memzero(cached_keys, sizeof(cached_keys));
+    memzero(authentication_sum, sizeof(authentication_sum));
+}
+
 static secbool unlock(uint32_t pin)
 {
     const void *buffer = NULL;
