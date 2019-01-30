@@ -59,6 +59,7 @@ ENV PATH=/opt/$TOOLCHAIN_LONGVER/bin:$PATH
 
 ENV PYTHON=python3
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # use zipfile module to extract files world-readable
 RUN $PYTHON -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/local && chmod 755 /usr/local/bin/protoc
