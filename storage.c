@@ -517,7 +517,7 @@ static secbool pin_fails_reset(void)
     return pin_logs_init(0);
 }
 
-static secbool pin_fails_increase(void)
+secbool storage_pin_fails_increase(void)
 {
     const void *logs = NULL;
     uint16_t len = 0;
@@ -739,7 +739,7 @@ secbool storage_unlock(uint32_t pin)
     // First, we increase PIN fail counter in storage, even before checking the
     // PIN.  If the PIN is correct, we reset the counter afterwards.  If not, we
     // check if this is the last allowed attempt.
-    if (sectrue != pin_fails_increase()) {
+    if (sectrue != storage_pin_fails_increase()) {
         memzero(&pin, sizeof(pin));
         return secfalse;
     }
@@ -994,7 +994,7 @@ static void handle_fault(void)
         ensure(secfalse, "fault detected");
     }
 
-    if (sectrue != pin_fails_increase()) {
+    if (sectrue != storage_pin_fails_increase()) {
         storage_wipe();
         ensure(secfalse, "fault detected");
     }
