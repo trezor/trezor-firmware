@@ -443,17 +443,17 @@ static secbool pin_logs_init(uint32_t fails)
 }
 
 /*
- * Initializes the values of VERSION_KEY, EDEK_PVC_KEY, PIN_NOT_SET_KEY and PIN_LOGS_KEY using the given PIN.
+ * Initializes the values of VERSION_KEY, EDEK_PVC_KEY, PIN_NOT_SET_KEY and PIN_LOGS_KEY using an empty PIN.
  * This function should be called to initialize freshly wiped storage.
  */
-static void init_wiped_storage(uint32_t new_pin, uint32_t pin_fail_count)
+static void init_wiped_storage(void)
 {
     random_buffer(cached_keys, sizeof(cached_keys));
     uint32_t version = NORCOW_VERSION;
     ensure(auth_init(), "failed to initialize storage authentication tag");
     ensure(storage_set_encrypted(VERSION_KEY, &version, sizeof(version)), "failed to set storage version");
-    ensure(set_pin(new_pin), "failed to initialize PIN");
-    ensure(pin_logs_init(pin_fail_count), "failed to initialize PIN logs");
+    ensure(set_pin(PIN_EMPTY), "failed to initialize PIN");
+    ensure(pin_logs_init(0), "failed to initialize PIN logs");
     if (unlocked != sectrue) {
         memzero(cached_keys, sizeof(cached_keys));
     }
@@ -480,7 +480,7 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt, const uint
     const void *val;
     uint16_t len;
     if (secfalse == norcow_get(EDEK_PVC_KEY, &val, &len)) {
-        init_wiped_storage(PIN_EMPTY, 0);
+        init_wiped_storage();
     }
     memzero(cached_keys, sizeof(cached_keys));
 }
@@ -967,18 +967,13 @@ secbool storage_change_pin(uint32_t oldpin, uint32_t newpin)
     return ret;
 }
 
-void storage_wipe_ex(uint32_t new_pin, uint32_t pin_fail_count)
+void storage_wipe(void)
 {
     norcow_wipe();
     norcow_active_version = NORCOW_VERSION;
     memzero(authentication_sum, sizeof(authentication_sum));
     memzero(cached_keys, sizeof(cached_keys));
-    init_wiped_storage(new_pin, pin_fail_count);
-}
-
-void storage_wipe(void)
-{
-    storage_wipe_ex(PIN_EMPTY, 0);
+    init_wiped_storage();
 }
 
 static void handle_fault(void)
