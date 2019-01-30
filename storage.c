@@ -641,6 +641,11 @@ static secbool pin_get_fails(uint32_t *ctr)
     return sectrue;
 }
 
+secbool storage_is_unlocked(void)
+{
+    return unlocked;
+}
+
 void storage_lock(void)
 {
     unlocked = secfalse;
