@@ -81,7 +81,10 @@ class TestMsgSigntxZcash(TrezorTest):
             )
 
             details = proto.SignTx(
-                version=3, overwintered=True, version_group_id=0x3C48270
+                version=3,
+                overwintered=True,
+                version_group_id=0x3C48270,
+                branch_id=0x5ba81b19,
             )
             _, serialized_tx = btc.sign_tx(
                 self.client,
@@ -145,7 +148,10 @@ class TestMsgSigntxZcash(TrezorTest):
             )
 
             details = proto.SignTx(
-                version=4, overwintered=True, version_group_id=0x892F2085
+                version=4,
+                overwintered=True,
+                version_group_id=0x892F2085,
+                branch_id=0x76b809bb,
             )
             _, serialized_tx = btc.sign_tx(
                 self.client,
