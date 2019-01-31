@@ -24,10 +24,6 @@ import requests
 from . import Transport, TransportException
 from .. import mapping, protobuf
 
-if False:
-    # mark Optional as used, otherwise it only exists in comments
-    Optional
-
 LOG = logging.getLogger(__name__)
 
 TREZORD_HOST = "http://127.0.0.1:21325"

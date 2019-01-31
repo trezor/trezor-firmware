@@ -5,4 +5,4 @@ flake8
 protobuf
 isort
 black; python_version >= "3.6"
-autoflake
+autoflake>=1.2

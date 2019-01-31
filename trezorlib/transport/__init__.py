@@ -15,14 +15,10 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import logging
-from typing import Iterable, List, Set, Type
+from typing import Iterable, List, Type
 
 from ..exceptions import TrezorException
 from ..protobuf import MessageType
-
-if False:
-    # mark Set and List as used, otherwise they only exist in comments
-    List, Set
 
 LOG = logging.getLogger(__name__)
 

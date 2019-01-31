@@ -31,10 +31,6 @@ except Exception as e:
     LOG.warning("WebUSB transport is disabled: {}".format(e))
     usb1 = None
 
-if False:
-    # mark Optional as used, otherwise it only exists in comments
-    Optional
-
 INTERFACE = 0
 ENDPOINT = 1
 DEBUG_INTERFACE = 1

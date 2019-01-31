@@ -20,10 +20,6 @@ from typing import Iterable, Optional, cast
 from . import TransportException
 from .protocol import ProtocolBasedTransport, get_protocol
 
-if False:
-    # mark Optional as used, otherwise it only exists in comments
-    Optional
-
 
 class UdpTransport(ProtocolBasedTransport):
 
