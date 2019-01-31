@@ -527,9 +527,9 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 
 	// segwit hashes for hashPrevouts and hashSequence
 	if (overwintered) {
-		hasher_Init(&hasher_prevouts, HASHER_OVERWINTER_PREVOUTS);
-		hasher_Init(&hasher_sequence, HASHER_OVERWINTER_SEQUENCE);
-		hasher_Init(&hasher_outputs, HASHER_OVERWINTER_OUTPUTS);
+		hasher_InitParam(&hasher_prevouts, HASHER_BLAKE2B_PERSONAL, "ZcashPrevoutHash", 16);
+		hasher_InitParam(&hasher_sequence, HASHER_BLAKE2B_PERSONAL, "ZcashSequencHash", 16);
+		hasher_InitParam(&hasher_outputs, HASHER_BLAKE2B_PERSONAL, "ZcashOutputsHash", 16);
 		hasher_Init(&hasher_check, coin->curve->hasher_sign);
 	} else {
 		hasher_Init(&hasher_prevouts, coin->curve->hasher_sign);
@@ -589,7 +589,7 @@ static bool signing_check_input(const TxInputType *txinput) {
 	}
 	// hash prevout and script type to check it later (relevant for fee computation)
 	tx_prevout_hash(&hasher_check, txinput);
-	hasher_Update(&hasher_check, (const uint8_t *) &txinput->script_type, sizeof(&txinput->script_type));
+	hasher_Update(&hasher_check, (const uint8_t *)&txinput->script_type, sizeof(&txinput->script_type));
 	return true;
 }
 
@@ -758,18 +758,19 @@ static void signing_hash_bip143(const TxInputType *txinput, uint8_t *hash) {
 	hasher_Update(&hasher_preimage, hash_sequence, 32);										// hashSequence
 	tx_prevout_hash(&hasher_preimage, txinput);												// outpoint
 	tx_script_hash(&hasher_preimage, txinput->script_sig.size, txinput->script_sig.bytes);	// scriptCode
-	hasher_Update(&hasher_preimage, (const uint8_t*) &txinput->amount, 8);					// amount
+	hasher_Update(&hasher_preimage, (const uint8_t *)&txinput->amount, 8);					// amount
 	tx_sequence_hash(&hasher_preimage, txinput);											// nSequence
 	hasher_Update(&hasher_preimage, hash_outputs, 32);										// hashOutputs
-	hasher_Update(&hasher_preimage, (const uint8_t*)&lock_time, 4);							// nLockTime
-	hasher_Update(&hasher_preimage, (const uint8_t*)&hash_type, 4);							// nHashType
+	hasher_Update(&hasher_preimage, (const uint8_t *)&lock_time, 4);							// nLockTime
+	hasher_Update(&hasher_preimage, (const uint8_t *)&hash_type, 4);							// nHashType
 	hasher_Final(&hasher_preimage, hash);
 }
 
 static void signing_hash_zip143(const TxInputType *txinput, uint8_t *hash) {
 	uint32_t hash_type = signing_hash_type();
 	Hasher hasher_preimage;
-	hasher_Init(&hasher_preimage, HASHER_OVERWINTER_PREIMAGE);
+	// BRANCH_ID = 0x5ba81b19 / Overwinter
+	hasher_InitParam(&hasher_preimage, HASHER_BLAKE2B_PERSONAL, "ZcashSigHash\x19\x1b\xa8\x5b", 16);
 	uint32_t ver = version | TX_OVERWINTERED;												// 1. nVersion | fOverwintered
 	hasher_Update(&hasher_preimage, (const uint8_t *)&ver, 4);
 	hasher_Update(&hasher_preimage, (const uint8_t *)&version_group_id, 4);					// 2. nVersionGroupId
@@ -778,13 +779,13 @@ static void signing_hash_zip143(const TxInputType *txinput, uint8_t *hash) {
 	hasher_Update(&hasher_preimage, hash_outputs, 32);										// 5. hashOutputs
 																							// 6. hashJoinSplits
 	hasher_Update(&hasher_preimage, (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32);
-	hasher_Update(&hasher_preimage, (const uint8_t*)&lock_time, 4);							// 7. nLockTime
-	hasher_Update(&hasher_preimage, (const uint8_t*)&expiry, 4);							// 8. expiryHeight
-	hasher_Update(&hasher_preimage, (const uint8_t*)&hash_type, 4);							// 9. nHashType
+	hasher_Update(&hasher_preimage, (const uint8_t *)&lock_time, 4);						// 7. nLockTime
+	hasher_Update(&hasher_preimage, (const uint8_t *)&expiry, 4);							// 8. expiryHeight
+	hasher_Update(&hasher_preimage, (const uint8_t *)&hash_type, 4);						// 9. nHashType
 
 	tx_prevout_hash(&hasher_preimage, txinput);												// 10a. outpoint
 	tx_script_hash(&hasher_preimage, txinput->script_sig.size, txinput->script_sig.bytes);	// 10b. scriptCode
-	hasher_Update(&hasher_preimage, (const uint8_t*)&txinput->amount, 8);					// 10c. value
+	hasher_Update(&hasher_preimage, (const uint8_t *)&txinput->amount, 8);					// 10c. value
 	tx_sequence_hash(&hasher_preimage, txinput);											// 10d. nSequence
 
 	hasher_Final(&hasher_preimage, hash);
@@ -793,7 +794,8 @@ static void signing_hash_zip143(const TxInputType *txinput, uint8_t *hash) {
 static void signing_hash_zip243(const TxInputType *txinput, uint8_t *hash) {
 	uint32_t hash_type = signing_hash_type();
 	Hasher hasher_preimage;
-	hasher_Init(&hasher_preimage, HASHER_SAPLING_PREIMAGE);
+	// BRANCH_ID = 0x76b809bb / Sapling
+	hasher_InitParam(&hasher_preimage, HASHER_BLAKE2B_PERSONAL, "ZcashSigHash\xbb\x09\xb8\x76", 16);
 	uint32_t ver = version | TX_OVERWINTERED;													// 1. nVersion | fOverwintered
 	hasher_Update(&hasher_preimage, (const uint8_t *)&ver, 4);
 	hasher_Update(&hasher_preimage, (const uint8_t *)&version_group_id, 4);						// 2. nVersionGroupId
@@ -806,14 +808,14 @@ static void signing_hash_zip243(const TxInputType *txinput, uint8_t *hash) {
 	hasher_Update(&hasher_preimage, (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32);
 																								// 8. hashShieldedOutputs
 	hasher_Update(&hasher_preimage, (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32);
-	hasher_Update(&hasher_preimage, (const uint8_t*)&lock_time, 4);								// 9. nLockTime
-	hasher_Update(&hasher_preimage, (const uint8_t*)&expiry, 4);								// 10. expiryHeight
+	hasher_Update(&hasher_preimage, (const uint8_t *)&lock_time, 4);							// 9. nLockTime
+	hasher_Update(&hasher_preimage, (const uint8_t *)&expiry, 4);								// 10. expiryHeight
 	hasher_Update(&hasher_preimage, (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00", 8);	// 11. valueBalance
-	hasher_Update(&hasher_preimage, (const uint8_t*)&hash_type, 4);								// 12. nHashType
+	hasher_Update(&hasher_preimage, (const uint8_t *)&hash_type, 4);							// 12. nHashType
 
 	tx_prevout_hash(&hasher_preimage, txinput);												// 13a. outpoint
 	tx_script_hash(&hasher_preimage, txinput->script_sig.size, txinput->script_sig.bytes);	// 13b. scriptCode
-	hasher_Update(&hasher_preimage, (const uint8_t*)&txinput->amount, 8);					// 13c. value
+	hasher_Update(&hasher_preimage, (const uint8_t *)&txinput->amount, 8);					// 13c. value
 	tx_sequence_hash(&hasher_preimage, txinput);											// 13d. nSequence
 
 	hasher_Final(&hasher_preimage, hash);
@@ -823,13 +825,13 @@ static void signing_hash_decred(const uint8_t *hash_witness, uint8_t *hash) {
 	uint32_t hash_type = signing_hash_type();
 	Hasher hasher_preimage;
 	hasher_Init(&hasher_preimage, coin->curve->hasher_sign);
-	hasher_Update(&hasher_preimage, (const uint8_t*) &hash_type, 4);
+	hasher_Update(&hasher_preimage, (const uint8_t *)&hash_type, 4);
 	hasher_Update(&hasher_preimage, hash_prefix, 32);
 	hasher_Update(&hasher_preimage, hash_witness, 32);
 	hasher_Final(&hasher_preimage, hash);
 }
 
-static bool signing_sign_hash(TxInputType *txinput, const uint8_t* private_key, const uint8_t *public_key, const uint8_t *hash) {
+static bool signing_sign_hash(TxInputType *txinput, const uint8_t *private_key, const uint8_t *public_key, const uint8_t *hash) {
 	resp.serialized.has_signature_index = true;
 	resp.serialized.signature_index = idx1;
 	resp.serialized.has_signature = true;
@@ -1167,7 +1169,7 @@ void signing_txack(TransactionType *tx)
 			}
 			// check prevouts and script type
 			tx_prevout_hash(&hasher_check, tx->inputs);
-			hasher_Update(&hasher_check, (const uint8_t *) &tx->inputs[0].script_type, sizeof(&tx->inputs[0].script_type));
+			hasher_Update(&hasher_check, (const uint8_t *)&tx->inputs[0].script_type, sizeof(&tx->inputs[0].script_type));
 			if (idx2 == idx1) {
 				if (!compile_input_script_sig(&tx->inputs[0])) {
 					fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to compile input"));
