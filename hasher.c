@@ -23,9 +23,10 @@
 #include "hasher.h"
 #include "ripemd160.h"
 
-void hasher_InitParam(Hasher *hasher, HasherType type, const void *param) {
+void hasher_InitParam(Hasher *hasher, HasherType type, const void *param, uint32_t param_size) {
 	hasher->type = type;
 	hasher->param = param;
+	hasher->param_size = param_size;
 
 	switch (hasher->type) {
 	case HASHER_SHA2:
@@ -56,8 +57,12 @@ void hasher_InitParam(Hasher *hasher, HasherType type, const void *param) {
 	}
 }
 
+void hasher_Init(Hasher *hasher, HasherType type) {
+	hasher_InitParam(hasher, type, NULL, 0);
+}
+
 void hasher_Reset(Hasher *hasher) {
-	hasher_InitParam(hasher, hasher->type, hasher->param);
+	hasher_InitParam(hasher, hasher->type, hasher->param, hasher->param_size);
 }
 
 void hasher_Update(Hasher *hasher, const uint8_t *data, size_t length) {

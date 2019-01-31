@@ -66,10 +66,11 @@ typedef struct {
     } ctx;
 
     const void *param;
+    uint32_t param_size;
 } Hasher;
 
-void hasher_InitParam(Hasher *hasher, HasherType type, const void *param);
-inline void hasher_Init(Hasher *hasher, HasherType type) { hasher_InitParam(hasher, type, NULL); }
+void hasher_InitParam(Hasher *hasher, HasherType type, const void *param, uint32_t param_size);
+void hasher_Init(Hasher *hasher, HasherType type);
 void hasher_Reset(Hasher *hasher);
 void hasher_Update(Hasher *hasher, const uint8_t *data, size_t length);
 void hasher_Final(Hasher *hasher, uint8_t hash[HASHER_DIGEST_LENGTH]);
