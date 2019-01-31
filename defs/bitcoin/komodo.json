@@ -30,8 +30,8 @@
   "dust_limit": 546,
   "blocktime_seconds": 60,
   "uri_prefix": "komodo",
-  "min_address_length": 27,
-  "max_address_length": 34,
+  "min_address_length": 35,
+  "max_address_length": 95,
   "bitcore": [],
   "blockbook": [],
   "cooldown": 100
