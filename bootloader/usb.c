@@ -139,24 +139,27 @@ static uint8_t meta_backup[FLASH_META_LEN];
 
 static void send_msg_success(usbd_device *dev)
 {
+	uint8_t response[64];
+	memzero(response, sizeof(response));
 	// response: Success message (id 2), payload len 0
-	while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
+	memcpy(response,
 		// header
 		"?##"
 		// msg_id
 		"\x00\x02"
 		// msg_size
-		"\x00\x00\x00\x00"
-		// padding
-		"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-		, 64) != 64) {}
+		"\x00\x00\x00\x00",
+		9);
+	while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {}
 }
 
 static void send_msg_failure(usbd_device *dev)
 {
+	uint8_t response[64];
+	memzero(response, sizeof(response));
 	// response: Failure message (id 3), payload len 2
 	//           - code = 99 (Failure_FirmwareError)
-	while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
+	memcpy(response,
 		// header
 		"?##"
 		// msg_id
@@ -164,15 +167,16 @@ static void send_msg_failure(usbd_device *dev)
 		// msg_size
 		"\x00\x00\x00\x02"
 		// data
-		"\x08" "\x63"
-		// padding
-		"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-		, 64) != 64) {}
+		"\x08" "\x63",
+		11);
+	while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {}
 }
 
 static void send_msg_features(usbd_device *dev)
 {
-	// response: Features message (id 17), payload len 30
+	uint8_t response[64];
+	memzero(response, sizeof(response));
+	// response: Features message (id 17), payload len 25
 	//           - vendor = "trezor.io"
 	//           - major_version = VERSION_MAJOR
 	//           - minor_version = VERSION_MINOR
@@ -180,52 +184,33 @@ static void send_msg_features(usbd_device *dev)
 	//           - bootloader_mode = True
 	//           - firmware_present = True/False
 	//           - model = "1"
-	if (brand_new_firmware) {
-		while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
-			// header
-			"?##"
-			// msg_id
-			"\x00\x11"
-			// msg_size
-			"\x00\x00\x00\x16"
-			// data
-			"\x0a" "\x09" "trezor.io"
-			"\x10" VERSION_MAJOR_CHAR
-			"\x18" VERSION_MINOR_CHAR
-			"\x20" VERSION_PATCH_CHAR
-			"\x28" "\x01"
-			"\x90\x01" "\x00"
-			"\xaa" "\x01" "1"
-			// padding
-			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-			, 64) != 64) {}
-	} else {
-		while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
-			// header
-			"?##"
-			// msg_id
-			"\x00\x11"
-			// msg_size
-			"\x00\x00\x00\x16"
-			// data
-			"\x0a" "\x09" "trezor.io"
-			"\x10" VERSION_MAJOR_CHAR
-			"\x18" VERSION_MINOR_CHAR
-			"\x20" VERSION_PATCH_CHAR
-			"\x28" "\x01"
-			"\x90\x01" "\x01"
-			"\xaa" "\x01" "1"
-			// padding
-			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-			, 64) != 64) {}
-	}
+	memcpy(response,
+		// header
+		"?##"
+		// msg_id
+		"\x00\x11"
+		// msg_size
+		"\x00\x00\x00\x16"
+		// data
+		"\x0a" "\x09" "trezor.io"
+		"\x10" VERSION_MAJOR_CHAR
+		"\x18" VERSION_MINOR_CHAR
+		"\x20" VERSION_PATCH_CHAR
+		"\x28" "\x01"
+		"\x90\x01" "\x00"
+		"\xaa" "\x01" "1",
+		34);
+	response[30] = brand_new_firmware ? 0x01 : 0x00;
+	while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {}
 }
 
 static void send_msg_buttonrequest_firmwarecheck(usbd_device *dev)
 {
+	uint8_t response[64];
+	memzero(response, sizeof(response));
 	// response: ButtonRequest message (id 26), payload len 2
 	//           - code = ButtonRequest_FirmwareCheck (9)
-	while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN,
+	memcpy(response,
 		// header
 		"?##"
 		// msg_id
@@ -233,10 +218,10 @@ static void send_msg_buttonrequest_firmwarecheck(usbd_device *dev)
 		// msg_size
 		"\x00\x00\x00\x02"
 		// data
-		"\x08" "\x09"
-		// padding
-		"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-		, 64) != 64) {}
+		"\x08" "\x09",
+		11
+	);
+	while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {}
 }
 
 static void backup_metadata(uint8_t *backup)
@@ -551,8 +536,7 @@ void usbInit(void)
 	usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings, sizeof(usb_strings)/sizeof(const char *), usbd_control_buffer, sizeof(usbd_control_buffer));
 	usbd_register_set_config_callback(usbd_dev, set_config);
 	usb21_setup(usbd_dev, &bos_descriptor);
-	static const char* origin_url = "trezor.io/start";
-	webusb_setup(usbd_dev, origin_url);
+	webusb_setup(usbd_dev, "trezor.io/start");
 	winusb_setup(usbd_dev, USB_INTERFACE_INDEX_MAIN);
 }
 
