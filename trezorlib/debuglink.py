@@ -26,8 +26,9 @@ EXPECTED_RESPONSES_CONTEXT_LINES = 3
 
 
 class DebugLink:
-    def __init__(self, transport):
+    def __init__(self, transport, auto_interact=True):
         self.transport = transport
+        self.allow_interactions = auto_interact
 
     def open(self):
         self.transport.begin_session()
@@ -87,6 +88,8 @@ class DebugLink:
         return obj.passphrase_protection
 
     def input(self, word=None, button=None, swipe=None):
+        if not self.allow_interactions:
+            return
         decision = proto.DebugLinkDecision()
         if button is not None:
             decision.yes_no = button
@@ -130,6 +133,24 @@ class DebugLink:
         self._call(proto.DebugLinkFlashErase(sector=sector), nowait=True)
 
 
+class NullDebugLink(DebugLink):
+    def __init__(self):
+        super().__init__(None)
+
+    def open(self):
+        pass
+
+    def close(self):
+        pass
+
+    def _call(self, msg, nowait=False):
+        if not nowait:
+            if isinstance(msg, proto.DebugLinkGetState):
+                return proto.DebugLinkState()
+            else:
+                raise RuntimeError("unexpected call to a fake debuglink")
+
+
 class DebugUI:
     INPUT_FLOW_DONE = object()
 
@@ -171,8 +192,16 @@ class TrezorClientDebugLink(TrezorClient):
     # without special DebugLink interface provided
     # by the device.
 
-    def __init__(self, transport):
-        self.debug = DebugLink(transport.find_debug())
+    def __init__(self, transport, auto_interact=True):
+        try:
+            debug_transport = transport.find_debug()
+            self.debug = DebugLink(debug_transport, auto_interact)
+        except Exception:
+            if not auto_interact:
+                self.debug = NullDebugLink()
+            else:
+                raise
+
         self.ui = DebugUI(self.debug)
 
         self.in_with_statement = 0

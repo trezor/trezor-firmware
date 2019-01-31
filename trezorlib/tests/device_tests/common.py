@@ -15,7 +15,6 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from trezorlib import debuglink, device
-from trezorlib.debuglink import TrezorClientDebugLink
 from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 
 from . import conftest
@@ -35,8 +34,7 @@ class TrezorTest:
     pin8 = "45678978"
 
     def setup_method(self, method):
-        wirelink = conftest.get_device()
-        self.client = TrezorClientDebugLink(wirelink)
+        self.client = conftest.get_device()
         # self.client.set_buttonwait(3)
 
         device.wipe(self.client)

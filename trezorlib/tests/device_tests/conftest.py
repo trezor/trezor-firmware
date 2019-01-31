@@ -30,20 +30,26 @@ TREZOR_VERSION = None
 def get_device():
     path = os.environ.get("TREZOR_PATH")
     if path:
-        return get_transport(path)
+        transport = get_transport(path)
     else:
         devices = enumerate_devices()
         for device in devices:
             if hasattr(device, "find_debug"):
-                return device
-        raise RuntimeError("No debuggable device found")
+                transport = device
+                break
+        else:
+            raise RuntimeError("No debuggable device found")
+    env_interactive = int(os.environ.get("INTERACT", 0))
+    try:
+        return TrezorClientDebugLink(transport, auto_interact=not env_interactive)
+    except Exception as e:
+        raise RuntimeError(
+            "Failed to open debuglink for {}".format(transport.get_path())
+        ) from e
 
 
 def device_version():
-    device = get_device()
-    if not device:
-        raise RuntimeError()
-    client = TrezorClientDebugLink(device)
+    client = get_device()
     if client.features.model == "T":
         return 2
     else:
@@ -52,8 +58,7 @@ def device_version():
 
 @pytest.fixture(scope="function")
 def client():
-    wirelink = get_device()
-    client = TrezorClientDebugLink(wirelink)
+    client = get_device()
     wipe_device(client)
 
     client.open()
@@ -99,6 +104,11 @@ def pytest_addoption(parser):
         "List of markers that will run even tests that are marked as xfail",
         "args",
         [],
+    )
+    parser.addoption(
+        "--interactive",
+        action="store_true",
+        help="Wait for user to do interaction manually",
     )
 
 
