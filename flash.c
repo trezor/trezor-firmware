@@ -71,7 +71,7 @@ const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size)
     if (addr + size > next) {
         return NULL;
     }
-    return (const void *)addr;
+    return (const void *) FLASH_PTR(addr);
 }
 
 secbool flash_erase(uint8_t sector)
@@ -83,7 +83,7 @@ secbool flash_erase(uint8_t sector)
 	// Check whether the sector was really deleted (contains only 0xFF).
 	const uint32_t addr_start = FLASH_SECTOR_TABLE[sector], addr_end = FLASH_SECTOR_TABLE[sector + 1];
 	for (uint32_t addr = addr_start; addr < addr_end; addr += 4) {
-		if (*((const uint32_t *)addr) != 0xFFFFFFFF) {
+		if (*((const uint32_t *)FLASH_PTR(addr)) != 0xFFFFFFFF) {
 			return secfalse;
 		}
 	}
@@ -92,19 +92,19 @@ secbool flash_erase(uint8_t sector)
 
 secbool flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data)
 {
-    uint32_t address = (uint32_t)flash_get_address(sector, offset, 1);
-    if (address == 0) {
+    uint8_t *address = (uint8_t *) flash_get_address(sector, offset, 1);
+    if (address == NULL) {
         return secfalse;
     }
 
-    if ((*((uint8_t*)address) & data) != data) {
+    if ((*address & data) != data) {
     	return secfalse;
     }
 
 	svc_flash_program(FLASH_CR_PROGRAM_X8);
-	flash_write8(address, data);
+	*(volatile uint8_t *) address = data;
 
-    if (*((uint8_t*)address) != data) {
+    if (*address != data) {
     	return secfalse;
     }
 
@@ -113,8 +113,8 @@ secbool flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data)
 
 secbool flash_write_word(uint8_t sector, uint32_t offset, uint32_t data)
 {
-    uint32_t address = (uint32_t)flash_get_address(sector, offset, 4);
-    if (address == 0) {
+    uint32_t *address = (uint32_t *) flash_get_address(sector, offset, 4);
+    if (address == NULL) {
         return secfalse;
     }
 
@@ -122,14 +122,14 @@ secbool flash_write_word(uint8_t sector, uint32_t offset, uint32_t data)
         return secfalse;
     }
 
-    if ((*((uint32_t*)address) & data) != data) {
+    if ((*address & data) != data) {
     	return secfalse;
     }
 
 	svc_flash_program(FLASH_CR_PROGRAM_X32);
-	flash_write32(address, data);
+	*(volatile uint32_t *) address = data;
 
-    if (*((uint32_t*)address) != data) {
+    if (*address != data) {
     	return secfalse;
     }
 

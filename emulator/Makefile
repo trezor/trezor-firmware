@@ -3,7 +3,7 @@ EMULATOR := 1
 OBJS += setup.o
 
 OBJS += buttons.o
-OBJS += flash.o
+OBJS += memory.o
 OBJS += oled.o
 OBJS += rng.o
 OBJS += timer.o

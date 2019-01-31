@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_FLASH_H
-#define TREZORHAL_FLASH_H
+#ifndef FLASH_H
+#define FLASH_H
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -44,4 +44,4 @@ secbool __wur flash_erase(uint8_t sector);
 secbool __wur flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data);
 secbool __wur flash_write_word(uint8_t sector, uint32_t offset, uint32_t data);
 
-#endif // TREZORHAL_FLASH_H
+#endif // FLASH_H
