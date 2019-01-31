@@ -118,9 +118,11 @@ static void erase_sector(uint8_t sector, secbool set_magic)
 
 #if NORCOW_HEADER_LEN > 0
     // Copy the sector header back.
+    ensure(flash_unlock_write(), NULL);
     for (uint32_t i = 0; i < NORCOW_HEADER_LEN/sizeof(uint32_t); ++i) {
         ensure(flash_write_word(norcow_sectors[sector], i*sizeof(uint32_t), header_backup[i]), NULL);
     }
+    ensure(flash_lock_write(), NULL);
 #endif
 
     if (sectrue == set_magic) {
