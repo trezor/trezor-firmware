@@ -68,6 +68,7 @@ static uint32_t lock_time = 0;
 static uint32_t expiry = 0;
 static bool overwintered = false;
 static uint32_t version_group_id = 0;
+static uint32_t branch_id = 0;
 static uint32_t next_nonsegwit_input;
 static uint32_t progress, progress_step, progress_meta_step;
 static bool multisig_fp_set, multisig_fp_mismatch;
@@ -485,6 +486,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 	expiry = msg->expiry;
 	overwintered = msg->has_overwintered && msg->overwintered;
 	version_group_id = msg->version_group_id;
+	branch_id = msg->branch_id;
 
 	uint32_t size = TXSIZE_HEADER + TXSIZE_FOOTER + ser_length_size(inputs_count) + ser_length_size(outputs_count);
 	if (coin->decred) {
@@ -768,9 +770,11 @@ static void signing_hash_bip143(const TxInputType *txinput, uint8_t *hash) {
 
 static void signing_hash_zip143(const TxInputType *txinput, uint8_t *hash) {
 	uint32_t hash_type = signing_hash_type();
+	uint8_t personal[16];
+	memcpy(personal, "ZcashSigHash", 12);
+	memcpy(personal + 12, &branch_id, 4);
 	Hasher hasher_preimage;
-	// BRANCH_ID = 0x5ba81b19 / Overwinter
-	hasher_InitParam(&hasher_preimage, HASHER_BLAKE2B_PERSONAL, "ZcashSigHash\x19\x1b\xa8\x5b", 16);
+	hasher_InitParam(&hasher_preimage, HASHER_BLAKE2B_PERSONAL, personal, sizeof(personal));
 	uint32_t ver = version | TX_OVERWINTERED;												// 1. nVersion | fOverwintered
 	hasher_Update(&hasher_preimage, (const uint8_t *)&ver, 4);
 	hasher_Update(&hasher_preimage, (const uint8_t *)&version_group_id, 4);					// 2. nVersionGroupId
@@ -793,9 +797,11 @@ static void signing_hash_zip143(const TxInputType *txinput, uint8_t *hash) {
 
 static void signing_hash_zip243(const TxInputType *txinput, uint8_t *hash) {
 	uint32_t hash_type = signing_hash_type();
+	uint8_t personal[16];
+	memcpy(personal, "ZcashSigHash", 12);
+	memcpy(personal + 12, &branch_id, 4);
 	Hasher hasher_preimage;
-	// BRANCH_ID = 0x76b809bb / Sapling
-	hasher_InitParam(&hasher_preimage, HASHER_BLAKE2B_PERSONAL, "ZcashSigHash\xbb\x09\xb8\x76", 16);
+	hasher_InitParam(&hasher_preimage, HASHER_BLAKE2B_PERSONAL, personal, sizeof(personal));
 	uint32_t ver = version | TX_OVERWINTERED;													// 1. nVersion | fOverwintered
 	hasher_Update(&hasher_preimage, (const uint8_t *)&ver, 4);
 	hasher_Update(&hasher_preimage, (const uint8_t *)&version_group_id, 4);						// 2. nVersionGroupId
