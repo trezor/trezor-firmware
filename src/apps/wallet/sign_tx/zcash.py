@@ -1,3 +1,4 @@
+import ustruct as struct
 from micropython import const
 
 from trezor.crypto.hashlib import blake2b
@@ -45,7 +46,8 @@ def derive_script_code(txi: TxInputType, pubkeyhash: bytes) -> bytearray:
 
 
 class Zip143:
-    def __init__(self):
+    def __init__(self, branch_id):
+        self.branch_id = branch_id
         self.h_prevouts = HashWriter(blake2b(outlen=32, personal=b"ZcashPrevoutHash"))
         self.h_sequence = HashWriter(blake2b(outlen=32, personal=b"ZcashSequencHash"))
         self.h_outputs = HashWriter(blake2b(outlen=32, personal=b"ZcashOutputsHash"))
@@ -78,8 +80,10 @@ class Zip143:
         sighash: int,
     ) -> bytes:
         h_preimage = HashWriter(
-            blake2b(outlen=32, personal=b"ZcashSigHash\x19\x1b\xa8\x5b")
-        )  # BRANCH_ID = 0x5ba81b19 / Overwinter
+            blake2b(
+                outlen=32, personal=b"ZcashSigHash" + struct.pack("<I", self.branch_id)
+            )
+        )
 
         ensure(tx.overwintered)
         ensure(tx.version == 3)
@@ -111,8 +115,8 @@ class Zip143:
 
 
 class Zip243(Zip143):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, branch_id):
+        super().__init__(branch_id)
 
     def preimage_hash(
         self,
@@ -123,8 +127,10 @@ class Zip243(Zip143):
         sighash: int,
     ) -> bytes:
         h_preimage = HashWriter(
-            blake2b(outlen=32, personal=b"ZcashSigHash\xbb\x09\xb8\x76")
-        )  # BRANCH_ID = 0x76b809bb / Sapling
+            blake2b(
+                outlen=32, personal=b"ZcashSigHash" + struct.pack("<I", self.branch_id)
+            )
+        )
 
         ensure(tx.overwintered)
         ensure(tx.version == 4)

@@ -185,7 +185,7 @@ class TestZcashZip243(unittest.TestCase):
                 overwintered=(v["version"] >= 3),
                 version_group_id=v["version_group_id"],
             )
-            zip243 = Zip243()
+            zip243 = Zip243(0x76b809bb)  # Sapling
             for i in v["inputs"]:
                 txi = TxInputType()
                 txi.amount = i["amount"]
