@@ -342,6 +342,8 @@ void config_init(void)
     // TODO Add salt.
     storage_init(&protectPinUiCallback, (const uint8_t*)"", 0);
 
+    storage_unlock(1);
+
     uint16_t len = 0;
     if (sectrue == storage_get(KEY_UUID, config_uuid, sizeof(config_uuid), &len) && len == sizeof(config_uuid)) {
         data2hex(config_uuid, sizeof(config_uuid), config_uuid_str);
@@ -432,9 +434,6 @@ void config_dumpNode(HDNodeType *node)
 
 void config_loadDevice(const LoadDevice *msg)
 {
-    session_clear(true);
-    // TODO We can't set anything with the storage locked. Shouldn't we wipe?
-
     config_set_bool(KEY_IMPORTED, true);
     config_setPassphraseProtection(msg->has_passphrase_protection && msg->passphrase_protection);
 
@@ -459,6 +458,8 @@ void config_loadDevice(const LoadDevice *msg)
     if (msg->has_u2f_counter) {
         config_setU2FCounter(msg->u2f_counter);
     }
+
+    session_clear(true);
 }
 
 void config_setLabel(const char *label)
