@@ -481,7 +481,7 @@ void config_setLanguage(const char *lang)
     if (strcmp(lang, "english") != 0) {
         return;
     }
-    storage_set(KEY_LABEL, lang, strnlen(lang, MAX_LANGUAGE_LEN));
+    storage_set(KEY_LANGUAGE, lang, strnlen(lang, MAX_LANGUAGE_LEN));
 }
 
 void config_setPassphraseProtection(bool passphrase_protection)
