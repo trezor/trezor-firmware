@@ -37,6 +37,22 @@ def get_device():
         raise RuntimeError("No debuggable device found")
 
 
+def pin_input_flow(client, old_pin, new_pin):
+    # do you want to change pin?
+    yield
+    client.debug.press_yes()
+    if old_pin is not None:
+        # enter old pin
+        yield
+        client.debug.input(old_pin)
+    # enter new pin
+    yield
+    client.debug.input(new_pin)
+    # repeat new pin
+    yield
+    client.debug.input(new_pin)
+
+
 if __name__ == "__main__":
     wirelink = get_device()
     client = TrezorClientDebugLink(wirelink)
@@ -45,6 +61,8 @@ if __name__ == "__main__":
     device.reset(client, no_backup=True)
 
     i = 0
+
+    last_pin = None
 
     while True:
         # set private field
@@ -57,6 +75,13 @@ if __name__ == "__main__":
         label = "".join(random.choices(string.ascii_uppercase + string.digits, k=17))
         device.apply_settings(client, label=label)
         assert client.features.label == label
+
+        # change PIN
+        new_pin = "".join(random.choices(string.digits, k=random.randint(6, 10)))
+        client.set_input_flow(pin_input_flow(client, last_pin, new_pin))
+        device.change_pin(client)
+        client.set_input_flow(None)
+        last_pin = new_pin
 
         print("iteration %d" % i)
         i = i + 1
