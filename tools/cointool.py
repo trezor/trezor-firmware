@@ -672,13 +672,13 @@ def dump(
             filter = filter.lower()
             if field not in coin:
                 return False
-            if not fnmatch.fnmatch(coin[field].lower(), filter):
+            if not fnmatch.fnmatch(str(coin[field]).lower(), filter):
                 return False
         for field, filter in exclude_filters:
             filter = filter.lower()
             if field not in coin:
                 continue
-            if fnmatch.fnmatch(coin[field].lower(), filter):
+            if fnmatch.fnmatch(str(coin[field]).lower(), filter):
                 return False
         if device:
             is_supported = support_info[coin["key"]].get(device, None)
