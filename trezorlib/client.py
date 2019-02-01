@@ -52,6 +52,25 @@ def get_buttonrequest_value(code):
     ][0]
 
 
+def get_default_client(path=None, ui=None, **kwargs):
+    """Get a client for a connected Trezor device.
+
+    Returns a TrezorClient instance with minimum fuss.
+
+    If no path is specified, finds first connected Trezor. Otherwise performs
+    a prefix-search for the specified device. If no UI is supplied, instantiates
+    the default CLI UI.
+    """
+    from .transport import get_transport
+    from .ui import ClickUI
+
+    transport = get_transport(path, prefix_search=True)
+    if ui is None:
+        ui = ClickUI()
+
+    return TrezorClient(transport, ui, **kwargs)
+
+
 class TrezorClient:
     """Trezor client, a connection to a Trezor device.
 
