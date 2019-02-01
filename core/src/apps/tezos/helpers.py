@@ -1,9 +1,16 @@
 from micropython import const
 
+from trezor import config
+
 from trezor.crypto import base58
 
 from apps.common import HARDENED
 from apps.common.writers import write_uint8
+
+_TEZOS = const(0x05)                # Tezos namespace
+_TYPE = const(0x00)                 # Key for operation type
+_BLOCK_LEVEL = const(0x01)          # Key for last signed block level
+_ENDORSEMENT_LEVEL = const(0x02)    # Key for last signed endorsement level
 
 TEZOS_AMOUNT_DIVISIBILITY = const(6)
 TEZOS_ED25519_ADDRESS_PREFIX = "tz1"
@@ -71,3 +78,37 @@ def write_bool(w: bytearray, boolean: bool):
         write_uint8(w, 255)
     else:
         write_uint8(w, 0)
+
+
+def get_last_block_level():
+    level = config.get(_TEZOS, _BLOCK_LEVEL, True)
+    if not level:
+        return 0
+    return int.from_bytes(level, 'big')
+
+
+def get_last_endorsement_level():
+    level = config.get(_TEZOS, _ENDORSEMENT_LEVEL, True)
+    if not level:
+        return 0
+    return int.from_bytes(level, 'big')
+
+
+def set_last_block_level(level):
+    config.set(_TEZOS, _BLOCK_LEVEL, level.to_bytes(4, 'big'), True)
+
+
+def set_last_endorsement_level(level):
+    config.set(_TEZOS, _ENDORSEMENT_LEVEL, level.to_bytes(4, 'big'), True)
+
+
+def get_last_type():
+    op_type = config.get(_TEZOS, _TYPE, True)
+    if not op_type:
+        return "None"
+    op_type = int.from_bytes(op_type, 'big')
+    return "Block" if op_type == 1 else "Endorsement"
+
+
+def set_last_type(wm):
+    config.set(_TEZOS, _TYPE, wm.to_bytes(1, 'big'), True)

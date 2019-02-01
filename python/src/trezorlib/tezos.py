@@ -36,3 +36,18 @@ def get_public_key(client, address_n, show_display=False):
 def sign_tx(client, address_n, sign_tx_msg):
     sign_tx_msg.address_n = address_n
     return client.call(sign_tx_msg)
+
+
+@expect(messages.TezosSignedBakerOp)
+def sign_baker_op(client, address_n, sign_baker_msg, show_display=False):
+    sign_baker_msg.address_n = address_n
+    sign_baker_msg.show_display = show_display
+    print(show_display)
+    return client.call(sign_baker_msg)
+
+
+@expect(messages.Success)
+def control_baking(client):
+    return client.call(
+        messages.TezosControlBaking()
+    )

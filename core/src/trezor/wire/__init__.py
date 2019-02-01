@@ -1,5 +1,7 @@
+from micropython import const
+
 import protobuf
-from trezor import log, loop, messages, utils, workflow
+from trezor import config, log, loop, messages, utils, wire, workflow
 from trezor.messages import FailureType
 from trezor.wire import codec_v1
 from trezor.wire.errors import Error
@@ -300,3 +302,10 @@ async def read_full_msg(reader: codec_v1.Reader) -> None:
     while reader.size > 0:
         buf = bytearray(reader.size)
         await reader.areadinto(buf)
+
+
+def clear_handlers(keep: list):
+    # remove all handlers, except the ones used in tezos baking
+    for handler in workflow_handlers.keys():
+        if handler not in keep:
+            workflow_handlers.pop(handler, None)

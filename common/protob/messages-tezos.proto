@@ -156,3 +156,66 @@ message TezosSignedTx {
     optional bytes sig_op_contents = 2;     // operation_bytes + signed operation_bytes
     optional string operation_hash = 3;     // b58 encoded hashed operation contents with prefix
 }
+
+/**
+ * Request: Ask device to sign Tezos baker operations
+ * @start
+ * @next TezosSignedBakerOp
+ */
+message TezosSignBakerOp {
+    repeated uint32 address_n = 1;
+    //force set the magic byte
+    //optional bytes magic_byte = 2;
+    optional bytes chain_id = 2;
+    optional TezosEndorsement endorsement = 3;
+    optional TezosBlockHeader block_header = 4;
+    optional bool show_display = 5;     // optionally show on display before sending the result
+
+    /**
+     * Structure representing endorsement
+     * see https://tezos.gitlab.io/master/api/p2p.html#
+     */
+    message TezosEndorsement {
+        optional bytes branch = 1;
+        //force set the tag
+        //optional uint64 tag = 2;
+        optional uint64 level = 2;
+    }
+
+    /**
+     * Structure representing block header
+     * see https://tezos.gitlab.io/master/api/p2p.html#
+     */
+    message TezosBlockHeader {
+        optional uint64 level = 1;
+        optional uint64 proto = 2;
+        optional bytes predecessor = 3;
+        optional uint64 timestamp = 4;
+        optional uint64 validation_pass = 5;
+        optional bytes operations_hash = 6;
+        optional uint64 bytes_in_field_fitness = 7;
+        optional uint64 bytes_in_next_field = 8;
+        optional bytes fitness = 9;
+        optional bytes context = 10;
+        optional uint64 priority = 11;
+        optional bytes proof_of_work_nonce = 12;
+        optional bool presence_of_field_seed_nonce_hash = 13;
+        optional bytes seed_nonce_hash = 14;
+    }
+}
+
+/**
+ * Response: Contains Tezos baker operation signature
+ * @end
+ */
+message TezosSignedBakerOp {
+    optional string signature = 1;
+}
+
+/**
+ * Request: Activate/Deactivate staking mode
+ * @start
+ * @next Success
+ */
+message TezosControlBaking {
+}

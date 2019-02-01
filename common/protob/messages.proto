@@ -141,6 +141,9 @@ enum MessageType {
     MessageType_TezosSignedTx = 153 [(wire_out) = true];
     MessageType_TezosGetPublicKey = 154 [(wire_in) = true];
     MessageType_TezosPublicKey = 155 [(wire_out) = true];
+    MessageType_TezosSignBakerOp = 156 [(wire_in) = true];
+    MessageType_TezosSignedBakerOp = 157 [(wire_out) = true];
+    MessageType_TezosControlBaking = 158 [(wire_in) = true];
 
     // Stellar
     MessageType_StellarSignTx = 202 [(wire_in) = true];
