@@ -106,7 +106,6 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 	memzero(int_entropy, 32);
 	awaiting_entropy = false;
 
-
 	if (skip_backup || no_backup) {
 	    if (no_backup) {
 	        config_setNoBackup();
@@ -127,7 +126,7 @@ static char current_word[10];
 // separated == true if called as a separate workflow via BackupMessage
 void reset_backup(bool separated, const char* mnemonic)
 {
-	if (!config_needsBackup()) {
+	if (separated && !config_needsBackup()) {
 		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Seed already backed up"));
 		return;
 	}

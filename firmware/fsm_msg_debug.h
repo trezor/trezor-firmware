@@ -54,7 +54,7 @@ void fsm_msgDebugLinkGetState(const DebugLinkGetState *msg)
 
 	if (config_hasMnemonic()) {
 		resp.has_mnemonic = true;
-		strlcpy(resp.mnemonic, config_getMnemonic(), sizeof(resp.mnemonic));
+		config_getMnemonic(resp.mnemonic, sizeof(resp.mnemonic));
 	}
 
 	if (config_hasNode()) {
