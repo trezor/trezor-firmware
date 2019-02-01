@@ -250,7 +250,7 @@ static secbool auth_get(uint16_t key, const void **val, uint16_t *len)
     // Cache the authentication sum.
     for (size_t i = 0; i < SHA256_DIGEST_LENGTH/sizeof(uint32_t); i++) {
 #if BYTE_ORDER == LITTLE_ENDIAN
-        REVERSE32(((uint32_t*)authentication_sum)[i], sum[i]);
+        REVERSE32(sum[i], ((uint32_t*)authentication_sum)[i]);
 #else
         ((uint32_t*)authentication_sum)[i] = sum[i];
 #endif
@@ -690,10 +690,8 @@ static secbool unlock(uint32_t pin)
     memzero(keys, sizeof(keys));
     memzero(tag, sizeof(tag));
 
-    // Call auth_get() to initialize the authentication_sum.
-    auth_get(0, &buffer, &len);
-
     // Check that the authenticated version number matches the norcow version.
+    // NOTE: storage_get_encrypted() calls auth_get(), which initializes the authentication_sum.
     uint32_t version;
     if (sectrue != storage_get_encrypted(VERSION_KEY, &version, sizeof(version), &len) || len != sizeof(version) || version != norcow_active_version) {
         handle_fault();
