@@ -240,6 +240,10 @@ class TrezorClientDebugLink(TrezorClient):
             return msg
 
     def set_input_flow(self, input_flow):
+        if input_flow is None:
+            self.ui.input_flow = None
+            return
+
         if callable(input_flow):
             input_flow = input_flow()
         if not hasattr(input_flow, "send"):
