@@ -26,6 +26,8 @@ message MultisigRedeemScriptType {
     repeated HDNodePathType pubkeys = 1;    // pubkeys from multisig address (sorted lexicographically)
     repeated bytes signatures = 2;          // existing signatures for partially signed input
     optional uint32 m = 3;                  // "m" from n, how many valid signatures is necessary for spending
+    repeated hw.trezor.messages.common.HDNodeType nodes = 4;    // simplified way how to specify pubkeys if they share the same address_n path
+    repeated uint32 common_address_n = 5;                       // use only field 1 or fields 4+5, if fields 4+5 are used, field 1 is ignored
     /**
     * Structure representing HDNode + Path
     */
