@@ -45,6 +45,8 @@ static const struct MessagesMap_t MessagesMap[] = {
 	{0, 0, 0, 0, 0}
 };
 
+#include "messages_map_limits.h"
+
 const pb_field_t *MessageFields(char type, char dir, uint16_t msg_id)
 {
 	const struct MessagesMap_t *m = MessagesMap;
