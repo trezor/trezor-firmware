@@ -69,31 +69,22 @@ class TestMultisigChange(TrezorTest):
     #   input 1: 0.001 BTC
 
     multisig_in1 = proto.MultisigRedeemScriptType(
-        pubkeys=[
-            proto.HDNodePathType(node=node_ext2, address_n=[0, 0]),
-            proto.HDNodePathType(node=node_ext1, address_n=[0, 0]),
-            proto.HDNodePathType(node=node_int, address_n=[0, 0]),
-        ],
+        nodes=[node_ext2, node_ext1, node_int],
+        address_n=[0, 0],
         signatures=[b"", b"", b""],
         m=2,
     )
 
     multisig_in2 = proto.MultisigRedeemScriptType(
-        pubkeys=[
-            proto.HDNodePathType(node=node_ext1, address_n=[0, 1]),
-            proto.HDNodePathType(node=node_ext2, address_n=[0, 1]),
-            proto.HDNodePathType(node=node_int, address_n=[0, 1]),
-        ],
+        nodes=[node_ext1, node_ext2, node_int],
+        address_n=[0, 1],
         signatures=[b"", b"", b""],
         m=2,
     )
 
     multisig_in3 = proto.MultisigRedeemScriptType(
-        pubkeys=[
-            proto.HDNodePathType(node=node_ext1, address_n=[0, 1]),
-            proto.HDNodePathType(node=node_ext3, address_n=[0, 1]),
-            proto.HDNodePathType(node=node_int, address_n=[0, 1]),
-        ],
+        nodes=[node_ext1, node_ext3, node_int],
+        address_n=[0, 1],
         signatures=[b"", b"", b""],
         m=2,
     )
@@ -395,11 +386,8 @@ class TestMultisigChange(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         multisig_out1 = proto.MultisigRedeemScriptType(
-            pubkeys=[
-                proto.HDNodePathType(node=self.node_ext2, address_n=[1, 0]),
-                proto.HDNodePathType(node=self.node_ext1, address_n=[1, 0]),
-                proto.HDNodePathType(node=self.node_int, address_n=[1, 0]),
-            ],
+            nodes=[self.node_ext2, self.node_ext1, self.node_int],
+            address_n=[1, 0],
             signatures=[b"", b"", b""],
             m=2,
         )
@@ -439,11 +427,8 @@ class TestMultisigChange(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         multisig_out2 = proto.MultisigRedeemScriptType(
-            pubkeys=[
-                proto.HDNodePathType(node=self.node_ext1, address_n=[1, 1]),
-                proto.HDNodePathType(node=self.node_ext2, address_n=[1, 1]),
-                proto.HDNodePathType(node=self.node_int, address_n=[1, 1]),
-            ],
+            nodes=[self.node_ext1, self.node_ext2, self.node_int],
+            address_n=[1, 1],
             signatures=[b"", b"", b""],
             m=2,
         )
@@ -483,11 +468,8 @@ class TestMultisigChange(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         multisig_out2 = proto.MultisigRedeemScriptType(
-            pubkeys=[
-                proto.HDNodePathType(node=self.node_ext1, address_n=[1, 0]),
-                proto.HDNodePathType(node=self.node_int, address_n=[1, 0]),
-                proto.HDNodePathType(node=self.node_ext3, address_n=[1, 0]),
-            ],
+            nodes=[self.node_ext1, self.node_int, self.node_ext3],
+            address_n=[1, 0],
             signatures=[b"", b"", b""],
             m=2,
         )
@@ -525,11 +507,8 @@ class TestMultisigChange(TrezorTest):
         self.setup_mnemonic_nopin_nopassphrase()
 
         multisig_out1 = proto.MultisigRedeemScriptType(
-            pubkeys=[
-                proto.HDNodePathType(node=self.node_ext2, address_n=[1, 0]),
-                proto.HDNodePathType(node=self.node_ext1, address_n=[1, 0]),
-                proto.HDNodePathType(node=self.node_int, address_n=[1, 0]),
-            ],
+            nodes=[self.node_ext2, self.node_ext1, self.node_int],
+            address_n=[1, 0],
             signatures=[b"", b"", b""],
             m=2,
         )

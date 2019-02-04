@@ -290,10 +290,8 @@ class TestMsgSigntxDecred(TrezorTest):
         def create_multisig(index, address, signatures=None):
             address_n = parse_path(address)
             multisig = proto.MultisigRedeemScriptType(
-                pubkeys=[
-                    proto.HDNodePathType(node=node, address_n=address_n)
-                    for node in nodes
-                ],
+                nodes=nodes,
+                address_n=address_n,
                 signatures=signatures,
                 m=2,
             )

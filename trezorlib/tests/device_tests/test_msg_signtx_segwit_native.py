@@ -410,14 +410,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             for index in range(1, 4)
         ]
         multisig = proto.MultisigRedeemScriptType(
-            pubkeys=list(
-                map(
-                    lambda n: proto.HDNodePathType(
-                        node=deserialize(n.xpub), address_n=[0, 0]
-                    ),
-                    nodes,
-                )
-            ),
+            nodes=[deserialize(n.xpub) for n in nodes],
+            address_n=[0, 0],
             signatures=[b"", b"", b""],
             m=2,
         )
@@ -517,14 +511,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             for index in range(1, 4)
         ]
         multisig = proto.MultisigRedeemScriptType(
-            pubkeys=list(
-                map(
-                    lambda n: proto.HDNodePathType(
-                        node=deserialize(n.xpub), address_n=[0, 1]
-                    ),
-                    nodes,
-                )
-            ),
+            nodes=[deserialize(n.xpub) for n in nodes],
+            address_n=[0, 1],
             signatures=[b"", b"", b""],
             m=2,
         )
@@ -624,26 +612,14 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             for index in range(1, 4)
         ]
         multisig = proto.MultisigRedeemScriptType(
-            pubkeys=list(
-                map(
-                    lambda n: proto.HDNodePathType(
-                        node=deserialize(n.xpub), address_n=[1, 0]
-                    ),
-                    nodes,
-                )
-            ),
+            nodes=[deserialize(n.xpub) for n in nodes],
+            address_n=[1, 0],
             signatures=[b"", b"", b""],
             m=2,
         )
         multisig2 = proto.MultisigRedeemScriptType(
-            pubkeys=list(
-                map(
-                    lambda n: proto.HDNodePathType(
-                        node=deserialize(n.xpub), address_n=[1, 1]
-                    ),
-                    nodes,
-                )
-            ),
+            nodes=[deserialize(n.xpub) for n in nodes],
+            address_n=[1, 1],
             signatures=[b"", b"", b""],
             m=2,
         )
@@ -743,26 +719,14 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             for index in range(1, 4)
         ]
         multisig = proto.MultisigRedeemScriptType(
-            pubkeys=list(
-                map(
-                    lambda n: proto.HDNodePathType(
-                        node=deserialize(n.xpub), address_n=[1, 1]
-                    ),
-                    nodes,
-                )
-            ),
+            nodes=[deserialize(n.xpub) for n in nodes],
+            address_n=[1, 1],
             signatures=[b"", b"", b""],
             m=2,
         )
         multisig2 = proto.MultisigRedeemScriptType(
-            pubkeys=list(
-                map(
-                    lambda n: proto.HDNodePathType(
-                        node=deserialize(n.xpub), address_n=[1, 2]
-                    ),
-                    nodes,
-                )
-            ),
+            nodes=[deserialize(n.xpub) for n in nodes],
+            address_n=[1, 2],
             signatures=[b"", b"", b""],
             m=2,
         )

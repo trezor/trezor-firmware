@@ -78,14 +78,8 @@ class TestMsgGetaddressSegwit(TrezorTest):
             range(1, 4),
         )
         multisig1 = proto.MultisigRedeemScriptType(
-            pubkeys=list(
-                map(
-                    lambda n: proto.HDNodePathType(
-                        node=bip32.deserialize(n.xpub), address_n=[2, 0]
-                    ),
-                    nodes,
-                )
-            ),
+            nodes=[bip32.deserialize(n.xpub) for n in nodes],
+            address_n=[2, 0],
             signatures=[b"", b"", b""],
             m=2,
         )

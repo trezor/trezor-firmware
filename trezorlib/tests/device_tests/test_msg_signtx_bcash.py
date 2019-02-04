@@ -424,14 +424,8 @@ class TestMsgSigntxBch(TrezorTest):
 
         def getmultisig(chain, nr, signatures=[b"", b"", b""], xpubs=xpubs):
             return proto.MultisigRedeemScriptType(
-                pubkeys=list(
-                    map(
-                        lambda xpub: proto.HDNodePathType(
-                            node=deserialize(xpub), address_n=[chain, nr]
-                        ),
-                        xpubs,
-                    )
-                ),
+                nodes=[deserialize(xpub) for xpub in xpubs],
+                address_n=[chain, nr],
                 signatures=signatures,
                 m=2,
             )
@@ -524,14 +518,8 @@ class TestMsgSigntxBch(TrezorTest):
 
         def getmultisig(chain, nr, signatures=[b"", b"", b""], xpubs=xpubs):
             return proto.MultisigRedeemScriptType(
-                pubkeys=list(
-                    map(
-                        lambda xpub: proto.HDNodePathType(
-                            node=deserialize(xpub), address_n=[chain, nr]
-                        ),
-                        xpubs,
-                    )
-                ),
+                nodes=[deserialize(xpub) for xpub in xpubs],
+                address_n=[chain, nr],
                 signatures=signatures,
                 m=2,
             )

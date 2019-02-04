@@ -40,14 +40,8 @@ class TestMultisig(TrezorTest):
         ]
 
         multisig = proto.MultisigRedeemScriptType(
-            pubkeys=list(
-                map(
-                    lambda n: proto.HDNodePathType(
-                        node=deserialize(n.xpub), address_n=[0, 0]
-                    ),
-                    nodes,
-                )
-            ),
+            nodes=[deserialize(n.xpub) for n in nodes],
+            address_n=[0, 0],
             signatures=[b"", b"", b""],
             m=2,
         )
@@ -131,14 +125,8 @@ class TestMultisig(TrezorTest):
         # Let's do second signature using 3rd key
 
         multisig = proto.MultisigRedeemScriptType(
-            pubkeys=list(
-                map(
-                    lambda n: proto.HDNodePathType(
-                        node=deserialize(n.xpub), address_n=[0, 0]
-                    ),
-                    nodes,
-                )
-            ),
+            nodes=[deserialize(n.xpub) for n in nodes],
+            address_n=[0, 0],
             signatures=[
                 signatures1[0],
                 b"",

@@ -25,10 +25,8 @@ from .common import TrezorTest
 
 def getmultisig(chain, nr, xpubs, signatures=[b"", b"", b""]):
     return proto.MultisigRedeemScriptType(
-        pubkeys=[
-            proto.HDNodePathType(node=bip32.deserialize(xpub), address_n=[chain, nr])
-            for xpub in xpubs
-        ],
+        nodes=[bip32.deserialize(xpub) for xpub in xpubs],
+        address_n=[chain, nr],
         signatures=signatures,
         m=2,
     )
