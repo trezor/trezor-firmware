@@ -1,7 +1,6 @@
 from trezor.crypto import bip32
 from trezor.crypto.hashlib import sha256
 from trezor.messages import FailureType
-from trezor.messages.HDNodePathType import HDNodePathType
 from trezor.messages.HDNodeType import HDNodeType
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
 from trezor.utils import HashWriter, ensure
@@ -93,9 +92,7 @@ def multisig_get_pubkey(n: HDNodeType, p: list) -> bytes:
 
 def multisig_get_pubkeys(multisig: MultisigRedeemScriptType):
     if multisig.nodes:
-        return [
-            multisig_get_pubkey(hd, multisig.address_n) for hd in multisig.nodes
-        ]
+        return [multisig_get_pubkey(hd, multisig.address_n) for hd in multisig.nodes]
     else:
         return [multisig_get_pubkey(hd.node, hd.address_n) for hd in multisig.pubkeys]
 
