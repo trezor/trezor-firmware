@@ -5,5 +5,5 @@ let
 in
   stdenv.mkDerivation {
     name = "trezor-common-dev";
-    buildInputs = [ myPython python27Packages.demjson graphviz ];
+    buildInputs = [ myPython python2Packages.demjson graphviz protobuf ];
   }
