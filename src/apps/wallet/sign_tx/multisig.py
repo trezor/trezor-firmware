@@ -101,4 +101,4 @@ def multisig_get_pubkey_count(multisig: MultisigRedeemScriptType):
     if multisig.nodes:
         return len(multisig.nodes)
     else:
-        len(multisig.pubkeys)
+        return len(multisig.pubkeys)
