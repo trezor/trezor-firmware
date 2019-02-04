@@ -448,6 +448,10 @@ static secbool pin_logs_init(uint32_t fails)
  */
 static void init_wiped_storage(void)
 {
+    if (sectrue != initialized) {
+        // We cannot initialize the storage contents if the hardware_salt is not set.
+        return;
+    }
     random_buffer(cached_keys, sizeof(cached_keys));
     uint32_t version = NORCOW_VERSION;
     ensure(auth_init(), "failed to initialize storage authentication tag");
@@ -519,6 +523,10 @@ static secbool pin_fails_reset(void)
 
 secbool storage_pin_fails_increase(void)
 {
+    if (sectrue != initialized) {
+        return secfalse;
+    }
+
     const void *logs = NULL;
     uint16_t len = 0;
 
@@ -643,6 +651,10 @@ static secbool pin_get_fails(uint32_t *ctr)
 
 secbool storage_is_unlocked(void)
 {
+    if (sectrue != initialized) {
+        return secfalse;
+    }
+
     return unlocked;
 }
 
@@ -703,6 +715,10 @@ static secbool unlock(uint32_t pin)
 
 secbool storage_unlock(uint32_t pin)
 {
+    if (sectrue != initialized) {
+        return secfalse;
+    }
+
     // Get the pin failure counter
     uint32_t ctr;
     if (sectrue != pin_get_fails(&ctr)) {
@@ -949,6 +965,10 @@ secbool storage_has_pin(void)
 
 uint32_t storage_get_pin_rem(void)
 {
+    if (sectrue != initialized) {
+        return 0;
+    }
+
     uint32_t ctr = 0;
     if (sectrue != pin_get_fails(&ctr)) {
         return 0;
