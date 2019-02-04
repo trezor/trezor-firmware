@@ -2,6 +2,7 @@ from trezor.crypto import bip32
 from trezor.crypto.hashlib import sha256
 from trezor.messages import FailureType
 from trezor.messages.HDNodePathType import HDNodePathType
+from trezor.messages.HDNodeType import HDNodeType
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
 from trezor.utils import HashWriter, ensure
 
@@ -35,26 +36,27 @@ class MultisigFingerprint:
 
 
 def multisig_fingerprint(multisig: MultisigRedeemScriptType) -> bytes:
-    pubkeys = multisig.pubkeys
+    if multisig.nodes:
+        pubnodes = multisig.nodes
+    else:
+        pubnodes = [hd.node for hd in multisig.pubkeys]
     m = multisig.m
-    n = len(pubkeys)
+    n = len(pubnodes)
 
     if n < 1 or n > 15 or m < 1 or m > 15:
         raise MultisigError(FailureType.DataError, "Invalid multisig parameters")
 
-    for hd in pubkeys:
-        d = hd.node
+    for d in pubnodes:
         if len(d.public_key) != 33 or len(d.chain_code) != 32:
             raise MultisigError(FailureType.DataError, "Invalid multisig parameters")
 
     # casting to bytes(), sorting on bytearray() is not supported in MicroPython
-    pubkeys = sorted(pubkeys, key=lambda hd: bytes(hd.node.public_key))
+    pubnodes = sorted(pubnodes, key=lambda n: bytes(n.public_key))
 
     h = HashWriter(sha256())
     write_uint32(h, m)
     write_uint32(h, n)
-    for hd in pubkeys:
-        d = hd.node
+    for d in pubnodes:
         write_uint32(h, d.depth)
         write_uint32(h, d.fingerprint)
         write_uint32(h, d.child_num)
@@ -65,15 +67,18 @@ def multisig_fingerprint(multisig: MultisigRedeemScriptType) -> bytes:
 
 
 def multisig_pubkey_index(multisig: MultisigRedeemScriptType, pubkey: bytes) -> int:
-    for i, hd in enumerate(multisig.pubkeys):
-        if multisig_get_pubkey(hd) == pubkey:
-            return i
+    if multisig.nodes:
+        for i, hd in enumerate(multisig.nodes):
+            if multisig_get_pubkey(hd, multisig.address_n) == pubkey:
+                return i
+    else:
+        for i, hd in enumerate(multisig.pubkeys):
+            if multisig_get_pubkey(hd.node, hd.address_n) == pubkey:
+                return i
     raise MultisigError(FailureType.DataError, "Pubkey not found in multisig script")
 
 
-def multisig_get_pubkey(hd: HDNodePathType) -> bytes:
-    p = hd.address_n
-    n = hd.node
+def multisig_get_pubkey(n: HDNodeType, p: list) -> bytes:
     node = bip32.HDNode(
         depth=n.depth,
         fingerprint=n.fingerprint,
@@ -87,4 +92,16 @@ def multisig_get_pubkey(hd: HDNodePathType) -> bytes:
 
 
 def multisig_get_pubkeys(multisig: MultisigRedeemScriptType):
-    return [multisig_get_pubkey(hd) for hd in multisig.pubkeys]
+    if multisig.nodes:
+        return [
+            multisig_get_pubkey(hd, multisig.address_n) for hd in multisig.nodes
+        ]
+    else:
+        return [multisig_get_pubkey(hd.node, hd.address_n) for hd in multisig.pubkeys]
+
+
+def multisig_get_pubkey_count(multisig: MultisigRedeemScriptType):
+    if multisig.nodes:
+        return len(multisig.nodes)
+    else:
+        len(multisig.pubkeys)

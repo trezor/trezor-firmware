@@ -3,7 +3,7 @@ from trezor.utils import ensure
 
 from apps.common.coininfo import CoinInfo
 from apps.common.writers import empty_bytearray
-from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
+from apps.wallet.sign_tx.multisig import multisig_get_pubkey_count, multisig_get_pubkeys
 from apps.wallet.sign_tx.writers import (
     write_bytes,
     write_op_push,
@@ -158,7 +158,7 @@ def witness_p2wsh(
 ):
     # get other signatures, stretch with None to the number of the pubkeys
     signatures = multisig.signatures + [None] * (
-        len(multisig.pubkeys) - len(multisig.signatures)
+        multisig_get_pubkey_count(multisig) - len(multisig.signatures)
     )
     # fill in our signature
     if signatures[signature_index]:
