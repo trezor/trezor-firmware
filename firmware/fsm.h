@@ -73,7 +73,7 @@ void fsm_msgSignMessage(const SignMessage *msg);
 void fsm_msgVerifyMessage(const VerifyMessage *msg);
 
 // crypto
-void fsm_msgCipherKeyValue(CipherKeyValue *msg);    // not const because we mutate msg->iv
+void fsm_msgCipherKeyValue(const CipherKeyValue *msg);
 void fsm_msgSignIdentity(const SignIdentity *msg);
 void fsm_msgGetECDHSessionKey(const GetECDHSessionKey *msg);
 void fsm_msgCosiCommit(const CosiCommit *msg);
@@ -92,7 +92,7 @@ void fsm_msgDebugLinkFlashErase(const DebugLinkFlashErase *msg);
 // ethereum
 void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg);
 void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg);
-void fsm_msgEthereumSignTx(EthereumSignTx *msg);  // not const because we mutate transaction
+void fsm_msgEthereumSignTx(EthereumSignTx *msg);  // not const because we mutate transaction during validation
 void fsm_msgEthereumTxAck(const EthereumTxAck *msg);
 void fsm_msgEthereumSignMessage(const EthereumSignMessage *msg);
 void fsm_msgEthereumVerifyMessage(const EthereumVerifyMessage *msg);
@@ -102,7 +102,7 @@ void fsm_msgLiskGetAddress(const LiskGetAddress *msg);
 void fsm_msgLiskGetPublicKey(const LiskGetPublicKey *msg);
 void fsm_msgLiskSignMessage(const LiskSignMessage *msg);
 void fsm_msgLiskVerifyMessage(const LiskVerifyMessage *msg);
-void fsm_msgLiskSignTx(LiskSignTx *msg);  // // not const because we mutate transaction
+void fsm_msgLiskSignTx(LiskSignTx *msg);  // not const because we mutate transaction during validation
 
 // nem
 void fsm_msgNEMGetAddress(NEMGetAddress *msg);          // not const because we mutate msg->network

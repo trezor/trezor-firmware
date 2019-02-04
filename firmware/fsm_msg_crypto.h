@@ -17,7 +17,7 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void fsm_msgCipherKeyValue(CipherKeyValue *msg)
+void fsm_msgCipherKeyValue(const CipherKeyValue *msg)
 {
 	CHECK_INITIALIZED
 
@@ -49,15 +49,20 @@ void fsm_msgCipherKeyValue(CipherKeyValue *msg)
 
 	hmac_sha512(node->private_key, 32, data, strlen((char *)data), data);
 
+	if (msg->iv.size == 16) {
+		// override iv if provided
+		memcpy(data + 32, msg->iv.bytes, 16);
+	}
+
 	RESP_INIT(CipheredKeyValue);
 	if (encrypt) {
 		aes_encrypt_ctx ctx;
 		aes_encrypt_key256(data, &ctx);
-		aes_cbc_encrypt(msg->value.bytes, resp->value.bytes, msg->value.size, ((msg->iv.size == 16) ? (msg->iv.bytes) : (data + 32)), &ctx);
+		aes_cbc_encrypt(msg->value.bytes, resp->value.bytes, msg->value.size, data + 32, &ctx);
 	} else {
 		aes_decrypt_ctx ctx;
 		aes_decrypt_key256(data, &ctx);
-		aes_cbc_decrypt(msg->value.bytes, resp->value.bytes, msg->value.size, ((msg->iv.size == 16) ? (msg->iv.bytes) : (data + 32)), &ctx);
+		aes_cbc_decrypt(msg->value.bytes, resp->value.bytes, msg->value.size, data + 32, &ctx);
 	}
 	resp->has_value = true;
 	resp->value.size = msg->value.size;

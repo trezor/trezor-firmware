@@ -48,7 +48,7 @@ def handle_message(fh, fl, skipped, message, extension):
         return
 
     if direction == "i":
-        process_func = "(void (*)(void *)) fsm_msg%s" % short_name
+        process_func = "(void (*)(const void *))fsm_msg%s" % short_name
     else:
         process_func = "0"
 
