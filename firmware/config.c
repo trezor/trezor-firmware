@@ -342,6 +342,7 @@ void config_init(void)
     // TODO Add salt.
     storage_init(&protectPinUiCallback, (const uint8_t*)"", 0);
 
+    // TODO Remove
     storage_unlock(1);
 
     uint16_t len = 0;
@@ -851,5 +852,5 @@ void config_wipe(void)
     data2hex(config_uuid, sizeof(config_uuid), config_uuid_str);
     storage_set(KEY_UUID, config_uuid, sizeof(config_uuid));
     storage_set(KEY_VERSION, &CONFIG_VERSION, sizeof(CONFIG_VERSION));
-    session_clear(true);
+    session_clear(false);
 }

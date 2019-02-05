@@ -153,7 +153,7 @@ static void recovery_request(void) {
  * Check mnemonic and send success/failure.
  */
 static void recovery_done(void) {
-	char new_mnemonic[241] = {0}; // TODO: remove constant
+	char new_mnemonic[MAX_MNEMONIC_LEN + 1] = {0};
 
 	strlcpy(new_mnemonic, words[0], sizeof(new_mnemonic));
 	for (uint32_t i = 1; i < word_count; i++) {

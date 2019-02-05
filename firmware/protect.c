@@ -155,11 +155,11 @@ void protectPinUiCallback(uint32_t wait, uint32_t progress)
     char secstrbuf[] = _("________0 seconds");
     char *secstr = secstrbuf + 9;
     uint32_t secs = wait;
-    while (secs > 0 && secstr >= secstrbuf) {
+    do {
         secstr--;
         *secstr = (secs % 10) + '0';
         secs /= 10;
-    }
+    } while (secs > 0 && secstr >= secstrbuf);
     if (wait == 1) {
         // Change "seconds" to "second".
         secstrbuf[16] = 0;
