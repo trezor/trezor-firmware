@@ -1,7 +1,7 @@
 {
   "coin_name": "MonetaryUnit",
   "coin_shortcut": "MUE",
-  "coin_label": "MUE",
+  "coin_label": "MonetaryUnit",
   "website": "https://www.monetaryunit.org",
   "github": "https://github.com/muecoin/MUECore",
   "maintainer": "Sotiris Blad <swthrhs@protonmail.com>",
