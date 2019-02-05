@@ -53,20 +53,21 @@ static const uint32_t CONFIG_MAGIC_V10 = 0x726f7473;   // 'stor' as uint32_t
 
 static const uint16_t KEY_UUID                  =  0 | APP | FLAG_PUBLIC; // bytes(12)
 static const uint16_t KEY_VERSION               =  1 | APP;               // uint32
-static const uint16_t KEY_NODE                  =  2 | APP;               // node
-static const uint16_t KEY_MNEMONIC              =  3 | APP;               // string(241)
-static const uint16_t KEY_PASSPHRASE_PROTECTION =  4 | APP;               // bool
-static const uint16_t KEY_LANGUAGE              =  5 | APP | FLAG_PUBLIC; // string(17)
-static const uint16_t KEY_LABEL                 =  6 | APP | FLAG_PUBLIC; // string(33)
-static const uint16_t KEY_IMPORTED              =  7 | APP;               // bool
-static const uint16_t KEY_HOMESCREEN            =  8 | APP | FLAG_PUBLIC; // bytes(1024)
+static const uint16_t KEY_MNEMONIC              =  2 | APP;               // string(241)
+static const uint16_t KEY_LANGUAGE              =  3 | APP | FLAG_PUBLIC; // string(17)
+static const uint16_t KEY_LABEL                 =  4 | APP | FLAG_PUBLIC; // string(33)
+static const uint16_t KEY_PASSPHRASE_PROTECTION =  5 | APP;               // bool
+static const uint16_t KEY_HOMESCREEN            =  6 | APP | FLAG_PUBLIC; // bytes(1024)
+static const uint16_t KEY_NEEDS_BACKUP          =  7 | APP;               // bool
+static const uint16_t KEY_FLAGS                 =  8 | APP;               // uint32
 static const uint16_t KEY_U2F_COUNTER           =  9 | APP | FLAG_PUBLIC; // uint32
-static const uint16_t KEY_NEEDS_BACKUP          = 10 | APP;               // bool
-static const uint16_t KEY_FLAGS                 = 11 | APP;               // uint32
-static const uint16_t KEY_U2F_ROOT              = 12 | APP;               // node
-static const uint16_t KEY_UNFINISHED_BACKUP     = 13 | APP;               // bool
-static const uint16_t KEY_AUTO_LOCK_DELAY_MS    = 14 | APP;               // uint32
-static const uint16_t KEY_NO_BACKUP             = 15 | APP;               // bool
+static const uint16_t KEY_UNFINISHED_BACKUP     = 11 | APP;               // bool
+static const uint16_t KEY_AUTO_LOCK_DELAY_MS    = 12 | APP;               // uint32
+static const uint16_t KEY_NO_BACKUP             = 13 | APP;               // bool
+static const uint16_t KEY_INITIALIZED           = 14 | APP | FLAG_PUBLIC; // uint32
+static const uint16_t KEY_NODE                  = 15 | APP;               // node
+static const uint16_t KEY_IMPORTED              = 16 | APP;               // bool
+static const uint16_t KEY_U2F_ROOT              = 17 | APP | FLAG_PUBLIC; // node
 
 // The PIN value corresponding to an empty PIN.
 static const uint32_t PIN_EMPTY = 1;
@@ -290,7 +291,9 @@ static bool config_upgrade_v10(void)
     storage_set(KEY_UUID, config_uuid, sizeof(config_uuid));
     storage_set(KEY_VERSION, &CONFIG_VERSION, sizeof(CONFIG_VERSION));
     if (config.has_node) {
-        storage_set(KEY_NODE, &config.node, sizeof(config.node));
+        if (sectrue == storage_set(KEY_NODE, &config.node, sizeof(config.node))) {
+            config_set_bool(KEY_INITIALIZED, true);
+        }
     }
     if (config.has_mnemonic) {
         config_setMnemonic(config.mnemonic);
@@ -402,7 +405,9 @@ static void config_setNode(const HDNodeType *node) {
         storageHDNode.private_key.size = 32;
         memcpy(storageHDNode.private_key.bytes, node->private_key.bytes, 32);
     }
-    storage_set(KEY_NODE, &storageHDNode, sizeof(storageHDNode));
+    if (sectrue == storage_set(KEY_NODE, &storageHDNode, sizeof(storageHDNode))) {
+        config_set_bool(KEY_INITIALIZED, true);
+    }
 }
 
 #if DEBUG_LINK
@@ -628,21 +633,33 @@ bool config_getHomescreen(uint8_t *dest, uint16_t dest_size)
     return true;
 }
 
-void config_setMnemonic(const char *mnemonic)
+bool config_setMnemonic(const char *mnemonic)
 {
     if (mnemonic == NULL) {
-        return;
+        return false;
     }
 
     if (sectrue != storage_set(KEY_MNEMONIC, mnemonic, strnlen(mnemonic, MAX_MNEMONIC_LEN))) {
-        return;
+        return false;
+    }
+
+    if (sectrue != config_set_bool(KEY_INITIALIZED, true)) {
+        storage_delete(KEY_MNEMONIC);
+        return false;
     }
 
     StorageHDNode u2fNode;
     memzero(&u2fNode, sizeof(u2fNode));
     config_compute_u2froot(mnemonic, &u2fNode);
-    storage_set(KEY_U2F_ROOT, &u2fNode, sizeof(u2fNode));
+    secbool ret = storage_set(KEY_U2F_ROOT, &u2fNode, sizeof(u2fNode));
     memzero(&u2fNode, sizeof(u2fNode));
+
+    if (sectrue != ret) {
+        storage_delete(KEY_MNEMONIC);
+        storage_delete(KEY_INITIALIZED);
+        return false;
+    }
+    return true;
 }
 
 bool config_hasNode(void)
@@ -756,7 +773,7 @@ bool session_isPinCached(void)
 
 bool config_isInitialized(void)
 {
-    return config_has_key(KEY_NODE) || config_has_key(KEY_MNEMONIC);
+    return config_get_bool(KEY_INITIALIZED);
 }
 
 bool config_isImported(void)

@@ -164,13 +164,16 @@ static void recovery_done(void) {
 		// New mnemonic is valid.
 		if (!dry_run) {
 			// Update mnemonic on config.
-			config_setMnemonic(new_mnemonic);
-			memzero(new_mnemonic, sizeof(new_mnemonic));
-			if (!enforce_wordlist) {
-				// not enforcing => mark config as imported
-				config_setImported(true);
+			if (config_setMnemonic(new_mnemonic)) {
+	            if (!enforce_wordlist) {
+	                // not enforcing => mark config as imported
+	                config_setImported(true);
+	            }
+			    fsm_sendSuccess(_("Device recovered"));
+			} else {
+			    fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to store mnemonic"));
 			}
-			fsm_sendSuccess(_("Device recovered"));
+			memzero(new_mnemonic, sizeof(new_mnemonic));
 		} else {
 			// Inform the user about new mnemonic correctness (as well as whether it is the same as the current one).
 			bool match = (config_isInitialized() && config_containsMnemonic(new_mnemonic));

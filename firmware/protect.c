@@ -180,17 +180,20 @@ void protectPinUiCallback(uint32_t wait, uint32_t progress)
 
 bool protectPin(bool use_cached)
 {
-	if (!config_hasPin() || (use_cached && session_isPinCached())) {
+	if (use_cached && session_isPinCached()) {
 		return true;
 	}
 
     // TODO If maximum number of PIN attempts:
     // error_shutdown("Too many wrong PIN", "attempts. Storage has", "been wiped.", NULL, "Please unplug", "the device.");
 
-	const char *pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current, _("Please enter current PIN:"));
-	if (!pin) {
-		fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
-		return false;
+	const char *pin = "";
+	if (config_hasPin()) {
+        pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current, _("Please enter current PIN:"));
+        if (!pin) {
+            fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
+            return false;
+        }
 	}
 
     usbTiny(1);

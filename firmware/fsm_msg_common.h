@@ -63,7 +63,7 @@ void fsm_msgGetFeatures(const GetFeatures *msg)
 	}
 
 	resp->has_initialized = true; resp->initialized = config_isInitialized();
-	resp->has_imported = true; resp->imported = config_isImported();
+	resp->has_imported = config_hasKey(KEY_IMPORTED); resp->imported = config_isImported();
 	resp->has_pin_cached = true; resp->pin_cached = session_isPinCached();
 	resp->has_passphrase_cached = true; resp->passphrase_cached = session_isPassphraseCached();
 	resp->has_needs_backup = true; resp->needs_backup = config_needsBackup();
@@ -180,6 +180,8 @@ void fsm_msgGetEntropy(const GetEntropy *msg)
 
 void fsm_msgLoadDevice(const LoadDevice *msg)
 {
+    CHECK_PIN
+
 	CHECK_NOT_INITIALIZED
 
 	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("I take the risk"), NULL, _("Loading private seed"), _("is not recommended."), _("Continue only if you"), _("know what you are"), _("doing!"), NULL);
@@ -204,6 +206,8 @@ void fsm_msgLoadDevice(const LoadDevice *msg)
 
 void fsm_msgResetDevice(const ResetDevice *msg)
 {
+    CHECK_PIN
+
 	CHECK_NOT_INITIALIZED
 
 	CHECK_PARAM(!msg->has_strength || msg->strength == 128 || msg->strength == 192 || msg->strength == 256, _("Invalid seed strength"));
@@ -331,6 +335,8 @@ void fsm_msgApplySettings(const ApplySettings *msg)
 
 void fsm_msgApplyFlags(const ApplyFlags *msg)
 {
+    CHECK_PIN
+
 	if (msg->has_flags) {
 		config_applyFlags(msg->flags);
 	}
@@ -339,10 +345,10 @@ void fsm_msgApplyFlags(const ApplyFlags *msg)
 
 void fsm_msgRecoveryDevice(const RecoveryDevice *msg)
 {
+    CHECK_PIN
+
 	const bool dry_run = msg->has_dry_run ? msg->dry_run : false;
-	if (dry_run) {
-		CHECK_PIN
-	} else {
+	if (!dry_run) {
 		CHECK_NOT_INITIALIZED
 	}
 

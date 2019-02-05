@@ -111,7 +111,7 @@ void session_cachePassphrase(const char *passphrase);
 bool session_isPassphraseCached(void);
 bool session_getState(const uint8_t *salt, uint8_t *state, const char *passphrase);
 
-void config_setMnemonic(const char *mnemonic);
+bool config_setMnemonic(const char *mnemonic);
 bool config_containsMnemonic(const char *mnemonic);
 bool config_hasMnemonic(void);
 bool config_getMnemonic(char *dest, uint16_t dest_size);

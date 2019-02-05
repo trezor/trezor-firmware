@@ -97,6 +97,8 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Not in Reset mode"));
 		return;
 	}
+    awaiting_entropy = false;
+
 	SHA256_CTX ctx;
 	sha256_Init(&ctx);
 	sha256_Update(&ctx, int_entropy, 32);
@@ -104,7 +106,6 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 	sha256_Final(&ctx, int_entropy);
 	const char* mnemonic = mnemonic_from_data(int_entropy, strength / 8);
 	memzero(int_entropy, 32);
-	awaiting_entropy = false;
 
 	if (skip_backup || no_backup) {
 	    if (no_backup) {
@@ -112,8 +113,11 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 	    } else {
 	        config_setNeedsBackup(true);
 	    }
-        config_setMnemonic(mnemonic);
-		fsm_sendSuccess(_("Device successfully initialized"));
+        if (config_setMnemonic(mnemonic)) {
+            fsm_sendSuccess(_("Device successfully initialized"));
+        } else {
+            fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to store mnemonic"));
+        }
 		layoutHome();
 	} else {
 		reset_backup(false, mnemonic);
@@ -169,8 +173,11 @@ void reset_backup(bool separated, const char* mnemonic)
 		fsm_sendSuccess(_("Seed successfully backed up"));
 	} else {
         config_setNeedsBackup(false);
-        config_setMnemonic(mnemonic);
-		fsm_sendSuccess(_("Device successfully initialized"));
+        if (config_setMnemonic(mnemonic)) {
+            fsm_sendSuccess(_("Device successfully initialized"));
+        } else {
+            fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to store mnemonic"));
+        }
 	}
 	layoutHome();
 }
