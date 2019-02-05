@@ -1,6 +1,6 @@
 from micropython import const
 
-from trezor import ui
+from trezor import ui, wire
 from trezor.messages import (
     NEMMosaicCreation,
     NEMMosaicDefinition,
@@ -9,7 +9,7 @@ from trezor.messages import (
     NEMSupplyChangeType,
     NEMTransactionCommon,
 )
-from trezor.ui.confirm import ConfirmDialog
+from trezor.ui.confirm import ConfirmDialog, CONFIRMED
 from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
 from trezor.ui.text import Text
 
@@ -75,6 +75,7 @@ def _supply_message(supply_change):
 
 
 async def _require_confirm_properties(ctx, definition: NEMMosaicDefinition):
+    # TODO: we should send a button request here
     properties = _get_mosaic_properties(definition)
     first_page = const(0)
     paginator = paginate(_show_page, len(properties), first_page, properties)
@@ -85,7 +86,8 @@ async def _require_confirm_properties(ctx, definition: NEMMosaicDefinition):
 async def _show_page(page: int, page_count: int, content):
     content = Scrollpage(content[page], page, page_count)
     if page + 1 == page_count:
-        await ConfirmDialog(content)
+        if await ConfirmDialog(content) != CONFIRMED:
+            raise wire.ActionCancelled("Action cancelled")
     else:
         content.render()
         await animate_swipe()
