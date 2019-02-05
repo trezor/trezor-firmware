@@ -100,7 +100,7 @@ def coinmarketcap_init(api_key, refresh=None):
             coin_data[slug] = int(market_cap)
             if platform is not None and platform["name"] == "Ethereum":
                 address = platform["token_address"].lower()
-                coin_data[address] = market_cap
+                coin_data[address] = int(market_cap)
 
     MARKET_CAPS = coin_data
 
