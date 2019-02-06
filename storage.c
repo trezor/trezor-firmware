@@ -745,14 +745,18 @@ secbool storage_unlock(uint32_t pin)
                 } else {
                     progress = ((wait - rem) * 10 + i) * 100 / wait;
                 }
-                ui_callback(rem, progress);
+                if (sectrue == ui_callback(rem, progress)) {
+                    return secfalse;
+                }
             }
             hal_delay(100);
         }
     }
     // Show last frame if we were waiting
     if ((wait > 0) && ui_callback) {
-        ui_callback(0, 1000);
+        if (sectrue == ui_callback(0, 1000)) {
+            return secfalse;
+        }
     }
 
     // First, we increase PIN fail counter in storage, even before checking the
