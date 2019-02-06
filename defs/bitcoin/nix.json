@@ -1,7 +1,7 @@
 {
-  "coin_name": "Nix",
+  "coin_name": "NIX",
   "coin_shortcut": "NIX",
-  "coin_label": "Nix",
+  "coin_label": "NIX",
   "website": "https://nixplatform.io",
   "github": "https://github.com/nixplatform/nixcore",
   "maintainer": "mattt21 <matt@nixplatform.io>",
@@ -32,7 +32,7 @@
   "uri_prefix": "nix",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [],
+  "bitcore": ["https://blockchain.nixplatform.io"],
   "blockbook": [],
   "cooldown": 100
 }

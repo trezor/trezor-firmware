@@ -47,5 +47,9 @@
     "bitcoin:XZC": {
         "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
         "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"
+    },
+    "bitcoin:NIX": {
+        "NIX-Electrum": "https://github.com/nixplatform/electrum-nix",
+        "Ghostnode Tool": "https://github.com/nixplatform/ghostnode-tool"
     }
 }
