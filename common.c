@@ -21,34 +21,51 @@
 #include "common.h"
 #include "rng.h"
 #include "layout.h"
+#include "oled.h"
 #include "firmware/usb.h"
 
-void shutdown(void);
-
-void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line_num, const char *func) {
-    char line[4][128] = {{0}};
-    int i = 0;
-    if (expr != NULL) {
-        snprintf(line[i], sizeof(line[0]), "Expr: %s", expr);
-        i++;
-    }
-    if (msg != NULL) {
-        snprintf(line[i], sizeof(line[0]), "Msg: %s", msg);
-        i++;
-    }
-    if (file != NULL) {
-        snprintf(line[i], sizeof(line[0]), "File: %s:%d", file, line_num);
-        i++;
-    }
-    if (func != NULL) {
-        snprintf(line[i], sizeof(line[0]), "Func: %s", func);
-        i++;
-    }
-    error_shutdown("FATAL ERROR:", NULL, line[0], line[1], line[2], line[3]);
+static void __attribute__((noreturn)) shutdown(void)
+{
+    for (;;);
 }
 
-void __attribute__((noreturn)) error_shutdown(const char *line1, const char *line2, const char *line3, const char *line4, const char *line5, const char *line6) {
-    layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, line2, line3, line4, line5, line6);
+void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line_num, const char *func) {
+    const BITMAP *icon = &bmp_icon_error;
+    char line[128] = {0};
+    int y = icon->height + 3;
+    oledClear();
+
+    oledDrawBitmap(0, 0, icon);
+    oledDrawStringCenter((icon->height - FONT_HEIGHT)/2 + 1, "FATAL  ERROR", FONT_STANDARD);
+
+    snprintf(line, sizeof(line), "Expr: %s", expr ? expr : "(null)");
+    oledDrawString(0, y, line, FONT_STANDARD);
+    y += FONT_HEIGHT + 1;
+
+    snprintf(line, sizeof(line), "Msg: %s", msg ? msg : "(null)");
+    oledDrawString(0, y, line, FONT_STANDARD);
+    y += FONT_HEIGHT + 1;
+
+    const char *label = "File: ";
+    snprintf(line, sizeof(line), "%s:%d", file ? file : "(null)", line_num);
+    oledDrawStringRight(OLED_WIDTH - 1, y, line, FONT_STANDARD);
+    oledBox(0, y, oledStringWidth(label, FONT_STANDARD), y + FONT_HEIGHT, false);
+    oledDrawString(0, y, label, FONT_STANDARD);
+    y += FONT_HEIGHT + 1;
+
+    snprintf(line, sizeof(line), "Func: %s", func ? func : "(null)");
+    oledDrawString(0, y, line, FONT_STANDARD);
+    y += FONT_HEIGHT + 1;
+
+    oledDrawString(0, y, "Please unplug the device.", FONT_STANDARD);
+    oledRefresh();
+
+    shutdown();
+    for (;;);
+}
+
+void __attribute__((noreturn)) error_shutdown(const char *line1, const char *line2, const char *line3, const char *line4) {
+    layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, line2, line3, line4, "Please unplug", "the device.");
     shutdown();
     for (;;);
 }
