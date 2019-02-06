@@ -730,7 +730,7 @@ secbool storage_unlock(uint32_t pin)
     wait_random();
     if (ctr >= PIN_MAX_TRIES) {
         storage_wipe();
-        ensure(secfalse, "pin_fails_check_max");
+        error_shutdown("Too many wrong PIN", "attempts. Storage has", "been wiped.", NULL);
         return secfalse;
     }
 
@@ -779,7 +779,7 @@ secbool storage_unlock(uint32_t pin)
         wait_random();
         if (ctr + 1 >= PIN_MAX_TRIES) {
             storage_wipe();
-            ensure(secfalse, "pin_fails_check_max");
+            error_shutdown("Too many wrong PIN", "attempts. Storage has", "been wiped.", NULL);
         }
         return secfalse;
     }
