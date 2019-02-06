@@ -345,9 +345,6 @@ void config_init(void)
     // TODO Add salt.
     storage_init(&protectPinUiCallback, (const uint8_t*)"", 0);
 
-    // TODO Remove
-    storage_unlock(1);
-
     uint16_t len = 0;
     if (sectrue == storage_get(KEY_UUID, config_uuid, sizeof(config_uuid), &len) && len == sizeof(config_uuid)) {
         data2hex(config_uuid, sizeof(config_uuid), config_uuid_str);
@@ -643,7 +640,7 @@ bool config_setMnemonic(const char *mnemonic)
         return false;
     }
 
-    if (sectrue != config_set_bool(KEY_INITIALIZED, true)) {
+    if (!config_set_bool(KEY_INITIALIZED, true)) {
         storage_delete(KEY_MNEMONIC);
         return false;
     }

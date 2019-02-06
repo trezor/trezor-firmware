@@ -147,7 +147,7 @@ const char *requestPin(PinMatrixRequestType type, const char *text)
 	}
 }
 
-void protectPinUiCallback(uint32_t wait, uint32_t progress)
+secbool protectPinUiCallback(uint32_t wait, uint32_t progress)
 {
     (void) progress;
 
@@ -166,16 +166,17 @@ void protectPinUiCallback(uint32_t wait, uint32_t progress)
     }
     layoutDialog(&bmp_icon_info, NULL, NULL, NULL, _("Wrong PIN entered"), NULL, _("Please wait"), secstr, _("to continue ..."), NULL);
 
-    /* TODO
-    if (msg_tiny_id == MessageType_MessageType_Initialize) {
-        protectAbortedByCancel = false;
-        protectAbortedByInitialize = true;
+    // Check for Cancel / Initialize.
+    protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
+    protectAbortedByInitialize = (msg_tiny_id == MessageType_MessageType_Initialize);
+    if (protectAbortedByCancel || protectAbortedByInitialize) {
         msg_tiny_id = 0xFFFF;
         usbTiny(0);
         fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
-        return false;
+        return sectrue;
     }
-    */
+
+    return secfalse;
 }
 
 bool protectPin(bool use_cached)

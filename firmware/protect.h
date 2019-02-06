@@ -22,9 +22,10 @@
 
 #include <stdbool.h>
 #include "messages-common.pb.h"
+#include "secbool.h"
 
 bool protectButton(ButtonRequestType type, bool confirm_only);
-void protectPinUiCallback(uint32_t wait, uint32_t progress);
+secbool protectPinUiCallback(uint32_t wait, uint32_t progress);
 bool protectPin(bool use_cached);
 bool protectChangePin(bool removal);
 bool protectPassphrase(void);
