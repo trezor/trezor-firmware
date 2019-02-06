@@ -982,7 +982,7 @@ uint32_t storage_get_pin_rem(void)
 
 secbool storage_change_pin(uint32_t oldpin, uint32_t newpin)
 {
-    if (sectrue != initialized || sectrue != unlocked) {
+    if (sectrue != initialized) {
         return secfalse;
     }
     if (sectrue != storage_unlock(oldpin)) {
