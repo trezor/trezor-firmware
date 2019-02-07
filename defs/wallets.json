@@ -1,4 +1,7 @@
 {
+    "bitcoin:ACM": {
+        "Actilectrum": "https://actilectrum.org"
+    },
     "bitcoin:BCH": {
         "Electron Cash": "https://electroncash.org"
     },
