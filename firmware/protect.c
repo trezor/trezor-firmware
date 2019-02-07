@@ -164,7 +164,7 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress)
         // Change "seconds" to "second".
         secstrbuf[16] = 0;
     }
-    layoutDialog(&bmp_icon_info, NULL, NULL, NULL, _("Wrong PIN entered"), NULL, _("Please wait"), secstr, _("to continue ..."), NULL);
+    layoutDialog(&bmp_icon_info, NULL, NULL, NULL, _("Verifying PIN"), NULL, _("Please wait"), secstr, _("to continue ..."), NULL);
 
     // Check for Cancel / Initialize.
     protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
