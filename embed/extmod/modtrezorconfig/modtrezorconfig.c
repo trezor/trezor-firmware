@@ -30,10 +30,13 @@
 
 STATIC mp_obj_t ui_wait_callback = mp_const_none;
 
-STATIC void wrapped_ui_wait_callback(uint32_t wait, uint32_t progress) {
+STATIC secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress) {
     if (mp_obj_is_callable(ui_wait_callback)) {
-        mp_call_function_2(ui_wait_callback, mp_obj_new_int(wait), mp_obj_new_int(progress));
+        if (mp_call_function_2(ui_wait_callback, mp_obj_new_int(wait), mp_obj_new_int(progress)) == mp_const_true) {
+            return sectrue;
+        }
     }
+    return secfalse;
 }
 
 /// def init(ui_wait_callback: (int, int -> None)=None) -> None:
