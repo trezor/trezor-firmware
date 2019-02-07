@@ -130,12 +130,14 @@ static char current_word[10];
 // separated == true if called as a separate workflow via BackupMessage
 void reset_backup(bool separated, const char* mnemonic)
 {
-	if (separated && !config_needsBackup()) {
-		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Seed already backed up"));
-		return;
-	}
-
 	if (separated) {
+        bool needs_backup = false;
+        config_getNeedsBackup(&needs_backup);
+        if (!needs_backup) {
+            fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Seed already backed up"));
+            return;
+        }
+
 	    config_setUnfinishedBackup(true);
 	    config_setNeedsBackup(false);
 	}

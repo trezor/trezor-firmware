@@ -52,18 +52,14 @@ void fsm_msgDebugLinkGetState(const DebugLinkGetState *msg)
 	resp.has_recovery_word_pos = true;
 	resp.recovery_word_pos = recovery_get_word_pos();
 
-	if (config_hasMnemonic()) {
-		resp.has_mnemonic = true;
-		config_getMnemonic(resp.mnemonic, sizeof(resp.mnemonic));
-	}
+    resp.has_mnemonic = config_getMnemonic(resp.mnemonic, sizeof(resp.mnemonic));
 
 	if (config_hasNode()) {
 		resp.has_node = true;
 		config_dumpNode(&(resp.node));
 	}
 
-	resp.has_passphrase_protection = true;
-	resp.passphrase_protection = config_hasPassphraseProtection();
+	resp.has_passphrase_protection = config_getPassphraseProtection(&(resp.passphrase_protection));
 
 	msg_debug_write(MessageType_MessageType_DebugLinkState, &resp);
 }

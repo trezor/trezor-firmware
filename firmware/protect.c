@@ -259,7 +259,9 @@ bool protectChangePin(bool removal)
 
 bool protectPassphrase(void)
 {
-	if (!config_hasPassphraseProtection() || session_isPassphraseCached()) {
+    bool passphrase_protection = false;
+    config_getPassphraseProtection(&passphrase_protection);
+	if (!passphrase_protection || session_isPassphraseCached()) {
 		return true;
 	}
 

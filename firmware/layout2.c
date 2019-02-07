@@ -256,15 +256,20 @@ void layoutHome(void)
 			oledDrawBitmap(40, 0, &bmp_logo64);
 		}
 	}
-	if (config_noBackup()) {
+
+    bool no_backup = false;
+    bool unfinished_backup = false;
+    bool needs_backup = false;
+    config_getNoBackup(&no_backup);
+    config_getUnfinishedBackup(&unfinished_backup);
+    config_getNeedsBackup(&needs_backup);
+	if (no_backup) {
 		oledBox(0, 0, 127, 8, false);
 		oledDrawStringCenter(OLED_WIDTH / 2, 0, "SEEDLESS", FONT_STANDARD);
-	} else
-	if (config_unfinishedBackup()) {
+	} else if (unfinished_backup) {
 		oledBox(0, 0, 127, 8, false);
 		oledDrawStringCenter(OLED_WIDTH / 2, 0, "BACKUP FAILED!", FONT_STANDARD);
-	} else
-	if (config_needsBackup()) {
+	} else if (needs_backup) {
 		oledBox(0, 0, 127, 8, false);
 		oledDrawStringCenter(OLED_WIDTH / 2, 0, "NEEDS BACKUP!", FONT_STANDARD);
 	}

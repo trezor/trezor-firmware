@@ -23,6 +23,7 @@
 
 #include "messages.pb.h"
 
+#include "common.h"
 #include "trezor.h"
 #include "sha2.h"
 #include "aes/aes.h"
@@ -147,12 +148,17 @@ static bool config_set_bool(uint16_t key, bool value)
     }
 }
 
-static bool config_get_bool(uint16_t key)
+static bool config_get_bool(uint16_t key, bool *value)
 {
-    uint8_t value = 0;
+    uint8_t val = 0;
     uint16_t len = 0;
-    secbool ret = storage_get(key, &value, sizeof(value), &len);
-    return (sectrue == ret && len == 1 && value == TRUE_BYTE);
+    if (sectrue == storage_get(key, &val, sizeof(val), &len) && len == sizeof(TRUE_BYTE)) {
+        *value = (val == TRUE_BYTE);
+        return true;
+    } else {
+        *value = false;
+        return false;
+    }
 }
 
 static bool config_has_key(uint16_t key)
@@ -161,7 +167,8 @@ static bool config_has_key(uint16_t key)
     return sectrue == storage_get(key, NULL, 0, &len);
 }
 
-static bool config_get_string(uint16_t key, char *dest, uint16_t dest_size) {
+static bool config_get_string(uint16_t key, char *dest, uint16_t dest_size)
+{
     dest[0] = '\0';
     uint16_t len = 0;
     if (sectrue != storage_get(key, dest, dest_size - 1, &len)) {
@@ -171,19 +178,14 @@ static bool config_get_string(uint16_t key, char *dest, uint16_t dest_size) {
     return true;
 }
 
-static uint32_t config_get_uint32(uint16_t key) {
-    uint32_t value = 0;
-    uint16_t len = 0;
-    if (sectrue != storage_get(key, &value, sizeof(value), &len) || len != sizeof(value)) {
-        return 0;
-    }
-    return value;
-}
-
-void config_show_error(void)
+static bool config_get_uint32(uint16_t key, uint32_t *value)
 {
-    layoutDialog(&bmp_icon_error, NULL, NULL, NULL, _("Storage failure"), _("detected."), NULL, _("Please unplug"), _("the device."), NULL);
-    shutdown();
+    uint16_t len = 0;
+    if (sectrue != storage_get(key, value, sizeof(uint32_t), &len) || len != sizeof(uint32_t)) {
+        *value = 0;
+        return false;
+    }
+    return true;
 }
 
 static bool config_upgrade_v10(void)
@@ -494,9 +496,9 @@ void config_setPassphraseProtection(bool passphrase_protection)
     config_set_bool(KEY_PASSPHRASE_PROTECTION, passphrase_protection);
 }
 
-bool config_hasPassphraseProtection(void)
+bool config_getPassphraseProtection(bool *passphrase_protection)
 {
-    return config_get_bool(KEY_PASSPHRASE_PROTECTION);
+    return config_get_bool(KEY_PASSPHRASE_PROTECTION, passphrase_protection);
 }
 
 void config_setHomescreen(const uint8_t *data, uint32_t size)
@@ -530,11 +532,13 @@ const uint8_t *config_getSeed(bool usePassphrase)
             return NULL;
         }
         // if storage was not imported (i.e. it was properly generated or recovered)
-        if (!config_get_bool(KEY_IMPORTED)) {
+        bool imported = false;
+        config_get_bool(KEY_IMPORTED, &imported);
+        if (!imported) {
             // test whether mnemonic is a valid BIP-0039 mnemonic
             if (!mnemonic_check(mnemonic)) {
                 // and if not then halt the device
-                config_show_error();
+                error_shutdown(_("Storage failure"), _("detected."), NULL, NULL);
             }
         }
         char oldTiny = usbTiny(1);
@@ -580,7 +584,9 @@ bool config_getRootNode(HDNode *node, const char *curve, bool usePassphrase)
             memzero(&storageHDNode, sizeof(storageHDNode));
             return false;
         }
-        if (config_hasPassphraseProtection() && sessionPassphraseCached && sessionPassphrase[0] != '\0') {
+        bool passphrase_protection = false;
+        config_getPassphraseProtection(&passphrase_protection);
+        if (passphrase_protection && sessionPassphraseCached && sessionPassphrase[0] != '\0') {
             // decrypt hd node
             uint8_t secret[64];
             PBKDF2_HMAC_SHA512_CTX pctx;
@@ -770,12 +776,14 @@ bool session_isPinCached(void)
 
 bool config_isInitialized(void)
 {
-    return config_get_bool(KEY_INITIALIZED);
+    bool initialized = false;
+    config_get_bool(KEY_INITIALIZED, &initialized);
+    return initialized;
 }
 
-bool config_isImported(void)
+bool config_getImported(bool* imported)
 {
-    return config_get_bool(KEY_IMPORTED);
+    return config_get_bool(KEY_IMPORTED, imported);
 }
 
 void config_setImported(bool imported)
@@ -783,9 +791,9 @@ void config_setImported(bool imported)
     config_set_bool(KEY_IMPORTED, imported);
 }
 
-bool config_needsBackup(void)
+bool config_getNeedsBackup(bool *needs_backup)
 {
-    return config_get_bool(KEY_NEEDS_BACKUP);
+    return config_get_bool(KEY_NEEDS_BACKUP, needs_backup);
 }
 
 void config_setNeedsBackup(bool needs_backup)
@@ -793,9 +801,9 @@ void config_setNeedsBackup(bool needs_backup)
     config_set_bool(KEY_NEEDS_BACKUP, needs_backup);
 }
 
-bool config_unfinishedBackup(void)
+bool config_getUnfinishedBackup(bool *unfinished_backup)
 {
-    return config_get_bool(KEY_UNFINISHED_BACKUP);
+    return config_get_bool(KEY_UNFINISHED_BACKUP, unfinished_backup);
 }
 
 void config_setUnfinishedBackup(bool unfinished_backup)
@@ -803,9 +811,9 @@ void config_setUnfinishedBackup(bool unfinished_backup)
     config_set_bool(KEY_UNFINISHED_BACKUP, unfinished_backup);
 }
 
-bool config_noBackup(void)
+bool config_getNoBackup(bool *no_backup)
 {
-    return config_get_bool(KEY_NO_BACKUP);
+    return config_get_bool(KEY_NO_BACKUP, no_backup);
 }
 
 void config_setNoBackup(void)
@@ -815,7 +823,8 @@ void config_setNoBackup(void)
 
 void config_applyFlags(uint32_t flags)
 {
-    uint32_t old_flags = config_get_uint32(KEY_FLAGS);
+    uint32_t old_flags = 0;
+    config_get_uint32(KEY_FLAGS, &old_flags);
     flags |= old_flags;
     if (flags == old_flags) {
         return; // no new flags
@@ -823,9 +832,9 @@ void config_applyFlags(uint32_t flags)
     storage_set(KEY_FLAGS, &flags, sizeof(flags));
 }
 
-uint32_t config_getFlags(void)
+bool config_getFlags(uint32_t *flags)
 {
-    return config_get_uint32(KEY_FLAGS);
+    return config_get_uint32(KEY_FLAGS, flags);
 }
 
 uint32_t config_nextU2FCounter(void)
@@ -847,8 +856,11 @@ void config_setU2FCounter(uint32_t u2fcounter)
 uint32_t config_getAutoLockDelayMs()
 {
     const uint32_t default_delay_ms = 10 * 60 * 1000U; // 10 minutes
-    uint32_t delay_ms = config_get_uint32(KEY_AUTO_LOCK_DELAY_MS);
-    return (delay_ms != 0) ? delay_ms : default_delay_ms;
+    uint32_t delay_ms = 0;
+    if (config_get_uint32(KEY_AUTO_LOCK_DELAY_MS, &delay_ms)) {
+        return delay_ms;
+    }
+    return default_delay_ms;
 }
 
 void config_setAutoLockDelayMs(uint32_t auto_lock_delay_ms)

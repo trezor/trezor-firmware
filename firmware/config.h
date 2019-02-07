@@ -102,7 +102,7 @@ bool config_getLanguage(char *dest, uint16_t dest_size);
 void config_setLanguage(const char *lang);
 
 void config_setPassphraseProtection(bool passphrase_protection);
-bool config_hasPassphraseProtection(void);
+bool config_getPassphraseProtection(bool *passphrase_protection);
 
 bool config_getHomescreen(uint8_t *dest, uint16_t dest_size);
 void config_setHomescreen(const uint8_t *data, uint32_t size);
@@ -132,20 +132,20 @@ void config_setU2FCounter(uint32_t u2fcounter);
 
 bool config_isInitialized(void);
 
-bool config_isImported(void);
+bool config_getImported(bool *imported);
 void config_setImported(bool imported);
 
-bool config_needsBackup(void);
+bool config_getNeedsBackup(bool *needs_backup);
 void config_setNeedsBackup(bool needs_backup);
 
-bool config_unfinishedBackup(void);
+bool config_getUnfinishedBackup(bool *unfinished_backup);
 void config_setUnfinishedBackup(bool unfinished_backup);
 
-bool config_noBackup(void);
+bool config_getNoBackup(bool *no_backup);
 void config_setNoBackup(void);
 
 void config_applyFlags(uint32_t flags);
-uint32_t config_getFlags(void);
+bool config_getFlags(uint32_t *flags);
 
 uint32_t config_getAutoLockDelayMs(void);
 void config_setAutoLockDelayMs(uint32_t auto_lock_delay_ms);
