@@ -117,7 +117,9 @@ static uint32_t norcow_active_version = 0;
 static const uint8_t TRUE_BYTE = 0x01;
 static const uint8_t FALSE_BYTE = 0x00;
 
-static void handle_fault(void);
+static void __handle_fault(const char *msg, const char *file, int line, const char *func);
+#define handle_fault(msg) (__handle_fault(msg, __FILE__, __LINE__, __func__))
+
 static secbool storage_upgrade(void);
 static secbool storage_set_encrypted(const uint16_t key, const void *val, const uint16_t len);
 static secbool storage_get_encrypted(const uint16_t key, void *val_dest, const uint16_t max_len, uint16_t *len);
@@ -135,7 +137,7 @@ static secbool secequal(const void* ptr1, const void* ptr2, size_t n) {
 
     // Check loop completion in case of a fault injection attack.
     if (i != n) {
-        handle_fault();
+        handle_fault("loop completion check");
     }
 
     return diff ? secfalse : sectrue;
@@ -258,7 +260,7 @@ static secbool auth_get(uint16_t key, const void **val, uint16_t *len)
 
     // Check loop completion in case of a fault injection attack.
     if (secfalse != norcow_get_next(&offset, &k, &v, &l)) {
-        handle_fault();
+        handle_fault("loop completion check");
     }
 
     // Check storage authentication tag.
@@ -268,13 +270,13 @@ static secbool auth_get(uint16_t key, const void **val, uint16_t *len)
     }
 #endif
     if (tag_val == NULL || tag_len != STORAGE_TAG_SIZE || sectrue != secequal(h, tag_val, STORAGE_TAG_SIZE)) {
-        handle_fault();
+        handle_fault("storage tag check");
     }
 
     if (*val == NULL) {
         // Check for fault injection.
         if (other_count != entry_count) {
-            handle_fault();
+            handle_fault("sanity check");
         }
         return secfalse;
     }
@@ -292,7 +294,7 @@ static void wait_random(void)
     volatile int j = wait;
     while (i < wait) {
         if (i + j != wait) {
-            handle_fault();
+            handle_fault("sanity check");
         }
         ++i;
         --j;
@@ -300,7 +302,7 @@ static void wait_random(void)
 
     // Double-check loop completion.
     if (i != wait) {
-        handle_fault();
+        handle_fault("loop completion check");
     }
 #endif
 }
@@ -404,7 +406,7 @@ static uint32_t generate_guard_key(void)
 static secbool expand_guard_key(const uint32_t guard_key, uint32_t *guard_mask, uint32_t *guard)
 {
     if (sectrue != check_guard_key(guard_key)) {
-        handle_fault();
+        handle_fault("guard key check");
         return secfalse;
     }
     *guard_mask = ((guard_key & LOW_MASK) << 1) | ((~guard_key) & LOW_MASK);
@@ -532,7 +534,7 @@ secbool storage_pin_fails_increase(void)
 
     wait_random();
     if (sectrue != norcow_get(PIN_LOGS_KEY, &logs, &len) || len != WORD_SIZE*(GUARD_KEY_WORDS + 2*PIN_LOG_WORDS)) {
-        handle_fault();
+        handle_fault("no PIN logs");
         return secfalse;
     }
 
@@ -540,7 +542,7 @@ secbool storage_pin_fails_increase(void)
     uint32_t guard;
     wait_random();
     if (sectrue != expand_guard_key(*(const uint32_t*)logs, &guard_mask, &guard)) {
-        handle_fault();
+        handle_fault("guard key expansion");
         return secfalse;
     }
 
@@ -548,7 +550,7 @@ secbool storage_pin_fails_increase(void)
     for (size_t i = 0; i < PIN_LOG_WORDS; ++i) {
         wait_random();
         if ((entry_log[i] & guard_mask) != guard) {
-            handle_fault();
+            handle_fault("guard bits check");
             return secfalse;
         }
         if (entry_log[i] != guard) {
@@ -559,14 +561,14 @@ secbool storage_pin_fails_increase(void)
 
             wait_random();
             if (sectrue != norcow_update_word(PIN_LOGS_KEY, sizeof(uint32_t)*(i + GUARD_KEY_WORDS + PIN_LOG_WORDS), (word & ~guard_mask) | guard)) {
-                handle_fault();
+                handle_fault("PIN logs update");
                 return secfalse;
             }
             return sectrue;
         }
 
     }
-    handle_fault();
+    handle_fault("PIN log exhausted");
     return secfalse;
 }
 
@@ -588,7 +590,7 @@ static secbool pin_get_fails(uint32_t *ctr)
     uint16_t len = 0;
     wait_random();
     if (sectrue != norcow_get(PIN_LOGS_KEY, &logs, &len) || len != WORD_SIZE*(GUARD_KEY_WORDS + 2*PIN_LOG_WORDS)) {
-        handle_fault();
+        handle_fault("no PIN logs");
         return secfalse;
     }
 
@@ -596,7 +598,7 @@ static secbool pin_get_fails(uint32_t *ctr)
     uint32_t guard;
     wait_random();
     if (sectrue != expand_guard_key(*(const uint32_t*)logs, &guard_mask, &guard)) {
-        handle_fault();
+        handle_fault("guard key expansion");
         return secfalse;
     }
     const uint32_t unused = guard | ~guard_mask;
@@ -607,7 +609,7 @@ static secbool pin_get_fails(uint32_t *ctr)
     volatile size_t i;
     for (i = 0; i < PIN_LOG_WORDS; ++i) {
         if ((entry_log[i] & guard_mask) != guard || (success_log[i] & guard_mask) != guard || (entry_log[i] & success_log[i]) != entry_log[i]) {
-            handle_fault();
+            handle_fault("PIN logs format check");
             return secfalse;
         }
 
@@ -617,14 +619,14 @@ static secbool pin_get_fails(uint32_t *ctr)
             }
         } else {
             if (entry_log[i] != unused) {
-                handle_fault();
+                handle_fault("PIN entry log format check");
                 return secfalse;
             }
         }
     }
 
     if (current < 0 || current >= PIN_LOG_WORDS || i != PIN_LOG_WORDS) {
-        handle_fault();
+        handle_fault("PIN log exhausted");
         return secfalse;
     }
 
@@ -635,7 +637,7 @@ static secbool pin_get_fails(uint32_t *ctr)
     word = word | (word << 1);
     // Verify that the entry word has form 0*1*.
     if ((word & (word + 1)) != 0) {
-        handle_fault();
+        handle_fault("PIN entry log format check");
         return secfalse;
     }
 
@@ -706,7 +708,7 @@ static secbool unlock(uint32_t pin)
     // NOTE: storage_get_encrypted() calls auth_get(), which initializes the authentication_sum.
     uint32_t version;
     if (sectrue != storage_get_encrypted(VERSION_KEY, &version, sizeof(version), &len) || len != sizeof(version) || version != norcow_active_version) {
-        handle_fault();
+        handle_fault("storage version check");
         return secfalse;
     }
 
@@ -770,7 +772,7 @@ secbool storage_unlock(uint32_t pin)
     // Check that the PIN fail counter was incremented.
     uint32_t ctr_ck;
     if (sectrue != pin_get_fails(&ctr_ck) || ctr + 1 != ctr_ck) {
-        handle_fault();
+        handle_fault("PIN counter increment");
         return secfalse;
     }
 
@@ -804,7 +806,7 @@ static secbool storage_get_encrypted(const uint16_t key, void *val_dest, const u
     }
 
     if (*len < CHACHA20_IV_SIZE + POLY1305_TAG_SIZE) {
-        handle_fault();
+        handle_fault("ciphertext length check");
         return secfalse;
     }
     *len -= CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
@@ -832,7 +834,7 @@ static secbool storage_get_encrypted(const uint16_t key, void *val_dest, const u
     if (secequal(tag_computed, tag_stored, POLY1305_TAG_SIZE) != sectrue) {
         memzero(val_dest, max_len);
         memzero(tag_computed, sizeof(tag_computed));
-        handle_fault();
+        handle_fault("authentication tag check");
         return secfalse;
     }
 
@@ -1003,14 +1005,14 @@ void storage_wipe(void)
     init_wiped_storage();
 }
 
-static void handle_fault(void)
+static void __handle_fault(const char *msg, const char *file, int line, const char *func)
 {
     static secbool in_progress = secfalse;
 
     // If fault handling is already in progress, then we are probably facing a fault injection attack, so wipe.
     if (secfalse != in_progress) {
         storage_wipe();
-        ensure(secfalse, "fault detected");
+        __fatal_error("Fault detected", msg, file, line, func);
     }
 
     // We use the PIN fail counter as a fault counter. Increment the counter, check that it was incremented and halt.
@@ -1018,19 +1020,19 @@ static void handle_fault(void)
     uint32_t ctr;
     if (sectrue != pin_get_fails(&ctr)) {
         storage_wipe();
-        ensure(secfalse, "fault detected");
+        __fatal_error("Fault detected", msg, file, line, func);
     }
 
     if (sectrue != storage_pin_fails_increase()) {
         storage_wipe();
-        ensure(secfalse, "fault detected");
+        __fatal_error("Fault detected", msg, file, line, func);
     }
 
     uint32_t ctr_new;
     if (sectrue != pin_get_fails(&ctr_new) || ctr + 1 != ctr_new) {
         storage_wipe();
     }
-    ensure(secfalse, "fault detected");
+    __fatal_error("Fault detected", msg, file, line, func);
 }
 
 /*
