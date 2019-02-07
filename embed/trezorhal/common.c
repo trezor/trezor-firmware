@@ -51,6 +51,53 @@ void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, 
 #ifdef GITREV
     display_printf("rev : %s\n", XSTR(GITREV));
 #endif
+    display_printf("\nPlease contact TREZOR support.\n");
+    shutdown();
+    for (;;);
+}
+
+void __attribute__((noreturn)) error_shutdown(const char *line1, const char *line2, const char *line3, const char *line4)
+{
+    display_orientation(0);
+#ifdef TREZOR_FONT_NORMAL_ENABLE
+    display_clear();
+    display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_FATAL_ERROR);
+    int y = 32;
+    if (line1) {
+        display_text(8, y, line1, -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
+        y += 32;
+    }
+    if (line2) {
+        display_text(8, y, line2, -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
+        y += 32;
+    }
+    if (line3) {
+        display_text(8, y, line3, -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
+        y += 32;
+    }
+    if (line4) {
+        display_text(8, y, line4, -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
+        y += 32;
+    }
+    y += 32;
+    display_text(8, y, "Please unplug the device.", -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
+#else
+    display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
+    if (line1) {
+        display_printf("%s\n", line1);
+    }
+    if (line2) {
+        display_printf("%s\n", line2);
+    }
+    if (line3) {
+        display_printf("%s\n", line3);
+    }
+    if (line4) {
+        display_printf("%s\n", line4);
+    }
+    display_printf("\nPlease unplug the device.\n");
+#endif
+    display_backlight(255);
     shutdown();
     for (;;);
 }
