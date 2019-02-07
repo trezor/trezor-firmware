@@ -279,8 +279,7 @@ static bool config_upgrade_v10(void)
         }
     }
 
-    // TODO Add salt.
-    storage_init(NULL, (const uint8_t*)"", 0);
+    storage_init(NULL, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
     storage_unlock(PIN_EMPTY);
     if (config.has_pin) {
         storage_change_pin(PIN_EMPTY, pin_to_int(config.pin));
@@ -344,8 +343,7 @@ void config_init(void)
 {
     config_upgrade_v10();
 
-    // TODO Add salt.
-    storage_init(&protectPinUiCallback, (const uint8_t*)"", 0);
+    storage_init(&protectPinUiCallback, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
 
     uint16_t len = 0;
     if (sectrue == storage_get(KEY_UUID, config_uuid, sizeof(config_uuid), &len) && len == sizeof(config_uuid)) {

@@ -24,6 +24,8 @@
 #include "oled.h"
 #include "firmware/usb.h"
 
+uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
+
 static void __attribute__((noreturn)) shutdown(void)
 {
     for (;;);

@@ -23,6 +23,9 @@
 #include <stdint.h>
 #include "secbool.h"
 
+#define HW_ENTROPY_LEN 12
+extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
+
 void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func);
 void __attribute__((noreturn)) error_shutdown(const char *line1, const char *line2, const char *line3, const char *line4);
 

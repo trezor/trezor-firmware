@@ -17,6 +17,7 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "common.h"
 #include "trezor.h"
 #include "oled.h"
 #include "bitmaps.h"
@@ -31,6 +32,8 @@
 #include "buttons.h"
 #include "gettext.h"
 #include "bl_check.h"
+#include "memzero.h"
+#include <libopencm3/stm32/desig.h>
 
 /* Screen timeout */
 uint32_t system_millis_lock_start;
@@ -86,6 +89,13 @@ void check_lock_screen(void)
 
 int main(void)
 {
+#if EMULATOR
+    memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
+    HW_ENTROPY_DATA[0] = 1;
+#else
+    desig_get_unique_id((uint32_t*)HW_ENTROPY_DATA);
+#endif
+
 #ifndef APPVER
 	setup();
 	__stack_chk_guard = random32(); // this supports compiler provided unpredictable stack protection checks
