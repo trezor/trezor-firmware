@@ -105,6 +105,9 @@
 // The length of the ChaCha20 block in bytes.
 #define CHACHA20_BLOCK_SIZE 64
 
+// The length of the counter tail in bytes.
+#define COUNTER_TAIL_LEN    8
+
 // Values used in the guard key integrity check.
 #define GUARD_KEY_MODULUS   6311
 #define GUARD_KEY_REMAINDER 15
@@ -858,7 +861,7 @@ secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len, 
         return secfalse;
     }
 
-    // If the top bit of APP is set, then the value is not encrypted and can be read from an unlocked device.
+    // If the top bit of APP is set, then the value is not encrypted and can be read from a locked device.
     secbool ret = secfalse;
     if ((app & FLAG_PUBLIC) != 0) {
         const void *val_stored = NULL;
@@ -965,6 +968,60 @@ secbool storage_delete(const uint16_t key)
         ret = auth_update(key);
     }
     return ret;
+}
+
+secbool storage_set_counter(const uint16_t key, const uint32_t count)
+{
+    const uint8_t app = key >> 8;
+    if ((app & FLAG_PUBLIC) == 0) {
+        return secfalse;
+    }
+
+    // The count is stored as a 32-bit integer followed by a tail of "1" bits,
+    // which is used as a tally.
+    uint8_t value[sizeof(count) + COUNTER_TAIL_LEN];
+    memset(value, 0xff, sizeof(value));
+    *((uint32_t*)value) = count;
+    return storage_set(key, value, sizeof(value));
+}
+
+secbool storage_next_counter(const uint16_t key, uint32_t *count)
+{
+    const uint8_t app = key >> 8;
+    // APP == 0 is reserved for PIN related values
+    if (sectrue != initialized || app == APP_STORAGE || (app & FLAG_PUBLIC) == 0) {
+        return secfalse;
+    }
+
+    if (sectrue != unlocked && (app & FLAGS_WRITE) != FLAGS_WRITE) {
+        return secfalse;
+    }
+
+    uint16_t len = 0;
+    const uint32_t *val_stored = NULL;
+    if (sectrue != norcow_get(key, (const void**)&val_stored, &len)) {
+        *count = 0;
+        return storage_set_counter(key, 0);
+    }
+
+    if (len < sizeof(uint32_t) || len % sizeof(uint32_t) != 0) {
+        return secfalse;
+    }
+    uint16_t len_words = len / sizeof(uint32_t);
+
+    uint16_t i = 1;
+    while (i < len_words && val_stored[i] == 0) {
+        ++i;
+    }
+
+    *count = val_stored[0] + 1 + 32 * (i - 1);
+
+    if (i < len_words) {
+        *count += hamming_weight(~val_stored[i]);
+        return norcow_update_word(key, sizeof(uint32_t) * i, val_stored[i] >> 1);
+    } else {
+        return storage_set_counter(key, *count);
+    }
 }
 
 secbool storage_has_pin(void)
