@@ -169,7 +169,6 @@ void reset_backup(bool separated, const char* mnemonic)
 	}
 
 	config_setUnfinishedBackup(false);
-	storage_update();
 
 	if (separated) {
 		fsm_sendSuccess(_("Seed successfully backed up"));
