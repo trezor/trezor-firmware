@@ -51,6 +51,7 @@ static const uint32_t CONFIG_MAGIC_V10 = 0x726f7473;   // 'stor' as uint32_t
 
 #define APP         0x0100
 #define FLAG_PUBLIC 0x8000
+#define FLAGS_WRITE 0xC000
 
 static const uint16_t KEY_UUID                  =  0 | APP | FLAG_PUBLIC; // bytes(12)
 static const uint16_t KEY_VERSION               =  1 | APP;               // uint32
@@ -61,7 +62,7 @@ static const uint16_t KEY_PASSPHRASE_PROTECTION =  5 | APP;               // boo
 static const uint16_t KEY_HOMESCREEN            =  6 | APP | FLAG_PUBLIC; // bytes(1024)
 static const uint16_t KEY_NEEDS_BACKUP          =  7 | APP;               // bool
 static const uint16_t KEY_FLAGS                 =  8 | APP;               // uint32
-static const uint16_t KEY_U2F_COUNTER           =  9 | APP | FLAG_PUBLIC; // uint32
+static const uint16_t KEY_U2F_COUNTER           =  9 | APP | FLAGS_WRITE; // uint32
 static const uint16_t KEY_UNFINISHED_BACKUP     = 11 | APP;               // bool
 static const uint16_t KEY_AUTO_LOCK_DELAY_MS    = 12 | APP;               // uint32
 static const uint16_t KEY_NO_BACKUP             = 13 | APP;               // bool
@@ -837,18 +838,14 @@ bool config_getFlags(uint32_t *flags)
 
 uint32_t config_nextU2FCounter(void)
 {
-    // TODO Implement efficient version.
-    uint32_t counter = 0;
-    uint16_t len = 0;
-    storage_get(KEY_U2F_COUNTER, &counter, sizeof(counter), &len);
-    counter++;
-    storage_set(KEY_U2F_COUNTER, &counter, sizeof(counter));
-    return counter;
+    uint32_t u2fcounter = 0;
+    storage_next_counter(KEY_U2F_COUNTER, &u2fcounter);
+    return u2fcounter;
 }
 
 void config_setU2FCounter(uint32_t u2fcounter)
 {
-    storage_set(KEY_U2F_COUNTER, &u2fcounter, sizeof(u2fcounter));
+    storage_set_counter(KEY_U2F_COUNTER, u2fcounter);
 }
 
 uint32_t config_getAutoLockDelayMs()
