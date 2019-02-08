@@ -62,6 +62,10 @@
 // If the top bit of APP is set, then the value is not encrypted.
 #define FLAG_PUBLIC         0x80
 
+// If the top two bits of APP are set, then the value is not encrypted and it
+// can be written even when the storage is locked.
+#define FLAGS_WRITE         0xC0
+
 // The length of the guard key in words.
 #define GUARD_KEY_WORDS     1
 
@@ -926,7 +930,11 @@ secbool storage_set(const uint16_t key, const void *val, const uint16_t len)
     const uint8_t app = key >> 8;
 
     // APP == 0 is reserved for PIN related values
-    if (sectrue != initialized || sectrue != unlocked || app == APP_STORAGE) {
+    if (sectrue != initialized || app == APP_STORAGE) {
+        return secfalse;
+    }
+
+    if (sectrue != unlocked && (app & FLAGS_WRITE) != FLAGS_WRITE) {
         return secfalse;
     }
 
@@ -944,7 +952,11 @@ secbool storage_delete(const uint16_t key)
     const uint8_t app = key >> 8;
 
     // APP == 0 is reserved for storage related values
-    if (sectrue != initialized || sectrue != unlocked || app == APP_STORAGE) {
+    if (sectrue != initialized || app == APP_STORAGE) {
+        return secfalse;
+    }
+
+    if (sectrue != unlocked && (app & FLAGS_WRITE) != FLAGS_WRITE) {
         return secfalse;
     }
 
