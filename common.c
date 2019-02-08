@@ -38,7 +38,7 @@ void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, 
     oledClear();
 
     oledDrawBitmap(0, 0, icon);
-    oledDrawStringCenter((icon->height - FONT_HEIGHT)/2 + 1, "FATAL  ERROR", FONT_STANDARD);
+    oledDrawStringCenter(OLED_WIDTH / 2, (icon->height - FONT_HEIGHT)/2 + 1, "FATAL  ERROR", FONT_STANDARD);
 
     snprintf(line, sizeof(line), "Expr: %s", expr ? expr : "(null)");
     oledDrawString(0, y, line, FONT_STANDARD);
