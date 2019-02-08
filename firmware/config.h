@@ -125,7 +125,7 @@ bool config_containsPin(const char *pin);
 bool config_hasPin(void);
 void config_setPin(const char *pin);
 bool config_changePin(const char *old_pin, const char *new_pin);
-bool session_isPinCached(void);
+bool session_isUnlocked(void);
 
 uint32_t config_nextU2FCounter(void);
 void config_setU2FCounter(uint32_t u2fcounter);

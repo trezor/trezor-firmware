@@ -181,12 +181,9 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress)
 
 bool protectPin(bool use_cached)
 {
-	if (use_cached && session_isPinCached()) {
+	if (use_cached && session_isUnlocked()) {
 		return true;
 	}
-
-    // TODO If maximum number of PIN attempts:
-    // error_shutdown("Too many wrong PIN", "attempts. Storage has", "been wiped.", NULL, "Please unplug", "the device.");
 
 	const char *pin = "";
 	if (config_hasPin()) {

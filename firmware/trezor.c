@@ -91,7 +91,6 @@ int main(void)
 {
 #if EMULATOR
     memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
-    HW_ENTROPY_DATA[0] = 1;
 #else
     desig_get_unique_id((uint32_t*)HW_ENTROPY_DATA);
 #endif

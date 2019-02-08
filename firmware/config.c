@@ -767,7 +767,7 @@ bool session_getState(const uint8_t *salt, uint8_t *state, const char *passphras
     return true;
 }
 
-bool session_isPinCached(void)
+bool session_isUnlocked(void)
 {
     return storage_is_unlocked();
 }
