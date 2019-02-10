@@ -378,7 +378,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep)
 				return;
 			}
 			// read payload length
-			uint8_t *p = buf + 10;
+			const uint8_t *p = buf + 10;
 			flash_len = readprotobufint(&p);
 			if (flash_len > FLASH_TOTAL_SIZE + FLASH_META_DESC_LEN - (FLASH_APP_START - FLASH_ORIGIN)) { // firmware is too big
 				send_msg_failure(dev);
