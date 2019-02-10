@@ -42,7 +42,7 @@ void uint32hex(uint32_t num, char *str);
 void data2hex(const void *data, uint32_t len, char *str);
 
 // read protobuf integer and advance pointer
-uint32_t readprotobufint(uint8_t **ptr);
+uint32_t readprotobufint(const uint8_t **ptr);
 
 extern void __attribute__((noreturn)) shutdown(void);
 
