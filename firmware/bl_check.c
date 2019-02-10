@@ -78,6 +78,8 @@ void check_bootloader(void)
 
 	for (int tries = 0; tries < 10; tries++) {
 		// replace bootloader
+		flash_wait_for_last_operation();
+		flash_clear_status_flags();
 		flash_unlock();
 		for (int i = FLASH_BOOT_SECTOR_FIRST; i <= FLASH_BOOT_SECTOR_LAST; i++) {
 			flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
@@ -86,6 +88,7 @@ void check_bootloader(void)
 			const uint32_t *w = (const uint32_t *)(bl_data + i * 4);
 			flash_program_word(FLASH_BOOT_START + i * 4, *w);
 		}
+		flash_wait_for_last_operation();
 		flash_lock();
 		// check whether the write was OK
 		r = memory_bootloader_hash(hash);

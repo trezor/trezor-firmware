@@ -25,6 +25,7 @@
 #if !EMULATOR
 
 static void svhandler_flash_unlock(void) {
+	flash_wait_for_last_operation();
 	flash_clear_status_flags();
 	flash_unlock();
 }
