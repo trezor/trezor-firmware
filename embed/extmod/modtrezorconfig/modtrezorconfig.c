@@ -27,6 +27,7 @@
 
 #include "storage.h"
 #include "common.h"
+#include "memzero.h"
 
 STATIC mp_obj_t ui_wait_callback = mp_const_none;
 
@@ -51,6 +52,7 @@ STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
     } else {
         storage_init(NULL, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
     }
+    memzero(HW_ENTROPY_DATA, sizeof(HW_ENTROPY_DATA));
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_init_obj, 0, 1, mod_trezorconfig_init);
