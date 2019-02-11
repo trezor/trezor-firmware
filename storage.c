@@ -105,8 +105,8 @@
 // The length of the ChaCha20 block in bytes.
 #define CHACHA20_BLOCK_SIZE 64
 
-// The length of the counter tail in bytes.
-#define COUNTER_TAIL_LEN    8
+// The length of the counter tail in words.
+#define COUNTER_TAIL_WORDS  2
 
 // Values used in the guard key integrity check.
 #define GUARD_KEY_MODULUS   6311
@@ -979,9 +979,9 @@ secbool storage_set_counter(const uint16_t key, const uint32_t count)
 
     // The count is stored as a 32-bit integer followed by a tail of "1" bits,
     // which is used as a tally.
-    uint8_t value[sizeof(count) + COUNTER_TAIL_LEN];
+    uint32_t value[1 + COUNTER_TAIL_WORDS];
     memset(value, 0xff, sizeof(value));
-    *((uint32_t*)value) = count;
+    value[0] = count;
     return storage_set(key, value, sizeof(value));
 }
 
