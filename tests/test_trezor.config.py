@@ -54,7 +54,6 @@ class TestConfig(unittest.TestCase):
                 config.set(appid, key, bytes())
         config.init()
         config.wipe()
-        self.assertEqual(config.change_pin(pin_to_int(''), pin_to_int('000')), False)
 
     def test_public(self):
         config.init()
