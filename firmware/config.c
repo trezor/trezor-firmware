@@ -345,6 +345,7 @@ void config_init(void)
     config_upgrade_v10();
 
     storage_init(&protectPinUiCallback, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
+    memzero(HW_ENTROPY_DATA, sizeof(HW_ENTROPY_DATA));
 
     uint16_t len = 0;
     if (sectrue == storage_get(KEY_UUID, config_uuid, sizeof(config_uuid), &len) && len == sizeof(config_uuid)) {
