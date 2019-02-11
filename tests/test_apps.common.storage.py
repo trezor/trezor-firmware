@@ -9,7 +9,6 @@ class TestConfig(unittest.TestCase):
     def test_counter(self):
         config.init()
         config.wipe()
-        self.assertEqual(config.unlock(pin_to_int('')), True)
         for i in range(150):
             self.assertEqual(storage.next_u2f_counter(), i)
         storage.set_u2f_counter(350)
