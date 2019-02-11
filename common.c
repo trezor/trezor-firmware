@@ -59,7 +59,7 @@ void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, 
     oledDrawString(0, y, line, FONT_STANDARD);
     y += FONT_HEIGHT + 1;
 
-    oledDrawString(0, y, "Please unplug the device.", FONT_STANDARD);
+    oledDrawString(0, y, "Contact TREZOR support.", FONT_STANDARD);
     oledRefresh();
 
     shutdown();
