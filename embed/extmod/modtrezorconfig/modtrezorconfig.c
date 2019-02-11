@@ -133,7 +133,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_change_pin_obj, mod_trezorconf
 ///     Raises a RuntimeError if decryption or authentication of the stored value fails.
 ///     '''
 STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
-    uint8_t app = trezor_obj_get_uint8(args[0]) & 0x7F;
+    uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
     uint8_t key = trezor_obj_get_uint8(args[1]);
     if (n_args > 2 && args[2] == mp_const_true) {
         app |= 0x80;
@@ -161,7 +161,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_get_obj, 2, 3, mod_t
 ///     Sets a value of given key for given app.
 ///     '''
 STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
-    uint8_t app = trezor_obj_get_uint8(args[0]) & 0x7F;
+    uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
     uint8_t key = trezor_obj_get_uint8(args[1]);
     if (n_args > 3 && args[3] == mp_const_true) {
         app |= 0x80;
@@ -181,7 +181,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_obj, 3, 4, mod_t
 ///     Deletes the given key of the given app.
 ///     '''
 STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
-    uint8_t app = trezor_obj_get_uint8(args[0]) & 0x7F;
+    uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
     uint8_t key = trezor_obj_get_uint8(args[1]);
     if (n_args > 2 && args[2] == mp_const_true) {
         app |= 0x80;
@@ -193,6 +193,54 @@ STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
     return mp_const_true;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_delete_obj, 2, 3, mod_trezorconfig_delete);
+
+/// def set_counter(app: int, key: int, count: int, writable_locked: bool=False) -> bool:
+///     '''
+///     Sets the given key of the given app as a counter with the given value.
+///     '''
+STATIC mp_obj_t mod_trezorconfig_set_counter(size_t n_args, const mp_obj_t *args) {
+    uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
+    uint8_t key = trezor_obj_get_uint8(args[1]);
+    if (n_args > 3 && args[3] == mp_const_true) {
+        app |= 0xC0;
+    } else {
+        app |= 0x80;
+    }
+    uint16_t appkey = (app << 8) | key;
+    if (args[2] == mp_const_none) {
+        if (sectrue != storage_delete(appkey)) {
+            return mp_const_false;
+        }
+    } else {
+        uint32_t count = trezor_obj_get_uint(args[2]);
+        if (sectrue != storage_set_counter(appkey, count)) {
+            return mp_const_false;
+        }
+    }
+    return mp_const_true;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_counter_obj, 3, 4, mod_trezorconfig_set_counter);
+
+/// def next_counter(app: int, key: int, writable_locked: bool=False) -> bool:
+///     '''
+///     Increments the counter stored under the given key of the given app and returns the new value.
+///     '''
+STATIC mp_obj_t mod_trezorconfig_next_counter(size_t n_args, const mp_obj_t *args) {
+    uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
+    uint8_t key = trezor_obj_get_uint8(args[1]);
+    if (n_args > 2 && args[2] == mp_const_true) {
+        app |= 0xC0;
+    } else {
+        app |= 0x80;
+    }
+    uint16_t appkey = (app << 8) | key;
+    uint32_t count = 0;
+    if (sectrue != storage_next_counter(appkey, &count)) {
+        return mp_const_none;
+    }
+    return mp_obj_new_int_from_uint(count);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_next_counter_obj, 2, 3, mod_trezorconfig_next_counter);
 
 /// def wipe() -> None:
 ///     '''
@@ -216,6 +264,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_get), MP_ROM_PTR(&mod_trezorconfig_get_obj) },
     { MP_ROM_QSTR(MP_QSTR_set), MP_ROM_PTR(&mod_trezorconfig_set_obj) },
     { MP_ROM_QSTR(MP_QSTR_delete), MP_ROM_PTR(&mod_trezorconfig_delete_obj) },
+    { MP_ROM_QSTR(MP_QSTR_set_counter), MP_ROM_PTR(&mod_trezorconfig_set_counter_obj) },
+    { MP_ROM_QSTR(MP_QSTR_next_counter), MP_ROM_PTR(&mod_trezorconfig_next_counter_obj) },
     { MP_ROM_QSTR(MP_QSTR_wipe), MP_ROM_PTR(&mod_trezorconfig_wipe_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorconfig_globals, mp_module_trezorconfig_globals_table);
