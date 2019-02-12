@@ -111,11 +111,14 @@ be added to the storage u2f_counter to get the real counter value.
  * This corresponds to the number of cleared bits in the U2FAREA.
  */
 static bool sessionSeedCached, sessionSeedUsesPassphrase;
-
 static uint8_t CONFIDENTIAL sessionSeed[64];
 
 static bool sessionPassphraseCached = false;
 static char CONFIDENTIAL sessionPassphrase[51];
+
+#define autoLockDelayMsDefault (10 * 60 * 1000U) // 10 minutes
+static secbool autoLockDelayMsCached = secfalse;
+static uint32_t autoLockDelayMs = autoLockDelayMsDefault;
 
 static const uint32_t CONFIG_VERSION = 10;
 
@@ -851,19 +854,29 @@ void config_setU2FCounter(uint32_t u2fcounter)
 
 uint32_t config_getAutoLockDelayMs()
 {
-    const uint32_t default_delay_ms = 10 * 60 * 1000U; // 10 minutes
-    uint32_t delay_ms = 0;
-    if (config_get_uint32(KEY_AUTO_LOCK_DELAY_MS, &delay_ms)) {
-        return delay_ms;
+    if (sectrue == autoLockDelayMsCached) {
+        return autoLockDelayMs;
     }
-    return default_delay_ms;
+
+    if (sectrue != storage_is_unlocked()) {
+        return autoLockDelayMsDefault;
+    }
+
+    if (!config_get_uint32(KEY_AUTO_LOCK_DELAY_MS, &autoLockDelayMs)) {
+        autoLockDelayMs = autoLockDelayMsDefault;
+    }
+    autoLockDelayMsCached = sectrue;
+    return autoLockDelayMs;
 }
 
 void config_setAutoLockDelayMs(uint32_t auto_lock_delay_ms)
 {
     const uint32_t min_delay_ms = 10 * 1000U; // 10 seconds
     auto_lock_delay_ms = MAX(auto_lock_delay_ms, min_delay_ms);
-    storage_set(KEY_AUTO_LOCK_DELAY_MS, &auto_lock_delay_ms, sizeof(auto_lock_delay_ms));
+    if (sectrue == storage_set(KEY_AUTO_LOCK_DELAY_MS, &auto_lock_delay_ms, sizeof(auto_lock_delay_ms))) {
+        autoLockDelayMs = auto_lock_delay_ms;
+        autoLockDelayMsCached = sectrue;
+    }
 }
 
 void config_wipe(void)
@@ -872,6 +885,7 @@ void config_wipe(void)
     storage_unlock(PIN_EMPTY);
     random_buffer((uint8_t *)config_uuid, sizeof(config_uuid));
     data2hex(config_uuid, sizeof(config_uuid), config_uuid_str);
+    autoLockDelayMsCached = secfalse;
     storage_set(KEY_UUID, config_uuid, sizeof(config_uuid));
     storage_set(KEY_VERSION, &CONFIG_VERSION, sizeof(CONFIG_VERSION));
     session_clear(false);
