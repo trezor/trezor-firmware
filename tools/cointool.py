@@ -411,6 +411,42 @@ def check_key_uniformity(coins):
     return False
 
 
+def check_segwit(coins):
+    for coin in coins:
+        segwit = coin["segwit"]
+        if segwit:
+            if coin["xpub_magic_segwit_native"] is None:
+                print_log(
+                    logging.WARNING,
+                    coin["name"],
+                    "segwit is True => xpub_magic_segwit_native should be set",
+                )
+                # return False
+            if coin["xpub_magic_segwit_p2sh"] is None:
+                print_log(
+                    logging.WARNING,
+                    coin["name"],
+                    "segwit is True => xpub_magic_segwit_p2sh should be set",
+                )
+                # return False
+        else:
+            if coin["xpub_magic_segwit_native"] is not None:
+                print_log(
+                    logging.ERROR,
+                    coin["name"],
+                    "segwit is False => xpub_magic_segwit_native should NOT be set",
+                )
+                return False
+            if coin["xpub_magic_segwit_p2sh"] is not None:
+                print_log(
+                    logging.ERROR,
+                    coin["name"],
+                    "segwit is False => xpub_magic_segwit_p2sh should NOT be set",
+                )
+                return False
+    return True
+
+
 # ====== coindefs generators ======
 
 
@@ -563,6 +599,10 @@ def check(backend, icons, show_duplicates):
         print("Checking backend responses...")
         if not check_backends(defs.bitcoin):
             all_checks_passed = False
+
+    print("Checking segwit fields...")
+    if not check_segwit(defs.bitcoin):
+        all_checks_passed = False
 
     print("Checking key uniformity...")
     for cointype, coinlist in defs.items():
