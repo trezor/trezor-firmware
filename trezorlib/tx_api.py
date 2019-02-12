@@ -149,9 +149,11 @@ class TxApi:
         if coin_data["blockbook"]:
             self.url = random.choice(coin_data["blockbook"])
             self.pushtx_url = self.url + "/sendtx"
+            self.type = "blockbook"
         elif coin_data["bitcore"]:
             self.url = random.choice(coin_data["bitcore"])
             self.pushtx_url = self.url + "/tx/send"
+            self.type = "bitcore"
         else:
             raise ValueError("No API URL in coin data")
 
@@ -171,7 +173,8 @@ class TxApi:
         return self.get_tx(txhash.hex())
 
     def get_tx_data(self, txhash):
-        data = self.fetch_json("tx", txhash)
+        method = "tx-specific" if self.type == "blockbook" else "tx"
+        data = self.fetch_json(method, txhash)
         if is_zcash(self.coin_data) and data.get("vjoinsplit") and "hex" not in data:
             j = self.fetch_json("rawtx", txhash)
             data["hex"] = j["rawtx"]
