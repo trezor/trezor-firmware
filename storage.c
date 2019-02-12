@@ -680,6 +680,7 @@ static secbool unlock(uint32_t pin)
     uint16_t len = 0;
     if (sectrue != initialized || sectrue != norcow_get(EDEK_PVC_KEY, &buffer, &len) || len != RANDOM_SALT_SIZE + KEYS_SIZE + PVC_SIZE) {
         memzero(&pin, sizeof(pin));
+        handle_fault("no EDEK");
         return secfalse;
     }
 
