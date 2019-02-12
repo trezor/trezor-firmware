@@ -463,10 +463,10 @@ static void init_wiped_storage(void)
     }
     random_buffer(cached_keys, sizeof(cached_keys));
     uint32_t version = NORCOW_VERSION;
-    ensure(auth_init(), "failed to initialize storage authentication tag");
-    ensure(storage_set_encrypted(VERSION_KEY, &version, sizeof(version)), "failed to set storage version");
-    ensure(set_pin(PIN_EMPTY), "failed to initialize PIN");
-    ensure(pin_logs_init(0), "failed to initialize PIN logs");
+    ensure(auth_init(), "set_storage_auth_tag failed");
+    ensure(storage_set_encrypted(VERSION_KEY, &version, sizeof(version)), "set_storage_version failed");
+    ensure(pin_logs_init(0), "init_pin_logs failed");
+    ensure(set_pin(PIN_EMPTY), "init_pin failed");
     if (unlocked != sectrue) {
         memzero(cached_keys, sizeof(cached_keys));
     }
@@ -485,7 +485,7 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt, const uint
     if (norcow_active_version < NORCOW_VERSION) {
         if (sectrue != storage_upgrade()) {
             storage_wipe();
-            ensure(secfalse, "storage_upgrade");
+            ensure(secfalse, "storage_upgrade failed");
         }
     }
 
