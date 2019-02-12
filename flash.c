@@ -43,7 +43,7 @@ static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
 
 static secbool flash_check_success(uint32_t status)
 {
-	return (status & (FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) ? secfalse : sectrue;
+    return (status & (FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR | FLASH_SR_WRPERR)) ? secfalse : sectrue;
 }
 
 void flash_init(void)
@@ -58,7 +58,7 @@ secbool flash_unlock_write(void)
 
 secbool flash_lock_write(void)
 {
-	return flash_check_success(svc_flash_lock());
+    return flash_check_success(svc_flash_lock());
 }
 
 const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size)
@@ -77,16 +77,16 @@ const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size)
 secbool flash_erase(uint8_t sector)
 {
     ensure(flash_unlock_write(), NULL);
-	svc_flash_erase_sector(sector);
-	ensure(flash_lock_write(), NULL);
+    svc_flash_erase_sector(sector);
+    ensure(flash_lock_write(), NULL);
 
-	// Check whether the sector was really deleted (contains only 0xFF).
-	const uint32_t addr_start = FLASH_SECTOR_TABLE[sector], addr_end = FLASH_SECTOR_TABLE[sector + 1];
-	for (uint32_t addr = addr_start; addr < addr_end; addr += 4) {
-		if (*((const uint32_t *)FLASH_PTR(addr)) != 0xFFFFFFFF) {
-			return secfalse;
-		}
-	}
+    // Check whether the sector was really deleted (contains only 0xFF).
+    const uint32_t addr_start = FLASH_SECTOR_TABLE[sector], addr_end = FLASH_SECTOR_TABLE[sector + 1];
+    for (uint32_t addr = addr_start; addr < addr_end; addr += 4) {
+        if (*((const uint32_t *)FLASH_PTR(addr)) != 0xFFFFFFFF) {
+            return secfalse;
+        }
+    }
     return sectrue;
 }
 
@@ -98,14 +98,14 @@ secbool flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data)
     }
 
     if ((*address & data) != data) {
-    	return secfalse;
+        return secfalse;
     }
 
-	svc_flash_program(FLASH_CR_PROGRAM_X8);
-	*(volatile uint8_t *) address = data;
+    svc_flash_program(FLASH_CR_PROGRAM_X8);
+    *(volatile uint8_t *) address = data;
 
     if (*address != data) {
-    	return secfalse;
+        return secfalse;
     }
 
     return sectrue;
@@ -123,14 +123,14 @@ secbool flash_write_word(uint8_t sector, uint32_t offset, uint32_t data)
     }
 
     if ((*address & data) != data) {
-    	return secfalse;
+        return secfalse;
     }
 
-	svc_flash_program(FLASH_CR_PROGRAM_X32);
-	*(volatile uint32_t *) address = data;
+    svc_flash_program(FLASH_CR_PROGRAM_X32);
+    *(volatile uint32_t *) address = data;
 
     if (*address != data) {
-    	return secfalse;
+        return secfalse;
     }
 
     return sectrue;

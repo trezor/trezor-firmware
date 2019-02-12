@@ -97,7 +97,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 		fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Not in Reset mode"));
 		return;
 	}
-    awaiting_entropy = false;
+	awaiting_entropy = false;
 
 	SHA256_CTX ctx;
 	sha256_Init(&ctx);
@@ -108,21 +108,21 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len)
 	memzero(int_entropy, 32);
 
 	if (skip_backup || no_backup) {
-	    if (no_backup) {
-	        config_setNoBackup();
-	    } else {
-	        config_setNeedsBackup(true);
-	    }
-        if (config_setMnemonic(mnemonic)) {
-            fsm_sendSuccess(_("Device successfully initialized"));
-        } else {
-            fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to store mnemonic"));
-        }
+		if (no_backup) {
+			config_setNoBackup();
+		} else {
+			config_setNeedsBackup(true);
+		}
+		if (config_setMnemonic(mnemonic)) {
+			fsm_sendSuccess(_("Device successfully initialized"));
+		} else {
+			fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to store mnemonic"));
+		}
 		layoutHome();
 	} else {
 		reset_backup(false, mnemonic);
 	}
-    mnemonic_clear();
+	mnemonic_clear();
 }
 
 static char current_word[10];
@@ -131,15 +131,15 @@ static char current_word[10];
 void reset_backup(bool separated, const char* mnemonic)
 {
 	if (separated) {
-        bool needs_backup = false;
-        config_getNeedsBackup(&needs_backup);
-        if (!needs_backup) {
-            fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Seed already backed up"));
-            return;
-        }
+		bool needs_backup = false;
+		config_getNeedsBackup(&needs_backup);
+		if (!needs_backup) {
+			fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Seed already backed up"));
+			return;
+		}
 
-	    config_setUnfinishedBackup(true);
-	    config_setNeedsBackup(false);
+		config_setUnfinishedBackup(true);
+		config_setNeedsBackup(false);
 	}
 
 	for (int pass = 0; pass < 2; pass++) {
@@ -173,12 +173,12 @@ void reset_backup(bool separated, const char* mnemonic)
 	if (separated) {
 		fsm_sendSuccess(_("Seed successfully backed up"));
 	} else {
-        config_setNeedsBackup(false);
-        if (config_setMnemonic(mnemonic)) {
-            fsm_sendSuccess(_("Device successfully initialized"));
-        } else {
-            fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to store mnemonic"));
-        }
+		config_setNeedsBackup(false);
+		if (config_setMnemonic(mnemonic)) {
+			fsm_sendSuccess(_("Device successfully initialized"));
+		} else {
+			fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to store mnemonic"));
+		}
 	}
 	layoutHome();
 }

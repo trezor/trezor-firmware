@@ -149,34 +149,34 @@ const char *requestPin(PinMatrixRequestType type, const char *text)
 
 secbool protectPinUiCallback(uint32_t wait, uint32_t progress)
 {
-    (void) progress;
+	(void) progress;
 
-    // Convert wait to secstr string.
-    char secstrbuf[] = _("________0 seconds");
-    char *secstr = secstrbuf + 9;
-    uint32_t secs = wait;
-    do {
-        secstr--;
-        *secstr = (secs % 10) + '0';
-        secs /= 10;
-    } while (secs > 0 && secstr >= secstrbuf);
-    if (wait == 1) {
-        // Change "seconds" to "second".
-        secstrbuf[16] = 0;
-    }
-    layoutDialog(&bmp_icon_info, NULL, NULL, NULL, _("Verifying PIN"), NULL, _("Please wait"), secstr, _("to continue ..."), NULL);
+	// Convert wait to secstr string.
+	char secstrbuf[] = _("________0 seconds");
+	char *secstr = secstrbuf + 9;
+	uint32_t secs = wait;
+	do {
+		secstr--;
+		*secstr = (secs % 10) + '0';
+		secs /= 10;
+	} while (secs > 0 && secstr >= secstrbuf);
+	if (wait == 1) {
+		// Change "seconds" to "second".
+		secstrbuf[16] = 0;
+	}
+	layoutDialog(&bmp_icon_info, NULL, NULL, NULL, _("Verifying PIN"), NULL, _("Please wait"), secstr, _("to continue ..."), NULL);
 
-    // Check for Cancel / Initialize.
-    protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
-    protectAbortedByInitialize = (msg_tiny_id == MessageType_MessageType_Initialize);
-    if (protectAbortedByCancel || protectAbortedByInitialize) {
-        msg_tiny_id = 0xFFFF;
-        usbTiny(0);
-        fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
-        return sectrue;
-    }
+	// Check for Cancel / Initialize.
+	protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
+	protectAbortedByInitialize = (msg_tiny_id == MessageType_MessageType_Initialize);
+	if (protectAbortedByCancel || protectAbortedByInitialize) {
+		msg_tiny_id = 0xFFFF;
+		usbTiny(0);
+		fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
+		return sectrue;
+	}
 
-    return secfalse;
+	return secfalse;
 }
 
 bool protectPin(bool use_cached)
@@ -187,77 +187,77 @@ bool protectPin(bool use_cached)
 
 	const char *pin = "";
 	if (config_hasPin()) {
-        pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current, _("Please enter current PIN:"));
-        if (!pin) {
-            fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
-            return false;
-        }
+		pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current, _("Please enter current PIN:"));
+		if (!pin) {
+			fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
+			return false;
+		}
 	}
 
-    usbTiny(1);
+	usbTiny(1);
 	bool ret = config_containsPin(pin);
-    usbTiny(0);
+	usbTiny(0);
 	if (!ret) {
 		fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
 	}
-    return ret;
+	return ret;
 }
 
 bool protectChangePin(bool removal)
 {
-    static CONFIDENTIAL char old_pin[MAX_PIN_LEN + 1] = "";
-    static CONFIDENTIAL char new_pin[MAX_PIN_LEN + 1] = "";
-    const char* pin = NULL;
+	static CONFIDENTIAL char old_pin[MAX_PIN_LEN + 1] = "";
+	static CONFIDENTIAL char new_pin[MAX_PIN_LEN + 1] = "";
+	const char* pin = NULL;
 
-    if (config_hasPin()) {
-        pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current, _("Please enter current PIN:"));
-        if (pin == NULL) {
-            fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
-            return false;
-        }
-        strlcpy(old_pin, pin, sizeof(old_pin));
-    }
+	if (config_hasPin()) {
+		pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current, _("Please enter current PIN:"));
+		if (pin == NULL) {
+			fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
+			return false;
+		}
+		strlcpy(old_pin, pin, sizeof(old_pin));
+	}
 
-    if (!removal) {
-        pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewFirst, _("Please enter new PIN:"));
-        if (pin == NULL) {
-            memzero(old_pin, sizeof(old_pin));
-            fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
-            return false;
-        }
-        strlcpy(new_pin, pin, sizeof(new_pin));
+	if (!removal) {
+		pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewFirst, _("Please enter new PIN:"));
+		if (pin == NULL) {
+			memzero(old_pin, sizeof(old_pin));
+			fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
+			return false;
+		}
+		strlcpy(new_pin, pin, sizeof(new_pin));
 
-        pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewSecond, _("Please re-enter new PIN:"));
-        if (pin == NULL) {
-            memzero(old_pin, sizeof(old_pin));
-            memzero(new_pin, sizeof(new_pin));
-            fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
-            return false;
-        }
+		pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewSecond, _("Please re-enter new PIN:"));
+		if (pin == NULL) {
+			memzero(old_pin, sizeof(old_pin));
+			memzero(new_pin, sizeof(new_pin));
+			fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
+			return false;
+		}
 
-        if (strncmp(new_pin, pin, sizeof(new_pin)) != 0) {
-            memzero(old_pin, sizeof(old_pin));
-            memzero(new_pin, sizeof(new_pin));
-            fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
-            return false;
-        }
-    }
+		if (strncmp(new_pin, pin, sizeof(new_pin)) != 0) {
+			memzero(old_pin, sizeof(old_pin));
+			memzero(new_pin, sizeof(new_pin));
+			fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
+			return false;
+		}
+	}
 
-    usbTiny(1);
-    bool ret = config_changePin(old_pin, new_pin);
-    usbTiny(0);
-    memzero(old_pin, sizeof(old_pin));
-    memzero(new_pin, sizeof(new_pin));
-    if (ret == false) {
-        fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
-    }
-    return ret;
+	usbTiny(1);
+	bool ret = config_changePin(old_pin, new_pin);
+	usbTiny(0);
+	memzero(old_pin, sizeof(old_pin));
+	memzero(new_pin, sizeof(new_pin));
+	if (ret == false) {
+		fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+	}
+	return ret;
 }
 
 bool protectPassphrase(void)
 {
-    bool passphrase_protection = false;
-    config_getPassphraseProtection(&passphrase_protection);
+	bool passphrase_protection = false;
+	config_getPassphraseProtection(&passphrase_protection);
 	if (!passphrase_protection || session_isPassphraseCached()) {
 		return true;
 	}

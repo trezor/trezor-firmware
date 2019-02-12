@@ -90,9 +90,9 @@ void check_lock_screen(void)
 int main(void)
 {
 #if EMULATOR
-    memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
+	memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
 #else
-    desig_get_unique_id((uint32_t*)HW_ENTROPY_DATA);
+	desig_get_unique_id((uint32_t*)HW_ENTROPY_DATA);
 #endif
 
 #ifndef APPVER

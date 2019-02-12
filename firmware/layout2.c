@@ -238,7 +238,7 @@ void layoutHome(void)
 
 	char label[MAX_LABEL_LEN + 1] = _("Go to trezor.io/start");
 	if (config_isInitialized()) {
-	    config_getLabel(label, sizeof(label));
+		config_getLabel(label, sizeof(label));
 	}
 
 	uint8_t homescreen[HOMESCREEN_SIZE];
@@ -257,12 +257,12 @@ void layoutHome(void)
 		}
 	}
 
-    bool no_backup = false;
-    bool unfinished_backup = false;
-    bool needs_backup = false;
-    config_getNoBackup(&no_backup);
-    config_getUnfinishedBackup(&unfinished_backup);
-    config_getNeedsBackup(&needs_backup);
+	bool no_backup = false;
+	bool unfinished_backup = false;
+	bool needs_backup = false;
+	config_getNoBackup(&no_backup);
+	config_getUnfinishedBackup(&unfinished_backup);
+	config_getNeedsBackup(&needs_backup);
 	if (no_backup) {
 		oledBox(0, 0, 127, 8, false);
 		oledDrawStringCenter(OLED_WIDTH / 2, 0, "SEEDLESS", FONT_STANDARD);
