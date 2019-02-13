@@ -1,10 +1,10 @@
 {
   "connect": {
     "supported": {
-      "bitcoin:AXE": true,
       "bitcoin:BCH": true,
       "bitcoin:BTC": true,
       "bitcoin:BTG": true,
+      "bitcoin:CPC": true,
       "bitcoin:DASH": true,
       "bitcoin:DOGE": true,
       "bitcoin:LTC": true,
