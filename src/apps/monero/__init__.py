@@ -15,6 +15,8 @@ def boot():
     wire.add(
         MessageType.MoneroKeyImageExportInitRequest, __name__, "key_image_sync", ns
     )
+    wire.add(MessageType.MoneroGetTxKeyRequest, __name__, "get_tx_keys", ns)
+    wire.add(MessageType.MoneroLiveRefreshStartRequest, __name__, "live_refresh", ns)
 
     if __debug__ and hasattr(MessageType, "DebugMoneroDiagRequest"):
         wire.add(MessageType.DebugMoneroDiagRequest, __name__, "diag")

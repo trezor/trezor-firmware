@@ -40,12 +40,12 @@ def _export_key_image(
     xi, ki, recv_derivation = r[:3]
 
     phash = crypto.encodepoint(ki)
-    sig = _generate_ring_signature(phash, ki, [pkey], xi, 0, test)
+    sig = generate_ring_signature(phash, ki, [pkey], xi, 0, test)
 
     return ki, sig
 
 
-def _generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
+def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
     """
     Generates ring signature with key image.
     void crypto_ops::generate_ring_signature()

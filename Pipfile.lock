@@ -423,10 +423,9 @@
         },
         "py-cryptonight": {
             "hashes": [
-                "sha256:da83570f040bb6c4caad05d28ca7ffc4a0c983a18c60c733366ae8858d587b1f",
-                "sha256:fd55a7915b68b7d46794de646d9bff7fb1870b905c83903e36e1b9cb50cc01d2"
+                "sha256:18ef26c56d7b677c527932af37a9bc98f39e4a56a87a003ef9a3a994d8bfe080"
             ],
-            "version": "==0.1.6"
+            "version": "==0.1.8"
         },
         "py-trezor-crypto-ph4": {
             "hashes": [
