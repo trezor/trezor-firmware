@@ -52,12 +52,9 @@ void fsm_msgDebugLinkGetState(const DebugLinkGetState *msg)
 	resp.has_recovery_word_pos = true;
 	resp.recovery_word_pos = recovery_get_word_pos();
 
-    resp.has_mnemonic = config_getMnemonic(resp.mnemonic, sizeof(resp.mnemonic));
+	resp.has_mnemonic = config_getMnemonic(resp.mnemonic, sizeof(resp.mnemonic));
 
-	if (config_hasNode()) {
-		resp.has_node = true;
-		config_dumpNode(&(resp.node));
-	}
+	resp.has_node = config_dumpNode(&(resp.node));
 
 	resp.has_passphrase_protection = config_getPassphraseProtection(&(resp.passphrase_protection));
 

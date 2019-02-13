@@ -165,12 +165,6 @@ static secbool config_get_bool(uint16_t key, bool *value)
     }
 }
 
-static secbool config_has_key(uint16_t key)
-{
-    uint16_t len = 0;
-    return storage_get(key, NULL, 0, &len);
-}
-
 static secbool config_get_string(uint16_t key, char *dest, uint16_t dest_size)
 {
     uint16_t len = 0;
@@ -410,17 +404,19 @@ static void config_setNode(const HDNodeType *node) {
     if (sectrue == storage_set(KEY_NODE, &storageHDNode, sizeof(storageHDNode))) {
         config_set_bool(KEY_INITIALIZED, true);
     }
+    memzero(&storageHDNode, sizeof(storageHDNode));
 }
 
 #if DEBUG_LINK
-void config_dumpNode(HDNodeType *node)
+bool config_dumpNode(HDNodeType *node)
 {
     memzero(node, sizeof(HDNodeType));
 
     StorageHDNode storageNode;
     uint16_t len = 0;
     if (sectrue != storage_get(KEY_NODE, &storageNode, sizeof(storageNode), &len) || len != sizeof(StorageHDNode)) {
-        return;
+        memzero(&storageNode, sizeof(storageNode));
+        return false;
     }
 
     node->depth = storageNode.depth;
@@ -437,6 +433,7 @@ void config_dumpNode(HDNodeType *node)
     }
 
     memzero(&storageNode, sizeof(storageNode));
+    return true;
 }
 #endif
 
@@ -649,11 +646,6 @@ bool config_setMnemonic(const char *mnemonic)
         return false;
     }
 
-    if (sectrue != config_set_bool(KEY_INITIALIZED, true)) {
-        storage_delete(KEY_MNEMONIC);
-        return false;
-    }
-
     StorageHDNode u2fNode;
     memzero(&u2fNode, sizeof(u2fNode));
     config_compute_u2froot(mnemonic, &u2fNode);
@@ -662,20 +654,12 @@ bool config_setMnemonic(const char *mnemonic)
 
     if (sectrue != ret) {
         storage_delete(KEY_MNEMONIC);
-        storage_delete(KEY_INITIALIZED);
         return false;
     }
+
+    config_set_bool(KEY_INITIALIZED, true);
+
     return true;
-}
-
-bool config_hasNode(void)
-{
-    return sectrue == config_has_key(KEY_NODE);
-}
-
-bool config_hasMnemonic(void)
-{
-    return sectrue == config_has_key(KEY_MNEMONIC);
 }
 
 bool config_getMnemonic(char *dest, uint16_t dest_size)
