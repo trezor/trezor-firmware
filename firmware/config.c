@@ -110,10 +110,10 @@ be added to the storage u2f_counter to get the real counter value.
  * storage.u2f_counter + config_u2f_offset.
  * This corresponds to the number of cleared bits in the U2FAREA.
  */
-static bool sessionSeedCached, sessionSeedUsesPassphrase;
+static secbool sessionSeedCached, sessionSeedUsesPassphrase;
 static uint8_t CONFIDENTIAL sessionSeed[64];
 
-static bool sessionPassphraseCached = false;
+static secbool sessionPassphraseCached = secfalse;
 static char CONFIDENTIAL sessionPassphrase[51];
 
 #define autoLockDelayMsDefault (10 * 60 * 1000U) // 10 minutes
@@ -143,62 +143,62 @@ static uint32_t pin_to_int(const char *pin)
     return val;
 }
 
-static bool config_set_bool(uint16_t key, bool value)
+static secbool config_set_bool(uint16_t key, bool value)
 {
     if (value) {
-        return (sectrue == storage_set(key, &TRUE_BYTE, sizeof(TRUE_BYTE)));
+        return storage_set(key, &TRUE_BYTE, sizeof(TRUE_BYTE));
     } else {
-        return (sectrue == storage_set(key, &FALSE_BYTE, sizeof(FALSE_BYTE)));
+        return storage_set(key, &FALSE_BYTE, sizeof(FALSE_BYTE));
     }
 }
 
-static bool config_get_bool(uint16_t key, bool *value)
+static secbool config_get_bool(uint16_t key, bool *value)
 {
     uint8_t val = 0;
     uint16_t len = 0;
     if (sectrue == storage_get(key, &val, sizeof(val), &len) && len == sizeof(TRUE_BYTE)) {
         *value = (val == TRUE_BYTE);
-        return true;
+        return sectrue;
     } else {
         *value = false;
-        return false;
+        return secfalse;
     }
 }
 
-static bool config_has_key(uint16_t key)
+static secbool config_has_key(uint16_t key)
 {
     uint16_t len = 0;
-    return sectrue == storage_get(key, NULL, 0, &len);
+    return storage_get(key, NULL, 0, &len);
 }
 
-static bool config_get_string(uint16_t key, char *dest, uint16_t dest_size)
+static secbool config_get_string(uint16_t key, char *dest, uint16_t dest_size)
 {
-    dest[0] = '\0';
     uint16_t len = 0;
     if (sectrue != storage_get(key, dest, dest_size - 1, &len)) {
-        return false;
+        dest[0] = '\0';
+        return secfalse;
     }
     dest[len] = '\0';
-    return true;
+    return sectrue;
 }
 
-static bool config_get_uint32(uint16_t key, uint32_t *value)
+static secbool config_get_uint32(uint16_t key, uint32_t *value)
 {
     uint16_t len = 0;
     if (sectrue != storage_get(key, value, sizeof(uint32_t), &len) || len != sizeof(uint32_t)) {
         *value = 0;
-        return false;
+        return secfalse;
     }
-    return true;
+    return sectrue;
 }
 
-static bool config_upgrade_v10(void)
+static secbool config_upgrade_v10(void)
 {
 #define OLD_STORAGE_SIZE(last_member) (((offsetof(Storage, last_member) + pb_membersize(Storage, last_member)) + 3) & ~3)
 
     if (memcmp(FLASH_PTR(FLASH_STORAGE_START), &CONFIG_MAGIC_V10, sizeof(CONFIG_MAGIC_V10)) != 0) {
         // wrong magic
-        return false;
+        return secfalse;
     }
 
     Storage config __attribute__((aligned(4)));
@@ -220,7 +220,7 @@ static bool config_upgrade_v10(void)
     if (config.version > CONFIG_VERSION) {
         // downgrade -> clear storage
         config_wipe();
-        return false;
+        return secfalse;
     }
 
     size_t old_config_size = 0;
@@ -340,7 +340,7 @@ static bool config_upgrade_v10(void)
 
     session_clear(true);
 
-    return true;
+    return sectrue;
 }
 
 void config_init(void)
@@ -360,9 +360,9 @@ void config_init(void)
 
 void session_clear(bool lock)
 {
-    sessionSeedCached = false;
+    sessionSeedCached = secfalse;
     memzero(&sessionSeed, sizeof(sessionSeed));
-    sessionPassphraseCached = false;
+    sessionPassphraseCached = secfalse;
     memzero(&sessionPassphrase, sizeof(sessionPassphrase));
     if (lock) {
         storage_lock();
@@ -494,14 +494,14 @@ void config_setLanguage(const char *lang)
 
 void config_setPassphraseProtection(bool passphrase_protection)
 {
-    sessionSeedCached = false;
-    sessionPassphraseCached = false;
+    sessionSeedCached = secfalse;
+    sessionPassphraseCached = secfalse;
     config_set_bool(KEY_PASSPHRASE_PROTECTION, passphrase_protection);
 }
 
 bool config_getPassphraseProtection(bool *passphrase_protection)
 {
-    return config_get_bool(KEY_PASSPHRASE_PROTECTION, passphrase_protection);
+    return sectrue == config_get_bool(KEY_PASSPHRASE_PROTECTION, passphrase_protection);
 }
 
 void config_setHomescreen(const uint8_t *data, uint32_t size)
@@ -522,8 +522,8 @@ static void get_root_node_callback(uint32_t iter, uint32_t total)
 const uint8_t *config_getSeed(bool usePassphrase)
 {
     // root node is properly cached
-    if (usePassphrase == sessionSeedUsesPassphrase
-        && sessionSeedCached) {
+    if (usePassphrase == (sectrue == sessionSeedUsesPassphrase)
+        && sectrue == sessionSeedCached) {
         return sessionSeed;
     }
 
@@ -548,8 +548,8 @@ const uint8_t *config_getSeed(bool usePassphrase)
         mnemonic_to_seed(mnemonic, usePassphrase ? sessionPassphrase : "", sessionSeed, get_root_node_callback); // BIP-0039
         memzero(mnemonic, sizeof(mnemonic));
         usbTiny(oldTiny);
-        sessionSeedCached = true;
-        sessionSeedUsesPassphrase = usePassphrase;
+        sessionSeedCached = sectrue;
+        sessionSeedUsesPassphrase = usePassphrase ? sectrue : secfalse;
         return sessionSeed;
     }
 
@@ -589,7 +589,7 @@ bool config_getRootNode(HDNode *node, const char *curve, bool usePassphrase)
         }
         bool passphrase_protection = false;
         config_getPassphraseProtection(&passphrase_protection);
-        if (passphrase_protection && sessionPassphraseCached && sessionPassphrase[0] != '\0') {
+        if (passphrase_protection && sectrue == sessionPassphraseCached && sessionPassphrase[0] != '\0') {
             // decrypt hd node
             uint8_t secret[64];
             PBKDF2_HMAC_SHA512_CTX pctx;
@@ -621,12 +621,12 @@ bool config_getRootNode(HDNode *node, const char *curve, bool usePassphrase)
 
 bool config_getLabel(char *dest, uint16_t dest_size)
 {
-    return config_get_string(KEY_LABEL, dest, dest_size);
+    return sectrue == config_get_string(KEY_LABEL, dest, dest_size);
 }
 
 bool config_getLanguage(char *dest, uint16_t dest_size)
 {
-    return config_get_string(KEY_LANGUAGE, dest, dest_size);
+    return sectrue == config_get_string(KEY_LANGUAGE, dest, dest_size);
 }
 
 bool config_getHomescreen(uint8_t *dest, uint16_t dest_size)
@@ -649,7 +649,7 @@ bool config_setMnemonic(const char *mnemonic)
         return false;
     }
 
-    if (!config_set_bool(KEY_INITIALIZED, true)) {
+    if (sectrue != config_set_bool(KEY_INITIALIZED, true)) {
         storage_delete(KEY_MNEMONIC);
         return false;
     }
@@ -670,17 +670,17 @@ bool config_setMnemonic(const char *mnemonic)
 
 bool config_hasNode(void)
 {
-    return config_has_key(KEY_NODE);
+    return sectrue == config_has_key(KEY_NODE);
 }
 
 bool config_hasMnemonic(void)
 {
-    return config_has_key(KEY_MNEMONIC);
+    return sectrue == config_has_key(KEY_MNEMONIC);
 }
 
 bool config_getMnemonic(char *dest, uint16_t dest_size)
 {
-    return config_get_string(KEY_MNEMONIC, dest, dest_size);
+    return sectrue == config_get_string(KEY_MNEMONIC, dest, dest_size);
 }
 
 /* Check whether mnemonic matches storage. The mnemonic must be
@@ -718,7 +718,7 @@ bool config_containsPin(const char *pin)
 
 bool config_hasPin(void)
 {
-    return storage_has_pin();
+    return sectrue == storage_has_pin();
 }
 
 bool config_changePin(const char *old_pin, const char *new_pin)
@@ -737,17 +737,17 @@ bool config_changePin(const char *old_pin, const char *new_pin)
 void session_cachePassphrase(const char *passphrase)
 {
     strlcpy(sessionPassphrase, passphrase, sizeof(sessionPassphrase));
-    sessionPassphraseCached = true;
+    sessionPassphraseCached = sectrue;
 }
 
 bool session_isPassphraseCached(void)
 {
-    return sessionPassphraseCached;
+    return sectrue == sessionPassphraseCached;
 }
 
 bool session_getState(const uint8_t *salt, uint8_t *state, const char *passphrase)
 {
-    if (!passphrase && !sessionPassphraseCached) {
+    if (!passphrase && sectrue != sessionPassphraseCached) {
         return false;
     } else {
         passphrase = sessionPassphrase;
@@ -774,7 +774,7 @@ bool session_getState(const uint8_t *salt, uint8_t *state, const char *passphras
 
 bool session_isUnlocked(void)
 {
-    return storage_is_unlocked();
+    return sectrue == storage_is_unlocked();
 }
 
 bool config_isInitialized(void)
@@ -786,7 +786,7 @@ bool config_isInitialized(void)
 
 bool config_getImported(bool* imported)
 {
-    return config_get_bool(KEY_IMPORTED, imported);
+    return sectrue == config_get_bool(KEY_IMPORTED, imported);
 }
 
 void config_setImported(bool imported)
@@ -796,7 +796,7 @@ void config_setImported(bool imported)
 
 bool config_getNeedsBackup(bool *needs_backup)
 {
-    return config_get_bool(KEY_NEEDS_BACKUP, needs_backup);
+    return sectrue == config_get_bool(KEY_NEEDS_BACKUP, needs_backup);
 }
 
 void config_setNeedsBackup(bool needs_backup)
@@ -806,7 +806,7 @@ void config_setNeedsBackup(bool needs_backup)
 
 bool config_getUnfinishedBackup(bool *unfinished_backup)
 {
-    return config_get_bool(KEY_UNFINISHED_BACKUP, unfinished_backup);
+    return sectrue == config_get_bool(KEY_UNFINISHED_BACKUP, unfinished_backup);
 }
 
 void config_setUnfinishedBackup(bool unfinished_backup)
@@ -816,7 +816,7 @@ void config_setUnfinishedBackup(bool unfinished_backup)
 
 bool config_getNoBackup(bool *no_backup)
 {
-    return config_get_bool(KEY_NO_BACKUP, no_backup);
+    return sectrue == config_get_bool(KEY_NO_BACKUP, no_backup);
 }
 
 void config_setNoBackup(void)
@@ -837,7 +837,7 @@ void config_applyFlags(uint32_t flags)
 
 bool config_getFlags(uint32_t *flags)
 {
-    return config_get_uint32(KEY_FLAGS, flags);
+    return sectrue == config_get_uint32(KEY_FLAGS, flags);
 }
 
 uint32_t config_nextU2FCounter(void)
@@ -862,7 +862,7 @@ uint32_t config_getAutoLockDelayMs()
         return autoLockDelayMsDefault;
     }
 
-    if (!config_get_uint32(KEY_AUTO_LOCK_DELAY_MS, &autoLockDelayMs)) {
+    if (sectrue != config_get_uint32(KEY_AUTO_LOCK_DELAY_MS, &autoLockDelayMs)) {
         autoLockDelayMs = autoLockDelayMsDefault;
     }
     autoLockDelayMsCached = sectrue;
