@@ -32,9 +32,7 @@
   "uri_prefix": "komodo",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [
-    "https://kmdexplorer.io"
-  ],
+  "bitcore": [],
   "blockbook": [],
   "cooldown": 100
 }
