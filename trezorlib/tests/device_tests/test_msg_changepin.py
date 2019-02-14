@@ -58,7 +58,7 @@ class TestMsgChangepin(TrezorTest):
         assert features.pin_protection is True
 
         # Check that the PIN is correct
-        assert self.client.debug.read_pin()[0] == self.pin6
+        self.check_pin(self.pin6)
 
     def test_change_pin(self):
         self.setup_mnemonic_pin_passphrase()
@@ -71,7 +71,7 @@ class TestMsgChangepin(TrezorTest):
         self.client.call_raw(proto.Cancel())
 
         # Check current PIN value
-        assert self.client.debug.read_pin()[0] == self.pin4
+        self.check_pin(self.pin4)
 
         # Let's change PIN
         ret = self.client.call_raw(proto.ChangePin())
@@ -104,7 +104,7 @@ class TestMsgChangepin(TrezorTest):
         assert features.pin_protection is True
 
         # Check that the PIN is correct
-        assert self.client.debug.read_pin()[0] == self.pin6
+        self.check_pin(self.pin6)
 
     def test_remove_pin(self):
         self.setup_mnemonic_pin_passphrase()
@@ -208,4 +208,12 @@ class TestMsgChangepin(TrezorTest):
         # Check that there's still old PIN protection
         features = self.client.call_raw(proto.Initialize())
         assert features.pin_protection is True
-        assert self.client.debug.read_pin()[0] == self.pin4
+        self.check_pin(self.pin4)
+
+    def check_pin(self, pin):
+        self.client.clear_session()
+        ret = self.client.call_raw(proto.Ping(pin_protection=True))
+        assert isinstance(ret, proto.PinMatrixRequest)
+        pin_encoded = self.client.debug.encode_pin(pin)
+        ret = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+        assert isinstance(ret, proto.Success)
