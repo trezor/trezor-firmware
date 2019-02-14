@@ -22,7 +22,8 @@ from trezorlib.tools import parse_path
 from ..support.tx_cache import tx_cache
 from .common import TrezorTest
 
-TX_API = tx_cache("Komodo")
+# KMD has no usable backends, use cached TX only
+TX_API = tx_cache("Komodo", allow_fetch=False)
 
 TXHASH_339c3e = bytes.fromhex(
     "339c3e78610e229f65ebc3fa722016fcb9fbde7bc196d2d876604f5257ada19c"
@@ -82,6 +83,7 @@ class TestMsgSigntxKomodo(TrezorTest):
                 overwintered=True,
                 version_group_id=0x892F2085,
                 branch_id=0x76B809BB,
+                lock_time=0x5C5CE16B,
             )
             _, serialized_tx = btc.sign_tx(
                 self.client, "Komodo", [inp1], [out1], details=details, prev_txes=TX_API
