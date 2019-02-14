@@ -744,8 +744,8 @@ secbool storage_unlock(uint32_t pin)
         return secfalse;
     }
 
-    // Sleep for 2^(ctr-1) seconds before checking the PIN.
-    uint32_t wait = (1 << ctr) >> 1;
+    // Sleep for 2^ctr - 1 seconds before checking the PIN.
+    uint32_t wait = (1 << ctr) - 1;
     uint32_t progress;
     for (uint32_t rem = wait; rem > 0; rem--) {
         for (int i = 0; i < 10; i++) {
