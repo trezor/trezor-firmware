@@ -47,7 +47,7 @@ void fsm_msgGetFeatures(const GetFeatures *msg)
 	resp->has_patch_version = true;  resp->patch_version = VERSION_PATCH;
 	resp->has_device_id = true;      strlcpy(resp->device_id, config_uuid_str, sizeof(resp->device_id));
 	resp->has_pin_protection = true; resp->pin_protection = config_hasPin();
-	resp->has_passphrase_protection = config_getPassphraseProtection(&(resp->passphrase_protection));
+	resp->has_passphrase_protection = true; config_getPassphraseProtection(&(resp->passphrase_protection));
 #ifdef SCM_REVISION
 	int len = sizeof(SCM_REVISION) - 1;
 	resp->has_revision = true; memcpy(resp->revision.bytes, SCM_REVISION, len); resp->revision.size = len;
@@ -60,9 +60,9 @@ void fsm_msgGetFeatures(const GetFeatures *msg)
 	resp->has_imported = config_getImported(&(resp->imported));
 	resp->has_pin_cached = true; resp->pin_cached = session_isUnlocked() && config_hasPin();
 	resp->has_passphrase_cached = true; resp->passphrase_cached = session_isPassphraseCached();
-	resp->has_needs_backup = config_getNeedsBackup(&(resp->needs_backup));
-	resp->has_unfinished_backup = config_getUnfinishedBackup(&(resp->unfinished_backup));
-	resp->has_no_backup = config_getNoBackup(&(resp->no_backup));
+	resp->has_needs_backup = true; config_getNeedsBackup(&(resp->needs_backup));
+	resp->has_unfinished_backup = true; config_getUnfinishedBackup(&(resp->unfinished_backup));
+	resp->has_no_backup = true; config_getNoBackup(&(resp->no_backup));
 	resp->has_flags = config_getFlags(&(resp->flags));
 	resp->has_model = true; strlcpy(resp->model, "1", sizeof(resp->model));
 
