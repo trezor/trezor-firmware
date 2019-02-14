@@ -46,8 +46,14 @@
 #include "supervise.h"
 #include "storage.h"
 
-/* Magic constant to check validity of storage block for storage versions 1 to 10. */
-static const uint32_t CONFIG_MAGIC_V10 = 0x726f7473;   // 'stor' as uint32_t
+/* Magic constants to check validity of storage block for storage versions 1 to 10. */
+static const uint32_t CONFIG_MAGIC_V10 = 0x726f7473; // 'stor' as uint32_t
+
+#if !EMULATOR
+static const uint32_t META_MAGIC_V10   = 0x525a5254; // 'TRZR' as uint32_t
+#else
+static const uint32_t META_MAGIC_V10   = 0xFFFFFFFF;
+#endif
 
 #define APP         0x0100
 #define FLAG_PUBLIC 0x8000
@@ -121,7 +127,7 @@ static char CONFIDENTIAL sessionPassphrase[51];
 static secbool autoLockDelayMsCached = secfalse;
 static uint32_t autoLockDelayMs = autoLockDelayMsDefault;
 
-static const uint32_t CONFIG_VERSION = 10;
+static const uint32_t CONFIG_VERSION = 11;
 
 static const uint8_t FALSE_BYTE = '\x00';
 static const uint8_t TRUE_BYTE = '\x01';
@@ -195,7 +201,8 @@ static secbool config_upgrade_v10(void)
 {
 #define OLD_STORAGE_SIZE(last_member) (((offsetof(Storage, last_member) + pb_membersize(Storage, last_member)) + 3) & ~3)
 
-    if (memcmp(FLASH_PTR(FLASH_STORAGE_START), &CONFIG_MAGIC_V10, sizeof(CONFIG_MAGIC_V10)) != 0) {
+    if (memcmp(FLASH_PTR(FLASH_META_MAGIC), &META_MAGIC_V10, sizeof(META_MAGIC_V10)) != 0 ||
+        memcmp(FLASH_PTR(FLASH_STORAGE_START), &CONFIG_MAGIC_V10, sizeof(CONFIG_MAGIC_V10)) != 0) {
         // wrong magic
         return secfalse;
     }
