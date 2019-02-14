@@ -117,6 +117,7 @@ bool config_getMnemonic(char *dest, uint16_t dest_size);
 
 #if DEBUG_LINK
 bool config_dumpNode(HDNodeType *node);
+bool config_getPin(char *dest, uint16_t dest_size);
 #endif
 
 bool config_containsPin(const char *pin);

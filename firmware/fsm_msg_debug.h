@@ -32,10 +32,7 @@ void fsm_msgDebugLinkGetState(const DebugLinkGetState *msg)
 	resp.layout.size = OLED_BUFSIZE;
 	memcpy(resp.layout.bytes, oledGetBuffer(), OLED_BUFSIZE);
 
-	if (config_hasPin()) {
-		resp.has_pin = true;
-		strlcpy(resp.pin, "1", sizeof(resp.pin));
-	}
+	resp.has_pin = config_getPin(resp.pin, sizeof(resp.pin));
 
 	resp.has_matrix = true;
 	strlcpy(resp.matrix, pinmatrix_get(), sizeof(resp.matrix));

@@ -53,23 +53,24 @@ static const uint32_t CONFIG_MAGIC_V10 = 0x726f7473;   // 'stor' as uint32_t
 #define FLAG_PUBLIC 0x8000
 #define FLAGS_WRITE 0xC000
 
-static const uint16_t KEY_UUID                  =  0 | APP | FLAG_PUBLIC; // bytes(12)
-static const uint16_t KEY_VERSION               =  1 | APP;               // uint32
-static const uint16_t KEY_MNEMONIC              =  2 | APP;               // string(241)
-static const uint16_t KEY_LANGUAGE              =  3 | APP | FLAG_PUBLIC; // string(17)
-static const uint16_t KEY_LABEL                 =  4 | APP | FLAG_PUBLIC; // string(33)
-static const uint16_t KEY_PASSPHRASE_PROTECTION =  5 | APP;               // bool
-static const uint16_t KEY_HOMESCREEN            =  6 | APP | FLAG_PUBLIC; // bytes(1024)
-static const uint16_t KEY_NEEDS_BACKUP          =  7 | APP;               // bool
-static const uint16_t KEY_FLAGS                 =  8 | APP;               // uint32
-static const uint16_t KEY_U2F_COUNTER           =  9 | APP | FLAGS_WRITE; // uint32
-static const uint16_t KEY_UNFINISHED_BACKUP     = 11 | APP;               // bool
-static const uint16_t KEY_AUTO_LOCK_DELAY_MS    = 12 | APP;               // uint32
-static const uint16_t KEY_NO_BACKUP             = 13 | APP;               // bool
-static const uint16_t KEY_INITIALIZED           = 14 | APP | FLAG_PUBLIC; // uint32
-static const uint16_t KEY_NODE                  = 15 | APP;               // node
-static const uint16_t KEY_IMPORTED              = 16 | APP;               // bool
-static const uint16_t KEY_U2F_ROOT              = 17 | APP | FLAG_PUBLIC; // node
+#define KEY_UUID                    (  0 | APP | FLAG_PUBLIC) // bytes(12)
+#define KEY_VERSION                 (  1 | APP)               // uint32
+#define KEY_MNEMONIC                (  2 | APP)               // string(241)
+#define KEY_LANGUAGE                (  3 | APP | FLAG_PUBLIC) // string(17)
+#define KEY_LABEL                   (  4 | APP | FLAG_PUBLIC) // string(33)
+#define KEY_PASSPHRASE_PROTECTION   (  5 | APP | FLAG_PUBLIC) // bool
+#define KEY_HOMESCREEN              (  6 | APP | FLAG_PUBLIC) // bytes(1024)
+#define KEY_NEEDS_BACKUP            (  7 | APP)               // bool
+#define KEY_FLAGS                   (  8 | APP)               // uint32
+#define KEY_U2F_COUNTER             (  9 | APP | FLAGS_WRITE) // uint32
+#define KEY_UNFINISHED_BACKUP       ( 11 | APP)               // bool
+#define KEY_AUTO_LOCK_DELAY_MS      ( 12 | APP)               // uint32
+#define KEY_NO_BACKUP               ( 13 | APP)               // bool
+#define KEY_INITIALIZED             ( 14 | APP | FLAG_PUBLIC) // uint32
+#define KEY_NODE                    ( 15 | APP)               // node
+#define KEY_IMPORTED                ( 16 | APP)               // bool
+#define KEY_U2F_ROOT                ( 17 | APP | FLAG_PUBLIC) // node
+#define KEY_DEBUG_LINK_PIN          (255 | APP | FLAG_PUBLIC) // string(10)
 
 // The PIN value corresponding to an empty PIN.
 static const uint32_t PIN_EMPTY = 1;
@@ -167,6 +168,10 @@ static secbool config_get_bool(uint16_t key, bool *value)
 
 static secbool config_get_string(uint16_t key, char *dest, uint16_t dest_size)
 {
+    if (dest_size == 0) {
+        return secfalse;
+    }
+
     uint16_t len = 0;
     if (sectrue != storage_get(key, dest, dest_size - 1, &len)) {
         dest[0] = '\0';
@@ -712,11 +717,29 @@ bool config_changePin(const char *old_pin, const char *new_pin)
         return false;
     }
 
-    if (sectrue == storage_change_pin(pin_to_int(old_pin), new_pin_int)) {
-        return true;
+    secbool ret = storage_change_pin(pin_to_int(old_pin), new_pin_int);
+
+#if DEBUG_LINK
+    if (sectrue == ret) {
+        if (new_pin_int != PIN_EMPTY) {
+            storage_set(KEY_DEBUG_LINK_PIN, new_pin, strnlen(new_pin, MAX_PIN_LEN));
+        } else {
+            storage_delete(KEY_DEBUG_LINK_PIN);
+        }
     }
-    return false;
+#endif
+
+    memzero(&new_pin_int, sizeof(new_pin_int));
+
+    return sectrue == ret;
 }
+
+#if DEBUG_LINK
+bool config_getPin(char *dest, uint16_t dest_size)
+{
+    return sectrue == config_get_string(KEY_DEBUG_LINK_PIN, dest, dest_size);
+}
+#endif
 
 void session_cachePassphrase(const char *passphrase)
 {
