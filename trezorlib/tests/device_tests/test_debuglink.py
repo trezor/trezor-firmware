@@ -28,7 +28,7 @@ class TestDebuglink(TrezorTest):
         assert len(layout) == 1024
 
     def test_mnemonic(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+        self.setup_mnemonic_nopin_nopassphrase(lock=False)
         mnemonic = self.client.debug.state().mnemonic
         assert mnemonic == self.mnemonic12
 

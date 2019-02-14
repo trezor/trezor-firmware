@@ -24,7 +24,7 @@ from .common import TrezorTest
 @pytest.mark.skip_t2
 class TestDeviceLoad(TrezorTest):
     def test_load_device_1(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+        self.setup_mnemonic_nopin_nopassphrase(lock=False)
         state = self.client.debug.state()
         assert state.mnemonic == self.mnemonic12
         assert state.pin is None
@@ -34,7 +34,7 @@ class TestDeviceLoad(TrezorTest):
         assert address == "1EfKbQupktEMXf4gujJ9kCFo83k1iMqwqK"
 
     def test_load_device_2(self):
-        self.setup_mnemonic_pin_passphrase()
+        self.setup_mnemonic_pin_passphrase(lock=False)
         self.client.set_passphrase("passphrase")
         state = self.client.debug.state()
         assert state.mnemonic == self.mnemonic12

@@ -43,7 +43,7 @@ class TrezorTest:
     def teardown_method(self, method):
         self.client.close()
 
-    def _setup_mnemonic(self, mnemonic=None, pin="", passphrase=False):
+    def _setup_mnemonic(self, mnemonic=None, pin="", passphrase=False, lock=True):
         if mnemonic is None:
             mnemonic = TrezorTest.mnemonic12
         debuglink.load_device_by_mnemonic(
@@ -54,26 +54,26 @@ class TrezorTest:
             label="test",
             language="english",
         )
-        if conftest.TREZOR_VERSION == 1:
+        if conftest.TREZOR_VERSION == 1 and lock:
             # remove cached PIN (introduced via load_device)
             self.client.clear_session()
         if conftest.TREZOR_VERSION > 1 and passphrase:
             device.apply_settings(self.client, passphrase_source=PASSPHRASE_ON_HOST)
 
-    def setup_mnemonic_allallall(self):
-        self._setup_mnemonic(mnemonic=TrezorTest.mnemonic_all)
+    def setup_mnemonic_allallall(self, lock=True):
+        self._setup_mnemonic(mnemonic=TrezorTest.mnemonic_all, lock=lock)
 
-    def setup_mnemonic_nopin_nopassphrase(self):
-        self._setup_mnemonic()
+    def setup_mnemonic_nopin_nopassphrase(self, lock=True):
+        self._setup_mnemonic(lock=lock)
 
-    def setup_mnemonic_nopin_passphrase(self):
-        self._setup_mnemonic(passphrase=True)
+    def setup_mnemonic_nopin_passphrase(self, lock=True):
+        self._setup_mnemonic(passphrase=True, lock=lock)
 
-    def setup_mnemonic_pin_nopassphrase(self):
-        self._setup_mnemonic(pin=TrezorTest.pin4)
+    def setup_mnemonic_pin_nopassphrase(self, lock=True):
+        self._setup_mnemonic(pin=TrezorTest.pin4, lock=lock)
 
-    def setup_mnemonic_pin_passphrase(self):
-        self._setup_mnemonic(pin=TrezorTest.pin4, passphrase=True)
+    def setup_mnemonic_pin_passphrase(self, lock=True):
+        self._setup_mnemonic(pin=TrezorTest.pin4, passphrase=True, lock=lock)
 
 
 def generate_entropy(strength, internal_entropy, external_entropy):
