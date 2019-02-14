@@ -451,6 +451,7 @@ bool config_dumpNode(HDNodeType *node)
 
 void config_loadDevice(const LoadDevice *msg)
 {
+    session_clear(false);
     config_set_bool(KEY_IMPORTED, true);
     config_setPassphraseProtection(msg->has_passphrase_protection && msg->passphrase_protection);
 
@@ -475,8 +476,6 @@ void config_loadDevice(const LoadDevice *msg)
     if (msg->has_u2f_counter) {
         config_setU2FCounter(msg->u2f_counter);
     }
-
-    session_clear(true);
 }
 
 void config_setLabel(const char *label)
