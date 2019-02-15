@@ -45,31 +45,25 @@ void fsm_msgGetFeatures(const GetFeatures *msg)
 	resp->has_major_version = true;  resp->major_version = VERSION_MAJOR;
 	resp->has_minor_version = true;  resp->minor_version = VERSION_MINOR;
 	resp->has_patch_version = true;  resp->patch_version = VERSION_PATCH;
-	resp->has_device_id = true;      strlcpy(resp->device_id, storage_uuid_str, sizeof(resp->device_id));
-	resp->has_pin_protection = true; resp->pin_protection = storage_hasPin();
-	resp->has_passphrase_protection = true; resp->passphrase_protection = storage_hasPassphraseProtection();
+	resp->has_device_id = true;      strlcpy(resp->device_id, config_uuid_str, sizeof(resp->device_id));
+	resp->has_pin_protection = true; resp->pin_protection = config_hasPin();
+	resp->has_passphrase_protection = true; config_getPassphraseProtection(&(resp->passphrase_protection));
 #ifdef SCM_REVISION
 	int len = sizeof(SCM_REVISION) - 1;
 	resp->has_revision = true; memcpy(resp->revision.bytes, SCM_REVISION, len); resp->revision.size = len;
 #endif
 	resp->has_bootloader_hash = true; resp->bootloader_hash.size = memory_bootloader_hash(resp->bootloader_hash.bytes);
-	if (storage_getLanguage()) {
-		resp->has_language = true;
-		strlcpy(resp->language, storage_getLanguage(), sizeof(resp->language));
-	}
-	if (storage_getLabel()) {
-		resp->has_label = true;
-		strlcpy(resp->label, storage_getLabel(), sizeof(resp->label));
-	}
 
-	resp->has_initialized = true; resp->initialized = storage_isInitialized();
-	resp->has_imported = true; resp->imported = storage_isImported();
-	resp->has_pin_cached = true; resp->pin_cached = session_isPinCached();
+	resp->has_language = config_getLanguage(resp->language, sizeof(resp->language));
+    resp->has_label = config_getLabel(resp->label, sizeof(resp->label));
+	resp->has_initialized = true; resp->initialized = config_isInitialized();
+	resp->has_imported = config_getImported(&(resp->imported));
+	resp->has_pin_cached = true; resp->pin_cached = session_isUnlocked() && config_hasPin();
 	resp->has_passphrase_cached = true; resp->passphrase_cached = session_isPassphraseCached();
-	resp->has_needs_backup = true; resp->needs_backup = storage_needsBackup();
-	resp->has_unfinished_backup = true; resp->unfinished_backup = storage_unfinishedBackup();
-	resp->has_no_backup = true; resp->no_backup = storage_noBackup();
-	resp->has_flags = true; resp->flags = storage_getFlags();
+	resp->has_needs_backup = true; config_getNeedsBackup(&(resp->needs_backup));
+	resp->has_unfinished_backup = true; config_getUnfinishedBackup(&(resp->unfinished_backup));
+	resp->has_no_backup = true; config_getNoBackup(&(resp->no_backup));
+	resp->has_flags = config_getFlags(&(resp->flags));
 	resp->has_model = true; strlcpy(resp->model, "1", sizeof(resp->model));
 
 	msg_write(MessageType_MessageType_Features, resp);
@@ -111,14 +105,14 @@ void fsm_msgChangePin(const ChangePin *msg)
 {
 	bool removal = msg->has_remove && msg->remove;
 	if (removal) {
-		if (storage_hasPin()) {
+		if (config_hasPin()) {
 			layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("remove current PIN?"), NULL, NULL, NULL, NULL);
 		} else {
 			fsm_sendSuccess(_("PIN removed"));
 			return;
 		}
 	} else {
-		if (storage_hasPin()) {
+		if (config_hasPin()) {
 			layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("change current PIN?"), NULL, NULL, NULL, NULL);
 		} else {
 			layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _("Do you really want to"), _("set new PIN?"), NULL, NULL, NULL, NULL);
@@ -130,19 +124,14 @@ void fsm_msgChangePin(const ChangePin *msg)
 		return;
 	}
 
-	CHECK_PIN_UNCACHED
+    if (protectChangePin(removal)) {
+        if (removal) {
+            fsm_sendSuccess(_("PIN removed"));
+        } else {
+            fsm_sendSuccess(_("PIN changed"));
+        }
+    }
 
-	if (removal) {
-		storage_setPin("");
-		storage_update();
-		fsm_sendSuccess(_("PIN removed"));
-	} else {
-		if (protectChangePin()) {
-			fsm_sendSuccess(_("PIN changed"));
-		} else {
-			fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
-		}
-	}
 	layoutHome();
 }
 
@@ -155,7 +144,7 @@ void fsm_msgWipeDevice(const WipeDevice *msg)
 		layoutHome();
 		return;
 	}
-	storage_wipe();
+	config_wipe();
 	// the following does not work on Mac anyway :-/ Linux/Windows are fine, so it is not needed
 	// usbReconnect(); // force re-enumeration because of the serial number change
 	fsm_sendSuccess(_("Device wiped"));
@@ -185,6 +174,8 @@ void fsm_msgGetEntropy(const GetEntropy *msg)
 
 void fsm_msgLoadDevice(const LoadDevice *msg)
 {
+    CHECK_PIN
+
 	CHECK_NOT_INITIALIZED
 
 	layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("I take the risk"), NULL, _("Loading private seed"), _("is not recommended."), _("Continue only if you"), _("know what you are"), _("doing!"), NULL);
@@ -202,13 +193,15 @@ void fsm_msgLoadDevice(const LoadDevice *msg)
 		}
 	}
 
-	storage_loadDevice(msg);
+	config_loadDevice(msg);
 	fsm_sendSuccess(_("Device loaded"));
 	layoutHome();
 }
 
 void fsm_msgResetDevice(const ResetDevice *msg)
 {
+    CHECK_PIN
+
 	CHECK_NOT_INITIALIZED
 
 	CHECK_PARAM(!msg->has_strength || msg->strength == 128 || msg->strength == 192 || msg->strength == 256, _("Invalid seed strength"));
@@ -242,7 +235,11 @@ void fsm_msgBackupDevice(const BackupDevice *msg)
 	CHECK_PIN_UNCACHED
 
 	(void)msg;
-	reset_backup(true);
+    char mnemonic[MAX_MNEMONIC_LEN + 1];
+    if (config_getMnemonic(mnemonic, sizeof(mnemonic))) {
+        reset_backup(true, mnemonic);
+    }
+    memzero(mnemonic, sizeof(mnemonic));
 }
 
 void fsm_msgCancel(const Cancel *msg)
@@ -312,39 +309,40 @@ void fsm_msgApplySettings(const ApplySettings *msg)
 	}
 
 	if (msg->has_label) {
-		storage_setLabel(msg->label);
+		config_setLabel(msg->label);
 	}
 	if (msg->has_language) {
-		storage_setLanguage(msg->language);
+		config_setLanguage(msg->language);
 	}
 	if (msg->has_use_passphrase) {
-		storage_setPassphraseProtection(msg->use_passphrase);
+		config_setPassphraseProtection(msg->use_passphrase);
 	}
 	if (msg->has_homescreen) {
-		storage_setHomescreen(msg->homescreen.bytes, msg->homescreen.size);
+		config_setHomescreen(msg->homescreen.bytes, msg->homescreen.size);
 	}
 	if (msg->has_auto_lock_delay_ms) {
-		storage_setAutoLockDelayMs(msg->auto_lock_delay_ms);
+		config_setAutoLockDelayMs(msg->auto_lock_delay_ms);
 	}
-	storage_update();
 	fsm_sendSuccess(_("Settings applied"));
 	layoutHome();
 }
 
 void fsm_msgApplyFlags(const ApplyFlags *msg)
 {
+    CHECK_PIN
+
 	if (msg->has_flags) {
-		storage_applyFlags(msg->flags);
+		config_applyFlags(msg->flags);
 	}
 	fsm_sendSuccess(_("Flags applied"));
 }
 
 void fsm_msgRecoveryDevice(const RecoveryDevice *msg)
 {
+    CHECK_PIN
+
 	const bool dry_run = msg->has_dry_run ? msg->dry_run : false;
-	if (dry_run) {
-		CHECK_PIN
-	} else {
+	if (!dry_run) {
 		CHECK_NOT_INITIALIZED
 	}
 
@@ -376,8 +374,7 @@ void fsm_msgSetU2FCounter(const SetU2FCounter *msg)
 		layoutHome();
 		return;
 	}
-	storage_setU2FCounter(msg->u2f_counter);
-	storage_update();
+	config_setU2FCounter(msg->u2f_counter);
 	fsm_sendSuccess(_("U2F counter set"));
 	layoutHome();
 }

@@ -32,10 +32,7 @@ void fsm_msgDebugLinkGetState(const DebugLinkGetState *msg)
 	resp.layout.size = OLED_BUFSIZE;
 	memcpy(resp.layout.bytes, oledGetBuffer(), OLED_BUFSIZE);
 
-	if (storage_hasPin()) {
-		resp.has_pin = true;
-		strlcpy(resp.pin, storage_getPin(), sizeof(resp.pin));
-	}
+	resp.has_pin = config_getPin(resp.pin, sizeof(resp.pin));
 
 	resp.has_matrix = true;
 	strlcpy(resp.matrix, pinmatrix_get(), sizeof(resp.matrix));
@@ -52,18 +49,11 @@ void fsm_msgDebugLinkGetState(const DebugLinkGetState *msg)
 	resp.has_recovery_word_pos = true;
 	resp.recovery_word_pos = recovery_get_word_pos();
 
-	if (storage_hasMnemonic()) {
-		resp.has_mnemonic = true;
-		strlcpy(resp.mnemonic, storage_getMnemonic(), sizeof(resp.mnemonic));
-	}
+	resp.has_mnemonic = config_getMnemonic(resp.mnemonic, sizeof(resp.mnemonic));
 
-	if (storage_hasNode()) {
-		resp.has_node = true;
-		storage_dumpNode(&(resp.node));
-	}
+	resp.has_node = config_dumpNode(&(resp.node));
 
-	resp.has_passphrase_protection = true;
-	resp.passphrase_protection = storage_hasPassphraseProtection();
+	resp.has_passphrase_protection = config_getPassphraseProtection(&(resp.passphrase_protection));
 
 	msg_debug_write(MessageType_MessageType_DebugLinkState, &resp);
 }

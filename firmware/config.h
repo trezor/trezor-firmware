@@ -17,8 +17,8 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __STORAGE_H__
-#define __STORAGE_H__
+#ifndef __CONFIG_H__
+#define __CONFIG_H__
 
 #include "bip32.h"
 #include "messages-management.pb.h"
@@ -76,85 +76,81 @@ typedef struct _Storage {
     STORAGE_BOOL   (no_backup)
 } Storage;
 
-extern Storage storageUpdate;
+extern Storage configUpdate;
 
-void storage_init(void);
-void storage_generate_uuid(void);
-void storage_clear_update(void);
-void storage_update(void);
-void session_clear(bool clear_pin);
+#define MAX_PIN_LEN         9
+#define MAX_LABEL_LEN       32
+#define MAX_LANGUAGE_LEN    16
+#define MAX_MNEMONIC_LEN    240
+#define HOMESCREEN_SIZE     1024
+#define UUID_SIZE           12
 
-void storage_loadDevice(const LoadDevice *msg);
+void config_init(void);
+void session_clear(bool lock);
 
-const uint8_t *storage_getSeed(bool usePassphrase);
+void config_loadDevice(const LoadDevice *msg);
 
-bool storage_getU2FRoot(HDNode *node);
-bool storage_getRootNode(HDNode *node, const char *curve, bool usePassphrase);
+const uint8_t *config_getSeed(bool usePassphrase);
 
-const char *storage_getLabel(void);
-void storage_setLabel(const char *label);
+bool config_getU2FRoot(HDNode *node);
+bool config_getRootNode(HDNode *node, const char *curve, bool usePassphrase);
 
-const char *storage_getLanguage(void);
-void storage_setLanguage(const char *lang);
+bool config_getLabel(char *dest, uint16_t dest_size);
+void config_setLabel(const char *label);
 
-void storage_setPassphraseProtection(bool passphrase_protection);
-bool storage_hasPassphraseProtection(void);
+bool config_getLanguage(char *dest, uint16_t dest_size);
+void config_setLanguage(const char *lang);
 
-const uint8_t *storage_getHomescreen(void);
-void storage_setHomescreen(const uint8_t *data, uint32_t size);
+void config_setPassphraseProtection(bool passphrase_protection);
+bool config_getPassphraseProtection(bool *passphrase_protection);
+
+bool config_getHomescreen(uint8_t *dest, uint16_t dest_size);
+void config_setHomescreen(const uint8_t *data, uint32_t size);
 
 void session_cachePassphrase(const char *passphrase);
 bool session_isPassphraseCached(void);
 bool session_getState(const uint8_t *salt, uint8_t *state, const char *passphrase);
 
-void storage_setMnemonic(const char *mnemonic);
-bool storage_containsMnemonic(const char *mnemonic);
-bool storage_hasMnemonic(void);
-const char *storage_getMnemonic(void);
+bool config_setMnemonic(const char *mnemonic);
+bool config_containsMnemonic(const char *mnemonic);
+bool config_getMnemonic(char *dest, uint16_t dest_size);
 
-bool storage_hasNode(void);
 #if DEBUG_LINK
-void storage_dumpNode(HDNodeType *node);
+bool config_dumpNode(HDNodeType *node);
+bool config_getPin(char *dest, uint16_t dest_size);
 #endif
 
-bool storage_containsPin(const char *pin);
-bool storage_hasPin(void);
-const char *storage_getPin(void);
-void storage_setPin(const char *pin);
-void session_cachePin(void);
-void session_uncachePin(void);
-bool session_isPinCached(void);
-void storage_clearPinArea(void);
-void storage_resetPinFails(uint32_t flash_pinfails);
-bool storage_increasePinFails(uint32_t flash_pinfails);
-uint32_t storage_getPinWait(uint32_t flash_pinfails);
-uint32_t storage_getPinFailsOffset(void);
+bool config_containsPin(const char *pin);
+bool config_hasPin(void);
+void config_setPin(const char *pin);
+bool config_changePin(const char *old_pin, const char *new_pin);
+bool session_isUnlocked(void);
 
-uint32_t storage_nextU2FCounter(void);
-void storage_setU2FCounter(uint32_t u2fcounter);
+uint32_t config_nextU2FCounter(void);
+void config_setU2FCounter(uint32_t u2fcounter);
 
-bool storage_isInitialized(void);
+bool config_isInitialized(void);
 
-bool storage_isImported(void);
-void storage_setImported(bool imported);
+bool config_getImported(bool *imported);
+void config_setImported(bool imported);
 
-bool storage_needsBackup(void);
-void storage_setNeedsBackup(bool needs_backup);
+bool config_getNeedsBackup(bool *needs_backup);
+void config_setNeedsBackup(bool needs_backup);
 
-bool storage_unfinishedBackup(void);
-void storage_setUnfinishedBackup(bool unfinished_backup);
+bool config_getUnfinishedBackup(bool *unfinished_backup);
+void config_setUnfinishedBackup(bool unfinished_backup);
 
-bool storage_noBackup(void);
-void storage_setNoBackup(void);
+bool config_getNoBackup(bool *no_backup);
+void config_setNoBackup(void);
 
-void storage_applyFlags(uint32_t flags);
-uint32_t storage_getFlags(void);
+void config_applyFlags(uint32_t flags);
+bool config_getFlags(uint32_t *flags);
 
-uint32_t storage_getAutoLockDelayMs(void);
-void storage_setAutoLockDelayMs(uint32_t auto_lock_delay_ms);
+uint32_t config_getAutoLockDelayMs(void);
+void config_setAutoLockDelayMs(uint32_t auto_lock_delay_ms);
 
-void storage_wipe(void);
+void config_wipe(void);
 
-extern char storage_uuid_str[25];
+extern char config_uuid_str[2*UUID_SIZE + 1];
 
 #endif

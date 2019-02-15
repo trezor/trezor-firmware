@@ -17,13 +17,14 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "common.h"
 #include "trezor.h"
 #include "oled.h"
 #include "bitmaps.h"
 #include "util.h"
 #include "usb.h"
 #include "setup.h"
-#include "storage.h"
+#include "config.h"
 #include "layout.h"
 #include "layout2.h"
 #include "rng.h"
@@ -31,6 +32,8 @@
 #include "buttons.h"
 #include "gettext.h"
 #include "bl_check.h"
+#include "memzero.h"
+#include <libopencm3/stm32/desig.h>
 
 /* Screen timeout */
 uint32_t system_millis_lock_start;
@@ -76,7 +79,7 @@ void check_lock_screen(void)
 
 	// if homescreen is shown for too long
 	if (layoutLast == layoutHome) {
-		if ((timer_ms() - system_millis_lock_start) >= storage_getAutoLockDelayMs()) {
+		if ((timer_ms() - system_millis_lock_start) >= config_getAutoLockDelayMs()) {
 			// lock the screen
 			session_clear(true);
 			layoutScreensaver();
@@ -97,24 +100,31 @@ int main(void)
 #endif
 
 	if (!is_mode_unprivileged()) {
-
+		desig_get_unique_id((uint32_t*)HW_ENTROPY_DATA);
 		timer_init();
-
 #ifdef APPVER
 		// enable MPU (Memory Protection Unit)
 		mpu_config();
+#endif
+	} else {
+#if EMULATOR
+		memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
+#else
+		// we are running in unprivileged mode
+		// use fixed HW_ENTROPY
+		memset(HW_ENTROPY_DATA, 0x3C, HW_ENTROPY_LEN);
 #endif
 	}
 
 #if DEBUG_LINK
 	oledSetDebugLink(1);
-	storage_wipe();
+	config_wipe();
 #endif
 
 	oledDrawBitmap(40, 0, &bmp_logo64);
 	oledRefresh();
 
-	storage_init();
+	config_init();
 	layoutHome();
 	usbInit();
 	for (;;) {

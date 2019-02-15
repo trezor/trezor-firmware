@@ -21,7 +21,7 @@
 #include <ctype.h>
 #include "recovery.h"
 #include "fsm.h"
-#include "storage.h"
+#include "config.h"
 #include "layout2.h"
 #include "protect.h"
 #include "messages.h"
@@ -44,7 +44,7 @@ static uint32_t word_count;
  */
 static int awaiting_word = 0;
 
-/* True if we should not write anything back to storage
+/* True if we should not write anything back to config
  * (can be used for testing seed for correctness).
  */
 static bool dry_run;
@@ -153,7 +153,7 @@ static void recovery_request(void) {
  * Check mnemonic and send success/failure.
  */
 static void recovery_done(void) {
-	char new_mnemonic[241] = {0}; // TODO: remove constant
+	char new_mnemonic[MAX_MNEMONIC_LEN + 1] = {0};
 
 	strlcpy(new_mnemonic, words[0], sizeof(new_mnemonic));
 	for (uint32_t i = 1; i < word_count; i++) {
@@ -163,18 +163,20 @@ static void recovery_done(void) {
 	if (!enforce_wordlist || mnemonic_check(new_mnemonic)) {
 		// New mnemonic is valid.
 		if (!dry_run) {
-			// Update mnemonic on storage.
-			storage_setMnemonic(new_mnemonic);
-			memzero(new_mnemonic, sizeof(new_mnemonic));
-			if (!enforce_wordlist) {
-				// not enforcing => mark storage as imported
-				storage_setImported(true);
+			// Update mnemonic on config.
+			if (config_setMnemonic(new_mnemonic)) {
+				if (!enforce_wordlist) {
+					// not enforcing => mark config as imported
+					config_setImported(true);
+				}
+				fsm_sendSuccess(_("Device recovered"));
+			} else {
+				fsm_sendFailure(FailureType_Failure_ProcessError, _("Failed to store mnemonic"));
 			}
-			storage_update();
-			fsm_sendSuccess(_("Device recovered"));
+			memzero(new_mnemonic, sizeof(new_mnemonic));
 		} else {
 			// Inform the user about new mnemonic correctness (as well as whether it is the same as the current one).
-			bool match = (storage_isInitialized() && storage_containsMnemonic(new_mnemonic));
+			bool match = (config_isInitialized() && config_containsMnemonic(new_mnemonic));
 			memzero(new_mnemonic, sizeof(new_mnemonic));
 			if (match) {
 				layoutDialog(&bmp_icon_ok, NULL, _("Confirm"), NULL,
@@ -466,17 +468,15 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection, bool pin_pr
 	}
 
 	if (!dry_run) {
-		if (pin_protection && !protectChangePin()) {
-			fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
+		if (pin_protection && !protectChangePin(false)) {
 			layoutHome();
 			return;
 		}
 
-		storage_setPassphraseProtection(passphrase_protection);
-		storage_setLanguage(language);
-		storage_setLabel(label);
-		storage_setU2FCounter(u2f_counter);
-		storage_update();
+		config_setPassphraseProtection(passphrase_protection);
+		config_setLanguage(language);
+		config_setLabel(label);
+		config_setU2FCounter(u2f_counter);
 	}
 
 	if ((type & RecoveryDeviceType_RecoveryDeviceType_Matrix) != 0) {

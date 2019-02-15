@@ -38,7 +38,7 @@
 #include "bignum.h"
 #include "oled.h"
 #include "base32.h"
-#include "storage.h"
+#include "config.h"
 #include "fsm.h"
 #include "protect.h"
 #include "util.h"
@@ -1514,7 +1514,7 @@ const HDNode *stellar_deriveNode(const uint32_t *address_n, size_t address_n_cou
     const char *curve = "ed25519";
 
     // Device not initialized, passphrase request cancelled, or unsupported curve
-    if (!storage_getRootNode(&node, curve, true)) {
+    if (!config_getRootNode(&node, curve, true)) {
         return 0;
     }
     // Failed to derive private key
