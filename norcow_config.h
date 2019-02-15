@@ -29,7 +29,7 @@
 /*
  * The length of the sector header in bytes. The header is preserved between sector erasures.
  */
-#define NORCOW_HEADER_LEN (0x000)
+#define NORCOW_HEADER_LEN (0x100)
 
 /*
  * Current storage version.
