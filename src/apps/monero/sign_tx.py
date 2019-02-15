@@ -67,12 +67,7 @@ async def sign_tx_dispatch(state, msg, keychain):
 
         return (
             await step_04_input_vini.input_vini(
-                state,
-                msg.src_entr,
-                msg.vini,
-                msg.vini_hmac,
-                msg.pseudo_out,
-                msg.pseudo_out_hmac,
+                state, msg.src_entr, msg.vini, msg.vini_hmac
             ),
             (
                 MessageType.MoneroTransactionInputViniRequest,
@@ -91,11 +86,14 @@ async def sign_tx_dispatch(state, msg, keychain):
     elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionSetOutputRequest:
         from apps.monero.signing import step_06_set_output
 
+        is_offloaded_bp = bool(msg.is_offloaded_bp)
         dst, dst_hmac, rsig_data = msg.dst_entr, msg.dst_entr_hmac, msg.rsig_data
         del msg
 
         return (
-            await step_06_set_output.set_output(state, dst, dst_hmac, rsig_data),
+            await step_06_set_output.set_output(
+                state, dst, dst_hmac, rsig_data, is_offloaded_bp
+            ),
             (
                 MessageType.MoneroTransactionSetOutputRequest,
                 MessageType.MoneroTransactionAllOutSetRequest,

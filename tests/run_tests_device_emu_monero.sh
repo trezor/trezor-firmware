@@ -18,6 +18,9 @@ export EC_BACKEND_FORCE=1
 export EC_BACKEND=1
 export TREZOR_TEST_GET_TX=1
 export TREZOR_TEST_LIVE_REFRESH=1
+export TREZOR_TEST_SIGN_CL0_HF9=1
+export TREZOR_TEST_SIGN_CL1_HF9=1
+export TREZOR_TEST_SIGN_CL1_HF10=1
 python3 -m unittest trezor_monero_test.test_trezor
 error=$?
 kill $upy_pid

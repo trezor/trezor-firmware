@@ -7,7 +7,7 @@ Also hashes `pseudo_out` to the final_message.
 from .state import State
 
 from apps.monero.layout import confirms
-from apps.monero.signing import RctType, RsigType, offloading_keys
+from apps.monero.signing import offloading_keys
 from apps.monero.xmr import crypto
 
 if False:
@@ -21,9 +21,18 @@ async def input_vini(
     src_entr: MoneroTransactionSourceEntry,
     vini_bin: bytes,
     vini_hmac: bytes,
-    pseudo_out: bytes,
-    pseudo_out_hmac: bytes,
 ):
+    """
+    This step serves for an incremental hashing of tx.vin[i] to the tx_prefix_hasher
+    after the sorting on tx.vin[i].ki.
+
+    Originally, this step also incrementaly hashed pseudo_output[i] to the full_message_hasher for
+    RctSimple transactions with Borromean proofs (HF8).
+
+    In later hard-forks, the pseudo_outputs were moved to the rctsig.prunable
+    which is not hashed to the final signature, thus pseudo_output hashing has been removed
+    (as we support only HF9 and HF10 now).
+    """
     from trezor.messages.MoneroTransactionInputViniAck import (
         MoneroTransactionInputViniAck,
     )
@@ -50,24 +59,4 @@ async def input_vini(
     Incremental hasing of tx.vin[i]
     """
     state.tx_prefix_hasher.buffer(vini_bin)
-
-    # in monero version >= 8 pseudo outs were moved to a different place
-    # bulletproofs imply version >= 8
-    if state.rct_type == RctType.Simple and state.rsig_type != RsigType.Bulletproof:
-        _hash_vini_pseudo_out(state, pseudo_out, pseudo_out_hmac)
-
     return MoneroTransactionInputViniAck()
-
-
-def _hash_vini_pseudo_out(state: State, pseudo_out: bytes, pseudo_out_hmac: bytes):
-    """
-    Incremental hasing of pseudo output. Only applicable for simple rct.
-    """
-    idx = state.source_permutation[state.current_input_index]
-    pseudo_out_hmac_comp = crypto.compute_hmac(
-        offloading_keys.hmac_key_txin_comm(state.key_hmac, idx), pseudo_out
-    )
-    if not crypto.ct_equals(pseudo_out_hmac, pseudo_out_hmac_comp):
-        raise ValueError("HMAC invalid for pseudo outs")
-
-    state.full_message_hasher.set_pseudo_out(pseudo_out)

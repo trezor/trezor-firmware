@@ -259,3 +259,16 @@ def generate_sub_address_keys(view_sec, spend_pub, major, minor):
     D = crypto.point_add(spend_pub, M)
     C = crypto.scalarmult(D, view_sec)
     return D, C
+
+
+def commitment_mask(key, buff=None):
+    """
+    Generates deterministic commitment mask for Bulletproof2
+    """
+    data = bytearray(15 + 32)
+    data[0:15] = b"commitment_mask"
+    data[15:] = key
+    if buff:
+        return crypto.hash_to_scalar_into(buff, data)
+    else:
+        return crypto.hash_to_scalar(data)

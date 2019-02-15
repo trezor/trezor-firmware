@@ -25,8 +25,11 @@ keccak_hash = tcry.xmr_fast_hash
 keccak_hash_into = tcry.xmr_fast_hash
 
 
-def keccak_2hash(inp):
-    return keccak_hash(keccak_hash(inp))
+def keccak_2hash(inp, buff=None):
+    buff = buff if buff else bytearray(32)
+    keccak_hash_into(buff, inp)
+    keccak_hash_into(buff, buff)
+    return buff
 
 
 def compute_hmac(key, msg=None):
@@ -168,7 +171,6 @@ https://www.imperialviolet.org/2013/12/25/elligator.html
 http://elligator.cr.yp.to/
 http://elligator.cr.yp.to/elligator-20130828.pdf
 """
-ge_frombytes_vartime_check = tcry.ge25519_check
 
 #
 # Monero specific
@@ -226,7 +228,7 @@ def generate_key_derivation(pub, sec):
     Key derivation: 8*(key2*key1)
     """
     sc_check(sec)  # checks that the secret key is uniform enough...
-    ge_frombytes_vartime_check(pub)
+    check_ed25519point(pub)
     return tcry.xmr_generate_key_derivation(pub, sec)
 
 
@@ -242,9 +244,7 @@ def derive_public_key(derivation, output_index, B):
     """
     H_s(derivation || varint(output_index))G + B
     """
-    ge_frombytes_vartime_check(B)  # check some conditions on the point
     check_ed25519point(B)
-
     return tcry.xmr_derive_public_key(derivation, output_index, B)
 
 
@@ -298,3 +298,9 @@ def check_signature(data, c, r, pub):
     tmp_c = hash_to_scalar(buff)
     res = sc_sub(tmp_c, c)
     return not sc_isnonzero(res)
+
+
+def xor8(buff, key):
+    for i in range(8):
+        buff[i] ^= key[i]
+    return buff
