@@ -66,9 +66,11 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
         tx_ser = TxRequestSerializedType()
     elif tx.overwintered:
         if tx.version == 3:
-            hash143 = zcash.Zip143(tx.branch_id)  # ZIP-0143 transaction hashing
+            branch_id = tx.branch_id or 0x5BA81B19  # Overwinter
+            hash143 = zcash.Zip143(branch_id)  # ZIP-0143 transaction hashing
         elif tx.version == 4:
-            hash143 = zcash.Zip243(tx.branch_id)  # ZIP-0243 transaction hashing
+            branch_id = tx.branch_id or 0x76B809BB  # Sapling
+            hash143 = zcash.Zip243(branch_id)  # ZIP-0243 transaction hashing
         else:
             raise SigningError(
                 FailureType.DataError,
