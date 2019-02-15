@@ -30,6 +30,7 @@ TXHASH_339c3e = bytes.fromhex(
 )
 
 
+@pytest.mark.xfail
 @pytest.mark.komodo
 class TestMsgSigntxKomodo(TrezorTest):
     def test_one_one_fee_sapling(self):
