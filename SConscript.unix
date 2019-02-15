@@ -9,10 +9,14 @@ SOURCE_MOD = []
 LIBS_MOD = []
 
 # modtrezorconfig
+CPPPATH_MOD += [
+    'embed/extmod/modtrezorconfig',
+    'vendor/trezor-storage',
+]
 SOURCE_MOD += [
     'embed/extmod/modtrezorconfig/modtrezorconfig.c',
-    'embed/extmod/modtrezorconfig/norcow.c',
-    'embed/extmod/modtrezorconfig/storage.c',
+    'vendor/trezor-storage/norcow.c',
+    'vendor/trezor-storage/storage.c',
 ]
 
 # modtrezorcrypto

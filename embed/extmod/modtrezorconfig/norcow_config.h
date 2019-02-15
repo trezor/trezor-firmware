@@ -22,6 +22,7 @@
 
 #include "flash.h"
 
+#define NORCOW_HEADER_LEN    0
 #define NORCOW_SECTOR_COUNT  2
 
 #if TREZOR_MODEL == T
@@ -39,5 +40,10 @@
 #error Unknown TREZOR Model
 
 #endif
+
+/*
+ * Current storage version.
+ */
+#define NORCOW_VERSION ((uint32_t)0x00000001)
 
 #endif

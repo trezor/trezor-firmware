@@ -34,6 +34,7 @@
 #endif
 
 void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func);
+void __attribute__((noreturn)) error_shutdown(const char *line1, const char *line2, const char *line3, const char *line4);
 
 #define ensure(expr, msg) (((expr) == sectrue) ? (void)0 : __fatal_error(#expr, msg, __FILE__, __LINE__, __func__))
 
@@ -42,6 +43,10 @@ void hal_delay(uint32_t ms);
 void clear_otg_hs_memory(void);
 
 extern uint32_t __stack_chk_guard;
+
+void collect_hw_entropy(void);
+#define HW_ENTROPY_LEN 12
+extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
 // the following functions are defined in util.s
 

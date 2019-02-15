@@ -48,6 +48,8 @@ int main(void)
     HAL_Init();
 #endif
 
+    collect_hw_entropy();
+
 #if TREZOR_MODEL == T
     // Enable MPU
     mpu_config();

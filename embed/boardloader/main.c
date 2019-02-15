@@ -133,7 +133,7 @@ static secbool copy_sdcard(void)
     }
     display_printf(" done\n\n");
 
-    ensure(flash_unlock(), NULL);
+    ensure(flash_unlock_write(), NULL);
 
     // copy bootloader from SD card to Flash
     display_printf("copying new bootloader from SD card\n\n");
@@ -149,7 +149,7 @@ static secbool copy_sdcard(void)
     }
 
     sdcard_power_off();
-    ensure(flash_lock(), NULL);
+    ensure(flash_lock_write(), NULL);
 
     display_printf("\ndone\n\n");
     display_printf("Unplug the device and remove the SD card\n");

@@ -1,6 +1,7 @@
 from trezor import config, log, loop, res, ui
 from trezor.pin import pin_to_int, show_pin_timeout
 
+from apps.common import storage
 from apps.common.request_pin import request_pin
 
 
@@ -9,12 +10,14 @@ async def bootscreen():
         try:
             if not config.has_pin():
                 config.unlock(pin_to_int(""))
+                storage.init_unlocked()
                 return
             await lockscreen()
             label = None
             while True:
-                pin = await request_pin(label)
+                pin = await request_pin(label, config.get_pin_rem())
                 if config.unlock(pin_to_int(pin)):
+                    storage.init_unlocked()
                     return
                 else:
                     label = "Wrong PIN, enter again"
@@ -24,8 +27,6 @@ async def bootscreen():
 
 
 async def lockscreen():
-    from apps.common import storage
-
     label = storage.get_label()
     image = storage.get_homescreen()
     if not label:

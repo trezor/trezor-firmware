@@ -8,7 +8,11 @@ from apps.common import cache
 
 HOMESCREEN_MAXSIZE = 16384
 
-_STORAGE_VERSION = b"\x01"
+_STORAGE_VERSION = b"\x02"
+_FALSE_BYTE = b"\x00"
+_TRUE_BYTE = b"\x01"
+_COUNTER_HEAD_LEN = 4
+_COUNTER_TAIL_LEN = 8
 
 # fmt: off
 _APP                = const(0x01)  # app namespace
@@ -29,16 +33,27 @@ _NO_BACKUP          = const(0x0D)  # bool (0x01 or empty)
 # fmt: on
 
 
+def _set_bool(app: int, key: int, value: bool, public: bool = False) -> None:
+    if value:
+        config.set(app, key, _TRUE_BYTE, public)
+    else:
+        config.set(app, key, _FALSE_BYTE, public)
+
+
+def _get_bool(app: int, key: int, public: bool = False) -> bool:
+    return config.get(app, key, public) == _TRUE_BYTE
+
+
 def _new_device_id() -> str:
     return hexlify(random.bytes(12)).decode().upper()
 
 
 def get_device_id() -> str:
-    dev_id = config.get(_APP, _DEVICE_ID, True).decode()  # public
+    dev_id = config.get(_APP, _DEVICE_ID, True)  # public
     if not dev_id:
-        dev_id = _new_device_id()
-        config.set(_APP, _DEVICE_ID, dev_id.encode(), True)  # public
-    return dev_id
+        dev_id = _new_device_id().encode()
+        config.set(_APP, _DEVICE_ID, dev_id, True)  # public
+    return dev_id.decode()
 
 
 def is_initialized() -> bool:
@@ -46,15 +61,21 @@ def is_initialized() -> bool:
 
 
 def get_label() -> str:
-    return config.get(_APP, _LABEL, True).decode()  # public
+    label = config.get(_APP, _LABEL, True)  # public
+    if label is None:
+        return None
+    return label.decode()
 
 
 def get_mnemonic() -> str:
-    return config.get(_APP, _MNEMONIC).decode()
+    mnemonic = config.get(_APP, _MNEMONIC)
+    if mnemonic is None:
+        return None
+    return mnemonic.decode()
 
 
 def has_passphrase() -> bool:
-    return bool(config.get(_APP, _USE_PASSPHRASE))
+    return _get_bool(_APP, _USE_PASSPHRASE)
 
 
 def get_homescreen() -> bytes:
@@ -64,18 +85,13 @@ def get_homescreen() -> bytes:
 def load_mnemonic(mnemonic: str, needs_backup: bool, no_backup: bool) -> None:
     config.set(_APP, _MNEMONIC, mnemonic.encode())
     config.set(_APP, _VERSION, _STORAGE_VERSION)
-    if no_backup:
-        config.set(_APP, _NO_BACKUP, b"\x01")
-    else:
-        config.set(_APP, _NO_BACKUP, b"")
-        if needs_backup:
-            config.set(_APP, _NEEDS_BACKUP, b"\x01")
-        else:
-            config.set(_APP, _NEEDS_BACKUP, b"")
+    _set_bool(_APP, _NO_BACKUP, no_backup)
+    if not no_backup:
+        _set_bool(_APP, _NEEDS_BACKUP, needs_backup)
 
 
 def needs_backup() -> bool:
-    return bool(config.get(_APP, _NEEDS_BACKUP))
+    return _get_bool(_APP, _NEEDS_BACKUP)
 
 
 def set_backed_up() -> None:
@@ -83,18 +99,15 @@ def set_backed_up() -> None:
 
 
 def unfinished_backup() -> bool:
-    return bool(config.get(_APP, _UNFINISHED_BACKUP))
+    return _get_bool(_APP, _UNFINISHED_BACKUP)
 
 
 def set_unfinished_backup(state: bool) -> None:
-    if state:
-        config.set(_APP, _UNFINISHED_BACKUP, b"\x01")
-    else:
-        config.set(_APP, _UNFINISHED_BACKUP, b"")
+    _set_bool(_APP, _UNFINISHED_BACKUP, state)
 
 
 def no_backup() -> bool:
-    return bool(config.get(_APP, _NO_BACKUP))
+    return _get_bool(_APP, _NO_BACKUP)
 
 
 def get_passphrase_source() -> int:
@@ -115,10 +128,8 @@ def load_settings(
 ) -> None:
     if label is not None:
         config.set(_APP, _LABEL, label.encode(), True)  # public
-    if use_passphrase is True:
-        config.set(_APP, _USE_PASSPHRASE, b"\x01")
-    if use_passphrase is False:
-        config.set(_APP, _USE_PASSPHRASE, b"")
+    if use_passphrase is not None:
+        _set_bool(_APP, _USE_PASSPHRASE, use_passphrase)
     if homescreen is not None:
         if homescreen[:8] == b"TOIf\x90\x00\x90\x00":
             if len(homescreen) <= HOMESCREEN_MAXSIZE:
@@ -164,22 +175,27 @@ def set_autolock_delay_ms(delay_ms: int) -> None:
 
 
 def next_u2f_counter() -> int:
-    b = config.get(_APP, _U2F_COUNTER)
-    if not b:
-        b = 0
-    else:
-        b = int.from_bytes(b, "big") + 1
-    set_u2f_counter(b)
-    return b
+    return config.next_counter(_APP, _U2F_COUNTER, True)  # writable when locked
 
 
-def set_u2f_counter(cntr: int):
-    if cntr:
-        config.set(_APP, _U2F_COUNTER, cntr.to_bytes(4, "big"))
-    else:
-        config.set(_APP, _U2F_COUNTER, b"")
+def set_u2f_counter(cntr: int) -> None:
+    config.set_counter(_APP, _U2F_COUNTER, cntr, True)  # writable when locked
 
 
 def wipe():
     config.wipe()
     cache.clear()
+
+
+def init_unlocked():
+    # Check for storage version upgrade.
+    version = config.get(_APP, _VERSION)
+    if version == b"\x01":
+        # Make the U2F counter public and writable even when storage is locked.
+        counter = config.get(_APP, _U2F_COUNTER)
+        if counter is not None:
+            config.set_counter(
+                _APP, _U2F_COUNTER, counter, True
+            )  # writable when locked
+            config.delete(_APP, _U2F_COUNTER)
+        config.set(_APP, _VERSION, _STORAGE_VERSION)
