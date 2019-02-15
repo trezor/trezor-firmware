@@ -487,6 +487,17 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root)
 	overwintered = msg->has_overwintered && msg->overwintered;
 	version_group_id = msg->version_group_id;
 	branch_id = msg->branch_id;
+	// set default values for Zcash if branch_id is unset
+	if (overwintered && (branch_id == 0)) {
+		switch (version) {
+			case 3:
+				branch_id = 0x5BA81B19; // Overwinter
+				break;
+			case 4:
+				branch_id = 0x76B809BB; // Sapling
+				break;
+		}
+	}
 
 	uint32_t size = TXSIZE_HEADER + TXSIZE_FOOTER + ser_length_size(inputs_count) + ser_length_size(outputs_count);
 	if (coin->decred) {
