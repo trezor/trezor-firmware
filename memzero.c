@@ -18,7 +18,12 @@
 #endif
 
 // GNU C Library version 2.25 or later.
-#if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 25)
+#if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 25))
+#define HAVE_EXPLICIT_BZERO 1
+#endif
+
+// Newlib
+#if defined( __NEWLIB__)
 #define HAVE_EXPLICIT_BZERO 1
 #endif
 
