@@ -72,7 +72,7 @@ CFLAGS   += $(OPTFLAGS) \
             -I$(TOP_DIR) \
             -I$(TOP_DIR)gen \
             -I$(TOP_DIR)vendor/trezor-crypto \
-            -I$(TOP_DIR)vendor/trezor-qrenc \
+            -I$(TOP_DIR)vendor/QR-Code-generator/c \
             -I$(TOP_DIR)vendor/trezor-storage
 
 LDFLAGS  += -L$(TOP_DIR) \

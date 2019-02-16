@@ -4,9 +4,6 @@
 [submodule "trezor-common"]
 	path = vendor/trezor-common
 	url = https://github.com/trezor/trezor-common.git
-[submodule "trezor-qrenc"]
-	path = vendor/trezor-qrenc
-	url = https://github.com/trezor/trezor-qrenc.git
 [submodule "libopencm3"]
 	path = vendor/libopencm3
 	url = https://github.com/libopencm3/libopencm3.git
@@ -16,3 +13,6 @@
 [submodule "vendor/trezor-storage"]
 	path = vendor/trezor-storage
 	url = https://github.com/trezor/trezor-storage.git
+[submodule "vendor/QR-Code-generator"]
+	path = vendor/QR-Code-generator
+	url = https://github.com/nayuki/QR-Code-generator.git

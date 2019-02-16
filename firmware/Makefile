@@ -82,7 +82,7 @@ OBJS += ../vendor/trezor-crypto/chacha20poly1305/rfc7539.o
 
 OBJS += ../vendor/trezor-crypto/nem.o
 
-OBJS += ../vendor/trezor-qrenc/qr_encode.o
+OBJS += ../vendor/QR-Code-generator/c/qrcodegen.o
 
 OBJS += ../vendor/trezor-storage/storage.o
 OBJS += ../vendor/trezor-storage/norcow.o
@@ -117,7 +117,6 @@ DEBUG_LOG  ?= 0
 
 CFLAGS += -Wno-sequence-point
 CFLAGS += -I../vendor/nanopb -Iprotob -DPB_FIELD_16BIT=1
-CFLAGS += -DQR_MAX_VERSION=0
 CFLAGS += -DDEBUG_LINK=$(DEBUG_LINK)
 CFLAGS += -DDEBUG_LOG=$(DEBUG_LOG)
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'

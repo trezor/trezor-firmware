@@ -27,7 +27,7 @@
 #include "bitmaps.h"
 #include "string.h"
 #include "util.h"
-#include "qr_encode.h"
+#include "qrcodegen.h"
 #include "timer.h"
 #include "bignum.h"
 #include "secp256k1.h"
@@ -553,6 +553,8 @@ void layoutResetWord(const char *word, int pass, int word_pos, bool last)
 	oledRefresh();
 }
 
+#define QR_MAX_VERSION 9
+
 void layoutAddress(const char *address, const char *desc, bool qrcode, bool ignorecase, const uint32_t *address_n, size_t address_n_count, bool address_is_account)
 {
 	if (layoutLast != layoutAddress) {
@@ -564,7 +566,6 @@ void layoutAddress(const char *address, const char *desc, bool qrcode, bool igno
 
 	uint32_t addrlen = strlen(address);
 	if (qrcode) {
-		static unsigned char bitdata[QR_MAX_BITDATA];
 		char address_upcase[addrlen + 1];
 		if (ignorecase) {
 			for (uint32_t i = 0; i < addrlen + 1; i++) {
@@ -572,16 +573,28 @@ void layoutAddress(const char *address, const char *desc, bool qrcode, bool igno
 					address[i] + 'A' - 'a' : address[i];
 			}
 		}
-		int side = qr_encode(addrlen <= (ignorecase ? 60 : 40) ? QR_LEVEL_M : QR_LEVEL_L, 0,
-							 ignorecase ? address_upcase : address, 0, bitdata);
+		uint8_t codedata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)];
+		uint8_t tempdata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)];
+
+		int side = 0;
+		if (qrcodegen_encodeText(
+			ignorecase ? address_upcase : address,
+			tempdata,
+			codedata,
+			qrcodegen_Ecc_LOW,
+			qrcodegen_VERSION_MIN,
+			QR_MAX_VERSION,
+			qrcodegen_Mask_AUTO,
+			true)) {
+				side = qrcodegen_getSize(codedata);
+			}
 
 		oledInvert(0, 0, 63, 63);
 		if (side > 0 && side <= 29) {
 			int offset = 32 - side;
 			for (int i = 0; i < side; i++) {
 				for (int j = 0; j< side; j++) {
-					int a = j * side + i;
-					if (bitdata[a / 8] & (1 << (7 - a % 8))) {
+					if (qrcodegen_getModule(codedata, i, j)) {
 						oledBox(offset + i * 2, offset + j * 2,
 								offset + 1 + i * 2, offset + 1 + j * 2, false);
 					}
@@ -591,8 +604,7 @@ void layoutAddress(const char *address, const char *desc, bool qrcode, bool igno
 			int offset = 32 - (side / 2); 
 			for (int i = 0; i < side; i++) {
 				for (int j = 0; j< side; j++) {
-					int a = j * side + i;
-					if (bitdata[a / 8] & (1 << (7 - a % 8))) {
+					if (qrcodegen_getModule(codedata, i, j)) {
 						oledClearPixel(offset + i, offset + j);
 					}
 				}
