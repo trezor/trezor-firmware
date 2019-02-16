@@ -32,7 +32,7 @@
 #include "font_robotomono_bold_20.h"
 #endif
 
-#include "trezor-qrenc/qr_encode.h"
+#include "qr-code-generator/qrcodegen.h"
 
 #include "common.h"
 #include "display.h"
@@ -626,11 +626,28 @@ int display_text_width(const char *text, int textlen, int font)
     return width;
 }
 
+#define QR_MAX_VERSION 9
+
 void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale)
 {
     if (scale < 1 || scale > 10) return;
-    uint8_t bitdata[QR_MAX_BITDATA];
-    int side = qr_encode(QR_LEVEL_M, 0, data, datalen, bitdata);
+
+    uint8_t codedata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)];
+    uint8_t tempdata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)];
+
+    int side = 0;
+    if (qrcodegen_encodeText(
+        data,
+        tempdata,
+        codedata,
+        qrcodegen_Ecc_MEDIUM,
+        qrcodegen_VERSION_MIN,
+        QR_MAX_VERSION,
+        qrcodegen_Mask_AUTO,
+        true)) {
+            side = qrcodegen_getSize(codedata);
+    }
+
     x += DISPLAY_OFFSET.x - (side + 2) * scale / 2;
     y += DISPLAY_OFFSET.y - (side + 2) * scale / 2;
     int x0, y0, x1, y1;
@@ -645,8 +662,7 @@ void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale)
                 PIXELDATA(0xFFFF);
                 continue;
             }
-            int a = ry * side + rx;
-            if (bitdata[a / 8] & (1 << (7 - a % 8))) {
+            if (qrcodegen_getModule(codedata, rx, ry)) {
                 PIXELDATA(0x0000);
             } else {
                 PIXELDATA(0xFFFF);

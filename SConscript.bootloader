@@ -34,7 +34,6 @@ SOURCE_MOD += [
 CPPDEFINES_MOD += [
     'TREZOR_FONT_NORMAL_ENABLE',
     'TREZOR_FONT_MONO_ENABLE',
-    ('QR_MAX_VERSION', '0'),
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorui/display.c',
@@ -42,7 +41,7 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/font_bitmap.c',
     'embed/extmod/modtrezorui/font_roboto_regular_20.c',
     'embed/extmod/modtrezorui/font_robotomono_regular_20.c',
-    'embed/extmod/modtrezorui/trezor-qrenc/qr_encode.c',
+    'embed/extmod/modtrezorui/qr-code-generator/qrcodegen.c',
 ]
 
 SOURCE_STMHAL = [
