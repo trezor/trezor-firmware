@@ -52,7 +52,7 @@ void hasher_InitParam(Hasher *hasher, HasherType type, const void *param, uint32
 		blake2b_Init(&hasher->ctx.blake2b, 32);
 		break;
 	case HASHER_BLAKE2B_PERSONAL:
-		blake2b_InitPersonal(&hasher->ctx.blake2b, 32, hasher->param, 16);
+		blake2b_InitPersonal(&hasher->ctx.blake2b, 32, hasher->param, hasher->param_size);
 		break;
 	}
 }
