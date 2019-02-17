@@ -16,3 +16,4 @@
 [submodule "vendor/QR-Code-generator"]
 	path = vendor/QR-Code-generator
 	url = https://github.com/nayuki/QR-Code-generator.git
+	ignore = untracked
