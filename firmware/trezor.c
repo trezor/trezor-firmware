@@ -33,7 +33,9 @@
 #include "gettext.h"
 #include "bl_check.h"
 #include "memzero.h"
+#if !EMULATOR
 #include <libopencm3/stm32/desig.h>
+#endif
 
 /* Screen timeout */
 uint32_t system_millis_lock_start;
@@ -99,17 +101,21 @@ int main(void)
 	__stack_chk_guard = random32(); // this supports compiler provided unpredictable stack protection checks
 #endif
 
+#if EMULATOR
+	memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
+#endif
+
 	if (!is_mode_unprivileged()) {
+#if !EMULATOR
 		desig_get_unique_id((uint32_t*)HW_ENTROPY_DATA);
+#endif
 		timer_init();
 #ifdef APPVER
 		// enable MPU (Memory Protection Unit)
 		mpu_config();
 #endif
 	} else {
-#if EMULATOR
-		memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
-#else
+#if !EMULATOR
 		// we are running in unprivileged mode
 		// use fixed HW_ENTROPY
 		memset(HW_ENTROPY_DATA, 0x3C, HW_ENTROPY_LEN);
