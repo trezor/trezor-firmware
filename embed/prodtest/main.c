@@ -352,7 +352,7 @@ static void test_otp_write(const char *args)
     memzero(data, sizeof(data));
     strncpy(data, args, sizeof(data) - 1);
     ensure(flash_otp_write(FLASH_OTP_BLOCK_BATCH, 0, (const uint8_t *) data, sizeof(data)), NULL);
-    ensure(flash_otp_lock(0), NULL);
+    ensure(flash_otp_lock(FLASH_OTP_BLOCK_BATCH), NULL);
     vcp_printf("OK");
 }
 
