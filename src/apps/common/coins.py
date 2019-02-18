@@ -15,13 +15,6 @@ def by_name(name):
     raise ValueError('Unknown coin name "%s"' % name)
 
 
-def by_address_type(address_type):
-    for c in COINS:
-        if c.address_type == address_type:
-            return c
-    raise ValueError("Unknown coin address type %d" % address_type)
-
-
 def by_slip44(slip44):
     for c in COINS:
         if c.slip44 == slip44:

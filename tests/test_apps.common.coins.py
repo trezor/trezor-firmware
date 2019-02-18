@@ -17,18 +17,14 @@ class TestCoins(unittest.TestCase):
         for s, n, a in ref:
             c1 = coins.by_shortcut(s)
             c2 = coins.by_name(n)
-            c3 = coins.by_address_type(a)
             self.assertEqual(c1, c2)
-            self.assertEqual(c1, c3)
-            self.assertEqual(c2, c3)
+            self.assertEqual(c1.address_type, a)
 
     def test_failure(self):
         with self.assertRaises(ValueError):
             coins.by_shortcut('XXX')
         with self.assertRaises(ValueError):
             coins.by_name('XXXXX')
-        with self.assertRaises(ValueError):
-            coins.by_address_type(1234)
 
 
 if __name__ == '__main__':
