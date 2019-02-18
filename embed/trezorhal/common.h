@@ -45,7 +45,7 @@ void clear_otg_hs_memory(void);
 extern uint32_t __stack_chk_guard;
 
 void collect_hw_entropy(void);
-#define HW_ENTROPY_LEN 12
+#define HW_ENTROPY_LEN (12 + 32)
 extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
 // the following functions are defined in util.s

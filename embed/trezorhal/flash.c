@@ -197,5 +197,5 @@ secbool flash_otp_lock(uint8_t block)
 
 secbool flash_otp_is_locked(uint8_t block)
 {
-    return *(__IO uint8_t *)(FLASH_OTP_LOCK_BASE + block) == 0x00;
+    return sectrue * (0x00 == *(__IO uint8_t *)(FLASH_OTP_LOCK_BASE + block));
 }

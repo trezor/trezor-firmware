@@ -82,6 +82,12 @@ secbool __wur flash_write_word(uint8_t sector, uint32_t offset, uint32_t data);
 #define FLASH_OTP_NUM_BLOCKS      16
 #define FLASH_OTP_BLOCK_SIZE      32
 
+// OTP blocks allocation
+#define FLASH_OTP_BLOCK_BATCH                 0
+#define FLASH_OTP_BLOCK_BOOTLOADER_VERSION    1
+#define FLASH_OTP_BLOCK_VENDOR_KEYS_LOCK      2
+#define FLASH_OTP_BLOCK_RANDOMNESS            3
+
 secbool __wur flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data, uint8_t datalen);
 secbool __wur flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data, uint8_t datalen);
 secbool __wur flash_otp_lock(uint8_t block);

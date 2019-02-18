@@ -187,11 +187,9 @@ secbool load_vendor_header_keys(const uint8_t * const data, vendor_header * cons
     return load_vendor_header(data, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N, BOOTLOADER_KEYS, vhdr);
 }
 
-#define OTP_BLOCK_VENDOR_KEYS_LOCK 2
-
 static secbool check_vendor_keys_lock(const vendor_header * const vhdr) {
     uint8_t lock[FLASH_OTP_BLOCK_SIZE];
-    ensure(flash_otp_read(OTP_BLOCK_VENDOR_KEYS_LOCK, 0, lock, FLASH_OTP_BLOCK_SIZE), NULL);
+    ensure(flash_otp_read(FLASH_OTP_BLOCK_VENDOR_KEYS_LOCK, 0, lock, FLASH_OTP_BLOCK_SIZE), NULL);
     if (0 == memcmp(lock, "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF", FLASH_OTP_BLOCK_SIZE)) {
         return sectrue;
     }
@@ -204,8 +202,6 @@ static secbool check_vendor_keys_lock(const vendor_header * const vhdr) {
 
 #if PRODUCTION
 
-#define OTP_BLOCK_BOOTLOADER_VERSION 1
-
 static void check_bootloader_version(void)
 {
     uint8_t bits[FLASH_OTP_BLOCK_SIZE];
@@ -216,10 +212,10 @@ static void check_bootloader_version(void)
              bits[i / 8] |= (1 << (7 - (i % 8)));
         }
     }
-    ensure(flash_otp_write(OTP_BLOCK_BOOTLOADER_VERSION, 0, bits, FLASH_OTP_BLOCK_SIZE), NULL);
+    ensure(flash_otp_write(FLASH_OTP_BLOCK_BOOTLOADER_VERSION, 0, bits, FLASH_OTP_BLOCK_SIZE), NULL);
 
     uint8_t bits2[FLASH_OTP_BLOCK_SIZE];
-    ensure(flash_otp_read(OTP_BLOCK_BOOTLOADER_VERSION, 0, bits2, FLASH_OTP_BLOCK_SIZE), NULL);
+    ensure(flash_otp_read(FLASH_OTP_BLOCK_BOOTLOADER_VERSION, 0, bits2, FLASH_OTP_BLOCK_SIZE), NULL);
 
     ensure(sectrue * (0 == memcmp(bits, bits2, FLASH_OTP_BLOCK_SIZE)), "Bootloader downgraded");
 }

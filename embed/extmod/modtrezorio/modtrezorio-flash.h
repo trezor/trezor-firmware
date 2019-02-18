@@ -89,7 +89,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FlashOTP_lock_obj, mod_trezorio_Fl
 ///     '''
 STATIC mp_obj_t mod_trezorio_FlashOTP_is_locked(mp_obj_t self, mp_obj_t block) {
     uint8_t b = trezor_obj_get_uint8(block);
-    return flash_otp_is_locked(b) ? mp_const_true : mp_const_false;
+    return (sectrue == flash_otp_is_locked(b)) ? mp_const_true : mp_const_false;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FlashOTP_is_locked_obj, mod_trezorio_FlashOTP_is_locked);
 

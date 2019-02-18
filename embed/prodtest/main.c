@@ -328,7 +328,7 @@ static void test_otp_read(void)
 {
     uint8_t data[32];
     memzero(data, sizeof(data));
-    ensure(flash_otp_read(0, 0, data, sizeof(data)), NULL);
+    ensure(flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, data, sizeof(data)), NULL);
 
     // strip trailing 0xFF
     for (size_t i = 0; i < sizeof(data); i++) {
@@ -351,7 +351,7 @@ static void test_otp_write(const char *args)
     char data[32];
     memzero(data, sizeof(data));
     strncpy(data, args, sizeof(data) - 1);
-    ensure(flash_otp_write(0, 0, (const uint8_t *) data, sizeof(data)), NULL);
+    ensure(flash_otp_write(FLASH_OTP_BLOCK_BATCH, 0, (const uint8_t *) data, sizeof(data)), NULL);
     ensure(flash_otp_lock(0), NULL);
     vcp_printf("OK");
 }
@@ -376,7 +376,7 @@ int main(void)
 
     char dom[32];
     // format: TREZOR2-YYMMDD
-    if (sectrue == flash_otp_read(0, 0, (uint8_t *)dom, 32) && 0 == memcmp(dom, "TREZOR2-", 8) && dom[31] == 0) {
+    if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, (uint8_t *)dom, 32) && 0 == memcmp(dom, "TREZOR2-", 8) && dom[31] == 0) {
         display_qrcode(DISPLAY_RESX / 2, DISPLAY_RESY / 2, dom, strlen(dom), 4);
         display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 30, dom + 8, -1, FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
     }
