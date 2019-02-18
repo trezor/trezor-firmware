@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import socket
-from typing import Iterable, Optional, cast
+from typing import Iterable, cast
 
 from . import TransportException
 from .protocol import ProtocolBasedTransport, get_protocol

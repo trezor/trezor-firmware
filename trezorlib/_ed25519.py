@@ -32,7 +32,7 @@ arithmetic, so we cannot handle secrets without risking their disclosure.
 """
 
 import hashlib
-from typing import List, NewType, Tuple
+from typing import NewType, Tuple
 
 Point = NewType("Point", Tuple[int, int, int, int])
 

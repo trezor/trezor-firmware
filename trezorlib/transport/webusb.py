@@ -18,7 +18,7 @@ import atexit
 import logging
 import sys
 import time
-from typing import Iterable, Optional
+from typing import Iterable
 
 from . import TREZORS, UDEV_RULES_STR, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1

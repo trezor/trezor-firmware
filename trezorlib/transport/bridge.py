@@ -17,7 +17,7 @@
 import logging
 import struct
 from io import BytesIO
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Dict, Iterable
 
 import requests
 

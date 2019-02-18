@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import logging
-from typing import Iterable, List, Type
+from typing import Iterable, Type
 
 from ..exceptions import TrezorException
 from ..protobuf import MessageType
