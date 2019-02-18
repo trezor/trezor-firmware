@@ -53,6 +53,8 @@ SECTIONS {
     *(.text*);
     . = ALIGN(4);
     *(.rodata*);
+    . = ALIGN(4);
+    *(.bootloader*);
     . = ALIGN(512);
   } >FLASH AT>FLASH
 

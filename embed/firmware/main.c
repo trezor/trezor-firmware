@@ -40,6 +40,7 @@
 #include "rng.h"
 #include "sdcard.h"
 #include "touch.h"
+#include "bl_check.h"
 
 int main(void)
 {
@@ -51,6 +52,7 @@ int main(void)
     collect_hw_entropy();
 
 #if TREZOR_MODEL == T
+    check_and_replace_bootloader();
     // Enable MPU
     mpu_config();
 #endif

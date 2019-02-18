@@ -158,7 +158,7 @@ secbool flash_write_byte(uint8_t sector, uint32_t offset, uint8_t data)
 
 secbool flash_write_word(uint8_t sector, uint32_t offset, uint32_t data)
 {
-    if (offset % 4) {  // we write only at 4-byte boundary
+    if (offset % sizeof(uint32_t)) {  // we write only at 4-byte boundary
         return secfalse;
     }
     uint32_t *flash = (uint32_t *)flash_get_address(sector, offset, sizeof(data));

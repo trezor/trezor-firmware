@@ -255,6 +255,7 @@ SOURCE_STMHAL = [
 ]
 
 SOURCE_FIRMWARE = [
+    'embed/firmware/bl_check.c',
     'embed/firmware/startup.s',
     'embed/firmware/header.S',
     'embed/firmware/main.c',
@@ -424,6 +425,14 @@ obj_program.extend(
         source=VENDORHEADER,
         action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
         ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
+        ' $SOURCE $TARGET', ))
+
+obj_program.extend(
+    env.Command(
+        target='embed/firmware/bootloader.o',
+        source='embed/firmware/bootloader.bin',
+        action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
+        ' --rename-section .data=.bootloader'
         ' $SOURCE $TARGET', ))
 
 env.Depends(obj_program, qstr_generated)

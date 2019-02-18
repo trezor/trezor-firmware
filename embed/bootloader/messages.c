@@ -310,7 +310,7 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
     MSG_RECV(FirmwareErase);
 
     firmware_remaining = msg_recv.has_length ? msg_recv.length : 0;
-    if ((firmware_remaining > 0) && ((firmware_remaining % 4) == 0) && (firmware_remaining <= (FIRMWARE_SECTORS_COUNT * IMAGE_CHUNK_SIZE))) {
+    if ((firmware_remaining > 0) && ((firmware_remaining % sizeof(uint32_t)) == 0) && (firmware_remaining <= (FIRMWARE_SECTORS_COUNT * IMAGE_CHUNK_SIZE))) {
         // request new firmware
         chunk_requested = (firmware_remaining > IMAGE_CHUNK_SIZE) ? IMAGE_CHUNK_SIZE : firmware_remaining;
         MSG_SEND_INIT(FirmwareRequest);

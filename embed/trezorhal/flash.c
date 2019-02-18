@@ -141,7 +141,7 @@ secbool flash_write_word(uint8_t sector, uint32_t offset, uint32_t data)
     if (address == 0) {
         return secfalse;
     }
-    if (offset % 4 != 0) {
+    if (offset % sizeof(uint32_t)) {  // we write only at 4-byte boundary
         return secfalse;
     }
     if (data != (data & *((const uint32_t *)address))) {
@@ -149,7 +149,6 @@ secbool flash_write_word(uint8_t sector, uint32_t offset, uint32_t data)
     }
     if (HAL_OK != HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data)) {
         return secfalse;
-
     }
     if (data != *((const uint32_t *)address)) {
         return secfalse;
