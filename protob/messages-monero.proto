@@ -43,6 +43,8 @@ message MoneroTransactionDestinationEntry {
     optional uint64 amount = 1;
     optional MoneroAccountPublicAddress addr = 2;
     optional bool is_subaddress = 3;
+    optional bytes original = 4;
+    optional bool is_integrated = 5;
     /**
      * Structure representing Monero public address
      */
@@ -64,6 +66,7 @@ message MoneroTransactionRsigData {
     optional bytes mask = 4;       // mask vector
     optional bytes rsig = 5;       // range sig data, all of it or partial (based on rsig_parts)
     repeated bytes rsig_parts = 6;
+    optional uint32 bp_version = 7;  // Bulletproof version
 }
 
 /**
@@ -134,6 +137,7 @@ message MoneroTransactionInitRequest {
         repeated uint32 minor_indices = 10;
         optional MoneroTransactionRsigData rsig_data = 11;
         repeated uint32 integrated_indices = 12;
+        optional uint32 client_version = 13;  // connected client version
     }
 }
 
@@ -226,6 +230,7 @@ message MoneroTransactionSetOutputRequest {
     optional MoneroTransactionDestinationEntry dst_entr = 1;
     optional bytes dst_entr_hmac = 2;
     optional MoneroTransactionRsigData rsig_data = 3;
+    optional bool is_offloaded_bp = 4;  // Extra message, with offloaded BP.
 }
 
 /**
@@ -290,6 +295,7 @@ message MoneroTransactionSignInputRequest {
  */
 message MoneroTransactionSignInputAck {
     optional bytes signature = 1;
+    optional bytes pseudo_out = 2;  // updated pseudo-out after mask correction
 }
 
 /**
