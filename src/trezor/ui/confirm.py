@@ -91,7 +91,6 @@ class HoldToConfirmDialog(Widget):
             self.loader.start()
             return _STARTED
         if was_active and not is_active:
-            self.content.taint()
             if self.loader.stop():
                 return CONFIRMED
             else:
@@ -108,6 +107,7 @@ class HoldToConfirmDialog(Widget):
                 else:
                     result = await loop.spawn(self.loader, super().__iter__())
             else:
+                self.content.taint()
                 if __debug__:
                     result = await loop.spawn(super().__iter__(), confirm_signal)
                 else:
