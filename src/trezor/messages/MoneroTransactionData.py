@@ -28,6 +28,7 @@ class MoneroTransactionData(p.MessageType):
         minor_indices: List[int] = None,
         rsig_data: MoneroTransactionRsigData = None,
         integrated_indices: List[int] = None,
+        client_version: int = None,
     ) -> None:
         self.version = version
         self.payment_id = payment_id
@@ -41,6 +42,7 @@ class MoneroTransactionData(p.MessageType):
         self.minor_indices = minor_indices if minor_indices is not None else []
         self.rsig_data = rsig_data
         self.integrated_indices = integrated_indices if integrated_indices is not None else []
+        self.client_version = client_version
 
     @classmethod
     def get_fields(cls):
@@ -57,4 +59,5 @@ class MoneroTransactionData(p.MessageType):
             10: ('minor_indices', p.UVarintType, p.FLAG_REPEATED),
             11: ('rsig_data', MoneroTransactionRsigData, 0),
             12: ('integrated_indices', p.UVarintType, p.FLAG_REPEATED),
+            13: ('client_version', p.UVarintType, 0),
         }
