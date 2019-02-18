@@ -314,7 +314,7 @@ static void wait_random(void)
 #endif
 }
 
-static void derive_kek(uint32_t pin, const uint8_t *random_salt, uint8_t kek[SHA256_DIGEST_LENGTH], uint8_t keiv[SHA256_DIGEST_LENGTH])
+static void derive_kek(uint32_t pin, const uint8_t *random_salt, uint8_t kek[SHA256_DIGEST_LENGTH], uint8_t keiv[SHA256_DIGEST_LENGTH], secbool show_progress)
 {
 #if BYTE_ORDER == BIG_ENDIAN
     REVERSE32(pin, pin);
@@ -326,10 +326,20 @@ static void derive_kek(uint32_t pin, const uint8_t *random_salt, uint8_t kek[SHA
 
     PBKDF2_HMAC_SHA256_CTX ctx;
     pbkdf2_hmac_sha256_Init(&ctx, (const uint8_t*) &pin, sizeof(pin), salt, sizeof(salt), 1);
-    pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT/2);
+    for (int i = 1; i <= 5; i++) {
+        pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
+        if (show_progress && ui_callback) {
+            ui_callback(0, 900 + i * 10);
+        }
+    }
     pbkdf2_hmac_sha256_Final(&ctx, kek);
     pbkdf2_hmac_sha256_Init(&ctx, (const uint8_t*) &pin, sizeof(pin), salt, sizeof(salt), 2);
-    pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT/2);
+    for (int i = 6; i <= 10; i++) {
+        pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
+        if (show_progress && ui_callback) {
+            ui_callback(0, 900 + i * 10);
+        }
+    }
     pbkdf2_hmac_sha256_Final(&ctx, keiv);
     memzero(&ctx, sizeof(PBKDF2_HMAC_SHA256_CTX));
     memzero(&pin, sizeof(pin));
@@ -347,7 +357,7 @@ static secbool set_pin(uint32_t pin)
     uint8_t keiv[SHA256_DIGEST_LENGTH];
     chacha20poly1305_ctx ctx;
     random_buffer(salt, RANDOM_SALT_SIZE);
-    derive_kek(pin, salt, kek, keiv);
+    derive_kek(pin, salt, kek, keiv, secfalse);
     rfc7539_init(&ctx, kek, keiv);
     memzero(kek, sizeof(kek));
     memzero(keiv, sizeof(keiv));
@@ -694,7 +704,7 @@ static secbool unlock(uint32_t pin)
     chacha20poly1305_ctx ctx;
 
     // Decrypt the data encryption key and the storage authentication key and check the PIN verification code.
-    derive_kek(pin, salt, kek, keiv);
+    derive_kek(pin, salt, kek, keiv, sectrue);
     memzero(&pin, sizeof(pin));
     rfc7539_init(&ctx, kek, keiv);
     memzero(kek, sizeof(kek));
@@ -751,9 +761,9 @@ secbool storage_unlock(uint32_t pin)
         for (int i = 0; i < 10; i++) {
             if (ui_callback) {
                 if (wait > 1000000) {  // precise enough
-                    progress = (wait - rem) / (wait / 1000);
+                    progress = (wait - rem) / (wait / 900);
                 } else {
-                    progress = ((wait - rem) * 10 + i) * 100 / wait;
+                    progress = ((wait - rem) * 10 + i) * 90 / wait;
                 }
                 if (sectrue == ui_callback(rem, progress)) {
                     return secfalse;
@@ -764,7 +774,7 @@ secbool storage_unlock(uint32_t pin)
     }
     // Show last frame if we were waiting
     if ((wait > 0) && ui_callback) {
-        if (sectrue == ui_callback(0, 1000)) {
+        if (sectrue == ui_callback(0, 900)) {
             return secfalse;
         }
     }
