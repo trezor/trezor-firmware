@@ -149,8 +149,6 @@ const char *requestPin(PinMatrixRequestType type, const char *text)
 
 secbool protectPinUiCallback(uint32_t wait, uint32_t progress)
 {
-	(void) progress;
-
 	// Convert wait to secstr string.
 	char secstrbuf[] = _("________0 seconds");
 	char *secstr = secstrbuf + 9;
@@ -165,7 +163,15 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress)
 		secstrbuf[16] = 0;
 	}
 	layoutDialog(&bmp_icon_info, NULL, NULL, NULL, _("Verifying PIN"), NULL, _("Please wait"), secstr, _("to continue ..."), NULL);
-
+	// progressbar
+	oledFrame(0, OLED_HEIGHT - 8, OLED_WIDTH - 1, OLED_HEIGHT - 1);
+	oledBox(1, OLED_HEIGHT - 7, OLED_WIDTH - 2, OLED_HEIGHT - 2, 0);
+	progress = progress * (OLED_WIDTH - 4) / 1000;
+	if (progress > OLED_WIDTH - 4) {
+		progress = OLED_WIDTH - 4;
+	}
+	oledBox(2, OLED_HEIGHT - 6, 1 + progress, OLED_HEIGHT - 3, 1);
+	oledRefresh();
 	// Check for Cancel / Initialize.
 	protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
 	protectAbortedByInitialize = (msg_tiny_id == MessageType_MessageType_Initialize);
