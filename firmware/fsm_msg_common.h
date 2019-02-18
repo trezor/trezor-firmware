@@ -339,7 +339,7 @@ void fsm_msgApplyFlags(const ApplyFlags *msg)
 
 void fsm_msgRecoveryDevice(const RecoveryDevice *msg)
 {
-    CHECK_PIN
+	CHECK_PIN_UNCACHED
 
 	const bool dry_run = msg->has_dry_run ? msg->dry_run : false;
 	if (!dry_run) {

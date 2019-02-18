@@ -684,22 +684,25 @@ bool config_getMnemonic(char *dest, uint16_t dest_size)
 bool config_containsMnemonic(const char *mnemonic)
 {
     uint16_t len = 0;
-    uint8_t stored_mnemonic[MAX_MNEMONIC_LEN + 1];
-    if (sectrue != storage_get(KEY_MNEMONIC, stored_mnemonic, MAX_MNEMONIC_LEN, &len)) {
+    uint8_t stored_mnemonic[MAX_MNEMONIC_LEN];
+    if (sectrue != storage_get(KEY_MNEMONIC, stored_mnemonic, sizeof(stored_mnemonic), &len)) {
         return false;
     }
-    stored_mnemonic[len] = '\0';
 
-    /* The execution time of the following code only depends on the
-     * (public) input.  This avoids timing attacks.
-     */
-    char diff = 0;
-    uint32_t i = 0;
-    for (; mnemonic[i]; i++) {
-        diff |= (stored_mnemonic[i] - mnemonic[i]);
-    }
-    diff |= stored_mnemonic[i];
+    // Compare the digests to mitigate side-channel attacks.
+    uint8_t digest_stored[SHA256_DIGEST_LENGTH];
+    sha256_Raw(stored_mnemonic, len, digest_stored);
     memzero(stored_mnemonic, sizeof(stored_mnemonic));
+
+    uint8_t digest_input[SHA256_DIGEST_LENGTH];
+    sha256_Raw((const uint8_t*)mnemonic, strnlen(mnemonic, MAX_MNEMONIC_LEN), digest_input);
+
+    uint8_t diff = 0;
+    for (size_t i = 0; i < sizeof(digest_input); i++) {
+        diff |= (digest_stored[i] - digest_input[i]);
+    }
+    memzero(digest_stored, sizeof(digest_stored));
+    memzero(digest_input, sizeof(digest_input));
     return diff == 0;
 }
 
