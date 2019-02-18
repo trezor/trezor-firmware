@@ -754,8 +754,13 @@ secbool storage_unlock(uint32_t pin)
         return secfalse;
     }
 
-    // Sleep for 2^ctr - 1 seconds before checking the PIN.
     uint32_t wait = (1 << ctr) - 1;
+    if (ui_callback) {
+        if (sectrue == ui_callback(wait, 0)) {
+            return secfalse;
+        }
+    }
+    // Sleep for 2^ctr - 1 seconds before checking the PIN.
     uint32_t progress;
     for (uint32_t rem = wait; rem > 0; rem--) {
         for (int i = 0; i < 10; i++) {
@@ -772,8 +777,7 @@ secbool storage_unlock(uint32_t pin)
             hal_delay(100);
         }
     }
-    // Show last frame if we were waiting
-    if ((wait > 0) && ui_callback) {
+    if (ui_callback) {
         if (sectrue == ui_callback(0, 900)) {
             return secfalse;
         }
