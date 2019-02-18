@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include "secbool.h"
 
-#define HW_ENTROPY_LEN 12
+#define HW_ENTROPY_LEN (12 + 32)
 extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
 void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func);
