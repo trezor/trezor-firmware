@@ -17,7 +17,7 @@ from trezor.utils import consteq, format_ordinal
 
 from apps.common import storage
 from apps.common.confirm import require_confirm
-from apps.management.change_pin import request_pin_confirm
+from apps.management.change_pin import request_pin_ack, request_pin_confirm
 
 
 async def recovery_device(ctx, msg):
@@ -37,6 +37,11 @@ async def recovery_device(ctx, msg):
     text.normal("Do you really want to", "recover the device?", "")
 
     await require_confirm(ctx, text, code=ProtectCall)
+
+    if msg.dry_run and config.has_pin():
+        curpin = await request_pin_ack(ctx, "Enter PIN", config.get_pin_rem())
+        if not config.check_pin(pin_to_int(curpin)):
+            raise wire.PinInvalid("PIN invalid")
 
     # ask for the number of words
     wordcount = await request_wordcount(ctx)
