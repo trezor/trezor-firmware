@@ -93,6 +93,7 @@ void check_lock_screen(void)
 static void collect_hw_entropy(bool privileged)
 {
 #if EMULATOR
+	(void)privileged;
 	memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
 #else
 	if (privileged) {
