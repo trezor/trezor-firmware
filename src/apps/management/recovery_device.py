@@ -1,5 +1,6 @@
 from trezor import config, ui, wire
 from trezor.crypto import bip39
+from trezor.crypto.hashlib import sha256
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.ButtonRequestType import (
     MnemonicInput,
@@ -12,7 +13,7 @@ from trezor.pin import pin_to_int
 from trezor.ui.mnemonic import MnemonicKeyboard
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
-from trezor.utils import format_ordinal
+from trezor.utils import consteq, format_ordinal
 
 from apps.common import storage
 from apps.common.confirm import require_confirm
@@ -54,7 +55,9 @@ async def recovery_device(ctx, msg):
 
     # dry run
     if msg.dry_run:
-        if storage.get_mnemonic() == mnemonic:
+        digest_input = sha256(mnemonic).digest()
+        digest_stored = sha256(storage.get_mnemonic()).digest()
+        if consteq(digest_stored, digest_input):
             return Success(
                 message="The seed is valid and matches the one in the device"
             )

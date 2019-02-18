@@ -7,6 +7,7 @@ from trezorutils import (  # noqa: F401
     VERSION_MAJOR,
     VERSION_MINOR,
     VERSION_PATCH,
+    consteq,
     halt,
     memcpy,
     set_mode_unprivileged,
