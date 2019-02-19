@@ -162,7 +162,11 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress)
 		// Change "seconds" to "second".
 		secstrbuf[16] = 0;
 	}
-	layoutDialog(&bmp_icon_info, NULL, NULL, NULL, _("Verifying PIN"), NULL, _("Please wait"), secstr, _("to continue ..."), NULL);
+	oledClear();
+	oledDrawStringCenter(OLED_WIDTH / 2, 0 * 9, _("Verifying PIN"), FONT_STANDARD);
+	oledDrawStringCenter(OLED_WIDTH / 2, 2 * 9, _("Please wait"), FONT_STANDARD);
+	oledDrawStringCenter(OLED_WIDTH / 2, 3 * 9, secstr, FONT_STANDARD);
+	oledDrawStringCenter(OLED_WIDTH / 2, 4 * 9, _("to continue ..."), FONT_STANDARD);
 	// progressbar
 	oledFrame(0, OLED_HEIGHT - 8, OLED_WIDTH - 1, OLED_HEIGHT - 1);
 	oledBox(1, OLED_HEIGHT - 7, OLED_WIDTH - 2, OLED_HEIGHT - 2, 0);
