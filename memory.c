@@ -34,6 +34,7 @@ void memory_protect(void)
 	if (((FLASH_OPTION_BYTES_1 & 0xFFEC) == 0xCCEC) && ((FLASH_OPTION_BYTES_2 & 0xFFF) == 0xFFC) && (FLASH_OPTCR == 0x0FFCCCED)) {
 		return; // already set up correctly - bail out
 	}
+
 	flash_unlock_option_bytes();
 	// Section 2.8.6 Flash option control register (FLASH_OPTCR)
 	//   Bits 31:28 Reserved, must be kept cleared.
@@ -67,7 +68,6 @@ void memory_write_unlock(void)
 }
 
 int memory_bootloader_hash(uint8_t *hash)
-
 {
 	sha256_Raw(FLASH_PTR(FLASH_BOOT_START), FLASH_BOOT_LEN, hash);
 	sha256_Raw(hash, 32, hash);

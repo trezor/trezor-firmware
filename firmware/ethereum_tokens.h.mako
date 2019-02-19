@@ -10,10 +10,10 @@
 #define TOKENS_COUNT ${len(erc20_list)}
 
 typedef struct {
-    uint32_t chain_id;
-    const char * const address;
-    const char * const ticker;
-    int decimals;
+	uint32_t chain_id;
+	const char * const address;
+	const char * const ticker;
+	int decimals;
 } TokenType;
 
 extern const TokenType tokens[TOKENS_COUNT];

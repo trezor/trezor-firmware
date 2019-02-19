@@ -55,7 +55,7 @@ void fsm_msgGetFeatures(const GetFeatures *msg)
 	resp->has_bootloader_hash = true; resp->bootloader_hash.size = memory_bootloader_hash(resp->bootloader_hash.bytes);
 
 	resp->has_language = config_getLanguage(resp->language, sizeof(resp->language));
-    resp->has_label = config_getLabel(resp->label, sizeof(resp->label));
+	resp->has_label = config_getLabel(resp->label, sizeof(resp->label));
 	resp->has_initialized = true; resp->initialized = config_isInitialized();
 	resp->has_imported = config_getImported(&(resp->imported));
 	resp->has_pin_cached = true; resp->pin_cached = session_isUnlocked() && config_hasPin();
@@ -124,13 +124,13 @@ void fsm_msgChangePin(const ChangePin *msg)
 		return;
 	}
 
-    if (protectChangePin(removal)) {
-        if (removal) {
-            fsm_sendSuccess(_("PIN removed"));
-        } else {
-            fsm_sendSuccess(_("PIN changed"));
-        }
-    }
+	if (protectChangePin(removal)) {
+		if (removal) {
+			fsm_sendSuccess(_("PIN removed"));
+		} else {
+			fsm_sendSuccess(_("PIN changed"));
+		}
+	}
 
 	layoutHome();
 }
@@ -174,7 +174,7 @@ void fsm_msgGetEntropy(const GetEntropy *msg)
 
 void fsm_msgLoadDevice(const LoadDevice *msg)
 {
-    CHECK_PIN
+	CHECK_PIN
 
 	CHECK_NOT_INITIALIZED
 
@@ -200,7 +200,7 @@ void fsm_msgLoadDevice(const LoadDevice *msg)
 
 void fsm_msgResetDevice(const ResetDevice *msg)
 {
-    CHECK_PIN
+	CHECK_PIN
 
 	CHECK_NOT_INITIALIZED
 
@@ -235,11 +235,11 @@ void fsm_msgBackupDevice(const BackupDevice *msg)
 	CHECK_PIN_UNCACHED
 
 	(void)msg;
-    char mnemonic[MAX_MNEMONIC_LEN + 1];
-    if (config_getMnemonic(mnemonic, sizeof(mnemonic))) {
-        reset_backup(true, mnemonic);
-    }
-    memzero(mnemonic, sizeof(mnemonic));
+	char mnemonic[MAX_MNEMONIC_LEN + 1];
+	if (config_getMnemonic(mnemonic, sizeof(mnemonic))) {
+		reset_backup(true, mnemonic);
+	}
+	memzero(mnemonic, sizeof(mnemonic));
 }
 
 void fsm_msgCancel(const Cancel *msg)
@@ -329,7 +329,7 @@ void fsm_msgApplySettings(const ApplySettings *msg)
 
 void fsm_msgApplyFlags(const ApplyFlags *msg)
 {
-    CHECK_PIN
+	CHECK_PIN
 
 	if (msg->has_flags) {
 		config_applyFlags(msg->flags);

@@ -35,21 +35,21 @@
 #define STELLAR_KEY_SIZE 32
 
 typedef struct {
-    // BIP32 path to the address being used for signing
-    uint32_t address_n[10];
-    size_t address_n_count;
-    uint8_t signing_pubkey[32];
+	// BIP32 path to the address being used for signing
+	uint32_t address_n[10];
+	size_t address_n_count;
+	uint8_t signing_pubkey[32];
 
-    // 1 - public network, 2 - official testnet, 3 - other private network
-    uint8_t network_type;
+	// 1 - public network, 2 - official testnet, 3 - other private network
+	uint8_t network_type;
 
-    // Total number of operations expected
-    uint32_t num_operations;
-    // Number that have been confirmed by the user
-    uint32_t confirmed_operations;
+	// Total number of operations expected
+	uint32_t num_operations;
+	// Number that have been confirmed by the user
+	uint32_t confirmed_operations;
 
-    // sha256 context that will eventually be signed
-    SHA256_CTX sha256_ctx;
+	// sha256 context that will eventually be signed
+	SHA256_CTX sha256_ctx;
 } StellarTransaction;
 
 // Signing process
