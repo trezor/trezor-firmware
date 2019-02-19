@@ -774,13 +774,43 @@ def get_public_node(connect, coin, address, curve, script_type, show_display):
 
 @cli.command(help="Sign transaction.")
 @click.option("-c", "--coin", default="Bitcoin")
-# @click.option('-n', '--address', required=True, help="BIP-32 path, e.g. m/44'/0'/0'/0/0")
-# @click.option('-t', '--script-type', type=CHOICE_INPUT_SCRIPT_TYPE, default='address')
-# @click.option('-o', '--output', required=True, help='Transaction output')
-# @click.option('-f', '--fee', required=True, help='Transaction fee (sat/B)')
+@click.argument("json_file", type=click.File(), required=False)
 @click.pass_obj
-def sign_tx(connect, coin):
+def sign_tx(connect, coin, json_file):
     client = connect()
+
+    # XXX this is the future code of this function
+    if json_file is not None:
+        data = json.load(json_file)
+        coin = data["coin_name"]
+        details = protobuf.dict_to_proto(proto.SignTx, data["details"])
+        inputs = [protobuf.dict_to_proto(proto.TxInputType, i) for i in data["inputs"]]
+        outputs = [
+            protobuf.dict_to_proto(proto.TxOutputType, output)
+            for output in data["outputs"]
+        ]
+        prev_txes = {
+            bytes.fromhex(txid): protobuf.dict_to_proto(proto.TransactionType, tx)
+            for txid, tx in data["prev_txes"].items()
+        }
+
+        _, serialized_tx = btc.sign_tx(
+            client, coin, inputs, outputs, details, prev_txes
+        )
+
+        client.close()
+
+        click.echo()
+        click.echo("Signed Transaction:")
+        click.echo(serialized_tx.hex())
+        return
+
+    # XXX ALL THE REST is legacy code and will be dropped
+    click.echo("Warning: interactive sign-tx mode is deprecated.", err=True)
+    click.echo(
+        "Instead, you should format your transaction data as JSON and "
+        "supply the file as an argument to sign-tx"
+    )
     if coin in coins.tx_api:
         coin_data = coins.by_name[coin]
         txapi = coins.tx_api[coin]
