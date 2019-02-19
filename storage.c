@@ -329,7 +329,7 @@ static void derive_kek(uint32_t pin, const uint8_t *random_salt, uint8_t kek[SHA
     for (int i = 1; i <= 5; i++) {
         pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
         if (show_progress && ui_callback) {
-            ui_callback(0, 900 + i * 10);
+            ui_callback(0, 800 + i * 20);
         }
     }
     pbkdf2_hmac_sha256_Final(&ctx, kek);
@@ -337,7 +337,7 @@ static void derive_kek(uint32_t pin, const uint8_t *random_salt, uint8_t kek[SHA
     for (int i = 6; i <= 10; i++) {
         pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
         if (show_progress && ui_callback) {
-            ui_callback(0, 900 + i * 10);
+            ui_callback(0, 800 + i * 20);
         }
     }
     pbkdf2_hmac_sha256_Final(&ctx, keiv);
@@ -766,9 +766,9 @@ secbool storage_unlock(uint32_t pin)
         for (int i = 0; i < 10; i++) {
             if (ui_callback) {
                 if (wait > 1000000) {  // precise enough
-                    progress = (wait - rem) / (wait / 900);
+                    progress = (wait - rem) / (wait / 800);
                 } else {
-                    progress = ((wait - rem) * 10 + i) * 90 / wait;
+                    progress = ((wait - rem) * 10 + i) * 80 / wait;
                 }
                 if (sectrue == ui_callback(rem, progress)) {
                     return secfalse;
@@ -778,7 +778,7 @@ secbool storage_unlock(uint32_t pin)
         }
     }
     if (ui_callback) {
-        if (sectrue == ui_callback(0, 900)) {
+        if (sectrue == ui_callback(0, 800)) {
             return secfalse;
         }
     }
