@@ -162,7 +162,7 @@ void setupApp(void)
 #define SRAM_BASE	(0x20000000U)
 
 // Never use in bootloader! Disables access to PPB (including MPU, NVIC, SCB)
-void mpu_config(void)
+void mpu_config_firmware(void)
 {
 #if MEMORY_PROTECT
 	// Disable MPU

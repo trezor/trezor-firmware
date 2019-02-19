@@ -64,7 +64,7 @@ static inline void __attribute__((noreturn)) jump_to_firmware(const vector_table
 		// Set stack pointer
 		__asm__ volatile("msr msp, %0" :: "r" (vector_table->initial_sp_value));
 	} else {                                  // untrusted firmware
-		mpu_config();                         // * configure MPU
+		mpu_config_firmware();                // * configure MPU for the firmware
 		__asm__ volatile("msr msp, %0" :: "r" (_stack));
 	}
 

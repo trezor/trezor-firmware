@@ -130,7 +130,7 @@ int main(void)
 		timer_init();
 #ifdef APPVER
 		// enable MPU (Memory Protection Unit)
-		mpu_config();
+		mpu_config_firmware();
 #endif
 	} else {
 		collect_hw_entropy(false);
