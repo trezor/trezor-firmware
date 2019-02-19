@@ -51,8 +51,6 @@ static secbool latest_bootloader(const uint8_t *hash, int len) {
     return secfalse;
 }
 
-#define BACKLIGHT_NORMAL  150
-
 void check_and_replace_bootloader(void)
 {
     // compute current bootloader hash
