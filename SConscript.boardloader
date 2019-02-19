@@ -59,7 +59,6 @@ SOURCE_STMHAL = [
 
 SOURCE_BOARDLOADER = [
     'embed/boardloader/startup.s',
-    'embed/boardloader/lowlevel.c',
     'embed/boardloader/main.c',
 ]
 
@@ -67,6 +66,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/common.c',
     'embed/trezorhal/image.c',
     'embed/trezorhal/flash.c',
+    'embed/trezorhal/lowlevel.c',
     'embed/trezorhal/mini_printf.c',
     'embed/trezorhal/sdcard.c',
     'embed/trezorhal/stm32.c',

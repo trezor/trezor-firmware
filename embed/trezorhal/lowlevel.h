@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BOARDLOADER_LOWLEVEL_H
-#define BOARDLOADER_LOWLEVEL_H
+#ifndef __TREZORHAL_LOWLEVEL_H__
+#define __TREZORHAL_LOWLEVEL_H__
 
 #include "secbool.h"
 
@@ -31,4 +31,4 @@ secbool flash_configure_option_bytes(void);
 void periph_init(void);
 secbool reset_flags_check(void);
 
-#endif // BOARDLOADER_LOWLEVEL_H
+#endif // __TREZORHAL_LOWLEVEL_H__
