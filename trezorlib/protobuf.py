@@ -414,12 +414,21 @@ def dict_to_proto(message_type, d):
     return message_type(**params)
 
 
-def to_dict(msg):
+def to_dict(msg, hexlify_bytes=True):
+    def convert_value(value):
+        if hexlify_bytes and isinstance(value, bytes):
+            return value.hex()
+        elif isinstance(value, MessageType):
+            return to_dict(value, hexlify_bytes)
+        elif isinstance(value, list):
+            return [convert_value(v) for v in value]
+        else:
+            return value
+
     res = {}
     for key, value in msg.__dict__.items():
         if value is None or value == []:
             continue
-        if isinstance(value, MessageType):
-            value = to_dict(value)
-        res[key] = value
+        res[key] = convert_value(value)
+
     return res
