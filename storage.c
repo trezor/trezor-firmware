@@ -906,8 +906,11 @@ secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len, 
  */
 static secbool storage_set_encrypted(const uint16_t key, const void *val, const uint16_t len)
 {
+    if (len > UINT16_MAX - CHACHA20_IV_SIZE - POLY1305_TAG_SIZE) {
+        return secfalse;
+    }
+
     // Preallocate space on the flash storage.
-    uint16_t offset = 0;
     if (sectrue != auth_set(key, NULL, CHACHA20_IV_SIZE + len + POLY1305_TAG_SIZE)) {
         return secfalse;
     }
@@ -915,6 +918,7 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val, const 
     // Write the IV to the flash.
     uint8_t buffer[CHACHA20_BLOCK_SIZE + POLY1305_TAG_SIZE];
     random_buffer(buffer, CHACHA20_IV_SIZE);
+    uint16_t offset = 0;
     if (sectrue != norcow_update_bytes(key, offset, buffer, CHACHA20_IV_SIZE)) {
         return secfalse;
     }
