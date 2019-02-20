@@ -1,7 +1,13 @@
 """
-This step successively hashes the inputs in the order
-received in the previous step.
-Also hashes `pseudo_out` to the final_message.
+This step serves for an incremental hashing of tx.vin[i] to the tx_prefix_hasher
+after the sorting on tx.vin[i].ki. The sorting order was received in the previous step.
+
+Originally, this step also incrementaly hashed pseudo_output[i] to the full_message_hasher for
+RctSimple transactions with Borromean proofs (HF8).
+
+In later hard-forks, the pseudo_outputs were moved to the rctsig.prunable
+which is not hashed to the final signature, thus pseudo_output hashing has been removed
+(as we support only HF9 and HF10 now).
 """
 
 from .state import State
@@ -22,17 +28,6 @@ async def input_vini(
     vini_bin: bytes,
     vini_hmac: bytes,
 ):
-    """
-    This step serves for an incremental hashing of tx.vin[i] to the tx_prefix_hasher
-    after the sorting on tx.vin[i].ki.
-
-    Originally, this step also incrementaly hashed pseudo_output[i] to the full_message_hasher for
-    RctSimple transactions with Borromean proofs (HF8).
-
-    In later hard-forks, the pseudo_outputs were moved to the rctsig.prunable
-    which is not hashed to the final signature, thus pseudo_output hashing has been removed
-    (as we support only HF9 and HF10 now).
-    """
     from trezor.messages.MoneroTransactionInputViniAck import (
         MoneroTransactionInputViniAck,
     )

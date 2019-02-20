@@ -8,6 +8,8 @@ from trezor.utils import chunks
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.monero.layout import common
 
+DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
+
 
 async def require_confirm_watchkey(ctx):
     content = Text("Confirm export", ui.ICON_SEND, icon_color=ui.GREEN)
@@ -67,7 +69,7 @@ async def require_confirm_transaction(ctx, tsx_data, network_type):
     if (
         has_payment
         and not has_integrated
-        and tsx_data.payment_id != b"\x00\x00\x00\x00\x00\x00\x00\x00"
+        and tsx_data.payment_id != DUMMY_PAYMENT_ID
     ):
         await _require_confirm_payment_id(ctx, tsx_data.payment_id)
 

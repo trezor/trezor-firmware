@@ -97,7 +97,7 @@ async def set_input(state: State, src_entr: MoneroTransactionSourceEntry):
     alpha, pseudo_out = _gen_commitment(state, src_entr.amount)
     pseudo_out = crypto.encodepoint(pseudo_out)
 
-    # In full version the alpha is encrypted and passed back for storage
+    # The alpha is encrypted and passed back for storage
     pseudo_out_hmac = crypto.compute_hmac(
         offloading_keys.hmac_key_txin_comm(state.key_hmac, state.current_input_index),
         pseudo_out,

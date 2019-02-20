@@ -1,5 +1,13 @@
 """
 Generates a MLSAG signature for one input.
+
+Mask Balancing.
+Sum of input masks has to be equal to the sum of output masks.
+As the output masks has been made deterministic in HF10 the mask sum equality is corrected
+in this step. The last input mask (and thus pseudo_out) is recomputed so the sums equal.
+
+If deterministic masks cannot be used (client_version=0), the balancing is done in step 5
+on output masks as pseudo outputs have to remain same.
 """
 
 import gc
@@ -28,16 +36,6 @@ async def sign_input(
     spend_enc: bytes,
 ):
     """
-    Signing UTXO.
-
-    Mask Balancing.
-    Sum of input masks has to be equal to the sum of output masks.
-    As the output masks has been made deterministic in HF10 the mask sum equality is corrected
-    in this step. The last input mask (and thus pseudo_out) is recomputed so the sums equal.
-
-    If deterministic masks cannot be used (client_version=0), the balancing is done in step 5
-    on output masks as pseudo outputs have to remain same.
-
     :param state: transaction state
     :param src_entr: Source entry
     :param vini_bin: tx.vin[i] for the transaction. Contains key image, offsets, amount (usually zero)

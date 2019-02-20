@@ -46,7 +46,7 @@ class RsigType:
 def get_monero_rct_type(bp_version=1):
     """
     Returns transaction RctType according to the BP version.
-    Only HP9+ is supported, thus Full and Simple variants are removed.
+    Only HP9+ is supported, thus only Simple variant is concerned.
     """
     if bp_version == 1:
         return 3  # TxRctType.Bulletproof

@@ -1,7 +1,6 @@
 """
 Multilayer Linkable Spontaneous Anonymous Group (MLSAG)
 Optimized versions with incremental hashing.
-Both Simple and Full Monero tx types are supported.
 
 See https://eprint.iacr.org/2015/1098.pdf for details.
 Also explained in From Zero to Monero section 3.3 and 5.
