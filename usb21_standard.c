@@ -62,13 +62,15 @@ static int usb21_standard_get_descriptor(usbd_device* usbd_dev,
 	(void)complete;
 	(void)usbd_dev;
 
+	wait_random();
+
 	if (req->bRequest == USB_REQ_GET_DESCRIPTOR) {
 		int descr_type = req->wValue >> 8;
 		if (descr_type == USB_DT_BOS) {
 			if (!usb21_bos) {
 				return USBD_REQ_NOTSUPP;
 			}
-			*len = MIN(*len, build_bos_descriptor(usb21_bos, *buf, *len));
+			*len = MIN_8bits(*len, build_bos_descriptor(usb21_bos, *buf, *len));
 			return USBD_REQ_HANDLED;
 		}
 	}

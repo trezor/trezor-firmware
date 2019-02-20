@@ -82,6 +82,8 @@ static int winusb_descriptor_request(usbd_device *usbd_dev,
 	(void)complete;
 	(void)usbd_dev;
 
+	wait_random();
+
 	if ((req->bmRequestType & USB_REQ_TYPE_TYPE) != USB_REQ_TYPE_STANDARD) {
 		return USBD_REQ_NEXT_CALLBACK;
 	}
@@ -89,7 +91,7 @@ static int winusb_descriptor_request(usbd_device *usbd_dev,
 	if (req->bRequest == USB_REQ_GET_DESCRIPTOR && usb_descriptor_type(req->wValue) == USB_DT_STRING) {
 		if (usb_descriptor_index(req->wValue) == WINUSB_EXTRA_STRING_INDEX) {
 			*buf = (uint8_t*)(&winusb_string_descriptor);
-			*len = MIN(*len, winusb_string_descriptor.bLength);
+			*len = MIN_8bits(*len, winusb_string_descriptor.bLength);
 			return USBD_REQ_HANDLED;
 		}
 	}
@@ -103,6 +105,8 @@ static int winusb_control_vendor_request(usbd_device *usbd_dev,
 	(void)complete;
 	(void)usbd_dev;
 
+	wait_random();
+
 	if (req->bRequest != WINUSB_MS_VENDOR_CODE) {
 		return USBD_REQ_NEXT_CALLBACK;
 	}
@@ -111,7 +115,7 @@ static int winusb_control_vendor_request(usbd_device *usbd_dev,
 	if (((req->bmRequestType & USB_REQ_TYPE_RECIPIENT) == USB_REQ_TYPE_DEVICE) &&
 		(req->wIndex == WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR)) {
 		*buf = (uint8_t*)(&winusb_wcid);
-		*len = MIN(*len, winusb_wcid.header.dwLength);
+		*len = MIN_8bits(*len, winusb_wcid.header.dwLength);
 		status = USBD_REQ_HANDLED;
 
 	} else if (((req->bmRequestType & USB_REQ_TYPE_RECIPIENT) == USB_REQ_TYPE_INTERFACE) &&
@@ -119,7 +123,7 @@ static int winusb_control_vendor_request(usbd_device *usbd_dev,
 		(usb_descriptor_index(req->wValue) == winusb_wcid.functions[0].bInterfaceNumber)) {
 
 		*buf = (uint8_t*)(&guid);
-		*len = MIN(*len, guid.header.dwLength);
+		*len = MIN_8bits(*len, guid.header.dwLength);
 		status = USBD_REQ_HANDLED;
 
 	} else {

@@ -141,6 +141,7 @@ void setupApp(void)
 	gpio_set_af(GPIOA, GPIO_AF10, GPIO10);
 }
 
+#define MPU_RASR_SIZE_32B   (0x04UL << MPU_RASR_SIZE_LSB)
 #define MPU_RASR_SIZE_1KB   (0x09UL << MPU_RASR_SIZE_LSB)
 #define MPU_RASR_SIZE_4KB   (0x0BUL << MPU_RASR_SIZE_LSB)
 #define MPU_RASR_SIZE_8KB   (0x0CUL << MPU_RASR_SIZE_LSB)
@@ -160,6 +161,54 @@ void setupApp(void)
 
 #define FLASH_BASE	(0x08000000U)
 #define SRAM_BASE	(0x20000000U)
+
+void mpu_config_off(void)
+{
+	// Disable MPU
+	MPU_CTRL = 0;
+
+	__asm__ volatile("dsb");
+	__asm__ volatile("isb");
+}
+
+void mpu_config_bootloader(void)
+{
+	// Disable MPU
+	MPU_CTRL = 0;
+
+	// Note: later entries overwrite previous ones
+	// Flash (0x08000000 - 0x0807FFFF, 1 MiB, read-write)
+	MPU_RBAR = FLASH_BASE | MPU_RBAR_VALID | (0 << MPU_RBAR_REGION_LSB);
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH | MPU_RASR_SIZE_1MB | MPU_RASR_ATTR_AP_PRW_URW;
+
+	// Flash (0x8007FE0 - 0x08007FFF, 32 B, no-access)
+	MPU_RBAR = (FLASH_BASE + 0x7FE0) | MPU_RBAR_VALID | (1 << MPU_RBAR_REGION_LSB);
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH | MPU_RASR_SIZE_32B | MPU_RASR_ATTR_AP_PNO_UNO;
+
+	// SRAM (0x20000000 - 0x2001FFFF, read-write, execute never)
+	MPU_RBAR = SRAM_BASE | MPU_RBAR_VALID | (2 << MPU_RBAR_REGION_LSB);
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_SRAM | MPU_RASR_SIZE_128KB | MPU_RASR_ATTR_AP_PRW_URW | MPU_RASR_ATTR_XN;
+
+	// Peripherals (0x40000000 - 0x4001FFFF, read-write, execute never)
+	MPU_RBAR = PERIPH_BASE | MPU_RBAR_VALID | (3 << MPU_RBAR_REGION_LSB);
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_PERIPH | MPU_RASR_SIZE_128KB | MPU_RASR_ATTR_AP_PRW_URW | MPU_RASR_ATTR_XN;
+	// Peripherals (0x40020000 - 0x40023FFF, read-write, execute never)
+	MPU_RBAR = 0x40020000 | MPU_RBAR_VALID | (4 << MPU_RBAR_REGION_LSB);
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_PERIPH | MPU_RASR_SIZE_16KB | MPU_RASR_ATTR_AP_PRW_URW | MPU_RASR_ATTR_XN;
+	// Don't enable DMA controller access
+	// Peripherals (0x50000000 - 0x5007ffff, read-write, execute never)
+	MPU_RBAR = 0x50000000 | MPU_RBAR_VALID | (5 << MPU_RBAR_REGION_LSB);
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_PERIPH | MPU_RASR_SIZE_512KB | MPU_RASR_ATTR_AP_PRW_URW | MPU_RASR_ATTR_XN;
+
+	// Enable MPU
+	MPU_CTRL = MPU_CTRL_ENABLE | MPU_CTRL_HFNMIENA;
+
+	// Enable memory fault handler
+	SCB_SHCSR |= SCB_SHCSR_MEMFAULTENA;
+
+	__asm__ volatile("dsb");
+	__asm__ volatile("isb");
+}
 
 // Never use in bootloader! Disables access to PPB (including MPU, NVIC, SCB)
 void mpu_config_firmware(void)

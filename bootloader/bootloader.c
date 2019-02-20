@@ -129,6 +129,8 @@ int main(void)
 	oledInit();
 #endif
 
+	mpu_config_bootloader();
+
 #ifndef APPVER
 	// at least one button is unpressed
 	uint16_t state = gpio_port_read(BTN_PORT);
@@ -147,6 +149,7 @@ int main(void)
 			timer_init();
 		}
 
+		mpu_config_off();
 		load_app(signed_firmware);
 	}
 #endif
