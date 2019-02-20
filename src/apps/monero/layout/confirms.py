@@ -66,11 +66,7 @@ async def require_confirm_transaction(ctx, tsx_data, network_type):
             cur_payment = None
         await _require_confirm_output(ctx, dst, network_type, cur_payment)
 
-    if (
-        has_payment
-        and not has_integrated
-        and tsx_data.payment_id != DUMMY_PAYMENT_ID
-    ):
+    if has_payment and not has_integrated and tsx_data.payment_id != DUMMY_PAYMENT_ID:
         await _require_confirm_payment_id(ctx, tsx_data.payment_id)
 
     await _require_confirm_fee(ctx, tsx_data.fee)
