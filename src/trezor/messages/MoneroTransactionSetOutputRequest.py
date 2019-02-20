@@ -14,10 +14,12 @@ class MoneroTransactionSetOutputRequest(p.MessageType):
         dst_entr: MoneroTransactionDestinationEntry = None,
         dst_entr_hmac: bytes = None,
         rsig_data: MoneroTransactionRsigData = None,
+        is_offloaded_bp: bool = None,
     ) -> None:
         self.dst_entr = dst_entr
         self.dst_entr_hmac = dst_entr_hmac
         self.rsig_data = rsig_data
+        self.is_offloaded_bp = is_offloaded_bp
 
     @classmethod
     def get_fields(cls):
@@ -25,4 +27,5 @@ class MoneroTransactionSetOutputRequest(p.MessageType):
             1: ('dst_entr', MoneroTransactionDestinationEntry, 0),
             2: ('dst_entr_hmac', p.BytesType, 0),
             3: ('rsig_data', MoneroTransactionRsigData, 0),
+            4: ('is_offloaded_bp', p.BoolType, 0),
         }

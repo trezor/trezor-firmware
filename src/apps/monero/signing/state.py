@@ -60,12 +60,11 @@ class State:
         """
         self.need_additional_txkeys = False
 
-        # Ring Confidential Transaction type
-        # allowed values: RctType.{Full, Simple}
-        self.rct_type = None
-        # Range Signature type (also called range proof)
-        # allowed values: RsigType.{Borromean, Bulletproof}
-        self.rsig_type = None
+        # Connected client version
+        self.client_version = 0
+
+        # Bulletproof version. Pre for <=HF9 is 1, for >HP10 is 2
+        self.bp_version = 1
 
         self.input_count = 0
         self.output_count = 0
@@ -82,18 +81,22 @@ class State:
         # currently processed input/output index
         self.current_input_index = -1
         self.current_output_index = -1
+        self.is_processing_offloaded = False
+
+        # for pseudo_out recomputation from new mask
+        self.input_last_amount = 0
 
         self.summary_inputs_money = 0
         self.summary_outs_money = 0
 
         # output commitments
         self.output_pk_commitments = []
-        # masks used in the output commitment
-        self.output_sk_masks = []
 
         self.output_amounts = []
-        # output *range proof* masks
+        # output *range proof* masks. HP10+ makes them deterministic.
         self.output_masks = []
+        # last output mask for client_version=0
+        self.output_last_mask = None
 
         # the range proofs are calculated in batches, this denotes the grouping
         self.rsig_grouping = []
@@ -146,3 +149,9 @@ class State:
 
     def change_address(self):
         return self.output_change.addr if self.output_change else None
+
+    def is_bulletproof_v2(self):
+        return self.bp_version >= 2
+
+    def is_det_mask(self):
+        return self.bp_version >= 2 or self.client_version > 0

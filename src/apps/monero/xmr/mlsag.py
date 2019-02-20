@@ -49,68 +49,6 @@ from apps.monero.xmr import crypto
 from apps.monero.xmr.serialize import int_serialize
 
 
-def generate_mlsag_full(
-    message,
-    pubs,
-    in_sk,
-    out_sk_mask,
-    out_pk_commitments,
-    kLRki,
-    index,
-    txn_fee_key,
-    mg_buff,
-):
-    cols = len(pubs)
-    if cols == 0:
-        raise ValueError("Empty pubs")
-    rows = 1  # Monero uses only one row
-    if len(out_sk_mask) != len(out_pk_commitments):
-        raise ValueError("Bad outsk/putpk size")
-
-    sk = _key_vector(rows + 1)
-    M = _key_matrix(rows + 1, cols)
-
-    tmp_mi_rows = crypto.new_point(None)
-    tmp_pt = crypto.new_point(None)
-
-    for i in range(cols):
-        crypto.identity_into(tmp_mi_rows)  # M[i][rows]
-
-        # Should iterate over rows, simplified as rows == 1
-        M[i][0] = pubs[i].dest
-        crypto.point_add_into(
-            tmp_mi_rows,
-            tmp_mi_rows,
-            crypto.decodepoint_into(tmp_pt, pubs[i].commitment),
-        )
-        pubs[i] = None
-
-        for j in range(len(out_pk_commitments)):
-            crypto.point_sub_into(
-                tmp_mi_rows,
-                tmp_mi_rows,
-                crypto.decodepoint_into(tmp_pt, out_pk_commitments[j]),
-            )  # subtract output Ci's in last row
-
-        # Subtract txn fee output in last row
-        crypto.point_sub_into(tmp_mi_rows, tmp_mi_rows, txn_fee_key)
-        M[i][rows] = crypto.encodepoint(tmp_mi_rows)
-
-    # Simplified as rows == 1
-    sk[0] = in_sk.dest
-    sk[rows] = in_sk.mask  # originally: sum of all in_sk[0..rows] in sk[rows]
-
-    for j in range(len(out_pk_commitments)):
-        crypto.sc_sub_into(
-            sk[rows], sk[rows], out_sk_mask[j]
-        )  # subtract output masks in last row
-
-    del (pubs, tmp_mi_rows, tmp_pt)
-    gc.collect()
-
-    return generate_mlsag(message, M, sk, kLRki, index, rows, mg_buff)
-
-
 def generate_mlsag_simple(message, pubs, in_sk, a, cout, kLRki, index, mg_buff):
     """
     MLSAG for RctType.Simple

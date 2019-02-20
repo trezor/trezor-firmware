@@ -290,17 +290,17 @@
                 "tcry"
             ],
             "hashes": [
-                "sha256:229855aeffc2457c3cd20b30a41d8c31fc2898d9deb3667cfdb85ce5318aa218",
-                "sha256:898324657bf87c9f002dab5d2137565abda95950f52cbdbc6ccc659dd9d9910e"
+                "sha256:0e8ac7a9ff9512b9781deacf6a5ae8c53f49d0b8e43684278e4e57f328493ebb",
+                "sha256:e6e99d44a2d76cdc1addb9421d5039546d4ea0002691ca5186124aa4561f82f5"
             ],
             "index": "pypi",
-            "version": "==1.7.6"
+            "version": "==2.0.1"
         },
         "monero-serialize": {
             "hashes": [
-                "sha256:81ae31a25901cf81969b48a14f9267775b9dbe4856f322807732bf03836773c7"
+                "sha256:0bf42972a2b13b47c2b2bd42352006caf14117387c1fab09ab2ac0817c0dede5"
             ],
-            "version": "==2.1.0"
+            "version": "==3.0.0"
         },
         "more-itertools": {
             "hashes": [
@@ -433,6 +433,7 @@
                 "sha256:c523afd73949ac083bb7c5ef67416f0a971edc1921f4046a8cd40f87e43133ff"
             ],
             "index": "pypi",
+            "markers": "extra == 'tcry'",
             "version": "==0.1.1"
         },
         "pyblake2": {

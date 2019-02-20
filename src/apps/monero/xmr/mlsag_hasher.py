@@ -8,18 +8,16 @@ class PreMlsagHasher:
     """
 
     def __init__(self):
-        self.is_simple = None
         self.state = 0
         self.kc_master = crypto.get_keccak()
         self.rsig_hasher = crypto.get_keccak()
         self.rtcsig_hasher = KeccakXmrArchive()
 
-    def init(self, is_simple):
+    def init(self):
         if self.state != 0:
             raise ValueError("State error")
 
         self.state = 1
-        self.is_simple = is_simple
 
     def set_message(self, message):
         self.kc_master.update(message)
@@ -30,14 +28,6 @@ class PreMlsagHasher:
         self.state = 2
         self.rtcsig_hasher.uint(rv_type, 1)  # UInt8
         self.rtcsig_hasher.uvarint(fee)  # UVarintType
-
-    def set_pseudo_out(self, out):
-        if self.state != 2 and self.state != 3:
-            raise ValueError("State error")
-        self.state = 3
-
-        # Manual serialization of the ECKey
-        self.rtcsig_hasher.buffer(out)
 
     def set_ecdh(self, ecdh):
         if self.state != 2 and self.state != 3 and self.state != 4:

@@ -2,14 +2,28 @@ from trezor import utils
 
 from apps.monero.xmr import crypto
 
+if False:
+    from apps.monero.xmr.types import *
 
-def _build_key(secret, discriminator=None, index: int = None) -> bytes:
+
+BUILD_KEY_BUFFER = bytearray(32 + 12 + 4)  # key + disc + index
+
+
+def _build_key(
+    secret, discriminator=None, index: int = None, out: bytes = None
+) -> bytes:
     """
     Creates an unique-purpose key
     """
-    key_buff = bytearray(32 + 12 + 4)  # key + disc + index
+    key_buff = BUILD_KEY_BUFFER  # bytearray(32 + 12 + 4)  # key + disc + index
+    utils.ensure(len(secret) == 32, "Invalid key length")
+    utils.ensure(len(discriminator) <= 12, "Disc too long")
+
     offset = 32
-    utils.memcpy(key_buff, 0, secret, 0, len(secret))
+    utils.memcpy(key_buff, 0, secret, 0, 32)
+
+    for i in range(32, len(key_buff)):
+        key_buff[i] = 0
 
     if discriminator is not None:
         utils.memcpy(key_buff, offset, discriminator, 0, len(discriminator))
@@ -24,7 +38,7 @@ def _build_key(secret, discriminator=None, index: int = None) -> bytes:
             offset += 1
             index = shifted
 
-    return crypto.keccak_2hash(key_buff)
+    return crypto.keccak_2hash(key_buff, out)
 
 
 def hmac_key_txin(key_hmac, idx: int) -> bytes:
@@ -81,6 +95,13 @@ def enc_key_cout(key_enc, idx: int = None) -> bytes:
     Chacha20Poly1305 encryption key for multisig C values from MLASG.
     """
     return _build_key(key_enc, b"cout", idx)
+
+
+def det_comm_masks(key_enc, idx: int) -> Sc25519:
+    """
+    Deterministic output commitment masks
+    """
+    return crypto.decodeint(_build_key(key_enc, b"out-mask", idx))
 
 
 async def gen_hmac_vini(key, src_entr, vini_bin, idx: int) -> bytes:

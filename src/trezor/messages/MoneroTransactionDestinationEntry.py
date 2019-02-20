@@ -12,10 +12,14 @@ class MoneroTransactionDestinationEntry(p.MessageType):
         amount: int = None,
         addr: MoneroAccountPublicAddress = None,
         is_subaddress: bool = None,
+        original: bytes = None,
+        is_integrated: bool = None,
     ) -> None:
         self.amount = amount
         self.addr = addr
         self.is_subaddress = is_subaddress
+        self.original = original
+        self.is_integrated = is_integrated
 
     @classmethod
     def get_fields(cls):
@@ -23,4 +27,6 @@ class MoneroTransactionDestinationEntry(p.MessageType):
             1: ('amount', p.UVarintType, 0),
             2: ('addr', MoneroAccountPublicAddress, 0),
             3: ('is_subaddress', p.BoolType, 0),
+            4: ('original', p.BytesType, 0),
+            5: ('is_integrated', p.BoolType, 0),
         }

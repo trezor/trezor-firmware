@@ -22,6 +22,7 @@ async def all_outputs_set(state: State):
     state.mem_trace(1)
 
     _validate(state)
+    state.is_processing_offloaded = False
     state.mem_trace(2)
 
     _set_tx_extra(state)
@@ -51,7 +52,7 @@ async def all_outputs_set(state: State):
     rv_pb = MoneroRingCtSig(
         txn_fee=state.fee,
         message=state.tx_prefix_hash,
-        rv_type=get_monero_rct_type(state.rct_type, state.rsig_type),
+        rv_type=get_monero_rct_type(state.bp_version),
     )
 
     _out_pk(state)
@@ -71,14 +72,8 @@ async def all_outputs_set(state: State):
 
 
 def _validate(state: State):
-    from apps.monero.signing import RctType
-
     if state.current_output_index + 1 != state.output_count:
         raise ValueError("Invalid out num")
-
-    # Test if \sum Alpha == \sum A
-    if state.rct_type == RctType.Simple:
-        utils.ensure(crypto.sc_eq(state.sumout, state.sumpouts_alphas))
 
     # Fee test
     if state.fee != (state.summary_inputs_money - state.summary_outs_money):

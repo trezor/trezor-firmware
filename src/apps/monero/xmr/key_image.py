@@ -61,7 +61,7 @@ def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
         if not crypto.point_eq(k_i, image):
             raise ValueError("Key image invalid")
         for k in pubs:
-            crypto.ge_frombytes_vartime_check(k)
+            crypto.check_ed25519point(k)
 
     buff_off = len(prefix_hash)
     buff = bytearray(buff_off + 2 * 32 * len(pubs))

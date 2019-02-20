@@ -9,7 +9,6 @@ from trezor import utils
 from .state import State
 
 from apps.monero.layout import confirms
-from apps.monero.signing import RctType
 from apps.monero.xmr import crypto
 
 if False:
@@ -29,6 +28,16 @@ async def sign_input(
     spend_enc: bytes,
 ):
     """
+    Signing UTXO.
+
+    Mask Balancing.
+    Sum of input masks has to be equal to the sum of output masks.
+    As the output masks has been made deterministic in HF10 the mask sum equality is corrected
+    in this step. The last input mask (and thus pseudo_out) is recomputed so the sums equal.
+
+    If deterministic masks cannot be used (client_version=0), the balancing is done in step 5
+    on output masks as pseudo outputs have to remain same.
+
     :param state: transaction state
     :param src_entr: Source entry
     :param vini_bin: tx.vin[i] for the transaction. Contains key image, offsets, amount (usually zero)
@@ -47,12 +56,10 @@ async def sign_input(
     state.current_input_index += 1
     if state.current_input_index >= state.input_count:
         raise ValueError("Invalid inputs count")
-    if state.rct_type == RctType.Simple and pseudo_out is None:
+    if pseudo_out is None:
         raise ValueError("SimpleRCT requires pseudo_out but none provided")
-    if state.rct_type == RctType.Simple and pseudo_out_alpha_enc is None:
+    if pseudo_out_alpha_enc is None:
         raise ValueError("SimpleRCT requires pseudo_out's mask but none provided")
-    if state.current_input_index >= 1 and not state.rct_type == RctType.Simple:
-        raise ValueError("Two and more inputs must imply SimpleRCT")
 
     input_position = state.source_permutation[state.current_input_index]
     mods = utils.unimport_begin()
@@ -71,7 +78,27 @@ async def sign_input(
 
     from apps.monero.xmr.crypto import chacha_poly
 
-    if state.rct_type == RctType.Simple:
+    pseudo_out_alpha = crypto.decodeint(
+        chacha_poly.decrypt_pack(
+            offloading_keys.enc_key_txin_alpha(state.key_enc, input_position),
+            bytes(pseudo_out_alpha_enc),
+        )
+    )
+
+    # Last pseud_out is recomputed so mask sums hold
+    if state.is_det_mask() and input_position + 1 == state.input_count:
+        # Recompute the lash alpha so the sum holds
+        state.mem_trace("Correcting alpha")
+        alpha_diff = crypto.sc_sub(state.sumout, state.sumpouts_alphas)
+        crypto.sc_add_into(pseudo_out_alpha, pseudo_out_alpha, alpha_diff)
+        pseudo_out_c = crypto.gen_commitment(pseudo_out_alpha, state.input_last_amount)
+
+    else:
+        if input_position + 1 == state.input_count:
+            utils.ensure(
+                crypto.sc_eq(state.sumpouts_alphas, state.sumout), "Sum eq error"
+            )
+
         # both pseudo_out and its mask were offloaded so we need to
         # validate pseudo_out's HMAC and decrypt the alpha
         pseudo_out_hmac_comp = crypto.compute_hmac(
@@ -81,15 +108,9 @@ async def sign_input(
         if not crypto.ct_equals(pseudo_out_hmac_comp, pseudo_out_hmac):
             raise ValueError("HMAC is not correct")
 
-        state.mem_trace(2, True)
-
-        pseudo_out_alpha = crypto.decodeint(
-            chacha_poly.decrypt_pack(
-                offloading_keys.enc_key_txin_alpha(state.key_enc, input_position),
-                bytes(pseudo_out_alpha_enc),
-            )
-        )
         pseudo_out_c = crypto.decodepoint(pseudo_out)
+
+    state.mem_trace(2, True)
 
     # Spending secret
     spend_key = crypto.decodeint(
@@ -141,42 +162,24 @@ async def sign_input(
     ring_pubkeys = [x.key for x in src_entr.outputs]
     del src_entr
 
-    if state.rct_type == RctType.Simple:
-        mlsag.generate_mlsag_simple(
-            state.full_message,
-            ring_pubkeys,
-            input_secret_key,
-            pseudo_out_alpha,
-            pseudo_out_c,
-            kLRki,
-            index,
-            mg_buffer,
-        )
+    mlsag.generate_mlsag_simple(
+        state.full_message,
+        ring_pubkeys,
+        input_secret_key,
+        pseudo_out_alpha,
+        pseudo_out_c,
+        kLRki,
+        index,
+        mg_buffer,
+    )
 
-        del (input_secret_key, pseudo_out_alpha, pseudo_out_c)
-
-    else:
-        # Full RingCt, only one input
-        txn_fee_key = crypto.scalarmult_h(state.fee)
-        mlsag.generate_mlsag_full(
-            state.full_message,
-            ring_pubkeys,
-            input_secret_key,
-            state.output_sk_masks,
-            state.output_pk_commitments,
-            kLRki,
-            index,
-            txn_fee_key,
-            mg_buffer,
-        )
-
-        del (input_secret_key, txn_fee_key)
-
-    del (mlsag, ring_pubkeys)
+    del (input_secret_key, pseudo_out_alpha, mlsag, ring_pubkeys)
     state.mem_trace(5, True)
 
     from trezor.messages.MoneroTransactionSignInputAck import (
         MoneroTransactionSignInputAck,
     )
 
-    return MoneroTransactionSignInputAck(signature=mg_buffer)
+    return MoneroTransactionSignInputAck(
+        signature=mg_buffer, pseudo_out=crypto.encodepoint(pseudo_out_c)
+    )

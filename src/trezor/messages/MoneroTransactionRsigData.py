@@ -19,6 +19,7 @@ class MoneroTransactionRsigData(p.MessageType):
         mask: bytes = None,
         rsig: bytes = None,
         rsig_parts: List[bytes] = None,
+        bp_version: int = None,
     ) -> None:
         self.rsig_type = rsig_type
         self.offload_type = offload_type
@@ -26,6 +27,7 @@ class MoneroTransactionRsigData(p.MessageType):
         self.mask = mask
         self.rsig = rsig
         self.rsig_parts = rsig_parts if rsig_parts is not None else []
+        self.bp_version = bp_version
 
     @classmethod
     def get_fields(cls):
@@ -36,4 +38,5 @@ class MoneroTransactionRsigData(p.MessageType):
             4: ('mask', p.BytesType, 0),
             5: ('rsig', p.BytesType, 0),
             6: ('rsig_parts', p.BytesType, p.FLAG_REPEATED),
+            7: ('bp_version', p.UVarintType, 0),
         }

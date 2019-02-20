@@ -10,52 +10,59 @@ from .state import State
 
 from apps.monero import signing
 from apps.monero.layout import confirms
-from apps.monero.signing import RsigType, offloading_keys
+from apps.monero.signing import offloading_keys
 from apps.monero.xmr import crypto, serialize
 
 
-async def set_output(state: State, dst_entr, dst_entr_hmac, rsig_data):
+async def set_output(
+    state: State, dst_entr, dst_entr_hmac, rsig_data, is_offloaded_bp=False
+):
     state.mem_trace(0, True)
     mods = utils.unimport_begin()
 
-    await confirms.transaction_step(
-        state.ctx, state.STEP_OUT, state.current_output_index + 1, state.output_count
-    )
-    state.mem_trace(1)
+    # Progress update only for master message (skip for offloaded BP msg)
+    if not is_offloaded_bp:
+        await confirms.transaction_step(
+            state.ctx,
+            state.STEP_OUT,
+            state.current_output_index + 1,
+            state.output_count,
+        )
 
-    state.current_output_index += 1
+    state.mem_trace(1, True)
+
+    dst_entr = await _validate(state, dst_entr, dst_entr_hmac, is_offloaded_bp)
     state.mem_trace(2, True)
-    await _validate(state, dst_entr, dst_entr_hmac)
 
-    # First output - we include the size of the container into the tx prefix hasher
-    if state.current_output_index == 0:
-        state.tx_prefix_hasher.uvarint(state.output_count)
-    state.mem_trace(4, True)
+    if not state.is_processing_offloaded:
+        # First output - we include the size of the container into the tx prefix hasher
+        if state.current_output_index == 0:
+            state.tx_prefix_hasher.uvarint(state.output_count)
 
-    state.output_amounts.append(dst_entr.amount)
-    state.summary_outs_money += dst_entr.amount
+        state.mem_trace(4, True)
+        state.output_amounts.append(dst_entr.amount)
+        state.summary_outs_money += dst_entr.amount
+
     utils.unimport_end(mods)
     state.mem_trace(5, True)
 
-    # Range proof first, memory intensive
-    rsig, mask = _range_proof(state, dst_entr.amount, rsig_data)
+    # Compute tx keys and masks if applicable
+    tx_out_key, amount_key = _compute_tx_keys(state, dst_entr)
     utils.unimport_end(mods)
     state.mem_trace(6, True)
 
-    # additional tx key if applicable
-    additional_txkey_priv = _set_out_additional_keys(state, dst_entr)
-    # derivation = a*R or r*A or s*C
-    derivation = _set_out_derivation(state, dst_entr, additional_txkey_priv)
-    # amount key = H_s(derivation || i)
-    amount_key = crypto.derivation_to_scalar(derivation, state.current_output_index)
-    # one-time destination address P = H_s(derivation || i)*G + B
-    tx_out_key = crypto.derive_public_key(
-        derivation,
-        state.current_output_index,
-        crypto.decodepoint(dst_entr.addr.spend_public_key),
-    )
-    del (derivation, additional_txkey_priv)
+    # Range proof first, memory intensive (fragmentation)
+    rsig_data_new, mask = _range_proof(state, rsig_data)
+    utils.unimport_end(mods)
     state.mem_trace(7, True)
+
+    # If det masks & offloading, return as we are handling offloaded BP.
+    if state.is_processing_offloaded:
+        from trezor.messages.MoneroTransactionSetOutputAck import (
+            MoneroTransactionSetOutputAck,
+        )
+
+        return MoneroTransactionSetOutputAck()
 
     # Tx header prefix hashing, hmac dst_entr
     tx_out_bin, hmac_vouti = await _set_out_tx_out(state, dst_entr, tx_out_key)
@@ -93,28 +100,101 @@ async def set_output(state: State, dst_entr, dst_entr_hmac, rsig_data):
     return MoneroTransactionSetOutputAck(
         tx_out=tx_out_bin,
         vouti_hmac=hmac_vouti,
-        rsig_data=_return_rsig_data(rsig),
+        rsig_data=rsig_data_new,
         out_pk=out_pk_bin,
         ecdh_info=ecdh_info_bin,
     )
 
 
-async def _validate(state: State, dst_entr, dst_entr_hmac):
-    if state.current_input_index + 1 != state.input_count:
-        raise ValueError("Invalid number of inputs")
-    if state.current_output_index >= state.output_count:
-        raise ValueError("Invalid output index")
-    if dst_entr.amount < 0:
-        raise ValueError("Destination with wrong amount: %s" % dst_entr.amount)
+async def _validate(state: State, dst_entr, dst_entr_hmac, is_offloaded_bp):
+    # If offloading flag then it has to be det_masks and offloading enabled.
+    # Using IF as it is easier to read.
+    if is_offloaded_bp and (not state.rsig_offload or not state.is_det_mask()):
+        raise ValueError("Extraneous offloaded msg")
 
-    # HMAC check of the destination
-    dst_entr_hmac_computed = await offloading_keys.gen_hmac_tsxdest(
-        state.key_hmac, dst_entr, state.current_output_index
+    # State change according to the det-mask BP offloading.
+    if state.is_det_mask() and state.rsig_offload:
+        bidx = _get_rsig_batch(state, state.current_output_index)
+        last_in_batch = _is_last_in_batch(state, state.current_output_index, bidx)
+
+        utils.ensure(
+            not last_in_batch or state.is_processing_offloaded != is_offloaded_bp,
+            "Offloaded BP out of order",
+        )
+        state.is_processing_offloaded = is_offloaded_bp
+
+    if not state.is_processing_offloaded:
+        state.current_output_index += 1
+
+    utils.ensure(
+        not dst_entr or dst_entr.amount >= 0, "Destination with negative amount"
     )
-    if not crypto.ct_equals(dst_entr_hmac, dst_entr_hmac_computed):
-        raise ValueError("HMAC invalid")
-    del (dst_entr_hmac, dst_entr_hmac_computed)
+    utils.ensure(
+        state.current_input_index + 1 == state.input_count, "Invalid number of inputs"
+    )
+    utils.ensure(
+        state.current_output_index < state.output_count, "Invalid output index"
+    )
+    utils.ensure(
+        state.is_det_mask() or not state.is_processing_offloaded,
+        "Offloaded extra msg while not using det masks",
+    )
+
+    if not state.is_processing_offloaded:
+        # HMAC check of the destination
+        dst_entr_hmac_computed = await offloading_keys.gen_hmac_tsxdest(
+            state.key_hmac, dst_entr, state.current_output_index
+        )
+
+        utils.ensure(
+            crypto.ct_equals(dst_entr_hmac, dst_entr_hmac_computed), "HMAC failed"
+        )
+        del (dst_entr_hmac_computed)
+
+    else:
+        dst_entr = None
+
+    del (dst_entr_hmac)
     state.mem_trace(3, True)
+
+    return dst_entr
+
+
+def _compute_tx_keys(state: State, dst_entr):
+    """Computes tx_out_key, amount_key"""
+
+    if state.is_processing_offloaded:
+        return None, None  # no need to recompute
+
+    # additional tx key if applicable
+    additional_txkey_priv = _set_out_additional_keys(state, dst_entr)
+    # derivation = a*R or r*A or s*C
+    derivation = _set_out_derivation(state, dst_entr, additional_txkey_priv)
+    # amount key = H_s(derivation || i)
+    amount_key = crypto.derivation_to_scalar(derivation, state.current_output_index)
+    # one-time destination address P = H_s(derivation || i)*G + B
+    tx_out_key = crypto.derive_public_key(
+        derivation,
+        state.current_output_index,
+        crypto.decodepoint(dst_entr.addr.spend_public_key),
+    )
+    del (derivation, additional_txkey_priv)
+
+    # Computes the newest mask if applicable
+    if state.is_det_mask():
+        from apps.monero.xmr import monero
+
+        mask = monero.commitment_mask(crypto.encodeint(amount_key))
+
+    elif state.current_output_index + 1 < state.output_count:
+        mask = offloading_keys.det_comm_masks(state.key_enc, state.current_output_index)
+
+    else:
+        mask = state.output_last_mask
+        state.output_last_mask = None
+
+    state.output_masks.append(mask)
+    return tx_out_key, amount_key
 
 
 async def _set_out_tx_out(state: State, dst_entr, tx_out_key):
@@ -139,109 +219,128 @@ async def _set_out_tx_out(state: State, dst_entr, tx_out_key):
     return tx_out_bin, hmac_vouti
 
 
-def _range_proof(state, amount, rsig_data):
+def _range_proof(state, rsig_data):
     """
-    Computes rangeproof
-    In order to optimize incremental transaction build, the mask computation is changed compared
-    to the official Monero code. In the official code, the input pedersen commitments are computed
-    after range proof in such a way summed masks for commitments (alpha) and rangeproofs (ai) are equal.
+    Computes rangeproof and handles range proof offloading logic.
 
-    In order to save roundtrips we compute commitments randomly and then for the last rangeproof
-    a[63] = (\\sum_{i=0}^{num_inp}alpha_i - \\sum_{i=0}^{num_outs-1} amasks_i) - \\sum_{i=0}^{62}a_i
-
+    Since HF10 the commitments are deterministic.
     The range proof is incrementally hashed to the final_message.
     """
-    from apps.monero.xmr import range_signatures
-
-    mask = state.output_masks[state.current_output_index]
     provided_rsig = None
     if rsig_data and rsig_data.rsig and len(rsig_data.rsig) > 0:
         provided_rsig = rsig_data.rsig
     if not state.rsig_offload and provided_rsig:
         raise signing.Error("Provided unexpected rsig")
 
-    # Batching
+    # Batching & validation
     bidx = _get_rsig_batch(state, state.current_output_index)
-    batch_size = state.rsig_grouping[bidx]
     last_in_batch = _is_last_in_batch(state, state.current_output_index, bidx)
     if state.rsig_offload and provided_rsig and not last_in_batch:
         raise signing.Error("Provided rsig too early")
-    if state.rsig_offload and last_in_batch and not provided_rsig:
+
+    if (
+        state.rsig_offload
+        and last_in_batch
+        and not provided_rsig
+        and (not state.is_det_mask() or state.is_processing_offloaded)
+    ):
         raise signing.Error("Rsig expected, not provided")
 
     # Batch not finished, skip range sig generation now
+    mask = state.output_masks[-1] if not state.is_processing_offloaded else None
+    offload_mask = mask and state.is_det_mask() and state.rsig_offload
+
+    # If not last, do not proceed to the BP processing.
     if not last_in_batch:
-        return None, mask
+        rsig_data_new = (
+            _return_rsig_data(mask=crypto.encodeint(mask)) if offload_mask else None
+        )
+        return rsig_data_new, mask
 
     # Rangeproof
     # Pedersen commitment on the value, mask from the commitment, range signature.
-    C, rsig = None, None
+    rsig = None
 
     state.mem_trace("pre-rproof" if __debug__ else None, collect=True)
-    if state.rsig_type == RsigType.Bulletproof and not state.rsig_offload:
-        """Bulletproof calculation in trezor"""
-        rsig = range_signatures.prove_range_bp_batch(
-            state.output_amounts, state.output_masks
-        )
-        state.mem_trace("post-bp" if __debug__ else None, collect=True)
+    if not state.rsig_offload:
+        """Bulletproof calculation in Trezor"""
+        rsig = _rsig_bp(state)
 
-        # Incremental BP hashing
-        # BP is hashed with raw=False as hash does not contain L, R
-        # array sizes compared to the serialized bulletproof format
-        # thus direct serialization cannot be used.
-        state.full_message_hasher.rsig_val(rsig, True, raw=False)
-        state.mem_trace("post-bp-hash" if __debug__ else None, collect=True)
+    elif state.is_det_mask() and not state.is_processing_offloaded:
+        """Bulletproof offloaded to the host, deterministic masks. Nothing here, waiting for offloaded BP."""
+        pass
 
-        rsig = _dump_rsig_bp(rsig)
-        state.mem_trace(
-            "post-bp-ser, size: %s" % len(rsig) if __debug__ else None, collect=True
-        )
-
-    elif state.rsig_type == RsigType.Borromean and not state.rsig_offload:
-        """Borromean calculation in trezor"""
-        C, mask, rsig = range_signatures.prove_range_borromean(amount, mask)
-        del range_signatures
-
-        # Incremental hashing
-        state.full_message_hasher.rsig_val(rsig, False, raw=True)
-        _check_out_commitment(state, amount, mask, C)
-
-    elif state.rsig_type == RsigType.Bulletproof and state.rsig_offload:
-        """Bulletproof calculated on host, verify in trezor"""
-        from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
-
-        # TODO this should be tested
-        # last_in_batch = True (see above) so this is fine
-        masks = state.output_masks[
-            1 + state.current_output_index - batch_size : 1 + state.current_output_index
-        ]
-        bp_obj = serialize.parse_msg(rsig_data.rsig, Bulletproof)
-        rsig_data.rsig = None
-
-        # BP is hashed with raw=False as hash does not contain L, R
-        # array sizes compared to the serialized bulletproof format
-        # thus direct serialization cannot be used.
-        state.full_message_hasher.rsig_val(bp_obj, True, raw=False)
-        res = range_signatures.verify_bp(bp_obj, state.output_amounts, masks)
-        utils.ensure(res, "BP verification fail")
-        state.mem_trace("BP verified" if __debug__ else None, collect=True)
-        del (bp_obj, range_signatures)
-
-    elif state.rsig_type == RsigType.Borromean and state.rsig_offload:
-        """Borromean offloading not supported"""
-        raise signing.Error(
-            "Unsupported rsig state (Borromean offloaded is not supported)"
-        )
+    elif state.is_det_mask() and state.is_processing_offloaded:
+        """Bulletproof offloaded to the host, check BP, hash it."""
+        _rsig_process_bp(state, rsig_data)
 
     else:
-        raise signing.Error("Unexpected rsig state")
+        """Bulletproof calculated on host, verify in Trezor"""
+        _rsig_process_bp(state, rsig_data)
 
     state.mem_trace("rproof" if __debug__ else None, collect=True)
-    if state.current_output_index + 1 == state.output_count:
+
+    # Construct new rsig data to send back to the host.
+    rsig_data_new = _return_rsig_data(
+        rsig, crypto.encodeint(mask) if offload_mask else None
+    )
+
+    if state.current_output_index + 1 == state.output_count and (
+        not state.rsig_offload or state.is_processing_offloaded
+    ):
         # output masks and amounts are not needed anymore
-        state.output_amounts = []
-        state.output_masks = []
-    return rsig, mask
+        state.output_amounts = None
+        state.output_masks = None
+
+    return rsig_data_new, mask
+
+
+def _rsig_bp(state: State):
+    """Bulletproof calculation in trezor"""
+    from apps.monero.xmr import range_signatures
+
+    rsig = range_signatures.prove_range_bp_batch(
+        state.output_amounts, state.output_masks
+    )
+    state.mem_trace("post-bp" if __debug__ else None, collect=True)
+
+    # Incremental BP hashing
+    # BP is hashed with raw=False as hash does not contain L, R
+    # array sizes compared to the serialized bulletproof format
+    # thus direct serialization cannot be used.
+    state.full_message_hasher.rsig_val(rsig, True, raw=False)
+    state.mem_trace("post-bp-hash" if __debug__ else None, collect=True)
+
+    rsig = _dump_rsig_bp(rsig)
+    state.mem_trace(
+        "post-bp-ser, size: %s" % len(rsig) if __debug__ else None, collect=True
+    )
+
+    # state cleanup
+    state.output_masks = []
+    state.output_amounts = []
+    return rsig
+
+
+def _rsig_process_bp(state: State, rsig_data):
+    from apps.monero.xmr import range_signatures
+    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
+
+    bp_obj = serialize.parse_msg(rsig_data.rsig, Bulletproof)
+    rsig_data.rsig = None
+
+    # BP is hashed with raw=False as hash does not contain L, R
+    # array sizes compared to the serialized bulletproof format
+    # thus direct serialization cannot be used.
+    state.full_message_hasher.rsig_val(bp_obj, True, raw=False)
+    res = range_signatures.verify_bp(bp_obj, state.output_amounts, state.output_masks)
+    utils.ensure(res, "BP verification fail")
+    state.mem_trace("BP verified" if __debug__ else None, collect=True)
+    del (bp_obj, range_signatures)
+
+    # State cleanup after verification is finished
+    state.output_amounts = []
+    state.output_masks = []
 
 
 def _dump_rsig_bp(rsig):
@@ -286,15 +385,21 @@ def _dump_rsig_bp(rsig):
     return buff
 
 
-def _return_rsig_data(rsig):
-    if rsig is None:
+def _return_rsig_data(rsig=None, mask=None):
+    if rsig is None and mask is None:
         return None
+
     from trezor.messages.MoneroTransactionRsigData import MoneroTransactionRsigData
 
-    if isinstance(rsig, list):
-        return MoneroTransactionRsigData(rsig_parts=rsig)
-    else:
-        return MoneroTransactionRsigData(rsig=rsig)
+    rsig_data = MoneroTransactionRsigData()
+
+    if mask:
+        rsig_data.mask = mask
+
+    if rsig:
+        rsig_data.rsig = rsig
+
+    return rsig_data
 
 
 def _get_ecdh_info_and_out_pk(state: State, tx_out_key, amount, mask, amount_key):
@@ -305,23 +410,49 @@ def _get_ecdh_info_and_out_pk(state: State, tx_out_key, amount, mask, amount_key
     """
     out_pk_dest = crypto.encodepoint(tx_out_key)
     out_pk_commitment = crypto.encodepoint(crypto.gen_commitment(mask, amount))
-
-    state.sumout = crypto.sc_add(state.sumout, mask)
-    state.output_sk_masks.append(mask)
+    crypto.sc_add_into(state.sumout, state.sumout, mask)
 
     # masking of mask and amount
-    ecdh_info = _ecdh_encode(mask, amount, crypto.encodeint(amount_key))
+    ecdh_info = _ecdh_encode(
+        mask, amount, crypto.encodeint(amount_key), state.is_bulletproof_v2()
+    )
 
     # Manual ECDH info serialization
-    ecdh_info_bin = bytearray(64)
-    utils.memcpy(ecdh_info_bin, 0, ecdh_info.mask, 0, 32)
-    utils.memcpy(ecdh_info_bin, 32, ecdh_info.amount, 0, 32)
+    ecdh_info_bin = _serialize_ecdh(ecdh_info, state.is_bulletproof_v2())
     gc.collect()
 
     return out_pk_dest, out_pk_commitment, ecdh_info_bin
 
 
-def _ecdh_encode(mask, amount, amount_key):
+def _serialize_ecdh(ecdh_info, v2=False):
+    """
+    Serializes ECDH according to the current format defined by the hard fork version
+    or the signature format respectively.
+    """
+    if v2:
+        # In HF10 the amount is serialized to 8B and mask is deterministic
+        ecdh_info_bin = bytearray(8)
+        ecdh_info_bin[:] = ecdh_info.amount[0:8]
+        return ecdh_info_bin
+
+    else:
+        ecdh_info_bin = bytearray(64)
+        utils.memcpy(ecdh_info_bin, 0, ecdh_info.mask, 0, 32)
+        utils.memcpy(ecdh_info_bin, 32, ecdh_info.amount, 0, 32)
+        return ecdh_info_bin
+
+
+def _ecdh_hash(shared_sec):
+    """
+    Generates ECDH hash for amount masking for Bulletproof2
+    """
+    data = bytearray(38)
+    data[0:6] = b"amount"
+    data[6:] = shared_sec
+    return crypto.cn_fast_hash(data)
+
+
+def _ecdh_encode(mask, amount, amount_key, v2=False):
     """
     Output recipients need be able to reconstruct the amount commitments.
     This means the blinding factor `mask` and `amount` must be communicated
@@ -336,23 +467,27 @@ def _ecdh_encode(mask, amount, amount_key):
     from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
 
     ecdh_info = EcdhTuple(mask=mask, amount=crypto.sc_init(amount))
-    amount_key_hash_single = crypto.hash_to_scalar(amount_key)
-    amount_key_hash_double = crypto.hash_to_scalar(
-        crypto.encodeint(amount_key_hash_single)
-    )
 
-    ecdh_info.mask = crypto.sc_add(ecdh_info.mask, amount_key_hash_single)
-    ecdh_info.amount = crypto.sc_add(ecdh_info.amount, amount_key_hash_double)
-    return _recode_ecdh(ecdh_info)
+    if v2:
+        amnt = ecdh_info.amount
+        ecdh_info.mask = crypto.NULL_KEY_ENC
+        ecdh_info.amount = bytearray(32)
+        crypto.encodeint_into(ecdh_info.amount, amnt)
+        crypto.xor8(ecdh_info.amount, _ecdh_hash(amount_key))
+        return ecdh_info
 
+    else:
+        amount_key_hash_single = crypto.hash_to_scalar(amount_key)
+        amount_key_hash_double = crypto.hash_to_scalar(
+            crypto.encodeint(amount_key_hash_single)
+        )
 
-def _recode_ecdh(ecdh_info):
-    """
-    In-place ecdh_info tuple recoding
-    """
-    ecdh_info.mask = crypto.encodeint(ecdh_info.mask)
-    ecdh_info.amount = crypto.encodeint(ecdh_info.amount)
-    return ecdh_info
+        # Not modifying passed mask, is reused in BP.
+        ecdh_info.mask = crypto.sc_add(ecdh_info.mask, amount_key_hash_single)
+        crypto.sc_add_into(ecdh_info.amount, ecdh_info.amount, amount_key_hash_double)
+        ecdh_info.mask = crypto.encodeint(ecdh_info.mask)
+        ecdh_info.amount = crypto.encodeint(ecdh_info.amount)
+        return ecdh_info
 
 
 def _set_out_additional_keys(state: State, dst_entr):
@@ -367,8 +502,9 @@ def _set_out_additional_keys(state: State, dst_entr):
 
     if dst_entr.is_subaddress:
         # R=r*D
-        additional_txkey = crypto.scalarmult(
-            crypto.decodepoint(dst_entr.addr.spend_public_key), additional_txkey_priv
+        additional_txkey = crypto.decodepoint(dst_entr.addr.spend_public_key)
+        crypto.scalarmult_into(
+            additional_txkey, additional_txkey, additional_txkey_priv
         )
     else:
         # R=r*G
@@ -408,16 +544,6 @@ def _set_out_derivation(state: State, dst_entr, additional_txkey_priv):
             crypto.decodepoint(dst_entr.addr.view_public_key), deriv_priv
         )
     return derivation
-
-
-def _check_out_commitment(state: State, amount, mask, C):
-    utils.ensure(
-        crypto.point_eq(
-            C,
-            crypto.point_add(crypto.scalarmult_base(mask), crypto.scalarmult_h(amount)),
-        ),
-        "OutC fail",
-    )
 
 
 def _is_last_in_batch(state: State, idx, bidx):

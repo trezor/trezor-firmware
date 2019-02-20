@@ -14,7 +14,6 @@ key derived for exactly this purpose.
 from .state import State
 
 from apps.monero.layout import confirms
-from apps.monero.signing import RctType
 from apps.monero.xmr import crypto, monero, serialize
 
 if False:
@@ -95,27 +94,19 @@ async def set_input(state: State, src_entr: MoneroTransactionSourceEntry):
     state.mem_trace(3, True)
 
     # PseudoOuts commitment, alphas stored to state
-    pseudo_out = None
-    pseudo_out_hmac = None
-    alpha_enc = None
+    alpha, pseudo_out = _gen_commitment(state, src_entr.amount)
+    pseudo_out = crypto.encodepoint(pseudo_out)
 
-    if state.rct_type == RctType.Simple:
-        alpha, pseudo_out = _gen_commitment(state, src_entr.amount)
-        pseudo_out = crypto.encodepoint(pseudo_out)
+    # In full version the alpha is encrypted and passed back for storage
+    pseudo_out_hmac = crypto.compute_hmac(
+        offloading_keys.hmac_key_txin_comm(state.key_hmac, state.current_input_index),
+        pseudo_out,
+    )
 
-        # In full version the alpha is encrypted and passed back for storage
-        pseudo_out_hmac = crypto.compute_hmac(
-            offloading_keys.hmac_key_txin_comm(
-                state.key_hmac, state.current_input_index
-            ),
-            pseudo_out,
-        )
-        alpha_enc = chacha_poly.encrypt_pack(
-            offloading_keys.enc_key_txin_alpha(
-                state.key_enc, state.current_input_index
-            ),
-            crypto.encodeint(alpha),
-        )
+    alpha_enc = chacha_poly.encrypt_pack(
+        offloading_keys.enc_key_txin_alpha(state.key_enc, state.current_input_index),
+        crypto.encodeint(alpha),
+    )
 
     spend_enc = chacha_poly.encrypt_pack(
         offloading_keys.enc_key_spend(state.key_enc, state.current_input_index),
@@ -128,6 +119,7 @@ async def set_input(state: State, src_entr: MoneroTransactionSourceEntry):
         the precomputed subaddresses so we clear them to save memory.
         """
         state.subaddresses = None
+        state.input_last_amount = src_entr.amount
 
     return MoneroTransactionSetInputAck(
         vini=vini_bin,

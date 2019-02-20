@@ -6,7 +6,6 @@ import gc
 
 from apps.monero import misc, signing
 from apps.monero.layout import confirms
-from apps.monero.signing import RctType, RsigType
 from apps.monero.signing.state import State
 from apps.monero.xmr import crypto, monero
 
@@ -28,6 +27,7 @@ async def init_transaction(
     await paths.validate_path(state.ctx, misc.validate_full_path, path=address_n)
 
     state.creds = misc.get_creds(keychain, address_n, network_type)
+    state.client_version = tsx_data.client_version or 0
     state.fee = state.fee if state.fee > 0 else 0
     state.tx_priv = crypto.random_scalar()
     state.tx_pub = crypto.scalarmult_base(state.tx_priv)
@@ -74,9 +74,9 @@ async def init_transaction(
     state.mem_trace(10, True)
 
     # Final message hasher
-    state.full_message_hasher.init(state.rct_type == RctType.Simple)
+    state.full_message_hasher.init()
     state.full_message_hasher.set_type_fee(
-        signing.get_monero_rct_type(state.rct_type, state.rsig_type), state.fee
+        signing.get_monero_rct_type(state.bp_version), state.fee
     )
 
     # Sub address precomputation
@@ -167,31 +167,32 @@ def _get_primary_change_address(state: State):
 def _check_rsig_data(state: State, rsig_data: MoneroTransactionRsigData):
     """
     There are two types of monero ring confidential transactions:
-    1. RCTTypeFull = 1 (used if num_inputs == 1)
-    2. RCTTypeSimple = 2 (for num_inputs > 1)
+    1. RCTTypeFull = 1 (used if num_inputs == 1 && Borromean)
+    2. RCTTypeSimple = 2 (for num_inputs > 1 || !Borromean)
 
     and four types of range proofs (set in `rsig_data.rsig_type`):
     1. RangeProofBorromean = 0
     2. RangeProofBulletproof = 1
     3. RangeProofMultiOutputBulletproof = 2
     4. RangeProofPaddedBulletproof = 3
+
+    The current code supports only HF9, HF10 thus TX type is always simple
+    and RCT algorithm is always Bulletproof.
     """
     state.rsig_grouping = rsig_data.grouping
 
     if rsig_data.rsig_type == 0:
-        state.rsig_type = RsigType.Borromean
+        raise ValueError("Borromean range sig not supported")
+
     elif rsig_data.rsig_type in (1, 2, 3):
-        state.rsig_type = RsigType.Bulletproof
+        state.bp_version = rsig_data.bp_version or 1
+        if state.bp_version not in (1, 2):
+            raise ValueError("Unknown BP version")
+
     else:
         raise ValueError("Unknown rsig type")
 
-    # unintuitively RctType.Simple is used for more inputs
-    if state.input_count > 1 or state.rsig_type == RsigType.Bulletproof:
-        state.rct_type = RctType.Simple
-    else:
-        state.rct_type = RctType.Full
-
-    if state.rsig_type == RsigType.Bulletproof and state.output_count > 2:
+    if state.output_count > 2:
         state.rsig_offload = True
 
     _check_grouping(state)
@@ -293,18 +294,24 @@ def _process_payment_id(state: State, tsx_data: MoneroTransactionData):
     therefore the TX_EXTRA_NONCE_ENCRYPTED_PAYMENT_ID = 0x01 tag is used.
     If it is not encrypted, we use TX_EXTRA_NONCE_PAYMENT_ID = 0x00.
 
+    Since Monero release 0.13 all 2 output payments have encrypted payment ID
+    to make BC more uniform.
+
     See:
     - https://github.com/monero-project/monero/blob/ff7dc087ae5f7de162131cea9dbcf8eac7c126a1/src/cryptonote_basic/tx_extra.h
     """
+    # encrypted payment id / dummy payment ID
+    view_key_pub_enc = None
+
+    if not tsx_data.payment_id or len(tsx_data.payment_id) == 8:
+        view_key_pub_enc = _get_key_for_payment_id_encryption(
+            tsx_data, state.change_address(), state.client_version > 0
+        )
+
     if not tsx_data.payment_id:
         return
 
-    # encrypted payment id
-    if len(tsx_data.payment_id) == 8:
-        view_key_pub_enc = _get_key_for_payment_id_encryption(
-            tsx_data.outputs, state.change_address()
-        )
-
+    elif len(tsx_data.payment_id) == 8:
         view_key_pub = crypto.decodepoint(view_key_pub_enc)
         payment_id_encr = _encrypt_payment_id(
             tsx_data.payment_id, view_key_pub, state.tx_priv
@@ -334,10 +341,15 @@ def _process_payment_id(state: State, tsx_data: MoneroTransactionData):
     state.extra_nonce = extra_buff
 
 
-def _get_key_for_payment_id_encryption(destinations: list, change_addr=None):
+def _get_key_for_payment_id_encryption(
+    tsx_data: MoneroTransactionData,
+    change_addr=None,
+    add_dummy_payment_id: bool = False,
+):
     """
     Returns destination address public view key to be used for
-    payment id encryption.
+    payment id encryption. If no encrypted payment ID is chosen,
+    dummy payment ID is set for better transaction uniformity if possible.
     """
     from apps.monero.xmr.addresses import addr_eq
     from trezor.messages.MoneroAccountPublicAddress import MoneroAccountPublicAddress
@@ -346,19 +358,23 @@ def _get_key_for_payment_id_encryption(destinations: list, change_addr=None):
         spend_public_key=crypto.NULL_KEY_ENC, view_public_key=crypto.NULL_KEY_ENC
     )
     count = 0
-    for dest in destinations:
+    for dest in tsx_data.outputs:
         if dest.amount == 0:
             continue
         if change_addr and addr_eq(dest.addr, change_addr):
             continue
         if addr_eq(dest.addr, addr):
             continue
-        if count > 0:
+        if count > 0 and tsx_data.payment_id:
             raise ValueError(
                 "Destinations have to have exactly one output to support encrypted payment ids"
             )
         addr = dest.addr
         count += 1
+
+    # Insert dummy payment id for transaction uniformity
+    if not tsx_data.payment_id and count <= 1 and add_dummy_payment_id:
+        tsx_data.payment_id = bytearray(8)
 
     if count == 0 and change_addr:
         return change_addr.view_public_key
@@ -380,6 +396,4 @@ def _encrypt_payment_id(payment_id, public_key, secret_key):
     derivation[32] = 0x8D  # ENCRYPTED_PAYMENT_ID_TAIL
     hash = crypto.cn_fast_hash(derivation)
     pm_copy = bytearray(payment_id)
-    for i in range(8):
-        pm_copy[i] ^= hash[i]
-    return pm_copy
+    return crypto.xor8(pm_copy, hash)
