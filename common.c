@@ -22,14 +22,10 @@
 #include "rng.h"
 #include "layout.h"
 #include "oled.h"
+#include "util.h"
 #include "firmware/usb.h"
 
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
-
-static void __attribute__((noreturn)) shutdown(void)
-{
-    for (;;);
-}
 
 void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line_num, const char *func) {
     const BITMAP *icon = &bmp_icon_error;
@@ -63,13 +59,11 @@ void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, 
     oledRefresh();
 
     shutdown();
-    for (;;);
 }
 
 void __attribute__((noreturn)) error_shutdown(const char *line1, const char *line2, const char *line3, const char *line4) {
     layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, line2, line3, line4, "Please unplug", "the device.");
     shutdown();
-    for (;;);
 }
 
 #ifndef NDEBUG
