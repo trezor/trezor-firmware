@@ -53,6 +53,7 @@ class WebUsbHandle:
             else:
                 args = ()
             raise IOError("Cannot open device", *args)
+        self.handle.resetDevice()
         self.handle.claimInterface(self.interface)
 
     def close(self) -> None:
