@@ -225,17 +225,18 @@ static void check_bootloader_version(void)
 
 int main(void)
 {
-    mpu_config_bootloader();
+    touch_init();
+    touch_power_on();
 
-main_start:
-    display_clear();
+    mpu_config_bootloader();
 
 #if PRODUCTION
     check_bootloader_version();
 #endif
 
-    touch_init();
-    touch_power_on();
+main_start:
+
+    display_clear();
 
     // delay to detect touch
     uint32_t touched = 0;
