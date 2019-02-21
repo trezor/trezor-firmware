@@ -60,7 +60,7 @@ async def get_keychain(ctx: wire.Context, namespaces: list) -> Keychain:
     return keychain
 
 
-@ui.layout
+@ui.layout_no_slide
 async def _compute_seed(ctx: wire.Context) -> bytes:
     passphrase = cache.get_passphrase()
     if passphrase is None:
@@ -73,9 +73,11 @@ async def _compute_seed(ctx: wire.Context) -> bytes:
 
 
 def _start_bip39_progress():
+    ui.backlight_slide_sync(ui.BACKLIGHT_DIM)
     ui.display.clear()
     ui.header("Please wait")
     ui.display.refresh()
+    ui.backlight_slide_sync(ui.BACKLIGHT_NORMAL)
 
 
 def _render_bip39_progress(progress: int, total: int):

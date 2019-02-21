@@ -110,6 +110,13 @@ async def backlight_slide(val: int, delay: int = 35000, step: int = 20):
         yield sleep
 
 
+def backlight_slide_sync(val: int, delay: int = 35000, step: int = 20):
+    current = display.backlight()
+    for i in range(current, val, -step if current > val else step):
+        display.backlight(i)
+        utime.sleep_us(delay)
+
+
 def layout(f):
     async def inner(*args, **kwargs):
         await backlight_slide(BACKLIGHT_DIM)
@@ -122,6 +129,18 @@ def layout(f):
             return await layout
         finally:
             loop.close(slide)
+            workflow.onlayoutclose(layout)
+
+    return inner
+
+
+def layout_no_slide(f):
+    async def inner(*args, **kwargs):
+        try:
+            layout = f(*args, **kwargs)
+            workflow.onlayoutstart(layout)
+            return await layout
+        finally:
             workflow.onlayoutclose(layout)
 
     return inner
