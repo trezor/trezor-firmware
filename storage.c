@@ -150,6 +150,24 @@ static secbool secequal(const void* ptr1, const void* ptr2, size_t n) {
     return diff ? secfalse : sectrue;
 }
 
+static secbool secequal32(const uint32_t* ptr1, const uint32_t* ptr2, size_t n) {
+    uint32_t diff = 0;
+    size_t i;
+    for (i = 0; i < n; ++i) {
+        uint32_t mask = random32();
+        diff |= (*ptr1 + mask - *ptr2) ^ mask;
+        ++ptr1;
+        ++ptr2;
+    }
+
+    // Check loop completion in case of a fault injection attack.
+    if (i != n) {
+        handle_fault("loop completion check");
+    }
+
+    return diff ? secfalse : sectrue;
+}
+
 static secbool is_protected(uint16_t key) {
     const uint8_t app = key >> 8;
     return ((app & FLAG_PUBLIC) == 0 && app != APP_STORAGE) ? sectrue : secfalse;
@@ -696,11 +714,14 @@ static secbool unlock(uint32_t pin)
 
     const uint8_t *salt = (const uint8_t*) buffer;
     const uint8_t *ekeys = (const uint8_t*) buffer + RANDOM_SALT_SIZE;
-    const uint8_t *pvc  = (const uint8_t*) buffer + RANDOM_SALT_SIZE + KEYS_SIZE;
+    const uint32_t *pvc = (const uint32_t*) buffer + (RANDOM_SALT_SIZE + KEYS_SIZE)/sizeof(uint32_t);
+    _Static_assert(((RANDOM_SALT_SIZE + KEYS_SIZE) & 3) == 0, "PVC unaligned");
+    _Static_assert((PVC_SIZE & 3) == 0, "PVC size unaligned");
+
     uint8_t kek[SHA256_DIGEST_LENGTH];
     uint8_t keiv[SHA256_DIGEST_LENGTH];
     uint8_t keys[KEYS_SIZE];
-    uint8_t tag[POLY1305_TAG_SIZE];
+    uint8_t tag[POLY1305_TAG_SIZE] __attribute__((aligned(sizeof(uint32_t))));
     chacha20poly1305_ctx ctx;
 
     // Decrypt the data encryption key and the storage authentication key and check the PIN verification code.
@@ -713,7 +734,7 @@ static secbool unlock(uint32_t pin)
     rfc7539_finish(&ctx, 0, KEYS_SIZE, tag);
     memzero(&ctx, sizeof(ctx));
     wait_random();
-    if (secequal(tag, pvc, PVC_SIZE) != sectrue) {
+    if (secequal32((const uint32_t*) tag, pvc, PVC_SIZE/sizeof(uint32_t)) != sectrue) {
         memzero(keys, sizeof(keys));
         memzero(tag, sizeof(tag));
         return secfalse;
