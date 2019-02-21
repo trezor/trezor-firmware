@@ -8,7 +8,7 @@ from trezor.utils import chunks
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.monero.layout import common
 
-DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
+DUMMY_PAYMENT_ID = b"\x00" * 8
 
 
 async def require_confirm_watchkey(ctx):
