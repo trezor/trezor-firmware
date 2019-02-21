@@ -53,7 +53,8 @@ async def lockscreen():
     await ui.click()
 
 
-config.init(show_pin_timeout)
 ui.display.backlight(ui.BACKLIGHT_NONE)
+ui.backlight_slide_sync(ui.BACKLIGHT_NORMAL)
+config.init(show_pin_timeout)
 loop.schedule(bootscreen())
 loop.run()
