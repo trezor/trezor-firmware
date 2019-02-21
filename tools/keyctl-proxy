@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import binascii
 import sys
+import traceback
+
 import Pyro4
 import serpent
+from trezorlib import cosi, tools
 
 PORT = 5001
 indexmap = {"bootloader": 0, "vendorheader": 1, "firmware": 2}
@@ -11,8 +14,9 @@ indexmap = {"bootloader": 0, "vendorheader": 1, "firmware": 2}
 def get_trezor():
     from trezorlib.client import TrezorClient
     from trezorlib.transport import get_transport
+    from trezorlib.ui import ClickUI
 
-    return TrezorClient(get_transport())
+    return TrezorClient(get_transport(), ui=ClickUI())
 
 
 def get_path(index):
@@ -32,9 +36,10 @@ class KeyctlProxy(object):
                     "\n\n\nCommiting to hash %s with path %s:"
                     % (binascii.hexlify(digest).decode(), path)
                 )
-                commit = t.cosi_commit(t.expand_path(path), digest)
+                commit = cosi.commit(t, tools.parse_path(path), digest)
             except Exception as e:
                 print(e)
+                traceback.print_exc()
                 print("Trying again ...")
         pk = commit.pubkey
         R = commit.commitment
@@ -56,11 +61,12 @@ class KeyctlProxy(object):
                     "\n\n\nSigning hash %s with path %s:"
                     % (binascii.hexlify(digest).decode(), path)
                 )
-                signature = t.cosi_sign(
-                    t.expand_path(path), digest, global_R, global_pk
+                signature = cosi.sign(
+                    t, tools.parse_path(path), digest, global_R, global_pk
                 )
             except Exception as e:
                 print(e)
+                traceback.print_exc()
                 print("Trying again ...")
         sig = signature.signature
         print("Signature sent!")
