@@ -863,8 +863,8 @@ static secbool storage_get_encrypted(const uint16_t key, void *val_dest, const u
     }
 
     const uint8_t *iv = (const uint8_t*) val_stored;
-    const uint8_t *ciphertext = (const uint8_t*) val_stored + CHACHA20_IV_SIZE;
-    const uint8_t *tag_stored = (const uint8_t*) val_stored + CHACHA20_IV_SIZE + *len;
+    const uint8_t *tag_stored = (const uint8_t*) val_stored + CHACHA20_IV_SIZE;
+    const uint8_t *ciphertext = (const uint8_t*) val_stored + CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
     uint8_t tag_computed[POLY1305_TAG_SIZE];
     chacha20poly1305_ctx ctx;
     rfc7539_init(&ctx, cached_dek, iv);
@@ -932,18 +932,18 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val, const 
     }
 
     // Preallocate space on the flash storage.
-    if (sectrue != auth_set(key, NULL, CHACHA20_IV_SIZE + len + POLY1305_TAG_SIZE)) {
+    if (sectrue != auth_set(key, NULL, CHACHA20_IV_SIZE + POLY1305_TAG_SIZE + len)) {
         return secfalse;
     }
 
     // Write the IV to the flash.
-    uint8_t buffer[CHACHA20_BLOCK_SIZE + POLY1305_TAG_SIZE];
+    uint8_t buffer[CHACHA20_BLOCK_SIZE];
     random_buffer(buffer, CHACHA20_IV_SIZE);
     uint16_t offset = 0;
     if (sectrue != norcow_update_bytes(key, offset, buffer, CHACHA20_IV_SIZE)) {
         return secfalse;
     }
-    offset += CHACHA20_IV_SIZE;
+    offset += CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
 
     // Encrypt all blocks except for the last one.
     chacha20poly1305_ctx ctx;
@@ -961,8 +961,11 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val, const 
 
     // Encrypt final block and compute message authentication tag.
     chacha20poly1305_encrypt(&ctx, ((const uint8_t*) val) + i, buffer, len - i);
-    rfc7539_finish(&ctx, sizeof(key), len, buffer + len - i);
-    secbool ret = norcow_update_bytes(key, offset, buffer, len - i + POLY1305_TAG_SIZE);
+    secbool ret = norcow_update_bytes(key, offset, buffer, len - i);
+    if (sectrue == ret) {
+        rfc7539_finish(&ctx, sizeof(key), len, buffer);
+        ret = norcow_update_bytes(key, CHACHA20_IV_SIZE, buffer, POLY1305_TAG_SIZE);
+    }
     memzero(&ctx, sizeof(ctx));
     memzero(buffer, sizeof(buffer));
     return ret;
