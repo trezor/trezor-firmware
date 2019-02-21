@@ -64,4 +64,6 @@ void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32]);
 int signatures_new_ok(const image_header *hdr, uint8_t store_fingerprint[32]);
 int check_firmware_hashes(const image_header *hdr);
 
+int mem_is_empty(const uint8_t *src, uint32_t len);
+
 #endif

@@ -54,9 +54,9 @@ bool get_button_response(void)
 	return button.YesUp;
 }
 
-static void show_halt(void)
+void show_halt(const char *line1, const char *line2)
 {
-	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Unofficial firmware", "aborted.", NULL, "Unplug your TREZOR,", "reinstall firmware.", NULL);
+	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, line2, NULL, "Unplug your TREZOR,", "reinstall firmware.", NULL);
 	shutdown();
 }
 
@@ -66,14 +66,14 @@ static void show_unofficial_warning(const uint8_t *hash)
 
 	bool but = get_button_response();
 	if (!but) {  // no button was pressed -> halt
-		show_halt();
+		show_halt("Unofficial firmware", "aborted.");
 	}
 
 	layoutFirmwareFingerprint(hash);
 
 	but = get_button_response();
 	if (!but) {  // no button was pressed -> halt
-		show_halt();
+		show_halt("Unofficial firmware", "aborted.");
 	}
 
 	// everything is OK, user pressed 2x Continue -> continue program

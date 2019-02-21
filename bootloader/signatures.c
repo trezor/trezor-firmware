@@ -156,6 +156,14 @@ int signatures_new_ok(const image_header *hdr, uint8_t store_fingerprint[32])
 	return SIG_OK;
 }
 
+int mem_is_empty(const uint8_t *src, uint32_t len)
+{
+	for (uint32_t i = 0; i < len; i++) {
+		if (src[i]) return 0;
+	}
+	return 1;
+}
+
 int check_firmware_hashes(const image_header *hdr)
 {
 	uint8_t hash[32];
@@ -174,7 +182,7 @@ int check_firmware_hashes(const image_header *hdr)
 	}
 	// check unused chunks
 	for (int i = used_chunks; i < 16; i++) {
-		if (0 != memcmp(hdr->hashes + 32 * i, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32)) return SIG_FAIL;
+		if (!mem_is_empty(hdr->hashes + 32 * i, 32)) return SIG_FAIL;
 	}
 	// all OK
 	return SIG_OK;

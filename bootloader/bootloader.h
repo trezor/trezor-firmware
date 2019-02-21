@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+void show_halt(const char *line1, const char *line2);
 void layoutFirmwareFingerprint(const uint8_t *hash);
 bool get_button_response(void);
 

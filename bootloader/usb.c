@@ -85,8 +85,7 @@ static void check_and_write_chunk(void)
 		// erase storage
 		erase_storage();
 		flash_state = STATE_END;
-		layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your TREZOR", "and try again.", NULL);
-		shutdown();
+		show_halt("Error installing", "firmware.");
 		return;
 	}
 
@@ -104,10 +103,9 @@ static void check_and_write_chunk(void)
 		// check remaining chunks if any
 		for (uint32_t i = chunk_idx + 1; i < 16; i++) {
 			// hash should be empty if the chunk is unused
-			if (0 != memcmp(hdr->hashes + i * 32, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32)) {
+			if (!mem_is_empty(hdr->hashes + 32 * i, 32)) {
 				flash_state = STATE_END;
-				layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your TREZOR", "and try again.", NULL);
-				shutdown();
+				show_halt("Error installing", "firmware.");
 				return;
 			}
 		}
@@ -208,8 +206,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep)
 			if (buf[9] != 0x0a) { // invalid contents
 				send_msg_failure(dev);
 				flash_state = STATE_END;
-				layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your TREZOR", "and try again.", NULL);
-				shutdown();
+				show_halt("Error installing", "firmware.");
 				return;
 			}
 			// read payload length
@@ -218,20 +215,20 @@ static void rx_callback(usbd_device *dev, uint8_t ep)
 			if (flash_len <= FLASH_FWHEADER_LEN) { // firmware is too small
 				send_msg_failure(dev);
 				flash_state = STATE_END;
-				layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Firmware is too small.", NULL, "Get official firmware", "from trezor.io/start", NULL, NULL);
+				show_halt("Firmware is too small.", NULL);
 				return;
 			}
 			if (flash_len > FLASH_FWHEADER_LEN + FLASH_APP_LEN) { // firmware is too big
 				send_msg_failure(dev);
 				flash_state = STATE_END;
-				layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Firmware is too big.", NULL, "Get official firmware", "from trezor.io/start", NULL, NULL);
+				show_halt("Firmware is too big.", NULL);
 				return;
 			}
 			// check firmware magic
 			if (memcmp(p, &FIRMWARE_MAGIC_NEW, 4) != 0) {
 				send_msg_failure(dev);
 				flash_state = STATE_END;
-				layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Wrong firmware header.", NULL, "Get official firmware", "from trezor.io/start", NULL, NULL);
+				show_halt("Wrong firmware header.", NULL);
 				return;
 			}
 			memzero(FW_HEADER, sizeof(FW_HEADER));
@@ -259,8 +256,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep)
 		if (buf[0] != '?') {	// invalid contents
 			send_msg_failure(dev);
 			flash_state = STATE_END;
-			layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your TREZOR", "and try again.", NULL);
-			shutdown();
+			show_halt("Error installing", "firmware.");
 			return;
 		}
 
@@ -338,8 +334,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep)
 			sha256_Raw(FLASH_PTR(FLASH_STORAGE_START), FLASH_STORAGE_LEN, hash);
 			if (memcmp(hash, "\x2d\x86\x4c\x0b\x78\x9a\x43\x21\x4e\xee\x85\x24\xd3\x18\x20\x75\x12\x5e\x5c\xa2\xcd\x52\x7f\x35\x82\xec\x87\xff\xd9\x40\x76\xbc", 32) != 0) {
 				send_msg_failure(dev);
-				layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your TREZOR", "and try again.", NULL);
-				shutdown();
+				show_halt("Error installing", "firmware.");
 				return;
 			}
 		}
