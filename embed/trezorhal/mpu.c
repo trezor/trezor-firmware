@@ -27,10 +27,61 @@
 
 #define MPU_SUBREGION_DISABLE(X) ((X) << MPU_RASR_SRD_Pos)
 
-void mpu_config(void)
+void mpu_config_off(void)
 {
     // Disable MPU
     HAL_MPU_Disable();
+}
+
+void mpu_config_bootloader(void)
+{
+    // Disable MPU
+    HAL_MPU_Disable();
+
+    // Note: later entries overwrite previous ones
+
+    // Flash (0x08000000 - 0x081FFFFF, 2 MiB, read-write)
+    MPU->RBAR = FLASH_BASE | MPU_RBAR_VALID_Msk | MPU_REGION_NUMBER0;
+    MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_FLASH | LL_MPU_REGION_SIZE_2MB | LL_MPU_REGION_PRIV_RO_URO;
+
+    // Flash (0x0800C000 - 0x0800FFFF, 16 KiB, no access)
+    MPU->RBAR = FLASH_BASE | 0xC000 | MPU_RBAR_VALID_Msk | MPU_REGION_NUMBER1;
+    MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_FLASH | LL_MPU_REGION_SIZE_16KB | LL_MPU_REGION_NO_ACCESS;
+
+    // Flash (0x0810C000 - 0x0810FFFF, 16 KiB, no access)
+    MPU->RBAR = FLASH_BASE | 0x10C000 | MPU_RBAR_VALID_Msk | MPU_REGION_NUMBER2;
+    MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_FLASH | LL_MPU_REGION_SIZE_16KB | LL_MPU_REGION_NO_ACCESS;
+
+    // SRAM (0x20000000 - 0x2002FFFF, 192 KiB = 256 KiB except 2/8 at end, read-write, execute never)
+    MPU->RBAR = SRAM_BASE | MPU_RBAR_VALID_Msk | MPU_REGION_NUMBER3;
+    MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_SRAM | LL_MPU_REGION_SIZE_256KB | LL_MPU_REGION_FULL_ACCESS | MPU_RASR_XN_Msk | MPU_SUBREGION_DISABLE(0xC0);
+
+    // Peripherals (0x40000000 - 0x5FFFFFFF, read-write, execute never)
+    // External RAM (0x60000000 - 0x7FFFFFFF, read-write, execute never)
+    MPU->RBAR = PERIPH_BASE | MPU_RBAR_VALID_Msk | MPU_REGION_NUMBER4;
+    MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_PERIPH | LL_MPU_REGION_SIZE_1GB | LL_MPU_REGION_FULL_ACCESS | MPU_RASR_XN_Msk;
+
+#ifdef STM32F427xx
+    // CCMRAM (0x10000000 - 0x1000FFFF, read-write, execute never)
+    MPU->RBAR = CCMDATARAM_BASE | MPU_RBAR_VALID_Msk | MPU_REGION_NUMBER5;
+    MPU->RASR = MPU_RASR_ENABLE_Msk | MPU_RASR_ATTR_SRAM | LL_MPU_REGION_SIZE_64KB | LL_MPU_REGION_FULL_ACCESS | MPU_RASR_XN_Msk;
+#elif STM32F405xx
+    // no CCMRAM
+#else
+#error Unsupported MCU
+#endif
+
+    // Enable MPU
+    HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
+}
+
+
+void mpu_config_firmware(void)
+{
+    // Disable MPU
+    HAL_MPU_Disable();
+
+    // Note: later entries overwrite previous ones
 
 /*
     // Boardloader (0x08000000 - 0x0800FFFF, 64 KiB, read-only, execute never)
@@ -77,5 +128,5 @@ void mpu_config(void)
 #endif
 
     // Enable MPU
-    HAL_MPU_Enable(0);
+    HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
 }

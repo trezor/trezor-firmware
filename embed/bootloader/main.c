@@ -21,6 +21,7 @@
 #include <sys/types.h>
 
 #include "common.h"
+#include "mpu.h"
 #include "image.h"
 #include "flash.h"
 #include "display.h"
@@ -224,6 +225,8 @@ static void check_bootloader_version(void)
 
 int main(void)
 {
+    mpu_config_bootloader();
+
 main_start:
     display_clear();
 
@@ -379,9 +382,10 @@ main_start:
         ui_fadeout();
     }
 
-    // mpu_config();
+    // mpu_config_firmware();
     // jump_to_unprivileged(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
 
+    mpu_config_off();
     jump_to(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
 
     return 0;

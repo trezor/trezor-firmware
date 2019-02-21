@@ -20,6 +20,8 @@
 #ifndef __MPU_H__
 #define __MPU_H__
 
-void mpu_config(void);
+void mpu_config_off(void);
+void mpu_config_bootloader(void);
+void mpu_config_firmware(void);
 
 #endif

@@ -314,6 +314,7 @@ static uint8_t usb_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
 #define USB_WEBUSB_URL_SCHEME_HTTPS     1
 
 static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *req) {
+    delay_random();
     if (((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_CLASS) &&
         ((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_STANDARD) &&
         ((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_VENDOR)) {
@@ -330,7 +331,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
                         USB_WEBUSB_URL_SCHEME_HTTPS,        // uint8_t bScheme
                         't', 'r', 'e', 'z', 'o', 'r', '.', 'i', 'o', '/', 's', 't', 'a', 'r', 't',  // char URL[]
                     };
-                    USBD_CtlSendData(dev, UNCONST(webusb_url), MIN(req->wLength, sizeof(webusb_url)));
+                    USBD_CtlSendData(dev, UNCONST(webusb_url), MIN_8bits(req->wLength, sizeof(webusb_url)));
                     return USBD_OK;
                 } else {
                     USBD_CtlError(dev, req);
@@ -354,7 +355,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // subCompatibleId
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00,             // reserved
                     };
-                    USBD_CtlSendData(dev, UNCONST(winusb_wcid), MIN(req->wLength, sizeof(winusb_wcid)));
+                    USBD_CtlSendData(dev, UNCONST(winusb_wcid), MIN_8bits(req->wLength, sizeof(winusb_wcid)));
                     return USBD_OK;
                 } else {
                     USBD_CtlError(dev, req);
@@ -380,7 +381,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
                         0x50, 0x00, 0x00, 0x00, // dwPropertyDataLength
                         '{', 0x00, 'c', 0x00, '6', 0x00, 'c', 0x00, '3', 0x00, '7', 0x00, '4', 0x00, 'a', 0x00, '6', 0x00, '-', 0x00, '2', 0x00, '2', 0x00, '8', 0x00, '5', 0x00, '-', 0x00, '4', 0x00, 'c', 0x00, 'b', 0x00, '8', 0x00, '-', 0x00, 'a', 0x00, 'b', 0x00, '4', 0x00, '3', 0x00, '-', 0x00, '1', 0x00, '7', 0x00, '6', 0x00, '4', 0x00, '7', 0x00, 'c', 0x00, 'e', 0x00, 'a', 0x00, '5', 0x00, '0', 0x00, '3', 0x00, 'd', 0x00, '}', 0x00, 0x00, 0x00, 0x00, 0x00,  // propertyData
                     };
-                    USBD_CtlSendData(dev, UNCONST(winusb_guid), MIN(req->wLength, sizeof(winusb_guid)));
+                    USBD_CtlSendData(dev, UNCONST(winusb_guid), MIN_8bits(req->wLength, sizeof(winusb_guid)));
                     return USBD_OK;
                 } else {
                     USBD_CtlError(dev, req);
@@ -410,6 +411,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev, USBD_SetupReqTypedef *re
 }
 
 static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
+    delay_random();
     for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
         switch (usb_ifaces[i].type) {
             case USB_IFACE_TYPE_HID:
@@ -429,6 +431,7 @@ static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
 }
 
 static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
+    delay_random();
     for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
         switch (usb_ifaces[i].type) {
             case USB_IFACE_TYPE_HID:
@@ -448,6 +451,7 @@ static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
 }
 
 static uint8_t usb_class_sof(USBD_HandleTypeDef *dev) {
+    delay_random();
     for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
         switch (usb_ifaces[i].type) {
             case USB_IFACE_TYPE_VCP:
