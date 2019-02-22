@@ -24,7 +24,7 @@
 #include <stddef.h>
 #include "secbool.h"
 
-typedef secbool (*PIN_UI_WAIT_CALLBACK)(uint32_t wait, uint32_t progress);
+typedef secbool (*PIN_UI_WAIT_CALLBACK)(uint32_t wait, uint32_t progress, const char* message);
 
 void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt, const uint16_t salt_len);
 void storage_wipe(void);

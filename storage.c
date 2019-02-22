@@ -112,6 +112,9 @@
 #define GUARD_KEY_MODULUS   6311
 #define GUARD_KEY_REMAINDER 15
 
+const char* const VERIFYING_PIN_MSG = "Verifying PIN";
+const char* const PROCESSING_MSG = "Processing";
+
 static secbool initialized = secfalse;
 static secbool unlocked = secfalse;
 static PIN_UI_WAIT_CALLBACK ui_callback = NULL;
@@ -332,7 +335,7 @@ static void wait_random(void)
 #endif
 }
 
-static void derive_kek(uint32_t pin, const uint8_t *random_salt, uint8_t kek[SHA256_DIGEST_LENGTH], uint8_t keiv[SHA256_DIGEST_LENGTH], secbool show_progress)
+static void derive_kek(uint32_t pin, const uint8_t *random_salt, uint8_t kek[SHA256_DIGEST_LENGTH], uint8_t keiv[SHA256_DIGEST_LENGTH], secbool unlocking)
 {
 #if BYTE_ORDER == BIG_ENDIAN
     REVERSE32(pin, pin);
@@ -342,20 +345,22 @@ static void derive_kek(uint32_t pin, const uint8_t *random_salt, uint8_t kek[SHA
     memcpy(salt, hardware_salt, HARDWARE_SALT_SIZE);
     memcpy(salt + HARDWARE_SALT_SIZE, random_salt, RANDOM_SALT_SIZE);
 
+    const char* message = (pin == PIN_EMPTY || unlocking != sectrue) ? PROCESSING_MSG : VERIFYING_PIN_MSG;
+
     PBKDF2_HMAC_SHA256_CTX ctx;
     pbkdf2_hmac_sha256_Init(&ctx, (const uint8_t*) &pin, sizeof(pin), salt, sizeof(salt), 1);
     for (int i = 1; i <= 5; i++) {
         pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
-        if (show_progress && ui_callback) {
-            ui_callback(0, 800 + i * 20);
+        if (ui_callback) {
+            ui_callback(0, 800 + i * 20, message);
         }
     }
     pbkdf2_hmac_sha256_Final(&ctx, kek);
     pbkdf2_hmac_sha256_Init(&ctx, (const uint8_t*) &pin, sizeof(pin), salt, sizeof(salt), 2);
     for (int i = 6; i <= 10; i++) {
         pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
-        if (show_progress && ui_callback) {
-            ui_callback(0, 800 + i * 20);
+        if (ui_callback) {
+            ui_callback(0, 800 + i * 20, message);
         }
     }
     pbkdf2_hmac_sha256_Final(&ctx, keiv);
@@ -777,7 +782,7 @@ secbool storage_unlock(uint32_t pin)
 
     uint32_t wait = (1 << ctr) - 1;
     if (ui_callback) {
-        if (sectrue == ui_callback(wait, 0)) {
+        if (sectrue == ui_callback(wait, 0, VERIFYING_PIN_MSG)) {
             return secfalse;
         }
     }
@@ -791,7 +796,7 @@ secbool storage_unlock(uint32_t pin)
                 } else {
                     progress = ((wait - rem) * 10 + i) * 80 / wait;
                 }
-                if (sectrue == ui_callback(rem, progress)) {
+                if (sectrue == ui_callback(rem, progress, VERIFYING_PIN_MSG)) {
                     return secfalse;
                 }
             }
@@ -799,7 +804,7 @@ secbool storage_unlock(uint32_t pin)
         }
     }
     if (ui_callback) {
-        if (sectrue == ui_callback(0, 800)) {
+        if (sectrue == ui_callback(0, 800, VERIFYING_PIN_MSG)) {
             return secfalse;
         }
     }
