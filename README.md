@@ -26,11 +26,11 @@ The format of public entries has remained unchanged, that is:
 
 Private values are used to store storage-specific information and cannot be directly accessed through the storage interface. Protected entries have the following new format:
 
-| Data           | KEY | APP | LEN | IV | ENCRDATA | TAG |
-|----------------|-----|-----|-----|----|----------|-----|
-| Length (bytes) | 1   | 1   | 2   | 12 | LEN - 28 | 16  |
+| Data           | KEY | APP | LEN | IV | TAG | ENCRDATA |
+|----------------|-----|-----|-----|----|-----|----------|
+| Length (bytes) | 1   | 1   | 2   | 12 | 16  | LEN - 28 |
 
-The LEN value thus indicates the total length of IV, ENCRDATA and TAG.
+The LEN value thus indicates the total length of IV, TAG and ENCRDATA.
 
 The random salt (32 bits), EDEK (256 bits), ESAK (128 bits) and PVC (64 bits) is stored in a single entry under APP=0, KEY=2:
 
