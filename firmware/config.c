@@ -255,7 +255,7 @@ static secbool config_upgrade_v10(void)
 
     // Erase newly added fields.
     if (old_config_size != sizeof(Storage)) {
-        memzero(&config + old_config_size, sizeof(Storage) - old_config_size);
+        memzero((char*)&config + old_config_size, sizeof(Storage) - old_config_size);
     }
 
     const uint32_t FLASH_STORAGE_PINAREA = FLASH_META_START + 0x4000;
