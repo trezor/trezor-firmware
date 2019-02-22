@@ -259,7 +259,7 @@ static secbool auth_get(uint16_t key, const void **val, uint16_t *len)
             }
             continue;
         }
-        g[0] = ((k & 0xff) << 24) | ((k & 0xff00) << 8) | 0x8000; // Add SHA message padding.
+        g[0] = (((uint32_t)k & 0xff) << 24) | (((uint32_t)k & 0xff00) << 8) | 0x8000; // Add SHA message padding.
         sha256_Transform(idig, g, h);
         sha256_Transform(odig, h, h);
         for (uint32_t i = 0; i < SHA256_DIGEST_LENGTH/sizeof(uint32_t); i++) {
