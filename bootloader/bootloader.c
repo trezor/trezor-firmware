@@ -119,11 +119,9 @@ int main(void)
 	mpu_config_bootloader();
 
 #ifndef APPVER
-	// at least one button is unpressed
-	uint16_t state = gpio_port_read(BTN_PORT);
-	int unpressed = ((state & BTN_PIN_YES) == BTN_PIN_YES || (state & BTN_PIN_NO) == BTN_PIN_NO);
+	bool left_pressed = (buttonRead() & BTN_PIN_NO) == 0;
 
-	if (firmware_present_new() && unpressed) {
+	if (firmware_present_new() && !left_pressed) {
 
 		oledClear();
 		oledDrawBitmap(40, 0, &bmp_logo64_empty);

@@ -29,10 +29,9 @@ uint16_t buttonRead(void) {
 
 void buttonUpdate()
 {
-	uint16_t state;
 	static uint16_t last_state = BTN_PIN_YES | BTN_PIN_NO;
 
-	state = buttonRead();
+	uint16_t state = buttonRead();
 
 	if ((state & BTN_PIN_YES) == 0) {	// Yes button is down
 		if ((last_state & BTN_PIN_YES) == 0) {		// last Yes was down
