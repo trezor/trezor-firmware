@@ -780,9 +780,11 @@ secbool storage_unlock(uint32_t pin)
         return secfalse;
     }
 
+    const char* message = (pin == PIN_EMPTY) ? PROCESSING_MSG : VERIFYING_PIN_MSG;
+
     uint32_t wait = (1 << ctr) - 1;
     if (ui_callback) {
-        if (sectrue == ui_callback(wait, 0, VERIFYING_PIN_MSG)) {
+        if (sectrue == ui_callback(wait, 0, message)) {
             return secfalse;
         }
     }
@@ -796,7 +798,7 @@ secbool storage_unlock(uint32_t pin)
                 } else {
                     progress = ((wait - rem) * 10 + i) * 80 / wait;
                 }
-                if (sectrue == ui_callback(rem, progress, VERIFYING_PIN_MSG)) {
+                if (sectrue == ui_callback(rem, progress, message)) {
                     return secfalse;
                 }
             }
@@ -804,7 +806,7 @@ secbool storage_unlock(uint32_t pin)
         }
     }
     if (ui_callback) {
-        if (sectrue == ui_callback(0, 800, VERIFYING_PIN_MSG)) {
+        if (sectrue == ui_callback(0, 800, message)) {
             return secfalse;
         }
     }
