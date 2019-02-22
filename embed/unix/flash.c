@@ -62,6 +62,27 @@ static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
     [24] = 0x08200000, // last element - not a valid sector
 };
 
+const uint8_t FIRMWARE_SECTORS[FIRMWARE_SECTORS_COUNT] = {
+    FLASH_SECTOR_FIRMWARE_START,
+    7,
+    8,
+    9,
+    10,
+    FLASH_SECTOR_FIRMWARE_END,
+    FLASH_SECTOR_FIRMWARE_EXTRA_START,
+    18,
+    19,
+    20,
+    21,
+    22,
+    FLASH_SECTOR_FIRMWARE_EXTRA_END,
+};
+
+const uint8_t STORAGE_SECTORS[STORAGE_SECTORS_COUNT] = {
+    FLASH_SECTOR_STORAGE_1,
+    FLASH_SECTOR_STORAGE_2,
+};
+
 static uint8_t *FLASH_BUFFER;
 static uint32_t FLASH_SIZE;
 

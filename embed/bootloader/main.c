@@ -262,7 +262,7 @@ main_start:
         firmware_present = load_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub, &hdr);
     }
     if (sectrue == firmware_present) {
-        firmware_present = check_image_contents(&hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, firmware_sectors, FIRMWARE_SECTORS_COUNT);
+        firmware_present = check_image_contents(&hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT);
     }
 
     // start the bootloader if no or broken firmware found ...
@@ -286,11 +286,7 @@ main_start:
         ui_fadein();
 
         // erase storage
-        static const uint8_t sectors_storage[] = {
-            FLASH_SECTOR_STORAGE_1,
-            FLASH_SECTOR_STORAGE_2,
-        };
-        ensure(flash_erase_sectors(sectors_storage, sizeof(sectors_storage), NULL), NULL);
+        ensure(flash_erase_sectors(STORAGE_SECTORS, STORAGE_SECTORS_COUNT, NULL), NULL);
 
         // and start the usb loop
         if (bootloader_usb_loop(NULL, NULL) != sectrue) {
@@ -353,7 +349,7 @@ main_start:
         "invalid firmware header");
 
     ensure(
-        check_image_contents(&hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, firmware_sectors, FIRMWARE_SECTORS_COUNT),
+        check_image_contents(&hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT),
         "invalid firmware hash");
 
     // if all VTRUST flags are unset = ultimate trust => skip the procedure
