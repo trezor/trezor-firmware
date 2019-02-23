@@ -908,7 +908,9 @@ void config_setAutoLockDelayMs(uint32_t auto_lock_delay_ms)
 void config_wipe(void)
 {
     storage_wipe();
-    storage_unlock(PIN_EMPTY);
+    if (storage_is_unlocked() != sectrue) {
+        storage_unlock(PIN_EMPTY);
+    }
     random_buffer((uint8_t *)config_uuid, sizeof(config_uuid));
     data2hex(config_uuid, sizeof(config_uuid), config_uuid_str);
     autoLockDelayMsCached = secfalse;
