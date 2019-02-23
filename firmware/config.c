@@ -359,17 +359,19 @@ void config_init(void)
     storage_init(&protectPinUiCallback, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
     memzero(HW_ENTROPY_DATA, sizeof(HW_ENTROPY_DATA));
 
-    uint16_t len = 0;
-    if (sectrue == storage_get(KEY_UUID, config_uuid, sizeof(config_uuid), &len) && len == sizeof(config_uuid)) {
-        data2hex(config_uuid, sizeof(config_uuid), config_uuid_str);
-    } else {
-        config_wipe();
-    }
-
     // Auto-unlock storage if no PIN is set.
     if (storage_is_unlocked() == secfalse && storage_has_pin() == secfalse) {
         storage_unlock(PIN_EMPTY);
     }
+
+    uint16_t len = 0;
+    // If UUID is not set, then the config is uninitialized.
+    if (sectrue != storage_get(KEY_UUID, config_uuid, sizeof(config_uuid), &len) || len != sizeof(config_uuid)) {
+        random_buffer((uint8_t *)config_uuid, sizeof(config_uuid));
+        storage_set(KEY_UUID, config_uuid, sizeof(config_uuid));
+        storage_set(KEY_VERSION, &CONFIG_VERSION, sizeof(CONFIG_VERSION));
+    }
+    data2hex(config_uuid, sizeof(config_uuid), config_uuid_str);
 }
 
 void session_clear(bool lock)
