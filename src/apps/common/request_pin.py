@@ -36,6 +36,17 @@ async def request_pin(
                 c.taint()
         c.render()
 
+        c = dialog.confirm
+        if matrix.pin:
+            if not c.is_enabled():
+                c.enable()
+                c.taint()
+        else:
+            if c.is_enabled():
+                c.disable()
+                c.taint()
+        c.render()
+
     if label is None:
         label = "Enter your PIN"
     sublabel = None
@@ -59,6 +70,8 @@ async def request_pin(
         else:
             result = await dialog
         if result == CONFIRMED:
+            if not matrix.pin:
+                continue
             return matrix.pin
         elif matrix.pin:  # reset
             matrix.change("")

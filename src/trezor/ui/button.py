@@ -36,6 +36,9 @@ class Button(Widget):
             self.state = BTN_DISABLED
             self.tainted = True
 
+    def is_enabled(self):
+        return self.state != BTN_DISABLED
+
     def render(self):
         if not self.tainted:
             return
