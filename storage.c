@@ -59,6 +59,9 @@
 // The total number of iterations to use in PBKDF2.
 #define PIN_ITER_COUNT      20000
 
+// The number of seconds required to derive the KEK and KEIV.
+#define DERIVE_SECS         1
+
 // If the top bit of APP is set, then the value is not encrypted.
 #define FLAG_PUBLIC         0x80
 
@@ -114,10 +117,14 @@
 
 const char* const VERIFYING_PIN_MSG = "Verifying PIN";
 const char* const PROCESSING_MSG = "Processing";
+const char* const STARTING_MSG = "Starting up";
 
 static secbool initialized = secfalse;
 static secbool unlocked = secfalse;
 static PIN_UI_WAIT_CALLBACK ui_callback = NULL;
+static uint32_t ui_total = 0;
+static uint32_t ui_rem = 0;
+static const char *ui_message = NULL;
 static uint8_t cached_keys[KEYS_SIZE] = {0};
 static uint8_t *const cached_dek = cached_keys;
 static uint8_t *const cached_sak = cached_keys + DEK_SIZE;
@@ -335,7 +342,7 @@ static void wait_random(void)
 #endif
 }
 
-static void derive_kek(uint32_t pin, const uint8_t *random_salt, uint8_t kek[SHA256_DIGEST_LENGTH], uint8_t keiv[SHA256_DIGEST_LENGTH], secbool unlocking)
+static void derive_kek(uint32_t pin, const uint8_t *random_salt, uint8_t kek[SHA256_DIGEST_LENGTH], uint8_t keiv[SHA256_DIGEST_LENGTH])
 {
 #if BYTE_ORDER == BIG_ENDIAN
     REVERSE32(pin, pin);
@@ -345,25 +352,33 @@ static void derive_kek(uint32_t pin, const uint8_t *random_salt, uint8_t kek[SHA
     memcpy(salt, hardware_salt, HARDWARE_SALT_SIZE);
     memcpy(salt + HARDWARE_SALT_SIZE, random_salt, RANDOM_SALT_SIZE);
 
-    const char* message = (pin == PIN_EMPTY || unlocking != sectrue) ? PROCESSING_MSG : VERIFYING_PIN_MSG;
+    uint32_t progress = (ui_total - ui_rem) * 1000 / ui_total;
+    if (ui_callback && ui_message) {
+        ui_callback(ui_rem, progress, ui_message);
+    }
 
     PBKDF2_HMAC_SHA256_CTX ctx;
     pbkdf2_hmac_sha256_Init(&ctx, (const uint8_t*) &pin, sizeof(pin), salt, sizeof(salt), 1);
     for (int i = 1; i <= 5; i++) {
         pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
-        if (ui_callback) {
-            ui_callback(0, 800 + i * 20, message);
+        if (ui_callback && ui_message) {
+            progress = ((ui_total - ui_rem) * 1000 + i * DERIVE_SECS * 100) / ui_total;
+            ui_callback(ui_rem - i * DERIVE_SECS / 10, progress, ui_message);
         }
     }
     pbkdf2_hmac_sha256_Final(&ctx, kek);
+
     pbkdf2_hmac_sha256_Init(&ctx, (const uint8_t*) &pin, sizeof(pin), salt, sizeof(salt), 2);
     for (int i = 6; i <= 10; i++) {
         pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
-        if (ui_callback) {
-            ui_callback(0, 800 + i * 20, message);
+        if (ui_callback && ui_message) {
+            progress = ((ui_total - ui_rem) * 1000 + i * DERIVE_SECS * 100) / ui_total;
+            ui_callback(ui_rem - i * DERIVE_SECS / 10, progress, ui_message);
         }
     }
     pbkdf2_hmac_sha256_Final(&ctx, keiv);
+
+    ui_rem -= DERIVE_SECS;
     memzero(&ctx, sizeof(PBKDF2_HMAC_SHA256_CTX));
     memzero(&pin, sizeof(pin));
     memzero(&salt, sizeof(salt));
@@ -380,7 +395,7 @@ static secbool set_pin(uint32_t pin)
     uint8_t keiv[SHA256_DIGEST_LENGTH];
     chacha20poly1305_ctx ctx;
     random_buffer(salt, RANDOM_SALT_SIZE);
-    derive_kek(pin, salt, kek, keiv, secfalse);
+    derive_kek(pin, salt, kek, keiv);
     rfc7539_init(&ctx, kek, keiv);
     memzero(kek, sizeof(kek));
     memzero(keiv, sizeof(keiv));
@@ -499,6 +514,9 @@ static void init_wiped_storage(void)
     ensure(auth_init(), "set_storage_auth_tag failed");
     ensure(storage_set_encrypted(VERSION_KEY, &version, sizeof(version)), "set_storage_version failed");
     ensure(pin_logs_init(0), "init_pin_logs failed");
+    ui_total = DERIVE_SECS;
+    ui_rem = ui_total;
+    ui_message = PROCESSING_MSG;
     ensure(set_pin(PIN_EMPTY), "init_pin failed");
     if (unlocked != sectrue) {
         memzero(cached_keys, sizeof(cached_keys));
@@ -707,7 +725,7 @@ void storage_lock(void)
     memzero(authentication_sum, sizeof(authentication_sum));
 }
 
-static secbool unlock(uint32_t pin)
+static secbool decrypt_dek(uint32_t pin)
 {
     const void *buffer = NULL;
     uint16_t len = 0;
@@ -730,7 +748,7 @@ static secbool unlock(uint32_t pin)
     chacha20poly1305_ctx ctx;
 
     // Decrypt the data encryption key and the storage authentication key and check the PIN verification code.
-    derive_kek(pin, salt, kek, keiv, sectrue);
+    derive_kek(pin, salt, kek, keiv);
     memzero(&pin, sizeof(pin));
     rfc7539_init(&ctx, kek, keiv);
     memzero(kek, sizeof(kek));
@@ -759,7 +777,7 @@ static secbool unlock(uint32_t pin)
     return sectrue;
 }
 
-secbool storage_unlock(uint32_t pin)
+static secbool unlock(uint32_t pin)
 {
     if (sectrue != initialized) {
         return secfalse;
@@ -780,34 +798,23 @@ secbool storage_unlock(uint32_t pin)
         return secfalse;
     }
 
-    const char* message = (pin == PIN_EMPTY) ? PROCESSING_MSG : VERIFYING_PIN_MSG;
-
-    uint32_t wait = (1 << ctr) - 1;
-    if (ui_callback) {
-        if (sectrue == ui_callback(wait, 0, message)) {
-            return secfalse;
-        }
-    }
     // Sleep for 2^ctr - 1 seconds before checking the PIN.
-    uint32_t progress;
-    for (uint32_t rem = wait; rem > 0; rem--) {
+    uint32_t wait = (1 << ctr) - 1;
+    ui_total += wait;
+    uint32_t progress = 0;
+    for (ui_rem = ui_total; ui_rem > ui_total - wait; ui_rem--) {
         for (int i = 0; i < 10; i++) {
-            if (ui_callback) {
-                if (wait > 1000000) {  // precise enough
-                    progress = (wait - rem) / (wait / 800);
+            if (ui_callback && ui_message) {
+                if (ui_total > 1000000) {  // precise enough
+                    progress = (ui_total - ui_rem) / (ui_total / 1000);
                 } else {
-                    progress = ((wait - rem) * 10 + i) * 80 / wait;
+                    progress = ((ui_total - ui_rem) * 10 + i) * 100 / ui_total;
                 }
-                if (sectrue == ui_callback(rem, progress, message)) {
+                if (sectrue == ui_callback(ui_rem, progress, ui_message)) {
                     return secfalse;
                 }
             }
             hal_delay(100);
-        }
-    }
-    if (ui_callback) {
-        if (sectrue == ui_callback(0, 800, message)) {
-            return secfalse;
         }
     }
 
@@ -826,7 +833,7 @@ secbool storage_unlock(uint32_t pin)
         return secfalse;
     }
 
-    if (sectrue != unlock(pin)) {
+    if (sectrue != decrypt_dek(pin)) {
         // Wipe storage if too many failures
         wait_random();
         if (ctr + 1 >= PIN_MAX_TRIES) {
@@ -840,6 +847,22 @@ secbool storage_unlock(uint32_t pin)
 
     // Finally set the counter to 0 to indicate success.
     return pin_fails_reset();
+}
+
+secbool storage_unlock(uint32_t pin)
+{
+    ui_total = DERIVE_SECS;
+    ui_rem = ui_total;
+    if (pin == PIN_EMPTY) {
+        if (ui_message == NULL) {
+            ui_message = STARTING_MSG;
+        } else {
+            ui_message = PROCESSING_MSG;
+        }
+    } else {
+        ui_message = VERIFYING_PIN_MSG;
+    }
+    return unlock(pin);
 }
 
 /*
@@ -1106,7 +1129,12 @@ secbool storage_change_pin(uint32_t oldpin, uint32_t newpin)
     if (sectrue != initialized) {
         return secfalse;
     }
-    if (sectrue != storage_unlock(oldpin)) {
+
+    ui_total = 2 * DERIVE_SECS;
+    ui_rem = ui_total;
+    ui_message = (oldpin != PIN_EMPTY && newpin == PIN_EMPTY) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
+
+    if (sectrue != unlock(oldpin)) {
         return secfalse;
     }
     secbool ret = set_pin(newpin);
@@ -1207,6 +1235,9 @@ static secbool storage_upgrade(void)
         }
 
         // Set EDEK_PVC_KEY and PIN_NOT_SET_KEY.
+        ui_total = DERIVE_SECS;
+        ui_rem = ui_total;
+        ui_message = PROCESSING_MSG;
         if (sectrue == norcow_get(V0_PIN_KEY, &val, &len)) {
             set_pin(*(const uint32_t*)val);
         } else {
