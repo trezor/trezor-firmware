@@ -22,4 +22,8 @@ fi
 make -C vendor/nanopb/generator/proto
 make -C firmware/protob
 
-make -C firmware sign
+make -C firmware
+
+if [ "$EMULATOR" != 1 ]; then
+    make -C firmware sign
+fi
