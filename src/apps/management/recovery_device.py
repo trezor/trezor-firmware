@@ -57,6 +57,8 @@ async def recovery_device(ctx, msg):
     # ask for pin repeatedly
     if msg.pin_protection:
         newpin = await request_pin_confirm(ctx, cancellable=False)
+    else:
+        newpin = ""
 
     # dry run
     if msg.dry_run:
@@ -72,7 +74,7 @@ async def recovery_device(ctx, msg):
             )
 
     # save into storage
-    if msg.pin_protection:
+    if newpin:
         config.change_pin(pin_to_int(""), pin_to_int(newpin))
     storage.set_u2f_counter(msg.u2f_counter)
     storage.load_settings(label=msg.label, use_passphrase=msg.passphrase_protection)
