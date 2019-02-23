@@ -365,6 +365,11 @@ void config_init(void)
     } else {
         config_wipe();
     }
+
+    // Auto-unlock storage if no PIN is set.
+    if (storage_is_unlocked() == secfalse && storage_has_pin() == secfalse) {
+        storage_unlock(PIN_EMPTY);
+    }
 }
 
 void session_clear(bool lock)
