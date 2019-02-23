@@ -153,6 +153,7 @@ void setupApp(void)
 #define MPU_RASR_SIZE_512KB (0x12UL << MPU_RASR_SIZE_LSB)
 #define MPU_RASR_SIZE_1MB   (0x13UL << MPU_RASR_SIZE_LSB)
 #define MPU_RASR_SIZE_512MB (0x1CUL << MPU_RASR_SIZE_LSB)
+#define MPU_RASR_SIZE_4GB   (0x1FUL << MPU_RASR_SIZE_LSB)
 
 // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABDJJGF.html
 #define MPU_RASR_ATTR_FLASH  (MPU_RASR_ATTR_C)
@@ -177,9 +178,10 @@ void mpu_config_bootloader(void)
 	MPU_CTRL = 0;
 
 	// Note: later entries overwrite previous ones
-	// Flash (0x08000000 - 0x0807FFFF, 1 MiB, read-write)
-	MPU_RBAR = FLASH_BASE | MPU_RBAR_VALID | (0 << MPU_RBAR_REGION_LSB);
-	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH | MPU_RASR_SIZE_1MB | MPU_RASR_ATTR_AP_PRW_URW;
+
+	// Everything (0x00000000 - 0xFFFFFFFF, 4 GiB, read-write)
+	MPU_RBAR = 0 | MPU_RBAR_VALID | (0 << MPU_RBAR_REGION_LSB);
+	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH | MPU_RASR_SIZE_4GB | MPU_RASR_ATTR_AP_PRW_URW;
 
 	// Flash (0x8007FE0 - 0x08007FFF, 32 B, no-access)
 	MPU_RBAR = (FLASH_BASE + 0x7FE0) | MPU_RBAR_VALID | (1 << MPU_RBAR_REGION_LSB);
@@ -218,6 +220,7 @@ void mpu_config_firmware(void)
 	MPU_CTRL = 0;
 
 	// Note: later entries overwrite previous ones
+
 	// Flash (0x08000000 - 0x0807FFFF, 1 MiB, read-only)
 	MPU_RBAR = FLASH_BASE | MPU_RBAR_VALID | (0 << MPU_RBAR_REGION_LSB);
 	MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH | MPU_RASR_SIZE_1MB | MPU_RASR_ATTR_AP_PRO_URO;

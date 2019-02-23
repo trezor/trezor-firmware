@@ -1,5 +1,5 @@
 /* STM32F205RG - 1024K Flash, 128K RAM */
-/* program starts at 0x08010100 */
+/* program starts at 0x08010400 */
 MEMORY
 {
 	rom (rx) : ORIGIN = 0x08010000, LENGTH = 1024K - 64K
