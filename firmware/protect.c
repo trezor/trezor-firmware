@@ -225,6 +225,18 @@ bool protectChangePin(bool removal)
 			fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
 			return false;
 		}
+
+		// If removing, defer the check to config_changePin().
+		if (!removal) {
+			usbTiny(1);
+			bool ret = config_containsPin(pin);
+			usbTiny(0);
+			if (ret == false) {
+				fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+				return false;
+			}
+		}
+
 		strlcpy(old_pin, pin, sizeof(old_pin));
 	}
 
