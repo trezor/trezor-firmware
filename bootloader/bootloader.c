@@ -33,7 +33,6 @@
 #include "signatures.h"
 #include "layout.h"
 #include "rng.h"
-#include "timer.h"
 #include "memory.h"
 
 void layoutFirmwareFingerprint(const uint8_t *hash)
@@ -133,7 +132,6 @@ int main(void)
 		int signed_firmware = signatures_new_ok(hdr, fingerprint);
 		if (SIG_OK != signed_firmware) {
 			show_unofficial_warning(fingerprint);
-			timer_init();
 		}
 
 		if (SIG_OK != check_firmware_hashes(hdr)) {
