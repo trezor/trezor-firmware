@@ -182,7 +182,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep)
 				// check whether the current firmware is signed (old or new method)
 				if (firmware_present_new()) {
 					const image_header *hdr = (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
-					old_was_signed = (SIG_OK == signatures_new_ok(hdr, NULL)) && (SIG_OK == check_firmware_hashes(hdr));
+					old_was_signed = signatures_new_ok(hdr, NULL) & check_firmware_hashes(hdr);
 				} else if (firmware_present_old()) {
 					old_was_signed = signatures_old_ok();
 				} else {
