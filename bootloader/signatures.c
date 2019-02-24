@@ -119,7 +119,11 @@ bool firmware_present_new(void)
 {
 	const image_header *hdr = (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
 	if (hdr->magic != FIRMWARE_MAGIC_NEW) return false;
-	if (hdr->hdrlen != FLASH_FWHEADER_LEN) return false;
+	// we need to ignore hdrlen for now
+	// because we keep reset_handler ptr there
+	// for compatibility with older bootloaders
+	// after this is no longer necessary, let's uncomment the line below:
+	// if (hdr->hdrlen != FLASH_FWHEADER_LEN) return false;
 	if (hdr->codelen > FLASH_APP_LEN) return false;
 	if (hdr->codelen < 4096) return false;
 

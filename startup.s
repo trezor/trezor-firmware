@@ -19,6 +19,16 @@ memset_reg:
   .global reset_handler
   .type reset_handler, STT_FUNC
 reset_handler:
+// we need to perform this in case an old bootloader
+// is starting the new firmware, these will be set incorrectly
+  ldr r0, =0xE000ED08  // r0 = VTOR address
+  ldr r1, =0x08010400  // r1 = FLASH_APP_START
+  str r1, [r0]         // assign
+  ldr r0, =_stack      // r0 = stack pointer
+  msr msp, r0          // set stack pointer
+  dsb
+  isb
+
   ldr r0, =_ram_start // r0 - point to beginning of SRAM
   ldr r1, =_ram_end   // r1 - point to byte after the end of SRAM
   ldr r2, =0          // r2 - the byte-sized value to be written
