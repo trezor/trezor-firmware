@@ -245,4 +245,16 @@ enum MessageType {
     MessageType_EosTxActionRequest = 603 [(wire_out) = true];
     MessageType_EosTxActionAck = 604 [(wire_in) = true];
     MessageType_EosSignedTx = 605 [(wire_out) = true];
+
+    // Binance
+    MessageType_BinanceGetAddress = 700 [(wire_in) = true];
+    MessageType_BinanceAddress = 701 [(wire_out) = true];
+    MessageType_BinanceGetPublicKey = 702 [(wire_in) = true];
+    MessageType_BinancePublicKey = 703 [(wire_out) = true];
+    MessageType_BinanceSignTx = 704 [(wire_in) = true];
+    MessageType_BinanceTxRequest = 705 [(wire_out) = true];
+    MessageType_BinanceTransferMsg = 706 [(wire_in) = true];
+    MessageType_BinanceOrderMsg = 707 [(wire_in) = true];
+    MessageType_BinanceCancelMsg = 708 [(wire_in) = true];
+    MessageType_BinanceSignedTx = 709 [(wire_out) = true];
 }

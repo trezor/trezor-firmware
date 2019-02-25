@@ -187,6 +187,20 @@
         "blockchain_link": {}
     },
     {
+        "name": "Binance Chain",
+        "shortcut": "BNB",
+        "slip44": 714,
+        "curve": "secp256k1",
+        "decimals": 8,
+        "links": {
+            "Homepage": "https://binance.org"
+        },
+        "wallet": {
+            "Trust Wallet": "https://trustwallet.com"
+        },
+        "blockchain_link": {}
+    },
+    {
         "name": "Tether",
         "shortcut": "USDT",
         "slip44": 0,
