@@ -107,8 +107,8 @@ If you want to work on the sources, make a local clone:
 ```sh
 git clone https://github.com/trezor/python-trezor
 cd python-trezor
-python setup.py prebuild
-python setup.py develop
+python3 setup.py prebuild
+python3 setup.py develop
 ```
 
 ## Command line client (trezorctl)
