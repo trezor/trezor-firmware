@@ -374,7 +374,8 @@ def wipe_device(connect, bootloader):
             click.echo("Wiping user data!")
 
     try:
-        return device.wipe(connect())
+        device.wipe(client)
+        click.echo("Device wiped")
     except tools.CallException as e:
         click.echo("Action failed: {} {}".format(*e.args))
         sys.exit(3)

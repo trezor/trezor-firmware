@@ -53,7 +53,16 @@ class WebUsbHandle:
             else:
                 args = ()
             raise IOError("Cannot open device", *args)
+
         self.handle.resetDevice()
+        # XXX this may fail with LIBUSB_ERROR_NOT_FOUND
+        # This will usually happen after device wipe, because USB serial has changed,
+        # and requires re-enumeration and reacquiring of the device.
+        # I haven't found a reasonable way of handling it here, or in the enumeration
+        # step. (In particular, it seems impossible to force libusb to re-enumerate
+        # explicitly, without calling device reset.)
+        # So now I'm just leaving it here to crash in some cases.
+
         self.handle.claimInterface(self.interface)
 
     def close(self) -> None:
