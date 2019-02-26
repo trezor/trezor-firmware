@@ -339,7 +339,7 @@ def validate_onev1(fw: FirmwareType, allow_unsigned: bool = False) -> None:
         validate_onev2(fw.embedded_onev2, allow_unsigned)
 
 
-def validate_v2(fw: FirmwareType, skip_vendor_header=False) -> None:
+def validate_v2(fw: FirmwareType, skip_vendor_header: bool = False) -> None:
     vendor_fingerprint = _header_digest(fw.vendor_header, VendorHeader)
     fingerprint = digest_v2(fw)
 
@@ -383,10 +383,7 @@ def validate_v2(fw: FirmwareType, skip_vendor_header=False) -> None:
 
 def digest(version: FirmwareFormat, fw: FirmwareType) -> bytes:
     if version == FirmwareFormat.TREZOR_ONE:
-        if fw.embedded_onev2:
-            return digest_onev2(fw.embedded_onev2)
-        else:
-            return digest_onev1(fw)
+        return digest_onev1(fw)
     elif version == FirmwareFormat.TREZOR_ONE_V2:
         return digest_onev2(fw)
     elif version == FirmwareFormat.TREZOR_T:
@@ -396,7 +393,7 @@ def digest(version: FirmwareFormat, fw: FirmwareType) -> bytes:
 
 
 def validate(
-    version: FirmwareFormat, fw: FirmwareType, allow_unsigned: bool = True
+    version: FirmwareFormat, fw: FirmwareType, allow_unsigned: bool = False
 ) -> None:
     if version == FirmwareFormat.TREZOR_ONE:
         return validate_onev1(fw, allow_unsigned)
