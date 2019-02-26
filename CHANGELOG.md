@@ -22,7 +22,6 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 - Cardano: change `network` to `protocol_magic`
 - tests can run interactively when `INTERACT=1` environment variable is set
 - protobuf: improved `to_dict` function
-- webusb: issue device reset before connecting (fixes weird device states)
 
 ### Deprecated
 - trezorctl: interactive signing with `sign-tx` is considered deprecated

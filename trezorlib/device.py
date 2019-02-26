@@ -45,7 +45,6 @@ class TrezorDevice:
 
 
 @expect(proto.Success, field="message")
-@session
 def apply_settings(
     client,
     label=None,
@@ -75,7 +74,6 @@ def apply_settings(
 
 
 @expect(proto.Success, field="message")
-@session
 def apply_flags(client, flags):
     out = client.call(proto.ApplyFlags(flags=flags))
     client.init_device()  # Reload Features
@@ -83,7 +81,6 @@ def apply_flags(client, flags):
 
 
 @expect(proto.Success, field="message")
-@session
 def change_pin(client, remove=False):
     ret = client.call(proto.ChangePin(remove=remove))
     client.init_device()  # Re-read features
@@ -96,26 +93,14 @@ def set_u2f_counter(client, u2f_counter):
     return ret
 
 
-def wipe(client) -> bool:
-    """Initiate device wipe.
-
-    Returns whether it's safe to continue using the client instance.
-    (see comment in `WebUsbHandle.open`)
-    """
-    # This is not marked @session by design: the subsequent init_device should run
-    # in a separate session, so that when it triggers a USB error, a subsequent
-    # re-enumeration fixes it. See comment in WebUsbHandle.open
-    # XXX this should actually call the USB reset explicitly
-    client.call(proto.WipeDevice())
-    try:
-        client.init_device()
-        return True
-    except Exception:
-        return False
+@expect(proto.Success, field="message")
+def wipe(client):
+    ret = client.call(proto.WipeDevice())
+    client.init_device()
+    return ret
 
 
 @expect(proto.Success, field="message")
-@session
 def recover(
     client,
     word_count=24,
