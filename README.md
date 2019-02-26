@@ -9,12 +9,12 @@ See <https://trezor.io> for more information
 
 ## Install
 
-Python-trezor requires Python 3.3 or higher, and libusb 1.0. The easiest
+Python-trezor requires Python 3.5 or higher, and libusb 1.0. The easiest
 way to install it is with `pip`. The rest of this guide assumes you have
 a working `pip`; if not, you can refer to [this
 guide](https://packaging.python.org/tutorials/installing-packages/).
 
-### Trezor T only
+### Quick installation
 
 On a typical Linux / Mac / BSD system, you already have all you need.
 Install `trezor` with:
@@ -29,10 +29,10 @@ On Windows, you also need to install
 appropriate [drivers](https://zadig.akeo.ie/). This is, unfortunately, a
 topic bigger than this README.
 
-### Trezor One support
+### Older Trezor One support
 
-In addition to the above, you need to install development headers for
-HIDAPI.
+If your Trezor One is on firmware **1.6.3** or older, you will need HIDAPI support
+for it to be recognized. That requires additional packages.
 
 #### Debian / Ubuntu
 
@@ -85,6 +85,30 @@ or build via ports:
 ```sh
 cd /usr/ports/security/py-trezor
 make install clean
+```
+
+### Building from source
+
+Sometimes you might need to install the latest-and-greatest unreleased version
+straight from GitHub. You will need some prerequisites first:
+
+```sh
+sudo apt-get install protobuf-compiler protobuf-dev
+pip3 install protobuf
+```
+
+If you just need to install the package, you can use pip again:
+```sh
+pip3 install git+https://github.com/trezor/python-trezor
+```
+
+If you want to work on the sources, make a local clone:
+
+```sh
+git clone https://github.com/trezor/python-trezor
+cd python-trezor
+python setup.py prebuild
+python setup.py develop
 ```
 
 ## Command line client (trezorctl)
