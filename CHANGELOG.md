@@ -5,6 +5,28 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 _At the moment, the project does __not__ adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
+## [0.11.2] - 2019-02-26
+[0.11.2]: https://github.com/trezor/python-trezor/compare/v0.11.1...v0.11.2
+
+### Added
+- full support for bootloader 1.8.0 and relevant firmware upgrade functionality
+- trezorctl: support fully offline signing JSON-encoded transaction data
+- trezorctl: dry-run for firmware upgrade command
+- client: new convenience function `get_default_client` for simple script usage
+- Dash: support DIP-2 special inputs [#351]
+- Ethereum: add get_public_key methods
+
+### Changed
+- coins with BIP-143 fork id (BCH, BTG) won't require prev_tx [#352]
+- device recovery will restore U2F counter
+- Cardano: change `network` to `protocol_magic`
+- tests can run interactively when `INTERACT=1` environment variable is set
+- protobuf: improved `to_dict` function
+- webusb: issue device reset before connecting (fixes weird device states)
+
+### Deprecated
+- trezorctl: interactive signing with `sign-tx` is considered deprecated
+
 ## [0.11.1] - 2018-12-28
 [0.11.1]: https://github.com/trezor/python-trezor/compare/v0.11.0...v0.11.1
 
@@ -198,3 +220,5 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 [#315]: https://github.com/trezor/python-trezor/issues/315
 [#325]: https://github.com/trezor/python-trezor/issues/325
 [#349]: https://github.com/trezor/python-trezor/issues/349
+[#351]: https://github.com/trezor/python-trezor/issues/351
+[#352]: https://github.com/trezor/python-trezor/issues/352
