@@ -545,7 +545,7 @@ def validate_firmware(version, fw, expected_fingerprint=None):
         _print_version(fw.firmware_header.version)
 
     try:
-        firmware.validate(version, fw)
+        firmware.validate(version, fw, allow_unsigned=False)
         click.echo("Signatures are valid.")
     except firmware.Unsigned:
         if not click.confirm("No signatures found. Continue?", default=False):
@@ -633,13 +633,22 @@ def find_best_firmware_version(bootloader_version, requested_version=None):
 @click.option("-u", "--url")
 @click.option("-v", "--version")
 @click.option("-s", "--skip-check", is_flag=True, help="Do not validate firmware integrity")
+@click.option("-n", "--dry-run", is_flag=True, help="Perform all steps but do not actually upload the firmware")
 @click.option("--raw", is_flag=True, help="Push raw data to Trezor")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
 @click.option("--skip-vendor-header", help="Skip vendor header validation on Trezor T")
 # fmt: on
 @click.pass_obj
 def firmware_update(
-    connect, filename, url, version, skip_check, fingerprint, skip_vendor_header, raw
+    connect,
+    filename,
+    url,
+    version,
+    skip_check,
+    fingerprint,
+    skip_vendor_header,
+    raw,
+    dry_run,
 ):
     """Upload new firmware to device.
 
@@ -662,7 +671,7 @@ def firmware_update(
         sys.exit(1)
 
     client = connect()
-    if not client.features.bootloader_mode:
+    if not dry_run and not client.features.bootloader_mode:
         click.echo("Please switch your device to bootloader mode.")
         sys.exit(1)
 
@@ -714,18 +723,22 @@ def firmware_update(
         # for bootloader < 1.8, keep the embedding
         # for bootloader 1.8.0 and up, strip the old OneV1 header
         if bootloader_onev2 and data[:4] == b"TRZR" and data[256 : 256 + 4] == b"TRZF":
+            click.echo("Extracting embedded firmware image (fingerprint may change).")
             data = data[256:]
 
-    try:
-        if f.major_version == 1 and f.firmware_present:
-            # Trezor One does not send ButtonRequest
-            click.echo("Please confirm action on your Trezor device")
-        return firmware.update(client, data)
-    except exceptions.Cancelled:
-        click.echo("Update aborted on device.")
-    except exceptions.TrezorException as e:
-        click.echo("Update failed: {}".format(e))
-        sys.exit(3)
+    if dry_run:
+        click.echo("Dry run. Not uploading firmware to device.")
+    else:
+        try:
+            if f.major_version == 1 and f.firmware_present:
+                # Trezor One does not send ButtonRequest
+                click.echo("Please confirm action on your Trezor device")
+            return firmware.update(client, data)
+        except exceptions.Cancelled:
+            click.echo("Update aborted on device.")
+        except exceptions.TrezorException as e:
+            click.echo("Update failed: {}".format(e))
+            sys.exit(3)
 
 
 @cli.command(help="Perform a self-test.")
