@@ -518,7 +518,7 @@ def backup_device(connect):
 
 ALLOWED_FIRMWARE_FORMATS = {
     1: (firmware.FirmwareFormat.TREZOR_ONE, firmware.FirmwareFormat.TREZOR_ONE_V2),
-    2: (firmware.FirmwareFormat.TREZOR_T),
+    2: (firmware.FirmwareFormat.TREZOR_T,),
 }
 
 
