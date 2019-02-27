@@ -13,7 +13,7 @@ def publickey(secret_key: bytes, compressed: bool = True) -> bytes:
     '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
-def sign(secret_key: bytes, digest: bytes, compressed: bool = True, ethereum_canonical: bool = False) -> bytes:
+def sign(secret_key: bytes, digest: bytes, compressed: bool = True, canonical: int = None) -> bytes:
     '''
     Uses secret key to produce the signature of the digest.
     '''

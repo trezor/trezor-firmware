@@ -112,7 +112,7 @@ class HDNode:
         Construct a BIP0032 HD node from a BIP0039 seed value.
         '''
 
-    def from_mnemonic_cardano(mnemonic: str) -> bytes:
+    def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> bytes:
         '''
         Convert mnemonic to hdnode
         '''

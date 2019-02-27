@@ -32,7 +32,7 @@ def check(mnemonic: str) -> bool:
     '''
 
 # extmod/modtrezorcrypto/modtrezorcrypto-bip39.h
-def seed(mnemonic: str, passphrase: str) -> bytes:
+def seed(mnemonic: str, passphrase: str, callback: (int, int -> None)=None) -> bytes:
     '''
     Generate seed from mnemonic and passphrase.
     '''
