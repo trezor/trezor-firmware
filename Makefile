@@ -17,7 +17,11 @@ dist: clean
 	$(SETUP) sdist
 	$(SETUP) bdist_wheel
 
-clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
+clean: clean-generated clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
+
+clean-generated: ## remove generated files
+	rm -f trezorlib/messages/*.py
+	rm -f trezorlib/coins.json
 
 clean-build: ## remove build artifacts
 	rm -fr build/
@@ -51,4 +55,4 @@ style_check:
 	isort --diff --check-only --recursive $(STYLE_TARGETS) --skip-glob "*/$(EXCLUDE_TARGETS)/*"
 	flake8
 
-.PHONY: all build install clean style style_check git-clean clean-build clean-pyc clean-test
+.PHONY: all build install clean style style_check git-clean clean-generated clean-build clean-pyc clean-test
