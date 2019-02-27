@@ -6,13 +6,14 @@
 
 import io
 import sys
+from trezorlib import misc, ui
 from trezorlib.client import TrezorClient
 from trezorlib.transport import get_transport
 
 
 def main():
     try:
-        client = TrezorClient(get_transport())
+        client = TrezorClient(get_transport(), ui=ui.ClickUI())
     except Exception as e:
         print(e)
         return
@@ -23,7 +24,7 @@ def main():
 
     with io.open(arg1, 'wb') as f:
         for i in range(0, arg2, step):
-            entropy = client.get_entropy(step)
+            entropy = misc.get_entropy(client, step)
             f.write(entropy)
 
     client.close()

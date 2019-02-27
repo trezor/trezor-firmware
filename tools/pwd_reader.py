@@ -7,6 +7,7 @@ import json
 import os
 from urllib.parse import urlparse
 
+from trezorlib import misc, ui
 from trezorlib.client import TrezorClient
 from trezorlib.transport import get_transport
 from trezorlib.tools import parse_path
@@ -21,7 +22,8 @@ def getMasterKey(client):
     bip32_path = BIP32_PATH
     ENC_KEY = 'Activate TREZOR Password Manager?'
     ENC_VALUE = bytes.fromhex('2d650551248d792eabf628f451200d7f51cb63e46aadcbb1038aacb05e8c8aee2d650551248d792eabf628f451200d7f51cb63e46aadcbb1038aacb05e8c8aee')
-    key = client.encrypt_keyvalue(
+    key = misc.encrypt_keyvalue(
+        client,
         bip32_path,
         ENC_KEY,
         ENC_VALUE,
@@ -35,7 +37,7 @@ def getMasterKey(client):
 def getFileEncKey(key):
     filekey, enckey = key[:len(key) // 2], key[len(key) // 2:]
     FILENAME_MESS = b'5f91add3fa1c3c76e90c90a3bd0999e2bd7833d06a483fe884ee60397aca277a'
-    digest = hmac.new(filekey, FILENAME_MESS, hashlib.sha256).hexdigest()
+    digest = hmac.new(str.encode(filekey), FILENAME_MESS, hashlib.sha256).hexdigest()
     filename = digest + '.pswd'
     return [filename, filekey, enckey]
 
@@ -97,7 +99,8 @@ def getDecryptedNonce(client, entry):
 
     ENC_KEY = 'Unlock %s for user %s?' % (item, entry['username'])
     ENC_VALUE = entry['nonce']
-    decrypted_nonce = client.decrypt_keyvalue(
+    decrypted_nonce = misc.decrypt_keyvalue(
+        client,
         BIP32_PATH,
         ENC_KEY,
         bytes.fromhex(ENC_VALUE),
@@ -130,7 +133,7 @@ def main():
         print(e)
         return
 
-    client = TrezorClient(transport)
+    client = TrezorClient(transport=transport, ui=ui.ClickUI())
 
     print()
     print('Confirm operation on TREZOR')
@@ -142,13 +145,14 @@ def main():
     fileName = getFileEncKey(masterKey)[0]
     # print('file name:', fileName)
 
-    path = os.path.expanduser('~/Dropbox/Apps/TREZOR Password Manager/')
+    home = os.path.expanduser('~')
+    path = os.path.join(home, 'Dropbox', 'Apps', 'TREZOR Password Manager')
     # print('path to file:', path)
 
     encKey = getFileEncKey(masterKey)[2]
     # print('enckey:', encKey)
 
-    full_path = path + fileName
+    full_path = os.path.join(path, fileName)
     parsed_json = decryptStorage(full_path, encKey)
 
     # list entries
