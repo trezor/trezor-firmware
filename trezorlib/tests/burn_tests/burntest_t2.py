@@ -57,8 +57,6 @@ if __name__ == "__main__":
     wirelink = get_device()
     client = TrezorClientDebugLink(wirelink)
     client.open()
-    device.wipe(client)
-    device.reset(client, no_backup=True)
 
     i = 0
 
