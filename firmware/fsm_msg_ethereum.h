@@ -44,6 +44,7 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg)
 		}
 	}
 
+	resp->has_node = true;
 	resp->node.depth = node->depth;
 	resp->node.fingerprint = fingerprint;
 	resp->node.child_num = node->child_num;
@@ -53,8 +54,8 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg)
 	resp->node.has_public_key = true;
 	resp->node.public_key.size = 33;
 	memcpy(resp->node.public_key.bytes, node->public_key, 33);
-	resp->has_xpub = true;
 
+	resp->has_xpub = true;
 	hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub, sizeof(resp->xpub));
 
 	msg_write(MessageType_MessageType_EthereumPublicKey, resp);
