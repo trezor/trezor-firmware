@@ -105,8 +105,10 @@ If you need to change information in this file, modify the source information in
 one of the JSON files in the groups listed above, support info in `support.json`, or
 make a pull request to the tokens repository.
 
-If this is not viable for some reason, or if there is no source information (such as
-links to third-party wallets), you can also edit [`coins_details.override.json`](coins_details.override.json).
+If you want to add a **wallet link**, modify the file [`wallets.json`](wallets.json).
+
+If this is not viable for some reason, or if there is no source information ,
+you can also edit [`coins_details.override.json`](coins_details.override.json).
 External contributors should not touch this file unless asked to.
 
 
