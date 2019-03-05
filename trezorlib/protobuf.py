@@ -165,9 +165,6 @@ class MessageType:
                 else:
                     setattr(self, fname, None)
 
-    def CopyFrom(self, obj):
-        self.__dict__ = obj.__dict__.copy()
-
     def ByteSize(self):
         data = BytesIO()
         dump_message(data, self)

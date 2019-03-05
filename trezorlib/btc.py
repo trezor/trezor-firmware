@@ -126,8 +126,7 @@ def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
     serialized_tx = b""
 
     def copy_tx_meta(tx):
-        tx_copy = messages.TransactionType()
-        tx_copy.CopyFrom(tx)
+        tx_copy = messages.TransactionType(**tx)
         # clear fields
         tx_copy.inputs_cnt = len(tx.inputs)
         tx_copy.inputs = []

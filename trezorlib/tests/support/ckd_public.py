@@ -71,11 +71,10 @@ def public_ckd(public_node, n):
     if not isinstance(n, list):
         raise ValueError("Parameter must be a list")
 
-    node = messages.HDNodeType()
-    node.CopyFrom(public_node)
+    node = messages.HDNodeType(**public_node)
 
     for i in n:
-        node.CopyFrom(get_subnode(node, i))
+        node = get_subnode(node, i)
 
     return node
 
