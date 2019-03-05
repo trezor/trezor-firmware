@@ -57,5 +57,8 @@
     "bitcoin:NIX": {
         "NIX-Electrum": "https://github.com/nixplatform/electrum-nix",
         "Ghostnode Tool": "https://github.com/nixplatform/ghostnode-tool"
+    },
+    "bitcoin:QTUM": {
+        "Qtum-Electrum": "https://github.com/qtumproject/qtum-electrum"
     }
 }
