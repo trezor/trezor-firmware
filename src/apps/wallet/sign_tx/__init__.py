@@ -16,7 +16,6 @@ from apps.wallet.sign_tx import (
 )
 
 
-@ui.layout
 async def sign_tx(ctx, msg, keychain):
     signer = signing.sign_tx(msg, keychain)
 
