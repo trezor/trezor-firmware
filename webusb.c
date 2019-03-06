@@ -53,6 +53,8 @@ static int webusb_control_vendor_request(usbd_device *usbd_dev,
 	(void)complete;
 	(void)usbd_dev;
 
+	wait_random();
+
 	if (req->bRequest != WEBUSB_VENDOR_CODE) {
 		return USBD_REQ_NEXT_CALLBACK;
 	}
@@ -72,7 +74,7 @@ static int webusb_control_vendor_request(usbd_device *usbd_dev,
 				url->bDescriptorType = WEBUSB_DT_URL;
 				url->bScheme = WEBUSB_URL_SCHEME_HTTPS;
 				memcpy(&url->URL, webusb_https_url, url_len);
-				*len = MIN(*len, url->bLength);
+				*len = MIN_8bits(*len, url->bLength);
 				status = USBD_REQ_HANDLED;
 			} else {
 				// TODO: stall instead?

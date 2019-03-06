@@ -128,8 +128,8 @@ static const char *address_n_str(const uint32_t *address_n, size_t address_n_cou
 			}
 	}
 
-	//                  "Path: m"    /   i   '
-	static char address_str[7 + 8 * (1 + 9 + 1) + 1];
+	//                  "Path: m"    /    i   '
+	static char address_str[7 + 8 * (1 + 10 + 1) + 1];
 	char *c = address_str + sizeof(address_str) - 1;
 
 	*c = 0; c--;

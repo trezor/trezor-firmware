@@ -34,7 +34,9 @@ void memory_protect(void)
 	if (((FLASH_OPTION_BYTES_1 & 0xFFEC) == 0xCCEC) && ((FLASH_OPTION_BYTES_2 & 0xFFF) == 0xFFC) && (FLASH_OPTCR == 0x0FFCCCED)) {
 		return; // already set up correctly - bail out
 	}
-
+	for (int i = FLASH_STORAGE_SECTOR_FIRST; i <= FLASH_STORAGE_SECTOR_LAST; i++) {
+		flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
+	}
 	flash_unlock_option_bytes();
 	// Section 2.8.6 Flash option control register (FLASH_OPTCR)
 	//   Bits 31:28 Reserved, must be kept cleared.

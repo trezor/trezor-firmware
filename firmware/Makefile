@@ -1,4 +1,4 @@
-APPVER = 1.0.0
+APPVER = 1.8.0
 
 NAME  = trezor
 
@@ -8,6 +8,7 @@ else
 OBJS += usb.o
 OBJS += bl_check.o
 OBJS += otp.o
+OBJS += header.o
 endif
 
 OBJS += u2f.o

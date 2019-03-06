@@ -175,6 +175,8 @@ void u2fhid_init_cmd(const U2FHID_FRAME *f) {
 
 void u2fhid_read_start(const U2FHID_FRAME *f) {
 	U2F_ReadBuffer readbuffer;
+	memzero(&readbuffer, sizeof(readbuffer));
+
 	if (!(f->type & TYPE_INIT)) {
 		return;
 	}

@@ -1,5 +1,10 @@
 Version 1.8.0
 * Stable release, optional update
+* Security improvements
+* Upgraded to new storage format
+* Stellar and NEM fixes
+* New coins: ATS, KMD, XPM, XSN, ZCL
+* New ETH tokens
 
 Version 1.7.3
 * Stable release, optional update

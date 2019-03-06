@@ -147,7 +147,7 @@ const char *requestPin(PinMatrixRequestType type, const char *text)
 	}
 }
 
-secbool protectPinUiCallback(uint32_t wait, uint32_t progress)
+secbool protectPinUiCallback(uint32_t wait, uint32_t progress, const char* message)
 {
 	// Convert wait to secstr string.
 	char secstrbuf[] = _("________0 seconds");
@@ -163,7 +163,7 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress)
 		secstrbuf[16] = 0;
 	}
 	oledClear();
-	oledDrawStringCenter(OLED_WIDTH / 2, 0 * 9, _("Verifying PIN"), FONT_STANDARD);
+	oledDrawStringCenter(OLED_WIDTH / 2, 0 * 9, message, FONT_STANDARD);
 	oledDrawStringCenter(OLED_WIDTH / 2, 2 * 9, _("Please wait"), FONT_STANDARD);
 	oledDrawStringCenter(OLED_WIDTH / 2, 3 * 9, secstr, FONT_STANDARD);
 	oledDrawStringCenter(OLED_WIDTH / 2, 4 * 9, _("to continue ..."), FONT_STANDARD);
@@ -204,9 +204,7 @@ bool protectPin(bool use_cached)
 		}
 	}
 
-	usbTiny(1);
-	bool ret = config_containsPin(pin);
-	usbTiny(0);
+	bool ret = config_unlock(pin);
 	if (!ret) {
 		fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
 	}
@@ -225,6 +223,18 @@ bool protectChangePin(bool removal)
 			fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
 			return false;
 		}
+
+		// If removing, defer the check to config_changePin().
+		if (!removal) {
+			usbTiny(1);
+			bool ret = config_unlock(pin);
+			usbTiny(0);
+			if (ret == false) {
+				fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+				return false;
+			}
+		}
+
 		strlcpy(old_pin, pin, sizeof(old_pin));
 	}
 
@@ -253,9 +263,7 @@ bool protectChangePin(bool removal)
 		}
 	}
 
-	usbTiny(1);
 	bool ret = config_changePin(old_pin, new_pin);
-	usbTiny(0);
 	memzero(old_pin, sizeof(old_pin));
 	memzero(new_pin, sizeof(new_pin));
 	if (ret == false) {

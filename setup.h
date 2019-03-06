@@ -27,6 +27,8 @@ extern uint32_t __stack_chk_guard;
 void setup(void);
 void setupApp(void);
 
+void mpu_config_off(void);
+void mpu_config_bootloader(void);
 void mpu_config_firmware(void);
 
 #endif

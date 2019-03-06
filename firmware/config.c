@@ -197,12 +197,15 @@ static secbool config_get_uint32(uint16_t key, uint32_t *value)
     return sectrue;
 }
 
+#define FLASH_META_START       0x08008000
+#define FLASH_META_LEN         0x100
+
 static secbool config_upgrade_v10(void)
 {
 #define OLD_STORAGE_SIZE(last_member) (((offsetof(Storage, last_member) + pb_membersize(Storage, last_member)) + 3) & ~3)
 
-    if (memcmp(FLASH_PTR(FLASH_META_MAGIC), &META_MAGIC_V10, sizeof(META_MAGIC_V10)) != 0 ||
-        memcmp(FLASH_PTR(FLASH_STORAGE_START), &CONFIG_MAGIC_V10, sizeof(CONFIG_MAGIC_V10)) != 0) {
+    if (memcmp(FLASH_PTR(FLASH_META_START), &META_MAGIC_V10, sizeof(META_MAGIC_V10)) != 0 ||
+        memcmp(FLASH_PTR(FLASH_META_START + FLASH_META_LEN), &CONFIG_MAGIC_V10, sizeof(CONFIG_MAGIC_V10)) != 0) {
         // wrong magic
         return secfalse;
     }
@@ -210,8 +213,8 @@ static secbool config_upgrade_v10(void)
     Storage config __attribute__((aligned(4)));
     _Static_assert((sizeof(config) & 3) == 0, "storage unaligned");
 
-    memcpy(config_uuid, FLASH_PTR(FLASH_STORAGE_START + sizeof(CONFIG_MAGIC_V10)), sizeof(config_uuid));
-    memcpy(&config, FLASH_PTR(FLASH_STORAGE_START + sizeof(CONFIG_MAGIC_V10) + sizeof(config_uuid)), sizeof(config));
+    memcpy(config_uuid, FLASH_PTR(FLASH_META_START + FLASH_META_LEN + sizeof(CONFIG_MAGIC_V10)), sizeof(config_uuid));
+    memcpy(&config, FLASH_PTR(FLASH_META_START + FLASH_META_LEN + sizeof(CONFIG_MAGIC_V10) + sizeof(config_uuid)), sizeof(config));
 
     // version 1: since 1.0.0
     // version 2: since 1.2.1
@@ -252,7 +255,7 @@ static secbool config_upgrade_v10(void)
 
     // Erase newly added fields.
     if (old_config_size != sizeof(Storage)) {
-        memzero(&config + old_config_size, sizeof(Storage) - old_config_size);
+        memzero((char*)&config + old_config_size, sizeof(Storage) - old_config_size);
     }
 
     const uint32_t FLASH_STORAGE_PINAREA = FLASH_META_START + 0x4000;
@@ -294,6 +297,7 @@ static secbool config_upgrade_v10(void)
     if (config.has_pin) {
         storage_change_pin(PIN_EMPTY, pin_to_int(config.pin));
     }
+
     while (pin_wait != 0) {
         storage_pin_fails_increase();
         pin_wait >>= 1;
@@ -351,17 +355,28 @@ static secbool config_upgrade_v10(void)
 
 void config_init(void)
 {
+    char oldTiny = usbTiny(1);
+
     config_upgrade_v10();
 
     storage_init(&protectPinUiCallback, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
     memzero(HW_ENTROPY_DATA, sizeof(HW_ENTROPY_DATA));
 
-    uint16_t len = 0;
-    if (sectrue == storage_get(KEY_UUID, config_uuid, sizeof(config_uuid), &len) && len == sizeof(config_uuid)) {
-        data2hex(config_uuid, sizeof(config_uuid), config_uuid_str);
-    } else {
-        config_wipe();
+    // Auto-unlock storage if no PIN is set.
+    if (storage_is_unlocked() == secfalse && storage_has_pin() == secfalse) {
+        storage_unlock(PIN_EMPTY);
     }
+
+    uint16_t len = 0;
+    // If UUID is not set, then the config is uninitialized.
+    if (sectrue != storage_get(KEY_UUID, config_uuid, sizeof(config_uuid), &len) || len != sizeof(config_uuid)) {
+        random_buffer((uint8_t *)config_uuid, sizeof(config_uuid));
+        storage_set(KEY_UUID, config_uuid, sizeof(config_uuid));
+        storage_set(KEY_VERSION, &CONFIG_VERSION, sizeof(CONFIG_VERSION));
+    }
+    data2hex(config_uuid, sizeof(config_uuid), config_uuid_str);
+
+    usbTiny(oldTiny);
 }
 
 void session_clear(bool lock)
@@ -709,9 +724,12 @@ bool config_containsMnemonic(const char *mnemonic)
 /* Check whether pin matches storage.  The pin must be
  * a null-terminated string with at most 9 characters.
  */
-bool config_containsPin(const char *pin)
+bool config_unlock(const char *pin)
 {
-    return sectrue == storage_unlock(pin_to_int(pin));
+    char oldTiny = usbTiny(1);
+    secbool ret = storage_unlock(pin_to_int(pin));
+    usbTiny(oldTiny);
+    return sectrue == ret;
 }
 
 bool config_hasPin(void)
@@ -726,7 +744,9 @@ bool config_changePin(const char *old_pin, const char *new_pin)
         return false;
     }
 
+    char oldTiny = usbTiny(1);
     secbool ret = storage_change_pin(pin_to_int(old_pin), new_pin_int);
+    usbTiny(oldTiny);
 
 #if DEBUG_LINK
     if (sectrue == ret) {
@@ -897,8 +917,12 @@ void config_setAutoLockDelayMs(uint32_t auto_lock_delay_ms)
 
 void config_wipe(void)
 {
+    char oldTiny = usbTiny(1);
     storage_wipe();
-    storage_unlock(PIN_EMPTY);
+    if (storage_is_unlocked() != sectrue) {
+        storage_unlock(PIN_EMPTY);
+    }
+    usbTiny(oldTiny);
     random_buffer((uint8_t *)config_uuid, sizeof(config_uuid));
     data2hex(config_uuid, sizeof(config_uuid), config_uuid_str);
     autoLockDelayMsCached = secfalse;
