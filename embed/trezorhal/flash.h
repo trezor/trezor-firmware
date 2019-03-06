@@ -60,6 +60,13 @@
 //                                          22
 #define FLASH_SECTOR_FIRMWARE_EXTRA_END     23
 
+#define BOOTLOADER_SECTORS_COUNT            (1)
+#define STORAGE_SECTORS_COUNT               (2)
+#define FIRMWARE_SECTORS_COUNT              (6 + 7)
+
+extern const uint8_t STORAGE_SECTORS[STORAGE_SECTORS_COUNT];
+extern const uint8_t FIRMWARE_SECTORS[FIRMWARE_SECTORS_COUNT];
+
 // note: FLASH_SR_RDERR is STM32F42xxx and STM32F43xxx specific (STM32F427) (reference RM0090 section 3.7.5)
 #ifndef STM32F427xx
 #define FLASH_SR_RDERR 0

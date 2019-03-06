@@ -39,22 +39,6 @@
 #define MSG_HEADER1_LEN 9
 #define MSG_HEADER2_LEN 1
 
-const uint8_t firmware_sectors[FIRMWARE_SECTORS_COUNT] = {
-    FLASH_SECTOR_FIRMWARE_START,
-    7,
-    8,
-    9,
-    10,
-    FLASH_SECTOR_FIRMWARE_END,
-    FLASH_SECTOR_FIRMWARE_EXTRA_START,
-    18,
-    19,
-    20,
-    21,
-    22,
-    FLASH_SECTOR_FIRMWARE_EXTRA_END,
-};
-
 secbool msg_parse_header(const uint8_t *buf, uint16_t *msg_id, uint32_t *msg_size)
 {
     if (buf[0] != '?' || buf[1] != '#' || buf[2] != '#') {
@@ -479,13 +463,9 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
 
         // if firmware is not upgrade, erase storage
         if (sectrue != is_upgrade) {
-            static const uint8_t sectors_storage[] = {
-                FLASH_SECTOR_STORAGE_1,
-                FLASH_SECTOR_STORAGE_2,
-            };
-            ensure(flash_erase_sectors(sectors_storage, sizeof(sectors_storage), NULL), NULL);
+            ensure(flash_erase_sectors(STORAGE_SECTORS, STORAGE_SECTORS_COUNT, NULL), NULL);
         }
-        ensure(flash_erase_sectors(firmware_sectors, FIRMWARE_SECTORS_COUNT, ui_screen_install_progress_erase), NULL);
+        ensure(flash_erase_sectors(FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT, ui_screen_install_progress_erase), NULL);
 
         firstskip = IMAGE_HEADER_SIZE + vhdr.hdrlen;
     }
@@ -521,7 +501,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
 
     const uint32_t * const src = (const uint32_t * const)chunk_buffer;
     for (int i = 0; i < chunk_size / sizeof(uint32_t); i++) {
-        ensure(flash_write_word(firmware_sectors[firmware_block], i * sizeof(uint32_t), src[i]), NULL);
+        ensure(flash_write_word(FIRMWARE_SECTORS[firmware_block], i * sizeof(uint32_t), src[i]), NULL);
     }
 
     ensure(flash_lock_write(), NULL);
@@ -546,9 +526,9 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size, uint8_t *bu
 int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
 {
     static const uint8_t sectors[] = {
-        3,
         FLASH_SECTOR_STORAGE_1,
         FLASH_SECTOR_STORAGE_2,
+        // 3,  // skip because of MPU protection 
         FLASH_SECTOR_FIRMWARE_START,
         7,
         8,
@@ -558,7 +538,7 @@ int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf)
         FLASH_SECTOR_UNUSED_START,
         13,
         14,
-        FLASH_SECTOR_UNUSED_END,
+        // FLASH_SECTOR_UNUSED_END,  // skip because of MPU protection 
         FLASH_SECTOR_FIRMWARE_EXTRA_START,
         18,
         19,

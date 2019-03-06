@@ -83,6 +83,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/image.c',
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
+    'embed/trezorhal/mpu.c',
     'embed/trezorhal/rng.c',
     'embed/trezorhal/stm32.c',
     'embed/trezorhal/touch.c',

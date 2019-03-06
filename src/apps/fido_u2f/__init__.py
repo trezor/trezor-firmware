@@ -353,7 +353,7 @@ class ConfirmState:
             return False
         return True
 
-    def setup(self, action: int, checksum: bytes, app_id: bytes) -> None:
+    def setup(self, action: int, checksum: bytes, app_id: bytes) -> bool:
         if workflow.workflows:
             return False
 
@@ -379,6 +379,10 @@ class ConfirmState:
 
     @ui.layout
     async def confirm_layout(self) -> None:
+        workflow.fido_u2f_stop_signal.reset()
+        await loop.spawn(self.confirm_layout_inner(), workflow.fido_u2f_stop_signal)
+
+    async def confirm_layout_inner(self) -> None:
         from trezor.ui.confirm import ConfirmDialog, CONFIRMED
         from trezor.ui.text import Text
 

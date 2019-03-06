@@ -1,5 +1,11 @@
-Version 2.1.0 [unreleased]
+Version 2.1.0
 * stable release, optional update
+* Security improvements
+* Upgraded to new storage format
+* Ripple, Stellar, Cardano and NEM fixes
+* New coins: ATS, AXE, FLO, GIN, KMD, NIX,
+  PIVX, REOSC, XPM, XSN, ZCL
+* New ETH tokens
 
 Version 2.0.10
 * stable release, optional update

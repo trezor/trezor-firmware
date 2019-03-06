@@ -185,6 +185,9 @@ class signal(Syscall):
     """
 
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         self.value = _NO_VALUE
         self.task = None
 

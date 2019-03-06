@@ -1,4 +1,4 @@
-from trezor import ui, wire
+from trezor import wire
 from trezor.messages.MessageType import TxAck
 from trezor.messages.RequestType import TXFINISHED
 from trezor.messages.TxRequest import TxRequest
@@ -16,7 +16,6 @@ from apps.wallet.sign_tx import (
 )
 
 
-@ui.layout
 async def sign_tx(ctx, msg, keychain):
     signer = signing.sign_tx(msg, keychain)
 

@@ -54,7 +54,7 @@ int main(void)
 #if TREZOR_MODEL == T
     check_and_replace_bootloader();
     // Enable MPU
-    mpu_config();
+    mpu_config_firmware();
 #endif
 
     // Init peripherals

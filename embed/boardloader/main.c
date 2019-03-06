@@ -105,9 +105,9 @@ static secbool copy_sdcard(void)
 
     // erase all flash (except boardloader)
     static const uint8_t sectors[] = {
-        3,
         FLASH_SECTOR_STORAGE_1,
         FLASH_SECTOR_STORAGE_2,
+        3,
         FLASH_SECTOR_BOOTLOADER,
         FLASH_SECTOR_FIRMWARE_START,
         7,
@@ -168,12 +168,8 @@ int main(void)
     periph_init();
 
     if (sectrue != flash_configure_option_bytes()) {
-        static const uint8_t sectors[] = {
-            FLASH_SECTOR_STORAGE_1,
-            FLASH_SECTOR_STORAGE_2,
-        };
         // display is not initialized so don't call ensure
-        secbool r = flash_erase_sectors(sectors, sizeof(sectors), NULL);
+        secbool r = flash_erase_sectors(STORAGE_SECTORS, STORAGE_SECTORS_COUNT, NULL);
         (void)r;
         return 2;
     }

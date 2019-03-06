@@ -254,7 +254,6 @@ static void usb_hid_class_deinit(USBD_HandleTypeDef *dev, usb_hid_state_t *state
 }
 
 static int usb_hid_class_setup(USBD_HandleTypeDef *dev, usb_hid_state_t *state, USBD_SetupReqTypedef *req) {
-
     switch (req->bmRequest & USB_REQ_TYPE_MASK) {
 
         // Class request
@@ -302,11 +301,11 @@ static int usb_hid_class_setup(USBD_HandleTypeDef *dev, usb_hid_state_t *state, 
                     switch (req->wValue >> 8) {
 
                         case USB_DESC_TYPE_HID:
-                            USBD_CtlSendData(dev, UNCONST(&state->desc_block->hid), MIN(req->wLength, sizeof(state->desc_block->hid)));
+                            USBD_CtlSendData(dev, UNCONST(&state->desc_block->hid), MIN_8bits(req->wLength, sizeof(state->desc_block->hid)));
                             return USBD_OK;
 
                         case USB_DESC_TYPE_REPORT:
-                            USBD_CtlSendData(dev, UNCONST(state->report_desc), MIN(req->wLength, state->report_desc_len));
+                            USBD_CtlSendData(dev, UNCONST(state->report_desc), MIN_8bits(req->wLength, state->report_desc_len));
                             return USBD_OK;
 
                         default:

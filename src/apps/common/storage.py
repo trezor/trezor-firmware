@@ -195,7 +195,7 @@ def init_unlocked():
         counter = config.get(_APP, _U2F_COUNTER)
         if counter is not None:
             config.set_counter(
-                _APP, _U2F_COUNTER, counter, True
+                _APP, _U2F_COUNTER, int.from_bytes(counter, "big"), True
             )  # writable when locked
             config.delete(_APP, _U2F_COUNTER)
         config.set(_APP, _VERSION, _STORAGE_VERSION)

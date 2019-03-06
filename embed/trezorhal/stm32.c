@@ -79,7 +79,8 @@ void SysTick_Handler(void)
     uwTick++;
 }
 
-void shutdown(void);
+// from util.s
+extern void shutdown(void);
 
 void PVD_IRQHandler(void)
 {

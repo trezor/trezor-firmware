@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
+
 #include "py/runtime.h"
 #include "py/mphal.h"
 #include "py/objstr.h"
@@ -31,9 +33,13 @@
 
 STATIC mp_obj_t ui_wait_callback = mp_const_none;
 
-STATIC secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress) {
+STATIC secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress, const char* message) {
     if (mp_obj_is_callable(ui_wait_callback)) {
-        if (mp_call_function_2(ui_wait_callback, mp_obj_new_int(wait), mp_obj_new_int(progress)) == mp_const_true) {
+        mp_obj_t args[3];
+        args[0] = mp_obj_new_int(wait);
+        args[1] = mp_obj_new_int(progress);
+        args[2] = mp_obj_new_str(message, strlen(message));
+        if (mp_call_function_n_kw(ui_wait_callback, 3, 0, args) == mp_const_true) {
             return sectrue;
         }
     }

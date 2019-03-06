@@ -29,7 +29,8 @@
 
 #include "stm32f4xx_ll_utils.h"
 
-void shutdown(void);
+// from util.s
+extern void shutdown(void);
 
 #define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
 
@@ -113,6 +114,24 @@ void __assert_func(const char *file, int line, const char *func, const char *exp
 void hal_delay(uint32_t ms)
 {
     HAL_Delay(ms);
+}
+
+void delay_random(void)
+{
+    int wait = rng_get() & 0xff;
+    volatile int i = 0;
+    volatile int j = wait;
+    while (i < wait) {
+        if (i + j != wait) {
+            shutdown();
+        }
+        ++i;
+        --j;
+    }
+    // Double-check loop completion.
+    if (i != wait || j != 0) {
+        shutdown();
+    }
 }
 
 // reference RM0090 section 35.12.1 Figure 413
