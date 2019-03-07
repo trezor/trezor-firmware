@@ -15,7 +15,7 @@ knownapps = {
         b"https://slushpool.com/static/security/u2f.json"
     ).digest(): "Slush Pool",
     hashlib.sha256(b"https://u2f.bin.coffee").digest(): "u2f.bin.coffee",
-    hashlib.sha256(b"https://vault.bitwarden.com/app-id.json").digest(): "bitwarden",
+    hashlib.sha256(b"https://vault.bitwarden.com/app-id.json").digest(): "Bitwarden",
     hashlib.sha256(b"https://www.bitfinex.com").digest(): "Bitfinex",
     hashlib.sha256(b"https://www.dropbox.com/u2f-app-id.json").digest(): "Dropbox",
     hashlib.sha256(b"https://www.fastmail.com").digest(): "FastMail",
