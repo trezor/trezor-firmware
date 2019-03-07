@@ -149,6 +149,16 @@
     "blockbook": []
   },
   {
+    "chain": "dxn",
+    "chain_id": 237,
+    "slip44": 237,
+    "shortcut": "DXN",
+    "name": "DEXON",
+    "rskip60": false,
+    "url": "https://dexon.org",
+    "blockbook": []
+  },
+  {
     "chain": "clo",
     "chain_id": 820,
     "slip44": 820,
