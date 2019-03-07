@@ -63,9 +63,9 @@ class DebugLink:
         obj = self._call(proto.DebugLinkGetState())
         return obj.layout
 
-    def read_mnemonic(self):
+    def read_mnemonic_secret(self):
         obj = self._call(proto.DebugLinkGetState())
-        return obj.mnemonic
+        return obj.mnemonic_secret
 
     def read_recovery_word(self):
         obj = self._call(proto.DebugLinkGetState())

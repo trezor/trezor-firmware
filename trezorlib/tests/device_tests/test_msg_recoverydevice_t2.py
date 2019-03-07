@@ -71,7 +71,7 @@ class TestMsgRecoverydeviceT2(TrezorTest):
 
         # Mnemonic is the same
         self.client.init_device()
-        assert self.client.debug.read_mnemonic() == self.mnemonic12
+        assert self.client.debug.read_mnemonic_secret() == self.mnemonic12.encode()
 
         assert self.client.features.pin_protection is True
         assert self.client.features.passphrase_protection is True
@@ -112,7 +112,7 @@ class TestMsgRecoverydeviceT2(TrezorTest):
 
         # Mnemonic is the same
         self.client.init_device()
-        assert self.client.debug.read_mnemonic() == self.mnemonic12
+        assert self.client.debug.read_mnemonic_secret() == self.mnemonic12.encode()
 
         assert self.client.features.pin_protection is False
         assert self.client.features.passphrase_protection is False
