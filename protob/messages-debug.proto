@@ -34,7 +34,7 @@ message DebugLinkState {
     optional bytes layout = 1;                              // raw buffer of display
     optional string pin = 2;                                // current PIN, blank if PIN is not set/enabled
     optional string matrix = 3;                             // current PIN matrix
-    optional string mnemonic = 4;                           // current BIP-39 mnemonic
+    optional bytes mnemonic_secret = 4;                     // current mnemonic secret
     optional hw.trezor.messages.common.HDNodeType node = 5; // current BIP-32 node
     optional bool passphrase_protection = 6;                // is node/mnemonic encrypted using passphrase?
     optional string reset_word = 7;                         // word on device display during ResetDevice workflow
@@ -42,6 +42,7 @@ message DebugLinkState {
     optional string recovery_fake_word = 9;                 // (fake) word on display during RecoveryDevice workflow
     optional uint32 recovery_word_pos = 10;                 // index of mnemonic word the device is expecting during RecoveryDevice workflow
     optional uint32 reset_word_pos = 11;                    // index of mnemonic word the device is expecting during ResetDevice workflow
+    optional uint32 mnemonic_type = 12;                     // current mnemonic type (BIP-39/SLIP-39)
 }
 
 /**
