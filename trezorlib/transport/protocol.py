@@ -22,8 +22,8 @@ from typing import Tuple
 
 from typing_extensions import Protocol as StructuralType
 
-from . import Transport
 from .. import mapping, protobuf
+from . import Transport
 
 REPLEN = 64
 
