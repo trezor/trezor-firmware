@@ -1,7 +1,7 @@
 from trezor import ui, wire
-from trezor.crypto import bip32, bip39
+from trezor.crypto import bip32
 
-from apps.common import cache, storage
+from apps.common import cache, mnemonic, storage
 from apps.common.request_passphrase import protect_by_passphrase
 
 allow = list
@@ -66,24 +66,9 @@ async def _compute_seed(ctx: wire.Context) -> bytes:
     if passphrase is None:
         passphrase = await protect_by_passphrase(ctx)
         cache.set_passphrase(passphrase)
-    _start_bip39_progress()
-    seed = bip39.seed(storage.get_mnemonic(), passphrase, _render_bip39_progress)
+    seed = mnemonic.get_seed(passphrase)
     cache.set_seed(seed)
     return seed
-
-
-def _start_bip39_progress():
-    ui.backlight_slide_sync(ui.BACKLIGHT_DIM)
-    ui.display.clear()
-    ui.header("Please wait")
-    ui.display.refresh()
-    ui.backlight_slide_sync(ui.BACKLIGHT_NORMAL)
-
-
-def _render_bip39_progress(progress: int, total: int):
-    p = int(1000 * progress / total)
-    ui.display.loader(p, 18, ui.WHITE, ui.BG)
-    ui.display.refresh()
 
 
 def derive_node_without_passphrase(
@@ -91,7 +76,7 @@ def derive_node_without_passphrase(
 ) -> bip32.HDNode:
     if not storage.is_initialized():
         raise Exception("Device is not initialized")
-    seed = bip39.seed(storage.get_mnemonic(), "")
+    seed = mnemonic.get_seed()
     node = bip32.from_seed(seed, curve_name)
     node.derive_path(path)
     return node

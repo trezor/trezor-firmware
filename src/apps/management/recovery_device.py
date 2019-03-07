@@ -15,7 +15,7 @@ from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
 from trezor.utils import consteq, format_ordinal
 
-from apps.common import storage
+from apps.common import mnemonic, storage
 from apps.common.confirm import require_confirm
 from apps.management.change_pin import request_pin_ack, request_pin_confirm
 
@@ -47,11 +47,11 @@ async def recovery_device(ctx, msg):
     wordcount = await request_wordcount(ctx)
 
     # ask for mnemonic words one by one
-    mnemonic = await request_mnemonic(ctx, wordcount)
+    words = await request_mnemonic(ctx, wordcount)
 
     # check mnemonic validity
     if msg.enforce_wordlist or msg.dry_run:
-        if not bip39.check(mnemonic):
+        if not bip39.check(words):
             raise wire.ProcessError("Mnemonic is not valid")
 
     # ask for pin repeatedly
@@ -60,10 +60,13 @@ async def recovery_device(ctx, msg):
     else:
         newpin = ""
 
+    secret = mnemonic.process([words], mnemonic.TYPE_BIP39)
+
     # dry run
     if msg.dry_run:
-        digest_input = sha256(mnemonic).digest()
-        digest_stored = sha256(storage.get_mnemonic()).digest()
+        digest_input = sha256(secret).digest()
+        stored, _ = mnemonic.get()
+        digest_stored = sha256(stored).digest()
         if consteq(digest_stored, digest_input):
             return Success(
                 message="The seed is valid and matches the one in the device"
@@ -78,7 +81,12 @@ async def recovery_device(ctx, msg):
         config.change_pin(pin_to_int(""), pin_to_int(newpin))
     storage.set_u2f_counter(msg.u2f_counter)
     storage.load_settings(label=msg.label, use_passphrase=msg.passphrase_protection)
-    storage.load_mnemonic(mnemonic=mnemonic, needs_backup=False, no_backup=False)
+    storage.store_mnemonic(
+        secret=secret,
+        mnemonic_type=mnemonic.TYPE_BIP39,
+        needs_backup=False,
+        no_backup=False,
+    )
 
     return Success(message="Device recovered")
 

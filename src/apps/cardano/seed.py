@@ -2,7 +2,7 @@ from trezor import wire
 from trezor.crypto import bip32
 
 from apps.cardano import SEED_NAMESPACE
-from apps.common import cache, storage
+from apps.common import cache, mnemonic, storage
 from apps.common.request_passphrase import protect_by_passphrase
 
 
@@ -33,7 +33,7 @@ async def get_keychain(ctx: wire.Context) -> Keychain:
     if passphrase is None:
         passphrase = await protect_by_passphrase(ctx)
         cache.set_passphrase(passphrase)
-    root = bip32.from_mnemonic_cardano(storage.get_mnemonic(), passphrase)
+    root = bip32.from_mnemonic_cardano(mnemonic.restore(), passphrase)
 
     # derive the namespaced root node
     for i in SEED_NAMESPACE[0]:
