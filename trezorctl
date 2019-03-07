@@ -1041,7 +1041,7 @@ def ethereum_sign_message(connect, address, message):
     ret = ethereum.sign_message(client, address_n, message)
     output = {
         "message": message,
-        "address": "0x%s" % ret.address.hex(),
+        "address": ret.address,
         "signature": "0x%s" % ret.signature.hex(),
     }
     return output
@@ -1060,7 +1060,6 @@ def ethereum_decode_hex(value):
 @click.argument("message")
 @click.pass_obj
 def ethereum_verify_message(connect, address, signature, message):
-    address = ethereum_decode_hex(address)
     signature = ethereum_decode_hex(signature)
     return ethereum.verify_message(connect(), address, signature, message)
 
@@ -1263,7 +1262,7 @@ def ethereum_sign_tx(
 
     client = connect()
     address_n = tools.parse_path(address)
-    address = "0x%s" % ethereum.get_address(client, address_n).hex()
+    address = ethereum.get_address(client, address_n)
 
     if gas_price is None or gas_limit is None or nonce is None or publish:
         host, port = host.split(":")
@@ -1294,7 +1293,7 @@ def ethereum_sign_tx(
         nonce=nonce,
         gas_price=gas_price,
         gas_limit=gas_limit,
-        to=to_address,
+        to=to,
         value=value,
         data=data,
         chain_id=chain_id,
