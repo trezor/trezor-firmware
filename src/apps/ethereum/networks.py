@@ -143,6 +143,13 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=237,
+        slip44=237,
+        shortcut="DXN",
+        name="DEXON",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=820,
         slip44=820,
         shortcut="CLO",
