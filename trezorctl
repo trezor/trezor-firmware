@@ -1220,8 +1220,27 @@ def ethereum_list_units(ctx, param, value):
     ctx.exit()
 
 
+def ethereum_erc20_contract(w3, token_address, to_address, amount):
+    min_abi = [
+        {
+            "name": "transfer",
+            "type": "function",
+            "constant": False,
+            "inputs": [
+                {"name": "_to", "type": "address"},
+                {"name": "_value", "type": "uint256"},
+            ],
+            "outputs": [{"name": "", "type": "bool"}],
+        }
+    ]
+    contract = w3.eth.contract(address=token_address, abi=min_abi)
+    return contract.encodeABI("transfer", [to_address, amount])
+
+
 @cli.command()
-@click.option("-c", "--chain-id", type=int, help="EIP-155 chain id (replay protection)")
+@click.option(
+    "-c", "--chain-id", type=int, default=1, help="EIP-155 chain id (replay protection)"
+)
 @click.option(
     "-n",
     "--address",
@@ -1240,9 +1259,10 @@ def ethereum_list_units(ctx, param, value):
 @click.option(
     "-i", "--nonce", type=int, help="Transaction counter (required for offline signing)"
 )
-@click.option("-d", "--data", default="", help="Data as hex string, e.g. 0x12345678")
+@click.option("-d", "--data", help="Data as hex string, e.g. 0x12345678")
 @click.option("-p", "--publish", is_flag=True, help="Publish transaction via RPC")
 @click.option("-x", "--tx-type", type=int, help="TX type (used only for Wanchain)")
+@click.option("-t", "--token", help="ERC20 token address")
 @click.option(
     "--list-units",
     is_flag=True,
@@ -1251,7 +1271,7 @@ def ethereum_list_units(ctx, param, value):
     callback=ethereum_list_units,
     expose_value=False,
 )
-@click.argument("to")
+@click.argument("to_address")
 @click.argument("amount", callback=ethereum_amount_to_int)
 @click.pass_obj
 def ethereum_sign_tx(
@@ -1264,25 +1284,21 @@ def ethereum_sign_tx(
     nonce,
     data,
     publish,
-    to,
+    to_address,
     tx_type,
+    token,
 ):
     """Sign (and optionally publish) Ethereum transaction.
 
-    Use TO as destination address, or set TO to "" for contract creation.
+    Use TO_ADDRESS as destination address, or set to "" for contract creation.
+
+    Specify a contract address with the --token option to send an ERC20 token.
 
     You can specify AMOUNT and gas price either as a number of wei,
     or you can use a unit suffix.
-    E.g., the following are equivalent:
-
-    \b
-    0.000314eth
-    0.314milliether
-    314000000nano
-    314000000000000wei
-    314000000000000
 
     Use the --list-units option to show all known currency units.
+    ERC20 token amounts are specified in eth/wei, custom units are not supported.
 
     If any of gas price, gas limit and nonce is not specified, this command will
     try to connect to an ethereum node and auto-fill these values. You can configure
@@ -1295,21 +1311,29 @@ def ethereum_sign_tx(
         click.echo("  pip install web3 rlp")
         sys.exit(1)
 
-    if gas_price is None or gas_limit is None or nonce is None or publish:
-        w3 = web3.Web3()
-        if not w3.isConnected():
-            click.echo("Failed to connect to Ethereum node.")
-            click.echo(
-                "If you want to sign offline, make sure you provide --gas-price, "
-                "--gas-limit and --nonce arguments"
-            )
-            sys.exit(1)
+    w3 = web3.Web3()
+    if (
+        gas_price is None or gas_limit is None or nonce is None or publish
+    ) and not w3.isConnected():
+        click.echo("Failed to connect to Ethereum node.")
+        click.echo(
+            "If you want to sign offline, make sure you provide --gas-price, "
+            "--gas-limit and --nonce arguments"
+        )
+        sys.exit(1)
 
-    to_address = ethereum_decode_hex(to)
+    if data is not None and token is not None:
+        click.echo("Can't send tokens and custom data at the same time")
+        sys.exit(1)
 
     client = connect()
     address_n = tools.parse_path(address)
     from_address = ethereum.get_address(client, address_n)
+
+    if token:
+        data = ethereum_erc20_contract(w3, token, to_address, amount)
+        to_address = token
+        amount = 0
 
     if data:
         data = ethereum_decode_hex(data)
@@ -1339,19 +1363,18 @@ def ethereum_sign_tx(
         nonce=nonce,
         gas_price=gas_price,
         gas_limit=gas_limit,
-        to=to,
+        to=to_address,
         value=amount,
         data=data,
         chain_id=chain_id,
     )
 
+    to = ethereum_decode_hex(to_address)
     if tx_type is None:
-        transaction = rlp.encode(
-            (nonce, gas_price, gas_limit, to_address, amount, data) + sig
-        )
+        transaction = rlp.encode((nonce, gas_price, gas_limit, to, amount, data) + sig)
     else:
         transaction = rlp.encode(
-            (tx_type, nonce, gas_price, gas_limit, to_address, amount, data) + sig
+            (tx_type, nonce, gas_price, gas_limit, to, amount, data) + sig
         )
     tx_hex = "0x%s" % transaction.hex()
 
