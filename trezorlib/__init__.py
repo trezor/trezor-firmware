@@ -2,7 +2,7 @@ __version__ = "0.11.2"
 
 # fmt: off
 MINIMUM_FIRMWARE_VERSION = {
-    "1": (1, 6, 1),
-    "T": (2, 0, 10),
+    "1": (1, 8, 0),
+    "T": (2, 1, 0),
 }
 # fmt: on
