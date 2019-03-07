@@ -132,7 +132,7 @@ setup(
     install_requires=install_requires,
     extras_require={
         "hidapi": ["hidapi>=0.7.99.post20"],
-        "ethereum": ["rlp>=0.4.4", "ethjsonrpc>=0.3.0"],
+        "ethereum": ["rlp>=1.1.0", "web3>=4.8"],
     },
     python_requires=">=3.5",
     include_package_data=True,
