@@ -1,6 +1,6 @@
 {
     "coin_name": "Qtum Testnet",
-    "coin_shortcut": "TQTUM",
+    "coin_shortcut": "tQTUM",
     "coin_label": "Qtum Testnet",
     "website": "https://qtum.org",
     "github": "https://github.com/qtumproject/qtum",

@@ -50,7 +50,9 @@
             "Homepage": "https://ripple.com",
             "Github": "https://github.com/ripple/rippled"
         },
-        "wallet": {},
+        "wallet": {
+            "Trezor Beta": "https://beta-wallet.trezor.io/next/"
+        },
         "blockchain_link": {
             "type": "ripple",
             "url": [
