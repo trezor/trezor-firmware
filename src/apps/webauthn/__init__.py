@@ -421,7 +421,7 @@ class ConfirmContent(ui.Widget):
                 namepart = name.lower().replace(" ", "_")
                 icon = res.load("apps/webauthn/res/icon_%s.toif" % namepart)
             except Exception as e:
-                icon = res.load("apps/webauthn/res/icon_generic.toif")
+                icon = res.load("apps/webauthn/res/icon_webauthn.toif")
                 if __debug__:
                     log.exception(__name__, e)
         else:
@@ -429,7 +429,7 @@ class ConfirmContent(ui.Widget):
                 hexlify(self.app_id[:4]).decode(),
                 hexlify(self.app_id[-4:]).decode(),
             )
-            icon = res.load("apps/webauthn/res/icon_generic.toif")
+            icon = res.load("apps/webauthn/res/icon_webauthn.toif")
         self.app_name = name
         self.app_icon = icon
 

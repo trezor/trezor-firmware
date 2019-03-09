@@ -29,7 +29,7 @@ if __debug__:
         ep_cmd=0x84,
     )
 else:
-    # interface used for FIDO U2F HID transport
+    # interface used for FIDO/U2F and FIDO2/WebAuthn HID transport
     iface_webauthn = io.HID(
         iface_num=1,
         ep_in=0x82,
