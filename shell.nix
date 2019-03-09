@@ -1,7 +1,7 @@
 with import <nixpkgs> {};
 
 let
-  myPython = python3.withPackages(ps: [ps.trezor ps.pytest ps.flake8 ps.isort ps.black ps.Mako ps.munch ps.Pyro4]);
+  myPython = python3.withPackages(ps: [ps.trezor ps.pytest ps.flake8 ps.isort ps.black ps.Mako ps.munch ps.Pyro4 ps.pillow]);
 in
   stdenv.mkDerivation {
     name = "trezor-core-dev";

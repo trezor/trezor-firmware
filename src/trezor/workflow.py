@@ -5,8 +5,8 @@ layouts = []
 default = None
 default_layout = None
 
-# HACK: workaround way to stop the u2f layout from the outside
-fido_u2f_stop_signal = loop.signal()
+# HACK: workaround way to stop the WebAuthn layout from the outside
+webauthn_stop_signal = loop.signal()
 
 
 def onstart(w):
@@ -47,7 +47,7 @@ def restartdefault():
 def onlayoutstart(l):
     closedefault()
     layouts.append(l)
-    fido_u2f_stop_signal.send(None)
+    webauthn_stop_signal.send(None)
 
 
 def onlayoutclose(l):

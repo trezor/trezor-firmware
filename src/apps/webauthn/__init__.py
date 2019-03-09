@@ -379,8 +379,8 @@ class ConfirmState:
 
     @ui.layout
     async def confirm_layout(self) -> None:
-        workflow.fido_u2f_stop_signal.reset()
-        await loop.spawn(self.confirm_layout_inner(), workflow.fido_u2f_stop_signal)
+        workflow.webauthn_stop_signal.reset()
+        await loop.spawn(self.confirm_layout_inner(), workflow.webauthn_stop_signal)
 
     async def confirm_layout_inner(self) -> None:
         from trezor.ui.confirm import ConfirmDialog, CONFIRMED
@@ -413,15 +413,15 @@ class ConfirmContent(ui.Widget):
     def boot(self) -> None:
         from ubinascii import hexlify
         from trezor import res
-        from apps.fido_u2f import knownapps
+        from apps.webauthn import knownapps
 
         if self.app_id in knownapps.knownapps:
             name = knownapps.knownapps[self.app_id]
             try:
                 namepart = name.lower().replace(" ", "_")
-                icon = res.load("apps/fido_u2f/res/u2f_%s.toif" % namepart)
+                icon = res.load("apps/webauthn/res/icon_%s.toif" % namepart)
             except Exception as e:
-                icon = res.load("apps/fido_u2f/res/u2f_generic.toif")
+                icon = res.load("apps/webauthn/res/icon_generic.toif")
                 if __debug__:
                     log.exception(__name__, e)
         else:
@@ -429,7 +429,7 @@ class ConfirmContent(ui.Widget):
                 hexlify(self.app_id[:4]).decode(),
                 hexlify(self.app_id[-4:]).decode(),
             )
-            icon = res.load("apps/fido_u2f/res/u2f_generic.toif")
+            icon = res.load("apps/webauthn/res/icon_generic.toif")
         self.app_name = name
         self.app_icon = icon
 
