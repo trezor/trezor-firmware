@@ -756,11 +756,8 @@ void layoutDecryptIdentity(const IdentityType *identity)
 		NULL);
 }
 
-void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appicon) {
-	if (!appicon) {
-		appicon = &bmp_icon_question;
-	}
-	layoutDialog(appicon, NULL, verb, NULL, verb, _("U2F security key?"), NULL, appname, NULL, NULL);
+void layoutU2FDialog(const char *verb, const char *appname) {
+	layoutDialog(&bmp_webauthn, NULL, verb, NULL, verb, _("U2F security key?"), NULL, appname, NULL, NULL);
 }
 
 void layoutNEMDialog(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *address) {

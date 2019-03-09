@@ -23,6 +23,7 @@
 #include "layout.h"
 #include "oled.h"
 #include "util.h"
+#include "bitmaps.h"
 #include "firmware/usb.h"
 
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];

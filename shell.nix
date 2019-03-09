@@ -1,7 +1,7 @@
 with import <nixpkgs> {};
 
 let
-  myPython = python3.withPackages(p: [p.trezor p.Mako p.munch]);
+  myPython = python3.withPackages(p: [p.trezor p.Mako p.munch p.pillow]);
 in
   stdenv.mkDerivation {
     name = "trezor-mcu-dev";

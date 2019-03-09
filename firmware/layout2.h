@@ -59,7 +59,7 @@ void layoutAddress(const char *address, const char *desc, bool qrcode, bool igno
 void layoutPublicKey(const uint8_t *pubkey);
 void layoutSignIdentity(const IdentityType *identity, const char *challenge);
 void layoutDecryptIdentity(const IdentityType *identity);
-void layoutU2FDialog(const char *verb, const char *appname, const BITMAP *appicon);
+void layoutU2FDialog(const char *verb, const char *appname);
 
 void layoutNEMDialog(const BITMAP *icon, const char *btnNo, const char *btnYes, const char *desc, const char *line1, const char *address);
 void layoutNEMTransferXEM(const char *desc, uint64_t quantity, const bignum256 *multiplier, uint64_t fee);

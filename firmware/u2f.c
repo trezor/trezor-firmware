@@ -441,13 +441,12 @@ void u2f_version(const APDU *a)
 	send_u2f_msg(version_response, sizeof(version_response));
 }
 
-static void getReadableAppId(const uint8_t appid[U2F_APPID_SIZE], const char **appname, const BITMAP **appicon) {
+static void getReadableAppId(const uint8_t appid[U2F_APPID_SIZE], const char **appname) {
 	static char buf[8+2+8+1];
 
 	for (unsigned int i = 0; i < sizeof(u2f_well_known)/sizeof(U2FWellKnown); i++) {
 		if (memcmp(appid, u2f_well_known[i].appid, U2F_APPID_SIZE) == 0) {
 			*appname = u2f_well_known[i].appname;
-			*appicon = u2f_well_known[i].appicon;
 			return;
 		}
 	}
@@ -456,7 +455,6 @@ static void getReadableAppId(const uint8_t appid[U2F_APPID_SIZE], const char **a
 	buf[8] = buf[9] = '.';
 	data2hex(appid + (U2F_APPID_SIZE - 4), 4, &buf[10]);
 	*appname = buf;
-	*appicon = NULL;
 }
 
 static const HDNode *getDerivedNode(uint32_t *address_n, size_t address_n_count)
@@ -575,9 +573,8 @@ void u2f_register(const APDU *a)
 			layoutDialog(&bmp_icon_warning, NULL, _("OK"), NULL, _("Another U2F device"), _("was used to register"), _("in this application."), NULL, NULL, NULL);
 		} else {
 			const char *appname;
-			const BITMAP *appicon;
-			getReadableAppId(req->appId, &appname, &appicon);
-			layoutU2FDialog(_("Register"), appname, appicon);
+			getReadableAppId(req->appId, &appname);
+			layoutU2FDialog(_("Register"), appname);
 		}
 		last_req_state = REG;
 	}
@@ -709,9 +706,8 @@ void u2f_authenticate(const APDU *a)
 		// error: testof-user-presence is required
 		buttonUpdate(); // Clear button state
 		const char *appname;
-		const BITMAP *appicon;
-		getReadableAppId(req->appId, &appname, &appicon);
-		layoutU2FDialog(_("Authenticate"), appname, appicon);
+		getReadableAppId(req->appId, &appname);
+		layoutU2FDialog(_("Authenticate"), appname);
 		last_req_state = AUTH;
 	}
 
