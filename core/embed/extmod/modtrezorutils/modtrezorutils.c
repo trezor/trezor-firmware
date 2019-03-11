@@ -57,16 +57,17 @@ STATIC mp_obj_t mod_trezorutils_consteq(mp_obj_t sec, mp_obj_t pub) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_consteq_obj,
                                  mod_trezorutils_consteq);
 
-/// def memcpy(
-///     dst: bytearray, dst_ofs: int, src: bytearray, src_ofs: int, n: int
-/// ) -> int:
-///     """
+/// def memcpy(dst: bytearray, dst_ofs: int,
+///            src: bytearray, src_ofs: int,
+///            n: int = None) -> int:
+///     '''
 ///     Copies at most `n` bytes from `src` at offset `src_ofs` to
 ///     `dst` at offset `dst_ofs`.  Returns the number of actually
-///     copied bytes.
-///     """
+///     copied bytes.  If `n` is not not specified, tries to copy
+///     as much as possible.
+///     '''
 STATIC mp_obj_t mod_trezorutils_memcpy(size_t n_args, const mp_obj_t *args) {
-  mp_arg_check_num(n_args, 0, 5, 5, false);
+  mp_arg_check_num(n_args, 0, 4, 5, false);
 
   mp_buffer_info_t dst;
   mp_get_buffer_raise(args[0], &dst, MP_BUFFER_WRITE);
@@ -76,7 +77,12 @@ STATIC mp_obj_t mod_trezorutils_memcpy(size_t n_args, const mp_obj_t *args) {
   mp_get_buffer_raise(args[2], &src, MP_BUFFER_READ);
   uint32_t src_ofs = trezor_obj_get_uint(args[3]);
 
-  uint32_t n = trezor_obj_get_uint(args[4]);
+  uint32_t n = 0;
+  if (n_args > 4) {
+    n = trezor_obj_get_uint(args[4]);
+  } else {
+    n = src.len;
+  }
 
   size_t dst_rem = (dst_ofs < dst.len) ? dst.len - dst_ofs : 0;
   size_t src_rem = (src_ofs < src.len) ? src.len - src_ofs : 0;
@@ -86,7 +92,7 @@ STATIC mp_obj_t mod_trezorutils_memcpy(size_t n_args, const mp_obj_t *args) {
 
   return mp_obj_new_int(ncpy);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_memcpy_obj, 5, 5,
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_memcpy_obj, 4, 5,
                                            mod_trezorutils_memcpy);
 
 /// def halt(msg: str = None) -> None:

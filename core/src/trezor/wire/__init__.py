@@ -1,6 +1,7 @@
 import protobuf
 from trezor import log, loop, messages, utils, workflow
 from trezor.messages import FailureType
+from trezor.messages.Failure import Failure
 from trezor.wire import codec_v1
 from trezor.wire.errors import Error
 
@@ -9,22 +10,15 @@ from trezor.wire.errors import *  # isort:skip # noqa: F401,F403
 
 
 workflow_handlers = {}
+workflow_namespaces = {}
 
 
 def add(mtype, pkgname, modname, namespace=None):
     """Shortcut for registering a dynamically-imported Protobuf workflow."""
     if namespace is not None:
-        register(
-            mtype,
-            protobuf_workflow,
-            keychain_workflow,
-            namespace,
-            import_workflow,
-            pkgname,
-            modname,
-        )
+        register(mtype, keychain_workflow, namespace, import_workflow, pkgname, modname)
     else:
-        register(mtype, protobuf_workflow, import_workflow, pkgname, modname)
+        register(mtype, import_workflow, pkgname, modname)
 
 
 def register(mtype, handler, *args):
@@ -38,7 +32,7 @@ def register(mtype, handler, *args):
 
 def setup(iface):
     """Initialize the wire stack on passed USB interface."""
-    loop.schedule(session_handler(iface, codec_v1.SESSION_ID))
+    loop.schedule(handle_session(iface, codec_v1.SESSION_ID))
 
 
 class Context:
@@ -61,23 +55,22 @@ class Context:
         `UnexpectedMessageError` if the message type does not match one of
         `types`; and caller should always make sure to re-raise it.
         """
-        reader = self.getreader()
-
         if __debug__:
             log.debug(
                 __name__, "%s:%x read: %s", self.iface.iface_num(), self.sid, types
             )
 
-        await reader.aopen()  # wait for the message header
+        msg = await codec_v1.read_message(self.iface, _message_buffer)
 
-        # if we got a message with unexpected type, raise the reader via
+        # if we got a message with unexpected type, raise the message via
         # `UnexpectedMessageError` and let the session handler deal with it
-        if reader.type not in types:
-            raise UnexpectedMessageError(reader)
+        if msg.type not in types:
+            raise UnexpectedMessageError(msg)
 
         # look up the protobuf class and parse the message
-        pbtype = messages.get_type(reader.type)
-        return await protobuf.load_message(reader, pbtype)
+        pbtype = messages.get_type(msg.type)
+
+        return protobuf.load_message(msg, pbtype)
 
     async def write(self, msg):
         """
@@ -96,7 +89,7 @@ class Context:
 
         # write the message
         writer.setheader(msg.MESSAGE_WIRE_TYPE, size)
-        await protobuf.dump_message(writer, msg, fields)
+        protobuf.dump_message(writer, msg, fields)
         await writer.aclose()
 
     def wait(self, *tasks):
@@ -107,81 +100,56 @@ class Context:
         """
         return loop.spawn(self.read(()), *tasks)
 
-    def getreader(self):
-        return codec_v1.Reader(self.iface)
-
-    def getwriter(self):
-        return codec_v1.Writer(self.iface)
-
 
 class UnexpectedMessageError(Exception):
-    def __init__(self, reader):
-        super().__init__()
-        self.reader = reader
+    def __init__(self, msg):
+        self.msg = msg
 
 
-async def session_handler(iface, sid):
-    reader = None
+async def handle_session(iface, sid):
     ctx = Context(iface, sid)
     while True:
         try:
-            # wait for new message, if needed, and find handler
-            if not reader:
-                reader = ctx.getreader()
-                await reader.aopen()
+            mods = utils.unimport_begin()
             try:
-                handler, args = workflow_handlers[reader.type]
-            except KeyError:
-                handler, args = unexpected_msg, ()
-
-            m = utils.unimport_begin()
-            w = handler(ctx, reader, *args)
-            try:
-                workflow.onstart(w)
-                await w
-            finally:
-                workflow.onclose(w)
-                utils.unimport_end(m)
-
-        except UnexpectedMessageError as exc:
-            # retry with opened reader from the exception
-            reader = exc.reader
-            continue
-        except Error as exc:
-            # we log wire.Error as warning, not as exception
-            if __debug__:
-                log.warning(__name__, "failure: %s", exc.message)
+                req = await ctx.read(workflow_handlers)
+            except UnexpectedMessage:
+                res = unexpected_message()
+            else:
+                res = await handle_request(ctx, req)
+            if res is not None:
+                await ctx.write(res)
+            req = None
+            res = None
+            utils.unimport_end(mods)
         except Exception as exc:
-            # sessions are never closed by raised exceptions
             if __debug__:
                 log.exception(__name__, exc)
 
-        # read new message in next iteration
-        reader = None
 
-
-async def protobuf_workflow(ctx, reader, handler, *args):
-    from trezor.messages.Failure import Failure
-
-    req = await protobuf.load_message(reader, messages.get_type(reader.type))
+async def handle_request(ctx, request):
+    handler = get_workflow_handler(request)
     try:
-        res = await handler(ctx, req, *args)
-    except UnexpectedMessageError:
-        # session handler takes care of this one
-        raise
-    except Error as exc:
-        # respond with specific code and message
-        await ctx.write(Failure(code=exc.code, message=exc.message))
-        raise
-    except Exception:
-        # respond with a generic code and message
-        await ctx.write(
-            Failure(code=FailureType.FirmwareError, message="Firmware error")
-        )
-        raise
-    if res:
-        # respond with a specific response
-        await ctx.write(res)
+        workflow.onstart(handler)
+
+        response = None
+        try:
+            response = await handler
+
+        except Error as exc:
+            if __debug__:
+                log.warning(__name__, exc)
+            response = failure(exc.code, exc.message)
+
+        except Exception:
+            if __debug__:
+                log.exception(__name__, exc)
+            response = failure()
+
+    finally:
+        workflow.onclose(handler)
+
+    return response
 
 
 async def keychain_workflow(ctx, req, namespace, handler, *args):
@@ -195,22 +163,24 @@ async def keychain_workflow(ctx, req, namespace, handler, *args):
         keychain.__del__()
 
 
-def import_workflow(ctx, req, pkgname, modname, *args):
+def get_workflow_handler(request):
+    record = workflow_handlers[request.MESSAGE_WIRE_TYPE]
+    if isinstance(record, tuple):
+        pkgname, modname = record
+        record = import_workflow(pkgname, modname)
+    return record(ctx, request)
+
+
+def import_workflow(pkgname, modname):
     modpath = "%s.%s" % (pkgname, modname)
     module = __import__(modpath, None, None, (modname,), 0)
     handler = getattr(module, modname)
-    return handler(ctx, req, *args)
+    return handler
 
 
-async def unexpected_msg(ctx, reader):
-    from trezor.messages.Failure import Failure
+def failure(code=FailureType.FirmwareError, message="Firmware error"):
+    return Failure(code=code, message=message)
 
-    # receive the message and throw it away
-    while reader.size > 0:
-        buf = bytearray(reader.size)
-        await reader.areadinto(buf)
 
-    # respond with an unknown message error
-    await ctx.write(
-        Failure(code=FailureType.UnexpectedMessage, message="Unexpected message")
-    )
+def unexpected_message():
+    return Failure(code=FailureType.UnexpectedMessage, message="Unexpected message")
