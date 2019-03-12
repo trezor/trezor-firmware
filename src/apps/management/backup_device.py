@@ -1,7 +1,7 @@
 from trezor import wire
 from trezor.messages.Success import Success
 
-from apps.common import storage
+from apps.common import mnemonic, storage
 from apps.management.reset_device import (
     check_mnemonic,
     show_mnemonic,
@@ -16,7 +16,7 @@ async def backup_device(ctx, msg):
     if not storage.needs_backup():
         raise wire.ProcessError("Seed already backed up")
 
-    mnemonic = storage.get_mnemonic()
+    words = mnemonic.restore()
 
     # warn user about mnemonic safety
     await show_warning(ctx)
@@ -26,8 +26,8 @@ async def backup_device(ctx, msg):
 
     while True:
         # show mnemonic and require confirmation of a random word
-        await show_mnemonic(ctx, mnemonic)
-        if await check_mnemonic(ctx, mnemonic):
+        await show_mnemonic(ctx, words)
+        if await check_mnemonic(ctx, words):
             break
         await show_wrong_entry(ctx)
 

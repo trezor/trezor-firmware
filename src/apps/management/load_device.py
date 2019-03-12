@@ -4,7 +4,7 @@ from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
 from trezor.ui.text import Text
 
-from apps.common import storage
+from apps.common import mnemonic, storage
 from apps.common.confirm import require_confirm
 
 
@@ -24,7 +24,13 @@ async def load_device(ctx, msg):
     text.normal("Continue only if you", "know what you are doing!")
     await require_confirm(ctx, text)
 
-    storage.load_mnemonic(mnemonic=msg.mnemonic, needs_backup=True, no_backup=False)
+    secret = mnemonic.process([msg.mnemonic], mnemonic.TYPE_BIP39)
+    storage.store_mnemonic(
+        secret=secret,
+        mnemonic_type=mnemonic.TYPE_BIP39,
+        needs_backup=True,
+        no_backup=False,
+    )
     storage.load_settings(use_passphrase=msg.passphrase_protection, label=msg.label)
     if msg.pin:
         config.change_pin(pin_to_int(""), pin_to_int(msg.pin))

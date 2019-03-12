@@ -18,7 +18,7 @@ _COUNTER_TAIL_LEN = 8
 _APP                = const(0x01)  # app namespace
 _DEVICE_ID          = const(0x00)  # bytes
 _VERSION            = const(0x01)  # int
-_MNEMONIC           = const(0x02)  # str
+_MNEMONIC_SECRET    = const(0x02)  # bytes
 _LANGUAGE           = const(0x03)  # str
 _LABEL              = const(0x04)  # str
 _USE_PASSPHRASE     = const(0x05)  # bool (0x01 or empty)
@@ -30,6 +30,7 @@ _PASSPHRASE_SOURCE  = const(0x0A)  # int
 _UNFINISHED_BACKUP  = const(0x0B)  # bool (0x01 or empty)
 _AUTOLOCK_DELAY_MS  = const(0x0C)  # int
 _NO_BACKUP          = const(0x0D)  # bool (0x01 or empty)
+_MNEMONIC_TYPE      = const(0x0E)  # int
 # fmt: on
 
 
@@ -42,6 +43,17 @@ def _set_bool(app: int, key: int, value: bool, public: bool = False) -> None:
 
 def _get_bool(app: int, key: int, public: bool = False) -> bool:
     return config.get(app, key, public) == _TRUE_BYTE
+
+
+def _set_uint8(app: int, key: int, val: int):
+    config.set(app, key, val.to_bytes(1, "big"))
+
+
+def _get_uint8(app: int, key: int) -> int:
+    val = config.get(app, key)
+    if not val:
+        return None
+    return int.from_bytes(val, "big")
 
 
 def _new_device_id() -> str:
@@ -67,11 +79,15 @@ def get_label() -> str:
     return label.decode()
 
 
-def get_mnemonic() -> str:
-    mnemonic = config.get(_APP, _MNEMONIC)
+def get_mnemonic_secret() -> bytes:
+    mnemonic = config.get(_APP, _MNEMONIC_SECRET)
     if mnemonic is None:
         return None
-    return mnemonic.decode()
+    return mnemonic
+
+
+def get_mnemonic_type() -> int:
+    return _get_uint8(_APP, _MNEMONIC_TYPE)
 
 
 def has_passphrase() -> bool:
@@ -82,8 +98,11 @@ def get_homescreen() -> bytes:
     return config.get(_APP, _HOMESCREEN, True)  # public
 
 
-def load_mnemonic(mnemonic: str, needs_backup: bool, no_backup: bool) -> None:
-    config.set(_APP, _MNEMONIC, mnemonic.encode())
+def store_mnemonic(
+    secret: bytes, mnemonic_type: int, needs_backup: bool, no_backup: bool
+) -> None:
+    config.set(_APP, _MNEMONIC_SECRET, secret)
+    _set_uint8(_APP, _MNEMONIC_TYPE, mnemonic_type)
     config.set(_APP, _VERSION, _STORAGE_VERSION)
     _set_bool(_APP, _NO_BACKUP, no_backup)
     if not no_backup:

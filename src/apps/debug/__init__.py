@@ -9,7 +9,7 @@ if __debug__:
     from trezor.messages.DebugLinkState import DebugLinkState
     from trezor.ui import confirm, swipe
     from trezor.wire import register, protobuf_workflow
-    from apps.common import storage
+    from apps.common import storage, mnemonic
 
     reset_internal_entropy = None
     reset_current_words = None
@@ -29,7 +29,7 @@ if __debug__:
 
     async def dispatch_DebugLinkGetState(ctx, msg):
         m = DebugLinkState()
-        m.mnemonic = storage.get_mnemonic()
+        m.mnemonic_secret, m.mnemonic_type = mnemonic.get()
         m.passphrase_protection = storage.has_passphrase()
         m.reset_word_pos = reset_word_index
         m.reset_entropy = reset_internal_entropy
