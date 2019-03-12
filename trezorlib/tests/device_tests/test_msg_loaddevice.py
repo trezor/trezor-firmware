@@ -26,7 +26,7 @@ class TestDeviceLoad(TrezorTest):
     def test_load_device_1(self):
         self.setup_mnemonic_nopin_nopassphrase(lock=False)
         state = self.client.debug.state()
-        assert state.mnemonic == self.mnemonic12
+        assert state.mnemonic_secret == self.mnemonic12.encode()
         assert state.pin is None
         assert state.passphrase_protection is False
 
@@ -37,7 +37,7 @@ class TestDeviceLoad(TrezorTest):
         self.setup_mnemonic_pin_passphrase(lock=False)
         self.client.set_passphrase("passphrase")
         state = self.client.debug.state()
-        assert state.mnemonic == self.mnemonic12
+        assert state.mnemonic_secret == self.mnemonic12.encode()
         assert state.pin == self.pin4
         assert state.passphrase_protection is True
 

@@ -29,8 +29,8 @@ class TestDebuglink(TrezorTest):
 
     def test_mnemonic(self):
         self.setup_mnemonic_nopin_nopassphrase(lock=False)
-        mnemonic = self.client.debug.state().mnemonic
-        assert mnemonic == self.mnemonic12
+        mnemonic = self.client.debug.state().mnemonic_secret
+        assert mnemonic == self.mnemonic12.encode()
 
     def test_pin(self):
         self.setup_mnemonic_pin_passphrase()
