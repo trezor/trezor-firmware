@@ -26,7 +26,7 @@ messages_%_pb2.py: messages-%.proto
 	$(Q)protoc -I/usr/include -I. $< --python_out=.
 
 messages_map.h messages_map_limits.h: messages_map.py messages_pb2.py
-	$(Q)$(PYTHON) $< Cardano Tezos Ripple Monero DebugMonero Ontology Tron Eos
+	$(Q)$(PYTHON) $< Cardano Tezos Ripple Monero DebugMonero Ontology Tron Eos Binance
 
 clean:
 	rm -f *.pb *.o *.d *.pb.c *.pb.h *_pb2.py messages_map.h messages_map_limits.h
