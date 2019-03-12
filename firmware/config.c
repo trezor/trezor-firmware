@@ -172,6 +172,18 @@ static secbool config_get_bool(uint16_t key, bool *value)
     }
 }
 
+static secbool config_get_bytes(uint16_t key, uint8_t *dest, uint16_t dest_size, uint16_t *real_size)
+{
+    if (dest_size == 0) {
+        return secfalse;
+    }
+
+    if (sectrue != storage_get(key, dest, dest_size, real_size)) {
+        return secfalse;
+    }
+    return sectrue;
+}
+
 static secbool config_get_string(uint16_t key, char *dest, uint16_t dest_size)
 {
     if (dest_size == 0) {
@@ -686,6 +698,11 @@ bool config_setMnemonic(const char *mnemonic)
     config_set_bool(KEY_INITIALIZED, true);
 
     return true;
+}
+
+bool config_getMnemonicBytes(uint8_t *dest, uint16_t dest_size, uint16_t *real_size)
+{
+    return sectrue == config_get_bytes(KEY_MNEMONIC, dest, dest_size, real_size);
 }
 
 bool config_getMnemonic(char *dest, uint16_t dest_size)

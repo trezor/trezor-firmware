@@ -114,6 +114,7 @@ bool session_getState(const uint8_t *salt, uint8_t *state, const char *passphras
 bool config_setMnemonic(const char *mnemonic);
 bool config_containsMnemonic(const char *mnemonic);
 bool config_getMnemonic(char *dest, uint16_t dest_size);
+bool config_getMnemonicBytes(uint8_t *dest, uint16_t dest_size, uint16_t *real_size);
 
 #if DEBUG_LINK
 bool config_dumpNode(HDNodeType *node);
