@@ -60,5 +60,8 @@
     },
     "bitcoin:QTUM": {
         "Qtum-Electrum": "https://github.com/qtumproject/qtum-electrum"
+    },
+    "bitcoin:RVN": {
+        "Electrum-RVN": "https://github.com/traysi/electrum-raven"
     }
 }
