@@ -48,6 +48,7 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg)
 		}
 	}
 
+	resp->has_node = true;
 	resp->node.depth = node->depth;
 	resp->node.fingerprint = fingerprint;
 	resp->node.child_num = node->child_num;
@@ -61,8 +62,8 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg)
 		/* ed25519 public key */
 		resp->node.public_key.bytes[0] = 0;
 	}
-	resp->has_xpub = true;
 
+	resp->has_xpub = true;
 	if (coin->xpub_magic && (script_type == InputScriptType_SPENDADDRESS || script_type == InputScriptType_SPENDMULTISIG)) {
 		hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub, sizeof(resp->xpub));
 	} else

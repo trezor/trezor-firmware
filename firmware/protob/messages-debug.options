@@ -3,7 +3,7 @@ DebugLinkDecision.input                 max_size:33
 DebugLinkState.layout                   max_size:1024
 DebugLinkState.pin                      max_size:10
 DebugLinkState.matrix                   max_size:10
-DebugLinkState.mnemonic                 max_size:241
+DebugLinkState.mnemonic_secret          max_size:240
 DebugLinkState.reset_word               max_size:12
 DebugLinkState.reset_entropy            max_size:128
 DebugLinkState.recovery_fake_word       max_size:12
