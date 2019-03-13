@@ -76,17 +76,17 @@ message BinanceTxRequest {
  * @next Failure
  */
 message BinanceTransferMsg {
-    repeated InputOutput inputs = 1;
-    repeated InputOutput outputs = 2;
+    repeated BinanceInputOutput inputs = 1;
+    repeated BinanceInputOutput outputs = 2;
 
-    message Coin {
-        optional sint64 amount = 1;
-        optional string denom = 2;
+    message BinanceInputOutput {
+        optional string address = 1;
+        repeated BinanceCoin coins = 2;
     }
 
-    message InputOutput {
-        optional string address = 1;
-        repeated Coin coins = 2;
+    message BinanceCoin {
+        optional sint64 amount = 1;
+        optional string denom = 2;
     }
 }
 
@@ -98,28 +98,28 @@ message BinanceTransferMsg {
  */
 message BinanceOrderMsg {
     optional string id = 1;
-    optional OrderType ordertype = 2;
+    optional BinanceOrderType ordertype = 2;
     optional sint64 price = 3;
     optional sint64 quantity = 4;
     optional string sender = 5;
-    optional OrderSide side = 6;
+    optional BinanceOrderSide side = 6;
     optional string symbol = 7;
-    optional TimeInForce timeinforce = 8;
+    optional BinanceTimeInForce timeinforce = 8;
 
-    enum OrderType {
+    enum BinanceOrderType {
         OT_UNKNOWN = 0;
         MARKET = 1;
         LIMIT = 2;
         OT_RESERVED = 3;
     }
 
-    enum OrderSide {
+    enum BinanceOrderSide {
         SIDE_UNKNOWN = 0;
         BUY = 1;
         SELL = 2;
     }
 
-    enum TimeInForce {
+    enum BinanceTimeInForce {
         TIF_UNKNOWN = 0;
         GTE = 1;
         TIF_RESERVED = 2;
