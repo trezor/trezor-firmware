@@ -332,7 +332,7 @@ static void set_config(usbd_device *dev, uint16_t wValue)
 		hid_control_request);
 }
 
-static usbd_device *usbd_dev;
+static usbd_device *usbd_dev = NULL;
 static uint8_t usbd_control_buffer[256] __attribute__ ((aligned (2)));
 
 static const struct usb_device_capability_descriptor* capabilities[] = {
@@ -360,6 +360,10 @@ void usbInit(void)
 
 void usbPoll(void)
 {
+	if (usbd_dev == NULL) {
+		return;
+	}
+
 	static const uint8_t *data;
 	// poll read buffer
 	usbd_poll(usbd_dev);
@@ -383,9 +387,11 @@ void usbPoll(void)
 
 void usbReconnect(void)
 {
-	usbd_disconnect(usbd_dev, 1);
-	delay(1000);
-	usbd_disconnect(usbd_dev, 0);
+	if (usbd_dev != NULL) {
+		usbd_disconnect(usbd_dev, 1);
+		delay(1000);
+		usbd_disconnect(usbd_dev, 0);
+	}
 }
 
 char usbTiny(char set)
@@ -400,6 +406,8 @@ void usbSleep(uint32_t millis)
 	uint32_t start = timer_ms();
 
 	while ((timer_ms() - start) < millis) {
-		usbd_poll(usbd_dev);
+		if (usbd_dev != NULL) {
+			usbd_poll(usbd_dev);
+		}
 	}
 }
