@@ -74,6 +74,9 @@ pylint: ## run pylint on application sources and tests
 ## style commands:
 
 style_check: ## run code style check on application sources and tests
+	flake8 --version
+	isort --version | grep "VERSION"
+	black --version
 	flake8 $(shell find src -name *.py)
 	isort --check-only $(shell find src -name *.py ! -path 'src/trezor/messages/*')
 	black --check $(shell find src -name *.py ! -path 'src/trezor/messages/*')
