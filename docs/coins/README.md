@@ -15,17 +15,20 @@ algorithm, extended to work on other curves.
 
 ## List of used derivation paths
 
-| coin     | curve    | path               | public node | note           |
-| -------- | -------- | ------------------ | ----------- | -------------- |
-| Bitcoin  | secp256k | `44'/c'/a'/y/i`    | yes         | [1](#Bitcoin)  |
-| Ethereum | secp256k | `44'/c'/0'/0/a`    | yes         | [2](#Ethereum) |
-| Ripple   | secp256k | `44'/144'/a'/0/0`  |             | [3](#Ripple)   |
-| Cardano  | ed25519  | `44'/1815'/a'/y/i` | yes         | [4](#Cardano)  |
-| Stellar  | ed25519  | `44'/148'/a'`      |             |                |
-| Lisk     | ed25519  | `44'/134'/a'`      |             |                |
-| NEM      | ed25519  | `44'/43'/a'`       |             | [5](#NEM)      |
-| Monero   | ed25519  | `44'/128'/a'`      |             |                |
-| Tezos    | ed25519  | `44'/1729'/a'`     |             | [6](#Tezos)    |
+| coin     | curve     | path               | public node | note           |
+| -------- | --------- | ------------------ | ----------- | -------------- |
+| Bitcoin  | secp256k  | `44'/c'/a'/y/i`    | yes         | [1](#Bitcoin)  |
+| Ethereum | secp256k  | `44'/c'/0'/0/a`    | yes         | [2](#Ethereum) |
+| Ripple   | secp256k  | `44'/144'/a'/0/0`  |             | [3](#Ripple)   |
+| EOS      | secp256k  | `44'/194'/a'/0/0`  |             | [3](#Ripple)   |
+| Tron     | secp256k  | TODO               |             | TODO           |
+| Ontology | nist256p1 | TODO               |             | TODO           |
+| Cardano  | ed25519   | `44'/1815'/a'/y/i` | yes         | [4](#Cardano)  |
+| Stellar  | ed25519   | `44'/148'/a'`      |             |                |
+| Lisk     | ed25519   | `44'/134'/a'`      |             |                |
+| NEM      | ed25519   | `44'/43'/a'`       |             | [5](#NEM)      |
+| Monero   | ed25519   | `44'/128'/a'`      |             |                |
+| Tezos    | ed25519   | `44'/1729'/a'`     |             | [6](#Tezos)    |
 
 `c` stands for the [SLIP-44 id] of the currency, when multiple currencies are handled
 by the same code. `a` is an account number, `y` is change address indicator (must be
@@ -67,8 +70,8 @@ sends `44'/60'/0'/0` for getPublicKey.
    Metamask) do not use such scheme and set `a = 0` and then iterate the address index
    `i`. Therefore for compatibility reasons we use the same scheme.
 
-3. <a name="Ripple"></a> Similar to Ethereum this should be `44'/144'/a'`. But for
-   compatibility with other HW vendors we use `44'/144'/a'/0/0`.
+3. <a name="Ripple"></a> Similar to Ethereum this should be `44'/c'/a'`. But for
+   compatibility with other HW vendors we use `44'/c'/a'/0/0`.
 
 4. <a name="Cardano"></a> Cardano has a [custom derivation] algorithm that allows
    non-hardened derivation on ed25519.
