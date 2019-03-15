@@ -22,6 +22,8 @@ TEZOS_PREFIX_BYTES = {
     "edsig": [9, 245, 205, 134, 18],
     # operation hash
     "o": [5, 116],
+    # protocola hash
+    "P": [2, 170],
 }
 
 
