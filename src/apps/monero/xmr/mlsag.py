@@ -84,7 +84,7 @@ def generate_mlsag_simple(message, pubs, in_sk, a, cout, kLRki, index, mg_buff):
         M[i][1] = crypto.encodepoint(tmp_pt)
         pubs[i] = None
 
-    del (pubs)
+    del pubs
     gc.collect()
 
     return generate_mlsag(message, M, sk, kLRki, index, dsRows, mg_buff)

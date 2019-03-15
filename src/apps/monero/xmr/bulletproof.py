@@ -1090,7 +1090,7 @@ class BulletProofBuilder:
         add_keys(S, ve, scalarmult_base(tmp_bf_1, rho))
         if not proof_v8:
             scalarmult_key(S, S, INV_EIGHT)
-        del (ve)
+        del ve
         self.gc(12)
 
         # PAPER LINES 43-45
@@ -1115,7 +1115,7 @@ class BulletProofBuilder:
         # This computes the ugly sum/concatenation from PAPER LINE 65
         # r0 = aR + z
         r0 = vector_add(aR, zMN)
-        del (zMN)
+        del zMN
         self.gc(14)
 
         # r0 = r0 \odot yMN => r0[i]  = r0[i] * y^i
@@ -1191,7 +1191,7 @@ class BulletProofBuilder:
         del (xsq, tau1, tau2)
         for j in range(1, len(V) + 1):
             sc_muladd(taux, zpow.to(j + 1), gamma[j - 1], taux)
-        del (zpow)
+        del zpow
 
         self.gc(18)
         mu = _ensure_dst_key()
@@ -1465,7 +1465,7 @@ class BulletProofBuilder:
 
             multiexp(tmp, muex, False)
             add_keys(muex_acc, muex_acc, tmp)
-            del (muex)
+            del muex
 
             # Compute the number of rounds for the inner product
             rounds = logM + logN

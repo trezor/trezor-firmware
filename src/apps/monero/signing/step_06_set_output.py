@@ -149,12 +149,12 @@ async def _validate(state: State, dst_entr, dst_entr_hmac, is_offloaded_bp):
         utils.ensure(
             crypto.ct_equals(dst_entr_hmac, dst_entr_hmac_computed), "HMAC failed"
         )
-        del (dst_entr_hmac_computed)
+        del dst_entr_hmac_computed
 
     else:
         dst_entr = None
 
-    del (dst_entr_hmac)
+    del dst_entr_hmac
     state.mem_trace(3, True)
 
     return dst_entr
