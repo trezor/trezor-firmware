@@ -14,7 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import base64
+
 from trezorlib import btc, messages as proto
+from trezorlib.tools import parse_path
 
 from .common import TrezorTest
 
@@ -48,6 +51,21 @@ class TestMsgSignmessageSegwit(TrezorTest):
         assert (
             sig.signature.hex()
             == "249e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
+        )
+
+    def test_sign_grs(self):
+        self.setup_mnemonic_allallall()
+        sig = btc.sign_message(
+            self.client,
+            "Groestlcoin",
+            parse_path("49'/17'/0'/0/0"),
+            "test",
+            script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+        )
+        assert sig.address == "31inaRqambLsd9D7Ke4USZmGEVd3PHkh7P"
+        assert (
+            base64.b64encode(sig.signature)
+            == b"I/NA/J+epkaeE9vHQ7cDE+TQdrzYzoZ+3dcexBFg0CpKRiIF0h7G5JUCvz4qhGPUjolcpW9rOFsV7CzHVWKS7K4="
         )
 
     def test_sign_long(self):

@@ -101,6 +101,21 @@ class TestMsgGetaddress(TrezorTest):
             == "bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw"
         )
 
+    def test_grs(self):
+        self.setup_mnemonic_allallall()
+        assert (
+            btc.get_address(self.client, "Groestlcoin", parse_path("44'/17'/0'/0/0"))
+            == "Fj62rBJi8LvbmWu2jzkaUX1NFXLEqDLoZM"
+        )
+        assert (
+            btc.get_address(self.client, "Groestlcoin", parse_path("44'/17'/0'/1/0"))
+            == "FmRaqvVBRrAp2Umfqx9V1ectZy8gw54QDN"
+        )
+        assert (
+            btc.get_address(self.client, "Groestlcoin", parse_path("44'/17'/0'/1/1"))
+            == "Fmhtxeh7YdCBkyQF7AQG4QnY8y3rJg89di"
+        )
+
     def test_multisig(self):
         self.setup_mnemonic_allallall()
         xpubs = []

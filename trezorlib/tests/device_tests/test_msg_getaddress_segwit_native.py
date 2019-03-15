@@ -68,6 +68,17 @@ class TestMsgGetaddressSegwitNative(TrezorTest):
             )
             == "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
         )
+        assert (
+            btc.get_address(
+                self.client,
+                "Groestlcoin",
+                parse_path("84'/17'/0'/0/0"),
+                False,
+                None,
+                script_type=proto.InputScriptType.SPENDWITNESS,
+            )
+            == "grs1qw4teyraux2s77nhjdwh9ar8rl9dt7zww8r6lne"
+        )
 
     def test_show_multisig_3(self):
         self.setup_mnemonic_allallall()
