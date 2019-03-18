@@ -66,6 +66,7 @@ def create_renderer(confirmation_wrapper):
         if page >= page_count:
             page = page_count - 1
 
+        pages[page].taint()
         content = Scrollpage(pages[page], page, page_count)
         if page + 1 >= page_count:
             return await confirmation_wrapper(content)
