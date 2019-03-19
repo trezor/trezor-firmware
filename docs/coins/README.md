@@ -17,11 +17,11 @@ algorithm, extended to work on other curves.
 
 | coin     | curve     | path               | public node | note           |
 | -------- | --------- | ------------------ | ----------- | -------------- |
-| Bitcoin  | secp256k  | `44'/c'/a'/y/i`    | yes         | [1](#Bitcoin)  |
-| Ethereum | secp256k  | `44'/c'/0'/0/a`    | yes         | [2](#Ethereum) |
-| Ripple   | secp256k  | `44'/144'/a'/0/0`  |             | [3](#Ripple)   |
-| EOS      | secp256k  | `44'/194'/a'/0/0`  |             | [3](#Ripple)   |
-| Tron     | secp256k  | TODO               |             | TODO           |
+| Bitcoin  | secp256k1 | `44'/c'/a'/y/i`    | yes         | [1](#Bitcoin)  |
+| Ethereum | secp256k1 | `44'/c'/0'/0/a`    | yes         | [2](#Ethereum) |
+| Ripple   | secp256k1 | `44'/144'/a'/0/0`  |             | [3](#Ripple)   |
+| EOS      | secp256k1 | `44'/194'/a'/0/0`  |             | [3](#Ripple)   |
+| Tron     | secp256k1 | TODO               |             | TODO           |
 | Ontology | nist256p1 | TODO               |             | TODO           |
 | Cardano  | ed25519   | `44'/1815'/a'/y/i` | yes         | [4](#Cardano)  |
 | Stellar  | ed25519   | `44'/148'/a'`      |             |                |
