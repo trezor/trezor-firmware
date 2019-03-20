@@ -36,6 +36,8 @@ BLUE_GRAY = rgb(0x60, 0x7D, 0x8B)
 BLACK = rgb(0x00, 0x00, 0x00)
 WHITE = rgb(0xFA, 0xFA, 0xFA)
 BLACKISH = rgb(0x30, 0x30, 0x30)
+DARK_BLACK = rgb(0x10, 0x10, 0x10)
+DARK_WHITE = rgb(0xE8, 0xE8, 0xE8)
 
 TITLE_GREY = rgb(0x9B, 0x9B, 0x9B)
 ORANGE_ICON = rgb(0xF5, 0xA6, 0x23)
@@ -179,6 +181,30 @@ BTN_KEY = {
     },
     "disabled": {
         "bg-color": BG,
+        "fg-color": GREY,
+        "text-style": MONO,
+        "border-color": BG,
+        "radius": RADIUS,
+    },
+}
+
+BTN_KEY_DARK = {
+    "normal": {
+        "bg-color": DARK_BLACK,
+        "fg-color": DARK_WHITE,
+        "text-style": MONO,
+        "border-color": BG,
+        "radius": RADIUS,
+    },
+    "active": {
+        "bg-color": FG,
+        "fg-color": DARK_BLACK,
+        "text-style": MONO,
+        "border-color": FG,
+        "radius": RADIUS,
+    },
+    "disabled": {
+        "bg-color": DARK_BLACK,
         "fg-color": GREY,
         "text-style": MONO,
         "border-color": BG,
