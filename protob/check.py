@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 from glob import glob
+import os
 import sys
 
 error = False
 
-for fn in sorted(glob("messages-*.proto")):
+MYDIR = os.path.dirname(__file__)
+
+for fn in sorted(glob(os.path.join(MYDIR, "messages-*.proto"))):
     with open(fn, "rt") as f:
         prefix = fn.split(".")[0][9:].capitalize()
         if prefix in ["Bitcoin", "Bootloader", "Common", "Crypto", "Management"]:
