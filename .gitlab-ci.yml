@@ -14,7 +14,7 @@ build and push emulator image:
 build master:
   stage: build
   script:
-    - sh build-docker.sh HEAD local
+    - ./build-docker.sh HEAD local
   only:
     - master
   artifacts:
