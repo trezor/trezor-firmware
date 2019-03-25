@@ -10,3 +10,16 @@ build and push emulator image:
   script:
     - docker build -t ${CI_REGISTRY_IMAGE}/trezor-emulator:latest -f ./docker/emulator/Dockerfile .
     - docker push ${CI_REGISTRY_IMAGE}/trezor-emulator:latest
+
+build master:
+  stage: build
+  script:
+    - ./build-docker.sh HEAD local
+  only:
+    - master
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - build-docker/boardloader/boardloader.bin
+      - build-docker/bootloader/bootloader.bin
+      - build-docker/firmware/firmware.bin
