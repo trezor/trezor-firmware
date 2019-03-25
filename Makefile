@@ -81,12 +81,15 @@ style_check: ## run code style check on application sources and tests
 	isort --check-only $(shell find src -name *.py ! -path 'src/trezor/messages/*')
 	black --check $(shell find src -name *.py ! -path 'src/trezor/messages/*')
 
-style:
+style: ## apply code style on application sources and tests
 	isort $(shell find src -name *.py ! -path 'src/trezor/messages/*')
 	black $(shell find src -name *.py ! -path 'src/trezor/messages/*')
 
-cstyle: ## run code style check on low-level C code
+cstyle_check: ## run code style check on low-level C code
 	./tools/clang-format-check $(shell find embed -type f -name *.[ch])
+
+cstyle: ## apply code style on low-level C code
+	clang-format -i $(shell find embed -type f -name *.[ch])
 
 ## code generation:
 
