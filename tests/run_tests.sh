@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cd $(dirname $0)
 MICROPYTHON=../build/unix/micropython
 PYOPT=1
 
