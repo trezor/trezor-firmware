@@ -106,6 +106,16 @@
     "blockbook": []
   },
   {
+    "chain": "eti",
+    "chain_id": 101,
+    "slip44": 464,
+    "shortcut": "ETI",
+    "name": "EtherInc",
+    "rskip60": false,
+    "url": "https://einc.io",
+    "blockbook": []
+  },
+  {
     "chain": "etc",
     "chain_id": 61,
     "slip44": 61,
