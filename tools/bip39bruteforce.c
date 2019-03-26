@@ -5,6 +5,7 @@
 #include "bip32.h"
 #include "ecdsa.h"
 #include "curves.h"
+#include "secp256k1.h"
 
 char iter[256];
 uint8_t seed[512 / 8];
@@ -44,7 +45,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "\"%s\" is not a valid mnemonic\n", mnemonic);
 		return 2;
 	}
-	if (!ecdsa_address_decode(address, 0, HASHER_SHA2, addr)) {
+	if (!ecdsa_address_decode(address, 0, secp256k1_info.hasher_base58, addr)) {
 		fprintf(stderr, "\"%s\" is not a valid address\n", address);
 		return 3;
 	}
@@ -70,7 +71,7 @@ int main(int argc, char **argv)
 		hdnode_private_ckd(&node, 0);
 		hdnode_private_ckd(&node, 0);
 		hdnode_fill_public_key(&node);
-		ecdsa_get_pubkeyhash(node.public_key, HASHER_SHA2, pubkeyhash);
+		ecdsa_get_pubkeyhash(node.public_key, secp256k1_info.hasher_pubkey, pubkeyhash);
 		if (memcmp(addr + 1, pubkeyhash, 20) == 0) {
 			found = 1;
 			break;
