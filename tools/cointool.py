@@ -176,6 +176,18 @@ def check_eth(coins):
         chain_name_str = "colliding chain name " + crayon(None, key, bold=True) + ":"
         print_log(logging.ERROR, chain_name_str, bucket_str)
         check_passed = False
+    for coin in coins:
+        icon_file = "defs/ethereum/%s.png" % coin["shortcut"].lower()
+        try:
+            icon = Image.open(icon_file)
+        except Exception:
+            print(coin["key"], ": failed to open icon file", icon_file)
+            check_passed = False
+            continue
+
+        if icon.size != (128, 128) or icon.mode != "RGBA":
+            print(coin["key"], ": bad icon format (must be RGBA 128x128)")
+            check_passed = False
     return check_passed
 
 
