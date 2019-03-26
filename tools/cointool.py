@@ -414,36 +414,29 @@ def check_key_uniformity(coins):
 def check_segwit(coins):
     for coin in coins:
         segwit = coin["segwit"]
+        segwit_fields = [
+            "bech32_prefix",
+            "xpub_magic_segwit_native",
+            "xpub_magic_segwit_p2sh",
+        ]
         if segwit:
-            if coin["xpub_magic_segwit_native"] is None:
-                print_log(
-                    logging.WARNING,
-                    coin["name"],
-                    "segwit is True => xpub_magic_segwit_native should be set",
-                )
-                # return False
-            if coin["xpub_magic_segwit_p2sh"] is None:
-                print_log(
-                    logging.WARNING,
-                    coin["name"],
-                    "segwit is True => xpub_magic_segwit_p2sh should be set",
-                )
-                # return False
+            for field in segwit_fields:
+                if coin[field] is None:
+                    print_log(
+                        logging.ERROR,
+                        coin["name"],
+                        "segwit is True => %s should be set" % field,
+                    )
+                    return False
         else:
-            if coin["xpub_magic_segwit_native"] is not None:
-                print_log(
-                    logging.ERROR,
-                    coin["name"],
-                    "segwit is False => xpub_magic_segwit_native should NOT be set",
-                )
-                return False
-            if coin["xpub_magic_segwit_p2sh"] is not None:
-                print_log(
-                    logging.ERROR,
-                    coin["name"],
-                    "segwit is False => xpub_magic_segwit_p2sh should NOT be set",
-                )
-                return False
+            for field in segwit_fields:
+                if coin[field] is not None:
+                    print_log(
+                        logging.ERROR,
+                        coin["name"],
+                        "segwit is True => %s should NOT be set" % field,
+                    )
+                    return False
     return True
 
 
