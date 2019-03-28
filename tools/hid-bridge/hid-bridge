@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+import select
+import argparse
+
+from udp_interface import UDPInterface
+from hid_interface import HIDInterface
+import uhid
+import logger
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-e",
+    default=21325,
+    metavar="port",
+    type=int,
+    help="UDP port the utility communicates with, 21325 by default.",
+)
+parser.add_argument(
+    "-l",
+    "--log-level",
+    choices=["none", "raw", "uhid-event", "hid-packet"],
+    default="none",
+    help="Do not log at all (none); log everything sent to and received by the uhid device and the UDP socket (raw); log uhid events written to and read by the uhid device (uhid-event), log hid packets send to and received by the virtual hid device (hid-packet).",
+)
+parser.add_argument(
+    "-t",
+    "--log-timestams",
+    dest="log_timestamps",
+    action="store_true",
+    default="False",
+    help="Do include timestamps in the log, this is the default option.",
+)
+parser.add_argument(
+    "--no-log-timestams",
+    dest="log_timestamps",
+    action="store_false",
+    help="Do not include timestamps in the log.",
+)
+args = parser.parse_args()
+
+logger.log_level = args.log_level
+logger.log_timestamps = args.log_timestamps
+
+udp_interface = UDPInterface(args.e)
+hid_interface = HIDInterface()
+
+poller = select.poll()
+poller.register(udp_interface.file_descriptor, select.POLLIN | select.POLLPRI)
+poller.register(hid_interface.file_descriptor, select.POLLIN | select.POLLPRI)
+
+while True:
+    events = poller.poll()
+
+    for descriptor, event in events:
+        if descriptor == hid_interface.file_descriptor:
+            data = hid_interface.process_event()
+            if data:
+                udp_interface.write(data)
+        if descriptor == udp_interface.file_descriptor:
+            data = udp_interface.read(uhid.EVENT_LENGTH)
+            hid_interface.write_data(data)

@@ -1,0 +1,2 @@
+KERNELS=="uhid", KERNEL=="hidraw*", MODE="0660", GROUP="plugdev", TAG+="uaccess", TAG+="udev-acl"
+KERNEL=="uhid", MODE="0660", MODE="0660", GROUP="plugdev", TAG+="uaccess", TAG+="udev-acl"
