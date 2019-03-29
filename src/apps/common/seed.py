@@ -76,7 +76,7 @@ def derive_node_without_passphrase(
 ) -> bip32.HDNode:
     if not storage.is_initialized():
         raise Exception("Device is not initialized")
-    seed = mnemonic.get_seed()
+    seed = mnemonic.get_seed(progress_bar=False)
     node = bip32.from_seed(seed, curve_name)
     node.derive_path(path)
     return node

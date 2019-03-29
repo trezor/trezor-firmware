@@ -12,11 +12,14 @@ def get() -> (bytes, int):
     return mnemonic_secret, mnemonic_type
 
 
-def get_seed(passphrase: str = ""):
+def get_seed(passphrase: str = "", progress_bar=True):
     secret, mnemonic_type = get()
-    _start_progress()
     if mnemonic_type == TYPE_BIP39:
-        return bip39.seed(secret.decode(), passphrase, _render_progress)
+        module = bip39
+    if progress_bar:
+        _start_progress()
+        return module.seed(secret.decode(), passphrase, _render_progress)
+    return module.seed(secret.decode(), passphrase)
 
 
 def process(mnemonics: list, mnemonic_type: int):
