@@ -27,19 +27,41 @@
 #define STR(s) #s
 
 #ifndef MIN_8bits
-#define MIN_8bits(a, b) ({ typeof(a) _a = (a); typeof(b) _b = (b); _a < _b ? (_a & 0xFF) : (_b & 0xFF); })
+#define MIN_8bits(a, b)                  \
+  ({                                     \
+    typeof(a) _a = (a);                  \
+    typeof(b) _b = (b);                  \
+    _a < _b ? (_a & 0xFF) : (_b & 0xFF); \
+  })
 #endif
 #ifndef MIN
-#define MIN(a, b) ({ typeof(a) _a = (a); typeof(b) _b = (b); _a < _b ? _a : _b; })
+#define MIN(a, b)       \
+  ({                    \
+    typeof(a) _a = (a); \
+    typeof(b) _b = (b); \
+    _a < _b ? _a : _b;  \
+  })
 #endif
 #ifndef MAX
-#define MAX(a, b) ({ typeof(a) _a = (a); typeof(b) _b = (b); _a > _b ? _a : _b; })
+#define MAX(a, b)       \
+  ({                    \
+    typeof(a) _a = (a); \
+    typeof(b) _b = (b); \
+    _a > _b ? _a : _b;  \
+  })
 #endif
 
-void __attribute__((noreturn)) __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func);
-void __attribute__((noreturn)) error_shutdown(const char *line1, const char *line2, const char *line3, const char *line4);
+void __attribute__((noreturn))
+__fatal_error(const char *expr, const char *msg, const char *file, int line,
+              const char *func);
+void __attribute__((noreturn))
+error_shutdown(const char *line1, const char *line2, const char *line3,
+               const char *line4);
 
-#define ensure(expr, msg) (((expr) == sectrue) ? (void)0 : __fatal_error(#expr, msg, __FILE__, __LINE__, __func__))
+#define ensure(expr, msg) \
+  (((expr) == sectrue)    \
+       ? (void)0          \
+       : __fatal_error(#expr, msg, __FILE__, __LINE__, __func__))
 
 void hal_delay(uint32_t ms);
 

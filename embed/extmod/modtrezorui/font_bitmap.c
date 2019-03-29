@@ -1,5 +1,7 @@
 #include "font_bitmap.h"
 
+// clang-format off
+
 const uint8_t * const Font_Bitmap = (const uint8_t * const)
     "\x00\x00\x00\x00\x00"
     "\x00\x00\x5f\x00\x00"

@@ -86,10 +86,11 @@ style: ## apply code style on application sources and tests
 	black $(shell find src -name *.py ! -path 'src/trezor/messages/*')
 
 cstyle_check: ## run code style check on low-level C code
-	./tools/clang-format-check $(shell find embed -type f -name *.[ch])
+	./tools/clang-format-check embed/*/*.{c,h} embed/extmod/modtrezor*/*.{c,h}
+
 
 cstyle: ## apply code style on low-level C code
-	clang-format -i $(shell find embed -type f -name *.[ch])
+	clang-format -i embed/*/*.{c,h} embed/extmod/modtrezor*/*.{c,h}
 
 ## code generation:
 

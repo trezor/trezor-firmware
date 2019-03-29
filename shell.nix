@@ -5,5 +5,5 @@ let
 in
   stdenv.mkDerivation {
     name = "trezor-core-dev";
-    buildInputs = [ myPython protobuf scons gnumake gcc gcc-arm-embedded pkgconfig SDL2 SDL2_image autoflake ];
+    buildInputs = [ myPython protobuf scons gnumake gcc gcc-arm-embedded pkgconfig SDL2 SDL2_image autoflake clang-tools ];
   }

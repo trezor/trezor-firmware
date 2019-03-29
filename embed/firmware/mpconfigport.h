@@ -1,3 +1,5 @@
+// clang-format off
+
 /*
  * This file is part of the MicroPython project, http://micropython.org/
  *

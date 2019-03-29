@@ -31,4 +31,4 @@ secbool flash_configure_option_bytes(void);
 void periph_init(void);
 secbool reset_flags_check(void);
 
-#endif // __TREZORHAL_LOWLEVEL_H__
+#endif  // __TREZORHAL_LOWLEVEL_H__

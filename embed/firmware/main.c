@@ -21,18 +21,19 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "py/nlr.h"
+#include "lib/utils/pyexec.h"
 #include "py/compile.h"
-#include "py/runtime.h"
-#include "py/stackctrl.h"
-#include "py/repl.h"
 #include "py/gc.h"
 #include "py/mperrno.h"
-#include "lib/utils/pyexec.h"
+#include "py/nlr.h"
+#include "py/repl.h"
+#include "py/runtime.h"
+#include "py/stackctrl.h"
 
 #include "ports/stm32/gccollect.h"
 #include "ports/stm32/pendsv.h"
 
+#include "bl_check.h"
 #include "common.h"
 #include "display.h"
 #include "flash.h"
@@ -40,84 +41,82 @@
 #include "rng.h"
 #include "sdcard.h"
 #include "touch.h"
-#include "bl_check.h"
 
-int main(void)
-{
-    // reinitialize HAL for Trezor One
+int main(void) {
+  // reinitialize HAL for Trezor One
 #if TREZOR_MODEL == 1
-    HAL_Init();
+  HAL_Init();
 #endif
 
-    collect_hw_entropy();
+  collect_hw_entropy();
 
 #if TREZOR_MODEL == T
-    check_and_replace_bootloader();
-    // Enable MPU
-    mpu_config_firmware();
+  check_and_replace_bootloader();
+  // Enable MPU
+  mpu_config_firmware();
 #endif
 
-    // Init peripherals
-    pendsv_init();
+  // Init peripherals
+  pendsv_init();
 
 #if TREZOR_MODEL == 1
-    display_init();
-    touch_init();
+  display_init();
+  touch_init();
 #endif
 
 #if TREZOR_MODEL == T
-    sdcard_init();
-    touch_init();
-    touch_power_on();
+  sdcard_init();
+  touch_init();
+  touch_power_on();
 
-    display_clear();
+  display_clear();
 #endif
 
-    printf("CORE: Preparing stack\n");
-    // Stack limit should be less than real stack size, so we have a chance
-    // to recover from limit hit.
-    mp_stack_set_top(&_estack);
-    mp_stack_set_limit((char*)&_estack - (char*)&_heap_end - 1024);
+  printf("CORE: Preparing stack\n");
+  // Stack limit should be less than real stack size, so we have a chance
+  // to recover from limit hit.
+  mp_stack_set_top(&_estack);
+  mp_stack_set_limit((char *)&_estack - (char *)&_heap_end - 1024);
 
-    // GC init
-    printf("CORE: Starting GC\n");
-    gc_init(&_heap_start, &_heap_end);
+  // GC init
+  printf("CORE: Starting GC\n");
+  gc_init(&_heap_start, &_heap_end);
 
-    // Interpreter init
-    printf("CORE: Starting interpreter\n");
-    mp_init();
-    mp_obj_list_init(mp_sys_argv, 0);
-    mp_obj_list_init(mp_sys_path, 0);
-    mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); // current dir (or base dir of the script)
+  // Interpreter init
+  printf("CORE: Starting interpreter\n");
+  mp_init();
+  mp_obj_list_init(mp_sys_argv, 0);
+  mp_obj_list_init(mp_sys_path, 0);
+  mp_obj_list_append(
+      mp_sys_path,
+      MP_OBJ_NEW_QSTR(MP_QSTR_));  // current dir (or base dir of the script)
 
-    // Execute the main script
-    printf("CORE: Executing main script\n");
-    pyexec_frozen_module("main.py");
+  // Execute the main script
+  printf("CORE: Executing main script\n");
+  pyexec_frozen_module("main.py");
 
-    // Clean up
-    printf("CORE: Main script finished, cleaning up\n");
-    mp_deinit();
+  // Clean up
+  printf("CORE: Main script finished, cleaning up\n");
+  mp_deinit();
 
-    return 0;
+  return 0;
 }
 
 // MicroPython default exception handler
 
 void __attribute__((noreturn)) nlr_jump_fail(void *val) {
-    ensure(secfalse, "uncaught exception");
+  ensure(secfalse, "uncaught exception");
 }
 
-void PendSV_Handler(void) {
-    pendsv_isr_handler();
-}
+void PendSV_Handler(void) { pendsv_isr_handler(); }
 
 // MicroPython builtin stubs
 
 mp_import_stat_t mp_import_stat(const char *path) {
-    return MP_IMPORT_STAT_NO_EXIST;
+  return MP_IMPORT_STAT_NO_EXIST;
 }
 
 mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
-    return mp_const_none;
+  return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);

@@ -38,4 +38,4 @@ const char *profile_dir(void);
 const char *profile_flash_path(void);
 const char *profile_sdcard_path(void);
 
-#endif // __TREZOR_PROFILE_H__
+#endif  // __TREZOR_PROFILE_H__

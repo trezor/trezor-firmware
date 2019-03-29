@@ -30,81 +30,89 @@ extern int sdl_touch_offset_x, sdl_touch_offset_y;
 extern void __shutdown(void);
 extern void display_save(const char *prefix);
 
-uint32_t touch_read(void)
-{
+uint32_t touch_read(void) {
 #ifndef TREZOR_EMULATOR_NOUI
-    SDL_Event event;
-    SDL_PumpEvents();
-    if (SDL_PollEvent(&event) > 0) {
-        switch (event.type) {
+  SDL_Event event;
+  SDL_PumpEvents();
+  if (SDL_PollEvent(&event) > 0) {
+    switch (event.type) {
 #if TREZOR_MODEL == T
-            case SDL_MOUSEBUTTONDOWN:
-            case SDL_MOUSEMOTION:
-            case SDL_MOUSEBUTTONUP: {
-                const int x = event.button.x - sdl_touch_offset_x;
-                const int y = event.button.y - sdl_touch_offset_y;
-                if (x < 0 || y < 0 || x >= sdl_display_res_x || y >= sdl_display_res_y) {
-                    if (event.motion.state) {
-                        const int clamp_x = (x < 0) ? 0 : ((x >= sdl_display_res_x) ? sdl_display_res_x - 1 : x);
-                        const int clamp_y = (y < 0) ? 0 : ((y >= sdl_display_res_y) ? sdl_display_res_y - 1 : y);
-                        return TOUCH_END | touch_pack_xy(clamp_x, clamp_y);
-                    } else {
-                        break;
-                    }
-                }
-                switch (event.type) {
-                    case SDL_MOUSEBUTTONDOWN:
-                        return TOUCH_START | touch_pack_xy(x, y);
-                    case SDL_MOUSEMOTION:
-                        // remove other SDL_MOUSEMOTION events from queue
-                        SDL_FlushEvent(SDL_MOUSEMOTION);
-                        if (event.motion.state) {
-                            return TOUCH_MOVE | touch_pack_xy(x, y);
-                        }
-                        break;
-                    case SDL_MOUSEBUTTONUP:
-                        return TOUCH_END | touch_pack_xy(x, y);
-                }
-                break;
-            }
-#endif
-#if TREZOR_MODEL == 1
-            case SDL_KEYDOWN:
-                if (event.key.repeat) {
-                    break;
-                }
-                switch (event.key.keysym.sym) {
-                    case SDLK_LEFT:
-                        return TOUCH_START | touch_pack_xy(0, sdl_display_res_y - 1);
-                    case SDLK_RIGHT:
-                        return TOUCH_START | touch_pack_xy(sdl_display_res_x - 1, sdl_display_res_y - 1);
-                }
-                break;
-#endif
-            case SDL_KEYUP:
-                if (event.key.repeat) {
-                    break;
-                }
-                switch (event.key.keysym.sym) {
-                    case SDLK_ESCAPE:
-                        __shutdown();
-                        break;
-                    case SDLK_p:
-                        display_save("emu");
-                        break;
-#if TREZOR_MODEL == 1
-                    case SDLK_LEFT:
-                        return TOUCH_END | touch_pack_xy(0, sdl_display_res_y - 1);
-                    case SDLK_RIGHT:
-                        return TOUCH_END | touch_pack_xy(sdl_display_res_x - 1, sdl_display_res_y - 1);
-#endif
-                }
-                break;
-            case SDL_QUIT:
-                __shutdown();
-                break;
+      case SDL_MOUSEBUTTONDOWN:
+      case SDL_MOUSEMOTION:
+      case SDL_MOUSEBUTTONUP: {
+        const int x = event.button.x - sdl_touch_offset_x;
+        const int y = event.button.y - sdl_touch_offset_y;
+        if (x < 0 || y < 0 || x >= sdl_display_res_x ||
+            y >= sdl_display_res_y) {
+          if (event.motion.state) {
+            const int clamp_x =
+                (x < 0)
+                    ? 0
+                    : ((x >= sdl_display_res_x) ? sdl_display_res_x - 1 : x);
+            const int clamp_y =
+                (y < 0)
+                    ? 0
+                    : ((y >= sdl_display_res_y) ? sdl_display_res_y - 1 : y);
+            return TOUCH_END | touch_pack_xy(clamp_x, clamp_y);
+          } else {
+            break;
+          }
         }
-    }
+        switch (event.type) {
+          case SDL_MOUSEBUTTONDOWN:
+            return TOUCH_START | touch_pack_xy(x, y);
+          case SDL_MOUSEMOTION:
+            // remove other SDL_MOUSEMOTION events from queue
+            SDL_FlushEvent(SDL_MOUSEMOTION);
+            if (event.motion.state) {
+              return TOUCH_MOVE | touch_pack_xy(x, y);
+            }
+            break;
+          case SDL_MOUSEBUTTONUP:
+            return TOUCH_END | touch_pack_xy(x, y);
+        }
+        break;
+      }
 #endif
-    return 0;
+#if TREZOR_MODEL == 1
+      case SDL_KEYDOWN:
+        if (event.key.repeat) {
+          break;
+        }
+        switch (event.key.keysym.sym) {
+          case SDLK_LEFT:
+            return TOUCH_START | touch_pack_xy(0, sdl_display_res_y - 1);
+          case SDLK_RIGHT:
+            return TOUCH_START |
+                   touch_pack_xy(sdl_display_res_x - 1, sdl_display_res_y - 1);
+        }
+        break;
+#endif
+      case SDL_KEYUP:
+        if (event.key.repeat) {
+          break;
+        }
+        switch (event.key.keysym.sym) {
+          case SDLK_ESCAPE:
+            __shutdown();
+            break;
+          case SDLK_p:
+            display_save("emu");
+            break;
+#if TREZOR_MODEL == 1
+          case SDLK_LEFT:
+            return TOUCH_END | touch_pack_xy(0, sdl_display_res_y - 1);
+          case SDLK_RIGHT:
+            return TOUCH_END |
+                   touch_pack_xy(sdl_display_res_x - 1, sdl_display_res_y - 1);
+#endif
+        }
+        break;
+      case SDL_QUIT:
+        __shutdown();
+        break;
+    }
+  }
+#endif
+  return 0;
 }

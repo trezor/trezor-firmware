@@ -20,7 +20,4 @@
 #include "rand.h"
 #include "rng.h"
 
-uint32_t random32(void)
-{
-	return rng_get();
-}
+uint32_t random32(void) { return rng_get(); }

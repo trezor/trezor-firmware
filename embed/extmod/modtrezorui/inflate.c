@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// clang-format off
+
 /*
  * stream_inflate  -  tiny inflate library with output streaming
  *

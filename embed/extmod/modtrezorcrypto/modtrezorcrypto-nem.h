@@ -29,43 +29,51 @@
 ///     '''
 ///     Validate a NEM address
 ///     '''
-STATIC mp_obj_t mod_trezorcrypto_nem_validate_address(mp_obj_t address, mp_obj_t network) {
+STATIC mp_obj_t mod_trezorcrypto_nem_validate_address(mp_obj_t address,
+                                                      mp_obj_t network) {
+  mp_buffer_info_t addr;
+  mp_get_buffer_raise(address, &addr, MP_BUFFER_READ);
 
-    mp_buffer_info_t addr;
-    mp_get_buffer_raise(address, &addr, MP_BUFFER_READ);
-
-    uint32_t n = trezor_obj_get_uint(network);
-    return mp_obj_new_bool(nem_validate_address(addr.buf, n));
+  uint32_t n = trezor_obj_get_uint(network);
+  return mp_obj_new_bool(nem_validate_address(addr.buf, n));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_validate_address_obj, mod_trezorcrypto_nem_validate_address);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_validate_address_obj,
+                                 mod_trezorcrypto_nem_validate_address);
 
 /// def compute_address(public_key: bytes, network: int) -> str:
 ///     '''
 ///     Compute a NEM address from a public key
 ///     '''
-STATIC mp_obj_t mod_trezorcrypto_nem_compute_address(mp_obj_t public_key, mp_obj_t network) {
-    mp_buffer_info_t p;
-    mp_get_buffer_raise(public_key, &p, MP_BUFFER_READ);
+STATIC mp_obj_t mod_trezorcrypto_nem_compute_address(mp_obj_t public_key,
+                                                     mp_obj_t network) {
+  mp_buffer_info_t p;
+  mp_get_buffer_raise(public_key, &p, MP_BUFFER_READ);
 
-    uint32_t n = trezor_obj_get_uint(network);
+  uint32_t n = trezor_obj_get_uint(network);
 
-    char address[NEM_ADDRESS_SIZE + 1]; // + 1 for the 0 byte
-    if (!nem_get_address(p.buf, n, address)) {
-        mp_raise_ValueError("Failed to compute a NEM address from provided public key");
-    }
-    return mp_obj_new_str_of_type(&mp_type_str, (const uint8_t *)address, strlen(address));
+  char address[NEM_ADDRESS_SIZE + 1];  // + 1 for the 0 byte
+  if (!nem_get_address(p.buf, n, address)) {
+    mp_raise_ValueError(
+        "Failed to compute a NEM address from provided public key");
+  }
+  return mp_obj_new_str_of_type(&mp_type_str, (const uint8_t *)address,
+                                strlen(address));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_compute_address_obj, mod_trezorcrypto_nem_compute_address);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_compute_address_obj,
+                                 mod_trezorcrypto_nem_compute_address);
 
 // objects definition
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_nem_globals_table[] = {
-    { MP_ROM_QSTR(MP_QSTR_validate_address), MP_ROM_PTR(&mod_trezorcrypto_nem_validate_address_obj) },
-    { MP_ROM_QSTR(MP_QSTR_compute_address), MP_ROM_PTR(&mod_trezorcrypto_nem_compute_address_obj) },
+    {MP_ROM_QSTR(MP_QSTR_validate_address),
+     MP_ROM_PTR(&mod_trezorcrypto_nem_validate_address_obj)},
+    {MP_ROM_QSTR(MP_QSTR_compute_address),
+     MP_ROM_PTR(&mod_trezorcrypto_nem_compute_address_obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_nem_globals, mod_trezorcrypto_nem_globals_table);
+STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_nem_globals,
+                            mod_trezorcrypto_nem_globals_table);
 
 // module definition
 STATIC const mp_obj_module_t mod_trezorcrypto_nem_module = {
-    .base = { &mp_type_module },
-    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_nem_globals,
+    .base = {&mp_type_module},
+    .globals = (mp_obj_dict_t *)&mod_trezorcrypto_nem_globals,
 };
