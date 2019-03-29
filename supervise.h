@@ -20,9 +20,9 @@
 #ifndef __SUPERVISE_H__
 #define __SUPERVISE_H__
 
-#if !EMULATOR
-
 #include <stdint.h>
+
+#if !EMULATOR
 
 #define SVC_FLASH_UNLOCK 0
 #define SVC_FLASH_ERASE 1
