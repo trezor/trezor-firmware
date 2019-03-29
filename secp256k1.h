@@ -26,8 +26,8 @@
 
 #include <stdint.h>
 
-#include "ecdsa.h"
 #include "bip32.h"
+#include "ecdsa.h"
 
 extern const ecdsa_curve secp256k1;
 extern const curve_info secp256k1_info;

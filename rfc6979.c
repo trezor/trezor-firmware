@@ -22,57 +22,56 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <string.h>
 #include "rfc6979.h"
+#include <string.h>
 #include "hmac.h"
 #include "memzero.h"
 
-void init_rfc6979(const uint8_t *priv_key, const uint8_t *hash, rfc6979_state *state) {
-	uint8_t bx[2*32];
-	uint8_t buf[32 + 1 + 2*32];
+void init_rfc6979(const uint8_t *priv_key, const uint8_t *hash,
+                  rfc6979_state *state) {
+  uint8_t bx[2 * 32];
+  uint8_t buf[32 + 1 + 2 * 32];
 
-	memcpy(bx, priv_key, 32);
-	memcpy(bx+32, hash, 32);
+  memcpy(bx, priv_key, 32);
+  memcpy(bx + 32, hash, 32);
 
-	memset(state->v, 1, sizeof(state->v));
-	memset(state->k, 0, sizeof(state->k));
+  memset(state->v, 1, sizeof(state->v));
+  memset(state->k, 0, sizeof(state->k));
 
-	memcpy(buf, state->v, sizeof(state->v));
-	buf[sizeof(state->v)] = 0x00;
-	memcpy(buf + sizeof(state->v) + 1, bx, 64);
-	hmac_sha256(state->k, sizeof(state->k), buf, sizeof(buf), state->k);
-	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
+  memcpy(buf, state->v, sizeof(state->v));
+  buf[sizeof(state->v)] = 0x00;
+  memcpy(buf + sizeof(state->v) + 1, bx, 64);
+  hmac_sha256(state->k, sizeof(state->k), buf, sizeof(buf), state->k);
+  hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
 
-	memcpy(buf, state->v, sizeof(state->v));
-	buf[sizeof(state->v)] = 0x01;
-	memcpy(buf + sizeof(state->v) + 1, bx, 64);
-	hmac_sha256(state->k, sizeof(state->k), buf, sizeof(buf), state->k);
-	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
+  memcpy(buf, state->v, sizeof(state->v));
+  buf[sizeof(state->v)] = 0x01;
+  memcpy(buf + sizeof(state->v) + 1, bx, 64);
+  hmac_sha256(state->k, sizeof(state->k), buf, sizeof(buf), state->k);
+  hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
 
-	memzero(bx, sizeof(bx));
-	memzero(buf, sizeof(buf));
+  memzero(bx, sizeof(bx));
+  memzero(buf, sizeof(buf));
 }
 
 // generate next number from deterministic random number generator
-void generate_rfc6979(uint8_t rnd[32], rfc6979_state *state)
-{
-	uint8_t buf[32 + 1];
+void generate_rfc6979(uint8_t rnd[32], rfc6979_state *state) {
+  uint8_t buf[32 + 1];
 
-	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
-	memcpy(buf, state->v, sizeof(state->v));
-	buf[sizeof(state->v)] = 0x00;
-	hmac_sha256(state->k, sizeof(state->k), buf, sizeof(state->v) + 1, state->k);
-	hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
-	memcpy(rnd, buf, 32);
-	memzero(buf, sizeof(buf));
+  hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
+  memcpy(buf, state->v, sizeof(state->v));
+  buf[sizeof(state->v)] = 0x00;
+  hmac_sha256(state->k, sizeof(state->k), buf, sizeof(state->v) + 1, state->k);
+  hmac_sha256(state->k, sizeof(state->k), state->v, sizeof(state->v), state->v);
+  memcpy(rnd, buf, 32);
+  memzero(buf, sizeof(buf));
 }
 
 // generate K in a deterministic way, according to RFC6979
 // http://tools.ietf.org/html/rfc6979
-void generate_k_rfc6979(bignum256 *k, rfc6979_state *state)
-{
-	uint8_t buf[32];
-	generate_rfc6979(buf, state);
-	bn_read_be(buf, k);
-	memzero(buf, sizeof(buf));
+void generate_k_rfc6979(bignum256 *k, rfc6979_state *state) {
+  uint8_t buf[32];
+  generate_rfc6979(buf, state);
+  bn_read_be(buf, k);
+  memzero(buf, sizeof(buf));
 }

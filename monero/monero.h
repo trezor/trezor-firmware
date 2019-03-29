@@ -14,8 +14,8 @@
 #endif
 
 #include "base58.h"
+#include "range_proof.h"
 #include "serialize.h"
 #include "xmr.h"
-#include "range_proof.h"
 
-#endif //TREZOR_CRYPTO_MONERO_H
+#endif  // TREZOR_CRYPTO_MONERO_H

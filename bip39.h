@@ -28,7 +28,7 @@
 
 #define BIP39_PBKDF2_ROUNDS 2048
 
-const char *mnemonic_generate(int strength);	// strength in bits
+const char *mnemonic_generate(int strength);  // strength in bits
 const char *mnemonic_from_data(const uint8_t *data, int len);
 void mnemonic_clear(void);
 
@@ -37,8 +37,11 @@ int mnemonic_check(const char *mnemonic);
 int mnemonic_to_entropy(const char *mnemonic, uint8_t *entropy);
 
 // passphrase must be at most 256 characters otherwise it would be truncated
-void mnemonic_to_seed(const char *mnemonic, const char *passphrase, uint8_t seed[512 / 8], void (*progress_callback)(uint32_t current, uint32_t total));
+void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
+                      uint8_t seed[512 / 8],
+                      void (*progress_callback)(uint32_t current,
+                                                uint32_t total));
 
-const char * const *mnemonic_wordlist(void);
+const char *const *mnemonic_wordlist(void);
 
 #endif
