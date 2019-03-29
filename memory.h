@@ -58,47 +58,47 @@
 
  */
 
-#define FLASH_ORIGIN		(0x08000000)
+#define FLASH_ORIGIN (0x08000000)
 
 #if EMULATOR
 extern uint8_t *emulator_flash_base;
-#define FLASH_PTR(x)		(emulator_flash_base + (x - FLASH_ORIGIN))
+#define FLASH_PTR(x) (emulator_flash_base + (x - FLASH_ORIGIN))
 #else
-#define FLASH_PTR(x)		(const uint8_t*) (x)
+#define FLASH_PTR(x) (const uint8_t *)(x)
 #endif
 
-#define FLASH_TOTAL_SIZE	(1024 * 1024)
+#define FLASH_TOTAL_SIZE (1024 * 1024)
 
-#define FLASH_BOOT_START	(FLASH_ORIGIN)
-#define FLASH_BOOT_LEN		(0x8000)
+#define FLASH_BOOT_START (FLASH_ORIGIN)
+#define FLASH_BOOT_LEN (0x8000)
 
-#define FLASH_STORAGE_START	(FLASH_BOOT_START + FLASH_BOOT_LEN)
-#define FLASH_STORAGE_LEN	(0x8000)
+#define FLASH_STORAGE_START (FLASH_BOOT_START + FLASH_BOOT_LEN)
+#define FLASH_STORAGE_LEN (0x8000)
 
 #define FLASH_FWHEADER_START (FLASH_STORAGE_START + FLASH_STORAGE_LEN)
-#define FLASH_FWHEADER_LEN	(0x400)
+#define FLASH_FWHEADER_LEN (0x400)
 
-#define FLASH_APP_START		(FLASH_FWHEADER_START + FLASH_FWHEADER_LEN)
-#define FLASH_APP_LEN		(FLASH_TOTAL_SIZE - (FLASH_APP_START - FLASH_ORIGIN))
+#define FLASH_APP_START (FLASH_FWHEADER_START + FLASH_FWHEADER_LEN)
+#define FLASH_APP_LEN (FLASH_TOTAL_SIZE - (FLASH_APP_START - FLASH_ORIGIN))
 
-#define FLASH_BOOT_SECTOR_FIRST	0
-#define FLASH_BOOT_SECTOR_LAST	1
+#define FLASH_BOOT_SECTOR_FIRST 0
+#define FLASH_BOOT_SECTOR_LAST 1
 
-#define FLASH_STORAGE_SECTOR_FIRST	2
-#define FLASH_STORAGE_SECTOR_LAST	3
+#define FLASH_STORAGE_SECTOR_FIRST 2
+#define FLASH_STORAGE_SECTOR_LAST 3
 
-#define FLASH_CODE_SECTOR_FIRST	4
-#define FLASH_CODE_SECTOR_LAST	11
+#define FLASH_CODE_SECTOR_FIRST 4
+#define FLASH_CODE_SECTOR_LAST 11
 
 void memory_protect(void);
 void memory_write_unlock(void);
 int memory_bootloader_hash(uint8_t *hash);
 
 static inline void flash_write32(uint32_t addr, uint32_t word) {
-	*(volatile uint32_t *) FLASH_PTR(addr) = word;
+  *(volatile uint32_t *)FLASH_PTR(addr) = word;
 }
 static inline void flash_write8(uint32_t addr, uint8_t byte) {
-	*(volatile uint8_t *) FLASH_PTR(addr) = byte;
+  *(volatile uint8_t *)FLASH_PTR(addr) = byte;
 }
 
 #endif

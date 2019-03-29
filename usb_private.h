@@ -1,3 +1,4 @@
+// clang-format off
 /** @defgroup usb_private_defines USB Private Structures
 
 @brief <b>Defined Constants and Types for the USB Private Structures</b>

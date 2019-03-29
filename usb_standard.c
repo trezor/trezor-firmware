@@ -1,3 +1,4 @@
+// clang-format off
 /** @defgroup usb_standard_file Generic USB Standard Request Interface
 
 @ingroup USB

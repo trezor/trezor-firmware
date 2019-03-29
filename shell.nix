@@ -5,5 +5,5 @@ let
 in
   stdenv.mkDerivation {
     name = "trezor-mcu-dev";
-    buildInputs = [ myPython protobuf gnumake gcc gcc-arm-embedded pkgconfig SDL2 SDL2_image ];
+    buildInputs = [ myPython protobuf gnumake gcc gcc-arm-embedded pkgconfig SDL2 SDL2_image clang-tools ];
   }

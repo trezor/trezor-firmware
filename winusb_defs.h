@@ -30,60 +30,65 @@
 
 // Apparently using DeviceInterfaceGUID does not always work on Windows 7.
 // DeviceInterfaceGUIDs does seem to work.
-#define WINUSB_EXTENDED_PROPERTIES_GUID_NAME        u"DeviceInterfaceGUIDs"
-#define WINUSB_EXTENDED_PROPERTIES_GUID_NAME_SIZE_C sizeof(WINUSB_EXTENDED_PROPERTIES_GUID_NAME)
-#define WINUSB_EXTENDED_PROPERTIES_GUID_NAME_SIZE_U (sizeof(WINUSB_EXTENDED_PROPERTIES_GUID_NAME) / 2)
+#define WINUSB_EXTENDED_PROPERTIES_GUID_NAME u"DeviceInterfaceGUIDs"
+#define WINUSB_EXTENDED_PROPERTIES_GUID_NAME_SIZE_C \
+  sizeof(WINUSB_EXTENDED_PROPERTIES_GUID_NAME)
+#define WINUSB_EXTENDED_PROPERTIES_GUID_NAME_SIZE_U \
+  (sizeof(WINUSB_EXTENDED_PROPERTIES_GUID_NAME) / 2)
 
 // extra null is intentional - it's an array of GUIDs with 1 item
-#define WINUSB_EXTENDED_PROPERTIES_GUID_DATA        u"{0263b512-88cb-4136-9613-5c8e109d8ef5}\x00"
-#define WINUSB_EXTENDED_PROPERTIES_GUID_DATA_SIZE_C sizeof(WINUSB_EXTENDED_PROPERTIES_GUID_DATA)
-#define WINUSB_EXTENDED_PROPERTIES_GUID_DATA_SIZE_U (sizeof(WINUSB_EXTENDED_PROPERTIES_GUID_DATA) / 2)
-#define WINUSB_EXTENDED_PROPERTIES_MULTISZ_DATA_TYPE  7
+#define WINUSB_EXTENDED_PROPERTIES_GUID_DATA \
+  u"{0263b512-88cb-4136-9613-5c8e109d8ef5}\x00"
+#define WINUSB_EXTENDED_PROPERTIES_GUID_DATA_SIZE_C \
+  sizeof(WINUSB_EXTENDED_PROPERTIES_GUID_DATA)
+#define WINUSB_EXTENDED_PROPERTIES_GUID_DATA_SIZE_U \
+  (sizeof(WINUSB_EXTENDED_PROPERTIES_GUID_DATA) / 2)
+#define WINUSB_EXTENDED_PROPERTIES_MULTISZ_DATA_TYPE 7
 
 #define WINUSB_EXTRA_STRING_INDEX 0xee
 
 /* Table 2. Function Section */
 struct winusb_compatible_id_function_section {
-	uint8_t  bInterfaceNumber;
-	uint8_t  reserved0[1];
-	char compatibleId[8];
-	char subCompatibleId[8];
-	uint8_t  reserved1[6];
+  uint8_t bInterfaceNumber;
+  uint8_t reserved0[1];
+  char compatibleId[8];
+  char subCompatibleId[8];
+  uint8_t reserved1[6];
 } __attribute__((packed));
 
 /* Table 1. Header Section */
 struct winusb_compatible_id_descriptor_header {
-	uint32_t dwLength;
-	uint16_t bcdVersion;
-	uint16_t wIndex;
-	uint8_t  bNumSections;
-	uint8_t  reserved[7];
+  uint32_t dwLength;
+  uint16_t bcdVersion;
+  uint16_t wIndex;
+  uint8_t bNumSections;
+  uint8_t reserved[7];
 } __attribute__((packed));
 
 struct winusb_compatible_id_descriptor {
-	struct winusb_compatible_id_descriptor_header header;
-	struct winusb_compatible_id_function_section functions[];
+  struct winusb_compatible_id_descriptor_header header;
+  struct winusb_compatible_id_function_section functions[];
 } __attribute__((packed));
 
 struct winusb_extended_properties_feature_descriptor {
-	uint32_t dwLength;
-	uint32_t dwPropertyDataType;
-	uint16_t wNameLength;
-	uint16_t name[WINUSB_EXTENDED_PROPERTIES_GUID_NAME_SIZE_U];
-	uint32_t dwPropertyDataLength;
-	uint16_t propertyData[WINUSB_EXTENDED_PROPERTIES_GUID_DATA_SIZE_U];
+  uint32_t dwLength;
+  uint32_t dwPropertyDataType;
+  uint16_t wNameLength;
+  uint16_t name[WINUSB_EXTENDED_PROPERTIES_GUID_NAME_SIZE_U];
+  uint32_t dwPropertyDataLength;
+  uint16_t propertyData[WINUSB_EXTENDED_PROPERTIES_GUID_DATA_SIZE_U];
 } __attribute__((packed));
 
 struct winusb_extended_properties_descriptor_header {
-	uint32_t dwLength;
-	uint16_t bcdVersion;
-	uint16_t wIndex;
-	uint16_t wNumFeatures;
+  uint32_t dwLength;
+  uint16_t bcdVersion;
+  uint16_t wIndex;
+  uint16_t wNumFeatures;
 } __attribute__((packed));
 
 struct winusb_extended_properties_descriptor {
-	struct winusb_extended_properties_descriptor_header header;
-	struct winusb_extended_properties_feature_descriptor features[];
+  struct winusb_extended_properties_descriptor_header header;
+  struct winusb_extended_properties_feature_descriptor features[];
 } __attribute__((packed));
 
 #endif

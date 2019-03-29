@@ -17,52 +17,49 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "trezor.h"
 #include "debug.h"
 #include "oled.h"
+#include "trezor.h"
 #include "util.h"
 
 #if DEBUG_LOG
 
-void oledDebug(const char *line)
-{
-	static const char *lines[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-	static char id = 3;
-	for (int i = 0; i < 7; i++) {
-		lines[i] = lines[i + 1];
-	}
-	lines[7] = line;
-	oledClear();
-	for (int i = 0; i < 8; i++) {
-		if (lines[i]) {
-			oledDrawChar(0, i * 8, '0' + (id + i) % 10, FONT_STANDARD);
-			oledDrawString(8, i * 8, lines[i], FONT_STANDARD);
-		}
-	}
-	oledRefresh();
-	id = (id + 1) % 10;
+void oledDebug(const char *line) {
+  static const char *lines[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+  static char id = 3;
+  for (int i = 0; i < 7; i++) {
+    lines[i] = lines[i + 1];
+  }
+  lines[7] = line;
+  oledClear();
+  for (int i = 0; i < 8; i++) {
+    if (lines[i]) {
+      oledDrawChar(0, i * 8, '0' + (id + i) % 10, FONT_STANDARD);
+      oledDrawString(8, i * 8, lines[i], FONT_STANDARD);
+    }
+  }
+  oledRefresh();
+  id = (id + 1) % 10;
 }
 
-void debugLog(int level, const char *bucket, const char *text)
-{
-	(void)level;
-	(void)bucket;
+void debugLog(int level, const char *bucket, const char *text) {
+  (void)level;
+  (void)bucket;
 #if EMULATOR
-	puts(text);
+  puts(text);
 #else
-	oledDebug(text);
+  oledDebug(text);
 #endif
 }
 
-char *debugInt(const uint32_t i)
-{
-	static uint8_t n = 0;
-	static char id[8][9];
-	uint32hex(i, id[n]);
-	debugLog(0, "", id[n]);
-	char *ret = (char *)id[n];
-	n = (n + 1) % 8;
-	return ret;
+char *debugInt(const uint32_t i) {
+  static uint8_t n = 0;
+  static char id[8][9];
+  uint32hex(i, id[n]);
+  debugLog(0, "", id[n]);
+  char *ret = (char *)id[n];
+  n = (n + 1) % 8;
+  return ret;
 }
 
 #endif

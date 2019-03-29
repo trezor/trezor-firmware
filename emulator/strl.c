@@ -24,21 +24,21 @@
 
 #if (!defined __APPLE__) && (!defined HAVE_STRLCPY)
 size_t strlcpy(char *dst, const char *src, size_t size) {
-	size_t ret = strlen(src);
+  size_t ret = strlen(src);
 
-	if (size) {
-		size_t len = MIN(ret, size - 1);
-		memcpy(dst, src, len);
-		dst[len] = '\0';
-	}
+  if (size) {
+    size_t len = MIN(ret, size - 1);
+    memcpy(dst, src, len);
+    dst[len] = '\0';
+  }
 
-	return ret;
+  return ret;
 }
 
 size_t strlcat(char *dst, const char *src, size_t size) {
-	size_t n = strnlen(dst, size);
+  size_t n = strnlen(dst, size);
 
-	return n + strlcpy(&dst[n], src, size - n);
+  return n + strlcpy(&dst[n], src, size - n);
 }
 
 #endif

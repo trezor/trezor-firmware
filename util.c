@@ -17,71 +17,66 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "rng.h"
 #include "util.h"
+#include "rng.h"
 
-inline void delay(uint32_t wait)
-{
-	while (--wait > 0) __asm__("nop");
+inline void delay(uint32_t wait) {
+  while (--wait > 0) __asm__("nop");
 }
 
-void wait_random(void)
-{
-    int wait = random32() & 0xff;
-    volatile int i = 0;
-    volatile int j = wait;
-    while (i < wait) {
-        if (i + j != wait) {
-            shutdown();
-        }
-        ++i;
-        --j;
+void wait_random(void) {
+  int wait = random32() & 0xff;
+  volatile int i = 0;
+  volatile int j = wait;
+  while (i < wait) {
+    if (i + j != wait) {
+      shutdown();
     }
-    // Double-check loop completion.
-    if (i != wait || j != 0) {
-        shutdown();
-    }
+    ++i;
+    --j;
+  }
+  // Double-check loop completion.
+  if (i != wait || j != 0) {
+    shutdown();
+  }
 }
 
 static const char *hexdigits = "0123456789ABCDEF";
 
-void uint32hex(uint32_t num, char *str)
-{
-	for (uint32_t i = 0; i < 8; i++) {
-		str[i] = hexdigits[(num >> (28 - i * 4)) & 0xF];
-	}
+void uint32hex(uint32_t num, char *str) {
+  for (uint32_t i = 0; i < 8; i++) {
+    str[i] = hexdigits[(num >> (28 - i * 4)) & 0xF];
+  }
 }
 
 // converts data to hexa
-void data2hex(const void *data, uint32_t len, char *str)
-{
-	const uint8_t *cdata = (uint8_t *)data;
-	for (uint32_t i = 0; i < len; i++) {
-		str[i * 2    ] = hexdigits[(cdata[i] >> 4) & 0xF];
-		str[i * 2 + 1] = hexdigits[cdata[i] & 0xF];
-	}
-	str[len * 2] = 0;
+void data2hex(const void *data, uint32_t len, char *str) {
+  const uint8_t *cdata = (uint8_t *)data;
+  for (uint32_t i = 0; i < len; i++) {
+    str[i * 2] = hexdigits[(cdata[i] >> 4) & 0xF];
+    str[i * 2 + 1] = hexdigits[cdata[i] & 0xF];
+  }
+  str[len * 2] = 0;
 }
 
-uint32_t readprotobufint(const uint8_t **ptr)
-{
-	uint32_t result = (**ptr & 0x7F);
-	if (**ptr & 0x80) {
-		(*ptr)++;
-		result += (**ptr & 0x7F) * 128;
-		if (**ptr & 0x80) {
-			(*ptr)++;
-			result += (**ptr & 0x7F) * 128 * 128;
-			if (**ptr & 0x80) {
-				(*ptr)++;
-				result += (**ptr & 0x7F) * 128 * 128 * 128;
-				if (**ptr & 0x80) {
-					(*ptr)++;
-					result += (**ptr & 0x7F) * 128 * 128 * 128 * 128;
-				}
-			}
-		}
-	}
-	(*ptr)++;
-	return result;
+uint32_t readprotobufint(const uint8_t **ptr) {
+  uint32_t result = (**ptr & 0x7F);
+  if (**ptr & 0x80) {
+    (*ptr)++;
+    result += (**ptr & 0x7F) * 128;
+    if (**ptr & 0x80) {
+      (*ptr)++;
+      result += (**ptr & 0x7F) * 128 * 128;
+      if (**ptr & 0x80) {
+        (*ptr)++;
+        result += (**ptr & 0x7F) * 128 * 128 * 128;
+        if (**ptr & 0x80) {
+          (*ptr)++;
+          result += (**ptr & 0x7F) * 128 * 128 * 128 * 128;
+        }
+      }
+    }
+  }
+  (*ptr)++;
+  return result;
 }

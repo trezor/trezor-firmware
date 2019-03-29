@@ -20,13 +20,13 @@
 #include "rng.h"
 
 uint32_t random32(void) {
-	static uint32_t last = 0;
-	uint32_t new;
+  static uint32_t last = 0;
+  uint32_t new;
 
-	do {
-		emulatorRandom(&new, sizeof(new));
-	} while (last == new);
+  do {
+    emulatorRandom(&new, sizeof(new));
+  } while (last == new);
 
-	last = new;
-	return new;
+  last = new;
+  return new;
 }

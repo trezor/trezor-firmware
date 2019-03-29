@@ -24,14 +24,15 @@
 #include "u2f/u2f.h"
 
 typedef struct {
-	const uint8_t appid[U2F_APPID_SIZE];
-	const char *appname;
+  const uint8_t appid[U2F_APPID_SIZE];
+  const char *appname;
 } U2FWellKnown;
 
 // contents generated via script in
 // trezor-common/defs/webauthn/gen.py
 // do not edit manually
 
+// clang-format off
 static const U2FWellKnown u2f_well_known[] = {
 	{
 		// U2F: https://bitbucket.org
@@ -144,5 +145,6 @@ static const U2FWellKnown u2f_well_known[] = {
 		"demo.yubico.com"
 	},
 };
+// clang-format on
 
-#endif // U2F_KNOWNAPPS_INCLUDED
+#endif  // U2F_KNOWNAPPS_INCLUDED

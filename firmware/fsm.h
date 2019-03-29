@@ -24,19 +24,21 @@
 #include "messages-crypto.pb.h"
 #include "messages-debug.pb.h"
 #include "messages-ethereum.pb.h"
+#include "messages-lisk.pb.h"
 #include "messages-management.pb.h"
 #include "messages-nem.pb.h"
 #include "messages-stellar.pb.h"
-#include "messages-lisk.pb.h"
 
 // message functions
 
 void fsm_sendSuccess(const char *text);
 
 #if DEBUG_LINK
-void fsm_sendFailureDebug(FailureType code, const char *text, const char *source);
+void fsm_sendFailureDebug(FailureType code, const char *text,
+                          const char *source);
 
-#define fsm_sendFailure(code, text) fsm_sendFailureDebug((code), (text), __FILE__ ":" VERSTR(__LINE__) ":")
+#define fsm_sendFailure(code, text) \
+  fsm_sendFailureDebug((code), (text), __FILE__ ":" VERSTR(__LINE__) ":")
 #else
 void fsm_sendFailure(FailureType code, const char *text);
 #endif
@@ -67,7 +69,8 @@ void fsm_msgSetU2FCounter(const SetU2FCounter *msg);
 // coin
 void fsm_msgGetPublicKey(const GetPublicKey *msg);
 void fsm_msgSignTx(const SignTx *msg);
-void fsm_msgTxAck(TxAck *msg);    // not const because we mutate input/output scripts
+void fsm_msgTxAck(
+    TxAck *msg);  // not const because we mutate input/output scripts
 void fsm_msgGetAddress(const GetAddress *msg);
 void fsm_msgSignMessage(const SignMessage *msg);
 void fsm_msgVerifyMessage(const VerifyMessage *msg);
@@ -92,7 +95,9 @@ void fsm_msgDebugLinkFlashErase(const DebugLinkFlashErase *msg);
 // ethereum
 void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg);
 void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg);
-void fsm_msgEthereumSignTx(EthereumSignTx *msg);  // not const because we mutate transaction during validation
+void fsm_msgEthereumSignTx(
+    EthereumSignTx
+        *msg);  // not const because we mutate transaction during validation
 void fsm_msgEthereumTxAck(const EthereumTxAck *msg);
 void fsm_msgEthereumSignMessage(const EthereumSignMessage *msg);
 void fsm_msgEthereumVerifyMessage(const EthereumVerifyMessage *msg);
@@ -102,12 +107,16 @@ void fsm_msgLiskGetAddress(const LiskGetAddress *msg);
 void fsm_msgLiskGetPublicKey(const LiskGetPublicKey *msg);
 void fsm_msgLiskSignMessage(const LiskSignMessage *msg);
 void fsm_msgLiskVerifyMessage(const LiskVerifyMessage *msg);
-void fsm_msgLiskSignTx(LiskSignTx *msg);  // not const because we mutate transaction during validation
+void fsm_msgLiskSignTx(LiskSignTx *msg);  // not const because we mutate
+                                          // transaction during validation
 
 // nem
-void fsm_msgNEMGetAddress(NEMGetAddress *msg);          // not const because we mutate msg->network
-void fsm_msgNEMSignTx(NEMSignTx *msg);                  // not const because we mutate msg->network
-void fsm_msgNEMDecryptMessage(NEMDecryptMessage *msg);  // not const because we mutate msg->payload
+void fsm_msgNEMGetAddress(
+    NEMGetAddress *msg);  // not const because we mutate msg->network
+void fsm_msgNEMSignTx(
+    NEMSignTx *msg);  // not const because we mutate msg->network
+void fsm_msgNEMDecryptMessage(
+    NEMDecryptMessage *msg);  // not const because we mutate msg->payload
 
 // stellar
 void fsm_msgStellarGetAddress(const StellarGetAddress *msg);

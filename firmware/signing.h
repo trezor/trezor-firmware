@@ -20,14 +20,15 @@
 #ifndef __SIGNING_H__
 #define __SIGNING_H__
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include "bip32.h"
 #include "coins.h"
 #include "hasher.h"
 #include "messages-bitcoin.pb.h"
 
-void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root);
+void signing_init(const SignTx *msg, const CoinInfo *_coin,
+                  const HDNode *_root);
 void signing_abort(void);
 void signing_txack(TransactionType *tx);
 

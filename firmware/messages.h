@@ -20,8 +20,8 @@
 #ifndef __MESSAGES_H__
 #define __MESSAGES_H__
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include "trezor.h"
 
 #define MSG_IN_SIZE (15 * 1024)

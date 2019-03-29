@@ -19,64 +19,60 @@
 
 #include <string.h>
 
-#include "pinmatrix.h"
 #include "layout2.h"
 #include "oled.h"
+#include "pinmatrix.h"
 #include "rng.h"
 
 static char pinmatrix_perm[10] = "XXXXXXXXX";
 
-void pinmatrix_draw(const char *text)
-{
-	const BITMAP *bmp_digits[10] = {
-		&bmp_digit0, &bmp_digit1, &bmp_digit2, &bmp_digit3, &bmp_digit4,
-		&bmp_digit5, &bmp_digit6, &bmp_digit7, &bmp_digit8, &bmp_digit9,
-	};
-	layoutSwipe();
-	const int w = bmp_digit0.width, h = bmp_digit0.height, pad = 2;
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			// use (2 - j) instead of j to achieve 789456123 layout
-			int k = pinmatrix_perm[i + (2 - j) * 3] - '0';
-			if (text) {
-				oledDrawStringCenter(OLED_WIDTH / 2, 0, text, FONT_STANDARD);
-			}
-			oledDrawBitmap((OLED_WIDTH - 3 * w - 2 * pad) / 2 + i * (w + pad), OLED_HEIGHT - 3 * h - 2 * pad + j * (h + pad), bmp_digits[k]);
-		}
-	}
-	oledRefresh();
+void pinmatrix_draw(const char *text) {
+  const BITMAP *bmp_digits[10] = {
+      &bmp_digit0, &bmp_digit1, &bmp_digit2, &bmp_digit3, &bmp_digit4,
+      &bmp_digit5, &bmp_digit6, &bmp_digit7, &bmp_digit8, &bmp_digit9,
+  };
+  layoutSwipe();
+  const int w = bmp_digit0.width, h = bmp_digit0.height, pad = 2;
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      // use (2 - j) instead of j to achieve 789456123 layout
+      int k = pinmatrix_perm[i + (2 - j) * 3] - '0';
+      if (text) {
+        oledDrawStringCenter(OLED_WIDTH / 2, 0, text, FONT_STANDARD);
+      }
+      oledDrawBitmap((OLED_WIDTH - 3 * w - 2 * pad) / 2 + i * (w + pad),
+                     OLED_HEIGHT - 3 * h - 2 * pad + j * (h + pad),
+                     bmp_digits[k]);
+    }
+  }
+  oledRefresh();
 }
 
-void pinmatrix_start(const char *text)
-{
-	for (int i = 0; i < 9; i++) {
-		pinmatrix_perm[i] = '1' + i;
-	}
-	pinmatrix_perm[9] = 0;
-	random_permute(pinmatrix_perm, 9);
-	pinmatrix_draw(text);
+void pinmatrix_start(const char *text) {
+  for (int i = 0; i < 9; i++) {
+    pinmatrix_perm[i] = '1' + i;
+  }
+  pinmatrix_perm[9] = 0;
+  random_permute(pinmatrix_perm, 9);
+  pinmatrix_draw(text);
 }
 
-void pinmatrix_done(char *pin)
-{
-	int k, i = 0;
-	while (pin && pin[i]) {
-		k = pin[i] - '1';
-		if (k >= 0 && k <= 8) {
-			pin[i] = pinmatrix_perm[k];
-		} else {
-			pin[i] = 'X';
-		}
-		i++;
-	}
-	memset(pinmatrix_perm, 'X', sizeof(pinmatrix_perm) - 1);
+void pinmatrix_done(char *pin) {
+  int k, i = 0;
+  while (pin && pin[i]) {
+    k = pin[i] - '1';
+    if (k >= 0 && k <= 8) {
+      pin[i] = pinmatrix_perm[k];
+    } else {
+      pin[i] = 'X';
+    }
+    i++;
+  }
+  memset(pinmatrix_perm, 'X', sizeof(pinmatrix_perm) - 1);
 }
 
 #if DEBUG_LINK
 
-const char *pinmatrix_get(void)
-{
-	return pinmatrix_perm;
-}
+const char *pinmatrix_get(void) { return pinmatrix_perm; }
 
 #endif

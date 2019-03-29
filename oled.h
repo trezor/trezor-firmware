@@ -20,14 +20,14 @@
 #ifndef __OLED_H__
 #define __OLED_H__
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "bitmaps.h"
 #include "fonts.h"
 
-#define OLED_WIDTH   128
-#define OLED_HEIGHT  64
+#define OLED_WIDTH 128
+#define OLED_HEIGHT 64
 #define OLED_BUFSIZE (OLED_WIDTH * OLED_HEIGHT / 8)
 
 void oledInit(void);
@@ -45,9 +45,9 @@ void oledInvertPixel(int x, int y);
 void oledDrawChar(int x, int y, char c, int zoom);
 int oledStringWidth(const char *text, int font);
 
-void oledDrawString(int x, int y, const char* text, int font);
-void oledDrawStringCenter(int x, int y, const char* text, int font);
-void oledDrawStringRight(int x, int y, const char* text, int font);
+void oledDrawString(int x, int y, const char *text, int font);
+void oledDrawStringCenter(int x, int y, const char *text, int font);
+void oledDrawStringRight(int x, int y, const char *text, int font);
 void oledDrawBitmap(int x, int y, const BITMAP *bmp);
 void oledInvert(int x1, int y1, int x2, int y2);
 void oledBox(int x1, int y1, int x2, int y2, bool set);

@@ -21,15 +21,13 @@
 
 #include "usb.h"
 
+#include "debug.h"
 #include "messages.h"
 #include "timer.h"
-#include "debug.h"
 
 static volatile char tiny = 0;
 
-void usbInit(void) {
-	emulatorSocketInit();
-}
+void usbInit(void) { emulatorSocketInit(); }
 
 #if DEBUG_LINK
 #define _ISDBG (((iface == 1) ? 'd' : 'n'))
@@ -38,42 +36,42 @@ void usbInit(void) {
 #endif
 
 void usbPoll(void) {
-	emulatorPoll();
+  emulatorPoll();
 
-	static uint8_t buffer[64];
+  static uint8_t buffer[64];
 
-	int iface = 0;
-	if (emulatorSocketRead(&iface, buffer, sizeof(buffer)) > 0) {
-		if (!tiny) {
-			msg_read_common(_ISDBG, buffer, sizeof(buffer));
-		} else {
-			msg_read_tiny(buffer, sizeof(buffer));
-		}
-	}
+  int iface = 0;
+  if (emulatorSocketRead(&iface, buffer, sizeof(buffer)) > 0) {
+    if (!tiny) {
+      msg_read_common(_ISDBG, buffer, sizeof(buffer));
+    } else {
+      msg_read_tiny(buffer, sizeof(buffer));
+    }
+  }
 
-	const uint8_t *data = msg_out_data();
-	if (data != NULL) {
-		emulatorSocketWrite(0, data, 64);
-	}
+  const uint8_t *data = msg_out_data();
+  if (data != NULL) {
+    emulatorSocketWrite(0, data, 64);
+  }
 
 #if DEBUG_LINK
-	data = msg_debug_out_data();
-	if (data != NULL) {
-		emulatorSocketWrite(1, data, 64);
-	}
+  data = msg_debug_out_data();
+  if (data != NULL) {
+    emulatorSocketWrite(1, data, 64);
+  }
 #endif
 }
 
 char usbTiny(char set) {
-	char old = tiny;
-	tiny = set;
-	return old;
+  char old = tiny;
+  tiny = set;
+  return old;
 }
 
 void usbSleep(uint32_t millis) {
-	uint32_t start = timer_ms();
+  uint32_t start = timer_ms();
 
-	while ((timer_ms() - start) < millis) {
-		usbPoll();
-	}
+  while ((timer_ms() - start) < millis) {
+    usbPoll();
+  }
 }

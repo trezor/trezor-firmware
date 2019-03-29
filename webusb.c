@@ -18,90 +18,87 @@
 
 #include <string.h>
 
+#include "usb21_standard.h"
 #include "util.h"
 #include "webusb.h"
-#include "usb21_standard.h"
 
-const struct webusb_platform_descriptor webusb_platform_capability_descriptor = {
-	.bLength = WEBUSB_PLATFORM_DESCRIPTOR_SIZE,
-	.bDescriptorType = USB_DT_DEVICE_CAPABILITY,
-	.bDevCapabilityType = USB_DC_PLATFORM,
-	.bReserved = 0,
-	.platformCapabilityUUID = WEBUSB_UUID,
-	.bcdVersion = 0x0100,
-	.bVendorCode = WEBUSB_VENDOR_CODE,
-	.iLandingPage = 1
-};
+const struct webusb_platform_descriptor webusb_platform_capability_descriptor =
+    {.bLength = WEBUSB_PLATFORM_DESCRIPTOR_SIZE,
+     .bDescriptorType = USB_DT_DEVICE_CAPABILITY,
+     .bDevCapabilityType = USB_DC_PLATFORM,
+     .bReserved = 0,
+     .platformCapabilityUUID = WEBUSB_UUID,
+     .bcdVersion = 0x0100,
+     .bVendorCode = WEBUSB_VENDOR_CODE,
+     .iLandingPage = 1};
 
-const struct webusb_platform_descriptor webusb_platform_capability_descriptor_no_landing_page = {
-	.bLength = WEBUSB_PLATFORM_DESCRIPTOR_SIZE,
-	.bDescriptorType = USB_DT_DEVICE_CAPABILITY,
-	.bDevCapabilityType = USB_DC_PLATFORM,
-	.bReserved = 0,
-	.platformCapabilityUUID = WEBUSB_UUID,
-	.bcdVersion = 0x0100,
-	.bVendorCode = WEBUSB_VENDOR_CODE,
-	.iLandingPage = 0
-};
+const struct webusb_platform_descriptor
+    webusb_platform_capability_descriptor_no_landing_page = {
+        .bLength = WEBUSB_PLATFORM_DESCRIPTOR_SIZE,
+        .bDescriptorType = USB_DT_DEVICE_CAPABILITY,
+        .bDevCapabilityType = USB_DC_PLATFORM,
+        .bReserved = 0,
+        .platformCapabilityUUID = WEBUSB_UUID,
+        .bcdVersion = 0x0100,
+        .bVendorCode = WEBUSB_VENDOR_CODE,
+        .iLandingPage = 0};
 
 static const char* webusb_https_url;
 
-static int webusb_control_vendor_request(usbd_device *usbd_dev,
-									 struct usb_setup_data *req,
-									 uint8_t **buf, uint16_t *len,
-									 usbd_control_complete_callback* complete) {
-	(void)complete;
-	(void)usbd_dev;
+static int webusb_control_vendor_request(
+    usbd_device* usbd_dev, struct usb_setup_data* req, uint8_t** buf,
+    uint16_t* len, usbd_control_complete_callback* complete) {
+  (void)complete;
+  (void)usbd_dev;
 
-	wait_random();
+  wait_random();
 
-	if (req->bRequest != WEBUSB_VENDOR_CODE) {
-		return USBD_REQ_NEXT_CALLBACK;
-	}
+  if (req->bRequest != WEBUSB_VENDOR_CODE) {
+    return USBD_REQ_NEXT_CALLBACK;
+  }
 
-	int status = USBD_REQ_NOTSUPP;
-	switch (req->wIndex) {
-		case WEBUSB_REQ_GET_URL: {
-			struct webusb_url_descriptor* url = (struct webusb_url_descriptor*)(*buf);
-			uint16_t index = req->wValue;
-			if (index == 0) {
-				return USBD_REQ_NOTSUPP;
-			}
+  int status = USBD_REQ_NOTSUPP;
+  switch (req->wIndex) {
+    case WEBUSB_REQ_GET_URL: {
+      struct webusb_url_descriptor* url = (struct webusb_url_descriptor*)(*buf);
+      uint16_t index = req->wValue;
+      if (index == 0) {
+        return USBD_REQ_NOTSUPP;
+      }
 
-			if (index == 1) {
-				size_t url_len = strlen(webusb_https_url);
-				url->bLength = WEBUSB_DT_URL_DESCRIPTOR_SIZE + url_len;
-				url->bDescriptorType = WEBUSB_DT_URL;
-				url->bScheme = WEBUSB_URL_SCHEME_HTTPS;
-				memcpy(&url->URL, webusb_https_url, url_len);
-				*len = MIN_8bits(*len, url->bLength);
-				status = USBD_REQ_HANDLED;
-			} else {
-				// TODO: stall instead?
-				status = USBD_REQ_NOTSUPP;
-			}
-			break;
-		}
-		default: {
-			status = USBD_REQ_NOTSUPP;
-			break;
-		}
-	}
+      if (index == 1) {
+        size_t url_len = strlen(webusb_https_url);
+        url->bLength = WEBUSB_DT_URL_DESCRIPTOR_SIZE + url_len;
+        url->bDescriptorType = WEBUSB_DT_URL;
+        url->bScheme = WEBUSB_URL_SCHEME_HTTPS;
+        memcpy(&url->URL, webusb_https_url, url_len);
+        *len = MIN_8bits(*len, url->bLength);
+        status = USBD_REQ_HANDLED;
+      } else {
+        // TODO: stall instead?
+        status = USBD_REQ_NOTSUPP;
+      }
+      break;
+    }
+    default: {
+      status = USBD_REQ_NOTSUPP;
+      break;
+    }
+  }
 
-	return status;
+  return status;
 }
 
 static void webusb_set_config(usbd_device* usbd_dev, uint16_t wValue) {
-	(void)wValue;
-	usbd_register_control_callback(
-		usbd_dev,
-		USB_REQ_TYPE_VENDOR | USB_REQ_TYPE_DEVICE,
-		USB_REQ_TYPE_TYPE | USB_REQ_TYPE_RECIPIENT,
-		webusb_control_vendor_request);
+  (void)wValue;
+  usbd_register_control_callback(usbd_dev,
+                                 USB_REQ_TYPE_VENDOR | USB_REQ_TYPE_DEVICE,
+                                 USB_REQ_TYPE_TYPE | USB_REQ_TYPE_RECIPIENT,
+                                 webusb_control_vendor_request);
 }
 
 void webusb_setup(usbd_device* usbd_dev, const char* https_url) {
-	webusb_https_url = https_url;
+  webusb_https_url = https_url;
 
-	usbd_register_set_config_callback(usbd_dev, webusb_set_config);
+  usbd_register_set_config_callback(usbd_dev, webusb_set_config);
 }

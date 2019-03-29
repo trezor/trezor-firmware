@@ -23,11 +23,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-extern const uint32_t FIRMWARE_MAGIC_OLD; // TRZR
-extern const uint32_t FIRMWARE_MAGIC_NEW; // TRZF
+extern const uint32_t FIRMWARE_MAGIC_OLD;  // TRZR
+extern const uint32_t FIRMWARE_MAGIC_NEW;  // TRZF
 
-#define SIG_OK      0x5A3CA5C3
-#define SIG_FAIL    0x00000000
+#define SIG_OK 0x5A3CA5C3
+#define SIG_FAIL 0x00000000
 
 bool firmware_present_old(void);
 int signatures_old_ok(void);
@@ -38,23 +38,23 @@ int signatures_old_ok(void);
 // immediately following the chunk hashes
 
 typedef struct {
-	uint32_t magic;
-	uint32_t hdrlen;
-	uint32_t expiry;
-	uint32_t codelen;
-	uint32_t version;
-	uint32_t fix_version;
-	uint8_t __reserved1[8];
-	uint8_t hashes[512];
-	uint8_t sig1[64];
-	uint8_t sig2[64];
-	uint8_t sig3[64];
-	uint8_t sigindex1;
-	uint8_t sigindex2;
-	uint8_t sigindex3;
-	uint8_t __reserved2[220];
-	uint8_t __sigmask;
-	uint8_t __sig[64];
+  uint32_t magic;
+  uint32_t hdrlen;
+  uint32_t expiry;
+  uint32_t codelen;
+  uint32_t version;
+  uint32_t fix_version;
+  uint8_t __reserved1[8];
+  uint8_t hashes[512];
+  uint8_t sig1[64];
+  uint8_t sig2[64];
+  uint8_t sig3[64];
+  uint8_t sigindex1;
+  uint8_t sigindex2;
+  uint8_t sigindex3;
+  uint8_t __reserved2[220];
+  uint8_t __sigmask;
+  uint8_t __sig[64];
 } __attribute__((packed)) image_header;
 
 #define FW_CHUNK_SIZE 65536

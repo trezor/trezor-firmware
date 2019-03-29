@@ -20,8 +20,8 @@
 #ifndef __ETHEREUM_H__
 #define __ETHEREUM_H__
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include "bip32.h"
 #include "messages-ethereum.pb.h"
 
@@ -29,7 +29,8 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node);
 void ethereum_signing_abort(void);
 void ethereum_signing_txack(const EthereumTxAck *msg);
 
-void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node, EthereumMessageSignature *resp);
+void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node,
+                           EthereumMessageSignature *resp);
 int ethereum_message_verify(const EthereumVerifyMessage *msg);
 bool ethereum_parse(const char *address, uint8_t pubkeyhash[20]);
 

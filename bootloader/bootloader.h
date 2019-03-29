@@ -31,8 +31,8 @@
 #define VERSION_MINOR_CHAR "\x08"
 #define VERSION_PATCH_CHAR "\x00"
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 void show_halt(const char *line1, const char *line2);
 void layoutFirmwareFingerprint(const uint8_t *hash);

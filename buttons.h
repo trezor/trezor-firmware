@@ -24,10 +24,10 @@
 #include <stdbool.h>
 
 struct buttonState {
-	volatile bool YesUp;
-	volatile int YesDown;
-	volatile bool NoUp;
-	volatile int NoDown;
+  volatile bool YesUp;
+  volatile int YesDown;
+  volatile bool NoUp;
+  volatile int NoDown;
 };
 
 extern struct buttonState button;
@@ -36,15 +36,15 @@ uint16_t buttonRead(void);
 void buttonUpdate(void);
 
 #ifndef BTN_PORT
-#define BTN_PORT	GPIOC
+#define BTN_PORT GPIOC
 #endif
 
 #ifndef BTN_PIN_YES
-#define BTN_PIN_YES	GPIO2
+#define BTN_PIN_YES GPIO2
 #endif
 
 #ifndef BTN_PIN_NO
-#define BTN_PIN_NO	GPIO5
+#define BTN_PIN_NO GPIO5
 #endif
 
 #endif
