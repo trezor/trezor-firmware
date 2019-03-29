@@ -24,7 +24,7 @@ async def require_confirm_keyimage_sync(ctx):
 
 
 async def require_confirm_live_refresh(ctx):
-    content = Text("Confirm ki sync", ui.ICON_SEND, icon_color=ui.GREEN)
+    content = Text("Confirm refresh", ui.ICON_SEND, icon_color=ui.GREEN)
     content.normal("Do you really want to", "start refresh?")
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
