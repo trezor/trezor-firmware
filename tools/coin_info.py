@@ -110,7 +110,7 @@ BTC_CHECKS = [
     check_key("coin_shortcut", str, regex=r"^t?[A-Z]{3,}$"),
     check_key("coin_label", str, regex=r"^[A-Z]"),
     check_key("website", str, regex=r"^https://.*[^/]$"),
-    check_key("github", str, regex=r"^https://github.com/.*[^/]$"),
+    check_key("github", str, regex=r"^https://git(hu|la)b.com/.*[^/]$"),
     check_key("maintainer", str),
     check_key(
         "curve_name",
@@ -141,11 +141,11 @@ BTC_CHECKS = [
     check_key("dust_limit", int),
     check_key("blocktime_seconds", int),
     check_key("signed_message_header", str),
-    check_key("uri_prefix", str, regex=r"^[a-z]+$"),
+    check_key("uri_prefix", str, regex=r"^[a-z-\.\+]+$"),
     check_key("min_address_length", int),
     check_key("max_address_length", int),
-    check_key("bech32_prefix", str, regex=r"^[a-z]+$", nullable=True),
-    check_key("cashaddr_prefix", str, regex=r"^[a-z]+$", nullable=True),
+    check_key("bech32_prefix", str, regex=r"^[a-z-\.\+]+$", nullable=True),
+    check_key("cashaddr_prefix", str, regex=r"^[a-z-\.\+]+$", nullable=True),
     check_key("bitcore", list, empty=True),
     check_key("blockbook", list, empty=True),
 ]
