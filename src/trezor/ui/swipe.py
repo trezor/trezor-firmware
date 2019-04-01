@@ -14,17 +14,6 @@ SWIPE_ALL = const(SWIPE_VERTICAL | SWIPE_HORIZONTAL)
 _SWIPE_DISTANCE = const(120)
 
 
-def degrees(swipe: int) -> int:
-    if swipe == SWIPE_UP:
-        return 180
-    elif swipe == SWIPE_DOWN:
-        return 0
-    elif swipe == SWIPE_LEFT:
-        return 90
-    elif swipe == SWIPE_RIGHT:
-        return 270
-
-
 class Swipe(ui.Widget):
     def __init__(self, area=None, absolute=False, directions=SWIPE_ALL, treshold=30):
         self.area = area or (0, 0, ui.WIDTH, ui.HEIGHT)

@@ -31,6 +31,7 @@ _UNFINISHED_BACKUP  = const(0x0B)  # bool (0x01 or empty)
 _AUTOLOCK_DELAY_MS  = const(0x0C)  # int
 _NO_BACKUP          = const(0x0D)  # bool (0x01 or empty)
 _MNEMONIC_TYPE      = const(0x0E)  # int
+_ROTATION           = const(0x0F)  # int
 # fmt: on
 
 
@@ -66,6 +67,13 @@ def get_device_id() -> str:
         dev_id = _new_device_id().encode()
         config.set(_APP, _DEVICE_ID, dev_id, True)  # public
     return dev_id.decode()
+
+
+def get_rotation() -> int:
+    rotation = config.get(_APP, _ROTATION, True)  # public
+    if not rotation:
+        return 0
+    return int.from_bytes(rotation, "big")
 
 
 def is_initialized() -> bool:
@@ -144,6 +152,7 @@ def load_settings(
     use_passphrase: bool = None,
     homescreen: bytes = None,
     passphrase_source: int = None,
+    display_rotation: int = None,
 ) -> None:
     if label is not None:
         config.set(_APP, _LABEL, label.encode(), True)  # public
@@ -156,8 +165,17 @@ def load_settings(
         else:
             config.set(_APP, _HOMESCREEN, b"", True)  # public
     if passphrase_source is not None:
-        if passphrase_source in [0, 1, 2]:
+        if passphrase_source in (0, 1, 2):
             config.set(_APP, _PASSPHRASE_SOURCE, bytes([passphrase_source]))
+    if display_rotation is not None:
+        if display_rotation not in (0, 90, 180, 270):
+            raise ValueError(
+                "Unsupported display rotation degrees: %d" % display_rotation
+            )
+        else:
+            config.set(
+                _APP, _ROTATION, display_rotation.to_bytes(2, "big"), True
+            )  # public
 
 
 def get_flags() -> int:

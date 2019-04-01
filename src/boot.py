@@ -6,6 +6,7 @@ from apps.common.request_pin import request_pin
 
 
 async def bootscreen():
+    ui.display.orientation(storage.get_rotation())
     while True:
         try:
             if not config.has_pin():
