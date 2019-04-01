@@ -14,6 +14,7 @@ class ApplySettings(p.MessageType):
         homescreen: bytes = None,
         passphrase_source: int = None,
         auto_lock_delay_ms: int = None,
+        display_rotation: int = None,
     ) -> None:
         self.language = language
         self.label = label
@@ -21,6 +22,7 @@ class ApplySettings(p.MessageType):
         self.homescreen = homescreen
         self.passphrase_source = passphrase_source
         self.auto_lock_delay_ms = auto_lock_delay_ms
+        self.display_rotation = display_rotation
 
     @classmethod
     def get_fields(cls):
@@ -31,4 +33,5 @@ class ApplySettings(p.MessageType):
             4: ('homescreen', p.BytesType, 0),
             5: ('passphrase_source', p.UVarintType, 0),
             6: ('auto_lock_delay_ms', p.UVarintType, 0),
+            7: ('display_rotation', p.UVarintType, 0),
         }
