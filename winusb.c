@@ -73,10 +73,9 @@ static const struct winusb_extended_properties_descriptor guid = {
         },
     }};
 
-static int winusb_descriptor_request(usbd_device *usbd_dev,
-                                     struct usb_setup_data *req, uint8_t **buf,
-                                     uint16_t *len,
-                                     usbd_control_complete_callback *complete) {
+static enum usbd_request_return_codes winusb_descriptor_request(
+    usbd_device *usbd_dev, struct usb_setup_data *req, uint8_t **buf,
+    uint16_t *len, usbd_control_complete_callback *complete) {
   (void)complete;
   (void)usbd_dev;
 
@@ -97,7 +96,7 @@ static int winusb_descriptor_request(usbd_device *usbd_dev,
   return USBD_REQ_NEXT_CALLBACK;
 }
 
-static int winusb_control_vendor_request(
+static enum usbd_request_return_codes winusb_control_vendor_request(
     usbd_device *usbd_dev, struct usb_setup_data *req, uint8_t **buf,
     uint16_t *len, usbd_control_complete_callback *complete) {
   (void)complete;

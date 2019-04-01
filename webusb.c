@@ -45,7 +45,7 @@ const struct webusb_platform_descriptor
 
 static const char* webusb_https_url;
 
-static int webusb_control_vendor_request(
+static enum usbd_request_return_codes webusb_control_vendor_request(
     usbd_device* usbd_dev, struct usb_setup_data* req, uint8_t** buf,
     uint16_t* len, usbd_control_complete_callback* complete) {
   (void)complete;

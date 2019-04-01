@@ -69,7 +69,6 @@ extern void __attribute__((noreturn)) shutdown(void);
 #if !EMULATOR
 // defined in memory.ld
 extern uint8_t _ram_start[], _ram_end[];
-extern uint8_t _stack[];
 
 // defined in startup.s
 extern void memset_reg(void *start, void *stop, uint32_t val);
@@ -78,11 +77,11 @@ extern void memset_reg(void *start, void *stop, uint32_t val);
 #define FW_UNTRUSTED 0x00000000
 
 static inline void __attribute__((noreturn))
-jump_to_firmware(const vector_table_t *vector_table, int trust) {
-  if (FW_SIGNED == trust) {             // trusted signed firmware
-    SCB_VTOR = (uint32_t)vector_table;  // * relocate vector table
+jump_to_firmware(const vector_table_t *ivt, int trust) {
+  if (FW_SIGNED == trust) {    // trusted signed firmware
+    SCB_VTOR = (uint32_t)ivt;  // * relocate vector table
     // Set stack pointer
-    __asm__ volatile("msr msp, %0" ::"r"(vector_table->initial_sp_value));
+    __asm__ volatile("msr msp, %0" ::"r"(ivt->initial_sp_value));
   } else {  // untrusted firmware
     timer_init();
     mpu_config_firmware();  // * configure MPU for the firmware
@@ -90,7 +89,7 @@ jump_to_firmware(const vector_table_t *vector_table, int trust) {
   }
 
   // Jump to address
-  vector_table->reset();
+  ivt->reset();
 
   // Prevent compiler from generating stack protector code (which causes CPU
   // fault because the stack is moved)

@@ -53,7 +53,7 @@ static uint16_t build_bos_descriptor(const struct usb_bos_descriptor *bos,
 
 static const struct usb_bos_descriptor *usb21_bos;
 
-static int usb21_standard_get_descriptor(
+static enum usbd_request_return_codes usb21_standard_get_descriptor(
     usbd_device *usbd_dev, struct usb_setup_data *req, uint8_t **buf,
     uint16_t *len, usbd_control_complete_callback *complete) {
   (void)complete;

@@ -18,7 +18,7 @@ SECTIONS
 	} >rom AT>rom
 }
 
-INCLUDE libopencm3_stm32f2.ld
+INCLUDE cortex-m-generic.ld
 
 _codelen = SIZEOF(.text) + SIZEOF(.data) + SIZEOF(.ARM.exidx);
 
