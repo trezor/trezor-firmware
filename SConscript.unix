@@ -5,6 +5,7 @@ import os
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
+SOURCE_MOD_SECP256K1_ZKP = []
 SOURCE_MOD = []
 LIBS_MOD = []
 
@@ -80,6 +81,31 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/sha2.c',
     'vendor/trezor-crypto/sha3.c',
     'vendor/trezor-crypto/nem.c',
+]
+
+# libsecp256k1-zkp
+CPPPATH_MOD += [
+    'vendor/secp256k1-zkp/',
+    'vendor/secp256k1-zkp/src',
+    'vendor/secp256k1-zkp/include',
+]
+CPPDEFINES_MOD += [
+    'SECP256K1_BUILD',
+    'USE_NUM_NONE',
+    'USE_FIELD_INV_BUILTIN',
+    'USE_SCALAR_INV_BUILTIN',
+    'USE_FIELD_10X26',
+    'USE_SCALAR_8X32',
+    'USE_ECMULT_STATIC_PRECOMPUTATION',
+    'USE_EXTERNAL_DEFAULT_CALLBACKS',
+    ('ECMULT_WINDOW_SIZE', '8'),
+    'ENABLE_MODULE_GENERATOR',
+    'ENABLE_MODULE_RANGEPROOF',
+    'ENABLE_MODULE_RECOVERY',
+    'ENABLE_MODULE_ECDH',
+]
+SOURCE_MOD_SECP256K1_ZKP += [
+    'vendor/secp256k1-zkp/src/secp256k1.c',
 ]
 
 # modtrezorio
@@ -348,15 +374,38 @@ qstr_generated = env.GenerateQstrDefs(
 env.Ignore(qstr_collected, qstr_generated)
 
 #
+# static secp256-zkp ecmult context
+#
+
+host_env = Environment(ENV=os.environ)
+host_env.Replace(
+    CC=os.getenv('CC_FOR_BUILD') or 'gcc',
+    COPT='-O2',
+    CPPPATH='vendor/secp256k1-zkp',
+)
+gen_context = host_env.Program(
+    target='vendor/secp256k1-zkp/gen_context',
+    source='vendor/secp256k1-zkp/src/gen_context.c',
+)
+
+secp256k1_zkp_ecmult_static_context = host_env.Command(
+    target='vendor/secp256k1-zkp/src/ecmult_static_context.h',
+    source='vendor/secp256k1-zkp/gen_context',
+    action='cd ${SOURCE.dir}; ./gen_context',
+)
+
+#
 # Program objects
 #
 
 obj_program = []
 obj_program += env.Object(source=SOURCE_MOD)
+obj_program += env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function')
 obj_program += env.Object(source=SOURCE_MICROPYTHON)
 obj_program += env.Object(source=SOURCE_UNIX)
 
 env.Depends(obj_program, qstr_generated)
+env.Depends(obj_program, secp256k1_zkp_ecmult_static_context)
 
 program = env.Command(
     target='micropython',
