@@ -127,6 +127,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/modutimeq.c',
     'vendor/micropython/extmod/utime_mphal.c',
     'vendor/micropython/lib/mp-readline/readline.c',
+    'vendor/micropython/ports/unix/modos.c',
     'vendor/micropython/py/argcheck.c',
     'vendor/micropython/py/asmarm.c',
     'vendor/micropython/py/asmbase.c',
