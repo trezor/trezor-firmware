@@ -85,6 +85,11 @@ CHOICE_PASSPHRASE_SOURCE_TYPE = ChoiceType(
 )
 
 
+CHOICE_DISPLAY_ROTATION_TYPE = ChoiceType(
+    {"north": 0, "east": 90, "south": 180, "west": 270}
+)
+
+
 CHOICE_RECOVERY_DEVICE_TYPE = ChoiceType(
     {
         "scrambled": proto.RecoveryDeviceType.ScrambledWords,
@@ -285,6 +290,18 @@ def set_passphrase_source(connect, source):
     host - always enter passphrase on host
     """
     return device.apply_settings(connect(), passphrase_source=source)
+
+
+@cli.command()
+@click.argument("rotation", type=CHOICE_DISPLAY_ROTATION_TYPE)
+@click.pass_obj
+def set_display_rotation(connect, rotation):
+    """Set display rotation.
+
+    Configure display rotation for Trezor Model T. The options are
+    north, east, south or west. Defaults to north.
+    """
+    return device.apply_settings(connect(), display_rotation=rotation)
 
 
 @cli.command(help="Set auto-lock delay (in seconds).")
