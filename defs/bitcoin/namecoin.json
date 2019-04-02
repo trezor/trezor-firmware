@@ -37,5 +37,6 @@
     "https://nmc1.trezor.io",
     "https://nmc2.trezor.io"
   ],
-  "cooldown": 100
+  "cooldown": 100,
+  "consensus_branch_id": null
 }

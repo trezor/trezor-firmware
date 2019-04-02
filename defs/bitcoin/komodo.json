@@ -36,5 +36,11 @@
     "https://api.kmd.dev"
   ],
   "blockbook": [],
-  "cooldown": 100
+  "cooldown": 100,
+  "consensus_branch_id": {
+    "1": 0,
+    "2": 0,
+    "3": 1537743641,
+    "4": 1991772603
+  }
 }

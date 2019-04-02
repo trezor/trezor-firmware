@@ -40,5 +40,6 @@
     "https://dash4.trezor.io",
     "https://dash5.trezor.io"
   ],
-  "cooldown": 100
+  "cooldown": 100,
+  "consensus_branch_id": null
 }

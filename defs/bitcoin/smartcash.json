@@ -39,5 +39,6 @@
     "https://insight.smartcash.cc"
   ],
   "blockbook": [],
-  "cooldown": 100
+  "cooldown": 100,
+  "consensus_branch_id": null
 }

@@ -43,5 +43,6 @@
     "https://btc4.trezor.io",
     "https://btc5.trezor.io"
   ],
-  "cooldown": 100
+  "cooldown": 100,
+  "consensus_branch_id": null
 }

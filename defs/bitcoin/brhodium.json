@@ -40,5 +40,6 @@
       "https://blockbook1.bitcoinrh.org",
       "https://blockbook2.bitcoinrh.org"
     ],
-  "cooldown": 100
+  "cooldown": 100,
+  "consensus_branch_id": null
 }

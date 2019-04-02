@@ -42,5 +42,6 @@
     "https://blockbook3.capricoin.org",
     "https://blockbook4.capricoin.org"
   ],
-  "cooldown": 100
+  "cooldown": 100,
+  "consensus_branch_id": null
 }

@@ -36,5 +36,6 @@
   "blockbook": [
     "https://blockbook-testnet.pivx.link"
   ],
-  "cooldown": 100
+  "cooldown": 100,
+  "consensus_branch_id": null
 }

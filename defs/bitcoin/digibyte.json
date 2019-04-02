@@ -40,5 +40,6 @@
     "https://dgb1.trezor.io",
     "https://dgb2.trezor.io"
   ],
-  "cooldown": 100
+  "cooldown": 100,
+  "consensus_branch_id": null
 }

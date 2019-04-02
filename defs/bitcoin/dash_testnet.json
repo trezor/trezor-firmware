@@ -34,5 +34,6 @@
   "max_address_length": 34,
   "bitcore": [],
   "blockbook": [],
-  "cooldown": 100
+  "cooldown": 100,
+  "consensus_branch_id": null
 }

@@ -39,5 +39,6 @@
   "blockbook": [
     "https://blockbook.groestlcoin.org"
   ],
-  "cooldown": 100
+  "cooldown": 100,
+  "consensus_branch_id": null
 }
