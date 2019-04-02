@@ -28,7 +28,7 @@ extern int sdl_display_res_x, sdl_display_res_y;
 extern int sdl_touch_offset_x, sdl_touch_offset_y;
 
 extern void __shutdown(void);
-extern void display_save(const char *prefix);
+extern const char *display_save(const char *prefix);
 
 uint32_t touch_read(void) {
 #ifndef TREZOR_EMULATOR_NOUI

@@ -241,4 +241,6 @@ void display_refresh(void) {
   HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);  // set to CMD
 }
 
-void display_save(const char *prefix) {}
+const char *display_save(const char *prefix) {
+  return NULL;
+}
