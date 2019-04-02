@@ -13,7 +13,7 @@ from apps.stellar.operations import process_operation
 
 
 async def sign_tx(ctx, msg: StellarSignTx, keychain):
-    await paths.validate_path(ctx, helpers.validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, helpers.validate_full_path, keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n, consts.STELLAR_CURVE)
     pubkey = seed.remove_ed25519_prefix(node.public_key())

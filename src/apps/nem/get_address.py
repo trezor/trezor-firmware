@@ -9,7 +9,7 @@ from apps.common.paths import validate_path
 
 async def get_address(ctx, msg, keychain):
     network = validate_network(msg.network)
-    await validate_path(ctx, check_path, path=msg.address_n, network=network)
+    await validate_path(ctx, check_path, keychain, msg.address_n, network=network)
 
     node = keychain.derive(msg.address_n, NEM_CURVE)
     address = node.nem_address(network)

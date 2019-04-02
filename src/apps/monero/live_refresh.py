@@ -44,7 +44,7 @@ class LiveRefreshState:
 async def _init_step(
     s: LiveRefreshState, ctx, msg: MoneroLiveRefreshStartRequest, keychain
 ):
-    await paths.validate_path(ctx, misc.validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, misc.validate_full_path, keychain, msg.address_n)
 
     await confirms.require_confirm_live_refresh(ctx)
 

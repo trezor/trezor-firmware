@@ -85,7 +85,7 @@ async def sign_tx(ctx, msg):
         display_homescreen()
 
         for i in msg.inputs:
-            await validate_path(ctx, validate_full_path, path=i.address_n)
+            await validate_path(ctx, validate_full_path, keychain, i.address_n)
 
         # sign the transaction bundle and prepare the result
         transaction = Transaction(

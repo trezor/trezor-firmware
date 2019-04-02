@@ -17,7 +17,7 @@ from apps.lisk.helpers import (
 
 
 async def sign_tx(ctx, msg, keychain):
-    await paths.validate_path(ctx, validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n)
 
     pubkey, seckey = _get_keys(keychain, msg)
     transaction = _update_raw_tx(msg.transaction, pubkey)

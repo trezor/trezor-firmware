@@ -25,6 +25,22 @@ class Keychain:
         del self.roots
         del self.seed
 
+    def validate_path(self, checked_path: list):
+        empty = True
+        for _, *namespace_path in self.namespaces:
+            if empty and len(namespace_path):
+                empty = False
+            for i, p in enumerate(namespace_path):
+                if p != checked_path[i]:
+                    # item did not match, move on to the next allowed path in namespace
+                    break
+                if i == len(namespace_path) - 1:
+                    # all items match in some namespace path -> success
+                    return
+        if not empty:
+            # checked_path was not among the allowed ones
+            raise wire.DataError("Forbidden key path")
+
     def derive(self, node_path: list, curve_name: str = "secp256k1") -> bip32.HDNode:
         # find the root node index
         root_index = 0
@@ -44,6 +60,7 @@ class Keychain:
             root.derive_path(path)
             self.roots[root_index] = root
 
+        # TODO check for ed25519?
         # derive child node from the root
         node = root.clone()
         node.derive_path(suffix)

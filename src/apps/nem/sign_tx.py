@@ -13,7 +13,11 @@ async def sign_tx(ctx, msg: NEMSignTx, keychain):
     validate(msg)
 
     await validate_path(
-        ctx, check_path, path=msg.transaction.address_n, network=msg.transaction.network
+        ctx,
+        check_path,
+        keychain,
+        msg.transaction.address_n,
+        network=msg.transaction.network,
     )
 
     node = keychain.derive(msg.transaction.address_n, NEM_CURVE)

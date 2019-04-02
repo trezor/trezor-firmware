@@ -10,7 +10,7 @@ from apps.common.layout import address_n_to_str, show_address, show_qr
 async def get_address(ctx, msg):
     keychain = await seed.get_keychain(ctx)
 
-    await paths.validate_path(ctx, validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n)
 
     try:
         address, _ = derive_address_and_node(keychain, msg.address_n)

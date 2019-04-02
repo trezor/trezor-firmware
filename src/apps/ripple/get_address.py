@@ -7,7 +7,7 @@ from apps.ripple import helpers
 
 
 async def get_address(ctx, msg: RippleGetAddress, keychain):
-    await paths.validate_path(ctx, helpers.validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, helpers.validate_full_path, keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     pubkey = node.public_key()

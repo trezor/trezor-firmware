@@ -9,7 +9,7 @@ from apps.ethereum.address import address_from_bytes, validate_full_path
 
 
 async def get_address(ctx, msg, keychain):
-    await paths.validate_path(ctx, validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     seckey = node.private_key()

@@ -7,7 +7,7 @@ from apps.ethereum import address
 
 async def get_public_key(ctx, msg, keychain):
     await paths.validate_path(
-        ctx, address.validate_path_for_get_public_key, path=msg.address_n
+        ctx, address.validate_path_for_get_public_key, keychain, msg.address_n
     )
     node = keychain.derive(msg.address_n)
 

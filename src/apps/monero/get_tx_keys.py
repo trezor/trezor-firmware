@@ -30,7 +30,7 @@ _GET_TX_KEY_REASON_TX_DERIVATION = 1
 
 
 async def get_tx_keys(ctx, msg: MoneroGetTxKeyRequest, keychain):
-    await paths.validate_path(ctx, misc.validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, misc.validate_full_path, keychain, msg.address_n)
 
     do_deriv = msg.reason == _GET_TX_KEY_REASON_TX_DERIVATION
     await confirms.require_confirm_tx_key(ctx, export_key=not do_deriv)

@@ -14,7 +14,11 @@ async def get_public_key(ctx, msg):
     keychain = await seed.get_keychain(ctx)
 
     await paths.validate_path(
-        ctx, paths.validate_path_for_get_public_key, path=msg.address_n, slip44_id=1815
+        ctx,
+        paths.validate_path_for_get_public_key,
+        keychain,
+        msg.address_n,
+        slip44_id=1815,
     )
 
     try:
