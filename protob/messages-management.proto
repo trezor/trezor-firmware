@@ -80,6 +80,7 @@ message ApplySettings {
     optional bytes homescreen = 4;
     optional PassphraseSourceType passphrase_source = 5;
     optional uint32 auto_lock_delay_ms = 6;
+    optional uint32 display_rotation = 7;  // in degrees from North
     /**
     * Structure representing passphrase source
     */
