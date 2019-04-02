@@ -6,6 +6,7 @@ from trezor.messages.TxRequest import TxRequest
 from apps.common import paths
 from apps.wallet.sign_tx import (
     addresses,
+    dash,
     helpers,
     layout,
     multisig,
@@ -61,6 +62,9 @@ async def sign_tx(ctx, msg, keychain):
             mods = utils.unimport_begin()
             res = await paths.show_path_warning(ctx, req.address_n)
             utils.unimport_end(mods)
+            progress.report_init()
+        elif isinstance(req, dash.UIConfirmTxDetail):
+            res = await dash.confirm_tx_detail(ctx, req.title, req.data)
             progress.report_init()
         else:
             raise TypeError("Invalid signing instruction")

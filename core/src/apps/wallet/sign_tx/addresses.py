@@ -120,6 +120,11 @@ def address_pkh(pubkey: bytes, coin: CoinInfo) -> str:
     return base58.encode_check(bytes(s), coin.b58_hash)
 
 
+def address_pkh_from_keyid(keyid: bytes, coin: CoinInfo) -> str:
+    s = address_type.tobytes(coin.address_type) + keyid
+    return base58.encode_check(bytes(s), coin.b58_hash)
+
+
 def address_p2sh(redeem_script_hash: bytes, coin: CoinInfo) -> str:
     s = address_type.tobytes(coin.address_type_p2sh) + redeem_script_hash
     return base58.encode_check(bytes(s), coin.b58_hash)
