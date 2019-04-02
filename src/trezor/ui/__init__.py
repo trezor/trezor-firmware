@@ -13,6 +13,8 @@ if __debug__:
     def debug_display_refresh():
         display.bar(Display.WIDTH - 8, 0, 8, 8, 0xF800)
         display.refresh()
+        if utils.SAVE_SCREEN:
+            display.save("refresh")
 
     loop.after_step_hook = debug_display_refresh
 

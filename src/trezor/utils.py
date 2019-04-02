@@ -13,6 +13,16 @@ from trezorutils import (  # noqa: F401
     set_mode_unprivileged,
 )
 
+if __debug__:
+    if EMULATOR:
+        import uos
+
+        TEST = int(uos.getenv("TREZOR_TEST") or "0")
+        SAVE_SCREEN = int(uos.getenv("TREZOR_SAVE_SCREEN") or "0")
+    else:
+        TEST = 0
+        SAVE_SCREEN = 0
+
 
 def unimport_begin():
     return set(sys.modules)
