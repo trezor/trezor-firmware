@@ -87,9 +87,11 @@ def verify_message(client, coin_name, address, signature, message):
 
 
 @session
-def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
+def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None, extra_payload=None):
     # set up a transactions dict
-    txes = {None: messages.TransactionType(inputs=inputs, outputs=outputs)}
+    txes = {None: messages.TransactionType(inputs=inputs, outputs=outputs,
+                                           extra_data_len=len(extra_payload or b''),
+                                           extra_data=extra_payload)}
     # preload all relevant transactions ahead of time
     if coin_name in coins.by_name:
         load_prevtxes = not coins.by_name[coin_name]["force_bip143"]
@@ -134,7 +136,7 @@ def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
         tx_copy.outputs = []
         tx_copy.bin_outputs = []
         tx_copy.extra_data_len = len(tx.extra_data or b"")
-        tx_copy.extra_data = None
+        tx_copy.extra_data = tx.extra_data
         return tx_copy
 
     R = messages.RequestType
