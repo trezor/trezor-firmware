@@ -20,7 +20,7 @@ def message_digest(message):
 
 
 async def sign_message(ctx, msg, keychain):
-    await paths.validate_path(ctx, address.validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, address.validate_full_path, keychain, msg.address_n)
     await require_confirm_sign_message(ctx, msg.message)
 
     node = keychain.derive(msg.address_n)

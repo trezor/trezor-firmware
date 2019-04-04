@@ -6,7 +6,7 @@ from apps.monero import misc
 
 
 async def get_address(ctx, msg, keychain):
-    await paths.validate_path(ctx, misc.validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, misc.validate_full_path, keychain, msg.address_n)
 
     creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
 

@@ -23,7 +23,7 @@ MAX_CHAIN_ID = 2147483629
 async def sign_tx(ctx, msg, keychain):
     msg = sanitize(msg)
     check(msg)
-    await paths.validate_path(ctx, validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n)
 
     data_total = msg.data_length
 

@@ -13,7 +13,7 @@ from apps.ripple.serialize import serialize
 async def sign_tx(ctx, msg: RippleSignTx, keychain):
     validate(msg)
 
-    await paths.validate_path(ctx, helpers.validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, helpers.validate_full_path, keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     source_address = helpers.address_from_public_key(node.public_key())

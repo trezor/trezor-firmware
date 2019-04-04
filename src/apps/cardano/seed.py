@@ -11,6 +11,10 @@ class Keychain:
         self.path = path
         self.root = root
 
+    def validate_path(self, checked_path: list):
+        if checked_path[:2] != SEED_NAMESPACE[0]:
+            raise wire.DataError("Forbidden key path")
+
     def derive(self, node_path: list) -> bip32.HDNode:
         # check we are in the cardano namespace
         prefix = node_path[: len(self.path)]

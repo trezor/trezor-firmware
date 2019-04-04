@@ -25,6 +25,12 @@ class Keychain:
         del self.roots
         del self.seed
 
+    def validate_path(self, checked_path: list):
+        for curve, *path in self.namespaces:
+            if path == checked_path[: len(path)]:  # TODO: check curve_name
+                return
+        raise wire.DataError("Forbidden key path")
+
     def derive(self, node_path: list, curve_name: str = "secp256k1") -> bip32.HDNode:
         # find the root node index
         root_index = 0
@@ -44,6 +50,7 @@ class Keychain:
             root.derive_path(path)
             self.roots[root_index] = root
 
+        # TODO check for ed25519?
         # derive child node from the root
         node = root.clone()
         node.derive_path(suffix)

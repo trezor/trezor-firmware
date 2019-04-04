@@ -7,7 +7,7 @@ from apps.stellar import helpers
 
 
 async def get_address(ctx, msg: StellarGetAddress, keychain):
-    await paths.validate_path(ctx, helpers.validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, helpers.validate_full_path, keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n, helpers.STELLAR_CURVE)
     pubkey = seed.remove_ed25519_prefix(node.public_key())

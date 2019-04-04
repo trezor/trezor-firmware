@@ -6,7 +6,7 @@ from apps.common import layout, paths
 
 
 async def get_public_key(ctx, msg, keychain):
-    await paths.validate_path(ctx, validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n, LISK_CURVE)
     pubkey = node.public_key()

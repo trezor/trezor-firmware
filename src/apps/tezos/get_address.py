@@ -7,7 +7,7 @@ from apps.tezos import helpers
 
 
 async def get_address(ctx, msg, keychain):
-    await paths.validate_path(ctx, helpers.validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, helpers.validate_full_path, keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n, helpers.TEZOS_CURVE)
 
