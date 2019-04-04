@@ -26,20 +26,10 @@ class Keychain:
         del self.seed
 
     def validate_path(self, checked_path: list):
-        empty = True
-        for _, *namespace_path in self.namespaces:
-            if empty and len(namespace_path):
-                empty = False
-            for i, p in enumerate(namespace_path):
-                if p != checked_path[i]:
-                    # item did not match, move on to the next allowed path in namespace
-                    break
-                if i == len(namespace_path) - 1:
-                    # all items match in some namespace path -> success
-                    return
-        if not empty:
-            # checked_path was not among the allowed ones
-            raise wire.DataError("Forbidden key path")
+        for curve, *path in self.namespaces:
+            if path == checked_path[: len(path)]:  # TODO: check curve_name
+                return
+        raise wire.DataError("Forbidden key path")
 
     def derive(self, node_path: list, curve_name: str = "secp256k1") -> bip32.HDNode:
         # find the root node index
