@@ -33,18 +33,27 @@ async def recovery_device(ctx, msg):
     if not msg.dry_run and storage.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
-    text = Text("Device recovery", ui.ICON_RECOVERY)
-    text.normal("Do you really want to", "recover the device?", "")
+    if not msg.dry_run:
+        title = "Device recovery"
+        text = Text(title, ui.ICON_RECOVERY)
+        text.normal("Do you really want to", "recover the device?", "")
+    else:
+        title = "Simulated recovery"
+        text = Text(title, ui.ICON_RECOVERY)
+        text.normal("Do you really want to", "check the recovery", "seed?")
 
     await require_confirm(ctx, text, code=ProtectCall)
 
-    if msg.dry_run and config.has_pin():
-        curpin = await request_pin_ack(ctx, "Enter PIN", config.get_pin_rem())
+    if msg.dry_run:
+        if config.has_pin():
+            curpin = await request_pin_ack(ctx, "Enter PIN", config.get_pin_rem())
+        else:
+            curpin = ""
         if not config.check_pin(pin_to_int(curpin)):
             raise wire.PinInvalid("PIN invalid")
 
     # ask for the number of words
-    wordcount = await request_wordcount(ctx)
+    wordcount = await request_wordcount(ctx, title)
 
     # ask for mnemonic words one by one
     words = await request_mnemonic(ctx, wordcount)
@@ -92,10 +101,10 @@ async def recovery_device(ctx, msg):
 
 
 @ui.layout
-async def request_wordcount(ctx):
+async def request_wordcount(ctx, title: str) -> int:
     await ctx.call(ButtonRequest(code=MnemonicWordCount), ButtonAck)
 
-    text = Text("Device recovery", ui.ICON_RECOVERY)
+    text = Text(title, ui.ICON_RECOVERY)
     text.normal("Number of words?")
     count = await ctx.wait(WordSelector(text))
 
