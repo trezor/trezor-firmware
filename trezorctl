@@ -299,7 +299,7 @@ def set_display_rotation(connect, rotation):
     """Set display rotation.
 
     Configure display rotation for Trezor Model T. The options are
-    north, east, south or west. Defaults to north.
+    north, east, south or west.
     """
     return device.apply_settings(connect(), display_rotation=rotation)
 
