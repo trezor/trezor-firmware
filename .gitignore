@@ -6,3 +6,4 @@ tools/coins.json
 tools/coindefs.json
 tools/coinmarketcap.json
 proto.gv*
+.idea/*
