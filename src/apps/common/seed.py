@@ -1,7 +1,7 @@
 from trezor import ui, wire
 from trezor.crypto import bip32
 
-from apps.common import cache, mnemonic, storage
+from apps.common import HARDENED, cache, mnemonic, storage
 from apps.common.request_passphrase import protect_by_passphrase
 
 allow = list
@@ -25,9 +25,11 @@ class Keychain:
         del self.roots
         del self.seed
 
-    def validate_path(self, checked_path: list):
+    def validate_path(self, checked_path: list, checked_curve: str):
         for curve, *path in self.namespaces:
-            if path == checked_path[: len(path)]:  # TODO: check curve_name
+            if path == checked_path[: len(path)] and curve == checked_curve:
+                if curve == "ed25519" and not _path_hardened(checked_path):
+                    break
                 return
         raise wire.DataError("Forbidden key path")
 
@@ -65,6 +67,14 @@ async def get_keychain(ctx: wire.Context, namespaces: list) -> Keychain:
         seed = await _compute_seed(ctx)
     keychain = Keychain(seed, namespaces)
     return keychain
+
+
+def _path_hardened(path: list) -> bool:
+    # TODO: move to paths.py after #538 is fixed
+    for i in path:
+        if not (i & HARDENED):
+            return False
+    return True
 
 
 @ui.layout_no_slide

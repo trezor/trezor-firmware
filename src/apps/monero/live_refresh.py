@@ -9,7 +9,7 @@ from trezor.messages.MoneroLiveRefreshStepAck import MoneroLiveRefreshStepAck
 from trezor.messages.MoneroLiveRefreshStepRequest import MoneroLiveRefreshStepRequest
 
 from apps.common import paths
-from apps.monero import misc
+from apps.monero import CURVE, misc
 from apps.monero.layout import confirms
 from apps.monero.xmr import crypto, key_image, monero
 from apps.monero.xmr.crypto import chacha_poly
@@ -44,7 +44,9 @@ class LiveRefreshState:
 async def _init_step(
     s: LiveRefreshState, ctx, msg: MoneroLiveRefreshStartRequest, keychain
 ):
-    await paths.validate_path(ctx, misc.validate_full_path, keychain, msg.address_n)
+    await paths.validate_path(
+        ctx, misc.validate_full_path, keychain, msg.address_n, CURVE
+    )
 
     await confirms.require_confirm_live_refresh(ctx)
 

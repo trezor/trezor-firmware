@@ -2,12 +2,12 @@ from trezor.messages.EthereumPublicKey import EthereumPublicKey
 from trezor.messages.HDNodeType import HDNodeType
 
 from apps.common import coins, layout, paths
-from apps.ethereum import address
+from apps.ethereum import CURVE, address
 
 
 async def get_public_key(ctx, msg, keychain):
     await paths.validate_path(
-        ctx, address.validate_path_for_get_public_key, keychain, msg.address_n
+        ctx, address.validate_path_for_get_public_key, keychain, msg.address_n, CURVE
     )
     node = keychain.derive(msg.address_n)
 

@@ -2,7 +2,6 @@ from micropython import const
 
 from trezor.messages import MessageType
 
-STELLAR_CURVE = "ed25519"
 TX_TYPE = bytearray("\x00\x00\x00\x02")
 
 # source: https://github.com/stellar/go/blob/3d2c1defe73dbfed00146ebe0e8d7e07ce4bb1b6/xdr/Stellar-transaction.x#L16

@@ -7,7 +7,7 @@ from trezor.messages.CardanoSignedTx import CardanoSignedTx
 from trezor.messages.CardanoTxRequest import CardanoTxRequest
 from trezor.messages.MessageType import CardanoTxAck
 
-from apps.cardano import cbor, seed
+from apps.cardano import CURVE, cbor, seed
 from apps.cardano.address import (
     derive_address_and_node,
     is_safe_output_address,
@@ -85,7 +85,7 @@ async def sign_tx(ctx, msg):
         display_homescreen()
 
         for i in msg.inputs:
-            await validate_path(ctx, validate_full_path, keychain, i.address_n)
+            await validate_path(ctx, validate_full_path, keychain, i.address_n, CURVE)
 
         # sign the transaction bundle and prepare the result
         transaction = Transaction(

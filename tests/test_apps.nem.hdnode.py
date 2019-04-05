@@ -1,7 +1,8 @@
 from common import *
 from ubinascii import unhexlify
 from trezor.crypto import bip32
-from apps.nem.helpers import NEM_NETWORK_MAINNET, NEM_CURVE
+from apps.nem import CURVE
+from apps.nem.helpers import NEM_NETWORK_MAINNET
 
 
 class TestNemHDNode(unittest.TestCase):
@@ -81,7 +82,7 @@ class TestNemHDNode(unittest.TestCase):
                 child_num=0,
                 chain_code=bytearray(32),
                 private_key=private_key,
-                curve_name=NEM_CURVE
+                curve_name=CURVE
             )
 
             self.assertEqual(node.nem_address(NEM_NETWORK_MAINNET), test[2])
@@ -222,7 +223,7 @@ class TestNemHDNode(unittest.TestCase):
                 child_num=0,
                 chain_code=bytearray(32),
                 private_key=private_key,
-                curve_name=NEM_CURVE
+                curve_name=CURVE
             )
 
             encrypted = node.nem_encrypt(unhexlify(test['public']),

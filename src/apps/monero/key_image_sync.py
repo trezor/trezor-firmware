@@ -8,7 +8,7 @@ from trezor.messages.MoneroKeyImageSyncFinalAck import MoneroKeyImageSyncFinalAc
 from trezor.messages.MoneroKeyImageSyncStepAck import MoneroKeyImageSyncStepAck
 
 from apps.common import paths
-from apps.monero import misc
+from apps.monero import CURVE, misc
 from apps.monero.layout import confirms
 from apps.monero.xmr import crypto, key_image, monero
 from apps.monero.xmr.crypto import chacha_poly
@@ -47,7 +47,9 @@ class KeyImageSync:
 
 
 async def _init_step(s, ctx, msg, keychain):
-    await paths.validate_path(ctx, misc.validate_full_path, keychain, msg.address_n)
+    await paths.validate_path(
+        ctx, misc.validate_full_path, keychain, msg.address_n, CURVE
+    )
 
     s.creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
 

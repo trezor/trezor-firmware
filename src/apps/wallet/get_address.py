@@ -16,6 +16,7 @@ async def get_address(ctx, msg, keychain):
         addresses.validate_full_path,
         keychain,
         msg.address_n,
+        coin.curve_name,
         coin=coin,
         script_type=msg.script_type,
     )

@@ -8,7 +8,7 @@ from trezor.messages.MessageType import EthereumTxAck
 from trezor.utils import HashWriter
 
 from apps.common import paths
-from apps.ethereum import address, tokens
+from apps.ethereum import CURVE, address, tokens
 from apps.ethereum.address import validate_full_path
 from apps.ethereum.layout import (
     require_confirm_data,
@@ -23,7 +23,7 @@ MAX_CHAIN_ID = 2147483629
 async def sign_tx(ctx, msg, keychain):
     msg = sanitize(msg)
     check(msg)
-    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n)
+    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
 
     data_total = msg.data_length
 

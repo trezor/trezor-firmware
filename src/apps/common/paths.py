@@ -8,8 +8,8 @@ from apps.common import HARDENED
 from apps.common.confirm import require_confirm
 
 
-async def validate_path(ctx, validate_func, keychain, path, **kwargs):
-    keychain.validate_path(path)
+async def validate_path(ctx, validate_func, keychain, path, curve, **kwargs):
+    keychain.validate_path(path, curve)
     if not validate_func(path, **kwargs):
         await show_path_warning(ctx, path)
 

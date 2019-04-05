@@ -1,7 +1,7 @@
 from trezor import wire
 from trezor.crypto import bip32
 
-from apps.cardano import SEED_NAMESPACE
+from apps.cardano import CURVE, SEED_NAMESPACE
 from apps.common import cache, mnemonic, storage
 from apps.common.request_passphrase import protect_by_passphrase
 
@@ -11,8 +11,8 @@ class Keychain:
         self.path = path
         self.root = root
 
-    def validate_path(self, checked_path: list):
-        if checked_path[:2] != SEED_NAMESPACE[0]:
+    def validate_path(self, checked_path: list, checked_curve: str):
+        if checked_curve != CURVE or checked_path[:2] != SEED_NAMESPACE:
             raise wire.DataError("Forbidden key path")
 
     def derive(self, node_path: list) -> bip32.HDNode:
@@ -40,8 +40,8 @@ async def get_keychain(ctx: wire.Context) -> Keychain:
     root = bip32.from_mnemonic_cardano(mnemonic.restore(), passphrase)
 
     # derive the namespaced root node
-    for i in SEED_NAMESPACE[0]:
+    for i in SEED_NAMESPACE:
         root.derive_cardano(i)
 
-    keychain = Keychain(SEED_NAMESPACE[0], root)
+    keychain = Keychain(SEED_NAMESPACE, root)
     return keychain
