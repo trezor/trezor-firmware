@@ -1,14 +1,35 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-_At the moment, the project does __not__ adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
+_At the moment, the project does **not** adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
+
+## [0.11.3] - Unreleased
+
+[0.11.3]: https://github.com/trezor/python-trezor/compare/v0.11.2...master
+
+### Added
+
+- trezorctl can now send ERC20 tokens
+- trezorctl usb-reset will perform USB reset on devices in inconsistent state
+- set-display-rotation command added for TT firmware 2.1.1
+
+### Changed
+
+- Minimum firmware versions bumped to 1.8.0 and 2.1.0
+
+### Fixed
+
+- Ethereum commands in trezorctl now work
 
 ## [0.11.2] - 2019-02-27
+
 [0.11.2]: https://github.com/trezor/python-trezor/compare/v0.11.1...v0.11.2
 
 ### Added
+
 - full support for bootloader 1.8.0 and relevant firmware upgrade functionality
 - trezorctl: support fully offline signing JSON-encoded transaction data
 - trezorctl: dry-run for firmware upgrade command
@@ -17,6 +38,7 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 - Ethereum: add get_public_key methods
 
 ### Changed
+
 - coins with BIP-143 fork id (BCH, BTG) won't require prev_tx [#352]
 - device recovery will restore U2F counter
 - Cardano: change `network` to `protocol_magic`
@@ -24,19 +46,24 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 - protobuf: improved `to_dict` function
 
 ### Deprecated
+
 - trezorctl: interactive signing with `sign-tx` is considered deprecated
 
 ## [0.11.1] - 2018-12-28
+
 [0.11.1]: https://github.com/trezor/python-trezor/compare/v0.11.0...v0.11.1
 
 ### Fixed
+
 - crash when entering passphrase on device with Trezor T
 - Qt widgets should only import QtCore [#349]
 
 ## [0.11.0] - 2018-12-06
+
 [0.11.0]: https://github.com/trezor/python-trezor/compare/v0.10.2...v0.11.0
 
 ### Incompatible changes
+
 - removed support for Python 3.3 and 3.4
 - major refactor of `TrezorClient` and UI handling. Implementers must now provide a "UI" object instead of overriding callbacks [#307], [#314]
 - protobuf classes now use a `get_fields()` method instead of `FIELDS` field [#312]
@@ -47,6 +74,7 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 - `@field` decorator was replaced by an argument to `@expect`
 
 ### Added
+
 - trezorlib now has a hardcoded check preventing use of outdated firmware versions [#283]
 - Ripple support [#286]
 - Zencash support [#287]
@@ -64,6 +92,7 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 - `tx_api` now supports Blockbook backend servers
 
 ### Changed
+
 - better reporting for debuglink expected messages
 - replaced Ed25519 module with a cleaner, optimized version
 - further reorganization of transports makes them more robust when dependencies are missing
@@ -75,41 +104,51 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 - Stellar: addresses are always strings
 
 ### Removed
+
 - `set_tx_api` method on `TrezorClient` is replaced by an argument for `sign_tx`
 - caching functionality of `TxApi` was moved to a separate test-support class
 - Stellar: public key methods removed
 - `EncryptMessage` and `DecryptMessage` actions are gone
 
 ### Fixed:
+
 - `TrezorClient` can now detect when a HID device is removed and a different one is plugged in on the same path
 - trezorctl now works with Click 7.0 and considers "`_`" and "`-`" as same in command names [#314]
 - bash completion fixed
 - Stellar: several bugs in the XDR parser were fixed
 
 ## [0.10.2] - 2018-06-21
+
 [0.10.2]: https://github.com/trezor/python-trezor/compare/v0.10.1...v0.10.2
 
 ### Added
+
 - `stellar_get_address` and `_public_key` functions support `show_display` parameter
 - trezorctl: `stellar_get_address` and `_public_key` commands for the respective functionality
 
 ### Removed
+
 - trezorctl: `list_coins` is removed because we no longer parse the relevant protobuf field
   (and newer Trezor firmwares don't send it) [#277]
 
 ### Fixed
+
 - test support module was not included in the release, so code relying on the deprecated `ckd_public` module would fail [#280]
 
 ## [0.10.1] - 2018-06-11
+
 [0.10.1]: https://github.com/trezor/python-trezor/compare/v0.10.0...v0.10.1
 
 ### Fixed
+
 - previous release fails to build on Windows [#274]
 
 ## [0.10.0] - 2018-06-08
+
 [0.10.0]: https://github.com/trezor/python-trezor/compare/v0.9.1...v0.10.0
 
 ### Added
+
 - Lisk support [#197]
 - Stellar support [#167], [#268]
 - Wanchain support [#230]
@@ -122,6 +161,7 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 - trezorctl: smarter handling of firmware updates [#242], [#269]
 
 ### Changed
+
 - reorganized transports and moved into their own `transport` submodule
 - protobuf messages and coins info is now regenerated at build time from the `trezor-common` repository [#248]
 - renamed `ed25519raw` to `_ed25519` to indicate its privateness
@@ -141,12 +181,14 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 - docs: switched changelog to Keep a Changelog format [#94]
 
 ### Deprecated
+
 - `ckd_public` is only maintained in `tests.support` submodule and considered private
 - `TrezorClient.expand_path` is moved to plain function `tools.parse_path`
 - `TrezorDevice` is deprecated in favor of `transport.enumerate_devices` and `transport.get_transport`
 - XPUB-related handling in `tools` is slated for removal
 
 ### Removed
+
 - most Python 2 compatibility constructs are gone [#229]
 - `TrezorClientVerbose` and `VerboseWireMixin` is removed
 - specific `tx_api.TxApi*` classes removed in favor of `coins.tx_api`
@@ -155,6 +197,7 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
   specified explicitly. Require `trezor[hidapi]` or `trezor[ethereum]` to get them.
 
 ### Fixed
+
 - WebUSB enumeration returning bad devices on Windows 10 [#223]
 - `sign_tx` operation sending empty address string [#237]
 - Wrongly formatted Ethereum signatures [#236]
@@ -163,11 +206,12 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
 - trezorctl: Matrix recovery on Windows wouldn't allow backspace [#207]
 - aes_encfs_getpass.py: fixed Python 3 bug [#169]
 
-
 ## [0.9.1] - 2018-03-05
+
 [0.9.1]: https://github.com/trezor/python-trezor/compare/v0.9.0...v0.9.1
 
 ### Added
+
 - proper support for Trezor model T
 - support for Monacoin
 - improvements to `trezorctl`:
@@ -175,8 +219,8 @@ _At the moment, the project does __not__ adhere to [Semantic Versioning](http://
   - support `TREZOR_PATH` environment variable to preselect a Trezor device.
 
 ### Removed
-- gradually dropping Python 2 compatibility (pypi package will now be marked as Python 3 only)
 
+- gradually dropping Python 2 compatibility (pypi package will now be marked as Python 3 only)
 
 [#94]: https://github.com/trezor/python-trezor/issues/94
 [#167]: https://github.com/trezor/python-trezor/issues/167
