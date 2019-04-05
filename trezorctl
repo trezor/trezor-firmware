@@ -774,6 +774,18 @@ def self_test(connect):
     return debuglink.self_test(connect())
 
 
+@cli.command()
+def usb_reset():
+    """Perform USB reset on a stuck device.
+
+    This can fix LIBUSB_ERROR_PIPE and similar errors when connecting to a device
+    in a messed state.
+    """
+    from trezorlib.transport.webusb import WebUsbTransport
+
+    WebUsbTransport.enumerate(usb_reset=True)
+
+
 #
 # Basic coin functions
 #

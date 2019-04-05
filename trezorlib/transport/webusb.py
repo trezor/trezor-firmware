@@ -106,7 +106,7 @@ class WebUsbTransport(ProtocolBasedTransport):
         return "%s:%s" % (self.PATH_PREFIX, dev_to_str(self.device))
 
     @classmethod
-    def enumerate(cls) -> Iterable["WebUsbTransport"]:
+    def enumerate(cls, usb_reset=False) -> Iterable["WebUsbTransport"]:
         if cls.context is None:
             cls.context = usb1.USBContext()
             cls.context.open()
@@ -128,6 +128,11 @@ class WebUsbTransport(ProtocolBasedTransport):
                 devices.append(WebUsbTransport(dev))
             except usb1.USBErrorNotSupported:
                 pass
+            except usb1.USBErrorPipe:
+                if usb_reset:
+                    handle = dev.open()
+                    handle.resetDevice()
+                    handle.close()
         return devices
 
     def find_debug(self) -> "WebUsbTransport":
