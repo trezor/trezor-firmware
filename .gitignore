@@ -9,3 +9,4 @@ build/
 build-docker/
 emu.config
 compile_commands.json
+tests/trezor_monero_tests{,.log}
