@@ -355,10 +355,11 @@ void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out) {
 void layoutConfirmOmni(const uint8_t *data, uint32_t size) {
   const char *desc;
   char str_out[32];
-  const uint32_t tx_type = *(const uint32_t *)(data + 4);
+  uint32_t tx_type, currency;
+  REVERSE32(*(const uint32_t *)(data + 4), tx_type);
   if (tx_type == 0x00000000 && size == 20) {  // OMNI simple send
     desc = _("Simple send of ");
-    const uint32_t currency = *(const uint32_t *)(data + 8);
+    REVERSE32(*(const uint32_t *)(data + 8), currency);
     const char *suffix = "UNKN";
     switch (currency) {
       case 1:
@@ -374,8 +375,9 @@ void layoutConfirmOmni(const uint8_t *data, uint32_t size) {
         suffix = "USDT";
         break;
     }
-    uint64_t amount;
-    memcpy(&amount, data + 12, sizeof(uint64_t));
+    uint64_t amount_be, amount;
+    memcpy(&amount_be, data + 12, sizeof(uint64_t));
+    REVERSE64(amount_be, amount);
     bn_format_uint64(amount, NULL, suffix, BITCOIN_DIVISIBILITY, 0, false,
                      str_out, sizeof(str_out));
   } else {
