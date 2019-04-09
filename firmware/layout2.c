@@ -360,19 +360,19 @@ void layoutConfirmOmni(const uint8_t *data, uint32_t size) {
   if (tx_type == 0x00000000 && size == 20) {  // OMNI simple send
     desc = _("Simple send of ");
     REVERSE32(*(const uint32_t *)(data + 8), currency);
-    const char *suffix = "UNKN";
+    const char *suffix = " UNKN";
     switch (currency) {
       case 1:
-        suffix = "OMNI";
+        suffix = " OMNI";
         break;
       case 2:
-        suffix = "tOMNI";
+        suffix = " tOMNI";
         break;
       case 3:
-        suffix = "MAID";
+        suffix = " MAID";
         break;
       case 31:
-        suffix = "USDT";
+        suffix = " USDT";
         break;
     }
     uint64_t amount_be, amount;
