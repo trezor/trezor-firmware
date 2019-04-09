@@ -33,6 +33,25 @@ class TestKeychain(unittest.TestCase):
             with self.assertRaises(wire.DataError):
                 k.validate_path(*f)
 
+    def test_validate_path_special_ed25519(self):
+        n = [
+            ["ed25519-keccak", 44 | HARDENED, 134 | HARDENED],
+        ]
+        k = Keychain(b"", n)
+
+        correct = (
+            ([44 | HARDENED, 134 | HARDENED], "ed25519-keccak"),
+        )
+        for c in correct:
+            self.assertEqual(None, k.validate_path(*c))
+
+        fails = [
+            ([44 | HARDENED, 134 | HARDENED, 1], "ed25519-keccak"),
+        ]
+        for f in fails:
+            with self.assertRaises(wire.DataError):
+                k.validate_path(*f)
+
     def test_validate_path_empty_namespace(self):
         k = Keychain(b"", [["secp256k1"]])
         correct = (

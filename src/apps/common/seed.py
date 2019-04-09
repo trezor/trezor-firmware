@@ -28,7 +28,7 @@ class Keychain:
     def validate_path(self, checked_path: list, checked_curve: str):
         for curve, *path in self.namespaces:
             if path == checked_path[: len(path)] and curve == checked_curve:
-                if curve == "ed25519" and not _path_hardened(checked_path):
+                if "ed25519" in curve and not _path_hardened(checked_path):
                     break
                 return
         raise wire.DataError("Forbidden key path")
