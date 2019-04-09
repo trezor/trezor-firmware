@@ -1,35 +1,41 @@
 #!/bin/bash
 
-cd $(dirname $0)
-MICROPYTHON=../build/unix/micropython
-PYOPT=1
+declare -a results
+declare -i PYOPT=1 passed=0 failed=0 exit_code=0
+declare COLOR_GREEN='\e[32m' COLOR_RED='\e[91m' COLOR_RESET='\e[39m'
+declare MICROPYTHON=../build/unix/micropython 
 
-results=()
-error=0
-
-if [ -z "$*" ]; then
-    list="test_*.py"
-else
-    list="$*"
-fi
-
-for i in $list; do
+print_summary() {
     echo
-    if $MICROPYTHON -O$PYOPT $i; then
-        results+=("OK   $i")
+    echo 'Summary:'
+    echo '-------------------'
+    printf '%b\n' "${results[@]}"
+    if [ $exit_code == 0 ]; then
+        echo -e "${COLOR_GREEN}PASSED:${COLOR_RESET} $passed/$num_of_tests tests OK!"
     else
-        results+=("FAIL $i")
-        error=1
+        echo -e "${COLOR_RED}FAILED:${COLOR_RESET} $failed/$num_of_tests tests failed!"
+    fi
+}
+
+trap 'print_summary; echo -e "${COLOR_RED}Interrupted by user!${COLOR_RESET}"; exit 1' SIGINT
+
+cd $(dirname $0)
+
+[ -z "$*" ] && tests=(test_*.py) || tests=($*)
+
+declare -i num_of_tests=${#tests[@]}
+
+for test_case in ${tests[@]}; do
+    echo
+    if $MICROPYTHON -O$PYOPT $test_case; then
+        results+=("${COLOR_GREEN}OK:${COLOR_RESET} $test_case")
+        ((passed++))
+    else
+        results+=("${COLOR_RED}FAIL:${COLOR_RESET} $test_case")
+        ((failed++))
+        exit_code=1
     fi
 done
 
-echo
-echo 'Summary:'
-printf '%s\n' "${results[@]}"
-echo '-------------------'
-if [ $error == 0 ]; then
-    echo 'ALL OK'
-else
-    echo 'FAIL at least one error occurred'
-fi
-exit $error
+print_summary
+exit $exit_code
