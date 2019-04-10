@@ -46,6 +46,9 @@ async def sign_tx(ctx, msg, keychain):
         elif isinstance(req, helpers.UiConfirmFeeOverThreshold):
             res = await layout.confirm_feeoverthreshold(ctx, req.fee, req.coin)
             progress.report_init()
+        elif isinstance(req, helpers.UiConfirmNonDefaultLocktime):
+            res = await layout.confirm_nondefault_locktime(ctx, req.lock_time)
+            progress.report_init()
         elif isinstance(req, helpers.UiConfirmForeignAddress):
             res = await paths.show_path_warning(ctx, req.address_n)
             progress.report_init()

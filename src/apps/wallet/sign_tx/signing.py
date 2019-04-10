@@ -200,6 +200,10 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
         if not await helpers.confirm_feeoverthreshold(fee, coin):
             raise SigningError(FailureType.ActionCancelled, "Signing cancelled")
 
+    if tx.lock_time > 0:
+        if not await helpers.confirm_nondefault_locktime(tx.lock_time):
+            raise SigningError(FailureType.ActionCancelled, "Locktime cancelled")
+
     if not await helpers.confirm_total(total_in - change_out, fee, coin):
         raise SigningError(FailureType.ActionCancelled, "Total cancelled")
 

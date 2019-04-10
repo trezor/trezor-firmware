@@ -52,6 +52,13 @@ class UiConfirmForeignAddress:
     __eq__ = obj_eq
 
 
+class UiConfirmNonDefaultLocktime:
+    def __init__(self, lock_time: int):
+        self.lock_time = lock_time
+
+    __eq__ = obj_eq
+
+
 def confirm_output(output: TxOutputType, coin: CoinInfo):
     return (yield UiConfirmOutput(output, coin))
 
@@ -66,6 +73,10 @@ def confirm_feeoverthreshold(fee: int, coin: CoinInfo):
 
 def confirm_foreign_address(address_n: list):
     return (yield UiConfirmForeignAddress(address_n))
+
+
+def confirm_nondefault_locktime(lock_time: int):
+    return (yield UiConfirmNonDefaultLocktime(lock_time))
 
 
 def request_tx_meta(tx_req: TxRequest, tx_hash: bytes = None):

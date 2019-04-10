@@ -1,3 +1,4 @@
+from micropython import const
 from ubinascii import hexlify
 
 from trezor import ui
@@ -7,6 +8,9 @@ from trezor.utils import chunks, format_amount
 
 from apps.common.confirm import confirm, hold_to_confirm
 from apps.wallet.sign_tx import addresses, omni
+
+
+_LOCKTIME_TIMESTAMP_MIN_VALUE = const(500000000)
 
 
 def format_coin_amount(amount, coin):
@@ -64,4 +68,16 @@ async def confirm_feeoverthreshold(ctx, fee, coin):
 async def confirm_foreign_address(ctx, address_n, coin):
     text = Text("Confirm sending", ui.ICON_SEND, icon_color=ui.RED)
     text.normal("Trying to spend", "coins from another chain.", "Continue?")
+    return await confirm(ctx, text, ButtonRequestType.SignTx)
+
+
+async def confirm_nondefault_locktime(ctx, lock_time):
+    text = Text("Confirm locktime", ui.ICON_SEND, icon_color=ui.GREEN)
+    text.normal("Locktime for this transaction is set to")
+    if lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
+        text.normal("blockheight:")
+    else:
+        text.normal("timestamp:")
+    text.bold(str(lock_time))
+    text.normal("Continue?")
     return await confirm(ctx, text, ButtonRequestType.SignTx)

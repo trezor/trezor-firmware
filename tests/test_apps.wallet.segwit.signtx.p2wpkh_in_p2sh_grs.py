@@ -72,6 +72,9 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             helpers.UiConfirmOutput(out2, coin),
             True,
 
+            helpers.UiConfirmNonDefaultLocktime(tx.lock_time),
+            True,
+
             helpers.UiConfirmTotal(123445789 + 11000, 11000, coin),
             True,
 
@@ -164,6 +167,9 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None),
                       serialized=None),
             TxAck(tx=TransactionType(outputs=[out2])),
+
+            helpers.UiConfirmNonDefaultLocktime(tx.lock_time),
+            True,
 
             helpers.UiConfirmTotal(12300000 + 11000, 11000, coin),
             True,
