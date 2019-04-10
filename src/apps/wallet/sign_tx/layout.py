@@ -9,7 +9,6 @@ from trezor.utils import chunks, format_amount
 from apps.common.confirm import confirm, hold_to_confirm
 from apps.wallet.sign_tx import addresses, omni
 
-
 _LOCKTIME_TIMESTAMP_MIN_VALUE = const(500000000)
 
 
