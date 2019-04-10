@@ -4,7 +4,7 @@ from trezor import log, wire
 from trezor.messages.CardanoPublicKey import CardanoPublicKey
 from trezor.messages.HDNodeType import HDNodeType
 
-from apps.cardano import seed
+from apps.cardano import CURVE, seed
 from apps.cardano.address import derive_address_and_node
 from apps.common import layout, paths
 from apps.common.seed import remove_ed25519_prefix
@@ -18,6 +18,7 @@ async def get_public_key(ctx, msg):
         paths.validate_path_for_get_public_key,
         keychain,
         msg.address_n,
+        CURVE,
         slip44_id=1815,
     )
 

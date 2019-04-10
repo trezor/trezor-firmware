@@ -24,6 +24,7 @@ async def sign_message(ctx, msg, keychain):
         validate_full_path,
         keychain,
         msg.address_n,
+        coin.curve_name,
         coin=coin,
         script_type=msg.script_type,
         validate_script_type=False,

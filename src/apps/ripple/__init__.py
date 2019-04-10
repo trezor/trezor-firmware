@@ -3,8 +3,10 @@ from trezor.messages import MessageType
 
 from apps.common import HARDENED
 
+CURVE = "secp256k1"
+
 
 def boot():
-    ns = [["secp256k1", HARDENED | 44, HARDENED | 144]]
+    ns = [[CURVE, HARDENED | 44, HARDENED | 144]]
     wire.add(MessageType.RippleGetAddress, __name__, "get_address", ns)
     wire.add(MessageType.RippleSignTx, __name__, "sign_tx", ns)

@@ -2,8 +2,6 @@ from trezor.crypto.hashlib import sha256
 
 from apps.common import HARDENED
 
-LISK_CURVE = "ed25519"
-
 
 def get_address_from_public_key(pubkey):
     pubkeyhash = sha256(pubkey).digest()

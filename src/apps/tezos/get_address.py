@@ -3,13 +3,15 @@ from trezor.messages.TezosAddress import TezosAddress
 
 from apps.common import paths, seed
 from apps.common.layout import address_n_to_str, show_address, show_qr
-from apps.tezos import helpers
+from apps.tezos import CURVE, helpers
 
 
 async def get_address(ctx, msg, keychain):
-    await paths.validate_path(ctx, helpers.validate_full_path, keychain, msg.address_n)
+    await paths.validate_path(
+        ctx, helpers.validate_full_path, keychain, msg.address_n, CURVE
+    )
 
-    node = keychain.derive(msg.address_n, helpers.TEZOS_CURVE)
+    node = keychain.derive(msg.address_n, CURVE)
 
     pk = seed.remove_ed25519_prefix(node.public_key())
     pkh = hashlib.blake2b(pk, outlen=20).digest()

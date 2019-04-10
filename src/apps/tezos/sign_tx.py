@@ -6,13 +6,15 @@ from trezor.messages.TezosSignedTx import TezosSignedTx
 
 from apps.common import paths
 from apps.common.writers import write_bytes, write_uint8
-from apps.tezos import helpers, layout
+from apps.tezos import CURVE, helpers, layout
 
 
 async def sign_tx(ctx, msg, keychain):
-    await paths.validate_path(ctx, helpers.validate_full_path, keychain, msg.address_n)
+    await paths.validate_path(
+        ctx, helpers.validate_full_path, keychain, msg.address_n, CURVE
+    )
 
-    node = keychain.derive(msg.address_n, helpers.TEZOS_CURVE)
+    node = keychain.derive(msg.address_n, CURVE)
 
     if msg.transaction is not None:
         to = _get_address_from_contract(msg.transaction.destination)

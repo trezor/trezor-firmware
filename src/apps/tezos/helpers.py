@@ -4,7 +4,6 @@ from trezor.crypto import base58
 
 from apps.common import HARDENED
 
-TEZOS_CURVE = "ed25519"
 TEZOS_AMOUNT_DIVISIBILITY = const(6)
 TEZOS_ED25519_ADDRESS_PREFIX = "tz1"
 TEZOS_ORIGINATED_ADDRESS_PREFIX = "KT1"

@@ -4,11 +4,11 @@ from trezor.messages.LiskMessageSignature import LiskMessageSignature
 from trezor.ui.text import Text
 from trezor.utils import HashWriter
 
-from .helpers import LISK_CURVE, validate_full_path
-
 from apps.common import paths
 from apps.common.confirm import require_confirm
 from apps.common.signverify import split_message
+from apps.lisk import CURVE
+from apps.lisk.helpers import validate_full_path
 from apps.wallet.sign_tx.writers import write_varint
 
 
@@ -23,10 +23,10 @@ def message_digest(message):
 
 
 async def sign_message(ctx, msg, keychain):
-    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n)
+    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
     await require_confirm_sign_message(ctx, msg.message)
 
-    node = keychain.derive(msg.address_n, LISK_CURVE)
+    node = keychain.derive(msg.address_n, CURVE)
     seckey = node.private_key()
     pubkey = node.public_key()
     pubkey = pubkey[1:]  # skip ed25519 pubkey marker
