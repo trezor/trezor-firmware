@@ -1,12 +1,18 @@
-from trezor import config, res, ui
+from trezor import config, io, loop, res, ui
 
 from apps.common import storage
 
 
 async def homescreen():
+    # render homescreen in dimmed mode and fade back in
     await ui.backlight_slide(ui.BACKLIGHT_DIM)
     display_homescreen()
     await ui.backlight_slide(ui.BACKLIGHT_NORMAL)
+
+    # loop forever, never return
+    touch = loop.wait(io.TOUCH)
+    while True:
+        await touch
 
 
 def display_homescreen():
