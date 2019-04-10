@@ -65,20 +65,6 @@ STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_init_obj, 0, 1,
                                            mod_trezorconfig_init);
 
-/// def check_pin(pin: int) -> bool:
-///     '''
-///     Check the given PIN. Returns True on success, False on failure.
-///     '''
-STATIC mp_obj_t mod_trezorconfig_check_pin(mp_obj_t pin) {
-  uint32_t pin_i = trezor_obj_get_uint(pin);
-  if (sectrue != storage_unlock(pin_i)) {
-    return mp_const_false;
-  }
-  return mp_const_true;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorconfig_check_pin_obj,
-                                 mod_trezorconfig_check_pin);
-
 /// def unlock(pin: int) -> bool:
 ///     '''
 ///     Attempts to unlock the storage with given PIN.  Returns True on
@@ -93,6 +79,16 @@ STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorconfig_unlock_obj,
                                  mod_trezorconfig_unlock);
+
+/// def check_pin(pin: int) -> bool:
+///     '''
+///     Check the given PIN. Returns True on success, False on failure.
+///     '''
+STATIC mp_obj_t mod_trezorconfig_check_pin(mp_obj_t pin) {
+  return mod_trezorconfig_unlock(pin);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorconfig_check_pin_obj,
+                                 mod_trezorconfig_check_pin);
 
 /// def lock() -> None:
 ///     '''
