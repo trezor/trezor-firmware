@@ -77,6 +77,9 @@ _APDU_LC2 = const(5)  # uint8_t lc2;        // Length field, MSB
 _APDU_LC3 = const(6)  # uint8_t lc3;        // Length field, LSB
 _APDU_DATA = const(7)  # uint8_t data[1];    // Data field
 
+_FRAME_INIT_SIZE = 57
+_FRAME_CONT_SIZE = 59
+
 
 def frame_init() -> dict:
     # uint32_t cid;     // Channel identifier
@@ -300,7 +303,10 @@ async def send_cmd(cmd: Cmd, iface: io.HID) -> None:
     write = loop.wait(iface.iface_num() | io.POLL_WRITE)
     while offset < datalen:
         frm.seq = seq
-        offset += utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
+        copied = utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
+        offset += copied
+        if copied < _FRAME_CONT_SIZE:
+            frm.data[copied:] = bytearray(_FRAME_CONT_SIZE - copied)
         while True:
             await write
             if iface.write(buf) > 0:
