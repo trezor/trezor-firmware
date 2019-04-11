@@ -5,9 +5,16 @@ def pin_to_int(pin: str) -> int:
     return int("1" + pin)
 
 
+_previous_progress = None
+
+
 def show_pin_timeout(seconds: int, progress: int, message: str) -> bool:
+    global _previous_progress
+
     if progress == 0:
-        ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
+        if progress != _previous_progress:
+            # avoid overdraw in case of repeated progress calls
+            ui.display.clear()
         ui.display.text_center(
             ui.WIDTH // 2, 37, message, ui.BOLD, ui.FG, ui.BG, ui.WIDTH
         )
@@ -37,4 +44,6 @@ def show_pin_timeout(seconds: int, progress: int, message: str) -> bool:
             ui.WIDTH,
         )
     ui.display.refresh()
+
+    _previous_progress = progress
     return False
