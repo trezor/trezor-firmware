@@ -3,14 +3,14 @@
 : "${RUN_PYTHON_TESTS:=0}"
 : "${FORCE_DOCKER_USE:=0}"
 
-SDIR="$(SHELL_SESSION_FILE= && cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SDIR="$(SHELL_SESSION_FILE='' && cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 CORE_DIR="$SDIR/.."
-MICROPYTHON=$CORE_DIR/build/unix/micropython
+MICROPYTHON="$CORE_DIR/build/unix/micropython"
 PYOPT=0
 
 # run emulator
-cd $CORE_DIR/src
-$MICROPYTHON -O$PYOPT main.py >/dev/null &
+cd "$CORE_DIR/src"
+"$MICROPYTHON" -O$PYOPT main.py >/dev/null &
 upy_pid=$!
 cd -
 sleep 1
@@ -54,26 +54,26 @@ error=1
 : "${TREZOR_MONERO_TESTS_PATH:=$CORE_DIR/tests/trezor_monero_tests}"
 : "${TREZOR_MONERO_TESTS_LOG:=$CORE_DIR/tests/trezor_monero_tests.log}"
 
-if [[ ! -f $TREZOR_MONERO_TESTS_PATH || "`shasum -a256 $TREZOR_MONERO_TESTS_PATH | cut -d' ' -f1`" != $TREZOR_MONERO_TESTS_SHA256SUM ]]; then 
+if [[ ! -f "$TREZOR_MONERO_TESTS_PATH" || "`shasum -a256 "$TREZOR_MONERO_TESTS_PATH" | cut -d' ' -f1`" != $TREZOR_MONERO_TESTS_SHA256SUM ]]; then 
   echo "Downloading Trezor monero tests binary to `pwd`${TREZOR_MONERO_TESTS_PATH:1}"
-  curl -# -L -o $TREZOR_MONERO_TESTS_PATH $TREZOR_MONERO_TESTS_URL \
-    && chmod +x $TREZOR_MONERO_TESTS_PATH \
-    && test "`shasum -a256 $TREZOR_MONERO_TESTS_PATH | cut -d' ' -f1`" == "$TREZOR_MONERO_TESTS_SHA256SUM" || exit 1
+  curl -# -L -o "$TREZOR_MONERO_TESTS_PATH" "$TREZOR_MONERO_TESTS_URL" \
+    && chmod +x "$TREZOR_MONERO_TESTS_PATH" \
+    && test "`shasum -a256 "$TREZOR_MONERO_TESTS_PATH" | cut -d' ' -f1`" == "$TREZOR_MONERO_TESTS_SHA256SUM" || exit 1
 fi
 
 echo "Running tests"
 TIME_TESTS_START=$SECONDS
 if [[ "$OSTYPE" == "linux-gnu" && "$FORCE_DOCKER_USE" != 1 ]]; then
-  $TREZOR_MONERO_TESTS_PATH 2>&1 > "$TREZOR_MONERO_TESTS_LOG"
+  "$TREZOR_MONERO_TESTS_PATH" 2>&1 > "$TREZOR_MONERO_TESTS_LOG"
   error=$?
 
 elif [[ "$OSTYPE" == "darwin"* || "$FORCE_DOCKER_USE" == 1 ]]; then
-  DOCKER_ID=$(docker run -idt --mount type=bind,src=$CORE_DIR,dst=$CORE_DIR -w $CORE_DIR --network=host ubuntu:18.04)    
+  DOCKER_ID=$(docker run -idt --mount type=bind,src="$CORE_DIR",dst="$CORE_DIR" -w "$CORE_DIR" --network=host ubuntu:18.04)    
   docker exec $DOCKER_ID apt-get update -qq 2>/dev/null >/dev/null
   docker exec $DOCKER_ID apt-get install --no-install-recommends --no-upgrade -qq net-tools socat 2>/dev/null >/dev/null
   docker exec -d $DOCKER_ID socat UDP-LISTEN:21324,reuseaddr,reuseport,fork UDP4-SENDTO:host.docker.internal:21324
   docker exec -d $DOCKER_ID socat UDP-LISTEN:21325,reuseaddr,reuseport,fork UDP4-SENDTO:host.docker.internal:21325
-  docker exec $DOCKER_ID $TREZOR_MONERO_TESTS_PATH 2>&1 > "$TREZOR_MONERO_TESTS_LOG"
+  docker exec $DOCKER_ID "$TREZOR_MONERO_TESTS_PATH" 2>&1 > "$TREZOR_MONERO_TESTS_LOG"
   error=$? 
  
 else 
