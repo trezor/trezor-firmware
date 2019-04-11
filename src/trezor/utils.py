@@ -104,10 +104,14 @@ def obj_eq(l, r):
     """
     if l.__class__ is not r.__class__:
         return False
-    if hasattr(l, "__slots__"):
-        return obj_slots_dict(l) == obj_slots_dict(r)
-    else:
+    if not hasattr(l, "__slots__"):
         return l.__dict__ == r.__dict__
+    if l.__slots__ is not r.__slots__:
+        return False
+    for slot in l.__slots__:
+        if getattr(l, slot, None) != getattr(r, slot, None):
+            return False
+    return True
 
 
 def obj_repr(o):
@@ -115,17 +119,7 @@ def obj_repr(o):
     Returns a string representation of object, supports __slots__.
     """
     if hasattr(o, "__slots__"):
-        d = obj_slots_dict(o)
+        d = {attr: getattr(o, attr, None) for attr in o.__slots__}
     else:
         d = o.__dict__
     return "<%s: %s>" % (o.__class__.__name__, d)
-
-
-def obj_slots_dict(o):
-    """
-    Builds dict for o from defined __slots__.
-    """
-    d = {}
-    for f in o.__slots__:
-        d[f] = getattr(o, f, None)
-    return d
