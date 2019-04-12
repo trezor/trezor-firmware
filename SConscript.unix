@@ -36,6 +36,7 @@ CPPDEFINES_MOD += [
 SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
     'embed/extmod/modtrezorcrypto/crc.c',
+    'embed/extmod/modtrezorcrypto/shamir.c',
     'vendor/trezor-crypto/address.c',
     'vendor/trezor-crypto/aes/aescrypt.c',
     'vendor/trezor-crypto/aes/aeskey.c',
