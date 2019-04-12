@@ -178,7 +178,7 @@ class ShamirMnemonic(object):
         """Converts a list of base 1024 indices in big endian order to an integer value."""
         value = 0
         for index in indices:
-            value = value * cls.RADIX + index
+            value = (value << cls.RADIX_BITS) + index
         return value
 
     @classmethod
@@ -352,7 +352,8 @@ class ShamirMnemonic(object):
                 )
             )
 
-        if (10 * (len(mnemonic_data) - self.METADATA_LENGTH_WORDS)) % 16 > 8:
+        padding_len = (10 * (len(mnemonic_data) - self.METADATA_LENGTH_WORDS)) % 16
+        if padding_len > 8:
             raise MnemonicError("Invalid mnemonic length.")
 
         if not self.rs1024_verify_checksum(mnemonic_data):
@@ -379,15 +380,11 @@ class ShamirMnemonic(object):
             self.ID_EXP_LENGTH_WORDS + 2 : -self.CHECKSUM_LENGTH_WORDS
         ]
 
-        # The length of the master secret in bytes is required to be even, so find the largest even
-        # integer, which is less than or equal to value_word_count * 10 / 8.
-        value_byte_count = 2 * math.floor(len(value_data) * 5 / 8)
+        value_byte_count = (10 * len(value_data) - padding_len) // 8
         value_int = self._int_from_indices(value_data)
-
-        try:
-            value = value_int.to_bytes(value_byte_count, "big")
-        except OverflowError:
-            raise MnemonicError("Invalid mnemonic padding.") from None
+        if value_data[0] >= 1 << (10 - padding_len):
+            raise MnemonicError("Invalid mnemonic padding.")
+        value = value_int.to_bytes(value_byte_count, "big")
 
         return (
             identifier,
