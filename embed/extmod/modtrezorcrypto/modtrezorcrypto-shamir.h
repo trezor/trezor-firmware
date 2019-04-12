@@ -28,7 +28,13 @@
 
 /// def interpolate(shares, x) -> bytes:
 ///     '''
-///     Interpolate
+///     Returns f(x) given the Shamir shares (x_1, f(x_1)), ... , (x_k, f(x_k)).
+///     :param shares: The Shamir shares.
+///     :type shares: A list of pairs (x_i, y_i), where x_i is an integer and y_i is an array of
+///         bytes representing the evaluations of the polynomials in x_i.
+///     :param int x: The x coordinate of the result.
+///     :return: Evaluations of the polynomials in x.
+///     :rtype: Array of bytes.
 ///     '''
 mp_obj_t mod_trezorcrypto_shamir_interpolate(mp_obj_t shares, mp_obj_t x) {
   size_t share_count;
