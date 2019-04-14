@@ -18,7 +18,6 @@
  */
 
 #include "py/obj.h"
-#include "py/objstr.h"
 
 #include "embed/extmod/trezorobj.h"
 
@@ -30,8 +29,9 @@
 ///     '''
 ///     Returns f(x) given the Shamir shares (x_1, f(x_1)), ... , (x_k, f(x_k)).
 ///     :param shares: The Shamir shares.
-///     :type shares: A list of pairs (x_i, y_i), where x_i is an integer and y_i is an array of
-///         bytes representing the evaluations of the polynomials in x_i.
+///     :type shares: A list of pairs (x_i, y_i), where x_i is an integer and
+///         y_i is an array of bytes representing the evaluations of the
+///         polynomials in x_i.
 ///     :param int x: The x coordinate of the result.
 ///     :return: Evaluations of the polynomials in x.
 ///     :rtype: Array of bytes.
@@ -39,10 +39,7 @@
 mp_obj_t mod_trezorcrypto_shamir_interpolate(mp_obj_t shares, mp_obj_t x) {
   size_t share_count;
   mp_obj_t *share_items;
-  if (!MP_OBJ_IS_TYPE(shares, &mp_type_list)) {
-    mp_raise_TypeError("Expected a list.");
-  }
-  mp_obj_list_get(shares, &share_count, &share_items);
+  mp_obj_get_array(shares, &share_count, &share_items);
   if (share_count < 1 || share_count > MAX_SHARE_COUNT) {
     mp_raise_ValueError("Invalid number of shares.");
   }
@@ -51,15 +48,8 @@ mp_obj_t mod_trezorcrypto_shamir_interpolate(mp_obj_t shares, mp_obj_t x) {
   const uint8_t *share_values[MAX_SHARE_COUNT];
   size_t value_len = 0;
   for (int i = 0; i < share_count; ++i) {
-    if (!MP_OBJ_IS_TYPE(share_items[i], &mp_type_tuple)) {
-      mp_raise_TypeError("Expected a tuple.");
-    }
-    size_t tuple_len;
     mp_obj_t *share;
-    mp_obj_tuple_get(share_items[i], &tuple_len, &share);
-    if (tuple_len != 2) {
-      mp_raise_ValueError("Expected a tuple of length 2.");
-    }
+    mp_obj_get_array_fixed_n(share_items[i], 2, &share);
     share_indices[i] = trezor_obj_get_uint8(share[0]);
     mp_buffer_info_t value;
     mp_get_buffer_raise(share[1], &value, MP_BUFFER_READ);
@@ -76,7 +66,8 @@ mp_obj_t mod_trezorcrypto_shamir_interpolate(mp_obj_t shares, mp_obj_t x) {
   }
   vstr_t vstr;
   vstr_init_len(&vstr, value_len);
-  shamir_interpolate((uint8_t*) vstr.buf, x_uint8, share_indices, share_values, share_count, value_len);
+  shamir_interpolate((uint8_t *)vstr.buf, x_uint8, share_indices, share_values,
+                     share_count, value_len);
   vstr_cut_tail_bytes(&vstr, vstr_len(&vstr) - value_len);
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
@@ -85,7 +76,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_shamir_interpolate_obj,
 
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_shamir_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_shamir)},
-    {MP_ROM_QSTR(MP_QSTR_interpolate), MP_ROM_PTR(&mod_trezorcrypto_shamir_interpolate_obj)},
+    {MP_ROM_QSTR(MP_QSTR_interpolate),
+     MP_ROM_PTR(&mod_trezorcrypto_shamir_interpolate_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_shamir_globals,
                             mod_trezorcrypto_shamir_globals_table);
