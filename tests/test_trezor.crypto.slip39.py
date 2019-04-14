@@ -68,13 +68,5 @@ class TestCryptoSlip39(unittest.TestCase):
                     slip39.combine_mnemonics(mnemonics, b"TREZOR")
 
 
-    def test_invalid_rs1024_checksum(self):
-        mnemonics = [
-            "artist away academic academic dismiss spill unkind pencil lair sugar usher elegant paces sweater firm gravity deal body chest sugar"
-        ]
-        with self.assertRaises(slip39.MnemonicError):
-            slip39.combine_mnemonics(mnemonics)
-
-
 if __name__ == '__main__':
     unittest.main()
