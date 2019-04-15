@@ -1,18 +1,9 @@
-[submodule "vendor/trezor-crypto"]
-	path = core/vendor/trezor-crypto
-	url = https://github.com/trezor/trezor-crypto.git
 [submodule "vendor/micropython"]
 	path = core/vendor/micropython
 	url = https://github.com/trezor/micropython.git
-[submodule "vendor/trezor-common"]
-	path = core/vendor/trezor-common
-	url = https://github.com/trezor/trezor-common.git
 [submodule "vendor/nanopb"]
 	path = core/vendor/nanopb
 	url = https://github.com/nanopb/nanopb.git
-[submodule "vendor/trezor-storage"]
-	path = core/vendor/trezor-storage
-	url = https://github.com/trezor/trezor-storage.git
 [submodule "vendor/QR-Code-generator"]
 	path = core/vendor/QR-Code-generator
 	url = https://github.com/nayuki/QR-Code-generator.git
@@ -26,25 +17,13 @@
 [submodule "crypto/tests/wycheproof"]
 	path = crypto/tests/wycheproof
 	url = https://github.com/google/wycheproof
-[submodule "legacy/trezor-crypto"]
-	path = legacy/vendor/trezor-crypto
-	url = https://github.com/trezor/trezor-crypto.git
-[submodule "legacy/trezor-common"]
-	path = legacy/vendor/trezor-common
-	url = https://github.com/trezor/trezor-common.git
 [submodule "legacy/libopencm3"]
 	path = legacy/vendor/libopencm3
 	url = https://github.com/libopencm3/libopencm3.git
 [submodule "legacy/vendor/nanopb"]
 	path = legacy/vendor/nanopb
 	url = https://github.com/nanopb/nanopb.git
-[submodule "legacy/vendor/trezor-storage"]
-	path = legacy/vendor/trezor-storage
-	url = https://github.com/trezor/trezor-storage.git
 [submodule "legacy/vendor/QR-Code-generator"]
 	path = legacy/vendor/QR-Code-generator
 	url = https://github.com/nayuki/QR-Code-generator.git
 	ignore = untracked
-[submodule "python/vendor/trezor-common"]
-	path = python/vendor/trezor-common
-	url = https://github.com/trezor/trezor-common.git
