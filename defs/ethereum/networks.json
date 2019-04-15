@@ -56,6 +56,16 @@
     "blockbook": []
   },
   {
+    "chain": "meta",
+    "chain_id": 11,
+    "slip44": 916,
+    "shortcut": "META",
+    "name": "Metadium",
+    "rskip60": false,
+    "url": "https://metadium.com",
+    "blockbook": []
+  },
+  {
     "chain": "etsc",
     "chain_id": 28,
     "slip44": 1128,
