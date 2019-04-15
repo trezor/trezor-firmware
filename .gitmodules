@@ -1,22 +1,22 @@
 [submodule "vendor/trezor-crypto"]
-	path = vendor/trezor-crypto
+	path = core/vendor/trezor-crypto
 	url = https://github.com/trezor/trezor-crypto.git
 [submodule "vendor/micropython"]
-	path = vendor/micropython
+	path = core/vendor/micropython
 	url = https://github.com/trezor/micropython.git
 [submodule "vendor/trezor-common"]
-	path = vendor/trezor-common
+	path = core/vendor/trezor-common
 	url = https://github.com/trezor/trezor-common.git
 [submodule "vendor/nanopb"]
-	path = vendor/nanopb
+	path = core/vendor/nanopb
 	url = https://github.com/nanopb/nanopb.git
 [submodule "vendor/trezor-storage"]
-	path = vendor/trezor-storage
+	path = core/vendor/trezor-storage
 	url = https://github.com/trezor/trezor-storage.git
 [submodule "vendor/QR-Code-generator"]
-	path = vendor/QR-Code-generator
+	path = core/vendor/QR-Code-generator
 	url = https://github.com/nayuki/QR-Code-generator.git
 [submodule "vendor/secp256k1-zkp"]
-	path = vendor/secp256k1-zkp
+	path = core/vendor/secp256k1-zkp
 	url = https://github.com/ElementsProject/secp256k1-zkp.git
 	branch = secp256k1-zkp
