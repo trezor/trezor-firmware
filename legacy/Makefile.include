@@ -1,0 +1,226 @@
+TOP_DIR       := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+TOOLCHAIN_DIR ?= $(TOP_DIR)vendor/libopencm3
+
+ifneq ($(V),1)
+Q := @
+endif
+
+PYTHON ?= python
+
+ifeq ($(EMULATOR),1)
+CC       ?= gcc
+LD       := $(CC)
+OBJCOPY  := objcopy
+OBJDUMP  := objdump
+AR       := ar
+AS       := as
+
+OPTFLAGS ?= -O3
+DBGFLAGS ?= -g3 -ggdb3
+CPUFLAGS ?=
+FPUFLAGS ?=
+else
+PREFIX   ?= arm-none-eabi-
+CC       := $(PREFIX)gcc
+LD       := $(PREFIX)gcc
+OBJCOPY  := $(PREFIX)objcopy
+OBJDUMP  := $(PREFIX)objdump
+AR       := $(PREFIX)ar
+AS       := $(PREFIX)as
+OPENOCD  := openocd -f interface/stlink-v2.cfg -c "transport select hla_swd" -f target/stm32f2x.cfg
+GDB      := $(PREFIX)gdb --nx -ex 'set remotetimeout unlimited' -ex 'set confirm off' -ex 'target remote 127.0.0.1:3333' -ex 'monitor reset halt'
+
+OPTFLAGS ?= -O3
+DBGFLAGS ?= -g -DNDEBUG
+CPUFLAGS ?= -mcpu=cortex-m3 -mthumb
+FPUFLAGS ?= -msoft-float
+endif
+
+CFLAGS   += $(OPTFLAGS) \
+            $(DBGFLAGS) \
+            -std=gnu11 \
+            -W \
+            -Wall \
+            -Wextra \
+            -Wimplicit-function-declaration \
+            -Wredundant-decls \
+            -Wstrict-prototypes \
+            -Wundef \
+            -Wshadow \
+            -Wpointer-arith \
+            -Wformat \
+            -Wreturn-type \
+            -Wsign-compare \
+            -Wmultichar \
+            -Wformat-nonliteral \
+            -Winit-self \
+            -Wuninitialized \
+            -Wformat-security \
+            -Werror \
+            -fno-common \
+            -fno-exceptions \
+            -fvisibility=internal \
+            -ffunction-sections \
+            -fdata-sections \
+            -fstack-protector-all \
+            $(CPUFLAGS) \
+            $(FPUFLAGS) \
+            -DSTM32F2 \
+            -DCONFIDENTIAL='__attribute__((section("confidential")))' \
+            -DRAND_PLATFORM_INDEPENDENT=1 \
+            -I$(TOOLCHAIN_DIR)/include \
+            -I$(TOP_DIR) \
+            -I$(TOP_DIR)gen \
+            -I$(TOP_DIR)vendor/trezor-crypto \
+            -I$(TOP_DIR)vendor/QR-Code-generator/c \
+            -I$(TOP_DIR)vendor/trezor-storage
+
+LDFLAGS  += -L$(TOP_DIR) \
+            $(DBGFLAGS) \
+            $(CPUFLAGS) \
+            $(FPUFLAGS)
+
+ifeq ($(EMULATOR),1)
+CFLAGS   += -DEMULATOR=1
+
+CFLAGS   += -include $(TOP_DIR)emulator/emulator.h
+CFLAGS   += -include stdio.h
+
+LDFLAGS  += -L$(TOP_DIR)emulator
+
+LDLIBS   += -ltrezor -lemulator
+LIBDEPS  += $(TOP_DIR)/libtrezor.a $(TOP_DIR)emulator/libemulator.a
+
+ifeq ($(HEADLESS),1)
+CFLAGS   += -DHEADLESS=1
+else
+CFLAGS   += -DHEADLESS=0
+
+CFLAGS   += $(shell pkg-config --cflags sdl2)
+LDLIBS   += $(shell pkg-config --libs sdl2)
+endif
+
+ifdef RANDOM_DEV_FILE
+CFLAGS += -DRANDOM_DEV_FILE=\"$(RANDOM_DEV_FILE)\"
+endif
+
+else
+ifdef APPVER
+CFLAGS   += -DAPPVER=$(APPVER)
+LDSCRIPT  = $(TOP_DIR)/memory_app_$(APPVER).ld
+else
+LDSCRIPT  = $(TOP_DIR)/memory.ld
+endif
+
+CFLAGS   += -DEMULATOR=0
+
+LDFLAGS  += --static \
+            -Wl,--start-group \
+            -lc \
+            -lgcc \
+            -lnosys \
+            -Wl,--end-group \
+            -L$(TOOLCHAIN_DIR)/lib \
+            -T$(LDSCRIPT) \
+            -nostartfiles \
+            -Wl,--gc-sections
+
+LDLIBS   += -ltrezor
+LIBDEPS  += $(TOP_DIR)/libtrezor.a
+
+LDLIBS   += -lopencm3_stm32f2
+LIBDEPS  += $(TOOLCHAIN_DIR)/lib/libopencm3_stm32f2.a
+endif
+
+ifeq ($(MEMORY_PROTECT), 0)
+CFLAGS += -DMEMORY_PROTECT=0
+$(info MEMORY_PROTECT=0)
+else
+CFLAGS += -DMEMORY_PROTECT=1
+$(info MEMORY_PROTECT=1)
+endif
+
+ifeq ($(DEBUG_RNG), 1)
+CFLAGS += -DDEBUG_RNG=1
+else
+CFLAGS += -DDEBUG_RNG=0
+endif
+
+all: $(NAME).bin
+
+openocd:
+	$(OPENOCD)
+
+gdb_bootloader: bootloader/bootloader.elf
+	$(GDB) $<
+
+gdb_firmware: firmware/trezor.elf
+	$(GDB) $<
+
+flash: $(NAME).bin
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $(NAME).bin 0x8000000; exit"
+
+upload: sign
+	trezorctl firmware_update -f $(NAME).bin -s
+
+sign: $(NAME).bin
+	$(PYTHON) ../bootloader/firmware_sign.py -f $(NAME).bin
+
+release: $(NAME).bin
+	$(PYTHON) ../bootloader/firmware_sign.py -f $(NAME).bin
+	cp $(NAME).bin $(NAME)-$(APPVER).bin
+	chmod -x $(NAME)-$(APPVER).bin
+	xxd -p $(NAME)-$(APPVER).bin | tr -d '\n' > $(NAME)-$(APPVER).bin.hex
+
+$(NAME).bin: $(NAME).elf
+	@printf "  OBJCOPY $@\n"
+	$(Q)$(OBJCOPY) -Obinary $(NAME).elf $(NAME).bin
+
+$(NAME).hex: $(NAME).elf
+	@printf "  OBJCOPY $@\n"
+	$(Q)$(OBJCOPY) -Oihex $(NAME).elf $(NAME).hex
+
+$(NAME).srec: $(NAME).elf
+	@printf "  OBJCOPY $@\n"
+	$(Q)$(OBJCOPY) -Osrec $(NAME).elf $(NAME).srec
+
+$(NAME).list: $(NAME).elf
+	@printf "  OBJDUMP $@\n"
+	$(Q)$(OBJDUMP) -S $(NAME).elf > $(NAME).list
+
+$(NAME).elf: $(OBJS) $(LDSCRIPT) $(LIBDEPS)
+	@printf "  LD      $@\n"
+	$(Q)$(LD) -o $(NAME).elf $(OBJS) $(LDLIBS) $(LDFLAGS)
+
+%.o: %.s Makefile
+	@printf "  AS      $@\n"
+	$(Q)$(AS) $(CPUFLAGS) -o $@ $<
+
+%.o: %.c Makefile
+	@printf "  CC      $@\n"
+	$(Q)$(CC) $(CFLAGS) -MMD -MP -o $@ -c $<
+
+%.small.o: %.c Makefile
+	@printf "  CC      $@\n"
+	$(Q)$(CC) $(CFLAGS) -MMD -MP -o $@ -c $<
+
+%.d: %.c Makefile
+	@printf "  DEP     $@\n"
+	$(Q)$(CC) $(CFLAGS) -MM -MP -MG -o $@ $<
+
+%.small.d: %.c Makefile
+	@printf "  DEP     $@\n"
+	$(Q)$(CC) $(CFLAGS) -MM -MP -MG -o $@ $<
+
+clean::
+	rm -f $(OBJS)
+	rm -f *.a
+	rm -f *.bin
+	rm -f *.d
+	rm -f *.elf
+	rm -f *.hex
+	rm -f *.list
+	rm -f *.log
+	rm -f *.srec
+
+-include $(OBJS:.o=.d)

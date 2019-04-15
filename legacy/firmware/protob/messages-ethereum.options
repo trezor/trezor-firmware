@@ -1,0 +1,28 @@
+EthereumSignTx.address_n                max_count:8
+EthereumSignTx.nonce                    max_size:32
+EthereumSignTx.gas_price                max_size:32
+EthereumSignTx.gas_limit                max_size:32
+EthereumSignTx.to                       max_size:43
+EthereumSignTx.value                    max_size:32
+EthereumSignTx.data_initial_chunk       max_size:1024
+
+EthereumTxRequest.signature_r           max_size:32
+EthereumTxRequest.signature_s           max_size:32
+
+EthereumTxAck.data_chunk                max_size:1024
+
+EthereumSignMessage.address_n           max_count:8
+EthereumSignMessage.message             max_size:1024
+
+EthereumVerifyMessage.address           max_size:43
+EthereumVerifyMessage.signature         max_size:65
+EthereumVerifyMessage.message           max_size:1024
+
+EthereumMessageSignature.address        max_size:43
+EthereumMessageSignature.signature      max_size:65
+
+EthereumGetAddress.address_n            max_count:8
+EthereumGetPublicKey.address_n          max_count:8
+
+EthereumAddress.address                 max_size:43
+EthereumPublicKey.xpub                  max_size:113

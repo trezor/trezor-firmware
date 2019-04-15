@@ -1,0 +1,14 @@
+.cache/
+.vscode/
+_attic/
+build/
+*.o
+*.a
+*.d
+*.bin
+*.elf
+*.hex
+*.img
+*.list
+*.srec
+*.log

@@ -1,0 +1,16 @@
+Success.message                         max_size:256
+
+Failure.message                         max_size:256
+
+ButtonRequest.data                      max_size:256
+
+PinMatrixAck.pin                        max_size:10
+
+PassphraseAck.passphrase                max_size:51
+PassphraseAck.state                     max_size:64
+
+PassphraseStateRequest.state            max_size:64
+
+HDNodeType.chain_code   max_size:32
+HDNodeType.private_key  max_size:32
+HDNodeType.public_key   max_size:33

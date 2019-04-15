@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# script/toolchain-run: Run command with downloaded GNU Arm Embedded toolchain.
+#
+
+set -e
+
+readonly TOOLCHAIN_RELATIVE_DIR="vendor/toolchain"
+readonly TOOLCHAIN_DIR="$(readlink -f "$(dirname "$0")/../$TOOLCHAIN_RELATIVE_DIR")"
+
+if [ ! -d "$TOOLCHAIN_DIR" ]; then
+    printf "Could not find toolchain in %s.\n" "$TOOLCHAIN_RELATIVE_DIR" >&2
+    printf "Run script/toolchain-download to download it.\n" >&2
+    exit 1
+fi
+
+export PATH="$TOOLCHAIN_DIR/bin:$PATH"
+exec "$@"

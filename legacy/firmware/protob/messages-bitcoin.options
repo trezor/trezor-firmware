@@ -1,0 +1,53 @@
+GetPublicKey.address_n                                      max_count:8
+GetPublicKey.ecdsa_curve_name                               max_size:32
+GetPublicKey.coin_name                                      max_size:21
+
+PublicKey.xpub                                              max_size:113
+
+GetAddress.address_n                                        max_count:8
+GetAddress.coin_name                                        max_size:21
+
+Address.address                                             max_size:130
+
+SignTx.coin_name                                            max_size:21
+
+SignMessage.address_n                                       max_count:8
+SignMessage.message                                         max_size:1024
+SignMessage.coin_name                                       max_size:21
+
+VerifyMessage.address                                       max_size:130
+VerifyMessage.signature                                     max_size:65
+VerifyMessage.message                                       max_size:1024
+VerifyMessage.coin_name                                     max_size:21
+
+MessageSignature.address                                    max_size:130
+MessageSignature.signature                                  max_size:65
+
+TransactionType.inputs                                      max_count:1
+TransactionType.bin_outputs                                 max_count:1
+TransactionType.outputs                                     max_count:1
+TransactionType.extra_data                                  max_size:1024
+
+TxInputType.address_n                                       max_count:8
+TxInputType.prev_hash                                       max_size:32
+TxInputType.script_sig                                      max_size:1650
+TxInputType.prev_block_hash_bip115                          max_size:32
+
+TxOutputType.address                                        max_size:130
+TxOutputType.address_n                                      max_count:8
+TxOutputType.op_return_data                                 max_size:80
+TxOutputType.block_hash_bip115                              max_size:32
+
+TxOutputBinType.script_pubkey                               max_size:520
+
+TxRequestDetailsType.tx_hash                                max_size:32
+
+TxRequestSerializedType.signature                           max_size:73
+TxRequestSerializedType.serialized_tx                       max_size:2048
+
+MultisigRedeemScriptType.pubkeys                            max_count:15
+MultisigRedeemScriptType.signatures                         max_count:15 max_size:73
+MultisigRedeemScriptType.nodes                              max_count:15
+MultisigRedeemScriptType.address_n                          max_count:8
+
+HDNodePathType.address_n           max_count:8

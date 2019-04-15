@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# script/toolchain-download: Download and extract the GNU Arm Embedded toolchain
+#                            for building the TREZOR firmware.
+
+set -e
+
+cd "$(dirname "$0")/../vendor"
+
+readonly URL="https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q2-update/+download/gcc-arm-none-eabi-5_4-2016q2-20160622-linux.tar.bz2"
+readonly SHA256SUM="9910b6b5df12efe564dbb3856bf1599d4c16178a6f28bd8a23c9e5c3edc219e4"
+
+readonly FILENAME="$(basename "$URL")"
+readonly DIRECTORY="gcc-arm-none-eabi-5_4-2016q2"
+
+if [ "$(uname)" != "Linux" ]; then
+    printf "Unsupported platform\n" >&2
+    exit 1
+fi
+
+validate_download() {
+    printf "$SHA256SUM $FILENAME" | sha256sum -c
+}
+
+download_file() {
+    curl -LC- "$URL" -o "$FILENAME"
+}
+
+extract_download() {
+    local temporary_dir="$(mktemp -d ./toolchain.XXXXXXXXXX)"
+    trap "rm -rf $temporary_dir" EXIT
+
+    tar -xf "$FILENAME" -C "$temporary_dir"
+    mv "$temporary_dir/$DIRECTORY" .
+    rm -f "$FILENAME"
+}
+
+if [ ! -d "$DIRECTORY" ]; then
+    if ! validate_download; then
+        download_file
+        validate_download
+    fi
+
+    extract_download
+fi
+
+# init toolchain as repository so Git will skip it
+git init -q "$DIRECTORY"
+
+# update toolchain symlink
+ln -snf "$DIRECTORY" toolchain
+
+# sanity-check extracted toolchain
+toolchain/bin/arm-none-eabi-gcc --version >/dev/null

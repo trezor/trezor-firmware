@@ -1,0 +1,131 @@
+#!/bin/bash
+
+# script/build: Build the TREZOR firmware in a clean working tree.
+#
+
+# this needs to be there, otherwise python click installer vomits an error
+export LC_ALL=C.UTF-8
+export LANG=C.UTF-8
+
+set -eu
+
+cd "$(dirname "$0")/.."
+
+readonly ARTIFACT_EXTENSIONS=(bin elf)
+readonly BUILD_DIR="$(readlink -f build)"
+
+readonly BOOTLOADER_DIR="$BUILD_DIR/bootloader"
+readonly BOOTLOADER_FILENAME="bootloader/bootloader.bin"
+readonly BOOTLOADER_PATH="$BOOTLOADER_DIR/$BOOTLOADER_FILENAME"
+
+readonly FIRMWARE_DIR="$BUILD_DIR/firmware"
+readonly FIRMWARE_FILENAME="firmware/trezor.bin"
+readonly FIRMWARE_PATH="$FIRMWARE_DIR/$FIRMWARE_FILENAME"
+
+readonly EMULATOR_DIR="$FIRMWARE_DIR"
+readonly EMULATOR_FILENAME="firmware/trezor-emulator.elf"
+readonly EMULATOR_PATH="$EMULATOR_DIR/firmware/trezor.elf"
+
+worktree_setup() {
+    local path="$1"
+    local commit="$2"
+
+    rm -rf "$path"
+    git clone -n --reference=. . "$path" --recurse-submodules
+
+    # Use `git rev-parse` so that we can use any reference from the working repository.
+    git -C "$path" checkout "$(git rev-parse "$commit")"
+
+    ( cd "$path" && script/setup )
+}
+
+worktree_build() {
+    local path="$1"
+
+    if [ -e "$path/Pipfile" ]; then
+        pushd $path
+        if ! pipenv install; then
+            # older tags can fail because they don't have protobuf in Pipfile
+            pipenv run pip install "protobuf==3.4.0"
+            pipenv install
+        fi
+        pipenv run script/cibuild
+        popd
+    else
+        # even older tags don't have Pipfile!
+        # use current one
+        pipenv install
+        ( cd "$path" && pipenv run script/cibuild )
+    fi
+}
+
+worktree_copy() {
+    local path="$1"
+    local filename="$2"
+    local pattern="$3"
+
+    local describe="$(git -C "$path" describe --tags --match "$pattern")"
+
+    local src="$path/$filename"
+
+    local basename="$(basename "$filename")"
+    local dest="$BUILD_DIR/${basename%.*}-$describe.${basename##*.}"
+
+    for extension in "${ARTIFACT_EXTENSIONS[@]}"; do
+        install -Dm0644 \
+            "${src%.*}.$extension" \
+            "${dest%.*}.$extension"
+    done
+
+    printf "%s" "$dest"
+}
+
+main() {
+    local bootloader_commit="$1"
+    local firmware_commit="$2"
+
+    script/bootstrap
+    worktree_setup "$FIRMWARE_DIR" "$firmware_commit"
+
+    if [ "$EMULATOR" != 1 ]; then
+        worktree_setup "$BOOTLOADER_DIR" "$bootloader_commit"
+        worktree_build "$BOOTLOADER_DIR"
+
+        cp "$BOOTLOADER_PATH" "$FIRMWARE_DIR/$BOOTLOADER_FILENAME"
+    fi
+
+    worktree_build "$FIRMWARE_DIR"
+
+    if [ "$EMULATOR" = 1 ]; then
+        cp "$EMULATOR_PATH" "$EMULATOR_DIR/$EMULATOR_FILENAME"
+        local firmware_path="$(worktree_copy \
+            "$EMULATOR_DIR" \
+            "$EMULATOR_FILENAME" \
+            "v*")"
+        chmod +x "$firmware_path"
+
+    else
+
+        local firmware_path="$(worktree_copy \
+            "$FIRMWARE_DIR" \
+            "$FIRMWARE_FILENAME" \
+            "v*")"
+
+        local bootloader_path="$(worktree_copy \
+            "$BOOTLOADER_DIR" \
+            "$BOOTLOADER_FILENAME" \
+            "bl*")"
+
+        printf "\n\n"; $PYTHON script/fingerprint \
+            "$bootloader_path" \
+            --max-size 32768 \
+            --double
+    fi
+
+    printf "\n\n"; $PYTHON script/fingerprint \
+        "$firmware_path" \
+        --offset 256 \
+        --max-size 983296  # 256 + 64*1024 + 3*128*1024 + 4*128*1024
+}
+
+main "$@"

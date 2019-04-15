@@ -1,0 +1,63 @@
+sudo: false
+dist: trusty
+language: c
+
+addons:
+  apt:
+    sources:
+    - deadsnakes
+    packages:
+    - build-essential
+    - python3.6
+    - python3.6-dev
+    - python3.6-venv
+
+env:
+  global:
+    - MAKEFLAGS=-j2
+    - PYTHON=python3.6
+    - PROTOBUF_VERSION=3.4.0
+    - TOOLCHAIN_SHORTVER=8-2018q4
+    - TOOLCHAIN_LONGVER=gcc-arm-none-eabi-8-2018-q4-major
+  matrix:
+    - DEBUG_LINK=0
+    - DEBUG_LINK=1
+
+matrix:
+  include:
+    - name: "Emulator GCC"
+      env: EMULATOR=1 HEADLESS=1 DEBUG_LINK=1
+      compiler: gcc
+      script: pipenv run ./script/cibuild && pipenv run script/test
+    - name: "Emulator Clang"
+      env: EMULATOR=1 HEADLESS=1 DEBUG_LINK=1
+      compiler: clang
+      script: pipenv run ./script/cibuild && pipenv run script/test
+
+before_install:
+  - $PYTHON -m ensurepip --user
+  - $PYTHON -m pip install --user pipenv
+
+install:
+  - wget "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
+  - unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d protoc
+  - export PATH="$(pwd)/protoc/bin:$PATH"
+  - pipenv install
+
+before_script:
+  - test "$EMULATOR" = "1" || wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/$TOOLCHAIN_SHORTVER/$TOOLCHAIN_LONGVER-linux.tar.bz2
+  - test "$EMULATOR" = "1" || tar xfj $TOOLCHAIN_LONGVER-linux.tar.bz2
+  - test "$EMULATOR" = "1" || export PATH=$PWD/$TOOLCHAIN_LONGVER/bin:$PATH
+
+script:
+  - pipenv run script/cibuild
+  - pipenv run make -C bootloader
+  - pipenv run make -C demo
+
+notifications:
+  webhooks:
+    urls:
+      - http://ci-bot.satoshilabs.com:5000/travis
+    on_success: always
+    on_failure: always
+    on_start: always

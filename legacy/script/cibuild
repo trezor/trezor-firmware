@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# script/cibuild: Setup environment for CI to run tests. This is primarily
+#                 designed to run on the continuous integration server.
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+if [ "$EMULATOR" = 1 ]; then
+    make -C emulator
+else
+    make -C vendor/libopencm3 lib/stm32/f2
+fi
+
+make
+
+if [ "$EMULATOR" != 1 ]; then
+    make -C bootloader align
+fi
+
+make -C vendor/nanopb/generator/proto
+make -C firmware/protob
+
+make -C firmware
+
+if [ "$EMULATOR" != 1 ]; then
+    make -C firmware sign
+fi

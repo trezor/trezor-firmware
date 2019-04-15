@@ -1,0 +1,50 @@
+StellarAssetType.code                                   max_size:13
+StellarAssetType.issuer                                 max_size:57
+StellarGetAddress.address_n                             max_count:10
+
+StellarAddress.address                                  max_size:57
+
+
+StellarSignTx.source_account                            max_size:57
+StellarSignTx.address_n                                 max_count:10
+StellarSignTx.network_passphrase                        max_size:1024
+StellarSignTx.memo_text                                 max_size:29
+StellarSignTx.memo_hash                                 max_size:32
+
+StellarPaymentOp.source_account                         max_size:57
+StellarPaymentOp.destination_account                    max_size:57
+
+StellarCreateAccountOp.source_account                   max_size:57
+StellarCreateAccountOp.new_account                      max_size:57
+
+StellarPathPaymentOp.source_account                     max_size:57
+StellarPathPaymentOp.destination_account                max_size:57
+StellarPathPaymentOp.paths                              max_count:5
+
+
+StellarManageOfferOp.source_account                     max_size:57
+
+StellarCreatePassiveOfferOp.source_account              max_size:57
+
+StellarSetOptionsOp.source_account                      max_size:57
+StellarSetOptionsOp.inflation_destination_account       max_size:57
+StellarSetOptionsOp.home_domain                         max_size:33
+StellarSetOptionsOp.signer_key                          max_size:32
+
+StellarChangeTrustOp.source_account                     max_size:57
+
+StellarAllowTrustOp.source_account                      max_size:57
+StellarAllowTrustOp.trusted_account                     max_size:57
+StellarAllowTrustOp.asset_code                          max_size:13
+
+StellarAccountMergeOp.source_account                    max_size:57
+StellarAccountMergeOp.destination_account               max_size:57
+
+StellarManageDataOp.source_account                      max_size:57
+StellarManageDataOp.key                                 max_size:65
+StellarManageDataOp.value                               max_size:65
+
+StellarBumpSequenceOp.source_account                    max_size:57
+
+StellarSignedTx.public_key                              max_size:32
+StellarSignedTx.signature                               max_size:64 # ed25519 signatures are 64 bytes, this does not include the hint

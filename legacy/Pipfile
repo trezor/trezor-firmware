@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+name = "pypi"
+verify_ssl = true
+
+[packages]
+setuptools = ">=24.2.0"
+trezor = {git = "https://github.com/trezor/python-trezor", editable = true, ref = "master"}
+pytest = "*"
+mock = "*"
+typing = "*"
+protobuf = "==3.4.0"
+mako = "*"
+munch = "*"

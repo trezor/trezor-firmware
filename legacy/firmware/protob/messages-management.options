@@ -1,0 +1,34 @@
+Initialize.state                        max_size:64
+
+Features.vendor                         max_size:33
+Features.device_id                      max_size:25
+Features.language                       max_size:17
+Features.label                          max_size:33
+Features.revision                       max_size:20
+Features.bootloader_hash                max_size:32
+Features.model                          max_size:17
+Features.fw_vendor                      max_size:256
+Features.fw_vendor_keys                 max_size:32
+
+ApplySettings.language                  max_size:17
+ApplySettings.label                     max_size:33
+ApplySettings.homescreen                max_size:1024
+
+Ping.message                            max_size:256
+
+LoadDevice.mnemonic                     max_size:241
+LoadDevice.pin                          max_size:10
+LoadDevice.language                     max_size:17
+LoadDevice.label                        max_size:33
+
+ResetDevice.language                    max_size:17
+ResetDevice.label                       max_size:33
+
+Entropy.entropy                         max_size:1024
+
+EntropyAck.entropy                      max_size:128
+
+RecoveryDevice.language                 max_size:17
+RecoveryDevice.label                    max_size:33
+
+WordAck.word                            max_size:12

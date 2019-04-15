@@ -1,0 +1,50 @@
+Version 1.6.1
+* Fix USB issue on some Windows 10 installations
+
+Version 1.6.0
+* Switch from HID to WebUSB
+
+Version 1.5.1
+* Improve MPU configuration
+
+Version 1.5.0
+* Make unofficial firmwares work again
+
+Version 1.4.0
+* More flash-write tests
+* Don't restore storage from unofficial firmware
+* Support WipeDevice message
+* Activate MPU and don't switch VTOR table for unofficial firmware
+
+Version 1.3.3
+* Add self-test
+* Erase metadata backup after usage
+* Erase SRAM on application start
+
+Version 1.3.2
+* Don't show recovery seed warning if firmware is flashed for the first time
+* Don't show fingerprint if firmware is flashed for the first time
+* Compute firmware hash before checking signatures
+* Add self-test
+* Fix usage of RNG before setup
+* Fix stack protector fault
+
+Version 1.3.1
+* Fix button testing so it does not break USB communication
+
+Version 1.3.0
+* Add test for buttons
+* Clean USB descriptor
+* Return firmware_present in Features response
+* Don't halt on broken firware, stay in bootloader
+
+Version 1.2.7
+* Optimize speed of firmware update
+
+Version 1.2.6
+* Show hash of unofficial firmware
+* Use stack protector
+* Clean USB descriptor
+
+Version 1.2.5
+* Initial import of code

@@ -1,0 +1,178 @@
+Version 1.8.0
+* Stable release, optional update
+* Security improvements
+* Upgraded to new storage format
+* Stellar and NEM fixes
+* New coins: ATS, KMD, XPM, XSN, ZCL
+* New ETH tokens
+
+Version 1.7.3
+* Stable release, optional update
+* Fix USB issue on some Windows 10 installations
+
+Version 1.7.2
+* Stable release, optional update
+* Add support for OMNI layer: OMNI/MAID/USDT
+* U2F fixes
+* Don't ask for PIN if it has been just set
+
+Version 1.7.1
+* Stable release, optional update
+* Add support for Lisk
+* Add support for Zcash Sapling hardfork
+* Implement seedless setup
+
+Version 1.7.0
+* Stable release, optional update
+* Switch from HID to WebUSB
+* Add support for Stellar
+* Included bootloader 1.6.0
+
+Version 1.6.3
+* Stable release, required update
+* Implement RSKIP-60 Ethereum checksum encoding
+* Add support for new Ethereum networks (ESN, AKA, ETHO, MUSI, PIRL, ATH, GO)
+* Add support for new 80 Ethereum tokens
+* Improve MPU configuration
+* Included bootloader 1.5.1
+
+Version 1.6.2
+* Stable release, optional update
+* Add possibility to set custom auto-lock delay
+* Bitcoin Cash cashaddr support
+* Zcash Overwinter hardfork support
+* Support for new coins:
+  - Decred, Bitcoin Private, Fujicoin, Groestlcoin, Vertcoin, Viacoin, Zcoin
+* Support for new Ethereum networks:
+  - EOS Classic, Ethereum Social, Ellaism, Callisto, EtherGem, Wanchain
+* Support for 500+ new Ethereum tokens
+* Included bootloader 1.5.0
+
+Version 1.6.1
+* Stable release, required update
+* Use fixed-width font for addresses
+* Lots of under-the-hood improvements
+* Fixed issue with write-protection settings
+* Included bootloader 1.4.0
+
+Version 1.6.0
+* Stable release, optional update
+* Native SegWit (Bech32) address support
+* Show recognized BIP44/BIP49 paths in GetAddress dialog
+* NEM support
+* Expanse and UBIQ chains support
+* Bitcoin Gold, DigiByte, Monacoin support
+* Ed25519 collective signatures (CoSi) support
+
+Version 1.5.2
+* Stable release, required update
+* Clean memory on start
+* Fix storage import from older versions
+
+Version 1.5.1
+* Stable release, optional update
+* Wipe storage after 16 wrong PIN attempts
+* Enable Segwit for Bitcoin
+* Bcash aka Bitcoin Cash support
+* Message signing/verification for Ethereum and Segwit
+* Make address dialog nicer (switch text/QR via button)
+* Use checksum for Ethereum addresses
+* Add more ERC-20 tokens, handle unrecognized ERC-20 tokens
+* Allow "dry run" recovery procedure
+* Allow separated backup procedure
+
+Version 1.5.0
+* Stable release, optional update
+* Enable Segwit for Testnet and Litecoin
+* Enable ERC-20 tokens for Ethereum chains
+
+Version 1.4.2
+* Stable release, optional update
+* New Matrix-based recovery method
+* Minor Ethereum fixes (including EIP-155 replay protection)
+* Minor USB, U2F and GPG fixes
+
+Version 1.4.1
+* Stable release, optional update
+* Support for Zcash JoinSplit transactions
+* Enable device lock after 10 minutes of inactivity
+* Enable device lock by pressing left button for 2 seconds
+* Confirm dialog for U2F counter change
+
+Version 1.4.0
+* Stable release, optional update
+* U2F support
+* Ethereum support
+* GPG decryption support
+* Zcash support
+
+Version 1.3.6
+* Stable release, optional update
+* Enable advanced transactions such as ones with REPLACE-BY-FEE and CHECKLOCKTIMEVERIFY
+* Fix message signing for altcoins
+* Message verification now shows address
+* Enable GPG signing support
+* Enable Ed25519 curve (for SSH and GPG)
+* Use separate deterministic hierarchy for NIST256P1 and Ed25519 curves
+* Users using SSH already need to regenerate their keys using the new firmware!!!
+
+Version 1.3.5
+* Stable release, optional update
+* Double size font for recovery words during the device setup
+* Optimizations for simultaneous access when more applications try communicate with the device
+
+Version 1.3.4
+* Stable release, optional update
+* Screensaver active on ClearSession message
+* Support for NIST P-256 curve
+* Updated SignIdentity to v2 format
+* Show seconds counter during PIN lockdown
+* Updated maxfee per kb for coins
+
+Version 1.3.3
+* Stable release, mandatory update
+* Ask for PIN on GetAddress and GetPublicKey
+* Signing speed improved
+
+Version 1.3.2
+* Stable release, optional update
+* Fix check during transaction streaming
+* Login feature via SignIdentity message
+* GetAddress for multisig shows M of N description
+* PIN checking in constant time
+
+Version 1.3.1
+* Stable release, optional update
+* Optimized signing speed
+* Enabled OP_RETURN
+* Added option to change home screen
+* Moved fee calculation before any signing
+* Made PIN delay increase immune against hardware hacking
+
+Version 1.3.0
+* Stable release, optional update
+* Added multisig support
+* Added visual validation of receiving address
+* Added ECIES encryption capabilities
+
+Version 1.2.1
+* Stable release, mandatory update
+* Added stack overflow protection
+* Added compatibility with TREZOR Bridge
+
+Version 1.2.0
+* Stable release, optional update
+* Fix false positives for fee warning
+* Better UI for signing/verifying messages
+* Smaller firmware size
+
+Version 1.1.0
+* Stable release, optional update
+* Minor UI fixes
+* Better handling of unexpected messages
+* Added AES support
+
+Version 1.0.0
+* Stable release, mandatory update
+* Added support for streaming of transactions into the device
+* Removed all current limits on size of signed transaction
