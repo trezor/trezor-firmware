@@ -165,8 +165,11 @@ class TrezorClient:
                 self.call_raw(messages.Cancel())
                 raise ValueError("Passphrase too long")
 
-        resp = self.call_raw(messages.PassphraseAck(passphrase=passphrase))
+        resp = self.call_raw(
+            messages.PassphraseAck(passphrase=passphrase, state=self.state)
+        )
         if isinstance(resp, messages.PassphraseStateRequest):
+            # TODO report to the user that the passphrase has changed?
             self.state = resp.state
             return self.call_raw(messages.PassphraseStateAck())
         else:
