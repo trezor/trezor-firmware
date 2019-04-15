@@ -184,7 +184,7 @@ def _encrypt(master_secret, passphrase, iteration_exponent, identifier):
     return r + l
 
 
-def _decrypt(encrypted_master_secret, passphrase, iteration_exponent, identifier):
+def decrypt(identifier, iteration_exponent, encrypted_master_secret, passphrase):
     l = encrypted_master_secret[: len(encrypted_master_secret) // 2]
     r = encrypted_master_secret[len(encrypted_master_secret) // 2 :]
     salt = _get_salt(identifier)
@@ -536,16 +536,14 @@ def generate_mnemonics_random(
     )
 
 
-def combine_mnemonics(mnemonics, passphrase=b""):
+def combine_mnemonics(mnemonics):
     """
     Combines mnemonic shares to obtain the master secret which was previously split using
     Shamir's secret sharing scheme.
     :param mnemonics: List of mnemonics.
     :type mnemonics: List of byte arrays.
-    :param passphrase: The passphrase used to encrypt the master secret.
-    :type passphrase: Array of bytes.
-    :return: The master secret.
-    :rtype: Array of bytes.
+    :return: Identifier, iteration exponent, the encrypted master secret.
+    :rtype: Integer, integer, array of bytes.
     """
 
     if not mnemonics:
@@ -587,9 +585,8 @@ def combine_mnemonics(mnemonics, passphrase=b""):
         for group_index, group in groups.items()
     ]
 
-    return _decrypt(
-        _recover_secret(group_threshold, group_shares),
-        passphrase,
-        iteration_exponent,
+    return (
         identifier,
+        iteration_exponent,
+        _recover_secret(group_threshold, group_shares),
     )
