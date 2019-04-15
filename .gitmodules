@@ -45,3 +45,6 @@
 	path = legacy/vendor/QR-Code-generator
 	url = https://github.com/nayuki/QR-Code-generator.git
 	ignore = untracked
+[submodule "python/vendor/trezor-common"]
+	path = python/vendor/trezor-common
+	url = https://github.com/trezor/trezor-common.git
