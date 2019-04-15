@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1000</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>DejaVu Sans Mono</family>
+    <pointsize>8</pointsize>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>TREZOR</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="4" column="1" colspan="3">
+     <widget class="QLineEdit" name="lineXpub"/>
+    </item>
+    <item row="1" column="2">
+     <widget class="QLineEdit" name="editPassphrase">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="3">
+     <widget class="QPushButton" name="buttonLoad">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>120</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Load</string>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="0" colspan="4">
+     <widget class="QTableWidget" name="listAddress">
+      <column>
+       <property name="text">
+        <string>address</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>private key</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>balance</string>
+       </property>
+      </column>
+     </widget>
+    </item>
+    <item row="9" column="0" colspan="4">
+     <widget class="QTableWidget" name="listChange">
+      <column>
+       <property name="text">
+        <string>address</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>private key</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>balance</string>
+       </property>
+      </column>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="labelMnemonic">
+      <property name="text">
+       <string>Mnemonic:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="2">
+     <widget class="QLabel" name="labelPassphrase">
+      <property name="text">
+       <string>Passphrase:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0">
+     <widget class="QLabel" name="labelExternal">
+      <property name="text">
+       <string>External Chain:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="0">
+     <widget class="QLabel" name="labelInternal">
+      <property name="text">
+       <string>Internal Chain:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QSpinBox" name="spinAccount">
+      <property name="maximumSize">
+       <size>
+        <width>130</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="prefix">
+       <string>Account #</string>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>2147483647</number>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0" colspan="2">
+     <widget class="QLineEdit" name="editMnemonic"/>
+    </item>
+    <item row="2" column="1" colspan="3">
+     <widget class="QLineEdit" name="lineXprv"/>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>editMnemonic</tabstop>
+  <tabstop>editPassphrase</tabstop>
+  <tabstop>buttonLoad</tabstop>
+  <tabstop>spinAccount</tabstop>
+  <tabstop>listAddress</tabstop>
+  <tabstop>listChange</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

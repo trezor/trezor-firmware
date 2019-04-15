@@ -1,0 +1,38 @@
+sudo: false
+dist: trusty
+language: c
+
+compiler:
+  - clang
+  - gcc
+
+addons:
+  apt:
+    packages:
+    - check
+    - libssl-dev
+    - python3-pip
+    - valgrind
+
+env:
+  global:
+    - PYTHON=python3
+
+install:
+  - $PYTHON -m pip install --user pytest ecdsa curve25519-donna pyasn1
+
+script:
+  - make
+  - ./tests/aestst
+  - ./tests/test_check
+  - CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./tests/test_check
+  - ./tests/test_openssl 1000
+  - ITERS=10 $PYTHON -m pytest tests/
+
+notifications:
+  webhooks:
+    urls:
+      - http://ci-bot.satoshilabs.com:5000/travis
+    on_success: always
+    on_failure: always
+    on_start: always

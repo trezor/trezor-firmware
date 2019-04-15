@@ -23,3 +23,6 @@
 [submodule "common/defs/ethereum/tokens"]
 	path = common/defs/ethereum/tokens
 	url = https://github.com/ethereum-lists/tokens.git
+[submodule "crypto/tests/wycheproof"]
+	path = crypto/tests/wycheproof
+	url = https://github.com/google/wycheproof
