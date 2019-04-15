@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git+ssh://git@github.com/trezor/trezor-crypto
+	branch = master
+	commit = 0c622d62e1f1e052c2292d39093222ce358ca7b0
+	parent = 28e74b5e0ea544160fe6184e014438caa70fe826
+	method = rebase
+	cmdver = 0.4.0
