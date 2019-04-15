@@ -1,0 +1,41 @@
+{
+  "coin_name": "Terracoin",
+  "coin_shortcut": "TRC",
+  "coin_label": "Terracoin",
+  "website": "https://terracoin.io",
+  "github": "https://github.com/terracoin/terracoin",
+  "maintainer": "The Terracoin Foundation <support@terracoin.io>",
+  "curve_name": "secp256k1",
+  "address_type": 0,
+  "address_type_p2sh": 5,
+  "maxfee_kb": 100000,
+  "minfee_kb": 10000,
+  "signed_message_header": "DarkCoin Signed Message:\n",
+  "hash_genesis_block": "00000000804bbc6a621a9dbb564ce469f492e1ccf2d70f8a6b241e26a277afa2",
+  "xprv_magic": 76066276,
+  "xpub_magic": 76067358,
+  "xpub_magic_segwit_p2sh": null,
+  "xpub_magic_segwit_native": null,
+  "bech32_prefix": null,
+  "cashaddr_prefix": null,
+  "slip44": 83,
+  "segwit": false,
+  "decred": false,
+  "fork_id": null,
+  "force_bip143": false,
+  "bip115": false,
+  "default_fee_b": {
+    "Normal": 10
+  },
+  "dust_limit": 5460,
+  "blocktime_seconds": 120,
+  "uri_prefix": "terracoin",
+  "min_address_length": 27,
+  "max_address_length": 34,
+  "bitcore": [
+    "https://insight.terracoin.io"
+  ],
+  "blockbook": [],
+  "cooldown": 100,
+  "consensus_branch_id": null
+}

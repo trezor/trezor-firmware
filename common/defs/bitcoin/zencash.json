@@ -1,0 +1,41 @@
+{
+  "coin_name": "Zencash",
+  "coin_shortcut": "ZEN",
+  "coin_label": "Zencash",
+  "website": "https://zencash.com",
+  "github": "https://github.com/ZencashOfficial/zen",
+  "maintainer": "Zencash <support@zencash.com>",
+  "curve_name": "secp256k1",
+  "address_type": 8329,
+  "address_type_p2sh": 8342,
+  "maxfee_kb": 2000000,
+  "minfee_kb": 1000,
+  "signed_message_header": "Zencash Signed Message:\n",
+  "hash_genesis_block": "0007104ccda289427919efc39dc9e4d499804b7bebc22df55f8b834301260602",
+  "xprv_magic": 76066276,
+  "xpub_magic": 76067358,
+  "xpub_magic_segwit_p2sh": null,
+  "xpub_magic_segwit_native": null,
+  "bech32_prefix": null,
+  "cashaddr_prefix": null,
+  "slip44": 121,
+  "segwit": false,
+  "decred": false,
+  "fork_id": null,
+  "force_bip143": false,
+  "bip115": true,
+  "default_fee_b": {
+    "Normal": 10
+  },
+  "dust_limit": 546,
+  "blocktime_seconds": 150,
+  "uri_prefix": "zencash",
+  "min_address_length": 35,
+  "max_address_length": 95,
+  "bitcore": [
+    "https://explorer.zensystem.io"
+  ],
+  "blockbook": [],
+  "cooldown": 100,
+  "consensus_branch_id": null
+}

@@ -1,0 +1,301 @@
+[
+  {
+    "chain": "eth",
+    "chain_id": 1,
+    "slip44": 60,
+    "shortcut": "ETH",
+    "name": "Ethereum",
+    "rskip60": false,
+    "url": "https://www.ethereum.org",
+    "blockbook": [
+      "https://eth1.trezor.io",
+      "https://eth2.trezor.io"
+    ]
+  },
+  {
+    "chain": "exp",
+    "chain_id": 2,
+    "slip44": 40,
+    "shortcut": "EXP",
+    "name": "Expanse",
+    "rskip60": false,
+    "url": "https://expanse.tech",
+    "blockbook": []
+  },
+  {
+    "chain": "rop",
+    "chain_id": 3,
+    "slip44": 1,
+    "shortcut": "tROP",
+    "name": "Ethereum Testnet Ropsten",
+    "rskip60": false,
+    "url": "https://www.ethereum.org",
+    "blockbook": [
+      "https://ropsten1.trezor.io",
+      "https://ropsten2.trezor.io"
+    ]
+  },
+  {
+    "chain": "rin",
+    "chain_id": 4,
+    "slip44": 1,
+    "shortcut": "tRIN",
+    "name": "Ethereum Testnet Rinkeby",
+    "rskip60": false,
+    "url": "https://www.ethereum.org",
+    "blockbook": []
+  },
+  {
+    "chain": "ubq",
+    "chain_id": 8,
+    "slip44": 108,
+    "shortcut": "UBQ",
+    "name": "Ubiq",
+    "rskip60": false,
+    "url": "https://ubiqsmart.com",
+    "blockbook": []
+  },
+  {
+    "chain": "meta",
+    "chain_id": 11,
+    "slip44": 916,
+    "shortcut": "META",
+    "name": "Metadium",
+    "rskip60": false,
+    "url": "https://metadium.com",
+    "blockbook": []
+  },
+  {
+    "chain": "etsc",
+    "chain_id": 28,
+    "slip44": 1128,
+    "shortcut": "ETSC",
+    "name": "Ethereum Social",
+    "rskip60": false,
+    "url": "https://ethereumsocial.kr",
+    "blockbook": []
+  },
+  {
+    "chain": "rsk",
+    "chain_id": 30,
+    "slip44": 137,
+    "shortcut": "RBTC",
+    "name": "RSK",
+    "rskip60": true,
+    "url": "https://www.rsk.co",
+    "blockbook": []
+  },
+  {
+    "chain": "trsk",
+    "chain_id": 31,
+    "slip44": 37310,
+    "shortcut": "tRBTC",
+    "name": "RSK Testnet",
+    "rskip60": true,
+    "url": "https://www.rsk.co",
+    "blockbook": []
+  },
+  {
+    "chain": "kov",
+    "chain_id": 42,
+    "slip44": 1,
+    "shortcut": "tKOV",
+    "name": "Ethereum Testnet Kovan",
+    "rskip60": false,
+    "url": "https://www.ethereum.org",
+    "blockbook": []
+  },
+  {
+    "chain": "go",
+    "chain_id": 60,
+    "slip44": 6060,
+    "shortcut": "GO",
+    "name": "GoChain",
+    "rskip60": false,
+    "url": "https://gochain.io",
+    "blockbook": []
+  },
+  {
+    "chain": "eti",
+    "chain_id": 101,
+    "slip44": 464,
+    "shortcut": "ETI",
+    "name": "EtherInc",
+    "rskip60": false,
+    "url": "https://einc.io",
+    "blockbook": []
+  },
+  {
+    "chain": "etc",
+    "chain_id": 61,
+    "slip44": 61,
+    "shortcut": "ETC",
+    "name": "Ethereum Classic",
+    "rskip60": false,
+    "url": "https://ethereumclassic.github.io",
+    "blockbook": [
+      "https://etc1.trezor.io",
+      "https://etc2.trezor.io"
+    ]
+  },
+  {
+    "chain": "tetc",
+    "chain_id": 62,
+    "slip44": 1,
+    "shortcut": "tETC",
+    "name": "Ethereum Classic Testnet",
+    "rskip60": false,
+    "url": "https://ethereumclassic.github.io",
+    "blockbook": []
+  },
+  {
+    "chain": "ella",
+    "chain_id": 64,
+    "slip44": 163,
+    "shortcut": "ELLA",
+    "name": "Ellaism",
+    "rskip60": false,
+    "url": "https://ellaism.org",
+    "blockbook": []
+  },
+  {
+    "chain": "mix",
+    "chain_id": 76,
+    "slip44": 76,
+    "shortcut": "MIX",
+    "name": "Mix",
+    "rskip60": false,
+    "url": "https://www.mix-blockchain.org",
+    "blockbook": []
+  },
+  {
+    "chain": "dxn",
+    "chain_id": 237,
+    "slip44": 237,
+    "shortcut": "DXN",
+    "name": "DEXON",
+    "rskip60": false,
+    "url": "https://dexon.org",
+    "blockbook": []
+  },
+  {
+    "chain": "clo",
+    "chain_id": 820,
+    "slip44": 820,
+    "shortcut": "CLO",
+    "name": "Callisto",
+    "rskip60": false,
+    "url": "https://callisto.network",
+    "blockbook": []
+  },
+  {
+    "chain": "ath",
+    "chain_id": 1620,
+    "slip44": 1620,
+    "shortcut": "ATH",
+    "name": "Atheios",
+    "rskip60": false,
+    "url": "https://atheios.com",
+    "blockbook": []
+  },
+  {
+    "chain": "eosc",
+    "chain_id": 2018,
+    "slip44": 2018,
+    "shortcut": "EOSC",
+    "name": "EOS Classic",
+    "rskip60": false,
+    "url": "https://eos-classic.io",
+    "blockbook": []
+  },
+  {
+    "chain": "egem",
+    "chain_id": 1987,
+    "slip44": 1987,
+    "shortcut": "EGEM",
+    "name": "EtherGem",
+    "rskip60": false,
+    "url": "https://egem.io",
+    "blockbook": []
+  },
+  {
+    "chain": "reosc",
+    "chain_id": 2894,
+    "slip44": 2894,
+    "shortcut": "REOSC",
+    "name": "REOSC Ecosystem",
+    "rskip60": false,
+    "url": "https://reosc.io",
+    "blockbook": []
+  },
+  {
+    "chain": "esn",
+    "chain_id": 31102,
+    "slip44": 31102,
+    "shortcut": "ESN",
+    "name": "Ethersocial Network",
+    "rskip60": false,
+    "url": "https://ethersocial.org",
+    "blockbook": []
+  },
+  {
+    "chain": "akroma",
+    "chain_id": 200625,
+    "slip44": 200625,
+    "shortcut": "AKA",
+    "name": "Akroma",
+    "rskip60": false,
+    "url": "https://akroma.io",
+    "blockbook": []
+  },
+  {
+    "chain": "artis_sigma1",
+    "chain_id": 246529,
+    "slip44": 246529,
+    "shortcut": "ATS",
+    "name": "ARTIS sigma1",
+    "rskip60": false,
+    "url": "https://artis.eco",
+    "blockbook": []
+  },
+  {
+    "chain": "artis_tau1",
+    "chain_id": 246785,
+    "slip44": 1,
+    "shortcut": "tATS",
+    "name": "ARTIS tau1",
+    "rskip60": false,
+    "url": "https://artis.eco",
+    "blockbook": []
+  },
+  {
+    "chain": "music",
+    "chain_id": 7762959,
+    "slip44": 184,
+    "shortcut": "MUSIC",
+    "name": "Musicoin",
+    "rskip60": false,
+    "url": "https://musicoin.org",
+    "blockbook": []
+  },
+  {
+    "chain": "etho",
+    "chain_id": 1313114,
+    "slip44": 1313114,
+    "shortcut": "ETHO",
+    "name": "Ether-1",
+    "rskip60": false,
+    "url": "https://ether1.org",
+    "blockbook": []
+  },
+  {
+    "chain": "pirl",
+    "chain_id": 3125659152,
+    "slip44": 164,
+    "shortcut": "PIRL",
+    "name": "Pirl",
+    "rskip60": false,
+    "url": "https://pirl.io",
+    "blockbook": []
+  }
+]

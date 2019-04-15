@@ -1,0 +1,107 @@
+syntax = "proto2";
+package hw.trezor.messages.cardano;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageCardano";
+
+import "messages-common.proto";
+
+/**
+ * Request: Ask device for Cardano address
+ * @start
+ * @next CardanoAddress
+ * @next Failure
+ */
+message CardanoGetAddress {
+    repeated uint32 address_n = 1;  // BIP-32-style path to derive the key from master node
+    optional bool show_display = 2; // optionally prompt for confirmation on trezor display
+}
+
+/**
+ * Request: Ask device for Cardano address
+ * @end
+ */
+message CardanoAddress {
+    optional string address = 1;    // Base58 cardano address
+}
+
+/**
+ * Request: Ask device for public key corresponding to address_n path
+ * @start
+ * @next CardanoPublicKey
+ * @next Failure
+ */
+message CardanoGetPublicKey {
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+    optional bool show_display = 2; // optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains public key derived from device private seed
+ * @end
+ */
+message CardanoPublicKey {
+    optional string xpub = 1;                               // Xpub key
+    optional hw.trezor.messages.common.HDNodeType node = 2; // BIP-32 public node
+}
+
+/**
+ * Request: Ask device to sign Cardano transaction
+ * @start
+ * @next CardanoSignedTx
+ * @next CardanoTxRequest
+ * @next Failure
+ */
+message CardanoSignTx {
+    repeated CardanoTxInputType inputs = 1;     // inputs to be used in transaction
+    repeated CardanoTxOutputType outputs = 2;   // outputs to be used in transaction
+    optional uint32 transactions_count = 3;     // transactions count
+    optional uint32 protocol_magic = 5;         // network's protocol magic
+    /**
+     * Structure representing cardano transaction input
+     */
+    message CardanoTxInputType {
+        repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+        optional bytes prev_hash = 2;   // hash of previous transaction output to spend by this input
+        optional uint32 prev_index = 3; // index of previous output to spend
+        optional uint32 type = 4;       // input type, defaults to 0
+    }
+    /**
+     * Structure representing cardano transaction output
+     */
+    message CardanoTxOutputType {
+        optional string address = 1;    // target coin address in Base58 encoding
+        repeated uint32 address_n = 2;  // BIP-32 path to derive the key from master node; has higher priority than "address"
+        optional uint64 amount = 3;     // amount to spend
+    }
+}
+
+/**
+ * Response: Serialised signed cardano transaction if tx_index is not specified.
+ *              If tx_index is specified, trezor will wait for transaction
+ * @next CardanoTxAck
+ */
+message CardanoTxRequest {
+    optional uint32 tx_index = 1;   // index of requested transaction
+    optional bytes tx_hash = 2;     // hash of the signed transaction
+    optional bytes tx_body = 3;     // serialised body of the signed transaction
+}
+
+/**
+ * Request: Reported transaction data
+ * @next CardanoSignedTx
+ * @next CardanoTxRequest
+ */
+message CardanoTxAck {
+    optional bytes transaction = 1;
+}
+
+/**
+ * Response: Serialised signed cardano transaction
+ * @end
+ */
+message CardanoSignedTx {
+    optional bytes tx_hash = 1; // hash of the signed transaction
+    optional bytes tx_body = 2; // serialised body of the signed transaction
+}

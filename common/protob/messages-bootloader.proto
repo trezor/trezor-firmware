@@ -1,0 +1,44 @@
+syntax = "proto2";
+package hw.trezor.messages.bootloader;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageBootloader";
+
+/**
+ * Request: Ask device to erase its firmware (so it can be replaced via FirmwareUpload)
+ * @start
+ * @next FirmwareRequest
+ */
+message FirmwareErase {
+    optional uint32 length = 1; // length of new firmware
+}
+
+/**
+ * Response: Ask for firmware chunk
+ * @next FirmwareUpload
+ */
+message FirmwareRequest {
+    optional uint32 offset = 1; // offset of requested firmware chunk
+    optional uint32 length = 2; // length of requested firmware chunk
+}
+
+/**
+ * Request: Send firmware in binary form to the device
+ * @next FirmwareRequest
+ * @next Success
+ * @next Failure
+ */
+message FirmwareUpload {
+    required bytes payload = 1; // firmware to be loaded into device
+    optional bytes hash = 2;    // hash of the payload
+}
+
+/**
+ * Request: Perform a device self-test
+ * @next Success
+ * @next Failure
+ */
+message SelfTest {
+    optional bytes payload = 1; // payload to be used in self-test
+}

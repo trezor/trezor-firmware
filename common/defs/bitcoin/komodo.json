@@ -1,0 +1,46 @@
+{
+  "coin_name": "Komodo",
+  "coin_shortcut": "KMD",
+  "coin_label": "Komodo",
+  "website": "https://komodoplatform.com",
+  "github": "https://github.com/komodoplatform/komodo",
+  "maintainer": "Kadan Stadelmann <ca333@komodoplatform.com>",
+  "curve_name": "secp256k1",
+  "address_type": 60,
+  "address_type_p2sh": 85,
+  "maxfee_kb": 1000000,
+  "minfee_kb": 1000,
+  "signed_message_header": "Komodo Signed Message:\n",
+  "hash_genesis_block": "027e3758c3a65b12aa1046462b486d0a63bfa1beae327897f56c5cfb7daaae71",
+  "xprv_magic": 76066276,
+  "xpub_magic": 76067358,
+  "xpub_magic_segwit_p2sh": null,
+  "xpub_magic_segwit_native": null,
+  "bech32_prefix": null,
+  "cashaddr_prefix": null,
+  "slip44": 141,
+  "segwit": false,
+  "decred": false,
+  "fork_id": null,
+  "force_bip143": false,
+  "bip115": false,
+  "default_fee_b": {
+    "Normal": 10
+  },
+  "dust_limit": 546,
+  "blocktime_seconds": 60,
+  "uri_prefix": "komodo",
+  "min_address_length": 27,
+  "max_address_length": 34,
+  "bitcore": [  
+    "https://api.kmd.dev"
+  ],
+  "blockbook": [],
+  "cooldown": 100,
+  "consensus_branch_id": {
+    "1": 0,
+    "2": 0,
+    "3": 1537743641,
+    "4": 1991772603
+  }
+}

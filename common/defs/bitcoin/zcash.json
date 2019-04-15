@@ -1,0 +1,50 @@
+{
+  "coin_name": "Zcash",
+  "coin_shortcut": "ZEC",
+  "coin_label": "Zcash",
+  "website": "https://z.cash",
+  "github": "https://github.com/zcash/zcash",
+  "maintainer": "Pavol Rusnak <stick@satoshilabs.com>",
+  "curve_name": "secp256k1",
+  "address_type": 7352,
+  "address_type_p2sh": 7357,
+  "maxfee_kb": 1000000,
+  "minfee_kb": 1000,
+  "signed_message_header": "Zcash Signed Message:\n",
+  "hash_genesis_block": "00040fe8ec8471911baa1db1266ea15dd06b4a8a5c453883c000b031973dce08",
+  "xprv_magic": 76066276,
+  "xpub_magic": 76067358,
+  "xpub_magic_segwit_p2sh": null,
+  "xpub_magic_segwit_native": null,
+  "bech32_prefix": null,
+  "cashaddr_prefix": null,
+  "slip44": 133,
+  "segwit": false,
+  "decred": false,
+  "fork_id": null,
+  "force_bip143": false,
+  "bip115": false,
+  "default_fee_b": {
+    "Normal": 10
+  },
+  "dust_limit": 546,
+  "blocktime_seconds": 150,
+  "uri_prefix": "zcash",
+  "min_address_length": 35,
+  "max_address_length": 95,
+  "bitcore": [],
+  "blockbook": [
+    "https://zec1.trezor.io",
+    "https://zec2.trezor.io",
+    "https://zec3.trezor.io",
+    "https://zec4.trezor.io",
+    "https://zec5.trezor.io"
+  ],
+  "cooldown": 100,
+  "consensus_branch_id": {
+    "1": 0,
+    "2": 0,
+    "3": 1537743641,
+    "4": 1991772603
+  }
+}

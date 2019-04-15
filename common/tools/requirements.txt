@@ -1,0 +1,16 @@
+click>=6
+
+# for `coin_gen coindefs` and checking icons:
+ed25519>=1.4
+Pillow>=5.2.0
+trezor>=0.10
+
+# for checking backends, generating coins_details.json
+requests>=2.19
+
+# for rendering templates:
+Mako>=1.0.7
+munch>=2.3.2
+
+# for pretty colors in checks
+termcolor >= 0.1.2

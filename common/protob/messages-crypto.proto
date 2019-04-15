@@ -1,0 +1,127 @@
+syntax = "proto2";
+package hw.trezor.messages.crypto;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageCrypto";
+
+/**
+ * Request: Ask device to encrypt or decrypt value of given key
+ * @start
+ * @next CipheredKeyValue
+ * @next Failure
+ */
+message CipherKeyValue {
+    repeated uint32 address_n = 1;      // BIP-32 path to derive the key from master node
+    optional string key = 2;            // key component of key:value
+    optional bytes value = 3;           // value component of key:value
+    optional bool encrypt = 4;          // are we encrypting (True) or decrypting (False)?
+    optional bool ask_on_encrypt = 5;   // should we ask on encrypt operation?
+    optional bool ask_on_decrypt = 6;   // should we ask on decrypt operation?
+    optional bytes iv = 7;              // initialization vector (will be computed if not set)
+}
+
+/**
+ * Response: Return ciphered/deciphered value
+ * @end
+ */
+message CipheredKeyValue {
+    optional bytes value = 1;           // ciphered/deciphered value
+}
+
+/**
+ * Structure representing identity data
+ * @embed
+ */
+message IdentityType {
+    optional string proto = 1;              // proto part of URI
+    optional string user = 2;               // user part of URI
+    optional string host = 3;               // host part of URI
+    optional string port = 4;               // port part of URI
+    optional string path = 5;               // path part of URI
+    optional uint32 index = 6 [default=0];  // identity index
+}
+
+/**
+ * Request: Ask device to sign identity
+ * @start
+ * @next SignedIdentity
+ * @next Failure
+ */
+message SignIdentity {
+    optional IdentityType identity = 1;     // identity
+    optional bytes challenge_hidden = 2;    // non-visible challenge
+    optional string challenge_visual = 3;   // challenge shown on display (e.g. date+time)
+    optional string ecdsa_curve_name = 4;   // ECDSA curve name to use
+}
+
+/**
+ * Response: Device provides signed identity
+ * @end
+ */
+message SignedIdentity {
+    optional string address = 1;    // identity address
+    optional bytes public_key = 2;  // identity public key
+    optional bytes signature = 3;   // signature of the identity data
+}
+
+/**
+ * Request: Ask device to generate ECDH session key
+ * @start
+ * @next ECDHSessionKey
+ * @next Failure
+ */
+message GetECDHSessionKey {
+    optional IdentityType identity = 1;     // identity
+    optional bytes peer_public_key = 2;     // peer's public key
+    optional string ecdsa_curve_name = 3;   // ECDSA curve name to use
+}
+
+/**
+ * Response: Device provides ECDH session key
+ * @end
+ */
+message ECDHSessionKey {
+    optional bytes session_key = 1;     // ECDH session key
+}
+
+/**
+ * Request: Ask device to commit to CoSi signing
+ * @start
+ * @next CosiCommitment
+ * @next Failure
+ */
+message CosiCommit {
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+    optional bytes data = 2;        // Data to be signed
+}
+
+/**
+ * Response: Contains a CoSi commitment
+ * @end
+ */
+message CosiCommitment {
+    optional bytes commitment = 1;  // Commitment
+    optional bytes pubkey = 2;      // Public key
+}
+
+/**
+ * Request: Ask device to sign using CoSi
+ * @start
+ * @next CosiSignature
+ * @next Failure
+ */
+message CosiSign {
+    repeated uint32 address_n = 1;          // BIP-32 path to derive the key from master node
+    optional bytes data = 2;                // Data to be signed
+    optional bytes global_commitment = 3;   // Aggregated commitment
+    optional bytes global_pubkey = 4;       // Aggregated public key
+}
+
+/**
+ * Response: Contains a CoSi signature
+ * @end
+ */
+message CosiSignature {
+    optional bytes signature = 1;   // Signature
+}

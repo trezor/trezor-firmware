@@ -1,0 +1,43 @@
+{
+  "coin_name": "Groestlcoin Testnet",
+  "coin_shortcut": "tGRS",
+  "coin_label": "Groestlcoin Testnet",
+  "website": "https://www.groestlcoin.org",
+  "github": "https://github.com/Groestlcoin/groestlcoin",
+  "maintainer": "Yura Pakhuchiy <pakhuchiy@gmail.com>",
+  "curve_name": "secp256k1_groestl",
+  "address_type": 111,
+  "address_type_p2sh": 196,
+  "maxfee_kb": 100000,
+  "minfee_kb": 1000,
+  "signed_message_header": "GroestlCoin Signed Message:\n",
+  "hash_genesis_block": "000000ffbb50fc9898cdd36ec163e6ba23230164c0052a28876255b7dcf2cd36",
+  "xprv_magic": 70615956,
+  "xpub_magic": 70617039,
+  "xpub_magic_segwit_p2sh": 71979618,
+  "xpub_magic_segwit_native": 73342198,
+  "bech32_prefix": "tgrs",
+  "cashaddr_prefix": null,
+  "slip44": 1,
+  "segwit": true,
+  "decred": false,
+  "fork_id": null,
+  "force_bip143": false,
+  "bip115": false,
+  "default_fee_b": {
+    "Normal": 10
+  },
+  "dust_limit": 546,
+  "blocktime_seconds": 60,
+  "uri_prefix": "groestlcoin",
+  "min_address_length": 27,
+  "max_address_length": 34,
+  "bitcore": [
+    "https://groestlsight-test.groestlcoin.org"
+  ],
+  "blockbook": [
+    "https://blockbook-test.groestlcoin.org"
+  ],
+  "cooldown": 100,
+  "consensus_branch_id": null
+}

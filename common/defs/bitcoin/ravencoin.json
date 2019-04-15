@@ -1,0 +1,41 @@
+{
+  "coin_name": "Ravencoin",
+  "coin_shortcut": "RVN",
+  "coin_label": "Ravencoin",
+  "website": "https://ravencoin.org",
+  "github": "https://github.com/RavenProject/Ravencoin",
+  "maintainer": "Tron Black <TronBlack@gmail.com>",
+  "curve_name": "secp256k1",
+  "address_type": 60,
+  "address_type_p2sh": 122,
+  "maxfee_kb": 2000000,
+  "minfee_kb": 1000,
+  "signed_message_header": "Ravencoin Signed Message:\n",
+  "hash_genesis_block": "0000006b444bc2f2ffe627be9d9e7e7a0730000870ef6eb6da46c8eae389df90",
+  "xprv_magic": 76066276,
+  "xpub_magic": 76067358,
+  "xpub_magic_segwit_p2sh": null,
+  "xpub_magic_segwit_native": null,
+  "bech32_prefix": null,
+  "cashaddr_prefix": null,
+  "slip44": 175,
+  "segwit": false,
+  "decred": false,
+  "fork_id": null,
+  "force_bip143": false,
+  "bip115": false,
+  "default_fee_b": {
+    "Low": 10
+  },
+  "dust_limit": 546,
+  "blocktime_seconds": 60,
+  "uri_prefix": "raven",
+  "min_address_length": 27,
+  "max_address_length": 34,
+  "bitcore": [
+    "https://ravencoin.network"
+  ],
+  "blockbook": [],
+  "cooldown": 100,
+  "consensus_branch_id": null
+}

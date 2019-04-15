@@ -1,0 +1,37 @@
+language: python
+
+# Runs jobs on container based infrastructure
+sudo: false
+
+# Saves pip downloads/wheels between builds
+cache:
+  directories:
+    - $HOME/.cache/pip
+
+addons:
+    apt:
+        packages:
+            - graphviz
+
+python:
+    - "3.6"
+
+install:
+    - pip install demjson graphviz
+    - pip install -r tools/requirements.txt
+
+script:
+    - jsonlint defs/*.json
+    - jsonlint defs/*/*.json
+    - python tools/cointool.py check
+    - python tools/support.py check --ignore-missing
+    - python protob/check.py
+    - python protob/graph.py protob/*.proto
+
+notifications:
+  webhooks:
+    urls:
+      - http://ci-bot.satoshilabs.com:5000/travis
+    on_success: always
+    on_failure: always
+    on_start: always

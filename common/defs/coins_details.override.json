@@ -1,0 +1,24 @@
+{
+    "bitcoin:DNR": {
+        "coinmarketcap_alias": "denarius-dnr"
+    },
+    "erc20:eth:BAT": {
+        "name": "Basic Attention Token"
+    },
+    "erc20:eth:LINK (Chainlink)": {
+        "name": "Chainlink"
+    },
+    "erc20:eth:YUPIE": {
+        "hidden": 1,
+        "notes": "Replaced by YUP"
+    },
+    "eth:CLO": {
+        "coinmarketcap_alias": "callisto-network"
+    },
+    "eth:ESN": {
+        "coinmarketcap_alias": "ethersocial"
+    },
+    "nem:DIMTOK": {
+        "coinmarketcap_alias": "dimcoin"
+    }
+}

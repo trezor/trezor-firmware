@@ -1,0 +1,198 @@
+syntax = "proto2";
+package hw.trezor.messages.nem;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageNem";
+
+/**
+ * Request: Ask device for NEM address corresponding to address_n path
+ * @start
+ * @next NEMAddress
+ * @next Failure
+ */
+message NEMGetAddress {
+    repeated uint32 address_n = 1;      // BIP-32 path to derive the key from master node
+    optional uint32 network = 2;        // Network ID (0x68 = Mainnet, 0x98 = Testnet, 0x60 = Mijin)
+    optional bool show_display = 3;     // Optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains NEM address derived from device private seed
+ * @end
+ */
+message NEMAddress {
+    required string address = 1;    // NEM address in Base32 encoding
+}
+
+/**
+ * Request: Ask device to sign transaction
+ * @start
+ * @next NEMSignedTx
+ * @next Failure
+ */
+message NEMSignTx {
+    optional NEMTransactionCommon transaction = 1;                  // Common part of transaction
+    optional NEMTransactionCommon multisig = 2;                     // Common part of inner transaction for multisig transactions
+    optional NEMTransfer transfer = 3;                              // Transfer transaction part
+    optional bool cosigning = 4;                                    // Whether cosigning or initiating the multisig transaction
+    optional NEMProvisionNamespace provision_namespace = 5;         // Provision namespace part
+    optional NEMMosaicCreation mosaic_creation = 6;                 // Mosaic definition creation part
+    optional NEMMosaicSupplyChange supply_change = 7;               // Mosaic supply change part
+    optional NEMAggregateModification aggregate_modification = 8;   // Aggregate modification part
+    optional NEMImportanceTransfer importance_transfer = 9;         // Importance transfer part
+    /**
+    * Structure representing the common part for NEM transactions
+    */
+    message NEMTransactionCommon {
+        repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+        optional uint32 network = 2;    // Network ID (0x68 = Mainnet, 0x98 = Testnet, 0x60 = Mijin)
+        optional uint32 timestamp = 3;  // Number of seconds elapsed since the creation of the nemesis block
+        optional uint64 fee = 4;        // Fee for the transaction
+        optional uint32 deadline = 5;   // Deadline of the transaction
+        optional bytes signer = 6;      // Public key of the account (for multisig transactions)
+    }
+    /**
+    * Structure representing the transfer transaction part for NEM transactions
+    */
+    message NEMTransfer {
+        optional string recipient = 1;      // Address of the recipient
+        optional uint64 amount = 2;         // Amount of micro NEM that is transferred
+        optional bytes payload = 3;         // Actual message data (unencrypted)
+        optional bytes public_key = 4;      // Public key of the recipient (for encrypted payloads)
+        repeated NEMMosaic mosaics = 5;     // Attached mosaics
+        /**
+        * Structure representing the mosaic attachment for NEM transfer transactions
+        */
+        message NEMMosaic {
+            optional string namespace = 1;  // Fully qualified name of the namespace
+            optional string mosaic = 2;     // Name of the mosaic definition
+            optional uint64 quantity = 3;   // Mosaic quantity, always given in smallest units
+        }
+    }
+    /**
+    * Structure representing the provision namespace part for NEM transactions
+    */
+    message NEMProvisionNamespace {
+        optional string namespace = 1;  // New part concatenated to the parent
+        optional string parent = 2;     // Parent namespace (for child namespaces)
+        optional string sink = 3;       // Rental fee sink address
+        optional uint64 fee = 4;        // Rental fee
+    }
+    /**
+    * Structure representing the mosaic definition creation part for NEM transactions
+    */
+    message NEMMosaicCreation {
+        optional NEMMosaicDefinition definition = 1;    // Mosaic definition
+        optional string sink = 2;                       // Creation fee sink address
+        optional uint64 fee = 3;                        // Creation fee
+        /**
+        * Structure representing a mosaic definition
+        */
+        message NEMMosaicDefinition {
+            optional string name = 1;               // User-friendly name of the mosaic (for whitelisted mosaics)
+            optional string ticker = 2;             // Ticker of the mosaic (for whitelisted mosaics)
+            optional string namespace = 3;          // Fully qualified name of the namespace
+            optional string mosaic = 4;             // Name of the mosaic definition
+            optional uint32 divisibility = 5;       // Number of decimal places that a mosaic can be divided into
+            optional NEMMosaicLevy levy = 6;        // Levy type
+            optional uint64 fee = 7;                // Levy fee (interpretation depends on levy type)
+            optional string levy_address = 8;       // Levy address
+            optional string levy_namespace = 9;     // Fully qualified name of the namespace of the levy mosaic
+            optional string levy_mosaic = 10;       // Name of the levy mosaic
+            optional uint64 supply = 11;            // Initial supply to create, always given in entire units
+            optional bool mutable_supply = 12;      // Mutable supply
+            optional bool transferable = 13;        // Mosaic allows transfers among accounts other than the creator
+            optional string description = 14;       // Mosaic description
+            repeated uint32 networks = 15;          // Networks that the mosaic is valid on (for whitelisted mosaics)
+            /**
+            * Type of levy which will be used for mosaic
+            */
+            enum NEMMosaicLevy {
+                MosaicLevy_Absolute = 1;
+                MosaicLevy_Percentile = 2;
+            }
+        }
+    }
+    /**
+    * Structure representing the mosaic supply change part for NEM transactions
+    */
+    message NEMMosaicSupplyChange {
+        optional string namespace = 1;          // Fully qualified name of the namespace
+        optional string mosaic = 2;             // Name of the mosaic definition
+        optional NEMSupplyChangeType type = 3;  // Type of supply change
+        optional uint64 delta = 4;              // Supply delta
+        /**
+        * Type of supply change which will be applied to mosaic
+        */
+        enum NEMSupplyChangeType {
+            SupplyChange_Increase = 1;
+            SupplyChange_Decrease = 2;
+        }
+    }
+    /**
+    * Structure representing the aggregate modification part for NEM transactions
+    */
+    message NEMAggregateModification {
+        repeated NEMCosignatoryModification modifications = 1;  // Cosignatory modifications
+        optional sint32 relative_change = 2;                    // Relative change of the minimum cosignatories
+        /**
+        * Structure representing the cosignatory modification for aggregate modification transactions
+        */
+        message NEMCosignatoryModification {
+            optional NEMModificationType type = 1;  // Type of cosignatory modification
+            optional bytes public_key = 2;          // Public key of the cosignatory
+            /**
+            * Type of cosignatory modification
+            */
+            enum NEMModificationType {
+                CosignatoryModification_Add = 1;
+                CosignatoryModification_Delete = 2;
+            }
+        }
+    }
+    /**
+    * Structure representing the importance transfer part for NEM transactions
+    */
+    message NEMImportanceTransfer {
+        optional NEMImportanceTransferMode mode = 1;    // Mode of importance transfer
+        optional bytes public_key = 2;                  // Public key of the remote account
+        /**
+        * Mode of importance transfer
+        */
+        enum NEMImportanceTransferMode {
+            ImportanceTransfer_Activate = 1;
+            ImportanceTransfer_Deactivate = 2;
+        }
+    }
+}
+
+/**
+ * Response: Contains NEM transaction data and signature
+ * @end
+ */
+message NEMSignedTx {
+    optional bytes data = 1;        // Transaction data
+    optional bytes signature = 2;   // Signature for the transaction
+}
+
+/**
+ * Request: Ask device to decrypt NEM transaction payload
+ * @start
+ * @next NEMDecryptedMessage
+ * @next Failure
+ */
+message NEMDecryptMessage {
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+    optional uint32 network = 2;    // Network ID (0x68 = Mainnet, 0x98 = Testnet, 0x60 = Mijin)
+    optional bytes public_key = 3;  // Public key of the other party
+    optional bytes payload = 4;     // Actual message data (encrypted)
+}
+
+/**
+ * Response: Contains decrypted NEM transaction payload
+ * @end
+ */
+message NEMDecryptedMessage {
+    optional bytes payload = 1;     // Actual message data (unencrypted)
+}

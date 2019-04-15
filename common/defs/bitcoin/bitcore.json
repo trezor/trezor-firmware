@@ -1,0 +1,41 @@
+{
+  "coin_name": "Bitcore",
+  "coin_shortcut": "BTX",
+  "coin_label": "Bitcore",
+  "website": "https://bitcore.cc",
+  "github": "https://github.com/LIMXTEC/BitCore",
+  "maintainer": "limxdev <limxdev@bitcore.cc>",
+  "curve_name": "secp256k1",
+  "address_type": 3,
+  "address_type_p2sh": 125,
+  "maxfee_kb": 2000000,
+  "minfee_kb": 1000,
+  "signed_message_header": "BitCore Signed Message:\n",
+  "hash_genesis_block": "604148281e5c4b7f2487e5d03cd60d8e6f69411d613f6448034508cea52e9574",
+  "xprv_magic": 76066276,
+  "xpub_magic": 76067358,
+  "xpub_magic_segwit_p2sh": 77429938,
+  "xpub_magic_segwit_native": 78792518,
+  "bech32_prefix": "btx",
+  "cashaddr_prefix": null,
+  "slip44": 160,
+  "segwit": true,
+  "decred": false,
+  "fork_id": null,
+  "force_bip143": false,
+  "bip115": false,
+  "default_fee_b": {
+    "Low": 10
+  },
+  "dust_limit": 546,
+  "blocktime_seconds": 150,
+  "uri_prefix": "bitcore",
+  "min_address_length": 27,
+  "max_address_length": 34,
+  "bitcore": [
+    "https://insight.bitcore.cc"
+  ],
+  "blockbook": [],
+  "cooldown": 100,
+  "consensus_branch_id": null
+}

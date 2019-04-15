@@ -1,0 +1,85 @@
+[
+  {
+    "name": "NEM",
+    "ticker": "XEM",
+    "namespace": "nem",
+    "mosaic": "xem",
+    "divisibility": 6,
+    "links": {
+      "Homepage": "https://nem.io"
+    }
+  },
+  {
+    "name": "DIMCOIN",
+    "ticker": "DIM",
+    "namespace": "dim",
+    "mosaic": "coin",
+    "divisibility": 6,
+    "levy": "MosaicLevy_Percentile",
+    "fee": 10,
+    "levy_namespace": "dim",
+    "levy_mosaic": "coin",
+    "networks": [
+      104
+    ],
+    "links": {
+      "Homepage": "https://www.dimcoin.io"
+    }
+  },
+  {
+    "name": "DIM TOKEN",
+    "ticker": "DIMTOK",
+    "namespace": "dim",
+    "mosaic": "token",
+    "divisibility": 6,
+    "networks": [
+      104
+    ],
+    "links": {
+      "Homepage": "https://www.dimcoin.io"
+    }
+  },
+  {
+    "name": "Breeze Token",
+    "ticker": "BREEZE",
+    "namespace": "breeze",
+    "mosaic": "breeze-token",
+    "divisibility": 0,
+    "networks": [
+      104
+    ],
+    "links": {
+      "Homepage": "https://breeze.chat"
+    }
+  },
+  {
+    "name": "PacNEM Game Credits",
+    "ticker": "PAC:HRT",
+    "namespace": "pacnem",
+    "mosaic": "heart",
+    "divisibility": 0,
+    "networks": [
+      104
+    ],
+    "links": {
+      "Homepage": "https://pacnem.com"
+    }
+  },
+  {
+    "name": "PacNEM Score Tokens",
+    "ticker": "PAC:CHS",
+    "namespace": "pacnem",
+    "mosaic": "cheese",
+    "divisibility": 6,
+    "levy": "MosaicLevy_Percentile",
+    "fee": 100,
+    "levy_namespace": "nem",
+    "levy_mosaic": "xem",
+    "networks": [
+      104
+    ],
+    "links": {
+      "Homepage": "https://pacnem.com"
+    }
+  }
+]

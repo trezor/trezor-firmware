@@ -1,0 +1,251 @@
+syntax = "proto2";
+package hw.trezor.messages.bitcoin;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageBitcoin";
+
+import "messages-common.proto";
+
+/**
+ * Type of script which will be used for transaction output
+ */
+enum InputScriptType {
+    SPENDADDRESS = 0;       // standard P2PKH address
+    SPENDMULTISIG = 1;      // P2SH multisig address
+    EXTERNAL = 2;           // reserved for external inputs (coinjoin)
+    SPENDWITNESS = 3;       // native SegWit
+    SPENDP2SHWITNESS = 4;   // SegWit over P2SH (backward compatible)
+}
+
+/**
+ * Type of redeem script used in input
+ * @embed
+ */
+message MultisigRedeemScriptType {
+    repeated HDNodePathType pubkeys = 1;    // pubkeys from multisig address (sorted lexicographically)
+    repeated bytes signatures = 2;          // existing signatures for partially signed input
+    optional uint32 m = 3;                  // "m" from n, how many valid signatures is necessary for spending
+    repeated hw.trezor.messages.common.HDNodeType nodes = 4;    // simplified way how to specify pubkeys if they share the same address_n path
+    repeated uint32 address_n = 5;                              // use only field 1 or fields 4+5, if fields 4+5 are used, field 1 is ignored
+    /**
+    * Structure representing HDNode + Path
+    */
+    message HDNodePathType {
+        required hw.trezor.messages.common.HDNodeType node = 1; // BIP-32 node in deserialized form
+        repeated uint32 address_n = 2;                          // BIP-32 path to derive the key from node
+    }
+}
+
+/**
+ * Request: Ask device for public key corresponding to address_n path
+ * @start
+ * @next PublicKey
+ * @next Failure
+ */
+message GetPublicKey {
+    repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
+    optional string ecdsa_curve_name = 2;                               // ECDSA curve name to use
+    optional bool show_display = 3;                                     // optionally show on display before sending the result
+    optional string coin_name = 4 [default='Bitcoin'];                  // coin to use for verifying
+    optional InputScriptType script_type = 5 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
+}
+
+/**
+ * Response: Contains public key derived from device private seed
+ * @end
+ */
+message PublicKey {
+    optional hw.trezor.messages.common.HDNodeType node = 1;        // BIP32 public node
+    optional string xpub = 2;        // serialized form of public node
+}
+
+/**
+ * Request: Ask device for address corresponding to address_n path
+ * @start
+ * @next Address
+ * @next Failure
+ */
+message GetAddress {
+    repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
+    optional string coin_name = 2 [default='Bitcoin'];                  // coin to use
+    optional bool show_display = 3;                                     // optionally show on display before sending the result
+    optional MultisigRedeemScriptType multisig = 4;                     // filled if we are showing a multisig address
+    optional InputScriptType script_type = 5 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
+}
+
+/**
+ * Response: Contains address derived from device private seed
+ * @end
+ */
+message Address {
+    required string address = 1;    // Coin address in Base58 encoding
+}
+
+/**
+ * Request: Ask device to sign message
+ * @start
+ * @next MessageSignature
+ * @next Failure
+ */
+message SignMessage {
+    repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
+    required bytes message = 2;                                         // message to be signed
+    optional string coin_name = 3 [default='Bitcoin'];                  // coin to use for signing
+    optional InputScriptType script_type = 4 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
+}
+
+/**
+ * Response: Signed message
+ * @end
+ */
+message MessageSignature {
+    optional string address = 1;    // address used to sign the message
+    optional bytes signature = 2;   // signature of the message
+}
+
+/**
+ * Request: Ask device to verify message
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message VerifyMessage {
+    optional string address = 1;                        // address to verify
+    optional bytes signature = 2;                       // signature to verify
+    optional bytes message = 3;                         // message to verify
+    optional string coin_name = 4 [default='Bitcoin'];  // coin to use for verifying
+}
+
+/**
+ * Request: Ask device to sign transaction
+ * @start
+ * @next TxRequest
+ * @next Failure
+ */
+message SignTx {
+    required uint32 outputs_count = 1;                  // number of transaction outputs
+    required uint32 inputs_count = 2;                   // number of transaction inputs
+    optional string coin_name = 3 [default='Bitcoin'];  // coin to use
+    optional uint32 version = 4 [default=1];            // transaction version
+    optional uint32 lock_time = 5 [default=0];          // transaction lock_time
+    optional uint32 expiry = 6;                         // only for Decred and Zcash
+    optional bool overwintered = 7;                     // only for Zcash
+    optional uint32 version_group_id = 8;               // only for Zcash, nVersionGroupId when overwintered is set
+    optional uint32 timestamp = 9;                      // only for Capricoin, transaction timestamp
+    optional uint32 branch_id = 10;                     // only for Zcash, BRANCH_ID when overwintered is set
+}
+
+/**
+ * Response: Device asks for information for signing transaction or returns the last result
+ * If request_index is set, device awaits TxAck message (with fields filled in according to request_type)
+ * If signature_index is set, 'signature' contains signed input of signature_index's input
+ * @end
+ * @next TxAck
+ */
+message TxRequest {
+    optional RequestType request_type = 1;              // what should be filled in TxAck message?
+    optional TxRequestDetailsType details = 2;          // request for tx details
+    optional TxRequestSerializedType serialized = 3;    // serialized data and request for next
+    /**
+    * Type of information required by transaction signing process
+    */
+    enum RequestType {
+        TXINPUT = 0;
+        TXOUTPUT = 1;
+        TXMETA = 2;
+        TXFINISHED = 3;
+        TXEXTRADATA = 4;
+    }
+    /**
+    * Structure representing request details
+    */
+    message TxRequestDetailsType {
+        optional uint32 request_index = 1;      // device expects TxAck message from the computer
+        optional bytes tx_hash = 2;             // tx_hash of requested transaction
+        optional uint32 extra_data_len = 3;     // length of requested extra data
+        optional uint32 extra_data_offset = 4;  // offset of requested extra data
+    }
+    /**
+    * Structure representing serialized data
+    */
+    message TxRequestSerializedType {
+        optional uint32 signature_index = 1;    // 'signature' field contains signed input of this index
+        optional bytes signature = 2;           // signature of the signature_index input
+        optional bytes serialized_tx = 3;       // part of serialized and signed transaction
+    }
+}
+
+/**
+ * Request: Reported transaction data
+ * @next TxRequest
+ */
+message TxAck {
+    optional TransactionType tx = 1;
+    /**
+    * Structure representing transaction
+    */
+    message TransactionType {
+        optional uint32 version = 1;
+        repeated TxInputType inputs = 2;
+        repeated TxOutputBinType bin_outputs = 3;
+        optional uint32 lock_time = 4;
+        repeated TxOutputType outputs = 5;
+        optional uint32 inputs_cnt = 6;
+        optional uint32 outputs_cnt = 7;
+        optional bytes extra_data = 8;          // only for Zcash
+        optional uint32 extra_data_len = 9;     // only for Zcash
+        optional uint32 expiry = 10;            // only for Decred and Zcash
+        optional bool overwintered = 11;        // only for Zcash
+        optional uint32 version_group_id = 12;  // only for Zcash, nVersionGroupId when overwintered is set
+        optional uint32 timestamp = 13;         // only for Capricoin, transaction timestamp
+        optional uint32 branch_id = 14;         // only for Zcash, BRANCH_ID when overwintered is set
+        /**
+        * Structure representing transaction input
+        */
+        message TxInputType {
+            repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
+            required bytes prev_hash = 2;                                       // hash of previous transaction output to spend by this input
+            required uint32 prev_index = 3;                                     // index of previous output to spend
+            optional bytes script_sig = 4;                                      // script signature, unset for tx to sign
+            optional uint32 sequence = 5 [default=4294967295];                  // sequence (default=0xffffffff)
+            optional InputScriptType script_type = 6 [default=SPENDADDRESS];    // defines template of input script
+            optional MultisigRedeemScriptType multisig = 7;                     // Filled if input is going to spend multisig tx
+            optional uint64 amount = 8;                                         // amount of previous transaction output (for segwit only)
+            optional uint32 decred_tree = 9;                                    // only for Decred
+            optional uint32 decred_script_version = 10;                         // only for Decred
+            optional bytes prev_block_hash_bip115 = 11;                         // block hash of previous transaction output (for bip115 implementation)
+            optional uint32 prev_block_height_bip115 = 12;                      // block height of previous transaction output (for bip115 implementation)
+        }
+        /**
+        * Structure representing compiled transaction output
+        */
+        message TxOutputBinType {
+            required uint64 amount = 1;
+            required bytes script_pubkey = 2;
+            optional uint32 decred_script_version = 3;      // only for Decred
+        }
+        /**
+        * Structure representing transaction output
+        */
+        message TxOutputType {
+            optional string address = 1;                    // target coin address in Base58 encoding
+            repeated uint32 address_n = 2;                  // BIP-32 path to derive the key from master node; has higher priority than "address"
+            required uint64 amount = 3;                     // amount to spend in satoshis
+            required OutputScriptType script_type = 4;      // output script type
+            optional MultisigRedeemScriptType multisig = 5; // defines multisig address; script_type must be PAYTOMULTISIG
+            optional bytes op_return_data = 6;              // defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
+            optional uint32 decred_script_version = 7;      // only for Decred
+            optional bytes block_hash_bip115 = 8;           // block hash of existing block (recommended current_block - 300) (for bip115 implementation)
+            optional uint32 block_height_bip115 = 9;        // block height of existing block (recommended current_block - 300) (for bip115 implementation)
+            enum OutputScriptType {
+                PAYTOADDRESS = 0;       // used for all addresses (bitcoin, p2sh, witness)
+                PAYTOSCRIPTHASH = 1;    // p2sh address (deprecated; use PAYTOADDRESS)
+                PAYTOMULTISIG = 2;      // only for change output
+                PAYTOOPRETURN = 3;      // op_return
+                PAYTOWITNESS = 4;       // only for change output
+                PAYTOP2SHWITNESS = 5;   // only for change output
+            }
+        }
+    }
+}

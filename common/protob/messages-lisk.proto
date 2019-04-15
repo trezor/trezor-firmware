@@ -1,0 +1,151 @@
+syntax = "proto2";
+package hw.trezor.messages.lisk;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageLisk";
+
+/**
+ * Request: Ask device for Lisk address corresponding to address_n path
+ * @start
+ * @next LiskAddress
+ * @next Failure
+ */
+message LiskGetAddress {
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+    optional bool show_display = 2; // Optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains Lisk address derived from device private seed
+ * @end
+ */
+message LiskAddress {
+    optional string address = 1;    // Lisk address
+}
+
+/**
+ * Request: Ask device for Lisk public key corresponding to address_n path
+ * @start
+ * @next LiskPublicKey
+ */
+message LiskGetPublicKey {
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+    optional bool show_display = 2; // Optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains Lisk public key derived from device private seed
+ * @end
+ */
+message LiskPublicKey {
+    optional bytes public_key = 1;  // Lisk public key
+}
+
+/**
+ * Request: Ask device to sign Lisk transaction
+ * @start
+ * @next LiskSignedTx
+ * @next Failure
+ */
+message LiskSignTx {
+    repeated uint32 address_n = 1;                  // BIP-32 path to derive the key from master node
+    optional LiskTransactionCommon transaction = 2; // Lisk transaction structure
+    /**
+     * Structure representing the common part for Lisk transactions
+     */
+    message LiskTransactionCommon {
+        optional LiskTransactionType type = 1;
+        optional uint64 amount = 2 [default=0];
+        optional uint64 fee = 3;
+        optional string recipient_id = 4;
+        optional bytes sender_public_key = 5;
+        optional bytes requester_public_key = 6;
+        optional bytes signature = 7;
+        optional uint32 timestamp = 8;
+        optional LiskTransactionAsset asset = 9;
+        /**
+         * Type of Lisk transaction
+         */
+        enum LiskTransactionType {
+            Transfer = 0;
+            RegisterSecondPassphrase = 1;
+            RegisterDelegate = 2;
+            CastVotes = 3;
+            RegisterMultisignatureAccount = 4;
+            CreateDapp = 5;
+            TransferIntoDapp = 6;
+            TransferOutOfDapp = 7;
+        }
+        /**
+         * Structure representing the asset field in the Lisk transaction
+         */
+        message LiskTransactionAsset {
+            optional LiskSignatureType signature = 1;
+            optional LiskDelegateType delegate = 2;
+            repeated string votes = 3;
+            optional LiskMultisignatureType multisignature = 4;
+            optional string data = 5;
+            /**
+             * Structure representing the signature field in the Lisk transaction asset field
+             */
+            message LiskSignatureType {
+                optional bytes public_key = 1;
+            }
+            /**
+             * Structure representing the delegate field in the Lisk transaction asset field
+             */
+            message LiskDelegateType {
+                optional string username  = 1;
+            }
+            /**
+             * Structure representing the multisignature field in the Lisk transaction asset field
+             */
+            message LiskMultisignatureType {
+                optional uint32 min = 1;
+                optional uint32 life_time = 2;
+                repeated string keys_group = 3;
+            }
+        }
+    }
+}
+
+/**
+ * Response: Contains Lisk transaction signature
+ * @end
+ */
+message LiskSignedTx {
+    optional bytes signature = 1;
+}
+
+/**
+ * Request: Ask device to sign message
+ * @start
+ * @next LiskMessageSignature
+ * @next Failure
+ */
+message LiskSignMessage {
+    repeated uint32 address_n = 1;
+    optional bytes message = 2;
+}
+
+/**
+ * Response: Signed message
+ * @end
+ */
+message LiskMessageSignature {
+    optional bytes public_key = 1;
+    optional bytes signature = 2;
+}
+
+/**
+ * Request: Ask device to verify message
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message LiskVerifyMessage {
+    optional bytes public_key = 1;
+    optional bytes signature = 2;
+    optional bytes message = 3;
+}

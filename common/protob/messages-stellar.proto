@@ -1,0 +1,222 @@
+syntax = "proto2";
+package hw.trezor.messages.stellar;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageStellar";
+
+/**
+ * Describes a Stellar asset
+ * @embed
+ */
+message StellarAssetType {
+    optional uint32 type = 1;       // 0 = native asset (XLM), 1 = alphanum 4, 2 = alphanum 12
+    optional string code = 2;       // for non-native assets, string describing the code
+    optional string issuer = 3;     // issuing address
+}
+
+/**
+ * Request: Address at the specified index
+ * @start
+ * @next StellarAddress
+ */
+message StellarGetAddress {
+    repeated uint32 address_n = 1;  // BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
+    optional bool show_display = 2; // optionally show on display before sending the result
+}
+
+/**
+ * Response: Address for the given index
+ * @end
+ */
+message StellarAddress {
+    optional string address = 1;    // Address in Stellar format (base32 of a pubkey with checksum)
+}
+
+/**
+ * Request: ask device to sign Stellar transaction
+ * @start
+ * @next StellarTxOpRequest
+ */
+message StellarSignTx {
+    repeated uint32 address_n = 2;          // BIP-32 path. For compatibility with other wallets, must be m/44'/148'/index'
+    optional string network_passphrase = 3; // passphrase for signing messages on the destination network
+    optional string source_account = 4;     // source account address
+    optional uint32 fee = 5;                // Fee (in stroops) for the transaction
+    optional uint64 sequence_number = 6;    // transaction sequence number
+    optional uint32 timebounds_start = 8;   // unix timestamp (client must truncate this to 32 bytes)
+    optional uint32 timebounds_end = 9;     // unix timestamp (client must truncate this to 32 bytes)
+    optional uint32 memo_type = 10;         // 0 = none, 1 = text, 2 = id, 3 = hash, 4 = return
+    optional string memo_text = 11;         // up to 28 characters (4 bytes are for length)
+    optional uint64 memo_id = 12;           // 8-byte uint64
+    optional bytes memo_hash = 13;          // 32 bytes representing a hash
+    optional uint32 num_operations = 14;    // number of operations in this transaction
+}
+
+/**
+ * Response: device is ready for client to send the next operation
+ * @next StellarPaymentOp
+ * @next StellarCreateAccountOp
+ * @next StellarPathPaymentOp
+ * @next StellarManageOfferOp
+ * @next StellarCreatePassiveOfferOp
+ * @next StellarSetOptionsOp
+ * @next StellarChangeTrustOp
+ * @next StellarAllowTrustOp
+ * @next StellarAccountMergeOp
+ * @next StellarManageDataOp
+ * @next StellarBumpSequenceOp
+ */
+message StellarTxOpRequest {
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarPaymentOp {
+    optional string source_account = 1;         // (optional) source account address
+    optional string destination_account = 2;    // destination account address
+    optional StellarAssetType asset = 3;        // asset involved in the operation
+    optional sint64 amount = 4;                 // amount of the given asset to pay
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarCreateAccountOp {
+    optional string source_account = 1;     // (optional) source account address
+    optional string new_account = 2;        // account address to create
+    optional sint64 starting_balance = 3;   // initial starting balance for the new account
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarPathPaymentOp {
+    optional string source_account = 1;         // (optional) source address
+    optional StellarAssetType send_asset = 2;
+    optional sint64 send_max = 3;
+    optional string destination_account = 4;
+    optional StellarAssetType destination_asset = 5;
+    optional sint64 destination_amount = 6;
+    repeated StellarAssetType paths = 7;
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarManageOfferOp {
+    optional string source_account = 1;             // (optional) source account address
+    optional StellarAssetType selling_asset = 2;
+    optional StellarAssetType buying_asset = 3;
+    optional sint64 amount = 4;
+    optional uint32 price_n = 5;                    // Price numerator
+    optional uint32 price_d = 6;                    // Price denominator
+    optional uint64 offer_id = 7;                   // Offer ID for updating an existing offer
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarCreatePassiveOfferOp {
+    optional string source_account = 1;             // (optional) source account address
+    optional StellarAssetType selling_asset = 2;
+    optional StellarAssetType buying_asset = 3;
+    optional sint64 amount = 4;
+    optional uint32 price_n = 5;                    // Price numerator
+    optional uint32 price_d = 6;                    // Price denominator
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarSetOptionsOp {
+    optional string source_account = 1;                 // (optional) source account address
+    optional string inflation_destination_account = 2;  // (optional) inflation destination address
+    optional uint32 clear_flags = 3;
+    optional uint32 set_flags = 4;
+    optional uint32 master_weight = 5;
+    optional uint32 low_threshold = 6;
+    optional uint32 medium_threshold = 7;
+    optional uint32 high_threshold = 8;
+    optional string home_domain = 9;
+    optional uint32 signer_type = 10;
+    optional bytes signer_key = 11;
+    optional uint32 signer_weight = 12;
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarChangeTrustOp {
+    optional string source_account = 1;     // (optional) source account address
+    optional StellarAssetType asset = 2;
+    optional uint64 limit = 3;
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarAllowTrustOp {
+    optional string source_account = 1;     // (optional) source account address
+    optional string trusted_account = 2;    // The account being allowed to hold the asset
+    optional uint32 asset_type = 3;         // 1 = 4-character, 2 = 12-character
+    optional string asset_code = 4;         // human-readable asset code
+    optional uint32 is_authorized = 5;
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarAccountMergeOp {
+    optional string source_account = 1;         // (optional) source account address
+    optional string destination_account = 2;    // destination account address
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarManageDataOp {
+    optional string source_account = 1; // (optional) source account address
+    optional string key = 2;
+    optional bytes value = 3;           // 64 bytes of arbitrary data
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarBumpSequenceOp {
+    optional string source_account = 1; // (optional) source account address
+    optional uint64 bump_to = 2;        // new sequence number
+}
+
+/**
+ * Response: signature for transaction
+ * @end
+ */
+message StellarSignedTx {
+    optional bytes public_key = 1;  // public key for the private key used to sign data
+    optional bytes signature = 2;   // signature suitable for sending to the Stellar network
+}
