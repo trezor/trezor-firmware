@@ -23,7 +23,7 @@
 
 #include "shamir.h"
 
-#define MAX_SHARE_COUNT 32
+#define MAX_SHARE_COUNT 16
 
 /// def interpolate(shares, x) -> bytes:
 ///     '''
