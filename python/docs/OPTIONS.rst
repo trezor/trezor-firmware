@@ -32,6 +32,8 @@ Use the following command to see all options:
     disable-passphrase              Disable passphrase.
     enable-passphrase               Enable passphrase.
     encrypt-keyvalue                Encrypt value by given key and path.
+    eos_get_public_key              Get EOS public key in base58 encoding.
+    eos_sign_transaction            Sign EOS transaction...
     ethereum-get-address            Get Ethereum address in hex encoding.
     ethereum-sign-message           Sign message with Ethereum address.
     ethereum-sign-tx                Sign (and optionally publish) Ethereum transaction.

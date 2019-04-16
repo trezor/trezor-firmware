@@ -37,6 +37,7 @@ from trezorlib import (
     cosi,
     debuglink,
     device,
+    eos,
     ethereum,
     exceptions,
     firmware,
@@ -1412,6 +1413,50 @@ def ethereum_sign_tx(
         return "Transaction published with ID: %s" % tx_hash
     else:
         return "Signed raw transaction:\n%s" % tx_hex
+
+
+#
+# EOS functions
+#
+
+
+@cli.command(help="Get Eos public key in base58 encoding.")
+@click.option(
+    "-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/194'/0'/0/0"
+)
+@click.option("-d", "--show-display", is_flag=True)
+@click.pass_obj
+def eos_get_public_key(connect, address, show_display):
+    client = connect()
+    address_n = tools.parse_path(address)
+    res = eos.get_public_key(client, address_n, show_display)
+    return "WIF: %s\nRaw: %s" % (str(res.wif_public_key), res.raw_public_key.hex())
+
+
+@cli.command(
+    help='Init sign (and optionally publish) EOS transaction. '
+)
+@click.option(
+    "-n",
+    "--address",
+    required=True,
+    help="BIP-32 path to source address, e.g., m/44'/194'/0'/0/0",
+)
+@click.option(
+    "-f",
+    "--file",
+    type=click.File("r"),
+    required=True,
+    help="Transaction in JSON format",
+)
+@click.pass_obj
+def eos_sign_transaction(connect, address, file):
+    client = connect()
+
+    transaction = json.load(file)
+    
+    address_n = tools.parse_path(address)
+    return eos.sign_tx(client, address_n, transaction)
 
 
 #
