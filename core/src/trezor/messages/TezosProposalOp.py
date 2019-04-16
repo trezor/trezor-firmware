@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import List
+    except ImportError:
+        List = None  # type: ignore
+
 
 class TezosProposalOp(p.MessageType):
 
@@ -9,19 +15,16 @@ class TezosProposalOp(p.MessageType):
         self,
         source: bytes = None,
         period: int = None,
-        bytes_in_next_field: int = None,
-        proposals: bytes = None,
+        proposals: List[bytes] = None,
     ) -> None:
         self.source = source
         self.period = period
-        self.bytes_in_next_field = bytes_in_next_field
-        self.proposals = proposals
+        self.proposals = proposals if proposals is not None else []
 
     @classmethod
     def get_fields(cls):
         return {
             1: ('source', p.BytesType, 0),
             2: ('period', p.UVarintType, 0),
-            3: ('bytes_in_next_field', p.UVarintType, 0),
-            4: ('proposals', p.BytesType, 0),
+            4: ('proposals', p.BytesType, p.FLAG_REPEATED),
         }

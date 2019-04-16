@@ -3,18 +3,16 @@ from micropython import const
 from trezor import wire
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
-from trezor.messages import TezosContractType
+from trezor.messages import TezosContractType, TezosBallotType
 from trezor.messages.TezosSignedTx import TezosSignedTx
 
 from apps.common import paths
 from apps.tezos import CURVE, helpers, layout
-from apps.tezos.writers import (
-    write_bool,
+from apps.common.writers import (
     write_bytes,
     write_uint8,
-    write_uint16,
-    write_uint32,
-    write_uint64,
+    write_uint16_be,
+    write_uint32_be,
 )
 
 PROPOSAL_LENGTH = const(32)
@@ -65,12 +63,7 @@ async def sign_tx(ctx, msg, keychain):
 
     elif msg.proposal is not None:
         proposed_protocols = _get_protocol_hash_from_msg(msg.proposal.proposals)
-
-        # byte count larger than PROPOSAL_LENGTH indicates more than 1 proposal, use paginated screen
-        if msg.proposal.bytes_in_next_field > PROPOSAL_LENGTH:
-            await layout.show_proposals(ctx, proposed_protocols)
-        else:
-            await layout.require_confirm_proposal(ctx, proposed_protocols)
+        await layout.show_proposals(ctx, proposed_protocols)
 
     elif msg.ballot is not None:
         proposed_protocol = _get_protocol_hash_from_msg(msg.ballot.proposal)
@@ -127,25 +120,20 @@ def _get_address_from_contract(address):
 
 
 def _get_protocol_hash_from_msg(proposals):
-    # split the proposals
-    proposal_list = list(
-        [
-            proposals[i : i + PROPOSAL_LENGTH]
-            for i in range(0, len(proposals), PROPOSAL_LENGTH)
-        ]
-    )
+    print(proposals)
+    if type(proposals) is not list:
+        return helpers.base58_encode_check(proposals, prefix="P")
     return [
-        helpers.base58_encode_check(proposal, prefix="P") for proposal in proposal_list
+        helpers.base58_encode_check(proposal, prefix="P") for proposal in proposals
     ]
 
 
-def _get_ballot(encoded_ballot):
-    encoded_ballot = int(encoded_ballot[0])
-    if encoded_ballot == 0:
+def _get_ballot(ballot):
+    if ballot == TezosBallotType.Yay:
         return "yay"
-    elif encoded_ballot == 1:
+    elif ballot == TezosBallotType.Nay:
         return "nay"
-    elif encoded_ballot == 2:
+    elif ballot == TezosBallotType.Pass:
         return "pass"
 
 
@@ -169,8 +157,8 @@ def _get_operation_bytes(w: bytearray, msg):
         _encode_common(w, msg.origination, "origination")
         write_bytes(w, msg.origination.manager_pubkey)
         _encode_zarith(w, msg.origination.balance)
-        _encode_bool(w, msg.origination.spendable)
-        _encode_bool(w, msg.origination.delegatable)
+        helpers.write_bool(w, msg.origination.spendable)
+        helpers.write_bool(w, msg.origination.delegatable)
         _encode_data_with_bool_prefix(w, msg.origination.delegate)
         _encode_data_with_bool_prefix(w, msg.origination.script)
     # delegation operation
@@ -198,19 +186,12 @@ def _encode_contract_id(w: bytearray, contract_id):
     write_bytes(w, contract_id.hash)
 
 
-def _encode_bool(w: bytearray, boolean):
-    if boolean:
-        write_uint8(w, 255)
-    else:
-        write_uint8(w, 0)
-
-
 def _encode_data_with_bool_prefix(w: bytearray, data):
     if data:
-        _encode_bool(w, True)
+        helpers.write_bool(w, True)
         write_bytes(w, data)
     else:
-        _encode_bool(w, False)
+        helpers.write_bool(w, False)
 
 
 def _encode_zarith(w: bytearray, num):
@@ -230,9 +211,10 @@ def _encode_proposal(w: bytearray, proposal):
 
     write_uint8(w, proposal_tag)
     write_bytes(w, proposal.source)
-    write_uint32(w, proposal.period)
-    write_uint32(w, proposal.bytes_in_next_field)
-    write_bytes(w, proposal.proposals)
+    write_uint32_be(w, proposal.period)
+    write_uint32_be(w, _get_proposals_bytecount(proposal.proposals))
+    for proposal_hash in proposal.proposals:
+        write_bytes(w, proposal_hash)
 
 
 def _encode_ballot(w: bytearray, ballot):
@@ -240,6 +222,10 @@ def _encode_ballot(w: bytearray, ballot):
 
     write_uint8(w, ballot_tag)
     write_bytes(w, ballot.source)
-    write_uint32(w, ballot.period)
+    write_uint32_be(w, ballot.period)
     write_bytes(w, ballot.proposal)
-    write_bytes(w, ballot.ballot)
+    write_uint8(w, ballot.ballot)
+
+
+def _get_proposals_bytecount(proposals):
+    return len(proposals) * PROPOSAL_LENGTH

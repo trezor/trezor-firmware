@@ -126,19 +126,24 @@ message TezosSignTx {
      * Structure representing information for proposal
      */
     message TezosProposalOp {
-        optional bytes source = 1;
+        optional bytes source = 1;                  //Contains only public_key_hash, not to be confused with TezosContractID
         optional uint64 period = 2;
-        optional uint64 bytes_in_next_field = 3;
-        optional bytes proposals = 4;
+        repeated bytes proposals = 4;
     }
     /**
      * Structure representing information for ballot
      */
     message TezosBallotOp {
-        optional bytes source = 1;
+        optional bytes source = 1;                  //Contains only public_key_hash, not to be confused with TezosContractID
         optional uint64 period = 2;
         optional bytes proposal = 3;
-        optional bytes ballot = 4;
+        optional TezosBallotType ballot = 4;
+
+        enum TezosBallotType {
+            Yay = 0;
+            Nay = 1;
+            Pass = 2;
+        }
     }
 }
 

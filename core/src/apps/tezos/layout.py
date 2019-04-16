@@ -79,18 +79,11 @@ def format_tezos_amount(value):
     return formatted_value + " XTZ"
 
 
-async def require_confirm_proposal(ctx, proposals):
-    text = Text("Submit proposal", ui.ICON_SEND, icon_color=ui.PURPLE)
-    text.bold("Proposal:")
-    text.mono(*split_proposal(proposals[0]))
-    await require_confirm(ctx, text, ButtonRequestType.SignTx)
-
-
 async def require_confirm_ballot(ctx, proposal, ballot):
     text = Text("Submit ballot", ui.ICON_SEND, icon_color=ui.PURPLE)
     text.bold("Ballot: {}".format(ballot))
     text.bold("Proposal:")
-    text.mono(*split_proposal(proposal[0]))
+    text.mono(*split_proposal(proposal))
     await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
@@ -98,15 +91,15 @@ async def require_confirm_ballot(ctx, proposal, ballot):
 async def show_proposals(ctx, proposals):
     first_page = const(0)
     pages = proposals
+    title = "Submit proposals" if len(proposals) > 1 else "Submit proposal"
 
-    paginator = paginate(show_proposal_page, len(pages), first_page, pages)
+    paginator = paginate(show_proposal_page, len(pages), first_page, pages, title)
     return await ctx.wait(paginator)
 
 
 @ui.layout
-async def show_proposal_page(page: int, page_count: int, pages: list):
-
-    text = Text("Submit proposals", ui.ICON_SEND, icon_color=ui.PURPLE)
+async def show_proposal_page(page: int, page_count: int, pages: list, title: str):
+    text = Text(title, ui.ICON_SEND, icon_color=ui.PURPLE)
     text.bold("Proposal {}: ".format(page + 1))
     text.mono(*split_proposal(pages[page]))
     content = Scrollpage(text, page, page_count)
