@@ -1,3 +1,5 @@
+from micropython import const
+
 from trezor import wire
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
@@ -5,8 +7,17 @@ from trezor.messages import TezosContractType
 from trezor.messages.TezosSignedTx import TezosSignedTx
 
 from apps.common import paths
-from apps.common.writers import write_bytes, write_uint8
 from apps.tezos import CURVE, helpers, layout
+from apps.tezos.writers import (
+    write_bool,
+    write_bytes,
+    write_uint8,
+    write_uint16,
+    write_uint32,
+    write_uint64,
+)
+
+PROPOSAL_LENGTH = const(32)
 
 
 async def sign_tx(ctx, msg, keychain):
@@ -51,6 +62,20 @@ async def sign_tx(ctx, msg, keychain):
             await layout.require_confirm_register_delegate(
                 ctx, source, msg.delegation.fee
             )
+
+    elif msg.proposal is not None:
+        proposed_protocols = _get_protocol_hash_from_msg(msg.proposal.proposals)
+
+        # byte count larger than PROPOSAL_LENGTH indicates more than 1 proposal, use paginated screen
+        if msg.proposal.bytes_in_next_field > PROPOSAL_LENGTH:
+            await layout.show_proposals(ctx, proposed_protocols)
+        else:
+            await layout.require_confirm_proposal(ctx, proposed_protocols)
+
+    elif msg.ballot is not None:
+        proposed_protocol = _get_protocol_hash_from_msg(msg.ballot.proposal)
+        submitted_ballot = _get_ballot(msg.ballot.ballot)
+        await layout.require_confirm_ballot(ctx, proposed_protocol, submitted_ballot)
 
     else:
         raise wire.DataError("Invalid operation")
@@ -101,11 +126,34 @@ def _get_address_from_contract(address):
     raise wire.DataError("Invalid contract type")
 
 
+def _get_protocol_hash_from_msg(proposals):
+    # split the proposals
+    proposal_list = list(
+        [
+            proposals[i : i + PROPOSAL_LENGTH]
+            for i in range(0, len(proposals), PROPOSAL_LENGTH)
+        ]
+    )
+    return [
+        helpers.base58_encode_check(proposal, prefix="P") for proposal in proposal_list
+    ]
+
+
+def _get_ballot(encoded_ballot):
+    encoded_ballot = int(encoded_ballot[0])
+    if encoded_ballot == 0:
+        return "yay"
+    elif encoded_ballot == 1:
+        return "nay"
+    elif encoded_ballot == 2:
+        return "pass"
+
+
 def _get_operation_bytes(w: bytearray, msg):
     write_bytes(w, msg.branch)
 
     # when the account sends first operation in lifetime,
-    # we need to reveal its publickey
+    # we need to reveal its public key
     if msg.reveal is not None:
         _encode_common(w, msg.reveal, "reveal")
         write_bytes(w, msg.reveal.public_key)
@@ -129,6 +177,10 @@ def _get_operation_bytes(w: bytearray, msg):
     elif msg.delegation is not None:
         _encode_common(w, msg.delegation, "delegation")
         _encode_data_with_bool_prefix(w, msg.delegation.delegate)
+    elif msg.proposal is not None:
+        _encode_proposal(w, msg.proposal)
+    elif msg.ballot is not None:
+        _encode_ballot(w, msg.ballot)
 
 
 def _encode_common(w: bytearray, operation, str_operation):
@@ -171,3 +223,23 @@ def _encode_zarith(w: bytearray, num):
             break
 
         write_uint8(w, 128 | byte)
+
+
+def _encode_proposal(w: bytearray, proposal):
+    proposal_tag = 5
+
+    write_uint8(w, proposal_tag)
+    write_bytes(w, proposal.source)
+    write_uint32(w, proposal.period)
+    write_uint32(w, proposal.bytes_in_next_field)
+    write_bytes(w, proposal.proposals)
+
+
+def _encode_ballot(w: bytearray, ballot):
+    ballot_tag = 6
+
+    write_uint8(w, ballot_tag)
+    write_bytes(w, ballot.source)
+    write_uint32(w, ballot.period)
+    write_bytes(w, ballot.proposal)
+    write_bytes(w, ballot.ballot)
