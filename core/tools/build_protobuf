@@ -11,6 +11,7 @@ rm -f ../src/trezor/messages/[A-Z]*.py
     ../vendor/trezor-common/protob/messages-common.proto \
     ../vendor/trezor-common/protob/messages-crypto.proto \
     ../vendor/trezor-common/protob/messages-debug.proto \
+    ../vendor/trezor-common/protob/messages-eos.proto \
     ../vendor/trezor-common/protob/messages-ethereum.proto \
     ../vendor/trezor-common/protob/messages-lisk.proto \
     ../vendor/trezor-common/protob/messages-management.proto \

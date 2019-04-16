@@ -85,8 +85,19 @@ static int ethereum_is_canonical(uint8_t v, uint8_t signature[64]) {
   return (v & 2) == 0;
 }
 
+static int eos_is_canonical(uint8_t v, uint8_t signature[64])
+{
+    (void) v;
+    return !(signature[0] & 0x80) 
+        && !(signature[0] == 0 
+        && !(signature[1] & 0x80)) 
+        && !(signature[32] & 0x80) 
+        && !(signature[32] == 0 && !(signature[33] & 0x80));
+}
+
 enum {
-  CANONICAL_SIG_ETHEREUM = 1,
+    CANONICAL_SIG_ETHEREUM = 1,
+    CANONICAL_SIG_EOS = 2,
 };
 
 /// def sign(secret_key: bytes, digest: bytes, compressed: bool = True,
@@ -105,6 +116,9 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign(size_t n_args,
   switch (canonical) {
     case CANONICAL_SIG_ETHEREUM:
       is_canonical = ethereum_is_canonical;
+      break;
+    case CANONICAL_SIG_EOS:
+      is_canonical = eos_is_canonical;
       break;
   }
   if (sk.len != 32) {
@@ -236,6 +250,8 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_secp256k1_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_multiply_obj)},
     {MP_ROM_QSTR(MP_QSTR_CANONICAL_SIG_ETHEREUM),
      MP_OBJ_NEW_SMALL_INT(CANONICAL_SIG_ETHEREUM)},
+    {MP_ROM_QSTR(MP_QSTR_CANONICAL_SIG_EOS), 
+     MP_OBJ_NEW_SMALL_INT(CANONICAL_SIG_EOS)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_secp256k1_globals,
                             mod_trezorcrypto_secp256k1_globals_table);
