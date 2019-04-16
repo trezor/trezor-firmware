@@ -8307,6 +8307,30 @@ START_TEST(test_rc4_rfc6229) {
 }
 END_TEST
 
+START_TEST(test_compress_coords) {
+  const ecdsa_curve *curve = &secp256k1;
+  curve_point expected_coords;
+
+  random_reseed(time(NULL));
+  bignum256 k = {0};
+  while (bn_is_zero(&k)) {
+    for (int i = 0; i < 8; i++) k.val[i] = random32();
+  }
+
+  point_multiply(curve, &k, &curve->G, &expected_coords);
+
+  uint8_t compress[33] = {0};
+  compress_coords(&expected_coords, compress);
+
+  bignum256 x = {0}, y = {0};
+  bn_read_be(compress + 1, &x);
+  uncompress_coords(curve, compress[0], &x, &y);
+
+  ck_assert(bn_is_equal(&expected_coords.x, &x));
+  ck_assert(bn_is_equal(&expected_coords.y, &y));
+}
+END_TEST
+
 static int my_strncasecmp(const char *s1, const char *s2, size_t n) {
   size_t i = 0;
   while (i < n) {
@@ -8578,6 +8602,10 @@ Suite *test_suite(void) {
 
   tc = tcase_create("cashaddr");
   tcase_add_test(tc, test_cashaddr);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("compress_coords");
+  tcase_add_test(tc, test_compress_coords);
   suite_add_tcase(s, tc);
 
 #if USE_CARDANO
