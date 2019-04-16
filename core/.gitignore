@@ -1,12 +1,6 @@
-.cache/
-*.pyc
-.sconsign.dblite
-.vscode/
-.mypy_cache/
-__pycache__/
-_attic/
 build/
 build-docker/
-emu.config
+.sconsign.dblite
 compile_commands.json
+emu.config
 tests/trezor_monero_tests{,.log}
