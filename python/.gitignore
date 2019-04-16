@@ -4,17 +4,9 @@ MANIFEST
 /build
 /dist
 /trezor.egg-info
-*.pyc
-__pycache__
 *.bin
 *.py.cache
 /.tox
-/.cache
-/.pytest_cache
-/.mypy_cache
-
-/.idea
-/.vscode
 
 /trezorlib/coins.json
 /trezorlib/messages/*
