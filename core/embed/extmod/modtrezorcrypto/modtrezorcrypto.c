@@ -50,6 +50,7 @@
 #include "modtrezorcrypto-sha3-256.h"
 #include "modtrezorcrypto-sha3-512.h"
 #include "modtrezorcrypto-sha512.h"
+#include "modtrezorcrypto-shamir.h"
 
 STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorcrypto)},
@@ -89,6 +90,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_Sha3_256_type)},
     {MP_ROM_QSTR(MP_QSTR_sha3_512),
      MP_ROM_PTR(&mod_trezorcrypto_Sha3_512_type)},
+    {MP_ROM_QSTR(MP_QSTR_shamir), MP_ROM_PTR(&mod_trezorcrypto_shamir_module)},
 };
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorcrypto_globals,
                             mp_module_trezorcrypto_globals_table);
