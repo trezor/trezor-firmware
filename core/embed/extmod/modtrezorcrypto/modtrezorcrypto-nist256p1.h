@@ -122,14 +122,14 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_verify(mp_obj_t public_key,
   mp_get_buffer_raise(signature, &sig, MP_BUFFER_READ);
   mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
   if (pk.len != 33 && pk.len != 65) {
-    mp_raise_ValueError("Invalid length of public key");
+    return mp_const_false;
   }
   if (sig.len != 64 && sig.len != 65) {
-    mp_raise_ValueError("Invalid length of signature");
+    return mp_const_false;
   }
   int offset = sig.len - 64;
   if (dig.len != 32) {
-    mp_raise_ValueError("Invalid length of digest");
+    return mp_const_false;
   }
   return mp_obj_new_bool(
       0 == ecdsa_verify_digest(&nist256p1, (const uint8_t *)pk.buf,
@@ -142,7 +142,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_nist256p1_verify_obj,
 /// def verify_recover(signature: bytes, digest: bytes) -> bytes:
 ///     '''
 ///     Uses signature of the digest to verify the digest and recover the public
-///     key. Returns public key on success, None on failure.
+///     key. Returns public key on success, None if the signature is invalid.
 ///     '''
 STATIC mp_obj_t mod_trezorcrypto_nist256p1_verify_recover(mp_obj_t signature,
                                                           mp_obj_t digest) {
@@ -150,14 +150,14 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_verify_recover(mp_obj_t signature,
   mp_get_buffer_raise(signature, &sig, MP_BUFFER_READ);
   mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
   if (sig.len != 65) {
-    mp_raise_ValueError("Invalid length of signature");
+    return mp_const_none;
   }
   if (dig.len != 32) {
-    mp_raise_ValueError("Invalid length of digest");
+    return mp_const_none;
   }
   uint8_t recid = ((const uint8_t *)sig.buf)[0] - 27;
   if (recid >= 8) {
-    mp_raise_ValueError("Invalid recid in signature");
+    return mp_const_none;
   }
   bool compressed = (recid >= 4);
   recid &= 3;
