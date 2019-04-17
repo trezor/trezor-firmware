@@ -65,6 +65,7 @@
 #include "secp256k1.h"
 #include "sha2.h"
 #include "sha3.h"
+#include "shamir.h"
 
 #if VALGRIND
 /*
@@ -5057,6 +5058,75 @@ START_TEST(test_mnemonic_to_entropy) {
 }
 END_TEST
 
+START_TEST(test_shamir) {
+#define SHAMIR_MAX_COUNT 16
+  static const struct {
+    const uint8_t result[SHAMIR_MAX_LEN];
+    uint8_t result_index;
+    const uint8_t share_indices[SHAMIR_MAX_COUNT];
+    const uint8_t share_values[SHAMIR_MAX_COUNT][SHAMIR_MAX_LEN];
+    uint8_t share_count;
+    size_t len;
+  } vectors[] = {{{7,   151, 168, 57,  186, 104, 218, 21, 209, 96,  106,
+                   152, 252, 35,  210, 208, 43,  47,  13, 21,  142, 122,
+                   24,  42,  149, 192, 95,  24,  240, 24, 148, 110},
+                  0,
+                  {2},
+                  {
+                      {7,   151, 168, 57,  186, 104, 218, 21, 209, 96,  106,
+                       152, 252, 35,  210, 208, 43,  47,  13, 21,  142, 122,
+                       24,  42,  149, 192, 95,  24,  240, 24, 148, 110},
+                  },
+                  1,
+                  32},
+
+                 {{53},
+                  255,
+                  {14, 10, 1, 13, 8, 7, 3, 11, 9, 4, 6, 0, 5, 12, 15, 2},
+                  {
+                      {114},
+                      {41},
+                      {116},
+                      {67},
+                      {198},
+                      {109},
+                      {232},
+                      {39},
+                      {90},
+                      {241},
+                      {156},
+                      {75},
+                      {46},
+                      {181},
+                      {144},
+                      {175},
+                  },
+                  16,
+                  1},
+
+                 {{163, 120, 30, 243, 179, 172, 196, 137, 119, 17},
+                  3,
+                  {1, 0, 12},
+                  {{80, 180, 198, 131, 111, 251, 45, 181, 2, 242},
+                   {121, 9, 79, 98, 132, 164, 9, 165, 19, 230},
+                   {86, 52, 173, 138, 189, 223, 122, 102, 248, 157}},
+                  3,
+                  10}};
+
+  for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); ++i) {
+    uint8_t result[SHAMIR_MAX_LEN];
+    const uint8_t *share_values[SHAMIR_MAX_COUNT];
+    for (size_t j = 0; j < vectors[i].share_count; ++j) {
+      share_values[j] = vectors[i].share_values[j];
+    }
+    shamir_interpolate(result, vectors[i].result_index,
+                       vectors[i].share_indices, share_values,
+                       vectors[i].share_count, vectors[i].len);
+    ck_assert_mem_eq(result, vectors[i].result, vectors[i].len);
+  }
+}
+END_TEST
+
 START_TEST(test_address) {
   char address[36];
   uint8_t pub_key[65];
@@ -8479,6 +8549,10 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_mnemonic);
   tcase_add_test(tc, test_mnemonic_check);
   tcase_add_test(tc, test_mnemonic_to_entropy);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("shamir");
+  tcase_add_test(tc, test_shamir);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("pubkey_validity");
