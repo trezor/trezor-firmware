@@ -147,13 +147,13 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_verify(mp_obj_t public_key,
   mp_get_buffer_raise(signature, &sig, MP_BUFFER_READ);
   mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
   if (pk.len != 32) {
-    mp_raise_ValueError("Invalid length of public key");
+    return mp_const_false;
   }
   if (sig.len != 64) {
-    mp_raise_ValueError("Invalid length of signature");
+    return mp_const_false;
   }
   if (msg.len == 0) {
-    mp_raise_ValueError("Empty data to verify");
+    return mp_const_false;
   }
   return (0 == ed25519_sign_open(msg.buf, msg.len,
                                  *(const ed25519_public_key *)pk.buf,
