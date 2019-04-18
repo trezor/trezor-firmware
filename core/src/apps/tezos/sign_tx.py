@@ -63,7 +63,7 @@ async def sign_tx(ctx, msg, keychain):
 
     elif msg.proposal is not None:
         proposed_protocols = [_get_protocol_hash(p) for p in msg.proposal.proposals]
-        await layout.show_proposals(ctx, proposed_protocols)
+        await layout.require_confirm_proposals(ctx, proposed_protocols)
 
     elif msg.ballot is not None:
         proposed_protocol = _get_protocol_hash(msg.ballot.proposal)

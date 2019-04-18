@@ -1,8 +1,9 @@
 from micropython import const
 
 from trezor import ui, wire
-from trezor.messages import ButtonRequestType
-from trezor.ui.confirm import CANCELLED, CONFIRMED, ConfirmDialog
+from trezor.messages import ButtonRequestType, MessageType
+from trezor.messages.ButtonRequest import ButtonRequest
+from trezor.ui.confirm import CANCELLED, ConfirmDialog
 from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
 from trezor.ui.text import Text
 from trezor.utils import chunks, format_amount
@@ -88,7 +89,8 @@ async def require_confirm_ballot(ctx, proposal, ballot):
 
 
 # use, when there are more then one proposals in one operation
-async def show_proposals(ctx, proposals):
+async def require_confirm_proposals(ctx, proposals):
+    await ctx.call(ButtonRequest(code=ButtonRequestType.SignTx), MessageType.ButtonAck)
     first_page = const(0)
     pages = proposals
     title = "Submit proposals" if len(proposals) > 1 else "Submit proposal"
