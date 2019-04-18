@@ -45,6 +45,8 @@ def validate_full_path(path: list) -> bool:
     """
     Validates derivation path to equal 44'/1729'/a',
     where `a` is an account index from 0 to 1 000 000.
+    Additional component added to allow ledger migration
+    44'/1729'/0'/b' where `b` is an account index from 0 to 1 000 000
     """
     length = len(path)
     print(path)
