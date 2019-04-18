@@ -206,7 +206,6 @@ class TestMsgTezosSignTx(TrezorTest):
             time.sleep(1)
         self.client.debug.press_yes()
 
-
     def test_tezos_sign_tx_proposal(self):
         self.setup_mnemonic_allallall()
 

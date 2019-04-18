@@ -3,17 +3,17 @@ from micropython import const
 from trezor import wire
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
-from trezor.messages import TezosContractType, TezosBallotType
+from trezor.messages import TezosBallotType, TezosContractType
 from trezor.messages.TezosSignedTx import TezosSignedTx
 
 from apps.common import paths
-from apps.tezos import CURVE, helpers, layout
 from apps.common.writers import (
     write_bytes,
     write_uint8,
     write_uint16_be,
     write_uint32_be,
 )
+from apps.tezos import CURVE, helpers, layout
 
 PROPOSAL_LENGTH = const(32)
 
