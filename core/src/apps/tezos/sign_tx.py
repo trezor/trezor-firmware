@@ -62,11 +62,11 @@ async def sign_tx(ctx, msg, keychain):
             )
 
     elif msg.proposal is not None:
-        proposed_protocols = _get_protocol_hash_from_msg(msg.proposal.proposals)
+        proposed_protocols = [_get_protocol_hash(p) for p in msg.proposal.proposals]
         await layout.show_proposals(ctx, proposed_protocols)
 
     elif msg.ballot is not None:
-        proposed_protocol = _get_protocol_hash_from_msg(msg.ballot.proposal)
+        proposed_protocol = _get_protocol_hash(msg.ballot.proposal)
         submitted_ballot = _get_ballot(msg.ballot.ballot)
         await layout.require_confirm_ballot(ctx, proposed_protocol, submitted_ballot)
 
@@ -119,13 +119,8 @@ def _get_address_from_contract(address):
     raise wire.DataError("Invalid contract type")
 
 
-def _get_protocol_hash_from_msg(proposals):
-    print(proposals)
-    if type(proposals) is not list:
-        return helpers.base58_encode_check(proposals, prefix="P")
-    return [
-        helpers.base58_encode_check(proposal, prefix="P") for proposal in proposals
-    ]
+def _get_protocol_hash(proposal):
+    return helpers.base58_encode_check(proposal, prefix="P")
 
 
 def _get_ballot(ballot):
@@ -212,7 +207,7 @@ def _encode_proposal(w: bytearray, proposal):
     write_uint8(w, proposal_tag)
     write_bytes(w, proposal.source)
     write_uint32_be(w, proposal.period)
-    write_uint32_be(w, _get_proposals_bytecount(proposal.proposals))
+    write_uint32_be(w, len(proposal.proposals) * PROPOSAL_LENGTH)
     for proposal_hash in proposal.proposals:
         write_bytes(w, proposal_hash)
 
@@ -225,7 +220,3 @@ def _encode_ballot(w: bytearray, ballot):
     write_uint32_be(w, ballot.period)
     write_bytes(w, ballot.proposal)
     write_uint8(w, ballot.ballot)
-
-
-def _get_proposals_bytecount(proposals):
-    return len(proposals) * PROPOSAL_LENGTH
