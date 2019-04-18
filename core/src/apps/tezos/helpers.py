@@ -49,7 +49,6 @@ def validate_full_path(path: list) -> bool:
     44'/1729'/0'/b' where `b` is an account index from 0 to 1 000 000
     """
     length = len(path)
-    print(path)
     if length < 3 or length > 4:
         return False
     if path[0] != 44 | HARDENED:
