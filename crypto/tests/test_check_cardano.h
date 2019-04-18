@@ -5,82 +5,80 @@ START_TEST(test_ed25519_cardano_sign_vectors) {
   ed25519_secret_key secret_key_extension;
   ed25519_signature signature;
 
-  static const char
-      *vectors[] =
-          {
-              "6065a956b1b34145c4416fdc3ba3276801850e91a77a31a7be782463288aea5"
-              "3",  // private key
-              "60ba6e25b1a02157fb69c5d1d7b96c4619736e545447069a6a6f0ba90844bc8"
-              "e",  // private key extension
-              "64b20fa082b3143d6b5eed42c6ef63f99599d0888afe060620abc1b319935fe"
-              "1",  // public key
-              "45b1a75fe3119e13c6f60ab9ba674b42f946fdc558e07c83dfa0751c2eba69c7"
-              "9331bd8a4a975662b23628a438a0eba76367e44c12ca91b39ec59063f860f10"
-              "d",  // signature
+  static const char *vectors[] = {
+      "6065a956b1b34145c4416fdc3ba3276801850e91a77a31a7be782463288aea5"
+      "3",  // private key
+      "60ba6e25b1a02157fb69c5d1d7b96c4619736e545447069a6a6f0ba90844bc8"
+      "e",  // private key extension
+      "64b20fa082b3143d6b5eed42c6ef63f99599d0888afe060620abc1b319935fe"
+      "1",  // public key
+      "45b1a75fe3119e13c6f60ab9ba674b42f946fdc558e07c83dfa0751c2eba69c7"
+      "9331bd8a4a975662b23628a438a0eba76367e44c12ca91b39ec59063f860f10"
+      "d",  // signature
 
-              "e7d27516538403a53a8b041656a3f570909df641a0ab811fe7d87c9ba02a830"
-              "c",  // private key
-              "794a2c54ad8b525b781773c87d38cbf4197636bc427a9d551368286fe4c294a"
-              "4",  // private key extension
-              "95bb82ffd5707716bc65170ab4e8dafeed90fbe0ce9258713b7751e962d931d"
-              "f",  // public key
-              "f2c9171782e7df7665126ac545ae53b05964b0160536efdb545e2460dbbec2b1"
-              "9ec6b338b8f1bf4dfee94360ed024b115e37b1d7e6f3f9ae4beb79539428560"
-              "f",  // signature
+      "e7d27516538403a53a8b041656a3f570909df641a0ab811fe7d87c9ba02a830"
+      "c",  // private key
+      "794a2c54ad8b525b781773c87d38cbf4197636bc427a9d551368286fe4c294a"
+      "4",  // private key extension
+      "95bb82ffd5707716bc65170ab4e8dafeed90fbe0ce9258713b7751e962d931d"
+      "f",  // public key
+      "f2c9171782e7df7665126ac545ae53b05964b0160536efdb545e2460dbbec2b1"
+      "9ec6b338b8f1bf4dfee94360ed024b115e37b1d7e6f3f9ae4beb79539428560"
+      "f",  // signature
 
-              "9b5a3d9a4c60bcd49bb64b72c082b164314d0f61d842f2575fd1d4fb30a28a0"
-              "c",  // private key
-              "b093e376f41eb7bf80abcd0073a52455d25b5d21815bc758e5f6f81536aedeb"
-              "b",  // private key extension
-              "79fc8154554b97e4c56ef2f9dbb4c1421ff19509688931a1e964bda5dec0f19"
-              "f",  // public key
-              "2ba1439ae648a7e8da7c9ab1ee6da94fd4ebe37abd0978306e8fba2afa8f111a"
-              "88a993dbf008bedae9167f4f68409e4c9ddaf02cba12418447b1848907ad800"
-              "f",  // signature
+      "9b5a3d9a4c60bcd49bb64b72c082b164314d0f61d842f2575fd1d4fb30a28a0"
+      "c",  // private key
+      "b093e376f41eb7bf80abcd0073a52455d25b5d21815bc758e5f6f81536aedeb"
+      "b",  // private key extension
+      "79fc8154554b97e4c56ef2f9dbb4c1421ff19509688931a1e964bda5dec0f19"
+      "f",  // public key
+      "2ba1439ae648a7e8da7c9ab1ee6da94fd4ebe37abd0978306e8fba2afa8f111a"
+      "88a993dbf008bedae9167f4f68409e4c9ddaf02cba12418447b1848907ad800"
+      "f",  // signature
 
-              "52e0c98aa600cfdcd1ff28fcda5227ed87063f4a98547a78b771052cf102b40"
-              "c",  // private key
-              "6c18d9f8075b1a6a1833540607479bd58b7beb8a83d2bb01ca7ae02452a2580"
-              "3",  // private key extension
-              "dc907c7c06e6314eedd9e18c9f6c6f9cc4e205fb1c70da608234c319f1f7b0d"
-              "6",  // public key
-              "0cd34f84e0d2fcb1800bdb0e869b9041349955ced66aedbe6bda187ebe8d36a6"
-              "2a05b39647e92fcc42aa7a7368174240afba08b8c81f981a22f942d6bd78160"
-              "2",  // signature
+      "52e0c98aa600cfdcd1ff28fcda5227ed87063f4a98547a78b771052cf102b40"
+      "c",  // private key
+      "6c18d9f8075b1a6a1833540607479bd58b7beb8a83d2bb01ca7ae02452a2580"
+      "3",  // private key extension
+      "dc907c7c06e6314eedd9e18c9f6c6f9cc4e205fb1c70da608234c319f1f7b0d"
+      "6",  // public key
+      "0cd34f84e0d2fcb1800bdb0e869b9041349955ced66aedbe6bda187ebe8d36a6"
+      "2a05b39647e92fcc42aa7a7368174240afba08b8c81f981a22f942d6bd78160"
+      "2",  // signature
 
-              "11fd6462a3a92b35c22703f6f1c124ddcf36b7c2b09cc2784f320e1cfa12ec0"
-              "4",  // private key
-              "c2785803c61c46aeca192a1bb1b7b20a8c4cc7fa01db57fc5d1d8a547340235"
-              "2",  // private key extension
-              "839775a41876e328986aa26168958bba1176e67819b357eea84afceab8b1db7"
-              "8",  // public key
-              "e41f73db2f8d2896a687802b2be76b7cabb73dfbb4891494883a0cbd9bbb9e5f"
-              "9d3e14d2d0b06c6674333508496db660936737c0efd9511514147dac79fa490"
-              "5",  // signature
+      "11fd6462a3a92b35c22703f6f1c124ddcf36b7c2b09cc2784f320e1cfa12ec0"
+      "4",  // private key
+      "c2785803c61c46aeca192a1bb1b7b20a8c4cc7fa01db57fc5d1d8a547340235"
+      "2",  // private key extension
+      "839775a41876e328986aa26168958bba1176e67819b357eea84afceab8b1db7"
+      "8",  // public key
+      "e41f73db2f8d2896a687802b2be76b7cabb73dfbb4891494883a0cbd9bbb9e5f"
+      "9d3e14d2d0b06c6674333508496db660936737c0efd9511514147dac79fa490"
+      "5",  // signature
 
-              "5b1e5cad02274ba461f4708d8598d3497faf8fe3e894a379573aa6ac3a03e50"
-              "5",  // private key
-              "ba179d2e3c67aabb486c48d16002b51ad32eab434c738a1550962313b07098c"
-              "d",  // private key extension
-              "75eb8d197ec8627c85af88e66aa1e49065dd8ac98ed8991db52ece01635dfb7"
-              "6",  // public key
-              "631015357cee3051116b4c2ff4d1c5beb13b6e5023635aa1eeb0563cadf0d4fb"
-              "c10bd5e31b4a4220c67875558c41b5cc0328104ae39cc7ff20ff0c2bda59890"
-              "6",  // signature
+      "5b1e5cad02274ba461f4708d8598d3497faf8fe3e894a379573aa6ac3a03e50"
+      "5",  // private key
+      "ba179d2e3c67aabb486c48d16002b51ad32eab434c738a1550962313b07098c"
+      "d",  // private key extension
+      "75eb8d197ec8627c85af88e66aa1e49065dd8ac98ed8991db52ece01635dfb7"
+      "6",  // public key
+      "631015357cee3051116b4c2ff4d1c5beb13b6e5023635aa1eeb0563cadf0d4fb"
+      "c10bd5e31b4a4220c67875558c41b5cc0328104ae39cc7ff20ff0c2bda59890"
+      "6",  // signature
 
-              "624b47150f58dfa44284fbc63c9f99b9b79f808c4955a461f0e2be44eb0be50"
-              "d",  // private key
-              "097aa006d694b165ef37cf23562e5967c96e49255d2f20faae478dee83aa5b0"
-              "2",  // private key extension
-              "0588589cd9b51dfc028cf225674069cbe52e0e70deb02dc45b79b26ee3548b0"
-              "0",  // public key
-              "1de1d275428ba9491a433cd473cd076c027f61e7a8b5391df9dea5cb4bc88d8a"
-              "57b095906a30b13e68259851a8dd3f57b6f0ffa37a5d3ffc171240f2d404f90"
-              "1",  // signature
+      "624b47150f58dfa44284fbc63c9f99b9b79f808c4955a461f0e2be44eb0be50"
+      "d",  // private key
+      "097aa006d694b165ef37cf23562e5967c96e49255d2f20faae478dee83aa5b0"
+      "2",  // private key extension
+      "0588589cd9b51dfc028cf225674069cbe52e0e70deb02dc45b79b26ee3548b0"
+      "0",  // public key
+      "1de1d275428ba9491a433cd473cd076c027f61e7a8b5391df9dea5cb4bc88d8a"
+      "57b095906a30b13e68259851a8dd3f57b6f0ffa37a5d3ffc171240f2d404f90"
+      "1",  // signature
 
-              0,
-              0,
-          };
+      0,
+      0,
+  };
 
   const char **test_data;
   test_data = vectors;

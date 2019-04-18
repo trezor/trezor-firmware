@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Fetch information about coins and tokens supported by Trezor and update it in coins_details.json."""
-import os
-import time
 import json
 import logging
-import requests
+import os
 import sys
-import coin_info
+import time
 
 import click
+import requests
+
+import coin_info
 
 LOG = logging.getLogger(__name__)
 
@@ -149,7 +150,7 @@ def summary(coins, api_key):
     try:
         ret = coinmarketcap_call("global-metrics/quotes/latest", api_key)
         total_marketcap = int(ret["data"]["quote"]["USD"]["total_market_cap"])
-    except:
+    except Exception:
         pass
 
     return dict(

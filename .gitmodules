@@ -23,6 +23,7 @@
 [submodule "legacy/vendor/nanopb"]
 	path = legacy/vendor/nanopb
 	url = https://github.com/nanopb/nanopb.git
+	ignore = untracked
 [submodule "legacy/vendor/QR-Code-generator"]
 	path = legacy/vendor/QR-Code-generator
 	url = https://github.com/nayuki/QR-Code-generator.git

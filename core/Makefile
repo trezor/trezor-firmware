@@ -39,7 +39,7 @@ CFLAGS += -DGITREV=$(GITREV)
 ## help commands:
 
 help: ## show this help
-	@awk -f help.awk $(MAKEFILE_LIST)
+	@awk -f ../tools/help.awk $(MAKEFILE_LIST)
 
 ## dependencies commands:
 
@@ -70,27 +70,6 @@ test_emu_monero: ## run selected monero device tests from monero-agent
 
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
-
-## style commands:
-
-style_check: ## run code style check on application sources and tests
-	flake8 --version
-	isort --version | grep "VERSION"
-	black --version
-	flake8 $(shell find src -name *.py)
-	isort --check-only $(shell find src -name *.py ! -path 'src/trezor/messages/*')
-	black --check $(shell find src -name *.py ! -path 'src/trezor/messages/*')
-
-style: ## apply code style on application sources and tests
-	isort $(shell find src -name *.py ! -path 'src/trezor/messages/*')
-	black $(shell find src -name *.py ! -path 'src/trezor/messages/*')
-
-cstyle_check: ## run code style check on low-level C code
-	./tools/clang-format-check embed/*/*.{c,h} embed/extmod/modtrezor*/*.{c,h}
-
-
-cstyle: ## apply code style on low-level C code
-	clang-format -i embed/*/*.{c,h} embed/extmod/modtrezor*/*.{c,h}
 
 ## code generation:
 

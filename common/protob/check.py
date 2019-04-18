@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-from glob import glob
 import os
 import re
 import sys
+from glob import glob
 
 error = False
 
@@ -21,7 +21,9 @@ for fn in sorted(glob(os.path.join(MYDIR, "messages-*.proto"))):
             line = line.strip().split(" ")
             if line[0] not in ["enum", "message"]:
                 continue
-            if not line[1].startswith(prefix) and not line[1].startswith("Debug" + prefix):
+            if not line[1].startswith(prefix) and not line[1].startswith(
+                "Debug" + prefix
+            ):
                 print("ERROR:", fn, line[1])
                 error = True
 
