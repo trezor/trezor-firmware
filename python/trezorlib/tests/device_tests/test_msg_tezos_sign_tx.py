@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import time
+
 import pytest
 
 from trezorlib import messages, tezos
@@ -196,9 +198,19 @@ class TestMsgTezosSignTx(TrezorTest):
             resp.operation_hash == "oocgc3hyKsGHPsw6WFWJpWT8jBwQLtebQAXF27KNisThkzoj635"
         )
 
+    def input_flow(self, num_pages):
+        yield
+        time.sleep(1)
+        for _ in range(num_pages - 1):
+            self.client.debug.swipe_down()
+            time.sleep(1)
+        self.client.debug.press_yes()
+
+
     def test_tezos_sign_tx_proposal(self):
         self.setup_mnemonic_allallall()
 
+        self.client.set_input_flow(self.input_flow(num_pages=1))
         resp = tezos.sign_tx(
             self.client,
             TEZOS_PATH_10,
@@ -231,6 +243,7 @@ class TestMsgTezosSignTx(TrezorTest):
     def test_tezos_sign_tx_multiple_proposals(self):
         self.setup_mnemonic_allallall()
 
+        self.client.set_input_flow(self.input_flow(num_pages=2))
         resp = tezos.sign_tx(
             self.client,
             TEZOS_PATH_10,
