@@ -209,21 +209,23 @@ class TestMsgTezosSignTx(TrezorTest):
                     "proposal": {
                         "source": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
                         "period": 17,
-                        "proposals": ["dfa974df171c2dad9a9b8f25d99af41fd9702ce5d04521d2f9943c84d88aa572"],
+                        "proposals": [
+                            "dfa974df171c2dad9a9b8f25d99af41fd9702ce5d04521d2f9943c84d88aa572"
+                        ],
                     },
                 },
             ),
         )
         assert (
-                resp.signature
-                == "edsigtfY16R32k2WVMYfFr7ymnro4ib5zMckk28vsuViYNN77DJAvCJLRNArd9L531pUCxT4YdcvCvBym5dhcZ1rknEVm6yZ8bB"
+            resp.signature
+            == "edsigtfY16R32k2WVMYfFr7ymnro4ib5zMckk28vsuViYNN77DJAvCJLRNArd9L531pUCxT4YdcvCvBym5dhcZ1rknEVm6yZ8bB"
         )
         assert (
-                resp.sig_op_contents.hex()
-                == "dee04042c0832d68a43699b2001c0a38065436eb05e578071a763e1972d0bc8105005f450441f41ee11eee78a31d1e1e55627c783bd60000001100000020dfa974df171c2dad9a9b8f25d99af41fd9702ce5d04521d2f9943c84d88aa5723b12621296a679b3a74ea790df5347995a76e20a09e76590baaacf4e09341965a04123f5cbbba8427f045b5f7d59157a3098e44839babe7c247d19b58bbb2405"
+            resp.sig_op_contents.hex()
+            == "dee04042c0832d68a43699b2001c0a38065436eb05e578071a763e1972d0bc8105005f450441f41ee11eee78a31d1e1e55627c783bd60000001100000020dfa974df171c2dad9a9b8f25d99af41fd9702ce5d04521d2f9943c84d88aa5723b12621296a679b3a74ea790df5347995a76e20a09e76590baaacf4e09341965a04123f5cbbba8427f045b5f7d59157a3098e44839babe7c247d19b58bbb2405"
         )
         assert (
-                resp.operation_hash == "opLqntFUu984M7LnGsFvfGW6kWe9QjAz4AfPDqQvwJ1wPM4Si4c"
+            resp.operation_hash == "opLqntFUu984M7LnGsFvfGW6kWe9QjAz4AfPDqQvwJ1wPM4Si4c"
         )
 
     def test_tezos_sign_tx_multiple_proposals(self):
@@ -239,24 +241,25 @@ class TestMsgTezosSignTx(TrezorTest):
                     "proposal": {
                         "source": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
                         "period": 17,
-                        "proposals": ["2a6ff28ab4d0ccb18f7129aaaf9a4b8027d794f2562849665fdb6999db2a4e57",
-                                      "47cd60c09ab8437cc9fe19add494dce1b9844100f660f02ce77510a0c66d2762"],
+                        "proposals": [
+                            "2a6ff28ab4d0ccb18f7129aaaf9a4b8027d794f2562849665fdb6999db2a4e57",
+                            "47cd60c09ab8437cc9fe19add494dce1b9844100f660f02ce77510a0c66d2762",
+                        ],
                     },
                 },
             ),
         )
         assert (
-                resp.signature
-                == "edsigu6GAjhiWAQ64ctWTGEDYAZ16tYzLgzWzqc4CUyixK4FGRE8YUBVzFaVJ2fUCexZjZLMLdiNZGcUdzeL1bQhZ2h5oLrh7pA"
+            resp.signature
+            == "edsigu6GAjhiWAQ64ctWTGEDYAZ16tYzLgzWzqc4CUyixK4FGRE8YUBVzFaVJ2fUCexZjZLMLdiNZGcUdzeL1bQhZ2h5oLrh7pA"
         )
         assert (
-                resp.sig_op_contents.hex()
-                == "7e0be36a90c663c73c60da3889ffefff1383fb65cc29f0639f173d8f95a52df705005f450441f41ee11eee78a31d1e1e55627c783bd600000011000000402a6ff28ab4d0ccb18f7129aaaf9a4b8027d794f2562849665fdb6999db2a4e5747cd60c09ab8437cc9fe19add494dce1b9844100f660f02ce77510a0c66d2762f813361ac00ada7e3256f23973ae25b112229476a3cb3e506fe929ea1e9358299fed22178d1be689cddeedd1f303abfef859b664f159a528576a1c807079f005"
+            resp.sig_op_contents.hex()
+            == "7e0be36a90c663c73c60da3889ffefff1383fb65cc29f0639f173d8f95a52df705005f450441f41ee11eee78a31d1e1e55627c783bd600000011000000402a6ff28ab4d0ccb18f7129aaaf9a4b8027d794f2562849665fdb6999db2a4e5747cd60c09ab8437cc9fe19add494dce1b9844100f660f02ce77510a0c66d2762f813361ac00ada7e3256f23973ae25b112229476a3cb3e506fe929ea1e9358299fed22178d1be689cddeedd1f303abfef859b664f159a528576a1c807079f005"
         )
         assert (
-                resp.operation_hash == "onobSyNgiitGXxSVFJN6949MhUomkkxvH4ZJ2owgWwNeDdntF9Y"
+            resp.operation_hash == "onobSyNgiitGXxSVFJN6949MhUomkkxvH4ZJ2owgWwNeDdntF9Y"
         )
-
 
     def test_tezos_sing_tx_ballot_yay(self):
         self.setup_mnemonic_allallall()
@@ -272,15 +275,15 @@ class TestMsgTezosSignTx(TrezorTest):
                         "source": "0002298c03ed7d454a101eb7022bc95f7e5f41ac78",
                         "period": 2,
                         "proposal": "def7ed9c84af23ab37ebb60dd83cd103d1272ad6c63d4c05931567e65ed027e3",
-                        "ballot": 0
+                        "ballot": 0,
                     },
-                }
-            )
+                },
+            ),
         )
 
         assert (
-                resp.signature
-                == "edsigtkxNm6YXwtV24DqeuimeZFTeFCn2jDYheSsXT4rHMcEjNvzsiSo55nVyVsQxtEe8M7U4PWJWT4rGYYGckQCgtkNJkd2roX"
+            resp.signature
+            == "edsigtkxNm6YXwtV24DqeuimeZFTeFCn2jDYheSsXT4rHMcEjNvzsiSo55nVyVsQxtEe8M7U4PWJWT4rGYYGckQCgtkNJkd2roX"
         )
 
     def test_tezos_sing_tx_ballot_nay(self):
@@ -297,14 +300,14 @@ class TestMsgTezosSignTx(TrezorTest):
                         "source": "0002298c03ed7d454a101eb7022bc95f7e5f41ac78",
                         "period": 2,
                         "proposal": "def7ed9c84af23ab37ebb60dd83cd103d1272ad6c63d4c05931567e65ed027e3",
-                        "ballot": 1
+                        "ballot": 1,
                     },
-                }
-            )
+                },
+            ),
         )
         assert (
-                resp.signature
-                == "edsigtqLaizfF6Cfc2JQL7TrsyniGhpZEojZAKMFW6AeudaUoU8KGXEHJH69Q4Lf27qFyUSTfbeHNnnCt69SGEPWkmpkgkgqMbL"
+            resp.signature
+            == "edsigtqLaizfF6Cfc2JQL7TrsyniGhpZEojZAKMFW6AeudaUoU8KGXEHJH69Q4Lf27qFyUSTfbeHNnnCt69SGEPWkmpkgkgqMbL"
         )
 
     def test_tezos_sing_tx_ballot_pass(self):
@@ -321,14 +324,13 @@ class TestMsgTezosSignTx(TrezorTest):
                         "source": "0002298c03ed7d454a101eb7022bc95f7e5f41ac78",
                         "period": 2,
                         "proposal": "def7ed9c84af23ab37ebb60dd83cd103d1272ad6c63d4c05931567e65ed027e3",
-                        "ballot": 2
+                        "ballot": 2,
                     },
-                }
-            )
+                },
+            ),
         )
 
         assert (
-                resp.signature
-                == "edsigu6YX7EegPwrpcEbdNQsNhrRiEagBNGJBmFamP4mixZZw1UynhahGQ8RNiZLSUVLERUZwygrsSVenBqXGt9VnknTxtzjKzv"
+            resp.signature
+            == "edsigu6YX7EegPwrpcEbdNQsNhrRiEagBNGJBmFamP4mixZZw1UynhahGQ8RNiZLSUVLERUZwygrsSVenBqXGt9VnknTxtzjKzv"
         )
-
