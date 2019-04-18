@@ -29,6 +29,7 @@
 #ifndef __SHAMIR_H__
 #define __SHAMIR_H__
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -36,16 +37,18 @@
 
 /*
  * Computes f(x) given the Shamir shares (x_1, f(x_1)), ... , (x_m, f(x_m)).
+ * The x coordinates of the shares must be pairwise distinct. Returns true on
+ * success, otherwise false.
  * result: Array of length len where the evaluations of the polynomials in x
  *     will be written.
  * result_index: The x coordinate of the result.
- * share_indices: Points to an array of integers x_1, ... , x_m.
- * share_values: Points to an array of y_1, ... , y_m, where each y_i is an
+ * share_indices: Points to the array of integers x_1, ... , x_m.
+ * share_values: Points to the array of y_1, ... , y_m, where each y_i is an
  *     array of bytes of length len representing the evaluations of the
  *     polynomials in x_i.
  * share_count: The number of shares m.
- * len: The length of the result array and each of the y_1, ... , y_m arrays.
-
+ * len: The length of the result array and of each of the y_1, ... , y_m arrays.
+ *
  * The number of shares used to compute the result may be larger than the
  * required threshold.
  *
@@ -58,7 +61,7 @@
  * This function treats `shares_values`, `share_indices` and `result` as secret
  * values. `share_count` is treated as a public value (for performance reasons).
  */
-void shamir_interpolate(uint8_t *result, uint8_t result_index,
+bool shamir_interpolate(uint8_t *result, uint8_t result_index,
                         const uint8_t *share_indices,
                         const uint8_t **share_values, uint8_t share_count,
                         size_t len);

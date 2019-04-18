@@ -36,8 +36,8 @@
  */
 
 #include "shamir.h"
-#include <stdio.h>
 #include <string.h>
+#include "memzero.h"
 
 static void bitslice(uint32_t r[8], const uint8_t *x, size_t len) {
   size_t bit_idx, arr_idx;
@@ -254,18 +254,29 @@ static void gf256_inv(uint32_t r[8], uint32_t x[8]) {
   gf256_mul(r, r, y);  // r = x^254
 }
 
-void shamir_interpolate(uint8_t *result, uint8_t result_index,
+bool shamir_interpolate(uint8_t *result, uint8_t result_index,
                         const uint8_t *share_indices,
                         const uint8_t **share_values, uint8_t share_count,
                         size_t len) {
   size_t i, j;
-  uint32_t xs[share_count][8], ys[share_count][8];
   uint32_t x[8];
-  uint32_t denom[8], tmp[8];
+  uint32_t xs[share_count][8];
+  uint32_t ys[share_count][8];
   uint32_t num[8] = {~0}; /* num is the numerator (=1) */
+  uint32_t denom[8];
+  uint32_t tmp[8];
   uint32_t secret[8] = {0};
+  bool ret = true;
 
-  if (len > SHAMIR_MAX_LEN) return;
+  if (len > SHAMIR_MAX_LEN) return false;
+
+  /* The code below assumes that none of the share_indices are equal to
+   * result_index. We need to treat that as a special case. */
+  for (i = 0; i < share_count; i++)
+    if (share_indices[i] == result_index) {
+      memcpy(result, share_values[i], len);
+      return true;
+    }
 
   /* Collect the x and y values */
   for (i = 0; i < share_count; i++) {
@@ -290,10 +301,28 @@ void shamir_interpolate(uint8_t *result, uint8_t result_index,
       gf256_add(tmp, xs[j]);
       gf256_mul(denom, denom, tmp);
     }
+    if ((denom[0] | denom[1] | denom[2] | denom[3] | denom[4] | denom[5] |
+         denom[6] | denom[7]) == 0) {
+      /* The share_indices are not unique. */
+      ret = false;
+      break;
+    }
     gf256_inv(tmp, denom);      /* inverted denominator */
     gf256_mul(tmp, tmp, num);   /* basis polynomial */
     gf256_mul(tmp, tmp, ys[i]); /* scaled coefficient */
     gf256_add(secret, tmp);
   }
-  unbitslice(result, secret, len);
+
+  if (ret == true) {
+    unbitslice(result, secret, len);
+  }
+
+  memzero(x, sizeof(x));
+  memzero(xs, sizeof(xs));
+  memzero(ys, sizeof(ys));
+  memzero(num, sizeof(num));
+  memzero(denom, sizeof(denom));
+  memzero(tmp, sizeof(tmp));
+  memzero(secret, sizeof(secret));
+  return ret;
 }
