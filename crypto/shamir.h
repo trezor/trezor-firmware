@@ -1,6 +1,7 @@
 /*
  * Low level API for Daan Sprenkels' Shamir secret sharing library
  * Copyright (c) 2017 Daan Sprenkels <hello@dsprenkels.com>
+ * Copyright (c) 2019 SatoshiLabs
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
