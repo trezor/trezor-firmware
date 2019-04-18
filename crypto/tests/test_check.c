@@ -8408,6 +8408,46 @@ START_TEST(test_rc4_rfc6229) {
 }
 END_TEST
 
+static void test_compress_coord(const char *k_raw) {
+  const ecdsa_curve *curve = &secp256k1;
+  curve_point expected_coords;
+
+  bignum256 k = {0};
+
+  bn_read_be(fromhex(k_raw), &k);
+
+  point_multiply(curve, &k, &curve->G, &expected_coords);
+
+  uint8_t compress[33] = {0};
+  compress_coords(&expected_coords, compress);
+
+  bignum256 x = {0}, y = {0};
+  bn_read_be(compress + 1, &x);
+  uncompress_coords(curve, compress[0], &x, &y);
+
+  ck_assert(bn_is_equal(&expected_coords.x, &x));
+  ck_assert(bn_is_equal(&expected_coords.y, &y));
+}
+
+START_TEST(test_compress_coords) {
+  static const char *k_raw[] = {
+      "dc05960ac673fd59554c98655e26722d007bb7ada0c8ff00883fdee70783d0be",
+      "41e41e0a218c980411108a0a58cf88f528c828b4d6f0d2c86234bc2504bdc3cd",
+      "1d963ddcb79f6028a32cadd2421ff7fff969bff5774f73063dab41519b3da175",
+      "2414141f96da0874dbc374b58861589935b7f940806ddf8d2e6b911f62e240f3",
+      "01cc1fb182e29f60fe43e22d250de34f2d3f956bbef2aa9b182d09e5d9176873",
+      "89b3d621d813682692fd61b2baea6b2ea696a44abc76925d29c4887fc4db9367",
+      "20c80c633e05a3a7dfac05fa0e0a7c7a6b708b02323e687735cff81ea5944f59",
+      "5a803c263aa93a4f74648066c03e63fb00641193bae93dfa254dabd634e8b49c",
+      "05efbcc87007797dca68315b9271ac8fb75bddbece53f4dcbfb83fc21cb91fc0",
+      "0bed78ef43474630bd646eef2d7ec19a1acb8e9eecf6a0a3ac7241ac40a7706f",
+  };
+
+  for (int i = 0; i < (int)(sizeof(k_raw) / sizeof(*k_raw)); i++)
+    test_compress_coord(k_raw[i]);
+}
+END_TEST
+
 static int my_strncasecmp(const char *s1, const char *s2, size_t n) {
   size_t i = 0;
   while (i < n) {
@@ -8683,6 +8723,10 @@ Suite *test_suite(void) {
 
   tc = tcase_create("cashaddr");
   tcase_add_test(tc, test_cashaddr);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("compress_coords");
+  tcase_add_test(tc, test_compress_coords);
   suite_add_tcase(s, tc);
 
 #if USE_CARDANO
