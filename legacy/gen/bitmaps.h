@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 typedef struct {
-	uint8_t width, height;
-	const uint8_t *data;
+  uint8_t width, height;
+  const uint8_t *data;
 } BITMAP;
 
 extern const BITMAP bmp_digit0;

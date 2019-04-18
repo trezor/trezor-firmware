@@ -256,12 +256,12 @@ void fsm_msgEntropyAck(const EntropyAck *msg) {
 }
 
 void fsm_msgBackupDevice(const BackupDevice *msg) {
+  (void)msg;
+
   CHECK_INITIALIZED
 
   CHECK_PIN_UNCACHED
 
-      (void)
-      msg;
   char mnemonic[MAX_MNEMONIC_LEN + 1];
   if (config_getMnemonic(mnemonic, sizeof(mnemonic))) {
     reset_backup(true, mnemonic);

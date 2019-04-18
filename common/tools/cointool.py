@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import fnmatch
+import glob
 import io
 import json
 import logging
-import re
-import sys
 import os
-import glob
+import re
 import struct
+import sys
 import zlib
 from collections import defaultdict
 from hashlib import sha256
@@ -524,8 +524,7 @@ def cli(colors):
 # fmt: off
 @click.option("--backend/--no-backend", "-b", default=False, help="Check blockbook/bitcore responses")
 @click.option("--icons/--no-icons", default=True, help="Check icon files")
-@click.option("-d", "--show-duplicates", type=click.Choice(("all", "nontoken", "errors")),
-    default="errors", help="How much information about duplicate shortcuts should be shown.")
+@click.option("-d", "--show-duplicates", type=click.Choice(("all", "nontoken", "errors")), default="errors", help="How much information about duplicate shortcuts should be shown.")
 # fmt: on
 def check(backend, icons, show_duplicates):
     """Validate coin definitions.

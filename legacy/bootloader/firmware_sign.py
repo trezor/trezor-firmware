@@ -7,7 +7,6 @@ import struct
 
 import ecdsa
 
-
 SLOTS = 3
 
 pubkeys = {
@@ -94,7 +93,7 @@ def update_hashes_in_header(data):
     data = bytearray(data)
     o = 0
     for h in prepare_hashes(data[FWHEADER_SIZE:]):
-        data[0x20 + o:0x20 + o + 32] = h
+        data[0x20 + o : 0x20 + o + 32] = h
         o += 32
     return bytes(data)
 
@@ -111,6 +110,7 @@ def get_header(data, zero_signatures=False):
 def check_size(data):
     size = struct.unpack("<L", data[12:16])[0]
     assert size == len(data) - 1024
+
 
 def check_signatures(data):
     # Analyses given firmware and prints out
@@ -146,7 +146,7 @@ def check_signatures(data):
                     used.append(indexes[x])
                     print("Slot #%d signature: VALID" % (x + 1), signature.hex())
 
-            except:
+            except Exception:
                 print("Slot #%d signature: INVALID" % (x + 1), signature.hex())
 
 
@@ -202,7 +202,7 @@ def sign(data, is_pem):
             index = i
             break
 
-    if index == None:
+    if index is None:
         raise Exception("Unable to find private key index. Unknown private key?")
 
     signature = key.sign_deterministic(to_sign, hashfunc=hashlib.sha256)
