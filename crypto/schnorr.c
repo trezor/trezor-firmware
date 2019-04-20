@@ -1,9 +1,8 @@
 #include "schnorr.h"
 
 // r = H(Q, kpub, m)
-static void calc_r(const curve_point *Q,
-                   const uint8_t pub_key[33], const uint8_t *msg,
-                   const uint32_t msg_len, bignum256 *r) {
+static void calc_r(const curve_point *Q, const uint8_t pub_key[33],
+                   const uint8_t *msg, const uint32_t msg_len, bignum256 *r) {
   uint8_t Q_compress[33];
   compress_coords(Q, Q_compress);
 
@@ -35,15 +34,15 @@ int schnorr_sign(const ecdsa_curve *curve, const uint8_t *priv_key,
   calc_r(&Q, pub_key, msg, msg_len, &result->r);
 
   /* s = k - r*kpriv mod(order) */
-  bignum256 s_temp = {0};
+  bignum256 s_temp;
   bn_copy(&result->r, &s_temp);
   bn_multiply(&private_key_scalar, &s_temp, &curve->order);
   bn_subtractmod(k, &s_temp, &result->s, &curve->order);
 
-  while (bn_is_less(&curve->order, &result->s) ||
-         bn_is_equal(&curve->order, &result->s)) {
+  while (bn_is_less(&curve->order, &result->s))
     bn_mod(&result->s, &curve->order);
-  }
+
+  if (bn_is_zero(&result->s) || bn_is_zero(&result->r)) return 1;
 
   return 0;
 }
