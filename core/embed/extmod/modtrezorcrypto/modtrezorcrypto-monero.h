@@ -21,6 +21,8 @@
 #include "py/objint.h"
 #include "py/objstr.h"
 
+#include "embed/extmod/trezorobj.h"
+
 #include "bignum.h"
 #include "memzero.h"
 #include "monero/monero.h"
@@ -72,47 +74,6 @@ STATIC inline void assert_ge25519(const mp_obj_t o) {
 STATIC inline void assert_scalar(const mp_obj_t o) {
   if (!MP_OBJ_IS_SCALAR(o)) {
     mp_raise_ValueError("scalar expected");
-  }
-}
-
-static uint64_t mp_obj_uint64_get_checked(mp_const_obj_t self_in) {
-#if MICROPY_LONGINT_IMPL != MICROPY_LONGINT_IMPL_MPZ
-#error "MPZ supported only"
-#endif
-
-  if (MP_OBJ_IS_SMALL_INT(self_in)) {
-    return MP_OBJ_SMALL_INT_VALUE(self_in);
-  } else {
-    byte buff[8];
-    uint64_t res = 0;
-    mp_obj_t *o = MP_OBJ_TO_PTR(self_in);
-
-    mp_obj_int_to_bytes_impl(o, true, 8, buff);
-    for (int i = 0; i < 8; i++) {
-      res <<= i > 0 ? 8 : 0;
-      res |= (uint64_t)(buff[i] & 0xff);
-    }
-    return res;
-  }
-}
-
-static uint64_t mp_obj_get_uint64(mp_const_obj_t arg) {
-  if (arg == mp_const_false) {
-    return 0;
-  } else if (arg == mp_const_true) {
-    return 1;
-  } else if (MP_OBJ_IS_SMALL_INT(arg)) {
-    return MP_OBJ_SMALL_INT_VALUE(arg);
-  } else if (MP_OBJ_IS_TYPE(arg, &mp_type_int)) {
-    return mp_obj_uint64_get_checked(arg);
-  } else {
-    if (MICROPY_ERROR_REPORTING == MICROPY_ERROR_REPORTING_TERSE) {
-      mp_raise_TypeError("can't convert to int");
-    } else {
-      nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_TypeError,
-                                              "can't convert %s to int",
-                                              mp_obj_get_type_str(arg)));
-    }
   }
 }
 
@@ -238,7 +199,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_bignum256modm_make_new(
   } else if (n_args == 1 && MP_OBJ_IS_STR_OR_BYTES(args[0])) {
     mp_unpack_scalar(o->p, args[0], 0);
   } else if (n_args == 1 && mp_obj_is_integer(args[0])) {
-    uint64_t v = mp_obj_get_uint64(args[0]);
+    uint64_t v = trezor_obj_get_uint64(args[0]);
     set256_modm(o->p, v);
   } else {
     mp_raise_ValueError("Invalid scalar constructor");
@@ -332,7 +293,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_init256_modm(size_t n_args,
   } else if (n_args > 0 && MP_OBJ_IS_STR_OR_BYTES(args[1 + off])) {
     mp_unpack_scalar(MP_OBJ_SCALAR(res), args[1 + off], 0);
   } else if (n_args > 0 && mp_obj_is_integer(args[1 + off])) {
-    uint64_t v = mp_obj_get_uint64(args[1 + off]);
+    uint64_t v = trezor_obj_get_uint64(args[1 + off]);
     set256_modm(MP_OBJ_SCALAR(res), v);
   } else {
     mp_raise_ValueError("Invalid scalar def");
@@ -1247,7 +1208,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_xmr_gen_c(size_t n_args,
   mp_obj_t res = mp_obj_new_ge25519_r(res_arg ? args[0] : mp_const_none);
   assert_scalar(args[1 + off]);
   xmr_gen_c(&MP_OBJ_GE25519(res), MP_OBJ_C_SCALAR(args[1 + off]),
-            mp_obj_get_uint64(args[2 + off]));
+            trezor_obj_get_uint64(args[2 + off]));
   return res;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
