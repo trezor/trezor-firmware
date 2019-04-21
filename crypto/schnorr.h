@@ -40,3 +40,4 @@ int schnorr_verify(const ecdsa_curve *curve, const uint8_t *pub_key,
                    const uint8_t *msg, const uint32_t msg_len,
                    const schnorr_sign_pair *sign);
 #endif
+
