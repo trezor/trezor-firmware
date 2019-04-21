@@ -36,16 +36,19 @@ async def init_transaction(
 
     state.mem_trace(1)
 
+    state.input_count = tsx_data.num_inputs
+    state.output_count = len(tsx_data.outputs)
+    state.progress_total = 4 + 3 * state.input_count + state.output_count
+    state.progress_cur = 0
+
     # Ask for confirmation
     await confirms.require_confirm_transaction(
-        state.ctx, tsx_data, state.creds.network_type
+        state.ctx, state, tsx_data, state.creds.network_type
     )
     gc.collect()
     state.mem_trace(3)
 
     # Basic transaction parameters
-    state.input_count = tsx_data.num_inputs
-    state.output_count = len(tsx_data.outputs)
     state.output_change = tsx_data.change_dts
     state.mixin = tsx_data.mixin
     state.fee = tsx_data.fee

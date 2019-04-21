@@ -18,7 +18,7 @@ from apps.monero.xmr import crypto
 async def all_outputs_set(state: State):
     state.mem_trace(0)
 
-    await confirms.transaction_step(state.ctx, state.STEP_ALL_OUT)
+    await confirms.transaction_step(state, state.STEP_ALL_OUT)
     state.mem_trace(1)
 
     _validate(state)
