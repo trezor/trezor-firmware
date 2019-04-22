@@ -1,27 +1,30 @@
-Version 1.6.1
+Version 1.8.0 [Feb 2019]
+* Make the update process more similar to Model T process
+
+Version 1.6.1 [Dec 2018]
 * Fix USB issue on some Windows 10 installations
 
-Version 1.6.0
+Version 1.6.0 [Sep 2018]
 * Switch from HID to WebUSB
 
-Version 1.5.1
+Version 1.5.1 [Aug 2018]
 * Improve MPU configuration
 
-Version 1.5.0
+Version 1.5.0 [Jun 2018]
 * Make unofficial firmwares work again
 
-Version 1.4.0
+Version 1.4.0 [Mar 2018]
 * More flash-write tests
 * Don't restore storage from unofficial firmware
 * Support WipeDevice message
 * Activate MPU and don't switch VTOR table for unofficial firmware
 
-Version 1.3.3
+Version 1.3.3 [Aug 2017]
 * Add self-test
 * Erase metadata backup after usage
 * Erase SRAM on application start
 
-Version 1.3.2
+Version 1.3.2 [Jul 2017]
 * Don't show recovery seed warning if firmware is flashed for the first time
 * Don't show fingerprint if firmware is flashed for the first time
 * Compute firmware hash before checking signatures
@@ -29,22 +32,25 @@ Version 1.3.2
 * Fix usage of RNG before setup
 * Fix stack protector fault
 
-Version 1.3.1
+Version 1.3.1 [Feb 2017]
 * Fix button testing so it does not break USB communication
 
-Version 1.3.0
+Version 1.3.0 [Oct 2016]
 * Add test for buttons
 * Clean USB descriptor
 * Return firmware_present in Features response
 * Don't halt on broken firware, stay in bootloader
 
-Version 1.2.7
+Version 1.2.8 [Sep 2016]
+* Don't halt on broken firmware
+
+Version 1.2.7 [May 2016]
 * Optimize speed of firmware update
 
-Version 1.2.6
+Version 1.2.6 [Feb 2016]
 * Show hash of unofficial firmware
 * Use stack protector
 * Clean USB descriptor
 
-Version 1.2.5
+Version 1.2.5 [Oct 2014]
 * Initial import of code
