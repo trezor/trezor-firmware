@@ -8537,6 +8537,47 @@ START_TEST(test_schnorr_fail_verify) {
 }
 END_TEST
 
+START_TEST(test_schnorr_from_to_hex_str) {
+  static struct {
+    const char *r_hex;
+    const char *s_hex;
+  } test_cases[] = {
+      {"4fd292a199a58067ab3c92205c8efc2add0407c353f9f90a3bc15a9ad3c7ba32",
+       "2d786242d88662ac18a03804e52cdc7231d1b97d44e1d4c1ef7eb37f479596ee"},
+      {"74aae9c3e069e2806e1b0d890970be387aebed8040f37991aacad70b27895e39",
+       "ffd72c290b98c93a4bcedc0edcdf040c35579be962fe83e6821d4f3cb4b795d2"},
+      {"9a0788e5b0947dedede386df57a006cf3fe43919a74d9ca630f8a1a9d97b4650",
+       "28982fa6c2b620cbc550f7ef9eab605f409c584fbe5a765678877b79ab517086"},
+      {"330a924525ef722fa20e8e25cb6e8bd7df4394886fa4414e4a0b6812aa25bbc0",
+       "51070abca039dac294f6ba3bfc8c36cfc66020edf66d1acf1a9b545b0bf09f52"},
+      {"5ed5edee0314dffbee39ee4e9c76de8bc3eb8cb891aec32b83957514284b205b",
+       "3d60fb4664c994ad956378b9402bc68f7b4799d74f4783a6199c0d74865ea2b6"},
+      {"b8667be5e10b113608bfe5327c44e9f0462be26f789177e10dce53019aa33daa",
+       "546f70aa1fee3718c95508240cdc073b9fefed05959c5319dd8e2bf07a1dd028"},
+      {"54d7a435e5e3f2811aa542f8895c20ccb760f2713dbddb7291dab6da4e4f927e",
+       "20a3bdabfff2c1bf8e2af709f6cdcafe70da9a1dbc22305b6332e36844092984"},
+      {"979f088e58f1814d5e462cb9f935d2924abd8d32211d8f02dd7e0991726df573",
+       "4890f9ac3a8d102ee3a2a473930c01cad29dce3860acb7a5dadaef16fe808991"},
+      {"83812632f1443a70b198d112d075d886be7bbc6ec6275ae52661e52b7358bb8b",
+       "0aa595a649e517133d3448ca657424dd07bbed289030f0c0aa6738d26ab9a910"}};
+
+  for (size_t i = 0; i < sizeof(test_cases) / sizeof(*test_cases); i++) {
+    schnorr_sign_pair sign, sign2 ;
+    char str_result[128];
+    bn_read_be(fromhex(test_cases[i].r_hex), &sign.r);
+    bn_read_be(fromhex(test_cases[i].s_hex), &sign.s);
+    schnorr_to_hex_str(&sign, str_result);
+
+    ck_assert_mem_eq(str_result, test_cases[i].r_hex, 64);
+    ck_assert_mem_eq(str_result + 64, test_cases[i].s_hex, 64);
+
+    schnorr_from_hex_str(str_result, &sign2);
+    ck_assert_mem_eq(&sign.r, &sign2.r, 32);
+    ck_assert_mem_eq(&sign.s, &sign2.s, 32);
+  }
+}
+END_TEST
+
 static int my_strncasecmp(const char *s1, const char *s2, size_t n) {
   size_t i = 0;
   while (i < n) {
@@ -8817,6 +8858,7 @@ Suite *test_suite(void) {
   tc = tcase_create("schnorr");
   tcase_add_test(tc, test_schnorr_sign_verify);
   tcase_add_test(tc, test_schnorr_fail_verify);
+  tcase_add_test(tc, test_schnorr_from_to_hex_str);
   suite_add_tcase(s, tc);
 
 #if USE_CARDANO
