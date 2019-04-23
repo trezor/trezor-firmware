@@ -1,0 +1,100 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: "recursive"
+
+stages:
+  - environment
+  - build
+  - test
+
+environment:
+  stage: environment
+  image: docker:latest
+  variables:
+    CONTAINER_NAME: "$CI_REGISTRY/trezor/trezor-firmware/environment"
+  services:
+    - docker:dind
+  before_script:
+    - docker login $CI_REGISTRY -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+  when: manual
+  script:
+    - docker pull $CONTAINER_NAME:latest || true
+    - docker build --cache-from $CONTAINER_NAME:latest --tag $CONTAINER_NAME:$CI_COMMIT_SHA --tag $CONTAINER_NAME:latest .
+    - docker push $CONTAINER_NAME:$CI_COMMIT_SHA
+    - docker push $CONTAINER_NAME:latest
+
+image: registry.corp.sldev.cz/trezor/trezor-firmware/environment
+
+before_script:
+  - pipenv install
+
+build core firmware:
+  stage: build
+  script:
+    - cd core
+    - pipenv run make build_cross
+    - pipenv run make build_boardloader
+    - pipenv run make build_bootloader
+    - pipenv run make build_prodtest
+    - pipenv run make build_firmware
+    # - test "$TREZOR_MODEL" = "1" || pipenv run make sizecheck
+  artifacts:
+    paths:
+    - core/build/firmware/firmware.bin
+    - core/build/bootloader/bootloader.bin
+    - core/build/boardloader/boardloader.bin
+    expire_in: 1 week
+
+build core unix:
+  stage: build
+  script:
+    - cd core
+    - pipenv run make build_unix_noui
+
+test style:
+  stage: test
+  script:
+    - pipenv run make style_check
+    - cd core && pipenv run make templates_check  # TODO
+
+test core unix unit:
+  stage: test
+  script:
+    - cd core
+    - pipenv run make build_unix_noui
+    - pipenv run make test
+
+test core unix device:
+  stage: test
+  script:
+    - cd core
+    - pipenv run make build_unix_noui
+    - pipenv run make test_emu
+
+test core unix monero:
+  stage: test
+  script:
+    - cd core
+    - pipenv run make build_unix_noui
+    - pipenv run make test_emu_monero
+
+test common:
+  stage: test
+  script:
+    - cd common
+    - pipenv run jsonlint defs/*.json
+    - pipenv run jsonlint defs/*/*.json
+    - pipenv run python tools/cointool.py check
+    - pipenv run python tools/support.py check --ignore-missing
+    - pipenv run python protob/check.py
+    - pipenv run python protob/graph.py protob/*.proto  # TODO: artifacts?
+
+test crypto:
+  stage: test
+  script:
+    - cd crypto
+    - pipenv run make
+    - ./tests/aestst
+    - ./tests/test_check
+    - CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./tests/test_check
+    - ./tests/test_openssl 1000
+    - ITERS=10 pipenv run pytest tests/  # TODO are ITERS=10 propagated?

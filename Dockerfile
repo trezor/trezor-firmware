@@ -1,6 +1,6 @@
 # initialize from the image
 
-FROM debian:9
+FROM python
 
 ARG TOOLCHAIN_FLAVOR=linux
 ENV TOOLCHAIN_FLAVOR=$TOOLCHAIN_FLAVOR
@@ -8,7 +8,10 @@ ENV TOOLCHAIN_FLAVOR=$TOOLCHAIN_FLAVOR
 # install build tools and dependencies
 
 RUN apt-get update && apt-get install -y \
-    build-essential wget git python3-pip
+    build-essential wget git libsodium-dev graphviz \
+    valgrind check libssl-dev libusb-1.0-0-dev libudev-dev
+
+# TODO are all apt packages actually needed?
 
 # install dependencies from toolchain source build
 
@@ -57,13 +60,17 @@ RUN echo "${PROTOBUF_HASH} protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" | sha256
 
 ENV PATH=/opt/$TOOLCHAIN_LONGVER/bin:$PATH
 
-ENV PYTHON=python3
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
-RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # use zipfile module to extract files world-readable
-RUN $PYTHON -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/local && chmod 755 /usr/local/bin/protoc
+RUN python -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/local && chmod 755 /usr/local/bin/protoc
+
+#ENV WORKON_HOME=/tmp/.venvs
 
 # install python dependencies
 
-RUN $PYTHON -m pip install scons trezor
+RUN pip install pipenv
+
+RUN python --version
+RUN pip --version
+RUN pipenv --version

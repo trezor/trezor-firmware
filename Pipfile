@@ -4,30 +4,44 @@ name = "pypi"
 verify_ssl = true
 
 [packages]
-trezor = {git = "https://github.com/trezor/python-trezor", editable = true, ref = "master"}
+# all
+trezor = {editable = true, path = "./python"}
+scons = "*"
 protobuf = "==3.4.0"
-
-# python-trezor tests
+pyblake2 = "*"
+## tests
 pytest = "*"
 mock = "*"
-
-# make style
+## style
 isort = "*"
 flake8 = "*"
 black = "*"
+mako = ">=1.0.7"
+munch = ">=2.3.2"
 
-# trezor-common cointool
+# common
+demjson = "*"
+graphviz = "*"  # TODO this was '8' do we need that?
+## cointool
 click = ">=6"
 "ed25519" = ">=1.4"
 requests = ">=2.19"
-munch = ">=2.3.2"
 termcolor = ">=0.1.2"
 Pillow = ">=5.2.0"
-Mako = ">=1.0.7"
 
-# monero
+# crypto
+ecdsa = "*"
+curve25519-donna = "*"
+pyasn1 = "*"
+
+# core
+## monero
 monero_agent = {version = ">=2.0.1", extras = ["tcry", "dev"]}
 py_trezor_crypto_ph4 = {version = ">=0.1.1"}
+
+# legacy
+setuptools = ">=24.2.0"
+typing = "*"
 
 [dev-packages]
 scan-build = "*"
