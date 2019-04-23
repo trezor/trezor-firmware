@@ -147,12 +147,15 @@ static bool path_mismatched(const CoinInfo *coin, const GetAddress *msg) {
 
   // m/48' - BIP48 Copay Multisig P2SH
   // m / purpose' / coin_type' / account' / change / address_index
+  // Electrum:
+  // m / purpose' / coin_type' / account' / type' / change / address_index
   if (msg->address_n[0] == (0x80000000 + 48)) {
-    mismatch |= (msg->script_type != InputScriptType_SPENDMULTISIG);
-    mismatch |= (msg->address_n_count != 5);
+    mismatch |= (msg->script_type != InputScriptType_SPENDMULTISIG) &&
+                (msg->script_type != InputScriptType_SPENDP2SHWITNESS) &&
+                (msg->script_type != InputScriptType_SPENDWITNESS);
+    mismatch |= (msg->address_n_count != 5) && (msg->address_n_count != 6);
     mismatch |= (msg->address_n[1] != coin->coin_type);
     mismatch |= (msg->address_n[2] & 0x80000000) == 0;
-    mismatch |= (msg->address_n[3] & 0x80000000) == 0x80000000;
     mismatch |= (msg->address_n[4] & 0x80000000) == 0x80000000;
     return mismatch;
   }

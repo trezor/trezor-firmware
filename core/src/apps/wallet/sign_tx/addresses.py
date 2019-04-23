@@ -204,7 +204,7 @@ def validate_full_path(
     See docs/coins for what paths are allowed. Please note that this is not
     a comprehensive check, some nuances are omitted for simplification.
     """
-    if len(path) != 5:
+    if len(path) not in (4, 5, 6):
         return False
 
     if not validate_purpose(path[0], coin):
@@ -214,21 +214,29 @@ def validate_full_path(
     ):
         return False
 
-    if path[1] != coin.slip44 | HARDENED:
+    if path[1] > 20 and path[1] != coin.slip44 | HARDENED:
         return False
-    if path[2] < HARDENED or path[2] > 20 | HARDENED:
+    if (path[2] > 20 and path[2] < HARDENED) or path[2] > 20 | HARDENED:
         return False
-    if path[3] not in [0, 1]:
+    if path[3] not in (0, 1, 0 | HARDENED, 1 | HARDENED, 2 | HARDENED):
         return False
-    if path[4] > 1000000:
+    if len(path) > 4 and path[4] > 1000000:
+        return False
+    if len(path) > 5 and path[5] > 1000000:
         return False
     return True
 
 
 def validate_purpose(purpose: int, coin: CoinInfo) -> bool:
-    if purpose not in (44 | HARDENED, 48 | HARDENED, 49 | HARDENED, 84 | HARDENED):
+    if purpose not in (
+        44 | HARDENED,
+        45 | HARDENED,
+        48 | HARDENED,
+        49 | HARDENED,
+        84 | HARDENED,
+    ):
         return False
-    if not coin.segwit and purpose not in (44 | HARDENED, 48 | HARDENED):
+    if not coin.segwit and purpose not in (44 | HARDENED, 45 | HARDENED, 48 | HARDENED):
         return False
     return True
 
@@ -239,21 +247,23 @@ def validate_purpose_against_script_type(
     """
     Validates purpose against provided input's script type:
     - 44 for spending address (script_type == SPENDADDRESS)
-    - 48 for multisig (script_type == SPENDMULTISIG)
-    - 49 for p2sh-segwit spend (script_type == SPENDP2SHWITNESS)
-    - 84 for native segwit spend (script_type == SPENDWITNESS)
+    - 45, 48 for multisig (script_type == SPENDMULTISIG)
+    - 49 for p2wsh-nested-in-p2sh spend (script_type == SPENDP2SHWITNESS)
+    - 84 for p2wsh native segwit spend (script_type == SPENDWITNESS)
     """
     if purpose == 44 | HARDENED and script_type != InputScriptType.SPENDADDRESS:
         return False
-    if purpose == 48 | HARDENED and script_type != InputScriptType.SPENDMULTISIG:
+    if purpose == 45 | HARDENED and script_type != InputScriptType.SPENDMULTISIG:
         return False
-    if (  # p2wsh-nested-in-p2sh
-        purpose == 49 | HARDENED and script_type != InputScriptType.SPENDP2SHWITNESS
+    if purpose == 48 | HARDENED and script_type not in (
+        InputScriptType.SPENDMULTISIG,
+        InputScriptType.SPENDP2SHWITNESS,
+        InputScriptType.SPENDWITNESS,
     ):
         return False
-    if (  # p2wsh
-        purpose == 84 | HARDENED and script_type != InputScriptType.SPENDWITNESS
-    ):
+    if purpose == 49 | HARDENED and script_type != InputScriptType.SPENDP2SHWITNESS:
+        return False
+    if purpose == 84 | HARDENED and script_type != InputScriptType.SPENDWITNESS:
         return False
     return True
 
