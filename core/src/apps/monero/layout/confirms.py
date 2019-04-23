@@ -176,6 +176,6 @@ async def live_refresh_step(ctx, current):
     step = 8
     p = (1000 * current // step) % 1000
 
-    ui.display.loader(p, True, 18, ui.WHITE, ui.BG, None, 0)
+    ui.display.loader(p, True, 18, ui.WHITE, ui.BG)
     ui.display.text_center(ui.WIDTH // 2, 145, "%d" % current, ui.NORMAL, ui.FG, ui.BG)
     ui.display.refresh()

@@ -362,7 +362,7 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
       }
 // inside of circle - draw glyph
 #define LOADER_ICON_CORNER_CUT 2
-#define LOADER_INDETERMINATE_WIDTH 125
+#define LOADER_INDETERMINATE_WIDTH 100
       if (icon &&
           mx + my > (((LOADER_ICON_SIZE / 2) + LOADER_ICON_CORNER_CUT) * 2) &&
           mx >= img_loader_size - (LOADER_ICON_SIZE / 2) &&
@@ -380,8 +380,8 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
       } else {
         uint8_t c;
         if (indeterminate) {
-          uint16_t diff = (progress > a) ? (progress - a) : (a - progress);
-          if (diff < LOADER_INDETERMINATE_WIDTH) {
+          uint16_t diff = (progress > a) ? (progress - a) : (1000 + progress - a);
+          if (diff < LOADER_INDETERMINATE_WIDTH || diff > 1000 - LOADER_INDETERMINATE_WIDTH) {
             c = (img_loader[my][mx] & 0x00F0) >> 4;
           } else {
             c = img_loader[my][mx] & 0x000F;
