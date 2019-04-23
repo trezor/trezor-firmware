@@ -7,12 +7,7 @@ from trezor.messages import TezosBallotType, TezosContractType
 from trezor.messages.TezosSignedTx import TezosSignedTx
 
 from apps.common import paths
-from apps.common.writers import (
-    write_bytes,
-    write_uint8,
-    write_uint16_be,
-    write_uint32_be,
-)
+from apps.common.writers import write_bytes, write_uint8, write_uint32_be
 from apps.tezos import CURVE, helpers, layout
 
 PROPOSAL_LENGTH = const(32)

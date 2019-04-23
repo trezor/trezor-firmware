@@ -5,10 +5,9 @@ import hashlib
 import os
 import random
 
+import curve25519
 import ecdsa
 import pytest
-
-import curve25519
 
 
 def bytes2num(s):
