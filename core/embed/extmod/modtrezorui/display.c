@@ -380,8 +380,10 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
       } else {
         uint8_t c;
         if (indeterminate) {
-          uint16_t diff = (progress > a) ? (progress - a) : (1000 + progress - a);
-          if (diff < LOADER_INDETERMINATE_WIDTH || diff > 1000 - LOADER_INDETERMINATE_WIDTH) {
+          uint16_t diff =
+              (progress > a) ? (progress - a) : (1000 + progress - a);
+          if (diff < LOADER_INDETERMINATE_WIDTH ||
+              diff > 1000 - LOADER_INDETERMINATE_WIDTH) {
             c = (img_loader[my][mx] & 0x00F0) >> 4;
           } else {
             c = img_loader[my][mx] & 0x000F;
