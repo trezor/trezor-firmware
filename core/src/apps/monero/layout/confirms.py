@@ -171,5 +171,13 @@ async def live_refresh_step(ctx, current):
         return
     ui.display.clear()
     text = Text("Refreshing", ui.ICON_SEND, icon_color=ui.BLUE)
-    text.normal("%d" % current)
     text.render()
+
+    step = 6
+    p = int(1000.0 * (current / step)) % 1000
+    if p == 0 and current > 0:
+        p = 1000
+
+    ui.display.loader(p, 18, ui.WHITE, ui.BG, None, 0, 1000 // step)
+    ui.display.text_center(ui.WIDTH // 2, 145, "%d" % current, ui.NORMAL, ui.FG, ui.BG)
+    ui.display.refresh()
