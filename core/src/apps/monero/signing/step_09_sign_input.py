@@ -48,7 +48,7 @@ async def sign_input(
     :return: Generated signature MGs[i]
     """
     await confirms.transaction_step(
-        state.ctx, state.STEP_SIGN, state.current_input_index + 1, state.input_count
+        state, state.STEP_SIGN, state.current_input_index + 1
     )
 
     state.current_input_index += 1

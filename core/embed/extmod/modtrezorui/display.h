@@ -84,7 +84,7 @@ void display_icon(int x, int y, int w, int h, const void *data, int datalen,
                   uint16_t fgcolor, uint16_t bgcolor);
 void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor,
                     uint16_t bgcolor, const uint8_t *icon, uint32_t iconlen,
-                    uint16_t iconfgcolor);
+                    uint16_t iconfgcolor, uint16_t slice_span);
 
 #ifndef TREZOR_PRINT_DISABLE
 void display_print_color(uint16_t fgcolor, uint16_t bgcolor);

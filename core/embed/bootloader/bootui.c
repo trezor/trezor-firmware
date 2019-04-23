@@ -237,7 +237,7 @@ void ui_screen_install_confirm_newvendor(const vendor_header *const vhdr,
 void ui_screen_install(void) {
   display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
   display_loader(0, -20, COLOR_BL_PROCESS, COLOR_WHITE, toi_icon_install,
-                 sizeof(toi_icon_install), COLOR_BLACK);
+                 sizeof(toi_icon_install), COLOR_BLACK, 0);
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24,
                       "Installing firmware", -1, FONT_NORMAL, COLOR_BLACK,
                       COLOR_WHITE);
@@ -245,12 +245,12 @@ void ui_screen_install(void) {
 
 void ui_screen_install_progress_erase(int pos, int len) {
   display_loader(250 * pos / len, -20, COLOR_BL_PROCESS, COLOR_WHITE,
-                 toi_icon_install, sizeof(toi_icon_install), COLOR_BLACK);
+                 toi_icon_install, sizeof(toi_icon_install), COLOR_BLACK, 0);
 }
 
 void ui_screen_install_progress_upload(int pos) {
   display_loader(pos, -20, COLOR_BL_PROCESS, COLOR_WHITE, toi_icon_install,
-                 sizeof(toi_icon_install), COLOR_BLACK);
+                 sizeof(toi_icon_install), COLOR_BLACK, 0);
 }
 
 // wipe UI
@@ -275,14 +275,14 @@ void ui_screen_wipe_confirm(void) {
 void ui_screen_wipe(void) {
   display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
   display_loader(0, -20, COLOR_BL_PROCESS, COLOR_WHITE, toi_icon_wipe,
-                 sizeof(toi_icon_wipe), COLOR_BLACK);
+                 sizeof(toi_icon_wipe), COLOR_BLACK, 0);
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24, "Wiping device", -1,
                       FONT_NORMAL, COLOR_BLACK, COLOR_WHITE);
 }
 
 void ui_screen_wipe_progress(int pos, int len) {
   display_loader(1000 * pos / len, -20, COLOR_BL_PROCESS, COLOR_WHITE,
-                 toi_icon_wipe, sizeof(toi_icon_wipe), COLOR_BLACK);
+                 toi_icon_wipe, sizeof(toi_icon_wipe), COLOR_BLACK, 0);
 }
 
 // done UI
@@ -301,7 +301,7 @@ void ui_screen_done(int restart_seconds, secbool full_redraw) {
     display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
   }
   display_loader(1000, -20, COLOR_BL_DONE, COLOR_WHITE, toi_icon_done,
-                 sizeof(toi_icon_done), COLOR_BLACK);
+                 sizeof(toi_icon_done), COLOR_BLACK, 0);
   if (secfalse == full_redraw) {
     display_bar(0, DISPLAY_RESY - 24 - 18, 240, 23, COLOR_WHITE);
   }
@@ -314,7 +314,7 @@ void ui_screen_done(int restart_seconds, secbool full_redraw) {
 void ui_screen_fail(void) {
   display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
   display_loader(1000, -20, COLOR_BL_FAIL, COLOR_WHITE, toi_icon_fail,
-                 sizeof(toi_icon_fail), COLOR_BLACK);
+                 sizeof(toi_icon_fail), COLOR_BLACK, 0);
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24,
                       "Failed! Please, reconnect.", -1, FONT_NORMAL,
                       COLOR_BLACK, COLOR_WHITE);
