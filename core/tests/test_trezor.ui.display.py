@@ -39,7 +39,7 @@ class TestDisplay(unittest.TestCase):
         display.qrcode(0, 0, 'Test', 4)
 
     def test_loader(self):
-        display.loader(333, 0, 0xFFFF, 0x0000)
+        display.loader(333, False, 0, 0xFFFF, 0x0000)
 
     def test_orientation(self):
         for o in [0, 90, 180, 270]:

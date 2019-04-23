@@ -130,7 +130,7 @@ class TestAddress(unittest.TestCase):
             ([49 | HARDENED], InputScriptType.SPENDP2SHWITNESS),  # invalid length
             ([49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED], InputScriptType.SPENDP2SHWITNESS),  # too many HARDENED
             ([49 | HARDENED, 0 | HARDENED], InputScriptType.SPENDP2SHWITNESS),  # invalid length
-            ([49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0, 0], InputScriptType.SPENDP2SHWITNESS),  # invalid length
+            ([49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0, 0, 0], InputScriptType.SPENDP2SHWITNESS),  # invalid length
             ([49 | HARDENED, 123 | HARDENED, 0 | HARDENED, 0, 0, 0], InputScriptType.SPENDP2SHWITNESS),  # invalid slip44
             ([49 | HARDENED, 0 | HARDENED, 1000 | HARDENED, 0, 0], InputScriptType.SPENDP2SHWITNESS),  # account too high
             ([49 | HARDENED, 0 | HARDENED, 1 | HARDENED, 2, 0], InputScriptType.SPENDP2SHWITNESS),  # invalid y
@@ -172,7 +172,7 @@ class TestAddress(unittest.TestCase):
             ([49 | HARDENED, 145 | HARDENED, 0 | HARDENED, 0, 0], InputScriptType.SPENDP2SHWITNESS),  # bch is not segwit coin so 49' is not allowed
             ([84 | HARDENED, 145 | HARDENED, 1 | HARDENED, 0, 1], InputScriptType.SPENDWITNESS),  # and neither is 84'
             ([44 | HARDENED, 145 | HARDENED], InputScriptType.SPENDADDRESS),  # invalid length
-            ([44 | HARDENED, 145 | HARDENED, 0 | HARDENED, 0, 0, 0], InputScriptType.SPENDADDRESS),  # invalid length
+            ([44 | HARDENED, 145 | HARDENED, 0 | HARDENED, 0, 0, 0, 0], InputScriptType.SPENDADDRESS),  # invalid length
             ([44 | HARDENED, 123 | HARDENED, 0 | HARDENED, 0, 0, 0], InputScriptType.SPENDADDRESS),  # invalid slip44
             ([44 | HARDENED, 145 | HARDENED, 1000 | HARDENED, 0, 0], InputScriptType.SPENDADDRESS),  # account too high
             ([44 | HARDENED, 145 | HARDENED, 1 | HARDENED, 2, 0], InputScriptType.SPENDADDRESS),  # invalid y
