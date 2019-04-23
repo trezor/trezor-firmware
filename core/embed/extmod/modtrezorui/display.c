@@ -343,6 +343,10 @@ void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor,
   } else {
     icon = NULL;
   }
+
+#define SUB_CIRC(X, Y) ((X) > (Y) ? ((X) - (Y)) : 1000u + (X) - (Y))
+  const uint16_t ld = slice_span == 0 ? 0 : SUB_CIRC(progress, slice_span);
+  const uint16_t rt = slice_span == 0 ? 0 : SUB_CIRC(progress, ld);
   for (int y = 0; y < img_loader_size * 2; y++) {
     for (int x = 0; x < img_loader_size * 2; x++) {
       int mx = x, my = y;
@@ -378,15 +382,21 @@ void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor,
         PIXELDATA(iconcolortable[c]);
       } else {
         uint8_t c;
-        if (progress > a && (slice_span == 0 || progress < (a + slice_span))) {
-          c = (img_loader[my][mx] & 0x00F0) >> 4;
+#define GET_LOADER_COLOR(COND) ((COND) ? (img_loader[my][mx] & 0x00F0) >> 4 : img_loader[my][mx] & 0x000F)
+        if (slice_span == 0){
+          c = GET_LOADER_COLOR(progress > a);
         } else {
-          c = img_loader[my][mx] & 0x000F;
+          // l, r = left and right active region. l = progress - slice_span, r = progress
+          // Transform {l, a, r} with -ld for easy circle computation
+          const uint16_t at = SUB_CIRC(a, ld);
+          c = GET_LOADER_COLOR(at > 0 && at < rt);
         }
         PIXELDATA(colortable[c]);
       }
     }
   }
+#undef SUB_CIRC
+#undef GET_LOADER_COLOR
 #endif
 }
 
