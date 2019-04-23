@@ -318,7 +318,7 @@ static void inflate_callback_loader(uint8_t byte, uint32_t pos,
 
 void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor,
                     uint16_t bgcolor, const uint8_t *icon, uint32_t iconlen,
-                    uint16_t iconfgcolor) {
+                    uint16_t iconfgcolor, uint16_t slice_span) {
 #if TREZOR_MODEL == T
   uint16_t colortable[16], iconcolortable[16];
   set_color_table(colortable, fgcolor, bgcolor);
@@ -378,7 +378,7 @@ void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor,
         PIXELDATA(iconcolortable[c]);
       } else {
         uint8_t c;
-        if (progress > a) {
+        if (progress > a && (slice_span == 0 || progress < (a + slice_span))) {
           c = (img_loader[my][mx] & 0x00F0) >> 4;
         } else {
           c = img_loader[my][mx] & 0x000F;

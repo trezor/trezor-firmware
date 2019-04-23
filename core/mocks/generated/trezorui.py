@@ -51,12 +51,14 @@ class Display:
         The icon needs to be in TREZOR Optimized Image Format (TOIF) - gray-scale mode.
         '''
 
-    def loader(self, progress: int, yoffset: int, fgcolor: int, bgcolor: int, icon: bytes = None, iconfgcolor: int = None) -> None:
+    def loader(self, progress: int, yoffset: int, fgcolor: int, bgcolor: int, icon: bytes = None, iconfgcolor: int = None, slice_span: int = None) -> None:
         '''
         Renders a rotating loader graphic.
         Progress determines its position (0-1000), fgcolor is used as foreground color, bgcolor as background.
         When icon and iconfgcolor are provided, an icon is drawn in the middle using the color specified in iconfgcolor.
         Icon needs to be of exactly LOADER_ICON_SIZE x LOADER_ICON_SIZE pixels size.
+        If slice_span is defined the progress is sliced to emulate indeterminate
+        loader.
         '''
 
     def print(self, text: str) -> None:
