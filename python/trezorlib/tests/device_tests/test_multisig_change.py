@@ -127,15 +127,7 @@ class TestMultisigChange(TrezorTest):
             proto.TxRequest(
                 request_type=proto.RequestType.TXINPUT,
                 details=proto.TxRequestDetailsType(request_index=0),
-            )
-        ]
-        if TREZOR_VERSION != 1:
-            # trezor 1 does not have UnknownDerivationPath implemented
-            resp.append(
-                proto.ButtonRequest(code=proto.ButtonRequestType.UnknownDerivationPath)
-            )
-
-        resp += [
+            ),
             proto.TxRequest(
                 request_type=proto.RequestType.TXMETA,
                 details=proto.TxRequestDetailsType(tx_hash=inp1.prev_hash),
@@ -162,14 +154,6 @@ class TestMultisigChange(TrezorTest):
                 request_type=proto.RequestType.TXINPUT,
                 details=proto.TxRequestDetailsType(request_index=1),
             ),
-        ]
-        if TREZOR_VERSION != 1:
-            # trezor 1 does not have UnknownDerivationPath implemented
-            resp.append(
-                proto.ButtonRequest(code=proto.ButtonRequestType.UnknownDerivationPath)
-            )
-
-        resp += [
             proto.TxRequest(
                 request_type=proto.RequestType.TXMETA,
                 details=proto.TxRequestDetailsType(tx_hash=inp2.prev_hash),
