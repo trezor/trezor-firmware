@@ -18,7 +18,7 @@ def show_pin_timeout(seconds: int, progress: int, message: str) -> bool:
         ui.display.text_center(
             ui.WIDTH // 2, 37, message, ui.BOLD, ui.FG, ui.BG, ui.WIDTH
         )
-    ui.display.loader(progress, 0, ui.FG, ui.BG)
+    ui.display.loader(progress, False, 0, ui.FG, ui.BG)
     if seconds == 0:
         ui.display.text_center(
             ui.WIDTH // 2, ui.HEIGHT - 22, "Done", ui.BOLD, ui.FG, ui.BG, ui.WIDTH

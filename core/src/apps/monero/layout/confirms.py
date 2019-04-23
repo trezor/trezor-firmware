@@ -144,8 +144,8 @@ async def transaction_step(state, step, sub_step=None):
     text = Text("Signing transaction", ui.ICON_SEND, icon_color=ui.BLUE)
     text.render()
 
-    p = int(1000.0 * state.progress_cur / state.progress_total)
-    ui.display.loader(p, -4, ui.WHITE, ui.BG)
+    p = 1000 * state.progress_cur // state.progress_total
+    ui.display.loader(p, False, -4, ui.WHITE, ui.BG)
     ui.display.text_center(ui.WIDTH // 2, 210, info[0], ui.NORMAL, ui.FG, ui.BG)
     if len(info) > 1:
         ui.display.text_center(ui.WIDTH // 2, 235, info[1], ui.NORMAL, ui.FG, ui.BG)
@@ -160,8 +160,8 @@ async def keyimage_sync_step(ctx, current, total_num):
     text = Text("Syncing", ui.ICON_SEND, icon_color=ui.BLUE)
     text.render()
 
-    p = (int(1000.0 * (current + 1) / total_num)) if total_num > 0 else 0
-    ui.display.loader(p, 18, ui.WHITE, ui.BG)
+    p = (1000 * (current + 1) // total_num) if total_num > 0 else 0
+    ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
     ui.display.refresh()
 
 
@@ -173,11 +173,9 @@ async def live_refresh_step(ctx, current):
     text = Text("Refreshing", ui.ICON_SEND, icon_color=ui.BLUE)
     text.render()
 
-    step = 6
-    p = int(1000.0 * (current / step)) % 1000
-    if p == 0 and current > 0:
-        p = 1000
+    step = 8
+    p = (1000 * current // step) % 1000
 
-    ui.display.loader(p, 18, ui.WHITE, ui.BG, None, 0, 1000 // step)
+    ui.display.loader(p, True, 18, ui.WHITE, ui.BG, None, 0)
     ui.display.text_center(ui.WIDTH // 2, 145, "%d" % current, ui.NORMAL, ui.FG, ui.BG)
     ui.display.refresh()

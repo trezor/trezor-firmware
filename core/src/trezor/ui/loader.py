@@ -47,12 +47,15 @@ class Loader(ui.Widget):
         else:
             s = self.normal_style
         if s["icon"] is None:
-            ui.display.loader(r, -24, s["fg-color"], s["bg-color"])
+            ui.display.loader(r, False, -24, s["fg-color"], s["bg-color"])
         elif s["icon-fg-color"] is None:
-            ui.display.loader(r, -24, s["fg-color"], s["bg-color"], res.load(s["icon"]))
+            ui.display.loader(
+                r, False, -24, s["fg-color"], s["bg-color"], res.load(s["icon"])
+            )
         else:
             ui.display.loader(
                 r,
+                False,
                 -24,
                 s["fg-color"],
                 s["bg-color"],

@@ -24,5 +24,5 @@ def report_init(text):
 
 
 def report():
-    p = int(1000 * _progress / _steps)
-    ui.display.loader(p, 18, ui.WHITE, ui.BG)
+    p = 1000 * _progress // _steps
+    ui.display.loader(p, False, 18, ui.WHITE, ui.BG)

@@ -44,6 +44,6 @@ def _start_progress():
 
 
 def _render_progress(progress: int, total: int):
-    p = int(1000 * progress / total)
-    ui.display.loader(p, 18, ui.WHITE, ui.BG)
+    p = 1000 * progress // total
+    ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
     ui.display.refresh()
