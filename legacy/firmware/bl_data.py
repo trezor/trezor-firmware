@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from hashlib import sha256
 
-fn = "../bootloader/bootloader.bin"
+fn = "bootloader.dat"
 
 data = open(fn, "rb").read()
 if len(data) > 32768:
