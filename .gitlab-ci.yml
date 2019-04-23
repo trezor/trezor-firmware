@@ -50,6 +50,17 @@ build core unix:
     - cd core
     - pipenv run make build_unix_noui
 
+# TODO: matrix: DEBUG_LINK={0,1}, gcc vs clang
+build legacy:
+  stage: build
+  variables:
+    HEADLESS: "1"
+  script:
+    - cd legacy
+    - pipenv run script/cibuild
+    - pipenv run make -C bootloader
+    - pipenv run make -C demo
+
 test style:
   stage: test
   script:
@@ -98,3 +109,16 @@ test crypto:
     - CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./tests/test_check
     - ./tests/test_openssl 1000
     - ITERS=10 pipenv run pytest tests/  # TODO are ITERS=10 propagated?
+
+# TODO: matrix: DEBUG_LINK={0,1}, gcc vs clang
+# TODO add more based on deleted .travis.yml
+test legacy:
+  stage: test
+  variables:
+    HEADLESS: "1"
+    EMULATOR: "1"
+    DEBUG_LINK: "1"
+  script:
+    - cd legacy
+    - pipenv run script/cibuild
+    - pipenv run script/test
