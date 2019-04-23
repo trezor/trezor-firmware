@@ -24,6 +24,13 @@ def write_uint16_le(w: bytearray, n: int) -> int:
     return 2
 
 
+def write_uint16_be(w: bytearray, n: int):
+    ensure(0 <= n <= 0xFFFF)
+    w.append((n >> 8) & 0xFF)
+    w.append(n & 0xFF)
+    return 2
+
+
 def write_uint32_le(w: bytearray, n: int) -> int:
     ensure(0 <= n <= 0xFFFFFFFF)
     w.append(n & 0xFF)

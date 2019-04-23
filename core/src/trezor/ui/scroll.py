@@ -21,9 +21,9 @@ async def change_page(page, page_count):
         else:
             s = await swipe
         if s == SWIPE_UP:
-            return page + 1  # scroll down
+            return min(page + 1, page_count - 1)  # scroll down
         elif s == SWIPE_DOWN:
-            return page - 1  # scroll up
+            return max(page - 1, 0)  # scroll up
 
 
 async def paginate(render_page, page_count, page=0, *args):
