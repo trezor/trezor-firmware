@@ -123,7 +123,7 @@ static int known_bootloader(int r, const uint8_t *hash) {
              "\xf7\xfa\x16\x5b\xe6\xd7\x80\xf3\xe1\xaf\x00\xab\xc0\x7d\xf8\xb3"
              "\x07\x6b\xcd\xad\x72\xd7\x0d\xa2\x2a\x63\xd8\x89\x6b\x63\x91\xd8",
              32))
-    return 1;  // 1.8.0 shipped with fw 1.8.0
+    return 1;  // 1.8.0 shipped with fw 1.8.0 and 1.8.1
   return 0;
 }
 
