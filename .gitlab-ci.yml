@@ -1,5 +1,15 @@
 variables:
+  # Init submodules.
+  # See https://docs.gitlab.com/ee/ci/yaml/#git-submodule-strategy
   GIT_SUBMODULE_STRATEGY: "recursive"
+
+  # Use shallow cloning to speed up git clone. This can fail, if retrying an older build on CI
+  # and the old commit is not in the shallow history any more.
+  # See https://docs.gitlab.com/ee/ci/yaml/#shallow-cloning
+  GIT_DEPTH: "50"
+
+  # run make paralel
+  MAKEFLAGS: "-j10"
 
 stages:
   - environment
