@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+cd $(dirname $0)
 
 rm -f ../src/trezor/messages/[A-Z]*.py
 ../vendor/trezor-common/protob/pb2py \
