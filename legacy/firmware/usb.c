@@ -344,7 +344,7 @@ static uint8_t usbd_control_buffer[256] __attribute__((aligned(2)));
 
 static const struct usb_device_capability_descriptor *capabilities[] = {
     (const struct usb_device_capability_descriptor
-         *)&webusb_platform_capability_descriptor_no_landing_page,
+         *)&webusb_platform_capability_descriptor,
 };
 
 static const struct usb_bos_descriptor bos_descriptor = {

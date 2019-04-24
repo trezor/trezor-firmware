@@ -62,7 +62,6 @@ bus = io.USB(
     product="TREZOR",
     interface="TREZOR Interface",
     serial_number=get_device_id(),
-    usb21_landing=False,
 )
 bus.add(iface_wire)
 if __debug__:
