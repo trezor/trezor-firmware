@@ -88,13 +88,6 @@ main() {
     local bootloader_commit="$1"
     local firmware_commit="$2"
 
-    if [ "$bootloader_commit" != "HEAD" ]; then
-        bootloader_commit="legacy/$bootloader_commit"
-    fi
-    if [ "$firmware_commit" != "HEAD" ]; then
-        firmware_commit="legacy/$firmware_commit"
-    fi
-
     worktree_setup "$FIRMWARE_DIR" "$firmware_commit"
 
     if [ "$EMULATOR" != 1 ]; then
