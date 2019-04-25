@@ -77,36 +77,32 @@ build legacy:
 
 test style:
   stage: test
+  dependencies: []  # no need to download artifacts
   script:
     - pipenv run make style_check
     - cd core && pipenv run make templates_check  # TODO
 
 test core unix unit:
   stage: test
-  dependencies:
-    - build core unix
   script:
     - cd core
     - pipenv run make test
 
 test core unix device:
   stage: test
-  dependencies:
-    - build core unix
   script:
     - cd core
     - pipenv run make test_emu
 
 test core unix monero:
   stage: test
-  dependencies:
-    - build core unix
   script:
     - cd core
     - pipenv run make test_emu_monero
 
 test common:
   stage: test
+  dependencies: []  # no need to download artifacts
   script:
     - cd common
     - pipenv run jsonlint defs/*.json
@@ -118,6 +114,7 @@ test common:
 
 test crypto:
   stage: test
+  dependencies: []  # no need to download artifacts
   script:
     - cd crypto
     - pipenv run make
