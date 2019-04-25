@@ -11,11 +11,7 @@ else
 fi
 
 IMAGE=trezor-core-build.$TOOLCHAIN_FLAVOR
-if [ -z "$1" ]; then
-	TAG=master
-else
-	TAG=core/${1}
-fi
+TAG=${1:-master}
 REPOSITORY=${2:-trezor}
 PRODUCTION=${PRODUCTION:-0}
 
