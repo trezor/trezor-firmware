@@ -33,3 +33,17 @@ def split_message(message: bytes) -> List[str]:
         m = "hex(%s)" % hexlify(message).decode()
         words = [m]
     return words
+
+# hashes the serialized bytes
+# required for Stakenet TPOS contracts
+def tpos_digest(coin, tpos):
+    if coin.decred:
+        h = HashWriter(blake256())
+    else:
+        h = HashWriter(sha256())
+    h.extend(tpos)
+    ret = h.get_digest()
+    if coin.sign_hash_double:
+        ret = sha256(ret).digest()
+
+    return ret
