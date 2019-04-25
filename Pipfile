@@ -43,6 +43,10 @@ py_trezor_crypto_ph4 = {version = ">=0.1.1"}
 setuptools = ">=24.2.0"
 typing = "*"
 
+# storage
+cryptography = "*"
+hypothesis = "*"
+
 [dev-packages]
 scan-build = "*"
 
