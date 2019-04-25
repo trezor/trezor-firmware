@@ -50,11 +50,7 @@ worktree_build() {
     fi
 
     pushd $path/$MCU_ROOT
-    if ! pipenv install; then
-        # older tags can fail because they don't have protobuf in Pipfile
-        pipenv run pip install "protobuf==3.4.0"
-        pipenv install
-    fi
+    pipenv install
     pipenv run script/cibuild
     popd
 }
