@@ -44,14 +44,14 @@ worktree_setup() {
 worktree_build() {
     local path="$1"
 
-    if [ ! -e "$path/$MCU_ROOT/Pipfile" ]; then
+    if [ ! -e "$path/Pipfile" ]; then
         echo "Can't handle pre-monorepo tags properly. You will have to check out manually"
         exit 1
     fi
 
-    pushd $path/$MCU_ROOT
+    pushd $path
     pipenv install
-    pipenv run script/cibuild
+    pipenv run $MCU_ROOT/script/cibuild
     popd
 }
 

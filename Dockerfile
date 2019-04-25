@@ -65,7 +65,7 @@ ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
 # use zipfile module to extract files world-readable
 RUN python -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/local && chmod 755 /usr/local/bin/protoc
 
-#ENV WORKON_HOME=/tmp/.venvs
+ENV WORKON_HOME=/tmp/.venvs
 
 # install python dependencies
 
