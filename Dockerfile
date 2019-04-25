@@ -63,7 +63,9 @@ ENV PATH=/opt/$TOOLCHAIN_LONGVER/bin:$PATH
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
 
 # use zipfile module to extract files world-readable
-RUN python -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/local && chmod 755 /usr/local/bin/protoc
+ENV PYTHON=python
+
+RUN $PYTHON -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/local && chmod 755 /usr/local/bin/protoc
 
 ENV WORKON_HOME=/tmp/.venvs
 
@@ -71,6 +73,6 @@ ENV WORKON_HOME=/tmp/.venvs
 
 RUN pip install pipenv
 
-RUN python --version
+RUN $PYTHON --version
 RUN pip --version
 RUN pipenv --version
