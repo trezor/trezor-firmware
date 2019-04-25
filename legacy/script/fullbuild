@@ -11,6 +11,8 @@ set -eu
 
 cd "$(dirname "$0")/../.."
 
+EMULATOR=${EMULATOR:-0}
+
 readonly MCU_ROOT=legacy
 
 readonly ARTIFACT_EXTENSIONS=(bin elf)
