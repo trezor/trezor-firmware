@@ -1499,6 +1499,34 @@ def ethereum_sign_tx(
     else:
         return "Signed raw transaction:\n%s" % tx_hex
 
+@cli.command(help="Sign TPOS contract using address of given path.")
+@click.option("-c", "--coin", default="Bitcoin")
+@click.option(
+    "-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/0'/0'/0/0"
+)
+@click.option(
+    "-t",
+    "--script-type",
+    type=click.Choice(["address", "segwit", "p2shsegwit"]),
+    default="address",
+)
+@click.argument("tpos")
+@click.pass_obj
+def sign_tpos_contract(connect, coin, address, tpos, script_type):
+    client = connect()
+    address_n = tools.parse_path(address)
+    typemap = {
+        "address": proto.InputScriptType.SPENDADDRESS,
+        "segwit": proto.InputScriptType.SPENDWITNESS,
+        "p2shsegwit": proto.InputScriptType.SPENDP2SHWITNESS,
+    }
+    script_type = typemap[script_type]
+    res = btc.sign_tpos_contract(client, coin, address_n, tpos, script_type)
+    return {
+        "tpos": tpos,
+        "address": res.address,
+        "signature": res.signature.hex(),
+    }
 
 #
 # EOS functions
