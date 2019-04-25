@@ -52,6 +52,7 @@ worktree_build() {
     fi
 
     pushd $path
+    export HOME=/tmp
     pipenv install
     pipenv run $MCU_ROOT/script/cibuild
     popd
