@@ -107,18 +107,24 @@ build legacy emu:
 
 test core unix unit:
   stage: test
+  dependencies:
+    - build core unix
   script:
     - cd core
     - pipenv run make test
 
 test core unix device:
   stage: test
+  dependencies:
+    - build core unix
   script:
     - cd core
     - pipenv run make test_emu
 
 test core unix monero:
   stage: test
+  dependencies:
+    - build core unix
   script:
     - cd core
     - pipenv run make test_emu_monero
@@ -127,10 +133,10 @@ test core unix monero:
 # TODO: aren't some tests from .travis.yml missing?
 test legacy emu:
   stage: test
-  variables:
-    EMULATOR: "1"
   dependencies:
     - build legacy emu
+  variables:
+    EMULATOR: "1"
   script:
     - cd legacy
     - pipenv run script/test
