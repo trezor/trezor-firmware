@@ -82,9 +82,18 @@ build core unix:
     untracked: true
     expire_in: 1 day
 
-# TODO: matrix: gcc vs clang
 build legacy firmware:
   stage: build
+  script:
+    - cd legacy
+    - pipenv run script/cibuild
+    - pipenv run make -C bootloader
+    - pipenv run make -C demo
+
+build legacy firmware debug:
+  stage: build
+  variables:
+    DEBUG_LINK: "1"
   script:
     - cd legacy
     - pipenv run script/cibuild
@@ -139,7 +148,6 @@ test core unix monero:
     - cd core
     - pipenv run make test_emu_monero
 
-# TODO: matrix: do we need to test gcc vs clang as well? or build is enough?
 # TODO: aren't some tests from .travis.yml missing?
 test legacy emu:
   stage: test
