@@ -82,16 +82,28 @@ build core unix:
     untracked: true
     expire_in: 1 day
 
-# TODO: matrix: DEBUG_LINK={0,1}, gcc vs clang
-build legacy:
+# TODO: matrix: gcc vs clang
+build legacy firmware:
   stage: build
-  variables:
-    HEADLESS: "1"
   script:
     - cd legacy
     - pipenv run script/cibuild
     - pipenv run make -C bootloader
     - pipenv run make -C demo
+
+build legacy emu:
+  stage: build
+  variables:
+    HEADLESS: "1"
+    EMULATOR: "1"
+    DEBUG_LINK: "1"
+  script:
+    - cd legacy
+    - pipenv run script/cibuild
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    untracked: true
+    expire_in: 1 day
 
 test core unix unit:
   stage: test
@@ -111,6 +123,18 @@ test core unix monero:
     - cd core
     - pipenv run make test_emu_monero
 
+# TODO: matrix: do we need to test gcc vs clang as well? or build is enough?
+# TODO: aren't some tests from .travis.yml missing?
+test legacy emu:
+  stage: test
+  variables:
+    EMULATOR: "1"
+  dependencies:
+    - build legacy emu
+  script:
+    - cd legacy
+    - pipenv run script/test
+
 test crypto:
   stage: test
   dependencies: []  # no need to download artifacts
@@ -122,19 +146,6 @@ test crypto:
     - CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./tests/test_check
     - ./tests/test_openssl 1000
     - ITERS=10 pipenv run pytest tests/  # TODO are ITERS=10 propagated?
-
-# TODO: matrix: DEBUG_LINK={0,1}, gcc vs clang
-# TODO add more based on deleted .travis.yml
-test legacy:
-  stage: test
-  variables:
-    HEADLESS: "1"
-    EMULATOR: "1"
-    DEBUG_LINK: "1"
-  script:
-    - cd legacy
-    - pipenv run script/cibuild
-    - pipenv run script/test
 
 test storage:
   stage: test
