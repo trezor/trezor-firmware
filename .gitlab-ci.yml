@@ -38,13 +38,13 @@ image: registry.corp.sldev.cz/trezor/trezor-firmware/environment
 before_script:
   - pipenv install
 
-style:
+prebuild style:
   stage: prebuild
   script:
     - pipenv run make style_check
     - cd core && pipenv run make templates_check  # TODO
 
-common:
+prebuild common:
   stage: prebuild
   script:
     - cd common
