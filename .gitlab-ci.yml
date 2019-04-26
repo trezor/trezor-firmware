@@ -13,6 +13,7 @@ variables:
 
 stages:
   - environment
+  - prebuild
   - build
   - test
 
@@ -36,6 +37,23 @@ image: registry.corp.sldev.cz/trezor/trezor-firmware/environment
 
 before_script:
   - pipenv install
+
+style:
+  stage: prebuild
+  script:
+    - pipenv run make style_check
+    - cd core && pipenv run make templates_check  # TODO
+
+common:
+  stage: prebuild
+  script:
+    - cd common
+    - pipenv run jsonlint defs/*.json
+    - pipenv run jsonlint defs/*/*.json
+    - pipenv run python tools/cointool.py check
+    - pipenv run python tools/support.py check --ignore-missing
+    - pipenv run python protob/check.py
+    - pipenv run python protob/graph.py protob/*.proto  # TODO: artifacts?
 
 build core firmware:
   stage: build
@@ -75,13 +93,6 @@ build legacy:
     - pipenv run make -C bootloader
     - pipenv run make -C demo
 
-test style:
-  stage: test
-  dependencies: []  # no need to download artifacts
-  script:
-    - pipenv run make style_check
-    - cd core && pipenv run make templates_check  # TODO
-
 test core unix unit:
   stage: test
   script:
@@ -99,18 +110,6 @@ test core unix monero:
   script:
     - cd core
     - pipenv run make test_emu_monero
-
-test common:
-  stage: test
-  dependencies: []  # no need to download artifacts
-  script:
-    - cd common
-    - pipenv run jsonlint defs/*.json
-    - pipenv run jsonlint defs/*/*.json
-    - pipenv run python tools/cointool.py check
-    - pipenv run python tools/support.py check --ignore-missing
-    - pipenv run python protob/check.py
-    - pipenv run python protob/graph.py protob/*.proto  # TODO: artifacts?
 
 test crypto:
   stage: test
