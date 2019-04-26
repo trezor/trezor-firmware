@@ -4,7 +4,7 @@
   "coin_label": "BlockStamp",
   "website": "https://blockstamp.info",
   "github": "https://github.com/BlockStamp/bst",
-  "maintainer": "The BlockStamp Developers <support@blockstamp.info>",
+  "maintainer": "Krzysztof Kuchta <k.kuchta@blockstamp.info>",
   "curve_name": "secp256k1",
   "address_type": 26,
   "address_type_p2sh": 5,
@@ -35,9 +35,7 @@
   "uri_prefix": "blockstamp",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [
-    "https://explorer.blockstamp.info"
-  ],
+  "bitcore": [],
   "blockbook": [],
   "cooldown": 1000,
   "consensus_branch_id": null
