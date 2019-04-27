@@ -273,7 +273,9 @@ void fsm_msgCancel(const Cancel *msg) {
   (void)msg;
   recovery_abort();
   signing_abort();
+#if !BITCOIN_ONLY
   ethereum_signing_abort();
+#endif
   fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 }
 

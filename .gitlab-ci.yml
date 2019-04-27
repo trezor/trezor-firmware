@@ -100,6 +100,16 @@ build legacy firmware debug:
     - pipenv run make -C bootloader
     - pipenv run make -C demo
 
+build legacy firmware bitcoinonly:
+  stage: build
+  variables:
+    BITCOIN_ONLY: "1"
+  script:
+    - cd legacy
+    - pipenv run script/cibuild
+    - pipenv run make -C bootloader
+    - pipenv run make -C demo
+
 build legacy emu:
   stage: build
   variables:
