@@ -26,11 +26,11 @@ OBJS += reset.o
 OBJS += signing.o
 OBJS += crypto.o
 
-ifeq ($(U2F_ENABLED),1)
+ifneq ($(U2F_ENABLED),0)
 OBJS += u2f.o
 endif
 
-ifeq ($(BITCOIN_ONLY),0)
+ifneq ($(BITCOIN_ONLY),1)
 OBJS += ethereum.o
 OBJS += ethereum_tokens.o
 OBJS += lisk.o
@@ -105,7 +105,7 @@ OBJS += protob/messages-common.pb.o
 OBJS += protob/messages-crypto.pb.o
 OBJS += protob/messages-debug.pb.o
 OBJS += protob/messages-management.pb.o
-ifeq ($(BITCOIN_ONLY),0)
+ifneq ($(BITCOIN_ONLY),1)
 OBJS += protob/messages-ethereum.pb.o
 OBJS += protob/messages-lisk.pb.o
 OBJS += protob/messages-nem.pb.o
@@ -131,7 +131,7 @@ CFLAGS += -DDEBUG_LINK=$(DEBUG_LINK)
 CFLAGS += -DDEBUG_LOG=$(DEBUG_LOG)
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'
 CFLAGS += -DUSE_MONERO=0
-ifeq ($(BITCOIN_ONLY),0)
+ifneq ($(BITCOIN_ONLY),1)
 CFLAGS += -DUSE_ETHEREUM=1
 CFLAGS += -DUSE_NEM=1
 MAKO_RENDER_FLAG =

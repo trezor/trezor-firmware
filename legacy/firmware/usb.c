@@ -278,6 +278,8 @@ static const struct usb_config_descriptor config = {
     .interface = ifaces,
 };
 
+static volatile char tiny = 0;
+
 #if U2F_ENABLED
 
 static enum usbd_request_return_codes hid_control_request(
@@ -308,8 +310,6 @@ static void u2f_rx_callback(usbd_device *dev, uint8_t ep) {
 }
 
 #endif
-
-static volatile char tiny = 0;
 
 static void main_rx_callback(usbd_device *dev, uint8_t ep) {
   (void)ep;
