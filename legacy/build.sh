@@ -10,6 +10,6 @@ IMAGE=trezor-mcu-build
 USER=$(ls -lnd . | awk '{ print $3 }')
 GROUP=$(ls -lnd . | awk '{ print $4 }')
 
-docker build -t "$IMAGE" .
+docker build -t "$IMAGE" ci/
 docker run -it -v $(pwd):/src:z --user="$USER:$GROUP" "$IMAGE" \
     /src/legacy/script/fullbuild "$BOOTLOADER_COMMIT" "$FIRMWARE_COMMIT"

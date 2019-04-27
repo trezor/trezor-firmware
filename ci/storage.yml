@@ -1,0 +1,9 @@
+image: registry.corp.sldev.cz/trezor/trezor-firmware/environment
+
+test storage:
+  stage: test
+  dependencies: []
+  script:
+    - cd storage/tests
+    - pipenv run make build
+    - pipenv run make tests_all

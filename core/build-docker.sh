@@ -21,7 +21,7 @@ else
 	REPOSITORY=https://github.com/$REPOSITORY/trezor-firmware.git
 fi
 
-docker build -t $IMAGE --build-arg TOOLCHAIN_FLAVOR=$TOOLCHAIN_FLAVOR core
+docker build -t $IMAGE --build-arg TOOLCHAIN_FLAVOR=$TOOLCHAIN_FLAVOR ci/
 
 USER=$(ls -lnd . | awk '{ print $3 }')
 GROUP=$(ls -lnd . | awk '{ print $4 }')

@@ -1,0 +1,15 @@
+environment:
+  stage: environment
+  image: docker:latest
+  variables:
+    CONTAINER_NAME: "$CI_REGISTRY/trezor/trezor-firmware/environment"
+  services:
+    - docker:dind
+  before_script:
+    - docker login $CI_REGISTRY -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+  when: manual
+  script:
+    - docker pull $CONTAINER_NAME:latest || true
+    - docker build --cache-from $CONTAINER_NAME:latest --tag $CONTAINER_NAME:$CI_COMMIT_SHA --tag $CONTAINER_NAME:latest ci/
+    - docker push $CONTAINER_NAME:$CI_COMMIT_SHA
+    - docker push $CONTAINER_NAME:latest
