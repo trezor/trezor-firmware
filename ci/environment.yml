@@ -2,6 +2,7 @@ environment:
   stage: environment
   image: docker:latest
   variables:
+    GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
     CONTAINER_NAME: "$CI_REGISTRY/trezor/trezor-firmware/environment"
   services:
     - docker:dind

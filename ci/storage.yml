@@ -1,6 +1,8 @@
 image: registry.corp.sldev.cz/trezor/trezor-firmware/environment
 
 test storage:
+  variables:
+    GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
   stage: test
   dependencies: []
   script:

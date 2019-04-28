@@ -29,6 +29,8 @@ build core unix:
 
 test core unix unit:
   stage: test
+  variables:
+    GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
   dependencies:
     - build core unix
   script:
@@ -37,6 +39,8 @@ test core unix unit:
 
 test core unix device:
   stage: test
+  variables:
+    GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
   dependencies:
     - build core unix
   script:
@@ -45,6 +49,8 @@ test core unix device:
 
 test core unix monero:
   stage: test
+  variables:
+    GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
   dependencies:
     - build core unix
   script:
