@@ -1,9 +1,9 @@
 variables:
-  # Using git fetch is faster.
+  # Using git fetch is faster
   # See https://docs.gitlab.com/ce/user/project/pipelines/settings.html#git-strategy
   GIT_STRATEGY: "fetch"
 
-  # Init submodules.
+  # Init submodules
   # See https://docs.gitlab.com/ee/ci/yaml/#git-submodule-strategy
   GIT_SUBMODULE_STRATEGY: "recursive"
 
@@ -12,8 +12,12 @@ variables:
   # See https://docs.gitlab.com/ee/ci/yaml/#shallow-cloning
   GIT_DEPTH: "50"
 
-  # run make paralel
+  # Run `make` in parallel
   MAKEFLAGS: "-j10"
+
+  # Pipenv cache
+  PIPENV_VENV_IN_PROJECT: "true"
+  PIPENV_CACHE_DIR: ".cache/"
 
 stages:
   - environment

@@ -1,5 +1,6 @@
 .attic/
 .cache/
+.venv/
 .idea/
 .mypy_cache/
 .pytest_cache/
