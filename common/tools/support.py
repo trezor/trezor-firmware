@@ -82,7 +82,7 @@ def print_support(coin):
 
 
 def check_support_values():
-    def _check_value_version_soon(val):
+    def _check_value_version_soon(value):
         if not isinstance(value, str):
             raise ValueError(f"non-str value: {value}")
 
