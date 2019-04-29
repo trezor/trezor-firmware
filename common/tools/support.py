@@ -195,6 +195,16 @@ def process_erc20(coins_dict):
             clear_support(device, key)
 
 
+def clear_erc20_mixed_buckets(buckets):
+    for bucket in buckets.values():
+        tokens = [coin for coin in bucket if coin_info.is_token(coin)]
+        if tokens == bucket:
+            continue
+
+        if len(tokens) == 1:
+            tokens[0]["duplicate"] = False
+
+
 @click.group()
 def cli():
     pass
@@ -207,7 +217,8 @@ def fix(dry_run):
 
     Prunes orphaned keys and ensures that ERC20 duplicate info matches support info.
     """
-    all_coins, _ = coin_info.coin_info_with_duplicates()
+    all_coins, buckets = coin_info.coin_info_with_duplicates()
+    clear_erc20_mixed_buckets(buckets)
     coins_dict = all_coins.as_dict()
 
     orphaned = find_orphaned_support_keys(coins_dict)
@@ -240,7 +251,8 @@ def check(check_tokens, ignore_missing):
     support info, but will not fail when missing coins are found. This is
     useful in Travis.
     """
-    all_coins, _ = coin_info.coin_info_with_duplicates()
+    all_coins, buckets = coin_info.coin_info_with_duplicates()
+    clear_erc20_mixed_buckets(buckets)
     coins_dict = all_coins.as_dict()
     checks_ok = True
 
