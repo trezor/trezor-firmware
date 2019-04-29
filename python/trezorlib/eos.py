@@ -293,8 +293,8 @@ def parse_transaction_json(json):
     tx.chain_id = bytes.fromhex(json['chain_id'])
 
     body = json['transaction']
-
-    expiration = int(datetime.strptime(body['expiration'], '%Y-%m-%dT%H:%M:%S').strftime("%s"))
+  
+    expiration = int((datetime.strptime(body['expiration'], '%Y-%m-%dT%H:%M:%S') - datetime(1970, 1, 1)).total_seconds())
     tx.expiration = expiration
     tx.ref_block_num = int(body['ref_block_num'])
     tx.ref_block_prefix = int(body['ref_block_prefix'])

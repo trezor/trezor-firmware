@@ -83,8 +83,8 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "729e0a94e5a587d7f10001214fc017e56c8753ff0fc785eb3e91b3f471d58864"
-        assert actionResp.signature_s.hex() == "532ee29e14bc925b37dec2cab72863b5bf82af581f2250b5149722582b56998d"
+        assert actionResp.signature_r.hex() == "0a9a0f467697010b743ffd02eae6698464c8b5c84b696245397287c225f85e01"
+        assert actionResp.signature_s.hex() == "3ec6a0175e5209be6789587a9d6b5f61593b841a751112faa05d9efdd9239d40"
         assert actionResp.signature_v == 31
 
     def test_eos_signtx_buyram(self):
@@ -146,8 +146,8 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "25eebc6591e2c06bb0a5ac1a6e7d79a65e5b5ec2c098362676ba88a0921a9daa"
-        assert actionResp.signature_s.hex() == "2f5f9b0f6a3bfe6981d4db99cfe2ab88329bf86fb04b40a3a8828453e54cef2c"
+        assert actionResp.signature_r.hex() == "480bdc505ba196d445d92ea12bda9d39f986d01620efcffe98bcf645ddcbb4ec"
+        assert actionResp.signature_s.hex() == "35c8e2105f0228c9e1e511682ae79eac1b7b90bc84c1a0dae13245b7f0f96abf"
         assert actionResp.signature_v == 31
 
     def test_eos_signtx_buyrambytes(self):
@@ -203,9 +203,9 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "56a5a2bb2a4ad9426209f2ce1d48e8722bbb9c692fd2f42fd1a830431d6e86e0"
-        assert actionResp.signature_s.hex() == "6caa1786e0913574b78e95685600f84f21c2db54a0454b62dfee637feaa5f4c7"
-        assert actionResp.signature_v == 32
+        assert actionResp.signature_r.hex() == "52267ee5f3ff73939af5ccdaa3406e0783deaf76accf5ce4ceb9714cdbdf7d6b"
+        assert actionResp.signature_s.hex() == "53aa9a9ecf044396441a559b51d3b97e239321c895823aad6888b0de2063a078"
+        assert actionResp.signature_v == 31
 
     def test_eos_signtx_sellram(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -259,9 +259,9 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "651fb86faa118464fb0ad273fb83a4af03bf800fe304924a809448ee0ba6ce9b"
-        assert actionResp.signature_s.hex() == "1cbf9773df9ad2d4cc300df070102ac76308f19617d30807105b14393cb07354"
-        assert actionResp.signature_v == 32
+        assert actionResp.signature_r.hex() == "04c0fdf1d2e0ea21af292173eacc2c7db90f7764abe69b79a8c2b24201af27c4"
+        assert actionResp.signature_s.hex() == "7bb29f12eaaabbebdb5190d30367012a80128138b5024b30e93e3afb3d24734e"
+        assert actionResp.signature_v == 31
 
     def test_eos_signtx_delegate(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -320,9 +320,9 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "36f341e5c1ad5bfc088ca2ca901faa66d71a92643f88b62bd7ada7dfe1c5c52d"
-        assert actionResp.signature_s.hex() == "1fe42c07959e6e0e85ec9e05dc7a2c87be96c8217cd0a886bda2f8af0e434d77"
-        assert actionResp.signature_v == 32
+        assert actionResp.signature_r.hex() == "03b4ccb74b7ad54f28fdeda244facb3038cf70424fd6aa4b171a3bb02a591504"
+        assert actionResp.signature_s.hex() == "4e24e08d1789421e17ba47e0e4635a3721400a795e40a8896dc5e5af4a95343d"
+        assert actionResp.signature_v == 31
 
     def test_eos_signtx_undelegate(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -378,8 +378,8 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "657438398a9f49d8e38629943277a3f3735b800eb0478f137edd11246ce9eae4"
-        assert actionResp.signature_s.hex() == "2e6530c1482c6168356500b87bd90a904a8b935a1d68555888f7ca3ce5780264"
+        assert actionResp.signature_r.hex() == "3f39722a88f12395f3cfcdbe218c185f02295ec07a5da8f4b953d5ec3c9ec36b"
+        assert actionResp.signature_s.hex() == "7acbae47d60cd538ca28fcc8f3dae8f03b3812e7719dd4e9c069a66dbac5ebf3"
         assert actionResp.signature_v == 31
 
     def test_eos_signtx_refund(self):
@@ -433,9 +433,9 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "0c72f3379801af5e74e4b345e02453001fb8ee1bab709004c7a0a2f437fddfb1"
-        assert actionResp.signature_s.hex() == "287b8de9871b352c316724295e2378b959d5ba2c6420a50bfafa16f6b3ba6051"
-        assert actionResp.signature_v == 32
+        assert actionResp.signature_r.hex() == "113c4867f77c371ff4701beb794ff0a0a6a1137a0115d0f4b5245c391e9f596f"
+        assert actionResp.signature_s.hex() == "27203aaaeb8cdbc92c0af32f840c385ac6202e3b4e927bda59d397ebef513381"
+        assert actionResp.signature_v == 31
 
     def test_eos_signtx_linkauth(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -491,8 +491,8 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "729d5ca3d116676cef12606c610a9b88d88c6617a3e6f7afb77899762ba703da"
-        assert actionResp.signature_s.hex() == "2a117e2b36c7bc5997369bb6092a233c67c78541a0f5d816cd93fb69c681d60f"
+        assert actionResp.signature_r.hex() == "5c9bf154dc77649ccf5a997441fcd4041e9da79149078df27a1c6268cf237c75"
+        assert actionResp.signature_s.hex() == "3e432ddcd17feb2997145d11240b0ca4344a01e2d96e9886533bca7ffceb10cd"
         assert actionResp.signature_v == 32
 
     def test_eos_signtx_unlinkauth(self):
@@ -548,9 +548,9 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "68ee06fb0ebc1e92bd950df7a088cb740826146cbf423430b737755184f50820"
-        assert actionResp.signature_s.hex() == "22001faccf560006dffa04befacdaeee0f071a026fc1b0d118daf6e4c5b39664"
-        assert actionResp.signature_v == 32
+        assert actionResp.signature_r.hex() == "316c296594fd7a4dd3b615d80c630fda256e9a3460b00d4f16eede1fb2af9574"
+        assert actionResp.signature_s.hex() == "76d023913b4f323cfa857d144bf78a4d561954bb23c5df9a31649c9503c3a3b7"
+        assert actionResp.signature_v == 31
 
     def test_eos_signtx_updateauth(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -635,8 +635,8 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "510b711d19b090dbe9615341d5ae5cbe058520d0bf3f0b4e4fa48466103b3718"
-        assert actionResp.signature_s.hex() == "7c2cb5c0174d8a84bb41c1b124424ec6a3a28f95dbd014b191ac6f7766fa2914"
+        assert actionResp.signature_r.hex() == "00f0ca8ffa8208e72df509a3b356e77056b234d4db167b58d485f30cb9c61841"
+        assert actionResp.signature_s.hex() == "3f6fb40ffa4e1cf6f3bcb0d8fa3873a2b5a05384ca9251159968558688a4e43d"
         assert actionResp.signature_v == 31
 
     def test_eos_signtx_deleteauth(self):
@@ -693,8 +693,8 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "544c40147f98c1570aae56c01ad1ade165fcba1557bd6db7e05c53f1c09addd7"
-        assert actionResp.signature_s.hex() == "78e840f9190c92482f51713c3b569984e172ffb1a0004db814832f2d52d706e2"
+        assert actionResp.signature_r.hex() == "6fe7d66f8be2fe3de23c48561e8a17113d1a0aabcf0d4160e9bd8af90f5a608f"
+        assert actionResp.signature_s.hex() == "3cec8db96be2f6aa7bb00302cec6ad3c8655b492f9a2b84b3c61df6bc81f0d83"
         assert actionResp.signature_v == 32
 
     def test_eos_signtx_vote(self):
@@ -785,8 +785,8 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "765dee35f135cdebbeb29a6c01e92749c2fef5f3b25450876a2cd00cbcbae53a"
-        assert actionResp.signature_s.hex() == "79c3b1dabec258ed90f29f407df3f7a92783b4f36a3fc4cf2521f97014008eee"
+        assert actionResp.signature_r.hex() == "1a303dcb27d2d17bc9efc89b10c41d9d78f7e3d671e3475bb1115b988f918770"
+        assert actionResp.signature_s.hex() == "07869385bf3af8cf0a4ee9daf4f8dd122650c7d59da48d6d9ce1e26b59753324"
         assert actionResp.signature_v == 31
 
     def test_eos_signtx_vote_proxy(self):
@@ -842,8 +842,8 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "1081ad2f20f65d5f81a6767e0b0171597216cfeb9a619d44ae44445365a287ca"
-        assert actionResp.signature_s.hex() == "4172a2b4a34864a6ad65ab5ab6454925017bcf52a94c79073c29bd5ad136dbcf"
+        assert actionResp.signature_r.hex() == "6f511059a910d256ac20483bfedef2ada3b2d04f3261c97c0fce9455ca8b7ef4"
+        assert actionResp.signature_s.hex() == "58d795deaf5c9b686e5bcaeabee801ad78e6675f051c24972d8c47abd33585f0"
         assert actionResp.signature_v == 32
 
     def test_eos_signtx_unknown(self):
@@ -893,9 +893,9 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "324ba8d98ae336c28ceb8187047a1a1c883ea85f830184218facec82f456720e"
-        assert actionResp.signature_s.hex() == "29128593f90caf038659b8a20de9d963187279d2cd4a1025a3344856f671b731"
-        assert actionResp.signature_v == 32
+        assert actionResp.signature_r.hex() == "0bcc986299cf4eb1d5e5bc73620972b2b6683cd4230953a6f1725017927fd9ba"
+        assert actionResp.signature_s.hex() == "488f7830e30eea5c7b4a96156bf7ffb0983c45a96211ca070b9db3bc6ba4db02"
+        assert actionResp.signature_v == 31
 
     def test_eos_signtx_newaccount(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -1029,8 +1029,8 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "24af5378bd335b6999ef6c652889d5f316ebd4f24f58a6c57e3e885227d009dc"
-        assert actionResp.signature_s.hex() == "204e010ce0036e14b415ba09dd614d40addbb290626e4acc6039b185748f6683"
+        assert actionResp.signature_r.hex() == "6346a807eef0257a34269b034df7470e134261833d0da5fe0bd91aedf5a47f86"
+        assert actionResp.signature_s.hex() == "676a1fcd0d8faff63ec206c8596de9cb5d35037d05f337afdc22c7b9e0863e77"
         assert actionResp.signature_v == 32
 
     def test_eos_signtx_setcontract(self):
@@ -1105,9 +1105,9 @@ class TestMsgEosSignTx(TrezorTest):
         actionResp = self.client.transport.read()
 
         assert isinstance(actionResp, proto.EosSignedTx)
-        assert actionResp.signature_r.hex() == "7c5af79bc1f696f43ed41eced52d67ceec02ca9e191cdc516eb2899f631b171e"
-        assert actionResp.signature_s.hex() == "47c228f49dce66a4c6a6cc051c27ca2570e6ca634683e6bf2b854cfe6cb88989"
-        assert actionResp.signature_v == 32
+        assert actionResp.signature_r.hex() == "7bcd72464bc600e2e835c0f94027b6401c8f4c1369e5764a5e19c4b19557f84f"
+        assert actionResp.signature_s.hex() == "5e7b76f1e7d5ef830c7e5921136a00f9a32f81c183deaa2e425280851cfc68d8"
+        assert actionResp.signature_v == 31
 
 
 def _tx_header(tx):
