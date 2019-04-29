@@ -42,7 +42,7 @@ async def require_confirm_tx_key(ctx, export_key=False):
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
-async def require_confirm_transaction(ctx, tsx_data, network_type):
+async def require_confirm_transaction(ctx, state, tsx_data, network_type):
     """
     Ask for confirmation from user.
     """
@@ -70,10 +70,7 @@ async def require_confirm_transaction(ctx, tsx_data, network_type):
         await _require_confirm_payment_id(ctx, tsx_data.payment_id)
 
     await _require_confirm_fee(ctx, tsx_data.fee)
-
-    text = Text("Signing transaction", ui.ICON_SEND, icon_color=ui.BLUE)
-    text.normal("Signing...")
-    text.render()
+    await transaction_step(state, 0)
 
 
 async def _require_confirm_output(ctx, dst, network_type, payment_id):
@@ -119,46 +116,66 @@ async def _require_confirm_fee(ctx, fee):
     await require_hold_to_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
 
-@ui.layout
-async def transaction_step(ctx, step, sub_step=None, sub_step_total=None):
+@ui.layout_no_slide
+async def transaction_step(state, step, sub_step=None):
     info = []
-    if step == 100:
-        info = ["Processing inputs", "%d/%d" % (sub_step + 1, sub_step_total)]
+    if step == 0:
+        info = ["Signing..."]
+    elif step == 100:
+        info = ["Processing inputs", "%d/%d" % (sub_step + 1, state.input_count)]
     elif step == 200:
-        info = ["Sorting"]
+        info = ["Sorting..."]
     elif step == 300:
-        info = [
-            "Processing inputs",
-            "phase 2",
-            "%d/%d" % (sub_step + 1, sub_step_total),
-        ]
+        info = ["Hashing inputs", "%d/%d" % (sub_step + 1, state.input_count)]
+    elif step == 350:
+        info = ["Processing..."]
     elif step == 400:
-        info = ["Processing outputs", "%d/%d" % (sub_step + 1, sub_step_total)]
+        info = ["Processing outputs", "%d/%d" % (sub_step + 1, state.output_count)]
     elif step == 500:
         info = ["Postprocessing..."]
     elif step == 600:
-        info = ["Signing inputs", "%d/%d" % (sub_step + 1, sub_step_total)]
+        info = ["Signing inputs", "%d/%d" % (sub_step + 1, state.input_count)]
     else:
         info = ["Processing..."]
 
+    state.progress_cur += 1
+
+    ui.display.clear()
     text = Text("Signing transaction", ui.ICON_SEND, icon_color=ui.BLUE)
-    text.normal(*info)
     text.render()
 
+    p = 1000 * state.progress_cur // state.progress_total
+    ui.display.loader(p, False, -4, ui.WHITE, ui.BG)
+    ui.display.text_center(ui.WIDTH // 2, 210, info[0], ui.NORMAL, ui.FG, ui.BG)
+    if len(info) > 1:
+        ui.display.text_center(ui.WIDTH // 2, 235, info[1], ui.NORMAL, ui.FG, ui.BG)
+    ui.display.refresh()
 
-@ui.layout
+
+@ui.layout_no_slide
 async def keyimage_sync_step(ctx, current, total_num):
     if current is None:
         return
+    ui.display.clear()
     text = Text("Syncing", ui.ICON_SEND, icon_color=ui.BLUE)
-    text.normal("%d/%d" % (current + 1, total_num))
     text.render()
 
+    p = (1000 * (current + 1) // total_num) if total_num > 0 else 0
+    ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
+    ui.display.refresh()
 
-@ui.layout
+
+@ui.layout_no_slide
 async def live_refresh_step(ctx, current):
     if current is None:
         return
+    ui.display.clear()
     text = Text("Refreshing", ui.ICON_SEND, icon_color=ui.BLUE)
-    text.normal("%d" % current)
     text.render()
+
+    step = 8
+    p = (1000 * current // step) % 1000
+
+    ui.display.loader(p, True, 18, ui.WHITE, ui.BG)
+    ui.display.text_center(ui.WIDTH // 2, 145, "%d" % current, ui.NORMAL, ui.FG, ui.BG)
+    ui.display.refresh()

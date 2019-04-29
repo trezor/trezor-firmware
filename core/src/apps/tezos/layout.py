@@ -1,5 +1,10 @@
-from trezor import ui
-from trezor.messages import ButtonRequestType
+from micropython import const
+
+from trezor import ui, wire
+from trezor.messages import ButtonRequestType, MessageType
+from trezor.messages.ButtonRequest import ButtonRequest
+from trezor.ui.confirm import CANCELLED, ConfirmDialog
+from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
 from trezor.ui.text import Text
 from trezor.utils import chunks, format_amount
 
@@ -66,6 +71,45 @@ def split_address(address):
     return chunks(address, 18)
 
 
+def split_proposal(proposal):
+    return chunks(proposal, 17)
+
+
 def format_tezos_amount(value):
     formatted_value = format_amount(value, TEZOS_AMOUNT_DIVISIBILITY)
     return formatted_value + " XTZ"
+
+
+async def require_confirm_ballot(ctx, proposal, ballot):
+    text = Text("Submit ballot", ui.ICON_SEND, icon_color=ui.PURPLE)
+    text.bold("Ballot: {}".format(ballot))
+    text.bold("Proposal:")
+    text.mono(*split_proposal(proposal))
+    await require_confirm(ctx, text, ButtonRequestType.SignTx)
+
+
+# use, when there are more then one proposals in one operation
+async def require_confirm_proposals(ctx, proposals):
+    await ctx.call(ButtonRequest(code=ButtonRequestType.SignTx), MessageType.ButtonAck)
+    first_page = const(0)
+    pages = proposals
+    title = "Submit proposals" if len(proposals) > 1 else "Submit proposal"
+
+    paginator = paginate(show_proposal_page, len(pages), first_page, pages, title)
+    return await ctx.wait(paginator)
+
+
+@ui.layout
+async def show_proposal_page(page: int, page_count: int, pages: list, title: str):
+    text = Text(title, ui.ICON_SEND, icon_color=ui.PURPLE)
+    text.bold("Proposal {}: ".format(page + 1))
+    text.mono(*split_proposal(pages[page]))
+    content = Scrollpage(text, page, page_count)
+
+    if page + 1 >= page_count:
+        confirm = await ConfirmDialog(content)
+        if confirm == CANCELLED:
+            raise wire.ActionCancelled("Cancelled")
+    else:
+        content.render()
+        await animate_swipe()

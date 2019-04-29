@@ -4,9 +4,8 @@ from common import *
 from trezor.messages import TezosContractType
 from trezor.messages.TezosContractID import TezosContractID
 
-from apps.tezos.helpers import base58_decode_check, base58_encode_check
+from apps.tezos.helpers import base58_decode_check, base58_encode_check, write_bool
 from apps.tezos.sign_tx import (
-    _encode_bool,
     _encode_contract_id,
     _encode_data_with_bool_prefix,
     _encode_zarith,
@@ -35,11 +34,11 @@ class TestTezosEncoding(unittest.TestCase):
 
     def test_tezos_encode_bool(self):
         w = bytearray()
-        _encode_bool(w, True)
+        write_bool(w, True)
         self.assertEqual(bytes(w), bytes([255]))
 
         w = bytearray()
-        _encode_bool(w, False)
+        write_bool(w, False)
         self.assertEqual(bytes(w), bytes([0]))
 
     def test_tezos_encode_contract_id(self):

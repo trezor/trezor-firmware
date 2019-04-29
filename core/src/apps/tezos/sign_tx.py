@@ -1,12 +1,16 @@
+from micropython import const
+
 from trezor import wire
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
-from trezor.messages import TezosContractType
+from trezor.messages import TezosBallotType, TezosContractType
 from trezor.messages.TezosSignedTx import TezosSignedTx
 
 from apps.common import paths
-from apps.common.writers import write_bytes, write_uint8
+from apps.common.writers import write_bytes, write_uint8, write_uint32_be
 from apps.tezos import CURVE, helpers, layout
+
+PROPOSAL_LENGTH = const(32)
 
 
 async def sign_tx(ctx, msg, keychain):
@@ -51,6 +55,15 @@ async def sign_tx(ctx, msg, keychain):
             await layout.require_confirm_register_delegate(
                 ctx, source, msg.delegation.fee
             )
+
+    elif msg.proposal is not None:
+        proposed_protocols = [_get_protocol_hash(p) for p in msg.proposal.proposals]
+        await layout.require_confirm_proposals(ctx, proposed_protocols)
+
+    elif msg.ballot is not None:
+        proposed_protocol = _get_protocol_hash(msg.ballot.proposal)
+        submitted_ballot = _get_ballot(msg.ballot.ballot)
+        await layout.require_confirm_ballot(ctx, proposed_protocol, submitted_ballot)
 
     else:
         raise wire.DataError("Invalid operation")
@@ -101,11 +114,24 @@ def _get_address_from_contract(address):
     raise wire.DataError("Invalid contract type")
 
 
+def _get_protocol_hash(proposal):
+    return helpers.base58_encode_check(proposal, prefix="P")
+
+
+def _get_ballot(ballot):
+    if ballot == TezosBallotType.Yay:
+        return "yay"
+    elif ballot == TezosBallotType.Nay:
+        return "nay"
+    elif ballot == TezosBallotType.Pass:
+        return "pass"
+
+
 def _get_operation_bytes(w: bytearray, msg):
     write_bytes(w, msg.branch)
 
     # when the account sends first operation in lifetime,
-    # we need to reveal its publickey
+    # we need to reveal its public key
     if msg.reveal is not None:
         _encode_common(w, msg.reveal, "reveal")
         write_bytes(w, msg.reveal.public_key)
@@ -121,14 +147,18 @@ def _get_operation_bytes(w: bytearray, msg):
         _encode_common(w, msg.origination, "origination")
         write_bytes(w, msg.origination.manager_pubkey)
         _encode_zarith(w, msg.origination.balance)
-        _encode_bool(w, msg.origination.spendable)
-        _encode_bool(w, msg.origination.delegatable)
+        helpers.write_bool(w, msg.origination.spendable)
+        helpers.write_bool(w, msg.origination.delegatable)
         _encode_data_with_bool_prefix(w, msg.origination.delegate)
         _encode_data_with_bool_prefix(w, msg.origination.script)
     # delegation operation
     elif msg.delegation is not None:
         _encode_common(w, msg.delegation, "delegation")
         _encode_data_with_bool_prefix(w, msg.delegation.delegate)
+    elif msg.proposal is not None:
+        _encode_proposal(w, msg.proposal)
+    elif msg.ballot is not None:
+        _encode_ballot(w, msg.ballot)
 
 
 def _encode_common(w: bytearray, operation, str_operation):
@@ -146,19 +176,12 @@ def _encode_contract_id(w: bytearray, contract_id):
     write_bytes(w, contract_id.hash)
 
 
-def _encode_bool(w: bytearray, boolean):
-    if boolean:
-        write_uint8(w, 255)
-    else:
-        write_uint8(w, 0)
-
-
 def _encode_data_with_bool_prefix(w: bytearray, data):
     if data:
-        _encode_bool(w, True)
+        helpers.write_bool(w, True)
         write_bytes(w, data)
     else:
-        _encode_bool(w, False)
+        helpers.write_bool(w, False)
 
 
 def _encode_zarith(w: bytearray, num):
@@ -171,3 +194,24 @@ def _encode_zarith(w: bytearray, num):
             break
 
         write_uint8(w, 128 | byte)
+
+
+def _encode_proposal(w: bytearray, proposal):
+    proposal_tag = 5
+
+    write_uint8(w, proposal_tag)
+    write_bytes(w, proposal.source)
+    write_uint32_be(w, proposal.period)
+    write_uint32_be(w, len(proposal.proposals) * PROPOSAL_LENGTH)
+    for proposal_hash in proposal.proposals:
+        write_bytes(w, proposal_hash)
+
+
+def _encode_ballot(w: bytearray, ballot):
+    ballot_tag = 6
+
+    write_uint8(w, ballot_tag)
+    write_bytes(w, ballot.source)
+    write_uint32_be(w, ballot.period)
+    write_bytes(w, ballot.proposal)
+    write_uint8(w, ballot.ballot)

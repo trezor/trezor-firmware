@@ -32,9 +32,7 @@ async def set_input(state: State, src_entr: MoneroTransactionSourceEntry):
 
     state.current_input_index += 1
 
-    await confirms.transaction_step(
-        state.ctx, state.STEP_INP, state.current_input_index, state.input_count
-    )
+    await confirms.transaction_step(state, state.STEP_INP, state.current_input_index)
 
     if state.current_input_index >= state.input_count:
         raise ValueError("Too many inputs")

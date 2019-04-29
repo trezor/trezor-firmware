@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
+import json
 import sys
 from glob import glob
-import json
 from hashlib import sha256
-
 
 try:
     opt = sys.argv[1]
-except:
+except IndexError:
     print("Usage: gen.py [core|mcu|check])")
     sys.exit(1)
 
@@ -22,12 +21,12 @@ def gen_core(data):
     for d in data:
         if "u2f" in d:
             url, label = d["u2f"], d["label"]
-            print("    \"%s\": \"%s\"," % (url, label))
+            print('    "%s": "%s",' % (url, label))
     print("    # WebAuthn")
     for d in data:
         if "webauthn" in d:
             origin, label = d["webauthn"], d["label"]
-            print("    \"%s\": \"%s\"," % (origin, label))
+            print('    "%s": "%s",' % (origin, label))
     print("}")
 
 
@@ -36,12 +35,17 @@ def gen_mcu(data):
         if "u2f" in d:
             url, label = d["u2f"], d["label"]
             h = sha256(url.encode()).digest()
-            print("\t{\n\t\t// U2F: %s\n\t\t%s,\n\t\t\"%s\"\n\t}," % (url, c_bytes(h), label))
+            print(
+                '\t{\n\t\t// U2F: %s\n\t\t%s,\n\t\t"%s"\n\t},'
+                % (url, c_bytes(h), label)
+            )
         if "webauthn" in d:
             origin, label = d["webauthn"], d["label"]
             h = sha256(origin.encode()).digest()
-            print("\t{\n\t\t// WebAuthn: %s\n\t\t%s,\n\t\t\"%s\"\n\t}," % (origin, c_bytes(h), label))
-
+            print(
+                '\t{\n\t\t// WebAuthn: %s\n\t\t%s,\n\t\t"%s"\n\t},'
+                % (origin, c_bytes(h), label)
+            )
 
 
 data = []

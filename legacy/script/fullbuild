@@ -9,22 +9,26 @@ export LANG=C.UTF-8
 
 set -eu
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
+
+EMULATOR=${EMULATOR:-0}
+
+readonly MCU_ROOT=legacy
 
 readonly ARTIFACT_EXTENSIONS=(bin elf)
 readonly BUILD_DIR="$(readlink -f build)"
 
-readonly BOOTLOADER_DIR="$BUILD_DIR/bootloader"
-readonly BOOTLOADER_FILENAME="bootloader/bootloader.bin"
+readonly BOOTLOADER_DIR="$BUILD_DIR/legacy/bootloader"
+readonly BOOTLOADER_FILENAME="$MCU_ROOT/bootloader/bootloader.bin"
 readonly BOOTLOADER_PATH="$BOOTLOADER_DIR/$BOOTLOADER_FILENAME"
 
-readonly FIRMWARE_DIR="$BUILD_DIR/firmware"
-readonly FIRMWARE_FILENAME="firmware/trezor.bin"
+readonly FIRMWARE_DIR="$BUILD_DIR/legacy/firmware"
+readonly FIRMWARE_FILENAME="$MCU_ROOT/firmware/trezor.bin"
 readonly FIRMWARE_PATH="$FIRMWARE_DIR/$FIRMWARE_FILENAME"
 
 readonly EMULATOR_DIR="$FIRMWARE_DIR"
-readonly EMULATOR_FILENAME="firmware/trezor-emulator.elf"
-readonly EMULATOR_PATH="$EMULATOR_DIR/firmware/trezor.elf"
+readonly EMULATOR_FILENAME="$MCU_ROOT/firmware/trezor-emulator.elf"
+readonly EMULATOR_PATH="$EMULATOR_DIR/$MCU_ROOT/firmware/trezor.elf"
 
 worktree_setup() {
     local path="$1"
@@ -36,27 +40,22 @@ worktree_setup() {
     # Use `git rev-parse` so that we can use any reference from the working repository.
     git -C "$path" checkout "$(git rev-parse "$commit")"
 
-    ( cd "$path" && script/setup )
+    ( cd "$path/$MCU_ROOT" && script/setup )
 }
 
 worktree_build() {
     local path="$1"
 
-    if [ -e "$path/Pipfile" ]; then
-        pushd $path
-        if ! pipenv install; then
-            # older tags can fail because they don't have protobuf in Pipfile
-            pipenv run pip install "protobuf==3.4.0"
-            pipenv install
-        fi
-        pipenv run script/cibuild
-        popd
-    else
-        # even older tags don't have Pipfile!
-        # use current one
-        pipenv install
-        ( cd "$path" && pipenv run script/cibuild )
+    if [ ! -e "$path/Pipfile" ]; then
+        echo "Can't handle pre-monorepo tags properly. You will have to check out manually"
+        exit 1
     fi
+
+    pushd $path
+    export HOME=/tmp
+    pipenv install
+    pipenv run $MCU_ROOT/script/cibuild
+    popd
 }
 
 worktree_copy() {
@@ -64,18 +63,23 @@ worktree_copy() {
     local filename="$2"
     local pattern="$3"
 
-    local describe="$(git -C "$path" describe --tags --match "$pattern")"
+    local describe="$(git -C "$path" describe --tags --match "legacy/$pattern")"
+    describe="${describe##legacy/}"
 
     local src="$path/$filename"
 
     local basename="$(basename "$filename")"
     local dest="$BUILD_DIR/${basename%.*}-$describe.${basename##*.}"
 
-    for extension in "${ARTIFACT_EXTENSIONS[@]}"; do
-        install -Dm0644 \
-            "${src%.*}.$extension" \
-            "${dest%.*}.$extension"
-    done
+    if [ "$EMULATOR" = 1 ]; then
+        install -Dm0644 "${src%.*}.elf" "${dest%.*}.elf"
+    else
+        for extension in "${ARTIFACT_EXTENSIONS[@]}"; do
+            install -Dm0644 \
+                "${src%.*}.$extension" \
+                "${dest%.*}.$extension"
+        done
+    fi
 
     printf "%s" "$dest"
 }
@@ -84,7 +88,6 @@ main() {
     local bootloader_commit="$1"
     local firmware_commit="$2"
 
-    script/bootstrap
     worktree_setup "$FIRMWARE_DIR" "$firmware_commit"
 
     if [ "$EMULATOR" != 1 ]; then
@@ -116,13 +119,13 @@ main() {
             "$BOOTLOADER_FILENAME" \
             "bl*")"
 
-        printf "\n\n"; $PYTHON script/fingerprint \
+        printf "\n\n"; $PYTHON $MCU_ROOT/script/fingerprint \
             "$bootloader_path" \
             --max-size 32768 \
             --double
     fi
 
-    printf "\n\n"; $PYTHON script/fingerprint \
+    printf "\n\n"; $PYTHON $MCU_ROOT/script/fingerprint \
         "$firmware_path" \
         --offset 256 \
         --max-size 983296  # 256 + 64*1024 + 3*128*1024 + 4*128*1024

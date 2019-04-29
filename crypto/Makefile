@@ -63,6 +63,7 @@ SRCS  += rc4.c
 SRCS  += nem.c
 SRCS  += segwit_addr.c cash_addr.c
 SRCS  += memzero.c
+SRCS  += schnorr.c
 SRCS  += shamir.c
 
 OBJS   = $(SRCS:.c=.o)

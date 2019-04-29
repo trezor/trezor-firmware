@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-from collections import defaultdict, OrderedDict
-import re
-import os
-import json
 import glob
+import json
 import logging
+import os
+import re
+from collections import OrderedDict, defaultdict
 
 try:
     import requests

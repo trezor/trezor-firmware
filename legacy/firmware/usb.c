@@ -25,7 +25,9 @@
 #include "messages.h"
 #include "timer.h"
 #include "trezor.h"
+#if U2F_ENABLED
 #include "u2f.h"
+#endif
 #include "usb.h"
 #include "util.h"
 
@@ -36,11 +38,19 @@
 #define USB_INTERFACE_INDEX_MAIN 0
 #if DEBUG_LINK
 #define USB_INTERFACE_INDEX_DEBUG 1
+#if U2F_ENABLED
 #define USB_INTERFACE_INDEX_U2F 2
 #define USB_INTERFACE_COUNT 3
 #else
+#define USB_INTERFACE_COUNT 2
+#endif
+#else
+#if U2F_ENABLED
 #define USB_INTERFACE_INDEX_U2F 1
 #define USB_INTERFACE_COUNT 2
+#else
+#define USB_INTERFACE_COUNT 1
+#endif
 #endif
 
 #define ENDPOINT_ADDRESS_MAIN_IN (0x81)
@@ -49,8 +59,10 @@
 #define ENDPOINT_ADDRESS_DEBUG_IN (0x82)
 #define ENDPOINT_ADDRESS_DEBUG_OUT (0x02)
 #endif
+#if U2F_ENABLED
 #define ENDPOINT_ADDRESS_U2F_IN (0x83)
 #define ENDPOINT_ADDRESS_U2F_OUT (0x03)
+#endif
 
 #define USB_STRINGS                                 \
   X(MANUFACTURER, "SatoshiLabs")                    \
@@ -87,6 +99,8 @@ static const struct usb_device_descriptor dev_descr = {
     .iSerialNumber = USB_STRING_SERIAL_NUMBER,
     .bNumConfigurations = 1,
 };
+
+#if U2F_ENABLED
 
 static const uint8_t hid_report_descriptor_u2f[] = {
     0x06, 0xd0, 0xf1,  // USAGE_PAGE (FIDO Alliance)
@@ -160,7 +174,10 @@ static const struct usb_interface_descriptor hid_iface_u2f[] = {{
     .extralen = sizeof(hid_function_u2f),
 }};
 
+#endif
+
 #if DEBUG_LINK
+
 static const struct usb_endpoint_descriptor webusb_endpoints_debug[2] = {
     {
         .bLength = USB_DT_ENDPOINT_SIZE,
@@ -241,10 +258,12 @@ static const struct usb_interface ifaces[] = {
         .num_altsetting = 1,
         .altsetting = webusb_iface_debug,
 #endif
+#if U2F_ENABLED
     },
     {
         .num_altsetting = 1,
         .altsetting = hid_iface_u2f,
+#endif
     }};
 
 static const struct usb_config_descriptor config = {
@@ -258,6 +277,10 @@ static const struct usb_config_descriptor config = {
     .bMaxPower = 0x32,
     .interface = ifaces,
 };
+
+static volatile char tiny = 0;
+
+#if U2F_ENABLED
 
 static enum usbd_request_return_codes hid_control_request(
     usbd_device *dev, struct usb_setup_data *req, uint8_t **buf, uint16_t *len,
@@ -277,7 +300,16 @@ static enum usbd_request_return_codes hid_control_request(
   return 1;
 }
 
-static volatile char tiny = 0;
+static void u2f_rx_callback(usbd_device *dev, uint8_t ep) {
+  (void)ep;
+  static CONFIDENTIAL uint8_t buf[64] __attribute__((aligned(4)));
+
+  debugLog(0, "", "u2f_rx_callback");
+  if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, 64) != 64) return;
+  u2fhid_read(tiny, (const U2FHID_FRAME *)(void *)buf);
+}
+
+#endif
 
 static void main_rx_callback(usbd_device *dev, uint8_t ep) {
   (void)ep;
@@ -292,16 +324,8 @@ static void main_rx_callback(usbd_device *dev, uint8_t ep) {
   }
 }
 
-static void u2f_rx_callback(usbd_device *dev, uint8_t ep) {
-  (void)ep;
-  static CONFIDENTIAL uint8_t buf[64] __attribute__((aligned(4)));
-
-  debugLog(0, "", "u2f_rx_callback");
-  if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, 64) != 64) return;
-  u2fhid_read(tiny, (const U2FHID_FRAME *)(void *)buf);
-}
-
 #if DEBUG_LINK
+
 static void debug_rx_callback(usbd_device *dev, uint8_t ep) {
   (void)ep;
   static uint8_t buf[64] __attribute__((aligned(4)));
@@ -314,6 +338,7 @@ static void debug_rx_callback(usbd_device *dev, uint8_t ep) {
     msg_read_tiny(buf, 64);
   }
 }
+
 #endif
 
 static void set_config(usbd_device *dev, uint16_t wValue) {
@@ -323,20 +348,23 @@ static void set_config(usbd_device *dev, uint16_t wValue) {
                 0);
   usbd_ep_setup(dev, ENDPOINT_ADDRESS_MAIN_OUT, USB_ENDPOINT_ATTR_INTERRUPT, 64,
                 main_rx_callback);
+#if U2F_ENABLED
   usbd_ep_setup(dev, ENDPOINT_ADDRESS_U2F_IN, USB_ENDPOINT_ATTR_INTERRUPT, 64,
                 0);
   usbd_ep_setup(dev, ENDPOINT_ADDRESS_U2F_OUT, USB_ENDPOINT_ATTR_INTERRUPT, 64,
                 u2f_rx_callback);
+#endif
 #if DEBUG_LINK
   usbd_ep_setup(dev, ENDPOINT_ADDRESS_DEBUG_IN, USB_ENDPOINT_ATTR_INTERRUPT, 64,
                 0);
   usbd_ep_setup(dev, ENDPOINT_ADDRESS_DEBUG_OUT, USB_ENDPOINT_ATTR_INTERRUPT,
                 64, debug_rx_callback);
 #endif
-
+#if U2F_ENABLED
   usbd_register_control_callback(
       dev, USB_REQ_TYPE_STANDARD | USB_REQ_TYPE_INTERFACE,
       USB_REQ_TYPE_TYPE | USB_REQ_TYPE_RECIPIENT, hid_control_request);
+#endif
 }
 
 static usbd_device *usbd_dev = NULL;
@@ -344,7 +372,7 @@ static uint8_t usbd_control_buffer[256] __attribute__((aligned(2)));
 
 static const struct usb_device_capability_descriptor *capabilities[] = {
     (const struct usb_device_capability_descriptor
-         *)&webusb_platform_capability_descriptor_no_landing_page,
+         *)&webusb_platform_capability_descriptor,
 };
 
 static const struct usb_bos_descriptor bos_descriptor = {
@@ -381,12 +409,14 @@ void usbPoll(void) {
            64) {
     }
   }
+#if U2F_ENABLED
   data = u2f_out_data();
   if (data) {
     while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_U2F_IN, data, 64) !=
            64) {
     }
   }
+#endif
 #if DEBUG_LINK
   // write pending debug data
   data = msg_debug_out_data();

@@ -2,7 +2,7 @@
 
 This repository contains the implementation of Trezor's internal storage, which is common for both trezor-mcu (Trezor One) and trezor-core (Trezor T). This README also contains a detailed description of the cryptographic design.
 
-All tests are located in the [trezor-storage-test](https://github.com/trezor/trezor-storage-test) repository, which also includes a Python implementation to run tests against this C production version and the Python one.
+All tests are located in the `tests` subdirectory, which also includes a Python implementation to run tests against this C production version and the Python one.
 
 ## Summary
 

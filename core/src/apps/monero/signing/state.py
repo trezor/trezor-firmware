@@ -68,6 +68,9 @@ class State:
 
         self.input_count = 0
         self.output_count = 0
+        self.progress_total = 0
+        self.progress_cur = 0
+
         self.output_change = None
         self.fee = 0
 

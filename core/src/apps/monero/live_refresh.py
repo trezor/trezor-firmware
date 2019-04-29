@@ -37,7 +37,7 @@ async def live_refresh(ctx, msg: MoneroLiveRefreshStartRequest, keychain):
 
 class LiveRefreshState:
     def __init__(self):
-        self.current_output = -1
+        self.current_output = 0
         self.creds = None
 
 

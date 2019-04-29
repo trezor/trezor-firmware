@@ -745,10 +745,16 @@ void layoutDecryptIdentity(const IdentityType *identity) {
                     row_user[0] ? row_user : NULL, NULL, NULL, NULL);
 }
 
+#if U2F_ENABLED
+
 void layoutU2FDialog(const char *verb, const char *appname) {
   layoutDialog(&bmp_webauthn, NULL, verb, NULL, verb, _("U2F security key?"),
                NULL, appname, NULL, NULL);
 }
+
+#endif
+
+#if !BITCOIN_ONLY
 
 void layoutNEMDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
                      const char *desc, const char *line1, const char *address) {
@@ -907,6 +913,8 @@ void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network) {
       break;
   }
 }
+
+#endif
 
 static inline bool is_slip18(const uint32_t *address_n,
                              size_t address_n_count) {

@@ -21,7 +21,7 @@ async def tsx_inputs_permutation(state: State, permutation: list):
         MoneroTransactionInputsPermutationAck,
     )
 
-    await transaction_step(state.ctx, state.STEP_PERM)
+    await transaction_step(state, state.STEP_PERM)
 
     """
     Set permutation on the inputs - sorted by key image on host.

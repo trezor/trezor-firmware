@@ -316,9 +316,9 @@ static void inflate_callback_loader(uint8_t byte, uint32_t pos,
 
 #endif
 
-void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor,
-                    uint16_t bgcolor, const uint8_t *icon, uint32_t iconlen,
-                    uint16_t iconfgcolor) {
+void display_loader(uint16_t progress, bool indeterminate, int yoffset,
+                    uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon,
+                    uint32_t iconlen, uint16_t iconfgcolor) {
 #if TREZOR_MODEL == T
   uint16_t colortable[16], iconcolortable[16];
   set_color_table(colortable, fgcolor, bgcolor);
@@ -362,6 +362,7 @@ void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor,
       }
 // inside of circle - draw glyph
 #define LOADER_ICON_CORNER_CUT 2
+#define LOADER_INDETERMINATE_WIDTH 100
       if (icon &&
           mx + my > (((LOADER_ICON_SIZE / 2) + LOADER_ICON_CORNER_CUT) * 2) &&
           mx >= img_loader_size - (LOADER_ICON_SIZE / 2) &&
@@ -378,10 +379,21 @@ void display_loader(uint16_t progress, int yoffset, uint16_t fgcolor,
         PIXELDATA(iconcolortable[c]);
       } else {
         uint8_t c;
-        if (progress > a) {
-          c = (img_loader[my][mx] & 0x00F0) >> 4;
+        if (indeterminate) {
+          uint16_t diff =
+              (progress > a) ? (progress - a) : (1000 + progress - a);
+          if (diff < LOADER_INDETERMINATE_WIDTH ||
+              diff > 1000 - LOADER_INDETERMINATE_WIDTH) {
+            c = (img_loader[my][mx] & 0x00F0) >> 4;
+          } else {
+            c = img_loader[my][mx] & 0x000F;
+          }
         } else {
-          c = img_loader[my][mx] & 0x000F;
+          if (progress > a) {
+            c = (img_loader[my][mx] & 0x00F0) >> 4;
+          } else {
+            c = img_loader[my][mx] & 0x000F;
+          }
         }
         PIXELDATA(colortable[c]);
       }

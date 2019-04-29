@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import fnmatch
+import glob
 import io
 import json
 import logging
-import re
-import sys
 import os
-import glob
+import re
 import struct
+import sys
 import zlib
 from collections import defaultdict
 from hashlib import sha256
@@ -209,7 +209,7 @@ def check_btc(coins):
         for coin in bucket:
             name = coin["name"]
             prefix = ""
-            if name.endswith("Testnet"):
+            if name.endswith("Testnet") or name.endswith("Regtest"):
                 color = "green"
             elif name == "Bitcoin":
                 color = "red"
@@ -232,7 +232,12 @@ def check_btc(coins):
         """
         failed = False
         for key, bucket in buckets.items():
-            mainnets = [c for c in bucket if not c["name"].endswith("Testnet")]
+            mainnets = [
+                c
+                for c in bucket
+                if not c["name"].endswith("Testnet")
+                and not c["name"].endswith("Regtest")
+            ]
 
             have_bitcoin = False
             for coin in mainnets:
@@ -524,8 +529,7 @@ def cli(colors):
 # fmt: off
 @click.option("--backend/--no-backend", "-b", default=False, help="Check blockbook/bitcore responses")
 @click.option("--icons/--no-icons", default=True, help="Check icon files")
-@click.option("-d", "--show-duplicates", type=click.Choice(("all", "nontoken", "errors")),
-    default="errors", help="How much information about duplicate shortcuts should be shown.")
+@click.option("-d", "--show-duplicates", type=click.Choice(("all", "nontoken", "errors")), default="errors", help="How much information about duplicate shortcuts should be shown.")
 # fmt: on
 def check(backend, icons, show_duplicates):
     """Validate coin definitions.
@@ -779,8 +783,9 @@ def coindefs(outfile):
 @click.argument("paths", metavar="[path]...", nargs=-1)
 @click.option("-o", "--outfile", type=click.File("w"), help="Alternate output file")
 @click.option("-v", "--verbose", is_flag=True, help="Print rendered file names")
+@click.option("-b", "--bitcoin-only", is_flag=True, help="Accept only Bitcoin coins")
 # fmt: on
-def render(paths, outfile, verbose):
+def render(paths, outfile, verbose, bitcoin_only):
     """Generate source code from Mako templates.
 
     For every "foo.bar.mako" filename passed, runs the template and
@@ -800,6 +805,13 @@ def render(paths, outfile, verbose):
     # prepare defs
     defs = coin_info.coin_info()
     support_info = coin_info.support_info(defs)
+
+    if bitcoin_only:
+        defs["bitcoin"] = [
+            x
+            for x in defs["bitcoin"]
+            if x["coin_name"] in ("Bitcoin", "Testnet", "Regtest")
+        ]
 
     # munch dicts - make them attribute-accessible
     for key, value in defs.items():

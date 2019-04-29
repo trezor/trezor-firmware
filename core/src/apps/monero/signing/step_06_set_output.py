@@ -23,10 +23,7 @@ async def set_output(
     # Progress update only for master message (skip for offloaded BP msg)
     if not is_offloaded_bp:
         await confirms.transaction_step(
-            state.ctx,
-            state.STEP_OUT,
-            state.current_output_index + 1,
-            state.output_count,
+            state, state.STEP_OUT, state.current_output_index + 1
         )
 
     state.mem_trace(1, True)

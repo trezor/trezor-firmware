@@ -498,6 +498,4 @@ void display_refresh(void) {
   }
 }
 
-const char *display_save(const char *prefix) {
-  return NULL;
-}
+const char *display_save(const char *prefix) { return NULL; }

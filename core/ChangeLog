@@ -1,5 +1,11 @@
-Version 2.1.0
-* stable release, optional update
+Version 2.1.1 [unreleased]
+* More strict path validations
+* Display non-zero locktime values
+* Don't rotate the screen via swipe gesture
+* Set screen rotation via user setting
+* Monero UI fixes
+
+Version 2.1.0 [Mar 2019]
 * Security improvements
 * Upgraded to new storage format
 * Ripple, Stellar, Cardano and NEM fixes
@@ -7,20 +13,17 @@ Version 2.1.0
   PIVX, REOSC, XPM, XSN, ZCL
 * New ETH tokens
 
-Version 2.0.10
-* stable release, optional update
+Version 2.0.10 [Dec 2018]
 * Fix Monero payment ID computation
 * Fix issue with touch screen and flickering
 * Add support for OMNI layer: OMNI/MAID/USDT
 * Add support for new coins: BTX, CPC, GAME, RVN
 * Add support for new Ethereum tokens
 
-Version 2.0.9
-* stable release, optional update
+Version 2.0.9 [Nov 2018]
 * Small Monero and Segwit bugfixes
 
-Version 2.0.8
-* stable release, optional update
+Version 2.0.8 [Oct 2018]
 * Monero support
 * Cardano support
 * Stellar support
@@ -32,25 +35,22 @@ Version 2.0.8
 * Zcash sapling hardfork support
 * Implemented seedless setup
 
-Version 2.0.7
-* stable release, optional update
+Version 2.0.7 [Jun 2018]
 * Bitcoin Cash cashaddr support
 * Zcash Overwinter hardfork support
 * NEM support
 * Lisk support
 * Show warning on home screen if PIN is not set
 * Support for new coins:
-  - Bitcoin Private, Fujicoin, Vertcoin, Viacoin, Zcoin
+  Bitcoin Private, Fujicoin, Vertcoin, Viacoin, Zcoin
 * Support for new Ethereum networks:
-  - EOS Classic, Ethereum Social, Ellaism, Callisto, EtherGem, Wanchain
+  EOS Classic, Ethereum Social, Ellaism, Callisto, EtherGem, Wanchain
 * Support for 500+ new Ethereum tokens
 
-Version 2.0.6
-* stable release, optional update
+Version 2.0.6 [Mar 2018]
 * fix layout for Ethereum transactions
 * fix public key generation for SSH and GPG
 * add special characters to passphrase keyboard
 
-Version 2.0.5
-* stable release, required update
+Version 2.0.5 [Mar 2018]
 * first public release

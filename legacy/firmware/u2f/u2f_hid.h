@@ -1,3 +1,4 @@
+// clang-format off
 /**
  * Copyright FIDO Alliance, 2017
  *

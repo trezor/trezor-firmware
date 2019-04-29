@@ -12,7 +12,7 @@ from apps.monero.xmr import crypto
 async def all_inputs_set(state: State):
     state.mem_trace(0)
 
-    await confirms.transaction_step(state.ctx, state.STEP_ALL_IN)
+    await confirms.transaction_step(state, state.STEP_ALL_IN)
 
     from trezor.messages.MoneroTransactionAllInputsSetAck import (
         MoneroTransactionAllInputsSetAck,
