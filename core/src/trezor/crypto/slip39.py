@@ -18,8 +18,6 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-import math
-
 from trezor.crypto import hashlib, hmac, pbkdf2, random
 from trezor.crypto.slip39_wordlist import wordlist
 from trezorcrypto import shamir
@@ -31,6 +29,14 @@ class ConfigurationError(Exception):
 
 class MnemonicError(Exception):
     pass
+
+
+def bits_to_bytes(n):
+    return (n + 7) // 8
+
+
+def bits_to_words(n):
+    return (n + RADIX_BITS - 1) // RADIX_BITS
 
 
 RADIX_BITS = 10
@@ -45,7 +51,7 @@ ID_LENGTH_BITS = 15
 ITERATION_EXP_LENGTH_BITS = 5
 """The length of the iteration exponent in bits."""
 
-ID_EXP_LENGTH_WORDS = (ID_LENGTH_BITS + ITERATION_EXP_LENGTH_BITS) // RADIX_BITS
+ID_EXP_LENGTH_WORDS = bits_to_words(ID_LENGTH_BITS + ITERATION_EXP_LENGTH_BITS)
 """The length of the random identifier and iteration exponent in words."""
 
 MAX_SHARE_COUNT = 16
@@ -66,10 +72,10 @@ METADATA_LENGTH_WORDS = ID_EXP_LENGTH_WORDS + 2 + CHECKSUM_LENGTH_WORDS
 MIN_STRENGTH_BITS = 128
 """The minimum allowed entropy of the master secret."""
 
-MIN_MNEMONIC_LENGTH_WORDS = METADATA_LENGTH_WORDS + math.ceil(MIN_STRENGTH_BITS / 10)
+MIN_MNEMONIC_LENGTH_WORDS = METADATA_LENGTH_WORDS + bits_to_words(MIN_STRENGTH_BITS)
 """The minimum allowed length of the mnemonic in words."""
 
-MIN_ITERATION_COUNT = 10000
+BASE_ITERATION_COUNT = 10000
 """The minimum number of iterations to use in PBKDF2."""
 
 ROUND_COUNT = 4
@@ -162,13 +168,13 @@ def _round_function(i, passphrase, e, salt, r):
         pbkdf2.HMAC_SHA256,
         bytes([i]) + passphrase,
         salt + r,
-        (MIN_ITERATION_COUNT << e) // ROUND_COUNT,
+        (BASE_ITERATION_COUNT << e) // ROUND_COUNT,
     ).key()[: len(r)]
 
 
 def _get_salt(identifier):
     return CUSTOMIZATION_STRING + identifier.to_bytes(
-        math.ceil(ID_LENGTH_BITS / 8), "big"
+        bits_to_bytes(ID_LENGTH_BITS), "big"
     )
 
 
@@ -284,7 +290,7 @@ def encode_mnemonic(
     """
 
     # Convert the share value from bytes to wordlist indices.
-    value_word_count = math.ceil(len(value) * 8 / RADIX_BITS)
+    value_word_count = bits_to_words(len(value) * 8)
     value_int = int.from_bytes(value, "big")
 
     share_data = (
@@ -315,7 +321,7 @@ def decode_mnemonic(mnemonic):
             )
         )
 
-    padding_len = (10 * (len(mnemonic_data) - METADATA_LENGTH_WORDS)) % 16
+    padding_len = (RADIX_BITS * (len(mnemonic_data) - METADATA_LENGTH_WORDS)) % 16
     if padding_len > 8:
         raise MnemonicError("Invalid mnemonic length.")
 
@@ -344,9 +350,9 @@ def decode_mnemonic(mnemonic):
             )
         )
 
-    value_byte_count = (10 * len(value_data) - padding_len) // 8
+    value_byte_count = bits_to_bytes(RADIX_BITS * len(value_data) - padding_len)
     value_int = _int_from_indices(value_data)
-    if value_data[0] >= 1 << (10 - padding_len):
+    if value_data[0] >= 1 << (RADIX_BITS - padding_len):
         raise MnemonicError(
             'Invalid mnemonic padding for "{} ...".'.format(
                 " ".join(mnemonic.split()[: ID_EXP_LENGTH_WORDS + 2])
@@ -422,7 +428,7 @@ def _decode_mnemonics(mnemonics):
 def _generate_random_identifier():
     """Returns a randomly generated integer in the range 0, ... , 2**ID_LENGTH_BITS - 1."""
 
-    identifier = int.from_bytes(random.bytes(math.ceil(ID_LENGTH_BITS / 8)), "big")
+    identifier = int.from_bytes(random.bytes(bits_to_bytes(ID_LENGTH_BITS)), "big")
     return identifier & ((1 << ID_LENGTH_BITS) - 1)
 
 
@@ -450,7 +456,7 @@ def generate_mnemonics(
     if len(master_secret) * 8 < MIN_STRENGTH_BITS:
         raise ValueError(
             "The length of the master secret ({} bytes) must be at least {} bytes.".format(
-                len(master_secret), math.ceil(MIN_STRENGTH_BITS / 8)
+                len(master_secret), bits_to_bytes(MIN_STRENGTH_BITS)
             )
         )
 
