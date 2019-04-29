@@ -72,11 +72,7 @@ def print_support(coin):
     key, name, shortcut = coin["key"], coin["name"], coin["shortcut"]
     print(f"{key} - {name} ({shortcut})")
     if coin.get("duplicate"):
-        if coin_info.is_token(coin):
-            print(" * DUPLICATE SYMBOL (no support)")
-            return
-        else:
-            print(" * DUPLICATE SYMBOL")
+        print(" * DUPLICATE SYMBOL")
     for dev, where in SUPPORT_INFO.items():
         missing_means_no = dev in coin_info.MISSING_SUPPORT_MEANS_NO
         print(" *", dev, ":", support_value(where, key, missing_means_no))
@@ -131,8 +127,6 @@ def find_unsupported_coins(coins_dict):
 
         result[device] = []
         for key, coin in coins_dict.items():
-            if coin.get("duplicate") and coin_info.is_token(coin):
-                continue
             if key not in support_set:
                 result[device].append(coin)
 
@@ -466,12 +460,6 @@ def set_support_value(key, entries, reason):
     (or null, in case of trezor1/2)
     Setting variable to empty ("trezor1=") will set to null, or clear the entry.
     Setting to "soon", "planned", "2.1.1" etc. will set the literal string.
-
-    Entries that are always present:
-    trezor1 trezor2 webwallet connect
-
-    Entries with other names will be inserted into "others". This is a good place
-    to store links to 3rd party software, such as Electrum forks or claim tools.
     """
     defs, _ = coin_info.coin_info_with_duplicates()
     coins = defs.as_dict()
@@ -483,7 +471,6 @@ def set_support_value(key, entries, reason):
     if coins[key].get("duplicate") and coin_info.is_token(coins[key]):
         shortcut = coins[key]["shortcut"]
         click.echo(f"Note: shortcut {shortcut} is a duplicate.")
-        click.echo(f"Coin will NOT be listed regardless of support.json status.")
 
     for entry in entries:
         try:
