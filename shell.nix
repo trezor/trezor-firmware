@@ -30,10 +30,12 @@ in
       gnumake
       graphviz
       openssl
+      pipenv
       pkgconfig
       protobuf
       python2Packages.demjson
       scons
       valgrind
+      zlib
     ];
   }

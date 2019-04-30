@@ -9,7 +9,7 @@ ENV TOOLCHAIN_FLAVOR=$TOOLCHAIN_FLAVOR
 
 RUN apt-get update && apt-get install -y \
     build-essential wget git libsodium-dev graphviz \
-    valgrind check libssl-dev libusb-1.0-0-dev libudev-dev
+    valgrind check libssl-dev libusb-1.0-0-dev libudev-dev zlib1g-dev
 
 # TODO are all apt packages actually needed?
 
