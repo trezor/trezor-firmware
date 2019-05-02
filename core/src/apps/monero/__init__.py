@@ -4,6 +4,7 @@ from trezor.messages import MessageType
 from apps.common import HARDENED
 
 CURVE = "ed25519"
+_LIVE_REFRESH_TOKEN = None  # live-refresh permission token
 
 
 def boot():
@@ -19,3 +20,11 @@ def boot():
 
     if __debug__ and hasattr(MessageType, "DebugMoneroDiagRequest"):
         wire.add(MessageType.DebugMoneroDiagRequest, __name__, "diag")
+
+
+def live_refresh_token(token=None):
+    global _LIVE_REFRESH_TOKEN
+    if token is None:
+        return _LIVE_REFRESH_TOKEN
+    else:
+        _LIVE_REFRESH_TOKEN = token

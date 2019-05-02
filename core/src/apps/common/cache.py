@@ -56,3 +56,7 @@ def clear(skip_passphrase: bool = False):
         set_passphrase("")
     else:
         set_passphrase(None)
+
+
+def get_passphrase_fprint():
+    return _compute_state(b"", get_passphrase() or "")[:4]
