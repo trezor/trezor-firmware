@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import pytest
+import binascii
 
 from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, CallException, btc_hash, parse_path
@@ -64,7 +65,9 @@ TXHASH_50f6f1 = bytes.fromhex(
 TXHASH_2bac7a = bytes.fromhex(
     "2bac7ad1dec654579a71ea9555463f63ac7b7df9d8ba67b4682bba4e514d0f0c"
 )
-
+TXHASH_6b97a5 = bytes.fromhex(
+    "6b97a5579b4e088d472c1b8c2a30b216be1603dd006af7a42d75c12b0a75d6db"
+)
 
 def check_sign_tx(
     client,
@@ -74,11 +77,13 @@ def check_sign_tx(
     fee_too_high=False,
     failure=None,
     unknown_path=False,
+    details_tx=None,
+    allow_fetch=True,
 ):
     __tracebackhide__ = True
     expected_responses = []
 
-    txes = tx_cache(coin_name)
+    txes = tx_cache(coin_name, allow_fetch)
 
     t = proto.RequestType
     b = proto.ButtonRequestType
@@ -147,7 +152,7 @@ def check_sign_tx(
 
     with client:
         client.set_expected_responses(expected_responses)
-        return btc.sign_tx(client, coin_name, inputs, outputs, prev_txes=txes)
+        return btc.sign_tx(client, coin_name, inputs, outputs, details=details_tx, prev_txes=txes)
 
 
 class TestMsgSigntx:
@@ -806,4 +811,55 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        check_sign_tx(client, "Testnet", [inp1], [out1, out_change])
+        check_sign_tx(self.client, "Testnet", [inp1], [out1, out_change])
+
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_tpos(self, client):
+        # self.setup_mnemonic_nopin_nopassphrase()
+
+        # tx: 6b97a5579b4e088d472c1b8c2a30b216be1603dd006af7a42d75c12b0a75d6db
+        # input 0: 1.11994500 XSN
+
+        inp1 = proto.TxInputType(
+            address_n=[0], # Xe2cLLPxqahT3XkkuuPJrAXhsved39jeqa
+            prev_hash=TXHASH_6b97a5,
+            prev_index=0,
+        )
+
+        out1 = proto.TxOutputType(
+            address="Xat9wgxXaJMaJEWWMZCG4fh5B9utBXcpba",
+            amount=100000000, # 1 XSN
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        out2 = proto.TxOutputType(
+            address="Xe2cLLPxqahT3XkkuuPJrAXhsved39jeqa",
+            amount=11993500, # 0.11993500 XSN
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+        
+        out3 = proto.TxOutputType(
+            op_return_data=binascii.a2b_hex("54504f53434f4e54524143545861743977677858614a4d614a4557574d5a43473466683542397574425863706261586572557a7859474735595a7873756968476341594d4459594450543358576b6636501f116a4255fa8cd32418d211227abcb3989684c34c240da876704b229f0a943a7966144f96fbe044b65412fbcb2dee6f28ebe56d1bd5559b4b189cb70beeea8159"),
+            amount=0,
+            script_type=proto.OutputScriptType.PAYTOOPRETURN
+        )
+        out3.force_confirm = True
+
+        details_tx = proto.SignTx()
+        details_tx.version = 2
+        details_tx.lock_time = 0
+
+        _, serialized_tx = check_sign_tx(
+            client,
+            "Stakenet",
+            [inp1],
+            [out1, out2, out3],
+            details_tx=details_tx,
+            unknown_path=True,
+            allow_fetch=False,
+        )
+
+        assert (
+            serialized_tx.hex()
+            == "0200000001dbd6750a2bc1752da4f76a00dd0316be16b2302a8c1b2c478d084e9b57a5976b000000006a473044022020b39b176b72fcb70f408215f1849326f9863ab5cb1a68526fe62042180f2b92022060474698859f7d35ae80101876f4a51163632efe9ddc4b334368099e20d54a930121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0300e1f505000000001976a9140223b1a09138753c9cb0baf95a0a62c82711567a88ac9c01b700000000001976a91424a56db43cf6f2b02e838ea493f95d8d6047423188ac00000000000000008b6a225861743977677858614a4d614a4557574d5a4347346668354239757442586370626122586572557a7859474735595a7873756968476341594d4459594450543358576b66360150411f116a4255fa8cd32418d211227abcb3989684c34c240da876704b229f0a943a7966144f96fbe044b65412fbcb2dee6f28ebe56d1bd5559b4b189cb70beeea815900000000"
+        )
