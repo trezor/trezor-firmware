@@ -69,7 +69,7 @@ static void unbitslice(uint8_t *r, const uint32_t x[8], size_t len) {
 static void bitslice_setall(uint32_t r[8], const uint8_t x) {
   size_t idx;
   for (idx = 0; idx < 8; idx++) {
-    r[idx] = ((int32_t)((x & (1 << idx)) << (31 - idx))) >> 31;
+    r[idx] = -((x >> idx) & 1);
   }
 }
 
@@ -271,14 +271,6 @@ bool shamir_interpolate(uint8_t *result, uint8_t result_index,
 
   if (len > SHAMIR_MAX_LEN) return false;
 
-  /* The code below assumes that none of the share_indices are equal to
-   * result_index. We need to treat that as a special case. */
-  for (i = 0; i < share_count; i++)
-    if (share_indices[i] == result_index) {
-      memcpy(result, share_values[i], len);
-      return true;
-    }
-
   /* Collect the x and y values */
   for (i = 0; i < share_count; i++) {
     bitslice_setall(xs[i], share_indices[i]);
@@ -294,8 +286,15 @@ bool shamir_interpolate(uint8_t *result, uint8_t result_index,
 
   /* Use Lagrange basis polynomials to calculate the secret coefficient */
   for (i = 0; i < share_count; i++) {
-    memcpy(denom, x, sizeof(denom));
-    gf256_add(denom, xs[i]);
+    /* The code below assumes that none of the share_indices are equal to
+     * result_index. We need to treat that as a special case. */
+    if (share_indices[i] != result_index) {
+      memcpy(denom, x, sizeof(denom));
+      gf256_add(denom, xs[i]);
+    } else {
+      bitslice_setall(denom, 1);
+      gf256_add(secret, ys[i]);
+    }
     for (j = 0; j < share_count; j++) {
       if (i == j) continue;
       memcpy(tmp, xs[i], sizeof(uint32_t[8]));
