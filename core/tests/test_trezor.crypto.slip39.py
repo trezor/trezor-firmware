@@ -64,6 +64,24 @@ class TestCryptoSlip39(unittest.TestCase):
             slip39.combine_mnemonics(mnemonics[0][1:4])
 
 
+    def test_invalid_sharing(self):
+        # Short master secret.
+        with self.assertRaises(ValueError):
+            slip39.generate_mnemonics(1, [(2, 3)], self.MS[:14])
+
+        # Odd length master secret.
+        with self.assertRaises(ValueError):
+            slip39.generate_mnemonics(1, [(2, 3)], self.MS + b"X")
+
+        # Group threshold exceeds number of groups.
+        with self.assertRaises(ValueError):
+            slip39.generate_mnemonics(3, [(3, 5), (2, 5)], self.MS)
+
+        # Group with multiple members and threshold 1.
+        with self.assertRaises(ValueError):
+            slip39.generate_mnemonics(2, [(3, 5), (1, 3), (2, 5)], self.MS)
+
+
     def test_vectors(self):
         for mnemonics, secret in vectors:
             if secret:

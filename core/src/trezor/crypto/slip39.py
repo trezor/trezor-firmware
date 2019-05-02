@@ -472,6 +472,14 @@ def generate_mnemonics(
             )
         )
 
+    if any(
+        member_threshold == 1 and member_count > 1
+        for member_threshold, member_count in groups
+    ):
+        raise ValueError(
+            "Creating multiple member shares with member threshold 1 is not allowed. Use 1-of-1 member sharing instead."
+        )
+
     encrypted_master_secret = _encrypt(
         master_secret, passphrase, iteration_exponent, identifier
     )
