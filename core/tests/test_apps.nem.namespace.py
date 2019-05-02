@@ -1,12 +1,12 @@
-from common import *
+from common import unhexlify, unittest
 
-from apps.nem.helpers import *
-from apps.nem.namespace import *
-from apps.nem.namespace.serialize import *
+from apps.nem.helpers import NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET
+from apps.nem.namespace.serialize import serialize_provision_namespace
 
 from trezor.crypto import hashlib
 from trezor.messages.NEMProvisionNamespace import NEMProvisionNamespace
 from trezor.messages.NEMSignTx import NEMSignTx
+from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 
 
 class TestNemNamespace(unittest.TestCase):

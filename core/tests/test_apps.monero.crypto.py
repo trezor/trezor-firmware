@@ -1,4 +1,4 @@
-from common import *
+from common import hexlify, unhexlify, unittest
 
 from apps.monero.xmr import crypto, monero
 from apps.monero.xmr.addresses import encode_addr

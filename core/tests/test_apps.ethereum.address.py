@@ -1,7 +1,7 @@
-from common import *
+from common import unittest
 from apps.common.paths import HARDENED
-from apps.ethereum.address import address_from_bytes, bytes_from_address, validate_full_path
-from apps.ethereum.networks import NetworkInfo, by_chain_id
+from apps.ethereum.address import address_from_bytes, validate_full_path
+from apps.ethereum.networks import NetworkInfo
 
 
 class TestEthereumGetAddress(unittest.TestCase):

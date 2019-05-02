@@ -1,4 +1,4 @@
-from common import *
+from common import unhexlify, unittest
 from apps.common.paths import HARDENED
 from apps.stellar.helpers import address_from_public_key, public_key_from_address, validate_full_path
 from trezor.wire import ProcessError

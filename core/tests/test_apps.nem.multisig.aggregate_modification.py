@@ -1,13 +1,16 @@
-from common import *
+from common import unhexlify, unittest
 from trezor.crypto import hashlib
 from trezor.messages.NEMAggregateModification import NEMAggregateModification
 from trezor.messages.NEMCosignatoryModification import NEMCosignatoryModification
 from trezor.messages.NEMSignTx import NEMSignTx
 from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 
-from apps.nem.helpers import *
-from apps.nem.multisig import *
-from apps.nem.multisig.serialize import *
+from apps.nem.helpers import NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET
+from apps.nem.multisig.serialize import (
+    serialize_aggregate_modification,
+    write_cosignatory_modification,
+    write_minimum_cosignatories,
+)
 
 
 class TestNemMultisigAggregateModification(unittest.TestCase):

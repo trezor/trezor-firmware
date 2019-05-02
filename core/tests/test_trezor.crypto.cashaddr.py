@@ -22,7 +22,7 @@
 
 """Reference tests for cashaddr adresses"""
 
-from common import *
+from common import unittest
 from trezor.crypto import base58, cashaddr
 
 

@@ -2,7 +2,7 @@ import sys
 
 sys.path.append('../src')
 
-from utest import *
+from utest import assert_eq, assert_async, run_tests
 from ubinascii import unhexlify
 
 from trezor import io

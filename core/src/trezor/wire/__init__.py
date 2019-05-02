@@ -1,7 +1,7 @@
 import protobuf
 from trezor import log, loop, messages, utils, workflow
 from trezor.wire import codec_v1
-from trezor.wire.errors import *
+from trezor.wire.errors import Error, FailureType
 
 from apps.common import seed
 

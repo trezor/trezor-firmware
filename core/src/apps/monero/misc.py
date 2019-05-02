@@ -2,7 +2,8 @@ from apps.common import HARDENED
 from apps.monero import CURVE
 
 if False:
-    from apps.monero.xmr.types import *
+    from typing import Tuple
+    from apps.monero.xmr.types import Sc25519
 
 
 def get_creds(keychain, address_n=None, network_type=None):

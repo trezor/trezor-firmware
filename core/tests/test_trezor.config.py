@@ -1,4 +1,4 @@
-from common import *
+from common import unittest
 
 from trezor.crypto import random
 from trezor.pin import pin_to_int

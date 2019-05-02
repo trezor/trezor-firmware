@@ -1,4 +1,4 @@
-from common import *
+from common import unittest
 from apps.ethereum.layout import format_ethereum_amount
 
 

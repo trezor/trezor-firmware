@@ -1,11 +1,12 @@
-from common import *
+from common import unhexlify, unittest
 
+from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputType import TxOutputType
-from trezor.messages import OutputScriptType
+from trezor.messages import InputScriptType, OutputScriptType
 from trezor.crypto import bip32, bip39
 
 from apps.common import coins
-from apps.wallet.sign_tx.tx_weight import *
+from apps.wallet.sign_tx.tx_weight import TxWeightCalculator
 from apps.wallet.sign_tx import signing
 
 

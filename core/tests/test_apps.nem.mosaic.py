@@ -1,8 +1,7 @@
-from common import *
+from common import unittest
 from trezor.messages.NEMMosaic import NEMMosaic
 from apps.nem.mosaic.helpers import get_mosaic_definition
-from apps.nem.transfer import *
-from apps.nem.transfer.serialize import *
+from apps.nem.transfer.serialize import merge_mosaics, sort_mosaics, canonicalize_mosaics
 
 
 class TestNemMosaic(unittest.TestCase):

@@ -1,6 +1,6 @@
 from ubinascii import unhexlify
 
-from common import *
+from common import unittest
 from trezor.messages import TezosContractType
 from trezor.messages.TezosContractID import TezosContractID
 

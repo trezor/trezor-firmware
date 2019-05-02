@@ -1,4 +1,4 @@
-from common import *
+from common import unittest
 from apps.common import HARDENED
 from apps.common.seed import Keychain, _path_hardened
 from trezor import wire
@@ -74,6 +74,7 @@ class TestKeychain(unittest.TestCase):
         self.assertFalse(_path_hardened([44, 44 | HARDENED, 0 | HARDENED]))
         self.assertFalse(_path_hardened([0, ]))
         self.assertFalse(_path_hardened([44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0]))
+
 
 if __name__ == '__main__':
     unittest.main()

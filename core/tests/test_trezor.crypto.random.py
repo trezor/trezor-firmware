@@ -1,4 +1,4 @@
-from common import *
+from common import unittest, hexlify
 
 from trezor.crypto import random
 

@@ -1,12 +1,12 @@
-from common import *
+from common import unhexlify, unittest
 
-from apps.nem.helpers import *
-from apps.nem.mosaic import *
-from apps.nem.mosaic.serialize import *
+from apps.nem.helpers import NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET
+from apps.nem.mosaic.serialize import serialize_mosaic_supply_change
 
 from trezor.crypto import hashlib
 from trezor.messages.NEMSignTx import NEMSignTx
 from trezor.messages.NEMMosaicSupplyChange import NEMMosaicSupplyChange
+from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 
 
 class TestNemMosaicSupplyChange(unittest.TestCase):

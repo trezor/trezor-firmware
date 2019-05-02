@@ -1,4 +1,4 @@
-from common import *
+from common import unhexlify, unittest
 from apps.common.paths import HARDENED
 from apps.ripple.helpers import address_from_public_key, validate_full_path
 

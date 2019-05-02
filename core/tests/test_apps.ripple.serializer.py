@@ -1,4 +1,4 @@
-from common import *
+from common import unhexlify, unittest
 from trezor.messages.RipplePayment import RipplePayment
 from trezor.messages.RippleSignTx import RippleSignTx
 

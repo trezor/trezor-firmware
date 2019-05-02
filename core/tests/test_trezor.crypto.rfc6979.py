@@ -1,4 +1,4 @@
-from common import *
+from common import unhexlify, unittest
 
 from trezor.crypto import rfc6979
 from trezor.crypto.hashlib import sha256

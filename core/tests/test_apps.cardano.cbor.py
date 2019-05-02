@@ -1,4 +1,4 @@
-from common import *
+from common import unittest
 
 from apps.cardano.cbor import (
     Tagged,

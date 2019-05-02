@@ -1,13 +1,13 @@
-from common import *
+from common import unhexlify, unittest
 
-from apps.nem.helpers import *
-from apps.nem.mosaic import *
-from apps.nem.transfer import *
-from apps.nem.transfer.serialize import *
+from apps.nem.helpers import NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET
+from apps.nem.transfer.serialize import serialize_transfer, serialize_mosaic
 
 from trezor.crypto import hashlib
 from trezor.messages.NEMTransfer import NEMTransfer
 from trezor.messages.NEMSignTx import NEMSignTx
+from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+from trezor.messages.NEMMosaic import NEMMosaic
 
 
 class TestNemTransfer(unittest.TestCase):

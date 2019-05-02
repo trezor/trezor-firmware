@@ -1,4 +1,4 @@
-from common import *
+from common import unittest
 from apps.common import HARDENED
 from apps.common.paths import validate_path_for_get_public_key, is_hardened
 

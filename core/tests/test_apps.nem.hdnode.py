@@ -1,4 +1,4 @@
-from common import *
+from common import unittest
 from ubinascii import unhexlify
 from trezor.crypto import bip32
 from apps.nem import CURVE

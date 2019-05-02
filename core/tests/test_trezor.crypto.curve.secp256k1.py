@@ -1,4 +1,4 @@
-from common import *
+from common import hexlify, unhexlify, unittest
 
 from trezor.crypto import random
 from trezor.crypto.curve import secp256k1, secp256k1_zkp

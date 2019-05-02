@@ -1,7 +1,11 @@
-from common import *
+from common import unhexlify, unittest
 
-from apps.wallet.sign_tx.signing import *
-from apps.wallet.sign_tx.addresses import *
+from apps.wallet.sign_tx.addresses import (
+    address_pkh,
+    address_p2sh,
+    address_p2wpkh,
+    address_p2wpkh_in_p2sh,
+)
 from apps.common import coins
 from trezor.crypto import bip32, bip39
 
@@ -21,9 +25,9 @@ class TestAddressGRS(unittest.TestCase):
         root = bip32.from_seed(seed, coin.curve_name)
 
         node = node_derive(root, [44 | 0x80000000, 17 | 0x80000000, 0 | 0x80000000, 1, 0])
-        address = node.address(coin.address_type) # generate in trezor-crypto
+        address = node.address(coin.address_type)  # generate in trezor-crypto
         self.assertEqual(address, 'FmRaqvVBRrAp2Umfqx9V1ectZy8gw54QDN')
-        address = address_pkh(node.public_key(), coin) # generate in trezor-core
+        address = address_pkh(node.public_key(), coin)  # generate in trezor-core
         self.assertEqual(address, 'FmRaqvVBRrAp2Umfqx9V1ectZy8gw54QDN')
 
         node = node_derive(root, [44 | 0x80000000, 17 | 0x80000000, 0 | 0x80000000, 1, 1])

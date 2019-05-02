@@ -1,13 +1,6 @@
-import utest
-from common import *
-from trezor import log, loop, utils
+from common import unittest
 
-from apps.monero.xmr.serialize.int_serialize import (
-    dump_uint,
-    dump_uvarint,
-    load_uint,
-    load_uvarint,
-)
+from apps.monero.xmr.serialize.int_serialize import dump_uvarint, load_uvarint
 from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
 from apps.monero.xmr.serialize_messages.base import ECPoint
 from apps.monero.xmr.serialize_messages.tx_prefix import (
@@ -41,31 +34,6 @@ class XmrTstData(object):
             self.ec_offset += 1
 
         return bytearray(range(offset, offset + 32))
-
-    def gen_transaction_prefix(self):
-        """
-        Returns test transaction prefix
-        :return:
-        """
-        vin = [
-            TxinToKey(
-                amount=123, key_offsets=[1, 2, 3, 2 ** 76], k_image=bytearray(range(32))
-            ),
-            TxinToKey(
-                amount=456, key_offsets=[9, 8, 7, 6], k_image=bytearray(range(32, 64))
-            ),
-            TxinGen(height=99),
-        ]
-
-        vout = [
-            TxOut(amount=11, target=TxoutToKey(key=bytearray(range(32)))),
-            TxOut(amount=34, target=TxoutToKey(key=bytearray(range(64, 96)))),
-        ]
-
-        msg = TransactionPrefix(
-            version=2, unlock_time=10, vin=vin, vout=vout, extra=list(range(31))
-        )
-        return msg
 
 
 class TestMoneroSerializer(unittest.TestCase):

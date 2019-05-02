@@ -1,4 +1,4 @@
-from common import *
+from common import unhexlify, unittest
 
 from trezor.crypto import hashlib
 

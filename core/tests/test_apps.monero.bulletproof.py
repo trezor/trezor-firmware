@@ -1,4 +1,4 @@
-from common import *
+from common import unhexlify, unittest
 
 from apps.monero.xmr import bulletproof as bp, crypto, monero
 from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof

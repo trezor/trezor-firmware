@@ -1,4 +1,4 @@
-from common import *
+from common import hexlify, unhexlify, unittest
 from trezor.messages import InputScriptType
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType

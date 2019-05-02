@@ -1,4 +1,4 @@
-from common import *
+from common import unittest
 
 from apps.cardano.seed import Keychain
 from apps.cardano.get_public_key import _get_public_key

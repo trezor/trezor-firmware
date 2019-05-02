@@ -49,7 +49,16 @@ def blend(ca: int, cb: int, t: float) -> int:
 
 
 # import style definitions
-from trezor.ui.style import *  # isort:skip
+from trezor.ui.style import *  # isort:skip  # noqa: F401, F403
+from trezor.ui.style import (  # isort:skip
+    BACKLIGHT_DIM,
+    BACKLIGHT_MAX,
+    BACKLIGHT_NORMAL,
+    BG,
+    FG,
+    GREEN,
+    ICON_DEFAULT,
+)
 
 
 def contains(area: tuple, pos: tuple) -> bool:

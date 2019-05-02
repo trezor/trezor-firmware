@@ -1,4 +1,4 @@
-from common import *
+from common import hexlify, unittest
 from apps.common import seed
 
 from apps.common import HARDENED
@@ -107,7 +107,6 @@ class TestCardanoAddress(unittest.TestCase):
             self.assertEqual(hexlify(seed.remove_ed25519_prefix(n.public_key())), pub)
             self.assertEqual(hexlify(n.chain_code()), chain)
 
-
     def test_root_address_derivation_scheme(self):
         mnemonic = "all all all all all all all all all all all all"
         passphrase = ""
@@ -133,13 +132,11 @@ class TestCardanoAddress(unittest.TestCase):
         self.assertEqual(hexlify(seed.remove_ed25519_prefix(n.public_key())), pub)
         self.assertEqual(hexlify(n.chain_code()), chain)
 
-
     def test_address_hash(self):
         data = [0, [0, b"}\x1d\xe3\xf2/S\x90M\x00\x7f\xf83\xfa\xdd|\xd6H.\xa1\xe89\x18\xb9\x85\xb4\xea3\xe6<\x16\xd1\x83z\x04\xa6\xaa\xb0\xed\x12\xafV*&\xdbM\x104DT'M\x0b\xfan5\x81\xdf\x1d\xc0/\x13\xc5\xfb\xe5"], {}]
         result = _address_hash(data)
 
         self.assertEqual(result, b'\x1c\xca\xee\xc9\x80\xaf}\xb0\x9a\xa8\x96E\xd6\xa4\xd1\xb4\x13\x85\xb9\xc2q\x1d5/{\x12"\xca')
-
 
     def test_paths(self):
         incorrect_derivation_paths = [
@@ -175,6 +172,7 @@ class TestCardanoAddress(unittest.TestCase):
 
         address_root = _get_address_root(root_node, {1: b'X\x1cr,zu\x81?\xaf\xde\x9f\xf9\xe4\xd4\x90\xadH$\xe9\xf3\x88\x16\xcb\xd2)\x02M\x0c#\xde'})
         self.assertEqual(address_root, b'\xb3\xbbS\xa8;uN:E=\xe8\xe5\x9c\x18\xbcn\xcf\xd0c\xba\x0e\xba\xaelL}\xba\xbb')
+
 
 if __name__ == '__main__':
     unittest.main()

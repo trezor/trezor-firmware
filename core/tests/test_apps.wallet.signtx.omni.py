@@ -1,4 +1,4 @@
-from common import *
+from common import unhexlify, unittest
 
 from apps.wallet.sign_tx.omni import is_valid, parse
 
