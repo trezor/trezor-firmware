@@ -1,7 +1,7 @@
 from common import unittest
 from apps.common import HARDENED
 from apps.common.seed import Keychain, _path_hardened
-from trezor import wire
+from trezor.wire.errors import DataError
 
 
 class TestKeychain(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestKeychain(unittest.TestCase):
             ([44 | HARDENED, 13 | HARDENED], "secp256k1"),  # invalid second item
         ]
         for f in fails:
-            with self.assertRaises(wire.DataError):
+            with self.assertRaises(DataError):
                 k.validate_path(*f)
 
     def test_validate_path_special_ed25519(self):
@@ -49,7 +49,7 @@ class TestKeychain(unittest.TestCase):
             ([44 | HARDENED, 134 | HARDENED, 1], "ed25519-keccak"),
         ]
         for f in fails:
-            with self.assertRaises(wire.DataError):
+            with self.assertRaises(DataError):
                 k.validate_path(*f)
 
     def test_validate_path_empty_namespace(self):
@@ -63,7 +63,7 @@ class TestKeychain(unittest.TestCase):
         for c in correct:
             self.assertEqual(None, k.validate_path(*c))
 
-        with self.assertRaises(wire.DataError):
+        with self.assertRaises(DataError):
             k.validate_path([1, 2, 3, 4], "ed25519")
             k.validate_path([], "ed25519")
 

@@ -1,5 +1,6 @@
 from common import unhexlify, unittest
-from trezor.crypto import bip32, bip39, sha256
+from trezor.crypto import bip32, bip39
+from trezor.crypto.hashlib import sha256
 from trezor.utils import HashWriter
 
 from trezor.messages import InputScriptType

@@ -1,13 +1,13 @@
 from common import unhexlify, unittest
 
 from apps.nem.helpers import NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET
-from apps.nem.namespace.serialize import (
+from apps.nem.multisig.serialize import (
     serialize_multisig_signature,
     serialize_aggregate_modification,
     serialize_multisig,
-    serialize_provision_namespace,
     write_cosignatory_modification,
 )
+from apps.nem.namespace.serialize import serialize_provision_namespace
 
 from trezor.messages.NEMSignTx import NEMSignTx
 from trezor.messages.NEMAggregateModification import NEMAggregateModification

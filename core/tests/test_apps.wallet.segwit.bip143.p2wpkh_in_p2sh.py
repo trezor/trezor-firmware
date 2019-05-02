@@ -6,7 +6,8 @@ from apps.common import coins
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputType import TxOutputType
-from trezor.messages import InputScriptType, TxOutputBinType
+from trezor.messages.TxOutputBinType import TxOutputBinType
+from trezor.messages import InputScriptType
 from trezor.messages import OutputScriptType
 from trezor.crypto import bip32, bip39
 
