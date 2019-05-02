@@ -54,9 +54,9 @@ vectors = [
   ],
   [
     [
-      "script smoking academic enlarge diet theater twin guard already image increase trash lend pink general crowd chest remind faint literary",
       "script smoking beard echo blimp diminish pencil curious vampire devote valuable skin mama starting tension explain elegant surface venture judicial",
-      "script smoking beard email charity clock join peasant acquire tidy dress drove width depend smart trust guitar bulb echo duration"
+      "script smoking beard email charity clock join peasant acquire tidy dress drove width depend smart trust guitar bulb echo duration",
+      "script smoking academic easy diet theater twin guard already image increase trash lend pink general crowd chest metric together heat"
     ],
     ""
   ],
@@ -207,9 +207,9 @@ vectors = [
   ],
   [
     [
-      "depart branch academic enlarge august moisture snapshot smear genuine sister order crisis gums afraid dress romantic imply corner justice center",
       "depart branch beard echo dilemma likely building hand treat trial pumps writing photo fragment lunar ranked sympathy wrap alien debris",
-      "depart branch beard email darkness tracks national discuss fluff merit gesture order mule firefly evaluate both element adult walnut stick"
+      "depart branch beard email darkness tracks national discuss fluff merit gesture order mule firefly evaluate both element adult walnut stick",
+      "depart branch academic easy august moisture snapshot smear genuine sister order crisis gums afraid dress romantic imply activity skunk shelter"
     ],
     ""
   ],
