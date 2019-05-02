@@ -5,9 +5,9 @@ Monorepo notes
 Generating
 ----------
 
-Use the [create-monorepo] script to regenerate from current master(s).
+Use the [create_monorepo] script to regenerate from current master(s).
 
-[create-monorepo]: create-monorepo.py
+[create_monorepo]: create_monorepo.py
 
 
 Structure

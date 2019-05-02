@@ -1,4 +1,4 @@
-Version 1.8.1 [unreleased]
+Version 1.8.1 [May 2019]
 * Fix fault when using the device with no PIN
 * Fix OMNI transactions parsing
 

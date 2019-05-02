@@ -34,4 +34,5 @@ docker run -t -v $(pwd):/local -v $(pwd)/build/core:/build:z --user="$USER:$GROU
 	ln -s /build build &&
 	git checkout $TAG && \
 	git submodule update --init --recursive && \
-	PRODUCTION=$PRODUCTION make clean vendor build_boardloader build_bootloader build_firmware"
+	pipenv install && \
+	PRODUCTION=$PRODUCTION pipenv run make clean vendor build_boardloader build_bootloader build_firmware"

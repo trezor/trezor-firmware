@@ -27,6 +27,12 @@ build core unix:
     untracked: true
     expire_in: 1 day
 
+build core unix frozen:
+  stage: build
+  script:
+    - cd core
+    - pipenv run make build_unix_noui_frozen
+
 test core unix unit:
   stage: test
   variables:

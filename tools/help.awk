@@ -7,7 +7,7 @@ BEGIN {
     COLOR_RESET = "\033[0m"
 } /^[a-zA-Z0-9_-]+:.*?## / {
     printf COLOR_DARKGREEN
-    printf "  make %-20s", $1
+    printf "  make %-22s", $1
     printf COLOR_RESET
     printf " %s\n", $2
 } /^##(.*)/ {
