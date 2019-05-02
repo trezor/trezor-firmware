@@ -1,5 +1,6 @@
 from trezor import wire
 from trezor.crypto import bip32
+from trezor.wire import errors
 
 from apps.cardano import CURVE, SEED_NAMESPACE
 from apps.common import cache, mnemonic, storage
@@ -13,14 +14,14 @@ class Keychain:
 
     def validate_path(self, checked_path: list, checked_curve: str):
         if checked_curve != CURVE or checked_path[:2] != SEED_NAMESPACE:
-            raise wire.DataError("Forbidden key path")
+            raise errors.DataError("Forbidden key path")
 
     def derive(self, node_path: list) -> bip32.HDNode:
         # check we are in the cardano namespace
         prefix = node_path[: len(self.path)]
         suffix = node_path[len(self.path) :]
         if prefix != self.path:
-            raise wire.DataError("Forbidden key path")
+            raise errors.DataError("Forbidden key path")
         # derive child node from the root
         node = self.root.clone()
         for i in suffix:
@@ -30,7 +31,7 @@ class Keychain:
 
 async def get_keychain(ctx: wire.Context) -> Keychain:
     if not storage.is_initialized():
-        raise wire.ProcessError("Device is not initialized")
+        raise errors.ProcessError("Device is not initialized")
 
     # derive the root node from mnemonic and passphrase
     passphrase = cache.get_passphrase()

@@ -3,6 +3,7 @@ from trezor.crypto.curve import secp256k1
 from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
 from trezor.messages.MessageSignature import MessageSignature
 from trezor.ui.text import Text
+from trezor.wire import errors
 
 from apps.common import coins
 from apps.common.confirm import require_confirm
@@ -44,7 +45,7 @@ async def sign_message(ctx, msg, keychain):
     elif script_type == SPENDWITNESS:
         signature = bytes([signature[0] + 8]) + signature[1:]
     else:
-        raise wire.ProcessError("Unsupported script type")
+        raise errors.ProcessError("Unsupported script type")
 
     return MessageSignature(address=address, signature=signature)
 

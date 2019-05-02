@@ -10,7 +10,7 @@ from trezor.messages.NEMSignTx import (
     NEMTransactionCommon,
     NEMTransfer,
 )
-from trezor.wire import ProcessError
+from trezor.wire.errors import ProcessError
 
 from .helpers import (
     NEM_MAX_DIVISIBILITY,

@@ -4,6 +4,7 @@ from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
 from trezor.ui.text import Text
+from trezor.wire import errors
 
 from apps.common.confirm import require_confirm
 from apps.common.request_pin import PinCancelled, request_pin
@@ -78,7 +79,7 @@ async def request_pin_ack(ctx, *args, **kwargs):
         )
         return await ctx.wait(request_pin(*args, **kwargs))
     except PinCancelled:
-        raise wire.ActionCancelled("Cancelled")
+        raise errors.ActionCancelled("Cancelled")
 
 
 @ui.layout

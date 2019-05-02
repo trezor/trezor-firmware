@@ -5,7 +5,7 @@ from trezor.crypto.hashlib import sha256
 from trezor.messages.StellarSignedTx import StellarSignedTx
 from trezor.messages.StellarSignTx import StellarSignTx
 from trezor.messages.StellarTxOpRequest import StellarTxOpRequest
-from trezor.wire import ProcessError
+from trezor.wire.errors import ProcessError
 
 from apps.common import paths, seed
 from apps.stellar import CURVE, consts, helpers, layout, writers

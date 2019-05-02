@@ -1,5 +1,6 @@
-from trezor import log, wire
+from trezor import log
 from trezor.messages.CardanoAddress import CardanoAddress
+from trezor.wire import errors
 
 from apps.cardano import CURVE, seed
 from apps.cardano.address import derive_address_and_node, validate_full_path
@@ -17,7 +18,7 @@ async def get_address(ctx, msg):
     except ValueError as e:
         if __debug__:
             log.exception(__name__, e)
-        raise wire.ProcessError("Deriving address failed")
+        raise errors.ProcessError("Deriving address failed")
     if msg.show_display:
         desc = address_n_to_str(msg.address_n)
         while True:

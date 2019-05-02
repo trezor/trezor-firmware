@@ -1,8 +1,9 @@
 from ubinascii import hexlify
 
-from trezor import log, wire
+from trezor import log
 from trezor.messages.CardanoPublicKey import CardanoPublicKey
 from trezor.messages.HDNodeType import HDNodeType
+from trezor.wire import errors
 
 from apps.cardano import CURVE, seed
 from apps.cardano.address import derive_address_and_node
@@ -27,7 +28,7 @@ async def get_public_key(ctx, msg):
     except ValueError as e:
         if __debug__:
             log.exception(__name__, e)
-        raise wire.ProcessError("Deriving public key failed")
+        raise errors.ProcessError("Deriving public key failed")
 
     if msg.show_display:
         await layout.show_pubkey(ctx, key.node.public_key)

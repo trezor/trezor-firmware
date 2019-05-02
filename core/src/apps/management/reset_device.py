@@ -13,6 +13,7 @@ from trezor.ui.mnemonic import MnemonicKeyboard
 from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
 from trezor.ui.text import Text
 from trezor.utils import chunks, format_ordinal
+from trezor.wire import errors
 
 from apps.common import mnemonic, storage
 from apps.common.confirm import require_confirm
@@ -25,11 +26,11 @@ if __debug__:
 async def reset_device(ctx, msg):
     # validate parameters and device state
     if msg.strength not in (128, 192, 256):
-        raise wire.ProcessError("Invalid strength (has to be 128, 192 or 256 bits)")
+        raise errors.ProcessError("Invalid strength (has to be 128, 192 or 256 bits)")
     if msg.display_random and (msg.skip_backup or msg.no_backup):
-        raise wire.ProcessError("Can't show internal entropy when backup is skipped")
+        raise errors.ProcessError("Can't show internal entropy when backup is skipped")
     if storage.is_initialized():
-        raise wire.UnexpectedMessage("Already initialized")
+        raise errors.UnexpectedMessage("Already initialized")
 
     text = Text("Create a new wallet", ui.ICON_RESET, new_lines=False)
     text.normal("Do you really want to")
@@ -75,7 +76,7 @@ async def reset_device(ctx, msg):
     # write PIN into storage
     if newpin:
         if not config.change_pin(pin_to_int(""), pin_to_int(newpin)):
-            raise wire.ProcessError("Could not change PIN")
+            raise errors.ProcessError("Could not change PIN")
 
     secret = mnemonic.process([words], mnemonic.TYPE_BIP39)
     # write settings and mnemonic into storage

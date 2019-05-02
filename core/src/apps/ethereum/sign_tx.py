@@ -6,6 +6,7 @@ from trezor.messages.EthereumSignTx import EthereumSignTx
 from trezor.messages.EthereumTxRequest import EthereumTxRequest
 from trezor.messages.MessageType import EthereumTxAck
 from trezor.utils import HashWriter
+from trezor.wire import errors
 
 from apps.common import paths
 from apps.ethereum import CURVE, address, tokens
@@ -156,24 +157,24 @@ def sign_digest(msg: EthereumSignTx, keychain, digest):
 
 def check(msg: EthereumSignTx):
     if msg.tx_type not in [1, 6, None]:
-        raise wire.DataError("tx_type out of bounds")
+        raise errors.DataError("tx_type out of bounds")
 
     if msg.chain_id < 0:
-        raise wire.DataError("chain_id out of bounds")
+        raise errors.DataError("chain_id out of bounds")
 
     if msg.data_length > 0:
         if not msg.data_initial_chunk:
-            raise wire.DataError("Data length provided, but no initial chunk")
+            raise errors.DataError("Data length provided, but no initial chunk")
         # Our encoding only supports transactions up to 2^24 bytes. To
         # prevent exceeding the limit we use a stricter limit on data length.
         if msg.data_length > 16000000:
-            raise wire.DataError("Data length exceeds limit")
+            raise errors.DataError("Data length exceeds limit")
         if len(msg.data_initial_chunk) > msg.data_length:
-            raise wire.DataError("Invalid size of initial chunk")
+            raise errors.DataError("Invalid size of initial chunk")
 
     # safety checks
     if not check_gas(msg) or not check_to(msg):
-        raise wire.DataError("Safety check failed")
+        raise errors.DataError("Safety check failed")
 
 
 def check_gas(msg: EthereumSignTx) -> bool:

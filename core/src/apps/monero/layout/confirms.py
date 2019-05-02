@@ -4,6 +4,7 @@ from trezor import ui, wire
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
 from trezor.utils import chunks
+from trezor.wire import errors
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.monero.layout import common
@@ -96,7 +97,7 @@ async def _require_confirm_output(ctx, dst, network_type, payment_id):
         ui.GREEN,
         4,
     ):
-        raise wire.ActionCancelled("Cancelled")
+        raise errors.ActionCancelled("Cancelled")
 
 
 async def _require_confirm_payment_id(ctx, payment_id):
@@ -107,7 +108,7 @@ async def _require_confirm_payment_id(ctx, payment_id):
         ui.ICON_SEND,
         ui.GREEN,
     ):
-        raise wire.ActionCancelled("Cancelled")
+        raise errors.ActionCancelled("Cancelled")
 
 
 async def _require_confirm_fee(ctx, fee):

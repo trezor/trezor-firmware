@@ -145,7 +145,7 @@ async def session_handler(iface, sid):
             reader = exc.reader
             continue
         except Error as exc:
-            # we log wire.Error as warning, not as exception
+            # we log errors.Error as warning, not as exception
             if __debug__:
                 log.warning(__name__, "failure: %s", exc.message)
         except Exception as exc:

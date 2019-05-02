@@ -3,7 +3,7 @@ from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha512
 from trezor.messages.RippleSignedTx import RippleSignedTx
 from trezor.messages.RippleSignTx import RippleSignTx
-from trezor.wire import ProcessError
+from trezor.wire.errors import ProcessError
 
 from apps.common import paths
 from apps.ripple import CURVE, helpers, layout

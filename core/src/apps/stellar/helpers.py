@@ -1,7 +1,7 @@
 import ustruct
 
 from trezor.crypto import base32
-from trezor.wire import ProcessError
+from trezor.wire.errors import ProcessError
 
 from apps.common import HARDENED
 

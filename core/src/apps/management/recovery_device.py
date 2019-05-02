@@ -14,6 +14,7 @@ from trezor.ui.mnemonic import MnemonicKeyboard
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
 from trezor.utils import consteq, format_ordinal
+from trezor.wire import errors
 
 from apps.common import mnemonic, storage
 from apps.common.confirm import require_confirm
@@ -31,7 +32,7 @@ async def recovery_device(ctx, msg):
     5. Save into storage.
     """
     if not msg.dry_run and storage.is_initialized():
-        raise wire.UnexpectedMessage("Already initialized")
+        raise errors.UnexpectedMessage("Already initialized")
 
     if not msg.dry_run:
         title = "Device recovery"
@@ -61,7 +62,7 @@ async def recovery_device(ctx, msg):
     # check mnemonic validity
     if msg.enforce_wordlist or msg.dry_run:
         if not bip39.check(words):
-            raise wire.ProcessError("Mnemonic is not valid")
+            raise errors.ProcessError("Mnemonic is not valid")
 
     # ask for pin repeatedly
     if msg.pin_protection:
@@ -81,7 +82,7 @@ async def recovery_device(ctx, msg):
                 message="The seed is valid and matches the one in the device"
             )
         else:
-            raise wire.ProcessError(
+            raise errors.ProcessError(
                 "The seed is valid but does not match the one in the device"
             )
 

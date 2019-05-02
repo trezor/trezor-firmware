@@ -1,5 +1,6 @@
 from trezor import wire
 from trezor.messages.Success import Success
+from trezor.wire import errors
 
 from apps.common import mnemonic, storage
 from apps.management.reset_device import (
@@ -12,9 +13,9 @@ from apps.management.reset_device import (
 
 async def backup_device(ctx, msg):
     if not storage.is_initialized():
-        raise wire.ProcessError("Device is not initialized")
+        raise errors.ProcessError("Device is not initialized")
     if not storage.needs_backup():
-        raise wire.ProcessError("Seed already backed up")
+        raise errors.ProcessError("Seed already backed up")
 
     words = mnemonic.restore()
 

@@ -12,6 +12,7 @@ from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxRequest import TxRequest
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
+from trezor.wire import errors
 
 from apps.common import address_type, coininfo, coins, seed
 from apps.wallet.sign_tx import (

@@ -1,6 +1,7 @@
 from ubinascii import unhexlify
 
 from trezor import wire
+from trezor.wire import errors
 
 from apps.common import HARDENED, paths
 from apps.ethereum import networks
@@ -90,10 +91,10 @@ def bytes_from_address(address: str) -> bytes:
 
     elif len(address) == 42:
         if address[0:2] not in ("0x", "0X"):
-            raise wire.ProcessError("Ethereum: invalid beginning of an address")
+            raise errors.ProcessError("Ethereum: invalid beginning of an address")
         return unhexlify(address[2:])
 
     elif len(address) == 0:
         return bytes()
 
-    raise wire.ProcessError("Ethereum: Invalid address length")
+    raise errors.ProcessError("Ethereum: Invalid address length")

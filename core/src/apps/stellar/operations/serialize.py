@@ -10,7 +10,7 @@ from trezor.messages.StellarManageOfferOp import StellarManageOfferOp
 from trezor.messages.StellarPathPaymentOp import StellarPathPaymentOp
 from trezor.messages.StellarPaymentOp import StellarPaymentOp
 from trezor.messages.StellarSetOptionsOp import StellarSetOptionsOp
-from trezor.wire import ProcessError
+from trezor.wire.errors import ProcessError
 
 from apps.stellar import consts, writers
 

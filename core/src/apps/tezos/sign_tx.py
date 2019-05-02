@@ -5,6 +5,7 @@ from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
 from trezor.messages import TezosBallotType, TezosContractType
 from trezor.messages.TezosSignedTx import TezosSignedTx
+from trezor.wire import errors
 
 from apps.common import paths
 from apps.common.writers import write_bytes, write_uint8, write_uint32_be
@@ -66,7 +67,7 @@ async def sign_tx(ctx, msg, keychain):
         await layout.require_confirm_ballot(ctx, proposed_protocol, submitted_ballot)
 
     else:
-        raise wire.DataError("Invalid operation")
+        raise errors.DataError("Invalid operation")
 
     w = bytearray()
     _get_operation_bytes(w, msg)
@@ -99,7 +100,7 @@ def _get_address_by_tag(address_hash):
 
     if 0 <= tag < len(prefixes):
         return helpers.base58_encode_check(address_hash[1:], prefix=prefixes[tag])
-    raise wire.DataError("Invalid tag in address hash")
+    raise errors.DataError("Invalid tag in address hash")
 
 
 def _get_address_from_contract(address):
@@ -111,7 +112,7 @@ def _get_address_from_contract(address):
             address.hash[:-1], prefix=helpers.TEZOS_ORIGINATED_ADDRESS_PREFIX
         )
 
-    raise wire.DataError("Invalid contract type")
+    raise errors.DataError("Invalid contract type")
 
 
 def _get_protocol_hash(proposal):

@@ -2,6 +2,7 @@ from trezor import wire
 from trezor.messages import InputScriptType
 from trezor.messages.HDNodeType import HDNodeType
 from trezor.messages.PublicKey import PublicKey
+from trezor.wire import errors
 
 from apps.common import coins, layout
 
@@ -32,7 +33,7 @@ async def get_public_key(ctx, msg, keychain):
     ):
         node_xpub = node.serialize_public(coin.xpub_magic_segwit_native)
     else:
-        raise wire.DataError("Invalid combination of coin and script_type")
+        raise errors.DataError("Invalid combination of coin and script_type")
 
     pubkey = node.public_key()
     if pubkey[0] == 1:

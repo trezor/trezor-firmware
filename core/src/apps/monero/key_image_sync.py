@@ -6,6 +6,7 @@ from trezor.messages.MoneroExportedKeyImage import MoneroExportedKeyImage
 from trezor.messages.MoneroKeyImageExportInitAck import MoneroKeyImageExportInitAck
 from trezor.messages.MoneroKeyImageSyncFinalAck import MoneroKeyImageSyncFinalAck
 from trezor.messages.MoneroKeyImageSyncStepAck import MoneroKeyImageSyncStepAck
+from trezor.wire import errors
 
 from apps.common import paths
 from apps.monero import CURVE, misc
@@ -69,7 +70,7 @@ async def _init_step(s, ctx, msg, keychain):
 
 async def _sync_step(s, ctx, tds):
     if not tds.tdis:
-        raise wire.DataError("Empty")
+        raise errors.DataError("Empty")
 
     kis = []
     buff = bytearray(32 * 3)
@@ -80,7 +81,7 @@ async def _sync_step(s, ctx, tds):
     for td in tds.tdis:
         s.current_output += 1
         if s.current_output >= s.num_outputs:
-            raise wire.DataError("Too many outputs")
+            raise errors.DataError("Too many outputs")
 
         if __debug__:
             log.debug(__name__, "ki_sync, step i: %d", s.current_output)
@@ -106,10 +107,10 @@ async def _sync_step(s, ctx, tds):
 
 async def _final_step(s, ctx):
     if s.current_output + 1 != s.num_outputs:
-        raise wire.DataError("Invalid number of outputs")
+        raise errors.DataError("Invalid number of outputs")
 
     final_hash = s.hasher.digest()
     if final_hash != s.expected_hash:
-        raise wire.DataError("Invalid number of outputs")
+        raise errors.DataError("Invalid number of outputs")
 
     return MoneroKeyImageSyncFinalAck(enc_key=s.enc_key)

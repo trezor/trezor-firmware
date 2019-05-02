@@ -3,13 +3,14 @@ from trezor.crypto import aes, hmac
 from trezor.crypto.hashlib import sha512
 from trezor.messages.CipheredKeyValue import CipheredKeyValue
 from trezor.ui.text import Text
+from trezor.wire import errors
 
 from apps.common.confirm import require_confirm
 
 
 async def cipher_key_value(ctx, msg, keychain):
     if len(msg.value) % 16 > 0:
-        raise wire.DataError("Value length must be a multiple of 16")
+        raise errors.DataError("Value length must be a multiple of 16")
 
     encrypt = msg.encrypt
     decrypt = not msg.encrypt

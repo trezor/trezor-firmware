@@ -109,7 +109,7 @@ async def show_proposal_page(page: int, page_count: int, pages: list, title: str
     if page + 1 >= page_count:
         confirm = await ConfirmDialog(content)
         if confirm == CANCELLED:
-            raise wire.ActionCancelled("Cancelled")
+            raise errors.ActionCancelled("Cancelled")
     else:
         content.render()
         await animate_swipe()

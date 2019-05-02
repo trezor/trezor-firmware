@@ -12,6 +12,7 @@ from trezor.messages import (
 from trezor.ui.confirm import CONFIRMED, ConfirmDialog
 from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
 from trezor.ui.text import Text
+from trezor.wire import errors
 
 from ..layout import (
     require_confirm_content,
@@ -87,7 +88,7 @@ async def _show_page(page: int, page_count: int, content):
     content = Scrollpage(content[page], page, page_count)
     if page + 1 == page_count:
         if await ConfirmDialog(content) != CONFIRMED:
-            raise wire.ActionCancelled("Action cancelled")
+            raise errors.ActionCancelled("Action cancelled")
     else:
         content.render()
         await animate_swipe()

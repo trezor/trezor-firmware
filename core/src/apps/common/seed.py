@@ -1,5 +1,6 @@
 from trezor import ui, wire
 from trezor.crypto import bip32
+from trezor.wire import errors
 
 from apps.common import HARDENED, cache, mnemonic, storage
 from apps.common.request_passphrase import protect_by_passphrase
@@ -31,7 +32,7 @@ class Keychain:
                 if "ed25519" in curve and not _path_hardened(checked_path):
                     break
                 return
-        raise wire.DataError("Forbidden key path")
+        raise errors.DataError("Forbidden key path")
 
     def derive(self, node_path: list, curve_name: str = "secp256k1") -> bip32.HDNode:
         # find the root node index
@@ -43,7 +44,7 @@ class Keychain:
                 break
             root_index += 1
         else:
-            raise wire.DataError("Forbidden key path")
+            raise errors.DataError("Forbidden key path")
 
         # create the root node if not cached
         root = self.roots[root_index]
@@ -61,7 +62,7 @@ class Keychain:
 
 async def get_keychain(ctx: wire.Context, namespaces: list) -> Keychain:
     if not storage.is_initialized():
-        raise wire.ProcessError("Device is not initialized")
+        raise errors.ProcessError("Device is not initialized")
     seed = cache.get_seed()
     if seed is None:
         seed = await _compute_seed(ctx)

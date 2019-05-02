@@ -6,6 +6,7 @@ from trezor.crypto.curve import ed25519
 from trezor.messages.CardanoSignedTx import CardanoSignedTx
 from trezor.messages.CardanoTxRequest import CardanoTxRequest
 from trezor.messages.MessageType import CardanoTxAck
+from trezor.wire import errors
 
 from apps.cardano import CURVE, cbor, seed
 from apps.cardano.address import (
@@ -97,7 +98,7 @@ async def sign_tx(ctx, msg):
     except ValueError as e:
         if __debug__:
             log.exception(__name__, e)
-        raise wire.ProcessError("Signing failed")
+        raise errors.ProcessError("Signing failed")
 
     # display the transaction in UI
     if not await show_tx(
@@ -109,7 +110,7 @@ async def sign_tx(ctx, msg):
         transaction.inputs,
         transaction.outputs,
     ):
-        raise wire.ActionCancelled("Signing cancelled")
+        raise errors.ActionCancelled("Signing cancelled")
 
     return tx
 
@@ -162,7 +163,7 @@ class Transaction:
                 amount = outputs[output_index][1]
                 input_coins.append(amount)
             else:
-                raise wire.ProcessError("No tx data sent for input " + str(index))
+                raise errors.ProcessError("No tx data sent for input " + str(index))
 
         self.input_coins = input_coins
         self.nodes = nodes
@@ -185,11 +186,11 @@ class Transaction:
                 change_coins.append(output.amount)
             else:
                 if output.address is None:
-                    raise wire.ProcessError(
+                    raise errors.ProcessError(
                         "Each output must have address or address_n field!"
                     )
                 if not is_safe_output_address(output.address):
-                    raise wire.ProcessError("Invalid output address!")
+                    raise errors.ProcessError("Invalid output address!")
 
                 outgoing_coins.append(output.amount)
                 output_addresses.append(output.address)

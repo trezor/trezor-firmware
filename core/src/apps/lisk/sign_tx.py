@@ -6,6 +6,7 @@ from trezor.crypto.hashlib import sha256
 from trezor.messages import LiskTransactionType
 from trezor.messages.LiskSignedTx import LiskSignedTx
 from trezor.utils import HashWriter
+from trezor.wire import errors
 
 from apps.common import paths
 from apps.lisk import CURVE, layout
@@ -21,7 +22,7 @@ async def sign_tx(ctx, msg, keychain):
     try:
         await _require_confirm_by_type(ctx, transaction)
     except AttributeError:
-        raise wire.DataError("The transaction has invalid asset data field")
+        raise errors.DataError("The transaction has invalid asset data field")
 
     await layout.require_confirm_fee(ctx, transaction.amount, transaction.fee)
 
@@ -85,7 +86,7 @@ async def _require_confirm_by_type(ctx, transaction):
             ctx, transaction.asset.multisignature
         )
 
-    raise wire.DataError("Invalid transaction type")
+    raise errors.DataError("Invalid transaction type")
 
 
 def _get_transaction_bytes(tx):
@@ -144,4 +145,4 @@ def _get_asset_data_bytes(msg):
         data += ("".join(msg.asset.multisignature.keys_group)).encode()
         return data
 
-    raise wire.DataError("Invalid transaction type")
+    raise errors.DataError("Invalid transaction type")

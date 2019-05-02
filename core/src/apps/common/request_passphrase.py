@@ -8,6 +8,7 @@ from trezor.messages.PassphraseStateRequest import PassphraseStateRequest
 from trezor.ui.entry_select import DEVICE, EntrySelector
 from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard
 from trezor.ui.text import Text
+from trezor.wire import errors
 
 from apps.common import storage
 from apps.common.cache import get_state
@@ -27,7 +28,7 @@ async def request_passphrase_entry(ctx):
         MessageType.Cancel,
     )
     if ack.MESSAGE_WIRE_TYPE == MessageType.Cancel:
-        raise wire.ActionCancelled("Passphrase cancelled")
+        raise errors.ActionCancelled("Passphrase cancelled")
 
     selector = EntrySelector(text)
     return await ctx.wait(selector)
@@ -43,18 +44,18 @@ async def request_passphrase_ack(ctx, on_device):
     req = PassphraseRequest(on_device=on_device)
     ack = await ctx.call(req, MessageType.PassphraseAck, MessageType.Cancel)
     if ack.MESSAGE_WIRE_TYPE == MessageType.Cancel:
-        raise wire.ActionCancelled("Passphrase cancelled")
+        raise errors.ActionCancelled("Passphrase cancelled")
 
     if on_device:
         if ack.passphrase is not None:
-            raise wire.ProcessError("Passphrase provided when it should not be")
+            raise errors.ProcessError("Passphrase provided when it should not be")
         keyboard = PassphraseKeyboard("Enter passphrase")
         passphrase = await ctx.wait(keyboard)
         if passphrase == CANCELLED:
-            raise wire.ActionCancelled("Passphrase cancelled")
+            raise errors.ActionCancelled("Passphrase cancelled")
     else:
         if ack.passphrase is None:
-            raise wire.ProcessError("Passphrase not provided")
+            raise errors.ProcessError("Passphrase not provided")
         passphrase = ack.passphrase
 
     req = PassphraseStateRequest(
@@ -72,7 +73,7 @@ async def request_passphrase(ctx):
         on_device = storage.get_passphrase_source() == PassphraseSourceType.DEVICE
     passphrase = await request_passphrase_ack(ctx, on_device)
     if len(passphrase) > _MAX_PASSPHRASE_LEN:
-        raise wire.DataError("Maximum passphrase length is %d" % _MAX_PASSPHRASE_LEN)
+        raise errors.DataError("Maximum passphrase length is %d" % _MAX_PASSPHRASE_LEN)
     return passphrase
 
 

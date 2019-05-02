@@ -2,6 +2,7 @@ import gc
 
 from trezor import log, utils, wire
 from trezor.messages import MessageType
+from trezor.wire import errors
 
 from apps.monero.signing.state import State
 
@@ -134,4 +135,4 @@ async def sign_tx_dispatch(state, msg, keychain):
         return await step_10_sign_final.final_msg(state), None
 
     else:
-        raise wire.DataError("Unknown message")
+        raise errors.DataError("Unknown message")
