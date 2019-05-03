@@ -135,10 +135,10 @@ void display_init(void) {
 #endif
   // TODO: find better way how to embed/distribute background image
 #ifdef TREZOR_EMULATOR_RASPI
-  BACKGROUND = IMG_LoadTexture(RENDERER, "../embed/unix/background_raspi.jpg");
+  BACKGROUND = IMG_LoadTexture(RENDERER, "embed/unix/background_raspi.jpg");
 #else
   BACKGROUND = IMG_LoadTexture(
-      RENDERER, "../embed/unix/background_" XSTR(TREZOR_MODEL) ".jpg");
+      RENDERER, "embed/unix/background_" XSTR(TREZOR_MODEL) ".jpg");
 #endif
   if (BACKGROUND) {
     SDL_SetTextureBlendMode(BACKGROUND, SDL_BLENDMODE_NONE);
