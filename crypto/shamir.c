@@ -192,6 +192,8 @@ static void gf256_mul(uint32_t r[8], const uint32_t a[8], const uint32_t b[8]) {
   r[5] ^= a2[6] & b[7];
   r[6] ^= a2[7] & b[7];
   r[7] ^= a2[0] & b[7];
+
+  memzero(a2, sizeof(a2));
 }
 
 /*
@@ -253,6 +255,9 @@ static void gf256_inv(uint32_t r[8], uint32_t x[8]) {
   gf256_square(z, z);  // z = x^200
   gf256_mul(r, r, z);  // r = x^250
   gf256_mul(r, r, y);  // r = x^254
+
+  memzero(y, sizeof(y));
+  memzero(z, sizeof(z));
 }
 
 bool shamir_interpolate(uint8_t *result, uint8_t result_index,
