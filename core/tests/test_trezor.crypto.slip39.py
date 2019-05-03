@@ -1,20 +1,37 @@
 from common import *
-
-from trezor.crypto import slip39
+from trezor.crypto import slip39, random
 from slip39_vectors import vectors
 
+def combinations(iterable, r):
+    # Taken from https://docs.python.org/3.7/library/itertools.html#itertools.combinations
+    pool = tuple(iterable)
+    n = len(pool)
+    if r > n:
+        return
+    indices = list(range(r))
+    yield tuple(pool[i] for i in indices)
+    while True:
+        for i in reversed(range(r)):
+            if indices[i] != i + n - r:
+                break
+        else:
+            return
+        indices[i] += 1
+        for j in range(i+1, r):
+            indices[j] = indices[j-1] + 1
+        yield tuple(pool[i] for i in indices)
 
 class TestCryptoSlip39(unittest.TestCase):
     MS = b"ABCDEFGHIJKLMNOP"
 
     def test_basic_sharing_random(self):
         mnemonics = slip39.generate_mnemonics_random(1, [(3, 5)])[0]
-        self.assertEqual(slip39.combine_mnemonics(mnemonics[1:4]), slip39.combine_mnemonics(mnemonics))
+        self.assertEqual(slip39.combine_mnemonics(mnemonics[:3]), slip39.combine_mnemonics(mnemonics[2:]))
 
 
     def test_basic_sharing_fixed(self):
         mnemonics = slip39.generate_mnemonics(1, [(3, 5)], self.MS)[0]
-        identifier, exponent, ems = slip39.combine_mnemonics(mnemonics)
+        identifier, exponent, ems = slip39.combine_mnemonics(mnemonics[:3])
         self.assertEqual(slip39.decrypt(identifier, exponent, ems, b""), self.MS)
         self.assertEqual(slip39.combine_mnemonics(mnemonics[1:4])[2], ems)
         with self.assertRaises(slip39.MnemonicError):
@@ -41,19 +58,27 @@ class TestCryptoSlip39(unittest.TestCase):
 
 
     def test_group_sharing(self):
-        mnemonics = slip39.generate_mnemonics(2, [(3, 5), (2, 3), (2, 5), (1, 1)], self.MS)
+        group_threshold = 2
+        group_sizes = (5, 3, 5, 1)
+        member_thresholds = (3, 2, 2, 1)
+        mnemonics = slip39.generate_mnemonics(
+            group_threshold, list(zip(member_thresholds, group_sizes)), self.MS
+        )
 
-        # All mnemonics.
-        identifier, exponent, ems = slip39.combine_mnemonics([mnemonic for group in mnemonics for mnemonic in group])
-        self.assertEqual(slip39.decrypt(identifier, exponent, ems, b""), self.MS)
+        # Test all valid combinations of mnemonics.
+        for groups in combinations(zip(mnemonics, member_thresholds), group_threshold):
+            for group1_subset in combinations(groups[0][0], groups[0][1]):
+                for group2_subset in combinations(groups[1][0], groups[1][1]):
+                    mnemonic_subset = list(group1_subset + group2_subset)
+                    random.shuffle(mnemonic_subset)
+                    identifier, exponent, ems = slip39.combine_mnemonics(mnemonic_subset)
+                    self.assertEqual(slip39.decrypt(identifier, exponent, ems, b""), self.MS)
+
 
         # Minimal sets of mnemonics.
-        self.assertEqual(slip39.combine_mnemonics([mnemonics[2][0], mnemonics[2][2], mnemonics[3][0]])[2], ems)
+        identifier, exponent, ems = slip39.combine_mnemonics([mnemonics[2][0], mnemonics[2][2], mnemonics[3][0]])
+        self.assertEqual(slip39.decrypt(identifier, exponent, ems, b""), self.MS)
         self.assertEqual(slip39.combine_mnemonics([mnemonics[2][3], mnemonics[3][0], mnemonics[2][4]])[2], ems)
-
-        # Two complete groups and one incomplete group.
-        self.assertEqual(slip39.combine_mnemonics(mnemonics[0] + [mnemonics[1][1]] + mnemonics[2])[2], ems)
-        self.assertEqual(slip39.combine_mnemonics(mnemonics[0][1:4] + mnemonics[1][1:3] + mnemonics[2][2:4])[2], ems)
 
         # One complete group and one incomplete group out of two groups required.
         with self.assertRaises(slip39.MnemonicError):
