@@ -5,6 +5,7 @@ PROTOB=common/protob
 
 CORE_PROTOBUF_SOURCES="\
     $PROTOB/messages.proto \
+    $PROTOB/messages-binance.proto \
     $PROTOB/messages-bitcoin.proto \
     $PROTOB/messages-cardano.proto \
     $PROTOB/messages-common.proto \

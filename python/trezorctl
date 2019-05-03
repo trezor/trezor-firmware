@@ -31,6 +31,7 @@ import click
 import requests
 
 from trezorlib import (
+    binance,
     btc,
     cardano,
     coins,
@@ -1839,6 +1840,56 @@ def tezos_sign_tx(connect, address, file):
     address_n = tools.parse_path(address)
     msg = protobuf.dict_to_proto(proto.TezosSignTx, json.load(file))
     return tezos.sign_tx(client, address_n, msg)
+
+
+#
+# Binance functions
+#
+
+
+@cli.command(help="Get Binance address for specified path.")
+@click.option(
+    "-n", "--address", required=True, help="BIP-32 path to key, e.g. m/44'/714'/0'/0/0"
+)
+@click.option("-d", "--show-display", is_flag=True)
+@click.pass_obj
+def binance_get_address(connect, address, show_display):
+    client = connect()
+    address_n = tools.parse_path(address)
+
+    return binance.get_address(client, address_n, show_display)
+
+
+@cli.command(help="Get Binance public key.")
+@click.option(
+    "-n", "--address", required=True, help="BIP-32 path to key, e.g. m/44'/714'/0'/0/0"
+)
+@click.option("-d", "--show-display", is_flag=True)
+@click.pass_obj
+def binance_get_public_key(connect, address, show_display):
+    client = connect()
+    address_n = tools.parse_path(address)
+
+    return binance.get_public_key(client, address_n, show_display).hex()
+
+
+@cli.command(help="Sign Binance transaction")
+@click.option(
+    "-n", "--address", required=True, help="BIP-32 path to key, e.g. m/44'/714'/0'/0/0"
+)
+@click.option(
+    "-f",
+    "--file",
+    type=click.File("r"),
+    required=True,
+    help="Transaction in JSON format",
+)
+@click.pass_obj
+def binance_sign_tx(connect, address, file):
+    client = connect()
+    address_n = tools.parse_path(address)
+
+    return binance.sign_tx(client, address_n, json.load(file))
 
 
 #

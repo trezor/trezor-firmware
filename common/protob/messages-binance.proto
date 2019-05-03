@@ -71,7 +71,6 @@ message BinanceTxRequest {
 
 /**
  * Request: Ask the device to include a Binance transfer msg in the tx.
- * @next BinanceTxRequest
  * @next BinanceSignedTx
  * @next Failure
  */
@@ -92,7 +91,6 @@ message BinanceTransferMsg {
 
 /**
  * Request: Ask the device to include a Binance order msg in the tx.
- * @next BinanceTxRequest
  * @next BinanceSignedTx
  * @next Failure
  */
@@ -129,7 +127,6 @@ message BinanceOrderMsg {
 
 /**
  * Request: Ask the device to include a Binance cancel msg in the tx.
- * @next BinanceTxRequest
  * @next BinanceSignedTx
  * @next Failure
  */
@@ -146,6 +143,5 @@ message BinanceCancelMsg {
 message BinanceSignedTx {
 	optional bytes signature = 1;
     optional bytes public_key = 2;
-	optional string json = 3;
 }
 
