@@ -20,6 +20,7 @@ import apps.stellar
 import apps.ripple
 import apps.cardano
 import apps.tezos
+import apps.binance
 
 if __debug__:
     import apps.debug
@@ -38,6 +39,7 @@ apps.stellar.boot()
 apps.ripple.boot()
 apps.cardano.boot()
 apps.tezos.boot()
+apps.binance.boot()
 if __debug__:
     apps.debug.boot()
 else:
