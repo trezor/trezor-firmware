@@ -77,6 +77,18 @@ class TestCryptoSlip39(unittest.TestCase):
         with self.assertRaises(ValueError):
             slip39.generate_mnemonics(3, [(3, 5), (2, 5)], self.MS)
 
+        # Invalid group threshold.
+        with self.assertRaises(ValueError):
+            slip39.generate_mnemonics(0, [(3, 5), (2, 5)], self.MS)
+
+        # Member threshold exceeds number of members.
+        with self.assertRaises(ValueError):
+            slip39.generate_mnemonics(2, [(3, 2), (2, 5)], self.MS)
+
+        # Invalid member threshold.
+        with self.assertRaises(ValueError):
+            slip39.generate_mnemonics(2, [(0, 2), (2, 5)], self.MS)
+
         # Group with multiple members and threshold 1.
         with self.assertRaises(ValueError):
             slip39.generate_mnemonics(2, [(3, 5), (1, 3), (2, 5)], self.MS)
