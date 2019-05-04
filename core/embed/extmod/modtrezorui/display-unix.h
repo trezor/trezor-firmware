@@ -133,12 +133,21 @@ void display_init(void) {
   SDL_PumpEvents();
   SDL_SetWindowSize(win, WINDOW_WIDTH, WINDOW_HEIGHT);
 #endif
-  // TODO: find better way how to embed/distribute background image
 #ifdef TREZOR_EMULATOR_RASPI
-  BACKGROUND = IMG_LoadTexture(RENDERER, "embed/unix/background_raspi.jpg");
+#include "background_raspi.h"
+  BACKGROUND = IMG_LoadTexture_RW(
+      RENDERER, SDL_RWFromMem(background_raspi_jpg, background_raspi_jpg_len),
+      0);
 #else
-  BACKGROUND = IMG_LoadTexture(
-      RENDERER, "embed/unix/background_" XSTR(TREZOR_MODEL) ".jpg");
+#if TREZOR_MODEL == T
+#include "background_T.h"
+  BACKGROUND = IMG_LoadTexture_RW(
+      RENDERER, SDL_RWFromMem(background_T_jpg, background_T_jpg_len), 0);
+#elif TREZOR_MODEL == 1
+#include "background_1.h"
+  BACKGROUND = IMG_LoadTexture_RW(
+      RENDERER, SDL_RWFromMem(background_1_jpg, background_1_jpg_len), 0);
+#endif
 #endif
   if (BACKGROUND) {
     SDL_SetTextureBlendMode(BACKGROUND, SDL_BLENDMODE_NONE);
