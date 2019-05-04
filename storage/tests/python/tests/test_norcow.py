@@ -1,7 +1,7 @@
 import pytest
 
-from . import common
 from ..src import consts, norcow
+from . import common
 
 
 def test_norcow_set():
