@@ -8,6 +8,8 @@ CPPDEFINES_MOD = []
 SOURCE_MOD = []
 SOURCE_MOD_SECP256K1_ZKP = []
 
+PYOPT = '1'
+
 # modtrezorconfig
 CPPPATH_MOD += [
     'embed/extmod/modtrezorconfig',
@@ -134,6 +136,8 @@ if ARGUMENTS.get('TREZOR_EMULATOR_NOUI', 0):
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_NOUI']
 if ARGUMENTS.get('TREZOR_EMULATOR_RASPI', 0):
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_RASPI']
+if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
+    CPPDEFINES_MOD += ['TREZOR_EMULATOR_FROZEN']
 
 # modtrezorutils
 SOURCE_MOD += [
@@ -286,7 +290,7 @@ SOURCE_UNIX = [
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX
 
-env = Environment(ENV=os.environ, CFLAGS=ARGUMENTS.get('CFLAGS', ''))
+env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT))
 
 env.Tool('micropython')
 
@@ -313,7 +317,7 @@ env.Replace(
 
 env.Replace(
     COPT=env.get('OPTIMIZE', env.get('ENV').get('OPTIMIZE', '-Os')),
-    CCFLAGS='$COPT -DMPZ_DIG_SIZE=16 '
+    CCFLAGS='$COPT '
     '-g3 '
     '-std=gnu99 -Wall -Werror -Wuninitialized '
     '-fdata-sections -ffunction-sections ' + CCFLAGS_MOD,
@@ -343,7 +347,8 @@ env.Replace(
     MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
-    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross', )
+    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross -O' + PYOPT
+)
 
 #
 # Micropython version
@@ -376,7 +381,7 @@ env.Ignore(qstr_collected, qstr_generated)
 # Frozen modules
 #
 
-if ARGUMENTS.get('TREZOR_FROZEN', 0):
+if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
     if env.get('TREZOR_MODEL') == '1':
         SOURCE_PY_DIR = 'src1/'
     else:
@@ -426,7 +431,7 @@ obj_program.extend(env.Object(source=SOURCE_MOD))
 obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
 obj_program.extend(env.Object(source=SOURCE_UNIX))
-if ARGUMENTS.get('TREZOR_FROZEN', 0):
+if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
     obj_program.extend(env.Object(source=source_mpyc))
 
 env.Depends(obj_program, qstr_generated)

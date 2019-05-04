@@ -28,6 +28,13 @@
 
 // options to control how MicroPython is built
 
+#ifdef TREZOR_EMULATOR_FROZEN
+#define MICROPY_QSTR_EXTRA_POOL (mp_qstr_frozen_const_pool)
+#define MICROPY_MODULE_FROZEN_MPY (1)
+#endif
+
+#define MPZ_DIG_SIZE (16)
+
 #define MICROPY_ALLOC_PATH_MAX (PATH_MAX)
 #define MICROPY_PERSISTENT_CODE_LOAD (1)
 #if !defined(MICROPY_EMIT_X64) && defined(__x86_64__)
