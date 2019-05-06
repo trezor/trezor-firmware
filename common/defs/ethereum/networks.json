@@ -289,6 +289,16 @@
     "blockbook": []
   },
   {
+    "chain": "aqua",
+    "chain_id": 61717561,
+    "slip44": 61717561,
+    "shortcut": "AQUA",
+    "name": "Aquachain",
+    "rskip60": false,
+    "url": "https://aquachain.github.io",
+    "blockbook": []
+  },
+  {
     "chain": "pirl",
     "chain_id": 3125659152,
     "slip44": 164,
