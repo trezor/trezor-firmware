@@ -84,14 +84,6 @@ class TestMsgEosSignTx(TrezorTest):
 
         with self.client:
             self.client.set_input_flow(self.input_flow(num_swipes=3))
-            self.client.set_expected_responses(
-                [
-                    messages.ButtonRequest(code=messages.SignTx),
-                    messages.EosTxActionRequest(),
-                    messages.ButtonRequest(code=messages.ConfirmOutput),
-                    messages.EosSignedTx(),
-                ]
-            )
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
 
             assert isinstance(resp, messages.EosSignedTx)
