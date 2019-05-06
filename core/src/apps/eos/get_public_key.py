@@ -34,7 +34,7 @@ def _get_public_key(node):
 
 
 async def get_public_key(ctx, msg: EosGetPublicKey, keychain):
-    await paths.validate_path(ctx, validate_full_path, path=msg.address_n, CURVE)
+    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
 
     node = keychain.derive(msg.address_n)
     wif, public_key = _get_public_key(node)

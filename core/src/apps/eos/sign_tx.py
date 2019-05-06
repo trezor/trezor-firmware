@@ -22,7 +22,7 @@ async def sign_tx(ctx, msg: EosSignTx, keychain):
     if msg.num_actions is None or msg.num_actions == 0:
         raise wire.DataError("No actions")
 
-    await paths.validate_path(ctx, validate_full_path, path=msg.address_n, CURVE)
+    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
 
     node = keychain.derive(msg.address_n)
     sha = HashWriter(sha256())
