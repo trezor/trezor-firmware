@@ -86,7 +86,7 @@ async def sign_tx(ctx, msg):
             ).digest()
             tx_decoded = cbor.decode(tx_ack.transaction)
             for i, input in enumerate(msg.inputs):
-                if not attested[i] and bytes(input.prev_hash) == tx_hash:
+                if not attested[i] and input.prev_hash == tx_hash:
                     attested[i] = True
                     outputs = tx_decoded[1]
                     amount = outputs[input.prev_index][1]
