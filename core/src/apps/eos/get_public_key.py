@@ -6,6 +6,7 @@ from trezor.messages.EosGetPublicKey import EosGetPublicKey
 from trezor.messages.EosPublicKey import EosPublicKey
 
 from apps.common import paths
+from apps.eos import CURVE
 from apps.eos.helpers import validate_full_path
 from apps.eos.layout import require_get_public_key
 

@@ -8,7 +8,7 @@ from trezor.messages.MessageType import EosTxActionAck
 from trezor.utils import HashWriter
 
 from apps.common import paths
-from apps.eos import writers
+from apps.eos import CURVE, writers
 from apps.eos.actions import process_action
 from apps.eos.helpers import validate_full_path
 from apps.eos.layout import require_sign_tx
@@ -22,7 +22,7 @@ async def sign_tx(ctx, msg: EosSignTx, keychain):
     if msg.num_actions is None or msg.num_actions == 0:
         raise wire.DataError("No actions")
 
-    await paths.validate_path(ctx, validate_full_path, path=msg.address_n)
+    await paths.validate_path(ctx, validate_full_path, path=msg.address_n, CURVE)
 
     node = keychain.derive(msg.address_n)
     sha = HashWriter(sha256())
