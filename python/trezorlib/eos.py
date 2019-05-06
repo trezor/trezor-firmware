@@ -195,7 +195,6 @@ def parse_authorization(data):
             messages.EosAuthorizationKey(
                 type=_t,
                 key=_k,
-                address_n=[],
                 weight=int(key['weight'])
             )
         )
@@ -250,63 +249,56 @@ def parse_unknown(data):
 
 
 def parse_action(action):
-    txAction = messages.EosTxActionAck()
+    tx_action = messages.EosTxActionAck()
     data = action['data']
 
-    txAction.common = parse_common(action)
+    tx_action.common = parse_common(action)
 
     if action['account'] == 'eosio':
         if action['name'] == 'voteproducer':
-            txAction.vote_producer = parse_vote_producer(data)
+            tx_action.vote_producer = parse_vote_producer(data)
         elif action['name'] == 'buyram':
-            txAction.buy_ram = parse_buy_ram(data)
+            tx_action.buy_ram = parse_buy_ram(data)
         elif action['name'] == 'buyrambytes':
-            txAction.buy_ram_bytes = parse_buy_rambytes(data)
+            tx_action.buy_ram_bytes = parse_buy_rambytes(data)
         elif action['name'] == 'sellram':
-            txAction.sell_ram = parse_sell_ram(data)
+            tx_action.sell_ram = parse_sell_ram(data)
         elif action['name'] == 'delegatebw':
-            txAction.delegate = parse_delegate(data)
+            tx_action.delegate = parse_delegate(data)
         elif action['name'] == 'undelegatebw':
-            txAction.undelegate = parse_undelegate(data)
+            tx_action.undelegate = parse_undelegate(data)
         elif action['name'] == 'refund':
-            txAction.refund = parse_refund(data)
+            tx_action.refund = parse_refund(data)
         elif action['name'] == 'updateauth':
-            txAction.update_auth = parse_updateauth(data)
+            tx_action.update_auth = parse_updateauth(data)
         elif action['name'] == 'deleteauth':
-            txAction.delete_auth = parse_deleteauth(data)
+            tx_action.delete_auth = parse_deleteauth(data)
         elif action['name'] == 'linkauth':
-            txAction.link_auth = parse_linkauth(data)
+            tx_action.link_auth = parse_linkauth(data)
         elif action['name'] == 'unlinkauth':
-            txAction.unlink_auth = parse_unlinkauth(data)
+            tx_action.unlink_auth = parse_unlinkauth(data)
         elif action['name'] == 'newaccount':
-            txAction.new_account = parse_new_account(data)
+            tx_action.new_account = parse_new_account(data)
     elif action['name'] == 'transfer':
-        txAction.transfer = parse_transfer(data)
+        tx_action.transfer = parse_transfer(data)
     else:
-        txAction.unknown = parse_unknown(data)
+        tx_action.unknown = parse_unknown(data)
 
-    return txAction
+    return tx_action
 
 
-def parse_transaction_json(json):
-    tx = type('Transaction', (object,), {})()
-    tx.chain_id = bytes.fromhex(json['chain_id'])
+def parse_transaction_json(transaction):
+    header = messages.EosTxHeader()
+    header.expiration = int((datetime.strptime(transaction['expiration'], '%Y-%m-%dT%H:%M:%S') - datetime(1970, 1, 1)).total_seconds()),
+    header.ref_block_num = int(transaction['ref_block_num']),
+    header.ref_block_prefix = int(transaction['ref_block_prefix']),
+    header.max_net_usage_words = int(transaction['net_usage_words']),
+    header.max_cpu_usage_ms = int(transaction['max_cpu_usage_ms']),
+    header.delay_sec = int(transaction['delay_sec'])
 
-    body = json['transaction']
-  
-    expiration = int((datetime.strptime(body['expiration'], '%Y-%m-%dT%H:%M:%S') - datetime(1970, 1, 1)).total_seconds())
-    tx.expiration = expiration
-    tx.ref_block_num = int(body['ref_block_num'])
-    tx.ref_block_prefix = int(body['ref_block_prefix'])
-    tx.net_usage_words = int(body['net_usage_words'])
-    tx.max_cpu_usage_ms = int(body['max_cpu_usage_ms'])
-    tx.delay_sec = int(body['delay_sec'])
+    actions = [parse_action(a) for a in transaction['actions']]
 
-    tx.actions = body['actions']
-
-    tx.num_actions = len(tx.actions)
-
-    return tx
+    return header, actions
 
 # ====== Client functions ====== #
 
@@ -318,28 +310,20 @@ def get_public_key(client, n, show_display=False, multisig=None):
 
 
 @session
-def sign_tx(client, address, transaction):
-    tx = parse_transaction_json(transaction)
-
-    header = messages.EosTxHeader()
-    header.expiration = tx.expiration
-    header.ref_block_num = tx.ref_block_num
-    header.ref_block_prefix = tx.ref_block_prefix
-    header.max_net_usage_words = tx.net_usage_words
-    header.max_cpu_usage_ms = tx.max_cpu_usage_ms
-    header.delay_sec = tx.delay_sec
+def sign_tx(client, address, transaction, chain_id):
+    header, actions = parse_transaction_json(transaction)
 
     msg = messages.EosSignTx()
     msg.address_n = address
-    msg.chain_id = tx.chain_id
+    msg.chain_id = bytes.fromhex(chain_id)
     msg.header = header
-    msg.num_actions = tx.num_actions
+    msg.num_actions = len(actions)
 
     response = client.call(msg)
 
     try:
         while isinstance(response, messages.EosTxActionRequest):
-            response = client.call(parse_action(tx.actions.pop(0)))
+            response = client.call(actions.pop(0))
     except IndexError:
         # pop from empty list
         raise CallException(

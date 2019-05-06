@@ -1430,7 +1430,7 @@ def eos_get_public_key(connect, address, show_display):
     client = connect()
     address_n = tools.parse_path(address)
     res = eos.get_public_key(client, address_n, show_display)
-    return "WIF: %s\nRaw: %s" % (str(res.wif_public_key), res.raw_public_key.hex())
+    return "WIF: {}\nRaw: {}".format(res.wif_public_key, res.raw_public_key.hex())
 
 
 @cli.command(
@@ -1453,10 +1453,10 @@ def eos_get_public_key(connect, address, show_display):
 def eos_sign_transaction(connect, address, file):
     client = connect()
 
-    transaction = json.load(file)
+    tx_json = json.load(file)
     
     address_n = tools.parse_path(address)
-    return eos.sign_tx(client, address_n, transaction)
+    return eos.sign_tx(client, address_n, tx_json['transaction'], tx_json['chain_id'])
 
 
 #
