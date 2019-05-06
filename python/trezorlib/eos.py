@@ -282,12 +282,12 @@ def parse_transaction_json(transaction):
                 datetime.strptime(transaction["expiration"], "%Y-%m-%dT%H:%M:%S")
                 - datetime(1970, 1, 1)
             ).total_seconds()
-        ),
+        )
     )
-    header.ref_block_num = (int(transaction["ref_block_num"]),)
-    header.ref_block_prefix = (int(transaction["ref_block_prefix"]),)
-    header.max_net_usage_words = (int(transaction["net_usage_words"]),)
-    header.max_cpu_usage_ms = (int(transaction["max_cpu_usage_ms"]),)
+    header.ref_block_num = (int(transaction["ref_block_num"]))
+    header.ref_block_prefix = (int(transaction["ref_block_prefix"]))
+    header.max_net_usage_words = (int(transaction["net_usage_words"]))
+    header.max_cpu_usage_ms = (int(transaction["max_cpu_usage_ms"]))
     header.delay_sec = int(transaction["delay_sec"])
 
     actions = [parse_action(a) for a in transaction["actions"]]
