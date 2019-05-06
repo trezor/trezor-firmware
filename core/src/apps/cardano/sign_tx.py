@@ -73,7 +73,7 @@ async def sign_tx(ctx, msg):
     progress.init(msg.transactions_count, "Loading data")
 
     try:
-        attested = len(msg.inputs)*[False]
+        attested = len(msg.inputs) * [False]
         input_coins_sum = 0
         # request transactions
         tx_req = CardanoTxRequest()
@@ -81,17 +81,21 @@ async def sign_tx(ctx, msg):
         for index in range(msg.transactions_count):
             progress.advance()
             tx_ack = await request_transaction(ctx, tx_req, index)
-            tx_hash = hashlib.blake2b(data=bytes(tx_ack.transaction), outlen=32).digest()
+            tx_hash = hashlib.blake2b(
+                data=bytes(tx_ack.transaction), outlen=32
+            ).digest()
             tx_decoded = cbor.decode(tx_ack.transaction)
             for i, input in enumerate(msg.inputs):
                 if not attested[i] and bytes(input.prev_hash) == tx_hash:
-                   attested[i] = True
-                   outputs = tx_decoded[1]
-                   amount = outputs[input.prev_index][1]
-                   input_coins_sum += amount
+                    attested[i] = True
+                    outputs = tx_decoded[1]
+                    amount = outputs[input.prev_index][1]
+                    input_coins_sum += amount
 
         if not all(attested):
-            raise wire.ProcessError("No tx data sent for input " + str(attested.index(False)))
+            raise wire.ProcessError(
+                "No tx data sent for input " + str(attested.index(False))
+            )
 
         transaction = Transaction(
             msg.inputs, msg.outputs, keychain, msg.protocol_magic, input_coins_sum
