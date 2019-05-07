@@ -266,6 +266,8 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                 writers.write_bytes(w_txi, get_tx_header(coin, tx, True))
             writers.write_tx_input(w_txi, txi_sign)
             tx_ser.serialized_tx = w_txi
+            tx_ser.signature_index = None
+            tx_ser.signature = None
             tx_req.serialized = tx_ser
 
         elif coin.force_bip143 or tx.overwintered:
@@ -546,7 +548,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             tx_ser.signature_index = i
             tx_ser.signature = signature
         elif any_segwit:
-            tx_ser.serialized_tx = bytearray(1)  # empty witness for non-segwit inputs
+            tx_ser.serialized_tx += bytearray(1)  # empty witness for non-segwit inputs
             tx_ser.signature_index = None
             tx_ser.signature = None
 
