@@ -5,7 +5,7 @@ verify_ssl = true
 
 [packages]
 # all
-trezor = {editable = true, path = "./python"}
+trezor = {editable = true,path = "./python"}
 scons = "*"
 protobuf = "==3.4.0"
 pyblake2 = "*"
@@ -13,11 +13,12 @@ pyblake2 = "*"
 pytest = "*"
 mock = "*"
 ## style
-isort = "*"
+isort = ">=4.3.14"
 flake8 = "*"
 black = "*"
 mako = ">=1.0.7"
 munch = ">=2.3.2"
+autoflake = "*"
 
 # common
 demjson = "*"
@@ -36,7 +37,7 @@ pyasn1 = "*"
 
 # core
 ## monero
-monero_agent = {version = ">=2.0.1", extras = ["tcry", "dev"]}
+monero_agent = {version = ">=2.0.1",extras = ["tcry", "dev"]}
 py_trezor_crypto_ph4 = {version = ">=0.1.1"}
 
 # legacy

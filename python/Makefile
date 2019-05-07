@@ -3,7 +3,7 @@ SETUP=$(PYTHON) setup.py
 
 EXCLUDES=.vscode
 STYLE_TARGETS=trezorlib trezorctl setup.py
-EXCLUDE_TARGETS=trezorlib/messages
+EXCLUDE_TARGETS=messages
 
 all: build
 
@@ -47,12 +47,12 @@ git-clean:
 
 style:
 	black $(STYLE_TARGETS)
-	isort --apply --recursive $(STYLE_TARGETS) --skip-glob "*/$(EXCLUDE_TARGETS)/*"
+	isort --apply --recursive $(STYLE_TARGETS) --skip-glob "$(EXCLUDE_TARGETS)/*"
 	autoflake -i --remove-all-unused-imports -r $(STYLE_TARGETS) --exclude "$(EXCLUDE_TARGETS)"
 
 style_check:
 	black --check $(STYLE_TARGETS)
-	isort --diff --check-only --recursive $(STYLE_TARGETS) --skip-glob "*/$(EXCLUDE_TARGETS)/*"
+	isort --check-only --recursive $(STYLE_TARGETS) --skip-glob "$(EXCLUDE_TARGETS)/*"
 	flake8
 
 .PHONY: all build install clean style style_check git-clean clean-generated clean-build clean-pyc clean-test
