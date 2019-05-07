@@ -48,8 +48,11 @@ def blend(ca: int, cb: int, t: float) -> int:
     )
 
 
-# import style definitions
-from trezor.ui.style import *  # isort:skip
+# import style later to avoid circular dep
+from trezor.ui import style  # isort:skip
+
+# import style definitions into namespace
+from trezor.ui.style import *  # isort:skip # noqa: F401,F403
 
 
 def contains(area: tuple, pos: tuple) -> bool:
@@ -83,10 +86,10 @@ async def alert(count: int = 3):
     current = display.backlight()
     for i in range(count * 2):
         if i % 2 == 0:
-            display.backlight(BACKLIGHT_MAX)
+            display.backlight(style.BACKLIGHT_MAX)
             yield short_sleep
         else:
-            display.backlight(BACKLIGHT_NORMAL)
+            display.backlight(style.BACKLIGHT_NORMAL)
             yield long_sleep
     display.backlight(current)
 
@@ -121,8 +124,8 @@ def backlight_slide_sync(val: int, delay: int = 35000, step: int = 20):
 
 def layout(f):
     async def inner(*args, **kwargs):
-        await backlight_slide(BACKLIGHT_DIM)
-        slide = backlight_slide(BACKLIGHT_NORMAL)
+        await backlight_slide(style.BACKLIGHT_DIM)
+        slide = backlight_slide(style.BACKLIGHT_NORMAL)
         try:
             layout = f(*args, **kwargs)
             workflow.onlayoutstart(layout)
@@ -149,7 +152,11 @@ def layout_no_slide(f):
 
 
 def header(
-    title: str, icon: bytes = ICON_DEFAULT, fg: int = FG, bg: int = BG, ifg: int = GREEN
+    title: str,
+    icon: bytes = style.ICON_DEFAULT,
+    fg: int = style.FG,
+    bg: int = style.BG,
+    ifg: int = style.GREEN,
 ):
     if icon is not None:
         display.icon(14, 15, res.load(icon), ifg, bg)

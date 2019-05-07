@@ -1,9 +1,14 @@
 import protobuf
 from trezor import log, loop, messages, utils, workflow
+from trezor.messages import FailureType
 from trezor.wire import codec_v1
-from trezor.wire.errors import *
+from trezor.wire.errors import Error
 
 from apps.common import seed
+
+# import all errors into namespace, so that `wire.Error` is available elsewhere
+from trezor.wire.errors import *  # isort:skip # noqa: F401,F403
+
 
 workflow_handlers = {}
 
