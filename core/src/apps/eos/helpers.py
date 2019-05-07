@@ -20,9 +20,14 @@ def eos_asset_to_string(asset: EosAsset) -> str:
     precision = symbol_bytes[7]
     symbol = bytes(reversed(symbol_bytes[:7])).rstrip(b"\x00").decode("ascii")
 
-    amount_digits = str(asset.amount)
+    fmt = '{:0' + str(precision) + 'd}'
+    amount_digits = fmt.format(asset.amount)
     if precision > 0:
-        integer, fraction = amount_digits[:-precision], amount_digits[-precision:]
+        integer = amount_digits[:-precision]
+        if len(integer) == 0:
+            integer = '0'
+        fraction = amount_digits[-precision:]
+
         return "{}.{} {}".format(integer, fraction, symbol)
     else:
         return "{} {}".format(amount_digits, symbol)
