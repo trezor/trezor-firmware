@@ -234,6 +234,13 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=61717561,
+        slip44=61717561,
+        shortcut="AQUA",
+        name="Aquachain",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=3125659152,
         slip44=164,
         shortcut="PIRL",
