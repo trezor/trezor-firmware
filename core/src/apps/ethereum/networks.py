@@ -73,6 +73,13 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=5,
+        slip44=1,
+        shortcut="tGOR",
+        name="Ethereum Testnet Goerli",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=8,
         slip44=108,
         shortcut="UBQ",
