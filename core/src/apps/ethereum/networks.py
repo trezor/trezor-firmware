@@ -76,7 +76,7 @@ NETWORKS = [
         chain_id=5,
         slip44=1,
         shortcut="tGOR",
-        name="Ethereum Testnet Görli",
+        name="Ethereum Testnet Goerli",
         rskip60=False,
     ),
     NetworkInfo(
