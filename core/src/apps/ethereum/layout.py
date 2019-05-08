@@ -65,7 +65,8 @@ def format_ethereum_amount(value: int, token, chain_id: int, tx_type=None):
         suffix = networks.shortcut_by_chain_id(chain_id, tx_type)
         decimals = 18
 
-    if value <= 1e9:
+    # Don't want to display wei values for tokens with small decimal numbers
+    if value / (10 ** decimals) <= 1e-9:
         suffix = "Wei " + suffix
         decimals = 0
 
