@@ -577,7 +577,12 @@
             "t1_enabled": "yes",
             "t2_enabled": "yes",
             "type": "coin",
-            "wallet": []
+            "wallet": [
+                {
+                    "name": "Mango Farm",
+                    "url": "https://mangofarmassets.com/mangowallet"
+                }
+            ]
         },
         "bitcoin:SMART": {
             "links": {
