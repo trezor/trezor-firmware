@@ -72,6 +72,7 @@ EthereumSignTx = 58
 EthereumTxRequest = 59
 EthereumTxAck = 60
 EthereumSignMessage = 64
+EthereumSignTypedData = 79
 EthereumVerifyMessage = 65
 EthereumMessageSignature = 66
 NEMGetAddress = 67

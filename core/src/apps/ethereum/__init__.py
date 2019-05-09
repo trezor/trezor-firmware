@@ -15,4 +15,5 @@ def boot():
     wire.add(MessageType.EthereumGetPublicKey, __name__, "get_public_key", ns)
     wire.add(MessageType.EthereumSignTx, __name__, "sign_tx", ns)
     wire.add(MessageType.EthereumSignMessage, __name__, "sign_message", ns)
+    wire.add(MessageType.EthereumSignTypedData, __name__, "sign_typed_data", ns)
     wire.add(MessageType.EthereumVerifyMessage, __name__, "verify_message")

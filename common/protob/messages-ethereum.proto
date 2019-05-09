@@ -102,6 +102,42 @@ message EthereumSignMessage {
 }
 
 /**
+ * Request: Ask device to sign typed data
+ * @start
+ * @next EthereumMessageSignature
+ * @next Failure
+ */
+message EthereumSignTypedData {
+    
+    message TypedData {
+        enum TypedData_DataType {
+            Literal = 1;
+            Struct = 2;
+            // Array could be added once it is finalized in the EIP
+        }
+        required TypedData_DataType data_type = 1;
+        optional string literal = 2;
+        repeated TypedData struct = 4;
+        required string name = 5;
+    }
+
+    message TypeDefinition {
+
+        message TypeDefinition_Parameter {
+            required string name = 1;
+            required string encoding = 2;
+        }
+
+        required string name = 1;
+        repeated TypeDefinition_Parameter parameters = 2;
+    }
+
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+    repeated TypeDefinition typed_data_definitions = 2; 
+    optional TypedData typed_data = 3; 
+}
+
+/**
  * Response: Signed message
  * @end
  */

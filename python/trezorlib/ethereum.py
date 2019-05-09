@@ -17,6 +17,8 @@
 from . import messages as proto
 from .tools import CallException, expect, normalize_nfc, session
 
+import json
+
 
 def int_to_big_endian(value):
     return value.to_bytes((value.bit_length() + 7) // 8, "big")
@@ -91,6 +93,121 @@ def sign_tx(
 def sign_message(client, n, message):
     message = normalize_nfc(message)
     return client.call(proto.EthereumSignMessage(address_n=n, message=message))
+
+
+@expect(proto.EthereumMessageSignature)
+def sign_typed_data(client, n, data):
+    defs = [
+        proto.TypeDefinition(
+            name="EIP712Domain",
+            parameters=[
+                proto.TypeDefinition_Parameter(name="name", encoding="string"),
+                proto.TypeDefinition_Parameter(name="version", encoding="string"),
+                proto.TypeDefinition_Parameter(name="chainId", encoding="uint256"),
+                proto.TypeDefinition_Parameter(name="verifyingContract", encoding="address")
+            ]
+        ),
+        proto.TypeDefinition(
+            name="Person",
+            parameters=[
+                proto.TypeDefinition_Parameter(name="name", encoding="string"),
+                proto.TypeDefinition_Parameter(name="wallet", encoding="address")
+            ]
+        ),
+        proto.TypeDefinition(
+            name="Mail",
+            parameters=[
+                proto.TypeDefinition_Parameter(name="from", encoding="Person"),
+                proto.TypeDefinition_Parameter(name="to", encoding="Person"),
+                proto.TypeDefinition_Parameter(name="contents", encoding="string")
+            ]
+        ),
+    ]
+    domain_data = [
+        proto.TypedData(
+            data_type=proto.TypedData_DataType.Literal,
+            name="chainId",
+            literal="1"
+        ),
+        proto.TypedData(
+            data_type=proto.TypedData_DataType.Literal,
+            name="verifyingContract",
+            literal="0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
+        ),
+        proto.TypedData(
+            data_type=proto.TypedData_DataType.Literal,
+            name="name",
+            literal="Ether Mail"
+        ),
+        proto.TypedData(
+            data_type=proto.TypedData_DataType.Literal,
+            name="version",
+            literal="1"
+        ),
+    ]
+    message_data = [
+        proto.TypedData(
+            data_type=proto.TypedData_DataType.Struct,
+            name="from",
+            struct=[
+                proto.TypedData(
+                    data_type=proto.TypedData_DataType.Literal,
+                    name="name",
+                    literal="Cow"
+                ),
+                proto.TypedData(
+                    data_type=proto.TypedData_DataType.Literal,
+                    name="wallet",
+                    literal="0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"
+                )
+            ]
+        ),
+        proto.TypedData(
+            data_type=proto.TypedData_DataType.Struct,
+            name="to",
+            struct=[
+                proto.TypedData(
+                    data_type=proto.TypedData_DataType.Literal,
+                    name="name",
+                    literal="Bob"
+                ),
+                proto.TypedData(
+                    data_type=proto.TypedData_DataType.Literal,
+                    name="wallet",
+                    literal="0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB"
+                )
+            ]
+        ),
+        proto.TypedData(
+            data_type=proto.TypedData_DataType.Literal,
+            name="contents",
+            literal="Hello, Bob!"
+        )
+    ]
+    typed_data = proto.TypedData(
+        data_type=proto.TypedData_DataType.Struct,
+        name="data",
+        struct= [
+            proto.TypedData(
+                data_type=proto.TypedData_DataType.Struct,
+                name="domain",
+                struct=domain_data
+            ),
+            proto.TypedData(
+                data_type=proto.TypedData_DataType.Struct,
+                name="message",
+                struct=message_data
+            ),
+            proto.TypedData(
+                data_type=proto.TypedData_DataType.Literal,
+                name="primaryType",
+                literal="Mail"
+            )
+        ]
+    )
+    resp = client.call(proto.EthereumSignTypedData(address_n=n, typed_data_definitions=defs, typed_data=typed_data))
+    print("RESP", resp)
+    return resp
 
 
 def verify_message(client, address, signature, message):

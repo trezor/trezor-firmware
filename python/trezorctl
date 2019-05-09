@@ -1086,6 +1086,24 @@ def ethereum_sign_message(connect, address, message):
     return output
 
 
+@cli.command(help="Sign typed data with Ethereum address.")
+@click.option(
+    "-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/60'/0'/0/0"
+)
+@click.argument("typed_data")
+@click.pass_obj
+def ethereum_sign_typed_data(connect, address, typed_data):
+    client = connect()
+    address_n = tools.parse_path(address)
+    ret = ethereum.sign_typed_data(client, address_n, typed_data)
+    output = {
+        "typed_data": typed_data,
+        "address": ret.address,
+        "signature": "0x%s" % ret.signature.hex(),
+    }
+    return output
+
+
 def ethereum_decode_hex(value):
     if value.startswith("0x") or value.startswith("0X"):
         return bytes.fromhex(value[2:])

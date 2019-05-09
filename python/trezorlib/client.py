@@ -333,6 +333,7 @@ class ProtocolMixin(object):
     ethereum_get_address = MovedTo("ethereum.get_address")
     ethereum_sign_tx = MovedTo("ethereum.sign_tx")
     ethereum_sign_message = MovedTo("ethereum.sign_message")
+    ethereum_sign_typed_data = MovedTo("ethereum.sign_typed_data")
     ethereum_verify_message = MovedTo("ethereum.verify_message")
 
     # Lisk functionality
