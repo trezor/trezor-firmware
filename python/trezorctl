@@ -286,6 +286,7 @@ def set_passphrase_source(connect, source):
 
     Configure how to enter passphrase on Trezor Model T. The options are:
 
+    \b
     ask - always ask where to enter passphrase
     device - always enter passphrase on device
     host - always enter passphrase on host
