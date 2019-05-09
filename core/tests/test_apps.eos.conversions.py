@@ -42,12 +42,22 @@ class TestEosConversions(unittest.TestCase):
               amount=999999,
               symbol=1397703939,
             ),
+            EosAsset(
+              amount=1,
+              symbol=1397703940,
+            ),
+            EosAsset(
+              amount=999,
+              symbol=1397703939,
+            ),
         ]
         asset_out = [
             '1.0000 EOS',
-            '20.0000 EOS', 
+            '20.0000 EOS',
             '25.5000 EOS',
             '999.999 EOS',
+            '0.0001 EOS',
+            '0.999 EOS',
         ]
         for i, o in zip(asset_in, asset_out):
             self.assertEqual(helpers.eos_asset_to_string(i), o)
