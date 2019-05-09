@@ -87,7 +87,7 @@ def verify_message(client, coin_name, address, signature, message):
 
 
 @session
-def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None, extra_payload=None):
+def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None, extra_payload=None, external_txes=None):
     # set up a transactions dict
     txes = {None: messages.TransactionType(inputs=inputs, outputs=outputs,
                                            extra_data_len=len(extra_payload or b''),
@@ -111,6 +111,15 @@ def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None, ex
                 if not isinstance(prev_tx, messages.TransactionType):
                     raise ValueError("Invalid value for prev_tx") from None
                 txes[inp.prev_hash] = prev_tx
+        if external_txes:
+            for txid in external_txes:
+                try:
+                    prev_tx = prev_txes[txid]
+                except Exception as e:
+                    raise ValueError("Could not retrieve prev_tx") from e
+                if not isinstance(prev_tx, messages.TransactionType):
+                    raise ValueError("Invalid value for prev_tx") from None
+                txes[txid] = prev_tx
 
     if details is None:
         signtx = messages.SignTx()
