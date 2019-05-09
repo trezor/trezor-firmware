@@ -1,14 +1,11 @@
 [submodule "vendor/micropython"]
-	path = core/vendor/micropython
+	path = vendor/micropython
 	url = https://github.com/trezor/micropython.git
-[submodule "vendor/nanopb"]
-	path = core/vendor/nanopb
-	url = https://github.com/nanopb/nanopb.git
 [submodule "vendor/QR-Code-generator"]
-	path = core/vendor/QR-Code-generator
+	path = vendor/QR-Code-generator
 	url = https://github.com/nayuki/QR-Code-generator.git
 [submodule "vendor/secp256k1-zkp"]
-	path = core/vendor/secp256k1-zkp
+	path = vendor/secp256k1-zkp
 	url = https://github.com/ElementsProject/secp256k1-zkp.git
 	branch = secp256k1-zkp
 [submodule "common/defs/ethereum/tokens"]
@@ -18,13 +15,9 @@
 	path = crypto/tests/wycheproof
 	url = https://github.com/google/wycheproof
 [submodule "legacy/libopencm3"]
-	path = legacy/vendor/libopencm3
+	path = vendor/libopencm3
 	url = https://github.com/libopencm3/libopencm3.git
 [submodule "legacy/vendor/nanopb"]
-	path = legacy/vendor/nanopb
+	path = vendor/nanopb
 	url = https://github.com/nanopb/nanopb.git
-	ignore = untracked
-[submodule "legacy/vendor/QR-Code-generator"]
-	path = legacy/vendor/QR-Code-generator
-	url = https://github.com/nayuki/QR-Code-generator.git
 	ignore = untracked
