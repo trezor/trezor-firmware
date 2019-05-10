@@ -14,7 +14,7 @@ class EthereumTypedDataRequest(p.MessageType):
 
     def __init__(
         self,
-        member_path: List['int'] = None,
+        member_path: List[int] = None,
         signature: bytes = None,
         address: str = None,
     ) -> None:
