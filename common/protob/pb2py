@@ -167,7 +167,7 @@ class Descriptor:
                 ) from None
 
         if repeated:
-            py_type = "List['{}']".format(py_type)
+            py_type = "List[{}]".format(py_type)
 
         return ProtoField(
             name=field.name,
@@ -182,12 +182,11 @@ class Descriptor:
     def create_message_import(self, name):
         return "from .{0} import {0}".format(name)
 
-    def process_message_imports(self, message, fields):
+    def process_message_imports(self, fields):
         imports = set(
             field.proto_type
             for field in fields
-            # Prevent self-imports
-            if field.orig.type == field.orig.TYPE_MESSAGE and field.proto_type != message.name
+            if field.orig.type == field.orig.TYPE_MESSAGE
         )
 
         if len(imports) > 0:
@@ -254,7 +253,7 @@ class Descriptor:
 
         fields = [self.parse_field(field) for field in message.field]
 
-        yield from self.process_message_imports(message, fields)
+        yield from self.process_message_imports(fields)
 
         if any(field.repeated for field in fields):
             yield ""
