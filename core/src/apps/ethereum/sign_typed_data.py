@@ -116,7 +116,6 @@ async def encode_value(ctx, member_path, confirm_member):
 async def request_member(ctx, member_path):
     req = EthereumTypedDataRequest()
     req.member_path = member_path
-    print("request_member", member_path)
     return await ctx.call(req, EthereumTypedDataAck)
 
 
