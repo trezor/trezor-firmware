@@ -20,8 +20,8 @@
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #if TREZOR_MODEL == T
 
