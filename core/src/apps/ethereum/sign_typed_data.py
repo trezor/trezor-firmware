@@ -46,6 +46,45 @@ async def sign_typed_data(ctx, msg, keychain):
     return sig
 
 
+async def generate_typed_data_hash(ctx):
+    domain = await request_member(ctx, [0])
+
+    #await require_confirm(ctx, Text("Confirm domain"))
+
+    if (domain.member_type != "EIP712Domain"):
+        raise ValueError("EIP712 domain not provided")
+    _, domainHash = await create_struct_hash(ctx, [0], domain, True)
+
+    text = Text("Show details", new_lines=False)
+    text.normal(ctx, "Show message details that are signed?")
+    #show_message = await confirm(ctx, text)
+
+    # TODO some checks here maybe
+    message = await request_member(ctx, [1])
+    _, messageHash = await create_struct_hash(ctx, [1], message, True)
+
+    typed_data_hash = message_digest(b'\x19' + b'\x01' + domainHash + messageHash)
+    return typed_data_hash
+
+
+async def create_struct_hash(ctx, struct_path, struct, confirm_member):
+    dependencies = {}
+    encoded = []
+    value_defs = []
+    for member_index in range(struct.num_members):
+        value_name, value_type, value_dep, encoded_value = await encode_value(ctx, struct_path + [member_index], confirm_member)
+        if value_dep:
+            dependencies.update(value_dep)
+        encoded.append(encoded_value)
+        value_defs.append(value_type + " " + value_name)
+    struct_desc = struct.member_type + "(" + ",".join(value_defs) + ")"
+    for dependency in sorted(dependencies):
+        struct_desc += dependencies[dependency]
+    dependencies[struct.member_type] = struct_desc
+    schema_hash = encode_solidity_static('bytes32', message_digest(struct_desc))
+    return dependencies, message_digest(schema_hash + b"".join(encoded))
+
+
 async def encode_value(ctx, member_path, confirm_member):
     member = await request_member(ctx, member_path)
 
@@ -72,45 +111,6 @@ async def encode_value(ctx, member_path, confirm_member):
     #if confirm_member:
         #await require_confirm(ctx, text)
     return member.member_name, member.member_type, dependencies, encoded_value
-
-
-async def create_struct_hash(ctx, struct_path, struct, confirm_member):
-    dependencies = {}
-    encoded = []
-    value_defs = []
-    for member_index in range(struct.num_members):
-        value_name, value_type, value_dep, encoded_value = await encode_value(ctx, struct_path + [member_index], confirm_member)
-        if value_dep:
-            dependencies.update(value_dep)
-        encoded.append(encoded_value)
-        value_defs.append(value_type + " " + value_name)
-    struct_desc = struct.member_type + "(" + ",".join(value_defs) + ")"
-    for dependency in sorted(dependencies):
-        struct_desc += dependencies[dependency]
-    dependencies[struct.member_type] = struct_desc
-    schema_hash = encode_solidity_static('bytes32', message_digest(struct_desc))
-    return dependencies, message_digest(schema_hash + b"".join(encoded))
-
-
-async def generate_typed_data_hash(ctx):
-    domain = await request_member(ctx, [0])
-
-    #await require_confirm(ctx, Text("Confirm domain"))
-
-    if (domain.member_type != "EIP712Domain"):
-        raise ValueError("EIP712 domain not provided")
-    _, domainHash = await create_struct_hash(ctx, [0], domain, True)
-
-    text = Text("Show details", new_lines=False)
-    text.normal(ctx, "Show message details that are signed?")
-    #show_message = await confirm(ctx, text)
-
-    # TODO some checks here maybe
-    message = await request_member(ctx, [1])
-    _, messageHash = await create_struct_hash(ctx, [1], message, True)
-
-    typed_data_hash = message_digest(b'\x19' + b'\x01' + domainHash + messageHash)
-    return typed_data_hash
     
 
 async def request_member(ctx, member_path):
@@ -118,36 +118,6 @@ async def request_member(ctx, member_path):
     req.member_path = member_path
     print("request_member", member_path)
     return await ctx.call(req, EthereumTypedDataAck)
-
-
-def create_struct_definition(name, schema):
-    schemaTypes = [ (schemaType['type'] + " " + schemaType['name']) for schemaType in schema ]
-    return name + "(" + ",".join(schemaTypes) + ")"
-
-
-def find_dependencies(name, definitions, dependencies):
-    if name in dependencies:
-        return
-    schema = definitions.get(name)
-    if not schema:
-        return
-    dependencies.add(name)
-    for schemaType in schema:
-        find_dependencies(schemaType['type'], definitions, dependencies)
-
-
-def create_schema(name, definitions):
-    arrayStart = name.find("[")
-    cleanName = name if arrayStart < 0 else name[:arrayStart]
-    dependencies = set()
-    find_dependencies(cleanName, definitions, dependencies)
-    dependencies.discard(cleanName)
-    dependencyDefinitions = [ create_struct_definition(dependency, definitions[dependency]) for dependency in sorted(dependencies) if definitions.get(dependency) ]
-    return create_struct_definition(cleanName, definitions[cleanName]) + "".join(dependencyDefinitions)
-
-
-def create_schema_hash(name, definitions):
-    return encode_solidity_static('bytes32', message_digest(create_schema(name, definitions)))
 
 
 def bytes32_big(data):
