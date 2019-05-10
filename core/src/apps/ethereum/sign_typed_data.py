@@ -49,19 +49,19 @@ async def sign_typed_data(ctx, msg, keychain):
 async def generate_typed_data_hash(ctx):
     domain = await request_member(ctx, [0])
 
-    #await require_confirm(ctx, Text("Confirm domain"))
+    await require_confirm(ctx, Text("Confirm domain"))
 
     if (domain.member_type != "EIP712Domain"):
         raise ValueError("EIP712 domain not provided")
     _, domainHash = await create_struct_hash(ctx, [0], domain, True)
 
     text = Text("Show details", new_lines=False)
-    text.normal(ctx, "Show message details that are signed?")
-    #show_message = await confirm(ctx, text)
+    text.normal("Show message details that are signed?")
+    show_message = await confirm(ctx, text)
 
     # TODO some checks here maybe
     message = await request_member(ctx, [1])
-    _, messageHash = await create_struct_hash(ctx, [1], message, True)
+    _, messageHash = await create_struct_hash(ctx, [1], message, show_message)
 
     typed_data_hash = message_digest(b'\x19' + b'\x01' + domainHash + messageHash)
     return typed_data_hash
@@ -88,28 +88,29 @@ async def create_struct_hash(ctx, struct_path, struct, confirm_member):
 async def encode_value(ctx, member_path, confirm_member):
     member = await request_member(ctx, member_path)
 
-    text = Text(member.member_name, new_lines=False)
-    text.normal(*member.member_type)
-    text.br()
 
     dependencies = None
     encoded_value = None
+
+    if confirm_member:
+        text = Text(member.member_name, new_lines=False)
+        text.normal(*member.member_type)
+        if member.member_value:
+            text.br()
+            text.mono(*member.member_value)
+        await require_confirm(ctx, text)
+
     if (member.member_value is None):
         dependencies, encoded_value = await create_struct_hash(ctx, member_path, member, confirm_member)
     elif (member.member_type == 'string'):
         encoded_value = encode_solidity_static('bytes32', message_digest(member.member_value))
-        text.mono(*member.member_value)
     elif (member.member_type == 'bytes'):
         rencoded_value = encode_solidity_static('bytes32', message_digest(bytes_from_hex(member.member_value)))
-        text.mono(*member.member_value)
     elif (member.member_type.endswith("]")):
         raise ValueError("Arrays not supported yet")
     else:
         encoded_value = encode_solidity_static(member.member_type, member.member_value)
-        text.mono(*member.member_value)
 
-    #if confirm_member:
-        #await require_confirm(ctx, text)
     return member.member_name, member.member_type, dependencies, encoded_value
     
 
