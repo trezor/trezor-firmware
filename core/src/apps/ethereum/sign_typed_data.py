@@ -2,15 +2,17 @@ from ubinascii import unhexlify, hexlify
 
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
-from trezor.messages.EthereumMessageSignature import EthereumMessageSignature
-from trezor.messages.TypedData_DataType import Literal, Struct
+from trezor.messages import ButtonRequestType
+from trezor.messages.EthereumTypedDataRequest import EthereumTypedDataRequest
+from trezor.messages.MessageType import EthereumTypedDataAck
 from trezor.ui.text import Text
 from trezor.utils import HashWriter
 
 from apps.common import paths
-from apps.common.confirm import require_confirm
+from apps.common.confirm import require_confirm, confirm
 from apps.common.signverify import split_message
 from apps.ethereum import CURVE, address
+from apps.ethereum.layout import split_data
 
 
 def message_digest(message):
@@ -20,16 +22,15 @@ def message_digest(message):
 
 
 async def sign_typed_data(ctx, msg, keychain):
-    data_hash = None
+    data_hash = message_digest("debug") # TODO remove try except
     try:
-        definitions = build_types_map(msg.typed_data_definitions)
-        data_hash = parse_typed_data(msg.typed_data, definitions)
+        data_hash = await generate_typed_data_hash(ctx)
     except Exception as e:
-        print("error", e)
+        print("error", type(e), e)
+
     await paths.validate_path(
         ctx, address.validate_full_path, keychain, msg.address_n, CURVE
     )
-    #await require_confirm_sign_message(ctx, msg.typed_data)
 
     node = keychain.derive(msg.address_n)
     signature = secp256k1.sign(
@@ -39,95 +40,84 @@ async def sign_typed_data(ctx, msg, keychain):
         secp256k1.CANONICAL_SIG_ETHEREUM,
     )
 
-    sig = EthereumMessageSignature()
+    sig = EthereumTypedDataRequest()
     sig.address = address.address_from_bytes(node.ethereum_pubkeyhash())
     sig.signature = signature[1:] + bytearray([signature[0]])
     return sig
 
 
-def build_types_map(defs):
-    defs_map = {}
-    for definition in defs:
-        if definition.name in defs_map:
-            raise ValueError("Type defined multiple times")
-        d = []
-        for param in definition.parameters:
-            if param.name in d:
-                raise ValueError("Parameter defined multiple times")
-            d += [{"name": param.name, "type": param.encoding}]
-        defs_map[definition.name] = d
-    return defs_map
+async def encode_value(ctx, member_path, confirm_member):
+    member = await request_member(ctx, member_path)
 
+    text = Text(member.member_name, new_lines=False)
+    text.normal(*member.member_type)
+    text.br()
 
-def build_struct_map(struct):
-    struct_map = {}
-    for parameter in struct:
-        if parameter.name in struct_map:
-            raise ValueError("Parameter defined multiple times")
-
-        if parameter.data_type == Literal:
-            struct_map[parameter.name] = parameter.literal
-        elif parameter.data_type == Struct:
-            struct_map[parameter.name] = build_struct_map(parameter.struct)
-        else:
-            raise ValueError("Unknown data type")
-    return struct_map
-
-
-def encode_value(dataType, value, types):
-    if (dataType == 'string'):
-        return encode_solidity_static('bytes32', message_digest(value))
-    elif (dataType == 'bytes'):
-        return encode_solidity_static('bytes32', message_digest(bytes_from_hex(value)))
-    elif (types.get(dataType)):
-        return encode_solidity_static('bytes32', message_digest(encode_data(dataType, value, types)))
-    elif (dataType.endswith("]")):
+    dependencies = None
+    encoded_value = None
+    if (member.member_value is None):
+        dependencies, encoded_value = await create_struct_hash(ctx, member_path, member, confirm_member)
+    elif (member.member_type == 'string'):
+        encoded_value = encode_solidity_static('bytes32', message_digest(member.member_value))
+        text.mono(*member.member_value)
+    elif (member.member_type == 'bytes'):
+        rencoded_value = encode_solidity_static('bytes32', message_digest(bytes_from_hex(member.member_value)))
+        text.mono(*member.member_value)
+    elif (member.member_type.endswith("]")):
         raise ValueError("Arrays not supported yet")
     else:
-        return encode_solidity_static(dataType, value)
+        encoded_value = encode_solidity_static(member.member_type, member.member_value)
+        text.mono(*member.member_value)
+
+    #if confirm_member:
+        #await require_confirm(ctx, text)
+    return member.member_name, member.member_type, dependencies, encoded_value
 
 
-def encode_data(name, data, definitions):
-    return create_schema_hash(name, definitions) + b"".join([ encode_value(schemaType['type'], data[schemaType['name']], definitions) for schemaType in definitions[name] ])
+async def create_struct_hash(ctx, struct_path, struct, confirm_member):
+    dependencies = {}
+    encoded = []
+    value_defs = []
+    for member_index in range(struct.num_members):
+        value_name, value_type, value_dep, encoded_value = await encode_value(ctx, struct_path + [member_index], confirm_member)
+        if value_dep:
+            dependencies.update(value_dep)
+        encoded.append(encoded_value)
+        value_defs.append(value_type + " " + value_name)
+    struct_desc = struct.member_type + "(" + ",".join(value_defs) + ")"
+    for dependency in sorted(dependencies):
+        struct_desc += dependencies[dependency]
+    dependencies[struct.member_type] = struct_desc
+    schema_hash = encode_solidity_static('bytes32', message_digest(struct_desc))
+    return dependencies, message_digest(schema_hash + b"".join(encoded))
 
 
-def create_struct_hash(name, data, definitions):
-    return message_digest(encode_data(name, data, definitions))
+async def generate_typed_data_hash(ctx):
+    domain = await request_member(ctx, [0])
 
+    #await require_confirm(ctx, Text("Confirm domain"))
 
-def typed_data_hash(primaryType, domain, message, definitions):
-    domainHash = create_struct_hash("EIP712Domain", domain, definitions)
-    messageHash = create_struct_hash(primaryType, message, definitions)
-    return message_digest(b'\x19' + b'\x01' + domainHash + messageHash)
+    if (domain.member_type != "EIP712Domain"):
+        raise ValueError("EIP712 domain not provided")
+    _, domainHash = await create_struct_hash(ctx, [0], domain, True)
 
+    text = Text("Show details", new_lines=False)
+    text.normal(ctx, "Show message details that are signed?")
+    #show_message = await confirm(ctx, text)
 
-def parse_typed_data(data, definitions):
-    if data.data_type != Struct or len(data.struct) != 3:
-        raise ValueError("Invalid typed data")
+    # TODO some checks here maybe
+    message = await request_member(ctx, [1])
+    _, messageHash = await create_struct_hash(ctx, [1], message, True)
 
-    domain_struct = data.struct[0]
-    if domain_struct.data_type != Struct or domain_struct.name != "domain":
-        raise ValueError("Invalid domain object")
-
-    message_struct = data.struct[1]
-    if message_struct.data_type != Struct or message_struct.name != "message":
-        raise ValueError("Invalid message object")
-
-    primary_type = data.struct[2]
-    if primary_type.data_type != Literal or primary_type.name != "primaryType":
-        raise ValueError("Invalid primaryType")
-
-    domain_map = build_struct_map(domain_struct.struct)
-    message_map = build_struct_map(message_struct.struct)
-    result = typed_data_hash(primary_type.literal, domain_map, message_map, definitions)
-    print("EIP712 hash", hexlify(result))
-    return result
+    typed_data_hash = message_digest(b'\x19' + b'\x01' + domainHash + messageHash)
+    return typed_data_hash
     
 
-async def require_confirm_sign_message(ctx, message):
-    text = Text("Sign Typed Data", new_lines=False)
-    text.normal(*message)
-    await require_confirm(ctx, text)
+async def request_member(ctx, member_path):
+    req = EthereumTypedDataRequest()
+    req.member_path = member_path
+    print("request_member", member_path)
+    return await ctx.call(req, EthereumTypedDataAck)
 
 
 def create_struct_definition(name, schema):

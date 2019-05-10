@@ -102,48 +102,50 @@ message EthereumSignMessage {
 }
 
 /**
- * Request: Ask device to sign typed data
- * @start
- * @next EthereumMessageSignature
- * @next Failure
- */
-message EthereumSignTypedData {
-    
-    message TypedData {
-        enum TypedData_DataType {
-            Literal = 1;
-            Struct = 2;
-            // Array could be added once it is finalized in the EIP
-        }
-        required TypedData_DataType data_type = 1;
-        optional string literal = 2;
-        repeated TypedData struct = 4;
-        required string name = 5;
-    }
-
-    message TypeDefinition {
-
-        message TypeDefinition_Parameter {
-            required string name = 1;
-            required string encoding = 2;
-        }
-
-        required string name = 1;
-        repeated TypeDefinition_Parameter parameters = 2;
-    }
-
-    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
-    repeated TypeDefinition typed_data_definitions = 2; 
-    optional TypedData typed_data = 3; 
-}
-
-/**
  * Response: Signed message
  * @end
  */
 message EthereumMessageSignature {
     optional bytes signature = 2;   // signature of the message
     optional string address = 3;     // address used to sign the message
+}
+
+/**
+ * Request: Ask device to sign typed data
+ * @start
+ * @next EthereumTypedDataRequest
+ * @next Failure
+ */
+message EthereumSignTypedData {
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+    optional uint32 num_members = 2; // Check if this can be removed, since it should always be 2 (domain and message/primaryType)
+}
+
+/**
+ * Response: Device asks for more values from typed data, or returns the signature and address.
+ * If member_path is not empty, device awaits the information for this value.
+ * Otherwise, the signature_* fields contain the computed transaction signature. All three fields will be present.
+ * @end
+ * @next EthereumTypedDataAck
+ * @next Failure
+ */
+message EthereumTypedDataRequest {
+    
+    repeated uint32 member_path = 1; // Path to value that should be send to device
+    optional bytes signature = 2;   // signature of the message
+    optional string address = 3;     // address used to sign the message
+}
+
+/**
+ * Request: Typed data value. 
+ * If the member is a struct member_value should not be set. If the member is literal num_members should not be set.
+ * @next EthereumTypedDataRequest
+ */
+message EthereumTypedDataAck {
+    optional string member_name = 1;
+    optional string member_type = 2;
+    optional string member_value = 3;
+    optional uint32 num_members = 4;
 }
 
 /**

@@ -95,119 +95,76 @@ def sign_message(client, n, message):
     return client.call(proto.EthereumSignMessage(address_n=n, message=message))
 
 
-@expect(proto.EthereumMessageSignature)
+@expect(proto.EthereumTypedDataRequest)
 def sign_typed_data(client, n, data):
-    defs = [
-        proto.TypeDefinition(
-            name="EIP712Domain",
-            parameters=[
-                proto.TypeDefinition_Parameter(name="name", encoding="string"),
-                proto.TypeDefinition_Parameter(name="version", encoding="string"),
-                proto.TypeDefinition_Parameter(name="chainId", encoding="uint256"),
-                proto.TypeDefinition_Parameter(name="verifyingContract", encoding="address")
+    data = { 
+        "types": { 
+            "EIP712Domain": [ 
+                { "name": 'name', "type": 'string' },
+                { "name": 'version', "type": 'string' },
+                { "name": 'chainId', "type": 'uint256' },
+                { "name": 'verifyingContract', "type": 'address' },
+            ],
+            "Person": [
+                { "name": 'name', "type": 'string' },
+                { "name": 'wallet', "type": 'address' }
+            ],
+            "Mail": [
+                { "name": 'from', "type": 'Person' },
+                { "name": 'to', "type": 'Person' },
+                { "name": 'contents', "type": 'string' }
             ]
-        ),
-        proto.TypeDefinition(
-            name="Person",
-            parameters=[
-                proto.TypeDefinition_Parameter(name="name", encoding="string"),
-                proto.TypeDefinition_Parameter(name="wallet", encoding="address")
-            ]
-        ),
-        proto.TypeDefinition(
-            name="Mail",
-            parameters=[
-                proto.TypeDefinition_Parameter(name="from", encoding="Person"),
-                proto.TypeDefinition_Parameter(name="to", encoding="Person"),
-                proto.TypeDefinition_Parameter(name="contents", encoding="string")
-            ]
-        ),
-    ]
-    domain_data = [
-        proto.TypedData(
-            data_type=proto.TypedData_DataType.Literal,
-            name="chainId",
-            literal="1"
-        ),
-        proto.TypedData(
-            data_type=proto.TypedData_DataType.Literal,
-            name="verifyingContract",
-            literal="0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
-        ),
-        proto.TypedData(
-            data_type=proto.TypedData_DataType.Literal,
-            name="name",
-            literal="Ether Mail"
-        ),
-        proto.TypedData(
-            data_type=proto.TypedData_DataType.Literal,
-            name="version",
-            literal="1"
-        ),
-    ]
-    message_data = [
-        proto.TypedData(
-            data_type=proto.TypedData_DataType.Struct,
-            name="from",
-            struct=[
-                proto.TypedData(
-                    data_type=proto.TypedData_DataType.Literal,
-                    name="name",
-                    literal="Cow"
-                ),
-                proto.TypedData(
-                    data_type=proto.TypedData_DataType.Literal,
-                    name="wallet",
-                    literal="0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"
-                )
-            ]
-        ),
-        proto.TypedData(
-            data_type=proto.TypedData_DataType.Struct,
-            name="to",
-            struct=[
-                proto.TypedData(
-                    data_type=proto.TypedData_DataType.Literal,
-                    name="name",
-                    literal="Bob"
-                ),
-                proto.TypedData(
-                    data_type=proto.TypedData_DataType.Literal,
-                    name="wallet",
-                    literal="0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB"
-                )
-            ]
-        ),
-        proto.TypedData(
-            data_type=proto.TypedData_DataType.Literal,
-            name="contents",
-            literal="Hello, Bob!"
-        )
-    ]
-    typed_data = proto.TypedData(
-        data_type=proto.TypedData_DataType.Struct,
-        name="data",
-        struct= [
-            proto.TypedData(
-                data_type=proto.TypedData_DataType.Struct,
-                name="domain",
-                struct=domain_data
-            ),
-            proto.TypedData(
-                data_type=proto.TypedData_DataType.Struct,
-                name="message",
-                struct=message_data
-            ),
-            proto.TypedData(
-                data_type=proto.TypedData_DataType.Literal,
-                name="primaryType",
-                literal="Mail"
-            )
-        ]
-    )
-    resp = client.call(proto.EthereumSignTypedData(address_n=n, typed_data_definitions=defs, typed_data=typed_data))
-    print("RESP", resp)
-    return resp
+        },
+        "primaryType": 'Mail',
+        "domain": {
+            "name": 'Ether Mail',
+            "version": '1',
+            "chainId": 1,
+            "verifyingContract": '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC',
+        },
+        "message": {
+            "from": {
+                "name": 'Cow',
+                "wallet": '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
+            },
+            "to": {
+                "name": 'Bob',
+                "wallet": '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB',
+            },
+            "contents": 'Hello, Bob!',
+        }, 
+    }
+    response = client.call(proto.EthereumSignTypedData(address_n=n, num_members=2))
+
+    while len(response.member_path) > 0:
+        print(response.member_path)
+        root_index = response.member_path[0]
+        if root_index == 0:
+            member_type = 'EIP712Domain'
+            member_data = data['domain']
+        elif root_index == 1:
+            member_type = data['primaryType']
+            member_data = data['message']
+        else: 
+            raise ValueError("Unknown root") # TODO do we need to signal the device?
+        member_name = None
+        for index in response.member_path[1:]:
+            member_def = data['types'][member_type][index]
+            member_name = member_def['name']
+            member_type = member_def['type']
+            member_data = member_data[member_def['name']]
+
+        print(member_name, member_data, member_type)
+
+        is_struct = member_type in data['types']
+        response = client.call(proto.EthereumTypedDataAck(
+            member_name=member_name,
+            member_type=member_type,
+            member_value=None if (is_struct) else str(member_data),
+            num_members=None if (not is_struct) else len(data['types'][member_type])
+        ))
+    print("RESP", response)
+    return response
 
 
 def verify_message(client, address, signature, message):

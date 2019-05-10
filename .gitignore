@@ -4,6 +4,7 @@
 .mypy_cache/
 .pytest_cache/
 .vscode/
+.env/
 __pycache__/
 *.pyc
 /build

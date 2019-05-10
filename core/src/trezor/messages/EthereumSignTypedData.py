@@ -2,9 +2,6 @@
 # fmt: off
 import protobuf as p
 
-from .TypeDefinition import TypeDefinition
-from .TypedData import TypedData
-
 if __debug__:
     try:
         from typing import List
@@ -18,17 +15,14 @@ class EthereumSignTypedData(p.MessageType):
     def __init__(
         self,
         address_n: List['int'] = None,
-        typed_data_definitions: List['TypeDefinition'] = None,
-        typed_data: TypedData = None,
+        num_members: int = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
-        self.typed_data_definitions = typed_data_definitions if typed_data_definitions is not None else []
-        self.typed_data = typed_data
+        self.num_members = num_members
 
     @classmethod
     def get_fields(cls):
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('typed_data_definitions', TypeDefinition, p.FLAG_REPEATED),
-            3: ('typed_data', TypedData, 0),
+            2: ('num_members', p.UVarintType, 0),
         }
