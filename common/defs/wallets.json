@@ -62,6 +62,7 @@
         "Qtum-Electrum": "https://github.com/qtumproject/qtum-electrum"
     },
     "bitcoin:RVN": {
-        "Electrum-RVN": "https://github.com/traysi/electrum-raven"
+        "Electrum-RVN": "https://github.com/traysi/electrum-raven",
+        "Mango Farm": "https://mangofarmassets.com/mangowallet"
     }
 }
