@@ -4,7 +4,7 @@
   "coin_label": "Horizen",
   "website": "https://www.horizen.global",
   "github": "https://github.com/ZencashOfficial/zen",
-  "maintainer": "Horizen <support@horizen.global>",
+  "maintainer": "Power_VANO <vano@horizen.global>",
   "curve_name": "secp256k1",
   "address_type": 8329,
   "address_type_p2sh": 8342,
