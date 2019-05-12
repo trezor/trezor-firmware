@@ -317,5 +317,15 @@
     "rskip60": false,
     "url": "https://pirl.io",
     "blockbook": []
+  },
+  {
+    "chain": "hpb",
+    "chain_id": 269,
+    "slip44": 269,
+    "shortcut": "HPB",
+    "name": "High Performance Blockchain",
+    "rskip60": false,
+    "url": "https://hpb.io",
+    "blockbook": []
   }
 ]
