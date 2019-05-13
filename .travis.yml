@@ -1,0 +1,35 @@
+# simple Travis file to run style-checks until our internal CI can process external PRs
+
+language: python
+sudo: false
+python:
+    - "3.6"
+
+cache:
+    directories:
+        - $HOME/.cache/pip
+        - $HOME/.virtualenvs
+
+addons:
+    apt:
+        packages:
+            clang-format
+
+
+install:
+    - pip install --upgrade pip wheel setuptools
+    - pip install pipenv
+    - pipenv install
+
+script:
+    - pipenv run make style_check
+    - pipenv run make -C core templates_check
+    - pipenv run make defs_check
+
+notifications:
+    webhooks:
+        urls:
+            - http://ci-bot.satoshilabs.com:5000/travis
+    on_success: always
+    on_failure: always
+    on_start: always
