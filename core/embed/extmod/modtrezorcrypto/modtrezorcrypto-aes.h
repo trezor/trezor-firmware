@@ -184,11 +184,11 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_AES_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_AES_decrypt_obj)},
     {MP_ROM_QSTR(MP_QSTR___del__),
      MP_ROM_PTR(&mod_trezorcrypto_AES___del___obj)},
-    {MP_ROM_QSTR(MP_QSTR_ECB), MP_OBJ_NEW_SMALL_INT(ECB)},
-    {MP_ROM_QSTR(MP_QSTR_CBC), MP_OBJ_NEW_SMALL_INT(CBC)},
-    {MP_ROM_QSTR(MP_QSTR_CFB), MP_OBJ_NEW_SMALL_INT(CFB)},
-    {MP_ROM_QSTR(MP_QSTR_OFB), MP_OBJ_NEW_SMALL_INT(OFB)},
-    {MP_ROM_QSTR(MP_QSTR_CTR), MP_OBJ_NEW_SMALL_INT(CTR)},
+    {MP_ROM_QSTR(MP_QSTR_ECB), MP_ROM_INT(ECB)},
+    {MP_ROM_QSTR(MP_QSTR_CBC), MP_ROM_INT(CBC)},
+    {MP_ROM_QSTR(MP_QSTR_CFB), MP_ROM_INT(CFB)},
+    {MP_ROM_QSTR(MP_QSTR_OFB), MP_ROM_INT(OFB)},
+    {MP_ROM_QSTR(MP_QSTR_CTR), MP_ROM_INT(CTR)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_AES_locals_dict,
                             mod_trezorcrypto_AES_locals_dict_table);

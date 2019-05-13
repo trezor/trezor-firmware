@@ -105,10 +105,9 @@ STATIC const mp_rom_map_elem_t
          MP_ROM_PTR(&mod_trezorcrypto_Groestl512_digest_obj)},
         {MP_ROM_QSTR(MP_QSTR___del__),
          MP_ROM_PTR(&mod_trezorcrypto_Groestl512___del___obj)},
-        {MP_ROM_QSTR(MP_QSTR_block_size),
-         MP_OBJ_NEW_SMALL_INT(GROESTL512_BLOCK_LENGTH)},
+        {MP_ROM_QSTR(MP_QSTR_block_size), MP_ROM_INT(GROESTL512_BLOCK_LENGTH)},
         {MP_ROM_QSTR(MP_QSTR_digest_size),
-         MP_OBJ_NEW_SMALL_INT(GROESTL512_DIGEST_LENGTH)},
+         MP_ROM_INT(GROESTL512_DIGEST_LENGTH)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_Groestl512_locals_dict,
                             mod_trezorcrypto_Groestl512_locals_dict_table);

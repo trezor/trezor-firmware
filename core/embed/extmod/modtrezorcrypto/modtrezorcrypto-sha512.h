@@ -99,10 +99,8 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_Sha512_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_Sha512_digest_obj)},
     {MP_ROM_QSTR(MP_QSTR___del__),
      MP_ROM_PTR(&mod_trezorcrypto_Sha512___del___obj)},
-    {MP_ROM_QSTR(MP_QSTR_block_size),
-     MP_OBJ_NEW_SMALL_INT(SHA512_BLOCK_LENGTH)},
-    {MP_ROM_QSTR(MP_QSTR_digest_size),
-     MP_OBJ_NEW_SMALL_INT(SHA512_DIGEST_LENGTH)},
+    {MP_ROM_QSTR(MP_QSTR_block_size), MP_ROM_INT(SHA512_BLOCK_LENGTH)},
+    {MP_ROM_QSTR(MP_QSTR_digest_size), MP_ROM_INT(SHA512_DIGEST_LENGTH)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_Sha512_locals_dict,
                             mod_trezorcrypto_Sha512_locals_dict_table);

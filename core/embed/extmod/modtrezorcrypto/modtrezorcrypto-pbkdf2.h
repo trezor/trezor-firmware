@@ -149,8 +149,8 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_Pbkdf2_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_key), MP_ROM_PTR(&mod_trezorcrypto_Pbkdf2_key_obj)},
     {MP_ROM_QSTR(MP_QSTR___del__),
      MP_ROM_PTR(&mod_trezorcrypto_Pbkdf2___del___obj)},
-    {MP_ROM_QSTR(MP_QSTR_HMAC_SHA256), MP_OBJ_NEW_SMALL_INT(PRF_HMAC_SHA256)},
-    {MP_ROM_QSTR(MP_QSTR_HMAC_SHA512), MP_OBJ_NEW_SMALL_INT(PRF_HMAC_SHA512)},
+    {MP_ROM_QSTR(MP_QSTR_HMAC_SHA256), MP_ROM_INT(PRF_HMAC_SHA256)},
+    {MP_ROM_QSTR(MP_QSTR_HMAC_SHA512), MP_ROM_INT(PRF_HMAC_SHA512)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_Pbkdf2_locals_dict,
                             mod_trezorcrypto_Pbkdf2_locals_dict_table);

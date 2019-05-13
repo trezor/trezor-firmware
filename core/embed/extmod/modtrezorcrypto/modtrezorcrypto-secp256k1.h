@@ -247,9 +247,8 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_secp256k1_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_multiply),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_multiply_obj)},
     {MP_ROM_QSTR(MP_QSTR_CANONICAL_SIG_ETHEREUM),
-     MP_OBJ_NEW_SMALL_INT(CANONICAL_SIG_ETHEREUM)},
-    {MP_ROM_QSTR(MP_QSTR_CANONICAL_SIG_EOS),
-     MP_OBJ_NEW_SMALL_INT(CANONICAL_SIG_EOS)},
+     MP_ROM_INT(CANONICAL_SIG_ETHEREUM)},
+    {MP_ROM_QSTR(MP_QSTR_CANONICAL_SIG_EOS), MP_ROM_INT(CANONICAL_SIG_EOS)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_secp256k1_globals,
                             mod_trezorcrypto_secp256k1_globals_table);

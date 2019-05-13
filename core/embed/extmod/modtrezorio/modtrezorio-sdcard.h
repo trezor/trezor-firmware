@@ -119,7 +119,7 @@ STATIC const mp_rom_map_elem_t mod_trezorio_SDCard_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_power), MP_ROM_PTR(&mod_trezorio_SDCard_power_obj)},
     {MP_ROM_QSTR(MP_QSTR_capacity),
      MP_ROM_PTR(&mod_trezorio_SDCard_capacity_obj)},
-    {MP_ROM_QSTR(MP_QSTR_block_size), MP_OBJ_NEW_SMALL_INT(SDCARD_BLOCK_SIZE)},
+    {MP_ROM_QSTR(MP_QSTR_block_size), MP_ROM_INT(SDCARD_BLOCK_SIZE)},
     {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_SDCard_read_obj)},
     {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_SDCard_write_obj)},
 };
