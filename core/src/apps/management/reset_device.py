@@ -1,21 +1,19 @@
 from micropython import const
 from ubinascii import hexlify
 
-from trezor import config, ui, wire, workflow
+from trezor import config, ui, wire
 from trezor.crypto import bip39, hashlib, random
 from trezor.messages import ButtonRequestType, MessageType
-from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
-from trezor.ui.confirm import HoldToConfirmDialog
 from trezor.ui.mnemonic import MnemonicKeyboard
-from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
+from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 from trezor.utils import chunks, format_ordinal
 
 from apps.common import mnemonic, storage
-from apps.common.confirm import require_confirm
+from apps.common.confirm import hold_to_confirm, require_confirm
 from apps.management.change_pin import request_pin_confirm
 
 if __debug__:
@@ -31,18 +29,8 @@ async def reset_device(ctx, msg):
     if storage.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
-    text = Text("Create a new wallet", ui.ICON_RESET, new_lines=False)
-    text.normal("Do you really want to")
-    text.br()
-    text.normal("create a new wallet?")
-    text.br()
-    text.br_half()
-    text.normal("By continuing you agree")
-    text.br()
-    text.normal("to")
-    text.bold("https://trezor.io/tos")
-
-    await require_confirm(ctx, text, code=ButtonRequestType.ResetDevice)
+    # make sure use knows he's setting up a new wallet
+    await show_reset_warning(ctx)
 
     # request new PIN
     if msg.pin_protection:
@@ -63,7 +51,7 @@ async def reset_device(ctx, msg):
 
     if not msg.skip_backup and not msg.no_backup:
         # require confirmation of the mnemonic safety
-        await show_warning(ctx)
+        await show_backup_warning(ctx)
 
         # show mnemonic and require confirmation of a random word
         while True:
@@ -87,12 +75,9 @@ async def reset_device(ctx, msg):
         no_backup=msg.no_backup,
     )
 
-    # show success message.  if we skipped backup, it's possible that homescreen
-    # is still running, uninterrupted.  restart it to pick up new label.
+    # show success message
     if not msg.skip_backup and not msg.no_backup:
         await show_success(ctx)
-    else:
-        workflow.restartdefault()
 
     return Success(message="Initialized")
 
@@ -105,7 +90,21 @@ def generate_mnemonic(strength: int, int_entropy: bytes, ext_entropy: bytes) -> 
     return bip39.from_data(entropy[: strength // 8])
 
 
-async def show_warning(ctx):
+async def show_reset_warning(ctx):
+    text = Text("Create a new wallet", ui.ICON_RESET, new_lines=False)
+    text.normal("Do you really want to")
+    text.br()
+    text.normal("create a new wallet?")
+    text.br()
+    text.br_half()
+    text.normal("By continuing you agree")
+    text.br()
+    text.normal("to")
+    text.bold("https://trezor.io/tos")
+    await require_confirm(ctx, text, code=ButtonRequestType.ResetDevice)
+
+
+async def show_backup_warning(ctx):
     text = Text("Backup your seed", ui.ICON_NOCOPY)
     text.normal(
         "Never make a digital",
@@ -119,7 +118,7 @@ async def show_warning(ctx):
 
 
 async def show_wrong_entry(ctx):
-    text = Text("Wrong entry!", ui.ICON_WRONG, icon_color=ui.RED)
+    text = Text("Wrong entry!", ui.ICON_WRONG, ui.RED)
     text.normal("You have entered", "wrong seed word.", "Please check again.")
     await require_confirm(
         ctx, text, ButtonRequestType.ResetDevice, confirm="Check again", cancel=None
@@ -127,7 +126,7 @@ async def show_wrong_entry(ctx):
 
 
 async def show_success(ctx):
-    text = Text("Backup is done!", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Backup is done!", ui.ICON_CONFIRM, ui.GREEN)
     text.normal(
         "Never make a digital",
         "copy of your recovery",
@@ -148,32 +147,33 @@ async def show_entropy(ctx, entropy: bytes):
 
 
 async def show_mnemonic(ctx, mnemonic: str):
-    await ctx.call(
-        ButtonRequest(code=ButtonRequestType.ResetDevice), MessageType.ButtonAck
-    )
-    first_page = const(0)
-    words_per_page = const(4)
-    words = list(enumerate(mnemonic.split()))
-    pages = list(chunks(words, words_per_page))
-    paginator = paginate(show_mnemonic_page, len(pages), first_page, pages)
-    await ctx.wait(paginator)
+    # split mnemonic words into pages
+    PER_PAGE = const(4)
+    words = mnemonic.split()
+    words = list(enumerate(words))
+    words = list(chunks(words, PER_PAGE))
 
+    # display the pages, with a confirmation dialog on the last one
+    pages = [get_mnemonic_page(page) for page in words]
+    paginated = Paginated(pages)
 
-@ui.layout
-async def show_mnemonic_page(page: int, page_count: int, pages: list):
     if __debug__:
-        debug.reset_current_words = [word for _, word in pages[page]]
 
-    lines = ["%2d. %s" % (wi + 1, word) for wi, word in pages[page]]
+        def export_displayed_words():
+            # export currently displayed mnemonic words into debuglink
+            debug.reset_current_words = [w for _, w in words[paginated.page]]
+
+        paginated.on_change = export_displayed_words
+        export_displayed_words()
+
+    await hold_to_confirm(ctx, paginated, ButtonRequestType.ResetDevice)
+
+
+def get_mnemonic_page(words: list):
     text = Text("Recovery seed", ui.ICON_RESET)
-    text.mono(*lines)
-    content = Scrollpage(text, page, page_count)
-
-    if page + 1 == page_count:
-        await HoldToConfirmDialog(content)
-    else:
-        content.render()
-        await animate_swipe()
+    for index, word in words:
+        text.mono("%2d. %s" % (index + 1, word))
+    return text
 
 
 async def check_mnemonic(ctx, mnemonic: str) -> bool:
@@ -192,11 +192,12 @@ async def check_mnemonic(ctx, mnemonic: str) -> bool:
     return True
 
 
-@ui.layout
 async def check_word(ctx, words: list, index: int):
     if __debug__:
         debug.reset_word_index = index
-
     keyboard = MnemonicKeyboard("Type the %s word:" % format_ordinal(index + 1))
-    result = await ctx.wait(keyboard)
+    if __debug__:
+        result = await ctx.wait(keyboard, debug.input_signal)
+    else:
+        result = await ctx.wait(keyboard)
     return result == words[index]

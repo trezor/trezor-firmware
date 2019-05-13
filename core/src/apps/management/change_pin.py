@@ -1,8 +1,9 @@
-from trezor import config, loop, ui, wire
+from trezor import config, ui, wire
 from trezor.messages import ButtonRequestType, MessageType
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
+from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
@@ -81,11 +82,10 @@ async def request_pin_ack(ctx, *args, **kwargs):
         raise wire.ActionCancelled("Cancelled")
 
 
-@ui.layout
 async def pin_mismatch():
-    text = Text("PIN mismatch", ui.ICON_WRONG, icon_color=ui.RED)
+    text = Text("PIN mismatch", ui.ICON_WRONG, ui.RED)
     text.normal("Entered PINs do not", "match each other.")
     text.normal("")
     text.normal("Please, try again...")
-    text.render()
-    await loop.sleep(3 * 1000 * 1000)
+    popup = Popup(text, 3000)  # show for 3 seconds
+    await popup

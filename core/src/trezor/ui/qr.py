@@ -1,11 +1,12 @@
 from trezor import ui
 
 
-class Qr(ui.Widget):
-    def __init__(self, data, pos, scale):
+class Qr(ui.Control):
+    def __init__(self, data, x, y, scale):
         self.data = data
-        self.pos = pos
+        self.x = x
+        self.y = y
         self.scale = scale
 
-    def render(self):
-        ui.display.qrcode(self.pos[0], self.pos[1], self.data, self.scale)
+    def on_render(self):
+        ui.display.qrcode(self.x, self.y, self.data, self.scale)

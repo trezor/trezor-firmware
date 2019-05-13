@@ -26,6 +26,6 @@ async def get_public_key(ctx, msg, keychain):
 
 async def _show_tezos_pubkey(ctx, pubkey):
     lines = chunks(pubkey, 18)
-    text = Text("Confirm public key", ui.ICON_RECEIVE, icon_color=ui.GREEN)
+    text = Text("Confirm public key", ui.ICON_RECEIVE, ui.GREEN)
     text.mono(*lines)
     return await require_confirm(ctx, text, code=ButtonRequestType.PublicKey)

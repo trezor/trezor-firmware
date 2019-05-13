@@ -48,7 +48,7 @@ async def ask_transfer_mosaic(
     mosaic_quantity = mosaic.quantity * transfer.amount / NEM_MOSAIC_AMOUNT_DIVISOR
 
     if definition:
-        msg = Text("Confirm mosaic", ui.ICON_SEND, icon_color=ui.GREEN)
+        msg = Text("Confirm mosaic", ui.ICON_SEND, ui.GREEN)
         msg.normal("Confirm transfer of")
         msg.bold(
             format_amount(mosaic_quantity, definition["divisibility"])
@@ -60,20 +60,20 @@ async def ask_transfer_mosaic(
 
         if "levy" in definition and "fee" in definition:
             levy_msg = _get_levy_msg(definition, mosaic_quantity, common.network)
-            msg = Text("Confirm mosaic", ui.ICON_SEND, icon_color=ui.GREEN)
+            msg = Text("Confirm mosaic", ui.ICON_SEND, ui.GREEN)
             msg.normal("Confirm mosaic", "levy fee of")
             msg.bold(levy_msg)
             await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
     else:
-        msg = Text("Confirm mosaic", ui.ICON_SEND, icon_color=ui.RED)
+        msg = Text("Confirm mosaic", ui.ICON_SEND, ui.RED)
         msg.bold("Unknown mosaic!")
         msg.normal("Divisibility and levy")
         msg.normal("cannot be shown for")
         msg.normal("unknown mosaics")
         await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
-        msg = Text("Confirm mosaic", ui.ICON_SEND, icon_color=ui.GREEN)
+        msg = Text("Confirm mosaic", ui.ICON_SEND, ui.GREEN)
         msg.normal("Confirm transfer of")
         msg.bold("%s raw units" % mosaic_quantity)
         msg.normal("of")
@@ -121,7 +121,7 @@ async def ask_importance_transfer(
 
 
 async def _require_confirm_transfer(ctx, recipient, value):
-    text = Text("Confirm transfer", ui.ICON_SEND, icon_color=ui.GREEN)
+    text = Text("Confirm transfer", ui.ICON_SEND, ui.GREEN)
     text.bold("Send %s XEM" % format_amount(value, NEM_MAX_DIVISIBILITY))
     text.normal("to")
     text.mono(*split_address(recipient))
@@ -132,11 +132,11 @@ async def _require_confirm_payload(ctx, payload: bytearray, encrypt=False):
     payload = bytes(payload).decode()
 
     if encrypt:
-        text = Text("Confirm payload", ui.ICON_SEND, icon_color=ui.GREEN)
+        text = Text("Confirm payload", ui.ICON_SEND, ui.GREEN)
         text.bold("Encrypted:")
         text.normal(*payload.split(" "))
     else:
-        text = Text("Confirm payload", ui.ICON_SEND, icon_color=ui.RED)
+        text = Text("Confirm payload", ui.ICON_SEND, ui.RED)
         text.bold("Unencrypted:")
         text.normal(*payload.split(" "))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)

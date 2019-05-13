@@ -18,10 +18,12 @@ if __debug__:
         import uos
 
         TEST = int(uos.getenv("TREZOR_TEST") or "0")
+        DISABLE_FADE = int(uos.getenv("TREZOR_DISABLE_FADE") or "0")
         SAVE_SCREEN = int(uos.getenv("TREZOR_SAVE_SCREEN") or "0")
         LOG_MEMORY = int(uos.getenv("TREZOR_LOG_MEMORY") or "0")
     else:
         TEST = 0
+        DISABLE_FADE = 0
         SAVE_SCREEN = 0
         LOG_MEMORY = 0
 

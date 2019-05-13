@@ -1,92 +1,180 @@
 from micropython import const
 
 from trezor import loop, res, ui
+from trezor.ui.button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
+from trezor.ui.confirm import CANCELLED, CONFIRMED
 from trezor.ui.swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
 
 if __debug__:
     from apps.debug import swipe_signal
 
 
-async def change_page(page, page_count):
-    while True:
-        if page == 0:
-            d = SWIPE_UP
-        elif page == page_count - 1:
-            d = SWIPE_DOWN
-        else:
-            d = SWIPE_VERTICAL
-        swipe = Swipe(directions=d)
-        if __debug__:
-            s = await loop.spawn(swipe, swipe_signal)
-        else:
-            s = await swipe
-        if s == SWIPE_UP:
-            return min(page + 1, page_count - 1)  # scroll down
-        elif s == SWIPE_DOWN:
-            return max(page - 1, 0)  # scroll up
-
-
-async def paginate(render_page, page_count, page=0, *args):
-    while True:
-        changer = change_page(page, page_count)
-        renderer = render_page(page, page_count, *args)
-        waiter = loop.spawn(changer, renderer)
-        result = await waiter
-        if changer in waiter.finished:
-            page = result
-        else:
-            return result
-
-
-async def animate_swipe():
-    time_delay = const(40000)
-    draw_delay = const(200000)
-
-    ui.display.text_center(130, 220, "Swipe", ui.BOLD, ui.GREY, ui.BG)
-
-    sleep = loop.sleep(time_delay)
-    icon = res.load(ui.ICON_SWIPE)
-    for t in ui.pulse(draw_delay):
-        fg = ui.blend(ui.GREY, ui.DARK_GREY, t)
-        ui.display.icon(70, 205, icon, fg, ui.BG)
-        yield sleep
-
-
-def render_scrollbar(page, page_count):
-    bbox = const(220)
-    size = const(8)
+def render_scrollbar(pages: int, page: int):
+    BBOX = const(220)
+    SIZE = const(8)
 
     padding = 14
-    if page_count * padding > bbox:
-        padding = bbox // page_count
+    if pages * padding > BBOX:
+        padding = BBOX // pages
 
-    x = const(220)
-    y = (bbox // 2) - (page_count // 2) * padding
+    X = const(220)
+    Y = (BBOX // 2) - (pages // 2) * padding
 
-    for i in range(0, page_count):
-        if i != page:
-            ui.display.bar_radius(x, y + i * padding, size, size, ui.GREY, ui.BG, 4)
-    ui.display.bar_radius(x, y + page * padding, size, size, ui.FG, ui.BG, 4)
+    for i in range(0, pages):
+        if i == page:
+            fg = ui.FG
+        else:
+            fg = ui.GREY
+        ui.display.bar_radius(X, Y + i * padding, SIZE, SIZE, fg, ui.BG, 4)
 
 
-class Scrollpage(ui.Widget):
-    def __init__(self, content, page, page_count):
-        self.content = content
+def render_swipe_icon():
+    DRAW_DELAY = const(200000)
+
+    icon = res.load(ui.ICON_SWIPE)
+    t = ui.pulse(DRAW_DELAY)
+    c = ui.blend(ui.GREY, ui.DARK_GREY, t)
+    ui.display.icon(70, 205, icon, c, ui.BG)
+
+
+def render_swipe_text():
+    ui.display.text_center(130, 220, "Swipe", ui.BOLD, ui.GREY, ui.BG)
+
+
+class Paginated(ui.Layout):
+    def __init__(self, pages, page=0, one_by_one=False):
+        self.pages = pages
         self.page = page
-        self.page_count = page_count
+        self.one_by_one = one_by_one
+        self.repaint = True
 
-        if content.__class__.__iter__ is not ui.Widget.__iter__:
-            raise TypeError(
-                "Scrollpage does not support widgets with custom event loop"
-            )
+    def dispatch(self, event, x, y):
+        pages = self.pages
+        page = self.page
+        pages[page].dispatch(event, x, y)
 
-    def taint(self):
-        super().taint()
-        self.content.taint()
+        if event is ui.RENDER:
+            length = len(pages)
+            if page < length - 1:
+                render_swipe_icon()
+                if self.repaint:
+                    render_swipe_text()
+            if self.repaint:
+                render_scrollbar(length, page)
+                self.repaint = False
 
-    def render(self):
-        self.content.render()
-        render_scrollbar(self.page, self.page_count)
+    async def handle_paging(self):
+        if self.page == 0:
+            directions = SWIPE_UP
+        elif self.page == len(self.pages) - 1:
+            directions = SWIPE_DOWN
+        else:
+            directions = SWIPE_VERTICAL
 
-    def touch(self, event, pos):
-        return self.content.touch(event, pos)
+        if __debug__:
+            swipe = await loop.spawn(Swipe(directions), swipe_signal)
+        else:
+            swipe = await Swipe(directions)
+
+        if swipe is SWIPE_UP:
+            self.page = min(self.page + 1, len(self.pages) - 1)
+        elif swipe is SWIPE_DOWN:
+            self.page = max(self.page - 1, 0)
+
+        self.pages[self.page].dispatch(ui.REPAINT, 0, 0)
+        self.repaint = True
+
+        self.on_change()
+
+    def create_tasks(self):
+        return self.handle_input(), self.handle_rendering(), self.handle_paging()
+
+    def on_change(self):
+        if self.one_by_one:
+            raise ui.Result(self.page)
+
+
+class PageWithButtons(ui.Control):
+    def __init__(self, content, paginated, index, count):
+        self.content = content
+        self.paginated = paginated
+        self.index = index
+        self.count = count
+
+        if self.index == 0:
+            # first page, we can cancel or go down
+            left = res.load(ui.ICON_CANCEL)
+            left_style = ButtonCancel
+            right = res.load(ui.ICON_CLICK)
+            right_style = ButtonDefault
+        elif self.index == count - 1:
+            # last page, we can go up or confirm
+            left = res.load(ui.ICON_BACK)
+            left_style = ButtonDefault
+            right = res.load(ui.ICON_CONFIRM)
+            right_style = ButtonConfirm
+        else:
+            # somewhere in the middle, we can go up or down
+            left = res.load(ui.ICON_BACK)
+            left_style = ButtonDefault
+            right = res.load(ui.ICON_CLICK)
+            right_style = ButtonDefault
+
+        self.left = Button(ui.grid(8, n_x=2), left, left_style)
+        self.left.on_click = self.on_left
+
+        self.right = Button(ui.grid(9, n_x=2), right, right_style)
+        self.right.on_click = self.on_right
+
+    def dispatch(self, event, x, y):
+        self.content.dispatch(event, x, y)
+        self.left.dispatch(event, x, y)
+        self.right.dispatch(event, x, y)
+
+    def on_left(self):
+        if self.index == 0:
+            self.paginated.on_cancel()
+        else:
+            self.paginated.on_down()
+
+    def on_right(self):
+        if self.index == self.count - 1:
+            self.paginated.on_confirm()
+        else:
+            self.paginated.on_up()
+
+
+class PaginatedWithButtons(ui.Layout):
+    def __init__(self, pages, page=0, one_by_one=False):
+        self.pages = [
+            PageWithButtons(p, self, i, len(pages)) for i, p in enumerate(pages)
+        ]
+        self.page = page
+        self.one_by_one = one_by_one
+
+    def dispatch(self, event, x, y):
+        pages = self.pages
+        page = self.page
+        pages[page].dispatch(event, x, y)
+        if event is ui.RENDER:
+            render_scrollbar(len(pages), page)
+
+    def on_up(self):
+        self.page = max(self.page - 1, 0)
+        self.pages[self.page].dispatch(ui.REPAINT, 0, 0)
+        self.on_change()
+
+    def on_down(self):
+        self.page = min(self.page + 1, len(self.pages) - 1)
+        self.pages[self.page].dispatch(ui.REPAINT, 0, 0)
+        self.on_change()
+
+    def on_confirm(self):
+        raise ui.Result(CONFIRMED)
+
+    def on_cancel(self):
+        raise ui.Result(CANCELLED)
+
+    def on_change(self):
+        if self.one_by_one:
+            raise ui.Result(self.page)

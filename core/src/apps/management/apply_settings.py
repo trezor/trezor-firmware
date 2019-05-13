@@ -51,14 +51,14 @@ async def apply_settings(ctx, msg):
 async def require_confirm_change_homescreen(ctx):
     text = Text("Change homescreen", ui.ICON_CONFIG)
     text.normal("Do you really want to", "change homescreen?")
-    await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)
+    await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
 
 
 async def require_confirm_change_label(ctx, label):
     text = Text("Change label", ui.ICON_CONFIG)
     text.normal("Do you really want to", "change label to")
     text.bold("%s?" % label)
-    await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)
+    await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
 
 
 async def require_confirm_change_passphrase(ctx, use):
@@ -66,7 +66,7 @@ async def require_confirm_change_passphrase(ctx, use):
     text.normal("Do you really want to")
     text.normal("enable passphrase" if use else "disable passphrase")
     text.normal("encryption?")
-    await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)
+    await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
 
 
 async def require_confirm_change_passphrase_source(ctx, source):
@@ -79,7 +79,7 @@ async def require_confirm_change_passphrase_source(ctx, source):
     text = Text("Passphrase source", ui.ICON_CONFIG)
     text.normal("Do you really want to", "change the passphrase", "source to")
     text.bold("ALWAYS %s?" % desc)
-    await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)
+    await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
 
 
 async def require_confirm_change_display_rotation(ctx, rotation):
@@ -95,4 +95,4 @@ async def require_confirm_change_display_rotation(ctx, rotation):
     text.normal("Do you really want to", "change display rotation")
     text.normal("to")
     text.bold("%s?" % label)
-    await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)
+    await require_confirm(ctx, text, ButtonRequestType.ProtectCall)

@@ -2,11 +2,9 @@ from trezor import loop
 
 workflows = []
 layouts = []
+layout_signal = loop.signal()
 default = None
 default_layout = None
-
-# HACK: workaround way to stop the WebAuthn layout from the outside
-webauthn_stop_signal = loop.signal()
 
 
 def onstart(w):
@@ -54,7 +52,6 @@ def restartdefault():
 def onlayoutstart(l):
     closedefault()
     layouts.append(l)
-    webauthn_stop_signal.send(None)
 
 
 def onlayoutclose(l):

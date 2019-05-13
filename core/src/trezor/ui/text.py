@@ -33,13 +33,13 @@ def render_text(words: list, new_lines: bool, max_lines: int) -> None:
         has_next_word = word_index < len(words) - 1
 
         if isinstance(word, int):
-            if word in [BR, BR_HALF]:
+            if word is BR or word is BR_HALF:
                 # line break or half-line break
                 if offset_y >= OFFSET_Y_MAX:
                     ui.display.text(offset_x, offset_y, "...", ui.BOLD, ui.GREY, bg)
                     return
                 offset_x = TEXT_MARGIN_LEFT
-                offset_y += TEXT_LINE_HEIGHT if word == BR else TEXT_LINE_HEIGHT_HALF
+                offset_y += TEXT_LINE_HEIGHT if word is BR else TEXT_LINE_HEIGHT_HALF
             elif word in FONTS:
                 # change of font style
                 font = word
@@ -108,7 +108,7 @@ def render_text(words: list, new_lines: bool, max_lines: int) -> None:
             offset_x += SPACE
 
 
-class Text(ui.Widget):
+class Text(ui.Control):
     def __init__(
         self,
         header_text: str,
@@ -123,6 +123,7 @@ class Text(ui.Widget):
         self.max_lines = max_lines
         self.new_lines = new_lines
         self.content = []
+        self.repaint = True
 
     def normal(self, *content):
         self.content.append(ui.NORMAL)
@@ -146,8 +147,8 @@ class Text(ui.Widget):
     def br_half(self):
         self.content.append(BR_HALF)
 
-    def render(self):
-        if self.tainted:
+    def on_render(self):
+        if self.repaint:
             ui.header(
                 self.header_text,
                 self.header_icon,
@@ -156,4 +157,4 @@ class Text(ui.Widget):
                 self.icon_color,
             )
             render_text(self.content, self.new_lines, self.max_lines)
-            self.tainted = False
+            self.repaint = False
