@@ -16,8 +16,8 @@
 
 import logging
 import sys
-from types import SimpleNamespace
 import warnings
+from types import SimpleNamespace
 
 from mnemonic import Mnemonic
 

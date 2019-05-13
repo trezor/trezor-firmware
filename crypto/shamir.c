@@ -36,9 +36,9 @@
  * lookup operations, as all proper crypto code must be.
  */
 
+#include "shamir.h"
 #include <string.h>
 #include "memzero.h"
-#include "shamir.h"
 
 static void bitslice(uint32_t r[8], const uint8_t *x, size_t len) {
   size_t bit_idx, arr_idx;

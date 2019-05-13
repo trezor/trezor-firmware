@@ -23,35 +23,35 @@
 
 #include "common.h"
 
-void __shutdown(void)
-{
-    printf("SHUTDOWN\n");
-    exit(3);
+void __shutdown(void) {
+  printf("SHUTDOWN\n");
+  exit(3);
 }
 
-void __fatal_error(const char *expr, const char *msg, const char *file, int line, const char *func)
-{
-    printf("\nFATAL ERROR:\n");
-    if (expr) {
-        printf("expr: %s\n", expr);
-    }
-    if (msg) {
-        printf("msg : %s\n", msg);
-    }
-    if (file) {
-        printf("file: %s:%d\n", file, line);
-    }
-    if (func) {
-        printf("func: %s\n", func);
-    }
-    __shutdown();
+void __fatal_error(const char *expr, const char *msg, const char *file,
+                   int line, const char *func) {
+  printf("\nFATAL ERROR:\n");
+  if (expr) {
+    printf("expr: %s\n", expr);
+  }
+  if (msg) {
+    printf("msg : %s\n", msg);
+  }
+  if (file) {
+    printf("file: %s:%d\n", file, line);
+  }
+  if (func) {
+    printf("func: %s\n", func);
+  }
+  __shutdown();
 }
 
-void error_shutdown(const char *line1, const char *line2, const char *line3, const char *line4) {
-    // For testing do not treat pin_fails_check_max as a fatal error.
-    (void) line1;
-    (void) line2;
-    (void) line3;
-    (void) line4;
-    return;
+void error_shutdown(const char *line1, const char *line2, const char *line3,
+                    const char *line4) {
+  // For testing do not treat pin_fails_check_max as a fatal error.
+  (void)line1;
+  (void)line2;
+  (void)line3;
+  (void)line4;
+  return;
 }

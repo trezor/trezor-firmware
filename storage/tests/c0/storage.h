@@ -20,8 +20,8 @@
 #ifndef __STORAGE_H__
 #define __STORAGE_H__
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 #include "secbool.h"
 
 typedef void (*PIN_UI_WAIT_CALLBACK)(uint32_t wait, uint32_t progress);
