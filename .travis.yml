@@ -1,6 +1,7 @@
 # simple Travis file to run style-checks until our internal CI can process external PRs
 
 language: python
+dist: xenial
 sudo: false
 python:
     - "3.6"
@@ -14,6 +15,7 @@ addons:
     apt:
         packages:
             clang-format
+            graphviz
 
 
 install:
