@@ -32,7 +32,9 @@ def get_features():
 
 async def handle_Initialize(ctx, msg):
     if msg.state is None or msg.state != cache.get_state(prev_state=bytes(msg.state)):
-        cache.clear(msg.skip_passphrase)
+        cache.clear()
+        if msg.skip_passphrase:
+            cache.set_passphrase("")
     return get_features()
 
 
@@ -45,7 +47,7 @@ async def handle_Cancel(ctx, msg):
 
 
 async def handle_ClearSession(ctx, msg):
-    cache.clear()
+    cache.clear(keep_passphrase=True)
     return Success(message="Session cleared")
 
 

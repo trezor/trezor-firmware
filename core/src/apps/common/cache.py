@@ -56,9 +56,7 @@ def set_passphrase(passphrase):
     _cached_passphrase_fprint = _compute_state(b"FPRINT", passphrase or "")[:4]
 
 
-def clear(skip_passphrase: bool = False):
+def clear(keep_passphrase: bool = False):
     set_seed(None)
-    if skip_passphrase:
-        set_passphrase("")
-    else:
+    if not keep_passphrase:
         set_passphrase(None)
