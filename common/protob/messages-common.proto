@@ -1,6 +1,10 @@
 syntax = "proto2";
 package hw.trezor.messages.common;
 
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageCommon";
+
 /**
  * Response: Success of the previous request
  * @end
