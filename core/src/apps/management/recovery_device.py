@@ -19,6 +19,9 @@ from apps.common import mnemonic, storage
 from apps.common.confirm import require_confirm
 from apps.management.change_pin import request_pin_ack, request_pin_confirm
 
+if __debug__:
+    from apps.debug import input_signal
+
 
 async def recovery_device(ctx, msg):
     """
@@ -65,7 +68,7 @@ async def recovery_device(ctx, msg):
 
     # ask for pin repeatedly
     if msg.pin_protection:
-        newpin = await request_pin_confirm(ctx, cancellable=False)
+        newpin = await request_pin_confirm(ctx, allow_cancel=False)
     else:
         newpin = ""
 
@@ -100,26 +103,31 @@ async def recovery_device(ctx, msg):
     return Success(message="Device recovered")
 
 
-@ui.layout
 async def request_wordcount(ctx, title: str) -> int:
     await ctx.call(ButtonRequest(code=MnemonicWordCount), ButtonAck)
 
     text = Text(title, ui.ICON_RECOVERY)
     text.normal("Number of words?")
-    count = await ctx.wait(WordSelector(text))
+
+    if __debug__:
+        count = await ctx.wait(WordSelector(text), input_signal)
+        count = int(count)  # if input_signal was triggered, count is a string
+    else:
+        count = await ctx.wait(WordSelector(text))
 
     return count
 
 
-@ui.layout
 async def request_mnemonic(ctx, count: int) -> str:
     await ctx.call(ButtonRequest(code=MnemonicInput), ButtonAck)
 
     words = []
-    board = MnemonicKeyboard()
     for i in range(count):
-        board.prompt = "Type the %s word:" % format_ordinal(i + 1)
-        word = await ctx.wait(board)
+        keyboard = MnemonicKeyboard("Type the %s word:" % format_ordinal(i + 1))
+        if __debug__:
+            word = await ctx.wait(keyboard, input_signal)
+        else:
+            word = await ctx.wait(keyboard)
         words.append(word)
 
     return " ".join(words)

@@ -21,7 +21,7 @@ from apps.stellar.layout import format_amount, require_confirm, split, trim_to_r
 
 
 async def confirm_source_account(ctx, source_account: bytes):
-    text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
     text.bold("Source account:")
     text.mono(*split(source_account))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
@@ -32,7 +32,7 @@ async def confirm_allow_trust_op(ctx, op: StellarAllowTrustOp):
         t = "Allow Trust"
     else:
         t = "Revoke Trust"
-    text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
     text.bold(t)
     text.normal("of %s by:" % op.asset_code)
     text.mono(*split(trim_to_rows(op.trusted_account, 3)))
@@ -41,7 +41,7 @@ async def confirm_allow_trust_op(ctx, op: StellarAllowTrustOp):
 
 
 async def confirm_account_merge_op(ctx, op: StellarAccountMergeOp):
-    text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
     text.bold("Account Merge")
     text.normal("All XLM will be sent to:")
     text.mono(*split(trim_to_rows(op.destination_account, 3)))
@@ -49,7 +49,7 @@ async def confirm_account_merge_op(ctx, op: StellarAccountMergeOp):
 
 
 async def confirm_bump_sequence_op(ctx, op: StellarBumpSequenceOp):
-    text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
     text.bold("Bump Sequence")
     text.normal("Set sequence to")
     text.mono(str(op.bump_to))
@@ -61,7 +61,7 @@ async def confirm_change_trust_op(ctx, op: StellarChangeTrustOp):
         t = "Delete Trust"
     else:
         t = "Add Trust"
-    text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
     text.bold(t)
     text.normal("Asset: %s" % op.asset.code)
     text.normal("Amount: %s" % format_amount(op.limit, ticker=False))
@@ -70,7 +70,7 @@ async def confirm_change_trust_op(ctx, op: StellarChangeTrustOp):
 
 
 async def confirm_create_account_op(ctx, op: StellarCreateAccountOp):
-    text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
     text.bold("Create Account")
     text.normal("with %s" % format_amount(op.starting_balance))
     text.mono(*split(trim_to_rows(op.new_account, 3)))
@@ -98,7 +98,7 @@ async def confirm_manage_offer_op(ctx, op: StellarManageOfferOp):
 
 
 async def _confirm_offer(ctx, title, op):
-    text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
     text.bold(title)
     text.normal(
         "Sell %s %s" % (format_amount(op.amount, ticker=False), op.selling_asset.code)
@@ -117,28 +117,28 @@ async def confirm_manage_data_op(ctx, op: StellarManageDataOp):
         title = "Set"
     else:
         title = "Clear"
-    text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
     text.bold("%s data value key" % title)
     text.mono(*split(op.key))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
     if op.value:
         digest = sha256(op.value).digest()
         digest_str = hexlify(digest).decode()
-        text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+        text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
         text.bold("Value (SHA-256):")
         text.mono(*split(digest_str))
         await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
 async def confirm_path_payment_op(ctx, op: StellarPathPaymentOp):
-    text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
     text.bold("Path Pay %s" % format_amount(op.destination_amount, ticker=False))
     text.bold("%s to:" % format_asset_code(op.destination_asset))
     text.mono(*split(trim_to_rows(op.destination_account, 3)))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
     await confirm_asset_issuer(ctx, op.destination_asset)
     # confirm what the sender is using to pay
-    text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
     text.normal("Pay using")
     text.bold(format_amount(op.send_max, ticker=False))
     text.bold(format_asset_code(op.send_asset))
@@ -149,7 +149,7 @@ async def confirm_path_payment_op(ctx, op: StellarPathPaymentOp):
 
 
 async def confirm_payment_op(ctx, op: StellarPaymentOp):
-    text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
     text.bold("Pay %s" % format_amount(op.amount, ticker=False))
     text.bold("%s to:" % format_asset_code(op.asset))
     text.mono(*split(trim_to_rows(op.destination_account, 3)))
@@ -159,30 +159,30 @@ async def confirm_payment_op(ctx, op: StellarPaymentOp):
 
 async def confirm_set_options_op(ctx, op: StellarSetOptionsOp):
     if op.inflation_destination_account:
-        text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+        text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
         text.bold("Set Inflation Destination")
         text.mono(*split(op.inflation_destination_account))
         await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
     if op.clear_flags:
         t = _format_flags(op.clear_flags)
-        text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+        text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
         text.bold("Clear Flags")
         text.mono(*t)
         await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
     if op.set_flags:
         t = _format_flags(op.set_flags)
-        text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+        text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
         text.bold("Set Flags")
         text.mono(*t)
         await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
     thresholds = _format_thresholds(op)
     if thresholds:
-        text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+        text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
         text.bold("Account Thresholds")
         text.mono(*thresholds)
         await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
     if op.home_domain:
-        text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+        text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
         text.bold("Home Domain")
         text.mono(*split(op.home_domain))
         await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
@@ -192,7 +192,7 @@ async def confirm_set_options_op(ctx, op: StellarSetOptionsOp):
         else:
             t = "Remove Signer (%s)"
         if op.signer_type == consts.SIGN_TYPE_ACCOUNT:
-            text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+            text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
             text.bold(t % "acc")
             text.mono(*split(helpers.address_from_public_key(op.signer_key)))
             await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
@@ -201,7 +201,7 @@ async def confirm_set_options_op(ctx, op: StellarSetOptionsOp):
                 signer_type = "auth"
             else:
                 signer_type = "hash"
-            text = Text("Confirm operation", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+            text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
             text.bold(t % signer_type)
             text.mono(*split(hexlify(op.signer_key).decode()))
             await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
@@ -244,7 +244,7 @@ def format_asset_code(asset: StellarAssetType) -> str:
 async def confirm_asset_issuer(ctx, asset: StellarAssetType):
     if asset is None or asset.type == consts.ASSET_TYPE_NATIVE:
         return
-    text = Text("Confirm issuer", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Confirm issuer", ui.ICON_CONFIRM, ui.GREEN)
     text.bold("%s issuer:" % asset.code)
     text.mono(*split(asset.issuer))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)

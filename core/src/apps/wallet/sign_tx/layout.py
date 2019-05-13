@@ -29,19 +29,19 @@ async def confirm_output(ctx, output, coin):
         data = output.op_return_data
         if omni.is_valid(data):
             # OMNI transaction
-            text = Text("OMNI transaction", ui.ICON_SEND, icon_color=ui.GREEN)
+            text = Text("OMNI transaction", ui.ICON_SEND, ui.GREEN)
             text.normal(omni.parse(data))
         else:
             # generic OP_RETURN
             data = hexlify(data).decode()
             if len(data) >= 18 * 5:
                 data = data[: (18 * 5 - 3)] + "..."
-            text = Text("OP_RETURN", ui.ICON_SEND, icon_color=ui.GREEN)
+            text = Text("OP_RETURN", ui.ICON_SEND, ui.GREEN)
             text.mono(*split_op_return(data))
     else:
         address = output.address
         address_short = addresses.address_short(coin, address)
-        text = Text("Confirm sending", ui.ICON_SEND, icon_color=ui.GREEN)
+        text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN)
         text.normal(format_coin_amount(output.amount, coin) + " to")
         text.mono(*split_address(address_short))
     return await confirm(ctx, text, ButtonRequestType.ConfirmOutput)

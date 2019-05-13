@@ -15,14 +15,12 @@ async def validate_path(ctx, validate_func, keychain, path, curve, **kwargs):
 
 
 async def show_path_warning(ctx, path: list):
-    text = Text("Confirm path", ui.ICON_WRONG, icon_color=ui.RED)
+    text = Text("Confirm path", ui.ICON_WRONG, ui.RED)
     text.normal("Path")
     text.mono(*break_address_n_to_lines(path))
     text.normal("is unknown.")
     text.normal("Are you sure?")
-    return await require_confirm(
-        ctx, text, code=ButtonRequestType.UnknownDerivationPath
-    )
+    return await require_confirm(ctx, text, ButtonRequestType.UnknownDerivationPath)
 
 
 def validate_path_for_get_public_key(path: list, slip44_id: int) -> bool:
@@ -50,7 +48,8 @@ def validate_path_for_get_public_key(path: list, slip44_id: int) -> bool:
 def is_hardened(i: int) -> bool:
     if i & HARDENED:
         return True
-    return False
+    else:
+        return False
 
 
 def break_address_n_to_lines(address_n: list) -> list:

@@ -1,7 +1,7 @@
 from micropython import const
 from ubinascii import hexlify
 
-from trezor import ui, wire
+from trezor import ui
 from trezor.messages import (
     ButtonRequestType,
     EosActionBuyRam,
@@ -17,11 +17,8 @@ from trezor.messages import (
     EosActionUnlinkAuth,
     EosActionUpdateAuth,
     EosActionVoteProducer,
-    MessageType,
 )
-from trezor.messages.ButtonRequest import ButtonRequest
-from trezor.ui.confirm import CONFIRMED, ConfirmDialog
-from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
+from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 from trezor.utils import chunks
 
@@ -38,11 +35,19 @@ _FOUR_FIELDS_PER_PAGE = const(4)
 _FIVE_FIELDS_PER_PAGE = const(5)
 
 
-async def confirm_action_buyram(ctx, msg: EosActionBuyRam):
-    await ctx.call(
-        ButtonRequest(code=ButtonRequestType.ConfirmOutput), MessageType.ButtonAck
-    )
+async def _require_confirm_paginated(ctx, header, fields, per_page):
+    pages = []
+    for page in chunks(fields, per_page):
+        if header == "Arbitrary data":
+            text = Text(header, ui.ICON_WIPE, ui.RED)
+        else:
+            text = Text(header, ui.ICON_CONFIRM, ui.GREEN)
+        text.mono(*page)
+        pages.append(text)
+    await require_confirm(ctx, Paginated(pages), ButtonRequestType.ConfirmOutput)
 
+
+async def confirm_action_buyram(ctx, msg: EosActionBuyRam):
     text = "Buy RAM"
     fields = []
     fields.append("Payer:")
@@ -51,18 +56,10 @@ async def confirm_action_buyram(ctx, msg: EosActionBuyRam):
     fields.append(helpers.eos_name_to_string(msg.receiver))
     fields.append("Amount:")
     fields.append(helpers.eos_asset_to_string(msg.quantity))
-
-    pages = list(chunks(fields, _FOUR_FIELDS_PER_PAGE))
-
-    paginator = paginate(show_lines_page, len(pages), _FIRST_PAGE, pages, text)
-    await ctx.wait(paginator)
+    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
 async def confirm_action_buyrambytes(ctx, msg: EosActionBuyRamBytes):
-    await ctx.call(
-        ButtonRequest(code=ButtonRequestType.ConfirmOutput), MessageType.ButtonAck
-    )
-
     text = "Buy RAM"
     fields = []
     fields.append("Payer:")
@@ -71,18 +68,10 @@ async def confirm_action_buyrambytes(ctx, msg: EosActionBuyRamBytes):
     fields.append(helpers.eos_name_to_string(msg.receiver))
     fields.append("Bytes:")
     fields.append(str(msg.bytes))
-
-    pages = list(chunks(fields, _FOUR_FIELDS_PER_PAGE))
-    paginator = paginate(show_lines_page, len(pages), _FIRST_PAGE, pages, text)
-
-    await ctx.wait(paginator)
+    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
 async def confirm_action_delegate(ctx, msg: EosActionDelegate):
-    await ctx.call(
-        ButtonRequest(code=ButtonRequestType.ConfirmOutput), MessageType.ButtonAck
-    )
-
     text = "Delegate"
     fields = []
     fields.append("Sender:")
@@ -101,35 +90,20 @@ async def confirm_action_delegate(ctx, msg: EosActionDelegate):
     else:
         fields.append("Transfer: No")
 
-    pages = list(chunks(fields, _FOUR_FIELDS_PER_PAGE))
-    paginator = paginate(show_lines_page, len(pages), _FIRST_PAGE, pages, text)
-
-    await ctx.wait(paginator)
+    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
 async def confirm_action_sellram(ctx, msg: EosActionSellRam):
-    await ctx.call(
-        ButtonRequest(code=ButtonRequestType.ConfirmOutput), MessageType.ButtonAck
-    )
-
     text = "Sell RAM"
     fields = []
     fields.append("Receiver:")
     fields.append(helpers.eos_name_to_string(msg.account))
     fields.append("Bytes:")
     fields.append(str(msg.bytes))
-
-    pages = list(chunks(fields, _TWO_FIELDS_PER_PAGE))
-    paginator = paginate(show_lines_page, len(pages), _FIRST_PAGE, pages, text)
-
-    await ctx.wait(paginator)
+    await _require_confirm_paginated(ctx, text, fields, _TWO_FIELDS_PER_PAGE)
 
 
 async def confirm_action_undelegate(ctx, msg: EosActionUndelegate):
-    await ctx.call(
-        ButtonRequest(code=ButtonRequestType.ConfirmOutput), MessageType.ButtonAck
-    )
-
     text = "Undelegate"
     fields = []
     fields.append("Sender:")
@@ -140,11 +114,7 @@ async def confirm_action_undelegate(ctx, msg: EosActionUndelegate):
     fields.append(helpers.eos_asset_to_string(msg.cpu_quantity))
     fields.append("NET:")
     fields.append(helpers.eos_asset_to_string(msg.net_quantity))
-
-    pages = list(chunks(fields, _FOUR_FIELDS_PER_PAGE))
-    paginator = paginate(show_lines_page, len(pages), _FIRST_PAGE, pages, text)
-
-    await ctx.wait(paginator)
+    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
 async def confirm_action_refund(ctx, msg: EosActionRefund):
@@ -166,13 +136,12 @@ async def confirm_action_voteproducer(ctx, msg: EosActionVoteProducer):
 
     elif msg.producers:
         # PRODUCERS
-        await ctx.call(
-            ButtonRequest(code=ButtonRequestType.ConfirmOutput), MessageType.ButtonAck
-        )
-        producers = list(enumerate(msg.producers))
-        pages = list(chunks(producers, _FIVE_FIELDS_PER_PAGE))
-        paginator = paginate(show_voter_page, len(pages), _FIRST_PAGE, pages)
-        await ctx.wait(paginator)
+        text = "Vote for producers"
+        fields = [
+            "{:2d}. {}".format(wi + 1, helpers.eos_name_to_string(producer))
+            for wi, producer in enumerate(msg.producers)
+        ]
+        await _require_confirm_paginated(ctx, text, fields, _FIVE_FIELDS_PER_PAGE)
 
     else:
         # Cancel vote
@@ -183,10 +152,6 @@ async def confirm_action_voteproducer(ctx, msg: EosActionVoteProducer):
 
 
 async def confirm_action_transfer(ctx, msg: EosActionTransfer, account: str):
-    await ctx.call(
-        ButtonRequest(code=ButtonRequestType.ConfirmOutput), MessageType.ButtonAck
-    )
-
     text = "Transfer"
     fields = []
     fields.append("From:")
@@ -200,19 +165,12 @@ async def confirm_action_transfer(ctx, msg: EosActionTransfer, account: str):
 
     if msg.memo is not None:
         fields.append("Memo:")
-        fields += split_data(msg.memo[:512])
+        fields.extend(split_data(msg.memo[:512]))
 
-    pages = list(chunks(fields, _FOUR_FIELDS_PER_PAGE))
-
-    paginator = paginate(show_lines_page, len(pages), _FIRST_PAGE, pages, text)
-    await ctx.wait(paginator)
+    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
 async def confirm_action_updateauth(ctx, msg: EosActionUpdateAuth):
-    await ctx.call(
-        ButtonRequest(code=ButtonRequestType.ConfirmOutput), MessageType.ButtonAck
-    )
-
     text = "Update Auth"
     fields = []
     fields.append("Account:")
@@ -221,12 +179,8 @@ async def confirm_action_updateauth(ctx, msg: EosActionUpdateAuth):
     fields.append(helpers.eos_name_to_string(msg.permission))
     fields.append("Parent:")
     fields.append(helpers.eos_name_to_string(msg.parent))
-    fields += authorization_fields(msg.auth)
-
-    pages = list(chunks(fields, _FOUR_FIELDS_PER_PAGE))
-
-    paginator = paginate(show_lines_page, len(pages), _FIRST_PAGE, pages, text)
-    await ctx.wait(paginator)
+    fields.extend(authorization_fields(msg.auth))
+    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
 async def confirm_action_deleteauth(ctx, msg: EosActionDeleteAuth):
@@ -239,10 +193,6 @@ async def confirm_action_deleteauth(ctx, msg: EosActionDeleteAuth):
 
 
 async def confirm_action_linkauth(ctx, msg: EosActionLinkAuth):
-    await ctx.call(
-        ButtonRequest(code=ButtonRequestType.ConfirmOutput), MessageType.ButtonAck
-    )
-
     text = "Link Auth"
     fields = []
     fields.append("Account:")
@@ -253,18 +203,10 @@ async def confirm_action_linkauth(ctx, msg: EosActionLinkAuth):
     fields.append(helpers.eos_name_to_string(msg.type))
     fields.append("Requirement:")
     fields.append(helpers.eos_name_to_string(msg.requirement))
-
-    pages = list(chunks(fields, _FOUR_FIELDS_PER_PAGE))
-    paginator = paginate(show_lines_page, len(pages), _FIRST_PAGE, pages, text)
-
-    await ctx.wait(paginator)
+    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
 async def confirm_action_unlinkauth(ctx, msg: EosActionUnlinkAuth):
-    await ctx.call(
-        ButtonRequest(code=ButtonRequestType.ConfirmOutput), MessageType.ButtonAck
-    )
-
     text = "Unlink Auth"
     fields = []
     fields.append("Account:")
@@ -273,86 +215,31 @@ async def confirm_action_unlinkauth(ctx, msg: EosActionUnlinkAuth):
     fields.append(helpers.eos_name_to_string(msg.code))
     fields.append("Type:")
     fields.append(helpers.eos_name_to_string(msg.type))
-
-    pages = list(chunks(fields, _FOUR_FIELDS_PER_PAGE))
-    paginator = paginate(show_lines_page, len(pages), _FIRST_PAGE, pages, text)
-
-    await ctx.wait(paginator)
+    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
 async def confirm_action_newaccount(ctx, msg: EosActionNewAccount):
-    await ctx.call(
-        ButtonRequest(code=ButtonRequestType.ConfirmOutput), MessageType.ButtonAck
-    )
-
     text = "New Account"
     fields = []
     fields.append("Creator:")
     fields.append(helpers.eos_name_to_string(msg.creator))
     fields.append("Name:")
     fields.append(helpers.eos_name_to_string(msg.name))
-    fields += authorization_fields(msg.owner)
-    fields += authorization_fields(msg.active)
-
-    pages = list(chunks(fields, _FOUR_FIELDS_PER_PAGE))
-    paginator = paginate(show_lines_page, len(pages), _FIRST_PAGE, pages, text)
-
-    await ctx.wait(paginator)
+    fields.extend(authorization_fields(msg.owner))
+    fields.extend(authorization_fields(msg.active))
+    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
 async def confirm_action_unknown(ctx, action, checksum):
-    await ctx.call(
-        ButtonRequest(code=ButtonRequestType.ConfirmOutput), MessageType.ButtonAck
-    )
     text = "Arbitrary data"
     fields = []
     fields.append("Contract:")
     fields.append(helpers.eos_name_to_string(action.account))
     fields.append("Action Name:")
     fields.append(helpers.eos_name_to_string(action.name))
-
     fields.append("Checksum: ")
-    fields += split_data(hexlify(checksum).decode("ascii"))
-
-    pages = list(chunks(fields, _FIVE_FIELDS_PER_PAGE))
-    paginator = paginate(show_lines_page, len(pages), _FIRST_PAGE, pages, text)
-
-    await ctx.wait(paginator)
-
-
-@ui.layout
-async def show_lines_page(page: int, page_count: int, pages: list, header: str):
-    if header == "Arbitrary data":
-        text = Text(header, ui.ICON_WIPE, icon_color=ui.RED)
-    else:
-        text = Text(header, ui.ICON_CONFIRM, icon_color=ui.GREEN)
-    text.mono(*pages[page])
-
-    content = Scrollpage(text, page, page_count)
-    if page + 1 == page_count:
-        if await ConfirmDialog(content) != CONFIRMED:
-            raise wire.ActionCancelled("Action cancelled")
-    else:
-        content.render()
-        await animate_swipe()
-
-
-@ui.layout
-async def show_voter_page(page: int, page_count: int, pages: list):
-    lines = [
-        "{:2d}. {}".format(wi + 1, helpers.eos_name_to_string(producer))
-        for wi, producer in pages[page]
-    ]
-    text = Text("Vote for producers", ui.ICON_CONFIRM, icon_color=ui.GREEN)
-    text.mono(*lines)
-    content = Scrollpage(text, page, page_count)
-
-    if page + 1 == page_count:
-        if await ConfirmDialog(content) != CONFIRMED:
-            raise wire.ActionCancelled("Action cancelled")
-    else:
-        content.render()
-        await animate_swipe()
+    fields.extend(split_data(hexlify(checksum).decode("ascii")))
+    await _require_confirm_paginated(ctx, text, fields, _FIVE_FIELDS_PER_PAGE)
 
 
 def authorization_fields(auth):

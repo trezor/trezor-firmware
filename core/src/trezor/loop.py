@@ -18,6 +18,7 @@ after_step_hook = None  # function, called after each task step
 _QUEUE_SIZE = const(64)  # maximum number of scheduled tasks
 _queue = utimeq.utimeq(_QUEUE_SIZE)
 _paused = {}
+_finalizers = {}
 
 if __debug__:
     # for performance stats
@@ -28,13 +29,15 @@ if __debug__:
     log_delay_rb = array.array("i", [0] * log_delay_rb_len)
 
 
-def schedule(task, value=None, deadline=None):
+def schedule(task, value=None, deadline=None, finalizer=None):
     """
     Schedule task to be executed with `value` on given `deadline` (in
     microseconds).  Does not start the event loop itself, see `run`.
     """
     if deadline is None:
         deadline = utime.ticks_us()
+    if finalizer is not None:
+        _finalizers[id(task)] = finalizer
     _queue.push(deadline, task, value)
 
 
@@ -45,11 +48,18 @@ def pause(task, iface):
     tasks.add(task)
 
 
+def finalize(task, value):
+    fn = _finalizers.pop(id(task), None)
+    if fn is not None:
+        fn(task, value)
+
+
 def close(task):
     for iface in _paused:
         _paused[iface].discard(task)
     _queue.discard(task)
     task.close()
+    finalize(task, GeneratorExit())
 
 
 def run():
@@ -93,16 +103,18 @@ def run():
 
 def _step(task, value):
     try:
-        if isinstance(value, Exception):
+        if isinstance(value, BaseException):
             result = task.throw(value)
         else:
             result = task.send(value)
-    except StopIteration:  # as e:
+    except StopIteration as e:  # as e:
         if __debug__:
             log.debug(__name__, "finish: %s", task)
+        finalize(task, e.value)
     except Exception as e:
         if __debug__:
             log.exception(__name__, e)
+        finalize(task, e)
     else:
         if isinstance(result, Syscall):
             result.handle(task)
@@ -213,6 +225,9 @@ class signal(Syscall):
             raise
 
 
+_type_gen = type((lambda: (yield))())
+
+
 class spawn(Syscall):
     """
     Execute one or more children tasks and wait until one of them exits.
@@ -241,39 +256,41 @@ class spawn(Syscall):
     def __init__(self, *children, exit_others=True):
         self.children = children
         self.exit_others = exit_others
-        self.scheduled = None  # list of scheduled wrapper tasks
-        self.finished = None  # list of children that finished
+        self.scheduled = []  # list of scheduled tasks
+        self.finished = []  # list of children that finished
         self.callback = None
 
     def handle(self, task):
+        finalizer = self._finish
+        scheduled = self.scheduled
+        finished = self.finished
+
         self.callback = task
-        self.finished = []
-        self.scheduled = []
-        for index, child in enumerate(self.children):
-            parent = self._wait(child, index)
-            schedule(parent)
-            self.scheduled.append(parent)
+        scheduled.clear()
+        finished.clear()
 
-    def exit(self, skip_index=-1):
-        for index, parent in enumerate(self.scheduled):
-            if index != skip_index:
-                close(parent)
+        for child in self.children:
+            if isinstance(child, _type_gen):
+                child_task = child
+            else:
+                child_task = iter(child)
+            schedule(child_task, None, None, finalizer)
+            scheduled.append(child_task)
 
-    async def _wait(self, child, index):
-        try:
-            result = await child
-        except Exception as e:
-            self._finish(child, index, e)
-            if __debug__:
-                log.exception(__name__, e)
-        else:
-            self._finish(child, index, result)
+    def exit(self, except_for=None):
+        for task in self.scheduled:
+            if task != except_for:
+                close(task)
 
-    def _finish(self, child, index, result):
+    def _finish(self, task, result):
         if not self.finished:
+            for index, child_task in enumerate(self.scheduled):
+                if child_task is task:
+                    child = self.children[index]
+                    break
             self.finished.append(child)
             if self.exit_others:
-                self.exit(index)
+                self.exit(task)
             schedule(self.callback, result)
 
     def __iter__(self):
@@ -284,66 +301,3 @@ class spawn(Syscall):
             # close() or throw(), kill the children tasks and re-raise
             self.exit()
             raise
-
-
-class put(Syscall):
-    def __init__(self, ch, value=None):
-        self.ch = ch
-        self.value = value
-
-    def __call__(self, value):
-        self.value = value
-        return self
-
-    def handle(self, task):
-        self.ch.schedule_put(schedule, task, self.value)
-
-
-class take(Syscall):
-    def __init__(self, ch):
-        self.ch = ch
-
-    def __call__(self):
-        return self
-
-    def handle(self, task):
-        if self.ch.schedule_take(schedule, task) and self.ch.id is not None:
-            pause(self.ch, self.ch.id)
-
-
-class chan:
-    def __init__(self, id=None):
-        self.id = id
-        self.putters = []
-        self.takers = []
-        self.put = put(self)
-        self.take = take(self)
-
-    def schedule_publish(self, schedule, value):
-        if self.takers:
-            for taker in self.takers:
-                schedule(taker, value)
-            self.takers.clear()
-            return True
-        else:
-            return False
-
-    def schedule_put(self, schedule, putter, value):
-        if self.takers:
-            taker = self.takers.pop(0)
-            schedule(taker, value)
-            schedule(putter, value)
-            return True
-        else:
-            self.putters.append((putter, value))
-            return False
-
-    def schedule_take(self, schedule, taker):
-        if self.putters:
-            putter, value = self.putters.pop(0)
-            schedule(taker, value)
-            schedule(putter, value)
-            return True
-        else:
-            self.takers.append(taker)
-            return False

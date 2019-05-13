@@ -1,5 +1,3 @@
-from micropython import const
-
 from trezor import ui, wire
 from trezor.messages import (
     NEMMosaicCreation,
@@ -9,8 +7,8 @@ from trezor.messages import (
     NEMSupplyChangeType,
     NEMTransactionCommon,
 )
-from trezor.ui.confirm import CONFIRMED, ConfirmDialog
-from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
+from trezor.ui.confirm import CONFIRMED, Confirm
+from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 
 from ..layout import (
@@ -21,6 +19,9 @@ from ..layout import (
 )
 
 from apps.common.layout import split_address
+
+if __debug__:
+    from apps.debug import confirm_signal
 
 
 async def ask_mosaic_creation(
@@ -76,21 +77,16 @@ def _supply_message(supply_change):
 
 async def _require_confirm_properties(ctx, definition: NEMMosaicDefinition):
     # TODO: we should send a button request here
-    properties = _get_mosaic_properties(definition)
-    first_page = const(0)
-    paginator = paginate(_show_page, len(properties), first_page, properties)
-    await ctx.wait(paginator)
+    pages = _get_mosaic_properties(definition)
+    pages[-1] = Confirm(pages[-1])
+    paginated = Paginated(pages)
 
-
-@ui.layout
-async def _show_page(page: int, page_count: int, content):
-    content = Scrollpage(content[page], page, page_count)
-    if page + 1 == page_count:
-        if await ConfirmDialog(content) != CONFIRMED:
-            raise wire.ActionCancelled("Action cancelled")
+    if __debug__:
+        result = await ctx.wait(paginated, confirm_signal)
     else:
-        content.render()
-        await animate_swipe()
+        result = await ctx.wait(paginated)
+    if result is not CONFIRMED:
+        raise wire.ActionCancelled("Action cancelled")
 
 
 def _get_mosaic_properties(definition: NEMMosaicDefinition):

@@ -3,6 +3,7 @@ from ubinascii import hexlify
 
 from trezor import ui
 from trezor.messages import ButtonRequestType
+from trezor.ui.button import ButtonDefault
 from trezor.ui.container import Container
 from trezor.ui.qr import Qr
 from trezor.ui.text import Text
@@ -12,42 +13,45 @@ from apps.common import HARDENED
 from apps.common.confirm import confirm, require_confirm
 
 
-async def show_address(ctx, address: str, desc: str = None, network: str = None):
-    text = Text(
-        desc if desc else "Confirm address", ui.ICON_RECEIVE, icon_color=ui.GREEN
-    )
-    if network:
+async def show_address(
+    ctx, address: str, desc: str = "Confirm address", network: str = None
+):
+    text = Text(desc, ui.ICON_RECEIVE, ui.GREEN)
+    if network is not None:
         text.normal("%s network" % network)
     text.mono(*split_address(address))
+
     return await confirm(
-        ctx, text, code=ButtonRequestType.Address, cancel="QR", cancel_style=ui.BTN_KEY
+        ctx,
+        text,
+        code=ButtonRequestType.Address,
+        cancel="QR",
+        cancel_style=ButtonDefault,
     )
 
 
-async def show_qr(ctx, address: str, desc: str = None):
-    qr_x = const(120)
-    qr_y = const(115)
-    qr_coef = const(4)
-
-    qr = Qr(address, (qr_x, qr_y), qr_coef)
-    text = Text(
-        desc if desc else "Confirm address", ui.ICON_RECEIVE, icon_color=ui.GREEN
-    )
+async def show_qr(ctx, address: str, desc: str = "Confirm address"):
+    QR_X = const(120)
+    QR_Y = const(115)
+    QR_COEF = const(4)
+    qr = Qr(address, QR_X, QR_Y, QR_COEF)
+    text = Text(desc, ui.ICON_RECEIVE, ui.GREEN)
     content = Container(qr, text)
+
     return await confirm(
         ctx,
         content,
         code=ButtonRequestType.Address,
         cancel="Address",
-        cancel_style=ui.BTN_KEY,
+        cancel_style=ButtonDefault,
     )
 
 
 async def show_pubkey(ctx, pubkey: bytes):
     lines = chunks(hexlify(pubkey).decode(), 18)
-    text = Text("Confirm public key", ui.ICON_RECEIVE, icon_color=ui.GREEN)
+    text = Text("Confirm public key", ui.ICON_RECEIVE, ui.GREEN)
     text.mono(*lines)
-    return await require_confirm(ctx, text, code=ButtonRequestType.PublicKey)
+    return await require_confirm(ctx, text, ButtonRequestType.PublicKey)
 
 
 def split_address(address: str):

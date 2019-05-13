@@ -9,7 +9,7 @@ from apps.stellar import consts
 async def require_confirm_init(
     ctx, address: str, network_passphrase: str, accounts_match: bool
 ):
-    text = Text("Confirm Stellar", ui.ICON_SEND, icon_color=ui.GREEN)
+    text = Text("Confirm Stellar", ui.ICON_SEND, ui.GREEN)
     text.normal("Initialize signing with")
     if accounts_match:
         text.normal("your account")
@@ -19,14 +19,14 @@ async def require_confirm_init(
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
     network = get_network_warning(network_passphrase)
     if network:
-        text = Text("Confirm network", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+        text = Text("Confirm network", ui.ICON_CONFIRM, ui.GREEN)
         text.normal("Transaction is on")
         text.bold(network)
         await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
 async def require_confirm_memo(ctx, memo_type: int, memo_text: str):
-    text = Text("Confirm memo", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text = Text("Confirm memo", ui.ICON_CONFIRM, ui.GREEN)
     if memo_type == consts.MEMO_TYPE_TEXT:
         text.bold("Memo (TEXT)")
     elif memo_type == consts.MEMO_TYPE_ID:
@@ -47,7 +47,7 @@ async def require_confirm_final(ctx, fee: int, num_operations: int):
     op_str = str(num_operations) + " operation"
     if num_operations > 1:
         op_str += "s"
-    text = Text("Final confirm", ui.ICON_SEND, icon_color=ui.GREEN)
+    text = Text("Final confirm", ui.ICON_SEND, ui.GREEN)
     text.normal("Sign this transaction")
     text.normal("made up of " + op_str)
     text.bold("and pay " + format_amount(fee))
