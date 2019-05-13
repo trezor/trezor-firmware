@@ -4,6 +4,7 @@ from apps.common import storage
 
 _cached_seed = None
 _cached_passphrase = None
+_cached_passphrase_fprint = None
 
 
 def get_state(prev_state: bytes = None, passphrase: str = None) -> bytes:
@@ -36,6 +37,10 @@ def get_passphrase():
     return _cached_passphrase
 
 
+def get_passphrase_fprint():
+    return _cached_passphrase_fprint or ""
+
+
 def has_passphrase():
     return _cached_passphrase is not None
 
@@ -46,8 +51,9 @@ def set_seed(seed):
 
 
 def set_passphrase(passphrase):
-    global _cached_passphrase
+    global _cached_passphrase, _cached_passphrase_fprint
     _cached_passphrase = passphrase
+    _cached_passphrase_fprint = _compute_state(b"FPRINT", passphrase)[:4]
 
 
 def clear(skip_passphrase: bool = False):
@@ -56,7 +62,3 @@ def clear(skip_passphrase: bool = False):
         set_passphrase("")
     else:
         set_passphrase(None)
-
-
-def get_passphrase_fprint():
-    return _compute_state(b"", get_passphrase() or "")[:4]
