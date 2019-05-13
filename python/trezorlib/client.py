@@ -16,6 +16,7 @@
 
 import logging
 import sys
+from types import SimpleNamespace
 import warnings
 
 from mnemonic import Mnemonic
@@ -41,6 +42,21 @@ Your Trezor firmware is out of date. Update it with the following command:
   trezorctl firmware-update
 Or visit https://wallet.trezor.io/
 """.strip()
+
+
+def _no_ui_selected(*args, **kwargs):
+    raise RuntimeError(
+        "You did not supply a UI object. You were warned that this would crash soon. "
+        "That's what happened now.\n "
+        "You need to supply a UI object to TrezorClient constructor."
+    )
+
+
+_NO_UI_OBJECT = SimpleNamespace(
+    button_request=_no_ui_selected,
+    get_passphrase=_no_ui_selected,
+    get_pin=_no_ui_selected,
+)
 
 
 def get_buttonrequest_value(code):
@@ -91,14 +107,21 @@ class TrezorClient:
     the user might not need to enter their passphrase again.
     """
 
-    def __init__(self, transport, ui=None, state=None):
+    def __init__(self, transport, ui=_NO_UI_OBJECT, state=None):
         LOG.info("creating client instance for device: {}".format(transport.get_path()))
         self.transport = transport
         self.ui = ui
         self.state = state
 
-        if ui is None:
-            warnings.warn("UI class not supplied. This will probably crash soon.")
+        # XXX remove when old Electrum has been cycled out.
+        # explanation: We changed the API in 0.11 and this broke older versions
+        # of Electrum (incl. all its forks). We want to display an intelligent error
+        # message instead of crashing for no reason (see DEPRECATION_ERROR and MovedTo),
+        # so we are not allowed to crash in constructor.
+        # I'd keep this until, say, end of 2019 (or version 0.12), and then drop
+        # the default value for `ui` argument and all related functionality.
+        if ui is _NO_UI_OBJECT:
+            warnings.warn("UI object not supplied. This will probably crash soon.")
 
         self.session_counter = 0
         self.init_device()
