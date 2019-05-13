@@ -4,7 +4,7 @@ from apps.common import storage
 
 _cached_seed = None
 _cached_passphrase = None
-_cached_passphrase_fprint = None
+_cached_passphrase_fprint = b"\x00\x00\x00\x00"
 
 
 def get_state(prev_state: bytes = None, passphrase: str = None) -> bytes:
@@ -38,7 +38,7 @@ def get_passphrase():
 
 
 def get_passphrase_fprint():
-    return _cached_passphrase_fprint or ""
+    return _cached_passphrase_fprint
 
 
 def has_passphrase():
