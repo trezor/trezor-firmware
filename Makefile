@@ -39,3 +39,10 @@ cstyle_check: ## run code style check on low-level C code
 cstyle: ## apply code style on low-level C code
 	@echo [CLANG-FORMAT]
 	@clang-format -i $(C_FILES)
+
+defs_check: ## check validity of coin definitions and protobuf files
+	jsonlint common/defs/*.json common/defs/*/*.json
+	python3 common/tools/cointool.py check
+	python3 common/tools/support.py check --ignore-missing
+	python3 common/protob/check.py
+	python3 common/protob/graph.py common/protob/*.proto

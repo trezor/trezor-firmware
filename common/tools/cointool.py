@@ -184,9 +184,9 @@ def check_eth(coins):
         print_log(logging.ERROR, chain_name_str, bucket_str)
         check_passed = False
     for coin in coins:
-        icon_file = "defs/ethereum/%s.png" % coin["shortcut"].lower()
+        icon_file = coin["shortcut"].lower() + ".png"
         try:
-            icon = Image.open(icon_file)
+            icon = Image.open(os.path.join(coin_info.DEFS_DIR, "ethereum", icon_file))
         except Exception:
             print(coin["key"], ": failed to open icon file", icon_file)
             check_passed = False

@@ -9,10 +9,4 @@ prebuild style:
 prebuild common:
   stage: prebuild
   script:
-    - cd common
-    - pipenv run jsonlint defs/*.json
-    - pipenv run jsonlint defs/*/*.json
-    - pipenv run python tools/cointool.py check
-    - pipenv run python tools/support.py check --ignore-missing
-    - pipenv run python protob/check.py
-    - pipenv run python protob/graph.py protob/*.proto  # TODO: artifacts?
+    - pipenv run make defs_check
