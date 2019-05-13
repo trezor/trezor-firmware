@@ -53,7 +53,7 @@ def set_seed(seed):
 def set_passphrase(passphrase):
     global _cached_passphrase, _cached_passphrase_fprint
     _cached_passphrase = passphrase
-    _cached_passphrase_fprint = _compute_state(b"FPRINT", passphrase)[:4]
+    _cached_passphrase_fprint = _compute_state(b"FPRINT", passphrase or "")[:4]
 
 
 def clear(skip_passphrase: bool = False):
