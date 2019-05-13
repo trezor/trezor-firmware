@@ -2,18 +2,22 @@
 
 : "${RUN_PYTHON_TESTS:=0}"
 : "${FORCE_DOCKER_USE:=0}"
+: "${RUN_TEST_EMU:=1}"
 
 SDIR="$(SHELL_SESSION_FILE='' && cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 CORE_DIR="$SDIR/.."
 MICROPYTHON="$CORE_DIR/build/unix/micropython"
 PYOPT=0
+upy_pid=""
 
-# run emulator
-cd "$CORE_DIR/src"
-"$MICROPYTHON" -O$PYOPT main.py >/dev/null &
-upy_pid=$!
-cd -
-sleep 1
+# run emulator if RUN_TEST_EMU
+if [[ $RUN_TEST_EMU > 0 ]]; then
+  cd "$CORE_DIR/src"
+  "$MICROPYTHON" -O$PYOPT main.py >/dev/null &
+  upy_pid=$!
+  cd -
+  sleep 1
+fi
 
 export TREZOR_PATH=udp:127.0.0.1:21324
 DOCKER_ID=""
@@ -21,7 +25,7 @@ DOCKER_ID=""
 # Test termination trap
 terminate_test() {
   if [[ $# > 0 ]]; then error=$1; fi
-  kill $upy_pid
+  if [ -n "$upy_pid" ]; then kill $upy_pid 2> /dev/null; fi
   if [ -n "$DOCKER_ID" ]; then docker kill $DOCKER_ID 2>/dev/null >/dev/null; fi 
   exit $error
 }
@@ -49,8 +53,8 @@ if [[ "$OSTYPE" != "linux-gnu" && "$OSTYPE" != "darwin"* ]]; then
 fi
 
 error=1
-: "${TREZOR_MONERO_TESTS_URL:=https://github.com/ph4r05/monero/releases/download/v0.14.0.2-tests-u14.04-02/trezor_tests}"
-: "${TREZOR_MONERO_TESTS_SHA256SUM:=ad7d366ad1d673f77523031da383ae12547270b6257962cb250ea75e11648697}"
+: "${TREZOR_MONERO_TESTS_URL:=https://github.com/ph4r05/monero/releases/download/v0.14.1.0-tests-u14.04-01/trezor_tests}"
+: "${TREZOR_MONERO_TESTS_SHA256SUM:=140a16b3d6105b5e8e88a93b451e9600a36ed23928ea3cf2f975f9c83f36dab7}"
 : "${TREZOR_MONERO_TESTS_PATH:=$CORE_DIR/tests/trezor_monero_tests}"
 : "${TREZOR_MONERO_TESTS_LOG:=$CORE_DIR/tests/trezor_monero_tests.log}"
 
