@@ -5,8 +5,8 @@ help: ## show this help
 
 ## style commands:
 
-PY_FILES = $(shell find -type f -name '*.py'   | grep -f ./tools/style.py.include | grep -v -f ./tools/style.py.exclude )
-C_FILES =  $(shell find -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
+PY_FILES = $(shell find . -type f -name '*.py'   | grep -f ./tools/style.py.include | grep -v -f ./tools/style.py.exclude )
+C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
 
 
 style_check: ## run code style check on application sources and tests
