@@ -7,6 +7,21 @@ EXCLUDE_TARGETS=messages
 
 all: build
 
+clean-gen: ## remove generated files
+	rm -f trezorlib/messages/*.py
+	rm -f trezorlib/coins.json
+
+gen: clean-gen
+	$(PYTHON) ../common/tools/cointool.py dump \
+		--list --support \
+		--include-type=bitcoin \
+		--exclude=icon \
+		-o trezorlib/coins.json
+	$(PYTHON) ../common/protob/pb2py \
+		-o trezorlib/messages \
+		-P ..protobuf \
+		../common/protob/*.proto
+
 build:
 	$(SETUP) build
 
@@ -17,11 +32,7 @@ dist: clean
 	$(SETUP) sdist
 	$(SETUP) bdist_wheel
 
-clean: clean-generated clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
-
-clean-generated: ## remove generated files
-	rm -f trezorlib/messages/*.py
-	rm -f trezorlib/coins.json
+clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
 clean-build: ## remove build artifacts
 	rm -fr build/
@@ -55,4 +66,4 @@ style_check:
 	isort --check-only --recursive $(STYLE_TARGETS) --skip-glob "$(EXCLUDE_TARGETS)/*"
 	flake8
 
-.PHONY: all build install clean style style_check git-clean clean-generated clean-build clean-pyc clean-test
+.PHONY: all build install clean style style_check git-clean clean-build clean-pyc clean-test

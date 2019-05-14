@@ -7,6 +7,3 @@ MANIFEST
 *.bin
 *.py.cache
 /.tox
-
-/trezorlib/coins.json
-/trezorlib/messages/*

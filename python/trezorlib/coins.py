@@ -24,12 +24,7 @@ COINS_JSON = os.path.join(os.path.dirname(__file__), "coins.json")
 
 def _load_coins_json():
     # Load coins.json to local variables
-    # NOTE: coins.json comes from 'vendor/trezor-common/coins.json',
-    # which is a git submodule. If you're trying to run trezorlib directly
-    # from the checkout (or tarball), initialize the submodule with:
-    # $ git submodule update --init
-    # and install coins.json with:
-    # $ python setup.py prebuild
+    # NOTE: coins.json is generated via `make generated` command.
     with open(COINS_JSON) as coins_json:
         return json.load(coins_json)
 

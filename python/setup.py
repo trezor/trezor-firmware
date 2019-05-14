@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
-import glob
-import json
 import os.path
 import re
-import subprocess
-import sys
 from distutils.errors import DistutilsError
 
 from setuptools import Command, find_packages, setup
-from setuptools.command.build_py import build_py
-from setuptools.command.develop import develop
 
 install_requires = [
     "setuptools>=19.0",
@@ -24,7 +18,6 @@ install_requires = [
 ]
 
 CWD = os.path.dirname(os.path.realpath(__file__))
-TREZOR_COMMON = os.path.join(CWD, "vendor", "trezor-common")
 
 
 def read(*path):
@@ -42,24 +35,8 @@ def find_version():
         raise RuntimeError("Version string not found")
 
 
-def build_coins_json(dst):
-    TOOLS_PATH = os.path.join(TREZOR_COMMON, "tools")
-    sys.path.insert(0, TOOLS_PATH)
-    import coin_info
-
-    coins = coin_info.coin_info().bitcoin
-    support = coin_info.support_info(coins)
-    for coin in coins:
-        coin["support"] = support[coin["key"]]
-
-    with open(dst, "w") as f:
-        json.dump(coins, f, indent=2, sort_keys=True)
-
-    del sys.path[0]
-
-
 class PrebuildCommand(Command):
-    description = "update vendored files (coins.json, protobuf messages)"
+    description = "Deprecated. Run 'make gen' instead."
     user_options = []
 
     def initialize_options(self):
@@ -69,51 +46,7 @@ class PrebuildCommand(Command):
         pass
 
     def run(self):
-        # check for existence of the submodule directory
-        common_defs = os.path.join(TREZOR_COMMON, "defs")
-        if not os.path.exists(common_defs):
-            raise DistutilsError(
-                "trezor-common submodule seems to be missing.\n"
-                + "Use 'git submodule update --init' to retrieve it."
-            )
-
-        # generate and copy coins.json to the tree
-        coins_json = os.path.join(CWD, "trezorlib", "coins.json")
-        build_coins_json(coins_json)
-
-        # regenerate messages
-        try:
-            proto_srcs = glob.glob(os.path.join(TREZOR_COMMON, "protob", "*.proto"))
-            subprocess.check_call(
-                [
-                    sys.executable,
-                    os.path.join(TREZOR_COMMON, "protob", "pb2py"),
-                    "-o",
-                    os.path.join(CWD, "trezorlib", "messages"),
-                    "-P",
-                    "..protobuf",
-                ]
-                + proto_srcs
-            )
-        except Exception as e:
-            raise DistutilsError(
-                "Generating protobuf failed. Make sure you have 'protoc' in your PATH."
-            ) from e
-
-
-def _patch_prebuild(cls):
-    """Patch a setuptools command to depend on `prebuild`"""
-    orig_run = cls.run
-
-    def new_run(self):
-        self.run_command("prebuild")
-        orig_run(self)
-
-    cls.run = new_run
-
-
-_patch_prebuild(build_py)
-_patch_prebuild(develop)
+        raise DistutilsError(self.description)
 
 
 setup(
