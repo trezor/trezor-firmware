@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 error=0
 for f in $*; do
-    changes=$(clang-format -output-replacements-xml "$f" | grep -c '^<replacement ')
+    changes=$(clang-format -output-replacements-xml "$f" | grep -c '^<replacement '; exit ${PIPESTATUS[0]})
     if [ "$?" -ne "0" ]; then
         echo "clang-format failed"
         exit 1
