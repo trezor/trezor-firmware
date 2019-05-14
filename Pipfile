@@ -35,11 +35,6 @@ ecdsa = "*"
 curve25519-donna = "*"
 pyasn1 = "*"
 
-# core
-## monero
-monero_agent = {version = ">=2.0.1",extras = ["tcry", "dev"]}
-py_trezor_crypto_ph4 = {version = ">=0.1.1"}
-
 # legacy
 setuptools = ">=24.2.0"
 typing = "*"
