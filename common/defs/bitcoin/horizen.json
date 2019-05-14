@@ -10,7 +10,7 @@
   "address_type_p2sh": 8342,
   "maxfee_kb": 2000000,
   "minfee_kb": 1000,
-  "signed_message_header": "Horizen Signed Message:\n",
+  "signed_message_header": "Zcash Signed Message:\n",
   "hash_genesis_block": "0007104ccda289427919efc39dc9e4d499804b7bebc22df55f8b834301260602",
   "xprv_magic": 76066276,
   "xpub_magic": 76067358,
