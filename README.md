@@ -1,12 +1,14 @@
 # Trezor Firmware
 
+[!img](https://repository-images.githubusercontent.com/180590388/968e6880-6538-11e9-9da6-4aef78157e94)
+
 ## Contribute
 
 Inspired by [GitLab Contributing Guide](https://docs.gitlab.com/ee/development/contributing/)
 
 ### Security vulnerability disclosure
 
-Please report suspected security vulnerabilities in private to [mailto:security@satoshilabs.com](mailto:security@satoshilabs.com), also see [the disclosure section on the Trezor.io website](https://trezor.io/security/). Please do NOT create publicly viewable issues for suspected security vulnerabilities.
+Please report suspected security vulnerabilities in private to [mailto:security@satoshilabs.com](security@satoshilabs.com), also see [the disclosure section on the Trezor.io website](https://trezor.io/security/). Please do NOT create publicly viewable issues for suspected security vulnerabilities.
 
 ### Issue Labels
 
