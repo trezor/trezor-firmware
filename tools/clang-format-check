@@ -2,6 +2,10 @@
 error=0
 for f in $*; do
     changes=$(clang-format -output-replacements-xml "$f" | grep -c '^<replacement ')
+    if [ "$?" -ne "0" ]; then
+        echo "clang-format failed"
+        exit 1
+    fi
     if test "$changes" -gt 0; then
         echo "$f ... $changes changes needed"
         error=1
