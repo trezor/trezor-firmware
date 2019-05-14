@@ -33,6 +33,7 @@ pystyle: ## apply code style on application sources and tests
 	make -C python style
 
 cstyle_check: ## run code style check on low-level C code
+	clang-format --version
 	@echo [CLANG-FORMAT]
 	@./tools/clang-format-check $(C_FILES)
 
