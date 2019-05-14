@@ -9,8 +9,12 @@ ENV TOOLCHAIN_FLAVOR=$TOOLCHAIN_FLAVOR
 
 RUN apt-get update && apt-get install -y \
     build-essential wget git libsodium-dev graphviz \
-    valgrind check libssl-dev libusb-1.0-0-dev libudev-dev zlib1g-dev \
-    clang-format
+    valgrind check libssl-dev libusb-1.0-0-dev libudev-dev zlib1g-dev
+
+# install clang-format 6 from backports
+RUN echo "deb http://deb.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/backports.list
+RUN apt-get update && apt-get install -t stretch-backports -y clang-format-6.0
+RUN ln -s clang-format-6.0 /usr/bin/clang-format
 
 # TODO are all apt packages actually needed?
 
