@@ -14,11 +14,17 @@ cache:
 addons:
     apt:
         packages:
-            clang-format
-            graphviz
+            - clang-format
+            - graphviz
 
+env:
+    global:
+        PROTOBUF_VERSION=3.4.0
 
 install:
+    - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
+    - unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d protoc
+    - export PATH="$(pwd)/protoc/bin:$PATH"
     - pip install --upgrade pip wheel setuptools
     - pip install pipenv
     - pipenv install
