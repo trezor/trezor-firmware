@@ -91,14 +91,8 @@ LDFLAGS  += -L$(TOP_DIR)emulator
 LDLIBS   += -ltrezor -lemulator
 LIBDEPS  += $(TOP_DIR)/libtrezor.a $(TOP_DIR)emulator/libemulator.a
 
-ifeq ($(HEADLESS),1)
-CFLAGS   += -DHEADLESS=1
-else
-CFLAGS   += -DHEADLESS=0
-
 CFLAGS   += $(shell pkg-config --cflags sdl2)
 LDLIBS   += $(shell pkg-config --libs sdl2)
-endif
 
 ifdef RANDOM_DEV_FILE
 CFLAGS += -DRANDOM_DEV_FILE=\"$(RANDOM_DEV_FILE)\"

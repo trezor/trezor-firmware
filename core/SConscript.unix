@@ -134,8 +134,6 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/modtrezorui.c',
     'embed/extmod/modtrezorui/qr-code-generator/qrcodegen.c',
 ]
-if ARGUMENTS.get('TREZOR_EMULATOR_NOUI', 0):
-    CPPDEFINES_MOD += ['TREZOR_EMULATOR_NOUI']
 if ARGUMENTS.get('TREZOR_EMULATOR_RASPI', 0):
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_RASPI']
 if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
@@ -341,8 +339,7 @@ env.Replace(
     ] + CPPDEFINES_MOD,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
-if not ARGUMENTS.get('TREZOR_EMULATOR_NOUI', 0):
-    env.ParseConfig('pkg-config --cflags --libs sdl2 SDL2_image || :')
+env.ParseConfig('pkg-config --cflags --libs sdl2 SDL2_image')
 
 env.Replace(
     PYTHON='python',

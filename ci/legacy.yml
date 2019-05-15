@@ -1,5 +1,9 @@
 image: registry.corp.sldev.cz/trezor/trezor-firmware/environment
 
+variables:
+  SDL_VIDEODRIVER: "dummy"
+  XDG_RUNTIME_DIR: "/var/tmp"
+
 build legacy firmware:
   stage: build
   script:
@@ -31,9 +35,8 @@ build legacy firmware bitcoinonly:
 build legacy emu:
   stage: build
   variables:
-    HEADLESS: "1"
-    EMULATOR: "1"
     DEBUG_LINK: "1"
+    EMULATOR: "1"
   script:
     - cd legacy
     - pipenv run script/cibuild

@@ -19,14 +19,6 @@
 
 #include "oled.h"
 
-#if HEADLESS
-
-void oledInit(void) {}
-void oledRefresh(void) {}
-void emulatorPoll(void) {}
-
-#else
-
 #include <SDL.h>
 
 static SDL_Renderer *renderer = NULL;
@@ -146,5 +138,3 @@ void emulatorPoll(void) {
     }
   }
 }
-
-#endif

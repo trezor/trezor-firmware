@@ -17,10 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#ifndef TREZOR_EMULATOR_NOUI
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <stdlib.h>
 
 #define EMULATOR_BORDER 16
 
@@ -90,12 +89,8 @@ void PIXELDATA(uint16_t c) {
     PIXELWINDOW.pos.y++;
   }
 }
-#else
-#define PIXELDATA(X) (void)(X)
-#endif
 
 void display_init(void) {
-#ifndef TREZOR_EMULATOR_NOUI
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("%s\n", SDL_GetError());
     ensure(secfalse, "SDL_Init error");
@@ -166,12 +161,10 @@ void display_init(void) {
 #else
   DISPLAY_ORIENTATION = 0;
 #endif
-#endif
 }
 
 static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
                                uint16_t y1) {
-#ifndef TREZOR_EMULATOR_NOUI
   if (!RENDERER) {
     display_init();
   }
@@ -181,11 +174,9 @@ static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
   PIXELWINDOW.end.y = y1;
   PIXELWINDOW.pos.x = x0;
   PIXELWINDOW.pos.y = y0;
-#endif
 }
 
 void display_refresh(void) {
-#ifndef TREZOR_EMULATOR_NOUI
   if (!RENDERER) {
     display_init();
   }
@@ -208,7 +199,6 @@ void display_refresh(void) {
     SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, DISPLAY_ORIENTATION, NULL, 0);
   }
   SDL_RenderPresent(RENDERER);
-#endif
 }
 
 static void display_set_orientation(int degrees) { display_refresh(); }
@@ -216,7 +206,6 @@ static void display_set_orientation(int degrees) { display_refresh(); }
 static void display_set_backlight(int val) { display_refresh(); }
 
 const char *display_save(const char *prefix) {
-#ifndef TREZOR_EMULATOR_NOUI
   if (!RENDERER) {
     display_init();
   }
@@ -243,6 +232,4 @@ const char *display_save(const char *prefix) {
   IMG_SavePNG(crop, filename);
   prev = crop;
   return filename;
-#endif
-  return NULL;
 }

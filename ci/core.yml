@@ -1,5 +1,9 @@
 image: registry.corp.sldev.cz/trezor/trezor-firmware/environment
 
+variables:
+  SDL_VIDEODRIVER: "dummy"
+  XDG_RUNTIME_DIR: "/var/tmp"
+
 build core firmware:
   stage: build
   script:
@@ -21,24 +25,24 @@ build core unix:
   stage: build
   script:
     - cd core
-    - pipenv run make build_unix_noui
-  artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
-    untracked: true
-    expire_in: 1 day
+    - pipenv run make build_unix
 
 build core unix frozen:
   stage: build
   script:
     - cd core
-    - pipenv run make build_unix_noui_frozen
+    - pipenv run make build_unix_frozen
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    untracked: true
+    expire_in: 1 day
 
 test core unix unit:
   stage: test
   variables:
     GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
   dependencies:
-    - build core unix
+    - build core unix frozen
   script:
     - cd core
     - pipenv run make test
@@ -48,7 +52,7 @@ test core unix device:
   variables:
     GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
   dependencies:
-    - build core unix
+    - build core unix frozen
   script:
     - cd core
     - pipenv run make test_emu
@@ -58,7 +62,7 @@ test core unix monero:
   variables:
     GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
   dependencies:
-    - build core unix
+    - build core unix frozen
   script:
     - cd core
     - pipenv run make test_emu_monero
