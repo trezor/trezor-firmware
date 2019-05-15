@@ -7,13 +7,16 @@
 SDIR="$(SHELL_SESSION_FILE='' && cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 CORE_DIR="$SDIR/.."
 MICROPYTHON="$CORE_DIR/build/unix/micropython"
+DISABLE_FADE=1
 PYOPT=0
 upy_pid=""
 
 # run emulator if RUN_TEST_EMU
 if [[ $RUN_TEST_EMU > 0 ]]; then
   cd "$CORE_DIR/src"
-  "$MICROPYTHON" -O$PYOPT main.py >/dev/null &
+  TREZOR_TEST=1 \
+  TREZOR_DISABLE_FADE=$DISABLE_FADE \
+    "$MICROPYTHON" -O$PYOPT main.py >/dev/null &
   upy_pid=$!
   cd -
   sleep 1
