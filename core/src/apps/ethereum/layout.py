@@ -66,7 +66,7 @@ def format_ethereum_amount(value: int, token, chain_id: int, tx_type=None):
         decimals = 18
 
     # Don't want to display wei values for tokens with small decimal numbers
-    if value / (10 ** decimals) <= 1e-9:
+    if decimals > 9 and value < 10 ** (decimals - 9):
         suffix = "Wei " + suffix
         decimals = 0
 
