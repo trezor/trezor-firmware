@@ -343,7 +343,7 @@ def check_missing_data(coins):
         if len(coin.get("wallet", [])) == 0:
             LOG.debug(f"{k}: Missing wallet")
 
-        if "Testnet" in coin["name"]:
+        if "Testnet" in coin["name"] or "Regtest" in coin["name"]:
             LOG.debug(f"{k}: Hiding testnet")
             hide = True
 
