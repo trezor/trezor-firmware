@@ -17,6 +17,9 @@
     "bitcoin:BTX": {
         "Electrum-BTX": "https://github.com/LIMXTEC/electrum-btx"
     },
+    "bitcoin:CPC": {
+        "Capricoin Mobile Wallet": "https://wallet.capricoin.org"
+    },
     "bitcoin:DASH": {
         "Dash Electrum": "https://electrum.dash.org"
     },
