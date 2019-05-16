@@ -8,7 +8,7 @@ TYPE_BIP39 = 0
 
 def get() -> (bytes, int):
     mnemonic_secret = storage.get_mnemonic_secret()
-    mnemonic_type = storage.get_mnemonic_type()
+    mnemonic_type = storage.get_mnemonic_type() or TYPE_BIP39
     return mnemonic_secret, mnemonic_type
 
 
