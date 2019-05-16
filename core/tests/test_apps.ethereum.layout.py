@@ -65,9 +65,9 @@ class TestEthereumLayout(unittest.TestCase):
 
         # tokens with low decimal values
         # USDC has 6 decimals
-        usdc_token = token_by_chain_address(1, bytes.fromhex("a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"))
+        usdc_token = token_by_chain_address(1, unhexlify("a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"))
         # ICO has 10 decimals
-        ico_token = token_by_chain_address(1, bytes.fromhex("a33e729bf4fdeb868b534e1f20523463d9c46bee"))
+        ico_token = token_by_chain_address(1, unhexlify("a33e729bf4fdeb868b534e1f20523463d9c46bee"))
 
         # when decimals < 10, should never display 'Wei' format
         text = format_ethereum_amount(1, usdc_token, 1)
