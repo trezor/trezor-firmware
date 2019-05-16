@@ -333,8 +333,6 @@ class Descriptor:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-
     parser = argparse.ArgumentParser()
     # fmt: off
     parser.add_argument("proto", nargs="+", help="Protobuf definition files")
@@ -343,8 +341,12 @@ if __name__ == "__main__":
     parser.add_argument("-l", "--no-init-py", action="store_true", help="Do not generate __init__.py with list of modules")
     parser.add_argument("--message-type", default="MessageType", help="Name of enum with message IDs")
     parser.add_argument("-I", "--protoc-include", action="append", help="protoc include path")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Print debug messages")
     # fmt: on
     args = parser.parse_args()
+
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
 
     protoc_includes = args.protoc_include or (os.environ.get("PROTOC_INCLUDE"),)
     descriptor_proto = protoc(args.proto, protoc_includes)

@@ -1,0 +1,67 @@
+#!/bin/bash
+cd $(dirname $0)/..
+
+PROTOB=common/protob
+
+CORE_PROTOBUF_SOURCES="\
+    $PROTOB/messages.proto \
+    $PROTOB/messages-bitcoin.proto \
+    $PROTOB/messages-cardano.proto \
+    $PROTOB/messages-common.proto \
+    $PROTOB/messages-crypto.proto \
+    $PROTOB/messages-debug.proto \
+    $PROTOB/messages-eos.proto \
+    $PROTOB/messages-ethereum.proto \
+    $PROTOB/messages-lisk.proto \
+    $PROTOB/messages-management.proto \
+    $PROTOB/messages-monero.proto \
+    $PROTOB/messages-nem.proto \
+    $PROTOB/messages-ripple.proto \
+    $PROTOB/messages-stellar.proto \
+    $PROTOB/messages-tezos.proto \
+"
+
+PYTHON_PROTOBUF_SOURCES=$PROTOB/*.proto
+
+RETURN=0
+
+do_rebuild() {
+    # rebuild protobuf in specified directory
+    local DESTDIR="$1"
+    shift
+    local SOURCES="$1"
+    shift
+
+    mkdir -p "$DESTDIR"
+    rm -f "$DESTDIR"/[A-Z]*.py
+
+    # note $SOURCES is unquoted - we want wildcard expansion and multiple args
+    $PROTOB/pb2py "$@" -o "$DESTDIR" $SOURCES
+}
+
+do_check() {
+    # rebuild protobuf in tmpdir and check result against specified directory
+    local TMPDIR=$(mktemp -d proto-check.XXXXXX)
+    local DESTDIR="$1"
+    shift
+
+    cp -rT "$DESTDIR" "$TMPDIR"
+    do_rebuild "$TMPDIR" "$@"
+    DIFF=$(diff -ur "$DESTDIR" "$TMPDIR")
+    rm -r "$TMPDIR"
+    if [ -n "$DIFF" ]; then
+        echo "$DIFF"
+        RETURN=1
+    fi
+}
+
+if [ "$1" == "--check" ]; then
+    func=do_check
+else
+    func=do_rebuild
+fi
+
+$func core/src/trezor/messages "$CORE_PROTOBUF_SOURCES" --no-init-py
+$func python/trezorlib/messages "$PYTHON_PROTOBUF_SOURCES" -P ..protobuf
+
+exit $RETURN
