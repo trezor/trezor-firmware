@@ -668,7 +668,7 @@
                 }
             ]
         },
-        "bitcoin:VIPS: {
+        "bitcoin:VIPS": {
             "links": {
                 "Github": "https://github.com/VIPSTARCOIN/VIPSTARCOIN",
                 "Homepage": "https://vipstarcoin.jp"
