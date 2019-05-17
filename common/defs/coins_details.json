@@ -812,8 +812,8 @@
             "marketcap_usd": 260270,
             "name": "BitZeny",
             "shortcut": "ZNY",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
+            "t1_enabled": "soon",
+            "t2_enabled": "soon",
             "type": "coin",
             "wallet": [
                 {
