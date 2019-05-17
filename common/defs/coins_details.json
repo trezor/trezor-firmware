@@ -61,8 +61,8 @@
             "marketcap_usd": 0,
             "name": "Bellcoin",
             "shortcut": "BELL",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
+            "t1_enabled": "soon",
+            "t2_enabled": "soon",
             "type": "coin",
             "wallet": [
                 {
