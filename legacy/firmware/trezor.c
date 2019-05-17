@@ -141,7 +141,9 @@ int main(void) {
 
 #if DEBUG_LINK
   oledSetDebugLink(1);
+#if !EMULATOR
   config_wipe();
+#endif
 #endif
 
   oledDrawBitmap(40, 0, &bmp_logo64);
