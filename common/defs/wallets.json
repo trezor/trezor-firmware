@@ -67,8 +67,5 @@
     "bitcoin:RVN": {
         "Electrum-RVN": "https://github.com/traysi/electrum-raven",
         "Mango Farm": "https://mangofarmassets.com/mangowallet"
-    },
-    "bitcoin:ZNY": {
-        "Electrum-ZNY": "https://bitzeny-electrum.github.io"
     }
 }

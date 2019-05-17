@@ -804,24 +804,6 @@
             "type": "coin",
             "wallet": []
         },
-        "bitcoin:ZNY": {
-            "links": {
-                "Github": "https://github.com/BitzenyCoreDevelopers/bitzeny",
-                "Homepage": "https://bitzeny.tech"
-            },
-            "marketcap_usd": 260270,
-            "name": "BitZeny",
-            "shortcut": "ZNY",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
-            "type": "coin",
-            "wallet": [
-                {
-                    "name": "Electrum-ZNY",
-                    "url": "https://bitzeny-electrum.github.io"
-                }
-            ]
-        },
         "erc20:ella:MINING": {
             "address": "0x991e7Fe4b05f2b3db1D788e705963f5D647b0044",
             "links": {
