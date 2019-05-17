@@ -34,7 +34,7 @@
   "max_address_length": 34,
   "bitcore": [
     "https://insight.bitzeny.jp",
-    "https://zeny.insight.monaco-ex.org/"
+    "https://zeny.insight.monaco-ex.org"
   ],
   "blockbook": [
     "https://zny.blockbook.ovh"
