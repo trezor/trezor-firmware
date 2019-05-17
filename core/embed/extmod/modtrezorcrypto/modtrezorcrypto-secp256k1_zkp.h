@@ -64,7 +64,6 @@ STATIC const secp256k1_context *mod_trezorcrypto_secp256k1_context(void) {
   return ctx;
 }
 
-
 /// package: trezorcrypto.secp256k1_zkp
 
 /// def generate_secret() -> bytes:

@@ -42,7 +42,6 @@ typedef struct _mp_obj_Pbkdf2_t {
 
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t data);
 
-
 /// def __init__(
 ///     self,
 ///     prf: int,

@@ -68,8 +68,8 @@ def poll(ifaces: Iterable[int], list_ref: List, timeout_us: int) -> bool:
     Wait until one of `ifaces` is ready to read or write (using masks
     `list_ref`:
     `list_ref[0]` - the interface number, including the mask
-    `list_ref[1]` - for touch event, tuple of (event_type, x_position,
-    y_position)
+    `list_ref[1]` - for touch event, tuple of:
+                    (event_type, x_position, y_position)
                   - for USB read event, received bytes
     If timeout occurs, False is returned, True otherwise.
     """
