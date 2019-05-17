@@ -1,7 +1,7 @@
 {
     "coin_name": "VIPSTARCOIN",
     "coin_shortcut": "VIPS",
-    "coin_label": "VIPS",
+    "coin_label": "VIPSTARCOIN",
     "website": "https://vipstarcoin.jp",
     "github": "https://github.com/VIPSTARCOIN/VIPSTARCOIN",
     "maintainer": "y-chan <yuto_tetuota@yahoo.co.jp>",
@@ -32,7 +32,7 @@
     },
     "dust_limit": 218400,
     "blocktime_seconds": 120,
-    "uri_prefix": "qtum",
+    "uri_prefix": "vipstarcoin",
     "min_address_length": 27,
     "max_address_length": 36,
     "bitcore": [
