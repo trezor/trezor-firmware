@@ -24,7 +24,7 @@ COINS_JSON = os.path.join(os.path.dirname(__file__), "coins.json")
 
 def _load_coins_json():
     # Load coins.json to local variables
-    # NOTE: coins.json is generated via `make generated` command.
+    # NOTE: coins.json is generated via `make coins_json` command.
     with open(COINS_JSON) as coins_json:
         return json.load(coins_json)
 

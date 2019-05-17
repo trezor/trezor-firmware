@@ -70,4 +70,7 @@ protobuf_check: ## check that generated protobuf headers are up to date
 	./tools/build_protobuf --check
 
 gen:  mocks templates protobuf ## regeneate auto-generated files from sources
+	make -C python coins_json
+
 gen_check: mocks_check templates_check protobuf_check ## check validity of auto-generated files
+	make -C python coins_json_check

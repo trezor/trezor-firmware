@@ -11,16 +11,14 @@ clean-gen: ## remove generated files
 	rm -f trezorlib/messages/*.py
 	rm -f trezorlib/coins.json
 
+coins_json:
+	./helper-scripts/build-coins-json.sh
+
+coins_json_check:
+	./helper-scripts/build-coins-json.sh --check
+
 gen: clean-gen
-	$(PYTHON) ../common/tools/cointool.py dump \
-		--list --support \
-		--include-type=bitcoin \
-		--exclude=icon \
-		-o trezorlib/coins.json
-	$(PYTHON) ../common/protob/pb2py \
-		-o trezorlib/messages \
-		-P ..protobuf \
-		../common/protob/*.proto
+	make -C .. gen
 
 build:
 	$(SETUP) build
