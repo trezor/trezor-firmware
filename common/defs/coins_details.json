@@ -668,24 +668,6 @@
                 }
             ]
         },
-        "bitcoin:VIPS: {
-            "links": {
-                "Github": "https://github.com/VIPSTARCOIN/VIPSTARCOIN",
-                "Homepage": "https://vipstarcoin.jp"
-            },
-            "marketcap_usd": 1973346,
-            "name": "VIPSTARCOIN",
-            "shortcut": "VIPS",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
-            "type": "coin",
-            "wallet": [
-                {
-                    "name": "Electrum-VIPS",
-                    "url": "https://electrum-vips.info"
-                }
-            ]
-        },
         "bitcoin:VTC": {
             "links": {
                 "Github": "https://github.com/vertcoin-project/vertcoin-core",
