@@ -676,8 +676,8 @@
             "marketcap_usd": 1973346,
             "name": "VIPSTARCOIN",
             "shortcut": "VIPS",
-            "t1_enabled": "soon",
-            "t2_enabled": "soon",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
             "type": "coin",
             "wallet": [
                 {
