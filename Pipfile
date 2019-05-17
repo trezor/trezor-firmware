@@ -14,7 +14,7 @@ pytest = "*"
 mock = "*"
 ## style
 isort = ">=4.3.14"
-flake8 = "*"
+flake8 = ">=3.7.0"
 black = "*"
 mako = ">=1.0.7"
 munch = ">=2.3.2"
