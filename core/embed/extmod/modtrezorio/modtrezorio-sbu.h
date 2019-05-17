@@ -20,15 +20,15 @@
 #include "sbu.h"
 
 /// class SBU:
-///     '''
-///     '''
+///     """
+///     """
 typedef struct _mp_obj_SBU_t {
   mp_obj_base_t base;
 } mp_obj_SBU_t;
 
 /// def __init__(self) -> None:
-///     '''
-///     '''
+///     """
+///     """
 STATIC mp_obj_t mod_trezorio_SBU_make_new(const mp_obj_type_t *type,
                                           size_t n_args, size_t n_kw,
                                           const mp_obj_t *args) {
@@ -40,9 +40,9 @@ STATIC mp_obj_t mod_trezorio_SBU_make_new(const mp_obj_type_t *type,
 }
 
 /// def set(self, sbu1: bool, sbu2: bool) -> None:
-///     '''
+///     """
 ///     Sets SBU wires to sbu1 and sbu2 values respectively
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorio_SBU_set(mp_obj_t self, mp_obj_t sbu1,
                                      mp_obj_t sbu2) {
   sbu_set(sectrue * mp_obj_is_true(sbu1), sectrue * mp_obj_is_true(sbu2));

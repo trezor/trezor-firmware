@@ -33,9 +33,9 @@ enum AESMode {
 /// package: trezorcrypto.__init__
 
 /// class AES:
-///     '''
+///     """
 ///     AES context.
-///     '''
+///     """
 typedef struct _mp_obj_AES_t {
   mp_obj_base_t base;
   aes_encrypt_ctx encrypt_ctx;
@@ -45,9 +45,9 @@ typedef struct _mp_obj_AES_t {
 } mp_obj_AES_t;
 
 /// def __init__(self, mode: int, key: bytes, iv: bytes = None) -> None:
-///     '''
+///     """
 ///     Initialize AES context.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_AES_make_new(const mp_obj_type_t *type,
                                               size_t n_args, size_t n_kw,
                                               const mp_obj_t *args) {
@@ -148,9 +148,9 @@ static mp_obj_t aes_update(mp_obj_t self, mp_obj_t data, bool encrypt) {
 }
 
 /// def encrypt(self, data: bytes) -> bytes:
-///     '''
+///     """
 ///     Encrypt data and update AES context.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_AES_encrypt(mp_obj_t self, mp_obj_t data) {
   return aes_update(self, data, true);
 }
@@ -158,9 +158,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AES_encrypt_obj,
                                  mod_trezorcrypto_AES_encrypt);
 
 /// def decrypt(self, data: bytes) -> bytes:
-///     '''
+///     """
 ///     Decrypt data and update AES context.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_AES_decrypt(mp_obj_t self, mp_obj_t data) {
   return aes_update(self, data, false);
 }

@@ -18,25 +18,27 @@
  */
 
 /// class HID:
-///     '''
+///     """
 ///     USB HID interface configuration.
-///     '''
+///     """
 typedef struct _mp_obj_HID_t {
   mp_obj_base_t base;
   usb_hid_info_t info;
 } mp_obj_HID_t;
 
-/// def __init__(self,
-///              iface_num: int,
-///              ep_in: int,
-///              ep_out: int,
-///              report_desc: bytes,
-///              subclass: int = 0,
-///              protocol: int = 0,
-///              polling_interval: int = 1,
-///              max_packet_len: int = 64) -> None:
-///     '''
-///     '''
+/// def __init__(
+///     self,
+///     iface_num: int,
+///     ep_in: int,
+///     ep_out: int,
+///     report_desc: bytes,
+///     subclass: int = 0,
+///     protocol: int = 0,
+///     polling_interval: int = 1,
+///     max_packet_len: int = 64,
+/// ) -> None:
+///     """
+///     """
 STATIC mp_obj_t mod_trezorio_HID_make_new(const mp_obj_type_t *type,
                                           size_t n_args, size_t n_kw,
                                           const mp_obj_t *args) {
@@ -102,9 +104,9 @@ STATIC mp_obj_t mod_trezorio_HID_make_new(const mp_obj_type_t *type,
 }
 
 /// def iface_num(self) -> int:
-///     '''
+///     """
 ///     Returns the configured number of this interface.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorio_HID_iface_num(mp_obj_t self) {
   mp_obj_HID_t *o = MP_OBJ_TO_PTR(self);
   return MP_OBJ_NEW_SMALL_INT(o->info.iface_num);
@@ -113,9 +115,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_HID_iface_num_obj,
                                  mod_trezorio_HID_iface_num);
 
 /// def write(self, msg: bytes) -> int:
-///     '''
+///     """
 ///     Sends message using USB HID (device) or UDP (emulator).
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorio_HID_write(mp_obj_t self, mp_obj_t msg) {
   mp_obj_HID_t *o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t buf;

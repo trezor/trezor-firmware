@@ -25,9 +25,9 @@
 /// package: trezorcrypto.__init__
 
 /// class Sha1:
-///     '''
+///     """
 ///     SHA1 context.
-///     '''
+///     """
 typedef struct _mp_obj_Sha1_t {
   mp_obj_base_t base;
   SHA1_CTX ctx;
@@ -36,9 +36,9 @@ typedef struct _mp_obj_Sha1_t {
 STATIC mp_obj_t mod_trezorcrypto_Sha1_update(mp_obj_t self, mp_obj_t data);
 
 /// def __init__(self, data: bytes = None) -> None:
-///     '''
+///     """
 ///     Creates a hash context object.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha1_make_new(const mp_obj_type_t *type,
                                                size_t n_args, size_t n_kw,
                                                const mp_obj_t *args) {
@@ -54,9 +54,9 @@ STATIC mp_obj_t mod_trezorcrypto_Sha1_make_new(const mp_obj_type_t *type,
 }
 
 /// def update(self, data: bytes) -> None:
-///     '''
+///     """
 ///     Update the hash context with hashed data.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha1_update(mp_obj_t self, mp_obj_t data) {
   mp_obj_Sha1_t *o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t msg;
@@ -70,9 +70,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Sha1_update_obj,
                                  mod_trezorcrypto_Sha1_update);
 
 /// def digest(self) -> bytes:
-///     '''
+///     """
 ///     Returns the digest of hashed data.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha1_digest(mp_obj_t self) {
   mp_obj_Sha1_t *o = MP_OBJ_TO_PTR(self);
   uint8_t out[SHA1_DIGEST_LENGTH];

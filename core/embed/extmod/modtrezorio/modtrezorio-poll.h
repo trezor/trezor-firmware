@@ -26,18 +26,18 @@
 #define POLL_WRITE (0x0100)
 
 /// def poll(ifaces: Iterable[int], list_ref: List, timeout_us: int) -> bool:
-///     '''
+///     """
 ///     Wait until one of `ifaces` is ready to read or write (using masks
 //      `io.POLL_READ` and `io.POLL_WRITE`) and assign the result into
 ///     `list_ref`:
 ///
 ///     `list_ref[0]` - the interface number, including the mask
-///     `list_ref[1]` - for touch event, tuple of (event_type, x_position,
-///     y_position)
+///     `list_ref[1]` - for touch event, tuple of:
+///                     (event_type, x_position, y_position)
 ///                   - for USB read event, received bytes
 ///
 ///     If timeout occurs, False is returned, True otherwise.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
                                   mp_obj_t timeout_us) {
   mp_obj_list_t *ret = MP_OBJ_TO_PTR(list_ref);

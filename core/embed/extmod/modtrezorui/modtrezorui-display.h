@@ -22,17 +22,17 @@
 #include "display.h"
 
 /// class Display:
-///     '''
+///     """
 ///     Provide access to device display.
-///     '''
+///     """
 typedef struct _mp_obj_Display_t {
   mp_obj_base_t base;
 } mp_obj_Display_t;
 
 /// def __init__(self) -> None:
-///     '''
+///     """
 ///     Initialize the display.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_make_new(const mp_obj_type_t *type,
                                               size_t n_args, size_t n_kw,
                                               const mp_obj_t *args) {
@@ -43,9 +43,9 @@ STATIC mp_obj_t mod_trezorui_Display_make_new(const mp_obj_type_t *type,
 }
 
 /// def clear(self) -> None:
-///     '''
+///     """
 ///     Clear display with black color.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_clear(mp_obj_t self) {
   display_clear();
   return mp_const_none;
@@ -54,9 +54,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_clear_obj,
                                  mod_trezorui_Display_clear);
 
 /// def refresh(self) -> None:
-///     '''
+///     """
 ///     Refresh display (update screen).
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_refresh(mp_obj_t self) {
   display_refresh();
   return mp_const_none;
@@ -65,10 +65,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_refresh_obj,
                                  mod_trezorui_Display_refresh);
 
 /// def bar(self, x: int, y: int, w: int, h: int, color: int) -> None:
-///     '''
+///     """
 ///     Renders a bar at position (x,y = upper left corner) with width w and
 ///     height h of color color.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_bar(size_t n_args, const mp_obj_t *args) {
   mp_int_t x = mp_obj_get_int(args[1]);
   mp_int_t y = mp_obj_get_int(args[2]);
@@ -81,13 +81,21 @@ STATIC mp_obj_t mod_trezorui_Display_bar(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_bar_obj, 6, 6,
                                            mod_trezorui_Display_bar);
 
-/// def bar_radius(self, x: int, y: int, w: int, h: int, fgcolor: int, bgcolor:
-/// int = None, radius: int = None) -> None:
-///     '''
+/// def bar_radius(
+///     self,
+///     x: int,
+///     y: int,
+///     w: int,
+///     h: int,
+///     fgcolor: int,
+///     bgcolor: int = None,
+///     radius: int = None,
+/// ) -> None:
+///     """
 ///     Renders a rounded bar at position (x,y = upper left corner) with width w
 ///     and height h of color fgcolor. Background is set to bgcolor and corners
 ///     are drawn with radius radius.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_bar_radius(size_t n_args,
                                                 const mp_obj_t *args) {
   mp_int_t x = mp_obj_get_int(args[1]);
@@ -105,11 +113,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_bar_radius_obj,
                                            mod_trezorui_Display_bar_radius);
 
 /// def image(self, x: int, y: int, image: bytes) -> None:
-///     '''
+///     """
 ///     Renders an image at position (x,y).
 ///     The image needs to be in TREZOR Optimized Image Format (TOIF) -
 ///     full-color mode.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_image(size_t n_args,
                                            const mp_obj_t *args) {
   mp_int_t x = mp_obj_get_int(args[1]);
@@ -132,14 +140,15 @@ STATIC mp_obj_t mod_trezorui_Display_image(size_t n_args,
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_image_obj, 4, 4,
                                            mod_trezorui_Display_image);
 
-/// def avatar(self, x: int, y: int, image: bytes, fgcolor: int, bgcolor: int)
-/// -> None:
-///     '''
+/// def avatar(
+///     self, x: int, y: int, image: bytes, fgcolor: int, bgcolor: int
+/// ) -> None:
+///     """
 ///     Renders an avatar at position (x,y).
 ///     The image needs to be in TREZOR Optimized Image Format (TOIF) -
 ///     full-color mode. Image needs to be of exactly AVATAR_IMAGE_SIZE x
 ///     AVATAR_IMAGE_SIZE pixels size.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_avatar(size_t n_args,
                                             const mp_obj_t *args) {
   mp_int_t x = mp_obj_get_int(args[1]);
@@ -167,13 +176,14 @@ STATIC mp_obj_t mod_trezorui_Display_avatar(size_t n_args,
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_avatar_obj, 6,
                                            6, mod_trezorui_Display_avatar);
 
-/// def icon(self, x: int, y: int, icon: bytes, fgcolor: int, bgcolor: int) ->
-/// None:
-///     '''
+/// def icon(
+///     self, x: int, y: int, icon: bytes, fgcolor: int, bgcolor: int
+/// ) -> None:
+///     """
 ///     Renders an icon at position (x,y), fgcolor is used as foreground color,
 ///     bgcolor as background. The icon needs to be in TREZOR Optimized Image
 ///     Format (TOIF) - gray-scale mode.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_icon(size_t n_args, const mp_obj_t *args) {
   mp_int_t x = mp_obj_get_int(args[1]);
   mp_int_t y = mp_obj_get_int(args[2]);
@@ -197,16 +207,24 @@ STATIC mp_obj_t mod_trezorui_Display_icon(size_t n_args, const mp_obj_t *args) {
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_icon_obj, 6, 6,
                                            mod_trezorui_Display_icon);
-/// def loader(self, progress: int, indeterminate: bool, yoffset: int, fgcolor:
-/// int, bgcolor: int, icon: bytes = None, iconfgcolor: int = None) -> None:
-///     '''
+/// def loader(
+///     self,
+///     progress: int,
+///     indeterminate: bool,
+///     yoffset: int,
+///     fgcolor: int,
+///     bgcolor: int,
+///     icon: bytes = None,
+///     iconfgcolor: int = None,
+/// ) -> None:
+///     """
 ///     Renders a rotating loader graphic.
 ///     Progress determines its position (0-1000), fgcolor is used as foreground
 ///     color, bgcolor as background. When icon and iconfgcolor are provided, an
 ///     icon is drawn in the middle using the color specified in iconfgcolor.
 ///     Icon needs to be of exactly LOADER_ICON_SIZE x LOADER_ICON_SIZE pixels
 ///     size.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_loader(size_t n_args,
                                             const mp_obj_t *args) {
   mp_int_t progress = mp_obj_get_int(args[1]);
@@ -248,9 +266,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_loader_obj, 6,
                                            8, mod_trezorui_Display_loader);
 
 /// def print(self, text: str) -> None:
-///     '''
+///     """
 ///     Renders text using 5x8 bitmap font (using special text mode).
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_print(mp_obj_t self, mp_obj_t text) {
   mp_buffer_info_t buf;
   mp_get_buffer_raise(text, &buf, MP_BUFFER_READ);
@@ -262,14 +280,22 @@ STATIC mp_obj_t mod_trezorui_Display_print(mp_obj_t self, mp_obj_t text) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_print_obj,
                                  mod_trezorui_Display_print);
 
-/// def text(self, x: int, y: int, text: str, font: int, fgcolor: int, bgcolor:
-/// int, minwidth: int=None) -> int:
-///     '''
+/// def text(
+///     self,
+///     x: int,
+///     y: int,
+///     text: str,
+///     font: int,
+///     fgcolor: int,
+///     bgcolor: int,
+///     minwidth: int = None,
+/// ) -> int:
+///     """
 ///     Renders left-aligned text at position (x,y) where x is left position and
 ///     y is baseline. Font font is used for rendering, fgcolor is used as
 ///     foreground color, bgcolor as background. Fills at least minwidth pixels
 ///     with bgcolor. Returns width of rendered text in pixels.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_text(size_t n_args, const mp_obj_t *args) {
   mp_int_t x = mp_obj_get_int(args[1]);
   mp_int_t y = mp_obj_get_int(args[2]);
@@ -290,14 +316,22 @@ STATIC mp_obj_t mod_trezorui_Display_text(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_obj, 7, 8,
                                            mod_trezorui_Display_text);
 
-/// def text_center(self, x: int, y: int, text: str, font: int, fgcolor: int,
-/// bgcolor: int, minwidth: int=None) -> int:
-///     '''
+/// def text_center(
+///     self,
+///     x: int,
+///     y: int,
+///     text: str,
+///     font: int,
+///     fgcolor: int,
+///     bgcolor: int,
+///     minwidth: int = None,
+/// ) -> int:
+///     """
 ///     Renders text centered at position (x,y) where x is text center and y is
 ///     baseline. Font font is used for rendering, fgcolor is used as foreground
 ///     color, bgcolor as background. Fills at least minwidth pixels with
 ///     bgcolor. Returns width of rendered text in pixels.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_text_center(size_t n_args,
                                                  const mp_obj_t *args) {
   mp_int_t x = mp_obj_get_int(args[1]);
@@ -320,14 +354,22 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_center_obj,
                                            7, 8,
                                            mod_trezorui_Display_text_center);
 
-/// def text_right(self, x: int, y: int, text: str, font: int, fgcolor: int,
-/// bgcolor: int, minwidth: int=None) -> int:
-///     '''
+/// def text_right(
+///     self,
+///     x: int,
+///     y: int,
+///     text: str,
+///     font: int,
+///     fgcolor: int,
+///     bgcolor: int,
+///     minwidth: int = None,
+/// ) -> int:
+///     """
 ///     Renders right-aligned text at position (x,y) where x is right position
 ///     and y is baseline. Font font is used for rendering, fgcolor is used as
 ///     foreground color, bgcolor as background. Fills at least minwidth pixels
 ///     with bgcolor. Returns width of rendered text in pixels.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_text_right(size_t n_args,
                                                 const mp_obj_t *args) {
   mp_int_t x = mp_obj_get_int(args[1]);
@@ -351,9 +393,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_right_obj,
                                            mod_trezorui_Display_text_right);
 
 /// def text_width(self, text: str, font: int) -> int:
-///     '''
+///     """
 ///     Returns a width of text in pixels. Font font is used for rendering.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_text_width(mp_obj_t self, mp_obj_t text,
                                                 mp_obj_t font) {
   mp_buffer_info_t txt;
@@ -366,10 +408,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorui_Display_text_width_obj,
                                  mod_trezorui_Display_text_width);
 
 /// def qrcode(self, x: int, y: int, data: bytes, scale: int) -> None:
-///     '''
+///     """
 ///     Renders data encoded as a QR code centered at position (x,y).
 ///     Scale determines a zoom factor.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_qrcode(size_t n_args,
                                             const mp_obj_t *args) {
   mp_int_t x = mp_obj_get_int(args[1]);
@@ -389,12 +431,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_qrcode_obj, 5,
                                            5, mod_trezorui_Display_qrcode);
 
 /// def orientation(self, degrees: int = None) -> int:
-///     '''
+///     """
 ///     Sets display orientation to 0, 90, 180 or 270 degrees.
 ///     Everything needs to be redrawn again when this function is used.
 ///     Call without the degrees parameter to just perform the read of the
 ///     value.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_orientation(size_t n_args,
                                                  const mp_obj_t *args) {
   mp_int_t deg;
@@ -414,10 +456,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_orientation_obj,
                                            mod_trezorui_Display_orientation);
 
 /// def backlight(self, val: int = None) -> int:
-///     '''
+///     """
 ///     Sets backlight intensity to the value specified in val.
 ///     Call without the val parameter to just perform the read of the value.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_backlight(size_t n_args,
                                                const mp_obj_t *args) {
   mp_int_t val;
@@ -437,10 +479,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_backlight_obj,
                                            mod_trezorui_Display_backlight);
 
 /// def offset(self, xy: Tuple[int, int] = None) -> Tuple[int, int]:
-///     '''
+///     """
 ///     Sets offset (x, y) for all subsequent drawing calls.
 ///     Call without the xy parameter to just perform the read of the value.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_offset(size_t n_args,
                                             const mp_obj_t *args) {
   int xy[2], x, y;
@@ -470,9 +512,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_offset_obj, 1,
                                            2, mod_trezorui_Display_offset);
 
 /// def save(self, prefix: str) -> None:
-///     '''
+///     """
 ///     Saves current display contents to PNG file with given prefix.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorui_Display_save(mp_obj_t self, mp_obj_t prefix) {
   mp_buffer_info_t pfx;
   mp_get_buffer_raise(prefix, &pfx, MP_BUFFER_READ);

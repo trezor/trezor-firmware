@@ -29,12 +29,12 @@
 #include "common.h"
 
 /// def consteq(sec: bytes, pub: bytes) -> bool:
-///     '''
+///     """
 ///     Compares the private information in `sec` with public, user-provided
 ///     information in `pub`.  Runs in constant time, corresponding to a length
 ///     of `pub`.  Can access memory behind valid length of `sec`, caller is
 ///     expected to avoid any invalid memory access.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorutils_consteq(mp_obj_t sec, mp_obj_t pub) {
   mp_buffer_info_t secbuf;
   mp_get_buffer_raise(sec, &secbuf, MP_BUFFER_READ);
@@ -57,14 +57,14 @@ STATIC mp_obj_t mod_trezorutils_consteq(mp_obj_t sec, mp_obj_t pub) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_consteq_obj,
                                  mod_trezorutils_consteq);
 
-/// def memcpy(dst: bytearray, dst_ofs: int,
-///            src: bytearray, src_ofs: int,
-///            n: int) -> int:
-///     '''
+/// def memcpy(
+///     dst: bytearray, dst_ofs: int, src: bytearray, src_ofs: int, n: int
+/// ) -> int:
+///     """
 ///     Copies at most `n` bytes from `src` at offset `src_ofs` to
 ///     `dst` at offset `dst_ofs`.  Returns the number of actually
 ///     copied bytes.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorutils_memcpy(size_t n_args, const mp_obj_t *args) {
   mp_arg_check_num(n_args, 0, 5, 5, false);
 
@@ -90,9 +90,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_memcpy_obj, 5, 5,
                                            mod_trezorutils_memcpy);
 
 /// def halt(msg: str = None) -> None:
-///     '''
+///     """
 ///     Halts execution.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorutils_halt(size_t n_args, const mp_obj_t *args) {
   mp_buffer_info_t msg;
   if (n_args > 0 && mp_get_buffer(args[0], &msg, MP_BUFFER_READ)) {
@@ -106,9 +106,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_halt_obj, 0, 1,
                                            mod_trezorutils_halt);
 
 /// def set_mode_unprivileged() -> None:
-///     '''
+///     """
 ///     Set unprivileged mode.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorutils_set_mode_unprivileged(void) {
 #ifndef TREZOR_EMULATOR
   __asm__ volatile("msr control, %0" ::"r"(0x1));

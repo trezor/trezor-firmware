@@ -64,10 +64,13 @@ STATIC const secp256k1_context *mod_trezorcrypto_secp256k1_context(void) {
   return ctx;
 }
 
+
+/// package: trezorcrypto.secp256k1_zkp
+
 /// def generate_secret() -> bytes:
-///     '''
+///     """
 ///     Generate secret key.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_generate_secret() {
   uint8_t out[32];
   for (;;) {
@@ -94,9 +97,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(
     mod_trezorcrypto_secp256k1_zkp_generate_secret);
 
 /// def publickey(secret_key: bytes, compressed: bool = True) -> bytes:
-///     '''
+///     """
 ///     Computes public key from secret key.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_publickey(size_t n_args,
                                                          const mp_obj_t *args) {
   const secp256k1_context *ctx = mod_trezorcrypto_secp256k1_context();
@@ -122,11 +125,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_secp256k1_zkp_publickey_obj, 1, 2,
     mod_trezorcrypto_secp256k1_zkp_publickey);
 
-/// def sign(secret_key: bytes, digest: bytes, compressed: bool = True) ->
-/// bytes:
-///     '''
+/// def sign(
+///     secret_key: bytes, digest: bytes, compressed: bool = True
+/// ) -> bytes:
+///     """
 ///     Uses secret key to produce the signature of the digest.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_sign(size_t n_args,
                                                     const mp_obj_t *args) {
   const secp256k1_context *ctx = mod_trezorcrypto_secp256k1_context();
@@ -157,10 +161,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_secp256k1_zkp_sign);
 
 /// def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
-///     '''
+///     """
 ///     Uses public key to verify the signature of the digest.
 ///     Returns True on success.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_verify(mp_obj_t public_key,
                                                       mp_obj_t signature,
                                                       mp_obj_t digest) {
@@ -197,10 +201,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_secp256k1_zkp_verify_obj,
                                  mod_trezorcrypto_secp256k1_zkp_verify);
 
 /// def verify_recover(signature: bytes, digest: bytes) -> bytes:
-///     '''
+///     """
 ///     Uses signature of the digest to verify the digest and recover the public
 ///     key. Returns public key on success, None if the signature is invalid.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_verify_recover(
     mp_obj_t signature, mp_obj_t digest) {
   const secp256k1_context *ctx = mod_trezorcrypto_secp256k1_context();
@@ -250,10 +254,10 @@ static int secp256k1_ecdh_hash_passthrough(uint8_t *output, const uint8_t *x,
 }
 
 /// def multiply(secret_key: bytes, public_key: bytes) -> bytes:
-///     '''
+///     """
 ///     Multiplies point defined by public_key with scalar defined by
 ///     secret_key. Useful for ECDH.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_multiply(mp_obj_t secret_key,
                                                         mp_obj_t public_key) {
   const secp256k1_context *ctx = mod_trezorcrypto_secp256k1_context();

@@ -28,9 +28,9 @@
 /// package: trezorcrypto.__init__
 
 /// class Pbkdf2:
-///     '''
+///     """
 ///     PBKDF2 context.
-///     '''
+///     """
 typedef struct _mp_obj_Pbkdf2_t {
   mp_obj_base_t base;
   union {
@@ -42,11 +42,18 @@ typedef struct _mp_obj_Pbkdf2_t {
 
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t data);
 
-/// def __init__(self, prf: int, password: bytes, salt: bytes, iterations: int =
-/// None, blocknr: int = 1) -> None:
-///     '''
+
+/// def __init__(
+///     self,
+///     prf: int,
+///     password: bytes,
+///     salt: bytes,
+///     iterations: int = None,
+///     blocknr: int = 1,
+/// ) -> None:
+///     """
 ///     Create a PBKDF2 context.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type,
                                                  size_t n_args, size_t n_kw,
                                                  const mp_obj_t *args) {
@@ -89,9 +96,9 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type,
 }
 
 /// def update(self, iterations: int) -> None:
-///     '''
+///     """
 ///     Update a PBKDF2 context.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self,
                                                mp_obj_t iterations) {
   mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
@@ -108,9 +115,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Pbkdf2_update_obj,
                                  mod_trezorcrypto_Pbkdf2_update);
 
 /// def key(self) -> bytes:
-///     '''
+///     """
 ///     Retrieve derived key.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_key(mp_obj_t self) {
   mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
   if (o->prf == PRF_HMAC_SHA256) {

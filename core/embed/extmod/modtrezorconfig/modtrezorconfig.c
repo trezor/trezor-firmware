@@ -47,11 +47,11 @@ STATIC secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
   return secfalse;
 }
 
-/// def init(ui_wait_callback: (int, int -> None)=None) -> None:
-///     '''
+/// def init(ui_wait_callback: Tuple[int, Callable[int, None]] = None) -> None:
+///     """
 ///     Initializes the storage.  Must be called before any other method is
 ///     called from this module!
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
   if (n_args > 0) {
     ui_wait_callback = args[0];
@@ -66,10 +66,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_init_obj, 0, 1,
                                            mod_trezorconfig_init);
 
 /// def unlock(pin: int) -> bool:
-///     '''
+///     """
 ///     Attempts to unlock the storage with given PIN.  Returns True on
 ///     success, False on failure.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin) {
   uint32_t pin_i = trezor_obj_get_uint(pin);
   if (sectrue != storage_unlock(pin_i)) {
@@ -81,9 +81,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorconfig_unlock_obj,
                                  mod_trezorconfig_unlock);
 
 /// def check_pin(pin: int) -> bool:
-///     '''
+///     """
 ///     Check the given PIN. Returns True on success, False on failure.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorconfig_check_pin(mp_obj_t pin) {
   return mod_trezorconfig_unlock(pin);
 }
@@ -91,9 +91,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorconfig_check_pin_obj,
                                  mod_trezorconfig_check_pin);
 
 /// def lock() -> None:
-///     '''
+///     """
 ///     Locks the storage.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorconfig_lock(void) {
   storage_lock();
   return mp_const_none;
@@ -102,9 +102,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_lock_obj,
                                  mod_trezorconfig_lock);
 
 /// def has_pin() -> bool:
-///     '''
+///     """
 ///     Returns True if storage has a configured PIN, False otherwise.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorconfig_has_pin(void) {
   if (sectrue != storage_has_pin()) {
     return mp_const_false;
@@ -115,9 +115,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_pin_obj,
                                  mod_trezorconfig_has_pin);
 
 /// def get_pin_rem() -> int:
-///     '''
+///     """
 ///     Returns the number of remaining PIN entry attempts.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorconfig_get_pin_rem(void) {
   return mp_obj_new_int_from_uint(storage_get_pin_rem());
 }
@@ -125,9 +125,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_get_pin_rem_obj,
                                  mod_trezorconfig_get_pin_rem);
 
 /// def change_pin(pin: int, newpin: int) -> bool:
-///     '''
+///     """
 ///     Change PIN. Returns True on success, False on failure.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorconfig_change_pin(mp_obj_t pin, mp_obj_t newpin) {
   uint32_t pin_i = trezor_obj_get_uint(pin);
   uint32_t newpin_i = trezor_obj_get_uint(newpin);
@@ -139,12 +139,12 @@ STATIC mp_obj_t mod_trezorconfig_change_pin(mp_obj_t pin, mp_obj_t newpin) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_change_pin_obj,
                                  mod_trezorconfig_change_pin);
 
-/// def get(app: int, key: int, public: bool=False) -> bytes:
-///     '''
+/// def get(app: int, key: int, public: bool = False) -> bytes:
+///     """
 ///     Gets the value of the given key for the given app (or None if not set).
 ///     Raises a RuntimeError if decryption or authentication of the stored
 ///     value fails.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
   uint8_t key = trezor_obj_get_uint8(args[1]);
@@ -170,10 +170,10 @@ STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_get_obj, 2, 3,
                                            mod_trezorconfig_get);
 
-/// def set(app: int, key: int, value: bytes, public: bool=False) -> None:
-///     '''
+/// def set(app: int, key: int, value: bytes, public: bool = False) -> None:
+///     """
 ///     Sets a value of given key for given app.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
   uint8_t key = trezor_obj_get_uint8(args[1]);
@@ -191,10 +191,10 @@ STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_obj, 3, 4,
                                            mod_trezorconfig_set);
 
-/// def delete(app: int, key: int, public: bool=False) -> bool:
-///     '''
+/// def delete(app: int, key: int, public: bool = False) -> bool:
+///     """
 ///     Deletes the given key of the given app.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
   uint8_t key = trezor_obj_get_uint8(args[1]);
@@ -210,11 +210,12 @@ STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_delete_obj, 2, 3,
                                            mod_trezorconfig_delete);
 
-/// def set_counter(app: int, key: int, count: int, writable_locked: bool=False)
-/// -> bool:
-///     '''
+/// def set_counter(
+///     app: int, key: int, count: int, writable_locked: bool = False
+/// ) -> bool:
+///     """
 ///     Sets the given key of the given app as a counter with the given value.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorconfig_set_counter(size_t n_args,
                                              const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
@@ -240,11 +241,11 @@ STATIC mp_obj_t mod_trezorconfig_set_counter(size_t n_args,
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_counter_obj, 3,
                                            4, mod_trezorconfig_set_counter);
 
-/// def next_counter(app: int, key: int, writable_locked: bool=False) -> bool:
-///     '''
+/// def next_counter(app: int, key: int, writable_locked: bool = False) -> bool:
+///     """
 ///     Increments the counter stored under the given key of the given app and
 ///     returns the new value.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorconfig_next_counter(size_t n_args,
                                               const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
@@ -265,9 +266,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_next_counter_obj, 2,
                                            3, mod_trezorconfig_next_counter);
 
 /// def wipe() -> None:
-///     '''
+///     """
 ///     Erases the whole config. Use with caution!
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorconfig_wipe(void) {
   storage_wipe();
   return mp_const_none;

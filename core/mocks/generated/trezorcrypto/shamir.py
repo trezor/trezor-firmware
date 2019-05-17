@@ -1,4 +1,4 @@
-from typing import *  # noqa: F401
+from typing import *
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-shamir.h

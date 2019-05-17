@@ -25,9 +25,9 @@ enum {
 };
 
 /// class USB:
-///     '''
+///     """
 ///     USB device configuration.
-///     '''
+///     """
 typedef struct _mp_obj_USB_t {
   mp_obj_base_t base;
   mp_obj_list_t ifaces;
@@ -49,21 +49,23 @@ static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
   }
 }
 
-/// def __init__(self,
-///              device_class: int=0,
-///              device_subclass: int=0,
-///              device_protocol: int=0,
-///              vendor_id: int,
-///              product_id: int,
-///              release_num: int,
-///              manufacturer: str='',
-///              product: str='',
-///              serial_number: str='',
-///              interface: str='',
-///              usb21_enabled: bool=True,
-///              usb21_landing: bool=True) -> None:
-///     '''
-///     '''
+/// def __init__(
+///     self,
+///     vendor_id: int,
+///     product_id: int,
+///     release_num: int,
+///     device_class: int = 0,
+///     device_subclass: int = 0,
+///     device_protocol: int = 0,
+///     manufacturer: str = "",
+///     product: str = "",
+///     serial_number: str = "",
+///     interface: str = "",
+///     usb21_enabled: bool = True,
+///     usb21_landing: bool = True,
+/// ) -> None:
+///     """
+///     """
 STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
                                           size_t n_args, size_t n_kw,
                                           const mp_obj_t *args) {
@@ -155,9 +157,9 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
 }
 
 /// def add(self, iface: Union[HID, VCP, WebUSB]) -> None:
-///     '''
+///     """
 ///     Registers passed interface into the USB stack.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorio_USB_add(mp_obj_t self, mp_obj_t iface) {
   mp_obj_USB_t *o = MP_OBJ_TO_PTR(self);
 
@@ -172,9 +174,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_USB_add_obj,
                                  mod_trezorio_USB_add);
 
 /// def open(self) -> None:
-///     '''
+///     """
 ///     Initializes the USB stack.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self) {
   mp_obj_USB_t *o = MP_OBJ_TO_PTR(self);
 
@@ -234,9 +236,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USB_open_obj,
                                  mod_trezorio_USB_open);
 
 /// def close(self) -> None:
-///     '''
+///     """
 ///     Cleans up the USB stack.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorio_USB_close(mp_obj_t self) {
   mp_obj_USB_t *o = MP_OBJ_TO_PTR(self);
 

@@ -27,9 +27,9 @@
 /// package: trezorcrypto.__init__
 
 /// class Blake2b:
-///     '''
+///     """
 ///     Blake2b context.
-///     '''
+///     """
 typedef struct _mp_obj_Blake2b_t {
   mp_obj_base_t base;
   BLAKE2B_CTX ctx;
@@ -37,11 +37,15 @@ typedef struct _mp_obj_Blake2b_t {
 
 STATIC mp_obj_t mod_trezorcrypto_Blake2b_update(mp_obj_t self, mp_obj_t data);
 
-/// def __init__(self, data: bytes = None, outlen: int = Blake2b.digest_size,
-/// personal: bytes = None) -> None:
-///     '''
+/// def __init__(
+///     self,
+///     data: bytes = None,
+///     outlen: int = Blake2b.digest_size,
+///     personal: bytes = None,
+/// ) -> None:
+///     """
 ///     Creates a hash context object.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Blake2b_make_new(const mp_obj_type_t *type,
                                                   size_t n_args, size_t n_kw,
                                                   const mp_obj_t *args) {
@@ -103,9 +107,9 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2b_make_new(const mp_obj_type_t *type,
 }
 
 /// def update(self, data: bytes) -> None:
-///     '''
+///     """
 ///     Update the hash context with hashed data.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Blake2b_update(mp_obj_t self, mp_obj_t data) {
   mp_obj_Blake2b_t *o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t msg;
@@ -119,9 +123,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Blake2b_update_obj,
                                  mod_trezorcrypto_Blake2b_update);
 
 /// def digest(self) -> bytes:
-///     '''
+///     """
 ///     Returns the digest of hashed data.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Blake2b_digest(mp_obj_t self) {
   mp_obj_Blake2b_t *o = MP_OBJ_TO_PTR(self);
   uint8_t out[BLAKE2B_DIGEST_LENGTH];

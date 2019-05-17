@@ -26,9 +26,9 @@
 /// package: trezorcrypto.nem
 
 /// def validate_address(address: str, network: int) -> bool:
-///     '''
+///     """
 ///     Validate a NEM address
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_nem_validate_address(mp_obj_t address,
                                                       mp_obj_t network) {
   mp_buffer_info_t addr;
@@ -41,9 +41,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_validate_address_obj,
                                  mod_trezorcrypto_nem_validate_address);
 
 /// def compute_address(public_key: bytes, network: int) -> str:
-///     '''
+///     """
 ///     Compute a NEM address from a public key
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_nem_compute_address(mp_obj_t public_key,
                                                      mp_obj_t network) {
   mp_buffer_info_t p;
