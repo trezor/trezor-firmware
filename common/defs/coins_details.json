@@ -53,6 +53,24 @@
                 }
             ]
         },
+        "bitcoin:BELL": {
+            "links": {
+                "Github": "https://github.com/bellcoin-org/bellcoin",
+                "Homepage": "https://bellcoin.web4u.jp"
+            },
+            "marketcap_usd": 0,
+            "name": "Bellcoin",
+            "shortcut": "BELL",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": [
+                {
+                    "name": "Electrum-BELL",
+                    "url": "https://bellcoin-electrum.github.io"
+                }
+            ]
+        },
         "bitcoin:BITC": {
             "links": {
                 "Github": "https://github.com/WillyTheCat/BitCash",

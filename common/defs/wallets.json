@@ -2,6 +2,9 @@
     "bitcoin:ACM": {
         "Actilectrum": "https://actilectrum.org"
     },
+    "bitcoin:BELL": {
+        "Electrum-BELL": "https://bellcoin-electrum.github.io"
+    },
     "bitcoin:BCH": {
         "Electron Cash": "https://electroncash.org"
     },
