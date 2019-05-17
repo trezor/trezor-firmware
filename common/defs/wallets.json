@@ -50,6 +50,9 @@
     "bitcoin:VIA": {
         "Vialectrum": "https://vialectrum.org"
     },
+    "bitcoin:VIPS": {
+        "Electrum-VIPS": "https://electrum-vips.info"
+    },
     "bitcoin:XZC": {
         "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
         "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"
