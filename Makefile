@@ -47,3 +47,27 @@ defs_check: ## check validity of coin definitions and protobuf files
 	python3 common/tools/support.py check --ignore-missing
 	python3 common/protob/check.py
 	python3 common/protob/graph.py common/protob/*.proto
+
+## code generation commands:
+
+mocks: ## generate mock python headers from C modules
+	./core/tools/build_mocks
+
+mocks_check: ## check validity of mock python headers
+	./core/tools/build_mocks --check
+	flake8 core/mocks/generated
+
+templates: ## rebuild coin lists from definitions in common
+	./core/tools/build_templates
+
+templates_check: ## check that coin lists are up to date
+	./core/tools/build_templates --check
+
+protobuf: ## generate python protobuf headers
+	./tools/build_protobuf
+
+protobuf_check: ## check that generated protobuf headers are up to date
+	./tools/build_protobuf --check
+
+gen:  mocks templates protobuf ## regeneate auto-generated files from sources
+gen_check: mocks_check templates_check protobuf_check ## check validity of auto-generated files
