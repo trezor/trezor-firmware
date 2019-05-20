@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
+
 #include "font_bitmap.h"
 #include "inflate.h"
 #ifdef TREZOR_FONT_NORMAL_ENABLE

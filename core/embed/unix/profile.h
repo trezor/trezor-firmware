@@ -20,20 +20,16 @@
 #ifndef __TREZOR_PROFILE_H__
 #define __TREZOR_PROFILE_H__
 
-// TREZOR_PROFILE environment variable can be a full path
-// or just a name that will result in the path:
-//   ~/${PROFILE_HOMEDOT}/${TREZOR_PROFILE}
-// If the variable is not set the default is ${PROFILE_DEFAULT}
+// Environment variables meaning:
+// TREZOR_PROFILE_NAME sets the title of the emulator window.
+// TREZOR_PROFILE_DIR contains flash files.
+//
+// If those are not set int the environment these default values are used.
 
-#ifndef PROFILE_DEFAULT
-#define PROFILE_DEFAULT "/var/tmp"
-#endif
+#define PROFILE_DIR_DEFAULT "/var/tmp"
+#define PROFILE_NAME_DEFAULT "/var/tmp"
 
-#ifndef PROFILE_HOMEDOT
-#define PROFILE_HOMEDOT ".trezoremu"
-#endif
-
-void profile_init(void);
+const char *profile_name(void);
 const char *profile_dir(void);
 const char *profile_flash_path(void);
 const char *profile_sdcard_path(void);

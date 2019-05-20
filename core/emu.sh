@@ -1,32 +1,27 @@
-#!/bin/sh
+#!/bin/bash
 
-if [ -f emu.config ]; then
-    . emu.config
-fi
+MICROPYTHON="${MICROPYTHON:-${PWD}/build/unix/micropython}"
+TREZOR_SRC=$(cd "${PWD}/src/"; pwd)
+BROWSER="${BROWSER:-chromium}"
 
-EXE=build/unix/micropython
-PYOPT="${PYOPT:-1}"
-MAIN="${MAIN:-src/main.py}"
-HEAPSIZE="${HEAPSIZE:-50M}"
+source ./trezor_cmd.sh
 
-ARGS="-O${PYOPT} -X heapsize=${HEAPSIZE}"
-
-cd `dirname $0`
+cd "${TREZOR_SRC}"
 
 case "$1" in
     "-d")
         shift
         OPERATING_SYSTEM=$(uname)
         if [ "$OPERATING_SYSTEM" = "Darwin" ]; then
-            PATH=/usr/bin /usr/bin/lldb -f $EXE -- $ARGS $* $MAIN
+            PATH=/usr/bin /usr/bin/lldb -f $MICROPYTHON -- $ARGS $* $MAIN
         else
-            gdb --args $EXE $ARGS $* $MAIN
+            gdb --args $MICROPYTHON $ARGS $* $MAIN
         fi
         ;;
     "-r")
         shift
         while true; do
-            $EXE $ARGS $* $MAIN &
+            $MICROPYTHON $ARGS $* $MAIN &
             UPY_PID=$!
             find -name '*.py' | inotifywait -q -e close_write --fromfile -
             echo Restarting ...
@@ -34,5 +29,7 @@ case "$1" in
         done
         ;;
     *)
-        $EXE $ARGS $* $MAIN
+        echo "Starting emulator: $MICROPYTHON $ARGS $* $MAIN"
+        $MICROPYTHON $ARGS $* $MAIN 2>&1 | tee "${TREZOR_LOGFILE}"
+        exit ${PIPESTATUS[0]}
 esac
