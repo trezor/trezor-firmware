@@ -4,8 +4,6 @@ from trezor.messages import FailureType
 from trezor.wire import codec_v1
 from trezor.wire.errors import Error
 
-from apps.common import seed
-
 # import all errors into namespace, so that `wire.Error` is available elsewhere
 from trezor.wire.errors import *  # isort:skip # noqa: F401,F403
 
@@ -187,6 +185,8 @@ async def protobuf_workflow(ctx, reader, handler, *args):
 
 
 async def keychain_workflow(ctx, req, namespace, handler, *args):
+    from apps.common import seed
+
     keychain = await seed.get_keychain(ctx, namespace)
     args += (keychain,)
     try:

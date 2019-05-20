@@ -4,12 +4,9 @@ if not __debug__:
     halt("debug mode inactive")
 
 if __debug__:
-    from trezor import loop, utils
+    from trezor import config, loop, utils
     from trezor.messages import MessageType
-    from trezor.messages.DebugLinkState import DebugLinkState
-    from trezor.ui import confirm, swipe
     from trezor.wire import register, protobuf_workflow
-    from apps.common import storage, mnemonic
 
     reset_internal_entropy = None
     reset_current_words = None
@@ -20,6 +17,8 @@ if __debug__:
     input_signal = loop.signal()
 
     async def dispatch_DebugLinkDecision(ctx, msg):
+        from trezor.ui import confirm, swipe
+
         if msg.yes_no is not None:
             confirm_signal.send(confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED)
         if msg.up_down is not None:
@@ -28,6 +27,9 @@ if __debug__:
             input_signal.send(msg.input)
 
     async def dispatch_DebugLinkGetState(ctx, msg):
+        from trezor.messages.DebugLinkState import DebugLinkState
+        from apps.common import storage, mnemonic
+
         m = DebugLinkState()
         m.mnemonic_secret, m.mnemonic_type = mnemonic.get()
         m.passphrase_protection = storage.has_passphrase()
@@ -40,7 +42,7 @@ if __debug__:
     def boot():
         # wipe storage when debug build is used on real hardware
         if not utils.EMULATOR:
-            storage.wipe()
+            config.wipe()
 
         register(
             MessageType.DebugLinkDecision, protobuf_workflow, dispatch_DebugLinkDecision
