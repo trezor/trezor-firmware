@@ -6,7 +6,7 @@ from collections import defaultdict
 
 def group_tokens(tokens):
     r = defaultdict(list)
-    for t in tokens:
+    for t in sorted(tokens, key=lambda t: t.chain_id):
         r[t.chain_id].append(t)
     return r
 %>
@@ -24,7 +24,7 @@ def token_by_chain_address(chain_id, address):
             pass
         % for t in tokens:
         elif address == ${black_repr(t.address_bytes)}:
-            return (${t.chain_id}, ${black_repr(t.address_bytes)}, ${black_repr(t.symbol)}, ${t.decimals})  # ${t.chain} / ${t.name.strip()}
+            return (chain_id, address, ${black_repr(t.symbol)}, ${t.decimals})  # ${t.chain} / ${t.name.strip()}
         % endfor
 % endfor
     # fmt: on
