@@ -28,14 +28,6 @@ case "$1" in
             kill $UPY_PID
         done
         ;;
-    "-p")
-        shift
-        $MICROPYTHON $ARGS $* $MAIN &
-        perf record -F 100 -p $! -g -- sleep 600
-        perf script > perf.trace
-        ../vendor/flamegraph/stackcollapse-perf.pl perf.trace | ../vendor/flamegraph/flamegraph.pl > perf.svg
-        $BROWSER perf.svg
-        ;;
     *)
         echo "Starting emulator: $MICROPYTHON $ARGS $* $MAIN"
         $MICROPYTHON $ARGS $* $MAIN 2>&1 | tee "${TREZOR_LOGFILE}"
