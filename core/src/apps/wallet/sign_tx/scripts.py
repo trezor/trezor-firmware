@@ -171,7 +171,18 @@ def witness_p2wsh(
     # witness program + signatures + redeem script
     num_of_witness_items = 1 + len(signatures) + 1
 
-    w = bytearray()
+    # length of the redeem script
+    pubkeys = multisig_get_pubkeys(multisig)
+    redeem_script_length = output_script_multisig_length(pubkeys, multisig.m)
+
+    # length of the result
+    total_length = 1 + 1  # number of items, version
+    for s in signatures:
+        total_length += 1 + len(s) + 1  # length, signature, sighash
+    total_length += 1 + redeem_script_length  # length, script
+
+    w = empty_bytearray(total_length)
+
     write_varint(w, num_of_witness_items)
     write_varint(w, 0)  # version 0 witness program
 
@@ -179,10 +190,9 @@ def witness_p2wsh(
         append_signature(w, s, sighash)  # size of the witness included
 
     # redeem script
-    pubkeys = multisig_get_pubkeys(multisig)
-    redeem_script = output_script_multisig(pubkeys, multisig.m)
-    write_varint(w, len(redeem_script))
-    write_bytes(w, redeem_script)
+    write_varint(w, redeem_script_length)
+    output_script_multisig(pubkeys, multisig.m, w)
+
     return w
 
 
@@ -198,13 +208,25 @@ def input_script_multisig(
     signature_index: int,
     sighash: int,
     coin: CoinInfo,
-):
+) -> bytearray:
     signatures = multisig.signatures  # other signatures
     if len(signatures[signature_index]) > 0:
         raise ScriptsError("Invalid multisig parameters")
     signatures[signature_index] = signature  # our signature
 
-    w = bytearray()
+    # length of the redeem script
+    pubkeys = multisig_get_pubkeys(multisig)
+    redeem_script_length = output_script_multisig_length(pubkeys, multisig.m)
+
+    # length of the result
+    total_length = 0
+    if not coin.decred:
+        total_length += 1  # OP_FALSE
+    for s in signatures:
+        total_length += 1 + len(s) + 1  # length, signature, sighash
+    total_length += 1 + redeem_script_length  # length, script
+
+    w = empty_bytearray(total_length)
 
     if not coin.decred:
         # Starts with OP_FALSE because of an old OP_CHECKMULTISIG bug, which
@@ -217,15 +239,13 @@ def input_script_multisig(
             append_signature(w, s, sighash)
 
     # redeem script
-    pubkeys = multisig_get_pubkeys(multisig)
-    redeem_script = output_script_multisig(pubkeys, multisig.m)
-    write_op_push(w, len(redeem_script))
-    write_bytes(w, redeem_script)
+    write_op_push(w, redeem_script_length)
+    output_script_multisig(pubkeys, multisig.m, w)
 
     return w
 
 
-def output_script_multisig(pubkeys, m: int) -> bytearray:
+def output_script_multisig(pubkeys, m: int, w: bytearray = None) -> bytearray:
     n = len(pubkeys)
     if n < 1 or n > 15 or m < 1 or m > 15:
         raise ScriptsError("Invalid multisig parameters")
@@ -233,13 +253,18 @@ def output_script_multisig(pubkeys, m: int) -> bytearray:
         if len(pubkey) != 33:
             raise ScriptsError("Invalid multisig parameters")
 
-    w = bytearray()
+    if w is None:
+        w = empty_bytearray(output_script_multisig_length(pubkeys, m))
     w.append(0x50 + m)  # numbers 1 to 16 are pushed as 0x50 + value
     for p in pubkeys:
         append_pubkey(w, p)
     w.append(0x50 + n)
     w.append(0xAE)  # OP_CHECKMULTISIG
     return w
+
+
+def output_script_multisig_length(pubkeys, m: int) -> int:
+    return 1 + len(pubkeys) * (1 + 33) + 1 + 1  # see output_script_multisig
 
 
 # OP_RETURN
