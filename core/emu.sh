@@ -7,7 +7,12 @@ PYOPT="${PYOPT:-1}"
 MAIN="${MAIN:-src/main.py}"
 HEAPSIZE="${HEAPSIZE:-50M}"
 
-ARGS="-O${PYOPT} -X heapsize=${HEAPSIZE}"
+case "$1" in
+    "--enable-debuglink")
+        shift
+        PYOPT=0
+        ;;
+esac
 
 cd `dirname $0`
 
