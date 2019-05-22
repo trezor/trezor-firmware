@@ -63,6 +63,11 @@ class CoinInfo:
             self.sign_hash_double = True
             self.script_hash = sha256_ripemd160_digest
 
+    def __eq__(self, other):
+        if not isinstance(other, CoinInfo):
+            return NotImplemented
+        return self.coin_name == other.coin_name
+
 
 # fmt: off
 <%
