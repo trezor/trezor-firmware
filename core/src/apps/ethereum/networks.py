@@ -199,6 +199,13 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=33416,
+        slip44=33416,
+        shortcut="TEO",
+        name="Trust ETH reOrigin",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=200625,
         slip44=200625,
         shortcut="AKA",
