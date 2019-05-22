@@ -3,6 +3,8 @@
 from trezor.crypto.base58 import blake256d_32, groestl512d_32, keccak_32, sha256d_32
 from trezor.crypto.scripts import blake256_ripemd160_digest, sha256_ripemd160_digest
 
+# flake8: noqa
+
 
 class CoinInfo:
     def __init__(
@@ -71,7 +73,7 @@ def hexfmt(x):
         return "0x{:08x}".format(x)
 
 ATTRIBUTES = (
-    ("coin_name", black_repr),
+    ("coin_name", lambda _: "name"),
     ("coin_shortcut", black_repr),
     ("address_type", int),
     ("address_type_p2sh", int),
@@ -91,12 +93,15 @@ ATTRIBUTES = (
     ("curve_name", lambda r: repr(r.replace("_", "-"))),
 )
 %>\
-COINS = [
+def by_name(name: str) -> CoinInfo:
+    if False:
+        pass
 % for coin in supported_on("trezor2", bitcoin):
-    CoinInfo(
-        % for attr, func in ATTRIBUTES:
-        ${attr}=${func(coin[attr])},
-        % endfor
-    ),
+    elif name == ${black_repr(coin["coin_name"])}:
+        return CoinInfo(
+            % for attr, func in ATTRIBUTES:
+            ${attr}=${func(coin[attr])},
+            % endfor
+        )
 % endfor
-]
+    raise ValueError('Unknown coin name "%s"' % name)
