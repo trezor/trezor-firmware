@@ -259,6 +259,16 @@
     "blockbook": []
   },
   {
+    "chain": "teo",
+    "chain_id": 33416,
+    "slip44": 33416,
+    "shortcut": "TEO",
+    "name": "Trust ETH reOrigin",
+    "rskip60": false,
+    "url": "https://tao.foundation",
+    "blockbook": []
+  },
+  {
     "chain": "akroma",
     "chain_id": 200625,
     "slip44": 200625,
