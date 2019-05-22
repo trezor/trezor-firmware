@@ -7,13 +7,14 @@ from trezor.messages.CardanoSignedTx import CardanoSignedTx
 from trezor.messages.CardanoTxRequest import CardanoTxRequest
 from trezor.messages.MessageType import CardanoTxAck
 
-from apps.cardano import CURVE, cbor, seed
+from apps.cardano import CURVE, seed
 from apps.cardano.address import (
     derive_address_and_node,
     is_safe_output_address,
     validate_full_path,
 )
 from apps.cardano.layout import confirm_sending, confirm_transaction, progress
+from apps.common import cbor
 from apps.common.paths import validate_path
 from apps.common.seed import remove_ed25519_prefix
 from apps.homescreen.homescreen import display_homescreen
