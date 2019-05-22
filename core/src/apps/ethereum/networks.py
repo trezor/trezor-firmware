@@ -87,6 +87,13 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=11,
+        slip44=916,
+        shortcut="META",
+        name="Metadium",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=28,
         slip44=1128,
         shortcut="ETSC",
@@ -150,10 +157,24 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=101,
+        slip44=464,
+        shortcut="ETI",
+        name="EtherInc",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=237,
         slip44=237,
         shortcut="DXN",
         name="DEXON",
+        rskip60=False,
+    ),
+    NetworkInfo(
+        chain_id=269,
+        slip44=269,
+        shortcut="HPB",
+        name="High Performance Blockchain",
         rskip60=False,
     ),
     NetworkInfo(
@@ -238,6 +259,13 @@ NETWORKS = [
         slip44=184,
         shortcut="MUSIC",
         name="Musicoin",
+        rskip60=False,
+    ),
+    NetworkInfo(
+        chain_id=61717561,
+        slip44=61717561,
+        shortcut="AQUA",
+        name="Aquachain",
         rskip60=False,
     ),
     NetworkInfo(
