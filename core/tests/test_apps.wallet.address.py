@@ -154,7 +154,7 @@ class TestAddress(unittest.TestCase):
             ([84 | HARDENED, 0 | HARDENED, 5 | HARDENED, 0, 10], InputScriptType.SPENDWITNESS),
             ([48 | HARDENED, 0 | HARDENED, 5 | HARDENED, 0, 10], InputScriptType.SPENDMULTISIG),
         ]
-        coin = coins.by_shortcut('BTC')
+        coin = coins.by_name('Bitcoin')
         for path, input_type in incorrect_derivation_paths:
             self.assertFalse(validate_full_path(path, coin, input_type))
 
@@ -190,7 +190,7 @@ class TestAddress(unittest.TestCase):
             ([48 | HARDENED, 145 | HARDENED, 5 | HARDENED, 0, 0], InputScriptType.SPENDMULTISIG),
             ([48 | HARDENED, 145 | HARDENED, 5 | HARDENED, 0, 10], InputScriptType.SPENDMULTISIG),
         ]
-        coin = coins.by_shortcut('BCH')  # segwit is disabled
+        coin = coins.by_name('Bcash')  # segwit is disabled
         for path, input_type in incorrect_derivation_paths:
             self.assertFalse(validate_full_path(path, coin, input_type))
 
@@ -207,7 +207,7 @@ class TestAddress(unittest.TestCase):
             ([44 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0, 1123], InputScriptType.SPENDADDRESS),
             ([44 | HARDENED, 3 | HARDENED, 0 | HARDENED, 1, 44444], InputScriptType.SPENDADDRESS),
         ]
-        coin = coins.by_shortcut('DOGE')  # segwit is disabled
+        coin = coins.by_name('Dogecoin')  # segwit is disabled
         for path, input_type in correct_derivation_paths:
             self.assertTrue(validate_full_path(path, coin, input_type))
 
@@ -233,7 +233,7 @@ class TestAddress(unittest.TestCase):
             [84 | HARDENED, 0 | HARDENED, 5 | HARDENED, 0, 0],
             [84 | HARDENED, 0 | HARDENED, 5 | HARDENED, 0, 10],
         ]
-        coin = coins.by_shortcut('BTC')
+        coin = coins.by_name('Bitcoin')
         for path in correct_derivation_paths:
             self.assertTrue(validate_path_for_bitcoin_public_key(path, coin))
 
@@ -249,7 +249,7 @@ class TestAddress(unittest.TestCase):
             [44 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0],
             [44 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0, 0],
         ]
-        coin = coins.by_shortcut('DOGE')  # segwit is disabled
+        coin = coins.by_name('Dogecoin')  # segwit is disabled
         for path in correct_derivation_paths:
             self.assertTrue(validate_path_for_bitcoin_public_key(path, coin))
 

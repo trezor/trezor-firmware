@@ -15,14 +15,11 @@ class TestCoins(unittest.TestCase):
             ('TAZ', 'Zcash Testnet', 7461),
         ]
         for s, n, a in ref:
-            c1 = coins.by_shortcut(s)
-            c2 = coins.by_name(n)
-            self.assertEqual(c1, c2)
-            self.assertEqual(c1.address_type, a)
+            c = coins.by_name(n)
+            self.assertEqual(c.address_type, a)
+            self.assertEqual(c.coin_shortcut, s)
 
     def test_failure(self):
-        with self.assertRaises(ValueError):
-            coins.by_shortcut('XXX')
         with self.assertRaises(ValueError):
             coins.by_name('XXXXX')
 
