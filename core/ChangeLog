@@ -1,9 +1,11 @@
 Version 2.1.1 [unreleased]
+* EOS support
+* Monero UI fixes
 * More strict path validations
 * Display non-zero locktime values
 * Don't rotate the screen via swipe gesture
 * Set screen rotation via user setting
-* Monero UI fixes
+* Speed and memory optimizations
 
 Version 2.1.0 [Mar 2019]
 * Security improvements
