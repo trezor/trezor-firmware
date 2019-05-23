@@ -4,7 +4,7 @@
   "coin_label": "Myriad",
   "curve_name": "secp256k1",
   "website": "https://www.myriadcoin.org",
-  "github": "https://github.com/myriadcoin/myriadcoin",
+  "github": "https://github.com/myriadteam/myriadcoin",
   "maintainer": "Adam Hickerson <a@hi.ckerson.com>",
   "address_type": 50,
   "address_type_p2sh": 9,
