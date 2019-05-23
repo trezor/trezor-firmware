@@ -3,7 +3,7 @@
   "coin_shortcut": "RITO",
   "coin_label": "Ritocoin",
   "website": "https://ritocoin.org",
-  "github": "https://github.com/RitoProject/",
+  "github": "https://github.com/RitoProject",
   "maintainer": "Scotty <scotty.rvn@gmail.com>",
   "curve_name": "secp256k1",
   "address_type": 25,
@@ -33,7 +33,7 @@
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [
-    "https://insight.ritocoin.org/"
+    "https://insight.ritocoin.org"
   ],
   "blockbook": [],
   "cooldown": 100,
