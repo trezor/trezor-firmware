@@ -47,8 +47,6 @@ build legacy emu:
 
 # TODO: aren't some tests from .travis.yml missing?
 test legacy emu:
-  variables:
-    GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
   stage: test
   dependencies:
     - build legacy emu
