@@ -319,19 +319,6 @@
                 }
             ]
         },
-        "bitcoin:FLASH": {
-            "links": {
-                "Github": "https://github.com/flash-coin",
-                "Homepage": "https://www.flashcoin.io"
-            },
-            "marketcap_usd": 3020672,
-            "name": "Flashcoin",
-            "shortcut": "FLASH",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
-            "type": "coin",
-            "wallet": []
-        },
         "bitcoin:FLO": {
             "links": {
                 "Github": "https://github.com/floblockchain/flo",
