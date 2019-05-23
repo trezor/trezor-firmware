@@ -640,27 +640,6 @@ def by_name(name: str) -> CoinInfo:
             decred=False,
             curve_name='secp256k1',
         )
-    elif name == "Flashcoin":
-        return CoinInfo(
-            coin_name=name,
-            coin_shortcut="FLASH",
-            address_type=68,
-            address_type_p2sh=130,
-            maxfee_kb=4000000,
-            signed_message_header="Flashcoin Signed Message:\n",
-            xpub_magic=0x0488b21e,
-            xpub_magic_segwit_p2sh=0x049d7cb2,
-            xpub_magic_segwit_native=0x04b24746,
-            bech32_prefix="flash",
-            cashaddr_prefix=None,
-            slip44=120,
-            segwit=True,
-            fork_id=None,
-            force_bip143=False,
-            bip115=False,
-            decred=False,
-            curve_name='secp256k1',
-        )
     elif name == "Florincoin":
         return CoinInfo(
             coin_name=name,

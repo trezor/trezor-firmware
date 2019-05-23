@@ -4,7 +4,6 @@ prebuild style:
   stage: prebuild
   script:
     - pipenv run make style_check
-    - cd core && pipenv run make templates_check  # TODO
 
 prebuild common:
   stage: prebuild
