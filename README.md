@@ -29,3 +29,7 @@ S1 Blocker  | Outage, broken feature with no workaround
 S2 Critical | Broken feature, workaround too complex & unacceptable
 S3 Major    | Broken feature, workaround acceptable
 S4 Low      | Functionality inconvenience or cosmetic issue
+
+### CI
+
+The complete test suite is running on our internal GitLab CI. If you are an external contributor, we also have a [Travis instance](https://travis-ci.org/trezor/trezor-firmware) where a small subset of tests is running as well - mostly style and easy fast checks, which are quite common to fail for new contributors.
