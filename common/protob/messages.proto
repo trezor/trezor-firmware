@@ -178,20 +178,6 @@ enum MessageType {
     MessageType_CardanoTxAck = 309 [(wire_in) = true];
     MessageType_CardanoSignedTx = 310 [(wire_out) = true];
 
-    // Ontology
-    MessageType_OntologyGetAddress = 350 [(wire_in) = true];
-    MessageType_OntologyAddress = 351 [(wire_out) = true];
-    MessageType_OntologyGetPublicKey = 352 [(wire_in) = true];
-    MessageType_OntologyPublicKey = 353 [(wire_out) = true];
-    MessageType_OntologySignTransfer = 354 [(wire_in) = true];
-    MessageType_OntologySignedTransfer = 355 [(wire_out) = true];
-    MessageType_OntologySignWithdrawOng = 356 [(wire_in) = true];
-    MessageType_OntologySignedWithdrawOng = 357 [(wire_out) = true];
-    MessageType_OntologySignOntIdRegister = 358 [(wire_in) = true];
-    MessageType_OntologySignedOntIdRegister = 359 [(wire_out) = true];
-    MessageType_OntologySignOntIdAddAttributes = 360 [(wire_in) = true];
-    MessageType_OntologySignedOntIdAddAttributes = 361 [(wire_out) = true];
-
     // Ripple
     MessageType_RippleGetAddress = 400 [(wire_in) = true];
     MessageType_RippleAddress = 401 [(wire_out) = true];
