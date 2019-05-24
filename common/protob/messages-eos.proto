@@ -277,7 +277,5 @@ message EosTxActionAck {
  * @end
  */
 message EosSignedTx {
-    optional uint32 signature_v = 1; // Computed signature (recovery parameter, limited to 31 or 32)
-    optional bytes signature_r = 2;  // Computed signature R component (256 bit)
-    optional bytes signature_s = 3;  // Computed signature S component (256 bit)
+    optional string signature = 1; // Computed signature
 }

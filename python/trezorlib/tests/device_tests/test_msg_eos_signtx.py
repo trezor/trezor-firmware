@@ -76,17 +76,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(self.input_flow(pages=3))
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "0a9a0f467697010b743ffd02eae6698464c8b5c84b696245397287c225f85e01"
+                resp.signature
+                == "SIG_K1_JveDuew7oyKjgLmApra3NmKArx3QH6HVmatgkLYeUYWv7aGaoQPFyjBwAdcxuo2Skq9wRgsizos92h9iq9i5JbeHh7zNuo"
             )
-            assert (
-                resp.signature_s.hex()
-                == "3ec6a0175e5209be6789587a9d6b5f61593b841a751112faa05d9efdd9239d40"
-            )
-            assert resp.signature_v == 31
 
     def test_eos_signtx_buyram(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -118,17 +112,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(self.input_flow(pages=2))
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "480bdc505ba196d445d92ea12bda9d39f986d01620efcffe98bcf645ddcbb4ec"
+                resp.signature
+                == "SIG_K1_K4gU5S9g7rS6MojaPwWppEBCBbPrJm1pyJtVR9mts1sBq5xyN7nJv3FGnrBR7ByjanboCtK4ogY35sNPFX1F5qoZW7BkF9"
             )
-            assert (
-                resp.signature_s.hex()
-                == "35c8e2105f0228c9e1e511682ae79eac1b7b90bc84c1a0dae13245b7f0f96abf"
-            )
-            assert resp.signature_v == 31
 
     def test_eos_signtx_buyrambytes(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -160,17 +148,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(self.input_flow(pages=2))
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "52267ee5f3ff73939af5ccdaa3406e0783deaf76accf5ce4ceb9714cdbdf7d6b"
+                resp.signature
+                == "SIG_K1_K618wK9f27YxHoPG9hoUCsazZXzxumBj3V9MqcTUh9yCocvP1uFZQAmGmZLhsAtuC2TRR4gtqbeQj57FniYd5i4faQCb6t"
             )
-            assert (
-                resp.signature_s.hex()
-                == "53aa9a9ecf044396441a559b51d3b97e239321c895823aad6888b0de2063a078"
-            )
-            assert resp.signature_v == 31
 
     def test_eos_signtx_sellram(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -198,17 +180,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(self.input_flow(pages=2))
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "04c0fdf1d2e0ea21af292173eacc2c7db90f7764abe69b79a8c2b24201af27c4"
+                resp.signature
+                == "SIG_K1_JusrCS7H5DR53qke7edoWvJuLiQS2VQ84CsN5NWmWYVa7wmJVjh3Hcg5hH42zF8KjAmmvHtaJZ3wkortTW9eds1eoiKsrj"
             )
-            assert (
-                resp.signature_s.hex()
-                == "7bb29f12eaaabbebdb5190d30367012a80128138b5024b30e93e3afb3d24734e"
-            )
-            assert resp.signature_v == 31
 
     def test_eos_signtx_delegate(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -242,17 +218,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(self.input_flow(pages=3))
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "03b4ccb74b7ad54f28fdeda244facb3038cf70424fd6aa4b171a3bb02a591504"
+                resp.signature
+                == "SIG_K1_Juju8Wjzyn38nuvgS1KT3koKQLHxMMfqVHrp5jMjv4QLU2pUG6EbiJD7D1EHE6xP8DRuwFLVUNR38nTyUKC1Eiz33WocUE"
             )
-            assert (
-                resp.signature_s.hex()
-                == "4e24e08d1789421e17ba47e0e4635a3721400a795e40a8896dc5e5af4a95343d"
-            )
-            assert resp.signature_v == 31
 
     def test_eos_signtx_undelegate(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -285,17 +255,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(self.input_flow(pages=2))
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "3f39722a88f12395f3cfcdbe218c185f02295ec07a5da8f4b953d5ec3c9ec36b"
+                resp.signature
+                == "SIG_K1_K3XXUzCUkT2HEdrJTz1CdDDKZbLMShmyEjknQozGhy4F21yUetr1nEe2vUgmGebk2nyYe49R5nkA155J5yFBBaLsTcSdBL"
             )
-            assert (
-                resp.signature_s.hex()
-                == "7acbae47d60cd538ca28fcc8f3dae8f03b3812e7719dd4e9c069a66dbac5ebf3"
-            )
-            assert resp.signature_v == 31
 
     def test_eos_signtx_refund(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -323,17 +287,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(self.input_flow(pages=2))
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "113c4867f77c371ff4701beb794ff0a0a6a1137a0115d0f4b5245c391e9f596f"
+                resp.signature
+                == "SIG_K1_JwWZSSKQZL1hCdMmwEAKjs3r15kau5gaBrQczKy65QANANzovV6U4XbVUZQkZzaQrNGYAtgxrU1WJ1smWgXZNqtKVQUZqc"
             )
-            assert (
-                resp.signature_s.hex()
-                == "27203aaaeb8cdbc92c0af32f840c385ac6202e3b4e927bda59d397ebef513381"
-            )
-            assert resp.signature_v == 31
 
     def test_eos_signtx_linkauth(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -366,17 +324,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(self.input_flow(pages=2))
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "5c9bf154dc77649ccf5a997441fcd4041e9da79149078df27a1c6268cf237c75"
+                resp.signature
+                == "SIG_K1_Kgs3JdLNqTyGz7uyNiuYLK8sy5qhVQWozrBY7bJWKsjrWAxNyDQUKqHsHmTom5rGY21vYdXmCpi4msU6XeMgWvi4bsBxTx"
             )
-            assert (
-                resp.signature_s.hex()
-                == "3e432ddcd17feb2997145d11240b0ca4344a01e2d96e9886533bca7ffceb10cd"
-            )
-            assert resp.signature_v == 32
 
     def test_eos_signtx_unlinkauth(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -408,17 +360,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(self.input_flow(pages=2))
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "316c296594fd7a4dd3b615d80c630fda256e9a3460b00d4f16eede1fb2af9574"
+                resp.signature
+                == "SIG_K1_K1ioB5KMRC2mmTwYsGwsFU51ENp1XdSBUrb4bxUCLYhoq7Y733WaLZ4Soq9fdrkaJS8uJ3R7Z1ZjyEKRHU8HU4s4MA86zB"
             )
-            assert (
-                resp.signature_s.hex()
-                == "76d023913b4f323cfa857d144bf78a4d561954bb23c5df9a31649c9503c3a3b7"
-            )
-            assert resp.signature_v == 31
 
     def test_eos_signtx_updateauth(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -473,17 +419,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(self.input_flow(pages=8))
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "00f0ca8ffa8208e72df509a3b356e77056b234d4db167b58d485f30cb9c61841"
+                resp.signature
+                == "SIG_K1_JuNuwmJm7nLfpxbCqXZMxZoU56TzBh8F5PH7ZyPvQMti6QxJbErDGbKCAaHhoRxwWKzv5kj6kX3WyWys6jAzVe9pDhXB1k"
             )
-            assert (
-                resp.signature_s.hex()
-                == "3f6fb40ffa4e1cf6f3bcb0d8fa3873a2b5a05384ca9251159968558688a4e43d"
-            )
-            assert resp.signature_v == 31
 
     def test_eos_signtx_deleteauth(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -511,17 +451,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(self.input_flow(pages=2))
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "6fe7d66f8be2fe3de23c48561e8a17113d1a0aabcf0d4160e9bd8af90f5a608f"
+                resp.signature
+                == "SIG_K1_KjPTp8jCtgBKQWqsndhrH4pdCGiks76Q1qBt9e8MtexW6FQg3FzfVFKDU4SvyVDyFs3worn6RyW6WYavw76ACNqcqkCYjf"
             )
-            assert (
-                resp.signature_s.hex()
-                == "3cec8db96be2f6aa7bb00302cec6ad3c8655b492f9a2b84b3c61df6bc81f0d83"
-            )
-            assert resp.signature_v == 32
 
     def test_eos_signtx_vote(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -583,17 +517,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(self.input_flow(pages=6))
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "1a303dcb27d2d17bc9efc89b10c41d9d78f7e3d671e3475bb1115b988f918770"
+                resp.signature
+                == "SIG_K1_JxgVhc6ExoTHee3Djrciwmmf2Xck7NLgvAtC2gfgV4Wj2AqMXEb6aKMhpUcTV59VTR1DdnPF1XbiCcJViJiU3zsk1kQz89"
             )
-            assert (
-                resp.signature_s.hex()
-                == "07869385bf3af8cf0a4ee9daf4f8dd122650c7d59da48d6d9ce1e26b59753324"
-            )
-            assert resp.signature_v == 31
 
     def test_eos_signtx_vote_proxy(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -621,17 +549,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(self.input_flow(pages=2))
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "6f511059a910d256ac20483bfedef2ada3b2d04f3261c97c0fce9455ca8b7ef4"
+                resp.signature
+                == "SIG_K1_KjJzcDg9MT8XbLeP1fgQjdmdE6oNQQisMwbXikqrEZYmJe6GCYg89Wr2donYV6zRfg9h7dJKQDCHugdtsxjtmEdqLtPv25"
             )
-            assert (
-                resp.signature_s.hex()
-                == "58d795deaf5c9b686e5bcaeabee801ad78e6675f051c24972d8c47abd33585f0"
-            )
-            assert resp.signature_v == 32
 
     def test_eos_signtx_unknown(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -659,17 +581,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(self.input_flow(pages=2))
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "0bcc986299cf4eb1d5e5bc73620972b2b6683cd4230953a6f1725017927fd9ba"
+                resp.signature
+                == "SIG_K1_JvoJtrHpQJjHAZzEBhiQm75iimYabcAVNDvz8mkempLh6avSJgnXm5JzCCUEBjDtW3syByfXknmgr93Sw3P9RNLnwySmv6"
             )
-            assert (
-                resp.signature_s.hex()
-                == "488f7830e30eea5c7b4a96156bf7ffb0983c45a96211ca070b9db3bc6ba4db02"
-            )
-            assert resp.signature_v == 31
 
     def test_eos_signtx_newaccount(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -779,17 +695,11 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(input_flow)
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "6346a807eef0257a34269b034df7470e134261833d0da5fe0bd91aedf5a47f86"
+                resp.signature
+                == "SIG_K1_KhjdS1gKUHR4jKbN3YSdNbPbEqnUVM1Nt6ybdzEAwsUtfbCRJDwpQwPRuEau48CyvhYC5fKo5BiWMPQJbQPrg5ErHThieU"
             )
-            assert (
-                resp.signature_s.hex()
-                == "676a1fcd0d8faff63ec206c8596de9cb5d35037d05f337afdc22c7b9e0863e77"
-            )
-            assert resp.signature_v == 32
 
     def test_eos_signtx_setcontract(self):
         self.setup_mnemonic_nopin_nopassphrase()
@@ -847,14 +757,8 @@ class TestMsgEosSignTx(TrezorTest):
         with self.client:
             self.client.set_input_flow(input_flow)
             resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
-
             assert isinstance(resp, EosSignedTx)
             assert (
-                resp.signature_r.hex()
-                == "674bbe7c8c7b9abf03ab38851cb53411e794afff04737895962643b1ed94b7d1"
+                resp.signature
+                == "SIG_K1_KiG8c8t2SQkSfrEbD9BwJoYT133BPFLx3gu8sAzJadXyFk1EXKYAsgx4tkjt79G6ofuaQzJPAfDqy1FSpgLRbhbeFH9omd"
             )
-            assert (
-                resp.signature_s.hex()
-                == "1e47559db68d435494e832a16cc08ae7a67b533013ab3407f7a89d5e28de98b7"
-            )
-            assert resp.signature_v == 32

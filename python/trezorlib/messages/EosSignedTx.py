@@ -8,18 +8,12 @@ class EosSignedTx(p.MessageType):
 
     def __init__(
         self,
-        signature_v: int = None,
-        signature_r: bytes = None,
-        signature_s: bytes = None,
+        signature: str = None,
     ) -> None:
-        self.signature_v = signature_v
-        self.signature_r = signature_r
-        self.signature_s = signature_s
+        self.signature = signature
 
     @classmethod
     def get_fields(cls):
         return {
-            1: ('signature_v', p.UVarintType, 0),
-            2: ('signature_r', p.BytesType, 0),
-            3: ('signature_s', p.BytesType, 0),
+            1: ('signature', p.UnicodeType, 0),
         }
