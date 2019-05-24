@@ -27,10 +27,10 @@ class TestEosGetPublicKey(unittest.TestCase):
         ]
 
         wif_keys = [
-            'EOS6zpSNY1YoLxNt2VsvJjoDfBueU6xC1M1ERJw1UoekL1NHn8KNA',
-            'EOS62cPUiWnLqbUjiBMxbEU4pm4Hp5X3RGk4KMTadvZNygjX72yHW',
-            'EOS5dp8aCFoFwrKo6KuUfos1hwMfZGkiZUbaF2CyuD4chyBEN2wQK',
-            'EOS7n7TXwR4Y3DtPt2ji6akhQi5uw4SruuPArvoNJso84vhwPQt1G',
+            'PUB_K1_6zpSNY1YoLxNt2VsvJjoDfBueU6xC1M1ERJw1UoekL1NK2aD4t',
+            'PUB_K1_62cPUiWnLqbUjiBMxbEU4pm4Hp5X3RGk4KMTadvZNygjZg9L9x',
+            'PUB_K1_5dp8aCFoFwrKo6KuUfos1hwMfZGkiZUbaF2CyuD4chyBEdV3mU',
+            'PUB_K1_7n7TXwR4Y3DtPt2ji6akhQi5uw4SruuPArvoNJso84vhxKpEz3',
         ]
 
         for index, path in enumerate(derivation_paths):
