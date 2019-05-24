@@ -7,6 +7,7 @@ from trezor import io, log, loop, ui, utils, workflow
 from trezor.crypto import der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
 
+from apps.cardano import cbor
 from apps.common import HARDENED, storage
 
 _HID_RPT_SIZE = const(64)
@@ -23,12 +24,60 @@ _CMD_MSG = const(0x83)  # send U2F message frame
 _CMD_LOCK = const(0x84)  # send lock channel command
 _CMD_INIT = const(0x86)  # channel initialization
 _CMD_WINK = const(0x88)  # send device identification wink
+_CMD_CBOR = const(0x90)  # send encapsulated CTAP CBOR encoded message
+_CMD_CANCEL = const(0x91)  # cancel any outstanding requests on this CID
+_CMD_KEEPALIVE = const(0xBB)  # processing a message
 _CMD_ERROR = const(0xBF)  # error response
 
 # types for the msg cmd
 _MSG_REGISTER = const(0x01)  # registration command
 _MSG_AUTHENTICATE = const(0x02)  # authenticate/sign command
 _MSG_VERSION = const(0x03)  # read version string command
+
+# types for the cbor cmd
+_CBOR_MAKE_CREDENTIAL = const(0x01)  # generate new credential command
+_CBOR_GET_ASSERTION = const(0x02)  # authenticate command
+_CBOR_GET_INFO = const(0x04)  # report AAGUID and device capabilities
+_CBOR_CLIENT_PIN = const(0x06)  # PIN and pinToken management
+_CBOR_RESET = const(0x07)  # factory reset, invalidating all generated credentials
+_CBOR_GET_NEXT_ASSERTION = const(0x08)  # obtain the next per-credential signature
+
+# CBOR MakeCredential command parameter keys
+_MAKECRED_CMD_CLIENT_DATA_HASH = const(0x01)  # bytes, required
+_MAKECRED_CMD_RP = const(0x02)  # map, required
+_MAKECRED_CMD_USER = const(0x03)  # map, required
+_MAKECRED_CMD_PUB_KEY_CRED_PARAMS = const(0x04)  # array of maps, required
+_MAKECRED_CMD_EXCLUDE_LIST = const(0x05)  # array of maps, optional
+_MAKECRED_CMD_OPTIONS = const(0x07)  # map, optional
+_MAKECRED_CMD_PIN_AUTH = const(0x08)  # bytes, optional
+
+# CBOR MakeCredential response member keys
+_MAKECRED_RESP_FMT = const(0x01)  # str, required
+_MAKECRED_RESP_AUTH_DATA = const(0x02)  # bytes, required
+_MAKECRED_RESP_ATT_STMT = const(0x03)  # map, required
+
+# CBOR GetAssertion command parameter keys
+_GETASSERT_CMD_RP_ID = const(0x01)  # str, required
+_GETASSERT_CMD_CLIENT_DATA_HASH = const(0x02)  # bytes, required
+_GETASSERT_CMD_ALLOW_LIST = const(0x03)  # array of maps, optional
+_GETASSERT_CMD_OPTIONS = const(0x05)  # map, optional
+_GETASSERT_CMD_PIN_AUTH = const(0x06)  # bytes, optional
+
+# CBOR GetAssertion response member keys
+_GETASSERT_RESP_CREDENTIAL = const(0x01)  # map, optional
+_GETASSERT_RESP_AUTH_DATA = const(0x02)  # bytes, required
+_GETASSERT_RESP_SIGNATURE = const(0x03)  # bytes, required
+_GETASSERT_RESP_PUB_KEY_CREDENTIAL_USER_ENTITY = const(0x04)  # map, optional
+_GETASSERT_RESP_NUM_OF_CREDENTIALS = const(0x05)  # int, optional
+
+# CBOR GetInfo response member keys
+_GETINFO_RESP_VERSIONS = const(0x01)  # array of str, required
+_GETINFO_RESP_AAGUID = const(0x03)  # bytes(16), required
+_GETINFO_RESP_OPTIONS = const(0x04)  # map, optional
+
+# status codes for the keepalive cmd
+_KEEPALIVE_STATUS_PROCESSING = const(0x01)  # still processing the current request
+_KEEPALIVE_STATUS_UP_NEEDED = const(0x02)  # waiting for user presence
 
 # hid error codes
 _ERR_NONE = const(0x00)  # no error
@@ -40,6 +89,12 @@ _ERR_MSG_TIMEOUT = const(0x05)  # message has timed out
 _ERR_CHANNEL_BUSY = const(0x06)  # channel busy
 _ERR_LOCK_REQUIRED = const(0x0A)  # command requires channel lock
 _ERR_INVALID_CID = const(0x0B)  # command not allowed on this cid
+_ERR_INVALID_CBOR = const(0x12)  # error when parsing CBOR
+_ERR_OPERATION_DENIED = const(0x27)  # user declined or timed out
+_ERR_UNSUPPORTED_OPTION = const(0x2B)  # unsupported option
+_ERR_NO_CREDENTIALS = const(0x2E)  # no valid credentials provided
+_ERR_NOT_ALLOWED = const(0x30)  # continuation command not allowed
+_ERR_PIN_AUTH_INVALID = const(0x33)  # pinAuth verification failed
 _ERR_OTHER = const(0x7F)  # other unspecified error
 
 # command status responses
@@ -53,6 +108,7 @@ _SW_CLA_NOT_SUPPORTED = const(0x6E00)
 
 # init response
 _CAPFLAG_WINK = const(0x01)  # device supports _CMD_WINK
+_CAPFLAG_CBOR = const(0x04)  # device supports _CMD_CBOR
 _U2FHID_IF_VERSION = const(2)  # interface version
 
 # register response
@@ -61,11 +117,15 @@ _U2F_REGISTER_ID = const(0x05)  # version 2 registration identifier
 _U2F_ATT_PRIV_KEY = b"q&\xac+\xf6D\xdca\x86\xad\x83\xef\x1f\xcd\xf1*W\xb5\xcf\xa2\x00\x0b\x8a\xd0'\xe9V\xe8T\xc5\n\x8b"
 _U2F_ATT_CERT = b"0\x82\x01\x180\x81\xc0\x02\t\x00\xb1\xd9\x8fBdr\xd3,0\n\x06\x08*\x86H\xce=\x04\x03\x020\x151\x130\x11\x06\x03U\x04\x03\x0c\nTrezor U2F0\x1e\x17\r160429133153Z\x17\r260427133153Z0\x151\x130\x11\x06\x03U\x04\x03\x0c\nTrezor U2F0Y0\x13\x06\x07*\x86H\xce=\x02\x01\x06\x08*\x86H\xce=\x03\x01\x07\x03B\x00\x04\xd9\x18\xbd\xfa\x8aT\xac\x92\xe9\r\xa9\x1f\xcaz\xa2dT\xc0\xd1s61M\xde\x83\xa5K\x86\xb5\xdfN\xf0Re\x9a\x1do\xfc\xb7F\x7f\x1a\xcd\xdb\x8a3\x08\x0b^\xed\x91\x89\x13\xf4C\xa5&\x1b\xc7{h`o\xc10\n\x06\x08*\x86H\xce=\x04\x03\x02\x03G\x000D\x02 $\x1e\x81\xff\xd2\xe5\xe6\x156\x94\xc3U.\x8f\xeb\xd7\x1e\x895\x92\x1c\xb4\x83ACq\x1cv\xea\xee\xf3\x95\x02 _\x80\xeb\x10\xf2\\\xcc9\x8b<\xa8\xa9\xad\xa4\x02\x7f\x93\x13 w\xb7\xab\xcewFZ'\xf5=3\xa1\x1d"
 _BOGUS_APPID = b"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+_AAGUID = (
+    b"\x80\xbc\xc8T\x83\xb9\xf3\x0e\x9d6TF\x00\x08\x08\x86"
+)  # First 16 bytes of SHA-256("TREZOR")
 
 # authentication control byte
 _AUTH_ENFORCE = const(0x03)  # enforce user presence and sign
 _AUTH_CHECK_ONLY = const(0x07)  # check only
-_AUTH_FLAG_TUP = const(0x01)  # test of user presence set
+_AUTH_FLAG_TUP = const(0x01)  # user present
+_AUTH_FLAG_TUV = const(0x04)  # user verified
 
 # common raw message format (ISO7816-4:2005 mapping)
 _APDU_CLA = const(0)  # uint8_t cla;        // Class - reserved
@@ -396,13 +456,13 @@ class ConfirmState:
             )
             dialog = Confirm(text)
         else:
-            content = ConfirmContent(self.action, app_id)
+            content = ConfirmContentU2f(self.action, app_id)
             dialog = Confirm(content)
 
         self.confirmed = await dialog is CONFIRMED
 
 
-class ConfirmContent(ui.Control):
+class ConfirmContentU2f(ui.Control):
     def __init__(self, action: int, app_id: bytes) -> None:
         self.action = action
         self.app_id = app_id
@@ -448,6 +508,37 @@ class ConfirmContent(ui.Control):
             self.repaint = False
 
 
+class ConfirmContentFido2(ui.Widget):
+    def __init__(self, action: int, rp_id: str) -> None:
+        self.action = action
+        self.rp_id = rp_id
+        self.app_icon = None
+        self.boot()
+
+    def boot(self) -> None:
+        from trezor import res
+        from apps.webauthn import knownapps
+
+        rp_id_hash = hashlib.sha256(self.rp_id).digest()
+        try:
+            namepart = knownapps.knownapps[rp_id_hash].lower().replace(" ", "_")
+            icon = res.load("apps/webauthn/res/icon_%s.toif" % namepart)
+        except Exception as e:
+            icon = res.load("apps/webauthn/res/icon_webauthn.toif")
+            if __debug__:
+                log.exception(__name__, e)
+        self.app_icon = icon
+
+    def render(self) -> None:
+        if self.action == _CONFIRM_REGISTER:
+            header = "FIDO2 Make Credential"
+        else:
+            header = "FIDO2 Authenticate"
+        ui.header(header, ui.ICON_DEFAULT, ui.GREEN, ui.BG, ui.GREEN)
+        ui.display.image((ui.WIDTH - 64) // 2, 64, self.app_icon)
+        ui.display.text_center(ui.WIDTH // 2, 168, self.app_name, ui.MONO, ui.FG, ui.BG)
+
+
 def dispatch_cmd(req: Cmd, state: ConfirmState) -> Cmd:
     if req.cmd == _CMD_MSG:
         m = req.to_msg()
@@ -490,6 +581,42 @@ def dispatch_cmd(req: Cmd, state: ConfirmState) -> Cmd:
     elif req.cmd == _CMD_WINK:
         if __debug__:
             log.debug(__name__, "_CMD_WINK")
+        ui.alert()
+        return req
+    elif req.cmd == _CMD_CBOR:
+        if req.data[0] == _CBOR_MAKE_CREDENTIAL:
+            if __debug__:
+                log.debug(__name__, "_CBOR_MAKE_CREDENTIAL")
+            return cbor_make_credential(req)
+        elif req.data[0] == _CBOR_GET_ASSERTION:
+            if __debug__:
+                log.debug(__name__, "_CBOR_GET_ASSERTION")
+            return cbor_get_assertion(req)
+        elif req.data[0] == _CBOR_GET_INFO:
+            if __debug__:
+                log.debug(__name__, "_CBOR_GET_INFO")
+            return cbor_get_info(req)
+        elif req.data[0] == _CBOR_CLIENT_PIN:
+            if __debug__:
+                log.debug(__name__, "_CBOR_CLIENT_PIN")
+            return cbor_error(req.cid, _ERR_INVALID_CMD)
+        elif req.data[0] == _CBOR_RESET:
+            if __debug__:
+                log.debug(__name__, "_CBOR_RESET")
+            return cbor_error(req.cid, _ERR_INVALID_CMD)
+        elif req.data[0] == _CBOR_GET_NEXT_ASSERTION:
+            if __debug__:
+                log.debug(__name__, "_CBOR_GET_NEXT_ASSERTION")
+            return cbor_error(req.cid, _ERR_NOT_ALLOWED)
+        else:
+            if __debug__:
+                log.warning(__name__, "_ERR_INVALID_CMD _CMD_CBOR %d", req.data[0])
+            return cbor_error(req.cid, _ERR_INVALID_CMD)
+
+    elif req.cmd == _CMD_CANCEL:
+        if __debug__:
+            log.debug(__name__, "_CMD_CANCEL")
+        state.reset()
         return req
     else:
         if __debug__:
@@ -513,7 +640,7 @@ def cmd_init(req: Cmd) -> Cmd:
     resp.versionMajor = 2
     resp.versionMinor = 0
     resp.versionBuild = 0
-    resp.capFlags = _CAPFLAG_WINK
+    resp.capFlags = _CAPFLAG_WINK | _CAPFLAG_CBOR
 
     return Cmd(req.cid, req.cmd, buf)
 
@@ -749,3 +876,113 @@ def msg_error(cid: int, code: int) -> Cmd:
 
 def cmd_error(cid: int, code: int) -> Cmd:
     return Cmd(cid, _CMD_ERROR, ustruct.pack(">B", code))
+
+
+def cbor_error(cid: int, code: int) -> Cmd:
+    return Cmd(cid, _CMD_CBOR, ustruct.pack(">H", code))
+
+
+def cbor_make_credential(req: Cmd) -> Cmd:
+    log.warning(__name__, "cbor_make_credential")
+    # TODO
+    raise
+
+
+def cbor_get_assertion(req: Cmd) -> Cmd:
+    from trezor.ui.confirm import CONFIRMED, ConfirmDialog
+
+    try:
+        param = cbor.decode(req.data[1:])
+        rp_id = param[_GETASSERT_CMD_RP_ID]
+        client_data_hash = param[_GETASSERT_CMD_CLIENT_DATA_HASH]
+        rp_id_hash = hashlib.sha256(rp_id).digest()
+    except:
+        return cbor_error(req.cid, _ERR_INVALID_CBOR)
+
+    try:
+        allow_list = param[_GETASSERT_CMD_ALLOW_LIST]
+    except:
+        # Resident keys are not supported
+        return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
+
+    try:
+        credential_id_list = [
+            credential["id"]
+            for credential in allow_list
+            if credential["type"] != "public-key"
+        ]
+    except:
+        return cbor_error(req.cid, _ERR_INVALID_CBOR)
+
+    if _GETASSERT_CMD_PIN_AUTH in param:
+        # Client PIN is not supported
+        return cbor_error(req.cid, _ERR_PIN_AUTH_INVALID)
+
+    user_verification = False
+    if _GETASSERT_CMD_OPTIONS in param:
+        options = param[_GETASSERT_CMD_OPTIONS]
+        if "uv" in options:
+            user_verification = options["uv"]
+
+    content = ConfirmContentFido2(_CONFIRM_AUTHENTICATE, rp_id)
+    if ConfirmDialog(content) != CONFIRMED:
+        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+
+    if user_verification:
+        # TODO check PIN
+        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+
+    credentials = []
+    for credential_id in credential_id_list:
+        node = msg_authenticate_genkey(rp_id_hash, credential_id, "<8L")
+        if node is None:
+            # prior to firmware version 2.0.8, keypath was serialized in a
+            # big-endian manner, instead of little endian, like in trezor-mcu.
+            # try to parse it as big-endian now and check the HMAC.
+            node = msg_authenticate_genkey(rp_id_hash, credential_id, ">8L")
+        if node is not None:
+            credentials.append((credential_id, node))
+
+    if not credentials:
+        return cbor_error(req.cid, _ERR_NO_CREDENTIALS)
+
+    # TODO select credential
+    credential_id = credentials[0][0]
+    node = credentials[0][1]
+
+    flags = _AUTH_FLAG_TUP
+    if user_verification:
+        flags |= _AUTH_FLAG_TUV
+
+    # get next counter
+    ctr = storage.next_u2f_counter()
+
+    auth_data = rp_id_hash + bytes([flags]) + ctr.to_bytes(4, "big")
+    dig = hashlib.sha256()
+    dig.update(auth_data)
+    dig.update(client_data_hash)
+    dig = dig.digest()
+
+    # sign the digest and convert to der
+    sig = nist256p1.sign(node.private_key(), dig, False)
+    sig = der.encode_seq((sig[1:33], sig[33:]))
+
+    response_data = {
+        _GETASSERT_RESP_CREDENTIAL: {"type": "public-key", "id": credential_id},
+        _GETASSERT_RESP_AUTH_DATA: auth_data,
+        _GETASSERT_RESP_SIGNATURE: sig,
+    }
+    return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
+
+
+def cbor_get_info(req: Cmd) -> Cmd:
+    response_data = {
+        _GETINFO_RESP_VERSIONS: ["FIDO_2_0", "U2F_V2"],
+        _GETINFO_RESP_AAGUID: _AAGUID,
+        _GETINFO_RESP_OPTIONS: {"uv": True},
+    }
+    return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
+
+
+def cmd_keepalive(cid: int, status: int) -> Cmd:
+    return Cmd(cid, _CMD_KEEPALIVE, bytes([status]))
