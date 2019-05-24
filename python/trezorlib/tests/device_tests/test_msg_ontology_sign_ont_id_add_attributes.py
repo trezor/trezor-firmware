@@ -18,8 +18,7 @@ import time
 
 import pytest
 
-from trezorlib import messages, ontology
-from trezorlib.messages import ButtonRequestType as B
+from trezorlib import messages
 from trezorlib.tools import parse_path
 
 from .common import TrezorTest
@@ -70,28 +69,23 @@ class TestMsgOntologySignOntIdAddAttributes(TrezorTest):
     def _ontology_sign(
         self, num_of_swipes, address_n, transaction, ont_id_add_attributes
     ):
-        def input_flow():
-            # Sign Tx
-            btn_code = yield
-            assert btn_code == B.SignTx
+        # Sending Ontology message
+        msg = messages.OntologySignOntIdAddAttributes(
+            address_n=address_n,
+            transaction=transaction,
+            ont_id_add_attributes=ont_id_add_attributes,
+        )
 
-            # Swipe and confirm
+        self.client.transport.write(msg)
+        ret = self.client.transport.read()
+
+        # Confirm action
+        assert isinstance(ret, messages.ButtonRequest)
+        self.client.debug.press_yes()
+        self.client.transport.write(messages.ButtonAck())
+        time.sleep(1)
+        for _ in range(num_of_swipes):
+            self.client.debug.swipe_down()
             time.sleep(1)
-            for _ in range(num_of_swipes):
-                self.client.debug.swipe_down()
-                time.sleep(1)
-
-            # Confirm Action
-            self.client.debug.press_yes()
-
-        with self.client:
-            self.client.set_input_flow(input_flow)
-            self.client.set_expected_responses(
-                [
-                    messages.ButtonRequest(code=B.SignTx),
-                    messages.OntologySignedOntIdAddAttributes(),
-                ]
-            )
-            return ontology.sign_add_attr(
-                self.client, address_n, transaction, ont_id_add_attributes
-            )
+        self.client.debug.press_yes()
+        return self.client.transport.read()
