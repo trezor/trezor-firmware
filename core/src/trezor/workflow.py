@@ -18,6 +18,13 @@ def onclose(w):
     if not layouts and default_layout:
         startdefault(default_layout)
 
+    if __debug__:
+        import micropython
+        from trezor import utils
+
+        if utils.LOG_MEMORY:
+            micropython.mem_info()
+
 
 def closedefault():
     global default
