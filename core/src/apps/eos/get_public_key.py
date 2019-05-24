@@ -1,6 +1,5 @@
 from trezor import wire
 from trezor.crypto.curve import secp256k1
-from trezor.crypto.hashlib import ripemd160
 from trezor.messages.EosGetPublicKey import EosGetPublicKey
 from trezor.messages.EosPublicKey import EosPublicKey
 
