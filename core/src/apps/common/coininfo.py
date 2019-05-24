@@ -945,7 +945,7 @@ def by_name(name: str) -> CoinInfo:
             xpub_magic=0x0488b21e,
             xpub_magic_segwit_p2sh=0x049d7cb2,
             xpub_magic_segwit_native=0x04b24746,
-            bech32_prefix="xmy",
+            bech32_prefix="my",
             cashaddr_prefix=None,
             slip44=90,
             segwit=True,
