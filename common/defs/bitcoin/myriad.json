@@ -16,7 +16,7 @@
   "xpub_magic": 76067358,
   "xpub_magic_segwit_p2sh": 77429938,
   "xpub_magic_segwit_native": 78792518,
-  "bech32_prefix": "xmy",
+  "bech32_prefix": "my",
   "cashaddr_prefix": null,
   "slip44": 90,
   "segwit": true,
