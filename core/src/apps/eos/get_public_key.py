@@ -1,5 +1,4 @@
 from trezor import wire
-from trezor.crypto import base58
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import ripemd160
 from trezor.messages.EosGetPublicKey import EosGetPublicKey
@@ -7,23 +6,19 @@ from trezor.messages.EosPublicKey import EosPublicKey
 
 from apps.common import paths
 from apps.eos import CURVE
-from apps.eos.helpers import validate_full_path
+from apps.eos.helpers import base58_encode, validate_full_path
 from apps.eos.layout import require_get_public_key
 
 
-def _ripemd160_32(data: bytes) -> bytes:
-    return ripemd160(data).digest()[:4]
-
-
 def _public_key_to_wif(pub_key: bytes) -> str:
-    if len(pub_key) == 65:
-        head = 0x03 if pub_key[64] & 0x01 else 0x02
-        compresed_pub_key = bytes([head]) + pub_key[1:33]
-    elif len(pub_key) == 33:
-        compresed_pub_key = pub_key
+    if pub_key[0] == 0x04 and len(pub_key) == 65:
+        head = b"\x03" if pub_key[64] & 0x01 else b"\x02"
+        compressed_pub_key = head + pub_key[1:33]
+    elif pub_key[0] in [0x02, 0x03] and len(pub_key) == 33:
+        compressed_pub_key = pub_key
     else:
-        raise wire.DataError("invalid public key length")
-    return "EOS" + base58.encode_check(compresed_pub_key, _ripemd160_32)
+        raise wire.DataError("invalid public key")
+    return base58_encode("EOS", "", compressed_pub_key)
 
 
 def _get_public_key(node):
