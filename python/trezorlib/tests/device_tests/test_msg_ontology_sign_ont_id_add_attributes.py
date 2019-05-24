@@ -25,7 +25,6 @@ from trezorlib.tools import parse_path
 from .common import TrezorTest
 
 
-@pytest.mark.xfail
 @pytest.mark.ontology
 @pytest.mark.skip_t1
 class TestMsgOntologySignOntIdAddAttributes(TrezorTest):
