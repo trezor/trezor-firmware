@@ -83,6 +83,7 @@ message Features {
         Capability_U2F = 14;
         Capability_Shamir = 15;
         Capability_ShamirGroups = 16;
+        Capability_Ontology = 17;
     }
     optional BackupType backup_type = 31;       // type of device backup (BIP-39 / SLIP-39 basic / SLIP-39 advanced)
     optional bool sd_card_present = 32;         // is SD card present

@@ -61,6 +61,7 @@ def get_features() -> Features:
             Capability.Lisk,
             Capability.Monero,
             Capability.NEM,
+            Capability.Ontology,
             Capability.Ripple,
             Capability.Stellar,
             Capability.Tezos,

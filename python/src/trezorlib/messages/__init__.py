@@ -190,6 +190,19 @@ from .NEMSignedTx import NEMSignedTx
 from .NEMTransactionCommon import NEMTransactionCommon
 from .NEMTransfer import NEMTransfer
 from .NextU2FCounter import NextU2FCounter
+from .OntologyAddress import OntologyAddress
+from .OntologyGetAddress import OntologyGetAddress
+from .OntologyGetPublicKey import OntologyGetPublicKey
+from .OntologyOntIdAddAttributes import OntologyOntIdAddAttributes
+from .OntologyOntIdAttribute import OntologyOntIdAttribute
+from .OntologyOntIdRegister import OntologyOntIdRegister
+from .OntologyPublicKey import OntologyPublicKey
+from .OntologySignTx import OntologySignTx
+from .OntologySignedTx import OntologySignedTx
+from .OntologyTransaction import OntologyTransaction
+from .OntologyTransfer import OntologyTransfer
+from .OntologyTxAttribute import OntologyTxAttribute
+from .OntologyWithdrawOng import OntologyWithdrawOng
 from .PassphraseAck import PassphraseAck
 from .PassphraseRequest import PassphraseRequest
 from .PassphraseStateAck import PassphraseStateAck
@@ -277,6 +290,7 @@ from . import NEMImportanceTransferMode
 from . import NEMModificationType
 from . import NEMMosaicLevy
 from . import NEMSupplyChangeType
+from . import OntologyAsset
 from . import OutputScriptType
 from . import PassphraseSourceType
 from . import PinMatrixRequestType
