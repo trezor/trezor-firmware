@@ -150,19 +150,6 @@
         "blockchain_link": {}
     },
     {
-        "name": "Tron",
-        "shortcut": "TRX",
-        "slip44": 195,
-        "curve": "secp256k1",
-        "decimals": 6,
-        "links": {
-            "Homepage": "https://tron.network",
-            "Github": "https://github.com/tronprotocol/java-tron"
-        },
-        "wallet": {},
-        "blockchain_link": {}
-    },
-    {
         "name": "Omni",
         "shortcut": "OMNI",
         "slip44": 0,
