@@ -100,6 +100,7 @@ CPPDEFINES_MOD += [
     'USE_NUM_NONE',
     'USE_FIELD_INV_BUILTIN',
     'USE_SCALAR_INV_BUILTIN',
+    'USE_EXTERNAL_ASM',
     'USE_FIELD_10X26',
     'USE_SCALAR_8X32',
     'USE_ECMULT_STATIC_PRECOMPUTATION',
@@ -112,6 +113,7 @@ CPPDEFINES_MOD += [
 ]
 SOURCE_MOD_SECP256K1_ZKP += [
     'vendor/secp256k1-zkp/src/secp256k1.c',
+    'vendor/secp256k1-zkp/src/asm/field_10x26_arm.s'
 ]
 
 # modtrezorio
