@@ -31,6 +31,8 @@ TXHASH_339c3e = bytes.fromhex(
 
 
 @pytest.mark.komodo
+@pytest.mark.skip_t1
+@pytest.mark.skip_t2
 class TestMsgSigntxKomodo(TrezorTest):
     def test_one_one_fee_sapling(self):
         self.setup_mnemonic_allallall()
@@ -54,6 +56,7 @@ class TestMsgSigntxKomodo(TrezorTest):
         )
 
         with self.client:
+            """
             self.client.set_expected_responses(
                 [
                     proto.TxRequest(
@@ -77,6 +80,7 @@ class TestMsgSigntxKomodo(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
+            """
 
             details = proto.SignTx(
                 version=4,
