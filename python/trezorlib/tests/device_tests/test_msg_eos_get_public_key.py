@@ -14,7 +14,7 @@ class TestMsgEosGetpublickey(TrezorTest):
         public_key = get_public_key(self.client, parse_path("m/44'/194'/0'/0/0"))
         assert (
             public_key.wif_public_key
-            == "PUB_K1_4u6Sfnzj4Sh2pEQnkXyZQJqH3PkKjGByDCbsqqmyq6PtxkQ9TE"
+            == "EOS4u6Sfnzj4Sh2pEQnkXyZQJqH3PkKjGByDCbsqqmyq6PttM9KyB"
         )
         assert (
             public_key.raw_public_key.hex()
@@ -23,7 +23,7 @@ class TestMsgEosGetpublickey(TrezorTest):
         public_key = get_public_key(self.client, parse_path("m/44'/194'/0'/0/1"))
         assert (
             public_key.wif_public_key
-            == "PUB_K1_5d1VP15RKxT4dSakWu2TFuEgnmaGC2ckfSvQwND7pZC1uLnJzD"
+            == "EOS5d1VP15RKxT4dSakWu2TFuEgnmaGC2ckfSvQwND7pZC1tXkfLP"
         )
         assert (
             public_key.raw_public_key.hex()
@@ -32,7 +32,7 @@ class TestMsgEosGetpublickey(TrezorTest):
         public_key = get_public_key(self.client, parse_path("m/44'/194'/1'/0/0"))
         assert (
             public_key.wif_public_key
-            == "PUB_K1_7UuNeTf13nfcG85rDB7AHGugZi4C4wJ4ft12QRotqNfxeNPmwo"
+            == "EOS7UuNeTf13nfcG85rDB7AHGugZi4C4wJ4ft12QRotqNfxdV2NvP"
         )
         assert (
             public_key.raw_public_key.hex()
