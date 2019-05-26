@@ -134,8 +134,6 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/modtrezorui.c',
     'embed/extmod/modtrezorui/qr-code-generator/qrcodegen.c',
 ]
-if ARGUMENTS.get('TREZOR_EMULATOR_RASPI', 0):
-    CPPDEFINES_MOD += ['TREZOR_EMULATOR_RASPI']
 if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_FROZEN']
 
