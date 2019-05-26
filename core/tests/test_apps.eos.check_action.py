@@ -19,7 +19,7 @@ from trezor.messages.EosActionVoteProducer import EosActionVoteProducer
 
 class TestEosActions(unittest.TestCase):
     def test_check_action(self):
-        # return True 
+        # return True
         self.assertEqual(check_action(EosTxActionAck(buy_ram=EosActionBuyRam()), 'buyram', 'eosio'), True)
         self.assertEqual(check_action(EosTxActionAck(buy_ram_bytes=EosActionBuyRamBytes()), 'buyrambytes', 'eosio'), True)
         self.assertEqual(check_action(EosTxActionAck(sell_ram=EosActionSellRam()), 'sellram', 'eosio'), True)
@@ -36,8 +36,7 @@ class TestEosActions(unittest.TestCase):
         self.assertEqual(check_action(EosTxActionAck(unknown=[]), 'unknown', 'not_eosio'), True)
         self.assertEqual(check_action(EosTxActionAck(unknown=[]), 'buyram', 'buygoods'), True)
 
-
-        # returns False 
+        # returns False
         self.assertEqual(check_action(EosTxActionAck(buy_ram=EosActionBuyRam()), 'buyram', 'not_eosio'), False)
         self.assertEqual(check_action(EosTxActionAck(), 'buyram', 'eosio'), False)
         self.assertEqual(check_action(EosTxActionAck(buy_ram_bytes=EosActionBuyRamBytes()), 'buyrambytes', 'not_eosio'), False)
@@ -58,7 +57,7 @@ class TestEosActions(unittest.TestCase):
         self.assertEqual(check_action(EosTxActionAck(buy_ram=EosActionBuyRam()), 'test', 'eosio'), False)
         self.assertEqual(check_action(EosTxActionAck(unknown=[]), 'buyram', 'eosio'), False)
         self.assertEqual(check_action(EosTxActionAck(unknown=[]), 'transfer', 'loveme'), False)
-        
+
 
 if __name__ == '__main__':
     unittest.main()

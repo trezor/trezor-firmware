@@ -15,7 +15,7 @@ class TestEosConversions(unittest.TestCase):
         ]
         names_out = [
             'miniminimini',
-            '12345abcdefg', 
+            '12345abcdefg',
             '123451234512',
             'hijklmnopqrs',
             'tuvwxyz12345',

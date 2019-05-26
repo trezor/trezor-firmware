@@ -40,7 +40,7 @@ message RippleSignTx {
 	 * Payment transaction type
 	 * - simple A sends money to B
 	 * - only a subset of fields is supported
-	 * - see https://developers.ripple.com/payment.html 
+	 * - see https://developers.ripple.com/payment.html
 	 */
 	message RipplePayment {
 		optional uint64 amount = 1;				// only XRP is supported at the moment so this an integer

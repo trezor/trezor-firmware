@@ -194,7 +194,7 @@ message MoneroTransactionInputsPermutationAck {
  * @next MoneroTransactionInputViniAck
  */
 message MoneroTransactionInputViniRequest {
-    optional MoneroTransactionSourceEntry src_entr = 1; 
+    optional MoneroTransactionSourceEntry src_entr = 1;
     optional bytes vini = 2;      // xmrtypes.TxinToKey
     optional bytes vini_hmac = 3;
     optional bytes pseudo_out = 4;

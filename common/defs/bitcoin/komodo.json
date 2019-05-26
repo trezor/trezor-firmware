@@ -32,7 +32,7 @@
   "uri_prefix": "komodo",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [  
+  "bitcore": [
     "https://api.kmd.dev"
   ],
   "blockbook": [],

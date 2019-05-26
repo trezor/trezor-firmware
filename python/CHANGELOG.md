@@ -169,7 +169,7 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](http://
 - protobuf messages are now logged through Python's `logging` facility instead of custom printing through `VerboseWireMixin`
 - `client.format_protobuf` is moved to `protobuf.format_message`
 - `tools.Hash` is renamed to `tools.btc_hash`
-- `coins` module `coins_txapi` is renamed to `tx_api`.  
+- `coins` module `coins_txapi` is renamed to `tx_api`.
   `coins_slip44` is renamed to `slip44`.
 - build: stricter flake8 checks
 - build: split requirements to separate files

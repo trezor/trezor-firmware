@@ -234,7 +234,7 @@ USBD_StatusTypeDef  USBD_StdEPReq (USBD_HandleTypeDef *pdev , USBD_SetupReqTyped
       {
         USBD_LL_StallEP(pdev , ep_addr);
       }
-      break;	
+      break;
 
     case USBD_STATE_CONFIGURED:
       if (req->wValue == USB_FEATURE_EP_HALT)
@@ -265,7 +265,7 @@ USBD_StatusTypeDef  USBD_StdEPReq (USBD_HandleTypeDef *pdev , USBD_SetupReqTyped
       {
         USBD_LL_StallEP(pdev , ep_addr);
       }
-      break;	
+      break;
 
     case USBD_STATE_CONFIGURED:
       if (req->wValue == USB_FEATURE_EP_HALT)
@@ -293,7 +293,7 @@ USBD_StatusTypeDef  USBD_StdEPReq (USBD_HandleTypeDef *pdev , USBD_SetupReqTyped
       {
         USBD_LL_StallEP(pdev , ep_addr);
       }
-      break;	
+      break;
 
     case USBD_STATE_CONFIGURED:
       pep = ((ep_addr & 0x80) == 0x80) ? &pdev->ep_in[ep_addr & 0x7F]:\
@@ -511,7 +511,7 @@ static void USBD_SetConfig(USBD_HandleTypeDef *pdev ,
     {
     case USBD_STATE_ADDRESSED:
       if (cfgidx)
-      {                                			   							   							   				
+      {
         pdev->dev_config = cfgidx;
         pdev->dev_state = USBD_STATE_CONFIGURED;
         if(USBD_SetClassConfig(pdev , cfgidx) == USBD_FAIL)
@@ -556,7 +556,7 @@ static void USBD_SetConfig(USBD_HandleTypeDef *pdev ,
       }
       break;
 
-    default:					
+    default:
        USBD_CtlError(pdev , req);
       break;
     }

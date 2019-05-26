@@ -44,7 +44,7 @@ message BinancePublicKey {
 
 /**
  * Request: Starts the Binance transaction protocol flow.
- * A transaction consists of these common fields and a series of Binance<Any>Msg messages. 
+ * A transaction consists of these common fields and a series of Binance<Any>Msg messages.
  * These parts form a JSON structure (a string) in Trezor's memory, which is signed to produce a BinanceSignedTx.
  * @start
  * @next BinanceTxRequest

@@ -128,11 +128,11 @@ Each coin on each device can be in one of four support states:
   dictionary. If it's a Trezor device, it contains the firmware version from which
   it is supported. For connect and webwallet, the value is simply `true`.
 * **unsupported** explicitly: coin's key is listed in the device's `unsupported`
-  dictionary. The value is a string with reason for not supporting.  
-  For connect and webwallet, if the key is not listed at all, it is also considered unsupported.  
+  dictionary. The value is a string with reason for not supporting.
+  For connect and webwallet, if the key is not listed at all, it is also considered unsupported.
   ERC20 tokens detected as duplicates are also considered unsupported.
 * **soon**: coin's key is listed in the device's `supported` dictionary, with
-  the value `"soon"`.  
+  the value `"soon"`.
   ERC20 tokens that are not listed at all are also considered `soon`, unless detected
   as duplicates.
 * **unknown**: coin's key is not listed at all.
