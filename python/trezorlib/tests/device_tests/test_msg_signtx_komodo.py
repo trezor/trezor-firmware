@@ -31,8 +31,7 @@ TXHASH_339c3e = bytes.fromhex(
 
 
 @pytest.mark.komodo
-@pytest.mark.skip_t1
-@pytest.mark.skip_t2
+@pytest.mark.skip(reason="komodo is broken at the moment - issue #178")
 class TestMsgSigntxKomodo(TrezorTest):
     def test_one_one_fee_sapling(self):
         self.setup_mnemonic_allallall()
