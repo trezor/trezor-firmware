@@ -17,7 +17,7 @@ def _public_key_to_wif(pub_key: bytes) -> str:
         compressed_pub_key = pub_key
     else:
         raise wire.DataError("invalid public key")
-    return base58_encode("PUB", "K1", compressed_pub_key)
+    return base58_encode("EOS", "", compressed_pub_key)
 
 
 def _get_public_key(node):
