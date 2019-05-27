@@ -29,7 +29,7 @@ extern void main_clean_exit();
 
 void __shutdown(void) {
   printf("SHUTDOWN\n");
-  main_clean_exit();
+  main_clean_exit(3);
 }
 
 #define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
