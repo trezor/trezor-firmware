@@ -25,11 +25,6 @@
 #include "vendor/secp256k1-zkp/include/secp256k1_preallocated.h"
 #include "vendor/secp256k1-zkp/include/secp256k1_recovery.h"
 
-// The minimum buffer size can vary in future secp256k1-zkp revisions.
-// It can always be determined by a call to
-// secp256k1_context_preallocated_size(...) as below.
-STATIC uint8_t g_buffer[(1UL << (ECMULT_WINDOW_SIZE + 4)) + 208] = {0};
-
 void secp256k1_default_illegal_callback_fn(const char *str, void *data) {
   (void)data;
   mp_raise_ValueError(str);
@@ -42,26 +37,37 @@ void secp256k1_default_error_callback_fn(const char *str, void *data) {
   return;
 }
 
-STATIC const secp256k1_context *mod_trezorcrypto_secp256k1_context(void) {
-  static secp256k1_context *ctx;
-  if (ctx == NULL) {
-    size_t sz = secp256k1_context_preallocated_size(SECP256K1_CONTEXT_SIGN |
-                                                    SECP256K1_CONTEXT_VERIFY);
-    if (sz > sizeof g_buffer) {
-      mp_raise_ValueError("secp256k1 context is too large");
+static secp256k1_context *secp256k1_ctx = NULL;
+static void *secp256k1_ctx_buf = NULL;
+static size_t secp256k1_ctx_size = 0;
+
+static const secp256k1_context *mod_trezorcrypto_secp256k1_context_create(
+    void) {
+  if (secp256k1_ctx == NULL) {
+    secp256k1_ctx_size = secp256k1_context_preallocated_size(
+        SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+    secp256k1_ctx_buf = m_new_maybe(uint8_t, secp256k1_ctx_size);
+    if (!secp256k1_ctx_buf) {
+      mp_raise_ValueError("secp256k1_zkp context is too large");
     }
-    void *buf = (void *)g_buffer;
-    ctx = secp256k1_context_preallocated_create(
-        buf, SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+    secp256k1_ctx = secp256k1_context_preallocated_create(
+        secp256k1_ctx_buf, SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
     uint8_t rand[32];
     random_buffer(rand, 32);
-    int ret = secp256k1_context_randomize(ctx, rand);
+    int ret = secp256k1_context_randomize(secp256k1_ctx, rand);
     if (ret != 1) {
       mp_raise_msg(&mp_type_RuntimeError, "secp256k1_context_randomize failed");
     }
   }
-  return ctx;
+  return secp256k1_ctx;
+}
+
+STATIC void mod_trezorcrypto_secp256k1_context_delete(void) {
+  secp256k1_context_destroy(secp256k1_ctx);
+  m_del(uint8_t, secp256k1_ctx_buf, secp256k1_ctx_size);
+  secp256k1_ctx_buf = NULL;
+  secp256k1_ctx = NULL;
 }
 
 /// package: trezorcrypto.secp256k1_zkp
@@ -101,7 +107,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_publickey(size_t n_args,
                                                          const mp_obj_t *args) {
-  const secp256k1_context *ctx = mod_trezorcrypto_secp256k1_context();
+  const secp256k1_context *ctx = mod_trezorcrypto_secp256k1_context_create();
   mp_buffer_info_t sk;
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   secp256k1_pubkey pk;
@@ -118,6 +124,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_publickey(size_t n_args,
   secp256k1_ec_pubkey_serialize(
       ctx, out, &outlen, &pk,
       compressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+  mod_trezorcrypto_secp256k1_context_delete();
   return mp_obj_new_bytes(out, outlen);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
@@ -132,7 +139,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_sign(size_t n_args,
                                                     const mp_obj_t *args) {
-  const secp256k1_context *ctx = mod_trezorcrypto_secp256k1_context();
+  const secp256k1_context *ctx = mod_trezorcrypto_secp256k1_context_create();
   mp_buffer_info_t sk, dig;
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &dig, MP_BUFFER_READ);
@@ -152,6 +159,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_sign(size_t n_args,
   }
   secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, &out[1], &pby,
                                                           &sig);
+  mod_trezorcrypto_secp256k1_context_delete();
   out[0] = 27 + pby + compressed * 4;
   return mp_obj_new_bytes(out, sizeof(out));
 }
@@ -167,7 +175,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_verify(mp_obj_t public_key,
                                                       mp_obj_t signature,
                                                       mp_obj_t digest) {
-  const secp256k1_context *ctx = mod_trezorcrypto_secp256k1_context();
+  const secp256k1_context *ctx = mod_trezorcrypto_secp256k1_context_create();
   mp_buffer_info_t pk, sig, dig;
   mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);
   mp_get_buffer_raise(signature, &sig, MP_BUFFER_READ);
@@ -192,9 +200,10 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_verify(mp_obj_t public_key,
                                  pk.len)) {
     return mp_const_false;
   }
-  return mp_obj_new_bool(1 == secp256k1_ecdsa_verify(ctx, &ec_sig,
-                                                     (const uint8_t *)dig.buf,
-                                                     &ec_pk));
+  bool ret = (1 == secp256k1_ecdsa_verify(ctx, &ec_sig,
+                                          (const uint8_t *)dig.buf, &ec_pk));
+  mod_trezorcrypto_secp256k1_context_delete();
+  return mp_obj_new_bool(ret);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_secp256k1_zkp_verify_obj,
                                  mod_trezorcrypto_secp256k1_zkp_verify);
@@ -206,7 +215,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_secp256k1_zkp_verify_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_verify_recover(
     mp_obj_t signature, mp_obj_t digest) {
-  const secp256k1_context *ctx = mod_trezorcrypto_secp256k1_context();
+  const secp256k1_context *ctx = mod_trezorcrypto_secp256k1_context_create();
   mp_buffer_info_t sig, dig;
   mp_get_buffer_raise(signature, &sig, MP_BUFFER_READ);
   mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
@@ -237,6 +246,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_verify_recover(
   secp256k1_ec_pubkey_serialize(
       ctx, out, &pklen, &pk,
       compressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+  mod_trezorcrypto_secp256k1_context_delete();
   return mp_obj_new_bytes(out, pklen);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(
@@ -259,7 +269,7 @@ static int secp256k1_ecdh_hash_passthrough(uint8_t *output, const uint8_t *x,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_multiply(mp_obj_t secret_key,
                                                         mp_obj_t public_key) {
-  const secp256k1_context *ctx = mod_trezorcrypto_secp256k1_context();
+  const secp256k1_context *ctx = mod_trezorcrypto_secp256k1_context_create();
   mp_buffer_info_t sk, pk;
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);
@@ -279,6 +289,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_multiply(mp_obj_t secret_key,
                       secp256k1_ecdh_hash_passthrough, NULL)) {
     mp_raise_ValueError("Multiply failed");
   }
+  mod_trezorcrypto_secp256k1_context_delete();
   return mp_obj_new_bytes(out, sizeof(out));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_secp256k1_zkp_multiply_obj,
