@@ -461,7 +461,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
   signal(SIGPIPE, SIG_IGN);
 #endif
 
-  mp_stack_set_limit(60000 * (BYTES_PER_WORD / 4));
+  mp_stack_set_limit(600000 * (BYTES_PER_WORD / 4));
 
   pre_process_options(argc, argv);
 
