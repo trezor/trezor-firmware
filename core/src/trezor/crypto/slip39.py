@@ -85,15 +85,16 @@ DIGEST_INDEX = 254
 
 
 def word_index(word):
+    word = word + " " * (8 - len(word))
     lo = 0
-    hi = len(wordlist)
+    hi = RADIX
     while hi - lo > 1:
         mid = (hi + lo) // 2
-        if wordlist[mid] > word:
+        if wordlist[mid * 8 : mid * 8 + 8] > word:
             hi = mid
         else:
             lo = mid
-    if not wordlist[lo].startswith(word):
+    if wordlist[lo * 8 : lo * 8 + 8] != word:
         raise MnemonicError('Invalid mnemonic word "{}".'.format(word))
     return lo
 
@@ -151,7 +152,7 @@ def _int_to_indices(value, length, bits):
 
 
 def mnemonic_from_indices(indices):
-    return " ".join(wordlist[i] for i in indices)
+    return " ".join(wordlist[i * 8 : i * 8 + 8].strip() for i in indices)
 
 
 def mnemonic_to_indices(mnemonic):
