@@ -85,3 +85,44 @@ You must not use both on the same test.
 [pipenv]: https://docs.pipenv.org/
 [device_tests]: ../../python/trezorlib/tests/device_tests
 [REGISTERED_MARKERS]: ../../python/trezorlib/tests/device_tests/REGISTERED_MARKERS
+
+
+## Extended testing and debugging
+
+### Building for debugging (Emulator only)
+
+Build the debuggable unix binary so you can attach the gdb or lldb.
+This removes optimizations and reduces address space randomizaiton.
+
+```sh
+make build_unix_debug
+```
+
+The final executable is significantly slower due to ASAN(Address Sanitizer) integration.
+If you wan't to catch some memory errors use this.
+
+```sh
+time ASAN_OPTIONS=verbosity=1:detect_invalid_pointer_pairs=1:strict_init_order=true:strict_string_checks=true TREZOR_PROFILE="" pipenv run make test_emu
+```
+
+### Coverage (Emulator only)
+
+Get the Python code coverage report.
+
+If you want to get HTML/console summary output you need to install the __coverage.py__ tool.
+
+```sh
+pip3 install coverage
+```
+
+First you need to enable the __settrace__ featurine in the __./embed/unix/mpconfigport.h__:
+
+```c
+#define MICROPY_PY_SYS_TRACE (1)
+```
+
+Rebuild the emulator and run the tests with coverage output.
+
+```sh
+make build_unix && make coverage
+```
