@@ -26,10 +26,10 @@ from .conftest import TREZOR_VERSION
 EXPECTED_RESPONSES_NOPIN = [proto.ButtonRequest(), proto.Success(), proto.Features()]
 EXPECTED_RESPONSES_PIN = [proto.PinMatrixRequest()] + EXPECTED_RESPONSES_NOPIN
 
-if TREZOR_VERSION >= 2:
-    EXPECTED_RESPONSES = EXPECTED_RESPONSES_NOPIN
-else:
+if TREZOR_VERSION == 1:
     EXPECTED_RESPONSES = EXPECTED_RESPONSES_PIN
+else:
+    EXPECTED_RESPONSES = EXPECTED_RESPONSES_NOPIN
 
 
 class TestMsgApplysettings(TrezorTest):

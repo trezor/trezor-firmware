@@ -91,19 +91,23 @@ def setup_client(mnemonic=None, pin="", passphrase=False):
 
 
 def pytest_configure(config):
+    # try to figure out trezor version
     global TREZOR_VERSION
-    TREZOR_VERSION = device_version()
+    try:
+        TREZOR_VERSION = device_version()
+    except Exception:
+        pass
 
+    # register known markers
+    config.addinivalue_line("markers", "skip_t1: skip the test on Trezor One")
+    config.addinivalue_line("markers", "skip_t2: skip the test on Trezor T")
+    with open(os.path.join(os.path.dirname(__file__), "REGISTERED_MARKERS")) as f:
+        for line in f:
+            config.addinivalue_line("markers", line.strip())
+
+    # enable debug
     if config.getoption("verbose"):
         log.enable_debug_output()
-
-
-def pytest_addoption(parser):
-    parser.addoption(
-        "--interactive",
-        action="store_true",
-        help="Wait for user to do interaction manually",
-    )
 
 
 def pytest_runtest_setup(item):
@@ -114,6 +118,9 @@ def pytest_runtest_setup(item):
     * 'skip_t2' tests are skipped on T2 and 'skip_t1' tests are skipped on T1.
     * no test should have both skips at the same time
     """
+    if TREZOR_VERSION is None:
+        pytest.fail("No debuggable Trezor is available")
+
     if item.get_closest_marker("skip_t1") and item.get_closest_marker("skip_t2"):
         pytest.fail("Don't skip tests for both trezors!")
 
