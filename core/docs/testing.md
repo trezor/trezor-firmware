@@ -12,7 +12,7 @@ Apart from the internal tests, Trezor core has a suite of integration tests in t
 ```sh
 sudo pip3 install pipenv
 ```
-In the `frezor-firmware` checkout, install the environment:
+In the `trezor-firmware` checkout, install the environment:
 ```sh
 pipenv sync
 ```
