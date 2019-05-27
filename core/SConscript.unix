@@ -314,21 +314,31 @@ env.Replace(
     LINK='ld',
     SIZE='size',
     STRIP='strip',
-    OBJCOPY='objcopy', )
+    OBJCOPY='objcopy',
+    COPT=os.getenv('OPTIMIZE', '-Os'), )
 
-if env.get('ENV').get('DEBUG_BUILD', 0):
-    import platform
-    platsys = platform.system()
-    env.Replace(
-        OPTIMIZE='-O0',
-        LINKFLAGS='-Wl,-no_pie' if platsys == "Darwin" else '-Wl,-no-pie'
+if ARGUMENTS.get('TREZOR_EMULATOR_ASAN', 0):
+    asan_flags=(
+            ' -fsanitize=address'+
+            ' -fsanitize-blacklist=asan_blacklist.txt'+
+            ' -fno-omit-frame-pointer'+
+            ' -fno-optimize-sibling-calls'
     )
+    env.Replace(
+        CC=os.getenv('CC') or 'clang',
+        LINK=os.getenv('LINK') or 'clang',
+        CFLAGS=asan_flags,
+        LINKFLAGS=' -Wl,-no_pie' + asan_flags, )
+
+if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', 0):
+    env.Replace(
+        COPT=' -O0 -ggdb',
+        STRIP='true', )
 
 env.Replace(
     TREZOR_MODEL=env.get('ENV').get('TREZOR_MODEL', 'T'), )
 
 env.Replace(
-    COPT=env.get('OPTIMIZE', env.get('ENV').get('OPTIMIZE', '-Os')),
     CCFLAGS='$COPT '
     '-g3 '
     '-std=gnu99 -Wall -Werror -Wuninitialized -Wno-missing-braces '

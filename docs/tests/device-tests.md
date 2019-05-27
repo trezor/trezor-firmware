@@ -73,3 +73,21 @@ You must not use both on the same test.
 
 [pytest-random-order]: https://pypi.org/project/pytest-random-order/
 [REGISTERED_MARKERS]: ../REGISTERED_MARKERS
+
+## Extended testing and debugging
+
+### Building for debugging (Emulator only)
+
+Build the debuggable unix binary so you can attach the gdb or lldb.
+This removes optimizations and reduces address space randomizaiton.
+
+```sh
+make build_unix_debug
+```
+
+The final executable is significantly slower due to ASAN(Address Sanitizer) integration.
+If you wan't to catch some memory errors use this.
+
+```sh
+time ASAN_OPTIONS=verbosity=1:detect_invalid_pointer_pairs=1:strict_init_order=true:strict_string_checks=true TREZOR_PROFILE="" pipenv run make test_emu
+```
