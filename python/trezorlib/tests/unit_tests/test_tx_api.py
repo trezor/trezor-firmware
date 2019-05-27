@@ -22,7 +22,7 @@ from ..support.tx_cache import tx_cache
 
 TxApiBitcoin = coins.tx_api["Bitcoin"]
 TxApiTestnet = tx_cache("Testnet", allow_fetch=False)
-TxApiZencash = coins.tx_api["Zencash"]
+TxApiZencash = coins.tx_api["Horizen"]
 TxApiDash = tx_cache("Dash", allow_fetch=False)
 
 tests_dir = os.path.dirname(os.path.abspath(__file__))
