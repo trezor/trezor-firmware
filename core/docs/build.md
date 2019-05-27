@@ -41,6 +41,12 @@ Install the required packages, depending on your operating system.
   sudo pacman -S scons sdl2 sdl2_image
   ```
 
+* __NixOS__:
+
+  ```sh
+  nix-shell
+  ```
+
 * __Mac OS X__:
 
   ```sh
@@ -58,7 +64,7 @@ make build_unix
 Now you can start the emulator:
 
 ```sh
-./emu.sh
+bash ./emu.sh
 ```
 
 ## Build instructions for Embedded (ARM port)
