@@ -64,7 +64,7 @@ def pulse(delay: int):
     return 0.5 + 0.5 * math.sin(utime.ticks_us() / delay)
 
 
-async def click() -> tuple:
+def click() -> tuple:
     touch = loop.wait(io.TOUCH)
     while True:
         ev, *pos = yield touch
