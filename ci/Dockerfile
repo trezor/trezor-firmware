@@ -1,6 +1,6 @@
 # initialize from the image
 
-FROM python
+FROM python:3.7.3
 
 ARG TOOLCHAIN_FLAVOR=linux
 ENV TOOLCHAIN_FLAVOR=$TOOLCHAIN_FLAVOR
