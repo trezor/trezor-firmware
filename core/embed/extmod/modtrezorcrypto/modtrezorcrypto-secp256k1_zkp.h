@@ -64,7 +64,7 @@ static const secp256k1_context *mod_trezorcrypto_secp256k1_context_create(
 }
 
 STATIC void mod_trezorcrypto_secp256k1_context_delete(void) {
-  secp256k1_context_destroy(secp256k1_ctx);
+  secp256k1_context_preallocated_destroy(secp256k1_ctx);
   m_del(uint8_t, secp256k1_ctx_buf, secp256k1_ctx_size);
   secp256k1_ctx_buf = NULL;
   secp256k1_ctx = NULL;
