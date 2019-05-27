@@ -405,16 +405,16 @@ STATIC void set_sys_argv(char *argv[], int argc, int start_arg) {
   }
 }
 
-void main_clean_exit() {
+void main_clean_exit(int exitno) {
   fflush(stdout);
   fflush(stderr);
   mp_obj_t sys_exit =
       mp_obj_dict_get(mp_module_sys.globals, MP_ROM_QSTR(MP_QSTR_exit));
   if (mp_obj_is_callable(sys_exit)) {
-    mp_call_function_1(MP_OBJ_TO_PTR(sys_exit), MP_OBJ_NEW_SMALL_INT(3));
+    mp_call_function_1(MP_OBJ_TO_PTR(sys_exit), MP_OBJ_NEW_SMALL_INT(exitno));
   }
   // sys.exit shouldn't return so force exit in case it does.
-  exit(3);
+  exit(exitno);
 }
 
 #ifdef _WIN32
@@ -455,7 +455,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
   signal(SIGPIPE, SIG_IGN);
 #endif
 
-  mp_stack_set_limit(60000 * (BYTES_PER_WORD / 4));
+  mp_stack_set_limit(600000 * (BYTES_PER_WORD / 4));
 
   pre_process_options(argc, argv);
 
@@ -651,6 +651,14 @@ MP_NOINLINE int main_(int argc, char **argv) {
       ret = execute_from_lexer(LEX_SRC_STDIN, NULL, MP_PARSE_FILE_INPUT, false);
     }
   }
+
+#if MICROPY_PY_SYS_UATEXIT
+  if (mp_obj_is_callable(MP_STATE_VM(exitfunc))) {
+    mp_obj_t exitfunc = MP_STATE_VM(exitfunc);
+    MP_STATE_VM(exitfunc) = mp_const_none;
+    mp_call_function_0(exitfunc);
+  }
+#endif
 
 #if MICROPY_PY_MICROPYTHON_MEM_INFO
   if (mp_verbose_flag) {
