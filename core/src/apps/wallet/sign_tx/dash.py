@@ -5,10 +5,8 @@ from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
 from trezor.utils import obj_eq
 from trezor.wire import ProcessError
-from trezor.crypto.base58 import encode_check
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import ripemd160, sha256
-from apps.common.signverify import message_digest
 from trezor.messages.TxRequest import TxRequest
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from apps.common import coininfo, coins
@@ -278,6 +276,7 @@ class SpecialTx:
                   owner_address + "|" + voting_address + "|"
             data_hash = bytes(reversed(sha256(sha256(data[self.payload_content_start:payload_content_end]).digest()).digest()))
             res += _to_hex(data_hash)
+            from apps.common.signverify import message_digest
             digest = message_digest(self.coin, res)
             key_from_sig = secp256k1.verify_recover(payload_sig, digest)
             if not key_from_sig:

@@ -170,6 +170,12 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
         txo_bin.script_pubkey = output_derive_script(txo, coin, keychain)
         weight.add_output(txo_bin.script_pubkey)
 
+        if dash.is_dip2_tx(tx) and not txo.address_n:
+            raise SigningError(
+                FailureType.ActionCancelled,
+                "Cannot send Dash special transaction to external address",
+            )
+
         if change_out == 0 and output_is_change(txo, wallet_path, segwit_in, multifp):
             # output is change and does not need confirmation
             change_out = txo.amount
