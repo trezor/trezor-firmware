@@ -22,11 +22,7 @@ def message_digest(message):
 
 
 async def sign_typed_data(ctx, msg, keychain):
-    data_hash = message_digest("debug") # TODO remove try except
-    try:
-        data_hash = await generate_typed_data_hash(ctx)
-    except Exception as e:
-        print("error", type(e), e)
+    data_hash = await generate_typed_data_hash(ctx)
 
     await paths.validate_path(
         ctx, address.validate_full_path, keychain, msg.address_n, CURVE
@@ -135,7 +131,7 @@ def bytes32_small(data):
     if data_length == 32:
         return data
     elif data_length > 32:
-        return data[0:data_length-32]
+        return data[0:32-data_length]
     else:
         return data + bytes(32 - data_length)
 
