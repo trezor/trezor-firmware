@@ -2,47 +2,60 @@ from typing import *
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-secp256k1_zkp.h
-def generate_secret() -> bytes:
+class Context:
     """
-    Generate secret key.
-    """
-
-
-# extmod/modtrezorcrypto/modtrezorcrypto-secp256k1_zkp.h
-def publickey(secret_key: bytes, compressed: bool = True) -> bytes:
-    """
-    Computes public key from secret key.
+    Owns a secp256k1 context.
+    Can be allocated once and re-used between subsequent operations.
     """
 
+    def __init__(self):
+        """
+        Allocate and initialize secp256k1_context.
+        """
 
-# extmod/modtrezorcrypto/modtrezorcrypto-secp256k1_zkp.h
-def sign(
-    secret_key: bytes, digest: bytes, compressed: bool = True
-) -> bytes:
-    """
-    Uses secret key to produce the signature of the digest.
-    """
+    def __del__(self):
+        """
+        Destructor.
+        """
 
+    def size(self):
+        """
+        Return the size in bytes of the internal secp256k1_ctx_buf buffer.
+        """
 
-# extmod/modtrezorcrypto/modtrezorcrypto-secp256k1_zkp.h
-def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
-    """
-    Uses public key to verify the signature of the digest.
-    Returns True on success.
-    """
+    def generate_secret(self) -> bytes:
+        """
+        Generate secret key.
+        """
 
+    def publickey(self, secret_key: bytes, compressed: bool = True) -> bytes:
+        """
+        Computes public key from secret key.
+        """
 
-# extmod/modtrezorcrypto/modtrezorcrypto-secp256k1_zkp.h
-def verify_recover(signature: bytes, digest: bytes) -> bytes:
-    """
-    Uses signature of the digest to verify the digest and recover the public
-    key. Returns public key on success, None if the signature is invalid.
-    """
+    def sign(
+        self, secret_key: bytes, digest: bytes, compressed: bool = True
+    ) -> bytes:
+        """
+        Uses secret key to produce the signature of the digest.
+        """
 
+    def verify(
+        self, public_key: bytes, signature: bytes, digest: bytes
+    ) -> bool:
+        """
+        Uses public key to verify the signature of the digest.
+        Returns True on success.
+        """
 
-# extmod/modtrezorcrypto/modtrezorcrypto-secp256k1_zkp.h
-def multiply(secret_key: bytes, public_key: bytes) -> bytes:
-    """
-    Multiplies point defined by public_key with scalar defined by
-    secret_key. Useful for ECDH.
-    """
+    def verify_recover(self, signature: bytes, digest: bytes) -> bytes:
+        """
+        Uses signature of the digest to verify the digest and recover the public
+        key. Returns public key on success, None if the signature is invalid.
+        """
+
+    def multiply(self, secret_key: bytes, public_key: bytes) -> bytes:
+        """
+        Multiplies point defined by public_key with scalar defined by
+        secret_key. Useful for ECDH.
+        """
