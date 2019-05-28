@@ -103,27 +103,31 @@ def sign_typed_data(client, n, data_string):
     while len(response.member_path) > 0:
         root_index = response.member_path[0]
         if root_index == 0:
-            member_type = 'EIP712Domain'
-            member_data = data['domain']
+            member_type = "EIP712Domain"
+            member_data = data["domain"]
         elif root_index == 1:
-            member_type = data['primaryType']
-            member_data = data['message']
-        else: 
-            raise ValueError("Unknown root") # TODO do we need to signal the device?
+            member_type = data["primaryType"]
+            member_data = data["message"]
+        else:
+            raise ValueError("Unknown root")  # TODO do we need to signal the device?
         member_name = None
         for index in response.member_path[1:]:
-            member_def = data['types'][member_type][index]
-            member_name = member_def['name']
-            member_type = member_def['type']
-            member_data = member_data[member_def['name']]
+            member_def = data["types"][member_type][index]
+            member_name = member_def["name"]
+            member_type = member_def["type"]
+            member_data = member_data[member_def["name"]]
 
-        is_struct = member_type in data['types']
-        response = client.call(proto.EthereumTypedDataAck(
-            member_name=member_name,
-            member_type=member_type,
-            member_value=None if (is_struct) else str(member_data),
-            num_members=None if (not is_struct) else len(data['types'][member_type])
-        ))
+        is_struct = member_type in data["types"]
+        response = client.call(
+            proto.EthereumTypedDataAck(
+                member_name=member_name,
+                member_type=member_type,
+                member_value=None if (is_struct) else str(member_data),
+                num_members=None
+                if (not is_struct)
+                else len(data["types"][member_type]),
+            )
+        )
     return response
 
 
