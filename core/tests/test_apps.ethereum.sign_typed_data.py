@@ -1,7 +1,7 @@
 from common import *
 from ubinascii import unhexlify
 from apps.common.paths import HARDENED
-from apps.ethereum.sign_typed_data import encode_solidity_static
+from apps.ethereum.sign_typed_data import encode_solidity_static, bytes_from_hex
 
 # https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md
 class TestEthereumSignTypedData(unittest.TestCase):
@@ -48,6 +48,26 @@ class TestEthereumSignTypedData(unittest.TestCase):
         # values > 32 bytes are cutoff at the beginning
         encoded = encode_solidity_static('uint', '0X0000000000000000000000000000000000000000000000000000000000000000baddad')
         self.assertEqual(encoded, b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xba\xdd\xad')
+
+
+    def test_bytes_from_hex(self):
+        encoded = bytes_from_hex('0X00baddad')
+        self.assertEqual(encoded, b'\x00\xba\xdd\xad')
+
+        encoded = bytes_from_hex('0x00bad000')
+        self.assertEqual(encoded, b'\x00\xba\xd0\x00')
+
+        encoded = bytes_from_hex('000dad0000')
+        self.assertEqual(encoded, b'\x00\x0d\xad\x00\x00')
+
+        encoded = bytes_from_hex('')
+        self.assertEqual(encoded, bytes())
+
+        encoded = bytes_from_hex('0x')
+        self.assertEqual(encoded, b'')
+
+        encoded = bytes_from_hex('0X')
+        self.assertEqual(encoded, b'')
 
 
 if __name__ == '__main__':
