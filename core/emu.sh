@@ -1,6 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 
-source emu.config 2>/dev/null
+if [ -f emu.config ]; then
+    . emu.config
+fi
 
 EXE=build/unix/micropython
 PYOPT="${PYOPT:-1}"
@@ -15,7 +17,7 @@ case "$1" in
     "-d")
         shift
         OPERATING_SYSTEM=$(uname)
-        if [ $OPERATING_SYSTEM == "Darwin" ]; then
+        if [ "$OPERATING_SYSTEM" = "Darwin" ]; then
             PATH=/usr/bin /usr/bin/lldb -f $EXE -- $ARGS $* $MAIN
         else
             gdb --args $EXE $ARGS $* $MAIN
