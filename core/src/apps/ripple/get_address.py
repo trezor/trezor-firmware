@@ -20,7 +20,7 @@ async def get_address(ctx, msg: RippleGetAddress, keychain):
         while True:
             if await show_address(ctx, address, desc=desc):
                 break
-            if await show_qr(ctx, address.upper(), desc=desc):
+            if await show_qr(ctx, address, desc=desc):
                 break
 
     return RippleAddress(address=address)
