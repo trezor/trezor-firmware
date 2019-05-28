@@ -35,6 +35,7 @@ Use the following command to see all options:
     ethereum-get-address            Get Ethereum address in hex encoding.
     ethereum-sign-message           Sign message with Ethereum address.
     ethereum-sign-tx                Sign (and optionally publish) Ethereum transaction.
+    ethereum-sign-typed_data        Sign typed data (EIP-712) with Ethereum address.
     ethereum-verify-message         Verify message signed with Ethereum address.
     firmware-update                 Upload new firmware to device.
     get-address                     Get address for specified path.
