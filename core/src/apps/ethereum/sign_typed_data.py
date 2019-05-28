@@ -1,8 +1,7 @@
-from ubinascii import unhexlify, hexlify
+from ubinascii import unhexlify
 
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
-from trezor.messages import ButtonRequestType
 from trezor.messages.EthereumTypedDataRequest import EthereumTypedDataRequest
 from trezor.messages.MessageType import EthereumTypedDataAck
 from trezor.ui.text import Text
@@ -10,9 +9,7 @@ from trezor.utils import HashWriter
 
 from apps.common import paths
 from apps.common.confirm import require_confirm, confirm
-from apps.common.signverify import split_message
 from apps.ethereum import CURVE, address
-from apps.ethereum.layout import split_data
 
 
 def message_digest(message):
@@ -83,7 +80,6 @@ async def create_struct_hash(ctx, struct_path, struct, confirm_member):
 async def encode_value(ctx, member_path, confirm_member):
     member = await request_member(ctx, member_path)
 
-
     dependencies = None
     encoded_value = None
 
@@ -100,14 +96,14 @@ async def encode_value(ctx, member_path, confirm_member):
     elif (member.member_type == 'string'):
         encoded_value = encode_solidity_static('bytes32', message_digest(member.member_value))
     elif (member.member_type == 'bytes'):
-        rencoded_value = encode_solidity_static('bytes32', message_digest(bytes_from_hex(member.member_value)))
+        encoded_value = encode_solidity_static('bytes32', message_digest(bytes_from_hex(member.member_value)))
     elif (member.member_type.endswith("]")):
         raise ValueError("Arrays not supported yet")
     else:
         encoded_value = encode_solidity_static(member.member_type, member.member_value)
 
     return member.member_name, member.member_type, dependencies, encoded_value
-    
+
 
 async def request_member(ctx, member_path):
     req = EthereumTypedDataRequest()
@@ -120,7 +116,7 @@ def bytes32_big(data):
     if data_length == 32:
         return data
     elif data_length > 32:
-        return data[data_length-32:]
+        return data[(data_length - 32):]
     else:
         return bytes(32 - data_length) + data
 
@@ -130,7 +126,7 @@ def bytes32_small(data):
     if data_length == 32:
         return data
     elif data_length > 32:
-        return data[0:32-data_length]
+        return data[0:(32 - data_length)]
     else:
         return data + bytes(32 - data_length)
 
@@ -138,7 +134,7 @@ def bytes32_small(data):
 def encode_solidity_static(solidity_type, value):
     if solidity_type == 'bool':
         return (1 if value == 'true' else 0).to_bytes(32, 'big')
-    
+
     # Bytes are right padded to 32 bytes
     elif solidity_type.startswith('bytes') and solidity_type != 'bytes':
         if type(value) == bytes:
@@ -159,6 +155,6 @@ def bytes_from_hex(hex_str: str) -> bytes:
 
     elif len(hex_str) == 0:
         return bytes()
-    
+
     else:
         return unhexlify(hex_str)
