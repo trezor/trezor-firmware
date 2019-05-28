@@ -55,7 +55,6 @@ async def generate_typed_data_hash(ctx):
     text.normal("Show message details that are signed?")
     show_message = await confirm(ctx, text)
 
-    # TODO some checks here maybe
     message = await request_member(ctx, [1])
     _, messageHash = await create_struct_hash(ctx, [1], message, show_message)
 
