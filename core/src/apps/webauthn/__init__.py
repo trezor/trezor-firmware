@@ -6,6 +6,7 @@ from micropython import const
 from trezor import io, log, loop, ui, utils, workflow
 from trezor.crypto import der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
+from trezor.ui.confirm import CONFIRMED, ConfirmDialog
 
 from apps.cardano import cbor
 from apps.common import HARDENED, storage
@@ -79,6 +80,16 @@ _GETINFO_RESP_OPTIONS = const(0x04)  # map, optional
 _KEEPALIVE_STATUS_PROCESSING = const(0x01)  # still processing the current request
 _KEEPALIVE_STATUS_UP_NEEDED = const(0x02)  # waiting for user presence
 
+# CBOR object signing and encryption algorithms and keys
+_COSE_ALG_KEY = const(3)
+_COSE_ALG_ES256 = const(-7)  # ECDSA P-256 with SHA-256
+_COSE_KEY_TYPE_KEY = const(1)
+_COSE_KEY_TYPE_EC2 = const(2)  # elliptic curve keys with x- and y-coordinate pair
+_COSE_CURVE_KEY = const(-1)  # elliptic curve identifier
+_COSE_CURVE_P256 = const(1)  # P-256 curve
+_COSE_X_COORD_KEY = const(-2)  # x coordinate of the public key
+_COSE_Y_COORD_KEY = const(-3)  # y coordinate of the public key
+
 # hid error codes
 _ERR_NONE = const(0x00)  # no error
 _ERR_INVALID_CMD = const(0x01)  # invalid command
@@ -90,6 +101,8 @@ _ERR_CHANNEL_BUSY = const(0x06)  # channel busy
 _ERR_LOCK_REQUIRED = const(0x0A)  # command requires channel lock
 _ERR_INVALID_CID = const(0x0B)  # command not allowed on this cid
 _ERR_INVALID_CBOR = const(0x12)  # error when parsing CBOR
+_ERR_CREDENTIAL_EXCLUDED = const(0x19)  # valid credential found in the exclude list
+_ERR_UNSUPPORTED_ALGORITHM = const(0x26)  # requested COSE algorithm not supported
 _ERR_OPERATION_DENIED = const(0x27)  # user declined or timed out
 _ERR_UNSUPPORTED_OPTION = const(0x2B)  # unsupported option
 _ERR_NO_CREDENTIALS = const(0x2E)  # no valid credentials provided
@@ -124,8 +137,9 @@ _AAGUID = (
 # authentication control byte
 _AUTH_ENFORCE = const(0x03)  # enforce user presence and sign
 _AUTH_CHECK_ONLY = const(0x07)  # check only
-_AUTH_FLAG_TUP = const(0x01)  # user present
-_AUTH_FLAG_TUV = const(0x04)  # user verified
+_AUTH_FLAG_UP = const(1 << 0)  # user present
+_AUTH_FLAG_UV = const(1 << 2)  # user verified
+_AUTH_FLAG_AT = const(1 << 6)  # attested credential data included
 
 # common raw message format (ISO7816-4:2005 mapping)
 _APDU_CLA = const(0)  # uint8_t cla;        // Class - reserved
@@ -685,8 +699,7 @@ def msg_register(req: Msg, state: ConfirmState) -> Cmd:
     return Cmd(req.cid, _CMD_MSG, buf)
 
 
-def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
-
+def generate_credential(app_id: bytes):
     from apps.common import seed
 
     # derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
@@ -705,13 +718,18 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     keybase.update(keybuf)
     keybase = keybase.digest()
 
+    return keybuf + keybase, pubkey, node.private_key()
+
+
+def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
+    keyhandle, pubkey, _ = generate_credential(app_id)
+
     # hash the request data together with keyhandle and pubkey
     dig = hashlib.sha256()
     dig.update(b"\x00")  # uint8_t reserved;
     dig.update(app_id)  # uint8_t appId[32];
     dig.update(challenge)  # uint8_t chal[32];
-    dig.update(keybuf)  # uint8_t keyHandle[64];
-    dig.update(keybase)
+    dig.update(keyhandle)  # uint8_t keyHandle[64];
     dig.update(pubkey)  # uint8_t pubKey[65];
     dig = dig.digest()
 
@@ -721,18 +739,62 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
 
     # pack to a response
     buf, resp = make_struct(
-        resp_cmd_register(len(keybuf) + len(keybase), len(_U2F_ATT_CERT), len(sig))
+        resp_cmd_register(len(keyhandle), len(_U2F_ATT_CERT), len(sig))
     )
     resp.registerId = _U2F_REGISTER_ID
     utils.memcpy(resp.pubKey, 0, pubkey, 0, len(pubkey))
-    resp.keyHandleLen = len(keybuf) + len(keybase)
-    utils.memcpy(resp.keyHandle, 0, keybuf, 0, len(keybuf))
-    utils.memcpy(resp.keyHandle, len(keybuf), keybase, 0, len(keybase))
+    resp.keyHandleLen = len(keyhandle)
+    utils.memcpy(resp.keyHandle, 0, keyhandle, 0, len(keyhandle))
     utils.memcpy(resp.cert, 0, _U2F_ATT_CERT, 0, len(_U2F_ATT_CERT))
     utils.memcpy(resp.sig, 0, sig, 0, len(sig))
     resp.status = _SW_NO_ERROR
 
     return buf
+
+
+def cbor_register_sign(
+    client_data_hash: bytes, rp_id_hash: bytes, user_verified: bool
+) -> bytes:
+    credential_id, pubkey, privkey = generate_credential(rp_id_hash)
+
+    flags = _AUTH_FLAG_UP | _AUTH_FLAG_AT
+    if user_verified:
+        flags |= _AUTH_FLAG_UV
+
+    credential_pub_key = cbor.encode(
+        {
+            _COSE_ALG_KEY: _COSE_ALG_ES256,
+            _COSE_KEY_TYPE_KEY: _COSE_KEY_TYPE_EC2,
+            _COSE_CURVE_KEY: _COSE_CURVE_P256,
+            _COSE_X_COORD_KEY: pubkey[1:33],
+            _COSE_Y_COORD_KEY: pubkey[33:],
+        }
+    )
+    att_cred_data = (
+        _AAGUID
+        + len(credential_id).to_bytes(2, "big")
+        + credential_id
+        + credential_pub_key
+    )
+
+    authenticator_data = (
+        rp_id_hash + bytes([flags]) + b"\x00\x00\x00\x00" + att_cred_data
+    )
+
+    # compute self-attestation signature
+    dig = hashlib.sha256()
+    dig.update(authenticator_data)
+    dig.update(client_data_hash)
+    sig = nist256p1.sign(privkey, dig.digest(), False)
+    sig = der.encode_seq((sig[1:33], sig[33:]))
+
+    return cbor.encode(
+        {
+            _MAKECRED_RESP_FMT: "packed",
+            _MAKECRED_RESP_AUTH_DATA: authenticator_data,
+            _MAKECRED_RESP_ATT_STMT: {"alg": _COSE_ALG_ES256, "sig": sig},
+        }
+    )
 
 
 def msg_authenticate(req: Msg, state: ConfirmState) -> Cmd:
@@ -836,7 +898,7 @@ def msg_authenticate_genkey(app_id: bytes, keyhandle: bytes, pathformat: str):
 
 
 def msg_authenticate_sign(challenge: bytes, app_id: bytes, privkey: bytes) -> bytes:
-    flags = bytes([_AUTH_FLAG_TUP])
+    flags = bytes([_AUTH_FLAG_UP])
 
     # get next counter
     ctr = storage.device.next_u2f_counter()
@@ -879,18 +941,91 @@ def cmd_error(cid: int, code: int) -> Cmd:
 
 
 def cbor_error(cid: int, code: int) -> Cmd:
-    return Cmd(cid, _CMD_CBOR, ustruct.pack(">H", code))
+    return Cmd(cid, _CMD_CBOR, ustruct.pack(">B", code))
 
 
 def cbor_make_credential(req: Cmd) -> Cmd:
-    log.warning(__name__, "cbor_make_credential")
-    # TODO
-    raise
+    try:
+        param = cbor.decode(req.data[1:])
+        rp_id = param[_MAKECRED_CMD_RP]["id"]
+        client_data_hash = param[_MAKECRED_CMD_CLIENT_DATA_HASH]
+        user = param[_MAKECRED_CMD_USER]
+        account_id = user["id"]
+        pub_key_cred_params = param[_MAKECRED_CMD_PUB_KEY_CRED_PARAMS]
+        rp_id_hash = hashlib.sha256(rp_id).digest()
+    except:
+        return cbor_error(req.cid, _ERR_INVALID_CBOR)
+
+    excluded = False
+    if _MAKECRED_CMD_EXCLUDE_LIST in param:
+        try:
+            for credential in param[_MAKECRED_CMD_EXCLUDE_LIST]:
+                if (
+                    credential["type"] == "public-key"
+                    and get_node(rp_id_hash, credential["id"]) is not None
+                ):
+                    excluded = True
+                    break
+        except:
+            return cbor_error(req.cid, _ERR_INVALID_CBOR)
+
+    if excluded:
+        # TODO Show "This token is already registered" and wait for user confirmation.
+        return cbor_error(req.cid, _ERR_CREDENTIAL_EXCLUDED)
+
+    if _COSE_ALG_ES256 not in (alg.get("alg", None) for alg in pub_key_cred_params):
+        return cbor_error(req.cid, _ERR_UNSUPPORTED_ALGORITHM)
+
+    if _GETASSERT_CMD_PIN_AUTH in param:
+        # Client PIN is not supported
+        return cbor_error(req.cid, _ERR_PIN_AUTH_INVALID)
+
+    user_verification = False
+    if _MAKECRED_CMD_OPTIONS in param:
+        options = param[_MAKECRED_CMD_OPTIONS]
+        if options.get("rk", False):
+            # Resident keys are not supported
+            return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
+        if "uv" in options:
+            user_verification = options["uv"]
+
+    if "displayName" in user:
+        name = user["displayName"]
+    elif "name" in user:
+        name = user["name"]
+    else:
+        name = account_id.hex()
+
+    # TODO make use of name and account_id
+
+    # TODO check user presence
+    content = ConfirmContentFido2(_CONFIRM_REGISTER, rp_id)
+    if ConfirmDialog(content) != CONFIRMED:
+        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+
+    if user_verification:
+        # TODO check PIN
+        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+
+    return Cmd(
+        req.cid,
+        _CMD_CBOR,
+        bytes([_ERR_NONE])
+        + cbor_register_sign(client_data_hash, rp_id_hash, user_verification),
+    )
+
+
+def get_node(rp_id_hash: bytes, credential_id: bytes):
+    node = msg_authenticate_genkey(rp_id_hash, credential_id, "<8L")
+    if node is None:
+        # prior to firmware version 2.0.8, keypath was serialized in a
+        # big-endian manner, instead of little endian, like in trezor-mcu.
+        # try to parse it as big-endian now and check the HMAC.
+        node = msg_authenticate_genkey(rp_id_hash, credential_id, ">8L")
+    return node
 
 
 def cbor_get_assertion(req: Cmd) -> Cmd:
-    from trezor.ui.confirm import CONFIRMED, ConfirmDialog
-
     try:
         param = cbor.decode(req.data[1:])
         rp_id = param[_GETASSERT_CMD_RP_ID]
@@ -909,7 +1044,7 @@ def cbor_get_assertion(req: Cmd) -> Cmd:
         credential_id_list = [
             credential["id"]
             for credential in allow_list
-            if credential["type"] != "public-key"
+            if credential["type"] == "public-key"
         ]
     except:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
@@ -924,6 +1059,7 @@ def cbor_get_assertion(req: Cmd) -> Cmd:
         if "uv" in options:
             user_verification = options["uv"]
 
+    # TODO check user presence
     content = ConfirmContentFido2(_CONFIRM_AUTHENTICATE, rp_id)
     if ConfirmDialog(content) != CONFIRMED:
         return cbor_error(req.cid, _ERR_OPERATION_DENIED)
@@ -934,12 +1070,7 @@ def cbor_get_assertion(req: Cmd) -> Cmd:
 
     credentials = []
     for credential_id in credential_id_list:
-        node = msg_authenticate_genkey(rp_id_hash, credential_id, "<8L")
-        if node is None:
-            # prior to firmware version 2.0.8, keypath was serialized in a
-            # big-endian manner, instead of little endian, like in trezor-mcu.
-            # try to parse it as big-endian now and check the HMAC.
-            node = msg_authenticate_genkey(rp_id_hash, credential_id, ">8L")
+        node = get_node(rp_id_hash, credential_id)
         if node is not None:
             credentials.append((credential_id, node))
 
@@ -950,9 +1081,9 @@ def cbor_get_assertion(req: Cmd) -> Cmd:
     credential_id = credentials[0][0]
     node = credentials[0][1]
 
-    flags = _AUTH_FLAG_TUP
+    flags = _AUTH_FLAG_UP
     if user_verification:
-        flags |= _AUTH_FLAG_TUV
+        flags |= _AUTH_FLAG_UV
 
     # get next counter
     ctr = storage.next_u2f_counter()
