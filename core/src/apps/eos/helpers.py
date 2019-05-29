@@ -4,12 +4,9 @@ from trezor.messages import EosAsset
 from apps.common import HARDENED
 
 
-def base58_encode(prefix: str, sig_prefix: str, data: bytes) -> str:
-    b58 = base58.encode(data + base58.ripemd160_32(data + sig_prefix.encode()))
-    if sig_prefix:
-        return prefix + sig_prefix + "_" + b58
-    else:
-        return prefix + b58
+def base58_encode(prefix: str, data: bytes, curve_id: str = "K1") -> str:
+    b58 = base58.encode_check(data, digestfunc=base58.ripemd160_32)
+    return prefix + "_" + curve_id + "_" + b58
 
 
 def eos_name_to_string(value) -> str:

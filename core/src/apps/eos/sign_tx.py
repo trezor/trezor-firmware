@@ -36,7 +36,7 @@ async def sign_tx(ctx, msg: EosSignTx, keychain):
         node.private_key(), digest, True, secp256k1.CANONICAL_SIG_EOS
     )
 
-    return EosSignedTx(signature=base58_encode("SIG_", "K1", signature))
+    return EosSignedTx(signature=base58_encode("SIG", signature))
 
 
 async def _init(ctx, sha, msg):

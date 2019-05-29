@@ -79,7 +79,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_JveDuew7oyKjgLmApra3NmKArx3QH6HVmatgkLYeUYWv7aGaoQPFyjBwAdcxuo2Skq9wRgsizos92h9iq9i5JbeHh7zNuo"
+                == "SIG_K1_JveDuew7oyKjgLmApra3NmKArx3QH6HVmatgkLYeUYWv7aGaoQPFyjBwAdcxuo2Skq9wRgsizos92h9iq9i5JbeHgrstPb"
             )
 
     def test_eos_signtx_buyram(self):
@@ -115,7 +115,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_K4gU5S9g7rS6MojaPwWppEBCBbPrJm1pyJtVR9mts1sBq5xyN7nJv3FGnrBR7ByjanboCtK4ogY35sNPFX1F5qoZW7BkF9"
+                == "SIG_K1_K4gU5S9g7rS6MojaPwWppEBCBbPrJm1pyJtVR9mts1sBq5xyN7nJv3FGnrBR7ByjanboCtK4ogY35sNPFX1F5qoZYN4Gq5"
             )
 
     def test_eos_signtx_buyrambytes(self):
@@ -151,7 +151,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_K618wK9f27YxHoPG9hoUCsazZXzxumBj3V9MqcTUh9yCocvP1uFZQAmGmZLhsAtuC2TRR4gtqbeQj57FniYd5i4faQCb6t"
+                == "SIG_K1_K618wK9f27YxHoPG9hoUCsazZXzxumBj3V9MqcTUh9yCocvP1uFZQAmGmZLhsAtuC2TRR4gtqbeQj57FniYd5i4fXxmtzv"
             )
 
     def test_eos_signtx_sellram(self):
@@ -183,7 +183,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_JusrCS7H5DR53qke7edoWvJuLiQS2VQ84CsN5NWmWYVa7wmJVjh3Hcg5hH42zF8KjAmmvHtaJZ3wkortTW9eds1eoiKsrj"
+                == "SIG_K1_JusrCS7H5DR53qke7edoWvJuLiQS2VQ84CsN5NWmWYVa7wmJVjh3Hcg5hH42zF8KjAmmvHtaJZ3wkortTW9eds1ep5gcFs"
             )
 
     def test_eos_signtx_delegate(self):
@@ -221,7 +221,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_Juju8Wjzyn38nuvgS1KT3koKQLHxMMfqVHrp5jMjv4QLU2pUG6EbiJD7D1EHE6xP8DRuwFLVUNR38nTyUKC1Eiz33WocUE"
+                == "SIG_K1_Juju8Wjzyn38nuvgS1KT3koKQLHxMMfqVHrp5jMjv4QLU2pUG6EbiJD7D1EHE6xP8DRuwFLVUNR38nTyUKC1Eiz36CBx5M"
             )
 
     def test_eos_signtx_undelegate(self):
@@ -258,7 +258,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_K3XXUzCUkT2HEdrJTz1CdDDKZbLMShmyEjknQozGhy4F21yUetr1nEe2vUgmGebk2nyYe49R5nkA155J5yFBBaLsTcSdBL"
+                == "SIG_K1_K3XXUzCUkT2HEdrJTz1CdDDKZbLMShmyEjknQozGhy4F21yUetr1nEe2vUgmGebk2nyYe49R5nkA155J5yFBBaLsUVFe2x"
             )
 
     def test_eos_signtx_refund(self):
@@ -290,7 +290,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_JwWZSSKQZL1hCdMmwEAKjs3r15kau5gaBrQczKy65QANANzovV6U4XbVUZQkZzaQrNGYAtgxrU1WJ1smWgXZNqtKVQUZqc"
+                == "SIG_K1_JwWZSSKQZL1hCdMmwEAKjs3r15kau5gaBrQczKy65QANANzovV6U4XbVUZQkZzaQrNGYAtgxrU1WJ1smWgXZNqtKXjjq11"
             )
 
     def test_eos_signtx_linkauth(self):
@@ -327,7 +327,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_Kgs3JdLNqTyGz7uyNiuYLK8sy5qhVQWozrBY7bJWKsjrWAxNyDQUKqHsHmTom5rGY21vYdXmCpi4msU6XeMgWvi4bsBxTx"
+                == "SIG_K1_Kgs3JdLNqTyGz7uyNiuYLK8sy5qhVQWozrBY7bJWKsjrWAxNyDQUKqHsHmTom5rGY21vYdXmCpi4msU6XeMgWvi4gqpLHz"
             )
 
     def test_eos_signtx_unlinkauth(self):
@@ -363,7 +363,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_K1ioB5KMRC2mmTwYsGwsFU51ENp1XdSBUrb4bxUCLYhoq7Y733WaLZ4Soq9fdrkaJS8uJ3R7Z1ZjyEKRHU8HU4s4MA86zB"
+                == "SIG_K1_K1ioB5KMRC2mmTwYsGwsFU51ENp1XdSBUrb4bxUCLYhoq7Y733WaLZ4Soq9fdrkaJS8uJ3R7Z1ZjyEKRHU8HU4s4Mswdw6"
             )
 
     def test_eos_signtx_updateauth(self):
@@ -422,7 +422,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_JuNuwmJm7nLfpxbCqXZMxZoU56TzBh8F5PH7ZyPvQMti6QxJbErDGbKCAaHhoRxwWKzv5kj6kX3WyWys6jAzVe9pDhXB1k"
+                == "SIG_K1_JuNuwmJm7nLfpxbCqXZMxZoU56TzBh8F5PH7ZyPvQMti6QxJbErDGbKCAaHhoRxwWKzv5kj6kX3WyWys6jAzVe9pFp4VhN"
             )
 
     def test_eos_signtx_deleteauth(self):
@@ -454,7 +454,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_KjPTp8jCtgBKQWqsndhrH4pdCGiks76Q1qBt9e8MtexW6FQg3FzfVFKDU4SvyVDyFs3worn6RyW6WYavw76ACNqcqkCYjf"
+                == "SIG_K1_KjPTp8jCtgBKQWqsndhrH4pdCGiks76Q1qBt9e8MtexW6FQg3FzfVFKDU4SvyVDyFs3worn6RyW6WYavw76ACNqcrfczKX"
             )
 
     def test_eos_signtx_vote(self):
@@ -520,7 +520,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_JxgVhc6ExoTHee3Djrciwmmf2Xck7NLgvAtC2gfgV4Wj2AqMXEb6aKMhpUcTV59VTR1DdnPF1XbiCcJViJiU3zsk1kQz89"
+                == "SIG_K1_JxgVhc6ExoTHee3Djrciwmmf2Xck7NLgvAtC2gfgV4Wj2AqMXEb6aKMhpUcTV59VTR1DdnPF1XbiCcJViJiU3zsk1RtiTA"
             )
 
     def test_eos_signtx_vote_proxy(self):
@@ -552,7 +552,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_KjJzcDg9MT8XbLeP1fgQjdmdE6oNQQisMwbXikqrEZYmJe6GCYg89Wr2donYV6zRfg9h7dJKQDCHugdtsxjtmEdqLtPv25"
+                == "SIG_K1_KjJzcDg9MT8XbLeP1fgQjdmdE6oNQQisMwbXikqrEZYmJe6GCYg89Wr2donYV6zRfg9h7dJKQDCHugdtsxjtmEdqJxC66n"
             )
 
     def test_eos_signtx_unknown(self):
@@ -584,7 +584,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_JvoJtrHpQJjHAZzEBhiQm75iimYabcAVNDvz8mkempLh6avSJgnXm5JzCCUEBjDtW3syByfXknmgr93Sw3P9RNLnwySmv6"
+                == "SIG_K1_JvoJtrHpQJjHAZzEBhiQm75iimYabcAVNDvz8mkempLh6avSJgnXm5JzCCUEBjDtW3syByfXknmgr93Sw3P9RNLnxMH7zY"
             )
 
     def test_eos_signtx_newaccount(self):
@@ -698,7 +698,7 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_KhjdS1gKUHR4jKbN3YSdNbPbEqnUVM1Nt6ybdzEAwsUtfbCRJDwpQwPRuEau48CyvhYC5fKo5BiWMPQJbQPrg5ErHThieU"
+                == "SIG_K1_KhjdS1gKUHR4jKbN3YSdNbPbEqnUVM1Nt6ybdzEAwsUtfbCRJDwpQwPRuEau48CyvhYC5fKo5BiWMPQJbQPrg5ErJo8ob9"
             )
 
     def test_eos_signtx_setcontract(self):
@@ -760,5 +760,5 @@ class TestMsgEosSignTx(TrezorTest):
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
-                == "SIG_K1_KiG8c8t2SQkSfrEbD9BwJoYT133BPFLx3gu8sAzJadXyFk1EXKYAsgx4tkjt79G6ofuaQzJPAfDqy1FSpgLRbhbeFH9omd"
+                == "SIG_K1_KiG8c8t2SQkSfrEbD9BwJoYT133BPFLx3gu8sAzJadXyFk1EXKYAsgx4tkjt79G6ofuaQzJPAfDqy1FSpgLRbhbeETLMH9"
             )
