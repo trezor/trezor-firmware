@@ -192,7 +192,7 @@ class TrezorClientDebugLink(TrezorClient):
     # without special DebugLink interface provided
     # by the device.
 
-    def __init__(self, transport, auto_interact=True):
+    def __init__(self, transport, auto_interact=True, check_firmware=True):
         try:
             debug_transport = transport.find_debug()
             self.debug = DebugLink(debug_transport, auto_interact)
@@ -219,6 +219,7 @@ class TrezorClientDebugLink(TrezorClient):
         # Use blank passphrase
         self.set_passphrase("")
         super().__init__(transport, ui=self.ui)
+        self.check_firmware = check_firmware
 
     def open(self):
         super().open()

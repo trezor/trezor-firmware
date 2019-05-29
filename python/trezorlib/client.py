@@ -112,6 +112,7 @@ class TrezorClient:
         self.transport = transport
         self.ui = ui
         self.state = state
+        self.check_firmware = True
 
         # XXX remove when old Electrum has been cycled out.
         # explanation: We changed the API in 0.11 and this broke older versions
@@ -250,6 +251,8 @@ class TrezorClient:
         return self.version < required_version
 
     def check_firmware_version(self, warn_only=False):
+        if not self.check_firmware:
+            return
         if self.is_outdated():
             if warn_only:
                 warnings.warn(OUTDATED_FIRMWARE_ERROR, stacklevel=2)
