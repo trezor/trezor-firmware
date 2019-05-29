@@ -60,3 +60,12 @@ test core unix monero:
   script:
     - cd core
     - pipenv run make test_emu_monero
+
+# TODO move to seperate .yml file?
+test upgrade:
+  stage: test
+  dependencies:
+    - build core unix frozen
+    - build legacy emu
+  script:
+    - pipenv run python python/trezorlib/tests/upgrade/test_upgrades.py
