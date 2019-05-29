@@ -35,7 +35,9 @@
   "bitcore": [
     "https://insight.ritocoin.org"
   ],
-  "blockbook": [],
+  "blockbook": [
+    "https://blockbook.ritocoin.org"
+  ],
   "cooldown": 100,
   "consensus_branch_id": null
 }
