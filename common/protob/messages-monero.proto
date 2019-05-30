@@ -81,6 +81,7 @@ message MoneroGetAddress {
     optional uint32 network_type = 3;       // Main-net / testnet / stagenet
     optional uint32 account = 4;            // Major subaddr index
     optional uint32 minor = 5;              // Minor subaddr index
+    optional bytes payment_id = 6;          // Payment ID for integrated address
 }
 
 /**

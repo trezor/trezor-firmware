@@ -41,6 +41,7 @@ async def naive_pagination(
 
 
 def paginate_lines(lines, lines_per_page=5):
+    """Paginates lines across pages with preserving formatting modifiers (e.g., mono)"""
     pages = []
     cpage = []
     nlines = 0
