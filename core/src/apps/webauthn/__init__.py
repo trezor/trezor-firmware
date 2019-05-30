@@ -3,10 +3,9 @@ import ustruct
 import utime
 from micropython import const
 
-from trezor import io, log, loop, ui, utils, workflow
+from trezor import config, io, log, loop, ui, utils, workflow
 from trezor.crypto import der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
-from trezor.ui.confirm import CONFIRMED, ConfirmDialog
 
 from apps.cardano import cbor
 from apps.common import HARDENED, storage
@@ -79,6 +78,9 @@ _GETINFO_RESP_OPTIONS = const(0x04)  # map, optional
 # status codes for the keepalive cmd
 _KEEPALIVE_STATUS_PROCESSING = const(0x01)  # still processing the current request
 _KEEPALIVE_STATUS_UP_NEEDED = const(0x02)  # waiting for user presence
+
+# interval between keepalive commands
+_KEEPALIVE_INTERVAL = const(80 * 1000)  # 80 milliseconds
 
 # CBOR object signing and encryption algorithms and keys
 _COSE_ALG_KEY = const(3)
@@ -394,14 +396,16 @@ def boot(iface: io.HID):
 
 async def handle_reports(iface: io.HID):
     state = ConfirmState()
+    connection = Connection(iface)
 
     while True:
         try:
             req = await read_cmd(iface)
             if req is None:
                 continue
-            resp = dispatch_cmd(req, state)
-            await send_cmd(resp, iface)
+            resp = dispatch_cmd(req, state, connection)
+            if resp is not None:
+                await send_cmd(resp, iface)
         except Exception as e:
             log.exception(__name__, e)
 
@@ -522,38 +526,247 @@ class ConfirmContentU2f(ui.Control):
             self.repaint = False
 
 
-class ConfirmContentFido2(ui.Widget):
-    def __init__(self, action: int, rp_id: str) -> None:
-        self.action = action
-        self.rp_id = rp_id
-        self.app_icon = None
-        self.boot()
+class Connection:
+    def __init__(self, iface: io.HID) -> None:
+        self.iface = iface
+        self._reset()
 
-    def boot(self) -> None:
+    def _reset(self):
+        self.state = None
+        self.deadline = None
+        self.confirmed = None
+        self.workflow = None
+        self.keepalive = None
+
+    def cancel(self):
+        if self.workflow is not None:
+            loop.close(self.workflow)
+        if self.keepalive is not None:
+            loop.close(self.keepalive)
+        self._reset()
+
+    def is_busy(self) -> bool:
+        if self.workflow is None:
+            return False
+        if utime.ticks_ms() >= self.deadline:
+            self.cancel()
+            return False
+        return True
+
+    def set_state(self, state: State) -> bool:
+        if workflow.workflows:
+            return False
+
+        self.state = state
+        self.deadline = utime.ticks_ms() + _CONFIRM_TIMEOUT_MS
+        self.confirmed = loop.signal()
+        self.workflow = self.confirm_workflow()
+        self.keepalive = self.keepalive_loop()
+        loop.schedule(self.workflow)
+        loop.schedule(self.keepalive)
+        return True
+
+    async def keepalive_loop(self) -> None:
+        while True:
+            waiter = loop.spawn(loop.sleep(_KEEPALIVE_INTERVAL), self.confirmed)
+            user_confirmed = await waiter
+            if self.confirmed in waiter.finished:
+                if user_confirmed:
+                    await send_cmd(self.state.on_confirm(), self.iface)
+                else:
+                    await send_cmd(self.state.on_decline(), self.iface)
+                return
+            if utime.ticks_ms() >= self.deadline:
+                await send_cmd(self.state.on_decline(), self.iface)
+                self.cancel()
+                return
+            await send_cmd(
+                cmd_keepalive(self.state.cid, _KEEPALIVE_STATUS_UP_NEEDED), self.iface
+            )
+
+    async def confirm_workflow(self) -> None:
+        try:
+            workflow.onstart(self.workflow)
+            await self.confirm_layout()
+        finally:
+            workflow.onclose(self.workflow)
+            self.workflow = None
+
+    async def confirm_layout(self) -> None:
+        from trezor.ui.confirm import Confirm, CONFIRMED
+        from trezor.ui.text import Text
+
+        content = ConfirmContent(self.state)
+
+        if self.state.is_confirmable():
+            dialog = Confirm(content)
+        else:
+            dialog = Confirm(content, confirm=None)
+
+        self.confirmed.send(await dialog is CONFIRMED)
+
+
+class ConfirmContent(ui.Control):
+    def __init__(self, state: State) -> None:
+        self.state = state
+
+    def on_render(self) -> None:
+        ui.header(self.state.get_header(), ui.ICON_DEFAULT, ui.GREEN, ui.BG, ui.GREEN)
+        ui.display.image((ui.WIDTH - 64) // 2, 48, self.state.get_icon())
+        ui.display.text_center(
+            ui.WIDTH // 2, 136, self.state.get_text1(), ui.MONO, ui.FG, ui.BG
+        )
+        ui.display.text_center(
+            ui.WIDTH // 2, 168, self.state.get_text2(), ui.MONO, ui.FG, ui.BG
+        )
+
+
+class State:
+    def __init__(self, cid: int, client_data_hash: bytes, rp_id: str) -> None:
+        self.cid = cid
+        self.client_data_hash = client_data_hash
+        self.rp_id = rp_id
+
+    def is_confirmable(self):
+        return True
+
+    def get_app_id(self):
+        return hashlib.sha256(self.rp_id).digest()
+
+    def get_text1(self):
+        return self.rp_id
+
+    def get_icon(self) -> None:
         from trezor import res
         from apps.webauthn import knownapps
 
-        rp_id_hash = hashlib.sha256(self.rp_id).digest()
+        app_id = self.get_app_id()
         try:
-            namepart = knownapps.knownapps[rp_id_hash].lower().replace(" ", "_")
+            namepart = knownapps.knownapps[app_id].lower().replace(" ", "_")
             icon = res.load("apps/webauthn/res/icon_%s.toif" % namepart)
         except Exception as e:
             icon = res.load("apps/webauthn/res/icon_webauthn.toif")
             if __debug__:
                 log.exception(__name__, e)
-        self.app_icon = icon
-
-    def render(self) -> None:
-        if self.action == _CONFIRM_REGISTER:
-            header = "FIDO2 Make Credential"
-        else:
-            header = "FIDO2 Authenticate"
-        ui.header(header, ui.ICON_DEFAULT, ui.GREEN, ui.BG, ui.GREEN)
-        ui.display.image((ui.WIDTH - 64) // 2, 64, self.app_icon)
-        ui.display.text_center(ui.WIDTH // 2, 168, self.app_name, ui.MONO, ui.FG, ui.BG)
+        return icon
 
 
-def dispatch_cmd(req: Cmd, state: ConfirmState) -> Cmd:
+class Fido2ConfirmMakeCredential(State):
+    def __init__(
+        self, cid: int, client_data_hash: bytes, rp_id: str, name: str
+    ) -> None:
+        super(Fido2ConfirmMakeCredential, self).__init__(cid, client_data_hash, rp_id)
+        self.name = name
+
+    def get_header(self):
+        return "FIDO2 Register"
+
+    def get_text2(self):
+        return self.name
+
+    def on_confirm(self):
+        response_data = cbor_make_credential_sign(
+            self.client_data_hash, hashlib.sha256(self.rp_id).digest()
+        )
+        return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
+
+    def on_decline(self):
+        return cbor_error(self.cid, _ERR_OPERATION_DENIED)
+
+
+class Fido2ConfirmGetAssertion(State):
+    def __init__(
+        self, cid: int, client_data_hash: bytes, rp_id: str, credentials
+    ) -> None:
+        super(Fido2ConfirmGetAssertion, self).__init__(cid, client_data_hash, rp_id)
+        self.credentials = credentials
+
+    def get_header(self):
+        return "FIDO2 Authenticate"
+
+    def get_text2(self):
+        return ""
+
+    def on_confirm(self):
+        # TODO Ask user to select credential from a list.
+        credential_id = self.credentials[0][0]
+        node = self.credentials[0][1]
+        response_data = cbor_get_assertion_sign(
+            self.client_data_hash,
+            hashlib.sha256(self.rp_id).digest(),
+            credential_id,
+            node,
+        )
+        return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
+
+    def on_decline(self):
+        return cbor_error(self.cid, _ERR_OPERATION_DENIED)
+
+
+class Fido2ConfirmExcluded(State):
+    def __init__(self, cid: int, client_data_hash: bytes, rp_id: str) -> None:
+        super(Fido2ConfirmExcluded, self).__init__(cid, client_data_hash, rp_id)
+
+    def get_header(self):
+        return "FIDO2 Register"
+
+    def get_text2(self):
+        return "This token is already registered"
+
+    def is_confirmable(self):
+        return False
+
+    def on_confirm(self):
+        return cbor_error(self.cid, _ERR_CREDENTIAL_EXCLUDED)
+
+    def on_decline(self):
+        return cbor_error(self.cid, _ERR_CREDENTIAL_EXCLUDED)
+
+
+class Fido2ConfirmNoPin(State):
+    def __init__(
+        self, cid: int, client_data_hash: bytes, rp_id: str, name: str
+    ) -> None:
+        super(Fido2ConfirmNoPin, self).__init__(cid, client_data_hash, rp_id)
+        self.name = name
+
+    def get_header(self):
+        return "FIDO2 Register"
+
+    def get_text2(self):
+        return "PIN not set. Unable to verify user."
+
+    def is_confirmable(self):
+        return False
+
+    def on_confirm(self):
+        return cbor_error(self.cid, _ERR_OPERATION_DENIED)
+
+    def on_decline(self):
+        return cbor_error(self.cid, _ERR_OPERATION_DENIED)
+
+
+class Fido2ConfirmNoCredentials(State):
+    def __init__(self, cid: int, client_data_hash: bytes, rp_id: str) -> None:
+        super(Fido2ConfirmNoCredentials, self).__init__(cid, client_data_hash, rp_id)
+
+    def get_header(self):
+        return "FIDO2 Authenticate"
+
+    def get_text2(self):
+        return "Token is not registered."
+
+    def is_confirmable(self):
+        return False
+
+    def on_confirm(self):
+        return cbor_error(self.cid, _ERR_NO_CREDENTIALS)
+
+    def on_decline(self):
+        return cbor_error(self.cid, _ERR_NO_CREDENTIALS)
+
+
+def dispatch_cmd(req: Cmd, state: ConfirmState, connection: Connection) -> Cmd:
     if req.cmd == _CMD_MSG:
         m = req.to_msg()
 
@@ -601,11 +814,11 @@ def dispatch_cmd(req: Cmd, state: ConfirmState) -> Cmd:
         if req.data[0] == _CBOR_MAKE_CREDENTIAL:
             if __debug__:
                 log.debug(__name__, "_CBOR_MAKE_CREDENTIAL")
-            return cbor_make_credential(req)
+            return cbor_make_credential(req, connection)
         elif req.data[0] == _CBOR_GET_ASSERTION:
             if __debug__:
                 log.debug(__name__, "_CBOR_GET_ASSERTION")
-            return cbor_get_assertion(req)
+            return cbor_get_assertion(req, connection)
         elif req.data[0] == _CBOR_GET_INFO:
             if __debug__:
                 log.debug(__name__, "_CBOR_GET_INFO")
@@ -630,7 +843,7 @@ def dispatch_cmd(req: Cmd, state: ConfirmState) -> Cmd:
     elif req.cmd == _CMD_CANCEL:
         if __debug__:
             log.debug(__name__, "_CMD_CANCEL")
-        state.reset()
+        connection.cancel()
         return req
     else:
         if __debug__:
@@ -750,51 +963,6 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     resp.status = _SW_NO_ERROR
 
     return buf
-
-
-def cbor_register_sign(
-    client_data_hash: bytes, rp_id_hash: bytes, user_verified: bool
-) -> bytes:
-    credential_id, pubkey, privkey = generate_credential(rp_id_hash)
-
-    flags = _AUTH_FLAG_UP | _AUTH_FLAG_AT
-    if user_verified:
-        flags |= _AUTH_FLAG_UV
-
-    credential_pub_key = cbor.encode(
-        {
-            _COSE_ALG_KEY: _COSE_ALG_ES256,
-            _COSE_KEY_TYPE_KEY: _COSE_KEY_TYPE_EC2,
-            _COSE_CURVE_KEY: _COSE_CURVE_P256,
-            _COSE_X_COORD_KEY: pubkey[1:33],
-            _COSE_Y_COORD_KEY: pubkey[33:],
-        }
-    )
-    att_cred_data = (
-        _AAGUID
-        + len(credential_id).to_bytes(2, "big")
-        + credential_id
-        + credential_pub_key
-    )
-
-    authenticator_data = (
-        rp_id_hash + bytes([flags]) + b"\x00\x00\x00\x00" + att_cred_data
-    )
-
-    # compute self-attestation signature
-    dig = hashlib.sha256()
-    dig.update(authenticator_data)
-    dig.update(client_data_hash)
-    sig = nist256p1.sign(privkey, dig.digest(), False)
-    sig = der.encode_seq((sig[1:33], sig[33:]))
-
-    return cbor.encode(
-        {
-            _MAKECRED_RESP_FMT: "packed",
-            _MAKECRED_RESP_AUTH_DATA: authenticator_data,
-            _MAKECRED_RESP_ATT_STMT: {"alg": _COSE_ALG_ES256, "sig": sig},
-        }
-    )
 
 
 def msg_authenticate(req: Msg, state: ConfirmState) -> Cmd:
@@ -944,7 +1112,7 @@ def cbor_error(cid: int, code: int) -> Cmd:
     return Cmd(cid, _CMD_CBOR, ustruct.pack(">B", code))
 
 
-def cbor_make_credential(req: Cmd) -> Cmd:
+def cbor_make_credential(req: Cmd, connection: Connection) -> Cmd:
     try:
         param = cbor.decode(req.data[1:])
         rp_id = param[_MAKECRED_CMD_RP]["id"]
@@ -964,14 +1132,12 @@ def cbor_make_credential(req: Cmd) -> Cmd:
                     credential["type"] == "public-key"
                     and get_node(rp_id_hash, credential["id"]) is not None
                 ):
-                    excluded = True
-                    break
+                    connection.set_state(
+                        Fido2ConfirmExcluded(req.cid, client_data_hash, rp_id)
+                    )
+                    return None
         except:
             return cbor_error(req.cid, _ERR_INVALID_CBOR)
-
-    if excluded:
-        # TODO Show "This token is already registered" and wait for user confirmation.
-        return cbor_error(req.cid, _ERR_CREDENTIAL_EXCLUDED)
 
     if _COSE_ALG_ES256 not in (alg.get("alg", None) for alg in pub_key_cred_params):
         return cbor_error(req.cid, _ERR_UNSUPPORTED_ALGORITHM)
@@ -996,22 +1162,57 @@ def cbor_make_credential(req: Cmd) -> Cmd:
     else:
         name = account_id.hex()
 
-    # TODO make use of name and account_id
+    # TODO Store name and account_id in the credential identifier.
 
-    # TODO check user presence
-    content = ConfirmContentFido2(_CONFIRM_REGISTER, rp_id)
-    if ConfirmDialog(content) != CONFIRMED:
-        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+    if user_verification and not config.has_pin():
+        connection.set_state(Fido2ConfirmNoPin(req.cid, client_data_hash, rp_id, name))
+    else:
+        connection.set_state(
+            Fido2ConfirmMakeCredential(req.cid, client_data_hash, rp_id, name)
+        )
+    return None
 
-    if user_verification:
-        # TODO check PIN
-        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
 
-    return Cmd(
-        req.cid,
-        _CMD_CBOR,
-        bytes([_ERR_NONE])
-        + cbor_register_sign(client_data_hash, rp_id_hash, user_verification),
+def cbor_make_credential_sign(client_data_hash: bytes, rp_id_hash: bytes) -> bytes:
+    credential_id, pubkey, privkey = generate_credential(rp_id_hash)
+
+    flags = _AUTH_FLAG_UP | _AUTH_FLAG_AT
+    if config.has_pin():
+        flags |= _AUTH_FLAG_UV
+
+    credential_pub_key = cbor.encode(
+        {
+            _COSE_ALG_KEY: _COSE_ALG_ES256,
+            _COSE_KEY_TYPE_KEY: _COSE_KEY_TYPE_EC2,
+            _COSE_CURVE_KEY: _COSE_CURVE_P256,
+            _COSE_X_COORD_KEY: pubkey[1:33],
+            _COSE_Y_COORD_KEY: pubkey[33:],
+        }
+    )
+    att_cred_data = (
+        _AAGUID
+        + len(credential_id).to_bytes(2, "big")
+        + credential_id
+        + credential_pub_key
+    )
+
+    authenticator_data = (
+        rp_id_hash + bytes([flags]) + b"\x00\x00\x00\x00" + att_cred_data
+    )
+
+    # compute self-attestation signature
+    dig = hashlib.sha256()
+    dig.update(authenticator_data)
+    dig.update(client_data_hash)
+    sig = nist256p1.sign(privkey, dig.digest(), False)
+    sig = der.encode_seq((sig[1:33], sig[33:]))
+
+    return cbor.encode(
+        {
+            _MAKECRED_RESP_FMT: "packed",
+            _MAKECRED_RESP_AUTH_DATA: authenticator_data,
+            _MAKECRED_RESP_ATT_STMT: {"alg": _COSE_ALG_ES256, "sig": sig},
+        }
     )
 
 
@@ -1025,7 +1226,7 @@ def get_node(rp_id_hash: bytes, credential_id: bytes):
     return node
 
 
-def cbor_get_assertion(req: Cmd) -> Cmd:
+def cbor_get_assertion(req: Cmd, connection: Connection) -> Cmd:
     try:
         param = cbor.decode(req.data[1:])
         rp_id = param[_GETASSERT_CMD_RP_ID]
@@ -1059,30 +1260,30 @@ def cbor_get_assertion(req: Cmd) -> Cmd:
         if "uv" in options:
             user_verification = options["uv"]
 
-    # TODO check user presence
-    content = ConfirmContentFido2(_CONFIRM_AUTHENTICATE, rp_id)
-    if ConfirmDialog(content) != CONFIRMED:
-        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
-
-    if user_verification:
-        # TODO check PIN
-        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
-
     credentials = []
     for credential_id in credential_id_list:
         node = get_node(rp_id_hash, credential_id)
         if node is not None:
             credentials.append((credential_id, node))
 
-    if not credentials:
-        return cbor_error(req.cid, _ERR_NO_CREDENTIALS)
+    if user_verification and not config.has_pin():
+        connection.set_state(Fido2ConfirmNoPin(req.cid, client_data_hash, rp_id))
+    elif not credentials:
+        connection.set_state(
+            Fido2ConfirmNoCredentials(req.cid, client_data_hash, rp_id)
+        )
+    else:
+        connection.set_state(
+            Fido2ConfirmGetAssertion(req.cid, client_data_hash, rp_id, credentials)
+        )
+    return None
 
-    # TODO select credential
-    credential_id = credentials[0][0]
-    node = credentials[0][1]
 
+def cbor_get_assertion_sign(
+    client_data_hash: bytes, rp_id_hash: bytes, credential_id: bytes, node
+) -> bytes:
     flags = _AUTH_FLAG_UP
-    if user_verification:
+    if config.has_pin():
         flags |= _AUTH_FLAG_UV
 
     # get next counter
@@ -1103,14 +1304,14 @@ def cbor_get_assertion(req: Cmd) -> Cmd:
         _GETASSERT_RESP_AUTH_DATA: auth_data,
         _GETASSERT_RESP_SIGNATURE: sig,
     }
-    return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
+    return cbor.encode(response_data)
 
 
 def cbor_get_info(req: Cmd) -> Cmd:
     response_data = {
         _GETINFO_RESP_VERSIONS: ["FIDO_2_0", "U2F_V2"],
         _GETINFO_RESP_AAGUID: _AAGUID,
-        _GETINFO_RESP_OPTIONS: {"uv": True},
+        _GETINFO_RESP_OPTIONS: {"uv": config.has_pin()},
     }
     return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
 
