@@ -412,129 +412,6 @@ async def handle_reports(iface: io.HID):
             log.exception(__name__, e)
 
 
-class DialogManager:
-    def __init__(self, iface: io.HID) -> None:
-        self.iface = iface
-        self._clear()
-
-    def _clear(self):
-        self.state = None
-        self.deadline = 0
-        self.confirmed = None
-        self.workflow = None
-        self.keepalive = None
-
-    def reset_timeout(self):
-        self.deadline = utime.ticks_ms() + self.state.timeout_ms()
-
-    def reset(self):
-        if self.workflow is not None:
-            loop.close(self.workflow)
-        if self.keepalive is not None:
-            loop.close(self.keepalive)
-        self._clear()
-
-    def is_busy(self) -> bool:
-        if self.workflow is None:
-            return False
-        if utime.ticks_ms() >= self.deadline:
-            self.reset()
-            return False
-        return True
-
-    def compare(self, state: State) -> bool:
-        if self.state != state:
-            return False
-        if utime.ticks_ms() >= self.deadline:
-            self.reset()
-            return False
-        return True
-
-    def set_state(self, state: State) -> bool:
-        if utime.ticks_ms() >= self.deadline:
-            self.reset()
-
-        if workflow.workflows:
-            return False
-
-        self.state = state
-        self.reset_timeout()
-        if state.keepalive_status() is not None:
-            self.confirmed = loop.signal()
-            self.keepalive = self.keepalive_loop()
-            loop.schedule(self.keepalive)
-        else:
-            self.confirmed = None
-            self.keepalive = None
-        self.workflow = self.dialog_workflow()
-        loop.schedule(self.workflow)
-        return True
-
-    async def keepalive_loop(self) -> None:
-        while True:
-            waiter = loop.spawn(
-                loop.sleep(_KEEPALIVE_INTERVAL_MS * 1000), self.confirmed
-            )
-            user_confirmed = await waiter
-            if self.confirmed in waiter.finished:
-                if user_confirmed:
-                    await send_cmd(self.state.on_confirm(), self.iface)
-                else:
-                    await send_cmd(self.state.on_decline(), self.iface)
-                return
-            if utime.ticks_ms() >= self.deadline:
-                await send_cmd(self.state.on_timeout(), self.iface)
-                self.reset()
-                return
-            await send_cmd(
-                cmd_keepalive(self.state.cid, self.state.keepalive_status()), self.iface
-            )
-
-    async def dialog_workflow(self) -> None:
-        try:
-            workflow.onstart(self.workflow)
-            await self.dialog_layout()
-        finally:
-            workflow.onclose(self.workflow)
-            self.workflow = None
-
-    async def dialog_layout(self) -> None:
-        dialog = self.state.get_dialog()
-        confirmed = await dialog is CONFIRMED
-        if isinstance(self.confirmed, loop.signal):
-            self.confirmed.send(confirmed)
-        else:
-            self.confirmed = confirmed
-
-
-class ConfirmContent(ui.Control):
-    def __init__(self, state: State) -> None:
-        self.state = state
-        self.repaint = True
-
-    def on_render(self) -> None:
-        if self.repaint:
-            ui.header(
-                self.state.get_header(), ui.ICON_DEFAULT, ui.GREEN, ui.BG, ui.GREEN
-            )
-            ui.display.image((ui.WIDTH - 64) // 2, 48, self.state.app_icon)
-            text_top = 112
-            text_bot = 188
-            text_height = ui.SIZE
-            text = self.state.get_text()
-            text_sep = (text_bot - text_top - len(text) * text_height) / (len(text) + 1)
-            for i, line in enumerate(text):
-                ui.display.text_center(
-                    ui.WIDTH // 2,
-                    int(text_top + (text_sep + text_height) * (i + 1) - 4),
-                    line,
-                    ui.MONO,
-                    ui.FG,
-                    ui.BG,
-                )
-            self.repaint = False
-
-
 class State:
     def __init__(self, cid: int) -> None:
         self.cid = cid
@@ -769,6 +646,129 @@ class Fido2ConfirmNoCredentials(Fido2State):
 
     def on_decline(self):
         return cbor_error(self.cid, _ERR_NO_CREDENTIALS)
+
+
+class DialogManager:
+    def __init__(self, iface: io.HID) -> None:
+        self.iface = iface
+        self._clear()
+
+    def _clear(self):
+        self.state = None
+        self.deadline = 0
+        self.confirmed = None
+        self.workflow = None
+        self.keepalive = None
+
+    def reset_timeout(self):
+        self.deadline = utime.ticks_ms() + self.state.timeout_ms()
+
+    def reset(self):
+        if self.workflow is not None:
+            loop.close(self.workflow)
+        if self.keepalive is not None:
+            loop.close(self.keepalive)
+        self._clear()
+
+    def is_busy(self) -> bool:
+        if self.workflow is None:
+            return False
+        if utime.ticks_ms() >= self.deadline:
+            self.reset()
+            return False
+        return True
+
+    def compare(self, state: State) -> bool:
+        if self.state != state:
+            return False
+        if utime.ticks_ms() >= self.deadline:
+            self.reset()
+            return False
+        return True
+
+    def set_state(self, state: State) -> bool:
+        if utime.ticks_ms() >= self.deadline:
+            self.reset()
+
+        if workflow.workflows:
+            return False
+
+        self.state = state
+        self.reset_timeout()
+        if state.keepalive_status() is not None:
+            self.confirmed = loop.signal()
+            self.keepalive = self.keepalive_loop()
+            loop.schedule(self.keepalive)
+        else:
+            self.confirmed = None
+            self.keepalive = None
+        self.workflow = self.dialog_workflow()
+        loop.schedule(self.workflow)
+        return True
+
+    async def keepalive_loop(self) -> None:
+        while True:
+            waiter = loop.spawn(
+                loop.sleep(_KEEPALIVE_INTERVAL_MS * 1000), self.confirmed
+            )
+            user_confirmed = await waiter
+            if self.confirmed in waiter.finished:
+                if user_confirmed:
+                    await send_cmd(self.state.on_confirm(), self.iface)
+                else:
+                    await send_cmd(self.state.on_decline(), self.iface)
+                return
+            if utime.ticks_ms() >= self.deadline:
+                await send_cmd(self.state.on_timeout(), self.iface)
+                self.reset()
+                return
+            await send_cmd(
+                cmd_keepalive(self.state.cid, self.state.keepalive_status()), self.iface
+            )
+
+    async def dialog_workflow(self) -> None:
+        try:
+            workflow.onstart(self.workflow)
+            await self.dialog_layout()
+        finally:
+            workflow.onclose(self.workflow)
+            self.workflow = None
+
+    async def dialog_layout(self) -> None:
+        dialog = self.state.get_dialog()
+        confirmed = await dialog is CONFIRMED
+        if isinstance(self.confirmed, loop.signal):
+            self.confirmed.send(confirmed)
+        else:
+            self.confirmed = confirmed
+
+
+class ConfirmContent(ui.Control):
+    def __init__(self, state: State) -> None:
+        self.state = state
+        self.repaint = True
+
+    def on_render(self) -> None:
+        if self.repaint:
+            ui.header(
+                self.state.get_header(), ui.ICON_DEFAULT, ui.GREEN, ui.BG, ui.GREEN
+            )
+            ui.display.image((ui.WIDTH - 64) // 2, 48, self.state.app_icon)
+            text_top = 112
+            text_bot = 188
+            text_height = ui.SIZE
+            text = self.state.get_text()
+            text_sep = (text_bot - text_top - len(text) * text_height) / (len(text) + 1)
+            for i, line in enumerate(text):
+                ui.display.text_center(
+                    ui.WIDTH // 2,
+                    int(text_top + (text_sep + text_height) * (i + 1) - 4),
+                    line,
+                    ui.MONO,
+                    ui.FG,
+                    ui.BG,
+                )
+            self.repaint = False
 
 
 def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
@@ -1126,7 +1126,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
         account_id = user["id"]
         pub_key_cred_params = param[_MAKECRED_CMD_PUB_KEY_CRED_PARAMS]
         rp_id_hash = hashlib.sha256(rp_id).digest()
-    except:
+    except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
     if _MAKECRED_CMD_EXCLUDE_LIST in param:
@@ -1141,7 +1141,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
                     ):
                         return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
                     return None
-        except:
+        except Exception:
             return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
     if _COSE_ALG_ES256 not in (alg.get("alg", None) for alg in pub_key_cred_params):
@@ -1241,12 +1241,12 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
         rp_id = param[_GETASSERT_CMD_RP_ID]
         client_data_hash = param[_GETASSERT_CMD_CLIENT_DATA_HASH]
         rp_id_hash = hashlib.sha256(rp_id).digest()
-    except:
+    except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
     try:
         allow_list = param[_GETASSERT_CMD_ALLOW_LIST]
-    except:
+    except Exception:
         # Resident keys are not supported
         return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
 
@@ -1256,7 +1256,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
             for credential in allow_list
             if credential["type"] == "public-key"
         ]
-    except:
+    except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
     if _GETASSERT_CMD_PIN_AUTH in param:
