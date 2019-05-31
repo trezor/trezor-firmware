@@ -813,7 +813,7 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
     elif req.cmd == _CMD_WINK:
         if __debug__:
             log.debug(__name__, "_CMD_WINK")
-        ui.alert()
+        loop.schedule(ui.alert())
         return req
     elif req.cmd == _CMD_CBOR:
         if req.data[0] == _CBOR_MAKE_CREDENTIAL:
