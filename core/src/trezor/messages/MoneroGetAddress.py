@@ -19,12 +19,14 @@ class MoneroGetAddress(p.MessageType):
         network_type: int = None,
         account: int = None,
         minor: int = None,
+        payment_id: bytes = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.show_display = show_display
         self.network_type = network_type
         self.account = account
         self.minor = minor
+        self.payment_id = payment_id
 
     @classmethod
     def get_fields(cls):
@@ -34,4 +36,5 @@ class MoneroGetAddress(p.MessageType):
             3: ('network_type', p.UVarintType, 0),
             4: ('account', p.UVarintType, 0),
             5: ('minor', p.UVarintType, 0),
+            6: ('payment_id', p.BytesType, 0),
         }
