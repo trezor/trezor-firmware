@@ -7,7 +7,7 @@
 	ignore = untracked
 [submodule "vendor/secp256k1-zkp"]
 	path = vendor/secp256k1-zkp
-	url = https://github.com/tsusanka/secp256k1-zkp.git
+	url = https://github.com/ElementsProject/secp256k1-zkp.git
 	branch = secp256k1-zkp
 [submodule "common/defs/ethereum/tokens"]
 	path = common/defs/ethereum/tokens
