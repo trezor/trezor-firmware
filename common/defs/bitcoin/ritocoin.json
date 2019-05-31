@@ -10,7 +10,7 @@
   "address_type_p2sh": 105,
   "maxfee_kb": 2000000,
   "minfee_kb": 1000,
-  "signed_message_header": "Ritocoin Signed Message:\n",
+  "signed_message_header": "Rito Signed Message:\n",
   "hash_genesis_block": "00000075e344bdf1c0e433f453764b1830a7aa19b2a5213e707502a22b779c1b",
   "xprv_magic": 87326380,
   "xpub_magic": 87353290,
