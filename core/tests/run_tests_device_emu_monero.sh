@@ -63,7 +63,7 @@ error=1
 
 if [[ ! -f "$TREZOR_MONERO_TESTS_PATH" || "`shasum -a256 "$TREZOR_MONERO_TESTS_PATH" | cut -d' ' -f1`" != $TREZOR_MONERO_TESTS_SHA256SUM ]]; then
   echo "Downloading Trezor monero tests binary to `pwd`${TREZOR_MONERO_TESTS_PATH:1}"
-  curl -# -L -o "$TREZOR_MONERO_TESTS_PATH" "$TREZOR_MONERO_TESTS_URL" \
+  curl -L -o "$TREZOR_MONERO_TESTS_PATH" "$TREZOR_MONERO_TESTS_URL" \
     && chmod +x "$TREZOR_MONERO_TESTS_PATH" \
     && test "`shasum -a256 "$TREZOR_MONERO_TESTS_PATH" | cut -d' ' -f1`" == "$TREZOR_MONERO_TESTS_SHA256SUM" || exit 1
 fi
