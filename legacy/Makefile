@@ -21,7 +21,10 @@ ifneq ($(EMULATOR),1)
 OBJS += timer.o
 endif
 
+ifndef PIZERO
 OBJS += usb_standard.o
+endif
+
 OBJS += usb21_standard.o
 OBJS += webusb.o
 OBJS += winusb.o

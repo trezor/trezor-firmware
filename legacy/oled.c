@@ -377,6 +377,7 @@ void oledFrame(int x1, int y1, int x2, int y2) {
  * This clears the display.
  */
 void oledSwipeLeft(void) {
+#if !defined(PIZERO)
   for (int i = 0; i < OLED_WIDTH; i++) {
     for (int j = 0; j < OLED_HEIGHT / 8; j++) {
       for (int k = OLED_WIDTH - 1; k > 0; k--) {
@@ -386,6 +387,23 @@ void oledSwipeLeft(void) {
     }
     oledRefresh();
   }
+#else
+  for (int i = 0; i < OLED_WIDTH / 4; i++) {
+    for (int j = 0; j < OLED_HEIGHT / 8; j++) {
+      for (int k = OLED_WIDTH / 4 - 1; k > 0; k--) {
+        _oledbuffer[k * 4 + 3 + j * OLED_WIDTH] = _oledbuffer[k * 4 - 1 + j * OLED_WIDTH];
+        _oledbuffer[k * 4 + 2 + j * OLED_WIDTH] = _oledbuffer[k * 4 - 2 + j * OLED_WIDTH];
+        _oledbuffer[k * 4 + 1 + j * OLED_WIDTH] = _oledbuffer[k * 4 - 3 + j * OLED_WIDTH];
+        _oledbuffer[k * 4 + 0 + j * OLED_WIDTH] = _oledbuffer[k * 4 - 4 + j * OLED_WIDTH];
+      }
+      _oledbuffer[j * OLED_WIDTH] = 0;
+      _oledbuffer[j * OLED_WIDTH + 1] = 0;
+      _oledbuffer[j * OLED_WIDTH + 2] = 0;
+      _oledbuffer[j * OLED_WIDTH + 3] = 0;
+    }
+    oledRefresh();
+  }
+#endif
 }
 
 /*
