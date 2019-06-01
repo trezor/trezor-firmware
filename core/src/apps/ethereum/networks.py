@@ -164,6 +164,13 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=222,
+        slip44=2221,
+        shortcut="ASK",
+        name="Permission",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=237,
         slip44=237,
         shortcut="DXN",
