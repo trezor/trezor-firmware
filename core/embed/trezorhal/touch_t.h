@@ -1,3 +1,4 @@
+#include <py/mpprint.h>
 #include <string.h>
 
 #include "common.h"
@@ -91,16 +92,11 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c) {
   __HAL_RCC_I2C1_CLK_DISABLE();
 }
 
-void touch_power_on(void) {
+void _i2c_init(void) {
   if (i2c_handle.Instance) {
     return;
   }
 
-  // turn on CTP circuitry
-  touch_active_pin_state();
-  HAL_Delay(50);
-
-  // I2C device interface configuration
   i2c_handle.Instance = I2C1;
   i2c_handle.Init.ClockSpeed = 400000;
   i2c_handle.Init.DutyCycle = I2C_DUTYCYCLE_16_9;
@@ -115,6 +111,81 @@ void touch_power_on(void) {
     ensure(secfalse, NULL);
     return;
   }
+}
+
+void _i2c_deinit(void) {
+  if (i2c_handle.Instance) {
+    HAL_I2C_DeInit(&i2c_handle);
+    i2c_handle.Instance = NULL;
+  }
+}
+
+static void _i2c_ensure_pin(uint16_t GPIO_Pin, GPIO_PinState PinState) {
+  HAL_GPIO_WritePin(GPIOB, GPIO_Pin, PinState);
+  while (HAL_GPIO_ReadPin(GPIOB, GPIO_Pin) != PinState)
+    ;
+}
+
+void _i2c_cycle(void) {
+  _i2c_deinit();
+
+  // set above pins to OUTPUT / NOPULL
+  GPIO_InitTypeDef GPIO_InitStructure;
+
+  mp_printf(&mp_plat_print, "reset GPIOs...\n");
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = GPIO_PIN_6 | GPIO_PIN_7;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+  HAL_Delay(50);
+
+  // PIN6 is SCL, PIN7 is SDA
+
+  mp_printf(&mp_plat_print, "set high...\n");
+  _i2c_ensure_pin(GPIO_PIN_6, GPIO_PIN_SET);
+  _i2c_ensure_pin(GPIO_PIN_7, GPIO_PIN_SET);
+  mp_printf(&mp_plat_print, "SDA low...\n");
+  _i2c_ensure_pin(GPIO_PIN_7, GPIO_PIN_RESET);
+  mp_printf(&mp_plat_print, "SCL low...\n");
+  _i2c_ensure_pin(GPIO_PIN_6, GPIO_PIN_RESET);
+  mp_printf(&mp_plat_print, "SCL high...\n");
+  _i2c_ensure_pin(GPIO_PIN_6, GPIO_PIN_SET);
+  mp_printf(&mp_plat_print, "SDA high...\n");
+  _i2c_ensure_pin(GPIO_PIN_7, GPIO_PIN_SET);
+
+  mp_printf(&mp_plat_print, "reinit I2C...\n");
+  GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed =
+      GPIO_SPEED_FREQ_LOW;  // I2C is a KHz bus and low speed is still good into
+                            // the low MHz
+  GPIO_InitStructure.Alternate = GPIO_AF4_I2C1;
+  GPIO_InitStructure.Pin = GPIO_PIN_6 | GPIO_PIN_7;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+  HAL_Delay(50);
+
+  mp_printf(&mp_plat_print, "toggle reset flag...\n");
+  __HAL_RCC_I2C1_FORCE_RESET();
+  HAL_Delay(50);
+  __HAL_RCC_I2C1_RELEASE_RESET();
+
+  _i2c_init();
+  HAL_Delay(10);
+  mp_printf(&mp_plat_print, "i2c cycle finished\n");
+}
+
+void touch_power_on(void) {
+  if (i2c_handle.Instance) {
+    return;
+  }
+
+  // turn on CTP circuitry
+  touch_active_pin_state();
+  HAL_Delay(50);
+
+  // I2C device interface configuration
+  _i2c_init();
 
   // set register 0xA4 G_MODE to interrupt polling mode (0x00). basically, CTPM
   // keeps this input line (to PC4) low while a finger is on the screen.
@@ -129,10 +200,7 @@ void touch_power_on(void) {
 }
 
 void touch_power_off(void) {
-  if (i2c_handle.Instance) {
-    HAL_I2C_DeInit(&i2c_handle);
-    i2c_handle.Instance = NULL;
-  }
+  _i2c_deinit();
   // turn off CTP circuitry
   HAL_Delay(50);
   touch_default_pin_state();
@@ -175,8 +243,10 @@ uint32_t touch_read(void) {
   }
 
   uint8_t outgoing[] = {0x00};  // start reading from address 0x00
-  if (HAL_OK != HAL_I2C_Master_Transmit(&i2c_handle, TOUCH_ADDRESS, outgoing,
-                                        sizeof(outgoing), 1)) {
+  int result = HAL_I2C_Master_Transmit(&i2c_handle, TOUCH_ADDRESS, outgoing,
+                                       sizeof(outgoing), 1);
+  if (result != HAL_OK) {
+    if (result == HAL_BUSY) _i2c_cycle();
     return 0;
   }
 
