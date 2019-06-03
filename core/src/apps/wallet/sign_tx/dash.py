@@ -1,28 +1,21 @@
-from ustruct import unpack
 from ubinascii import unhexlify
+from ustruct import unpack
+
 from trezor import ui
+from trezor.crypto.curve import secp256k1
+from trezor.crypto.hashlib import sha256
 from trezor.messages import ButtonRequestType
+from trezor.messages.TxRequest import TxRequest
+from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.ui.text import Text
 from trezor.utils import obj_eq
 from trezor.wire import ProcessError
-from trezor.crypto.curve import secp256k1
-from trezor.crypto.hashlib import ripemd160, sha256
-from trezor.messages.TxRequest import TxRequest
-from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
+
 from apps.common import coininfo, coins
+from apps.common.confirm import require_confirm
+from apps.wallet.sign_tx import addresses, helpers
 
-from apps.common.confirm import (
-    require_confirm,
-    require_hold_to_confirm,
-    confirm,
-)
-from apps.wallet.sign_tx import (
-    helpers,
-    addresses
-)
-
-
-VAR_INT_MAX_SIZE = 8
+_VAR_INT_MAX_SIZE = 8
 _DASH_COIN = 100000000
 _BLS_SIGNATURE_SIZE = 96
 
@@ -59,12 +52,12 @@ def _unpack_varint(data: bytes):
 
 
 def _to_hex(data: bytes) -> str:
-    return "".join('{:02x}'.format(x) for x in data)
+    return "".join("{:02x}".format(x) for x in data)
 
 
 def _inet_ntoa(data: bytes) -> str:
     # this is IPv4 mapped IPv6 address,  can get only 4 last bytes
-    return ".".join('{}'.format(data[i]) for i in [12, 13, 14, 15])
+    return ".".join("{}".format(data[i]) for i in [12, 13, 14, 15])
 
 
 def _is_p2pkh_script(data: bytes) -> bool:
@@ -72,11 +65,11 @@ def _is_p2pkh_script(data: bytes) -> bool:
         return False
     if not data[0] == 0x76:
         return False
-    if not data[1] == 0xa9:
+    if not data[1] == 0xA9:
         return False
     if not data[2] == 0x14:
         return False
-    if not data[-1] == 0xac:
+    if not data[-1] == 0xAC:
         return False
     if not data[-2] == 0x88:
         return False
@@ -86,7 +79,7 @@ def _is_p2pkh_script(data: bytes) -> bool:
 def _is_p2sh_script(data: bytes) -> bool:
     if not len(data) == 23:
         return False
-    if not data[0] == 0xa9:
+    if not data[0] == 0xA9:
         return False
     if not data[1] == 0x14:
         return False
@@ -132,7 +125,7 @@ def _revoke_reason(idx: int) -> str:
 
 
 class UIConfirmTxDetail:
-    def __init__(self, title: str, data:str):
+    def __init__(self, title: str, data: str):
         self.title = title
         self.data = data
 
@@ -141,13 +134,15 @@ class UIConfirmTxDetail:
 
 # This class is used to parse specific transaction details
 class SpecialTx:
-    def __init__(self, data: bytes, dip2_type, testnet: bool, coin: coininfo, inputs_hash: bytes):
+    def __init__(
+        self, data: bytes, dip2_type, testnet: bool, coin: coininfo, inputs_hash: bytes
+    ):
         self.coin = coin
         self.payload = data
         self.position = 0
         # check payload size
         varint_size = _varint_size(data)
-        payload_size = _unpack_varint(data[self.position:self.position + varint_size])
+        payload_size = _unpack_varint(data[self.position : self.position + varint_size])
         if len(data) != varint_size + payload_size:
             raise ProcessError("Invalid Dash DIP2 extra payload size")
         self.position += varint_size
@@ -159,25 +154,25 @@ class SpecialTx:
 
     def tx_name(self):
         if self.type == 1:
-            return 'Provider Registration Transaction'
+            return "Provider Registration Transaction"
         elif self.type == 2:
-            return 'Provider Update Service Transaction'
+            return "Provider Update Service Transaction"
         elif self.type == 3:
-            return 'Provider Update Registrar Transaction'
+            return "Provider Update Registrar Transaction"
         elif self.type == 4:
-            return 'Provider Update Revocation Transaction'
+            return "Provider Update Revocation Transaction"
         elif self.type == 5:
-            return 'Coinbase Transaction'
+            return "Coinbase Transaction"
         elif self.type == 6:
-            return 'Quorum Commitment'
+            return "Quorum Commitment"
         elif self.type == 8:
-            return 'Register Subscription Transaction'
+            return "Register Subscription Transaction"
         elif self.type == 9:
-            return 'Topup BU Credit Subscription Transaction'
+            return "Topup BU Credit Subscription Transaction"
         elif self.type == 10:
-            return 'Reset BU Key Subscription Transaction'
+            return "Reset BU Key Subscription Transaction"
         elif self.type == 11:
-            return 'Close BU Account Subscription Transaction'
+            return "Close BU Account Subscription Transaction"
         raise ProcessError("Unknown Dash DIP2 transaction type")
 
     async def parse(self):
@@ -205,19 +200,20 @@ class SpecialTx:
             raise ProcessError("Unknown Dash DIP2 transaction type")
 
     async def _parse_pro_reg_tx(self, data, position):
-        version = unpack("<H", data[position:position + 2])[0]
+        version = unpack("<H", data[position : position + 2])[0]
         if not version == 1:
             raise ProcessError("Unknown Dash Provider Register format version")
         position += 2
-        mntype = unpack("<H", data[position:position + 2])[0]
+        mntype = unpack("<H", data[position : position + 2])[0]
         position += 2
-        mode = unpack("<H", data[position:position + 2])[0]
+        mode = unpack("<H", data[position : position + 2])[0]
         position += 2
-        self.confirmations.extend([("Masternode type",
-                                    "Type: {}, mode: {}".format(mntype, mode))])
-        collateral_id = _to_hex(reversed(data[position:position + 32]))
+        self.confirmations.extend(
+            [("Masternode type", "Type: {}, mode: {}".format(mntype, mode))]
+        )
+        collateral_id = _to_hex(reversed(data[position : position + 32]))
         position += 32
-        collateral_out = unpack('<I', data[position:position + 4])[0]
+        collateral_out = unpack("<I", data[position : position + 4])[0]
         position += 4
         empty_collateral = all(c == "0" for c in collateral_id)
         if empty_collateral:
@@ -225,44 +221,54 @@ class SpecialTx:
         else:
             tx_req = TxRequest()
             tx_req.details = TxRequestDetailsType()
-            collateral_txo = await helpers.request_tx_output(tx_req, collateral_out, unhexlify(collateral_id))
+            collateral_txo = await helpers.request_tx_output(
+                tx_req, collateral_out, unhexlify(collateral_id)
+            )
             if collateral_txo.amount != 1000 * _DASH_COIN:
                 raise ProcessError("Invalid external collateral")
-            self.confirmations.extend([("External collateral",
-                                        "{}:{}".format(collateral_id, collateral_out))])
-        ip = _inet_ntoa(data[position:position+16])
+            self.confirmations.extend(
+                [("External collateral", "{}:{}".format(collateral_id, collateral_out))]
+            )
+        ip = _inet_ntoa(data[position : position + 16])
         position += 16
-        port = unpack(">H", data[position:position+2])[0]
+        port = unpack(">H", data[position : position + 2])[0]
         position += 2
-        self.confirmations.extend([("Address and port",
-                                    "{}:{}".format(ip, port))])
-        owner_address = addresses.address_pkh_from_keyid(data[position:position + 20], self.coin)
+        self.confirmations.extend([("Address and port", "{}:{}".format(ip, port))])
+        owner_address = addresses.address_pkh_from_keyid(
+            data[position : position + 20], self.coin
+        )
         position += 20
         self.confirmations.extend([("Owner address", owner_address)])
-        self.confirmations.extend([("Operator Public Key",
-                                    _to_hex(data[position:position + 48]))])
+        self.confirmations.extend(
+            [("Operator Public Key", _to_hex(data[position : position + 48]))]
+        )
         position += 48
-        voting_address = addresses.address_pkh_from_keyid(data[position:position + 20], self.coin)
+        voting_address = addresses.address_pkh_from_keyid(
+            data[position : position + 20], self.coin
+        )
         position += 20
         self.confirmations.extend([("Voting address", voting_address)])
-        operator_reward = unpack("<H", data[position:position+2])[0]
+        operator_reward = unpack("<H", data[position : position + 2])[0]
         if operator_reward > 10000:
             raise ProcessError("Invalid operator reward in ProRegTx")
         position += 2
-        self.confirmations.extend([("Operator reward",
-                                    "{:.2f}%".format(operator_reward / 100.0))])
-        varint_size = _varint_size(data[position:position + 8])
-        payout_script_size = _unpack_varint(data[position:position + varint_size])
+        self.confirmations.extend(
+            [("Operator reward", "{:.2f}%".format(operator_reward / 100.0))]
+        )
+        varint_size = _varint_size(data[position : position + 8])
+        payout_script_size = _unpack_varint(data[position : position + varint_size])
         position += varint_size
-        payout_address = _address_from_script(data[position:position + payout_script_size], self.coin)
+        payout_address = _address_from_script(
+            data[position : position + payout_script_size], self.coin
+        )
         position += payout_script_size
         self.confirmations.extend([("Payout address", payout_address)])
-        if data[position:position + 32] != self.inputs_hash:
+        if data[position : position + 32] != self.inputs_hash:
             raise ProcessError("Invalid inputs hash in DIP2 transaction")
         position += 32
         payload_content_end = position
-        varint_size = _varint_size(data[position:position + 8])
-        payload_sig_size = _unpack_varint(data[position:position + varint_size])
+        varint_size = _varint_size(data[position : position + 8])
+        payload_sig_size = _unpack_varint(data[position : position + varint_size])
         position += varint_size
         if position + payload_sig_size != len(data):
             raise ProcessError("Invalid payload signature size")
@@ -271,27 +277,46 @@ class SpecialTx:
         if not empty_collateral and payload_sig_size == 0:
             raise ProcessError("No payload signature for external collateral")
         if payload_sig_size > 0:
-            payload_sig = data[position:position + payload_sig_size]
-            res = payout_address + "|" + str(operator_reward) + "|" + \
-                  owner_address + "|" + voting_address + "|"
-            data_hash = bytes(reversed(sha256(sha256(data[self.payload_content_start:payload_content_end]).digest()).digest()))
+            payload_sig = data[position : position + payload_sig_size]
+            res = (
+                payout_address
+                + "|"
+                + str(operator_reward)
+                + "|"
+                + owner_address
+                + "|"
+                + voting_address
+                + "|"
+            )
+            data_hash = bytes(
+                reversed(
+                    sha256(
+                        sha256(
+                            data[self.payload_content_start : payload_content_end]
+                        ).digest()
+                    ).digest()
+                )
+            )
             res += _to_hex(data_hash)
             from apps.common.signverify import message_digest
+
             digest = message_digest(self.coin, res)
             key_from_sig = secp256k1.verify_recover(payload_sig, digest)
             if not key_from_sig:
                 raise ProcessError("Invalid payload signature")
             address_from_sig = addresses.address_pkh(key_from_sig, self.coin)
-            address_from_txout = _address_from_script(collateral_txo.script_pubkey, self.coin)
+            address_from_txout = _address_from_script(
+                collateral_txo.script_pubkey, self.coin
+            )
             if address_from_sig != address_from_txout:
                 raise ProcessError("Invalid payload signature")
 
     async def _parse_pro_up_serv_tx(self, data, position):
-        version = unpack("<H", data[position:position + 2])[0]
+        version = unpack("<H", data[position : position + 2])[0]
         if not version == 1:
             raise ProcessError("Unknown Dash Provider Update Service format version")
         position += 2
-        initial_proregtx_id = bytes(reversed(data[position:position + 32]))
+        initial_proregtx_id = bytes(reversed(data[position : position + 32]))
         position += 32
         tx_req = TxRequest()
         tx_req.details = TxRequestDetailsType()
@@ -299,33 +324,34 @@ class SpecialTx:
         if proregtx.version != ((1 << 16) | 3):
             raise ProcessError("Invalid ProRegTx")
         self.confirmations.extend([("Initial ProRegTx", _to_hex(initial_proregtx_id))])
-        ip = _inet_ntoa(data[position:position+16])
+        ip = _inet_ntoa(data[position : position + 16])
         position += 16
-        port = unpack(">H", data[position:position+2])[0]
+        port = unpack(">H", data[position : position + 2])[0]
         position += 2
-        self.confirmations.extend([("Address and port",
-                                    "{}:{}".format(ip, port))])
-        varint_size = _varint_size(data[position:position + 8])
-        payout_script_size = _unpack_varint(data[position:position + varint_size])
+        self.confirmations.extend([("Address and port", "{}:{}".format(ip, port))])
+        varint_size = _varint_size(data[position : position + 8])
+        payout_script_size = _unpack_varint(data[position : position + varint_size])
         position += varint_size
         if payout_script_size == 0:
             payout_address = "Empty"
         else:
-            payout_address = _address_from_script(data[position:position + payout_script_size], self.coin)
+            payout_address = _address_from_script(
+                data[position : position + payout_script_size], self.coin
+            )
         position += payout_script_size
         self.confirmations.extend([("Payout address", payout_address)])
-        if data[position:position + 32] != self.inputs_hash:
+        if data[position : position + 32] != self.inputs_hash:
             raise ProcessError("Invalid inputs hash in DIP2 transaction")
         position += 32
         if position + _BLS_SIGNATURE_SIZE != len(data):
             raise ProcessError("Invalid payload BLS signature size")
 
     async def _parse_pro_up_reg_tx(self, data, position):
-        version = unpack("<H", data[position:position + 2])[0]
+        version = unpack("<H", data[position : position + 2])[0]
         if not version == 1:
             raise ProcessError("Unknown Dash Provider Update Registrar format version")
         position += 2
-        initial_proregtx_id = bytes(reversed(data[position:position + 32]))
+        initial_proregtx_id = bytes(reversed(data[position : position + 32]))
         position += 32
         tx_req = TxRequest()
         tx_req.details = TxRequestDetailsType()
@@ -333,38 +359,44 @@ class SpecialTx:
         if proregtx.version != ((1 << 16) | 3):
             raise ProcessError("Invalid ProRegTx")
         self.confirmations.extend([("Initial ProRegTx", _to_hex(initial_proregtx_id))])
-        mode = unpack("<H", data[position:position + 2])[0]
+        mode = unpack("<H", data[position : position + 2])[0]
         position += 2
-        self.confirmations.extend([("Masternode mode",
-                                    "Mode: {}".format(mode))])
-        self.confirmations.extend([("Operator Public Key",
-                                    _to_hex(data[position:position + 48]))])
+        self.confirmations.extend([("Masternode mode", "Mode: {}".format(mode))])
+        self.confirmations.extend(
+            [("Operator Public Key", _to_hex(data[position : position + 48]))]
+        )
         position += 48
-        voting_address = addresses.address_pkh_from_keyid(data[position:position + 20], self.coin)
+        voting_address = addresses.address_pkh_from_keyid(
+            data[position : position + 20], self.coin
+        )
         position += 20
         self.confirmations.extend([("Voting address", voting_address)])
-        varint_size = _varint_size(data[position:position + 8])
-        payout_script_size = _unpack_varint(data[position:position + varint_size])
+        varint_size = _varint_size(data[position : position + 8])
+        payout_script_size = _unpack_varint(data[position : position + varint_size])
         position += varint_size
         if payout_script_size == 0:
             payout_address = "Empty"
         else:
-            payout_address = _address_from_script(data[position:position + payout_script_size], self.coin)
+            payout_address = _address_from_script(
+                data[position : position + payout_script_size], self.coin
+            )
         position += payout_script_size
         self.confirmations.extend([("Payout address", payout_address)])
-        if data[position:position + 32] != self.inputs_hash:
+        if data[position : position + 32] != self.inputs_hash:
             raise ProcessError("Invalid inputs hash in DIP2 transaction")
         position += 32
         payload_content_end = position
-        varint_size = _varint_size(data[position:position + 8])
-        payload_sig_size = _unpack_varint(data[position:position + varint_size])
+        varint_size = _varint_size(data[position : position + 8])
+        payload_sig_size = _unpack_varint(data[position : position + varint_size])
         position += varint_size
         if position + payload_sig_size != len(data):
             raise ProcessError("Invalid payload signature size")
         if payload_sig_size == 0:
             raise ProcessError("Invalid payload signature size")
-        payload_sig = data[position:position + payload_sig_size]
-        data_hash = sha256(sha256(data[self.payload_content_start:payload_content_end]).digest()).digest()
+        payload_sig = data[position : position + payload_sig_size]
+        data_hash = sha256(
+            sha256(data[self.payload_content_start : payload_content_end]).digest()
+        ).digest()
         key_from_sig = secp256k1.verify_recover(payload_sig, data_hash)
         if not key_from_sig:
             raise ProcessError("Invalid payload signature")
@@ -375,20 +407,22 @@ class SpecialTx:
         proregtx_payload = bytes()
         while ofs < proregtx.extra_data_len:
             size = min(1024, proregtx.extra_data_len - ofs)
-            chunk = await helpers.request_tx_extra_data(tx_req, ofs, size, initial_proregtx_id)
+            chunk = await helpers.request_tx_extra_data(
+                tx_req, ofs, size, initial_proregtx_id
+            )
             proregtx_payload += chunk
             ofs += len(chunk)
         ownerkeyid_position = _varint_size(proregtx_payload) + 60
-        owner_keyid = proregtx_payload[ownerkeyid_position:ownerkeyid_position + 20]
+        owner_keyid = proregtx_payload[ownerkeyid_position : ownerkeyid_position + 20]
         if keyid_from_sig != owner_keyid:
             raise ProcessError("Payload signature doesn't match Owner key")
 
     async def _parse_pro_up_rev_tx(self, data, position):
-        version = unpack("<H", data[position:position + 2])[0]
+        version = unpack("<H", data[position : position + 2])[0]
         if not version == 1:
             raise ProcessError("Unknown Dash Provider Update Registrar format version")
         position += 2
-        initial_proregtx_id = bytes(reversed(data[position:position + 32]))
+        initial_proregtx_id = bytes(reversed(data[position : position + 32]))
         position += 32
         tx_req = TxRequest()
         tx_req.details = TxRequestDetailsType()
@@ -396,10 +430,10 @@ class SpecialTx:
         if proregtx.version != ((1 << 16) | 3):
             raise ProcessError("Invalid ProRegTx")
         self.confirmations.extend([("Initial ProRegTx", _to_hex(initial_proregtx_id))])
-        reason = unpack("<H", data[position:position + 2])[0]
+        reason = unpack("<H", data[position : position + 2])[0]
         position += 2
         self.confirmations.extend([("Revoke reason", _revoke_reason(reason))])
-        if data[position:position + 32] != self.inputs_hash:
+        if data[position : position + 32] != self.inputs_hash:
             raise ProcessError("Invalid inputs hash in DIP2 transaction")
         position += 32
         if position + _BLS_SIGNATURE_SIZE != len(data):
@@ -436,20 +470,20 @@ def is_dip2_tx(tx):
         return False
     version = tx.version
     dip2_type = version >> 16
-    version &= 0xffff
-    return (version is 3) and (dip2_type > 0)
+    version &= 0xFFFF
+    return (version == 3) and (dip2_type > 0)
 
 
 async def request_dip2_extra_payload(tx_req):
     # if it is Dash Special Tx it has at least 8 (max varint size) bytes
     # extra data, so we can request it
-    size = VAR_INT_MAX_SIZE
+    size = _VAR_INT_MAX_SIZE
     ofs = 0
     data = await helpers.request_tx_extra_data(tx_req, ofs, size)
     # calc full extra data size
     extra_len = _varint_size(data) + _unpack_varint(data)
     # request remaining extra data
-    ofs = VAR_INT_MAX_SIZE
+    ofs = _VAR_INT_MAX_SIZE
     data_to_confirm = bytearray(data)
     while ofs < extra_len:
         size = min(1024, extra_len - ofs)
