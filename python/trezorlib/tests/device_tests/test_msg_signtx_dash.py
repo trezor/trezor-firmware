@@ -14,7 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import pytest
+
 from trezorlib import btc, messages as proto
+from trezorlib.exceptions import Cancelled
 from trezorlib.tools import parse_path
 
 from ..support.tx_cache import tx_cache
@@ -936,4 +939,37 @@ class TestMsgSigntxDash(TrezorTest):
             serialized_tx.hex()
             == "03000400018dc5f38fcb801a6fad31de622a226e5b1886b1fecac41ada087d5c23be016e69010000006b483045022100ae899bab721ade91116e903617988ffbcb2ef7bf307331dc1221768a4752778702202e057237b5ef239900c5a5c2f68e603c746445fb71d0756c70e4dc0486557af80121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffff0186a4c872170000001976a914a579388225827d9f2fe9014add644487808c695d88ac00000000a4010061d48e8bd82f0fe9dba3413753c90b695ae75dccee5b3401e76df29b9d33a1390000c3803e9de251fdfe2f6fa200638ae4675511ec0bf0180983ea7a0ab2acd7a500183721a5870eded00d0cd39905d3dc0bfaf30a69e8c3e40c2cc5478f5d8f058b4471ff1f64180145d6f4c54f7562676a00a0751a10d806bd06338fb06af4b53e51c2a47642ab91f9ad28ab66309669bdc9c82fa8a958256f156a5e4657000ab0"
         )
+
+    def test_send_dash_dip2_external_output(self):
+        self.setup_mnemonic_allallall()
+        inp1 = proto.TxInputType(
+            address_n=parse_path("44'/1'/0'/0/0"),
+            # dash testnet:ybQPZRHKifv9BDqMN2cieCsMzQQ1BuDoR5
+            amount=100710000000,
+            prev_hash=bytes.fromhex(
+                "696e01be235c7d08da1ac4cafeb186185b6e222a62de31ad6f1a80cb8ff3c58d"
+            ),
+            prev_index=1,
+            script_type=proto.InputScriptType.SPENDADDRESS,
+        )
+        out1 = proto.TxOutputType(
+            address="yRdup9c8LRhvsK1CY1VVMFrEjPofCS5gSE",
+            amount=100709999750,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+        extra_payload = bytes.fromhex(
+                "a4010061d48e8bd82f0fe9dba3413753c90b695ae75dccee5b3401e76df29b9d33a1390000c3803e9de251fdfe2f6fa200638ae4675511ec0bf0180983ea7a0ab2acd7a500183721a5870eded00d0cd39905d3dc0bfaf30a69e8c3e40c2cc5478f5d8f058b4471ff1f64180145d6f4c54f7562676a00a0751a10d806bd06338fb06af4b53e51c2a47642ab91f9ad28ab66309669bdc9c82fa8a958256f156a5e4657000ab0"
+            )
+        proregtx_id = bytes.fromhex(
+            "39a1339d9bf26de701345beecc5de75a690bc9533741a3dbe90f2fd88b8ed461"
+        )
+        txdata = proto.SignTx()
+        txdata.version = (4 << 16) | 3
+
+        with pytest.raises(Cancelled) as exc:
+            btc.sign_tx(
+                self.client, "Dash Testnet", [inp1], [out1], details=txdata,
+                prev_txes=TX_API, extra_payload=extra_payload,
+                external_txes=[proregtx_id]
+            )
 
