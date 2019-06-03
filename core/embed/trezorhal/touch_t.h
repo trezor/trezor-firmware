@@ -1,4 +1,4 @@
-#include <py/mpprint.h>
+// #include <py/mpprint.h>
 #include <string.h>
 
 #include "common.h"
@@ -132,7 +132,7 @@ void _i2c_cycle(void) {
   // set above pins to OUTPUT / NOPULL
   GPIO_InitTypeDef GPIO_InitStructure;
 
-  mp_printf(&mp_plat_print, "reset GPIOs...\n");
+  // mp_printf(&mp_plat_print, "reset GPIOs...\n");
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
@@ -142,19 +142,19 @@ void _i2c_cycle(void) {
 
   // PIN6 is SCL, PIN7 is SDA
 
-  mp_printf(&mp_plat_print, "set high...\n");
+  // mp_printf(&mp_plat_print, "set high...\n");
   _i2c_ensure_pin(GPIO_PIN_6, GPIO_PIN_SET);
   _i2c_ensure_pin(GPIO_PIN_7, GPIO_PIN_SET);
-  mp_printf(&mp_plat_print, "SDA low...\n");
+  // mp_printf(&mp_plat_print, "SDA low...\n");
   _i2c_ensure_pin(GPIO_PIN_7, GPIO_PIN_RESET);
-  mp_printf(&mp_plat_print, "SCL low...\n");
+  // mp_printf(&mp_plat_print, "SCL low...\n");
   _i2c_ensure_pin(GPIO_PIN_6, GPIO_PIN_RESET);
-  mp_printf(&mp_plat_print, "SCL high...\n");
+  // mp_printf(&mp_plat_print, "SCL high...\n");
   _i2c_ensure_pin(GPIO_PIN_6, GPIO_PIN_SET);
-  mp_printf(&mp_plat_print, "SDA high...\n");
+  // mp_printf(&mp_plat_print, "SDA high...\n");
   _i2c_ensure_pin(GPIO_PIN_7, GPIO_PIN_SET);
 
-  mp_printf(&mp_plat_print, "reinit I2C...\n");
+  // mp_printf(&mp_plat_print, "reinit I2C...\n");
   GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed =
@@ -165,14 +165,14 @@ void _i2c_cycle(void) {
   HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
   HAL_Delay(50);
 
-  mp_printf(&mp_plat_print, "toggle reset flag...\n");
+  // mp_printf(&mp_plat_print, "toggle reset flag...\n");
   __HAL_RCC_I2C1_FORCE_RESET();
   HAL_Delay(50);
   __HAL_RCC_I2C1_RELEASE_RESET();
 
   _i2c_init();
   HAL_Delay(10);
-  mp_printf(&mp_plat_print, "i2c cycle finished\n");
+  // mp_printf(&mp_plat_print, "i2c cycle finished\n");
 }
 
 void touch_power_on(void) {
