@@ -2,6 +2,7 @@ from ubinascii import unhexlify
 from ustruct import unpack
 
 from trezor import ui
+from trezor.crypto import base58
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
 from trezor.messages import ButtonRequestType
@@ -11,7 +12,7 @@ from trezor.ui.text import Text
 from trezor.utils import obj_eq
 from trezor.wire import ProcessError
 
-from apps.common import coininfo, coins
+from apps.common import address_type, coininfo, coins
 from apps.common.confirm import require_confirm
 from apps.wallet.sign_tx import addresses, helpers
 
@@ -88,9 +89,14 @@ def _is_p2sh_script(data: bytes) -> bool:
     return True
 
 
+def _address_pkh_from_keyid(keyid: bytes, coin: coininfo.CoinInfo) -> str:
+    s = address_type.tobytes(coin.address_type) + keyid
+    return base58.encode_check(bytes(s), coin.b58_hash)
+
+
 def _address_from_script(data: bytes, coin: coininfo.CoinInfo) -> str:
     if _is_p2pkh_script(data):
-        return addresses.address_pkh_from_keyid(data[3:23], coin)
+        return _address_pkh_from_keyid(data[3:23], coin)
     if _is_p2sh_script(data):
         return addresses.address_p2sh(data[2:22], coin)
     raise ProcessError("Unsupported payout script type")
@@ -234,7 +240,7 @@ class SpecialTx:
         port = unpack(">H", data[position : position + 2])[0]
         position += 2
         self.confirmations.extend([("Address and port", "{}:{}".format(ip, port))])
-        owner_address = addresses.address_pkh_from_keyid(
+        owner_address = _address_pkh_from_keyid(
             data[position : position + 20], self.coin
         )
         position += 20
@@ -243,7 +249,7 @@ class SpecialTx:
             [("Operator Public Key", _to_hex(data[position : position + 48]))]
         )
         position += 48
-        voting_address = addresses.address_pkh_from_keyid(
+        voting_address = _address_pkh_from_keyid(
             data[position : position + 20], self.coin
         )
         position += 20
@@ -366,7 +372,7 @@ class SpecialTx:
             [("Operator Public Key", _to_hex(data[position : position + 48]))]
         )
         position += 48
-        voting_address = addresses.address_pkh_from_keyid(
+        voting_address = _address_pkh_from_keyid(
             data[position : position + 20], self.coin
         )
         position += 20
