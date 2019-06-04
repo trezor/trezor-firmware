@@ -121,7 +121,7 @@ void __assert_func(const char *file, int line, const char *func,
 void hal_delay(uint32_t ms) { HAL_Delay(ms); }
 
 void delay_random(void) {
-  int wait = rng_get() & 0xff;
+  int wait = 0;  // rng_get() & 0xff;
   volatile int i = 0;
   volatile int j = wait;
   while (i < wait) {

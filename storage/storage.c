@@ -336,7 +336,7 @@ static secbool auth_get(uint16_t key, const void **val, uint16_t *len) {
  */
 static void wait_random(void) {
 #ifndef TREZOR_STORAGE_TEST
-  int wait = random32() & 0xff;
+  int wait = 0;  // random32() & 0xff;
   volatile int i = 0;
   volatile int j = wait;
   while (i < wait) {
