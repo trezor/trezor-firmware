@@ -31,6 +31,7 @@ def input_script_p2pkh_or_p2sh(
 
 
 def output_script_p2pkh(pubkeyhash: bytes) -> bytearray:
+    ensure(len(pubkeyhash) == 20)
     s = bytearray(25)
     s[0] = 0x76  # OP_DUP
     s[1] = 0xA9  # OP_HASH_160
@@ -43,7 +44,7 @@ def output_script_p2pkh(pubkeyhash: bytes) -> bytearray:
 
 def output_script_p2sh(scripthash: bytes) -> bytearray:
     # A9 14 <scripthash> 87
-
+    ensure(len(scripthash) == 20)
     s = bytearray(23)
     s[0] = 0xA9  # OP_HASH_160
     s[1] = 0x14  # pushing 20 bytes
