@@ -75,6 +75,16 @@ RUN $PYTHON -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/loc
 
 ENV WORKON_HOME=/tmp/.venvs
 
+# download monero tests binary
+
+ENV TREZOR_MONERO_TESTS_SHA256SUM=140a16b3d6105b5e8e88a93b451e9600a36ed23928ea3cf2f975f9c83f36dab7
+ENV TREZOR_MONERO_TESTS_URL="https://github.com/ph4r05/monero/releases/download/v0.14.1.0-tests-u14.04-01/trezor_tests"
+ENV TREZOR_MONERO_TESTS_PATH="/opt/trezor_monero_tests"
+
+RUN wget "$TREZOR_MONERO_TESTS_URL" -O "$TREZOR_MONERO_TESTS_PATH" \
+    && chmod +x "$TREZOR_MONERO_TESTS_PATH"
+RUN echo "${TREZOR_MONERO_TESTS_SHA256SUM} ${TREZOR_MONERO_TESTS_PATH}" | sha256sum -c
+
 # install python dependencies
 
 RUN pip install pipenv

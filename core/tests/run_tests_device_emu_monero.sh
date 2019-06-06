@@ -66,6 +66,8 @@ if [[ ! -f "$TREZOR_MONERO_TESTS_PATH" || "`shasum -a256 "$TREZOR_MONERO_TESTS_P
   curl -L -o "$TREZOR_MONERO_TESTS_PATH" "$TREZOR_MONERO_TESTS_URL" \
     && chmod +x "$TREZOR_MONERO_TESTS_PATH" \
     && test "`shasum -a256 "$TREZOR_MONERO_TESTS_PATH" | cut -d' ' -f1`" == "$TREZOR_MONERO_TESTS_SHA256SUM" || exit 1
+else
+  echo "Trezor monero binary with valid hash already present at $TREZOR_MONERO_TESTS_PATH - not downloading again."
 fi
 
 echo "Running tests"
