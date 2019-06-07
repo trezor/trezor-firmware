@@ -33,9 +33,9 @@
   "min_address_length": 36,
   "max_address_length": 40,
   "bitcore": [
-    "https://insight-01.crown.tech/insight/",
-    "https://insight-02.crown.tech/insight/",
-    "https://insight-03.crown.tech/insight/"
+    "https://insight-01.crown.tech/insight",
+    "https://insight-02.crown.tech/insight",
+    "https://insight-03.crown.tech/insight"
   ],
   "blockbook": [],
   "cooldown": 100,
