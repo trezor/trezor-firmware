@@ -25,13 +25,13 @@
 #include "memzero.h"
 #include "sha2.h"
 
-static void update_k(HMAC_DRBG_CTX *ctx, uint8_t domain, const uint8_t *data,
-                     size_t len) {
-  // Computes K = HMAC(K, V || domain || data).
+static void update_k(HMAC_DRBG_CTX *ctx, uint8_t domain, const uint8_t *data1,
+                     size_t len1, const uint8_t *data2, size_t len2) {
+  // Computes K = HMAC(K, V || domain || data1 || data 2).
 
   // First hash operation of HMAC.
   uint32_t h[SHA256_BLOCK_LENGTH / sizeof(uint32_t)] = {0};
-  if (data == NULL) {
+  if (len1 + len2 == 0) {
     ctx->v[8] = 0x00800000;
     ctx->v[15] = (SHA256_BLOCK_LENGTH + SHA256_DIGEST_LENGTH + 1) * 8;
     sha256_Transform(ctx->idig, ctx->v, h);
@@ -49,7 +49,8 @@ static void update_k(HMAC_DRBG_CTX *ctx, uint8_t domain, const uint8_t *data,
     }
     ((uint8_t *)sha_ctx.buffer)[SHA256_DIGEST_LENGTH] = domain;
     sha_ctx.bitcount = (SHA256_BLOCK_LENGTH + SHA256_DIGEST_LENGTH + 1) * 8;
-    sha256_Update(&sha_ctx, data, len);
+    sha256_Update(&sha_ctx, data1, len1);
+    sha256_Update(&sha_ctx, data2, len2);
     sha256_Final(&sha_ctx, (uint8_t *)h);
 #if BYTE_ORDER == LITTLE_ENDIAN
     for (size_t i = 0; i < SHA256_DIGEST_LENGTH / sizeof(uint32_t); i++)
@@ -82,7 +83,7 @@ static void update_v(HMAC_DRBG_CTX *ctx) {
   sha256_Transform(ctx->odig, ctx->v, ctx->v);
 }
 
-void hmac_drbg_init(HMAC_DRBG_CTX *ctx, const uint8_t *entropy, size_t len) {
+void hmac_drbg_init(HMAC_DRBG_CTX *ctx, const uint8_t *entropy, size_t entropy_len, const uint8_t *nonce, size_t nonce_len) {
   uint32_t h[SHA256_BLOCK_LENGTH / sizeof(uint32_t)];
 
   // Precompute the inner digest and outer digest of K = 0x00 ... 0x00.
@@ -97,16 +98,16 @@ void hmac_drbg_init(HMAC_DRBG_CTX *ctx, const uint8_t *entropy, size_t len) {
   ctx->v[8] = 0x80000000;
   ctx->v[15] = (SHA256_BLOCK_LENGTH + SHA256_DIGEST_LENGTH) * 8;
 
-  hmac_drbg_reseed(ctx, entropy, len);
+  hmac_drbg_reseed(ctx, entropy, entropy_len, nonce, nonce_len);
 
   memzero(h, sizeof(h));
 }
 
-void hmac_drbg_reseed(HMAC_DRBG_CTX *ctx, const uint8_t *entropy, size_t len) {
-  update_k(ctx, 0, entropy, len);
+void hmac_drbg_reseed(HMAC_DRBG_CTX *ctx, const uint8_t *entropy, size_t len, const uint8_t *addin, size_t addin_len) {
+  update_k(ctx, 0, entropy, len, addin, addin_len);
   update_v(ctx);
   if (len == 0) return;
-  update_k(ctx, 1, entropy, len);
+  update_k(ctx, 1, entropy, len, addin, addin_len);
   update_v(ctx);
 }
 
@@ -121,6 +122,6 @@ void hmac_drbg_generate(HMAC_DRBG_CTX *ctx, uint8_t *buf, size_t len) {
       }
     }
   }
-  update_k(ctx, 0, NULL, 0);
+  update_k(ctx, 0, NULL, 0, NULL, 0);
   update_v(ctx);
 }
