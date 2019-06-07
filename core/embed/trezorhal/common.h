@@ -20,6 +20,7 @@
 #ifndef __TREZORHAL_COMMON_H__
 #define __TREZORHAL_COMMON_H__
 
+#include <stddef.h>
 #include <stdint.h>
 #include "secbool.h"
 
@@ -74,6 +75,11 @@ extern uint32_t __stack_chk_guard;
 void collect_hw_entropy(void);
 #define HW_ENTROPY_LEN (12 + 32)
 extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
+
+void drbg_init();
+void drbg_reseed(const uint8_t *entropy, size_t len);
+void drbg_generate(uint8_t *buf, size_t len);
+uint32_t drbg_random32(void);
 
 // the following functions are defined in util.s
 

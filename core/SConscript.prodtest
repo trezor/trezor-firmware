@@ -12,7 +12,10 @@ CPPPATH_MOD += [
     'vendor/trezor-crypto',
 ]
 SOURCE_MOD += [
+    'vendor/trezor-crypto/hmac_drbg.c',
     'vendor/trezor-crypto/memzero.c',
+    'vendor/trezor-crypto/rand.c',
+    'vendor/trezor-crypto/sha2.c',
 ]
 
 # modtrezorui

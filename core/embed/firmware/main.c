@@ -43,6 +43,9 @@
 #include "touch.h"
 
 int main(void) {
+  // initialize pseudo-random number generator
+  drbg_init();
+
   // reinitialize HAL for Trezor One
 #if TREZOR_MODEL == 1
   HAL_Init();
