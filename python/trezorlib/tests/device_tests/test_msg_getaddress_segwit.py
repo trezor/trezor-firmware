@@ -79,6 +79,17 @@ class TestMsgGetaddressSegwit(TrezorTest):
             )
             == "2N4Q5FhU2497BryFfUgbqkAJE87aKDv3V3e"
         )
+        assert (
+            btc.get_address(
+                self.client,
+                "Elements",
+                parse_path("m/49'/1'/0'/0/0"),
+                False,
+                None,
+                script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+            )
+            == "XNW67ZQA9K3AuXPBWvJH4zN2y5QBDTwy2Z"
+        )
 
     def test_show_multisig_3(self):
         self.setup_mnemonic_allallall()

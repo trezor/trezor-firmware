@@ -116,6 +116,13 @@ class TestMsgGetaddress(TrezorTest):
             == "Fmhtxeh7YdCBkyQF7AQG4QnY8y3rJg89di"
         )
 
+    def test_elements(self):
+        self.setup_mnemonic_allallall()
+        assert (
+            btc.get_address(self.client, "Elements", parse_path("m/44'/1'/0'/0/0"))
+            == "2dpWh6jbhAowNsQ5agtFzi7j6nKscj6UnEr"
+        )
+
     def test_multisig(self):
         self.setup_mnemonic_allallall()
         xpubs = []
