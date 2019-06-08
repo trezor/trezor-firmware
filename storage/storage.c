@@ -330,30 +330,6 @@ static secbool auth_get(uint16_t key, const void **val, uint16_t *len) {
   return sectrue;
 }
 
-/*
- *  Generates a delay of random length. Use this to protect sensitive code
- * against fault injection.
- */
-static void wait_random(void) {
-#ifndef TREZOR_STORAGE_TEST
-  int wait = random32() & 0xff;
-  volatile int i = 0;
-  volatile int j = wait;
-  while (i < wait) {
-    if (i + j != wait) {
-      handle_fault("sanity check");
-    }
-    ++i;
-    --j;
-  }
-
-  // Double-check loop completion.
-  if (i != wait) {
-    handle_fault("loop completion check");
-  }
-#endif
-}
-
 static void derive_kek(uint32_t pin, const uint8_t *random_salt,
                        uint8_t kek[SHA256_DIGEST_LENGTH],
                        uint8_t keiv[SHA256_DIGEST_LENGTH]) {

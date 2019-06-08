@@ -23,6 +23,8 @@
 
 #include "common.h"
 
+void wait_random(void) {}
+
 void __shutdown(void) {
   printf("SHUTDOWN\n");
   exit(3);
