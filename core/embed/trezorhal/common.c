@@ -24,8 +24,8 @@
 #include "common.h"
 #include "display.h"
 #include "flash.h"
-#include "rand.h"
 #include "hmac_drbg.h"
+#include "rand.h"
 
 #include "stm32f4xx_ll_utils.h"
 
@@ -122,7 +122,11 @@ void __assert_func(const char *file, int line, const char *func,
 
 void hal_delay(uint32_t ms) { HAL_Delay(ms); }
 
-void delay_random(void) {
+/*
+ * Generates a delay of random length. Use this to protect sensitive code
+ * against fault injection.
+ */
+void wait_random(void) {
   int wait = drbg_random32() & 0xff;
   volatile int i = 0;
   volatile int j = wait;
@@ -188,7 +192,7 @@ void collect_hw_entropy(void) {
          NULL);
 }
 
-void drbg_init() {
+void drbg_init(void) {
   uint8_t entropy[48];
   random_buffer(entropy, sizeof(entropy));
   hmac_drbg_init(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
