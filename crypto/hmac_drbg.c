@@ -20,8 +20,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <string.h>
 #include "hmac_drbg.h"
+#include <string.h>
 #include "memzero.h"
 #include "sha2.h"
 
@@ -83,7 +83,9 @@ static void update_v(HMAC_DRBG_CTX *ctx) {
   sha256_Transform(ctx->odig, ctx->v, ctx->v);
 }
 
-void hmac_drbg_init(HMAC_DRBG_CTX *ctx, const uint8_t *entropy, size_t entropy_len, const uint8_t *nonce, size_t nonce_len) {
+void hmac_drbg_init(HMAC_DRBG_CTX *ctx, const uint8_t *entropy,
+                    size_t entropy_len, const uint8_t *nonce,
+                    size_t nonce_len) {
   uint32_t h[SHA256_BLOCK_LENGTH / sizeof(uint32_t)];
 
   // Precompute the inner digest and outer digest of K = 0x00 ... 0x00.
@@ -103,7 +105,8 @@ void hmac_drbg_init(HMAC_DRBG_CTX *ctx, const uint8_t *entropy, size_t entropy_l
   memzero(h, sizeof(h));
 }
 
-void hmac_drbg_reseed(HMAC_DRBG_CTX *ctx, const uint8_t *entropy, size_t len, const uint8_t *addin, size_t addin_len) {
+void hmac_drbg_reseed(HMAC_DRBG_CTX *ctx, const uint8_t *entropy, size_t len,
+                      const uint8_t *addin, size_t addin_len) {
   update_k(ctx, 0, entropy, len, addin, addin_len);
   update_v(ctx);
   if (len == 0) return;

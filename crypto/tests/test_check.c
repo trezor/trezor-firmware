@@ -4641,13 +4641,15 @@ START_TEST(test_hmac_drbg) {
   uint8_t nonce_bytes[16];
   memcpy(nonce_bytes, fromhex(nonce), sizeof(nonce_bytes));
   HMAC_DRBG_CTX ctx;
-  hmac_drbg_init(&ctx, fromhex(entropy), strlen(entropy) / 2, nonce_bytes, strlen(nonce) / 2);
+  hmac_drbg_init(&ctx, fromhex(entropy), strlen(entropy) / 2, nonce_bytes,
+                 strlen(nonce) / 2);
   hmac_drbg_reseed(&ctx, fromhex(reseed), strlen(reseed) / 2, NULL, 0);
   hmac_drbg_generate(&ctx, result, sizeof(result));
   hmac_drbg_generate(&ctx, result, sizeof(result));
   ck_assert_mem_eq(result, fromhex(expected), sizeof(result));
 
-  hmac_drbg_init(&ctx, fromhex(entropy), strlen(entropy) / 2, nonce_bytes, strlen(nonce) / 2);
+  hmac_drbg_init(&ctx, fromhex(entropy), strlen(entropy) / 2, nonce_bytes,
+                 strlen(nonce) / 2);
   hmac_drbg_reseed(&ctx, fromhex(reseed), strlen(reseed) / 2, NULL, 0);
   hmac_drbg_generate(&ctx, result, sizeof(result) - 13);
   hmac_drbg_generate(&ctx, result, sizeof(result) - 17);
