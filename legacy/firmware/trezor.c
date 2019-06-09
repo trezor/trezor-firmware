@@ -128,6 +128,9 @@ int main(void) {
   __stack_chk_guard = random32();  // this supports compiler provided
                                    // unpredictable stack protection checks
 #endif
+
+  drbg_init();
+
   if (!is_mode_unprivileged()) {
     collect_hw_entropy(true);
     timer_init();

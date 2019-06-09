@@ -20,6 +20,7 @@
 #include <libopencm3/usb/hid.h>
 #include <libopencm3/usb/usbd.h>
 
+#include "common.h"
 #include "config.h"
 #include "debug.h"
 #include "messages.h"

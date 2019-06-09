@@ -47,6 +47,8 @@ OBJS += ../vendor/trezor-crypto/ecdsa.o
 OBJS += ../vendor/trezor-crypto/curves.o
 OBJS += ../vendor/trezor-crypto/secp256k1.o
 OBJS += ../vendor/trezor-crypto/nist256p1.o
+OBJS += ../vendor/trezor-crypto/hmac_drbg.o
+OBJS += ../vendor/trezor-crypto/rfc6979.o
 OBJS += ../vendor/trezor-crypto/rand.o
 OBJS += ../vendor/trezor-crypto/memzero.o
 

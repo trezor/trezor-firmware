@@ -18,6 +18,7 @@
 
 #include <string.h>
 
+#include "common.h"
 #include "usb21_standard.h"
 #include "util.h"
 #include "webusb.h"

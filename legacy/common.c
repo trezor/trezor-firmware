@@ -21,12 +21,15 @@
 #include <stdio.h>
 #include "bitmaps.h"
 #include "firmware/usb.h"
+#include "hmac_drbg.h"
 #include "layout.h"
 #include "oled.h"
 #include "rng.h"
 #include "util.h"
 
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
+
+static HMAC_DRBG_CTX drbg_ctx;
 
 void __attribute__((noreturn))
 __fatal_error(const char *expr, const char *msg, const char *file, int line_num,
@@ -81,3 +84,40 @@ void __assert_func(const char *file, int line, const char *func,
 #endif
 
 void hal_delay(uint32_t ms) { usbSleep(ms); }
+
+void wait_random(void) {
+  int wait = drbg_random32() & 0xff;
+  volatile int i = 0;
+  volatile int j = wait;
+  while (i < wait) {
+    if (i + j != wait) {
+      shutdown();
+    }
+    ++i;
+    --j;
+  }
+  // Double-check loop completion.
+  if (i != wait || j != 0) {
+    shutdown();
+  }
+}
+
+void drbg_init() {
+  uint8_t entropy[48];
+  random_buffer(entropy, sizeof(entropy));
+  hmac_drbg_init(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
+}
+
+void drbg_reseed(const uint8_t *entropy, size_t len) {
+  hmac_drbg_reseed(&drbg_ctx, entropy, len, NULL, 0);
+}
+
+void drbg_generate(uint8_t *buf, size_t len) {
+  hmac_drbg_generate(&drbg_ctx, buf, len);
+}
+
+uint32_t drbg_random32(void) {
+  uint32_t value;
+  drbg_generate((uint8_t *)&value, sizeof(value));
+  return value;
+}
