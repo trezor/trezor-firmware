@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-from PIL import Image
 import io
-import sys
 import struct
+import sys
 import zlib
 from os.path import basename
 
+from PIL import Image
+
 
 def png2toif(input_data):
-
     def process_rgb(w, h, pix):
         data = bytes()
         for j in range(h):
@@ -85,9 +85,7 @@ def png2toif(input_data):
     """
 
 
-
 def toif2png(data):
-
     def process_rgb(w, h, data):
         pix = bytearray(w * h * 3)
         for i in range(w * h):
@@ -96,7 +94,6 @@ def toif2png(data):
             pix[i * 3 + 1] = (c & 0x07C0) >> 3
             pix[i * 3 + 2] = (c & 0x001F) << 3
         return bytes(pix)
-
 
     def process_grayscale(w, h, data):
         pix = bytearray(w * h)
@@ -117,7 +114,9 @@ def toif2png(data):
 
     if format == "toif":
         if len(data) != w * h * 2:
-            raise ValueError("Uncompressed data length mismatch (%d vs %d)" % (len(data), w * h * 2))
+            raise ValueError(
+                "Uncompressed data length mismatch (%d vs %d)" % (len(data), w * h * 2)
+            )
         pix = process_rgb(w, h, data)
         img = Image.frombuffer("RGB", (w, h), pix, "raw", "RGB", 0, 1)
         ret = io.BytesIO()
@@ -126,7 +125,9 @@ def toif2png(data):
 
     if format == "toig":
         if len(data) != w * h // 2:
-            raise ValueError("Uncompressed data length mismatch (%d vs %d)" % (len(data), w * h // 2))
+            raise ValueError(
+                "Uncompressed data length mismatch (%d vs %d)" % (len(data), w * h // 2)
+            )
         pix = process_grayscale(w, h, data)
         img = Image.frombuffer("L", (w, h), pix, "raw", "L", 0, 1)
         ret = io.BytesIO()
