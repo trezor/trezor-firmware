@@ -47,22 +47,22 @@ BG = BLACK
 FG = WHITE
 
 # icons
-ICON_RESET = "trezor/res/header_icons/reset.toig"
-ICON_WIPE = "trezor/res/header_icons/wipe.toig"
-ICON_RECOVERY = "trezor/res/header_icons/recovery.toig"
-ICON_NOCOPY = "trezor/res/header_icons/nocopy.toig"
-ICON_WRONG = "trezor/res/header_icons/wrong.toig"
-ICON_CONFIG = "trezor/res/header_icons/cog.toig"
-ICON_RECEIVE = "trezor/res/header_icons/receive.toig"
-ICON_SEND = "trezor/res/header_icons/send.toig"
+ICON_RESET = "trezor/res/header_icons/reset.toif"
+ICON_WIPE = "trezor/res/header_icons/wipe.toif"
+ICON_RECOVERY = "trezor/res/header_icons/recovery.toif"
+ICON_NOCOPY = "trezor/res/header_icons/nocopy.toif"
+ICON_WRONG = "trezor/res/header_icons/wrong.toif"
+ICON_CONFIG = "trezor/res/header_icons/cog.toif"
+ICON_RECEIVE = "trezor/res/header_icons/receive.toif"
+ICON_SEND = "trezor/res/header_icons/send.toif"
 
 ICON_DEFAULT = ICON_CONFIG
 
-ICON_CANCEL = "trezor/res/cancel.toig"
-ICON_CONFIRM = "trezor/res/confirm.toig"
-ICON_LOCK = "trezor/res/lock.toig"
-ICON_CLICK = "trezor/res/click.toig"
-ICON_BACK = "trezor/res/left.toig"
-ICON_SWIPE = "trezor/res/swipe.toig"
-ICON_CHECK = "trezor/res/check.toig"
-ICON_SPACE = "trezor/res/space.toig"
+ICON_CANCEL = "trezor/res/cancel.toif"
+ICON_CONFIRM = "trezor/res/confirm.toif"
+ICON_LOCK = "trezor/res/lock.toif"
+ICON_CLICK = "trezor/res/click.toif"
+ICON_BACK = "trezor/res/left.toif"
+ICON_SWIPE = "trezor/res/swipe.toif"
+ICON_CHECK = "trezor/res/check.toif"
+ICON_SPACE = "trezor/res/space.toif"
