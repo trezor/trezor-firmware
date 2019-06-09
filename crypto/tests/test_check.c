@@ -4637,6 +4637,7 @@ START_TEST(test_hmac_drbg) {
       "c3e66ea1b1a064b005de914eac2e9d4f2d72a8616a80225422918250ff66a41bd2f864a6"
       "a38cc5b6499dc43f7f2bd09e1e0f8f5885935124";
   uint8_t result[128];
+  uint8_t null_bytes[128] = {0};
 
   uint8_t nonce_bytes[16];
   memcpy(nonce_bytes, fromhex(nonce), sizeof(nonce_bytes));
@@ -4648,12 +4649,16 @@ START_TEST(test_hmac_drbg) {
   hmac_drbg_generate(&ctx, result, sizeof(result));
   ck_assert_mem_eq(result, fromhex(expected), sizeof(result));
 
-  hmac_drbg_init(&ctx, fromhex(entropy), strlen(entropy) / 2, nonce_bytes,
-                 strlen(nonce) / 2);
-  hmac_drbg_reseed(&ctx, fromhex(reseed), strlen(reseed) / 2, NULL, 0);
-  hmac_drbg_generate(&ctx, result, sizeof(result) - 13);
-  hmac_drbg_generate(&ctx, result, sizeof(result) - 17);
-  ck_assert_mem_eq(result, fromhex(expected), sizeof(result) - 17);
+  for (size_t i = 0; i <= sizeof(result); ++i) {
+    hmac_drbg_init(&ctx, fromhex(entropy), strlen(entropy) / 2, nonce_bytes,
+                   strlen(nonce) / 2);
+    hmac_drbg_reseed(&ctx, fromhex(reseed), strlen(reseed) / 2, NULL, 0);
+    hmac_drbg_generate(&ctx, result, sizeof(result) - 13);
+    memset(result, 0, sizeof(result));
+    hmac_drbg_generate(&ctx, result, i);
+    ck_assert_mem_eq(result, fromhex(expected), i);
+    ck_assert_mem_eq(result + i, null_bytes, sizeof(result) - i);
+  }
 }
 END_TEST
 

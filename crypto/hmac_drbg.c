@@ -118,9 +118,9 @@ void hmac_drbg_generate(HMAC_DRBG_CTX *ctx, uint8_t *buf, size_t len) {
   size_t i = 0;
   while (i < len) {
     update_v(ctx);
-    for (size_t j = 0; j < 8; j++) {
+    for (size_t j = 0; j < 8 && i < len; j++) {
       uint32_t r = ctx->v[j];
-      for (int k = 24; k >= 0; k -= 8) {
+      for (int k = 24; k >= 0 && i < len; k -= 8) {
         buf[i++] = (r >> k) & 0xFF;
       }
     }
