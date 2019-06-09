@@ -44,6 +44,16 @@
 #include "modtrezorio-usb.h"
 // clang-format on
 
+/// POLL_READ: int  # wait until interface is readable and return read data
+/// POLL_WRITE: int  # wait until interface is writable
+///
+/// TOUCH: int  # interface id of the touch events
+/// TOUCH_START: int  # event id of touch start event
+/// TOUCH_MOVE: int  # event id of touch move event
+/// TOUCH_END: int  # event id of touch end event
+
+/// WireInterface = Union[HID, WebUSB]
+
 STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorio)},
 

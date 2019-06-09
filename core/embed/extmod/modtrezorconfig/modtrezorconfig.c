@@ -47,7 +47,9 @@ STATIC secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
   return secfalse;
 }
 
-/// def init(ui_wait_callback: Tuple[int, Callable[int, None]] = None) -> None:
+/// def init(
+///    ui_wait_callback: Callable[[int, int, str], bool] = None
+/// ) -> None:
 ///     """
 ///     Initializes the storage.  Must be called before any other method is
 ///     called from this module!

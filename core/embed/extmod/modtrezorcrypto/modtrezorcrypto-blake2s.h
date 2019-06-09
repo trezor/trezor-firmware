@@ -26,10 +26,12 @@
 
 /// package: trezorcrypto.__init__
 
-/// class Blake2s:
+/// class blake2s:
 ///     """
 ///     Blake2s context.
 ///     """
+///     block_size: int
+///     digest_size: int
 typedef struct _mp_obj_Blake2s_t {
   mp_obj_base_t base;
   BLAKE2S_CTX ctx;
@@ -40,7 +42,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2s_update(mp_obj_t self, mp_obj_t data);
 /// def __init__(
 ///     self,
 ///     data: bytes = None,
-///     outlen: int = Blake2s.digest_size,
+///     outlen: int = blake2s.digest_size,
 ///     key: bytes = None,
 ///     personal: bytes = None,
 /// ) -> None:

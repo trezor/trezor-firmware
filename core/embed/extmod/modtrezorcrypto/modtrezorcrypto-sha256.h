@@ -24,10 +24,12 @@
 
 /// package: trezorcrypto.__init__
 
-/// class Sha256:
+/// class sha256:
 ///     """
 ///     SHA256 context.
 ///     """
+///     block_size: int
+///     digest_size: int
 typedef struct _mp_obj_Sha256_t {
   mp_obj_base_t base;
   SHA256_CTX ctx;

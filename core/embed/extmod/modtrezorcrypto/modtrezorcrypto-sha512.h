@@ -24,10 +24,12 @@
 
 /// package: trezorcrypto.__init__
 
-/// class Sha512:
+/// class sha512:
 ///     """
 ///     SHA512 context.
 ///     """
+///     block_size: int
+///     digest_size: int
 typedef struct _mp_obj_Sha512_t {
   mp_obj_base_t base;
   SHA512_CTX ctx;

@@ -60,7 +60,7 @@ def store_to_file(dest, parts):
     for package, line in parts:
         package = package.replace(".", "/")
         dirpath = os.path.join(dest, os.path.dirname(package))
-        filename = os.path.basename(package) + ".py"
+        filename = os.path.basename(package) + ".pyi"
         filepath = os.path.join(dirpath, filename)
 
         os.makedirs(dirpath, exist_ok=True)
@@ -71,7 +71,6 @@ def store_to_file(dest, parts):
             print("Package exists: {}".format(package))
             print("You should set 'package:' in {}".format(line.strip()))
             sys.exit(1)
-
 
         if not os.path.exists(filepath):
             with open(filepath, "a") as f:

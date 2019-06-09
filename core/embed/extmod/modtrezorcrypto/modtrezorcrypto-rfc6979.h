@@ -23,7 +23,7 @@
 
 /// package: trezorcrypto.__init__
 
-/// class Rfc6979:
+/// class rfc6979:
 ///     """
 ///     RFC6979 context.
 ///     """

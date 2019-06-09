@@ -58,7 +58,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_consteq_obj,
                                  mod_trezorutils_consteq);
 
 /// def memcpy(
-///     dst: bytearray, dst_ofs: int, src: bytearray, src_ofs: int, n: int
+///     dst: bytearray, dst_ofs: int, src: bytes, src_ofs: int, n: int
 /// ) -> int:
 ///     """
 ///     Copies at most `n` bytes from `src` at offset `src_ofs` to
@@ -121,6 +121,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_set_mode_unprivileged_obj,
 
 #define PASTER(s) MP_QSTR_##s
 #define MP_QSTR(s) PASTER(s)
+
+/// GITREV: str
+/// VERSION_MAJOR: int
+/// VERSION_MINOR: int
+/// VERSION_PATCH: int
+/// MODEL: str
+/// EMULATOR: bool
 
 STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorutils)},

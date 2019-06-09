@@ -27,10 +27,12 @@
 
 /// package: trezorcrypto.__init__
 
-/// class Groestl512:
+/// class groestl512:
 ///     """
 ///     GROESTL512 context.
 ///     """
+///     block_size: int
+///     digest_size: int
 typedef struct _mp_obj_Groestl512_t {
   mp_obj_base_t base;
   GROESTL512_CTX ctx;

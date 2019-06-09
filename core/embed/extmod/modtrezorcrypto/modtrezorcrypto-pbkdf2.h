@@ -27,10 +27,12 @@
 
 /// package: trezorcrypto.__init__
 
-/// class Pbkdf2:
+/// class pbkdf2:
 ///     """
 ///     PBKDF2 context.
 ///     """
+///     HMAC_SHA256: int
+///     HMAC_SHA512: int
 typedef struct _mp_obj_Pbkdf2_t {
   mp_obj_base_t base;
   union {
