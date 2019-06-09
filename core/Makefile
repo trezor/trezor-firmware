@@ -71,6 +71,10 @@ test_emu_monero: ## run selected monero device tests from monero-agent
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 
+mypy:
+	mypy \
+		src/main.py
+
 ## code generation:
 
 templates: ## render Mako templates (for lists of coins, tokens, etc.)

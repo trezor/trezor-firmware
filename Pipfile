@@ -22,6 +22,7 @@ black = "*"
 mako = ">=1.0.7"
 munch = ">=2.3.2"
 autoflake = "*"
+mypy = "*"
 
 # common
 demjson = "*"
