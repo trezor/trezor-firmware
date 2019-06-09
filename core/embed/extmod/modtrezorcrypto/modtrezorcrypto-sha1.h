@@ -24,10 +24,12 @@
 
 /// package: trezorcrypto.__init__
 
-/// class Sha1:
+/// class sha1:
 ///     """
 ///     SHA1 context.
 ///     """
+///     block_size: int
+///     digest_size: int
 typedef struct _mp_obj_Sha1_t {
   mp_obj_base_t base;
   SHA1_CTX ctx;

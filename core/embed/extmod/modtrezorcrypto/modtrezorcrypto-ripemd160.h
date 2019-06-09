@@ -24,10 +24,12 @@
 
 /// package: trezorcrypto.__init__
 
-/// class Ripemd160:
+/// class ripemd160:
 ///     """
 ///     RIPEMD160 context.
 ///     """
+///     block_size: int
+///     digest_size: int
 typedef struct _mp_obj_Ripemd160_t {
   mp_obj_base_t base;
   RIPEMD160_CTX ctx;

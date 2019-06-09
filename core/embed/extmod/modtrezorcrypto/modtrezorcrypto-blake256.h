@@ -24,10 +24,12 @@
 
 /// package: trezorcrypto.__init__
 
-/// class Blake256:
+/// class blake256:
 ///     """
 ///     Blake256 context.
 ///     """
+///     block_size: int
+///     digest_size: int
 typedef struct _mp_obj_Blake256_t {
   mp_obj_base_t base;
   BLAKE256_CTX ctx;

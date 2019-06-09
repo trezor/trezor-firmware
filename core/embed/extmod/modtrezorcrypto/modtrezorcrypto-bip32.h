@@ -489,6 +489,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(
     mod_trezorcrypto_HDNode_ethereum_pubkeyhash_obj,
     mod_trezorcrypto_HDNode_ethereum_pubkeyhash);
 
+/// def __del__(self) -> None:
+///     """
+///     Cleans up sensitive memory.
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode___del__(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
   o->fingerprint = 0;
@@ -547,8 +551,10 @@ STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type = {
     .locals_dict = (void *)&mod_trezorcrypto_HDNode_locals_dict,
 };
 
+/// mock:global
+
 /// def deserialize(
-///     self, value: str, version_public: int, version_private: int
+///     value: str, version_public: int, version_private: int
 /// ) -> HDNode:
 ///     """
 ///     Construct a BIP0032 HD node from a base58-serialized value.

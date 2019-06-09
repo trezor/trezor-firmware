@@ -6,10 +6,11 @@ def uniform(n: int) -> int:
     """
     Compute uniform random number from interval 0 ... n - 1.
     """
+import builtins
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-random.h
-def bytes(len: int) -> bytes:
+def bytes(len: int) -> builtins.bytes:
     """
     Generate random bytes sequence of length len.
     """

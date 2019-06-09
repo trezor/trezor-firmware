@@ -2,7 +2,7 @@ from typing import *
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-aes.h
-class AES:
+class aes:
     """
     AES context.
     """
@@ -24,10 +24,12 @@ class AES:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-blake256.h
-class Blake256:
+class blake256:
     """
     Blake256 context.
     """
+    block_size: int
+    digest_size: int
 
     def __init__(self, data: bytes = None) -> None:
         """
@@ -46,15 +48,17 @@ class Blake256:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-blake2b.h
-class Blake2b:
+class blake2b:
     """
     Blake2b context.
     """
+    block_size: int
+    digest_size: int
 
     def __init__(
         self,
         data: bytes = None,
-        outlen: int = Blake2b.digest_size,
+        outlen: int = blake2b.digest_size,
         personal: bytes = None,
     ) -> None:
         """
@@ -73,15 +77,17 @@ class Blake2b:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-blake2s.h
-class Blake2s:
+class blake2s:
     """
     Blake2s context.
     """
+    block_size: int
+    digest_size: int
 
     def __init__(
         self,
         data: bytes = None,
-        outlen: int = Blake2s.digest_size,
+        outlen: int = blake2s.digest_size,
         key: bytes = None,
         personal: bytes = None,
     ) -> None:
@@ -101,7 +107,7 @@ class Blake2s:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-chacha20poly1305.h
-class ChaCha20Poly1305:
+class chacha20poly1305:
     """
     ChaCha20Poly1305 context.
     """
@@ -138,10 +144,12 @@ class ChaCha20Poly1305:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-groestl.h
-class Groestl512:
+class groestl512:
     """
     GROESTL512 context.
     """
+    block_size: int
+    digest_size: int
 
     def __init__(self, data: bytes = None) -> None:
         """
@@ -160,10 +168,12 @@ class Groestl512:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-pbkdf2.h
-class Pbkdf2:
+class pbkdf2:
     """
     PBKDF2 context.
     """
+    HMAC_SHA256: int
+    HMAC_SHA512: int
 
     def __init__(
         self,
@@ -189,7 +199,7 @@ class Pbkdf2:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-rfc6979.h
-class Rfc6979:
+class rfc6979:
     """
     RFC6979 context.
     """
@@ -206,10 +216,12 @@ class Rfc6979:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-ripemd160.h
-class Ripemd160:
+class ripemd160:
     """
     RIPEMD160 context.
     """
+    block_size: int
+    digest_size: int
 
     def __init__(self, data: bytes = None) -> None:
         """
@@ -228,10 +240,12 @@ class Ripemd160:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-sha1.h
-class Sha1:
+class sha1:
     """
     SHA1 context.
     """
+    block_size: int
+    digest_size: int
 
     def __init__(self, data: bytes = None) -> None:
         """
@@ -250,10 +264,12 @@ class Sha1:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-sha256.h
-class Sha256:
+class sha256:
     """
     SHA256 context.
     """
+    block_size: int
+    digest_size: int
 
     def __init__(self, data: bytes = None) -> None:
         """
@@ -272,10 +288,12 @@ class Sha256:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-sha3-256.h
-class Sha3_256:
+class sha3_256:
     """
     SHA3_256 context.
     """
+    block_size: int
+    digest_size: int
 
     def __init__(self, data: bytes = None, keccak: bool = False) -> None:
         """
@@ -292,17 +310,19 @@ class Sha3_256:
         Returns the digest of hashed data.
         """
 
-    def copy(self) -> sha3:
+    def copy(self) -> sha3_256:
         """
         Returns the copy of the digest object with the current state
         """
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-sha3-512.h
-class Sha3_512:
+class sha3_512:
     """
     SHA3_512 context.
     """
+    block_size: int
+    digest_size: int
 
     def __init__(self, data: bytes = None, keccak: bool = False) -> None:
         """
@@ -319,17 +339,19 @@ class Sha3_512:
         Returns the digest of hashed data.
         """
 
-    def copy(self) -> sha3:
+    def copy(self) -> sha3_512:
         """
         Returns the copy of the digest object with the current state
         """
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-sha512.h
-class Sha512:
+class sha512:
     """
     SHA512 context.
     """
+    block_size: int
+    digest_size: int
 
     def __init__(self, data: bytes = None) -> None:
         """
