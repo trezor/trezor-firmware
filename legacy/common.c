@@ -86,7 +86,7 @@ void __assert_func(const char *file, int line, const char *func,
 void hal_delay(uint32_t ms) { usbSleep(ms); }
 
 void wait_random(void) {
-  int wait = drbg_random32() & 0xff;
+  int wait = random32() & 0xff;
   volatile int i = 0;
   volatile int j = wait;
   while (i < wait) {
