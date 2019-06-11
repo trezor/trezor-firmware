@@ -15,6 +15,7 @@ STRENGTH = 128
 ROOT = os.path.dirname(os.path.abspath(__file__)) + "/../../../../"
 CORE_BUILD = ROOT + "core/build/unix/micropython"
 LEGACY_BUILD = ROOT + "legacy/firmware/trezor.elf"
+BIN_DIR = os.path.dirname(os.path.abspath(__file__)) + "/emulators"
 
 
 def check_version(tag, ver_emu):
@@ -145,8 +146,19 @@ def test_upgrade_reset_no_backup(gen, from_tag, to_tag):
         asserts(to_tag, emu.client)
 
 
+def check_file(gen, tag):
+    if tag.startswith("/"):
+        filename = tag
+    else:
+        filename = "%s/trezor-emu-%s-%s" % (BIN_DIR, gen, tag)
+    print(filename)
+    if not os.path.exists(filename):
+        raise ValueError(filename + " not found. Use download_emulators.sh to download emulators.")
+
+
 def try_tags(gen, tags_from, tag_to):
     for v0 in tags_from + [tag_to]:
+        check_file(gen, v0)
         v1 = tag_to
         print("[%s] %s => %s" % (gen, v0, v1))
         print("- test_upgrade_load")
@@ -160,7 +172,7 @@ def try_tags(gen, tags_from, tag_to):
             test_upgrade_reset(gen, v0, v1)
 
 
-# try_tags("core", ["v2.1.0"], CORE_BUILD)  TODO
+try_tags("core", ["v2.1.0", "v2.1.1"], CORE_BUILD)
 
 try_tags(
     "legacy",

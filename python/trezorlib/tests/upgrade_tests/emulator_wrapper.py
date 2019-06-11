@@ -6,8 +6,7 @@ import time
 from trezorlib.debuglink import TrezorClientDebugLink
 from trezorlib.transport import TransportException, get_transport
 
-ROOT = os.path.dirname(os.path.abspath(__file__)) + "/../../../../"
-BINDIR = ROOT + "vendor/artifacts/emulators"
+BINDIR = os.path.dirname(os.path.abspath(__file__)) + "/emulators"
 ENV = {"SDL_VIDEODRIVER": "dummy"}
 
 
@@ -27,7 +26,7 @@ class EmulatorWrapper:
         env = ENV
         if self.gen == "core":
             args += ["-m", "main"]
-            env["TREZOR_PROFILE"] = self.workdir.name
+            env["TREZOR_PROFILE_DIR"] = self.workdir.name
         self.process = subprocess.Popen(
             args, cwd=self.workdir.name, env=ENV, stdout=open(os.devnull, "w")
         )
