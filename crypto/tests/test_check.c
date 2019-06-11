@@ -53,6 +53,7 @@
 #include "ed25519-donna/ed25519-donna.h"
 #include "ed25519-donna/ed25519-keccak.h"
 #include "ed25519-donna/ed25519.h"
+#include "hmac_drbg.h"
 #include "memzero.h"
 #include "monero/monero.h"
 #include "nem.h"
@@ -4624,6 +4625,43 @@ START_TEST(test_pbkdf2_hmac_sha512) {
 }
 END_TEST
 
+START_TEST(test_hmac_drbg) {
+  char entropy[] =
+      "06032cd5eed33f39265f49ecb142c511da9aff2af71203bffaf34a9ca5bd9c0d";
+  char nonce[] = "0e66f71edc43e42a45ad3c6fc6cdc4df";
+  char reseed[] =
+      "01920a4e669ed3a85ae8a33b35a74ad7fb2a6bb4cf395ce00334a9c9a5a5d552";
+  char expected[] =
+      "76fc79fe9b50beccc991a11b5635783a83536add03c157fb30645e611c2898bb2b1bc215"
+      "000209208cd506cb28da2a51bdb03826aaf2bd2335d576d519160842e7158ad0949d1a9e"
+      "c3e66ea1b1a064b005de914eac2e9d4f2d72a8616a80225422918250ff66a41bd2f864a6"
+      "a38cc5b6499dc43f7f2bd09e1e0f8f5885935124";
+  uint8_t result[128];
+  uint8_t null_bytes[128] = {0};
+
+  uint8_t nonce_bytes[16];
+  memcpy(nonce_bytes, fromhex(nonce), sizeof(nonce_bytes));
+  HMAC_DRBG_CTX ctx;
+  hmac_drbg_init(&ctx, fromhex(entropy), strlen(entropy) / 2, nonce_bytes,
+                 strlen(nonce) / 2);
+  hmac_drbg_reseed(&ctx, fromhex(reseed), strlen(reseed) / 2, NULL, 0);
+  hmac_drbg_generate(&ctx, result, sizeof(result));
+  hmac_drbg_generate(&ctx, result, sizeof(result));
+  ck_assert_mem_eq(result, fromhex(expected), sizeof(result));
+
+  for (size_t i = 0; i <= sizeof(result); ++i) {
+    hmac_drbg_init(&ctx, fromhex(entropy), strlen(entropy) / 2, nonce_bytes,
+                   strlen(nonce) / 2);
+    hmac_drbg_reseed(&ctx, fromhex(reseed), strlen(reseed) / 2, NULL, 0);
+    hmac_drbg_generate(&ctx, result, sizeof(result) - 13);
+    memset(result, 0, sizeof(result));
+    hmac_drbg_generate(&ctx, result, i);
+    ck_assert_mem_eq(result, fromhex(expected), i);
+    ck_assert_mem_eq(result + i, null_bytes, sizeof(result) - i);
+  }
+}
+END_TEST
+
 START_TEST(test_mnemonic) {
   static const char *vectors[] = {
       "00000000000000000000000000000000",
@@ -8626,6 +8664,10 @@ Suite *test_suite(void) {
   tc = tcase_create("pbkdf2");
   tcase_add_test(tc, test_pbkdf2_hmac_sha256);
   tcase_add_test(tc, test_pbkdf2_hmac_sha512);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("hmac_drbg");
+  tcase_add_test(tc, test_hmac_drbg);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("bip39");

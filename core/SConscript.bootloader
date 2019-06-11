@@ -26,7 +26,9 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/ed25519-donna/ed25519-donna-32bit-tables.c',
     'vendor/trezor-crypto/ed25519-donna/ed25519-donna-impl-base.c',
     'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
+    'vendor/trezor-crypto/hmac_drbg.c',
     'vendor/trezor-crypto/memzero.c',
+    'vendor/trezor-crypto/rand.c',
     'vendor/trezor-crypto/sha2.c',
 ]
 

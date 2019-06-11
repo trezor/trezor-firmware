@@ -52,8 +52,6 @@
 
 void delay(uint32_t wait);
 
-void wait_random(void);
-
 // converts uint32 to hexa (8 digits)
 void uint32hex(uint32_t num, char *str);
 
