@@ -19,8 +19,6 @@ build legacy firmware debug:
   script:
     - cd legacy
     - pipenv run script/cibuild
-    - pipenv run make -C bootloader
-    - pipenv run make -C demo
 
 build legacy firmware bitcoinonly:
   stage: build
@@ -29,8 +27,6 @@ build legacy firmware bitcoinonly:
   script:
     - cd legacy
     - pipenv run script/cibuild
-    - pipenv run make -C bootloader
-    - pipenv run make -C demo
 
 build legacy emu:
   stage: build
