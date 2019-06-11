@@ -229,7 +229,7 @@ def _split_secret(threshold, share_count, shared_secret):
 
     # If the threshold is 1, then the digest of the shared secret is not used.
     if threshold == 1:
-        return [(0, shared_secret)]
+        return [(i, shared_secret) for i in range(share_count)]
 
     random_share_count = threshold - 2
 

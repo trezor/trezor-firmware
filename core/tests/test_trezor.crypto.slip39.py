@@ -89,6 +89,31 @@ class TestCryptoSlip39(unittest.TestCase):
             slip39.combine_mnemonics(mnemonics[0][1:4])
 
 
+    def test_group_sharing_threshold_1(self):
+        group_threshold = 1
+        group_sizes = (5, 3, 5, 1)
+        member_thresholds = (3, 2, 2, 1)
+        mnemonics = slip39.generate_mnemonics(
+            group_threshold, list(zip(member_thresholds, group_sizes)), self.MS
+        )
+
+        # Test all valid combinations of mnemonics.
+        for group, threshold in zip(mnemonics, member_thresholds):
+            for group_subset in combinations(group, threshold):
+                mnemonic_subset = list(group_subset)
+                random.shuffle(mnemonic_subset)
+                identifier, exponent, ems = slip39.combine_mnemonics(mnemonic_subset)
+                self.assertEqual(slip39.decrypt(identifier, exponent, ems, b""), self.MS)
+
+
+    def test_all_groups_exist(self):
+        for group_threshold in (1, 2, 5):
+            mnemonics = slip39.generate_mnemonics(
+                group_threshold, [(3, 5), (1, 1), (2, 3), (2, 5), (3, 5)], self.MS
+            )
+            self.assertEqual(len(mnemonics), 5)
+            self.assertEqual(len(sum(mnemonics, [])), 19)
+
     def test_invalid_sharing(self):
         # Short master secret.
         with self.assertRaises(ValueError):
