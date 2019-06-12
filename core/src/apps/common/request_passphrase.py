@@ -6,6 +6,7 @@ from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.PassphraseRequest import PassphraseRequest
 from trezor.messages.PassphraseStateRequest import PassphraseStateRequest
 from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard, PassphraseSource
+from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
 from apps.common import cache, storage
@@ -50,7 +51,7 @@ async def request_passphrase_ack(ctx, on_device: bool) -> str:
     if not on_device:
         text = Text("Passphrase entry", ui.ICON_CONFIG)
         text.normal("Please, type passphrase", "on connected host.")
-        text.render()
+        await Popup(text)
 
     req = PassphraseRequest(on_device=on_device)
     ack = await ctx.call(req, MessageType.PassphraseAck)
