@@ -27,8 +27,8 @@ class InputButton(Button):
     def __init__(self, area, content, word):
         super().__init__(area, content)
         self.word = word
-        self.pending = False
-        self.icon = None
+        self.pending = False  # should we draw the pending marker?
+        self.icon = None  # rendered icon
         self.disable()
 
     def edit(self, content, word, pending):
@@ -57,28 +57,25 @@ class InputButton(Button):
         fg_color = s.fg_color
         bg_color = s.bg_color
 
-        p = self.pending  # should we draw the pending marker?
-        t = self.content  # input content
-        w = self.word[len(t) :]  # suggested word
-        i = self.icon  # rendered icon
-
         tx = ax + 24  # x-offset of the content
         ty = ay + ah // 2 + 8  # y-offset of the content
 
-        # input content and the suggested word
-        display.text(tx, ty, t, text_style, fg_color, bg_color)
-        width = display.text_width(t, text_style)
-        display.text(tx + width, ty, w, text_style, ui.GREY, bg_color)
+        # entered content
+        display.text(tx, ty, self.content, text_style, fg_color, bg_color)
+        # word suggestion
+        suggested_word = self.word[len(self.content) :]
+        width = display.text_width(self.content, text_style)
+        display.text(tx + width, ty, suggested_word, text_style, ui.GREY, bg_color)
 
-        if p:  # pending marker
-            pw = display.text_width(t[-1:], text_style)
+        if self.pending:
+            pw = display.text_width(self.content[-1:], text_style)
             px = tx + width - pw
             display.bar(px, ty + 2, pw + 1, 3, fg_color)
 
-        if i:  # icon
+        if self.icon:
             ix = ax + aw - 16 * 2
             iy = ty - 16
-            display.icon(ix, iy, res.load(i), fg_color, bg_color)
+            display.icon(ix, iy, res.load(self.icon), fg_color, bg_color)
 
 
 class Prompt(ui.Control):
