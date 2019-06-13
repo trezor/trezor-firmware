@@ -62,11 +62,6 @@ class InputButton(Button):
         w = self.word[len(t) :]  # suggested word
         i = self.icon  # rendered icon
 
-        if not t:
-            # render prompt
-            display.text(20, 40, self.prompt, ui.BOLD, ui.GREY, ui.BG)
-            return
-
         tx = ax + 24  # x-offset of the content
         ty = ay + ah // 2 + 8  # y-offset of the content
 
