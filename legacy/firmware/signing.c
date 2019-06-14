@@ -687,19 +687,25 @@ static bool signing_check_output(TxOutputType *txoutput) {
 
 static bool signing_check_fee(void) {
   // check fees
-  if (spending > to_spend) {
-    fsm_sendFailure(FailureType_Failure_NotEnoughFunds, _("Not enough funds"));
-    signing_abort();
-    return false;
-  }
-  uint64_t fee = to_spend - spending;
-  if (fee > ((uint64_t)tx_weight * coin->maxfee_kb) / 4000) {
-    layoutFeeOverThreshold(coin, fee);
-    if (!protectButton(ButtonRequestType_ButtonRequest_FeeOverThreshold,
-                       false)) {
-      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+  uint64_t fee = 0;
+  // set a static KMD fee and bypass output>input check due to reward TX
+  // which are all output_value_sum > input_value_sum
+  if (strcmp(coin->coin_shortcut,"KMD") == 0) fee = 5000; //static KMD fee = 1000 sat
+  else {
+    if (spending > to_spend) {
+      fsm_sendFailure(FailureType_Failure_NotEnoughFunds, _("Not enough funds"));
       signing_abort();
       return false;
+    }
+    fee = to_spend - spending;
+    if (fee > ((uint64_t)tx_weight * coin->maxfee_kb) / 4000) {
+      layoutFeeOverThreshold(coin, fee);
+      if (!protectButton(ButtonRequestType_ButtonRequest_FeeOverThreshold,
+                       false)) {
+        fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+        signing_abort();
+        return false;
+      }
     }
   }
   // last confirmation
