@@ -75,6 +75,7 @@
       "eth:tRIN": true,
       "eth:tROP": true,
       "misc:ADA": true,
+      "misc:EOS": true,
       "misc:LSK": true,
       "misc:XLM": true,
       "misc:XRP": true,
