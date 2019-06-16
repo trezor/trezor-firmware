@@ -192,14 +192,21 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
         hash143.add_output(txo_bin)
         total_out += txo_bin.amount
 
-    fee = total_in - total_out
-    if fee < 0:
-        raise SigningError(FailureType.NotEnoughFunds, "Not enough funds")
-
-    # fee > (coin.maxfee per byte * tx size)
-    if fee > (coin.maxfee_kb / 1000) * (weight.get_total() / 4):
-        if not await helpers.confirm_feeoverthreshold(fee, coin):
-            raise SigningError(FailureType.ActionCancelled, "Signing cancelled")
+    fee = 0
+    # set a static KMD fee and bypass output > input check due to reward TX
+    # which are all output_value_sum > input_value_sum
+    if coin.coin_shortcut == "KMD":
+        fee = 5000 # static KMD fee = 5000 sat
+    else:
+        if total_out > total_in:
+            raise SigningError(FailureType.NotEnoughFunds, "Not enough funds")
+        
+        fee = total_in - total_out
+        
+        # fee > (coin.maxfee per byte * tx size)
+        if fee > (coin.maxfee_kb / 1000) * (weight.get_total() / 4):
+            if not await helpers.confirm_feeoverthreshold(fee, coin):
+                raise SigningError(FailureType.ActionCancelled, "Signing cancelled")
 
     if tx.lock_time > 0:
         if not await helpers.confirm_nondefault_locktime(tx.lock_time):
