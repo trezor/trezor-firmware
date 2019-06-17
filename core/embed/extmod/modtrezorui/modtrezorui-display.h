@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -115,7 +115,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_bar_radius_obj,
 /// def image(self, x: int, y: int, image: bytes) -> None:
 ///     """
 ///     Renders an image at position (x,y).
-///     The image needs to be in TREZOR Optimized Image Format (TOIF) -
+///     The image needs to be in Trezor Optimized Image Format (TOIF) -
 ///     full-color mode.
 ///     """
 STATIC mp_obj_t mod_trezorui_Display_image(size_t n_args,
@@ -145,7 +145,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_image_obj, 4, 4,
 /// ) -> None:
 ///     """
 ///     Renders an avatar at position (x,y).
-///     The image needs to be in TREZOR Optimized Image Format (TOIF) -
+///     The image needs to be in Trezor Optimized Image Format (TOIF) -
 ///     full-color mode. Image needs to be of exactly AVATAR_IMAGE_SIZE x
 ///     AVATAR_IMAGE_SIZE pixels size.
 ///     """
@@ -181,7 +181,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_avatar_obj, 6,
 /// ) -> None:
 ///     """
 ///     Renders an icon at position (x,y), fgcolor is used as foreground color,
-///     bgcolor as background. The icon needs to be in TREZOR Optimized Image
+///     bgcolor as background. The icon needs to be in Trezor Optimized Image
 ///     Format (TOIF) - gray-scale mode.
 ///     """
 STATIC mp_obj_t mod_trezorui_Display_icon(size_t n_args, const mp_obj_t *args) {

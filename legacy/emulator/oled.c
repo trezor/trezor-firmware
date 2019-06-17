@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2017 Saleem Rashid <trezor@saleemrashid.com>
  *
@@ -59,7 +59,7 @@ void oledInit(void) {
   int fullscreen = emulatorFullscreen();
 
   SDL_Window *window = SDL_CreateWindow(
-      "TREZOR", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+      "Trezor^emu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
       OLED_WIDTH * scale, OLED_HEIGHT * scale,
       fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
 

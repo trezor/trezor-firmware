@@ -94,7 +94,7 @@ class BridgeHandleLegacy(BridgeHandle):
 
 class BridgeTransport(Transport):
     """
-    BridgeTransport implements transport through TREZOR Bridge (aka trezord).
+    BridgeTransport implements transport through Trezor Bridge (aka trezord).
     """
 
     PATH_PREFIX = "bridge"

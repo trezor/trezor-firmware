@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -47,7 +47,7 @@
 #define TOUCH_OFFSET_Y 92
 
 #else
-#error Unknown TREZOR Model
+#error Unknown Trezor Model
 #endif
 
 static SDL_Renderer *RENDERER;
@@ -100,8 +100,8 @@ void display_init(void) {
   atexit(SDL_Quit);
 
   char *window_title;
-  if (!asprintf(&window_title, "TREZOR^emu: %s", profile_name())) {
-    window_title = "TREZOR^emu";
+  if (!asprintf(&window_title, "Trezor^emu: %s", profile_name())) {
+    window_title = "Trezor^emu";
   }
 
   SDL_Window *win =

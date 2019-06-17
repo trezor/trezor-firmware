@@ -81,7 +81,7 @@ class TestZerosig(TrezorTest):
         )
         siglen = serialized_tx[44]
 
-        # TREZOR must strip leading zero from signature
+        # Trezor must strip leading zero from signature
         assert siglen == 67
 
     def test_two_zero_signature(self):
@@ -106,5 +106,5 @@ class TestZerosig(TrezorTest):
         )
         siglen = serialized_tx[44]
 
-        # TREZOR must strip leading zero from signature
+        # Trezor must strip leading zero from signature
         assert siglen == 66

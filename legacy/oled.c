@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
  *
@@ -56,7 +56,7 @@
 #define OLED_RST_PORT GPIOB
 #define OLED_RST_PIN GPIO1  // PB1 | Reset display
 
-/* TREZOR has a display of size OLED_WIDTH x OLED_HEIGHT (128x64).
+/* Trezor has a display of size OLED_WIDTH x OLED_HEIGHT (128x64).
  * The contents of this display are buffered in _oledbuffer.  This is
  * an array of OLED_WIDTH * OLED_HEIGHT/8 bytes.  At byte y*OLED_WIDTH + x
  * it stores the column of pixels from (x,8y) to (x,8y+7); the LSB stores

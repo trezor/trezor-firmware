@@ -17,7 +17,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>TREZOR</string>
+   <string>Trezor</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">

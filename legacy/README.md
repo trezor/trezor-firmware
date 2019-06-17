@@ -1,10 +1,10 @@
-# TREZOR One Bootloader and Firmware
+# Trezor One Bootloader and Firmware
 
 [![Build Status](https://travis-ci.org/trezor/trezor-mcu.svg?branch=master)](https://travis-ci.org/trezor/trezor-mcu) [![gitter](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
 
 https://trezor.io/
 
-## How to build the TREZOR bootloader, firmware and emulator
+## How to build the Trezor bootloader, firmware and emulator
 
 Ensure that you have Docker installed. You can follow [Docker's installation instructions](https://docs.docker.com/engine/installation/).
 
@@ -49,7 +49,7 @@ Step 3 should produce the same sha256 fingerprint like your local build (for the
 
 ## How to install custom built firmware?
 
-**WARNING: This will erase the recovery seed stored on the device! You should never do this on TREZOR that contains coins!**
+**WARNING: This will erase the recovery seed stored on the device! You should never do this on Trezor that contains coins!**
 
 1. Install python-trezor: `pip install trezor` ([more info](https://github.com/trezor/python-trezor))
 2. `trezorctl firmware_update -f build/trezor-TAG.bin`

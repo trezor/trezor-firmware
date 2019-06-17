@@ -20,7 +20,7 @@ def display_homescreen():
         label = "Go to trezor.io/start"
         image = None
     else:
-        label = storage.get_label() or "My TREZOR"
+        label = storage.get_label() or "My Trezor"
         image = storage.get_homescreen()
 
     if not image:

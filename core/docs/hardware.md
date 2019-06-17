@@ -1,6 +1,6 @@
-# TREZOR Core Hardware
+# Trezor Core Hardware
 
-## TREZOR Model T Open Source Hardware Reference Documentation
+## Trezor Model T Open Source Hardware Reference Documentation
 
 ### Photo
 

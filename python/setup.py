@@ -52,10 +52,10 @@ class PrebuildCommand(Command):
 setup(
     name="trezor",
     version=find_version(),
-    author="TREZOR",
+    author="Trezor",
     author_email="info@trezor.io",
     license="LGPLv3",
-    description="Python library for communicating with TREZOR Hardware Wallet",
+    description="Python library for communicating with Trezor Hardware Wallet",
     long_description="{}\n\n{}".format(read("README.md"), read("CHANGELOG.md")),
     long_description_content_type="text/markdown",
     url="https://github.com/trezor/python-trezor",

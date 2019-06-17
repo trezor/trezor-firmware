@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -62,8 +62,8 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
   display_printf("rev : %s\n", XSTR(GITREV));
   printf("rev : %s\n", XSTR(GITREV));
 #endif
-  display_printf("\nPlease contact TREZOR support.\n");
-  printf("\nPlease contact TREZOR support.\n");
+  display_printf("\nPlease contact Trezor support.\n");
+  printf("\nPlease contact Trezor support.\n");
   hal_delay(3000);
   __shutdown();
   for (;;)

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# script/build: Build the TREZOR firmware in a clean working tree.
+# script/build: Build the Trezor firmware in a clean working tree.
 #
 
 # this needs to be there, otherwise python click installer vomits an error

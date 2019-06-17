@@ -1,4 +1,4 @@
-/* TREZORv2 boardloader linker script */
+/* Trezor v2 boardloader linker script */
 
 ENTRY(reset_handler)
 

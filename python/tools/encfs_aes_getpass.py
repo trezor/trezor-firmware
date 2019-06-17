@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Use TREZOR as a hardware key for opening EncFS filesystem!
+Use Trezor as a hardware key for opening EncFS filesystem!
 
 Usage:
 
@@ -28,7 +28,7 @@ import trezorlib.misc
 def wait_for_devices():
     devices = enumerate_devices()
     while not len(devices):
-        sys.stderr.write("Please connect TREZOR to computer and press Enter...")
+        sys.stderr.write("Please connect Trezor to computer and press Enter...")
         input()
         devices = enumerate_devices()
 
@@ -37,7 +37,7 @@ def wait_for_devices():
 
 def choose_device(devices):
     if not len(devices):
-        raise RuntimeError("No TREZOR connected!")
+        raise RuntimeError("No Trezor connected!")
 
     if len(devices) == 1:
         try:
@@ -96,7 +96,7 @@ def main():
         sys.stderr.write("Please provide label for new drive: ")
         label = input()
 
-        sys.stderr.write("Computer asked TREZOR for new strong password.\n")
+        sys.stderr.write("Computer asked Trezor for new strong password.\n")
 
         # 32 bytes, good for AES
         trezor_entropy = trezorlib.misc.get_entropy(client, 32)

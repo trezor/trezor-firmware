@@ -69,7 +69,7 @@ class PinMatrixWidget(QWidget):
     """
         Displays widget with nine blank buttons and password box.
         Encodes button clicks into sequence of numbers for passing
-        into PinAck messages of TREZOR.
+        into PinAck messages of Trezor.
 
         show_strength=True may be useful for entering new PIN
     """

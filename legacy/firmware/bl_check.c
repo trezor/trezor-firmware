@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2018 Pavol Rusnak <stick@satoshilabs.com>
  *
@@ -134,7 +134,7 @@ void check_bootloader(void) {
 
   if (!known_bootloader(r, hash)) {
     layoutDialog(&bmp_icon_error, NULL, NULL, NULL, _("Unknown bootloader"),
-                 _("detected."), NULL, _("Unplug your TREZOR"),
+                 _("detected."), NULL, _("Unplug your Trezor"),
                  _("contact our support."), NULL);
     shutdown();
   }
@@ -185,7 +185,7 @@ void check_bootloader(void) {
   }
   // show info and halt
   layoutDialog(&bmp_icon_error, NULL, NULL, NULL, _("Bootloader update"),
-               _("broken."), NULL, _("Unplug your TREZOR"),
+               _("broken."), NULL, _("Unplug your Trezor"),
                _("contact our support."), NULL);
   shutdown();
 #endif
