@@ -2,7 +2,7 @@
   "coin_name": "ZelCash",
   "coin_shortcut": "ZEL",
   "coin_label": "Zel",
-  "website": "https://zel.network/",
+  "website": "https://zel.network",
   "github": "https://github.com/zelcash",
   "maintainer": "Cabecinha84 <valter.cabecinha@gmail.com>",
   "curve_name": "secp256k1",
