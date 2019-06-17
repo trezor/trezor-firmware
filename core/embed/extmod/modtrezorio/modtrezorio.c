@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
+
 #include "py/mphal.h"
 #include "py/objstr.h"
 #include "py/runtime.h"
@@ -34,6 +36,7 @@
   }
 
 // clang-format off
+#include "modtrezorio-fatfs.h"
 #include "modtrezorio-flash.h"
 #include "modtrezorio-hid.h"
 #include "modtrezorio-poll.h"
@@ -56,6 +59,8 @@
 
 STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorio)},
+
+    {MP_ROM_QSTR(MP_QSTR_FatFS), MP_ROM_PTR(&mod_trezorio_FatFS_type)},
 
     {MP_ROM_QSTR(MP_QSTR_FlashOTP), MP_ROM_PTR(&mod_trezorio_FlashOTP_type)},
 
