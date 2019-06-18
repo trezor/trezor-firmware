@@ -156,13 +156,17 @@ class TestCryptoSlip39(unittest.TestCase):
 
 
     def test_error_location(self):
-        mnemonics = ["duckling enlarge academic academic agency result length solution fridge kidney coal piece deal husband erode duke ajar critical decision keyboard", "theory painting academic academic armed sweater year military elder discuss acne wildlife boring employer fused large satoshi bundle carbon diagnose anatomy hamster leaves tracks paces beyond phantom capital marvel lips brave detect luck"]
+        mnemonics = [
+            "duckling enlarge academic academic agency result length solution fridge kidney coal piece deal husband erode duke ajar critical decision keyboard",
+            "theory painting academic academic armed sweater year military elder discuss acne wildlife boring employer fused large satoshi bundle carbon diagnose anatomy hamster leaves tracks paces beyond phantom capital marvel lips brave detect luck",
+        ]
         for mnemonic in mnemonics:
             data = tuple(slip39.mnemonic_to_indices(mnemonic))
             self.assertEqual(slip39.rs1024_error_index(data), None)
             for i in range(len(data)):
-                error_data = data[:i] + (data[i]^1,) + data[i+1:]
-                self.assertEqual(slip39.rs1024_error_index(error_data), i)
+                for _ in range(50):
+                    error_data = error_data = data[:i] + (data[i] ^ (random.uniform(1023) + 1), ) + data[i + 1:]
+                    self.assertEqual(slip39.rs1024_error_index(error_data), i)
 
 
 if __name__ == '__main__':
