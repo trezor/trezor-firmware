@@ -114,6 +114,7 @@ class TestCryptoSlip39(unittest.TestCase):
             self.assertEqual(len(mnemonics), 5)
             self.assertEqual(len(sum(mnemonics, [])), 19)
 
+
     def test_invalid_sharing(self):
         # Short master secret.
         with self.assertRaises(ValueError):
@@ -152,6 +153,16 @@ class TestCryptoSlip39(unittest.TestCase):
             else:
                 with self.assertRaises(slip39.MnemonicError):
                     slip39.combine_mnemonics(mnemonics)
+
+
+    def test_error_location(self):
+        mnemonics = ["duckling enlarge academic academic agency result length solution fridge kidney coal piece deal husband erode duke ajar critical decision keyboard", "theory painting academic academic armed sweater year military elder discuss acne wildlife boring employer fused large satoshi bundle carbon diagnose anatomy hamster leaves tracks paces beyond phantom capital marvel lips brave detect luck"]
+        for mnemonic in mnemonics:
+            data = tuple(slip39.mnemonic_to_indices(mnemonic))
+            self.assertEqual(slip39.rs1024_error_index(data), None)
+            for i in range(len(data)):
+                error_data = data[:i] + (data[i]^1,) + data[i+1:]
+                self.assertEqual(slip39.rs1024_error_index(error_data), i)
 
 
 if __name__ == '__main__':

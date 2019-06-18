@@ -135,6 +135,33 @@ def rs1024_verify_checksum(data):
     return _rs1024_polymod(tuple(_CUSTOMIZATION_STRING) + data) == 1
 
 
+def rs1024_error_index(data):
+    GEN = (
+        0x91F9F87,
+        0x122F1F07,
+        0x244E1E07,
+        0x81C1C07,
+        0x10281C0E,
+        0x20401C1C,
+        0x103838,
+        0x207070,
+        0x40E0E0,
+        0x81C1C0,
+    )
+    chk = _rs1024_polymod(tuple(_CUSTOMIZATION_STRING) + data) ^ 1
+    if chk == 0:
+        return None
+
+    for i in reversed(range(len(data))):
+        b = chk & 0x3FF
+        chk >>= 10
+        if chk == 0:
+            return i
+        for j in range(10):
+            chk ^= GEN[j] if ((b >> j) & 1) else 0
+    return None
+
+
 def xor(a, b):
     return bytes(x ^ y for x, y in zip(a, b))
 
