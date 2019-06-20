@@ -460,6 +460,8 @@ STATIC mp_obj_t mod_trezorio_FatFS_unmount(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFS_unmount_obj, mod_trezorio_FatFS_unmount);
 
+#ifdef TREZOR_EMULATOR
+
 /// def mkfs(self) -> None:
 ///     """
 ///     Create a FAT volume
@@ -475,6 +477,8 @@ STATIC mp_obj_t mod_trezorio_FatFS_mkfs(mp_obj_t self) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFS_mkfs_obj, mod_trezorio_FatFS_mkfs);
 
+#endif
+
 STATIC const mp_rom_map_elem_t mod_trezorio_FatFS_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_open), MP_ROM_PTR(&mod_trezorio_FatFS_open_obj)},
     {MP_ROM_QSTR(MP_QSTR_listdir), MP_ROM_PTR(&mod_trezorio_FatFS_listdir_obj)},
@@ -484,7 +488,9 @@ STATIC const mp_rom_map_elem_t mod_trezorio_FatFS_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_stat), MP_ROM_PTR(&mod_trezorio_FatFS_stat_obj)},
     {MP_ROM_QSTR(MP_QSTR_mount), MP_ROM_PTR(&mod_trezorio_FatFS_mount_obj)},
     {MP_ROM_QSTR(MP_QSTR_unmount), MP_ROM_PTR(&mod_trezorio_FatFS_unmount_obj)},
+#ifdef TREZOR_EMULATOR
     {MP_ROM_QSTR(MP_QSTR_mkfs), MP_ROM_PTR(&mod_trezorio_FatFS_mkfs_obj)},
+#endif
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_FatFS_locals_dict, mod_trezorio_FatFS_locals_dict_table);
 

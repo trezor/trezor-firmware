@@ -44,7 +44,11 @@
 /  f_findnext(). (0:Disable, 1:Enable 2:Enable with matching altname[] too) */
 
 
+#ifdef TREZOR_EMULATOR
 #define FF_USE_MKFS     1
+#else
+#define FF_USE_MKFS     0
+#endif
 /* This option switches f_mkfs() function. (0:Disable or 1:Enable) */
 
 
