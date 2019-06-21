@@ -1,7 +1,8 @@
 from micropython import const
 from ubinascii import hexlify
 
-from trezor.crypto import random
+from trezor.crypto import hmac, random
+from trezor.crypto.hashlib import sha256
 from trezor.messages import BackupType
 
 from apps.common.sd_salt import SD_SALT_AUTH_KEY_LEN_BYTES
@@ -82,6 +83,13 @@ def get_label() -> Optional[str]:
 
 def get_mnemonic_secret() -> Optional[bytes]:
     return common.get(_NAMESPACE, _MNEMONIC_SECRET)
+
+
+def get_seed_id() -> bytes:
+    ms = get_mnemonic_secret()
+    if not ms:
+        raise RuntimeError
+    return hexlify(hmac.new(ms, b"TREZOR_SEED_ID", sha256).digest()).decode()[:20]
 
 
 def get_backup_type() -> EnumTypeBackupType:
