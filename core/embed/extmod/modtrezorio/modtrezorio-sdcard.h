@@ -91,7 +91,8 @@ STATIC mp_obj_t mod_trezorio_SDCard_read(mp_obj_t self, mp_obj_t block_num,
   uint32_t block = trezor_obj_get_uint(block_num);
   mp_buffer_info_t bufinfo;
   mp_get_buffer_raise(buf, &bufinfo, MP_BUFFER_WRITE);
-  if (sectrue != sdcard_read_blocks(bufinfo.buf, block, bufinfo.len / SDCARD_BLOCK_SIZE)) {
+  if (sectrue !=
+      sdcard_read_blocks(bufinfo.buf, block, bufinfo.len / SDCARD_BLOCK_SIZE)) {
     mp_raise_OSError(MP_EIO);
   }
   return mp_const_none;
@@ -110,7 +111,8 @@ STATIC mp_obj_t mod_trezorio_SDCard_write(mp_obj_t self, mp_obj_t block_num,
   uint32_t block = trezor_obj_get_uint(block_num);
   mp_buffer_info_t bufinfo;
   mp_get_buffer_raise(buf, &bufinfo, MP_BUFFER_READ);
-  if (sectrue != sdcard_write_blocks(bufinfo.buf, block, bufinfo.len / SDCARD_BLOCK_SIZE)) {
+  if (sectrue != sdcard_write_blocks(bufinfo.buf, block,
+                                     bufinfo.len / SDCARD_BLOCK_SIZE)) {
     mp_raise_OSError(MP_EIO);
   }
   return mp_const_none;
