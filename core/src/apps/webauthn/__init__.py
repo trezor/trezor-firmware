@@ -4,7 +4,7 @@ import utime
 from micropython import const
 
 from trezor import config, io, log, loop, ui, utils, workflow
-from trezor.crypto import der, hashlib, hmac, random
+from trezor.crypto import aes, der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
 from trezor.ui.confirm import CONFIRMED, Confirm
 from trezor.ui.text import Text
@@ -49,6 +49,7 @@ _MAKECRED_CMD_RP = const(0x02)  # map, required
 _MAKECRED_CMD_USER = const(0x03)  # map, required
 _MAKECRED_CMD_PUB_KEY_CRED_PARAMS = const(0x04)  # array of maps, required
 _MAKECRED_CMD_EXCLUDE_LIST = const(0x05)  # array of maps, optional
+_MAKECRED_CMD_EXTENSIONS = const(0x06)  # map, optional
 _MAKECRED_CMD_OPTIONS = const(0x07)  # map, optional
 _MAKECRED_CMD_PIN_AUTH = const(0x08)  # bytes, optional
 
@@ -61,6 +62,7 @@ _MAKECRED_RESP_ATT_STMT = const(0x03)  # map, required
 _GETASSERT_CMD_RP_ID = const(0x01)  # str, required
 _GETASSERT_CMD_CLIENT_DATA_HASH = const(0x02)  # bytes, required
 _GETASSERT_CMD_ALLOW_LIST = const(0x03)  # array of maps, optional
+_GETASSERT_CMD_EXTENSIONS = const(0x04)  # map, optional
 _GETASSERT_CMD_OPTIONS = const(0x05)  # map, optional
 _GETASSERT_CMD_PIN_AUTH = const(0x06)  # bytes, optional
 
@@ -73,8 +75,17 @@ _GETASSERT_RESP_NUM_OF_CREDENTIALS = const(0x05)  # int, optional
 
 # CBOR GetInfo response member keys
 _GETINFO_RESP_VERSIONS = const(0x01)  # array of str, required
+_GETINFO_RESP_EXTENSIONS = const(0x02)  # array of str, optional
 _GETINFO_RESP_AAGUID = const(0x03)  # bytes(16), required
 _GETINFO_RESP_OPTIONS = const(0x04)  # map, optional
+
+# CBOR ClientPin command parameter keys
+_CLIENTPIN_CMD_PIN_PROTOCOL = const(0x01)  # unsigned int, required
+_CLIENTPIN_CMD_SUBCOMMAND = const(0x02)  # unsigned int, required
+_CLIENTPIN_SUBCMD_GET_KEY_AGREEMENT = const(0x02)
+
+# CBOR ClientPin response member keys
+_CLIENTPIN_RESP_KEY_AGREEMENT = const(0x01)  # COSE_Key, optional
 
 # status codes for the keepalive cmd
 _KEEPALIVE_STATUS_PROCESSING = const(0x01)  # still processing the current request
@@ -145,6 +156,7 @@ _AUTH_CHECK_ONLY = const(0x07)  # check only
 _AUTH_FLAG_UP = const(1 << 0)  # user present
 _AUTH_FLAG_UV = const(1 << 2)  # user verified
 _AUTH_FLAG_AT = const(1 << 6)  # attested credential data included
+_AUTH_FLAG_ED = const(1 << 7)  # extension data included
 
 # common raw message format (ISO7816-4:2005 mapping)
 _APDU_CLA = const(0)  # uint8_t cla;        // Class - reserved
@@ -158,6 +170,10 @@ _APDU_DATA = const(7)  # uint8_t data[1];    // Data field
 
 _FRAME_INIT_SIZE = 57
 _FRAME_CONT_SIZE = 59
+
+# Generate the authenticatorKeyAgreementKey used for ECDH in authenticatorClientPIN getKeyAgreement.
+_KEY_AGREEMENT_PRIVKEY = nist256p1.generate_secret()
+_KEY_AGREEMENT_PUBKEY = nist256p1.publickey(_KEY_AGREEMENT_PRIVKEY, False)
 
 
 def frame_init() -> dict:
@@ -532,10 +548,16 @@ class Fido2State(State):
 
 class Fido2ConfirmMakeCredential(Fido2State):
     def __init__(
-        self, cid: int, client_data_hash: bytes, rp_id: str, account_name: str
+        self,
+        cid: int,
+        client_data_hash: bytes,
+        rp_id: str,
+        account_name: str,
+        hmac_secret: bool,
     ) -> None:
         super(Fido2ConfirmMakeCredential, self).__init__(cid, client_data_hash, rp_id)
         self.account_name = account_name
+        self.hmac_secret = hmac_secret
 
     def get_header(self):
         return "FIDO2 Register"
@@ -545,7 +567,7 @@ class Fido2ConfirmMakeCredential(Fido2State):
 
     def on_confirm(self):
         response_data = cbor_make_credential_sign(
-            self.client_data_hash, hashlib.sha256(self.rp_id).digest()
+            self.client_data_hash, hashlib.sha256(self.rp_id).digest(), self.hmac_secret
         )
         return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
 
@@ -555,10 +577,18 @@ class Fido2ConfirmMakeCredential(Fido2State):
 
 class Fido2ConfirmGetAssertion(Fido2State):
     def __init__(
-        self, cid: int, client_data_hash: bytes, rp_id: str, credentials
+        self,
+        cid: int,
+        client_data_hash: bytes,
+        rp_id: str,
+        credentials,
+        shared_secret: bytes,
+        hmac_secret_salt: bytes,
     ) -> None:
         super(Fido2ConfirmGetAssertion, self).__init__(cid, client_data_hash, rp_id)
         self.credentials = credentials
+        self.shared_secret = shared_secret
+        self.hmac_secret_salt = hmac_secret_salt
 
     def get_header(self):
         return "FIDO2 Authenticate"
@@ -570,11 +600,14 @@ class Fido2ConfirmGetAssertion(Fido2State):
         # TODO Ask user to select credential from a list.
         credential_id = self.credentials[0][0]
         node = self.credentials[0][1]
+
         response_data = cbor_get_assertion_sign(
             self.client_data_hash,
             hashlib.sha256(self.rp_id).digest(),
             credential_id,
             node,
+            self.shared_secret,
+            self.hmac_secret_salt,
         )
         return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
 
@@ -635,7 +668,7 @@ class Fido2ConfirmNoCredentials(Fido2State):
         return "FIDO2 Authenticate"
 
     def get_text(self):
-        return [self.rp_id, "Token not registered."]
+        return [self.rp_id, "This token is", "not registered."]
 
     def get_dialog(self):
         content = ConfirmContent(self)
@@ -831,7 +864,7 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
         elif req.data[0] == _CBOR_CLIENT_PIN:
             if __debug__:
                 log.debug(__name__, "_CBOR_CLIENT_PIN")
-            return cbor_error(req.cid, _ERR_INVALID_CMD)
+            return cbor_client_pin(req)
         elif req.data[0] == _CBOR_RESET:
             if __debug__:
                 log.debug(__name__, "_CBOR_RESET")
@@ -1147,6 +1180,13 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
     if _COSE_ALG_ES256 not in (alg.get("alg", None) for alg in pub_key_cred_params):
         return cbor_error(req.cid, _ERR_UNSUPPORTED_ALGORITHM)
 
+    hmac_secret = False
+    if _MAKECRED_CMD_EXTENSIONS in param:
+        try:
+            hmac_secret = param[_MAKECRED_CMD_EXTENSIONS].get("hmac-secret", False)
+        except Exception:
+            return cbor_error(req.cid, _ERR_INVALID_CBOR)
+
     if _GETASSERT_CMD_PIN_AUTH in param:
         # Client PIN is not supported
         return cbor_error(req.cid, _ERR_PIN_AUTH_INVALID)
@@ -1175,14 +1215,18 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
         )
     else:
         state_set = dialog_mgr.set_state(
-            Fido2ConfirmMakeCredential(req.cid, client_data_hash, rp_id, name)
+            Fido2ConfirmMakeCredential(
+                req.cid, client_data_hash, rp_id, name, hmac_secret
+            )
         )
     if not state_set:
         return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
     return None
 
 
-def cbor_make_credential_sign(client_data_hash: bytes, rp_id_hash: bytes) -> bytes:
+def cbor_make_credential_sign(
+    client_data_hash: bytes, rp_id_hash: bytes, hmac_secret: bool
+) -> bytes:
     credential_id, pubkey, privkey = generate_credential(rp_id_hash)
 
     flags = _AUTH_FLAG_UP | _AUTH_FLAG_AT
@@ -1205,8 +1249,13 @@ def cbor_make_credential_sign(client_data_hash: bytes, rp_id_hash: bytes) -> byt
         + credential_pub_key
     )
 
+    extensions = b""
+    if hmac_secret:
+        extensions = cbor.encode({"hmac-secret": True})
+        flags |= _AUTH_FLAG_ED
+
     authenticator_data = (
-        rp_id_hash + bytes([flags]) + b"\x00\x00\x00\x00" + att_cred_data
+        rp_id_hash + bytes([flags]) + b"\x00\x00\x00\x00" + att_cred_data + extensions
     )
 
     # compute self-attestation signature
@@ -1269,6 +1318,11 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
         if "uv" in options:
             user_verification = options["uv"]
 
+    try:
+        hmac_secret_salt, shared_secret = cbor_get_assertion_hmac_secret(param)
+    except Exception:
+        return cbor_error(req.cid, _ERR_INVALID_CBOR)
+
     credentials = []
     for credential_id in credential_id_list:
         node = get_node(rp_id_hash, credential_id)
@@ -1285,24 +1339,81 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
         )
     else:
         state_set = dialog_mgr.set_state(
-            Fido2ConfirmGetAssertion(req.cid, client_data_hash, rp_id, credentials)
+            Fido2ConfirmGetAssertion(
+                req.cid,
+                client_data_hash,
+                rp_id,
+                credentials,
+                shared_secret,
+                hmac_secret_salt,
+            )
         )
     if not state_set:
         return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
     return None
 
 
+def cbor_get_assertion_hmac_secret(param):
+    hmac_secret = param.get(_GETASSERT_CMD_EXTENSIONS, {}).get("hmac-secret", None)
+    if hmac_secret is None:
+        return None, None
+
+    key_agreement = hmac_secret[1]
+    salt_enc = hmac_secret[2]
+    salt_auth = hmac_secret[3]
+    x = key_agreement[_COSE_X_COORD_KEY]
+    y = key_agreement[_COSE_Y_COORD_KEY]
+    if (
+        key_agreement[_COSE_ALG_KEY] != _COSE_ALG_ES256
+        or key_agreement[_COSE_KEY_TYPE_KEY] != _COSE_KEY_TYPE_EC2
+        or key_agreement[_COSE_CURVE_KEY] != _COSE_CURVE_P256
+        or len(x) != 32
+        or len(y) != 32
+        or len(salt_enc) not in (32, 64)
+    ):
+        raise ValueError
+
+    ecdh_result = nist256p1.multiply(_KEY_AGREEMENT_PRIVKEY, b"\04" + x + y)
+    shared_secret = hashlib.sha256(ecdh_result[1:33]).digest()
+    if hmac.Hmac(shared_secret, salt_enc, hashlib.sha256).digest()[:16] != salt_auth:
+        raise ValueError
+
+    hmac_secret_salt = aes(aes.CBC, shared_secret).decrypt(salt_enc)
+
+    return hmac_secret_salt, shared_secret
+
+
 def cbor_get_assertion_sign(
-    client_data_hash: bytes, rp_id_hash: bytes, credential_id: bytes, node
+    client_data_hash: bytes,
+    rp_id_hash: bytes,
+    credential_id: bytes,
+    node,
+    shared_secret,
+    hmac_secret_salt,
 ) -> bytes:
     flags = _AUTH_FLAG_UP
     if config.has_pin():
         flags |= _AUTH_FLAG_UV
 
+    extensions = b""
+    if hmac_secret_salt:
+        hmac_secret_key = hashlib.sha256(node.private_key()).digest()
+        output = hmac.Hmac(
+            hmac_secret_key, hmac_secret_salt[:32], hashlib.sha256
+        ).digest()
+        if len(hmac_secret_salt) == 64:
+            output += hmac.Hmac(
+                hmac_secret_key, hmac_secret_salt[32:], hashlib.sha256
+            ).digest()
+        extensions = cbor.encode(
+            {"hmac-secret": aes(aes.CBC, shared_secret).encrypt(output)}
+        )
+        flags |= _AUTH_FLAG_ED
+
     # get next counter
     ctr = storage.next_u2f_counter()
 
-    auth_data = rp_id_hash + bytes([flags]) + ctr.to_bytes(4, "big")
+    auth_data = rp_id_hash + bytes([flags]) + ctr.to_bytes(4, "big") + extensions
     dig = hashlib.sha256()
     dig.update(auth_data)
     dig.update(client_data_hash)
@@ -1323,9 +1434,37 @@ def cbor_get_assertion_sign(
 def cbor_get_info(req: Cmd) -> Cmd:
     response_data = {
         _GETINFO_RESP_VERSIONS: ["FIDO_2_0", "U2F_V2"],
+        _GETINFO_RESP_EXTENSIONS: ["hmac-secret"],
         _GETINFO_RESP_AAGUID: _AAGUID,
         _GETINFO_RESP_OPTIONS: {"uv": config.has_pin()},
     }
+    return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
+
+
+def cbor_client_pin(req: Cmd) -> Cmd:
+    try:
+        param = cbor.decode(req.data[1:])
+        pin_protocol = param[_CLIENTPIN_CMD_PIN_PROTOCOL]
+        subcommand = param[_CLIENTPIN_CMD_SUBCOMMAND]
+    except Exception:
+        return cbor_error(req.cid, _ERR_INVALID_CBOR)
+
+    if pin_protocol != 1:
+        return cbor_error(req.cid, _ERR_PIN_AUTH_INVALID)
+
+    if subcommand != _CLIENTPIN_SUBCMD_GET_KEY_AGREEMENT:
+        return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
+
+    response_data = {
+        _CLIENTPIN_RESP_KEY_AGREEMENT: {
+            _COSE_ALG_KEY: _COSE_ALG_ES256,
+            _COSE_KEY_TYPE_KEY: _COSE_KEY_TYPE_EC2,
+            _COSE_CURVE_KEY: _COSE_CURVE_P256,
+            _COSE_X_COORD_KEY: _KEY_AGREEMENT_PUBKEY[1:33],
+            _COSE_Y_COORD_KEY: _KEY_AGREEMENT_PUBKEY[33:],
+        }
+    }
+
     return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
 
 
