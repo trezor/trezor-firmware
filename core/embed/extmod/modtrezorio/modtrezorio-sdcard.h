@@ -17,9 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "sdcard.h"
-
 #include "embed/extmod/trezorobj.h"
+#include "py/mperrno.h"
+
+#include "sdcard.h"
 
 /// class SDCard:
 ///     """
@@ -79,7 +80,7 @@ STATIC mp_obj_t mod_trezorio_SDCard_capacity(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_SDCard_capacity_obj,
                                  mod_trezorio_SDCard_capacity);
 
-/// def read(self, block_num: int, buf: bytearray) -> bool:
+/// def read(self, block_num: int, buf: bytearray) -> None:
 ///     """
 ///     Reads blocks starting with block_num from the SD card into buf.
 ///     Number of bytes read is length of buf rounded down to multiply of
@@ -90,13 +91,15 @@ STATIC mp_obj_t mod_trezorio_SDCard_read(mp_obj_t self, mp_obj_t block_num,
   uint32_t block = trezor_obj_get_uint(block_num);
   mp_buffer_info_t bufinfo;
   mp_get_buffer_raise(buf, &bufinfo, MP_BUFFER_WRITE);
-  return mp_obj_new_bool(
-      sdcard_read_blocks(bufinfo.buf, block, bufinfo.len / SDCARD_BLOCK_SIZE));
+  if (sectrue != sdcard_read_blocks(bufinfo.buf, block, bufinfo.len / SDCARD_BLOCK_SIZE)) {
+    mp_raise_OSError(MP_EIO);
+  }
+  return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_SDCard_read_obj,
                                  mod_trezorio_SDCard_read);
 
-/// def write(self, block_num: int, buf: bytes) -> bool:
+/// def write(self, block_num: int, buf: bytes) -> None:
 ///     """
 ///     Writes blocks starting with block_num from buf to the SD card.
 ///     Number of bytes written is length of buf rounded down to multiply of
@@ -107,8 +110,10 @@ STATIC mp_obj_t mod_trezorio_SDCard_write(mp_obj_t self, mp_obj_t block_num,
   uint32_t block = trezor_obj_get_uint(block_num);
   mp_buffer_info_t bufinfo;
   mp_get_buffer_raise(buf, &bufinfo, MP_BUFFER_READ);
-  return mp_obj_new_bool(
-      sdcard_write_blocks(bufinfo.buf, block, bufinfo.len / SDCARD_BLOCK_SIZE));
+  if (sectrue != sdcard_write_blocks(bufinfo.buf, block, bufinfo.len / SDCARD_BLOCK_SIZE)) {
+    mp_raise_OSError(MP_EIO);
+  }
+  return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_SDCard_write_obj,
                                  mod_trezorio_SDCard_write);
