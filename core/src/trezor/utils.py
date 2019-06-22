@@ -56,7 +56,7 @@ def unimport_end(mods):
 def ensure(cond, msg=None):
     if not cond:
         if msg is None:
-            raise AssertionError()
+            raise AssertionError
         else:
             raise AssertionError(msg)
 

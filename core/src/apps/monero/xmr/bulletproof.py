@@ -298,7 +298,7 @@ class KeyVBase:
         return memcpy(buff, offset, self[self.idxize(idx)], 0, 32)
 
     def read(self, idx, buff, offset=0):
-        raise ValueError()
+        raise ValueError
 
     def slice(self, res, start, stop):
         for i in range(start, stop):
@@ -583,7 +583,7 @@ class KeyVPowers(KeyVBase):
         elif item == prev + 1:
             return sc_mul(self.cur, self.cur, self.x)
         else:
-            IndexError("Only linear scan allowed")
+            raise IndexError("Only linear scan allowed")
 
 
 class KeyVZtwo(KeyVBase):
@@ -827,7 +827,7 @@ def vector_z_two(N, logN, M, zpow, twoN, zero_twos=None, dynamic=False, **kwargs
     if dynamic:
         return KeyVZtwo(N, logN, M, zpow, twoN, **kwargs)
     else:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 def hash_cache_mash(dst, hash_cache, *args):

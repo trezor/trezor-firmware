@@ -29,5 +29,5 @@ async def request_pin(
         else:
             result = await dialog
         if result is CANCELLED:
-            raise PinCancelled()
+            raise PinCancelled
         return result
