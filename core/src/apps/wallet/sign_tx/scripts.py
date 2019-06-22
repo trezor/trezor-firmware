@@ -88,6 +88,7 @@ def output_script_native_p2wpkh_or_p2wsh(witprog: bytes) -> bytearray:
     # Either:
     # 00 14 <20-byte-key-hash>
     # 00 20 <32-byte-script-hash>
+    ensure(len(witprog) == 20 or len(witprog) == 32)
 
     w = empty_bytearray(3 + len(witprog))
     w.append(0x00)  # witness version byte
@@ -107,6 +108,7 @@ def output_script_native_p2wpkh_or_p2wsh(witprog: bytes) -> bytearray:
 def input_script_p2wpkh_in_p2sh(pubkeyhash: bytes) -> bytearray:
     # 16 00 14 <pubkeyhash>
     # Signature is moved to the witness.
+    ensure(len(pubkeyhash) == 20)
 
     w = empty_bytearray(3 + len(pubkeyhash))
     w.append(0x16)  # length of the data
