@@ -45,6 +45,11 @@ class TestMsgResetDeviceT2(TrezorTest):
             assert btn_code == B.ResetDevice
             self.client.debug.press_yes()
 
+            # safety warning
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
             # mnemonic phrases
             btn_code = yield
             assert btn_code == B.ResetDevice
@@ -64,7 +69,12 @@ class TestMsgResetDeviceT2(TrezorTest):
                 index = self.client.debug.state().reset_word_pos
                 self.client.debug.input(words[index])
 
-            # safety warning
+            # confirm recovery seed check
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
+            # confirm success
             btn_code = yield
             assert btn_code == B.ResetDevice
             self.client.debug.press_yes()
@@ -75,6 +85,8 @@ class TestMsgResetDeviceT2(TrezorTest):
                 [
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.EntropyRequest(),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
@@ -138,6 +150,11 @@ class TestMsgResetDeviceT2(TrezorTest):
             assert btn_code == B.ResetDevice
             self.client.debug.press_yes()
 
+            # safety warning
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
             # mnemonic phrases
             btn_code = yield
             assert btn_code == B.ResetDevice
@@ -157,7 +174,12 @@ class TestMsgResetDeviceT2(TrezorTest):
                 index = self.client.debug.state().reset_word_pos
                 self.client.debug.input(words[index])
 
-            # safety warning
+            # confirm recovery seed check
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
+            # confirm success
             btn_code = yield
             assert btn_code == B.ResetDevice
             self.client.debug.press_yes()
@@ -171,6 +193,8 @@ class TestMsgResetDeviceT2(TrezorTest):
                     proto.ButtonRequest(code=B.Other),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.EntropyRequest(),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
