@@ -88,6 +88,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/sha2.c',
     'vendor/trezor-crypto/sha3.c',
     'vendor/trezor-crypto/shamir.c',
+    'vendor/trezor-crypto/slip39.c',
 ]
 
 # libsecp256k1-zkp

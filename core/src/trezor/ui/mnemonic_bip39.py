@@ -90,7 +90,7 @@ class Prompt(ui.Control):
             self.repaint = False
 
 
-class MnemonicKeyboard(ui.Layout):
+class Bip39Keyboard(ui.Layout):
     def __init__(self, prompt):
         self.prompt = Prompt(prompt)
 

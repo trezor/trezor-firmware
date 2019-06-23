@@ -66,6 +66,7 @@ SRCS  += memzero.c
 SRCS  += shamir.c
 SRCS  += hmac_drbg.c
 SRCS  += rfc6979.c
+SRCS  += slip39.c
 
 OBJS   = $(SRCS:.c=.o)
 
