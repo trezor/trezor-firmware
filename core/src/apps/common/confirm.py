@@ -15,16 +15,24 @@ async def confirm(
     confirm_style=Confirm.DEFAULT_CONFIRM_STYLE,
     cancel=Confirm.DEFAULT_CANCEL,
     cancel_style=Confirm.DEFAULT_CANCEL_STYLE,
+    major_confirm=None,
 ):
     await ctx.call(ButtonRequest(code=code), MessageType.ButtonAck)
 
     if content.__class__.__name__ == "Paginated":
         content.pages[-1] = Confirm(
-            content.pages[-1], confirm, confirm_style, cancel, cancel_style
+            content.pages[-1],
+            confirm,
+            confirm_style,
+            cancel,
+            cancel_style,
+            major_confirm,
         )
         dialog = content
     else:
-        dialog = Confirm(content, confirm, confirm_style, cancel, cancel_style)
+        dialog = Confirm(
+            content, confirm, confirm_style, cancel, cancel_style, major_confirm
+        )
 
     if __debug__:
         return await ctx.wait(dialog, confirm_signal) is CONFIRMED

@@ -2,7 +2,7 @@ from micropython import const
 from ubinascii import hexlify
 
 from trezor import config
-from trezor.crypto import random
+from trezor.crypto import random, slip39
 
 from apps.common import cache
 
@@ -32,7 +32,98 @@ _AUTOLOCK_DELAY_MS  = const(0x0C)  # int
 _NO_BACKUP          = const(0x0D)  # bool (0x01 or empty)
 _MNEMONIC_TYPE      = const(0x0E)  # int
 _ROTATION           = const(0x0F)  # int
+
+_SLIP39             = const(0x02)  # SLIP-39 namespace
+_SLIP39_IN_PROGRESS = const(0x00)  # bool
+_SLIP39_IDENTIFIER  = const(0x01)  # bytes
+_SLIP39_THRESHOLD   = const(0x02)  # int
+_SLIP39_REMAINING   = const(0x03)  # int
+_SLIP39_WORDS_COUNT = const(0x04)  # int
+_SLIP39_ITERATION_EXPONENT = const(0x05)  # int
+
+# Mnemonics stored during SLIP-39 recovery process.
+# Each mnemonic is stored under key = index.
+_SLIP39_MNEMONICS   = const(0x03)  # SLIP-39 mnemonics namespace
+
 # fmt: on
+
+
+def set_slip39_in_progress(val: bool):
+    _set_bool(_SLIP39, _SLIP39_IN_PROGRESS, val)
+
+
+def is_slip39_in_progress():
+    return _get_bool(_SLIP39, _SLIP39_IN_PROGRESS)
+
+
+def set_slip39_identifier(identifier: int):
+    _set_uint16(_SLIP39, _SLIP39_IDENTIFIER, identifier)
+
+
+def get_slip39_identifier() -> int:
+    return _get_uint16(_SLIP39, _SLIP39_IDENTIFIER)
+
+
+def set_slip39_threshold(threshold: int):
+    _set_uint8(_SLIP39, _SLIP39_THRESHOLD, threshold)
+
+
+def get_slip39_threshold() -> int:
+    return _get_uint8(_SLIP39, _SLIP39_THRESHOLD)
+
+
+def set_slip39_remaining(remaining: int):
+    _set_uint8(_SLIP39, _SLIP39_REMAINING, remaining)
+
+
+def get_slip39_remaining() -> int:
+    return _get_uint8(_SLIP39, _SLIP39_REMAINING)
+
+
+def set_slip39_words_count(count: int):
+    _set_uint8(_SLIP39, _SLIP39_WORDS_COUNT, count)
+
+
+def get_slip39_words_count() -> int:
+    return _get_uint8(_SLIP39, _SLIP39_WORDS_COUNT)
+
+
+def set_slip39_iteration_exponent(exponent: int):
+    # TODO: check if not > 5 bits
+    _set_uint8(_SLIP39, _SLIP39_ITERATION_EXPONENT, exponent)
+
+
+def get_slip39_iteration_exponent() -> int:
+    return _get_uint8(_SLIP39, _SLIP39_ITERATION_EXPONENT)
+
+
+def set_slip39_mnemonic(index: int, mnemonic: str):
+    config.set(_SLIP39_MNEMONICS, index, mnemonic.encode())
+
+
+def get_slip39_mnemonic(index: int) -> str:
+    m = config.get(_SLIP39_MNEMONICS, index)
+    if m:
+        return m.decode()
+    return False
+
+
+def get_slip39_mnemonics() -> list:
+    mnemonics = []
+    for index in range(0, slip39.MAX_SHARE_COUNT):
+        m = get_slip39_mnemonic(index)
+        if m:
+            mnemonics.append(m)
+    return mnemonics
+
+
+def clear_slip39_data():
+    config.delete(_SLIP39, _SLIP39_IN_PROGRESS)
+    config.delete(_SLIP39, _SLIP39_REMAINING)
+    config.delete(_SLIP39, _SLIP39_THRESHOLD)
+    config.delete(_SLIP39, _SLIP39_WORDS_COUNT)
+    for index in (0, slip39.MAX_SHARE_COUNT):
+        config.delete(_SLIP39_MNEMONICS, index)
 
 
 def _set_bool(app: int, key: int, value: bool, public: bool = False) -> None:
@@ -51,6 +142,17 @@ def _set_uint8(app: int, key: int, val: int):
 
 
 def _get_uint8(app: int, key: int) -> int:
+    val = config.get(app, key)
+    if not val:
+        return None
+    return int.from_bytes(val, "big")
+
+
+def _set_uint16(app: int, key: int, val: int):
+    config.set(app, key, val.to_bytes(2, "big"))
+
+
+def _get_uint16(app: int, key: int) -> int:
     val = config.get(app, key)
     if not val:
         return None
@@ -77,7 +179,9 @@ def get_rotation() -> int:
 
 
 def is_initialized() -> bool:
-    return bool(config.get(_APP, _VERSION))
+    return bool(config.get(_APP, _VERSION)) and not bool(
+        config.get(_SLIP39, _SLIP39_IN_PROGRESS)
+    )
 
 
 def get_label() -> str:
@@ -88,10 +192,7 @@ def get_label() -> str:
 
 
 def get_mnemonic_secret() -> bytes:
-    mnemonic = config.get(_APP, _MNEMONIC_SECRET)
-    if mnemonic is None:
-        return None
-    return mnemonic
+    return config.get(_APP, _MNEMONIC_SECRET)
 
 
 def get_mnemonic_type() -> int:
@@ -107,10 +208,17 @@ def get_homescreen() -> bytes:
 
 
 def store_mnemonic(
-    secret: bytes, mnemonic_type: int, needs_backup: bool, no_backup: bool
+    secret: bytes,
+    mnemonic_type: int,
+    needs_backup: bool = False,
+    no_backup: bool = False,
 ) -> None:
     config.set(_APP, _MNEMONIC_SECRET, secret)
     _set_uint8(_APP, _MNEMONIC_TYPE, mnemonic_type)
+    _init(needs_backup, no_backup)
+
+
+def _init(needs_backup=False, no_backup=False):
     config.set(_APP, _VERSION, _STORAGE_VERSION)
     _set_bool(_APP, _NO_BACKUP, no_backup)
     if not no_backup:

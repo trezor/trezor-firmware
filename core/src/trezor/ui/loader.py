@@ -77,6 +77,26 @@ class Loader(ui.Control):
             self.start_ms = None
             self.stop_ms = None
             self.on_start()
+        if r == target:
+            self.on_finish()
 
     def on_start(self):
         pass
+
+    def on_finish(self):
+        pass
+
+
+class LoadingAnimation(ui.Layout):
+    def __init__(self, style=LoaderDefault):
+        self.loader = Loader(style)
+        self.loader.on_finish = self.on_finish
+        self.loader.start()
+
+    def dispatch(self, event, x, y):
+        if not self.loader.elapsed_ms():
+            self.loader.start()
+        self.loader.dispatch(event, x, y)
+
+    def on_finish(self):
+        raise ui.Result(None)
