@@ -505,6 +505,7 @@ def recovery_device(
 @click.option("-u", "--u2f-counter", default=0)
 @click.option("-s", "--skip-backup", is_flag=True)
 @click.option("-n", "--no-backup", is_flag=True)
+@click.option("-x", "--slip39", is_flag=True)
 @click.pass_obj
 def reset_device(
     connect,
@@ -516,6 +517,7 @@ def reset_device(
     u2f_counter,
     skip_backup,
     no_backup,
+    slip39,
 ):
     if strength:
         strength = int(strength)
@@ -530,6 +532,7 @@ def reset_device(
         u2f_counter=u2f_counter,
         skip_backup=skip_backup,
         no_backup=no_backup,
+        slip39=slip39,
     )
 
 

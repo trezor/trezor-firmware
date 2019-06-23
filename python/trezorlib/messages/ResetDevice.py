@@ -17,6 +17,7 @@ class ResetDevice(p.MessageType):
         u2f_counter: int = None,
         skip_backup: bool = None,
         no_backup: bool = None,
+        slip39: bool = None,
     ) -> None:
         self.display_random = display_random
         self.strength = strength
@@ -27,6 +28,7 @@ class ResetDevice(p.MessageType):
         self.u2f_counter = u2f_counter
         self.skip_backup = skip_backup
         self.no_backup = no_backup
+        self.slip39 = slip39
 
     @classmethod
     def get_fields(cls):
@@ -40,4 +42,5 @@ class ResetDevice(p.MessageType):
             7: ('u2f_counter', p.UVarintType, 0),
             8: ('skip_backup', p.BoolType, 0),
             9: ('no_backup', p.BoolType, 0),
+            10: ('slip39', p.BoolType, 0),
         }

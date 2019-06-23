@@ -19,12 +19,15 @@ class Confirm(ui.Layout):
         confirm_style=DEFAULT_CONFIRM_STYLE,
         cancel=DEFAULT_CANCEL,
         cancel_style=DEFAULT_CANCEL_STYLE,
+        major_confirm=False,
     ):
         self.content = content
 
         if confirm is not None:
             if cancel is None:
                 area = ui.grid(4, n_x=1)
+            elif major_confirm:
+                area = ui.grid(13, cells_x=2)
             else:
                 area = ui.grid(9, n_x=2)
             self.confirm = Button(area, confirm, confirm_style)
@@ -35,6 +38,8 @@ class Confirm(ui.Layout):
         if cancel is not None:
             if confirm is None:
                 area = ui.grid(4, n_x=1)
+            elif major_confirm:
+                area = ui.grid(12, cells_x=1)
             else:
                 area = ui.grid(8, n_x=2)
             self.cancel = Button(area, cancel, cancel_style)

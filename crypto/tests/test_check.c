@@ -67,6 +67,7 @@
 #include "sha2.h"
 #include "sha3.h"
 #include "shamir.h"
+#include "slip39.h"
 
 #if VALGRIND
 /*
@@ -5096,6 +5097,96 @@ START_TEST(test_mnemonic_to_entropy) {
 }
 END_TEST
 
+START_TEST(test_slip39_get_word) {
+  static const struct {
+    const int index;
+    const char *expected_word;
+  } vectors[] = {{573, "member"},
+                 {0, "academic"},
+                 {1023, "zero"},
+                 {245, "drove"},
+                 {781, "satoshi"}};
+  for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
+    const char *a = get_word(vectors[i].index);
+    ck_assert_str_eq(a, vectors[i].expected_word);
+  }
+}
+END_TEST
+
+START_TEST(test_slip39_word_index) {
+  uint16_t index;
+  static const struct {
+    const char *word;
+    bool expected_result;
+    uint16_t expected_index;
+  } vectors[] = {{"academic", true, 0},
+                 {"zero", true, 1023},
+                 {"drove", true, 245},
+                 {"satoshi", true, 781},
+                 {"member", true, 573},
+                 // 9999 value is never checked since the word is not in list
+                 {"fakeword", false, 9999}};
+  for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
+    bool result = word_index(&index, vectors[i].word, sizeof(vectors[i].word));
+    ck_assert_int_eq(result, vectors[i].expected_result);
+    if (result) {
+      ck_assert_int_eq(index, vectors[i].expected_index);
+    }
+  }
+}
+END_TEST
+
+START_TEST(test_slip39_compute_mask) {
+  static const struct {
+    const uint16_t prefix;
+    const uint16_t expected_mask;
+  } vectors[] = {{
+                     12,
+                     0xFD  // 011111101
+                 },
+                 {
+                     21,
+                     0xF8  // 011111000
+                 },
+                 {
+                     75,
+                     0xAD  // 010101101
+                 },
+                 {
+                     4,
+                     0x1F7  // 111110111
+                 },
+                 {
+                     738,
+                     0x6D  // 001101101
+                 },
+                 {
+                     9,
+                     0x6D  // 001101101
+                 }};
+  for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
+    uint16_t mask = compute_mask(vectors[i].prefix);
+    ck_assert_int_eq(mask, vectors[i].expected_mask);
+  }
+}
+END_TEST
+
+START_TEST(test_slip39_sequence_to_word) {
+  static const struct {
+    const uint16_t prefix;
+    const char *expected_word;
+  } vectors[] = {{7945, "swimming"},
+                 {646, "photo"},
+                 {5, "kernel"},
+                 {34, "either"},
+                 {62, "ocean"}};
+  for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
+    const char *word = button_sequence_to_word(vectors[i].prefix);
+    ck_assert_str_eq(word, vectors[i].expected_word);
+  }
+}
+END_TEST
+
 START_TEST(test_shamir) {
 #define SHAMIR_MAX_COUNT 16
   static const struct {
@@ -8674,6 +8765,13 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_mnemonic);
   tcase_add_test(tc, test_mnemonic_check);
   tcase_add_test(tc, test_mnemonic_to_entropy);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("slip39");
+  tcase_add_test(tc, test_slip39_get_word);
+  tcase_add_test(tc, test_slip39_word_index);
+  tcase_add_test(tc, test_slip39_compute_mask);
+  tcase_add_test(tc, test_slip39_sequence_to_word);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("shamir");
