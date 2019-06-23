@@ -107,7 +107,7 @@
 */
 
 
-#define FF_USE_LFN      0
+#define FF_USE_LFN      1
 #define FF_MAX_LFN      255
 /* The FF_USE_LFN switches the support for LFN (long file name).
 /
@@ -127,7 +127,7 @@
 /  ff_memfree() in ffsystem.c, need to be added to the project. */
 
 
-#define FF_LFN_UNICODE  0
+#define FF_LFN_UNICODE  2
 /* This option switches the character encoding on the API when LFN is enabled.
 /
 /   0: ANSI/OEM in current CP (TCHAR = char)
