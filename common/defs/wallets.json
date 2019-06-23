@@ -70,5 +70,8 @@
     },
     "bitcoin:ZNY": {
         "Electrum-ZNY": "https://zny.electrum-jp.net"
+    },
+    "bitcoin:XRC": {
+        "Electrum-XRC": "https://electrum.bitcoinrh.org"
     }
 }
