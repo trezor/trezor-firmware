@@ -1,13 +1,12 @@
 from micropython import const
 
-from trezor import ui, wire
+from trezor import ui, wire, workflow
 from trezor.crypto.hashlib import sha256
 from trezor.messages.Success import Success
 from trezor.utils import consteq
 
-from . import bip39, slip39
-
 from apps.common import storage
+from apps.common.mnemonic import bip39, slip39
 
 TYPE_BIP39 = const(0)
 TYPE_SLIP39 = const(1)
@@ -46,6 +45,7 @@ def module_from_words_count(count: int):
 
 
 def _start_progress():
+    workflow.closedefault()
     ui.backlight_fade(ui.BACKLIGHT_DIM)
     ui.display.clear()
     ui.header("Please wait")
@@ -57,3 +57,7 @@ def _render_progress(progress: int, total: int):
     p = 1000 * progress // total
     ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
     ui.display.refresh()
+
+
+def _stop_progress():
+    pass

@@ -82,6 +82,8 @@ def get_seed(encrypted_master_secret: bytes, passphrase: str):
     mnemonic._start_progress()
     identifier = storage.get_slip39_identifier()
     iteration_exponent = storage.get_slip39_iteration_exponent()
-    return slip39.decrypt(
+    master_secret = slip39.decrypt(
         identifier, iteration_exponent, encrypted_master_secret, passphrase
     )
+    mnemonic._stop_progress()
+    return master_secret

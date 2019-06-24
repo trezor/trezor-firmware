@@ -29,7 +29,9 @@ def store(secret: bytes, needs_backup: bool, no_backup: bool):
 
 def get_seed(secret: bytes, passphrase: str):
     mnemonic._start_progress()
-    return bip39.seed(secret.decode(), passphrase, mnemonic._render_progress)
+    seed = bip39.seed(secret.decode(), passphrase, mnemonic._render_progress)
+    mnemonic._stop_progress()
+    return seed
 
 
 def check(secret: bytes):
