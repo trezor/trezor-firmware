@@ -108,8 +108,6 @@ def _validate_reset_device(msg):
         raise wire.ProcessError("Can't show internal entropy when backup is skipped")
     if storage.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
-    if (msg.skip_backup or msg.no_backup) and msg.slip39:
-        raise wire.ProcessError("Both no/skip backup flag and Shamir SLIP-39 required.")
 
 
 def _compute_secret_from_entropy(
