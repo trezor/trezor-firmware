@@ -18,6 +18,7 @@ PYTHON ?= python
 		-L '#include "%s"' \
 		-T \
 		-s "mangle_names:M_FLATTEN"
+	@grep CALLBACK $@ && echo "CALLBACK field found" && rm $@ && exit 1  || :
 
 %.pb: %.proto
 	@printf "  PROTOC  $@\n"
