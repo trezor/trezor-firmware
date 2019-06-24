@@ -24,5 +24,6 @@ EthereumMessageSignature.signature      max_size:65
 EthereumGetAddress.address_n            max_count:8
 EthereumGetPublicKey.address_n          max_count:8
 
+EthereumAddress.old_address             max_size:20
 EthereumAddress.address                 max_size:43
 EthereumPublicKey.xpub                  max_size:113
