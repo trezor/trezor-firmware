@@ -4,16 +4,6 @@ from trezor.ui import display
 from trezor.ui.button import Button, ButtonClear, ButtonMono, ButtonMonoConfirm
 
 
-def check_mask(mask: int, index: int) -> bool:
-    return bool((1 << (index - 1)) & mask)
-
-
-# TODO: ask UX if we want to finish sooner than 4 words
-# example: 'hairy'
-def _is_final(content: str) -> bool:
-    return len(content) > 3
-
-
 class KeyButton(Button):
     def __init__(self, area, content, keyboard, index):
         self.keyboard = keyboard
@@ -25,12 +15,13 @@ class KeyButton(Button):
 
 
 class InputButton(Button):
-    def __init__(self, area, content, word):
-        super().__init__(area, content)
-        self.word = word
+    def __init__(self, area, keyboard):
+        super().__init__(area, "")
+        self.word = ""
         self.pending_button = None
         self.pending_index = None
         self.icon = None  # rendered icon
+        self.keyboard = keyboard
         self.disable()
 
     def edit(self, content, word, pending_button, pending_index):
@@ -57,7 +48,7 @@ class InputButton(Button):
         tx = ax + 24  # x-offset of the content
         ty = ay + ah // 2 + 8  # y-offset of the content
 
-        if not _is_final(self.content):
+        if not self.keyboard.is_input_final():
             to_display = len(self.content) * "*"
             if self.pending_button:
                 to_display = (
@@ -68,7 +59,7 @@ class InputButton(Button):
 
         display.text(tx, ty, to_display, text_style, fg_color, bg_color)
 
-        if self.pending_button and not _is_final(self.content):
+        if self.pending_button and not self.keyboard.is_input_final():
             width = display.text_width(to_display, text_style)
             pw = display.text_width(self.content[-1:], text_style)
             px = tx + width - pw
@@ -100,7 +91,7 @@ class Slip39Keyboard(ui.Layout):
         self.back = Button(ui.grid(0, n_x=4, n_y=4), icon_back, ButtonClear)
         self.back.on_click = self.on_back_click
 
-        self.input = InputButton(ui.grid(1, n_x=4, n_y=4, cells_x=3), "", "")
+        self.input = InputButton(ui.grid(1, n_x=4, n_y=4, cells_x=3), self)
         self.input.on_click = self.on_input_click
 
         self.keys = [
@@ -112,6 +103,7 @@ class Slip39Keyboard(ui.Layout):
         self.pending_button = None
         self.pending_index = 0
         self.button_sequence = ""
+        self.mask = slip39.KEYBOARD_FULL_MASK
 
     def dispatch(self, event: int, x: int, y: int):
         for btn in self.keys:
@@ -131,7 +123,7 @@ class Slip39Keyboard(ui.Layout):
         # Input button was clicked. If the content matches the suggested word,
         # let's confirm it, otherwise just auto-complete.
         result = self.input.word
-        if _is_final(self.input.content):
+        if self.is_input_final():
             self.button_sequence = ""
             self.edit()
             self.on_confirm(result)
@@ -160,12 +152,10 @@ class Slip39Keyboard(ui.Layout):
         self.pending_index = index
 
         # find the completions
-        mask = 0
         word = ""
-        if _is_final(self.button_sequence):
+        self.mask = slip39.compute_mask(self.button_sequence)
+        if self.is_input_final():
             word = slip39.button_sequence_to_word(self.button_sequence)
-        else:
-            mask = slip39.compute_mask(self.button_sequence)
 
         # modify the input state
         self.input.edit(
@@ -174,9 +164,9 @@ class Slip39Keyboard(ui.Layout):
 
         # enable or disable key buttons
         for btn in self.keys:
-            if (not _is_final(self.button_sequence) and btn is button) or check_mask(
-                mask, btn.index
-            ):
+            if self.is_input_final():
+                btn.disable()
+            elif btn is button or self.check_mask(btn.index):
                 btn.enable()
             else:
                 btn.disable()
@@ -184,6 +174,13 @@ class Slip39Keyboard(ui.Layout):
         # invalidate the prompt if we display it next frame
         if not self.input.content:
             self.prompt.repaint = True
+
+    def is_input_final(self) -> bool:
+        # returns True if mask has exactly one bit set to 1 or is 0
+        return not (self.mask & (self.mask-1))
+
+    def check_mask(self, index: int) -> bool:
+        return bool((1 << (index - 1)) & self.mask)
 
     async def handle_input(self):
         touch = loop.wait(io.TOUCH)

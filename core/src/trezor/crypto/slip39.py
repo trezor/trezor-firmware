@@ -23,19 +23,19 @@ from micropython import const
 from trezor.crypto import hashlib, hmac, pbkdf2, random
 from trezorcrypto import shamir, slip39
 
-_KEYBOARD_FULL_MASK = const(0x1FF)
+KEYBOARD_FULL_MASK = const(0x1FF)
 """All buttons are allowed. 9-bit bitmap all set to 1."""
 
 
 def compute_mask(prefix: str) -> int:
     if not prefix:
-        return _KEYBOARD_FULL_MASK
+        return KEYBOARD_FULL_MASK
     return slip39.compute_mask(int(prefix))
 
 
 def button_sequence_to_word(prefix: str) -> str:
     if not prefix:
-        return _KEYBOARD_FULL_MASK
+        return KEYBOARD_FULL_MASK
     return slip39.button_sequence_to_word(int(prefix))
 
 
