@@ -1,4 +1,5 @@
 from trezor import config, ui, wire
+from trezor.crypto import slip39
 from trezor.messages import ButtonRequestType
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.MessageType import ButtonAck
@@ -10,7 +11,6 @@ from trezor.ui.mnemonic_slip39 import Slip39Keyboard
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
 from trezor.utils import format_ordinal
-from trezor.crypto import slip39
 
 from apps.common import mnemonic, storage
 from apps.common.confirm import require_confirm
