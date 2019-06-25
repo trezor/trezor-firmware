@@ -84,3 +84,8 @@ def get_seed(encrypted_master_secret: bytes, passphrase: str):
     )
     mnemonic._stop_progress()
     return master_secret
+
+
+def get_mnemonic_count(mnemonic: str) -> int:
+    _, _, _, _, _, _, threshold, _ = slip39.decode_mnemonic(mnemonic)
+    return threshold

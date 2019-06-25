@@ -64,6 +64,10 @@ async def recovery_device(ctx, msg):
         # show a note about the keyboard
         await show_keyboard_info(ctx)
 
+    if msg.dry_run:
+        dry_run_mnemonics = []
+        dry_run_mnemonic_count = None
+
     secret = None
     while secret is None:
         # ask for mnemonic words one by one
@@ -71,14 +75,23 @@ async def recovery_device(ctx, msg):
             ctx, wordcount, mnemonic_module == mnemonic.slip39
         )
         try:
-            secret = mnemonic_module.process_single(words)
+            if msg.dry_run:
+                if dry_run_mnemonic_count is None:
+                    dry_run_mnemonic_count = mnemonic_module.get_mnemonic_count(words)
+                dry_run_mnemonics.append(words)
+            else:
+                secret = mnemonic_module.process_single(words)
         except slip39.MnemonicError as e:
             raise wire.ProcessError("Mnemonic is not valid: " + str(e))
+        if msg.dry_run:
+            remaining = dry_run_mnemonic_count - len(dry_run_mnemonics)
+            if remaining == 0:
+                secret = mnemonic_module.process_all(dry_run_mnemonics)
+        else:
+            remaining = storage.get_slip39_remaining()
         # show a number of remaining mnemonics for SLIP39
         if secret is None and mnemonic_module == mnemonic.slip39:
-            await show_remaining_slip39_mnemonics(
-                ctx, title, storage.get_slip39_remaining()
-            )
+            await show_remaining_slip39_mnemonics(ctx, title, remaining)
 
     # check mnemonic validity
     # it is checked automatically in SLIP-39
@@ -94,7 +107,7 @@ async def recovery_device(ctx, msg):
 
     # dry run
     if msg.dry_run:
-        mnemonic.dry_run(secret)
+        return mnemonic.dry_run(secret)
 
     # save into storage
     if msg.pin_protection:

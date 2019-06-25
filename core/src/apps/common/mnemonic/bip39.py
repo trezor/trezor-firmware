@@ -34,5 +34,9 @@ def get_seed(secret: bytes, passphrase: str):
     return seed
 
 
+def get_mnemonic_count(mnemonic: str) -> int:
+    return 1
+
+
 def check(secret: bytes):
     return bip39.check(secret)
