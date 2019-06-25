@@ -245,7 +245,6 @@ async def slip39_show_checklist_set_shares(ctx):
     checklist.add("Set the threshold")
     checklist.add(("Write down and check", "all backup shares"))
     checklist.select(0)
-    checklist.process()
     return await confirm(
         ctx,
         checklist,
@@ -261,7 +260,6 @@ async def slip39_show_checklist_set_threshold(ctx, num_of_shares):
     checklist.add("Set the threshold")
     checklist.add(("Write down and check", "all backup shares"))
     checklist.select(1)
-    checklist.process()
     return await confirm(
         ctx,
         checklist,
@@ -277,7 +275,6 @@ async def slip39_show_checklist_show_shares(ctx, num_of_shares, threshold):
     checklist.add("Set the threshold")
     checklist.add(("Write down and check", "all backup shares"))
     checklist.select(2)
-    checklist.process()
     return await confirm(
         ctx,
         checklist,
@@ -395,7 +392,6 @@ async def _slip39_show_share_words(ctx, share_index, share_words):
     # middle pages
     for chunk in chunks:
         text = Text(header_title, header_icon)
-        text.br_half()
         for index, word in chunk:
             text.mono("%s. %s" % (index + 1, word))
             shares_words_check.append(word)
@@ -503,14 +499,11 @@ class ShamirNumInput(ui.Control):
 
 class MnemonicWordSelect(ui.Layout):
     NUM_OF_CHOICES = 3
-    MODE_CHECK = object()
-    MODE_RECOVERY = object()
 
-    def __init__(self, words, share_index, word_index, mode):
+    def __init__(self, words, share_index, word_index):
         self.words = words
         self.share_index = share_index
         self.word_index = word_index
-        self.mode = mode
         self.buttons = []
         for i, word in enumerate(words):
             area = ui.grid(i + 2, n_x=1)
@@ -518,15 +511,9 @@ class MnemonicWordSelect(ui.Layout):
             btn.on_click = self.select(word)
             self.buttons.append(btn)
         if share_index is None:
-            if self.mode is MnemonicWordSelect.MODE_CHECK:
-                self.text = Text("Check seed")
-            else:  # self.mode is MnemonicWordSelect.MODE_RECOVERY
-                self.text = Text("Recovery seed")
+            self.text = Text("Check seed")
         else:
-            if self.mode is MnemonicWordSelect.MODE_CHECK:
-                self.text = Text("Check share #%s" % (share_index + 1))
-            else:  # self.mode is MnemonicWordSelect.MODE_RECOVERY
-                self.text = Text("Recovery share #%s" % (share_index + 1))
+            self.text = Text("Check share #%s" % (share_index + 1))
         self.text.normal("Choose the %s word:" % utils.format_ordinal(word_index + 1))
 
     def dispatch(self, event, x, y):
