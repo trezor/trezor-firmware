@@ -177,7 +177,7 @@ class Slip39Keyboard(ui.Layout):
 
     def is_input_final(self) -> bool:
         # returns True if mask has exactly one bit set to 1 or is 0
-        return not (self.mask & (self.mask-1))
+        return not (self.mask & (self.mask - 1))
 
     def check_mask(self, index: int) -> bool:
         return bool((1 << (index - 1)) & self.mask)

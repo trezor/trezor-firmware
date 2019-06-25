@@ -464,7 +464,7 @@ def _decode_mnemonics(mnemonics):
     )
 
 
-def _generate_random_identifier() -> int:
+def generate_random_identifier() -> int:
     """Returns a randomly generated integer in the range 0, ... , 2**_ID_LENGTH_BITS - 1."""
 
     identifier = int.from_bytes(random.bytes(bits_to_bytes(_ID_LENGTH_BITS)), "big")
@@ -473,33 +473,40 @@ def _generate_random_identifier() -> int:
 
 def generate_single_group_mnemonics_from_data(
     master_secret,
+    identifier,
     threshold,
     count,
     passphrase=b"",
     iteration_exponent=DEFAULT_ITERATION_EXPONENT,
-) -> (int, list):
-    identifier, mnemonics = generate_mnemonics_from_data(
-        master_secret, 1, [(threshold, count)], passphrase, iteration_exponent
-    )
-    return identifier, mnemonics[0]
+) -> list:
+    return generate_mnemonics_from_data(
+        master_secret,
+        identifier,
+        1,
+        [(threshold, count)],
+        passphrase,
+        iteration_exponent,
+    )[0]
 
 
 def generate_mnemonics_from_data(
     master_secret,
+    identifier,
     group_threshold,
     groups,
     passphrase=b"",
     iteration_exponent=DEFAULT_ITERATION_EXPONENT,
-) -> (int, list):
+) -> list:
     """
     Splits a master secret into mnemonic shares using Shamir's secret sharing scheme.
+    :param master_secret: The master secret to split.
+    :type master_secret: Array of bytes.
+    :param int identifier
     :param int group_threshold: The number of groups required to reconstruct the master secret.
     :param groups: A list of (member_threshold, member_count) pairs for each group, where member_count
         is the number of shares to generate for the group and member_threshold is the number of members required to
         reconstruct the group secret.
     :type groups: List of pairs of integers.
-    :param master_secret: The master secret to split.
-    :type master_secret: Array of bytes.
     :param passphrase: The passphrase used to encrypt the master secret.
     :type passphrase: Array of bytes.
     :param int iteration_exponent: The iteration exponent.
@@ -508,8 +515,6 @@ def generate_mnemonics_from_data(
     :return: Identifier.
     :rtype: int.
     """
-
-    identifier = _generate_random_identifier()
 
     if len(master_secret) * 8 < _MIN_STRENGTH_BITS:
         raise ValueError(
@@ -570,7 +575,7 @@ def generate_mnemonics_from_data(
                 )
             )
         mnemonics.append(group_mnemonics)
-    return identifier, mnemonics
+    return mnemonics
 
 
 def combine_mnemonics(mnemonics):

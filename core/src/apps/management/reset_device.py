@@ -1,5 +1,5 @@
 from trezor import config, wire
-from trezor.crypto import bip39, hashlib, random
+from trezor.crypto import bip39, hashlib, random, slip39
 from trezor.messages import MessageType
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
@@ -37,6 +37,10 @@ async def reset_device(ctx, msg):
     entropy_ack = await ctx.call(EntropyRequest(), MessageType.EntropyAck)
     ext_entropy = entropy_ack.entropy
     secret = _compute_secret_from_entropy(int_entropy, ext_entropy, msg.strength)
+
+    if msg.slip39:
+        storage.set_slip39_identifier(slip39.generate_random_identifier())
+        storage.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
 
     # should we back up the wallet now?
     if not msg.no_backup and not msg.skip_backup:

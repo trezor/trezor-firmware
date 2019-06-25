@@ -3,16 +3,13 @@ from trezor.crypto import slip39
 from apps.common import mnemonic, storage
 
 
-def generate_from_secret(master_secret: bytes, count: int, threshold: int) -> str:
+def generate_from_secret(master_secret: bytes, count: int, threshold: int) -> list:
     """
     Generates new Shamir backup for 'master_secret'. Multiple groups are not yet supported.
     """
-    identifier, group_mnemonics = slip39.generate_single_group_mnemonics_from_data(
-        master_secret, threshold, count
+    return slip39.generate_single_group_mnemonics_from_data(
+        master_secret, storage.get_slip39_identifier(), threshold, count
     )
-    storage.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
-    storage.set_slip39_identifier(identifier)
-    return group_mnemonics
 
 
 def get_type():
