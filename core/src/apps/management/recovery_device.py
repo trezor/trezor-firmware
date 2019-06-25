@@ -10,6 +10,7 @@ from trezor.ui.mnemonic_slip39 import Slip39Keyboard
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
 from trezor.utils import format_ordinal
+from trezor.crypto import slip39
 
 from apps.common import mnemonic, storage
 from apps.common.confirm import require_confirm
@@ -69,7 +70,10 @@ async def recovery_device(ctx, msg):
         words = await request_mnemonic(
             ctx, wordcount, mnemonic_module == mnemonic.slip39
         )
-        secret = mnemonic_module.process_single(words)
+        try:
+            secret = mnemonic_module.process_single(words)
+        except slip39.MnemonicError as e:
+            raise wire.ProcessError("Mnemonic is not valid: " + str(e))
         # show a number of remaining mnemonics for SLIP39
         if secret is None and mnemonic_module == mnemonic.slip39:
             await show_remaining_slip39_mnemonics(
