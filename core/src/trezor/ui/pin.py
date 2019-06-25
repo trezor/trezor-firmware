@@ -85,6 +85,7 @@ class PinDialog(ui.Layout):
         icon_confirm = res.load(ui.ICON_CONFIRM)
         self.confirm_button = Button(ui.grid(14), icon_confirm, ButtonConfirm)
         self.confirm_button.on_click = self.on_confirm
+        self.confirm_button.disable()
 
         icon_back = res.load(ui.ICON_BACK)
         self.reset_button = Button(ui.grid(12), icon_back, ButtonClear)
@@ -103,14 +104,14 @@ class PinDialog(ui.Layout):
         ]
 
     def dispatch(self, event, x, y):
-        for btn in self.pin_buttons:
-            btn.dispatch(event, x, y)
         self.input.dispatch(event, x, y)
-        self.confirm_button.dispatch(event, x, y)
         if self.input.pin:
             self.reset_button.dispatch(event, x, y)
         else:
             self.cancel_button.dispatch(event, x, y)
+        self.confirm_button.dispatch(event, x, y)
+        for btn in self.pin_buttons:
+            btn.dispatch(event, x, y)
 
     def assign(self, pin):
         if len(pin) > self.maxlength:
@@ -121,9 +122,11 @@ class PinDialog(ui.Layout):
             else:
                 btn.disable()
         if pin:
+            self.confirm_button.enable()
             self.reset_button.enable()
             self.cancel_button.disable()
         else:
+            self.confirm_button.disable()
             self.reset_button.disable()
             self.cancel_button.enable()
         self.input.pin = pin
@@ -136,4 +139,5 @@ class PinDialog(ui.Layout):
         raise ui.Result(CANCELLED)
 
     def on_confirm(self):
-        raise ui.Result(self.input.pin)
+        if self.input.pin:
+            raise ui.Result(self.input.pin)
