@@ -186,9 +186,13 @@ class Label(ui.Control):
             tx = ax + aw // 2
             ty = ay + ah // 2 + 8
             if align is LABEL_LEFT:
-                ui.display.text_left(tx, ty, self.content, self.style, ui.FG, ui.BG)
+                ui.display.text_left(tx, ty, self.content, self.style, ui.FG, ui.BG, aw)
             elif align is LABEL_CENTER:
-                ui.display.text_center(tx, ty, self.content, self.style, ui.FG, ui.BG)
+                ui.display.text_center(
+                    tx, ty, self.content, self.style, ui.FG, ui.BG, aw
+                )
             elif align is LABEL_RIGHT:
-                ui.display.text_right(tx, ty, self.content, self.style, ui.FG, ui.BG)
+                ui.display.text_right(
+                    tx, ty, self.content, self.style, ui.FG, ui.BG, aw
+                )
             self.repaint = False
