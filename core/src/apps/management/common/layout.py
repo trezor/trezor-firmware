@@ -60,7 +60,7 @@ async def show_backup_success(ctx):
 
 
 async def confirm_backup(ctx):
-    text = Text("Backup wallet", ui.ICON_RESET, new_lines=False)
+    text = Text("Back up wallet", ui.ICON_RESET, new_lines=False)
     text.bold("New wallet created")
     text.br()
     text.bold("successfully!")
@@ -80,21 +80,21 @@ async def confirm_backup(ctx):
 
 
 async def confirm_backup_again(ctx):
-    text = Text("Backup wallet", ui.ICON_RESET, new_lines=False)
+    text = Text("Back up wallet", ui.ICON_RESET, new_lines=False)
     text.bold("Are you sure you want")
     text.br()
     text.bold("to skip the backup?")
     text.br()
     text.br_half()
-    text.normal("You can backup Trezor")
+    text.normal("You can back up your")
     text.br()
-    text.normal("anytime later.")
+    text.normal("Trezor once, at any time.")
     return await confirm(
         ctx,
         text,
         ButtonRequestType.ResetDevice,
         cancel="Skip",
-        confirm="Backup",
+        confirm="Back up",
         major_confirm=True,
     )
 
@@ -243,7 +243,7 @@ async def slip39_show_checklist_set_shares(ctx):
     checklist = Checklist("Backup checklist", ui.ICON_RESET)
     checklist.add("Set number of shares")
     checklist.add("Set threshold")
-    checklist.add(("Write down and check", "all shares"))
+    checklist.add(("Write down and check", "all recovery shares"))
     checklist.select(0)
     return await confirm(
         ctx, checklist, ButtonRequestType.ResetDevice, cancel=None, confirm="Continue"
@@ -253,8 +253,8 @@ async def slip39_show_checklist_set_shares(ctx):
 async def slip39_show_checklist_set_threshold(ctx, num_of_shares):
     checklist = Checklist("Backup checklist", ui.ICON_RESET)
     checklist.add("Set number of shares")
-    checklist.add("Set the threshold")
-    checklist.add(("Write down and check", "all backup shares"))
+    checklist.add("Set threshold")
+    checklist.add(("Write down and check", "all recovery shares"))
     checklist.select(1)
     return await confirm(
         ctx, checklist, ButtonRequestType.ResetDevice, cancel=None, confirm="Continue"
@@ -264,8 +264,8 @@ async def slip39_show_checklist_set_threshold(ctx, num_of_shares):
 async def slip39_show_checklist_show_shares(ctx, num_of_shares, threshold):
     checklist = Checklist("Backup checklist", ui.ICON_RESET)
     checklist.add("Set number of shares")
-    checklist.add("Set the threshold")
-    checklist.add(("Write down and check", "all backup shares"))
+    checklist.add("Set threshold")
+    checklist.add(("Write down and check", "all recovery shares"))
     checklist.select(2)
     return await confirm(
         ctx, checklist, ButtonRequestType.ResetDevice, cancel=None, confirm="Continue"
