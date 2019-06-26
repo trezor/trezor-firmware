@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 MICROPYTHON="${MICROPYTHON:-${PWD}/build/unix/micropython}"
 TREZOR_SRC=$(cd "${PWD}/src/"; pwd)
