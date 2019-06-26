@@ -76,6 +76,11 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
                 self.client.debug.press_yes()
                 ret = self.client.call_raw(proto.ButtonAck())
 
+        # Confirm success
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
         # Workflow succesfully ended
         assert ret == proto.Success(message="Device recovered")
 
@@ -160,6 +165,11 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
         # Enter PIN for second time
         assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
         self.client.debug.input("654")
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Confirm success
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
         # Workflow succesfully ended
