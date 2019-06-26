@@ -66,6 +66,11 @@ class TestMsgRecoverydeviceT2(TrezorTest):
         self.client.debug.input("654")
         ret = self.client.call_raw(proto.ButtonAck())
 
+        # Confirm success
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
         # Workflow succesfully ended
         assert ret == proto.Success(message="Device recovered")
 
@@ -106,6 +111,11 @@ class TestMsgRecoverydeviceT2(TrezorTest):
             time.sleep(1)
             self.client.debug.input(word)
         ret = self.client.transport.read()
+
+        # Confirm success
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
 
         # Workflow succesfully ended
         assert ret == proto.Success(message="Device recovered")
