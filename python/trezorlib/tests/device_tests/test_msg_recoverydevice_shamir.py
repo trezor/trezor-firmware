@@ -99,8 +99,7 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
         address = btc.get_address(self.client, "Bitcoin", [])
         assert address == "1G1MwH5sLVxKQ7yKYasfE5pxWaABLo7VK7"
 
-        # TODO: enable passphrase and test
-        # ask @jpochyla how to do this - see below
+        # TODO: test passphrase in load_device
         # # BIP32 Root Key for passphrase TREZOR
         # # provided by Andrew, address calculated using T1
         # # xprv9s21ZrQH143K2pMWi8jrTawHaj16uKk4CSbvo4Zt61tcrmuUDMx2o1Byzcr3saXNGNvHP8zZgXVdJHsXVdzYFPavxvCyaGyGr1WkAYG83ce
@@ -193,11 +192,15 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
         address = btc.get_address(self.client, "Bitcoin", [])
         assert address == "1BmqXKM8M1gWA4bgkbPeCtJruRnrY2qYKP"
 
-        # BIP32 Root Key for empty passphrase
+        # hackish way to clear passphrase
+        # TODO: move this to another test file and test using load_device on a new session
+        self.client.state = None
+        self.client.init_device()
+        self.client.set_passphrase("TREZOR")
+
+        # BIP32 Root Key for passphrase TREZOR
         # provided by Andrew, address calculated using T1
         # xprv9s21ZrQH143K2o6EXEHpVy8TCYoMmkBnDCCESLdR2ieKwmcNG48ck2XJQY4waS7RUQcXqR9N7HnQbUVEDMWYyREdF1idQqxFHuCfK7fqFni
-        # self.client.set_passphrase("TREZOR")
-        # TODO: @jpochyla this does not get send to Trezor :( How should I enter passphrase?
 
-        # address = btc.get_address(self.client, "Bitcoin", [])
-        # assert address == "19Fjs9AvT13Y2Nx8GtoVfADmFWnccsPinQ"
+        address = btc.get_address(self.client, "Bitcoin", [])
+        assert address == "19Fjs9AvT13Y2Nx8GtoVfADmFWnccsPinQ"
