@@ -246,11 +246,7 @@ async def slip39_show_checklist_set_shares(ctx):
     checklist.add(("Write down and check", "all shares"))
     checklist.select(0)
     return await confirm(
-        ctx,
-        checklist,
-        ButtonRequestType.ResetDevice,
-        cancel=None,
-        confirm="Continue",
+        ctx, checklist, ButtonRequestType.ResetDevice, cancel=None, confirm="Continue"
     )
 
 
@@ -261,11 +257,7 @@ async def slip39_show_checklist_set_threshold(ctx, num_of_shares):
     checklist.add(("Write down and check", "all backup shares"))
     checklist.select(1)
     return await confirm(
-        ctx,
-        checklist,
-        ButtonRequestType.ResetDevice,
-        cancel=None,
-        confirm="Continue",
+        ctx, checklist, ButtonRequestType.ResetDevice, cancel=None, confirm="Continue"
     )
 
 
@@ -276,11 +268,7 @@ async def slip39_show_checklist_show_shares(ctx, num_of_shares, threshold):
     checklist.add(("Write down and check", "all backup shares"))
     checklist.select(2)
     return await confirm(
-        ctx,
-        checklist,
-        ButtonRequestType.ResetDevice,
-        cancel=None,
-        confirm="Continue",
+        ctx, checklist, ButtonRequestType.ResetDevice, cancel=None, confirm="Continue"
     )
 
 
