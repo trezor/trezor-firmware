@@ -23,15 +23,13 @@ async def sign_tx(ctx, msg, keychain):
     while True:
         try:
             req = signer.send(res)
-        except signing.SigningError as e:
-            raise wire.Error(*e.args)
-        except multisig.MultisigError as e:
-            raise wire.Error(*e.args)
-        except addresses.AddressError as e:
-            raise wire.Error(*e.args)
-        except scripts.ScriptsError as e:
-            raise wire.Error(*e.args)
-        except segwit_bip143.Bip143Error as e:
+        except (
+            signing.SigningError,
+            multisig.MultisigError,
+            addresses.AddressError,
+            scripts.ScriptsError,
+            segwit_bip143.Bip143Error,
+        ) as e:
             raise wire.Error(*e.args)
         if isinstance(req, TxRequest):
             if req.request_type == TXFINISHED:
