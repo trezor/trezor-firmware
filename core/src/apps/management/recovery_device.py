@@ -158,8 +158,9 @@ async def show_keyboard_info(ctx):
         "Did you know? "
         "You can type the letters "
         "one by one or use it like "
-        "a T9 keyboard."
-    , "Great!")
+        "a T9 keyboard.",
+        "Great!",
+    )
     if __debug__:
         await ctx.wait(info, confirm_signal)
     else:
