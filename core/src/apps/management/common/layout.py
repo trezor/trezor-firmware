@@ -51,8 +51,8 @@ async def show_backup_success(ctx):
     text.normal(
         "Never make a digital",
         "copy of your recovery",
-        "seed and never upload",
-        "it online!",
+        "shares and never upload",
+        "them online!",
     )
     await require_confirm(
         ctx, text, ButtonRequestType.ResetDevice, confirm="Finish backup", cancel=None
@@ -193,8 +193,8 @@ async def bip39_show_backup_warning(ctx):
     text.normal(
         "Never make a digital",
         "copy of your recovery",
-        "seed and never upload",
-        "it online!",
+        "shares and never upload",
+        "them online!",
     )
     await require_confirm(
         ctx, text, ButtonRequestType.ResetDevice, confirm="I understand", cancel=None
