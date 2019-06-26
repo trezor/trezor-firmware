@@ -1,5 +1,4 @@
 from trezor import config, ui, wire
-from trezor.crypto import slip39
 from trezor.messages import ButtonRequestType
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.MessageType import ButtonAck
@@ -11,6 +10,7 @@ from trezor.ui.mnemonic_slip39 import Slip39Keyboard
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
 from trezor.utils import format_ordinal
+from trezor.crypto import slip39
 
 from apps.common import mnemonic, storage
 from apps.common.confirm import require_confirm
@@ -36,9 +36,9 @@ async def recovery_device(ctx, msg):
 
     if not storage.is_slip39_in_progress():
         if not msg.dry_run:
-            title = "Device recovery"
+            title = "Wallet recovery"
             text = Text(title, ui.ICON_RECOVERY)
-            text.normal("Do you really want to", "recover the device?", "")
+            text.normal("Do you really want to", "recover the wallet?", "")
         else:
             title = "Simulated recovery"
             text = Text(title, ui.ICON_RECOVERY)
@@ -116,6 +116,7 @@ async def recovery_device(ctx, msg):
     storage.load_settings(label=msg.label, use_passphrase=msg.passphrase_protection)
     mnemonic_module.store(secret=secret, needs_backup=False, no_backup=False)
 
+    await show_success(ctx)
     display_homescreen()
 
     return Success(message="Device recovered")
@@ -171,14 +172,23 @@ async def show_keyboard_info(ctx):
         await ctx.wait(info)
 
 
+async def show_success(ctx):
+    text = Text("Recovery success", ui.ICON_RECOVERY)
+    text.normal("You have successfully")
+    text.normal("recovered your wallet.")
+    await require_confirm(
+        ctx, text, ButtonRequestType.ProtectCall, cancel=None, confirm="Continue"
+    )
+
+
 async def show_remaining_slip39_mnemonics(ctx, title, remaining: int):
     text = Text(title, ui.ICON_RECOVERY)
     text.bold("Good job!")
+    text.normal("Enter %s more recovery " % remaining)
     if remaining > 1:
-        text.normal("%s more shares" % remaining)
+        text.normal("shares.")
     else:
-        text.normal("%s more share" % remaining)
-    text.normal("needed to enter.")
+        text.normal("share.")
     await require_confirm(
         ctx, text, ButtonRequestType.ProtectCall, cancel=None, confirm="Continue"
     )
