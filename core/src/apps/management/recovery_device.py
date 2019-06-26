@@ -60,10 +60,6 @@ async def recovery_device(ctx, msg):
         wordcount = storage.get_slip39_words_count()
         mnemonic_module = mnemonic.slip39
 
-    if mnemonic_module == mnemonic.slip39:
-        # show a note about the keyboard
-        await show_keyboard_info(ctx)
-
     if msg.dry_run:
         dry_run_mnemonics = []
         dry_run_mnemonic_count = None
@@ -159,13 +155,11 @@ async def show_keyboard_info(ctx):
     await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
 
     info = InfoConfirm(
-        "One more thing. "
+        "Did you know? "
         "You can type the letters "
-        "the old-fashioned way "
-        "one by one or use our "
-        "T9 keyboard and press "
-        "buttons only once."
-    )
+        "one by one or use it like "
+        "a T9 keyboard."
+    , "Great!")
     if __debug__:
         await ctx.wait(info, confirm_signal)
     else:
