@@ -1,0 +1,233 @@
+syntax = "proto2";
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageTron";
+
+/**
+ * Request: Ask device for Tron address corresponding to address_n path
+ * @start
+ * @next TronAddress
+ * @next Failure
+ */
+message TronGetAddress {
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+    optional bool show_display = 2; // Optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains Tron address derived from device private seed
+ * @end
+ */
+message TronAddress {
+    optional string address = 1; // Tron address (base58)
+}
+
+/**
+ * Request: Ask device to sign Tron transaction
+ * @start
+ * @next TronSignedTx
+ */
+message TronSignTx {
+    repeated uint32 address_n = 1;                  // BIP-32 path to derive the key from master node
+    // Common part of transaction
+    optional bytes ref_block_bytes = 2;             // Reference block number
+    optional bytes ref_block_hash = 3;              // Reference block hash
+    optional uint64 expiration = 4;                 // Transaction expiration
+    optional string data = 5;                       // Extra transaction info
+    optional TronContract contract = 6;             // Contract messages
+    optional uint64 timestamp = 7;                  // UTC timestamp
+
+    /***
+     * Tron Contracts Messages
+     *
+     */
+    message TronContract {
+
+        // Update account name
+        message TronAccountUpdateContract {
+            optional string account_name = 1;       // Account name is not unique
+        }
+        // Transfer TRX
+        message TronTransferContract {
+            optional string to_address = 1;         // To address - base 58
+            optional uint64 amount = 2;             // TRX amount in sun (10^-6)
+        }
+        // Transfer asset
+        message TronTransferAssetContract {
+            optional string to_address = 1;         // To address - base 58
+            optional uint64 amount = 2;             // Amount to transfer
+            optional string asset_id = 3;           // Asset id
+            optional string asset_name = 4;         // Asset name
+            optional uint32 asset_decimals = 5;      // Asset decimals
+            optional string asset_signature = 6;    // Asset signature
+        }
+        // Vote witness
+        message TronVoteWitnessContract {
+            message TronVote {
+                optional string vote_address = 1;    // Candidate Address - decoded base 58
+                optional uint64 vote_count = 2;     // Amount of votes
+            }
+            repeated TronVote votes = 1;            // votes
+        }
+        // Upgrade account to witness
+        message TronWitnessCreateContract {
+            optional string url = 1;                // Witness URL
+        }
+        // Update witness URL
+        message TronWitnessUpdateContract {
+            optional string update_url = 2;         // Witness URL
+        }
+        // Issue Asset
+        message TronAssetIssueContract {
+            message TronFrozenSupply {
+                optional uint64 frozen_amount = 1;  // Amount frozen
+                optional uint64 frozen_days = 2;    // Days from issue date
+            }
+            optional string name = 2;               // Asset name
+            optional string abbr = 3;               // Asset abbreviation
+            optional uint64 total_supply = 4;       // Total supply including frozen
+            repeated TronFrozenSupply frozen_supply = 5; // Frozen supply
+            optional uint32 trx_num = 6;            // Amount of TRX (exchange ratio)
+            optional uint32 num = 7;                // Amount of tokens (exchange ratio)
+            optional uint64 start_time = 8;         // Negotiation start date and time
+            optional uint64 end_time = 9;           // Negotiation end date and time
+            optional string description = 10;       // Asset description
+            optional string url = 11;               // Asset URL
+        }
+        // Participate in an asset
+        message TronParticipateAssetIssueContract {
+            optional string to_address = 1;         // Asset issuer address - base 58
+            optional uint64 amount = 2;             // TRX amount in sun
+            optional string asset_id = 3;           // Asset id
+            optional string asset_name = 4;         // Asset name
+            optional uint32 asset_decimals = 5;      // Asset decimals
+            optional string asset_signature = 6;    // Asset signature
+        }
+        // Tron freeze resouce Type
+        enum TronResourceCode {
+            BANDWIDTH = 0x00;
+            ENERGY = 0x01;
+        }
+        // Freeze TRX balance
+        message TronFreezeBalanceContract {
+            optional uint64 frozen_balance = 1;     // Amount to freeze
+            optional uint64 frozen_duration = 2;    // Freeze minimal duration in days
+            optional TronResourceCode type = 3;     // Resource type
+            optional string to_address = 4;         // Rental Freeze receiver address - base 58
+        }
+        // Unfreeze TRX Balance
+        message TronUnfreezeBalanceContract {
+            optional TronResourceCode type = 1;     // Resource type
+            optional string to_address = 2;         // Rental Freeze receiver address - base 58
+        }
+        // Unfreeze Asset Balance
+        message TronUnfreezeAssetContract {
+        }
+        // Withdraw witness balance
+        message TronWithdrawBalanceContract {
+        }
+        // Update Asset
+        message TronUpdateAssetContract {
+            optional string description = 1;        // New description
+            optional string url = 2;                // New URL
+        }
+        // Network proposal contract
+        message TronProposalCreateContract {
+            message TronProposalParameters {
+                optional uint64 key = 1;            // Parameter key
+                optional uint64 value = 2;          // Parameter value
+            }
+            repeated TronProposalParameters parameters = 1; // Parameter to be changed
+        }
+        // Approval contract
+        message TronProposalApproveContract {
+            optional uint64 proposal_id = 1;        // Proposal ID
+            optional bool is_add_approval = 2;      // Add or remove approval
+        }
+        // Delete proposal
+        message TronProposalDeleteContract {
+            optional uint64 proposal_id = 1;        // Proposal ID
+        }
+        // TronTriggerSmartContract
+        message TronTriggerSmartContract {
+            optional string contract_address = 1;   // Contract address - base58
+            optional uint64 call_value = 3;         // TRX amount if any
+            optional bytes data = 4;                // Contract data
+            optional uint64 call_token_value = 5;   // Asset ID if any
+            optional string asset_id = 6;           // Asset signature
+            optional string asset_name = 7;         // Asset signature
+            optional uint32 asset_decimals = 8;      // Asset signature
+            optional string asset_signature = 9;    // Asset signature
+        }
+        // TronExchangeCreateContract
+        message TronExchangeCreateContract {
+            optional string first_asset_id = 1;         // Asset id
+            optional string first_asset_name = 2;       // Asset name
+            optional uint32 first_asset_decimals = 3;    // Asset decimals
+            optional string first_asset_signature = 4;  // Asset signature
+            optional uint64 first_asset_balance = 5;    // First asset balance
+            optional string second_asset_id = 6;        // Asset id
+            optional string second_asset_name = 7;      // Asset name
+            optional uint32 second_asset_decimals = 8;   // Asset decimals
+            optional string second_asset_signature = 9; // Asset signature
+            optional uint64 second_asset_balance = 10;  // Second asset balance
+        }
+        //TODO:
+        // TronExchangeInjectContract
+        message TronExchangeInjectContract {
+            optional uint64 exchange_id = 2;
+            optional string token_id = 3;
+            optional uint64 quant = 4;
+        }
+        // TronExchangeWithdrawContract
+        message TronExchangeWithdrawContract {
+            optional uint64 exchange_id = 2;
+            optional bytes token_id = 3;
+            optional uint64 quant = 4;
+        }
+        // TronExchangeTransactionContract
+        message TronExchangeTransactionContract {
+            optional uint64 exchange_id = 2;
+            optional bytes token_id = 3;
+            optional uint64 quant = 4;
+            optional uint64 expected = 5;
+        }
+
+        optional TronTransferContract transfer_contract = 1;
+        optional TronTransferAssetContract transfer_asset_contract = 2;
+        optional TronVoteWitnessContract vote_witness_contract = 4;
+        optional TronWitnessCreateContract witness_create_contract = 5;
+        optional TronAssetIssueContract asset_issue_contract = 6;
+        optional TronWitnessUpdateContract witness_update_contract = 8;
+        optional TronParticipateAssetIssueContract participate_asset_issue_contract = 9;
+        optional TronAccountUpdateContract account_update_contract = 10;
+        optional TronFreezeBalanceContract freeze_balance_contract = 11;
+        optional TronUnfreezeBalanceContract unfreeze_balance_contract = 12;
+        optional TronWithdrawBalanceContract withdraw_balance_contract = 13;
+        optional TronUnfreezeAssetContract unfreeze_asset_contract = 14;
+        optional TronUpdateAssetContract update_asset_contract = 15;
+        optional TronProposalCreateContract proposal_create_contract = 16;
+        optional TronProposalApproveContract proposal_approve_contract = 17;
+        optional TronProposalDeleteContract proposal_delete_contract = 18;
+        //optional TronCreateSmartContract create_smart_contract = 30;
+        optional TronTriggerSmartContract trigger_smart_contract = 31;
+        //optional TronUpdateSettingContract update_setting_contract = 33;
+        optional TronExchangeCreateContract exchange_create_contract = 41;
+        optional TronExchangeInjectContract exchange_inject_contract = 42;
+        optional TronExchangeWithdrawContract exchange_withdraw_contract = 43;
+        optional TronExchangeTransactionContract exchange_transaction_contract = 44;
+        //optional TronUpdateEnergyLimitContract update_energy_limit_contract = 45;
+        //optional TronAccountPermissionUpdateContract account_permission_update_contract = 46;
+        //optional TronCancelDeferredTransactionContract cancel_deferred_transaction_contract = 47;
+    }
+}
+
+/**
+ * Response: Contains Tron transaction signature
+ * @end
+ */
+message TronSignedTx {
+    optional bytes signature = 1; // Transaction signature
+    optional bytes serialized_tx = 2; // Serialized transaction
+}
