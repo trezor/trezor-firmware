@@ -365,11 +365,7 @@ def decode_mnemonic(mnemonic):
         raise MnemonicError("Invalid mnemonic length.")
 
     if not rs1024_verify_checksum(mnemonic_data):
-        raise MnemonicError(
-            'Invalid mnemonic checksum for "{} ...".'.format(
-                " ".join(mnemonic.split()[: _ID_EXP_LENGTH_WORDS + 2])
-            )
-        )
+        raise MnemonicError("Invalid mnemonic checksum.")
 
     id_exp_int = _int_from_indices(mnemonic_data[:_ID_EXP_LENGTH_WORDS])
     identifier = id_exp_int >> _ITERATION_EXP_LENGTH_BITS
@@ -384,19 +380,13 @@ def decode_mnemonic(mnemonic):
 
     if group_count < group_threshold:
         raise MnemonicError(
-            'Invalid mnemonic "{} ...". Group threshold cannot be greater than group count.'.format(
-                " ".join(mnemonic.split()[: _ID_EXP_LENGTH_WORDS + 2])
-            )
+            "Invalid mnemonic. Group threshold cannot be greater than group count."
         )
 
     value_byte_count = bits_to_bytes(_RADIX_BITS * len(value_data) - padding_len)
     value_int = _int_from_indices(value_data)
     if value_data[0] >= 1 << (_RADIX_BITS - padding_len):
-        raise MnemonicError(
-            'Invalid mnemonic padding for "{} ...".'.format(
-                " ".join(mnemonic.split()[: _ID_EXP_LENGTH_WORDS + 2])
-            )
-        )
+        raise MnemonicError("Invalid mnemonic padding")
     value = value_int.to_bytes(value_byte_count, "big")
 
     return (
@@ -612,8 +602,8 @@ def combine_mnemonics(mnemonics):
                 group_count,
             )
             raise MnemonicError(
-                'Wrong number of mnemonics. Expected {} mnemonics starting with "{} ...", but {} were provided.'.format(
-                    group[0], mnemonic_from_indices(prefix), len(group[1])
+                "Wrong number of mnemonics. Expected {} mnemonics, but {} were provided.".format(
+                    group[0], len(group[1])
                 )
             )
 

@@ -77,7 +77,7 @@ async def recovery_device(ctx, msg):
             try:
                 secret = mnemonic_module.process_all(mnemonics)
             except slip39.MnemonicError as e:
-                raise wire.ProcessError("Mnemonic is not valid: " + str(e))
+                raise wire.ProcessError("Mnemonic is not valid")
         # show a number of remaining mnemonics for SLIP39
         if secret is None and mnemonic_module == mnemonic.slip39:
             await show_remaining_slip39_mnemonics(ctx, title, remaining)
