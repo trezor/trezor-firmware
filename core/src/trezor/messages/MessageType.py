@@ -180,3 +180,11 @@ if not utils.BITCOIN_ONLY:
     BinanceOrderMsg = 707
     BinanceCancelMsg = 708
     BinanceSignedTx = 709
+DashSignProRegTx = 750
+DashSignProUpServTx = 751
+DashSignProUpRegTx = 752
+DashSignProUpRevTx = 753
+DashSignSubTxRegister = 754
+DashSignSubTxTopup = 755
+DashSignSubTxResetKey = 756
+DashSignSubTxCloseAccount = 757

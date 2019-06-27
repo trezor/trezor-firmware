@@ -38,6 +38,14 @@ from .CosiCommit import CosiCommit
 from .CosiCommitment import CosiCommitment
 from .CosiSign import CosiSign
 from .CosiSignature import CosiSignature
+from .DashSignProRegTx import DashSignProRegTx
+from .DashSignProUpRegTx import DashSignProUpRegTx
+from .DashSignProUpRevTx import DashSignProUpRevTx
+from .DashSignProUpServTx import DashSignProUpServTx
+from .DashSignSubTxCloseAccount import DashSignSubTxCloseAccount
+from .DashSignSubTxRegister import DashSignSubTxRegister
+from .DashSignSubTxResetKey import DashSignSubTxResetKey
+from .DashSignSubTxTopup import DashSignSubTxTopup
 from .DebugLinkDecision import DebugLinkDecision
 from .DebugLinkFlashErase import DebugLinkFlashErase
 from .DebugLinkGetState import DebugLinkGetState
