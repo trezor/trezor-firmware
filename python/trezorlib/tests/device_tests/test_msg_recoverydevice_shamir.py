@@ -53,11 +53,6 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
         self.client.debug.input(str(word_count))
         ret = self.client.call_raw(proto.ButtonAck())
 
-        # Confirm T9 keyboard
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
-
         # Enter shares
         for mnemonic in mnemonics:
             # Enter mnemonic words
@@ -131,11 +126,6 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
             code=proto.ButtonRequestType.MnemonicWordCount
         )
         self.client.debug.input(str(word_count))
-        ret = self.client.call_raw(proto.ButtonAck())
-
-        # Confirm T9 keyboard
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
         # Enter shares
