@@ -60,9 +60,8 @@ async def recovery_device(ctx, msg):
         wordcount = storage.get_slip39_words_count()
         mnemonic_module = mnemonic.slip39
 
-    if msg.dry_run:
-        dry_run_mnemonics = []
-        dry_run_mnemonic_count = None
+    mnemonic_threshold = None
+    mnemonics = []
 
     secret = None
     while secret is None:
@@ -70,21 +69,15 @@ async def recovery_device(ctx, msg):
         words = await request_mnemonic(
             ctx, wordcount, mnemonic_module == mnemonic.slip39
         )
-        try:
-            if msg.dry_run:
-                if dry_run_mnemonic_count is None:
-                    dry_run_mnemonic_count = mnemonic_module.get_mnemonic_count(words)
-                dry_run_mnemonics.append(words)
-            else:
-                secret = mnemonic_module.process_single(words)
-        except slip39.MnemonicError as e:
-            raise wire.ProcessError("Mnemonic is not valid: " + str(e))
-        if msg.dry_run:
-            remaining = dry_run_mnemonic_count - len(dry_run_mnemonics)
-            if remaining == 0:
-                secret = mnemonic_module.process_all(dry_run_mnemonics)
-        else:
-            remaining = storage.get_slip39_remaining()
+        if mnemonic_threshold is None:
+            mnemonic_threshold = mnemonic_module.get_mnemonic_threshold(words)
+        mnemonics.append(words)
+        remaining = mnemonic_threshold - len(mnemonics)
+        if remaining == 0:
+            try:
+                secret = mnemonic_module.process_all(mnemonics)
+            except slip39.MnemonicError as e:
+                raise wire.ProcessError("Mnemonic is not valid: " + str(e))
         # show a number of remaining mnemonics for SLIP39
         if secret is None and mnemonic_module == mnemonic.slip39:
             await show_remaining_slip39_mnemonics(ctx, title, remaining)

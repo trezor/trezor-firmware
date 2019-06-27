@@ -66,7 +66,9 @@ def process_all(mnemonics: list) -> bytes:
     Receives all mnemonics and processes it into pre-master secret which is usually then
     stored in the storage.
     """
-    _, _, secret = slip39.combine_mnemonics(mnemonics)
+    identifier, iteration_exponent, secret = slip39.combine_mnemonics(mnemonics)
+    storage.set_slip39_iteration_exponent(iteration_exponent)
+    storage.set_slip39_identifier(identifier)
     return secret
 
 
@@ -86,6 +88,6 @@ def get_seed(encrypted_master_secret: bytes, passphrase: str):
     return master_secret
 
 
-def get_mnemonic_count(mnemonic: str) -> int:
+def get_mnemonic_threshold(mnemonic: str) -> int:
     _, _, _, _, _, _, threshold, _ = slip39.decode_mnemonic(mnemonic)
     return threshold
