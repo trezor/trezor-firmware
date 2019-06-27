@@ -43,7 +43,7 @@ async def require_confirm_witness_contract(ctx, url):
 
 async def require_confirm_asset_issue(
     ctx, token_name, token_abbr, supply, trx_num, num
-    ):
+):
     text = Text("Confirm transaction", ui.ICON_SEND, icon_color=ui.GREEN)
     text.bold("Create Token")
     text.normal(token_name)
@@ -156,7 +156,9 @@ async def require_confirm_create_smart_contract(ctx, create_smart_contract):
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def require_confirm_trigger_smart_contract(ctx, contract_address, trigger_smart_contract):
+async def require_confirm_trigger_smart_contract(
+    ctx, contract_address, trigger_smart_contract
+):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Trigger Smart Contract")
     text.mono("Contract Address:")
@@ -173,7 +175,9 @@ async def require_confirm_trigger_smart_contract(ctx, contract_address, trigger_
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def require_confirm_update_setting_contract(ctx, contract_address, consume_user_resource_percent):
+async def require_confirm_update_setting_contract(
+    ctx, contract_address, consume_user_resource_percent
+):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Update Smart Contract Resource Consumption")
     text.mono("Contract Address:")
@@ -184,11 +188,11 @@ async def require_confirm_update_setting_contract(ctx, contract_address, consume
 
 
 async def require_confirm_exchange_create_contract(
-        ctx,
-        first_token_id: int,
-        first_token_balance: int,
-        second_token_id: int,
-        second_token_balance: int
+    ctx,
+    first_token_id: int,
+    first_token_balance: int,
+    second_token_id: int,
+    second_token_balance: int,
 ):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Create Exchange")
@@ -203,7 +207,9 @@ async def require_confirm_exchange_create_contract(
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def require_confirm_exchange_inject_contract(ctx, exchange_id: int, token_id: int, quantity: int):
+async def require_confirm_exchange_inject_contract(
+    ctx, exchange_id: int, token_id: int, quantity: int
+):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Inject Exchange")
     text.mono("Exchange ID:")
@@ -215,7 +221,9 @@ async def require_confirm_exchange_inject_contract(ctx, exchange_id: int, token_
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def require_confirm_exchange_withdraw_contract(ctx, exchange_id: int, token_id: int, quantity: int):
+async def require_confirm_exchange_withdraw_contract(
+    ctx, exchange_id: int, token_id: int, quantity: int
+):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Withdraw Exchange")
     text.mono("Exchange ID:")
@@ -227,7 +235,9 @@ async def require_confirm_exchange_withdraw_contract(ctx, exchange_id: int, toke
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def require_confirm_exchange_transaction_contract(ctx, exchange_id: int, token_id: int, quantity: int, expected: int):
+async def require_confirm_exchange_transaction_contract(
+    ctx, exchange_id: int, token_id: int, quantity: int, expected: int
+):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Exchange Transaction")
     text.mono("Exchange ID:")
@@ -241,7 +251,9 @@ async def require_confirm_exchange_transaction_contract(ctx, exchange_id: int, t
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def require_confirm_update_energy_limit_contract(ctx, contract_address, energy_limit):
+async def require_confirm_update_energy_limit_contract(
+    ctx, contract_address, energy_limit
+):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Update Energy Limit")
     text.mono("Contract Address:")

@@ -1,18 +1,15 @@
 from trezor.crypto.curve import secp256k1
 from trezor.messages.TronAddress import TronAddress
 
+from apps.common import paths
+from apps.common.layout import address_n_to_str, show_address, show_qr
 from apps.tron import CURVE
 from apps.tron.address import get_address_from_public_key, validate_full_path
-
-from apps.common import paths, seed
-from apps.common.layout import address_n_to_str, show_address, show_qr
 
 
 async def get_address(ctx, msg, keychain):
     address_n = msg.address_n or ()
-    await paths.validate_path(
-        ctx, validate_full_path, keychain, address_n, CURVE
-    )
+    await paths.validate_path(ctx, validate_full_path, keychain, address_n, CURVE)
 
     node = keychain.derive(address_n)
     seckey = node.private_key()

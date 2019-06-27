@@ -58,7 +58,9 @@ def pack_contract(contract, owner_address):
         add_field(cmessage, 1, TYPE_STRING)
         write_bytes_with_length(cmessage, base58.decode_check(owner_address))
         add_field(cmessage, 2, TYPE_STRING)
-        write_bytes_with_length(cmessage, base58.decode_check(contract.transfer_contract.to_address))
+        write_bytes_with_length(
+            cmessage, base58.decode_check(contract.transfer_contract.to_address)
+        )
         add_field(cmessage, 3, TYPE_VARINT)
         write_varint(cmessage, contract.transfer_contract.amount)
 
@@ -89,7 +91,10 @@ def pack_contract(contract, owner_address):
             vote = bytearray()
             add_field(vote, 1, TYPE_STRING)
             write_bytes_with_length(
-                vote, base58.decode_check(contract.vote_witness_contract.votes[i].vote_address)
+                vote,
+                base58.decode_check(
+                    contract.vote_witness_contract.votes[i].vote_address
+                ),
             )
             add_field(vote, 2, TYPE_VARINT)
             write_varint(vote, contract.vote_witness_contract.votes[i].vote_count)
@@ -163,7 +168,8 @@ def pack_contract(contract, owner_address):
         write_bytes_with_length(cmessage, base58.decode_check(owner_address))
         add_field(cmessage, 2, TYPE_STRING)
         write_bytes_with_length(
-            cmessage, base58.decode_check(contract.participate_asset_issue_contract.to_address)
+            cmessage,
+            base58.decode_check(contract.participate_asset_issue_contract.to_address),
         )
         add_field(cmessage, 3, TYPE_STRING)
         write_bytes_with_length(

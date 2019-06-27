@@ -1,17 +1,15 @@
+from ubinascii import unhexlify
+
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
 from trezor.messages.TronSignedTx import TronSignedTx
 from trezor.messages.TronSignTx import TronSignTx
-from trezor.wire import ProcessError
 
-from apps.tron import CURVE, layout
-from apps.tron.address import address_to_bytes, get_address_from_public_key, validate_full_path
-
+from apps.common import paths
+from apps.tron import CURVE, TRON_PUBLICKEY, layout
+from apps.tron.address import get_address_from_public_key, validate_full_path
 from apps.tron.serialize import serialize
-
-from apps.common import paths, seed
-from ubinascii import unhexlify
 
 
 async def sign_tx(ctx, msg: TronSignTx, keychain):
@@ -19,12 +17,10 @@ async def sign_tx(ctx, msg: TronSignTx, keychain):
 
     validate(msg)
     address_n = msg.address_n or ()
-    await paths.validate_path(
-        ctx, validate_full_path, keychain, address_n, CURVE
-    )
+    await paths.validate_path(ctx, validate_full_path, keychain, address_n, CURVE)
 
     node = keychain.derive(address_n)
-    
+
     seckey = node.private_key()
     public_key = secp256k1.publickey(seckey, False)
     address = get_address_from_public_key(public_key[:65])
@@ -42,6 +38,7 @@ async def sign_tx(ctx, msg: TronSignTx, keychain):
     signature = signature[1:65] + bytes([~signature[0] & 0x01])
     return TronSignedTx(signature=signature, serialized_tx=raw_data)
 
+
 async def _require_confirm_by_type(ctx, transaction, owner_address):
     """Confirm extra data if exist"""
     if transaction.data:
@@ -56,11 +53,13 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
             contract.transfer_contract.amount,
         )
     if contract.transfer_asset_contract:
-        if not validateToken(contract.transfer_asset_contract.asset_id,
+        if not validateToken(
+            contract.transfer_asset_contract.asset_id,
             contract.transfer_asset_contract.asset_name,
             contract.transfer_asset_contract.asset_decimals,
-            contract.transfer_asset_contract.asset_signature):
-            raise ProcessError(
+            contract.transfer_asset_contract.asset_signature,
+        ):
+            raise wire.ProcessError(
                 "Some of the required fields are missing (contract)"
             )
         return await layout.require_confirm_tx_asset(
@@ -150,28 +149,26 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
 
     if contract.proposal_delete_contract:
         return await layout.require_confirm_proposal_delete_contract(
-            ctx, 
-            contract.proposal_delete_contract.proposal_id
+            ctx, contract.proposal_delete_contract.proposal_id
         )
-    
+
     if contract.create_smart_contract:
         return await layout.require_confirm_create_smart_contract(
-            ctx,
-            contract.create_smart_contract
+            ctx, contract.create_smart_contract
         )
 
     if contract.trigger_smart_contract:
         return await layout.require_confirm_trigger_smart_contract(
             ctx,
             contract.trigger_smart_contract.contract_address,
-            contract.trigger_smart_contract
+            contract.trigger_smart_contract,
         )
 
     if contract.update_setting_contract:
         return await layout.require_confirm_update_setting_contract(
             ctx,
             contract.update_setting_contract.contract_address,
-            contract.update_setting_contract.consume_user_resource_percent
+            contract.update_setting_contract.consume_user_resource_percent,
         )
 
     if contract.exchange_create_contract:
@@ -216,29 +213,21 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
         )
 
     if contract.account_permission_update_contract:
-        return await layout.require_confirm_account_permission_update_contract(
-            ctx,
-        )
+        return await layout.require_confirm_account_permission_update_contract(ctx)
 
     if contract.cancel_deferred_transaction_contract:
-        return await layout.require_confirm_cancel_deferred_transaction_contract(
-            ctx,
-        )
+        return await layout.require_confirm_cancel_deferred_transaction_contract(ctx)
 
     raise wire.DataError("Invalid transaction type")
 
 
-
 def validateToken(id, name, decimals, signature):
-    MESSAGE = bytes(id+name,'utf-8') + bytes([decimals])
+    MESSAGE = bytes(id + name, "utf-8") + bytes([decimals])
     return secp256k1.verify(
-                unhexlify("0492491c3f954d0a2a71e7f475e30ffbeb967aafde678f44a3a3264d813f498d954b3e000f4a71cbcdf4c97c609d3d207b75132aee66c0842dd8d0f6dd5054aa6c"),
-                unhexlify(signature),
-                sha256(MESSAGE).digest()
-             )
+        unhexlify(TRON_PUBLICKEY), unhexlify(signature), sha256(MESSAGE).digest()
+    )
+
 
 def validate(msg: TronSignTx):
     if None in (msg.contract,):
-        raise ProcessError(
-            "Some of the required fields are missing (contract)"
-        )
+        raise wire.ProcessError("Some of the required fields are missing (contract)")
