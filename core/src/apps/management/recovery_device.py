@@ -70,7 +70,10 @@ async def recovery_device(ctx, msg):
             ctx, wordcount, mnemonic_module == mnemonic.slip39
         )
         if mnemonic_threshold is None:
-            mnemonic_threshold = mnemonic_module.get_mnemonic_threshold(words)
+            try:
+                mnemonic_threshold = mnemonic_module.get_mnemonic_threshold(words)
+            except slip39.MnemonicError:
+                raise wire.ProcessError("Mnemonic is not valid")
         mnemonics.append(words)
         remaining = mnemonic_threshold - len(mnemonics)
         if remaining == 0:
