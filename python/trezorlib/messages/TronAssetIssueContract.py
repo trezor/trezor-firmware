@@ -20,6 +20,7 @@ class TronAssetIssueContract(p.MessageType):
         total_supply: int = None,
         frozen_supply: List[TronFrozenSupply] = None,
         trx_num: int = None,
+        precision: int = None,
         num: int = None,
         start_time: int = None,
         end_time: int = None,
@@ -31,6 +32,7 @@ class TronAssetIssueContract(p.MessageType):
         self.total_supply = total_supply
         self.frozen_supply = frozen_supply if frozen_supply is not None else []
         self.trx_num = trx_num
+        self.precision = precision
         self.num = num
         self.start_time = start_time
         self.end_time = end_time
@@ -45,9 +47,10 @@ class TronAssetIssueContract(p.MessageType):
             4: ('total_supply', p.UVarintType, 0),
             5: ('frozen_supply', TronFrozenSupply, p.FLAG_REPEATED),
             6: ('trx_num', p.UVarintType, 0),
-            7: ('num', p.UVarintType, 0),
-            8: ('start_time', p.UVarintType, 0),
-            9: ('end_time', p.UVarintType, 0),
-            10: ('description', p.UnicodeType, 0),
-            11: ('url', p.UnicodeType, 0),
+            7: ('precision', p.UVarintType, 0),
+            8: ('num', p.UVarintType, 0),
+            9: ('start_time', p.UVarintType, 0),
+            10: ('end_time', p.UVarintType, 0),
+            11: ('description', p.UnicodeType, 0),
+            12: ('url', p.UnicodeType, 0),
         }

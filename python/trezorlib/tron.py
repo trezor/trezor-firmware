@@ -45,7 +45,7 @@ def create_sign_tx_msg(transaction) -> messages.TronSignTx:
         )
     ):
         raise ValueError(
-            "Some of the required fields missing (ref_block_bytes, ref_block_hash, expiration, timestamp, contract"
+            "Some of the required fields missing (ref_block_bytes, ref_block_hash, expiration, timestamp, contract)"
         )
 
     converted = dict_from_camelcase(transaction)

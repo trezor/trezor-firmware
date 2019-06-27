@@ -24,6 +24,7 @@ from .conftest import TREZOR_VERSION
 
 
 @pytest.mark.tron
+@pytest.mark.skip_t2
 class TestMsgTronGetAddress(TrezorTest):
     def test_tron_getaddressAllAllAll(self):
         self.setup_mnemonic_allallall()

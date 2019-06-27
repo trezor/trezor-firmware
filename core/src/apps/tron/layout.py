@@ -1,7 +1,7 @@
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
-from trezor.utils import chunks
+from trezor.utils import chunks, format_amount
 
 from apps.common.confirm import require_confirm
 
@@ -19,9 +19,9 @@ async def require_confirm_tx(ctx, dest, value):
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def require_confirm_tx_asset(ctx, token, dest, value):
+async def require_confirm_tx_asset(ctx, token, dest, value, decimals=0):
     text = Text("Confirm sending", ui.ICON_SEND, icon_color=ui.GREEN)
-    text.bold(format_amount_token(value) + token)
+    text.bold(format_amount(value, decimals) + token)
     text.mono(*split_address("To: " + dest))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
@@ -42,13 +42,15 @@ async def require_confirm_witness_contract(ctx, url):
 
 
 async def require_confirm_asset_issue(
-    ctx, token_name, token_abbr, supply, trx_num, num
+    ctx, token_name, token_abbr, supply, trx_num, num, precision
 ):
     text = Text("Confirm transaction", ui.ICON_SEND, icon_color=ui.GREEN)
     text.bold("Create Token")
     text.normal(token_name)
-    text.normal("{} {}".format(supply, token_abbr))
-    text.mono("Ratio {}:{}".format(trx_num, num))
+    text.normal(format_amount(supply, precision) + token_abbr)
+    text.mono(
+        "Ratio {}:{}".format(format_amount(trx_num, 6), format_amount(num, precision))
+    )
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
@@ -60,12 +62,12 @@ async def require_confirm_witness_update(ctx, owner_address, update_url):
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def require_confirm_participate_asset(ctx, token, value):
+async def require_confirm_participate_asset(ctx, token, value, decimals):
     text = Text("Confirm transaction", ui.ICON_SEND, icon_color=ui.GREEN)
     text.bold("Token Participate:")
     text.mono(token)
     text.bold("Amount:")
-    text.mono(format_amount_token(value))
+    text.mono(format_amount(value, decimals))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
@@ -77,26 +79,49 @@ async def require_confirm_account_update(ctx, account_name):
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def require_confirm_freeze_balance(ctx, value, days):
+async def require_confirm_freeze_balance(ctx, value, days, resource, receiver):
     text = Text("Confirm transaction", ui.ICON_SEND, icon_color=ui.GREEN)
     text.bold("Freeze Balance")
     text.mono("Amount:")
     text.bold(format_amount_trx(value))
     text.mono("Days: {}".format(days))
-    return await require_confirm(ctx, text, ButtonRequestType.SignTx)
+    if resource == 1:
+        text.mono("to gain energy")
+    else:
+        text.mono("to gain banwidth")
+
+    try:
+        await require_confirm(ctx, text, ButtonRequestType.SignTx)
+    except AttributeError:
+        return False
+    if receiver is not None:
+        text = Text("Confirm transaction", ui.ICON_SEND, icon_color=ui.GREEN)
+        text.bold("Freeze Balance")
+        text.mono("Assign to: ")
+        text.mono(*split_text(receiver))
+        return await require_confirm(ctx, text, ButtonRequestType.SignTx)
+    else:
+        return True
 
 
-async def require_confirm_unfreeze_balance(ctx):
+async def require_confirm_unfreeze_balance(ctx, resource, receiver):
     text = Text("Confirm transaction", ui.ICON_SEND, icon_color=ui.GREEN)
     text.bold("Unfreeze Balance")
-    text.mono(*split_text("Total frozen balance will be unfreeze."))
+    text.mono(
+        *split_text(
+            "{}{} will be unfreeze.".format(
+                "Energy" if resource == 1 else "Bandwidth",
+                "" if receiver is None else " assigned to" + receiver,
+            )
+        )
+    )
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_withdraw_balance(ctx):
     text = Text("Confirm transaction", ui.ICON_SEND, icon_color=ui.GREEN)
     text.bold("Withdraw Balance")
-    text.mono(*split_text("Total allowance withdraw to your account."))
+    text.mono(*split_text("Withdraw total allowance  to your account."))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
@@ -144,6 +169,13 @@ async def require_confirm_proposal_delete_contract(ctx, proposal_id):
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
+async def require_confirm_set_account_id_contract(ctx, account_id):
+    text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text.bold("Set Accoount ID")
+    text.mono("ID: {}".format(account_id))
+    return await require_confirm(ctx, text, ButtonRequestType.SignTx)
+
+
 async def require_confirm_create_smart_contract(ctx, create_smart_contract):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Create Smart Contract")
@@ -152,7 +184,7 @@ async def require_confirm_create_smart_contract(ctx, create_smart_contract):
         text.bold("{}".format(create_smart_contract.token_id))
     if create_smart_contract.call_token_value:
         text.mono("Token Amount:")
-        text.bold(format_amount_token(create_smart_contract.call_token_value))
+        text.bold(format_amount(create_smart_contract.call_token_value))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
@@ -171,7 +203,7 @@ async def require_confirm_trigger_smart_contract(
         text.bold("{}".format(trigger_smart_contract.token_id))
     if trigger_smart_contract.call_token_value:
         text.mono("Token Amount:")
-        text.bold(format_amount_token(trigger_smart_contract.call_token_value))
+        text.bold(format_amount(trigger_smart_contract.call_token_value))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
@@ -189,65 +221,59 @@ async def require_confirm_update_setting_contract(
 
 async def require_confirm_exchange_create_contract(
     ctx,
-    first_token_id: int,
+    first_token_name: int,
     first_token_balance: int,
-    second_token_id: int,
+    second_token_name: int,
     second_token_balance: int,
 ):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Create Exchange")
-    text.mono("First Token ID:")
-    text.bold(first_token_id)
-    text.mono("First Token Amount:")
-    text.bold(first_token_balance)
-    text.mono("Second Token ID:")
-    text.bold(second_token_id)
-    text.mono("Second Token Amount:")
-    text.bold(second_token_balance)
+    text.mono("First Token:")
+    text.bold(format_amount(first_token_balance) + first_token_name)
+    text.mono("Second Token :")
+    text.bold(format_amount(second_token_balance) + second_token_name)
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_exchange_inject_contract(
-    ctx, exchange_id: int, token_id: int, quantity: int
+    ctx, exchange_id: int, token_name: int, quantity: int
 ):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Inject Exchange")
     text.mono("Exchange ID:")
     text.bold(exchange_id)
-    text.mono("Token ID:")
-    text.bold(token_id)
+    text.mono("Token:")
+    text.bold(token_name)
     text.mono("Quantity")
     text.bold(quantity)
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_exchange_withdraw_contract(
-    ctx, exchange_id: int, token_id: int, quantity: int
+    ctx, exchange_id: int, token_name: int, quantity: int
 ):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Withdraw Exchange")
     text.mono("Exchange ID:")
     text.bold(exchange_id)
-    text.mono("Token ID:")
-    text.bold(token_id)
+    text.mono("Token:")
+    text.bold(token_name)
     text.mono("Quantity")
     text.bold(quantity)
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_exchange_transaction_contract(
-    ctx, exchange_id: int, token_id: int, quantity: int, expected: int
+    ctx, exchange_id: int, token_1, token_2, quantity: int, expected: int
 ):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Exchange Transaction")
     text.mono("Exchange ID:")
     text.bold(exchange_id)
-    text.mono("Token ID:")
-    text.bold(token_id)
-    text.mono("Quantity")
-    text.bold(quantity)
+    text.mono("Token:")
+    text.bold(format_amount(quantity) + token_1)
     text.mono("Expected")
-    text.bold(expected)
+    text.bold(format_amount(expected) + token_2)
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
@@ -278,11 +304,7 @@ async def require_confirm_cancel_deferred_transaction_contract(ctx):
 
 
 def format_amount_trx(value):
-    return "%s TRX" % (int(value) / 1000000)
-
-
-def format_amount_token(value):
-    return "%s " % int(value)
+    return "%s TRX" % format_amount(value, 6)
 
 
 def split_address(address):

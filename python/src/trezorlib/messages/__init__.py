@@ -267,6 +267,7 @@ from .TronProposalApproveContract import TronProposalApproveContract
 from .TronProposalCreateContract import TronProposalCreateContract
 from .TronProposalDeleteContract import TronProposalDeleteContract
 from .TronProposalParameters import TronProposalParameters
+from .TronSetAccountIdContract import TronSetAccountIdContract
 from .TronSignTx import TronSignTx
 from .TronSignedTx import TronSignedTx
 from .TronTransferAssetContract import TronTransferAssetContract

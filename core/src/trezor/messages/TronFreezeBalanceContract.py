@@ -9,19 +9,19 @@ class TronFreezeBalanceContract(p.MessageType):
         self,
         frozen_balance: int = None,
         frozen_duration: int = None,
-        type: int = None,
-        to_address: str = None,
+        resource: int = None,
+        receiver_address: str = None,
     ) -> None:
         self.frozen_balance = frozen_balance
         self.frozen_duration = frozen_duration
-        self.type = type
-        self.to_address = to_address
+        self.resource = resource
+        self.receiver_address = receiver_address
 
     @classmethod
     def get_fields(cls):
         return {
             1: ('frozen_balance', p.UVarintType, 0),
             2: ('frozen_duration', p.UVarintType, 0),
-            3: ('type', p.UVarintType, 0),
-            4: ('to_address', p.UnicodeType, 0),
+            3: ('resource', p.UVarintType, 0),
+            4: ('receiver_address', p.UnicodeType, 0),
         }

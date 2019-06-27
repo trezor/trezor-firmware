@@ -71,7 +71,7 @@ class TestMsgTronSigntx(TrezorTest):
                     asset_id="1002000",
                     asset_name="BitTorrent",
                     asset_decimals=6,
-                    asset_signature="2e2502f36b00e57be785fc79ec4043abcdd4fdd1b58d737ce123599dffad2cb61702c307f009d014a553503b499591558b3634ceee4c054c61cedd8aca94c02b",
+                    asset_signature="304402202e2502f36b00e57be785fc79ec4043abcdd4fdd1b58d737ce123599dffad2cb602201702c307f009d014a553503b499591558b3634ceee4c054c61cedd8aca94c02b",
                     to_address="TLrpNTBuCpGMrB9TyVwgEhNVRhtWEQPHh4",
                     amount=1,
                 )
@@ -96,19 +96,19 @@ class TestMsgTronSigntx(TrezorTest):
                 vote_witness_contract=proto.TronVoteWitnessContract(
                     votes=[
                         proto.TronVote(
-                            "TKSXDA8HfE9E1y39RczVQ1ZascUEtaSToF", vote_count=1000000
+                            vote_address="TKSXDA8HfE9E1y39RczVQ1ZascUEtaSToF", vote_count=1000000
                         ),
                         proto.TronVote(
-                            "TTcYhypP8m4phDhN6oRexz2174zAerjEWP", vote_count=100000
+                            vote_address="TTcYhypP8m4phDhN6oRexz2174zAerjEWP", vote_count=100000
                         ),
                         proto.TronVote(
-                            "TE7hnUtWRRBz3SkFrX8JESWUmEvxxAhoPt", vote_count=100000
+                            vote_address="TE7hnUtWRRBz3SkFrX8JESWUmEvxxAhoPt", vote_count=100000
                         ),
                         proto.TronVote(
-                            "TVMP5r12ymtNerq5KB4E8zAgLDmg2FqsEG", vote_count=10000
+                            vote_address="TVMP5r12ymtNerq5KB4E8zAgLDmg2FqsEG", vote_count=10000
                         ),
                         proto.TronVote(
-                            "TRni6NxF8CQVcywcDm67sEpCYCo7BUGXCD", vote_count=1000
+                            vote_address="TRni6NxF8CQVcywcDm67sEpCYCo7BUGXCD", vote_count=1000
                         ),
                     ]
                 )
@@ -160,8 +160,9 @@ class TestMsgTronSigntx(TrezorTest):
                         proto.TronFrozenSupply(frozen_amount=10000, frozen_days=20),
                         proto.TronFrozenSupply(frozen_amount=100000, frozen_days=30),
                     ],
-                    trx_num=100,
+                    trx_num=1000,
                     num=1,
+                    precision=0,
                     start_time=1514764800000,
                     end_time=1546300800000,
                     description="CryptoChain Token Issue Test",
@@ -209,7 +210,10 @@ class TestMsgTronSigntx(TrezorTest):
             contract=proto.TronContract(
                 participate_asset_issue_contract=proto.TronParticipateAssetIssueContract(
                     to_address="THChUb7p2bwY6ReAiJXao6qc2ZGn88T46v",
+                    asset_id="1000166",
                     asset_name="CryptoChain",
+                    asset_decimals=0,
+                    asset_signature="30450221008417d04d1caeae31f591ae50f7d19e53e0dfb827bd51c18e66081941bf04639802203c73361a521c969e3fd7f62e62b46d61aad00e47d41e7da108546d954278a6b1",
                     amount=1,
                 )
             ),
@@ -242,8 +246,7 @@ class TestMsgTronSigntx(TrezorTest):
             == "c4c1381d3a3e23010f19f8055df6d78990fdac619ae8be030425e0de0726f4fb665618a2c663c891cb5f8b26d009d79d3650008bda429e274bf4eee3330c806a00"
         )
 
-    # TODO: Check Alll Freeze Types and Rental
-    def test_tron_freeze_balance(self):
+    def test_tron_freeze_balance_bandwidth(self):
         load_device(self)
 
         msg = proto.TronSignTx(
@@ -255,19 +258,17 @@ class TestMsgTronSigntx(TrezorTest):
                 freeze_balance_contract=proto.TronFreezeBalanceContract(
                     frozen_balance=10000000,
                     frozen_duration=3,
-                    type=proto.TronResourceCode.BANDWIDTH,
+                    resource=proto.TronResourceCode.BANDWIDTH,
                 )
             ),
         )
-
         result = tron.sign_tx(self.client, parse_path(TRON_DEFAULT_PATH), msg)
         assert (
             result.signature.hex()
-            == "3c29d0e30913b37d997d9b40c664a8669653c2151702c449d01eeeaa8df65ce467970293daf0e1019e4efd94db9ca159cc65b9b04264d3e203f0abe5723a528d00"
+            == "6c10c4f0149135749507607f890dc529083fe41504b22052dd68d946b4caed704a116f2d6a767934ed43ae6d4c6ccf0002317e00dfdd5415ed8c72f8c6b5f74a01"
         )
-
-    # TODO: Check Alll Freeze Types and Rental
-    def test_tron_unfreeze_balance(self):
+        
+    def test_tron_freeze_balance_energy(self):
         load_device(self)
 
         msg = proto.TronSignTx(
@@ -276,16 +277,151 @@ class TestMsgTronSigntx(TrezorTest):
             expiration=1531429101000,
             timestamp=1531428803023,
             contract=proto.TronContract(
-                unfreeze_balance_contract=proto.TronUnfreezeBalanceContract()
+                freeze_balance_contract=proto.TronFreezeBalanceContract(
+                    frozen_balance=10000000,
+                    frozen_duration=3,
+                    resource=proto.TronResourceCode.ENERGY,
+                )
+            ),
+        )
+        result = tron.sign_tx(self.client, parse_path(TRON_DEFAULT_PATH), msg)
+        assert (
+            result.signature.hex()
+            == "14fe46619fed9d9acf863c464854bfedd257e4072e31116f9e144b846cb112725343e0aa13cd0b856b53f2265ef2c19d9610eafee0b6c120ba501d06a4e2c49901"
+        )
+
+    def test_tron_freeze_balance_bandwidth_rental(self):
+        load_device(self)
+
+        msg = proto.TronSignTx(
+            ref_block_bytes=bytes.fromhex("D0EF"),
+            ref_block_hash=bytes.fromhex("6CD6025AFD991D7D"),
+            expiration=1531429101000,
+            timestamp=1531428803023,
+            contract=proto.TronContract(
+                freeze_balance_contract=proto.TronFreezeBalanceContract(
+                    frozen_balance=10000000,
+                    frozen_duration=3,
+                    resource=proto.TronResourceCode.BANDWIDTH,
+                    receiver_address="TLrpNTBuCpGMrB9TyVwgEhNVRhtWEQPHh4",
+                )
+            ),
+        )
+        result = tron.sign_tx(self.client, parse_path(TRON_DEFAULT_PATH), msg)
+        assert (
+            result.signature.hex()
+            == "9885b510e3aff53b9e85511acf6b6a803a79472d5cdd27774bdc8363877e99685a9b71c2eec44de392b77bf00f6fdbab8b0a58fbee6d2401c1b2ea798a87b9a901"
+        )
+        
+    def test_tron_freeze_balance_energy_rental(self):
+        load_device(self)
+
+        msg = proto.TronSignTx(
+            ref_block_bytes=bytes.fromhex("D0EF"),
+            ref_block_hash=bytes.fromhex("6CD6025AFD991D7D"),
+            expiration=1531429101000,
+            timestamp=1531428803023,
+            contract=proto.TronContract(
+                freeze_balance_contract=proto.TronFreezeBalanceContract(
+                    frozen_balance=10000000,
+                    frozen_duration=3,
+                    resource=proto.TronResourceCode.ENERGY,
+                    receiver_address="TLrpNTBuCpGMrB9TyVwgEhNVRhtWEQPHh4",
+                )
+            ),
+        )
+        result = tron.sign_tx(self.client, parse_path(TRON_DEFAULT_PATH), msg)
+        assert (
+            result.signature.hex()
+            == "34b73c06cfb238c2ef8071e17bf1c8618cc2f14db9faef494cb9f4151631c9da33d06e2c66d78d1d3bcf4e955e8e82d7e343cc065c96d5e435d9251074433fe600"
+        )
+
+    def test_tron_unfreeze_balance_bandwidth(self):
+        load_device(self)
+
+        msg = proto.TronSignTx(
+            ref_block_bytes=bytes.fromhex("D0EF"),
+            ref_block_hash=bytes.fromhex("6CD6025AFD991D7D"),
+            expiration=1531429101000,
+            timestamp=1531428803023,
+            contract=proto.TronContract(
+                unfreeze_balance_contract=proto.TronUnfreezeBalanceContract(
+                    resource=proto.TronResourceCode.BANDWIDTH
+                )
             ),
         )
 
         result = tron.sign_tx(self.client, parse_path(TRON_DEFAULT_PATH), msg)
         assert (
             result.signature.hex()
-            == "20719064aa6d2ae4215fdd2c1818a8706f55d2d9fb9ae7bf482c7b5aae03c2f33213f7f1d7afbc8a4ed418bf21719d6ae2c0cc9f743139fea4374fdbc61ae48701"
+            == "64613fa2d2b2ea18f9d37a7b97cc6c76f56c59f05b1d28806617c7b89ecc16994b275145f43a5289d49ef227f74a5cc3ac039534048416c9b3e51d82029a60e301"
         )
 
+    def test_tron_unfreeze_balance_energy(self):
+        load_device(self)
+
+        msg = proto.TronSignTx(
+            ref_block_bytes=bytes.fromhex("D0EF"),
+            ref_block_hash=bytes.fromhex("6CD6025AFD991D7D"),
+            expiration=1531429101000,
+            timestamp=1531428803023,
+            contract=proto.TronContract(
+                unfreeze_balance_contract=proto.TronUnfreezeBalanceContract(
+                    resource=proto.TronResourceCode.ENERGY
+                )
+            ),
+        )
+
+        result = tron.sign_tx(self.client, parse_path(TRON_DEFAULT_PATH), msg)
+        assert (
+            result.signature.hex()
+            == "7f3f7d2f03da17c8f950bb3a606248c0a37092522b0e9ca824f44d00c6278be96e78b87c202727b9d32599118cf3f132d82b75cfdd30a02075c9c1fe0096167101"
+        )
+
+    def test_tron_unfreeze_balance_bandwidth_rental(self):
+        load_device(self)
+
+        msg = proto.TronSignTx(
+            ref_block_bytes=bytes.fromhex("D0EF"),
+            ref_block_hash=bytes.fromhex("6CD6025AFD991D7D"),
+            expiration=1531429101000,
+            timestamp=1531428803023,
+            contract=proto.TronContract(
+                unfreeze_balance_contract=proto.TronUnfreezeBalanceContract(
+                    resource=proto.TronResourceCode.BANDWIDTH,
+                    receiver_address="TLrpNTBuCpGMrB9TyVwgEhNVRhtWEQPHh4",
+                )
+            ),
+        )
+
+        result = tron.sign_tx(self.client, parse_path(TRON_DEFAULT_PATH), msg)
+        assert (
+            result.signature.hex()
+            == "90b0b27b0820ca46e6a2c42e6c80a1a7a304ec4a1859db863bad19b5db49eac3412b7015f5f637894d4ffecd88b44de8e4b2ec789b77090997b5353b17a22bfe00"
+        )
+
+    def test_tron_unfreeze_balance_energy_rental(self):
+        load_device(self)
+
+        msg = proto.TronSignTx(
+            ref_block_bytes=bytes.fromhex("D0EF"),
+            ref_block_hash=bytes.fromhex("6CD6025AFD991D7D"),
+            expiration=1531429101000,
+            timestamp=1531428803023,
+            contract=proto.TronContract(
+                unfreeze_balance_contract=proto.TronUnfreezeBalanceContract(
+                    resource=proto.TronResourceCode.ENERGY,
+                    receiver_address="TLrpNTBuCpGMrB9TyVwgEhNVRhtWEQPHh4",
+                )
+            ),
+        )
+
+        result = tron.sign_tx(self.client, parse_path(TRON_DEFAULT_PATH), msg)
+        assert (
+            result.signature.hex()
+            == "e8176724732452c7b21654922df0efc796b4ed56b2f408b0dd6ac90eb593fa9f6a67145af27e44bcfd5e515cfb6014d747ce43aec9a819eb2a4a321425dad92100"
+        )
+    
     def test_tron_withdraw_balance(self):
         load_device(self)
 
@@ -411,6 +547,27 @@ class TestMsgTronSigntx(TrezorTest):
         assert (
             result.signature.hex()
             == "636577a6800c6ab4e7c11a72d5f0b3d865e190b51714cf5c4bd1d71bc37f54643582382314c236b489376bc4ab5d0612e3c6f9434e97db6dd41c517757cc8d7101"
+        )
+
+    def test_tron_set_account_id_contract(self):
+        load_device(self)
+
+        msg = proto.TronSignTx(
+            ref_block_bytes=bytes.fromhex("D0EF"),
+            ref_block_hash=bytes.fromhex("6CD6025AFD991D7D"),
+            expiration=1531429101000,
+            timestamp=1531428803023,
+            contract=proto.TronContract(
+                set_account_id=proto.TronSetAccountIdContract(
+                    account_id="CryptoChain"
+                )
+            ),
+        )
+
+        result = tron.sign_tx(self.client, parse_path(TRON_DEFAULT_PATH), msg)
+        assert (
+            result.signature.hex()
+            == "d3868f17951ff242ab92c2be500c676d21f9d396c0c8ab82912975d593bf3f0279ebbd9b7211d1f4ed3c2e2045d62ccade2f48455fadd12023397acb515644d000"
         )
 
 

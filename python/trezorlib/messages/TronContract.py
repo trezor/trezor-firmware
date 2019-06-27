@@ -13,6 +13,7 @@ from .TronParticipateAssetIssueContract import TronParticipateAssetIssueContract
 from .TronProposalApproveContract import TronProposalApproveContract
 from .TronProposalCreateContract import TronProposalCreateContract
 from .TronProposalDeleteContract import TronProposalDeleteContract
+from .TronSetAccountIdContract import TronSetAccountIdContract
 from .TronTransferAssetContract import TronTransferAssetContract
 from .TronTransferContract import TronTransferContract
 from .TronTriggerSmartContract import TronTriggerSmartContract
@@ -45,6 +46,7 @@ class TronContract(p.MessageType):
         proposal_create_contract: TronProposalCreateContract = None,
         proposal_approve_contract: TronProposalApproveContract = None,
         proposal_delete_contract: TronProposalDeleteContract = None,
+        set_account_id: TronSetAccountIdContract = None,
         trigger_smart_contract: TronTriggerSmartContract = None,
         exchange_create_contract: TronExchangeCreateContract = None,
         exchange_inject_contract: TronExchangeInjectContract = None,
@@ -67,6 +69,7 @@ class TronContract(p.MessageType):
         self.proposal_create_contract = proposal_create_contract
         self.proposal_approve_contract = proposal_approve_contract
         self.proposal_delete_contract = proposal_delete_contract
+        self.set_account_id = set_account_id
         self.trigger_smart_contract = trigger_smart_contract
         self.exchange_create_contract = exchange_create_contract
         self.exchange_inject_contract = exchange_inject_contract
@@ -92,6 +95,7 @@ class TronContract(p.MessageType):
             16: ('proposal_create_contract', TronProposalCreateContract, 0),
             17: ('proposal_approve_contract', TronProposalApproveContract, 0),
             18: ('proposal_delete_contract', TronProposalDeleteContract, 0),
+            19: ('set_account_id', TronSetAccountIdContract, 0),
             31: ('trigger_smart_contract', TronTriggerSmartContract, 0),
             41: ('exchange_create_contract', TronExchangeCreateContract, 0),
             42: ('exchange_inject_contract', TronExchangeInjectContract, 0),

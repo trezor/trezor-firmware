@@ -59,14 +59,13 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
             contract.transfer_asset_contract.asset_decimals,
             contract.transfer_asset_contract.asset_signature,
         ):
-            raise wire.ProcessError(
-                "Some of the required fields are missing (contract)"
-            )
+            raise wire.ProcessError("Token signature not valid")
         return await layout.require_confirm_tx_asset(
             ctx,
             contract.transfer_asset_contract.asset_name,
             contract.transfer_asset_contract.to_address,
             contract.transfer_asset_contract.amount,
+            contract.transfer_asset_contract.asset_decimals,
         )
 
     if contract.vote_witness_contract:
@@ -84,6 +83,8 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
         )
 
     if contract.asset_issue_contract:
+        if contract.asset_issue_contract.precision is None:
+            contract.asset_issue_contract.precision = 0
         return await layout.require_confirm_asset_issue(
             ctx,
             contract.asset_issue_contract.name,
@@ -91,6 +92,7 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
             contract.asset_issue_contract.total_supply,
             contract.asset_issue_contract.trx_num,
             contract.asset_issue_contract.num,
+            contract.asset_issue_contract.precision,
         )
 
     if contract.witness_update_contract:
@@ -101,10 +103,18 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
         )
 
     if contract.participate_asset_issue_contract:
+        if not validateToken(
+            contract.participate_asset_issue_contract.asset_id,
+            contract.participate_asset_issue_contract.asset_name,
+            contract.participate_asset_issue_contract.asset_decimals,
+            contract.participate_asset_issue_contract.asset_signature,
+        ):
+            raise wire.ProcessError("Token signature not valid")
         return await layout.require_confirm_participate_asset(
             ctx,
             contract.participate_asset_issue_contract.asset_name,
             contract.participate_asset_issue_contract.amount,
+            contract.participate_asset_issue_contract.asset_decimals,
         )
 
     if contract.account_update_contract:
@@ -117,10 +127,16 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
             ctx,
             contract.freeze_balance_contract.frozen_balance,
             contract.freeze_balance_contract.frozen_duration,
+            contract.freeze_balance_contract.resource,
+            contract.freeze_balance_contract.receiver_address,
         )
 
     if contract.unfreeze_balance_contract:
-        return await layout.require_confirm_unfreeze_balance(ctx)
+        return await layout.require_confirm_unfreeze_balance(
+            ctx,
+            contract.unfreeze_balance_contract.resource,
+            contract.unfreeze_balance_contract.receiver_address,
+        )
 
     if contract.withdraw_balance_contract:
         return await layout.require_confirm_withdraw_balance(ctx)
@@ -150,6 +166,11 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
     if contract.proposal_delete_contract:
         return await layout.require_confirm_proposal_delete_contract(
             ctx, contract.proposal_delete_contract.proposal_id
+        )
+
+    if contract.set_account_id:
+        return await layout.require_confirm_set_account_id_contract(
+            ctx, contract.set_account_id.account_id
         )
 
     if contract.create_smart_contract:
@@ -223,8 +244,11 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
 
 def validateToken(id, name, decimals, signature):
     MESSAGE = bytes(id + name, "utf-8") + bytes([decimals])
+    rs = (int(signature[6]) * 16 + int(signature[7])) * 2
+    ss = (int(signature[10 + rs]) * 16 + int(signature[11 + rs])) * 2
+    sig = signature[8 : 8 + rs] + signature[12 + rs : 12 + rs + ss]
     return secp256k1.verify(
-        unhexlify(TRON_PUBLICKEY), unhexlify(signature), sha256(MESSAGE).digest()
+        unhexlify(TRON_PUBLICKEY), unhexlify(sig), sha256(MESSAGE).digest()
     )
 
 

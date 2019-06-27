@@ -4,4 +4,18 @@ from .. import protobuf as p
 
 
 class TronUnfreezeAssetContract(p.MessageType):
-    pass
+
+    def __init__(
+        self,
+        resource: int = None,
+        receiver_address: str = None,
+    ) -> None:
+        self.resource = resource
+        self.receiver_address = receiver_address
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ('resource', p.UVarintType, 0),
+            2: ('receiver_address', p.UnicodeType, 0),
+        }

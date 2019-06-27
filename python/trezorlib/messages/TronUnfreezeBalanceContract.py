@@ -7,15 +7,15 @@ class TronUnfreezeBalanceContract(p.MessageType):
 
     def __init__(
         self,
-        type: int = None,
-        to_address: str = None,
+        resource: int = None,
+        receiver_address: str = None,
     ) -> None:
-        self.type = type
-        self.to_address = to_address
+        self.resource = resource
+        self.receiver_address = receiver_address
 
     @classmethod
     def get_fields(cls):
         return {
-            1: ('type', p.UVarintType, 0),
-            2: ('to_address', p.UnicodeType, 0),
+            1: ('resource', p.UVarintType, 0),
+            2: ('receiver_address', p.UnicodeType, 0),
         }

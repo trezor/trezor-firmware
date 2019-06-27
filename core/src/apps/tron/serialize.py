@@ -140,6 +140,8 @@ def pack_contract(contract, owner_address):
 
         add_field(cmessage, 6, TYPE_VARINT)
         write_varint(cmessage, contract.asset_issue_contract.trx_num)
+        add_field(cmessage, 7, TYPE_VARINT)
+        write_varint(cmessage, contract.asset_issue_contract.precision)
         add_field(cmessage, 8, TYPE_VARINT)
         write_varint(cmessage, contract.asset_issue_contract.num)
         add_field(cmessage, 9, TYPE_VARINT)
@@ -173,7 +175,7 @@ def pack_contract(contract, owner_address):
         )
         add_field(cmessage, 3, TYPE_STRING)
         write_bytes_with_length(
-            cmessage, contract.participate_asset_issue_contract.asset_name
+            cmessage, contract.participate_asset_issue_contract.asset_id
         )
         add_field(cmessage, 4, TYPE_VARINT)
         write_varint(cmessage, contract.participate_asset_issue_contract.amount)
@@ -197,6 +199,15 @@ def pack_contract(contract, owner_address):
         write_varint(cmessage, contract.freeze_balance_contract.frozen_balance)
         add_field(cmessage, 3, TYPE_VARINT)
         write_varint(cmessage, contract.freeze_balance_contract.frozen_duration)
+        if contract.freeze_balance_contract.resource is not None:
+            add_field(cmessage, 10, TYPE_VARINT)
+            write_varint(cmessage, contract.freeze_balance_contract.resource)
+        if contract.freeze_balance_contract.receiver_address is not None:
+            add_field(cmessage, 15, TYPE_STRING)
+            write_bytes_with_length(
+                cmessage,
+                base58.decode_check(contract.freeze_balance_contract.receiver_address),
+            )
 
     if contract.unfreeze_balance_contract:
         write_varint(retc, 12)
@@ -204,6 +215,18 @@ def pack_contract(contract, owner_address):
 
         add_field(cmessage, 1, TYPE_STRING)
         write_bytes_with_length(cmessage, base58.decode_check(owner_address))
+
+        if contract.unfreeze_balance_contract.resource is not None:
+            add_field(cmessage, 10, TYPE_VARINT)
+            write_varint(cmessage, contract.unfreeze_balance_contract.resource)
+        if contract.unfreeze_balance_contract.receiver_address is not None:
+            add_field(cmessage, 15, TYPE_STRING)
+            write_bytes_with_length(
+                cmessage,
+                base58.decode_check(
+                    contract.unfreeze_balance_contract.receiver_address
+                ),
+            )
 
     if contract.withdraw_balance_contract:
         write_varint(retc, 13)
@@ -267,6 +290,81 @@ def pack_contract(contract, owner_address):
         write_bytes_with_length(cmessage, base58.decode_check(owner_address))
         add_field(cmessage, 2, TYPE_VARINT)
         write_varint(cmessage, contract.proposal_delete_contract.proposal_id)
+
+    if contract.set_account_id:
+        write_varint(retc, 19)
+        api = "SetAccountIdContract"
+
+        add_field(cmessage, 1, TYPE_STRING)
+        write_bytes_with_length(cmessage, contract.set_account_id.account_id)
+        add_field(cmessage, 2, TYPE_STRING)
+        write_bytes_with_length(cmessage, base58.decode_check(owner_address))
+
+    if contract.exchange_create_contract:
+        write_varint(retc, 41)
+        api = "ExchangeCreateContract"
+
+        add_field(cmessage, 1, TYPE_STRING)
+        write_bytes_with_length(cmessage, base58.decode_check(owner_address))
+        add_field(cmessage, 2, TYPE_STRING)
+        write_bytes_with_length(
+            cmessage, contract.exchange_create_contract.first_asset_id
+        )
+        add_field(cmessage, 3, TYPE_VARINT)
+        write_varint(cmessage, contract.exchange_create_contract.first_asset_balance)
+        add_field(cmessage, 4, TYPE_STRING)
+        write_bytes_with_length(
+            cmessage, contract.exchange_create_contract.second_asset_id
+        )
+        add_field(cmessage, 5, TYPE_VARINT)
+        write_varint(cmessage, contract.exchange_create_contract.second_asset_balance)
+
+    if contract.exchange_inject_contract:
+        write_varint(retc, 41)
+        api = "ExchangeInjectContract"
+
+        add_field(cmessage, 1, TYPE_STRING)
+        write_bytes_with_length(cmessage, base58.decode_check(owner_address))
+        add_field(cmessage, 2, TYPE_STRING)
+        write_bytes_with_length(cmessage, contract.exchange_inject_contract.exchange_id)
+        add_field(cmessage, 3, TYPE_STRING)
+        write_bytes_with_length(cmessage, contract.exchange_inject_contract.token_id)
+        add_field(cmessage, 4, TYPE_VARINT)
+        write_varint(cmessage, contract.exchange_inject_contract.quant)
+
+    if contract.exchange_withdraw_contract:
+        write_varint(retc, 41)
+        api = "ExchangeWithdrawContract"
+
+        add_field(cmessage, 1, TYPE_STRING)
+        write_bytes_with_length(cmessage, base58.decode_check(owner_address))
+        add_field(cmessage, 2, TYPE_STRING)
+        write_bytes_with_length(
+            cmessage, contract.exchange_withdraw_contract.exchange_id
+        )
+        add_field(cmessage, 3, TYPE_STRING)
+        write_bytes_with_length(cmessage, contract.exchange_withdraw_contract.token_id)
+        add_field(cmessage, 4, TYPE_VARINT)
+        write_varint(cmessage, contract.exchange_withdraw_contract.quant)
+
+    if contract.exchange_transaction_contract:
+        write_varint(retc, 41)
+        api = "ExchangeTransactionContract"
+
+        add_field(cmessage, 1, TYPE_STRING)
+        write_bytes_with_length(cmessage, base58.decode_check(owner_address))
+        add_field(cmessage, 2, TYPE_STRING)
+        write_bytes_with_length(
+            cmessage, contract.exchange_transaction_contract.exchange_id
+        )
+        add_field(cmessage, 3, TYPE_STRING)
+        write_bytes_with_length(
+            cmessage, contract.exchange_transaction_contract.token_id
+        )
+        add_field(cmessage, 4, TYPE_VARINT)
+        write_varint(cmessage, contract.exchange_transaction_contract.quant)
+        add_field(cmessage, 5, TYPE_VARINT)
+        write_varint(cmessage, contract.exchange_transaction_contract.expected)
 
     # write API
     capi = bytearray()
