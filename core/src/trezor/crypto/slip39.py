@@ -594,13 +594,6 @@ def combine_mnemonics(mnemonics):
 
     for group_index, group in groups.items():
         if len(group[1]) != group[0]:
-            prefix = _group_prefix(
-                identifier,
-                iteration_exponent,
-                group_index,
-                group_threshold,
-                group_count,
-            )
             raise MnemonicError(
                 "Wrong number of mnemonics. Expected {} mnemonics, but {} were provided.".format(
                     group[0], len(group[1])
