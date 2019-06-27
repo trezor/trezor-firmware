@@ -1,0 +1,178 @@
+syntax = "proto2";
+package hw.trezor.messages.dashspecial;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageDashSpecial";
+
+
+/**
+ * List of messages to create Special Dash transactions.
+ * Transaction descriptions:
+ * https://github.com/dashpay/dips/blob/master/dip-0002.md
+ * https://github.com/dashpay/dips/blob/master/dip-0003.md
+ * https://github.com/dashpay/dips/blob/master/dip-0005.md
+ */
+
+
+/**
+ * Request: Ask device to sign Dash Provider Registration Transaction.
+ * @start
+ * @next TxRequest
+ * @next Failure
+ */
+message DashSignProRegTx {
+    required uint32 outputs_count = 1;              // number of transaction outputs
+    required uint32 inputs_count = 2;               // number of transaction inputs
+    optional string coin_name = 3 [default='Dash']; // coin to use
+    optional uint32 lock_time = 4 [default=0];      // transaction lock_time
+    optional uint32 payload_version = 5 [default=1];// Provider transaction version number.
+    optional uint32 mn_type = 6 [default=0];        // Masternode type. Default set to 0.
+    optional uint32 mn_mode = 7 [default=0];        // Masternode mode. Default set to 0.
+    optional bytes collateral_hash = 8;             // The collateral transaction hash.
+    optional uint32 collateral_index = 9;           // Index of the collateral transaction hash output.
+    optional bytes ip_address = 10;                 // IPv6 address in network byte order.
+                                                    // Only IPv4 mapped addresses are allowed (to be extended in the future).
+    optional uint32 port = 11;                      // Port (network byte order)
+    optional bytes key_id_owner = 12;               // The public key hash used for owner related signing.
+    optional bytes pub_key_operator = 13;           // The public key used for operational related signing (network messages, ProTx updates).
+    optional bytes key_id_voting = 14;              // The public key hash used for voting.
+    optional uint32 operator_reward = 15;           // A value from 0 to 10000.
+    optional bytes script_payout = 16;              // Payee script (p2pkh/p2sh)
+    optional bytes payload_sig = 17;                // Signature of the hash of the ProTx fields.
+                                                    // Signed with the key corresponding to the collateral outpoint
+                                                    // in case the collateral is not part of the ProRegTx itself, empty otherwise.
+}
+
+
+/**
+ * Request: Ask device to sign Dash Provider Update Service Transaction.
+ * @start
+ * @next TxRequest
+ * @next Failure
+ */
+message DashSignProUpServTx {
+    required uint32 outputs_count = 1;              // number of transaction outputs
+    required uint32 inputs_count = 2;               // number of transaction inputs
+    optional string coin_name = 3 [default='Dash']; // coin to use
+    optional uint32 lock_time = 4 [default=0];      // transaction lock_time
+    optional uint32 payload_version = 5 [default=1];// Provider transaction version number.
+    optional bytes protx_hash = 6;                  // The hash of the initial ProRegTx
+    optional bytes ip_address = 7;                  // IPv6 address in network byte order.
+                                                    // Only IPv4 mapped addresses are allowed (to be extended in the future).
+    optional uint32 port = 8;                       // Port (network byte order)
+    optional bytes script_payout = 9;               // Payee script (p2pkh/p2sh)
+    optional bytes payload_sig = 10;                // Signature of the hash of the ProUpServTx fields.
+                                                    // Signed by the Operator.
+}
+
+/**
+ * Request: Ask device to sign Dash Provider Update Registrar Transaction.
+ * @start
+ * @next TxRequest
+ * @next Failure
+ */
+message DashSignProUpRegTx {
+    required uint32 outputs_count = 1;              // number of transaction outputs
+    required uint32 inputs_count = 2;               // number of transaction inputs
+    optional string coin_name = 3 [default='Dash']; // coin to use
+    optional uint32 lock_time = 4 [default=0];      // transaction lock_time
+    optional uint32 payload_version = 5 [default=1];// Provider transaction version number.
+    optional bytes protx_hash = 6;                  // The hash of the initial ProRegTx
+    optional uint32 mn_mode = 7 [default=0];        // Masternode mode. Default set to 0.
+    optional bytes pub_key_operator = 8;            // The public key used for operational related signing (network messages, ProTx updates).
+    optional bytes key_id_voting = 9;               // The public key hash used for voting.
+    optional bytes script_payout = 10;              // Payee script (p2pkh/p2sh)
+    optional bytes payload_sig = 11;                // Signature of the hash of the ProTx fields.
+                                                    // Signed by the Owner.
+}
+
+/**
+ * Request: Ask device to sign Dash Provider Update Revocation Transaction.
+ * @start
+ * @next TxRequest
+ * @next Failure
+ */
+message DashSignProUpRevTx {
+    required uint32 outputs_count = 1;              // number of transaction outputs
+    required uint32 inputs_count = 2;               // number of transaction inputs
+    optional string coin_name = 3 [default='Dash']; // coin to use
+    optional uint32 lock_time = 4 [default=0];      // transaction lock_time
+    optional uint32 payload_version = 5 [default=1];// Provider transaction version number.
+    optional bytes protx_hash = 6;                  // The hash of the initial ProRegTx
+    optional uint32 reason = 7;                     // The reason for revoking the key.
+    optional bytes payload_sig = 8;                 // Signature of the hash of the ProTx fields.
+                                                    // Signed by the Operator.
+}
+
+/**
+ * Request: Ask device to sign Dash Register SubTx Transaction.
+ * @start
+ * @next TxRequest
+ * @next Failure
+ */
+message DashSignSubTxRegister {
+    required uint32 outputs_count = 1;              // number of transaction outputs
+    required uint32 inputs_count = 2;               // number of transaction inputs
+    optional string coin_name = 3 [default='Dash']; // coin to use
+    optional uint32 lock_time = 4 [default=0];      // transaction lock_time
+    optional uint32 payload_version = 5 [default=1];// SubTx transaction version number.
+    optional string user_name = 6;                  // Username for the account
+    optional bytes pub_key = 7;                     // Owner’s public key for the account.
+    optional bytes payload_sig = 8;                 // Signature of the hash of the preceding
+                                                    // fields signed by the blockchain user
+                                                    // with the private key for the specified PubKey.
+}
+
+/**
+ * Request: Ask device to sign Dash Topup Blockchain User Credit Transaction.
+ * @start
+ * @next TxRequest
+ * @next Failure
+ */
+message DashSignSubTxTopup {
+    required uint32 outputs_count = 1;              // number of transaction outputs
+    required uint32 inputs_count = 2;               // number of transaction inputs
+    optional string coin_name = 3 [default='Dash']; // coin to use
+    optional uint32 lock_time = 4 [default=0];      // transaction lock_time
+    optional uint32 payload_version = 5 [default=1];// SubTx transaction version number.
+    optional bytes regtx_hash = 6;                  // Registration Transaction-ID of the first Register Subscription Transaction
+}
+
+/**
+ * Request: Ask device to sign Dash Reset Blockchain User Key Transaction.
+ * @start
+ * @next TxRequest
+ * @next Failure
+ */
+message DashSignSubTxResetKey {
+    required uint32 outputs_count = 1;              // number of transaction outputs
+    required uint32 inputs_count = 2;               // number of transaction inputs
+    optional string coin_name = 3 [default='Dash']; // coin to use
+    optional uint32 lock_time = 4 [default=0];      // transaction lock_time
+    optional uint32 payload_version = 5 [default=1];// SubTx transaction version number.
+    optional bytes regtx_hash = 6;                  // Registration Transaction-ID of the first Register Subscription Transaction
+    optional bytes prev_subtx_hash = 7;             // Hash of the user’s previous subscription transaction
+    optional uint64 creditFee = 8;                  // Fee (denominated in duffs) to pay for transaction
+    optional bytes new_pub_key = 9;                 // New public key for a change/reset action
+    optional bytes payload_sig = 10;                // Signature of most recent pubkey prior to this transaction, signing a change/reset action
+}
+
+/**
+ * Request: Ask device to sign Dash Close Blockchain User Account Transaction.
+ * @start
+ * @next TxRequest
+ * @next Failure
+ */
+message DashSignSubTxCloseAccount {
+    required uint32 outputs_count = 1;              // number of transaction outputs
+    required uint32 inputs_count = 2;               // number of transaction inputs
+    optional string coin_name = 3 [default='Dash']; // coin to use
+    optional uint32 lock_time = 4 [default=0];      // transaction lock_time
+    optional uint32 payload_version = 5 [default=1];// SubTx transaction version number.
+    optional bytes regtx_hash = 6;                  // Registration Transaction-ID of the first Register Subscription Transaction
+    optional bytes prev_subtx_hash = 7;             // Hash of the user’s previous subscription transaction
+    optional uint64 creditFee = 8;                  // Fee (denominated in duffs) to pay for transaction
+    optional bytes payload_sig = 9;                 // Signature of most recent pubkey prior to this transaction, signing a change/reset action
+}
+

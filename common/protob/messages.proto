@@ -237,4 +237,14 @@ enum MessageType {
     MessageType_BinanceOrderMsg = 707 [(wire_in) = true];
     MessageType_BinanceCancelMsg = 708 [(wire_in) = true];
     MessageType_BinanceSignedTx = 709 [(wire_out) = true];
+
+    // Dash Special Transactions
+    MessageType_DashSignProRegTx = 750 [(wire_in) = true];
+    MessageType_DashSignProUpServTx = 751 [(wire_in) = true];
+    MessageType_DashSignProUpRegTx = 752 [(wire_in) = true];
+    MessageType_DashSignProUpRevTx = 753 [(wire_in) = true];
+    MessageType_DashSignSubTxRegister = 754 [(wire_in) = true];
+    MessageType_DashSignSubTxTopup = 755 [(wire_in) = true];
+    MessageType_DashSignSubTxResetKey = 756 [(wire_in) = true];
+    MessageType_DashSignSubTxCloseAccount = 757 [(wire_in) = true];
 }
