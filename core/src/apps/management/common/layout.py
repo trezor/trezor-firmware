@@ -129,11 +129,16 @@ async def _confirm_word(ctx, share_index, numbered_share_words):
     return selected_word == checked_word
 
 
-async def _show_confirmation_success(ctx, share_index, num_of_shares=None):
+async def _show_confirmation_success(
+    ctx, share_index, num_of_shares=None, slip39=False
+):
     if share_index is None or num_of_shares is None or share_index == num_of_shares - 1:
         text = Text("Recovery seed", ui.ICON_RESET)
         text.bold("You finished verifying")
-        text.bold("your recovery shares.")
+        if slip39:
+            text.bold("your recovery shares.")
+        else:
+            text.bold("your recovery seed.")
     else:
         text = Text("Recovery share #%s" % (share_index + 1), ui.ICON_RESET)
         text.bold("Recovery share #%s" % (share_index + 1))
@@ -344,7 +349,9 @@ async def slip39_show_and_confirm_shares(ctx, shares):
 
             # make the user confirm 2 words from the share
             if await _confirm_share_words(ctx, index, share_words):
-                await _show_confirmation_success(ctx, index, len(shares))
+                await _show_confirmation_success(
+                    ctx, index, num_of_shares=len(shares), slip39=True
+                )
                 break  # this share is confirmed, go to next one
             else:
                 await _show_confirmation_failure(ctx, index)
