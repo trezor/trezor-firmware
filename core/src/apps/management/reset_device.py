@@ -75,7 +75,9 @@ async def reset_device(ctx, msg):
 
     # if we backed up the wallet, show success message
     if not msg.no_backup and not msg.skip_backup:
-        await layout.show_backup_success(ctx)
+        await layout.show_backup_warning(
+            ctx, "Backup is done!", "Finish backup", msg.slip39
+        )
 
     return Success(message="Initialized")
 

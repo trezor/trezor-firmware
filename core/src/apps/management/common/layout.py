@@ -46,19 +46,6 @@ async def show_internal_entropy(ctx, entropy: bytes):
     await require_confirm(ctx, text, ButtonRequestType.ResetDevice)
 
 
-async def show_backup_success(ctx):
-    text = Text("Backup is done!", ui.ICON_CONFIRM, ui.GREEN)
-    text.normal(
-        "Never make a digital",
-        "copy of your recovery",
-        "shares and never upload",
-        "them online!",
-    )
-    await require_confirm(
-        ctx, text, ButtonRequestType.ResetDevice, confirm="Finish backup", cancel=None
-    )
-
-
 async def confirm_backup(ctx):
     text = Text("Back up wallet", ui.ICON_RESET, new_lines=False)
     text.bold("New wallet created")
@@ -169,6 +156,27 @@ async def _show_confirmation_failure(ctx, share_index):
     )
 
 
+async def show_backup_warning(ctx, header: str, confirm_text: str, slip39=False):
+    text = Text(header, ui.ICON_NOCOPY)
+    if slip39:
+        text.normal(
+            "Never make a digital",
+            "copy of your recovery",
+            "shares and never upload",
+            "them online!",
+        )
+    else:
+        text.normal(
+            "Never make a digital",
+            "copy of your recovery",
+            "seed and never upload",
+            "it online!",
+        )
+    await require_confirm(
+        ctx, text, ButtonRequestType.ResetDevice, confirm_text, cancel=None
+    )
+
+
 # BIP39
 # ===
 
@@ -186,19 +194,6 @@ async def bip39_show_and_confirm_mnemonic(ctx, mnemonic: str):
             break  # this share is confirmed, go to next one
         else:
             await _show_confirmation_failure(ctx, None)
-
-
-async def bip39_show_backup_warning(ctx):
-    text = Text("Backup your seed", ui.ICON_NOCOPY)
-    text.normal(
-        "Never make a digital",
-        "copy of your recovery",
-        "shares and never upload",
-        "them online!",
-    )
-    await require_confirm(
-        ctx, text, ButtonRequestType.ResetDevice, confirm="I understand", cancel=None
-    )
 
 
 async def _bip39_show_mnemonic(ctx, words: list):

@@ -13,7 +13,7 @@ async def backup_device(ctx, msg):
         raise wire.ProcessError("Seed already backed up")
 
     # warn user about mnemonic safety
-    await layout.bip39_show_backup_warning(ctx)
+    await layout.show_backup_warning(ctx, "Back up your seed", "I understand")
 
     storage.set_unfinished_backup(True)
     storage.set_backed_up()
