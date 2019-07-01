@@ -1,5 +1,7 @@
 #include <string.h>
 
+#include "display.h"
+#include "mini_printf.h"
 #include "common.h"
 #include "secbool.h"
 
@@ -15,6 +17,8 @@
 #define X_POS_LSB (touch_data[4])
 #define Y_POS_MSB (touch_data[5] & 0x0FU)
 #define Y_POS_LSB (touch_data[6])
+
+void touch_filter(uint8_t value);
 
 static I2C_HandleTypeDef i2c_handle;
 
@@ -199,6 +203,7 @@ void touch_power_on(void) {
       NULL);
 
   touch_sensitivity(0x06);
+  touch_filter(0x03);
 }
 
 void touch_power_off(void) {
@@ -215,6 +220,16 @@ void touch_sensitivity(uint8_t value) {
              (HAL_OK == HAL_I2C_Master_Transmit(
                             &i2c_handle, TOUCH_ADDRESS, touch_panel_threshold,
                             sizeof(touch_panel_threshold), 10)),
+         NULL);
+}
+
+void touch_filter(uint8_t value) {
+  // set panel filter function coefficient (TH_DIFF) - default value is 0x??
+  uint8_t touch_panel_filter[] = {0x85, value};
+  ensure(sectrue *
+             (HAL_OK == HAL_I2C_Master_Transmit(
+                            &i2c_handle, TOUCH_ADDRESS, touch_panel_filter,
+                            sizeof(touch_panel_filter), 10)),
          NULL);
 }
 
@@ -268,6 +283,21 @@ uint32_t touch_read(void) {
                              // first touch) (tested with FT6206)
   const uint32_t event_flag = touch_data[3] & 0xC0;
   if (touch_data[1] == GESTURE_NO_GESTURE) {
+    int x = (X_POS_MSB << 8) | X_POS_LSB;
+    int y = (Y_POS_MSB << 8) | Y_POS_LSB;
+    /*
+    char buf[30];
+    display_bar(0,0,240,50,COLOR_BLACK);
+    mini_snprintf(buf, sizeof(buf), "%04d %04d", x, y);
+    display_text(8,25, buf, -1, FONT_NORMAL, COLOR_WHITE, COLOR_BLACK);
+    mini_snprintf(buf, sizeof(buf), "%02x %02x %02x %02x %02x %02x %02x", touch_data[0], touch_data[1], touch_data[2], touch_data[3], touch_data[4], touch_data[5], touch_data[6]);
+    display_text(8,50, buf, -1, FONT_NORMAL, COLOR_WHITE, COLOR_BLACK);
+
+    x = x/2 + DISPLAY_RESX/4;
+    y = y/2 + DISPLAY_RESY/4;
+    //*/
+    display_bar(x - 3, y - 3, 7, 7, COLOR_BLACK);    
+    display_bar(x - 2, y - 2, 5, 5, COLOR_WHITE);
     xy = touch_pack_xy((X_POS_MSB << 8) | X_POS_LSB,
                        (Y_POS_MSB << 8) | Y_POS_LSB);
     if ((number_of_touch_points == 1) && (event_flag == EVENT_PRESS_DOWN)) {
