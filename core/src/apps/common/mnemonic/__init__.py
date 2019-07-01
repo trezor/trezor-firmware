@@ -22,12 +22,12 @@ def get() -> (bytes, int):
     return mnemonic_secret, mnemonic_type
 
 
-def get_seed(passphrase: str = ""):
+def get_seed(passphrase: str = "", progress_bar=True):
     mnemonic_secret, mnemonic_type = get()
     if mnemonic_type == TYPE_BIP39:
-        return bip39.get_seed(mnemonic_secret, passphrase)
+        return bip39.get_seed(mnemonic_secret, passphrase, progress_bar)
     elif mnemonic_type == TYPE_SLIP39:
-        return slip39.get_seed(mnemonic_secret, passphrase)
+        return slip39.get_seed(mnemonic_secret, passphrase, progress_bar)
 
 
 def dry_run(secret: bytes):

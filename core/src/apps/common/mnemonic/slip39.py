@@ -77,14 +77,16 @@ def store(secret: bytes, needs_backup: bool, no_backup: bool):
     storage.clear_slip39_data()
 
 
-def get_seed(encrypted_master_secret: bytes, passphrase: str):
-    mnemonic._start_progress()
+def get_seed(encrypted_master_secret: bytes, passphrase: str, progress_bar=True):
+    if progress_bar:
+        mnemonic._start_progress()
     identifier = storage.get_slip39_identifier()
     iteration_exponent = storage.get_slip39_iteration_exponent()
     master_secret = slip39.decrypt(
         identifier, iteration_exponent, encrypted_master_secret, passphrase
     )
-    mnemonic._stop_progress()
+    if progress_bar:
+        mnemonic._stop_progress()
     return master_secret
 
 
