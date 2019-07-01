@@ -16,6 +16,6 @@ async def set_u2f_counter(ctx, msg):
     text.bold("to %d?" % msg.u2f_counter)
     await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)
 
-    storage.set_u2f_counter(msg.u2f_counter)
+    storage.device.set_u2f_counter(msg.u2f_counter)
 
     return Success(message="U2F counter set")

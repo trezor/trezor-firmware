@@ -39,8 +39,8 @@ async def reset_device(ctx, msg):
     secret = _compute_secret_from_entropy(int_entropy, ext_entropy, msg.strength)
 
     if msg.slip39:
-        storage.set_slip39_identifier(slip39.generate_random_identifier())
-        storage.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
+        storage.slip39.set_identifier(slip39.generate_random_identifier())
+        storage.slip39.set_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
 
     # should we back up the wallet now?
     if not msg.no_backup and not msg.skip_backup:
@@ -60,7 +60,9 @@ async def reset_device(ctx, msg):
         raise wire.ProcessError("Could not change PIN")
 
     # write settings and master secret into storage
-    storage.load_settings(label=msg.label, use_passphrase=msg.passphrase_protection)
+    storage.device.load_settings(
+        label=msg.label, use_passphrase=msg.passphrase_protection
+    )
     if msg.slip39:
         mnemonic.slip39.store(
             secret=secret, needs_backup=msg.skip_backup, no_backup=msg.no_backup

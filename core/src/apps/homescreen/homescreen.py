@@ -17,26 +17,26 @@ async def homescreen():
 
 def display_homescreen():
     image = None
-    if storage.is_slip39_in_progress():
+    if storage.slip39.is_in_progress():
         label = "Waiting for other shares"
     elif not storage.is_initialized():
         label = "Go to trezor.io/start"
     else:
-        label = storage.get_label() or "My Trezor"
-        image = storage.get_homescreen()
+        label = storage.device.get_label() or "My Trezor"
+        image = storage.device.get_homescreen()
 
     if not image:
         image = res.load("apps/homescreen/res/bg.toif")
 
-    if storage.is_initialized() and storage.no_backup():
+    if storage.is_initialized() and storage.device.no_backup():
         _err("SEEDLESS")
-    elif storage.is_initialized() and storage.unfinished_backup():
+    elif storage.is_initialized() and storage.device.unfinished_backup():
         _err("BACKUP FAILED!")
-    elif storage.is_initialized() and storage.needs_backup():
+    elif storage.is_initialized() and storage.device.needs_backup():
         _warn("NEEDS BACKUP!")
     elif storage.is_initialized() and not config.has_pin():
         _warn("PIN NOT SET!")
-    elif storage.is_slip39_in_progress():
+    elif storage.slip39.is_in_progress():
         _warn("SHAMIR IN PROGRESS!")
     else:
         ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)

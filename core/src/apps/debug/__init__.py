@@ -32,7 +32,7 @@ if __debug__:
 
         m = DebugLinkState()
         m.mnemonic_secret, m.mnemonic_type = mnemonic.get()
-        m.passphrase_protection = storage.has_passphrase()
+        m.passphrase_protection = storage.device.has_passphrase()
         m.reset_word_pos = reset_word_index
         m.reset_entropy = reset_internal_entropy
         if reset_current_words:

@@ -34,7 +34,7 @@ async def recovery_device(ctx, msg):
     if not msg.dry_run and storage.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
-    if not storage.is_slip39_in_progress():
+    if not storage.slip39.is_in_progress():
         if not msg.dry_run:
             title = "Wallet recovery"
             text = Text(title, ui.ICON_RECOVERY)
@@ -57,7 +57,7 @@ async def recovery_device(ctx, msg):
         wordcount = await request_wordcount(ctx, title)
         mnemonic_module = mnemonic.module_from_words_count(wordcount)
     else:
-        wordcount = storage.get_slip39_words_count()
+        wordcount = storage.slip39.get_words_count()
         mnemonic_module = mnemonic.slip39
 
     mnemonic_threshold = None
@@ -104,8 +104,10 @@ async def recovery_device(ctx, msg):
     # save into storage
     if msg.pin_protection:
         config.change_pin(pin_to_int(""), pin_to_int(newpin))
-    storage.set_u2f_counter(msg.u2f_counter)
-    storage.load_settings(label=msg.label, use_passphrase=msg.passphrase_protection)
+    storage.device.set_u2f_counter(msg.u2f_counter)
+    storage.device.load_settings(
+        label=msg.label, use_passphrase=msg.passphrase_protection
+    )
     mnemonic_module.store(secret=secret, needs_backup=False, no_backup=False)
 
     await show_success(ctx)
