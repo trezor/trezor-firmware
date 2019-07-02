@@ -4,7 +4,7 @@ import utime
 from micropython import const
 
 from trezor import config, io, log, loop, ui, utils, workflow
-from trezor.crypto import aes, der, hashlib, hmac, random
+from trezor.crypto import aes, chacha20poly1305, der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
 from trezor.ui.confirm import CONFIRMED, Confirm
 from trezor.ui.text import Text
@@ -106,6 +106,15 @@ _COSE_CURVE_P256 = const(1)  # P-256 curve
 _COSE_X_COORD_KEY = const(-2)  # x coordinate of the public key
 _COSE_Y_COORD_KEY = const(-3)  # y coordinate of the public key
 
+# Credential ID values
+_CRED_ID_VERSION = const(1)
+_CRED_ID_MIN_LENGTH = const(30)
+
+# Credential ID keys
+_CRED_ID_ACCOUNT_NAME = const(0x01)
+_CRED_ID_ACCOUNT_ID = const(0x02)
+_CRED_ID_CREATION_TIME = const(0x03)
+
 # hid error codes
 _ERR_NONE = const(0x00)  # no error
 _ERR_INVALID_CMD = const(0x01)  # invalid command
@@ -140,8 +149,13 @@ _CAPFLAG_WINK = const(0x01)  # device supports _CMD_WINK
 _CAPFLAG_CBOR = const(0x04)  # device supports _CMD_CBOR
 _U2FHID_IF_VERSION = const(2)  # interface version
 
-# register response
+# Key paths
 _U2F_KEY_PATH = const(0x80553246)
+_FIDO_KEY_PATH = const(0xC649444F)
+_FIDO_CRED_ID_KEY_PATH = b"FIDO2 Trezor Credential ID"
+_FIDO_HMAC_SECRET_KEY_PATH = b"FIDO2 Trezor hmac-secret"
+
+# register response
 _U2F_REGISTER_ID = const(0x05)  # version 2 registration identifier
 _U2F_ATT_PRIV_KEY = b"q&\xac+\xf6D\xdca\x86\xad\x83\xef\x1f\xcd\xf1*W\xb5\xcf\xa2\x00\x0b\x8a\xd0'\xe9V\xe8T\xc5\n\x8b"
 _U2F_ATT_CERT = b"0\x82\x01\x180\x81\xc0\x02\t\x00\xb1\xd9\x8fBdr\xd3,0\n\x06\x08*\x86H\xce=\x04\x03\x020\x151\x130\x11\x06\x03U\x04\x03\x0c\nTrezor U2F0\x1e\x17\r160429133153Z\x17\r260427133153Z0\x151\x130\x11\x06\x03U\x04\x03\x0c\nTrezor U2F0Y0\x13\x06\x07*\x86H\xce=\x02\x01\x06\x08*\x86H\xce=\x03\x01\x07\x03B\x00\x04\xd9\x18\xbd\xfa\x8aT\xac\x92\xe9\r\xa9\x1f\xcaz\xa2dT\xc0\xd1s61M\xde\x83\xa5K\x86\xb5\xdfN\xf0Re\x9a\x1do\xfc\xb7F\x7f\x1a\xcd\xdb\x8a3\x08\x0b^\xed\x91\x89\x13\xf4C\xa5&\x1b\xc7{h`o\xc10\n\x06\x08*\x86H\xce=\x04\x03\x02\x03G\x000D\x02 $\x1e\x81\xff\xd2\xe5\xe6\x156\x94\xc3U.\x8f\xeb\xd7\x1e\x895\x92\x1c\xb4\x83ACq\x1cv\xea\xee\xf3\x95\x02 _\x80\xeb\x10\xf2\\\xcc9\x8b<\xa8\xa9\xad\xa4\x02\x7f\x93\x13 w\xb7\xab\xcewFZ'\xf5=3\xa1\x1d"
@@ -553,10 +567,12 @@ class Fido2ConfirmMakeCredential(Fido2State):
         client_data_hash: bytes,
         rp_id: str,
         account_name: str,
+        account_id: bytes,
         hmac_secret: bool,
     ) -> None:
         super(Fido2ConfirmMakeCredential, self).__init__(cid, client_data_hash, rp_id)
         self.account_name = account_name
+        self.account_id = account_id
         self.hmac_secret = hmac_secret
 
     def get_header(self):
@@ -566,8 +582,12 @@ class Fido2ConfirmMakeCredential(Fido2State):
         return [self.rp_id, self.account_name]
 
     def on_confirm(self):
+        rp_id_hash = hashlib.sha256(self.rp_id).digest()
+        credential_id = generate_credential_id(
+            self.account_name, self.account_id, rp_id_hash
+        )
         response_data = cbor_make_credential_sign(
-            self.client_data_hash, hashlib.sha256(self.rp_id).digest(), self.hmac_secret
+            self.client_data_hash, rp_id_hash, credential_id, self.hmac_secret
         )
         return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
 
@@ -594,18 +614,19 @@ class Fido2ConfirmGetAssertion(Fido2State):
         return "FIDO2 Authenticate"
 
     def get_text(self):
-        return [self.rp_id]
+        account_name, _, _ = parse_credential_id(
+            self.credentials[0], hashlib.sha256(self.rp_id).digest()
+        )
+        return [self.rp_id, account_name]
 
     def on_confirm(self):
         # TODO Ask user to select credential from a list.
-        credential_id = self.credentials[0][0]
-        node = self.credentials[0][1]
+        credential_id = self.credentials[0]
 
         response_data = cbor_get_assertion_sign(
             self.client_data_hash,
             hashlib.sha256(self.rp_id).digest(),
             credential_id,
-            node,
             self.shared_secret,
             self.hmac_secret_salt,
         )
@@ -971,6 +992,69 @@ def generate_credential(app_id: bytes):
     return keybuf + keybase, pubkey, node.private_key()
 
 
+def generate_credential_id(
+    account_name: str, account_id: bytes, rp_id_hash: bytes
+) -> bytes:
+    from apps.common import seed
+
+    data = cbor.encode(
+        {
+            _CRED_ID_ACCOUNT_NAME: account_name,
+            _CRED_ID_ACCOUNT_ID: account_id,
+            _CRED_ID_CREATION_TIME: storage.next_u2f_counter(),
+        }
+    )
+
+    key = seed.derive_slip21_node_without_passphrase([_FIDO_CRED_ID_KEY_PATH]).key()
+    iv = random.bytes(12)
+    ctx = chacha20poly1305(key, iv)
+    ctx.auth(rp_id_hash)
+    ciphertext = ctx.encrypt(data)
+    tag = ctx.finish()
+    return bytes([_CRED_ID_VERSION]) + iv + ciphertext + tag
+
+
+def parse_credential_id(credential_id: bytes, rp_id_hash: bytes):
+    from apps.common import seed
+
+    if len(credential_id) < _CRED_ID_MIN_LENGTH or credential_id[0] != _CRED_ID_VERSION:
+        return False
+
+    key = seed.derive_slip21_node_without_passphrase([_FIDO_CRED_ID_KEY_PATH]).key()
+    iv = credential_id[1:13]
+    ciphertext = credential_id[13:-16]
+    tag = credential_id[-16:]
+    ctx = chacha20poly1305(key, iv)
+    ctx.auth(rp_id_hash)
+    data = ctx.decrypt(ciphertext)
+    if not utils.consteq(ctx.finish(), tag):
+        return False
+
+    try:
+        data = cbor.decode(data)
+    except Exception:
+        return False
+
+    if not isinstance(data, dict):
+        return False
+
+    account_name = data.get(_CRED_ID_ACCOUNT_NAME, None)
+    account_id = data.get(_CRED_ID_ACCOUNT_ID, None)
+    creation_time = data.get(_CRED_ID_CREATION_TIME, 0)
+
+    return account_name, account_id, creation_time
+
+
+def get_credential_private_key(credential_id: bytes) -> bytes:
+    from apps.common import seed
+
+    path = [_FIDO_KEY_PATH] + [
+        HARDENED | i for i in ustruct.unpack("<4L", credential_id[-16:])
+    ]
+    node = seed.derive_node_without_passphrase(path, "nist256p1")
+    return node.private_key()
+
+
 def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     keyhandle, pubkey, _ = generate_credential(app_id)
 
@@ -1151,6 +1235,11 @@ def cbor_error(cid: int, code: int) -> Cmd:
 def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
     from ubinascii import hexlify
 
+    if not storage.is_initialized():
+        if __debug__:
+            log.warning(__name__, "not initialized")
+        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+
     try:
         param = cbor.decode(req.data[1:])
         rp_id = param[_MAKECRED_CMD_RP]["id"]
@@ -1201,22 +1290,20 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
             user_verification = options["uv"]
 
     if "displayName" in user:
-        name = user["displayName"]
+        account_name = user["displayName"]
     elif "name" in user:
-        name = user["name"]
+        account_name = user["name"]
     else:
-        name = hexlify(account_id).decode()
-
-    # TODO Store name and account_id in the credential identifier.
+        account_name = hexlify(account_id).decode()
 
     if user_verification and not config.has_pin():
         state_set = dialog_mgr.set_state(
-            Fido2ConfirmNoPin(req.cid, client_data_hash, rp_id, name)
+            Fido2ConfirmNoPin(req.cid, client_data_hash, rp_id, account_name)
         )
     else:
         state_set = dialog_mgr.set_state(
             Fido2ConfirmMakeCredential(
-                req.cid, client_data_hash, rp_id, name, hmac_secret
+                req.cid, client_data_hash, rp_id, account_name, account_id, hmac_secret
             )
         )
     if not state_set:
@@ -1225,9 +1312,10 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
 
 
 def cbor_make_credential_sign(
-    client_data_hash: bytes, rp_id_hash: bytes, hmac_secret: bool
+    client_data_hash: bytes, rp_id_hash: bytes, credential_id: bytes, hmac_secret: bool
 ) -> bytes:
-    credential_id, pubkey, privkey = generate_credential(rp_id_hash)
+    privkey = get_credential_private_key(credential_id)
+    pubkey = nist256p1.publickey(privkey, False)
 
     flags = _AUTH_FLAG_UP | _AUTH_FLAG_AT
     if config.has_pin():
@@ -1285,6 +1373,11 @@ def get_node(rp_id_hash: bytes, credential_id: bytes):
 
 
 def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
+    if not storage.is_initialized():
+        if __debug__:
+            log.warning(__name__, "not initialized")
+        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+
     try:
         param = cbor.decode(req.data[1:])
         rp_id = param[_GETASSERT_CMD_RP_ID]
@@ -1319,21 +1412,21 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
             user_verification = options["uv"]
 
     try:
-        hmac_secret_salt, shared_secret = cbor_get_assertion_hmac_secret(param)
+        hmac_secret_salt, shared_secret = cbor_get_assertion_hmac_secret_salt(param)
     except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
-    credentials = []
-    for credential_id in credential_id_list:
-        node = get_node(rp_id_hash, credential_id)
-        if node is not None:
-            credentials.append((credential_id, node))
+    valid_credential_ids = [
+        credential_id
+        for credential_id in credential_id_list
+        if parse_credential_id(credential_id, rp_id_hash) is not False
+    ]
 
     if user_verification and not config.has_pin():
         state_set = dialog_mgr.set_state(
             Fido2ConfirmNoPin(req.cid, client_data_hash, rp_id)
         )
-    elif not credentials:
+    elif not valid_credential_ids:
         state_set = dialog_mgr.set_state(
             Fido2ConfirmNoCredentials(req.cid, client_data_hash, rp_id)
         )
@@ -1343,7 +1436,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
                 req.cid,
                 client_data_hash,
                 rp_id,
-                credentials,
+                valid_credential_ids,
                 shared_secret,
                 hmac_secret_salt,
             )
@@ -1353,7 +1446,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
     return None
 
 
-def cbor_get_assertion_hmac_secret(param):
+def cbor_get_assertion_hmac_secret_salt(param):
     hmac_secret = param.get(_GETASSERT_CMD_EXTENSIONS, {}).get("hmac-secret", None)
     if hmac_secret is None:
         return None, None
@@ -1383,13 +1476,26 @@ def cbor_get_assertion_hmac_secret(param):
     return hmac_secret_salt, shared_secret
 
 
+def cbor_get_assertion_hmac_secret(
+    credential_id: bytes, hmac_secret_salt: bytes, shared_secret: bytes
+) -> bytes:
+    from apps.common import seed
+
+    cred_random = seed.derive_slip21_node_without_passphrase(
+        [_FIDO_HMAC_SECRET_KEY_PATH, credential_id[-16:]]
+    ).key()
+    output = hmac.Hmac(cred_random, hmac_secret_salt[:32], hashlib.sha256).digest()
+    if len(hmac_secret_salt) == 64:
+        output += hmac.Hmac(cred_random, hmac_secret_salt[32:], hashlib.sha256).digest()
+    return aes(aes.CBC, shared_secret).encrypt(output)
+
+
 def cbor_get_assertion_sign(
     client_data_hash: bytes,
     rp_id_hash: bytes,
     credential_id: bytes,
-    node,
-    shared_secret,
-    hmac_secret_salt,
+    shared_secret: bytes,
+    hmac_secret_salt: bytes,
 ) -> bytes:
     flags = _AUTH_FLAG_UP
     if config.has_pin():
@@ -1397,30 +1503,24 @@ def cbor_get_assertion_sign(
 
     extensions = b""
     if hmac_secret_salt:
-        hmac_secret_key = hashlib.sha256(node.private_key()).digest()
-        output = hmac.Hmac(
-            hmac_secret_key, hmac_secret_salt[:32], hashlib.sha256
-        ).digest()
-        if len(hmac_secret_salt) == 64:
-            output += hmac.Hmac(
-                hmac_secret_key, hmac_secret_salt[32:], hashlib.sha256
-            ).digest()
         extensions = cbor.encode(
-            {"hmac-secret": aes(aes.CBC, shared_secret).encrypt(output)}
+            {
+                "hmac-secret": cbor_get_assertion_hmac_secret(
+                    credential_id, hmac_secret_salt, shared_secret
+                )
+            }
         )
         flags |= _AUTH_FLAG_ED
 
-    # get next counter
-    ctr = storage.next_u2f_counter()
-
-    auth_data = rp_id_hash + bytes([flags]) + ctr.to_bytes(4, "big") + extensions
+    auth_data = rp_id_hash + bytes([flags]) + b"\x00\x00\x00\x00" + extensions
     dig = hashlib.sha256()
     dig.update(auth_data)
     dig.update(client_data_hash)
     dig = dig.digest()
 
     # sign the digest and convert to der
-    sig = nist256p1.sign(node.private_key(), dig, False)
+    privkey = get_credential_private_key(credential_id)
+    sig = nist256p1.sign(privkey, dig, False)
     sig = der.encode_seq((sig[1:33], sig[33:]))
 
     response_data = {
