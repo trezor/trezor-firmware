@@ -4,6 +4,12 @@ import protobuf as p
 
 from .StellarAssetType import StellarAssetType
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class StellarPaymentOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 211
@@ -21,7 +27,7 @@ class StellarPaymentOp(p.MessageType):
         self.amount = amount
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('source_account', p.UnicodeType, 0),
             2: ('destination_account', p.UnicodeType, 0),

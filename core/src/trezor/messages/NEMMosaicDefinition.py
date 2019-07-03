@@ -4,9 +4,9 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class NEMMosaicDefinition(p.MessageType):
@@ -46,7 +46,7 @@ class NEMMosaicDefinition(p.MessageType):
         self.networks = networks if networks is not None else []
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('name', p.UnicodeType, 0),
             2: ('ticker', p.UnicodeType, 0),

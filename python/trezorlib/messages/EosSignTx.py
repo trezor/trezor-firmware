@@ -6,9 +6,9 @@ from .EosTxHeader import EosTxHeader
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class EosSignTx(p.MessageType):
@@ -27,7 +27,7 @@ class EosSignTx(p.MessageType):
         self.num_actions = num_actions
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
             2: ('chain_id', p.BytesType, 0),

@@ -4,6 +4,12 @@ import protobuf as p
 
 from .EosAsset import EosAsset
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class EosActionDelegate(p.MessageType):
 
@@ -22,7 +28,7 @@ class EosActionDelegate(p.MessageType):
         self.transfer = transfer
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('sender', p.UVarintType, 0),
             2: ('receiver', p.UVarintType, 0),

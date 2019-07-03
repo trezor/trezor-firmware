@@ -4,6 +4,12 @@ from .. import protobuf as p
 
 from .MoneroRingCtSig import MoneroRingCtSig
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class MoneroTransactionAllOutSetAck(p.MessageType):
     MESSAGE_WIRE_TYPE = 514
@@ -21,7 +27,7 @@ class MoneroTransactionAllOutSetAck(p.MessageType):
         self.full_message_hash = full_message_hash
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('extra', p.BytesType, 0),
             2: ('tx_prefix_hash', p.BytesType, 0),

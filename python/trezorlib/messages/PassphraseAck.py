@@ -2,6 +2,12 @@
 # fmt: off
 from .. import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class PassphraseAck(p.MessageType):
     MESSAGE_WIRE_TYPE = 42
@@ -15,7 +21,7 @@ class PassphraseAck(p.MessageType):
         self.state = state
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('passphrase', p.UnicodeType, 0),
             2: ('state', p.BytesType, 0),

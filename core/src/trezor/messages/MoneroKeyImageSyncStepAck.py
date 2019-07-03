@@ -6,9 +6,9 @@ from .MoneroExportedKeyImage import MoneroExportedKeyImage
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class MoneroKeyImageSyncStepAck(p.MessageType):
@@ -21,7 +21,7 @@ class MoneroKeyImageSyncStepAck(p.MessageType):
         self.kis = kis if kis is not None else []
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('kis', MoneroExportedKeyImage, p.FLAG_REPEATED),
         }

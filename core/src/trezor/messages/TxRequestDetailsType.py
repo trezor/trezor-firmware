@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class TxRequestDetailsType(p.MessageType):
 
@@ -18,7 +24,7 @@ class TxRequestDetailsType(p.MessageType):
         self.extra_data_offset = extra_data_offset
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('request_index', p.UVarintType, 0),
             2: ('tx_hash', p.BytesType, 0),

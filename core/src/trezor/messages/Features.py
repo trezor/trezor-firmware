@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class Features(p.MessageType):
     MESSAGE_WIRE_TYPE = 17
@@ -65,7 +71,7 @@ class Features(p.MessageType):
         self.no_backup = no_backup
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('vendor', p.UnicodeType, 0),
             2: ('major_version', p.UVarintType, 0),

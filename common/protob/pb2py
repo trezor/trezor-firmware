@@ -214,7 +214,7 @@ class Descriptor:
     def create_fields_method(self, fields):
         # fmt: off
         yield "    @classmethod"
-        yield "    def get_fields(cls):"
+        yield "    def get_fields(cls) -> Dict:"
         yield "        return {"
         for field in fields:
             comments = []
@@ -255,13 +255,12 @@ class Descriptor:
 
         yield from self.process_message_imports(fields)
 
-        if any(field.repeated for field in fields):
-            yield ""
-            yield "if __debug__:"
-            yield "    try:"
-            yield "        from typing import List"
-            yield "    except ImportError:"
-            yield "        List = None  # type: ignore"
+        yield ""
+        yield "if __debug__:"
+        yield "    try:"
+        yield "        from typing import Dict, List, Optional"
+        yield "    except ImportError:"
+        yield "        Dict, List, Optional = None, None, None  # type: ignore"
 
         yield ""
         yield ""

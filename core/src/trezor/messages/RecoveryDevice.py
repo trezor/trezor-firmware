@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class RecoveryDevice(p.MessageType):
     MESSAGE_WIRE_TYPE = 45
@@ -29,7 +35,7 @@ class RecoveryDevice(p.MessageType):
         self.dry_run = dry_run
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('word_count', p.UVarintType, 0),
             2: ('passphrase_protection', p.BoolType, 0),

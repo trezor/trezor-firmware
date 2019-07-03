@@ -2,6 +2,12 @@
 # fmt: off
 from .. import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class LiskSignedTx(p.MessageType):
     MESSAGE_WIRE_TYPE = 117
@@ -13,7 +19,7 @@ class LiskSignedTx(p.MessageType):
         self.signature = signature
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('signature', p.BytesType, 0),
         }

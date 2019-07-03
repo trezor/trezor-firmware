@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class HDNodeType(p.MessageType):
 
@@ -22,7 +28,7 @@ class HDNodeType(p.MessageType):
         self.public_key = public_key
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('depth', p.UVarintType, 0),  # required
             2: ('fingerprint', p.UVarintType, 0),  # required

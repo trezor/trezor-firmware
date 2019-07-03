@@ -2,6 +2,12 @@
 # fmt: off
 from .. import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class MoneroRingCtSig(p.MessageType):
 
@@ -16,7 +22,7 @@ class MoneroRingCtSig(p.MessageType):
         self.rv_type = rv_type
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('txn_fee', p.UVarintType, 0),
             2: ('message', p.BytesType, 0),

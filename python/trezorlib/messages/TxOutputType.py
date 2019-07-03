@@ -6,9 +6,9 @@ from .MultisigRedeemScriptType import MultisigRedeemScriptType
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class TxOutputType(p.MessageType):
@@ -36,7 +36,7 @@ class TxOutputType(p.MessageType):
         self.block_height_bip115 = block_height_bip115
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('address', p.UnicodeType, 0),
             2: ('address_n', p.UVarintType, p.FLAG_REPEATED),

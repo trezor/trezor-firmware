@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class Ping(p.MessageType):
     MESSAGE_WIRE_TYPE = 1
@@ -19,7 +25,7 @@ class Ping(p.MessageType):
         self.passphrase_protection = passphrase_protection
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('message', p.UnicodeType, 0),
             2: ('button_protection', p.BoolType, 0),

@@ -4,9 +4,9 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class CipherKeyValue(p.MessageType):
@@ -31,7 +31,7 @@ class CipherKeyValue(p.MessageType):
         self.iv = iv
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
             2: ('key', p.UnicodeType, 0),

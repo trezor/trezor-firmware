@@ -4,6 +4,12 @@ from .. import protobuf as p
 
 from .TezosContractID import TezosContractID
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class TezosOriginationOp(p.MessageType):
 
@@ -34,7 +40,7 @@ class TezosOriginationOp(p.MessageType):
         self.script = script
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('source', TezosContractID, 0),
             2: ('fee', p.UVarintType, 0),

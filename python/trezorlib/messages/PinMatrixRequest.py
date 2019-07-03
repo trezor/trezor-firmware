@@ -2,6 +2,12 @@
 # fmt: off
 from .. import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class PinMatrixRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 18
@@ -13,7 +19,7 @@ class PinMatrixRequest(p.MessageType):
         self.type = type
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('type', p.UVarintType, 0),
         }

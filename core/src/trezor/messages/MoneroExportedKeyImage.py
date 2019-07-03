@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class MoneroExportedKeyImage(p.MessageType):
 
@@ -14,7 +20,7 @@ class MoneroExportedKeyImage(p.MessageType):
         self.blob = blob
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('iv', p.BytesType, 0),
             3: ('blob', p.BytesType, 0),
