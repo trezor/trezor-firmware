@@ -1,17 +1,21 @@
 from trezor import loop
 
-workflows = []
-layouts = []
+if False:
+    from trezor import ui
+    from typing import List, Callable, Optional
+
+workflows = []  # type: List[loop.Task]
+layouts = []  # type: List[ui.Layout]
 layout_signal = loop.signal()
-default = None
-default_layout = None
+default = None  # type: Optional[loop.Task]
+default_layout = None  # type: Optional[Callable[[], loop.Task]]
 
 
-def onstart(w):
+def onstart(w: loop.Task) -> None:
     workflows.append(w)
 
 
-def onclose(w):
+def onclose(w: loop.Task) -> None:
     workflows.remove(w)
     if not layouts and default_layout:
         startdefault(default_layout)
@@ -24,7 +28,7 @@ def onclose(w):
             micropython.mem_info()
 
 
-def closedefault():
+def closedefault() -> None:
     global default
 
     if default:
@@ -32,7 +36,7 @@ def closedefault():
         default = None
 
 
-def startdefault(layout):
+def startdefault(layout: Callable[[], loop.Task]) -> None:
     global default
     global default_layout
 
@@ -42,18 +46,19 @@ def startdefault(layout):
         loop.schedule(default)
 
 
-def restartdefault():
+def restartdefault() -> None:
     global default_layout
-    d = default_layout
+
     closedefault()
-    startdefault(d)
+    if default_layout:
+        startdefault(default_layout)
 
 
-def onlayoutstart(l):
+def onlayoutstart(l: ui.Layout) -> None:
     closedefault()
     layouts.append(l)
 
 
-def onlayoutclose(l):
+def onlayoutclose(l: ui.Layout) -> None:
     if l in layouts:
         layouts.remove(l)

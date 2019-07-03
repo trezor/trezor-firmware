@@ -26,7 +26,7 @@ async def sign_tx(ctx, received_msg, keychain):
         del (result_msg, received_msg)
         utils.unimport_end(mods)
 
-        received_msg = await ctx.read(accept_msgs)
+        received_msg = await ctx.read_any(accept_msgs)
 
     utils.unimport_end(mods)
     return result_msg

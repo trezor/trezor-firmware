@@ -7,7 +7,7 @@ from apps.ethereum.networks import all_slip44_ids_hardened
 CURVE = "secp256k1"
 
 
-def boot():
+def boot() -> None:
     ns = []
     for i in all_slip44_ids_hardened():
         ns.append([CURVE, HARDENED | 44, i])

@@ -1,13 +1,19 @@
 from trezor.crypto.hashlib import sha256
+from trezor.messages.EosTxActionAck import EosTxActionAck
 from trezor.messages.EosTxActionRequest import EosTxActionRequest
-from trezor.messages.MessageType import EosTxActionAck
 from trezor.utils import HashWriter
 
 from apps.eos import helpers, writers
 from apps.eos.actions import layout
 
+if False:
+    from trezor import wire
+    from trezor.utils import Writer
 
-async def process_action(ctx, sha, action):
+
+async def process_action(
+    ctx: wire.Context, sha: HashWriter, action: EosTxActionAck
+) -> None:
     name = helpers.eos_name_to_string(action.common.name)
     account = helpers.eos_name_to_string(action.common.account)
 
@@ -65,7 +71,9 @@ async def process_action(ctx, sha, action):
     writers.write_bytes(sha, w)
 
 
-async def process_unknown_action(ctx, w, action):
+async def process_unknown_action(
+    ctx: wire.Context, w: Writer, action: EosTxActionAck
+) -> None:
     checksum = HashWriter(sha256())
     writers.write_variant32(checksum, action.unknown.data_size)
     checksum.extend(action.unknown.data_chunk)
@@ -91,7 +99,7 @@ async def process_unknown_action(ctx, w, action):
     await layout.confirm_action_unknown(ctx, action.common, checksum.get_digest())
 
 
-def check_action(action, name, account):
+def check_action(action: EosTxActionAck, name: str, account: str) -> bool:
     if account == "eosio":
         if (
             (name == "buyram" and action.buy_ram is not None)

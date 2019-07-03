@@ -1,6 +1,6 @@
 from trezor import utils, wire
-from trezor.messages.MessageType import TxAck
 from trezor.messages.RequestType import TXFINISHED
+from trezor.messages.TxAck import TxAck
 from trezor.messages.TxRequest import TxRequest
 
 from apps.common import paths

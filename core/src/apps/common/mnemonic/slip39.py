@@ -2,6 +2,9 @@ from trezor.crypto import slip39
 
 from apps.common import mnemonic, storage
 
+if False:
+    from typing import Optional
+
 
 def generate_from_secret(master_secret: bytes, count: int, threshold: int) -> list:
     """
@@ -12,11 +15,11 @@ def generate_from_secret(master_secret: bytes, count: int, threshold: int) -> li
     )
 
 
-def get_type():
+def get_type() -> int:
     return mnemonic.TYPE_SLIP39
 
 
-def process_single(mnemonic: str) -> bytes:
+def process_single(mnemonic: str) -> Optional[bytes]:
     """
     Receives single mnemonic and processes it. Returns what is then stored in storage or
     None if more shares are needed.
@@ -72,14 +75,16 @@ def process_all(mnemonics: list) -> bytes:
     return secret
 
 
-def store(secret: bytes, needs_backup: bool, no_backup: bool):
+def store(secret: bytes, needs_backup: bool, no_backup: bool) -> None:
     storage.device.store_mnemonic_secret(
         secret, mnemonic.TYPE_SLIP39, needs_backup, no_backup
     )
     storage.slip39.delete_progress()
 
 
-def get_seed(encrypted_master_secret: bytes, passphrase: str, progress_bar=True):
+def get_seed(
+    encrypted_master_secret: bytes, passphrase: str, progress_bar: bool = True
+) -> bytes:
     if progress_bar:
         mnemonic._start_progress()
     identifier = storage.slip39.get_identifier()

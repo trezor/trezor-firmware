@@ -2,6 +2,9 @@ import sys
 import utime
 from micropython import const
 
+if False:
+    from typing import Any
+
 NOTSET = const(0)
 DEBUG = const(10)
 INFO = const(20)
@@ -21,7 +24,7 @@ level = DEBUG
 color = True
 
 
-def _log(name, mlevel, msg, *args):
+def _log(name: str, mlevel: int, msg: str, *args: Any) -> None:
     if __debug__ and mlevel >= level:
         if color:
             fmt = (
@@ -35,26 +38,26 @@ def _log(name, mlevel, msg, *args):
         print(fmt % ((utime.ticks_us(), name, _leveldict[mlevel][0]) + args))
 
 
-def debug(name, msg, *args):
+def debug(name: str, msg: str, *args: Any) -> None:
     _log(name, DEBUG, msg, *args)
 
 
-def info(name, msg, *args):
+def info(name: str, msg: str, *args: Any) -> None:
     _log(name, INFO, msg, *args)
 
 
-def warning(name, msg, *args):
+def warning(name: str, msg: str, *args: Any) -> None:
     _log(name, WARNING, msg, *args)
 
 
-def error(name, msg, *args):
+def error(name: str, msg: str, *args: Any) -> None:
     _log(name, ERROR, msg, *args)
 
 
-def exception(name, exc):
+def critical(name: str, msg: str, *args: Any) -> None:
+    _log(name, CRITICAL, msg, *args)
+
+
+def exception(name: str, exc: BaseException) -> None:
     _log(name, ERROR, "exception:")
     sys.print_exception(exc)
-
-
-def critical(name, msg, *args):
-    _log(name, CRITICAL, msg, *args)

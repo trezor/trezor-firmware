@@ -1,23 +1,3 @@
-from trezor.messages import (
-    EosActionBuyRam,
-    EosActionBuyRamBytes,
-    EosActionCommon,
-    EosActionDelegate,
-    EosActionDeleteAuth,
-    EosActionLinkAuth,
-    EosActionNewAccount,
-    EosActionRefund,
-    EosActionSellRam,
-    EosActionTransfer,
-    EosActionUndelegate,
-    EosActionUpdateAuth,
-    EosActionVoteProducer,
-    EosAsset,
-    EosAuthorization,
-    EosTxHeader,
-)
-from trezor.utils import HashWriter
-
 from apps.common.writers import (
     write_bytes,
     write_uint8,
@@ -26,8 +6,27 @@ from apps.common.writers import (
     write_uint64_le,
 )
 
+if False:
+    from trezor.messages.EosActionBuyRam import EosActionBuyRam
+    from trezor.messages.EosActionBuyRamBytes import EosActionBuyRamBytes
+    from trezor.messages.EosActionCommon import EosActionCommon
+    from trezor.messages.EosActionDelegate import EosActionDelegate
+    from trezor.messages.EosActionDeleteAuth import EosActionDeleteAuth
+    from trezor.messages.EosActionLinkAuth import EosActionLinkAuth
+    from trezor.messages.EosActionNewAccount import EosActionNewAccount
+    from trezor.messages.EosActionRefund import EosActionRefund
+    from trezor.messages.EosActionSellRam import EosActionSellRam
+    from trezor.messages.EosActionTransfer import EosActionTransfer
+    from trezor.messages.EosActionUndelegate import EosActionUndelegate
+    from trezor.messages.EosActionUpdateAuth import EosActionUpdateAuth
+    from trezor.messages.EosActionVoteProducer import EosActionVoteProducer
+    from trezor.messages.EosAsset import EosAsset
+    from trezor.messages.EosAuthorization import EosAuthorization
+    from trezor.messages.EosTxHeader import EosTxHeader
+    from trezor.utils import Writer
 
-def write_auth(w: bytearray, auth: EosAuthorization) -> int:
+
+def write_auth(w: Writer, auth: EosAuthorization) -> None:
     write_uint32_le(w, auth.threshold)
     write_variant32(w, len(auth.keys))
     for key in auth.keys:
@@ -47,7 +46,7 @@ def write_auth(w: bytearray, auth: EosAuthorization) -> int:
         write_uint16_le(w, wait.weight)
 
 
-def write_header(hasher: HashWriter, header: EosTxHeader):
+def write_header(hasher: Writer, header: EosTxHeader) -> None:
     write_uint32_le(hasher, header.expiration)
     write_uint16_le(hasher, header.ref_block_num)
     write_uint32_le(hasher, header.ref_block_prefix)
@@ -56,7 +55,7 @@ def write_header(hasher: HashWriter, header: EosTxHeader):
     write_variant32(hasher, header.delay_sec)
 
 
-def write_action_transfer(w: bytearray, msg: EosActionTransfer):
+def write_action_transfer(w: Writer, msg: EosActionTransfer) -> None:
     write_uint64_le(w, msg.sender)
     write_uint64_le(w, msg.receiver)
     write_asset(w, msg.quantity)
@@ -64,24 +63,24 @@ def write_action_transfer(w: bytearray, msg: EosActionTransfer):
     write_bytes(w, msg.memo)
 
 
-def write_action_buyram(w: bytearray, msg: EosActionBuyRam):
+def write_action_buyram(w: Writer, msg: EosActionBuyRam) -> None:
     write_uint64_le(w, msg.payer)
     write_uint64_le(w, msg.receiver)
     write_asset(w, msg.quantity)
 
 
-def write_action_buyrambytes(w: bytearray, msg: EosActionBuyRamBytes):
+def write_action_buyrambytes(w: Writer, msg: EosActionBuyRamBytes) -> None:
     write_uint64_le(w, msg.payer)
     write_uint64_le(w, msg.receiver)
     write_uint32_le(w, msg.bytes)
 
 
-def write_action_sellram(w: bytearray, msg: EosActionSellRam):
+def write_action_sellram(w: Writer, msg: EosActionSellRam) -> None:
     write_uint64_le(w, msg.account)
     write_uint64_le(w, msg.bytes)
 
 
-def write_action_delegate(w: bytearray, msg: EosActionDelegate):
+def write_action_delegate(w: Writer, msg: EosActionDelegate) -> None:
     write_uint64_le(w, msg.sender)
     write_uint64_le(w, msg.receiver)
     write_asset(w, msg.net_quantity)
@@ -89,18 +88,18 @@ def write_action_delegate(w: bytearray, msg: EosActionDelegate):
     write_uint8(w, 1 if msg.transfer else 0)
 
 
-def write_action_undelegate(w: bytearray, msg: EosActionUndelegate):
+def write_action_undelegate(w: Writer, msg: EosActionUndelegate) -> None:
     write_uint64_le(w, msg.sender)
     write_uint64_le(w, msg.receiver)
     write_asset(w, msg.net_quantity)
     write_asset(w, msg.cpu_quantity)
 
 
-def write_action_refund(w: bytearray, msg: EosActionRefund):
+def write_action_refund(w: Writer, msg: EosActionRefund) -> None:
     write_uint64_le(w, msg.owner)
 
 
-def write_action_voteproducer(w: bytearray, msg: EosActionVoteProducer):
+def write_action_voteproducer(w: Writer, msg: EosActionVoteProducer) -> None:
     write_uint64_le(w, msg.voter)
     write_uint64_le(w, msg.proxy)
     write_variant32(w, len(msg.producers))
@@ -108,61 +107,59 @@ def write_action_voteproducer(w: bytearray, msg: EosActionVoteProducer):
         write_uint64_le(w, producer)
 
 
-def write_action_updateauth(w: bytearray, msg: EosActionUpdateAuth):
+def write_action_updateauth(w: Writer, msg: EosActionUpdateAuth) -> None:
     write_uint64_le(w, msg.account)
     write_uint64_le(w, msg.permission)
     write_uint64_le(w, msg.parent)
     write_auth(w, msg.auth)
 
 
-def write_action_deleteauth(w: bytearray, msg: EosActionDeleteAuth):
+def write_action_deleteauth(w: Writer, msg: EosActionDeleteAuth) -> None:
     write_uint64_le(w, msg.account)
     write_uint64_le(w, msg.permission)
 
 
-def write_action_linkauth(w: bytearray, msg: EosActionLinkAuth):
+def write_action_linkauth(w: Writer, msg: EosActionLinkAuth) -> None:
     write_uint64_le(w, msg.account)
     write_uint64_le(w, msg.code)
     write_uint64_le(w, msg.type)
     write_uint64_le(w, msg.requirement)
 
 
-def write_action_unlinkauth(w: bytearray, msg: EosActionLinkAuth):
+def write_action_unlinkauth(w: Writer, msg: EosActionLinkAuth) -> None:
     write_uint64_le(w, msg.account)
     write_uint64_le(w, msg.code)
     write_uint64_le(w, msg.type)
 
 
-def write_action_newaccount(w: bytearray, msg: EosActionNewAccount):
+def write_action_newaccount(w: Writer, msg: EosActionNewAccount) -> None:
     write_uint64_le(w, msg.creator)
     write_uint64_le(w, msg.name)
     write_auth(w, msg.owner)
     write_auth(w, msg.active)
 
 
-def write_action_common(hasher: HashWriter, msg: EosActionCommon):
-    write_uint64_le(hasher, msg.account)
-    write_uint64_le(hasher, msg.name)
-    write_variant32(hasher, len(msg.authorization))
+def write_action_common(w: Writer, msg: EosActionCommon) -> None:
+    write_uint64_le(w, msg.account)
+    write_uint64_le(w, msg.name)
+    write_variant32(w, len(msg.authorization))
     for authorization in msg.authorization:
-        write_uint64_le(hasher, authorization.actor)
-        write_uint64_le(hasher, authorization.permission)
+        write_uint64_le(w, authorization.actor)
+        write_uint64_le(w, authorization.permission)
 
 
-def write_asset(w: bytearray, asset: EosAsset) -> int:
+def write_asset(w: Writer, asset: EosAsset) -> None:
     write_uint64_le(w, asset.amount)
     write_uint64_le(w, asset.symbol)
 
 
-def write_variant32(w: bytearray, value: int) -> int:
+def write_variant32(w: Writer, value: int) -> None:
     variant = bytearray()
     while True:
         b = value & 0x7F
         value >>= 7
         b |= (value > 0) << 7
         variant.append(b)
-
         if value == 0:
             break
-
     write_bytes(w, bytes(variant))

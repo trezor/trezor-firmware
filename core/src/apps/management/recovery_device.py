@@ -1,8 +1,8 @@
 from trezor import config, ui, wire
 from trezor.crypto import slip39
 from trezor.messages import ButtonRequestType
+from trezor.messages.ButtonAck import ButtonAck
 from trezor.messages.ButtonRequest import ButtonRequest
-from trezor.messages.MessageType import ButtonAck
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
 from trezor.ui.info import InfoConfirm
@@ -20,8 +20,11 @@ from apps.management.change_pin import request_pin_ack, request_pin_confirm
 if __debug__:
     from apps.debug import confirm_signal, input_signal
 
+if False:
+    from trezor.messages.RecoveryDevice import RecoveryDevice
 
-async def recovery_device(ctx, msg):
+
+async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     """
     Recover BIP39/SLIP39 seed into empty device.
 
@@ -116,7 +119,7 @@ async def recovery_device(ctx, msg):
     return Success(message="Device recovered")
 
 
-async def request_wordcount(ctx, title: str) -> int:
+async def request_wordcount(ctx: wire.Context, title: str) -> int:
     await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicWordCount), ButtonAck)
 
     text = Text(title, ui.ICON_RECOVERY)
@@ -131,7 +134,7 @@ async def request_wordcount(ctx, title: str) -> int:
     return count
 
 
-async def request_mnemonic(ctx, count: int, slip39: bool) -> str:
+async def request_mnemonic(ctx: wire.Context, count: int, slip39: bool) -> str:
     await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicInput), ButtonAck)
 
     words = []
@@ -149,7 +152,7 @@ async def request_mnemonic(ctx, count: int, slip39: bool) -> str:
     return " ".join(words)
 
 
-async def show_keyboard_info(ctx):
+async def show_keyboard_info(ctx: wire.Context) -> None:
     await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
 
     info = InfoConfirm(
@@ -174,7 +177,9 @@ async def show_success(ctx):
     )
 
 
-async def show_remaining_slip39_mnemonics(ctx, title, remaining: int):
+async def show_remaining_slip39_mnemonics(
+    ctx: wire.Context, title: str, remaining: int
+) -> None:
     text = Text(title, ui.ICON_RECOVERY)
     text.bold("Good job!")
     text.normal("Enter %s more recovery " % remaining)

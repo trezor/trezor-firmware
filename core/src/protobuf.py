@@ -1,32 +1,31 @@
-'''
+"""
 Extremely minimal streaming codec for a subset of protobuf.  Supports uint32,
 bytes, string, embedded message and repeated fields.
-
-For de-serializing (loading) protobuf types, object with `AsyncReader`
-interface is required:
-
->>> class AsyncReader:
->>>     async def areadinto(self, buffer):
->>>         """
->>>         Reads `len(buffer)` bytes into `buffer`, or raises `EOFError`.
->>>         """
-
-For serializing (dumping) protobuf types, object with `AsyncWriter` interface is
-required:
-
->>> class AsyncWriter:
->>>     async def awrite(self, buffer):
->>>         """
->>>         Writes all bytes from `buffer`, or raises `EOFError`.
->>>         """
-'''
+"""
 
 from micropython import const
+
+if False:
+    from typing import Any, Dict, List, Type, TypeVar
+    from typing_extensions import Protocol
+
+    class AsyncReader(Protocol):
+        async def areadinto(self, buf: bytearray) -> int:
+            """
+            Reads `len(buf)` bytes into `buf`, or raises `EOFError`.
+            """
+
+    class AsyncWriter(Protocol):
+        async def awrite(self, buf: bytes) -> int:
+            """
+            Writes all bytes from `buf`, or raises `EOFError`.
+            """
+
 
 _UVARINT_BUFFER = bytearray(1)
 
 
-async def load_uvarint(reader):
+async def load_uvarint(reader: AsyncReader) -> int:
     buffer = _UVARINT_BUFFER
     result = 0
     shift = 0
@@ -39,11 +38,11 @@ async def load_uvarint(reader):
     return result
 
 
-async def dump_uvarint(writer, n):
+async def dump_uvarint(writer: AsyncWriter, n: int) -> None:
     if n < 0:
         raise ValueError("Cannot dump signed value, convert it to unsigned first.")
     buffer = _UVARINT_BUFFER
-    shifted = True
+    shifted = 1
     while shifted:
         shifted = n >> 7
         buffer[0] = (n & 0x7F) | (0x80 if shifted else 0x00)
@@ -51,7 +50,7 @@ async def dump_uvarint(writer, n):
         n = shifted
 
 
-def count_uvarint(n):
+def count_uvarint(n: int) -> int:
     if n < 0:
         raise ValueError("Cannot dump signed value, convert it to unsigned first.")
     if n <= 0x7F:
@@ -95,14 +94,14 @@ def count_uvarint(n):
 # So we have to branch on whether the number is negative.
 
 
-def sint_to_uint(sint):
+def sint_to_uint(sint: int) -> int:
     res = sint << 1
     if sint < 0:
         res = ~res
     return res
 
 
-def uint_to_sint(uint):
+def uint_to_sint(uint: int) -> int:
     sign = uint & 1
     res = uint >> 1
     if sign:
@@ -133,27 +132,31 @@ class UnicodeType:
 class MessageType:
     WIRE_TYPE = 2
 
+    # Type id for the wire codec.
+    # Technically, not every protobuf message has this.
+    MESSAGE_WIRE_TYPE = -1
+
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {}
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         for kw in kwargs:
             setattr(self, kw, kwargs[kw])
 
-    def __eq__(self, rhs):
+    def __eq__(self, rhs: Any) -> bool:
         return self.__class__ is rhs.__class__ and self.__dict__ == rhs.__dict__
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<%s>" % self.__class__.__name__
 
 
 class LimitedReader:
-    def __init__(self, reader, limit):
+    def __init__(self, reader: AsyncReader, limit: int) -> None:
         self.reader = reader
         self.limit = limit
 
-    async def areadinto(self, buf):
+    async def areadinto(self, buf: bytearray) -> int:
         if self.limit < len(buf):
             raise EOFError
         else:
@@ -162,20 +165,15 @@ class LimitedReader:
             return nread
 
 
-class CountingWriter:
-    def __init__(self):
-        self.size = 0
-
-    async def awrite(self, buf):
-        nwritten = len(buf)
-        self.size += nwritten
-        return nwritten
-
-
 FLAG_REPEATED = const(1)
 
+if False:
+    LoadedMessageType = TypeVar("LoadedMessageType", bound=MessageType)
 
-async def load_message(reader, msg_type):
+
+async def load_message(
+    reader: AsyncReader, msg_type: Type[LoadedMessageType]
+) -> LoadedMessageType:
     fields = msg_type.get_fields()
     msg = msg_type()
 
@@ -239,7 +237,9 @@ async def load_message(reader, msg_type):
     return msg
 
 
-async def dump_message(writer, msg, fields=None):
+async def dump_message(
+    writer: AsyncWriter, msg: MessageType, fields: Dict = None
+) -> None:
     repvalue = [0]
 
     if fields is None:
@@ -297,7 +297,7 @@ async def dump_message(writer, msg, fields=None):
                 raise TypeError
 
 
-def count_message(msg, fields=None):
+def count_message(msg: MessageType, fields: Dict = None) -> int:
     nbytes = 0
     repvalue = [0]
 
@@ -361,7 +361,7 @@ def count_message(msg, fields=None):
     return nbytes
 
 
-def _count_bytes_list(svalue):
+def _count_bytes_list(svalue: List[bytes]) -> int:
     res = 0
     for x in svalue:
         res += len(x)

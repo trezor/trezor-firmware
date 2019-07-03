@@ -5,12 +5,18 @@ from trezorui import Display
 
 from trezor import io, loop, res, utils, workflow
 
+if False:
+    from typing import Any, Generator, Iterable, Tuple, TypeVar
+
+    Pos = Tuple[int, int]
+    Area = Tuple[int, int, int, int]
+
 display = Display()
 
 # in debug mode, display an indicator in top right corner
 if __debug__:
 
-    def debug_display_refresh():
+    def debug_display_refresh() -> None:
         display.bar(Display.WIDTH - 8, 0, 8, 8, 0xF800)
         display.refresh()
         if utils.SAVE_SCREEN:
@@ -59,25 +65,25 @@ from trezor.ui import style  # isort:skip
 from trezor.ui.style import *  # isort:skip # noqa: F401,F403
 
 
-def pulse(delay: int):
+def pulse(delay: int) -> float:
     # normalize sin from interval -1:1 to 0:1
     return 0.5 + 0.5 * math.sin(utime.ticks_us() / delay)
 
 
-async def click() -> tuple:
+async def click() -> Pos:
     touch = loop.wait(io.TOUCH)
     while True:
-        ev, *pos = yield touch
+        ev, *pos = await touch
         if ev == io.TOUCH_START:
             break
     while True:
-        ev, *pos = yield touch
+        ev, *pos = await touch
         if ev == io.TOUCH_END:
             break
-    return pos
+    return pos  # type: ignore
 
 
-def backlight_fade(val: int, delay: int = 14000, step: int = 15):
+def backlight_fade(val: int, delay: int = 14000, step: int = 15) -> None:
     if __debug__:
         if utils.DISABLE_FADE:
             display.backlight(val)
@@ -96,7 +102,7 @@ def header(
     fg: int = style.FG,
     bg: int = style.BG,
     ifg: int = style.GREEN,
-):
+) -> None:
     if icon is not None:
         display.icon(14, 15, res.load(icon), ifg, bg)
     display.text(44, 35, title, BOLD, fg, bg)
@@ -113,7 +119,7 @@ def grid(
     cells_x: int = 1,
     cells_y: int = 1,
     spacing: int = 0,
-):
+) -> Area:
     w = (end_x - start_x) // n_x
     h = (end_y - start_y) // n_y
     x = (i % n_x) * w
@@ -121,7 +127,7 @@ def grid(
     return (x + start_x, y + start_y, (w - spacing) * cells_x, (h - spacing) * cells_y)
 
 
-def in_area(area: tuple, x: int, y: int) -> bool:
+def in_area(area: Area, x: int, y: int) -> bool:
     ax, ay, aw, ah = area
     return ax <= x <= ax + aw and ay <= y <= ay + ah
 
@@ -132,7 +138,7 @@ REPAINT = const(-256)
 
 
 class Control:
-    def dispatch(self, event, x, y):
+    def dispatch(self, event: int, x: int, y: int) -> None:
         if event is RENDER:
             self.on_render()
         elif event is io.TOUCH_START:
@@ -144,16 +150,16 @@ class Control:
         elif event is REPAINT:
             self.repaint = True
 
-    def on_render(self):
+    def on_render(self) -> None:
         pass
 
-    def on_touch_start(self, x, y):
+    def on_touch_start(self, x: int, y: int) -> None:
         pass
 
-    def on_touch_move(self, x, y):
+    def on_touch_move(self, x: int, y: int) -> None:
         pass
 
-    def on_touch_end(self, x, y):
+    def on_touch_end(self, x: int, y: int) -> None:
         pass
 
 
@@ -164,8 +170,12 @@ class LayoutCancelled(Exception):
     pass
 
 
+if False:
+    ResultValue = TypeVar("ResultValue")
+
+
 class Result(Exception):
-    def __init__(self, value):
+    def __init__(self, value: ResultValue) -> None:
         self.value = value
 
 
@@ -173,7 +183,7 @@ class Layout(Control):
     """
     """
 
-    async def __iter__(self):
+    async def __iter__(self) -> ResultValue:
         value = None
         try:
             if workflow.layout_signal.task is not None:
@@ -188,17 +198,20 @@ class Layout(Control):
             workflow.onlayoutclose(self)
         return value
 
-    def create_tasks(self):
+    def __await__(self) -> Generator[Any, Any, ResultValue]:
+        return self.__iter__()  # type: ignore
+
+    def create_tasks(self) -> Iterable[loop.Task]:
         return self.handle_input(), self.handle_rendering()
 
-    def handle_input(self):
+    def handle_input(self) -> loop.Task:  # type: ignore
         touch = loop.wait(io.TOUCH)
         while True:
             event, x, y = yield touch
             self.dispatch(event, x, y)
             self.dispatch(RENDER, 0, 0)
 
-    def handle_rendering(self):
+    def handle_rendering(self) -> loop.Task:  # type: ignore
         backlight_fade(style.BACKLIGHT_DIM)
         display.clear()
         self.dispatch(RENDER, 0, 0)

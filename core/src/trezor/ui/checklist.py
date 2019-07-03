@@ -3,32 +3,37 @@ from micropython import const
 from trezor import res, ui
 from trezor.ui.text import TEXT_HEADER_HEIGHT, TEXT_LINE_HEIGHT
 
+if False:
+    from typing import Iterable, List, Union
+
+    ChecklistItem = Union[str, Iterable[str]]
+
 _CHECKLIST_MAX_LINES = const(5)
 _CHECKLIST_OFFSET_X = const(24)
 _CHECKLIST_OFFSET_X_ICON = const(0)
 
 
 class Checklist(ui.Control):
-    def __init__(self, title, icon):
+    def __init__(self, title: str, icon: str) -> None:
         self.title = title
         self.icon = icon
-        self.items = []
+        self.items = []  # type: List[ChecklistItem]
         self.active = 0
         self.repaint = True
 
-    def add(self, choice):
-        self.items.append(choice)
+    def add(self, item: ChecklistItem) -> None:
+        self.items.append(item)
 
-    def select(self, active):
+    def select(self, active: int) -> None:
         self.active = active
 
-    def on_render(self):
+    def on_render(self) -> None:
         if self.repaint:
             ui.header(self.title, self.icon)
             self.render_items()
             self.repaint = False
 
-    def render_items(self):
+    def render_items(self) -> None:
         offset_x = _CHECKLIST_OFFSET_X
         offset_y = TEXT_HEADER_HEIGHT + TEXT_LINE_HEIGHT
         bg = ui.BG

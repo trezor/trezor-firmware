@@ -11,14 +11,17 @@ from trezor.ui.button import (
     ButtonMono,
 )
 
+if False:
+    from typing import Iterable
 
-def digit_area(i):
+
+def digit_area(i: int) -> ui.Area:
     if i == 9:  # 0-position
         i = 10  # display it in the middle
     return ui.grid(i + 3)  # skip the first line
 
 
-def generate_digits():
+def generate_digits() -> Iterable[int]:
     digits = list(range(0, 10))  # 0-9
     random.shuffle(digits)
     # We lay out the buttons top-left to bottom-right, but the order
@@ -27,13 +30,13 @@ def generate_digits():
 
 
 class PinInput(ui.Control):
-    def __init__(self, prompt, subprompt, pin):
+    def __init__(self, prompt: str, subprompt: str, pin: str) -> None:
         self.prompt = prompt
         self.subprompt = subprompt
         self.pin = pin
         self.repaint = True
 
-    def on_render(self):
+    def on_render(self) -> None:
         if self.repaint:
             if self.pin:
                 self.render_pin()
@@ -41,7 +44,7 @@ class PinInput(ui.Control):
                 self.render_prompt()
             self.repaint = False
 
-    def render_pin(self):
+    def render_pin(self) -> None:
         display.bar(0, 0, ui.WIDTH, 50, ui.BG)
         count = len(self.pin)
         BOX_WIDTH = const(240)
@@ -54,7 +57,7 @@ class PinInput(ui.Control):
                 render_x + i * PADDING, RENDER_Y, DOT_SIZE, DOT_SIZE, ui.GREY, ui.BG, 4
             )
 
-    def render_prompt(self):
+    def render_prompt(self) -> None:
         display.bar(0, 0, ui.WIDTH, 50, ui.BG)
         if self.subprompt:
             display.text_center(ui.WIDTH // 2, 20, self.prompt, ui.BOLD, ui.GREY, ui.BG)
@@ -66,35 +69,37 @@ class PinInput(ui.Control):
 
 
 class PinButton(Button):
-    def __init__(self, index, digit, matrix):
-        self.matrix = matrix
+    def __init__(self, index: int, digit: int, dialog: "PinDialog"):
+        self.dialog = dialog
         super().__init__(digit_area(index), str(digit), ButtonMono)
 
-    def on_click(self):
-        self.matrix.assign(self.matrix.input.pin + self.content)
+    def on_click(self) -> None:
+        self.dialog.assign(self.dialog.input.pin + self.text)
 
 
 CANCELLED = object()
 
 
 class PinDialog(ui.Layout):
-    def __init__(self, prompt, subprompt, allow_cancel=True, maxlength=9):
+    def __init__(
+        self, prompt: str, subprompt: str, allow_cancel: bool = True, maxlength: int = 9
+    ) -> None:
         self.maxlength = maxlength
         self.input = PinInput(prompt, subprompt, "")
 
         icon_confirm = res.load(ui.ICON_CONFIRM)
         self.confirm_button = Button(ui.grid(14), icon_confirm, ButtonConfirm)
-        self.confirm_button.on_click = self.on_confirm
+        self.confirm_button.on_click = self.on_confirm  # type: ignore
         self.confirm_button.disable()
 
         icon_back = res.load(ui.ICON_BACK)
         self.reset_button = Button(ui.grid(12), icon_back, ButtonClear)
-        self.reset_button.on_click = self.on_reset
+        self.reset_button.on_click = self.on_reset  # type: ignore
 
         if allow_cancel:
             icon_lock = res.load(ui.ICON_LOCK)
             self.cancel_button = Button(ui.grid(12), icon_lock, ButtonCancel)
-            self.cancel_button.on_click = self.on_cancel
+            self.cancel_button.on_click = self.on_cancel  # type: ignore
         else:
             self.cancel_button = Button(ui.grid(12), "")
             self.cancel_button.disable()
@@ -103,7 +108,7 @@ class PinDialog(ui.Layout):
             PinButton(i, d, self) for i, d in enumerate(generate_digits())
         ]
 
-    def dispatch(self, event, x, y):
+    def dispatch(self, event: int, x: int, y: int) -> None:
         self.input.dispatch(event, x, y)
         if self.input.pin:
             self.reset_button.dispatch(event, x, y)
@@ -113,7 +118,7 @@ class PinDialog(ui.Layout):
         for btn in self.pin_buttons:
             btn.dispatch(event, x, y)
 
-    def assign(self, pin):
+    def assign(self, pin: str) -> None:
         if len(pin) > self.maxlength:
             return
         for btn in self.pin_buttons:
@@ -132,12 +137,12 @@ class PinDialog(ui.Layout):
         self.input.pin = pin
         self.input.repaint = True
 
-    def on_reset(self):
+    def on_reset(self) -> None:
         self.assign("")
 
-    def on_cancel(self):
+    def on_cancel(self) -> None:
         raise ui.Result(CANCELLED)
 
-    def on_confirm(self):
+    def on_confirm(self) -> None:
         if self.input.pin:
             raise ui.Result(self.input.pin)

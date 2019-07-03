@@ -2,12 +2,15 @@ from trezor.crypto import hashlib, hmac, random
 
 from apps.common import storage
 
-_cached_seed = None
-_cached_passphrase = None
-_cached_passphrase_fprint = b"\x00\x00\x00\x00"
+if False:
+    from typing import Optional
+
+_cached_seed = None  # type: Optional[bytes]
+_cached_passphrase = None  # type: Optional[str]
+_cached_passphrase_fprint = b"\x00\x00\x00\x00"  # type: bytes
 
 
-def get_state(prev_state: bytes = None, passphrase: str = None) -> bytes:
+def get_state(prev_state: bytes = None, passphrase: str = None) -> Optional[bytes]:
     if prev_state is None:
         salt = random.bytes(32)  # generate a random salt if no state provided
     else:
@@ -29,34 +32,34 @@ def _compute_state(salt: bytes, passphrase: str) -> bytes:
     return salt + state
 
 
-def get_seed():
+def get_seed() -> Optional[bytes]:
     return _cached_seed
 
 
-def get_passphrase():
+def get_passphrase() -> Optional[str]:
     return _cached_passphrase
 
 
-def get_passphrase_fprint():
+def get_passphrase_fprint() -> bytes:
     return _cached_passphrase_fprint
 
 
-def has_passphrase():
+def has_passphrase() -> bool:
     return _cached_passphrase is not None
 
 
-def set_seed(seed):
+def set_seed(seed: Optional[bytes]) -> None:
     global _cached_seed
     _cached_seed = seed
 
 
-def set_passphrase(passphrase):
+def set_passphrase(passphrase: Optional[str]) -> None:
     global _cached_passphrase, _cached_passphrase_fprint
     _cached_passphrase = passphrase
     _cached_passphrase_fprint = _compute_state(b"FPRINT", passphrase or "")[:4]
 
 
-def clear(keep_passphrase: bool = False):
+def clear(keep_passphrase: bool = False) -> None:
     set_seed(None)
     if not keep_passphrase:
         set_passphrase(None)
