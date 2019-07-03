@@ -6,7 +6,7 @@ from apps.common import HARDENED
 CURVE = "ed25519"
 
 
-def boot():
+def boot() -> None:
     ns = [[CURVE, HARDENED | 44, HARDENED | 134]]
     wire.add(MessageType.LiskGetPublicKey, __name__, "get_public_key", ns)
     wire.add(MessageType.LiskGetAddress, __name__, "get_address", ns)

@@ -3,7 +3,7 @@ from trezor import config, io, loop, res, ui
 from apps.common import storage
 
 
-async def homescreen():
+async def homescreen() -> None:
     # render homescreen in dimmed mode and fade back in
     ui.backlight_fade(ui.BACKLIGHT_DIM)
     display_homescreen()
@@ -15,7 +15,7 @@ async def homescreen():
         await touch
 
 
-def display_homescreen():
+def display_homescreen() -> None:
     image = None
     if storage.slip39.is_in_progress():
         label = "Waiting for other shares"
@@ -44,13 +44,13 @@ def display_homescreen():
     ui.display.text_center(ui.WIDTH // 2, 220, label, ui.BOLD, ui.FG, ui.BG)
 
 
-def _warn(message: str):
+def _warn(message: str) -> None:
     ui.display.bar(0, 0, ui.WIDTH, 30, ui.YELLOW)
     ui.display.text_center(ui.WIDTH // 2, 22, message, ui.BOLD, ui.BLACK, ui.YELLOW)
     ui.display.bar(0, 30, ui.WIDTH, ui.HEIGHT - 30, ui.BG)
 
 
-def _err(message: str):
+def _err(message: str) -> None:
     ui.display.bar(0, 0, ui.WIDTH, 30, ui.RED)
     ui.display.text_center(ui.WIDTH // 2, 22, message, ui.BOLD, ui.WHITE, ui.RED)
     ui.display.bar(0, 30, ui.WIDTH, ui.HEIGHT - 30, ui.BG)

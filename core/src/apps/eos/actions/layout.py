@@ -2,22 +2,7 @@ from micropython import const
 from ubinascii import hexlify
 
 from trezor import ui
-from trezor.messages import (
-    ButtonRequestType,
-    EosActionBuyRam,
-    EosActionBuyRamBytes,
-    EosActionDelegate,
-    EosActionDeleteAuth,
-    EosActionLinkAuth,
-    EosActionNewAccount,
-    EosActionRefund,
-    EosActionSellRam,
-    EosActionTransfer,
-    EosActionUndelegate,
-    EosActionUnlinkAuth,
-    EosActionUpdateAuth,
-    EosActionVoteProducer,
-)
+from trezor.messages import ButtonRequestType
 from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 from trezor.utils import chunks
@@ -25,6 +10,25 @@ from trezor.utils import chunks
 from apps.eos import helpers
 from apps.eos.get_public_key import _public_key_to_wif
 from apps.eos.layout import require_confirm
+
+if False:
+    from typing import List
+    from trezor import wire
+    from trezor.messages.EosAuthorization import EosAuthorization
+    from trezor.messages.EosActionBuyRam import EosActionBuyRam
+    from trezor.messages.EosActionBuyRamBytes import EosActionBuyRamBytes
+    from trezor.messages.EosActionCommon import EosActionCommon
+    from trezor.messages.EosActionDelegate import EosActionDelegate
+    from trezor.messages.EosActionDeleteAuth import EosActionDeleteAuth
+    from trezor.messages.EosActionLinkAuth import EosActionLinkAuth
+    from trezor.messages.EosActionNewAccount import EosActionNewAccount
+    from trezor.messages.EosActionRefund import EosActionRefund
+    from trezor.messages.EosActionSellRam import EosActionSellRam
+    from trezor.messages.EosActionTransfer import EosActionTransfer
+    from trezor.messages.EosActionUndelegate import EosActionUndelegate
+    from trezor.messages.EosActionUnlinkAuth import EosActionUnlinkAuth
+    from trezor.messages.EosActionUpdateAuth import EosActionUpdateAuth
+    from trezor.messages.EosActionVoteProducer import EosActionVoteProducer
 
 _LINE_LENGTH = const(17)
 _LINE_PLACEHOLDER = "{:<" + str(_LINE_LENGTH) + "}"
@@ -35,7 +39,9 @@ _FOUR_FIELDS_PER_PAGE = const(4)
 _FIVE_FIELDS_PER_PAGE = const(5)
 
 
-async def _require_confirm_paginated(ctx, header, fields, per_page):
+async def _require_confirm_paginated(
+    ctx: wire.Context, header: str, fields: List[str], per_page: int
+) -> None:
     pages = []
     for page in chunks(fields, per_page):
         if header == "Arbitrary data":
@@ -47,7 +53,7 @@ async def _require_confirm_paginated(ctx, header, fields, per_page):
     await require_confirm(ctx, Paginated(pages), ButtonRequestType.ConfirmOutput)
 
 
-async def confirm_action_buyram(ctx, msg: EosActionBuyRam):
+async def confirm_action_buyram(ctx: wire.Context, msg: EosActionBuyRam) -> None:
     text = "Buy RAM"
     fields = []
     fields.append("Payer:")
@@ -59,7 +65,9 @@ async def confirm_action_buyram(ctx, msg: EosActionBuyRam):
     await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
-async def confirm_action_buyrambytes(ctx, msg: EosActionBuyRamBytes):
+async def confirm_action_buyrambytes(
+    ctx: wire.Context, msg: EosActionBuyRamBytes
+) -> None:
     text = "Buy RAM"
     fields = []
     fields.append("Payer:")
@@ -71,7 +79,7 @@ async def confirm_action_buyrambytes(ctx, msg: EosActionBuyRamBytes):
     await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
-async def confirm_action_delegate(ctx, msg: EosActionDelegate):
+async def confirm_action_delegate(ctx: wire.Context, msg: EosActionDelegate) -> None:
     text = "Delegate"
     fields = []
     fields.append("Sender:")
@@ -93,7 +101,7 @@ async def confirm_action_delegate(ctx, msg: EosActionDelegate):
     await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
-async def confirm_action_sellram(ctx, msg: EosActionSellRam):
+async def confirm_action_sellram(ctx: wire.Context, msg: EosActionSellRam) -> None:
     text = "Sell RAM"
     fields = []
     fields.append("Receiver:")
@@ -103,7 +111,9 @@ async def confirm_action_sellram(ctx, msg: EosActionSellRam):
     await _require_confirm_paginated(ctx, text, fields, _TWO_FIELDS_PER_PAGE)
 
 
-async def confirm_action_undelegate(ctx, msg: EosActionUndelegate):
+async def confirm_action_undelegate(
+    ctx: wire.Context, msg: EosActionUndelegate
+) -> None:
     text = "Undelegate"
     fields = []
     fields.append("Sender:")
@@ -117,14 +127,16 @@ async def confirm_action_undelegate(ctx, msg: EosActionUndelegate):
     await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
-async def confirm_action_refund(ctx, msg: EosActionRefund):
+async def confirm_action_refund(ctx: wire.Context, msg: EosActionRefund) -> None:
     text = Text("Refund", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.normal("Owner:")
     text.normal(helpers.eos_name_to_string(msg.owner))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
-async def confirm_action_voteproducer(ctx, msg: EosActionVoteProducer):
+async def confirm_action_voteproducer(
+    ctx: wire.Context, msg: EosActionVoteProducer
+) -> None:
     if msg.proxy and not msg.producers:
         # PROXY
         text = Text("Vote for proxy", ui.ICON_CONFIRM, icon_color=ui.GREEN)
@@ -151,7 +163,9 @@ async def confirm_action_voteproducer(ctx, msg: EosActionVoteProducer):
         await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
-async def confirm_action_transfer(ctx, msg: EosActionTransfer, account: str):
+async def confirm_action_transfer(
+    ctx: wire.Context, msg: EosActionTransfer, account: str
+) -> None:
     text = "Transfer"
     fields = []
     fields.append("From:")
@@ -170,7 +184,9 @@ async def confirm_action_transfer(ctx, msg: EosActionTransfer, account: str):
     await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
-async def confirm_action_updateauth(ctx, msg: EosActionUpdateAuth):
+async def confirm_action_updateauth(
+    ctx: wire.Context, msg: EosActionUpdateAuth
+) -> None:
     text = "Update Auth"
     fields = []
     fields.append("Account:")
@@ -183,7 +199,9 @@ async def confirm_action_updateauth(ctx, msg: EosActionUpdateAuth):
     await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
-async def confirm_action_deleteauth(ctx, msg: EosActionDeleteAuth):
+async def confirm_action_deleteauth(
+    ctx: wire.Context, msg: EosActionDeleteAuth
+) -> None:
     text = Text("Delete auth", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.normal("Account:")
     text.normal(helpers.eos_name_to_string(msg.account))
@@ -192,7 +210,7 @@ async def confirm_action_deleteauth(ctx, msg: EosActionDeleteAuth):
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
-async def confirm_action_linkauth(ctx, msg: EosActionLinkAuth):
+async def confirm_action_linkauth(ctx: wire.Context, msg: EosActionLinkAuth) -> None:
     text = "Link Auth"
     fields = []
     fields.append("Account:")
@@ -206,7 +224,9 @@ async def confirm_action_linkauth(ctx, msg: EosActionLinkAuth):
     await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
-async def confirm_action_unlinkauth(ctx, msg: EosActionUnlinkAuth):
+async def confirm_action_unlinkauth(
+    ctx: wire.Context, msg: EosActionUnlinkAuth
+) -> None:
     text = "Unlink Auth"
     fields = []
     fields.append("Account:")
@@ -218,7 +238,9 @@ async def confirm_action_unlinkauth(ctx, msg: EosActionUnlinkAuth):
     await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
-async def confirm_action_newaccount(ctx, msg: EosActionNewAccount):
+async def confirm_action_newaccount(
+    ctx: wire.Context, msg: EosActionNewAccount
+) -> None:
     text = "New Account"
     fields = []
     fields.append("Creator:")
@@ -230,7 +252,9 @@ async def confirm_action_newaccount(ctx, msg: EosActionNewAccount):
     await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
 
 
-async def confirm_action_unknown(ctx, action, checksum):
+async def confirm_action_unknown(
+    ctx: wire.Context, action: EosActionCommon, checksum: bytes
+) -> None:
     text = "Arbitrary data"
     fields = []
     fields.append("Contract:")
@@ -242,7 +266,7 @@ async def confirm_action_unknown(ctx, action, checksum):
     await _require_confirm_paginated(ctx, text, fields, _FIVE_FIELDS_PER_PAGE)
 
 
-def authorization_fields(auth):
+def authorization_fields(auth: EosAuthorization) -> List[str]:
     fields = []
 
     fields.append("Threshold:")
@@ -288,11 +312,9 @@ def authorization_fields(auth):
     return fields
 
 
-def split_data(data):
-    temp_list = []
-    len_left = len(data)
-    while len_left > 0:
-        temp_list.append("{} ".format(data[:_LINE_LENGTH]))
+def split_data(data: str) -> List[str]:
+    lines = []
+    while data:
+        lines.append("{} ".format(data[:_LINE_LENGTH]))
         data = data[_LINE_LENGTH:]
-        len_left = len(data)
-    return temp_list
+    return lines

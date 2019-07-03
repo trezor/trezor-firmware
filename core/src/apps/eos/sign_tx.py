@@ -3,8 +3,8 @@ from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
 from trezor.messages.EosSignedTx import EosSignedTx
 from trezor.messages.EosSignTx import EosSignTx
+from trezor.messages.EosTxActionAck import EosTxActionAck
 from trezor.messages.EosTxActionRequest import EosTxActionRequest
-from trezor.messages.MessageType import EosTxActionAck
 from trezor.utils import HashWriter
 
 from apps.common import paths
@@ -13,8 +13,13 @@ from apps.eos.actions import process_action
 from apps.eos.helpers import base58_encode, validate_full_path
 from apps.eos.layout import require_sign_tx
 
+if False:
+    from apps.common import seed
 
-async def sign_tx(ctx, msg: EosSignTx, keychain):
+
+async def sign_tx(
+    ctx: wire.Context, msg: EosSignTx, keychain: seed.Keychain
+) -> EosSignedTx:
     if msg.chain_id is None:
         raise wire.DataError("No chain id")
     if msg.header is None:
@@ -39,7 +44,7 @@ async def sign_tx(ctx, msg: EosSignTx, keychain):
     return EosSignedTx(signature=base58_encode("SIG_", "K1", signature))
 
 
-async def _init(ctx, sha, msg):
+async def _init(ctx: wire.Context, sha: HashWriter, msg: EosSignTx) -> None:
     writers.write_bytes(sha, msg.chain_id)
     writers.write_header(sha, msg.header)
     writers.write_variant32(sha, 0)
@@ -48,7 +53,7 @@ async def _init(ctx, sha, msg):
     await require_sign_tx(ctx, msg.num_actions)
 
 
-async def _actions(ctx, sha, num_actions: int):
+async def _actions(ctx: wire.Context, sha: HashWriter, num_actions: int) -> None:
     for i in range(num_actions):
         action = await ctx.call(EosTxActionRequest(), EosTxActionAck)
         await process_action(ctx, sha, action)

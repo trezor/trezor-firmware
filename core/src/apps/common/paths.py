@@ -7,20 +7,32 @@ from trezor.ui.text import Text
 from apps.common import HARDENED
 from apps.common.confirm import require_confirm
 
+if False:
+    from typing import Any, Callable, List
+    from trezor import wire
+    from apps.common import seed
 
-async def validate_path(ctx, validate_func, keychain, path, curve, **kwargs):
+
+async def validate_path(
+    ctx: wire.Context,
+    validate_func: Callable[..., bool],
+    keychain: seed.Keychain,
+    path: List[int],
+    curve: str,
+    **kwargs: Any,
+) -> None:
     keychain.validate_path(path, curve)
     if not validate_func(path, **kwargs):
         await show_path_warning(ctx, path)
 
 
-async def show_path_warning(ctx, path: list):
+async def show_path_warning(ctx: wire.Context, path: List[int]) -> None:
     text = Text("Confirm path", ui.ICON_WRONG, ui.RED)
     text.normal("Path")
     text.mono(*break_address_n_to_lines(path))
     text.normal("is unknown.")
     text.normal("Are you sure?")
-    return await require_confirm(ctx, text, ButtonRequestType.UnknownDerivationPath)
+    await require_confirm(ctx, text, ButtonRequestType.UnknownDerivationPath)
 
 
 def validate_path_for_get_public_key(path: list, slip44_id: int) -> bool:
@@ -53,7 +65,7 @@ def is_hardened(i: int) -> bool:
 
 
 def break_address_n_to_lines(address_n: list) -> list:
-    def path_item(i: int):
+    def path_item(i: int) -> str:
         if i & HARDENED:
             return str(i ^ HARDENED) + "'"
         else:

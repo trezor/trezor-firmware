@@ -8,13 +8,16 @@ from trezor.utils import consteq
 from apps.common import storage
 from apps.common.mnemonic import bip39, slip39
 
+if False:
+    from typing import Any, Tuple
+
 TYPE_BIP39 = const(0)
 TYPE_SLIP39 = const(1)
 
 TYPES_WORD_COUNT = {12: bip39, 18: bip39, 24: bip39, 20: slip39, 33: slip39}
 
 
-def get() -> (bytes, int):
+def get() -> Tuple[bytes, int]:
     mnemonic_secret = storage.device.get_mnemonic_secret()
     mnemonic_type = storage.device.get_mnemonic_type() or TYPE_BIP39
     if mnemonic_type not in (TYPE_BIP39, TYPE_SLIP39):
@@ -22,15 +25,16 @@ def get() -> (bytes, int):
     return mnemonic_secret, mnemonic_type
 
 
-def get_seed(passphrase: str = "", progress_bar=True):
+def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
     mnemonic_secret, mnemonic_type = get()
     if mnemonic_type == TYPE_BIP39:
         return bip39.get_seed(mnemonic_secret, passphrase, progress_bar)
     elif mnemonic_type == TYPE_SLIP39:
         return slip39.get_seed(mnemonic_secret, passphrase, progress_bar)
+    raise ValueError("Unknown mnemonic type")
 
 
-def dry_run(secret: bytes):
+def dry_run(secret: bytes) -> None:
     digest_input = sha256(secret).digest()
     stored, _ = get()
     digest_stored = sha256(stored).digest()
@@ -42,11 +46,11 @@ def dry_run(secret: bytes):
         )
 
 
-def module_from_words_count(count: int):
+def module_from_words_count(count: int) -> Any:
     return TYPES_WORD_COUNT[count]
 
 
-def _start_progress():
+def _start_progress() -> None:
     workflow.closedefault()
     ui.backlight_fade(ui.BACKLIGHT_DIM)
     ui.display.clear()
@@ -55,11 +59,11 @@ def _start_progress():
     ui.backlight_fade(ui.BACKLIGHT_NORMAL)
 
 
-def _render_progress(progress: int, total: int):
+def _render_progress(progress: int, total: int) -> None:
     p = 1000 * progress // total
     ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
     ui.display.refresh()
 
 
-def _stop_progress():
+def _stop_progress() -> None:
     pass

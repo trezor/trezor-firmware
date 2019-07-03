@@ -6,7 +6,11 @@ import ustruct as struct
 from micropython import const
 
 from trezor import log
-from trezor.utils import ensure
+
+if False:
+    from typing import Any, Dict, Iterable, List, Tuple
+
+    Value = Any
 
 _CBOR_TYPE_MASK = const(0xE0)
 _CBOR_INFO_BITS = const(0x1F)
@@ -32,7 +36,7 @@ _CBOR_BREAK = const(0x1F)
 _CBOR_RAW_TAG = const(0x18)
 
 
-def _header(typ, l: int):
+def _header(typ: int, l: int) -> bytes:
     if l < 24:
         return struct.pack(">B", typ + l)
     elif l < 2 ** 8:
@@ -47,7 +51,7 @@ def _header(typ, l: int):
         raise NotImplementedError("Length %d not suppported" % l)
 
 
-def _cbor_encode(value):
+def _cbor_encode(value: Value) -> Iterable[bytes]:
     if isinstance(value, int):
         if value >= 0:
             yield _header(_CBOR_UNSIGNED_INT, value)
@@ -95,7 +99,7 @@ def _cbor_encode(value):
         raise NotImplementedError
 
 
-def _read_length(cbor, aux):
+def _read_length(cbor: bytes, aux: int) -> Tuple[int, bytes]:
     if aux < _CBOR_UINT8_FOLLOWS:
         return (aux, cbor)
     elif aux == _CBOR_UINT8_FOLLOWS:
@@ -124,7 +128,7 @@ def _read_length(cbor, aux):
         raise NotImplementedError("Length %d not suppported" % aux)
 
 
-def _cbor_decode(cbor):
+def _cbor_decode(cbor: bytes) -> Tuple[Value, bytes]:
     fb = cbor[0]
     data = b""
     fb_type = fb & _CBOR_TYPE_MASK
@@ -158,7 +162,7 @@ def _cbor_decode(cbor):
                 res.append(item)
             return (res, data)
     elif fb_type == _CBOR_MAP:
-        res = {}
+        res = {}  # type: Dict[Value, Value]
         if fb_aux == _CBOR_VAR_FOLLOWS:
             data = cbor[1:]
             while True:
@@ -201,36 +205,41 @@ def _cbor_decode(cbor):
 
 
 class Tagged:
-    def __init__(self, tag, value):
+    def __init__(self, tag: int, value: Value) -> None:
         self.tag = tag
         self.value = value
 
-    def __eq__(self, other):
-        return self.tag == other.tag and self.value == other.value
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, Tagged)
+            and self.tag == other.tag
+            and self.value == other.value
+        )
 
 
 class Raw:
-    def __init__(self, value):
+    def __init__(self, value: Value):
         self.value = value
 
 
 class IndefiniteLengthArray:
-    def __init__(self, array):
-        ensure(isinstance(array, list))
+    def __init__(self, array: List[Value]) -> None:
         self.array = array
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, IndefiniteLengthArray):
             return self.array == other.array
-        else:
+        elif isinstance(other, list):
             return self.array == other
+        else:
+            return False
 
 
-def encode(value):
+def encode(value: Value) -> bytes:
     return b"".join(_cbor_encode(value))
 
 
-def decode(cbor: bytes):
+def decode(cbor: bytes) -> Value:
     res, check = _cbor_decode(cbor)
     if not (check == b""):
         raise ValueError

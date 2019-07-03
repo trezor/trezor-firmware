@@ -1,6 +1,6 @@
 from trezor import config, wire
 from trezor.crypto import bip39, hashlib, random, slip39
-from trezor.messages import MessageType
+from trezor.messages.EntropyAck import EntropyAck
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
@@ -12,8 +12,11 @@ from apps.management.common import layout
 if __debug__:
     from apps import debug
 
+if False:
+    from trezor.messages.ResetDevice import ResetDevice
 
-async def reset_device(ctx, msg):
+
+async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     # validate parameters and device state
     _validate_reset_device(msg)
 
@@ -34,7 +37,7 @@ async def reset_device(ctx, msg):
         await layout.show_internal_entropy(ctx, int_entropy)
 
     # request external entropy and compute the master secret
-    entropy_ack = await ctx.call(EntropyRequest(), MessageType.EntropyAck)
+    entropy_ack = await ctx.call(EntropyRequest(), EntropyAck)
     ext_entropy = entropy_ack.entropy
     secret = _compute_secret_from_entropy(int_entropy, ext_entropy, msg.strength)
 
@@ -84,7 +87,7 @@ async def reset_device(ctx, msg):
     return Success(message="Initialized")
 
 
-async def backup_slip39_wallet(ctx, secret: bytes):
+async def backup_slip39_wallet(ctx: wire.Context, secret: bytes) -> None:
     # get number of shares
     await layout.slip39_show_checklist_set_shares(ctx)
     shares_count = await layout.slip39_prompt_number_of_shares(ctx)
@@ -101,12 +104,12 @@ async def backup_slip39_wallet(ctx, secret: bytes):
     await layout.slip39_show_and_confirm_shares(ctx, mnemonics)
 
 
-async def backup_bip39_wallet(ctx, secret: bytes):
+async def backup_bip39_wallet(ctx: wire.Context, secret: bytes) -> None:
     mnemonic = bip39.from_data(secret)
     await layout.bip39_show_and_confirm_mnemonic(ctx, mnemonic)
 
 
-def _validate_reset_device(msg):
+def _validate_reset_device(msg: ResetDevice) -> None:
     if msg.strength not in (128, 256):
         if msg.slip39:
             raise wire.ProcessError("Invalid strength (has to be 128 or 256 bits)")

@@ -4,7 +4,8 @@ from trezor.crypto import bip32
 from apps.common import HARDENED, cache, mnemonic, storage
 from apps.common.request_passphrase import protect_by_passphrase
 
-allow = list
+if False:
+    from typing import List, Optional
 
 
 class Keychain:
@@ -16,16 +17,16 @@ class Keychain:
     def __init__(self, seed: bytes, namespaces: list):
         self.seed = seed
         self.namespaces = namespaces
-        self.roots = [None] * len(namespaces)
+        self.roots = [None] * len(namespaces)  # type: List[Optional[bip32.HDNode]]
 
-    def __del__(self):
+    def __del__(self) -> None:
         for root in self.roots:
             if root is not None:
                 root.__del__()
         del self.roots
         del self.seed
 
-    def validate_path(self, checked_path: list, checked_curve: str):
+    def validate_path(self, checked_path: list, checked_curve: str) -> None:
         for curve, *path in self.namespaces:
             if path == checked_path[: len(path)] and curve == checked_curve:
                 if "ed25519" in curve and not _path_hardened(checked_path):

@@ -2,7 +2,7 @@ from trezor import wire
 from trezor.messages import MessageType
 
 
-def boot():
+def boot() -> None:
     ns = [
         ["curve25519"],
         ["ed25519"],

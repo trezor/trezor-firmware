@@ -72,7 +72,7 @@ pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 
 mypy:
-	mypy \
+	mypy --config-file ../setup.cfg \
 		src/main.py
 
 ## code generation:
