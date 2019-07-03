@@ -4,6 +4,12 @@ from .. import protobuf as p
 
 from .HDNodeType import HDNodeType
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class LoadDevice(p.MessageType):
     MESSAGE_WIRE_TYPE = 13
@@ -29,7 +35,7 @@ class LoadDevice(p.MessageType):
         self.u2f_counter = u2f_counter
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('mnemonic', p.UnicodeType, 0),
             2: ('node', HDNodeType, 0),

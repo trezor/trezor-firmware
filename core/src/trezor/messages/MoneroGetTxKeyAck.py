@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class MoneroGetTxKeyAck(p.MessageType):
     MESSAGE_WIRE_TYPE = 551
@@ -17,7 +23,7 @@ class MoneroGetTxKeyAck(p.MessageType):
         self.tx_derivations = tx_derivations
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('salt', p.BytesType, 0),
             2: ('tx_keys', p.BytesType, 0),

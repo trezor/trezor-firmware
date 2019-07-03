@@ -2,6 +2,12 @@
 # fmt: off
 from .. import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class ApplySettings(p.MessageType):
     MESSAGE_WIRE_TYPE = 25
@@ -25,7 +31,7 @@ class ApplySettings(p.MessageType):
         self.display_rotation = display_rotation
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('language', p.UnicodeType, 0),
             2: ('label', p.UnicodeType, 0),

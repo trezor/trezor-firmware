@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class MoneroLiveRefreshStepRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 554
@@ -21,7 +27,7 @@ class MoneroLiveRefreshStepRequest(p.MessageType):
         self.sub_addr_minor = sub_addr_minor
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('out_key', p.BytesType, 0),
             2: ('recv_deriv', p.BytesType, 0),

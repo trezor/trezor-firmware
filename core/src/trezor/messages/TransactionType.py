@@ -8,9 +8,9 @@ from .TxOutputType import TxOutputType
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class TransactionType(p.MessageType):
@@ -48,7 +48,7 @@ class TransactionType(p.MessageType):
         self.branch_id = branch_id
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('version', p.UVarintType, 0),
             2: ('inputs', TxInputType, p.FLAG_REPEATED),

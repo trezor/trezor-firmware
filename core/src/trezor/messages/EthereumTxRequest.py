@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class EthereumTxRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 59
@@ -19,7 +25,7 @@ class EthereumTxRequest(p.MessageType):
         self.signature_s = signature_s
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('data_length', p.UVarintType, 0),
             2: ('signature_v', p.UVarintType, 0),

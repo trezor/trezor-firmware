@@ -8,9 +8,9 @@ from .EosAuthorizationWait import EosAuthorizationWait
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class EosAuthorization(p.MessageType):
@@ -28,7 +28,7 @@ class EosAuthorization(p.MessageType):
         self.waits = waits if waits is not None else []
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('threshold', p.UVarintType, 0),
             2: ('keys', EosAuthorizationKey, p.FLAG_REPEATED),

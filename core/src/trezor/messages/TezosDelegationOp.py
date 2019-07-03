@@ -4,6 +4,12 @@ import protobuf as p
 
 from .TezosContractID import TezosContractID
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class TezosDelegationOp(p.MessageType):
 
@@ -24,7 +30,7 @@ class TezosDelegationOp(p.MessageType):
         self.delegate = delegate
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('source', TezosContractID, 0),
             2: ('fee', p.UVarintType, 0),

@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class EosActionLinkAuth(p.MessageType):
 
@@ -18,7 +24,7 @@ class EosActionLinkAuth(p.MessageType):
         self.requirement = requirement
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('account', p.UVarintType, 0),
             2: ('code', p.UVarintType, 0),

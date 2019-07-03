@@ -6,9 +6,9 @@ from .MoneroTransactionRsigData import MoneroTransactionRsigData
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class MoneroTransactionInitAck(p.MessageType):
@@ -23,7 +23,7 @@ class MoneroTransactionInitAck(p.MessageType):
         self.rsig_data = rsig_data
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('hmacs', p.BytesType, p.FLAG_REPEATED),
             2: ('rsig_data', MoneroTransactionRsigData, 0),

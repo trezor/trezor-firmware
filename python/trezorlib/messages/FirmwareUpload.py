@@ -2,6 +2,12 @@
 # fmt: off
 from .. import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class FirmwareUpload(p.MessageType):
     MESSAGE_WIRE_TYPE = 7
@@ -15,7 +21,7 @@ class FirmwareUpload(p.MessageType):
         self.hash = hash
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('payload', p.BytesType, 0),  # required
             2: ('hash', p.BytesType, 0),

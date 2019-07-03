@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class RipplePayment(p.MessageType):
 
@@ -16,7 +22,7 @@ class RipplePayment(p.MessageType):
         self.destination_tag = destination_tag
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('amount', p.UVarintType, 0),
             2: ('destination', p.UnicodeType, 0),

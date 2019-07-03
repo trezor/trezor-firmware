@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class EntropyAck(p.MessageType):
     MESSAGE_WIRE_TYPE = 36
@@ -13,7 +19,7 @@ class EntropyAck(p.MessageType):
         self.entropy = entropy
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('entropy', p.BytesType, 0),
         }

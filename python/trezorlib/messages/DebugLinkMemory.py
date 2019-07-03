@@ -2,6 +2,12 @@
 # fmt: off
 from .. import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class DebugLinkMemory(p.MessageType):
     MESSAGE_WIRE_TYPE = 111
@@ -13,7 +19,7 @@ class DebugLinkMemory(p.MessageType):
         self.memory = memory
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('memory', p.BytesType, 0),
         }

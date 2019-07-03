@@ -6,9 +6,9 @@ from .EosPermissionLevel import EosPermissionLevel
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class EosActionCommon(p.MessageType):
@@ -24,7 +24,7 @@ class EosActionCommon(p.MessageType):
         self.authorization = authorization if authorization is not None else []
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('account', p.UVarintType, 0),
             2: ('name', p.UVarintType, 0),

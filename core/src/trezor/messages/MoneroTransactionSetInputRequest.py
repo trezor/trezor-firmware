@@ -4,6 +4,12 @@ import protobuf as p
 
 from .MoneroTransactionSourceEntry import MoneroTransactionSourceEntry
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class MoneroTransactionSetInputRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 503
@@ -15,7 +21,7 @@ class MoneroTransactionSetInputRequest(p.MessageType):
         self.src_entr = src_entr
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('src_entr', MoneroTransactionSourceEntry, 0),
         }

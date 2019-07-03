@@ -4,6 +4,12 @@ from .. import protobuf as p
 
 from .MoneroTransactionSourceEntry import MoneroTransactionSourceEntry
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class MoneroTransactionInputViniRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 507
@@ -23,7 +29,7 @@ class MoneroTransactionInputViniRequest(p.MessageType):
         self.pseudo_out_hmac = pseudo_out_hmac
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('src_entr', MoneroTransactionSourceEntry, 0),
             2: ('vini', p.BytesType, 0),

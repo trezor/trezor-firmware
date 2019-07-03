@@ -8,9 +8,9 @@ from .LiskSignatureType import LiskSignatureType
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class LiskTransactionAsset(p.MessageType):
@@ -30,7 +30,7 @@ class LiskTransactionAsset(p.MessageType):
         self.data = data
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('signature', LiskSignatureType, 0),
             2: ('delegate', LiskDelegateType, 0),

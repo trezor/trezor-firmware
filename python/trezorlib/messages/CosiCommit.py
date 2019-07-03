@@ -4,9 +4,9 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class CosiCommit(p.MessageType):
@@ -21,7 +21,7 @@ class CosiCommit(p.MessageType):
         self.data = data
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
             2: ('data', p.BytesType, 0),

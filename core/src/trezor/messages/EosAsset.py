@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class EosAsset(p.MessageType):
 
@@ -14,7 +20,7 @@ class EosAsset(p.MessageType):
         self.symbol = symbol
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('amount', p.SVarintType, 0),
             2: ('symbol', p.UVarintType, 0),

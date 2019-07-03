@@ -2,6 +2,12 @@
 # fmt: off
 from .. import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class EosPermissionLevel(p.MessageType):
 
@@ -14,7 +20,7 @@ class EosPermissionLevel(p.MessageType):
         self.permission = permission
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('actor', p.UVarintType, 0),
             2: ('permission', p.UVarintType, 0),

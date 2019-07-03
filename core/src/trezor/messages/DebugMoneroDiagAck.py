@@ -4,9 +4,9 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class DebugMoneroDiagAck(p.MessageType):
@@ -29,7 +29,7 @@ class DebugMoneroDiagAck(p.MessageType):
         self.data2 = data2
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('ins', p.UVarintType, 0),
             2: ('p1', p.UVarintType, 0),
