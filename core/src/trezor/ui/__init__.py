@@ -65,9 +65,9 @@ from trezor.ui import style  # isort:skip
 from trezor.ui.style import *  # isort:skip # noqa: F401,F403
 
 
-def pulse(delay: int) -> float:
+def pulse(period: int, offset: int = 0) -> float:
     # normalize sin from interval -1:1 to 0:1
-    return 0.5 + 0.5 * math.sin(utime.ticks_us() / delay)
+    return 0.5 + 0.5 * math.sin(2 * math.pi * (utime.ticks_us() + offset) / period)
 
 
 async def alert(count: int = 3):
