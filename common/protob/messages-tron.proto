@@ -192,7 +192,7 @@ message TronSignTx {
             optional string second_asset_id = 7;        // Asset id
             optional string second_asset_name = 8;      // Asset name
             optional uint32 second_asset_decimals = 9;  // Asset decimals
-            optional string exachange_signature = 10;   // Excahnge signature
+            optional string exchange_signature = 10;   // Excahnge signature
         }
         // TronExchangeWithdrawContract
         message TronExchangeWithdrawContract {
@@ -205,7 +205,7 @@ message TronSignTx {
             optional string second_asset_id = 7;        // Asset id
             optional string second_asset_name = 8;      // Asset name
             optional uint32 second_asset_decimals = 9;  // Asset decimals
-            optional string exachange_signature = 10;   // Excahnge signature
+            optional string exchange_signature = 10;   // Excahnge signature
         }
         // TronExchangeTransactionContract
         message TronExchangeTransactionContract {
@@ -219,7 +219,7 @@ message TronSignTx {
             optional string second_asset_id = 8;        // Asset id
             optional string second_asset_name = 9;      // Asset name
             optional uint32 second_asset_decimals = 10; // Asset decimals
-            optional string exachange_signature = 11;   // Excahnge signature
+            optional string exchange_signature = 11;   // Excahnge signature
         }
 
         optional TronTransferContract transfer_contract = 1;

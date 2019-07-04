@@ -17,7 +17,7 @@ class TronExchangeTransactionContract(p.MessageType):
         second_asset_id: str = None,
         second_asset_name: str = None,
         second_asset_decimals: int = None,
-        exachange_signature: str = None,
+        exchange_signature: str = None,
     ) -> None:
         self.exchange_id = exchange_id
         self.token_id = token_id
@@ -29,7 +29,7 @@ class TronExchangeTransactionContract(p.MessageType):
         self.second_asset_id = second_asset_id
         self.second_asset_name = second_asset_name
         self.second_asset_decimals = second_asset_decimals
-        self.exachange_signature = exachange_signature
+        self.exchange_signature = exchange_signature
 
     @classmethod
     def get_fields(cls):
@@ -44,5 +44,5 @@ class TronExchangeTransactionContract(p.MessageType):
             8: ('second_asset_id', p.UnicodeType, 0),
             9: ('second_asset_name', p.UnicodeType, 0),
             10: ('second_asset_decimals', p.UVarintType, 0),
-            11: ('exachange_signature', p.UnicodeType, 0),
+            11: ('exchange_signature', p.UnicodeType, 0),
         }

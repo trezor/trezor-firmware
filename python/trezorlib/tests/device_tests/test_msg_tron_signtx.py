@@ -96,19 +96,24 @@ class TestMsgTronSigntx(TrezorTest):
                 vote_witness_contract=proto.TronVoteWitnessContract(
                     votes=[
                         proto.TronVote(
-                            vote_address="TKSXDA8HfE9E1y39RczVQ1ZascUEtaSToF", vote_count=1000000
+                            vote_address="TKSXDA8HfE9E1y39RczVQ1ZascUEtaSToF",
+                            vote_count=1000000,
                         ),
                         proto.TronVote(
-                            vote_address="TTcYhypP8m4phDhN6oRexz2174zAerjEWP", vote_count=100000
+                            vote_address="TTcYhypP8m4phDhN6oRexz2174zAerjEWP",
+                            vote_count=100000,
                         ),
                         proto.TronVote(
-                            vote_address="TE7hnUtWRRBz3SkFrX8JESWUmEvxxAhoPt", vote_count=100000
+                            vote_address="TE7hnUtWRRBz3SkFrX8JESWUmEvxxAhoPt",
+                            vote_count=100000,
                         ),
                         proto.TronVote(
-                            vote_address="TVMP5r12ymtNerq5KB4E8zAgLDmg2FqsEG", vote_count=10000
+                            vote_address="TVMP5r12ymtNerq5KB4E8zAgLDmg2FqsEG",
+                            vote_count=10000,
                         ),
                         proto.TronVote(
-                            vote_address="TRni6NxF8CQVcywcDm67sEpCYCo7BUGXCD", vote_count=1000
+                            vote_address="TRni6NxF8CQVcywcDm67sEpCYCo7BUGXCD",
+                            vote_count=1000,
                         ),
                     ]
                 )
@@ -267,7 +272,7 @@ class TestMsgTronSigntx(TrezorTest):
             result.signature.hex()
             == "6c10c4f0149135749507607f890dc529083fe41504b22052dd68d946b4caed704a116f2d6a767934ed43ae6d4c6ccf0002317e00dfdd5415ed8c72f8c6b5f74a01"
         )
-        
+
     def test_tron_freeze_balance_energy(self):
         load_device(self)
 
@@ -312,7 +317,7 @@ class TestMsgTronSigntx(TrezorTest):
             result.signature.hex()
             == "9885b510e3aff53b9e85511acf6b6a803a79472d5cdd27774bdc8363877e99685a9b71c2eec44de392b77bf00f6fdbab8b0a58fbee6d2401c1b2ea798a87b9a901"
         )
-        
+
     def test_tron_freeze_balance_energy_rental(self):
         load_device(self)
 
@@ -421,7 +426,7 @@ class TestMsgTronSigntx(TrezorTest):
             result.signature.hex()
             == "e8176724732452c7b21654922df0efc796b4ed56b2f408b0dd6ac90eb593fa9f6a67145af27e44bcfd5e515cfb6014d747ce43aec9a819eb2a4a321425dad92100"
         )
-    
+
     def test_tron_withdraw_balance(self):
         load_device(self)
 
@@ -558,9 +563,7 @@ class TestMsgTronSigntx(TrezorTest):
             expiration=1531429101000,
             timestamp=1531428803023,
             contract=proto.TronContract(
-                set_account_id=proto.TronSetAccountIdContract(
-                    account_id="CryptoChain"
-                )
+                set_account_id=proto.TronSetAccountIdContract(account_id="CryptoChain")
             ),
         )
 
@@ -568,6 +571,127 @@ class TestMsgTronSigntx(TrezorTest):
         assert (
             result.signature.hex()
             == "d3868f17951ff242ab92c2be500c676d21f9d396c0c8ab82912975d593bf3f0279ebbd9b7211d1f4ed3c2e2045d62ccade2f48455fadd12023397acb515644d000"
+        )
+
+    def test_tron_create_exchange_contract(self):
+        load_device(self)
+
+        msg = proto.TronSignTx(
+            ref_block_bytes=bytes.fromhex("b80e"),
+            ref_block_hash=bytes.fromhex("2b264690d8bd9711"),
+            expiration=1561994163000,
+            timestamp=1561994105137,
+            contract=proto.TronContract(
+                exchange_create_contract=proto.TronExchangeCreateContract(
+                    first_asset_id="1002000",
+                    first_asset_name="BitTorrent",
+                    first_asset_decimals=6,
+                    first_asset_signature="304402202e2502f36b00e57be785fc79ec4043abcdd4fdd1b58d737ce123599dffad2cb602201702c307f009d014a553503b499591558b3634ceee4c054c61cedd8aca94c02b",
+                    first_asset_balance=1000000000,
+                    second_asset_id="_",
+                    second_asset_name="TRX",
+                    second_asset_decimals=6,
+                    second_asset_signature="3044022037c53ecb06abe1bfd708bd7afd047720b72e2bfc0a2e4b6ade9a33ae813565a802200a7d5086dc08c4a6f866aad803ac7438942c3c0a6371adcb6992db94487f66c7",
+                    second_asset_balance=100000000000,
+                )
+            ),
+        )
+
+        result = tron.sign_tx(self.client, parse_path(TRON_DEFAULT_PATH), msg)
+        assert (
+            result.signature.hex()
+            == "c4fe8e85c96fe5a847e8db67ca00d39f3859fdcd970373c925a1afe93099d4d507f14d97b653488c192cb5bd7c903b1f5968605e2a5adfd071433ff542afc05201"
+        )
+
+    def test_tron_exchange_inject_contract(self):
+        load_device(self)
+
+        msg = proto.TronSignTx(
+            ref_block_bytes=bytes.fromhex("b80e"),
+            ref_block_hash=bytes.fromhex("2b264690d8bd9711"),
+            expiration=1561994163000,
+            timestamp=1561994105137,
+            contract=proto.TronContract(
+                exchange_inject_contract=proto.TronExchangeInjectContract(
+                    exchange_id=6,
+                    token_id="1000166",
+                    quant=10000,
+                    first_asset_id="1000166",
+                    first_asset_name="CryptoChain",
+                    first_asset_decimals=0,
+                    second_asset_id="_",
+                    second_asset_name="TRX",
+                    second_asset_decimals=6,
+                    exchange_signature="3045022100fe276f30a63173b2440991affbbdc5d6d2d22b61b306b24e535a2fb866518d9c02205f7f41254201131382ec6c8b3c78276a2bb136f910b9a1f37bfde192fc448793",
+                )
+            ),
+        )
+
+        result = tron.sign_tx(self.client, parse_path(TRON_DEFAULT_PATH), msg)
+        assert (
+            result.signature.hex()
+            == "2fd95947864b04812d3523997a4cf911ad1d7dd25940346530007db8dcd975976eff84f8cad6321b5f1c9b399b1d89a22e66e6e71b13439a66b7df3fbc6b588000"
+        )
+
+    def test_tron_exchange_withdraw_contract(self):
+        load_device(self)
+
+        msg = proto.TronSignTx(
+            ref_block_bytes=bytes.fromhex("b80e"),
+            ref_block_hash=bytes.fromhex("2b264690d8bd9711"),
+            expiration=1561994163000,
+            timestamp=1561994105137,
+            contract=proto.TronContract(
+                exchange_withdraw_contract=proto.TronExchangeWithdrawContract(
+                    exchange_id=6,
+                    token_id="1000166",
+                    quant=10000,
+                    first_asset_id="1000166",
+                    first_asset_name="CryptoChain",
+                    first_asset_decimals=0,
+                    second_asset_id="_",
+                    second_asset_name="TRX",
+                    second_asset_decimals=6,
+                    exchange_signature="3045022100fe276f30a63173b2440991affbbdc5d6d2d22b61b306b24e535a2fb866518d9c02205f7f41254201131382ec6c8b3c78276a2bb136f910b9a1f37bfde192fc448793",
+                )
+            ),
+        )
+
+        result = tron.sign_tx(self.client, parse_path(TRON_DEFAULT_PATH), msg)
+        assert (
+            result.signature.hex()
+            == "0b357a4760dc29bb6b4e3f2d5ef437de070f09df7b46f57592db9c7a6823f2411f7e2264ed13126b8ed003e8b03794b3a0ec27f7841d758349714f34d1ebcf7b00"
+        )
+
+    def test_tron_exchange_transaction_contract(self):
+        load_device(self)
+
+        msg = proto.TronSignTx(
+            ref_block_bytes=bytes.fromhex("b80e"),
+            ref_block_hash=bytes.fromhex("2b264690d8bd9711"),
+            expiration=1561994163000,
+            timestamp=1561994105137,
+            contract=proto.TronContract(
+                exchange_transaction_contract=proto.TronExchangeTransactionContract(
+                    exchange_id=6,
+                    token_id="1000166",
+                    quant=10000,
+                    expected=10000000,
+                    first_asset_id="1000166",
+                    first_asset_name="CryptoChain",
+                    first_asset_decimals=0,
+                    second_asset_id="_",
+                    second_asset_name="TRX",
+                    second_asset_decimals=6,
+                    exchange_signature="3045022100fe276f30a63173b2440991affbbdc5d6d2d22b61b306b24e535a2fb866518d9c02205f7f41254201131382ec6c8b3c78276a2bb136f910b9a1f37bfde192fc448793",
+                )
+            ),
+        )
+
+        result = tron.sign_tx(self.client, parse_path(TRON_DEFAULT_PATH), msg)
+        assert (
+            result.signature.hex()
+            == "ae01e592cf9da33a2bea2db24a821d51b91c641f15141b45b49e31739e6c296439a19fbe1839e95d110df66bae9001b965371041c3465e497f17ce0484bd0af800"
         )
 
 

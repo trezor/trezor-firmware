@@ -325,8 +325,8 @@ def pack_contract(contract, owner_address):
 
         add_field(cmessage, 1, TYPE_STRING)
         write_bytes_with_length(cmessage, base58.decode_check(owner_address))
-        add_field(cmessage, 2, TYPE_STRING)
-        write_bytes_with_length(cmessage, contract.exchange_inject_contract.exchange_id)
+        add_field(cmessage, 2, TYPE_VARINT)
+        write_varint(cmessage, contract.exchange_inject_contract.exchange_id)
         add_field(cmessage, 3, TYPE_STRING)
         write_bytes_with_length(cmessage, contract.exchange_inject_contract.token_id)
         add_field(cmessage, 4, TYPE_VARINT)
@@ -338,10 +338,8 @@ def pack_contract(contract, owner_address):
 
         add_field(cmessage, 1, TYPE_STRING)
         write_bytes_with_length(cmessage, base58.decode_check(owner_address))
-        add_field(cmessage, 2, TYPE_STRING)
-        write_bytes_with_length(
-            cmessage, contract.exchange_withdraw_contract.exchange_id
-        )
+        add_field(cmessage, 2, TYPE_VARINT)
+        write_varint(cmessage, contract.exchange_withdraw_contract.exchange_id)
         add_field(cmessage, 3, TYPE_STRING)
         write_bytes_with_length(cmessage, contract.exchange_withdraw_contract.token_id)
         add_field(cmessage, 4, TYPE_VARINT)
@@ -353,10 +351,8 @@ def pack_contract(contract, owner_address):
 
         add_field(cmessage, 1, TYPE_STRING)
         write_bytes_with_length(cmessage, base58.decode_check(owner_address))
-        add_field(cmessage, 2, TYPE_STRING)
-        write_bytes_with_length(
-            cmessage, contract.exchange_transaction_contract.exchange_id
-        )
+        add_field(cmessage, 2, TYPE_VARINT)
+        write_varint(cmessage, contract.exchange_transaction_contract.exchange_id)
         add_field(cmessage, 3, TYPE_STRING)
         write_bytes_with_length(
             cmessage, contract.exchange_transaction_contract.token_id

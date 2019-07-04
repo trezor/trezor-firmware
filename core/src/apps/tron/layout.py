@@ -176,18 +176,6 @@ async def require_confirm_set_account_id_contract(ctx, account_id):
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def require_confirm_create_smart_contract(ctx, create_smart_contract):
-    text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
-    text.bold("Create Smart Contract")
-    if create_smart_contract.token_id:
-        text.mono("Token ID:")
-        text.bold("{}".format(create_smart_contract.token_id))
-    if create_smart_contract.call_token_value:
-        text.mono("Token Amount:")
-        text.bold(format_amount(create_smart_contract.call_token_value))
-    return await require_confirm(ctx, text, ButtonRequestType.SignTx)
-
-
 async def require_confirm_trigger_smart_contract(
     ctx, contract_address, trigger_smart_contract
 ):
@@ -207,73 +195,72 @@ async def require_confirm_trigger_smart_contract(
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def require_confirm_update_setting_contract(
-    ctx, contract_address, consume_user_resource_percent
-):
-    text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
-    text.bold("Update Smart Contract Resource Consumption")
-    text.mono("Contract Address:")
-    text.bold(contract_address)
-    text.mono("Percentage:")
-    text.bold("{}%".format(consume_user_resource_percent))
-    return await require_confirm(ctx, text, ButtonRequestType.SignTx)
-
-
 async def require_confirm_exchange_create_contract(
     ctx,
-    first_token_name: int,
+    first_token_name: str,
     first_token_balance: int,
-    second_token_name: int,
+    first_token_decimals: int,
+    second_token_name: str,
     second_token_balance: int,
+    second_token_decimals: int,
 ):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Create Exchange")
     text.mono("First Token:")
-    text.bold(format_amount(first_token_balance) + first_token_name)
+    text.bold(
+        format_amount(first_token_balance, first_token_decimals)
+        + " "
+        + first_token_name
+    )
     text.mono("Second Token :")
-    text.bold(format_amount(second_token_balance) + second_token_name)
+    text.bold(
+        format_amount(second_token_balance, second_token_decimals)
+        + " "
+        + second_token_name
+    )
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_exchange_inject_contract(
-    ctx, exchange_id: int, token_name: int, quantity: int
+    ctx, exchange_id: int, token_name: str, decimals: int, quantity: int
 ):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Inject Exchange")
-    text.mono("Exchange ID:")
-    text.bold(exchange_id)
-    text.mono("Token:")
-    text.bold(token_name)
+    text.mono("ID - Token:")
+    text.bold("{} - {}".format(exchange_id, token_name))
     text.mono("Quantity")
-    text.bold(quantity)
+    text.bold(format_amount(quantity, decimals))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_exchange_withdraw_contract(
-    ctx, exchange_id: int, token_name: int, quantity: int
+    ctx, exchange_id: int, token_name: str, decimals: int, quantity: int
 ):
     text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
     text.bold("Withdraw Exchange")
-    text.mono("Exchange ID:")
-    text.bold(exchange_id)
-    text.mono("Token:")
-    text.bold(token_name)
+    text.mono("ID - Token:")
+    text.bold("{} - {}".format(exchange_id, token_name))
     text.mono("Quantity")
-    text.bold(quantity)
+    text.bold(format_amount(quantity, decimals))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_exchange_transaction_contract(
-    ctx, exchange_id: int, token_1, token_2, quantity: int, expected: int
+    ctx,
+    exchange_id: int,
+    token_1: str,
+    decimals_1: int,
+    token_2: str,
+    decimals_2: int,
+    quantity: int,
+    expected: int,
 ):
-    text = Text("Confirm transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
-    text.bold("Exchange Transaction")
-    text.mono("Exchange ID:")
-    text.bold(exchange_id)
+    text = Text("Exchange Transaction", ui.ICON_CONFIRM, icon_color=ui.GREEN)
+    text.bold("ID: {}".format(exchange_id))
     text.mono("Token:")
-    text.bold(format_amount(quantity) + token_1)
+    text.bold(format_amount(quantity, decimals_1) + " " + token_1)
     text.mono("Expected")
-    text.bold(format_amount(expected) + token_2)
+    text.bold(format_amount(expected, decimals_2) + " " + token_2)
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 

@@ -52,6 +52,7 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
             contract.transfer_contract.to_address,
             contract.transfer_contract.amount,
         )
+
     if contract.transfer_asset_contract:
         if not validateToken(
             contract.transfer_asset_contract.asset_id,
@@ -173,11 +174,6 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
             ctx, contract.set_account_id.account_id
         )
 
-    if contract.create_smart_contract:
-        return await layout.require_confirm_create_smart_contract(
-            ctx, contract.create_smart_contract
-        )
-
     if contract.trigger_smart_contract:
         return await layout.require_confirm_trigger_smart_contract(
             ctx,
@@ -185,65 +181,143 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
             contract.trigger_smart_contract,
         )
 
-    if contract.update_setting_contract:
-        return await layout.require_confirm_update_setting_contract(
-            ctx,
-            contract.update_setting_contract.contract_address,
-            contract.update_setting_contract.consume_user_resource_percent,
-        )
-
     if contract.exchange_create_contract:
+        if not validateToken(
+            contract.exchange_create_contract.first_asset_id,
+            contract.exchange_create_contract.first_asset_name,
+            contract.exchange_create_contract.first_asset_decimals,
+            contract.exchange_create_contract.first_asset_signature,
+        ):
+            raise wire.ProcessError("Token 1 signature not valid")
+        if not validateToken(
+            contract.exchange_create_contract.second_asset_id,
+            contract.exchange_create_contract.second_asset_name,
+            contract.exchange_create_contract.second_asset_decimals,
+            contract.exchange_create_contract.second_asset_signature,
+        ):
+            raise wire.ProcessError("Token 2 signature not valid")
         return await layout.require_confirm_exchange_create_contract(
             ctx,
-            contract.exchange_create_contract.first_token_id,
-            contract.exchange_create_contract.first_token_balance,
-            contract.exchange_create_contract.second_token_id,
-            contract.exchange_create_contract.second_token_balance,
+            contract.exchange_create_contract.first_asset_name,
+            contract.exchange_create_contract.first_asset_balance,
+            contract.exchange_create_contract.first_asset_decimals,
+            contract.exchange_create_contract.second_asset_name,
+            contract.exchange_create_contract.second_asset_balance,
+            contract.exchange_create_contract.second_asset_decimals,
         )
 
     if contract.exchange_inject_contract:
+        if not validateExchange(
+            contract.exchange_inject_contract.exchange_id,
+            contract.exchange_inject_contract.first_asset_id,
+            contract.exchange_inject_contract.first_asset_name,
+            contract.exchange_inject_contract.first_asset_decimals,
+            contract.exchange_inject_contract.second_asset_id,
+            contract.exchange_inject_contract.second_asset_name,
+            contract.exchange_inject_contract.second_asset_decimals,
+            contract.exchange_inject_contract.exchange_signature,
+        ):
+            raise wire.ProcessError("Exchange signature not valid")
         return await layout.require_confirm_exchange_inject_contract(
             ctx,
             contract.exchange_inject_contract.exchange_id,
-            contract.exchange_inject_contract.token_id,
+            contract.exchange_inject_contract.first_asset_name
+            if contract.exchange_inject_contract.token_id
+            == contract.exchange_inject_contract.first_asset_id
+            else contract.exchange_inject_contract.second_asset_name,
+            contract.exchange_inject_contract.first_asset_decimals
+            if contract.exchange_inject_contract.token_id
+            == contract.exchange_inject_contract.first_asset_id
+            else contract.exchange_inject_contract.second_asset_decimals,
             contract.exchange_inject_contract.quant,
         )
 
     if contract.exchange_withdraw_contract:
+        if not validateExchange(
+            contract.exchange_withdraw_contract.exchange_id,
+            contract.exchange_withdraw_contract.first_asset_id,
+            contract.exchange_withdraw_contract.first_asset_name,
+            contract.exchange_withdraw_contract.first_asset_decimals,
+            contract.exchange_withdraw_contract.second_asset_id,
+            contract.exchange_withdraw_contract.second_asset_name,
+            contract.exchange_withdraw_contract.second_asset_decimals,
+            contract.exchange_withdraw_contract.exchange_signature,
+        ):
+            raise wire.ProcessError("Exchange signature not valid")
         return await layout.require_confirm_exchange_withdraw_contract(
             ctx,
             contract.exchange_withdraw_contract.exchange_id,
-            contract.exchange_withdraw_contract.token_id,
+            contract.exchange_withdraw_contract.first_asset_name
+            if contract.exchange_withdraw_contract.token_id
+            == contract.exchange_withdraw_contract.first_asset_id
+            else contract.exchange_withdraw_contract.second_asset_name,
+            contract.exchange_withdraw_contract.first_asset_decimals
+            if contract.exchange_withdraw_contract.token_id
+            == contract.exchange_withdraw_contract.first_asset_id
+            else contract.exchange_withdraw_contract.second_asset_decimals,
             contract.exchange_withdraw_contract.quant,
         )
 
     if contract.exchange_transaction_contract:
+        if not validateExchange(
+            contract.exchange_transaction_contract.exchange_id,
+            contract.exchange_transaction_contract.first_asset_id,
+            contract.exchange_transaction_contract.first_asset_name,
+            contract.exchange_transaction_contract.first_asset_decimals,
+            contract.exchange_transaction_contract.second_asset_id,
+            contract.exchange_transaction_contract.second_asset_name,
+            contract.exchange_transaction_contract.second_asset_decimals,
+            contract.exchange_transaction_contract.exchange_signature,
+        ):
+            raise wire.ProcessError("Exchange signature not valid")
         return await layout.require_confirm_exchange_transaction_contract(
             ctx,
-            contract.exchange_withdraw_contract.exchange_id,
-            contract.exchange_withdraw_contract.token_id,
-            contract.exchange_withdraw_contract.quant,
-            contract.exchange_withdraw_contract.expected,
+            contract.exchange_transaction_contract.exchange_id,
+            contract.exchange_transaction_contract.first_asset_name
+            if contract.exchange_transaction_contract.token_id
+            == contract.exchange_transaction_contract.first_asset_id
+            else contract.exchange_transaction_contract.second_asset_name,
+            contract.exchange_transaction_contract.first_asset_decimals
+            if contract.exchange_transaction_contract.token_id
+            == contract.exchange_transaction_contract.first_asset_id
+            else contract.exchange_transaction_contract.second_asset_decimals,
+            contract.exchange_transaction_contract.second_asset_name
+            if contract.exchange_transaction_contract.token_id
+            == contract.exchange_transaction_contract.first_asset_id
+            else contract.exchange_transaction_contract.first_asset_name,
+            contract.exchange_transaction_contract.second_asset_decimals
+            if contract.exchange_transaction_contract.token_id
+            == contract.exchange_transaction_contract.first_asset_id
+            else contract.exchange_transaction_contract.first_asset_decimals,
+            contract.exchange_transaction_contract.quant,
+            contract.exchange_transaction_contract.expected,
         )
-
-    if contract.update_energy_limit_contract:
-        return await layout.require_confirm_update_energy_limit_contract(
-            ctx,
-            contract.update_energy_limit_contract.contract_address,
-            contract.update_energy_limit_contract.origin_energy_limit,
-        )
-
-    if contract.account_permission_update_contract:
-        return await layout.require_confirm_account_permission_update_contract(ctx)
-
-    if contract.cancel_deferred_transaction_contract:
-        return await layout.require_confirm_cancel_deferred_transaction_contract(ctx)
 
     raise wire.DataError("Invalid transaction type")
 
 
 def validateToken(id, name, decimals, signature):
+    if id == "_":
+        id = "TRX"
     MESSAGE = bytes(id + name, "utf-8") + bytes([decimals])
+    rs = (int(signature[6]) * 16 + int(signature[7])) * 2
+    ss = (int(signature[10 + rs]) * 16 + int(signature[11 + rs])) * 2
+    sig = signature[8 : 8 + rs] + signature[12 + rs : 12 + rs + ss]
+    return secp256k1.verify(
+        unhexlify(TRON_PUBLICKEY), unhexlify(sig), sha256(MESSAGE).digest()
+    )
+
+
+def validateExchange(
+    id, token_1, name_1, decimals_1, token_2, name_2, decimals_2, signature
+):
+    MESSAGE = (
+        str(id).encode()
+        + bytes(token_1 + name_1, "utf-8")
+        + bytes([decimals_1])
+        + bytes(token_2 + name_2, "utf-8")
+        + bytes([decimals_2])
+    )
     rs = (int(signature[6]) * 16 + int(signature[7])) * 2
     ss = (int(signature[10 + rs]) * 16 + int(signature[11 + rs])) * 2
     sig = signature[8 : 8 + rs] + signature[12 + rs : 12 + rs + ss]
