@@ -727,6 +727,35 @@ class Fido2ConfirmNoCredentials(Fido2State):
         return cbor_error(self.cid, _ERR_NO_CREDENTIALS)
 
 
+class Fido2ConfirmReset(State):
+    def __init__(self, cid: int) -> None:
+        super(Fido2ConfirmReset, self).__init__(cid)
+        self.boot()
+
+    def get_header(self):
+        return "FIDO2 Reset"
+
+    def get_text(self):
+        return ["Do you really want to", "erase all credentials?"]
+
+    def get_dialog(self):
+        content = ConfirmContent(self, ui.NORMAL)
+        return Confirm(content)
+
+    def on_confirm(self):
+        erase_resident_credentials()
+        return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]))
+
+    def on_decline(self):
+        return cbor_error(self.cid, _ERR_OPERATION_DENIED)
+
+    def keepalive_status(self):
+        return _KEEPALIVE_STATUS_UP_NEEDED
+
+    def timeout_ms(self):
+        return _FIDO2_CONFIRM_TIMEOUT_MS
+
+
 class DialogManager:
     def __init__(self, iface: io.HID) -> None:
         self.iface = iface
@@ -875,9 +904,10 @@ class ConfirmGetAssertion(Confirm):
 
 
 class ConfirmContent(ui.Control):
-    def __init__(self, state: State) -> None:
+    def __init__(self, state: State, font = ui.MONO) -> None:
         self.state = state
         self.repaint = True
+        self.font = font
 
     def on_render(self) -> None:
         if self.repaint:
@@ -895,7 +925,7 @@ class ConfirmContent(ui.Control):
                     ui.WIDTH // 2,
                     int(text_top + (text_sep + text_height) * (i + 1) - 4),
                     line,
-                    ui.MONO,
+                    self.font,
                     ui.FG,
                     ui.BG,
                 )
@@ -966,8 +996,7 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
         elif req.data[0] == _CBOR_RESET:
             if __debug__:
                 log.debug(__name__, "_CBOR_RESET")
-            erase_resident_credentials()
-            return Cmd(cid, _CMD_CBOR, bytes([_ERR_NONE]))
+            return cbor_reset(req, dialog_mgr)
         elif req.data[0] == _CBOR_GET_NEXT_ASSERTION:
             if __debug__:
                 log.debug(__name__, "_CBOR_GET_NEXT_ASSERTION")
@@ -1331,7 +1360,7 @@ def cbor_error(cid: int, code: int) -> Cmd:
     return Cmd(cid, _CMD_CBOR, ustruct.pack(">B", code))
 
 
-def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
+def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None]:
     from ubinascii import hexlify
 
     if not storage.is_initialized():
@@ -1350,20 +1379,20 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
     except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
-    if _MAKECRED_CMD_EXCLUDE_LIST in param:
-        try:
-            for credential in param[_MAKECRED_CMD_EXCLUDE_LIST]:
-                if (
-                    credential["type"] == "public-key"
-                    and get_node(rp_id_hash, credential["id"]) is not None
+    exclude_list = param.get(_MAKECRED_CMD_EXCLUDE_LIST, [])
+    try:
+        for credential in exclude_list:
+            if (
+                credential["type"] == "public-key"
+                and Credential.from_id(credential["id"], rp_id_hash) is not None
+            ):
+                if not dialog_mgr.set_state(
+                    Fido2ConfirmExcluded(req.cid, client_data_hash, rp_id)
                 ):
-                    if not dialog_mgr.set_state(
-                        Fido2ConfirmExcluded(req.cid, client_data_hash, rp_id)
-                    ):
-                        return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
-                    return None
-        except Exception:
-            return cbor_error(req.cid, _ERR_INVALID_CBOR)
+                    return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
+                return None
+    except Exception:
+        return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
     if _COSE_ALG_ES256 not in (alg.get("alg", None) for alg in pub_key_cred_params):
         return cbor_error(req.cid, _ERR_UNSUPPORTED_ALGORITHM)
@@ -1459,17 +1488,7 @@ def cbor_make_credential_sign(
     )
 
 
-def get_node(rp_id_hash: bytes, key_handle: bytes):
-    node = msg_authenticate_genkey(rp_id_hash, key_handle, "<8L")
-    if node is None:
-        # prior to firmware version 2.0.8, keypath was serialized in a
-        # big-endian manner, instead of little endian, like in trezor-mcu.
-        # try to parse it as big-endian now and check the HMAC.
-        node = msg_authenticate_genkey(rp_id_hash, key_handle, ">8L")
-    return node
-
-
-def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
+def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None]:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
@@ -1631,6 +1650,7 @@ def cbor_get_info(req: Cmd) -> Cmd:
         _GETINFO_RESP_AAGUID: _AAGUID,
         _GETINFO_RESP_OPTIONS: {
             "rk": _ALLOW_RESIDENT_CREDENTIALS,
+            "up": True,
             "uv": config.has_pin(),
         },
     }
@@ -1662,6 +1682,17 @@ def cbor_client_pin(req: Cmd) -> Cmd:
     }
 
     return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
+
+
+def cbor_reset(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None]:
+    if not storage.is_initialized():
+        if __debug__:
+            log.warning(__name__, "not initialized")
+        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+
+    if not dialog_mgr.set_state(Fido2ConfirmReset(req.cid)):
+        return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
+    return None
 
 
 def cmd_keepalive(cid: int, status: int) -> Cmd:
