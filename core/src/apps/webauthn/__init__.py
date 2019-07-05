@@ -130,6 +130,7 @@ _ERR_INVALID_CBOR = const(0x12)  # error when parsing CBOR
 _ERR_CREDENTIAL_EXCLUDED = const(0x19)  # valid credential found in the exclude list
 _ERR_UNSUPPORTED_ALGORITHM = const(0x26)  # requested COSE algorithm not supported
 _ERR_OPERATION_DENIED = const(0x27)  # user declined or timed out
+_ERR_KEY_STORE_FULL = const(0x28)  # internal key storage is full
 _ERR_UNSUPPORTED_OPTION = const(0x2B)  # unsupported option
 _ERR_NO_CREDENTIALS = const(0x2E)  # no valid credentials provided
 _ERR_NOT_ALLOWED = const(0x30)  # continuation command not allowed
@@ -189,6 +190,27 @@ _FRAME_CONT_SIZE = 59
 # Generate the authenticatorKeyAgreementKey used for ECDH in authenticatorClientPIN getKeyAgreement.
 _KEY_AGREEMENT_PRIVKEY = nist256p1.generate_secret()
 _KEY_AGREEMENT_PUBKEY = nist256p1.publickey(_KEY_AGREEMENT_PRIVKEY, False)
+
+_ALLOW_RESIDENT_CREDENTIALS = True
+_APP_FIDO2 = const(0x04)
+
+
+# TODO move these functions to core/src/apps/common/storage/fido2.py
+def get_resident_credentials():
+    return list(filter(None, (config.get(_APP_FIDO2, i) for i in range(1, 16))))
+
+
+def store_resident_credential(credential_id: bytes):
+    for i in range(1, 16):
+        if config.get(_APP_FIDO2, i) is None:
+            config.set(_APP_FIDO2, i, credential_id)
+            return True
+    return False
+
+
+def erase_resident_credentials():
+    for i in range(1, 16):
+        config.delete(_APP_FIDO2, i)
 
 
 def frame_init() -> dict:
@@ -568,10 +590,12 @@ class Fido2ConfirmMakeCredential(Fido2State):
         client_data_hash: bytes,
         rp_id: str,
         cred: Credential,
+        resident: bool,
         hmac_secret: bool,
     ) -> None:
         super(Fido2ConfirmMakeCredential, self).__init__(cid, client_data_hash, rp_id)
         self.cred = cred
+        self.resident = resident
         self.hmac_secret = hmac_secret
 
     def get_header(self):
@@ -586,6 +610,9 @@ class Fido2ConfirmMakeCredential(Fido2State):
         response_data = cbor_make_credential_sign(
             self.client_data_hash, rp_id_hash, self.cred, self.hmac_secret
         )
+        if self.resident:
+            if not store_resident_credential(self.cred.id):
+                return cbor_error(self.cid, _ERR_KEY_STORE_FULL)
         return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
 
     def on_decline(self):
@@ -939,7 +966,8 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
         elif req.data[0] == _CBOR_RESET:
             if __debug__:
                 log.debug(__name__, "_CBOR_RESET")
-            return cbor_error(req.cid, _ERR_INVALID_CMD)
+            erase_resident_credentials()
+            return Cmd(cid, _CMD_CBOR, bytes([_ERR_NONE]))
         elif req.data[0] == _CBOR_GET_NEXT_ASSERTION:
             if __debug__:
                 log.debug(__name__, "_CBOR_GET_NEXT_ASSERTION")
@@ -1347,18 +1375,16 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
         except Exception:
             return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
-    if _GETASSERT_CMD_PIN_AUTH in param:
+    if _MAKECRED_CMD_PIN_AUTH in param:
         # Client PIN is not supported
         return cbor_error(req.cid, _ERR_PIN_AUTH_INVALID)
 
-    user_verification = False
-    if _MAKECRED_CMD_OPTIONS in param:
-        options = param[_MAKECRED_CMD_OPTIONS]
-        if options.get("rk", False):
-            # Resident keys are not supported
-            return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
-        if "uv" in options:
-            user_verification = options["uv"]
+    options = param.get(_MAKECRED_CMD_OPTIONS, {})
+    resident_key = options.get("rk", False)
+    user_verification = options.get("uv", False)
+
+    if resident_key and not _ALLOW_RESIDENT_CREDENTIALS:
+        return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
 
     if "displayName" in user:
         account_name = user["displayName"]
@@ -1377,7 +1403,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
         cred.account_id = account_id
         state_set = dialog_mgr.set_state(
             Fido2ConfirmMakeCredential(
-                req.cid, client_data_hash, rp_id, cred, hmac_secret
+                req.cid, client_data_hash, rp_id, cred, resident_key, hmac_secret
             )
         )
     if not state_set:
@@ -1457,20 +1483,21 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
     except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
-    try:
-        allow_list = param[_GETASSERT_CMD_ALLOW_LIST]
-    except Exception:
-        # Resident keys are not supported
-        return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
-
-    try:
-        cred_list = [
-            credential["id"]
-            for credential in allow_list
-            if credential["type"] == "public-key"
-        ]
-    except Exception:
-        return cbor_error(req.cid, _ERR_INVALID_CBOR)
+    allow_list = param.get(_GETASSERT_CMD_ALLOW_LIST, [])
+    if allow_list:
+        try:
+            cred_list = [
+                credential["id"]
+                for credential in allow_list
+                if credential["type"] == "public-key"
+            ]
+        except Exception:
+            return cbor_error(req.cid, _ERR_INVALID_CBOR)
+    else:
+        if not _ALLOW_RESIDENT_CREDENTIALS:
+            # Resident keys are not supported
+            return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
+        cred_list = get_resident_credentials()
 
     if _GETASSERT_CMD_PIN_AUTH in param:
         # Client PIN is not supported
@@ -1602,7 +1629,10 @@ def cbor_get_info(req: Cmd) -> Cmd:
         _GETINFO_RESP_VERSIONS: ["FIDO_2_0", "U2F_V2"],
         _GETINFO_RESP_EXTENSIONS: ["hmac-secret"],
         _GETINFO_RESP_AAGUID: _AAGUID,
-        _GETINFO_RESP_OPTIONS: {"uv": config.has_pin()},
+        _GETINFO_RESP_OPTIONS: {
+            "rk": _ALLOW_RESIDENT_CREDENTIALS,
+            "uv": config.has_pin(),
+        },
     }
     return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
 
