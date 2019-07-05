@@ -71,6 +71,7 @@ _GETASSERT_CMD_PIN_AUTH = const(0x06)  # bytes, optional
 _GETASSERT_RESP_CREDENTIAL = const(0x01)  # map, optional
 _GETASSERT_RESP_AUTH_DATA = const(0x02)  # bytes, required
 _GETASSERT_RESP_SIGNATURE = const(0x03)  # bytes, required
+_GETASSERT_RESP_USER = const(0x04)  # map, optional
 _GETASSERT_RESP_PUB_KEY_CREDENTIAL_USER_ENTITY = const(0x04)  # map, optional
 _GETASSERT_RESP_NUM_OF_CREDENTIALS = const(0x05)  # int, optional
 
@@ -193,23 +194,61 @@ _KEY_AGREEMENT_PUBKEY = nist256p1.publickey(_KEY_AGREEMENT_PRIVKEY, False)
 
 _ALLOW_RESIDENT_CREDENTIALS = True
 _APP_FIDO2 = const(0x04)
-
+_RESIDENT_CREDENTIAL_START_KEY = const(1)
+_MAX_RESIDENT_CREDENTIALS = const(16)
 
 # TODO move these functions to core/src/apps/common/storage/fido2.py
-def get_resident_credentials():
-    return list(filter(None, (config.get(_APP_FIDO2, i) for i in range(1, 16))))
+def get_resident_credentials(rp_id_hash: bytes):
+    creds = []
+    for i in range(
+        _RESIDENT_CREDENTIAL_START_KEY,
+        _RESIDENT_CREDENTIAL_START_KEY + _MAX_RESIDENT_CREDENTIALS,
+    ):
+        stored_credential_id = config.get(_APP_FIDO2, i)
+        if stored_credential_id is None:
+            continue
+
+        stored_cred = Credential.from_id(stored_credential_id, rp_id_hash)
+        if stored_cred is not None:
+            creds.append(stored_cred)
+
+    return creds
 
 
-def store_resident_credential(credential_id: bytes):
-    for i in range(1, 16):
-        if config.get(_APP_FIDO2, i) is None:
-            config.set(_APP_FIDO2, i, credential_id)
-            return True
-    return False
+def store_resident_credential(cred: Credential, rp_id_hash: bytes):
+    slot = None
+    for i in range(
+        _RESIDENT_CREDENTIAL_START_KEY,
+        _RESIDENT_CREDENTIAL_START_KEY + _MAX_RESIDENT_CREDENTIALS,
+    ):
+        # If a credential for the same RP ID and account ID already exists, then overwrite it.
+        stored_credential_id = config.get(_APP_FIDO2, i)
+        if stored_credential_id is None:
+            if slot is None:
+                slot = i
+            continue
+
+        stored_cred = Credential.from_id(stored_credential_id, rp_id_hash)
+        if stored_cred is None:
+            # Stored credential is not for this RP ID.
+            continue
+
+        if stored_cred.account_id == cred.account_id:
+            slot = i
+            break
+
+    if slot is None:
+        return False
+
+    config.set(_APP_FIDO2, slot, cred.id)
+    return True
 
 
 def erase_resident_credentials():
-    for i in range(1, 16):
+    for i in range(
+        _RESIDENT_CREDENTIAL_START_KEY,
+        _RESIDENT_CREDENTIAL_START_KEY + _MAX_RESIDENT_CREDENTIALS,
+    ):
         config.delete(_APP_FIDO2, i)
 
 
@@ -611,7 +650,7 @@ class Fido2ConfirmMakeCredential(Fido2State):
             self.client_data_hash, rp_id_hash, self.cred, self.hmac_secret
         )
         if self.resident:
-            if not store_resident_credential(self.cred.id):
+            if not store_resident_credential(self.cred, rp_id_hash):
                 return cbor_error(self.cid, _ERR_KEY_STORE_FULL)
         return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
 
@@ -904,7 +943,7 @@ class ConfirmGetAssertion(Confirm):
 
 
 class ConfirmContent(ui.Control):
-    def __init__(self, state: State, font = ui.MONO) -> None:
+    def __init__(self, state: State, font=ui.MONO) -> None:
         self.state = state
         self.repaint = True
         self.font = font
@@ -1505,18 +1544,22 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None]:
     allow_list = param.get(_GETASSERT_CMD_ALLOW_LIST, [])
     if allow_list:
         try:
-            cred_list = [
-                credential["id"]
-                for credential in allow_list
-                if credential["type"] == "public-key"
-            ]
+            cred_list = []
+            for credential_descriptor in allow_list:
+                if credential_descriptor["type"] != "public-key":
+                    continue
+                cred = Credential.from_id(credential_descriptor["id"], rp_id_hash)
+                if cred is not None:
+                    cred_list.append(cred)
         except Exception:
             return cbor_error(req.cid, _ERR_INVALID_CBOR)
     else:
         if not _ALLOW_RESIDENT_CREDENTIALS:
             # Resident keys are not supported
             return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
-        cred_list = get_resident_credentials()
+        cred_list = get_resident_credentials(rp_id_hash)
+
+    cred_list.sort()
 
     if _GETASSERT_CMD_PIN_AUTH in param:
         # Client PIN is not supported
@@ -1533,16 +1576,11 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None]:
     except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
-    valid_creds = list(
-        filter(None, (Credential.from_id(cred, rp_id_hash) for cred in cred_list))
-    )
-    valid_creds.sort()
-
     if user_verification and not config.has_pin():
         state_set = dialog_mgr.set_state(
             Fido2ConfirmNoPin(req.cid, client_data_hash, rp_id)
         )
-    elif not valid_creds:
+    elif not cred_list:
         state_set = dialog_mgr.set_state(
             Fido2ConfirmNoCredentials(req.cid, client_data_hash, rp_id)
         )
@@ -1552,7 +1590,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None]:
                 req.cid,
                 client_data_hash,
                 rp_id,
-                valid_creds,
+                cred_list,
                 shared_secret,
                 hmac_secret_salt,
             )
@@ -1639,6 +1677,7 @@ def cbor_get_assertion_sign(
         _GETASSERT_RESP_CREDENTIAL: {"type": "public-key", "id": cred.id},
         _GETASSERT_RESP_AUTH_DATA: auth_data,
         _GETASSERT_RESP_SIGNATURE: sig,
+        _GETASSERT_RESP_USER: {"id": cred.account_id},
     }
     return cbor.encode(response_data)
 
