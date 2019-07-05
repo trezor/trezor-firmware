@@ -711,7 +711,7 @@ class Fido2ConfirmExcluded(Fido2State):
         return [self.rp_id, "This token is", "already registered"]
 
     def get_dialog(self):
-        content = ConfirmContent(self)
+        content = ConfirmContent(self, ui.NORMAL)
         return Confirm(content, confirm=None)
 
     def on_confirm(self):
@@ -735,7 +735,7 @@ class Fido2ConfirmNoPin(Fido2State):
         return [self.rp_id, "PIN not set.", "Unable to verify."]
 
     def get_dialog(self):
-        content = ConfirmContent(self)
+        content = ConfirmContent(self, ui.NORMAL)
         return Confirm(content, confirm=None)
 
     def on_confirm(self):
@@ -756,7 +756,7 @@ class Fido2ConfirmNoCredentials(Fido2State):
         return [self.rp_id, "This token is", "not registered."]
 
     def get_dialog(self):
-        content = ConfirmContent(self)
+        content = ConfirmContent(self, ui.NORMAL)
         return Confirm(content, confirm=None)
 
     def on_confirm(self):
@@ -1447,9 +1447,12 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None
         # Client PIN is not supported
         return cbor_error(req.cid, _ERR_PIN_AUTH_INVALID)
 
-    options = param.get(_MAKECRED_CMD_OPTIONS, {})
-    resident_key = options.get("rk", False)
-    user_verification = options.get("uv", False)
+    try:
+        options = param.get(_MAKECRED_CMD_OPTIONS, {})
+        resident_key = options.get("rk", False)
+        user_verification = options.get("uv", False)
+    except Exception:
+        return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
     if resident_key and not _ALLOW_RESIDENT_CREDENTIALS:
         return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
@@ -1565,11 +1568,12 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None]:
         # Client PIN is not supported
         return cbor_error(req.cid, _ERR_PIN_AUTH_INVALID)
 
-    user_verification = False
-    if _GETASSERT_CMD_OPTIONS in param:
-        options = param[_GETASSERT_CMD_OPTIONS]
-        if "uv" in options:
-            user_verification = options["uv"]
+    try:
+        options = param.get(_GETASSERT_CMD_OPTIONS, {})
+        user_presence = options.get("up", True)
+        user_verification = options.get("uv", False)
+    except Exception:
+        return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
     try:
         hmac_secret_salt, shared_secret = cbor_get_assertion_hmac_secret_salt(param)
@@ -1581,9 +1585,22 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None]:
             Fido2ConfirmNoPin(req.cid, client_data_hash, rp_id)
         )
     elif not cred_list:
-        state_set = dialog_mgr.set_state(
-            Fido2ConfirmNoCredentials(req.cid, client_data_hash, rp_id)
+        if user_presence:
+            state_set = dialog_mgr.set_state(
+                Fido2ConfirmNoCredentials(req.cid, client_data_hash, rp_id)
+            )
+        else:
+            return cbor_error(req.cid, _ERR_NO_CREDENTIALS)
+    elif not user_presence and len(cred_list) == 1:
+        response_data = cbor_get_assertion_sign(
+            client_data_hash,
+            rp_id_hash,
+            cred_list[0],
+            shared_secret,
+            hmac_secret_salt,
+            user_presence,
         )
+        return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
     else:
         state_set = dialog_mgr.set_state(
             Fido2ConfirmGetAssertion(
@@ -1646,8 +1663,11 @@ def cbor_get_assertion_sign(
     cred: Credential,
     shared_secret: bytes,
     hmac_secret_salt: bytes,
+    user_presence=True,
 ) -> bytes:
-    flags = _AUTH_FLAG_UP
+    flags = 0
+    if user_presence:
+        flags |= _AUTH_FLAG_UP
     if config.has_pin():
         flags |= _AUTH_FLAG_UV
 
