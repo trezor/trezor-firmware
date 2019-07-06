@@ -5,6 +5,9 @@
     "bitcoin:BCH": {
         "Electron Cash": "https://electroncash.org"
     },
+    "bitcoin:BELL": {
+        "Electrum-BELL": "https://bell.electrum-jp.net"
+    },
     "bitcoin:BTC": {
         "Electrum": "https://electrum.org"
     },
@@ -49,6 +52,9 @@
     },
     "bitcoin:VIA": {
         "Vialectrum": "https://vialectrum.org"
+    },
+    "bitcoin:VIPS": {
+        "Electrum-VIPS": "https://electrum-vips.info"
     },
     "bitcoin:XZC": {
         "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
