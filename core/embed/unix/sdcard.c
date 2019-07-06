@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -33,7 +33,7 @@
 #define SDCARD_FILE profile_sdcard_path()
 #endif
 
-#define SDCARD_SIZE (32 * 1024 * 1024)
+#define SDCARD_SIZE (64 * 1024 * 1024)
 
 static uint8_t *sdcard_buffer;
 static secbool sdcard_powered;

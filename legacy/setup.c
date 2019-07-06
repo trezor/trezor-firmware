@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
  *
@@ -54,7 +54,7 @@ void mem_manage_handler(void) { fault_handler("Memory fault"); }
 
 void setup(void) {
   // set SCB_CCR STKALIGN bit to make sure 8-byte stack alignment on exception
-  // entry is in effect. This is not strictly necessary for the current TREZOR
+  // entry is in effect. This is not strictly necessary for the current Trezor
   // system. This is here to comply with guidance from section 3.3.3 "Binary
   // compatibility with other Cortex processors" of the ARM Cortex-M3 Processor
   // Technical Reference Manual. According to section 4.4.2 and 4.4.7 of the

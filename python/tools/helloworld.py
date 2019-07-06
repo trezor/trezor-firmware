@@ -8,7 +8,7 @@ def main():
     # Use first connected device
     client = get_default_client()
 
-    # Print out TREZOR's features and settings
+    # Print out Trezor's features and settings
     print(client.features)
 
     # Get the first address of first BIP44 account

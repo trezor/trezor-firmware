@@ -57,7 +57,7 @@ class InputButton(Button):
         fg_color = s.fg_color
         bg_color = s.bg_color
 
-        tx = ax + 24  # x-offset of the content
+        tx = ax + 16  # x-offset of the content
         ty = ay + ah // 2 + 8  # y-offset of the content
 
         # entered content
@@ -90,15 +90,15 @@ class Prompt(ui.Control):
             self.repaint = False
 
 
-class MnemonicKeyboard(ui.Layout):
+class Bip39Keyboard(ui.Layout):
     def __init__(self, prompt):
         self.prompt = Prompt(prompt)
 
         icon_back = res.load(ui.ICON_BACK)
-        self.back = Button(ui.grid(0, n_x=4, n_y=4), icon_back, ButtonClear)
+        self.back = Button(ui.grid(0, n_x=3, n_y=4), icon_back, ButtonClear)
         self.back.on_click = self.on_back_click
 
-        self.input = InputButton(ui.grid(1, n_x=4, n_y=4, cells_x=3), "", "")
+        self.input = InputButton(ui.grid(1, n_x=3, n_y=4, cells_x=2), "", "")
         self.input.on_click = self.on_input_click
 
         self.keys = [

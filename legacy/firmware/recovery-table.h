@@ -1,6 +1,6 @@
 // clang-format off
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2016 Jochen Hoenicke <hoenicke@gmail.com>
  *

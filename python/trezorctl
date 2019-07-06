@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# This file is part of the TREZOR project.
+# This file is part of the Trezor project.
 #
 # Copyright (C) 2012-2017 Marek Palatinus <slush@satoshilabs.com>
 # Copyright (C) 2012-2017 Pavol Rusnak <stick@satoshilabs.com>
@@ -157,7 +157,7 @@ def cli(ctx, path, verbose, is_json):
             try:
                 device = get_transport(path, prefix_search=True)
             except Exception:
-                click.echo("Failed to find a TREZOR device.")
+                click.echo("Failed to find a Trezor device.")
                 if path is not None:
                     click.echo("Using path: {}".format(path))
                 sys.exit(1)
@@ -195,7 +195,7 @@ def print_result(res, path, verbose, is_json):
 #
 
 
-@cli.command(name="list", help="List connected TREZOR devices.")
+@cli.command(name="list", help="List connected Trezor devices.")
 def ls():
     return enumerate_devices()
 
@@ -505,6 +505,7 @@ def recovery_device(
 @click.option("-u", "--u2f-counter", default=0)
 @click.option("-s", "--skip-backup", is_flag=True)
 @click.option("-n", "--no-backup", is_flag=True)
+@click.option("-x", "--slip39", is_flag=True)
 @click.pass_obj
 def reset_device(
     connect,
@@ -516,6 +517,7 @@ def reset_device(
     u2f_counter,
     skip_backup,
     no_backup,
+    slip39,
 ):
     if strength:
         strength = int(strength)
@@ -530,6 +532,7 @@ def reset_device(
         u2f_counter=u2f_counter,
         skip_backup=skip_backup,
         no_backup=no_backup,
+        slip39=slip39,
     )
 
 

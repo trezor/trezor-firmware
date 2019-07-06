@@ -1,4 +1,4 @@
-# TREZOR Optimized Image Format
+# Trezor Optimized Image Format
 
 All multibyte integer values are little endian!
 

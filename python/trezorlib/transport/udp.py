@@ -58,7 +58,7 @@ class UdpTransport(ProtocolBasedTransport):
                 return d
             else:
                 raise TransportException(
-                    "No TREZOR device found at address {}".format(path)
+                    "No Trezor device found at address {}".format(path)
                 )
         finally:
             d.close()

@@ -61,8 +61,8 @@ class Bip143:
         ensure(not tx.overwintered)
 
         write_uint32(h_preimage, tx.version)  # nVersion
-        write_bytes(h_preimage, bytearray(self.get_prevouts_hash(coin)))  # hashPrevouts
-        write_bytes(h_preimage, bytearray(self.get_sequence_hash(coin)))  # hashSequence
+        write_bytes(h_preimage, self.get_prevouts_hash(coin))  # hashPrevouts
+        write_bytes(h_preimage, self.get_sequence_hash(coin))  # hashSequence
 
         write_bytes_reversed(h_preimage, txi.prev_hash)  # outpoint
         write_uint32(h_preimage, txi.prev_index)  # outpoint
@@ -73,7 +73,7 @@ class Bip143:
 
         write_uint64(h_preimage, txi.amount)  # amount
         write_uint32(h_preimage, txi.sequence)  # nSequence
-        write_bytes(h_preimage, bytearray(self.get_outputs_hash(coin)))  # hashOutputs
+        write_bytes(h_preimage, self.get_outputs_hash(coin))  # hashOutputs
         write_uint32(h_preimage, tx.lock_time)  # nLockTime
         write_uint32(h_preimage, sighash)  # nHashType
 

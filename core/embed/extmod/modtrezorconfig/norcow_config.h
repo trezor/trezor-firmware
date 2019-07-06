@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -39,7 +39,7 @@
 
 #else
 
-#error Unknown TREZOR Model
+#error Unknown Trezor Model
 
 #endif
 

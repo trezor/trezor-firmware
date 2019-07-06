@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -29,7 +29,7 @@ extern void main_clean_exit();
 
 void __shutdown(void) {
   printf("SHUTDOWN\n");
-  main_clean_exit();
+  main_clean_exit(3);
 }
 
 #define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
@@ -62,8 +62,8 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
   display_printf("rev : %s\n", XSTR(GITREV));
   printf("rev : %s\n", XSTR(GITREV));
 #endif
-  display_printf("\nPlease contact TREZOR support.\n");
-  printf("\nPlease contact TREZOR support.\n");
+  display_printf("\nPlease contact Trezor support.\n");
+  printf("\nPlease contact Trezor support.\n");
   hal_delay(3000);
   __shutdown();
   for (;;)

@@ -9,9 +9,12 @@ trezor = {editable = true,path = "./python"}
 scons = "*"
 protobuf = "==3.4.0"
 pyblake2 = "*"
+
 ## tests
 pytest = "*"
 mock = "*"
+coverage = "==4.5.3"  # coverage 5+ uses binary format
+
 ## style
 isort = ">=4.3.14"
 flake8 = ">=3.7.0"
@@ -23,6 +26,7 @@ autoflake = "*"
 # common
 demjson = "*"
 graphviz = "*"  # TODO this was '8' do we need that?
+
 ## cointool
 click = ">=6"
 "ed25519" = ">=1.4"

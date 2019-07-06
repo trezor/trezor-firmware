@@ -86,7 +86,7 @@ def decryptEntryValue(nonce, val):
 # Decrypt give entry nonce
 def getDecryptedNonce(client, entry):
     print()
-    print('Waiting for TREZOR input ...')
+    print('Waiting for Trezor input ...')
     print()
     if 'item' in entry:
         item = entry['item']
@@ -136,7 +136,7 @@ def main():
     client = TrezorClient(transport=transport, ui=ui.ClickUI())
 
     print()
-    print('Confirm operation on TREZOR')
+    print('Confirm operation on Trezor')
     print()
 
     masterKey = getMasterKey(client)

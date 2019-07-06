@@ -5,6 +5,7 @@ let
     ps.Mako
     ps.Pyro4
     ps.black
+    ps.coverage
     ps.ed25519
     ps.flake8
     ps.graphviz

@@ -47,7 +47,7 @@ class Display:
     def image(self, x: int, y: int, image: bytes) -> None:
         """
         Renders an image at position (x,y).
-        The image needs to be in TREZOR Optimized Image Format (TOIF) -
+        The image needs to be in Trezor Optimized Image Format (TOIF) -
         full-color mode.
         """
 
@@ -56,7 +56,7 @@ class Display:
     ) -> None:
         """
         Renders an avatar at position (x,y).
-        The image needs to be in TREZOR Optimized Image Format (TOIF) -
+        The image needs to be in Trezor Optimized Image Format (TOIF) -
         full-color mode. Image needs to be of exactly AVATAR_IMAGE_SIZE x
         AVATAR_IMAGE_SIZE pixels size.
         """
@@ -66,7 +66,7 @@ class Display:
     ) -> None:
         """
         Renders an icon at position (x,y), fgcolor is used as foreground color,
-        bgcolor as background. The icon needs to be in TREZOR Optimized Image
+        bgcolor as background. The icon needs to be in Trezor Optimized Image
         Format (TOIF) - gray-scale mode.
         """
 

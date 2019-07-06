@@ -8,7 +8,7 @@ devices = HidTransport.enumerate()
 if len(devices) > 0:
     t = TrezorClient(devices[0])
 else:
-    raise Exception("No TREZOR found")
+    raise Exception("No Trezor found")
 
 for i in [0, 1, 2]:
     path = "m/10018'/%d'" % i

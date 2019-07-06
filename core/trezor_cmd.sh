@@ -15,7 +15,7 @@ if [[ ! "${TREZOR_SRC}" ]]; then echo "expecting TREZOR_SRC"; exit 0; fi
 #   HEAPSIZE
 #   ARGS -- uMP arguments
 #   MAIN -- uMP file to execute
-## TREZOR core
+## Trezor core
 #   TREZOR_PROFILE_DIR
 #   TREZOR_PROFILE_NAME
 #   TREZOR_UDP_PORT
@@ -61,12 +61,12 @@ TREZOR_LOGFILE="${TREZOR_PROFILE_DIR}/trezor.log"
 TREZOR_UDP_PORT="${TREZOR_UDP_PORT:-21324}"
 TREZOR_PATH="${TREZOR_PATH:-udp:127.0.0.1:${TREZOR_UDP_PORT}}"
 
-echo "TREZOR^emu profile name: ${TREZOR_PROFILE_NAME}"
-echo "TREZOR^emu profile directory: ${TREZOR_PROFILE_DIR}"
-echo "TREZOR^emu log file: ${TREZOR_LOGFILE}"
-echo "TREZOR^emu UDP port: ${TREZOR_UDP_PORT}"
-echo "TREZOR^emu path: ${TREZOR_PATH}"
-echo "TREZOR^emu src: ${TREZOR_SRC}"
+echo "Trezor^emu profile name: ${TREZOR_PROFILE_NAME}"
+echo "Trezor^emu profile directory: ${TREZOR_PROFILE_DIR}"
+echo "Trezor^emu log file: ${TREZOR_LOGFILE}"
+echo "Trezor^emu UDP port: ${TREZOR_UDP_PORT}"
+echo "Trezor^emu path: ${TREZOR_PATH}"
+echo "Trezor^emu src: ${TREZOR_SRC}"
 
 export TREZOR_PROFILE_NAME="${TREZOR_PROFILE_NAME}"
 export TREZOR_PROFILE_DIR="${TREZOR_PROFILE_DIR}"

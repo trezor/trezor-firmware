@@ -21,8 +21,23 @@
 from micropython import const
 
 from trezor.crypto import hashlib, hmac, pbkdf2, random
-from trezor.crypto.slip39_wordlist import wordlist
-from trezorcrypto import shamir
+from trezorcrypto import shamir, slip39
+
+KEYBOARD_FULL_MASK = const(0x1FF)
+"""All buttons are allowed. 9-bit bitmap all set to 1."""
+
+
+def compute_mask(prefix: str) -> int:
+    if not prefix:
+        return KEYBOARD_FULL_MASK
+    return slip39.compute_mask(int(prefix))
+
+
+def button_sequence_to_word(prefix: str) -> str:
+    if not prefix:
+        return KEYBOARD_FULL_MASK
+    return slip39.button_sequence_to_word(int(prefix))
+
 
 _RADIX_BITS = const(10)
 """The length of the radix in bits."""
@@ -36,6 +51,11 @@ def bits_to_words(n):
     return (n + _RADIX_BITS - 1) // _RADIX_BITS
 
 
+MAX_SHARE_COUNT = const(16)
+"""The maximum number of shares that can be created."""
+
+DEFAULT_ITERATION_EXPONENT = const(0)
+
 _RADIX = 2 ** _RADIX_BITS
 """The number of words in the wordlist."""
 
@@ -47,9 +67,6 @@ _ITERATION_EXP_LENGTH_BITS = const(5)
 
 _ID_EXP_LENGTH_WORDS = bits_to_words(_ID_LENGTH_BITS + _ITERATION_EXP_LENGTH_BITS)
 """The length of the random identifier and iteration exponent in words."""
-
-_MAX_SHARE_COUNT = const(16)
-"""The maximum number of shares that can be created."""
 
 _CHECKSUM_LENGTH_WORDS = const(3)
 """The length of the RS1024 checksum in words."""
@@ -86,21 +103,6 @@ class MnemonicError(Exception):
     pass
 
 
-def word_index(word):
-    word = word + " " * (8 - len(word))
-    lo = 0
-    hi = _RADIX
-    while hi - lo > 1:
-        mid = (hi + lo) // 2
-        if wordlist[mid * 8 : mid * 8 + 8] > word:
-            hi = mid
-        else:
-            lo = mid
-    if wordlist[lo * 8 : lo * 8 + 8] != word:
-        raise MnemonicError('Invalid mnemonic word "{}".'.format(word))
-    return lo
-
-
 def _rs1024_polymod(values):
     GEN = (
         0xE0E040,
@@ -135,6 +137,33 @@ def rs1024_verify_checksum(data):
     return _rs1024_polymod(tuple(_CUSTOMIZATION_STRING) + data) == 1
 
 
+def rs1024_error_index(data):
+    GEN = (
+        0x91F9F87,
+        0x122F1F07,
+        0x244E1E07,
+        0x81C1C07,
+        0x10281C0E,
+        0x20401C1C,
+        0x103838,
+        0x207070,
+        0x40E0E0,
+        0x81C1C0,
+    )
+    chk = _rs1024_polymod(tuple(_CUSTOMIZATION_STRING) + data) ^ 1
+    if chk == 0:
+        return None
+
+    for i in reversed(range(len(data))):
+        b = chk & 0x3FF
+        chk >>= 10
+        if chk == 0:
+            return i
+        for j in range(10):
+            chk ^= GEN[j] if ((b >> j) & 1) else 0
+    return None
+
+
 def xor(a, b):
     return bytes(x ^ y for x, y in zip(a, b))
 
@@ -154,11 +183,11 @@ def _int_to_indices(value, length, bits):
 
 
 def mnemonic_from_indices(indices):
-    return " ".join(wordlist[i * 8 : i * 8 + 8].strip() for i in indices)
+    return " ".join(slip39.get_word(i) for i in indices)
 
 
 def mnemonic_to_indices(mnemonic):
-    return (word_index(word.lower()) for word in mnemonic.split())
+    return (slip39.word_index(word.lower()) for word in mnemonic.split())
 
 
 def _round_function(i, passphrase, e, salt, r):
@@ -220,10 +249,10 @@ def _split_secret(threshold, share_count, shared_secret):
             )
         )
 
-    if share_count > _MAX_SHARE_COUNT:
+    if share_count > MAX_SHARE_COUNT:
         raise ValueError(
             "The requested number of shares ({}) must not exceed {}.".format(
-                share_count, _MAX_SHARE_COUNT
+                share_count, MAX_SHARE_COUNT
             )
         )
 
@@ -336,11 +365,7 @@ def decode_mnemonic(mnemonic):
         raise MnemonicError("Invalid mnemonic length.")
 
     if not rs1024_verify_checksum(mnemonic_data):
-        raise MnemonicError(
-            'Invalid mnemonic checksum for "{} ...".'.format(
-                " ".join(mnemonic.split()[: _ID_EXP_LENGTH_WORDS + 2])
-            )
-        )
+        raise MnemonicError("Invalid mnemonic checksum.")
 
     id_exp_int = _int_from_indices(mnemonic_data[:_ID_EXP_LENGTH_WORDS])
     identifier = id_exp_int >> _ITERATION_EXP_LENGTH_BITS
@@ -355,19 +380,13 @@ def decode_mnemonic(mnemonic):
 
     if group_count < group_threshold:
         raise MnemonicError(
-            'Invalid mnemonic "{} ...". Group threshold cannot be greater than group count.'.format(
-                " ".join(mnemonic.split()[: _ID_EXP_LENGTH_WORDS + 2])
-            )
+            "Invalid mnemonic. Group threshold cannot be greater than group count."
         )
 
     value_byte_count = bits_to_bytes(_RADIX_BITS * len(value_data) - padding_len)
     value_int = _int_from_indices(value_data)
     if value_data[0] >= 1 << (_RADIX_BITS - padding_len):
-        raise MnemonicError(
-            'Invalid mnemonic padding for "{} ...".'.format(
-                " ".join(mnemonic.split()[: _ID_EXP_LENGTH_WORDS + 2])
-            )
-        )
+        raise MnemonicError("Invalid mnemonic padding")
     value = value_int.to_bytes(value_byte_count, "big")
 
     return (
@@ -435,33 +454,57 @@ def _decode_mnemonics(mnemonics):
     )
 
 
-def _generate_random_identifier():
+def generate_random_identifier() -> int:
     """Returns a randomly generated integer in the range 0, ... , 2**_ID_LENGTH_BITS - 1."""
 
     identifier = int.from_bytes(random.bytes(bits_to_bytes(_ID_LENGTH_BITS)), "big")
     return identifier & ((1 << _ID_LENGTH_BITS) - 1)
 
 
-def generate_mnemonics(
-    group_threshold, groups, master_secret, passphrase=b"", iteration_exponent=0
-):
+def generate_single_group_mnemonics_from_data(
+    master_secret,
+    identifier,
+    threshold,
+    count,
+    passphrase=b"",
+    iteration_exponent=DEFAULT_ITERATION_EXPONENT,
+) -> list:
+    return generate_mnemonics_from_data(
+        master_secret,
+        identifier,
+        1,
+        [(threshold, count)],
+        passphrase,
+        iteration_exponent,
+    )[0]
+
+
+def generate_mnemonics_from_data(
+    master_secret,
+    identifier,
+    group_threshold,
+    groups,
+    passphrase=b"",
+    iteration_exponent=DEFAULT_ITERATION_EXPONENT,
+) -> list:
     """
     Splits a master secret into mnemonic shares using Shamir's secret sharing scheme.
+    :param master_secret: The master secret to split.
+    :type master_secret: Array of bytes.
+    :param int identifier
     :param int group_threshold: The number of groups required to reconstruct the master secret.
     :param groups: A list of (member_threshold, member_count) pairs for each group, where member_count
         is the number of shares to generate for the group and member_threshold is the number of members required to
         reconstruct the group secret.
     :type groups: List of pairs of integers.
-    :param master_secret: The master secret to split.
-    :type master_secret: Array of bytes.
     :param passphrase: The passphrase used to encrypt the master secret.
     :type passphrase: Array of bytes.
     :param int iteration_exponent: The iteration exponent.
     :return: List of mnemonics.
     :rtype: List of byte arrays.
+    :return: Identifier.
+    :rtype: int.
     """
-
-    identifier = _generate_random_identifier()
 
     if len(master_secret) * 8 < _MIN_STRENGTH_BITS:
         raise ValueError(
@@ -501,68 +544,28 @@ def generate_mnemonics(
 
     group_shares = _split_secret(group_threshold, len(groups), encrypted_master_secret)
 
-    return [
-        [
-            encode_mnemonic(
-                identifier,
-                iteration_exponent,
-                group_index,
-                group_threshold,
-                len(groups),
-                member_index,
-                member_threshold,
-                value,
+    mnemonics = []
+    for (member_threshold, member_count), (group_index, group_secret) in zip(
+        groups, group_shares
+    ):
+        group_mnemonics = []
+        for member_index, value in _split_secret(
+            member_threshold, member_count, group_secret
+        ):
+            group_mnemonics.append(
+                encode_mnemonic(
+                    identifier,
+                    iteration_exponent,
+                    group_index,
+                    group_threshold,
+                    len(groups),
+                    member_index,
+                    member_threshold,
+                    value,
+                )
             )
-            for member_index, value in _split_secret(
-                member_threshold, member_count, group_secret
-            )
-        ]
-        for (member_threshold, member_count), (group_index, group_secret) in zip(
-            groups, group_shares
-        )
-    ]
-
-
-def generate_mnemonics_random(
-    group_threshold, groups, strength_bits=128, passphrase=b"", iteration_exponent=0
-):
-    """
-    Generates a random master secret and splits it into mnemonic shares using Shamir's secret
-    sharing scheme.
-    :param int group_threshold: The number of groups required to reconstruct the master secret.
-    :param groups: A list of (member_threshold, member_count) pairs for each group, where member_count
-        is the number of shares to generate for the group and member_threshold is the number of members required to
-        reconstruct the group secret.
-    :type groups: List of pairs of integers.
-    :param int strength_bits: The entropy of the randomly generated master secret in bits.
-    :param passphrase: The passphrase used to encrypt the master secret.
-    :type passphrase: Array of bytes.
-    :param int iteration_exponent: The iteration exponent.
-    :return: List of mnemonics.
-    :rtype: List of byte arrays.
-    """
-
-    if strength_bits < _MIN_STRENGTH_BITS:
-        raise ValueError(
-            "The requested strength of the master secret ({} bits) must be at least {} bits.".format(
-                strength_bits, _MIN_STRENGTH_BITS
-            )
-        )
-
-    if strength_bits % 16 != 0:
-        raise ValueError(
-            "The requested strength of the master secret ({} bits) must be a multiple of 16 bits.".format(
-                strength_bits
-            )
-        )
-
-    return generate_mnemonics(
-        group_threshold,
-        groups,
-        random.bytes(strength_bits // 8),
-        passphrase,
-        iteration_exponent,
-    )
+        mnemonics.append(group_mnemonics)
+    return mnemonics
 
 
 def combine_mnemonics(mnemonics):
@@ -570,7 +573,7 @@ def combine_mnemonics(mnemonics):
     Combines mnemonic shares to obtain the master secret which was previously split using
     Shamir's secret sharing scheme.
     :param mnemonics: List of mnemonics.
-    :type mnemonics: List of byte arrays.
+    :type mnemonics: List of strings.
     :return: Identifier, iteration exponent, the encrypted master secret.
     :rtype: Integer, integer, array of bytes.
     """
@@ -591,16 +594,9 @@ def combine_mnemonics(mnemonics):
 
     for group_index, group in groups.items():
         if len(group[1]) != group[0]:
-            prefix = _group_prefix(
-                identifier,
-                iteration_exponent,
-                group_index,
-                group_threshold,
-                group_count,
-            )
             raise MnemonicError(
-                'Wrong number of mnemonics. Expected {} mnemonics starting with "{} ...", but {} were provided.'.format(
-                    group[0], mnemonic_from_indices(prefix), len(group[1])
+                "Wrong number of mnemonics. Expected {} mnemonics, but {} were provided.".format(
+                    group[0], len(group[1])
                 )
             )
 

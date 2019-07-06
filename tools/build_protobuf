@@ -23,6 +23,30 @@ CORE_PROTOBUF_SOURCES="\
 
 PYTHON_PROTOBUF_SOURCES=$PROTOB/*.proto
 
+CORE_MESSAGES_IGNORE="\
+    CosiCommit \
+    CosiCommitment \
+    CosiSign \
+    CosiSignature \
+    DebugLinkFlashErase \
+    DebugLinkLog \
+    DebugLinkMemory \
+    DebugLinkMemoryRead \
+    DebugLinkMemoryWrite \
+    DebugLinkStop \
+    NEMDecryptMessage \
+    NEMDecryptedMessage \
+    PinMatrixAck \
+    PinMatrixRequest \
+    PinMatrixRequestType \
+    RecoveryDeviceType \
+    WordAck \
+    WordRequest \
+    WordRequestType \
+"
+
+PYTHON_MESSAGES_IGNORE=""
+
 RETURN=0
 
 do_rebuild() {
@@ -31,12 +55,19 @@ do_rebuild() {
     shift
     local SOURCES="$1"
     shift
+    local IGNORE="$1"
+    shift
 
     mkdir -p "$DESTDIR"
     rm -f "$DESTDIR"/[A-Z]*.py
 
     # note $SOURCES is unquoted - we want wildcard expansion and multiple args
     $PROTOB/pb2py "$@" -o "$DESTDIR" $SOURCES
+
+    # delete unused messages
+    for F in $IGNORE; do
+        rm -f "$DESTDIR"/"$F".py
+    done
 }
 
 do_check() {
@@ -61,7 +92,7 @@ else
     func=do_rebuild
 fi
 
-$func core/src/trezor/messages "$CORE_PROTOBUF_SOURCES" --no-init-py
-$func python/trezorlib/messages "$PYTHON_PROTOBUF_SOURCES" -P ..protobuf
+$func core/src/trezor/messages "$CORE_PROTOBUF_SOURCES" "$CORE_MESSAGES_IGNORE" --no-init-py
+$func python/trezorlib/messages "$PYTHON_PROTOBUF_SOURCES" "$PYTHON_MESSAGES_IGNORE" -P ..protobuf
 
 exit $RETURN

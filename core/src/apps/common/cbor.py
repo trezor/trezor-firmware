@@ -92,7 +92,7 @@ def _cbor_encode(value):
     else:
         if __debug__:
             log.debug(__name__, "not implemented (encode): %s", type(value))
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 def _read_length(cbor, aux):
@@ -193,11 +193,11 @@ def _cbor_decode(cbor):
         elif fb_aux == _CBOR_BREAK:
             return (cbor[0], cbor[1:])
         else:
-            raise NotImplementedError()
+            raise NotImplementedError
     else:
         if __debug__:
             log.debug(__name__, "not implemented (decode): %s", cbor[0])
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class Tagged:
@@ -233,5 +233,5 @@ def encode(value):
 def decode(cbor: bytes):
     res, check = _cbor_decode(cbor)
     if not (check == b""):
-        raise ValueError()
+        raise ValueError
     return res
