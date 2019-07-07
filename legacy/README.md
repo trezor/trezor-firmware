@@ -54,6 +54,8 @@ Step 3 should produce the same sha256 fingerprint like your local build (for the
 1. Install python-trezor: `pip install trezor` ([more info](https://github.com/trezor/python-trezor))
 2. `trezorctl firmware_update -f build/trezor-TAG.bin`
 
+*Note: if your device is on the latest bootloader version and you flash custom firmware then you may receive a hard fault warning when booting the firmware image. ([more info](https://github.com/trezor/trezor-firmware/issues/313))*
+
 ## Building for development
 
 If you want to build device firmware, make sure you have the
