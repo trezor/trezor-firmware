@@ -540,6 +540,19 @@
                 }
             ]
         },
+        "bitcoin:PART": {
+            "links": {
+                "Github": "https://github.com/particl/particl-core",
+                "Homepage": "https://particl.io"
+            },
+            "marketcap_usd": 0,
+            "name": "Particl",
+            "shortcut": "PART",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": {}
+        },
         "bitcoin:PIVX": {
             "links": {
                 "Github": "https://github.com/PIVX-Project/PIVX",
