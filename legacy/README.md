@@ -60,7 +60,7 @@ If you want to build device firmware, make sure you have the
 [GNU ARM Embedded toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) installed.
 You will also need Python 3.5 or later and [pipenv](https://pipenv.readthedocs.io/en/latest/install/).
 
-* If you want to build the emulator instead of the firmware, run `export EMULATOR=1 TREZOR_TRANSPORT_V1=1`
+* If you want to build the emulator instead of the firmware, run `export EMULATOR=1`
 * If you want to build with the debug link, run `export DEBUG_LINK=1`. Use this if you want to run the device tests.
 * When you change these variables, use `script/setup` to clean the repository
 
