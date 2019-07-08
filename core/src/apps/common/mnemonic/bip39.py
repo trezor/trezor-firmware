@@ -24,7 +24,9 @@ def process_all(mnemonics: list) -> bytes:
 
 
 def store(secret: bytes, needs_backup: bool, no_backup: bool):
-    storage.store_mnemonic(secret, mnemonic.TYPE_BIP39, needs_backup, no_backup)
+    storage.device.store_mnemonic_secret(
+        secret, mnemonic.TYPE_BIP39, needs_backup, no_backup
+    )
 
 
 def get_seed(secret: bytes, passphrase: str, progress_bar=True):

@@ -1,6 +1,6 @@
 from trezor import io
 
-from apps.common.storage import get_device_id
+from apps.common.storage.device import get_device_id
 
 # fmt: off
 

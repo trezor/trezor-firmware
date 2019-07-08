@@ -712,7 +712,7 @@ def msg_authenticate_sign(challenge: bytes, app_id: bytes, privkey: bytes) -> by
     flags = bytes([_AUTH_FLAG_TUP])
 
     # get next counter
-    ctr = storage.next_u2f_counter()
+    ctr = storage.device.next_u2f_counter()
     ctrbuf = ustruct.pack(">L", ctr)
 
     # hash input data together with counter

@@ -24,7 +24,7 @@ def get_state(prev_state: bytes = None, passphrase: str = None) -> bytes:
 
 def _compute_state(salt: bytes, passphrase: str) -> bytes:
     # state = HMAC(passphrase, salt || device_id)
-    message = salt + storage.get_device_id().encode()
+    message = salt + storage.device.get_device_id().encode()
     state = hmac.new(passphrase.encode(), message, hashlib.sha256).digest()
     return salt + state
 

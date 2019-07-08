@@ -25,13 +25,15 @@ async def load_device(ctx, msg):
     await require_confirm(ctx, text)
 
     secret = bip39.process_all([msg.mnemonic])
-    storage.store_mnemonic(
+    storage.device.store_mnemonic_secret(
         secret=secret,
         mnemonic_type=bip39.get_type(),
         needs_backup=True,
         no_backup=False,
     )
-    storage.load_settings(use_passphrase=msg.passphrase_protection, label=msg.label)
+    storage.device.load_settings(
+        use_passphrase=msg.passphrase_protection, label=msg.label
+    )
     if msg.pin:
         config.change_pin(pin_to_int(""), pin_to_int(msg.pin))
 

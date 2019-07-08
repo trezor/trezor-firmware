@@ -18,14 +18,14 @@ _MAX_PASSPHRASE_LEN = const(50)
 
 
 async def protect_by_passphrase(ctx) -> str:
-    if storage.has_passphrase():
+    if storage.device.has_passphrase():
         return await request_passphrase(ctx)
     else:
         return ""
 
 
 async def request_passphrase(ctx) -> str:
-    source = storage.get_passphrase_source()
+    source = storage.device.get_passphrase_source()
     if source == PassphraseSourceType.ASK:
         source = await request_passphrase_source(ctx)
     passphrase = await request_passphrase_ack(

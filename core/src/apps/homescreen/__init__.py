@@ -16,17 +16,17 @@ def get_features():
     f.patch_version = utils.VERSION_PATCH
     f.revision = utils.GITREV
     f.model = utils.MODEL
-    f.device_id = storage.get_device_id()
-    f.label = storage.get_label()
+    f.device_id = storage.device.get_device_id()
+    f.label = storage.device.get_label()
     f.initialized = storage.is_initialized()
     f.pin_protection = config.has_pin()
     f.pin_cached = config.has_pin()
-    f.passphrase_protection = storage.has_passphrase()
+    f.passphrase_protection = storage.device.has_passphrase()
     f.passphrase_cached = cache.has_passphrase()
-    f.needs_backup = storage.needs_backup()
-    f.unfinished_backup = storage.unfinished_backup()
-    f.no_backup = storage.no_backup()
-    f.flags = storage.get_flags()
+    f.needs_backup = storage.device.needs_backup()
+    f.unfinished_backup = storage.device.unfinished_backup()
+    f.no_backup = storage.device.no_backup()
+    f.flags = storage.device.get_flags()
     return f
 
 

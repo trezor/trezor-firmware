@@ -15,8 +15,8 @@ TYPES_WORD_COUNT = {12: bip39, 18: bip39, 24: bip39, 20: slip39, 33: slip39}
 
 
 def get() -> (bytes, int):
-    mnemonic_secret = storage.get_mnemonic_secret()
-    mnemonic_type = storage.get_mnemonic_type() or TYPE_BIP39
+    mnemonic_secret = storage.device.get_mnemonic_secret()
+    mnemonic_type = storage.device.get_mnemonic_type() or TYPE_BIP39
     if mnemonic_type not in (TYPE_BIP39, TYPE_SLIP39):
         raise RuntimeError("Invalid mnemonic type")
     return mnemonic_secret, mnemonic_type
