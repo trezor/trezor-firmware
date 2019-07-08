@@ -135,13 +135,13 @@ class PageWithButtons(ui.Control):
         if self.index == 0:
             self.paginated.on_cancel()
         else:
-            self.paginated.on_down()
+            self.paginated.on_up()
 
     def on_right(self):
         if self.index == self.count - 1:
             self.paginated.on_confirm()
         else:
-            self.paginated.on_up()
+            self.paginated.on_down()
 
 
 class PaginatedWithButtons(ui.Layout):
