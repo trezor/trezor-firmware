@@ -84,7 +84,7 @@ class TestMsgResetDeviceT2(TrezorTest):
                         self.client.debug.press_yes()
 
                 # check share
-                for _ in range(2):
+                for _ in range(3):
                     time.sleep(1)
                     index = self.client.debug.state().reset_word_pos
                     self.client.debug.input(words[index])
