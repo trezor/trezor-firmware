@@ -52,7 +52,7 @@ typedef struct _mp_obj_secp256k1_context_t {
   uint8_t secp256k1_ctx_buf[0];  // to be allocate via m_new_obj_var_maybe().
 } mp_obj_secp256k1_context_t;
 
-/// def __init__(self):
+/// def __init__(self) -> None:
 ///     """
 ///     Allocate and initialize secp256k1_context.
 ///     """
@@ -84,7 +84,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_context_make_new(
   return MP_OBJ_FROM_PTR(o);
 }
 
-/// def __del__(self):
+/// def __del__(self) -> None:
 ///     """
 ///     Destructor.
 ///     """
@@ -98,7 +98,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_context___del__(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_secp256k1_context___del___obj,
                                  mod_trezorcrypto_secp256k1_context___del__);
 
-/// def size(self):
+/// def size(self) -> int:
 ///     """
 ///     Return the size in bytes of the internal secp256k1_ctx_buf buffer.
 ///     """

@@ -8,17 +8,17 @@ class Context:
     Can be allocated once and re-used between subsequent operations.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Allocate and initialize secp256k1_context.
         """
 
-    def __del__(self):
+    def __del__(self) -> None:
         """
         Destructor.
         """
 
-    def size(self):
+    def size(self) -> int:
         """
         Return the size in bytes of the internal secp256k1_ctx_buf buffer.
         """

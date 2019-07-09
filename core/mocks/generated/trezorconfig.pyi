@@ -55,7 +55,7 @@ def change_pin(pin: int, newpin: int) -> bool:
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def get(app: int, key: int, public: bool = False) -> bytes:
+def get(app: int, key: int, public: bool = False) -> Optional[bytes]:
     """
     Gets the value of the given key for the given app (or None if not set).
     Raises a RuntimeError if decryption or authentication of the stored
@@ -87,7 +87,9 @@ def set_counter(
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def next_counter(app: int, key: int, writable_locked: bool = False) -> bool:
+def next_counter(
+   app: int, key: int, writable_locked: bool = False,
+) -> Optional[int]:
     """
     Increments the counter stored under the given key of the given app and
     returns the new value.
