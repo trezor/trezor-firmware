@@ -50,7 +50,7 @@ def test_norcow_read_item():
 
     with pytest.raises(ValueError) as e:
         key, value = n._read_item(204)
-    assert "no data" in str(e)
+    assert "no data" in str(e.value)
 
 
 def test_norcow_get_item():
@@ -122,7 +122,7 @@ def test_norcow_replace_item():
 
     with pytest.raises(RuntimeError) as e:
         n.replace(0x0001, b"00000")
-    assert "same length" in str(e)
+    assert "same length" in str(e.value)
 
 
 def test_norcow_compact():
