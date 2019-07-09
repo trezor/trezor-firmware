@@ -10,7 +10,6 @@ from trezor.ui.mnemonic_bip39 import Bip39Keyboard
 from trezor.ui.mnemonic_slip39 import Slip39Keyboard
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
-from trezor.utils import format_ordinal
 
 from apps.common import mnemonic, storage
 from apps.common.confirm import require_confirm
@@ -140,9 +139,9 @@ async def request_mnemonic(ctx: wire.Context, count: int, slip39: bool) -> str:
     words = []
     for i in range(count):
         if slip39:
-            keyboard = Slip39Keyboard("Type the %s word:" % format_ordinal(i + 1))
+            keyboard = Slip39Keyboard("Type word %s of %s:" % (i + 1, count))
         else:
-            keyboard = Bip39Keyboard("Type the %s word:" % format_ordinal(i + 1))
+            keyboard = Bip39Keyboard("Type word %s of %s:" % (i + 1, count))
         if __debug__:
             word = await ctx.wait(keyboard, input_signal)
         else:
