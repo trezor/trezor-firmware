@@ -405,7 +405,7 @@ async def _slip39_show_share_words(ctx, share_index, share_words):
 
         def export_displayed_words():
             # export currently displayed mnemonic words into debuglink
-            debug.reset_current_words = word_pages[paginated.page]
+            debug.reset_current_words = [w for _, w in word_pages[paginated.page]]
 
         paginated.on_change = export_displayed_words
         export_displayed_words()
