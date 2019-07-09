@@ -5,6 +5,9 @@ from trezor.crypto import random
 
 from apps.common.storage import common
 
+if False:
+    from typing import Optional
+
 # Namespace:
 _NAMESPACE = common._APP_DEVICE
 
@@ -35,12 +38,12 @@ def is_version_stored() -> bool:
     return bool(common._get(_NAMESPACE, _VERSION))
 
 
-def get_version() -> bool:
+def get_version() -> Optional[bytes]:
     return common._get(_NAMESPACE, _VERSION)
 
 
-def set_version(version: bytes) -> bool:
-    return common._set(_NAMESPACE, _VERSION, version)
+def set_version(version: bytes) -> None:
+    common._set(_NAMESPACE, _VERSION, version)
 
 
 def _new_device_id() -> str:
@@ -62,18 +65,18 @@ def get_rotation() -> int:
     return int.from_bytes(rotation, "big")
 
 
-def get_label() -> str:
+def get_label() -> Optional[str]:
     label = common._get(_NAMESPACE, _LABEL, True)  # public
     if label is None:
         return None
     return label.decode()
 
 
-def get_mnemonic_secret() -> bytes:
+def get_mnemonic_secret() -> Optional[bytes]:
     return common._get(_NAMESPACE, _MNEMONIC_SECRET)
 
 
-def get_mnemonic_type() -> int:
+def get_mnemonic_type() -> Optional[int]:
     return common._get_uint8(_NAMESPACE, _MNEMONIC_TYPE)
 
 
@@ -81,7 +84,7 @@ def has_passphrase() -> bool:
     return common._get_bool(_NAMESPACE, _USE_PASSPHRASE)
 
 
-def get_homescreen() -> bytes:
+def get_homescreen() -> Optional[bytes]:
     return common._get(_NAMESPACE, _HOMESCREEN, True)  # public
 
 
@@ -171,11 +174,11 @@ def get_flags() -> int:
 def set_flags(flags: int) -> None:
     b = common._get(_NAMESPACE, _FLAGS)
     if b is None:
-        b = 0
+        i = 0
     else:
-        b = int.from_bytes(b, "big")
-    flags = (flags | b) & 0xFFFFFFFF
-    if flags != b:
+        i = int.from_bytes(b, "big")
+    flags = (flags | i) & 0xFFFFFFFF
+    if flags != i:
         common._set(_NAMESPACE, _FLAGS, flags.to_bytes(4, "big"))
 
 
@@ -193,7 +196,7 @@ def set_autolock_delay_ms(delay_ms: int) -> None:
     common._set(_NAMESPACE, _AUTOLOCK_DELAY_MS, delay_ms.to_bytes(4, "big"))
 
 
-def next_u2f_counter() -> int:
+def next_u2f_counter() -> Optional[int]:
     return common._next_counter(_NAMESPACE, _U2F_COUNTER, True)  # writable when locked
 
 

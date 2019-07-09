@@ -90,20 +90,20 @@ class Loader(ui.Control):
     def on_start(self) -> None:
         pass
 
-    def on_finish(self):
+    def on_finish(self) -> None:
         pass
 
 
 class LoadingAnimation(ui.Layout):
-    def __init__(self, style=LoaderDefault):
+    def __init__(self, style: LoaderStyleType = LoaderDefault) -> None:
         self.loader = Loader(style)
-        self.loader.on_finish = self.on_finish
+        self.loader.on_finish = self.on_finish  # type: ignore
         self.loader.start()
 
-    def dispatch(self, event, x, y):
+    def dispatch(self, event: int, x: int, y: int) -> None:
         if not self.loader.elapsed_ms():
             self.loader.start()
         self.loader.dispatch(event, x, y)
 
-    def on_finish(self):
+    def on_finish(self) -> None:
         raise ui.Result(None)
