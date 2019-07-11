@@ -1,11 +1,11 @@
 from trezor import config, wire
+from trezor.crypto import bip39
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
 from trezor.ui.text import Text
 
-from apps.common import storage
+from apps.common import mnemonic, storage
 from apps.common.confirm import require_confirm
-from apps.common.mnemonic import bip39
 
 
 async def load_device(ctx, msg):
@@ -24,10 +24,9 @@ async def load_device(ctx, msg):
     text.normal("Continue only if you", "know what you are doing!")
     await require_confirm(ctx, text)
 
-    secret = bip39.process_all([msg.mnemonic])
     storage.device.store_mnemonic_secret(
-        secret=secret,
-        mnemonic_type=bip39.get_type(),
+        secret=msg.mnemonic.encode(),
+        mnemonic_type=mnemonic.TYPE_BIP39,
         needs_backup=True,
         no_backup=False,
     )

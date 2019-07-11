@@ -7,8 +7,8 @@ if False:
 # fmt: off
 # Intentionally not using const() to allow import in submodules.
 _APP_DEVICE             = 0x01
-_APP_SLIP39             = 0x02
-_APP_SLIP39_MNEMONICS   = 0x03
+_APP_RECOVERY           = 0x02
+_APP_RECOVERY_SHARES    = 0x03
 # fmt: on
 
 _FALSE_BYTE = b"\x00"

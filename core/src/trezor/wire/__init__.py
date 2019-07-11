@@ -58,6 +58,20 @@ def setup(iface: WireInterface) -> None:
     loop.schedule(session_handler(iface, codec_v1.SESSION_ID))
 
 
+class DummyContext:
+    async def call(*argv):
+        pass
+
+    async def read(*argv):
+        pass
+
+    async def write(*argv):
+        pass
+
+    async def wait(self, *tasks: Awaitable) -> Any:
+        return await loop.spawn(*tasks)
+
+
 class Context:
     def __init__(self, iface: WireInterface, sid: int) -> None:
         self.iface = iface

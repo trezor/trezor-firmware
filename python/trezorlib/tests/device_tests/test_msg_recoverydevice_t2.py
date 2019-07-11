@@ -41,21 +41,6 @@ class TestMsgRecoverydeviceT2(TrezorTest):
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
-        # Enter word count
-        assert ret == proto.ButtonRequest(
-            code=proto.ButtonRequestType.MnemonicWordCount
-        )
-        self.client.debug.input(str(len(mnemonic)))
-        ret = self.client.call_raw(proto.ButtonAck())
-
-        # Enter mnemonic words
-        assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.MnemonicInput)
-        self.client.transport.write(proto.ButtonAck())
-        for word in mnemonic:
-            time.sleep(1)
-            self.client.debug.input(word)
-        ret = self.client.transport.read()
-
         # Enter PIN for first time
         assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
         self.client.debug.input("654")
@@ -65,6 +50,31 @@ class TestMsgRecoverydeviceT2(TrezorTest):
         assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
         self.client.debug.input("654")
         ret = self.client.call_raw(proto.ButtonAck())
+
+        # Homescreen
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Enter word count
+        assert ret == proto.ButtonRequest(
+            code=proto.ButtonRequestType.MnemonicWordCount
+        )
+        self.client.debug.input(str(len(mnemonic)))
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Homescreen
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Enter mnemonic words
+        assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.MnemonicInput)
+        self.client.transport.write(proto.ButtonAck())
+        for word in mnemonic:
+            time.sleep(1)
+            self.client.debug.input(word)
+        ret = self.client.transport.read()
 
         # Confirm success
         assert isinstance(ret, proto.ButtonRequest)
@@ -97,11 +107,21 @@ class TestMsgRecoverydeviceT2(TrezorTest):
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
+        # Homescreen
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
         # Enter word count
         assert ret == proto.ButtonRequest(
             code=proto.ButtonRequestType.MnemonicWordCount
         )
         self.client.debug.input(str(len(mnemonic)))
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Homescreen
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
         # Enter mnemonic words
