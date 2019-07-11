@@ -47,6 +47,9 @@
     "bitcoin:NMC": {
         "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
     },
+    "bitcoin:PART": {
+        "Particl Core": "https://github.com/particl/particl-core/releases"
+    },
     "bitcoin:VIA": {
         "Vialectrum": "https://vialectrum.org"
     },
