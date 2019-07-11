@@ -9,6 +9,7 @@ if False:
 _APP_DEVICE             = 0x01
 _APP_RECOVERY           = 0x02
 _APP_RECOVERY_SHARES    = 0x03
+_APP_FIDO2              = 0x04
 # fmt: on
 
 _FALSE_BYTE = b"\x00"

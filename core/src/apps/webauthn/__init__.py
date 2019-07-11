@@ -4,13 +4,14 @@ import utime
 from micropython import const
 
 from trezor import config, io, log, loop, res, ui, utils, workflow
-from trezor.crypto import aes, chacha20poly1305, der, hashlib, hmac, random
+from trezor.crypto import aes, der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
 from trezor.ui.confirm import CONFIRMED, Confirm
 from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, SWIPE_RIGHT, Swipe
 from trezor.ui.text import Text
 
 from apps.common import HARDENED, cbor, storage
+from apps.webauthn.credential import Credential
 
 _HID_RPT_SIZE = const(64)
 _CID_BROADCAST = const(0xFFFFFFFF)  # broadcast channel id
@@ -108,19 +109,6 @@ _COSE_CURVE_P256 = const(1)  # P-256 curve
 _COSE_X_COORD_KEY = const(-2)  # x coordinate of the public key
 _COSE_Y_COORD_KEY = const(-3)  # y coordinate of the public key
 
-# Credential ID values
-_CRED_ID_VERSION = const(1)
-_CRED_ID_MIN_LENGTH = const(30)
-
-# Credential ID keys
-_CRED_ID_RP_ID = const(0x01)
-_CRED_ID_RP_NAME = const(0x02)
-_CRED_ID_USER_ID = const(0x03)
-_CRED_ID_USER_NAME = const(0x04)
-_CRED_ID_USER_DISPLAY_NAME = const(0x05)
-_CRED_ID_CREATION_TIME = const(0x06)
-_CRED_ID_HMAC_SECRET = const(0x07)
-
 # hid error codes
 _ERR_NONE = const(0x00)  # no error
 _ERR_INVALID_CMD = const(0x01)  # invalid command
@@ -158,9 +146,6 @@ _U2FHID_IF_VERSION = const(2)  # interface version
 
 # Key paths
 _U2F_KEY_PATH = const(0x80553246)
-_FIDO_KEY_PATH = const(0xC649444F)
-_FIDO_CRED_ID_KEY_PATH = b"FIDO2 Trezor Credential ID"
-_FIDO_HMAC_SECRET_KEY_PATH = b"FIDO2 Trezor hmac-secret"
 
 # register response
 _U2F_REGISTER_ID = const(0x05)  # version 2 registration identifier
@@ -197,64 +182,6 @@ _KEY_AGREEMENT_PRIVKEY = nist256p1.generate_secret()
 _KEY_AGREEMENT_PUBKEY = nist256p1.publickey(_KEY_AGREEMENT_PRIVKEY, False)
 
 _ALLOW_RESIDENT_CREDENTIALS = True
-_APP_FIDO2 = const(0x04)
-_RESIDENT_CREDENTIAL_START_KEY = const(1)
-_MAX_RESIDENT_CREDENTIALS = const(16)
-
-# TODO move these functions to core/src/apps/common/storage/fido2.py
-def get_resident_credentials(rp_id_hash: bytes) -> List[Credential]:
-    creds = []
-    for i in range(
-        _RESIDENT_CREDENTIAL_START_KEY,
-        _RESIDENT_CREDENTIAL_START_KEY + _MAX_RESIDENT_CREDENTIALS,
-    ):
-        stored_credential_id = config.get(_APP_FIDO2, i)
-        if stored_credential_id is None:
-            continue
-
-        stored_cred = Credential.from_id(stored_credential_id, rp_id_hash)
-        if stored_cred is not None:
-            creds.append(stored_cred)
-
-    return creds
-
-
-def store_resident_credential(cred: Credential) -> bool:
-    slot = None
-    rp_id_hash = hashlib.sha256(cred.rp_id).digest()
-    for i in range(
-        _RESIDENT_CREDENTIAL_START_KEY,
-        _RESIDENT_CREDENTIAL_START_KEY + _MAX_RESIDENT_CREDENTIALS,
-    ):
-        # If a credential for the same RP ID and user ID already exists, then overwrite it.
-        stored_credential_id = config.get(_APP_FIDO2, i)
-        if stored_credential_id is None:
-            if slot is None:
-                slot = i
-            continue
-
-        stored_cred = Credential.from_id(stored_credential_id, rp_id_hash)
-        if stored_cred is None:
-            # Stored credential is not for this RP ID.
-            continue
-
-        if stored_cred.user_id == cred.user_id:
-            slot = i
-            break
-
-    if slot is None:
-        return False
-
-    config.set(_APP_FIDO2, slot, cred.id)
-    return True
-
-
-def erase_resident_credentials():
-    for i in range(
-        _RESIDENT_CREDENTIAL_START_KEY,
-        _RESIDENT_CREDENTIAL_START_KEY + _MAX_RESIDENT_CREDENTIALS,
-    ):
-        config.delete(_APP_FIDO2, i)
 
 
 def frame_init() -> dict:
@@ -647,7 +574,7 @@ class Fido2ConfirmMakeCredential(Fido2State):
         self.cred.generate_id()
         response_data = cbor_make_credential_sign(self.client_data_hash, self.cred)
         if self.resident:
-            if not store_resident_credential(self.cred):
+            if not storage.webauthn.store_resident_credential(self.cred):
                 return cbor_error(self.cid, _ERR_KEY_STORE_FULL)
         return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
 
@@ -776,7 +703,7 @@ class Fido2ConfirmReset(State):
         return Confirm(content)
 
     def on_confirm(self) -> Cmd:
-        erase_resident_credentials()
+        storage.webauthn.erase_resident_credentials()
         return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]))
 
     def on_decline(self) -> Cmd:
@@ -1132,116 +1059,6 @@ def generate_credential(app_id: bytes):
     return keybuf + keybase, pubkey, node.private_key()
 
 
-class Credential:
-    def __init__(self):
-        self.rp_id = None
-        self.rp_name = None
-        self.user_id = None
-        self.user_name = None
-        self.user_display_name = None
-        self._creation_time = 0
-        self.hmac_secret = False
-        self.id = None
-
-    def __lt__(self, other):
-        # Sort newest first.
-        return self._creation_time > other._creation_time
-
-    def generate_id(self) -> None:
-        from apps.common import seed
-
-        self._creation_time = storage.device.next_u2f_counter()
-
-        data = cbor.encode(
-            {
-                key: value
-                for key, value in (
-                    (_CRED_ID_RP_ID, self.rp_id),
-                    (_CRED_ID_RP_NAME, self.rp_name),
-                    (_CRED_ID_USER_ID, self.user_id),
-                    (_CRED_ID_USER_NAME, self.user_name),
-                    (_CRED_ID_USER_DISPLAY_NAME, self.user_display_name),
-                    (_CRED_ID_CREATION_TIME, self._creation_time),
-                    (_CRED_ID_HMAC_SECRET, self.hmac_secret),
-                )
-                if value
-            }
-        )
-
-        key = seed.derive_slip21_node_without_passphrase([_FIDO_CRED_ID_KEY_PATH]).key()
-        iv = random.bytes(12)
-        ctx = chacha20poly1305(key, iv)
-        ctx.auth(hashlib.sha256(self.rp_id).digest())
-        ciphertext = ctx.encrypt(data)
-        tag = ctx.finish()
-        self.id = bytes([_CRED_ID_VERSION]) + iv + ciphertext + tag
-
-    @staticmethod
-    def from_id(cred_id: bytes, rp_id_hash: bytes) -> Credential:
-        from apps.common import seed
-
-        if len(cred_id) < _CRED_ID_MIN_LENGTH or cred_id[0] != _CRED_ID_VERSION:
-            return None
-
-        key = seed.derive_slip21_node_without_passphrase([_FIDO_CRED_ID_KEY_PATH]).key()
-        iv = cred_id[1:13]
-        ciphertext = cred_id[13:-16]
-        tag = cred_id[-16:]
-        ctx = chacha20poly1305(key, iv)
-        ctx.auth(rp_id_hash)
-        data = ctx.decrypt(ciphertext)
-        if not utils.consteq(ctx.finish(), tag):
-            return None
-
-        try:
-            data = cbor.decode(data)
-        except Exception:
-            return None
-
-        if not isinstance(data, dict):
-            return None
-
-        cred = Credential()
-        cred.rp_id = data.get(_CRED_ID_RP_ID, None)
-        cred.rp_name = data.get(_CRED_ID_RP_NAME, None)
-        cred.user_id = data.get(_CRED_ID_USER_ID, None)
-        cred.user_name = data.get(_CRED_ID_USER_NAME, None)
-        cred.user_display_name = data.get(_CRED_ID_USER_DISPLAY_NAME, None)
-        cred._creation_time = data.get(_CRED_ID_CREATION_TIME, 0)
-        cred.hmac_secret = data.get(_CRED_ID_HMAC_SECRET, False)
-        cred.id = cred_id
-
-        return cred
-
-    def name(self) -> str:
-        from ubinascii import hexlify
-
-        if self.user_display_name:
-            return self.user_display_name
-        if self.user_name:
-            return self.user_name
-        else:
-            return hexlify(self.user_id).decode()
-
-    def private_key(self) -> bytes:
-        from apps.common import seed
-
-        path = [_FIDO_KEY_PATH] + [
-            HARDENED | i for i in ustruct.unpack("<4L", self.id[-16:])
-        ]
-        node = seed.derive_node_without_passphrase(path, "nist256p1")
-        return node.private_key()
-
-    def cred_random(self) -> Optional[bytes]:
-        from apps.common import seed
-
-        if not self.hmac_secret:
-            return None
-        return seed.derive_slip21_node_without_passphrase(
-            [_FIDO_HMAC_SECRET_KEY_PATH, self.id]
-        ).key()
-
-
 def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     keyhandle, pubkey, _ = generate_credential(app_id)
 
@@ -1576,7 +1393,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         if not _ALLOW_RESIDENT_CREDENTIALS:
             # Resident keys are not supported
             return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
-        cred_list = get_resident_credentials(rp_id_hash)
+        cred_list = storage.webauthn.get_resident_credentials(rp_id_hash)
 
     cred_list.sort()
 

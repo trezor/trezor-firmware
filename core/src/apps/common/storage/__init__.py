@@ -1,7 +1,7 @@
 from trezor import config
 
 from apps.common import cache
-from apps.common.storage import common, device, recovery
+from apps.common.storage import common, device, recovery, webauthn
 
 
 def set_current_version() -> None:
