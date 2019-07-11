@@ -108,16 +108,20 @@ def header(
     display.text(44, 35, title, BOLD, fg, bg)
 
 
-def header_warning(message: str) -> None:
+def header_warning(message: str, clear=True) -> None:
+    # TODO: review: is the clear=True really needed?
     display.bar(0, 0, WIDTH, 30, style.YELLOW)
     display.text_center(WIDTH // 2, 22, message, BOLD, style.BLACK, style.YELLOW)
-    display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
+    if clear:
+        display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
 
 
-def header_error(message: str) -> None:
+def header_error(message: str, clear=True) -> None:
+    # TODO: review: as above
     display.bar(0, 0, WIDTH, 30, style.RED)
     display.text_center(WIDTH // 2, 22, message, BOLD, style.WHITE, style.RED)
-    display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
+    if clear:
+        display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
 
 
 def grid(

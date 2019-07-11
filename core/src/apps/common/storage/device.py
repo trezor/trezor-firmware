@@ -3,7 +3,7 @@ from ubinascii import hexlify
 
 from trezor.crypto import random
 
-from apps.common.storage import common
+from apps.common.storage import common, slip39
 
 if False:
     from typing import Optional
@@ -29,6 +29,9 @@ _AUTOLOCK_DELAY_MS  = const(0x0C)  # int
 _NO_BACKUP          = const(0x0D)  # bool (0x01 or empty)
 _MNEMONIC_TYPE      = const(0x0E)  # int
 _ROTATION           = const(0x0F)  # int
+_RECOVERY_IN_PROGRESS = const(0x10)  # bool
+_RECOVERY_WORD_COUNT   = const(0x11)  # int
+_RECOVERY_DRY_RUN = const(0x12)  # bool
 # fmt: on
 
 HOMESCREEN_MAXSIZE = 16384
@@ -202,3 +205,35 @@ def next_u2f_counter() -> Optional[int]:
 
 def set_u2f_counter(count: int) -> None:
     common._set_counter(_NAMESPACE, _U2F_COUNTER, count, True)  # writable when locked
+
+
+def set_recovery_in_progress(val: bool):
+    common._set_bool(_NAMESPACE, _RECOVERY_IN_PROGRESS, val)
+
+
+def is_recovery_in_progress():
+    return common._get_bool(_NAMESPACE, _RECOVERY_IN_PROGRESS)
+
+
+def set_recovery_dry_run(val: bool):
+    common._set_bool(_NAMESPACE, _RECOVERY_DRY_RUN, val)
+
+
+def is_recovery_dry_run() -> bool:
+    return common._get_bool(_NAMESPACE, _RECOVERY_DRY_RUN)
+
+
+def set_word_count(count: int):
+    common._set_uint8(_NAMESPACE, _RECOVERY_WORD_COUNT, count)
+
+
+def get_word_count() -> int:
+    return common._get_uint8(_NAMESPACE, _RECOVERY_WORD_COUNT)
+
+
+def end_recovery_progress():
+    common._delete(_NAMESPACE, _RECOVERY_IN_PROGRESS)
+    common._delete(_NAMESPACE, _RECOVERY_DRY_RUN)
+    common._delete(_NAMESPACE, _RECOVERY_WORD_COUNT)
+    # bip39 has no additional data
+    slip39._delete_progress()

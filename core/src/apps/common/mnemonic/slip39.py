@@ -30,38 +30,30 @@ def process_single(mnemonic: str) -> Optional[bytes]:
     if threshold == 1:
         raise ValueError("Threshold equal to 1 is not allowed.")
 
-    # if recovery is not in progress already, start it and wait for more mnemonics
-    if not storage.slip39.is_in_progress():
-        storage.slip39.set_in_progress(True)
+    # if this is the first share, parse and store metadata
+    if not storage.slip39.get_remaining():
         storage.slip39.set_iteration_exponent(iteration_exponent)
         storage.slip39.set_identifier(identifier)
         storage.slip39.set_threshold(threshold)
         storage.slip39.set_remaining(threshold - 1)
-        storage.slip39.set_words_count(len(mnemonic.split()))
         storage.slip39_mnemonics.set(index, mnemonic)
         return None  # we need more shares
 
-    # check identifier and member index of this share against stored values
+    # These should be checked by UI before so it's a Runtime exception otherwise
     if identifier != storage.slip39.get_identifier():
-        # TODO: improve UX (tell user)
-        raise ValueError("Share identifiers do not match")
+        raise RuntimeError("Slip39: Share identifiers do not match")
     if storage.slip39_mnemonics.get(index):
-        # TODO: improve UX (tell user)
-        raise ValueError("This mnemonic was already entered")
+        raise RuntimeError("Slip39: This mnemonic was already entered")
 
-    # append to storage
+    # add mnemonic to storage
     remaining = storage.slip39.get_remaining() - 1
     storage.slip39.set_remaining(remaining)
-    storage.slip39.set(index, mnemonic)
+    storage.slip39_mnemonics.set(index, mnemonic)
     if remaining != 0:
         return None  # we need more shares
 
     # combine shares and return the master secret
-    mnemonics = storage.slip39_mnemonics.fetch()
-    if len(mnemonics) != threshold:
-        raise ValueError("Some mnemonics are still missing.")
-    _, _, secret = slip39.combine_mnemonics(mnemonics)
-    return secret
+    return _combine(storage.slip39_mnemonics.fetch())
 
 
 def process_all(mnemonics: list) -> bytes:
@@ -69,6 +61,10 @@ def process_all(mnemonics: list) -> bytes:
     Receives all mnemonics and processes it into pre-master secret which is usually then
     stored in the storage.
     """
+    return _combine(mnemonics)
+
+
+def _combine(mnemonics) -> bytes:
     identifier, iteration_exponent, secret = slip39.combine_mnemonics(mnemonics)
     storage.slip39.set_iteration_exponent(iteration_exponent)
     storage.slip39.set_identifier(identifier)
@@ -79,7 +75,6 @@ def store(secret: bytes, needs_backup: bool, no_backup: bool) -> None:
     storage.device.store_mnemonic_secret(
         secret, mnemonic.TYPE_SLIP39, needs_backup, no_backup
     )
-    storage.slip39.delete_progress()
 
 
 def get_seed(
@@ -96,8 +91,3 @@ def get_seed(
     if progress_bar:
         mnemonic._stop_progress()
     return master_secret
-
-
-def get_mnemonic_threshold(mnemonic: str) -> int:
-    _, _, _, _, _, _, threshold, _ = slip39.decode_mnemonic(mnemonic)
-    return threshold

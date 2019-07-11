@@ -12,8 +12,8 @@ async def backup_device(ctx, msg):
     if not storage.device.needs_backup():
         raise wire.ProcessError("Seed already backed up")
 
-    mnemonic_secret, mnemonic_type = mnemonic.get()
-    slip39 = mnemonic_type == mnemonic.TYPE_SLIP39
+    mnemonic_secret, mnemonic_module = mnemonic.get()
+    slip39 = mnemonic_module == mnemonic.slip39
 
     storage.device.set_unfinished_backup(True)
     storage.device.set_backed_up()
