@@ -42,7 +42,11 @@ if __debug__:
         from apps.common import storage, mnemonic
 
         m = DebugLinkState()
-        m.mnemonic_secret, m.mnemonic_type = mnemonic.get()
+        m.mnemonic_secret, mnemonic_module = mnemonic.get()
+        if mnemonic_module == mnemonic.bip39:
+            m.mnemonic_type = mnemonic.TYPE_BIP39
+        else:
+            m.mnemonic_type = mnemonic.TYPE_SLIP39
         m.passphrase_protection = storage.device.has_passphrase()
         m.reset_word_pos = reset_word_index
         m.reset_entropy = reset_internal_entropy

@@ -56,6 +56,13 @@ utils.set_mode_unprivileged()
 
 # run main event loop and specify which screen is the default
 from apps.homescreen.homescreen import homescreen
+from apps.management.recovery_device.homescreen import recovery_homescreen
+from apps.common.storage import device
 
-workflow.startdefault(homescreen)
+if device.is_recovery_in_progress():
+    # TODO: @jpochyla
+    loop.schedule(recovery_homescreen())
+else:
+    workflow.startdefault(homescreen)
+
 loop.run()

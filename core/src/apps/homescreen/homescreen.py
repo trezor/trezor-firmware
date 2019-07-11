@@ -17,9 +17,7 @@ async def homescreen() -> None:
 
 def display_homescreen() -> None:
     image = None
-    if storage.slip39.is_in_progress():
-        label = "Waiting for other shares"
-    elif not storage.is_initialized():
+    if not storage.is_initialized():
         label = "Go to trezor.io/start"
     else:
         label = storage.device.get_label() or "My Trezor"
@@ -36,8 +34,6 @@ def display_homescreen() -> None:
         ui.header_warning("NEEDS BACKUP!")
     elif storage.is_initialized() and not config.has_pin():
         ui.header_warning("PIN NOT SET!")
-    elif storage.slip39.is_in_progress():
-        ui.header_warning("SHAMIR IN PROGRESS!")
     else:
         ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
     ui.display.avatar(48, 48 - 10, image, ui.WHITE, ui.BLACK)
