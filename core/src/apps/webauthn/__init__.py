@@ -113,9 +113,13 @@ _CRED_ID_VERSION = const(1)
 _CRED_ID_MIN_LENGTH = const(30)
 
 # Credential ID keys
-_CRED_ID_ACCOUNT_NAME = const(0x01)
-_CRED_ID_ACCOUNT_ID = const(0x02)
-_CRED_ID_CREATION_TIME = const(0x03)
+_CRED_ID_RP_ID = const(0x01)
+_CRED_ID_RP_NAME = const(0x02)
+_CRED_ID_USER_ID = const(0x03)
+_CRED_ID_USER_NAME = const(0x04)
+_CRED_ID_USER_DISPLAY_NAME = const(0x05)
+_CRED_ID_CREATION_TIME = const(0x06)
+_CRED_ID_HMAC_SECRET = const(0x07)
 
 # hid error codes
 _ERR_NONE = const(0x00)  # no error
@@ -198,7 +202,7 @@ _RESIDENT_CREDENTIAL_START_KEY = const(1)
 _MAX_RESIDENT_CREDENTIALS = const(16)
 
 # TODO move these functions to core/src/apps/common/storage/fido2.py
-def get_resident_credentials(rp_id_hash: bytes):
+def get_resident_credentials(rp_id_hash: bytes) -> List[Credential]:
     creds = []
     for i in range(
         _RESIDENT_CREDENTIAL_START_KEY,
@@ -215,13 +219,14 @@ def get_resident_credentials(rp_id_hash: bytes):
     return creds
 
 
-def store_resident_credential(cred: Credential, rp_id_hash: bytes):
+def store_resident_credential(cred: Credential) -> bool:
     slot = None
+    rp_id_hash = hashlib.sha256(cred.rp_id).digest()
     for i in range(
         _RESIDENT_CREDENTIAL_START_KEY,
         _RESIDENT_CREDENTIAL_START_KEY + _MAX_RESIDENT_CREDENTIALS,
     ):
-        # If a credential for the same RP ID and account ID already exists, then overwrite it.
+        # If a credential for the same RP ID and user ID already exists, then overwrite it.
         stored_credential_id = config.get(_APP_FIDO2, i)
         if stored_credential_id is None:
             if slot is None:
@@ -233,7 +238,7 @@ def store_resident_credential(cred: Credential, rp_id_hash: bytes):
             # Stored credential is not for this RP ID.
             continue
 
-        if stored_cred.account_id == cred.account_id:
+        if stored_cred.user_id == cred.user_id:
             slot = i
             break
 
@@ -513,13 +518,13 @@ class State:
         content = ConfirmContent(self)
         return Confirm(content)
 
-    def get_text(self):
-        return ""
+    def get_text(self) -> List[str]:
+        return []
 
-    def keepalive_status(self):
+    def keepalive_status(self) -> Optional[int]:
         return None
 
-    def timeout_ms(self):
+    def timeout_ms(self) -> int:
         return _U2F_CONFIRM_TIMEOUT_MS
 
     def boot(self) -> None:
@@ -535,13 +540,13 @@ class State:
                 log.exception(__name__, e)
         self.app_icon = icon
 
-    def on_confirm(self):
+    def on_confirm(self) -> Optional[Cmd]:
         return None
 
-    def on_decline(self):
+    def on_decline(self) -> Optional[Cmd]:
         return None
 
-    def on_timeout(self):
+    def on_timeout(self) -> Optional[Cmd]:
         return self.on_decline()
 
 
@@ -554,7 +559,7 @@ class U2fState(State):
         self.checksum = checksum
         self.boot()
 
-    def get_text(self):
+    def get_text(self) -> List[str]:
         return [self.app_name]
 
     def boot(self) -> None:
@@ -586,7 +591,7 @@ class U2fConfirmRegister(U2fState):
         else:
             return super(U2fConfirmRegister, self).get_dialog()
 
-    def get_header(self):
+    def get_header(self) -> str:
         return "U2F Register"
 
     def __eq__(self, other) -> bool:
@@ -597,7 +602,7 @@ class U2fConfirmAuthenticate(U2fState):
     def __init__(self, cid: int, checksum: bytes, app_id: bytes) -> None:
         super(U2fConfirmAuthenticate, self).__init__(cid, checksum, app_id)
 
-    def get_header(self):
+    def get_header(self) -> str:
         return "U2F Authenticate"
 
     def __eq__(self, other) -> bool:
@@ -615,46 +620,38 @@ class Fido2State(State):
         self.app_id = hashlib.sha256(rp_id).digest()
         self.boot()
 
-    def keepalive_status(self):
+    def keepalive_status(self) -> int:
         return _KEEPALIVE_STATUS_UP_NEEDED
 
-    def timeout_ms(self):
+    def timeout_ms(self) -> int:
         return _FIDO2_CONFIRM_TIMEOUT_MS
 
 
 class Fido2ConfirmMakeCredential(Fido2State):
     def __init__(
-        self,
-        cid: int,
-        client_data_hash: bytes,
-        rp_id: str,
-        cred: Credential,
-        resident: bool,
-        hmac_secret: bool,
+        self, cid: int, client_data_hash: bytes, cred: Credential, resident: bool
     ) -> None:
-        super(Fido2ConfirmMakeCredential, self).__init__(cid, client_data_hash, rp_id)
+        super(Fido2ConfirmMakeCredential, self).__init__(
+            cid, client_data_hash, cred.rp_id
+        )
         self.cred = cred
         self.resident = resident
-        self.hmac_secret = hmac_secret
 
-    def get_header(self):
+    def get_header(self) -> str:
         return "FIDO2 Register"
 
-    def get_text(self):
-        return [self.rp_id, self.cred.account_name]
+    def get_text(self) -> List[str]:
+        return [self.rp_id, self.cred.name()]
 
-    def on_confirm(self):
-        rp_id_hash = hashlib.sha256(self.rp_id).digest()
-        self.cred.generate_id(rp_id_hash)
-        response_data = cbor_make_credential_sign(
-            self.client_data_hash, rp_id_hash, self.cred, self.hmac_secret
-        )
+    def on_confirm(self) -> Cmd:
+        self.cred.generate_id()
+        response_data = cbor_make_credential_sign(self.client_data_hash, self.cred)
         if self.resident:
-            if not store_resident_credential(self.cred, rp_id_hash):
+            if not store_resident_credential(self.cred):
                 return cbor_error(self.cid, _ERR_KEY_STORE_FULL)
         return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
 
-    def on_decline(self):
+    def on_decline(self) -> Cmd:
         return cbor_error(self.cid, _ERR_OPERATION_DENIED)
 
 
@@ -665,38 +662,38 @@ class Fido2ConfirmGetAssertion(Fido2State):
         client_data_hash: bytes,
         rp_id: str,
         creds: List[Credential],
-        shared_secret: bytes,
-        hmac_secret_salt: bytes,
+        hmac_secret: map,
     ) -> None:
         super(Fido2ConfirmGetAssertion, self).__init__(cid, client_data_hash, rp_id)
         self.creds = creds
-        self.shared_secret = shared_secret
-        self.hmac_secret_salt = hmac_secret_salt
+        self.hmac_secret = hmac_secret
         self.i = 0
 
     def get_header(self):
         return "FIDO2 Authenticate"
 
-    def get_text(self):
-        return [self.rp_id, self.creds[self.i].account_name]
+    def get_text(self) -> List[str]:
+        return [self.rp_id, self.creds[self.i].name()]
 
     def get_dialog(self):
         content = ConfirmContent(self)
         return ConfirmGetAssertion(content, len(self.creds))
 
-    def on_confirm(self):
+    def on_confirm(self) -> Cmd:
         cred = self.creds[self.i]
 
-        response_data = cbor_get_assertion_sign(
-            self.client_data_hash,
-            hashlib.sha256(self.rp_id).digest(),
-            cred,
-            self.shared_secret,
-            self.hmac_secret_salt,
-        )
-        return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
+        try:
+            response_data = cbor_get_assertion_sign(
+                self.client_data_hash,
+                hashlib.sha256(self.rp_id).digest(),
+                cred,
+                self.hmac_secret,
+            )
+            return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
+        except Exception:
+            return cbor_error(self.cid, _ERR_OPERATION_DENIED)
 
-    def on_decline(self):
+    def on_decline(self) -> Cmd:
         return cbor_error(self.cid, _ERR_OPERATION_DENIED)
 
 
@@ -704,44 +701,41 @@ class Fido2ConfirmExcluded(Fido2State):
     def __init__(self, cid: int, client_data_hash: bytes, rp_id: str) -> None:
         super(Fido2ConfirmExcluded, self).__init__(cid, client_data_hash, rp_id)
 
-    def get_header(self):
+    def get_header(self) -> str:
         return "FIDO2 Register"
 
-    def get_text(self):
+    def get_text(self) -> List[str]:
         return [self.rp_id, "This token is", "already registered"]
 
     def get_dialog(self):
         content = ConfirmContent(self, ui.NORMAL)
         return Confirm(content, confirm=None)
 
-    def on_confirm(self):
+    def on_confirm(self) -> Cmd:
         return cbor_error(self.cid, _ERR_CREDENTIAL_EXCLUDED)
 
-    def on_decline(self):
+    def on_decline(self) -> Cmd:
         return cbor_error(self.cid, _ERR_CREDENTIAL_EXCLUDED)
 
 
 class Fido2ConfirmNoPin(Fido2State):
-    def __init__(
-        self, cid: int, client_data_hash: bytes, rp_id: str, account_name: str
-    ) -> None:
+    def __init__(self, cid: int, client_data_hash: bytes, rp_id: str) -> None:
         super(Fido2ConfirmNoPin, self).__init__(cid, client_data_hash, rp_id)
-        self.account_name = account_name
 
-    def get_header(self):
+    def get_header(self) -> str:
         return "FIDO2 Register"
 
-    def get_text(self):
+    def get_text(self) -> List[str]:
         return [self.rp_id, "PIN not set.", "Unable to verify."]
 
     def get_dialog(self):
         content = ConfirmContent(self, ui.NORMAL)
         return Confirm(content, confirm=None)
 
-    def on_confirm(self):
+    def on_confirm(self) -> Cmd:
         return cbor_error(self.cid, _ERR_OPERATION_DENIED)
 
-    def on_decline(self):
+    def on_decline(self) -> Cmd:
         return cbor_error(self.cid, _ERR_OPERATION_DENIED)
 
 
@@ -749,20 +743,20 @@ class Fido2ConfirmNoCredentials(Fido2State):
     def __init__(self, cid: int, client_data_hash: bytes, rp_id: str) -> None:
         super(Fido2ConfirmNoCredentials, self).__init__(cid, client_data_hash, rp_id)
 
-    def get_header(self):
+    def get_header(self) -> str:
         return "FIDO2 Authenticate"
 
-    def get_text(self):
+    def get_text(self) -> List[str]:
         return [self.rp_id, "This token is", "not registered."]
 
     def get_dialog(self):
         content = ConfirmContent(self, ui.NORMAL)
         return Confirm(content, confirm=None)
 
-    def on_confirm(self):
+    def on_confirm(self) -> Cmd:
         return cbor_error(self.cid, _ERR_NO_CREDENTIALS)
 
-    def on_decline(self):
+    def on_decline(self) -> Cmd:
         return cbor_error(self.cid, _ERR_NO_CREDENTIALS)
 
 
@@ -771,27 +765,27 @@ class Fido2ConfirmReset(State):
         super(Fido2ConfirmReset, self).__init__(cid)
         self.boot()
 
-    def get_header(self):
+    def get_header(self) -> str:
         return "FIDO2 Reset"
 
-    def get_text(self):
+    def get_text(self) -> List[str]:
         return ["Do you really want to", "erase all credentials?"]
 
     def get_dialog(self):
         content = ConfirmContent(self, ui.NORMAL)
         return Confirm(content)
 
-    def on_confirm(self):
+    def on_confirm(self) -> Cmd:
         erase_resident_credentials()
         return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]))
 
-    def on_decline(self):
+    def on_decline(self) -> Cmd:
         return cbor_error(self.cid, _ERR_OPERATION_DENIED)
 
-    def keepalive_status(self):
+    def keepalive_status(self) -> int:
         return _KEEPALIVE_STATUS_UP_NEEDED
 
-    def timeout_ms(self):
+    def timeout_ms(self) -> int:
         return _FIDO2_CONFIRM_TIMEOUT_MS
 
 
@@ -800,17 +794,17 @@ class DialogManager:
         self.iface = iface
         self._clear()
 
-    def _clear(self):
+    def _clear(self) -> None:
         self.state = None
         self.deadline = 0
         self.confirmed = None
         self.workflow = None
         self.keepalive = None
 
-    def reset_timeout(self):
+    def reset_timeout(self) -> None:
         self.deadline = utime.ticks_ms() + self.state.timeout_ms()
 
-    def reset(self):
+    def reset(self) -> None:
         if self.workflow is not None:
             loop.close(self.workflow)
         if self.keepalive is not None:
@@ -1140,34 +1134,44 @@ def generate_credential(app_id: bytes):
 
 class Credential:
     def __init__(self):
-        self.clear()
-
-    def clear(self):
-        self._creation_time = None
-        self.account_name = None
-        self.account_id = None
+        self.rp_id = None
+        self.rp_name = None
+        self.user_id = None
+        self.user_name = None
+        self.user_display_name = None
+        self._creation_time = 0
+        self.hmac_secret = False
         self.id = None
 
     def __lt__(self, other):
         # Sort newest first.
         return self._creation_time > other._creation_time
 
-    def generate_id(self, rp_id_hash: bytes):
+    def generate_id(self) -> None:
         from apps.common import seed
 
-        self._creation_time = storage.next_u2f_counter()
+        self._creation_time = storage.device.next_u2f_counter()
+
         data = cbor.encode(
             {
-                _CRED_ID_ACCOUNT_NAME: self.account_name,
-                _CRED_ID_ACCOUNT_ID: self.account_id,
-                _CRED_ID_CREATION_TIME: self._creation_time,
+                key: value
+                for key, value in (
+                    (_CRED_ID_RP_ID, self.rp_id),
+                    (_CRED_ID_RP_NAME, self.rp_name),
+                    (_CRED_ID_USER_ID, self.user_id),
+                    (_CRED_ID_USER_NAME, self.user_name),
+                    (_CRED_ID_USER_DISPLAY_NAME, self.user_display_name),
+                    (_CRED_ID_CREATION_TIME, self._creation_time),
+                    (_CRED_ID_HMAC_SECRET, self.hmac_secret),
+                )
+                if value
             }
         )
 
         key = seed.derive_slip21_node_without_passphrase([_FIDO_CRED_ID_KEY_PATH]).key()
         iv = random.bytes(12)
         ctx = chacha20poly1305(key, iv)
-        ctx.auth(rp_id_hash)
+        ctx.auth(hashlib.sha256(self.rp_id).digest())
         ciphertext = ctx.encrypt(data)
         tag = ctx.finish()
         self.id = bytes([_CRED_ID_VERSION]) + iv + ciphertext + tag
@@ -1198,12 +1202,26 @@ class Credential:
             return None
 
         cred = Credential()
+        cred.rp_id = data.get(_CRED_ID_RP_ID, None)
+        cred.rp_name = data.get(_CRED_ID_RP_NAME, None)
+        cred.user_id = data.get(_CRED_ID_USER_ID, None)
+        cred.user_name = data.get(_CRED_ID_USER_NAME, None)
+        cred.user_display_name = data.get(_CRED_ID_USER_DISPLAY_NAME, None)
         cred._creation_time = data.get(_CRED_ID_CREATION_TIME, 0)
-        cred.account_name = data.get(_CRED_ID_ACCOUNT_NAME, None)
-        cred.account_id = data.get(_CRED_ID_ACCOUNT_ID, None)
+        cred.hmac_secret = data.get(_CRED_ID_HMAC_SECRET, False)
         cred.id = cred_id
 
         return cred
+
+    def name(self) -> str:
+        from ubinascii import hexlify
+
+        if self.user_display_name:
+            return self.user_display_name
+        if self.user_name:
+            return self.user_name
+        else:
+            return hexlify(self.user_id).decode()
 
     def private_key(self) -> bytes:
         from apps.common import seed
@@ -1214,11 +1232,13 @@ class Credential:
         node = seed.derive_node_without_passphrase(path, "nist256p1")
         return node.private_key()
 
-    def cred_random(self) -> bytes:
+    def cred_random(self) -> Optional[bytes]:
         from apps.common import seed
 
+        if not self.hmac_secret:
+            return None
         return seed.derive_slip21_node_without_passphrase(
-            [_FIDO_HMAC_SECRET_KEY_PATH, self.id[-16:]]
+            [_FIDO_HMAC_SECRET_KEY_PATH, self.id]
         ).key()
 
 
@@ -1399,9 +1419,7 @@ def cbor_error(cid: int, code: int) -> Cmd:
     return Cmd(cid, _CMD_CBOR, ustruct.pack(">B", code))
 
 
-def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None]:
-    from ubinascii import hexlify
-
+def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
@@ -1412,7 +1430,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None
         rp_id = param[_MAKECRED_CMD_RP]["id"]
         client_data_hash = param[_MAKECRED_CMD_CLIENT_DATA_HASH]
         user = param[_MAKECRED_CMD_USER]
-        account_id = user["id"]
+        user_id = user["id"]
         pub_key_cred_params = param[_MAKECRED_CMD_PUB_KEY_CRED_PARAMS]
         rp_id_hash = hashlib.sha256(rp_id).digest()
     except Exception:
@@ -1443,6 +1461,9 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None
         except Exception:
             return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
+    if not isinstance(hmac_secret, bool):
+        return cbor_error(req.cid, _ERR_INVALID_CBOR)
+
     if _MAKECRED_CMD_PIN_AUTH in param:
         # Client PIN is not supported
         return cbor_error(req.cid, _ERR_PIN_AUTH_INVALID)
@@ -1457,34 +1478,28 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None
     if resident_key and not _ALLOW_RESIDENT_CREDENTIALS:
         return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
 
-    if "displayName" in user:
-        account_name = user["displayName"]
-    elif "name" in user:
-        account_name = user["name"]
-    else:
-        account_name = hexlify(account_id).decode()
+    cred = Credential()
+    cred.rp_id = rp_id
+    cred.rp_name = param[_MAKECRED_CMD_RP].get("name", None)
+    cred.user_id = user_id
+    cred.user_name = user.get("name", None)
+    cred.user_display_name = user.get("displayName", None)
+    cred.hmac_secret = hmac_secret
 
     if user_verification and not config.has_pin():
         state_set = dialog_mgr.set_state(
-            Fido2ConfirmNoPin(req.cid, client_data_hash, rp_id, account_name)
+            Fido2ConfirmNoPin(req.cid, client_data_hash, rp_id)
         )
     else:
-        cred = Credential()
-        cred.account_name = account_name
-        cred.account_id = account_id
         state_set = dialog_mgr.set_state(
-            Fido2ConfirmMakeCredential(
-                req.cid, client_data_hash, rp_id, cred, resident_key, hmac_secret
-            )
+            Fido2ConfirmMakeCredential(req.cid, client_data_hash, cred, resident_key)
         )
     if not state_set:
         return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
     return None
 
 
-def cbor_make_credential_sign(
-    client_data_hash: bytes, rp_id_hash: bytes, cred: Credential, hmac_secret: bool
-) -> bytes:
+def cbor_make_credential_sign(client_data_hash: bytes, cred: Credential) -> bytes:
     privkey = cred.private_key()
     pubkey = nist256p1.publickey(privkey, False)
 
@@ -1506,10 +1521,11 @@ def cbor_make_credential_sign(
     )
 
     extensions = b""
-    if hmac_secret:
+    if cred.hmac_secret:
         extensions = cbor.encode({"hmac-secret": True})
         flags |= _AUTH_FLAG_ED
 
+    rp_id_hash = hashlib.sha256(cred.rp_id).digest()
     authenticator_data = (
         rp_id_hash + bytes([flags]) + b"\x00\x00\x00\x00" + att_cred_data + extensions
     )
@@ -1530,7 +1546,7 @@ def cbor_make_credential_sign(
     )
 
 
-def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None]:
+def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
@@ -1576,7 +1592,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None]:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
     try:
-        hmac_secret_salt, shared_secret = cbor_get_assertion_hmac_secret_salt(param)
+        hmac_secret = param.get(_GETASSERT_CMD_EXTENSIONS, {}).get("hmac-secret", None)
     except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
@@ -1592,24 +1608,17 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None]:
         else:
             return cbor_error(req.cid, _ERR_NO_CREDENTIALS)
     elif not user_presence and len(cred_list) == 1:
-        response_data = cbor_get_assertion_sign(
-            client_data_hash,
-            rp_id_hash,
-            cred_list[0],
-            shared_secret,
-            hmac_secret_salt,
-            user_presence,
-        )
-        return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
+        try:
+            response_data = cbor_get_assertion_sign(
+                client_data_hash, rp_id_hash, cred_list[0], hmac_secret, user_presence
+            )
+            return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
+        except Exception:
+            return cbor_error(req.cid, _ERR_OPERATION_DENIED)
     else:
         state_set = dialog_mgr.set_state(
             Fido2ConfirmGetAssertion(
-                req.cid,
-                client_data_hash,
-                rp_id,
-                cred_list,
-                shared_secret,
-                hmac_secret_salt,
+                req.cid, client_data_hash, rp_id, cred_list, hmac_secret
             )
         )
     if not state_set:
@@ -1617,11 +1626,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None]:
     return None
 
 
-def cbor_get_assertion_hmac_secret_salt(param):
-    hmac_secret = param.get(_GETASSERT_CMD_EXTENSIONS, {}).get("hmac-secret", None)
-    if hmac_secret is None:
-        return None, None
-
+def cbor_get_assertion_hmac_secret(cred: Credential, hmac_secret: map) -> bytes:
     key_agreement = hmac_secret[1]
     salt_enc = hmac_secret[2]
     salt_auth = hmac_secret[3]
@@ -1642,18 +1647,12 @@ def cbor_get_assertion_hmac_secret_salt(param):
     if hmac.Hmac(shared_secret, salt_enc, hashlib.sha256).digest()[:16] != salt_auth:
         raise ValueError
 
-    hmac_secret_salt = aes(aes.CBC, shared_secret).decrypt(salt_enc)
+    salt = aes(aes.CBC, shared_secret).decrypt(salt_enc)
 
-    return hmac_secret_salt, shared_secret
-
-
-def cbor_get_assertion_hmac_secret(
-    cred: Credential, hmac_secret_salt: bytes, shared_secret: bytes
-) -> bytes:
     cred_random = cred.cred_random()
-    output = hmac.Hmac(cred_random, hmac_secret_salt[:32], hashlib.sha256).digest()
-    if len(hmac_secret_salt) == 64:
-        output += hmac.Hmac(cred_random, hmac_secret_salt[32:], hashlib.sha256).digest()
+    output = hmac.Hmac(cred_random, salt[:32], hashlib.sha256).digest()
+    if len(salt) == 64:
+        output += hmac.Hmac(cred_random, salt[32:], hashlib.sha256).digest()
     return aes(aes.CBC, shared_secret).encrypt(output)
 
 
@@ -1661,8 +1660,7 @@ def cbor_get_assertion_sign(
     client_data_hash: bytes,
     rp_id_hash: bytes,
     cred: Credential,
-    shared_secret: bytes,
-    hmac_secret_salt: bytes,
+    hmac_secret: map,
     user_presence=True,
 ) -> bytes:
     flags = 0
@@ -1672,13 +1670,9 @@ def cbor_get_assertion_sign(
         flags |= _AUTH_FLAG_UV
 
     extensions = b""
-    if hmac_secret_salt:
+    if hmac_secret:
         extensions = cbor.encode(
-            {
-                "hmac-secret": cbor_get_assertion_hmac_secret(
-                    cred.id, hmac_secret_salt, shared_secret
-                )
-            }
+            {"hmac-secret": cbor_get_assertion_hmac_secret(cred.id, hmac_secret)}
         )
         flags |= _AUTH_FLAG_ED
 
@@ -1697,7 +1691,7 @@ def cbor_get_assertion_sign(
         _GETASSERT_RESP_CREDENTIAL: {"type": "public-key", "id": cred.id},
         _GETASSERT_RESP_AUTH_DATA: auth_data,
         _GETASSERT_RESP_SIGNATURE: sig,
-        _GETASSERT_RESP_USER: {"id": cred.account_id},
+        _GETASSERT_RESP_USER: {"id": cred.user_id},
     }
     return cbor.encode(response_data)
 
@@ -1743,7 +1737,7 @@ def cbor_client_pin(req: Cmd) -> Cmd:
     return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
 
 
-def cbor_reset(req: Cmd, dialog_mgr: DialogManager) -> Union[Cmd, None]:
+def cbor_reset(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
