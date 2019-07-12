@@ -32,9 +32,12 @@
   "uri_prefix": "nix",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": ["https://blockchain.nixplatform.io"],
+  "bitcore": [
+    "https://blockchain.nixplatform.io"
+  ],
   "blockbook": [],
   "negative_fee": false,
   "cooldown": 100,
-  "consensus_branch_id": null
+  "consensus_branch_id": null,
+  "confidential_assets": null
 }
