@@ -24,7 +24,9 @@ _knownapps = {
     "https://dashboard.stripe.com": "Stripe",
     "https://u2f.bin.coffee": "u2f.bin.coffee",
     # WebAuthn
+    "www.binance.com": "Binance",
     "www.dropbox.com": "Dropbox",
+    "secure.login.gov": "login.gov",
     "webauthn.bin.coffee": "webauthn.bin.coffee",
     "webauthn.io": "WebAuthn.io",
     "webauthn.me": "WebAuthn.me",
