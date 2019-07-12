@@ -112,10 +112,10 @@ class Credential:
     def name(self) -> str:
         from ubinascii import hexlify
 
-        if self.user_display_name:
-            return self.user_display_name
         if self.user_name:
             return self.user_name
+        elif self.user_display_name:
+            return self.user_display_name
         else:
             return hexlify(self.user_id).decode()
 

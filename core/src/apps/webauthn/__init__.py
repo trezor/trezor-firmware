@@ -13,6 +13,9 @@ from trezor.ui.text import Text
 from apps.common import HARDENED, cbor, storage
 from apps.webauthn.credential import Credential
 
+if False:
+    from typing import List, Optional
+
 _HID_RPT_SIZE = const(64)
 _CID_BROADCAST = const(0xFFFFFFFF)  # broadcast channel id
 
@@ -97,7 +100,7 @@ _KEEPALIVE_STATUS_UP_NEEDED = const(0x02)  # waiting for user presence
 # time intervals and timeouts
 _KEEPALIVE_INTERVAL_MS = const(80)  # interval between keepalive commands
 _U2F_CONFIRM_TIMEOUT_MS = const(10 * 1000)
-_FIDO2_CONFIRM_TIMEOUT_MS = const(30 * 1000)
+_FIDO2_CONFIRM_TIMEOUT_MS = const(60 * 1000)
 
 # CBOR object signing and encryption algorithms and keys
 _COSE_ALG_KEY = const(3)
@@ -441,12 +444,12 @@ class State:
         self.cid = cid
         self.app_icon = None
 
+    def user_name(self) -> Optional[str]:
+        return None
+
     def get_dialog(self):
         content = ConfirmContent(self)
         return Confirm(content)
-
-    def get_text(self) -> List[str]:
-        return []
 
     def keepalive_status(self) -> Optional[int]:
         return None
@@ -454,12 +457,12 @@ class State:
     def timeout_ms(self) -> int:
         return _U2F_CONFIRM_TIMEOUT_MS
 
-    def boot(self) -> None:
+    def load_icon(self, app_id: bytes) -> None:
         from trezor import res
         from apps.webauthn import knownapps
 
         try:
-            namepart = knownapps.knownapps[self.app_id].lower().replace(" ", "_")
+            namepart = knownapps.knownapps[app_id].lower().replace(" ", "_")
             icon = res.load("apps/webauthn/res/icon_%s.toif" % namepart)
         except Exception as e:
             icon = res.load("apps/webauthn/res/icon_webauthn.toif")
@@ -486,11 +489,8 @@ class U2fState(State):
         self.checksum = checksum
         self.boot()
 
-    def get_text(self) -> List[str]:
-        return [self.app_name]
-
     def boot(self) -> None:
-        super(U2fState, self).boot()
+        self.load_icon(self.app_id)
         from ubinascii import hexlify
         from apps.webauthn import knownapps
 
@@ -514,7 +514,7 @@ class U2fConfirmRegister(U2fState):
             text.normal(
                 "Another U2F device", "was used to register", "in this application."
             )
-            return Confirm(text)
+            return Confirm(text, confirm=None)
         else:
             return super(U2fConfirmRegister, self).get_dialog()
 
@@ -540,12 +540,8 @@ class U2fConfirmAuthenticate(U2fState):
 
 
 class Fido2State(State):
-    def __init__(self, cid: int, client_data_hash: bytes, rp_id: str) -> None:
+    def __init__(self, cid: int) -> None:
         super(Fido2State, self).__init__(cid)
-        self.client_data_hash = client_data_hash
-        self.rp_id = rp_id
-        self.app_id = hashlib.sha256(rp_id).digest()
-        self.boot()
 
     def keepalive_status(self) -> int:
         return _KEEPALIVE_STATUS_UP_NEEDED
@@ -558,20 +554,22 @@ class Fido2ConfirmMakeCredential(Fido2State):
     def __init__(
         self, cid: int, client_data_hash: bytes, cred: Credential, resident: bool
     ) -> None:
-        super(Fido2ConfirmMakeCredential, self).__init__(
-            cid, client_data_hash, cred.rp_id
-        )
+        super(Fido2ConfirmMakeCredential, self).__init__(cid)
+        self.client_data_hash = client_data_hash
         self.cred = cred
         self.resident = resident
+        self.app_name = cred.rp_id
+        self.load_icon(hashlib.sha256(cred.rp_id).digest())
 
     def get_header(self) -> str:
         return "FIDO2 Register"
 
-    def get_text(self) -> List[str]:
-        return [self.rp_id, self.cred.name()]
+    def user_name(self) -> Optional[str]:
+        return self.cred.name()
 
     def on_confirm(self) -> Cmd:
         self.cred.generate_id()
+
         response_data = cbor_make_credential_sign(self.client_data_hash, self.cred)
         if self.resident:
             if not storage.webauthn.store_resident_credential(self.cred):
@@ -587,20 +585,22 @@ class Fido2ConfirmGetAssertion(Fido2State):
         self,
         cid: int,
         client_data_hash: bytes,
-        rp_id: str,
         creds: List[Credential],
         hmac_secret: map,
     ) -> None:
-        super(Fido2ConfirmGetAssertion, self).__init__(cid, client_data_hash, rp_id)
+        super(Fido2ConfirmGetAssertion, self).__init__(cid)
+        self.client_data_hash = client_data_hash
         self.creds = creds
         self.hmac_secret = hmac_secret
         self.i = 0
+        self.app_name = creds[0].rp_id
+        self.load_icon(hashlib.sha256(self.app_name).digest())
 
     def get_header(self):
         return "FIDO2 Authenticate"
 
-    def get_text(self) -> List[str]:
-        return [self.rp_id, self.creds[self.i].name()]
+    def user_name(self) -> Optional[str]:
+        return self.creds[self.i].name()
 
     def get_dialog(self):
         content = ConfirmContent(self)
@@ -612,7 +612,7 @@ class Fido2ConfirmGetAssertion(Fido2State):
         try:
             response_data = cbor_get_assertion_sign(
                 self.client_data_hash,
-                hashlib.sha256(self.rp_id).digest(),
+                hashlib.sha256(cred.rp_id).digest(),
                 cred,
                 self.hmac_secret,
             )
@@ -625,18 +625,14 @@ class Fido2ConfirmGetAssertion(Fido2State):
 
 
 class Fido2ConfirmExcluded(Fido2State):
-    def __init__(self, cid: int, client_data_hash: bytes, rp_id: str) -> None:
-        super(Fido2ConfirmExcluded, self).__init__(cid, client_data_hash, rp_id)
-
-    def get_header(self) -> str:
-        return "FIDO2 Register"
-
-    def get_text(self) -> List[str]:
-        return [self.rp_id, "This token is", "already registered"]
+    def __init__(self, cid: int, cred: Credential) -> None:
+        super(Fido2ConfirmExcluded, self).__init__(cid)
+        self.cred = cred
 
     def get_dialog(self):
-        content = ConfirmContent(self, ui.NORMAL)
-        return Confirm(content, confirm=None)
+        text = Text("FIDO2 Register", ui.ICON_WRONG, ui.RED)
+        text.normal("This token is already", "registered with", self.cred.rp_id + ".")
+        return Confirm(text, confirm=None)
 
     def on_confirm(self) -> Cmd:
         return cbor_error(self.cid, _ERR_CREDENTIAL_EXCLUDED)
@@ -646,18 +642,13 @@ class Fido2ConfirmExcluded(Fido2State):
 
 
 class Fido2ConfirmNoPin(Fido2State):
-    def __init__(self, cid: int, client_data_hash: bytes, rp_id: str) -> None:
-        super(Fido2ConfirmNoPin, self).__init__(cid, client_data_hash, rp_id)
-
-    def get_header(self) -> str:
-        return "FIDO2 Register"
-
-    def get_text(self) -> List[str]:
-        return [self.rp_id, "PIN not set.", "Unable to verify."]
+    def __init__(self, cid: int) -> None:
+        super(Fido2ConfirmNoPin, self).__init__(cid)
 
     def get_dialog(self):
-        content = ConfirmContent(self, ui.NORMAL)
-        return Confirm(content, confirm=None)
+        text = Text("FIDO2 Verify User", ui.ICON_WRONG, ui.RED)
+        text.normal("Unable to verify user.", "Please enable PIN", "protection.")
+        return Confirm(text, confirm=None)
 
     def on_confirm(self) -> Cmd:
         return cbor_error(self.cid, _ERR_OPERATION_DENIED)
@@ -667,18 +658,14 @@ class Fido2ConfirmNoPin(Fido2State):
 
 
 class Fido2ConfirmNoCredentials(Fido2State):
-    def __init__(self, cid: int, client_data_hash: bytes, rp_id: str) -> None:
-        super(Fido2ConfirmNoCredentials, self).__init__(cid, client_data_hash, rp_id)
-
-    def get_header(self) -> str:
-        return "FIDO2 Authenticate"
-
-    def get_text(self) -> List[str]:
-        return [self.rp_id, "This token is", "not registered."]
+    def __init__(self, cid: int, rp_id: str) -> None:
+        super(Fido2ConfirmNoCredentials, self).__init__(cid)
+        self.app_name = rp_id
 
     def get_dialog(self):
-        content = ConfirmContent(self, ui.NORMAL)
-        return Confirm(content, confirm=None)
+        text = Text("FIDO2 Authenticate", ui.ICON_WRONG, ui.RED)
+        text.normal("This token is not", "registered with", self.app_name + ".")
+        return Confirm(text, confirm=None)
 
     def on_confirm(self) -> Cmd:
         return cbor_error(self.cid, _ERR_NO_CREDENTIALS)
@@ -687,20 +674,15 @@ class Fido2ConfirmNoCredentials(Fido2State):
         return cbor_error(self.cid, _ERR_NO_CREDENTIALS)
 
 
-class Fido2ConfirmReset(State):
+class Fido2ConfirmReset(Fido2State):
     def __init__(self, cid: int) -> None:
         super(Fido2ConfirmReset, self).__init__(cid)
-        self.boot()
-
-    def get_header(self) -> str:
-        return "FIDO2 Reset"
-
-    def get_text(self) -> List[str]:
-        return ["Do you really want to", "erase all credentials?"]
 
     def get_dialog(self):
-        content = ConfirmContent(self, ui.NORMAL)
-        return Confirm(content)
+        text = Text("FIDO2 Reset", ui.ICON_CONFIG)
+        text.normal("Do you really want to")
+        text.bold("erase all credentials?")
+        return Confirm(text)
 
     def on_confirm(self) -> Cmd:
         storage.webauthn.erase_resident_credentials()
@@ -863,8 +845,56 @@ class ConfirmGetAssertion(Confirm):
                 ui.display.icon(205, 68, icon, c, ui.BG)
 
 
+def text_center_trim_left(
+    x: int, y: int, text: str, font: int = ui.NORMAL, width: int = ui.WIDTH - 16
+) -> None:
+    if ui.display.text_width(text, font) <= width:
+        ui.display.text_center(x, y, text, font, ui.FG, ui.BG)
+        return
+
+    ELLIPSIS_WIDTH = ui.display.text_width("...", ui.BOLD)
+    if width < ELLIPSIS_WIDTH:
+        return
+
+    text_length = 0
+    for i in range(1, len(text)):
+        if ui.display.text_width(text[-i:], font) + ELLIPSIS_WIDTH > width:
+            text_length = i - 1
+            break
+
+    text_width = ui.display.text_width(text[-text_length:], font)
+    x -= (text_width + ELLIPSIS_WIDTH) // 2
+    ui.display.text(x, y, "...", ui.BOLD, ui.GREY, ui.BG)
+    x += ELLIPSIS_WIDTH
+    ui.display.text(x, y, text[-text_length:], font, ui.FG, ui.BG)
+
+
+def text_center_trim_right(
+    x: int, y: int, text: str, font: int = ui.NORMAL, width: int = ui.WIDTH - 16
+) -> None:
+    if ui.display.text_width(text, font) <= width:
+        ui.display.text_center(x, y, text, font, ui.FG, ui.BG)
+        return
+
+    ELLIPSIS_WIDTH = ui.display.text_width("...", ui.BOLD)
+    if width < ELLIPSIS_WIDTH:
+        return
+
+    text_length = 0
+    for i in range(1, len(text)):
+        if ui.display.text_width(text[:i], font) + ELLIPSIS_WIDTH > width:
+            text_length = i - 1
+            break
+
+    text_width = ui.display.text_width(text[:text_length], font)
+    x -= (text_width + ELLIPSIS_WIDTH) // 2
+    ui.display.text(x, y, text[:text_length], font, ui.FG, ui.BG)
+    x += text_width
+    ui.display.text(x, y, "...", ui.BOLD, ui.GREY, ui.BG)
+
+
 class ConfirmContent(ui.Control):
-    def __init__(self, state: State, font=ui.MONO) -> None:
+    def __init__(self, state: State, font=ui.NORMAL) -> None:
         self.state = state
         self.repaint = True
         self.font = font
@@ -875,20 +905,17 @@ class ConfirmContent(ui.Control):
                 self.state.get_header(), ui.ICON_DEFAULT, ui.GREEN, ui.BG, ui.GREEN
             )
             ui.display.image((ui.WIDTH - 64) // 2, 48, self.state.app_icon)
-            text_top = 112
-            text_bot = 188
-            text_height = ui.SIZE
-            text = self.state.get_text()
-            text_sep = (text_bot - text_top - len(text) * text_height) / (len(text) + 1)
-            for i, line in enumerate(text):
-                ui.display.text_center(
-                    ui.WIDTH // 2,
-                    int(text_top + (text_sep + text_height) * (i + 1) - 4),
-                    line,
-                    self.font,
-                    ui.FG,
-                    ui.BG,
-                )
+
+            app_name = self.state.app_name
+            user_name = self.state.user_name()
+            if app_name is not None and user_name is not None and app_name != user_name:
+                text_center_trim_left(ui.WIDTH // 2, 140, app_name)
+                text_center_trim_right(ui.WIDTH // 2, 172, user_name)
+            elif user_name is not None:
+                text_center_trim_right(ui.WIDTH // 2, 156, user_name)
+            elif app_name is not None:
+                text_center_trim_left(ui.WIDTH // 2, 156, app_name)
+
             self.repaint = False
 
 
@@ -1255,14 +1282,10 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
     exclude_list = param.get(_MAKECRED_CMD_EXCLUDE_LIST, [])
     try:
-        for credential in exclude_list:
-            if (
-                credential["type"] == "public-key"
-                and Credential.from_id(credential["id"], rp_id_hash) is not None
-            ):
-                if not dialog_mgr.set_state(
-                    Fido2ConfirmExcluded(req.cid, client_data_hash, rp_id)
-                ):
+        for credential_descriptor in exclude_list:
+            cred = Credential.from_id(credential_descriptor["id"], rp_id_hash)
+            if credential_descriptor["type"] == "public-key" and cred is not None:
+                if not dialog_mgr.set_state(Fido2ConfirmExcluded(req.cid, cred)):
                     return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
                 return None
     except Exception:
@@ -1304,9 +1327,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     cred.hmac_secret = hmac_secret
 
     if user_verification and not config.has_pin():
-        state_set = dialog_mgr.set_state(
-            Fido2ConfirmNoPin(req.cid, client_data_hash, rp_id)
-        )
+        state_set = dialog_mgr.set_state(Fido2ConfirmNoPin(req.cid))
     else:
         state_set = dialog_mgr.set_state(
             Fido2ConfirmMakeCredential(req.cid, client_data_hash, cred, resident_key)
@@ -1414,17 +1435,13 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
     if user_verification and not config.has_pin():
-        state_set = dialog_mgr.set_state(
-            Fido2ConfirmNoPin(req.cid, client_data_hash, rp_id)
-        )
+        state_set = dialog_mgr.set_state(Fido2ConfirmNoPin(req.cid))
     elif not cred_list:
         if user_presence:
-            state_set = dialog_mgr.set_state(
-                Fido2ConfirmNoCredentials(req.cid, client_data_hash, rp_id)
-            )
+            state_set = dialog_mgr.set_state(Fido2ConfirmNoCredentials(req.cid, rp_id))
         else:
             return cbor_error(req.cid, _ERR_NO_CREDENTIALS)
-    elif not user_presence and len(cred_list) == 1:
+    elif not user_presence:
         try:
             response_data = cbor_get_assertion_sign(
                 client_data_hash, rp_id_hash, cred_list[0], hmac_secret, user_presence
@@ -1434,9 +1451,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
             return cbor_error(req.cid, _ERR_OPERATION_DENIED)
     else:
         state_set = dialog_mgr.set_state(
-            Fido2ConfirmGetAssertion(
-                req.cid, client_data_hash, rp_id, cred_list, hmac_secret
-            )
+            Fido2ConfirmGetAssertion(req.cid, client_data_hash, cred_list, hmac_secret)
         )
     if not state_set:
         return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
@@ -1515,7 +1530,7 @@ def cbor_get_assertion_sign(
 
 def cbor_get_info(req: Cmd) -> Cmd:
     response_data = {
-        _GETINFO_RESP_VERSIONS: ["FIDO_2_0", "U2F_V2"],
+        _GETINFO_RESP_VERSIONS: ["FIDO_2_0"],
         _GETINFO_RESP_EXTENSIONS: ["hmac-secret"],
         _GETINFO_RESP_AAGUID: _AAGUID,
         _GETINFO_RESP_OPTIONS: {
