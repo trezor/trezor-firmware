@@ -27,6 +27,7 @@ class Bip143:
     def __init__(self):
         self.h_prevouts = HashWriter(sha256())
         self.h_sequence = HashWriter(sha256())
+        self.h_issuance = HashWriter(sha256())
         self.h_outputs = HashWriter(sha256())
 
     def add_prevouts(self, txi: TxInputType):
@@ -36,6 +37,12 @@ class Bip143:
     def add_sequence(self, txi: TxInputType):
         write_uint32(self.h_sequence, txi.sequence)
 
+    def add_issuance(self, txi: TxInputType):
+        # TODO: handle issuance properly, ignore for now
+        issuance = txi.issuance or b""
+        write_varint(self.h_issuance, len(issuance))
+        write_bytes(self.h_issuance, issuance)
+
     def add_output(self, txo_bin: TxOutputBinType):
         write_tx_output(self.h_outputs, txo_bin)
 
@@ -44,6 +51,9 @@ class Bip143:
 
     def get_sequence_hash(self, coin: CoinInfo) -> bytes:
         return get_tx_hash(self.h_sequence, double=coin.sign_hash_double)
+
+    def get_issuance_hash(self, coin: CoinInfo) -> bytes:
+        return get_tx_hash(self.h_issuance, double=coin.sign_hash_double)
 
     def get_outputs_hash(self, coin: CoinInfo) -> bytes:
         return get_tx_hash(self.h_outputs, double=coin.sign_hash_double)
@@ -63,6 +73,8 @@ class Bip143:
         write_uint32(h_preimage, tx.version)  # nVersion
         write_bytes(h_preimage, self.get_prevouts_hash(coin))  # hashPrevouts
         write_bytes(h_preimage, self.get_sequence_hash(coin))  # hashSequence
+        if coin.confidential_assets:
+            write_bytes(h_preimage, self.get_issuance_hash(coin))  # hashIssuance
 
         write_bytes_reversed(h_preimage, txi.prev_hash)  # outpoint
         write_uint32(h_preimage, txi.prev_index)  # outpoint
@@ -71,7 +83,14 @@ class Bip143:
         write_varint(h_preimage, len(script_code))
         write_bytes(h_preimage, script_code)
 
-        write_uint64(h_preimage, txi.amount)  # amount
+        if coin.confidential_assets:
+            ensure(
+                txi.confidential_value is not None,
+                "txi.confidential_value must be set for " + coin.coin_name,
+            )
+            write_bytes(h_preimage, txi.confidential_value.value)
+        else:
+            write_uint64(h_preimage, txi.amount)
         write_uint32(h_preimage, txi.sequence)  # nSequence
         write_bytes(h_preimage, self.get_outputs_hash(coin))  # hashOutputs
         write_uint32(h_preimage, tx.lock_time)  # nLockTime

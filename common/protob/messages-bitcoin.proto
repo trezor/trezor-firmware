@@ -201,6 +201,14 @@ message TxAck {
         optional uint32 timestamp = 13;         // only for Capricoin, transaction timestamp
         optional uint32 branch_id = 14;         // only for Zcash, BRANCH_ID when overwintered is set
         /**
+        * Structure representing confidential asset amount
+        */
+        message TxConfidentialValue {
+            required bytes value = 1;
+            required bytes asset = 2;
+            optional bytes nonce = 3;
+        }
+        /**
         * Structure representing transaction input
         */
         message TxInputType {
@@ -216,6 +224,8 @@ message TxAck {
             optional uint32 decred_script_version = 10;                         // only for Decred
             optional bytes prev_block_hash_bip115 = 11;                         // block hash of previous transaction output (for bip115 implementation)
             optional uint32 prev_block_height_bip115 = 12;                      // block height of previous transaction output (for bip115 implementation)
+            optional TxConfidentialValue confidential_value = 13;
+            optional bytes issuance = 14;
         }
         /**
         * Structure representing compiled transaction output
@@ -224,6 +234,7 @@ message TxAck {
             required uint64 amount = 1;
             required bytes script_pubkey = 2;
             optional uint32 decred_script_version = 3;      // only for Decred
+            optional TxConfidentialValue confidential_value = 4;
         }
         /**
         * Structure representing transaction output
@@ -238,6 +249,7 @@ message TxAck {
             optional uint32 decred_script_version = 7;      // only for Decred
             optional bytes block_hash_bip115 = 8;           // block hash of existing block (recommended current_block - 300) (for bip115 implementation)
             optional uint32 block_height_bip115 = 9;        // block height of existing block (recommended current_block - 300) (for bip115 implementation)
+            optional TxConfidentialValue confidential_value = 10;
             enum OutputScriptType {
                 PAYTOADDRESS = 0;       // used for all addresses (bitcoin, p2sh, witness)
                 PAYTOSCRIPTHASH = 1;    // p2sh address (deprecated; use PAYTOADDRESS)

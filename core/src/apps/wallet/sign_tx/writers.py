@@ -53,7 +53,14 @@ def write_tx_input_decred_witness(w, i: TxInputType):
 
 
 def write_tx_output(w, o: TxOutputBinType):
-    write_uint64(w, o.amount)
+    if o.confidential_value is not None:
+        # serialize Elements output:
+        write_bytes(w, o.confidential_value.asset)
+        write_bytes(w, o.confidential_value.value)
+        write_bytes(w, o.confidential_value.nonce)
+    else:
+        write_uint64(w, o.amount)
+
     if o.decred_script_version is not None:
         write_uint16(w, o.decred_script_version)
     write_varint(w, len(o.script_pubkey))

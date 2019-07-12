@@ -3,6 +3,7 @@
 from .. import protobuf as p
 
 from .MultisigRedeemScriptType import MultisigRedeemScriptType
+from .TxConfidentialValue import TxConfidentialValue
 
 if __debug__:
     try:
@@ -27,6 +28,7 @@ class TxOutputType(p.MessageType):
         decred_script_version: int = None,
         block_hash_bip115: bytes = None,
         block_height_bip115: int = None,
+        confidential_value: TxConfidentialValue = None,
     ) -> None:
         self.address = address
         self.address_n = address_n if address_n is not None else []
@@ -37,6 +39,7 @@ class TxOutputType(p.MessageType):
         self.decred_script_version = decred_script_version
         self.block_hash_bip115 = block_hash_bip115
         self.block_height_bip115 = block_height_bip115
+        self.confidential_value = confidential_value
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -50,4 +53,5 @@ class TxOutputType(p.MessageType):
             7: ('decred_script_version', p.UVarintType, 0),
             8: ('block_hash_bip115', p.BytesType, 0),
             9: ('block_height_bip115', p.UVarintType, 0),
+            10: ('confidential_value', TxConfidentialValue, 0),
         }
