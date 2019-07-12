@@ -2811,6 +2811,7 @@
       "bitcoin:LTC": true,
       "bitcoin:MONA": true,
       "bitcoin:NMC": true,
+      "bitcoin:QTUM": true,
       "bitcoin:RVN": true,
       "bitcoin:TAZ": true,
       "bitcoin:TDCR": true,
