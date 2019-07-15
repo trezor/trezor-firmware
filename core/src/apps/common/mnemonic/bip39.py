@@ -1,5 +1,5 @@
-from trezor import wire
 from trezor.crypto import bip39
+from trezor.errors import MnemonicError
 
 from apps.common import mnemonic, storage
 
@@ -13,9 +13,8 @@ def process_single(mnemonic: str) -> bytes:
     Receives single mnemonic and processes it. Returns what is then stored
     in the storage, which is the mnemonic itself for BIP-39.
     """
-    if not check(mnemonic):
-        # TODO: we probably shouldn't depend on wire here
-        raise wire.ProcessError("Mnemonic is not valid")
+    if not bip39.check(mnemonic):
+        raise MnemonicError()
     return mnemonic.encode()
 
 
@@ -41,7 +40,3 @@ def get_seed(secret: bytes, passphrase: str, progress_bar: bool = True) -> bytes
     else:
         seed = bip39.seed(secret.decode(), passphrase)
     return seed
-
-
-def check(mnemonic: str) -> bool:
-    return bip39.check(mnemonic)

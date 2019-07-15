@@ -21,6 +21,7 @@
 from micropython import const
 
 from trezor.crypto import hashlib, hmac, pbkdf2, random
+from trezor.errors import MnemonicError
 from trezorcrypto import shamir, slip39
 
 if False:
@@ -102,10 +103,6 @@ _SECRET_INDEX = const(255)
 
 _DIGEST_INDEX = const(254)
 """The index of the share containing the digest of the shared secret."""
-
-
-class MnemonicError(Exception):
-    pass
 
 
 def _rs1024_polymod(values: Indices) -> int:

@@ -118,6 +118,19 @@ async def show_keyboard_info(ctx: wire.Context) -> None:
         await ctx.wait(info)
 
 
+async def show_invalid_mnemonic(ctx, slip39: bool = False):
+    text = Text("Wallet recovery", ui.ICON_WRONG, ui.RED)
+    text.bold("You have entered")
+    if slip39:
+        text.bold("recovery share that")
+    else:
+        text.bold("recovery seed that")
+    text.bold("is incorrect.")
+    await require_confirm(
+        ctx, text, ButtonRequestType.ProtectCall, confirm="Try again", cancel=None
+    )
+
+
 class RecoveryHomescreen(ui.Control):
     def __init__(self, text: str, subtext: str = None):
         self.text = text
