@@ -108,6 +108,7 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
             "hobo romp academic axis august founder knife legal recover alien expect emphasis loan kitchen involve teacher capture rebuild trial numb spider forward ladle lying voter typical security quantity hawk legs idle leaves gasoline",
             "hobo romp academic agency ancestor industry argue sister scene midst graduate profile numb paid headset airport daisy flame express scene usual welcome quick silent downtown oral critical step remove says rhythm venture aunt",
         ]
+        # TODO: add incorrect mnemonic to test
         word_count = len(mnemonics[0].split(" "))
 
         ret = self.client.call_raw(

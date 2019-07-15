@@ -89,8 +89,8 @@ async def _request_words(
         try:
             secret = mnemonic_module.process_single(words)
         except crypto.slip39.MnemonicError:
-            # TODO: we should ask again, not raising exception
-            raise wire.ProcessError("Mnemonic is not valid")
+            await layout.show_invalid_mnemonic(ctx)
+            continue
 
         if not secret:
             await _next_share_screen(ctx, mnemonic_module)
