@@ -51,8 +51,8 @@ async def hold_to_confirm(
     ctx: wire.Context,
     content: ui.Control,
     code: int = ButtonRequestType.Other,
-    confirm: ButtonContent = Confirm.DEFAULT_CONFIRM,
-    confirm_style: ButtonStyleType = Confirm.DEFAULT_CONFIRM_STYLE,
+    confirm: ButtonContent = HoldToConfirm.DEFAULT_CONFIRM,
+    confirm_style: ButtonStyleType = HoldToConfirm.DEFAULT_CONFIRM_STYLE,
     loader_style: LoaderStyleType = HoldToConfirm.DEFAULT_LOADER_STYLE,
 ) -> bool:
     await ctx.call(ButtonRequest(code=code), ButtonAck)
