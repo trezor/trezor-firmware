@@ -1,11 +1,15 @@
-from trezor import config, wire
+from trezor import config, ui, wire
 from trezor.crypto import bip39, hashlib, random, slip39
+from trezor.messages import ButtonRequestType
 from trezor.messages.EntropyAck import EntropyAck
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
+from trezor.ui.loader import LoadingAnimation
+from trezor.ui.text import Text
 
 from apps.common import mnemonic, storage
+from apps.common.confirm import require_confirm
 from apps.management.change_pin import request_pin_confirm
 from apps.management.common import layout
 
@@ -21,7 +25,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     _validate_reset_device(msg)
 
     # make sure user knows he's setting up a new wallet
-    await layout.show_reset_device_warning(ctx, msg.slip39)
+    await _show_reset_device_warning(ctx, msg.slip39)
 
     # request new PIN
     if msg.pin_protection:
@@ -80,9 +84,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
 
     # if we backed up the wallet, show success message
     if not msg.no_backup and not msg.skip_backup:
-        await layout.show_backup_warning(
-            ctx, "Backup is done!", "Finish backup", msg.slip39
-        )
+        await layout.show_backup_success(ctx)
 
     return Success(message="Initialized")
 
@@ -133,3 +135,23 @@ def _compute_secret_from_entropy(
     strength = strength_in_bytes // 8
     secret = entropy[:strength]
     return secret
+
+
+async def _show_reset_device_warning(ctx, use_slip39: bool):
+    text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
+    if use_slip39:
+        text.bold("Create a new wallet")
+        text.br()
+        text.bold("with Shamir Backup?")
+    else:
+        text.bold("Do you want to create")
+        text.br()
+        text.bold("a new wallet?")
+    text.br()
+    text.br_half()
+    text.normal("By continuing you agree")
+    text.br()
+    text.normal("to")
+    text.bold("https://trezor.io/tos")
+    await require_confirm(ctx, text, ButtonRequestType.ResetDevice, major_confirm=True)
+    await LoadingAnimation()

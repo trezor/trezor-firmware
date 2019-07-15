@@ -35,6 +35,11 @@ class TestMsgResetDeviceT2(TrezorTest):
             assert btn_code == B.ResetDevice
             self.client.debug.press_yes()
 
+            # Confirm warning
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
             # shares info
             btn_code = yield
             assert btn_code == B.ResetDevice
@@ -109,6 +114,7 @@ class TestMsgResetDeviceT2(TrezorTest):
                 [
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.EntropyRequest(),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
