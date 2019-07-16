@@ -9,7 +9,7 @@ from trezor.ui.word_select import WordSelector
 from .bip39_keyboard import Bip39Keyboard
 from .slip39_keyboard import Slip39Keyboard
 
-from apps.common import storage
+from apps.common import mnemonic, storage
 from apps.common.confirm import confirm, require_confirm
 from apps.common.layout import show_success, show_warning
 from apps.homescreen.homescreen import homescreen
@@ -49,12 +49,12 @@ async def request_word_count(ctx: wire.Context, dry_run: bool) -> int:
     return count
 
 
-async def request_mnemonic(ctx: wire.Context, count: int, slip39: bool) -> str:
+async def request_mnemonic(ctx: wire.Context, count: int, mnemonic_type: int) -> str:
     await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicInput), ButtonAck)
 
     words = []
     for i in range(count):
-        if slip39:
+        if mnemonic_type == mnemonic.TYPE_SLIP39:
             keyboard = Slip39Keyboard("Type word %s of %s:" % (i + 1, count))
         else:
             keyboard = Bip39Keyboard("Type word %s of %s:" % (i + 1, count))
@@ -114,8 +114,8 @@ async def show_keyboard_info(ctx: wire.Context) -> None:
         await ctx.wait(info)
 
 
-async def show_invalid_mnemonic(ctx, slip39: bool = False):
-    if slip39:
+async def show_invalid_mnemonic(ctx, mnemonic_type: int):
+    if mnemonic_type == mnemonic.TYPE_SLIP39:
         await show_warning(
             ctx,
             ("You have entered", "a recovery share", "that is not valid."),

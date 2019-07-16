@@ -1,16 +1,16 @@
-from trezor import crypto, wire
+from trezor import wire
 from trezor.crypto.hashlib import sha256
+from trezor.errors import MnemonicError
 from trezor.messages.Success import Success
 from trezor.utils import consteq
+
+from . import recover
 
 from apps.common import mnemonic, storage
 from apps.common.layout import show_success
 from apps.common.storage import device
 from apps.homescreen.homescreen import homescreen
 from apps.management.recovery_device import layout
-
-if False:
-    from typing import Union
 
 
 async def recovery_homescreen(single_run=False) -> None:
@@ -24,12 +24,12 @@ async def recovery_homescreen(single_run=False) -> None:
     if not word_count:
         word_count = await _request_word_count(ctx, dry_run)
 
-    mnemonic_module = mnemonic.module_from_word_count(word_count)
+    mnemonic_type = mnemonic.type_from_word_count(word_count)
 
     if dry_run:
         await _dry_run_precheck(ctx, word_count, single_run)
 
-    secret = await _request_words(ctx, word_count, mnemonic_module)
+    secret = await _request_words(ctx, word_count, mnemonic_type)
 
     if dry_run:
         result = _dry_run(secret)
@@ -37,7 +37,9 @@ async def recovery_homescreen(single_run=False) -> None:
         return await _dry_run_result(ctx, result, single_run)
 
     else:
-        mnemonic_module.store(secret, needs_backup=False, no_backup=False)
+        storage.device.store_mnemonic_secret(
+            secret, mnemonic_type, needs_backup=False, no_backup=False
+        )
         await show_success(ctx, ("You have successfully", "recovered your wallet."))
 
     storage.device.end_recovery_progress()
@@ -56,9 +58,9 @@ def _dry_run(secret: bytes) -> bool:
 
 
 async def _dry_run_precheck(ctx: wire.Context, word_count: int, single_run: bool):
-    _, module_stored = mnemonic.get()
-    module_suggested = mnemonic.module_from_word_count(word_count)
-    if module_stored != module_suggested:
+    _, type_stored = mnemonic.get()
+    type_suggested = mnemonic.type_from_word_count(word_count)
+    if type_stored != type_suggested:
         await layout.show_dry_run_different_type(ctx)
         return await _dry_run_result(ctx, False, single_run)
 
@@ -74,37 +76,27 @@ async def _dry_run_result(ctx: wire.Context, result: bool, single_run: bool):
     raise RuntimeError("Recovery process should not continue after it ended")
 
 
-async def _request_words(
-    ctx: wire.Context,
-    word_count: int,
-    mnemonic_module: Union[mnemonic.bip39, mnemonic.slip39],
-):
-    await _first_share_screen(ctx, word_count, mnemonic_module)
+async def _request_words(ctx: wire.Context, word_count: int, mnemonic_type: int):
+    await _first_share_screen(ctx, word_count, mnemonic_type)
 
     secret = None
     while secret is None:
         # ask for mnemonic words one by one
-        words = await layout.request_mnemonic(
-            ctx, word_count, mnemonic_module == mnemonic.slip39
-        )
+        words = await layout.request_mnemonic(ctx, word_count, mnemonic_type)
         try:
-            secret = mnemonic_module.process_single(words)
-        except crypto.slip39.MnemonicError:
-            await layout.show_invalid_mnemonic(ctx)
+            secret = recover.process_share(words, mnemonic_type)
+        except MnemonicError:
+            await layout.show_invalid_mnemonic(ctx, mnemonic_type)
             continue
 
         if not secret:
-            await _next_share_screen(ctx, mnemonic_module)
+            await _next_share_screen(ctx, mnemonic_type)
     return secret
 
 
-async def _first_share_screen(
-    ctx: wire.Context,
-    word_count: int,
-    mnemonic_module: Union[mnemonic.bip39, mnemonic.slip39],
-):
+async def _first_share_screen(ctx: wire.Context, word_count: int, mnemonic_type: int):
 
-    if mnemonic_module == mnemonic.bip39:
+    if mnemonic_type == mnemonic.TYPE_BIP39:
         content = layout.RecoveryHomescreen(
             "Enter recovery seed", "(%d words)" % word_count
         )
@@ -115,13 +107,11 @@ async def _first_share_screen(
         )
         await layout.homescreen_dialog(ctx, content, "Enter share")
     else:
-        await _next_share_screen(ctx, mnemonic_module)
+        await _next_share_screen(ctx, mnemonic_type)
 
 
-async def _next_share_screen(
-    ctx: wire.Context, mnemonic_module: Union[mnemonic.bip39, mnemonic.slip39]
-):
-    if mnemonic_module == mnemonic.bip39:
+async def _next_share_screen(ctx: wire.Context, mnemonic_type: int):
+    if mnemonic_type == mnemonic.TYPE_BIP39:
         raise RuntimeError("BIP-39 should have only a single share")
     else:
         remaining = storage.slip39.get_remaining()

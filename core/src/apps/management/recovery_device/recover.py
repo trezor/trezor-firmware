@@ -1,25 +1,30 @@
-from trezor.crypto import slip39
+from trezor.crypto import bip39, slip39
+from trezor.errors import MnemonicError
 
-from apps.common import mnemonic, storage
+from apps.common import storage
 
 if False:
     from typing import Optional
 
 
-def generate_from_secret(master_secret: bytes, count: int, threshold: int) -> list:
+def process_share(mnemonic: str, mnemonic_type: int):
+    if mnemonic_type == mnemonic.TYPE_BIP39:
+        return _process_bip39(mnemonic)
+    else:
+        return _process_slip39(mnemonic)
+
+
+def _process_bip39(mnemonic: str) -> bytes:
     """
-    Generates new Shamir backup for 'master_secret'. Multiple groups are not yet supported.
+    Receives single mnemonic and processes it. Returns what is then stored
+    in the storage, which is the mnemonic itself for BIP-39.
     """
-    return slip39.generate_single_group_mnemonics_from_data(
-        master_secret, storage.slip39.get_identifier(), threshold, count
-    )
+    if not bip39.check(mnemonic):
+        raise MnemonicError()
+    return mnemonic.encode()
 
 
-def get_type() -> int:
-    return mnemonic.TYPE_SLIP39
-
-
-def process_single(mnemonic: str) -> Optional[bytes]:
+def _process_slip39(mnemonic: str) -> Optional[bytes]:
     """
     Receives single mnemonic and processes it. Returns what is then stored in storage or
     None if more shares are needed.
@@ -53,41 +58,8 @@ def process_single(mnemonic: str) -> Optional[bytes]:
         return None  # we need more shares
 
     # combine shares and return the master secret
-    return _combine(storage.slip39_mnemonics.fetch())
-
-
-def process_all(mnemonics: list) -> bytes:
-    """
-    Receives all mnemonics and processes it into pre-master secret which is usually then
-    stored in the storage.
-    """
-    return _combine(mnemonics)
-
-
-def _combine(mnemonics) -> bytes:
+    mnemonics = storage.slip39_mnemonics.fetch()
     identifier, iteration_exponent, secret = slip39.combine_mnemonics(mnemonics)
     storage.slip39.set_iteration_exponent(iteration_exponent)
     storage.slip39.set_identifier(identifier)
     return secret
-
-
-def store(secret: bytes, needs_backup: bool, no_backup: bool) -> None:
-    storage.device.store_mnemonic_secret(
-        secret, mnemonic.TYPE_SLIP39, needs_backup, no_backup
-    )
-
-
-def get_seed(
-    encrypted_master_secret: bytes, passphrase: str, progress_bar: bool = True
-) -> bytes:
-    if progress_bar:
-        mnemonic._start_progress()
-    identifier = storage.slip39.get_identifier()
-    iteration_exponent = storage.slip39.get_iteration_exponent()
-
-    master_secret = slip39.decrypt(
-        identifier, iteration_exponent, encrypted_master_secret, passphrase
-    )
-    if progress_bar:
-        mnemonic._stop_progress()
-    return master_secret

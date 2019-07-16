@@ -75,13 +75,17 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
         label=msg.label, use_passphrase=msg.passphrase_protection
     )
     if is_slip39_simple:
-        mnemonic.slip39.store(
-            secret=secret, needs_backup=msg.skip_backup, no_backup=msg.no_backup
+        storage.device.store_mnemonic_secret(
+            secret,
+            mnemonic.TYPE_SLIP39,
+            needs_backup=msg.skip_backup,
+            no_backup=msg.no_backup,
         )
     else:
         # in BIP-39 we store mnemonic string instead of the secret
-        mnemonic.bip39.store(
-            secret=bip39.from_data(secret).encode(),
+        storage.device.store_mnemonic_secret(
+            bip39.from_data(secret).encode(),
+            mnemonic.TYPE_BIP39,
             needs_backup=msg.skip_backup,
             no_backup=msg.no_backup,
         )
@@ -103,7 +107,9 @@ async def backup_slip39_wallet(ctx: wire.Context, secret: bytes) -> None:
     threshold = await layout.slip39_prompt_threshold(ctx, shares_count)
 
     # generate the mnemonics
-    mnemonics = mnemonic.slip39.generate_from_secret(secret, shares_count, threshold)
+    mnemonics = slip39.generate_single_group_mnemonics_from_data(
+        secret, storage.slip39.get_identifier(), threshold, shares_count
+    )
 
     # show and confirm individual shares
     await layout.slip39_show_checklist_show_shares(ctx, shares_count, threshold)

@@ -24,10 +24,9 @@ async def load_device(ctx, msg):
     text.normal("Continue only if you", "know what you are doing!")
     await require_confirm(ctx, text)
 
-    secret = mnemonic.bip39.process_all([msg.mnemonic])
     storage.device.store_mnemonic_secret(
-        secret=secret,
-        mnemonic_type=mnemonic.bip39.get_type(),
+        secret=msg.mnemonic.encode(),
+        mnemonic_type=mnemonic.TYPE_BIP39,
         needs_backup=True,
         no_backup=False,
     )
