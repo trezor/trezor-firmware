@@ -68,15 +68,16 @@ async def confirm_backup_again(ctx):
 async def _confirm_share_words(ctx, share_index, share_words):
     numbered = list(enumerate(share_words))
 
-    # check a word from the first half
-    first_half = numbered[: len(numbered) // 2]
-    if not await _confirm_word(ctx, share_index, first_half):
-        return False
+    # check three words
+    third = len(numbered) // 3
+    # if the num of words is not dividable by 3 let's add 1
+    # to have more words at the beggining and to check all of them
+    if len(numbered) % 3:
+        third += 1
 
-    # check a word from the second half
-    second_half = numbered[len(numbered) // 2 :]
-    if not await _confirm_word(ctx, share_index, second_half):
-        return False
+    for part in utils.chunks(numbered, third):
+        if not await _confirm_word(ctx, share_index, part):
+            return False
 
     return True
 
