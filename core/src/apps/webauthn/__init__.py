@@ -4,7 +4,7 @@ import utime
 from micropython import const
 
 from trezor import config, io, log, loop, res, ui, utils, workflow
-from trezor.crypto import aes, der, hashlib, hmac, random
+from trezor.crypto import aes, bip32, der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
 from trezor.ui.confirm import CONFIRMED, Confirm
 from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, SWIPE_RIGHT, Swipe
@@ -14,7 +14,7 @@ from apps.common import HARDENED, cbor, storage
 from apps.webauthn.credential import Credential
 
 if False:
-    from typing import List, Optional
+    from typing import Coroutine, List, Optional, Tuple
 
 _HID_RPT_SIZE = const(64)
 _CID_BROADCAST = const(0xFFFFFFFF)  # broadcast channel id
@@ -330,7 +330,7 @@ class Cmd:
         return Msg(self.cid, cla, ins, p1, p2, lc, data)
 
 
-async def read_cmd(iface: io.HID) -> Cmd:
+async def read_cmd(iface: io.HID) -> Optional[Cmd]:
     desc_init = frame_init()
     desc_cont = frame_cont()
     read = loop.wait(iface.iface_num() | io.POLL_READ)
@@ -420,11 +420,11 @@ async def send_cmd(cmd: Cmd, iface: io.HID) -> None:
         seq += 1
 
 
-def boot(iface: io.HID):
+def boot(iface: io.HID) -> None:
     loop.schedule(handle_reports(iface))
 
 
-async def handle_reports(iface: io.HID):
+async def handle_reports(iface: io.HID) -> None:
     dialog_mgr = DialogManager(iface)
 
     while True:
@@ -439,370 +439,38 @@ async def handle_reports(iface: io.HID):
             log.exception(__name__, e)
 
 
-class State:
-    def __init__(self, cid: int) -> None:
-        self.cid = cid
-        self.app_icon = None
+class Pageable:
+    def __init__(self) -> None:
+        self._page = 0
 
-    def user_name(self) -> Optional[str]:
-        return None
+    def page(self) -> int:
+        return self._page
 
-    def get_dialog(self):
-        content = ConfirmContent(self)
-        return Confirm(content)
+    def page_count(self) -> int:
+        return 1
 
-    def keepalive_status(self) -> Optional[int]:
-        return None
+    def is_first(self) -> bool:
+        return self._page == 0
 
-    def timeout_ms(self) -> int:
-        return _U2F_CONFIRM_TIMEOUT_MS
+    def is_last(self) -> bool:
+        return self._page == self.page_count() - 1
 
-    def load_icon(self, app_id: bytes) -> None:
-        from trezor import res
-        from apps.webauthn import knownapps
+    def next(self) -> None:
+        self._page = min(self._page + 1, self.page_count() - 1)
 
-        try:
-            namepart = knownapps.knownapps[app_id].lower().replace(" ", "_")
-            icon = res.load("apps/webauthn/res/icon_%s.toif" % namepart)
-        except Exception as e:
-            icon = res.load("apps/webauthn/res/icon_webauthn.toif")
-            if __debug__:
-                log.exception(__name__, e)
-        self.app_icon = icon
-
-    def on_confirm(self) -> Optional[Cmd]:
-        return None
-
-    def on_decline(self) -> Optional[Cmd]:
-        return None
-
-    def on_timeout(self) -> Optional[Cmd]:
-        return self.on_decline()
-
-
-class U2fState(State):
-    def __init__(self, cid: int, checksum: bytes, app_id: bytes) -> None:
-        super(U2fState, self).__init__(cid)
-        self.app_id = bytes(app_id)  # could be bytearray, which doesn't have __hash__
-        self.app_name = None
-        self.app_icon = None
-        self.checksum = checksum
-        self.boot()
-
-    def boot(self) -> None:
-        self.load_icon(self.app_id)
-        from ubinascii import hexlify
-        from apps.webauthn import knownapps
-
-        if self.app_id in knownapps.knownapps:
-            name = knownapps.knownapps[self.app_id]
-        else:
-            name = "%s...%s" % (
-                hexlify(self.app_id[:4]).decode(),
-                hexlify(self.app_id[-4:]).decode(),
-            )
-        self.app_name = name
-
-
-class U2fConfirmRegister(U2fState):
-    def __init__(self, cid: int, checksum: bytes, app_id: bytes) -> None:
-        super(U2fConfirmRegister, self).__init__(cid, checksum, app_id)
-
-    def get_dialog(self):
-        if self.app_id == _BOGUS_APPID:
-            text = Text("U2F", ui.ICON_WRONG, ui.RED)
-            text.normal(
-                "Another U2F device", "was used to register", "in this application."
-            )
-            return Confirm(text, confirm=None)
-        else:
-            return super(U2fConfirmRegister, self).get_dialog()
-
-    def get_header(self) -> str:
-        return "U2F Register"
-
-    def __eq__(self, other) -> bool:
-        return isinstance(other, U2fConfirmRegister) and self.checksum == other.checksum
-
-
-class U2fConfirmAuthenticate(U2fState):
-    def __init__(self, cid: int, checksum: bytes, app_id: bytes) -> None:
-        super(U2fConfirmAuthenticate, self).__init__(cid, checksum, app_id)
-
-    def get_header(self) -> str:
-        return "U2F Authenticate"
-
-    def __eq__(self, other) -> bool:
-        return (
-            isinstance(other, U2fConfirmAuthenticate)
-            and self.checksum == other.checksum
-        )
-
-
-class Fido2State(State):
-    def __init__(self, cid: int) -> None:
-        super(Fido2State, self).__init__(cid)
-
-    def keepalive_status(self) -> int:
-        return _KEEPALIVE_STATUS_UP_NEEDED
-
-    def timeout_ms(self) -> int:
-        return _FIDO2_CONFIRM_TIMEOUT_MS
-
-
-class Fido2ConfirmMakeCredential(Fido2State):
-    def __init__(
-        self, cid: int, client_data_hash: bytes, cred: Credential, resident: bool
-    ) -> None:
-        super(Fido2ConfirmMakeCredential, self).__init__(cid)
-        self.client_data_hash = client_data_hash
-        self.cred = cred
-        self.resident = resident
-        self.app_name = cred.rp_id
-        self.load_icon(hashlib.sha256(cred.rp_id).digest())
-
-    def get_header(self) -> str:
-        return "FIDO2 Register"
-
-    def user_name(self) -> Optional[str]:
-        return self.cred.name()
-
-    def on_confirm(self) -> Cmd:
-        self.cred.generate_id()
-
-        response_data = cbor_make_credential_sign(self.client_data_hash, self.cred)
-        if self.resident:
-            if not storage.webauthn.store_resident_credential(self.cred):
-                return cbor_error(self.cid, _ERR_KEY_STORE_FULL)
-        return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
-
-    def on_decline(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_OPERATION_DENIED)
-
-
-class Fido2ConfirmGetAssertion(Fido2State):
-    def __init__(
-        self,
-        cid: int,
-        client_data_hash: bytes,
-        creds: List[Credential],
-        hmac_secret: map,
-    ) -> None:
-        super(Fido2ConfirmGetAssertion, self).__init__(cid)
-        self.client_data_hash = client_data_hash
-        self.creds = creds
-        self.hmac_secret = hmac_secret
-        self.i = 0
-        self.app_name = creds[0].rp_id
-        self.load_icon(hashlib.sha256(self.app_name).digest())
-
-    def get_header(self):
-        return "FIDO2 Authenticate"
-
-    def user_name(self) -> Optional[str]:
-        return self.creds[self.i].name()
-
-    def get_dialog(self):
-        content = ConfirmContent(self)
-        return ConfirmGetAssertion(content, len(self.creds))
-
-    def on_confirm(self) -> Cmd:
-        cred = self.creds[self.i]
-
-        try:
-            response_data = cbor_get_assertion_sign(
-                self.client_data_hash,
-                hashlib.sha256(cred.rp_id).digest(),
-                cred,
-                self.hmac_secret,
-            )
-            return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
-        except Exception:
-            return cbor_error(self.cid, _ERR_OPERATION_DENIED)
-
-    def on_decline(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_OPERATION_DENIED)
-
-
-class Fido2ConfirmExcluded(Fido2State):
-    def __init__(self, cid: int, cred: Credential) -> None:
-        super(Fido2ConfirmExcluded, self).__init__(cid)
-        self.cred = cred
-
-    def get_dialog(self):
-        text = Text("FIDO2 Register", ui.ICON_WRONG, ui.RED)
-        text.normal("This token is already", "registered with", self.cred.rp_id + ".")
-        return Confirm(text, confirm=None)
-
-    def on_confirm(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_CREDENTIAL_EXCLUDED)
-
-    def on_decline(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_CREDENTIAL_EXCLUDED)
-
-
-class Fido2ConfirmNoPin(Fido2State):
-    def __init__(self, cid: int) -> None:
-        super(Fido2ConfirmNoPin, self).__init__(cid)
-
-    def get_dialog(self):
-        text = Text("FIDO2 Verify User", ui.ICON_WRONG, ui.RED)
-        text.normal("Unable to verify user.", "Please enable PIN", "protection.")
-        return Confirm(text, confirm=None)
-
-    def on_confirm(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_OPERATION_DENIED)
-
-    def on_decline(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_OPERATION_DENIED)
-
-
-class Fido2ConfirmNoCredentials(Fido2State):
-    def __init__(self, cid: int, rp_id: str) -> None:
-        super(Fido2ConfirmNoCredentials, self).__init__(cid)
-        self.app_name = rp_id
-
-    def get_dialog(self):
-        text = Text("FIDO2 Authenticate", ui.ICON_WRONG, ui.RED)
-        text.normal("This token is not", "registered with", self.app_name + ".")
-        return Confirm(text, confirm=None)
-
-    def on_confirm(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_NO_CREDENTIALS)
-
-    def on_decline(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_NO_CREDENTIALS)
-
-
-class Fido2ConfirmReset(Fido2State):
-    def __init__(self, cid: int) -> None:
-        super(Fido2ConfirmReset, self).__init__(cid)
-
-    def get_dialog(self):
-        text = Text("FIDO2 Reset", ui.ICON_CONFIG)
-        text.normal("Do you really want to")
-        text.bold("erase all credentials?")
-        return Confirm(text)
-
-    def on_confirm(self) -> Cmd:
-        storage.webauthn.erase_resident_credentials()
-        return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]))
-
-    def on_decline(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_OPERATION_DENIED)
-
-    def keepalive_status(self) -> int:
-        return _KEEPALIVE_STATUS_UP_NEEDED
-
-    def timeout_ms(self) -> int:
-        return _FIDO2_CONFIRM_TIMEOUT_MS
-
-
-class DialogManager:
-    def __init__(self, iface: io.HID) -> None:
-        self.iface = iface
-        self._clear()
-
-    def _clear(self) -> None:
-        self.state = None
-        self.deadline = 0
-        self.confirmed = None
-        self.workflow = None
-        self.keepalive = None
-
-    def reset_timeout(self) -> None:
-        self.deadline = utime.ticks_ms() + self.state.timeout_ms()
-
-    def reset(self) -> None:
-        if self.workflow is not None:
-            loop.close(self.workflow)
-        if self.keepalive is not None:
-            loop.close(self.keepalive)
-        self._clear()
-
-    def is_busy(self) -> bool:
-        if self.workflow is None:
-            return False
-        if utime.ticks_ms() >= self.deadline:
-            self.reset()
-            return False
-        return True
-
-    def compare(self, state: State) -> bool:
-        if self.state != state:
-            return False
-        if utime.ticks_ms() >= self.deadline:
-            self.reset()
-            return False
-        return True
-
-    def set_state(self, state: State) -> bool:
-        if utime.ticks_ms() >= self.deadline:
-            self.reset()
-
-        if workflow.workflows:
-            return False
-
-        self.state = state
-        self.reset_timeout()
-        if state.keepalive_status() is not None:
-            self.confirmed = loop.signal()
-            self.keepalive = self.keepalive_loop()
-            loop.schedule(self.keepalive)
-        else:
-            self.confirmed = None
-            self.keepalive = None
-        self.workflow = self.dialog_workflow()
-        loop.schedule(self.workflow)
-        return True
-
-    async def keepalive_loop(self) -> None:
-        while True:
-            waiter = loop.spawn(
-                loop.sleep(_KEEPALIVE_INTERVAL_MS * 1000), self.confirmed
-            )
-            user_confirmed = await waiter
-            if self.confirmed in waiter.finished:
-                if user_confirmed:
-                    await send_cmd(self.state.on_confirm(), self.iface)
-                else:
-                    await send_cmd(self.state.on_decline(), self.iface)
-                return
-            if utime.ticks_ms() >= self.deadline:
-                await send_cmd(self.state.on_timeout(), self.iface)
-                self.reset()
-                return
-            await send_cmd(
-                cmd_keepalive(self.state.cid, self.state.keepalive_status()), self.iface
-            )
-
-    async def dialog_workflow(self) -> None:
-        try:
-            workflow.onstart(self.workflow)
-            await self.dialog_layout()
-        finally:
-            workflow.onclose(self.workflow)
-            self.workflow = None
-
-    async def dialog_layout(self) -> None:
-        dialog = self.state.get_dialog()
-        confirmed = await dialog is CONFIRMED
-        if isinstance(self.confirmed, loop.signal):
-            self.confirmed.send(confirmed)
-        else:
-            self.confirmed = confirmed
+    def prev(self) -> None:
+        self._page = max(self._page - 1, 0)
 
 
 class ConfirmGetAssertion(Confirm):
-    def __init__(self, content: ui.Control, page_count: int):
-        super(ConfirmGetAssertion, self).__init__(content)
-        self.page_count = page_count
-        self.page = 0
+    def __init__(self, content: ui.Control, state: Pageable):
+        super().__init__(content)
+        self.state = state
 
-    async def handle_paging(self):
-        if self.page == 0:
+    async def handle_paging(self) -> None:
+        if self.state.is_first():
             directions = SWIPE_LEFT
-        elif self.page == self.page_count - 1:
+        elif self.state.is_last():
             directions = SWIPE_RIGHT
         else:
             directions = SWIPE_HORIZONTAL
@@ -810,36 +478,35 @@ class ConfirmGetAssertion(Confirm):
         swipe = await Swipe(directions)
 
         if swipe == SWIPE_LEFT:
-            self.page = min(self.page + 1, self.page_count - 1)
+            self.state.next()
         else:
-            self.page = max(self.page - 1, 0)
+            self.state.prev()
 
-        self.content.state.i = self.page
         self.content.repaint = True
         self.confirm.repaint = True
         self.cancel.repaint = True
 
-    def create_tasks(self):
-        tasks = super(ConfirmGetAssertion, self).create_tasks()
-        if self.page_count > 1:
+    def create_tasks(self) -> Tuple[loop.Task, ...]:
+        tasks = super().create_tasks()
+        if self.state.page_count() > 1:
             return tasks + (self.handle_paging(),)
         else:
             return tasks
 
-    def dispatch(self, event, x, y):
+    def dispatch(self, event: int, x: int, y: int) -> None:
         PULSE_PERIOD = const(1200000)
 
-        super(ConfirmGetAssertion, self).dispatch(event, x, y)
+        super().dispatch(event, x, y)
 
         if event is ui.RENDER:
-            if self.page != 0:
+            if not self.state.is_first():
                 t = ui.pulse(PULSE_PERIOD)
                 c = ui.blend(ui.GREY, ui.DARK_GREY, t)
                 icon = res.load(ui.ICON_SWIPE_RIGHT)
                 ui.display.icon(18, 68, icon, c, ui.BG)
 
-            if self.page != self.page_count - 1:
-                t = ui.pulse(PULSE_PERIOD, PULSE_PERIOD / 2)
+            if not self.state.is_last():
+                t = ui.pulse(PULSE_PERIOD, PULSE_PERIOD // 2)
                 c = ui.blend(ui.GREY, ui.DARK_GREY, t)
                 icon = res.load(ui.ICON_SWIPE_LEFT)
                 ui.display.icon(205, 68, icon, c, ui.BG)
@@ -893,21 +560,50 @@ def text_center_trim_right(
     ui.display.text(x, y, "...", ui.BOLD, ui.GREY, ui.BG)
 
 
+class ConfirmInfo:
+    def __init__(self) -> None:
+        self.app_icon = None  # type: Optional[bytes]
+
+    def get_header(self) -> Optional[str]:
+        return None
+
+    def app_name(self) -> Optional[str]:
+        return None
+
+    def user_name(self) -> Optional[str]:
+        return None
+
+    def load_icon(self, app_id: bytes) -> None:
+        from trezor import res
+        from apps.webauthn import knownapps
+
+        try:
+            namepart = knownapps.knownapps[app_id].lower().replace(" ", "_")
+            icon = res.load("apps/webauthn/res/icon_%s.toif" % namepart)
+        except Exception as e:
+            icon = res.load("apps/webauthn/res/icon_webauthn.toif")
+            if __debug__:
+                log.exception(__name__, e)
+        self.app_icon = icon
+
+
 class ConfirmContent(ui.Control):
-    def __init__(self, state: State, font=ui.NORMAL) -> None:
-        self.state = state
+    def __init__(self, info: ConfirmInfo) -> None:
+        self.info = info
         self.repaint = True
-        self.font = font
 
     def on_render(self) -> None:
         if self.repaint:
-            ui.header(
-                self.state.get_header(), ui.ICON_DEFAULT, ui.GREEN, ui.BG, ui.GREEN
-            )
-            ui.display.image((ui.WIDTH - 64) // 2, 48, self.state.app_icon)
+            header = self.info.get_header()
 
-            app_name = self.state.app_name
-            user_name = self.state.user_name()
+            if header is None or self.info.app_icon is None:
+                return
+            ui.header(header, ui.ICON_DEFAULT, ui.GREEN, ui.BG, ui.GREEN)
+            ui.display.image((ui.WIDTH - 64) // 2, 48, self.info.app_icon)
+
+            app_name = self.info.app_name()
+            user_name = self.info.user_name()
+
             if app_name is not None and user_name is not None and app_name != user_name:
                 text_center_trim_left(ui.WIDTH // 2, 140, app_name)
                 text_center_trim_right(ui.WIDTH // 2, 172, user_name)
@@ -919,7 +615,351 @@ class ConfirmContent(ui.Control):
             self.repaint = False
 
 
-def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Cmd:
+class State:
+    def __init__(self, cid: int) -> None:
+        self.cid = cid
+
+    def get_dialog(self) -> ui.Layout:
+        pass
+
+    def keepalive_status(self) -> Optional[int]:
+        return None
+
+    def timeout_ms(self) -> int:
+        return _U2F_CONFIRM_TIMEOUT_MS
+
+
+class U2fState(State, ConfirmInfo):
+    def __init__(self, cid: int, checksum: bytes, app_id: bytes) -> None:
+        super().__init__(cid)
+        self._app_id = bytes(app_id)  # could be bytearray, which doesn't have __hash__
+        self._checksum = checksum
+
+        self.load_icon(self._app_id)
+        from ubinascii import hexlify
+        from apps.webauthn import knownapps
+
+        if self._app_id in knownapps.knownapps:
+            name = knownapps.knownapps[self._app_id]
+        else:
+            name = "%s...%s" % (
+                hexlify(self._app_id[:4]).decode(),
+                hexlify(self._app_id[-4:]).decode(),
+            )
+        self._app_name = name
+
+    def app_name(self) -> str:
+        return self._app_name
+
+
+class U2fConfirmRegister(U2fState):
+    def __init__(self, cid: int, checksum: bytes, app_id: bytes) -> None:
+        super().__init__(cid, checksum, app_id)
+
+    def get_dialog(self) -> ui.Layout:
+        if self._app_id == _BOGUS_APPID:
+            text = Text("U2F", ui.ICON_WRONG, ui.RED)
+            text.normal(
+                "Another U2F device", "was used to register", "in this application."
+            )
+            return Confirm(text, confirm=None)
+        else:
+            content = ConfirmContent(self)
+            return Confirm(content)
+
+    def get_header(self) -> str:
+        return "U2F Register"
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, U2fConfirmRegister)
+            and self.cid == other.cid
+            and self._checksum == other._checksum
+        )
+
+
+class U2fConfirmAuthenticate(U2fState):
+    def __init__(self, cid: int, checksum: bytes, app_id: bytes) -> None:
+        super().__init__(cid, checksum, app_id)
+
+    def get_header(self) -> str:
+        return "U2F Authenticate"
+
+    def get_dialog(self) -> ui.Layout:
+        content = ConfirmContent(self)
+        return Confirm(content)
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, U2fConfirmAuthenticate)
+            and self.cid == other.cid
+            and self._checksum == other._checksum
+        )
+
+
+class Fido2State(State):
+    def __init__(self, cid: int) -> None:
+        super().__init__(cid)
+
+    def keepalive_status(self) -> int:
+        return _KEEPALIVE_STATUS_UP_NEEDED
+
+    def timeout_ms(self) -> int:
+        return _FIDO2_CONFIRM_TIMEOUT_MS
+
+    def on_confirm(self) -> Cmd:
+        return cbor_error(self.cid, _ERR_OPERATION_DENIED)
+
+    def on_decline(self) -> Cmd:
+        return cbor_error(self.cid, _ERR_OPERATION_DENIED)
+
+    def on_timeout(self) -> Cmd:
+        return self.on_decline()
+
+
+class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
+    def __init__(
+        self, cid: int, client_data_hash: bytes, cred: Credential, resident: bool
+    ) -> None:
+        super().__init__(cid)
+        self._client_data_hash = client_data_hash
+        self._cred = cred
+        self._resident = resident
+        self._app_name = cred.rp_id
+        self.load_icon(hashlib.sha256(cred.rp_id.encode()).digest())
+
+    def get_dialog(self) -> ui.Layout:
+        content = ConfirmContent(self)
+        return Confirm(content)
+
+    def get_header(self) -> str:
+        return "FIDO2 Register"
+
+    def app_name(self) -> str:
+        return self._app_name
+
+    def user_name(self) -> Optional[str]:
+        return self._cred.name()
+
+    def on_confirm(self) -> Cmd:
+        self._cred.generate_id()
+
+        response_data = cbor_make_credential_sign(self._client_data_hash, self._cred)
+        if self._resident:
+            if not storage.webauthn.store_resident_credential(self._cred):
+                return cbor_error(self.cid, _ERR_KEY_STORE_FULL)
+        return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
+
+
+class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
+    def __init__(
+        self,
+        cid: int,
+        client_data_hash: bytes,
+        creds: List[Credential],
+        hmac_secret: dict,
+    ) -> None:
+        Fido2State.__init__(self, cid)
+        ConfirmInfo.__init__(self)
+        Pageable.__init__(self)
+        self._client_data_hash = client_data_hash
+        self._creds = creds
+        self._hmac_secret = hmac_secret
+        self._app_name = creds[0].rp_id
+        self.load_icon(hashlib.sha256(self._app_name.encode()).digest())
+
+    def get_dialog(self) -> ui.Layout:
+        content = ConfirmContent(self)
+        return ConfirmGetAssertion(content, self)
+
+    def get_header(self) -> str:
+        return "FIDO2 Authenticate"
+
+    def app_name(self) -> str:
+        return self._app_name
+
+    def user_name(self) -> Optional[str]:
+        return self._creds[self.page()].name()
+
+    def page_count(self) -> int:
+        return len(self._creds)
+
+    def on_confirm(self) -> Cmd:
+        cred = self._creds[self.page()]
+        try:
+            response_data = cbor_get_assertion_sign(
+                self._client_data_hash,
+                hashlib.sha256(cred.rp_id.encode()).digest(),
+                cred,
+                self._hmac_secret,
+            )
+            return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
+        except Exception:
+            return cbor_error(self.cid, _ERR_OPERATION_DENIED)
+
+
+class Fido2ConfirmExcluded(Fido2State):
+    def __init__(self, cid: int, cred: Credential) -> None:
+        super().__init__(cid)
+        self._cred = cred
+
+    def get_dialog(self) -> ui.Layout:
+        text = Text("FIDO2 Register", ui.ICON_WRONG, ui.RED)
+        text.normal("This token is already", "registered with", self._cred.rp_id + ".")
+        return Confirm(text, confirm=None)
+
+    def on_confirm(self) -> Cmd:
+        return cbor_error(self.cid, _ERR_CREDENTIAL_EXCLUDED)
+
+    def on_decline(self) -> Cmd:
+        return cbor_error(self.cid, _ERR_CREDENTIAL_EXCLUDED)
+
+
+class Fido2ConfirmNoPin(Fido2State):
+    def __init__(self, cid: int) -> None:
+        super().__init__(cid)
+
+    def get_dialog(self) -> ui.Layout:
+        text = Text("FIDO2 Verify User", ui.ICON_WRONG, ui.RED)
+        text.normal("Unable to verify user.", "Please enable PIN", "protection.")
+        return Confirm(text, confirm=None)
+
+
+class Fido2ConfirmNoCredentials(Fido2State):
+    def __init__(self, cid: int, rp_id: str) -> None:
+        super().__init__(cid)
+        self._app_name = rp_id
+
+    def get_dialog(self) -> ui.Layout:
+        text = Text("FIDO2 Authenticate", ui.ICON_WRONG, ui.RED)
+        text.normal("This token is not", "registered with", self._app_name + ".")
+        return Confirm(text, confirm=None)
+
+    def on_confirm(self) -> Cmd:
+        return cbor_error(self.cid, _ERR_NO_CREDENTIALS)
+
+    def on_decline(self) -> Cmd:
+        return cbor_error(self.cid, _ERR_NO_CREDENTIALS)
+
+
+class Fido2ConfirmReset(Fido2State):
+    def __init__(self, cid: int) -> None:
+        super().__init__(cid)
+
+    def get_dialog(self) -> ui.Layout:
+        text = Text("FIDO2 Reset", ui.ICON_CONFIG)
+        text.normal("Do you really want to")
+        text.bold("erase all credentials?")
+        return Confirm(text)
+
+    def on_confirm(self) -> Cmd:
+        storage.webauthn.erase_resident_credentials()
+        return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]))
+
+
+class DialogManager:
+    def __init__(self, iface: io.HID) -> None:
+        self.iface = iface
+        self._clear()
+
+    def _clear(self) -> None:
+        self.state = None  # type: Optional[State]
+        self.deadline = 0
+        self.done_signal = loop.signal()
+        self.user_confirmed = None  # type: Optional[bool]
+        self.workflow = None  # type: Optional[Coroutine]
+        self.keepalive = None  # type: Optional[Coroutine]
+
+    def reset_timeout(self) -> None:
+        if self.state is not None:
+            self.deadline = utime.ticks_ms() + self.state.timeout_ms()
+
+    def reset(self) -> None:
+        if self.workflow is not None:
+            loop.close(self.workflow)
+        if self.keepalive is not None:
+            loop.close(self.keepalive)
+        self._clear()
+
+    def is_busy(self) -> bool:
+        if self.workflow is None:
+            return False
+        if utime.ticks_ms() >= self.deadline:
+            self.reset()
+            return False
+        return True
+
+    def compare(self, state: State) -> bool:
+        if self.state != state:
+            return False
+        if utime.ticks_ms() >= self.deadline:
+            self.reset()
+            return False
+        return True
+
+    def set_state(self, state: State) -> bool:
+        if utime.ticks_ms() >= self.deadline:
+            self.reset()
+
+        if workflow.workflows:
+            return False
+
+        self.state = state
+        self.reset_timeout()
+        self.user_confirmed = None
+        if state.keepalive_status() is not None:
+            self.done_signal.reset()
+            self.keepalive = self.keepalive_loop()
+            loop.schedule(self.keepalive)
+        else:
+            self.keepalive = None
+        self.workflow = self.dialog_workflow()
+        loop.schedule(self.workflow)
+        return True
+
+    async def keepalive_loop(self) -> None:
+        while True:
+            waiter = loop.spawn(
+                loop.sleep(_KEEPALIVE_INTERVAL_MS * 1000), self.done_signal
+            )
+            await waiter
+            if not isinstance(self.state, Fido2State):
+                self.reset()
+                return
+            if self.done_signal in waiter.finished:
+                if self.user_confirmed:
+                    await send_cmd(self.state.on_confirm(), self.iface)
+                else:
+                    await send_cmd(self.state.on_decline(), self.iface)
+                return
+            if utime.ticks_ms() >= self.deadline:
+                await send_cmd(self.state.on_timeout(), self.iface)
+                self.reset()
+                return
+            await send_cmd(
+                cmd_keepalive(self.state.cid, self.state.keepalive_status()), self.iface
+            )
+
+    async def dialog_workflow(self) -> None:
+        if self.workflow is None:
+            return
+
+        try:
+            workflow.onstart(self.workflow)
+            await self.dialog_layout()
+        finally:
+            workflow.onclose(self.workflow)
+            self.workflow = None
+
+    async def dialog_layout(self) -> None:
+        if self.state is None:
+            return
+        dialog = self.state.get_dialog()
+        self.user_confirmed = await dialog is CONFIRMED
+        self.done_signal.send(None)
+
+
+def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     if req.cmd == _CMD_MSG:
         m = req.to_msg()
 
@@ -1039,7 +1079,7 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
 
     # parse challenge and app_id
     chal = req.data[:32]
-    app_id = req.data[32:]
+    app_id = bytes(req.data[32:])
 
     # check equality with last request
     new_state = U2fConfirmRegister(req.cid, req.data, app_id)
@@ -1049,7 +1089,7 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     dialog_mgr.reset_timeout()
 
     # wait for a button or continue
-    if not dialog_mgr.confirmed:
+    if not dialog_mgr.user_confirmed:
         if __debug__:
             log.info(__name__, "waiting for button")
         return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
@@ -1064,30 +1104,29 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     return Cmd(req.cid, _CMD_MSG, buf)
 
 
-def generate_credential(app_id: bytes):
+def generate_credential(app_id: bytes) -> Tuple[bytes, bytes]:
     from apps.common import seed
 
     # derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
-    keypath = [HARDENED | random.uniform(0xF0000000) for _ in range(0, 8)]
-    nodepath = [_U2F_KEY_PATH] + keypath
+    path = [HARDENED | random.uniform(0xF0000000) for _ in range(0, 8)]
+    nodepath = [_U2F_KEY_PATH] + path
 
     # prepare signing key from random path, compute decompressed public key
     node = seed.derive_node_without_passphrase(nodepath, "nist256p1")
     pubkey = nist256p1.publickey(node.private_key(), False)
 
     # first half of keyhandle is keypath
-    keybuf = ustruct.pack("<8L", *keypath)
+    keypath = ustruct.pack("<8L", *path)
 
     # second half of keyhandle is a hmac of app_id and keypath
-    keybase = hmac.Hmac(node.private_key(), app_id, hashlib.sha256)
-    keybase.update(keybuf)
-    keybase = keybase.digest()
+    mac = hmac.Hmac(node.private_key(), app_id, hashlib.sha256)
+    mac.update(keypath)
 
-    return keybuf + keybase, pubkey, node.private_key()
+    return keypath + mac.digest(), pubkey
 
 
 def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
-    keyhandle, pubkey, _ = generate_credential(app_id)
+    keyhandle, pubkey = generate_credential(app_id)
 
     # hash the request data together with keyhandle and pubkey
     dig = hashlib.sha256()
@@ -1096,10 +1135,9 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
     dig.update(challenge)  # uint8_t chal[32];
     dig.update(keyhandle)  # uint8_t keyHandle[64];
     dig.update(pubkey)  # uint8_t pubKey[65];
-    dig = dig.digest()
 
     # sign the digest and convert to der
-    sig = nist256p1.sign(_U2F_ATT_PRIV_KEY, dig, False)
+    sig = nist256p1.sign(_U2F_ATT_PRIV_KEY, dig.digest(), False)
     sig = der.encode_seq((sig[1:33], sig[33:]))
 
     # pack to a response
@@ -1169,7 +1207,7 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     dialog_mgr.reset_timeout()
 
     # wait for a button or continue
-    if not dialog_mgr.confirmed:
+    if not dialog_mgr.user_confirmed:
         if __debug__:
             log.info(__name__, "waiting for button")
         return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
@@ -1184,31 +1222,32 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     return Cmd(req.cid, _CMD_MSG, buf)
 
 
-def msg_authenticate_genkey(app_id: bytes, keyhandle: bytes, pathformat: str):
+def msg_authenticate_genkey(
+    app_id: bytes, keyhandle: bytes, pathformat: str
+) -> Optional[bip32.HDNode]:
     from apps.common import seed
 
     # unpack the keypath from the first half of keyhandle
-    keybuf = keyhandle[:32]
-    keypath = ustruct.unpack(pathformat, keybuf)
+    keypath = keyhandle[:32]
+    path = ustruct.unpack(pathformat, keypath)
 
     # check high bit for hardened keys
-    for i in keypath:
+    for i in path:
         if not i & HARDENED:
             if __debug__:
                 log.warning(__name__, "invalid key path")
             return None
 
     # derive the signing key
-    nodepath = [_U2F_KEY_PATH] + list(keypath)
+    nodepath = [_U2F_KEY_PATH] + list(path)
     node = seed.derive_node_without_passphrase(nodepath, "nist256p1")
 
     # second half of keyhandle is a hmac of app_id and keypath
-    keybase = hmac.Hmac(node.private_key(), app_id, hashlib.sha256)
-    keybase.update(keybuf)
-    keybase = keybase.digest()
+    mac = hmac.Hmac(node.private_key(), app_id, hashlib.sha256)
+    mac.update(keypath)
 
     # verify the hmac
-    if keybase != keyhandle[32:]:
+    if mac.digest() != keyhandle[32:]:
         if __debug__:
             log.warning(__name__, "invalid key handle")
         return None
@@ -1229,10 +1268,9 @@ def msg_authenticate_sign(challenge: bytes, app_id: bytes, privkey: bytes) -> by
     dig.update(flags)  # uint8_t flags;
     dig.update(ctrbuf)  # uint8_t ctr[4];
     dig.update(challenge)  # uint8_t chal[32];
-    dig = dig.digest()
 
     # sign the digest and convert to der
-    sig = nist256p1.sign(privkey, dig, False)
+    sig = nist256p1.sign(privkey, dig.digest(), False)
     sig = der.encode_seq((sig[1:33], sig[33:]))
 
     # pack to a response
@@ -1363,7 +1401,7 @@ def cbor_make_credential_sign(client_data_hash: bytes, cred: Credential) -> byte
         extensions = cbor.encode({"hmac-secret": True})
         flags |= _AUTH_FLAG_ED
 
-    rp_id_hash = hashlib.sha256(cred.rp_id).digest()
+    rp_id_hash = hashlib.sha256(cred.rp_id.encode()).digest()
     authenticator_data = (
         rp_id_hash + bytes([flags]) + b"\x00\x00\x00\x00" + att_cred_data + extensions
     )
@@ -1458,7 +1496,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     return None
 
 
-def cbor_get_assertion_hmac_secret(cred: Credential, hmac_secret: map) -> bytes:
+def cbor_get_assertion_hmac_secret(cred: Credential, hmac_secret: dict) -> bytes:
     key_agreement = hmac_secret[1]
     salt_enc = hmac_secret[2]
     salt_auth = hmac_secret[3]
@@ -1482,6 +1520,8 @@ def cbor_get_assertion_hmac_secret(cred: Credential, hmac_secret: map) -> bytes:
     salt = aes(aes.CBC, shared_secret).decrypt(salt_enc)
 
     cred_random = cred.cred_random()
+    if cred_random is None:
+        raise ValueError
     output = hmac.Hmac(cred_random, salt[:32], hashlib.sha256).digest()
     if len(salt) == 64:
         output += hmac.Hmac(cred_random, salt[32:], hashlib.sha256).digest()
@@ -1492,8 +1532,8 @@ def cbor_get_assertion_sign(
     client_data_hash: bytes,
     rp_id_hash: bytes,
     cred: Credential,
-    hmac_secret: map,
-    user_presence=True,
+    hmac_secret: dict,
+    user_presence: bool = True,
 ) -> bytes:
     flags = 0
     if user_presence:
@@ -1504,7 +1544,7 @@ def cbor_get_assertion_sign(
     extensions = b""
     if hmac_secret:
         extensions = cbor.encode(
-            {"hmac-secret": cbor_get_assertion_hmac_secret(cred.id, hmac_secret)}
+            {"hmac-secret": cbor_get_assertion_hmac_secret(cred, hmac_secret)}
         )
         flags |= _AUTH_FLAG_ED
 
@@ -1512,11 +1552,10 @@ def cbor_get_assertion_sign(
     dig = hashlib.sha256()
     dig.update(auth_data)
     dig.update(client_data_hash)
-    dig = dig.digest()
 
     # sign the digest and convert to der
     privkey = cred.private_key()
-    sig = nist256p1.sign(privkey, dig, False)
+    sig = nist256p1.sign(privkey, dig.digest(), False)
     sig = der.encode_seq((sig[1:33], sig[33:]))
 
     response_data = {

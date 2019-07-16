@@ -29,24 +29,24 @@ _FIDO_HMAC_SECRET_KEY_PATH = b"FIDO2 Trezor hmac-secret"
 
 
 class Credential:
-    def __init__(self):
-        self.rp_id = None
-        self.rp_name = None
-        self.user_id = None
-        self.user_name = None
-        self.user_display_name = None
-        self._creation_time = 0
-        self.hmac_secret = False
-        self.id = None
+    def __init__(self) -> None:
+        self.rp_id = ""  # type: str
+        self.rp_name = None  # type: Optional[str]
+        self.user_id = None  # type: Optional[bytes]
+        self.user_name = None  # type: Optional[str]
+        self.user_display_name = None  # type: Optional[str]
+        self._creation_time = 0  # type: int
+        self.hmac_secret = False  # type: bool
+        self.id = b""  # type: bytes
 
-    def __lt__(self, other: Credential) -> bool:
+    def __lt__(self, other: "Credential") -> bool:
         # Sort newest first.
         return self._creation_time > other._creation_time
 
     def generate_id(self) -> None:
         from apps.common import seed
 
-        self._creation_time = storage.device.next_u2f_counter()
+        self._creation_time = storage.device.next_u2f_counter() or 0
 
         data = cbor.encode(
             {
@@ -67,13 +67,13 @@ class Credential:
         key = seed.derive_slip21_node_without_passphrase([_FIDO_CRED_ID_KEY_PATH]).key()
         iv = random.bytes(12)
         ctx = chacha20poly1305(key, iv)
-        ctx.auth(hashlib.sha256(self.rp_id).digest())
+        ctx.auth(hashlib.sha256(self.rp_id.encode()).digest())
         ciphertext = ctx.encrypt(data)
         tag = ctx.finish()
         self.id = bytes([_CRED_ID_VERSION]) + iv + ciphertext + tag
 
     @staticmethod
-    def from_id(cred_id: bytes, rp_id_hash: bytes) -> Credential:
+    def from_id(cred_id: bytes, rp_id_hash: bytes) -> Optional["Credential"]:
         from apps.common import seed
 
         if len(cred_id) < _CRED_ID_MIN_LENGTH or cred_id[0] != _CRED_ID_VERSION:
@@ -109,15 +109,17 @@ class Credential:
 
         return cred
 
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         from ubinascii import hexlify
 
         if self.user_name:
             return self.user_name
         elif self.user_display_name:
             return self.user_display_name
-        else:
+        elif self.user_id:
             return hexlify(self.user_id).decode()
+        else:
+            return None
 
     def private_key(self) -> bytes:
         from apps.common import seed

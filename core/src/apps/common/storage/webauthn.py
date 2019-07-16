@@ -1,3 +1,5 @@
+from micropython import const
+
 from trezor.crypto import hashlib
 
 from apps.common.storage import common
@@ -29,7 +31,7 @@ def get_resident_credentials(rp_id_hash: bytes) -> List[Credential]:
 
 def store_resident_credential(cred: Credential) -> bool:
     slot = None
-    rp_id_hash = hashlib.sha256(cred.rp_id).digest()
+    rp_id_hash = hashlib.sha256(cred.rp_id.encode()).digest()
     for i in range(
         _RESIDENT_CREDENTIAL_START_KEY,
         _RESIDENT_CREDENTIAL_START_KEY + _MAX_RESIDENT_CREDENTIALS,

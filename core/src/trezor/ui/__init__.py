@@ -6,7 +6,7 @@ from trezorui import Display
 from trezor import io, loop, res, utils, workflow
 
 if False:
-    from typing import Any, Generator, Iterable, Tuple, TypeVar
+    from typing import Any, Generator, Tuple
 
     Pos = Tuple[int, int]
     Area = Tuple[int, int, int, int]
@@ -231,7 +231,7 @@ class Layout(Control):
     def __await__(self) -> Generator[Any, Any, ResultValue]:
         return self.__iter__()  # type: ignore
 
-    def create_tasks(self) -> Iterable[loop.Task]:
+    def create_tasks(self) -> Tuple[loop.Task, ...]:
         return self.handle_input(), self.handle_rendering()
 
     def handle_input(self) -> loop.Task:  # type: ignore

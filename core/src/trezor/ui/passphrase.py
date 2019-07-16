@@ -7,7 +7,7 @@ from trezor.ui.button import Button, ButtonClear, ButtonConfirm
 from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, Swipe
 
 if False:
-    from typing import List, Iterable, Optional
+    from typing import Iterable, List, Optional, Tuple
     from trezor.ui.button import ButtonContent, ButtonStyleStateType
 
 SPACE = res.load(ui.ICON_SPACE)
@@ -244,7 +244,7 @@ class PassphraseKeyboard(ui.Layout):
     def on_confirm(self) -> None:
         raise ui.Result(self.input.text)
 
-    def create_tasks(self) -> Iterable[loop.Task]:
+    def create_tasks(self) -> Tuple[loop.Task, ...]:
         return self.handle_input(), self.handle_rendering(), self.handle_paging()
 
 

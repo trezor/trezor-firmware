@@ -6,6 +6,11 @@ class aes:
     """
     AES context.
     """
+    ECB: int
+    CBC: int
+    CFB: int
+    OFB: int
+    CTR: int
 
     def __init__(self, mode: int, key: bytes, iv: bytes = None) -> None:
         """

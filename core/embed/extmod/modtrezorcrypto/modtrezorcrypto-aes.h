@@ -36,6 +36,11 @@ enum AESMode {
 ///     """
 ///     AES context.
 ///     """
+///     ECB: int
+///     CBC: int
+///     CFB: int
+///     OFB: int
+///     CTR: int
 typedef struct _mp_obj_AES_t {
   mp_obj_base_t base;
   aes_encrypt_ctx encrypt_ctx;
