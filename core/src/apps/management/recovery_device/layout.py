@@ -11,6 +11,7 @@ from .slip39_keyboard import Slip39Keyboard
 
 from apps.common import storage
 from apps.common.confirm import confirm, require_confirm
+from apps.common.layout import show_success, show_warning
 from apps.homescreen.homescreen import homescreen
 
 if __debug__:
@@ -21,12 +22,12 @@ if __debug__:
 
 async def confirm_abort(ctx: wire.Context, dry_run: bool = False) -> bool:
     if dry_run:
-        text = Text("Abort dry run", ui.ICON_WIPE)
-        text.normal("Do you really want to", "abort the dry run", "recovery process?")
+        text = Text("Abort seed check", ui.ICON_WIPE)
+        text.normal("Do you really want to", "abort the seed check?")
     else:
         text = Text("Abort recovery", ui.ICON_WIPE)
         text.normal("Do you really want to", "abort the recovery", "process?")
-        text.bold("All data will be lost.")
+        text.bold("All progress will be lost.")
     return await confirm(ctx, text)
 
 
@@ -34,8 +35,7 @@ async def request_word_count(ctx: wire.Context, dry_run: bool) -> int:
     await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicWordCount), ButtonAck)
 
     if dry_run:
-        # TODO: unify terminology - Simulated recovery vs dry run
-        text = Text("Simulated recovery", ui.ICON_RECOVERY)
+        text = Text("Seed check", ui.ICON_RECOVERY)
     else:
         text = Text("Wallet recovery", ui.ICON_RECOVERY)
     text.normal("Number of words?")
@@ -67,29 +67,25 @@ async def request_mnemonic(ctx: wire.Context, count: int, slip39: bool) -> str:
     return " ".join(words)
 
 
-async def show_success(ctx: wire.Context) -> None:
-    text = Text("Recovery success", ui.ICON_RECOVERY)
-    text.normal("You have successfully")
-    text.normal("recovered your wallet.")
-    await require_confirm(
-        ctx, text, ButtonRequestType.ProtectCall, cancel=None, confirm="Continue"
-    )
-
-
 async def show_dry_run_result(ctx: wire.Context, result: bool) -> None:
     if result:
-        text = Text("Dry run result", ui.ICON_CONFIRM)
-        text.normal("The seed is valid and")
-        text.bold("matches the one")
-        text.normal("in the device.")
+        await show_success(
+            ctx,
+            (
+                "The entered recovery seed",
+                "is valid and matches",
+                "the one in the device.",
+            ),
+        )
     else:
-        text = Text("Dry run result", ui.ICON_CANCEL)
-        text.normal("The seed is valid")
-        text.bold("but does not match")
-        text.normal("the one in the device.")
-    await require_confirm(
-        ctx, text, ButtonRequestType.ProtectCall, cancel=None, confirm="Continue"
-    )
+        await show_warning(
+            ctx,
+            (
+                "The entered recovery seed",
+                "is valid but does not match",
+                "the one in the device.",
+            ),
+        )
 
 
 async def show_dry_run_different_type(ctx: wire.Context) -> None:
@@ -119,16 +115,18 @@ async def show_keyboard_info(ctx: wire.Context) -> None:
 
 
 async def show_invalid_mnemonic(ctx, slip39: bool = False):
-    text = Text("Wallet recovery", ui.ICON_WRONG, ui.RED)
-    text.bold("You have entered")
     if slip39:
-        text.bold("recovery share that")
+        await show_warning(
+            ctx,
+            ("You have entered", "a recovery share", "that is not valid."),
+            button="Try again",
+        )
     else:
-        text.bold("recovery seed that")
-    text.bold("is incorrect.")
-    await require_confirm(
-        ctx, text, ButtonRequestType.ProtectCall, confirm="Try again", cancel=None
-    )
+        await show_warning(
+            ctx,
+            ("You have entered", "a recovery seed", "that is not valid."),
+            button="Try again",
+        )
 
 
 class RecoveryHomescreen(ui.Control):
@@ -139,9 +137,9 @@ class RecoveryHomescreen(ui.Control):
     def on_render(self):
         # TODO: review: how many kittens die when I'm touching storage in ui component?
         if storage.device.is_recovery_dry_run():
-            heading = "Dry run recovery"
+            heading = "SEED CHECK"
         else:
-            heading = "Recovery mode"
+            heading = "RECOVERY MODE"
         ui.header_warning(heading, clear=False)
 
         if not self.subtext:

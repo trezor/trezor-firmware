@@ -28,9 +28,9 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
         text = Text(title, ui.ICON_RECOVERY)
         text.normal("Do you really want to", "recover the wallet?", "")
     else:
-        title = "Simulated recovery"
+        title = "Seed check"
         text = Text(title, ui.ICON_RECOVERY)
-        text.normal("Do you really want to", "check the recovery", "backup?")
+        text.normal("Do you really want to", "check the recovery", "seed?")
     await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)
 
     # for dry run pin needs to entered

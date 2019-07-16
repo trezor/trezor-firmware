@@ -4,6 +4,7 @@ from trezor.messages.Success import Success
 from trezor.utils import consteq
 
 from apps.common import mnemonic, storage
+from apps.common.layout import show_success
 from apps.common.storage import device
 from apps.homescreen.homescreen import homescreen
 from apps.management.recovery_device import layout
@@ -37,7 +38,7 @@ async def recovery_homescreen(single_run=False) -> None:
 
     else:
         mnemonic_module.store(secret, needs_backup=False, no_backup=False)
-        await layout.show_success(ctx)
+        await show_success(ctx, ("You have successfully", "recovered your wallet."))
 
     storage.device.end_recovery_progress()
     if single_run:
