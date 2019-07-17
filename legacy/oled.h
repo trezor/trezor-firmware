@@ -39,6 +39,7 @@ void oledInvertDebugLink(void);
 
 void oledSetBuffer(uint8_t *buf);
 const uint8_t *oledGetBuffer(void);
+bool oledGetPixel(int x, int y);
 void oledDrawPixel(int x, int y);
 void oledClearPixel(int x, int y);
 void oledInvertPixel(int x, int y);
@@ -55,5 +56,6 @@ void oledHLine(int y);
 void oledFrame(int x1, int y1, int x2, int y2);
 void oledSwipeLeft(void);
 void oledSwipeRight(void);
+void oledSCA(int y1, int y2, int val);
 
 #endif
