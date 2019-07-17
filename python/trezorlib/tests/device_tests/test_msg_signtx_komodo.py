@@ -25,37 +25,37 @@ from .common import TrezorTest
 # KMD has no usable backends, use cached TX only
 TX_API = tx_cache("Komodo", allow_fetch=False)
 
-TXHASH_339c3e = bytes.fromhex(
-    "339c3e78610e229f65ebc3fa722016fcb9fbde7bc196d2d876604f5257ada19c"
+TXHASH_2807c = bytes.fromhex(
+    "2807c5b126ec8e2b078cab0f12e4c8b4ce1d7724905f8ebef8dca26b0c8e0f1d"
+)
+TXHASH_7b28bd = bytes.fromhex(
+    "7b28bd91119e9776f0d4ebd80e570165818a829bbf4477cd1afe5149dbcd34b1"
 )
 
-
 @pytest.mark.komodo
-@pytest.mark.skip(reason="komodo is broken at the moment - issue #178")
 class TestMsgSigntxKomodo(TrezorTest):
     def test_one_one_fee_sapling(self):
         self.setup_mnemonic_allallall()
 
-        # prevout:  339c3e78610e229f65ebc3fa722016fcb9fbde7bc196d2d876604f5257ada19c:0
-        # input 1: 2.9999 KMD
+        # prevout: 2807c5b126ec8e2b078cab0f12e4c8b4ce1d7724905f8ebef8dca26b0c8e0f1d:0
+        # input 1: 10.9998 KMD
 
         inp1 = proto.TxInputType(
             address_n=parse_path(
-                "m/Komodo/0h/0/0"
-            ),  # RDvyC66RQf7HKkUB5zyLKJhitV4ibzkKF5
-            amount=299990000,
-            prev_hash=TXHASH_339c3e,
+                "44'/141'/0'/0/0"
+            ),  # R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi
+            amount=1099980000,
+            prev_hash=TXHASH_2807c,
             prev_index=0,
         )
 
         out1 = proto.TxOutputType(
-            address="RDvyC66RQf7HKkUB5zyLKJhitV4ibzkKF5",
-            amount=299990000 - 10000,
+            address="R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi",
+            amount=1099980000 - 10000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
         with self.client:
-            """
             self.client.set_expected_responses(
                 [
                     proto.TxRequest(
@@ -68,6 +68,7 @@ class TestMsgSigntxKomodo(TrezorTest):
                     ),
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx), # locktime > 0
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
                         details=proto.TxRequestDetailsType(request_index=0),
@@ -79,21 +80,100 @@ class TestMsgSigntxKomodo(TrezorTest):
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            """
 
             details = proto.SignTx(
                 version=4,
                 overwintered=True,
                 version_group_id=0x892F2085,
                 branch_id=0x76B809BB,
-                lock_time=0x5C5CE16B,
+                lock_time=0x5D2A30B8
             )
             _, serialized_tx = btc.sign_tx(
                 self.client, "Komodo", [inp1], [out1], details=details, prev_txes=TX_API
             )
 
-        # Accepted by network: tx 92b45f54cb7c3cdfc4a88dbf088dfcc7c1417ad0955f02712e136da7fd5343d6
+        # Accepted by network: tx 7b28bd91119e9776f0d4ebd80e570165818a829bbf4477cd1afe5149dbcd34b1
         assert (
             serialized_tx.hex()
-            == "0400008085202f89019ca1ad57524f6076d8d296c17bdefbb9fc162072fac3eb659f220e61783e9c33000000006a47304402206972af8ff4dec4074da9edb1a741114bebda9e686bb411dd6f388aafd81f0af2022060a05d0ea66d5b8632868b6a6d377ad1a8941385d628be4631b31cc246014b8501210235ad92bb4efda1e6794890f248fa26aab75906bd496c07a6a8532b62a5bd80f7ffffffff01e054e111000000001976a91433058d6bb20e9297fc0a518e2e0262e854496a6c88ac6be15c5c000000000000000000000000000000"
+            == "0400008085202f89011d0f8e0c6ba2dcf8be8e5f9024771dceb4c8e4120fab8c072b8eec26b1c50728000000006a4730440220158c970ca2fc6bcc33026eb5366f0342f63b35d178f7efb334b1df78fe90b67202207bc4ff69f67cf843b08564a5adc77bf5593e28ab4d5104911824ac13fe885d8f012102a87aef7b1a8f676e452d6240767699719cd58b0261c822472c25df146938bca5ffffffff01d0359041000000001976a91400178fa0b6fc253a3a402ee2cadd8a7bfec08f6388acb8302a5d000000000000000000000000000000"
+        )
+
+    def test_one_one_rewards_claim(self):
+        self.setup_mnemonic_allallall()
+
+        # prevout: 7b28bd91119e9776f0d4ebd80e570165818a829bbf4477cd1afe5149dbcd34b1:0
+        # input 1: 10.9997 KMD
+
+        inp1 = proto.TxInputType(
+            address_n=parse_path(
+                "44'/141'/0'/0/0"
+            ),  # R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi
+            amount=1099970000,
+            prev_hash=TXHASH_7b28bd,
+            prev_index=0,
+        )
+
+        out1 = proto.TxOutputType(
+            address="R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi",
+            amount=1099970000 - 10000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        # kmd interest, vout sum > vin sum
+        out2 = proto.TxOutputType(
+            address="R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi",
+            amount=79605,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        with self.client:
+            self.client.set_expected_responses(
+                [
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXINPUT,
+                        details=proto.TxRequestDetailsType(request_index=0),
+                    ),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXOUTPUT,
+                        details=proto.TxRequestDetailsType(request_index=0),
+                    ),
+                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXOUTPUT,
+                        details=proto.TxRequestDetailsType(request_index=1),
+                    ),
+                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx), # locktime > 0
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXINPUT,
+                        details=proto.TxRequestDetailsType(request_index=0),
+                    ),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXOUTPUT,
+                        details=proto.TxRequestDetailsType(request_index=0),
+                    ),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXOUTPUT,
+                        details=proto.TxRequestDetailsType(request_index=1),
+                    ),
+                    proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
+                ]
+            )
+
+            details = proto.SignTx(
+                version=4,
+                overwintered=True,
+                version_group_id=0x892F2085,
+                branch_id=0x76B809BB,
+                lock_time=0x5D2AF1F2
+            )
+            _, serialized_tx = btc.sign_tx(
+                self.client, "Komodo", [inp1], [out1, out2], details=details, prev_txes=TX_API
+            )
+
+        # Accepted by network: tx c775678ceb18277729b427c7acf2f8ce63ac02fc2366f47ce08a3f443ff0e059
+        assert (
+            serialized_tx.hex()
+            == "0400008085202f8901b134cddb4951fe1acd7744bf9b828a816501570ed8ebd4f076979e1191bd287b000000006a4730440220483a58f5be3a147c773c663008c992a7fcea4d03bdf4c1d4bc0535c0d98ddf0602207b19d69140dd00c7a94f048c712aeaed55dfd27f581c7212d9cc5e476fe1dc9f012102a87aef7b1a8f676e452d6240767699719cd58b0261c822472c25df146938bca5ffffffff02c00e9041000000001976a91400178fa0b6fc253a3a402ee2cadd8a7bfec08f6388acf5360100000000001976a91400178fa0b6fc253a3a402ee2cadd8a7bfec08f6388acf2f12a5d000000000000000000000000000000"
         )
