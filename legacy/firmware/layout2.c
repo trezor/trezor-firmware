@@ -544,8 +544,9 @@ void layoutResetWord(const char *word, int pass, int word_pos, bool last) {
   oledDrawString(left, 0 * 9, action, FONT_STANDARD);
   oledDrawString(left, 2 * 9, word_pos < 10 ? index_str + 1 : index_str,
                  FONT_STANDARD);
-  oledDrawString(left, 3 * 9, word, FONT_STANDARD | FONT_DOUBLE);
-  oledHLine(OLED_HEIGHT - 13);
+  oledDrawStringCenter(OLED_WIDTH / 2, 4 * 9 - 3, word,
+                       FONT_FIXED | FONT_DOUBLE);
+  oledSCA(4 * 9 - 3 - 2, 4 * 9 - 3 + 15 + 2, OLED_WIDTH / 2);
   layoutButtonYes(btnYes);
   oledRefresh();
 }
