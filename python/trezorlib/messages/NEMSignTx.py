@@ -10,6 +10,12 @@ from .NEMProvisionNamespace import NEMProvisionNamespace
 from .NEMTransactionCommon import NEMTransactionCommon
 from .NEMTransfer import NEMTransfer
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class NEMSignTx(p.MessageType):
     MESSAGE_WIRE_TYPE = 69
@@ -37,7 +43,7 @@ class NEMSignTx(p.MessageType):
         self.importance_transfer = importance_transfer
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('transaction', NEMTransactionCommon, 0),
             2: ('multisig', NEMTransactionCommon, 0),

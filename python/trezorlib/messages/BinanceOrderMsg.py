@@ -2,6 +2,12 @@
 # fmt: off
 from .. import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class BinanceOrderMsg(p.MessageType):
     MESSAGE_WIRE_TYPE = 707
@@ -27,7 +33,7 @@ class BinanceOrderMsg(p.MessageType):
         self.timeinforce = timeinforce
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('id', p.UnicodeType, 0),
             2: ('ordertype', p.UVarintType, 0),

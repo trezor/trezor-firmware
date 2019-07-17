@@ -7,7 +7,6 @@ from trezor.messages import ButtonRequestType
 from trezor.ui.button import Button, ButtonDefault
 from trezor.ui.checklist import Checklist
 from trezor.ui.info import InfoConfirm
-from trezor.ui.loader import LoadingAnimation
 from trezor.ui.scroll import Paginated
 from trezor.ui.shamir import NumInput
 from trezor.ui.text import Text
@@ -16,26 +15,6 @@ from apps.common.confirm import confirm, hold_to_confirm, require_confirm
 
 if __debug__:
     from apps import debug
-
-
-async def show_reset_device_warning(ctx, use_slip39: bool):
-    text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
-    if use_slip39:
-        text.bold("Create a new wallet")
-        text.br()
-        text.bold("with Shamir Backup?")
-    else:
-        text.bold("Do you want to create")
-        text.br()
-        text.bold("a new wallet?")
-    text.br()
-    text.br_half()
-    text.normal("By continuing you agree")
-    text.br()
-    text.normal("to")
-    text.bold("https://trezor.io/tos")
-    await require_confirm(ctx, text, ButtonRequestType.ResetDevice, major_confirm=True)
-    await LoadingAnimation()
 
 
 async def show_internal_entropy(ctx, entropy: bytes):
@@ -89,15 +68,16 @@ async def confirm_backup_again(ctx):
 async def _confirm_share_words(ctx, share_index, share_words):
     numbered = list(enumerate(share_words))
 
-    # check a word from the first half
-    first_half = numbered[: len(numbered) // 2]
-    if not await _confirm_word(ctx, share_index, first_half):
-        return False
+    # check three words
+    third = len(numbered) // 3
+    # if the num of words is not dividable by 3 let's add 1
+    # to have more words at the beggining and to check all of them
+    if len(numbered) % 3:
+        third += 1
 
-    # check a word from the second half
-    second_half = numbered[len(numbered) // 2 :]
-    if not await _confirm_word(ctx, share_index, second_half):
-        return False
+    for part in utils.chunks(numbered, third):
+        if not await _confirm_word(ctx, share_index, part):
+            return False
 
     return True
 
@@ -161,8 +141,8 @@ async def _show_confirmation_failure(ctx, share_index):
     )
 
 
-async def show_backup_warning(ctx, header: str, confirm_text: str, slip39=False):
-    text = Text(header, ui.ICON_NOCOPY)
+async def show_backup_warning(ctx, slip39=False):
+    text = Text("Back up your seed", ui.ICON_NOCOPY)
     if slip39:
         text.normal(
             "Never make a digital",
@@ -178,7 +158,17 @@ async def show_backup_warning(ctx, header: str, confirm_text: str, slip39=False)
             "it online!",
         )
     await require_confirm(
-        ctx, text, ButtonRequestType.ResetDevice, confirm_text, cancel=None
+        ctx, text, ButtonRequestType.ResetDevice, "I understand", cancel=None
+    )
+
+
+async def show_backup_success(ctx):
+    text = Text("Backup is done!", ui.ICON_RESET)
+    text.normal(
+        "Use the backup to", "recover your wallet", "if you ever lose", "the device."
+    )
+    await require_confirm(
+        ctx, text, ButtonRequestType.ResetDevice, "Finish backup", cancel=None
     )
 
 
@@ -187,6 +177,9 @@ async def show_backup_warning(ctx, header: str, confirm_text: str, slip39=False)
 
 
 async def bip39_show_and_confirm_mnemonic(ctx, mnemonic: str):
+    # warn user about mnemonic safety
+    await show_backup_warning(ctx)
+
     words = mnemonic.split()
 
     while True:
@@ -341,6 +334,9 @@ async def slip39_prompt_threshold(ctx, num_of_shares):
 
 
 async def slip39_show_and_confirm_shares(ctx, shares):
+    # warn user about mnemonic safety
+    await show_backup_warning(ctx, slip39=True)
+
     for index, share in enumerate(shares):
         share_words = share.split(" ")
         while True:
@@ -405,7 +401,7 @@ async def _slip39_show_share_words(ctx, share_index, share_words):
 
         def export_displayed_words():
             # export currently displayed mnemonic words into debuglink
-            debug.reset_current_words = word_pages[paginated.page]
+            debug.reset_current_words = [w for _, w in word_pages[paginated.page]]
 
         paginated.on_change = export_displayed_words
         export_displayed_words()

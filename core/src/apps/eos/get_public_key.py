@@ -8,6 +8,11 @@ from apps.eos import CURVE
 from apps.eos.helpers import base58_encode, validate_full_path
 from apps.eos.layout import require_get_public_key
 
+if False:
+    from typing import Tuple
+    from trezor.crypto import bip32
+    from apps.common import seed
+
 
 def _public_key_to_wif(pub_key: bytes) -> str:
     if pub_key[0] == 0x04 and len(pub_key) == 65:
@@ -20,14 +25,16 @@ def _public_key_to_wif(pub_key: bytes) -> str:
     return base58_encode("EOS", "", compressed_pub_key)
 
 
-def _get_public_key(node):
+def _get_public_key(node: bip32.HDNode) -> Tuple[str, bytes]:
     seckey = node.private_key()
     public_key = secp256k1.publickey(seckey, True)
     wif = _public_key_to_wif(public_key)
     return wif, public_key
 
 
-async def get_public_key(ctx, msg: EosGetPublicKey, keychain):
+async def get_public_key(
+    ctx: wire.Context, msg: EosGetPublicKey, keychain: seed.Keychain
+) -> EosPublicKey:
     await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
 
     node = keychain.derive(msg.address_n)

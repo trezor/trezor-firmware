@@ -6,9 +6,9 @@ from .BinanceCoin import BinanceCoin
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class BinanceInputOutput(p.MessageType):
@@ -22,7 +22,7 @@ class BinanceInputOutput(p.MessageType):
         self.coins = coins if coins is not None else []
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('address', p.UnicodeType, 0),
             2: ('coins', BinanceCoin, p.FLAG_REPEATED),

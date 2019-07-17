@@ -23,6 +23,11 @@ from micropython import const
 from trezor.crypto import hashlib, hmac, pbkdf2, random
 from trezorcrypto import shamir, slip39
 
+if False:
+    from typing import Dict, Iterable, List, Optional, Set, Tuple
+
+    Indices = Tuple[int, ...]
+
 KEYBOARD_FULL_MASK = const(0x1FF)
 """All buttons are allowed. 9-bit bitmap all set to 1."""
 
@@ -35,7 +40,7 @@ def compute_mask(prefix: str) -> int:
 
 def button_sequence_to_word(prefix: str) -> str:
     if not prefix:
-        return KEYBOARD_FULL_MASK
+        return ""
     return slip39.button_sequence_to_word(int(prefix))
 
 
@@ -43,11 +48,11 @@ _RADIX_BITS = const(10)
 """The length of the radix in bits."""
 
 
-def bits_to_bytes(n):
+def bits_to_bytes(n: int) -> int:
     return (n + 7) // 8
 
 
-def bits_to_words(n):
+def bits_to_words(n: int) -> int:
     return (n + _RADIX_BITS - 1) // _RADIX_BITS
 
 
@@ -103,7 +108,7 @@ class MnemonicError(Exception):
     pass
 
 
-def _rs1024_polymod(values):
+def _rs1024_polymod(values: Indices) -> int:
     GEN = (
         0xE0E040,
         0x1C1C080,
@@ -125,7 +130,7 @@ def _rs1024_polymod(values):
     return chk
 
 
-def rs1024_create_checksum(data):
+def rs1024_create_checksum(data: Indices) -> Indices:
     values = tuple(_CUSTOMIZATION_STRING) + data + _CHECKSUM_LENGTH_WORDS * (0,)
     polymod = _rs1024_polymod(values) ^ 1
     return tuple(
@@ -133,11 +138,11 @@ def rs1024_create_checksum(data):
     )
 
 
-def rs1024_verify_checksum(data):
+def rs1024_verify_checksum(data: Indices) -> bool:
     return _rs1024_polymod(tuple(_CUSTOMIZATION_STRING) + data) == 1
 
 
-def rs1024_error_index(data):
+def rs1024_error_index(data: Indices) -> Optional[int]:
     GEN = (
         0x91F9F87,
         0x122F1F07,
@@ -164,11 +169,11 @@ def rs1024_error_index(data):
     return None
 
 
-def xor(a, b):
+def xor(a: bytes, b: bytes) -> bytes:
     return bytes(x ^ y for x, y in zip(a, b))
 
 
-def _int_from_indices(indices):
+def _int_from_indices(indices: Indices) -> int:
     """Converts a list of base 1024 indices in big endian order to an integer value."""
     value = 0
     for index in indices:
@@ -176,21 +181,21 @@ def _int_from_indices(indices):
     return value
 
 
-def _int_to_indices(value, length, bits):
+def _int_to_indices(value: int, length: int, bits: int) -> Iterable[int]:
     """Converts an integer value to indices in big endian order."""
     mask = (1 << bits) - 1
     return ((value >> (i * bits)) & mask for i in reversed(range(length)))
 
 
-def mnemonic_from_indices(indices):
+def mnemonic_from_indices(indices: Indices) -> str:
     return " ".join(slip39.get_word(i) for i in indices)
 
 
-def mnemonic_to_indices(mnemonic):
+def mnemonic_to_indices(mnemonic: str) -> Iterable[int]:
     return (slip39.word_index(word.lower()) for word in mnemonic.split())
 
 
-def _round_function(i, passphrase, e, salt, r):
+def _round_function(i: int, passphrase: bytes, e: int, salt: bytes, r: bytes) -> bytes:
     """The round function used internally by the Feistel cipher."""
     return pbkdf2(
         pbkdf2.HMAC_SHA256,
@@ -200,13 +205,15 @@ def _round_function(i, passphrase, e, salt, r):
     ).key()[: len(r)]
 
 
-def _get_salt(identifier):
+def _get_salt(identifier: int) -> bytes:
     return _CUSTOMIZATION_STRING + identifier.to_bytes(
         bits_to_bytes(_ID_LENGTH_BITS), "big"
     )
 
 
-def _encrypt(master_secret, passphrase, iteration_exponent, identifier):
+def _encrypt(
+    master_secret: bytes, passphrase: bytes, iteration_exponent: int, identifier: int
+) -> bytes:
     l = master_secret[: len(master_secret) // 2]
     r = master_secret[len(master_secret) // 2 :]
     salt = _get_salt(identifier)
@@ -218,7 +225,12 @@ def _encrypt(master_secret, passphrase, iteration_exponent, identifier):
     return r + l
 
 
-def decrypt(identifier, iteration_exponent, encrypted_master_secret, passphrase):
+def decrypt(
+    identifier: int,
+    iteration_exponent: int,
+    encrypted_master_secret: bytes,
+    passphrase: bytes,
+) -> bytes:
     l = encrypted_master_secret[: len(encrypted_master_secret) // 2]
     r = encrypted_master_secret[len(encrypted_master_secret) // 2 :]
     salt = _get_salt(identifier)
@@ -230,13 +242,15 @@ def decrypt(identifier, iteration_exponent, encrypted_master_secret, passphrase)
     return r + l
 
 
-def _create_digest(random_data, shared_secret):
+def _create_digest(random_data: bytes, shared_secret: bytes) -> bytes:
     return hmac.new(random_data, shared_secret, hashlib.sha256).digest()[
         :_DIGEST_LENGTH_BYTES
     ]
 
 
-def _split_secret(threshold, share_count, shared_secret):
+def _split_secret(
+    threshold: int, share_count: int, shared_secret: bytes
+) -> List[Tuple[int, bytes]]:
     if threshold < 1:
         raise ValueError(
             "The requested threshold ({}) must be a positive integer.".format(threshold)
@@ -278,7 +292,7 @@ def _split_secret(threshold, share_count, shared_secret):
     return shares
 
 
-def _recover_secret(threshold, shares):
+def _recover_secret(threshold: int, shares: List[Tuple[int, bytes]]) -> bytes:
     # If the threshold is 1, then the digest of the shared secret is not used.
     if threshold == 1:
         return shares[0][1]
@@ -295,8 +309,12 @@ def _recover_secret(threshold, shares):
 
 
 def _group_prefix(
-    identifier, iteration_exponent, group_index, group_threshold, group_count
-):
+    identifier: int,
+    iteration_exponent: int,
+    group_index: int,
+    group_threshold: int,
+    group_count: int,
+) -> Indices:
     id_exp_int = (identifier << _ITERATION_EXP_LENGTH_BITS) + iteration_exponent
     return tuple(_int_to_indices(id_exp_int, _ID_EXP_LENGTH_WORDS, _RADIX_BITS)) + (
         (group_index << 6) + ((group_threshold - 1) << 2) + ((group_count - 1) >> 2),
@@ -304,15 +322,15 @@ def _group_prefix(
 
 
 def encode_mnemonic(
-    identifier,
-    iteration_exponent,
-    group_index,
-    group_threshold,
-    group_count,
-    member_index,
-    member_threshold,
-    value,
-):
+    identifier: int,
+    iteration_exponent: int,
+    group_index: int,
+    group_threshold: int,
+    group_count: int,
+    member_index: int,
+    member_threshold: int,
+    value: bytes,
+) -> str:
     """
     Converts share data to a share mnemonic.
     :param int identifier: The random identifier.
@@ -348,7 +366,7 @@ def encode_mnemonic(
     return mnemonic_from_indices(share_data + checksum)
 
 
-def decode_mnemonic(mnemonic):
+def decode_mnemonic(mnemonic: str) -> Tuple[int, int, int, int, int, int, int, bytes]:
     """Converts a share mnemonic to share data."""
 
     mnemonic_data = tuple(mnemonic_to_indices(mnemonic))
@@ -401,12 +419,20 @@ def decode_mnemonic(mnemonic):
     )
 
 
-def _decode_mnemonics(mnemonics):
+if False:
+    MnemonicGroups = Dict[int, Tuple[int, Set[Tuple[int, bytes]]]]
+
+
+def _decode_mnemonics(
+    mnemonics: List[str]
+) -> Tuple[int, int, int, int, MnemonicGroups]:
     identifiers = set()
     iteration_exponents = set()
     group_thresholds = set()
     group_counts = set()
-    groups = {}  # { group_index : [member_threshold, set_of_member_shares] }
+
+    # { group_index : [member_threshold, set_of_member_shares] }
+    groups = {}  # type: MnemonicGroups
     for mnemonic in mnemonics:
         identifier, iteration_exponent, group_index, group_threshold, group_count, member_index, member_threshold, share_value = decode_mnemonic(
             mnemonic
@@ -415,7 +441,7 @@ def _decode_mnemonics(mnemonics):
         iteration_exponents.add(iteration_exponent)
         group_thresholds.add(group_threshold)
         group_counts.add(group_count)
-        group = groups.setdefault(group_index, [member_threshold, set()])
+        group = groups.setdefault(group_index, (member_threshold, set()))
         if group[0] != member_threshold:
             raise MnemonicError(
                 "Invalid set of mnemonics. All mnemonics in a group must have the same member threshold."
@@ -462,13 +488,13 @@ def generate_random_identifier() -> int:
 
 
 def generate_single_group_mnemonics_from_data(
-    master_secret,
-    identifier,
-    threshold,
-    count,
-    passphrase=b"",
-    iteration_exponent=DEFAULT_ITERATION_EXPONENT,
-) -> list:
+    master_secret: bytes,
+    identifier: int,
+    threshold: int,
+    count: int,
+    passphrase: bytes = b"",
+    iteration_exponent: int = DEFAULT_ITERATION_EXPONENT,
+) -> List[str]:
     return generate_mnemonics_from_data(
         master_secret,
         identifier,
@@ -480,13 +506,13 @@ def generate_single_group_mnemonics_from_data(
 
 
 def generate_mnemonics_from_data(
-    master_secret,
-    identifier,
-    group_threshold,
-    groups,
-    passphrase=b"",
-    iteration_exponent=DEFAULT_ITERATION_EXPONENT,
-) -> list:
+    master_secret: bytes,
+    identifier: int,
+    group_threshold: int,
+    groups: List[Tuple[int, int]],
+    passphrase: bytes = b"",
+    iteration_exponent: int = DEFAULT_ITERATION_EXPONENT,
+) -> List[List[str]]:
     """
     Splits a master secret into mnemonic shares using Shamir's secret sharing scheme.
     :param master_secret: The master secret to split.
@@ -544,7 +570,7 @@ def generate_mnemonics_from_data(
 
     group_shares = _split_secret(group_threshold, len(groups), encrypted_master_secret)
 
-    mnemonics = []
+    mnemonics = []  # type: List[List[str]]
     for (member_threshold, member_count), (group_index, group_secret) in zip(
         groups, group_shares
     ):
@@ -568,7 +594,7 @@ def generate_mnemonics_from_data(
     return mnemonics
 
 
-def combine_mnemonics(mnemonics):
+def combine_mnemonics(mnemonics: List[str]) -> Tuple[int, int, bytes]:
     """
     Combines mnemonic shares to obtain the master secret which was previously split using
     Shamir's secret sharing scheme.

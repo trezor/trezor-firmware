@@ -2,6 +2,12 @@
 # fmt: off
 from .. import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class StellarCreateAccountOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 210
@@ -17,7 +23,7 @@ class StellarCreateAccountOp(p.MessageType):
         self.starting_balance = starting_balance
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('source_account', p.UnicodeType, 0),
             2: ('new_account', p.UnicodeType, 0),

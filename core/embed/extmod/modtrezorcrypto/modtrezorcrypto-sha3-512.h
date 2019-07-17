@@ -24,10 +24,12 @@
 
 /// package: trezorcrypto.__init__
 
-/// class Sha3_512:
+/// class sha3_512:
 ///     """
 ///     SHA3_512 context.
 ///     """
+///     block_size: int
+///     digest_size: int
 typedef struct _mp_obj_Sha3_512_t {
   mp_obj_base_t base;
   SHA3_CTX ctx;
@@ -102,7 +104,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_512_digest(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha3_512_digest_obj,
                                  mod_trezorcrypto_Sha3_512_digest);
 
-/// def copy(self) -> sha3:
+/// def copy(self) -> sha3_512:
 ///     """
 ///     Returns the copy of the digest object with the current state
 ///     """

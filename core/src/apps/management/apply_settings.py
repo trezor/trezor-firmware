@@ -18,7 +18,7 @@ async def apply_settings(ctx, msg):
         raise wire.ProcessError("No setting provided")
 
     if msg.homescreen is not None:
-        if len(msg.homescreen) > storage.HOMESCREEN_MAXSIZE:
+        if len(msg.homescreen) > storage.device.HOMESCREEN_MAXSIZE:
             raise wire.DataError("Homescreen is too complex")
         await require_confirm_change_homescreen(ctx)
 
@@ -34,7 +34,7 @@ async def apply_settings(ctx, msg):
     if msg.display_rotation is not None:
         await require_confirm_change_display_rotation(ctx, msg.display_rotation)
 
-    storage.load_settings(
+    storage.device.load_settings(
         label=msg.label,
         use_passphrase=msg.use_passphrase,
         homescreen=msg.homescreen,
@@ -43,7 +43,7 @@ async def apply_settings(ctx, msg):
     )
 
     if msg.display_rotation is not None:
-        ui.display.orientation(storage.get_rotation())
+        ui.display.orientation(storage.device.get_rotation())
 
     return Success(message="Settings applied")
 

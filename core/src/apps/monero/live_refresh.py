@@ -21,7 +21,7 @@ async def live_refresh(ctx, msg: MoneroLiveRefreshStartRequest, keychain):
 
     res = await _init_step(state, ctx, msg, keychain)
     while True:
-        msg = await ctx.call(
+        msg = await ctx.call_any(
             res,
             MessageType.MoneroLiveRefreshStepRequest,
             MessageType.MoneroLiveRefreshFinalRequest,

@@ -5,6 +5,9 @@
     "bitcoin:BCH": {
         "Electron Cash": "https://electroncash.org"
     },
+    "bitcoin:BELL": {
+        "Electrum-BELL": "https://bell.electrum-jp.net"
+    },
     "bitcoin:BTC": {
         "Electrum": "https://electrum.org"
     },
@@ -19,6 +22,9 @@
     },
     "bitcoin:CPC": {
         "Capricoin Mobile Wallet": "https://wallet.capricoin.org"
+    },
+    "bitcoin:CPU": {
+        "Electrum-CPU": "https://cpuchain.org/download"
     },
     "bitcoin:DASH": {
         "Dash Electrum": "https://electrum.dash.org"
@@ -47,8 +53,14 @@
     "bitcoin:NMC": {
         "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
     },
+    "bitcoin:PART": {
+        "Particl Core": "https://github.com/particl/particl-core/releases"
+    },
     "bitcoin:VIA": {
         "Vialectrum": "https://vialectrum.org"
+    },
+    "bitcoin:VIPS": {
+        "Electrum-VIPS": "https://electrum-vips.info"
     },
     "bitcoin:XZC": {
         "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",

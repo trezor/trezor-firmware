@@ -37,7 +37,9 @@
             "Homepage": "https://getmonero.org",
             "Github": "https://github.com/monero-project/monero"
         },
-        "wallet": {},
+        "wallet": {
+            "Monero CLI/GUI": "https://www.getmonero.org/downloads/"
+        },
         "blockchain_link": {}
     },
     {

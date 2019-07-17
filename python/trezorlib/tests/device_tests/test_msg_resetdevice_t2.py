@@ -45,6 +45,11 @@ class TestMsgResetDeviceT2(TrezorTest):
             assert btn_code == B.ResetDevice
             self.client.debug.press_yes()
 
+            # Confirm warning
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
             # mnemonic phrases
             btn_code = yield
             assert btn_code == B.ResetDevice
@@ -59,7 +64,7 @@ class TestMsgResetDeviceT2(TrezorTest):
                     self.client.debug.press_yes()
 
             # check backup words
-            for _ in range(2):
+            for _ in range(3):
                 time.sleep(1)
                 index = self.client.debug.state().reset_word_pos
                 self.client.debug.input(words[index])
@@ -80,6 +85,7 @@ class TestMsgResetDeviceT2(TrezorTest):
                 [
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.EntropyRequest(),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
@@ -144,6 +150,11 @@ class TestMsgResetDeviceT2(TrezorTest):
             assert btn_code == B.ResetDevice
             self.client.debug.press_yes()
 
+            # Confirm warning
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
             # mnemonic phrases
             btn_code = yield
             assert btn_code == B.ResetDevice
@@ -158,7 +169,7 @@ class TestMsgResetDeviceT2(TrezorTest):
                     self.client.debug.press_yes()
 
             # check backup words
-            for _ in range(2):
+            for _ in range(3):
                 time.sleep(1)
                 index = self.client.debug.state().reset_word_pos
                 self.client.debug.input(words[index])
@@ -182,6 +193,7 @@ class TestMsgResetDeviceT2(TrezorTest):
                     proto.ButtonRequest(code=B.Other),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.EntropyRequest(),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),

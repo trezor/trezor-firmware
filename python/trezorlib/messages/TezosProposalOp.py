@@ -4,9 +4,9 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class TezosProposalOp(p.MessageType):
@@ -22,7 +22,7 @@ class TezosProposalOp(p.MessageType):
         self.proposals = proposals if proposals is not None else []
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('source', p.BytesType, 0),
             2: ('period', p.UVarintType, 0),

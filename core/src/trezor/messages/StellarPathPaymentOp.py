@@ -6,9 +6,9 @@ from .StellarAssetType import StellarAssetType
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class StellarPathPaymentOp(p.MessageType):
@@ -33,7 +33,7 @@ class StellarPathPaymentOp(p.MessageType):
         self.paths = paths if paths is not None else []
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('source_account', p.UnicodeType, 0),
             2: ('send_asset', StellarAssetType, 0),

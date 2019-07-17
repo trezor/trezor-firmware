@@ -1,8 +1,8 @@
 from trezor import config, ui, wire
 from trezor.crypto import slip39
 from trezor.messages import ButtonRequestType
+from trezor.messages.ButtonAck import ButtonAck
 from trezor.messages.ButtonRequest import ButtonRequest
-from trezor.messages.MessageType import ButtonAck
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
 from trezor.ui.info import InfoConfirm
@@ -10,7 +10,6 @@ from trezor.ui.mnemonic_bip39 import Bip39Keyboard
 from trezor.ui.mnemonic_slip39 import Slip39Keyboard
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
-from trezor.utils import format_ordinal
 
 from apps.common import mnemonic, storage
 from apps.common.confirm import require_confirm
@@ -20,8 +19,11 @@ from apps.management.change_pin import request_pin_ack, request_pin_confirm
 if __debug__:
     from apps.debug import confirm_signal, input_signal
 
+if False:
+    from trezor.messages.RecoveryDevice import RecoveryDevice
 
-async def recovery_device(ctx, msg):
+
+async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     """
     Recover BIP39/SLIP39 seed into empty device.
 
@@ -34,7 +36,7 @@ async def recovery_device(ctx, msg):
     if not msg.dry_run and storage.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
-    if not storage.is_slip39_in_progress():
+    if not storage.slip39.is_in_progress():
         if not msg.dry_run:
             title = "Wallet recovery"
             text = Text(title, ui.ICON_RECOVERY)
@@ -57,7 +59,7 @@ async def recovery_device(ctx, msg):
         wordcount = await request_wordcount(ctx, title)
         mnemonic_module = mnemonic.module_from_words_count(wordcount)
     else:
-        wordcount = storage.get_slip39_words_count()
+        wordcount = storage.slip39.get_words_count()
         mnemonic_module = mnemonic.slip39
 
     mnemonic_threshold = None
@@ -104,8 +106,10 @@ async def recovery_device(ctx, msg):
     # save into storage
     if msg.pin_protection:
         config.change_pin(pin_to_int(""), pin_to_int(newpin))
-    storage.set_u2f_counter(msg.u2f_counter)
-    storage.load_settings(label=msg.label, use_passphrase=msg.passphrase_protection)
+    storage.device.set_u2f_counter(msg.u2f_counter)
+    storage.device.load_settings(
+        label=msg.label, use_passphrase=msg.passphrase_protection
+    )
     mnemonic_module.store(secret=secret, needs_backup=False, no_backup=False)
 
     await show_success(ctx)
@@ -114,7 +118,7 @@ async def recovery_device(ctx, msg):
     return Success(message="Device recovered")
 
 
-async def request_wordcount(ctx, title: str) -> int:
+async def request_wordcount(ctx: wire.Context, title: str) -> int:
     await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicWordCount), ButtonAck)
 
     text = Text(title, ui.ICON_RECOVERY)
@@ -129,15 +133,15 @@ async def request_wordcount(ctx, title: str) -> int:
     return count
 
 
-async def request_mnemonic(ctx, count: int, slip39: bool) -> str:
+async def request_mnemonic(ctx: wire.Context, count: int, slip39: bool) -> str:
     await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicInput), ButtonAck)
 
     words = []
     for i in range(count):
         if slip39:
-            keyboard = Slip39Keyboard("Type the %s word:" % format_ordinal(i + 1))
+            keyboard = Slip39Keyboard("Type word %s of %s:" % (i + 1, count))
         else:
-            keyboard = Bip39Keyboard("Type the %s word:" % format_ordinal(i + 1))
+            keyboard = Bip39Keyboard("Type word %s of %s:" % (i + 1, count))
         if __debug__:
             word = await ctx.wait(keyboard, input_signal)
         else:
@@ -147,7 +151,7 @@ async def request_mnemonic(ctx, count: int, slip39: bool) -> str:
     return " ".join(words)
 
 
-async def show_keyboard_info(ctx):
+async def show_keyboard_info(ctx: wire.Context) -> None:
     await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
 
     info = InfoConfirm(
@@ -172,7 +176,9 @@ async def show_success(ctx):
     )
 
 
-async def show_remaining_slip39_mnemonics(ctx, title, remaining: int):
+async def show_remaining_slip39_mnemonics(
+    ctx: wire.Context, title: str, remaining: int
+) -> None:
     text = Text(title, ui.ICON_RECOVERY)
     text.bold("Good job!")
     text.normal("Enter %s more recovery " % remaining)

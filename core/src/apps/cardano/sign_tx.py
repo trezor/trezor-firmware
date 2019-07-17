@@ -4,8 +4,8 @@ from trezor import log, wire
 from trezor.crypto import base58, hashlib
 from trezor.crypto.curve import ed25519
 from trezor.messages.CardanoSignedTx import CardanoSignedTx
+from trezor.messages.CardanoTxAck import CardanoTxAck
 from trezor.messages.CardanoTxRequest import CardanoTxRequest
-from trezor.messages.MessageType import CardanoTxAck
 
 from apps.cardano import CURVE, seed
 from apps.cardano.address import (

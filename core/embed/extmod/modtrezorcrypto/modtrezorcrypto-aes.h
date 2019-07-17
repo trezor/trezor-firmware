@@ -32,7 +32,7 @@ enum AESMode {
 
 /// package: trezorcrypto.__init__
 
-/// class AES:
+/// class aes:
 ///     """
 ///     AES context.
 ///     """

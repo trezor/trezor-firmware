@@ -4,9 +4,9 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class EosActionVoteProducer(p.MessageType):
@@ -22,7 +22,7 @@ class EosActionVoteProducer(p.MessageType):
         self.producers = producers if producers is not None else []
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('voter', p.UVarintType, 0),
             2: ('proxy', p.UVarintType, 0),

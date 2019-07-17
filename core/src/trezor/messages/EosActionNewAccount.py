@@ -4,6 +4,12 @@ import protobuf as p
 
 from .EosAuthorization import EosAuthorization
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class EosActionNewAccount(p.MessageType):
 
@@ -20,7 +26,7 @@ class EosActionNewAccount(p.MessageType):
         self.active = active
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('creator', p.UVarintType, 0),
             2: ('name', p.UVarintType, 0),

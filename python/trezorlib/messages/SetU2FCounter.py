@@ -2,6 +2,12 @@
 # fmt: off
 from .. import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class SetU2FCounter(p.MessageType):
     MESSAGE_WIRE_TYPE = 63
@@ -13,7 +19,7 @@ class SetU2FCounter(p.MessageType):
         self.u2f_counter = u2f_counter
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('u2f_counter', p.UVarintType, 0),
         }

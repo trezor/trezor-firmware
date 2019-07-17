@@ -4,6 +4,12 @@ from .. import protobuf as p
 
 from .IdentityType import IdentityType
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class SignIdentity(p.MessageType):
     MESSAGE_WIRE_TYPE = 53
@@ -21,7 +27,7 @@ class SignIdentity(p.MessageType):
         self.ecdsa_curve_name = ecdsa_curve_name
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('identity', IdentityType, 0),
             2: ('challenge_hidden', p.BytesType, 0),

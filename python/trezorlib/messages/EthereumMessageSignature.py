@@ -2,6 +2,12 @@
 # fmt: off
 from .. import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class EthereumMessageSignature(p.MessageType):
     MESSAGE_WIRE_TYPE = 66
@@ -15,7 +21,7 @@ class EthereumMessageSignature(p.MessageType):
         self.address = address
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             2: ('signature', p.BytesType, 0),
             3: ('address', p.UnicodeType, 0),

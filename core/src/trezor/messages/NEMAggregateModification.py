@@ -6,9 +6,9 @@ from .NEMCosignatoryModification import NEMCosignatoryModification
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class NEMAggregateModification(p.MessageType):
@@ -22,7 +22,7 @@ class NEMAggregateModification(p.MessageType):
         self.relative_change = relative_change
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('modifications', NEMCosignatoryModification, p.FLAG_REPEATED),
             2: ('relative_change', p.SVarintType, 0),

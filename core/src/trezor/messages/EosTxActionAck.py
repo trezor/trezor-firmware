@@ -18,6 +18,12 @@ from .EosActionUnlinkAuth import EosActionUnlinkAuth
 from .EosActionUpdateAuth import EosActionUpdateAuth
 from .EosActionVoteProducer import EosActionVoteProducer
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class EosTxActionAck(p.MessageType):
     MESSAGE_WIRE_TYPE = 604
@@ -57,7 +63,7 @@ class EosTxActionAck(p.MessageType):
         self.unknown = unknown
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('common', EosActionCommon, 0),
             2: ('transfer', EosActionTransfer, 0),

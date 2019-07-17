@@ -2,6 +2,10 @@ from trezor import res, ui
 from trezor.ui.button import Button, ButtonCancel, ButtonConfirm
 from trezor.ui.loader import Loader, LoaderDefault
 
+if False:
+    from trezor.ui.button import ButtonContent, ButtonStyleType
+    from trezor.ui.loader import LoaderStyleType
+
 CONFIRMED = object()
 CANCELLED = object()
 
@@ -14,13 +18,13 @@ class Confirm(ui.Layout):
 
     def __init__(
         self,
-        content,
-        confirm=DEFAULT_CONFIRM,
-        confirm_style=DEFAULT_CONFIRM_STYLE,
-        cancel=DEFAULT_CANCEL,
-        cancel_style=DEFAULT_CANCEL_STYLE,
-        major_confirm=False,
-    ):
+        content: ui.Control,
+        confirm: ButtonContent = DEFAULT_CONFIRM,
+        confirm_style: ButtonStyleType = DEFAULT_CONFIRM_STYLE,
+        cancel: ButtonContent = DEFAULT_CANCEL,
+        cancel_style: ButtonStyleType = DEFAULT_CANCEL_STYLE,
+        major_confirm: bool = False,
+    ) -> None:
         self.content = content
 
         if confirm is not None:
@@ -31,7 +35,7 @@ class Confirm(ui.Layout):
             else:
                 area = ui.grid(9, n_x=2)
             self.confirm = Button(area, confirm, confirm_style)
-            self.confirm.on_click = self.on_confirm
+            self.confirm.on_click = self.on_confirm  # type: ignore
         else:
             self.confirm = None
 
@@ -43,21 +47,21 @@ class Confirm(ui.Layout):
             else:
                 area = ui.grid(8, n_x=2)
             self.cancel = Button(area, cancel, cancel_style)
-            self.cancel.on_click = self.on_cancel
+            self.cancel.on_click = self.on_cancel  # type: ignore
         else:
             self.cancel = None
 
-    def dispatch(self, event, x, y):
+    def dispatch(self, event: int, x: int, y: int) -> None:
         self.content.dispatch(event, x, y)
         if self.confirm is not None:
             self.confirm.dispatch(event, x, y)
         if self.cancel is not None:
             self.cancel.dispatch(event, x, y)
 
-    def on_confirm(self):
+    def on_confirm(self) -> None:
         raise ui.Result(CONFIRMED)
 
-    def on_cancel(self):
+    def on_cancel(self) -> None:
         raise ui.Result(CANCELLED)
 
 
@@ -68,44 +72,44 @@ class HoldToConfirm(ui.Layout):
 
     def __init__(
         self,
-        content,
-        confirm=DEFAULT_CONFIRM,
-        confirm_style=DEFAULT_CONFIRM_STYLE,
-        loader_style=DEFAULT_LOADER_STYLE,
+        content: ui.Control,
+        confirm: str = DEFAULT_CONFIRM,
+        confirm_style: ButtonStyleType = DEFAULT_CONFIRM_STYLE,
+        loader_style: LoaderStyleType = DEFAULT_LOADER_STYLE,
     ):
         self.content = content
 
         self.loader = Loader(loader_style)
-        self.loader.on_start = self._on_loader_start
+        self.loader.on_start = self._on_loader_start  # type: ignore
 
         self.button = Button(ui.grid(4, n_x=1), confirm, confirm_style)
-        self.button.on_press_start = self._on_press_start
-        self.button.on_press_end = self._on_press_end
-        self.button.on_click = self._on_click
+        self.button.on_press_start = self._on_press_start  # type: ignore
+        self.button.on_press_end = self._on_press_end  # type: ignore
+        self.button.on_click = self._on_click  # type: ignore
 
-    def _on_press_start(self):
+    def _on_press_start(self) -> None:
         self.loader.start()
 
-    def _on_press_end(self):
+    def _on_press_end(self) -> None:
         self.loader.stop()
 
-    def _on_loader_start(self):
+    def _on_loader_start(self) -> None:
         # Loader has either started growing, or returned to the 0-position.
         # In the first case we need to clear the content leftovers, in the latter
         # we need to render the content again.
         ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT - 60, ui.BG)
         self.content.dispatch(ui.REPAINT, 0, 0)
 
-    def _on_click(self):
+    def _on_click(self) -> None:
         if self.loader.elapsed_ms() >= self.loader.target_ms:
             self.on_confirm()
 
-    def dispatch(self, event, x, y):
+    def dispatch(self, event: int, x: int, y: int) -> None:
         if self.loader.start_ms is not None:
             self.loader.dispatch(event, x, y)
         else:
             self.content.dispatch(event, x, y)
         self.button.dispatch(event, x, y)
 
-    def on_confirm(self):
+    def on_confirm(self) -> None:
         raise ui.Result(CONFIRMED)

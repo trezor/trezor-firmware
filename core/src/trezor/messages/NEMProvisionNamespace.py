@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class NEMProvisionNamespace(p.MessageType):
 
@@ -18,7 +24,7 @@ class NEMProvisionNamespace(p.MessageType):
         self.fee = fee
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('namespace', p.UnicodeType, 0),
             2: ('parent', p.UnicodeType, 0),

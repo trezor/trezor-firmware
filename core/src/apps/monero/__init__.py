@@ -7,7 +7,7 @@ CURVE = "ed25519"
 _LIVE_REFRESH_TOKEN = None  # live-refresh permission token
 
 
-def boot():
+def boot() -> None:
     ns = [[CURVE, HARDENED | 44, HARDENED | 128]]
     wire.add(MessageType.MoneroGetAddress, __name__, "get_address", ns)
     wire.add(MessageType.MoneroGetWatchKey, __name__, "get_watch_only", ns)

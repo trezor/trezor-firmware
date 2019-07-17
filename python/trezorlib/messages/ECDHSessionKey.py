@@ -2,6 +2,12 @@
 # fmt: off
 from .. import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class ECDHSessionKey(p.MessageType):
     MESSAGE_WIRE_TYPE = 62
@@ -13,7 +19,7 @@ class ECDHSessionKey(p.MessageType):
         self.session_key = session_key
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('session_key', p.BytesType, 0),
         }

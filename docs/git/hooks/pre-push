@@ -2,20 +2,19 @@
 
 # Runs a simple check before pushing. In particular, this checks
 # if templates were regenerated and style is correct.
-# Put this file to `.git/hooks/`.
 
 echo "Running pre-push git hook."
 
 # Runs check for common simple errors before pushing
-if ! make templates_check &> /dev/null
+if ! pipenv run make templates_check &> /dev/null
 then
-    echo >&2 "Templates not updated, run 'make templates'. Not pushing."
+    echo >&2 "Templates not updated, run 'pipenv run make templates'. Not pushing."
     exit 1
 fi
 
-if ! make style_check &> /dev/null
+if ! pipenv run make style_check &> /dev/null
 then
-    echo >&2 "Style invalid, run style make commands. Not pushing."
+    echo >&2 "Style invalid, run 'pipenv run make style'. Not pushing."
     exit 2
 fi
 

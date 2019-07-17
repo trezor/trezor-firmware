@@ -39,7 +39,8 @@ STATIC mp_obj_t mod_trezorcrypto_random_uniform(mp_obj_t n) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_uniform_obj,
                                  mod_trezorcrypto_random_uniform);
 
-/// def bytes(len: int) -> bytes:
+/// import builtins
+/// def bytes(len: int) -> builtins.bytes:
 ///     """
 ///     Generate random bytes sequence of length len.
 ///     """

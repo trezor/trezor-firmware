@@ -24,7 +24,7 @@
 
 /// package: trezorcrypto.__init__
 
-/// class ChaCha20Poly1305:
+/// class chacha20poly1305:
 ///     """
 ///     ChaCha20Poly1305 context.
 ///     """

@@ -4,6 +4,12 @@ import protobuf as p
 
 from .TransactionType import TransactionType
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class TxAck(p.MessageType):
     MESSAGE_WIRE_TYPE = 22
@@ -15,7 +21,7 @@ class TxAck(p.MessageType):
         self.tx = tx
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('tx', TransactionType, 0),
         }

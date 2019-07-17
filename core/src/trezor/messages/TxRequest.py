@@ -5,6 +5,12 @@ import protobuf as p
 from .TxRequestDetailsType import TxRequestDetailsType
 from .TxRequestSerializedType import TxRequestSerializedType
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class TxRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 21
@@ -20,7 +26,7 @@ class TxRequest(p.MessageType):
         self.serialized = serialized
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('request_type', p.UVarintType, 0),
             2: ('details', TxRequestDetailsType, 0),

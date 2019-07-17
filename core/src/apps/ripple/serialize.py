@@ -8,8 +8,6 @@
 # the actual data follow. This currently only supports the Payment
 # transaction type and the fields that are required for it.
 
-from micropython import const
-
 from trezor.messages.RippleSignTx import RippleSignTx
 
 from . import helpers
@@ -82,11 +80,9 @@ def write_type(w: bytearray, field: dict):
 
 
 def serialize_amount(value: int) -> bytearray:
-    MAX_ALLOWED_AMOUNT = const(100000000000)
-
     if value < 0:
         raise ValueError("Only non-negative integers are supported")
-    if value > MAX_ALLOWED_AMOUNT:
+    if value > helpers.MAX_ALLOWED_AMOUNT:
         raise ValueError("Value is too large")
 
     b = bytearray(value.to_bytes(8, "big"))

@@ -2,6 +2,9 @@ from micropython import const
 
 from trezor import ui
 
+if False:
+    from typing import List, Union
+
 TEXT_HEADER_HEIGHT = const(48)
 TEXT_LINE_HEIGHT = const(26)
 TEXT_LINE_HEIGHT_HALF = const(13)
@@ -12,9 +15,12 @@ TEXT_MAX_LINES = const(5)
 BR = const(-256)
 BR_HALF = const(-257)
 
+if False:
+    TextContent = Union[str, int]
+
 
 def render_text(
-    words: list,
+    words: List[TextContent],
     new_lines: bool,
     max_lines: int,
     font: int = ui.NORMAL,
@@ -128,32 +134,32 @@ class Text(ui.Control):
         self.icon_color = icon_color
         self.max_lines = max_lines
         self.new_lines = new_lines
-        self.content = []
+        self.content = []  # type: List[Union[str, int]]
         self.repaint = True
 
-    def normal(self, *content):
+    def normal(self, *content: TextContent) -> None:
         self.content.append(ui.NORMAL)
         self.content.extend(content)
 
-    def bold(self, *content):
+    def bold(self, *content: TextContent) -> None:
         self.content.append(ui.BOLD)
         self.content.extend(content)
 
-    def mono(self, *content):
+    def mono(self, *content: TextContent) -> None:
         self.content.append(ui.MONO)
         self.content.extend(content)
 
-    def mono_bold(self, *content):
+    def mono_bold(self, *content: TextContent) -> None:
         self.content.append(ui.MONO_BOLD)
         self.content.extend(content)
 
-    def br(self):
+    def br(self) -> None:
         self.content.append(BR)
 
-    def br_half(self):
+    def br_half(self) -> None:
         self.content.append(BR_HALF)
 
-    def on_render(self):
+    def on_render(self) -> None:
         if self.repaint:
             ui.header(
                 self.header_text,
@@ -172,21 +178,27 @@ LABEL_RIGHT = const(2)
 
 
 class Label(ui.Control):
-    def __init__(self, area, content, align=LABEL_LEFT, style=ui.NORMAL):
+    def __init__(
+        self,
+        area: ui.Area,
+        content: str,
+        align: int = LABEL_LEFT,
+        style: int = ui.NORMAL,
+    ) -> None:
         self.area = area
         self.content = content
         self.align = align
         self.style = style
         self.repaint = True
 
-    def on_render(self):
+    def on_render(self) -> None:
         if self.repaint:
             align = self.align
             ax, ay, aw, ah = self.area
             tx = ax + aw // 2
             ty = ay + ah // 2 + 8
             if align is LABEL_LEFT:
-                ui.display.text_left(tx, ty, self.content, self.style, ui.FG, ui.BG, aw)
+                ui.display.text(tx, ty, self.content, self.style, ui.FG, ui.BG, aw)
             elif align is LABEL_CENTER:
                 ui.display.text_center(
                     tx, ty, self.content, self.style, ui.FG, ui.BG, aw

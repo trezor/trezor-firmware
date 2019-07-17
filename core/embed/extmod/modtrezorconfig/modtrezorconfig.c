@@ -47,7 +47,9 @@ STATIC secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
   return secfalse;
 }
 
-/// def init(ui_wait_callback: Tuple[int, Callable[int, None]] = None) -> None:
+/// def init(
+///    ui_wait_callback: Callable[[int, int, str], bool] = None
+/// ) -> None:
 ///     """
 ///     Initializes the storage.  Must be called before any other method is
 ///     called from this module!
@@ -139,7 +141,7 @@ STATIC mp_obj_t mod_trezorconfig_change_pin(mp_obj_t pin, mp_obj_t newpin) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_change_pin_obj,
                                  mod_trezorconfig_change_pin);
 
-/// def get(app: int, key: int, public: bool = False) -> bytes:
+/// def get(app: int, key: int, public: bool = False) -> Optional[bytes]:
 ///     """
 ///     Gets the value of the given key for the given app (or None if not set).
 ///     Raises a RuntimeError if decryption or authentication of the stored
@@ -241,7 +243,9 @@ STATIC mp_obj_t mod_trezorconfig_set_counter(size_t n_args,
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_counter_obj, 3,
                                            4, mod_trezorconfig_set_counter);
 
-/// def next_counter(app: int, key: int, writable_locked: bool = False) -> bool:
+/// def next_counter(
+///    app: int, key: int, writable_locked: bool = False,
+/// ) -> Optional[int]:
 ///     """
 ///     Increments the counter stored under the given key of the given app and
 ///     returns the new value.

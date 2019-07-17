@@ -7,9 +7,9 @@ from .MoneroTransactionRsigData import MoneroTransactionRsigData
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class MoneroTransactionData(p.MessageType):
@@ -49,7 +49,7 @@ class MoneroTransactionData(p.MessageType):
         self.monero_version = monero_version
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('version', p.UVarintType, 0),
             2: ('payment_id', p.BytesType, 0),

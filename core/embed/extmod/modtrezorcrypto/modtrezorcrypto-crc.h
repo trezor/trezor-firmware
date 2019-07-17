@@ -23,6 +23,12 @@
 
 #include "crc.h"
 
+/// package: trezorcrypto.crc
+
+/// def crc32(data: bytes, crc: int = 0) -> int:
+///     """
+///     Computes a CRC32 checksum of `data`.
+///     """
 mp_obj_t mod_trezorcrypto_crc_crc32(size_t n_args, const mp_obj_t *args) {
   mp_buffer_info_t bufinfo;
   mp_get_buffer_raise(args[0], &bufinfo, MP_BUFFER_READ);

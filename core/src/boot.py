@@ -5,8 +5,8 @@ from apps.common import storage
 from apps.common.request_pin import request_pin
 
 
-async def bootscreen():
-    ui.display.orientation(storage.get_rotation())
+async def bootscreen() -> None:
+    ui.display.orientation(storage.device.get_rotation())
     while True:
         try:
             if not config.has_pin():
@@ -27,9 +27,9 @@ async def bootscreen():
                 log.exception(__name__, e)
 
 
-async def lockscreen():
-    label = storage.get_label()
-    image = storage.get_homescreen()
+async def lockscreen() -> None:
+    label = storage.device.get_label()
+    image = storage.device.get_homescreen()
     if not label:
         label = "My Trezor"
     if not image:

@@ -4,5 +4,5 @@ from apps.common import storage
 
 
 async def apply_flags(ctx, msg):
-    storage.set_flags(msg.flags)
+    storage.device.set_flags(msg.flags)
     return Success(message="Flags applied")

@@ -8,8 +8,11 @@ from trezor.ui.swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
 if __debug__:
     from apps.debug import swipe_signal
 
+if False:
+    from typing import Iterable, Sequence
 
-def render_scrollbar(pages: int, page: int):
+
+def render_scrollbar(pages: int, page: int) -> None:
     BBOX = const(220)
     SIZE = const(8)
 
@@ -28,7 +31,7 @@ def render_scrollbar(pages: int, page: int):
         ui.display.bar_radius(X, Y + i * padding, SIZE, SIZE, fg, ui.BG, 4)
 
 
-def render_swipe_icon():
+def render_swipe_icon() -> None:
     DRAW_DELAY = const(200000)
 
     icon = res.load(ui.ICON_SWIPE)
@@ -37,18 +40,20 @@ def render_swipe_icon():
     ui.display.icon(70, 205, icon, c, ui.BG)
 
 
-def render_swipe_text():
+def render_swipe_text() -> None:
     ui.display.text_center(130, 220, "Swipe", ui.BOLD, ui.GREY, ui.BG)
 
 
 class Paginated(ui.Layout):
-    def __init__(self, pages, page=0, one_by_one=False):
+    def __init__(
+        self, pages: Sequence[ui.Control], page: int = 0, one_by_one: bool = False
+    ):
         self.pages = pages
         self.page = page
         self.one_by_one = one_by_one
         self.repaint = True
 
-    def dispatch(self, event, x, y):
+    def dispatch(self, event: int, x: int, y: int) -> None:
         pages = self.pages
         page = self.page
         pages[page].dispatch(event, x, y)
@@ -63,7 +68,7 @@ class Paginated(ui.Layout):
                 render_scrollbar(length, page)
                 self.repaint = False
 
-    async def handle_paging(self):
+    async def handle_paging(self) -> None:
         if self.page == 0:
             directions = SWIPE_UP
         elif self.page == len(self.pages) - 1:
@@ -86,20 +91,32 @@ class Paginated(ui.Layout):
 
         self.on_change()
 
-    def create_tasks(self):
+    def create_tasks(self) -> Iterable[loop.Task]:
         return self.handle_input(), self.handle_rendering(), self.handle_paging()
 
-    def on_change(self):
+    def on_change(self) -> None:
         if self.one_by_one:
             raise ui.Result(self.page)
 
 
 class PageWithButtons(ui.Control):
-    def __init__(self, content, paginated, index, count):
+    def __init__(
+        self,
+        content: ui.Control,
+        paginated: "PaginatedWithButtons",
+        index: int,
+        count: int,
+    ) -> None:
         self.content = content
         self.paginated = paginated
         self.index = index
         self.count = count
+
+        # somewhere in the middle, we can go up or down
+        left = res.load(ui.ICON_BACK)
+        left_style = ButtonDefault
+        right = res.load(ui.ICON_CLICK)
+        right_style = ButtonDefault
 
         if self.index == 0:
             # first page, we can cancel or go down
@@ -113,68 +130,64 @@ class PageWithButtons(ui.Control):
             left_style = ButtonDefault
             right = res.load(ui.ICON_CONFIRM)
             right_style = ButtonConfirm
-        else:
-            # somewhere in the middle, we can go up or down
-            left = res.load(ui.ICON_BACK)
-            left_style = ButtonDefault
-            right = res.load(ui.ICON_CLICK)
-            right_style = ButtonDefault
 
         self.left = Button(ui.grid(8, n_x=2), left, left_style)
-        self.left.on_click = self.on_left
+        self.left.on_click = self.on_left  # type: ignore
 
         self.right = Button(ui.grid(9, n_x=2), right, right_style)
-        self.right.on_click = self.on_right
+        self.right.on_click = self.on_right  # type: ignore
 
-    def dispatch(self, event, x, y):
+    def dispatch(self, event: int, x: int, y: int) -> None:
         self.content.dispatch(event, x, y)
         self.left.dispatch(event, x, y)
         self.right.dispatch(event, x, y)
 
-    def on_left(self):
+    def on_left(self) -> None:
         if self.index == 0:
             self.paginated.on_cancel()
         else:
-            self.paginated.on_down()
+            self.paginated.on_up()
 
-    def on_right(self):
+    def on_right(self) -> None:
         if self.index == self.count - 1:
             self.paginated.on_confirm()
         else:
-            self.paginated.on_up()
+            self.paginated.on_down()
 
 
 class PaginatedWithButtons(ui.Layout):
-    def __init__(self, pages, page=0, one_by_one=False):
+    def __init__(
+        self, pages: Sequence[ui.Control], page: int = 0, one_by_one: bool = False
+    ) -> None:
         self.pages = [
             PageWithButtons(p, self, i, len(pages)) for i, p in enumerate(pages)
         ]
         self.page = page
         self.one_by_one = one_by_one
 
-    def dispatch(self, event, x, y):
+    def dispatch(self, event: int, x: int, y: int) -> None:
         pages = self.pages
         page = self.page
         pages[page].dispatch(event, x, y)
         if event is ui.RENDER:
             render_scrollbar(len(pages), page)
 
-    def on_up(self):
+    def on_up(self) -> None:
         self.page = max(self.page - 1, 0)
         self.pages[self.page].dispatch(ui.REPAINT, 0, 0)
         self.on_change()
 
-    def on_down(self):
+    def on_down(self) -> None:
         self.page = min(self.page + 1, len(self.pages) - 1)
         self.pages[self.page].dispatch(ui.REPAINT, 0, 0)
         self.on_change()
 
-    def on_confirm(self):
+    def on_confirm(self) -> None:
         raise ui.Result(CONFIRMED)
 
-    def on_cancel(self):
+    def on_cancel(self) -> None:
         raise ui.Result(CANCELLED)
 
-    def on_change(self):
+    def on_change(self) -> None:
         if self.one_by_one:
             raise ui.Result(self.page)

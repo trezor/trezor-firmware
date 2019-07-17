@@ -2,7 +2,7 @@ from trezor import wire
 from trezor.messages import MessageType
 
 
-def boot():
+def boot() -> None:
     # only enable LoadDevice in debug builds
     if __debug__:
         wire.add(MessageType.LoadDevice, __name__, "load_device")

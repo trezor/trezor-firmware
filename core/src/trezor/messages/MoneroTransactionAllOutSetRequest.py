@@ -4,6 +4,12 @@ import protobuf as p
 
 from .MoneroTransactionRsigData import MoneroTransactionRsigData
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class MoneroTransactionAllOutSetRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 513
@@ -15,7 +21,7 @@ class MoneroTransactionAllOutSetRequest(p.MessageType):
         self.rsig_data = rsig_data
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('rsig_data', MoneroTransactionRsigData, 0),
         }

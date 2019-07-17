@@ -3,6 +3,9 @@ from micropython import const
 from trezor import ui
 from trezor.ui import display, in_area
 
+if False:
+    from typing import Type, Union
+
 
 class ButtonDefault:
     class normal:
@@ -12,14 +15,14 @@ class ButtonDefault:
         border_color = ui.BG
         radius = ui.RADIUS
 
-    class active:
+    class active(normal):
         bg_color = ui.FG
         fg_color = ui.BLACKISH
         text_style = ui.BOLD
         border_color = ui.FG
         radius = ui.RADIUS
 
-    class disabled:
+    class disabled(normal):
         bg_color = ui.BG
         fg_color = ui.GREY
         text_style = ui.NORMAL
@@ -38,7 +41,7 @@ class ButtonMono(ButtonDefault):
         text_style = ui.MONO
 
 
-class ButtonMonoDark:
+class ButtonMonoDark(ButtonDefault):
     class normal:
         bg_color = ui.DARK_BLACK
         fg_color = ui.DARK_WHITE
@@ -46,14 +49,14 @@ class ButtonMonoDark:
         border_color = ui.BG
         radius = ui.RADIUS
 
-    class active:
+    class active(normal):
         bg_color = ui.FG
         fg_color = ui.DARK_BLACK
         text_style = ui.MONO
         border_color = ui.FG
         radius = ui.RADIUS
 
-    class disabled:
+    class disabled(normal):
         bg_color = ui.DARK_BLACK
         fg_color = ui.GREY
         text_style = ui.MONO
@@ -98,6 +101,12 @@ class ButtonMonoConfirm(ButtonDefault):
         text_style = ui.MONO
 
 
+if False:
+    ButtonContent = Union[str, bytes]
+    ButtonStyleType = Type[ButtonDefault]
+    ButtonStyleStateType = Type[ButtonDefault.normal]
+
+
 # button states
 _INITIAL = const(0)
 _PRESSED = const(1)
@@ -110,39 +119,53 @@ _BORDER = const(4)  # border size in pixels
 
 
 class Button(ui.Control):
-    def __init__(self, area, content, style=ButtonDefault):
+    def __init__(
+        self,
+        area: ui.Area,
+        content: ButtonContent,
+        style: ButtonStyleType = ButtonDefault,
+    ) -> None:
+        if isinstance(content, str):
+            self.text = content
+            self.icon = b""
+        elif isinstance(content, bytes):
+            self.icon = content
+            self.text = ""
+        else:
+            raise TypeError
         self.area = area
-        self.content = content
         self.normal_style = style.normal
         self.active_style = style.active
         self.disabled_style = style.disabled
         self.state = _INITIAL
         self.repaint = True
 
-    def enable(self):
+    def enable(self) -> None:
         if self.state is not _INITIAL:
             self.state = _INITIAL
             self.repaint = True
 
-    def disable(self):
+    def disable(self) -> None:
         if self.state is not _DISABLED:
             self.state = _DISABLED
             self.repaint = True
 
-    def on_render(self):
+    def on_render(self) -> None:
         if self.repaint:
-            if self.state is _DISABLED:
+            if self.state is _INITIAL or self.state is _RELEASED:
+                s = self.normal_style
+            elif self.state is _DISABLED:
                 s = self.disabled_style
             elif self.state is _PRESSED:
                 s = self.active_style
-            else:
-                s = self.normal_style
             ax, ay, aw, ah = self.area
             self.render_background(s, ax, ay, aw, ah)
             self.render_content(s, ax, ay, aw, ah)
             self.repaint = False
 
-    def render_background(self, s, ax, ay, aw, ah):
+    def render_background(
+        self, s: ButtonStyleStateType, ax: int, ay: int, aw: int, ah: int
+    ) -> None:
         radius = s.radius
         bg_color = s.bg_color
         border_color = s.border_color
@@ -162,16 +185,21 @@ class Button(ui.Control):
                 radius,
             )
 
-    def render_content(self, s, ax, ay, aw, ah):
+    def render_content(
+        self, s: ButtonStyleStateType, ax: int, ay: int, aw: int, ah: int
+    ) -> None:
         tx = ax + aw // 2
         ty = ay + ah // 2 + 8
-        t = self.content
-        if isinstance(t, str):
+        t = self.text
+        if t:
             display.text_center(tx, ty, t, s.text_style, s.fg_color, s.bg_color)
-        elif isinstance(t, bytes):
-            display.icon(tx - _ICON // 2, ty - _ICON, t, s.fg_color, s.bg_color)
+            return
+        i = self.icon
+        if i:
+            display.icon(tx - _ICON // 2, ty - _ICON, i, s.fg_color, s.bg_color)
+            return
 
-    def on_touch_start(self, x, y):
+    def on_touch_start(self, x: int, y: int) -> None:
         if self.state is _DISABLED:
             return
         if in_area(self.area, x, y):
@@ -179,7 +207,7 @@ class Button(ui.Control):
             self.repaint = True
             self.on_press_start()
 
-    def on_touch_move(self, x, y):
+    def on_touch_move(self, x: int, y: int) -> None:
         if self.state is _DISABLED:
             return
         if in_area(self.area, x, y):
@@ -193,7 +221,7 @@ class Button(ui.Control):
                 self.repaint = True
                 self.on_press_end()
 
-    def on_touch_end(self, x, y):
+    def on_touch_end(self, x: int, y: int) -> None:
         state = self.state
         if state is not _INITIAL and state is not _DISABLED:
             self.state = _INITIAL
@@ -203,11 +231,11 @@ class Button(ui.Control):
                 self.on_press_end()
                 self.on_click()
 
-    def on_press_start(self):
+    def on_press_start(self) -> None:
         pass
 
-    def on_press_end(self):
+    def on_press_end(self) -> None:
         pass
 
-    def on_click(self):
+    def on_click(self) -> None:
         pass

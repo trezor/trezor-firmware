@@ -12,10 +12,14 @@ from trezor.utils import chunks
 from apps.common import HARDENED
 from apps.common.confirm import confirm, require_confirm
 
+if False:
+    from typing import Iterable, List
+    from trezor import wire
+
 
 async def show_address(
-    ctx, address: str, desc: str = "Confirm address", network: str = None
-):
+    ctx: wire.Context, address: str, desc: str = "Confirm address", network: str = None
+) -> bool:
     text = Text(desc, ui.ICON_RECEIVE, ui.GREEN)
     if network is not None:
         text.normal("%s network" % network)
@@ -30,7 +34,9 @@ async def show_address(
     )
 
 
-async def show_qr(ctx, address: str, desc: str = "Confirm address"):
+async def show_qr(
+    ctx: wire.Context, address: str, desc: str = "Confirm address"
+) -> bool:
     QR_X = const(120)
     QR_Y = const(115)
     QR_COEF = const(4)
@@ -47,19 +53,19 @@ async def show_qr(ctx, address: str, desc: str = "Confirm address"):
     )
 
 
-async def show_pubkey(ctx, pubkey: bytes):
+async def show_pubkey(ctx: wire.Context, pubkey: bytes) -> None:
     lines = chunks(hexlify(pubkey).decode(), 18)
     text = Text("Confirm public key", ui.ICON_RECEIVE, ui.GREEN)
     text.mono(*lines)
-    return await require_confirm(ctx, text, ButtonRequestType.PublicKey)
+    await require_confirm(ctx, text, ButtonRequestType.PublicKey)
 
 
-def split_address(address: str):
+def split_address(address: str) -> Iterable[str]:
     return chunks(address, 17)
 
 
 def address_n_to_str(address_n: list) -> str:
-    def path_item(i: int):
+    def path_item(i: int) -> str:
         if i & HARDENED:
             return str(i ^ HARDENED) + "'"
         else:
@@ -69,3 +75,40 @@ def address_n_to_str(address_n: list) -> str:
         return "m"
 
     return "m/" + "/".join([path_item(i) for i in address_n])
+
+
+async def show_warning(
+    ctx: wire.Context,
+    content: List[str],
+    subheader: str = None,
+    button: str = "Continue",
+) -> None:
+    text = Text("Warning", ui.ICON_WRONG, ui.RED)
+    await _message(ctx, text, content, subheader, button)
+
+
+async def show_success(
+    ctx: wire.Context,
+    content: List[str],
+    subheader: str = None,
+    button: str = "Continue",
+) -> None:
+    text = Text("Success", ui.ICON_CONFIRM, ui.GREEN)
+    await _message(ctx, text, content, subheader, button)
+
+
+async def _message(
+    ctx: wire.Context,
+    text: Text,
+    content: List[str],
+    subheader: str = None,
+    button: str = "Continue",
+) -> None:
+    if subheader:
+        text.bold(subheader)
+        text.br_half()
+    for row in content:
+        text.normal(row)
+    await require_confirm(
+        ctx, text, ButtonRequestType.Other, confirm=button, cancel=None
+    )
