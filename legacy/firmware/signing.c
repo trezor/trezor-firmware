@@ -688,10 +688,11 @@ static bool signing_check_output(TxOutputType *txoutput) {
 static bool signing_check_fee(void) {
   // check fees
   uint64_t fee = 0;
-  // set a static KMD fee and bypass output>input check due to reward TX
+  // set a static KMD fee and bypass output > input check due to reward TX
   // which are all output_value_sum > input_value_sum
-  if (strcmp(coin->coin_shortcut,"KMD") == 0) fee = 5000; //static KMD fee = 1000 sat
-  else {
+  if (strcmp(coin->coin_name,"Komodo") == 0 || strcmp(coin->coin_shortcut,"KMD") == 0) {
+    fee = 5000;
+  } else {
     if (spending > to_spend) {
       fsm_sendFailure(FailureType_Failure_NotEnoughFunds, _("Not enough funds"));
       signing_abort();
