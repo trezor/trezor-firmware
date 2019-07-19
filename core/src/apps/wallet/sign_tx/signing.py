@@ -196,13 +196,13 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
     # set a static KMD fee and bypass output > input check due to reward TX
     # which are all output_value_sum > input_value_sum
     if coin.coin_shortcut == "KMD":
-        fee = 5000 # static KMD fee = 5000 sat
+        fee = 5000  # static KMD fee = 5000 sat
     else:
         if total_out > total_in:
             raise SigningError(FailureType.NotEnoughFunds, "Not enough funds")
-        
+
         fee = total_in - total_out
-        
+
         # fee > (coin.maxfee per byte * tx size)
         if fee > (coin.maxfee_kb / 1000) * (weight.get_total() / 4):
             if not await helpers.confirm_feeoverthreshold(fee, coin):
