@@ -128,6 +128,7 @@ _ERR_UNSUPPORTED_ALGORITHM = const(0x26)  # requested COSE algorithm not support
 _ERR_OPERATION_DENIED = const(0x27)  # user declined or timed out
 _ERR_KEY_STORE_FULL = const(0x28)  # internal key storage is full
 _ERR_UNSUPPORTED_OPTION = const(0x2B)  # unsupported option
+_ERR_KEEPALIVE_CANCEL = const(0x2D)  # pending keep alive was cancelled
 _ERR_NO_CREDENTIALS = const(0x2E)  # no valid credentials provided
 _ERR_NOT_ALLOWED = const(0x30)  # continuation command not allowed
 _ERR_PIN_AUTH_INVALID = const(0x33)  # pinAuth verification failed
@@ -918,27 +919,30 @@ class DialogManager:
         return True
 
     async def keepalive_loop(self) -> None:
-        while True:
-            waiter = loop.spawn(
-                loop.sleep(_KEEPALIVE_INTERVAL_MS * 1000), self.done_signal
-            )
-            await waiter
-            if not isinstance(self.state, Fido2State):
-                self.reset()
-                return
-            if self.done_signal in waiter.finished:
-                if self.user_confirmed:
-                    await send_cmd(self.state.on_confirm(), self.iface)
-                else:
-                    await send_cmd(self.state.on_decline(), self.iface)
-                return
-            if utime.ticks_ms() >= self.deadline:
-                await send_cmd(self.state.on_timeout(), self.iface)
-                self.reset()
-                return
-            await send_cmd(
-                cmd_keepalive(self.state.cid, self.state.keepalive_status()), self.iface
-            )
+        try:
+            while True:
+                waiter = loop.spawn(
+                    loop.sleep(_KEEPALIVE_INTERVAL_MS * 1000), self.done_signal
+                )
+                await waiter
+                if not isinstance(self.state, Fido2State):
+                    self.reset()
+                    return
+                if self.done_signal in waiter.finished:
+                    if self.user_confirmed:
+                        await send_cmd(self.state.on_confirm(), self.iface)
+                    else:
+                        await send_cmd(self.state.on_decline(), self.iface)
+                    return
+                if utime.ticks_ms() >= self.deadline:
+                    await send_cmd(self.state.on_timeout(), self.iface)
+                    self.reset()
+                    return
+                await send_cmd(
+                    cmd_keepalive(self.state.cid, self.state.keepalive_status()), self.iface
+                )
+        except GeneratorExit:
+            await send_cmd(cbor_error(self.state.cid, _ERR_KEEPALIVE_CANCEL), self.iface)
 
     async def dialog_workflow(self) -> None:
         if self.workflow is None:
@@ -1037,7 +1041,7 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         if __debug__:
             log.debug(__name__, "_CMD_CANCEL")
         dialog_mgr.reset()
-        return req
+        return None
     else:
         if __debug__:
             log.warning(__name__, "_ERR_INVALID_CMD: %d", req.cmd)
