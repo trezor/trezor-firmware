@@ -107,7 +107,22 @@ class Credential:
         cred.hmac_secret = data.get(_CRED_ID_HMAC_SECRET, False)
         cred.id = cred_id
 
+        if not cred.check_data_types():
+            return None
+
         return cred
+
+    def check_data_types(self):
+        return (
+            isinstance(self.rp_id, str)
+            and isinstance(self.rp_name, (str, type(None)))
+            and isinstance(self.user_id, (bytes, bytearray))
+            and isinstance(self.user_name, (str, type(None)))
+            and isinstance(self.user_display_name, (str, type(None)))
+            and isinstance(self.hmac_secret, bool)
+            and isinstance(self._creation_time, (int, type(None)))
+            and isinstance(self.id, (bytes, bytearray))
+        )
 
     def name(self) -> Optional[str]:
         from ubinascii import hexlify
@@ -130,11 +145,15 @@ class Credential:
         node = seed.derive_node_without_passphrase(path, "nist256p1")
         return node.private_key()
 
-    def cred_random(self) -> Optional[bytes]:
-        from apps.common import seed
+    def hmac_secret_key(self) -> Optional[bytes]:
+        # Returns the symmetric key for the hmac-secret extension also known as CredRandom.
 
         if not self.hmac_secret:
             return None
-        return seed.derive_slip21_node_without_passphrase(
+
+        from apps.common import seed
+
+        node = seed.derive_slip21_node_without_passphrase(
             [_FIDO_HMAC_SECRET_KEY_PATH, self.id]
-        ).key()
+        )
+        return node.key()
