@@ -113,6 +113,14 @@ CHOICE_OUTPUT_SCRIPT_TYPE = ChoiceType(
     }
 )
 
+CHOICE_RESET_DEVICE_TYPE = ChoiceType(
+    {
+        "single": proto.ResetDeviceBackupType.Bip39,
+        "shamir": proto.ResetDeviceBackupType.Slip39_Single_Group,
+        "advanced": proto.ResetDeviceBackupType.Slip39_Multiple_Groups,
+    }
+)
+
 
 class UnderscoreAgnosticGroup(click.Group):
     """Command group that normalizes dashes and underscores.
@@ -505,7 +513,7 @@ def recovery_device(
 @click.option("-u", "--u2f-counter", default=0)
 @click.option("-s", "--skip-backup", is_flag=True)
 @click.option("-n", "--no-backup", is_flag=True)
-@click.option("-x", "--slip39", is_flag=True)
+@click.option("-b", "--backup-type", type=CHOICE_RESET_DEVICE_TYPE, default="single")
 @click.pass_obj
 def reset_device(
     connect,
@@ -517,7 +525,7 @@ def reset_device(
     u2f_counter,
     skip_backup,
     no_backup,
-    slip39,
+    backup_type,
 ):
     if strength:
         strength = int(strength)
@@ -532,7 +540,7 @@ def reset_device(
         u2f_counter=u2f_counter,
         skip_backup=skip_backup,
         no_backup=no_backup,
-        slip39=slip39,
+        backup_type=backup_type,
     )
 
 
