@@ -1,17 +1,15 @@
 import time
+from itertools import combinations
 from unittest import mock
 
 import pytest
+import shamir_mnemonic as shamir
+from shamir_mnemonic import MnemonicError
 
 from trezorlib import device, messages as proto
 from trezorlib.messages import ButtonRequestType as B
 
-from .common import TrezorTest
-
-# TODO: uncomment when python_shamir_mnemonic is uploaded to pypi
-# import shamir_mnemonic as shamir
-# from shamir_mnemonic import MnemonicError
-
+from .common import TrezorTest, generate_entropy
 
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
@@ -21,8 +19,7 @@ class TestMsgResetDeviceT2(TrezorTest):
     # TODO: test with different options
     def test_reset_device_shamir(self):
         strength = 128
-        # TODO: uncomment when python_shamir_mnemonic is uploaded to pypi
-        # member_threshold = 2
+        member_threshold = 3
 
         def input_flow():
             # Confirm Reset
@@ -97,11 +94,11 @@ class TestMsgResetDeviceT2(TrezorTest):
                 self.client.debug.press_yes()
 
             # generate secret locally
-            # internal_entropy = self.client.debug.state().reset_entropy
-            # secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
+            internal_entropy = self.client.debug.state().reset_entropy
+            secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
 
             # validate that all combinations will result in the correct master secret
-            # validate_mnemonics(all_mnemonics, member_threshold, secret)
+            validate_mnemonics(all_mnemonics, member_threshold, secret)
 
             # safety warning
             btn_code = yield
@@ -158,16 +155,14 @@ class TestMsgResetDeviceT2(TrezorTest):
         assert resp.passphrase_protection is False
 
 
-# TODO: uncomment when python_shamir_mnemonic is uploaded to pypi
-
-# def validate_mnemonics(mnemonics, threshold, expected_secret):
-#     # We expect these combinations to recreate the secret properly
-#     for test_group in combinations(mnemonics, threshold):
-#         secret = shamir.combine_mnemonics(test_group)
-#         assert secret == expected_secret
-#     # We expect these combinations to raise MnemonicError
-#     for test_group in combinations(mnemonics, threshold - 1):
-#         with pytest.raises(
-#             MnemonicError, match=r".*Expected {} mnemonics.*".format(threshold)
-#         ):
-#             secret = shamir.combine_mnemonics(test_group)
+def validate_mnemonics(mnemonics, threshold, expected_secret):
+    # We expect these combinations to recreate the secret properly
+    for test_group in combinations(mnemonics, threshold):
+        secret = shamir.combine_mnemonics(test_group)
+        assert secret == expected_secret
+    # We expect these combinations to raise MnemonicError
+    for test_group in combinations(mnemonics, threshold - 1):
+        with pytest.raises(
+            MnemonicError, match=r".*Expected {} mnemonics.*".format(threshold)
+        ):
+            secret = shamir.combine_mnemonics(test_group)

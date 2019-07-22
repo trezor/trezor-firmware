@@ -1,5 +1,6 @@
 ecdsa>=0.9
 mnemonic>=0.17
+shamir-mnemonic>=0.1.0
 requests>=2.4.0
 click>=7,<8
 pyblake2>=0.9.3
