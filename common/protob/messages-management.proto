@@ -191,7 +191,14 @@ message ResetDevice {
     optional uint32 u2f_counter = 7;                    // U2F counter
     optional bool skip_backup = 8;                      // postpone seed backup to BackupDevice workflow
     optional bool no_backup = 9;                        // indicate that no backup is going to be made
-    optional bool slip39 = 10;                          // indicate that we want SLIP-39 backup not BIP-39
+
+    // type of the mnemonic backup (BIP-39 vs SLIP-39 single group vs SLIP-39 multiple groups)
+    optional ResetDeviceBackupType backup_type = 10 [default=ResetDeviceBackupType_Bip39];
+    enum ResetDeviceBackupType {
+        ResetDeviceBackupType_Bip39 = 0;                      // The traditional Single Backup - BIP39
+        ResetDeviceBackupType_Slip39_Single_Group = 1;        // Shamir Backup with only single group (one-level Shamir)
+        ResetDeviceBackupType_Slip39_Multiple_Groups = 2;     // Shamir Backup with multiple groups (two-level Shamir)
+    }
 }
 
 /**
