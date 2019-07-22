@@ -1,132 +1,157 @@
-from trezor import wire
+from trezor import loop, utils, wire
 from trezor.crypto.hashlib import sha256
 from trezor.errors import MnemonicError
 from trezor.messages.Success import Success
-from trezor.utils import consteq
 
 from . import recover
 
 from apps.common import mnemonic, storage
 from apps.common.layout import show_success
-from apps.common.storage import device
-from apps.homescreen.homescreen import homescreen
 from apps.management.recovery_device import layout
 
 
-async def recovery_homescreen(single_run=False) -> None:
+async def recovery_homescreen() -> None:
+    try:
+        await recovery_process()
+    except Exception:
+        # clear the loop state, so loop.run will exit and the device is soft-rebooted
+        loop.clear()
+        raise
+
+
+async def recovery_process() -> Success:
+    # recovery process does not communicate on the wire
     ctx = wire.DummyContext()
 
-    if not device.is_recovery_in_progress():
-        raise RuntimeError("Recovery is not in progress!")
+    try:
+        result = await _continue_recovery_process(ctx)
+    except recover.RecoveryAborted:
+        dry_run = storage.device.is_recovery_dry_run()
+        if dry_run:
+            storage.device.end_recovery_progress()
+        else:
+            storage.wipe()
+        raise wire.ActionCancelled("Cancelled")
 
-    dry_run = device.is_recovery_dry_run()
-    word_count = device.get_word_count()
-    if not word_count:
-        word_count = await _request_word_count(ctx, dry_run)
+    return result
+
+
+async def _continue_recovery_process(ctx: wire.Context) -> Success:
+    # gather the current recovery state from storage
+    in_progress = storage.device.is_recovery_in_progress()
+    word_count = storage.device.get_word_count()
+    dry_run = storage.device.is_recovery_dry_run()
+
+    if not in_progress:  # invalid and inconsistent state
+        raise RuntimeError
+    if not word_count:  # the first run, prompt word count from the user
+        word_count = await _request_and_store_word_count(ctx, dry_run)
 
     mnemonic_type = mnemonic.type_from_word_count(word_count)
 
-    if dry_run:
-        await _dry_run_precheck(ctx, word_count, single_run)
-
-    secret = await _request_words(ctx, word_count, mnemonic_type)
+    secret = await _request_and_store_secret(ctx, word_count, mnemonic_type)
 
     if dry_run:
-        result = _dry_run(secret)
-        await layout.show_dry_run_result(ctx, result)
-        return await _dry_run_result(ctx, result, single_run)
-
+        result = await _finish_recovery_dry_run(ctx, secret, mnemonic_type)
     else:
-        storage.device.store_mnemonic_secret(
-            secret, mnemonic_type, needs_backup=False, no_backup=False
-        )
-        await show_success(ctx, ("You have successfully", "recovered your wallet."))
-
-    storage.device.end_recovery_progress()
-    if single_run:
-        return Success(message="Device recovered")
-    await homescreen()
+        result = await _finish_recovery_real_run(ctx, secret, mnemonic_type)
+    return result
 
 
-def _dry_run(secret: bytes) -> bool:
+async def _finish_recovery_dry_run(
+    ctx: wire.Context, secret: bytes, mnemonic_type: int
+) -> Success:
     digest_input = sha256(secret).digest()
     stored, _ = mnemonic.get()
     digest_stored = sha256(stored).digest()
-    if consteq(digest_stored, digest_input):
-        return True
-    return False
+    result = utils.consteq(digest_stored, digest_input)
 
+    await layout.show_dry_run_result(ctx, result)
 
-async def _dry_run_precheck(ctx: wire.Context, word_count: int, single_run: bool):
-    _, type_stored = mnemonic.get()
-    type_suggested = mnemonic.type_from_word_count(word_count)
-    if type_stored != type_suggested:
-        await layout.show_dry_run_different_type(ctx)
-        return await _dry_run_result(ctx, False, single_run)
-
-
-async def _dry_run_result(ctx: wire.Context, result: bool, single_run: bool):
     storage.device.end_recovery_progress()
-    if single_run:
-        if result:
-            return Success("The seed is valid and matches the one in the device")
-        else:
-            raise wire.ProcessError("The seed does not match the one in the device")
-    await homescreen()
-    raise RuntimeError("Recovery process should not continue after it ended")
 
-
-async def _request_words(ctx: wire.Context, word_count: int, mnemonic_type: int):
-    await _first_share_screen(ctx, word_count, mnemonic_type)
-
-    secret = None
-    while secret is None:
-        # ask for mnemonic words one by one
-        words = await layout.request_mnemonic(ctx, word_count, mnemonic_type)
-        try:
-            secret = recover.process_share(words, mnemonic_type)
-        except MnemonicError:
-            await layout.show_invalid_mnemonic(ctx, mnemonic_type)
-            continue
-
-        if not secret:
-            await _next_share_screen(ctx, mnemonic_type)
-    return secret
-
-
-async def _first_share_screen(ctx: wire.Context, word_count: int, mnemonic_type: int):
-
-    if mnemonic_type == mnemonic.TYPE_BIP39:
-        content = layout.RecoveryHomescreen(
-            "Enter recovery seed", "(%d words)" % word_count
-        )
-        await layout.homescreen_dialog(ctx, content, "Enter seed")
-    elif not storage.slip39.get_remaining():
-        content = layout.RecoveryHomescreen(
-            "Enter any share", "(%d words)" % word_count
-        )
-        await layout.homescreen_dialog(ctx, content, "Enter share")
+    if result:
+        return Success("The seed is valid and matches the one in the device")
     else:
-        await _next_share_screen(ctx, mnemonic_type)
+        raise wire.ProcessError("The seed does not match the one in the device")
 
 
-async def _next_share_screen(ctx: wire.Context, mnemonic_type: int):
-    if mnemonic_type == mnemonic.TYPE_BIP39:
-        raise RuntimeError("BIP-39 should have only a single share")
-    else:
-        remaining = storage.slip39.get_remaining()
-        text = "%d more share" % remaining
-        if remaining > 1:
-            text += "s"
-        content = layout.RecoveryHomescreen(text, "needed to enter")
-        await layout.homescreen_dialog(ctx, content, "Enter share")
+async def _finish_recovery_real_run(
+    ctx: wire.Context, secret: bytes, mnemonic_type: int
+) -> Success:
+    storage.device.store_mnemonic_secret(
+        secret, mnemonic_type, needs_backup=False, no_backup=False
+    )
+    storage.device.end_recovery_progress()
+
+    await show_success(ctx, ("You have successfully", "recovered your wallet."))
+
+    return Success(message="Device recovered")
 
 
-async def _request_word_count(ctx, dry_run: bool) -> int:
+async def _request_and_store_word_count(ctx: wire.Context, dry_run: bool) -> int:
     homepage = layout.RecoveryHomescreen("Select number of words")
     await layout.homescreen_dialog(ctx, homepage, "Select")
 
     # ask for the number of words
     word_count = await layout.request_word_count(ctx, dry_run)
-    device.set_word_count(word_count)
+
+    # save them into storage
+    storage.device.set_word_count(word_count)
+
     return word_count
+
+
+async def _request_and_store_secret(
+    ctx: wire.Context, word_count: int, mnemonic_type: int
+):
+    await _request_share_first_screen(ctx, word_count, mnemonic_type)
+
+    secret = None
+    while secret is None:
+        # ask for mnemonic words one by one
+        words = await layout.request_mnemonic(ctx, word_count, mnemonic_type)
+        # process this seed share
+        try:
+            secret = recover.process_share(words, mnemonic_type)
+        except MnemonicError:
+            await layout.show_invalid_mnemonic(ctx, mnemonic_type)
+            continue
+        if secret is None:
+            await _request_share_next_screen(ctx, mnemonic_type)
+
+    return secret
+
+
+async def _request_share_first_screen(
+    ctx: wire.Context, word_count: int, mnemonic_type: int
+):
+    if mnemonic_type == mnemonic.TYPE_BIP39:
+        content = layout.RecoveryHomescreen(
+            "Enter recovery seed", "(%d words)" % word_count
+        )
+        await layout.homescreen_dialog(ctx, content, "Enter seed")
+    elif mnemonic_type == mnemonic.TYPE_SLIP39:
+        remaining = storage.slip39.get_remaining()
+        if remaining:
+            await _request_share_next_screen(ctx, mnemonic_type)
+        else:
+            content = layout.RecoveryHomescreen(
+                "Enter any share", "(%d words)" % word_count
+            )
+            await layout.homescreen_dialog(ctx, content, "Enter share")
+    else:
+        raise RuntimeError
+
+
+async def _request_share_next_screen(ctx: wire.Context, mnemonic_type: int):
+    if mnemonic_type == mnemonic.TYPE_SLIP39:
+        remaining = storage.slip39.get_remaining()
+        if remaining == 1:
+            text = "1 more share"
+        else:
+            text = "%d more shares" % remaining
+        content = layout.RecoveryHomescreen(text, "needed to enter")
+        await layout.homescreen_dialog(ctx, content, "Enter share")
+    else:
+        raise RuntimeError

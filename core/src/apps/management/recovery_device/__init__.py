@@ -6,9 +6,8 @@ from trezor.ui.text import Text
 
 from apps.common import storage
 from apps.common.confirm import require_confirm
-from apps.homescreen.homescreen import display_homescreen
 from apps.management.change_pin import request_pin_ack, request_pin_confirm
-from apps.management.recovery_device.homescreen import recovery_homescreen
+from apps.management.recovery_device.homescreen import recovery_process
 
 if False:
     from trezor.messages.RecoveryDevice import RecoveryDevice
@@ -53,12 +52,11 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     storage.device.load_settings(
         label=msg.label, use_passphrase=msg.passphrase_protection
     )
-
     storage.device.set_recovery_in_progress(True)
     storage.device.set_recovery_dry_run(msg.dry_run)
-    result = await recovery_homescreen(single_run=True)
 
-    display_homescreen()
+    result = await recovery_process()
+
     return result
 
 

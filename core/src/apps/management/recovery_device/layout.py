@@ -6,18 +6,16 @@ from trezor.ui.info import InfoConfirm
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
 
+from .recover import RecoveryAborted
 from .bip39_keyboard import Bip39Keyboard
 from .slip39_keyboard import Slip39Keyboard
 
 from apps.common import mnemonic, storage
 from apps.common.confirm import confirm, require_confirm
 from apps.common.layout import show_success, show_warning
-from apps.homescreen.homescreen import homescreen
 
 if __debug__:
     from apps.debug import input_signal, confirm_signal
-
-# TODO: wire.Context may be wire.DummyContext
 
 
 async def confirm_abort(ctx: wire.Context, dry_run: bool = False) -> bool:
@@ -133,10 +131,14 @@ class RecoveryHomescreen(ui.Control):
     def __init__(self, text: str, subtext: str = None):
         self.text = text
         self.subtext = subtext
+        self.dry_run = storage.device.is_recovery_dry_run()
+        self.repaint = True
 
     def on_render(self):
-        # TODO: review: how many kittens die when I'm touching storage in ui component?
-        if storage.device.is_recovery_dry_run():
+        if not self.repaint:
+            return
+
+        if self.dry_run:
             heading = "SEED CHECK"
         else:
             heading = "RECOVERY MODE"
@@ -157,20 +159,20 @@ class RecoveryHomescreen(ui.Control):
             ui.WIDTH // 2, 155, "and continue later", ui.NORMAL, ui.GREY, ui.BG
         )
 
+        self.repaint = False
+
 
 async def homescreen_dialog(
     ctx: wire.DummyContext, homepage: RecoveryHomescreen, button_label: str
 ) -> None:
     while True:
-        if await confirm(ctx, homepage, confirm=button_label, major_confirm=True):
-            return
-        else:
-            # TODO: review: again, how ugly is it to touch storage here instead of passing parameters?
-            dry_run = storage.device.is_recovery_dry_run()
-            if await confirm_abort(ctx, dry_run):
-                if dry_run:
-                    storage.device.end_recovery_progress()
-                else:
-                    storage.wipe()
-                break
-    await homescreen()
+        continue_recovery = await confirm(
+            ctx, homepage, confirm=button_label, major_confirm=True
+        )
+        if continue_recovery:
+            # go forward in the recovery process
+            break
+        # user has chosen to abort, confirm the choice
+        dry_run = storage.device.is_recovery_dry_run()
+        if await confirm_abort(ctx, dry_run):
+            raise RecoveryAborted

@@ -7,6 +7,10 @@ if False:
     from typing import Optional
 
 
+class RecoveryAborted(Exception):
+    pass
+
+
 def process_share(mnemonic: str, mnemonic_type: int):
     if mnemonic_type == mnemonic.TYPE_BIP39:
         return _process_bip39(mnemonic)

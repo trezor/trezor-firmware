@@ -58,7 +58,6 @@ def setup(iface: WireInterface) -> None:
     loop.schedule(session_handler(iface, codec_v1.SESSION_ID))
 
 
-# TODO: @jpochyla
 class DummyContext:
     async def call(*argv):
         pass
@@ -70,8 +69,7 @@ class DummyContext:
         pass
 
     async def wait(self, *tasks: Awaitable) -> Any:
-        obj, signal = tasks
-        return await obj
+        return await loop.spawn(*tasks)
 
 
 class Context:
