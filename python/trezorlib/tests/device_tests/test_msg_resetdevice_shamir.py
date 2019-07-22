@@ -7,7 +7,7 @@ import shamir_mnemonic as shamir
 from shamir_mnemonic import MnemonicError
 
 from trezorlib import device, messages as proto
-from trezorlib.messages import ButtonRequestType as B
+from trezorlib.messages import ButtonRequestType as B, ResetDeviceBackupType
 
 from .common import TrezorTest, generate_entropy
 
@@ -144,7 +144,7 @@ class TestMsgResetDeviceT2(TrezorTest):
                 pin_protection=False,
                 label="test",
                 language="english",
-                slip39=True,
+                backup_type=ResetDeviceBackupType.Slip39_Single_Group,
             )
 
         # Check if device is properly initialized
