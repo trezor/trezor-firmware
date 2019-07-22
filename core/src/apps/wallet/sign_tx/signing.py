@@ -661,7 +661,9 @@ def get_hash_type(coin: coininfo.CoinInfo) -> int:
     SIGHASH_FORKID = const(0x40)
     SIGHASH_ALL = const(0x01)
     hashtype = SIGHASH_ALL
-    if coin.fork_id is not None:
+    if coin.sighash_fork_id is not None:
+        hashtype |= coin.sighash_fork_id
+    elif coin.fork_id is not None:
         hashtype |= (coin.fork_id << 8) | SIGHASH_FORKID
     return hashtype
 

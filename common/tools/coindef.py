@@ -35,6 +35,7 @@ class CoinDef(p.MessageType):
         31: ("blocktime_seconds", p.UVarintType, 0),
         32: ("bip115", p.BoolType, 0),
         33: ("cooldown", p.UVarintType, 0),
+        33: ("sighash_fork_id", p.UnicodeType, 0),
     }
 
     def __init__(
@@ -74,6 +75,7 @@ class CoinDef(p.MessageType):
         bitcore: dict = None,
         blockbook: dict = None,
         cooldown: int = None,
+        sighash_fork_id: str = None,
     ):
         self.coin_name = coin_name
         self.coin_shortcut = coin_shortcut
@@ -110,4 +112,5 @@ class CoinDef(p.MessageType):
         self.bitcore = bitcore
         self.blockbook = blockbook
         self.cooldown = cooldown
+        self.sighash_fork_id = sighash_fork_id
         p.MessageType.__init__(self)

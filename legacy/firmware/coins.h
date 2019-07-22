@@ -37,6 +37,7 @@ typedef struct _CoinInfo {
   bool has_fork_id;
   bool force_bip143;
   bool decred;
+  bool has_sighash_fork_id;
   // address types > 0xFF represent a two-byte prefix in big-endian order
   uint32_t address_type;
   uint32_t address_type_p2sh;
@@ -49,6 +50,7 @@ typedef struct _CoinInfo {
   uint32_t coin_type;
   const char *curve_name;
   const curve_info *curve;
+  const char *sighash_fork_id;
 } CoinInfo;
 
 #include "coin_info.h"

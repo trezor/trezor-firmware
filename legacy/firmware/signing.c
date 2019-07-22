@@ -715,7 +715,10 @@ static bool signing_check_fee(void) {
 static uint32_t signing_hash_type(void) {
   uint32_t hash_type = SIGHASH_ALL;
 
-  if (coin->has_fork_id) {
+  if (coin->has_sighash_fork_id) {
+    hash_type |= coin->sighash_fork_id;
+  }
+  else if (coin->has_fork_id) {
     hash_type |= (coin->fork_id << 8) | SIGHASH_FORKID;
   }
 

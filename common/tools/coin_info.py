@@ -134,6 +134,7 @@ BTC_CHECKS = [
     check_key("slip44", int),
     check_key("segwit", bool),
     check_key("decred", bool),
+    check_key("sighash_fork_id", str, regex=r"^0x[0-9A-F]+$", nullable=True),
     check_key("fork_id", int, nullable=True),
     check_key("force_bip143", bool),
     check_key("bip115", bool),
