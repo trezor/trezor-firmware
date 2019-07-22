@@ -37,7 +37,7 @@
   "max_address_length": 34,
   "bitcore": [
     "https://titlenet.truevisionofsatoshi.com",
-    "https://insight.title.network/"
+    "https://insight.title.network"
   ],
   "blockbook": [],
   "cooldown": 100,
