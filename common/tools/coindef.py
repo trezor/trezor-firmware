@@ -35,7 +35,7 @@ class CoinDef(p.MessageType):
         31: ("blocktime_seconds", p.UVarintType, 0),
         32: ("bip115", p.BoolType, 0),
         33: ("cooldown", p.UVarintType, 0),
-        33: ("sighash_fork_id", p.UnicodeType, 0),
+        34: ("sighash_fork_id", p.UnicodeType, 0),
     }
 
     def __init__(
