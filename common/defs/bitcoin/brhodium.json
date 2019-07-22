@@ -41,5 +41,6 @@
       "https://blockbook2.bitcoinrh.org"
     ],
   "cooldown": 100,
+  "sighash_fork_id": null,
   "consensus_branch_id": null
 }

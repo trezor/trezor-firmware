@@ -40,5 +40,6 @@
     "https://explorer.fujicoin.org"
   ],
   "cooldown": 100,
+  "sighash_fork_id": null,
   "consensus_branch_id": null
 }

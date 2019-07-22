@@ -42,5 +42,6 @@
       "https://vips.blockbook.japanesecoin-pool.work"
     ],
     "cooldown": 100,
+    "sighash_fork_id": null,
     "consensus_branch_id": null
 }

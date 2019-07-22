@@ -38,5 +38,6 @@
   "bitcore": [],
   "blockbook": [],
   "cooldown": 1000,
+  "sighash_fork_id": null,
   "consensus_branch_id": null
 }
