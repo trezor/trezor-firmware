@@ -6,8 +6,8 @@ from trezor.ui.info import InfoConfirm
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
 
-from .recover import RecoveryAborted
 from .bip39_keyboard import Bip39Keyboard
+from .recover import RecoveryAborted
 from .slip39_keyboard import Slip39Keyboard
 
 from apps.common import mnemonic, storage
