@@ -5,8 +5,11 @@ from .. import protobuf as p
 if __debug__:
     try:
         from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+        EnumTypePinMatrixRequestType = Literal[1, 2, 3]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
+        EnumTypePinMatrixRequestType = None  # type: ignore
 
 
 class PinMatrixRequest(p.MessageType):
@@ -14,12 +17,12 @@ class PinMatrixRequest(p.MessageType):
 
     def __init__(
         self,
-        type: int = None,
+        type: EnumTypePinMatrixRequestType = None,
     ) -> None:
         self.type = type
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.UVarintType, 0),
+            1: ('type', p.EnumType("PinMatrixRequestType", (1, 2, 3)), 0),
         }

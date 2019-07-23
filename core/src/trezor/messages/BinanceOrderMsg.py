@@ -5,8 +5,15 @@ import protobuf as p
 if __debug__:
     try:
         from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+        EnumTypeBinanceOrderType = Literal[0, 1, 2, 3]
+        EnumTypeBinanceOrderSide = Literal[0, 1, 2]
+        EnumTypeBinanceTimeInForce = Literal[0, 1, 2, 3]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
+        EnumTypeBinanceOrderType = None  # type: ignore
+        EnumTypeBinanceOrderSide = None  # type: ignore
+        EnumTypeBinanceTimeInForce = None  # type: ignore
 
 
 class BinanceOrderMsg(p.MessageType):
@@ -15,13 +22,13 @@ class BinanceOrderMsg(p.MessageType):
     def __init__(
         self,
         id: str = None,
-        ordertype: int = None,
+        ordertype: EnumTypeBinanceOrderType = None,
         price: int = None,
         quantity: int = None,
         sender: str = None,
-        side: int = None,
+        side: EnumTypeBinanceOrderSide = None,
         symbol: str = None,
-        timeinforce: int = None,
+        timeinforce: EnumTypeBinanceTimeInForce = None,
     ) -> None:
         self.id = id
         self.ordertype = ordertype
@@ -36,11 +43,11 @@ class BinanceOrderMsg(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('id', p.UnicodeType, 0),
-            2: ('ordertype', p.UVarintType, 0),
+            2: ('ordertype', p.EnumType("BinanceOrderType", (0, 1, 2, 3)), 0),
             3: ('price', p.SVarintType, 0),
             4: ('quantity', p.SVarintType, 0),
             5: ('sender', p.UnicodeType, 0),
-            6: ('side', p.UVarintType, 0),
+            6: ('side', p.EnumType("BinanceOrderSide", (0, 1, 2)), 0),
             7: ('symbol', p.UnicodeType, 0),
-            8: ('timeinforce', p.UVarintType, 0),
+            8: ('timeinforce', p.EnumType("BinanceTimeInForce", (0, 1, 2, 3)), 0),
         }

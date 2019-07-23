@@ -8,8 +8,11 @@ from .TxRequestSerializedType import TxRequestSerializedType
 if __debug__:
     try:
         from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+        EnumTypeRequestType = Literal[0, 1, 2, 3, 4]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
+        EnumTypeRequestType = None  # type: ignore
 
 
 class TxRequest(p.MessageType):
@@ -17,7 +20,7 @@ class TxRequest(p.MessageType):
 
     def __init__(
         self,
-        request_type: int = None,
+        request_type: EnumTypeRequestType = None,
         details: TxRequestDetailsType = None,
         serialized: TxRequestSerializedType = None,
     ) -> None:
@@ -28,7 +31,7 @@ class TxRequest(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('request_type', p.UVarintType, 0),
+            1: ('request_type', p.EnumType("RequestType", (0, 1, 2, 3, 4)), 0),
             2: ('details', TxRequestDetailsType, 0),
             3: ('serialized', TxRequestSerializedType, 0),
         }

@@ -5,8 +5,11 @@ from .. import protobuf as p
 if __debug__:
     try:
         from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+        EnumTypeWordRequestType = Literal[0, 1, 2]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
+        EnumTypeWordRequestType = None  # type: ignore
 
 
 class WordRequest(p.MessageType):
@@ -14,12 +17,12 @@ class WordRequest(p.MessageType):
 
     def __init__(
         self,
-        type: int = None,
+        type: EnumTypeWordRequestType = None,
     ) -> None:
         self.type = type
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.UVarintType, 0),
+            1: ('type', p.EnumType("WordRequestType", (0, 1, 2)), 0),
         }
