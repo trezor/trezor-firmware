@@ -1,6 +1,6 @@
 from trezor import config, ui, wire
 from trezor.crypto import bip39, hashlib, random, slip39
-from trezor.messages import ButtonRequestType
+from trezor.messages import ButtonRequestType, ResetDeviceBackupType
 from trezor.messages.EntropyAck import EntropyAck
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
@@ -19,13 +19,17 @@ if __debug__:
 if False:
     from trezor.messages.ResetDevice import ResetDevice
 
+_DEFAULT_BACKUP_TYPE = ResetDeviceBackupType.Bip39
+
 
 async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     # validate parameters and device state
     _validate_reset_device(msg)
 
+    is_slip39_simple = msg.backup_type == ResetDeviceBackupType.Slip39_Single_Group
+
     # make sure user knows he's setting up a new wallet
-    await _show_reset_device_warning(ctx, msg.slip39)
+    await _show_reset_device_warning(ctx, is_slip39_simple)
 
     # request new PIN
     if msg.pin_protection:
@@ -45,7 +49,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     ext_entropy = entropy_ack.entropy
     secret = _compute_secret_from_entropy(int_entropy, ext_entropy, msg.strength)
 
-    if msg.slip39:
+    if is_slip39_simple:
         storage.slip39.set_identifier(slip39.generate_random_identifier())
         storage.slip39.set_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
 
@@ -57,7 +61,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
 
     # generate and display backup information for the master secret
     if not msg.no_backup and not msg.skip_backup:
-        if msg.slip39:
+        if is_slip39_simple:
             await backup_slip39_wallet(ctx, secret)
         else:
             await backup_bip39_wallet(ctx, secret)
@@ -70,7 +74,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     storage.device.load_settings(
         label=msg.label, use_passphrase=msg.passphrase_protection
     )
-    if msg.slip39:
+    if is_slip39_simple:
         mnemonic.slip39.store(
             secret=secret, needs_backup=msg.skip_backup, no_backup=msg.no_backup
         )
@@ -112,8 +116,14 @@ async def backup_bip39_wallet(ctx: wire.Context, secret: bytes) -> None:
 
 
 def _validate_reset_device(msg: ResetDevice) -> None:
+    msg.backup_type = msg.backup_type or _DEFAULT_BACKUP_TYPE
+    if msg.backup_type not in (
+        ResetDeviceBackupType.Bip39,
+        ResetDeviceBackupType.Slip39_Single_Group,
+    ):
+        raise wire.ProcessError("Backup type not implemented.")
     if msg.strength not in (128, 256):
-        if msg.slip39:
+        if msg.backup_type == ResetDeviceBackupType.Slip39_Single_Group:
             raise wire.ProcessError("Invalid strength (has to be 128 or 256 bits)")
         elif msg.strength != 192:
             raise wire.ProcessError("Invalid strength (has to be 128, 192 or 256 bits)")
