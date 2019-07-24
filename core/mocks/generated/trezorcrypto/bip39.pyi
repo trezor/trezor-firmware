@@ -40,7 +40,9 @@ def check(mnemonic: str) -> bool:
 
 # extmod/modtrezorcrypto/modtrezorcrypto-bip39.h
 def seed(
-    mnemonic: str, passphrase: str, callback: Tuple[int, int, None] = None
+    mnemonic: str,
+    passphrase: str,
+    callback: Callable[[int, int], None] = None,
 ) -> bytes:
     """
     Generate seed from mnemonic and passphrase.

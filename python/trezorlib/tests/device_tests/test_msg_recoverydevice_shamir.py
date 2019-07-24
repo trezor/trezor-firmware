@@ -46,11 +46,31 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
+        # Homescreen - consider aborting process
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_no()
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Homescreen - but then bail out in the warning
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_no()
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Homescreen - click Enter
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
         # Enter word count
         assert ret == proto.ButtonRequest(
             code=proto.ButtonRequestType.MnemonicWordCount
         )
         self.client.debug.input(str(word_count))
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Homescreen
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
         # Enter shares
@@ -66,7 +86,7 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
             ret = self.client.transport.read()
 
             if mnemonic != mnemonics[-1]:
-                # Confirm status
+                # Homescreen
                 assert isinstance(ret, proto.ButtonRequest)
                 self.client.debug.press_yes()
                 ret = self.client.call_raw(proto.ButtonAck())
@@ -108,6 +128,7 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
             "hobo romp academic axis august founder knife legal recover alien expect emphasis loan kitchen involve teacher capture rebuild trial numb spider forward ladle lying voter typical security quantity hawk legs idle leaves gasoline",
             "hobo romp academic agency ancestor industry argue sister scene midst graduate profile numb paid headset airport daisy flame express scene usual welcome quick silent downtown oral critical step remove says rhythm venture aunt",
         ]
+        # TODO: add incorrect mnemonic to test
         word_count = len(mnemonics[0].split(" "))
 
         ret = self.client.call_raw(
@@ -121,11 +142,31 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
+        # Enter PIN for first time
+        assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
+        self.client.debug.input("654")
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Enter PIN for second time
+        assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
+        self.client.debug.input("654")
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Homescreen
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
         # Enter word count
         assert ret == proto.ButtonRequest(
             code=proto.ButtonRequestType.MnemonicWordCount
         )
         self.client.debug.input(str(word_count))
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Homescreen
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
         # Enter shares
@@ -141,20 +182,10 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
             ret = self.client.transport.read()
 
             if mnemonic != mnemonics[-1]:
-                # Confirm status
+                # Homescreen
                 assert isinstance(ret, proto.ButtonRequest)
                 self.client.debug.press_yes()
                 ret = self.client.call_raw(proto.ButtonAck())
-
-        # Enter PIN for first time
-        assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
-        self.client.debug.input("654")
-        ret = self.client.call_raw(proto.ButtonAck())
-
-        # Enter PIN for second time
-        assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
-        self.client.debug.input("654")
-        ret = self.client.call_raw(proto.ButtonAck())
 
         # Confirm success
         assert isinstance(ret, proto.ButtonRequest)
@@ -194,3 +225,29 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
 
         address = btc.get_address(self.client, "Bitcoin", [])
         assert address == "19Fjs9AvT13Y2Nx8GtoVfADmFWnccsPinQ"
+
+    def test_abort(self):
+        ret = self.client.call_raw(
+            proto.RecoveryDevice(
+                passphrase_protection=False, pin_protection=False, label="label"
+            )
+        )
+
+        # Confirm Recovery
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Homescreen - abort process
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_no()
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Homescreen - yup, really
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # check that the device is wiped
+        features = self.client.call_raw(proto.Initialize())
+        assert features.initialized is False

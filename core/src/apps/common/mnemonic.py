@@ -1,20 +1,23 @@
 from micropython import const
 
-from trezor import ui, wire, workflow
-from trezor.crypto.hashlib import sha256
-from trezor.messages.Success import Success
-from trezor.utils import consteq
+from trezor import ui, workflow
+from trezor.crypto import bip39, slip39
 
 from apps.common import storage
-from apps.common.mnemonic import bip39, slip39
 
 if False:
-    from typing import Any, Tuple
+    from typing import Tuple
 
 TYPE_BIP39 = const(0)
 TYPE_SLIP39 = const(1)
 
-TYPES_WORD_COUNT = {12: bip39, 18: bip39, 24: bip39, 20: slip39, 33: slip39}
+TYPES_WORD_COUNT = {
+    12: TYPE_BIP39,
+    18: TYPE_BIP39,
+    24: TYPE_BIP39,
+    20: TYPE_SLIP39,
+    33: TYPE_SLIP39,
+}
 
 
 def get() -> Tuple[bytes, int]:
@@ -27,26 +30,30 @@ def get() -> Tuple[bytes, int]:
 
 def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
     mnemonic_secret, mnemonic_type = get()
+
+    render_func = None
+    if progress_bar:
+        _start_progress()
+        render_func = _render_progress
+
     if mnemonic_type == TYPE_BIP39:
-        return bip39.get_seed(mnemonic_secret, passphrase, progress_bar)
+        seed = bip39.seed(mnemonic_secret.decode(), passphrase, render_func)
+
     elif mnemonic_type == TYPE_SLIP39:
-        return slip39.get_seed(mnemonic_secret, passphrase, progress_bar)
-    raise ValueError("Unknown mnemonic type")
-
-
-def dry_run(secret: bytes) -> None:
-    digest_input = sha256(secret).digest()
-    stored, _ = get()
-    digest_stored = sha256(stored).digest()
-    if consteq(digest_stored, digest_input):
-        return Success(message="The seed is valid and matches the one in the device")
-    else:
-        raise wire.ProcessError(
-            "The seed is valid but does not match the one in the device"
+        identifier = storage.device.get_slip39_identifier()
+        iteration_exponent = storage.device.get_slip39_iteration_exponent()
+        seed = slip39.decrypt(
+            identifier, iteration_exponent, mnemonic_secret, passphrase
         )
 
+    if progress_bar:
+        _stop_progress()
+    return seed
 
-def module_from_words_count(count: int) -> Any:
+
+def type_from_word_count(count: int) -> int:
+    if count not in TYPES_WORD_COUNT:
+        raise RuntimeError("Recovery: Unknown words count")
     return TYPES_WORD_COUNT[count]
 
 

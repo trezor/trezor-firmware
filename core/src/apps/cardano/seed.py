@@ -38,8 +38,8 @@ async def get_keychain(ctx: wire.Context) -> Keychain:
         passphrase = await protect_by_passphrase(ctx)
         cache.set_passphrase(passphrase)
     # TODO fix for SLIP-39!
-    mnemonic_secret, mnemonic_type = mnemonic.get()
-    if mnemonic_type == mnemonic.TYPE_SLIP39:
+    mnemonic_secret, mnemonic_module = mnemonic.get()
+    if mnemonic_module == mnemonic.slip39:
         # TODO: we need to modify bip32.from_mnemonic_cardano to accept entropy directly
         raise NotImplementedError("SLIP-39 currently does not support Cardano")
     else:

@@ -84,7 +84,14 @@ async def show_warning(
     button: str = "Continue",
 ) -> None:
     text = Text("Warning", ui.ICON_WRONG, ui.RED)
-    await _message(ctx, text, content, subheader, button)
+    if subheader:
+        text.bold(subheader)
+        text.br_half()
+    for row in content:
+        text.normal(row)
+    await require_confirm(
+        ctx, text, ButtonRequestType.Warning, confirm=button, cancel=None
+    )
 
 
 async def show_success(
@@ -94,21 +101,11 @@ async def show_success(
     button: str = "Continue",
 ) -> None:
     text = Text("Success", ui.ICON_CONFIRM, ui.GREEN)
-    await _message(ctx, text, content, subheader, button)
-
-
-async def _message(
-    ctx: wire.Context,
-    text: Text,
-    content: List[str],
-    subheader: str = None,
-    button: str = "Continue",
-) -> None:
     if subheader:
         text.bold(subheader)
         text.br_half()
     for row in content:
         text.normal(row)
     await require_confirm(
-        ctx, text, ButtonRequestType.Other, confirm=button, cancel=None
+        ctx, text, ButtonRequestType.Success, confirm=button, cancel=None
     )

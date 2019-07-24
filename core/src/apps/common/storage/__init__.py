@@ -1,7 +1,7 @@
 from trezor import config
 
 from apps.common import cache
-from apps.common.storage import common, device, slip39
+from apps.common.storage import common, device, recovery
 
 
 def set_current_version() -> None:
@@ -9,7 +9,7 @@ def set_current_version() -> None:
 
 
 def is_initialized() -> bool:
-    return device.is_version_stored() and not slip39.is_in_progress()
+    return device.is_version_stored() and not recovery.is_in_progress()
 
 
 def wipe() -> None:

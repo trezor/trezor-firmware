@@ -64,6 +64,9 @@ message ButtonRequest {
         ButtonRequest_MnemonicInput = 13;
         ButtonRequest_PassphraseType = 14;
         ButtonRequest_UnknownDerivationPath = 15;
+        ButtonRequest_RecoveryHomepage = 16;
+        ButtonRequest_Success = 17;
+        ButtonRequest_Warning = 18;
     }
 }
 

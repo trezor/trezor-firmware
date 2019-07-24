@@ -13,22 +13,24 @@ _NAMESPACE = common._APP_DEVICE
 
 # fmt: off
 # Keys:
-_DEVICE_ID          = const(0x00)  # bytes
-_VERSION            = const(0x01)  # int
-_MNEMONIC_SECRET    = const(0x02)  # bytes
-_LANGUAGE           = const(0x03)  # str
-_LABEL              = const(0x04)  # str
-_USE_PASSPHRASE     = const(0x05)  # bool (0x01 or empty)
-_HOMESCREEN         = const(0x06)  # bytes
-_NEEDS_BACKUP       = const(0x07)  # bool (0x01 or empty)
-_FLAGS              = const(0x08)  # int
-_U2F_COUNTER        = const(0x09)  # int
-_PASSPHRASE_SOURCE  = const(0x0A)  # int
-_UNFINISHED_BACKUP  = const(0x0B)  # bool (0x01 or empty)
-_AUTOLOCK_DELAY_MS  = const(0x0C)  # int
-_NO_BACKUP          = const(0x0D)  # bool (0x01 or empty)
-_MNEMONIC_TYPE      = const(0x0E)  # int
-_ROTATION           = const(0x0F)  # int
+_DEVICE_ID                 = const(0x00)  # bytes
+_VERSION                   = const(0x01)  # int
+_MNEMONIC_SECRET           = const(0x02)  # bytes
+_LANGUAGE                  = const(0x03)  # str
+_LABEL                     = const(0x04)  # str
+_USE_PASSPHRASE            = const(0x05)  # bool (0x01 or empty)
+_HOMESCREEN                = const(0x06)  # bytes
+_NEEDS_BACKUP              = const(0x07)  # bool (0x01 or empty)
+_FLAGS                     = const(0x08)  # int
+_U2F_COUNTER               = const(0x09)  # int
+_PASSPHRASE_SOURCE         = const(0x0A)  # int
+_UNFINISHED_BACKUP         = const(0x0B)  # bool (0x01 or empty)
+_AUTOLOCK_DELAY_MS         = const(0x0C)  # int
+_NO_BACKUP                 = const(0x0D)  # bool (0x01 or empty)
+_MNEMONIC_TYPE             = const(0x0E)  # int
+_ROTATION                  = const(0x0F)  # int
+_SLIP39_IDENTIFIER         = const(0x10)  # bool
+_SLIP39_ITERATION_EXPONENT = const(0x11)  # int
 # fmt: on
 
 HOMESCREEN_MAXSIZE = 16384
@@ -202,3 +204,33 @@ def next_u2f_counter() -> Optional[int]:
 
 def set_u2f_counter(count: int) -> None:
     common._set_counter(_NAMESPACE, _U2F_COUNTER, count, True)  # writable when locked
+
+
+def set_slip39_identifier(identifier: int) -> None:
+    """
+    The device's actual SLIP-39 identifier used in passphrase derivation.
+    Not to be confused with recovery.identifier, which is stored only during
+    the recovery process and it is copied here upon success.
+    """
+    common._set_uint16(_NAMESPACE, _SLIP39_IDENTIFIER, identifier)
+
+
+def get_slip39_identifier() -> Optional[int]:
+    """The device's actual SLIP-39 identifier used in passphrase derivation."""
+    return common._get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
+
+
+def set_slip39_iteration_exponent(exponent: int) -> None:
+    """
+    The device's actual SLIP-39 iteration exponent used in passphrase derivation.
+    Not to be confused with recovery.iteration_exponent, which is stored only during
+    the recovery process and it is copied here upon success.
+    """
+    common._set_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT, exponent)
+
+
+def get_slip39_iteration_exponent() -> Optional[int]:
+    """
+    The device's actual SLIP-39 iteration exponent used in passphrase derivation.
+    """
+    return common._get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)

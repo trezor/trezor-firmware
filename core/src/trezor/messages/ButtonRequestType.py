@@ -15,3 +15,6 @@ MnemonicWordCount = 12
 MnemonicInput = 13
 PassphraseType = 14
 UnknownDerivationPath = 15
+RecoveryHomepage = 16
+Success = 17
+Warning = 18

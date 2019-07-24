@@ -126,6 +126,15 @@ def run() -> None:
                 # rationale: We use untyped lists here, because that is what the C API supports.
 
 
+def clear():
+    """Clear all queue state.  Any scheduled or paused tasks will be forgotten."""
+    _ = [0, 0, 0]
+    while _queue:
+        _queue.pop(_)
+    _paused.clear()
+    _finalizers.clear()
+
+
 def _step(task: Task, value: Any) -> None:
     try:
         if isinstance(value, BaseException):
