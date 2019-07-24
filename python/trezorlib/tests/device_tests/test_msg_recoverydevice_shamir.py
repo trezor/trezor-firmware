@@ -18,206 +18,219 @@ import time
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import device, exceptions, messages
 
-from .common import TrezorTest
+pytestmark = pytest.mark.skip_t1
+
+SHARES_20_3of6 = [
+    "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
+    "extra extend academic acne away best indicate impact square oasis prospect painting voting guest either argue username racism enemy eclipse",
+    "extra extend academic arcade born dive legal hush gross briefing talent drug much home firefly toxic analysis idea umbrella slice",
+]
+
+SHARES_33_2of5 = [
+    "hobo romp academic axis august founder knife legal recover alien expect emphasis loan kitchen involve teacher capture rebuild trial numb spider forward ladle lying voter typical security quantity hawk legs idle leaves gasoline",
+    "hobo romp academic agency ancestor industry argue sister scene midst graduate profile numb paid headset airport daisy flame express scene usual welcome quick silent downtown oral critical step remove says rhythm venture aunt",
+]
 
 
-@pytest.mark.skip_t1
-class TestMsgRecoveryDeviceShamir(TrezorTest):
-    def test_3of6_nopin_nopassphrase(self):
-        # 128 bits security, 3 of 6
-        mnemonics = [
-            "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
-            "extra extend academic acne away best indicate impact square oasis prospect painting voting guest either argue username racism enemy eclipse",
-            "extra extend academic arcade born dive legal hush gross briefing talent drug much home firefly toxic analysis idea umbrella slice",
-        ]
-        word_count = len(mnemonics[0].split(" "))
+VECTORS = (
+    (SHARES_20_3of6, "491b795b80fc21ccdf466c0fbc98c8fc"),
+    (
+        SHARES_33_2of5,
+        "b770e0da1363247652de97a39bdbf2463be087848d709ecbf28e84508e31202a",
+    ),
+)
 
-        ret = self.client.call_raw(
-            proto.RecoveryDevice(
-                passphrase_protection=False, pin_protection=False, label="label"
-            )
+
+def enter_all_shares(debug, shares):
+    word_count = len(shares[0].split(" "))
+
+    # Homescreen - proceed to word number selection
+    yield
+    debug.press_yes()
+    # Input word number
+    code = yield
+    assert code == messages.ButtonRequestType.MnemonicWordCount
+    debug.input(str(word_count))
+    # Homescreen - proceed to share entry
+    yield
+    debug.press_yes()
+    # Enter shares
+    for share in shares:
+        code = yield
+        assert code == messages.ButtonRequestType.MnemonicInput
+        # Enter mnemonic words
+        for word in share.split(" "):
+            time.sleep(1)
+            debug.input(word)
+
+        # Homescreen - continue
+        # or Homescreen - confirm success
+        yield
+        debug.press_yes()
+
+
+@pytest.mark.parametrize("shares, secret", VECTORS)
+def test_secret(client, shares, secret):
+    debug = client.debug
+
+    def input_flow():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        # run recovery flow
+        yield from enter_all_shares(debug, shares)
+
+    with client:
+        client.set_input_flow(input_flow)
+        ret = device.recover(client, pin_protection=False, label="label")
+
+    # Workflow succesfully ended
+    assert ret == messages.Success(message="Device recovered")
+    assert client.features.pin_protection is False
+    assert client.features.passphrase_protection is False
+
+    # Check mnemonic
+    assert debug.read_mnemonic_secret().hex() == secret
+
+
+def test_recover_with_pin_passphrase(client):
+    debug = client.debug
+
+    def input_flow():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        yield  # Enter PIN
+        debug.input("654")
+        yield  # Enter PIN again
+        debug.input("654")
+        # Proceed with recovery
+        yield from enter_all_shares(debug, SHARES_20_3of6)
+
+    with client:
+        client.set_input_flow(input_flow)
+        ret = device.recover(
+            client, pin_protection=True, passphrase_protection=True, label="label"
         )
 
-        # Confirm Recovery
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+    # Workflow succesfully ended
+    assert ret == messages.Success(message="Device recovered")
+    assert client.features.pin_protection is True
+    assert client.features.passphrase_protection is True
 
-        # Homescreen - consider aborting process
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_no()
-        ret = self.client.call_raw(proto.ButtonAck())
 
-        # Homescreen - but then bail out in the warning
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_no()
-        ret = self.client.call_raw(proto.ButtonAck())
+def test_abort(client):
+    debug = client.debug
 
-        # Homescreen - click Enter
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+    def input_flow():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        yield  # Homescreen - abort process
+        debug.press_no()
+        yield  # Homescreen - confirm abort
+        debug.press_yes()
 
-        # Enter word count
-        assert ret == proto.ButtonRequest(
-            code=proto.ButtonRequestType.MnemonicWordCount
-        )
-        self.client.debug.input(str(word_count))
-        ret = self.client.call_raw(proto.ButtonAck())
+    with client:
+        client.set_input_flow(input_flow)
+        with pytest.raises(exceptions.Cancelled):
+            device.recover(client, pin_protection=False, label="label")
+        client.init_device()
+        assert client.features.initialized is False
 
-        # Homescreen
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
 
-        # Enter shares
-        for mnemonic in mnemonics:
-            # Enter mnemonic words
-            assert ret == proto.ButtonRequest(
-                code=proto.ButtonRequestType.MnemonicInput
-            )
-            self.client.transport.write(proto.ButtonAck())
-            for word in mnemonic.split(" "):
-                time.sleep(1)
-                self.client.debug.input(word)
-            ret = self.client.transport.read()
+def test_noabort(client):
+    debug = client.debug
 
-            if mnemonic != mnemonics[-1]:
-                # Homescreen
-                assert isinstance(ret, proto.ButtonRequest)
-                self.client.debug.press_yes()
-                ret = self.client.call_raw(proto.ButtonAck())
+    def input_flow():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        yield  # Homescreen - abort process
+        debug.press_no()
+        yield  # Homescreen - go back to process
+        debug.press_no()
+        yield from enter_all_shares(debug, SHARES_20_3of6)
 
-        # Confirm success
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+    with client:
+        client.set_input_flow(input_flow)
+        device.recover(client, pin_protection=False, label="label")
+        client.init_device()
+        assert client.features.initialized is True
 
-        # Workflow succesfully ended
-        assert ret == proto.Success(message="Device recovered")
 
-        assert self.client.features.pin_protection is False
-        assert self.client.features.passphrase_protection is False
+@pytest.mark.parametrize("nth_word", range(3))
+def test_wrong_nth_word(client, nth_word):
+    debug = client.debug
+    share = SHARES_20_3of6[0].split(" ")
 
-        # Check mnemonic
-        assert (
-            self.client.debug.read_mnemonic_secret().hex()
-            == "491b795b80fc21ccdf466c0fbc98c8fc"
-        )
+    def input_flow():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        yield  # Homescreen - start process
+        debug.press_yes()
+        yield  # Enter number of words
+        debug.input(str(len(share)))
+        yield  # Homescreen - proceed to share entry
+        debug.press_yes()
+        yield  # Enter first share
+        for word in share:
+            time.sleep(1)
+            debug.input(word)
 
-        # BIP32 Root Key for empty passphrase
-        # provided by Andrew, address calculated using T1
-        # xprv9s21ZrQH143K3reExTJbGTHPu6mGuUx6yN1H1KkqoiAcw6j1t6hBiwwnXYxNQXxU8T7pANSv1rJYQPXn1LMQk1gbWes5BjSz3rJ5ZfH1cc3
-        address = btc.get_address(self.client, "Bitcoin", [])
-        assert address == "1G1MwH5sLVxKQ7yKYasfE5pxWaABLo7VK7"
+        yield  # Continue to next share
+        debug.press_yes()
+        yield  # Enter next share
+        for i, word in enumerate(share):
+            time.sleep(1)
+            if i < nth_word:
+                debug.input(word)
+            else:
+                debug.input(share[-1])
+                break
 
-    def test_2of5_pin_passphrase(self):
-        # 256 bits security, 2 of 5
-        mnemonics = [
-            "hobo romp academic axis august founder knife legal recover alien expect emphasis loan kitchen involve teacher capture rebuild trial numb spider forward ladle lying voter typical security quantity hawk legs idle leaves gasoline",
-            "hobo romp academic agency ancestor industry argue sister scene midst graduate profile numb paid headset airport daisy flame express scene usual welcome quick silent downtown oral critical step remove says rhythm venture aunt",
-        ]
-        # TODO: add incorrect mnemonic to test
-        word_count = len(mnemonics[0].split(" "))
+        code = yield
+        assert code == messages.ButtonRequestType.Warning
 
-        ret = self.client.call_raw(
-            proto.RecoveryDevice(
-                passphrase_protection=True, pin_protection=True, label="label"
-            )
-        )
+        client.cancel()
 
-        # Confirm Recovery
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+    with client:
+        client.set_input_flow(input_flow)
+        with pytest.raises(exceptions.Cancelled):
+            device.recover(client, pin_protection=False, label="label")
 
-        # Enter PIN for first time
-        assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
-        self.client.debug.input("654")
-        ret = self.client.call_raw(proto.ButtonAck())
 
-        # Enter PIN for second time
-        assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
-        self.client.debug.input("654")
-        ret = self.client.call_raw(proto.ButtonAck())
+def test_same_share(client):
+    debug = client.debug
+    first_share = SHARES_20_3of6[0].split(" ")
+    # second share is first 4 words of first
+    second_share = SHARES_20_3of6[0].split(" ")[:4]
 
-        # Homescreen
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+    def input_flow():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        yield  # Homescreen - start process
+        debug.press_yes()
+        yield  # Enter number of words
+        debug.input(str(len(first_share)))
+        yield  # Homescreen - proceed to share entry
+        debug.press_yes()
+        yield  # Enter first share
+        for word in first_share:
+            time.sleep(1)
+            debug.input(word)
 
-        # Enter word count
-        assert ret == proto.ButtonRequest(
-            code=proto.ButtonRequestType.MnemonicWordCount
-        )
-        self.client.debug.input(str(word_count))
-        ret = self.client.call_raw(proto.ButtonAck())
+        yield  # Continue to next share
+        debug.press_yes()
+        yield  # Enter next share
+        for word in second_share:
+            time.sleep(1)
+            debug.input(word)
 
-        # Homescreen
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        code = yield
+        assert code == messages.ButtonRequestType.Warning
 
-        # Enter shares
-        for mnemonic in mnemonics:
-            # Enter mnemonic words
-            assert ret == proto.ButtonRequest(
-                code=proto.ButtonRequestType.MnemonicInput
-            )
-            self.client.transport.write(proto.ButtonAck())
-            for word in mnemonic.split(" "):
-                time.sleep(1)
-                self.client.debug.input(word)
-            ret = self.client.transport.read()
+        client.cancel()
 
-            if mnemonic != mnemonics[-1]:
-                # Homescreen
-                assert isinstance(ret, proto.ButtonRequest)
-                self.client.debug.press_yes()
-                ret = self.client.call_raw(proto.ButtonAck())
-
-        # Confirm success
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
-
-        # Workflow succesfully ended
-        assert ret == proto.Success(message="Device recovered")
-
-        # Check mnemonic
-        self.client.init_device()
-        assert (
-            self.client.debug.read_mnemonic_secret().hex()
-            == "b770e0da1363247652de97a39bdbf2463be087848d709ecbf28e84508e31202a"
-        )
-
-        assert self.client.features.pin_protection is True
-        assert self.client.features.passphrase_protection is True
-
-    def test_abort(self):
-        ret = self.client.call_raw(
-            proto.RecoveryDevice(
-                passphrase_protection=False, pin_protection=False, label="label"
-            )
-        )
-
-        # Confirm Recovery
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
-
-        # Homescreen - abort process
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_no()
-        ret = self.client.call_raw(proto.ButtonAck())
-
-        # Homescreen - yup, really
-        assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
-
-        # check that the device is wiped
-        features = self.client.call_raw(proto.Initialize())
-        assert features.initialized is False
+    with client:
+        client.set_input_flow(input_flow)
+        with pytest.raises(exceptions.Cancelled):
+            device.recover(client, pin_protection=False, label="label")
