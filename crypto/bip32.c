@@ -50,6 +50,8 @@
 #endif
 #include "memzero.h"
 
+#define CARDANO_MAX_NODE_DEPTH 1048576
+
 const curve_info ed25519_info = {
     .bip32_name = "ed25519 seed",
     .params = NULL,
@@ -288,6 +290,10 @@ static void scalar_add_256bits(const uint8_t *src1, const uint8_t *src2,
 }
 
 int hdnode_private_ckd_cardano(HDNode *inout, uint32_t index) {
+  if (inout->depth >= CARDANO_MAX_NODE_DEPTH) {
+    return 0;
+  }
+
   // checks for hardened/non-hardened derivation, keysize 32 means we are
   // dealing with public key and thus non-h, keysize 64 is for private key
   int keysize = 32;
@@ -356,30 +362,60 @@ int hdnode_private_ckd_cardano(HDNode *inout, uint32_t index) {
   return 1;
 }
 
-int hdnode_from_seed_cardano(const uint8_t *pass, int pass_len,
-                             const uint8_t *seed, int seed_len, HDNode *out) {
-  static CONFIDENTIAL uint8_t secret[96];
-  pbkdf2_hmac_sha512(pass, pass_len, seed, seed_len, 4096, secret, 96);
-
-  secret[0] &= 248;
-  secret[31] &= 31;
-  secret[31] |= 64;
-
+static int hdnode_from_secret_cardano(const uint8_t *k,
+                                      const uint8_t *chain_code, HDNode *out) {
   memzero(out, sizeof(HDNode));
   out->depth = 0;
   out->child_num = 0;
-  out->curve = get_curve_by_name(ED25519_CARDANO_NAME);
+  out->curve = &ed25519_cardano_info;
+  memcpy(out->private_key, k, 32);
+  memcpy(out->private_key_extension, k + 32, 32);
+  memcpy(out->chain_code, chain_code, 32);
 
-  memcpy(out->private_key, secret, 32);
-  memcpy(out->private_key_extension, secret + 32, 32);
+  out->private_key[0] &= 0xf8;
+  out->private_key[31] &= 0x1f;
+  out->private_key[31] |= 0x40;
 
   out->public_key[0] = 0;
   hdnode_fill_public_key(out);
 
-  memcpy(out->chain_code, secret + 64, 32);
-  memzero(secret, sizeof(secret));
-
   return 1;
+}
+
+// Derives the root Cardano HDNode from a master secret, aka seed, as defined in
+// SLIP-0023.
+int hdnode_from_seed_cardano(const uint8_t *seed, int seed_len, HDNode *out) {
+  static CONFIDENTIAL uint8_t I[SHA512_DIGEST_LENGTH];
+  static CONFIDENTIAL uint8_t k[SHA512_DIGEST_LENGTH];
+  static CONFIDENTIAL HMAC_SHA512_CTX ctx;
+
+  hmac_sha512_Init(&ctx, (const uint8_t *)ED25519_CARDANO_NAME,
+                   strlen(ED25519_CARDANO_NAME));
+  hmac_sha512_Update(&ctx, seed, seed_len);
+  hmac_sha512_Final(&ctx, I);
+
+  sha512_Raw(I, 32, k);
+
+  int ret = hdnode_from_secret_cardano(k, I + 32, out);
+
+  memzero(I, sizeof(I));
+  memzero(k, sizeof(k));
+  memzero(&ctx, sizeof(ctx));
+  return ret;
+}
+
+// Derives the root Cardano HDNode from a passphrase and the entropy encoded in
+// a BIP-0039 mnemonic using the Icarus derivation scheme, aka V2 derivation
+// scheme.
+int hdnode_from_entropy_cardano_icarus(const uint8_t *pass, int pass_len,
+                                       const uint8_t *entropy, int entropy_len,
+                                       HDNode *out) {
+  static CONFIDENTIAL uint8_t secret[96];
+  pbkdf2_hmac_sha512(pass, pass_len, entropy, entropy_len, 4096, secret, 96);
+
+  int ret = hdnode_from_secret_cardano(secret, secret + 64, out);
+  memzero(secret, sizeof(secret));
+  return ret;
 }
 #endif
 

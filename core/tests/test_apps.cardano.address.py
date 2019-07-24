@@ -9,7 +9,7 @@ from apps.cardano.address import (
     derive_address_and_node
 )
 from apps.cardano.seed import Keychain
-from trezor.crypto import bip32
+from trezor.crypto import bip32, slip39
 
 
 class TestCardanoAddress(unittest.TestCase):
@@ -175,6 +175,79 @@ class TestCardanoAddress(unittest.TestCase):
 
         address_root = _get_address_root(root_node, {1: b'X\x1cr,zu\x81?\xaf\xde\x9f\xf9\xe4\xd4\x90\xadH$\xe9\xf3\x88\x16\xcb\xd2)\x02M\x0c#\xde'})
         self.assertEqual(address_root, b'\xb3\xbbS\xa8;uN:E=\xe8\xe5\x9c\x18\xbcn\xcf\xd0c\xba\x0e\xba\xaelL}\xba\xbb')
+
+    def test_slip39_128(self):
+        mnemonics = ["extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
+                "extra extend academic acne away best indicate impact square oasis prospect painting voting guest either argue username racism enemy eclipse",
+                "extra extend academic arcade born dive legal hush gross briefing talent drug much home firefly toxic analysis idea umbrella slice"]
+        passphrase = b"TREZOR"
+        identifier, exponent, ems = slip39.combine_mnemonics(mnemonics)
+        master_secret = slip39.decrypt(identifier, exponent, ems, passphrase)
+
+        node = bip32.from_seed(master_secret, "ed25519 cardano seed")
+
+        # Check root node.
+        root_priv = b"c0fe4a6973df4de06262693fc9186f71faf292960350882d49456bf108d13954"
+        root_pub = b"83e3ecaf57f90f022c45e10d1b8cb78499c30819515ad9a81ad82139fdb12a90"
+        root_ext = b"4064253ffefc4127489bce1b825a47329010c5afb4d21154ef949ef786204405"
+        root_chain = b"22c12755afdd192742613b3062069390743ea232bc1b366c8f41e37292af9305"
+
+        self.assertEqual(hexlify(node.private_key()), root_priv)
+        self.assertEqual(hexlify(node.private_key_ext()), root_ext)
+        self.assertEqual(hexlify(seed.remove_ed25519_prefix(node.public_key())), root_pub)
+        self.assertEqual(hexlify(node.chain_code()), root_chain)
+
+        # Check derived nodes and addresses.
+        node.derive_cardano(0x80000000 | 44)
+        node.derive_cardano(0x80000000 | 1815)
+        keychain = Keychain([0x80000000 | 44, 0x80000000 | 1815], node)
+
+        addresses = [
+            "Ae2tdPwUPEYxF9NAMNdd3v2LZoMeWp7gCZiDb6bZzFQeeVASzoP7HC4V9s6",
+            "Ae2tdPwUPEZ1TjYcvfkWAbiHtGVxv4byEHHZoSyQXjPJ362DifCe1ykgqgy",
+            "Ae2tdPwUPEZGXmSbda1kBNfyhRQGRcQxJFdk7mhWZXAGnapyejv2b2U3aRb"
+        ]
+
+        for i, expected in enumerate(addresses):
+            # 44'/1815'/0'/0/i
+            address, _ = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
+            self.assertEqual(address, expected)
+
+    def test_slip39_256(self):
+        mnemonics = ["hobo romp academic axis august founder knife legal recover alien expect emphasis loan kitchen involve teacher capture rebuild trial numb spider forward ladle lying voter typical security quantity hawk legs idle leaves gasoline",
+"hobo romp academic agency ancestor industry argue sister scene midst graduate profile numb paid headset airport daisy flame express scene usual welcome quick silent downtown oral critical step remove says rhythm venture aunt"]
+        passphrase = b"TREZOR"
+        identifier, exponent, ems = slip39.combine_mnemonics(mnemonics)
+        master_secret = slip39.decrypt(identifier, exponent, ems, passphrase)
+
+        node = bip32.from_seed(master_secret, "ed25519 cardano seed")
+
+        # Check root node.
+        root_priv = b"90633724b5daf770a8b420b8658e7d8bc21e066b60ec8cd4d5730681cc294e4f"
+        root_pub = b"eea170f0ef97b59d22907cb429888029721ed67d3e7a1b56b81731086ab7db64"
+        root_ext = b"f9d99bf3cd9c7e12663e8646afa40cb3aecf15d91f2abc15d21056c6bccb3414"
+        root_chain = b"04f1de750b62725fcc1ae1b93ca4063acb53c486b959cadaa100ebd7828e5460"
+
+        self.assertEqual(hexlify(node.private_key()), root_priv)
+        self.assertEqual(hexlify(node.private_key_ext()), root_ext)
+        self.assertEqual(hexlify(seed.remove_ed25519_prefix(node.public_key())), root_pub)
+        self.assertEqual(hexlify(node.chain_code()), root_chain)
+
+        # Check derived nodes and addresses.
+        node.derive_cardano(0x80000000 | 44)
+        node.derive_cardano(0x80000000 | 1815)
+        keychain = Keychain([0x80000000 | 44, 0x80000000 | 1815], node)
+
+        addresses = [
+            "Ae2tdPwUPEYyDD1C2FbVJFAE3FuAxLspfMYt29TJ1urnSKr57cVhEcioSCC",
+            "Ae2tdPwUPEZHJGtyz47F6wD7qAegt1JNRJWuiE36QLvFzeqJPBZ2EBvhr8M",
+            "Ae2tdPwUPEYxD9xNPBJTzYmtFVVWEPB6KW4TCDijQ4pDwU11wt5621PyCi4"
+        ]
+
+        for i, expected in enumerate(addresses):
+            # 44'/1815'/0'/0/i
+            address, _ = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
+            self.assertEqual(address, expected)
 
 if __name__ == '__main__':
     unittest.main()
