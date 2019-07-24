@@ -503,9 +503,9 @@ void config_loadDevice(const LoadDevice *msg) {
   if (msg->has_node) {
     storage_delete(KEY_MNEMONIC);
     config_setNode(&(msg->node));
-  } else if (msg->has_mnemonic) {
+  } else if (msg->mnemonics_count) {
     storage_delete(KEY_NODE);
-    config_setMnemonic(msg->mnemonic);
+    config_setMnemonic(msg->mnemonics[0]);
   }
 
   if (msg->has_language) {

@@ -213,8 +213,8 @@ void fsm_msgLoadDevice(const LoadDevice *msg) {
     return;
   }
 
-  if (msg->has_mnemonic && !(msg->has_skip_checksum && msg->skip_checksum)) {
-    if (!mnemonic_check(msg->mnemonic)) {
+  if (msg->mnemonics_count && !(msg->has_skip_checksum && msg->skip_checksum)) {
+    if (!mnemonic_check(msg->mnemonics[0])) {
       fsm_sendFailure(FailureType_Failure_DataError,
                       _("Mnemonic with wrong checksum provided"));
       layoutHome();
