@@ -18,8 +18,7 @@ import time
 
 import pytest
 
-from trezorlib import btc, device, messages as proto
-from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
+from trezorlib import btc, messages as proto
 
 from .common import TrezorTest
 
@@ -114,14 +113,6 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
         address = btc.get_address(self.client, "Bitcoin", [])
         assert address == "1G1MwH5sLVxKQ7yKYasfE5pxWaABLo7VK7"
 
-        # TODO: test passphrase in load_device
-        # # BIP32 Root Key for passphrase TREZOR
-        # # provided by Andrew, address calculated using T1
-        # # xprv9s21ZrQH143K2pMWi8jrTawHaj16uKk4CSbvo4Zt61tcrmuUDMx2o1Byzcr3saXNGNvHP8zZgXVdJHsXVdzYFPavxvCyaGyGr1WkAYG83ce
-        # self.client.set_passphrase("TREZOR")
-        # address = btc.get_address(self.client, "Bitcoin", [])
-        # assert address == "18oZEMRWurCZW1FeK8sWYyXuWx2bFqEKyX"
-
     def test_2of5_pin_passphrase(self):
         # 256 bits security, 2 of 5
         mnemonics = [
@@ -204,27 +195,6 @@ class TestMsgRecoveryDeviceShamir(TrezorTest):
 
         assert self.client.features.pin_protection is True
         assert self.client.features.passphrase_protection is True
-
-        device.apply_settings(self.client, passphrase_source=PASSPHRASE_ON_HOST)
-
-        # BIP32 Root Key for empty passphrase
-        # provided by Andrew, address calculated using T1
-        # xprv9s21ZrQH143K2kP9RYJE5AFggTHLs8PbDaaTYtvh238THxDyXqyqQV6H1QpFr3aaQ7CFusFMYyGZ6VcK7aLADyCaCJrszovxtzVZmnRfca4
-        address = btc.get_address(self.client, "Bitcoin", [])
-        assert address == "1BmqXKM8M1gWA4bgkbPeCtJruRnrY2qYKP"
-
-        # hackish way to clear passphrase
-        # TODO: move this to another test file and test using load_device on a new session
-        self.client.state = None
-        self.client.init_device()
-        self.client.set_passphrase("TREZOR")
-
-        # BIP32 Root Key for passphrase TREZOR
-        # provided by Andrew, address calculated using T1
-        # xprv9s21ZrQH143K2o6EXEHpVy8TCYoMmkBnDCCESLdR2ieKwmcNG48ck2XJQY4waS7RUQcXqR9N7HnQbUVEDMWYyREdF1idQqxFHuCfK7fqFni
-
-        address = btc.get_address(self.client, "Bitcoin", [])
-        assert address == "19Fjs9AvT13Y2Nx8GtoVfADmFWnccsPinQ"
 
     def test_abort(self):
         ret = self.client.call_raw(
