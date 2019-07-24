@@ -408,21 +408,11 @@ def load_device_by_mnemonic(
     label,
     language="english",
     skip_checksum=False,
-    expand=False,
 ):
-    # Convert mnemonic to UTF8 NKFD
-    mnemonic = Mnemonic.normalize_string(mnemonic)
+    if not isinstance(mnemonic, (list, tuple)):
+        mnemonic = [mnemonic]
 
-    # Convert mnemonic to ASCII stream
-    mnemonic = mnemonic.encode()
-
-    m = Mnemonic("english")
-
-    if expand:
-        mnemonic = m.expand(mnemonic)
-
-    if not skip_checksum and not m.check(mnemonic):
-        raise ValueError("Invalid mnemonic checksum")
+    mnemonics = [Mnemonic.normalize_string(m) for m in mnemonic]
 
     if client.features.initialized:
         raise RuntimeError(
@@ -431,7 +421,7 @@ def load_device_by_mnemonic(
 
     resp = client.call(
         proto.LoadDevice(
-            mnemonic=mnemonic,
+            mnemonics=mnemonics,
             pin=pin,
             passphrase_protection=passphrase_protection,
             language=language,
