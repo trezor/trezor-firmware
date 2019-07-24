@@ -165,7 +165,7 @@ message WipeDevice {
  * @next Failure
  */
 message LoadDevice {
-    optional string mnemonic = 1;                           // seed encoded as BIP-39 mnemonic (12, 18 or 24 words)
+    repeated string mnemonics = 1;                          // seed encoded as mnemonic (12, 18 or 24 words for BIP39, 20 or 33 for SLIP39)
     optional hw.trezor.messages.common.HDNodeType node = 2; // BIP-32 node
     optional string pin = 3;                                // set PIN protection
     optional bool passphrase_protection = 4;                // enable master node encryption using passphrase
