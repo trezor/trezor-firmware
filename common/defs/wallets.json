@@ -24,7 +24,7 @@
         "Capricoin Mobile Wallet": "https://wallet.capricoin.org"
     },
     "bitcoin:CPU": {
-        "Electrum-CPU": "https://cpuchain.org/download"
+        "Electrum-CPU": "https://cpuchain.org/download-page.html#home"
     },
     "bitcoin:DASH": {
         "Dash Electrum": "https://electrum.dash.org"
