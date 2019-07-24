@@ -196,6 +196,9 @@ class TrezorClientDebugLink(TrezorClient):
         try:
             debug_transport = transport.find_debug()
             self.debug = DebugLink(debug_transport, auto_interact)
+            # try to open debuglink, see if it works
+            self.debug.open()
+            self.debug.close()
         except Exception:
             if not auto_interact:
                 self.debug = NullDebugLink()
