@@ -15,10 +15,11 @@ async def recovery_homescreen() -> None:
     ctx = wire.DummyContext()
     try:
         await recovery_process(ctx)
-    except Exception:
-        # clear the loop state, so loop.run will exit and the device is soft-rebooted
+    finally:
+        # clear the loop state, so loop.run will exit
         loop.clear()
-        raise
+        # clear the registered wire handlers to avoid conflicts
+        wire.clear()
 
 
 async def recovery_process(ctx: wire.Context) -> Success:

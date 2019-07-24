@@ -73,9 +73,10 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
     return Success(message=msg.message)
 
 
-def boot() -> None:
+def boot(features_only: bool = False) -> None:
     register(MessageType.Initialize, protobuf_workflow, handle_Initialize)
     register(MessageType.GetFeatures, protobuf_workflow, handle_GetFeatures)
-    register(MessageType.Cancel, protobuf_workflow, handle_Cancel)
-    register(MessageType.ClearSession, protobuf_workflow, handle_ClearSession)
-    register(MessageType.Ping, protobuf_workflow, handle_Ping)
+    if not features_only:
+        register(MessageType.Cancel, protobuf_workflow, handle_Cancel)
+        register(MessageType.ClearSession, protobuf_workflow, handle_ClearSession)
+        register(MessageType.Ping, protobuf_workflow, handle_Ping)

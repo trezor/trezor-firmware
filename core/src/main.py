@@ -6,12 +6,9 @@ import boot  # noqa: F401
 # prepare the USB interfaces, but do not connect to the host yet
 import usb
 
-from trezor import wire, utils
+from trezor import utils
 
-# initialize the wire codec and start the USB
-wire.setup(usb.iface_wire)
-if __debug__:
-    wire.setup(usb.iface_debug)
+# start the USB
 usb.bus.open()
 
 # switch into unprivileged mode, as we don't need the extra permissions anymore
@@ -20,15 +17,10 @@ utils.set_mode_unprivileged()
 
 def _boot_recovery():
     # load applications
-    import apps.management
+    import apps.homescreen
 
     # boot applications
-    apps.management.boot()
-
-    if __debug__:
-        import apps.debug
-
-        apps.debug.boot()
+    apps.homescreen.boot(features_only=True)
 
     from apps.management.recovery_device.homescreen import recovery_homescreen
 
@@ -79,11 +71,20 @@ def _boot_default():
     workflow.startdefault(homescreen)
 
 
-from trezor import loop, workflow
+from trezor import loop, wire, workflow
 from apps.common.storage import recovery
 
-if recovery.is_in_progress():
-    _boot_recovery()
-else:
-    _boot_default()
-loop.run()
+while True:
+    # initialize the wire codec
+    wire.setup(usb.iface_wire)
+    if __debug__:
+        wire.setup(usb.iface_debug)
+
+    # boot either in recovery or default mode
+    if recovery.is_in_progress():
+        _boot_recovery()
+    else:
+        _boot_default()
+    loop.run()
+
+    # loop is empty, reboot

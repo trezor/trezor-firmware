@@ -58,6 +58,11 @@ def setup(iface: WireInterface) -> None:
     loop.schedule(session_handler(iface, codec_v1.SESSION_ID))
 
 
+def clear() -> None:
+    """Remove all registered handlers."""
+    workflow_handlers.clear()
+
+
 class DummyContext:
     async def call(*argv):
         pass
