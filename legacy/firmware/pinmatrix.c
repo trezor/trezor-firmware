@@ -45,6 +45,10 @@ void pinmatrix_draw(const char *text) {
                      bmp_digits[k]);
     }
   }
+  for (int i = 0; i < 3; i++) {
+    oledSCA(12 + i * (h + pad), 12 + i * (h + pad) + h - 1, OLED_WIDTH / 2);
+    oledInvert(0, 12 + i * (h + pad), OLED_WIDTH - 1, 12 + i * (h + pad) + h - 1);
+  }
   oledRefresh();
 }
 
