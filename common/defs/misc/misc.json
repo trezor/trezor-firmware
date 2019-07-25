@@ -148,7 +148,9 @@
             "Homepage": "https://eos.io",
             "Github": "https://github.com/EOSIO/eos"
         },
-        "wallet": {},
+        "wallet": {
+            "Bloks.io": "https://bloks.io"
+        },
         "blockchain_link": {}
     },
     {
