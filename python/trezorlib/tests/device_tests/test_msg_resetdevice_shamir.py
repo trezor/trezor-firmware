@@ -1,4 +1,3 @@
-import time
 from itertools import combinations
 from unittest import mock
 
@@ -72,8 +71,7 @@ class TestMsgResetDeviceT2(TrezorTest):
                 # mnemonic phrases
                 # 20 word over 6 pages for strength 128, 33 words over 9 pages for strength 256
                 for i in range(6):
-                    time.sleep(1)
-                    words.extend(self.client.debug.state().reset_word.split())
+                    words.extend(self.client.debug.read_reset_word().split())
                     if i < 5:
                         self.client.debug.swipe_down()
                     else:
@@ -82,8 +80,7 @@ class TestMsgResetDeviceT2(TrezorTest):
 
                 # check share
                 for _ in range(3):
-                    time.sleep(1)
-                    index = self.client.debug.state().reset_word_pos
+                    index = self.client.debug.read_reset_word_pos()
                     self.client.debug.input(words[index])
 
                 all_mnemonics.extend([" ".join(words)])

@@ -1,5 +1,3 @@
-import time
-
 import pytest
 
 from trezorlib import device, messages
@@ -94,7 +92,6 @@ def enter_all_shares(debug, shares):
         assert code == messages.ButtonRequestType.MnemonicInput
         # Enter mnemonic words
         for word in share.split(" "):
-            time.sleep(1)
             debug.input(word)
 
         # Homescreen - continue
