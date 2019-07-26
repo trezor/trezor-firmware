@@ -133,5 +133,6 @@ def from_seed(seed: bytes, curve_name: str) -> HDNode:
 # extmod/modtrezorcrypto/modtrezorcrypto-bip32.h
 def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> bytes:
     """
-    Convert mnemonic to hdnode
+    Construct a HD node from a BIP-0039 mnemonic using the Icarus derivation
+    scheme, aka v2 derivation scheme.
     """

@@ -601,10 +601,19 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed,
   if (curveb.len == 0) {
     mp_raise_ValueError("Invalid curve name");
   }
+
   HDNode hdnode;
-  if (!hdnode_from_seed(seedb.buf, seedb.len, curveb.buf, &hdnode)) {
+  int res = 0;
+  if (strcmp(curveb.buf, ED25519_CARDANO_NAME) != 0) {
+    res = hdnode_from_seed(seedb.buf, seedb.len, curveb.buf, &hdnode);
+  } else {
+    res = hdnode_from_seed_cardano(seedb.buf, seedb.len, &hdnode);
+  }
+
+  if (!res) {
     mp_raise_ValueError("Failed to derive the root node");
   }
+
   mp_obj_HDNode_t *o = m_new_obj(mp_obj_HDNode_t);
   o->base.type = &mod_trezorcrypto_HDNode_type;
   o->hdnode = hdnode;
@@ -616,7 +625,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_seed_obj,
 
 /// def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> bytes:
 ///     """
-///     Convert mnemonic to hdnode
+///     Construct a HD node from a BIP-0039 mnemonic using the Icarus derivation
+///     scheme, aka v2 derivation scheme.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(
     mp_obj_t mnemonic, mp_obj_t passphrase) {
@@ -634,9 +644,9 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(
     mp_raise_ValueError("Invalid mnemonic");
   }
 
-  const int res =
-      hdnode_from_seed_cardano((const uint8_t *)ppassphrase, phrase.len,
-                               entropy, entropy_len / 8, &hdnode);
+  const int res = hdnode_from_entropy_cardano_icarus(
+      (const uint8_t *)ppassphrase, phrase.len, entropy, entropy_len / 8,
+      &hdnode);
 
   if (!res) {
     mp_raise_ValueError(
