@@ -59,10 +59,6 @@ class DebugLink:
             _, matrix = self.read_pin()
         return "".join([str(matrix.index(p) + 1) for p in pin])
 
-    def read_layout(self):
-        obj = self._call(proto.DebugLinkGetState())
-        return obj.layout
-
     def read_mnemonic_secret(self):
         obj = self._call(proto.DebugLinkGetState())
         return obj.mnemonic_secret
@@ -72,11 +68,11 @@ class DebugLink:
         return (obj.recovery_fake_word, obj.recovery_word_pos)
 
     def read_reset_word(self):
-        obj = self._call(proto.DebugLinkGetState())
+        obj = self._call(proto.DebugLinkGetState(wait_word_list=True))
         return obj.reset_word
 
     def read_reset_word_pos(self):
-        obj = self._call(proto.DebugLinkGetState())
+        obj = self._call(proto.DebugLinkGetState(wait_word_pos=True))
         return obj.reset_word_pos
 
     def read_reset_entropy(self):
@@ -90,19 +86,13 @@ class DebugLink:
     def input(self, word=None, button=None, swipe=None):
         if not self.allow_interactions:
             return
-        decision = proto.DebugLinkDecision()
-        if button is not None:
-            decision.yes_no = button
-        elif word is not None:
-            decision.input = word
-        elif swipe is not None:
-            decision.up_down = swipe
-        else:
-            raise ValueError("You need to provide input data.")
-        self._call(decision, nowait=True)
 
-    def press_button(self, yes_no):
-        self._call(proto.DebugLinkDecision(yes_no=yes_no), nowait=True)
+        args = sum(a is not None for a in (word, button, swipe))
+        if args != 1:
+            raise ValueError("Invalid input - must use one of word, button, swipe")
+
+        decision = proto.DebugLinkDecision(yes_no=button, up_down=swipe, input=word)
+        self._call(decision, nowait=True)
 
     def press_yes(self):
         self.input(button=True)

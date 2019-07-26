@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import time
 
 import pytest
 
@@ -62,7 +61,6 @@ def enter_all_shares(debug, shares):
         assert code == messages.ButtonRequestType.MnemonicInput
         # Enter mnemonic words
         for word in share.split(" "):
-            time.sleep(1)
             debug.input(word)
 
         # Homescreen - continue
@@ -173,14 +171,12 @@ def test_wrong_nth_word(client, nth_word):
         debug.press_yes()
         yield  # Enter first share
         for word in share:
-            time.sleep(1)
             debug.input(word)
 
         yield  # Continue to next share
         debug.press_yes()
         yield  # Enter next share
         for i, word in enumerate(share):
-            time.sleep(1)
             if i < nth_word:
                 debug.input(word)
             else:
@@ -215,14 +211,12 @@ def test_same_share(client):
         debug.press_yes()
         yield  # Enter first share
         for word in first_share:
-            time.sleep(1)
             debug.input(word)
 
         yield  # Continue to next share
         debug.press_yes()
         yield  # Enter next share
         for word in second_share:
-            time.sleep(1)
             debug.input(word)
 
         code = yield

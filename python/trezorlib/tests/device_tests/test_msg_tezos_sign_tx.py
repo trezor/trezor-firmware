@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import time
 
 import pytest
 
@@ -200,10 +199,8 @@ class TestMsgTezosSignTx(TrezorTest):
 
     def input_flow(self, num_pages):
         yield
-        time.sleep(1)
         for _ in range(num_pages - 1):
             self.client.debug.swipe_down()
-            time.sleep(1)
         self.client.debug.press_yes()
 
     def test_tezos_sign_tx_proposal(self):
