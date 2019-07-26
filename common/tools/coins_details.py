@@ -38,10 +38,11 @@ WALLETS_ETH_NATIVE = WALLETS_ETH_3RDPARTY.copy()
 WALLETS_ETH_NATIVE.update(WALLET_TREZOR_NEXT)
 
 
-TREZORIO_KNOWN_URLS = (
+TREZOR_KNOWN_URLS = (
     "https://wallet.trezor.io",
     "https://beta-wallet.trezor.io/next/",
     "https://trezor.io/stellar/",
+    "https://omnitrezor.com/",
 )
 
 
@@ -330,11 +331,8 @@ def check_missing_data(coins):
                 LOG.warning(f"{k}: Bad wallet entry")
                 hide = True
                 continue
-            if "trezor" in name.lower() and url not in TREZORIO_KNOWN_URLS:
+            if "trezor" in name.lower() and url not in TREZOR_KNOWN_URLS:
                 LOG.warning(f"{k}: Strange URL for Trezor Wallet")
-                hide = True
-            if "trezor.io" in url.lower() and url not in TREZORIO_KNOWN_URLS:
-                LOG.warning(f"{k}: Unexpected trezor.io URL: {url}")
 
         if coin["t1_enabled"] == "no" and coin["t2_enabled"] == "no":
             LOG.info(f"{k}: Coin not enabled on either device")
