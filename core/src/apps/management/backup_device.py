@@ -12,13 +12,13 @@ async def backup_device(ctx, msg):
     if not storage.device.needs_backup():
         raise wire.ProcessError("Seed already backed up")
 
-    mnemonic_secret, mnemonic_module = mnemonic.get()
-    slip39 = mnemonic_module == mnemonic.slip39
+    mnemonic_secret, mnemonic_type = mnemonic.get()
+    is_slip39 = mnemonic_type == mnemonic.TYPE_SLIP39
 
     storage.device.set_unfinished_backup(True)
     storage.device.set_backed_up()
 
-    if slip39:
+    if is_slip39:
         await backup_slip39_wallet(ctx, mnemonic_secret)
     else:
         await layout.bip39_show_and_confirm_mnemonic(ctx, mnemonic_secret.decode())

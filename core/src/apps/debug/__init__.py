@@ -42,7 +42,8 @@ if __debug__:
         from apps.common import storage, mnemonic
 
         m = DebugLinkState()
-        m.mnemonic_secret, m.mnemonic_type = mnemonic.get()
+        m.mnemonic_secret = mnemonic.get_secret()
+        m.mnemonic_type = mnemonic.get_type()
         m.passphrase_protection = storage.device.has_passphrase()
         m.reset_word_pos = reset_word_index
         m.reset_entropy = reset_internal_entropy

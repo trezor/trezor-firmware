@@ -61,7 +61,7 @@ async def _finish_recovery_dry_run(
     ctx: wire.Context, secret: bytes, mnemonic_type: int
 ) -> Success:
     digest_input = sha256(secret).digest()
-    stored, _ = mnemonic.get()
+    stored = mnemonic.get_secret()
     digest_stored = sha256(stored).digest()
     result = utils.consteq(digest_stored, digest_input)
 
