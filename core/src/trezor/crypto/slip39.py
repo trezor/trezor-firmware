@@ -60,7 +60,7 @@ def bits_to_words(n: int) -> int:
 MAX_SHARE_COUNT = const(16)
 """The maximum number of shares that can be created."""
 
-DEFAULT_ITERATION_EXPONENT = const(0)
+DEFAULT_ITERATION_EXPONENT = const(1)
 
 _RADIX = 2 ** _RADIX_BITS
 """The number of words in the wordlist."""
