@@ -29438,6 +29438,42 @@
                 }
             ]
         },
+        "misc:MAID": {
+            "links": {
+                "Github": "https://github.com/maidsafe",
+                "Homepage": "https://maidsafe.net"
+            },
+            "marketcap_usd": 68213588,
+            "name": "MaidSafeCoin",
+            "shortcut": "MAID",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": [
+                {
+                    "name": "OMNI Trezor",
+                    "url": "https://omnitrezor.com/"
+                }
+            ]
+        },
+        "misc:OMNI": {
+            "links": {
+                "Github": "https://github.com/OmniLayer",
+                "Homepage": "https://www.omnilayer.org"
+            },
+            "marketcap_usd": 1222234,
+            "name": "Omni",
+            "shortcut": "OMNI",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": [
+                {
+                    "name": "OMNI Trezor",
+                    "url": "https://omnitrezor.com/"
+                }
+            ]
+        },
         "misc:ONT": {
             "links": {
                 "Github": "https://github.com/ontio/ontology",
@@ -29450,6 +29486,23 @@
             "t2_enabled": "soon",
             "type": "coin",
             "wallet": []
+        },
+        "misc:USDT": {
+            "links": {
+                "Homepage": "https://tether.to"
+            },
+            "marketcap_usd": 4028751828,
+            "name": "Tether",
+            "shortcut": "USDT",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": [
+                {
+                    "name": "OMNI Trezor",
+                    "url": "https://omnitrezor.com/"
+                }
+            ]
         },
         "misc:WAN": {
             "links": {
@@ -29646,12 +29699,12 @@
         }
     },
     "info": {
-        "marketcap_supported": "90.56 %",
-        "marketcap_usd": 246401654903,
-        "t1_coins": 1056,
-        "t2_coins": 1077,
-        "total_marketcap_usd": 272085180133,
-        "updated_at": 1564139340,
-        "updated_at_readable": "Fri Jul 26 13:09:00 2019"
+        "marketcap_supported": "91.96 %",
+        "marketcap_usd": 250499842553,
+        "t1_coins": 1059,
+        "t2_coins": 1080,
+        "total_marketcap_usd": 272400777609,
+        "updated_at": 1564140094,
+        "updated_at_readable": "Fri Jul 26 13:21:34 2019"
     }
 }
