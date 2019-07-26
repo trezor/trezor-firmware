@@ -35,6 +35,7 @@ def get_features() -> Features:
     f.unfinished_backup = storage.device.unfinished_backup()
     f.no_backup = storage.device.no_backup()
     f.flags = storage.device.get_flags()
+    f.recovery_mode = storage.recovery.is_in_progress()
     return f
 
 

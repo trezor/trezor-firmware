@@ -41,6 +41,7 @@ class Features(p.MessageType):
         fw_vendor_keys: bytes = None,
         unfinished_backup: bool = None,
         no_backup: bool = None,
+        recovery_mode: bool = None,
     ) -> None:
         self.vendor = vendor
         self.major_version = major_version
@@ -69,6 +70,7 @@ class Features(p.MessageType):
         self.fw_vendor_keys = fw_vendor_keys
         self.unfinished_backup = unfinished_backup
         self.no_backup = no_backup
+        self.recovery_mode = recovery_mode
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -100,4 +102,5 @@ class Features(p.MessageType):
             26: ('fw_vendor_keys', p.BytesType, 0),
             27: ('unfinished_backup', p.BoolType, 0),
             28: ('no_backup', p.BoolType, 0),
+            29: ('recovery_mode', p.BoolType, 0),
         }
