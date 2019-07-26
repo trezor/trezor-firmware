@@ -22,8 +22,8 @@ class TestSignTxOmni(unittest.TestCase):
         VECTORS = {
              "6f6d6e69000000000000001f000000002b752ee0": "Simple send of 7.291 USDT",
              "6f6d6e69000000000000001f0000000020c85580": "Simple send of 5.5 USDT",
-             "6f6d6e690000000000000003000000002b752ee0": "Simple send of 7.291 MAID",
-             "6f6d6e690000000000000000000000002b752ee0": "Simple send of 7.291 UNKN",
+             "6f6d6e690000000000000003000000002b752ee0": "Simple send of 729100000 MAID",
+             "6f6d6e690000000000000000000000002b752ee0": "Simple send of 729100000 UNKN",
              "6f6d6e6901000000": "Unknown transaction",
         }
         for k, v in VECTORS.items():
