@@ -90,7 +90,7 @@ class TestMsgResetDeviceT2(TrezorTest):
 
                 # Confirm continue to next share
                 btn_code = yield
-                assert btn_code == B.ResetDevice
+                assert btn_code == B.Success
                 self.client.debug.press_yes()
 
             # generate secret locally
@@ -102,7 +102,7 @@ class TestMsgResetDeviceT2(TrezorTest):
 
             # safety warning
             btn_code = yield
-            assert btn_code == B.ResetDevice
+            assert btn_code == B.Success
             self.client.debug.press_yes()
 
         os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
@@ -119,16 +119,16 @@ class TestMsgResetDeviceT2(TrezorTest):
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Other),
-                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.Success),
                     proto.ButtonRequest(code=B.Other),
-                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.Success),
                     proto.ButtonRequest(code=B.Other),
-                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.Success),
                     proto.ButtonRequest(code=B.Other),
-                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.Success),
                     proto.ButtonRequest(code=B.Other),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.Success),
+                    proto.ButtonRequest(code=B.Success),
                     proto.Success(),
                     proto.Features(),
                 ]

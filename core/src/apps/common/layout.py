@@ -80,12 +80,13 @@ def address_n_to_str(address_n: list) -> str:
 async def show_warning(
     ctx: wire.Context,
     content: List[str],
-    subheader: str = None,
-    button: str = "Continue",
+    subheader: List[str] = [],
+    button: str = "Try again",
 ) -> None:
     text = Text("Warning", ui.ICON_WRONG, ui.RED)
     if subheader:
-        text.bold(subheader)
+        for row in subheader:
+            text.bold(row)
         text.br_half()
     for row in content:
         text.normal(row)
@@ -96,13 +97,14 @@ async def show_warning(
 
 async def show_success(
     ctx: wire.Context,
-    content: List[str],
-    subheader: str = None,
+    content: List[str] = [],
+    subheader: List[str] = [],
     button: str = "Continue",
 ) -> None:
     text = Text("Success", ui.ICON_CONFIRM, ui.GREEN)
     if subheader:
-        text.bold(subheader)
+        for row in subheader:
+            text.bold(row)
         text.br_half()
     for row in content:
         text.normal(row)

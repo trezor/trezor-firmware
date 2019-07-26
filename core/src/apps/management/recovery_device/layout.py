@@ -39,7 +39,7 @@ async def request_word_count(ctx: wire.Context, dry_run: bool) -> int:
     if dry_run:
         text = Text("Seed check", ui.ICON_RECOVERY)
     else:
-        text = Text("Wallet recovery", ui.ICON_RECOVERY)
+        text = Text("Recovery mode", ui.ICON_RECOVERY)
     text.normal("Number of words?")
 
     if __debug__:
@@ -137,31 +137,23 @@ async def show_keyboard_info(ctx: wire.Context) -> None:
 async def show_invalid_mnemonic(ctx, mnemonic_type: int):
     if mnemonic_type == mnemonic.TYPE_SLIP39:
         await show_warning(
-            ctx,
-            ("You have entered", "a recovery share", "that is not valid."),
-            button="Try again",
+            ctx, ("You have entered", "a recovery share", "that is not valid.")
         )
     else:
         await show_warning(
-            ctx,
-            ("You have entered", "a recovery seed", "that is not valid."),
-            button="Try again",
+            ctx, ("You have entered", "a recovery seed", "that is not valid.")
         )
 
 
 async def show_share_already_added(ctx):
     return await show_warning(
-        ctx,
-        ("Share already entered,", "please enter", "a different share."),
-        button="Try again",
+        ctx, ("Share already entered,", "please enter", "a different share.")
     )
 
 
 async def show_identifier_mismatch(ctx):
     return await show_warning(
-        ctx,
-        ("You have entered", "a share from another", "Shamir Backup."),
-        button="Try again",
+        ctx, ("You have entered", "a share from another", "Shamir Backup.")
     )
 
 

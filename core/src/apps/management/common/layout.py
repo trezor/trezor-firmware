@@ -12,6 +12,7 @@ from trezor.ui.shamir import NumInput
 from trezor.ui.text import Text
 
 from apps.common.confirm import confirm, hold_to_confirm, require_confirm
+from apps.common.layout import show_success
 
 if __debug__:
     from apps import debug
@@ -26,7 +27,7 @@ async def show_internal_entropy(ctx, entropy: bytes):
 
 
 async def confirm_backup(ctx):
-    text = Text("Back up wallet", ui.ICON_RESET, new_lines=False)
+    text = Text("Success", ui.ICON_CONFIRM, ui.GREEN, new_lines=False)
     text.bold("New wallet created")
     text.br()
     text.bold("successfully!")
@@ -46,7 +47,7 @@ async def confirm_backup(ctx):
 
 
 async def confirm_backup_again(ctx):
-    text = Text("Back up wallet", ui.ICON_RESET, new_lines=False)
+    text = Text("Warning", ui.ICON_WRONG, ui.RED, new_lines=False)
     text.bold("Are you sure you want")
     text.br()
     text.bold("to skip the backup?")
@@ -76,13 +77,13 @@ async def _confirm_share_words(ctx, share_index, share_words):
         third += 1
 
     for part in utils.chunks(numbered, third):
-        if not await _confirm_word(ctx, share_index, part):
+        if not await _confirm_word(ctx, share_index, part, len(share_words)):
             return False
 
     return True
 
 
-async def _confirm_word(ctx, share_index, numbered_share_words):
+async def _confirm_word(ctx, share_index, numbered_share_words, count):
     # TODO: duplicated words in the choice list
 
     # shuffle the numbered seed half, slice off the choices we need
@@ -99,7 +100,7 @@ async def _confirm_word(ctx, share_index, numbered_share_words):
 
     # let the user pick a word
     choices = [word for _, word in numbered_choices]
-    select = MnemonicWordSelect(choices, share_index, checked_index)
+    select = MnemonicWordSelect(choices, share_index, checked_index, count)
     if __debug__:
         selected_word = await ctx.wait(select, debug.input_signal)
     else:
@@ -113,20 +114,16 @@ async def _show_confirmation_success(
     ctx, share_index, num_of_shares=None, slip39=False
 ):
     if share_index is None or num_of_shares is None or share_index == num_of_shares - 1:
-        text = Text("Recovery seed", ui.ICON_RESET)
-        text.bold("You finished verifying")
         if slip39:
-            text.bold("your recovery shares.")
+            subheader = ("You finished verifying", "your recovery shares.")
         else:
-            text.bold("your recovery seed.")
+            subheader = ("You finished verifying", "your recovery seed.")
+        text = []
     else:
-        text = Text("Recovery share #%s" % (share_index + 1), ui.ICON_RESET)
-        text.bold("Recovery share #%s" % (share_index + 1))
-        text.bold("checked successfully.")
-        text.normal("Continue with share #%s." % (share_index + 2))
-    return await confirm(
-        ctx, text, ButtonRequestType.ResetDevice, cancel=None, confirm="Continue"
-    )
+        subheader = ("Recovery share #%s" % (share_index + 1), "checked successfully.")
+        text = ["Continue with share #%s." % (share_index + 2)]
+
+    return await show_success(ctx, text, subheader=subheader)
 
 
 async def _show_confirmation_failure(ctx, share_index):
@@ -135,14 +132,14 @@ async def _show_confirmation_failure(ctx, share_index):
     else:
         text = Text("Recovery share #%s" % (share_index + 1), ui.ICON_WRONG, ui.RED)
     text.bold("That is the wrong word.")
-    text.bold("Please check again.")
+    text.normal("Please check again.")
     await require_confirm(
         ctx, text, ButtonRequestType.ResetDevice, confirm="Check again", cancel=None
     )
 
 
 async def show_backup_warning(ctx, slip39=False):
-    text = Text("Back up your seed", ui.ICON_NOCOPY)
+    text = Text("Caution", ui.ICON_NOCOPY)
     if slip39:
         text.normal(
             "Never make a digital",
@@ -163,13 +160,8 @@ async def show_backup_warning(ctx, slip39=False):
 
 
 async def show_backup_success(ctx):
-    text = Text("Backup is done!", ui.ICON_RESET)
-    text.normal(
-        "Use the backup to", "recover your wallet", "if you ever lose", "the device."
-    )
-    await require_confirm(
-        ctx, text, ButtonRequestType.ResetDevice, "Finish backup", cancel=None
-    )
+    text = ("Use your backup", "when you need to", "recover your wallet.")
+    await show_success(ctx, text, subheader=["Your backup is done."])
 
 
 # BIP39
@@ -343,7 +335,7 @@ async def slip39_show_and_confirm_shares(ctx, shares):
             # display paginated share on the screen
             await _slip39_show_share_words(ctx, index, share_words)
 
-            # make the user confirm 2 words from the share
+            # make the user confirm words from the share
             if await _confirm_share_words(ctx, index, share_words):
                 await _show_confirmation_success(
                     ctx, index, num_of_shares=len(shares), slip39=True
@@ -485,7 +477,7 @@ class ShamirNumInput(ui.Control):
 class MnemonicWordSelect(ui.Layout):
     NUM_OF_CHOICES = 3
 
-    def __init__(self, words, share_index, word_index):
+    def __init__(self, words, share_index, word_index, count):
         self.words = words
         self.share_index = share_index
         self.word_index = word_index
@@ -499,7 +491,7 @@ class MnemonicWordSelect(ui.Layout):
             self.text = Text("Check seed")
         else:
             self.text = Text("Check share #%s" % (share_index + 1))
-        self.text.normal("Select the %s word:" % utils.format_ordinal(word_index + 1))
+        self.text.normal("Select word %d of %d:" % (word_index + 1, count))
 
     def dispatch(self, event, x, y):
         for btn in self.buttons:
