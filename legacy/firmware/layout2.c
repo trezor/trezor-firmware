@@ -361,25 +361,30 @@ void layoutConfirmOmni(const uint8_t *data, uint32_t size) {
     desc = _("Simple send of ");
     REVERSE32(*(const uint32_t *)(data + 8), currency);
     const char *suffix = " UNKN";
+    bool divisible = false;
     switch (currency) {
       case 1:
         suffix = " OMNI";
+        divisible = true;
         break;
       case 2:
         suffix = " tOMNI";
+        divisible = true;
         break;
       case 3:
         suffix = " MAID";
+        divisible = false;
         break;
       case 31:
         suffix = " USDT";
+        divisible = true;
         break;
     }
     uint64_t amount_be, amount;
     memcpy(&amount_be, data + 12, sizeof(uint64_t));
     REVERSE64(amount_be, amount);
-    bn_format_uint64(amount, NULL, suffix, BITCOIN_DIVISIBILITY, 0, false,
-                     str_out, sizeof(str_out));
+    bn_format_uint64(amount, NULL, suffix, divisible ? BITCOIN_DIVISIBILITY : 0,
+                     0, false, str_out, sizeof(str_out));
   } else {
     desc = _("Unknown transaction");
     str_out[0] = 0;
