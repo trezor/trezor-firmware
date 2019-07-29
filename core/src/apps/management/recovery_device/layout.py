@@ -150,21 +150,21 @@ async def show_keyboard_info(ctx: wire.Context) -> None:
         await ctx.wait(info)
 
 
-async def show_invalid_mnemonic(ctx, mnemonic_type: int):
+async def show_invalid_mnemonic(ctx: wire.Context, mnemonic_type: int) -> None:
     if mnemonic_type == mnemonic.TYPE_SLIP39:
         await show_warning(ctx, ("You have entered", "an invalid recovery", "share."))
     else:
         await show_warning(ctx, ("You have entered", "an invalid recovery", "seed."))
 
 
-async def show_share_already_added(ctx):
-    return await show_warning(
+async def show_share_already_added(ctx: wire.Context) -> None:
+    await show_warning(
         ctx, ("Share already entered,", "please enter", "a different share.")
     )
 
 
-async def show_identifier_mismatch(ctx):
-    return await show_warning(
+async def show_identifier_mismatch(ctx: wire.Context) -> None:
+    await show_warning(
         ctx, ("You have entered", "a share from another", "Shamir Backup.")
     )
 
@@ -176,7 +176,7 @@ class RecoveryHomescreen(ui.Control):
         self.dry_run = storage.recovery.is_dry_run()
         self.repaint = True
 
-    def on_render(self):
+    def on_render(self) -> None:
         if not self.repaint:
             return
 

@@ -126,7 +126,7 @@ def run() -> None:
                 # rationale: We use untyped lists here, because that is what the C API supports.
 
 
-def clear():
+def clear() -> None:
     """Clear all queue state.  Any scheduled or paused tasks will be forgotten."""
     _ = [0, 0, 0]
     while _queue:

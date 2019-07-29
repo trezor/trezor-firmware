@@ -64,7 +64,7 @@ def require_confirm_change_pin(ctx, msg):
         return require_confirm(ctx, text)
 
 
-async def request_pin_confirm(ctx, *args, **kwargs):
+async def request_pin_confirm(ctx: wire.Context, *args, **kwargs) -> str:
     while True:
         pin1 = await request_pin_ack(ctx, "Enter new PIN", *args, **kwargs)
         pin2 = await request_pin_ack(ctx, "Re-enter new PIN", *args, **kwargs)
@@ -73,7 +73,7 @@ async def request_pin_confirm(ctx, *args, **kwargs):
         await pin_mismatch()
 
 
-async def request_pin_ack(ctx, *args, **kwargs):
+async def request_pin_ack(ctx: wire.Context, *args, **kwargs) -> str:
     try:
         await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
         return await ctx.wait(request_pin(*args, **kwargs))

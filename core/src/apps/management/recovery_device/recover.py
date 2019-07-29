@@ -11,7 +11,7 @@ class RecoveryAborted(Exception):
     pass
 
 
-def process_share(words: str, mnemonic_type: int):
+def process_share(words: str, mnemonic_type: int) -> Optional[bytes]:
     if mnemonic_type == mnemonic.TYPE_BIP39:
         return _process_bip39(words)
     else:

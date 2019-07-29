@@ -93,10 +93,13 @@ async def _finish_recovery(
         secret, mnemonic_type, needs_backup=False, no_backup=False
     )
     if mnemonic_type == mnemonic.TYPE_SLIP39:
-        storage.device.set_slip39_identifier(storage.recovery.get_slip39_identifier())
-        storage.device.set_slip39_iteration_exponent(
-            storage.recovery.get_slip39_iteration_exponent()
-        )
+        identifier = storage.recovery.get_slip39_identifier()
+        exponent = storage.recovery.get_slip39_iteration_exponent()
+        if identifier is None or exponent is None:
+            # Identifier and exponent need to be stored in storage at this point
+            raise RuntimeError
+        storage.device.set_slip39_identifier(identifier)
+        storage.device.set_slip39_iteration_exponent(exponent)
     storage.recovery.end_progress()
 
     await show_success(ctx, ("You have successfully", "recovered your wallet."))
@@ -117,7 +120,9 @@ async def _request_and_store_word_count(ctx: wire.Context, dry_run: bool) -> int
     return word_count
 
 
-async def _request_secret(ctx: wire.Context, word_count: int, mnemonic_type: int):
+async def _request_secret(
+    ctx: wire.Context, word_count: int, mnemonic_type: int
+) -> bytes:
     await _request_share_first_screen(ctx, word_count, mnemonic_type)
 
     secret = None
@@ -148,7 +153,7 @@ async def _request_secret(ctx: wire.Context, word_count: int, mnemonic_type: int
 
 async def _request_share_first_screen(
     ctx: wire.Context, word_count: int, mnemonic_type: int
-):
+) -> None:
     if mnemonic_type == mnemonic.TYPE_BIP39:
         content = layout.RecoveryHomescreen(
             "Enter recovery seed", "(%d words)" % word_count
@@ -167,9 +172,12 @@ async def _request_share_first_screen(
         raise RuntimeError
 
 
-async def _request_share_next_screen(ctx: wire.Context, mnemonic_type: int):
+async def _request_share_next_screen(ctx: wire.Context, mnemonic_type: int) -> None:
     if mnemonic_type == mnemonic.TYPE_SLIP39:
         remaining = storage.recovery.get_remaining()
+        if not remaining:
+            # 'remaining' should be stored at this point
+            raise RuntimeError
         if remaining == 1:
             text = "1 more share"
         else:
