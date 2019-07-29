@@ -1524,7 +1524,9 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     return None
 
 
-def cbor_get_assertion_hmac_secret(cred: Credential, hmac_secret: dict) -> bytes:
+def cbor_get_assertion_hmac_secret(
+    cred: Credential, hmac_secret: dict
+) -> Optional[bytes]:
     key_agreement = hmac_secret[1]  # The public key of platform key agreement key.
     salt_enc = hmac_secret[2]  # The encrypted salt.
     salt_auth = hmac_secret[3]  # The HMAC of the encrypted salt.
@@ -1556,7 +1558,7 @@ def cbor_get_assertion_hmac_secret(cred: Credential, hmac_secret: dict) -> bytes
     cred_random = cred.hmac_secret_key()
     if cred_random is None:
         # The credential does not have the hmac-secret extension enabled.
-        raise ValueError
+        return None
 
     # Compute the hmac-secret output.
     output = hmac.Hmac(cred_random, salt[:32], hashlib.sha256).digest()
@@ -1574,21 +1576,28 @@ def cbor_get_assertion_sign(
     hmac_secret: dict,
     user_presence: bool = True,
 ) -> bytes:
+    # Process extensions
+    extensions = {}
+    if hmac_secret:
+        encrypted_output = cbor_get_assertion_hmac_secret(cred, hmac_secret)
+        if encrypted_output is not None:
+            extensions["hmac-secret"] = encrypted_output
+
+    # Encode the authenticator data.
     flags = 0
     if user_presence:
         flags |= _AUTH_FLAG_UP
     if config.has_pin():
         flags |= _AUTH_FLAG_UV
 
-    # Encode the authenticator data.
-    extensions = b""
-    if hmac_secret:
-        extensions = cbor.encode(
-            {"hmac-secret": cbor_get_assertion_hmac_secret(cred, hmac_secret)}
-        )
+    encoded_extensions = b""
+    if extensions:
         flags |= _AUTH_FLAG_ED
+        encoded_extensions = cbor.encode(extensions)
 
-    authenticator_data = rp_id_hash + bytes([flags]) + b"\x00\x00\x00\x00" + extensions
+    authenticator_data = (
+        rp_id_hash + bytes([flags]) + b"\x00\x00\x00\x00" + encoded_extensions
+    )
 
     # Sign the authenticator data and the client data hash.
     dig = hashlib.sha256()
