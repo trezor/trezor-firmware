@@ -16,11 +16,18 @@
 
 import pytest
 
+from trezorlib import device
 from trezorlib.cardano import get_address
+from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
 from .conftest import setup_client
+
+SLIP39_MNEMONIC = [
+    "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
+    "extra extend academic acne away best indicate impact square oasis prospect painting voting guest either argue username racism enemy eclipse",
+    "extra extend academic arcade born dive legal hush gross briefing talent drug much home firefly toxic analysis idea umbrella slice",
+]
 
 
 @pytest.mark.cardano
@@ -30,21 +37,24 @@ from .conftest import setup_client
     [
         (
             "m/44'/1815'/0'/0/0",
-            "Ae2tdPwUPEZLCq3sFv4wVYxwqjMH2nUzBVt1HFr4v87snYrtYq3d3bq2PUQ",
+            "Ae2tdPwUPEYxF9NAMNdd3v2LZoMeWp7gCZiDb6bZzFQeeVASzoP7HC4V9s6",
         ),
         (
             "m/44'/1815'/0'/0/1",
-            "Ae2tdPwUPEZEY6pVJoyuNNdLp7VbMB7U7qfebeJ7XGunk5Z2eHarkcN1bHK",
+            "Ae2tdPwUPEZ1TjYcvfkWAbiHtGVxv4byEHHZoSyQXjPJ362DifCe1ykgqgy",
         ),
         (
             "m/44'/1815'/0'/0/2",
-            "Ae2tdPwUPEZ3gZD1QeUHvAqadAV59Zid6NP9VCR9BG5LLAja9YtBUgr6ttK",
+            "Ae2tdPwUPEZGXmSbda1kBNfyhRQGRcQxJFdk7mhWZXAGnapyejv2b2U3aRb",
         ),
     ],
 )
-@setup_client(mnemonic=TrezorTest.mnemonic12)
+@setup_client(mnemonic=SLIP39_MNEMONIC, passphrase=True)
 def test_cardano_get_address(client, path, expected_address):
-    # data from https://iancoleman.io/bip39/#english
+    # enter passphrase
+    assert client.debug.read_passphrase_protection() is True
+    device.apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
+    client.set_passphrase("TREZOR")
 
     address = get_address(client, parse_path(path))
     assert address == expected_address
