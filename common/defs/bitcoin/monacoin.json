@@ -39,6 +39,12 @@
   "blockbook": [
     "https://blockbook.electrum-mona.org"
   ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.electrum-mona.org"
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": null
 }

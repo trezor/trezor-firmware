@@ -36,6 +36,12 @@
   "blockbook": [
     "https://blockbook.gamecredits.network"
   ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.gamecredits.network"
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": null
 }

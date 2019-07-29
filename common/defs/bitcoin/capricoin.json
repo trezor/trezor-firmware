@@ -42,6 +42,15 @@
     "https://blockbook3.capricoin.org",
     "https://blockbook4.capricoin.org"
   ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.capricoin.org",
+      "https://blockbook2.capricoin.org",
+      "https://blockbook3.capricoin.org",
+      "https://blockbook4.capricoin.org"
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": null
 }

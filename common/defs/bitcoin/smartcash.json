@@ -39,6 +39,7 @@
     "https://insight.smartcash.cc"
   ],
   "blockbook": [],
+  "blockchain_link": null,
   "cooldown": 100,
   "consensus_branch_id": null
 }

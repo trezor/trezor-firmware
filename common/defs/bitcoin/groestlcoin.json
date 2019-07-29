@@ -39,6 +39,12 @@
   "blockbook": [
     "https://blockbook.groestlcoin.org"
   ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.groestlcoin.org"
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": null
 }

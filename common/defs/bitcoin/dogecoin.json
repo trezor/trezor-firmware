@@ -40,6 +40,16 @@
     "https://doge4.trezor.io",
     "https://doge5.trezor.io"
   ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
+      "https://doge1.trezor.io",
+      "https://doge2.trezor.io",
+      "https://doge3.trezor.io",
+      "https://doge4.trezor.io",
+      "https://doge5.trezor.io"
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": null
 }

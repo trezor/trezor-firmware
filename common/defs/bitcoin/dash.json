@@ -40,6 +40,16 @@
     "https://dash4.trezor.io",
     "https://dash5.trezor.io"
   ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
+      "https://dash1.trezor.io",
+      "https://dash2.trezor.io",
+      "https://dash3.trezor.io",
+      "https://dash4.trezor.io",
+      "https://dash5.trezor.io"
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": null
 }

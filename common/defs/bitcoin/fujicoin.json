@@ -39,6 +39,12 @@
   "blockbook": [
     "https://explorer.fujicoin.org"
   ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
+      "https://explorer.fujicoin.org"
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": null
 }

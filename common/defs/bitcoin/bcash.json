@@ -43,6 +43,16 @@
     "https://bch4.trezor.io",
     "https://bch5.trezor.io"
   ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
+      "https://bch1.trezor.io",
+      "https://bch2.trezor.io",
+      "https://bch3.trezor.io",
+      "https://bch4.trezor.io",
+      "https://bch5.trezor.io"
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": null
 }

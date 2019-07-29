@@ -39,6 +39,12 @@
   "blockbook": [
     "https://zny.blockbook.ovh"
   ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
+      "https://zny.blockbook.ovh"
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": null
 }

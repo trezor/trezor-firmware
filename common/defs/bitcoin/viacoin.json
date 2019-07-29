@@ -39,6 +39,7 @@
     "https://explorer.viacoin.org"
   ],
   "blockbook": [],
+  "blockchain_link": null,
   "cooldown": 100,
   "consensus_branch_id": null
 }

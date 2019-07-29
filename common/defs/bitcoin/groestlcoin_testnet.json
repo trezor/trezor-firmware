@@ -38,6 +38,12 @@
   "blockbook": [
     "https://blockbook-test.groestlcoin.org"
   ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook-test.groestlcoin.org"
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": null
 }

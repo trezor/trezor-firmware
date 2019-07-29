@@ -37,6 +37,13 @@
     "https://bellcoin-blockbook.ilmango.work",
     "https://bell.blockbook.ovh"
   ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
+      "https://bellcoin-blockbook.ilmango.work",
+      "https://bell.blockbook.ovh"
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": null
 }

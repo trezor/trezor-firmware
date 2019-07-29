@@ -40,6 +40,16 @@
     "https://zec4.trezor.io",
     "https://zec5.trezor.io"
   ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
+      "https://zec1.trezor.io",
+      "https://zec2.trezor.io",
+      "https://zec3.trezor.io",
+      "https://zec4.trezor.io",
+      "https://zec5.trezor.io"
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": {
     "1": 0,

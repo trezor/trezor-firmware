@@ -36,10 +36,17 @@
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [],
-    "blockbook": [
+  "blockbook": [
+    "https://blockbook1.bitcoinrh.org",
+    "https://blockbook2.bitcoinrh.org"
+  ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
       "https://blockbook1.bitcoinrh.org",
       "https://blockbook2.bitcoinrh.org"
-    ],
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": null
 }

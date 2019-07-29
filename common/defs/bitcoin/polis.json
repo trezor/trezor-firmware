@@ -36,6 +36,12 @@
   "blockbook": [
     "https://blockbook.polispay.org"
   ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.polispay.org"
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": null
 }

@@ -36,6 +36,12 @@
   "blockbook": [
     "https://blockbook.zel.network"
   ],
+  "blockchain_link": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.zel.network"
+    ]
+  },
   "cooldown": 100,
   "consensus_branch_id": null
 }
