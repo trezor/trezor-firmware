@@ -107,10 +107,21 @@ class Credential:
         cred.hmac_secret = data.get(_CRED_ID_HMAC_SECRET, False)
         cred.id = cred_id
 
-        if not cred.check_data_types():
+        if (
+            not cred.check_required()
+            or not cred.check_data_types()
+            or hashlib.sha256(cred.rp_id).digest() != rp_id_hash
+        ):
             return None
 
         return cred
+
+    def check_required(self):
+        return (
+            self.rp_id is not None
+            and self.user_id is not None
+            and self._creation_time is not None
+        )
 
     def check_data_types(self):
         return (
