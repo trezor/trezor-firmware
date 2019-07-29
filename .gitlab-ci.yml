@@ -19,6 +19,8 @@ variables:
   PIPENV_VENV_IN_PROJECT: "true"
   PIPENV_CACHE_DIR: ".cache/"
 
+  # No need for TLS because everything runs on the same machine
+  DOCKER_TLS_CERTDIR: ""
 stages:
   - environment
   - prebuild
