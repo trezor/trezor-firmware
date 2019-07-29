@@ -50,9 +50,10 @@ class Checklist(ui.Control):
                 font = ui.NORMAL
                 fg = ui.GREY
 
-            # render item icon
-            icon = res.load(ui.ICON_CONFIRM)
-            ui.display.icon(0, offset_y - 14, icon, fg, bg)
+            # render item icon in past items
+            if index < self.active:
+                icon = res.load(ui.ICON_CONFIRM)
+                ui.display.icon(0, offset_y - 14, icon, fg, bg)
 
             # render item text
             if isinstance(item, str):
