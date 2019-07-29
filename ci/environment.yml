@@ -1,6 +1,6 @@
 environment:
   stage: environment
-  image: docker:18.09.6
+  image: docker
   variables:
     GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
     CONTAINER_NAME: "$CI_REGISTRY/trezor/trezor-firmware/environment"
