@@ -433,7 +433,13 @@ async def handle_reports(iface: io.HID) -> None:
             req = await read_cmd(iface)
             if req is None:
                 continue
-            resp = dispatch_cmd(req, dialog_mgr)
+            if dialog_mgr.is_busy() and req.cid not in (
+                dialog_mgr.get_cid(),
+                _CID_BROADCAST,
+            ):
+                resp = cmd_error(req.cid, _ERR_CHANNEL_BUSY)
+            else:
+                resp = dispatch_cmd(req, dialog_mgr)
             if resp is not None:
                 await send_cmd(resp, iface)
         except Exception as e:
@@ -511,6 +517,23 @@ class ConfirmGetAssertion(Confirm):
                 c = ui.blend(ui.GREY, ui.DARK_GREY, t)
                 icon = res.load(ui.ICON_SWIPE_LEFT)
                 ui.display.icon(205, 68, icon, c, ui.BG)
+
+
+async def check_pin() -> bool:
+    from apps.common.request_pin import PinCancelled, request_pin
+    from trezor.pin import pin_to_int
+
+    if not config.has_pin():
+        if config.unlock(pin_to_int("")) is True:
+            return True
+
+    try:
+        pin = await request_pin("Enter your PIN", config.get_pin_rem())
+        while config.unlock(pin_to_int(pin)) is not True:
+            pin = await request_pin("Wrong PIN, enter again", config.get_pin_rem())
+    except PinCancelled:
+        return False
+    return True
 
 
 def text_center_trim_left(
@@ -620,14 +643,23 @@ class State:
     def __init__(self, cid: int) -> None:
         self.cid = cid
 
-    def get_dialog(self) -> ui.Layout:
-        pass
-
     def keepalive_status(self) -> Optional[int]:
         return None
 
     def timeout_ms(self) -> int:
         return _U2F_CONFIRM_TIMEOUT_MS
+
+    async def confirmation(self) -> bool:
+        pass
+
+    async def on_confirm(self, iface: io.HID) -> None:
+        pass
+
+    async def on_decline(self, iface: io.HID) -> None:
+        pass
+
+    async def on_timeout(self, iface: io.HID) -> None:
+        pass
 
 
 class U2fState(State, ConfirmInfo):
@@ -657,16 +689,16 @@ class U2fConfirmRegister(U2fState):
     def __init__(self, cid: int, checksum: bytes, app_id: bytes) -> None:
         super().__init__(cid, checksum, app_id)
 
-    def get_dialog(self) -> ui.Layout:
+    async def confirmation(self) -> bool:
         if self._app_id == _BOGUS_APPID:
             text = Text("U2F", ui.ICON_WRONG, ui.RED)
             text.normal(
                 "Another U2F device", "was used to register", "in this application."
             )
-            return Confirm(text, confirm=None)
+            return await Confirm(text, confirm=None) is CONFIRMED
         else:
             content = ConfirmContent(self)
-            return Confirm(content)
+            return await Confirm(content) is CONFIRMED
 
     def get_header(self) -> str:
         return "U2F Register"
@@ -686,9 +718,9 @@ class U2fConfirmAuthenticate(U2fState):
     def get_header(self) -> str:
         return "U2F Authenticate"
 
-    def get_dialog(self) -> ui.Layout:
+    async def confirmation(self) -> bool:
         content = ConfirmContent(self)
-        return Confirm(content)
+        return await Confirm(content) is CONFIRMED
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -708,30 +740,34 @@ class Fido2State(State):
     def timeout_ms(self) -> int:
         return _FIDO2_CONFIRM_TIMEOUT_MS
 
-    def on_confirm(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_OPERATION_DENIED)
+    async def on_confirm(self, iface: io.HID) -> None:
+        cmd = cbor_error(self.cid, _ERR_OPERATION_DENIED)
+        await send_cmd(cmd, iface)
 
-    def on_decline(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_OPERATION_DENIED)
+    async def on_decline(self, iface: io.HID) -> None:
+        cmd = cbor_error(self.cid, _ERR_OPERATION_DENIED)
+        await send_cmd(cmd, iface)
 
-    def on_timeout(self) -> Cmd:
-        return self.on_decline()
+    async def on_timeout(self, iface: io.HID) -> None:
+        await self.on_decline(iface)
 
 
 class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
     def __init__(
-        self, cid: int, client_data_hash: bytes, cred: Credential, resident: bool
+        self,
+        cid: int,
+        client_data_hash: bytes,
+        cred: Credential,
+        resident: bool,
+        user_verification: bool,
     ) -> None:
         super().__init__(cid)
         self._client_data_hash = client_data_hash
         self._cred = cred
         self._resident = resident
+        self._user_verification = user_verification
         self._app_name = cred.rp_id
         self.load_icon(hashlib.sha256(cred.rp_id.encode()).digest())
-
-    def get_dialog(self) -> ui.Layout:
-        content = ConfirmContent(self)
-        return Confirm(content)
 
     def get_header(self) -> str:
         return "FIDO2 Register"
@@ -742,14 +778,37 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
     def user_name(self) -> Optional[str]:
         return self._cred.name()
 
-    def on_confirm(self) -> Cmd:
-        self._cred.generate_id()
+    async def confirmation(self) -> bool:
+        content = ConfirmContent(self)
+        if await Confirm(content) is not CONFIRMED:
+            return False
+        if self._user_verification:
+            return await check_pin()
+        return True
 
-        response_data = cbor_make_credential_sign(self._client_data_hash, self._cred)
+    async def on_confirm(self, iface: io.HID) -> None:
+        self._cred.generate_id()
+        response_data = cbor_make_credential_sign(
+            self._client_data_hash, self._cred, self._user_verification
+        )
+        cmd = Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
         if self._resident:
             if not storage.webauthn.store_resident_credential(self._cred):
-                return cbor_error(self.cid, _ERR_KEY_STORE_FULL)
-        return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
+                cmd = cbor_error(self.cid, _ERR_KEY_STORE_FULL)
+        await send_cmd(cmd, iface)
+
+
+class Fido2ConfirmExcluded(Fido2ConfirmMakeCredential):
+    def __init__(self, cid: int, cred: Credential) -> None:
+        super().__init__(cid, b"", cred, False, False)
+
+    async def on_confirm(self, iface: io.HID) -> None:
+        cmd = cbor_error(self.cid, _ERR_CREDENTIAL_EXCLUDED)
+        await send_cmd(cmd, iface)
+
+        text = Text("FIDO2 Register", ui.ICON_WRONG, ui.RED)
+        text.normal("This device is already", "registered with", self._cred.rp_id + ".")
+        await Confirm(text, confirm=None)
 
 
 class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
@@ -759,6 +818,7 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
         client_data_hash: bytes,
         creds: List[Credential],
         hmac_secret: dict,
+        user_verification: bool,
     ) -> None:
         Fido2State.__init__(self, cid)
         ConfirmInfo.__init__(self)
@@ -767,11 +827,8 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
         self._creds = creds
         self._hmac_secret = hmac_secret
         self._app_name = creds[0].rp_id
+        self._user_verification = user_verification
         self.load_icon(hashlib.sha256(self._app_name.encode()).digest())
-
-    def get_dialog(self) -> ui.Layout:
-        content = ConfirmContent(self)
-        return ConfirmGetAssertion(content, self)
 
     def get_header(self) -> str:
         return "FIDO2 Authenticate"
@@ -785,7 +842,15 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
     def page_count(self) -> int:
         return len(self._creds)
 
-    def on_confirm(self) -> Cmd:
+    async def confirmation(self) -> bool:
+        content = ConfirmContent(self)
+        if await ConfirmGetAssertion(content, self) is not CONFIRMED:
+            return False
+        if self._user_verification:
+            return await check_pin()
+        return True
+
+    async def on_confirm(self, iface: io.HID) -> None:
         cred = self._creds[self.page()]
         try:
             response_data = cbor_get_assertion_sign(
@@ -793,69 +858,64 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
                 hashlib.sha256(cred.rp_id.encode()).digest(),
                 cred,
                 self._hmac_secret,
+                True,
+                self._user_verification,
             )
-            return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
+            cmd = Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
         except Exception:
-            return cbor_error(self.cid, _ERR_OPERATION_DENIED)
+            cmd = cbor_error(self.cid, _ERR_OPERATION_DENIED)
 
-
-class Fido2ConfirmExcluded(Fido2State):
-    def __init__(self, cid: int, cred: Credential) -> None:
-        super().__init__(cid)
-        self._cred = cred
-
-    def get_dialog(self) -> ui.Layout:
-        text = Text("FIDO2 Register", ui.ICON_WRONG, ui.RED)
-        text.normal("This device is already", "registered with", self._cred.rp_id + ".")
-        return Confirm(text, confirm=None)
-
-    def on_confirm(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_CREDENTIAL_EXCLUDED)
-
-    def on_decline(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_CREDENTIAL_EXCLUDED)
+        await send_cmd(cmd, iface)
 
 
 class Fido2ConfirmNoPin(Fido2State):
     def __init__(self, cid: int) -> None:
         super().__init__(cid)
 
-    def get_dialog(self) -> ui.Layout:
+    async def confirmation(self) -> bool:
         text = Text("FIDO2 Verify User", ui.ICON_WRONG, ui.RED)
         text.normal("Unable to verify user.", "Please enable PIN", "protection.")
-        return Confirm(text, confirm=None)
+        return await Confirm(text, confirm=None) is CONFIRMED
+
+    async def on_confirm(self, iface: io.HID) -> None:
+        cmd = cbor_error(self.cid, _ERR_UNSUPPORTED_OPTION)
+        await send_cmd(cmd, iface)
+
+    async def on_decline(self, iface: io.HID) -> None:
+        cmd = cbor_error(self.cid, _ERR_UNSUPPORTED_OPTION)
+        await send_cmd(cmd, iface)
 
 
-class Fido2ConfirmNoCredentials(Fido2State):
+class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
     def __init__(self, cid: int, rp_id: str) -> None:
-        super().__init__(cid)
+        cred = Credential()
+        cred.rp_id = rp_id
+        super().__init__(cid, b"", [cred], {}, False)
         self._app_name = rp_id
 
-    def get_dialog(self) -> ui.Layout:
+    async def on_confirm(self, iface: io.HID) -> None:
+        cmd = cbor_error(self.cid, _ERR_NO_CREDENTIALS)
+        await send_cmd(cmd, iface)
+
         text = Text("FIDO2 Authenticate", ui.ICON_WRONG, ui.RED)
         text.normal("This device is not", "registered with", self._app_name + ".")
-        return Confirm(text, confirm=None)
-
-    def on_confirm(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_NO_CREDENTIALS)
-
-    def on_decline(self) -> Cmd:
-        return cbor_error(self.cid, _ERR_NO_CREDENTIALS)
+        await Confirm(text, confirm=None)
 
 
 class Fido2ConfirmReset(Fido2State):
     def __init__(self, cid: int) -> None:
         super().__init__(cid)
 
-    def get_dialog(self) -> ui.Layout:
+    async def confirmation(self) -> bool:
         text = Text("FIDO2 Reset", ui.ICON_CONFIG)
         text.normal("Do you really want to")
         text.bold("erase all credentials?")
-        return Confirm(text)
+        return await Confirm(text) is CONFIRMED
 
-    def on_confirm(self) -> Cmd:
+    async def on_confirm(self, iface: io.HID) -> None:
         storage.webauthn.erase_resident_credentials()
-        return Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]))
+        cmd = Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]))
+        await send_cmd(cmd, iface)
 
 
 class DialogManager:
@@ -882,13 +942,15 @@ class DialogManager:
             loop.close(self.keepalive)
         self._clear()
 
+    def get_cid(self) -> int:
+        if self.state is None:
+            return 0
+        return self.state.cid
+
     def is_busy(self) -> bool:
-        if self.workflow is None:
-            return False
         if utime.ticks_ms() >= self.deadline:
             self.reset()
-            return False
-        return True
+        return bool(workflow.workflows)
 
     def compare(self, state: State) -> bool:
         if self.state != state:
@@ -899,10 +961,7 @@ class DialogManager:
         return True
 
     def set_state(self, state: State) -> bool:
-        if utime.ticks_ms() >= self.deadline:
-            self.reset()
-
-        if workflow.workflows:
+        if self.is_busy():
             return False
 
         self.state = state
@@ -920,32 +979,22 @@ class DialogManager:
 
     async def keepalive_loop(self) -> None:
         try:
-            while True:
+            while utime.ticks_ms() < self.deadline:
+                cmd = cmd_keepalive(self.state.cid, self.state.keepalive_status())
+                await send_cmd(cmd, self.iface)
                 waiter = loop.spawn(
                     loop.sleep(_KEEPALIVE_INTERVAL_MS * 1000), self.done_signal
                 )
                 await waiter
-                if not isinstance(self.state, Fido2State):
-                    self.reset()
+                if self.user_confirmed is not None:
                     return
-                if self.done_signal in waiter.finished:
-                    if self.user_confirmed:
-                        await send_cmd(self.state.on_confirm(), self.iface)
-                    else:
-                        await send_cmd(self.state.on_decline(), self.iface)
-                    return
-                if utime.ticks_ms() >= self.deadline:
-                    await send_cmd(self.state.on_timeout(), self.iface)
-                    self.reset()
-                    return
-                await send_cmd(
-                    cmd_keepalive(self.state.cid, self.state.keepalive_status()),
-                    self.iface,
-                )
         except GeneratorExit:
-            await send_cmd(
-                cbor_error(self.state.cid, _ERR_KEEPALIVE_CANCEL), self.iface
-            )
+            cmd = cbor_error(self.state.cid, _ERR_KEEPALIVE_CANCEL)
+            await send_cmd(cmd, self.iface)
+            return
+
+        await self.state.on_timeout(self.iface)
+        self.reset()
 
     async def dialog_workflow(self) -> None:
         if self.workflow is None:
@@ -961,9 +1010,12 @@ class DialogManager:
     async def dialog_layout(self) -> None:
         if self.state is None:
             return
-        dialog = self.state.get_dialog()
-        self.user_confirmed = await dialog is CONFIRMED
+        self.user_confirmed = await self.state.confirmation()
         self.done_signal.send(None)
+        if self.user_confirmed:
+            await self.state.on_confirm(self.iface)
+        else:
+            await self.state.on_decline(self.iface)
 
 
 def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
@@ -1319,11 +1371,20 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         rp_id = param[_MAKECRED_CMD_RP]["id"]
         rp_id_hash = hashlib.sha256(rp_id).digest()
 
+        # Prepare the new credential.
+        user = param[_MAKECRED_CMD_USER]
+        cred = Credential()
+        cred.rp_id = rp_id
+        cred.rp_name = param[_MAKECRED_CMD_RP].get("name", None)
+        cred.user_id = user["id"]
+        cred.user_name = user.get("name", None)
+        cred.user_display_name = user.get("displayName", None)
+
         # Check if any of the credential descriptors in the exclude list belong to this authenticator.
         exclude_list = param.get(_MAKECRED_CMD_EXCLUDE_LIST, [])
         for credential_descriptor in exclude_list:
-            cred = Credential.from_id(credential_descriptor["id"], rp_id_hash)
-            if credential_descriptor["type"] == "public-key" and cred is not None:
+            excl_cred = Credential.from_id(credential_descriptor["id"], rp_id_hash)
+            if credential_descriptor["type"] == "public-key" and excl_cred is not None:
                 # This authenticator is already registered.
                 if not dialog_mgr.set_state(Fido2ConfirmExcluded(req.cid, cred)):
                     return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
@@ -1333,15 +1394,6 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         pub_key_cred_params = param[_MAKECRED_CMD_PUB_KEY_CRED_PARAMS]
         if _COSE_ALG_ES256 not in (alg.get("alg", None) for alg in pub_key_cred_params):
             return cbor_error(req.cid, _ERR_UNSUPPORTED_ALGORITHM)
-
-        # Prepare the new credential.
-        user = param[_MAKECRED_CMD_USER]
-        cred = Credential()
-        cred.rp_id = rp_id
-        cred.rp_name = param[_MAKECRED_CMD_RP].get("name", None)
-        cred.user_id = user["id"]
-        cred.user_name = user.get("name", None)
-        cred.user_display_name = user.get("displayName", None)
 
         # Get extensions.
         cred.hmac_secret = param.get(_MAKECRED_CMD_EXTENSIONS, {}).get(
@@ -1379,7 +1431,9 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     else:
         # Ask user to confirm registration.
         state_set = dialog_mgr.set_state(
-            Fido2ConfirmMakeCredential(req.cid, client_data_hash, cred, resident_key)
+            Fido2ConfirmMakeCredential(
+                req.cid, client_data_hash, cred, resident_key, user_verification
+            )
         )
 
     if not state_set:
@@ -1388,12 +1442,14 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     return None
 
 
-def cbor_make_credential_sign(client_data_hash: bytes, cred: Credential) -> bytes:
+def cbor_make_credential_sign(
+    client_data_hash: bytes, cred: Credential, user_verification: bool
+) -> bytes:
     privkey = cred.private_key()
     pubkey = nist256p1.publickey(privkey, False)
 
     flags = _AUTH_FLAG_UP | _AUTH_FLAG_AT
-    if config.has_pin():
+    if user_verification:
         flags |= _AUTH_FLAG_UV
 
     # Encode the authenticator data (Credential ID, its public key and extensions).
@@ -1507,7 +1563,12 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         # This is a dangerous feature, but it seems we have no choice but to enable it to make the UX acceptable.
         try:
             response_data = cbor_get_assertion_sign(
-                client_data_hash, rp_id_hash, cred_list[0], hmac_secret, user_presence
+                client_data_hash,
+                rp_id_hash,
+                cred_list[0],
+                hmac_secret,
+                user_presence,
+                user_verification,
             )
             return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
         except Exception:
@@ -1515,7 +1576,9 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     else:
         # Ask user to confirm one of the credentials.
         state_set = dialog_mgr.set_state(
-            Fido2ConfirmGetAssertion(req.cid, client_data_hash, cred_list, hmac_secret)
+            Fido2ConfirmGetAssertion(
+                req.cid, client_data_hash, cred_list, hmac_secret, user_verification
+            )
         )
 
     if not state_set:
@@ -1574,7 +1637,8 @@ def cbor_get_assertion_sign(
     rp_id_hash: bytes,
     cred: Credential,
     hmac_secret: dict,
-    user_presence: bool = True,
+    user_presence: bool,
+    user_verification: bool,
 ) -> bytes:
     # Process extensions
     extensions = {}
@@ -1587,7 +1651,7 @@ def cbor_get_assertion_sign(
     flags = 0
     if user_presence:
         flags |= _AUTH_FLAG_UP
-    if config.has_pin():
+    if user_verification:
         flags |= _AUTH_FLAG_UV
 
     encoded_extensions = b""
