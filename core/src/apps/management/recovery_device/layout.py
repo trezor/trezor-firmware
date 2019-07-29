@@ -86,25 +86,41 @@ async def request_mnemonic(
     return " ".join(words)
 
 
-async def show_dry_run_result(ctx: wire.Context, result: bool) -> None:
+async def show_dry_run_result(
+    ctx: wire.Context, result: bool, mnemonic_type: int
+) -> None:
     if result:
-        await show_success(
-            ctx,
-            (
+        if mnemonic_type == mnemonic.TYPE_SLIP39:
+            text = (
                 "The entered recovery",
-                "seed is valid and matches",
-                "the one in the device.",
-            ),
-        )
+                "shares are valid and",
+                "match what is currently",
+                "in the device.",
+            )
+        else:
+            text = (
+                "The entered recovery",
+                "seed is valid and",
+                "matches the one",
+                "in the device.",
+            )
+        await show_success(ctx, text, button="Continue")
     else:
-        await show_warning(
-            ctx,
-            (
+        if mnemonic_type == mnemonic.TYPE_SLIP39:
+            text = (
                 "The entered recovery",
-                "seed is valid but does not",
-                "match the one in the device.",
-            ),
-        )
+                "shares are valid but",
+                "do not match what is",
+                "currently in the device.",
+            )
+        else:
+            text = (
+                "The entered recovery",
+                "seed is valid but does",
+                "not match the one",
+                "in the device.",
+            )
+        await show_warning(ctx, text, button="Continue")
 
 
 async def show_dry_run_different_type(ctx: wire.Context) -> None:
@@ -136,13 +152,9 @@ async def show_keyboard_info(ctx: wire.Context) -> None:
 
 async def show_invalid_mnemonic(ctx, mnemonic_type: int):
     if mnemonic_type == mnemonic.TYPE_SLIP39:
-        await show_warning(
-            ctx, ("You have entered", "a recovery share", "that is not valid.")
-        )
+        await show_warning(ctx, ("You have entered", "an invalid recovery", "share."))
     else:
-        await show_warning(
-            ctx, ("You have entered", "a recovery seed", "that is not valid.")
-        )
+        await show_warning(ctx, ("You have entered", "an invalid recovery", "seed."))
 
 
 async def show_share_already_added(ctx):

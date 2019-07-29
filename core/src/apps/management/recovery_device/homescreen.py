@@ -76,7 +76,7 @@ async def _finish_recovery_dry_run(
             == storage.recovery.get_slip39_iteration_exponent()
         )
 
-    await layout.show_dry_run_result(ctx, result)
+    await layout.show_dry_run_result(ctx, result, mnemonic_type)
 
     storage.recovery.end_progress()
 

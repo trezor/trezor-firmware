@@ -83,8 +83,8 @@ async def request_pin_ack(ctx, *args, **kwargs):
 
 async def pin_mismatch():
     text = Text("PIN mismatch", ui.ICON_WRONG, ui.RED)
-    text.normal("Entered PINs do not", "match each other.")
+    text.normal("The PINs you entered", "do not match.")
     text.normal("")
-    text.normal("Please, try again...")
+    text.normal("Please try again.")
     popup = Popup(text, 3000)  # show for 3 seconds
     await popup

@@ -25,7 +25,7 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     if not msg.dry_run:
         title = "Recovery mode"
         text = Text(title, ui.ICON_RECOVERY)
-        text.normal("Do you really want to", "recover the wallet?", "")
+        text.normal("Do you really want to", "recover a wallet?", "")
     else:
         title = "Seed check"
         text = Text(title, ui.ICON_RECOVERY)

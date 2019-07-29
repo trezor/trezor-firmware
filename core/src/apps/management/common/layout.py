@@ -115,9 +115,9 @@ async def _show_confirmation_success(
 ):
     if share_index is None or num_of_shares is None or share_index == num_of_shares - 1:
         if slip39:
-            subheader = ("You finished verifying", "your recovery shares.")
+            subheader = ("You have finished", "verifying your", "recovery shares.")
         else:
-            subheader = ("You finished verifying", "your recovery seed.")
+            subheader = ("You have finished", "verifying your", "recovery seed.")
         text = []
     else:
         subheader = ("Recovery share #%s" % (share_index + 1), "checked successfully.")
