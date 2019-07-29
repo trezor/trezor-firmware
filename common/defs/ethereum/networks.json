@@ -7,10 +7,13 @@
     "name": "Ethereum",
     "rskip60": false,
     "url": "https://www.ethereum.org",
-    "blockbook": [
-      "https://eth1.trezor.io",
-      "https://eth2.trezor.io"
-    ]
+    "blockchain_link": {
+      "type": "blockbook",
+      "url": [
+        "https://eth1.trezor.io",
+        "https://eth2.trezor.io"
+      ]
+    }
   },
   {
     "chain": "exp",
@@ -20,7 +23,7 @@
     "name": "Expanse",
     "rskip60": false,
     "url": "https://expanse.tech",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "rop",
@@ -30,10 +33,13 @@
     "name": "Ethereum Testnet Ropsten",
     "rskip60": false,
     "url": "https://www.ethereum.org",
-    "blockbook": [
-      "https://ropsten1.trezor.io",
-      "https://ropsten2.trezor.io"
-    ]
+    "blockchain_link": {
+      "type": "blockbook",
+      "url": [
+        "https://ropsten1.trezor.io",
+        "https://ropsten2.trezor.io"
+      ]
+    }
   },
   {
     "chain": "rin",
@@ -43,7 +49,7 @@
     "name": "Ethereum Testnet Rinkeby",
     "rskip60": false,
     "url": "https://rinkeby.io",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "gor",
@@ -53,7 +59,7 @@
     "name": "Ethereum Testnet Goerli",
     "rskip60": false,
     "url": "https://www.goerli.net",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "ubq",
@@ -63,7 +69,7 @@
     "name": "Ubiq",
     "rskip60": false,
     "url": "https://ubiqsmart.com",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "meta",
@@ -73,7 +79,7 @@
     "name": "Metadium",
     "rskip60": false,
     "url": "https://metadium.com",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "etsc",
@@ -83,7 +89,7 @@
     "name": "Ethereum Social",
     "rskip60": false,
     "url": "https://ethereumsocial.kr",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "rsk",
@@ -93,7 +99,7 @@
     "name": "RSK",
     "rskip60": true,
     "url": "https://www.rsk.co",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "trsk",
@@ -103,7 +109,7 @@
     "name": "RSK Testnet",
     "rskip60": true,
     "url": "https://www.rsk.co",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "kov",
@@ -113,7 +119,7 @@
     "name": "Ethereum Testnet Kovan",
     "rskip60": false,
     "url": "https://www.ethereum.org",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "go",
@@ -123,7 +129,7 @@
     "name": "GoChain",
     "rskip60": false,
     "url": "https://gochain.io",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "etc",
@@ -133,10 +139,13 @@
     "name": "Ethereum Classic",
     "rskip60": false,
     "url": "https://ethereumclassic.github.io",
-    "blockbook": [
-      "https://etc1.trezor.io",
-      "https://etc2.trezor.io"
-    ]
+    "blockchain_link": {
+      "type": "blockbook",
+      "url": [
+        "https://etc1.trezor.io",
+        "https://etc2.trezor.io"
+      ]
+    }
   },
   {
     "chain": "tetc",
@@ -146,7 +155,7 @@
     "name": "Ethereum Classic Testnet",
     "rskip60": false,
     "url": "https://ethereumclassic.github.io",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "ella",
@@ -156,7 +165,7 @@
     "name": "Ellaism",
     "rskip60": false,
     "url": "https://ellaism.org",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "mix",
@@ -166,7 +175,7 @@
     "name": "Mix",
     "rskip60": false,
     "url": "https://www.mix-blockchain.org",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "eti",
@@ -176,7 +185,7 @@
     "name": "EtherInc",
     "rskip60": false,
     "url": "https://einc.io",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "ask",
@@ -186,7 +195,7 @@
     "name": "Permission",
     "rskip60": false,
     "url": "https://permission.io",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "dxn",
@@ -196,7 +205,7 @@
     "name": "DEXON",
     "rskip60": false,
     "url": "https://dexon.org",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "hpb",
@@ -206,7 +215,7 @@
     "name": "High Performance Blockchain",
     "rskip60": false,
     "url": "https://hpb.io",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "clo",
@@ -216,7 +225,7 @@
     "name": "Callisto",
     "rskip60": false,
     "url": "https://callisto.network",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "ath",
@@ -226,7 +235,7 @@
     "name": "Atheios",
     "rskip60": false,
     "url": "https://atheios.com",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "egem",
@@ -236,7 +245,7 @@
     "name": "EtherGem",
     "rskip60": false,
     "url": "https://egem.io",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "eosc",
@@ -246,7 +255,7 @@
     "name": "EOS Classic",
     "rskip60": false,
     "url": "https://eos-classic.io",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "reosc",
@@ -256,7 +265,7 @@
     "name": "REOSC Ecosystem",
     "rskip60": false,
     "url": "https://reosc.io",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "esn",
@@ -266,7 +275,7 @@
     "name": "Ethersocial Network",
     "rskip60": false,
     "url": "https://ethersocial.org",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "teo",
@@ -276,7 +285,7 @@
     "name": "Trust ETH reOrigin",
     "rskip60": false,
     "url": "https://tao.foundation",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "akroma",
@@ -286,7 +295,7 @@
     "name": "Akroma",
     "rskip60": false,
     "url": "https://akroma.io",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "artis_sigma1",
@@ -296,7 +305,7 @@
     "name": "ARTIS sigma1",
     "rskip60": false,
     "url": "https://artis.eco",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "artis_tau1",
@@ -306,7 +315,7 @@
     "name": "ARTIS tau1",
     "rskip60": false,
     "url": "https://artis.eco",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "etho",
@@ -316,7 +325,7 @@
     "name": "Ether-1",
     "rskip60": false,
     "url": "https://ether1.org",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "music",
@@ -326,7 +335,7 @@
     "name": "Musicoin",
     "rskip60": false,
     "url": "https://musicoin.org",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "aqua",
@@ -336,7 +345,7 @@
     "name": "Aquachain",
     "rskip60": false,
     "url": "https://aquachain.github.io",
-    "blockbook": []
+    "blockchain_link": null
   },
   {
     "chain": "pirl",
@@ -346,6 +355,6 @@
     "name": "Pirl",
     "rskip60": false,
     "url": "https://pirl.io",
-    "blockbook": []
+    "blockchain_link": null
   }
 ]
