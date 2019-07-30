@@ -55,4 +55,4 @@ zdata = zdata[2:-4] # strip header and checksum
 
 ## Tools
 
-* [toif_convert](../tools/toif_convert) - tool for converting PNGs into TOI format and back
+* [toif_convert](../tools/toif_convert.py) - tool for converting PNGs into TOI format and back
