@@ -101,7 +101,7 @@ class Context:
 
         if __debug__:
             log.debug(
-                __name__, "%s:%x read: %s", self.iface.iface_num(), self.sid, exptype
+                __name__, "%s:%x expect: %s", self.iface.iface_num(), self.sid, exptype
             )
 
         await reader.aopen()  # wait for the message header
@@ -110,6 +110,11 @@ class Context:
         # `UnexpectedMessageError` and let the session handler deal with it
         if exptype is None or reader.type != exptype.MESSAGE_WIRE_TYPE:
             raise UnexpectedMessageError(reader)
+
+        if __debug__:
+            log.debug(
+                __name__, "%s:%x read: %s", self.iface.iface_num(), self.sid, exptype
+            )
 
         # parse the message and return it
         return await protobuf.load_message(reader, exptype)
@@ -120,7 +125,7 @@ class Context:
         if __debug__:
             log.debug(
                 __name__,
-                "%s:%x read: %s",
+                "%s:%x expect: %s",
                 self.iface.iface_num(),
                 self.sid,
                 allowed_types,
@@ -135,6 +140,11 @@ class Context:
 
         # find the protobuf type
         exptype = messages.get_type(reader.type)
+
+        if __debug__:
+            log.debug(
+                __name__, "%s:%x read: %s", self.iface.iface_num(), self.sid, exptype
+            )
 
         # parse the message and return it
         return await protobuf.load_message(reader, exptype)
@@ -223,6 +233,10 @@ async def protobuf_workflow(
     from trezor.messages.Failure import Failure
 
     req = await protobuf.load_message(reader, messages.get_type(reader.type))
+
+    if __debug__:
+        log.debug(__name__, "%s:%x request: %s", ctx.iface.iface_num(), ctx.sid, req)
+
     try:
         res = await handler(ctx, req, *args)
     except UnexpectedMessageError:
