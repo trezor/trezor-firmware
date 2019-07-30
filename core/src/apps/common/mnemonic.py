@@ -51,8 +51,11 @@ def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
     elif mnemonic_type == TYPE_SLIP39:
         identifier = storage.device.get_slip39_identifier()
         iteration_exponent = storage.device.get_slip39_iteration_exponent()
+        if identifier is None or iteration_exponent is None:
+            # Identifier or exponent expected but not found
+            raise RuntimeError
         seed = slip39.decrypt(
-            identifier, iteration_exponent, mnemonic_secret, passphrase
+            identifier, iteration_exponent, mnemonic_secret, passphrase.encode()
         )
 
     if progress_bar:
