@@ -117,10 +117,27 @@ class TestMsgGetaddress:
         )
 
     @pytest.mark.altcoin
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_elements(self, client):
         assert (
-            btc.get_address(client, "Elements", parse_path("m/44'/1'/0'/0/0"))
-            == "2dpWh6jbhAowNsQ5agtFzi7j6nKscj6UnEr"
+            btc.get_address(
+                client,
+                "Elements",
+                parse_path("m/44'/1'/0'/0/0"),
+                script_type=proto.InputScriptType.SPENDADDRESS,
+                confidential=True,
+            )
+            == "CTExueKM8363z7gaDiD22BKuYCcj8peAtgDTndcdUFn4s47jgBHAsTk1WrpL3GJkVJzuRdnvU56ma3MQ"
+        )
+        assert (
+            btc.get_address(
+                client,
+                "Elements",
+                parse_path("m/44'/1'/0'/0/0"),
+                script_type=proto.InputScriptType.SPENDADDRESS,
+                confidential=False,
+            )
+            == "2dekDMTvVnZjAZVFRrs8mRAhyXKHGptx5pd"
         )
 
     @pytest.mark.multisig

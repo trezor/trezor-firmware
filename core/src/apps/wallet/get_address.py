@@ -1,3 +1,4 @@
+from trezor import utils
 from trezor.crypto import bip32
 from trezor.messages import InputScriptType
 from trezor.messages.Address import Address
@@ -48,7 +49,17 @@ async def get_address(ctx, msg, keychain):
     )
 
     node = keychain.derive(msg.address_n, coin.curve_name)
-    address = addresses.get_address(msg.script_type, coin, node, msg.multisig)
+    derive_blinding_pubkey = None
+    if not utils.BITCOIN_ONLY and msg.confidential:
+        derive_blinding_pubkey = keychain.derive_slip77_blinding_public_key
+
+    address = addresses.get_address(
+        msg.script_type,
+        coin,
+        node,
+        msg.multisig,
+        derive_blinding_pubkey=derive_blinding_pubkey,
+    )
     address_short = addresses.address_short(coin, address)
     if msg.script_type == InputScriptType.SPENDWITNESS:
         address_qr = address.upper()  # bech32 address

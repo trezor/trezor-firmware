@@ -80,6 +80,10 @@ class TestMsgGetaddressSegwitNative:
             )
             == "grs1qw4teyraux2s77nhjdwh9ar8rl9dt7zww8r6lne"
         )
+
+    @pytest.mark.altcoin
+    @pytest.mark.setup_client(mnemonic=" ".join(["all"] * 12))
+    def test_elements(self, client):
         assert (
             btc.get_address(
                 client,

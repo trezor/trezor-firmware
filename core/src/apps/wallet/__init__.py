@@ -1,4 +1,4 @@
-from trezor import wire
+from trezor import utils, wire
 from trezor.messages import MessageType
 
 
@@ -13,6 +13,9 @@ def boot() -> None:
         ["secp256k1-groestl"],
         ["secp256k1-smart"],
     ]
+    if not utils.BITCOIN_ONLY:
+        ns.append(["slip21"])
+
     wire.add(MessageType.GetPublicKey, __name__, "get_public_key", ns)
     wire.add(MessageType.GetAddress, __name__, "get_address", ns)
     wire.add(MessageType.GetEntropy, __name__, "get_entropy")
