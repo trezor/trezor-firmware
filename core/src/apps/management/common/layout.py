@@ -93,7 +93,7 @@ async def _confirm_word(ctx, share_index, numbered_share_words, count):
     # we always confirm the first (random) word index
     checked_index, checked_word = numbered_choices[0]
     if __debug__:
-        debug.reset_word_index = checked_index
+        debug.reset_word_index.publish(checked_index)
 
     # shuffle again so the confirmed word is not always the first choice
     random.shuffle(numbered_choices)
@@ -200,7 +200,7 @@ async def _bip39_show_mnemonic(ctx, words: list):
 
         def export_displayed_words():
             # export currently displayed mnemonic words into debuglink
-            debug.reset_current_words = [w for _, w in words[paginated.page]]
+            debug.reset_current_words.publish([w for _, w in words[paginated.page]])
 
         paginated.on_change = export_displayed_words
         export_displayed_words()
@@ -393,7 +393,8 @@ async def _slip39_show_share_words(ctx, share_index, share_words):
 
         def export_displayed_words():
             # export currently displayed mnemonic words into debuglink
-            debug.reset_current_words = [w for _, w in word_pages[paginated.page]]
+            words = [w for _, w in word_pages[paginated.page]]
+            debug.reset_current_words.publish(words)
 
         paginated.on_change = export_displayed_words
         export_displayed_words()

@@ -4,36 +4,60 @@ if not __debug__:
     halt("debug mode inactive")
 
 if __debug__:
-    from trezor import config, loop, utils
+    from trezor import config, log, loop, utils
     from trezor.messages import MessageType
     from trezor.wire import register, protobuf_workflow
 
     if False:
-        from typing import List, Optional
+        from typing import Optional
         from trezor import wire
         from trezor.messages.DebugLinkDecision import DebugLinkDecision
         from trezor.messages.DebugLinkGetState import DebugLinkGetState
         from trezor.messages.DebugLinkState import DebugLinkState
 
     reset_internal_entropy = None  # type: Optional[bytes]
-    reset_current_words = None  # type: Optional[List[str]]
-    reset_word_index = None  # type: Optional[int]
+    reset_current_words = loop.chan()
+    reset_word_index = loop.chan()
 
-    confirm_signal = loop.signal()
-    swipe_signal = loop.signal()
-    input_signal = loop.signal()
+    confirm_chan = loop.chan()
+    swipe_chan = loop.chan()
+    input_chan = loop.chan()
+    confirm_signal = confirm_chan.take
+    swipe_signal = swipe_chan.take
+    input_signal = input_chan.take
 
     async def dispatch_DebugLinkDecision(
         ctx: wire.Context, msg: DebugLinkDecision
     ) -> None:
         from trezor.ui import confirm, swipe
 
+        waiting_signals = [
+            bool(s.putters) for s in (confirm_chan, swipe_chan, input_chan)
+        ]
+        if sum(waiting_signals) > 0:
+            log.warning(
+                __name__,
+                "Received new DebugLinkDecision before the previous one was handled.",
+            )
+            log.warning(
+                __name__,
+                "received: button {}, swipe {}, input {}".format(
+                    msg.yes_no, msg.up_down, msg.input
+                ),
+            )
+            log.warning(
+                __name__,
+                "waiting: button {}, swipe {}, input {}".format(*waiting_signals),
+            )
+
         if msg.yes_no is not None:
-            confirm_signal.send(confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED)
+            await confirm_chan.put(
+                confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED
+            )
         if msg.up_down is not None:
-            swipe_signal.send(swipe.SWIPE_DOWN if msg.up_down else swipe.SWIPE_UP)
+            await swipe_chan.put(swipe.SWIPE_DOWN if msg.up_down else swipe.SWIPE_UP)
         if msg.input is not None:
-            input_signal.send(msg.input)
+            await input_chan.put(msg.input)
 
     async def dispatch_DebugLinkGetState(
         ctx: wire.Context, msg: DebugLinkGetState
@@ -45,10 +69,12 @@ if __debug__:
         m.mnemonic_secret = mnemonic.get_secret()
         m.mnemonic_type = mnemonic.get_type()
         m.passphrase_protection = storage.device.has_passphrase()
-        m.reset_word_pos = reset_word_index
         m.reset_entropy = reset_internal_entropy
-        if reset_current_words:
-            m.reset_word = " ".join(reset_current_words)
+
+        if msg.wait_word_pos:
+            m.reset_word_pos = await reset_word_index.take()
+        if msg.wait_word_list:
+            m.reset_word = " ".join(await reset_current_words.take())
         return m
 
     def boot() -> None:
