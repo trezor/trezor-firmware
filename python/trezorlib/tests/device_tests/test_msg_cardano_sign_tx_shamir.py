@@ -17,7 +17,6 @@
 import pytest
 
 from trezorlib import cardano, device, messages
-from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 
 from .conftest import setup_client
@@ -113,69 +112,6 @@ VALID_VECTORS = [
     ),
 ]
 
-INVALID_VECTORS = [
-    # Output address is a valid CBOR but invalid Cardano address
-    (
-        # protocol magic
-        PROTOCOL_MAGICS["mainnet"],
-        # inputs
-        [SAMPLE_INPUTS[0]["input"]],
-        # outputs
-        [
-            {
-                "address": "jsK75PTH2esX8k4Wvxenyz83LJJWToBbVmGrWUer2CHFHanLseh7r3sW5X5q",
-                "amount": "3003112",
-            }
-        ],
-        # transactions
-        [SAMPLE_INPUTS[0]["prev_tx"]],
-        "Invalid output address!",
-    ),
-    # Output address is an invalid CBOR
-    (
-        # protocol magic
-        PROTOCOL_MAGICS["mainnet"],
-        # inputs
-        [SAMPLE_INPUTS[0]["input"]],
-        # outputs
-        [
-            {
-                "address": "jsK75PTH2esX8k4Wvxenyz83LJJWToBbVmGrWUer2CHFHanLseh7r3sW5X5q",
-                "amount": "3003112",
-            }
-        ],
-        # transactions
-        [
-            "839f8200d818582482582008abb575fac4c39d5bf80683f7f0c37e48f4e3d96e37d1f6611919a7241b456600ff9f8282d818582183581cda4da43db3fca93695e71dab839e72271204d28b9d964d306b8800a8a0001a7a6916a51a00305becffa0"
-        ],
-        "Invalid output address!",
-    ),
-    # Output address is invalid CBOR
-    (
-        # protocol magic (mainnet)
-        764824073,
-        # inputs
-        [
-            {
-                "path": "m/44'/1815'/0'/0/1",
-                "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
-                "prev_index": 0,
-                "type": 0,
-            }
-        ],
-        # outputs
-        [
-            {
-                "address": "5dnY6xgRcNUSLGa4gfqef2jGAMHb7koQs9EXErXLNC1LiMPUnhn8joXhvEJpWQtN3F4ysATcBvCn5tABgL3e4hPWapPHmcK5GJMSEaET5JafgAGwSrznzL1Mqa",
-                "amount": "3003112",
-            }
-        ],
-        # transactions
-        [SAMPLE_INPUTS[0]["prev_tx"]],
-        "Invalid output address!",
-    ),
-]
-
 
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
@@ -220,29 +156,3 @@ def test_cardano_sign_tx(
         )
         assert response.tx_hash.hex() == tx_hash
         assert response.tx_body.hex() == tx_body
-
-
-@pytest.mark.cardano
-@pytest.mark.skip_t1  # T1 support is not planned
-@setup_client(mnemonic=SHARES_20_3of6)
-@pytest.mark.parametrize(
-    "protocol_magic,inputs,outputs,transactions,expected_error_message", INVALID_VECTORS
-)
-def test_cardano_sign_tx_validation(
-    client, protocol_magic, inputs, outputs, transactions, expected_error_message
-):
-    inputs = [cardano.create_input(i) for i in inputs]
-    outputs = [cardano.create_output(o) for o in outputs]
-
-    expected_responses = [
-        messages.CardanoTxRequest(tx_index=i) for i in range(len(transactions))
-    ]
-    expected_responses += [messages.Failure()]
-
-    with client:
-        client.set_expected_responses(expected_responses)
-
-        with pytest.raises(TrezorFailure) as exc:
-            cardano.sign_tx(client, inputs, outputs, transactions, protocol_magic)
-
-        assert exc.value.args[1] == expected_error_message
