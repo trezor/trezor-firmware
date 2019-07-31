@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 _At the moment, the project does **not** adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
+## [0.11.4] - 2019-07-31
+
+[0.11.4]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.3...python/v0.11.4
+
+### Added
+
+- trezorctl support for SLIP-39 Shamir Backup
+- support for Binance Chain
+
 ## [0.11.3] - 2019-05-29
 
 [0.11.3]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.2...python/v0.11.3
