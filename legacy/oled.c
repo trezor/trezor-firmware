@@ -422,7 +422,7 @@ void oledSwipeRight(void) {
 }
 
 /*
- * Mitigate SCA on lines y1-y2 by setting exactly width pixels black
+ * Mitigate SCA on lines y1-y2 by setting at least width pixels white
  */
 void oledSCA(int y1, int y2, int width) {
   y1 = MAX(y1, 0);
@@ -432,9 +432,14 @@ void oledSCA(int y1, int y2, int width) {
     for (int x = 0; x < OLED_WIDTH; x++) {
       pix += oledGetPixel(x, y);
     }
-    pix = MAX(width - pix, 0);
-    for (int x = 0 + (pix / 2); x < OLED_WIDTH - ((pix + 1) / 2); x++) {
-      oledInvertPixel(x, y);
+    if (width > pix) {
+      pix = width - pix;
+      for (int x = 0; x < pix / 2; x++) {
+        oledDrawPixel(x, y);
+      }
+      for (int x = OLED_WIDTH - ((pix + 1) / 2); x < OLED_WIDTH; x++) {
+        oledDrawPixel(x, y);
+      }
     }
   }
 }
