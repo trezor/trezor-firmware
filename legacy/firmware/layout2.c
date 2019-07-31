@@ -546,7 +546,9 @@ void layoutResetWord(const char *word, int pass, int word_pos, bool last) {
                  FONT_STANDARD);
   oledDrawStringCenter(OLED_WIDTH / 2, 4 * 9 - 3, word,
                        FONT_FIXED | FONT_DOUBLE);
-  oledSCA(4 * 9 - 3 - 2, 4 * 9 - 3 + 15 + 2, OLED_WIDTH / 2);
+  // 30 is the maximum pixels used for a pixel row in the BIP39 word "abstract"
+  oledSCA(4 * 9 - 3 - 2, 4 * 9 - 3 + 15 + 2, 30);
+  oledInvert(0, 4 * 9 - 3 - 2, OLED_WIDTH - 1, 4 * 9 - 3 + 15 + 2);
   layoutButtonYes(btnYes);
   oledRefresh();
 }

@@ -46,8 +46,8 @@ void pinmatrix_draw(const char *text) {
     }
   }
   for (int i = 0; i < 3; i++) {
-    oledSCA(12 + i * (h + pad), 12 + i * (h + pad) + h - 1, OLED_WIDTH / 2);
-    oledInvert(0, 12 + i * (h + pad), OLED_WIDTH - 1, 12 + i * (h + pad) + h - 1);
+    // 36 is the maximum pixels used for a pin matrix pixel row
+    oledSCA(12 + i * (h + pad), 12 + i * (h + pad) + h - 1, 36);
   }
   oledRefresh();
 }
