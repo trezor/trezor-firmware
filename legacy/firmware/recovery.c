@@ -444,34 +444,25 @@ static void recovery_digit(const char digit) {
  * Ask the user for the next word.
  */
 void next_word(void) {
+  layoutLast = layoutDialogSwipe;
+  layoutSwipe();
+  oledDrawStringCenter(OLED_WIDTH / 2, 8, _("Please enter"), FONT_STANDARD);
   word_pos = word_order[word_index];
   if (word_pos == 0) {
     const char *const *wl = mnemonic_wordlist();
     strlcpy(fake_word, wl[random_uniform(2048)], sizeof(fake_word));
-
-    layoutLast = layoutDialogSwipe;
-    layoutSwipe();
-    oledDrawStringCenter(OLED_WIDTH / 2, 8, _("Please enter the word"), FONT_STANDARD);
     oledDrawStringCenter(OLED_WIDTH / 2, 24, fake_word, FONT_FIXED | FONT_DOUBLE);
-    oledDrawStringCenter(OLED_WIDTH / 2, 48, _("on your computer"), FONT_STANDARD);
-    // 30 is the maximum pixels used for a pixel row in the BIP39 word "abstract"
-    oledSCA(24 - 2, 24 + 15 + 2, 30);
-    oledInvert(0, 24 - 2, OLED_WIDTH - 1, 24 + 15 + 2);
-    oledRefresh();
   } else {
     fake_word[0] = 0;
-    char desc[] = "##th word";
-    format_number(desc, word_pos);
-    layoutLast = layoutDialogSwipe;
-    layoutSwipe();
-    oledDrawStringCenter(OLED_WIDTH / 2, 8, _("Please enter the"), FONT_STANDARD);
-    oledDrawStringCenter(OLED_WIDTH / 2, 24, (word_pos < 10 ? desc + 1 : desc), FONT_FIXED | FONT_DOUBLE);
-    oledDrawStringCenter(OLED_WIDTH / 2, 48, _("of your mnemonic"), FONT_STANDARD);
-    // 30 is the maximum pixels used for a pixel row in the BIP39 word "abstract"
-    oledSCA(24 - 2, 24 + 15 + 2, 30);
-    oledInvert(0, 24 - 2, OLED_WIDTH - 1, 24 + 15 + 2);
-    oledRefresh();
+    char desc[] = "the ##th word";
+    format_number(desc + 4, word_pos);
+    oledDrawStringCenter(OLED_WIDTH / 2, 24, desc, FONT_FIXED | FONT_DOUBLE);
   }
+  oledDrawStringCenter(OLED_WIDTH / 2, 48, _("on your computer"), FONT_STANDARD);
+  // 35 is the maximum pixels used for a pixel row ("the 21st word")
+  oledSCA(24 - 2, 24 + 15 + 2, 35);
+  oledInvert(0, 24 - 2, OLED_WIDTH - 1, 24 + 15 + 2);
+  oledRefresh();
   recovery_request();
 }
 
