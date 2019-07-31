@@ -100,10 +100,10 @@ async def _finish_recovery(
             raise RuntimeError
         storage.device.set_slip39_identifier(identifier)
         storage.device.set_slip39_iteration_exponent(exponent)
-    storage.recovery.end_progress()
 
     await show_success(ctx, ("You have successfully", "recovered your wallet."))
 
+    storage.recovery.end_progress()
     return Success(message="Device recovered")
 
 
