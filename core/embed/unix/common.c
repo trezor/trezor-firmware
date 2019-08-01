@@ -62,8 +62,8 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
   display_printf("rev : %s\n", XSTR(GITREV));
   printf("rev : %s\n", XSTR(GITREV));
 #endif
-  display_printf("\nPlease contact Trezor support.\n");
-  printf("\nPlease contact Trezor support.\n");
+  display_printf("\n\n\nHint:\nIsn't the emulator already running?\n");
+  printf("Hint:\nIsn't the emulator already running?\n");
   hal_delay(3000);
   __shutdown();
   for (;;)
