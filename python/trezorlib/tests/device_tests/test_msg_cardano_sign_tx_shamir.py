@@ -16,8 +16,7 @@
 
 import pytest
 
-from trezorlib import cardano, device, messages
-from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
+from trezorlib import cardano, messages
 
 from .conftest import setup_client
 
@@ -139,7 +138,6 @@ def test_cardano_sign_tx(
     ]
 
     def input_flow():
-        client.set_passphrase("TREZOR")
         yield
         client.debug.swipe_down()
         client.debug.press_yes()
@@ -147,7 +145,7 @@ def test_cardano_sign_tx(
         client.debug.swipe_down()
         client.debug.press_yes()
 
-    device.apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
+    client.set_passphrase("TREZOR")
     with client:
         client.set_expected_responses(expected_responses)
         client.set_input_flow(input_flow)

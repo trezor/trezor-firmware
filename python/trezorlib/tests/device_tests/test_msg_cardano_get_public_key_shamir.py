@@ -16,9 +16,7 @@
 
 import pytest
 
-from trezorlib import device
 from trezorlib.cardano import get_public_key
-from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 from trezorlib.tools import parse_path
 
 from .conftest import setup_client
@@ -59,7 +57,6 @@ SLIP39_MNEMONIC = [
 def test_cardano_get_public_key(client, path, public_key, chain_code):
     # enter passphrase
     assert client.debug.read_passphrase_protection() is True
-    device.apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
     client.set_passphrase("TREZOR")
 
     key = get_public_key(client, parse_path(path))
