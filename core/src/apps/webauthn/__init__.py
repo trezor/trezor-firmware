@@ -1133,8 +1133,8 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     # check length of input data
     if len(req.data) != 64:
         if __debug__:
-            log.warning(__name__, "_SW_WRONG_LENGTH req.data")
-        return msg_error(req.cid, _SW_WRONG_LENGTH)
+            log.warning(__name__, "_SW_WRONG_DATA req.data")
+        return msg_error(req.cid, _SW_WRONG_DATA)
 
     # parse challenge and app_id
     chal = req.data[:32]
@@ -1230,8 +1230,8 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     khlen = req.data[_REQ_CMD_AUTHENTICATE_KHLEN]
     if khlen != 64:
         if __debug__:
-            log.warning(__name__, "_SW_WRONG_LENGTH khlen")
-        return msg_error(req.cid, _SW_WRONG_LENGTH)
+            log.warning(__name__, "_SW_WRONG_DATA khlen")
+        return msg_error(req.cid, _SW_WRONG_DATA)
 
     auth = overlay_struct(req.data, req_cmd_authenticate(khlen))
 
