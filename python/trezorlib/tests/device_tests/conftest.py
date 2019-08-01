@@ -21,7 +21,8 @@ import pytest
 
 from trezorlib import debuglink, log
 from trezorlib.debuglink import TrezorClientDebugLink
-from trezorlib.device import wipe as wipe_device
+from trezorlib.device import apply_settings, wipe as wipe_device
+from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 from trezorlib.transport import enumerate_devices, get_transport
 
 TREZOR_VERSION = None
@@ -83,7 +84,9 @@ def setup_client(mnemonic=None, pin="", passphrase=False):
                 label="test",
                 language="english",
             )
-            return function(client, *args, **kwargs)
+            if TREZOR_VERSION > 1 and passphrase:
+                apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
+            return function(*args, client=client, **kwargs)
 
         return wrapper
 
