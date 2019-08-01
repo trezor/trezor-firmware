@@ -26,6 +26,8 @@ async def get_address(ctx, msg, keychain):
     address_short = addresses.address_short(coin, address)
     if msg.script_type == InputScriptType.SPENDWITNESS:
         address_qr = address.upper()  # bech32 address
+    elif coin.cashaddr_prefix is not None:
+        address_qr = address.upper()  # cashaddr address
     else:
         address_qr = address  # base58 address
 
