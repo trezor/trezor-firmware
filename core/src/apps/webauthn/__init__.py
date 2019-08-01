@@ -159,6 +159,7 @@ _BOGUS_APPID = b"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 _AAGUID = (
     b"\x80\xbc\xc8T\x83\xb9\xf3\x0e\x9d6TF\x00\x08\x08\x86"
 )  # First 16 bytes of SHA-256("TREZOR")
+_BOGUS_PRIV_KEY = b"\xAA" * 32
 
 # authentication control byte
 _AUTH_ENFORCE = const(0x03)  # enforce user presence and sign
@@ -1549,6 +1550,9 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     ):
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
+    # User verification cannot happen without user presence.
+    user_presence = user_presence or user_verification
+
     if user_verification and not config.has_pin():
         # User verification requested, but PIN is not enabled.
         state_set = dialog_mgr.set_state(Fido2ConfirmNoPin(req.cid))
@@ -1560,15 +1564,9 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
             return cbor_error(req.cid, _ERR_NO_CREDENTIALS)
     elif not user_presence:
         # Silent authentication.
-        # This is a dangerous feature, but it seems we have no choice but to enable it to make the UX acceptable.
         try:
             response_data = cbor_get_assertion_sign(
-                client_data_hash,
-                rp_id_hash,
-                cred_list[0],
-                hmac_secret,
-                user_presence,
-                user_verification,
+                client_data_hash, rp_id_hash, cred_list[0], hmac_secret, False, False
             )
             return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
         except Exception:
@@ -1642,7 +1640,9 @@ def cbor_get_assertion_sign(
 ) -> bytes:
     # Process extensions
     extensions = {}
-    if hmac_secret:
+
+    # Spec deviation: Do not reveal hmac-secret during silent authentication.
+    if hmac_secret and user_presence:
         encrypted_output = cbor_get_assertion_hmac_secret(cred, hmac_secret)
         if encrypted_output is not None:
             extensions["hmac-secret"] = encrypted_output
@@ -1667,19 +1667,25 @@ def cbor_get_assertion_sign(
     dig = hashlib.sha256()
     dig.update(authenticator_data)
     dig.update(client_data_hash)
-    privkey = cred.private_key()
+    if user_presence:
+        privkey = cred.private_key()
+    else:
+        # Spec deviation: Use a bogus key during silent authentication.
+        privkey = _BOGUS_PRIV_KEY
     sig = nist256p1.sign(privkey, dig.digest(), False)
     sig = der.encode_seq((sig[1:33], sig[33:]))
 
     # Encode the authenticatorGetAssertion response data.
-    return cbor.encode(
-        {
-            _GETASSERT_RESP_CREDENTIAL: {"type": "public-key", "id": cred.id},
-            _GETASSERT_RESP_AUTH_DATA: authenticator_data,
-            _GETASSERT_RESP_SIGNATURE: sig,
-            _GETASSERT_RESP_USER: {"id": cred.user_id},
-        }
-    )
+    response = {
+        _GETASSERT_RESP_CREDENTIAL: {"type": "public-key", "id": cred.id},
+        _GETASSERT_RESP_AUTH_DATA: authenticator_data,
+        _GETASSERT_RESP_SIGNATURE: sig,
+    }
+
+    if user_presence:
+        response[_GETASSERT_RESP_USER] = {"id": cred.user_id},
+
+    return cbor.encode(response)
 
 
 def cbor_get_info(req: Cmd) -> Cmd:
