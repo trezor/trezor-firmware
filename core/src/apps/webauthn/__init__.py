@@ -157,8 +157,8 @@ _U2F_ATT_PRIV_KEY = b"q&\xac+\xf6D\xdca\x86\xad\x83\xef\x1f\xcd\xf1*W\xb5\xcf\xa
 _U2F_ATT_CERT = b"0\x82\x01\x180\x81\xc0\x02\t\x00\xb1\xd9\x8fBdr\xd3,0\n\x06\x08*\x86H\xce=\x04\x03\x020\x151\x130\x11\x06\x03U\x04\x03\x0c\nTrezor U2F0\x1e\x17\r160429133153Z\x17\r260427133153Z0\x151\x130\x11\x06\x03U\x04\x03\x0c\nTrezor U2F0Y0\x13\x06\x07*\x86H\xce=\x02\x01\x06\x08*\x86H\xce=\x03\x01\x07\x03B\x00\x04\xd9\x18\xbd\xfa\x8aT\xac\x92\xe9\r\xa9\x1f\xcaz\xa2dT\xc0\xd1s61M\xde\x83\xa5K\x86\xb5\xdfN\xf0Re\x9a\x1do\xfc\xb7F\x7f\x1a\xcd\xdb\x8a3\x08\x0b^\xed\x91\x89\x13\xf4C\xa5&\x1b\xc7{h`o\xc10\n\x06\x08*\x86H\xce=\x04\x03\x02\x03G\x000D\x02 $\x1e\x81\xff\xd2\xe5\xe6\x156\x94\xc3U.\x8f\xeb\xd7\x1e\x895\x92\x1c\xb4\x83ACq\x1cv\xea\xee\xf3\x95\x02 _\x80\xeb\x10\xf2\\\xcc9\x8b<\xa8\xa9\xad\xa4\x02\x7f\x93\x13 w\xb7\xab\xcewFZ'\xf5=3\xa1\x1d"
 _BOGUS_APPID = b"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 _AAGUID = (
-    b"\x80\xbc\xc8T\x83\xb9\xf3\x0e\x9d6TF\x00\x08\x08\x86"
-)  # First 16 bytes of SHA-256("TREZOR")
+    b"\xd6\xd0\xbd\xc3b\xee\xc4\xdb\xde\x8dzenJD\x87"
+)  # First 16 bytes of SHA-256("TREZOR 2")
 _BOGUS_PRIV_KEY = b"\xAA" * 32
 
 # authentication control byte
@@ -792,6 +792,7 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
         response_data = cbor_make_credential_sign(
             self._client_data_hash, self._cred, self._user_verification
         )
+
         cmd = Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
         if self._resident:
             if not storage.webauthn.store_resident_credential(self._cred):
@@ -1659,8 +1660,9 @@ def cbor_get_assertion_sign(
         flags |= _AUTH_FLAG_ED
         encoded_extensions = cbor.encode(extensions)
 
+    ctr = storage.device.next_u2f_counter()
     authenticator_data = (
-        rp_id_hash + bytes([flags]) + b"\x00\x00\x00\x00" + encoded_extensions
+        rp_id_hash + bytes([flags]) + ctr.to_bytes(4, "big") + encoded_extensions
     )
 
     # Sign the authenticator data and the client data hash.
@@ -1683,7 +1685,7 @@ def cbor_get_assertion_sign(
     }
 
     if user_presence:
-        response[_GETASSERT_RESP_USER] = {"id": cred.user_id},
+        response[_GETASSERT_RESP_USER] = {"id": cred.user_id}
 
     return cbor.encode(response)
 

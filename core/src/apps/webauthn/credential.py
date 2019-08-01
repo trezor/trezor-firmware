@@ -10,8 +10,8 @@ if False:
     from typing import Optional
 
 # Credential ID values
-_CRED_ID_VERSION = const(1)
-_CRED_ID_MIN_LENGTH = const(30)
+_CRED_ID_VERSION = b"\xf1\xd0\x02\x00"
+_CRED_ID_MIN_LENGTH = const(33)
 
 # Credential ID keys
 _CRED_ID_RP_ID = const(0x01)
@@ -23,9 +23,9 @@ _CRED_ID_CREATION_TIME = const(0x06)
 _CRED_ID_HMAC_SECRET = const(0x07)
 
 # Key paths
-_FIDO_KEY_PATH = const(0xC649444F)
-_FIDO_CRED_ID_KEY_PATH = b"FIDO2 Trezor Credential ID"
-_FIDO_HMAC_SECRET_KEY_PATH = b"FIDO2 Trezor hmac-secret"
+_FIDO_KEY_PATH = [HARDENED | 10022, HARDENED | 0xF1D00200]
+_FIDO_CRED_ID_KEY_PATH = [b"SLIP-0022", b"FIDO2", b"Encryption key"]
+_FIDO_HMAC_SECRET_KEY_PATH = [b"SLIP-0022", b"FIDO2", b"hmac-secret"]
 
 
 class Credential:
@@ -63,25 +63,24 @@ class Credential:
                 if value
             }
         )
-
-        key = seed.derive_slip21_node_without_passphrase([_FIDO_CRED_ID_KEY_PATH]).key()
+        key = seed.derive_slip21_node_without_passphrase(_FIDO_CRED_ID_KEY_PATH).key()
         iv = random.bytes(12)
         ctx = chacha20poly1305(key, iv)
         ctx.auth(hashlib.sha256(self.rp_id.encode()).digest())
         ciphertext = ctx.encrypt(data)
         tag = ctx.finish()
-        self.id = bytes([_CRED_ID_VERSION]) + iv + ciphertext + tag
+        self.id = _CRED_ID_VERSION + iv + ciphertext + tag
 
     @staticmethod
     def from_id(cred_id: bytes, rp_id_hash: bytes) -> Optional["Credential"]:
         from apps.common import seed
 
-        if len(cred_id) < _CRED_ID_MIN_LENGTH or cred_id[0] != _CRED_ID_VERSION:
+        if len(cred_id) < _CRED_ID_MIN_LENGTH or cred_id[0:4] != _CRED_ID_VERSION:
             return None
 
-        key = seed.derive_slip21_node_without_passphrase([_FIDO_CRED_ID_KEY_PATH]).key()
-        iv = cred_id[1:13]
-        ciphertext = cred_id[13:-16]
+        key = seed.derive_slip21_node_without_passphrase(_FIDO_CRED_ID_KEY_PATH).key()
+        iv = cred_id[4:16]
+        ciphertext = cred_id[16:-16]
         tag = cred_id[-16:]
         ctx = chacha20poly1305(key, iv)
         ctx.auth(rp_id_hash)
@@ -150,7 +149,7 @@ class Credential:
     def private_key(self) -> bytes:
         from apps.common import seed
 
-        path = [_FIDO_KEY_PATH] + [
+        path = _FIDO_KEY_PATH + [
             HARDENED | i for i in ustruct.unpack("<4L", self.id[-16:])
         ]
         node = seed.derive_node_without_passphrase(path, "nist256p1")
@@ -165,6 +164,6 @@ class Credential:
         from apps.common import seed
 
         node = seed.derive_slip21_node_without_passphrase(
-            [_FIDO_HMAC_SECRET_KEY_PATH, self.id]
+            _FIDO_HMAC_SECRET_KEY_PATH + [self.id]
         )
         return node.key()
