@@ -3,7 +3,7 @@ environment:
   image: docker:18.09.6
   variables:
     GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
-    CONTAINER_NAME: "$CI_REGISTRY/trezor/trezor-firmware/environment"
+    CONTAINER_NAME: "$CI_REGISTRY/satoshilabs/trezor/trezor-firmware/environment"
   services:
     - docker:dind
   before_script:
