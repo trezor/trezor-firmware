@@ -122,7 +122,7 @@ class Credential:
             and self._creation_time is not None
         )
 
-    def check_data_types(self):
+    def check_data_types(self) -> bool:
         return (
             isinstance(self.rp_id, str)
             and isinstance(self.rp_name, (str, type(None)))
