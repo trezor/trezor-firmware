@@ -370,7 +370,7 @@ def format_message(
 
     def get_type(name: str) -> Any:
         try:
-            return next(ft for fn, ft, _ in pb.get_fields() if fn == name)
+            return next(ft for fn, ft, _ in pb.get_fields().values() if fn == name)
         except StopIteration:
             return None
 
