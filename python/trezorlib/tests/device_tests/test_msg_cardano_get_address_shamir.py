@@ -50,7 +50,7 @@ SLIP39_MNEMONIC = [
 @setup_client(mnemonic=SLIP39_MNEMONIC, passphrase=True)
 def test_cardano_get_address(client, path, expected_address):
     # enter passphrase
-    assert client.debug.read_passphrase_protection() is True
+    assert client.features.passphrase_protection is True
     client.set_passphrase("TREZOR")
 
     address = get_address(client, parse_path(path))

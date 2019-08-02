@@ -56,7 +56,7 @@ SLIP39_MNEMONIC = [
 )
 def test_cardano_get_public_key(client, path, public_key, chain_code):
     # enter passphrase
-    assert client.debug.read_passphrase_protection() is True
+    assert client.features.passphrase_protection is True
     client.set_passphrase("TREZOR")
 
     key = get_public_key(client, parse_path(path))

@@ -17,8 +17,7 @@
 
 import pytest
 
-from trezorlib import btc, device
-from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
+from trezorlib import btc
 
 from .conftest import setup_client
 
@@ -38,9 +37,7 @@ def test_3of6_passphrase(client):
     provided by Andrew, address calculated using T1
     xprv9s21ZrQH143K2pMWi8jrTawHaj16uKk4CSbvo4Zt61tcrmuUDMx2o1Byzcr3saXNGNvHP8zZgXVdJHsXVdzYFPavxvCyaGyGr1WkAYG83ce
     """
-    assert client.debug.read_passphrase_protection() is True
-    device.apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
-
+    assert client.features.passphrase_protection is True
     client.set_passphrase("TREZOR")
     address = btc.get_address(client, "Bitcoin", [])
     assert address == "18oZEMRWurCZW1FeK8sWYyXuWx2bFqEKyX"
@@ -60,9 +57,7 @@ def test_2of5_passphrase(client):
     provided by Andrew, address calculated using T1
     xprv9s21ZrQH143K2o6EXEHpVy8TCYoMmkBnDCCESLdR2ieKwmcNG48ck2XJQY4waS7RUQcXqR9N7HnQbUVEDMWYyREdF1idQqxFHuCfK7fqFni
     """
-    assert client.debug.read_passphrase_protection() is True
-    device.apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
-
+    assert client.features.passphrase_protection is True
     client.set_passphrase("TREZOR")
     address = btc.get_address(client, "Bitcoin", [])
     assert address == "19Fjs9AvT13Y2Nx8GtoVfADmFWnccsPinQ"
