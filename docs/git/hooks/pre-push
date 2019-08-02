@@ -6,13 +6,17 @@
 echo "Running pre-push git hook."
 
 # Runs check for common simple errors before pushing
-if ! pipenv run make templates_check &> /dev/null
+echo ""
+echo "Checking templates"
+if ! pipenv run make templates_check
 then
     echo >&2 "Templates not updated, run 'pipenv run make templates'. Not pushing."
     exit 1
 fi
 
-if ! pipenv run make style_check &> /dev/null
+echo ""
+echo "Checking style"
+if ! pipenv run make style_check
 then
     echo >&2 "Style invalid, run 'pipenv run make style'. Not pushing."
     exit 2
