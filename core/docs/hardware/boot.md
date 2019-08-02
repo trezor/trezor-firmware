@@ -1,7 +1,6 @@
-# Trezor Core Bootloader
+# Trezor Core Boot Stages
 
-Trezor initialization is split into two stages.
-See [Memory Layout](memory.md) for info about in which sectors each stage is stored.
+Trezor T initialization is split into two stages. See [Memory Layout](memory.md) for info about in which sectors each stage is stored.
 
 First stage (boardloader) is stored in write-protected area, which means it is non-upgradable.
 Only second stage (bootloader) update is allowed.

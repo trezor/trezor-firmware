@@ -2,17 +2,15 @@
 
 ## Testing with python-trezor
 
-Apart from the internal tests, Trezor core has a suite of integration tests in the
-`python` subdirectory. There are several ways to use that.
+Apart from the internal tests, Trezor Core has a suite of integration tests in the
+`python` monorepo's subdirectory. There are several ways to use that.
 
 
 ### 1. Running the full test suite
 
-[pipenv] is a tool for making reproducible Python environments. Install it with:
-```sh
-sudo pip3 install pipenv
-```
-In the `trezor-firmware` checkout, install the environment:
+_Note: You need Pipenv, as mentioned in the [build](../build/index.md) section._
+
+In the `trezor-firmware` checkout, in the root of the monorepo, install the environment:
 ```sh
 pipenv sync
 ```

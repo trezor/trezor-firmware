@@ -1,42 +1,41 @@
-# Trezor Core Hardware
 
-## Trezor Model T Open Source Hardware Reference Documentation
+# Trezor Model T Open Source Hardware Reference Documentation
 
-### Photo
+## Photo
 
-![Photo Front](hardware/photo-front.jpg)
+![Photo Front](assets/photo-front.jpg)
 
-### Photo of assembled board (top)
+## Photo of assembled board (top)
 
-![Assembled Board Top](hardware/model-t-top-v12.jpg)
+![Assembled Board Top](assets/model-t-top-v12.jpg)
 
-### Photo of assembled board (bottom)
+## Photo of assembled board (bottom)
 
-![Assembled Board Bottom](hardware/model-t-bottom-v12.jpg)
+![Assembled Board Bottom](assets/model-t-bottom-v12.jpg)
 
-### Photo of assembled TFT LCD display + capacitive touch panel module (top)
+## Photo of assembled TFT LCD display + capacitive touch panel module (top)
 
-![Display Module Top](hardware/model-t-display-module-top.jpg)
+![Display Module Top](assets/model-t-display-module-top.jpg)
 
-### Photo of assembled TFT LCD display + capacitive touch panel module (bottom)
+## Photo of assembled TFT LCD display + capacitive touch panel module (bottom)
 
-![Display Module Bottom](hardware/model-t-display-module-bottom.jpg)
+![Display Module Bottom](assets/model-t-display-module-bottom.jpg)
 
-### Photo of disassembled TFT LCD display + capacitive touch panel module (top) (CTPM on left) (TFT LCD broken glass removed)
+## Photo of disassembled TFT LCD display + capacitive touch panel module (top) (CTPM on left) (TFT LCD broken glass removed)
 
-![Display Module Disassembled Top](hardware/model-t-display-module-disassembled-top.jpg)
+![Display Module Disassembled Top](assets/model-t-display-module-disassembled-top.jpg)
 
-### Photo of disassembled TFT LCD display + capacitive touch panel module (bottom) (CTPM on left) (TFT LCD broken glass removed)
+## Photo of disassembled TFT LCD display + capacitive touch panel module (bottom) (CTPM on left) (TFT LCD broken glass removed)
 
-![Display Module Disassembled Bottom](hardware/model-t-display-module-disassembled-bottom.jpg)
+![Display Module Disassembled Bottom](assets/model-t-display-module-disassembled-bottom.jpg)
 
-### Bill of Materials / BOM
+## Bill of Materials / BOM
 
-[BOM](hardware/bom.txt)
+[BOM](assets/bom.txt)
 
-### Schematic
+## Schematic
 
-![Schematic](hardware/schematic.png)
+![Schematic](assets/schematic.png)
 
 ## Developer Kit
 
@@ -47,14 +46,14 @@
 * 1 x [microSD Board](https://www.waveshare.com/product/modules/storage/sd-tf-storage/micro-sd-storage-board.htm)
 * 1 x [Pack of 40 Female to female jumper wires with 0.1" header contacts](https://www.adafruit.com/product/266)
 
-#### Display
+### Display
 
 * Resolution: 240px x 240px -OR- 240px x 320px
 * Driver IC: ST7789V, GC9307, or ILI9341V (on-chip display data RAM of 240x320x18 bits)
 * 18-bit (262,144) RGB color graphic type TFT-LCD
 * Bus/Interface: 8080-I 8-bit parallel with 16-bit/pixel (RGB 5-6-5)
 
-##### Pinout
+#### Pinout
 
 |Description|MCU Pin|Notes|
 |-----------|-------|-----|
@@ -75,13 +74,13 @@
 |LCD_D7|PE10|display module pin 10|
 |LCD_D8|PE11|not currently used|
 
-#### Capacitive Touch Panel / Sensor
+### Capacitive Touch Panel / Sensor
 
 * Bus/Interface: I2C
 * Driver IC: FT6236 or FT6206
 * single touch
 
-##### Pinout
+#### Pinout
 
 |Description|MCU Pin|Notes|
 |-----------|-------|-----|
@@ -91,11 +90,11 @@
 |EINT|PC4|not currently used. display module pin 39. conflict with USB OTG FS PSO on dev board.|
 |REST|PC5|benign conflict with USB OTG FS OC on dev board. no mapped pin on display module.|
 
-#### microSD Socket
+### microSD Socket
 
 * Bus/Interface: 4-bit
 
-##### Pinout
+#### Pinout
 
 |Description|MCU Pin|
 |-----------|-------|
@@ -108,11 +107,11 @@
 |SD_CARDDETECT|PC13|
 |SD_ON|PC0|
 
-#### USB Socket
+### USB Socket
 
 * USB HS (high-speed) peripheral in FS (full-speed) mode
 
-##### Pinout
+#### Pinout
 
 |Description|MCU Pin|Notes|
 |-----------|-------|-----|
@@ -123,7 +122,7 @@
 |SBU1|PA2|not currently used. conflict with L3GD20 Gyroscope MEMS on dev board.|
 |SBU2|PA3|not currently used|
 
-#### Dev Board
+### Dev Board
 
 * [STM32F429ZIT6](http://www.st.com/en/microcontrollers/stm32f429zi.html)
 * HSE / High-Speed External Crystal: 8 MHz
@@ -138,13 +137,13 @@ This method reduces the amount of knife work, and the chance for slicing other t
 To remove the TFT LCD display + resistive touch panel module, lift the module away from the metal tray, bend the metal tray out of the way, then cleanly pull/tear the flex PCB away from the solder connections to the main board (the connections usually break without much force).
 The metal tray is attached to the board with double stick tape. You just have to pull that up.
 
-### Photo of dev board before modifications (top)
+## Photo of dev board before modifications (top)
 
-![Dev Board Top Before](hardware/dev-board-top-before.jpg)
+![Dev Board Top Before](assets/dev-board-top-before.jpg)
 
-### Photo of dev board before modifications (bottom)
+## Photo of dev board before modifications (bottom)
 
-![Dev Board Bottom Before](hardware/dev-board-bottom-before.jpg)
+![Dev Board Bottom Before](assets/dev-board-bottom-before.jpg)
 
 Minimum MCU requirements:
 
@@ -156,6 +155,6 @@ Minimum MCU requirements:
 * FMC controller
 * TRNG
 
-#### Clock Tree
+### Clock Tree
 
-![Clock Tree](hardware/clock-tree.png)
+![Clock Tree](assets/clock-tree.png)

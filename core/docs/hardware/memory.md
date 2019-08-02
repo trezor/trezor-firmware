@@ -1,4 +1,4 @@
-# Memory Layout
+# Trezor T Memory Layout
 
 ## Flash
 
