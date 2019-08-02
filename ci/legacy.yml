@@ -1,4 +1,4 @@
-image: registry.corp.sldev.cz/trezor/trezor-firmware/environment
+image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
 
 variables:
   SDL_VIDEODRIVER: "dummy"
