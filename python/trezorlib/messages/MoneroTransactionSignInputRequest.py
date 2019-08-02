@@ -7,6 +7,7 @@ from .MoneroTransactionSourceEntry import MoneroTransactionSourceEntry
 if __debug__:
     try:
         from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
 

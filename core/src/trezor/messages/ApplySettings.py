@@ -5,8 +5,11 @@ import protobuf as p
 if __debug__:
     try:
         from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+        EnumTypePassphraseSourceType = Literal[0, 1, 2]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
+        EnumTypePassphraseSourceType = None  # type: ignore
 
 
 class ApplySettings(p.MessageType):
@@ -18,7 +21,7 @@ class ApplySettings(p.MessageType):
         label: str = None,
         use_passphrase: bool = None,
         homescreen: bytes = None,
-        passphrase_source: int = None,
+        passphrase_source: EnumTypePassphraseSourceType = None,
         auto_lock_delay_ms: int = None,
         display_rotation: int = None,
     ) -> None:
@@ -37,7 +40,7 @@ class ApplySettings(p.MessageType):
             2: ('label', p.UnicodeType, 0),
             3: ('use_passphrase', p.BoolType, 0),
             4: ('homescreen', p.BytesType, 0),
-            5: ('passphrase_source', p.UVarintType, 0),
+            5: ('passphrase_source', p.EnumType("PassphraseSourceType", (0, 1, 2)), 0),
             6: ('auto_lock_delay_ms', p.UVarintType, 0),
             7: ('display_rotation', p.UVarintType, 0),
         }

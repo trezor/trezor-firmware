@@ -40,7 +40,6 @@ CORE_MESSAGES_IGNORE="\
     PinMatrixAck \
     PinMatrixRequest \
     PinMatrixRequestType \
-    RecoveryDeviceType \
     WordAck \
     WordRequest \
     WordRequestType \

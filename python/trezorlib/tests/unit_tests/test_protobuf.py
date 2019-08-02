@@ -19,6 +19,7 @@ from io import BytesIO
 import pytest
 
 from trezorlib import protobuf
+from trezorlib.messages import InputScriptType
 
 
 class PrimitiveMessage(protobuf.MessageType):
@@ -30,7 +31,20 @@ class PrimitiveMessage(protobuf.MessageType):
             2: ("bool", protobuf.BoolType, 0),
             3: ("bytes", protobuf.BytesType, 0),
             4: ("unicode", protobuf.UnicodeType, 0),
+            5: ("enum", protobuf.EnumType("t", (0, 5, 25)), 0),
         }
+
+
+class EnumMessageMoreValues(protobuf.MessageType):
+    @classmethod
+    def get_fields(cls):
+        return {0: ("enum", protobuf.EnumType("t", (0, 1, 2, 3, 4, 5)), 0)}
+
+
+class EnumMessageLessValues(protobuf.MessageType):
+    @classmethod
+    def get_fields(cls):
+        return {0: ("enum", protobuf.EnumType("t", (0, 5)), 0)}
 
 
 def load_uvarint(buffer):
@@ -89,6 +103,7 @@ def test_simple_message():
         bool=True,
         bytes=b"\xDE\xAD\xCA\xFE",
         unicode="Příliš žluťoučký kůň úpěl ďábelské ódy 😊",
+        enum=5,
     )
 
     buf = BytesIO()
@@ -103,3 +118,55 @@ def test_simple_message():
     assert retr.bool is True
     assert retr.bytes == b"\xDE\xAD\xCA\xFE"
     assert retr.unicode == "Příliš žluťoučký kůň úpěl ďábelské ódy 😊"
+    assert retr.enum == 5
+
+
+def test_validate_enum(caplog):
+    # round-trip of a valid value
+    msg = EnumMessageMoreValues(enum=0)
+    buf = BytesIO()
+    protobuf.dump_message(buf, msg)
+    buf.seek(0)
+    retr = protobuf.load_message(buf, EnumMessageLessValues)
+    assert retr.enum == msg.enum
+
+    assert not caplog.records
+
+    # dumping an invalid enum value fails
+    msg.enum = 19
+    buf.seek(0)
+    protobuf.dump_message(buf, msg)
+
+    assert len(caplog.records) == 1
+    record = caplog.records.pop(0)
+    assert record.levelname == "WARNING"
+    assert record.getMessage() == "Value 19 unknown for type t"
+
+    msg.enum = 3
+    buf.seek(0)
+    protobuf.dump_message(buf, msg)
+    buf.seek(0)
+    protobuf.load_message(buf, EnumMessageLessValues)
+
+    assert len(caplog.records) == 1
+    record = caplog.records.pop(0)
+    assert record.levelname == "WARNING"
+    assert record.getMessage() == "Value 3 unknown for type t"
+
+
+def test_enum_to_str():
+    enum_values = [
+        (key, getattr(InputScriptType, key))
+        for key in dir(InputScriptType)
+        if not key.startswith("__")
+    ]
+    enum_type = protobuf.EnumType("InputScriptType", [v for _, v in enum_values])
+    for name, value in enum_values:
+        assert enum_type.to_str(value) == name
+        assert enum_type.from_str(name) == value
+
+    with pytest.raises(TypeError):
+        enum_type.from_str("NotAValidValue")
+
+    with pytest.raises(TypeError):
+        enum_type.to_str(999)

@@ -5,8 +5,11 @@ from .. import protobuf as p
 if __debug__:
     try:
         from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+        EnumTypeNEMMosaicLevy = Literal[1, 2]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
+        EnumTypeNEMMosaicLevy = None  # type: ignore
 
 
 class NEMMosaicDefinition(p.MessageType):
@@ -18,7 +21,7 @@ class NEMMosaicDefinition(p.MessageType):
         namespace: str = None,
         mosaic: str = None,
         divisibility: int = None,
-        levy: int = None,
+        levy: EnumTypeNEMMosaicLevy = None,
         fee: int = None,
         levy_address: str = None,
         levy_namespace: str = None,
@@ -53,7 +56,7 @@ class NEMMosaicDefinition(p.MessageType):
             3: ('namespace', p.UnicodeType, 0),
             4: ('mosaic', p.UnicodeType, 0),
             5: ('divisibility', p.UVarintType, 0),
-            6: ('levy', p.UVarintType, 0),
+            6: ('levy', p.EnumType("NEMMosaicLevy", (1, 2)), 0),
             7: ('fee', p.UVarintType, 0),
             8: ('levy_address', p.UnicodeType, 0),
             9: ('levy_namespace', p.UnicodeType, 0),

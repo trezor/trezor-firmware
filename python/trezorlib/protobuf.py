@@ -37,10 +37,13 @@ required:
 >>>         """
 '''
 
+import logging
 from io import BytesIO
 from typing import Any, Optional
 
 _UVARINT_BUFFER = bytearray(1)
+
+LOG = logging.getLogger(__name__)
 
 
 def load_uvarint(reader):
@@ -114,6 +117,45 @@ class SVarintType:
 
 class BoolType:
     WIRE_TYPE = 0
+
+
+class EnumType:
+    WIRE_TYPE = 0
+
+    def __init__(self, enum_name, enum_values):
+        self.enum_name = enum_name
+        self.enum_values = enum_values
+
+    def validate(self, fvalue: int) -> int:
+        if fvalue not in self.enum_values:
+            # raise TypeError("Invalid enum value")
+            LOG.warning("Value {} unknown for type {}".format(fvalue, self.enum_name))
+        return fvalue
+
+    def to_str(self, fvalue: int) -> str:
+        from . import messages
+
+        module = getattr(messages, self.enum_name)
+        for name in dir(module):
+            if name.startswith("__"):
+                continue
+            if getattr(module, name) == fvalue:
+                return name
+        else:
+            raise TypeError("Invalid enum value")
+
+    def from_str(self, fstr: str) -> int:
+        try:
+            from . import messages
+
+            module = getattr(messages, self.enum_name)
+            ivalue = getattr(module, fstr)
+            if isinstance(ivalue, int):
+                return ivalue
+            else:
+                raise TypeError("Invalid enum value")
+        except AttributeError:
+            raise TypeError("Invalid enum value") from None
 
 
 class BytesType:
@@ -235,6 +277,8 @@ def load_message(reader, msg_type):
             fvalue = uint_to_sint(ivalue)
         elif ftype is BoolType:
             fvalue = bool(ivalue)
+        elif isinstance(ftype, EnumType):
+            fvalue = ftype.validate(ivalue)
         elif ftype is BytesType:
             buf = bytearray(ivalue)
             reader.readinto(buf)
@@ -287,6 +331,9 @@ def dump_message(writer, msg):
             elif ftype is BoolType:
                 dump_uvarint(writer, int(svalue))
 
+            elif isinstance(ftype, EnumType):
+                dump_uvarint(writer, ftype.validate(svalue))
+
             elif ftype is BytesType:
                 dump_uvarint(writer, len(svalue))
                 writer.write(svalue)
@@ -321,11 +368,19 @@ def format_message(
         printable = sum(1 for byte in bytes if 0x20 <= byte <= 0x7E)
         return printable / len(bytes) > 0.8
 
-    def pformat_value(value: Any, indent: int) -> str:
+    def get_type(name: str) -> Any:
+        try:
+            return next(ft for fn, ft, _ in pb.get_fields().values() if fn == name)
+        except StopIteration:
+            return None
+
+    def pformat(name: str, value: Any, indent: int) -> str:
         level = sep * indent
         leadin = sep * (indent + 1)
+
         if isinstance(value, MessageType):
             return format_message(value, indent, sep)
+
         if isinstance(value, list):
             # short list of simple values
             if not value or not isinstance(value[0], MessageType):
@@ -333,16 +388,18 @@ def format_message(
 
             # long list, one line per entry
             lines = ["[", level + "]"]
-            lines[1:1] = [leadin + pformat_value(x, indent + 1) + "," for x in value]
+            lines[1:1] = [leadin + pformat(name, x, indent + 1) + "," for x in value]
             return "\n".join(lines)
+
         if isinstance(value, dict):
             lines = ["{"]
             for key, val in sorted(value.items()):
                 if val is None or val == []:
                     continue
-                lines.append(leadin + key + ": " + pformat_value(val, indent + 1) + ",")
+                lines.append(leadin + key + ": " + pformat(key, val, indent + 1) + ",")
             lines.append(level + "}")
             return "\n".join(lines)
+
         if isinstance(value, (bytes, bytearray)):
             length = len(value)
             suffix = ""
@@ -355,41 +412,32 @@ def format_message(
                 output = "0x" + value.hex()
             return "{} bytes {}{}".format(length, output, suffix)
 
+        if isinstance(value, int):
+            ftype = get_type(name)
+            if isinstance(ftype, EnumType):
+                return ftype.to_str(value)
+
         return repr(value)
 
     return "{name} ({size} bytes) {content}".format(
         name=pb.__class__.__name__,
         size=pb.ByteSize(),
-        content=pformat_value(pb.__dict__, indent),
+        content=pformat("", pb.__dict__, indent),
     )
 
 
-_ALL_ENUMS = {}
-
-
-def _make_all_enums():
-    if not _ALL_ENUMS:
-        import inspect
-        from . import messages
-
-        for attr in messages.__dict__.values():
-            if not inspect.ismodule(attr):
-                continue
-            for name in dir(attr):
-                value = getattr(attr, name)
-                if isinstance(value, int):
-                    _ALL_ENUMS[name] = value
-
-
 def value_to_proto(ftype, value):
-    if issubclass(ftype, MessageType):
+    if isinstance(ftype, type) and issubclass(ftype, MessageType):
         raise TypeError("value_to_proto only converts simple values")
 
-    if ftype in (UVarintType, SVarintType):
-        if isinstance(value, str) and value in _ALL_ENUMS:
-            return _ALL_ENUMS[value]
+    if isinstance(ftype, EnumType):
+        if isinstance(value, str):
+            return ftype.from_str(value)
         else:
             return int(value)
+
+    if ftype in (UVarintType, SVarintType):
+        return int(value)
 
     if ftype is BoolType:
         return bool(value)
@@ -407,8 +455,6 @@ def value_to_proto(ftype, value):
 
 
 def dict_to_proto(message_type, d):
-    _make_all_enums()
-
     params = {}
     for fname, ftype, fflags in message_type.get_fields().values():
         repeated = fflags & FLAG_REPEATED
@@ -419,7 +465,7 @@ def dict_to_proto(message_type, d):
         if not repeated:
             value = [value]
 
-        if issubclass(ftype, MessageType):
+        if isinstance(ftype, type) and issubclass(ftype, MessageType):
             function = dict_to_proto
         else:
             function = value_to_proto

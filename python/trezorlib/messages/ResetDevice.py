@@ -5,8 +5,11 @@ from .. import protobuf as p
 if __debug__:
     try:
         from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+        EnumTypeResetDeviceBackupType = Literal[0, 1, 2]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
+        EnumTypeResetDeviceBackupType = None  # type: ignore
 
 
 class ResetDevice(p.MessageType):
@@ -23,7 +26,7 @@ class ResetDevice(p.MessageType):
         u2f_counter: int = None,
         skip_backup: bool = None,
         no_backup: bool = None,
-        backup_type: int = None,
+        backup_type: EnumTypeResetDeviceBackupType = None,
     ) -> None:
         self.display_random = display_random
         self.strength = strength
@@ -48,5 +51,5 @@ class ResetDevice(p.MessageType):
             7: ('u2f_counter', p.UVarintType, 0),
             8: ('skip_backup', p.BoolType, 0),
             9: ('no_backup', p.BoolType, 0),
-            10: ('backup_type', p.UVarintType, 0),  # default=ResetDeviceBackupType_Bip39
+            10: ('backup_type', p.EnumType("ResetDeviceBackupType", (0, 1, 2)), 0),  # default=ResetDeviceBackupType_Bip39
         }
