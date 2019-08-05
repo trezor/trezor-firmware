@@ -3,7 +3,7 @@ from micropython import const
 from trezor.crypto import hashlib
 
 from apps.common.storage import common
-from apps.webauthn.credential import Credential
+from apps.webauthn.credential import Fido2Credential
 
 if False:
     from typing import List
@@ -22,14 +22,14 @@ def get_resident_credentials(rp_id_hash: bytes) -> List[Credential]:
         if stored_credential_id is None:
             continue
 
-        stored_cred = Credential.from_id(stored_credential_id, rp_id_hash)
+        stored_cred = Fido2Credential.from_cred_id(stored_credential_id, rp_id_hash)
         if stored_cred is not None:
             creds.append(stored_cred)
 
     return creds
 
 
-def store_resident_credential(cred: Credential) -> bool:
+def store_resident_credential(cred: Fido2Credential) -> bool:
     slot = None
     rp_id_hash = hashlib.sha256(cred.rp_id.encode()).digest()
     for i in range(
@@ -43,7 +43,7 @@ def store_resident_credential(cred: Credential) -> bool:
                 slot = i
             continue
 
-        stored_cred = Credential.from_id(stored_credential_id, rp_id_hash)
+        stored_cred = Fido2Credential.from_cred_id(stored_credential_id, rp_id_hash)
         if stored_cred is None:
             # Stored credential is not for this RP ID.
             continue

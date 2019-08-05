@@ -11,7 +11,7 @@ from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, SWIPE_RIGHT, Swipe
 from trezor.ui.text import Text
 
 from apps.common import HARDENED, cbor, storage
-from apps.webauthn.credential import Credential
+from apps.webauthn.credential import Credential, Fido2Credential, U2fCredential
 
 if False:
     from typing import Coroutine, List, Optional, Tuple
@@ -148,9 +148,6 @@ _CAPFLAG_WINK = const(0x01)  # device supports _CMD_WINK
 _CAPFLAG_CBOR = const(0x04)  # device supports _CMD_CBOR
 _U2FHID_IF_VERSION = const(2)  # interface version
 
-# Key paths
-_U2F_KEY_PATH = const(0x80553246)
-
 # register response
 _U2F_REGISTER_ID = const(0x05)  # version 2 registration identifier
 _U2F_ATT_PRIV_KEY = b"q&\xac+\xf6D\xdca\x86\xad\x83\xef\x1f\xcd\xf1*W\xb5\xcf\xa2\x00\x0b\x8a\xd0'\xe9V\xe8T\xc5\n\x8b"
@@ -187,6 +184,7 @@ _KEY_AGREEMENT_PRIVKEY = nist256p1.generate_secret()
 _KEY_AGREEMENT_PUBKEY = nist256p1.publickey(_KEY_AGREEMENT_PRIVKEY, False)
 
 _ALLOW_RESIDENT_CREDENTIALS = True
+_ALLOW_FIDO2 = True
 
 
 def frame_init() -> dict:
@@ -468,7 +466,7 @@ async def handle_reports(iface: io.HID) -> None:
                 dialog_mgr.get_cid(),
                 _CID_BROADCAST,
             ):
-                resp = cmd_error(req.cid, _ERR_CHANNEL_BUSY)
+                resp = cmd_error(req.cid, _ERR_CHANNEL_BUSY)  # type: Optional[Cmd]
             else:
                 resp = dispatch_cmd(req, dialog_mgr)
             if resp is not None:
@@ -637,15 +635,15 @@ class ConfirmInfo:
     def app_name(self) -> Optional[str]:
         return None
 
-    def user_name(self) -> Optional[str]:
+    def account_name(self) -> Optional[str]:
         return None
 
-    def load_icon(self, app_id: bytes) -> None:
+    def load_icon(self, rp_id_hash: bytes) -> None:
         from trezor import res
         from apps.webauthn import knownapps
 
         try:
-            namepart = knownapps.knownapps[app_id].lower().replace(" ", "_")
+            namepart = knownapps.knownapps[rp_id_hash].lower().replace(" ", "_")
             icon = res.load("apps/webauthn/res/icon_%s.toif" % namepart)
         except Exception as e:
             icon = res.load("apps/webauthn/res/icon_webauthn.toif")
@@ -669,13 +667,19 @@ class ConfirmContent(ui.Control):
             ui.display.image((ui.WIDTH - 64) // 2, 48, self.info.app_icon)
 
             app_name = self.info.app_name()
-            user_name = self.info.user_name()
+            account_name = self.info.account_name()
 
-            if app_name is not None and user_name is not None and app_name != user_name:
+            # Dummy requests usually have some text as both app_name and account_name,
+            # in that case show the text only once.
+            if (
+                app_name is not None
+                and account_name is not None
+                and app_name != account_name
+            ):
                 text_center_trim_left(ui.WIDTH // 2, 140, app_name)
-                text_center_trim_right(ui.WIDTH // 2, 172, user_name)
-            elif user_name is not None:
-                text_center_trim_right(ui.WIDTH // 2, 156, user_name)
+                text_center_trim_right(ui.WIDTH // 2, 172, account_name)
+            elif account_name is not None:
+                text_center_trim_right(ui.WIDTH // 2, 156, account_name)
             elif app_name is not None:
                 text_center_trim_left(ui.WIDTH // 2, 156, app_name)
 
@@ -707,34 +711,30 @@ class State:
 
 
 class U2fState(State, ConfirmInfo):
-    def __init__(self, cid: int, iface: io.HID, checksum: bytes, app_id: bytes) -> None:
+    def __init__(
+        self, cid: int, iface: io.HID, checksum: bytes, cred: Credential
+    ) -> None:
         super().__init__(cid, iface)
-        self._app_id = bytes(app_id)  # could be bytearray, which doesn't have __hash__
+        self._cred = cred
         self._checksum = checksum
 
-        self.load_icon(self._app_id)
-        from ubinascii import hexlify
-        from apps.webauthn import knownapps
-
-        if self._app_id in knownapps.knownapps:
-            name = knownapps.knownapps[self._app_id]
-        else:
-            name = "%s...%s" % (
-                hexlify(self._app_id[:4]).decode(),
-                hexlify(self._app_id[-4:]).decode(),
-            )
-        self._app_name = name
+        self.load_icon(self._cred.rp_id_hash)
 
     def app_name(self) -> str:
-        return self._app_name
+        return self._cred.app_name()
+
+    def account_name(self) -> Optional[str]:
+        return self._cred.account_name()
 
 
 class U2fConfirmRegister(U2fState):
-    def __init__(self, cid: int, iface: io.HID, checksum: bytes, app_id: bytes) -> None:
-        super().__init__(cid, iface, checksum, app_id)
+    def __init__(
+        self, cid: int, iface: io.HID, checksum: bytes, cred: U2fCredential
+    ) -> None:
+        super().__init__(cid, iface, checksum, cred)
 
     async def confirmation(self) -> bool:
-        if self._app_id == _BOGUS_APPID:
+        if self._cred.rp_id_hash == _BOGUS_APPID:
             text = Text("U2F", ui.ICON_WRONG, ui.RED)
             text.normal(
                 "Another U2F device", "was used to register", "in this application."
@@ -756,8 +756,10 @@ class U2fConfirmRegister(U2fState):
 
 
 class U2fConfirmAuthenticate(U2fState):
-    def __init__(self, cid: int, iface: io.HID, checksum: bytes, app_id: bytes) -> None:
-        super().__init__(cid, iface, checksum, app_id)
+    def __init__(
+        self, cid: int, iface: io.HID, checksum: bytes, cred: Credential
+    ) -> None:
+        super().__init__(cid, iface, checksum, cred)
 
     def get_header(self) -> str:
         return "U2F Authenticate"
@@ -802,7 +804,7 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
         cid: int,
         iface: io.HID,
         client_data_hash: bytes,
-        cred: Credential,
+        cred: Fido2Credential,
         resident: bool,
         user_verification: bool,
     ) -> None:
@@ -811,17 +813,16 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
         self._cred = cred
         self._resident = resident
         self._user_verification = user_verification
-        self._app_name = cred.rp_id
-        self.load_icon(hashlib.sha256(cred.rp_id.encode()).digest())
+        self.load_icon(cred.rp_id_hash)
 
     def get_header(self) -> str:
         return "FIDO2 Register"
 
     def app_name(self) -> str:
-        return self._app_name
+        return self._cred.app_name()
 
-    def user_name(self) -> Optional[str]:
-        return self._cred.name()
+    def account_name(self) -> Optional[str]:
+        return self._cred.account_name()
 
     async def confirmation(self) -> bool:
         content = ConfirmContent(self)
@@ -849,7 +850,7 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
 
 
 class Fido2ConfirmExcluded(Fido2ConfirmMakeCredential):
-    def __init__(self, cid: int, iface: io.HID, cred: Credential) -> None:
+    def __init__(self, cid: int, iface: io.HID, cred: Fido2Credential) -> None:
         super().__init__(cid, iface, b"", cred, False, False)
 
     async def on_confirm(self) -> None:
@@ -877,18 +878,17 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
         self._client_data_hash = client_data_hash
         self._creds = creds
         self._hmac_secret = hmac_secret
-        self._app_name = creds[0].rp_id
         self._user_verification = user_verification
-        self.load_icon(hashlib.sha256(self._app_name.encode()).digest())
+        self.load_icon(self._creds[0].rp_id_hash)
 
     def get_header(self) -> str:
         return "FIDO2 Authenticate"
 
     def app_name(self) -> str:
-        return self._app_name
+        return self._creds[self.page()].app_name()
 
-    def user_name(self) -> Optional[str]:
-        return self._creds[self.page()].name()
+    def account_name(self) -> Optional[str]:
+        return self._creds[self.page()].account_name()
 
     def page_count(self) -> int:
         return len(self._creds)
@@ -945,14 +945,15 @@ class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
         cred = Credential()
         cred.rp_id = rp_id
         super().__init__(cid, iface, b"", [cred], {}, False)
-        self._app_name = rp_id
 
     async def on_confirm(self) -> None:
         cmd = cbor_error(self.cid, _ERR_NO_CREDENTIALS)
         await send_cmd(cmd, self.iface)
 
         text = Text("FIDO2 Authenticate", ui.ICON_WRONG, ui.RED)
-        text.normal("This device is not", "registered with", self._app_name + ".")
+        text.normal(
+            "This device is not", "registered with", self._creds[0].app_name() + "."
+        )
         await Confirm(text, confirm=None)
 
 
@@ -1118,7 +1119,7 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
             log.debug(__name__, "_CMD_WINK")
         loop.schedule(ui.alert())
         return req
-    elif req.cmd == _CMD_CBOR:
+    elif req.cmd == _CMD_CBOR and _ALLOW_FIDO2:
         if req.data[0] == _CBOR_MAKE_CREDENTIAL:
             if __debug__:
                 log.debug(__name__, "_CBOR_MAKE_CREDENTIAL")
@@ -1189,15 +1190,17 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     # check length of input data
     if len(req.data) != 64:
         if __debug__:
-            log.warning(__name__, "_SW_WRONG_DATA req.data")
-        return msg_error(req.cid, _SW_WRONG_DATA)
+            log.warning(__name__, "_SW_WRONG_LENGTH req.data")
+        return msg_error(req.cid, _SW_WRONG_LENGTH)
 
-    # parse challenge and app_id
+    # parse challenge and rp_id_hash
     chal = req.data[:32]
-    app_id = bytes(req.data[32:])
+    cred = U2fCredential()
+    cred.rp_id_hash = bytes(req.data[32:])
+    cred.generate_key_handle()
 
     # check equality with last request
-    new_state = U2fConfirmRegister(req.cid, dialog_mgr.iface, req.data, app_id)
+    new_state = U2fConfirmRegister(req.cid, dialog_mgr.iface, req.data, cred)
     if not dialog_mgr.compare(new_state):
         if not dialog_mgr.set_state(new_state):
             return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
@@ -1212,43 +1215,22 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     # sign the registration challenge and return
     if __debug__:
         log.info(__name__, "signing register")
-    buf = msg_register_sign(chal, app_id)
+    buf = msg_register_sign(chal, cred)
 
     dialog_mgr.reset()
 
     return Cmd(req.cid, _CMD_MSG, buf)
 
 
-def generate_credential(app_id: bytes) -> Tuple[bytes, bytes]:
-    from apps.common import seed
-
-    # derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
-    path = [HARDENED | random.uniform(0xF0000000) for _ in range(0, 8)]
-    nodepath = [_U2F_KEY_PATH] + path
-
-    # prepare signing key from random path, compute decompressed public key
-    node = seed.derive_node_without_passphrase(nodepath, "nist256p1")
-    pubkey = nist256p1.publickey(node.private_key(), False)
-
-    # first half of keyhandle is keypath
-    keypath = ustruct.pack("<8L", *path)
-
-    # second half of keyhandle is a hmac of app_id and keypath
-    mac = hmac.Hmac(node.private_key(), app_id, hashlib.sha256)
-    mac.update(keypath)
-
-    return keypath + mac.digest(), pubkey
-
-
-def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
-    keyhandle, pubkey = generate_credential(app_id)
+def msg_register_sign(challenge: bytes, cred: U2fCredential) -> bytes:
+    pubkey = pubkey = nist256p1.publickey(cred.private_key(), False)
 
     # hash the request data together with keyhandle and pubkey
     dig = hashlib.sha256()
     dig.update(b"\x00")  # uint8_t reserved;
-    dig.update(app_id)  # uint8_t appId[32];
+    dig.update(cred.rp_id_hash)  # uint8_t appId[32];
     dig.update(challenge)  # uint8_t chal[32];
-    dig.update(keyhandle)  # uint8_t keyHandle[64];
+    dig.update(cred.id)  # uint8_t keyHandle[64];
     dig.update(pubkey)  # uint8_t pubKey[65];
 
     # sign the digest and convert to der
@@ -1257,12 +1239,12 @@ def msg_register_sign(challenge: bytes, app_id: bytes) -> bytes:
 
     # pack to a response
     buf, resp = make_struct(
-        resp_cmd_register(len(keyhandle), len(_U2F_ATT_CERT), len(sig))
+        resp_cmd_register(len(cred.id), len(_U2F_ATT_CERT), len(sig))
     )
     resp.registerId = _U2F_REGISTER_ID
     utils.memcpy(resp.pubKey, 0, pubkey, 0, len(pubkey))
-    resp.keyHandleLen = len(keyhandle)
-    utils.memcpy(resp.keyHandle, 0, keyhandle, 0, len(keyhandle))
+    resp.keyHandleLen = len(cred.id)
+    utils.memcpy(resp.keyHandle, 0, cred.id, 0, len(cred.id))
     utils.memcpy(resp.cert, 0, _U2F_ATT_CERT, 0, len(_U2F_ATT_CERT))
     utils.memcpy(resp.sig, 0, sig, 0, len(sig))
     resp.status = _SW_NO_ERROR
@@ -1284,21 +1266,10 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
 
     # check keyHandleLen
     khlen = req.data[_REQ_CMD_AUTHENTICATE_KHLEN]
-    if khlen != 64:
-        if __debug__:
-            log.warning(__name__, "_SW_WRONG_DATA khlen")
-        return msg_error(req.cid, _SW_WRONG_DATA)
-
     auth = overlay_struct(req.data, req_cmd_authenticate(khlen))
 
-    # check the keyHandle and generate the signing key
-    node = msg_authenticate_genkey(auth.appId, auth.keyHandle, "<8L")
-    if node is None:
-        # prior to firmware version 2.0.8, keypath was serialized in a
-        # big-endian manner, instead of little endian, like in trezor-mcu.
-        # try to parse it as big-endian now and check the HMAC.
-        node = msg_authenticate_genkey(auth.appId, auth.keyHandle, ">8L")
-    if node is None:
+    cred = Credential.from_bytes(auth.keyHandle, bytes(auth.appId))
+    if cred is None:
         # specific error logged in msg_authenticate_genkey
         return msg_error(req.cid, _SW_WRONG_DATA)
 
@@ -1315,7 +1286,7 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
         return msg_error(req.cid, _SW_WRONG_DATA)
 
     # check equality with last request
-    new_state = U2fConfirmAuthenticate(req.cid, dialog_mgr.iface, req.data, auth.appId)
+    new_state = U2fConfirmAuthenticate(req.cid, dialog_mgr.iface, req.data, cred)
     if not dialog_mgr.compare(new_state):
         if not dialog_mgr.set_state(new_state):
             return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
@@ -1330,47 +1301,14 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     # sign the authentication challenge and return
     if __debug__:
         log.info(__name__, "signing authentication")
-    buf = msg_authenticate_sign(auth.chal, auth.appId, node.private_key())
+    buf = msg_authenticate_sign(auth.chal, auth.appId, cred.private_key())
 
     dialog_mgr.reset()
 
     return Cmd(req.cid, _CMD_MSG, buf)
 
 
-def msg_authenticate_genkey(
-    app_id: bytes, keyhandle: bytes, pathformat: str
-) -> Optional[bip32.HDNode]:
-    from apps.common import seed
-
-    # unpack the keypath from the first half of keyhandle
-    keypath = keyhandle[:32]
-    path = ustruct.unpack(pathformat, keypath)
-
-    # check high bit for hardened keys
-    for i in path:
-        if not i & HARDENED:
-            if __debug__:
-                log.warning(__name__, "invalid key path")
-            return None
-
-    # derive the signing key
-    nodepath = [_U2F_KEY_PATH] + list(path)
-    node = seed.derive_node_without_passphrase(nodepath, "nist256p1")
-
-    # second half of keyhandle is a hmac of app_id and keypath
-    mac = hmac.Hmac(node.private_key(), app_id, hashlib.sha256)
-    mac.update(keypath)
-
-    # verify the hmac
-    if mac.digest() != keyhandle[32:]:
-        if __debug__:
-            log.warning(__name__, "invalid key handle")
-        return None
-
-    return node
-
-
-def msg_authenticate_sign(challenge: bytes, app_id: bytes, privkey: bytes) -> bytes:
+def msg_authenticate_sign(challenge: bytes, rp_id_hash: bytes, privkey: bytes) -> bytes:
     flags = bytes([_AUTH_FLAG_UP])
 
     # get next counter
@@ -1379,7 +1317,7 @@ def msg_authenticate_sign(challenge: bytes, app_id: bytes, privkey: bytes) -> by
 
     # hash input data together with counter
     dig = hashlib.sha256()
-    dig.update(app_id)  # uint8_t appId[32];
+    dig.update(rp_id_hash)  # uint8_t appId[32];
     dig.update(flags)  # uint8_t flags;
     dig.update(ctrbuf)  # uint8_t ctr[4];
     dig.update(challenge)  # uint8_t chal[32];
@@ -1429,7 +1367,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
         # Prepare the new credential.
         user = param[_MAKECRED_CMD_USER]
-        cred = Credential()
+        cred = Fido2Credential()
         cred.rp_id = rp_id
         cred.rp_name = param[_MAKECRED_CMD_RP].get("name", None)
         cred.user_id = user["id"]
@@ -1439,7 +1377,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         # Check if any of the credential descriptors in the exclude list belong to this authenticator.
         exclude_list = param.get(_MAKECRED_CMD_EXCLUDE_LIST, [])
         for credential_descriptor in exclude_list:
-            excl_cred = Credential.from_id(credential_descriptor["id"], rp_id_hash)
+            excl_cred = Credential.from_bytes(credential_descriptor["id"], rp_id_hash)
             if credential_descriptor["type"] == "public-key" and excl_cred is not None:
                 # This authenticator is already registered.
                 if not dialog_mgr.set_state(
@@ -1506,7 +1444,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
 
 def cbor_make_credential_sign(
-    client_data_hash: bytes, cred: Credential, user_verification: bool
+    client_data_hash: bytes, cred: Fido2Credential, user_verification: bool
 ) -> bytes:
     privkey = cred.private_key()
     pubkey = nist256p1.publickey(privkey, False)
@@ -1579,8 +1517,10 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
             for credential_descriptor in allow_list:
                 if credential_descriptor["type"] != "public-key":
                     continue
-                cred = Credential.from_id(credential_descriptor["id"], rp_id_hash)
+                cred = Credential.from_bytes(credential_descriptor["id"], rp_id_hash)
                 if cred is not None:
+                    if cred.rp_id is None:
+                        cred.rp_id = rp_id
                     cred_list.append(cred)
         else:
             # Allow list is empty. Get resident credentials.
@@ -1764,7 +1704,7 @@ def cbor_get_assertion_sign(
         _GETASSERT_RESP_SIGNATURE: sig,
     }
 
-    if user_presence:
+    if user_presence and cred.user_id is not None:
         response[_GETASSERT_RESP_USER] = {"id": cred.user_id}
 
     return cbor.encode(response)
