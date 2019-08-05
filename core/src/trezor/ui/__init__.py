@@ -230,6 +230,7 @@ class Layout(Control):
     def handle_rendering(self) -> loop.Task:  # type: ignore
         backlight_fade(style.BACKLIGHT_DIM)
         display.clear()
+        self.dispatch(REPAINT, 0, 0)
         self.dispatch(RENDER, 0, 0)
         display.refresh()
         backlight_fade(style.BACKLIGHT_NORMAL)
