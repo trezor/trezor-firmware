@@ -909,7 +909,7 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
             )
             response_data = cbor_get_assertion_sign(
                 self._client_data_hash,
-                hashlib.sha256(cred.rp_id.encode()).digest(),
+                cred.rp_id_hash,
                 cred,
                 self._hmac_secret,
                 True,
@@ -1369,6 +1369,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         user = param[_MAKECRED_CMD_USER]
         cred = Fido2Credential()
         cred.rp_id = rp_id
+        cred.rp_id_hash = rp_id_hash
         cred.rp_name = param[_MAKECRED_CMD_RP].get("name", None)
         cred.user_id = user["id"]
         cred.user_name = user.get("name", None)
@@ -1473,9 +1474,12 @@ def cbor_make_credential_sign(
         extensions = cbor.encode({"hmac-secret": True})
         flags |= _AUTH_FLAG_ED
 
-    rp_id_hash = hashlib.sha256(cred.rp_id.encode()).digest()
     authenticator_data = (
-        rp_id_hash + bytes([flags]) + b"\x00\x00\x00\x00" + att_cred_data + extensions
+        cred.rp_id_hash
+        + bytes([flags])
+        + b"\x00\x00\x00\x00"
+        + att_cred_data
+        + extensions
     )
 
     # Compute self-attestation signature of the authenticator data.

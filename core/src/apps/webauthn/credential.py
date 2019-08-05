@@ -99,7 +99,7 @@ class Fido2Credential(Credential):
         key = seed.derive_slip21_node_without_passphrase(_FIDO_CRED_ID_KEY_PATH).key()
         iv = random.bytes(12)
         ctx = chacha20poly1305(key, iv)
-        ctx.auth(hashlib.sha256(self.rp_id.encode()).digest())
+        ctx.auth(self.rp_id_hash)
         ciphertext = ctx.encrypt(data)
         tag = ctx.finish()
         self.id = _CRED_ID_VERSION + iv + ciphertext + tag
