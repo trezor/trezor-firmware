@@ -6,7 +6,7 @@ from trezorui import Display
 from trezor import io, loop, res, utils, workflow
 
 if False:
-    from typing import Any, Generator, Tuple
+    from typing import Any, Generator, Tuple, TypeVar
 
     Pos = Tuple[int, int]
     Area = Tuple[int, int, int, int]

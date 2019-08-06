@@ -4,13 +4,13 @@ import utime
 from micropython import const
 
 from trezor import config, io, log, loop, res, ui, utils, workflow
-from trezor.crypto import aes, bip32, der, hashlib, hmac, random
+from trezor.crypto import aes, der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
 from trezor.ui.confirm import CONFIRMED, Confirm
 from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, SWIPE_RIGHT, Swipe
 from trezor.ui.text import Text
 
-from apps.common import HARDENED, cbor, storage
+from apps.common import cbor, storage
 from apps.webauthn.credential import Credential, Fido2Credential, U2fCredential
 
 if False:

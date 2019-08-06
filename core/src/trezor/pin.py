@@ -1,5 +1,8 @@
 from trezor import ui
 
+if False:
+    from typing import Any
+
 
 def pin_to_int(pin: str) -> int:
     return int("1" + pin)
