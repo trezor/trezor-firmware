@@ -19,9 +19,9 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
-from ..support.tx_cache import tx_cache
 from .common import TrezorTest
 from .conftest import TREZOR_VERSION
+from .tx_cache import tx_cache
 
 # KMD has no usable backends, use cached TX only
 TX_API = tx_cache("Komodo", allow_fetch=False)

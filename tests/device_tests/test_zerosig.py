@@ -16,8 +16,8 @@
 
 from trezorlib import btc, messages as proto
 
-from ..support.tx_cache import tx_cache
 from .common import TrezorTest
+from .tx_cache import tx_cache
 
 TXHASH_d5f65e = bytes.fromhex(
     "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
