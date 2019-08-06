@@ -444,9 +444,7 @@ def send_cmd_sync(cmd: Cmd, iface: io.HID) -> None:
         offset += copied
         if copied < _FRAME_CONT_SIZE:
             frm.data[copied:] = bytearray(_FRAME_CONT_SIZE - copied)
-        while True:
-            if iface.write_blocking(buf, 100) > 0:
-                break
+        iface.write_blocking(buf, 1000)
         seq += 1
 
 
@@ -714,7 +712,8 @@ class U2fState(State, ConfirmInfo):
     def __init__(
         self, cid: int, iface: io.HID, checksum: bytes, cred: Credential
     ) -> None:
-        super().__init__(cid, iface)
+        State.__init__(self, cid, iface)
+        ConfirmInfo.__init__(self)
         self._cred = cred
         self._checksum = checksum
 
@@ -808,7 +807,8 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
         resident: bool,
         user_verification: bool,
     ) -> None:
-        super().__init__(cid, iface)
+        Fido2State.__init__(self, cid, iface)
+        ConfirmInfo.__init__(self)
         self._client_data_hash = client_data_hash
         self._cred = cred
         self._resident = resident
@@ -1510,10 +1510,6 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         rp_id = param[_GETASSERT_CMD_RP_ID]
         rp_id_hash = hashlib.sha256(rp_id).digest()
 
-        send_cmd_sync(
-            cmd_keepalive(req.cid, _KEEPALIVE_STATUS_PROCESSING), dialog_mgr.iface
-        )
-
         allow_list = param.get(_GETASSERT_CMD_ALLOW_LIST, [])
         if allow_list:
             # Get all credentials from the allow list that belong to this authenticator.
@@ -1531,10 +1527,6 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
             if not _ALLOW_RESIDENT_CREDENTIALS:
                 return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
             cred_list = storage.webauthn.get_resident_credentials(rp_id_hash)
-
-        send_cmd_sync(
-            cmd_keepalive(req.cid, _KEEPALIVE_STATUS_PROCESSING), dialog_mgr.iface
-        )
 
         # Sort credentials by time of creation.
         cred_list.sort()
@@ -1566,10 +1558,6 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
     # User verification cannot happen without user presence.
     user_presence = user_presence or user_verification
-
-    send_cmd_sync(
-        cmd_keepalive(req.cid, _KEEPALIVE_STATUS_PROCESSING), dialog_mgr.iface
-    )
 
     if user_verification and not config.has_pin():
         # User verification requested, but PIN is not enabled.
