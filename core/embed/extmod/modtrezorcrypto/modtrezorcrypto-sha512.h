@@ -54,7 +54,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha512_make_new(const mp_obj_type_t *type,
   return MP_OBJ_FROM_PTR(o);
 }
 
-/// def hash(self, data: bytes) -> None:
+/// def update(self, data: bytes) -> None:
 ///     """
 ///     Update the hash context with hashed data.
 ///     """

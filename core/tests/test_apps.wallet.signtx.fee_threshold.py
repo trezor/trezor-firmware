@@ -156,9 +156,8 @@ class TestSignTxFeeThreshold(unittest.TestCase):
         ]
 
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
-        root = bip32.from_seed(seed, 'secp256k1')
 
-        keychain = Keychain([[coin_bitcoin.curve_name]], [root])
+        keychain = Keychain(seed, [[coin_bitcoin.curve_name]])
         signer = signing.sign_tx(tx, keychain)
         for request, response in chunks(messages, 2):
             self.assertEqual(signer.send(request), response)

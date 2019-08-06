@@ -1,11 +1,36 @@
 from trezor import wire
-from trezor.crypto import bip32
+from trezor.crypto import bip32, hashlib, hmac
 
 from apps.common import HARDENED, cache, mnemonic, storage
 from apps.common.request_passphrase import protect_by_passphrase
 
 if False:
-    from typing import List, Optional
+    from typing import List, Union
+
+
+class Slip21Node:
+    def __init__(self, seed: bytes = None) -> None:
+        if seed is not None:
+            self.data = hmac.new(b"Symmetric key seed", seed, hashlib.sha512).digest()
+        else:
+            self.data = b""
+
+    def __del__(self) -> None:
+        del self.data
+
+    def derive_path(self, path: list) -> None:
+        for label in path:
+            h = hmac.new(self.data[0:32], b"\x00", hashlib.sha512)
+            h.update(label)
+            self.data = h.digest()
+
+    def key(self) -> bytes:
+        return self.data[32:64]
+
+    def clone(self) -> "Slip21Node":
+        node = Slip21Node()
+        node.data = self.data
+        return node
 
 
 class Keychain:
@@ -17,7 +42,9 @@ class Keychain:
     def __init__(self, seed: bytes, namespaces: list):
         self.seed = seed
         self.namespaces = namespaces
-        self.roots = [None] * len(namespaces)  # type: List[Optional[bip32.HDNode]]
+        self.roots = [None] * len(
+            namespaces
+        )  # type: List[Union[bip32.HDNode, Slip21Node, None]]
 
     def __del__(self) -> None:
         for root in self.roots:
@@ -34,7 +61,12 @@ class Keychain:
                 return
         raise wire.DataError("Forbidden key path")
 
-    def derive(self, node_path: list, curve_name: str = "secp256k1") -> bip32.HDNode:
+    def derive(
+        self, node_path: list, curve_name: str = "secp256k1"
+    ) -> Union[bip32.HDNode, Slip21Node]:
+        if "ed25519" in curve_name and not _path_hardened(node_path):
+            raise wire.DataError("Forbidden key path")
+
         # find the root node index
         root_index = 0
         for curve, *path in self.namespaces:
@@ -49,11 +81,13 @@ class Keychain:
         # create the root node if not cached
         root = self.roots[root_index]
         if root is None:
-            root = bip32.from_seed(self.seed, curve_name)
+            if curve_name != "slip21":
+                root = bip32.from_seed(self.seed, curve_name)
+            else:
+                root = Slip21Node(self.seed)
             root.derive_path(path)
             self.roots[root_index] = root
 
-        # TODO check for ed25519?
         # derive child node from the root
         node = root.clone()
         node.derive_path(suffix)
@@ -82,6 +116,15 @@ def derive_node_without_passphrase(
         raise Exception("Device is not initialized")
     seed = mnemonic.get_seed(progress_bar=False)
     node = bip32.from_seed(seed, curve_name)
+    node.derive_path(path)
+    return node
+
+
+def derive_slip21_node_without_passphrase(path: list) -> Slip21Node:
+    if not storage.is_initialized():
+        raise Exception("Device is not initialized")
+    seed = mnemonic.get_seed(progress_bar=False)
+    node = Slip21Node(seed)
     node.derive_path(path)
     return node
 

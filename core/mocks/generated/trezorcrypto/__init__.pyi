@@ -358,7 +358,7 @@ class sha512:
         Creates a hash context object.
         """
 
-    def hash(self, data: bytes) -> None:
+    def update(self, data: bytes) -> None:
         """
         Update the hash context with hashed data.
         """
