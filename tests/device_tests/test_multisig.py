@@ -16,11 +16,9 @@
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, ckd_public as bip32, messages as proto
 from trezorlib.tools import CallException, parse_path
 
-from ..support import ckd_public as bip32
-from ..support.ckd_public import deserialize
 from .common import TrezorTest
 from .tx_cache import tx_cache
 
@@ -35,15 +33,12 @@ class TestMultisig(TrezorTest):
     def test_2_of_3(self):
         self.setup_mnemonic_allallall()
         nodes = [
-            btc.get_public_node(self.client, parse_path("48'/0'/%d'" % index))
+            btc.get_public_node(self.client, parse_path("48'/0'/%d'" % index)).node
             for index in range(1, 4)
         ]
 
         multisig = proto.MultisigRedeemScriptType(
-            nodes=[deserialize(n.xpub) for n in nodes],
-            address_n=[0, 0],
-            signatures=[b"", b"", b""],
-            m=2,
+            nodes=nodes, address_n=[0, 0], signatures=[b"", b"", b""], m=2
         )
         # Let's go to sign with key 1
         inp1 = proto.TxInputType(
@@ -125,7 +120,7 @@ class TestMultisig(TrezorTest):
         # Let's do second signature using 3rd key
 
         multisig = proto.MultisigRedeemScriptType(
-            nodes=[deserialize(n.xpub) for n in nodes],
+            nodes=nodes,
             address_n=[0, 0],
             signatures=[
                 signatures1[0],

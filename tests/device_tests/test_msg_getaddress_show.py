@@ -14,9 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, ckd_public as bip32, messages as proto
 
-from ..support import ckd_public as bip32
 from .common import TrezorTest
 
 
