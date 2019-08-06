@@ -24,6 +24,7 @@ from trezorlib.tools import H_
 from .common import TrezorTest
 
 
+@pytest.mark.flaky(max_runs=5)
 class TestBip32Speed(TrezorTest):
     def test_public_ckd(self):
         self.setup_mnemonic_nopin_nopassphrase()

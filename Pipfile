@@ -14,6 +14,12 @@ pyblake2 = "*"
 pytest = "*"
 mock = "*"
 coverage = "==4.5.3"  # coverage 5+ uses binary format
+flaky = ">=3.6.1"  # https://github.com/box/flaky/issues/156
+pytest-random-order = "*"
+
+## typing
+mypy = "*"
+typing-extensions = "*"
 
 ## style
 isort = ">=4.3.14"
@@ -22,7 +28,6 @@ black = "*"
 mako = ">=1.0.7"
 munch = ">=2.3.2"
 autoflake = "*"
-mypy = "*"
 
 # common
 demjson = "*"
