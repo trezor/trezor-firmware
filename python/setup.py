@@ -28,7 +28,7 @@ def read(*path):
 
 
 def find_version():
-    version_file = read("trezorlib", "__init__.py")
+    version_file = read("src", "trezorlib", "__init__.py")
     version_match = re.search(r"^__version__ = \"(.*)\"$", version_file, re.M)
     if version_match:
         return version_match.group(1)
@@ -60,9 +60,10 @@ setup(
     long_description="{}\n\n{}".format(read("README.md"), read("CHANGELOG.md")),
     long_description_content_type="text/markdown",
     url="https://github.com/trezor/python-trezor",
-    packages=find_packages(),
+    packages=find_packages("src"),
+    package_dir={"": "src"},
     package_data={"trezorlib": ["coins.json"]},
-    scripts=["trezorctl"],
+    entry_points={"console_scripts": ["trezorctl=trezorlib.cli.trezorctl:cli"]},
     install_requires=install_requires,
     extras_require={
         "hidapi": ["hidapi>=0.7.99.post20"],

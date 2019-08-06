@@ -1,7 +1,7 @@
 #!/bin/bash
 cd $(dirname $0)/..
 
-DEST=trezorlib/coins.json
+DEST=src/trezorlib/coins.json
 
 BUILD_COINS_AT="../common/tools/cointool.py dump \
     --list --support \

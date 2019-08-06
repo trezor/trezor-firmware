@@ -2,14 +2,14 @@ PYTHON=python3
 SETUP=$(PYTHON) setup.py
 
 EXCLUDES=.vscode
-STYLE_TARGETS=trezorlib trezorctl setup.py
+STYLE_TARGETS=src/trezorlib setup.py
 EXCLUDE_TARGETS=messages
 
 all: build
 
 clean-gen: ## remove generated files
-	rm -f trezorlib/messages/*.py
-	rm -f trezorlib/coins.json
+	rm -f src/trezorlib/messages/*.py
+	rm -f src/trezorlib/coins.json
 
 coins_json:
 	./helper-scripts/build-coins-json.sh

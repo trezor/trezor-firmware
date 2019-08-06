@@ -93,6 +93,6 @@ else
 fi
 
 $func core/src/trezor/messages "$CORE_PROTOBUF_SOURCES" "$CORE_MESSAGES_IGNORE" --no-init-py
-$func python/trezorlib/messages "$PYTHON_PROTOBUF_SOURCES" "$PYTHON_MESSAGES_IGNORE" -P ..protobuf
+$func python/src/trezorlib/messages "$PYTHON_PROTOBUF_SOURCES" "$PYTHON_MESSAGES_IGNORE" -P ..protobuf
 
 exit $RETURN
