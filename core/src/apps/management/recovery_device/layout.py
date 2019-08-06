@@ -208,8 +208,6 @@ async def homescreen_dialog(
     ctx: wire.Context, homepage: RecoveryHomescreen, button_label: str
 ) -> None:
     while True:
-        # make sure the homepage gets painted, even after cancelling the dialog
-        homepage.repaint = True
         continue_recovery = await confirm(
             ctx,
             homepage,
