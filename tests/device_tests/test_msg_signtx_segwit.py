@@ -19,7 +19,6 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, CallException, parse_path
 
-from ..support.ckd_public import deserialize
 from .common import TrezorTest
 from .conftest import TREZOR_VERSION
 from .tx_cache import tx_cache
@@ -216,17 +215,13 @@ class TestMsgSigntxSegwit(TrezorTest):
 
     def test_send_multisig_1(self):
         self.setup_mnemonic_allallall()
-        nodes = map(
-            lambda index: btc.get_public_node(
-                self.client, parse_path("49'/1'/%d'" % index)
-            ),
-            range(1, 4),
-        )
+        nodes = [
+            btc.get_public_node(self.client, parse_path("49'/1'/%d'" % i)).node
+            for i in range(1, 4)
+        ]
+
         multisig = proto.MultisigRedeemScriptType(
-            nodes=[deserialize(n.xpub) for n in nodes],
-            address_n=[1, 0],
-            signatures=[b"", b"", b""],
-            m=2,
+            nodes=nodes, address_n=[1, 0], signatures=[b"", b"", b""], m=2
         )
 
         inp1 = proto.TxInputType(

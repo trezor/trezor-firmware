@@ -19,7 +19,6 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, CallException, parse_path
 
-from ..support.ckd_public import deserialize
 from .common import TrezorTest
 from .tx_cache import tx_cache
 
@@ -413,21 +412,14 @@ class TestMsgSigntxBch(TrezorTest):
 
     def test_send_bch_multisig_wrongchange(self):
         self.setup_mnemonic_allallall()
-        xpubs = []
-        for n in map(
-            lambda index: btc.get_public_node(
-                self.client, parse_path("48'/145'/%d'" % index)
-            ),
-            range(1, 4),
-        ):
-            xpubs.append(n.xpub)
+        nodes = [
+            btc.get_public_node(self.client, parse_path("48'/145'/%d'" % i)).node
+            for i in range(1, 4)
+        ]
 
-        def getmultisig(chain, nr, signatures=[b"", b"", b""], xpubs=xpubs):
+        def getmultisig(chain, nr, signatures=[b"", b"", b""], nodes=nodes):
             return proto.MultisigRedeemScriptType(
-                nodes=[deserialize(xpub) for xpub in xpubs],
-                address_n=[chain, nr],
-                signatures=signatures,
-                m=2,
+                nodes=nodes, address_n=[chain, nr], signatures=signatures, m=2
             )
 
         correcthorse = proto.HDNodeType(
@@ -459,7 +451,7 @@ class TestMsgSigntxBch(TrezorTest):
             address_n=parse_path("48'/145'/1'/1/1"),
             multisig=proto.MultisigRedeemScriptType(
                 pubkeys=[
-                    proto.HDNodePathType(node=deserialize(xpubs[0]), address_n=[1, 1]),
+                    proto.HDNodePathType(node=nodes[0], address_n=[1, 1]),
                     proto.HDNodePathType(node=correcthorse, address_n=[]),
                     proto.HDNodePathType(node=correcthorse, address_n=[]),
                 ],
@@ -507,21 +499,14 @@ class TestMsgSigntxBch(TrezorTest):
 
     def test_send_bch_multisig_change(self):
         self.setup_mnemonic_allallall()
-        xpubs = []
-        for n in map(
-            lambda index: btc.get_public_node(
-                self.client, parse_path("48'/145'/%d'" % index)
-            ),
-            range(1, 4),
-        ):
-            xpubs.append(n.xpub)
+        nodes = [
+            btc.get_public_node(self.client, parse_path("48'/145'/%d'" % i)).node
+            for i in range(1, 4)
+        ]
 
-        def getmultisig(chain, nr, signatures=[b"", b"", b""], xpubs=xpubs):
+        def getmultisig(chain, nr, signatures=[b"", b"", b""], nodes=nodes):
             return proto.MultisigRedeemScriptType(
-                nodes=[deserialize(xpub) for xpub in xpubs],
-                address_n=[chain, nr],
-                signatures=signatures,
-                m=2,
+                nodes=nodes, address_n=[chain, nr], signatures=signatures, m=2
             )
 
         inp1 = proto.TxInputType(

@@ -17,7 +17,6 @@
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
-from ..support import ckd_public as bip32
 from .common import TrezorTest
 
 
@@ -83,20 +82,14 @@ class TestMsgGetaddressSegwitNative(TrezorTest):
     def test_show_multisig_3(self):
         self.setup_mnemonic_allallall()
         nodes = [
-            btc.get_public_node(self.client, parse_path("999'/1'/%d'" % index))
+            btc.get_public_node(self.client, parse_path("999'/1'/%d'" % index)).node
             for index in range(1, 4)
         ]
         multisig1 = proto.MultisigRedeemScriptType(
-            nodes=[bip32.deserialize(n.xpub) for n in nodes],
-            address_n=[2, 0],
-            signatures=[b"", b"", b""],
-            m=2,
+            nodes=nodes, address_n=[2, 0], signatures=[b"", b"", b""], m=2
         )
         multisig2 = proto.MultisigRedeemScriptType(
-            nodes=[bip32.deserialize(n.xpub) for n in nodes],
-            address_n=[2, 1],
-            signatures=[b"", b"", b""],
-            m=2,
+            nodes=nodes, address_n=[2, 1], signatures=[b"", b"", b""], m=2
         )
         for i in [1, 2, 3]:
             assert (

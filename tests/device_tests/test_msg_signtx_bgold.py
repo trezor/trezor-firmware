@@ -19,7 +19,6 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, CallException, parse_path
 
-from ..support.ckd_public import deserialize
 from .common import TrezorTest
 from .tx_cache import tx_cache
 
@@ -224,21 +223,14 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
 
     def test_send_btg_multisig_change(self):
         self.setup_mnemonic_allallall()
-        xpubs = []
-        for n in map(
-            lambda index: btc.get_public_node(
-                self.client, parse_path("48'/156'/%d'" % index)
-            ),
-            range(1, 4),
-        ):
-            xpubs.append(n.xpub)
+        nodes = [
+            btc.get_public_node(self.client, parse_path("48'/156'/%d'" % i)).node
+            for i in range(1, 4)
+        ]
 
-        def getmultisig(chain, nr, signatures=[b"", b"", b""], xpubs=xpubs):
+        def getmultisig(chain, nr, signatures=[b"", b"", b""], nodes=nodes):
             return proto.MultisigRedeemScriptType(
-                nodes=[deserialize(xpub) for xpub in xpubs],
-                address_n=[chain, nr],
-                signatures=signatures,
-                m=2,
+                nodes=nodes, address_n=[chain, nr], signatures=signatures, m=2
             )
 
         inp1 = proto.TxInputType(
@@ -496,17 +488,12 @@ class TestMsgSigntxBitcoinGold(TrezorTest):
 
     def test_send_multisig_1(self):
         self.setup_mnemonic_allallall()
-        nodes = map(
-            lambda index: btc.get_public_node(
-                self.client, parse_path("49'/156'/%d'" % index)
-            ),
-            range(1, 4),
-        )
+        nodes = [
+            btc.get_public_node(self.client, parse_path("49'/156'/%d'" % i)).node
+            for i in range(1, 4)
+        ]
         multisig = proto.MultisigRedeemScriptType(
-            nodes=[deserialize(n.xpub) for n in nodes],
-            address_n=[1, 0],
-            signatures=[b"", b"", b""],
-            m=2,
+            nodes=nodes, address_n=[1, 0], signatures=[b"", b"", b""], m=2
         )
 
         inp1 = proto.TxInputType(
