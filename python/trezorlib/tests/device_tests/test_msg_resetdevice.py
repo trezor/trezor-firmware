@@ -110,10 +110,17 @@ class TestMsgResetDevice(TrezorTest):
             )
         )
 
+        # Do you want ... ?
         assert isinstance(ret, proto.ButtonRequest)
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
+        # Entropy screen #1
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Entropy screen #2
         assert isinstance(ret, proto.ButtonRequest)
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
@@ -191,10 +198,17 @@ class TestMsgResetDevice(TrezorTest):
             )
         )
 
+        # Do you want ... ?
         assert isinstance(ret, proto.ButtonRequest)
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
+        # Entropy screen #1
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Entropy screen #2
         assert isinstance(ret, proto.ButtonRequest)
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
