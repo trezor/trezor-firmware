@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from ..support import ckd_public
+from trezorlib import ckd_public
 
 
 def test_ckd_public():

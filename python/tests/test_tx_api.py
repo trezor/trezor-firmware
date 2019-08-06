@@ -14,23 +14,25 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import decimal
+import json
 import os
 
 from trezorlib import coins, tx_api
 
-from ..support.tx_cache import tx_cache
+CACHE_PATH = os.path.join(os.path.dirname(__file__), "../../tests/txcache")
 
 TxApiBitcoin = coins.tx_api["Bitcoin"]
-TxApiTestnet = tx_cache("Testnet", allow_fetch=False)
 TxApiZencash = coins.tx_api["Horizen"]
-TxApiDash = tx_cache("Dash", allow_fetch=False)
 
-tests_dir = os.path.dirname(os.path.abspath(__file__))
+
+def load_tx_json(coin_name, txhash):
+    filename = "insight_{}_tx_{}.json".format(coin_name, txhash)
+    with open(os.path.join(CACHE_PATH, filename)) as f:
+        return json.load(f, parse_float=decimal.Decimal)
 
 
 def test_tx_api_gettx():
-    tx_api.cache_dir = os.path.join(tests_dir, "../txcache")
-
     TxApiBitcoin.get_tx(
         "39a29e954977662ab3879c66fb251ef753e0912223a83d1dcb009111d28265e5"
     )
@@ -65,13 +67,6 @@ def test_tx_api_gettx():
         "e4bc1ae5e5007a08f2b3926fe11c66612e8f73c6b00c69c7027213b84d259be3"
     )
 
-    TxApiTestnet.get_tx(
-        "6f90f3c7cbec2258b0971056ef3fe34128dbde30daa9c0639a898f9977299d54"
-    )
-    TxApiTestnet.get_tx(
-        "d6da21677d7cca5f42fbc7631d062c9ae918a0254f7c6c22de8e8cb7fd5b8236"
-    )
-
 
 def test_tx_api_current_block():
     height = TxApiZencash.current_height()
@@ -86,23 +81,23 @@ def test_tx_api_get_block_hash():
 
 
 def test_tx_api_dash_dip2():
+    dash_data = coins.by_name["Dash"]
+
+    def get_tx(txhash):
+        data = load_tx_json("dash", txhash)
+        return tx_api.json_to_tx(dash_data, data)
+
     # Test if pre-DIP2 TXs are still working as expected
-    tx = TxApiDash.get_tx(
-        "acb3b7f259429989fc9c51ae4a5e3e3eab0723dceb21577533ac7c4b4ba4db5d"
-    )
+    tx = get_tx("acb3b7f259429989fc9c51ae4a5e3e3eab0723dceb21577533ac7c4b4ba4db5d")
     assert tx.version == 2  # pre-DIP2
     assert tx.extra_data is None and tx.extra_data_len is None
 
     # Test if version 3 TX with type=0 is treated as normal TX
-    tx = TxApiDash.get_tx(
-        "5579eaa64b2a0233e7d8d037f5a5afc957cedf48f1c4067e9e33ca6df22ab04f"
-    )
+    tx = get_tx("5579eaa64b2a0233e7d8d037f5a5afc957cedf48f1c4067e9e33ca6df22ab04f")
     assert tx.version == 3
     assert tx.extra_data is None and tx.extra_data_len is None
 
     # Test if DIP2 payloads are initialized correctly
-    tx = TxApiDash.get_tx(
-        "15575a1c874bd60a819884e116c42e6791c8283ce1fc3b79f0d18531a61bbb8a"
-    )
+    tx = get_tx("15575a1c874bd60a819884e116c42e6791c8283ce1fc3b79f0d18531a61bbb8a")
     assert tx.version == (3 | (5 << 16))  # DIP2 type 1 (ProRegTx)
     assert len(tx.extra_data) == (38 + 1)  # real length + varint size

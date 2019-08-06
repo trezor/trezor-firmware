@@ -3,7 +3,7 @@
 MANIFEST
 /build
 /dist
-/trezor.egg-info
+*.egg-info
 *.bin
 *.py.cache
 /.tox
