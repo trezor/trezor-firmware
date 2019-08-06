@@ -6,7 +6,7 @@ bytes, string, embedded message and repeated fields.
 from micropython import const
 
 if False:
-    from typing import Any, Dict, List, Type, TypeVar
+    from typing import Any, Dict, Iterable, List, Type, TypeVar, Union
     from typing_extensions import Protocol
 
     class AsyncReader(Protocol):
@@ -124,7 +124,7 @@ class BoolType:
 class EnumType:
     WIRE_TYPE = 0
 
-    def __init__(self, _, enum_values):
+    def __init__(self, name: str, enum_values: Iterable[int]) -> None:
         self.enum_values = enum_values
 
     def validate(self, fvalue: int) -> int:
@@ -189,6 +189,11 @@ async def load_message(
 ) -> LoadedMessageType:
     fields = msg_type.get_fields()
     msg = msg_type()
+
+    if False:
+        SingularValue = Union[int, bool, bytearray, str, MessageType]
+        Value = Union[SingularValue, List[SingularValue]]
+        fvalue = 0  # type: Value
 
     while True:
         try:
@@ -276,7 +281,7 @@ async def dump_message(
         if isinstance(ftype, type) and issubclass(ftype, MessageType):
             ffields = ftype.get_fields()
         else:
-            ffields = None
+            del ffields
 
         for svalue in fvalue:
             await dump_uvarint(writer, fkey)

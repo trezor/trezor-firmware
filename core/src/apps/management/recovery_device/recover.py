@@ -39,8 +39,10 @@ def _process_slip39(words: str) -> Optional[bytes]:
     if threshold == 1:
         raise ValueError("Threshold equal to 1 is not allowed.")
 
+    remaining = storage.recovery.get_remaining()
+
     # if this is the first share, parse and store metadata
-    if not storage.recovery.get_remaining():
+    if not remaining:
         storage.recovery.set_slip39_iteration_exponent(iteration_exponent)
         storage.recovery.set_slip39_identifier(identifier)
         storage.recovery.set_slip39_threshold(threshold)
@@ -55,7 +57,7 @@ def _process_slip39(words: str) -> Optional[bytes]:
         raise RuntimeError("Slip39: This mnemonic was already entered")
 
     # add mnemonic to storage
-    remaining = storage.recovery.get_remaining() - 1
+    remaining -= 1
     storage.recovery.set_remaining(remaining)
     storage.recovery_shares.set(index, words)
     if remaining != 0:

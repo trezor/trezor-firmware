@@ -15,7 +15,7 @@ usb.bus.open()
 utils.set_mode_unprivileged()
 
 
-def _boot_recovery():
+def _boot_recovery() -> None:
     # load applications
     import apps.homescreen
 
@@ -27,7 +27,7 @@ def _boot_recovery():
     loop.schedule(recovery_homescreen())
 
 
-def _boot_default():
+def _boot_default() -> None:
     # load applications
     import apps.homescreen
     import apps.management

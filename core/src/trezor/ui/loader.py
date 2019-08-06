@@ -42,8 +42,8 @@ class Loader(ui.Control):
         self.normal_style = style.normal
         self.active_style = style.active
         self.target_ms = _TARGET_MS
-        self.start_ms = None
-        self.stop_ms = None
+        self.start_ms = None  # type: Optional[int]
+        self.stop_ms = None  # type: Optional[int]
 
     def start(self) -> None:
         self.start_ms = utime.ticks_ms()
@@ -62,6 +62,8 @@ class Loader(ui.Control):
         target = self.target_ms
         start = self.start_ms
         stop = self.stop_ms
+        if start is None:
+            return
         now = utime.ticks_ms()
         if stop is None:
             r = min(now - start, target)
