@@ -203,7 +203,7 @@ class Layout(Control):
             workflow.onlayoutstart(self)
             while True:
                 layout_tasks = self.create_tasks()
-                await loop.spawn(workflow.layout_signal.take, *layout_tasks)
+                await loop.race(workflow.layout_signal.take, *layout_tasks)
         except Result as result:
             value = result.value
         finally:

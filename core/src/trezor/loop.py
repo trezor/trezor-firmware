@@ -4,7 +4,7 @@ the form of python coroutines (either plain generators or `async` functions) are
 stepped through until completion, and can get asynchronously blocked by
 `yield`ing or `await`ing a syscall.
 
-See `schedule`, `run`, and syscalls `sleep`, `wait`, `signal` and `spawn`.
+See `schedule`, `run`, and syscalls `sleep`, `wait`, `signal` and `race`.
 """
 
 import utime
@@ -57,6 +57,8 @@ def schedule(
     """
     Schedule task to be executed with `value` on given `deadline` (in
     microseconds).  Does not start the event loop itself, see `run`.
+    Usually done in very low-level cases, see `race` for more user-friendly
+    and correct concept.
     """
     if deadline is None:
         deadline = utime.ticks_us()
@@ -66,6 +68,11 @@ def schedule(
 
 
 def pause(task: Task, iface: int) -> None:
+    """
+    Block task on given message interface.  Task is resumed when the interface
+    is activated.  It is most probably wrong to call `pause` from user code,
+    see the `wait` syscall for the correct concept.
+    """
     tasks = _paused.get(iface, None)
     if tasks is None:
         tasks = _paused[iface] = set()
@@ -73,12 +80,17 @@ def pause(task: Task, iface: int) -> None:
 
 
 def finalize(task: Task, value: Any) -> None:
+    """Call and remove any finalization callbacks registered for given task."""
     fn = _finalizers.pop(id(task), None)
     if fn is not None:
         fn(task, value)
 
 
 def close(task: Task) -> None:
+    """
+    Deschedule and unblock a task, close it so it can release all resources, and
+    call its finalizer.
+    """
     for iface in _paused:
         _paused[iface].discard(task)
     _queue.discard(task)
@@ -220,7 +232,7 @@ class wait(Syscall):
     """
     Pause current task, and resume only after a message on `msg_iface` is
     received.  Messages are received either from an USB interface, or the
-    touch display.  Result value a tuple of message values.
+    touch display.  Result value is a tuple of message values.
 
     Example:
 
@@ -238,29 +250,33 @@ class wait(Syscall):
 _type_gen = type((lambda: (yield))())
 
 
-class spawn(Syscall):
+class race(Syscall):
     """
-    Execute one or more children tasks and wait until one of them exits.
-    Return value of `spawn` is the return value of task that triggered the
-    completion.  By default, `spawn` returns after the first child completes, and
-    other running children are killed (by cancelling any pending schedules and
-    calling `close()`).
+    Given a list of either children tasks or syscalls, `race` waits until one of
+    them completes (tasks are executed in parallel, syscalls are waited upon,
+    directly).  Return value of `race` is the return value of the child that
+    triggered the  completion.  Other running children are killed (by cancelling
+    any pending schedules and raising a `GeneratorExit` by calling `close()`).
+    Child that caused the completion is present in `self.finished`.
 
     Example:
 
     >>> # async def wait_for_touch(): ...
     >>> # async def animate_logo(): ...
+    >>> some_signal = loop.signal()
     >>> touch_task = wait_for_touch()
     >>> animation_task = animate_logo()
-    >>> waiter = loop.spawn(touch_task, animation_task)
-    >>> result = await waiter
-    >>> if animation_task in waiter.finished:
-    >>>     print('animation task returned', result)
+    >>> racer = loop.race(some_signal, touch_task, animation_task)
+    >>> result = await racer
+    >>> if animation_task in racer.finished:
+    >>>     print('animation task returned value:', result)
+    >>> elif touch_task in racer.finished:
+    >>>     print('touch task returned value:', result)
     >>> else:
-    >>>     print('touch task returned', result)
+    >>>     print('signal was triggered with value:', result)
 
-    Note: You should not directly `yield` a `spawn` instance, see logic in
-    `spawn.__iter__` for explanation.  Always use `await`.
+    Note: You should not directly `yield` a `race` instance, see logic in
+    `race.__iter__` for explanation.  Always use `await`.
     """
 
     def __init__(self, *children: Awaitable, exit_others: bool = True) -> None:
@@ -297,6 +313,8 @@ class spawn(Syscall):
 
     def _finish(self, task: Task, result: Any) -> None:
         if not self.finished:
+            # because we create tasks for children that are not generators yet,
+            # we need to find the child value that the caller supplied
             for index, child_task in enumerate(self.scheduled):
                 if child_task is task:
                     child = self.children[index]

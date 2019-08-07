@@ -77,7 +77,7 @@ class Paginated(ui.Layout):
             directions = SWIPE_VERTICAL
 
         if __debug__:
-            swipe = await loop.spawn(Swipe(directions), swipe_signal)
+            swipe = await loop.race(Swipe(directions), swipe_signal)
         else:
             swipe = await Swipe(directions)
 

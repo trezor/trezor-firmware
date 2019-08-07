@@ -74,7 +74,7 @@ class DummyContext:
         pass
 
     async def wait(self, *tasks: Awaitable) -> Any:
-        return await loop.spawn(*tasks)
+        return await loop.race(*tasks)
 
 
 class Context:
@@ -172,7 +172,7 @@ class Context:
         while servicing the wire context.  If a message comes until one of the
         tasks ends, `UnexpectedMessageError` is raised.
         """
-        return loop.spawn(self.read(None), *tasks)
+        return loop.race(self.read(None), *tasks)
 
     def make_reader(self) -> codec_v1.Reader:
         return codec_v1.Reader(self.iface)

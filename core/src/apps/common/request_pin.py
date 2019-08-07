@@ -25,7 +25,7 @@ async def request_pin(
 
     while True:
         if __debug__:
-            result = await loop.spawn(dialog, input_signal)
+            result = await loop.race(dialog, input_signal)
         else:
             result = await dialog
         if result is CANCELLED:
