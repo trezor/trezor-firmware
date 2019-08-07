@@ -6,7 +6,7 @@ bytes, string, embedded message and repeated fields.
 from micropython import const
 
 if False:
-    from typing import Any, Dict, Iterable, List, Type, TypeVar, Union
+    from typing import Any, Dict, Iterable, List, Optional, Type, TypeVar, Union
     from typing_extensions import Protocol
 
     class AsyncReader(Protocol):
@@ -278,10 +278,7 @@ async def dump_message(
             repvalue[0] = fvalue
             fvalue = repvalue
 
-        if isinstance(ftype, type) and issubclass(ftype, MessageType):
-            ffields = ftype.get_fields()
-        else:
-            ffields = None
+        ffields = None  # type: Optional[Dict]
 
         for svalue in fvalue:
             await dump_uvarint(writer, fkey)
@@ -313,6 +310,8 @@ async def dump_message(
                 await writer.awrite(svalue)
 
             elif issubclass(ftype, MessageType):
+                if ffields is None:
+                    ffields = ftype.get_fields()
                 await dump_uvarint(writer, count_message(svalue, ffields))
                 await dump_message(writer, svalue, ffields)
 
