@@ -1,7 +1,9 @@
-from ..src import pin_log
+from ..src import pin_log, prng
 
 
 def test_generate_guard_key():
+    prng.random_reseed(0)
+
     p = pin_log.PinLog(None)
 
     assert p._generate_guard_key() == 2267428717

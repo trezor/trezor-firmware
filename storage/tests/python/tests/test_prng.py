@@ -2,6 +2,8 @@ from ..src import prng
 
 
 def test_prng():
+    prng.random_reseed(0)
+
     buf = prng.random_buffer(4)
     assert buf == b"\x5f\xf3\x6e\x3c"
     buf = prng.random_buffer(4)
