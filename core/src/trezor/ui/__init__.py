@@ -111,7 +111,6 @@ def header(
 
 
 def header_warning(message: str, clear: bool = True) -> None:
-    # TODO: review: is the clear=True really needed?
     display.bar(0, 0, WIDTH, 30, style.YELLOW)
     display.text_center(WIDTH // 2, 22, message, BOLD, style.BLACK, style.YELLOW)
     if clear:
@@ -119,7 +118,6 @@ def header_warning(message: str, clear: bool = True) -> None:
 
 
 def header_error(message: str, clear: bool = True) -> None:
-    # TODO: review: as above
     display.bar(0, 0, WIDTH, 30, style.RED)
     display.text_center(WIDTH // 2, 22, message, BOLD, style.WHITE, style.RED)
     if clear:

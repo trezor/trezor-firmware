@@ -137,6 +137,21 @@ def clear() -> None:
 
 
 def _step(task: Task, value: Any) -> None:
+    """
+    Step through the task by sending `value` to `Task`. This can result in either:
+    1. The task raises an exception:
+        a) StopIteration
+            - The Task is completed and we call finalize to finish it.
+        b) Exception
+            - An error occurred. We still need to call finalize.
+    2. Task does not raise exception and returns either:
+        a) Syscall
+            - Syscall.handle is called.
+        b) None
+            - The Task is simply scheduled to continue.
+        c) Something else
+            - That should not happen - error.
+    """
     try:
         if isinstance(value, BaseException):
             result = task.throw(value)  # type: ignore
@@ -144,7 +159,7 @@ def _step(task: Task, value: Any) -> None:
             # rationale: In micropython, generator.throw() accepts the exception object directly.
         else:
             result = task.send(value)
-    except StopIteration as e:  # as e:
+    except StopIteration as e:
         if __debug__:
             log.debug(__name__, "finish: %s", task)
         finalize(task, e.value)
@@ -255,6 +270,9 @@ class spawn(Syscall):
         self.scheduled = []  # type: List[Task]  # scheduled wrapper tasks
 
     def handle(self, task: Task) -> None:
+        """
+        Schedule all children Tasks and set `task` as callback.
+        """
         finalizer = self._finish
         scheduled = self.scheduled
         finished = self.finished
