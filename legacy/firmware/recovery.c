@@ -451,14 +451,16 @@ void next_word(void) {
   if (word_pos == 0) {
     const char *const *wl = mnemonic_wordlist();
     strlcpy(fake_word, wl[random_uniform(2048)], sizeof(fake_word));
-    oledDrawStringCenter(OLED_WIDTH / 2, 24, fake_word, FONT_FIXED | FONT_DOUBLE);
+    oledDrawStringCenter(OLED_WIDTH / 2, 24, fake_word,
+                         FONT_FIXED | FONT_DOUBLE);
   } else {
     fake_word[0] = 0;
     char desc[] = "the ##th word";
     format_number(desc + 4, word_pos);
     oledDrawStringCenter(OLED_WIDTH / 2, 24, desc, FONT_FIXED | FONT_DOUBLE);
   }
-  oledDrawStringCenter(OLED_WIDTH / 2, 48, _("on your computer"), FONT_STANDARD);
+  oledDrawStringCenter(OLED_WIDTH / 2, 48, _("on your computer"),
+                       FONT_STANDARD);
   // 35 is the maximum pixels used for a pixel row ("the 21st word")
   oledSCA(24 - 2, 24 + 15 + 2, 35);
   oledInvert(0, 24 - 2, OLED_WIDTH - 1, 24 + 15 + 2);
