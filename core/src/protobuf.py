@@ -281,7 +281,7 @@ async def dump_message(
         if isinstance(ftype, type) and issubclass(ftype, MessageType):
             ffields = ftype.get_fields()
         else:
-            del ffields
+            ffields = None
 
         for svalue in fvalue:
             await dump_uvarint(writer, fkey)
