@@ -1,3 +1,68 @@
+"""
+# Wire
+
+Implements wire, which:
+
+1. Provides API for registering messages. In other words binds what functions are invoked
+when some particular message is received. See the `add` function.
+2. Runs workflows, also called `handlers` to process the message.
+3. Creates and passes on the `Context` object to the endpoint functions. This provides
+the functions an interface to wait, read, write etc. on the wire.
+
+## `add` function
+
+The `add` function registers what function is invoked when some particular `message_type`
+is received. The following example binds the `apps.wallet.get_address` function with
+the GetAddress message:
+
+```python
+wire.add(MessageType.GetAddress, "apps.wallet", "get_address")
+```
+
+## `register` function
+
+The `add` is shortcut for the `register` function, which registers what workflows are to
+be run in an onion-like structure. The number of workflows is variable and workflows can
+have variable amount of arguments. This is best explained on an example:
+
+```python
+register(
+        MessageType.GetAddress,
+        protobuf_workflow,
+        keychain_workflow,
+        namespace,
+        import_workflow,
+        "apps.wallet",
+        "get_address",
+)
+```
+
+In the example above we can see that for the message GetAddress a number of workflows
+is invoked.
+1. `protobuf_workflow` with no arguments.
+2. `keychain_workflow` with a single argument `namespace`.
+3. `import_workflow` with two str arguments.
+
+The `register` function adds the workflows to the `workflow_handlers` global variable in
+the format of Dict[message_type, Tuple[handler, args]]. Taken the example above the
+`register` function adds this to the Dict:
+
+```
+workflow_handlers[MessageType.GetAddress] = (protobuf_workflow, args)
+```
+
+where `args` is the rest of arguments as described above.
+
+## Session handler
+
+When the `wire.setup` is called the `session_handler` coroutine is scheduled. The
+`session_handler` waits for some messages to be received on some particular interface and
+reads the message's header. When the message type is known (in other words the
+`workflow_handlers` Dict has this specific key) the first handler is called. This way the
+`session_handler` goes through all the workflows.
+
+"""
+
 import protobuf
 from trezor import log, loop, messages, utils, workflow
 from trezor.messages import FailureType
@@ -44,13 +109,16 @@ def add(mtype: int, pkgname: str, modname: str, namespace: List = None) -> None:
         register(mtype, protobuf_workflow, import_workflow, pkgname, modname)
 
 
-def register(mtype: int, handler: Handler, *args: Any) -> None:
-    """Register `handler` to get scheduled after `mtype` message is received."""
-    if isinstance(mtype, type) and issubclass(mtype, protobuf.MessageType):
-        mtype = mtype.MESSAGE_WIRE_TYPE
-    if mtype in workflow_handlers:
+def register(message_type: int, handler: Handler, *args: Any) -> None:
+    """Register `handler` to get scheduled after `message_type` message is received."""
+    if isinstance(message_type, type) and issubclass(
+        message_type, protobuf.MessageType
+    ):
+        # Q: shouldn't we use one or another? This is weird to support both
+        message_type = message_type.MESSAGE_WIRE_TYPE
+    if message_type in workflow_handlers:
         raise KeyError
-    workflow_handlers[mtype] = (handler, args)
+    workflow_handlers[message_type] = (handler, args)
 
 
 def setup(iface: WireInterface) -> None:

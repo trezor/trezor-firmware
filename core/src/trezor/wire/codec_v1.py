@@ -20,7 +20,7 @@ INVALID_TYPE = const(-1)
 
 class Reader:
     """
-    Decoder for legacy codec over the HID layer.  Provides readable
+    Decoder for legacy codec over the HID layer.  Provides readable  Q: legacy?
     async-file-like interface.
     """
 
