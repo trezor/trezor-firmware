@@ -17,6 +17,7 @@
 import time
 
 import pytest
+from flaky import flaky
 
 from trezorlib import btc
 from trezorlib.tools import H_
@@ -25,6 +26,7 @@ from .common import TrezorTest
 
 
 class TestBip32Speed(TrezorTest):
+    @flaky(max_runs=3, min_passes=1)
     def test_public_ckd(self):
         self.setup_mnemonic_nopin_nopassphrase()
 
