@@ -75,6 +75,19 @@ def pulse(period: int, offset: int = 0) -> float:
     return 0.5 + 0.5 * math.sin(2 * math.pi * (utime.ticks_us() + offset) / period)
 
 
+async def alert(count: int = 3) -> None:
+    short_sleep = loop.sleep(20000)
+    long_sleep = loop.sleep(80000)
+    for i in range(count * 2):
+        if i % 2 == 0:
+            display.backlight(style.BACKLIGHT_MAX)
+            await short_sleep
+        else:
+            display.backlight(style.BACKLIGHT_DIM)
+            await long_sleep
+    display.backlight(style.BACKLIGHT_NORMAL)
+
+
 async def click() -> Pos:
     touch = loop.wait(io.TOUCH)
     while True:
