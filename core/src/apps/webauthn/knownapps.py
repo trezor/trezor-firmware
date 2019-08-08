@@ -27,6 +27,7 @@ _knownapps = {
     "www.binance.com": "Binance",
     "www.dropbox.com": "Dropbox",
     "secure.login.gov": "login.gov",
+    "login.microsoft.com": "Microsoft",
     "webauthn.bin.coffee": "webauthn.bin.coffee",
     "webauthn.io": "WebAuthn.io",
     "webauthn.me": "WebAuthn.me",
