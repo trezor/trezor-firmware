@@ -220,7 +220,7 @@ class U2fCredential(Credential):
 
     def generate_key_handle(self) -> None:
         # derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
-        path = [HARDENED | random.uniform(0xF0000000) for _ in range(0, 8)]
+        path = [HARDENED | random.uniform(0x80000000) for _ in range(0, 8)]
         nodepath = [_U2F_KEY_PATH] + path
 
         # prepare signing key from random path, compute decompressed public key
