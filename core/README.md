@@ -15,4 +15,4 @@ It runs both inside of the device and also in the Trezor Emulator.
 
 The documentation can be found in the `docs` folder. See [SUMMARY.md](docs/SUMMARY.md) for a list of topics.
 
-<!-- This documentation is also automatically built to a HTML format and automatically deployed TODOhere using [mdBook](https://github.com/rust-lang-nursery/mdBook). -->
+The documentation is also automatically built into a HTML format using [mdBook](https://github.com/rust-lang-nursery/mdBook) and deployed to [https://docs.trezor.io](https://docs.trezor.io/trezor-firmware/core/), where you can read it in a well arranged way.
