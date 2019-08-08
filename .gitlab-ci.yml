@@ -28,7 +28,7 @@ stages:
   - test
 
 before_script:
-  - pipenv install
+  - pipenv sync
 
 include:
   - ci/environment.yml

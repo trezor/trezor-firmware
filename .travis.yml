@@ -23,7 +23,7 @@ env:
 install:
     - pip install --upgrade pip wheel setuptools
     - pip install pipenv
-    - pipenv install
+    - pipenv sync
     # make sure pipenv is installable without protobuf - install protoc later
     - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
     - unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d protoc
