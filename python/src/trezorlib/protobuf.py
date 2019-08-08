@@ -415,7 +415,7 @@ def format_message(
         if isinstance(value, int):
             ftype = get_type(name)
             if isinstance(ftype, EnumType):
-                return ftype.to_str(value)
+                return "{} ({})".format(ftype.to_str(value), value)
 
         return repr(value)
 
