@@ -10,6 +10,8 @@ if False:
 
     Pos = Tuple[int, int]
     Area = Tuple[int, int, int, int]
+    ResultValue = TypeVar("ResultValue")
+
 
 display = Display()
 
@@ -184,10 +186,6 @@ _RENDER_DELAY_US = const(10000)  # 10 msec
 
 class LayoutCancelled(Exception):
     pass
-
-
-if False:
-    ResultValue = TypeVar("ResultValue")
 
 
 class Result(Exception):

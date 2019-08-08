@@ -34,4 +34,4 @@ _knownapps = {
     "demo.yubico.com": "demo.yubico.com",
 }
 
-knownapps = {sha256(k).digest(): v for (k, v) in _knownapps.items()}
+knownapps = {sha256(k.encode()).digest(): v for (k, v) in _knownapps.items()}

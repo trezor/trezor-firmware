@@ -8,7 +8,7 @@ from micropython import const
 from trezor import log
 
 if False:
-    from typing import Any, Dict, Iterable, List, Tuple
+    from typing import Any, Iterable, List, Tuple
 
     Value = Any
 
@@ -146,7 +146,7 @@ def _cbor_decode(cbor: bytes) -> Tuple[Value, bytes]:
         return (bytes(data[0:ln]).decode(), data[ln:])
     elif fb_type == _CBOR_ARRAY:
         if fb_aux == _CBOR_VAR_FOLLOWS:
-            res = []
+            res = []  # type: Value
             data = cbor[1:]
             while True:
                 item, data = _cbor_decode(data)
@@ -162,7 +162,7 @@ def _cbor_decode(cbor: bytes) -> Tuple[Value, bytes]:
                 res.append(item)
             return (res, data)
     elif fb_type == _CBOR_MAP:
-        res = {}  # type: Dict[Value, Value]
+        res = {}
         if fb_aux == _CBOR_VAR_FOLLOWS:
             data = cbor[1:]
             while True:
