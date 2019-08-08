@@ -32,10 +32,10 @@ def render_scrollbar(pages: int, page: int) -> None:
 
 
 def render_swipe_icon() -> None:
-    DRAW_DELAY = const(200000)
+    PULSE_PERIOD = const(1200000)
 
     icon = res.load(ui.ICON_SWIPE)
-    t = ui.pulse(DRAW_DELAY)
+    t = ui.pulse(PULSE_PERIOD)
     c = ui.blend(ui.GREY, ui.DARK_GREY, t)
     ui.display.icon(70, 205, icon, c, ui.BG)
 
