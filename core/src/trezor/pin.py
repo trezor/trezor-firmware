@@ -1,5 +1,8 @@
 from trezor import ui
 
+if False:
+    from typing import Any
+
 
 def pin_to_int(pin: str) -> int:
     return int("1" + pin)
@@ -7,9 +10,14 @@ def pin_to_int(pin: str) -> int:
 
 _previous_progress = None
 
+keepalive_callback = None  # type: Any
+
 
 def show_pin_timeout(seconds: int, progress: int, message: str) -> bool:
     global _previous_progress
+
+    if callable(keepalive_callback):
+        keepalive_callback()
 
     if progress == 0:
         if progress != _previous_progress:
