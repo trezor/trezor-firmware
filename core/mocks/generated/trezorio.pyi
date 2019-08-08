@@ -171,6 +171,11 @@ class HID:
         Sends message using USB HID (device) or UDP (emulator).
         """
 
+    def write_blocking(self, msg: bytes, timeout_ms: int) -> int:
+        """
+        Sends message using USB HID (device) or UDP (emulator).
+        """
+
 
 # extmod/modtrezorio/modtrezorio-poll.h
 def poll(ifaces: Iterable[int], list_ref: List, timeout_us: int) -> bool:
