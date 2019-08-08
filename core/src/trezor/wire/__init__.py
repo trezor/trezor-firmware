@@ -311,9 +311,12 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
 
                 except UnexpectedMessageError as exc:
                     # Workflow was trying to read a message from the wire, and
-                    # something unexpected came in.  Let this reader to get
-                    # picked up by the workflow logic in the beginning of the
-                    # cycle.
+                    # something unexpected came in.  See Context.read() for
+                    # example, which expects some particular message and raises
+                    # UnexpectedMessageError if another one comes in.
+                    # In order not to loose the message, we pass on the reader
+                    # to get picked up by the workflow logic in the beginning of
+                    # the cycle, which processes it in the usual manner.
                     # TODO:
                     # We might handle only the few common cases here, like
                     # Initialize and Cancel.
