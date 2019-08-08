@@ -9,7 +9,7 @@ if __debug__:
     from apps.debug import swipe_signal
 
 if False:
-    from typing import Iterable, Sequence
+    from typing import Tuple, Sequence
 
 
 def render_scrollbar(pages: int, page: int) -> None:
@@ -91,7 +91,7 @@ class Paginated(ui.Layout):
 
         self.on_change()
 
-    def create_tasks(self) -> Iterable[loop.Task]:
+    def create_tasks(self) -> Tuple[loop.Task, ...]:
         return self.handle_input(), self.handle_rendering(), self.handle_paging()
 
     def on_change(self) -> None:

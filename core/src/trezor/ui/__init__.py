@@ -6,7 +6,7 @@ from trezorui import Display
 from trezor import io, loop, res, utils
 
 if False:
-    from typing import Any, Generator, Iterable, Tuple, TypeVar
+    from typing import Any, Generator, Tuple, TypeVar
 
     Pos = Tuple[int, int]
     Area = Tuple[int, int, int, int]
@@ -276,7 +276,7 @@ class Layout(Component):
     def __await__(self) -> Generator[Any, Any, ResultValue]:
         return self.__iter__()  # type: ignore
 
-    def create_tasks(self) -> Iterable[loop.Task]:
+    def create_tasks(self) -> Tuple[loop.Task, ...]:
         """
         Called from `__iter__`.  Creates and returns a sequence of tasks that
         run this layout.  Tasks are executed in parallel.  When one of them
