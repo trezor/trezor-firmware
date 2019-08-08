@@ -1,65 +1,37 @@
 """
 # Wire
 
-Implements wire, which:
+Handles on-the-wire communication with a host computer. The communication is:
+
+- Request / response.
+- Protobuf-encoded, see `protobuf.py`.
+- Wrapped in a simple envelope format, see `trezor/wire/codec_v1.py`.
+- Transferred over USB interface, or UDP in case of Unix emulation.
+
+This module:
 
 1. Provides API for registering messages. In other words binds what functions are invoked
-when some particular message is received. See the `add` function.
-2. Runs workflows, also called `handlers` to process the message.
-3. Creates and passes on the `Context` object to the endpoint functions. This provides
-the functions an interface to wait, read, write etc. on the wire.
+   when some particular message is received. See the `add` function.
+2. Runs workflows, also called `handlers`, to process the message.
+3. Creates and passes the `Context` object to the handlers. This provides an interface to
+   wait, read, write etc. on the wire.
 
 ## `add` function
 
 The `add` function registers what function is invoked when some particular `message_type`
 is received. The following example binds the `apps.wallet.get_address` function with
-the GetAddress message:
+the `GetAddress` message:
 
 ```python
 wire.add(MessageType.GetAddress, "apps.wallet", "get_address")
 ```
 
-## `register` function
-
-The `add` is shortcut for the `register` function, which registers what workflows are to
-be run in an onion-like structure. The number of workflows is variable and workflows can
-have variable amount of arguments. This is best explained on an example:
-
-```python
-register(
-        MessageType.GetAddress,
-        protobuf_workflow,
-        keychain_workflow,
-        namespace,
-        import_workflow,
-        "apps.wallet",
-        "get_address",
-)
-```
-
-In the example above we can see that for the message GetAddress a number of workflows
-is invoked.
-1. `protobuf_workflow` with no arguments.
-2. `keychain_workflow` with a single argument `namespace`.
-3. `import_workflow` with two str arguments.
-
-The `register` function adds the workflows to the `workflow_handlers` global variable in
-the format of Dict[message_type, Tuple[handler, args]]. Taken the example above the
-`register` function adds this to the Dict:
-
-```
-workflow_handlers[MessageType.GetAddress] = (protobuf_workflow, args)
-```
-
-where `args` is the rest of arguments as described above.
-
 ## Session handler
 
-When the `wire.setup` is called the `session_handler` coroutine is scheduled. The
-`session_handler` waits for some messages to be received on some particular interface and
-reads the message's header. When the message type is known (in other words the
-`workflow_handlers` Dict has this specific key) the first handler is called. This way the
-`session_handler` goes through all the workflows.
+When the `wire.setup` is called the `handle_session` coroutine is scheduled. The
+`handle_session` waits for some messages to be received on some particular interface and
+reads the message's header. When the message type is known the first handler is called. This way the
+`handle_session` goes through all the workflows.
 
 """
 
@@ -91,8 +63,15 @@ if False:
     Handler = Callable[..., loop.Task]
 
 
+# Maps a wire type directly to a handler.
 workflow_handlers = {}  # type: Dict[int, Handler]
-workflow_imports = {}  # type: Dict[int, Tuple[str, str]]
+
+# Maps a wire type to a tuple of package and module.  This allows handlers
+# to be dynamically imported when such message arrives.
+workflow_packages = {}  # type: Dict[int, Tuple[str, str]]
+
+# Maps a wire type to a "keychain namespace".  Such workflows are created
+# with an instance of `seed.Keychain` with correctly derived keys.
 workflow_namespaces = {}  # type: Dict[int, List]
 
 
@@ -100,7 +79,7 @@ def add(wire_type: int, pkgname: str, modname: str, namespace: List = None) -> N
     """Shortcut for registering a dynamically-imported Protobuf workflow."""
     if namespace is not None:
         workflow_namespaces[wire_type] = namespace
-    workflow_imports[wire_type] = (pkgname, modname)
+    workflow_packages[wire_type] = (pkgname, modname)
 
 
 def register(wire_type: int, handler: Handler) -> None:
@@ -116,7 +95,7 @@ def setup(iface: WireInterface) -> None:
 def clear() -> None:
     """Remove all registered handlers."""
     workflow_handlers.clear()
-    workflow_imports.clear()
+    workflow_packages.clear()
     workflow_namespaces.clear()
 
 
@@ -391,10 +370,10 @@ def get_workflow_handler(reader: codec_v1.Reader) -> Optional[Handler]:
         # Message has a handler available, return it directly.
         handler = workflow_handlers[msg_type]
 
-    elif msg_type in workflow_imports:
+    elif msg_type in workflow_packages:
         # Message needs a dynamically imported handler, import it.
-        pkgname, modname = workflow_imports[msg_type]
-        handler = import_workflow(pkgname, modname)  # TODO: exceptions
+        pkgname, modname = workflow_packages[msg_type]
+        handler = import_workflow(pkgname, modname)
 
     else:
         # Message does not have any registered handler.
