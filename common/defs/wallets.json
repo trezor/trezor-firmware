@@ -9,7 +9,8 @@
         "Electrum-BELL": "https://bell.electrum-jp.net"
     },
     "bitcoin:BTC": {
-        "Electrum": "https://electrum.org"
+        "Electrum": "https://electrum.org",
+        "PolisPay": "https://polispay.com"
     },
     "bitcoin:BTCP": {
         "BTCP Electrum": "https://github.com/BTCPrivate/electrum-btcp"
@@ -27,7 +28,11 @@
         "Electrum-CPU": "https://cpuchain.org/download-page.html"
     },
     "bitcoin:DASH": {
-        "Dash Electrum": "https://electrum.dash.org"
+        "Dash Electrum": "https://electrum.dash.org",
+        "PolisPay": "https://polispay.com"
+    },
+    "bitcoin:DGB": {
+        "PolisPay": "https://polispay.com"
     },
     "bitcoin:FJC": {
         "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
@@ -39,7 +44,8 @@
         "Electrum-GAME": "https://electrum-game.org"
     },
     "bitcoin:GRS": {
-        "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet"
+        "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet",
+        "PolisPay": "https://polispay.com"
     },
     "bitcoin:KOTO": {
         "Electrum-KOTO": "https://electrum.kotocoin.info"
@@ -55,6 +61,9 @@
     },
     "bitcoin:PART": {
         "Particl Core": "https://github.com/particl/particl-core/releases"
+    },
+    "bitcoin:POLIS": {
+        "PolisPay": "https://polispay.com"
     },
     "bitcoin:VIA": {
         "Vialectrum": "https://vialectrum.org"
