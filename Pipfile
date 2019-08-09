@@ -19,7 +19,7 @@ pytest-random-order = "*"
 
 ## typing
 mypy = "*"
-typing-extensions = "*"
+typing-extensions = ">=3.7.4"
 
 ## style
 isort = ">=4.3.14"
