@@ -199,6 +199,27 @@ def by_name(name: str) -> CoinInfo:
             decred=False,
             curve_name='secp256k1',
         )
+    elif name == "Bitgreen":
+        return CoinInfo(
+            coin_name=name,
+            coin_shortcut="BITG",
+            address_type=38,
+            address_type_p2sh=6,
+            maxfee_kb=100000,
+            signed_message_header="DarkNet Signed Message:\n",
+            xpub_magic=0x0488b21e,
+            xpub_magic_segwit_p2sh=None,
+            xpub_magic_segwit_native=None,
+            bech32_prefix=None,
+            cashaddr_prefix=None,
+            slip44=222,
+            segwit=False,
+            fork_id=None,
+            force_bip143=False,
+            bip115=False,
+            decred=False,
+            curve_name='secp256k1',
+        )
     elif name == "BitZeny":
         return CoinInfo(
             coin_name=name,
@@ -430,6 +451,27 @@ def by_name(name: str) -> CoinInfo:
             decred=False,
             curve_name='secp256k1',
         )
+    elif name == "CPUchain":
+        return CoinInfo(
+            coin_name=name,
+            coin_shortcut="CPU",
+            address_type=28,
+            address_type_p2sh=30,
+            maxfee_kb=1000000,
+            signed_message_header="CPUchain Signed Message:\n",
+            xpub_magic=0x0488b21e,
+            xpub_magic_segwit_p2sh=0x049d7cb2,
+            xpub_magic_segwit_native=0x04b24746,
+            bech32_prefix="cpu",
+            cashaddr_prefix=None,
+            slip44=363,
+            segwit=True,
+            fork_id=None,
+            force_bip143=False,
+            bip115=False,
+            decred=False,
+            curve_name='secp256k1',
+        )
     elif name == "Capricoin":
         return CoinInfo(
             coin_name=name,
@@ -592,6 +634,27 @@ def by_name(name: str) -> CoinInfo:
             cashaddr_prefix=None,
             slip44=3,
             segwit=False,
+            fork_id=None,
+            force_bip143=False,
+            bip115=False,
+            decred=False,
+            curve_name='secp256k1',
+        )
+    elif name == "Elements":
+        return CoinInfo(
+            coin_name=name,
+            coin_shortcut="ELEMENTS",
+            address_type=235,
+            address_type_p2sh=75,
+            maxfee_kb=10000000,
+            signed_message_header="Bitcoin Signed Message:\n",
+            xpub_magic=0x043587cf,
+            xpub_magic_segwit_p2sh=0x044a5262,
+            xpub_magic_segwit_native=0x045f1cf6,
+            bech32_prefix="ert",
+            cashaddr_prefix=None,
+            slip44=1,
+            segwit=True,
             fork_id=None,
             force_bip143=False,
             bip115=False,
@@ -1039,6 +1102,48 @@ def by_name(name: str) -> CoinInfo:
             decred=False,
             curve_name='secp256k1',
         )
+    elif name == "Particl":
+        return CoinInfo(
+            coin_name=name,
+            coin_shortcut="PART",
+            address_type=56,
+            address_type_p2sh=60,
+            maxfee_kb=2000000,
+            signed_message_header="Bitcoin Signed Message:\n",
+            xpub_magic=0x8f1daeb8,
+            xpub_magic_segwit_p2sh=0x01b26ef6,
+            xpub_magic_segwit_native=0x04b24746,
+            bech32_prefix="bc",
+            cashaddr_prefix=None,
+            slip44=44,
+            segwit=True,
+            fork_id=None,
+            force_bip143=False,
+            bip115=False,
+            decred=False,
+            curve_name='secp256k1',
+        )
+    elif name == "Particl Testnet":
+        return CoinInfo(
+            coin_name=name,
+            coin_shortcut="tPART",
+            address_type=118,
+            address_type_p2sh=122,
+            maxfee_kb=10000000,
+            signed_message_header="Bitcoin Signed Message:\n",
+            xpub_magic=0x04889478,
+            xpub_magic_segwit_p2sh=0x044a5262,
+            xpub_magic_segwit_native=0x045f1cf6,
+            bech32_prefix="tb",
+            cashaddr_prefix=None,
+            slip44=1,
+            segwit=True,
+            fork_id=None,
+            force_bip143=False,
+            bip115=False,
+            decred=False,
+            curve_name='secp256k1',
+        )
     elif name == "Pesetacoin":
         return CoinInfo(
             coin_name=name,
@@ -1431,6 +1536,27 @@ def by_name(name: str) -> CoinInfo:
             bech32_prefix=None,
             cashaddr_prefix=None,
             slip44=1,
+            segwit=False,
+            fork_id=None,
+            force_bip143=False,
+            bip115=False,
+            decred=False,
+            curve_name='secp256k1',
+        )
+    elif name == "ZelCash":
+        return CoinInfo(
+            coin_name=name,
+            coin_shortcut="ZEL",
+            address_type=7352,
+            address_type_p2sh=7357,
+            maxfee_kb=1000000,
+            signed_message_header="Zcash Signed Message:\n",
+            xpub_magic=0x0488b21e,
+            xpub_magic_segwit_p2sh=None,
+            xpub_magic_segwit_native=None,
+            bech32_prefix=None,
+            cashaddr_prefix=None,
+            slip44=19167,
             segwit=False,
             fork_id=None,
             force_bip143=False,
