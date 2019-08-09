@@ -193,8 +193,12 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
         total_out += txo_bin.amount
 
     fee = total_in - total_out
-    if fee < 0:
-        raise SigningError(FailureType.NotEnoughFunds, "Not enough funds")
+
+    if coin.negative_fee:
+        pass  # bypass check for negative fee coins, required for reward TX
+    else:
+        if fee < 0:
+            raise SigningError(FailureType.NotEnoughFunds, "Not enough funds")
 
     # fee > (coin.maxfee per byte * tx size)
     if fee > (coin.maxfee_kb / 1000) * (weight.get_total() / 4):

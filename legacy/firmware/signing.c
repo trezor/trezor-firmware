@@ -686,21 +686,31 @@ static bool signing_check_output(TxOutputType *txoutput) {
 }
 
 static bool signing_check_fee(void) {
-  // check fees
-  if (spending > to_spend) {
-    fsm_sendFailure(FailureType_Failure_NotEnoughFunds, _("Not enough funds"));
-    signing_abort();
-    return false;
-  }
-  uint64_t fee = to_spend - spending;
-  if (fee > ((uint64_t)tx_weight * coin->maxfee_kb) / 4000) {
-    layoutFeeOverThreshold(coin, fee);
-    if (!protectButton(ButtonRequestType_ButtonRequest_FeeOverThreshold,
-                       false)) {
-      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+  if (coin->negative_fee) {
+    // bypass check for negative fee coins, required for reward TX
+  } else {
+    // check fees
+    if (spending > to_spend) {
+      fsm_sendFailure(FailureType_Failure_NotEnoughFunds,
+                      _("Not enough funds"));
       signing_abort();
       return false;
     }
+  }
+  uint64_t fee;
+  if (spending <= to_spend) {
+    fee = to_spend - spending;
+    if (fee > ((uint64_t)tx_weight * coin->maxfee_kb) / 4000) {
+      layoutFeeOverThreshold(coin, fee);
+      if (!protectButton(ButtonRequestType_ButtonRequest_FeeOverThreshold,
+                         false)) {
+        fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+        signing_abort();
+        return false;
+      }
+    }
+  } else {
+    fee = 0;
   }
   // last confirmation
   layoutConfirmTx(coin, to_spend - change_spend, fee);

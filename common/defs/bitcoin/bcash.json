@@ -43,6 +43,7 @@
     "https://bch4.trezor.io",
     "https://bch5.trezor.io"
   ],
+  "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": null
 }

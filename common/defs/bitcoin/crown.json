@@ -38,6 +38,7 @@
     "https://insight-03.crown.tech"
   ],
   "blockbook": [],
+  "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": null
 }

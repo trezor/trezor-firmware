@@ -44,6 +44,7 @@ const CoinInfo coins[COINS_COUNT] = {
 	.bech32_prefix = ${c_str(c.bech32_prefix)},
 	.cashaddr_prefix = ${c_str(c.cashaddr_prefix)},
 	.coin_type = (${c_int(c.slip44)} | 0x80000000),
+	.negative_fee = ${c_bool(c.negative_fee)},
 	.curve_name = ${c.curve_name.upper()}_NAME,
 	.curve = &${c.curve_name}_info,
 },

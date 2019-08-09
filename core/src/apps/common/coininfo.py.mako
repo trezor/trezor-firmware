@@ -26,6 +26,7 @@ class CoinInfo:
         force_bip143: bool,
         bip115: bool,
         decred: bool,
+        negative_fee: bool,
         curve_name: str,
     ):
         self.coin_name = coin_name
@@ -45,6 +46,7 @@ class CoinInfo:
         self.force_bip143 = force_bip143
         self.bip115 = bip115
         self.decred = decred
+        self.negative_fee = negative_fee
         self.curve_name = curve_name
         if curve_name == "secp256k1-groestl":
             self.b58_hash = groestl512d_32
@@ -95,6 +97,7 @@ ATTRIBUTES = (
     ("force_bip143", bool),
     ("bip115", bool),
     ("decred", bool),
+    ("negative_fee", bool),
     ("curve_name", lambda r: repr(r.replace("_", "-"))),
 )
 %>\

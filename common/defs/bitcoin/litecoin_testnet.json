@@ -36,6 +36,7 @@
     "https://testnet.litecore.io"
   ],
   "blockbook": [],
+  "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": null
 }
