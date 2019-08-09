@@ -1,8 +1,0 @@
--r requirements.txt
--r requirements-optional.txt
-pytest>=3.6
-flake8
-protobuf
-isort>=4.3.14
-black; python_version >= "3.6"
-autoflake>=1.2

@@ -10,12 +10,16 @@ scons = "*"
 protobuf = "==3.4.0"
 pyblake2 = "*"
 
-## tests
+## test tools
 pytest = "*"
 mock = "*"
 coverage = "==4.5.3"  # coverage 5+ uses binary format
 flaky = ">=3.6.1"  # https://github.com/box/flaky/issues/156
 pytest-random-order = "*"
+tox = "*"
+
+## test requirements
+shamir-mnemonic = "*"
 
 ## typing
 mypy = "*"

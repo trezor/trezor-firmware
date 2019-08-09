@@ -1,0 +1,7 @@
+image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
+
+test python:
+  stage: test
+  script:
+    - cd python
+    - pipenv run tox

@@ -35,6 +35,6 @@ include:
   - ci/prebuild.yml  # common, style
   - ci/core.yml
   - ci/legacy.yml
-  # - ci/python.yml  TODO
+  - ci/python.yml
   - ci/crypto.yml
   - ci/storage.yml

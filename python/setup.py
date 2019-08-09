@@ -9,7 +9,6 @@ install_requires = [
     "setuptools>=19.0",
     "ecdsa>=0.9",
     "mnemonic>=0.17",
-    "shamir-mnemonic>=0.1.0",
     "requests>=2.4.0",
     "click>=7,<8",
     "libusb1>=1.6.4",

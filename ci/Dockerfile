@@ -17,6 +17,14 @@ RUN echo "deb http://deb.debian.org/debian stretch-backports main" > /etc/apt/so
 RUN apt-get update && apt-get install -t stretch-backports -y clang-format-6.0
 RUN ln -s clang-format-6.0 /usr/bin/clang-format
 
+# install python versions from deadsnakes
+# assuming our installed Python is 3.7
+RUN apt-add-repository ppa:deadsnakes/ppa
+RUN apt-get update && apt-get install -y \
+    python3.5 python3.5-dev \
+    python3.6 python3.6-dev \
+    python3.8 python3.8-dev python3.8-distutils
+
 # TODO are all apt packages actually needed?
 
 # install dependencies from toolchain source build
