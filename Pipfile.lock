@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1500571b9eec4292da6b3de3debe63a520cd0e6c26ff75b19cba948b051b507b"
+            "sha256": "dcb322f20cb35e8779f1667304894d51dcc8bdaab0ed613502cd4acd356b21ab"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -527,11 +527,11 @@
         },
         "scons": {
             "hashes": [
-                "sha256:84ff89dc0509420ed76c16a8f18076a572dc1f88d51fe5ada01fce5df5cbbbf9",
-                "sha256:94e0d0684772d3e6d9368785296716e0ed6ce757270b3ed814e5aa72d3163890"
+                "sha256:822b99f82295dfa1270f613d63a9cd43cd007c7e98b48cee28067d9c3c9fd593",
+                "sha256:fd44f8f2a4562e7e5bc8c63c82b01e469e8115805a3e9c2923ee54cdcd6678b3"
             ],
             "index": "pypi",
-            "version": "==3.1.0"
+            "version": "==3.1.1"
         },
         "shamir-mnemonic": {
             "hashes": [
