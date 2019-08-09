@@ -31,6 +31,7 @@ WordRequest = 46
 WordAck = 47
 GetFeatures = 55
 SetU2FCounter = 63
+SdProtect = 79
 FirmwareErase = 6
 FirmwareUpload = 7
 FirmwareRequest = 8
