@@ -26,38 +26,35 @@ if __debug__:
     swipe_signal = swipe_chan.take
     input_signal = input_chan.take
 
+    debuglink_decision_chan = loop.chan()
+
+    async def debuglink_decision_dispatcher():
+        from trezor.ui import confirm, swipe
+
+        while True:
+            msg = await debuglink_decision_chan.take()
+
+            if msg.yes_no is not None:
+                await confirm_chan.put(
+                    confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED
+                )
+            if msg.up_down is not None:
+                await swipe_chan.put(
+                    swipe.SWIPE_DOWN if msg.up_down else swipe.SWIPE_UP
+                )
+            if msg.input is not None:
+                await input_chan.put(msg.input)
+
+    loop.schedule(debuglink_decision_dispatcher())
+
     async def dispatch_DebugLinkDecision(
         ctx: wire.Context, msg: DebugLinkDecision
     ) -> None:
-        from trezor.ui import confirm, swipe
 
-        waiting_signals = [
-            bool(s.putters) for s in (confirm_chan, swipe_chan, input_chan)
-        ]
-        if sum(waiting_signals) > 0:
-            log.warning(
-                __name__,
-                "Received new DebugLinkDecision before the previous one was handled.",
-            )
-            log.warning(
-                __name__,
-                "received: button {}, swipe {}, input {}".format(
-                    msg.yes_no, msg.up_down, msg.input
-                ),
-            )
-            log.warning(
-                __name__,
-                "waiting: button {}, swipe {}, input {}".format(*waiting_signals),
-            )
+        if debuglink_decision_chan.putters:
+            log.warning(__name__, "DebugLinkDecision queue is not empty")
 
-        if msg.yes_no is not None:
-            await confirm_chan.put(
-                confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED
-            )
-        if msg.up_down is not None:
-            await swipe_chan.put(swipe.SWIPE_DOWN if msg.up_down else swipe.SWIPE_UP)
-        if msg.input is not None:
-            await input_chan.put(msg.input)
+        debuglink_decision_chan.publish(msg)
 
     async def dispatch_DebugLinkGetState(
         ctx: wire.Context, msg: DebugLinkGetState
