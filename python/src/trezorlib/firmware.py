@@ -20,9 +20,14 @@ from typing import Callable, List, NewType, Tuple
 
 import construct as c
 import ecdsa
-import pyblake2
 
 from . import cosi, messages, tools
+
+try:
+    from hashlib import blake2s
+except ImportError:
+    from pyblake2 import blake2s
+
 
 V1_SIGNATURE_SLOTS = 3
 V1_BOOTLOADER_KEYS = {
@@ -263,9 +268,7 @@ def check_sig_v1(
 
 
 def _header_digest(
-    header: c.Container,
-    header_type: c.Construct,
-    hash_function: Callable = pyblake2.blake2s,
+    header: c.Container, header_type: c.Construct, hash_function: Callable = blake2s
 ) -> bytes:
     stripped_header = header.copy()
     stripped_header.sigmask = 0
@@ -277,7 +280,7 @@ def _header_digest(
 
 
 def digest_v2(fw: FirmwareType) -> bytes:
-    return _header_digest(fw.firmware_header, FirmwareHeader, pyblake2.blake2s)
+    return _header_digest(fw.firmware_header, FirmwareHeader, blake2s)
 
 
 def digest_onev2(fw: FirmwareType) -> bytes:
@@ -286,7 +289,7 @@ def digest_onev2(fw: FirmwareType) -> bytes:
 
 def validate_code_hashes(
     fw: FirmwareType,
-    hash_function: Callable = pyblake2.blake2s,
+    hash_function: Callable = blake2s,
     chunk_size: int = V2_CHUNK_SIZE,
     padding_byte: bytes = None,
 ) -> None:
@@ -426,7 +429,7 @@ def update(client, data):
     # TREZORv2 method
     while isinstance(resp, messages.FirmwareRequest):
         payload = data[resp.offset : resp.offset + resp.length]
-        digest = pyblake2.blake2s(payload).digest()
+        digest = blake2s(payload).digest()
         resp = client.call(messages.FirmwareUpload(payload=payload, hash=digest))
 
     if isinstance(resp, messages.Success):

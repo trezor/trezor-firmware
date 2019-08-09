@@ -12,10 +12,10 @@ install_requires = [
     "shamir-mnemonic>=0.1.0",
     "requests>=2.4.0",
     "click>=7,<8",
-    "pyblake2>=0.9.3",
     "libusb1>=1.6.4",
     "construct>=2.9",
     "typing_extensions>=3.6",
+    "pyblake2>=0.9.3 ; python_version<'3.6'",
 ]
 
 CWD = os.path.dirname(os.path.realpath(__file__))
