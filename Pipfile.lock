@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "dcb322f20cb35e8779f1667304894d51dcc8bdaab0ed613502cd4acd356b21ab"
+            "sha256": "79f117b15c6ca077e6304f4f99517da7c880ba84832ebf8034807996e2c337bd"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -219,6 +219,13 @@
                 "sha256:c70dd71abe5a8c85e55e12c19bd91ccfeec11a6e99044204511f9ed547d48451"
             ],
             "version": "==0.3"
+        },
+        "filelock": {
+            "hashes": [
+                "sha256:18d82244ee114f543149c66a6e0c14e9c4f8a1044b5cdaadd0f82159d6a6ff59",
+                "sha256:929b7d63ec5b7d6b71b0fa5ac14e030b3f70b75747cef1b10da9b879fef15836"
+            ],
+            "version": "==3.0.12"
         },
         "flake8": {
             "hashes": [
@@ -538,6 +545,7 @@
                 "sha256:1cc08d276e05b13cd32bd3b0c5d1cb6c30254e0086e0f6857ec106d4cceff121",
                 "sha256:5e7cc1354697e304b7868fc01085bcd4b30bb2020b77b6cc5ceeb0c032d513a7"
             ],
+            "index": "pypi",
             "version": "==0.1.0"
         },
         "six": {
@@ -560,6 +568,14 @@
                 "sha256:235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e"
             ],
             "version": "==0.10.0"
+        },
+        "tox": {
+            "hashes": [
+                "sha256:dab0b0160dd187b654fc33d690ee1d7bf328bd5b8dc6ef3bb3cc468969c659ba",
+                "sha256:ee35ffce74933a6c6ac10c9a0182e41763140a5a5070e21b114feca56eaccdcd"
+            ],
+            "index": "pypi",
+            "version": "==3.13.2"
         },
         "trezor": {
             "editable": true,
@@ -609,6 +625,13 @@
                 "sha256:dbe59173209418ae49d485b87d1681aefa36252ee85884c31346debd19463232"
             ],
             "version": "==1.25.3"
+        },
+        "virtualenv": {
+            "hashes": [
+                "sha256:6cb2e4c18d22dbbe283d0a0c31bb7d90771a606b2cb3415323eea008eaee6a9d",
+                "sha256:909fe0d3f7c9151b2df0a2cb53e55bdb7b0d61469353ff7a49fd47b0f0ab9285"
+            ],
+            "version": "==16.7.2"
         },
         "wcwidth": {
             "hashes": [
