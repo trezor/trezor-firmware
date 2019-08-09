@@ -6,7 +6,7 @@ if False:
 
 workflows = []  # type: List[loop.Task]
 layouts = []  # type: List[ui.Layout]
-layout_signal = loop.signal()
+layout_signal = loop.chan()
 default = None  # type: Optional[loop.Task]
 default_layout = None  # type: Optional[Callable[[], loop.Task]]
 
