@@ -200,12 +200,12 @@ class Layout(Control):
     async def __iter__(self) -> ResultValue:
         value = None
         try:
-            if workflow.layout_signal.task is not None:
-                workflow.layout_signal.send(LayoutCancelled())
+            if workflow.layout_signal.takers:
+                await workflow.layout_signal.put(LayoutCancelled())
             workflow.onlayoutstart(self)
             while True:
                 layout_tasks = self.create_tasks()
-                await loop.spawn(workflow.layout_signal, *layout_tasks)
+                await loop.spawn(workflow.layout_signal.take, *layout_tasks)
         except Result as result:
             value = result.value
         finally:

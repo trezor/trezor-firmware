@@ -220,53 +220,6 @@ class wait(Syscall):
         pause(task, self.msg_iface)
 
 
-_NO_VALUE = object()
-
-
-class signal(Syscall):
-    """
-    Pause current task, and let other running task to resume it later with a
-    result value or an exception.
-
-    Example:
-
-    >>> # in task #1:
-    >>> signal = loop.signal()
-    >>> result = await signal
-    >>> print('awaited result:', result)
-    >>> # in task #2:
-    >>> signal.send('hello from task #2')
-    >>> # prints in the next iteration of the event loop
-    """
-
-    def __init__(self) -> None:
-        self.reset()
-
-    def reset(self) -> None:
-        self.value = _NO_VALUE
-        self.task = None  # type: Optional[Task]
-
-    def handle(self, task: Task) -> None:
-        self.task = task
-        self._deliver()
-
-    def send(self, value: Any) -> None:
-        self.value = value
-        self._deliver()
-
-    def _deliver(self) -> None:
-        if self.task is not None and self.value is not _NO_VALUE:
-            schedule(self.task, self.value)
-            self.reset()
-
-    def __iter__(self) -> Task:  # type: ignore
-        try:
-            return (yield self)
-        except:  # noqa: E722
-            self.task = None
-            raise
-
-
 _type_gen = type((lambda: (yield))())
 
 
