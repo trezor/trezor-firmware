@@ -125,17 +125,28 @@ def header_error(message: str, clear: bool = True) -> None:
 
 
 def grid(
-    i: int,
-    n_x: int = 3,
-    n_y: int = 5,
-    start_x: int = VIEWX,
-    start_y: int = VIEWY,
-    end_x: int = (WIDTH - VIEWX),
-    end_y: int = (HEIGHT - VIEWY),
-    cells_x: int = 1,
-    cells_y: int = 1,
-    spacing: int = 0,
+    i: int,  # i-th cell of the table of which we wish to return Area (snake-like starting with 0)
+    n_x: int = 3,  # number of rows in the table
+    n_y: int = 5,  # number of columns in the table
+    start_x: int = VIEWX,  # where the table starts on x-axis
+    start_y: int = VIEWY,  # where the table starts on y-axis
+    end_x: int = (WIDTH - VIEWX),  # where the table ends on x-axis
+    end_y: int = (HEIGHT - VIEWY),  # where the table ends on y-axis
+    cells_x: int = 1,  # number of cells to be merged into one in the direction of x-axis
+    cells_y: int = 1,  # number of cells to be merged into one in the direction of y-axis
+    spacing: int = 0,  # spacing size between cells
 ) -> Area:
+    """
+    This function returns Area (tuple of four integers) of a cell on i-th possition in
+    a table you define yourself.  Example:
+
+    `ui.grid(4, n_x=2, n_y=3, start_x=20, start_y=20)`
+    Return 5th cell in a table that has two columns, three rows and has a larger margin
+    (starts on (20, 20)).
+        |____|____|
+        |____|____|
+        |_XX_|____|
+    """
     w = (end_x - start_x) // n_x
     h = (end_y - start_y) // n_y
     x = (i % n_x) * w
