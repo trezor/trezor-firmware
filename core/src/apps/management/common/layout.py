@@ -380,8 +380,8 @@ async def _slip39_show_share_words(ctx, share_index, share_words):
         text.mono("%s. %s" % (index + 1, word))
         shares_words_check.append(word)
     text.br_half()
-    text.bold("I confirm that I wrote")
-    text.bold("down all %s words." % len(share_words))
+    text.bold("I wrote down all %s" % len(share_words))
+    text.bold("words in order.")
     pages.append(text)
 
     # pagination
