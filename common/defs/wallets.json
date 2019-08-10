@@ -10,7 +10,6 @@
     },
     "bitcoin:BTC": {
         "Electrum": "https://electrum.org",
-        "PolisPay": "https://polispay.com"
     },
     "bitcoin:BTCP": {
         "BTCP Electrum": "https://github.com/BTCPrivate/electrum-btcp"
@@ -29,10 +28,6 @@
     },
     "bitcoin:DASH": {
         "Dash Electrum": "https://electrum.dash.org",
-        "PolisPay": "https://polispay.com"
-    },
-    "bitcoin:DGB": {
-        "PolisPay": "https://polispay.com"
     },
     "bitcoin:FJC": {
         "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
@@ -45,7 +40,6 @@
     },
     "bitcoin:GRS": {
         "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet",
-        "PolisPay": "https://polispay.com"
     },
     "bitcoin:KOTO": {
         "Electrum-KOTO": "https://electrum.kotocoin.info"
