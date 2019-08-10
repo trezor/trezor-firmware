@@ -56,6 +56,9 @@
     "bitcoin:PART": {
         "Particl Core": "https://github.com/particl/particl-core/releases"
     },
+    "bitcoin:POLIS": {
+        "PolisPay": "https://polispay.com"
+    },
     "bitcoin:VIA": {
         "Vialectrum": "https://vialectrum.org"
     },
