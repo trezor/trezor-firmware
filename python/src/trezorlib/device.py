@@ -91,6 +91,13 @@ def change_pin(client, remove=False):
 
 
 @expect(proto.Success, field="message")
+def sd_salt(client, operation):
+    ret = client.call(proto.SdSalt(operation=operation))
+    client.init_device()  # Re-read features
+    return ret
+
+
+@expect(proto.Success, field="message")
 def set_u2f_counter(client, u2f_counter):
     ret = client.call(proto.SetU2FCounter(u2f_counter=u2f_counter))
     return ret

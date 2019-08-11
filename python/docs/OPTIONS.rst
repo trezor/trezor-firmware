@@ -66,6 +66,7 @@ Use the following command to see all options:
     reset-device                    Perform device setup and generate new seed.
     ripple-get-address              Get Ripple address
     ripple-sign-tx                  Sign Ripple transaction
+    sd-salt                         Enable, disable or regenerate SD card salt.
     self-test                       Perform a self-test.
     set-auto-lock-delay             Set auto-lock delay (in seconds).
     set-flags                       Set device flags.

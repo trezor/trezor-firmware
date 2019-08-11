@@ -122,6 +122,14 @@ CHOICE_RESET_DEVICE_TYPE = ChoiceType(
     }
 )
 
+CHOICE_SD_SALT_OPERATION_TYPE = ChoiceType(
+    {
+        "enable": proto.SdSaltOperationType.ENABLE,
+        "disable": proto.SdSaltOperationType.DISABLE,
+        "regenerate": proto.SdSaltOperationType.REGENERATE,
+    }
+)
+
 
 class UnderscoreAgnosticGroup(click.Group):
     """Command group that normalizes dashes and underscores.
@@ -265,6 +273,22 @@ def get_features(connect):
 @click.pass_obj
 def change_pin(connect, remove):
     return device.change_pin(connect(), remove)
+
+
+@cli.command()
+@click.argument("operation", type=CHOICE_SD_SALT_OPERATION_TYPE)
+@click.pass_obj
+def sd_salt(connect, operation):
+    """Configure SD card salt protection.
+
+    Enable, disable or regenerate SD card salt. The options are:
+
+    \b
+    enable - Generate SD card salt and use it to encrypt the storage.
+    disable - Remove SD card salt protection.
+    regenerate - Replace the current SD card salt and with a new one.
+    """
+    return device.sd_salt(connect(), operation)
 
 
 @cli.command(help="Enable passphrase.")

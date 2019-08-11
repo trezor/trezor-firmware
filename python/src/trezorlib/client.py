@@ -341,6 +341,7 @@ class ProtocolMixin(object):
     apply_settings = MovedTo("device.apply_settings")
     apply_flags = MovedTo("device.apply_flags")
     change_pin = MovedTo("device.change_pin")
+    sd_salt = MovedTo("device.sd_salt")
 
     # Firmware functionality
     firmware_update = MovedTo("firmware.update")
