@@ -329,6 +329,16 @@
     "blockbook": []
   },
   {
+    "chain": "aux",
+    "chain_id": 28945486,
+    "slip44": 344,
+    "shortcut": "AUX",
+    "name": "Auxilium",
+    "rskip60": false,
+    "url": "https://auxilium.global",
+    "blockbook": []
+  },
+  {
     "chain": "aqua",
     "chain_id": 61717561,
     "slip44": 61717561,
