@@ -152,14 +152,14 @@ class TestMsgResetDeviceT2(TrezorTest):
         assert resp.passphrase_protection is False
 
 
-def validate_mnemonics(mnemonics, threshold, expected_secret):
+def validate_mnemonics(mnemonics, threshold, expected_ems):
     # We expect these combinations to recreate the secret properly
     for test_group in combinations(mnemonics, threshold):
         # TODO: HOTFIX, we should fix this properly by modifying and unifying the python-shamir-mnemonic API
         ms = shamir.combine_mnemonics(test_group)
         identifier, iteration_exponent, _, _, _ = shamir._decode_mnemonics(test_group)
         ems = shamir._encrypt(ms, b"", iteration_exponent, identifier)
-        assert ems == expected_secret
+        assert ems == expected_ems
     # We expect these combinations to raise MnemonicError
     for test_group in combinations(mnemonics, threshold - 1):
         with pytest.raises(
