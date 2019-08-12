@@ -70,6 +70,17 @@ def _get_uint16(app: int, key: int) -> Optional[int]:
     return int.from_bytes(val, "big")
 
 
+def _set_uint32(app: int, key: int, val: int) -> None:
+    _set(app, key, val.to_bytes(4, "big"))
+
+
+def _get_uint32(app: int, key: int) -> Optional[int]:
+    val = _get(app, key)
+    if not val:
+        return None
+    return int.from_bytes(val, "big")
+
+
 def _next_counter(app: int, key: int, public: bool = False) -> Optional[int]:
     return config.next_counter(app, key, public)
 

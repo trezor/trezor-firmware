@@ -5,7 +5,7 @@ from trezor.utils import HashWriter
 from trezor.crypto.curve import ed25519
 from trezor.messages.TezosSignedBakerOp import TezosSignedBakerOp
 from trezor.messages.Failure import Failure
-
+from apps.common.storage import common
 
 from apps.tezos import CURVE, helpers, layout
 from apps.common.writers import (
@@ -87,5 +87,4 @@ async def _sign(ctx, node, msg):
     elif msg.block_header is not None:
         helpers.set_last_block_level(msg.block_header.level)
         helpers.set_last_type(BLOCK_WATERMARK)
-
     return sig_prefixed

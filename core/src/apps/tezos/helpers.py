@@ -6,11 +6,12 @@ from trezor.crypto import base58
 
 from apps.common import HARDENED
 from apps.common.writers import write_uint8
+from apps.common.storage import common
 
-_TEZOS = const(0x05)                # Tezos namespace
-_TYPE = const(0x00)                 # Key for operation type
-_BLOCK_LEVEL = const(0x01)          # Key for last signed block level
-_ENDORSEMENT_LEVEL = const(0x02)    # Key for last signed endorsement level
+TEZOS = const(0x05)                # Tezos namespace
+TYPE = const(0x00)                 # Key for operation type
+BLOCK_LEVEL = const(0x01)          # Key for last signed block level
+ENDORSEMENT_LEVEL = const(0x02)    # Key for last signed endorsement level
 
 TEZOS_AMOUNT_DIVISIBILITY = const(6)
 TEZOS_ED25519_ADDRESS_PREFIX = "tz1"
@@ -81,34 +82,33 @@ def write_bool(w: bytearray, boolean: bool):
 
 
 def get_last_block_level():
-    level = config.get(_TEZOS, _BLOCK_LEVEL, True)
+    level = common._get_uint32(TEZOS, BLOCK_LEVEL)
     if not level:
         return 0
-    return int.from_bytes(level, 'big')
+    return level
 
 
 def get_last_endorsement_level():
-    level = config.get(_TEZOS, _ENDORSEMENT_LEVEL, True)
+    level = common._get_uint32(TEZOS, ENDORSEMENT_LEVEL)
     if not level:
         return 0
-    return int.from_bytes(level, 'big')
+    return level
 
 
 def set_last_block_level(level):
-    config.set(_TEZOS, _BLOCK_LEVEL, level.to_bytes(4, 'big'), True)
+    common._set_uint32(TEZOS, BLOCK_LEVEL, level)
 
 
 def set_last_endorsement_level(level):
-    config.set(_TEZOS, _ENDORSEMENT_LEVEL, level.to_bytes(4, 'big'), True)
+    common._set_uint32(TEZOS, ENDORSEMENT_LEVEL, level)
 
 
 def get_last_type():
-    op_type = config.get(_TEZOS, _TYPE, True)
+    op_type = common._get_uint8(TEZOS, TYPE)
     if not op_type:
         return "None"
-    op_type = int.from_bytes(op_type, 'big')
     return "Block" if op_type == 1 else "Endorsement"
 
 
 def set_last_type(wm):
-    config.set(_TEZOS, _TYPE, wm.to_bytes(1, 'big'), True)
+    common._set_uint8(TEZOS, TYPE, wm)

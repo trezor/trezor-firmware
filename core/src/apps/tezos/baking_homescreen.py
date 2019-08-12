@@ -6,9 +6,9 @@ from apps.tezos import helpers
 
 async def baking_homescreen():
     # render homescreen in dimmed mode and fade back in
-    await ui.backlight_slide(ui.BACKLIGHT_DIM)
+    ui.backlight_fade(ui.BACKLIGHT_DIM)
     display_baking_homescreen()
-    await ui.backlight_slide(ui.BACKLIGHT_NORMAL)
+    ui.backlight_fade(ui.BACKLIGHT_NORMAL)
 
     # loop forever, never return
     touch = loop.wait(io.TOUCH)
@@ -40,5 +40,5 @@ def display_baking_homescreen():
     text.normal(level)
     text.bold("Type:")
     text.normal(op_type)
-    text.render()
+    text.on_render()
     ui.display.backlight(ui.BACKLIGHT_NORMAL)
