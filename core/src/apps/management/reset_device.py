@@ -47,6 +47,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     # request external entropy and compute the master secret
     entropy_ack = await ctx.call(EntropyRequest(), EntropyAck)
     ext_entropy = entropy_ack.entropy
+    # For SLIP-39 this is the Encrypted Master Secret
     secret = _compute_secret_from_entropy(int_entropy, ext_entropy, msg.strength)
 
     if is_slip39_simple:
@@ -76,7 +77,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     )
     if is_slip39_simple:
         storage.device.store_mnemonic_secret(
-            secret,
+            secret,  # this is the EMS in SLIP-39 terminology
             mnemonic.TYPE_SLIP39,
             needs_backup=msg.skip_backup,
             no_backup=msg.no_backup,
@@ -97,7 +98,9 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     return Success(message="Initialized")
 
 
-async def backup_slip39_wallet(ctx: wire.Context, secret: bytes) -> None:
+async def backup_slip39_wallet(
+    ctx: wire.Context, encrypted_master_secret: bytes
+) -> None:
     # get number of shares
     await layout.slip39_show_checklist_set_shares(ctx)
     shares_count = await layout.slip39_prompt_number_of_shares(ctx)
@@ -108,7 +111,10 @@ async def backup_slip39_wallet(ctx: wire.Context, secret: bytes) -> None:
 
     # generate the mnemonics
     mnemonics = slip39.generate_single_group_mnemonics_from_data(
-        secret, storage.device.get_slip39_identifier(), threshold, shares_count
+        encrypted_master_secret,
+        storage.device.get_slip39_identifier(),
+        threshold,
+        shares_count,
     )
 
     # show and confirm individual shares

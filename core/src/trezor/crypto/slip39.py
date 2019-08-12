@@ -485,7 +485,7 @@ def generate_random_identifier() -> int:
 
 
 def generate_single_group_mnemonics_from_data(
-    master_secret: bytes,
+    encrypted_master_secret: bytes,
     identifier: int,
     threshold: int,
     count: int,
@@ -493,7 +493,7 @@ def generate_single_group_mnemonics_from_data(
     iteration_exponent: int = DEFAULT_ITERATION_EXPONENT,
 ) -> List[str]:
     return generate_mnemonics_from_data(
-        master_secret,
+        encrypted_master_secret,
         identifier,
         1,
         [(threshold, count)],
@@ -503,7 +503,7 @@ def generate_single_group_mnemonics_from_data(
 
 
 def generate_mnemonics_from_data(
-    master_secret: bytes,
+    encrypted_master_secret: bytes,
     identifier: int,
     group_threshold: int,
     groups: List[Tuple[int, int]],
@@ -512,8 +512,8 @@ def generate_mnemonics_from_data(
 ) -> List[List[str]]:
     """
     Splits a master secret into mnemonic shares using Shamir's secret sharing scheme.
-    :param master_secret: The master secret to split.
-    :type master_secret: Array of bytes.
+    :param encrypted_master_secret: The encrypted master secret to split.
+    :type encrypted_master_secret: Array of bytes.
     :param int identifier
     :param int group_threshold: The number of groups required to reconstruct the master secret.
     :param groups: A list of (member_threshold, member_count) pairs for each group, where member_count
@@ -529,14 +529,14 @@ def generate_mnemonics_from_data(
     :rtype: int.
     """
 
-    if len(master_secret) * 8 < _MIN_STRENGTH_BITS:
+    if len(encrypted_master_secret) * 8 < _MIN_STRENGTH_BITS:
         raise ValueError(
             "The length of the master secret ({} bytes) must be at least {} bytes.".format(
-                len(master_secret), bits_to_bytes(_MIN_STRENGTH_BITS)
+                len(encrypted_master_secret), bits_to_bytes(_MIN_STRENGTH_BITS)
             )
         )
 
-    if len(master_secret) % 2 != 0:
+    if len(encrypted_master_secret) % 2 != 0:
         raise ValueError(
             "The length of the master secret in bytes must be an even number."
         )
@@ -560,10 +560,6 @@ def generate_mnemonics_from_data(
         raise ValueError(
             "Creating multiple member shares with member threshold 1 is not allowed. Use 1-of-1 member sharing instead."
         )
-
-    encrypted_master_secret = _encrypt(
-        master_secret, passphrase, iteration_exponent, identifier
-    )
 
     group_shares = _split_secret(group_threshold, len(groups), encrypted_master_secret)
 
