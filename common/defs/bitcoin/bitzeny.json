@@ -28,7 +28,7 @@
     "Normal": 20
   },
   "dust_limit": 546,
-  "blocktime_seconds":90,
+  "blocktime_seconds": 90,
   "uri_prefix": "bitzeny",
   "min_address_length": 27,
   "max_address_length": 34,
@@ -41,5 +41,6 @@
   ],
   "negative_fee": false,
   "cooldown": 100,
-  "consensus_branch_id": null
+  "consensus_branch_id": null,
+  "confidential_assets": null
 }

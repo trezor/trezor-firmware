@@ -39,5 +39,6 @@
   "blockbook": [],
   "negative_fee": false,
   "cooldown": 1000,
-  "consensus_branch_id": null
+  "consensus_branch_id": null,
+  "confidential_assets": null
 }
