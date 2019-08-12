@@ -208,20 +208,6 @@ def _get_salt(identifier: int) -> bytes:
     )
 
 
-def _encrypt(
-    master_secret: bytes, passphrase: bytes, iteration_exponent: int, identifier: int
-) -> bytes:
-    l = master_secret[: len(master_secret) // 2]
-    r = master_secret[len(master_secret) // 2 :]
-    salt = _get_salt(identifier)
-    for i in range(_ROUND_COUNT):
-        (l, r) = (
-            r,
-            xor(l, _round_function(i, passphrase, iteration_exponent, salt, r)),
-        )
-    return r + l
-
-
 def decrypt(
     identifier: int,
     iteration_exponent: int,
