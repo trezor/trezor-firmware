@@ -155,11 +155,14 @@ class TestMsgResetDeviceT2(TrezorTest):
 def validate_mnemonics(mnemonics, threshold, expected_secret):
     # We expect these combinations to recreate the secret properly
     for test_group in combinations(mnemonics, threshold):
-        secret = shamir.combine_mnemonics(test_group)
-        assert secret == expected_secret
+        # TODO: HOTFIX, we should fix this properly by modifying and unifying the python-shamir-mnemonic API
+        ms = shamir.combine_mnemonics(test_group)
+        identifier, iteration_exponent, _, _, _ = shamir._decode_mnemonics(test_group)
+        ems = shamir._encrypt(ms, b"", iteration_exponent, identifier)
+        assert ems == expected_secret
     # We expect these combinations to raise MnemonicError
     for test_group in combinations(mnemonics, threshold - 1):
         with pytest.raises(
             MnemonicError, match=r".*Expected {} mnemonics.*".format(threshold)
         ):
-            secret = shamir.combine_mnemonics(test_group)
+            shamir.combine_mnemonics(test_group)
