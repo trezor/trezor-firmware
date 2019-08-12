@@ -1,6 +1,9 @@
 Version 2.x.x [not yet released]
 * nothing yet
 
+Version 2.1.4 [Aug 2019 hotfix]
+* Shamir Backup reset device hotfix
+
 Version 2.1.3 [Aug 2019]
 * Shamir Backup with Recovery persistence
 * Touchscreen freeze fix
