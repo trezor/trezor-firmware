@@ -22,7 +22,7 @@ def combinations(iterable, r):
         yield tuple(pool[i] for i in indices)
 
 class TestCryptoSlip39(unittest.TestCase):
-    MS = b"ABCDEFGHIJKLMNOP"
+    EMS = b"ABCDEFGHIJKLMNOP"
 
     def test_basic_sharing_random(self):
         ms = random.bytes(32)
@@ -34,39 +34,28 @@ class TestCryptoSlip39(unittest.TestCase):
 
     def test_basic_sharing_fixed(self):
         generated_identifier = slip39.generate_random_identifier()
-        mnemonics = slip39.generate_mnemonics_from_data(self.MS, generated_identifier, 1, [(3, 5)])
+        mnemonics = slip39.generate_mnemonics_from_data(self.EMS, generated_identifier, 1, [(3, 5)])
         mnemonics = mnemonics[0]
         identifier, exponent, ems = slip39.combine_mnemonics(mnemonics[:3])
-        self.assertEqual(slip39.decrypt(identifier, exponent, ems, b""), self.MS)
+        self.assertEqual(ems, self.EMS)
         self.assertEqual(generated_identifier, identifier)
         self.assertEqual(slip39.combine_mnemonics(mnemonics[1:4])[2], ems)
         with self.assertRaises(slip39.MnemonicError):
             slip39.combine_mnemonics(mnemonics[1:3])
 
 
-    def test_passphrase(self):
-        identifier = slip39.generate_random_identifier()
-        mnemonics = slip39.generate_mnemonics_from_data(self.MS, identifier, 1, [(3, 5)], b"TREZOR")
-        mnemonics = mnemonics[0]
-        identifier, exponent, ems = slip39.combine_mnemonics(mnemonics[1:4])
-        self.assertEqual(slip39.decrypt(identifier, exponent, ems, b"TREZOR"), self.MS)
-        self.assertNotEqual(slip39.decrypt(identifier, exponent, ems, b""), self.MS)
-
-
     def test_iteration_exponent(self):
         identifier = slip39.generate_random_identifier()
-        mnemonics = slip39.generate_mnemonics_from_data(self.MS, identifier, 1, [(3, 5)], b"TREZOR", 1)
+        mnemonics = slip39.generate_mnemonics_from_data(self.EMS, identifier, 1, [(3, 5)], 1)
         mnemonics = mnemonics[0]
         identifier, exponent, ems = slip39.combine_mnemonics(mnemonics[1:4])
-        self.assertEqual(slip39.decrypt(identifier, exponent, ems, b"TREZOR"), self.MS)
-        self.assertNotEqual(slip39.decrypt(identifier, exponent, ems, b""), self.MS)
+        self.assertEqual(ems, self.EMS)
 
         identifier = slip39.generate_random_identifier()
-        mnemonics = slip39.generate_mnemonics_from_data(self.MS, identifier, 1, [(3, 5)], b"TREZOR", 2)
+        mnemonics = slip39.generate_mnemonics_from_data(self.EMS, identifier, 1, [(3, 5)], 2)
         mnemonics = mnemonics[0]
         identifier, exponent, ems = slip39.combine_mnemonics(mnemonics[1:4])
-        self.assertEqual(slip39.decrypt(identifier, exponent, ems, b"TREZOR"), self.MS)
-        self.assertNotEqual(slip39.decrypt(identifier, exponent, ems, b""), self.MS)
+        self.assertEqual(ems, self.EMS)
 
 
     def test_group_sharing(self):
@@ -75,7 +64,7 @@ class TestCryptoSlip39(unittest.TestCase):
         member_thresholds = (3, 2, 2, 1)
         identifier = slip39.generate_random_identifier()
         mnemonics = slip39.generate_mnemonics_from_data(
-            self.MS, identifier, group_threshold, list(zip(member_thresholds, group_sizes))
+            self.EMS, identifier, group_threshold, list(zip(member_thresholds, group_sizes))
         )
 
         # Test all valid combinations of mnemonics.
@@ -85,12 +74,12 @@ class TestCryptoSlip39(unittest.TestCase):
                     mnemonic_subset = list(group1_subset + group2_subset)
                     random.shuffle(mnemonic_subset)
                     identifier, exponent, ems = slip39.combine_mnemonics(mnemonic_subset)
-                    self.assertEqual(slip39.decrypt(identifier, exponent, ems, b""), self.MS)
+                    self.assertEqual(ems, self.EMS)
 
 
         # Minimal sets of mnemonics.
         identifier, exponent, ems = slip39.combine_mnemonics([mnemonics[2][0], mnemonics[2][2], mnemonics[3][0]])
-        self.assertEqual(slip39.decrypt(identifier, exponent, ems, b""), self.MS)
+        self.assertEqual(ems, self.EMS)
         self.assertEqual(slip39.combine_mnemonics([mnemonics[2][3], mnemonics[3][0], mnemonics[2][4]])[2], ems)
 
         # One complete group and one incomplete group out of two groups required.
@@ -108,7 +97,7 @@ class TestCryptoSlip39(unittest.TestCase):
         member_thresholds = (3, 2, 2, 1)
         identifier = slip39.generate_random_identifier()
         mnemonics = slip39.generate_mnemonics_from_data(
-            self.MS, identifier, group_threshold, list(zip(member_thresholds, group_sizes))
+            self.EMS, identifier, group_threshold, list(zip(member_thresholds, group_sizes))
         )
 
         # Test all valid combinations of mnemonics.
@@ -117,14 +106,14 @@ class TestCryptoSlip39(unittest.TestCase):
                 mnemonic_subset = list(group_subset)
                 random.shuffle(mnemonic_subset)
                 identifier, exponent, ems = slip39.combine_mnemonics(mnemonic_subset)
-                self.assertEqual(slip39.decrypt(identifier, exponent, ems, b""), self.MS)
+                self.assertEqual(ems, self.EMS)
 
 
     def test_all_groups_exist(self):
         for group_threshold in (1, 2, 5):
             identifier = slip39.generate_random_identifier()
             mnemonics = slip39.generate_mnemonics_from_data(
-                self.MS, identifier, group_threshold, [(3, 5), (1, 1), (2, 3), (2, 5), (3, 5)]
+                self.EMS, identifier, group_threshold, [(3, 5), (1, 1), (2, 3), (2, 5), (3, 5)]
             )
             self.assertEqual(len(mnemonics), 5)
             self.assertEqual(len(sum(mnemonics, [])), 19)
@@ -134,31 +123,31 @@ class TestCryptoSlip39(unittest.TestCase):
         identifier = slip39.generate_random_identifier()
         # Short master secret.
         with self.assertRaises(ValueError):
-            slip39.generate_mnemonics_from_data(self.MS[:14], identifier, 1, [(2, 3)])
+            slip39.generate_mnemonics_from_data(self.EMS[:14], identifier, 1, [(2, 3)])
 
         # Odd length master secret.
         with self.assertRaises(ValueError):
-            slip39.generate_mnemonics_from_data(self.MS + b"X", identifier,1, [(2, 3)])
+            slip39.generate_mnemonics_from_data(self.EMS + b"X", identifier,1, [(2, 3)])
 
         # Group threshold exceeds number of groups.
         with self.assertRaises(ValueError):
-            slip39.generate_mnemonics_from_data(self.MS, identifier, 3, [(3, 5), (2, 5)])
+            slip39.generate_mnemonics_from_data(self.EMS, identifier, 3, [(3, 5), (2, 5)])
 
         # Invalid group threshold.
         with self.assertRaises(ValueError):
-            slip39.generate_mnemonics_from_data(self.MS, identifier, 0, [(3, 5), (2, 5)])
+            slip39.generate_mnemonics_from_data(self.EMS, identifier, 0, [(3, 5), (2, 5)])
 
         # Member threshold exceeds number of members.
         with self.assertRaises(ValueError):
-            slip39.generate_mnemonics_from_data(self.MS, identifier, 2, [(3, 2), (2, 5)])
+            slip39.generate_mnemonics_from_data(self.EMS, identifier, 2, [(3, 2), (2, 5)])
 
         # Invalid member threshold.
         with self.assertRaises(ValueError):
-            slip39.generate_mnemonics_from_data(self.MS, identifier, 2, [(0, 2), (2, 5)])
+            slip39.generate_mnemonics_from_data(self.EMS, identifier, 2, [(0, 2), (2, 5)])
 
         # Group with multiple members and threshold 1.
         with self.assertRaises(ValueError):
-            slip39.generate_mnemonics_from_data(self.MS, identifier, 2, [(3, 5), (1, 3), (2, 5)])
+            slip39.generate_mnemonics_from_data(self.EMS, identifier, 2, [(3, 5), (1, 3), (2, 5)])
 
 
     def test_vectors(self):
