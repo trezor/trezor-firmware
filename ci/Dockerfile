@@ -14,12 +14,15 @@ RUN apt-get update && apt-get install -y \
 
 # install clang-format 6 from backports
 RUN echo "deb http://deb.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/backports.list
+RUN apt-get update && apt-get install -t stretch-backports -y clang-format-6.0
+RUN ln -s clang-format-6.0 /usr/bin/clang-format
 
-# Install Python 3.5, 3.6 and 3.8 assuming we have 3.7 docker image
-RUN wget https://www.python.org/ftp/python/3.5.7/Python-3.5.7.tgz
-RUN tar zxf Python-3.5.7.tgz
-RUN cd Python-3.5.7 && ./configure && make && make install
+# TODO are all apt packages actually needed?
 
+# Install Python 3.5 from Debian
+RUN apt-get install -y python3.5-dev
+
+# Install Python 3.6 and 3.8 from source, assuming we have 3.7 from the docker image
 RUN wget https://www.python.org/ftp/python/3.6.9/Python-3.6.9.tgz
 RUN tar zxf Python-3.6.9.tgz
 RUN cd Python-3.6.9/ && ./configure && make && make install
@@ -27,12 +30,6 @@ RUN cd Python-3.6.9/ && ./configure && make && make install
 RUN wget https://www.python.org/ftp/python/3.8.0/Python-3.8.0b3.tgz
 RUN tar zxf Python-3.8.0b3.tgz
 RUN cd Python-3.8.0b3/ && ./configure && make && make install
-
-RUN apt-get update && apt-get install -t stretch-backports -y clang-format-6.0
-RUN ln -s clang-format-6.0 /usr/bin/clang-format
-
-
-# TODO are all apt packages actually needed?
 
 # install dependencies from toolchain source build
 
