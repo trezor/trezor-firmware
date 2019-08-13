@@ -14,16 +14,23 @@ RUN apt-get update && apt-get install -y \
 
 # install clang-format 6 from backports
 RUN echo "deb http://deb.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/backports.list
+
+# Install Python 3.5, 3.6 and 3.8 assuming we have 3.7 docker image
+RUN wget https://www.python.org/ftp/python/3.5.7/Python-3.5.7.tgz
+RUN tar zxf Python-3.5.7.tgz
+RUN cd Python-3.5.7 && ./configure && make && make install
+
+RUN wget https://www.python.org/ftp/python/3.6.9/Python-3.6.9.tgz
+RUN tar zxf Python-3.6.9.tgz
+RUN cd Python-3.6.9/ && ./configure && make && make install
+
+RUN wget https://www.python.org/ftp/python/3.8.0/Python-3.8.0b3.tgz
+RUN tar zxf Python-3.8.0b3.tgz
+RUN cd Python-3.8.0b3/ && ./configure && make && make install
+
 RUN apt-get update && apt-get install -t stretch-backports -y clang-format-6.0
 RUN ln -s clang-format-6.0 /usr/bin/clang-format
 
-# install python versions from deadsnakes
-# assuming our installed Python is 3.7
-RUN apt-add-repository ppa:deadsnakes/ppa
-RUN apt-get update && apt-get install -y \
-    python3.5 python3.5-dev \
-    python3.6 python3.6-dev \
-    python3.8 python3.8-dev python3.8-distutils
 
 # TODO are all apt packages actually needed?
 
