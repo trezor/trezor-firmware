@@ -99,6 +99,40 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(config.unlock(pin_to_int('')), True)
         self.assertEqual(config.get(1, 1), b'value')
 
+    def test_change_sd_salt(self):
+        salt1 = b"0123456789abcdef0123456789abcdef"
+        salt2 = b"0123456789ABCDEF0123456789ABCDEF"
+
+        # Enable PIN and SD salt.
+        config.init()
+        config.wipe()
+        self.assertTrue(config.unlock(pin_to_int('')))
+        config.set(1, 1, b'value')
+        self.assertFalse(config.change_pin(pin_to_int(''), pin_to_int(''), salt1, None))
+        self.assertTrue(config.change_pin(pin_to_int(''), pin_to_int('000'), None, salt1))
+        self.assertEqual(config.get(1, 1), b'value')
+
+        # Disable PIN and change SD salt.
+        config.init()
+        self.assertFalse(config.unlock(pin_to_int('000')))
+        self.assertIsNone(config.get(1, 1))
+        self.assertTrue(config.unlock(pin_to_int('000'), salt1))
+        self.assertTrue(config.change_pin(pin_to_int('000'), pin_to_int(''), salt1, salt2))
+        self.assertEqual(config.get(1, 1), b'value')
+
+        # Disable SD salt.
+        config.init()
+        self.assertFalse(config.unlock(pin_to_int('000'), salt2))
+        self.assertIsNone(config.get(1, 1))
+        self.assertTrue(config.unlock(pin_to_int(''), salt2))
+        self.assertTrue(config.change_pin(pin_to_int(''), pin_to_int(''), salt2, None))
+        self.assertEqual(config.get(1, 1), b'value')
+
+        # Check that PIN and SD salt are disabled.
+        config.init()
+        self.assertTrue(config.unlock(pin_to_int('')))
+        self.assertEqual(config.get(1, 1), b'value')
+
     def test_set_get(self):
         config.init()
         config.wipe()

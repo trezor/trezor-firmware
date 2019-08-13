@@ -9,26 +9,25 @@ from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
 from apps.common.request_pin import PinCancelled, request_pin
+from apps.common.sd_salt import request_sd_salt
+from apps.common.storage import device
 
 if False:
-    from typing import Any
+    from typing import Any, Optional, Tuple
     from trezor.messages.ChangePin import ChangePin
 
 
 async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:
-
     # confirm that user wants to change the pin
     await require_confirm_change_pin(ctx, msg)
 
-    # get current pin, return failure if invalid
-    if config.has_pin():
-        curpin = await request_pin_ack(ctx, "Enter old PIN", config.get_pin_rem())
-        # if removing, defer check to change_pin()
-        if not msg.remove:
-            if not config.check_pin(pin_to_int(curpin)):
-                raise wire.PinInvalid("PIN invalid")
-    else:
-        curpin = ""
+    # get old pin
+    curpin, salt = await request_pin_and_sd_salt(ctx, "Enter old PIN")
+
+    # if changing pin, pre-check the entered pin before getting new pin
+    if curpin and not msg.remove:
+        if not config.check_pin(pin_to_int(curpin), salt):
+            raise wire.PinInvalid("PIN invalid")
 
     # get new pin
     if not msg.remove:
@@ -37,7 +36,7 @@ async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:
         newpin = ""
 
     # write into storage
-    if not config.change_pin(pin_to_int(curpin), pin_to_int(newpin)):
+    if not config.change_pin(pin_to_int(curpin), pin_to_int(newpin), salt, salt):
         raise wire.PinInvalid("PIN invalid")
 
     if newpin:
@@ -75,6 +74,23 @@ async def request_pin_confirm(ctx: wire.Context, *args: Any, **kwargs: Any) -> s
         if pin1 == pin2:
             return pin1
         await pin_mismatch()
+
+
+async def request_pin_and_sd_salt(
+    ctx: wire.Context, prompt: str = "Enter your PIN", allow_cancel: bool = True
+) -> Tuple[str, Optional[bytearray]]:
+    salt_auth_key = device.get_sd_salt_auth_key()
+    if salt_auth_key is not None:
+        salt = await request_sd_salt(ctx, salt_auth_key)  # type: Optional[bytearray]
+    else:
+        salt = None
+
+    if config.has_pin():
+        pin = await request_pin_ack(ctx, prompt, config.get_pin_rem(), allow_cancel)
+    else:
+        pin = ""
+
+    return pin, salt
 
 
 async def request_pin_ack(ctx: wire.Context, *args: Any, **kwargs: Any) -> str:
