@@ -12,7 +12,7 @@ def init(
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def unlock(pin: int, ext_salt: Optional[bytes] = None) -> bool:
+def unlock(pin: int, ext_salt: Optional[bytes]) -> bool:
     """
     Attempts to unlock the storage with the given PIN and external salt.
     Returns True on success, False on failure.
@@ -20,7 +20,7 @@ def unlock(pin: int, ext_salt: Optional[bytes] = None) -> bool:
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def check_pin(pin: int, ext_salt: Optional[bytes] = None) -> bool:
+def check_pin(pin: int, ext_salt: Optional[bytes]) -> bool:
     """
     Check the given PIN with the given external salt.
     Returns True on success, False on failure.
@@ -52,8 +52,8 @@ def get_pin_rem() -> int:
 def change_pin(
     oldpin: int,
     newpin: int,
-    old_ext_salt: Optional[bytes] = None,
-    new_ext_salt: Optional[bytes] = None,
+    old_ext_salt: Optional[bytes],
+    new_ext_salt: Optional[bytes],
 ) -> bool:
     """
     Change PIN and external salt. Returns True on success, False on failure.

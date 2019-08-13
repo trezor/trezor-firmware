@@ -28,8 +28,8 @@ def get(app: int, key: int, public: bool = False) -> Optional[bytes]:
     return config.get(app, key, public)
 
 
-def delete(app: int, key: int) -> None:
-    config.delete(app, key)
+def delete(app: int, key: int, public: bool = False) -> None:
+    config.delete(app, key, public)
 
 
 def set_true_or_delete(app: int, key: int, value: bool) -> None:

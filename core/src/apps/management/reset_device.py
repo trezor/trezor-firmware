@@ -71,7 +71,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
             await backup_bip39_wallet(ctx, secret)
 
     # write PIN into storage
-    if not config.change_pin(pin_to_int(""), pin_to_int(newpin)):
+    if not config.change_pin(pin_to_int(""), pin_to_int(newpin), None, None):
         raise wire.ProcessError("Could not change PIN")
 
     # write settings and master secret into storage
