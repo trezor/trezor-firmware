@@ -1,17 +1,15 @@
 from micropython import const
 
-from trezor import config
-
 from trezor.crypto import base58
 
 from apps.common import HARDENED
-from apps.common.writers import write_uint8
 from apps.common.storage import common
+from apps.common.writers import write_uint8
 
-TEZOS = const(0x05)                # Tezos namespace
-TYPE = const(0x00)                 # Key for operation type
-BLOCK_LEVEL = const(0x01)          # Key for last signed block level
-ENDORSEMENT_LEVEL = const(0x02)    # Key for last signed endorsement level
+TEZOS = const(0x05)  # Tezos namespace
+TYPE = const(0x00)  # Key for operation type
+BLOCK_LEVEL = const(0x01)  # Key for last signed block level
+ENDORSEMENT_LEVEL = const(0x02)  # Key for last signed endorsement level
 
 TEZOS_AMOUNT_DIVISIBILITY = const(6)
 TEZOS_ED25519_ADDRESS_PREFIX = "tz1"

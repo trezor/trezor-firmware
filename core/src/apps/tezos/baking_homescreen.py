@@ -1,4 +1,4 @@
-from trezor import ui, loop, io
+from trezor import io, loop, ui
 from trezor.ui.text import Text
 
 from apps.tezos import helpers

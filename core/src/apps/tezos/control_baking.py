@@ -1,9 +1,9 @@
 from trezor import config, wire, workflow
+from trezor.messages import MessageType
 from trezor.messages.Failure import Failure
 from trezor.messages.Success import Success
-from trezor.messages import MessageType
 
-from apps.tezos import ns, helpers, layout
+from apps.tezos import layout, ns
 from apps.tezos.baking_homescreen import baking_homescreen
 
 # list of messages used in Tezos baking

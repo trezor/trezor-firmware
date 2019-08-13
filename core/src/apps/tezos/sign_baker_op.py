@@ -1,13 +1,12 @@
 from micropython import const
-from trezor import wire, loop
-from trezor.crypto.hashlib import blake2b
-from trezor.utils import HashWriter
-from trezor.crypto.curve import ed25519
-from trezor.messages.TezosSignedBakerOp import TezosSignedBakerOp
-from trezor.messages.Failure import Failure
-from apps.common.storage import common
 
-from apps.tezos import CURVE, helpers, layout
+from trezor import wire
+from trezor.crypto.curve import ed25519
+from trezor.crypto.hashlib import blake2b
+from trezor.messages.Failure import Failure
+from trezor.messages.TezosSignedBakerOp import TezosSignedBakerOp
+from trezor.utils import HashWriter
+
 from apps.common.writers import (
     write_bytes,
     write_uint8,
@@ -15,6 +14,7 @@ from apps.common.writers import (
     write_uint32_be,
     write_uint64_be,
 )
+from apps.tezos import CURVE, helpers
 
 BLOCK_WATERMARK = const(1)
 ENDORSEMENT_WATERMARK = const(2)
@@ -28,7 +28,10 @@ async def sign_baker_op(ctx, msg, keychain):
         return Failure()
 
     # the level should be greater than the last signed, with this check we avoid double baking/endorsement
-    if msg.endorsement and helpers.get_last_endorsement_level() >= msg.endorsement.level:
+    if (
+        msg.endorsement
+        and helpers.get_last_endorsement_level() >= msg.endorsement.level
+    ):
         raise wire.DataError("Potential double endorsement")
 
     if msg.block_header and helpers.get_last_block_level() >= msg.block_header.level:

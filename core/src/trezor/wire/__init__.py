@@ -1,7 +1,5 @@
-from micropython import const
-
 import protobuf
-from trezor import config, log, loop, messages, utils, wire, workflow
+from trezor import log, loop, messages, utils, workflow
 from trezor.messages import FailureType
 from trezor.wire import codec_v1
 from trezor.wire.errors import Error
