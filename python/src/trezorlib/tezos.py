@@ -48,6 +48,4 @@ def sign_baker_op(client, address_n, sign_baker_msg, show_display=False):
 
 @expect(messages.Success)
 def control_baking(client):
-    return client.call(
-        messages.TezosControlBaking()
-    )
+    return client.call(messages.TezosControlBaking())
