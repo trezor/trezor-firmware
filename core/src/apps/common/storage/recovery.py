@@ -1,5 +1,7 @@
 from micropython import const
 
+from trezor.crypto import slip39
+
 from apps.common.storage import common, recovery_shares
 
 # Namespace:
@@ -14,10 +16,12 @@ _REMAINING                 = const(0x05)  # int
 _SLIP39_IDENTIFIER         = const(0x03)  # bytes
 _SLIP39_THRESHOLD          = const(0x04)  # int
 _SLIP39_ITERATION_EXPONENT = const(0x06)  # int
+_SLIP39_GROUP_COUNT        = const(0x07)  # int
+_SLIP39_GROUP_THRESHOLD    = const(0x08)  # int
 # fmt: on
 
 if False:
-    from typing import Optional
+    from typing import List, Optional
 
 
 def set_in_progress(val: bool) -> None:
@@ -60,20 +64,65 @@ def get_slip39_threshold() -> Optional[int]:
     return common._get_uint8(_NAMESPACE, _SLIP39_THRESHOLD)
 
 
-def set_remaining(remaining: int) -> None:
-    common._set_uint8(_NAMESPACE, _REMAINING, remaining)
-
-
-def get_remaining() -> Optional[int]:
-    return common._get_uint8(_NAMESPACE, _REMAINING)
-
-
 def set_slip39_iteration_exponent(exponent: int) -> None:
     common._set_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT, exponent)
 
 
 def get_slip39_iteration_exponent() -> Optional[int]:
     return common._get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
+
+
+def set_slip39_group_count(group_count: int) -> None:
+    common._set_uint8(_NAMESPACE, _SLIP39_GROUP_COUNT, group_count)
+
+
+def get_slip39_group_count() -> Optional[int]:
+    return common._get_uint8(_NAMESPACE, _SLIP39_GROUP_COUNT)
+
+
+def set_slip39_group_threshold(group_threshold: int) -> None:
+    common._set_uint8(_NAMESPACE, _SLIP39_GROUP_THRESHOLD, group_threshold)
+
+
+def get_slip39_group_threshold() -> Optional[int]:
+    return common._get_uint8(_NAMESPACE, _SLIP39_GROUP_THRESHOLD)
+
+
+def set_slip39_remaining_shares(shares_remaining: int, group_index: int = 0) -> None:
+    """
+    We store the remaining shares as a bytearray of length group_count.
+    Each byte represents share remaining for group of that group_index.
+    0x10 (16) was chosen as the default value because it's the max
+    share count for a group.
+    """
+    remaining = common._get(_NAMESPACE, _REMAINING)
+    if not get_slip39_group_count():
+        raise RuntimeError()
+    if remaining is None:
+        remaining = bytearray([slip39.MAX_SHARE_COUNT] * get_slip39_group_count())
+    remaining = bytearray(remaining)
+    remaining[group_index] = shares_remaining
+    common._set(_NAMESPACE, _REMAINING, remaining)
+
+
+def get_slip39_remaining_shares(group_index: int = 0) -> Optional[int]:
+    remaining = common._get(_NAMESPACE, _REMAINING)
+    if remaining is None or remaining[group_index] == slip39.MAX_SHARE_COUNT:
+        return None
+    else:
+        return remaining[group_index]
+
+
+def fetch_slip39_remaining_shares() -> Optional[List[int]]:
+    remaining = common._get(_NAMESPACE, _REMAINING)
+    if not remaining:
+        return None
+
+    result = []
+    for i in range(get_slip39_group_count()):
+        result.append(remaining[i])
+
+    return result
 
 
 def end_progress() -> None:
@@ -84,4 +133,6 @@ def end_progress() -> None:
     common._delete(_NAMESPACE, _SLIP39_THRESHOLD)
     common._delete(_NAMESPACE, _REMAINING)
     common._delete(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
+    common._delete(_NAMESPACE, _SLIP39_GROUP_COUNT)
+    common._delete(_NAMESPACE, _SLIP39_GROUP_THRESHOLD)
     recovery_shares.delete()

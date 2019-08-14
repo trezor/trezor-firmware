@@ -41,7 +41,10 @@ async def get_keychain(ctx: wire.Context) -> Keychain:
     if not storage.is_initialized():
         raise wire.ProcessError("Device is not initialized")
 
-    if mnemonic.get_type() == mnemonic.TYPE_SLIP39:
+    if (
+        mnemonic.get_type() == mnemonic.TYPE_SLIP39
+        or mnemonic.get_type() == mnemonic.TYPE_SLIP39_GROUP
+    ):
         seed = cache.get_seed()
         if seed is None:
             passphrase = await _get_passphrase(ctx)

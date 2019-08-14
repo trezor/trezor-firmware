@@ -13,3 +13,7 @@ class IdentifierMismatchError(MnemonicError):
 
 class ShareAlreadyAddedError(MnemonicError):
     pass
+
+
+class GroupThresholdReachedError(MnemonicError):
+    pass

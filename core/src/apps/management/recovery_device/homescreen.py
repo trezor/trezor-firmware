@@ -1,6 +1,11 @@
 from trezor import loop, utils, wire
 from trezor.crypto.hashlib import sha256
-from trezor.errors import IdentifierMismatchError, MnemonicError, ShareAlreadyAddedError
+from trezor.errors import (
+    GroupThresholdReachedError,
+    IdentifierMismatchError,
+    MnemonicError,
+    ShareAlreadyAddedError,
+)
 from trezor.messages.Success import Success
 
 from . import recover
@@ -8,6 +13,9 @@ from . import recover
 from apps.common import mnemonic, storage
 from apps.common.layout import show_success
 from apps.management.recovery_device import layout
+
+if False:
+    from typing import List
 
 
 async def recovery_homescreen() -> None:
@@ -125,13 +133,26 @@ async def _request_secret(
 ) -> bytes:
     await _request_share_first_screen(ctx, word_count, mnemonic_type)
 
+    mnemonics = None
+    advanced_shamir = False
     secret = None
     while secret is None:
-        # ask for mnemonic words one by one
-        mnemonics = storage.recovery_shares.fetch()
+        group_count = storage.recovery.get_slip39_group_count()
+        if group_count:
+            mnemonics = storage.recovery_shares.fetch()
+            advanced_shamir = group_count > 1
+            group_threshold = storage.recovery.get_slip39_group_threshold()
+            shares_remaining = storage.recovery.fetch_slip39_remaining_shares()
+
+            if advanced_shamir:
+                await _show_remaining_groups_and_shares(
+                    ctx, group_threshold, shares_remaining
+                )
+
         try:
+            # ask for mnemonic words one by one
             words = await layout.request_mnemonic(
-                ctx, word_count, mnemonic_type, mnemonics
+                ctx, word_count, mnemonic_type, mnemonics, advanced_shamir
             )
         except IdentifierMismatchError:
             await layout.show_identifier_mismatch(ctx)
@@ -141,11 +162,21 @@ async def _request_secret(
             continue
         # process this seed share
         try:
-            secret = recover.process_share(words, mnemonic_type)
+            if mnemonic_type == mnemonic.TYPE_BIP39:
+                secret = recover.process_bip39(words)
+            else:
+                try:
+                    secret, group_index, share_index = recover.process_slip39(words)
+                except GroupThresholdReachedError:
+                    await layout.show_group_threshold_reached(ctx)
+                    continue
         except MnemonicError:
             await layout.show_invalid_mnemonic(ctx, mnemonic_type)
             continue
         if secret is None:
+            group_count = storage.recovery.get_slip39_group_count()
+            if group_count and group_count > 1:
+                await layout.show_group_share_success(ctx, share_index, group_index)
             await _request_share_next_screen(ctx, mnemonic_type)
 
     return secret
@@ -160,7 +191,7 @@ async def _request_share_first_screen(
         )
         await layout.homescreen_dialog(ctx, content, "Enter seed")
     elif mnemonic_type == mnemonic.TYPE_SLIP39:
-        remaining = storage.recovery.get_remaining()
+        remaining = storage.recovery.fetch_slip39_remaining_shares()
         if remaining:
             await _request_share_next_screen(ctx, mnemonic_type)
         else:
@@ -174,15 +205,52 @@ async def _request_share_first_screen(
 
 async def _request_share_next_screen(ctx: wire.Context, mnemonic_type: int) -> None:
     if mnemonic_type == mnemonic.TYPE_SLIP39:
-        remaining = storage.recovery.get_remaining()
+        remaining = storage.recovery.fetch_slip39_remaining_shares()
+        group_count = storage.recovery.get_slip39_group_count()
         if not remaining:
             # 'remaining' should be stored at this point
             raise RuntimeError
-        if remaining == 1:
-            text = "1 more share"
+
+        if group_count > 1:
+            content = layout.RecoveryHomescreen(
+                "More shares needed", "for this recovery"
+            )
+            await layout.homescreen_dialog(ctx, content, "Enter share")
         else:
-            text = "%d more shares" % remaining
-        content = layout.RecoveryHomescreen(text, "needed to enter")
-        await layout.homescreen_dialog(ctx, content, "Enter share")
+            if remaining[0] == 1:
+                text = "1 more share"
+            else:
+                text = "%d more shares" % remaining[0]
+            content = layout.RecoveryHomescreen(text, "needed to enter")
+            await layout.homescreen_dialog(ctx, content, "Enter share")
     else:
         raise RuntimeError
+
+
+async def _show_remaining_groups_and_shares(
+    ctx: wire.Context, group_threshold: int, shares_remaining: List[int]
+) -> None:
+    identifiers = []
+
+    first_entered_index = -1
+    for i in range(len(shares_remaining)):
+        if shares_remaining[i] < 16:
+            first_entered_index = i
+
+    for i, r in enumerate(shares_remaining):
+        if 0 < r < 16:
+            identifier = storage.recovery_shares.fetch_group(i)[0].split(" ")[0:3]
+            identifiers.append([r, identifier])
+        elif r == 16:
+            identifier = storage.recovery_shares.fetch_group(first_entered_index)[
+                0
+            ].split(" ")[0:2]
+            try:
+                # we only add the group (two words) identifier once
+                identifiers.index([r, identifier])
+            except ValueError:
+                identifiers.append([r, identifier])
+
+    return await layout.show_remaining_shares(
+        ctx, identifiers, group_threshold, shares_remaining
+    )
