@@ -409,8 +409,17 @@ async def _slip39_show_share_words(ctx, share_index, share_words):
 def _slip39_split_share_into_pages(share_words):
     share = list(enumerate(share_words))  # we need to keep track of the word indices
     first = share[:2]  # two words on the first page
-    middle = share[2:-2]
-    last = share[-2:]  # two words on the last page
+    length = len(share_words)
+    if length == 20:
+        middle = share[2:-2]
+        last = share[-2:]  # two words on the last page
+    elif length == 33:
+        middle = share[2:]
+        last = []  # no words at the last page, because it does not add up
+    else:
+        # Invalid number of shares. SLIP-39 allows 20 or 33 words.
+        raise RuntimeError
+
     chunks = utils.chunks(middle, 4)  # 4 words on the middle pages
     return first, list(chunks), last
 
