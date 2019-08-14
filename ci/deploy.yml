@@ -2,7 +2,7 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
 
 # Core
 
-core to upgrade tests deploy:
+core upgrade tests deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}/upgrade_tests"
@@ -16,6 +16,36 @@ core to upgrade tests deploy:
     - DEST=${DEPLOY_DIRECTORY}/trezor-emu-`git tag --points-at HEAD | sed "s/\//-/"`
     - echo "Deploying to $DEST"
     - rsync --delete -va core/build/unix/micropython "$DEST"
+  tags:
+    - deploy
+
+core emu regular deploy:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}core/emulators/${CI_COMMIT_REF_NAME}"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - core unix frozen regular build
+  script:
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/`date -I`-core-emu-${CI_COMMIT_SHORT_SHA}"
+    - mkdir -p ${DEPLOY_DIRECTORY}
+    - rsync --delete -va core/build/unix/micropython "${DEPLOY_DIRECTORY}/`date -I`-core-emu-${CI_COMMIT_SHORT_SHA}"
+  tags:
+    - deploy
+
+core fw regular deploy:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}core/firmwares/${CI_COMMIT_REF_NAME}"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - core fw regular build
+  script:
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/`date -I`-core-firmware-${CI_COMMIT_SHORT_SHA}"
+    - mkdir -p ${DEPLOY_DIRECTORY}
+    - rsync --delete -va core/build/firmware/firmware.bin "${DEPLOY_DIRECTORY}/`date -I`-core-firmware-${CI_COMMIT_SHORT_SHA}"
   tags:
     - deploy
 
@@ -36,5 +66,33 @@ legacy to upgrade tests deploy:
     - DEST=${DEPLOY_DIRECTORY}/trezor-emu-`git tag --points-at HEAD | sed "s/\//-/"`
     - echo "Deploying to $DEST"
     - rsync --delete -va legacy/firmware/trezor.elf "$DEST"
+
+legacy emu regular deploy:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}legacy/emulators/${CI_COMMIT_REF_NAME}"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - legacy emu regular build
+  script:
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/`date -I`-legacy-emu-${CI_COMMIT_SHORT_SHA}"
+    - mkdir -p ${DEPLOY_DIRECTORY}
+    - rsync --delete -va legacy/firmware/trezor.elf "${DEPLOY_DIRECTORY}/`date -I`-legacy-emu-${CI_COMMIT_SHORT_SHA}"
+  tags:
+    - deploy
+
+legacy fw regular deploy:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}legacy/firmwares/${CI_COMMIT_REF_NAME}"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - legacy fw regular build
+  script:
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/`date -I`-legacy-firmware-${CI_COMMIT_SHORT_SHA}"
+    - mkdir -p ${DEPLOY_DIRECTORY}
+    - rsync --delete -va legacy/firmware/trezor.bin "${DEPLOY_DIRECTORY}/`date -I`-legacy-firmware-${CI_COMMIT_SHORT_SHA}"
   tags:
     - deploy
