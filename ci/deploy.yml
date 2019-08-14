@@ -1,0 +1,66 @@
+image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
+
+# Core
+
+deploy upload core emu:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}core/emulators/${CI_COMMIT_REF_NAME}"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - build core unix frozen
+  script:
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/`date -I`-core-emu-${CI_COMMIT_SHORT_SHA}"
+    - mkdir -p ${DEPLOY_DIRECTORY}
+    - rsync --delete -va core/build/unix/micropython "${DEPLOY_DIRECTORY}/`date -I`-core-emu-${CI_COMMIT_SHORT_SHA}"
+  tags:
+    - deploy
+
+deploy upload core firmware:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}core/firmwares/${CI_COMMIT_REF_NAME}"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - build core firmware
+  script:
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/`date -I`-core-firmware-${CI_COMMIT_SHORT_SHA}"
+    - mkdir -p ${DEPLOY_DIRECTORY}
+    - rsync --delete -va core/build/firmware/firmware.bin "${DEPLOY_DIRECTORY}/`date -I`-core-firmware-${CI_COMMIT_SHORT_SHA}"
+  tags:
+    - deploy
+
+
+# Legacy
+
+deploy upload legacy emu:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}legacy/emulators/${CI_COMMIT_REF_NAME}"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - build legacy emu
+  script:
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/`date -I`-legacy-emu-${CI_COMMIT_SHORT_SHA}"
+    - mkdir -p ${DEPLOY_DIRECTORY}
+    - rsync --delete -va legacy/firmware/trezor.elf "${DEPLOY_DIRECTORY}/`date -I`-legacy-emu-${CI_COMMIT_SHORT_SHA}"
+  tags:
+    - deploy
+
+deploy upload legacy firmware:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}legacy/firmwares/${CI_COMMIT_REF_NAME}"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - build legacy firmware
+  script:
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/`date -I`-legacy-firmware-${CI_COMMIT_SHORT_SHA}"
+    - mkdir -p ${DEPLOY_DIRECTORY}
+    - rsync --delete -va legacy/firmware/trezor.bin "${DEPLOY_DIRECTORY}/`date -I`-legacy-firmware-${CI_COMMIT_SHORT_SHA}"
+  tags:
+    - deploy
