@@ -863,6 +863,19 @@
                 }
             ]
         },
+        "bitcoin:MTNS": {
+            "links": {
+                "Github": "https://github.com/omotenashicoin-project/OmotenashiCoin",
+                "Homepage": "https://www.omotenashicoin.site"
+            },
+            "marketcap_usd": 0,
+            "name": "OmotenashiCoin",
+            "shortcut": "MTNS",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": []
+        },
         "erc20:ella:MINING": {
             "address": "0x991e7Fe4b05f2b3db1D788e705963f5D647b0044",
             "links": {
