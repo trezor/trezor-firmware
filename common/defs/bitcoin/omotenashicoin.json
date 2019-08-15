@@ -1,0 +1,45 @@
+{
+  "coin_name": "OmotenashiCoin",
+  "coin_shortcut": "MTNS",
+  "coin_label": "OmotenashiCoin",
+  "website": "http://www.omotenashicoin.site/",
+  "github": "https://github.com/omotenashicoin-project/OmotenashiCoin",
+  "maintainer": "nakkie <git@omotenashiocin.site>",
+  "curve_name": "secp256k1",
+  "address_type": 63,
+  "address_type_p2sh": 18,
+  "maxfee_kb": 100000,
+  "minfee_kb": 100,
+  "signed_message_header": "MtnsNet Signed Message:\n",
+  "hash_genesis_block": "00000e04317329056e236da90ebbd1cafacf2cbe1337509231289677cec3f192",
+  "xprv_magic": 61052378,
+  "xpub_magic": 61052245,
+  "xpub_magic_segwit_p2sh": null,
+  "xpub_magic_segwit_native": null,
+  "bech32_prefix": null,
+  "cashaddr_prefix": null,
+  "slip44": 341,
+  "segwit": false,
+  "decred": false,
+  "fork_id": null,
+  "force_bip143": false,
+  "bip115": false,
+  "default_fee_b": {
+    "Normal": 10
+  },
+  "dust_limit": 546,
+  "blocktime_seconds": 90,
+  "uri_prefix": "omotenashicoin",
+  "min_address_length": 27,
+  "max_address_length": 34,
+  "bitcore": [
+    "http://mtns.hashexplorer.net:8015/"
+  ],
+  "blockbook": [
+    "http://mtns.hashexplorer.net/"
+  ],
+  "negative_fee": false,
+  "cooldown": 100,
+  "consensus_branch_id": null,
+  "confidential_assets": null
+}
