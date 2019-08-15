@@ -2,7 +2,7 @@
   "coin_name": "OmotenashiCoin",
   "coin_shortcut": "MTNS",
   "coin_label": "OmotenashiCoin",
-  "website": "http://www.omotenashicoin.site/",
+  "website": "https://www.omotenashicoin.site",
   "github": "https://github.com/omotenashicoin-project/OmotenashiCoin",
   "maintainer": "nakkie <git@omotenashiocin.site>",
   "curve_name": "secp256k1",
