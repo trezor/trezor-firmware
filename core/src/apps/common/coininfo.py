@@ -1710,4 +1710,27 @@ def by_name(name: str) -> CoinInfo:
             curve_name='secp256k1',
             confidential_assets=None,
         )
+    elif name == "Omotenashicoin":
+        return CoinInfo(
+            coin_name=name,
+            coin_shortcut="MTNS",
+            address_type=63,
+            address_type_p2sh=18,
+            maxfee_kb=100000,
+            signed_message_header="MtnsNet Signed Message:\n",
+            xpub_magic=0x03a39555,
+            xpub_magic_segwit_p2sh=None,
+            xpub_magic_segwit_native=None,
+            bech32_prefix=None,
+            cashaddr_prefix=None,
+            slip44=341,
+            segwit=False,
+            fork_id=None,
+            force_bip143=False,
+            bip115=False,
+            decred=False,
+            negative_fee=False,
+            curve_name='secp256k1',
+            confidential_assets=None,
+        )
     raise ValueError('Unknown coin name "%s"' % name)
