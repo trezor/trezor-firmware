@@ -1170,7 +1170,7 @@ def by_name(name: str) -> CoinInfo:
             xpub_magic_segwit_p2sh=None,
             xpub_magic_segwit_native=None,
             bech32_prefix=None,
-           cashaddr_prefix=None,
+            cashaddr_prefix=None,
             slip44=341,
             segwit=False,
             fork_id=None,
