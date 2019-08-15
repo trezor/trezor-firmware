@@ -110,6 +110,10 @@ class TestAddress(unittest.TestCase):
         address = address_multisig_p2sh(pubkeys, 2, coin)
         self.assertEqual(address, '39bgKC7RFbpoCRbtD5KEdkYKtNyhpsNa3Z')
 
+        for invalid_m in (-1, 0, len(pubkeys) + 1, 16):
+            with self.assertRaises(scripts.ScriptsError):
+                address_multisig_p2sh(pubkeys, invalid_m, coin)
+
     def test_multisig_address_p2wsh_in_p2sh(self):
         # test data from
         # https://bitcoin.stackexchange.com/questions/62656/generate-a-p2sh-p2wsh-address-and-spend-output-sent-to-it
