@@ -91,7 +91,7 @@ class TestAddress(unittest.TestCase):
 
     def test_multisig_address_p2sh(self):
         # # test data from
-        # # http://www.soroushjp.com/2014/12/20/bitcoin-multisig-the-hard-way-understanding-raw-multisignature-bitcoin-transactions/
+        # # https://www.soroushjp.com/2014/12/20/bitcoin-multisig-the-hard-way-understanding-raw-multisignature-bitcoin-transactions/
         # # commented out because uncompressed public keys are not supported
         # coin = coins.by_name('Bitcoin')
         # pubkeys = [

@@ -1,10 +1,10 @@
-[ed25519](http://ed25519.cr.yp.to/) is an 
-[Elliptic Curve Digital Signature Algortithm](http://en.wikipedia.org/wiki/Elliptic_Curve_DSA), 
-developed by [Dan Bernstein](http://cr.yp.to/djb.html), 
-[Niels Duif](http://www.nielsduif.nl/), 
-[Tanja Lange](http://hyperelliptic.org/tanja), 
-[Peter Schwabe](http://www.cryptojedi.org/users/peter/), 
-and [Bo-Yin Yang](http://www.iis.sinica.edu.tw/pages/byyang/).
+[ed25519](https://ed25519.cr.yp.to) is an 
+[Elliptic Curve Digital Signature Algortithm](https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm), 
+developed by [Dan Bernstein](https://cr.yp.to/djb.html), 
+[Niels Duif](https://www.nielsduif.nl), 
+[Tanja Lange](https://hyperelliptic.org/tanja), 
+[Peter Schwabe](https://cryptojedi.org/peter), 
+and [Bo-Yin Yang](https://www.iis.sinica.edu.tw/pages/byyang).
 
 This project provides performant, portable 32-bit & 64-bit implementations. All implementations are 
 of course constant time in regard to secret data.
@@ -81,7 +81,7 @@ custom hash implementation in ed25519-randombytes-custom.h. The random function 
 	void ED25519_FN(ed25519_randombytes_unsafe) (void *p, size_t len);
 
 Use `-DED25519_TEST` when compiling `ed25519.c` to use a deterministically seeded, non-thread safe CSPRNG 
-variant of Bob Jenkins [ISAAC](http://en.wikipedia.org/wiki/ISAAC_%28cipher%29)
+variant of Bob Jenkins [ISAAC](https://en.wikipedia.org/wiki/ISAAC_%28cipher%29)
 
 ##### Minor options
 
@@ -148,7 +148,7 @@ To batch verify signatures:
 `ed25519-randombytes.h`, to generate random scalars for the verification code. 
 The default implementation now uses OpenSSLs `RAND_bytes`.
 
-Unlike the [SUPERCOP](http://bench.cr.yp.to/supercop.html) version, signatures are
+Unlike the [SUPERCOP](https://bench.cr.yp.to/supercop.html) version, signatures are
 not appended to messages, and there is no need for padding in front of messages. 
 Additionally, the secret key does not contain a copy of the public key, so it is 
 32 bytes instead of 64 bytes, and the public key must be provided to the signing
@@ -157,7 +157,7 @@ function.
 ##### Curve25519
 
 Curve25519 public keys can be generated thanks to 
-[Adam Langley](http://www.imperialviolet.org/2013/05/10/fastercurve25519.html) 
+[Adam Langley](https://www.imperialviolet.org/2013/05/10/fastercurve25519.html) 
 leveraging Ed25519's precomputed basepoint scalar multiplication.
 
 	curved25519_key sk, pk;
@@ -180,4 +180,4 @@ with extreme values to ensure they function correctly. SSE2 is now supported.
 
 #### Papers
 
-[Available on the Ed25519 website](http://ed25519.cr.yp.to/papers.html)
+[Available on the Ed25519 website](https://ed25519.cr.yp.to/papers.html)
