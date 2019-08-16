@@ -610,8 +610,11 @@ def validate_firmware(version, fw, expected_fingerprint=None):
         sys.exit(5)
 
 
-def find_best_firmware_version(bootloader_version, requested_version=None):
-    url = "https://beta-wallet.trezor.io/data/firmware/{}/releases.json"
+def find_best_firmware_version(bootloader_version, requested_version=None, beta=False):
+    if beta:
+        url = "https://beta-wallet.trezor.io/data/firmware/{}/releases.json"
+    else:
+        url = "https://wallet.trezor.io/data/firmware/{}/releases.json"
     releases = requests.get(url.format(bootloader_version[0])).json()
     if not releases:
         raise click.ClickException("Failed to get list of releases")
@@ -660,7 +663,10 @@ def find_best_firmware_version(bootloader_version, requested_version=None):
             if not ok:
                 sys.exit(1)
 
-    url = "https://beta-wallet.trezor.io/" + release["url"]
+    if beta:
+        url = "https://beta-wallet.trezor.io/" + release["url"]
+    else:
+        url = "https://wallet.trezor.io/" + release["url"]
     if url.endswith(".hex"):
         url = url[:-4]
 
@@ -674,6 +680,7 @@ def find_best_firmware_version(bootloader_version, requested_version=None):
 @click.option("-v", "--version")
 @click.option("-s", "--skip-check", is_flag=True, help="Do not validate firmware integrity")
 @click.option("-n", "--dry-run", is_flag=True, help="Perform all steps but do not actually upload the firmware")
+@click.option("--beta", is_flag=True, help="Use firmware from BETA wallet")
 @click.option("--raw", is_flag=True, help="Push raw data to Trezor")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
 @click.option("--skip-vendor-header", help="Skip vendor header validation on Trezor T")
@@ -689,6 +696,7 @@ def firmware_update(
     skip_vendor_header,
     raw,
     dry_run,
+    beta,
 ):
     """Upload new firmware to device.
 
@@ -724,7 +732,7 @@ def firmware_update(
         if not url:
             bootloader_version = [f.major_version, f.minor_version, f.patch_version]
             version_list = [int(x) for x in version.split(".")] if version else None
-            url, fp = find_best_firmware_version(bootloader_version, version_list)
+            url, fp = find_best_firmware_version(bootloader_version, version_list, beta)
             if not fingerprint:
                 fingerprint = fp
 
