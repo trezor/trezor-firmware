@@ -2,9 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-_At the moment, the project does **not** adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
+_At the moment, the project does **not** adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
 ## [0.11.4] - 2019-07-31
 

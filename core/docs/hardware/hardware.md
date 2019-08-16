@@ -124,7 +124,7 @@
 
 ### Dev Board
 
-* [STM32F429ZIT6](http://www.st.com/en/microcontrollers/stm32f429zi.html)
+* [STM32F429ZIT6](https://www.st.com/en/microcontrollers-microprocessors/stm32f429zi.html)
 * HSE / High-Speed External Crystal: 8 MHz
 * Integrated STMicroelectronics ST-LINK/V2.1 debugger
 
@@ -147,7 +147,7 @@ The metal tray is attached to the board with double stick tape. You just have to
 
 Minimum MCU requirements:
 
-* STM32F4 family [STM32F427VIT6](http://www.st.com/en/microcontrollers/stm32f427vi.html)
+* STM32F4 family [STM32F427VIT6](https://www.st.com/en/microcontrollers-microprocessors/stm32f427vi.html)
 * 168 MHz, 8 MHz HSE
 * 2048 KB Flash memory
 * 192 KB SRAM
