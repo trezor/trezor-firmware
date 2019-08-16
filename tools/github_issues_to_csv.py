@@ -1,8 +1,7 @@
 """
-Exports issues from a list of repositories to individual csv files.
-Uses basic authentication (Github username + password) to retrieve issues
-from a repository that username has access to. Supports Github API v3.
-Forked from: unbracketed/export_repo_issues_to_csv.py
+Taken from  https://gist.github.com/patrickfuller/e2ea8a94badc5b6967ef3ca0a9452a43 and modified.
+
+Currently writes all issues that have some Weight.
 """
 import argparse
 import csv
@@ -10,8 +9,10 @@ from getpass import getpass
 import requests
 
 auth = None
-state = 'open'
 
+PRIORITIES = ("P1", "P2", "P3", "P4")
+SEVERITIES = ("S1", "S2", "S3", "S4")
+WEIGHTS = ("W0", "W1/2", "W1", "W2", "W3", "W5", "W8", "W13", "W20", "W40", "W100")
 
 def write_issues(r, csvout):
     """Parses JSON response and writes to CSV."""
@@ -19,22 +20,38 @@ def write_issues(r, csvout):
         raise Exception(r.status_code)
     for issue in r.json():
         if 'pull_request' not in issue:
-            labels = ', '.join([l['name'] for l in issue['labels']])
+            priority = ""
+            severity = ""
+            weight = ""
+            labels = []
+            for l in issue['labels']:
+                if l["name"][:2] in PRIORITIES:
+                    priority = l["name"]
+                elif l["name"][:2] in SEVERITIES:
+                    severity = l["name"]
+                elif l["name"][:2] in WEIGHTS:
+                    weight = l["name"][1:]
+                else:
+                    labels.append(l["name"])
+            if not weight:
+                continue
+            labels = ", ".join(labels)
             date = issue['created_at'].split('T')[0]
-            # Change the following line to write out additional fields
-            csvout.writerow([labels, issue['title'], issue['state'], date,
-                             issue['html_url']])
+            milestone =  issue['milestone']['title'] if issue['milestone'] else ""
+
+            csvout.writerow([issue['title'], issue['number'], issue['state'], issue['html_url'],
+                milestone, priority, severity, weight, labels])
 
 
 def get_issues(name):
     """Requests issues from GitHub API and writes to CSV file."""
-    url = 'https://api.github.com/repos/{}/issues?state={}'.format(name, state)
+    url = 'https://api.github.com/repos/{}/issues?state=all'.format(name)
     r = requests.get(url, auth=auth)
 
     csvfilename = '{}-issues.csv'.format(name.replace('/', '-'))
     with open(csvfilename, 'w', newline='') as csvfile:
         csvout = csv.writer(csvfile)
-        csvout.writerow(['Labels', 'Title', 'State', 'Date', 'URL'])
+        csvout.writerow(['Title', 'Number', 'State', 'URL', 'Milestone', 'Priority', 'Severity', 'Weight', 'Labels'])
         write_issues(r, csvout)
 
         # Multiple requests are required if response is paged
@@ -60,11 +77,5 @@ parser.add_argument('--all', action='store_true', help="Returns both open "
                     "and closed issues.")
 args = parser.parse_args()
 
-if args.all:
-    state = 'all'
-
-username = input("Username for 'https://github.com': ")
-password = getpass("Password for 'https://{}@github.com': ".format(username))
-auth = (username, password)
 for repository in args.repositories:
     get_issues(repository)
