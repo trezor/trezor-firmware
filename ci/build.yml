@@ -71,6 +71,18 @@ build core unix frozen bitcoinonly:
     - core/src/trezor/res/resources.py
     expire_in: 1 day
 
+build core unix frozen debug:
+  stage: build
+  variables:
+    PYOPT: "0"
+  script:
+    - cd core
+    - pipenv run make build_unix_frozen
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    untracked: true
+    expire_in: 1 day
+
 
 # Crypto
 
