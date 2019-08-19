@@ -88,7 +88,7 @@ class InputButton(Button):
             display.icon(ix, iy, self.icon, fg_color, bg_color)
 
 
-class Prompt(ui.Control):
+class Prompt(ui.Component):
     def __init__(self, prompt: str) -> None:
         self.prompt = prompt
         self.repaint = True

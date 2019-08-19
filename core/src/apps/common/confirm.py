@@ -16,7 +16,7 @@ if False:
 
 async def confirm(
     ctx: wire.Context,
-    content: ui.Control,
+    content: ui.Component,
     code: int = ButtonRequestType.Other,
     confirm: ButtonContent = Confirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = Confirm.DEFAULT_CONFIRM_STYLE,
@@ -49,7 +49,7 @@ async def confirm(
 
 async def hold_to_confirm(
     ctx: wire.Context,
-    content: ui.Control,
+    content: ui.Component,
     code: int = ButtonRequestType.Other,
     confirm: ButtonContent = HoldToConfirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = HoldToConfirm.DEFAULT_CONFIRM_STYLE,

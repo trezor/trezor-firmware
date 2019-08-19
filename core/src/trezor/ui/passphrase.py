@@ -114,7 +114,7 @@ class Input(Button):
         pass
 
 
-class Prompt(ui.Control):
+class Prompt(ui.Component):
     def __init__(self, text: str) -> None:
         self.text = text
         self.repaint = True
@@ -249,7 +249,7 @@ class PassphraseKeyboard(ui.Layout):
 
 
 class PassphraseSource(ui.Layout):
-    def __init__(self, content: ui.Control) -> None:
+    def __init__(self, content: ui.Component) -> None:
         self.content = content
 
         self.device = Button(ui.grid(8, n_y=4, n_x=4, cells_x=4), "Device")

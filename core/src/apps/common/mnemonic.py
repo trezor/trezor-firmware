@@ -70,7 +70,7 @@ def type_from_word_count(count: int) -> int:
 
 
 def _start_progress() -> None:
-    workflow.closedefault()
+    workflow.close_default()
     ui.backlight_fade(ui.BACKLIGHT_DIM)
     ui.display.clear()
     ui.header("Please wait")

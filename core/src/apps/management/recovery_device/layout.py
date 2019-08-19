@@ -169,7 +169,7 @@ async def show_identifier_mismatch(ctx: wire.Context) -> None:
     )
 
 
-class RecoveryHomescreen(ui.Control):
+class RecoveryHomescreen(ui.Component):
     def __init__(self, text: str, subtext: str = None):
         self.text = text
         self.subtext = subtext

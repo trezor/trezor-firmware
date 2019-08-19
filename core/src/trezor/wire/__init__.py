@@ -280,7 +280,7 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
             else:
                 # We found a valid handler for this message type.
 
-                # Workflow task, declared for the `workflow.onclose` call later.
+                # Workflow task, declared for the `workflow.on_close` call later.
                 wf_task = None  # type: Optional[loop.Task]
 
                 # Here we make sure we always respond with a Failure response
@@ -301,7 +301,7 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                     wf_task = handler(ctx, req_msg)
 
                     # Register the task into the workflow management system.
-                    workflow.onstart(wf_task)
+                    workflow.on_start(wf_task)
 
                     # Run the workflow task.  Workflow can do more on-the-wire
                     # communication inside, but it should eventually return a
@@ -314,7 +314,7 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                     # something unexpected came in.  See Context.read() for
                     # example, which expects some particular message and raises
                     # UnexpectedMessageError if another one comes in.
-                    # In order not to loose the message, we pass on the reader
+                    # In order not to lose the message, we pass on the reader
                     # to get picked up by the workflow logic in the beginning of
                     # the cycle, which processes it in the usual manner.
                     # TODO:
@@ -337,7 +337,7 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                     # De-register the task from the workflow system, if we
                     # registered it before.
                     if wf_task is not None:
-                        workflow.onclose(wf_task)
+                        workflow.on_close(wf_task)
 
             if res_msg is not None:
                 # Either the workflow returned a response, or we created one.

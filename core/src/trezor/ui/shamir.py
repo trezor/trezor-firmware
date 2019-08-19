@@ -3,7 +3,7 @@ from trezor.ui.button import Button
 from trezor.ui.text import LABEL_CENTER, Label
 
 
-class NumInput(ui.Control):
+class NumInput(ui.Component):
     def __init__(self, count: int = 5, max_count: int = 16, min_count: int = 1) -> None:
         self.count = count
         self.max_count = max_count

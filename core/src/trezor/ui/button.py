@@ -118,7 +118,7 @@ _ICON = const(16)  # icon size in pixels
 _BORDER = const(4)  # border size in pixels
 
 
-class Button(ui.Control):
+class Button(ui.Component):
     def __init__(
         self,
         area: ui.Area,

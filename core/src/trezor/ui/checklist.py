@@ -13,7 +13,7 @@ _CHECKLIST_OFFSET_X = const(24)
 _CHECKLIST_OFFSET_X_ICON = const(0)
 
 
-class Checklist(ui.Control):
+class Checklist(ui.Component):
     def __init__(self, title: str, icon: str) -> None:
         self.title = title
         self.icon = icon
