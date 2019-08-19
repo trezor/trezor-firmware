@@ -72,6 +72,20 @@ Running `emu.sh` with `-r` watches for file changes and reloads the emulator if 
 
 Press `p` on your keyboard to capture emulator's screen. You will find a png screenshot in the `src` directory.
 
-### Auto print screen
+### Environment Variables
+
+#### Auto print screen
 
 If ``` TREZOR_SAVE_SCREEN=1 ``` is set, the emulator makes print screen on every screen change.
+
+#### Memory statistics
+
+If ```TREZOR_LOG_MEMORY=1``` is set, the emulator prints memory usage information after each workflow task is finished.
+
+#### Disable fade
+
+```TREZOR_DISABLE_FADE=1``` disables fading, which speeds up the UI workflows (useful for tests).
+
+#### Tests
+
+```TREZOR_TEST``` informs whether device tests are to be run. Currently unused.
