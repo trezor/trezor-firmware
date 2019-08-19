@@ -51,6 +51,7 @@ class ProtoField:
     type_name = attr.ib()
     proto_type = attr.ib()
     py_type = attr.ib()
+    py_inner_type = attr.ib()
 
     @classmethod
     def from_field(cls, descriptor, field):
@@ -73,6 +74,7 @@ class ProtoField:
                     "Unknown field type {} for field {}".format(field.type, field.name)
                 ) from None
 
+        py_inner_type = py_type
         if repeated:
             py_type = "List[{}]".format(py_type)
 
@@ -85,6 +87,7 @@ class ProtoField:
             type_name=type_name,
             proto_type=proto_type,
             py_type=py_type,
+            py_inner_type=py_inner_type,
         )
 
 
@@ -282,12 +285,12 @@ class Descriptor:
         for field in all_enums:
             allowed_values = self.enum_types[field.type_name]
             valuestr = ", ".join(str(v) for v in sorted(allowed_values))
-            yield "        {} = Literal[{}]".format(field.py_type, valuestr)
+            yield "        {} = Literal[{}]".format(field.py_inner_type, valuestr)
 
         yield "    except ImportError:"
         yield "        Dict, List, Optional = None, None, None  # type: ignore"
         for field in all_enums:
-            yield "        {} = None  # type: ignore".format(field.py_type)
+            yield "        {} = None  # type: ignore".format(field.py_inner_type)
 
         yield ""
         yield ""
