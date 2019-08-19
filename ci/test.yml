@@ -1,0 +1,75 @@
+image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
+
+# Core
+
+test core unix unit:
+  stage: test
+  dependencies:
+    - build core unix frozen
+  script:
+    - cd core
+    - pipenv run make test
+
+test core unix device:
+  stage: test
+  dependencies:
+    - build core unix frozen
+  script:
+    - cd core
+    - pipenv run make test_emu
+
+test core unix monero:
+  stage: test
+  dependencies:
+    - build core unix frozen
+  script:
+    - cd core
+    - pipenv run make test_emu_monero
+
+
+# Crypto
+
+test crypto:
+  stage: test
+  dependencies:
+    - build crypto
+  script:
+    - cd crypto
+    - ./tests/aestst
+    - ./tests/test_check
+    - CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./tests/test_check
+    - ./tests/test_openssl 1000
+    - ITERS=10 pipenv run pytest tests
+
+
+# Legacy
+
+test legacy emu:
+  stage: test
+  dependencies:
+    - build legacy emu
+  variables:
+    EMULATOR: "1"
+  script:
+    - cd legacy
+    - pipenv run script/test
+
+
+# Python
+
+test python:
+  stage: test
+  script:
+    - cd python
+    - pipenv run tox
+
+
+# Storage
+
+test storage:
+  stage: test
+  dependencies: []
+  script:
+    - cd storage/tests
+    - pipenv run make build
+    - pipenv run make tests_all

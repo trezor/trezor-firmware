@@ -32,9 +32,6 @@ before_script:
 
 include:
   - ci/environment.yml
-  - ci/prebuild.yml  # common, style
-  - ci/core.yml
-  - ci/legacy.yml
-  - ci/python.yml
-  - ci/crypto.yml
-  - ci/storage.yml
+  - ci/prebuild.yml
+  - ci/build.yml
+  - ci/test.yml
