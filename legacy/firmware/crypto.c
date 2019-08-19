@@ -110,6 +110,17 @@ int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
   }
 }
 
+int signifyMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
+                       uint8_t *signature) {
+  signature[0] = 0;  // prefix: pad with zero, so all signatures are 65 bytes
+  const curve_info *ed25519_curve_info = get_curve_by_name(ED25519_NAME);
+  // only ed25519 is supported
+  if (!ed25519_curve_info || node->curve != ed25519_curve_info) {
+    return 1;
+  }
+  return hdnode_sign(node, message, message_len, 0, signature + 1, NULL, NULL);
+}
+
 static void cryptoMessageHash(const CoinInfo *coin, const uint8_t *message,
                               size_t message_len,
                               uint8_t hash[HASHER_DIGEST_LENGTH]) {

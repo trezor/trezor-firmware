@@ -135,3 +135,37 @@ class TestMsgSignidentity(TrezorTest):
             sig.signature.hex()
             == "00f05e5085e666429de397c70a081932654369619c0bd2a6579ea6c1ef2af112ef79998d6c862a16b932d44b1ac1b83c8cbcd0fbda228274fde9e0d0ca6e9cb709"
         )
+
+        # URI  : gpg://satoshi@bitcoin.org
+        identity = proto.IdentityType(
+            proto="gpg", user="satoshi", host="bitcoin.org", port="", path=""
+        )
+        sig = misc.sign_identity(
+            self.client, identity, hidden, visual, ecdsa_curve_name="ed25519"
+        )
+        assert sig.address is None
+        assert (
+            sig.public_key.hex()
+            == "00d18cdf4dbdbb50ef1fdba1ae0539451f3354a366d6a35313712ab82f16d4cd9e"
+        )
+        assert (
+            sig.signature.hex()
+            == "00f47f1a09a2875b971811ebbece19c3004c3ecbe84e65666dc8c36cc2fc002544af8a3f545375ebe53d73b41c700df2f9020256c31bb774a7eb03ed9819226407"
+        )
+
+        # URI  : signify://satoshi@bitcoin.org
+        identity = proto.IdentityType(
+            proto="signify", user="satoshi", host="bitcoin.org", port="", path=""
+        )
+        sig = misc.sign_identity(
+            self.client, identity, hidden, visual, ecdsa_curve_name="ed25519"
+        )
+        assert sig.address is None
+        assert (
+            sig.public_key.hex()
+            == "0038c0f42c0e47b233e837763098f029fd01009b74fdf4b0d60db114fb0f4f8b17"
+        )
+        assert (
+            sig.signature.hex()
+            == "009bb30a7a894e6cdd86e2b75803745e93bd5294b979f9e00ce9dc870642c7f6ad7322af4c54d401ea793494e8a5fdf2bf8b88c6e875094512bd67b94f9188000d"
+        )

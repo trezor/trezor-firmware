@@ -44,6 +44,9 @@ int sshMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
 int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
                    uint8_t *signature);
 
+int signifyMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
+                       uint8_t *signature);
+
 int cryptoMessageSign(const CoinInfo *coin, HDNode *node,
                       InputScriptType script_type, const uint8_t *message,
                       size_t message_len, uint8_t *signature);

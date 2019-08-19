@@ -118,6 +118,8 @@ void fsm_msgSignIdentity(const SignIdentity *msg) {
       msg->identity.has_proto && (strcmp(msg->identity.proto, "ssh") == 0);
   bool sign_gpg =
       msg->identity.has_proto && (strcmp(msg->identity.proto, "gpg") == 0);
+  bool sign_signify =
+      msg->identity.has_proto && (strcmp(msg->identity.proto, "signify") == 0);
 
   int result = 0;
   layoutProgressSwipe(_("Signing"), 0);
@@ -127,6 +129,10 @@ void fsm_msgSignIdentity(const SignIdentity *msg) {
   } else if (sign_gpg) {  // GPG should sign a message digest
     result = gpgMessageSign(node, msg->challenge_hidden.bytes,
                             msg->challenge_hidden.size, resp->signature.bytes);
+  } else if (sign_signify) {  // Signify should sign a message digest
+    result =
+        signifyMessageSign(node, msg->challenge_hidden.bytes,
+                           msg->challenge_hidden.size, resp->signature.bytes);
   } else {
     uint8_t digest[64];
     sha256_Raw(msg->challenge_hidden.bytes, msg->challenge_hidden.size, digest);
