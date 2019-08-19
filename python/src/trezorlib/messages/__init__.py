@@ -255,6 +255,7 @@ from . import BinanceOrderType
 from . import BinanceTimeInForce
 from . import ButtonRequestType
 from . import FailureType
+from . import Feature
 from . import InputScriptType
 from . import LiskTransactionType
 from . import MessageType
