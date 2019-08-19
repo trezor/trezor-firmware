@@ -13,7 +13,7 @@ build core firmware:
     - pipenv run make build_bootloader
     - pipenv run make build_prodtest
     - pipenv run make build_firmware
-    # - test "$TREZOR_MODEL" = "1" || pipenv run make sizecheck
+    - pipenv run make sizecheck
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:

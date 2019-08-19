@@ -4,6 +4,7 @@ variables:
   SDL_VIDEODRIVER: "dummy"
   XDG_RUNTIME_DIR: "/var/tmp"
 
+# TODO: add clang https://github.com/trezor/trezor-firmware/issues/44
 build legacy firmware:
   stage: build
   script:
@@ -41,7 +42,6 @@ build legacy emu:
     untracked: true
     expire_in: 1 day
 
-# TODO: aren't some tests from .travis.yml missing?
 test legacy emu:
   stage: test
   dependencies:
