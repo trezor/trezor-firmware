@@ -70,6 +70,9 @@ def type_from_word_count(count: int) -> int:
 
 
 def _start_progress() -> None:
+    # Because we are drawing to the screen manually, without a layout, we
+    # should make sure that no other layout is running.  At this point, only
+    # the homescreen should be on, so shut it down.
     workflow.close_default()
     ui.backlight_fade(ui.BACKLIGHT_DIM)
     ui.display.clear()
