@@ -1,7 +1,7 @@
 environment:
   stage: environment
   image: docker
-  when: manual
+  # when: manual
   variables:
     GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
     CONTAINER_NAME: "$CI_REGISTRY/satoshilabs/trezor/trezor-firmware/environment"
@@ -10,7 +10,7 @@ environment:
   before_script:
     - docker login $CI_REGISTRY -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
   script:
-    - docker pull $CONTAINER_NAME:latest || true
-    - docker build --cache-from $CONTAINER_NAME:latest --tag $CONTAINER_NAME:$CI_COMMIT_SHA --tag $CONTAINER_NAME:latest ci/
-    - docker push $CONTAINER_NAME:$CI_COMMIT_SHA
-    - docker push $CONTAINER_NAME:latest
+    # - docker pull $CONTAINER_NAME:latest || true
+    - docker build --tag $CONTAINER_NAME:test ci/
+    - docker push $CONTAINER_NAME:test
+    # - docker push $CONTAINER_NAME:latest

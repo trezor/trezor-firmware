@@ -1,6 +1,6 @@
 # initialize from the image
 
-FROM python:3.7.3
+FROM debian
 
 ARG TOOLCHAIN_FLAVOR=linux
 ENV TOOLCHAIN_FLAVOR=$TOOLCHAIN_FLAVOR
@@ -22,10 +22,14 @@ RUN ln -s clang-format-6.0 /usr/bin/clang-format
 # Install Python 3.5 from Debian
 RUN apt-get install -y python3.5-dev
 
-# Install Python 3.6 and 3.8 from source, assuming we have 3.7 from the docker image
+# Install Python 3.6, 3.7 and 3.8 from source
 RUN wget --no-verbose https://www.python.org/ftp/python/3.6.9/Python-3.6.9.tgz
 RUN tar zxf Python-3.6.9.tgz
 RUN cd Python-3.6.9/ && ./configure && make && make install
+
+RUN wget --no-verbose https://www.python.org/ftp/python/3.7.4/Python-3.7.4.tgz
+RUN tar zxf Python-3.7.4.tgz
+RUN cd Python-3.7.4/ && ./configure && make && make install
 
 RUN wget --no-verbose https://www.python.org/ftp/python/3.8.0/Python-3.8.0b3.tgz
 RUN tar zxf Python-3.8.0b3.tgz
