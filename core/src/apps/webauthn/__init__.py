@@ -377,10 +377,10 @@ class ConfirmState:
 
     async def confirm_workflow(self) -> None:
         try:
-            workflow.onstart(self.workflow)
+            workflow.on_start(self.workflow)
             await self.confirm_layout()
         finally:
-            workflow.onclose(self.workflow)
+            workflow.on_close(self.workflow)
             self.workflow = None
 
     async def confirm_layout(self) -> None:
@@ -402,7 +402,7 @@ class ConfirmState:
         self.confirmed = await dialog is CONFIRMED
 
 
-class ConfirmContent(ui.Control):
+class ConfirmContent(ui.Component):
     def __init__(self, action: int, app_id: bytes) -> None:
         self.action = action
         self.app_id = app_id

@@ -70,7 +70,7 @@ def _boot_default() -> None:
     # run main event loop and specify which screen is the default
     from apps.homescreen.homescreen import homescreen
 
-    workflow.startdefault(homescreen)
+    workflow.start_default(homescreen)
 
 
 from trezor import loop, wire, workflow

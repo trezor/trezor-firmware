@@ -5,7 +5,7 @@ if False:
 
 
 class Popup(ui.Layout):
-    def __init__(self, content: ui.Control, time_ms: int = 0) -> None:
+    def __init__(self, content: ui.Component, time_ms: int = 0) -> None:
         self.content = content
         self.time_ms = time_ms
 

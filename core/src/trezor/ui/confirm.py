@@ -19,7 +19,7 @@ class Confirm(ui.Layout):
 
     def __init__(
         self,
-        content: ui.Control,
+        content: ui.Component,
         confirm: Optional[ButtonContent] = DEFAULT_CONFIRM,
         confirm_style: ButtonStyleType = DEFAULT_CONFIRM_STYLE,
         cancel: Optional[ButtonContent] = DEFAULT_CANCEL,
@@ -75,7 +75,7 @@ class HoldToConfirm(ui.Layout):
 
     def __init__(
         self,
-        content: ui.Control,
+        content: ui.Component,
         confirm: str = DEFAULT_CONFIRM,
         confirm_style: ButtonStyleType = DEFAULT_CONFIRM_STYLE,
         loader_style: LoaderStyleType = DEFAULT_LOADER_STYLE,

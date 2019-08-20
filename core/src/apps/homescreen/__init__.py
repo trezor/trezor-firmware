@@ -2,7 +2,7 @@ from trezor import config, utils, wire
 from trezor.messages import MessageType
 from trezor.messages.Features import Features
 from trezor.messages.Success import Success
-from trezor.wire import protobuf_workflow, register
+from trezor.wire import register
 
 from apps.common import cache, storage
 
@@ -75,9 +75,9 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
 
 
 def boot(features_only: bool = False) -> None:
-    register(MessageType.Initialize, protobuf_workflow, handle_Initialize)
-    register(MessageType.GetFeatures, protobuf_workflow, handle_GetFeatures)
+    register(MessageType.Initialize, handle_Initialize)
+    register(MessageType.GetFeatures, handle_GetFeatures)
     if not features_only:
-        register(MessageType.Cancel, protobuf_workflow, handle_Cancel)
-        register(MessageType.ClearSession, protobuf_workflow, handle_ClearSession)
-        register(MessageType.Ping, protobuf_workflow, handle_Ping)
+        register(MessageType.Cancel, handle_Cancel)
+        register(MessageType.ClearSession, handle_ClearSession)
+        register(MessageType.Ping, handle_Ping)

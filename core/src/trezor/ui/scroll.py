@@ -46,7 +46,7 @@ def render_swipe_text() -> None:
 
 class Paginated(ui.Layout):
     def __init__(
-        self, pages: Sequence[ui.Control], page: int = 0, one_by_one: bool = False
+        self, pages: Sequence[ui.Component], page: int = 0, one_by_one: bool = False
     ):
         self.pages = pages
         self.page = page
@@ -77,7 +77,7 @@ class Paginated(ui.Layout):
             directions = SWIPE_VERTICAL
 
         if __debug__:
-            swipe = await loop.spawn(Swipe(directions), swipe_signal)
+            swipe = await loop.race(Swipe(directions), swipe_signal)
         else:
             swipe = await Swipe(directions)
 
@@ -99,10 +99,10 @@ class Paginated(ui.Layout):
             raise ui.Result(self.page)
 
 
-class PageWithButtons(ui.Control):
+class PageWithButtons(ui.Component):
     def __init__(
         self,
-        content: ui.Control,
+        content: ui.Component,
         paginated: "PaginatedWithButtons",
         index: int,
         count: int,
@@ -157,7 +157,7 @@ class PageWithButtons(ui.Control):
 
 class PaginatedWithButtons(ui.Layout):
     def __init__(
-        self, pages: Sequence[ui.Control], page: int = 0, one_by_one: bool = False
+        self, pages: Sequence[ui.Component], page: int = 0, one_by_one: bool = False
     ) -> None:
         self.pages = [
             PageWithButtons(p, self, i, len(pages)) for i, p in enumerate(pages)

@@ -37,7 +37,7 @@ if False:
 _TARGET_MS = const(1000)
 
 
-class Loader(ui.Control):
+class Loader(ui.Component):
     def __init__(self, style: LoaderStyleType = LoaderDefault) -> None:
         self.normal_style = style.normal
         self.active_style = style.active

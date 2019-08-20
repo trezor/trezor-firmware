@@ -424,7 +424,7 @@ def _slip39_split_share_into_pages(share_words):
     return first, list(chunks), last
 
 
-class ShamirNumInput(ui.Control):
+class ShamirNumInput(ui.Component):
     SET_SHARES = object()
     SET_THRESHOLD = object()
 

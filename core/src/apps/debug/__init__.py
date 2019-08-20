@@ -6,7 +6,7 @@ if not __debug__:
 if __debug__:
     from trezor import config, log, loop, utils
     from trezor.messages import MessageType
-    from trezor.wire import register, protobuf_workflow
+    from trezor.wire import register
 
     if False:
         from typing import Optional
@@ -79,9 +79,5 @@ if __debug__:
         if not utils.EMULATOR:
             config.wipe()
 
-        register(
-            MessageType.DebugLinkDecision, protobuf_workflow, dispatch_DebugLinkDecision
-        )
-        register(
-            MessageType.DebugLinkGetState, protobuf_workflow, dispatch_DebugLinkGetState
-        )
+        register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)
+        register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)
