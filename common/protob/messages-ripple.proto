@@ -30,38 +30,36 @@ message RippleAddress {
  */
 message RippleSignTx {
 	// Common fields
-	repeated uint32 address_n = 1; // BIP-32 path. For compatibility with other wallets, must be m/44'/144'/index'
-	optional uint64 fee = 2; // fee (in drops) for the transaction
-	optional uint32 sequence = 3; // transaction sequence number
-	optional string account_txn_id = 4; // see https://xrpl.org/transaction-common-fields.html#accounttxnid
-	optional uint32 flags = 5; // transaction flags
-	optional uint32 last_ledger_sequence = 6; // see https://developers.ripple.com/reliable-transaction-submission.html#lastledgersequence
-	repeated RippleMemo memos = 7; // additional arbitrary information used to identify this transaction
-	repeated RippleSigner signers = 8; // array of objects that represent a multi-signature
-	optional uint32 source_tag = 9; // identify the reason for this payment, or a sender on whose behalf this transaction is made.
+	repeated uint32 address_n = 1;				// BIP-32 path. For compatibility with other wallets, must be m/44'/144'/index'
+	optional uint64 fee = 2;					// fee (in drops) for the transaction
+	optional uint32 flags = 3;					// transaction flags
+	optional uint32 sequence = 4;				// transaction sequence number
+	optional uint32 last_ledger_sequence = 5;	// see https://developers.ripple.com/reliable-transaction-submission.html#lastledgersequence
+	optional string account_txn_id = 6; 		// see https://xrpl.org/transaction-common-fields.html#accounttxnid
+	repeated RippleMemo memos = 7; 				// additional arbitrary information used to identify this transaction
+	repeated RippleSigner signers = 8; 			// array of objects that represent a multi-signature
+	optional uint32 source_tag = 9;				// identify the reason for this payment, or a sender on whose behalf this transaction is made.
 
 
 
 	// Transaction fields
-	oneof transaction_data {
-		RippleAccountSet account_set = 10;
-		RippleCheckCancel check_cancel = 11;
-		RippleCheckCash check_cash = 12;
-		RippleCheckCreate check_create = 13;
-		RippleDepositPreauth deposit_preauth = 14;
-		RippleEscrowCancel escrow_cancel = 15;
-		RippleEscrowCreate escrow_create = 16;
-		RippleEscrowFinish escrow_finish = 17;
-		RippleOfferCancel offer_cancel = 18;
-		RippleOfferCreate offer_create = 19;
-		RipplePayment payment = 20;
-		RipplePaymentChannelClaim payment_channel_claim = 21;
-		RipplePaymentChannelCreate payment_channel_create = 22;
-		RipplePaymentChannelFund payment_channel_fund = 23;
-		RippleSetRegularKey set_regular_key = 24;
-		RippleSignerListSet signer_list_set = 25;
-		RippleTrustSet trust_set = 26;
-	}
+	optional RippleAccountSet account_set = 10;
+	optional RippleCheckCancel check_cancel = 11;
+	optional RippleCheckCash check_cash = 12;
+	optional RippleCheckCreate check_create = 13;
+	optional RippleDepositPreauth deposit_preauth = 14;
+	optional RippleEscrowCancel escrow_cancel = 15;
+	optional RippleEscrowCreate escrow_create = 16;
+	optional RippleEscrowFinish escrow_finish = 17;
+	optional RippleOfferCancel offer_cancel = 18;
+	optional RippleOfferCreate offer_create = 19;
+	optional RipplePayment payment = 20;
+	optional RipplePaymentChannelClaim payment_channel_claim = 21;
+	optional RipplePaymentChannelCreate payment_channel_create = 22;
+	optional RipplePaymentChannelFund payment_channel_fund = 23;
+	optional RippleSetRegularKey set_regular_key = 24;
+	optional RippleSignerListSet signer_list_set = 25;
+	optional RippleTrustSet trust_set = 26;
 
 	/**
 	 * AccountSet transaction type
@@ -69,10 +67,8 @@ message RippleSignTx {
 	 * - see https://xrpl.org/accountset.html
 	 */
 	message RippleAccountSet {
-		oneof Flag{
-			uint32 clear_flag = 1;
-			uint32 set_flag = 2;
-		}
+		optional uint32 clear_flag = 1;
+		optional uint32 set_flag = 2;
 		optional string domain = 3;
 		optional string email_hash = 4;
 		optional string message_key = 5;
@@ -96,14 +92,10 @@ message RippleSignTx {
 	 */
 	message RippleCheckCash {
 		optional string check_id = 1;
-		oneof Amount {
-			uint64 amount = 2;
-			RippleIssuedAmount issued_amount = 3;
-		}
-		oneof DeliverMin {
-			uint64 deliver_min = 4;
-			RippleIssuedAmount issued_deliver_min = 5;
-		}
+		optional uint64 amount = 2;
+		optional RippleIssuedAmount issued_amount = 3;
+		optional uint64 deliver_min = 4;
+		optional RippleIssuedAmount issued_deliver_min = 5;
 	}
 
 	/**
@@ -113,10 +105,8 @@ message RippleSignTx {
 	 */
 	message RippleCheckCreate {
 		optional string destination = 1;
-		oneof SendMax {
-			uint64 send_max = 2;
-			RippleIssuedAmount issued_send_max = 3;
-		}
+		optional uint64 send_max = 2;
+		optional RippleIssuedAmount issued_send_max = 3;
 		optional uint32 destination_tag = 4;
 		optional uint32 expiration = 5;
 		optional string invoice_id = 6;
@@ -128,10 +118,8 @@ message RippleSignTx {
 	 * - see https://xrpl.org/depositpreauth.html
 	 */
 	message RippleDepositPreauth {
-		oneof Preauth {
-			string authorize = 1;
-			string unauthorize = 2;
-		}
+		optional string authorize = 1;
+		optional string unauthorize = 2;
 	}
 
 	/**
@@ -188,14 +176,10 @@ message RippleSignTx {
 	message RippleOfferCreate {
 		optional uint32 expiration = 1;
 		optional uint32 offer_sequence = 2;
-		oneof TakerGets {
-			uint64 taker_gets = 3;
-			RippleIssuedAmount issued_taker_gets = 4;
-		}
-		oneof TakerPays {
-			uint64 taker_pays = 5;
-			RippleIssuedAmount issued_taker_pays = 6;
-		}
+		optional uint64 taker_gets = 3;
+		optional RippleIssuedAmount issued_taker_gets = 4;
+		optional uint64 taker_pays = 5;
+		optional RippleIssuedAmount issued_taker_pays = 6;
 	}
 
 	/**
@@ -204,18 +188,14 @@ message RippleSignTx {
 	 * - see https://developers.ripple.com/payment.html
 	 */
 	message RipplePayment {
-		oneof Amount {
-			uint64 amount = 1;
-			RippleIssuedAmount issued_amount = 2;
-		}
-		optional string destination = 3;
-		optional uint32 destination_tag = 4;
+		optional uint64 amount = 1;
+		optional string destination = 2;
+		optional uint32 destination_tag = 3;
+		optional RippleIssuedAmount issued_amount = 4;
 		optional string invoice_id = 5;
 		optional uint64 send_max = 6;
-		oneof DeliverMin {
-			uint64 deliver_min = 7;
-			RippleIssuedAmount issued_deliver_min = 8;
-		}
+		optional uint64 deliver_min = 7;
+		optional RippleIssuedAmount issued_deliver_min = 8;
 	}
 
 	/**
