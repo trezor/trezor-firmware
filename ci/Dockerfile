@@ -19,14 +19,14 @@ RUN ln -s clang-format-6.0 /usr/bin/clang-format
 
 # TODO are all apt packages actually needed?
 
-# Install Python 3.5 from Debian
-RUN apt-get install -y python3.7-dev
+# Install Python 3.7 from Debian
+RUN apt-get install -y python3.7-dev python-pip
 
+# Install Python 3.5, 3.6 and 3.8 from source
 RUN wget --no-verbose https://www.python.org/ftp/python/3.5.7/Python-3.5.7.tgz
 RUN tar zxf Python-3.5.7.tgz
 RUN cd Python-3.5.7/ && ./configure && make && make install
 
-# Install Python 3.6, 3.7 and 3.8 from source
 RUN wget --no-verbose https://www.python.org/ftp/python/3.6.9/Python-3.6.9.tgz
 RUN tar zxf Python-3.6.9.tgz
 RUN cd Python-3.6.9/ && ./configure && make && make install
