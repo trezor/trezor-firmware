@@ -23,11 +23,11 @@ RUN ln -s clang-format-6.0 /usr/bin/clang-format
 RUN apt-get install -y python3.5-dev
 
 # Install Python 3.6 and 3.8 from source, assuming we have 3.7 from the docker image
-RUN wget https://www.python.org/ftp/python/3.6.9/Python-3.6.9.tgz
+RUN wget --no-verbose https://www.python.org/ftp/python/3.6.9/Python-3.6.9.tgz
 RUN tar zxf Python-3.6.9.tgz
 RUN cd Python-3.6.9/ && ./configure && make && make install
 
-RUN wget https://www.python.org/ftp/python/3.8.0/Python-3.8.0b3.tgz
+RUN wget --no-verbose https://www.python.org/ftp/python/3.8.0/Python-3.8.0b3.tgz
 RUN tar zxf Python-3.8.0b3.tgz
 RUN cd Python-3.8.0b3/ && ./configure && make && make install
 
@@ -51,7 +51,7 @@ ENV TOOLCHAIN_HASH_src=bc228325dbbfaf643f2ee5d19e01d8b1873fcb9c31781b5e1355d40a6
 
 # extract toolchain
 
-RUN cd /opt && wget $TOOLCHAIN_URL
+RUN cd /opt && wget --no-verbose $TOOLCHAIN_URL
 
 RUN cd /opt && echo "$TOOLCHAIN_HASH_linux $TOOLCHAIN_LONGVER-linux.tar.bz2\n$TOOLCHAIN_HASH_src $TOOLCHAIN_LONGVER-src.tar.bz2" | sha256sum -c --ignore-missing
 
@@ -71,7 +71,7 @@ RUN if [ "$TOOLCHAIN_FLAVOR" = "src" ]; then \
 
 ENV PROTOBUF_VERSION=3.4.0
 ENV PROTOBUF_HASH=e4b51de1b75813e62d6ecdde582efa798586e09b5beaebfb866ae7c9eaadace4
-RUN wget "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
+RUN wget --no-verbose "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
 RUN echo "${PROTOBUF_HASH} protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" | sha256sum -c
 
 # setup toolchain
@@ -93,7 +93,7 @@ ENV TREZOR_MONERO_TESTS_SHA256SUM=140a16b3d6105b5e8e88a93b451e9600a36ed23928ea3c
 ENV TREZOR_MONERO_TESTS_URL="https://github.com/ph4r05/monero/releases/download/v0.14.1.0-tests-u14.04-01/trezor_tests"
 ENV TREZOR_MONERO_TESTS_PATH="/opt/trezor_monero_tests"
 
-RUN wget "$TREZOR_MONERO_TESTS_URL" -O "$TREZOR_MONERO_TESTS_PATH" \
+RUN wget --no-verbose "$TREZOR_MONERO_TESTS_URL" -O "$TREZOR_MONERO_TESTS_PATH" \
     && chmod +x "$TREZOR_MONERO_TESTS_PATH"
 RUN echo "${TREZOR_MONERO_TESTS_SHA256SUM} ${TREZOR_MONERO_TESTS_PATH}" | sha256sum -c
 
