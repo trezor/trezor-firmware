@@ -12,37 +12,28 @@ if __debug__:
         Dict, List, Optional = None, None, None  # type: ignore
 
 
-class RipplePayment(p.MessageType):
+class RippleCheckCash(p.MessageType):
 
     def __init__(
         self,
+        check_id: str = None,
         amount: int = None,
         issued_amount: RippleIssuedAmount = None,
-        destination: str = None,
-        destination_tag: int = None,
-        invoice_id: str = None,
-        send_max: int = None,
         deliver_min: int = None,
         issued_deliver_min: RippleIssuedAmount = None,
     ) -> None:
+        self.check_id = check_id
         self.amount = amount
         self.issued_amount = issued_amount
-        self.destination = destination
-        self.destination_tag = destination_tag
-        self.invoice_id = invoice_id
-        self.send_max = send_max
         self.deliver_min = deliver_min
         self.issued_deliver_min = issued_deliver_min
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('amount', p.UVarintType, 0),
-            2: ('issued_amount', RippleIssuedAmount, 0),
-            3: ('destination', p.UnicodeType, 0),
-            4: ('destination_tag', p.UVarintType, 0),
-            5: ('invoice_id', p.UnicodeType, 0),
-            6: ('send_max', p.UVarintType, 0),
-            7: ('deliver_min', p.UVarintType, 0),
-            8: ('issued_deliver_min', RippleIssuedAmount, 0),
+            1: ('check_id', p.UnicodeType, 0),
+            2: ('amount', p.UVarintType, 0),
+            3: ('issued_amount', RippleIssuedAmount, 0),
+            4: ('deliver_min', p.UVarintType, 0),
+            5: ('issued_deliver_min', RippleIssuedAmount, 0),
         }
