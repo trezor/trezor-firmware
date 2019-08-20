@@ -250,7 +250,7 @@ def input_script_multisig(
 
 def output_script_multisig(pubkeys, m: int, w: bytearray = None) -> bytearray:
     n = len(pubkeys)
-    if n < 1 or n > 15 or m < 1 or m > 15:
+    if n < 1 or n > 15 or m < 1 or m > 15 or m > n:
         raise ScriptsError("Invalid multisig parameters")
     for pubkey in pubkeys:
         if len(pubkey) != 33:
