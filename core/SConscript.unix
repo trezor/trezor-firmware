@@ -9,6 +9,7 @@ SOURCE_MOD = []
 SOURCE_MOD_SECP256K1_ZKP = []
 
 PYOPT = ARGUMENTS.get('PYOPT', '1')
+FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
 
 # modtrezorconfig
 CPPPATH_MOD += [
@@ -137,7 +138,7 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/modtrezorui.c',
     'embed/extmod/modtrezorui/qr-code-generator/qrcodegen.c',
 ]
-if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
+if FROZEN:
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_FROZEN']
 
 # modtrezorutils
@@ -381,7 +382,7 @@ env.Ignore(qstr_collected, qstr_generated)
 # Frozen modules
 #
 
-if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
+if FROZEN:
     if env.get('TREZOR_MODEL') == '1':
         SOURCE_PY_DIR = 'src1/'
     else:
@@ -460,7 +461,7 @@ obj_program.extend(env.Object(source=SOURCE_MOD))
 obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
 obj_program.extend(env.Object(source=SOURCE_UNIX))
-if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
+if FROZEN:
     obj_program.extend(env.Object(source=source_mpyc))
 
 env.Depends(obj_program, qstr_generated)
