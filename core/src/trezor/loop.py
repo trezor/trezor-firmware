@@ -88,7 +88,7 @@ def finalize(task: Task, value: Any) -> None:
 
 def close(task: Task) -> None:
     """
-    Deschedule and unblock a task, close it so it can release all resources, and
+    Unschedule and unblock a task, close it so it can release all resources, and
     call its finalizer.
     """
     for iface in _paused:
@@ -101,7 +101,7 @@ def close(task: Task) -> None:
 def run() -> None:
     """
     Loop forever, stepping through scheduled tasks and awaiting I/O events
-    inbetween.  Use `schedule` first to add a coroutine to the task queue.
+    in between.  Use `schedule` first to add a coroutine to the task queue.
     Tasks yield back to the scheduler on any I/O, usually by calling `await` on
     a `Syscall`.
     """
@@ -150,19 +150,19 @@ def clear() -> None:
 
 def _step(task: Task, value: Any) -> None:
     """
-    Step through the task by sending `value` to `Task`. This can result in either:
+    Step through the task by sending value to it. This can result in either:
     1. The task raises an exception:
         a) StopIteration
-            - The Task is completed and we call finalize to finish it.
+            - The Task is completed and we call finalize() to finish it.
         b) Exception
-            - An error occurred. We still need to call finalize.
+            - An error occurred. We still need to call finalize().
     2. Task does not raise exception and returns either:
         a) Syscall
-            - Syscall.handle is called.
+            - Syscall.handle() is called.
         b) None
             - The Task is simply scheduled to continue.
         c) Something else
-            - That should not happen - error.
+            - This should not happen - error.
     """
     try:
         if isinstance(value, BaseException):

@@ -252,7 +252,7 @@ class Layout(Component):
     async def __iter__(self) -> ResultValue:
         """
         Run the layout and wait until it completes.  Returns the result value.
-        Usually not overriden.
+        Usually not overridden.
         """
         value = None
         try:
@@ -282,7 +282,7 @@ class Layout(Component):
         run this layout.  Tasks are executed in parallel.  When one of them
         returns, the others are closed and `create_tasks` is called again.
 
-        Usually overriden to add another task to the list."""
+        Usually overridden to add another tasks to the list."""
         return self.handle_input(), self.handle_rendering()
 
     def handle_input(self) -> loop.Task:  # type: ignore

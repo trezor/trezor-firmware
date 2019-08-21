@@ -11,8 +11,8 @@ iface_wire = io.WebUSB(
     ep_out=0x01,
 )
 
-# as the iface_vcp inteface needs 3 endpoints, we cannot use it simultaneously
-# with the iface_webauthn inteface.
+# as the iface_vcp interface can have at most 3 endpoints, we cannot use it simultaneously
+# with the iface_webauthn interface.
 if __debug__:
     # interface used for debug messages with trezor wire protocol
     iface_debug = io.WebUSB(
