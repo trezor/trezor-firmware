@@ -98,11 +98,6 @@ LIBDEPS  += $(TOP_DIR)emulator/pizero/libpizero.a
 LDLIBS   += -lpizero -lbcm2835 -pthread
 endif
 
-ifeq ($(HEADLESS),1)
-CFLAGS   += -DHEADLESS=1
-else
-CFLAGS   += -DHEADLESS=0
-
 CFLAGS   += $(shell pkg-config --cflags sdl2)
 LDLIBS   += $(shell pkg-config --libs sdl2)
 
