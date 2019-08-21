@@ -31,6 +31,8 @@ def write_issues(r, csvout):
                     severity = l["name"]
                 elif l["name"][:2] in WEIGHTS:
                     weight = l["name"][1:]
+                    if weight == "1/2":
+                        weight = "0.5"
                 else:
                     labels.append(l["name"])
             if not weight:
