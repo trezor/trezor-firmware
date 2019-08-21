@@ -289,6 +289,7 @@ class Layout(Component):
         """Task that is waiting for the user input."""
         touch = loop.wait(io.TOUCH)
         while True:
+            # Using `yield` instead of `await` to avoid allocations.
             event, x, y = yield touch
             self.dispatch(event, x, y)
             # We dispatch a render event right after the touch.  Quick and dirty
@@ -314,7 +315,7 @@ class Layout(Component):
         while True:
             # Wait for a couple of ms and render the layout again.  Because
             # components use re-paint marking, they do not really draw on the
-            # display needlessly.
+            # display needlessly.  Using `yield` instead of `await` to avoid allocations.
             # TODO: remove the busy loop
             yield sleep
             self.dispatch(RENDER, 0, 0)
