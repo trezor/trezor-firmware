@@ -383,37 +383,32 @@ class ConfirmState:
             workflow.onclose(self.workflow)
             self.workflow = None
 
-    @ui.layout
     async def confirm_layout(self) -> None:
-        workflow.webauthn_stop_signal.reset()
-        await loop.spawn(self.confirm_layout_inner(), workflow.webauthn_stop_signal)
-
-    async def confirm_layout_inner(self) -> None:
-        from trezor.ui.confirm import ConfirmDialog, CONFIRMED
+        from trezor.ui.confirm import Confirm, CONFIRMED
         from trezor.ui.text import Text
 
         app_id = bytes(self.app_id)  # could be bytearray, which doesn't have __hash__
 
         if app_id == _BOGUS_APPID and self.action == _CONFIRM_REGISTER:
-            text = Text("U2F", ui.ICON_WRONG, icon_color=ui.RED)
+            text = Text("U2F", ui.ICON_WRONG, ui.RED)
             text.normal(
                 "Another U2F device", "was used to register", "in this application."
             )
-            text.render()
-            dialog = ConfirmDialog(text)
+            dialog = Confirm(text)
         else:
             content = ConfirmContent(self.action, app_id)
-            dialog = ConfirmDialog(content)
+            dialog = Confirm(content)
 
-        self.confirmed = await dialog == CONFIRMED
+        self.confirmed = await dialog is CONFIRMED
 
 
-class ConfirmContent(ui.Widget):
+class ConfirmContent(ui.Control):
     def __init__(self, action: int, app_id: bytes) -> None:
         self.action = action
         self.app_id = app_id
         self.app_name = None
         self.app_icon = None
+        self.repaint = True
         self.boot()
 
     def boot(self) -> None:
@@ -439,14 +434,18 @@ class ConfirmContent(ui.Widget):
         self.app_name = name
         self.app_icon = icon
 
-    def render(self) -> None:
-        if self.action == _CONFIRM_REGISTER:
-            header = "U2F Register"
-        else:
-            header = "U2F Authenticate"
-        ui.header(header, ui.ICON_DEFAULT, ui.GREEN, ui.BG, ui.GREEN)
-        ui.display.image((ui.WIDTH - 64) // 2, 64, self.app_icon)
-        ui.display.text_center(ui.WIDTH // 2, 168, self.app_name, ui.MONO, ui.FG, ui.BG)
+    def on_render(self) -> None:
+        if self.repaint:
+            if self.action == _CONFIRM_REGISTER:
+                header = "U2F Register"
+            else:
+                header = "U2F Authenticate"
+            ui.header(header, ui.ICON_DEFAULT, ui.GREEN, ui.BG, ui.GREEN)
+            ui.display.image((ui.WIDTH - 64) // 2, 64, self.app_icon)
+            ui.display.text_center(
+                ui.WIDTH // 2, 168, self.app_name, ui.MONO, ui.FG, ui.BG
+            )
+            self.repaint = False
 
 
 def dispatch_cmd(req: Cmd, state: ConfirmState) -> Cmd:
@@ -713,7 +712,7 @@ def msg_authenticate_sign(challenge: bytes, app_id: bytes, privkey: bytes) -> by
     flags = bytes([_AUTH_FLAG_TUP])
 
     # get next counter
-    ctr = storage.next_u2f_counter()
+    ctr = storage.device.next_u2f_counter()
     ctrbuf = ustruct.pack(">L", ctr)
 
     # hash input data together with counter

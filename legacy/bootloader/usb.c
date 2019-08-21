@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
  *
@@ -165,12 +165,12 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         flash_state = STATE_END;
         layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, "Device",
                      "successfully wiped.", NULL, "You may now",
-                     "unplug your TREZOR.", NULL);
+                     "unplug your Trezor.", NULL);
         send_msg_success(dev);
       } else {
         flash_state = STATE_END;
         layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Device wipe",
-                     "aborted.", NULL, "You may now", "unplug your TREZOR.",
+                     "aborted.", NULL, "You may now", "unplug your Trezor.",
                      NULL);
         send_msg_failure(dev);
       }
@@ -209,7 +209,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         flash_state = STATE_END;
         layoutDialog(&bmp_icon_warning, NULL, NULL, NULL,
                      "Firmware installation", "aborted.", NULL, "You may now",
-                     "unplug your TREZOR.", NULL);
+                     "unplug your Trezor.", NULL);
       }
       return;
     }
@@ -380,7 +380,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
     if (hash_check_ok) {
       layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, "New firmware",
                    "successfully installed.", NULL, "You may now",
-                   "unplug your TREZOR.", NULL);
+                   "unplug your Trezor.", NULL);
       send_msg_success(dev);
       shutdown();
     } else {

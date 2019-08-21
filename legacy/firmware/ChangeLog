@@ -1,4 +1,4 @@
-Version 1.8.1 [unreleased]
+Version 1.8.1 [May 2019]
 * Fix fault when using the device with no PIN
 * Fix OMNI transactions parsing
 
@@ -139,7 +139,7 @@ Version 1.3.0 [Dec 2014]
 
 Version 1.2.1 [Jul 2014]
 * Added stack overflow protection
-* Added compatibility with TREZOR Bridge
+* Added compatibility with Trezor Bridge
 
 Version 1.2.0 [Jul 2014]
 * Fix false positives for fee warning

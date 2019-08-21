@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -24,10 +24,10 @@
 
 /// package: trezorcrypto.__init__
 
-/// class ChaCha20Poly1305:
-///     '''
+/// class chacha20poly1305:
+///     """
 ///     ChaCha20Poly1305 context.
-///     '''
+///     """
 typedef struct _mp_obj_ChaCha20Poly1305_t {
   mp_obj_base_t base;
   chacha20poly1305_ctx ctx;
@@ -35,10 +35,10 @@ typedef struct _mp_obj_ChaCha20Poly1305_t {
 } mp_obj_ChaCha20Poly1305_t;
 
 /// def __init__(self, key: bytes, nonce: bytes) -> None:
-///     '''
+///     """
 ///     Initialize the ChaCha20 + Poly1305 context for encryption or decryption
 ///     using a 32 byte key and 12 byte nonce as in the RFC 7539 style.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
     const mp_obj_type_t *type, size_t n_args, size_t n_kw,
     const mp_obj_t *args) {
@@ -61,10 +61,10 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
 }
 
 /// def encrypt(self, data: bytes) -> bytes:
-///     '''
+///     """
 ///     Encrypt data (length of data must be divisible by 64 except for the
 ///     final value).
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_encrypt(mp_obj_t self,
                                                           mp_obj_t data) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
@@ -80,10 +80,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_encrypt_obj,
                                  mod_trezorcrypto_ChaCha20Poly1305_encrypt);
 
 /// def decrypt(self, data: bytes) -> bytes:
-///     '''
+///     """
 ///     Decrypt data (length of data must be divisible by 64 except for the
 ///     final value).
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt(mp_obj_t self,
                                                           mp_obj_t data) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
@@ -99,11 +99,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_decrypt_obj,
                                  mod_trezorcrypto_ChaCha20Poly1305_decrypt);
 
 /// def auth(self, data: bytes) -> None:
-///     '''
+///     """
 ///     Include authenticated data in the Poly1305 MAC using the RFC 7539
 ///     style with 16 byte padding. This must only be called once and prior
 ///     to encryption or decryption.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_auth(mp_obj_t self,
                                                        mp_obj_t data) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
@@ -117,9 +117,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_auth_obj,
                                  mod_trezorcrypto_ChaCha20Poly1305_auth);
 
 /// def finish(self) -> bytes:
-///     '''
+///     """
 ///     Compute RFC 7539-style Poly1305 MAC.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_finish(mp_obj_t self) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
   uint8_t out[16];

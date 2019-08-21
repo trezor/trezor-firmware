@@ -1,0 +1,43 @@
+# simple Travis file to run style-checks until our internal CI can process external PRs
+
+language: python
+dist: xenial
+sudo: false
+python:
+    - "3.6"
+
+cache:
+    directories:
+        - $HOME/.cache/pip
+        - $HOME/.virtualenvs
+
+addons:
+    apt:
+        packages:
+            - graphviz
+
+env:
+    global:
+        PROTOBUF_VERSION=3.4.0
+
+install:
+    - pip install --upgrade pip wheel setuptools
+    - pip install pipenv
+    - pipenv install
+    # make sure pipenv is installable without protobuf - install protoc later
+    - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
+    - unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d protoc
+    - export PATH="$(pwd)/protoc/bin:$PATH"
+
+script:
+    - pipenv run make style_check
+    - pipenv run make defs_check
+    - pipenv run make gen_check
+
+notifications:
+    webhooks:
+        urls:
+            - http://ci-bot.satoshilabs.com:5000/travis
+    on_success: always
+    on_failure: always
+    on_start: always

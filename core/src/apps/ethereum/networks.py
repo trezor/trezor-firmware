@@ -3,30 +3,33 @@
 
 from apps.common import HARDENED
 
+if False:
+    from typing import Iterator, Optional
 
-def shortcut_by_chain_id(chain_id, tx_type=None):
-    if tx_type in [1, 6] and chain_id in [1, 3]:
+
+def shortcut_by_chain_id(chain_id: int, tx_type: int = None) -> str:
+    if tx_type in (1, 6) and chain_id in (1, 3):
         return "WAN"
     else:
         n = by_chain_id(chain_id)
         return n.shortcut if n is not None else "UNKN"
 
 
-def by_chain_id(chain_id):
+def by_chain_id(chain_id: int) -> Optional["NetworkInfo"]:
     for n in NETWORKS:
         if n.chain_id == chain_id:
             return n
     return None
 
 
-def by_slip44(slip44):
+def by_slip44(slip44: int) -> Optional["NetworkInfo"]:
     for n in NETWORKS:
         if n.slip44 == slip44:
             return n
     return None
 
 
-def all_slip44_ids_hardened():
+def all_slip44_ids_hardened() -> Iterator[int]:
     for n in NETWORKS:
         yield n.slip44 | HARDENED
 
@@ -34,7 +37,7 @@ def all_slip44_ids_hardened():
 class NetworkInfo:
     def __init__(
         self, chain_id: int, slip44: int, shortcut: str, name: str, rskip60: bool
-    ):
+    ) -> None:
         self.chain_id = chain_id
         self.slip44 = slip44
         self.shortcut = shortcut
@@ -73,10 +76,24 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=5,
+        slip44=1,
+        shortcut="tGOR",
+        name="Ethereum Testnet Goerli",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=8,
         slip44=108,
         shortcut="UBQ",
         name="Ubiq",
+        rskip60=False,
+    ),
+    NetworkInfo(
+        chain_id=11,
+        slip44=916,
+        shortcut="META",
+        name="Metadium",
         rskip60=False,
     ),
     NetworkInfo(
@@ -143,10 +160,31 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=101,
+        slip44=464,
+        shortcut="ETI",
+        name="EtherInc",
+        rskip60=False,
+    ),
+    NetworkInfo(
+        chain_id=222,
+        slip44=2221,
+        shortcut="ASK",
+        name="Permission",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=237,
         slip44=237,
         shortcut="DXN",
         name="DEXON",
+        rskip60=False,
+    ),
+    NetworkInfo(
+        chain_id=269,
+        slip44=269,
+        shortcut="HPB",
+        name="High Performance Blockchain",
         rskip60=False,
     ),
     NetworkInfo(
@@ -192,6 +230,13 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=33416,
+        slip44=33416,
+        shortcut="TEO",
+        name="Trust ETH reOrigin",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=200625,
         slip44=200625,
         shortcut="AKA",
@@ -224,6 +269,13 @@ NETWORKS = [
         slip44=184,
         shortcut="MUSIC",
         name="Musicoin",
+        rskip60=False,
+    ),
+    NetworkInfo(
+        chain_id=61717561,
+        slip44=61717561,
+        shortcut="AQUA",
+        name="Aquachain",
         rskip60=False,
     ),
     NetworkInfo(

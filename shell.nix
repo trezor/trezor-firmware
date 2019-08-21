@@ -5,6 +5,7 @@ let
     ps.Mako
     ps.Pyro4
     ps.black
+    ps.coverage
     ps.ed25519
     ps.flake8
     ps.graphviz
@@ -30,10 +31,12 @@ in
       gnumake
       graphviz
       openssl
+      pipenv
       pkgconfig
       protobuf
       python2Packages.demjson
       scons
       valgrind
+      zlib
     ];
   }

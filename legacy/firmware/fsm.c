@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
  *
@@ -30,18 +30,14 @@
 #include "curves.h"
 #include "debug.h"
 #include "ecdsa.h"
-#include "ethereum.h"
 #include "fsm.h"
 #include "gettext.h"
 #include "hmac.h"
 #include "layout2.h"
-#include "lisk.h"
 #include "memory.h"
 #include "memzero.h"
 #include "messages.h"
 #include "messages.pb.h"
-#include "nem.h"
-#include "nem2.h"
 #include "oled.h"
 #include "pinmatrix.h"
 #include "protect.h"
@@ -51,12 +47,19 @@
 #include "rng.h"
 #include "secp256k1.h"
 #include "signing.h"
-#include "stellar.h"
 #include "supervise.h"
 #include "transaction.h"
 #include "trezor.h"
 #include "usb.h"
 #include "util.h"
+
+#if !BITCOIN_ONLY
+#include "ethereum.h"
+#include "lisk.h"
+#include "nem.h"
+#include "nem2.h"
+#include "stellar.h"
+#endif
 
 // message methods
 
@@ -254,7 +257,12 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
 #include "fsm_msg_common.h"
 #include "fsm_msg_crypto.h"
 #include "fsm_msg_debug.h"
+
+#if !BITCOIN_ONLY
+
 #include "fsm_msg_ethereum.h"
 #include "fsm_msg_lisk.h"
 #include "fsm_msg_nem.h"
 #include "fsm_msg_stellar.h"
+
+#endif

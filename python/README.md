@@ -2,7 +2,7 @@
 
 [![image](https://travis-ci.org/trezor/python-trezor.svg?branch=master)](https://travis-ci.org/trezor/python-trezor) [![repology](https://repology.org/badge/tiny-repos/python:trezor.svg)](https://repology.org/metapackage/python:trezor) [![image](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
 
-Python library and commandline client for communicating with TREZOR
+Python library and commandline client for communicating with Trezor
 Hardware Wallet
 
 See <https://trezor.io> for more information
@@ -131,7 +131,7 @@ use its capabilities in your application. See examples here in the
 ## PIN Entering
 
 When you are asked for PIN, you have to enter scrambled PIN. Follow the
-numbers shown on TREZOR display and enter the their positions using the
+numbers shown on Trezor display and enter the their positions using the
 numeric keyboard mapping:
 
 |   |   |   |
@@ -140,7 +140,7 @@ numeric keyboard mapping:
 | 4 | 5 | 6 |
 | 1 | 2 | 3 |
 
-Example: your PIN is **1234** and TREZOR is displaying the following:
+Example: your PIN is **1234** and Trezor is displaying the following:
 
 |   |   |   |
 |---|---|---|

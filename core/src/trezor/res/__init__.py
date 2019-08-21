@@ -1,17 +1,17 @@
 try:
     from .resources import resdata
 except ImportError:
-    resdata = None
+    resdata = {}
 
 
-def load(name):
+def load(name: str) -> bytes:
     """
     Loads resource of a given name as bytes.
     """
     return resdata[name]
 
 
-def gettext(message):
+def gettext(message: str) -> str:
     """
     Returns localized string. This function is aliased to _.
     """

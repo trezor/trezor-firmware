@@ -5,8 +5,12 @@ from trezor.utils import HashWriter
 
 from apps.wallet.sign_tx.writers import write_varint
 
+if False:
+    from typing import List
+    from apps.common.coininfo import CoinType
 
-def message_digest(coin, message):
+
+def message_digest(coin: CoinType, message: bytes) -> bytes:
     if coin.decred:
         h = HashWriter(blake256())
     else:
@@ -21,7 +25,7 @@ def message_digest(coin, message):
     return ret
 
 
-def split_message(message):
+def split_message(message: bytes) -> List[str]:
     try:
         m = bytes(message).decode()
         words = m.split(" ")

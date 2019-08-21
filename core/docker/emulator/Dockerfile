@@ -9,7 +9,7 @@ RUN apt-get update
 RUN apt-get install libusb-1.0-0
 
 RUN pip3 install scons trezor
-RUN make build_unix_noui
+RUN make build_unix
 
 ENTRYPOINT ["emulator/run.sh"]
 EXPOSE 21324/udp 21325

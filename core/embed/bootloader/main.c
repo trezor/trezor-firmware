@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -234,6 +234,7 @@ static void check_bootloader_version(void) {
 #endif
 
 int main(void) {
+  drbg_init();
   touch_init();
   touch_power_on();
 

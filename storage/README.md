@@ -2,7 +2,7 @@
 
 This repository contains the implementation of Trezor's internal storage, which is common for both trezor-mcu (Trezor One) and trezor-core (Trezor T). This README also contains a detailed description of the cryptographic design.
 
-All tests are located in the [trezor-storage-test](https://github.com/trezor/trezor-storage-test) repository, which also includes a Python implementation to run tests against this C production version and the Python one.
+All tests are located in the `tests` subdirectory, which also includes a Python implementation to run tests against this C production version and the Python one.
 
 ## Summary
 
@@ -57,7 +57,7 @@ Furthermore, if any entry is overwritten, the old entry is erased, i.e., overwri
 
     `PBKDF2(PRF = HMAC-SHA256, Password = pin, Salt = salt, iterations = 10000, dkLen = 352 bits)`
 
-    The first 256 bits of the output will be used as the key encryption key (KEK) and the remaining 96 bits will be used as the key encryption initialization vector (KEIV). 
+    The first 256 bits of the output will be used as the key encryption key (KEK) and the remaining 96 bits will be used as the key encryption initialization vector (KEIV).
 
     *Note: Since two blocks of output need to be produced in PBKDF2 the total number of iterations is 20000.*
 

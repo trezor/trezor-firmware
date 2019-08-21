@@ -5,12 +5,18 @@ from trezorui import Display
 
 from trezor import io, loop, res, utils, workflow
 
+if False:
+    from typing import Any, Generator, Iterable, Tuple, TypeVar
+
+    Pos = Tuple[int, int]
+    Area = Tuple[int, int, int, int]
+
 display = Display()
 
 # in debug mode, display an indicator in top right corner
 if __debug__:
 
-    def debug_display_refresh():
+    def debug_display_refresh() -> None:
         display.bar(Display.WIDTH - 8, 0, 8, 8, 0xF800)
         display.refresh()
         if utils.SAVE_SCREEN:
@@ -31,6 +37,10 @@ SIZE = Display.FONT_SIZE
 WIDTH = Display.WIDTH
 HEIGHT = Display.HEIGHT
 
+# viewport margins
+VIEWX = const(6)
+VIEWY = const(9)
+
 
 def lerpi(a: int, b: int, t: float) -> int:
     return int(a + t * (b - a))
@@ -48,116 +58,70 @@ def blend(ca: int, cb: int, t: float) -> int:
     )
 
 
-# import style definitions
-from trezor.ui.style import *  # isort:skip
+# import style later to avoid circular dep
+from trezor.ui import style  # isort:skip
+
+# import style definitions into namespace
+from trezor.ui.style import *  # isort:skip # noqa: F401,F403
 
 
-def contains(area: tuple, pos: tuple) -> bool:
-    x, y = pos
-    ax, ay, aw, ah = area
-    return ax <= x <= ax + aw and ay <= y <= ay + ah
+def pulse(delay: int) -> float:
+    # normalize sin from interval -1:1 to 0:1
+    return 0.5 + 0.5 * math.sin(utime.ticks_us() / delay)
 
 
-def rotate(pos: tuple) -> tuple:
-    r = display.orientation()
-    if r == 0:
-        return pos
-    x, y = pos
-    if r == 90:
-        return (y, WIDTH - x)
-    if r == 180:
-        return (WIDTH - x, HEIGHT - y)
-    if r == 270:
-        return (HEIGHT - y, x)
-
-
-def pulse(delay: int):
-    while True:
-        # normalize sin from interval -1:1 to 0:1
-        yield 0.5 + 0.5 * math.sin(utime.ticks_us() / delay)
-
-
-async def alert(count: int = 3):
-    short_sleep = loop.sleep(20000)
-    long_sleep = loop.sleep(80000)
-    current = display.backlight()
-    for i in range(count * 2):
-        if i % 2 == 0:
-            display.backlight(BACKLIGHT_MAX)
-            yield short_sleep
-        else:
-            display.backlight(BACKLIGHT_NORMAL)
-            yield long_sleep
-    display.backlight(current)
-
-
-async def click() -> tuple:
+async def click() -> Pos:
     touch = loop.wait(io.TOUCH)
     while True:
-        ev, *pos = yield touch
+        ev, *pos = await touch
         if ev == io.TOUCH_START:
             break
     while True:
-        ev, *pos = yield touch
+        ev, *pos = await touch
         if ev == io.TOUCH_END:
             break
-    return pos
+    return pos  # type: ignore
 
 
-async def backlight_slide(val: int, delay: int = 35000, step: int = 20):
-    sleep = loop.sleep(delay)
+def backlight_fade(val: int, delay: int = 14000, step: int = 15) -> None:
+    if __debug__:
+        if utils.DISABLE_FADE:
+            display.backlight(val)
+            return
     current = display.backlight()
-    for i in range(current, val, -step if current > val else step):
-        display.backlight(i)
-        yield sleep
-
-
-def backlight_slide_sync(val: int, delay: int = 35000, step: int = 20):
-    current = display.backlight()
-    for i in range(current, val, -step if current > val else step):
+    if current > val:
+        step = -step
+    for i in range(current, val, step):
         display.backlight(i)
         utime.sleep_us(delay)
 
 
-def layout(f):
-    async def inner(*args, **kwargs):
-        await backlight_slide(BACKLIGHT_DIM)
-        slide = backlight_slide(BACKLIGHT_NORMAL)
-        try:
-            layout = f(*args, **kwargs)
-            workflow.onlayoutstart(layout)
-            loop.schedule(slide)
-            display.clear()
-            return await layout
-        finally:
-            loop.close(slide)
-            workflow.onlayoutclose(layout)
-
-    return inner
-
-
-def layout_no_slide(f):
-    async def inner(*args, **kwargs):
-        try:
-            layout = f(*args, **kwargs)
-            workflow.onlayoutstart(layout)
-            return await layout
-        finally:
-            workflow.onlayoutclose(layout)
-
-    return inner
-
-
 def header(
-    title: str, icon: bytes = ICON_DEFAULT, fg: int = FG, bg: int = BG, ifg: int = GREEN
-):
+    title: str,
+    icon: str = style.ICON_DEFAULT,
+    fg: int = style.FG,
+    bg: int = style.BG,
+    ifg: int = style.GREEN,
+) -> None:
     if icon is not None:
         display.icon(14, 15, res.load(icon), ifg, bg)
     display.text(44, 35, title, BOLD, fg, bg)
 
 
-VIEWX = const(6)
-VIEWY = const(9)
+def header_warning(message: str, clear=True) -> None:
+    # TODO: review: is the clear=True really needed?
+    display.bar(0, 0, WIDTH, 30, style.YELLOW)
+    display.text_center(WIDTH // 2, 22, message, BOLD, style.BLACK, style.YELLOW)
+    if clear:
+        display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
+
+
+def header_error(message: str, clear=True) -> None:
+    # TODO: review: as above
+    display.bar(0, 0, WIDTH, 30, style.RED)
+    display.text_center(WIDTH // 2, 22, message, BOLD, style.WHITE, style.RED)
+    if clear:
+        display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
 
 
 def grid(
@@ -171,7 +135,7 @@ def grid(
     cells_x: int = 1,
     cells_y: int = 1,
     spacing: int = 0,
-):
+) -> Area:
     w = (end_x - start_x) // n_x
     h = (end_y - start_y) // n_y
     x = (i % n_x) * w
@@ -179,23 +143,98 @@ def grid(
     return (x + start_x, y + start_y, (w - spacing) * cells_x, (h - spacing) * cells_y)
 
 
-class Widget:
-    tainted = True
+def in_area(area: Area, x: int, y: int) -> bool:
+    ax, ay, aw, ah = area
+    return ax <= x <= ax + aw and ay <= y <= ay + ah
 
-    def taint(self):
-        self.tainted = True
 
-    def render(self):
+# render events
+RENDER = const(-255)
+REPAINT = const(-256)
+
+
+class Control:
+    def dispatch(self, event: int, x: int, y: int) -> None:
+        if event is RENDER:
+            self.on_render()
+        elif event is io.TOUCH_START:
+            self.on_touch_start(x, y)
+        elif event is io.TOUCH_MOVE:
+            self.on_touch_move(x, y)
+        elif event is io.TOUCH_END:
+            self.on_touch_end(x, y)
+        elif event is REPAINT:
+            self.repaint = True
+
+    def on_render(self) -> None:
         pass
 
-    def touch(self, event, pos):
+    def on_touch_start(self, x: int, y: int) -> None:
         pass
 
-    def __iter__(self):
+    def on_touch_move(self, x: int, y: int) -> None:
+        pass
+
+    def on_touch_end(self, x: int, y: int) -> None:
+        pass
+
+
+_RENDER_DELAY_US = const(10000)  # 10 msec
+
+
+class LayoutCancelled(Exception):
+    pass
+
+
+if False:
+    ResultValue = TypeVar("ResultValue")
+
+
+class Result(Exception):
+    def __init__(self, value: ResultValue) -> None:
+        self.value = value
+
+
+class Layout(Control):
+    """
+    """
+
+    async def __iter__(self) -> ResultValue:
+        value = None
+        try:
+            if workflow.layout_signal.task is not None:
+                workflow.layout_signal.send(LayoutCancelled())
+            workflow.onlayoutstart(self)
+            while True:
+                layout_tasks = self.create_tasks()
+                await loop.spawn(workflow.layout_signal, *layout_tasks)
+        except Result as result:
+            value = result.value
+        finally:
+            workflow.onlayoutclose(self)
+        return value
+
+    def __await__(self) -> Generator[Any, Any, ResultValue]:
+        return self.__iter__()  # type: ignore
+
+    def create_tasks(self) -> Iterable[loop.Task]:
+        return self.handle_input(), self.handle_rendering()
+
+    def handle_input(self) -> loop.Task:  # type: ignore
         touch = loop.wait(io.TOUCH)
-        result = None
-        while result is None:
-            self.render()
-            event, *pos = yield touch
-            result = self.touch(event, pos)
-        return result
+        while True:
+            event, x, y = yield touch
+            self.dispatch(event, x, y)
+            self.dispatch(RENDER, 0, 0)
+
+    def handle_rendering(self) -> loop.Task:  # type: ignore
+        backlight_fade(style.BACKLIGHT_DIM)
+        display.clear()
+        self.dispatch(REPAINT, 0, 0)
+        self.dispatch(RENDER, 0, 0)
+        display.refresh()
+        backlight_fade(style.BACKLIGHT_NORMAL)
+        sleep = loop.sleep(_RENDER_DELAY_US)
+        while True:
+            self.dispatch(RENDER, 0, 0)
+            yield sleep

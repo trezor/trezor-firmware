@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -20,8 +20,8 @@
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #if TREZOR_MODEL == T
 
@@ -39,7 +39,7 @@
 #define DISPLAY_RESY 64
 
 #else
-#error Unknown TREZOR Model
+#error Unknown Trezor Model
 #endif
 
 #define FONT_BPP 4

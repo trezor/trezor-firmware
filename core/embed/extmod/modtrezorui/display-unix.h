@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -17,10 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#ifndef TREZOR_EMULATOR_NOUI
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "profile.h"
 
 #define EMULATOR_BORDER 16
 
@@ -46,7 +47,7 @@
 #define TOUCH_OFFSET_Y 92
 
 #else
-#error Unknown TREZOR Model
+#error Unknown Trezor Model
 #endif
 
 static SDL_Renderer *RENDERER;
@@ -90,19 +91,21 @@ void PIXELDATA(uint16_t c) {
     PIXELWINDOW.pos.y++;
   }
 }
-#else
-#define PIXELDATA(X) (void)(X)
-#endif
 
 void display_init(void) {
-#ifndef TREZOR_EMULATOR_NOUI
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("%s\n", SDL_GetError());
     ensure(secfalse, "SDL_Init error");
   }
   atexit(SDL_Quit);
+
+  char *window_title;
+  if (!asprintf(&window_title, "Trezor^emu: %s", profile_name())) {
+    window_title = "Trezor^emu";
+  }
+
   SDL_Window *win =
-      SDL_CreateWindow("TREZOR Emulator", SDL_WINDOWPOS_UNDEFINED,
+      SDL_CreateWindow(window_title, SDL_WINDOWPOS_UNDEFINED,
                        SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT,
 #ifdef TREZOR_EMULATOR_RASPI
                        SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN
@@ -133,12 +136,21 @@ void display_init(void) {
   SDL_PumpEvents();
   SDL_SetWindowSize(win, WINDOW_WIDTH, WINDOW_HEIGHT);
 #endif
-  // TODO: find better way how to embed/distribute background image
 #ifdef TREZOR_EMULATOR_RASPI
-  BACKGROUND = IMG_LoadTexture(RENDERER, "../embed/unix/background_raspi.jpg");
+#include "background_raspi.h"
+  BACKGROUND = IMG_LoadTexture_RW(
+      RENDERER, SDL_RWFromMem(background_raspi_jpg, background_raspi_jpg_len),
+      0);
 #else
-  BACKGROUND = IMG_LoadTexture(
-      RENDERER, "../embed/unix/background_" XSTR(TREZOR_MODEL) ".jpg");
+#if TREZOR_MODEL == T
+#include "background_T.h"
+  BACKGROUND = IMG_LoadTexture_RW(
+      RENDERER, SDL_RWFromMem(background_T_jpg, background_T_jpg_len), 0);
+#elif TREZOR_MODEL == 1
+#include "background_1.h"
+  BACKGROUND = IMG_LoadTexture_RW(
+      RENDERER, SDL_RWFromMem(background_1_jpg, background_1_jpg_len), 0);
+#endif
 #endif
   if (BACKGROUND) {
     SDL_SetTextureBlendMode(BACKGROUND, SDL_BLENDMODE_NONE);
@@ -157,12 +169,10 @@ void display_init(void) {
 #else
   DISPLAY_ORIENTATION = 0;
 #endif
-#endif
 }
 
 static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
                                uint16_t y1) {
-#ifndef TREZOR_EMULATOR_NOUI
   if (!RENDERER) {
     display_init();
   }
@@ -172,11 +182,9 @@ static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
   PIXELWINDOW.end.y = y1;
   PIXELWINDOW.pos.x = x0;
   PIXELWINDOW.pos.y = y0;
-#endif
 }
 
 void display_refresh(void) {
-#ifndef TREZOR_EMULATOR_NOUI
   if (!RENDERER) {
     display_init();
   }
@@ -199,7 +207,6 @@ void display_refresh(void) {
     SDL_RenderCopyEx(RENDERER, TEXTURE, NULL, &r, DISPLAY_ORIENTATION, NULL, 0);
   }
   SDL_RenderPresent(RENDERER);
-#endif
 }
 
 static void display_set_orientation(int degrees) { display_refresh(); }
@@ -207,7 +214,6 @@ static void display_set_orientation(int degrees) { display_refresh(); }
 static void display_set_backlight(int val) { display_refresh(); }
 
 const char *display_save(const char *prefix) {
-#ifndef TREZOR_EMULATOR_NOUI
   if (!RENDERER) {
     display_init();
   }
@@ -234,6 +240,4 @@ const char *display_save(const char *prefix) {
   IMG_SavePNG(crop, filename);
   prev = crop;
   return filename;
-#endif
-  return NULL;
 }

@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
  *
@@ -56,7 +56,7 @@
 #define OLED_RST_PORT GPIOB
 #define OLED_RST_PIN GPIO1  // PB1 | Reset display
 
-/* TREZOR has a display of size OLED_WIDTH x OLED_HEIGHT (128x64).
+/* Trezor has a display of size OLED_WIDTH x OLED_HEIGHT (128x64).
  * The contents of this display are buffered in _oledbuffer.  This is
  * an array of OLED_WIDTH * OLED_HEIGHT/8 bytes.  At byte y*OLED_WIDTH + x
  * it stores the column of pixels from (x,8y) to (x,8y+7); the LSB stores
@@ -72,6 +72,13 @@ static bool is_debug_link = 0;
  */
 #define OLED_OFFSET(x, y) (OLED_BUFSIZE - 1 - (x) - ((y) / 8) * OLED_WIDTH)
 #define OLED_MASK(x, y) (1 << (7 - (y) % 8))
+
+/*
+ * Return the state of the pixel at x, y
+ */
+bool oledGetPixel(int x, int y) {
+  return _oledbuffer[OLED_OFFSET(x, y)] & OLED_MASK(x, y);
+}
 
 /*
  * Draws a white pixel at x, y
@@ -239,11 +246,11 @@ void oledDrawChar(int x, int y, char c, int font) {
     return;
   }
 
-  int zoom = (font & FONT_DOUBLE ? 2 : 1);
+  int zoom = (font & FONT_DOUBLE) ? 2 : 1;
   int char_width = fontCharWidth(font & 0x7f, c);
   const uint8_t *char_data = fontCharData(font & 0x7f, c);
 
-  if (x <= -char_width * zoom) {
+  if (x <= -char_width) {
     return;
   }
 
@@ -253,7 +260,7 @@ void oledDrawChar(int x, int y, char c, int font) {
         if (zoom <= 1) {
           oledDrawPixel(x + xo, y + yo);
         } else {
-          oledBox(x + xo * zoom, y + yo * zoom, x + (xo + 1) * zoom - 1,
+          oledBox(x + xo, y + yo * zoom, x + (xo + 1) - 1,
                   y + (yo + 1) * zoom - 1, true);
         }
       }
@@ -273,12 +280,12 @@ char oledConvertChar(const char c) {
 
 int oledStringWidth(const char *text, int font) {
   if (!text) return 0;
-  int size = (font & FONT_DOUBLE ? 2 : 1);
+  int space = (font & FONT_DOUBLE) ? 2 : 1;
   int l = 0;
   for (; *text; text++) {
     char c = oledConvertChar(*text);
     if (c) {
-      l += size * (fontCharWidth(font & 0x7f, c) + 1);
+      l += fontCharWidth(font & 0x7f, c) + space;
     }
   }
   return l;
@@ -287,12 +294,12 @@ int oledStringWidth(const char *text, int font) {
 void oledDrawString(int x, int y, const char *text, int font) {
   if (!text) return;
   int l = 0;
-  int size = (font & FONT_DOUBLE ? 2 : 1);
+  int space = (font & FONT_DOUBLE) ? 2 : 1;
   for (; *text; text++) {
     char c = oledConvertChar(*text);
     if (c) {
       oledDrawChar(x + l, y, c, font);
-      l += size * (fontCharWidth(font & 0x7f, c) + 1);
+      l += fontCharWidth(font & 0x7f, c) + space;
     }
   }
 }
@@ -429,5 +436,28 @@ void oledSwipeRight(void) {
       _oledbuffer[j * OLED_WIDTH + OLED_WIDTH - 4] = 0;
     }
     oledRefresh();
+  }
+}
+
+/*
+ * Mitigate SCA on lines y1-y2 by setting at least width pixels white
+ */
+void oledSCA(int y1, int y2, int width) {
+  y1 = MAX(y1, 0);
+  y2 = MIN(y2, OLED_HEIGHT - 1);
+  for (int y = y1; y <= y2; y++) {
+    int pix = 0;
+    for (int x = 0; x < OLED_WIDTH; x++) {
+      pix += oledGetPixel(x, y);
+    }
+    if (width > pix) {
+      pix = width - pix;
+      for (int x = 0; x < pix / 2; x++) {
+        oledDrawPixel(x, y);
+      }
+      for (int x = OLED_WIDTH - ((pix + 1) / 2); x < OLED_WIDTH; x++) {
+        oledDrawPixel(x, y);
+      }
+    }
   }
 }

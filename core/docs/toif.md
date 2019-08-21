@@ -1,4 +1,4 @@
-# TREZOR Optimized Image Format
+# Trezor Optimized Image Format
 
 All multibyte integer values are little endian!
 
@@ -17,8 +17,8 @@ All multibyte integer values are little endian!
 
 TOI currently supports 2 variants:
 
-* `f`: full-color, file extension `.toif`
-* `g`: gray-scale, file extension `.toig`
+* `f`: full-color
+* `g`: gray-scale
 
 ### Full-color
 
@@ -55,5 +55,4 @@ zdata = zdata[2:-4] # strip header and checksum
 
 ## Tools
 
-* [png2toi](../tools/png2toi) - tool for converting PNG into TOI format
-* [toi2png](../tools/toi2png) - tool for converting TOI into PNG
+* [toif_convert](../tools/toif_convert) - tool for converting PNGs into TOI format and back

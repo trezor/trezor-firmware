@@ -4,6 +4,12 @@ import protobuf as p
 
 from .MoneroAccountPublicAddress import MoneroAccountPublicAddress
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class MoneroTransactionDestinationEntry(p.MessageType):
 
@@ -22,7 +28,7 @@ class MoneroTransactionDestinationEntry(p.MessageType):
         self.is_integrated = is_integrated
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('amount', p.UVarintType, 0),
             2: ('addr', MoneroAccountPublicAddress, 0),

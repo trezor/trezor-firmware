@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2017 Saleem Rashid <trezor@saleemrashid.com>
  *
@@ -19,14 +19,11 @@
 
 #include "buttons.h"
 
-#if !HEADLESS
 #include <SDL.h>
-#endif
 
 uint16_t buttonRead(void) {
   uint16_t state = 0;
 
-#if !HEADLESS
   const uint8_t *scancodes = SDL_GetKeyboardState(NULL);
   if (scancodes[SDL_SCANCODE_LEFT]) {
     state |= BTN_PIN_NO;
@@ -34,7 +31,6 @@ uint16_t buttonRead(void) {
   if (scancodes[SDL_SCANCODE_RIGHT]) {
     state |= BTN_PIN_YES;
   }
-#endif
 
   return ~state;
 }

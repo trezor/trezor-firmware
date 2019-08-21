@@ -5,9 +5,10 @@ import os
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
-SOURCE_MOD_SECP256K1_ZKP = []
 SOURCE_MOD = []
-LIBS_MOD = []
+SOURCE_MOD_SECP256K1_ZKP = []
+
+PYOPT = '1'
 
 # modtrezorconfig
 CPPPATH_MOD += [
@@ -33,6 +34,7 @@ CPPDEFINES_MOD += [
     ('USE_MONERO', '1'),
     ('USE_CARDANO', '1'),
     ('USE_NEM', '1'),
+    ('USE_EOS', '1'),
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
@@ -72,20 +74,24 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/groestl.c',
     'vendor/trezor-crypto/hasher.c',
     'vendor/trezor-crypto/hmac.c',
+    'vendor/trezor-crypto/hmac_drbg.c',
     'vendor/trezor-crypto/memzero.c',
+    'vendor/trezor-crypto/nem.c',
     'vendor/trezor-crypto/nist256p1.c',
     'vendor/trezor-crypto/pbkdf2.c',
     'vendor/trezor-crypto/rand.c',
     'vendor/trezor-crypto/ripemd160.c',
+    'vendor/trezor-crypto/rfc6979.c',
     'vendor/trezor-crypto/secp256k1.c',
     'vendor/trezor-crypto/sha2.c',
     'vendor/trezor-crypto/sha3.c',
-    'vendor/trezor-crypto/nem.c',
+    'vendor/trezor-crypto/shamir.c',
+    'vendor/trezor-crypto/slip39.c',
 ]
 
 # libsecp256k1-zkp
 CPPPATH_MOD += [
-    'vendor/secp256k1-zkp/',
+    'vendor/secp256k1-zkp',
     'vendor/secp256k1-zkp/src',
     'vendor/secp256k1-zkp/include',
 ]
@@ -131,10 +137,8 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/modtrezorui.c',
     'embed/extmod/modtrezorui/qr-code-generator/qrcodegen.c',
 ]
-if ARGUMENTS.get('TREZOR_EMULATOR_NOUI', 0):
-    CPPDEFINES_MOD += ['TREZOR_EMULATOR_NOUI']
-if ARGUMENTS.get('TREZOR_EMULATOR_RASPI', 0):
-    CPPDEFINES_MOD += ['TREZOR_EMULATOR_RASPI']
+if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
+    CPPDEFINES_MOD += ['TREZOR_EMULATOR_FROZEN']
 
 # modtrezorutils
 SOURCE_MOD += [
@@ -287,7 +291,7 @@ SOURCE_UNIX = [
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX
 
-env = Environment(ENV=os.environ, CFLAGS=ARGUMENTS.get('CFLAGS', ''))
+env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT))
 
 env.Tool('micropython')
 
@@ -319,7 +323,7 @@ env.Replace(
     '-std=gnu99 -Wall -Werror -Wuninitialized '
     '-fdata-sections -ffunction-sections ' + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LIBS=['m'] + LIBS_MOD,
+    LIBS=['m'],
     CPPPATH=[
         '.',
         'embed/unix',
@@ -336,15 +340,15 @@ env.Replace(
     ] + CPPDEFINES_MOD,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
-if not ARGUMENTS.get('TREZOR_EMULATOR_NOUI', 0):
-    env.ParseConfig('pkg-config --cflags --libs sdl2 SDL2_image || :')
+env.ParseConfig('pkg-config --cflags --libs sdl2 SDL2_image')
 
 env.Replace(
     PYTHON='python',
     MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
-    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross', )
+    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross -O' + PYOPT
+)
 
 #
 # Micropython version
@@ -374,6 +378,30 @@ qstr_generated = env.GenerateQstrDefs(
 env.Ignore(qstr_collected, qstr_generated)
 
 #
+# Frozen modules
+#
+
+if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
+    if env.get('TREZOR_MODEL') == '1':
+        SOURCE_PY_DIR = 'src1/'
+    else:
+        SOURCE_PY_DIR = 'src/'
+
+    # TODO: recursive Glob
+    SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*/*/*.py'))
+
+    source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR)
+
+    source_mpyc = env.FrozenCFile(
+        target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)
+
+    env.Depends(source_mpyc, qstr_generated)
+
+#
 # static secp256-zkp ecmult context
 #
 
@@ -399,10 +427,12 @@ secp256k1_zkp_ecmult_static_context = host_env.Command(
 #
 
 obj_program = []
-obj_program += env.Object(source=SOURCE_MOD)
-obj_program += env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function')
-obj_program += env.Object(source=SOURCE_MICROPYTHON)
-obj_program += env.Object(source=SOURCE_UNIX)
+obj_program.extend(env.Object(source=SOURCE_MOD))
+obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
+obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
+obj_program.extend(env.Object(source=SOURCE_UNIX))
+if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
+    obj_program.extend(env.Object(source=source_mpyc))
 
 env.Depends(obj_program, qstr_generated)
 env.Depends(obj_program, secp256k1_zkp_ecmult_static_context)

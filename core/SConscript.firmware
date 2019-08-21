@@ -35,6 +35,7 @@ CPPDEFINES_MOD += [
     ('USE_MONERO', '1'),
     ('USE_CARDANO', '1'),
     ('USE_NEM', '1'),
+    ('USE_EOS', '1'),
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
@@ -75,15 +76,19 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/groestl.c',
     'vendor/trezor-crypto/hasher.c',
     'vendor/trezor-crypto/hmac.c',
+    'vendor/trezor-crypto/hmac_drbg.c',
     'vendor/trezor-crypto/memzero.c',
     'vendor/trezor-crypto/nem.c',
     'vendor/trezor-crypto/nist256p1.c',
     'vendor/trezor-crypto/pbkdf2.c',
     'vendor/trezor-crypto/rand.c',
     'vendor/trezor-crypto/ripemd160.c',
+    'vendor/trezor-crypto/rfc6979.c',
     'vendor/trezor-crypto/secp256k1.c',
     'vendor/trezor-crypto/sha2.c',
     'vendor/trezor-crypto/sha3.c',
+    'vendor/trezor-crypto/shamir.c',
+    'vendor/trezor-crypto/slip39.c',
 ]
 
 # libsecp256k1-zkp
@@ -98,6 +103,7 @@ CPPDEFINES_MOD += [
     'USE_NUM_NONE',
     'USE_FIELD_INV_BUILTIN',
     'USE_SCALAR_INV_BUILTIN',
+    'USE_EXTERNAL_ASM',
     'USE_FIELD_10X26',
     'USE_SCALAR_8X32',
     'USE_ECMULT_STATIC_PRECOMPUTATION',
@@ -110,6 +116,7 @@ CPPDEFINES_MOD += [
 ]
 SOURCE_MOD_SECP256K1_ZKP += [
     'vendor/secp256k1-zkp/src/secp256k1.c',
+    'vendor/secp256k1-zkp/src/asm/field_10x26_arm.s'
 ]
 
 # modtrezorio
@@ -411,24 +418,25 @@ env.Ignore(qstr_collected, qstr_generated)
 # Frozen modules
 #
 
-if env.get('TREZOR_MODEL') == '1':
-    SOURCE_PY_DIR = 'src1/'
-else:
-    SOURCE_PY_DIR = 'src/'
+if True:
+    if env.get('TREZOR_MODEL') == '1':
+        SOURCE_PY_DIR = 'src1/'
+    else:
+        SOURCE_PY_DIR = 'src/'
 
-# TODO: recursive Glob
-SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
-SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*.py'))
-SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*.py'))
-SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*/*.py'))
-SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*/*/*.py'))
+    # TODO: recursive Glob
+    SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*/*/*.py'))
 
-source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR)
+    source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR)
 
-source_mpyc = env.FrozenCFile(
-    target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)
+    source_mpyc = env.FrozenCFile(
+        target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)
 
-env.Depends(source_mpyc, qstr_generated)
+    env.Depends(source_mpyc, qstr_generated)
 
 #
 # static secp256-zkp ecmult context
@@ -463,7 +471,8 @@ obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON_SPEED, COPT='-O3'))
 obj_program.extend(env.Object(source=SOURCE_STMHAL))
 obj_program.extend(env.Object(source=SOURCE_TREZORHAL))
-obj_program.extend(env.Object(source=source_mpyc))
+if True:
+    obj_program.extend(env.Object(source=source_mpyc))
 
 VENDORHEADER = 'embed/vendorheader/vendorheader_' + ('unsafe_signed_prod.bin' if ARGUMENTS.get('PRODUCTION', '0') == '0' else 'satoshilabs_signed_prod.bin')
 

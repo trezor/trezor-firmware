@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2018 SatoshiLabs and contributors
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -110,10 +110,17 @@ class TestMsgResetDevice(TrezorTest):
             )
         )
 
+        # Do you want ... ?
         assert isinstance(ret, proto.ButtonRequest)
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
+        # Entropy screen #1
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Entropy screen #2
         assert isinstance(ret, proto.ButtonRequest)
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
@@ -191,10 +198,17 @@ class TestMsgResetDevice(TrezorTest):
             )
         )
 
+        # Do you want ... ?
         assert isinstance(ret, proto.ButtonRequest)
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())
 
+        # Entropy screen #1
+        assert isinstance(ret, proto.ButtonRequest)
+        self.client.debug.press_yes()
+        ret = self.client.call_raw(proto.ButtonAck())
+
+        # Entropy screen #2
         assert isinstance(ret, proto.ButtonRequest)
         self.client.debug.press_yes()
         ret = self.client.call_raw(proto.ButtonAck())

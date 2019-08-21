@@ -3,7 +3,7 @@
 LICENSE_NOTICE = """\
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2018 SatoshiLabs and contributors
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -19,19 +19,35 @@ LICENSE_NOTICE = """\
 
 """
 
+SHEBANG_HEADER = """\
+#!/usr/bin/env python3
+
+"""
+
 EXCLUDE_FILES = ["trezorlib/__init__.py", "trezorlib/_ed25519.py"]
 
 
 def one_file(fp):
     lines = list(fp)
     new = lines[:]
+    shebang_header = False
+
+    if new[0].startswith("#!"):
+        shebang_header = True
+        new.pop(0)
+        if not new[0].strip():
+            new.pop(0)
+
     while new and new[0][0] == "#":
         new.pop(0)
 
     while new and new[0].strip() == "":
         new.pop(0)
 
-    data = "".join([LICENSE_NOTICE] + new)
+    new.insert(0, LICENSE_NOTICE)
+    if shebang_header:
+        new.insert(0, SHEBANG_HEADER)
+    data = "".join(new)
 
     fp.seek(0)
     fp.write(data)
@@ -42,6 +58,8 @@ import glob
 import os
 
 for fn in glob.glob("trezorlib/**/*.py", recursive=True):
+    if fn.startswith("trezorlib/messages/"):
+        continue
     if fn in EXCLUDE_FILES:
         continue
     statinfo = os.stat(fn)

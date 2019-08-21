@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -83,7 +83,7 @@ static void progress_callback(int pos, int len) { display_printf("."); }
 static secbool copy_sdcard(void) {
   display_backlight(255);
 
-  display_printf("TREZOR Boardloader\n");
+  display_printf("Trezor Boardloader\n");
   display_printf("==================\n\n");
 
   display_printf("bootloader found on the SD card\n\n");

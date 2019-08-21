@@ -77,7 +77,7 @@ def _timebounds(w: bytearray, start: int, end: int):
 async def _operations(ctx, w: bytearray, num_operations: int):
     writers.write_uint32(w, num_operations)
     for i in range(num_operations):
-        op = await ctx.call(StellarTxOpRequest(), *consts.op_wire_types)
+        op = await ctx.call_any(StellarTxOpRequest(), *consts.op_wire_types)
         await process_operation(ctx, w, op)
 
 

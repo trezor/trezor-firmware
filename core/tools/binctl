@@ -60,13 +60,13 @@ class BinImage(object):
 
     def print(self):
         if self.magic == b"TRZF":
-            print("TREZOR Firmware Image")
+            print("Trezor Firmware Image")
             total_len = self.vhdrlen + self.hdrlen + self.codelen
         elif self.magic == b"TRZB":
-            print("TREZOR Bootloader Image")
+            print("Trezor Bootloader Image")
             total_len = self.hdrlen + self.codelen
         else:
-            print("TREZOR Unknown Image")
+            print("Trezor Unknown Image")
         print("  * magic   :", self.magic.decode())
         print("  * hdrlen  :", self.hdrlen)
         print("  * expiry  :", self.expiry)
@@ -230,7 +230,7 @@ class VendorHeader(object):
         assert len(data) % 512 == 0
 
     def print(self):
-        print("TREZOR Vendor Header")
+        print("Trezor Vendor Header")
         print("  * magic   :", self.magic.decode())
         print("  * hdrlen  :", self.hdrlen)
         print("  * expiry  :", self.expiry)

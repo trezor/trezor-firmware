@@ -6,23 +6,33 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 _At the moment, the project does **not** adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
-## [0.11.3] - Unreleased
+## [0.11.3] - 2019-05-29
 
-[0.11.3]: https://github.com/trezor/python-trezor/compare/v0.11.2...master
+[0.11.3]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.2...python/v0.11.3
 
 ### Added
 
 - trezorctl can now send ERC20 tokens
 - trezorctl usb-reset will perform USB reset on devices in inconsistent state
 - set-display-rotation command added for TT firmware 2.1.1
+- EOS support [f#87]
+- Tezos: add voting support [f#41]
+- `dict_to_proto` now allows enum values as strings
 
 ### Changed
 
 - Minimum firmware versions bumped to 1.8.0 and 2.1.0
+- Cleaner errors when UI object is not supplied
+- Generated files are now part of the source tarball again. That means that `protoc` is no longer required.
 
 ### Fixed
 
 - Ethereum commands in trezorctl now work
+- Memory debugging tools now work again
+
+### Removed
+
+- Tron and Ontology support removed until implementations exist in Trezor firmware
 
 ## [0.11.2] - 2019-02-27
 
@@ -169,7 +179,7 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](http://
 - protobuf messages are now logged through Python's `logging` facility instead of custom printing through `VerboseWireMixin`
 - `client.format_protobuf` is moved to `protobuf.format_message`
 - `tools.Hash` is renamed to `tools.btc_hash`
-- `coins` module `coins_txapi` is renamed to `tx_api`.  
+- `coins` module `coins_txapi` is renamed to `tx_api`.
   `coins_slip44` is renamed to `slip44`.
 - build: stricter flake8 checks
 - build: split requirements to separate files
@@ -265,3 +275,5 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](http://
 [#349]: https://github.com/trezor/python-trezor/issues/349
 [#351]: https://github.com/trezor/python-trezor/issues/351
 [#352]: https://github.com/trezor/python-trezor/issues/352
+[f#41]: https://github.com/trezor/trezor-firmware/issues/41
+[f#87]: https://github.com/trezor/trezor-firmware/issues/87

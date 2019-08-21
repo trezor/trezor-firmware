@@ -30,4 +30,4 @@ async def get_address(ctx, msg, keychain):
             if await show_qr(ctx, address, desc=desc):
                 break
 
-    return EthereumAddress(address)
+    return EthereumAddress(address=address)

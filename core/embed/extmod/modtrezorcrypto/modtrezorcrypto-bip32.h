@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -30,9 +30,9 @@
 /// package: trezorcrypto.bip32
 
 /// class HDNode:
-///     '''
+///     """
 ///     BIP0032 HD node structure.
-///     '''
+///     """
 typedef struct _mp_obj_HDNode_t {
   mp_obj_base_t base;
   uint32_t fingerprint;
@@ -44,16 +44,18 @@ STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type;
 #define XPUB_MAXLEN 128
 #define ADDRESS_MAXLEN 36
 
-/// def __init__(self,
-///              depth: int,
-///              fingerprint: int,
-///              child_num: int,
-///              chain_code: bytes,
-///              private_key: bytes = None,
-///              public_key: bytes = None,
-///              curve_name: str = None) -> None:
-///     '''
-///     '''
+/// def __init__(
+///     self,
+///     depth: int,
+///     fingerprint: int,
+///     child_num: int,
+///     chain_code: bytes,
+///     private_key: bytes = None,
+///     public_key: bytes = None,
+///     curve_name: str = None,
+/// ) -> None:
+///     """
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_make_new(const mp_obj_type_t *type,
                                                  size_t n_args, size_t n_kw,
                                                  const mp_obj_t *args) {
@@ -144,10 +146,10 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_make_new(const mp_obj_type_t *type,
   return MP_OBJ_FROM_PTR(o);
 }
 
-/// def derive(self, index: int, public: bool=False) -> None:
-///     '''
+/// def derive(self, index: int, public: bool = False) -> None:
+///     """
 ///     Derive a BIP0032 child node in place.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_derive(size_t n_args,
                                                const mp_obj_t *args) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(args[0]);
@@ -183,9 +185,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_HDNode_derive_obj,
                                            mod_trezorcrypto_HDNode_derive);
 
 /// def derive_cardano(self, index: int) -> None:
-///     '''
+///     """
 ///     Derive a BIP0032 child node in place using Cardano algorithm.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_derive_cardano(mp_obj_t self,
                                                        mp_obj_t index) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
@@ -216,10 +218,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_derive_cardano_obj,
                                  mod_trezorcrypto_HDNode_derive_cardano);
 
 /// def derive_path(self, path: List[int]) -> None:
-///     '''
+///     """
 ///     Go through a list of indexes and iteratively derive a child node in
 ///     place.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_derive_path(mp_obj_t self,
                                                     mp_obj_t path) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
@@ -272,9 +274,9 @@ STATIC mp_obj_t serialize_public_private(mp_obj_t self, bool use_public,
 }
 
 /// def serialize_public(self, version: int) -> str:
-///     '''
+///     """
 ///     Serialize the public info from HD node to base58 string.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_serialize_public(mp_obj_t self,
                                                          mp_obj_t version) {
   uint32_t ver = trezor_obj_get_uint(version);
@@ -284,9 +286,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_serialize_public_obj,
                                  mod_trezorcrypto_HDNode_serialize_public);
 
 /// def serialize_private(self, version: int) -> str:
-///     '''
+///     """
 ///     Serialize the private info HD node to base58 string.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_serialize_private(mp_obj_t self,
                                                           mp_obj_t version) {
   uint32_t ver = trezor_obj_get_uint(version);
@@ -296,9 +298,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_serialize_private_obj,
                                  mod_trezorcrypto_HDNode_serialize_private);
 
 /// def clone(self) -> HDNode:
-///     '''
+///     """
 ///     Returns a copy of the HD node.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_clone(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
   mp_obj_HDNode_t *copy = m_new_obj(mp_obj_HDNode_t);
@@ -311,9 +313,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_clone_obj,
                                  mod_trezorcrypto_HDNode_clone);
 
 /// def depth(self) -> int:
-///     '''
+///     """
 ///     Returns a depth of the HD node.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_depth(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
   return mp_obj_new_int_from_uint(o->hdnode.depth);
@@ -322,9 +324,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_depth_obj,
                                  mod_trezorcrypto_HDNode_depth);
 
 /// def fingerprint(self) -> int:
-///     '''
+///     """
 ///     Returns a fingerprint of the HD node (hash of the parent public key).
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_fingerprint(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
   return mp_obj_new_int_from_uint(o->fingerprint);
@@ -333,9 +335,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_fingerprint_obj,
                                  mod_trezorcrypto_HDNode_fingerprint);
 
 /// def child_num(self) -> int:
-///     '''
+///     """
 ///     Returns a child index of the HD node.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_child_num(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
   return mp_obj_new_int_from_uint(o->hdnode.child_num);
@@ -344,9 +346,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_child_num_obj,
                                  mod_trezorcrypto_HDNode_child_num);
 
 /// def chain_code(self) -> bytes:
-///     '''
+///     """
 ///     Returns a chain code of the HD node.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_chain_code(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
   return mp_obj_new_bytes(o->hdnode.chain_code, sizeof(o->hdnode.chain_code));
@@ -355,9 +357,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_chain_code_obj,
                                  mod_trezorcrypto_HDNode_chain_code);
 
 /// def private_key(self) -> bytes:
-///     '''
+///     """
 ///     Returns a private key of the HD node.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_private_key(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
   return mp_obj_new_bytes(o->hdnode.private_key, sizeof(o->hdnode.private_key));
@@ -366,9 +368,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_private_key_obj,
                                  mod_trezorcrypto_HDNode_private_key);
 
 /// def private_key_ext(self) -> bytes:
-///     '''
+///     """
 ///     Returns a private key extension of the HD node.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_private_key_ext(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
   return mp_obj_new_bytes(o->hdnode.private_key_extension,
@@ -378,9 +380,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_private_key_ext_obj,
                                  mod_trezorcrypto_HDNode_private_key_ext);
 
 /// def public_key(self) -> bytes:
-///     '''
+///     """
 ///     Returns a public key of the HD node.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_public_key(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
   hdnode_fill_public_key(&o->hdnode);
@@ -390,9 +392,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_public_key_obj,
                                  mod_trezorcrypto_HDNode_public_key);
 
 /// def address(self, version: int) -> str:
-///     '''
+///     """
 ///     Compute a base58-encoded address string from the HD node.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_address(mp_obj_t self,
                                                 mp_obj_t version) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
@@ -408,9 +410,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_address_obj,
                                  mod_trezorcrypto_HDNode_address);
 
 /// def nem_address(self, network: int) -> str:
-///     '''
+///     """
 ///     Compute a NEM address string from the HD node.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_nem_address(mp_obj_t self,
                                                     mp_obj_t network) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
@@ -427,11 +429,12 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_nem_address(mp_obj_t self,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_nem_address_obj,
                                  mod_trezorcrypto_HDNode_nem_address);
 
-/// def nem_encrypt(self, transfer_public_key: bytes, iv: bytes, salt: bytes,
-/// payload: bytes) -> bytes:
-///     '''
+/// def nem_encrypt(
+///     self, transfer_public_key: bytes, iv: bytes, salt: bytes, payload: bytes
+/// ) -> bytes:
+///     """
 ///     Encrypts payload using the transfer's public key
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_nem_encrypt(size_t n_args,
                                                     const mp_obj_t *args) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(args[0]);
@@ -472,9 +475,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_HDNode_nem_encrypt);
 
 /// def ethereum_pubkeyhash(self) -> bytes:
-///     '''
+///     """
 ///     Compute an Ethereum pubkeyhash (aka address) from the HD node.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_ethereum_pubkeyhash(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
 
@@ -486,6 +489,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(
     mod_trezorcrypto_HDNode_ethereum_pubkeyhash_obj,
     mod_trezorcrypto_HDNode_ethereum_pubkeyhash);
 
+/// def __del__(self) -> None:
+///     """
+///     Cleans up sensitive memory.
+///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode___del__(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
   o->fingerprint = 0;
@@ -544,11 +551,14 @@ STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type = {
     .locals_dict = (void *)&mod_trezorcrypto_HDNode_locals_dict,
 };
 
-/// def deserialize(self, value: str, version_public: int, version_private: int)
-/// -> HDNode:
-///     '''
+/// mock:global
+
+/// def deserialize(
+///     value: str, version_public: int, version_private: int
+/// ) -> HDNode:
+///     """
 ///     Construct a BIP0032 HD node from a base58-serialized value.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_bip32_deserialize(mp_obj_t value,
                                                    mp_obj_t version_public,
                                                    mp_obj_t version_private) {
@@ -576,9 +586,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_bip32_deserialize_obj,
                                  mod_trezorcrypto_bip32_deserialize);
 
 /// def from_seed(seed: bytes, curve_name: str) -> HDNode:
-///     '''
+///     """
 ///     Construct a BIP0032 HD node from a BIP0039 seed value.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed,
                                                  mp_obj_t curve_name) {
   mp_buffer_info_t seedb;
@@ -591,10 +601,19 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed,
   if (curveb.len == 0) {
     mp_raise_ValueError("Invalid curve name");
   }
+
   HDNode hdnode;
-  if (!hdnode_from_seed(seedb.buf, seedb.len, curveb.buf, &hdnode)) {
+  int res = 0;
+  if (strcmp(curveb.buf, ED25519_CARDANO_NAME) != 0) {
+    res = hdnode_from_seed(seedb.buf, seedb.len, curveb.buf, &hdnode);
+  } else {
+    res = hdnode_from_seed_cardano(seedb.buf, seedb.len, &hdnode);
+  }
+
+  if (!res) {
     mp_raise_ValueError("Failed to derive the root node");
   }
+
   mp_obj_HDNode_t *o = m_new_obj(mp_obj_HDNode_t);
   o->base.type = &mod_trezorcrypto_HDNode_type;
   o->hdnode = hdnode;
@@ -605,9 +624,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_seed_obj,
                                  mod_trezorcrypto_bip32_from_seed);
 
 /// def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> bytes:
-///     '''
-///     Convert mnemonic to hdnode
-///     '''
+///     """
+///     Construct a HD node from a BIP-0039 mnemonic using the Icarus derivation
+///     scheme, aka v2 derivation scheme.
+///     """
 STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(
     mp_obj_t mnemonic, mp_obj_t passphrase) {
   mp_buffer_info_t mnemo, phrase;
@@ -624,9 +644,9 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(
     mp_raise_ValueError("Invalid mnemonic");
   }
 
-  const int res =
-      hdnode_from_seed_cardano((const uint8_t *)ppassphrase, phrase.len,
-                               entropy, entropy_len / 8, &hdnode);
+  const int res = hdnode_from_entropy_cardano_icarus(
+      (const uint8_t *)ppassphrase, phrase.len, entropy, entropy_len / 8,
+      &hdnode);
 
   if (!res) {
     mp_raise_ValueError(

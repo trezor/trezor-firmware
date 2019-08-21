@@ -9,7 +9,8 @@ from trezor.messages.MoneroLiveRefreshStepAck import MoneroLiveRefreshStepAck
 from trezor.messages.MoneroLiveRefreshStepRequest import MoneroLiveRefreshStepRequest
 
 from apps.common import paths
-from apps.monero import CURVE, misc
+from apps.common.cache import get_passphrase_fprint
+from apps.monero import CURVE, live_refresh_token, misc
 from apps.monero.layout import confirms
 from apps.monero.xmr import crypto, key_image, monero
 from apps.monero.xmr.crypto import chacha_poly
@@ -20,7 +21,7 @@ async def live_refresh(ctx, msg: MoneroLiveRefreshStartRequest, keychain):
 
     res = await _init_step(state, ctx, msg, keychain)
     while True:
-        msg = await ctx.call(
+        msg = await ctx.call_any(
             res,
             MessageType.MoneroLiveRefreshStepRequest,
             MessageType.MoneroLiveRefreshFinalRequest,
@@ -48,7 +49,10 @@ async def _init_step(
         ctx, misc.validate_full_path, keychain, msg.address_n, CURVE
     )
 
-    await confirms.require_confirm_live_refresh(ctx)
+    passphrase_fprint = get_passphrase_fprint()
+    if live_refresh_token() != passphrase_fprint:
+        await confirms.require_confirm_live_refresh(ctx)
+        live_refresh_token(passphrase_fprint)
 
     s.creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
 

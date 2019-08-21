@@ -118,7 +118,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_1) {
       "junk",
       seed);
   ck_assert_int_eq(seed_len, 132);
-  hdnode_from_seed_cardano((const uint8_t *)"", 0, seed, seed_len / 8, &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, seed, seed_len / 8,
+                                     &node);
 
   ck_assert_mem_eq(
       node.chain_code,
@@ -153,7 +154,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_2) {
       "junk",
       seed);
   ck_assert_int_eq(seed_len, 132);
-  hdnode_from_seed_cardano((const uint8_t *)"", 0, seed, seed_len / 8, &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, seed, seed_len / 8,
+                                     &node);
 
   hdnode_private_ckd_cardano(&node, 0x80000000);
 
@@ -190,7 +192,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_3) {
       "junk",
       seed);
   ck_assert_int_eq(seed_len, 132);
-  hdnode_from_seed_cardano((const uint8_t *)"", 0, seed, seed_len / 8, &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, seed, seed_len / 8,
+                                     &node);
 
   hdnode_private_ckd_cardano(&node, 0x80000001);
 
@@ -227,7 +230,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_4) {
       "junk",
       seed);
   ck_assert_int_eq(seed_len, 132);
-  hdnode_from_seed_cardano((const uint8_t *)"", 0, seed, seed_len / 8, &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, seed, seed_len / 8,
+                                     &node);
 
   hdnode_private_ckd_cardano(&node, 0x80000000);
   hdnode_private_ckd_cardano(&node, 0x80000001);
@@ -265,7 +269,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_5) {
       "junk",
       seed);
   ck_assert_int_eq(seed_len, 132);
-  hdnode_from_seed_cardano((const uint8_t *)"", 0, seed, seed_len / 8, &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, seed, seed_len / 8,
+                                     &node);
 
   hdnode_private_ckd_cardano(&node, 0x80000000);
   hdnode_private_ckd_cardano(&node, 0x80000001);
@@ -304,7 +309,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_6) {
       "junk",
       seed);
   ck_assert_int_eq(seed_len, 132);
-  hdnode_from_seed_cardano((const uint8_t *)"", 0, seed, seed_len / 8, &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, seed, seed_len / 8,
+                                     &node);
 
   hdnode_private_ckd_cardano(&node, 0x80000000);
   hdnode_private_ckd_cardano(&node, 0x80000001);
@@ -344,7 +350,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_7) {
       "junk",
       seed);
   ck_assert_int_eq(seed_len, 132);
-  hdnode_from_seed_cardano((const uint8_t *)"", 0, seed, seed_len / 8, &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, seed, seed_len / 8,
+                                     &node);
 
   hdnode_private_ckd_cardano(&node, 0x80000000);
   hdnode_private_ckd_cardano(&node, 0x80000001);

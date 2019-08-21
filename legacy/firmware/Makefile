@@ -15,7 +15,6 @@ OBJS += otp.o
 OBJS += header.o
 endif
 
-OBJS += u2f.o
 OBJS += messages.o
 OBJS += config.o
 OBJS += trezor.o
@@ -30,12 +29,19 @@ OBJS += recovery.o
 OBJS += reset.o
 OBJS += signing.o
 OBJS += crypto.o
+
+ifneq ($(U2F_ENABLED),0)
+OBJS += u2f.o
+endif
+
+ifneq ($(BITCOIN_ONLY),1)
 OBJS += ethereum.o
 OBJS += ethereum_tokens.o
+OBJS += lisk.o
 OBJS += nem2.o
 OBJS += nem_mosaics.o
 OBJS += stellar.o
-OBJS += lisk.o
+endif
 
 OBJS += debug.o
 
@@ -45,6 +51,8 @@ OBJS += ../vendor/trezor-crypto/ecdsa.o
 OBJS += ../vendor/trezor-crypto/curves.o
 OBJS += ../vendor/trezor-crypto/secp256k1.o
 OBJS += ../vendor/trezor-crypto/nist256p1.o
+OBJS += ../vendor/trezor-crypto/hmac_drbg.o
+OBJS += ../vendor/trezor-crypto/rfc6979.o
 OBJS += ../vendor/trezor-crypto/rand.o
 OBJS += ../vendor/trezor-crypto/memzero.o
 
@@ -102,11 +110,13 @@ OBJS += protob/messages-bitcoin.pb.o
 OBJS += protob/messages-common.pb.o
 OBJS += protob/messages-crypto.pb.o
 OBJS += protob/messages-debug.pb.o
-OBJS += protob/messages-ethereum.pb.o
 OBJS += protob/messages-management.pb.o
+ifneq ($(BITCOIN_ONLY),1)
+OBJS += protob/messages-ethereum.pb.o
+OBJS += protob/messages-lisk.pb.o
 OBJS += protob/messages-nem.pb.o
 OBJS += protob/messages-stellar.pb.o
-OBJS += protob/messages-lisk.pb.o
+endif
 
 OPTFLAGS ?= -Os
 
@@ -126,13 +136,20 @@ CFLAGS += -I../vendor/nanopb -Iprotob -DPB_FIELD_16BIT=1
 CFLAGS += -DDEBUG_LINK=$(DEBUG_LINK)
 CFLAGS += -DDEBUG_LOG=$(DEBUG_LOG)
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'
+CFLAGS += -DUSE_MONERO=0
+ifneq ($(BITCOIN_ONLY),1)
 CFLAGS += -DUSE_ETHEREUM=1
 CFLAGS += -DUSE_NEM=1
-CFLAGS += -DUSE_MONERO=0
+MAKO_RENDER_FLAG =
+else
+CFLAGS += -DUSE_ETHEREUM=0
+CFLAGS += -DUSE_NEM=0
+MAKO_RENDER_FLAG = --bitcoin-only
+endif
 
 %:: %.mako defs
 	@printf "  MAKO    $@\n"
-	$(Q)$(PYTHON) ../vendor/trezor-common/tools/cointool.py render $@.mako
+	$(Q)$(PYTHON) ../vendor/trezor-common/tools/cointool.py render $(MAKO_RENDER_FLAG) $@.mako
 
 bl_data.h: bl_data.py bootloader.dat
 	@printf "  PYTHON  bl_data.py\n"

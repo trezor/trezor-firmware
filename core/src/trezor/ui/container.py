@@ -1,21 +1,10 @@
-from trezor.ui import Widget
+from trezor import ui
 
 
-class Container(Widget):
-    def __init__(self, *children):
+class Container(ui.Control):
+    def __init__(self, *children: ui.Control):
         self.children = children
 
-    def taint(self):
-        super().taint()
+    def dispatch(self, event: int, x: int, y: int) -> None:
         for child in self.children:
-            child.taint()
-
-    def render(self):
-        for child in self.children:
-            child.render()
-
-    def touch(self, event, pos):
-        for child in self.children:
-            result = child.touch(event, pos)
-            if result is not None:
-                return result
+            child.dispatch(event, x, y)

@@ -40,7 +40,6 @@
 #include "extmod/misc.h"
 #include "genhdr/mpversion.h"
 #include "input.h"
-#include "profile.h"
 #include "py/builtin.h"
 #include "py/compile.h"
 #include "py/gc.h"
@@ -406,6 +405,18 @@ STATIC void set_sys_argv(char *argv[], int argc, int start_arg) {
   }
 }
 
+void main_clean_exit(int status) {
+  fflush(stdout);
+  fflush(stderr);
+  mp_obj_t sys_exit =
+      mp_obj_dict_get(mp_module_sys.globals, MP_ROM_QSTR(MP_QSTR_exit));
+  if (mp_obj_is_callable(sys_exit)) {
+    mp_call_function_1(MP_OBJ_TO_PTR(sys_exit), MP_OBJ_NEW_SMALL_INT(status));
+  }
+  // sys.exit shouldn't return so force exit in case it does.
+  exit(status);
+}
+
 #ifdef _WIN32
 #define PATHLIST_SEP_CHAR ';'
 #else
@@ -415,9 +426,6 @@ STATIC void set_sys_argv(char *argv[], int argc, int start_arg) {
 MP_NOINLINE int main_(int argc, char **argv);
 
 int main(int argc, char **argv) {
-  // Through TREZOR_PROFILE you can set the directory for trezor.flash file.
-  profile_init();
-
   collect_hw_entropy();
 
 #if MICROPY_PY_THREAD

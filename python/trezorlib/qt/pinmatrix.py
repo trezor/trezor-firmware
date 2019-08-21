@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2018 SatoshiLabs and contributors
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -69,7 +69,7 @@ class PinMatrixWidget(QWidget):
     """
         Displays widget with nine blank buttons and password box.
         Encodes button clicks into sequence of numbers for passing
-        into PinAck messages of TREZOR.
+        into PinAck messages of Trezor.
 
         show_strength=True may be useful for entering new PIN
     """

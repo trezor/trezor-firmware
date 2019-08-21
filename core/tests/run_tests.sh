@@ -3,7 +3,7 @@
 declare -a results
 declare -i PYOPT=1 passed=0 failed=0 exit_code=0
 declare COLOR_GREEN='\e[32m' COLOR_RED='\e[91m' COLOR_RESET='\e[39m'
-declare MICROPYTHON=../build/unix/micropython 
+declare MICROPYTHON=../build/unix/micropython
 
 print_summary() {
     echo

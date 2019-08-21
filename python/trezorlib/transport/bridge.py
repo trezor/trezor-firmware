@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2018 SatoshiLabs and contributors
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -94,7 +94,7 @@ class BridgeHandleLegacy(BridgeHandle):
 
 class BridgeTransport(Transport):
     """
-    BridgeTransport implements transport through TREZOR Bridge (aka trezord).
+    BridgeTransport implements transport through Trezor Bridge (aka trezord).
     """
 
     PATH_PREFIX = "bridge"

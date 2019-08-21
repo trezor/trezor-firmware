@@ -44,7 +44,8 @@ message EthereumGetAddress {
  * @end
  */
 message EthereumAddress {
-    optional string address = 2;     // Ethereum address as string
+    optional bytes old_address = 1 [deprecated=true];  // trezor <1.8.0, <2.1.0 - raw bytes of Ethereum address
+    optional string address = 2;                       // Ethereum address as hex-encoded string
 }
 
 /**

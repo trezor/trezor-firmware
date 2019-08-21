@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -371,6 +371,7 @@ static secbool startswith(const char *s, const char *prefix) {
 
 int main(void) {
   display_orientation(0);
+  drbg_init();
   sdcard_init();
   touch_init();
   sbu_init();

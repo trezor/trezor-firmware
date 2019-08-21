@@ -1,25 +1,34 @@
 from trezor import loop
 
-workflows = []
-layouts = []
-default = None
-default_layout = None
+if False:
+    from trezor import ui
+    from typing import List, Callable, Optional
 
-# HACK: workaround way to stop the WebAuthn layout from the outside
-webauthn_stop_signal = loop.signal()
+workflows = []  # type: List[loop.Task]
+layouts = []  # type: List[ui.Layout]
+layout_signal = loop.signal()
+default = None  # type: Optional[loop.Task]
+default_layout = None  # type: Optional[Callable[[], loop.Task]]
 
 
-def onstart(w):
+def onstart(w: loop.Task) -> None:
     workflows.append(w)
 
 
-def onclose(w):
+def onclose(w: loop.Task) -> None:
     workflows.remove(w)
     if not layouts and default_layout:
         startdefault(default_layout)
 
+    if __debug__:
+        import micropython
+        from trezor import utils
 
-def closedefault():
+        if utils.LOG_MEMORY:
+            micropython.mem_info()
+
+
+def closedefault() -> None:
     global default
 
     if default:
@@ -27,7 +36,7 @@ def closedefault():
         default = None
 
 
-def startdefault(layout):
+def startdefault(layout: Callable[[], loop.Task]) -> None:
     global default
     global default_layout
 
@@ -37,19 +46,19 @@ def startdefault(layout):
         loop.schedule(default)
 
 
-def restartdefault():
+def restartdefault() -> None:
     global default_layout
-    d = default_layout
+
     closedefault()
-    startdefault(d)
+    if default_layout:
+        startdefault(default_layout)
 
 
-def onlayoutstart(l):
+def onlayoutstart(l: ui.Layout) -> None:
     closedefault()
     layouts.append(l)
-    webauthn_stop_signal.send(None)
 
 
-def onlayoutclose(l):
+def onlayoutclose(l: ui.Layout) -> None:
     if l in layouts:
         layouts.remove(l)

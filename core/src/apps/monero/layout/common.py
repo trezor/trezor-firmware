@@ -1,10 +1,46 @@
-from trezor import res, ui, utils
+from trezor import loop, ui, utils
 from trezor.messages import ButtonRequestType
+from trezor.messages.ButtonAck import ButtonAck
+from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.ui.text import Text
-from trezor.utils import chunks
+
+if __debug__:
+    from apps.debug import confirm_signal
+
+
+async def naive_pagination(
+    ctx, lines, title, icon=ui.ICON_RESET, icon_color=ui.ORANGE, per_page=5
+):
+    from trezor.ui.scroll import CANCELLED, CONFIRMED, PaginatedWithButtons
+
+    pages = []
+    page_lines = paginate_lines(lines, per_page)
+
+    for i, lines in enumerate(page_lines):
+        if len(page_lines) > 1:
+            paging = "%s/%s" % (i + 1, len(page_lines))
+        else:
+            paging = ""
+        text = Text("%s %s" % (title, paging), icon, icon_color)
+        text.normal(*lines)
+        pages.append(text)
+
+    paginated = PaginatedWithButtons(pages, one_by_one=True)
+
+    while True:
+        await ctx.call(ButtonRequest(code=ButtonRequestType.SignTx), ButtonAck)
+        if __debug__:
+            result = await loop.spawn(paginated, confirm_signal)
+        else:
+            result = await paginated
+        if result is CONFIRMED:
+            return True
+        if result is CANCELLED:
+            return False
 
 
 def paginate_lines(lines, lines_per_page=5):
+    """Paginates lines across pages with preserving formatting modifiers (e.g., mono)"""
     pages = []
     cpage = []
     nlines = 0
@@ -28,94 +64,9 @@ def paginate_lines(lines, lines_per_page=5):
     return pages
 
 
-@ui.layout
-async def tx_dialog(
-    ctx,
-    code,
-    content,
-    cancel_btn,
-    confirm_btn,
-    cancel_style,
-    confirm_style,
-    scroll_tuple=None,
-):
-    from trezor.messages import MessageType
-    from trezor.messages.ButtonRequest import ButtonRequest
-    from trezor.ui.confirm import ConfirmDialog
-    from trezor.ui.scroll import Scrollpage
-
-    await ctx.call(ButtonRequest(code=code), MessageType.ButtonAck)
-
-    if scroll_tuple and scroll_tuple[1] > 1:
-        content = Scrollpage(content, scroll_tuple[0], scroll_tuple[1])
-
-    dialog = ConfirmDialog(
-        content,
-        cancel=cancel_btn,
-        confirm=confirm_btn,
-        cancel_style=cancel_style,
-        confirm_style=confirm_style,
-    )
-    return await ctx.wait(dialog)
-
-
-async def naive_pagination(
-    ctx, lines, title, icon=ui.ICON_RESET, icon_color=ui.ORANGE, per_page=5
-):
-    from trezor.ui.confirm import CANCELLED, CONFIRMED, DEFAULT_CANCEL, DEFAULT_CONFIRM
-
-    if isinstance(lines, (list, tuple)):
-        lines = lines
-    else:
-        lines = list(chunks(lines, 16))
-
-    pages = paginate_lines(lines, per_page)
-    npages = len(pages)
-    cur_step = 0
-    code = ButtonRequestType.SignTx
-    iback = res.load(ui.ICON_BACK)
-    inext = res.load(ui.ICON_CLICK)
-
-    while cur_step <= npages:
-        text = pages[cur_step]
-        fst_page = cur_step == 0
-        lst_page = cur_step + 1 >= npages
-
-        cancel_btn = DEFAULT_CANCEL if fst_page else iback
-        cancel_style = ui.BTN_CANCEL if fst_page else ui.BTN_DEFAULT
-        confirm_btn = DEFAULT_CONFIRM if lst_page else inext
-        confirm_style = ui.BTN_CONFIRM if lst_page else ui.BTN_DEFAULT
-
-        paging = ("%d/%d" % (cur_step + 1, npages)) if npages > 1 else ""
-        content = Text("%s %s" % (title, paging), icon, icon_color=icon_color)
-        content.normal(*text)
-
-        reaction = await tx_dialog(
-            ctx,
-            code,
-            content,
-            cancel_btn,
-            confirm_btn,
-            cancel_style,
-            confirm_style,
-            (cur_step, npages),
-        )
-
-        if fst_page and reaction == CANCELLED:
-            return False
-        elif not lst_page and reaction == CONFIRMED:
-            cur_step += 1
-        elif lst_page and reaction == CONFIRMED:
-            return True
-        elif reaction == CANCELLED:
-            cur_step -= 1
-        elif reaction == CONFIRMED:
-            cur_step += 1
-
-
 def format_amount(value):
     return "%s XMR" % utils.format_amount(value, 12)
 
 
 def split_address(address):
-    return chunks(address, 16)
+    return utils.chunks(address, 16)

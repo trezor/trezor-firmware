@@ -4,13 +4,19 @@ import protobuf as p
 
 from .HDNodeType import HDNodeType
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class LoadDevice(p.MessageType):
     MESSAGE_WIRE_TYPE = 13
 
     def __init__(
         self,
-        mnemonic: str = None,
+        mnemonics: List[str] = None,
         node: HDNodeType = None,
         pin: str = None,
         passphrase_protection: bool = None,
@@ -19,7 +25,7 @@ class LoadDevice(p.MessageType):
         skip_checksum: bool = None,
         u2f_counter: int = None,
     ) -> None:
-        self.mnemonic = mnemonic
+        self.mnemonics = mnemonics if mnemonics is not None else []
         self.node = node
         self.pin = pin
         self.passphrase_protection = passphrase_protection
@@ -29,9 +35,9 @@ class LoadDevice(p.MessageType):
         self.u2f_counter = u2f_counter
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
-            1: ('mnemonic', p.UnicodeType, 0),
+            1: ('mnemonics', p.UnicodeType, p.FLAG_REPEATED),
             2: ('node', HDNodeType, 0),
             3: ('pin', p.UnicodeType, 0),
             4: ('passphrase_protection', p.BoolType, 0),

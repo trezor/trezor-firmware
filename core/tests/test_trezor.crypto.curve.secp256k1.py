@@ -139,7 +139,7 @@ class TestCryptoSecp256k1(Secp256k1Common, unittest.TestCase):
 
 class TestCryptoSecp256k1Zkp(Secp256k1Common, unittest.TestCase):
     def __init__(self):
-        self.impl = secp256k1_zkp
+        self.impl = secp256k1_zkp.Context()
 
 if __name__ == '__main__':
     unittest.main()

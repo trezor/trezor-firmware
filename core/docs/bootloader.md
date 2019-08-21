@@ -1,6 +1,6 @@
-# TREZOR Core Bootloader
+# Trezor Core Bootloader
 
-TREZOR initialization is split into two stages.
+Trezor initialization is split into two stages.
 See [Memory Layout](memory.md) for info about in which sectors each stage is stored.
 
 First stage (boardloader) is stored in write-protected area, which means it is non-upgradable.
@@ -60,7 +60,7 @@ allowing a firmware update via USB.
 
 ## Bootloader Format
 
-TREZOR Core (second stage) bootloader consists of 2 parts:
+Trezor Core (second stage) bootloader consists of 2 parts:
 
 1. bootloader header
 2. bootloader code
@@ -94,7 +94,7 @@ Total length of bootloader header is always 1024 bytes.
 
 ## Firmware Format
 
-TREZOR Core firmware consists of 3 parts:
+Trezor Core firmware consists of 3 parts:
 
 1. vendor header
 2. firmware header

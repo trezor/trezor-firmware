@@ -26,7 +26,7 @@ class HIDInterface:
         logger.log_raw("{} <".format(HIDInterface.uhid_device), data.hex())
 
     def create_device(self):
-        name = b"Virtual TREZOR"
+        name = b"Virtual Trezor"
         phys = b""
         uniq = random_bytes(64)
         bus = 0

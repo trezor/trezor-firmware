@@ -1,5 +1,6 @@
 .attic/
 .cache/
+.venv/
 .idea/
 .mypy_cache/
 .pytest_cache/
@@ -7,3 +8,4 @@
 __pycache__/
 *.pyc
 /build
+proto.gv*

@@ -1,5 +1,23 @@
+if False:
+    from typing import Protocol, Type
+
+    class HashContext(Protocol):
+
+        digest_size = -1  # type: int
+        block_size = -1  # type: int
+
+        def __init__(self, data: bytes = None) -> None:
+            ...
+
+        def update(self, data: bytes) -> None:
+            ...
+
+        def digest(self) -> bytes:
+            ...
+
+
 class Hmac:
-    def __init__(self, key, msg, digestmod):
+    def __init__(self, key: bytes, msg: bytes, digestmod: Type[HashContext]):
         self.digestmod = digestmod
         self.inner = digestmod()
         self.digest_size = self.inner.digest_size
@@ -28,7 +46,7 @@ class Hmac:
         return outer.digest()
 
 
-def new(key, msg, digestmod) -> Hmac:
+def new(key: bytes, msg: bytes, digestmod: Type[HashContext]) -> Hmac:
     """
     Creates a HMAC context object.
     """

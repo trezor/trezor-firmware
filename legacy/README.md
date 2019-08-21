@@ -1,10 +1,10 @@
-# TREZOR One Bootloader and Firmware
+# Trezor One Bootloader and Firmware
 
 [![Build Status](https://travis-ci.org/trezor/trezor-mcu.svg?branch=master)](https://travis-ci.org/trezor/trezor-mcu) [![gitter](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
 
 https://trezor.io/
 
-## How to build the TREZOR bootloader, firmware and emulator
+## How to build the Trezor bootloader, firmware and emulator
 
 Ensure that you have Docker installed. You can follow [Docker's installation instructions](https://docs.docker.com/engine/installation/).
 
@@ -49,10 +49,12 @@ Step 3 should produce the same sha256 fingerprint like your local build (for the
 
 ## How to install custom built firmware?
 
-**WARNING: This will erase the recovery seed stored on the device! You should never do this on TREZOR that contains coins!**
+**WARNING: This will erase the recovery seed stored on the device! You should never do this on Trezor that contains coins!**
 
 1. Install python-trezor: `pip install trezor` ([more info](https://github.com/trezor/python-trezor))
 2. `trezorctl firmware_update -f build/trezor-TAG.bin`
+
+*Note: if your device is on the latest bootloader version and you flash custom firmware then you will receive a hard fault warning when booting the firmware image. To avoid this issue, just remove the code in startup.s added by [this commit](https://github.com/trezor/trezor-firmware/commit/222c9ea46c7574cb52d4713c481438a32b85e692#diff-178d0ab7c4debbcf430a0fad8fa06a5c).*
 
 ## Building for development
 
@@ -60,7 +62,7 @@ If you want to build device firmware, make sure you have the
 [GNU ARM Embedded toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) installed.
 You will also need Python 3.5 or later and [pipenv](https://pipenv.readthedocs.io/en/latest/install/).
 
-* If you want to build the emulator instead of the firmware, run `export EMULATOR=1 TREZOR_TRANSPORT_V1=1`
+* If you want to build the emulator instead of the firmware, run `export EMULATOR=1`
 * If you want to build with the debug link, run `export DEBUG_LINK=1`. Use this if you want to run the device tests.
 * When you change these variables, use `script/setup` to clean the repository
 

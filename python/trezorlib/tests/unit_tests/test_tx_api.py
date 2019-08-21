@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2018 SatoshiLabs and contributors
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -22,7 +22,7 @@ from ..support.tx_cache import tx_cache
 
 TxApiBitcoin = coins.tx_api["Bitcoin"]
 TxApiTestnet = tx_cache("Testnet", allow_fetch=False)
-TxApiZencash = coins.tx_api["Zencash"]
+TxApiZencash = coins.tx_api["Horizen"]
 TxApiDash = tx_cache("Dash", allow_fetch=False)
 
 tests_dir = os.path.dirname(os.path.abspath(__file__))

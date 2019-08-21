@@ -24,22 +24,21 @@ async def get_address(ctx, msg, keychain):
     node = keychain.derive(msg.address_n, coin.curve_name)
     address = addresses.get_address(msg.script_type, coin, node, msg.multisig)
     address_short = addresses.address_short(coin, address)
+    if msg.script_type == InputScriptType.SPENDWITNESS:
+        address_qr = address.upper()  # bech32 address
+    else:
+        address_qr = address  # base58 address
 
     if msg.show_display:
         if msg.multisig:
             desc = "Multisig %d of %d" % (msg.multisig.m, len(msg.multisig.pubkeys))
         else:
             desc = address_n_to_str(msg.address_n)
+
         while True:
             if await show_address(ctx, address_short, desc=desc):
                 break
-            if await show_qr(
-                ctx,
-                address.upper()
-                if msg.script_type == InputScriptType.SPENDWITNESS
-                else address,
-                desc=desc,
-            ):
+            if await show_qr(ctx, address_qr, desc=desc):
                 break
 
     return Address(address=address)

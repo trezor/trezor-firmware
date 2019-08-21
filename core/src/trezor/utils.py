@@ -18,17 +18,24 @@ if __debug__:
         import uos
 
         TEST = int(uos.getenv("TREZOR_TEST") or "0")
+        DISABLE_FADE = int(uos.getenv("TREZOR_DISABLE_FADE") or "0")
         SAVE_SCREEN = int(uos.getenv("TREZOR_SAVE_SCREEN") or "0")
+        LOG_MEMORY = int(uos.getenv("TREZOR_LOG_MEMORY") or "0")
     else:
         TEST = 0
+        DISABLE_FADE = 0
         SAVE_SCREEN = 0
+        LOG_MEMORY = 0
+
+if False:
+    from typing import Iterable, Iterator, Protocol, List, TypeVar
 
 
-def unimport_begin():
+def unimport_begin() -> Iterable[str]:
     return set(sys.modules)
 
 
-def unimport_end(mods):
+def unimport_end(mods: Iterable[str]) -> None:
     for mod in sys.modules:
         if mod not in mods:
             # remove reference from sys.modules
@@ -49,56 +56,79 @@ def unimport_end(mods):
     gc.collect()
 
 
-def ensure(cond, msg=None):
+def ensure(cond: bool, msg: str = None) -> None:
     if not cond:
         if msg is None:
-            raise AssertionError()
+            raise AssertionError
         else:
             raise AssertionError(msg)
 
 
-def chunks(items, size):
+if False:
+    Chunked = TypeVar("Chunked")
+
+
+def chunks(items: List[Chunked], size: int) -> Iterator[List[Chunked]]:
     for i in range(0, len(items), size):
         yield items[i : i + size]
 
 
-def format_amount(amount, decimals):
+def format_amount(amount: int, decimals: int) -> str:
     d = pow(10, decimals)
-    amount = ("%d.%0*d" % (amount // d, decimals, amount % d)).rstrip("0")
-    if amount.endswith("."):
-        amount = amount[:-1]
-    return amount
+    s = ("%d.%0*d" % (amount // d, decimals, amount % d)).rstrip("0").rstrip(".")
+    return s
 
 
-def format_ordinal(number):
+def format_ordinal(number: int) -> str:
     return str(number) + {1: "st", 2: "nd", 3: "rd"}.get(
         4 if 10 <= number % 100 < 20 else number % 10, "th"
     )
 
 
+if False:
+
+    class HashContext(Protocol):
+        def update(self, buf: bytes) -> None:
+            ...
+
+        def digest(self) -> bytes:
+            ...
+
+    class Writer(Protocol):
+        def append(self, b: int) -> None:
+            ...
+
+        def extend(self, buf: bytes) -> None:
+            ...
+
+        def write(self, buf: bytes) -> None:
+            ...
+
+
 class HashWriter:
-    def __init__(self, ctx):
+    def __init__(self, ctx: HashContext) -> None:
         self.ctx = ctx
         self.buf = bytearray(1)  # used in append()
 
-    def extend(self, buf: bytearray):
-        self.ctx.update(buf)
-
-    def write(self, buf: bytearray):  # alias for extend()
-        self.ctx.update(buf)
-
-    async def awrite(self, buf: bytearray):  # AsyncWriter interface
-        return self.ctx.update(buf)
-
-    def append(self, b: int):
+    def append(self, b: int) -> None:
         self.buf[0] = b
         self.ctx.update(self.buf)
+
+    def extend(self, buf: bytes) -> None:
+        self.ctx.update(buf)
+
+    def write(self, buf: bytes) -> None:  # alias for extend()
+        self.ctx.update(buf)
+
+    async def awrite(self, buf: bytes) -> int:  # AsyncWriter interface
+        self.ctx.update(buf)
+        return len(buf)
 
     def get_digest(self) -> bytes:
         return self.ctx.digest()
 
 
-def obj_eq(l, r):
+def obj_eq(l: object, r: object) -> bool:
     """
     Compares object contents, supports __slots__.
     """
@@ -114,7 +144,7 @@ def obj_eq(l, r):
     return True
 
 
-def obj_repr(o):
+def obj_repr(o: object) -> str:
     """
     Returns a string representation of object, supports __slots__.
     """

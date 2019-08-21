@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
  *
@@ -18,27 +18,9 @@
  */
 
 #include "util.h"
-#include "rng.h"
 
 inline void delay(uint32_t wait) {
   while (--wait > 0) __asm__("nop");
-}
-
-void wait_random(void) {
-  int wait = random32() & 0xff;
-  volatile int i = 0;
-  volatile int j = wait;
-  while (i < wait) {
-    if (i + j != wait) {
-      shutdown();
-    }
-    ++i;
-    --j;
-  }
-  // Double-check loop completion.
-  if (i != wait || j != 0) {
-    shutdown();
-  }
 }
 
 static const char *hexdigits = "0123456789ABCDEF";

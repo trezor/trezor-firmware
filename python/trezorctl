@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# This file is part of the TREZOR project.
+# This file is part of the Trezor project.
 #
 # Copyright (C) 2012-2017 Marek Palatinus <slush@satoshilabs.com>
 # Copyright (C) 2012-2017 Pavol Rusnak <stick@satoshilabs.com>
@@ -37,6 +37,7 @@ from trezorlib import (
     cosi,
     debuglink,
     device,
+    eos,
     ethereum,
     exceptions,
     firmware,
@@ -46,7 +47,6 @@ from trezorlib import (
     misc,
     monero,
     nem,
-    ontology,
     protobuf,
     ripple,
     stellar,
@@ -113,6 +113,14 @@ CHOICE_OUTPUT_SCRIPT_TYPE = ChoiceType(
     }
 )
 
+CHOICE_RESET_DEVICE_TYPE = ChoiceType(
+    {
+        "single": proto.ResetDeviceBackupType.Bip39,
+        "shamir": proto.ResetDeviceBackupType.Slip39_Single_Group,
+        "advanced": proto.ResetDeviceBackupType.Slip39_Multiple_Groups,
+    }
+)
+
 
 class UnderscoreAgnosticGroup(click.Group):
     """Command group that normalizes dashes and underscores.
@@ -157,7 +165,7 @@ def cli(ctx, path, verbose, is_json):
             try:
                 device = get_transport(path, prefix_search=True)
             except Exception:
-                click.echo("Failed to find a TREZOR device.")
+                click.echo("Failed to find a Trezor device.")
                 if path is not None:
                     click.echo("Using path: {}".format(path))
                 sys.exit(1)
@@ -195,7 +203,7 @@ def print_result(res, path, verbose, is_json):
 #
 
 
-@cli.command(name="list", help="List connected TREZOR devices.")
+@cli.command(name="list", help="List connected Trezor devices.")
 def ls():
     return enumerate_devices()
 
@@ -285,6 +293,7 @@ def set_passphrase_source(connect, source):
 
     Configure how to enter passphrase on Trezor Model T. The options are:
 
+    \b
     ask - always ask where to enter passphrase
     device - always enter passphrase on device
     host - always enter passphrase on host
@@ -408,7 +417,7 @@ def wipe_device(connect, bootloader):
 
 
 @cli.command(help="Load custom configuration to the device.")
-@click.option("-m", "--mnemonic")
+@click.option("-m", "--mnemonic", multiple=True)
 @click.option("-e", "--expand", is_flag=True)
 @click.option("-x", "--xprv")
 @click.option("-p", "--pin", default="")
@@ -428,31 +437,31 @@ def load_device(
     ignore_checksum,
     slip0014,
 ):
-    if not mnemonic and not xprv and not slip0014:
-        raise tools.CallException(
-            proto.FailureType.DataError, "Please provide mnemonic or xprv"
-        )
+    n_args = sum(bool(a) for a in (mnemonic, xprv, slip0014))
+    if n_args == 0:
+        raise click.ClickException("Please provide a mnemonic or xprv")
+    if n_args > 1:
+        raise click.ClickException("Cannot use mnemonic and xprv together")
 
     client = connect()
-    if mnemonic:
-        return debuglink.load_device_by_mnemonic(
-            client,
-            mnemonic,
-            pin,
-            passphrase_protection,
-            label,
-            "english",
-            ignore_checksum,
-            expand,
-        )
+
     if xprv:
         return debuglink.load_device_by_xprv(
             client, xprv, pin, passphrase_protection, label, "english"
         )
+
     if slip0014:
-        return debuglink.load_device_by_mnemonic(
-            client, " ".join(["all"] * 12), pin, passphrase_protection, "SLIP-0014"
-        )
+        mnemonic = [" ".join(["all"] * 12)]
+
+    return debuglink.load_device_by_mnemonic(
+        client,
+        list(mnemonic),
+        pin,
+        passphrase_protection,
+        label,
+        "english",
+        ignore_checksum,
+    )
 
 
 @cli.command(help="Start safe recovery workflow.")
@@ -504,6 +513,7 @@ def recovery_device(
 @click.option("-u", "--u2f-counter", default=0)
 @click.option("-s", "--skip-backup", is_flag=True)
 @click.option("-n", "--no-backup", is_flag=True)
+@click.option("-b", "--backup-type", type=CHOICE_RESET_DEVICE_TYPE, default="single")
 @click.pass_obj
 def reset_device(
     connect,
@@ -515,6 +525,7 @@ def reset_device(
     u2f_counter,
     skip_backup,
     no_backup,
+    backup_type,
 ):
     if strength:
         strength = int(strength)
@@ -529,6 +540,7 @@ def reset_device(
         u2f_counter=u2f_counter,
         skip_backup=skip_backup,
         no_backup=no_backup,
+        backup_type=backup_type,
     )
 
 
@@ -1415,6 +1427,48 @@ def ethereum_sign_tx(
 
 
 #
+# EOS functions
+#
+
+
+@cli.command(help="Get Eos public key in base58 encoding.")
+@click.option(
+    "-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/194'/0'/0/0"
+)
+@click.option("-d", "--show-display", is_flag=True)
+@click.pass_obj
+def eos_get_public_key(connect, address, show_display):
+    client = connect()
+    address_n = tools.parse_path(address)
+    res = eos.get_public_key(client, address_n, show_display)
+    return "WIF: {}\nRaw: {}".format(res.wif_public_key, res.raw_public_key.hex())
+
+
+@cli.command(help="Init sign (and optionally publish) EOS transaction. ")
+@click.option(
+    "-n",
+    "--address",
+    required=True,
+    help="BIP-32 path to source address, e.g., m/44'/194'/0'/0/0",
+)
+@click.option(
+    "-f",
+    "--file",
+    type=click.File("r"),
+    required=True,
+    help="Transaction in JSON format",
+)
+@click.pass_obj
+def eos_sign_transaction(connect, address, file):
+    client = connect()
+
+    tx_json = json.load(file)
+
+    address_n = tools.parse_path(address)
+    return eos.sign_tx(client, address_n, tx_json["transaction"], tx_json["chain_id"])
+
+
+#
 # ADA functions
 #
 
@@ -1477,9 +1531,7 @@ def cardano_get_public_key(connect, address):
 
 
 @cli.command(help="Get NEM address for specified path.")
-@click.option(
-    "-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/0'/43'/0/0"
-)
+@click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/43'/0'")
 @click.option("-N", "--network", type=int, default=0x68)
 @click.option("-d", "--show-display", is_flag=True)
 @click.pass_obj
@@ -1787,197 +1839,6 @@ def tezos_sign_tx(connect, address, file):
     address_n = tools.parse_path(address)
     msg = protobuf.dict_to_proto(proto.TezosSignTx, json.load(file))
     return tezos.sign_tx(client, address_n, msg)
-
-
-#
-# Ontology functions
-#
-
-
-@cli.command(help="Get Ontology address for specified path.")
-@click.option(
-    "-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/888'/0'/0/0"
-)
-@click.option("-d", "--show-display", is_flag=True)
-@click.pass_obj
-def ontology_get_address(connect, address, show_display):
-    client = connect()
-    address_n = tools.parse_path(address)
-    return ontology.get_address(client, address_n, show_display)
-
-
-@cli.command(help="Get Ontology public key for specified path.")
-@click.option(
-    "-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/888'/0'/0/0"
-)
-@click.option("-d", "--show-display", is_flag=True)
-@click.pass_obj
-def ontology_get_public_key(connect, address, show_display):
-    client = connect()
-    address_n = tools.parse_path(address)
-    result = ontology.get_public_key(client, address_n, show_display)
-
-    return result.public_key.hex()
-
-
-@cli.command(help="Sign Ontology transfer.")
-@click.option(
-    "-n",
-    "--address",
-    required=True,
-    help="BIP-32 path to signing key, e.g. m/44'/888'/0'/0/0",
-)
-@click.option(
-    "-tx",
-    "--transaction",
-    type=click.File("r"),
-    default="-",
-    help="Transaction in JSON format",
-)
-@click.option(
-    "-tr",
-    "--transfer",
-    type=click.File("r"),
-    default="-",
-    help="Transfer in JSON format",
-)
-@click.pass_obj
-def ontology_sign_transfer(connect, address, transaction_f, transfer_f):
-    client = connect()
-    address_n = tools.parse_path(address)
-    transaction = protobuf.dict_to_proto(
-        proto.OntologyTransaction, json.load(transaction_f)
-    )
-    transfer = protobuf.dict_to_proto(proto.OntologyTransfer, json.load(transfer_f))
-
-    result = ontology.sign_transfer(client, address_n, transaction, transfer)
-
-    output = {"payload": result.payload.hex(), "signature": result.signature.hex()}
-
-    return output
-
-
-@cli.command(help="Sign Ontology withdraw Ong.")
-@click.option(
-    "-n",
-    "--address",
-    required=True,
-    help="BIP-32 path to signing key, e.g. m/44'/888'/0'/0/0",
-)
-@click.option(
-    "-tx",
-    "--transaction",
-    type=click.File("r"),
-    default="-",
-    help="Transaction in JSON format",
-)
-@click.option(
-    "-wi",
-    "--withdraw_ong",
-    type=click.File("r"),
-    default="-",
-    help="Withdrawal in JSON format",
-)
-@click.pass_obj
-def ontology_sign_withdraw_ong(connect, address, transaction_f, withdraw_ong_f):
-    client = connect()
-    address_n = tools.parse_path(address)
-    transaction = protobuf.dict_to_proto(
-        proto.OntologyTransaction, json.load(transaction_f)
-    )
-    withdraw_ong = protobuf.dict_to_proto(
-        proto.OntologyWithdrawOng, json.load(withdraw_ong_f)
-    )
-
-    result = ontology.sign_withdrawal(client, address_n, transaction, withdraw_ong)
-
-    output = {"payload": result.payload.hex(), "signature": result.signature.hex()}
-
-    return output
-
-
-@cli.command(help="Sign Ontology ONT ID Registration.")
-@click.option(
-    "-n",
-    "--address",
-    required=True,
-    help="BIP-32 path to signing key, e.g. m/44'/888'/0'/0/0",
-)
-@click.option(
-    "-tx",
-    "--transaction",
-    type=click.File("r"),
-    default="-",
-    help="Transaction in JSON format",
-)
-@click.option(
-    "-re",
-    "--register",
-    type=click.File("r"),
-    default="-",
-    help="Register in JSON format",
-)
-@click.argument("transaction")
-@click.argument("ont_id_register")
-@click.pass_obj
-def ontology_sign_ont_id_register(connect, address, transaction_f, ont_id_register_f):
-    client = connect()
-    address_n = tools.parse_path(address)
-    transaction = protobuf.dict_to_proto(
-        proto.OntologyTransaction, json.load(transaction_f)
-    )
-    ont_id_register = protobuf.dict_to_proto(
-        proto.OntologyOntIdRegister, json.load(ont_id_register_f)
-    )
-
-    result = ontology.sign_register(client, address_n, transaction, ont_id_register)
-
-    output = {"payload": result.payload.hex(), "signature": result.signature.hex()}
-
-    return output
-
-
-@cli.command(help="Sign Ontology ONT ID Attributes adding.")
-@click.option(
-    "-n",
-    "--address",
-    required=True,
-    help="BIP-32 path to signing key, e.g. m/44'/888'/0'/0/0",
-)
-@click.option(
-    "-tx",
-    "--transaction",
-    type=click.File("r"),
-    default="-",
-    help="Transaction in JSON format",
-)
-@click.option(
-    "-aa",
-    "--add_attr",
-    type=click.File("r"),
-    default="-",
-    help="Add attributes in JSON format",
-)
-@click.pass_obj
-def ontology_sign_ont_id_add_attributes(
-    connect, address, transaction_f, ont_id_add_attributes_f
-):
-    client = connect()
-    address_n = tools.parse_path(address)
-    transaction = protobuf.dict_to_proto(
-        proto.OntologyTransaction, json.load(transaction_f)
-    )
-    ont_id_add_attributes = protobuf.dict_to_proto(
-        proto.OntologyOntIdAddAttributes, json.load(ont_id_add_attributes_f)
-    )
-
-    result = ontology.sign_add_attr(
-        client, address_n, transaction, ont_id_add_attributes
-    )
-
-    output = {"payload": result.payload.hex(), "signature": result.signature.hex()}
-
-    return output
 
 
 #

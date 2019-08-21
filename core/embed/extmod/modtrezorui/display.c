@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -16,6 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#define _GNU_SOURCE
 
 #include "font_bitmap.h"
 #include "inflate.h"
@@ -706,7 +708,7 @@ int display_orientation(int degrees) {
 #elif TREZOR_MODEL == 1
     if (degrees == 0 || degrees == 180) {
 #else
-#error Unknown TREZOR model
+#error Unknown Trezor model
 #endif
       DISPLAY_ORIENTATION = degrees;
       display_set_orientation(degrees);

@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -24,10 +24,12 @@
 
 /// package: trezorcrypto.__init__
 
-/// class Sha3_512:
-///     '''
+/// class sha3_512:
+///     """
 ///     SHA3_512 context.
-///     '''
+///     """
+///     block_size: int
+///     digest_size: int
 typedef struct _mp_obj_Sha3_512_t {
   mp_obj_base_t base;
   SHA3_CTX ctx;
@@ -36,10 +38,10 @@ typedef struct _mp_obj_Sha3_512_t {
 
 STATIC mp_obj_t mod_trezorcrypto_Sha3_512_update(mp_obj_t self, mp_obj_t data);
 
-/// def __init__(self, data: bytes = None, keccak = False) -> None:
-///     '''
+/// def __init__(self, data: bytes = None, keccak: bool = False) -> None:
+///     """
 ///     Creates a hash context object.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha3_512_make_new(const mp_obj_type_t *type,
                                                    size_t n_args, size_t n_kw,
                                                    const mp_obj_t *args) {
@@ -67,9 +69,9 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_512_make_new(const mp_obj_type_t *type,
 }
 
 /// def update(self, data: bytes) -> None:
-///     '''
+///     """
 ///     Update the hash context with hashed data.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha3_512_update(mp_obj_t self, mp_obj_t data) {
   mp_obj_Sha3_512_t *o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t msg;
@@ -83,9 +85,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Sha3_512_update_obj,
                                  mod_trezorcrypto_Sha3_512_update);
 
 /// def digest(self) -> bytes:
-///     '''
+///     """
 ///     Returns the digest of hashed data.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha3_512_digest(mp_obj_t self) {
   mp_obj_Sha3_512_t *o = MP_OBJ_TO_PTR(self);
   uint8_t out[SHA3_512_DIGEST_LENGTH];
@@ -102,10 +104,10 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_512_digest(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha3_512_digest_obj,
                                  mod_trezorcrypto_Sha3_512_digest);
 
-/// def copy(self) -> sha3:
-///     '''
+/// def copy(self) -> sha3_512:
+///     """
 ///     Returns the copy of the digest object with the current state
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha3_512_copy(size_t n_args,
                                                const mp_obj_t *args) {
   mp_obj_Sha3_512_t *o = MP_OBJ_TO_PTR(args[0]);
@@ -136,10 +138,8 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_Sha3_512_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_Sha3_512_copy_obj)},
     {MP_ROM_QSTR(MP_QSTR___del__),
      MP_ROM_PTR(&mod_trezorcrypto_Sha3_512___del___obj)},
-    {MP_ROM_QSTR(MP_QSTR_block_size),
-     MP_OBJ_NEW_SMALL_INT(SHA3_512_BLOCK_LENGTH)},
-    {MP_ROM_QSTR(MP_QSTR_digest_size),
-     MP_OBJ_NEW_SMALL_INT(SHA3_512_DIGEST_LENGTH)},
+    {MP_ROM_QSTR(MP_QSTR_block_size), MP_ROM_INT(SHA3_512_BLOCK_LENGTH)},
+    {MP_ROM_QSTR(MP_QSTR_digest_size), MP_ROM_INT(SHA3_512_DIGEST_LENGTH)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_Sha3_512_locals_dict,
                             mod_trezorcrypto_Sha3_512_locals_dict_table);

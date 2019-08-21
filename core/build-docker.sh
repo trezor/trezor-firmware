@@ -11,11 +11,7 @@ else
 fi
 
 IMAGE=trezor-core-build.$TOOLCHAIN_FLAVOR
-if [ -z "$1" ]; then
-	TAG=master
-else
-	TAG=core/${1}
-fi
+TAG=${1:-master}
 REPOSITORY=${2:-trezor}
 PRODUCTION=${PRODUCTION:-0}
 
@@ -25,7 +21,7 @@ else
 	REPOSITORY=https://github.com/$REPOSITORY/trezor-firmware.git
 fi
 
-docker build -t $IMAGE --build-arg TOOLCHAIN_FLAVOR=$TOOLCHAIN_FLAVOR core
+docker build -t $IMAGE --build-arg TOOLCHAIN_FLAVOR=$TOOLCHAIN_FLAVOR ci/
 
 USER=$(ls -lnd . | awk '{ print $3 }')
 GROUP=$(ls -lnd . | awk '{ print $4 }')
@@ -38,4 +34,5 @@ docker run -t -v $(pwd):/local -v $(pwd)/build/core:/build:z --user="$USER:$GROU
 	ln -s /build build &&
 	git checkout $TAG && \
 	git submodule update --init --recursive && \
-	PRODUCTION=$PRODUCTION make clean vendor build_boardloader build_bootloader build_firmware"
+	pipenv install && \
+	PRODUCTION=$PRODUCTION pipenv run make clean vendor build_boardloader build_bootloader build_firmware"

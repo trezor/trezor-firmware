@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -20,6 +20,7 @@
 #ifndef __TREZORHAL_COMMON_H__
 #define __TREZORHAL_COMMON_H__
 
+#include <stddef.h>
 #include <stdint.h>
 #include "secbool.h"
 
@@ -39,5 +40,12 @@ error_shutdown(const char *line1, const char *line2, const char *line3,
        : __fatal_error(#expr, msg, __FILE__, __LINE__, __func__))
 
 void hal_delay(uint32_t ms);
+
+void wait_random(void);
+
+void drbg_init(void);
+void drbg_reseed(const uint8_t *entropy, size_t len);
+void drbg_generate(uint8_t *buf, size_t len);
+uint32_t drbg_random32(void);
 
 #endif

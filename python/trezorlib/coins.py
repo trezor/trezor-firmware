@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2018 SatoshiLabs and contributors
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -24,12 +24,7 @@ COINS_JSON = os.path.join(os.path.dirname(__file__), "coins.json")
 
 def _load_coins_json():
     # Load coins.json to local variables
-    # NOTE: coins.json comes from 'vendor/trezor-common/coins.json',
-    # which is a git submodule. If you're trying to run trezorlib directly
-    # from the checkout (or tarball), initialize the submodule with:
-    # $ git submodule update --init
-    # and install coins.json with:
-    # $ python setup.py prebuild
+    # NOTE: coins.json is generated via `make coins_json` command.
     with open(COINS_JSON) as coins_json:
         return json.load(coins_json)
 

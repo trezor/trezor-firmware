@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2018 SatoshiLabs and contributors
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -81,7 +81,7 @@ class TestZerosig(TrezorTest):
         )
         siglen = serialized_tx[44]
 
-        # TREZOR must strip leading zero from signature
+        # Trezor must strip leading zero from signature
         assert siglen == 67
 
     def test_two_zero_signature(self):
@@ -106,5 +106,5 @@ class TestZerosig(TrezorTest):
         )
         siglen = serialized_tx[44]
 
-        # TREZOR must strip leading zero from signature
+        # Trezor must strip leading zero from signature
         assert siglen == 66

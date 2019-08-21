@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2018 SatoshiLabs and contributors
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -45,6 +45,11 @@ class TestMsgResetDeviceT2(TrezorTest):
             assert btn_code == B.ResetDevice
             self.client.debug.press_yes()
 
+            # Confirm warning
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
             # mnemonic phrases
             btn_code = yield
             assert btn_code == B.ResetDevice
@@ -59,14 +64,19 @@ class TestMsgResetDeviceT2(TrezorTest):
                     self.client.debug.press_yes()
 
             # check backup words
-            for _ in range(2):
+            for _ in range(3):
                 time.sleep(1)
                 index = self.client.debug.state().reset_word_pos
                 self.client.debug.input(words[index])
 
-            # safety warning
+            # confirm recovery seed check
             btn_code = yield
-            assert btn_code == B.ResetDevice
+            assert btn_code == B.Success
+            self.client.debug.press_yes()
+
+            # confirm success
+            btn_code = yield
+            assert btn_code == B.Success
             self.client.debug.press_yes()
 
         os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
@@ -78,6 +88,8 @@ class TestMsgResetDeviceT2(TrezorTest):
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.Success),
+                    proto.ButtonRequest(code=B.Success),
                     proto.Success(),
                     proto.Features(),
                 ]
@@ -138,6 +150,11 @@ class TestMsgResetDeviceT2(TrezorTest):
             assert btn_code == B.ResetDevice
             self.client.debug.press_yes()
 
+            # Confirm warning
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            self.client.debug.press_yes()
+
             # mnemonic phrases
             btn_code = yield
             assert btn_code == B.ResetDevice
@@ -152,14 +169,19 @@ class TestMsgResetDeviceT2(TrezorTest):
                     self.client.debug.press_yes()
 
             # check backup words
-            for _ in range(2):
+            for _ in range(3):
                 time.sleep(1)
                 index = self.client.debug.state().reset_word_pos
                 self.client.debug.input(words[index])
 
-            # safety warning
+            # confirm recovery seed check
             btn_code = yield
-            assert btn_code == B.ResetDevice
+            assert btn_code == B.Success
+            self.client.debug.press_yes()
+
+            # confirm success
+            btn_code = yield
+            assert btn_code == B.Success
             self.client.debug.press_yes()
 
         os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
@@ -174,6 +196,8 @@ class TestMsgResetDeviceT2(TrezorTest):
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.Success),
+                    proto.ButtonRequest(code=B.Success),
                     proto.Success(),
                     proto.Features(),
                 ]

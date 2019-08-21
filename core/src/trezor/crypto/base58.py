@@ -83,6 +83,12 @@ def keccak_32(data: bytes) -> bytes:
     return sha3_256(data, keccak=True).digest()[:4]
 
 
+def ripemd160_32(data: bytes) -> bytes:
+    from .hashlib import ripemd160
+
+    return ripemd160(data).digest()[:4]
+
+
 def encode_check(data: bytes, digestfunc=sha256d_32) -> str:
     """
     Convert bytes to base58 encoded string, append checksum.

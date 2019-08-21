@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -27,10 +27,12 @@
 
 /// package: trezorcrypto.__init__
 
-/// class Pbkdf2:
-///     '''
+/// class pbkdf2:
+///     """
 ///     PBKDF2 context.
-///     '''
+///     """
+///     HMAC_SHA256: int
+///     HMAC_SHA512: int
 typedef struct _mp_obj_Pbkdf2_t {
   mp_obj_base_t base;
   union {
@@ -42,11 +44,17 @@ typedef struct _mp_obj_Pbkdf2_t {
 
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t data);
 
-/// def __init__(self, prf: int, password: bytes, salt: bytes, iterations: int =
-/// None, blocknr: int = 1) -> None:
-///     '''
+/// def __init__(
+///     self,
+///     prf: int,
+///     password: bytes,
+///     salt: bytes,
+///     iterations: int = None,
+///     blocknr: int = 1,
+/// ) -> None:
+///     """
 ///     Create a PBKDF2 context.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type,
                                                  size_t n_args, size_t n_kw,
                                                  const mp_obj_t *args) {
@@ -89,9 +97,9 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type,
 }
 
 /// def update(self, iterations: int) -> None:
-///     '''
+///     """
 ///     Update a PBKDF2 context.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self,
                                                mp_obj_t iterations) {
   mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
@@ -108,9 +116,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Pbkdf2_update_obj,
                                  mod_trezorcrypto_Pbkdf2_update);
 
 /// def key(self) -> bytes:
-///     '''
+///     """
 ///     Retrieve derived key.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_key(mp_obj_t self) {
   mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
   if (o->prf == PRF_HMAC_SHA256) {
@@ -149,8 +157,8 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_Pbkdf2_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_key), MP_ROM_PTR(&mod_trezorcrypto_Pbkdf2_key_obj)},
     {MP_ROM_QSTR(MP_QSTR___del__),
      MP_ROM_PTR(&mod_trezorcrypto_Pbkdf2___del___obj)},
-    {MP_ROM_QSTR(MP_QSTR_HMAC_SHA256), MP_OBJ_NEW_SMALL_INT(PRF_HMAC_SHA256)},
-    {MP_ROM_QSTR(MP_QSTR_HMAC_SHA512), MP_OBJ_NEW_SMALL_INT(PRF_HMAC_SHA512)},
+    {MP_ROM_QSTR(MP_QSTR_HMAC_SHA256), MP_ROM_INT(PRF_HMAC_SHA256)},
+    {MP_ROM_QSTR(MP_QSTR_HMAC_SHA512), MP_ROM_INT(PRF_HMAC_SHA512)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_Pbkdf2_locals_dict,
                             mod_trezorcrypto_Pbkdf2_locals_dict_table);

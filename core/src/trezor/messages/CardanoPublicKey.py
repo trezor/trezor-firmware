@@ -4,6 +4,12 @@ import protobuf as p
 
 from .HDNodeType import HDNodeType
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class CardanoPublicKey(p.MessageType):
     MESSAGE_WIRE_TYPE = 306
@@ -17,7 +23,7 @@ class CardanoPublicKey(p.MessageType):
         self.node = node
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('xpub', p.UnicodeType, 0),
             2: ('node', HDNodeType, 0),

@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class ResetDevice(p.MessageType):
     MESSAGE_WIRE_TYPE = 14
@@ -17,6 +23,7 @@ class ResetDevice(p.MessageType):
         u2f_counter: int = None,
         skip_backup: bool = None,
         no_backup: bool = None,
+        backup_type: int = None,
     ) -> None:
         self.display_random = display_random
         self.strength = strength
@@ -27,9 +34,10 @@ class ResetDevice(p.MessageType):
         self.u2f_counter = u2f_counter
         self.skip_backup = skip_backup
         self.no_backup = no_backup
+        self.backup_type = backup_type
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('display_random', p.BoolType, 0),
             2: ('strength', p.UVarintType, 0),  # default=256
@@ -40,4 +48,5 @@ class ResetDevice(p.MessageType):
             7: ('u2f_counter', p.UVarintType, 0),
             8: ('skip_backup', p.BoolType, 0),
             9: ('no_backup', p.BoolType, 0),
+            10: ('backup_type', p.UVarintType, 0),  # default=ResetDeviceBackupType_Bip39
         }

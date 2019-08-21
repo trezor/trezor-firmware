@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2018 ZuluCrypto <zulucrypto@protonmail.com>
  *
@@ -1352,6 +1352,7 @@ size_t stellar_publicAddressAsStr(const uint8_t *bytes, char *out,
 bool stellar_validateAddress(const char *str_address) {
   bool valid = false;
   uint8_t decoded[STELLAR_ADDRESS_SIZE_RAW];
+  memzero(decoded, sizeof(decoded));
 
   if (strlen(str_address) != STELLAR_ADDRESS_SIZE) {
     return false;
@@ -1384,6 +1385,7 @@ bool stellar_validateAddress(const char *str_address) {
  */
 bool stellar_getAddressBytes(const char *str_address, uint8_t *out_bytes) {
   uint8_t decoded[STELLAR_ADDRESS_SIZE_RAW];
+  memzero(decoded, sizeof(decoded));
 
   // Ensure address is valid
   if (!stellar_validateAddress(str_address)) return false;

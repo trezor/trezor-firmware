@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Converts Google's protobuf python definitions of TREZOR wire messages
-# to plain-python objects as used in TREZOR Core and python-trezor
+# Converts Google's protobuf python definitions of Trezor wire messages
+# to plain-python objects as used in Trezor Core and python-trezor
 
 import argparse
 import importlib
@@ -214,7 +214,7 @@ class Descriptor:
     def create_fields_method(self, fields):
         # fmt: off
         yield "    @classmethod"
-        yield "    def get_fields(cls):"
+        yield "    def get_fields(cls) -> Dict:"
         yield "        return {"
         for field in fields:
             comments = []
@@ -255,13 +255,12 @@ class Descriptor:
 
         yield from self.process_message_imports(fields)
 
-        if any(field.repeated for field in fields):
-            yield ""
-            yield "if __debug__:"
-            yield "    try:"
-            yield "        from typing import List"
-            yield "    except ImportError:"
-            yield "        List = None  # type: ignore"
+        yield ""
+        yield "if __debug__:"
+        yield "    try:"
+        yield "        from typing import Dict, List, Optional"
+        yield "    except ImportError:"
+        yield "        Dict, List, Optional = None, None, None  # type: ignore"
 
         yield ""
         yield ""
@@ -333,8 +332,6 @@ class Descriptor:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-
     parser = argparse.ArgumentParser()
     # fmt: off
     parser.add_argument("proto", nargs="+", help="Protobuf definition files")
@@ -343,8 +340,12 @@ if __name__ == "__main__":
     parser.add_argument("-l", "--no-init-py", action="store_true", help="Do not generate __init__.py with list of modules")
     parser.add_argument("--message-type", default="MessageType", help="Name of enum with message IDs")
     parser.add_argument("-I", "--protoc-include", action="append", help="protoc include path")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Print debug messages")
     # fmt: on
     args = parser.parse_args()
+
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
 
     protoc_includes = args.protoc_include or (os.environ.get("PROTOC_INCLUDE"),)
     descriptor_proto = protoc(args.proto, protoc_includes)

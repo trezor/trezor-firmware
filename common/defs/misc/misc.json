@@ -9,7 +9,9 @@
             "Homepage": "https://lisk.io/",
             "Github": "https://github.com/LiskHQ/lisk"
         },
-        "wallet": {},
+        "wallet": {
+            "Liskish Wallet": "https://github.com/hirishh/liskish-wallet/releases"
+        },
         "blockchain_link": {}
     },
     {
@@ -37,7 +39,9 @@
             "Homepage": "https://getmonero.org",
             "Github": "https://github.com/monero-project/monero"
         },
-        "wallet": {},
+        "wallet": {
+            "Monero CLI/GUI": "https://www.getmonero.org/downloads/"
+        },
         "blockchain_link": {}
     },
     {
@@ -72,7 +76,9 @@
             "Homepage": "https://ripple.com",
             "Github": "https://github.com/ripple/rippled"
         },
-        "wallet": {},
+        "wallet": {
+            "Trezor Beta": "https://beta-wallet.trezor.io/next/"
+        },
         "blockchain_link": {
             "type": "ripple",
             "url": [
@@ -133,7 +139,9 @@
             "Homepage": "https://wanchain.org",
             "Github": "https://github.com/wanchain/go-wanchain"
         },
-        "wallet": {},
+        "wallet": {
+            "Wanchain Wallet": "https://www.wanchain.org/products"
+        },
         "blockchain_link": {}
     },
     {
@@ -146,20 +154,9 @@
             "Homepage": "https://eos.io",
             "Github": "https://github.com/EOSIO/eos"
         },
-        "wallet": {},
-        "blockchain_link": {}
-    },
-    {
-        "name": "Tron",
-        "shortcut": "TRX",
-        "slip44": 195,
-        "curve": "secp256k1",
-        "decimals": 6,
-        "links": {
-            "Homepage": "https://tron.network",
-            "Github": "https://github.com/tronprotocol/java-tron"
+        "wallet": {
+            "Bloks.io": "https://bloks.io/wallet"
         },
-        "wallet": {},
         "blockchain_link": {}
     },
     {
@@ -172,7 +169,9 @@
             "Homepage": "https://www.omnilayer.org",
             "Github": "https://github.com/OmniLayer"
         },
-        "wallet": {},
+        "wallet": {
+            "OMNI Trezor": "https://omnitrezor.com/"
+        },
         "blockchain_link": {}
     },
     {
@@ -185,7 +184,9 @@
             "Homepage": "https://maidsafe.net",
             "Github": "https://github.com/maidsafe"
         },
-        "wallet": {},
+        "wallet": {
+            "OMNI Trezor": "https://omnitrezor.com/"
+        },
         "blockchain_link": {}
     },
     {
@@ -211,7 +212,9 @@
         "links": {
             "Homepage": "https://tether.to"
         },
-        "wallet": {},
+        "wallet": {
+            "OMNI Trezor": "https://omnitrezor.com/"
+        },
         "blockchain_link": {}
     }
 ]

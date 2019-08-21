@@ -21,7 +21,7 @@ for TYPE in "deb" "rpm"; do
 		-v $VERSION \
 		--license "LGPL-3.0" \
 		--vendor "SatoshiLabs" \
-		--description "Udev rules for TREZOR" \
+		--description "Udev rules for Trezor" \
 		--maintainer "SatoshiLabs <stick@satoshilabs.com>" \
 		--url "https://trezor.io/" \
 		--category "Productivity/Security" \

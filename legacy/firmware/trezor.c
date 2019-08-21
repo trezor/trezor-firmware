@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
  *
@@ -53,7 +53,7 @@ void check_lock_screen(void) {
   // button held for long enough (2 seconds)
   if (layoutLast == layoutHome && button.NoDown >= 285000 * 2) {
     layoutDialog(&bmp_icon_question, _("Cancel"), _("Lock Device"), NULL,
-                 _("Do you really want to"), _("lock your TREZOR?"), NULL, NULL,
+                 _("Do you really want to"), _("lock your Trezor?"), NULL, NULL,
                  NULL, NULL);
 
     // wait until NoButton is released
@@ -128,6 +128,9 @@ int main(void) {
   __stack_chk_guard = random32();  // this supports compiler provided
                                    // unpredictable stack protection checks
 #endif
+
+  drbg_init();
+
   if (!is_mode_unprivileged()) {
     collect_hw_entropy(true);
     timer_init();
@@ -141,7 +144,9 @@ int main(void) {
 
 #if DEBUG_LINK
   oledSetDebugLink(1);
+#if !EMULATOR
   config_wipe();
+#endif
 #endif
 
   oledDrawBitmap(40, 0, &bmp_logo64);

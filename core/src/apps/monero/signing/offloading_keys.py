@@ -3,7 +3,7 @@ from trezor import utils
 from apps.monero.xmr import crypto
 
 if False:
-    from apps.monero.xmr.types import *
+    from apps.monero.xmr.types import Sc25519
 
 
 BUILD_KEY_BUFFER = bytearray(32 + 12 + 4)  # key + disc + index

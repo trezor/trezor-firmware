@@ -28,16 +28,30 @@ class Keychain:
         return node
 
 
-async def get_keychain(ctx: wire.Context) -> Keychain:
-    if not storage.is_initialized():
-        raise wire.ProcessError("Device is not initialized")
-
-    # derive the root node from mnemonic and passphrase
+async def _get_passphrase(ctx: wire.Context) -> bytes:
     passphrase = cache.get_passphrase()
     if passphrase is None:
         passphrase = await protect_by_passphrase(ctx)
         cache.set_passphrase(passphrase)
-    root = bip32.from_mnemonic_cardano(mnemonic.restore(), passphrase)
+
+    return passphrase
+
+
+async def get_keychain(ctx: wire.Context) -> Keychain:
+    if not storage.is_initialized():
+        raise wire.ProcessError("Device is not initialized")
+
+    if mnemonic.get_type() == mnemonic.TYPE_SLIP39:
+        seed = cache.get_seed()
+        if seed is None:
+            passphrase = await _get_passphrase(ctx)
+            seed = mnemonic.get_seed(passphrase)
+            cache.set_seed(seed)
+        root = bip32.from_seed(seed, "ed25519 cardano seed")
+    else:
+        # derive the root node from mnemonic and passphrase
+        passphrase = await _get_passphrase(ctx)
+        root = bip32.from_mnemonic_cardano(mnemonic.get_secret().decode(), passphrase)
 
     # derive the namespaced root node
     for i in SEED_NAMESPACE:

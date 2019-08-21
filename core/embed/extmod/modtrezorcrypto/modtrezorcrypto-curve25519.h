@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -26,9 +26,9 @@
 /// package: trezorcrypto.curve25519
 
 /// def generate_secret() -> bytes:
-///     '''
+///     """
 ///     Generate secret key.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_curve25519_generate_secret() {
   uint8_t out[32];
   random_buffer(out, 32);
@@ -43,9 +43,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(
     mod_trezorcrypto_curve25519_generate_secret);
 
 /// def publickey(secret_key: bytes) -> bytes:
-///     '''
+///     """
 ///     Computes public key from secret key.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_curve25519_publickey(mp_obj_t secret_key) {
   mp_buffer_info_t sk;
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
@@ -60,10 +60,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_curve25519_publickey_obj,
                                  mod_trezorcrypto_curve25519_publickey);
 
 /// def multiply(secret_key: bytes, public_key: bytes) -> bytes:
-///     '''
+///     """
 ///     Multiplies point defined by public_key with scalar defined by
 ///     secret_key. Useful for ECDH.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_curve25519_multiply(mp_obj_t secret_key,
                                                      mp_obj_t public_key) {
   mp_buffer_info_t sk, pk;

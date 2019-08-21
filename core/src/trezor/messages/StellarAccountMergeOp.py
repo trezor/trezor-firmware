@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class StellarAccountMergeOp(p.MessageType):
     MESSAGE_WIRE_TYPE = 218
@@ -15,7 +21,7 @@ class StellarAccountMergeOp(p.MessageType):
         self.destination_account = destination_account
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('source_account', p.UnicodeType, 0),
             2: ('destination_account', p.UnicodeType, 0),

@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2018 Pavol Rusnak <stick@satoshilabs.com>
  *
@@ -213,8 +213,8 @@ void fsm_msgLoadDevice(const LoadDevice *msg) {
     return;
   }
 
-  if (msg->has_mnemonic && !(msg->has_skip_checksum && msg->skip_checksum)) {
-    if (!mnemonic_check(msg->mnemonic)) {
+  if (msg->mnemonics_count && !(msg->has_skip_checksum && msg->skip_checksum)) {
+    if (!mnemonic_check(msg->mnemonics[0])) {
       fsm_sendFailure(FailureType_Failure_DataError,
                       _("Mnemonic with wrong checksum provided"));
       layoutHome();
@@ -273,7 +273,9 @@ void fsm_msgCancel(const Cancel *msg) {
   (void)msg;
   recovery_abort();
   signing_abort();
+#if !BITCOIN_ONLY
   ethereum_signing_abort();
+#endif
   fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 }
 

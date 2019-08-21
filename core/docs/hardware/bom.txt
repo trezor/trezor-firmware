@@ -1,109 +1,109 @@
-Part Value                Device                                  Package                    Description 
-C1   1n/50V               C_0402                                  0402                                   
-C2   22p                  C_0402                                  0402                                   
-C3   22p                  C_0402                                  0402                                   
-C4   1u                   C_0603$REFLOW                           0603_REFLOW                            
-C5   1u                   C_0603                                  0603                                   
-C6   10n                  C_0402                                  0402                                   
-C7   100n                 C_0402                                  0402                                   
-C8   10n                  C_0402                                  0402                                   
-C9   100n                 C_0402                                  0402                                   
-C10  100n                 C_0402                                  0402                                   
-C11  1n                   C_0402                                  0402                                   
-C12  2u2                  C_0805$REFLOW                           0805_REFLOW                            
-C13  2u2                  C_0805$REFLOW                           0805_REFLOW                            
-C14  4u7/16V              C_0805$REFLOW                           0805_REFLOW                            
-C15  4u7/16V              C_0805$REFLOW                           0805_REFLOW                            
-C16  100n                 C_0402                                  0402                                   
-C18  100n                 C_0402                                  0402                                   
-C19  1u                   C_0603                                  0603                                   
-C20  100n                 C_0402                                  0402                                   
-C21  100n                 C_0402                                  0402                                   
-C22  1u                   C_0603                                  0603                                   
-C23  10n                  C_0402                                  0402                                   
-C24  100n                 C_0402                                  0402                                   
-C25  1n/50V               C_0402                                  0402                                   
-C26  10n                  C_0402                                  0402                                   
-C27  100n                 C_0402                                  0402                                   
-C28  100n                 C_0402                                  0402                                   
-C29  100n                 C_0402                                  0402                                   
-C30  10n                  C_0402                                  0402                                   
-C31  100n                 C_0402                                  0402                                   
-C32  10n                  C_0402                                  0402                                   
-C33  1n                   C_0402                                  0402                                   
-C34  2u2                  C_0805$REFLOW                           0805_REFLOW                            
-C36  47p                  C_0402                                  0402                                   
-C37  47p                  C_0402                                  0402                                   
-C38  47p                  C_0402                                  0402                                   
-C39  47p                  C_0402                                  0402                                   
-C40  47p                  C_0402                                  0402                                   
-C41  100n                 C_0402                                  0402                                   
-C42  1n                   C_0402                                  0402                                   
-C43  47p                  C_0402                                  0402                                   
-C44  100n                 C_0402                                  0402                                   
-C45  2u2                  C_0805$REFLOW                           0805_REFLOW                            
-C46  1n                   C_0402                                  0402                                   
-C47  1n                   C_0402                                  0402                                   
-C48  10n                  C_0402                                  0402                                   
-C49  10n                  C_0402                                  0402                                   
-C50  10n                  C_0402                                  0402                                   
-D1   PMEG3005             DS_SOD323F                              SOD323F                                
-D2   PESD5V0F1BLD         D_TRANSIL_BI_SOD882D                    SOD882D                                
-D3   PRTR5V0U2X           PRTR5V0_SOT143B$REFLOW                  SOT143B_REFLOW                         
-D4   PESD5V0F1BLD         D_TRANSIL_BI_SOD882D                    SOD882D                                
-D6   PMEG4005             DS_SOD323F                              SOD323F                                
-IC2  STM32F427VIT6        STM32F427_LQFP100                       LQFP100_NO_CENTER_NO_TDOCU             
-IC5  TPS61043             TP6104X_WSON-8_3X3MM                    WSON-8_3X3MM                           
-IC6  XC6210B332PR         XC6210B_SOT89-5                         SOT89-5                                
-K1   DX07B024XJ1R1300     USB-C_JAE_DX07B024XJ1                   USB_C_JAE_DX07B024XJ1                  
-K3   ATTEND_112J-TDAR-R01 KON_µSD_CARD_ATTEND_112J_TXAR_R01_SMALL ATTEND_112J-TXAR-R01_SMALL             
-K4   DF37NB-24DS-0.4V     DISPLEJ_154A2411CTP01                   DF37NB-24DS-0.4V                       
-K5   SWD                  SWD                                     SWD                                    
-K6   DF37NB-10DS-0.4V     DISPLEJ_154A2411CTP01_TOUCH             DF37NB-10DS-0.4V                       
-L1   4u7 VLS252008ET-4R7M L_2.5X2.0                               L_2.5X2.0                              
-L2   BLM18AG102SN1D       L_0603$REFLOW                           0603_REFLOW                            
-L3   BLM18AG102SN1D       L_0603$REFLOW                           0603_REFLOW                            
-L4   BLM18AG102SN1D       L_0603$REFLOW                           0603_REFLOW                            
-LCD1                      LCD_DISPLEJ                             LCD                                    
-MB1                       MB_1.27                                 MB1.27                                 
-MB2                       MB_1.27                                 MB1.27                                 
-MB3                       MB_1.50                                 MB1.5                                  
-MB4                       MB_1.27                                 MB1.27                                 
-MB5                       MB_1.50                                 MB1.5                                  
-MB6                       MB_1.27                                 MB1.27                                 
-MB7                       MB_1.27                                 MB1.27                                 
-MB8                       MB_1.27                                 MB1.27                                 
-MB9                       MB_1.27                                 MB1.27                                 
-MB10                      MB_1.50                                 MB1.5                                  
-MB11                      MB_1.50                                 MB1.5                                  
-MB12                      MB_1.27                                 MB1.27                                 
-MB13                      MB_1.27                                 MB1.27                                 
-MB14                      MB_1.27                                 MB1.27                                 
-MB15                      MB_1.00                                 MB_1.00                                
-MB16                      MB_1.00                                 MB_1.00                                
-MB17                      MB_1.00                                 MB_1.00                                
-MB18                      MB_1.27                                 MB1.27                                 
-MB19                      MB_1.00                                 MB_1.00                                
-R1   22R                  R_0402                                  0402                                   
-R4   5k1                  R_0402                                  0402                                   
-R5   5k1                  R_0402                                  0402                                   
-R6   1M                   R_0402                                  0402                                   
-R7   1M                   R_0402                                  0402                                   
-R8   MF-FSMF020X-2        POLYSWITCH_0603                         0603                                   
-R9   100k                 R_0402                                  0402                                   
-R10  3k3                  R_0402                                  0402                                   
-R11  N.C.                 R_0402                                  0402                                   
-R12  10k                  R_0402                                  0402                                   
-R13  100R                 R_0402                                  0402                                   
-R14  27R                  R_0402                                  0402                                   
-R15  1k5                  R_0402                                  0402                                   
-R16  1k5                  R_0402                                  0402                                   
-R18  68R                  R_0402                                  0402                                   
-R19  68R                  R_0402                                  0402                                   
-R20  68R                  R_0402                                  0402                                   
-R21  68R                  R_0402                                  0402                                   
-R22  68R                  R_0402                                  0402                                   
-R23  68R                  R_0402                                  0402                                   
-R25  0R                   R_0402                                  0402                                   
-R26  N.C.                 R_0402                                  0402                                   
-X1   CTS406 8MHz          X_4V_6,0X3,5                            X6,0X3,5                               
+Part Value                Device                                  Package                    Description
+C1   1n/50V               C_0402                                  0402
+C2   22p                  C_0402                                  0402
+C3   22p                  C_0402                                  0402
+C4   1u                   C_0603$REFLOW                           0603_REFLOW
+C5   1u                   C_0603                                  0603
+C6   10n                  C_0402                                  0402
+C7   100n                 C_0402                                  0402
+C8   10n                  C_0402                                  0402
+C9   100n                 C_0402                                  0402
+C10  100n                 C_0402                                  0402
+C11  1n                   C_0402                                  0402
+C12  2u2                  C_0805$REFLOW                           0805_REFLOW
+C13  2u2                  C_0805$REFLOW                           0805_REFLOW
+C14  4u7/16V              C_0805$REFLOW                           0805_REFLOW
+C15  4u7/16V              C_0805$REFLOW                           0805_REFLOW
+C16  100n                 C_0402                                  0402
+C18  100n                 C_0402                                  0402
+C19  1u                   C_0603                                  0603
+C20  100n                 C_0402                                  0402
+C21  100n                 C_0402                                  0402
+C22  1u                   C_0603                                  0603
+C23  10n                  C_0402                                  0402
+C24  100n                 C_0402                                  0402
+C25  1n/50V               C_0402                                  0402
+C26  10n                  C_0402                                  0402
+C27  100n                 C_0402                                  0402
+C28  100n                 C_0402                                  0402
+C29  100n                 C_0402                                  0402
+C30  10n                  C_0402                                  0402
+C31  100n                 C_0402                                  0402
+C32  10n                  C_0402                                  0402
+C33  1n                   C_0402                                  0402
+C34  2u2                  C_0805$REFLOW                           0805_REFLOW
+C36  47p                  C_0402                                  0402
+C37  47p                  C_0402                                  0402
+C38  47p                  C_0402                                  0402
+C39  47p                  C_0402                                  0402
+C40  47p                  C_0402                                  0402
+C41  100n                 C_0402                                  0402
+C42  1n                   C_0402                                  0402
+C43  47p                  C_0402                                  0402
+C44  100n                 C_0402                                  0402
+C45  2u2                  C_0805$REFLOW                           0805_REFLOW
+C46  1n                   C_0402                                  0402
+C47  1n                   C_0402                                  0402
+C48  10n                  C_0402                                  0402
+C49  10n                  C_0402                                  0402
+C50  10n                  C_0402                                  0402
+D1   PMEG3005             DS_SOD323F                              SOD323F
+D2   PESD5V0F1BLD         D_TRANSIL_BI_SOD882D                    SOD882D
+D3   PRTR5V0U2X           PRTR5V0_SOT143B$REFLOW                  SOT143B_REFLOW
+D4   PESD5V0F1BLD         D_TRANSIL_BI_SOD882D                    SOD882D
+D6   PMEG4005             DS_SOD323F                              SOD323F
+IC2  STM32F427VIT6        STM32F427_LQFP100                       LQFP100_NO_CENTER_NO_TDOCU
+IC5  TPS61043             TP6104X_WSON-8_3X3MM                    WSON-8_3X3MM
+IC6  XC6210B332PR         XC6210B_SOT89-5                         SOT89-5
+K1   DX07B024XJ1R1300     USB-C_JAE_DX07B024XJ1                   USB_C_JAE_DX07B024XJ1
+K3   ATTEND_112J-TDAR-R01 KON_µSD_CARD_ATTEND_112J_TXAR_R01_SMALL ATTEND_112J-TXAR-R01_SMALL
+K4   DF37NB-24DS-0.4V     DISPLEJ_154A2411CTP01                   DF37NB-24DS-0.4V
+K5   SWD                  SWD                                     SWD
+K6   DF37NB-10DS-0.4V     DISPLEJ_154A2411CTP01_TOUCH             DF37NB-10DS-0.4V
+L1   4u7 VLS252008ET-4R7M L_2.5X2.0                               L_2.5X2.0
+L2   BLM18AG102SN1D       L_0603$REFLOW                           0603_REFLOW
+L3   BLM18AG102SN1D       L_0603$REFLOW                           0603_REFLOW
+L4   BLM18AG102SN1D       L_0603$REFLOW                           0603_REFLOW
+LCD1                      LCD_DISPLEJ                             LCD
+MB1                       MB_1.27                                 MB1.27
+MB2                       MB_1.27                                 MB1.27
+MB3                       MB_1.50                                 MB1.5
+MB4                       MB_1.27                                 MB1.27
+MB5                       MB_1.50                                 MB1.5
+MB6                       MB_1.27                                 MB1.27
+MB7                       MB_1.27                                 MB1.27
+MB8                       MB_1.27                                 MB1.27
+MB9                       MB_1.27                                 MB1.27
+MB10                      MB_1.50                                 MB1.5
+MB11                      MB_1.50                                 MB1.5
+MB12                      MB_1.27                                 MB1.27
+MB13                      MB_1.27                                 MB1.27
+MB14                      MB_1.27                                 MB1.27
+MB15                      MB_1.00                                 MB_1.00
+MB16                      MB_1.00                                 MB_1.00
+MB17                      MB_1.00                                 MB_1.00
+MB18                      MB_1.27                                 MB1.27
+MB19                      MB_1.00                                 MB_1.00
+R1   22R                  R_0402                                  0402
+R4   5k1                  R_0402                                  0402
+R5   5k1                  R_0402                                  0402
+R6   1M                   R_0402                                  0402
+R7   1M                   R_0402                                  0402
+R8   MF-FSMF020X-2        POLYSWITCH_0603                         0603
+R9   100k                 R_0402                                  0402
+R10  3k3                  R_0402                                  0402
+R11  N.C.                 R_0402                                  0402
+R12  10k                  R_0402                                  0402
+R13  100R                 R_0402                                  0402
+R14  27R                  R_0402                                  0402
+R15  1k5                  R_0402                                  0402
+R16  1k5                  R_0402                                  0402
+R18  68R                  R_0402                                  0402
+R19  68R                  R_0402                                  0402
+R20  68R                  R_0402                                  0402
+R21  68R                  R_0402                                  0402
+R22  68R                  R_0402                                  0402
+R23  68R                  R_0402                                  0402
+R25  0R                   R_0402                                  0402
+R26  N.C.                 R_0402                                  0402
+X1   CTS406 8MHz          X_4V_6,0X3,5                            X6,0X3,5

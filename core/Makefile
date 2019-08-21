@@ -71,6 +71,10 @@ test_emu_monero: ## run selected monero device tests from monero-agent
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 
+mypy:
+	mypy --config-file ../setup.cfg \
+		src/main.py
+
 ## code generation:
 
 templates: ## render Mako templates (for lists of coins, tokens, etc.)
@@ -105,11 +109,8 @@ build_firmware: res build_cross ## build firmware with frozen modules
 build_unix: res ## build unix port
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS)
 
-build_unix_noui: res ## build unix port without UI support
-	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS) TREZOR_EMULATOR_NOUI=1
-
-build_unix_raspi: res ## build unix port for Raspberry Pi
-	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS) TREZOR_EMULATOR_RASPI=1
+build_unix_frozen: res build_cross ## build unix port with frozen modules
+	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS) TREZOR_EMULATOR_FROZEN=1
 
 build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)

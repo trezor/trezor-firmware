@@ -5,6 +5,9 @@
     "bitcoin:BCH": {
         "Electron Cash": "https://electroncash.org"
     },
+    "bitcoin:BELL": {
+        "Electrum-BELL": "https://bell.electrum-jp.net"
+    },
     "bitcoin:BTC": {
         "Electrum": "https://electrum.org"
     },
@@ -16,6 +19,12 @@
     },
     "bitcoin:BTX": {
         "Electrum-BTX": "https://github.com/LIMXTEC/electrum-btx"
+    },
+    "bitcoin:CPC": {
+        "Capricoin Mobile Wallet": "https://wallet.capricoin.org"
+    },
+    "bitcoin:CPU": {
+        "Electrum-CPU": "https://cpuchain.org/download-page.html"
     },
     "bitcoin:DASH": {
         "Dash Electrum": "https://electrum.dash.org"
@@ -44,8 +53,14 @@
     "bitcoin:NMC": {
         "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
     },
+    "bitcoin:PART": {
+        "Particl Core": "https://github.com/particl/particl-core/releases"
+    },
     "bitcoin:VIA": {
         "Vialectrum": "https://vialectrum.org"
+    },
+    "bitcoin:VIPS": {
+        "Electrum-VIPS": "https://electrum-vips.info"
     },
     "bitcoin:XZC": {
         "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
@@ -62,6 +77,13 @@
         "Qtum-Electrum": "https://github.com/qtumproject/qtum-electrum"
     },
     "bitcoin:RVN": {
-        "Electrum-RVN": "https://github.com/traysi/electrum-raven"
+        "Electrum-RVN": "https://github.com/traysi/electrum-raven",
+        "Mango Farm": "https://mangofarmassets.com/mangowallet"
+    },
+    "bitcoin:ZNY": {
+        "Electrum-ZNY": "https://zny.electrum-jp.net"
+    },
+    "bitcoin:XRC": {
+        "Electrum-XRC": "https://electrum.bitcoinrh.org"
     }
 }

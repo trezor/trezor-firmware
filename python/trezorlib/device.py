@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2018 SatoshiLabs and contributors
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -103,7 +103,6 @@ def wipe(client):
     return ret
 
 
-@expect(proto.Success, field="message")
 def recover(
     client,
     word_count=24,
@@ -168,6 +167,7 @@ def reset(
     u2f_counter=0,
     skip_backup=False,
     no_backup=False,
+    backup_type=proto.ResetDeviceBackupType.Bip39,
 ):
     if client.features.initialized:
         raise RuntimeError(
@@ -191,6 +191,7 @@ def reset(
         u2f_counter=u2f_counter,
         skip_backup=bool(skip_backup),
         no_backup=bool(no_backup),
+        backup_type=backup_type,
     )
 
     resp = client.call(msg)

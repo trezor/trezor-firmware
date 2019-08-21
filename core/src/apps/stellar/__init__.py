@@ -6,7 +6,7 @@ from apps.common import HARDENED
 CURVE = "ed25519"
 
 
-def boot():
+def boot() -> None:
     ns = [[CURVE, HARDENED | 44, HARDENED | 148]]
     wire.add(MessageType.StellarGetAddress, __name__, "get_address", ns)
     wire.add(MessageType.StellarSignTx, __name__, "sign_tx", ns)

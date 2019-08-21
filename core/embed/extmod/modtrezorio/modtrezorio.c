@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -44,6 +44,16 @@
 #include "modtrezorio-usb.h"
 // clang-format on
 
+/// POLL_READ: int  # wait until interface is readable and return read data
+/// POLL_WRITE: int  # wait until interface is writable
+///
+/// TOUCH: int  # interface id of the touch events
+/// TOUCH_START: int  # event id of touch start event
+/// TOUCH_MOVE: int  # event id of touch move event
+/// TOUCH_END: int  # event id of touch end event
+
+/// WireInterface = Union[HID, WebUSB]
+
 STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorio)},
 
@@ -59,16 +69,13 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_WebUSB), MP_ROM_PTR(&mod_trezorio_WebUSB_type)},
 
     {MP_ROM_QSTR(MP_QSTR_poll), MP_ROM_PTR(&mod_trezorio_poll_obj)},
-    {MP_ROM_QSTR(MP_QSTR_POLL_READ), MP_OBJ_NEW_SMALL_INT(POLL_READ)},
-    {MP_ROM_QSTR(MP_QSTR_POLL_WRITE), MP_OBJ_NEW_SMALL_INT(POLL_WRITE)},
+    {MP_ROM_QSTR(MP_QSTR_POLL_READ), MP_ROM_INT(POLL_READ)},
+    {MP_ROM_QSTR(MP_QSTR_POLL_WRITE), MP_ROM_INT(POLL_WRITE)},
 
-    {MP_ROM_QSTR(MP_QSTR_TOUCH), MP_OBJ_NEW_SMALL_INT(TOUCH_IFACE)},
-    {MP_ROM_QSTR(MP_QSTR_TOUCH_START),
-     MP_OBJ_NEW_SMALL_INT((TOUCH_START >> 24) & 0xFFU)},
-    {MP_ROM_QSTR(MP_QSTR_TOUCH_MOVE),
-     MP_OBJ_NEW_SMALL_INT((TOUCH_MOVE >> 24) & 0xFFU)},
-    {MP_ROM_QSTR(MP_QSTR_TOUCH_END),
-     MP_OBJ_NEW_SMALL_INT((TOUCH_END >> 24) & 0xFFU)},
+    {MP_ROM_QSTR(MP_QSTR_TOUCH), MP_ROM_INT(TOUCH_IFACE)},
+    {MP_ROM_QSTR(MP_QSTR_TOUCH_START), MP_ROM_INT((TOUCH_START >> 24) & 0xFFU)},
+    {MP_ROM_QSTR(MP_QSTR_TOUCH_MOVE), MP_ROM_INT((TOUCH_MOVE >> 24) & 0xFFU)},
+    {MP_ROM_QSTR(MP_QSTR_TOUCH_END), MP_ROM_INT((TOUCH_END >> 24) & 0xFFU)},
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorio_globals,

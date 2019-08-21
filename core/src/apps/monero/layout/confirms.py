@@ -2,6 +2,7 @@ from ubinascii import hexlify
 
 from trezor import ui, wire
 from trezor.messages import ButtonRequestType
+from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 from trezor.utils import chunks
 
@@ -12,25 +13,25 @@ DUMMY_PAYMENT_ID = b"\x00" * 8
 
 
 async def require_confirm_watchkey(ctx):
-    content = Text("Confirm export", ui.ICON_SEND, icon_color=ui.GREEN)
+    content = Text("Confirm export", ui.ICON_SEND, ui.GREEN)
     content.normal("Do you really want to", "export watch-only", "credentials?")
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_keyimage_sync(ctx):
-    content = Text("Confirm ki sync", ui.ICON_SEND, icon_color=ui.GREEN)
+    content = Text("Confirm ki sync", ui.ICON_SEND, ui.GREEN)
     content.normal("Do you really want to", "sync key images?")
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_live_refresh(ctx):
-    content = Text("Confirm refresh", ui.ICON_SEND, icon_color=ui.GREEN)
+    content = Text("Confirm refresh", ui.ICON_SEND, ui.GREEN)
     content.normal("Do you really want to", "start refresh?")
     return await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_tx_key(ctx, export_key=False):
-    content = Text("Confirm export", ui.ICON_SEND, icon_color=ui.GREEN)
+    content = Text("Confirm export", ui.ICON_SEND, ui.GREEN)
     txt = ["Do you really want to"]
     if export_key:
         txt.append("export tx_key?")
@@ -111,14 +112,55 @@ async def _require_confirm_payment_id(ctx, payment_id):
 
 
 async def _require_confirm_fee(ctx, fee):
-    content = Text("Confirm fee", ui.ICON_SEND, icon_color=ui.GREEN)
+    content = Text("Confirm fee", ui.ICON_SEND, ui.GREEN)
     content.bold(common.format_amount(fee))
     await require_hold_to_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
 
-@ui.layout_no_slide
+class TransactionStep(ui.Control):
+    def __init__(self, state, info):
+        self.state = state
+        self.info = info
+
+    def on_render(self):
+        state = self.state
+        info = self.info
+        ui.header("Signing transaction", ui.ICON_SEND, ui.TITLE_GREY, ui.BG, ui.BLUE)
+        p = 1000 * state.progress_cur // state.progress_total
+        ui.display.loader(p, False, -4, ui.WHITE, ui.BG)
+        ui.display.text_center(ui.WIDTH // 2, 210, info[0], ui.NORMAL, ui.FG, ui.BG)
+        if len(info) > 1:
+            ui.display.text_center(ui.WIDTH // 2, 235, info[1], ui.NORMAL, ui.FG, ui.BG)
+
+
+class KeyImageSyncStep(ui.Control):
+    def __init__(self, current, total_num):
+        self.current = current
+        self.total_num = total_num
+
+    def on_render(self):
+        current = self.current
+        total_num = self.total_num
+        ui.header("Syncing", ui.ICON_SEND, ui.TITLE_GREY, ui.BG, ui.BLUE)
+        p = (1000 * (current + 1) // total_num) if total_num > 0 else 0
+        ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
+
+
+class LiveRefreshStep(ui.Control):
+    def __init__(self, current):
+        self.current = current
+
+    def on_render(self):
+        current = self.current
+        ui.header("Refreshing", ui.ICON_SEND, ui.TITLE_GREY, ui.BG, ui.BLUE)
+        p = (1000 * current // 8) % 1000
+        ui.display.loader(p, True, 18, ui.WHITE, ui.BG)
+        ui.display.text_center(
+            ui.WIDTH // 2, 145, "%d" % current, ui.NORMAL, ui.FG, ui.BG
+        )
+
+
 async def transaction_step(state, step, sub_step=None):
-    info = []
     if step == 0:
         info = ["Signing..."]
     elif step == 100:
@@ -139,43 +181,41 @@ async def transaction_step(state, step, sub_step=None):
         info = ["Processing..."]
 
     state.progress_cur += 1
-
-    ui.display.clear()
-    text = Text("Signing transaction", ui.ICON_SEND, icon_color=ui.BLUE)
-    text.render()
-
-    p = 1000 * state.progress_cur // state.progress_total
-    ui.display.loader(p, False, -4, ui.WHITE, ui.BG)
-    ui.display.text_center(ui.WIDTH // 2, 210, info[0], ui.NORMAL, ui.FG, ui.BG)
-    if len(info) > 1:
-        ui.display.text_center(ui.WIDTH // 2, 235, info[1], ui.NORMAL, ui.FG, ui.BG)
-    ui.display.refresh()
+    await Popup(TransactionStep(state, info))
 
 
-@ui.layout_no_slide
 async def keyimage_sync_step(ctx, current, total_num):
     if current is None:
         return
-    ui.display.clear()
-    text = Text("Syncing", ui.ICON_SEND, icon_color=ui.BLUE)
-    text.render()
-
-    p = (1000 * (current + 1) // total_num) if total_num > 0 else 0
-    ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
-    ui.display.refresh()
+    await Popup(KeyImageSyncStep(current, total_num))
 
 
-@ui.layout_no_slide
 async def live_refresh_step(ctx, current):
     if current is None:
         return
-    ui.display.clear()
-    text = Text("Refreshing", ui.ICON_SEND, icon_color=ui.BLUE)
-    text.render()
+    await Popup(LiveRefreshStep(current))
 
-    step = 8
-    p = (1000 * current // step) % 1000
 
-    ui.display.loader(p, True, 18, ui.WHITE, ui.BG)
-    ui.display.text_center(ui.WIDTH // 2, 145, "%d" % current, ui.NORMAL, ui.FG, ui.BG)
-    ui.display.refresh()
+async def show_address(
+    ctx, address: str, desc: str = "Confirm address", network: str = None
+):
+    from apps.common.confirm import confirm
+    from trezor.messages import ButtonRequestType
+    from trezor.ui.button import ButtonDefault
+    from trezor.ui.scroll import Paginated
+
+    pages = []
+    for lines in common.paginate_lines(common.split_address(address), 5):
+        text = Text(desc, ui.ICON_RECEIVE, ui.GREEN)
+        if network is not None:
+            text.normal("%s network" % network)
+        text.mono(*lines)
+        pages.append(text)
+
+    return await confirm(
+        ctx,
+        Paginated(pages),
+        code=ButtonRequestType.Address,
+        cancel="QR",
+        cancel_style=ButtonDefault,
+    )

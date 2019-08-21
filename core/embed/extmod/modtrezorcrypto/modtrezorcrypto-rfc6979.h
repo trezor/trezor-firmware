@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -23,19 +23,19 @@
 
 /// package: trezorcrypto.__init__
 
-/// class Rfc6979:
-///     '''
+/// class rfc6979:
+///     """
 ///     RFC6979 context.
-///     '''
+///     """
 typedef struct _mp_obj_Rfc6979_t {
   mp_obj_base_t base;
   rfc6979_state rng;
 } mp_obj_Rfc6979_t;
 
 /// def __init__(self, secret_key: bytes, hash: bytes) -> None:
-///     '''
+///     """
 ///     Initialize RFC6979 context from secret key and a hash.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Rfc6979_make_new(const mp_obj_type_t *type,
                                                   size_t n_args, size_t n_kw,
                                                   const mp_obj_t *args) {
@@ -56,9 +56,9 @@ STATIC mp_obj_t mod_trezorcrypto_Rfc6979_make_new(const mp_obj_type_t *type,
 }
 
 /// def next(self) -> bytes:
-///     '''
+///     """
 ///     Compute next 32-bytes of pseudorandom data.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorcrypto_Rfc6979_next(mp_obj_t self) {
   mp_obj_Rfc6979_t *o = MP_OBJ_TO_PTR(self);
   uint8_t out[32];

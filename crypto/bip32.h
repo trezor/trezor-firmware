@@ -71,8 +71,10 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i);
 
 #if USE_CARDANO
 int hdnode_private_ckd_cardano(HDNode *inout, uint32_t i);
-int hdnode_from_seed_cardano(const uint8_t *pass, int pass_len,
-                             const uint8_t *seed, int seed_len, HDNode *out);
+int hdnode_from_seed_cardano(const uint8_t *seed, int seed_len, HDNode *out);
+int hdnode_from_entropy_cardano_icarus(const uint8_t *pass, int pass_len,
+                                       const uint8_t *seed, int seed_len,
+                                       HDNode *out);
 #endif
 
 int hdnode_public_ckd_cp(const ecdsa_curve *curve, const curve_point *parent,

@@ -2,6 +2,12 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class EthereumVerifyMessage(p.MessageType):
     MESSAGE_WIRE_TYPE = 65
@@ -17,7 +23,7 @@ class EthereumVerifyMessage(p.MessageType):
         self.address = address
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             2: ('signature', p.BytesType, 0),
             3: ('message', p.BytesType, 0),

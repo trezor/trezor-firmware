@@ -1,83 +1,82 @@
 from micropython import const
 
 from trezor import ui, wire
-from trezor.messages import ButtonRequestType, MessageType, PassphraseSourceType
+from trezor.messages import ButtonRequestType, PassphraseSourceType
+from trezor.messages.ButtonAck import ButtonAck
 from trezor.messages.ButtonRequest import ButtonRequest
+from trezor.messages.PassphraseAck import PassphraseAck
 from trezor.messages.PassphraseRequest import PassphraseRequest
+from trezor.messages.PassphraseStateAck import PassphraseStateAck
 from trezor.messages.PassphraseStateRequest import PassphraseStateRequest
-from trezor.ui.entry_select import DEVICE, EntrySelector
-from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard
+from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard, PassphraseSource
+from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
-from apps.common import storage
-from apps.common.cache import get_state
+from apps.common import cache, storage
+
+if __debug__:
+    from apps.debug import input_signal
 
 _MAX_PASSPHRASE_LEN = const(50)
 
 
-@ui.layout
-async def request_passphrase_entry(ctx):
+async def protect_by_passphrase(ctx: wire.Context) -> str:
+    if storage.device.has_passphrase():
+        return await request_passphrase(ctx)
+    else:
+        return ""
+
+
+async def request_passphrase(ctx: wire.Context) -> str:
+    source = storage.device.get_passphrase_source()
+    if source == PassphraseSourceType.ASK:
+        source = await request_passphrase_source(ctx)
+    passphrase = await request_passphrase_ack(
+        ctx, source == PassphraseSourceType.DEVICE
+    )
+    if len(passphrase) > _MAX_PASSPHRASE_LEN:
+        raise wire.DataError("Maximum passphrase length is %d" % _MAX_PASSPHRASE_LEN)
+    return passphrase
+
+
+async def request_passphrase_source(ctx: wire.Context) -> int:
+    req = ButtonRequest(code=ButtonRequestType.PassphraseType)
+    await ctx.call(req, ButtonAck)
+
     text = Text("Enter passphrase", ui.ICON_CONFIG)
     text.normal("Where to enter your", "passphrase?")
-    text.render()
+    source = PassphraseSource(text)
 
-    ack = await ctx.call(
-        ButtonRequest(code=ButtonRequestType.PassphraseType),
-        MessageType.ButtonAck,
-        MessageType.Cancel,
-    )
-    if ack.MESSAGE_WIRE_TYPE == MessageType.Cancel:
-        raise wire.ActionCancelled("Passphrase cancelled")
-
-    selector = EntrySelector(text)
-    return await ctx.wait(selector)
+    return await ctx.wait(source)
 
 
-@ui.layout
-async def request_passphrase_ack(ctx, on_device):
+async def request_passphrase_ack(ctx: wire.Context, on_device: bool) -> str:
     if not on_device:
         text = Text("Passphrase entry", ui.ICON_CONFIG)
         text.normal("Please, type passphrase", "on connected host.")
-        text.render()
+        await Popup(text)
 
     req = PassphraseRequest(on_device=on_device)
-    ack = await ctx.call(req, MessageType.PassphraseAck, MessageType.Cancel)
-    if ack.MESSAGE_WIRE_TYPE == MessageType.Cancel:
-        raise wire.ActionCancelled("Passphrase cancelled")
+    ack = await ctx.call(req, PassphraseAck)
 
     if on_device:
         if ack.passphrase is not None:
             raise wire.ProcessError("Passphrase provided when it should not be")
-        keyboard = PassphraseKeyboard("Enter passphrase")
-        passphrase = await ctx.wait(keyboard)
-        if passphrase == CANCELLED:
+
+        keyboard = PassphraseKeyboard("Enter passphrase", _MAX_PASSPHRASE_LEN)
+        if __debug__:
+            passphrase = await ctx.wait(keyboard, input_signal)
+        else:
+            passphrase = await ctx.wait(keyboard)
+        if passphrase is CANCELLED:
             raise wire.ActionCancelled("Passphrase cancelled")
     else:
         if ack.passphrase is None:
             raise wire.ProcessError("Passphrase not provided")
         passphrase = ack.passphrase
 
-    req = PassphraseStateRequest(
-        state=get_state(prev_state=ack.state, passphrase=passphrase)
-    )
-    ack = await ctx.call(req, MessageType.PassphraseStateAck, MessageType.Cancel)
+    state = cache.get_state(prev_state=ack.state, passphrase=passphrase)
+    req = PassphraseStateRequest(state=state)
+    ack = await ctx.call(req, PassphraseStateAck)
 
     return passphrase
-
-
-async def request_passphrase(ctx):
-    if storage.get_passphrase_source() == PassphraseSourceType.ASK:
-        on_device = await request_passphrase_entry(ctx) == DEVICE
-    else:
-        on_device = storage.get_passphrase_source() == PassphraseSourceType.DEVICE
-    passphrase = await request_passphrase_ack(ctx, on_device)
-    if len(passphrase) > _MAX_PASSPHRASE_LEN:
-        raise wire.DataError("Maximum passphrase length is %d" % _MAX_PASSPHRASE_LEN)
-    return passphrase
-
-
-async def protect_by_passphrase(ctx):
-    if storage.has_passphrase():
-        return await request_passphrase(ctx)
-    else:
-        return ""

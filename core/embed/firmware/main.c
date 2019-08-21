@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -43,6 +43,9 @@
 #include "touch.h"
 
 int main(void) {
+  // initialize pseudo-random number generator
+  drbg_init();
+
   // reinitialize HAL for Trezor One
 #if TREZOR_MODEL == 1
   HAL_Init();

@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
  *
@@ -37,10 +37,14 @@ void memory_protect(void) {
       (FLASH_OPTCR == 0x0FFCCCED)) {
     return;  // already set up correctly - bail out
   }
+
+  flash_unlock();
   for (int i = FLASH_STORAGE_SECTOR_FIRST; i <= FLASH_STORAGE_SECTOR_LAST;
        i++) {
     flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
   }
+  flash_lock();
+
   flash_unlock_option_bytes();
   // Section 2.8.6 Flash option control register (FLASH_OPTCR)
   //   Bits 31:28 Reserved, must be kept cleared.

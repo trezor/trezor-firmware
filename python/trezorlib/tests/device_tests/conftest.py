@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2018 SatoshiLabs and contributors
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -91,25 +91,23 @@ def setup_client(mnemonic=None, pin="", passphrase=False):
 
 
 def pytest_configure(config):
+    # try to figure out trezor version
     global TREZOR_VERSION
-    TREZOR_VERSION = device_version()
+    try:
+        TREZOR_VERSION = device_version()
+    except Exception:
+        pass
 
+    # register known markers
+    config.addinivalue_line("markers", "skip_t1: skip the test on Trezor One")
+    config.addinivalue_line("markers", "skip_t2: skip the test on Trezor T")
+    with open(os.path.join(os.path.dirname(__file__), "REGISTERED_MARKERS")) as f:
+        for line in f:
+            config.addinivalue_line("markers", line.strip())
+
+    # enable debug
     if config.getoption("verbose"):
         log.enable_debug_output()
-
-
-def pytest_addoption(parser):
-    parser.addini(
-        "run_xfail",
-        "List of markers that will run even tests that are marked as xfail",
-        "args",
-        [],
-    )
-    parser.addoption(
-        "--interactive",
-        action="store_true",
-        help="Wait for user to do interaction manually",
-    )
 
 
 def pytest_runtest_setup(item):
@@ -119,8 +117,10 @@ def pytest_runtest_setup(item):
     Performs custom processing, mainly useful for trezor CI testing:
     * 'skip_t2' tests are skipped on T2 and 'skip_t1' tests are skipped on T1.
     * no test should have both skips at the same time
-    * allows to 'runxfail' tests specified by 'run_xfail' in pytest.ini
     """
+    if TREZOR_VERSION is None:
+        pytest.fail("No debuggable Trezor is available")
+
     if item.get_closest_marker("skip_t1") and item.get_closest_marker("skip_t2"):
         pytest.fail("Don't skip tests for both trezors!")
 
@@ -128,13 +128,3 @@ def pytest_runtest_setup(item):
         pytest.skip("Test excluded on Trezor T")
     if item.get_closest_marker("skip_t1") and TREZOR_VERSION == 1:
         pytest.skip("Test excluded on Trezor 1")
-
-    xfail = item.get_closest_marker("xfail")
-    runxfail_markers = item.config.getini("run_xfail")
-    run_xfail = any(item.get_closest_marker(marker) for marker in runxfail_markers)
-    if xfail and run_xfail:
-        # Deep hack: pytest's private _evalxfail helper determines whether the test should xfail or not.
-        # The helper caches its result even before this hook runs.
-        # Here we force-set the result to False, meaning "test does NOT xfail, run as normal"
-        # IOW, this is basically per-item "--runxfail"
-        item._evalxfail.result = False

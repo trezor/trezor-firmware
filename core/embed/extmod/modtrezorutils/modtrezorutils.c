@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -29,12 +29,12 @@
 #include "common.h"
 
 /// def consteq(sec: bytes, pub: bytes) -> bool:
-///     '''
+///     """
 ///     Compares the private information in `sec` with public, user-provided
 ///     information in `pub`.  Runs in constant time, corresponding to a length
 ///     of `pub`.  Can access memory behind valid length of `sec`, caller is
 ///     expected to avoid any invalid memory access.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorutils_consteq(mp_obj_t sec, mp_obj_t pub) {
   mp_buffer_info_t secbuf;
   mp_get_buffer_raise(sec, &secbuf, MP_BUFFER_READ);
@@ -57,14 +57,14 @@ STATIC mp_obj_t mod_trezorutils_consteq(mp_obj_t sec, mp_obj_t pub) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_consteq_obj,
                                  mod_trezorutils_consteq);
 
-/// def memcpy(dst: bytearray, dst_ofs: int,
-///            src: bytearray, src_ofs: int,
-///            n: int) -> int:
-///     '''
+/// def memcpy(
+///     dst: bytearray, dst_ofs: int, src: bytes, src_ofs: int, n: int
+/// ) -> int:
+///     """
 ///     Copies at most `n` bytes from `src` at offset `src_ofs` to
 ///     `dst` at offset `dst_ofs`.  Returns the number of actually
 ///     copied bytes.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorutils_memcpy(size_t n_args, const mp_obj_t *args) {
   mp_arg_check_num(n_args, 0, 5, 5, false);
 
@@ -90,9 +90,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_memcpy_obj, 5, 5,
                                            mod_trezorutils_memcpy);
 
 /// def halt(msg: str = None) -> None:
-///     '''
+///     """
 ///     Halts execution.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorutils_halt(size_t n_args, const mp_obj_t *args) {
   mp_buffer_info_t msg;
   if (n_args > 0 && mp_get_buffer(args[0], &msg, MP_BUFFER_READ)) {
@@ -106,9 +106,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_halt_obj, 0, 1,
                                            mod_trezorutils_halt);
 
 /// def set_mode_unprivileged() -> None:
-///     '''
+///     """
 ///     Set unprivileged mode.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorutils_set_mode_unprivileged(void) {
 #ifndef TREZOR_EMULATOR
   __asm__ volatile("msr control, %0" ::"r"(0x1));
@@ -122,6 +122,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_set_mode_unprivileged_obj,
 #define PASTER(s) MP_QSTR_##s
 #define MP_QSTR(s) PASTER(s)
 
+/// GITREV: str
+/// VERSION_MAJOR: int
+/// VERSION_MINOR: int
+/// VERSION_PATCH: int
+/// MODEL: str
+/// EMULATOR: bool
+
 STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorutils)},
     {MP_ROM_QSTR(MP_QSTR_consteq), MP_ROM_PTR(&mod_trezorutils_consteq_obj)},
@@ -131,9 +138,9 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_set_mode_unprivileged_obj)},
     // various built-in constants
     {MP_ROM_QSTR(MP_QSTR_GITREV), MP_ROM_QSTR(MP_QSTR(GITREV))},
-    {MP_ROM_QSTR(MP_QSTR_VERSION_MAJOR), MP_OBJ_NEW_SMALL_INT(VERSION_MAJOR)},
-    {MP_ROM_QSTR(MP_QSTR_VERSION_MINOR), MP_OBJ_NEW_SMALL_INT(VERSION_MINOR)},
-    {MP_ROM_QSTR(MP_QSTR_VERSION_PATCH), MP_OBJ_NEW_SMALL_INT(VERSION_PATCH)},
+    {MP_ROM_QSTR(MP_QSTR_VERSION_MAJOR), MP_ROM_INT(VERSION_MAJOR)},
+    {MP_ROM_QSTR(MP_QSTR_VERSION_MINOR), MP_ROM_INT(VERSION_MINOR)},
+    {MP_ROM_QSTR(MP_QSTR_VERSION_PATCH), MP_ROM_INT(VERSION_PATCH)},
     {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MP_QSTR(TREZOR_MODEL))},
 #ifdef TREZOR_EMULATOR
     {MP_ROM_QSTR(MP_QSTR_EMULATOR), mp_const_true},

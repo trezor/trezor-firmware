@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2018 SatoshiLabs and contributors
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -26,10 +26,10 @@ from .conftest import TREZOR_VERSION
 EXPECTED_RESPONSES_NOPIN = [proto.ButtonRequest(), proto.Success(), proto.Features()]
 EXPECTED_RESPONSES_PIN = [proto.PinMatrixRequest()] + EXPECTED_RESPONSES_NOPIN
 
-if TREZOR_VERSION >= 2:
-    EXPECTED_RESPONSES = EXPECTED_RESPONSES_NOPIN
-else:
+if TREZOR_VERSION == 1:
     EXPECTED_RESPONSES = EXPECTED_RESPONSES_PIN
+else:
+    EXPECTED_RESPONSES = EXPECTED_RESPONSES_NOPIN
 
 
 class TestMsgApplysettings(TrezorTest):

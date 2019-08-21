@@ -105,7 +105,6 @@ CFLAGS   += -DHEADLESS=0
 
 CFLAGS   += $(shell pkg-config --cflags sdl2)
 LDLIBS   += $(shell pkg-config --libs sdl2)
-endif
 
 ifdef RANDOM_DEV_FILE
 CFLAGS += -DRANDOM_DEV_FILE=\"$(RANDOM_DEV_FILE)\"
@@ -137,6 +136,14 @@ LIBDEPS  += $(TOP_DIR)/libtrezor.a
 
 LDLIBS   += -lopencm3_stm32f2
 LIBDEPS  += $(TOOLCHAIN_DIR)/lib/libopencm3_stm32f2.a
+endif
+
+ifeq ($(BITCOIN_ONLY), 1)
+CFLAGS += -DBITCOIN_ONLY=1
+CFLAGS += -DU2F_ENABLED=0
+else
+CFLAGS += -DBITCOIN_ONLY=0
+CFLAGS += -DU2F_ENABLED=1
 endif
 
 ifeq ($(MEMORY_PROTECT), 0)

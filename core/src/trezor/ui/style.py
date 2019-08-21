@@ -1,6 +1,6 @@
 from micropython import const
 
-from trezor.ui import BOLD, MONO, NORMAL, rgb
+from trezor.ui import rgb
 
 # radius for buttons and other elements
 RADIUS = const(2)
@@ -47,212 +47,22 @@ BG = BLACK
 FG = WHITE
 
 # icons
-ICON_RESET = "trezor/res/header_icons/reset.toig"
-ICON_WIPE = "trezor/res/header_icons/wipe.toig"
-ICON_RECOVERY = "trezor/res/header_icons/recovery.toig"
-ICON_NOCOPY = "trezor/res/header_icons/nocopy.toig"
-ICON_WRONG = "trezor/res/header_icons/wrong.toig"
-ICON_CONFIG = "trezor/res/header_icons/cog.toig"
-ICON_RECEIVE = "trezor/res/header_icons/receive.toig"
-ICON_SEND = "trezor/res/header_icons/send.toig"
+ICON_RESET = "trezor/res/header_icons/reset.toif"
+ICON_WIPE = "trezor/res/header_icons/wipe.toif"
+ICON_RECOVERY = "trezor/res/header_icons/recovery.toif"
+ICON_NOCOPY = "trezor/res/header_icons/nocopy.toif"
+ICON_WRONG = "trezor/res/header_icons/wrong.toif"
+ICON_CONFIG = "trezor/res/header_icons/cog.toif"
+ICON_RECEIVE = "trezor/res/header_icons/receive.toif"
+ICON_SEND = "trezor/res/header_icons/send.toif"
 
 ICON_DEFAULT = ICON_CONFIG
 
-ICON_CANCEL = "trezor/res/cancel.toig"
-ICON_CONFIRM = "trezor/res/confirm.toig"
-ICON_LOCK = "trezor/res/lock.toig"
-ICON_CLICK = "trezor/res/click.toig"
-ICON_BACK = "trezor/res/left.toig"
-ICON_SWIPE = "trezor/res/swipe.toig"
-ICON_CHECK = "trezor/res/check.toig"
-ICON_SPACE = "trezor/res/space.toig"
-
-# buttons
-BTN_DEFAULT = {
-    "normal": {
-        "bg-color": BG,
-        "fg-color": FG,
-        "text-style": NORMAL,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-    "active": {
-        "bg-color": FG,
-        "fg-color": BG,
-        "text-style": BOLD,
-        "border-color": FG,
-        "radius": RADIUS,
-    },
-    "disabled": {
-        "bg-color": BG,
-        "fg-color": GREY,
-        "text-style": NORMAL,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-}
-
-BTN_CANCEL = {
-    "normal": {
-        "bg-color": RED,
-        "fg-color": FG,
-        "text-style": BOLD,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-    "active": {
-        "bg-color": FG,
-        "fg-color": RED,
-        "text-style": BOLD,
-        "border-color": FG,
-        "radius": RADIUS,
-    },
-    "disabled": {
-        "bg-color": BG,
-        "fg-color": GREY,
-        "text-style": NORMAL,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-}
-
-BTN_CONFIRM = {
-    "normal": {
-        "bg-color": GREEN,
-        "fg-color": FG,
-        "text-style": BOLD,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-    "active": {
-        "bg-color": FG,
-        "fg-color": GREEN,
-        "text-style": BOLD,
-        "border-color": FG,
-        "radius": RADIUS,
-    },
-    "disabled": {
-        "bg-color": BG,
-        "fg-color": GREY,
-        "text-style": NORMAL,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-}
-
-BTN_CLEAR = {
-    "normal": {
-        "bg-color": ORANGE,
-        "fg-color": FG,
-        "text-style": NORMAL,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-    "active": {
-        "bg-color": BG,
-        "fg-color": GREY,
-        "text-style": NORMAL,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-    "disabled": {
-        "bg-color": BG,
-        "fg-color": GREY,
-        "text-style": MONO,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-}
-
-BTN_KEY = {
-    "normal": {
-        "bg-color": BLACKISH,
-        "fg-color": FG,
-        "text-style": MONO,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-    "active": {
-        "bg-color": FG,
-        "fg-color": BLACKISH,
-        "text-style": MONO,
-        "border-color": FG,
-        "radius": RADIUS,
-    },
-    "disabled": {
-        "bg-color": BG,
-        "fg-color": GREY,
-        "text-style": MONO,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-}
-
-BTN_KEY_DARK = {
-    "normal": {
-        "bg-color": DARK_BLACK,
-        "fg-color": DARK_WHITE,
-        "text-style": MONO,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-    "active": {
-        "bg-color": FG,
-        "fg-color": DARK_BLACK,
-        "text-style": MONO,
-        "border-color": FG,
-        "radius": RADIUS,
-    },
-    "disabled": {
-        "bg-color": DARK_BLACK,
-        "fg-color": GREY,
-        "text-style": MONO,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-}
-
-BTN_KEY_CONFIRM = {
-    "normal": {
-        "bg-color": GREEN,
-        "fg-color": FG,
-        "text-style": MONO,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-    "active": {
-        "bg-color": FG,
-        "fg-color": GREEN,
-        "text-style": MONO,
-        "border-color": FG,
-        "radius": RADIUS,
-    },
-    "disabled": {
-        "bg-color": BG,
-        "fg-color": GREY,
-        "text-style": MONO,
-        "border-color": BG,
-        "radius": RADIUS,
-    },
-}
-
-# loader
-LDR_DEFAULT = {
-    "normal": {"bg-color": BG, "fg-color": GREEN, "icon": None, "icon-fg-color": None},
-    "active": {
-        "bg-color": BG,
-        "fg-color": GREEN,
-        "icon": ICON_CHECK,
-        "icon-fg-color": WHITE,
-    },
-}
-
-LDR_DANGER = {
-    "normal": {"bg-color": BG, "fg-color": RED, "icon": None, "icon-fg-color": None},
-    "active": {
-        "bg-color": BG,
-        "fg-color": RED,
-        "icon": ICON_CHECK,
-        "icon-fg-color": WHITE,
-    },
-}
+ICON_CANCEL = "trezor/res/cancel.toif"
+ICON_CONFIRM = "trezor/res/confirm.toif"
+ICON_LOCK = "trezor/res/lock.toif"
+ICON_CLICK = "trezor/res/click.toif"
+ICON_BACK = "trezor/res/left.toif"
+ICON_SWIPE = "trezor/res/swipe.toif"
+ICON_CHECK = "trezor/res/check.toif"
+ICON_SPACE = "trezor/res/space.toif"

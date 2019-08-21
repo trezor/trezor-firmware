@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -20,22 +20,24 @@
 void pendsv_kbd_intr(void);
 
 /// class VCP:
-///     '''
+///     """
 ///     USB VCP interface configuration.
-///     '''
+///     """
 typedef struct _mp_obj_VCP_t {
   mp_obj_base_t base;
   usb_vcp_info_t info;
 } mp_obj_VCP_t;
 
-/// def __init__(self,
-///              iface_num: int,
-///              data_iface_num: int,
-///              ep_in: int,
-///              ep_out: int,
-///              ep_cmd: int) -> None:
-///     '''
-///     '''
+/// def __init__(
+///     self,
+///     iface_num: int,
+///     data_iface_num: int,
+///     ep_in: int,
+///     ep_out: int,
+///     ep_cmd: int,
+/// ) -> None:
+///     """
+///     """
 STATIC mp_obj_t mod_trezorio_VCP_make_new(const mp_obj_type_t *type,
                                           size_t n_args, size_t n_kw,
                                           const mp_obj_t *args) {
@@ -98,9 +100,9 @@ STATIC mp_obj_t mod_trezorio_VCP_make_new(const mp_obj_type_t *type,
 }
 
 /// def iface_num(self) -> int:
-///     '''
+///     """
 ///     Returns the configured number of this interface.
-///     '''
+///     """
 STATIC mp_obj_t mod_trezorio_VCP_iface_num(mp_obj_t self) {
   mp_obj_VCP_t *o = MP_OBJ_TO_PTR(self);
   return MP_OBJ_NEW_SMALL_INT(o->info.iface_num);

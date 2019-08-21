@@ -4,8 +4,8 @@ import hashlib
 import mnemonic
 
 __doc__ = '''
-    Use this script to cross-check that TREZOR generated valid
-    mnemonic sentence for given internal (TREZOR-generated)
+    Use this script to cross-check that Trezor generated valid
+    mnemonic sentence for given internal (Trezor-generated)
     and external (computer-generated) entropy.
 
     Keep in mind that you're entering secret information to this script.
@@ -49,7 +49,7 @@ def main():
     print(__doc__)
 
     comp = bytes.fromhex(input("Please enter computer-generated entropy (in hex): ").strip())
-    trzr = bytes.fromhex(input("Please enter TREZOR-generated entropy (in hex): ").strip())
+    trzr = bytes.fromhex(input("Please enter Trezor-generated entropy (in hex): ").strip())
     word_count = int(input("How many words your mnemonic has? "))
 
     strength = word_count * 32 // 3

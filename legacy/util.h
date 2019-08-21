@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
  *
@@ -51,8 +51,6 @@
   })
 
 void delay(uint32_t wait);
-
-void wait_random(void);
 
 // converts uint32 to hexa (8 digits)
 void uint32hex(uint32_t num, char *str);

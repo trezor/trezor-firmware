@@ -5,8 +5,8 @@ from apps.common import storage
 from apps.common.request_pin import request_pin
 
 
-async def bootscreen():
-    ui.display.orientation(storage.get_rotation())
+async def bootscreen() -> None:
+    ui.display.orientation(storage.device.get_rotation())
     while True:
         try:
             if not config.has_pin():
@@ -14,7 +14,7 @@ async def bootscreen():
                 storage.init_unlocked()
                 return
             await lockscreen()
-            label = None
+            label = "Enter your PIN"
             while True:
                 pin = await request_pin(label, config.get_pin_rem())
                 if config.unlock(pin_to_int(pin)):
@@ -27,15 +27,15 @@ async def bootscreen():
                 log.exception(__name__, e)
 
 
-async def lockscreen():
-    label = storage.get_label()
-    image = storage.get_homescreen()
+async def lockscreen() -> None:
+    label = storage.device.get_label()
+    image = storage.device.get_homescreen()
     if not label:
-        label = "My TREZOR"
+        label = "My Trezor"
     if not image:
         image = res.load("apps/homescreen/res/bg.toif")
 
-    await ui.backlight_slide(ui.BACKLIGHT_DIM)
+    ui.backlight_fade(ui.BACKLIGHT_DIM)
 
     ui.display.clear()
     ui.display.avatar(48, 48, image, ui.TITLE_GREY, ui.BG)
@@ -50,12 +50,13 @@ async def lockscreen():
     )
     ui.display.icon(45, 202, res.load(ui.ICON_CLICK), ui.TITLE_GREY, ui.BG)
 
-    await ui.backlight_slide(ui.BACKLIGHT_NORMAL)
+    ui.backlight_fade(ui.BACKLIGHT_NORMAL)
+
     await ui.click()
 
 
 ui.display.backlight(ui.BACKLIGHT_NONE)
-ui.backlight_slide_sync(ui.BACKLIGHT_NORMAL)
+ui.backlight_fade(ui.BACKLIGHT_NORMAL)
 config.init(show_pin_timeout)
 loop.schedule(bootscreen())
 loop.run()

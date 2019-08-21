@@ -5,8 +5,8 @@
 Run the following to checkout the project:
 
 ```sh
-git clone --recursive https://github.com/trezor/trezor-core.git
-cd trezor-core
+git clone --recursive https://github.com/trezor/trezor-firmware.git
+cd trezor-firmware/core
 ```
 
 If you are building from an existing checkout, don't forget to use the following to refresh the submodules:
@@ -19,33 +19,41 @@ Install the required packages, depending on your operating system.
 
 * __Debian/Ubuntu__:
 
-  ```sh
-  sudo apt-get install scons libsdl2-dev libsdl2-image-dev
-  ```
+```sh
+sudo apt-get install scons libsdl2-dev libsdl2-image-dev
+```
 
 * __Fedora__:
 
-  ```sh
-  sudo yum install scons SDL2-devel SDL2_image-devel
-  ```
+```sh
+sudo yum install scons SDL2-devel SDL2_image-devel
+```
 
 * __OpenSUSE__:
 
-  ```sh
-  sudo zypper install scons libSDL2-devel libSDL2_image-devel
-  ```
+```sh
+sudo zypper install scons libSDL2-devel libSDL2_image-devel
+```
 
 * __Arch__:
 
-  ```sh
-  sudo pacman -S scons sdl2 sdl2_image
-  ```
+```sh
+sudo pacman -S scons sdl2 sdl2_image
+```
+
+* __NixOS__:
+
+There is a `shell.nix` file in the root of the project. Just run the following **before** entering the `core` directory:
+
+```sh
+nix-shell
+```
 
 * __Mac OS X__:
 
-  ```sh
-  brew install scons sdl2 sdl2_image pkg-config
-  ```
+```sh
+brew install scons sdl2 sdl2_image pkg-config
+```
 
 * __Windows__: not supported yet, sorry.
 

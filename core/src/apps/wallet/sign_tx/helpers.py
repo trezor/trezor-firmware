@@ -1,3 +1,5 @@
+import gc
+
 from trezor.messages import InputScriptType
 from trezor.messages.RequestType import (
     TXEXTRADATA,
@@ -85,6 +87,7 @@ def request_tx_meta(tx_req: TxRequest, tx_hash: bytes = None):
     tx_req.details.request_index = None
     ack = yield tx_req
     tx_req.serialized = None
+    gc.collect()
     return sanitize_tx_meta(ack.tx)
 
 
@@ -100,6 +103,7 @@ def request_tx_extra_data(
     tx_req.serialized = None
     tx_req.details.extra_data_offset = None
     tx_req.details.extra_data_len = None
+    gc.collect()
     return ack.tx.extra_data
 
 
@@ -109,6 +113,7 @@ def request_tx_input(tx_req: TxRequest, i: int, tx_hash: bytes = None):
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
     tx_req.serialized = None
+    gc.collect()
     return sanitize_tx_input(ack.tx)
 
 
@@ -118,6 +123,7 @@ def request_tx_output(tx_req: TxRequest, i: int, tx_hash: bytes = None):
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
     tx_req.serialized = None
+    gc.collect()
     if tx_hash is None:
         return sanitize_tx_output(ack.tx)
     else:
@@ -129,6 +135,7 @@ def request_tx_finish(tx_req: TxRequest):
     tx_req.details = None
     yield tx_req
     tx_req.serialized = None
+    gc.collect()
 
 
 # Data sanitizers

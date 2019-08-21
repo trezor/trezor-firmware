@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2018 SatoshiLabs and contributors
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -364,12 +364,32 @@ def format_message(
     )
 
 
+_ALL_ENUMS = {}
+
+
+def _make_all_enums():
+    if not _ALL_ENUMS:
+        import inspect
+        from . import messages
+
+        for attr in messages.__dict__.values():
+            if not inspect.ismodule(attr):
+                continue
+            for name in dir(attr):
+                value = getattr(attr, name)
+                if isinstance(value, int):
+                    _ALL_ENUMS[name] = value
+
+
 def value_to_proto(ftype, value):
     if issubclass(ftype, MessageType):
         raise TypeError("value_to_proto only converts simple values")
 
     if ftype in (UVarintType, SVarintType):
-        return int(value)
+        if isinstance(value, str) and value in _ALL_ENUMS:
+            return _ALL_ENUMS[value]
+        else:
+            return int(value)
 
     if ftype is BoolType:
         return bool(value)
@@ -387,6 +407,8 @@ def value_to_proto(ftype, value):
 
 
 def dict_to_proto(message_type, d):
+    _make_all_enums()
+
     params = {}
     for fname, ftype, fflags in message_type.get_fields().values():
         repeated = fflags & FLAG_REPEATED

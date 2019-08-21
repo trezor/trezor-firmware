@@ -1,3 +1,4 @@
+import gc
 from micropython import const
 
 from trezor import utils
@@ -266,6 +267,8 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                 writers.write_bytes(w_txi, get_tx_header(coin, tx, True))
             writers.write_tx_input(w_txi, txi_sign)
             tx_ser.serialized_tx = w_txi
+            tx_ser.signature_index = None
+            tx_ser.signature = None
             tx_req.serialized = tx_ser
 
         elif coin.force_bip143 or tx.overwintered:
@@ -302,6 +305,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             tx_ser.signature = signature
 
             # serialize input with correct signature
+            gc.collect()
             txi_sign.script_sig = input_derive_script(
                 coin, txi_sign, key_sign_pub, signature
             )
@@ -363,6 +367,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             tx_ser.signature = signature
 
             # serialize input with correct signature
+            gc.collect()
             txi_sign.script_sig = input_derive_script(
                 coin, txi_sign, key_sign_pub, signature
             )
@@ -468,6 +473,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             tx_ser.signature = signature
 
             # serialize input with correct signature
+            gc.collect()
             txi_sign.script_sig = input_derive_script(
                 coin, txi_sign, key_sign_pub, signature
             )
@@ -546,7 +552,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             tx_ser.signature_index = i
             tx_ser.signature = signature
         elif any_segwit:
-            tx_ser.serialized_tx = bytearray(1)  # empty witness for non-segwit inputs
+            tx_ser.serialized_tx += bytearray(1)  # empty witness for non-segwit inputs
             tx_ser.signature_index = None
             tx_ser.signature = None
 
@@ -810,8 +816,9 @@ def input_derive_script(
         if i.multisig:
             # p2wsh in p2sh
             pubkeys = multisig.multisig_get_pubkeys(i.multisig)
-            witness_script = scripts.output_script_multisig(pubkeys, i.multisig.m)
-            witness_script_hash = sha256(witness_script).digest()
+            witness_script_hasher = utils.HashWriter(sha256())
+            scripts.output_script_multisig(pubkeys, i.multisig.m, witness_script_hasher)
+            witness_script_hash = witness_script_hasher.get_digest()
             return scripts.input_script_p2wsh_in_p2sh(witness_script_hash)
 
         # p2wpkh in p2sh

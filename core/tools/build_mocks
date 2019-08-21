@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
+import glob
 import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+
+CORE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+EXTMOD_PATH = os.path.join(CORE_DIR, "embed", "extmod")
+MOCKS_PATH = os.path.join(CORE_DIR, "mocks", "generated")
 
 COMMENT_PREFIX = "/// "
 
@@ -28,17 +38,17 @@ def split_to_parts(line, mod_desc=None):
         current_class = line[6:].split("(")[0].strip(":")
         current_indent = 0
 
-        yield (current_package, "\n")
+        yield (current_package, "\n\n")
         yield (current_package, "# " + mod_desc + "\n")
 
     elif line.startswith("def "):
         current_method = line[4:].split("(")[0]
 
-        yield (current_package, "\n")
-
         if current_class is None:
+            yield (current_package, "\n\n")
             yield (current_package, "# " + mod_desc + "\n")
         else:
+            yield (current_package, "\n")
             current_indent = 4
 
     line = current_indent * " " + line
@@ -49,15 +59,18 @@ def split_to_parts(line, mod_desc=None):
 def store_to_file(dest, parts):
     for package, line in parts:
         package = package.replace(".", "/")
-        dirpath = os.path.join(os.path.abspath(dest), os.path.dirname(package))
-        filename = os.path.basename(package) + ".py"
-
-        if not os.path.exists(dirpath):
-            os.makedirs(dirpath)
-            open(os.path.join(dirpath, "__init__.py"), "w").close()
-            open(os.path.join(dirpath, ".mock-generated"), "w").close()
-
+        dirpath = os.path.join(dest, os.path.dirname(package))
+        filename = os.path.basename(package) + ".pyi"
         filepath = os.path.join(dirpath, filename)
+
+        os.makedirs(dirpath, exist_ok=True)
+
+        if os.path.isdir(os.path.join(dest, package)):
+            if not line.strip():
+                continue
+            print("Package exists: {}".format(package))
+            print("You should set 'package:' in {}".format(line.strip()))
+            sys.exit(1)
 
         if not os.path.exists(filepath):
             with open(filepath, "a") as f:
@@ -72,17 +85,16 @@ def build_module(mod_file, dest):
     global current_class
     global current_package
 
-    if not (mod_file.endswith(".h") or mod_file.endswith(".c")):
-        return
-    if not os.path.basename(mod_file).startswith("mod"):
-        return
+    filename = os.path.basename(mod_file)
+    assert filename.startswith("mod")
+    assert filename.endswith(".c") or filename.endswith(".h")
+    # modfoobar-xyz.h -> foobar-xyz
+    name = filename[3:-2]
 
     current_indent = 0
     current_class = None
-    current_package = (
-        os.path.basename(mod_file).split(".")[0].split("-")[0].replace("mod", "")
-    )
-    mod_desc = mod_file.replace("../embed/extmod", "extmod")
+    current_package = name.split("-")[0]
+    mod_desc = re.sub(r"^.*/embed/", "", mod_file)
 
     for l in open(mod_file):
         if not l.startswith(COMMENT_PREFIX):
@@ -92,34 +104,31 @@ def build_module(mod_file, dest):
         store_to_file(dest, split_to_parts(l, mod_desc))
 
 
-def build_directory(dir, dest):
-    print("Building mocks for", dir, "to", dest)
-    for pkg in sorted(
-        [x for x in os.listdir(dir) if os.path.isdir(os.path.join(dir, x))]
-    ):
-        for mod in sorted(os.listdir(os.path.join(dir, pkg))):
-            build_module(os.path.join(dir, pkg, mod), dest)
+def build_directory(src, dest):
+    for modfile in sorted(glob.glob(os.path.join(src, "**", "mod*.[ch]"))):
+        build_module(modfile, dest)
 
 
-def clear_directory(top_dir):
-    print("Clearing up directory", top_dir)
-    for root, dirs, files in os.walk(top_dir, topdown=False):
-        if ".mock-generated" not in files:
-            # print("Not a mock directory", root)
-            continue
-        for name in files:
-            # print('Deleting file', os.path.join(root, name))
-            os.remove(os.path.join(root, name))
-        for name in dirs:
-            # print('Deleting directory', os.path.join(root, name))
-            try:
-                os.rmdir(os.path.join(root, name))
-            except FileNotFoundError:
-                pass
+def do_check():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        build_directory(EXTMOD_PATH, tmpdir)
+        diff_out = subprocess.run(
+            ["diff", "-ur", MOCKS_PATH, tmpdir],
+            stdout=subprocess.PIPE,
+            universal_newlines=True,
+        ).stdout
+        if diff_out.strip():
+            print(diff_out, end="")
+            sys.exit(1)
 
-        os.rmdir(root)
+
+def do_generate():
+    shutil.rmtree(MOCKS_PATH)
+    build_directory(EXTMOD_PATH, MOCKS_PATH)
 
 
 if __name__ == "__main__":
-    clear_directory("../mocks/generated")
-    build_directory("../embed/extmod", "../mocks/generated")
+    if len(sys.argv) > 1 and sys.argv[1] == "--check":
+        do_check()
+    else:
+        do_generate()

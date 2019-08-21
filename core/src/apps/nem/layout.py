@@ -10,7 +10,7 @@ from apps.common.confirm import require_confirm, require_hold_to_confirm
 
 async def require_confirm_text(ctx, action: str):
     content = action.split(" ")
-    text = Text("Confirm action", ui.ICON_SEND, icon_color=ui.GREEN, new_lines=False)
+    text = Text("Confirm action", ui.ICON_SEND, ui.GREEN, new_lines=False)
     text.normal(*content)
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
@@ -26,13 +26,13 @@ async def require_confirm_fee(ctx, action: str, fee: int):
 
 
 async def require_confirm_content(ctx, headline: str, content: list):
-    text = Text(headline, ui.ICON_SEND, icon_color=ui.GREEN)
+    text = Text(headline, ui.ICON_SEND, ui.GREEN)
     text.normal(*content)
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
 async def require_confirm_final(ctx, fee: int):
-    text = Text("Final confirm", ui.ICON_SEND, icon_color=ui.GREEN)
+    text = Text("Final confirm", ui.ICON_SEND, ui.GREEN)
     text.normal("Sign this transaction")
     text.bold("and pay %s XEM" % format_amount(fee, NEM_MAX_DIVISIBILITY))
     text.normal("for network fee?")

@@ -81,6 +81,7 @@ message MoneroGetAddress {
     optional uint32 network_type = 3;       // Main-net / testnet / stagenet
     optional uint32 account = 4;            // Major subaddr index
     optional uint32 minor = 5;              // Minor subaddr index
+    optional bytes payment_id = 6;          // Payment ID for integrated address
 }
 
 /**
@@ -194,7 +195,7 @@ message MoneroTransactionInputsPermutationAck {
  * @next MoneroTransactionInputViniAck
  */
 message MoneroTransactionInputViniRequest {
-    optional MoneroTransactionSourceEntry src_entr = 1; 
+    optional MoneroTransactionSourceEntry src_entr = 1;
     optional bytes vini = 2;      // xmrtypes.TxinToKey
     optional bytes vini_hmac = 3;
     optional bytes pseudo_out = 4;

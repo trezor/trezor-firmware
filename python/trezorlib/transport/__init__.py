@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2018 SatoshiLabs and contributors
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -130,7 +130,7 @@ def get_transport(path: str = None, prefix_search: bool = False) -> Transport:
         try:
             return next(iter(enumerate_devices()))
         except StopIteration:
-            raise TransportException("No TREZOR device found") from None
+            raise TransportException("No Trezor device found") from None
 
     # Find whether B is prefix of A (transport name is part of the path)
     # or A is prefix of B (path is a prefix, or a name, of transport).

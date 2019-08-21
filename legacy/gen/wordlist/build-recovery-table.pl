@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 print <<'EOF';
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2016 Jochen Hoenicke <hoenicke@gmail.com>
  *
@@ -35,9 +35,9 @@ while (<>) {
     die if $c > 6;
     push @words, @nw;
     if ($n ne $l) {
-	$len = @arr2;
-	die if $len - $arr1[-1] > 9;
-	push @arr1, $len;
+        $len = @arr2;
+        die if $len - $arr1[-1] > 9;
+        push @arr1, $len;
     }
     push @arr2, $x;
     $x += $c;
@@ -55,25 +55,25 @@ sub computerange($$$) {
     $next = $i2 == @words ? "_" : $words[$i2];
     my $j;
     for ($j = 0; $j < 5; $j++) {
-	last if substr($first, 0, $j+1) ne substr($last, 0, $j+1);
-	last if substr($prev, 0, $j) ne substr($first, 0, $j)
-	     && substr($next, 0, $j) ne substr($last, 0, $j);
+        last if substr($first, 0, $j+1) ne substr($last, 0, $j+1);
+        last if substr($prev, 0, $j) ne substr($first, 0, $j)
+             && substr($next, 0, $j) ne substr($last, 0, $j);
     }
     $prefix = substr($first, 0, $j);
     $range = "";
     $rng = 0;
     if (substr($prev, 0, $j) eq substr($first, 0, $j)
-	|| substr($last, 0, $j) eq substr($next, 0, $j)) {
-	$range = "[".substr($first, $j, 1) . "-". substr($last, $j, 1)."]";
-	$rng++;
-	if ($j <= 1) {
-	    $range = substr($first,0, $j+1)."-".substr($last,0,$j+1);
-	    $prefix= "";
-	}
+        || substr($last, 0, $j) eq substr($next, 0, $j)) {
+        $range = "[".substr($first, $j, 1) . "-". substr($last, $j, 1)."]";
+        $rng++;
+        if ($j <= 1) {
+            $range = substr($first,0, $j+1)."-".substr($last,0,$j+1);
+            $prefix= "";
+        }
     }
     if (substr($prev, 0, $j+1) eq substr($first, 0, $j+1)
-	|| substr($last, 0, $j+1) eq substr($next, 0, $j+1)) {
-	$j = 0; $rng = 2;
+        || substr($last, 0, $j+1) eq substr($next, 0, $j+1)) {
+        $j = 0; $rng = 2;
     }
     #printf STDERR "  # %1d: %9s - %9s = \U$prefix$range\E\n", $entries, $first, $last;
     return $j + $rng;
@@ -96,7 +96,7 @@ for ($i = 0; $i< @arr1; $i++) {
     $prefixlen = 0 if ($i == @arr1 - 1);
     printf(" %5d,", $arr1[$i] + 4096 * $prefixlen);
 }
-print "\n};\n\n";    
+print "\n};\n\n";
 
 $len = @arr2;
 print "static const uint16_t word_table2[$len] =\n";

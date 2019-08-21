@@ -1,5 +1,5 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -25,7 +25,7 @@
 #elif TREZOR_MODEL == 1
 #include "touch_1.h"
 #else
-#error Unknown TREZOR Model
+#error Unknown Trezor Model
 #endif
 
 uint32_t touch_click(void) {
