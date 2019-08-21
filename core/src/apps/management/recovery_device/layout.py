@@ -7,9 +7,9 @@ from trezor.ui.info import InfoConfirm
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
 
-from .bip39_keyboard import Bip39Keyboard
+from .keyboard_bip39 import Bip39Keyboard
+from .keyboard_slip39 import Slip39Keyboard
 from .recover import RecoveryAborted
-from .slip39_keyboard import Slip39Keyboard
 
 from apps.common import mnemonic, storage
 from apps.common.confirm import confirm, require_confirm
