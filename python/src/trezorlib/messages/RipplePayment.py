@@ -2,8 +2,6 @@
 # fmt: off
 from .. import protobuf as p
 
-from .RippleIssuedAmount import RippleIssuedAmount
-
 if __debug__:
     try:
         from typing import Dict, List, Optional
@@ -17,32 +15,17 @@ class RipplePayment(p.MessageType):
     def __init__(
         self,
         amount: int = None,
-        issued_amount: RippleIssuedAmount = None,
         destination: str = None,
         destination_tag: int = None,
-        invoice_id: str = None,
-        send_max: int = None,
-        deliver_min: int = None,
-        issued_deliver_min: RippleIssuedAmount = None,
     ) -> None:
         self.amount = amount
-        self.issued_amount = issued_amount
         self.destination = destination
         self.destination_tag = destination_tag
-        self.invoice_id = invoice_id
-        self.send_max = send_max
-        self.deliver_min = deliver_min
-        self.issued_deliver_min = issued_deliver_min
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
             1: ('amount', p.UVarintType, 0),
-            2: ('issued_amount', RippleIssuedAmount, 0),
-            3: ('destination', p.UnicodeType, 0),
-            4: ('destination_tag', p.UVarintType, 0),
-            5: ('invoice_id', p.UnicodeType, 0),
-            6: ('send_max', p.UVarintType, 0),
-            7: ('deliver_min', p.UVarintType, 0),
-            8: ('issued_deliver_min', RippleIssuedAmount, 0),
+            2: ('destination', p.UnicodeType, 0),
+            3: ('destination_tag', p.UVarintType, 0),
         }
