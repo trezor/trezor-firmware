@@ -402,7 +402,7 @@ if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/sign_tx/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/*/*.py'))
 
     if True:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/binance/*.py'))
