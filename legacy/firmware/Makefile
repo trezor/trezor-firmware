@@ -26,11 +26,8 @@ OBJS += reset.o
 OBJS += signing.o
 OBJS += crypto.o
 
-ifneq ($(U2F_ENABLED),0)
-OBJS += u2f.o
-endif
-
 ifneq ($(BITCOIN_ONLY),1)
+OBJS += u2f.o
 OBJS += ethereum.o
 OBJS += ethereum_tokens.o
 OBJS += lisk.o

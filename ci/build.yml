@@ -94,5 +94,12 @@ build legacy emu:
     untracked: true
     expire_in: 1 day
 
-
-
+build legacy emu bitcoinonly:
+  stage: build
+  variables:
+    BITCOIN_ONLY: "1"
+    DEBUG_LINK: "1"
+    EMULATOR: "1"
+  script:
+    - cd legacy
+    - pipenv run script/cibuild
