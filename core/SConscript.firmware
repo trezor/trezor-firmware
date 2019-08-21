@@ -8,7 +8,8 @@ CPPDEFINES_MOD = []
 SOURCE_MOD = []
 SOURCE_MOD_SECP256K1_ZKP = []
 
-PYOPT = '1'
+PYOPT = ARGUMENTS.get('PYOPT', '1')
+FROZEN = True
 
 # modtrezorconfig
 CPPPATH_MOD += [
@@ -418,7 +419,7 @@ env.Ignore(qstr_collected, qstr_generated)
 # Frozen modules
 #
 
-if True:
+if FROZEN:
     if env.get('TREZOR_MODEL') == '1':
         SOURCE_PY_DIR = 'src1/'
     else:
@@ -500,7 +501,7 @@ obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON_SPEED, COPT='-O3'))
 obj_program.extend(env.Object(source=SOURCE_STMHAL))
 obj_program.extend(env.Object(source=SOURCE_TREZORHAL))
-if True:
+if FROZEN:
     obj_program.extend(env.Object(source=source_mpyc))
 
 VENDORHEADER = 'embed/vendorheader/vendorheader_' + ('unsafe_signed_prod.bin' if ARGUMENTS.get('PRODUCTION', '0') == '0' else 'satoshilabs_signed_prod.bin')
