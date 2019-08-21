@@ -491,7 +491,7 @@ def deduplicate_keys(all_coins):
 
 
 def _btc_sort_key(coin):
-    if coin["name"] in ("Bitcoin", "Testnet"):
+    if coin["name"] in ("Bitcoin", "Testnet", "Regtest"):
         return "000000" + coin["name"]
     else:
         return coin["name"]
