@@ -387,12 +387,42 @@ if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
     else:
         SOURCE_PY_DIR = 'src/'
 
-    # TODO: recursive Glob
     SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*/*/*.py'))
+    SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/crypto/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/res/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py'))
+
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/sign_tx/*.py'))
+
+    if True:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/binance/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/cardano/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/cardano/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ethereum/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/lisk/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/monero/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/monero/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/monero/*/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ripple/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/stellar/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/stellar/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tezos/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/webauthn/*.py'))
 
     source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR)
 
