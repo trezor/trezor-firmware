@@ -17,6 +17,7 @@ UNIX_PORT_OPTS ?=
 CROSS_PORT_OPTS ?=
 
 PRODUCTION ?= 0
+PYOPT      ?= 1
 
 STLINK_VER ?= v2
 OPENOCD = openocd -f interface/stlink-$(STLINK_VER).cfg -c "transport select hla_swd" -f target/stm32f4x.cfg
@@ -110,7 +111,7 @@ build_unix: res ## build unix port
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS)
 
 build_unix_frozen: res build_cross ## build unix port with frozen modules
-	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS) TREZOR_EMULATOR_FROZEN=1
+	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS) PYOPT="$(PYOPT)" TREZOR_EMULATOR_FROZEN=1
 
 build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)

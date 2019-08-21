@@ -8,7 +8,7 @@ CPPDEFINES_MOD = []
 SOURCE_MOD = []
 SOURCE_MOD_SECP256K1_ZKP = []
 
-PYOPT = '1'
+PYOPT = ARGUMENTS.get('PYOPT', '1')
 
 # modtrezorconfig
 CPPPATH_MOD += [
