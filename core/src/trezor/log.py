@@ -2,6 +2,8 @@ import sys
 import utime
 from micropython import const
 
+from trezor import ui
+
 if False:
     from typing import Any
 
@@ -59,5 +61,8 @@ def critical(name: str, msg: str, *args: Any) -> None:
 
 
 def exception(name: str, exc: BaseException) -> None:
-    _log(name, ERROR, "exception:")
-    sys.print_exception(exc)
+    if isinstance(exc, ui.Result):
+        _log(name, DEBUG, "ui.Result: %s", exc.value)
+    else:
+        _log(name, ERROR, "exception:")
+        sys.print_exception(exc)
