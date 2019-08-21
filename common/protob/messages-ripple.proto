@@ -29,23 +29,276 @@ message RippleAddress {
  * @next RippleSignedTx
  */
 message RippleSignTx {
+    // Common fields
     repeated uint32 address_n = 1;              // BIP-32 path. For compatibility with other wallets, must be m/44'/144'/index'
     optional uint64 fee = 2;                    // fee (in drops) for the transaction
     optional uint32 flags = 3;                  // transaction flags
     optional uint32 sequence = 4;               // transaction sequence number
     optional uint32 last_ledger_sequence = 5;   // see https://developers.ripple.com/reliable-transaction-submission.html#lastledgersequence
-    optional RipplePayment payment = 6;         // Payment transaction type
+    optional string account_txn_id = 7;         // see https://xrpl.org/transaction-common-fields.html#accounttxnid
+    repeated RippleMemo memos = 8;              // additional arbitrary information used to identify this transaction
+    repeated RippleSigner signers = 9;          // array of objects that represent a multi-signature
+    optional uint32 source_tag = 10;            // identify the reason for this payment, or a sender on whose behalf this transaction is made.
+
+    // Transaction fields
+    optional RippleAccountSet account_set = 11;
+    optional RippleCheckCancel check_cancel = 12;
+    optional RippleCheckCash check_cash = 13;
+    optional RippleCheckCreate check_create = 14;
+    optional RippleDepositPreauth deposit_preauth = 15;
+    optional RippleEscrowCancel escrow_cancel = 16;
+    optional RippleEscrowCreate escrow_create = 17;
+    optional RippleEscrowFinish escrow_finish = 18;
+    optional RippleOfferCancel offer_cancel = 19;
+    optional RippleOfferCreate offer_create = 20;
+    optional RipplePayment payment = 6;         // keep number 6 for backwards compatibility
+    optional RipplePaymentChannelClaim payment_channel_claim = 21;
+    optional RipplePaymentChannelCreate payment_channel_create = 22;
+    optional RipplePaymentChannelFund payment_channel_fund = 23;
+    optional RippleSetRegularKey set_regular_key = 24;
+    optional RippleSignerListSet signer_list_set = 25;
+    optional RippleTrustSet trust_set = 26;
+
+    /**
+     * AccountSet transaction type
+     * - modifies the properties of an account
+     * - see https://xrpl.org/accountset.html
+     */
+    message RippleAccountSet {
+        optional uint32 clear_flag = 1;
+        optional uint32 set_flag = 2;
+        optional string domain = 3;
+        optional string email_hash = 4;
+        optional string message_key = 5;
+        optional uint32 transfer_rate = 6;
+        optional uint32 tick_size = 7;
+    }
+
+    /**
+     * CheckCancel transaction type
+     * - cancels an unredeemed Check
+     * - see https://xrpl.org/checkcancel.html
+     */
+    message RippleCheckCancel {
+        optional string check_id = 1;
+    }
+
+    /**
+     * CheckCash transaction type
+     * - attempts to redeem a Check
+     * - see https://xrpl.org/checkcash.html
+     */
+    message RippleCheckCash {
+        optional string check_id = 1;
+        optional uint64 amount = 2;
+        optional RippleIssuedAmount issued_amount = 3;
+        optional uint64 deliver_min = 4;
+        optional RippleIssuedAmount issued_deliver_min = 5;
+    }
+
+    /**
+     * CheckCreate transaction type
+     * - creates a Check
+     * - see https://xrpl.org/checkcreate.html
+     */
+    message RippleCheckCreate {
+        optional string destination = 1;
+        optional uint64 send_max = 2;
+        optional RippleIssuedAmount issued_send_max = 3;
+        optional uint32 destination_tag = 4;
+        optional uint32 expiration = 5;
+        optional string invoice_id = 6;
+    }
+
+    /**
+     * DepositPreauth transaction type
+     * - gives another account pre-approval to deliver payments to the sender of this transaction
+     * - see https://xrpl.org/depositpreauth.html
+     */
+    message RippleDepositPreauth {
+        optional string authorize = 1;
+        optional string unauthorize = 2;
+    }
+
+    /**
+     * EscrowCancel transaction type
+     * - returns escrowed XRP to the sender
+     * - see https://xrpl.org/escrowcancel.html
+     */
+    message RippleEscrowCancel {
+        optional string owner = 1;
+        optional uint32 offer_sequence = 2;
+    }
+
+    /**
+     * EscrowCreate transaction type
+     * - sequesters XRP until the escrow process either finishes or is canceled
+     * - see https://xrpl.org/escrowcreate.html
+     */
+    message RippleEscrowCreate {
+        optional uint64 amount = 1;
+        optional string destination = 2;
+        optional uint32 cancel_after = 3;
+        optional uint32 finish_after = 4;
+        optional string condition = 5;
+        optional uint32 destination_tag = 6;
+    }
+
+    /**
+     * EscrowFinish transaction type
+     * - delivers XRP from a held payment to the recipient
+     * - see https://xrpl.org/escrowfinish.html
+     */
+    message RippleEscrowFinish {
+        optional string owner = 1;
+        optional uint32 offer_sequence = 2;
+        optional string condition = 3;
+        optional string fulfillment = 4;
+
+    }
+
+    /**
+     * OfferCancel transaction type
+     * - removes an Offer
+     * - see https://xrpl.org/offercancel.html
+     */
+    message RippleOfferCancel {
+        optional uint32 offer_sequence = 1;
+    }
+
+    /**
+     * OfferCreate transaction type
+     * - effectively a limit order
+     * - see https://xrpl.org/offercreate.html
+     */
+    message RippleOfferCreate {
+        optional uint32 expiration = 1;
+        optional uint32 offer_sequence = 2;
+        optional uint64 taker_gets = 3;
+        optional RippleIssuedAmount issued_taker_gets = 4;
+        optional uint64 taker_pays = 5;
+        optional RippleIssuedAmount issued_taker_pays = 6;
+    }
 
     /**
      * Payment transaction type
      * - simple A sends money to B
-     * - only a subset of fields is supported
-     * - see https://developers.ripple.com/payment.html
+     * - see https://xrpl.org/payment.html
      */
     message RipplePayment {
-        optional uint64 amount = 1;             // only XRP is supported at the moment so this an integer
-        optional string destination = 2;        // destination account address
-        optional uint32 destination_tag = 3;    // destination tag to identify payments
+        optional uint64 amount = 1;
+        optional string destination = 2;
+        optional uint32 destination_tag = 3;
+        optional RippleIssuedAmount issued_amount = 4;
+        optional string invoice_id = 5;
+        optional uint64 send_max = 6;
+        optional uint64 deliver_min = 7;
+        optional RippleIssuedAmount issued_deliver_min = 8;
+    }
+
+    /**
+     * PaymentChannelClaim transaction type
+     * - claims XRP from a payment channel, adjusts the payment channel's expiration, or both
+     * - see https://xrpl.org/paymentchannelclaim.html
+     */
+    message RipplePaymentChannelClaim {
+        optional string channel = 1;
+        optional uint64 balance = 2;
+        optional uint64 amount = 4;
+        optional string signature = 5;
+        optional string public_key = 6;
+    }
+
+    /**
+     * PaymentChannelCreate transaction type
+     * - creates a unidirectional channel and fund it with XRP
+     * - see https://xrpl.org/paymentchannelcreate.html
+     */
+    message RipplePaymentChannelCreate {
+        optional uint64 amount = 1;
+        optional string destination = 2;
+        optional uint32 settle_delay = 3;
+        optional string public_key = 4;
+        optional uint32 cancel_after = 5;
+        optional uint32 destination_tag = 6;
+    }
+
+    /**
+     * PaymentChannelFund transaction type
+     * - adds additional XRP to an open payment channel, updates the expiration time of the channel, or both
+     * - see https://xrpl.org/paymentchannelfund.html
+     */
+    message RipplePaymentChannelFund {
+        optional string channel = 1;
+        optional uint64 amount = 2;
+        optional uint32 expiration = 3;
+    }
+
+    /**
+     * SetRegularKey transaction type
+     * - assigns, changes, or removes the regular key pair associated with an account
+     * - see https://xrpl.org/setregularkey.html
+     */
+    message RippleSetRegularKey {
+        optional string regular_key = 1;
+    }
+
+    /**
+     * SignerListSet transaction type
+     * - creates, replaces, or removes a list of signers that can be used to multi-sign a transaction
+     * - see https://xrpl.org/signerlistset.html
+     */
+    message RippleSignerListSet {
+        optional uint32 signer_quorum = 1;
+        repeated RippleSignerEntry signer_entries = 2;
+        message RippleSignerEntry {
+            optional string account = 1;
+            optional uint32 signer_weight = 2;
+        }
+    }
+
+    /**
+     * TrustSet transaction type
+     * - creates or modify a trust line linking two accounts
+     * - see https://xrpl.org/trustset.html
+     */
+    message RippleTrustSet {
+        optional RippleIssuedAmount limit_amount = 1;
+        optional uint32 quality_in = 2;
+        optional uint32 quality_out = 3;
+    }
+
+    /**
+     * Amount object
+     * - specifies amount for issued currencies
+     * - see https://xrpl.org/basic-data-types.html#specifying-currency-amounts
+     */
+    message RippleIssuedAmount {
+        optional string currency = 1;
+        optional string value = 2;
+        optional string issuer = 3;
+    }
+
+    /**
+     * Memo object
+     * - specifies arbitrary messaging data for a transaction
+     * - see https://xrpl.org/transaction-common-fields.html#memos-field
+     */
+    message RippleMemo {
+        optional string memo_data = 1;
+        optional string memo_format = 2;
+        optional string memo_type = 3;
+    }
+
+    /**
+     * Signer object
+     * - specifies signatures for a multi-signed transaction
+     * - see https://xrpl.org/transaction-common-fields.html#signers-field
+     */
+    message RippleSigner {
+        optional string account = 1;
+        optional string txn_signature = 2;
+        optional string signing_pub_key = 3;
     }
 }
 
