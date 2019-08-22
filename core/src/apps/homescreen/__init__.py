@@ -1,5 +1,5 @@
 from trezor import config, utils, wire
-from trezor.messages import MessageType
+from trezor.messages import Feature, MessageType
 from trezor.messages.Features import Features
 from trezor.messages.Success import Success
 from trezor.wire import register
@@ -36,6 +36,25 @@ def get_features() -> Features:
     f.no_backup = storage.device.no_backup()
     f.flags = storage.device.get_flags()
     f.recovery_mode = storage.recovery.is_in_progress()
+    if utils.BITCOIN_ONLY:
+        f.features = [Feature.Bitcoin, Feature.Crypto]
+    else:
+        f.features = [
+            Feature.Bitcoin,
+            Feature.Bitcoin_like,
+            Feature.Binance,
+            Feature.Cardano,
+            Feature.Crypto,
+            Feature.EOS,
+            Feature.Ethereum,
+            Feature.Lisk,
+            Feature.Monero,
+            Feature.NEM,
+            Feature.Ripple,
+            Feature.Stellar,
+            Feature.Tezos,
+            Feature.U2F,
+        ]
     return f
 
 
