@@ -16,6 +16,8 @@
 
 import base64
 
+import pytest
+
 from trezorlib import btc
 
 from .common import TrezorTest

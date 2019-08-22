@@ -16,6 +16,8 @@
 
 import base64
 
+import pytest
+
 from trezorlib import btc
 from trezorlib.tools import parse_path
 

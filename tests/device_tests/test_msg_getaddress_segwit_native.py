@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import pytest
+
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
