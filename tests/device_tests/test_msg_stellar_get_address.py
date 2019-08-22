@@ -23,6 +23,7 @@ from .common import TrezorTest
 from .conftest import TREZOR_VERSION
 
 
+@pytest.mark.altcoin
 @pytest.mark.stellar
 class TestMsgStellarGetAddress(TrezorTest):
     def test_stellar_get_address(self):

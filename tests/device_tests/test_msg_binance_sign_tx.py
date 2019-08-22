@@ -86,6 +86,7 @@ BINANCE_TEST_VECTORS = [
 ]
 
 
+@pytest.mark.altcoin
 @pytest.mark.binance
 @pytest.mark.skip_t1  # T1 support is not planned
 @setup_client(

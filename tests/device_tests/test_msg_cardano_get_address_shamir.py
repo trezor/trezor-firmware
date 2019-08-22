@@ -28,6 +28,7 @@ SLIP39_MNEMONIC = [
 ]
 
 
+@pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @pytest.mark.parametrize(

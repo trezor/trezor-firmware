@@ -24,6 +24,7 @@ from .common import TrezorTest
 TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
 
 
+@pytest.mark.altcoin
 @pytest.mark.ethereum
 class TestMsgEthereumSigntx(TrezorTest):
     def test_ethereum_signtx_known_erc20_token(self):

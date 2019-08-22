@@ -27,8 +27,9 @@ CHAIN_ID = "cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f"
 ADDRESS_N = parse_path("m/44'/194'/0'/0/0")
 
 
-@pytest.mark.skip_t1
+@pytest.mark.altcoin
 @pytest.mark.eos
+@pytest.mark.skip_t1
 class TestMsgEosSignTx(TrezorTest):
     def input_flow(self, pages):
         # confirm number of actions

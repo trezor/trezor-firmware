@@ -23,6 +23,7 @@ from trezorlib.tools import parse_path
 from .common import TrezorTest
 
 
+@pytest.mark.altcoin
 @pytest.mark.ripple
 @pytest.mark.skip_t1  # T1 support is not planned
 class TestMsgRippleGetAddress(TrezorTest):

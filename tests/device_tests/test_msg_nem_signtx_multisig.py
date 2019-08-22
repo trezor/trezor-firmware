@@ -23,6 +23,7 @@ from .common import TrezorTest
 
 
 # assertion data from T1
+@pytest.mark.altcoin
 @pytest.mark.nem
 class TestMsgNEMSignTxMultisig(TrezorTest):
     def test_nem_signtx_aggregate_modification(self):

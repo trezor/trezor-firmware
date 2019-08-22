@@ -25,6 +25,7 @@ from .tx_cache import tx_cache
 TX_API = tx_cache("Bcash")
 
 
+@pytest.mark.altcoin
 class TestMsgSigntxBch(TrezorTest):
     def test_send_bch_change(self):
         self.setup_mnemonic_allallall()

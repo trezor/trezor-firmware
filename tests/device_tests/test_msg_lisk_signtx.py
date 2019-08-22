@@ -22,6 +22,7 @@ from trezorlib.tools import parse_path
 from .common import TrezorTest
 
 
+@pytest.mark.altcoin
 @pytest.mark.lisk
 class TestMsgLiskSignTx(TrezorTest):
     def test_lisk_sign_tx_send(self):

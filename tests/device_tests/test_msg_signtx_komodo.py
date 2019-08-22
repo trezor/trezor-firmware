@@ -34,6 +34,7 @@ TXHASH_7b28bd = bytes.fromhex(
 )
 
 
+@pytest.mark.altcoin
 @pytest.mark.komodo
 class TestMsgSigntxKomodo(TrezorTest):
     def test_one_one_fee_sapling(self):

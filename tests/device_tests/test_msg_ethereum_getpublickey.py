@@ -22,6 +22,7 @@ from trezorlib.tools import H_
 from .common import TrezorTest
 
 
+@pytest.mark.altcoin
 @pytest.mark.ethereum
 class TestMsgEthereumGetPublicKey(TrezorTest):
     def test_ethereum_getpublickey(self):

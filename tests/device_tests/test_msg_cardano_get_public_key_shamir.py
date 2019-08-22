@@ -31,6 +31,7 @@ SLIP39_MNEMONIC = [
 ]
 
 
+@pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @setup_client(mnemonic=SLIP39_MNEMONIC, passphrase=True)

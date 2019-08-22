@@ -22,6 +22,7 @@ from trezorlib.tools import parse_path
 from .common import TrezorTest
 
 
+@pytest.mark.altcoin
 @pytest.mark.decred
 class TestMsgSignmessageDecred(TrezorTest):
     def test_sign_mainnet(self):

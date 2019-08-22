@@ -70,6 +70,7 @@ class TestMsgGetpublickey(TrezorTest):
             == "xpub6A3FoZqQEK6iwLZ4HFkqSo5fb35BH4bpjC4SPZ63prfLdGYPwYxEuC6o91bUvFFdMzKWe5rs3axHRUjxJaSvBnKKFtnfLwDACRxPxabsv2r"
         )
 
+    @pytest.mark.altcoin
     def test_ltc(self):
         self.setup_mnemonic_nopin_nopassphrase()
         assert (

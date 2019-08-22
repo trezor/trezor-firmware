@@ -112,6 +112,7 @@ VALID_VECTORS = [
 ]
 
 
+@pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @setup_client(mnemonic=SHARES_20_3of6, passphrase=True)

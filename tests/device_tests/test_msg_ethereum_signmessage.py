@@ -22,6 +22,7 @@ from trezorlib.tools import H_
 from .common import TrezorTest
 
 
+@pytest.mark.altcoin
 @pytest.mark.ethereum
 class TestMsgEthereumSignmessage(TrezorTest):
 

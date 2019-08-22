@@ -22,6 +22,7 @@ from trezorlib.tools import parse_path
 from .common import TrezorTest
 
 
+@pytest.mark.altcoin
 @pytest.mark.tezos
 @pytest.mark.skip_t1
 class TestMsgTezosGetPublicKey(TrezorTest):

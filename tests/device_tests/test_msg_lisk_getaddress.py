@@ -24,6 +24,7 @@ from .common import TrezorTest
 LISK_PATH = parse_path("m/44h/134h/0h/1h")
 
 
+@pytest.mark.altcoin
 @pytest.mark.lisk
 class TestMsgLiskGetaddress(TrezorTest):
     def test_lisk_getaddress(self):

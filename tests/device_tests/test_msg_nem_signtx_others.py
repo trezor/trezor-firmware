@@ -23,6 +23,7 @@ from .common import TrezorTest
 
 
 # assertion data from T1
+@pytest.mark.altcoin
 @pytest.mark.nem
 class TestMsgNEMSignTxOther(TrezorTest):
     def test_nem_signtx_importance_transfer(self):

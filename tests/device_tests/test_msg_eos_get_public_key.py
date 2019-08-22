@@ -22,8 +22,9 @@ from trezorlib.tools import parse_path
 from .common import TrezorTest
 
 
-@pytest.mark.skip_t1
+@pytest.mark.altcoin
 @pytest.mark.eos
+@pytest.mark.skip_t1
 class TestMsgEosGetpublickey(TrezorTest):
     def test_eos_get_public_key(self):
         self.setup_mnemonic_nopin_nopassphrase()

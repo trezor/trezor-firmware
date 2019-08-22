@@ -23,6 +23,7 @@ from .common import TrezorTest
 from .conftest import setup_client
 
 
+@pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @pytest.mark.parametrize(

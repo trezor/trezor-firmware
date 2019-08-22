@@ -26,6 +26,7 @@ TX_API = tx_cache("Bgold")
 
 
 # All data taken from T1
+@pytest.mark.altcoin
 class TestMsgSigntxBitcoinGold(TrezorTest):
     def test_send_bitcoin_gold_change(self):
         self.setup_mnemonic_allallall()

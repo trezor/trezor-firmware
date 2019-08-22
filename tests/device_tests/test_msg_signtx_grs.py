@@ -23,6 +23,7 @@ from .tx_cache import tx_cache
 TX_API = tx_cache("Groestlcoin")
 
 
+@pytest.mark.altcoin
 class TestMsgSigntxGRS(TrezorTest):
     def test_legacy(self):
         # http://blockbook.groestlcoin.org/tx/f56521b17b828897f72b30dd21b0192fd942342e89acbb06abf1d446282c30f5

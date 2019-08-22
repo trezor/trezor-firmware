@@ -22,6 +22,7 @@ from trezorlib.tools import H_
 from .common import TrezorTest
 
 
+@pytest.mark.altcoin
 @pytest.mark.ethereum
 class TestMsgEthereumSigntxChainId(TrezorTest):
     def test_ethereum_signtx_eip155(self):

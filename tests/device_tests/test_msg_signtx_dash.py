@@ -23,6 +23,7 @@ from .tx_cache import tx_cache
 TX_API = tx_cache("Dash")
 
 
+@pytest.mark.altcoin
 class TestMsgSigntxDash(TrezorTest):
     def test_send_dash(self):
         self.setup_mnemonic_allallall()

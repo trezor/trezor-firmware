@@ -170,6 +170,7 @@ INVALID_VECTORS = [
 ]
 
 
+@pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @setup_client()
@@ -209,6 +210,7 @@ def test_cardano_sign_tx(
         assert response.tx_body.hex() == tx_body
 
 
+@pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @setup_client()

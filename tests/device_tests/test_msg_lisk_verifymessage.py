@@ -21,6 +21,7 @@ from trezorlib import lisk, messages as proto
 from .common import TrezorTest
 
 
+@pytest.mark.altcoin
 @pytest.mark.lisk
 class TestMsgLiskVerifymessage(TrezorTest):
     def test_verify(self):

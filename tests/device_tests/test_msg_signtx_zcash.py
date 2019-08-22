@@ -32,6 +32,7 @@ TXHASH_e38206 = bytes.fromhex(
 )
 
 
+@pytest.mark.altcoin
 @pytest.mark.zcash
 class TestMsgSigntxZcash(TrezorTest):
     def test_one_one_fee_overwinter(self):

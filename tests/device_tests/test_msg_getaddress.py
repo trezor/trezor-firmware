@@ -55,6 +55,7 @@ class TestMsgGetaddress(TrezorTest):
             == "1GS8X3yc7ntzwGw9vXwj9wqmBWZkTFewBV"
         )
 
+    @pytest.mark.altcoin
     def test_ltc(self):
         self.setup_mnemonic_nopin_nopassphrase()
         assert (
@@ -85,6 +86,7 @@ class TestMsgGetaddress(TrezorTest):
             == "moN6aN6NP1KWgnPSqzrrRPvx2x1UtZJssa"
         )
 
+    @pytest.mark.altcoin
     def test_bch(self):
         self.setup_mnemonic_allallall()
         assert (
@@ -100,6 +102,7 @@ class TestMsgGetaddress(TrezorTest):
             == "bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw"
         )
 
+    @pytest.mark.altcoin
     def test_grs(self):
         self.setup_mnemonic_allallall()
         assert (
@@ -115,6 +118,7 @@ class TestMsgGetaddress(TrezorTest):
             == "Fmhtxeh7YdCBkyQF7AQG4QnY8y3rJg89di"
         )
 
+    @pytest.mark.altcoin
     def test_elements(self):
         self.setup_mnemonic_allallall()
         assert (
@@ -178,6 +182,7 @@ class TestMsgGetaddress(TrezorTest):
                     multisig=getmultisig(1, 0, xpubs=xpubs),
                 )
 
+    @pytest.mark.altcoin
     def test_bch_multisig(self):
         self.setup_mnemonic_allallall()
         xpubs = []

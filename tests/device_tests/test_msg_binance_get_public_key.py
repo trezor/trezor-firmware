@@ -8,6 +8,7 @@ from .conftest import setup_client
 BINANCE_PATH = parse_path("m/44h/714h/0h/0/0")
 
 
+@pytest.mark.altcoin
 @pytest.mark.binance
 @pytest.mark.skip_t1  # T1 support is not planned
 @setup_client(

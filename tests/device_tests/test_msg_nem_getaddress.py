@@ -22,6 +22,7 @@ from trezorlib.tools import parse_path
 from .common import TrezorTest
 
 
+@pytest.mark.altcoin
 @pytest.mark.nem
 class TestMsgNEMGetaddress(TrezorTest):
     def test_nem_getaddress(self):

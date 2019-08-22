@@ -21,6 +21,7 @@ from trezorlib import ethereum
 from .common import TrezorTest
 
 
+@pytest.mark.altcoin
 @pytest.mark.ethereum
 class TestMsgEthereumVerifymessage(TrezorTest):
 

@@ -67,6 +67,10 @@ class TestMsgGetaddressSegwitNative(TrezorTest):
             )
             == "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
         )
+
+    @pytest.mark.altcoin
+    def test_show_segwit_altcoin(self):
+        self.setup_mnemonic_allallall()
         assert (
             btc.get_address(
                 self.client,
