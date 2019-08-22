@@ -386,16 +386,20 @@ class chan:
     def put(self, value: Any) -> None:
         put = chan.Put(self, value)
         try:
-            yield put
+            return (yield put)
         except:  # noqa: E722
-            self.putters.remove((put.task, value))
+            entry = (put.task, value)
+            if entry in self.putters:
+                self.putters.remove(entry)
+            raise
 
     def take(self) -> None:
         take = chan.Take(self)
         try:
-            yield take
+            return (yield take)
         except:  # noqa: E722
-            self.takers.remove(take.task)
+            if take.task in self.takers:
+                self.takers.remove(take.task)
             raise
 
     def publish(self, value: Any) -> None:
