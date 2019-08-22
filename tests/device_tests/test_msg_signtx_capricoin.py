@@ -31,6 +31,7 @@ TXHASH_f3a6e6 = bytes.fromhex(
 )
 
 
+@pytest.mark.altcoin
 @pytest.mark.capricoin
 @pytest.mark.skip_t1  # T1 support is not planned
 @setup_client()
