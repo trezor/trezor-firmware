@@ -263,17 +263,14 @@ class race(Syscall):
 
     >>> # async def wait_for_touch(): ...
     >>> # async def animate_logo(): ...
-    >>> some_signal = loop.signal()
     >>> touch_task = wait_for_touch()
     >>> animation_task = animate_logo()
-    >>> racer = loop.race(some_signal, touch_task, animation_task)
+    >>> racer = loop.race(touch_task, animation_task)
     >>> result = await racer
     >>> if animation_task in racer.finished:
     >>>     print('animation task returned value:', result)
     >>> elif touch_task in racer.finished:
     >>>     print('touch task returned value:', result)
-    >>> else:
-    >>>     print('signal was triggered with value:', result)
 
     Note: You should not directly `yield` a `race` instance, see logic in
     `race.__iter__` for explanation.  Always use `await`.
@@ -364,32 +361,42 @@ class chan:
     """
 
     class Put(Syscall):
-        def __init__(self, ch: "chan") -> None:
+        def __init__(self, ch: "chan", value: Any) -> None:
             self.ch = ch
-            self.value = None  # type: Any
-
-        def __call__(self, value: Any) -> Syscall:
             self.value = value
-            return self
+            self.task = None  # type: Optional[Task]
 
         def handle(self, task: Task) -> None:
+            self.task = task
             self.ch._schedule_put(task, self.value)
 
     class Take(Syscall):
         def __init__(self, ch: "chan") -> None:
             self.ch = ch
-
-        def __call__(self) -> Syscall:
-            return self
+            self.task = None  # type: Optional[Task]
 
         def handle(self, task) -> None:
+            self.task = task
             self.ch._schedule_take(task)
 
     def __init__(self):
         self.putters = []  # type: List[Tuple[Optional[Task], Any]]
         self.takers = []  # type: List[Task]
-        self.put = chan.Put(self)
-        self.take = chan.Take(self)
+
+    def put(self, value: Any) -> None:
+        put = chan.Put(self, value)
+        try:
+            yield put
+        except:  # noqa: E722
+            self.putters.remove((put.task, value))
+
+    def take(self) -> None:
+        take = chan.Take(self)
+        try:
+            yield take
+        except:  # noqa: E722
+            self.takers.remove(take.task)
+            raise
 
     def publish(self, value: Any) -> None:
         if self.takers:

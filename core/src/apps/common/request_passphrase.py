@@ -65,7 +65,7 @@ async def request_passphrase_ack(ctx: wire.Context, on_device: bool) -> str:
 
         keyboard = PassphraseKeyboard("Enter passphrase", _MAX_PASSPHRASE_LEN)
         if __debug__:
-            passphrase = await ctx.wait(keyboard, input_signal)
+            passphrase = await ctx.wait(keyboard, input_signal())
         else:
             passphrase = await ctx.wait(keyboard)
         if passphrase is CANCELLED:

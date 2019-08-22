@@ -42,7 +42,7 @@ async def confirm(
         )
 
     if __debug__:
-        return await ctx.wait(dialog, confirm_signal) is CONFIRMED
+        return await ctx.wait(dialog, confirm_signal()) is CONFIRMED
     else:
         return await ctx.wait(dialog) is CONFIRMED
 
@@ -66,7 +66,7 @@ async def hold_to_confirm(
         dialog = HoldToConfirm(content, confirm, confirm_style, loader_style)
 
     if __debug__:
-        return await ctx.wait(dialog, confirm_signal) is CONFIRMED
+        return await ctx.wait(dialog, confirm_signal()) is CONFIRMED
     else:
         return await ctx.wait(dialog) is CONFIRMED
 

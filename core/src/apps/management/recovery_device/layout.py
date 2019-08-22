@@ -43,7 +43,7 @@ async def request_word_count(ctx: wire.Context, dry_run: bool) -> int:
     text.normal("Number of words?")
 
     if __debug__:
-        count = await ctx.wait(WordSelector(text), input_signal)
+        count = await ctx.wait(WordSelector(text), input_signal())
         count = int(count)  # if input_signal was triggered, count is a string
     else:
         count = await ctx.wait(WordSelector(text))
@@ -63,7 +63,7 @@ async def request_mnemonic(
         else:
             keyboard = Bip39Keyboard("Type word %s of %s:" % (i + 1, count))
         if __debug__:
-            word = await ctx.wait(keyboard, input_signal)
+            word = await ctx.wait(keyboard, input_signal())
         else:
             word = await ctx.wait(keyboard)
 
@@ -145,7 +145,7 @@ async def show_keyboard_info(ctx: wire.Context) -> None:
         "Great!",
     )
     if __debug__:
-        await ctx.wait(info, confirm_signal)
+        await ctx.wait(info, confirm_signal())
     else:
         await ctx.wait(info)
 

@@ -267,7 +267,7 @@ class Layout(Component):
             # layout tasks to trigger restart by exiting (new tasks are created
             # and we continue, because we are in a loop).
             while True:
-                await loop.race(layout_chan.take, *self.create_tasks())
+                await loop.race(layout_chan.take(), *self.create_tasks())
         except Result as result:
             # Result exception was raised, this means this layout is complete.
             value = result.value

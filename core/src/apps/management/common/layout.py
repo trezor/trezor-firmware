@@ -102,7 +102,7 @@ async def _confirm_word(ctx, share_index, numbered_share_words, count):
     choices = [word for _, word in numbered_choices]
     select = MnemonicWordSelect(choices, share_index, checked_index, count)
     if __debug__:
-        selected_word = await ctx.wait(select, debug.input_signal)
+        selected_word = await ctx.wait(select, debug.input_signal())
     else:
         selected_word = await ctx.wait(select)
 
