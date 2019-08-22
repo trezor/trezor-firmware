@@ -54,13 +54,21 @@ def start_default(constructor: Callable[[], loop.Task]) -> None:
     if not default_task:
         default_constructor = constructor
         default_task = constructor()
-        loop.schedule(default_task)
+
+        # Schedule the default task.  Because the task can complete on its own,
+        # we need to reset the `default_task` global in a finalizer.
+        loop.schedule(default_task, None, None, _finalize_default)
 
 
 def close_default() -> None:
     """Explicitly close the default workflow task."""
+    if default_task:
+        # We let the `_finalize_default` reset the global.
+        loop.close(default_task)
+
+
+def _finalize_default(task, value) -> None:
     global default_task
 
-    if default_task:
-        loop.close(default_task)
+    if default_task is task:
         default_task = None
