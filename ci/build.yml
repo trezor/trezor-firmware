@@ -37,7 +37,9 @@ build core unix frozen:
     - pipenv run make build_unix_frozen
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
-    untracked: true
+    paths:
+    - core/build/unix/micropython
+    - core/src/trezor/res/resources.py
     expire_in: 1 day
 
 
@@ -50,7 +52,11 @@ build crypto:
     - pipenv run make
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
-    untracked: true
+    paths:
+    - crypto/tests/aestst
+    - crypto/tests/libtrezor-crypto.so
+    - crypto/tests/test_check
+    - crypto/tests/test_openssl
     expire_in: 1 day
 
 
@@ -91,7 +97,8 @@ build legacy emu:
     - pipenv run script/cibuild
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
-    untracked: true
+    paths:
+    - legacy/firmware/trezor.elf
     expire_in: 1 day
 
 build legacy emu bitcoinonly:
