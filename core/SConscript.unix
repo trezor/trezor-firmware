@@ -2,7 +2,8 @@
 
 import os
 
-EVERYTHING = True
+BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
+EVERYTHING = BITCOIN_ONLY != '1'
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -299,7 +300,7 @@ SOURCE_UNIX = [
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT))
+env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s -DBITCOIN_ONLY=%s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT, BITCOIN_ONLY))
 
 env.Tool('micropython')
 
@@ -467,7 +468,7 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/webauthn/*.py'))
 
-    source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR)
+    source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR, bitcoin_only=BITCOIN_ONLY)
 
     source_mpyc = env.FrozenCFile(
         target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)

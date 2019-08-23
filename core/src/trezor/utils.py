@@ -1,6 +1,7 @@
 import gc
 import sys
 from trezorutils import (  # noqa: F401
+    BITCOIN_ONLY,
     EMULATOR,
     GITREV,
     MODEL,

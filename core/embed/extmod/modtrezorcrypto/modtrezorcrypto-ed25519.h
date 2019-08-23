@@ -100,6 +100,8 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args,
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_ed25519_sign_obj, 2,
                                            3, mod_trezorcrypto_ed25519_sign);
 
+#if !BITCOIN_ONLY
+
 /// def sign_ext(
 ///     secret_key: bytes, secret_extension: bytes, message: bytes
 /// ) -> bytes:
@@ -134,6 +136,8 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign_ext(mp_obj_t secret_key,
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_ed25519_sign_ext_obj,
                                  mod_trezorcrypto_ed25519_sign_ext);
+
+#endif
 
 /// def verify(public_key: bytes, signature: bytes, message: bytes) -> bool:
 ///     """
@@ -282,8 +286,10 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_ed25519_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_publickey),
      MP_ROM_PTR(&mod_trezorcrypto_ed25519_publickey_obj)},
     {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_trezorcrypto_ed25519_sign_obj)},
+#if !BITCOIN_ONLY
     {MP_ROM_QSTR(MP_QSTR_sign_ext),
      MP_ROM_PTR(&mod_trezorcrypto_ed25519_sign_ext_obj)},
+#endif
     {MP_ROM_QSTR(MP_QSTR_verify),
      MP_ROM_PTR(&mod_trezorcrypto_ed25519_verify_obj)},
     {MP_ROM_QSTR(MP_QSTR_cosi_combine_publickeys),

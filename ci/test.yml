@@ -18,6 +18,17 @@ test core unix device:
     - cd core
     - pipenv run make test_emu
 
+test core unix device bitcoinonly:
+  stage: test
+  dependencies:
+    - build core unix frozen bitcoinonly
+  variables:
+    MICROPYTHON: "../build/unix/micropython-bitcoinonly"
+    TREZOR_PYTEST_SKIP_ALTCOINS: 1
+  script:
+    - cd core
+    - pipenv run make test_emu
+
 test core unix monero:
   stage: test
   dependencies:
@@ -50,6 +61,18 @@ test legacy emu:
     - build legacy emu
   variables:
     EMULATOR: "1"
+  script:
+    - cd legacy
+    - pipenv run script/test
+
+test legacy emu bitcoinonly:
+  stage: test
+  dependencies:
+    - build legacy emu bitcoinonly
+  variables:
+    EMULATOR: "1"
+    EMULATOR_BINARY: "firmware/trezor-bitcoinonly.elf"
+    TREZOR_PYTEST_SKIP_ALTCOINS: 1
   script:
     - cd legacy
     - pipenv run script/test

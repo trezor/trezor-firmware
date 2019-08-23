@@ -147,6 +147,11 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
 #else
     {MP_ROM_QSTR(MP_QSTR_EMULATOR), mp_const_false},
 #endif
+#if BITCOIN_ONLY
+    {MP_ROM_QSTR(MP_QSTR_BITCOIN_ONLY), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_BITCOIN_ONLY), mp_const_false},
+#endif
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorutils_globals,
