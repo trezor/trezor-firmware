@@ -80,7 +80,11 @@ def format_amount(amount: int, decimals: int) -> str:
     else:
         sign = ""
     d = pow(10, decimals)
-    s = ("%s%d.%0*d" % (sign, amount // d, decimals, amount % d)).rstrip("0").rstrip(".")
+    s = (
+        ("%s%d.%0*d" % (sign, amount // d, decimals, amount % d))
+        .rstrip("0")
+        .rstrip(".")
+    )
     return s
 
 
