@@ -80,6 +80,41 @@ class TestMsgEthereumSigntx(TrezorTest):
                 == "7001bfe3ba357e4a9f9e0d3a3f8a8962257615a4cf215db93e48b98999fc51b7"
             )
 
+    def test_ethereum_signtx_wanchain(self):
+        self.setup_mnemonic_nopin_nopassphrase()
+
+        with self.client:
+            self.client.set_expected_responses(
+                [
+                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                    proto.EthereumTxRequest(data_length=None),
+                ]
+            )
+            sig_v, sig_r, sig_s = ethereum.sign_tx(
+                self.client,
+                n=parse_path("44'/5718350'/0'/0/0"),
+                nonce=0,
+                gas_price=20,
+                gas_limit=20,
+                # ADT token address
+                to="0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
+                chain_id=1,
+                tx_type=1,
+                # value needs to be 0, token value is set in the contract (data)
+                value=100,
+            )
+
+            # ad-hoc generated signature. might not be valid.
+            assert (
+                sig_r.hex()
+                == "d6e197029031ec90b53ed14e8233aa78b592400513ac0386d2d55cdedc3d796f"
+            )
+            assert (
+                sig_s.hex()
+                == "326e0d600dd1b7ee606eb531b998a6a3b3293d4995fb8cfe0677962e8a43cff6"
+            )
+
     def test_ethereum_signtx_unknown_erc20_token(self):
         self.setup_mnemonic_nopin_nopassphrase()
 

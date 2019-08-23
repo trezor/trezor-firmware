@@ -70,6 +70,7 @@ class TestEthereumGetAddress(unittest.TestCase):
             [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 9999],
             [44 | HARDENED, 6060 | HARDENED, 0 | HARDENED, 0, 0],
             [44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 0, 0],
+            [44 | HARDENED, 5718350 | HARDENED, 0 | HARDENED, 0, 0],
         ]
 
         for path in incorrect_paths:
