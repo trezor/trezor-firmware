@@ -1,7 +1,12 @@
 # generated from networks.py.mako
 # do not edit manually!
 
+from micropython import const
+
 from apps.common import HARDENED
+
+SLIP44_WANCHAIN = const(5718350)
+SLIP44_ETHEREUM = const(60)
 
 if False:
     from typing import Iterator, Optional
@@ -23,6 +28,9 @@ def by_chain_id(chain_id: int) -> Optional["NetworkInfo"]:
 
 
 def by_slip44(slip44: int) -> Optional["NetworkInfo"]:
+    if slip44 == SLIP44_WANCHAIN:
+        # Coerce to Ethereum
+        slip44 == SLIP44_ETHEREUM
     for n in NETWORKS:
         if n.slip44 == slip44:
             return n
@@ -32,6 +40,7 @@ def by_slip44(slip44: int) -> Optional["NetworkInfo"]:
 def all_slip44_ids_hardened() -> Iterator[int]:
     for n in NETWORKS:
         yield n.slip44 | HARDENED
+    yield SLIP44_WANCHAIN | HARDENED
 
 
 class NetworkInfo:

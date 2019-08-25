@@ -51,3 +51,8 @@ class TestMsgEthereumGetaddress(TrezorTest):
             ethereum.get_address(self.client, [H_(44), H_(6060), 0, 9999999])
             == "0x98b8e926bd224764De2A0E4f4CBe1521474050AF"
         )
+        # Wanchain SLIP44 id
+        assert (
+            ethereum.get_address(self.client, [H_(44), H_(5718350), H_(0)])
+            == "0x4d643B1b556E14A27143a38bcE61230FFf5AFca8"
+        )
