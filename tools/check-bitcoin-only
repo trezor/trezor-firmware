@@ -1,0 +1,12 @@
+#!/bin/sh
+RETURN=0
+
+# dump all coins except the first 3 (Bitcoin, Testnet, Regtest)
+./common/tools/cointool.py dump -l -p -t | grep '"name"' | cut -d '"' -f 4 | tail -n +4 | while read altcoin; do
+    # echo :"$altcoin":
+    if strings $1 | grep "$altcoin" | grep -v TEXT_MARGIN_LEFT | grep -v _MIN_MNEMONIC_LENGTH_WORD ; then
+        RETURN=1
+    fi
+done
+
+exit $RETURN
