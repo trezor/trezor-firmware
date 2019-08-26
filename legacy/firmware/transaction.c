@@ -435,11 +435,15 @@ uint32_t serialize_script_multisig(const CoinInfo *coin,
                                    const MultisigRedeemScriptType *multisig,
                                    uint8_t sighash, uint8_t *out) {
   uint32_t r = 0;
+#if !BITCOIN_ONLY
   if (!coin->decred) {
     // Decred fixed the off-by-one bug
+#endif
     out[r] = 0x00;
     r++;
+#if !BITCOIN_ONLY
   }
+#endif
   for (uint32_t i = 0; i < multisig->signatures_count; i++) {
     if (multisig->signatures[i].size == 0) {
       continue;
@@ -813,9 +817,13 @@ static uint32_t tx_input_script_size(const TxInputType *txinput) {
 }
 
 uint32_t tx_input_weight(const CoinInfo *coin, const TxInputType *txinput) {
+#if !BITCOIN_ONLY
   if (coin->decred) {
     return 4 * (TXSIZE_INPUT + 1);  // Decred tree
   }
+#else
+  (void)coin;
+#endif
 
   uint32_t input_script_size = tx_input_script_size(txinput);
   uint32_t weight = 4 * TXSIZE_INPUT;
@@ -884,9 +892,11 @@ uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput) {
   output_script_size += ser_length_size(output_script_size);
 
   uint32_t size = TXSIZE_OUTPUT;
+#if !BITCOIN_ONLY
   if (coin->decred) {
     size += 2;  // Decred script version
   }
+#endif
 
   return 4 * (size + output_script_size);
 }
