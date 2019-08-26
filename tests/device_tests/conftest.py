@@ -127,9 +127,8 @@ def pytest_runtest_setup(item):
     if item.get_closest_marker("skip_t1") and item.get_closest_marker("skip_t2"):
         pytest.fail("Don't skip tests for both trezors!")
 
-    if item.get_closest_marker("altcoin") and os.environ.get(
-        "TREZOR_PYTEST_SKIP_ALTCOINS", 0
-    ):
+    skip_altcoins = int(os.environ.get("TREZOR_PYTEST_SKIP_ALTCOINS", 0))
+    if item.get_closest_marker("altcoin") and skip_altcoins:
         pytest.skip("Skipping altcoin test")
     if item.get_closest_marker("skip_t2") and TREZOR_VERSION == 2:
         pytest.skip("Test excluded on Trezor T")
