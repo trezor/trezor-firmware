@@ -17,7 +17,6 @@ from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 from apps.common import address_type, coininfo, coins, seed
 from apps.wallet.sign_tx import (
     addresses,
-    decred,
     helpers,
     multisig,
     progress,
@@ -25,8 +24,10 @@ from apps.wallet.sign_tx import (
     segwit_bip143,
     tx_weight,
     writers,
-    zcash,
 )
+
+if not utils.BITCOIN_ONLY:
+    from apps.wallet.sign_tx import decred, zcash
 
 # the number of bip32 levels used in a wallet (chain and address)
 _BIP32_WALLET_DEPTH = const(2)
@@ -62,10 +63,10 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
     # tx, as the SignTx info is streamed only once
     h_first = utils.HashWriter(sha256())  # not a real tx hash
 
-    if coin.decred:
+    if not utils.BITCOIN_ONLY and coin.decred:
         hash143 = decred.DecredPrefixHasher(tx)  # pseudo BIP-0143 prefix hashing
         tx_ser = TxRequestSerializedType()
-    elif tx.overwintered:
+    elif not utils.BITCOIN_ONLY and tx.overwintered:
         if tx.version == 3:
             branch_id = tx.branch_id or 0x5BA81B19  # Overwinter
             hash143 = zcash.Zip143(branch_id)  # ZIP-0143 transaction hashing
@@ -129,7 +130,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
             InputScriptType.SPENDADDRESS,
             InputScriptType.SPENDMULTISIG,
         ):
-            if coin.force_bip143 or tx.overwintered:
+            if coin.force_bip143 or (not utils.BITCOIN_ONLY and tx.overwintered):
                 if not txi.amount:
                     raise SigningError(
                         FailureType.DataError, "Expected input with amount"
@@ -146,7 +147,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
         else:
             raise SigningError(FailureType.DataError, "Wrong input script type")
 
-        if coin.decred:
+        if not utils.BITCOIN_ONLY and coin.decred:
             w_txi = writers.empty_bytearray(8 if i == 0 else 0 + 9 + len(txi.prev_hash))
             if i == 0:  # serializing first input => prepend headers
                 writers.write_bytes(w_txi, get_tx_header(coin, tx))
@@ -154,7 +155,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
             tx_ser.serialized_tx = w_txi
             tx_req.serialized = tx_ser
 
-    if coin.decred:
+    if not utils.BITCOIN_ONLY and coin.decred:
         hash143.add_output_count(tx)
 
     for o in range(tx.outputs_count):
@@ -170,7 +171,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
         elif not await helpers.confirm_output(txo, coin):
             raise SigningError(FailureType.ActionCancelled, "Output cancelled")
 
-        if coin.decred:
+        if not utils.BITCOIN_ONLY and coin.decred:
             if txo.decred_script_version is not None and txo.decred_script_version != 0:
                 raise SigningError(
                     FailureType.ActionCancelled,
@@ -212,7 +213,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
     if not await helpers.confirm_total(total_in - change_out, fee, coin):
         raise SigningError(FailureType.ActionCancelled, "Total cancelled")
 
-    if coin.decred:
+    if not utils.BITCOIN_ONLY and coin.decred:
         hash143.add_locktime_expiry(tx)
 
     return h_first, hash143, segwit, total_in, wallet_path
@@ -241,7 +242,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
     tx_req.details = TxRequestDetailsType()
     tx_req.serialized = None
 
-    if coin.decred:
+    if not utils.BITCOIN_ONLY and coin.decred:
         prefix_hash = hash143.prefix_hash()
 
     for i_sign in range(tx.inputs_count):
@@ -275,7 +276,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             tx_ser.signature = None
             tx_req.serialized = tx_ser
 
-        elif coin.force_bip143 or tx.overwintered:
+        elif coin.force_bip143 or (not utils.BITCOIN_ONLY and tx.overwintered):
             # STAGE_REQUEST_SEGWIT_INPUT
             txi_sign = await helpers.request_tx_input(tx_req, i_sign)
             input_check_wallet_path(txi_sign, wallet_path)
@@ -323,7 +324,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
 
             tx_req.serialized = tx_ser
 
-        elif coin.decred:
+        elif not utils.BITCOIN_ONLY and coin.decred:
             txi_sign = await helpers.request_tx_input(tx_req, i_sign)
 
             input_check_wallet_path(txi_sign, wallet_path)
@@ -397,7 +398,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             # same as h_first, checked before signing the digest
             h_second = utils.HashWriter(sha256())
 
-            if tx.overwintered:
+            if not utils.BITCOIN_ONLY and tx.overwintered:
                 writers.write_uint32(
                     h_sign, tx.version | zcash.OVERWINTERED
                 )  # nVersion | fOverwintered
@@ -453,7 +454,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                 writers.write_tx_output(h_sign, txo_bin)
 
             writers.write_uint32(h_sign, tx.lock_time)
-            if tx.overwintered:
+            if not utils.BITCOIN_ONLY and tx.overwintered:
                 writers.write_uint32(h_sign, tx.expiry)  # expiryHeight
                 writers.write_varint(h_sign, 0)  # nJoinSplit
 
@@ -491,7 +492,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
 
             tx_req.serialized = tx_ser
 
-    if coin.decred:
+    if not utils.BITCOIN_ONLY and coin.decred:
         return await helpers.request_tx_finish(tx_req)
 
     for o in range(tx.outputs_count):
@@ -564,7 +565,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
 
     writers.write_uint32(tx_ser.serialized_tx, tx.lock_time)
 
-    if tx.overwintered:
+    if not utils.BITCOIN_ONLY and tx.overwintered:
         if tx.version == 3:
             writers.write_uint32(tx_ser.serialized_tx, tx.expiry)  # expiryHeight
             writers.write_varint(tx_ser.serialized_tx, 0)  # nJoinSplit
@@ -591,17 +592,17 @@ async def get_prevtx_output_value(
     # STAGE_REQUEST_2_PREV_META
     tx = await helpers.request_tx_meta(tx_req, prev_hash)
 
-    if coin.decred:
+    if not utils.BITCOIN_ONLY and coin.decred:
         txh = utils.HashWriter(blake256())
     else:
         txh = utils.HashWriter(sha256())
 
-    if tx.overwintered:
+    if not utils.BITCOIN_ONLY and tx.overwintered:
         writers.write_uint32(
             txh, tx.version | zcash.OVERWINTERED
         )  # nVersion | fOverwintered
         writers.write_uint32(txh, tx.version_group_id)  # nVersionGroupId
-    elif coin.decred:
+    elif not utils.BITCOIN_ONLY and coin.decred:
         writers.write_uint32(txh, tx.version | decred.DECRED_SERIALIZE_NO_WITNESS)
     else:
         writers.write_uint32(txh, tx.version)  # nVersion
@@ -613,7 +614,7 @@ async def get_prevtx_output_value(
     for i in range(tx.inputs_cnt):
         # STAGE_REQUEST_2_PREV_INPUT
         txi = await helpers.request_tx_input(tx_req, i, prev_hash)
-        if coin.decred:
+        if not utils.BITCOIN_ONLY and coin.decred:
             writers.write_tx_input_decred(txh, txi)
         else:
             writers.write_tx_input(txh, txi)
@@ -627,7 +628,8 @@ async def get_prevtx_output_value(
         if o == prev_index:
             total_out += txo_bin.amount
             if (
-                coin.decred
+                not utils.BITCOIN_ONLY
+                and coin.decred
                 and txo_bin.decred_script_version is not None
                 and txo_bin.decred_script_version != 0
             ):
@@ -638,7 +640,7 @@ async def get_prevtx_output_value(
 
     writers.write_uint32(txh, tx.lock_time)
 
-    if tx.overwintered or coin.decred:
+    if not utils.BITCOIN_ONLY and (tx.overwintered or coin.decred):
         writers.write_uint32(txh, tx.expiry)
 
     ofs = 0
@@ -672,7 +674,7 @@ def get_hash_type(coin: coininfo.CoinInfo) -> int:
 
 def get_tx_header(coin: coininfo.CoinInfo, tx: SignTx, segwit: bool = False):
     w_txi = bytearray()
-    if tx.overwintered:
+    if not utils.BITCOIN_ONLY and tx.overwintered:
         writers.write_uint32(
             w_txi, tx.version | zcash.OVERWINTERED
         )  # nVersion | fOverwintered
