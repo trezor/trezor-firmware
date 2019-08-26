@@ -92,6 +92,7 @@ def test_secret(client, shares, secret):
     assert debug.read_mnemonic_secret().hex() == secret
 
 
+@pytest.mark.setup_client(uninitialized=True)
 def test_recover_with_pin_passphrase(client):
     debug = client.debug
 
@@ -117,6 +118,7 @@ def test_recover_with_pin_passphrase(client):
     assert client.features.passphrase_protection is True
 
 
+@pytest.mark.setup_client(uninitialized=True)
 def test_abort(client):
     debug = client.debug
 
@@ -136,6 +138,7 @@ def test_abort(client):
         assert client.features.initialized is False
 
 
+@pytest.mark.setup_client(uninitialized=True)
 def test_noabort(client):
     debug = client.debug
 
@@ -155,6 +158,7 @@ def test_noabort(client):
         assert client.features.initialized is True
 
 
+@pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("nth_word", range(3))
 def test_wrong_nth_word(client, nth_word):
     debug = client.debug
@@ -194,6 +198,7 @@ def test_wrong_nth_word(client, nth_word):
             device.recover(client, pin_protection=False, label="label")
 
 
+@pytest.mark.setup_client(uninitialized=True)
 def test_same_share(client):
     debug = client.debug
     first_share = SHARES_20_3of6[0].split(" ")

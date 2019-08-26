@@ -19,8 +19,6 @@ import pytest
 from trezorlib.cardano import get_address
 from trezorlib.tools import parse_path
 
-from .conftest import setup_client
-
 SLIP39_MNEMONIC = [
     "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
     "extra extend academic acne away best indicate impact square oasis prospect painting voting guest either argue username racism enemy eclipse",
@@ -48,7 +46,7 @@ SLIP39_MNEMONIC = [
         ),
     ],
 )
-@setup_client(mnemonic=SLIP39_MNEMONIC, passphrase=True)
+@pytest.mark.setup_client(mnemonic=SLIP39_MNEMONIC, passphrase=True)
 def test_cardano_get_address(client, path, expected_address):
     # enter passphrase
     assert client.features.passphrase_protection is True

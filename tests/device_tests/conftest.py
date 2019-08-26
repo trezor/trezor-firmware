@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import functools
 import os
 
 import pytest
@@ -58,39 +57,42 @@ def device_version():
 
 
 @pytest.fixture(scope="function")
-def client():
+def client(request):
     client = get_device()
     wipe_device(client)
 
     client.open()
+
+    # fmt: off
+    setup_params = dict(
+        uninitialized=False,
+        mnemonic=" ".join(["all"] * 12),
+        pin=None,
+        passphrase=False,
+    )
+    # fmt: on
+
+    marker = request.node.get_closest_marker("setup_client")
+    if marker:
+        setup_params.update(marker.kwargs)
+
+    if not setup_params["uninitialized"]:
+        if setup_params["pin"] is True:
+            setup_params["pin"] = "1234"
+
+        debuglink.load_device_by_mnemonic(
+            client,
+            mnemonic=setup_params["mnemonic"],
+            pin=setup_params["pin"],
+            passphrase_protection=setup_params["passphrase"],
+            label="test",
+            language="english",
+        )
+        if setup_params["passphrase"] and client.features.model != "1":
+            apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
+
     yield client
     client.close()
-
-
-def setup_client(mnemonic=None, pin="", passphrase=False):
-    if mnemonic is None:
-        mnemonic = " ".join(["all"] * 12)
-    if pin is True:
-        pin = "1234"
-
-    def client_decorator(function):
-        @functools.wraps(function)
-        def wrapper(client, *args, **kwargs):
-            debuglink.load_device_by_mnemonic(
-                client,
-                mnemonic=mnemonic,
-                pin=pin,
-                passphrase_protection=passphrase,
-                label="test",
-                language="english",
-            )
-            if TREZOR_VERSION > 1 and passphrase:
-                apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
-            return function(*args, client=client, **kwargs)
-
-        return wrapper
-
-    return client_decorator
 
 
 def pytest_configure(config):
@@ -104,6 +106,10 @@ def pytest_configure(config):
     # register known markers
     config.addinivalue_line("markers", "skip_t1: skip the test on Trezor One")
     config.addinivalue_line("markers", "skip_t2: skip the test on Trezor T")
+    config.addinivalue_line(
+        "markers",
+        'setup_client(mnemonic="all all all...", pin=None, passphrase=False, uninitialized=False): configure the client instance',
+    )
     with open(os.path.join(os.path.dirname(__file__), "REGISTERED_MARKERS")) as f:
         for line in f:
             config.addinivalue_line("markers", line.strip())

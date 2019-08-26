@@ -18,8 +18,6 @@ import pytest
 
 from trezorlib import cardano, messages
 
-from .conftest import setup_client
-
 SHARES_20_3of6 = [
     "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
     "extra extend academic acne away best indicate impact square oasis prospect painting voting guest either argue username racism enemy eclipse",
@@ -115,7 +113,7 @@ VALID_VECTORS = [
 @pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
-@setup_client(mnemonic=SHARES_20_3of6, passphrase=True)
+@pytest.mark.setup_client(mnemonic=SHARES_20_3of6, passphrase=True)
 @pytest.mark.parametrize(
     "protocol_magic,inputs,outputs,transactions,tx_hash,tx_body", VALID_VECTORS
 )

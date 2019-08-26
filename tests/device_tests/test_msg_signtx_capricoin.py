@@ -19,7 +19,6 @@ import pytest
 from trezorlib import btc, messages
 from trezorlib.tools import parse_path
 
-from .conftest import setup_client
 from .tx_cache import tx_cache
 
 TXHASH_3bf506 = bytes.fromhex(
@@ -34,7 +33,6 @@ TXHASH_f3a6e6 = bytes.fromhex(
 @pytest.mark.altcoin
 @pytest.mark.capricoin
 @pytest.mark.skip_t1  # T1 support is not planned
-@setup_client()
 def test_timestamp_included(client):
     # tx: 3bf506c81ce84eda891679ddc797d162c17c60b15d6c0ac23be5e31369e7235f
     # input 0: 0.01 CPC
