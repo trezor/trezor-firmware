@@ -30,7 +30,7 @@ def by_chain_id(chain_id: int) -> Optional["NetworkInfo"]:
 def by_slip44(slip44: int) -> Optional["NetworkInfo"]:
     if slip44 == SLIP44_WANCHAIN:
         # Coerce to Ethereum
-        slip44 == SLIP44_ETHEREUM
+        slip44 = SLIP44_ETHEREUM
     for n in NETWORKS:
         if n.slip44 == slip44:
             return n
