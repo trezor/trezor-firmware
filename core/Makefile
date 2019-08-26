@@ -70,6 +70,12 @@ test_emu: ## run selected device tests from python-trezor
 test_emu_monero: ## run selected monero device tests from monero-agent
 	cd tests ; ./run_tests_device_emu_monero.sh $(TESTOPTS)
 
+test_emu_ui:  # run ui integration tests from python-trezor
+	cd tests ; TREZOR_SAVE_SCREEN=1 ./run_tests_device_emu.sh $(TESTOPTS)
+
+test_emu_ui_record:  # record a full set of new ui fixtures
+	cd tests ; TREZOR_SAVE_SCREEN=1 TREZOR_SAVE_SCREEN_FIXTURES=1 ./run_tests_device_emu.sh $(TESTOPTS)
+
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 
