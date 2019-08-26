@@ -1,7 +1,10 @@
 from common import *
-from apps.ethereum import tokens
+
+if not utils.BITCOIN_ONLY:
+    from apps.ethereum import tokens
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestEthereumTokens(unittest.TestCase):
 
     def test_token_by_chain_address(self):

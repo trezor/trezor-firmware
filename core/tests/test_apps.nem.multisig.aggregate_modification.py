@@ -1,15 +1,17 @@
 from common import *
 from trezor.crypto import hashlib
-from trezor.messages.NEMAggregateModification import NEMAggregateModification
-from trezor.messages.NEMCosignatoryModification import NEMCosignatoryModification
-from trezor.messages.NEMSignTx import NEMSignTx
-from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 
-from apps.nem.helpers import *
-from apps.nem.multisig import *
-from apps.nem.multisig.serialize import *
+if not utils.BITCOIN_ONLY:
+    from trezor.messages.NEMAggregateModification import NEMAggregateModification
+    from trezor.messages.NEMCosignatoryModification import NEMCosignatoryModification
+    from trezor.messages.NEMSignTx import NEMSignTx
+    from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+    from apps.nem.helpers import *
+    from apps.nem.multisig import *
+    from apps.nem.multisig.serialize import *
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestNemMultisigAggregateModification(unittest.TestCase):
     def test_nem_transaction_aggregate_modification(self):
         # http://bob.nem.ninja:8765/#/aggregate/6a55471b17159e5b6cd579c421e95a4e39d92e3f78b0a55ee337e785a601d3a2

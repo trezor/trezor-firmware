@@ -1,12 +1,14 @@
 from common import *
 
-from apps.eos.get_public_key import _get_public_key, _public_key_to_wif
 from trezor.crypto import bip32, bip39
-from ubinascii import hexlify, unhexlify
 from apps.common.paths import HARDENED
-from apps.eos.helpers import validate_full_path
+
+if not utils.BITCOIN_ONLY:
+    from apps.eos.get_public_key import _get_public_key, _public_key_to_wif
+    from apps.eos.helpers import validate_full_path
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestEosGetPublicKey(unittest.TestCase):
     def test_get_public_key_scheme(self):
         mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"

@@ -1,19 +1,21 @@
 from common import *
 
-from apps.binance.helpers import produce_json_for_signing
-from apps.binance.sign_tx import generate_content_signature, sign_tx
-
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
-from trezor.messages.BinanceCancelMsg import BinanceCancelMsg
-from trezor.messages.BinanceCoin import BinanceCoin
-from trezor.messages.BinanceInputOutput import BinanceInputOutput
-from trezor.messages.BinanceOrderMsg import BinanceOrderMsg
-from trezor.messages.BinanceSignTx import BinanceSignTx
-from trezor.messages.BinanceTransferMsg import BinanceTransferMsg
+
+if not utils.BITCOIN_ONLY:
+    from apps.binance.helpers import produce_json_for_signing
+    from apps.binance.sign_tx import generate_content_signature, sign_tx
+    from trezor.messages.BinanceCancelMsg import BinanceCancelMsg
+    from trezor.messages.BinanceCoin import BinanceCoin
+    from trezor.messages.BinanceInputOutput import BinanceInputOutput
+    from trezor.messages.BinanceOrderMsg import BinanceOrderMsg
+    from trezor.messages.BinanceSignTx import BinanceSignTx
+    from trezor.messages.BinanceTransferMsg import BinanceTransferMsg
 
 
-class TestBinanceSign(unittest.TestCase):    
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+class TestBinanceSign(unittest.TestCase):
     def test_order_signature(self):
         # source of testing data
         # https://github.com/binance-chain/javascript-sdk/blob/master/__tests__/fixtures/placeOrder.json

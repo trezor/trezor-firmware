@@ -19,6 +19,7 @@ from apps.common.seed import Keychain
 from apps.wallet.sign_tx import helpers, signing
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestSignTx_GRS(unittest.TestCase):
     # pylint: disable=C0301
 

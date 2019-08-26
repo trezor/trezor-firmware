@@ -1,10 +1,13 @@
 from common import *
 
-from apps.monero.xmr import bulletproof as bp, crypto, monero
-from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
+if not utils.BITCOIN_ONLY:
+    from apps.monero.xmr import bulletproof as bp, crypto, monero
+    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestMoneroBulletproof(unittest.TestCase):
+
     def test_1(self):
         pass
 

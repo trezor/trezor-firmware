@@ -1,9 +1,12 @@
 from common import *
 from apps.common.paths import HARDENED
-from apps.ethereum.address import address_from_bytes, bytes_from_address, validate_full_path
-from apps.ethereum.networks import NetworkInfo, by_chain_id
+
+if not utils.BITCOIN_ONLY:
+    from apps.ethereum.address import address_from_bytes, bytes_from_address, validate_full_path
+    from apps.ethereum.networks import NetworkInfo, by_chain_id
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestEthereumGetAddress(unittest.TestCase):
 
     def test_address_from_bytes_eip55(self):
