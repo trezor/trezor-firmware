@@ -41,4 +41,6 @@ for msg_name in dir(MessageType):
     # No Message begins with underscore so it's safe to skip those.
     if msg_name[0] == "_":
         continue
+    if msg_name == "utils":  # skip imported trezor.utils
+        continue
     type_to_name[getattr(MessageType, msg_name)] = msg_name
