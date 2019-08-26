@@ -1,8 +1,11 @@
 from common import *
 from apps.common.paths import HARDENED
-from apps.lisk.helpers import validate_full_path
+
+if not utils.BITCOIN_ONLY:
+    from apps.lisk.helpers import validate_full_path
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestLiskGetAddress(unittest.TestCase):
 
     def test_paths(self):

@@ -1,10 +1,12 @@
 from common import *
-from ubinascii import unhexlify
-from trezor.crypto import nem
 from apps.common import HARDENED
-from apps.nem.helpers import check_path, NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET
+
+if not utils.BITCOIN_ONLY:
+    from trezor.crypto import nem
+    from apps.nem.helpers import check_path, NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestNemAddress(unittest.TestCase):
 
     def test_addresses(self):

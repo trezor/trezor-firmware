@@ -2,16 +2,18 @@ from common import *
 from apps.common import seed
 
 from apps.common import HARDENED
-from apps.cardano.address import (
-    _get_address_root,
-    _address_hash,
-    validate_full_path,
-    derive_address_and_node
-)
-from apps.cardano.seed import Keychain
 from trezor.crypto import bip32, slip39
+if not utils.BITCOIN_ONLY:
+    from apps.cardano.address import (
+        _get_address_root,
+        _address_hash,
+        validate_full_path,
+        derive_address_and_node
+    )
+    from apps.cardano.seed import Keychain
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestCardanoAddress(unittest.TestCase):
     def test_hardened_address_derivation_scheme(self):
         mnemonic = "all all all all all all all all all all all all"

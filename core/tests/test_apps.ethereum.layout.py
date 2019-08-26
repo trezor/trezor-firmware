@@ -1,8 +1,11 @@
 from common import *
-from apps.ethereum.layout import format_ethereum_amount
-from apps.ethereum.tokens import token_by_chain_address
+
+if not utils.BITCOIN_ONLY:
+    from apps.ethereum.layout import format_ethereum_amount
+    from apps.ethereum.tokens import token_by_chain_address
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestEthereumLayout(unittest.TestCase):
 
     def test_format(self):

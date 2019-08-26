@@ -169,6 +169,7 @@ class TestAddress(unittest.TestCase):
         self.assertFalse(validate_full_path([44 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0], coin, InputScriptType.SPENDWITNESS))
         self.assertTrue(validate_full_path([44 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0], coin, InputScriptType.SPENDWITNESS, validate_script_type=False))
 
+    @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
     def test_paths_bch(self):
         incorrect_derivation_paths = [
             ([44 | HARDENED], InputScriptType.SPENDADDRESS),  # invalid length
@@ -201,6 +202,7 @@ class TestAddress(unittest.TestCase):
         for path, input_type in correct_derivation_paths:
             self.assertTrue(validate_full_path(path, coin, input_type))
 
+    @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
     def test_paths_other(self):
         incorrect_derivation_paths = [
             ([44 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0, 0], InputScriptType.SPENDMULTISIG),  # input type mismatch
@@ -244,6 +246,8 @@ class TestAddress(unittest.TestCase):
         for path in incorrect_derivation_paths:
             self.assertFalse(validate_path_for_bitcoin_public_key(path, coin))
 
+    @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+    def test_paths_public_key_nosegwit(self):
         incorrect_derivation_paths = [
             [49 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0, 0],  # no segwit
         ]

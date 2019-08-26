@@ -1,10 +1,13 @@
 from common import *
-from trezor.messages.NEMMosaic import NEMMosaic
-from apps.nem.mosaic.helpers import get_mosaic_definition
-from apps.nem.transfer import *
-from apps.nem.transfer.serialize import *
+
+if not utils.BITCOIN_ONLY:
+    from trezor.messages.NEMMosaic import NEMMosaic
+    from apps.nem.mosaic.helpers import get_mosaic_definition
+    from apps.nem.transfer import *
+    from apps.nem.transfer.serialize import *
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestNemMosaic(unittest.TestCase):
 
     def test_get_mosaic_definition(self):

@@ -1,14 +1,16 @@
 from common import *
 
-from apps.nem.helpers import *
-from apps.nem.namespace import *
-from apps.nem.namespace.serialize import *
-
 from trezor.crypto import hashlib
-from trezor.messages.NEMProvisionNamespace import NEMProvisionNamespace
-from trezor.messages.NEMSignTx import NEMSignTx
+
+if not utils.BITCOIN_ONLY:
+    from apps.nem.helpers import *
+    from apps.nem.namespace import *
+    from apps.nem.namespace.serialize import *
+    from trezor.messages.NEMProvisionNamespace import NEMProvisionNamespace
+    from trezor.messages.NEMSignTx import NEMSignTx
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestNemNamespace(unittest.TestCase):
 
     def test_create_provision_namespace(self):

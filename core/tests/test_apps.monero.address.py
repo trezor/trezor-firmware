@@ -1,8 +1,11 @@
 from common import *
 from apps.common.paths import HARDENED
-from apps.monero.misc import validate_full_path
+
+if not utils.BITCOIN_ONLY:
+    from apps.monero.misc import validate_full_path
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestMoneroGetAddress(unittest.TestCase):
 
     def test_paths(self):

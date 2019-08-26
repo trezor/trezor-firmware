@@ -1,8 +1,11 @@
 from common import *
 from apps.common.paths import HARDENED
-from apps.ripple.helpers import address_from_public_key, validate_full_path
+
+if not utils.BITCOIN_ONLY:
+    from apps.ripple.helpers import address_from_public_key, validate_full_path
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestRippleAddress(unittest.TestCase):
 
     def test_pubkey_to_address(self):

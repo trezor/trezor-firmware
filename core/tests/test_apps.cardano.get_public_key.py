@@ -3,9 +3,9 @@ from common import *
 from apps.cardano.seed import Keychain
 from apps.cardano.get_public_key import _get_public_key
 from trezor.crypto import bip32, slip39
-from ubinascii import hexlify
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestCardanoGetPublicKey(unittest.TestCase):
     def test_get_public_key_scheme(self):
         mnemonic = "all all all all all all all all all all all all"

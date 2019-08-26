@@ -1,10 +1,13 @@
 from common import *
 from apps.common.paths import HARDENED
-from apps.binance.helpers import address_from_public_key, validate_full_path
 
 from trezor.crypto.curve import secp256k1
-from ubinascii import unhexlify
 
+if not utils.BITCOIN_ONLY:
+    from apps.binance.helpers import address_from_public_key, validate_full_path
+
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestBinanceAddress(unittest.TestCase):
     def test_privkey_to_address(self):
         #source of test data - binance javascript SDK
