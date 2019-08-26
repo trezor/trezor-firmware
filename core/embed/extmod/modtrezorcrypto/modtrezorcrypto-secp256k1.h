@@ -117,9 +117,9 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign(size_t n_args,
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &dig, MP_BUFFER_READ);
   bool compressed = (n_args < 3) || (args[2] == mp_const_true);
+  int (*is_canonical)(uint8_t by, uint8_t sig[64]) = NULL;
 #if !BITCOIN_ONLY
   mp_int_t canonical = (n_args > 3) ? mp_obj_get_int(args[3]) : 0;
-  int (*is_canonical)(uint8_t by, uint8_t sig[64]) = NULL;
   switch (canonical) {
     case CANONICAL_SIG_ETHEREUM:
       is_canonical = ethereum_is_canonical;
