@@ -3,8 +3,6 @@ import pytest
 from trezorlib import binance
 from trezorlib.tools import parse_path
 
-from .conftest import setup_client
-
 BINANCE_TEST_VECTORS = [
     (  # CANCEL
         {
@@ -89,7 +87,7 @@ BINANCE_TEST_VECTORS = [
 @pytest.mark.altcoin
 @pytest.mark.binance
 @pytest.mark.skip_t1  # T1 support is not planned
-@setup_client(
+@pytest.mark.setup_client(
     mnemonic="offer caution gift cross surge pretty orange during eye soldier popular holiday mention east eight office fashion ill parrot vault rent devote earth cousin"
 )
 @pytest.mark.parametrize("message, expected_response", BINANCE_TEST_VECTORS)

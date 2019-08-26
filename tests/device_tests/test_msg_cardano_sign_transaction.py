@@ -19,8 +19,6 @@ import pytest
 from trezorlib import cardano, messages
 from trezorlib.exceptions import TrezorFailure
 
-from .conftest import setup_client
-
 PROTOCOL_MAGICS = {"mainnet": 764824073, "testnet": 1097911063}
 
 SAMPLE_INPUTS = [
@@ -173,7 +171,6 @@ INVALID_VECTORS = [
 @pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
-@setup_client()
 @pytest.mark.parametrize(
     "protocol_magic,inputs,outputs,transactions,tx_hash,tx_body", VALID_VECTORS
 )
@@ -213,7 +210,6 @@ def test_cardano_sign_tx(
 @pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
-@setup_client()
 @pytest.mark.parametrize(
     "protocol_magic,inputs,outputs,transactions,expected_error_message", INVALID_VECTORS
 )

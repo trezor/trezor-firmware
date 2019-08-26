@@ -19,10 +19,7 @@ import pytest
 import trezorlib.messages as m
 from trezorlib.exceptions import Cancelled
 
-from .conftest import setup_client
 
-
-@setup_client()
 @pytest.mark.parametrize(
     "message",
     [
@@ -46,7 +43,6 @@ def test_cancel_message_via_cancel(client, message):
         client.call(message)
 
 
-@setup_client()
 @pytest.mark.parametrize(
     "message",
     [
