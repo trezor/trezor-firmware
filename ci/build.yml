@@ -32,6 +32,8 @@ build core firmware bitcoinonly:
     - cd core
     - pipenv run make build_firmware
     - mv build/firmware/firmware.bin build/firmware/firmware-bitcoinonly.bin
+    - cd ..
+    - pipenv run ./tools/check-bitcoin-only core/build/firmware/firmware-bitcoinonly.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -54,7 +56,7 @@ build core unix frozen:
     paths:
     - core/build/unix/micropython
     - core/src/trezor/res/resources.py
-    expire_in: 1 day
+    expire_in: 1 week
 
 build core unix frozen bitcoinonly:
   stage: build
@@ -69,7 +71,7 @@ build core unix frozen bitcoinonly:
     paths:
     - core/build/unix/micropython-bitcoinonly
     - core/src/trezor/res/resources.py
-    expire_in: 1 day
+    expire_in: 1 week
 
 build core unix frozen debug:
   stage: build
@@ -81,7 +83,7 @@ build core unix frozen debug:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     untracked: true
-    expire_in: 1 day
+    expire_in: 1 week
 
 
 # Crypto
@@ -98,7 +100,7 @@ build crypto:
     - crypto/tests/libtrezor-crypto.so
     - crypto/tests/test_check
     - crypto/tests/test_openssl
-    expire_in: 1 day
+    expire_in: 1 week
 
 
 # Legacy
@@ -111,6 +113,11 @@ build legacy firmware:
     - pipenv run script/cibuild
     - pipenv run make -C bootloader
     - pipenv run make -C demo
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - legacy/firmware/trezor.bin
+    expire_in: 1 week
 
 build legacy firmware debug:
   stage: build
@@ -127,6 +134,14 @@ build legacy firmware bitcoinonly:
   script:
     - cd legacy
     - pipenv run script/cibuild
+    - mv firmware/trezor.bin firmware/trezor-bitcoinonly.bin
+    - cd ..
+    - pipenv run ./tools/check-bitcoin-only legacy/firmware/trezor-bitcoinonly.bin
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - legacy/firmware/trezor-bitcoinonly.bin
+    expire_in: 1 week
 
 build legacy emu:
   stage: build
@@ -140,7 +155,7 @@ build legacy emu:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
     - legacy/firmware/trezor.elf
-    expire_in: 1 day
+    expire_in: 1 week
 
 build legacy emu bitcoinonly:
   stage: build
@@ -156,4 +171,4 @@ build legacy emu bitcoinonly:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
     - legacy/firmware/trezor-bitcoinonly.elf
-    expire_in: 1 day
+    expire_in: 1 week
