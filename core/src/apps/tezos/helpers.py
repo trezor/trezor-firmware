@@ -3,7 +3,13 @@ from micropython import const
 from trezor.crypto import base58
 
 from apps.common import HARDENED
+from apps.common.storage import common
 from apps.common.writers import write_uint8
+
+TEZOS = const(0x05)  # Tezos namespace
+TYPE = const(0x00)  # Key for operation type
+BLOCK_LEVEL = const(0x01)  # Key for last signed block level
+ENDORSEMENT_LEVEL = const(0x02)  # Key for last signed endorsement level
 
 TEZOS_AMOUNT_DIVISIBILITY = const(6)
 TEZOS_ED25519_ADDRESS_PREFIX = "tz1"
@@ -71,3 +77,36 @@ def write_bool(w: bytearray, boolean: bool):
         write_uint8(w, 255)
     else:
         write_uint8(w, 0)
+
+
+def get_last_block_level():
+    level = common._get_uint32(TEZOS, BLOCK_LEVEL)
+    if not level:
+        return 0
+    return level
+
+
+def get_last_endorsement_level():
+    level = common._get_uint32(TEZOS, ENDORSEMENT_LEVEL)
+    if not level:
+        return 0
+    return level
+
+
+def set_last_block_level(level):
+    common._set_uint32(TEZOS, BLOCK_LEVEL, level)
+
+
+def set_last_endorsement_level(level):
+    common._set_uint32(TEZOS, ENDORSEMENT_LEVEL, level)
+
+
+def get_last_type():
+    op_type = common._get_uint8(TEZOS, TYPE)
+    if not op_type:
+        return "None"
+    return "Block" if op_type == 1 else "Endorsement"
+
+
+def set_last_type(wm):
+    common._set_uint8(TEZOS, TYPE, wm)

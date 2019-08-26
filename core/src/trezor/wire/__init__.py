@@ -430,3 +430,10 @@ async def read_and_throw_away(reader: codec_v1.Reader) -> None:
     while reader.size > 0:
         buf = bytearray(reader.size)
         await reader.areadinto(buf)
+
+
+def clear_handlers(keep: list):
+    # remove all handlers, except the ones used in tezos baking
+    for handler in workflow_handlers.keys():
+        if handler not in keep:
+            workflow_handlers.pop(handler, None)
