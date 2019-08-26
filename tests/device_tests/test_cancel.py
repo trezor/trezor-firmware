@@ -17,6 +17,7 @@
 import pytest
 
 import trezorlib.messages as m
+from trezorlib.exceptions import Cancelled
 
 from .conftest import setup_client
 
@@ -35,16 +36,14 @@ from .conftest import setup_client
     ],
 )
 def test_cancel_message_via_cancel(client, message):
-    resp = client.call_raw(message)
-    assert isinstance(resp, m.ButtonRequest)
+    def input_flow():
+        yield
+        client.cancel()
 
-    client.transport.write(m.ButtonAck())
-    client.transport.write(m.Cancel())
-
-    resp = client.transport.read()
-
-    assert isinstance(resp, m.Failure)
-    assert resp.code == m.FailureType.ActionCancelled
+    with client, pytest.raises(Cancelled):
+        client.set_expected_responses([m.ButtonRequest(), m.Failure()])
+        client.set_input_flow(input_flow)
+        client.call(message)
 
 
 @setup_client()
