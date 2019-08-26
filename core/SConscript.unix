@@ -426,7 +426,12 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/*/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/*/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'apps/wallet/sign_tx/decred.py',
+            SOURCE_PY_DIR + 'apps/wallet/sign_tx/zcash.py',
+        ])
+    )
 
     if EVERYTHING:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/binance/*.py'))
@@ -467,6 +472,9 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Tezos*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/webauthn/*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/sign_tx/decred.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/sign_tx/zcash.py'))
 
     source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR, bitcoin_only=BITCOIN_ONLY)
 

@@ -80,6 +80,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_secp256k1_publickey_obj, 1, 2,
     mod_trezorcrypto_secp256k1_publickey);
 
+#if !BITCOIN_ONLY
+
 static int ethereum_is_canonical(uint8_t v, uint8_t signature[64]) {
   (void)signature;
   return (v & 2) == 0;
@@ -98,6 +100,8 @@ enum {
   CANONICAL_SIG_EOS = 2,
 };
 
+#endif
+
 /// def sign(
 ///     secret_key: bytes,
 ///     digest: bytes,
@@ -113,6 +117,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign(size_t n_args,
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &dig, MP_BUFFER_READ);
   bool compressed = (n_args < 3) || (args[2] == mp_const_true);
+#if !BITCOIN_ONLY
   mp_int_t canonical = (n_args > 3) ? mp_obj_get_int(args[3]) : 0;
   int (*is_canonical)(uint8_t by, uint8_t sig[64]) = NULL;
   switch (canonical) {
@@ -123,6 +128,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign(size_t n_args,
       is_canonical = eos_is_canonical;
       break;
   }
+#endif
   if (sk.len != 32) {
     mp_raise_ValueError("Invalid length of secret key");
   }
@@ -250,9 +256,11 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_secp256k1_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_verify_recover_obj)},
     {MP_ROM_QSTR(MP_QSTR_multiply),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_multiply_obj)},
+#if !BITCOIN_ONLY
     {MP_ROM_QSTR(MP_QSTR_CANONICAL_SIG_ETHEREUM),
      MP_ROM_INT(CANONICAL_SIG_ETHEREUM)},
     {MP_ROM_QSTR(MP_QSTR_CANONICAL_SIG_EOS), MP_ROM_INT(CANONICAL_SIG_EOS)},
+#endif
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_secp256k1_globals,
                             mod_trezorcrypto_secp256k1_globals_table);
