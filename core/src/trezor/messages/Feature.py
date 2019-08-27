@@ -18,3 +18,4 @@ if not utils.BITCOIN_ONLY:
     Stellar = 12
     Tezos = 13
     U2F = 14
+Shamir = 15
