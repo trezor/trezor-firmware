@@ -70,27 +70,6 @@ def chunks(items: Chunkable, size: int) -> Iterator[Chunkable]:
         yield items[i : i + size]
 
 
-def format_amount(amount: int, decimals: int) -> str:
-    if amount < 0:
-        amount = -amount
-        sign = "-"
-    else:
-        sign = ""
-    d = pow(10, decimals)
-    s = (
-        ("%s%d.%0*d" % (sign, amount // d, decimals, amount % d))
-        .rstrip("0")
-        .rstrip(".")
-    )
-    return s
-
-
-def format_ordinal(number: int) -> str:
-    return str(number) + {1: "st", 2: "nd", 3: "rd"}.get(
-        4 if 10 <= number % 100 < 20 else number % 10, "th"
-    )
-
-
 if False:
 
     class HashContext(Protocol):

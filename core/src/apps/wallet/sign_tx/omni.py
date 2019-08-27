@@ -1,6 +1,6 @@
 from ustruct import unpack
 
-from trezor.utils import format_amount
+from trezor.strings import format_amount
 
 currencies = {
     1: ("OMNI", True),

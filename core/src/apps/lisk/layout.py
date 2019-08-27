@@ -1,7 +1,8 @@
 from trezor import ui
 from trezor.messages import ButtonRequestType
+from trezor.strings import format_amount
 from trezor.ui.text import Text
-from trezor.utils import chunks, format_amount
+from trezor.utils import chunks
 
 from .helpers import get_vote_tx_text
 

@@ -13,16 +13,6 @@ class TestUtils(unittest.TestCase):
             self.assertEqual(c[i].stop, 100 if (i == 14) else (i + 1) * 7)
             self.assertEqual(c[i].step, 1)
 
-    def test_format_amount(self):
-        VECTORS = [
-            (123456, 3, "123.456"),
-            (4242, 7, "0.0004242"),
-            (-123456, 3, "-123.456"),
-            (-4242, 7, "-0.0004242"),
-        ]
-        for v in VECTORS:
-            self.assertEqual(utils.format_amount(v[0], v[1]), v[2])
-
 
 if __name__ == '__main__':
     unittest.main()
