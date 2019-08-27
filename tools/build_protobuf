@@ -69,17 +69,17 @@ do_rebuild() {
     # TODO: make this less hackish
     # maybe introduce attribute "altcoin" in protobuf?
     if [ "$APPLY_BITCOIN_ONLY" == "TRUE" ]; then
-        sed -i "3ifrom trezor import utils\n" "$DESTDIR"/Feature.py
+        sed -i "3ifrom trezor import utils\n" "$DESTDIR"/Capability.py
         sed -i "3ifrom trezor import utils\n" "$DESTDIR"/MessageType.py
         sed -i "/^EthereumGetPublicKey/iif not utils.BITCOIN_ONLY:" "$DESTDIR"/MessageType.py
         for altcoin in Ethereum NEM Lisk Tezos Stellar Cardano Ripple Monero DebugMonero Eos Binance; do
-            sed -i "s:^$altcoin:    $altcoin:" "$DESTDIR"/Feature.py
+            sed -i "s:^$altcoin:    $altcoin:" "$DESTDIR"/Capability.py
             sed -i "s:^$altcoin:    $altcoin:" "$DESTDIR"/MessageType.py
         done
-        sed -i "/^Bitcoin_like/iif not utils.BITCOIN_ONLY:" "$DESTDIR"/Feature.py
-        sed -i "/^EOS/iif not utils.BITCOIN_ONLY:" "$DESTDIR"/Feature.py
+        sed -i "/^Bitcoin_like/iif not utils.BITCOIN_ONLY:" "$DESTDIR"/Capability.py
+        sed -i "/^EOS/iif not utils.BITCOIN_ONLY:" "$DESTDIR"/Capability.py
         for feature in Bitcoin_like EOS U2F; do
-            sed -i "s:^$feature:    $feature:" "$DESTDIR"/Feature.py
+            sed -i "s:^$feature:    $feature:" "$DESTDIR"/Capability.py
         done
     fi
     # ENDTODO

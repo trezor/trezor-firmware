@@ -14,3 +14,5 @@ Ripple = 11
 Stellar = 12
 Tezos = 13
 U2F = 14
+Shamir = 15
+ShamirGroups = 16
