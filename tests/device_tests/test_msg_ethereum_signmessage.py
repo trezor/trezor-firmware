@@ -19,7 +19,7 @@ import pytest
 from trezorlib import ethereum
 from trezorlib.tools import H_
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 
 @pytest.mark.altcoin
@@ -63,9 +63,9 @@ class TestMsgEthereumSignmessage(TrezorTest):
         ),
     ]
 
-    def test_sign(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_sign(self, client):
         for msg, sig in self.VECTORS:
-            res = ethereum.sign_message(self.client, self.PATH, msg)
+            res = ethereum.sign_message(client, self.PATH, msg)
             assert res.address == self.ADDRESS
             assert res.signature.hex() == sig

@@ -24,9 +24,10 @@ from .common import TrezorTest
 
 @pytest.mark.skip_t1
 class TestMsgRecoverydeviceT2(TrezorTest):
-    def test_pin_passphrase(self):
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_pin_passphrase(self, client):
         mnemonic = self.mnemonic12.split(" ")
-        ret = self.client.call_raw(
+        ret = client.call_raw(
             proto.RecoveryDevice(
                 passphrase_protection=True,
                 pin_protection=True,
@@ -37,61 +38,62 @@ class TestMsgRecoverydeviceT2(TrezorTest):
 
         # Confirm Recovery
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.press_yes()
+        ret = client.call_raw(proto.ButtonAck())
 
         # Enter PIN for first time
         assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
-        self.client.debug.input("654")
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.input("654")
+        ret = client.call_raw(proto.ButtonAck())
 
         # Enter PIN for second time
         assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
-        self.client.debug.input("654")
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.input("654")
+        ret = client.call_raw(proto.ButtonAck())
 
         # Homescreen
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.press_yes()
+        ret = client.call_raw(proto.ButtonAck())
 
         # Enter word count
         assert ret == proto.ButtonRequest(
             code=proto.ButtonRequestType.MnemonicWordCount
         )
-        self.client.debug.input(str(len(mnemonic)))
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.input(str(len(mnemonic)))
+        ret = client.call_raw(proto.ButtonAck())
 
         # Homescreen
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.press_yes()
+        ret = client.call_raw(proto.ButtonAck())
 
         # Enter mnemonic words
         assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.MnemonicInput)
-        self.client.transport.write(proto.ButtonAck())
+        client.transport.write(proto.ButtonAck())
         for word in mnemonic:
-            self.client.debug.input(word)
-        ret = self.client.transport.read()
+            client.debug.input(word)
+        ret = client.transport.read()
 
         # Confirm success
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.press_yes()
+        ret = client.call_raw(proto.ButtonAck())
 
         # Workflow succesfully ended
         assert ret == proto.Success(message="Device recovered")
 
         # Mnemonic is the same
-        self.client.init_device()
-        assert self.client.debug.read_mnemonic_secret() == self.mnemonic12.encode()
+        client.init_device()
+        assert client.debug.read_mnemonic_secret() == self.mnemonic12.encode()
 
-        assert self.client.features.pin_protection is True
-        assert self.client.features.passphrase_protection is True
+        assert client.features.pin_protection is True
+        assert client.features.passphrase_protection is True
 
-    def test_nopin_nopassphrase(self):
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_nopin_nopassphrase(self, client):
         mnemonic = self.mnemonic12.split(" ")
-        ret = self.client.call_raw(
+        ret = client.call_raw(
             proto.RecoveryDevice(
                 passphrase_protection=False,
                 pin_protection=False,
@@ -102,57 +104,50 @@ class TestMsgRecoverydeviceT2(TrezorTest):
 
         # Confirm Recovery
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.press_yes()
+        ret = client.call_raw(proto.ButtonAck())
 
         # Homescreen
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.press_yes()
+        ret = client.call_raw(proto.ButtonAck())
 
         # Enter word count
         assert ret == proto.ButtonRequest(
             code=proto.ButtonRequestType.MnemonicWordCount
         )
-        self.client.debug.input(str(len(mnemonic)))
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.input(str(len(mnemonic)))
+        ret = client.call_raw(proto.ButtonAck())
 
         # Homescreen
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.press_yes()
+        ret = client.call_raw(proto.ButtonAck())
 
         # Enter mnemonic words
         assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.MnemonicInput)
-        self.client.transport.write(proto.ButtonAck())
+        client.transport.write(proto.ButtonAck())
         for word in mnemonic:
-            self.client.debug.input(word)
-        ret = self.client.transport.read()
+            client.debug.input(word)
+        ret = client.transport.read()
 
         # Confirm success
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.press_yes()
+        ret = client.call_raw(proto.ButtonAck())
 
         # Workflow succesfully ended
         assert ret == proto.Success(message="Device recovered")
 
         # Mnemonic is the same
-        self.client.init_device()
-        assert self.client.debug.read_mnemonic_secret() == self.mnemonic12.encode()
+        client.init_device()
+        assert client.debug.read_mnemonic_secret() == self.mnemonic12.encode()
 
-        assert self.client.features.pin_protection is False
-        assert self.client.features.passphrase_protection is False
+        assert client.features.pin_protection is False
+        assert client.features.passphrase_protection is False
 
-    def test_already_initialized(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_already_initialized(self, client):
         with pytest.raises(RuntimeError):
             device.recover(
-                self.client,
-                12,
-                False,
-                False,
-                "label",
-                "english",
-                self.client.mnemonic_callback,
+                client, 12, False, False, "label", "english", client.mnemonic_callback
             )

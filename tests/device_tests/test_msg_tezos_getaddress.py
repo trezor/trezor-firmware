@@ -26,13 +26,11 @@ from .common import TrezorTest
 @pytest.mark.tezos
 @pytest.mark.skip_t1
 class TestMsgTezosGetAddress(TrezorTest):
-    def test_tezos_get_address(self):
-        self.setup_mnemonic_allallall()
-
+    def test_tezos_get_address(self, client):
         path = parse_path("m/44'/1729'/0'")
-        address = get_address(self.client, path, show_display=True)
+        address = get_address(client, path, show_display=True)
         assert address == "tz1Kef7BSg6fo75jk37WkKRYSnJDs69KVqt9"
 
         path = parse_path("m/44'/1729'/1'")
-        address = get_address(self.client, path, show_display=True)
+        address = get_address(client, path, show_display=True)
         assert address == "tz1ekQapZCX4AXxTJhJZhroDKDYLHDHegvm1"

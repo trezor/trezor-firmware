@@ -23,9 +23,10 @@ from .common import TrezorTest
 
 @pytest.mark.skip_t2
 class TestMsgRecoverydevice(TrezorTest):
-    def test_pin_passphrase(self):
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_pin_passphrase(self, client):
         mnemonic = self.mnemonic12.split(" ")
-        ret = self.client.call_raw(
+        ret = client.call_raw(
             proto.RecoveryDevice(
                 word_count=12,
                 passphrase_protection=True,
@@ -38,30 +39,30 @@ class TestMsgRecoverydevice(TrezorTest):
 
         # click through confirmation
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.press_yes()
+        ret = client.call_raw(proto.ButtonAck())
 
         assert isinstance(ret, proto.PinMatrixRequest)
 
         # Enter PIN for first time
-        pin_encoded = self.client.debug.encode_pin(self.pin6)
-        ret = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+        pin_encoded = client.debug.encode_pin(self.pin6)
+        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
         assert isinstance(ret, proto.PinMatrixRequest)
 
         # Enter PIN for second time
-        pin_encoded = self.client.debug.encode_pin(self.pin6)
-        ret = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+        pin_encoded = client.debug.encode_pin(self.pin6)
+        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
 
         fakes = 0
         for _ in range(int(12 * 2)):
             assert isinstance(ret, proto.WordRequest)
-            (word, pos) = self.client.debug.read_recovery_word()
+            (word, pos) = client.debug.read_recovery_word()
 
             if pos != 0:
-                ret = self.client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
+                ret = client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
                 mnemonic[pos - 1] = None
             else:
-                ret = self.client.call_raw(proto.WordAck(word=word))
+                ret = client.call_raw(proto.WordAck(word=word))
                 fakes += 1
 
             print(mnemonic)
@@ -74,20 +75,21 @@ class TestMsgRecoverydevice(TrezorTest):
         assert mnemonic == [None] * 12
 
         # Mnemonic is the same
-        self.client.init_device()
-        assert self.client.debug.read_mnemonic_secret() == self.mnemonic12.encode()
+        client.init_device()
+        assert client.debug.read_mnemonic_secret() == self.mnemonic12.encode()
 
-        assert self.client.features.pin_protection is True
-        assert self.client.features.passphrase_protection is True
+        assert client.features.pin_protection is True
+        assert client.features.passphrase_protection is True
 
         # Do passphrase-protected action, PassphraseRequest should be raised
-        resp = self.client.call_raw(proto.Ping(passphrase_protection=True))
+        resp = client.call_raw(proto.Ping(passphrase_protection=True))
         assert isinstance(resp, proto.PassphraseRequest)
-        self.client.call_raw(proto.Cancel())
+        client.call_raw(proto.Cancel())
 
-    def test_nopin_nopassphrase(self):
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_nopin_nopassphrase(self, client):
         mnemonic = self.mnemonic12.split(" ")
-        ret = self.client.call_raw(
+        ret = client.call_raw(
             proto.RecoveryDevice(
                 word_count=12,
                 passphrase_protection=False,
@@ -100,19 +102,19 @@ class TestMsgRecoverydevice(TrezorTest):
 
         # click through confirmation
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.press_yes()
+        ret = client.call_raw(proto.ButtonAck())
 
         fakes = 0
         for _ in range(int(12 * 2)):
             assert isinstance(ret, proto.WordRequest)
-            (word, pos) = self.client.debug.read_recovery_word()
+            (word, pos) = client.debug.read_recovery_word()
 
             if pos != 0:
-                ret = self.client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
+                ret = client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
                 mnemonic[pos - 1] = None
             else:
-                ret = self.client.call_raw(proto.WordAck(word=word))
+                ret = client.call_raw(proto.WordAck(word=word))
                 fakes += 1
 
             print(mnemonic)
@@ -125,22 +127,23 @@ class TestMsgRecoverydevice(TrezorTest):
         assert mnemonic == [None] * 12
 
         # Mnemonic is the same
-        self.client.init_device()
-        assert self.client.debug.read_mnemonic_secret() == self.mnemonic12.encode()
+        client.init_device()
+        assert client.debug.read_mnemonic_secret() == self.mnemonic12.encode()
 
-        assert self.client.features.pin_protection is False
-        assert self.client.features.passphrase_protection is False
+        assert client.features.pin_protection is False
+        assert client.features.passphrase_protection is False
 
         # Do passphrase-protected action, PassphraseRequest should NOT be raised
-        resp = self.client.call_raw(proto.Ping(passphrase_protection=True))
+        resp = client.call_raw(proto.Ping(passphrase_protection=True))
         assert isinstance(resp, proto.Success)
 
         # Do PIN-protected action, PinRequest should NOT be raised
-        resp = self.client.call_raw(proto.Ping(pin_protection=True))
+        resp = client.call_raw(proto.Ping(pin_protection=True))
         assert isinstance(resp, proto.Success)
 
-    def test_word_fail(self):
-        ret = self.client.call_raw(
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_word_fail(self, client):
+        ret = client.call_raw(
             proto.RecoveryDevice(
                 word_count=12,
                 passphrase_protection=False,
@@ -153,21 +156,22 @@ class TestMsgRecoverydevice(TrezorTest):
 
         # click through confirmation
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.press_yes()
+        ret = client.call_raw(proto.ButtonAck())
 
         assert isinstance(ret, proto.WordRequest)
         for _ in range(int(12 * 2)):
-            (word, pos) = self.client.debug.read_recovery_word()
+            (word, pos) = client.debug.read_recovery_word()
             if pos != 0:
-                ret = self.client.call_raw(proto.WordAck(word="kwyjibo"))
+                ret = client.call_raw(proto.WordAck(word="kwyjibo"))
                 assert isinstance(ret, proto.Failure)
                 break
             else:
-                self.client.call_raw(proto.WordAck(word=word))
+                client.call_raw(proto.WordAck(word=word))
 
-    def test_pin_fail(self):
-        ret = self.client.call_raw(
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_pin_fail(self, client):
+        ret = client.call_raw(
             proto.RecoveryDevice(
                 word_count=12,
                 passphrase_protection=True,
@@ -180,32 +184,25 @@ class TestMsgRecoverydevice(TrezorTest):
 
         # click through confirmation
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.press_yes()
+        ret = client.call_raw(proto.ButtonAck())
 
         assert isinstance(ret, proto.PinMatrixRequest)
 
         # Enter PIN for first time
-        pin_encoded = self.client.debug.encode_pin(self.pin4)
-        ret = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+        pin_encoded = client.debug.encode_pin(self.pin4)
+        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
         assert isinstance(ret, proto.PinMatrixRequest)
 
         # Enter PIN for second time, but different one
-        pin_encoded = self.client.debug.encode_pin(self.pin6)
-        ret = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+        pin_encoded = client.debug.encode_pin(self.pin6)
+        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
 
         # Failure should be raised
         assert isinstance(ret, proto.Failure)
 
-    def test_already_initialized(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_already_initialized(self, client):
         with pytest.raises(RuntimeError):
             device.recover(
-                self.client,
-                12,
-                False,
-                False,
-                "label",
-                "english",
-                self.client.mnemonic_callback,
+                client, 12, False, False, "label", "english", client.mnemonic_callback
             )

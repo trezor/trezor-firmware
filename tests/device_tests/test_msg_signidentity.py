@@ -16,10 +16,12 @@
 
 import struct
 
+import pytest
+
 from trezorlib import messages as proto, misc
 from trezorlib.tools import H_
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 
 def check_path(identity):
@@ -46,9 +48,8 @@ def check_path(identity):
 
 
 class TestMsgSignidentity(TrezorTest):
-    def test_sign(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_sign(self, client):
         hidden = bytes.fromhex(
             "cd8552569d6e4509266ef137584d1e62c7579b5b8ed69bbafa4b864c6521e7c2"
         )
@@ -65,7 +66,7 @@ class TestMsgSignidentity(TrezorTest):
             path="/login",
             index=0,
         )
-        sig = misc.sign_identity(self.client, identity, hidden, visual)
+        sig = misc.sign_identity(client, identity, hidden, visual)
         assert sig.address == "17F17smBTX9VTZA9Mj8LM5QGYNZnmziCjL"
         assert (
             sig.public_key.hex()
@@ -87,7 +88,7 @@ class TestMsgSignidentity(TrezorTest):
             path="/pub",
             index=3,
         )
-        sig = misc.sign_identity(self.client, identity, hidden, visual)
+        sig = misc.sign_identity(client, identity, hidden, visual)
         assert sig.address == "1KAr6r5qF2kADL8bAaRQBjGKYEGxn9WrbS"
         assert (
             sig.public_key.hex()
@@ -105,7 +106,7 @@ class TestMsgSignidentity(TrezorTest):
             proto="ssh", user="satoshi", host="bitcoin.org", port="", path="", index=47
         )
         sig = misc.sign_identity(
-            self.client, identity, hidden, visual, ecdsa_curve_name="nist256p1"
+            client, identity, hidden, visual, ecdsa_curve_name="nist256p1"
         )
         assert sig.address is None
         assert (
@@ -124,7 +125,7 @@ class TestMsgSignidentity(TrezorTest):
             proto="ssh", user="satoshi", host="bitcoin.org", port="", path="", index=47
         )
         sig = misc.sign_identity(
-            self.client, identity, hidden, visual, ecdsa_curve_name="ed25519"
+            client, identity, hidden, visual, ecdsa_curve_name="ed25519"
         )
         assert sig.address is None
         assert (
@@ -141,7 +142,7 @@ class TestMsgSignidentity(TrezorTest):
             proto="gpg", user="satoshi", host="bitcoin.org", port="", path=""
         )
         sig = misc.sign_identity(
-            self.client, identity, hidden, visual, ecdsa_curve_name="ed25519"
+            client, identity, hidden, visual, ecdsa_curve_name="ed25519"
         )
         assert sig.address is None
         assert (
@@ -158,7 +159,7 @@ class TestMsgSignidentity(TrezorTest):
             proto="signify", user="satoshi", host="bitcoin.org", port="", path=""
         )
         sig = misc.sign_identity(
-            self.client, identity, hidden, visual, ecdsa_curve_name="ed25519"
+            client, identity, hidden, visual, ecdsa_curve_name="ed25519"
         )
         assert sig.address is None
         assert (

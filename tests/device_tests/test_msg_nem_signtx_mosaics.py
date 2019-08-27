@@ -19,7 +19,7 @@ import pytest
 from trezorlib import nem
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 
 # assertion data from T1
@@ -27,11 +27,10 @@ from .common import TrezorTest
 @pytest.mark.nem
 @pytest.mark.skip_t2
 class TestMsgNEMSignTxMosaics(TrezorTest):
-    def test_nem_signtx_mosaic_supply_change(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_mosaic_supply_change(self, client):
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 74649215,
@@ -57,11 +56,10 @@ class TestMsgNEMSignTxMosaics(TrezorTest):
             == "928b03c4a69fff35ecf0912066ea705895b3028fad141197d7ea2b56f1eef2a2516455e6f35d318f6fa39e2bb40492ac4ae603260790f7ebc7ea69feb4ca4c0a"
         )
 
-    def test_nem_signtx_mosaic_creation(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_mosaic_creation(self, client):
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 74649215,
@@ -90,11 +88,10 @@ class TestMsgNEMSignTxMosaics(TrezorTest):
             == "537adf4fd9bd5b46e204b2db0a435257a951ed26008305e0aa9e1201dafa4c306d7601a8dbacabf36b5137724386124958d53202015ab31fb3d0849dfed2df0e"
         )
 
-    def test_nem_signtx_mosaic_creation_properties(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_mosaic_creation_properties(self, client):
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 74649215,
@@ -128,11 +125,10 @@ class TestMsgNEMSignTxMosaics(TrezorTest):
             == "f17c859710060f2ea9a0ab740ef427431cf36bdc7d263570ca282bd66032e9f5737a921be9839429732e663be2bb74ccc16f34f5157ff2ef00a65796b54e800e"
         )
 
-    def test_nem_signtx_mosaic_creation_levy(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_mosaic_creation_levy(self, client):
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 74649215,

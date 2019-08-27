@@ -19,18 +19,17 @@ import pytest
 from trezorlib import messages as proto, nem
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 
 # assertion data from T1
 @pytest.mark.altcoin
 @pytest.mark.nem
 class TestMsgNEMSignTx(TrezorTest):
-    def test_nem_signtx_simple(self):
-        # tx hash: 209368053ac61969b6838ceb7e31badeb622ed6aa42d6c58365c42ad1a11e19d
-        self.setup_mnemonic_nopin_nopassphrase()
-        with self.client:
-            self.client.set_expected_responses(
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_simple(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     # Confirm transfer and network fee
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
@@ -43,7 +42,7 @@ class TestMsgNEMSignTx(TrezorTest):
             )
 
             tx = nem.sign_tx(
-                self.client,
+                client,
                 parse_path("m/44'/1'/0'/0'/0'"),
                 {
                     "timeStamp": 74649215,
@@ -69,11 +68,10 @@ class TestMsgNEMSignTx(TrezorTest):
                 == "9cda2045324d05c791a4fc312ecceb62954e7740482f8df8928560d63cf273dea595023640179f112de755c79717757ef76962175378d6d87360ddb3f3e5f70f"
             )
 
-    def test_nem_signtx_encrypted_payload(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
-        with self.client:
-            self.client.set_expected_responses(
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_encrypted_payload(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     # Confirm transfer and network fee
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
@@ -86,7 +84,7 @@ class TestMsgNEMSignTx(TrezorTest):
             )
 
             tx = nem.sign_tx(
-                self.client,
+                client,
                 parse_path("m/44'/1'/0'/0'/0'"),
                 {
                     "timeStamp": 74649215,
@@ -115,11 +113,10 @@ class TestMsgNEMSignTx(TrezorTest):
             # because IV and salt are random (therefore the encrypted payload as well) those data can't be asserted
             assert len(tx.signature) == 64
 
-    def test_nem_signtx_xem_as_mosaic(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_xem_as_mosaic(self, client):
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 76809215,
@@ -149,11 +146,10 @@ class TestMsgNEMSignTx(TrezorTest):
             == "7b25a84b65adb489ea55739f1ca2d83a0ae069c3c58d0ea075fc30bfe8f649519199ad2324ca229c6c3214191469f95326e99712124592cae7cd3a092c93ac0c"
         )
 
-    def test_nem_signtx_unknown_mosaic(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_unknown_mosaic(self, client):
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 76809215,
@@ -183,12 +179,10 @@ class TestMsgNEMSignTx(TrezorTest):
             == "2f0280420eceb41ef9e5d94fa44ddda9cdc70b8f423ae18af577f6d85df64bb4aaf40cf24fc6eef47c63b0963611f8682348cecdc49a9b64eafcbe7afcb49102"
         )
 
-    def test_nem_signtx_known_mosaic(self):
-
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_known_mosaic(self, client):
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 76809215,
@@ -218,12 +212,10 @@ class TestMsgNEMSignTx(TrezorTest):
             == "e7f14ef8c39727bfd257e109cd5acac31542f2e41f2e5deb258fc1db602b690eb1cabca41a627fe2adc51f3193db85c76b41c80bb60161eb8738ebf20b507104"
         )
 
-    def test_nem_signtx_known_mosaic_with_levy(self):
-
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_known_mosaic_with_levy(self, client):
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 76809215,
@@ -253,11 +245,10 @@ class TestMsgNEMSignTx(TrezorTest):
             == "d3222dd7b83d66bda0539827ac6f909d06e40350b5e5e893d6fa762f954e9bf7da61022ef04950e7b6dfa88a2278f2f8a1b21df2bc3af22b388cb3a90bf76f07"
         )
 
-    def test_nem_signtx_multiple_mosaics(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_multiple_mosaics(self, client):
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 76809215,

@@ -24,10 +24,9 @@ from .common import TrezorTest
 
 
 class TestMsgVerifymessage(TrezorTest):
-    def test_message_long(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_message_long(self, client):
         ret = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
             bytes.fromhex(
@@ -37,10 +36,9 @@ class TestMsgVerifymessage(TrezorTest):
         )
         assert ret is True
 
-    def test_message_testnet(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_message_testnet(self, client):
         ret = btc.verify_message(
-            self.client,
+            client,
             "Testnet",
             "mirio8q3gtv7fhdnmb3TpZ4EuafdzSs7zL",
             bytes.fromhex(
@@ -51,10 +49,9 @@ class TestMsgVerifymessage(TrezorTest):
         assert ret is True
 
     @pytest.mark.altcoin
-    def test_message_grs(self):
-        self.setup_mnemonic_allallall()
+    def test_message_grs(self, client):
         ret = btc.verify_message(
-            self.client,
+            client,
             "Groestlcoin",
             "Fj62rBJi8LvbmWu2jzkaUX1NFXLEqDLoZM",
             base64.b64decode(
@@ -64,12 +61,9 @@ class TestMsgVerifymessage(TrezorTest):
         )
         assert ret is True
 
-    def test_message_verify(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
-        # uncompressed pubkey - OK
+    def test_message_verify(self, client):
         res = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T",
             bytes.fromhex(
@@ -81,7 +75,7 @@ class TestMsgVerifymessage(TrezorTest):
 
         # uncompressed pubkey - FAIL - wrong sig
         res = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T",
             bytes.fromhex(
@@ -93,7 +87,7 @@ class TestMsgVerifymessage(TrezorTest):
 
         # uncompressed pubkey - FAIL - wrong msg
         res = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T",
             bytes.fromhex(
@@ -105,7 +99,7 @@ class TestMsgVerifymessage(TrezorTest):
 
         # compressed pubkey - OK
         res = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "1C7zdTfnkzmr13HfA2vNm5SJYRK6nEKyq8",
             bytes.fromhex(
@@ -117,7 +111,7 @@ class TestMsgVerifymessage(TrezorTest):
 
         # compressed pubkey - FAIL - wrong sig
         res = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "1C7zdTfnkzmr13HfA2vNm5SJYRK6nEKyq8",
             bytes.fromhex(
@@ -129,7 +123,7 @@ class TestMsgVerifymessage(TrezorTest):
 
         # compressed pubkey - FAIL - wrong msg
         res = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "1C7zdTfnkzmr13HfA2vNm5SJYRK6nEKyq8",
             bytes.fromhex(
@@ -141,7 +135,7 @@ class TestMsgVerifymessage(TrezorTest):
 
         # trezor pubkey - OK
         res = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
             bytes.fromhex(
@@ -153,7 +147,7 @@ class TestMsgVerifymessage(TrezorTest):
 
         # trezor pubkey - FAIL - wrong sig
         res = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
             bytes.fromhex(
@@ -165,7 +159,7 @@ class TestMsgVerifymessage(TrezorTest):
 
         # trezor pubkey - FAIL - wrong msg
         res = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
             bytes.fromhex(
@@ -176,10 +170,9 @@ class TestMsgVerifymessage(TrezorTest):
         assert res is False
 
     @pytest.mark.altcoin
-    def test_message_verify_bcash(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_message_verify_bcash(self, client):
         res = btc.verify_message(
-            self.client,
+            client,
             "Bcash",
             "bitcoincash:qqj22md58nm09vpwsw82fyletkxkq36zxyxh322pru",
             bytes.fromhex(
@@ -189,11 +182,9 @@ class TestMsgVerifymessage(TrezorTest):
         )
         assert res is True
 
-    def test_verify_bitcoind(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    def test_verify_bitcoind(self, client):
         res = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "1KzXE97kV7DrpxCViCN3HbGbiKhzzPM7TQ",
             bytes.fromhex(
@@ -204,14 +195,12 @@ class TestMsgVerifymessage(TrezorTest):
 
         assert res is True
 
-    def test_verify_utf(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    def test_verify_utf(self, client):
         words_nfkd = u"Pr\u030ci\u0301s\u030cerne\u030c z\u030clut\u030couc\u030cky\u0301 ku\u030an\u030c u\u0301pe\u030cl d\u030ca\u0301belske\u0301 o\u0301dy za\u0301ker\u030cny\u0301 uc\u030cen\u030c be\u030cz\u030ci\u0301 pode\u0301l zo\u0301ny u\u0301lu\u030a"
         words_nfc = u"P\u0159\xed\u0161ern\u011b \u017elu\u0165ou\u010dk\xfd k\u016f\u0148 \xfap\u011bl \u010f\xe1belsk\xe9 \xf3dy z\xe1ke\u0159n\xfd u\u010de\u0148 b\u011b\u017e\xed pod\xe9l z\xf3ny \xfal\u016f"
 
         res_nfkd = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
             bytes.fromhex(
@@ -221,7 +210,7 @@ class TestMsgVerifymessage(TrezorTest):
         )
 
         res_nfc = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
             bytes.fromhex(

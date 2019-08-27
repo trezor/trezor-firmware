@@ -37,9 +37,7 @@ TXHASH_7b28bd = bytes.fromhex(
 @pytest.mark.altcoin
 @pytest.mark.komodo
 class TestMsgSigntxKomodo(TrezorTest):
-    def test_one_one_fee_sapling(self):
-        self.setup_mnemonic_allallall()
-
+    def test_one_one_fee_sapling(self, client):
         # prevout: 2807c5b126ec8e2b078cab0f12e4c8b4ce1d7724905f8ebef8dca26b0c8e0f1d:0
         # input 1: 10.9998 KMD
 
@@ -58,7 +56,7 @@ class TestMsgSigntxKomodo(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
+        with client:
             er = [
                 proto.TxRequest(
                     request_type=proto.RequestType.TXINPUT,
@@ -85,7 +83,7 @@ class TestMsgSigntxKomodo(TrezorTest):
                 proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
             ]
 
-            self.client.set_expected_responses(er)
+            client.set_expected_responses(er)
 
             details = proto.SignTx(
                 version=4,
@@ -95,7 +93,7 @@ class TestMsgSigntxKomodo(TrezorTest):
                 lock_time=0x5D2A30B8,
             )
             _, serialized_tx = btc.sign_tx(
-                self.client, "Komodo", [inp1], [out1], details=details, prev_txes=TX_API
+                client, "Komodo", [inp1], [out1], details=details, prev_txes=TX_API
             )
 
         # Accepted by network: tx 7b28bd91119e9776f0d4ebd80e570165818a829bbf4477cd1afe5149dbcd34b1
@@ -104,9 +102,7 @@ class TestMsgSigntxKomodo(TrezorTest):
             == "0400008085202f89011d0f8e0c6ba2dcf8be8e5f9024771dceb4c8e4120fab8c072b8eec26b1c50728000000006a4730440220158c970ca2fc6bcc33026eb5366f0342f63b35d178f7efb334b1df78fe90b67202207bc4ff69f67cf843b08564a5adc77bf5593e28ab4d5104911824ac13fe885d8f012102a87aef7b1a8f676e452d6240767699719cd58b0261c822472c25df146938bca5ffffffff01d0359041000000001976a91400178fa0b6fc253a3a402ee2cadd8a7bfec08f6388acb8302a5d000000000000000000000000000000"
         )
 
-    def test_one_one_rewards_claim(self):
-        self.setup_mnemonic_allallall()
-
+    def test_one_one_rewards_claim(self, client):
         # prevout: 7b28bd91119e9776f0d4ebd80e570165818a829bbf4477cd1afe5149dbcd34b1:0
         # input 1: 10.9997 KMD
 
@@ -132,7 +128,7 @@ class TestMsgSigntxKomodo(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
+        with client:
             er = [
                 proto.TxRequest(
                     request_type=proto.RequestType.TXINPUT,
@@ -167,7 +163,7 @@ class TestMsgSigntxKomodo(TrezorTest):
                 ),
                 proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
             ]
-            self.client.set_expected_responses(er)
+            client.set_expected_responses(er)
 
             details = proto.SignTx(
                 version=4,
@@ -177,7 +173,7 @@ class TestMsgSigntxKomodo(TrezorTest):
                 lock_time=0x5D2AF1F2,
             )
             _, serialized_tx = btc.sign_tx(
-                self.client,
+                client,
                 "Komodo",
                 [inp1],
                 [out1, out2],

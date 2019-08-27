@@ -25,11 +25,9 @@ from .common import TrezorTest
 @pytest.mark.altcoin
 @pytest.mark.lisk
 class TestMsgLiskSignTx(TrezorTest):
-    def test_lisk_sign_tx_send(self):
-        self.setup_mnemonic_allallall()
-
-        with self.client:
-            self.client.set_expected_responses(
+    def test_lisk_sign_tx_send(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
@@ -42,7 +40,7 @@ class TestMsgLiskSignTx(TrezorTest):
             )
 
             lisk.sign_tx(
-                self.client,
+                client,
                 parse_path("m/44'/134'/0'"),
                 {
                     "amount": "10000000",
@@ -55,11 +53,9 @@ class TestMsgLiskSignTx(TrezorTest):
             )
 
     @pytest.mark.skip_t1
-    def test_lisk_sign_tx_send_wrong_path(self):
-        self.setup_mnemonic_allallall()
-
-        with self.client:
-            self.client.set_expected_responses(
+    def test_lisk_sign_tx_send_wrong_path(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(
                         code=proto.ButtonRequestType.UnknownDerivationPath
@@ -75,7 +71,7 @@ class TestMsgLiskSignTx(TrezorTest):
             )
 
             lisk.sign_tx(
-                self.client,
+                client,
                 parse_path("m/44'/134'/123456'/123456'/123456'/123456'/123456'"),
                 {
                     "amount": "10000000",
@@ -87,11 +83,9 @@ class TestMsgLiskSignTx(TrezorTest):
                 },
             )
 
-    def test_lisk_sign_tx_send_with_data(self):
-        self.setup_mnemonic_allallall()
-
-        with self.client:
-            self.client.set_expected_responses(
+    def test_lisk_sign_tx_send_with_data(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
@@ -104,7 +98,7 @@ class TestMsgLiskSignTx(TrezorTest):
             )
 
             lisk.sign_tx(
-                self.client,
+                client,
                 parse_path("m/44'/134'/0'"),
                 {
                     "amount": "10000000",
@@ -116,11 +110,9 @@ class TestMsgLiskSignTx(TrezorTest):
                 },
             )
 
-    def test_lisk_sign_tx_second_signature(self):
-        self.setup_mnemonic_allallall()
-
-        with self.client:
-            self.client.set_expected_responses(
+    def test_lisk_sign_tx_second_signature(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=proto.ButtonRequestType.PublicKey),
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
@@ -133,7 +125,7 @@ class TestMsgLiskSignTx(TrezorTest):
             )
 
             lisk.sign_tx(
-                self.client,
+                client,
                 parse_path("m/44'/134'/0'"),
                 {
                     "amount": "0",
@@ -148,11 +140,9 @@ class TestMsgLiskSignTx(TrezorTest):
                 },
             )
 
-    def test_lisk_sign_tx_delegate_registration(self):
-        self.setup_mnemonic_allallall()
-
-        with self.client:
-            self.client.set_expected_responses(
+    def test_lisk_sign_tx_delegate_registration(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
@@ -165,7 +155,7 @@ class TestMsgLiskSignTx(TrezorTest):
             )
 
             lisk.sign_tx(
-                self.client,
+                client,
                 parse_path("m/44'/134'/0'"),
                 {
                     "amount": "0",
@@ -176,11 +166,9 @@ class TestMsgLiskSignTx(TrezorTest):
                 },
             )
 
-    def test_lisk_sign_tx_cast_votes(self):
-        self.setup_mnemonic_allallall()
-
-        with self.client:
-            self.client.set_expected_responses(
+    def test_lisk_sign_tx_cast_votes(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
@@ -193,7 +181,7 @@ class TestMsgLiskSignTx(TrezorTest):
             )
 
             lisk.sign_tx(
-                self.client,
+                client,
                 parse_path("m/44'/134'/0'"),
                 {
                     "amount": "0",
@@ -209,11 +197,9 @@ class TestMsgLiskSignTx(TrezorTest):
                 },
             )
 
-    def test_lisk_sign_tx_multisignature(self):
-        self.setup_mnemonic_allallall()
-
-        with self.client:
-            self.client.set_expected_responses(
+    def test_lisk_sign_tx_multisignature(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
@@ -226,7 +212,7 @@ class TestMsgLiskSignTx(TrezorTest):
             )
 
             lisk.sign_tx(
-                self.client,
+                client,
                 parse_path("m/44'/134'/0'"),
                 {
                     "amount": "0",

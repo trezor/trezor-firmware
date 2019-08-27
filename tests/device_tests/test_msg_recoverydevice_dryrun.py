@@ -18,13 +18,13 @@ import pytest
 
 from trezorlib import messages as proto
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 
 @pytest.mark.skip_t2
 class TestMsgRecoverydeviceDryrun(TrezorTest):
-    def recovery_loop(self, mnemonic, result):
-        ret = self.client.call_raw(
+    def recovery_loop(self, client, mnemonic, result):
+        ret = client.call_raw(
             proto.RecoveryDevice(
                 word_count=12,
                 passphrase_protection=False,
@@ -39,34 +39,31 @@ class TestMsgRecoverydeviceDryrun(TrezorTest):
         fakes = 0
         for _ in range(int(12 * 2)):
             assert isinstance(ret, proto.WordRequest)
-            (word, pos) = self.client.debug.read_recovery_word()
+            (word, pos) = client.debug.read_recovery_word()
 
             if pos != 0:
-                ret = self.client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
+                ret = client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
                 mnemonic[pos - 1] = None
             else:
-                ret = self.client.call_raw(proto.WordAck(word=word))
+                ret = client.call_raw(proto.WordAck(word=word))
                 fakes += 1
 
             print(mnemonic)
 
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
+        client.debug.press_yes()
 
-        ret = self.client.call_raw(proto.ButtonAck())
+        ret = client.call_raw(proto.ButtonAck())
         assert isinstance(ret, result)
 
-    def test_correct_notsame(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_correct_notsame(self, client):
+        mnemonic = MNEMONIC12.split(" ")
+        self.recovery_loop(client, mnemonic, proto.Failure)
+
+    def test_correct_same(self, client):
         mnemonic = ["all"] * 12
-        self.recovery_loop(mnemonic, proto.Failure)
+        self.recovery_loop(client, mnemonic, proto.Success)
 
-    def test_correct_same(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-        mnemonic = self.mnemonic12.split(" ")
-        self.recovery_loop(mnemonic, proto.Success)
-
-    def test_incorrect(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_incorrect(self, client):
         mnemonic = ["stick"] * 12
-        self.recovery_loop(mnemonic, proto.Failure)
+        self.recovery_loop(client, mnemonic, proto.Failure)

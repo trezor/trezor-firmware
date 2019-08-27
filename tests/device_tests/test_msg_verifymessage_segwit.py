@@ -14,16 +14,16 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+
 from trezorlib import btc
 
 from .common import TrezorTest
 
 
 class TestMsgVerifymessageSegwit(TrezorTest):
-    def test_message_long(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_message_long(self, client):
         ret = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "3CwYaeWxhpXXiHue3ciQez1DLaTEAXcKa1",
             bytes.fromhex(
@@ -33,10 +33,9 @@ class TestMsgVerifymessageSegwit(TrezorTest):
         )
         assert ret is True
 
-    def test_message_testnet(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_message_testnet(self, client):
         ret = btc.verify_message(
-            self.client,
+            client,
             "Testnet",
             "2N4VkePSzKH2sv5YBikLHGvzUYvfPxV6zS9",
             bytes.fromhex(
@@ -46,12 +45,9 @@ class TestMsgVerifymessageSegwit(TrezorTest):
         )
         assert ret is True
 
-    def test_message_verify(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
-        # trezor pubkey - OK
+    def test_message_verify(self, client):
         res = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "3CwYaeWxhpXXiHue3ciQez1DLaTEAXcKa1",
             bytes.fromhex(
@@ -63,7 +59,7 @@ class TestMsgVerifymessageSegwit(TrezorTest):
 
         # trezor pubkey - FAIL - wrong sig
         res = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "3CwYaeWxhpXXiHue3ciQez1DLaTEAXcKa1",
             bytes.fromhex(
@@ -75,7 +71,7 @@ class TestMsgVerifymessageSegwit(TrezorTest):
 
         # trezor pubkey - FAIL - wrong msg
         res = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "3CwYaeWxhpXXiHue3ciQez1DLaTEAXcKa1",
             bytes.fromhex(
@@ -85,14 +81,12 @@ class TestMsgVerifymessageSegwit(TrezorTest):
         )
         assert res is False
 
-    def test_verify_utf(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    def test_verify_utf(self, client):
         words_nfkd = u"Pr\u030ci\u0301s\u030cerne\u030c z\u030clut\u030couc\u030cky\u0301 ku\u030an\u030c u\u0301pe\u030cl d\u030ca\u0301belske\u0301 o\u0301dy za\u0301ker\u030cny\u0301 uc\u030cen\u030c be\u030cz\u030ci\u0301 pode\u0301l zo\u0301ny u\u0301lu\u030a"
         words_nfc = u"P\u0159\xed\u0161ern\u011b \u017elu\u0165ou\u010dk\xfd k\u016f\u0148 \xfap\u011bl \u010f\xe1belsk\xe9 \xf3dy z\xe1ke\u0159n\xfd u\u010de\u0148 b\u011b\u017e\xed pod\xe9l z\xf3ny \xfal\u016f"
 
         res_nfkd = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "3CwYaeWxhpXXiHue3ciQez1DLaTEAXcKa1",
             bytes.fromhex(
@@ -102,7 +96,7 @@ class TestMsgVerifymessageSegwit(TrezorTest):
         )
 
         res_nfc = btc.verify_message(
-            self.client,
+            client,
             "Bitcoin",
             "3CwYaeWxhpXXiHue3ciQez1DLaTEAXcKa1",
             bytes.fromhex(

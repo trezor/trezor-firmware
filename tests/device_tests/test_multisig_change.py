@@ -14,10 +14,12 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import pytest
+
 from trezorlib import btc, ckd_public as bip32, messages as proto
 from trezorlib.tools import H_, parse_path
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 from .tx_cache import tx_cache
 
 TX_API = tx_cache("Testnet")
@@ -236,9 +238,8 @@ class TestMultisigChange(TrezorTest):
         return resp
 
     # both outputs are external
-    def test_external_external(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_external_external(self, client):
         out1 = proto.TxOutputType(
             address="muevUcG1Bb8eM2nGUGhqmeujHRX7YXjSEu",
             amount=40000000,
@@ -251,10 +252,10 @@ class TestMultisigChange(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(self._responses(self.inp1, self.inp2))
+        with client:
+            client.set_expected_responses(self._responses(self.inp1, self.inp2))
             _, serialized_tx = btc.sign_tx(
-                self.client,
+                client,
                 "Testnet",
                 [self.inp1, self.inp2],
                 [out1, out2],
@@ -267,9 +268,8 @@ class TestMultisigChange(TrezorTest):
         )
 
     # first external, second internal
-    def test_external_internal(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_external_internal(self, client):
         out1 = proto.TxOutputType(
             address="muevUcG1Bb8eM2nGUGhqmeujHRX7YXjSEu",
             amount=40000000,
@@ -282,12 +282,12 @@ class TestMultisigChange(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 self._responses(self.inp1, self.inp2, change=2)
             )
             _, serialized_tx = btc.sign_tx(
-                self.client,
+                client,
                 "Testnet",
                 [self.inp1, self.inp2],
                 [out1, out2],
@@ -300,9 +300,8 @@ class TestMultisigChange(TrezorTest):
         )
 
     # first internal, second external
-    def test_internal_external(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_internal_external(self, client):
         out1 = proto.TxOutputType(
             address_n=parse_path("45'/0/1/0"),
             amount=40000000,
@@ -315,12 +314,12 @@ class TestMultisigChange(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 self._responses(self.inp1, self.inp2, change=1)
             )
             _, serialized_tx = btc.sign_tx(
-                self.client,
+                client,
                 "Testnet",
                 [self.inp1, self.inp2],
                 [out1, out2],
@@ -333,9 +332,8 @@ class TestMultisigChange(TrezorTest):
         )
 
     # both outputs are external
-    def test_multisig_external_external(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_multisig_external_external(self, client):
         out1 = proto.TxOutputType(
             address="2N2aFoogGntQFFwdUVPfRmutXD22ThcNTsR",
             amount=40000000,
@@ -348,10 +346,10 @@ class TestMultisigChange(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(self._responses(self.inp1, self.inp2))
+        with client:
+            client.set_expected_responses(self._responses(self.inp1, self.inp2))
             _, serialized_tx = btc.sign_tx(
-                self.client,
+                client,
                 "Testnet",
                 [self.inp1, self.inp2],
                 [out1, out2],
@@ -364,9 +362,8 @@ class TestMultisigChange(TrezorTest):
         )
 
     # inputs match, change matches (first is change)
-    def test_multisig_change_match_first(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_multisig_change_match_first(self, client):
         multisig_out1 = proto.MultisigRedeemScriptType(
             nodes=[self.node_ext2, self.node_ext1, self.node_int],
             address_n=[1, 0],
@@ -387,12 +384,12 @@ class TestMultisigChange(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 self._responses(self.inp1, self.inp2, change=1)
             )
             _, serialized_tx = btc.sign_tx(
-                self.client,
+                client,
                 "Testnet",
                 [self.inp1, self.inp2],
                 [out1, out2],
@@ -405,9 +402,8 @@ class TestMultisigChange(TrezorTest):
         )
 
     # inputs match, change matches (second is change)
-    def test_multisig_change_match_second(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_multisig_change_match_second(self, client):
         multisig_out2 = proto.MultisigRedeemScriptType(
             nodes=[self.node_ext1, self.node_ext2, self.node_int],
             address_n=[1, 1],
@@ -428,12 +424,12 @@ class TestMultisigChange(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOMULTISIG,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 self._responses(self.inp1, self.inp2, change=2)
             )
             _, serialized_tx = btc.sign_tx(
-                self.client,
+                client,
                 "Testnet",
                 [self.inp1, self.inp2],
                 [out1, out2],
@@ -446,9 +442,8 @@ class TestMultisigChange(TrezorTest):
         )
 
     # inputs match, change mismatches (second tries to be change but isn't)
-    def test_multisig_mismatch_change(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_multisig_mismatch_change(self, client):
         multisig_out2 = proto.MultisigRedeemScriptType(
             nodes=[self.node_ext1, self.node_int, self.node_ext3],
             address_n=[1, 0],
@@ -469,10 +464,10 @@ class TestMultisigChange(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOMULTISIG,
         )
 
-        with self.client:
-            self.client.set_expected_responses(self._responses(self.inp1, self.inp2))
+        with client:
+            client.set_expected_responses(self._responses(self.inp1, self.inp2))
             _, serialized_tx = btc.sign_tx(
-                self.client,
+                client,
                 "Testnet",
                 [self.inp1, self.inp2],
                 [out1, out2],
@@ -485,9 +480,8 @@ class TestMultisigChange(TrezorTest):
         )
 
     # inputs mismatch, change matches with first input
-    def test_multisig_mismatch_inputs(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_multisig_mismatch_inputs(self, client):
         multisig_out1 = proto.MultisigRedeemScriptType(
             nodes=[self.node_ext2, self.node_ext1, self.node_int],
             address_n=[1, 0],
@@ -508,10 +502,10 @@ class TestMultisigChange(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(self._responses(self.inp1, self.inp3))
+        with client:
+            client.set_expected_responses(self._responses(self.inp1, self.inp3))
             _, serialized_tx = btc.sign_tx(
-                self.client,
+                client,
                 "Testnet",
                 [self.inp1, self.inp3],
                 [out1, out2],

@@ -21,7 +21,7 @@ from trezorlib import eos
 from trezorlib.messages import EosSignedTx
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 CHAIN_ID = "cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f"
 ADDRESS_N = parse_path("m/44'/194'/0'/0/0")
@@ -30,22 +30,23 @@ ADDRESS_N = parse_path("m/44'/194'/0'/0/0")
 @pytest.mark.altcoin
 @pytest.mark.eos
 @pytest.mark.skip_t1
+@pytest.mark.setup_client(mnemonic=MNEMONIC12)
 class TestMsgEosSignTx(TrezorTest):
-    def input_flow(self, pages):
+    @pytest.mark.setup_client(uninitialized=True)
+    def input_flow(self, debug, pages):
         # confirm number of actions
         yield
-        self.client.debug.press_yes()
+        debug.press_yes()
 
         # swipe through pages
         yield
         for _ in range(pages - 1):
-            self.client.debug.swipe_down()
+            debug.swipe_down()
 
         # confirm last page
-        self.client.debug.press_yes()
+        debug.press_yes()
 
-    def test_eos_signtx_transfer_token(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_transfer_token(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -72,17 +73,16 @@ class TestMsgEosSignTx(TrezorTest):
             "transaction_extensions": [],
         }
 
-        with self.client:
-            self.client.set_input_flow(self.input_flow(pages=3))
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, pages=3))
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_JveDuew7oyKjgLmApra3NmKArx3QH6HVmatgkLYeUYWv7aGaoQPFyjBwAdcxuo2Skq9wRgsizos92h9iq9i5JbeHh7zNuo"
             )
 
-    def test_eos_signtx_buyram(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_buyram(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -108,17 +108,16 @@ class TestMsgEosSignTx(TrezorTest):
             "transaction_extensions": [],
         }
 
-        with self.client:
-            self.client.set_input_flow(self.input_flow(pages=2))
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, pages=2))
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_K4gU5S9g7rS6MojaPwWppEBCBbPrJm1pyJtVR9mts1sBq5xyN7nJv3FGnrBR7ByjanboCtK4ogY35sNPFX1F5qoZW7BkF9"
             )
 
-    def test_eos_signtx_buyrambytes(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_buyrambytes(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -144,17 +143,16 @@ class TestMsgEosSignTx(TrezorTest):
             "transaction_extensions": [],
         }
 
-        with self.client:
-            self.client.set_input_flow(self.input_flow(pages=2))
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, pages=2))
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_K618wK9f27YxHoPG9hoUCsazZXzxumBj3V9MqcTUh9yCocvP1uFZQAmGmZLhsAtuC2TRR4gtqbeQj57FniYd5i4faQCb6t"
             )
 
-    def test_eos_signtx_sellram(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_sellram(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -176,17 +174,16 @@ class TestMsgEosSignTx(TrezorTest):
             "transaction_extensions": [],
         }
 
-        with self.client:
-            self.client.set_input_flow(self.input_flow(pages=2))
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, pages=2))
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_JusrCS7H5DR53qke7edoWvJuLiQS2VQ84CsN5NWmWYVa7wmJVjh3Hcg5hH42zF8KjAmmvHtaJZ3wkortTW9eds1eoiKsrj"
             )
 
-    def test_eos_signtx_delegate(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_delegate(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -214,17 +211,16 @@ class TestMsgEosSignTx(TrezorTest):
             "transaction_extensions": [],
         }
 
-        with self.client:
-            self.client.set_input_flow(self.input_flow(pages=3))
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, pages=3))
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_Juju8Wjzyn38nuvgS1KT3koKQLHxMMfqVHrp5jMjv4QLU2pUG6EbiJD7D1EHE6xP8DRuwFLVUNR38nTyUKC1Eiz33WocUE"
             )
 
-    def test_eos_signtx_undelegate(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_undelegate(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -251,17 +247,16 @@ class TestMsgEosSignTx(TrezorTest):
             "transaction_extensions": [],
         }
 
-        with self.client:
-            self.client.set_input_flow(self.input_flow(pages=2))
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, pages=2))
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_K3XXUzCUkT2HEdrJTz1CdDDKZbLMShmyEjknQozGhy4F21yUetr1nEe2vUgmGebk2nyYe49R5nkA155J5yFBBaLsTcSdBL"
             )
 
-    def test_eos_signtx_refund(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_refund(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -283,17 +278,16 @@ class TestMsgEosSignTx(TrezorTest):
             "transaction_extensions": [],
         }
 
-        with self.client:
-            self.client.set_input_flow(self.input_flow(pages=0))
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, pages=0))
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_JwWZSSKQZL1hCdMmwEAKjs3r15kau5gaBrQczKy65QANANzovV6U4XbVUZQkZzaQrNGYAtgxrU1WJ1smWgXZNqtKVQUZqc"
             )
 
-    def test_eos_signtx_linkauth(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_linkauth(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -320,17 +314,16 @@ class TestMsgEosSignTx(TrezorTest):
             "transaction_extensions": [],
         }
 
-        with self.client:
-            self.client.set_input_flow(self.input_flow(pages=2))
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, pages=2))
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_Kgs3JdLNqTyGz7uyNiuYLK8sy5qhVQWozrBY7bJWKsjrWAxNyDQUKqHsHmTom5rGY21vYdXmCpi4msU6XeMgWvi4bsBxTx"
             )
 
-    def test_eos_signtx_unlinkauth(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_unlinkauth(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -356,17 +349,16 @@ class TestMsgEosSignTx(TrezorTest):
             "transaction_extensions": [],
         }
 
-        with self.client:
-            self.client.set_input_flow(self.input_flow(pages=2))
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, pages=2))
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_K1ioB5KMRC2mmTwYsGwsFU51ENp1XdSBUrb4bxUCLYhoq7Y733WaLZ4Soq9fdrkaJS8uJ3R7Z1ZjyEKRHU8HU4s4MA86zB"
             )
 
-    def test_eos_signtx_updateauth(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_updateauth(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -415,17 +407,16 @@ class TestMsgEosSignTx(TrezorTest):
             "transaction_extensions": [],
         }
 
-        with self.client:
-            self.client.set_input_flow(self.input_flow(pages=8))
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, pages=8))
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_JuNuwmJm7nLfpxbCqXZMxZoU56TzBh8F5PH7ZyPvQMti6QxJbErDGbKCAaHhoRxwWKzv5kj6kX3WyWys6jAzVe9pDhXB1k"
             )
 
-    def test_eos_signtx_deleteauth(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_deleteauth(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -447,17 +438,16 @@ class TestMsgEosSignTx(TrezorTest):
             "transaction_extensions": [],
         }
 
-        with self.client:
-            self.client.set_input_flow(self.input_flow(pages=0))
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, pages=0))
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_KjPTp8jCtgBKQWqsndhrH4pdCGiks76Q1qBt9e8MtexW6FQg3FzfVFKDU4SvyVDyFs3worn6RyW6WYavw76ACNqcqkCYjf"
             )
 
-    def test_eos_signtx_vote(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_vote(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -513,17 +503,16 @@ class TestMsgEosSignTx(TrezorTest):
             "transaction_extensions": [],
         }
 
-        with self.client:
-            self.client.set_input_flow(self.input_flow(pages=6))
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, pages=6))
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_JxgVhc6ExoTHee3Djrciwmmf2Xck7NLgvAtC2gfgV4Wj2AqMXEb6aKMhpUcTV59VTR1DdnPF1XbiCcJViJiU3zsk1kQz89"
             )
 
-    def test_eos_signtx_vote_proxy(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_vote_proxy(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -545,17 +534,16 @@ class TestMsgEosSignTx(TrezorTest):
             "transaction_extensions": [],
         }
 
-        with self.client:
-            self.client.set_input_flow(self.input_flow(pages=0))
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, pages=0))
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_KjJzcDg9MT8XbLeP1fgQjdmdE6oNQQisMwbXikqrEZYmJe6GCYg89Wr2donYV6zRfg9h7dJKQDCHugdtsxjtmEdqLtPv25"
             )
 
-    def test_eos_signtx_unknown(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_unknown(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -577,17 +565,16 @@ class TestMsgEosSignTx(TrezorTest):
             "transaction_extensions": [],
         }
 
-        with self.client:
-            self.client.set_input_flow(self.input_flow(pages=2))
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, pages=2))
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_JvoJtrHpQJjHAZzEBhiQm75iimYabcAVNDvz8mkempLh6avSJgnXm5JzCCUEBjDtW3syByfXknmgr93Sw3P9RNLnwySmv6"
             )
 
-    def test_eos_signtx_newaccount(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_newaccount(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
             "ref_block_num": 6439,
@@ -663,42 +650,41 @@ class TestMsgEosSignTx(TrezorTest):
         def input_flow():
             # confirm number of actions
             yield
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
             # swipe through new account
             yield
             for _ in range(5):
-                self.client.debug.swipe_down()
+                client.debug.swipe_down()
 
             # confirm new account
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
             # swipe through buyrambytes
             yield
-            self.client.debug.swipe_down()
+            client.debug.swipe_down()
 
             # confirm buyrambytes
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
             # swipe through delegatebw
             yield
             for _ in range(2):
-                self.client.debug.swipe_down()
+                client.debug.swipe_down()
 
             # confirm delegatebw
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
-        with self.client:
-            self.client.set_input_flow(input_flow)
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(input_flow)
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature
                 == "SIG_K1_KhjdS1gKUHR4jKbN3YSdNbPbEqnUVM1Nt6ybdzEAwsUtfbCRJDwpQwPRuEau48CyvhYC5fKo5BiWMPQJbQPrg5ErHThieU"
             )
 
-    def test_eos_signtx_setcontract(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_eos_signtx_setcontract(self, client):
         transaction = {
             "expiration": "2018-06-19T13:29:53",
             "ref_block_num": 30587,
@@ -732,25 +718,25 @@ class TestMsgEosSignTx(TrezorTest):
         def input_flow():
             # confirm number of actions
             yield
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
             # swipe through setcode
             yield
-            self.client.debug.swipe_down()
+            client.debug.swipe_down()
 
             # confirm setcode
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
             # swipe through setabi
             yield
-            self.client.debug.swipe_down()
+            client.debug.swipe_down()
 
             # confirm setabi
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
-        with self.client:
-            self.client.set_input_flow(input_flow)
-            resp = eos.sign_tx(self.client, ADDRESS_N, transaction, CHAIN_ID)
+        with client:
+            client.set_input_flow(input_flow)
+            resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
                 resp.signature

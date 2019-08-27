@@ -19,24 +19,24 @@ import pytest
 from trezorlib import monero
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 
 @pytest.mark.altcoin
 @pytest.mark.monero
 @pytest.mark.skip_t1
 class TestMsgMoneroGetaddress(TrezorTest):
-    def test_monero_getaddress(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_monero_getaddress(self, client):
         assert (
-            monero.get_address(self.client, parse_path("m/44h/128h/0h"))
+            monero.get_address(client, parse_path("m/44h/128h/0h"))
             == b"4Ahp23WfMrMFK3wYL2hLWQFGt87ZTeRkufS6JoQZu6MEFDokAQeGWmu9MA3GFq1yVLSJQbKJqVAn9F9DLYGpRzRAEXqAXKM"
         )
         assert (
-            monero.get_address(self.client, parse_path("m/44h/128h/1h"))
+            monero.get_address(client, parse_path("m/44h/128h/1h"))
             == b"44iAazhoAkv5a5RqLNVyh82a1n3ceNggmN4Ho7bUBJ14WkEVR8uFTe9f7v5rNnJ2kEbVXxfXiRzsD5Jtc6NvBi4D6WNHPie"
         )
         assert (
-            monero.get_address(self.client, parse_path("m/44h/128h/2h"))
+            monero.get_address(client, parse_path("m/44h/128h/2h"))
             == b"47ejhmbZ4wHUhXaqA4b7PN667oPMkokf4ZkNdWrMSPy9TNaLVr7vLqVUQHh2MnmaAEiyrvLsX8xUf99q3j1iAeMV8YvSFcH"
         )

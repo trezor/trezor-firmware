@@ -19,18 +19,17 @@ import pytest
 from trezorlib import nem
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 
 # assertion data from T1
 @pytest.mark.altcoin
 @pytest.mark.nem
 class TestMsgNEMSignTxMultisig(TrezorTest):
-    def test_nem_signtx_aggregate_modification(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_aggregate_modification(self, client):
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 74649215,
@@ -57,11 +56,10 @@ class TestMsgNEMSignTxMultisig(TrezorTest):
             == "1200e552d8732ce3eae96719731194abfc5a09d98f61bb35684f4eeaeff15b1bdf326ee7b1bbbe89d3f68c8e07ad3daf72e4c7f031094ad2236b97918ad98601"
         )
 
-    def test_nem_signtx_multisig(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_multisig(self, client):
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 1,
@@ -96,7 +94,7 @@ class TestMsgNEMSignTxMultisig(TrezorTest):
         )
 
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 74649215,
@@ -129,11 +127,10 @@ class TestMsgNEMSignTxMultisig(TrezorTest):
             == "c915ca3332380925f4050301cdc62269cf29437ac5955321b18da34e570c7fdbb1aec2940a2a553a2a5c90950a4db3c8d3ef899c1a108582e0657f66fbbb0b04"
         )
 
-    def test_nem_signtx_multisig_signer(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_multisig_signer(self, client):
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 333,
@@ -168,7 +165,7 @@ class TestMsgNEMSignTxMultisig(TrezorTest):
         )
 
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 900000,

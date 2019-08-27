@@ -19,7 +19,7 @@ import pytest
 from trezorlib import lisk
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 LISK_PATH = parse_path("m/44h/134h/0h/1h")
 
@@ -27,12 +27,12 @@ LISK_PATH = parse_path("m/44h/134h/0h/1h")
 @pytest.mark.altcoin
 @pytest.mark.lisk
 class TestMsgLiskGetaddress(TrezorTest):
-    def test_lisk_getaddress(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-        assert lisk.get_address(self.client, LISK_PATH[:2]) == "1431530009238518937L"
-        assert lisk.get_address(self.client, LISK_PATH[:3]) == "17563781916205589679L"
-        assert lisk.get_address(self.client, LISK_PATH) == "1874186517773691964L"
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_lisk_getaddress(self, client):
+        assert lisk.get_address(client, LISK_PATH[:2]) == "1431530009238518937L"
+        assert lisk.get_address(client, LISK_PATH[:3]) == "17563781916205589679L"
+        assert lisk.get_address(client, LISK_PATH) == "1874186517773691964L"
         assert (
-            lisk.get_address(self.client, parse_path("m/44h/134h/999h/999h"))
+            lisk.get_address(client, parse_path("m/44h/134h/999h/999h"))
             == "16295203558710684671L"
         )

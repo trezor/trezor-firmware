@@ -23,11 +23,10 @@ from .common import TrezorTest
 
 @pytest.mark.skip_t2
 class TestMsgClearsession(TrezorTest):
-    def test_clearsession(self):
-        self.setup_mnemonic_pin_passphrase()
-
-        with self.client:
-            self.client.set_expected_responses(
+    @pytest.mark.setup_client(pin=True, passphrase=True)
+    def test_clearsession(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
                     proto.PinMatrixRequest(),
@@ -35,7 +34,7 @@ class TestMsgClearsession(TrezorTest):
                     proto.Success(),
                 ]
             )
-            res = self.client.ping(
+            res = client.ping(
                 "random data",
                 button_protection=True,
                 pin_protection=True,
@@ -43,15 +42,15 @@ class TestMsgClearsession(TrezorTest):
             )
             assert res == "random data"
 
-        with self.client:
+        with client:
             # pin and passphrase are cached
-            self.client.set_expected_responses(
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
                     proto.Success(),
                 ]
             )
-            res = self.client.ping(
+            res = client.ping(
                 "random data",
                 button_protection=True,
                 pin_protection=True,
@@ -59,11 +58,11 @@ class TestMsgClearsession(TrezorTest):
             )
             assert res == "random data"
 
-        self.client.clear_session()
+        client.clear_session()
 
         # session cache is cleared
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
                     proto.PinMatrixRequest(),
@@ -71,7 +70,7 @@ class TestMsgClearsession(TrezorTest):
                     proto.Success(),
                 ]
             )
-            res = self.client.ping(
+            res = client.ping(
                 "random data",
                 button_protection=True,
                 pin_protection=True,
@@ -79,15 +78,15 @@ class TestMsgClearsession(TrezorTest):
             )
             assert res == "random data"
 
-        with self.client:
+        with client:
             # pin and passphrase are cached
-            self.client.set_expected_responses(
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
                     proto.Success(),
                 ]
             )
-            res = self.client.ping(
+            res = client.ping(
                 "random data",
                 button_protection=True,
                 pin_protection=True,

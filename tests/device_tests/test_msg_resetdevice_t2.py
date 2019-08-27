@@ -22,14 +22,15 @@ from mnemonic import Mnemonic
 from trezorlib import device, messages as proto
 from trezorlib.messages import ButtonRequestType as B
 
-from .common import TrezorTest, generate_entropy
+from .common import MNEMONIC12, TrezorTest, generate_entropy
 
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 
 @pytest.mark.skip_t1
 class TestMsgResetDeviceT2(TrezorTest):
-    def test_reset_device(self):
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_reset_device(self, client):
         words = []
         strength = 128
 
@@ -37,48 +38,48 @@ class TestMsgResetDeviceT2(TrezorTest):
             # Confirm Reset
             btn_code = yield
             assert btn_code == B.ResetDevice
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
             # Backup your seed
             btn_code = yield
             assert btn_code == B.ResetDevice
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
             # Confirm warning
             btn_code = yield
             assert btn_code == B.ResetDevice
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
             # mnemonic phrases
             btn_code = yield
             assert btn_code == B.ResetDevice
             # 12 words, 3 pages
             for i in range(3):
-                words.extend(self.client.debug.read_reset_word().split())
+                words.extend(client.debug.read_reset_word().split())
                 if i < 2:
-                    self.client.debug.swipe_down()
+                    client.debug.swipe_down()
                 else:
                     # last page is confirmation
-                    self.client.debug.press_yes()
+                    client.debug.press_yes()
 
             # check backup words
             for _ in range(3):
-                index = self.client.debug.read_reset_word_pos()
-                self.client.debug.input(words[index])
+                index = client.debug.read_reset_word_pos()
+                client.debug.input(words[index])
 
             # confirm recovery seed check
             btn_code = yield
             assert btn_code == B.Success
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
             # confirm success
             btn_code = yield
             assert btn_code == B.Success
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
         os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
-        with mock.patch("os.urandom", os_urandom), self.client:
-            self.client.set_expected_responses(
+        with mock.patch("os.urandom", os_urandom), client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.EntropyRequest(),
@@ -91,11 +92,11 @@ class TestMsgResetDeviceT2(TrezorTest):
                     proto.Features(),
                 ]
             )
-            self.client.set_input_flow(input_flow)
+            client.set_input_flow(input_flow)
 
             # No PIN, no passphrase, don't display random
             device.reset(
-                self.client,
+                client,
                 display_random=False,
                 strength=strength,
                 passphrase_protection=False,
@@ -105,7 +106,7 @@ class TestMsgResetDeviceT2(TrezorTest):
             )
 
         # generate mnemonic locally
-        internal_entropy = self.client.debug.state().reset_entropy
+        internal_entropy = client.debug.state().reset_entropy
         entropy = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
         expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
 
@@ -113,13 +114,14 @@ class TestMsgResetDeviceT2(TrezorTest):
         assert " ".join(words) == expected_mnemonic
 
         # Check if device is properly initialized
-        resp = self.client.call_raw(proto.Initialize())
+        resp = client.call_raw(proto.Initialize())
         assert resp.initialized is True
         assert resp.needs_backup is False
         assert resp.pin_protection is False
         assert resp.passphrase_protection is False
 
-    def test_reset_device_pin(self):
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_reset_device_pin(self, client):
         words = []
         strength = 128
 
@@ -127,61 +129,61 @@ class TestMsgResetDeviceT2(TrezorTest):
             # Confirm Reset
             btn_code = yield
             assert btn_code == B.ResetDevice
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
             # Enter new PIN
             yield
-            self.client.debug.input("654")
+            client.debug.input("654")
 
             # Confirm PIN
             yield
-            self.client.debug.input("654")
+            client.debug.input("654")
 
             # Confirm entropy
             btn_code = yield
             assert btn_code == B.ResetDevice
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
             # Backup your seed
             btn_code = yield
             assert btn_code == B.ResetDevice
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
             # Confirm warning
             btn_code = yield
             assert btn_code == B.ResetDevice
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
             # mnemonic phrases
             btn_code = yield
             assert btn_code == B.ResetDevice
             # 12 words, 3 pages
             for i in range(3):
-                words.extend(self.client.debug.read_reset_word().split())
+                words.extend(client.debug.read_reset_word().split())
                 if i < 2:
-                    self.client.debug.swipe_down()
+                    client.debug.swipe_down()
                 else:
                     # last page is confirmation
-                    self.client.debug.press_yes()
+                    client.debug.press_yes()
 
             # check backup words
             for _ in range(3):
-                index = self.client.debug.read_reset_word_pos()
-                self.client.debug.input(words[index])
+                index = client.debug.read_reset_word_pos()
+                client.debug.input(words[index])
 
             # confirm recovery seed check
             btn_code = yield
             assert btn_code == B.Success
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
             # confirm success
             btn_code = yield
             assert btn_code == B.Success
-            self.client.debug.press_yes()
+            client.debug.press_yes()
 
         os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
-        with mock.patch("os.urandom", os_urandom), self.client:
-            self.client.set_expected_responses(
+        with mock.patch("os.urandom", os_urandom), client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Other),
@@ -197,11 +199,11 @@ class TestMsgResetDeviceT2(TrezorTest):
                     proto.Features(),
                 ]
             )
-            self.client.set_input_flow(input_flow)
+            client.set_input_flow(input_flow)
 
             # PIN, passphrase, display random
             device.reset(
-                self.client,
+                client,
                 display_random=True,
                 strength=strength,
                 passphrase_protection=True,
@@ -211,7 +213,7 @@ class TestMsgResetDeviceT2(TrezorTest):
             )
 
         # generate mnemonic locally
-        internal_entropy = self.client.debug.state().reset_entropy
+        internal_entropy = client.debug.state().reset_entropy
         entropy = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
         expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
 
@@ -219,37 +221,38 @@ class TestMsgResetDeviceT2(TrezorTest):
         assert " ".join(words) == expected_mnemonic
 
         # Check if device is properly initialized
-        resp = self.client.call_raw(proto.Initialize())
+        resp = client.call_raw(proto.Initialize())
         assert resp.initialized is True
         assert resp.needs_backup is False
         assert resp.pin_protection is True
         assert resp.passphrase_protection is True
 
-    def test_failed_pin(self):
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_failed_pin(self, client):
         # external_entropy = b'zlutoucky kun upel divoke ody' * 2
         strength = 128
-        ret = self.client.call_raw(
+        ret = client.call_raw(
             proto.ResetDevice(strength=strength, pin_protection=True, label="test")
         )
 
         # Confirm Reset
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.press_yes()
+        ret = client.call_raw(proto.ButtonAck())
 
         # Enter PIN for first time
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.input("654")
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.input("654")
+        ret = client.call_raw(proto.ButtonAck())
 
         # Enter PIN for second time
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.input("456")
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.input("456")
+        ret = client.call_raw(proto.ButtonAck())
 
         assert isinstance(ret, proto.ButtonRequest)
 
-    def test_already_initialized(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_already_initialized(self, client):
         with pytest.raises(Exception):
-            device.reset(self.client, False, 128, True, True, "label", "english")
+            device.reset(client, False, 128, True, True, "label", "english")

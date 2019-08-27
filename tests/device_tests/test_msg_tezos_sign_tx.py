@@ -31,11 +31,9 @@ TEZOS_PATH_10 = parse_path("m/44'/1729'/10'")
 @pytest.mark.tezos
 @pytest.mark.skip_t1
 class TestMsgTezosSignTx(TrezorTest):
-    def test_tezos_sign_tx_transaction(self):
-        self.setup_mnemonic_allallall()
-
+    def test_tezos_sign_tx_transaction(self, client):
         resp = tezos.sign_tx(
-            self.client,
+            client,
             TEZOS_PATH,
             dict_to_proto(
                 messages.TezosSignTx,
@@ -71,11 +69,9 @@ class TestMsgTezosSignTx(TrezorTest):
             resp.operation_hash == "opNeGBdgbM5jN2ykz4o8NdsCuJfqNZ6WBEFVbBUmYH8gp45CJvH"
         )
 
-    def test_tezos_sign_reveal_transaction(self):
-        self.setup_mnemonic_allallall()
-
+    def test_tezos_sign_reveal_transaction(self, client):
         resp = tezos.sign_tx(
-            self.client,
+            client,
             TEZOS_PATH,
             dict_to_proto(
                 messages.TezosSignTx,
@@ -122,11 +118,9 @@ class TestMsgTezosSignTx(TrezorTest):
             resp.operation_hash == "opQHu93L8juNm2VjmsMKioFowWNyMvGzopcuoVcuzFV1bJMhJef"
         )
 
-    def test_tezos_sign_tx_origination(self):
-        self.setup_mnemonic_allallall()
-
+    def test_tezos_sign_tx_origination(self, client):
         resp = tezos.sign_tx(
-            self.client,
+            client,
             TEZOS_PATH,
             dict_to_proto(
                 messages.TezosSignTx,
@@ -162,11 +156,9 @@ class TestMsgTezosSignTx(TrezorTest):
             resp.operation_hash == "onuKkBtP4K2JMGg7YMv7qs869B8aHCEUQecvuiL71aKkY8iPCb6"
         )
 
-    def test_tezos_sign_tx_delegation(self):
-        self.setup_mnemonic_allallall()
-
+    def test_tezos_sign_tx_delegation(self, client):
         resp = tezos.sign_tx(
-            self.client,
+            client,
             TEZOS_PATH,
             dict_to_proto(
                 messages.TezosSignTx,
@@ -198,18 +190,16 @@ class TestMsgTezosSignTx(TrezorTest):
             resp.operation_hash == "oocgc3hyKsGHPsw6WFWJpWT8jBwQLtebQAXF27KNisThkzoj635"
         )
 
-    def input_flow(self, num_pages):
+    def input_flow(self, debug, num_pages):
         yield
         for _ in range(num_pages - 1):
-            self.client.debug.swipe_down()
-        self.client.debug.press_yes()
+            debug.swipe_down()
+        debug.press_yes()
 
-    def test_tezos_sign_tx_proposal(self):
-        self.setup_mnemonic_allallall()
-
-        self.client.set_input_flow(self.input_flow(num_pages=1))
+    def test_tezos_sign_tx_proposal(self, client):
+        client.set_input_flow(self.input_flow(client.debug, num_pages=1))
         resp = tezos.sign_tx(
-            self.client,
+            client,
             TEZOS_PATH_10,
             dict_to_proto(
                 messages.TezosSignTx,
@@ -237,12 +227,10 @@ class TestMsgTezosSignTx(TrezorTest):
             resp.operation_hash == "opLqntFUu984M7LnGsFvfGW6kWe9QjAz4AfPDqQvwJ1wPM4Si4c"
         )
 
-    def test_tezos_sign_tx_multiple_proposals(self):
-        self.setup_mnemonic_allallall()
-
-        self.client.set_input_flow(self.input_flow(num_pages=2))
+    def test_tezos_sign_tx_multiple_proposals(self, client):
+        client.set_input_flow(self.input_flow(client.debug, num_pages=2))
         resp = tezos.sign_tx(
-            self.client,
+            client,
             TEZOS_PATH_10,
             dict_to_proto(
                 messages.TezosSignTx,
@@ -271,11 +259,9 @@ class TestMsgTezosSignTx(TrezorTest):
             resp.operation_hash == "onobSyNgiitGXxSVFJN6949MhUomkkxvH4ZJ2owgWwNeDdntF9Y"
         )
 
-    def test_tezos_sing_tx_ballot_yay(self):
-        self.setup_mnemonic_allallall()
-
+    def test_tezos_sing_tx_ballot_yay(self, client):
         resp = tezos.sign_tx(
-            self.client,
+            client,
             TEZOS_PATH_10,
             dict_to_proto(
                 messages.TezosSignTx,
@@ -296,11 +282,9 @@ class TestMsgTezosSignTx(TrezorTest):
             == "edsigtkxNm6YXwtV24DqeuimeZFTeFCn2jDYheSsXT4rHMcEjNvzsiSo55nVyVsQxtEe8M7U4PWJWT4rGYYGckQCgtkNJkd2roX"
         )
 
-    def test_tezos_sing_tx_ballot_nay(self):
-        self.setup_mnemonic_allallall()
-
+    def test_tezos_sing_tx_ballot_nay(self, client):
         resp = tezos.sign_tx(
-            self.client,
+            client,
             TEZOS_PATH_10,
             dict_to_proto(
                 messages.TezosSignTx,
@@ -320,11 +304,9 @@ class TestMsgTezosSignTx(TrezorTest):
             == "edsigtqLaizfF6Cfc2JQL7TrsyniGhpZEojZAKMFW6AeudaUoU8KGXEHJH69Q4Lf27qFyUSTfbeHNnnCt69SGEPWkmpkgkgqMbL"
         )
 
-    def test_tezos_sing_tx_ballot_pass(self):
-        self.setup_mnemonic_allallall()
-
+    def test_tezos_sing_tx_ballot_pass(self, client):
         resp = tezos.sign_tx(
-            self.client,
+            client,
             TEZOS_PATH_10,
             dict_to_proto(
                 messages.TezosSignTx,
