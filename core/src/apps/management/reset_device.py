@@ -27,9 +27,10 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     _validate_reset_device(msg)
 
     is_slip39_simple = msg.backup_type == ResetDeviceBackupType.Slip39_Single_Group
+    is_slip39_group = msg.backup_type == ResetDeviceBackupType.Slip39_Multiple_Groups
 
     # make sure user knows he's setting up a new wallet
-    await _show_reset_device_warning(ctx, is_slip39_simple)
+    await _show_reset_device_warning(ctx, msg.backup_type)
 
     # request new PIN
     if msg.pin_protection:
@@ -50,7 +51,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     # For SLIP-39 this is the Encrypted Master Secret
     secret = _compute_secret_from_entropy(int_entropy, ext_entropy, msg.strength)
 
-    if is_slip39_simple:
+    if is_slip39_simple or is_slip39_group:
         storage.device.set_slip39_identifier(slip39.generate_random_identifier())
         storage.device.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
 
@@ -64,6 +65,8 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     if not msg.no_backup and not msg.skip_backup:
         if is_slip39_simple:
             await backup_slip39_wallet(ctx, secret)
+        elif is_slip39_group:
+            await backup_group_slip39_wallet(ctx, secret)
         else:
             await backup_bip39_wallet(ctx, secret)
 
@@ -75,10 +78,10 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     storage.device.load_settings(
         label=msg.label, use_passphrase=msg.passphrase_protection
     )
-    if is_slip39_simple:
+    if is_slip39_simple or is_slip39_group:
         storage.device.store_mnemonic_secret(
             secret,  # this is the EMS in SLIP-39 terminology
-            mnemonic.TYPE_SLIP39,
+            msg.backup_type,
             needs_backup=msg.skip_backup,
             no_backup=msg.no_backup,
         )
@@ -123,6 +126,40 @@ async def backup_slip39_wallet(
     await layout.slip39_show_and_confirm_shares(ctx, mnemonics)
 
 
+async def backup_group_slip39_wallet(
+    ctx: wire.Context, encrypted_master_secret: bytes
+) -> None:
+    # get number of groups
+    await layout.slip39_group_show_checklist_set_groups(ctx)
+    groups_count = await layout.slip39_prompt_number_of_groups(ctx)
+
+    # get group threshold
+    await layout.slip39_group_show_checklist_set_group_threshold(ctx, groups_count)
+    group_threshold = await layout.slip39_prompt_group_threshold(ctx, groups_count)
+
+    # get shares and thresholds
+    await layout.slip39_group_show_checklist_set_shares(
+        ctx, groups_count, group_threshold
+    )
+    groups = []
+    for i in range(groups_count):
+        share_count = await layout.slip39_prompt_number_of_shares(ctx, i)
+        share_threshold = await layout.slip39_prompt_threshold(ctx, share_count, i)
+        groups.append((share_threshold, share_count))
+
+    # generate the mnemonics
+    mnemonics = slip39.generate_mnemonics_from_data(
+        encrypted_master_secret=encrypted_master_secret,
+        identifier=storage.device.get_slip39_identifier(),
+        group_threshold=group_threshold,
+        groups=groups,
+        iteration_exponent=storage.device.get_slip39_iteration_exponent(),
+    )
+
+    # show and confirm individual shares
+    await layout.slip39_group_show_and_confirm_shares(ctx, mnemonics)
+
+
 async def backup_bip39_wallet(ctx: wire.Context, secret: bytes) -> None:
     mnemonic = bip39.from_data(secret)
     await layout.bip39_show_and_confirm_mnemonic(ctx, mnemonic)
@@ -133,6 +170,7 @@ def _validate_reset_device(msg: ResetDevice) -> None:
     if msg.backup_type not in (
         ResetDeviceBackupType.Bip39,
         ResetDeviceBackupType.Slip39_Single_Group,
+        ResetDeviceBackupType.Slip39_Multiple_Groups,
     ):
         raise wire.ProcessError("Backup type not implemented.")
     if msg.strength not in (128, 256):
@@ -160,12 +198,18 @@ def _compute_secret_from_entropy(
     return secret
 
 
-async def _show_reset_device_warning(ctx, use_slip39: bool):
+async def _show_reset_device_warning(
+    ctx, backup_type: ResetDeviceBackupType = ResetDeviceBackupType.Bip39
+):
     text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
-    if use_slip39:
+    if backup_type == ResetDeviceBackupType.Slip39_Single_Group:
         text.bold("Create a new wallet")
         text.br()
         text.bold("with Shamir Backup?")
+    elif backup_type == ResetDeviceBackupType.Slip39_Multiple_Groups:
+        text.bold("Create a new wallet")
+        text.br()
+        text.bold("with Super Shamir?")
     else:
         text.bold("Do you want to create")
         text.br()

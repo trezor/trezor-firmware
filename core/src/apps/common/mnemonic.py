@@ -10,6 +10,7 @@ if False:
 
 TYPE_BIP39 = const(0)
 TYPE_SLIP39 = const(1)
+TYPE_SLIP39_GROUP = const(2)
 
 TYPES_WORD_COUNT = {
     12: TYPE_BIP39,
@@ -30,7 +31,7 @@ def get_secret() -> Optional[bytes]:
 
 def get_type() -> int:
     mnemonic_type = storage.device.get_mnemonic_type() or TYPE_BIP39
-    if mnemonic_type not in (TYPE_BIP39, TYPE_SLIP39):
+    if mnemonic_type not in (TYPE_BIP39, TYPE_SLIP39, TYPE_SLIP39_GROUP):
         raise RuntimeError("Invalid mnemonic type")
     return mnemonic_type
 
@@ -48,7 +49,7 @@ def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
     if mnemonic_type == TYPE_BIP39:
         seed = bip39.seed(mnemonic_secret.decode(), passphrase, render_func)
 
-    elif mnemonic_type == TYPE_SLIP39:
+    elif mnemonic_type == TYPE_SLIP39 or mnemonic_type == TYPE_SLIP39_GROUP:
         identifier = storage.device.get_slip39_identifier()
         iteration_exponent = storage.device.get_slip39_iteration_exponent()
         if identifier is None or iteration_exponent is None:

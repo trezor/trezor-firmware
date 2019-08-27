@@ -19,6 +19,7 @@ class TestMsgResetDeviceT2(TrezorTest):
     def test_reset_device_shamir(self):
         strength = 128
         member_threshold = 3
+        all_mnemonics = []
 
         def input_flow():
             # Confirm Reset
@@ -62,7 +63,6 @@ class TestMsgResetDeviceT2(TrezorTest):
             self.client.debug.press_yes()
 
             # show & confirm shares
-            all_mnemonics = []
             for h in range(5):
                 words = []
                 btn_code = yield
@@ -89,13 +89,6 @@ class TestMsgResetDeviceT2(TrezorTest):
                 btn_code = yield
                 assert btn_code == B.Success
                 self.client.debug.press_yes()
-
-            # generate secret locally
-            internal_entropy = self.client.debug.state().reset_entropy
-            secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
-
-            # validate that all combinations will result in the correct master secret
-            validate_mnemonics(all_mnemonics, member_threshold, secret)
 
             # safety warning
             btn_code = yield
@@ -144,12 +137,18 @@ class TestMsgResetDeviceT2(TrezorTest):
                 backup_type=ResetDeviceBackupType.Slip39_Single_Group,
             )
 
+        # generate secret locally
+        internal_entropy = self.client.debug.state().reset_entropy
+        secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
+
+        # validate that all combinations will result in the correct master secret
+        validate_mnemonics(all_mnemonics, member_threshold, secret)
+
         # Check if device is properly initialized
-        resp = self.client.call_raw(proto.Initialize())
-        assert resp.initialized is True
-        assert resp.needs_backup is False
-        assert resp.pin_protection is False
-        assert resp.passphrase_protection is False
+        assert self.client.features.initialized is True
+        assert self.client.features.needs_backup is False
+        assert self.client.features.pin_protection is False
+        assert self.client.features.passphrase_protection is False
 
 
 def validate_mnemonics(mnemonics, threshold, expected_ems):
