@@ -530,8 +530,19 @@ def reset_device(
 ):
     if strength:
         strength = int(strength)
+
+    client = connect()
+    if (
+        client.features.model == "1"
+        and backup_type != proto.ResetDeviceBackupType.Bip39
+    ):
+        click.echo(
+            "WARNING: Trezor One currently does not support Shamir backup.\n"
+            "Traditional single-seed backup will be generated instead."
+        )
+
     return device.reset(
-        connect(),
+        client,
         display_random=show_entropy,
         strength=strength,
         passphrase_protection=passphrase_protection,

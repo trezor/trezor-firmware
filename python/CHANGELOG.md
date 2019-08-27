@@ -8,10 +8,11 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 
 ## [0.11.5] - Unreleased
 
-[0.11.5]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.3...master
+[0.11.5]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.4...master
 
 ### Added
 
+- trezorctl shows a warning when activating Shamir Backup on T1 [f#445]
 - warnings are emitted when encountering unknown value for a protobuf enum [f#363]
 - debug messages show enum value names instead of raw numbers
 - support for packed repeated encoding in the protobuf decoder
@@ -314,3 +315,4 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 [f#363]: https://github.com/trezor/trezor-firmware/issues/363
 [f#411]: https://github.com/trezor/trezor-firmware/issues/411
 [f#420]: https://github.com/trezor/trezor-firmware/issues/420
+[f#445]: https://github.com/trezor/trezor-firmware/issues/445
