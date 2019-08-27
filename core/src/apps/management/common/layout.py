@@ -288,7 +288,7 @@ async def slip39_group_show_checklist_set_groups(ctx):
     checklist = Checklist("Backup checklist", ui.ICON_RESET)
     checklist.add("Set number of groups")
     checklist.add("Set group threshold")
-    checklist.add(("Set number of shares", "and shares threshold"))
+    checklist.add(("Set size and threshold", "for each group"))
     checklist.select(0)
     return await confirm(
         ctx, checklist, ButtonRequestType.ResetDevice, cancel=None, confirm="Continue"
@@ -299,7 +299,7 @@ async def slip39_group_show_checklist_set_group_threshold(ctx, num_of_shares):
     checklist = Checklist("Backup checklist", ui.ICON_RESET)
     checklist.add("Set number of groups")
     checklist.add("Set group threshold")
-    checklist.add(("Set number of shares", "and shares threshold"))
+    checklist.add(("Set size and threshold", "for each group"))
     checklist.select(1)
     return await confirm(
         ctx, checklist, ButtonRequestType.ResetDevice, cancel=None, confirm="Continue"
@@ -310,7 +310,7 @@ async def slip39_group_show_checklist_set_shares(ctx, num_of_shares, group_thres
     checklist = Checklist("Backup checklist", ui.ICON_RESET)
     checklist.add("Set number of groups")
     checklist.add("Set group threshold")
-    checklist.add(("Set number of shares", "and shares threshold"))
+    checklist.add(("Set size and threshold", "for each group"))
     checklist.select(2)
     return await confirm(
         ctx, checklist, ButtonRequestType.ResetDevice, cancel=None, confirm="Continue"
@@ -341,16 +341,26 @@ async def slip39_prompt_number_of_shares(ctx, group_id=None):
         count = shares.input.count
         if confirmed:
             break
+
+        if group_id is None:
+            info = InfoConfirm(
+                "Each recovery share is a "
+                "sequence of 20 words. "
+                "Next you will choose "
+                "how many shares you "
+                "need to recover your "
+                "wallet."
+            )
         else:
             info = InfoConfirm(
-                "Each recovery share is "
-                "a sequence of 20 "
-                "words. Next you will "
-                "choose how many "
-                "shares you need to "
-                "recover your wallet."
+                "Each recovery share is a "
+                "sequence of 20 words. "
+                "Next you will choose "
+                "the threshold number of "
+                "shares needed to form "
+                "Group %s." % (group_id + 1)
             )
-            await info
+        await info
 
     return count
 
@@ -376,12 +386,12 @@ async def slip39_prompt_number_of_groups(ctx):
             break
 
         info = InfoConfirm(
-            "Group contains set "
+            "Each group has a set "
             "number of shares and "
-            "its own threshold. "
-            "In the next step you set "
-            "both number of shares "
-            "and threshold."
+            "its own threshold. In the "
+            "next steps you will set "
+            "the numbers of shares "
+            "and the thresholds."
         )
         await info
 
@@ -411,10 +421,10 @@ async def slip39_prompt_group_threshold(ctx, num_of_groups):
             break
         else:
             info = InfoConfirm(
-                "Group threshold "
-                "specifies number of "
-                "groups required "
-                "to recover wallet. "
+                "The group threshold "
+                "specifies the number of "
+                "groups required to "
+                "recover your wallet. "
             )
             await info
 
@@ -442,7 +452,8 @@ async def slip39_prompt_threshold(ctx, num_of_shares, group_id=None):
         count = shares.input.count
         if confirmed:
             break
-        else:
+
+        if group_id is None:
             info = InfoConfirm(
                 "The threshold sets the "
                 "number of shares "
@@ -451,7 +462,16 @@ async def slip39_prompt_threshold(ctx, num_of_shares, group_id=None):
                 "you will need any %s "
                 "of your %s shares." % (count, count, num_of_shares)
             )
-            await info
+        else:
+            info = InfoConfirm(
+                "The threshold sets the "
+                "number of shares "
+                "needed to form a group. "
+                "Set it to %s and you will "
+                "need any %s of %s shares "
+                "to form Group %s." % (count, count, num_of_shares, group_id + 1)
+            )
+        await info
 
     return count
 
@@ -625,8 +645,8 @@ class ShamirNumInput(ui.Component):
                     first_line_text = "%s people or locations" % count
                     second_line_text = "will each hold one share."
                 else:
-                    first_line_text = "Sets number of shares"
-                    second_line_text = "for Group %s" % (self.group_id + 1)
+                    first_line_text = "Set the total number of"
+                    second_line_text = "shares in Group %s." % (self.group_id + 1)
                 ui.display.text(
                     12, 130, first_line_text, ui.NORMAL, ui.FG, ui.BG, ui.WIDTH - 12
                 )
@@ -636,19 +656,23 @@ class ShamirNumInput(ui.Component):
                     first_line_text = "For recovery you need"
                     second_line_text = "any %s of the shares." % count
                 else:
-                    first_line_text = "Required number of "
-                    second_line_text = "shares to form Group %s" % (self.group_id + 1)
+                    first_line_text = "The required number of "
+                    second_line_text = "shares to form Group %s." % (self.group_id + 1)
                 ui.display.text(12, 130, first_line_text, ui.NORMAL, ui.FG, ui.BG)
                 ui.display.text(
                     12, 156, second_line_text, ui.NORMAL, ui.FG, ui.BG, ui.WIDTH - 12
                 )
             elif self.step is ShamirNumInput.SET_GROUPS:
-                ui.display.text(12, 130, "A group is made of", ui.NORMAL, ui.FG, ui.BG)
+                ui.display.text(
+                    12, 130, "A group is made up of", ui.NORMAL, ui.FG, ui.BG
+                )
                 ui.display.text(
                     12, 156, "recovery shares.", ui.NORMAL, ui.FG, ui.BG, ui.WIDTH - 12
                 )
             elif self.step is ShamirNumInput.SET_GROUP_THRESHOLD:
-                ui.display.text(12, 130, "Required number of", ui.NORMAL, ui.FG, ui.BG)
+                ui.display.text(
+                    12, 130, "The required number of", ui.NORMAL, ui.FG, ui.BG
+                )
                 ui.display.text(
                     12,
                     156,
