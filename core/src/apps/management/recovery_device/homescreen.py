@@ -97,10 +97,16 @@ async def _finish_recovery_dry_run(
 async def _finish_recovery(
     ctx: wire.Context, secret: bytes, mnemonic_type: int
 ) -> Success:
+    group_count = storage.recovery.get_slip39_group_count()
+    if group_count and group_count > 1:
+        mnemonic_type = mnemonic.TYPE_SLIP39_GROUP
     storage.device.store_mnemonic_secret(
         secret, mnemonic_type, needs_backup=False, no_backup=False
     )
-    if mnemonic_type == mnemonic.TYPE_SLIP39:
+    if (
+        mnemonic_type == mnemonic.TYPE_SLIP39
+        or mnemonic_type == mnemonic.TYPE_SLIP39_GROUP
+    ):
         identifier = storage.recovery.get_slip39_identifier()
         exponent = storage.recovery.get_slip39_iteration_exponent()
         if identifier is None or exponent is None:
