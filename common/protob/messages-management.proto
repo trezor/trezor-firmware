@@ -74,6 +74,7 @@ message Features {
         Feature_Stellar = 12;
         Feature_Tezos = 13;
         Feature_U2F = 14;
+        Feature_Shamir = 15;
     }
 }
 
