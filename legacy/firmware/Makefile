@@ -96,7 +96,8 @@ OBJS += ../vendor/trezor-storage/norcow.o
 
 OBJS += ../vendor/nanopb/pb_common.o
 OBJS += ../vendor/nanopb/pb_decode.o
-OBJS += ../vendor/nanopb/pb_encode.o
+# we have a local patch in pb_encode.c
+OBJS += pb_encode.o
 
 OBJS += protob/messages.pb.o
 OBJS += protob/messages-bitcoin.pb.o
