@@ -25,9 +25,7 @@ from .common import TrezorTest
 @pytest.mark.altcoin
 @pytest.mark.ethereum
 class TestMsgEthereumSigntxChainId(TrezorTest):
-    def test_ethereum_signtx_eip155(self):
-
-        # chain_id, nonce, sig_v, sig_r, sig_s, value, gas_limit, data
+    def test_ethereum_signtx_eip155(self, client):
         VECTORS = [
             (
                 3,
@@ -201,11 +199,9 @@ class TestMsgEthereumSigntxChainId(TrezorTest):
             ),
         ]
 
-        self.setup_mnemonic_allallall()
-
         for ci, n, sv, sr, ss, v, gl, d in VECTORS:
             sig_v, sig_r, sig_s = ethereum.sign_tx(
-                self.client,
+                client,
                 n=[H_(44), H_(60), H_(0), 0, 0],
                 nonce=n,
                 gas_price=20000000000,

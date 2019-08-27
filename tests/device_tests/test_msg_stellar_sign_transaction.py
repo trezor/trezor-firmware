@@ -53,7 +53,7 @@ import pytest
 from trezorlib import messages as proto, stellar
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 
 @pytest.mark.altcoin
@@ -63,24 +63,22 @@ class TestMsgStellarSignTransaction(TrezorTest):
     ADDRESS_N = parse_path(stellar.DEFAULT_BIP32_PATH)
     NETWORK_PASSPHRASE = "Test SDF Network ; September 2015"
 
-    def test_sign_tx_bump_sequence_op(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_sign_tx_bump_sequence_op(self, client):
         op = proto.StellarBumpSequenceOp()
         op.bump_to = 0x7FFFFFFFFFFFFFFF
         tx = self._create_msg()
 
         response = stellar.sign_tx(
-            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
         )
         assert (
             b64encode(response.signature)
             == b"ZMIfHWhpyXdg40PzwOtkcXYnbZIO12Qy0WvkGqoYpb7jyWbG2HQCG7dgWhCoU5K81pvZTA2pMwiPjMwCXA//Bg=="
         )
 
-    def test_sign_tx_account_merge_op(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_sign_tx_account_merge_op(self, client):
         op = proto.StellarAccountMergeOp()
         op.destination_account = (
             "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
@@ -89,7 +87,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
         tx = self._create_msg()
 
         response = stellar.sign_tx(
-            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
         )
 
         assert (
@@ -101,9 +99,9 @@ class TestMsgStellarSignTransaction(TrezorTest):
             == b"2R3Pj89U+dWrqy7otUrLLjtANjAg0lmBQL8E+89Po0Y94oqZkauP8j3WE7+/z7vF6XvAMLoOdqRYkUzr2oh7Dg=="
         )
 
-    def test_sign_tx_create_account_op(self):
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_sign_tx_create_account_op(self, client):
         """Create new account with initial balance of 100.0333"""
-        self.setup_mnemonic_nopin_nopassphrase()
 
         op = proto.StellarCreateAccountOp()
         op.new_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
@@ -112,7 +110,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
         tx = self._create_msg()
 
         response = stellar.sign_tx(
-            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
         )
 
         assert (
@@ -120,9 +118,9 @@ class TestMsgStellarSignTransaction(TrezorTest):
             == b"vrRYqkM4b54NrDR05UrW7ZHU7CNcidV0fn+bk9dqOW1bCbmX3YfeRbk2Tf1aea8nr9SD0sfBhtrDpdyxUenjBw=="
         )
 
-    def test_sign_tx_payment_op_native(self):
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_sign_tx_payment_op_native(self, client):
         """Native payment of 50.0111 XLM to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
-        self.setup_mnemonic_nopin_nopassphrase()
 
         op = proto.StellarPaymentOp()
         op.amount = 500111000
@@ -133,7 +131,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
         tx = self._create_msg()
 
         response = stellar.sign_tx(
-            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
         )
 
         assert (
@@ -141,9 +139,9 @@ class TestMsgStellarSignTransaction(TrezorTest):
             == b"pDc6ghKCLNoYbt3h4eBw+533237m0BB0Jp/d/TxJCA83mF3o5Fr4l5vwAWBR62hdTWAP9MhVluY0cd5i54UwDg=="
         )
 
-    def test_sign_tx_payment_op_native_explicit_asset(self):
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_sign_tx_payment_op_native_explicit_asset(self, client):
         """Native payment of 50.0111 XLM to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
-        self.setup_mnemonic_nopin_nopassphrase()
 
         op = proto.StellarPaymentOp()
         op.amount = 500111000
@@ -155,7 +153,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
         tx = self._create_msg()
 
         response = stellar.sign_tx(
-            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
         )
 
         assert (
@@ -163,9 +161,9 @@ class TestMsgStellarSignTransaction(TrezorTest):
             == b"pDc6ghKCLNoYbt3h4eBw+533237m0BB0Jp/d/TxJCA83mF3o5Fr4l5vwAWBR62hdTWAP9MhVluY0cd5i54UwDg=="
         )
 
-    def test_sign_tx_payment_op_custom_asset1(self):
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_sign_tx_payment_op_custom_asset1(self, client):
         """Custom asset payment (code length 1) of 50.0111 X to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
-        self.setup_mnemonic_nopin_nopassphrase()
 
         op = proto.StellarPaymentOp()
         op.amount = 500111000
@@ -179,7 +177,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
         tx = self._create_msg()
 
         response = stellar.sign_tx(
-            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
         )
 
         assert (
@@ -187,9 +185,9 @@ class TestMsgStellarSignTransaction(TrezorTest):
             == b"ArZydOtXU2whoRuSjJLFIWPSIsq3AbsncJZ+THF24CRSriVWw5Fy/dHrDlUOu4fzU28I6osDMeI39aWezg5tDw=="
         )
 
-    def test_sign_tx_payment_op_custom_asset12(self):
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_sign_tx_payment_op_custom_asset12(self, client):
         """Custom asset payment (code length 12) of 50.0111 ABCDEFGHIJKL to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
-        self.setup_mnemonic_nopin_nopassphrase()
 
         op = proto.StellarPaymentOp()
         op.amount = 500111000
@@ -205,7 +203,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
         tx = self._create_msg()
 
         response = stellar.sign_tx(
-            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
         )
 
         assert (
@@ -213,9 +211,9 @@ class TestMsgStellarSignTransaction(TrezorTest):
             == b"QZIP4XKPfe4OpZtuJiyrMZBX9YBzvGpHGcngdgFfHn2kcdONreF384/pCF80xfEnGm8grKaoOnUEKxqcMKvxAA=="
         )
 
-    def test_sign_tx_set_options(self):
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_sign_tx_set_options(self, client):
         """Set inflation destination"""
-        self.setup_mnemonic_nopin_nopassphrase()
 
         op = proto.StellarSetOptionsOp()
         op.inflation_destination_account = (
@@ -224,7 +222,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
 
         tx = self._create_msg()
         response = stellar.sign_tx(
-            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
         )
 
         assert (
@@ -241,7 +239,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
 
         tx = self._create_msg()
         response = stellar.sign_tx(
-            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
         )
         assert (
             b64encode(response.signature)
@@ -253,7 +251,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
 
         tx = self._create_msg()
         response = stellar.sign_tx(
-            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
         )
         assert (
             b64encode(response.signature)
@@ -267,7 +265,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
 
         tx = self._create_msg()
         response = stellar.sign_tx(
-            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
         )
         assert (
             b64encode(response.signature)
@@ -281,7 +279,7 @@ class TestMsgStellarSignTransaction(TrezorTest):
 
         tx = self._create_msg()
         response = stellar.sign_tx(
-            self.client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
+            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
         )
         assert (
             b64encode(response.signature)

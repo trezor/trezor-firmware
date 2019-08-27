@@ -18,16 +18,14 @@ import pytest
 
 from trezorlib import misc
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 
 class TestMsgCipherkeyvalue(TrezorTest):
-    def test_encrypt(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
-        # different ask values
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_encrypt(self, client):
         res = misc.encrypt_keyvalue(
-            self.client,
+            client,
             [0, 1, 2],
             b"test",
             b"testing message!",
@@ -37,7 +35,7 @@ class TestMsgCipherkeyvalue(TrezorTest):
         assert res.hex() == "676faf8f13272af601776bc31bc14e8f"
 
         res = misc.encrypt_keyvalue(
-            self.client,
+            client,
             [0, 1, 2],
             b"test",
             b"testing message!",
@@ -47,7 +45,7 @@ class TestMsgCipherkeyvalue(TrezorTest):
         assert res.hex() == "5aa0fbcb9d7fa669880745479d80c622"
 
         res = misc.encrypt_keyvalue(
-            self.client,
+            client,
             [0, 1, 2],
             b"test",
             b"testing message!",
@@ -57,7 +55,7 @@ class TestMsgCipherkeyvalue(TrezorTest):
         assert res.hex() == "958d4f63269b61044aaedc900c8d6208"
 
         res = misc.encrypt_keyvalue(
-            self.client,
+            client,
             [0, 1, 2],
             b"test",
             b"testing message!",
@@ -68,7 +66,7 @@ class TestMsgCipherkeyvalue(TrezorTest):
 
         # different key
         res = misc.encrypt_keyvalue(
-            self.client,
+            client,
             [0, 1, 2],
             b"test2",
             b"testing message!",
@@ -79,7 +77,7 @@ class TestMsgCipherkeyvalue(TrezorTest):
 
         # different message
         res = misc.encrypt_keyvalue(
-            self.client,
+            client,
             [0, 1, 2],
             b"test",
             b"testing message! it is different",
@@ -93,7 +91,7 @@ class TestMsgCipherkeyvalue(TrezorTest):
 
         # different path
         res = misc.encrypt_keyvalue(
-            self.client,
+            client,
             [0, 1, 3],
             b"test",
             b"testing message!",
@@ -102,12 +100,10 @@ class TestMsgCipherkeyvalue(TrezorTest):
         )
         assert res.hex() == "b4811a9d492f5355a5186ddbfccaae7b"
 
-    def test_decrypt(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
-        # different ask values
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_decrypt(self, client):
         res = misc.decrypt_keyvalue(
-            self.client,
+            client,
             [0, 1, 2],
             b"test",
             bytes.fromhex("676faf8f13272af601776bc31bc14e8f"),
@@ -117,7 +113,7 @@ class TestMsgCipherkeyvalue(TrezorTest):
         assert res == b"testing message!"
 
         res = misc.decrypt_keyvalue(
-            self.client,
+            client,
             [0, 1, 2],
             b"test",
             bytes.fromhex("5aa0fbcb9d7fa669880745479d80c622"),
@@ -127,7 +123,7 @@ class TestMsgCipherkeyvalue(TrezorTest):
         assert res == b"testing message!"
 
         res = misc.decrypt_keyvalue(
-            self.client,
+            client,
             [0, 1, 2],
             b"test",
             bytes.fromhex("958d4f63269b61044aaedc900c8d6208"),
@@ -137,7 +133,7 @@ class TestMsgCipherkeyvalue(TrezorTest):
         assert res == b"testing message!"
 
         res = misc.decrypt_keyvalue(
-            self.client,
+            client,
             [0, 1, 2],
             b"test",
             bytes.fromhex("e0cf0eb0425947000eb546cc3994bc6c"),
@@ -148,7 +144,7 @@ class TestMsgCipherkeyvalue(TrezorTest):
 
         # different key
         res = misc.decrypt_keyvalue(
-            self.client,
+            client,
             [0, 1, 2],
             b"test2",
             bytes.fromhex("de247a6aa6be77a134bb3f3f925f13af"),
@@ -159,7 +155,7 @@ class TestMsgCipherkeyvalue(TrezorTest):
 
         # different message
         res = misc.decrypt_keyvalue(
-            self.client,
+            client,
             [0, 1, 2],
             b"test",
             bytes.fromhex(
@@ -172,7 +168,7 @@ class TestMsgCipherkeyvalue(TrezorTest):
 
         # different path
         res = misc.decrypt_keyvalue(
-            self.client,
+            client,
             [0, 1, 3],
             b"test",
             bytes.fromhex("b4811a9d492f5355a5186ddbfccaae7b"),
@@ -181,12 +177,10 @@ class TestMsgCipherkeyvalue(TrezorTest):
         )
         assert res == b"testing message!"
 
-    def test_encrypt_badlen(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_encrypt_badlen(self, client):
         with pytest.raises(Exception):
-            misc.encrypt_keyvalue(self.client, [0, 1, 2], b"test", b"testing")
+            misc.encrypt_keyvalue(client, [0, 1, 2], b"test", b"testing")
 
-    def test_decrypt_badlen(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_decrypt_badlen(self, client):
         with pytest.raises(Exception):
-            misc.decrypt_keyvalue(self.client, [0, 1, 2], b"test", b"testing")
+            misc.decrypt_keyvalue(client, [0, 1, 2], b"test", b"testing")

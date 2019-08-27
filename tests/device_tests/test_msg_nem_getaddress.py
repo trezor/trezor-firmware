@@ -19,19 +19,19 @@ import pytest
 from trezorlib import nem
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 
 @pytest.mark.altcoin
 @pytest.mark.nem
 class TestMsgNEMGetaddress(TrezorTest):
-    def test_nem_getaddress(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_getaddress(self, client):
         assert (
-            nem.get_address(self.client, parse_path("m/44'/1'/0'/0'/0'"), 0x68)
+            nem.get_address(client, parse_path("m/44'/1'/0'/0'/0'"), 0x68)
             == "NB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQGHUBWQN"
         )
         assert (
-            nem.get_address(self.client, parse_path("m/44'/1'/0'/0'/0'"), 0x98)
+            nem.get_address(client, parse_path("m/44'/1'/0'/0'/0'"), 0x98)
             == "TB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQHSBNBMF"
         )

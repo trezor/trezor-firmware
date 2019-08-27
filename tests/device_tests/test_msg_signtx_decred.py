@@ -48,9 +48,7 @@ TXHASH_16da18 = bytes.fromhex(
 @pytest.mark.altcoin
 @pytest.mark.decred
 class TestMsgSigntxDecred(TrezorTest):
-    def test_send_decred(self):
-        self.setup_mnemonic_allallall()
-
+    def test_send_decred(self, client):
         inp1 = proto.TxInputType(
             # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz
             address_n=parse_path("m/44'/1'/0'/0/0"),
@@ -67,8 +65,8 @@ class TestMsgSigntxDecred(TrezorTest):
             decred_script_version=0,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -111,7 +109,7 @@ class TestMsgSigntxDecred(TrezorTest):
                 ]
             )
             _, serialized_tx = btc.sign_tx(
-                self.client, "Decred Testnet", [inp1], [out1], prev_txes=TX_API
+                client, "Decred Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
         assert (
@@ -119,9 +117,7 @@ class TestMsgSigntxDecred(TrezorTest):
             == "0100000001edd579e9462ee0e80127a817e0500d4f942a4cf8f2d6530e0c0a9ab3f04862e10100000000ffffffff01802b530b0000000000001976a914819d291a2f7fbf770e784bfd78b5ce92c58e95ea88ac000000000000000001000000000000000000000000ffffffff6a473044022009e394c7dec76ab6988270b467839b1462ad781556bce37383b76e026418ce6302204f7f6ef535d2986b095d7c96232a0990a0b9ce3004894b39c167bb18e5833ac30121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
         )
 
-    def test_send_decred_change(self):
-        self.setup_mnemonic_allallall()
-
+    def test_send_decred_change(self, client):
         inp1 = proto.TxInputType(
             # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz
             address_n=parse_path("m/44'/1'/0'/0/0"),
@@ -164,8 +160,8 @@ class TestMsgSigntxDecred(TrezorTest):
             decred_script_version=0,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -265,7 +261,7 @@ class TestMsgSigntxDecred(TrezorTest):
                 ]
             )
             _, serialized_tx = btc.sign_tx(
-                self.client,
+                client,
                 "Decred Testnet",
                 [inp1, inp2, inp3],
                 [out1, out2],
@@ -277,12 +273,10 @@ class TestMsgSigntxDecred(TrezorTest):
             == "010000000370b95980a47b9bcb4ec2c2b450888a53179b1a5fdb23f5023cc533a300356e5e0000000000ffffffff74bc93bcfce18aff2e522d6822817522e2815a00175b2eae59ef20d20f5bf9cc0100000000ffffffff13317ab453832deabd684d2302eed42580c28ba3e715db66a731a8723eef95f30000000000ffffffff02d86c341d0000000000001976a9143eb656115197956125365348c542e37b6d3d259988ac00e1f5050000000000001976a9143ee6f9d662e7be18373d80e5eb44627014c2bf6688ac000000000000000003000000000000000000000000ffffffff6a47304402200e50a6d43c462045917792e7d03b4354900c3baccb7abef66f556a32b12f2ca6022031ae94fdf2a41dd6ed2e081faf0f8f1c64411a1b46eb26f7f35d94402b2bde110121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0000000000000000000000000ffffffff6a47304402204894c2f8e76c4645d2df600cdd01443aeb48807b72150c4bc10eebd126529532022054cd37462a3f0ddb85c75b4e874ab0c2aad7eebcff3e6c1ac20e1c16babe36720121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0000000000000000000000000ffffffff6b4830450221009f1ba584023da8aafd57374e83be68f1a097b906967ec9e50736f31bfc7989f102204a190fc2885e394572b5c2ced046657b1dd07abdb19144e21e78987968c7f17601210294e3e5e77e22eea0e4c0d30d89beb4db7f69b4bf1ae709e411d6a06618b8f852"
         )
 
-    def test_decred_multisig_change(self):
-        self.setup_mnemonic_allallall()
-
+    def test_decred_multisig_change(self, client):
         paths = [parse_path("m/48'/1'/%d'" % index) for index in range(3)]
         nodes = [
-            btc.get_public_node(self.client, address_n, coin_name="Decred Testnet").node
+            btc.get_public_node(client, address_n, coin_name="Decred Testnet").node
             for address_n in paths
         ]
 
@@ -336,8 +330,8 @@ class TestMsgSigntxDecred(TrezorTest):
                 decred_script_version=0,
             )
 
-            with self.client:
-                self.client.set_expected_responses(
+            with client:
+                client.set_expected_responses(
                     [
                         proto.TxRequest(
                             request_type=proto.RequestType.TXINPUT,
@@ -413,7 +407,7 @@ class TestMsgSigntxDecred(TrezorTest):
                     ]
                 )
                 signature, serialized_tx = btc.sign_tx(
-                    self.client,
+                    client,
                     "Decred Testnet",
                     [inp1, inp2],
                     [out1, out2],

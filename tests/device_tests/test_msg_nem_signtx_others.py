@@ -19,19 +19,18 @@ import pytest
 from trezorlib import nem
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 
 # assertion data from T1
 @pytest.mark.altcoin
 @pytest.mark.nem
 class TestMsgNEMSignTxOther(TrezorTest):
-    def test_nem_signtx_importance_transfer(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
-        with self.client:
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_importance_transfer(self, client):
+        with client:
             tx = nem.sign_tx(
-                self.client,
+                client,
                 parse_path("m/44'/1'/0'/0'/0'"),
                 {
                     "timeStamp": 12349215,
@@ -56,12 +55,10 @@ class TestMsgNEMSignTxOther(TrezorTest):
                 == "b6d9434ec5df80e65e6e45d7f0f3c579b4adfe8567c42d981b06e8ac368b1aad2b24eebecd5efd41f4497051fca8ea8a5e77636a79afc46ee1a8e0fe9e3ba90b"
             )
 
-    def test_nem_signtx_provision_namespace(self):
-
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem_signtx_provision_namespace(self, client):
         tx = nem.sign_tx(
-            self.client,
+            client,
             parse_path("m/44'/1'/0'/0'/0'"),
             {
                 "timeStamp": 74649215,

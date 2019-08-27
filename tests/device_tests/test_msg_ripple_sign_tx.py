@@ -26,9 +26,7 @@ from .common import TrezorTest
 @pytest.mark.ripple
 @pytest.mark.skip_t1  # T1 support is not planned
 class TestMsgRippleSignTx(TrezorTest):
-    def test_ripple_sign_simple_tx(self):
-        self.setup_mnemonic_allallall()
-
+    def test_ripple_sign_simple_tx(self, client):
         msg = ripple.create_sign_tx_msg(
             {
                 "TransactionType": "Payment",
@@ -41,7 +39,7 @@ class TestMsgRippleSignTx(TrezorTest):
                 "Sequence": 25,
             }
         )
-        resp = ripple.sign_tx(self.client, parse_path("m/44'/144'/0'/0/0"), msg)
+        resp = ripple.sign_tx(client, parse_path("m/44'/144'/0'/0/0"), msg)
         assert (
             resp.signature.hex()
             == "3045022100e243ef623675eeeb95965c35c3e06d63a9fc68bb37e17dc87af9c0af83ec057e02206ca8aa5eaab8396397aef6d38d25710441faf7c79d292ee1d627df15ad9346c0"
@@ -62,7 +60,7 @@ class TestMsgRippleSignTx(TrezorTest):
                 "Sequence": 1,
             }
         )
-        resp = ripple.sign_tx(self.client, parse_path("m/44'/144'/0'/0/2"), msg)
+        resp = ripple.sign_tx(client, parse_path("m/44'/144'/0'/0/2"), msg)
         assert (
             resp.signature.hex()
             == "3044022069900e6e578997fad5189981b74b16badc7ba8b9f1052694033fa2779113ddc002206c8006ada310edf099fb22c0c12073550c8fc73247b236a974c5f1144831dd5f"
@@ -86,7 +84,7 @@ class TestMsgRippleSignTx(TrezorTest):
                 "LastLedgerSequence": 333111,
             }
         )
-        resp = ripple.sign_tx(self.client, parse_path("m/44'/144'/0'/0/2"), msg)
+        resp = ripple.sign_tx(client, parse_path("m/44'/144'/0'/0/2"), msg)
         assert (
             resp.signature.hex()
             == "30450221008770743a472bb2d1c746a53ef131cc17cc118d538ec910ca928d221db4494cf702201e4ef242d6c3bff110c3cc3897a471fed0f5ac10987ea57da63f98dfa01e94df"
@@ -96,9 +94,7 @@ class TestMsgRippleSignTx(TrezorTest):
             == "120000228000000024000000642e0001e240201b00051537614000000005f5e109684000000000000064732103dbed1e77cb91a005e2ec71afbccce5444c9be58276665a3859040f692de8fed2744730450221008770743a472bb2d1c746a53ef131cc17cc118d538ec910ca928d221db4494cf702201e4ef242d6c3bff110c3cc3897a471fed0f5ac10987ea57da63f98dfa01e94df8114bdf86f3ae715ba346b7772ea0e133f48828b766483148fb40e1ffa5d557ce9851a535af94965e0dd0988"
         )
 
-    def test_ripple_sign_invalid_fee(self):
-        self.setup_mnemonic_allallall()
-
+    def test_ripple_sign_invalid_fee(self, client):
         msg = ripple.create_sign_tx_msg(
             {
                 "TransactionType": "Payment",
@@ -112,7 +108,7 @@ class TestMsgRippleSignTx(TrezorTest):
             }
         )
         with pytest.raises(CallException) as exc:
-            ripple.sign_tx(self.client, parse_path("m/44'/144'/0'/0/2"), msg)
+            ripple.sign_tx(client, parse_path("m/44'/144'/0'/0/2"), msg)
         assert exc.value.args[0] == messages.FailureType.ProcessError
         assert exc.value.args[1].endswith(
             "Fee must be in the range of 10 to 10,000 drops"

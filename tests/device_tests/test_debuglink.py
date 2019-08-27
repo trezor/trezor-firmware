@@ -16,33 +16,38 @@
 
 import pytest
 
-from trezorlib import messages as proto
+from trezorlib import debuglink, messages
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 
 @pytest.mark.skip_t2
 class TestDebuglink(TrezorTest):
-    def test_layout(self):
-        layout = self.client.debug.state().layout
+    def test_layout(self, client):
+        layout = client.debug.state().layout
         assert len(layout) == 1024
 
-    def test_mnemonic(self):
-        self.setup_mnemonic_nopin_nopassphrase(lock=False)
-        mnemonic = self.client.debug.state().mnemonic_secret
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_mnemonic(self, client):
+        debuglink.load_device_by_mnemonic(
+            client,
+            mnemonic=MNEMONIC12,
+            pin="",
+            passphrase_protection=False,
+            label="test",
+        )
+        mnemonic = client.debug.state().mnemonic_secret
         assert mnemonic == self.mnemonic12.encode()
 
-    def test_pin(self):
-        self.setup_mnemonic_pin_passphrase()
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12, pin="1234", passphrase=True)
+    def test_pin(self, client):
+        resp = client.call_raw(messages.Ping(message="test", pin_protection=True))
+        assert isinstance(resp, messages.PinMatrixRequest)
 
-        # Manually trigger PinMatrixRequest
-        resp = self.client.call_raw(proto.Ping(message="test", pin_protection=True))
-        assert isinstance(resp, proto.PinMatrixRequest)
-
-        pin, matrix = self.client.debug.read_pin()
+        pin, matrix = client.debug.read_pin()
         assert pin == "1234"
         assert matrix != ""
 
-        pin_encoded = self.client.debug.read_pin_encoded()
-        resp = self.client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
-        assert isinstance(resp, proto.Success)
+        pin_encoded = client.debug.read_pin_encoded()
+        resp = client.call_raw(messages.PinMatrixAck(pin=pin_encoded))
+        assert isinstance(resp, messages.Success)

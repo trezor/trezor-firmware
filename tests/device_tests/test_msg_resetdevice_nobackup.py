@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import pytest
+
 from trezorlib import messages as proto
 
 from .common import TrezorTest
@@ -24,9 +26,9 @@ class TestMsgResetDeviceNobackup(TrezorTest):
     external_entropy = b"zlutoucky kun upel divoke ody" * 2
     strength = 128
 
-    def test_reset_device_no_backup(self):
-
-        ret = self.client.call_raw(
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_reset_device_no_backup(self, client):
+        ret = client.call_raw(
             proto.ResetDevice(
                 display_random=False,
                 strength=self.strength,
@@ -39,27 +41,28 @@ class TestMsgResetDeviceNobackup(TrezorTest):
         )
 
         assert isinstance(ret, proto.ButtonRequest)
-        self.client.debug.press_yes()
-        ret = self.client.call_raw(proto.ButtonAck())
+        client.debug.press_yes()
+        ret = client.call_raw(proto.ButtonAck())
 
         # Provide entropy
         assert isinstance(ret, proto.EntropyRequest)
-        ret = self.client.call_raw(proto.EntropyAck(entropy=self.external_entropy))
+        ret = client.call_raw(proto.EntropyAck(entropy=self.external_entropy))
         assert isinstance(ret, proto.Success)
 
         # Check if device is properly initialized
-        ret = self.client.call_raw(proto.Initialize())
+        ret = client.call_raw(proto.Initialize())
         assert ret.initialized is True
         assert ret.needs_backup is False
         assert ret.unfinished_backup is False
         assert ret.no_backup is True
 
         # start backup - should fail
-        ret = self.client.call_raw(proto.BackupDevice())
+        ret = client.call_raw(proto.BackupDevice())
         assert isinstance(ret, proto.Failure)
 
-    def test_reset_device_no_backup_show_entropy_fail(self):
-        ret = self.client.call_raw(
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_reset_device_no_backup_show_entropy_fail(self, client):
+        ret = client.call_raw(
             proto.ResetDevice(
                 display_random=True,
                 strength=self.strength,

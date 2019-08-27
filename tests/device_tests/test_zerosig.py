@@ -14,9 +14,11 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import pytest
+
 from trezorlib import btc, messages as proto
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 from .tx_cache import tx_cache
 
 TXHASH_d5f65e = bytes.fromhex(
@@ -59,9 +61,8 @@ class TestZerosig(TrezorTest):
                 return
     """
 
-    def test_one_zero_signature(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_one_zero_signature(self, client):
         inp1 = proto.TxInputType(
             address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
             # amount=390000,
@@ -77,16 +78,15 @@ class TestZerosig(TrezorTest):
         )
 
         _, serialized_tx = btc.sign_tx(
-            self.client, "Bitcoin", [inp1], [out1], prev_txes=tx_cache("Bitcoin")
+            client, "Bitcoin", [inp1], [out1], prev_txes=tx_cache("Bitcoin")
         )
         siglen = serialized_tx[44]
 
         # Trezor must strip leading zero from signature
         assert siglen == 67
 
-    def test_two_zero_signature(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_two_zero_signature(self, client):
         inp1 = proto.TxInputType(
             address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
             # amount=390000,
@@ -102,7 +102,7 @@ class TestZerosig(TrezorTest):
         )
 
         _, serialized_tx = btc.sign_tx(
-            self.client, "Bitcoin", [inp1], [out1], prev_txes=tx_cache("Bitcoin")
+            client, "Bitcoin", [inp1], [out1], prev_txes=tx_cache("Bitcoin")
         )
         siglen = serialized_tx[44]
 

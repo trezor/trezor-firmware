@@ -23,9 +23,10 @@ from .common import TrezorTest
 
 @pytest.mark.skip_t2
 class TestDeviceLoadXprv(TrezorTest):
-    def test_load_device_xprv_1(self):
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_load_device_xprv_1(self, client):
         debuglink.load_device_by_xprv(
-            self.client,
+            client,
             xprv="xprv9s21ZrQH143K2JF8RafpqtKiTbsbaxEeUaMnNHsm5o6wCW3z8ySyH4UxFVSfZ8n7ESu7fgir8imbZKLYVBxFPND1pniTZ81vKfd45EHKX73",
             pin="",
             passphrase_protection=False,
@@ -33,15 +34,16 @@ class TestDeviceLoadXprv(TrezorTest):
             language="english",
         )
 
-        passphrase_protection = self.client.debug.read_passphrase_protection()
+        passphrase_protection = client.debug.read_passphrase_protection()
         assert passphrase_protection is False
 
-        address = btc.get_address(self.client, "Bitcoin", [])
+        address = btc.get_address(client, "Bitcoin", [])
         assert address == "128RdrAkJDmqasgvfRf6MC5VcX4HKqH4mR"
 
-    def test_load_device_xprv_2(self):
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_load_device_xprv_2(self, client):
         debuglink.load_device_by_xprv(
-            self.client,
+            client,
             xprv="xprv9s21ZrQH143K2JF8RafpqtKiTbsbaxEeUaMnNHsm5o6wCW3z8ySyH4UxFVSfZ8n7ESu7fgir8imbZKLYVBxFPND1pniTZ81vKfd45EHKX73",
             pin="",
             passphrase_protection=True,
@@ -49,10 +51,10 @@ class TestDeviceLoadXprv(TrezorTest):
             language="english",
         )
 
-        self.client.set_passphrase("passphrase")
+        client.set_passphrase("passphrase")
 
-        passphrase_protection = self.client.debug.read_passphrase_protection()
+        passphrase_protection = client.debug.read_passphrase_protection()
         assert passphrase_protection is True
 
-        address = btc.get_address(self.client, "Bitcoin", [])
+        address = btc.get_address(client, "Bitcoin", [])
         assert address == "1CHUbFa4wTTPYgkYaw2LHSd5D4qJjMU8ri"

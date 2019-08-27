@@ -21,14 +21,14 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 
 class TestMsgSignmessageSegwitNative(TrezorTest):
-    def test_sign(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_sign(self, client):
         sig = btc.sign_message(
-            self.client,
+            client,
             "Bitcoin",
             [0],
             "This is an example of a signed message.",
@@ -40,10 +40,10 @@ class TestMsgSignmessageSegwitNative(TrezorTest):
             == "289e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
         )
 
-    def test_sign_testnet(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_sign_testnet(self, client):
         sig = btc.sign_message(
-            self.client,
+            client,
             "Testnet",
             [0],
             "This is an example of a signed message.",
@@ -56,10 +56,9 @@ class TestMsgSignmessageSegwitNative(TrezorTest):
         )
 
     @pytest.mark.altcoin
-    def test_sign_grs(self):
-        self.setup_mnemonic_allallall()
+    def test_sign_grs(self, client):
         sig = btc.sign_message(
-            self.client,
+            client,
             "Groestlcoin",
             parse_path("84'/17'/0'/0/0"),
             "test",
@@ -71,10 +70,10 @@ class TestMsgSignmessageSegwitNative(TrezorTest):
             == b"KIJT20tKHV2sBZKWOFMQo1PvgJksR3ekQTOjNdEtNETabCh9Mq7EBx7EmuMn4gj4m6ChFaEp8QYiHI3VWQ/T3xM="
         )
 
-    def test_sign_long(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_sign_long(self, client):
         sig = btc.sign_message(
-            self.client,
+            client,
             "Bitcoin",
             [0],
             "VeryLongMessage!" * 64,
@@ -86,14 +85,13 @@ class TestMsgSignmessageSegwitNative(TrezorTest):
             == "285ff795c29aef7538f8b3bdb2e8add0d0722ad630a140b6aefd504a5a895cbd867cbb00981afc50edd0398211e8d7c304bb8efa461181bc0afa67ea4a720a89ed"
         )
 
-    def test_sign_utf(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_sign_utf(self, client):
         words_nfkd = u"Pr\u030ci\u0301s\u030cerne\u030c z\u030clut\u030couc\u030cky\u0301 ku\u030an\u030c u\u0301pe\u030cl d\u030ca\u0301belske\u0301 o\u0301dy za\u0301ker\u030cny\u0301 uc\u030cen\u030c be\u030cz\u030ci\u0301 pode\u0301l zo\u0301ny u\u0301lu\u030a"
         words_nfc = u"P\u0159\xed\u0161ern\u011b \u017elu\u0165ou\u010dk\xfd k\u016f\u0148 \xfap\u011bl \u010f\xe1belsk\xe9 \xf3dy z\xe1ke\u0159n\xfd u\u010de\u0148 b\u011b\u017e\xed pod\xe9l z\xf3ny \xfal\u016f"
 
         sig_nfkd = btc.sign_message(
-            self.client,
+            client,
             "Bitcoin",
             [0],
             words_nfkd,
@@ -106,7 +104,7 @@ class TestMsgSignmessageSegwitNative(TrezorTest):
         )
 
         sig_nfc = btc.sign_message(
-            self.client,
+            client,
             "Bitcoin",
             [0],
             words_nfc,

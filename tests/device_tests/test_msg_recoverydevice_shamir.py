@@ -69,6 +69,7 @@ def enter_all_shares(debug, shares):
         debug.press_yes()
 
 
+@pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("shares, secret", VECTORS)
 def test_secret(client, shares, secret):
     debug = client.debug

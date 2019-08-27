@@ -14,23 +14,25 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import pytest
+
 from trezorlib import device, messages as proto
 
 from .common import TrezorTest
 
 
 class TestMsgWipedevice(TrezorTest):
-    def test_wipe_device(self):
-        self.setup_mnemonic_pin_passphrase()
-        features = self.client.call_raw(proto.Initialize())
+    @pytest.mark.setup_client(pin=True, passphrase=True)
+    def test_wipe_device(self, client):
+        features = client.call_raw(proto.Initialize())
 
         assert features.initialized is True
         assert features.pin_protection is True
         assert features.passphrase_protection is True
         device_id = features.device_id
 
-        device.wipe(self.client)
-        features = self.client.call_raw(proto.Initialize())
+        device.wipe(client)
+        features = client.call_raw(proto.Initialize())
 
         assert features.initialized is False
         assert features.pin_protection is False

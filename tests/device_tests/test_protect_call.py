@@ -28,9 +28,9 @@ from .common import TrezorTest
 
 @pytest.mark.skip_t2
 class TestProtectCall(TrezorTest):
-    def _some_protected_call(self, button, pin, passphrase):
+    def _some_protected_call(self, client, button, pin, passphrase):
         # This method perform any call which have protection in the device
-        res = self.client.ping(
+        res = client.ping(
             "random data",
             button_protection=button,
             pin_protection=pin,
@@ -85,41 +85,37 @@ class TestProtectCall(TrezorTest):
             scenario5()
     """
 
-    def test_no_protection(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_no_protection(self, client):
+        with client:
+            assert client.debug.read_pin()[0] is None
+            client.set_expected_responses([proto.Success()])
+            self._some_protected_call(client, False, True, True)
 
-        with self.client:
-            assert self.client.debug.read_pin()[0] is None
-            self.client.set_expected_responses([proto.Success()])
-            self._some_protected_call(False, True, True)
-
-    def test_pin(self):
-        self.setup_mnemonic_pin_passphrase()
-
-        with self.client:
-            assert self.client.debug.read_pin()[0] == self.pin4
-            self.client.setup_debuglink(button=True, pin_correct=True)
-            self.client.set_expected_responses(
+    @pytest.mark.setup_client(pin="1234", passphrase=True)
+    def test_pin(self, client):
+        with client:
+            assert client.debug.read_pin()[0] == "1234"
+            client.setup_debuglink(button=True, pin_correct=True)
+            client.set_expected_responses(
                 [proto.ButtonRequest(), proto.PinMatrixRequest(), proto.Success()]
             )
-            self._some_protected_call(True, True, False)
+            self._some_protected_call(client, True, True, False)
 
-    def test_incorrect_pin(self):
-        self.setup_mnemonic_pin_passphrase()
-        self.client.setup_debuglink(button=True, pin_correct=False)
+    @pytest.mark.setup_client(pin="1234", passphrase=True)
+    def test_incorrect_pin(self, client):
+        client.setup_debuglink(button=True, pin_correct=False)
         with pytest.raises(PinException):
-            self._some_protected_call(False, True, False)
+            self._some_protected_call(client, False, True, False)
 
-    def test_cancelled_pin(self):
-        self.setup_mnemonic_pin_passphrase()
-        self.client.setup_debuglink(button=True, pin_correct=False)  # PIN cancel
+    @pytest.mark.setup_client(pin="1234", passphrase=True)
+    def test_cancelled_pin(self, client):
+        client.setup_debuglink(button=True, pin_correct=False)  # PIN cancel
         with pytest.raises(PinException):
-            self._some_protected_call(False, True, False)
+            self._some_protected_call(client, False, True, False)
 
-    def test_exponential_backoff_with_reboot(self):
-        self.setup_mnemonic_pin_passphrase()
-
-        self.client.setup_debuglink(button=True, pin_correct=False)
+    @pytest.mark.setup_client(pin="1234", passphrase=True)
+    def test_exponential_backoff_with_reboot(self, client):
+        client.setup_debuglink(button=True, pin_correct=False)
 
         def test_backoff(attempts, start):
             if attempts <= 1:
@@ -138,5 +134,5 @@ class TestProtectCall(TrezorTest):
         for attempt in range(1, 4):
             start = time.time()
             with pytest.raises(PinException):
-                self._some_protected_call(False, True, False)
+                self._some_protected_call(client, False, True, False)
             test_backoff(attempt, start)

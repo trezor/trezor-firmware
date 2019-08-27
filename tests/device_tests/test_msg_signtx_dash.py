@@ -27,8 +27,7 @@ TX_API = tx_cache("Dash")
 
 @pytest.mark.altcoin
 class TestMsgSigntxDash(TrezorTest):
-    def test_send_dash(self):
-        self.setup_mnemonic_allallall()
+    def test_send_dash(self, client):
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/5'/0'/0/0"),
             # dash:XdTw4G5AWW4cogGd7ayybyBNDbuB45UpgH
@@ -44,8 +43,8 @@ class TestMsgSigntxDash(TrezorTest):
             amount=999999000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -101,7 +100,7 @@ class TestMsgSigntxDash(TrezorTest):
                 ]
             )
             _, serialized_tx = btc.sign_tx(
-                self.client, "Dash", [inp1], [out1], prev_txes=TX_API
+                client, "Dash", [inp1], [out1], prev_txes=TX_API
             )
 
         assert (
@@ -109,8 +108,7 @@ class TestMsgSigntxDash(TrezorTest):
             == "01000000014fb02af26dca339e7e06c4f148dfce57c9afa5f537d0d8e733022a4ba6ea7955010000006a4730440220387be4d1e4b5e355614091416373e99e1a3532b8cc9a8629368060aff2681bdb02200a0c4a5e9eb2ce6adb6c2e01ec8f954463dcc04f531ed8a89a2b40019d5aeb0b012102936f80cac2ba719ddb238646eb6b78a170a55a52a9b9f08c43523a4a6bd5c896ffffffff0118c69a3b000000001976a9149710d6545407e78c326aa8c8ae386ec7f883b0af88ac00000000"
         )
 
-    def test_send_dash_dip2_input(self):
-        self.setup_mnemonic_allallall()
+    def test_send_dash_dip2_input(self, client):
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/5'/0'/0/0"),
             # dash:XdTw4G5AWW4cogGd7ayybyBNDbuB45UpgH
@@ -131,8 +129,8 @@ class TestMsgSigntxDash(TrezorTest):
             amount=95000000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -202,7 +200,7 @@ class TestMsgSigntxDash(TrezorTest):
                 ]
             )
             _, serialized_tx = btc.sign_tx(
-                self.client, "Dash", [inp1], [out1, out2], prev_txes=TX_API
+                client, "Dash", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (

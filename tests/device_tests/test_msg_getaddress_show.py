@@ -14,30 +14,31 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import pytest
+
 from trezorlib import btc, ckd_public as bip32, messages as proto
 
-from .common import TrezorTest
+from .common import MNEMONIC12, TrezorTest
 
 
 class TestMsgGetaddressShow(TrezorTest):
-    def test_show(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_show(self, client):
         assert (
-            btc.get_address(self.client, "Bitcoin", [1], show_display=True)
+            btc.get_address(client, "Bitcoin", [1], show_display=True)
             == "1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb"
         )
         assert (
-            btc.get_address(self.client, "Bitcoin", [2], show_display=True)
+            btc.get_address(client, "Bitcoin", [2], show_display=True)
             == "15AeAhtNJNKyowK8qPHwgpXkhsokzLtUpG"
         )
         assert (
-            btc.get_address(self.client, "Bitcoin", [3], show_display=True)
+            btc.get_address(client, "Bitcoin", [3], show_display=True)
             == "1CmzyJp9w3NafXMSEFH4SLYUPAVCSUrrJ5"
         )
 
-    def test_show_multisig_3(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_show_multisig_3(self, client):
         node = bip32.deserialize(
             "xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy"
         )
@@ -54,14 +55,13 @@ class TestMsgGetaddressShow(TrezorTest):
         for i in [1, 2, 3]:
             assert (
                 btc.get_address(
-                    self.client, "Bitcoin", [i], show_display=True, multisig=multisig
+                    client, "Bitcoin", [i], show_display=True, multisig=multisig
                 )
                 == "3E7GDtuHqnqPmDgwH59pVC7AvySiSkbibz"
             )
 
-    def test_show_multisig_15(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_show_multisig_15(self, client):
         node = bip32.deserialize(
             "xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy"
         )
@@ -77,7 +77,7 @@ class TestMsgGetaddressShow(TrezorTest):
         for i in range(15):
             assert (
                 btc.get_address(
-                    self.client, "Bitcoin", [i], show_display=True, multisig=multisig
+                    client, "Bitcoin", [i], show_display=True, multisig=multisig
                 )
                 == "3QaKF8zobqcqY8aS6nxCD5ZYdiRfL3RCmU"
             )

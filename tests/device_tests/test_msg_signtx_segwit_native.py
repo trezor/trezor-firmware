@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+
 from trezorlib import btc, messages as proto
 from trezorlib.ckd_public import deserialize
 from trezorlib.tools import H_, parse_path
@@ -25,8 +26,7 @@ TX_API = tx_cache("Testnet")
 
 
 class TestMsgSigntxSegwitNative(TrezorTest):
-    def test_send_p2sh(self):
-        self.setup_mnemonic_allallall()
+    def test_send_p2sh(self, client):
         inp1 = proto.TxInputType(
             address_n=parse_path("49'/1'/0'/1/0"),
             # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -47,8 +47,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
             amount=123456789 - 11000 - 12300000,
         )
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -85,7 +85,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 ]
             )
             _, serialized_tx = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
+                client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -93,8 +93,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             == "0100000000010137c361fb8f2d9056ba8c98c5611930fcb48cacfdd0fe2e0449d83eea982f91200000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff02e0aebb00000000001600140099a7ecbd938ed1839f5f6bf6d50933c6db9d5c3df39f060000000017a91458b53ea7f832e8f096e896b8713a8c6df0e892ca8702483045022100bd3d8b8ad35c094e01f6282277300e575f1021678fc63ec3f9945d6e35670da3022052e26ef0dd5f3741c9d5939d1dec5464c15ab5f2c85245e70a622df250d4eb7c012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7900000000"
         )
 
-    def test_send_p2sh_change(self):
-        self.setup_mnemonic_allallall()
+    def test_send_p2sh_change(self, client):
         inp1 = proto.TxInputType(
             address_n=parse_path("49'/1'/0'/1/0"),
             # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -115,8 +114,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
             amount=123456789 - 11000 - 12300000,
         )
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -152,7 +151,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 ]
             )
             _, serialized_tx = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
+                client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -160,8 +159,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             == "0100000000010137c361fb8f2d9056ba8c98c5611930fcb48cacfdd0fe2e0449d83eea982f91200000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff02e0aebb00000000001600140099a7ecbd938ed1839f5f6bf6d50933c6db9d5c3df39f060000000017a91458b53ea7f832e8f096e896b8713a8c6df0e892ca8702483045022100bd3d8b8ad35c094e01f6282277300e575f1021678fc63ec3f9945d6e35670da3022052e26ef0dd5f3741c9d5939d1dec5464c15ab5f2c85245e70a622df250d4eb7c012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7900000000"
         )
 
-    def test_send_native(self):
-        self.setup_mnemonic_allallall()
+    def test_send_native(self, client):
         inp1 = proto.TxInputType(
             address_n=parse_path("84'/1'/0'/0/0"),
             amount=12300000,
@@ -181,8 +179,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
             amount=12300000 - 11000 - 5000000,
         )
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -219,7 +217,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 ]
             )
             _, serialized_tx = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
+                client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -227,8 +225,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             == "010000000001018a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090000000000ffffffff02404b4c000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c987a8386f0000000000160014d16b8c0680c61fc6ed2e407455715055e41052f502473044022073ce72dcf2f6e42eeb44adbe7d5038cf3763f168d1c04bd8b873a19b53331f51022016b051725731e7f53a567021bcd9c370727f551c81e857ebae7c128472119652012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86200000000"
         )
 
-    def test_send_native_change(self):
-        self.setup_mnemonic_allallall()
+    def test_send_native_change(self, client):
         inp1 = proto.TxInputType(
             address_n=parse_path("84'/1'/0'/0/0"),
             amount=12300000,
@@ -248,8 +245,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOWITNESS,
             amount=12300000 - 11000 - 5000000,
         )
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -285,7 +282,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 ]
             )
             _, serialized_tx = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
+                client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
             )
 
         assert (
@@ -293,8 +290,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             == "010000000001018a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090000000000ffffffff02404b4c000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c987a8386f0000000000160014cc8067093f6f843d6d3e22004a4290cd0c0f336b024730440220067675423ca6a0be3ddd5e13da00a9433775041e5cebc838873d2686f1d2840102201a5819e0312e6451d6b6180689101bce995685a51524cc4c3a5383f7bdab979a012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86200000000"
         )
 
-    def test_send_both(self):
-        self.setup_mnemonic_allallall()
+    def test_send_both(self, client):
         inp1 = proto.TxInputType(
             address_n=parse_path("49'/1'/0'/1/0"),
             # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -332,8 +328,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -391,11 +387,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 ]
             )
             _, serialized_tx = btc.sign_tx(
-                self.client,
-                "Testnet",
-                [inp1, inp2],
-                [out1, out2, out3],
-                prev_txes=TX_API,
+                client, "Testnet", [inp1, inp2], [out1, out2, out3], prev_txes=TX_API
             )
 
         assert (
@@ -403,10 +395,9 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             == "010000000001028a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090100000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff7b010c5faeb41cc5c253121b6bf69bf1a7c5867cd7f2d91569fea0ecd311b8650100000000ffffffff03e0aebb0000000000160014a579388225827d9f2fe9014add644487808c695d00cdb7020000000017a91491233e24a9bf8dbb19c1187ad876a9380c12e787870d859b03000000001976a914a579388225827d9f2fe9014add644487808c695d88ac02483045022100ead79ee134f25bb585b48aee6284a4bb14e07f03cc130253e83450d095515e5202201e161e9402c8b26b666f2b67e5b668a404ef7e57858ae9a6a68c3837e65fdc69012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7902463043021f585c54a84dc7326fa60e22729accd41153c7dd4725bd4c8f751aa3a8cd8d6a0220631bfd83fc312cc6d5d129572a25178696d81eaf50c8c3f16c6121be4f4c029d012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f00000000"
         )
 
-    def test_send_multisig_1(self):
-        self.setup_mnemonic_allallall()
+    def test_send_multisig_1(self, client):
         nodes = [
-            btc.get_public_node(self.client, parse_path("49'/1'/%d'" % index))
+            btc.get_public_node(client, parse_path("49'/1'/%d'" % index))
             for index in range(1, 4)
         ]
         multisig = proto.MultisigRedeemScriptType(
@@ -433,8 +424,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -462,13 +453,13 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 ]
             )
             signatures, _ = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
+                client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
             # store signature
             inp1.multisig.signatures[0] = signatures[0]
             # sign with third key
             inp1.address_n[2] = H_(3)
-            self.client.set_expected_responses(
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -496,7 +487,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 ]
             )
             _, serialized_tx = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
+                client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
         assert (
@@ -504,10 +495,9 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             == "01000000000101be0210025c5be68a473f6a38bf53b53bc88d5c46567616026dc056e72b92319c01000000232200208d398cfb58a1d9cdb59ccbce81559c095e8c6f4a3e64966ca385078d9879f95effffffff01887d180000000000220020c5f4a0a4ea7c0392efe0a9670a73264cffa90b19107cd8a8e9750ff93c77fdfb0400483045022100dd6342c65197af27d7894d8b8b88b16b568ee3b5ebfdc55fdfb7caa9650e3b4c02200c7074a5bcb0068f63d9014c7cd2b0490aba75822d315d41aad444e9b86adf5201483045022100e7e6c2d21109512ba0609e93903e84bfb7731ac3962ee2c1cad54a7a30ff99a20220421497930226c39fc3834e8d6da3fc876516239518b0e82e2dc1e3c46271a17c01695221021630971f20fa349ba940a6ba3706884c41579cd760c89901374358db5dd545b92102f2ff4b353702d2bb03d4c494be19d77d0ab53d16161b53fbcaf1afeef4ad0cb52103e9b6b1c691a12ce448f1aedbbd588e064869c79fbd760eae3b8cd8a5f1a224db53ae00000000"
         )
 
-    def test_send_multisig_2(self):
-        self.setup_mnemonic_allallall()
+    def test_send_multisig_2(self, client):
         nodes = [
-            btc.get_public_node(self.client, parse_path("84'/1'/%d'" % index))
+            btc.get_public_node(client, parse_path("84'/1'/%d'" % index))
             for index in range(1, 4)
         ]
         multisig = proto.MultisigRedeemScriptType(
@@ -534,8 +524,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -563,13 +553,13 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 ]
             )
             signatures, _ = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
+                client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
             # store signature
             inp1.multisig.signatures[1] = signatures[0]
             # sign with first key
             inp1.address_n[2] = H_(1)
-            self.client.set_expected_responses(
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -597,7 +587,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 ]
             )
             _, serialized_tx = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
+                client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
         assert (
@@ -605,10 +595,9 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             == "010000000001012812fe3916f228cda6c7b57d5464541265a63ad118f430a805eeec8bddbe1cf40000000000ffffffff01a0791800000000002200201e8dda334f11171190b3da72e526d441491464769679a319a2f011da5ad312a10400473044022001b7f4f21a8ddcd5e0faaaee3b95515bf8b84f2a7cbfdf66996c64123617a5cf02202fc6a776a7225420dbca759ad4ac83a61d15bf8d2883b6bf1aa31de7437f9b6e0147304402206c4125c1189a3b3e93a77cdf54c60c0538b80e5a03ec74e6ac776dfa77706ee4022035be14de76259b9d8a24863131a06a65b95df02f7d3ace90d52b37e8d94b167f0169522103bab8ecdd9ae2c51a0dc858f4c751b27533143bf6013ba1725ba8a4ecebe7de8c21027d5e55696c875308b03f2ca3d8637f51d3e35da9456a5187aa14b3de8a89534f2103b78eabaea8b3a4868be4f4bb96d6f66973f7081faa7f1cafba321444611c241e53ae00000000"
         )
 
-    def test_send_multisig_3_change(self):
-        self.setup_mnemonic_allallall()
+    def test_send_multisig_3_change(self, client):
         nodes = [
-            btc.get_public_node(self.client, parse_path("84'/1'/%d'" % index))
+            btc.get_public_node(client, parse_path("84'/1'/%d'" % index))
             for index in range(1, 4)
         ]
         multisig = proto.MultisigRedeemScriptType(
@@ -642,8 +631,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -670,14 +659,14 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 ]
             )
             signatures, _ = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
+                client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
             # store signature
             inp1.multisig.signatures[0] = signatures[0]
             # sign with third key
             inp1.address_n[2] = H_(3)
             out1.address_n[2] = H_(3)
-            self.client.set_expected_responses(
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -704,7 +693,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 ]
             )
             _, serialized_tx = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
+                client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
         assert (
@@ -712,10 +701,9 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             == "01000000000101fc7901dd033f8c02da14f3ac916b6498036b80b4a0b4dc124e02c2bb408034c90000000000ffffffff01b87518000000000017a914536250d41937e5b641082447580ff6a8e46c122a870400473044022003c26107a5a47f1f900ef8aa758977530cd13ea37a33971abae8d75cac2f9f34022039e2b8c2c1d0c24ff4fc026652e1f27ad8e3ed6c9bf485f61d9aa691cb57830801483045022100963b0dc0ab46e963a66ab6e69e5e41bac6c4fedc127cac12c560b029d54fe87402205b3bcdcf313dccd78e5dce0540e7d3c8cc1bf83f13c1f9f01811eb791fd35c8101695221039dba3a72f5dc3cad17aa924b5a03c34561465f997d0cb15993f2ca2c0be771c42103cd39f3f08bbd508dce4d307d57d0c70c258c285878bfda579fa260acc738c25d2102cd631ba95beca1d64766f5540885092d0bb384a3c13b6c3a5334d0ebacf51b9553ae00000000"
         )
 
-    def test_send_multisig_4_change(self):
-        self.setup_mnemonic_allallall()
+    def test_send_multisig_4_change(self, client):
         nodes = [
-            btc.get_public_node(self.client, parse_path("49'/1'/%d'" % index))
+            btc.get_public_node(client, parse_path("49'/1'/%d'" % index))
             for index in range(1, 4)
         ]
         multisig = proto.MultisigRedeemScriptType(
@@ -749,8 +737,8 @@ class TestMsgSigntxSegwitNative(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOWITNESS,
         )
 
-        with self.client:
-            self.client.set_expected_responses(
+        with client:
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -777,14 +765,14 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 ]
             )
             signatures, _ = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
+                client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
             # store signature
             inp1.multisig.signatures[0] = signatures[0]
             # sign with third key
             inp1.address_n[2] = H_(3)
             out1.address_n[2] = H_(3)
-            self.client.set_expected_responses(
+            client.set_expected_responses(
                 [
                     proto.TxRequest(
                         request_type=proto.RequestType.TXINPUT,
@@ -811,7 +799,7 @@ class TestMsgSigntxSegwitNative(TrezorTest):
                 ]
             )
             _, serialized_tx = btc.sign_tx(
-                self.client, "Testnet", [inp1], [out1], prev_txes=TX_API
+                client, "Testnet", [inp1], [out1], prev_txes=TX_API
             )
 
         assert (

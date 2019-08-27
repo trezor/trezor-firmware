@@ -88,6 +88,7 @@ def client(request):
             label="test",
             language="english",
         )
+        client.clear_session()
         if setup_params["passphrase"] and client.features.model != "1":
             apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
 
