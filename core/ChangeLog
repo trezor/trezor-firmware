@@ -1,5 +1,9 @@
-Version 2.x.x [not yet released]
-* nothing yet
+Version 2.1.5 [Aug 2019 RC]
+* Super Shamir (Shamir Backup with groups)
+* Introduce Bitcoin-only firmware
+* Introduce firmware features
+* Fix Wanchain signing
+* Fix UI for Shamir with 33 words
 
 Version 2.1.4 [Aug 2019 hotfix]
 * Shamir Backup reset device hotfix
