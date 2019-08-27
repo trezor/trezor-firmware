@@ -48,7 +48,6 @@ test crypto:
     - cd crypto
     - ./tests/aestst
     - ./tests/test_check
-    - CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./tests/test_check
     - ./tests/test_openssl 1000
     - ITERS=10 pipenv run pytest tests
 
