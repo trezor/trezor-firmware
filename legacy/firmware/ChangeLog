@@ -1,6 +1,9 @@
 Version 1.x.x [not yet released]
 * nothing yet
 
+Version 1.8.3 [Aug 2019 RC]
+* Introduce Bitcoin-only firmware
+
 Version 1.8.2 [Aug 2019]
 * OLED display security improvements
 * Fix display of non-divisible OMNI amounts
