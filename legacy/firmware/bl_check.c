@@ -26,6 +26,8 @@
 #include "memory.h"
 #include "util.h"
 
+#if MEMORY_PROTECT
+
 static int known_bootloader(int r, const uint8_t *hash) {
   if (r != 32) return 0;
   if (0 ==
@@ -126,6 +128,7 @@ static int known_bootloader(int r, const uint8_t *hash) {
     return 1;  // 1.8.0 shipped with fw 1.8.0 and 1.8.1
   return 0;
 }
+#endif
 
 void check_bootloader(void) {
 #if MEMORY_PROTECT

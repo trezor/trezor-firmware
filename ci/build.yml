@@ -108,6 +108,8 @@ build crypto:
 # TODO: add clang https://github.com/trezor/trezor-firmware/issues/44
 build legacy firmware:
   stage: build
+  variables:
+    MEMORY_PROTECT: "0"
   script:
     - cd legacy
     - pipenv run script/cibuild
@@ -123,6 +125,7 @@ build legacy firmware debug:
   stage: build
   variables:
     DEBUG_LINK: "1"
+    MEMORY_PROTECT: "0"
   script:
     - cd legacy
     - pipenv run script/cibuild
@@ -131,6 +134,7 @@ build legacy firmware bitcoinonly:
   stage: build
   variables:
     BITCOIN_ONLY: "1"
+    MEMORY_PROTECT: "0"
   script:
     - cd legacy
     - pipenv run script/cibuild

@@ -19,6 +19,8 @@ memset_reg:
   .global reset_handler
   .type reset_handler, STT_FUNC
 reset_handler:
+
+#if MEMORY_PROTECT
 // we need to perform this in case an old bootloader
 // is starting the new firmware, these will be set incorrectly
   ldr r0, =0xE000ED08  // r0 = VTOR address
@@ -28,6 +30,7 @@ reset_handler:
   msr msp, r0          // set stack pointer
   dsb
   isb
+#endif
 
   ldr r0, =_ram_start // r0 - point to beginning of SRAM
   ldr r1, =_ram_end   // r1 - point to byte after the end of SRAM
