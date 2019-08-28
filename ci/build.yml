@@ -17,11 +17,13 @@ build core firmware:
     - pipenv run make build_prodtest
     - pipenv run make build_firmware
     - pipenv run make sizecheck
+    - cd ..
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - cp core/build/firmware/firmware.bin trezor-$VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - core/build/firmware/firmware.bin
-    - core/build/bootloader/bootloader.bin
+    - trezor-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 build core firmware bitcoinonly:
@@ -34,10 +36,12 @@ build core firmware bitcoinonly:
     - mv build/firmware/firmware.bin build/firmware/firmware-bitcoinonly.bin
     - cd ..
     - pipenv run ./tools/check-bitcoin-only core/build/firmware/firmware-bitcoinonly.bin
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - cp core/build/firmware/firmware-bitcoinonly.bin trezor-$VERSION-$CI_COMMIT_SHORT_SHA-bitcoinonly.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - core/build/firmware/firmware-bitcoinonly.bin
+    - trezor-*.*.*-$CI_COMMIT_SHORT_SHA-bitcoinonly.bin
     expire_in: 1 week
 
 build core unix:
@@ -115,10 +119,13 @@ build legacy firmware:
     - pipenv run script/cibuild
     - pipenv run make -C bootloader
     - pipenv run make -C demo
+    - cd ..
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - cp legacy/firmware/trezor.bin trezor-$VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - legacy/firmware/trezor.bin
+    - trezor-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 build legacy firmware debug:
@@ -141,10 +148,12 @@ build legacy firmware bitcoinonly:
     - mv firmware/trezor.bin firmware/trezor-bitcoinonly.bin
     - cd ..
     - pipenv run ./tools/check-bitcoin-only legacy/firmware/trezor-bitcoinonly.bin
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - cp legacy/firmware/trezor-bitcoinonly.bin trezor-$VERSION-$CI_COMMIT_SHORT_SHA-bitcoinonly.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - legacy/firmware/trezor-bitcoinonly.bin
+    - trezor-*.*.*-$CI_COMMIT_SHORT_SHA-bitcoinonly.bin
     expire_in: 1 week
 
 build legacy emu:
