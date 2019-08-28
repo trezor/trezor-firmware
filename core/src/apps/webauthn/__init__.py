@@ -355,12 +355,16 @@ class ConfirmState:
             return False
         if utime.ticks_ms() >= self.deadline:
             if self.workflow is not None:
+                # We crossed the deadline, kill the running confirmation
+                # workflow. `self.workflow` is reset in the finally
+                # handler in `confirm_workflow`.
                 loop.close(self.workflow)
             return False
         return True
 
     def setup(self, action: int, checksum: bytes, app_id: bytes) -> bool:
-        if workflow.workflows:
+        if workflow.tasks or self.workflow:
+            # If any other workflow is running, we bail out.
             return False
 
         self.action = action
