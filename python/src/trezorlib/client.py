@@ -287,10 +287,14 @@ class TrezorClient:
     def get_device_id(self):
         return self.features.device_id
 
-    @tools.expect(messages.Success, field="message")
     @tools.session
     def clear_session(self):
-        return self.call_raw(messages.ClearSession())
+        resp = self.call_raw(messages.ClearSession())
+        if isinstance(resp, messages.Success):
+            self.init_device()
+            return resp.message
+        else:
+            return resp
 
 
 def MovedTo(where):
