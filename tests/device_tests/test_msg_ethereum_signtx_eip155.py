@@ -21,8 +21,6 @@ import pytest
 from trezorlib import ethereum
 from trezorlib.tools import H_
 
-from .common import TrezorTest
-
 Vector = namedtuple("Vector", "chain_id nonce sig_v sig_r sig_s value gas_limit data")
 
 
