@@ -67,6 +67,7 @@ def enter_all_shares(debug, shares):
         debug.press_yes()
 
 
+@pytest.mark.setup_client(uninitialized=True)
 def test_recover_no_pin_no_passphrase(client):
     debug = client.debug
 
@@ -89,6 +90,7 @@ def test_recover_no_pin_no_passphrase(client):
     assert client.features.passphrase_protection is False
 
 
+@pytest.mark.setup_client(uninitialized=True)
 def test_abort(client):
     debug = client.debug
 
@@ -108,6 +110,7 @@ def test_abort(client):
         assert client.features.initialized is False
 
 
+@pytest.mark.setup_client(uninitialized=True)
 def test_noabort(client):
     debug = client.debug
 
