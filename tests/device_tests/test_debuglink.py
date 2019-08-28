@@ -27,6 +27,9 @@ class TestDebuglink(TrezorTest):
         layout = client.debug.state().layout
         assert len(layout) == 1024
 
+    # mnemonic_secret is not available when the device is locked, and the client fixture
+    # locks the device after initialization.
+    # It is easier to request an unintialized client and load it manually.
     @pytest.mark.setup_client(uninitialized=True)
     def test_mnemonic(self, client):
         debuglink.load_device_by_mnemonic(
