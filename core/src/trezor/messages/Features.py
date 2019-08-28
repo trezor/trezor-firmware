@@ -6,10 +6,10 @@ if __debug__:
     try:
         from typing import Dict, List, Optional
         from typing_extensions import Literal  # noqa: F401
-        EnumTypeFeature = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        EnumTypeCapability = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
-        EnumTypeFeature = None  # type: ignore
+        EnumTypeCapability = None  # type: ignore
 
 
 class Features(p.MessageType):
@@ -45,7 +45,7 @@ class Features(p.MessageType):
         unfinished_backup: bool = None,
         no_backup: bool = None,
         recovery_mode: bool = None,
-        features: List[EnumTypeFeature] = None,
+        capabilities: List[EnumTypeCapability] = None,
     ) -> None:
         self.vendor = vendor
         self.major_version = major_version
@@ -75,7 +75,7 @@ class Features(p.MessageType):
         self.unfinished_backup = unfinished_backup
         self.no_backup = no_backup
         self.recovery_mode = recovery_mode
-        self.features = features if features is not None else []
+        self.capabilities = capabilities if capabilities is not None else []
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -108,5 +108,5 @@ class Features(p.MessageType):
             27: ('unfinished_backup', p.BoolType, 0),
             28: ('no_backup', p.BoolType, 0),
             29: ('recovery_mode', p.BoolType, 0),
-            30: ('features', p.EnumType("Feature", (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)), p.FLAG_REPEATED),
+            30: ('capabilities', p.EnumType("Capability", (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)), p.FLAG_REPEATED),
         }

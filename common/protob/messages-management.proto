@@ -58,24 +58,24 @@ message Features {
     optional bool unfinished_backup = 27;       // report unfinished backup (equals to Storage.unfinished_backup)
     optional bool no_backup = 28;               // report no backup (equals to Storage.no_backup)
     optional bool recovery_mode = 29;           // is recovery mode in progress
-    repeated Feature features = 30;             // list of supported features
-    enum Feature {
-        Feature_Bitcoin = 1;
-        Feature_Bitcoin_like = 2;               // Altcoins based on the Bitcoin source code
-        Feature_Binance = 3;
-        Feature_Cardano = 4;
-        Feature_Crypto = 5;                     // generic crypto operations for GPG, SSH, etc.
-        Feature_EOS = 6;
-        Feature_Ethereum = 7;
-        Feature_Lisk = 8;
-        Feature_Monero = 9;
-        Feature_NEM = 10;
-        Feature_Ripple = 11;
-        Feature_Stellar = 12;
-        Feature_Tezos = 13;
-        Feature_U2F = 14;
-        Feature_Shamir = 15;
-        Feature_ShamirGroups = 16;
+    repeated Capability capabilities = 30;         // list of supported capabilities
+    enum Capability {
+        Capability_Bitcoin = 1;
+        Capability_Bitcoin_like = 2;               // Altcoins based on the Bitcoin source code
+        Capability_Binance = 3;
+        Capability_Cardano = 4;
+        Capability_Crypto = 5;                     // generic crypto operations for GPG, SSH, etc.
+        Capability_EOS = 6;
+        Capability_Ethereum = 7;
+        Capability_Lisk = 8;
+        Capability_Monero = 9;
+        Capability_NEM = 10;
+        Capability_Ripple = 11;
+        Capability_Stellar = 12;
+        Capability_Tezos = 13;
+        Capability_U2F = 14;
+        Capability_Shamir = 15;
+        Capability_ShamirGroups = 16;
     }
 }
 
