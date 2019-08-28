@@ -184,6 +184,10 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_write(mp_obj_t self, mp_obj_t data) {
   if (res != FR_OK) {
     mp_raise_OSError(fresult_to_errno_table[res]);
   }
+  if (written != buf.len) {
+    /* no space left on device or free clusters recorded in FSInfo fell to 0 */
+    mp_raise_OSError(MP_ENOSPC);
+  }
   return mp_obj_new_int_from_uint(written);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFSFile_write_obj, mod_trezorio_FatFSFile_write);
