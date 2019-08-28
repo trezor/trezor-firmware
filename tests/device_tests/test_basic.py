@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import pytest
 
 from trezorlib import device, messages
 
@@ -22,7 +21,6 @@ from .common import TrezorTest
 
 
 class TestBasic(TrezorTest):
-    @pytest.mark.setup_client(uninitialized=True)
     def test_features(self, client):
         f0 = client.features
         f1 = client.call(messages.Initialize())
