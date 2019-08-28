@@ -19,3 +19,4 @@ if not utils.BITCOIN_ONLY:
     Tezos = 13
     U2F = 14
 Shamir = 15
+ShamirGroups = 16

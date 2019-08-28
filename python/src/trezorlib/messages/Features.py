@@ -6,7 +6,7 @@ if __debug__:
     try:
         from typing import Dict, List, Optional
         from typing_extensions import Literal  # noqa: F401
-        EnumTypeFeature = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        EnumTypeFeature = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
         EnumTypeFeature = None  # type: ignore
@@ -108,5 +108,5 @@ class Features(p.MessageType):
             27: ('unfinished_backup', p.BoolType, 0),
             28: ('no_backup', p.BoolType, 0),
             29: ('recovery_mode', p.BoolType, 0),
-            30: ('features', p.EnumType("Feature", (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)), p.FLAG_REPEATED),
+            30: ('features', p.EnumType("Feature", (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)), p.FLAG_REPEATED),
         }
