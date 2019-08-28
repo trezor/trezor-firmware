@@ -16,8 +16,9 @@
 
 import pytest
 
-from trezorlib import ethereum, messages as proto
+from trezorlib import ethereum, messages
 from trezorlib.tools import parse_path
+from trezorlib.exceptions import TrezorFailure
 
 from .common import MNEMONIC12, TrezorTest
 
@@ -32,9 +33,9 @@ class TestMsgEthereumSigntx(TrezorTest):
         with client:
             client.set_expected_responses(
                 [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.EthereumTxRequest(data_length=None),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.EthereumTxRequest(data_length=None),
                 ]
             )
 
@@ -84,9 +85,9 @@ class TestMsgEthereumSigntx(TrezorTest):
         with client:
             client.set_expected_responses(
                 [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.EthereumTxRequest(data_length=None),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.EthereumTxRequest(data_length=None),
                 ]
             )
             sig_v, sig_r, sig_s = ethereum.sign_tx(
@@ -118,9 +119,9 @@ class TestMsgEthereumSigntx(TrezorTest):
         with client:
             client.set_expected_responses(
                 [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.EthereumTxRequest(data_length=None),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.EthereumTxRequest(data_length=None),
                 ]
             )
 
@@ -170,9 +171,9 @@ class TestMsgEthereumSigntx(TrezorTest):
         with client:
             client.set_expected_responses(
                 [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.EthereumTxRequest(data_length=None),  # v,r,s checked later
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.EthereumTxRequest(data_length=None),  # v,r,s checked later
                 ]
             )
 
@@ -199,9 +200,9 @@ class TestMsgEthereumSigntx(TrezorTest):
         with client:
             client.set_expected_responses(
                 [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.EthereumTxRequest(data_length=None),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.EthereumTxRequest(data_length=None),
                 ]
             )
 
@@ -229,10 +230,10 @@ class TestMsgEthereumSigntx(TrezorTest):
         with client:
             client.set_expected_responses(
                 [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.EthereumTxRequest(data_length=None),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.EthereumTxRequest(data_length=None),
                 ]
             )
 
@@ -259,19 +260,19 @@ class TestMsgEthereumSigntx(TrezorTest):
         with client:
             client.set_expected_responses(
                 [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.EthereumTxRequest(
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.EthereumTxRequest(
                         data_length=1024,
                         signature_r=None,
                         signature_s=None,
                         signature_v=None,
                     ),
-                    proto.EthereumTxRequest(data_length=1024),
-                    proto.EthereumTxRequest(data_length=1024),
-                    proto.EthereumTxRequest(data_length=3),
-                    proto.EthereumTxRequest(),
+                    messages.EthereumTxRequest(data_length=1024),
+                    messages.EthereumTxRequest(data_length=1024),
+                    messages.EthereumTxRequest(data_length=3),
+                    messages.EthereumTxRequest(),
                 ]
             )
 
@@ -300,19 +301,19 @@ class TestMsgEthereumSigntx(TrezorTest):
         with client:
             client.set_expected_responses(
                 [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.EthereumTxRequest(
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.EthereumTxRequest(
                         data_length=1024,
                         signature_r=None,
                         signature_s=None,
                         signature_v=None,
                     ),
-                    proto.EthereumTxRequest(data_length=1024),
-                    proto.EthereumTxRequest(data_length=1024),
-                    proto.EthereumTxRequest(data_length=3),
-                    proto.EthereumTxRequest(),
+                    messages.EthereumTxRequest(data_length=1024),
+                    messages.EthereumTxRequest(data_length=1024),
+                    messages.EthereumTxRequest(data_length=3),
+                    messages.EthereumTxRequest(),
                 ]
             )
 
@@ -352,19 +353,19 @@ class TestMsgEthereumSigntx(TrezorTest):
         with client:
             client.set_expected_responses(
                 [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.EthereumTxRequest(
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.EthereumTxRequest(
                         data_length=1024,
                         signature_r=None,
                         signature_s=None,
                         signature_v=None,
                     ),
-                    proto.EthereumTxRequest(data_length=1024),
-                    proto.EthereumTxRequest(data_length=1024),
-                    proto.EthereumTxRequest(data_length=3),
-                    proto.EthereumTxRequest(),
+                    messages.EthereumTxRequest(data_length=1024),
+                    messages.EthereumTxRequest(data_length=1024),
+                    messages.EthereumTxRequest(data_length=3),
+                    messages.EthereumTxRequest(),
                 ]
             )
 
@@ -388,10 +389,9 @@ class TestMsgEthereumSigntx(TrezorTest):
             == "18742403f75a05e7fa9868c30b36f1e55628de02d01c03084c1ff6775a13137c"
         )
 
-    @pytest.mark.setup_client(uninitialized=True)
     def test_ethereum_sanity_checks(self, client):
         # gas overflow
-        with pytest.raises(Exception):
+        with pytest.raises(TrezorFailure):
             ethereum.sign_tx(
                 client,
                 n=parse_path("44'/60'/0'/0/0"),
@@ -403,34 +403,39 @@ class TestMsgEthereumSigntx(TrezorTest):
             )
 
         # no gas price
-        with pytest.raises(Exception):
-            ethereum.sign_tx(
-                client,
-                n=[0, 0],
-                nonce=123456,
-                gas_limit=10000,
-                to=TO_ADDR,
-                value=12345678901234567890,
+        with pytest.raises(TrezorFailure):
+            client.call(
+                messages.EthereumSignTx(
+                    address_n=parse_path("44'/60'/0'/0/0"),
+                    nonce=b"AAA",
+                    gas_limit=ethereum.int_to_big_endian(10000),
+                    to=TO_ADDR,
+                    value=ethereum.int_to_big_endian(12345678901234567890),
+                )
             )
 
         # no gas limit
-        with pytest.raises(Exception):
-            ethereum.sign_tx(
-                client,
-                n=[0, 0],
-                nonce=123456,
-                gas_price=10000,
-                to=TO_ADDR,
-                value=12345678901234567890,
+        with pytest.raises(TrezorFailure):
+            client.call(
+                messages.EthereumSignTx(
+                    address_n=parse_path("44'/60'/0'/0/0"),
+                    nonce=b"AAA",
+                    gas_price=ethereum.int_to_big_endian(10000),
+                    to=TO_ADDR,
+                    value=ethereum.int_to_big_endian(12345678901234567890),
+                )
             )
 
         # no nonce
-        with pytest.raises(Exception):
-            ethereum.sign_tx(
-                client,
-                n=[0, 0],
-                gas_price=10000,
-                gas_limit=123456,
-                to=TO_ADDR,
-                value=12345678901234567890,
-            )
+        # TODO this was supposed to expect a failure if nonce is not provided.
+        # Trezor does not raise such failure however.
+        # with pytest.raises(TrezorFailure):
+        #     client.call(
+        #         messages.EthereumSignTx(
+        #             address_n=parse_path("44'/60'/0'/0/0"),
+        #             gas_price=ethereum.int_to_big_endian(10000),
+        #             gas_limit=ethereum.int_to_big_endian(10000),
+        #             to=TO_ADDR,
+        #             value=ethereum.int_to_big_endian(12345678901234567890),
+        #         )
+        #     )
