@@ -14,10 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from trezorlib import debuglink, device
-from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
-
-from . import conftest
 
 # fmt: off
 #                1      2     3    4      5      6      7     8      9    10    11    12
@@ -37,48 +33,6 @@ class TrezorTest:
     pin4 = "1234"
     pin6 = "789456"
     pin8 = "45678978"
-
-    def setup_method(self, method):
-        self.client = conftest.get_device()
-        # self.client.set_buttonwait(3)
-
-        device.wipe(self.client)
-        self.client.open()
-
-    def teardown_method(self, method):
-        self.client.close()
-
-    def _setup_mnemonic(self, mnemonic=None, pin="", passphrase=False, lock=True):
-        if mnemonic is None:
-            mnemonic = TrezorTest.mnemonic12
-        debuglink.load_device_by_mnemonic(
-            self.client,
-            mnemonic=mnemonic,
-            pin=pin,
-            passphrase_protection=passphrase,
-            label="test",
-            language="english",
-        )
-        if conftest.TREZOR_VERSION == 1 and lock:
-            # remove cached PIN (introduced via load_device)
-            self.client.clear_session()
-        if conftest.TREZOR_VERSION > 1 and passphrase:
-            device.apply_settings(self.client, passphrase_source=PASSPHRASE_ON_HOST)
-
-    def setup_mnemonic_allallall(self, lock=True):
-        self._setup_mnemonic(mnemonic=TrezorTest.mnemonic_all, lock=lock)
-
-    def setup_mnemonic_nopin_nopassphrase(self, lock=True):
-        self._setup_mnemonic(lock=lock)
-
-    def setup_mnemonic_nopin_passphrase(self, lock=True):
-        self._setup_mnemonic(passphrase=True, lock=lock)
-
-    def setup_mnemonic_pin_nopassphrase(self, lock=True):
-        self._setup_mnemonic(pin=TrezorTest.pin4, lock=lock)
-
-    def setup_mnemonic_pin_passphrase(self, lock=True):
-        self._setup_mnemonic(pin=TrezorTest.pin4, passphrase=True, lock=lock)
 
 
 def generate_entropy(strength, internal_entropy, external_entropy):

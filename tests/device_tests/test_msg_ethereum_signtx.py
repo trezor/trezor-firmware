@@ -17,8 +17,8 @@
 import pytest
 
 from trezorlib import ethereum, messages
-from trezorlib.tools import parse_path
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.tools import parse_path
 
 from .common import MNEMONIC12, TrezorTest
 
