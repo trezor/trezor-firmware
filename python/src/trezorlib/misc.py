@@ -14,21 +14,28 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from . import messages as proto
-from .tools import expect
+from . import messages
+from .tools import expect, Address
+
+if False:
+    from .client import TrezorClient
 
 
-@expect(proto.Entropy, field="entropy")
-def get_entropy(client, size):
-    return client.call(proto.GetEntropy(size=size))
+@expect(messages.Entropy, field="entropy")
+def get_entropy(client: "TrezorClient", size: int) -> messages.Entropy:
+    return client.call(messages.GetEntropy(size=size))
 
 
-@expect(proto.SignedIdentity)
+@expect(messages.SignedIdentity)
 def sign_identity(
-    client, identity, challenge_hidden, challenge_visual, ecdsa_curve_name=None
-):
+    client: "TrezorClient",
+    identity: messages.IdentityType,
+    challenge_hidden: bytes,
+    challenge_visual: str,
+    ecdsa_curve_name: str = None,
+) -> messages.SignedIdentity:
     return client.call(
-        proto.SignIdentity(
+        messages.SignIdentity(
             identity=identity,
             challenge_hidden=challenge_hidden,
             challenge_visual=challenge_visual,
@@ -37,10 +44,15 @@ def sign_identity(
     )
 
 
-@expect(proto.ECDHSessionKey)
-def get_ecdh_session_key(client, identity, peer_public_key, ecdsa_curve_name=None):
+@expect(messages.ECDHSessionKey)
+def get_ecdh_session_key(
+    client: "TrezorClient",
+    identity: messages.IdentityType,
+    peer_public_key: bytes,
+    ecdsa_curve_name: str = None,
+) -> messages.ECDHSessionKey:
     return client.call(
-        proto.GetECDHSessionKey(
+        messages.GetECDHSessionKey(
             identity=identity,
             peer_public_key=peer_public_key,
             ecdsa_curve_name=ecdsa_curve_name,
@@ -48,12 +60,18 @@ def get_ecdh_session_key(client, identity, peer_public_key, ecdsa_curve_name=Non
     )
 
 
-@expect(proto.CipheredKeyValue, field="value")
+@expect(messages.CipheredKeyValue, field="value")
 def encrypt_keyvalue(
-    client, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True, iv=b""
-):
+    client: "TrezorClient",
+    n: Address,
+    key: str,
+    value: bytes,
+    ask_on_encrypt: bool = True,
+    ask_on_decrypt: bool = True,
+    iv: bytes = b"",
+) -> messages.CipheredKeyValue:
     return client.call(
-        proto.CipherKeyValue(
+        messages.CipherKeyValue(
             address_n=n,
             key=key,
             value=value,
@@ -65,12 +83,18 @@ def encrypt_keyvalue(
     )
 
 
-@expect(proto.CipheredKeyValue, field="value")
+@expect(messages.CipheredKeyValue, field="value")
 def decrypt_keyvalue(
-    client, n, key, value, ask_on_encrypt=True, ask_on_decrypt=True, iv=b""
-):
+    client: "TrezorClient",
+    n: Address,
+    key: str,
+    value: bytes,
+    ask_on_encrypt: bool = True,
+    ask_on_decrypt: bool = True,
+    iv: bytes = b"",
+) -> messages.CipheredKeyValue:
     return client.call(
-        proto.CipherKeyValue(
+        messages.CipherKeyValue(
             address_n=n,
             key=key,
             value=value,

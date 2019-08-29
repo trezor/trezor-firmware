@@ -411,11 +411,9 @@ def dump_message(writer: Writer, msg: MessageType) -> None:
                 writer.write(svalue)
 
             elif ftype is UnicodeType:
-                if not isinstance(svalue, bytes):
-                    svalue = svalue.encode()
-
-                dump_uvarint(writer, len(svalue))
-                writer.write(svalue)
+                svalue_bytes = svalue.encode()
+                dump_uvarint(writer, len(svalue_bytes))
+                writer.write(svalue_bytes)
 
             elif issubclass(ftype, MessageType):
                 counter = CountingWriter()
