@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from . import messages
-from .tools import expect, Address
+from .tools import Address, expect
 
 if False:
     from .client import TrezorClient
