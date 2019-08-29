@@ -18,7 +18,8 @@ sudo apt-get install scons gcc-arm-none-eabi libnewlib-arm-none-eabi
 1. Download [gcc-arm-none-eabi](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads)
 2. Follow the [install instructions](https://launchpadlibrarian.net/287100883/readme.txt)
 3. To install OpenOCD, run `brew install open-ocd`
-4. Run `pipenv run make vendor build_boardloader build_bootloader build_firmware`
+4. Make sure that `sdl2` and `pkg-config` are installed: `brew install sdl2{,_image,_mixer,_ttf,_gfx} pkg-config`
+5. Run `pipenv run make vendor build_boardloader build_bootloader build_firmware`
 
 ## Building
 
