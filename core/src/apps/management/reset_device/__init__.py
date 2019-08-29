@@ -11,7 +11,7 @@ from trezor.ui.text import Text
 from apps.common import storage
 from apps.common.confirm import require_confirm
 from apps.management.change_pin import request_pin_confirm
-from apps.management.common import layout
+from apps.management.reset_device import layout
 
 if __debug__:
     from apps import debug
@@ -55,17 +55,17 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     # should we back up the wallet now?
     if not msg.no_backup and not msg.skip_backup:
         if not await layout.confirm_backup(ctx):
-            if not await layout.confirm_backup_again(ctx):
+            if not await layout.confirm_backup(ctx, repeated=True):
                 msg.skip_backup = True
 
     # generate and display backup information for the master secret
     if not msg.no_backup and not msg.skip_backup:
         if msg.backup_type == BackupType.Slip39_Basic:
-            await backup_slip39_wallet(ctx, secret)
+            await backup_slip39_basic(ctx, secret)
         elif msg.backup_type == BackupType.Slip39_Advanced:
-            await backup_group_slip39_wallet(ctx, secret)
+            await backup_slip39_advanced(ctx, secret)
         else:
-            await backup_bip39_wallet(ctx, secret)
+            await backup_bip39(ctx, secret)
 
     # write PIN into storage
     if not config.change_pin(pin_to_int(""), pin_to_int(newpin)):
@@ -103,15 +103,15 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     return Success(message="Initialized")
 
 
-async def backup_slip39_wallet(
+async def backup_slip39_basic(
     ctx: wire.Context, encrypted_master_secret: bytes
 ) -> None:
     # get number of shares
-    await layout.slip39_show_checklist_set_shares(ctx)
+    await layout.slip39_show_checklist(ctx, 0, BackupType.Slip39_Basic)
     shares_count = await layout.slip39_prompt_number_of_shares(ctx)
 
     # get threshold
-    await layout.slip39_show_checklist_set_threshold(ctx, shares_count)
+    await layout.slip39_show_checklist(ctx, 1, BackupType.Slip39_Advanced)
     threshold = await layout.slip39_prompt_threshold(ctx, shares_count)
 
     # generate the mnemonics
@@ -124,25 +124,25 @@ async def backup_slip39_wallet(
     )[0]
 
     # show and confirm individual shares
-    await layout.slip39_show_checklist_show_shares(ctx, shares_count, threshold)
-    await layout.slip39_show_and_confirm_shares(ctx, mnemonics)
+    await layout.slip39_show_checklist(ctx, 2, BackupType.Slip39_Basic)
+    await layout.slip39_basic_show_and_confirm_shares(ctx, mnemonics)
 
 
-async def backup_group_slip39_wallet(
+async def backup_slip39_advanced(
     ctx: wire.Context, encrypted_master_secret: bytes
 ) -> None:
     # get number of groups
-    await layout.slip39_group_show_checklist_set_groups(ctx)
-    groups_count = await layout.slip39_prompt_number_of_groups(ctx)
+    await layout.slip39_show_checklist(ctx, 0, BackupType.Slip39_Advanced)
+    groups_count = await layout.slip39_advanced_prompt_number_of_groups(ctx)
 
     # get group threshold
-    await layout.slip39_group_show_checklist_set_group_threshold(ctx, groups_count)
-    group_threshold = await layout.slip39_prompt_group_threshold(ctx, groups_count)
+    await layout.slip39_show_checklist(ctx, 1, BackupType.Slip39_Advanced)
+    group_threshold = await layout.slip39_advanced_prompt_group_threshold(
+        ctx, groups_count
+    )
 
     # get shares and thresholds
-    await layout.slip39_group_show_checklist_set_shares(
-        ctx, groups_count, group_threshold
-    )
+    await layout.slip39_show_checklist(ctx, 2, BackupType.Slip39_Advanced)
     groups = []
     for i in range(groups_count):
         share_count = await layout.slip39_prompt_number_of_shares(ctx, i)
@@ -159,10 +159,10 @@ async def backup_group_slip39_wallet(
     )
 
     # show and confirm individual shares
-    await layout.slip39_group_show_and_confirm_shares(ctx, mnemonics)
+    await layout.slip39_advanced_show_and_confirm_shares(ctx, mnemonics)
 
 
-async def backup_bip39_wallet(ctx: wire.Context, secret: bytes) -> None:
+async def backup_bip39(ctx: wire.Context, secret: bytes) -> None:
     mnemonic = bip39.from_data(secret)
     await layout.bip39_show_and_confirm_mnemonic(ctx, mnemonic)
 

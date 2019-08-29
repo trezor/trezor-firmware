@@ -53,10 +53,10 @@ class TestMsgResetDeviceT2(TrezorTest):
             # mnemonic phrases
             btn_code = yield
             assert btn_code == B.ResetDevice
-            # 12 words, 3 pages
-            for i in range(3):
+            # 12 words, 4 pages
+            for i in range(4):
                 words.extend(client.debug.read_reset_word().split())
-                if i < 2:
+                if i < 3:
                     client.debug.swipe_down()
                 else:
                     # last page is confirmation
@@ -158,10 +158,10 @@ class TestMsgResetDeviceT2(TrezorTest):
             # mnemonic phrases
             btn_code = yield
             assert btn_code == B.ResetDevice
-            # 12 words, 3 pages
-            for i in range(3):
+            # 12 words, 4 pages
+            for i in range(4):
                 words.extend(client.debug.read_reset_word().split())
-                if i < 2:
+                if i < 3:
                     client.debug.swipe_down()
                 else:
                     # last page is confirmation
