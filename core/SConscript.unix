@@ -349,7 +349,10 @@ env.Replace(
     ] + CPPDEFINES_MOD,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
-env.ParseConfig('pkg-config --cflags --libs sdl2 SDL2_image')
+try:
+    env.ParseConfig('pkg-config --cflags --libs sdl2 SDL2_image')
+except OSError:
+    print("SDL2 not installed, Emulator build is not possible")
 
 env.Replace(
     PYTHON='python',
