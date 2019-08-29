@@ -9,9 +9,9 @@ PY_FILES = $(shell find . -type f -name '*.py'   | grep -f ./tools/style.py.incl
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
 
 
-style_check: pystyle_check cstyle_check
+style_check: pystyle_check cstyle_check ## run all style checks (C+Py)
 
-style: pystyle cstyle
+style: pystyle cstyle ## apply all code styles (C+Py)
 
 pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
