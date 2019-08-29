@@ -48,6 +48,11 @@ class ScreenshotCollector:
             f.unlink()
 
     def get_test_dirname(self):
+        # This composes the dirname from the test module name and test item name.
+        # Test item name is usually function name, but when parametrization is used,
+        # parameters are also part of the name. Some functions have very long parameter
+        # names (tx hashes etc) that run out of maximum allowable filename length, so
+        # we limit the name to first 100 chars. This is not a problem with txhashes.
         node_name = re.sub(r"\W+", "_", self.node.name)[:100]
         node_module_name = self.node.getparent(pytest.Module).name
         return "{}_{}".format(node_module_name, node_name)
