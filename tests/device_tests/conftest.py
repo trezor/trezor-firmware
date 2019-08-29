@@ -14,7 +14,11 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import filecmp
+import itertools
 import os
+import re
+from pathlib import Path
 
 import pytest
 
@@ -25,6 +29,84 @@ from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 from trezorlib.transport import enumerate_devices, get_transport
 
 TREZOR_VERSION = None
+
+SAVE_SCREEN = int(os.environ.get("TREZOR_SAVE_SCREEN", 0))
+SAVE_SCREEN_FIXTURES = int(os.environ.get("TREZOR_SAVE_SCREEN_FIXTURES", 0))
+
+
+class ScreenshotCollector:
+    SCREENSHOT_PATH = (Path(__file__) / "../../../core/src").resolve()
+    SCREENSHOT_FIXTURE_PATH = (Path(__file__) / "../../ui_tests").resolve()
+
+    def __init__(self, node):
+        self.node = node
+
+    @staticmethod
+    def _remove_files(files):
+        for f in files:
+            print("Removing", f)
+            f.unlink()
+
+    def get_test_dirname(self):
+        node_name = re.sub(r"\W+", "_", self.node.name)[:100]
+        node_module_name = self.node.getparent(pytest.Module).name
+        return "{}_{}".format(node_module_name, node_name)
+
+    def collect_screenshots(self):
+        return list(sorted(self.SCREENSHOT_PATH.glob("*.png")))
+
+    def collect_fixtures(self):
+        return list(
+            sorted(
+                self.SCREENSHOT_FIXTURE_PATH.glob(
+                    "{}/*.png".format(self.get_test_dirname())
+                )
+            )
+        )
+
+    def assert_images(self):
+        fixtures = self.collect_fixtures()
+        if not fixtures:
+            return
+        images = self.collect_screenshots()
+
+        for fixture, image in itertools.zip_longest(fixtures, images):
+            if fixture is None:
+                pytest.fail("Missing fixture for image {}".format(image))
+            if image is None:
+                pytest.fail("Missing image for fixture {}".format(fixture))
+            if not filecmp.cmp(fixture, image):
+                pytest.fail("Image {} and fixture {} differ".format(image, fixture))
+
+    def record_fixtures(self):
+        fixture_dir = self.SCREENSHOT_FIXTURE_PATH / self.get_test_dirname()
+
+        if fixture_dir.is_dir():
+            # remove old fixtures
+            self._remove_files(self.collect_fixtures())
+        else:
+            # create the fixture dir, if not present
+            print("Creating", fixture_dir)
+            fixture_dir.mkdir()
+
+        # move the recorded images into the fixture locations
+        for index, image in enumerate(self.collect_screenshots()):
+            fixture = fixture_dir / "{}.png".format(index)
+            print("Saving", image, "into", fixture)
+            image.replace(fixture)
+
+    def __enter__(self):
+        if SAVE_SCREEN:
+            self._remove_files(self.collect_screenshots())
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        if exc_value is None and SAVE_SCREEN:
+            if SAVE_SCREEN_FIXTURES:
+                self.record_fixtures()
+            else:
+                self.assert_images()
+
+        # self._remove_files(self.collect_screenshots())
 
 
 def get_device():
@@ -92,7 +174,9 @@ def client(request):
         if setup_params["passphrase"] and client.features.model != "1":
             apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
 
-    yield client
+    with ScreenshotCollector(request.node):
+        yield client
+
     client.close()
 
 
