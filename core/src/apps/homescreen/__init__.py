@@ -37,12 +37,7 @@ def get_features() -> Features:
     f.flags = storage.device.get_flags()
     f.recovery_mode = storage.recovery.is_in_progress()
     if utils.BITCOIN_ONLY:
-        f.capabilities = [
-            Capability.Bitcoin,
-            Capability.Crypto,
-            Capability.Shamir,
-            Capability.ShamirGroups,
-        ]
+        f.capabilities = [Capability.Bitcoin, Capability.Crypto, Capability.Shamir]
     else:
         f.capabilities = [
             Capability.Bitcoin,
@@ -60,7 +55,6 @@ def get_features() -> Features:
             Capability.Tezos,
             Capability.U2F,
             Capability.Shamir,
-            Capability.ShamirGroups,
         ]
     return f
 
