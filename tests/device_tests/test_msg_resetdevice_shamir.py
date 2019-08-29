@@ -67,7 +67,7 @@ class TestMsgResetDeviceT2(TrezorTest):
             for h in range(5):
                 words = []
                 btn_code = yield
-                assert btn_code == B.Other
+                assert btn_code == B.ResetDevice
 
                 # mnemonic phrases
                 # 20 word over 6 pages for strength 128, 33 words over 9 pages for strength 256
@@ -109,15 +109,15 @@ class TestMsgResetDeviceT2(TrezorTest):
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Other),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.Other),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.Other),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.Other),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.Other),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Success),
                     proto.ButtonRequest(code=B.Success),
                     proto.Success(),

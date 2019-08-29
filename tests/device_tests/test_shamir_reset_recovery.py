@@ -70,7 +70,7 @@ def reset(client, strength=128):
         for h in range(5):
             words = []
             btn_code = yield
-            assert btn_code == B.Other
+            assert btn_code == B.ResetDevice
 
             # mnemonic phrases
             # 20 word over 6 pages for strength 128, 33 words over 9 pages for strength 256
@@ -111,15 +111,15 @@ def reset(client, strength=128):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Other),
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.Other),
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.Other),
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.Other),
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.Other),
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success(),
