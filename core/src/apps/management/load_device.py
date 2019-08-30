@@ -1,11 +1,13 @@
 from trezor import config, wire
 from trezor.crypto import bip39, slip39
+from trezor.messages import BackupType
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
 from trezor.ui.text import Text
 
-from apps.common import mnemonic, storage
+from apps.common import storage
 from apps.common.confirm import require_confirm
+from apps.management.recovery_device import backup_types
 
 
 async def load_device(ctx, msg):
@@ -25,10 +27,10 @@ async def load_device(ctx, msg):
                 "All shares are required to have the same number of words"
             )
 
-    mnemonic_type = mnemonic.type_from_word_count(word_count)
+    possible_backup_types = backup_types.get(word_count)
 
     if (
-        mnemonic_type == mnemonic.TYPE_BIP39
+        BackupType.Bip39 in possible_backup_types
         and not msg.skip_checksum
         and not bip39.check(msg.mnemonics[0])
     ):
@@ -39,17 +41,21 @@ async def load_device(ctx, msg):
     text.normal("Continue only if you", "know what you are doing!")
     await require_confirm(ctx, text)
 
-    if mnemonic_type == mnemonic.TYPE_BIP39:
+    if BackupType.Bip39 in possible_backup_types:
         secret = msg.mnemonics[0].encode()
-    elif mnemonic_type == mnemonic.TYPE_SLIP39:
+    elif backup_types.is_slip39(possible_backup_types):
         identifier, iteration_exponent, secret = slip39.combine_mnemonics(msg.mnemonics)
+        possible_backup_types = [BackupType.Slip39_Basic]  # TODO!!!
         storage.device.set_slip39_identifier(identifier)
         storage.device.set_slip39_iteration_exponent(iteration_exponent)
     else:
         raise RuntimeError("Unknown mnemonic type")
 
+    if len(possible_backup_types) != 1:
+        # Only one possible backup type should be left before storing into the storage.
+        raise RuntimeError
     storage.device.store_mnemonic_secret(
-        secret, mnemonic_type, needs_backup=True, no_backup=False
+        secret, possible_backup_types[0], needs_backup=True, no_backup=False
     )
     storage.device.load_settings(
         use_passphrase=msg.passphrase_protection, label=msg.label

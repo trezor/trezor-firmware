@@ -250,6 +250,7 @@ from .VerifyMessage import VerifyMessage
 from .WipeDevice import WipeDevice
 from .WordAck import WordAck
 from .WordRequest import WordRequest
+from . import BackupType
 from . import BinanceOrderSide
 from . import BinanceOrderType
 from . import BinanceTimeInForce
@@ -268,7 +269,6 @@ from . import PassphraseSourceType
 from . import PinMatrixRequestType
 from . import RecoveryDeviceType
 from . import RequestType
-from . import ResetDeviceBackupType
 from . import TezosBallotType
 from . import TezosContractType
 from . import WordRequestType

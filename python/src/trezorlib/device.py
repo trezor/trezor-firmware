@@ -167,7 +167,7 @@ def reset(
     u2f_counter=0,
     skip_backup=False,
     no_backup=False,
-    backup_type=proto.ResetDeviceBackupType.Bip39,
+    backup_type=proto.BackupType.Bip39,
 ):
     if client.features.initialized:
         raise RuntimeError(
