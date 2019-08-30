@@ -16,7 +16,7 @@
 	"xpub_magic": 70616782,
 	"xpub_magic_segwit_p2sh": null,
 	"xpub_magic_segwit_native": null,
-	"bech32_prefix": "un",
+	"bech32_prefix": null,
 	"cashaddr_prefix": null,
 	"slip44": 92,
 	"segwit": false,
@@ -36,7 +36,7 @@
 	"max_address_length": 34,
 	"bitcore": [],
 	"blockbook": [
-		"https://blockbook.flurbo.xyz/",
+		"https://blockbook.flurbo.xyz",
 		"https://blockbook.unobtanium.uno"
 	],
 	"bip115": false,
