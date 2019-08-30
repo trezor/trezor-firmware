@@ -1,24 +1,11 @@
-from micropython import const
-
 from trezor import ui, workflow
 from trezor.crypto import bip39, slip39
+from trezor.messages import BackupType
 
 from apps.common import storage
 
 if False:
     from typing import Optional, Tuple
-
-TYPE_BIP39 = const(0)
-TYPE_SLIP39 = const(1)
-TYPE_SLIP39_GROUP = const(2)
-
-TYPES_WORD_COUNT = {
-    12: TYPE_BIP39,
-    18: TYPE_BIP39,
-    24: TYPE_BIP39,
-    20: TYPE_SLIP39,
-    33: TYPE_SLIP39,
-}
 
 
 def get() -> Tuple[Optional[bytes], int]:
@@ -30,14 +17,19 @@ def get_secret() -> Optional[bytes]:
 
 
 def get_type() -> int:
-    mnemonic_type = storage.device.get_mnemonic_type() or TYPE_BIP39
-    if mnemonic_type not in (TYPE_BIP39, TYPE_SLIP39, TYPE_SLIP39_GROUP):
-        raise RuntimeError("Invalid mnemonic type")
-    return mnemonic_type
+    return storage.device.get_backup_type()
+
+
+def is_bip39() -> bool:
+    """
+    If False then SLIP-39 (either Basic or Advanced).
+    Other invalid values are checked directly in storage.
+    """
+    return get_type() == BackupType.Bip39
 
 
 def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
-    mnemonic_secret, mnemonic_type = get()
+    mnemonic_secret = get_secret()
     if mnemonic_secret is None:
         raise ValueError("Mnemonic not set")
 
@@ -46,10 +38,10 @@ def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
         _start_progress()
         render_func = _render_progress
 
-    if mnemonic_type == TYPE_BIP39:
+    if is_bip39():
         seed = bip39.seed(mnemonic_secret.decode(), passphrase, render_func)
 
-    elif mnemonic_type == TYPE_SLIP39 or mnemonic_type == TYPE_SLIP39_GROUP:
+    else:  # SLIP-39
         identifier = storage.device.get_slip39_identifier()
         iteration_exponent = storage.device.get_slip39_iteration_exponent()
         if identifier is None or iteration_exponent is None:
@@ -59,15 +51,7 @@ def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
             identifier, iteration_exponent, mnemonic_secret, passphrase.encode()
         )
 
-    if progress_bar:
-        _stop_progress()
     return seed
-
-
-def type_from_word_count(count: int) -> int:
-    if count not in TYPES_WORD_COUNT:
-        raise RuntimeError("Recovery: Unknown words count")
-    return TYPES_WORD_COUNT[count]
 
 
 def _start_progress() -> None:
@@ -86,7 +70,3 @@ def _render_progress(progress: int, total: int) -> None:
     p = 1000 * progress // total
     ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
     ui.display.refresh()
-
-
-def _stop_progress() -> None:
-    pass
