@@ -88,5 +88,8 @@
     },
     "bitcoin:XRC": {
         "Electrum-XRC": "https://electrum.bitcoinrh.org"
+    },
+    "bitcoin:UNO": {
+        "Electrum-UNO": "https://github.com/flurbos/electrum"
     }
 }
