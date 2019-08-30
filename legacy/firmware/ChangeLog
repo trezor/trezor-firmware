@@ -18,6 +18,7 @@ Version 1.8.0 [Feb 2019]
 * Stellar and NEM fixes
 * New coins: ATS, KMD, XPM, XSN, ZCL
 * New ETH tokens
+* Included bootloader 1.8.0
 
 Version 1.7.3 [Dec 2018]
 * Fix USB issue on some Windows 10 installations
@@ -26,6 +27,7 @@ Version 1.7.2 [Dec 2018]
 * Add support for OMNI layer: OMNI/MAID/USDT
 * U2F fixes
 * Don't ask for PIN if it has been just set
+* Included bootloader 1.6.1
 
 Version 1.7.1 [Oct 2018]
 * Add support for Lisk

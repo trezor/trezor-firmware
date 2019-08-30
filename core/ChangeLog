@@ -34,6 +34,7 @@ Version 2.1.0 [Mar 2019]
 * New coins: ATS, AXE, FLO, GIN, KMD, NIX,
   PIVX, REOSC, XPM, XSN, ZCL
 * New ETH tokens
+* Included bootloader 2.0.3
 
 Version 2.0.10 [Dec 2018]
 * Fix Monero payment ID computation
@@ -41,6 +42,7 @@ Version 2.0.10 [Dec 2018]
 * Add support for OMNI layer: OMNI/MAID/USDT
 * Add support for new coins: BTX, CPC, GAME, RVN
 * Add support for new Ethereum tokens
+* Included bootloader 2.0.2
 
 Version 2.0.9 [Nov 2018]
 * Small Monero and Segwit bugfixes
