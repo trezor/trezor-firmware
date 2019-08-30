@@ -313,6 +313,8 @@ void ge25519_double_scalarmult_vartime(ge25519 *r, const ge25519 *p1, const bign
 		ge25519_p1p1_to_partial(r, &t);
 	}
 	curve25519_mul(r->t, t.x, t.y);
+	memzero(slide1, sizeof(slide1));
+	memzero(slide2, sizeof(slide2));
 }
 
 /* computes [s1]p1 + [s2]p2 */
@@ -361,6 +363,8 @@ void ge25519_double_scalarmult_vartime2(ge25519 *r, const ge25519 *p1, const big
 		ge25519_p1p1_to_partial(r, &t);
 	}
 	curve25519_mul(r->t, t.x, t.y);
+	memzero(slide1, sizeof(slide1));
+	memzero(slide2, sizeof(slide2));
 }
 #endif
 
@@ -376,7 +380,7 @@ void ge25519_double_scalarmult_vartime2(ge25519 *r, const ge25519 *p1, const big
 static void ge25519_cmove_stride4(long * r, long * p, long * pos, long * n, int stride) {
   long x0=r[0], x1=r[1], x2=r[2], x3=r[3], y0, y1, y2, y3;
   for(; p<n; p+=stride) {
-    int flag=(p==pos);
+    volatile int flag=(p==pos);
     y0 = p[0];
     y1 = p[1];
     y2 = p[2];
@@ -396,7 +400,7 @@ static void ge25519_cmove_stride4(long * r, long * p, long * pos, long * n, int 
 static void ge25519_cmove_stride4b(long * r, long * p, long * pos, long * n, int stride) {
   long x0=p[0], x1=p[1], x2=p[2], x3=p[3], y0, y1, y2, y3;
   for(p+=stride; p<n; p+=stride) {
-    int flag=(p==pos);
+    volatile int flag=(p==pos);
     y0 = p[0];
     y1 = p[1];
     y2 = p[2];
@@ -476,6 +480,7 @@ void ge25519_scalarmult(ge25519 *r, const ge25519 *p1, const bignum256modm s1) {
 		ge25519_p1p1_to_partial(r, &t);
 	}
 	curve25519_mul(r->t, t.x, t.y);
+	memzero(slide1, sizeof(slide1));
 }
 
 void ge25519_scalarmult_base_choose_niels(ge25519_niels *t, const uint8_t table[256][96], uint32_t pos, signed char b) {
