@@ -54,7 +54,7 @@ def test_2of3_dryrun(client):
             label="label",
             language="english",
             dry_run=True,
-            type=messages.ResetDeviceBackupType.Slip39_Single_Group,
+            type=messages.BackupType.Slip39_Basic,
         )
 
     # Dry run was successful
@@ -85,5 +85,5 @@ def test_2of3_invalid_seed_dryrun(client):
             label="label",
             language="english",
             dry_run=True,
-            type=messages.ResetDeviceBackupType.Slip39_Single_Group,
+            type=messages.BackupType.Slip39_Basic,
         )

@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, device, messages
-from trezorlib.messages import ButtonRequestType as B, ResetDeviceBackupType
+from trezorlib.messages import BackupType, ButtonRequestType as B
 from trezorlib.tools import parse_path
 
 from .common import click_through, read_and_confirm_mnemonic, recovery_enter_shares
@@ -173,7 +173,7 @@ def reset(client, strength=128):
             pin_protection=False,
             label="test",
             language="english",
-            backup_type=ResetDeviceBackupType.Slip39_Multiple_Groups,
+            backup_type=BackupType.Slip39_Advanced,
         )
     client.set_input_flow(None)
 

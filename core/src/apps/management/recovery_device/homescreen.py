@@ -6,13 +6,14 @@ from trezor.errors import (
     MnemonicError,
     ShareAlreadyAddedError,
 )
+from trezor.messages import BackupType
 from trezor.messages.Success import Success
 
 from . import recover
 
 from apps.common import mnemonic, storage
 from apps.common.layout import show_success
-from apps.management.recovery_device import layout
+from apps.management.recovery_device import backup_types, layout
 
 if False:
     from typing import List
@@ -54,27 +55,29 @@ async def _continue_recovery_process(ctx: wire.Context) -> Success:
     if not word_count:  # the first run, prompt word count from the user
         word_count = await _request_and_store_word_count(ctx, dry_run)
 
-    mnemonic_type = mnemonic.type_from_word_count(word_count)
+    possible_backup_types = backup_types.get(word_count)
 
-    secret = await _request_secret(ctx, word_count, mnemonic_type)
+    secret = await _request_secret(ctx, word_count, possible_backup_types)
 
     if dry_run:
-        result = await _finish_recovery_dry_run(ctx, secret, mnemonic_type)
+        result = await _finish_recovery_dry_run(ctx, secret, possible_backup_types)
     else:
-        result = await _finish_recovery(ctx, secret, mnemonic_type)
+        result = await _finish_recovery(ctx, secret, possible_backup_types)
     return result
 
 
 async def _finish_recovery_dry_run(
-    ctx: wire.Context, secret: bytes, mnemonic_type: int
+    ctx: wire.Context, secret: bytes, possible_backup_types: list
 ) -> Success:
     digest_input = sha256(secret).digest()
     stored = mnemonic.get_secret()
     digest_stored = sha256(stored).digest()
     result = utils.consteq(digest_stored, digest_input)
 
+    is_slip39 = backup_types.is_slip39(possible_backup_types)
+
     # Check that the identifier and iteration exponent match as well
-    if mnemonic_type == mnemonic.TYPE_SLIP39:
+    if is_slip39:
         result &= (
             storage.device.get_slip39_identifier()
             == storage.recovery.get_slip39_identifier()
@@ -84,7 +87,7 @@ async def _finish_recovery_dry_run(
             == storage.recovery.get_slip39_iteration_exponent()
         )
 
-    await layout.show_dry_run_result(ctx, result, mnemonic_type)
+    await layout.show_dry_run_result(ctx, result, is_slip39)
 
     storage.recovery.end_progress()
 
@@ -95,18 +98,15 @@ async def _finish_recovery_dry_run(
 
 
 async def _finish_recovery(
-    ctx: wire.Context, secret: bytes, mnemonic_type: int
+    ctx: wire.Context, secret: bytes, possible_backup_types: list
 ) -> Success:
-    group_count = storage.recovery.get_slip39_group_count()
-    if group_count and group_count > 1:
-        mnemonic_type = mnemonic.TYPE_SLIP39_GROUP
+    if len(possible_backup_types) != 1:
+        # Only one possible backup type should be left before storing into the storage.
+        raise RuntimeError
     storage.device.store_mnemonic_secret(
-        secret, mnemonic_type, needs_backup=False, no_backup=False
+        secret, possible_backup_types[0], needs_backup=False, no_backup=False
     )
-    if (
-        mnemonic_type == mnemonic.TYPE_SLIP39
-        or mnemonic_type == mnemonic.TYPE_SLIP39_GROUP
-    ):
+    if backup_types.is_slip39(possible_backup_types):
         identifier = storage.recovery.get_slip39_identifier()
         exponent = storage.recovery.get_slip39_iteration_exponent()
         if identifier is None or exponent is None:
@@ -135,22 +135,25 @@ async def _request_and_store_word_count(ctx: wire.Context, dry_run: bool) -> int
 
 
 async def _request_secret(
-    ctx: wire.Context, word_count: int, mnemonic_type: int
+    ctx: wire.Context, word_count: int, possible_backup_types: list
 ) -> bytes:
-    await _request_share_first_screen(ctx, word_count, mnemonic_type)
+    is_slip39 = backup_types.is_slip39(possible_backup_types)
+    await _request_share_first_screen(ctx, word_count, is_slip39)
 
     mnemonics = None
-    advanced_shamir = False
     secret = None
     while secret is None:
         group_count = storage.recovery.get_slip39_group_count()
         if group_count:
             mnemonics = storage.recovery_shares.fetch()
-            advanced_shamir = group_count > 1
-            group_threshold = storage.recovery.get_slip39_group_threshold()
-            shares_remaining = storage.recovery.fetch_slip39_remaining_shares()
-
-            if advanced_shamir:
+            if group_count == 1:
+                if BackupType.Slip39_Advanced in possible_backup_types:
+                    possible_backup_types.remove(BackupType.Slip39_Advanced)
+            else:  # group_count > 1
+                if BackupType.Slip39_Basic in possible_backup_types:
+                    possible_backup_types.remove(BackupType.Slip39_Basic)
+                group_threshold = storage.recovery.get_slip39_group_threshold()
+                shares_remaining = storage.recovery.fetch_slip39_remaining_shares()
                 await _show_remaining_groups_and_shares(
                     ctx, group_threshold, shares_remaining
                 )
@@ -158,7 +161,7 @@ async def _request_secret(
         try:
             # ask for mnemonic words one by one
             words = await layout.request_mnemonic(
-                ctx, word_count, mnemonic_type, mnemonics, advanced_shamir
+                ctx, word_count, mnemonics, possible_backup_types
             )
         except IdentifierMismatchError:
             await layout.show_identifier_mismatch(ctx)
@@ -168,7 +171,7 @@ async def _request_secret(
             continue
         # process this seed share
         try:
-            if mnemonic_type == mnemonic.TYPE_BIP39:
+            if not is_slip39:
                 secret = recover.process_bip39(words)
             else:
                 try:
@@ -177,40 +180,38 @@ async def _request_secret(
                     await layout.show_group_threshold_reached(ctx)
                     continue
         except MnemonicError:
-            await layout.show_invalid_mnemonic(ctx, mnemonic_type)
+            await layout.show_invalid_mnemonic(ctx, is_slip39)
             continue
         if secret is None:
             group_count = storage.recovery.get_slip39_group_count()
             if group_count and group_count > 1:
                 await layout.show_group_share_success(ctx, share_index, group_index)
-            await _request_share_next_screen(ctx, mnemonic_type)
+            await _request_share_next_screen(ctx, is_slip39)
 
     return secret
 
 
 async def _request_share_first_screen(
-    ctx: wire.Context, word_count: int, mnemonic_type: int
+    ctx: wire.Context, word_count: int, is_slip39: bool
 ) -> None:
-    if mnemonic_type == mnemonic.TYPE_BIP39:
-        content = layout.RecoveryHomescreen(
-            "Enter recovery seed", "(%d words)" % word_count
-        )
-        await layout.homescreen_dialog(ctx, content, "Enter seed")
-    elif mnemonic_type == mnemonic.TYPE_SLIP39:
+    if is_slip39:
         remaining = storage.recovery.fetch_slip39_remaining_shares()
         if remaining:
-            await _request_share_next_screen(ctx, mnemonic_type)
+            await _request_share_next_screen(ctx, is_slip39)
         else:
             content = layout.RecoveryHomescreen(
                 "Enter any share", "(%d words)" % word_count
             )
             await layout.homescreen_dialog(ctx, content, "Enter share")
-    else:
-        raise RuntimeError
+    else:  # BIP-39
+        content = layout.RecoveryHomescreen(
+            "Enter recovery seed", "(%d words)" % word_count
+        )
+        await layout.homescreen_dialog(ctx, content, "Enter seed")
 
 
-async def _request_share_next_screen(ctx: wire.Context, mnemonic_type: int) -> None:
-    if mnemonic_type == mnemonic.TYPE_SLIP39:
+async def _request_share_next_screen(ctx: wire.Context, is_slip39: bool) -> None:
+    if is_slip39:
         remaining = storage.recovery.fetch_slip39_remaining_shares()
         group_count = storage.recovery.get_slip39_group_count()
         if not remaining:

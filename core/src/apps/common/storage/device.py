@@ -2,11 +2,12 @@ from micropython import const
 from ubinascii import hexlify
 
 from trezor.crypto import random
+from trezor.messages import BackupType
 
 from apps.common.storage import common
 
 if False:
-    from typing import Optional
+    from typing import Optional, Union
 
 # Namespace:
 _NAMESPACE = common._APP_DEVICE
@@ -27,10 +28,12 @@ _PASSPHRASE_SOURCE         = const(0x0A)  # int
 _UNFINISHED_BACKUP         = const(0x0B)  # bool (0x01 or empty)
 _AUTOLOCK_DELAY_MS         = const(0x0C)  # int
 _NO_BACKUP                 = const(0x0D)  # bool (0x01 or empty)
-_MNEMONIC_TYPE             = const(0x0E)  # int
+_BACKUP_TYPE               = const(0x0E)  # int
 _ROTATION                  = const(0x0F)  # int
 _SLIP39_IDENTIFIER         = const(0x10)  # bool
 _SLIP39_ITERATION_EXPONENT = const(0x11)  # int
+
+_DEFAULT_BACKUP_TYPE       = BackupType.Bip39
 # fmt: on
 
 HOMESCREEN_MAXSIZE = 16384
@@ -78,8 +81,21 @@ def get_mnemonic_secret() -> Optional[bytes]:
     return common._get(_NAMESPACE, _MNEMONIC_SECRET)
 
 
-def get_mnemonic_type() -> Optional[int]:
-    return common._get_uint8(_NAMESPACE, _MNEMONIC_TYPE)
+def get_backup_type() -> Union[
+    BackupType.Bip39, BackupType.Slip39_Basic, BackupType.Slip39_Advanced
+]:
+    backup_type = common._get_uint8(_NAMESPACE, _BACKUP_TYPE)
+    if backup_type is None:
+        backup_type = _DEFAULT_BACKUP_TYPE
+
+    if backup_type not in (
+        BackupType.Bip39,
+        BackupType.Slip39_Basic,
+        BackupType.Slip39_Advanced,
+    ):
+        # Invalid backup type
+        raise RuntimeError
+    return backup_type
 
 
 def has_passphrase() -> bool:
@@ -92,13 +108,15 @@ def get_homescreen() -> Optional[bytes]:
 
 def store_mnemonic_secret(
     secret: bytes,
-    mnemonic_type: int,
+    backup_type: Union[
+        BackupType.Bip39, BackupType.Slip39_Basic, BackupType.Slip39_Advanced
+    ],
     needs_backup: bool = False,
     no_backup: bool = False,
 ) -> None:
     set_version(common._STORAGE_VERSION_CURRENT)
     common._set(_NAMESPACE, _MNEMONIC_SECRET, secret)
-    common._set_uint8(_NAMESPACE, _MNEMONIC_TYPE, mnemonic_type)
+    common._set_uint8(_NAMESPACE, _BACKUP_TYPE, backup_type)
     common._set_true_or_delete(_NAMESPACE, _NO_BACKUP, no_backup)
     if not no_backup:
         common._set_true_or_delete(_NAMESPACE, _NEEDS_BACKUP, needs_backup)

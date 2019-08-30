@@ -20,7 +20,7 @@ import pytest
 import shamir_mnemonic as shamir
 
 from trezorlib import device, messages as proto
-from trezorlib.messages import ButtonRequestType as B, ResetDeviceBackupType
+from trezorlib.messages import BackupType, ButtonRequestType as B
 
 from .common import click_through, generate_entropy, read_and_confirm_mnemonic
 
@@ -159,7 +159,7 @@ class TestMsgResetDeviceT2:
                 pin_protection=False,
                 label="test",
                 language="english",
-                backup_type=ResetDeviceBackupType.Slip39_Multiple_Groups,
+                backup_type=BackupType.Slip39_Advanced,
             )
 
         # generate secret locally
