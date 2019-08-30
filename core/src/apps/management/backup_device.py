@@ -1,4 +1,5 @@
 from trezor import wire
+from trezor.messages import BackupType
 from trezor.messages.Success import Success
 
 from apps.common import mnemonic, storage
@@ -20,9 +21,9 @@ async def backup_device(ctx, msg):
     storage.device.set_unfinished_backup(True)
     storage.device.set_backed_up()
 
-    if mnemonic_type == mnemonic.TYPE_SLIP39:
+    if mnemonic_type == BackupType.Slip39_Basic:
         await backup_slip39_wallet(ctx, mnemonic_secret)
-    elif mnemonic_type == mnemonic.TYPE_SLIP39_GROUP:
+    elif mnemonic_type == BackupType.Slip39_Advanced:
         await backup_group_slip39_wallet(ctx, mnemonic_secret)
     else:
         await layout.bip39_show_and_confirm_mnemonic(ctx, mnemonic_secret.decode())
