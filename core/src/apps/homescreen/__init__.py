@@ -4,7 +4,7 @@ from trezor.messages.Features import Features
 from trezor.messages.Success import Success
 from trezor.wire import register
 
-from apps.common import cache, storage
+from apps.common import cache, mnemonic, storage
 
 if False:
     from typing import NoReturn
@@ -36,6 +36,7 @@ def get_features() -> Features:
     f.no_backup = storage.device.no_backup()
     f.flags = storage.device.get_flags()
     f.recovery_mode = storage.recovery.is_in_progress()
+    f.backup_type = mnemonic.get_type()
     if utils.BITCOIN_ONLY:
         f.capabilities = [
             Capability.Bitcoin,
