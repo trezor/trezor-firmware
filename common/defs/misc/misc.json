@@ -97,7 +97,8 @@
             "Github": "https://github.com/input-output-hk/cardano-sl"
         },
         "wallet": {
-            "AdaLite": "https://adalite.io/app"
+            "AdaLite": "https://adalite.io/app",
+            "Yoroi": "https://yoroi-wallet.com"
         },
         "blockchain_link": null
     },
