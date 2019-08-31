@@ -1,9 +1,10 @@
 from common import *
-from apps.common import HARDENED
+from apps.common import HARDENED, coins
 from apps.common.seed import Keychain, Slip21Node, _path_hardened
+from apps.wallet.sign_tx import scripts, addresses
 from trezor import wire
 from trezor.crypto import bip39
-
+from trezor.crypto.curve import secp256k1
 
 class TestKeychain(unittest.TestCase):
 
@@ -114,6 +115,21 @@ class TestKeychain(unittest.TestCase):
             self.assertFalse(keychain.validate_path([b"SLIP-9999", b"Authentication key"], "slip21"))
         with self.assertRaises(wire.DataError):
             keychain.derive([b"SLIP-9999", b"Authentication key"], "slip21").key()
+
+    def test_slip77(self):
+        seed = bip39.seed("alcohol woman abuse must during monitor noble actual mixed trade anger aisle", "")
+        keychain = Keychain(seed, [["slip21", b"SLIP-0077"], ["secp256k1"]])
+
+        node = keychain.derive([44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 0, 0])
+        coin = coins.by_name('Elements')
+        pubkey_hash = addresses.ecdsa_hash_pubkey(node.public_key(), coin)
+        script = scripts.output_script_p2pkh(pubkey_hash)
+
+        private_key = keychain.derive_slip77_blinding_private_key(script)
+        self.assertEqual(private_key, unhexlify(b"26f1dc2c52222394236d76e0809516255cfcca94069fd5187c0f090d18f42ad6"))
+        public_key = keychain.derive_slip77_blinding_public_key(script)
+        self.assertEqual(public_key, unhexlify(b"03e84cd853fea825bd94f5d2d46580ae0d059c734707fa7a08f5e2f612a51c1acb"))
+        self.assertEqual(secp256k1.publickey(private_key), public_key)
 
 
 if __name__ == '__main__':
