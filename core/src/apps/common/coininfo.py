@@ -1561,7 +1561,7 @@ def by_name(name: str) -> CoinInfo:
                 address_type_p2sh=30,
                 maxfee_kb=2000000,
                 signed_message_header="Unobtanium Signed Message:\n",
-                xpub_magic=0x043586ce,
+                xpub_magic=0x0488B21e,
                 xpub_magic_segwit_p2sh=None,
                 xpub_magic_segwit_native=None,
                 bech32_prefix=None,
