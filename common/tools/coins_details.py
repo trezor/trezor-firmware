@@ -422,6 +422,7 @@ def main(refresh, api_key, verbose):
     print(json.dumps(info, sort_keys=True, indent=4))
     with open(os.path.join(coin_info.DEFS_DIR, "coins_details.json"), "w") as f:
         json.dump(details, f, sort_keys=True, indent=4)
+        f.write("\n")
 
 
 if __name__ == "__main__":
