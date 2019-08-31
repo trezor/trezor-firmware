@@ -115,13 +115,13 @@ async def backup_slip39_wallet(
     threshold = await layout.slip39_prompt_threshold(ctx, shares_count)
 
     # generate the mnemonics
-    mnemonics = slip39.generate_single_group_mnemonics_from_data(
+    mnemonics = slip39.generate_mnemonics_from_data(
         encrypted_master_secret,
         storage.device.get_slip39_identifier(),
-        threshold,
-        shares_count,
+        1,  # Single Group threshold
+        [(threshold, shares_count)],  # Single Group threshold/count
         storage.device.get_slip39_iteration_exponent(),
-    )
+    )[0]
 
     # show and confirm individual shares
     await layout.slip39_show_checklist_show_shares(ctx, shares_count, threshold)
