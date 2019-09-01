@@ -247,6 +247,11 @@ from .TxRequest import TxRequest
 from .TxRequestDetailsType import TxRequestDetailsType
 from .TxRequestSerializedType import TxRequestSerializedType
 from .VerifyMessage import VerifyMessage
+from .WebAuthnAddResidentCredential import WebAuthnAddResidentCredential
+from .WebAuthnCredential import WebAuthnCredential
+from .WebAuthnCredentials import WebAuthnCredentials
+from .WebAuthnListResidentCredentials import WebAuthnListResidentCredentials
+from .WebAuthnRemoveResidentCredential import WebAuthnRemoveResidentCredential
 from .WipeDevice import WipeDevice
 from .WordAck import WordAck
 from .WordRequest import WordRequest
