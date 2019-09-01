@@ -14,6 +14,7 @@ let
     ps.munch
     ps.pillow
     ps.pytest
+    ps.pytest-random-order
     ps.trezor
   ]);
 in
