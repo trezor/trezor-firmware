@@ -17,23 +17,24 @@
 import pytest
 
 from trezorlib import btc, debuglink, device
+from trezorlib.messages import BackupType
 from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 
-from .common import MNEMONIC12, TrezorTest
+from . import common
 
 
 @pytest.mark.setup_client(uninitialized=True)
-class TestDeviceLoad(TrezorTest):
+class TestDeviceLoad(common.TrezorTest):
     def test_load_device_1(self, client):
         debuglink.load_device_by_mnemonic(
             client,
-            mnemonic=MNEMONIC12,
+            mnemonic=common.MNEMONIC12,
             pin="",
             passphrase_protection=False,
             label="test",
         )
         state = client.debug.state()
-        assert state.mnemonic_secret == MNEMONIC12.encode()
+        assert state.mnemonic_secret == common.MNEMONIC12.encode()
         assert state.pin is None
         assert state.passphrase_protection is False
 
@@ -43,7 +44,7 @@ class TestDeviceLoad(TrezorTest):
     def test_load_device_2(self, client):
         debuglink.load_device_by_mnemonic(
             client,
-            mnemonic=MNEMONIC12,
+            mnemonic=common.MNEMONIC12,
             pin="1234",
             passphrase_protection=True,
             label="test",
@@ -52,7 +53,7 @@ class TestDeviceLoad(TrezorTest):
             device.apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
         client.set_passphrase("passphrase")
         state = client.debug.state()
-        assert state.mnemonic_secret == MNEMONIC12.encode()
+        assert state.mnemonic_secret == common.MNEMONIC12.encode()
 
         if client.features.model == "1":
             # we do not send PIN in DebugLinkState in Core
@@ -61,6 +62,28 @@ class TestDeviceLoad(TrezorTest):
 
         address = btc.get_address(client, "Bitcoin", [])
         assert address == "15fiTDFwZd2kauHYYseifGi9daH2wniDHH"
+
+    @pytest.mark.skip_t1
+    def test_load_device_shamir_basic(self, client):
+        debuglink.load_device_by_mnemonic(
+            client,
+            mnemonic=common.MNEMONIC_SHAMIR_20_3of6,
+            pin="",
+            passphrase_protection=False,
+            label="test",
+        )
+        assert client.features.backup_type == BackupType.Slip39_Basic
+
+    @pytest.mark.skip_t1
+    def test_load_device_shamir_advanced(self, client):
+        debuglink.load_device_by_mnemonic(
+            client,
+            mnemonic=common.MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS,
+            pin="",
+            passphrase_protection=False,
+            label="test",
+        )
+        assert client.features.backup_type == BackupType.Slip39_Advanced
 
     def test_load_device_utf(self, client):
         words_nfkd = u"Pr\u030ci\u0301s\u030cerne\u030c z\u030clut\u030couc\u030cky\u0301 ku\u030an\u030c u\u0301pe\u030cl d\u030ca\u0301belske\u0301 o\u0301dy za\u0301ker\u030cny\u0301 uc\u030cen\u030c be\u030cz\u030ci\u0301 pode\u0301l zo\u0301ny u\u0301lu\u030a"

@@ -30,9 +30,14 @@ INVALID_SHARES_20_2of3_2of3_GROUPS = [
     "chest garlic beard lily burden pistol retreat pickup emphasis large gesture hand eyebrow season pleasure genuine election skunk champion income",
 ]
 
+# Extra share from another group to make sure it does not matter.
+EXTRA_GROUP_SHARE = [
+    "gesture negative ceramic leaf device fantasy style ceramic safari keyboard thumb total smug cage plunge aunt favorite lizard intend peanut"
+]
+
 
 @pytest.mark.setup_client(
-    mnemonic=MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS[1:5], passphrase=False
+    mnemonic=MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, passphrase=False
 )
 def test_2of3_dryrun(client):
     debug = client.debug
@@ -42,7 +47,7 @@ def test_2of3_dryrun(client):
         debug.press_yes()
         # run recovery flow
         yield from recovery_enter_shares(
-            debug, MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, groups=True
+            debug, EXTRA_GROUP_SHARE + MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, groups=True
         )
 
     with client:
@@ -62,9 +67,7 @@ def test_2of3_dryrun(client):
     )
 
 
-@pytest.mark.setup_client(
-    mnemonic=MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS[1:5], passphrase=True
-)
+@pytest.mark.setup_client(mnemonic=MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, passphrase=True)
 def test_2of3_invalid_seed_dryrun(client):
     debug = client.debug
 
