@@ -272,7 +272,11 @@ STATIC mp_obj_t mod_trezorio_FatFSDir_iternext(mp_obj_t self) {
   mp_obj_FatFSDir_t *o = MP_OBJ_TO_PTR(self);
   FILINFO info;
   FRESULT res = f_readdir(&(o->dp), &info);
-  if (res != FR_OK || info.fname[0] == 0) {  // stop on error or end of dir
+  if (res != FR_OK) {
+    f_closedir(&(o->dp));
+    mp_raise_OSError(fresult_to_errno_table[res]);
+  }
+  if (info.fname[0] == 0) {  // stop on end of dir
     f_closedir(&(o->dp));
     return MP_OBJ_STOP_ITERATION;
   }
