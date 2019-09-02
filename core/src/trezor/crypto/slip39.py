@@ -273,7 +273,7 @@ def combine_mnemonics(mnemonics: List[str]) -> Tuple[int, int, bytes]:
         )
 
     for group_index, group in groups.items():
-        if len(group[1]) != group[0]:
+        if len(group[1]) != group[0]:  # group[0] is threshold
             raise MnemonicError(
                 "Wrong number of mnemonics. Expected {} mnemonics, but {} were provided.".format(
                     group[0], len(group[1])
@@ -286,7 +286,7 @@ def combine_mnemonics(mnemonics: List[str]) -> Tuple[int, int, bytes]:
     ]
 
     encrypted_master_secret = _recover_secret(group_threshold, group_shares)
-    return (identifier, iteration_exponent, encrypted_master_secret)
+    return (identifier, iteration_exponent, encrypted_master_secret, group_count)
 
 
 def decode_mnemonic(mnemonic: str) -> Share:

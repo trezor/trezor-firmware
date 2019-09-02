@@ -36,10 +36,11 @@ class TestCryptoSlip39(unittest.TestCase):
         generated_identifier = slip39.generate_random_identifier()
         mnemonics = slip39.generate_mnemonics_from_data(self.EMS, generated_identifier, 1, [(3, 5)], 1)
         mnemonics = mnemonics[0]
-        identifier, exponent, ems = slip39.combine_mnemonics(mnemonics[:3])
+        identifier, exponent, ems, group_count = slip39.combine_mnemonics(mnemonics[:3])
         self.assertEqual(ems, self.EMS)
         self.assertEqual(generated_identifier, identifier)
         self.assertEqual(slip39.combine_mnemonics(mnemonics[1:4])[2], ems)
+        self.assertEqual(group_count, 1)
         with self.assertRaises(slip39.MnemonicError):
             slip39.combine_mnemonics(mnemonics[1:3])
 
@@ -48,13 +49,15 @@ class TestCryptoSlip39(unittest.TestCase):
         identifier = slip39.generate_random_identifier()
         mnemonics = slip39.generate_mnemonics_from_data(self.EMS, identifier, 1, [(3, 5)], 1)
         mnemonics = mnemonics[0]
-        identifier, exponent, ems = slip39.combine_mnemonics(mnemonics[1:4])
+        identifier, exponent, ems, group_count = slip39.combine_mnemonics(mnemonics[1:4])
         self.assertEqual(ems, self.EMS)
+        self.assertEqual(group_count, 1)
 
         identifier = slip39.generate_random_identifier()
         mnemonics = slip39.generate_mnemonics_from_data(self.EMS, identifier, 1, [(3, 5)], 2)
         mnemonics = mnemonics[0]
-        identifier, exponent, ems = slip39.combine_mnemonics(mnemonics[1:4])
+        identifier, exponent, ems, group_count = slip39.combine_mnemonics(mnemonics[1:4])
+        self.assertEqual(group_count, 1)
         self.assertEqual(ems, self.EMS)
 
 
@@ -73,14 +76,16 @@ class TestCryptoSlip39(unittest.TestCase):
                 for group2_subset in combinations(groups[1][0], groups[1][1]):
                     mnemonic_subset = list(group1_subset + group2_subset)
                     random.shuffle(mnemonic_subset)
-                    identifier, exponent, ems = slip39.combine_mnemonics(mnemonic_subset)
+                    identifier, exponent, ems, group_count = slip39.combine_mnemonics(mnemonic_subset)
+                    self.assertEqual(group_count, len(group_sizes))
                     self.assertEqual(ems, self.EMS)
 
 
         # Minimal sets of mnemonics.
-        identifier, exponent, ems = slip39.combine_mnemonics([mnemonics[2][0], mnemonics[2][2], mnemonics[3][0]])
+        identifier, exponent, ems, group_count = slip39.combine_mnemonics([mnemonics[2][0], mnemonics[2][2], mnemonics[3][0]])
         self.assertEqual(ems, self.EMS)
         self.assertEqual(slip39.combine_mnemonics([mnemonics[2][3], mnemonics[3][0], mnemonics[2][4]])[2], ems)
+        self.assertEqual(group_count, len(group_sizes))
 
         # One complete group and one incomplete group out of two groups required.
         with self.assertRaises(slip39.MnemonicError):
@@ -105,7 +110,8 @@ class TestCryptoSlip39(unittest.TestCase):
             for group_subset in combinations(group, threshold):
                 mnemonic_subset = list(group_subset)
                 random.shuffle(mnemonic_subset)
-                identifier, exponent, ems = slip39.combine_mnemonics(mnemonic_subset)
+                identifier, exponent, ems, group_count = slip39.combine_mnemonics(mnemonic_subset)
+                self.assertEqual(group_count, len(group_sizes))
                 self.assertEqual(ems, self.EMS)
 
 
@@ -146,7 +152,7 @@ class TestCryptoSlip39(unittest.TestCase):
     def test_vectors(self):
         for mnemonics, secret in vectors:
             if secret:
-                identifier, exponent, ems = slip39.combine_mnemonics(mnemonics)
+                identifier, exponent, ems, _ = slip39.combine_mnemonics(mnemonics)
                 self.assertEqual(slip39.decrypt(identifier, exponent, ems, b"TREZOR"), unhexlify(secret))
             else:
                 with self.assertRaises(slip39.MnemonicError):

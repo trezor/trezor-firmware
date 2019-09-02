@@ -11,22 +11,7 @@ from apps.management.recovery_device import backup_types
 
 
 async def load_device(ctx, msg):
-    if storage.is_initialized():
-        raise wire.UnexpectedMessage("Already initialized")
-
-    if msg.node is not None:
-        raise wire.ProcessError("LoadDevice.node is not supported")
-
-    if not msg.mnemonics:
-        raise wire.ProcessError("No mnemonic provided")
-
-    word_count = len(msg.mnemonics[0].split(" "))
-    for m in msg.mnemonics[1:]:
-        if word_count != len(m.split(" ")):
-            raise wire.ProcessError(
-                "All shares are required to have the same number of words"
-            )
-
+    word_count = _validate(msg)
     possible_backup_types = backup_types.get(word_count)
 
     if (
@@ -36,16 +21,20 @@ async def load_device(ctx, msg):
     ):
         raise wire.ProcessError("Mnemonic is not valid")
 
-    text = Text("Loading seed")
-    text.bold("Loading private seed", "is not recommended.")
-    text.normal("Continue only if you", "know what you are doing!")
-    await require_confirm(ctx, text)
+    await _warn(ctx)
 
     if BackupType.Bip39 in possible_backup_types:
         secret = msg.mnemonics[0].encode()
     elif backup_types.is_slip39(possible_backup_types):
-        identifier, iteration_exponent, secret = slip39.combine_mnemonics(msg.mnemonics)
-        possible_backup_types = [BackupType.Slip39_Basic]  # TODO!!!
+        identifier, iteration_exponent, secret, group_count = slip39.combine_mnemonics(
+            msg.mnemonics
+        )
+        if group_count == 1:
+            possible_backup_types = [BackupType.Slip39_Basic]
+        elif group_count > 1:
+            possible_backup_types = [BackupType.Slip39_Advanced]
+        else:
+            raise RuntimeError("Invalid group count")
         storage.device.set_slip39_identifier(identifier)
         storage.device.set_slip39_iteration_exponent(iteration_exponent)
     else:
@@ -64,3 +53,30 @@ async def load_device(ctx, msg):
         config.change_pin(pin_to_int(""), pin_to_int(msg.pin))
 
     return Success(message="Device loaded")
+
+
+def _validate(msg) -> int:
+    if storage.is_initialized():
+        raise wire.UnexpectedMessage("Already initialized")
+
+    if msg.node is not None:
+        raise wire.ProcessError("LoadDevice.node is not supported")
+
+    if not msg.mnemonics:
+        raise wire.ProcessError("No mnemonic provided")
+
+    word_count = len(msg.mnemonics[0].split(" "))
+    for m in msg.mnemonics[1:]:
+        if word_count != len(m.split(" ")):
+            raise wire.ProcessError(
+                "All shares are required to have the same number of words"
+            )
+
+    return word_count
+
+
+async def _warn(ctx: wire.Context):
+    text = Text("Loading seed")
+    text.bold("Loading private seed", "is not recommended.")
+    text.normal("Continue only if you", "know what you are doing!")
+    await require_confirm(ctx, text)

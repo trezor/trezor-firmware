@@ -23,6 +23,10 @@ from .common import MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, recovery_enter_shares
 
 pytestmark = pytest.mark.skip_t1
 
+EXTRA_GROUP_SHARE = [
+    "gesture negative ceramic leaf device fantasy style ceramic safari keyboard thumb total smug cage plunge aunt favorite lizard intend peanut"
+]
+
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_recover_no_pin_no_passphrase(client):
@@ -33,7 +37,7 @@ def test_recover_no_pin_no_passphrase(client):
         debug.press_yes()
         # Proceed with recovery
         yield from recovery_enter_shares(
-            debug, MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, groups=True
+            debug, EXTRA_GROUP_SHARE + MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, groups=True
         )
 
     with client:
@@ -82,7 +86,7 @@ def test_noabort(client):
         yield  # Homescreen - go back to process
         debug.press_no()
         yield from recovery_enter_shares(
-            debug, MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, groups=True
+            debug, EXTRA_GROUP_SHARE + MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, groups=True
         )
 
     with client:
