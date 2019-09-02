@@ -7,7 +7,7 @@ variables:
 
 # Core
 
-build core firmware:
+build core firmware regular:
   stage: build
   script:
     - cd core
@@ -44,13 +44,13 @@ build core firmware bitcoinonly:
     - trezor-*.*.*-$CI_COMMIT_SHORT_SHA-bitcoinonly.bin
     expire_in: 1 week
 
-build core unix:
+build core unix regular:
   stage: build
   script:
     - cd core
     - pipenv run make build_unix
 
-build core unix frozen:
+build core unix frozen regular:
   stage: build
   script:
     - cd core
@@ -110,7 +110,7 @@ build crypto:
 # Legacy
 
 # TODO: add clang https://github.com/trezor/trezor-firmware/issues/44
-build legacy firmware:
+build legacy firmware regular:
   stage: build
   variables:
     MEMORY_PROTECT: "0"
@@ -156,7 +156,7 @@ build legacy firmware bitcoinonly:
     - trezor-*.*.*-$CI_COMMIT_SHORT_SHA-bitcoinonly.bin
     expire_in: 1 week
 
-build legacy emu:
+build legacy emu regular:
   stage: build
   variables:
     DEBUG_LINK: "1"

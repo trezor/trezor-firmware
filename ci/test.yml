@@ -5,7 +5,7 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
 test core unix unit:
   stage: test
   dependencies:
-    - build core unix frozen
+    - build core unix frozen regular
   script:
     - cd core
     - pipenv run make test
@@ -13,7 +13,7 @@ test core unix unit:
 test core unix device:
   stage: test
   dependencies:
-    - build core unix frozen
+    - build core unix frozen regular
   script:
     - cd core
     - pipenv run make test_emu
@@ -32,7 +32,7 @@ test core unix device bitcoinonly:
 test core unix monero:
   stage: test
   dependencies:
-    - build core unix frozen
+    - build core unix frozen regular
   script:
     - cd core
     - pipenv run make test_emu_monero
@@ -58,7 +58,7 @@ test crypto:
 test legacy emu:
   stage: test
   dependencies:
-    - build legacy emu
+    - build legacy emu regular
   variables:
     EMULATOR: "1"
   script:
@@ -104,7 +104,7 @@ test upgrade:
   stage: test
   dependencies:
     - build core unix frozen debug
-    - build legacy emu
+    - build legacy emu regular
   script:
     - tests/upgrade_tests/download_emulators.sh
     - pipenv run pytest tests/upgrade_tests
