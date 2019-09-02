@@ -1,7 +1,7 @@
 import utime
 from micropython import const
 
-from trezor import res, ui
+from trezor import res, ui, utils
 from trezor.ui import display
 
 if False:
@@ -74,13 +74,13 @@ class Loader(ui.Component):
         else:
             s = self.active_style
 
-        Y = const(-24)
+        _Y = const(-24)
 
         if s.icon is None:
-            display.loader(r, False, Y, s.fg_color, s.bg_color)
+            display.loader(r, False, _Y, s.fg_color, s.bg_color)
         else:
             display.loader(
-                r, False, Y, s.fg_color, s.bg_color, res.load(s.icon), s.icon_fg_color
+                r, False, _Y, s.fg_color, s.bg_color, res.load(s.icon), s.icon_fg_color
             )
         if r == 0:
             self.start_ms = None
@@ -106,6 +106,10 @@ class LoadingAnimation(ui.Layout):
         if not self.loader.elapsed_ms():
             self.loader.start()
         self.loader.dispatch(event, x, y)
+
+        if __debug__:
+            if utils.DISABLE_FADE:
+                self.on_finish()
 
     def on_finish(self) -> None:
         raise ui.Result(None)
