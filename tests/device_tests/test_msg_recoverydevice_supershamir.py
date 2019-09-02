@@ -47,6 +47,7 @@ def test_recover_no_pin_no_passphrase(client):
     assert client.features.initialized is True
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
+    assert client.features.backup_type is messages.BackupType.Slip39_Advanced
 
 
 @pytest.mark.setup_client(uninitialized=True)
