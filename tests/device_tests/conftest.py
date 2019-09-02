@@ -44,7 +44,6 @@ class ScreenshotCollector:
     @staticmethod
     def _remove_files(files):
         for f in files:
-            print("Removing", f)
             f.unlink()
 
     def get_test_dirname(self):
@@ -91,21 +90,23 @@ class ScreenshotCollector:
             self._remove_files(self.collect_fixtures())
         else:
             # create the fixture dir, if not present
-            print("Creating", fixture_dir)
             fixture_dir.mkdir()
 
         # move the recorded images into the fixture locations
         for index, image in enumerate(self.collect_screenshots()):
-            fixture = fixture_dir / "{}.png".format(index)
-            print("Saving", image, "into", fixture)
+            fixture = fixture_dir / "{:08}.png".format(index)
             image.replace(fixture)
 
     def __enter__(self):
-        if SAVE_SCREEN:
+        if SAVE_SCREEN and not self.node.get_closest_marker("skip_ui"):
             self._remove_files(self.collect_screenshots())
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        if exc_value is None and SAVE_SCREEN:
+        if (
+            exc_value is None
+            and SAVE_SCREEN
+            and not self.node.get_closest_marker("skip_ui")
+        ):
             if SAVE_SCREEN_FIXTURES:
                 self.record_fixtures()
             else:
@@ -199,6 +200,9 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers",
         'setup_client(mnemonic="all all all...", pin=None, passphrase=False, uninitialized=False): configure the client instance',
+    )
+    config.addinivalue_line(
+        "markers", "skip_ui: skip UI integration checks for this test"
     )
     with open(os.path.join(os.path.dirname(__file__), "REGISTERED_MARKERS")) as f:
         for line in f:
