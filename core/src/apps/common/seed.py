@@ -114,7 +114,10 @@ def derive_node_without_passphrase(
 ) -> bip32.HDNode:
     if not storage.is_initialized():
         raise Exception("Device is not initialized")
-    seed = mnemonic.get_seed(progress_bar=False)
+    seed = cache.get_seed_without_passphrase()
+    if seed is None:
+        seed = mnemonic.get_seed(progress_bar=False)
+        cache.set_seed_without_passphrase(seed)
     node = bip32.from_seed(seed, curve_name)
     node.derive_path(path)
     return node
@@ -123,7 +126,10 @@ def derive_node_without_passphrase(
 def derive_slip21_node_without_passphrase(path: list) -> Slip21Node:
     if not storage.is_initialized():
         raise Exception("Device is not initialized")
-    seed = mnemonic.get_seed(progress_bar=False)
+    seed = cache.get_seed_without_passphrase()
+    if seed is None:
+        seed = mnemonic.get_seed(progress_bar=False)
+        cache.set_seed_without_passphrase(seed)
     node = Slip21Node(seed)
     node.derive_path(path)
     return node
