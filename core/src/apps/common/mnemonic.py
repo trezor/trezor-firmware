@@ -78,14 +78,14 @@ def _start_progress() -> None:
     ui.backlight_fade(ui.BACKLIGHT_DIM)
     ui.display.clear()
     ui.header("Please wait")
-    ui.display.refresh()
+    ui.refresh()
     ui.backlight_fade(ui.BACKLIGHT_NORMAL)
 
 
 def _render_progress(progress: int, total: int) -> None:
     p = 1000 * progress // total
     ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
-    ui.display.refresh()
+    ui.refresh()
 
 
 def _stop_progress() -> None:
