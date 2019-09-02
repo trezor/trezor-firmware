@@ -179,7 +179,7 @@ def witness_p2wsh(
     redeem_script_length = output_script_multisig_length(pubkeys, multisig.m)
 
     # length of the result
-    total_length = 1 + 1  # number of items, version
+    total_length = 1 + 1  # number of items, OP_FALSE
     for s in signatures:
         total_length += 1 + len(s) + 1  # length, signature, sighash
     total_length += 1 + redeem_script_length  # length, script
@@ -187,7 +187,10 @@ def witness_p2wsh(
     w = empty_bytearray(total_length)
 
     write_varint(w, num_of_witness_items)
-    write_varint(w, 0)  # version 0 witness program
+    # Starts with OP_FALSE because of an old OP_CHECKMULTISIG bug, which
+    # consumes one additional item on the stack:
+    # https://bitcoin.org/en/developer-guide#standard-transactions
+    write_varint(w, 0)
 
     for s in signatures:
         append_signature(w, s, sighash)  # size of the witness included
