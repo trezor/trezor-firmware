@@ -36,7 +36,7 @@ reads the message's header. When the message type is known the first handler is 
 """
 
 import protobuf
-from trezor import log, loop, messages, utils, workflow
+from trezor import log, loop, messages, utils, workflow, ui
 from trezor.messages import FailureType
 from trezor.messages.Failure import Failure
 from trezor.wire import codec_v1
@@ -347,6 +347,11 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                     # registered it before.
                     if wf_task is not None:
                         workflow.on_close(wf_task)
+                        # If a default workflow is on, make sure we do not race
+                        # against the layout that is inside.
+                        # TODO: this is very hacky and complects wire with the ui
+                        if workflow.default_task is not None:
+                            await ui.wait_until_layout_is_running()
 
             if res_msg is not None:
                 # Either the workflow returned a response, or we created one.

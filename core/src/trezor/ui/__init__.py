@@ -319,3 +319,8 @@ class Layout(Component):
             # TODO: remove the busy loop
             yield sleep
             self.dispatch(RENDER, 0, 0)
+
+
+def wait_until_layout_is_running():
+    while not layout_chan.takers:
+        yield
