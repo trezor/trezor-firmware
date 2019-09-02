@@ -71,7 +71,10 @@ from trezor.ui.style import *  # isort:skip # noqa: F401,F403
 
 
 def pulse(coef: int) -> float:
-    # normalize sin from interval -1:1 to 0:1
+    if __debug__:
+        if utils.DISABLE_FADE:
+            return 0.5
+    # Normalize sin from interval -1:1 to 0:1.
     return 0.5 + 0.5 * math.sin(utime.ticks_us() / coef)
 
 
