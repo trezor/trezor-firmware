@@ -121,6 +121,7 @@ class TestMsgResetDeviceT2:
         assert client.features.needs_backup is False
         assert client.features.pin_protection is False
         assert client.features.passphrase_protection is False
+        assert client.features.backup_type is BackupType.Slip39_Basic
 
 
 def validate_mnemonics(mnemonics, threshold, expected_ems):

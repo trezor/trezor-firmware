@@ -103,6 +103,7 @@ class TestMsgResetDeviceT2:
         assert resp.needs_backup is False
         assert resp.pin_protection is False
         assert resp.passphrase_protection is False
+        assert resp.backup_type is proto.BackupType.Bip39
 
     @pytest.mark.setup_client(uninitialized=True)
     def test_reset_device_pin(self, client):

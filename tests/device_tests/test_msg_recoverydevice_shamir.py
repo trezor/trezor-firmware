@@ -56,6 +56,7 @@ def test_secret(client, shares, secret):
     assert ret == messages.Success(message="Device recovered")
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
+    assert client.features.backup_type is messages.BackupType.Slip39_Basic
 
     # Check mnemonic
     assert debug.read_mnemonic_secret().hex() == secret
@@ -85,6 +86,7 @@ def test_recover_with_pin_passphrase(client):
     assert ret == messages.Success(message="Device recovered")
     assert client.features.pin_protection is True
     assert client.features.passphrase_protection is True
+    assert client.features.backup_type is messages.BackupType.Slip39_Basic
 
 
 @pytest.mark.setup_client(uninitialized=True)
