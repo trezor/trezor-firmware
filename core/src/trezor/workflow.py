@@ -1,4 +1,4 @@
-from trezor import loop
+from trezor import log, loop
 
 if False:
     from typing import Callable, Optional, Set
@@ -34,6 +34,8 @@ def on_start(workflow: loop.Task) -> None:
 def on_close(workflow: loop.Task) -> None:
     """Call when a workflow task has finished running."""
     # Remove task from the running set.
+    if __debug__:
+        log.debug(__name__, "close: %s", workflow)
     tasks.remove(workflow)
     if not tasks and default_constructor:
         # If no workflows are running, we should create a new default workflow
@@ -54,15 +56,21 @@ def start_default(constructor: Callable[[], loop.Task]) -> None:
     if not default_task:
         default_constructor = constructor
         default_task = constructor()
-
+        if __debug__:
+            log.debug(__name__, "start default")
         # Schedule the default task.  Because the task can complete on its own,
         # we need to reset the `default_task` global in a finalizer.
         loop.schedule(default_task, None, None, _finalize_default)
+    else:
+        if __debug__:
+            log.debug(__name__, "default already started")
 
 
 def close_default() -> None:
     """Explicitly close the default workflow task."""
     if default_task:
+        if __debug__:
+            log.debug(__name__, "close default")
         # We let the `_finalize_default` reset the global.
         loop.close(default_task)
 
@@ -71,4 +79,15 @@ def _finalize_default(task, value) -> None:
     global default_task
 
     if default_task is task:
+        if __debug__:
+            log.debug(__name__, "default closed")
         default_task = None
+    else:
+        if __debug__:
+            log.warning(
+                __name__,
+                "default task does not match: task=%s, default_task=%s",
+                task,
+                default_task,
+            )
+

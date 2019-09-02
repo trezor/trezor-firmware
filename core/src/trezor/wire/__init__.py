@@ -251,6 +251,15 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                 # header is eventually received, after a couple of tries.
                 req_reader = ctx.make_reader()
                 await req_reader.aopen()
+
+                if __debug__:
+                    log.debug(
+                        __name__,
+                        "%s:%x receive: %s",
+                        iface.iface_num(),
+                        session_id,
+                        req_reader.type,
+                    )
             else:
                 # We have a reader left over from earlier.  We should process
                 # this message instead of waiting for new one.

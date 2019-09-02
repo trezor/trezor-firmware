@@ -31,6 +31,9 @@ class Reader:
         self.ofs = 0
         self.data = bytes()
 
+    def __repr__(self) -> str:
+        return "<Reader type: %s>" % self.type
+
     async def aopen(self) -> None:
         """
         Start reading a message by waiting for initial message report.  Because
