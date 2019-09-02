@@ -4,6 +4,8 @@ from trezorlib import btc, device, messages
 from trezorlib.messages import ButtonRequestType as B, ResetDeviceBackupType
 from trezorlib.tools import parse_path
 
+from .common import recovery_enter_shares
+
 
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
@@ -155,7 +157,7 @@ def recover(client, shares):
         yield  # Confirm Recovery
         debug.press_yes()
         # run recovery flow
-        yield from enter_all_shares(debug, shares)
+        yield from recovery_enter_shares(debug, shares)
 
     with client:
         client.set_input_flow(input_flow)
@@ -167,31 +169,3 @@ def recover(client, shares):
     assert ret == messages.Success(message="Device recovered")
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
-
-
-# TODO: let's merge this with test_msg_recoverydevice_shamir.py
-def enter_all_shares(debug, shares):
-    word_count = len(shares[0].split(" "))
-
-    # Homescreen - proceed to word number selection
-    yield
-    debug.press_yes()
-    # Input word number
-    code = yield
-    assert code == B.MnemonicWordCount
-    debug.input(str(word_count))
-    # Homescreen - proceed to share entry
-    yield
-    debug.press_yes()
-    # Enter shares
-    for share in shares:
-        code = yield
-        assert code == B.MnemonicInput
-        # Enter mnemonic words
-        for word in share.split(" "):
-            debug.input(word)
-
-        # Homescreen - continue
-        # or Homescreen - confirm success
-        yield
-        debug.press_yes()

@@ -19,11 +19,7 @@ import pytest
 from trezorlib.cardano import get_address
 from trezorlib.tools import parse_path
 
-SLIP39_MNEMONIC = [
-    "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
-    "extra extend academic acne away best indicate impact square oasis prospect painting voting guest either argue username racism enemy eclipse",
-    "extra extend academic arcade born dive legal hush gross briefing talent drug much home firefly toxic analysis idea umbrella slice",
-]
+from .common import MNEMONIC_SHAMIR_20_3of6
 
 
 @pytest.mark.altcoin
@@ -46,7 +42,7 @@ SLIP39_MNEMONIC = [
         ),
     ],
 )
-@pytest.mark.setup_client(mnemonic=SLIP39_MNEMONIC, passphrase=True)
+@pytest.mark.setup_client(mnemonic=MNEMONIC_SHAMIR_20_3of6, passphrase=True)
 def test_cardano_get_address(client, path, expected_address):
     # enter passphrase
     assert client.features.passphrase_protection is True
