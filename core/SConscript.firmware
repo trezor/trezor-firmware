@@ -130,6 +130,8 @@ if EVERYTHING:
 
 # modtrezorio
 SOURCE_MOD += [
+    'embed/extmod/modtrezorio/ff.c',
+    'embed/extmod/modtrezorio/ffunicode.c',
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
 

@@ -1,6 +1,116 @@
 from typing import *
 
 
+# extmod/modtrezorio/modtrezorio-fatfs.h
+class FatFSFile:
+    """
+    Class encapsulating file
+    """
+
+    def __exit__(self) -> None:
+        """
+        Close an open file object
+        """
+
+    def close(self) -> None:
+        """
+        Close an open file object
+        """
+
+    def read(self, data: bytearray) -> int:
+        """
+        Read data from the file
+        """
+
+    def write(self, data: bytearray) -> int:
+        """
+        Write data to the file
+        """
+
+    def seek(self, offset: int) -> None:
+        """
+        Move file pointer of the file object
+        """
+
+    def truncate(self) -> None:
+        """
+        Truncate the file
+        """
+
+    def sync(self) -> None:
+        """
+        Flush cached data of the writing file
+        """
+
+
+# extmod/modtrezorio/modtrezorio-fatfs.h
+class FatFSDir(Iterable[Tuple[int, str, str]]):
+    """
+    Class encapsulating directory
+    """
+
+    def __next__(self) -> Tuple[int, str, str]:
+        """
+        Read an entry in the directory
+        """
+
+
+# extmod/modtrezorio/modtrezorio-fatfs.h
+class FatFS:
+    """
+    Class encapsulating FAT filesystem
+    """
+
+    def __init__(self) -> None:
+        """
+        """
+
+    def open(self, path: str, flags: str) -> FatFSFile:
+        """
+        Open or create a file
+        """
+
+    def listdir(self, path: str) -> FatFSDir:
+        """
+        List a directory (return generator)
+        """
+
+    def mkdir(self, path: str) -> None:
+        """
+        Create a sub directory
+        """
+
+    def unlink(self, path: str) -> None:
+        """
+        Delete an existing file or directory
+        """
+
+    def stat(self, path: str) -> Tuple[int, str, str]:
+        """
+        Get file status
+        """
+
+    def rename(self, oldpath: str, newpath: str) -> None:
+        """
+        Rename/Move a file or directory
+        """
+
+    def mount(self) -> None:
+        """
+        Mount/Unmount a logical drive
+        """
+
+    def unmount(self) -> None:
+        """
+        Unmount a logical drive
+        """
+
+    def mkfs(self) -> None:
+        """
+        Create a FAT volume
+        """
+
+
 # extmod/modtrezorio/modtrezorio-flash.h
 class FlashOTP:
     """
