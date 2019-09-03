@@ -157,6 +157,7 @@ def client(request):
         mnemonic=" ".join(["all"] * 12),
         pin=None,
         passphrase=False,
+        random_seed=None,
     )
     # fmt: on
 
@@ -179,6 +180,9 @@ def client(request):
         client.clear_session()
         if setup_params["passphrase"] and client.features.model != "1":
             apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
+
+    if setup_params["random_seed"] is not None:
+        client.debug.reseed(setup_params["random_seed"])
 
     with ScreenshotCollector(request.node):
         yield client

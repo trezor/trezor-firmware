@@ -109,6 +109,9 @@ class DebugLink:
     def stop(self):
         self._call(proto.DebugLinkStop(), nowait=True)
 
+    def reseed(self, value):
+        self._call(proto.DebugLinkReseedRandom(value=value))
+
     @expect(proto.DebugLinkMemory, field="memory")
     def memory_read(self, address, length):
         return self._call(proto.DebugLinkMemoryRead(address=address, length=length))

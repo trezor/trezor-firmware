@@ -19,6 +19,15 @@ message DebugLinkDecision {
 }
 
 /**
+ * Request: Re-seed RNG with given value
+ * @start
+ * @next Success
+ */
+message DebugLinkReseedRandom {
+    optional uint32 value = 1;
+}
+
+/**
  * Request: Computer asks for device state
  * @start
  * @next DebugLinkState

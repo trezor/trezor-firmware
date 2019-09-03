@@ -90,4 +90,3 @@ def _finalize_default(task, value) -> None:
                 task,
                 default_task,
             )
-

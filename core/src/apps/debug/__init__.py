@@ -4,7 +4,7 @@ if not __debug__:
     halt("debug mode inactive")
 
 if __debug__:
-    from trezor import config, log, loop, utils
+    from trezor import config, crypto, log, loop, utils
     from trezor.messages import MessageType
     from trezor.wire import register
 
@@ -13,7 +13,9 @@ if __debug__:
         from trezor import wire
         from trezor.messages.DebugLinkDecision import DebugLinkDecision
         from trezor.messages.DebugLinkGetState import DebugLinkGetState
+        from trezor.messages.DebugLinkReseedRandom import DebugLinkReseedRandom
         from trezor.messages.DebugLinkState import DebugLinkState
+        from trezor.messages.Success import Success
 
     reset_internal_entropy = None  # type: Optional[bytes]
     reset_current_words = loop.chan()
@@ -74,6 +76,12 @@ if __debug__:
             m.reset_word = " ".join(await reset_current_words.take())
         return m
 
+    async def dispatch_DebugLinkReseedRandom(
+        ctx: wire.Context, msg: DebugLinkReseedRandom
+    ) -> Success:
+        crypto.random.reseed(msg.value)
+        return Success()
+
     def boot() -> None:
         # wipe storage when debug build is used on real hardware
         if not utils.EMULATOR:
@@ -81,3 +89,4 @@ if __debug__:
 
         register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)
         register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)
+        register(MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom)

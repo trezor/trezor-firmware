@@ -66,6 +66,7 @@ DebugLinkMemoryRead = 110
 DebugLinkMemory = 111
 DebugLinkMemoryWrite = 112
 DebugLinkFlashErase = 113
+DebugLinkReseedRandom = 123
 if not utils.BITCOIN_ONLY:
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
