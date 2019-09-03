@@ -17,8 +17,8 @@ MSG_CANCEL_BLUEPRINT = '{{"refid":"{refid}","sender":"{sender}","symbol":"{symbo
 INPUT_OUTPUT_BLUEPRINT = '{{"address":"{address}","coins":[{coins}]}}'
 COIN_BLUEPRINT = '{{"amount":"{amount}","denom":"{denom}"}}'
 
-# 1*10^18 Jagers equal 1 BNB https://www.binance.vision/glossary/jager
-DIVISIBILITY = const(18)
+# 1*10^8 Jagers equal 1 BNB https://www.binance.vision/glossary/jager
+DIVISIBILITY = const(8)
 
 
 def produce_json_for_signing(envelope: BinanceSignTx, msg) -> str:
