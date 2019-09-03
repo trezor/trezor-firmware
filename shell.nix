@@ -9,7 +9,6 @@ stdenv.mkDerivation {
     check
     clang-tools
     gcc
-    gcc-arm-embedded
     gnumake
     graphviz
     libusb1
@@ -20,6 +19,20 @@ stdenv.mkDerivation {
     scons
     valgrind
     zlib
+  ] ++ stdenv.lib.optionals (!stdenv.isDarwin) [
+    gcc-arm-embedded
+  ] ++ stdenv.lib.optionals (stdenv.isDarwin) [
+    darwin.apple_sdk.frameworks.CoreAudio
+    darwin.apple_sdk.frameworks.AudioToolbox
+    darwin.apple_sdk.frameworks.ForceFeedback
+    darwin.apple_sdk.frameworks.CoreVideo
+    darwin.apple_sdk.frameworks.Cocoa
+    darwin.apple_sdk.frameworks.Carbon
+    darwin.apple_sdk.frameworks.IOKit
+    darwin.apple_sdk.frameworks.QuartzCore
+    darwin.apple_sdk.frameworks.Metal
+    darwin.libobjc
+    libiconv
   ];
   LD_LIBRARY_PATH="${libusb1}/lib";
   shellHook = ''
