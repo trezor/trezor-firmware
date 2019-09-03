@@ -57,7 +57,7 @@ async def _continue_recovery_process(ctx: wire.Context) -> Success:
 
     possible_backup_types = backup_types.get(word_count)
 
-    secret = await _request_secret(ctx, word_count, possible_backup_types)
+    secret = await _request_secret(ctx, word_count, possible_backup_types, dry_run)
 
     if dry_run:
         result = await _finish_recovery_dry_run(ctx, secret, possible_backup_types)
@@ -135,7 +135,7 @@ async def _request_and_store_word_count(ctx: wire.Context, dry_run: bool) -> int
 
 
 async def _request_secret(
-    ctx: wire.Context, word_count: int, possible_backup_types: list
+    ctx: wire.Context, word_count: int, possible_backup_types: list, dry_run: bool
 ) -> bytes:
     is_slip39 = backup_types.is_slip39(possible_backup_types)
     await _request_share_first_screen(ctx, word_count, is_slip39)
@@ -181,6 +181,9 @@ async def _request_secret(
                     continue
         except MnemonicError:
             await layout.show_invalid_mnemonic(ctx, is_slip39)
+            if group_count is None:  # first mnemonic
+                word_count = await _request_and_store_word_count(ctx, dry_run)
+                possible_backup_types = backup_types.get(word_count)
             continue
         if secret is None:
             group_count = storage.recovery.get_slip39_group_count()
