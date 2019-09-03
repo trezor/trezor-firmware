@@ -28,7 +28,7 @@ stages:
   - test
 
 before_script:
-  - pipenv sync
+  - command -v pipenv >/dev/null && pipenv sync
 
 include:
   - ci/environment.yml
