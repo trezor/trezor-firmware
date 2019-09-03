@@ -10,7 +10,7 @@ TYPES = {
 }
 
 
-def get(word_count: int) -> int:
+def get(word_count: int) -> list:
     """
     Returns possible backup types inferred from the word count.
     """
