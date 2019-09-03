@@ -121,6 +121,22 @@ core unix frozen debug build:
     untracked: true
     expire_in: 1 week
 
+build core unix regular darwin:
+  stage: build
+  tags:
+    - darwin
+  script:
+    - sed -i '' 's/pkg-config/pkg-config --static/' core/SConscript.unix
+    - . $HOME/.nix-profile/etc/profile.d/nix.sh
+    - nix-shell --run "cd core && make build_unix"
+    - cp -v core/build/unix/micropython trezor-darwin-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+  allow_failure: true
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - trezor-darwin-*
+    expire_in: 1 week
+
 
 # Crypto
 
