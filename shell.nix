@@ -14,7 +14,6 @@ let
     ps.munch
     ps.pillow
     ps.pytest
-    ps.pytest-random-order
     ps.trezor
   ]);
 in
@@ -28,7 +27,6 @@ in
       check
       clang-tools
       gcc
-      gcc-arm-embedded
       gnumake
       graphviz
       openssl
@@ -39,5 +37,19 @@ in
       scons
       valgrind
       zlib
+    ] ++ stdenv.lib.optionals (!stdenv.isDarwin) [
+      gcc-arm-embedded
+    ] ++ stdenv.lib.optionals (stdenv.isDarwin) [
+      darwin.apple_sdk.frameworks.CoreAudio
+      darwin.apple_sdk.frameworks.AudioToolbox
+      darwin.apple_sdk.frameworks.ForceFeedback
+      darwin.apple_sdk.frameworks.CoreVideo
+      darwin.apple_sdk.frameworks.Cocoa
+      darwin.apple_sdk.frameworks.Carbon
+      darwin.apple_sdk.frameworks.IOKit
+      darwin.apple_sdk.frameworks.QuartzCore
+      darwin.apple_sdk.frameworks.Metal
+      darwin.libobjc
+      libiconv
     ];
   }
