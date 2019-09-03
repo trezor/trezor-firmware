@@ -3,7 +3,6 @@ from trezor.errors import IdentifierMismatchError, ShareAlreadyAddedError
 from trezor.messages import BackupType, ButtonRequestType
 from trezor.messages.ButtonAck import ButtonAck
 from trezor.messages.ButtonRequest import ButtonRequest
-from trezor.ui.info import InfoConfirm
 from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
@@ -18,7 +17,7 @@ from apps.common.confirm import confirm, require_confirm
 from apps.common.layout import show_success, show_warning
 
 if __debug__:
-    from apps.debug import input_signal, confirm_signal
+    from apps.debug import input_signal
 
 if False:
     from typing import List
@@ -56,7 +55,7 @@ async def request_word_count(ctx: wire.Context, dry_run: bool) -> int:
 async def request_mnemonic(
     ctx: wire.Context,
     word_count: int,
-    mnemonics: List[str],
+    previous_mnemonics: List[str],
     possible_backup_types: list,
 ) -> str:
     await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicInput), ButtonAck)
@@ -72,16 +71,16 @@ async def request_mnemonic(
         else:
             word = await ctx.wait(keyboard)
 
-        if mnemonics:
+        if previous_mnemonics:
             if BackupType.Slip39_Basic in possible_backup_types:
                 # check if first 3 words of mnemonic match
                 # we can check against the first one, others were checked already
                 if i < 3:
-                    share_list = mnemonics[0].split(" ")
+                    share_list = previous_mnemonics[0].split(" ")
                     if share_list[i] != word:
                         raise IdentifierMismatchError()
                 elif i == 3:
-                    for share in mnemonics:
+                    for share in previous_mnemonics:
                         share_list = share.split(" ")
                         # check if the fourth word is different from previous shares
                         if share_list[i] == word:
@@ -89,7 +88,7 @@ async def request_mnemonic(
             elif BackupType.Slip39_Advanced in possible_backup_types:
                 # in case of advanced shamir recovery we only check 2 words
                 if i < 2:
-                    share_list = mnemonics[0].split(" ")
+                    share_list = previous_mnemonics[0].split(" ")
                     if share_list[i] != word:
                         raise IdentifierMismatchError()
 
@@ -184,23 +183,6 @@ async def show_dry_run_different_type(ctx: wire.Context) -> None:
     await require_confirm(
         ctx, text, ButtonRequestType.ProtectCall, cancel=None, confirm="Continue"
     )
-
-
-async def show_keyboard_info(ctx: wire.Context) -> None:
-    # TODO: do not send ButtonRequestType.Other
-    await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
-
-    info = InfoConfirm(
-        "Did you know? "
-        "You can type the letters "
-        "one by one or use it like "
-        "a T9 keyboard.",
-        "Great!",
-    )
-    if __debug__:
-        await ctx.wait(info, confirm_signal())
-    else:
-        await ctx.wait(info)
 
 
 async def show_invalid_mnemonic(ctx: wire.Context, is_slip39: bool) -> None:
