@@ -5,7 +5,7 @@ from trezor.messages import BackupType
 from apps.common import storage
 
 if False:
-    from typing import Optional, Tuple
+    from typing import Optional, Tuple, Union
 
 
 def get() -> Tuple[Optional[bytes], int]:
@@ -16,7 +16,9 @@ def get_secret() -> Optional[bytes]:
     return storage.device.get_mnemonic_secret()
 
 
-def get_type() -> int:
+def get_type() -> Union[
+    BackupType.Bip39, BackupType.Slip39_Basic, BackupType.Slip39_Advanced
+]:
     return storage.device.get_backup_type()
 
 
