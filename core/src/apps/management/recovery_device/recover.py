@@ -78,5 +78,5 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], int, int]:
     else:
         mnemonics = storage.recovery_shares.fetch()
 
-    identifier, iteration_exponent, secret = slip39.combine_mnemonics(mnemonics)
+    identifier, iteration_exponent, secret, _ = slip39.combine_mnemonics(mnemonics)
     return secret, share.group_index, share.index
