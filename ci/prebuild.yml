@@ -1,6 +1,6 @@
 image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
 
-prebuild style:
+style prebuild:
   stage: prebuild
   only:
     changes:
@@ -11,7 +11,7 @@ prebuild style:
   script:
     - pipenv run make style_check
 
-prebuild common:
+common prebuild:
   stage: prebuild
   only:
     changes:
@@ -21,7 +21,7 @@ prebuild common:
   script:
     - pipenv run make defs_check
 
-prebuild gen:
+gen prebuild:
   stage: prebuild
   only:
     changes:
