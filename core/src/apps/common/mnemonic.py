@@ -5,7 +5,8 @@ from trezor.messages import BackupType
 from apps.common import storage
 
 if False:
-    from typing import Optional, Tuple, Union
+    from typing import Optional, Tuple
+    from apps.management.recovery_device.backup_types import BackupTypeUnion
 
 
 def get() -> Tuple[Optional[bytes], int]:
@@ -16,9 +17,7 @@ def get_secret() -> Optional[bytes]:
     return storage.device.get_mnemonic_secret()
 
 
-def get_type() -> Union[
-    BackupType.Bip39, BackupType.Slip39_Basic, BackupType.Slip39_Advanced
-]:
+def get_type() -> BackupTypeUnion:
     return storage.device.get_backup_type()
 
 

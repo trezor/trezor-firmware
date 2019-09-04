@@ -251,7 +251,7 @@ def generate_mnemonics_from_data(
     return mnemonics
 
 
-def combine_mnemonics(mnemonics: List[str]) -> Tuple[int, int, bytes]:
+def combine_mnemonics(mnemonics: List[str]) -> Tuple[int, int, bytes, int]:
     """
     Combines mnemonic shares to obtain the encrypted master secret which was previously
     split using Shamir's secret sharing scheme.
@@ -286,7 +286,7 @@ def combine_mnemonics(mnemonics: List[str]) -> Tuple[int, int, bytes]:
     ]
 
     encrypted_master_secret = _recover_secret(group_threshold, group_shares)
-    return (identifier, iteration_exponent, encrypted_master_secret, group_count)
+    return identifier, iteration_exponent, encrypted_master_secret, group_count
 
 
 def decode_mnemonic(mnemonic: str) -> Share:
