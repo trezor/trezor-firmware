@@ -1,5 +1,12 @@
 from trezor.messages import BackupType
 
+if False:
+    from typing import Union
+
+    BackupTypeUnion = Union[
+        BackupType.Bip39, BackupType.Slip39_Basic, BackupType.Slip39_Advanced
+    ]
+
 # possible backup types based on the number of words
 TYPES = {
     12: [BackupType.Bip39],

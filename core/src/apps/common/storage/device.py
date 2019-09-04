@@ -7,7 +7,8 @@ from trezor.messages import BackupType
 from apps.common.storage import common
 
 if False:
-    from typing import Optional, Union
+    from apps.management.recovery_device.backup_types import BackupTypeUnion
+    from typing import Optional
 
 # Namespace:
 _NAMESPACE = common._APP_DEVICE
@@ -81,9 +82,7 @@ def get_mnemonic_secret() -> Optional[bytes]:
     return common._get(_NAMESPACE, _MNEMONIC_SECRET)
 
 
-def get_backup_type() -> Union[
-    BackupType.Bip39, BackupType.Slip39_Basic, BackupType.Slip39_Advanced
-]:
+def get_backup_type() -> BackupTypeUnion:
     backup_type = common._get_uint8(_NAMESPACE, _BACKUP_TYPE)
     if backup_type is None:
         backup_type = _DEFAULT_BACKUP_TYPE
@@ -108,9 +107,7 @@ def get_homescreen() -> Optional[bytes]:
 
 def store_mnemonic_secret(
     secret: bytes,
-    backup_type: Union[
-        BackupType.Bip39, BackupType.Slip39_Basic, BackupType.Slip39_Advanced
-    ],
+    backup_type: BackupTypeUnion,
     needs_backup: bool = False,
     no_backup: bool = False,
 ) -> None:
