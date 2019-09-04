@@ -121,13 +121,13 @@ core unix frozen debug build:
     untracked: true
     expire_in: 1 week
 
-build core unix regular darwin:
+build core unix frozen regular darwin:
   stage: build
   tags:
     - darwin
   script:
     - . $HOME/.nix-profile/etc/profile.d/nix.sh
-    - nix-shell --run "cd core && make build_unix"
+    - nix-shell --run "cd core && make build_unix_frozen"
     - mkdir -p TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/{MacOS,libs}
     - cp -v core/build/unix/micropython TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/MacOS/TrezorEmu-$CI_COMMIT_SHORT_SHA
     - dylibbundler -of -b -i /usr/lib/system -d TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/libs -x TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/MacOS/TrezorEmu-$CI_COMMIT_SHORT_SHA
