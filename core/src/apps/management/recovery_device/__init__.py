@@ -22,15 +22,7 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     """
     _check_state(msg)
 
-    if not msg.dry_run:
-        title = "Recovery mode"
-        text = Text(title, ui.ICON_RECOVERY)
-        text.normal("Do you really want to", "recover a wallet?", "")
-    else:
-        title = "Seed check"
-        text = Text(title, ui.ICON_RECOVERY)
-        text.normal("Do you really want to", "check the recovery", "seed?")
-    await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)
+    await _warn(ctx, msg)
 
     # for dry run pin needs to entered
     if msg.dry_run:
@@ -77,3 +69,22 @@ def _check_state(msg: RecoveryDevice) -> None:
         raise wire.ProcessError(
             "Value enforce_wordlist must be True, Trezor Core enforces words automatically."
         )
+
+
+async def _warn(ctx: wire.Context, msg: RecoveryDevice):
+    if not msg.dry_run:
+        text = Text("Recovery mode", ui.ICON_RECOVERY, new_lines=False)
+        text.bold("Do you really want to")
+        text.br()
+        text.bold("recover a wallet?")
+
+        text.br()
+        text.br_half()
+        text.normal("By continuing you agree")
+        text.br()
+        text.normal("to")
+        text.bold("https://trezor.io/tos")
+    else:
+        text = Text("Seed check", ui.ICON_RECOVERY, new_lines=False)
+        text.normal("Do you really want to", "check the recovery", "seed?")
+    await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)
