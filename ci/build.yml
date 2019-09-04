@@ -126,17 +126,17 @@ build core unix regular darwin:
   tags:
     - darwin
   script:
-    - sed -i '' 's/pkg-config/pkg-config --static/' core/SConscript.unix
     - . $HOME/.nix-profile/etc/profile.d/nix.sh
     - nix-shell --run "cd core && make build_unix"
-    - cp -v core/build/unix/micropython trezor-darwin-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+    - mkdir -p TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/{MacOS,libs}
+    - cp -v core/build/unix/micropython TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/MacOS/TrezorEmu-$CI_COMMIT_SHORT_SHA
+    - dylibbundler -of -b -i /usr/lib/system -d TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/libs -x TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/MacOS/TrezorEmu-$CI_COMMIT_SHORT_SHA
   allow_failure: true
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-      - trezor-darwin-*
+      - TrezorEmu-$CI_COMMIT_SHORT_SHA.app
     expire_in: 1 week
-
 
 # Crypto
 
