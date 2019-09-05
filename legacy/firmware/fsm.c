@@ -55,6 +55,7 @@
 
 #if !BITCOIN_ONLY
 #include "ethereum.h"
+#include "hedera.h"
 #include "lisk.h"
 #include "nem.h"
 #include "nem2.h"
@@ -261,6 +262,7 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
 #if !BITCOIN_ONLY
 
 #include "fsm_msg_ethereum.h"
+#include "fsm_msg_hedera.h"
 #include "fsm_msg_lisk.h"
 #include "fsm_msg_nem.h"
 #include "fsm_msg_stellar.h"

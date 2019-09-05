@@ -180,3 +180,7 @@ if not utils.BITCOIN_ONLY:
     BinanceOrderMsg = 707
     BinanceCancelMsg = 708
     BinanceSignedTx = 709
+    HederaSignTx = 800
+    HederaSignedTx = 801
+    HederaGetPublicKey = 802
+    HederaPublicKey = 803

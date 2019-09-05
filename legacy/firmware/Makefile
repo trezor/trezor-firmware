@@ -34,6 +34,7 @@ OBJS += lisk.o
 OBJS += nem2.o
 OBJS += nem_mosaics.o
 OBJS += stellar.o
+OBJS += hedera.o
 endif
 
 OBJS += debug.o
@@ -110,6 +111,8 @@ OBJS += protob/messages-ethereum.pb.o
 OBJS += protob/messages-lisk.pb.o
 OBJS += protob/messages-nem.pb.o
 OBJS += protob/messages-stellar.pb.o
+OBJS += protob/messages-hedera.pb.o
+OBJS += protob/internal-hedera.pb.o
 endif
 
 OPTFLAGS ?= -Os

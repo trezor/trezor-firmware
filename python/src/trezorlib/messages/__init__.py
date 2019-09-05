@@ -103,6 +103,10 @@ from .GetFeatures import GetFeatures
 from .GetPublicKey import GetPublicKey
 from .HDNodePathType import HDNodePathType
 from .HDNodeType import HDNodeType
+from .HederaGetPublicKey import HederaGetPublicKey
+from .HederaPublicKey import HederaPublicKey
+from .HederaSignTx import HederaSignTx
+from .HederaSignedTx import HederaSignedTx
 from .IdentityType import IdentityType
 from .Initialize import Initialize
 from .LiskAddress import LiskAddress

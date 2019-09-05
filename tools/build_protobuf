@@ -22,7 +22,7 @@ CORE_PROTOBUF_SOURCES="\
     $PROTOB/messages-tezos.proto \
 "
 
-PYTHON_PROTOBUF_SOURCES=$PROTOB/*.proto
+PYTHON_PROTOBUF_SOURCES=$PROTOB/message*.proto
 
 CORE_MESSAGES_IGNORE="\
     CosiCommit \
@@ -72,7 +72,7 @@ do_rebuild() {
         sed -i "3ifrom trezor import utils\n" "$DESTDIR"/Capability.py
         sed -i "3ifrom trezor import utils\n" "$DESTDIR"/MessageType.py
         sed -i "/^EthereumGetPublicKey/iif not utils.BITCOIN_ONLY:" "$DESTDIR"/MessageType.py
-        for altcoin in Ethereum NEM Lisk Tezos Stellar Cardano Ripple Monero DebugMonero Eos Binance; do
+        for altcoin in Ethereum NEM Lisk Tezos Stellar Cardano Ripple Monero DebugMonero Eos Binance Hedera; do
             sed -i "s:^$altcoin:    $altcoin:" "$DESTDIR"/Capability.py
             sed -i "s:^$altcoin:    $altcoin:" "$DESTDIR"/MessageType.py
         done

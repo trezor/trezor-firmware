@@ -1,0 +1,8 @@
+HederaGetPublicKey.address_n                  max_count:8
+
+HederaPublicKey.public_key                    max_size:32
+
+HederaSignTx.address_n                        max_count:8
+HederaSignTx.transaction                      max_size:1024
+
+HederaSignedTx.signature                      max_size:64

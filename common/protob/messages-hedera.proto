@@ -1,0 +1,43 @@
+syntax = "proto2";
+package hw.trezor.messages.hedera;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageHedera";
+
+/**
+ * Request: Ask device for Hedera public key corresponding to address_n path
+ * @start
+ * @next HederaPublicKey
+ */
+message HederaGetPublicKey {
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+    optional bool show_display = 2; // Optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains Hedera public key derived from device private seed
+ * @end
+ */
+message HederaPublicKey {
+    optional bytes public_key = 1;  // Hedera public key
+}
+
+/**
+ * Request: Ask device to sign Hedera transaction
+ * @start
+ * @next HederaSignedTx
+ * @next Failure
+ */
+ message HederaSignTx {
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+    optional bytes transaction = 2; // Hedera transaction structure, defined in internal-hedera
+}
+
+/**
+ * Response: Contains Hedera transaction signature
+ * @end
+ */
+ message HederaSignedTx {
+    optional bytes signature = 1;
+}

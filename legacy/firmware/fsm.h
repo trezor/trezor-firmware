@@ -24,6 +24,7 @@
 #include "messages-crypto.pb.h"
 #include "messages-debug.pb.h"
 #include "messages-ethereum.pb.h"
+#include "messages-hedera.pb.h"
 #include "messages-lisk.pb.h"
 #include "messages-management.pb.h"
 #include "messages-nem.pb.h"
@@ -109,6 +110,10 @@ void fsm_msgLiskSignMessage(const LiskSignMessage *msg);
 void fsm_msgLiskVerifyMessage(const LiskVerifyMessage *msg);
 void fsm_msgLiskSignTx(LiskSignTx *msg);  // not const because we mutate
                                           // transaction during validation
+
+// hedera
+void fsm_msgHederaGetPublicKey(const HederaGetPublicKey *msg);
+void fsm_msgHederaSignTx(const HederaSignTx *tx);
 
 // nem
 void fsm_msgNEMGetAddress(

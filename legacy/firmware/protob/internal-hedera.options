@@ -1,0 +1,5 @@
+HederaKey.ed25519                    max_size:32
+
+HederaTransferList.accountAmounts    max_count:10
+
+HederaTransactionBody.memo           max_size:100

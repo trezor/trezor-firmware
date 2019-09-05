@@ -1,0 +1,80 @@
+syntax = "proto3";
+package hw.trezor.messages.hedera_internal;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageHederaInternal";
+
+message HederaAccountID {
+    uint64 shardNum = 1; //The shard number (nonnegative)
+    uint64 realmNum = 2; //The realm number (nonnegative)
+    uint64 accountNum = 3; //A nonnegative account number unique within its realm
+}
+
+message HederaTimestamp {
+    uint64 seconds = 1; // Number of complete seconds since the start of the epoch
+    uint32 nanos = 2; // Number of nanoseconds since the start of the last second
+}
+
+message HederaTransactionID {
+    HederaTimestamp transactionValidStart = 1; // The transaction is invalid if consensusTimestamp < transactionID.transactionStartValid
+    HederaAccountID accountID = 2; //The Account ID that paid for this transaction
+}
+
+message HederaDuration {
+    uint64 seconds = 1; // number of seconds
+}
+
+message HederaKey {
+    oneof key {
+        bytes ed25519 = 2; // ed25519 public key bytes
+    }
+}
+
+message HederaShardID {
+    uint64 shardNum = 1; //the shard number (nonnegative)
+}
+
+message HederaRealmID {
+    uint64 shardNum = 1; //The shard number (nonnegative)
+    uint64 realmNum = 2; //The realm number (nonnegative)
+}
+
+message HederaCryptoCreateTransactionBody {
+    HederaKey key = 1; // The key that must sign each transfer out of the account. If receiverSigRequired is true, then it must also sign any transfer into the account.
+    uint64 initialBalance = 2; // The initial number of tinybars to put into the account
+    HederaAccountID proxyAccountID = 3; // ID of the account to which this account is proxy staked. If proxyAccountID is null, or is an invalid account, or is an account that isn't a node, then this account is automatically proxy staked to a node chosen by the network, but without earning payments. If the proxyAccountID account refuses to accept proxy staking , or if it is not currently running a node, then it will behave as if proxyAccountID was null.
+    uint64 sendRecordThreshold = 6; // The threshold amount (in tinybars) for which an account record is created for any send/withdraw transaction
+    uint64 receiveRecordThreshold = 7; // The threshold amount (in tinybars) for which an account record is created for any receive/deposit transaction
+    bool receiverSigRequired = 8; // If true, this account's key must sign any transaction depositing into this account (in addition to all withdrawals)
+    HederaDuration autoRenewPeriod = 9; // The account is charged to extend its expiration date every this many seconds. If it doesn't have enough balance, it extends as long as possible. If it is empty when it expires, then it is deleted.
+    HederaShardID shardID = 10; // The shard in which this account is created
+    HederaRealmID realmID = 11; // The realm in which this account is created (leave this null to create a new realm)
+    HederaKey newRealmAdminKey = 12; // If realmID is null, then this the admin key for the new realm that will be created
+}
+
+message HederaAccountAmount {
+    HederaAccountID accountID = 1; // The Account ID that sends or receives cryptocurrency
+    sint64 amount = 2; // The amount of tinybars that the account sends(negative) or receives(positive)
+}
+
+message HederaTransferList {
+    repeated HederaAccountAmount accountAmounts = 1; // Multiple list of AccountAmount pairs, each of which has an account and an amount to transfer into it (positive) or out of it (negative)
+}
+
+message HederaCryptoTransferTransactionBody {
+    HederaTransferList transfers = 1; // Accounts and amounts to transfer
+}
+
+message HederaTransactionBody {
+    HederaTransactionID transactionID = 1; // The ID for this transaction, which includes the payer's account (the account paying the transaction fee). If two transactions have the same transactionID, they won't both have an effect
+    HederaAccountID nodeAccountID = 2; // The account of the node that submits the client's transaction to the network
+    uint64 transactionFee = 3; // The fee the client pays, which is split between the network and the node
+    HederaDuration transactionValidDuration = 4; // The transaction is invalid if consensusTimestamp > transactionID.transactionValidStart + transactionValidDuration
+    bool generateRecord = 5; // Should a record of this transaction be generated? (A receipt is always generated, but the record is optional)
+    string memo = 6; // Any notes or descriptions that should be put into the record (max length 100)
+    oneof data {
+        HederaCryptoCreateTransactionBody cryptoCreateAccount = 11; // Create a new cryptocurrency account
+        HederaCryptoTransferTransactionBody cryptoTransfer = 14; // Transfer amount between accounts
+    }
+}

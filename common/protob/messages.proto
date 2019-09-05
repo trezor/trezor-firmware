@@ -237,4 +237,10 @@ enum MessageType {
     MessageType_BinanceOrderMsg = 707 [(wire_in) = true];
     MessageType_BinanceCancelMsg = 708 [(wire_in) = true];
     MessageType_BinanceSignedTx = 709 [(wire_out) = true];
+
+    // Hedera
+    MessageType_HederaSignTx = 800 [(wire_in) = true];
+    MessageType_HederaSignedTx = 801 [(wire_out) = true];
+    MessageType_HederaGetPublicKey = 802 [(wire_in) = true];
+    MessageType_HederaPublicKey = 803 [(wire_out) = true];
 }

@@ -217,5 +217,20 @@
             "OMNI Trezor": "https://omnitrezor.com/"
         },
         "blockchain_link": null
+    },
+    {
+        "name": "Hedera",
+        "shortcut": "HBAR",
+        "slip44": 800,
+        "curve": "ed25519",
+        "decimals": 9,
+        "links": {
+            "Homepage": "https://hedera.com/",
+            "Github": "https://github.com/hashgraph"
+        },
+        "wallet": {
+            "MyHbarWallet": "https://myhbarwallet.app/"
+        },
+        "blockchain_link": null
     }
 ]

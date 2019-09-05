@@ -48,7 +48,7 @@ defs_check: ## check validity of coin definitions and protobuf files
 	python3 common/tools/cointool.py check
 	python3 common/tools/support.py check --ignore-missing
 	python3 common/protob/check.py
-	python3 common/protob/graph.py common/protob/*.proto
+	python3 common/protob/graph.py common/protob/message*.proto
 
 ## code generation commands:
 
