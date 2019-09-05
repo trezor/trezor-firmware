@@ -4,11 +4,35 @@ variables:
   SDL_VIDEODRIVER: "dummy"
   XDG_RUNTIME_DIR: "/var/tmp"
 
+.only_changes_core: &only_changes_core
+  only:
+    changes:
+      - ci/**/*
+      - common/**/*
+      - core/**/*
+      - crypto/**/*
+      - python/**/*
+      - storage/**/*
+      - tools/**/*
+      - vendor/**/*
+
+.only_changes_legacy: &only_changes_legacy
+  only:
+    changes:
+      - ci/**/*
+      - common/**/*
+      - crypto/**/*
+      - legacy/**/*
+      - python/**/*
+      - storage/**/*
+      - tools/**/*
+      - vendor/**/*
 
 # Core
 
 build core firmware regular:
   stage: build
+  <<: *only_changes_core
   script:
     - cd core
     - pipenv run make build_cross
@@ -28,6 +52,7 @@ build core firmware regular:
 
 build core firmware bitcoinonly:
   stage: build
+  <<: *only_changes_core
   variables:
     BITCOIN_ONLY: "1"
   script:
@@ -46,12 +71,14 @@ build core firmware bitcoinonly:
 
 build core unix regular:
   stage: build
+  <<: *only_changes_core
   script:
     - cd core
     - pipenv run make build_unix
 
 build core unix frozen regular:
   stage: build
+  <<: *only_changes_core
   script:
     - cd core
     - pipenv run make build_unix_frozen
@@ -64,6 +91,7 @@ build core unix frozen regular:
 
 build core unix frozen bitcoinonly:
   stage: build
+  <<: *only_changes_core
   variables:
     BITCOIN_ONLY: "1"
   script:
@@ -79,6 +107,7 @@ build core unix frozen bitcoinonly:
 
 build core unix frozen debug:
   stage: build
+  <<: *only_changes_core
   variables:
     PYOPT: "0"
   script:
@@ -94,6 +123,10 @@ build core unix frozen debug:
 
 build crypto:
   stage: build
+  only:
+    changes:
+      - ci/**/*
+      - crypto/**/*
   script:
     - cd crypto
     - pipenv run make
@@ -112,6 +145,7 @@ build crypto:
 # TODO: add clang https://github.com/trezor/trezor-firmware/issues/44
 build legacy firmware regular:
   stage: build
+  <<: *only_changes_legacy
   variables:
     MEMORY_PROTECT: "0"
   script:
@@ -130,6 +164,7 @@ build legacy firmware regular:
 
 build legacy firmware debug:
   stage: build
+  <<: *only_changes_legacy
   variables:
     DEBUG_LINK: "1"
     MEMORY_PROTECT: "0"
@@ -139,6 +174,7 @@ build legacy firmware debug:
 
 build legacy firmware bitcoinonly:
   stage: build
+  <<: *only_changes_legacy
   variables:
     BITCOIN_ONLY: "1"
     MEMORY_PROTECT: "0"
@@ -158,6 +194,7 @@ build legacy firmware bitcoinonly:
 
 build legacy emu regular:
   stage: build
+  <<: *only_changes_legacy
   variables:
     DEBUG_LINK: "1"
     EMULATOR: "1"
@@ -172,6 +209,7 @@ build legacy emu regular:
 
 build legacy emu bitcoinonly:
   stage: build
+  <<: *only_changes_legacy
   variables:
     BITCOIN_ONLY: "1"
     DEBUG_LINK: "1"

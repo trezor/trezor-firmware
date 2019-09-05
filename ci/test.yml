@@ -1,9 +1,36 @@
 image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
 
+.only_changes_core: &only_changes_core
+  only:
+    changes:
+      - ci/**/*
+      - common/**/*
+      - core/**/*
+      - crypto/**/*
+      - python/**/*
+      - storage/**/*
+      - tests/**/*
+      - tools/**/*
+      - vendor/**/*
+
+.only_changes_legacy: &only_changes_legacy
+  only:
+    changes:
+      - ci/**/*
+      - common/**/*
+      - crypto/**/*
+      - legacy/**/*
+      - python/**/*
+      - storage/**/*
+      - tests/**/*
+      - tools/**/*
+      - vendor/**/*
+
 # Core
 
 test core unix unit:
   stage: test
+  <<: *only_changes_core
   dependencies:
     - build core unix frozen regular
   script:
@@ -12,6 +39,7 @@ test core unix unit:
 
 test core unix device:
   stage: test
+  <<: *only_changes_core
   dependencies:
     - build core unix frozen regular
   script:
@@ -20,6 +48,7 @@ test core unix device:
 
 test core unix device bitcoinonly:
   stage: test
+  <<: *only_changes_core
   dependencies:
     - build core unix frozen bitcoinonly
   variables:
@@ -31,6 +60,7 @@ test core unix device bitcoinonly:
 
 test core unix monero:
   stage: test
+  <<: *only_changes_core
   dependencies:
     - build core unix frozen regular
   script:
@@ -42,6 +72,10 @@ test core unix monero:
 
 test crypto:
   stage: test
+  only:
+    changes:
+      - ci/**/*
+      - crypto/**/*
   dependencies:
     - build crypto
   script:
@@ -57,6 +91,7 @@ test crypto:
 
 test legacy emu:
   stage: test
+  <<: *only_changes_legacy
   dependencies:
     - build legacy emu regular
   variables:
@@ -67,6 +102,7 @@ test legacy emu:
 
 test legacy emu bitcoinonly:
   stage: test
+  <<: *only_changes_legacy
   dependencies:
     - build legacy emu bitcoinonly
   variables:
@@ -82,6 +118,10 @@ test legacy emu bitcoinonly:
 
 test python:
   stage: test
+  only:
+    changes:
+      - ci/**/*
+      - python/**/*
   script:
     - cd python
     - pipenv run tox
@@ -91,6 +131,10 @@ test python:
 
 test storage:
   stage: test
+  only:
+    changes:
+      - ci/**/*
+      - storage/**/*
   dependencies: []
   script:
     - cd storage/tests
@@ -102,6 +146,8 @@ test storage:
 
 test upgrade:
   stage: test
+  <<: *only_changes_core
+  <<: *only_changes_legacy
   dependencies:
     - build core unix frozen debug
     - build legacy emu regular
