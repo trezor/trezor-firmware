@@ -126,5 +126,5 @@ test hardware legacy firmware regular:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-      - video*.mp4
+      - tpmb/scripts/video*.mp4
     expire_in: 1 week
