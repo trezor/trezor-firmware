@@ -24,7 +24,7 @@ from .common import TrezorTest
 
 @pytest.mark.skip_t1
 class TestMsgRecoverydeviceT2(TrezorTest):
-    @pytest.mark.setup_client(uninitialized=True)
+    @pytest.mark.setup_client(uninitialized=True, random_seed=0)
     def test_pin_passphrase(self, client):
         mnemonic = self.mnemonic12.split(" ")
         ret = client.call_raw(

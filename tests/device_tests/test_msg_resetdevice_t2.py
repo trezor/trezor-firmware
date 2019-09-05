@@ -29,7 +29,7 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 @pytest.mark.skip_t1
 class TestMsgResetDeviceT2(TrezorTest):
-    @pytest.mark.setup_client(uninitialized=True)
+    @pytest.mark.setup_client(uninitialized=True, random_seed=0)
     def test_reset_device(self, client):
         words = []
         strength = 128
@@ -120,7 +120,7 @@ class TestMsgResetDeviceT2(TrezorTest):
         assert resp.pin_protection is False
         assert resp.passphrase_protection is False
 
-    @pytest.mark.setup_client(uninitialized=True)
+    @pytest.mark.setup_client(uninitialized=True, random_seed=0)
     def test_reset_device_pin(self, client):
         words = []
         strength = 128
@@ -227,7 +227,7 @@ class TestMsgResetDeviceT2(TrezorTest):
         assert resp.pin_protection is True
         assert resp.passphrase_protection is True
 
-    @pytest.mark.setup_client(uninitialized=True)
+    @pytest.mark.setup_client(uninitialized=True, random_seed=0)
     def test_failed_pin(self, client):
         # external_entropy = b'zlutoucky kun upel divoke ody' * 2
         strength = 128

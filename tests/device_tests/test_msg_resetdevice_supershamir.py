@@ -14,7 +14,7 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 @pytest.mark.skip_t1
 class TestMsgResetDeviceT2(TrezorTest):
     # TODO: test with different options
-    @pytest.mark.setup_client(uninitialized=True)
+    @pytest.mark.setup_client(uninitialized=True, random_seed=0)
     def test_reset_device_supershamir(self, client):
         strength = 128
         member_threshold = 3
