@@ -30,6 +30,7 @@ _U2F_KEY_PATH = const(0x80553246)
 
 class Credential:
     def __init__(self) -> None:
+        self.index = None  # type Optional[int]
         self.id = b""  # type: bytes
         self.rp_id = ""  # type: str
         self.rp_id_hash = b""  # type: bytes
@@ -104,7 +105,9 @@ class Fido2Credential(Credential):
         self.id = _CRED_ID_VERSION + iv + ciphertext + tag
 
     @staticmethod
-    def from_cred_id(cred_id: bytes, rp_id_hash: bytes) -> Optional["Fido2Credential"]:
+    def from_cred_id(
+        cred_id: bytes, rp_id_hash: Optional[bytes]
+    ) -> Optional["Fido2Credential"]:
         if len(cred_id) < _CRED_ID_MIN_LENGTH or cred_id[0:4] != _CRED_ID_VERSION:
             return None
 
@@ -114,6 +117,16 @@ class Fido2Credential(Credential):
         iv = cred_id[4:16]
         ciphertext = cred_id[16:-16]
         tag = cred_id[-16:]
+
+        if rp_id_hash is None:
+            ctx = chacha20poly1305(key, iv)
+            data = ctx.decrypt(ciphertext)
+            try:
+                rp_id = cbor.decode(data)[_CRED_ID_RP_ID]
+            except Exception:
+                return None
+            rp_id_hash = hashlib.sha256(rp_id).digest()
+
         ctx = chacha20poly1305(key, iv)
         ctx.auth(rp_id_hash)
         data = ctx.decrypt(ciphertext)
