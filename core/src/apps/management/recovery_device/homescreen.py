@@ -191,6 +191,15 @@ async def _request_secret(
                 await layout.show_group_share_success(ctx, share_index, group_index)
             await _request_share_next_screen(ctx, is_slip39)
 
+    # if we have a secret and two possible backup_types
+    # it means the slip39 share was 1of1 and the group was 1ofX
+    if len(possible_backup_types) != 1:
+        group_count = storage.recovery.get_slip39_group_count()
+        if group_count == 1:
+            possible_backup_types.remove(BackupType.Slip39_Advanced)
+        else:
+            possible_backup_types.remove(BackupType.Slip39_Basic)
+
     return secret
 
 
