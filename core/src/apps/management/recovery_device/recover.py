@@ -44,7 +44,13 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], int, int]:
         )
         storage.recovery_shares.set(index_with_group_offset, words)
 
-        return None, share.group_index, share.index  # we need more shares
+        # if share threshold and group threshold are 1
+        # we can calculate the secret right away
+        if share.threshold == 1 and share.group_threshold == 1:
+            identifier, iteration_exponent, secret, _ = slip39.combine_mnemonics(words)
+            return secret, share.group_index, share.index
+        else:
+            return None, share.group_index, share.index  # we need more shares
 
     if remaining[share.group_index] == 0:
         raise GroupThresholdReachedError()
