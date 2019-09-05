@@ -108,3 +108,23 @@ test upgrade:
   script:
     - tests/upgrade_tests/download_emulators.sh
     - pipenv run pytest tests/upgrade_tests
+
+# Hardware
+test hardware legacy firmware regular:
+  stage: test
+  tags:
+    - tpmb
+  dependencies:
+    - build legacy firmware regular
+  script:
+    - git clone https://github.com/mmahut/tpmb
+    - cd tpmb/scripts
+    - nix-shell --run "./record_video.sh ${CI_COMMIT_SHORT_SHA} start"
+    - nix-shell --run "./update_from_to.sh 1.8.3 ../../trezor-*.bin"
+    - nix-shell --run "./basictest.py"
+    - nix-shell --run "./record_video.sh ${CI_COMMIT_SHORT_SHA} stop"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - video*.mp4
+    expire_in: 1 week
