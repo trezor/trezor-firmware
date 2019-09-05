@@ -82,4 +82,7 @@ Use the following command to see all options:
     tezos-sign-tx                   Sign Tezos transaction.
     verify-message                  Verify message.
     version                         Show version of trezorctl/trezorlib.
+    webauthn-add-credential         Add the credential with the given ID as a resident credential.
+    webauthn-list-credentials       List all resident credentials on the device.
+    webauthn-remove-credential      Remove the resident credential at the given index.
     wipe-device                     Reset device to factory defaults and remove all private data.
