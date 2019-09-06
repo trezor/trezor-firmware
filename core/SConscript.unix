@@ -40,6 +40,7 @@ CPPDEFINES_MOD += [
     ('USE_CARDANO', '1' if EVERYTHING else '0'),
     ('USE_NEM', '1' if EVERYTHING else '0'),
     ('USE_EOS', '1' if EVERYTHING else '0'),
+    ('USE_BIP39_CACHE', '0')
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
