@@ -34,12 +34,14 @@ layout_chan = loop.chan()
 
 # in debug mode, display an indicator in top right corner
 if __debug__:
+    import apps.debug
 
     def refresh() -> None:
         display.bar(Display.WIDTH - 8, 0, 8, 8, 0xF800)
         display.refresh()
-        if utils.SAVE_SCREEN:
-            display.save("refresh")
+
+        if utils.SAVE_SCREEN or apps.debug.save_screen:
+            display.save(apps.debug.save_screen_directory + "/refresh-")
 
 
 else:
