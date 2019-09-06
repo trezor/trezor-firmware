@@ -18,6 +18,7 @@ import filecmp
 import itertools
 import os
 import re
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -29,90 +30,6 @@ from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 from trezorlib.transport import enumerate_devices, get_transport
 
 TREZOR_VERSION = None
-
-SAVE_SCREEN = int(os.environ.get("TREZOR_SAVE_SCREEN", 0))
-SAVE_SCREEN_FIXTURES = int(os.environ.get("TREZOR_SAVE_SCREEN_FIXTURES", 0))
-
-
-class ScreenshotCollector:
-    SCREENSHOT_PATH = (Path(__file__) / "../../../core/src").resolve()
-    SCREENSHOT_FIXTURE_PATH = (Path(__file__) / "../../ui_tests").resolve()
-
-    def __init__(self, node):
-        self.node = node
-
-    @staticmethod
-    def _remove_files(files):
-        for f in files:
-            f.unlink()
-
-    def get_test_dirname(self):
-        # This composes the dirname from the test module name and test item name.
-        # Test item name is usually function name, but when parametrization is used,
-        # parameters are also part of the name. Some functions have very long parameter
-        # names (tx hashes etc) that run out of maximum allowable filename length, so
-        # we limit the name to first 100 chars. This is not a problem with txhashes.
-        node_name = re.sub(r"\W+", "_", self.node.name)[:100]
-        node_module_name = self.node.getparent(pytest.Module).name
-        return "{}_{}".format(node_module_name, node_name)
-
-    def collect_screenshots(self):
-        return list(sorted(self.SCREENSHOT_PATH.glob("*.png")))
-
-    def collect_fixtures(self):
-        return list(
-            sorted(
-                self.SCREENSHOT_FIXTURE_PATH.glob(
-                    "{}/*.png".format(self.get_test_dirname())
-                )
-            )
-        )
-
-    def assert_images(self):
-        fixtures = self.collect_fixtures()
-        if not fixtures:
-            return
-        images = self.collect_screenshots()
-
-        for fixture, image in itertools.zip_longest(fixtures, images):
-            if fixture is None:
-                pytest.fail("Missing fixture for image {}".format(image))
-            if image is None:
-                pytest.fail("Missing image for fixture {}".format(fixture))
-            if not filecmp.cmp(fixture, image):
-                pytest.fail("Image {} and fixture {} differ".format(image, fixture))
-
-    def record_fixtures(self):
-        fixture_dir = self.SCREENSHOT_FIXTURE_PATH / self.get_test_dirname()
-
-        if fixture_dir.is_dir():
-            # remove old fixtures
-            self._remove_files(self.collect_fixtures())
-        else:
-            # create the fixture dir, if not present
-            fixture_dir.mkdir()
-
-        # move the recorded images into the fixture locations
-        for index, image in enumerate(self.collect_screenshots()):
-            fixture = fixture_dir / "{:08}.png".format(index)
-            image.replace(fixture)
-
-    def __enter__(self):
-        if SAVE_SCREEN and not self.node.get_closest_marker("skip_ui"):
-            self._remove_files(self.collect_screenshots())
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        if (
-            exc_value is None
-            and SAVE_SCREEN
-            and not self.node.get_closest_marker("skip_ui")
-        ):
-            if SAVE_SCREEN_FIXTURES:
-                self.record_fixtures()
-            else:
-                self.assert_images()
-
-        # self._remove_files(self.collect_screenshots())
 
 
 def get_device():
@@ -144,14 +61,77 @@ def device_version():
         return 1
 
 
+def _get_test_dirname(node):
+    # This composes the dirname from the test module name and test item name.
+    # Test item name is usually function name, but when parametrization is used,
+    # parameters are also part of the name. Some functions have very long parameter
+    # names (tx hashes etc) that run out of maximum allowable filename length, so
+    # we limit the name to first 100 chars. This is not a problem with txhashes.
+    node_name = re.sub(r"\W+", "_", node.name)[:100]
+    node_module_name = node.getparent(pytest.Module).name
+    return "{}_{}".format(node_module_name, node_name)
+
+
+def _record_screen_fixtures(fixture_dir, test_dir):
+    if fixture_dir.exists():
+        # remove old fixtures
+        for fixture in fixture_dir.iterdir():
+            fixture.unlink()
+    else:
+        # create the fixture dir, if not present
+        fixture_dir.mkdir()
+
+    # move recorded screenshots into fixture directory
+    records = sorted(test_dir.iterdir())
+    for index, record in enumerate(sorted(records)):
+        fixture = fixture_dir / "{:08}.png".format(index)
+        record.replace(fixture)
+
+
+def _assert_screen_recording(fixture_dir, test_dir):
+    fixtures = sorted(fixture_dir.iterdir())
+    records = sorted(test_dir.iterdir())
+
+    if not fixtures:
+        return
+
+    for fixture, image in itertools.zip_longest(fixtures, records):
+        if fixture is None:
+            pytest.fail("Missing fixture for image {}".format(image))
+        if image is None:
+            pytest.fail("Missing image for fixture {}".format(fixture))
+        if not filecmp.cmp(fixture, image):
+            pytest.fail("Image {} and fixture {} differ".format(image, fixture))
+
+
+@contextmanager
+def _screen_recording(client, request, tmp_path):
+    if not request.node.get_closest_marker("skip_ui"):
+        test_screen = request.config.getoption("test_screen")
+    else:
+        test_screen = ""
+    fixture_root = Path(__file__) / "../../ui_tests"
+
+    try:
+        if test_screen:
+            client.debug.start_recording(str(tmp_path))
+        yield
+    finally:
+        if test_screen:
+            client.debug.stop_recording()
+            fixture_path = fixture_root.resolve() / _get_test_dirname(request.node)
+            if test_screen == "record":
+                _record_screen_fixtures(fixture_path, tmp_path)
+            elif test_screen == "test":
+                _assert_screen_recording(fixture_path, tmp_path)
+
+
 @pytest.fixture(scope="function")
-def client(request):
+def client(request, tmp_path):
     client = get_device()
     wipe_device(client)
-
     client.open()
 
-    # fmt: off
     setup_params = dict(
         uninitialized=False,
         mnemonic=" ".join(["all"] * 12),
@@ -159,8 +139,6 @@ def client(request):
         passphrase=False,
         random_seed=None,
     )
-    # fmt: on
-
     marker = request.node.get_closest_marker("setup_client")
     if marker:
         setup_params.update(marker.kwargs)
@@ -168,7 +146,6 @@ def client(request):
     if not setup_params["uninitialized"]:
         if setup_params["pin"] is True:
             setup_params["pin"] = "1234"
-
         debuglink.load_device_by_mnemonic(
             client,
             mnemonic=setup_params["mnemonic"],
@@ -184,10 +161,19 @@ def client(request):
     if setup_params["random_seed"] is not None:
         client.debug.reseed(setup_params["random_seed"])
 
-    with ScreenshotCollector(request.node):
+    with _screen_recording(client, request, tmp_path):
         yield client
 
     client.close()
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--test_screen",
+        action="store",
+        default="",
+        help="Enable UI intergration tests: 'test' or 'record'",
+    )
 
 
 def pytest_configure(config):
