@@ -192,6 +192,7 @@ def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
 
     return signatures, serialized_tx
 
+
 @expect(messages.MessageSignature)
 def sign_tpos_contract(
     client, coin_name, n, tpos, script_type=messages.InputScriptType.SPENDADDRESS

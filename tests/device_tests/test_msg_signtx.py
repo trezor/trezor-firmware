@@ -14,8 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import pytest
 import binascii
+
+import pytest
 
 from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, CallException, btc_hash, parse_path
@@ -68,6 +69,7 @@ TXHASH_2bac7a = bytes.fromhex(
 TXHASH_6b97a5 = bytes.fromhex(
     "6b97a5579b4e088d472c1b8c2a30b216be1603dd006af7a42d75c12b0a75d6db"
 )
+
 
 def check_sign_tx(
     client,
@@ -152,7 +154,9 @@ def check_sign_tx(
 
     with client:
         client.set_expected_responses(expected_responses)
-        return btc.sign_tx(client, coin_name, inputs, outputs, details=details_tx, prev_txes=txes)
+        return btc.sign_tx(
+            client, coin_name, inputs, outputs, details=details_tx, prev_txes=txes
+        )
 
 
 class TestMsgSigntx:
@@ -821,27 +825,29 @@ class TestMsgSigntx:
         # input 0: 1.11994500 XSN
 
         inp1 = proto.TxInputType(
-            address_n=[0], # Xe2cLLPxqahT3XkkuuPJrAXhsved39jeqa
+            address_n=[0],  # Xe2cLLPxqahT3XkkuuPJrAXhsved39jeqa
             prev_hash=TXHASH_6b97a5,
             prev_index=0,
         )
 
         out1 = proto.TxOutputType(
             address="Xat9wgxXaJMaJEWWMZCG4fh5B9utBXcpba",
-            amount=100000000, # 1 XSN
+            amount=100000000,  # 1 XSN
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
         out2 = proto.TxOutputType(
             address="Xe2cLLPxqahT3XkkuuPJrAXhsved39jeqa",
-            amount=11993500, # 0.11993500 XSN
+            amount=11993500,  # 0.11993500 XSN
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
-        
+
         out3 = proto.TxOutputType(
-            op_return_data=binascii.a2b_hex("54504f53434f4e54524143545861743977677858614a4d614a4557574d5a43473466683542397574425863706261586572557a7859474735595a7873756968476341594d4459594450543358576b6636501f116a4255fa8cd32418d211227abcb3989684c34c240da876704b229f0a943a7966144f96fbe044b65412fbcb2dee6f28ebe56d1bd5559b4b189cb70beeea8159"),
+            op_return_data=binascii.a2b_hex(
+                "54504f53434f4e54524143545861743977677858614a4d614a4557574d5a43473466683542397574425863706261586572557a7859474735595a7873756968476341594d4459594450543358576b6636501f116a4255fa8cd32418d211227abcb3989684c34c240da876704b229f0a943a7966144f96fbe044b65412fbcb2dee6f28ebe56d1bd5559b4b189cb70beeea8159"
+            ),
             amount=0,
-            script_type=proto.OutputScriptType.PAYTOOPRETURN
+            script_type=proto.OutputScriptType.PAYTOOPRETURN,
         )
         out3.force_confirm = True
 

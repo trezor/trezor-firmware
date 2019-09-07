@@ -206,6 +206,7 @@ from .SelfTest import SelfTest
 from .SetU2FCounter import SetU2FCounter
 from .SignIdentity import SignIdentity
 from .SignMessage import SignMessage
+from .SignTposContract import SignTposContract
 from .SignTx import SignTx
 from .SignedIdentity import SignedIdentity
 from .StellarAccountMergeOp import StellarAccountMergeOp

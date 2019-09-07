@@ -276,26 +276,29 @@ def output_script_multisig_length(pubkeys, m: int) -> int:
 # OP_RETURN
 # ===
 
+
 def is_tpos_contract(data: bytes) -> bool:
-    prefix = b'TPOSCONTRACT'
-    return len(data) == 0x92 and data[:len(prefix)] == prefix
+    prefix = b"TPOSCONTRACT"
+    return len(data) == 0x92 and data[: len(prefix)] == prefix
+
 
 # data length is expected to be already validated
 def unsafe_tpos_opreturn(data: bytes) -> bytearray:
     w = empty_bytearray(1 + 4 + len(data))
-    w.append(0x6A)              # OP_RETURN
+    w.append(0x6A)  # OP_RETURN
     write_op_push(w, 0x22)
-    w.extend(data[:0x22])       # TPOS ADDRESS
+    w.extend(data[:0x22])  # TPOS ADDRESS
     write_op_push(w, 0x22)
-    w.extend(data[0x22:0x44])   # MERCHANT ADDRESS
+    w.extend(data[0x22:0x44])  # MERCHANT ADDRESS
     write_op_push(w, 0x1)
-    w.extend(data[0x44:0x45])   # COMMISSION
+    w.extend(data[0x44:0x45])  # COMMISSION
     write_op_push(w, 0x41)
-    w.extend(data[0x45:])       # SIGNATURE
+    w.extend(data[0x45:])  # SIGNATURE
     return w
 
+
 def output_script_paytoopreturn(data: bytes) -> bytearray:
-    if (is_tpos_contract(data)):
+    if is_tpos_contract(data):
         w = unsafe_tpos_opreturn(data[12:])
     else:
         w = empty_bytearray(1 + 5 + len(data))

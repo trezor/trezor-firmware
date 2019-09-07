@@ -34,13 +34,14 @@ def split_message(message: bytes) -> List[str]:
         words = [m]
     return words
 
+
 # hashes the serialized bytes
 # required for Stakenet TPOS contracts
 def tpos_digest(coin, tpos):
     if coin.decred:
-        h = HashWriter(blake256())
+        h = utils.HashWriter(blake256())
     else:
-        h = HashWriter(sha256())
+        h = utils.HashWriter(sha256())
     h.extend(tpos)
     ret = h.get_digest()
     if coin.sign_hash_double:

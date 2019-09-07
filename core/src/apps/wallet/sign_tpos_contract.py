@@ -5,9 +5,8 @@ from trezor.messages.MessageSignature import MessageSignature
 from trezor.ui.text import Text
 
 from apps.common import coins
-from apps.common.confirm import require_confirm
 from apps.common.paths import validate_path
-from apps.common.signverify import tpos_digest, split_message
+from apps.common.signverify import split_message, tpos_digest
 from apps.wallet.sign_tx.addresses import get_address, validate_full_path
 
 
@@ -50,20 +49,22 @@ async def sign_tpos_contract(ctx, msg, keychain):
 
     return MessageSignature(address=address, signature=signature)
 
+
 def serialize(tpos):
     tpos = list(tpos)
-    separator = tpos.index(ord(':'))
+    separator = tpos.index(ord(":"))
     prev_hash = bytes(tpos[:separator])
-    prev_hash = [int(prev_hash[i : i + 2 ], 16) for i in range(0, len(prev_hash), 2)]
+    prev_hash = [int(prev_hash[i : i + 2], 16) for i in range(0, len(prev_hash), 2)]
     prev_hash.reverse()
     prev_hash = bytes(prev_hash)
 
-    nout = map(lambda n: str(n - ord('0')), tpos[separator + 1:])
-    nout = int(''.join(nout))
+    nout = map(lambda n: str(n - ord("0")), tpos[separator + 1 :])
+    nout = int("".join(nout))
 
-    nout = bytes(nout.to_bytes(4, 'big'))
+    nout = bytes(nout.to_bytes(4, "big"))
 
     return prev_hash + nout
+
 
 async def require_confirm_sign_tpos_contract(ctx, tpos):
     tpos = split_message(tpos)

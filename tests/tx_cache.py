@@ -23,10 +23,6 @@ from trezorlib.tx_api import json_to_tx
 
 CACHE_PATH = os.path.join(os.path.dirname(__file__), "txcache")
 
-def decimal_default(obj):
-    if isinstance(obj, decimal.Decimal):
-        return float(obj)
-    raise TypeError
 
 def tx_cache(coin_name, allow_fetch=True):
     coin_data = coins.by_name[coin_name]
@@ -58,7 +54,7 @@ class TxCache:
         # cache miss, try to use backend
         data = self.fetch(txhash)
         with open(cache_file, "w") as f:
-            json.dump(data, f, default=decimal_default)
+            json.dump(data, f)
         return json_to_tx(self.coin_data, data)
 
     def __getitem__(self, key):

@@ -20,6 +20,7 @@ from trezorlib import btc
 
 from ..common import MNEMONIC12
 
+
 class TestMsgSigntposContract:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_sign_stakenet_0(self, client):

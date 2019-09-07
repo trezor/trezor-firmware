@@ -46,6 +46,7 @@ Address = 30
 SignMessage = 38
 VerifyMessage = 39
 MessageSignature = 40
+SignTposContract = 43
 CipherKeyValue = 23
 CipheredKeyValue = 48
 SignIdentity = 53
