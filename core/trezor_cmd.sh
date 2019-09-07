@@ -7,7 +7,7 @@ if [[ ! "${TREZOR_SRC}" ]]; then echo "expecting TREZOR_SRC"; exit 0; fi
 
 # optional inputs:
 # TREZOR_PROFILE -- profile name (directory) in ~/.trezoremu or full path
-# PROFILING -- wrap the uMP/python in the profiler script
+# TREZOR_PROFILING -- wrap the uMP/python in the profiler script
 
 # outputs:
 ## uMP
@@ -51,7 +51,7 @@ if [[ -f "${TREZOR_PROFILE_DIR}/emu.config" ]]; then
 fi
 
 # for profiling wrap
-if [[ "$PROFILING" -gt 0 ]]; then
+if [[ "$TREZOR_PROFILING" -gt 0 ]]; then
     MAIN="${TREZOR_SRC}/../prof/prof.py"
 else
     MAIN="${TREZOR_SRC}/main.py"
