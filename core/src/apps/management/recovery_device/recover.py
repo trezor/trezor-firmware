@@ -21,7 +21,7 @@ def process_bip39(words: str) -> bytes:
     return words.encode()
 
 
-def process_slip39(words: str) -> Tuple[Optional[bytes], int, int]:
+def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
     """
     Processes a single mnemonic share. Returns the encrypted master secret
     (or None if more shares are needed) and the share's group index and member index.
@@ -48,9 +48,10 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], int, int]:
         # we can calculate the secret right away
         if share.threshold == 1 and share.group_threshold == 1:
             identifier, iteration_exponent, secret, _ = slip39.combine_mnemonics(words)
-            return secret, share.group_index, share.index
+            return secret, share
         else:
-            return None, share.group_index, share.index  # we need more shares
+            # we need more shares
+            return None, share
 
     if remaining[share.group_index] == 0:
         raise GroupThresholdReachedError()
@@ -72,7 +73,8 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], int, int]:
     storage.recovery_shares.set(index_with_group_offset, words)
 
     if remaining.count(0) < share.group_threshold:
-        return None, share.group_index, share.index  # we need more shares
+        # we need more shares
+        return None, share
 
     if len(remaining) > 1:
         mnemonics = []
@@ -85,4 +87,4 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], int, int]:
         mnemonics = storage.recovery_shares.fetch()
 
     identifier, iteration_exponent, secret, _ = slip39.combine_mnemonics(mnemonics)
-    return secret, share.group_index, share.index
+    return secret, share

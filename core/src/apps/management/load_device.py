@@ -12,39 +12,31 @@ from apps.management.recovery_device import backup_types
 
 async def load_device(ctx, msg):
     word_count = _validate(msg)
-    possible_backup_types = backup_types.get(word_count)
+    is_slip39 = backup_types.is_slip39_word_count(word_count)
 
-    if (
-        BackupType.Bip39 in possible_backup_types
-        and not msg.skip_checksum
-        and not bip39.check(msg.mnemonics[0])
-    ):
+    if not is_slip39 and not msg.skip_checksum and not bip39.check(msg.mnemonics[0]):
         raise wire.ProcessError("Mnemonic is not valid")
 
     await _warn(ctx)
 
-    if BackupType.Bip39 in possible_backup_types:
+    if not is_slip39:  # BIP-39
         secret = msg.mnemonics[0].encode()
-    elif backup_types.is_slip39(possible_backup_types):
+        backup_type = BackupType.Bip39
+    else:
         identifier, iteration_exponent, secret, group_count = slip39.combine_mnemonics(
             msg.mnemonics
         )
         if group_count == 1:
-            possible_backup_types = [BackupType.Slip39_Basic]
+            backup_type = BackupType.Slip39_Basic
         elif group_count > 1:
-            possible_backup_types = [BackupType.Slip39_Advanced]
+            backup_type = BackupType.Slip39_Advanced
         else:
             raise RuntimeError("Invalid group count")
         storage.device.set_slip39_identifier(identifier)
         storage.device.set_slip39_iteration_exponent(iteration_exponent)
-    else:
-        raise RuntimeError("Unknown mnemonic type")
 
-    if len(possible_backup_types) != 1:
-        # Only one possible backup type should be left before storing into the storage.
-        raise RuntimeError
     storage.device.store_mnemonic_secret(
-        secret, possible_backup_types[0], needs_backup=True, no_backup=False
+        secret, backup_type, needs_backup=True, no_backup=False
     )
     storage.device.load_settings(
         use_passphrase=msg.passphrase_protection, label=msg.label

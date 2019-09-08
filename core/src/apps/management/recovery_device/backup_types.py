@@ -7,24 +7,18 @@ if False:
         BackupType.Bip39, BackupType.Slip39_Basic, BackupType.Slip39_Advanced
     ]
 
-# possible backup types based on the number of words
-TYPES = {
-    12: [BackupType.Bip39],
-    18: [BackupType.Bip39],
-    24: [BackupType.Bip39],
-    20: [BackupType.Slip39_Basic, BackupType.Slip39_Advanced],
-    33: [BackupType.Slip39_Basic, BackupType.Slip39_Advanced],
-}
+_BIP39_WORD_COUNTS = (12, 18, 24)
+_SLIP39_WORD_COUNTS = (20, 33)
 
 
-def get(word_count: int) -> list:
+def is_slip39_word_count(word_count: int) -> bool:
     """
-    Returns possible backup types inferred from the word count.
+    Returns True for SLIP-39 and False for BIP-39.
+    Raise RuntimeError otherwise.
     """
-    if word_count not in TYPES:
-        raise RuntimeError("Recovery: Unknown words count")
-    return TYPES[word_count]
-
-
-def is_slip39(backup: list) -> bool:
-    return BackupType.Slip39_Basic in backup or BackupType.Slip39_Advanced in backup
+    if word_count in _SLIP39_WORD_COUNTS:
+        return True
+    elif word_count in _BIP39_WORD_COUNTS:
+        return False
+    # Unknown word count.
+    raise RuntimeError

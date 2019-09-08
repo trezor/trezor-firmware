@@ -23,7 +23,7 @@ def get(index: int) -> Optional[str]:
 def fetch() -> List[str]:
     mnemonics = []
     if not recovery.get_slip39_group_count():
-        raise RuntimeError
+        return mnemonics
     for index in range(0, slip39.MAX_SHARE_COUNT * recovery.get_slip39_group_count()):
         m = get(index)
         if m:

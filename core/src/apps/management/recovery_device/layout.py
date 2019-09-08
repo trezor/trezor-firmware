@@ -1,6 +1,5 @@
 from trezor import ui, wire
 from trezor.crypto.slip39 import MAX_SHARE_COUNT
-from trezor.errors import IdentifierMismatchError, ShareAlreadyAddedError
 from trezor.messages import BackupType, ButtonRequestType
 from trezor.messages.ButtonAck import ButtonAck
 from trezor.messages.ButtonRequest import ButtonRequest
@@ -21,7 +20,8 @@ if __debug__:
     from apps.debug import input_signal
 
 if False:
-    from typing import List
+    from typing import List, Optional
+    from apps.management.recovery_device.backup_types import BackupTypeUnion
 
 
 async def confirm_abort(ctx: wire.Context, dry_run: bool = False) -> bool:
@@ -54,16 +54,13 @@ async def request_word_count(ctx: wire.Context, dry_run: bool) -> int:
 
 
 async def request_mnemonic(
-    ctx: wire.Context,
-    word_count: int,
-    previous_mnemonics: List[str],
-    possible_backup_types: list,
-) -> str:
+    ctx: wire.Context, word_count: int, backup_type: Optional[BackupTypeUnion]
+) -> Optional[str]:
     await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicInput), ButtonAck)
 
     words = []
     for i in range(word_count):
-        if backup_types.is_slip39(possible_backup_types):
+        if backup_types.is_slip39_word_count(word_count):
             keyboard = Slip39Keyboard("Type word %s of %s:" % (i + 1, word_count))
         else:
             keyboard = Bip39Keyboard("Type word %s of %s:" % (i + 1, word_count))
@@ -72,38 +69,57 @@ async def request_mnemonic(
         else:
             word = await ctx.wait(keyboard)
 
-        if previous_mnemonics:
-            if BackupType.Slip39_Basic in possible_backup_types:
-                # check if first 3 words of mnemonic match
-                # we can check against the first one, others were checked already
-                if i < 3:
-                    share_list = previous_mnemonics[0].split(" ")
-                    if share_list[i] != word:
-                        raise IdentifierMismatchError()
-                elif i == 3:
-                    for share in previous_mnemonics:
-                        share_list = share.split(" ")
-                        # check if the fourth word is different from previous shares
-                        if share_list[i] == word:
-                            raise ShareAlreadyAddedError()
-            elif BackupType.Slip39_Advanced in possible_backup_types:
-                # in case of advanced shamir recovery we only check 2 words
-                if i < 2:
-                    share_list = previous_mnemonics[0].split(" ")
-                    if share_list[i] != word:
-                        raise IdentifierMismatchError()
+        # only if we know the backup type we can perform additional checks
+        if backup_type and not await check_mnemonic_validity(ctx, i, word, backup_type):
+            return None
 
         words.append(word)
 
     return " ".join(words)
 
 
+async def check_mnemonic_validity(
+    ctx: wire.Context,
+    current_index: int,
+    current_word: str,
+    backup_type: BackupTypeUnion,
+) -> bool:
+    previous_mnemonics = storage.recovery_shares.fetch()
+    if not previous_mnemonics:
+        # this function must be called only if some mnemonics are already stored
+        raise RuntimeError
+
+    if backup_type == BackupType.Slip39_Basic:
+        # check if first 3 words of mnemonic match
+        # we can check against the first one, others were checked already
+        if current_index < 3:
+            share_list = previous_mnemonics[0].split(" ")
+            if share_list[current_index] != current_word:
+                await show_identifier_mismatch(ctx)
+                return False
+        elif current_index == 3:
+            for share in previous_mnemonics:
+                share_list = share.split(" ")
+                # check if the fourth word is different from previous shares
+                if share_list[current_index] == current_word:
+                    await show_share_already_added(ctx)
+                    return False
+    elif backup_type == BackupType.Slip39_Advanced:
+        # in case of advanced shamir recovery we only check 2 words
+        if current_index < 2:
+            share_list = previous_mnemonics[0].split(" ")
+            if share_list[current_index] != current_word:
+                await show_identifier_mismatch(ctx)
+                return False
+    return True
+
+
 async def show_remaining_shares(
     ctx: wire.Context,
     groups: List[[int, List[str]]],  # remaining + list 3 words
-    group_threshold: int,
     shares_remaining: List[int],
 ) -> None:
+    group_threshold = storage.recovery.get_slip39_group_threshold()
     pages = []
     for remaining, group in groups:
         if 0 < remaining < MAX_SHARE_COUNT:
