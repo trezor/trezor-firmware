@@ -4,6 +4,9 @@ from trezor.crypto import slip39
 
 from apps.common.storage import common, recovery_shares
 
+if False:
+    from apps.management.recovery_device.backup_types import BackupTypeUnion
+
 # Namespace:
 _NAMESPACE = common._APP_RECOVERY
 
@@ -12,12 +15,13 @@ _NAMESPACE = common._APP_RECOVERY
 _IN_PROGRESS               = const(0x00)  # bool
 _DRY_RUN                   = const(0x01)  # bool
 _WORD_COUNT                = const(0x02)  # int
-_REMAINING                 = const(0x05)  # int
 _SLIP39_IDENTIFIER         = const(0x03)  # bytes
 _SLIP39_THRESHOLD          = const(0x04)  # int
+_REMAINING                 = const(0x05)  # int
 _SLIP39_ITERATION_EXPONENT = const(0x06)  # int
 _SLIP39_GROUP_COUNT        = const(0x07)  # int
 _SLIP39_GROUP_THRESHOLD    = const(0x08)  # int
+_BACKUP_TYPE               = const(0x09)  # int
 # fmt: on
 
 if False:
@@ -46,6 +50,14 @@ def set_word_count(count: int) -> None:
 
 def get_word_count() -> Optional[int]:
     return common._get_uint8(_NAMESPACE, _WORD_COUNT)
+
+
+def set_backup_type(backup_type: BackupTypeUnion) -> None:
+    common._set_uint8(_NAMESPACE, _BACKUP_TYPE, backup_type)
+
+
+def get_backup_type() -> Optional[BackupTypeUnion]:
+    return common._get_uint8(_NAMESPACE, _BACKUP_TYPE)
 
 
 def set_slip39_identifier(identifier: int) -> None:
@@ -135,4 +147,5 @@ def end_progress() -> None:
     common._delete(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
     common._delete(_NAMESPACE, _SLIP39_GROUP_COUNT)
     common._delete(_NAMESPACE, _SLIP39_GROUP_THRESHOLD)
+    common._delete(_NAMESPACE, _BACKUP_TYPE)
     recovery_shares.delete()
