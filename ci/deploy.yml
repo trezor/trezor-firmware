@@ -1,0 +1,40 @@
+image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
+
+# Core
+
+core to upgrade tests deploy:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}upgrade_tests/"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - core unix frozen debug build
+  script:
+    - TAG=`git tag --points-at HEAD | sed "s/\//-/"`
+    - "[[ ! $TAG =~ 'core' ]] && echo 'Tag is not core/*: exiting.' && exit 1"
+    - DEST=${DEPLOY_DIRECTORY}/trezor-emu-`git tag --points-at HEAD | sed "s/\//-/"`
+    - echo "Deploying to $DEST"
+    - rsync --delete -va core/build/unix/micropython "$DEST"
+  tags:
+    - deploy
+
+
+# Legacy
+
+legacy to upgrade tests deploy:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}upgrade_tests/"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - legacy emu regular build
+  script:
+    - TAG=`git tag --points-at HEAD | sed "s/\//-/"`
+    - "[[ ! $TAG =~ 'legacy' ]] && echo 'Tag is not legacy/*: exiting.' && exit 1"
+    - DEST=${DEPLOY_DIRECTORY}/trezor-emu-`git tag --points-at HEAD | sed "s/\//-/"`
+    - echo "Deploying to $DEST"
+    - rsync --delete -va legacy/firmware/trezor.elf "$DEST"
+  tags:
+    - deploy
