@@ -122,6 +122,7 @@ python test:
   only:
     changes:
       - ci/**/*
+      - common/**/*
       - python/**/*
   script:
     - cd python
