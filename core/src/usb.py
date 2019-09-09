@@ -1,4 +1,4 @@
-from trezor import io
+from trezor import io, utils
 
 from apps.common.storage.device import get_device_id
 
@@ -28,31 +28,32 @@ if __debug__:
         ep_out=0x03,
         ep_cmd=0x84,
     )
-else:
-    # interface used for FIDO/U2F and FIDO2/WebAuthn HID transport
-    iface_webauthn = io.HID(
-        iface_num=1,
-        ep_in=0x82,
-        ep_out=0x02,
-        report_desc=bytes([
-            0x06, 0xd0, 0xf1,  # USAGE_PAGE (FIDO Alliance)
-            0x09, 0x01,        # USAGE (U2F HID Authenticator Device)
-            0xa1, 0x01,        # COLLECTION (Application)
-            0x09, 0x20,        # USAGE (Input Report Data)
-            0x15, 0x00,        # LOGICAL_MINIMUM (0)
-            0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
-            0x75, 0x08,        # REPORT_SIZE (8)
-            0x95, 0x40,        # REPORT_COUNT (64)
-            0x81, 0x02,        # INPUT (Data,Var,Abs)
-            0x09, 0x21,        # USAGE (Output Report Data)
-            0x15, 0x00,        # LOGICAL_MINIMUM (0)
-            0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
-            0x75, 0x08,        # REPORT_SIZE (8)
-            0x95, 0x40,        # REPORT_COUNT (64)
-            0x91, 0x02,        # OUTPUT (Data,Var,Abs)
-            0xc0,              # END_COLLECTION
-        ]),
-    )
+if not utils.BITCOIN_ONLY:
+    if not __debug__ or utils.EMULATOR:
+        # interface used for FIDO/U2F and FIDO2/WebAuthn HID transport
+        iface_webauthn = io.HID(
+            iface_num=4 if __debug__ else 1,
+            ep_in=0x85 if __debug__ else 0x82,
+            ep_out=0x04  if __debug__ else 0x02,
+            report_desc=bytes([
+                0x06, 0xd0, 0xf1,  # USAGE_PAGE (FIDO Alliance)
+                0x09, 0x01,        # USAGE (U2F HID Authenticator Device)
+                0xa1, 0x01,        # COLLECTION (Application)
+                0x09, 0x20,        # USAGE (Input Report Data)
+                0x15, 0x00,        # LOGICAL_MINIMUM (0)
+                0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
+                0x75, 0x08,        # REPORT_SIZE (8)
+                0x95, 0x40,        # REPORT_COUNT (64)
+                0x81, 0x02,        # INPUT (Data,Var,Abs)
+                0x09, 0x21,        # USAGE (Output Report Data)
+                0x15, 0x00,        # LOGICAL_MINIMUM (0)
+                0x26, 0xff, 0x00,  # LOGICAL_MAXIMUM (255)
+                0x75, 0x08,        # REPORT_SIZE (8)
+                0x95, 0x40,        # REPORT_COUNT (64)
+                0x91, 0x02,        # OUTPUT (Data,Var,Abs)
+                0xc0,              # END_COLLECTION
+            ]),
+        )
 
 bus = io.USB(
     vendor_id=0x1209,
@@ -67,5 +68,6 @@ bus.add(iface_wire)
 if __debug__:
     bus.add(iface_debug)
     bus.add(iface_vcp)
-else:
-    bus.add(iface_webauthn)
+if not utils.BITCOIN_ONLY:
+    if not __debug__ or utils.EMULATOR:
+        bus.add(iface_webauthn)
