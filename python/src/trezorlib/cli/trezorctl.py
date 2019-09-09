@@ -621,7 +621,9 @@ def validate_firmware(version, fw, expected_fingerprint=None):
         sys.exit(5)
 
 
-def find_best_firmware_version(bootloader_version, requested_version=None, beta=False):
+def find_best_firmware_version(
+    bootloader_version, requested_version=None, beta=False, bitcoin_only=False
+):
     if beta:
         url = "https://beta-wallet.trezor.io/data/firmware/{}/releases.json"
     else:
@@ -630,6 +632,8 @@ def find_best_firmware_version(bootloader_version, requested_version=None, beta=
     if not releases:
         raise click.ClickException("Failed to get list of releases")
 
+    if bitcoin_only:
+        releases = [r for r in releases if "url_bitcoinonly" in r]
     releases.sort(key=lambda r: r["version"], reverse=True)
 
     def version_str(version):
@@ -674,14 +678,18 @@ def find_best_firmware_version(bootloader_version, requested_version=None, beta=
             if not ok:
                 sys.exit(1)
 
-    if beta:
-        url = "https://beta-wallet.trezor.io/" + release["url"]
+    if bitcoin_only:
+        url = release["url_bitcoinonly"]
+        fingerprint = release["fingerprint_bitcoinonly"]
     else:
-        url = "https://wallet.trezor.io/" + release["url"]
-    if url.endswith(".hex"):
-        url = url[:-4]
+        url = release["url"]
+        fingerprint = release["fingerprint"]
+    if beta:
+        url = "https://beta-wallet.trezor.io/" + url
+    else:
+        url = "https://wallet.trezor.io/" + url
 
-    return url, release["fingerprint"]
+    return url, fingerprint
 
 
 @cli.command()
@@ -692,6 +700,7 @@ def find_best_firmware_version(bootloader_version, requested_version=None, beta=
 @click.option("-s", "--skip-check", is_flag=True, help="Do not validate firmware integrity")
 @click.option("-n", "--dry-run", is_flag=True, help="Perform all steps but do not actually upload the firmware")
 @click.option("--beta", is_flag=True, help="Use firmware from BETA wallet")
+@click.option("--bitcoin-only", is_flag=True, help="Use bitcoin-only firmware (if possible)")
 @click.option("--raw", is_flag=True, help="Push raw data to Trezor")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
 @click.option("--skip-vendor-header", help="Skip vendor header validation on Trezor T")
@@ -708,6 +717,7 @@ def firmware_update(
     raw,
     dry_run,
     beta,
+    bitcoin_only,
 ):
     """Upload new firmware to device.
 
@@ -743,12 +753,20 @@ def firmware_update(
         if not url:
             bootloader_version = [f.major_version, f.minor_version, f.patch_version]
             version_list = [int(x) for x in version.split(".")] if version else None
-            url, fp = find_best_firmware_version(bootloader_version, version_list, beta)
+            url, fp = find_best_firmware_version(
+                bootloader_version, version_list, beta, bitcoin_only
+            )
             if not fingerprint:
                 fingerprint = fp
 
-        click.echo("Downloading from {}".format(url))
-        r = requests.get(url)
+        try:
+            click.echo("Downloading from {}".format(url))
+            r = requests.get(url)
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            click.echo("Error downloading file: {}".format(err))
+            sys.exit(3)
+
         data = r.content
 
     if not raw and not skip_check:
