@@ -47,7 +47,9 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
         # if share threshold and group threshold are 1
         # we can calculate the secret right away
         if share.threshold == 1 and share.group_threshold == 1:
-            identifier, iteration_exponent, secret, _ = slip39.combine_mnemonics(words)
+            identifier, iteration_exponent, secret, _ = slip39.combine_mnemonics(
+                [words]
+            )
             return secret, share
         else:
             # we need more shares
