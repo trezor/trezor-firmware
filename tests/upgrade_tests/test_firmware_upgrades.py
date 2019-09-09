@@ -69,8 +69,12 @@ def for_all(*args, minimum_version=(1, 0, 0)):
     if not args:
         args = ("core", "legacy")
 
+    enabled_gens = os.environ.get("TREZOR_UPGRADE_TEST", "").split(",")
+
     all_params = []
     for gen in args:
+        if gen not in enabled_gens:
+            continue
         try:
             to_tag = LOCAL_BUILDS[gen]
             from_tags = ALL_TAGS[gen] + [to_tag]
