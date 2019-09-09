@@ -162,7 +162,7 @@ test hardware legacy firmware regular:
   tags:
     - tpmb
   dependencies:
-    - build legacy firmware regular
+    - legacy fw regular build
   script:
     - git clone https://github.com/mmahut/tpmb
     - cd tpmb/scripts
