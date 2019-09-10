@@ -1,3 +1,5 @@
+import itertools
+
 import pytest
 
 from trezorlib import btc, device, messages
@@ -13,10 +15,9 @@ def test_reset_recovery(client):
     mnemonics = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
 
-    for share_subset in ((0, 1, 2), (4, 3, 2), (2, 1, 3)):
-        # TODO: change the above to itertools.combinations(mnemonics, 3)
+    for share_subset in itertools.combinations(mnemonics, 3):
         device.wipe(client)
-        selected_mnemonics = [mnemonics[i] for i in share_subset]
+        selected_mnemonics = share_subset
         recover(client, selected_mnemonics)
         address_after = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
         assert address_before == address_after
