@@ -42,7 +42,10 @@ class EmulatorWrapper:
         env = ENV
         if self.gen == "core":
             args += ["-m", "main"]
+            # for firmware 2.1.2 and newer
             env["TREZOR_PROFILE_DIR"] = self.workdir.name
+            # for firmware 2.1.1 and older
+            env["TREZOR_PROFILE"] = self.workdir.name
         self.process = subprocess.Popen(
             args, cwd=self.workdir.name, env=ENV, stdout=open(os.devnull, "w")
         )
