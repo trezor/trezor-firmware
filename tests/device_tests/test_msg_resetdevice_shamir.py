@@ -8,13 +8,13 @@ from shamir_mnemonic import MnemonicError
 from trezorlib import device, messages as proto
 from trezorlib.messages import ButtonRequestType as B, ResetDeviceBackupType
 
-from .common import TrezorTest, generate_entropy
+from .common import click_through, generate_entropy, read_and_confirm_mnemonic
 
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 
 @pytest.mark.skip_t1
-class TestMsgResetDeviceT2(TrezorTest):
+class TestMsgResetDeviceT2:
     # TODO: test with different options
     @pytest.mark.setup_client(uninitialized=True)
     def test_reset_device_shamir(self, client):
@@ -23,68 +23,23 @@ class TestMsgResetDeviceT2(TrezorTest):
         all_mnemonics = []
 
         def input_flow():
-            # Confirm Reset
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # Backup your seed
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # Confirm warning
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # shares info
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # Set & Confirm number of shares
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # threshold info
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # Set & confirm threshold value
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # Confirm show seeds
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
+            # 1. Confirm Reset
+            # 2. Backup your seed
+            # 3. Confirm warning
+            # 4. shares info
+            # 5. Set & Confirm number of shares
+            # 6. threshold info
+            # 7. Set & confirm threshold value
+            # 8. Confirm show seeds
+            yield from click_through(client.debug, screens=8, code=B.ResetDevice)
 
             # show & confirm shares
             for h in range(5):
-                words = []
+                # mnemonic phrases
                 btn_code = yield
                 assert btn_code == B.Other
-
-                # mnemonic phrases
-                # 20 word over 6 pages for strength 128, 33 words over 9 pages for strength 256
-                for i in range(6):
-                    words.extend(client.debug.read_reset_word().split())
-                    if i < 5:
-                        client.debug.swipe_down()
-                    else:
-                        # last page is confirmation
-                        client.debug.press_yes()
-
-                # check share
-                for _ in range(3):
-                    index = client.debug.read_reset_word_pos()
-                    client.debug.input(words[index])
-
-                all_mnemonics.extend([" ".join(words)])
+                mnemonic = read_and_confirm_mnemonic(client.debug, words=20)
+                all_mnemonics.append(mnemonic)
 
                 # Confirm continue to next share
                 btn_code = yield

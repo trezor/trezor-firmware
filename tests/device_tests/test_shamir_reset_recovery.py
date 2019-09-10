@@ -4,7 +4,7 @@ from trezorlib import btc, device, messages
 from trezorlib.messages import ButtonRequestType as B, ResetDeviceBackupType
 from trezorlib.tools import parse_path
 
-from .common import recovery_enter_shares
+from .common import click_through, read_and_confirm_mnemonic, recovery_enter_shares
 
 
 @pytest.mark.skip_t1
@@ -24,70 +24,28 @@ def test_reset_recovery(client):
 
 def reset(client, strength=128):
     all_mnemonics = []
+    # per SLIP-39: strength in bits, rounded up to nearest multiple of 10, plus 70 bits
+    # of metadata, split into 10-bit words
+    word_count = ((strength + 9) // 10) + 7
 
     def input_flow():
-        # Confirm Reset
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
-
-        # Backup your seed
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
-
-        # Confirm warning
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
-
-        # shares info
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
-
-        # Set & Confirm number of shares
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
-
-        # threshold info
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
-
-        # Set & confirm threshold value
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
-
-        # Confirm show seeds
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
+        # 1. Confirm Reset
+        # 2. Backup your seed
+        # 3. Confirm warning
+        # 4. shares info
+        # 5. Set & Confirm number of shares
+        # 6. threshold info
+        # 7. Set & confirm threshold value
+        # 8. Confirm show seeds
+        yield from click_through(client.debug, screens=8, code=B.ResetDevice)
 
         # show & confirm shares
         for h in range(5):
-            words = []
+            # mnemonic phrases
             btn_code = yield
             assert btn_code == B.Other
-
-            # mnemonic phrases
-            # 20 word over 6 pages for strength 128, 33 words over 9 pages for strength 256
-            for i in range(6):
-                words.extend(client.debug.read_reset_word().split())
-                if i < 5:
-                    client.debug.swipe_down()
-                else:
-                    # last page is confirmation
-                    client.debug.press_yes()
-
-            # check share
-            for _ in range(3):
-                index = client.debug.read_reset_word_pos()
-                client.debug.input(words[index])
-
-            all_mnemonics.extend([" ".join(words)])
+            mnemonic = read_and_confirm_mnemonic(client.debug, words=word_count)
+            all_mnemonics.append(mnemonic)
 
             # Confirm continue to next share
             btn_code = yield
@@ -139,6 +97,7 @@ def reset(client, strength=128):
             language="english",
             backup_type=ResetDeviceBackupType.Slip39_Single_Group,
         )
+
     client.set_input_flow(None)
 
     # Check if device is properly initialized

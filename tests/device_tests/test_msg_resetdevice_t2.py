@@ -22,50 +22,34 @@ from mnemonic import Mnemonic
 from trezorlib import device, messages as proto
 from trezorlib.messages import ButtonRequestType as B
 
-from .common import MNEMONIC12, TrezorTest, generate_entropy
+from .common import (
+    MNEMONIC12,
+    click_through,
+    generate_entropy,
+    read_and_confirm_mnemonic,
+)
 
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 
 @pytest.mark.skip_t1
-class TestMsgResetDeviceT2(TrezorTest):
+class TestMsgResetDeviceT2:
     @pytest.mark.setup_client(uninitialized=True)
     def test_reset_device(self, client):
-        words = []
+        mnemonic = None
         strength = 128
 
         def input_flow():
-            # Confirm Reset
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # Backup your seed
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # Confirm warning
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
+            nonlocal mnemonic
+            # 1. Confirm Reset
+            # 2. Backup your seed
+            # 3. Confirm warning
+            yield from click_through(client.debug, screens=3, code=B.ResetDevice)
 
             # mnemonic phrases
             btn_code = yield
             assert btn_code == B.ResetDevice
-            # 12 words, 3 pages
-            for i in range(3):
-                words.extend(client.debug.read_reset_word().split())
-                if i < 2:
-                    client.debug.swipe_down()
-                else:
-                    # last page is confirmation
-                    client.debug.press_yes()
-
-            # check backup words
-            for _ in range(3):
-                index = client.debug.read_reset_word_pos()
-                client.debug.input(words[index])
+            mnemonic = read_and_confirm_mnemonic(client.debug, words=12)
 
             # confirm recovery seed check
             btn_code = yield
@@ -111,7 +95,7 @@ class TestMsgResetDeviceT2(TrezorTest):
         expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
 
         # Compare that device generated proper mnemonic for given entropies
-        assert " ".join(words) == expected_mnemonic
+        assert mnemonic == expected_mnemonic
 
         # Check if device is properly initialized
         resp = client.call_raw(proto.Initialize())
@@ -122,10 +106,12 @@ class TestMsgResetDeviceT2(TrezorTest):
 
     @pytest.mark.setup_client(uninitialized=True)
     def test_reset_device_pin(self, client):
-        words = []
+        mnemonic = None
         strength = 128
 
         def input_flow():
+            nonlocal mnemonic
+
             # Confirm Reset
             btn_code = yield
             assert btn_code == B.ResetDevice
@@ -157,19 +143,7 @@ class TestMsgResetDeviceT2(TrezorTest):
             # mnemonic phrases
             btn_code = yield
             assert btn_code == B.ResetDevice
-            # 12 words, 3 pages
-            for i in range(3):
-                words.extend(client.debug.read_reset_word().split())
-                if i < 2:
-                    client.debug.swipe_down()
-                else:
-                    # last page is confirmation
-                    client.debug.press_yes()
-
-            # check backup words
-            for _ in range(3):
-                index = client.debug.read_reset_word_pos()
-                client.debug.input(words[index])
+            mnemonic = read_and_confirm_mnemonic(client.debug, words=12)
 
             # confirm recovery seed check
             btn_code = yield
@@ -218,7 +192,7 @@ class TestMsgResetDeviceT2(TrezorTest):
         expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
 
         # Compare that device generated proper mnemonic for given entropies
-        assert " ".join(words) == expected_mnemonic
+        assert mnemonic == expected_mnemonic
 
         # Check if device is properly initialized
         resp = client.call_raw(proto.Initialize())
