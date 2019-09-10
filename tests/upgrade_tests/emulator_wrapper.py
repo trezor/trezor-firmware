@@ -46,12 +46,18 @@ class EmulatorWrapper:
             env["TREZOR_PROFILE_DIR"] = self.workdir.name
             # for firmware 2.1.1 and older
             env["TREZOR_PROFILE"] = self.workdir.name
+        self.client = None
         self.process = subprocess.Popen(
             args, cwd=self.workdir.name, env=ENV, stdout=open(os.devnull, "w")
         )
-        # wait until emulator is started
+        # wait until emulator is listening
+        i = 0
         while True:
             try:
+                i += 1
+                if i > 100:
+                    self.__exit__(None, None, None)
+                    raise RuntimeError("Can't connect to emulator")
                 self.transport = get_transport("udp:127.0.0.1:21324")
             except TransportException:
                 time.sleep(0.1)
@@ -73,7 +79,8 @@ class EmulatorWrapper:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.client.close()
+        if self.client:
+            self.client.close()
         self.process.terminate()
         try:
             self.process.wait(1)
