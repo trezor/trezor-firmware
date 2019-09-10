@@ -34,7 +34,7 @@ if not utils.BITCOIN_ONLY:
         iface_webauthn = io.HID(
             iface_num=4 if __debug__ else 1,
             ep_in=0x85 if __debug__ else 0x82,
-            ep_out=0x04  if __debug__ else 0x02,
+            ep_out=0x04 if __debug__ else 0x02,
             report_desc=bytes([
                 0x06, 0xd0, 0xf1,  # USAGE_PAGE (FIDO Alliance)
                 0x09, 0x01,        # USAGE (U2F HID Authenticator Device)
