@@ -68,6 +68,17 @@ core unix monero test:
     - cd core
     - pipenv run make test_emu_monero
 
+core unix upgrade test:
+  stage: test
+  <<: *only_changes_core
+  dependencies:
+    - core unix frozen debug build
+  variables:
+    TREZOR_UPGRADE_TEST: "core"
+  script:
+    - tests/upgrade_tests/download_emulators.sh
+    - pipenv run pytest tests/upgrade_tests
+
 
 # Crypto
 
@@ -114,6 +125,17 @@ legacy emu btconly test:
     - cd legacy
     - pipenv run script/test
 
+legacy emu upgrade test:
+  stage: test
+  <<: *only_changes_legacy
+  dependencies:
+    - legacy emu regular build
+  variables:
+    TREZOR_UPGRADE_TEST: "legacy"
+  script:
+    - tests/upgrade_tests/download_emulators.sh
+    - pipenv run pytest tests/upgrade_tests
+
 
 # Python
 
@@ -122,6 +144,7 @@ python test:
   only:
     changes:
       - ci/**/*
+      - common/**/*
       - python/**/*
   script:
     - cd python
@@ -141,7 +164,6 @@ storage test:
     - cd storage/tests
     - pipenv run make build
     - pipenv run make tests_all
-
 
 # Other
 

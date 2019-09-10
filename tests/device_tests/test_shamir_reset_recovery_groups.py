@@ -1,10 +1,26 @@
+# This file is part of the Trezor project.
+#
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
 import pytest
 
 from trezorlib import btc, device, messages
 from trezorlib.messages import ButtonRequestType as B, ResetDeviceBackupType
 from trezorlib.tools import parse_path
 
-from .common import recovery_enter_shares
+from .common import click_through, read_and_confirm_mnemonic, recovery_enter_shares
 
 
 @pytest.mark.skip_t1
@@ -32,82 +48,32 @@ def test_reset_recovery(client):
 
 def reset(client, strength=128):
     all_mnemonics = []
+    # per SLIP-39: strength in bits, rounded up to nearest multiple of 10, plus 70 bits
+    # of metadata, split into 10-bit words
+    word_count = ((strength + 9) // 10) + 7
 
     def input_flow():
-        # Confirm Reset
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
-
-        # Backup your seed
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
-
-        # Confirm warning
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
-
-        # shares info
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
-
-        # Set & Confirm number of groups
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
-
-        # threshold info
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
-
-        # Set & confirm group threshold value
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
-
-        for _ in range(5):
-            # Set & Confirm number of share
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # Set & confirm share threshold value
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-        # Confirm show seeds
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        client.debug.press_yes()
+        # 1. Confirm Reset
+        # 2. Backup your seed
+        # 3. Confirm warning
+        # 4. shares info
+        # 5. Set & Confirm number of groups
+        # 6. threshold info
+        # 7. Set & confirm group threshold value
+        # 8-17: for each of 5 groups:
+        #   1. Set & Confirm number of shares
+        #   2. Set & confirm share threshold value
+        # 18. Confirm show seeds
+        yield from click_through(client.debug, screens=18, code=B.ResetDevice)
 
         # show & confirm shares for all groups
         for g in range(5):
             for h in range(5):
-                words = []
+                # mnemonic phrases
                 btn_code = yield
                 assert btn_code == B.Other
-
-                # mnemonic phrases
-                # 20 word over 6 pages for strength 128, 33 words over 9 pages for strength 256
-                for i in range(6):
-                    words.extend(client.debug.read_reset_word().split())
-                    if i < 5:
-                        client.debug.swipe_down()
-                    else:
-                        # last page is confirmation
-                        client.debug.press_yes()
-
-                # check share
-                for _ in range(3):
-                    index = client.debug.read_reset_word_pos()
-                    client.debug.input(words[index])
-
-                all_mnemonics.extend([" ".join(words)])
+                mnemonic = read_and_confirm_mnemonic(client.debug, words=word_count)
+                all_mnemonics.append(mnemonic)
 
                 # Confirm continue to next share
                 btn_code = yield
@@ -131,25 +97,15 @@ def reset(client, strength=128):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(
-                    code=B.ResetDevice
-                ),  # group #1 shares& thresholds
+                messages.ButtonRequest(code=B.ResetDevice),  # group #1 counts
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(
-                    code=B.ResetDevice
-                ),  # group #2 shares& thresholds
+                messages.ButtonRequest(code=B.ResetDevice),  # group #2 counts
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(
-                    code=B.ResetDevice
-                ),  # group #3 shares& thresholds
+                messages.ButtonRequest(code=B.ResetDevice),  # group #3 counts
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(
-                    code=B.ResetDevice
-                ),  # group #4 shares& thresholds
+                messages.ButtonRequest(code=B.ResetDevice),  # group #4 counts
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(
-                    code=B.ResetDevice
-                ),  # group #5 shares& thresholds
+                messages.ButtonRequest(code=B.ResetDevice),  # group #5 counts
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Other),  # show seeds
                 messages.ButtonRequest(code=B.Success),

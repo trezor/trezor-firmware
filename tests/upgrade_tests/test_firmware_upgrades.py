@@ -1,3 +1,19 @@
+# This file is part of the Trezor project.
+#
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
 import os
 from collections import defaultdict
 
@@ -69,8 +85,12 @@ def for_all(*args, minimum_version=(1, 0, 0)):
     if not args:
         args = ("core", "legacy")
 
+    enabled_gens = os.environ.get("TREZOR_UPGRADE_TEST", "").split(",")
+
     all_params = []
     for gen in args:
+        if gen not in enabled_gens:
+            continue
         try:
             to_tag = LOCAL_BUILDS[gen]
             from_tags = ALL_TAGS[gen] + [to_tag]

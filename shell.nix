@@ -8,6 +8,7 @@ let
     ps.coverage
     ps.ed25519
     ps.flake8
+    ps.flaky
     ps.graphviz
     ps.isort
     ps.mock

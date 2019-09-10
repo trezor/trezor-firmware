@@ -1,3 +1,19 @@
+# This file is part of the Trezor project.
+#
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
 from unittest import mock
 
 import pytest
@@ -6,95 +22,43 @@ import shamir_mnemonic as shamir
 from trezorlib import device, messages as proto
 from trezorlib.messages import ButtonRequestType as B, ResetDeviceBackupType
 
-from .common import TrezorTest, generate_entropy
+from .common import click_through, generate_entropy, read_and_confirm_mnemonic
 
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 
 @pytest.mark.skip_t1
-class TestMsgResetDeviceT2(TrezorTest):
+class TestMsgResetDeviceT2:
     # TODO: test with different options
     @pytest.mark.setup_client(uninitialized=True)
     def test_reset_device_supershamir(self, client):
         strength = 128
+        word_count = 20
         member_threshold = 3
         all_mnemonics = []
 
         def input_flow():
-            # Confirm Reset
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # Backup your seed
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # Confirm warning
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # shares info
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # Set & Confirm number of groups
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # threshold info
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            # Set & confirm group threshold value
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
-
-            for _ in range(5):
-                # Set & Confirm number of share
-                btn_code = yield
-                assert btn_code == B.ResetDevice
-                client.debug.press_yes()
-
-                # Set & confirm share threshold value
-                btn_code = yield
-                assert btn_code == B.ResetDevice
-                client.debug.press_yes()
-
-            # Confirm show seeds
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            client.debug.press_yes()
+            # 1. Confirm Reset
+            # 2. Backup your seed
+            # 3. Confirm warning
+            # 4. shares info
+            # 5. Set & Confirm number of groups
+            # 6. threshold info
+            # 7. Set & confirm group threshold value
+            # 8-17: for each of 5 groups:
+            #   1. Set & Confirm number of shares
+            #   2. Set & confirm share threshold value
+            # 18. Confirm show seeds
+            yield from click_through(client.debug, screens=18, code=B.ResetDevice)
 
             # show & confirm shares for all groups
             for g in range(5):
                 for h in range(5):
-                    words = []
+                    # mnemonic phrases
                     btn_code = yield
                     assert btn_code == B.Other
-
-                    # mnemonic phrases
-                    # 20 word over 6 pages for strength 128, 33 words over 9 pages for strength 256
-                    for i in range(6):
-                        words.extend(client.debug.read_reset_word().split())
-                        if i < 5:
-                            client.debug.swipe_down()
-                        else:
-                            # last page is confirmation
-                            client.debug.press_yes()
-
-                    # check share
-                    for _ in range(3):
-                        index = client.debug.read_reset_word_pos()
-                        client.debug.input(words[index])
-
-                    all_mnemonics.extend([" ".join(words)])
+                    mnemonic = read_and_confirm_mnemonic(client.debug, words=word_count)
+                    all_mnemonics.append(mnemonic)
 
                     # Confirm continue to next share
                     btn_code = yield
@@ -119,25 +83,15 @@ class TestMsgResetDeviceT2(TrezorTest):
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(
-                        code=B.ResetDevice
-                    ),  # group #1 shares& thresholds
+                    proto.ButtonRequest(code=B.ResetDevice),  # group #1 counts
                     proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(
-                        code=B.ResetDevice
-                    ),  # group #2 shares& thresholds
+                    proto.ButtonRequest(code=B.ResetDevice),  # group #2 counts
                     proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(
-                        code=B.ResetDevice
-                    ),  # group #3 shares& thresholds
+                    proto.ButtonRequest(code=B.ResetDevice),  # group #3 counts
                     proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(
-                        code=B.ResetDevice
-                    ),  # group #4 shares& thresholds
+                    proto.ButtonRequest(code=B.ResetDevice),  # group #4 counts
                     proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(
-                        code=B.ResetDevice
-                    ),  # group #5 shares& thresholds
+                    proto.ButtonRequest(code=B.ResetDevice),  # group #5 counts
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Other),  # show seeds
                     proto.ButtonRequest(code=B.Success),
