@@ -59,6 +59,17 @@ class EmulatorWrapper:
             break
         self.client = TrezorClientDebugLink(self.transport)
         self.client.open()
+        # check whether the reported version matches the expected one
+        if self.tag[0] == "v":
+            version = "v%d.%d.%d" % (
+                self.client.features["major_version"],
+                self.client.features["minor_version"],
+                self.client.features["patch_version"],
+            )
+            assert self.tag == version, "expected: %s reported: %s" % (
+                self.tag,
+                version,
+            )
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
