@@ -19,9 +19,6 @@ from trezorlib.messages import ButtonRequestType as B
 # fmt: off
 #                1      2     3    4      5      6      7     8      9    10    11    12
 MNEMONIC12 = "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
-MNEMONIC18 = "owner little vague addict embark decide pink prosper true fork panda embody mixture exchange choose canoe electric jewel"
-MNEMONIC24 = "dignity pass list indicate nasty swamp pool script soccer toe leaf photo multiply desk host tomato cradle drill spread actor shine dismiss champion exotic"
-MNEMONIC_ALLALLALL = " ".join(["all"] * 12)
 # fmt: on
 
 MNEMONIC_SHAMIR_20_3of6 = [
@@ -36,17 +33,6 @@ MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS = [
     "gesture negative beard leaf deadline stadium vegan employer armed marathon alien lunar broken edge justice military endorse diet sweater either",
     "gesture negative beard lily desert belong speak realize explain bolt diet believe response counter medal luck wits glance remove ending",
 ]
-
-
-class TrezorTest:
-    mnemonic12 = MNEMONIC12
-    mnemonic18 = MNEMONIC18
-    mnemonic24 = MNEMONIC24
-    mnemonic_all = MNEMONIC_ALLALLALL
-
-    pin4 = "1234"
-    pin6 = "789456"
-    pin8 = "45678978"
 
 
 def generate_entropy(strength, internal_entropy, external_entropy):
