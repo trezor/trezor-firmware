@@ -244,9 +244,7 @@ async def _request_share_next_screen(ctx: wire.Context, is_slip39: bool) -> None
             raise RuntimeError
 
         if group_count > 1:
-            content = layout.RecoveryHomescreen(
-                "More shares needed", "for this recovery"
-            )
+            content = layout.RecoveryHomescreen("More shares needed")
             await layout.homescreen_dialog(ctx, content, "Enter share")
         else:
             if remaining[0] == 1:
