@@ -22,6 +22,10 @@ from ..common import MNEMONIC_SHAMIR_20_3of6, recovery_enter_shares
 
 pytestmark = pytest.mark.skip_t1
 
+MNEMONIC_SHAMIR_1of1 = [
+    "academic academic academic academic academic academic academic academic academic academic academic academic academic academic academic academic academic rebuild aquatic spew"
+]
+
 
 MNEMONIC_SHAMIR_33_2of5 = [
     "hobo romp academic axis august founder knife legal recover alien expect emphasis loan kitchen involve teacher capture rebuild trial numb spider forward ladle lying voter typical security quantity hawk legs idle leaves gasoline",
@@ -204,3 +208,27 @@ def test_same_share(client):
         client.set_input_flow(input_flow)
         with pytest.raises(exceptions.Cancelled):
             device.recover(client, pin_protection=False, label="label")
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_1of1(client):
+    debug = client.debug
+
+    def input_flow():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        # Proceed with recovery
+        yield from recovery_enter_shares(debug, MNEMONIC_SHAMIR_1of1, groups=False)
+
+    with client:
+        client.set_input_flow(input_flow)
+        ret = device.recover(
+            client, pin_protection=False, passphrase_protection=False, label="label"
+        )
+
+    # Workflow succesfully ended
+    assert ret == messages.Success(message="Device recovered")
+    assert client.features.initialized is True
+    assert client.features.pin_protection is False
+    assert client.features.passphrase_protection is False
+    assert client.features.backup_type is messages.BackupType.Slip39_Basic

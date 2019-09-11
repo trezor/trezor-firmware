@@ -32,6 +32,18 @@ MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS = [
     "gesture negative beard leaf deadline stadium vegan employer armed marathon alien lunar broken edge justice military endorse diet sweater either",
     "gesture negative beard lily desert belong speak realize explain bolt diet believe response counter medal luck wits glance remove ending",
 ]
+MNEMONIC_SUPERSHAMIR_128BIT = [
+    "eraser senior decision roster beard treat identify grumpy salt index fake aviation theater cubic bike cause research dragon emphasis counter",
+    "eraser senior ceramic snake clay various huge numb argue hesitate auction category timber browser greatest hanger petition script leaf pickup",
+    "eraser senior ceramic shaft dynamic become junior wrist silver peasant force math alto coal amazing segment yelp velvet image paces",
+    "eraser senior ceramic round column hawk trust auction smug shame alive greatest sheriff living perfect corner chest sled fumes adequate",
+    "eraser senior decision smug corner ruin rescue cubic angel tackle skin skunk program roster trash rumor slush angel flea amazing",
+]
+
+MNEMONIC_SUPERSHAMIR_256BIT = [
+    "wildlife deal beard romp alcohol space mild usual clothes union nuclear testify course research heat listen task location thank hospital slice smell failure fawn helpful priest ambition average recover lecture process dough stadium",
+    "wildlife deal acrobat romp anxiety axis starting require metric flexible geology game drove editor edge screw helpful have huge holy making pitch unknown carve holiday numb glasses survive already tenant adapt goat fangs",
+]
 
 
 def generate_entropy(strength, internal_entropy, external_entropy):

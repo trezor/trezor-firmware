@@ -28,22 +28,26 @@ from ..common import click_through, read_and_confirm_mnemonic, recovery_enter_sh
 def test_reset_recovery(client):
     mnemonics = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
-    # TODO: more combinations
-    selected_mnemonics = [
-        mnemonics[0],
-        mnemonics[1],
-        mnemonics[2],
-        mnemonics[5],
-        mnemonics[6],
-        mnemonics[7],
-        mnemonics[10],
-        mnemonics[11],
-        mnemonics[12],
-    ]
-    device.wipe(client)
-    recover(client, selected_mnemonics)
-    address_after = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
-    assert address_before == address_after
+    # we're generating 3of5 groups 3of5 shares each
+    for group_offset in range(3):
+        for share_offset in range(3):
+            selected_mnemonics = [
+                mnemonics[0 + share_offset + group_offset * 5],
+                mnemonics[1 + share_offset + group_offset * 5],
+                mnemonics[2 + share_offset + group_offset * 5],
+                mnemonics[5 + share_offset + group_offset * 5],
+                mnemonics[6 + share_offset + group_offset * 5],
+                mnemonics[7 + share_offset + group_offset * 5],
+                mnemonics[10 + share_offset + group_offset * 5],
+                mnemonics[11 + share_offset + group_offset * 5],
+                mnemonics[12 + share_offset + group_offset * 5],
+            ]
+            device.wipe(client)
+            recover(client, selected_mnemonics)
+            address_after = btc.get_address(
+                client, "Bitcoin", parse_path("44'/0'/0'/0/0")
+            )
+            assert address_before == address_after
 
 
 def reset(client, strength=128):
