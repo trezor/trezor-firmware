@@ -19,7 +19,6 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, CallException, parse_path
 
-from .conftest import TREZOR_VERSION
 from .tx_cache import tx_cache
 
 TX_API = tx_cache("Testnet")
@@ -415,7 +414,7 @@ class TestMsgSigntxSegwit:
             with pytest.raises(CallException) as exc:
                 btc.sign_tx(client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API)
             assert exc.value.args[0] == proto.FailureType.ProcessError
-            if TREZOR_VERSION == 1:
+            if client.features.model == "1":
                 assert exc.value.args[1].endswith("Failed to compile input")
             else:
                 assert exc.value.args[1].endswith(

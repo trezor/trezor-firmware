@@ -20,7 +20,6 @@ from trezorlib import messages as proto, stellar
 from trezorlib.tools import CallException, parse_path
 
 from .common import MNEMONIC12
-from .conftest import TREZOR_VERSION
 
 
 @pytest.mark.altcoin
@@ -48,7 +47,7 @@ class TestMsgStellarGetAddress:
         with pytest.raises(CallException) as exc:
             stellar.get_address(client, parse_path("m/0/1"))
 
-        if TREZOR_VERSION == 1:
+        if client.features.model == "1":
             assert exc.value.args[0] == proto.FailureType.ProcessError
             assert exc.value.args[1].endswith("Failed to derive private key")
         else:
