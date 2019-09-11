@@ -19,7 +19,7 @@ from mnemonic import Mnemonic
 
 from trezorlib import messages as proto
 
-from .common import generate_entropy
+from ..common import generate_entropy
 
 
 @pytest.mark.skip_t2

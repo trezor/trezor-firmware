@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import messages as proto, misc
 
-from .common import MNEMONIC12
+from ..common import MNEMONIC12
 
 
 class TestMsgGetECDHSessionKey:

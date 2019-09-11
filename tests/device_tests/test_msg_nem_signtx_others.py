@@ -19,7 +19,7 @@ import pytest
 from trezorlib import nem
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12
+from ..common import MNEMONIC12
 
 
 # assertion data from T1

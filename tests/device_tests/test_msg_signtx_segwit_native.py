@@ -18,7 +18,7 @@ from trezorlib import btc, messages as proto
 from trezorlib.ckd_public import deserialize
 from trezorlib.tools import H_, parse_path
 
-from .tx_cache import tx_cache
+from ..tx_cache import tx_cache
 
 TX_API = tx_cache("Testnet")
 

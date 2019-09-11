@@ -19,7 +19,7 @@ import pytest
 from trezorlib import ethereum
 from trezorlib.tools import H_
 
-from .common import MNEMONIC12
+from ..common import MNEMONIC12
 
 
 @pytest.mark.altcoin

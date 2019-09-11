@@ -19,7 +19,7 @@ import pytest
 from trezorlib import btc, ckd_public as bip32, messages as proto
 from trezorlib.tools import H_
 
-from .common import MNEMONIC12
+from ..common import MNEMONIC12
 
 
 class TestMsgGetpublickey:

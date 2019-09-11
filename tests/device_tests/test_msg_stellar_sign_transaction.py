@@ -53,7 +53,7 @@ import pytest
 from trezorlib import messages as proto, stellar
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12
+from ..common import MNEMONIC12
 
 
 @pytest.mark.altcoin

@@ -20,7 +20,7 @@ from trezorlib import messages as proto, nem
 from trezorlib.messages import ButtonRequestType as B
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12
+from ..common import MNEMONIC12
 
 
 # assertion data from T1

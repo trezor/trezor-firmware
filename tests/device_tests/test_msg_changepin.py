@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import messages as proto
 
-from .common import MNEMONIC12
+from ..common import MNEMONIC12
 
 PIN4 = "1234"
 PIN6 = "789456"

@@ -19,7 +19,7 @@ import pytest
 from trezorlib import btc, messages
 from trezorlib.tools import parse_path
 
-from .tx_cache import tx_cache
+from ..tx_cache import tx_cache
 
 TXHASH_3bf506 = bytes.fromhex(
     "3bf506c81ce84eda891679ddc797d162c17c60b15d6c0ac23be5e31369e7235f"

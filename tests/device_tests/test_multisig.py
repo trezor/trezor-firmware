@@ -19,8 +19,8 @@ import pytest
 from trezorlib import btc, ckd_public as bip32, messages as proto
 from trezorlib.tools import CallException, parse_path
 
-from .common import MNEMONIC12
-from .tx_cache import tx_cache
+from ..common import MNEMONIC12
+from ..tx_cache import tx_cache
 
 TX_API = tx_cache("Bitcoin")
 

@@ -19,7 +19,7 @@ import pytest
 from trezorlib.eos import get_public_key
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12
+from ..common import MNEMONIC12
 
 
 @pytest.mark.altcoin

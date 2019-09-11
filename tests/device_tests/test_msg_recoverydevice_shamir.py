@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 
-from .common import MNEMONIC_SHAMIR_20_3of6, recovery_enter_shares
+from ..common import MNEMONIC_SHAMIR_20_3of6, recovery_enter_shares
 
 pytestmark = pytest.mark.skip_t1
 

@@ -19,7 +19,7 @@ import pytest
 from trezorlib import btc
 from trezorlib.tools import H_, CallException
 
-from .common import MNEMONIC12
+from ..common import MNEMONIC12
 
 
 class TestMsgGetpublickeyCurve:

@@ -21,7 +21,7 @@ import pytest
 from trezorlib import messages as proto, misc
 from trezorlib.tools import H_
 
-from .common import MNEMONIC12
+from ..common import MNEMONIC12
 
 
 def check_path(identity):

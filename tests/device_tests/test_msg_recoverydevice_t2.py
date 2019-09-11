@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import device, messages as proto
 
-from .common import MNEMONIC12
+from ..common import MNEMONIC12
 
 
 @pytest.mark.skip_t1
