@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from collections import defaultdict
 import os
 import subprocess
 import tempfile
@@ -24,6 +25,47 @@ from trezorlib.transport import TransportException, get_transport
 
 BINDIR = os.path.dirname(os.path.abspath(__file__)) + "/emulators"
 ENV = {"SDL_VIDEODRIVER": "dummy"}
+
+ROOT = os.path.dirname(os.path.abspath(__file__)) + "/../"
+LOCAL_BUILDS = {
+    "core": ROOT + "core/build/unix/micropython",
+    "legacy": ROOT + "legacy/firmware/trezor.elf",
+}
+BIN_DIR = os.path.dirname(os.path.abspath(__file__)) + "/emulators"
+
+
+def check_version(tag, ver_emu):
+    if tag.startswith("v") and len(tag.split(".")) == 3:
+        assert tag == "v" + ".".join(["%d" % i for i in ver_emu])
+
+
+def check_file(gen, tag):
+    if tag.startswith("/"):
+        filename = tag
+    else:
+        filename = "%s/trezor-emu-%s-%s" % (BIN_DIR, gen, tag)
+    if not os.path.exists(filename):
+        raise ValueError(filename + " not found. Do not forget to build firmware.")
+
+
+def get_tags():
+    files = os.listdir(BIN_DIR)
+    if not files:
+        raise ValueError(
+            "No files found. Use download_emulators.sh to download emulators."
+        )
+
+    result = defaultdict(list)
+    for f in sorted(files):
+        try:
+            _, _, gen, tag = f.split("-", maxsplit=3)
+            result[gen].append(tag)
+        except ValueError:
+            pass
+    return result
+
+
+ALL_TAGS = get_tags()
 
 
 class EmulatorWrapper:

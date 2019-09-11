@@ -25,10 +25,7 @@ from trezorlib.tools import H_
 MINIMUM_FIRMWARE_VERSION["1"] = (1, 0, 0)
 MINIMUM_FIRMWARE_VERSION["T"] = (2, 0, 0)
 
-try:
-    from .emulator_wrapper import EmulatorWrapper
-except ImportError:
-    pass
+from ..emulators import EmulatorWrapper, ALL_TAGS, LOCAL_BUILDS
 
 # **** COMMON DEFINITIONS ****
 
@@ -38,47 +35,6 @@ ADDRESS = "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL"
 LABEL = "test"
 LANGUAGE = "english"
 STRENGTH = 128
-
-ROOT = os.path.dirname(os.path.abspath(__file__)) + "/../../"
-LOCAL_BUILDS = {
-    "core": ROOT + "core/build/unix/micropython",
-    "legacy": ROOT + "legacy/firmware/trezor.elf",
-}
-BIN_DIR = os.path.dirname(os.path.abspath(__file__)) + "/emulators"
-
-
-def check_version(tag, ver_emu):
-    if tag.startswith("v") and len(tag.split(".")) == 3:
-        assert tag == "v" + ".".join(["%d" % i for i in ver_emu])
-
-
-def check_file(gen, tag):
-    if tag.startswith("/"):
-        filename = tag
-    else:
-        filename = "%s/trezor-emu-%s-%s" % (BIN_DIR, gen, tag)
-    if not os.path.exists(filename):
-        raise ValueError(filename + " not found. Do not forget to build firmware.")
-
-
-def get_tags():
-    files = os.listdir(BIN_DIR)
-    if not files:
-        raise ValueError(
-            "No files found. Use download_emulators.sh to download emulators."
-        )
-
-    result = defaultdict(list)
-    for f in sorted(files):
-        try:
-            _, _, gen, tag = f.split("-", maxsplit=3)
-            result[gen].append(tag)
-        except ValueError:
-            pass
-    return result
-
-
-ALL_TAGS = get_tags()
 
 
 def for_all(*args, minimum_version=(1, 0, 0)):
