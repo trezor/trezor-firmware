@@ -53,7 +53,7 @@ class TestMsgResetDeviceT2:
             for h in range(5):
                 # mnemonic phrases
                 btn_code = yield
-                assert btn_code == B.Other
+                assert btn_code == B.ResetDevice
                 mnemonic = read_and_confirm_mnemonic(client.debug, words=20)
                 all_mnemonics.append(mnemonic)
 
