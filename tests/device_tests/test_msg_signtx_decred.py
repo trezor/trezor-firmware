@@ -19,7 +19,6 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
 from .tx_cache import tx_cache
 
 TX_API = tx_cache("Decred Testnet")
@@ -47,7 +46,7 @@ TXHASH_16da18 = bytes.fromhex(
 
 @pytest.mark.altcoin
 @pytest.mark.decred
-class TestMsgSigntxDecred(TrezorTest):
+class TestMsgSigntxDecred:
     def test_send_decred(self, client):
         inp1 = proto.TxInputType(
             # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz

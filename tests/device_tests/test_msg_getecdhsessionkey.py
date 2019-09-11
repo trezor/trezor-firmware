@@ -18,10 +18,10 @@ import pytest
 
 from trezorlib import messages as proto, misc
 
-from .common import MNEMONIC12, TrezorTest
+from .common import MNEMONIC12
 
 
-class TestMsgGetECDHSessionKey(TrezorTest):
+class TestMsgGetECDHSessionKey:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_ecdh(self, client):
         identity = proto.IdentityType(

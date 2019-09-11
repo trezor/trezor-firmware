@@ -19,7 +19,6 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
 from .conftest import TREZOR_VERSION
 from .tx_cache import tx_cache
 
@@ -36,7 +35,7 @@ TXHASH_7b28bd = bytes.fromhex(
 
 @pytest.mark.altcoin
 @pytest.mark.komodo
-class TestMsgSigntxKomodo(TrezorTest):
+class TestMsgSigntxKomodo:
     def test_one_one_fee_sapling(self, client):
         # prevout: 2807c5b126ec8e2b078cab0f12e4c8b4ce1d7724905f8ebef8dca26b0c8e0f1d:0
         # input 1: 10.9998 KMD

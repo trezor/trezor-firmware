@@ -19,12 +19,12 @@ import pytest
 from trezorlib import btc
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from .common import MNEMONIC12
 
 
 @pytest.mark.altcoin
 @pytest.mark.decred
-class TestMsgSignmessageDecred(TrezorTest):
+class TestMsgSignmessageDecred:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_sign_mainnet(self, client):
         address_n = parse_path("m/44'/42'/0'/0/0")

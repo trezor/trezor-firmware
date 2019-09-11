@@ -18,11 +18,9 @@ import pytest
 
 from trezorlib import btc, debuglink
 
-from .common import TrezorTest
-
 
 @pytest.mark.skip_t2
-class TestDeviceLoadXprv(TrezorTest):
+class TestDeviceLoadXprv:
     @pytest.mark.setup_client(uninitialized=True)
     def test_load_device_xprv_1(self, client):
         debuglink.load_device_by_xprv(

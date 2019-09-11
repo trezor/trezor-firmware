@@ -21,11 +21,9 @@ import pytest
 from trezorlib import cosi
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
-
 
 @pytest.mark.skip_t2
-class TestCosi(TrezorTest):
+class TestCosi:
     def test_cosi_commit(self, client):
         digest = sha256(b"this is a message").digest()
 

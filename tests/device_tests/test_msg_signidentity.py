@@ -21,7 +21,7 @@ import pytest
 from trezorlib import messages as proto, misc
 from trezorlib.tools import H_
 
-from .common import MNEMONIC12, TrezorTest
+from .common import MNEMONIC12
 
 
 def check_path(identity):
@@ -47,7 +47,7 @@ def check_path(identity):
     print("path:", "m/" + "/".join([str(x) for x in address_n]))
 
 
-class TestMsgSignidentity(TrezorTest):
+class TestMsgSignidentity:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_sign(self, client):
         hidden = bytes.fromhex(

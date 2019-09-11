@@ -20,8 +20,6 @@ from trezorlib import messages, tezos
 from trezorlib.protobuf import dict_to_proto
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
-
 TEZOS_PATH = parse_path("m/44'/1729'/0'")
 TEZOS_PATH_10 = parse_path("m/44'/1729'/10'")
 
@@ -29,7 +27,7 @@ TEZOS_PATH_10 = parse_path("m/44'/1729'/10'")
 @pytest.mark.altcoin
 @pytest.mark.tezos
 @pytest.mark.skip_t1
-class TestMsgTezosSignTx(TrezorTest):
+class TestMsgTezosSignTx:
     def test_tezos_sign_tx_transaction(self, client):
         resp = tezos.sign_tx(
             client,

@@ -20,10 +20,8 @@ import pytest
 
 from trezorlib import btc
 
-from .common import TrezorTest
 
-
-class TestMsgVerifymessage(TrezorTest):
+class TestMsgVerifymessage:
     def test_message_long(self, client):
         ret = btc.verify_message(
             client,

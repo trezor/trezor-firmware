@@ -19,13 +19,13 @@ import pytest
 from trezorlib import btc, ckd_public as bip32, messages as proto
 from trezorlib.tools import H_, parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from .common import MNEMONIC12
 from .tx_cache import tx_cache
 
 TX_API = tx_cache("Testnet")
 
 
-class TestMultisigChange(TrezorTest):
+class TestMultisigChange:
     node_ext1 = bip32.deserialize(
         "tpubDADHV9u9Y6gkggintTdMjJE3be58zKNLhpxBQyuEM6Pwx3sN9JVLmMCMN4DNVwL9AKec27z5TaWcWuHzMXiGAtcra5DjwWbvppGX4gaEGVN"
     )

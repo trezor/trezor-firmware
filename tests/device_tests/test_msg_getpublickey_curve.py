@@ -19,10 +19,10 @@ import pytest
 from trezorlib import btc
 from trezorlib.tools import H_, CallException
 
-from .common import MNEMONIC12, TrezorTest
+from .common import MNEMONIC12
 
 
-class TestMsgGetpublickeyCurve(TrezorTest):
+class TestMsgGetpublickeyCurve:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_default_curve(self, client):
         assert (

@@ -21,13 +21,11 @@ import pytest
 from trezorlib import messages as proto
 from trezorlib.exceptions import PinException
 
-from .common import TrezorTest
-
 # FIXME TODO Add passphrase tests
 
 
 @pytest.mark.skip_t2
-class TestProtectCall(TrezorTest):
+class TestProtectCall:
     def _some_protected_call(self, client, button, pin, passphrase):
         # This method perform any call which have protection in the device
         res = client.ping(
@@ -38,52 +36,46 @@ class TestProtectCall(TrezorTest):
         )
         assert res == "random data"
 
-    """
-    def test_expected_responses(self):
-        self.setup_mnemonic_pin_passphrase()
-
+    @pytest.mark.setup_client(pin="1234", passphrase=True)
+    def test_expected_responses(self, client):
         # This is low-level test of set_expected_responses()
         # feature of debugging client
 
-        with self.client:
+        with pytest.raises(AssertionError), client:
             # Scenario 1 - Received unexpected message
-            self.client.set_expected_responses([])
-            with pytest.raises(CallException):
-                self._some_protected_call(True, True, True)
+            client.set_expected_responses([])
+            self._some_protected_call(client, True, True, True)
 
-        with self.client:
+        with pytest.raises(AssertionError), client:
             # Scenario 2 - Received other than expected message
-            self.client.set_expected_responses([proto.Success()])
-            with pytest.raises(CallException):
-                self._some_protected_call(True, True, True)
+            client.set_expected_responses([proto.Success()])
+            self._some_protected_call(client, True, True, True)
 
-        def scenario3():
-            with self.client:
-                # Scenario 3 - Not received expected message
-                self.client.set_expected_responses([proto.ButtonRequest(),
-                                                    proto.Success(),
-                                                    proto.Success()])  # This is expected, but not received
-                self._some_protected_call(True, False, False)
-                with pytest.raises(Exception):
-                    scenario3()
+        with pytest.raises(AssertionError), client:
+            # Scenario 3 - Not received expected message
+            client.set_expected_responses(
+                [proto.ButtonRequest(), proto.Success(), proto.Success()]
+            )  # This is expected, but not received
+            self._some_protected_call(client, True, False, False)
 
-        with self.client:
+        with pytest.raises(AssertionError), client:
             # Scenario 4 - Received what expected
-            self.client.set_expected_responses([proto.ButtonRequest(),
-                                                proto.PinMatrixRequest(),
-                                                proto.PassphraseRequest(),
-                                                proto.Success(message='random data')])
-            self._some_protected_call(True, True, True)
+            client.set_expected_responses(
+                [
+                    proto.ButtonRequest(),
+                    proto.PinMatrixRequest(),
+                    proto.PassphraseRequest(),
+                    proto.Success(message="random data"),
+                ]
+            )
+            self._some_protected_call(client, True, True, True)
 
-        def scenario5():
-            with self.client:
-                # Scenario 5 - Failed message by field filter
-                self.client.set_expected_responses([proto.ButtonRequest(),
-                                                    proto.Success(message='wrong data')])
-                self._some_protected_call(True, True, True)
-        with pytest.raises(CallException):
-            scenario5()
-    """
+        with pytest.raises(AssertionError), client:
+            # Scenario 5 - Failed message by field filter
+            client.set_expected_responses(
+                [proto.ButtonRequest(), proto.Success(message="wrong data")]
+            )
+            self._some_protected_call(client, True, True, True)
 
     def test_no_protection(self, client):
         with client:

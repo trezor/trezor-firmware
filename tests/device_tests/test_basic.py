@@ -16,10 +16,8 @@
 
 from trezorlib import device, messages
 
-from .common import TrezorTest
 
-
-class TestBasic(TrezorTest):
+class TestBasic:
     def test_features(self, client):
         f0 = client.features
         f1 = client.call(messages.Initialize())

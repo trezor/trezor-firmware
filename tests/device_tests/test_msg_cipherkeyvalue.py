@@ -18,10 +18,10 @@ import pytest
 
 from trezorlib import misc
 
-from .common import MNEMONIC12, TrezorTest
+from .common import MNEMONIC12
 
 
-class TestMsgCipherkeyvalue(TrezorTest):
+class TestMsgCipherkeyvalue:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_encrypt(self, client):
         res = misc.encrypt_keyvalue(

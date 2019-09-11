@@ -18,10 +18,10 @@ import pytest
 
 from trezorlib import btc, ckd_public as bip32, messages as proto
 
-from .common import MNEMONIC12, TrezorTest
+from .common import MNEMONIC12
 
 
-class TestMsgGetaddressShow(TrezorTest):
+class TestMsgGetaddressShow:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_show(self, client):
         assert (

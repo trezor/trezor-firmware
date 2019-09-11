@@ -19,7 +19,6 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import CallException, parse_path
 
-from .common import TrezorTest
 from .conftest import TREZOR_VERSION
 from .tx_cache import tx_cache
 
@@ -30,7 +29,7 @@ TXHASH_d5f65e = bytes.fromhex(
 )
 
 
-class TestOpReturn(TrezorTest):
+class TestOpReturn:
     def test_opreturn(self, client):
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/0'/0'/0/2"), prev_hash=TXHASH_d5f65e, prev_index=0

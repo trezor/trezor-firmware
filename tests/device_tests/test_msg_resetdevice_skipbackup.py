@@ -19,11 +19,11 @@ from mnemonic import Mnemonic
 
 from trezorlib import messages as proto
 
-from .common import TrezorTest, generate_entropy
+from .common import generate_entropy
 
 
 @pytest.mark.skip_t2
-class TestMsgResetDeviceSkipbackup(TrezorTest):
+class TestMsgResetDeviceSkipbackup:
 
     external_entropy = b"zlutoucky kun upel divoke ody" * 2
     strength = 128

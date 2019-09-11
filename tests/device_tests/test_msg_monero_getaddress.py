@@ -19,13 +19,13 @@ import pytest
 from trezorlib import monero
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from .common import MNEMONIC12
 
 
 @pytest.mark.altcoin
 @pytest.mark.monero
 @pytest.mark.skip_t1
-class TestMsgMoneroGetaddress(TrezorTest):
+class TestMsgMoneroGetaddress:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_monero_getaddress(self, client):
         assert (

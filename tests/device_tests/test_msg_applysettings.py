@@ -20,7 +20,6 @@ import pytest
 
 from trezorlib import device, messages as proto
 
-from .common import TrezorTest
 from .conftest import TREZOR_VERSION
 
 EXPECTED_RESPONSES_NOPIN = [proto.ButtonRequest(), proto.Success(), proto.Features()]
@@ -33,7 +32,7 @@ else:
 
 
 @pytest.mark.setup_client(pin=True)
-class TestMsgApplysettings(TrezorTest):
+class TestMsgApplysettings:
     def test_apply_settings(self, client):
         assert client.features.label == "test"
 

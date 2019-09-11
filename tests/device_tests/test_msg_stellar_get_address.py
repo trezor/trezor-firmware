@@ -19,13 +19,13 @@ import pytest
 from trezorlib import messages as proto, stellar
 from trezorlib.tools import CallException, parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from .common import MNEMONIC12
 from .conftest import TREZOR_VERSION
 
 
 @pytest.mark.altcoin
 @pytest.mark.stellar
-class TestMsgStellarGetAddress(TrezorTest):
+class TestMsgStellarGetAddress:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_stellar_get_address(self, client):
         address = stellar.get_address(client, parse_path(stellar.DEFAULT_BIP32_PATH))

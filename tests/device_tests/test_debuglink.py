@@ -18,11 +18,11 @@ import pytest
 
 from trezorlib import debuglink, messages
 
-from .common import MNEMONIC12, TrezorTest
+from .common import MNEMONIC12
 
 
 @pytest.mark.skip_t2
-class TestDebuglink(TrezorTest):
+class TestDebuglink:
     def test_layout(self, client):
         layout = client.debug.state().layout
         assert len(layout) == 1024
@@ -40,7 +40,7 @@ class TestDebuglink(TrezorTest):
             label="test",
         )
         mnemonic = client.debug.state().mnemonic_secret
-        assert mnemonic == self.mnemonic12.encode()
+        assert mnemonic == MNEMONIC12.encode()
 
     @pytest.mark.setup_client(mnemonic=MNEMONIC12, pin="1234", passphrase=True)
     def test_pin(self, client):

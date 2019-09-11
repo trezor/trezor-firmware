@@ -19,10 +19,10 @@ import pytest
 from trezorlib import btc, ckd_public as bip32, messages as proto
 from trezorlib.tools import H_
 
-from .common import MNEMONIC12, TrezorTest
+from .common import MNEMONIC12
 
 
-class TestMsgGetpublickey(TrezorTest):
+class TestMsgGetpublickey:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_btc(self, client):
         assert (

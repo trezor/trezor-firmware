@@ -18,12 +18,10 @@ import pytest
 
 from trezorlib import ethereum
 
-from .common import TrezorTest
-
 
 @pytest.mark.altcoin
 @pytest.mark.ethereum
-class TestMsgEthereumVerifymessage(TrezorTest):
+class TestMsgEthereumVerifymessage:
 
     ADDRESS = "0xEa53AF85525B1779eE99ece1a5560C0b78537C3b"
     VECTORS = [

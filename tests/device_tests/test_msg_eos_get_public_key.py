@@ -19,13 +19,13 @@ import pytest
 from trezorlib.eos import get_public_key
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from .common import MNEMONIC12
 
 
 @pytest.mark.altcoin
 @pytest.mark.eos
 @pytest.mark.skip_t1
-class TestMsgEosGetpublickey(TrezorTest):
+class TestMsgEosGetpublickey:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_eos_get_public_key(self, client):
         public_key = get_public_key(client, parse_path("m/44'/194'/0'/0/0"))

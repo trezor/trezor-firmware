@@ -18,11 +18,9 @@ import pytest
 
 from trezorlib import messages as proto
 
-from .common import TrezorTest
-
 
 @pytest.mark.skip_t2
-class TestMsgClearsession(TrezorTest):
+class TestMsgClearsession:
     @pytest.mark.setup_client(pin=True, passphrase=True)
     def test_clearsession(self, client):
         with client:

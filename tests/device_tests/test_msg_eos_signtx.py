@@ -20,7 +20,7 @@ from trezorlib import eos
 from trezorlib.messages import EosSignedTx
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from .common import MNEMONIC12
 
 CHAIN_ID = "cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f"
 ADDRESS_N = parse_path("m/44'/194'/0'/0/0")
@@ -30,7 +30,7 @@ ADDRESS_N = parse_path("m/44'/194'/0'/0/0")
 @pytest.mark.eos
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-class TestMsgEosSignTx(TrezorTest):
+class TestMsgEosSignTx:
     @pytest.mark.setup_client(uninitialized=True)
     def input_flow(self, debug, pages):
         # confirm number of actions

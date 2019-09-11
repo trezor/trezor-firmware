@@ -18,13 +18,12 @@ from trezorlib import btc, messages as proto
 from trezorlib.ckd_public import deserialize
 from trezorlib.tools import H_, parse_path
 
-from .common import TrezorTest
 from .tx_cache import tx_cache
 
 TX_API = tx_cache("Testnet")
 
 
-class TestMsgSigntxSegwitNative(TrezorTest):
+class TestMsgSigntxSegwitNative:
     def test_send_p2sh(self, client):
         inp1 = proto.TxInputType(
             address_n=parse_path("49'/1'/0'/1/0"),

@@ -21,10 +21,10 @@ import pytest
 from trezorlib import btc
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from .common import MNEMONIC12
 
 
-class TestMsgSignmessage(TrezorTest):
+class TestMsgSignmessage:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_sign(self, client):
         sig = btc.sign_message(

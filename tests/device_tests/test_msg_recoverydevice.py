@@ -18,14 +18,17 @@ import pytest
 
 from trezorlib import device, messages as proto
 
-from .common import TrezorTest
+from .common import MNEMONIC12
+
+PIN4 = "1234"
+PIN6 = "789456"
 
 
 @pytest.mark.skip_t2
-class TestMsgRecoverydevice(TrezorTest):
+class TestMsgRecoverydevice:
     @pytest.mark.setup_client(uninitialized=True)
     def test_pin_passphrase(self, client):
-        mnemonic = self.mnemonic12.split(" ")
+        mnemonic = MNEMONIC12.split(" ")
         ret = client.call_raw(
             proto.RecoveryDevice(
                 word_count=12,
@@ -45,12 +48,12 @@ class TestMsgRecoverydevice(TrezorTest):
         assert isinstance(ret, proto.PinMatrixRequest)
 
         # Enter PIN for first time
-        pin_encoded = client.debug.encode_pin(self.pin6)
+        pin_encoded = client.debug.encode_pin(PIN6)
         ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
         assert isinstance(ret, proto.PinMatrixRequest)
 
         # Enter PIN for second time
-        pin_encoded = client.debug.encode_pin(self.pin6)
+        pin_encoded = client.debug.encode_pin(PIN6)
         ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
 
         fakes = 0
@@ -76,7 +79,7 @@ class TestMsgRecoverydevice(TrezorTest):
 
         # Mnemonic is the same
         client.init_device()
-        assert client.debug.read_mnemonic_secret() == self.mnemonic12.encode()
+        assert client.debug.read_mnemonic_secret() == MNEMONIC12.encode()
 
         assert client.features.pin_protection is True
         assert client.features.passphrase_protection is True
@@ -88,7 +91,7 @@ class TestMsgRecoverydevice(TrezorTest):
 
     @pytest.mark.setup_client(uninitialized=True)
     def test_nopin_nopassphrase(self, client):
-        mnemonic = self.mnemonic12.split(" ")
+        mnemonic = MNEMONIC12.split(" ")
         ret = client.call_raw(
             proto.RecoveryDevice(
                 word_count=12,
@@ -128,7 +131,7 @@ class TestMsgRecoverydevice(TrezorTest):
 
         # Mnemonic is the same
         client.init_device()
-        assert client.debug.read_mnemonic_secret() == self.mnemonic12.encode()
+        assert client.debug.read_mnemonic_secret() == MNEMONIC12.encode()
 
         assert client.features.pin_protection is False
         assert client.features.passphrase_protection is False
@@ -190,12 +193,12 @@ class TestMsgRecoverydevice(TrezorTest):
         assert isinstance(ret, proto.PinMatrixRequest)
 
         # Enter PIN for first time
-        pin_encoded = client.debug.encode_pin(self.pin4)
+        pin_encoded = client.debug.encode_pin(PIN4)
         ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
         assert isinstance(ret, proto.PinMatrixRequest)
 
         # Enter PIN for second time, but different one
-        pin_encoded = client.debug.encode_pin(self.pin6)
+        pin_encoded = client.debug.encode_pin(PIN6)
         ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
 
         # Failure should be raised

@@ -19,13 +19,11 @@ import pytest
 from trezorlib import messages, ripple
 from trezorlib.tools import CallException, parse_path
 
-from .common import TrezorTest
-
 
 @pytest.mark.altcoin
 @pytest.mark.ripple
 @pytest.mark.skip_t1  # T1 support is not planned
-class TestMsgRippleSignTx(TrezorTest):
+class TestMsgRippleSignTx:
     def test_ripple_sign_simple_tx(self, client):
         msg = ripple.create_sign_tx_msg(
             {
