@@ -14,7 +14,7 @@ if False:
     from apps.common import seed
 
 
-def _public_key_to_wif(pub_key: bytes) -> str:
+def public_key_to_wif(pub_key: bytes) -> str:
     if pub_key[0] == 0x04 and len(pub_key) == 65:
         head = b"\x03" if pub_key[64] & 0x01 else b"\x02"
         compressed_pub_key = head + pub_key[1:33]
@@ -28,7 +28,7 @@ def _public_key_to_wif(pub_key: bytes) -> str:
 def _get_public_key(node: bip32.HDNode) -> Tuple[str, bytes]:
     seckey = node.private_key()
     public_key = secp256k1.publickey(seckey, True)
-    wif = _public_key_to_wif(public_key)
+    wif = public_key_to_wif(public_key)
     return wif, public_key
 
 
