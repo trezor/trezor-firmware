@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # script/toolchain-download: Download and extract the GNU Arm Embedded toolchain
 #                            for building the Trezor firmware.
