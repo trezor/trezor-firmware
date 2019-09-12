@@ -15,17 +15,17 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import os
-from collections import defaultdict
 
 import pytest
 
 from trezorlib import MINIMUM_FIRMWARE_VERSION, btc, debuglink, device
 from trezorlib.tools import H_
 
+from ..emulators import ALL_TAGS, EmulatorWrapper
+
 MINIMUM_FIRMWARE_VERSION["1"] = (1, 0, 0)
 MINIMUM_FIRMWARE_VERSION["T"] = (2, 0, 0)
 
-from ..emulators import EmulatorWrapper, ALL_TAGS, LOCAL_BUILDS
 
 # **** COMMON DEFINITIONS ****
 
@@ -41,21 +41,24 @@ def for_all(*args, minimum_version=(1, 0, 0)):
     if not args:
         args = ("core", "legacy")
 
-    enabled_gens = os.environ.get("TREZOR_UPGRADE_TEST", "").split(",")
+    specified_gens = os.environ.get("TREZOR_UPGRADE_TEST")
+    if specified_gens is not None:
+        enabled_gens = specified_gens.split(",")
+    else:
+        enabled_gens = args
 
     all_params = []
     for gen in args:
         if gen not in enabled_gens:
             continue
         try:
-            to_tag = LOCAL_BUILDS[gen]
+            to_tag = None
             from_tags = ALL_TAGS[gen] + [to_tag]
             for from_tag in from_tags:
-                if from_tag.startswith("v"):
+                if from_tag is not None and from_tag.startswith("v"):
                     tag_version = tuple(int(n) for n in from_tag[1:].split("."))
                     if tag_version < minimum_version:
                         continue
-                check_file(gen, from_tag)
                 all_params.append((gen, from_tag, to_tag))
         except KeyError:
             pass
@@ -69,7 +72,6 @@ def for_all(*args, minimum_version=(1, 0, 0)):
 @for_all()
 def test_upgrade_load(gen, from_tag, to_tag):
     def asserts(tag, client):
-        check_version(tag, emu.client.version)
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
         assert client.features.initialized
@@ -98,7 +100,6 @@ def test_upgrade_load(gen, from_tag, to_tag):
 @for_all("legacy")
 def test_upgrade_reset(gen, from_tag, to_tag):
     def asserts(tag, client):
-        check_version(tag, emu.client.version)
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
         assert client.features.initialized
@@ -132,7 +133,6 @@ def test_upgrade_reset(gen, from_tag, to_tag):
 @for_all()
 def test_upgrade_reset_skip_backup(gen, from_tag, to_tag):
     def asserts(tag, client):
-        check_version(tag, emu.client.version)
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
         assert client.features.initialized
@@ -167,7 +167,6 @@ def test_upgrade_reset_skip_backup(gen, from_tag, to_tag):
 @for_all(minimum_version=(1, 7, 2))
 def test_upgrade_reset_no_backup(gen, from_tag, to_tag):
     def asserts(tag, client):
-        check_version(tag, emu.client.version)
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
         assert client.features.initialized

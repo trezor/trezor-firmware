@@ -14,42 +14,38 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from collections import defaultdict
 import os
 import subprocess
 import tempfile
 import time
+from collections import defaultdict
 
 from trezorlib.debuglink import TrezorClientDebugLink
 from trezorlib.transport import TransportException, get_transport
 
 BINDIR = os.path.dirname(os.path.abspath(__file__)) + "/emulators"
-ENV = {"SDL_VIDEODRIVER": "dummy"}
-
 ROOT = os.path.dirname(os.path.abspath(__file__)) + "/../"
-LOCAL_BUILDS = {
+LOCAL_BUILD_PATHS = {
     "core": ROOT + "core/build/unix/micropython",
     "legacy": ROOT + "legacy/firmware/trezor.elf",
 }
-BIN_DIR = os.path.dirname(os.path.abspath(__file__)) + "/emulators"
+
+ENV = {"SDL_VIDEODRIVER": "dummy"}
 
 
-def check_version(tag, ver_emu):
-    if tag.startswith("v") and len(tag.split(".")) == 3:
-        assert tag == "v" + ".".join(["%d" % i for i in ver_emu])
+def check_version(tag, version_tuple):
+    if tag is not None and tag.startswith("v") and len(tag.split(".")) == 3:
+        version = ".".join(str(i) for i in version_tuple)
+        if tag[1:] != version:
+            raise RuntimeError(f"Version mismatch: tag {tag} reports version {version}")
 
 
-def check_file(gen, tag):
-    if tag.startswith("/"):
-        filename = tag
-    else:
-        filename = "%s/trezor-emu-%s-%s" % (BIN_DIR, gen, tag)
-    if not os.path.exists(filename):
-        raise ValueError(filename + " not found. Do not forget to build firmware.")
+def filename_from_tag(gen, tag):
+    return f"{BINDIR}/trezor-emu-{gen}-{tag}"
 
 
 def get_tags():
-    files = os.listdir(BIN_DIR)
+    files = os.listdir(BINDIR)
     if not files:
         raise ValueError(
             "No files found. Use download_emulators.sh to download emulators."
@@ -58,6 +54,7 @@ def get_tags():
     result = defaultdict(list)
     for f in sorted(files):
         try:
+            # example: "trezor-emu-core-v2.1.1"
             _, _, gen, tag = f.split("-", maxsplit=3)
             result[gen].append(tag)
         except ValueError:
@@ -69,18 +66,28 @@ ALL_TAGS = get_tags()
 
 
 class EmulatorWrapper:
-    def __init__(self, gen, tag, storage=None):
+    def __init__(self, gen, tag=None, executable=None, storage=None):
         self.gen = gen
         self.tag = tag
+
+        if executable is not None:
+            self.executable = executable
+        elif tag is not None:
+            self.executable = filename_from_tag(gen, tag)
+        else:
+            self.executable = LOCAL_BUILD_PATHS[gen]
+
+        if not os.path.exists(self.executable):
+            raise ValueError(f"emulator executable not found: {self.executable}")
+
         self.workdir = tempfile.TemporaryDirectory()
         if storage:
             open(self._storage_file(), "wb").write(storage)
 
+        self.client = None
+
     def __enter__(self):
-        if self.tag.startswith("/"):  # full path+filename provided
-            args = [self.tag]
-        else:  # only gen+tag provided
-            args = ["%s/trezor-emu-%s-%s" % (BINDIR, self.gen, self.tag)]
+        args = [self.executable]
         env = ENV
         if self.gen == "core":
             args += ["-m", "main"]
@@ -88,39 +95,35 @@ class EmulatorWrapper:
             env["TREZOR_PROFILE_DIR"] = self.workdir.name
             # for firmware 2.1.1 and older
             env["TREZOR_PROFILE"] = self.workdir.name
-        self.client = None
         self.process = subprocess.Popen(
-            args, cwd=self.workdir.name, env=ENV, stdout=open(os.devnull, "w")
+            args, cwd=self.workdir.name, env=env, stdout=open(os.devnull, "w")
         )
         # wait until emulator is listening
-        i = 0
-        while True:
+        for _ in range(100):
             try:
-                i += 1
-                if i > 100:
-                    self.__exit__(None, None, None)
-                    raise RuntimeError("Can't connect to emulator")
-                self.transport = get_transport("udp:127.0.0.1:21324")
-            except TransportException:
                 time.sleep(0.1)
-                continue
-            break
-        self.client = TrezorClientDebugLink(self.transport)
+                transport = get_transport("udp:127.0.0.1:21324")
+                break
+            except TransportException:
+                pass
+            if self.process.poll() is not None:
+                self._cleanup()
+                raise RuntimeError("Emulator proces died")
+        else:
+            # could not connect after 100 attempts * 0.1s = 10s of waiting
+            self._cleanup()
+            raise RuntimeError("Can't connect to emulator")
+
+        self.client = TrezorClientDebugLink(transport)
         self.client.open()
-        # check whether the reported version matches the expected one
-        if self.tag[0] == "v":
-            version = "v%d.%d.%d" % (
-                self.client.features["major_version"],
-                self.client.features["minor_version"],
-                self.client.features["patch_version"],
-            )
-            assert self.tag == version, "expected: %s reported: %s" % (
-                self.tag,
-                version,
-            )
+        check_version(self.tag, self.client.version)
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        self._cleanup()
+        return False
+
+    def _cleanup(self):
         if self.client:
             self.client.close()
         self.process.terminate()
