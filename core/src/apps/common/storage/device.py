@@ -22,7 +22,7 @@ _USE_PASSPHRASE            = const(0x05)  # bool (0x01 or empty)
 _HOMESCREEN                = const(0x06)  # bytes
 _NEEDS_BACKUP              = const(0x07)  # bool (0x01 or empty)
 _FLAGS                     = const(0x08)  # int
-_U2F_COUNTER               = const(0x09)  # int
+U2F_COUNTER                = const(0x09)  # int
 _PASSPHRASE_SOURCE         = const(0x0A)  # int
 _UNFINISHED_BACKUP         = const(0x0B)  # bool (0x01 or empty)
 _AUTOLOCK_DELAY_MS         = const(0x0C)  # int
@@ -199,11 +199,11 @@ def set_autolock_delay_ms(delay_ms: int) -> None:
 
 
 def next_u2f_counter() -> Optional[int]:
-    return common._next_counter(_NAMESPACE, _U2F_COUNTER, True)  # writable when locked
+    return common._next_counter(_NAMESPACE, U2F_COUNTER, True)  # writable when locked
 
 
 def set_u2f_counter(count: int) -> None:
-    common._set_counter(_NAMESPACE, _U2F_COUNTER, count, True)  # writable when locked
+    common._set_counter(_NAMESPACE, U2F_COUNTER, count, True)  # writable when locked
 
 
 def set_slip39_identifier(identifier: int) -> None:
