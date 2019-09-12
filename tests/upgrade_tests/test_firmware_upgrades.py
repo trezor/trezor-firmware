@@ -60,6 +60,9 @@ def for_all(*args, minimum_version=(1, 0, 0)):
         except KeyError:
             pass
 
+    if not all_params:
+        return pytest.mark.skip("no versions are applicable")
+
     return pytest.mark.parametrize("gen, from_tag, to_tag", all_params)
 
 
@@ -117,11 +120,13 @@ def test_upgrade_reset(gen, from_tag, to_tag):
         )
         device_id = emu.client.features.device_id
         asserts(from_tag, emu.client)
+        address = btc.get_address(emu.client, "Bitcoin", PATH)
         storage = emu.storage()
 
     with EmulatorWrapper(gen, to_tag, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(to_tag, emu.client)
+        assert btc.get_address(emu.client, "Bitcoin", PATH) == address
 
 
 @for_all()
@@ -150,11 +155,13 @@ def test_upgrade_reset_skip_backup(gen, from_tag, to_tag):
         )
         device_id = emu.client.features.device_id
         asserts(from_tag, emu.client)
+        address = btc.get_address(emu.client, "Bitcoin", PATH)
         storage = emu.storage()
 
     with EmulatorWrapper(gen, to_tag, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(to_tag, emu.client)
+        assert btc.get_address(emu.client, "Bitcoin", PATH) == address
 
 
 @for_all(minimum_version=(1, 7, 2))
@@ -183,11 +190,13 @@ def test_upgrade_reset_no_backup(gen, from_tag, to_tag):
         )
         device_id = emu.client.features.device_id
         asserts(from_tag, emu.client)
+        address = btc.get_address(emu.client, "Bitcoin", PATH)
         storage = emu.storage()
 
     with EmulatorWrapper(gen, to_tag, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(to_tag, emu.client)
+        assert btc.get_address(emu.client, "Bitcoin", PATH) == address
 
 
 if __name__ == "__main__":
