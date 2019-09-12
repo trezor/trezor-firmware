@@ -4,7 +4,7 @@ from trezor.crypto import bip32, bip39
 from apps.common.paths import HARDENED
 
 if not utils.BITCOIN_ONLY:
-    from apps.eos.get_public_key import _get_public_key, _public_key_to_wif
+    from apps.eos.get_public_key import _get_public_key, public_key_to_wif
     from apps.eos.helpers import validate_full_path
 
 
@@ -42,7 +42,7 @@ class TestEosGetPublicKey(unittest.TestCase):
 
             self.assertEqual(hexlify(public_key), public_keys[index])
             self.assertEqual(wif, wif_keys[index])
-            self.assertEqual(_public_key_to_wif(public_key), wif_keys[index])
+            self.assertEqual(public_key_to_wif(public_key), wif_keys[index])
 
     def test_paths(self):
         # 44'/194'/a'/0/0 is correct

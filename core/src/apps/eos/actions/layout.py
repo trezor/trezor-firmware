@@ -8,7 +8,7 @@ from trezor.ui.text import Text
 from trezor.utils import chunks
 
 from apps.eos import helpers
-from apps.eos.get_public_key import _public_key_to_wif
+from apps.eos.get_public_key import public_key_to_wif
 from apps.eos.layout import require_confirm
 
 if False:
@@ -273,7 +273,7 @@ def authorization_fields(auth: EosAuthorization) -> List[str]:
     fields.append(str(auth.threshold))
 
     for i, key in enumerate(auth.keys):
-        _key = _public_key_to_wif(bytes(key.key))
+        _key = public_key_to_wif(bytes(key.key))
         _weight = str(key.weight)
 
         header = "Key #{}:".format(i + 1)
