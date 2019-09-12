@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # expected inputs:
 # TREZOR_SRC -- directory containing python code for uMP

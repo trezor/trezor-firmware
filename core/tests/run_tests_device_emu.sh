@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 : "${RUN_TEST_EMU:=1}"
 

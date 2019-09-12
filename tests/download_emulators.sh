@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 SITE="https://firmware.corp.sldev.cz/upgrade_tests/"
 cd "$(dirname "$0")"
 
