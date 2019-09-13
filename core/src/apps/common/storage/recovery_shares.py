@@ -24,7 +24,7 @@ def fetch() -> List[str]:
     mnemonics = []
     if not recovery.get_slip39_group_count():
         return mnemonics
-    for index in range(0, slip39.MAX_SHARE_COUNT * recovery.get_slip39_group_count()):
+    for index in range(slip39.MAX_SHARE_COUNT * recovery.get_slip39_group_count()):
         m = get(index)
         if m:
             mnemonics.append(m)
@@ -33,7 +33,7 @@ def fetch() -> List[str]:
 
 def fetch_group(group_index: int) -> List[str]:
     mnemonics = []
-    starting_index = 0 + group_index * slip39.MAX_SHARE_COUNT
+    starting_index = group_index * slip39.MAX_SHARE_COUNT
     for index in range(starting_index, starting_index + slip39.MAX_SHARE_COUNT):
         m = get(index)
         if m:
