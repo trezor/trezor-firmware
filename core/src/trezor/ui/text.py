@@ -208,3 +208,51 @@ class Label(ui.Component):
                     tx, ty, self.content, self.style, ui.FG, ui.BG, aw
                 )
             self.repaint = False
+
+
+def text_center_trim_left(
+    x: int, y: int, text: str, font: int = ui.NORMAL, width: int = ui.WIDTH - 16
+) -> None:
+    if ui.display.text_width(text, font) <= width:
+        ui.display.text_center(x, y, text, font, ui.FG, ui.BG)
+        return
+
+    ELLIPSIS_WIDTH = ui.display.text_width("...", ui.BOLD)
+    if width < ELLIPSIS_WIDTH:
+        return
+
+    text_length = 0
+    for i in range(1, len(text)):
+        if ui.display.text_width(text[-i:], font) + ELLIPSIS_WIDTH > width:
+            text_length = i - 1
+            break
+
+    text_width = ui.display.text_width(text[-text_length:], font)
+    x -= (text_width + ELLIPSIS_WIDTH) // 2
+    ui.display.text(x, y, "...", ui.BOLD, ui.GREY, ui.BG)
+    x += ELLIPSIS_WIDTH
+    ui.display.text(x, y, text[-text_length:], font, ui.FG, ui.BG)
+
+
+def text_center_trim_right(
+    x: int, y: int, text: str, font: int = ui.NORMAL, width: int = ui.WIDTH - 16
+) -> None:
+    if ui.display.text_width(text, font) <= width:
+        ui.display.text_center(x, y, text, font, ui.FG, ui.BG)
+        return
+
+    ELLIPSIS_WIDTH = ui.display.text_width("...", ui.BOLD)
+    if width < ELLIPSIS_WIDTH:
+        return
+
+    text_length = 0
+    for i in range(1, len(text)):
+        if ui.display.text_width(text[:i], font) + ELLIPSIS_WIDTH > width:
+            text_length = i - 1
+            break
+
+    text_width = ui.display.text_width(text[:text_length], font)
+    x -= (text_width + ELLIPSIS_WIDTH) // 2
+    ui.display.text(x, y, text[:text_length], font, ui.FG, ui.BG)
+    x += text_width
+    ui.display.text(x, y, "...", ui.BOLD, ui.GREY, ui.BG)
