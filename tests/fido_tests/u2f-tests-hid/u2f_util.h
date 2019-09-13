@@ -72,8 +72,7 @@ float U2Fob_deltaTime(uint64_t* state);
 
 struct U2Fob {
   hid_device* dev;
-  int fd_in;
-  int fd_out;
+  hid_device* dev_debug;
   char* path;
   uint32_t cid;
   int loglevel;
@@ -153,6 +152,5 @@ void DEV_open_path(struct U2Fob* device);
 int DEV_write(struct U2Fob* device, const uint8_t* src, size_t n);
 int DEV_read_timeout(struct U2Fob* device, uint8_t* dst, size_t n, int timeout);
 int DEV_touch(struct U2Fob* device);
-void DEV_quit(struct U2Fob* device);
 
 #endif  // __U2F_UTIL_H_INCLUDED__

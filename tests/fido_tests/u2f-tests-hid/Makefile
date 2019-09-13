@@ -23,4 +23,4 @@ U2FTest: dev.o U2FTest.o u2f_util.o dsa_sig.o hidapi-udp.o p256.o p256_ec.o p256
 	$(CXX) $(CFLAGS) -o $@ $^
 
 clean:
-	rm -f *.o U2FTest
+	rm -f *.o HIDTest U2FTest

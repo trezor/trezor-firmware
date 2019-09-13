@@ -62,6 +62,10 @@ void hid_close(hid_device *device) {
 }
 
 int hid_write(hid_device *device, const unsigned char *data, size_t length) {
+  if (!device) {
+    fprintf(stderr, "Device can't be NULL\n");
+    return -1;
+  }
   if (length != 65) {
     fprintf(stderr, "Invalid packet size\n");
     return -1;
@@ -71,15 +75,20 @@ int hid_write(hid_device *device, const unsigned char *data, size_t length) {
     fprintf(stderr, "Failed to write socket\n");
     return -1;
   }
+  usleep(1000);
   return length;
 }
 
 int hid_read_timeout(hid_device *device, unsigned char *data, size_t length, int milliseconds) {
+  if (!device) {
+    fprintf(stderr, "Device can't be NULL\n");
+    return -1;
+  }
   for (int i = 0; i < milliseconds; i++) {
+    usleep(1000);
     ssize_t n = recvfrom(device->fd, data, length, MSG_DONTWAIT, (struct sockaddr *)&(device->other), &(device->slen));
     if (n < 0) {
       if (errno == EAGAIN && errno == EWOULDBLOCK) { // timeout tick
-        usleep(1000);
         continue;
       } else {
         fprintf(stderr, "Failed to read socket\n");

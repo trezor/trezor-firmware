@@ -49,7 +49,7 @@ void checkPause(const string& prompt) {
 static
 void AbortOrNot() {
   checkPause("Hit enter to continue..");
-  if (arg_Abort) abort();
+  if (arg_Abort) exit(3);
   cerr << "(continuing -a)" << endl;
 }
 
@@ -377,9 +377,8 @@ int main(int argc, char* argv[]) {
   CHECK_EQ(ctr2, ctr1 + 1);
 
   regRsp.keyHandleLen -= 8; // perturb keyhandle length
-  PASS(test_Sign(0x6A80, false));
+  PASS(test_Sign(0x6a80, false));
 
-  //DEV_quit(device); // stop emulator, if any
   U2Fob_destroy(device);
   return 0;
 }
