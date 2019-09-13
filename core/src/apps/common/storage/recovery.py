@@ -108,10 +108,11 @@ def set_slip39_remaining_shares(shares_remaining: int, group_index: int = 0) -> 
     share count for a group.
     """
     remaining = common._get(_NAMESPACE, _REMAINING)
-    if not get_slip39_group_count():
-        raise RuntimeError()
+    group_count = get_slip39_group_count()
+    if not group_count:
+        raise RuntimeError
     if remaining is None:
-        remaining = bytearray([slip39.MAX_SHARE_COUNT] * get_slip39_group_count())
+        remaining = bytearray([slip39.MAX_SHARE_COUNT] * group_count)
     remaining = bytearray(remaining)
     remaining[group_index] = shares_remaining
     common._set(_NAMESPACE, _REMAINING, remaining)
