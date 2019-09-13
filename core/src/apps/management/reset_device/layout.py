@@ -185,22 +185,24 @@ async def _confirm_word(
 
 
 async def _show_confirmation_success(
-    ctx, share_index, num_of_shares=None, slip39=False, group_index=None
+    ctx, share_index=None, num_of_shares=None, group_index=None
 ):
-    if share_index is None or num_of_shares is None or share_index == num_of_shares - 1:
-        if slip39:
-            if group_index is None:
-                subheader = ("You have finished", "verifying your", "recovery shares.")
-            else:
-                subheader = (
-                    "You have finished",
-                    "verifying your",
-                    "recovery shares",
-                    "for group %s." % (group_index + 1),
-                )
-        else:
-            subheader = ("You have finished", "verifying your", "recovery seed.")
+    if share_index is None:  # it is a BIP39 backup
+        subheader = ("You have finished", "verifying your", "recovery seed.")
         text = []
+
+    elif share_index == num_of_shares - 1:
+        if group_index is None:
+            subheader = ("You have finished", "verifying your", "recovery shares.")
+        else:
+            subheader = (
+                "You have finished",
+                "verifying your",
+                "recovery shares",
+                "for group %s." % (group_index + 1),
+            )
+        text = []
+
     else:
         if group_index is None:
             subheader = (
@@ -270,9 +272,9 @@ async def bip39_show_and_confirm_mnemonic(ctx, mnemonic: str):
         # display paginated mnemonic on the screen
         await _show_share_words(ctx, share_words=words)
 
-        # make the user confirm 2 words from the mnemonic
+        # make the user confirm some words from the mnemonic
         if await _confirm_share_words(ctx, None, words):
-            await _show_confirmation_success(ctx, None)
+            await _show_confirmation_success(ctx)
             break  # this share is confirmed, go to next one
         else:
             await _show_confirmation_failure(ctx, None)
@@ -405,7 +407,7 @@ async def slip39_basic_show_and_confirm_shares(ctx, shares):
             # make the user confirm words from the share
             if await _confirm_share_words(ctx, index, share_words):
                 await _show_confirmation_success(
-                    ctx, index, num_of_shares=len(shares), slip39=True
+                    ctx, share_index=index, num_of_shares=len(shares)
                 )
                 break  # this share is confirmed, go to next one
             else:
@@ -495,9 +497,8 @@ async def slip39_advanced_show_and_confirm_shares(ctx, shares):
                 ):
                     await _show_confirmation_success(
                         ctx,
-                        share_index,
+                        share_index=share_index,
                         num_of_shares=len(shares),
-                        slip39=True,
                         group_index=group_index,
                     )
                     break  # this share is confirmed, go to next one
