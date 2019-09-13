@@ -140,12 +140,9 @@ def _split_share_into_pages(share_words):
 async def _confirm_share_words(ctx, share_index, share_words, group_index=None):
     numbered = list(enumerate(share_words))
 
-    # check three words
-    third = len(numbered) // 3
-    # if the num of words is not dividable by 3 let's add 1
-    # to have more words at the beggining and to check all of them
-    if len(numbered) % 3:
-        third += 1
+    # divide list into thirds, rounding up, so that chunking by `third` always yields
+    # three parts (the last one might be shorter)
+    third = (len(numbered) + 2) // 3
 
     for part in utils.chunks(numbered, third):
         if not await _confirm_word(
