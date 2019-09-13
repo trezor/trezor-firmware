@@ -17,8 +17,11 @@ from apps.common.storage.webauthn import (
 )
 from apps.webauthn.credential import Credential, Fido2Credential, U2fCredential
 
+if __debug__:
+    from apps.debug import confirm_signal
+
 if False:
-    from typing import Coroutine, List, Optional
+    from typing import Any, Coroutine, List, Optional
 
 _HID_RPT_SIZE = const(64)
 _CID_BROADCAST = const(0xFFFFFFFF)  # broadcast channel id
@@ -515,6 +518,14 @@ async def check_pin(keepalive_callback: KeepaliveCallback) -> bool:
     return ret
 
 
+async def confirm(*args: Any, **kwargs: Any) -> bool:
+    dialog = Confirm(*args, **kwargs)
+    if __debug__:
+        return await loop.race(dialog, confirm_signal()) is CONFIRMED
+    else:
+        return await dialog is CONFIRMED
+
+
 class ConfirmInfo:
     def __init__(self) -> None:
         self.app_icon = None  # type: Optional[bytes]
@@ -632,10 +643,10 @@ class U2fConfirmRegister(U2fState):
             text.normal(
                 "Another U2F device", "was used to register", "in this application."
             )
-            return await Confirm(text, confirm=None) is CONFIRMED
+            return await confirm(text, confirm=None)
         else:
             content = ConfirmContent(self)
-            return await Confirm(content) is CONFIRMED
+            return await confirm(content)
 
     def get_header(self) -> str:
         return "U2F Register"
@@ -659,7 +670,7 @@ class U2fConfirmAuthenticate(U2fState):
 
     async def confirm_dialog(self) -> bool:
         content = ConfirmContent(self)
-        return await Confirm(content) is CONFIRMED
+        return await confirm(content)
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -724,7 +735,7 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
 
     async def confirm_dialog(self) -> bool:
         content = ConfirmContent(self)
-        if await Confirm(content) is not CONFIRMED:
+        if not await confirm(content):
             return False
         if self._user_verification:
             return await check_pin(KeepaliveCallback(self.cid, self.iface))
@@ -757,7 +768,7 @@ class Fido2ConfirmExcluded(Fido2ConfirmMakeCredential):
 
         text = Text("FIDO2 Register", ui.ICON_WRONG, ui.RED)
         text.normal("This device is already", "registered with", self._cred.rp_id + ".")
-        await Confirm(text, confirm=None)
+        await confirm(text, confirm=None)
 
 
 class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
@@ -830,7 +841,7 @@ class Fido2ConfirmNoPin(State):
     async def confirm_dialog(self) -> bool:
         text = Text("FIDO2 Verify User", ui.ICON_WRONG, ui.RED)
         text.normal("Unable to verify user.", "Please enable PIN", "protection.")
-        return await Confirm(text, confirm=None) is CONFIRMED
+        return await confirm(text, confirm=None)
 
 
 class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
@@ -847,7 +858,7 @@ class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
         text.normal(
             "This device is not", "registered with", self._creds[0].app_name() + "."
         )
-        await Confirm(text, confirm=None)
+        await confirm(text, confirm=None)
 
 
 class Fido2ConfirmReset(Fido2State):
@@ -858,7 +869,7 @@ class Fido2ConfirmReset(Fido2State):
         text = Text("FIDO2 Reset", ui.ICON_CONFIG)
         text.normal("Do you really want to")
         text.bold("erase all credentials?")
-        return await Confirm(text) is CONFIRMED
+        return await confirm(text)
 
     async def on_confirm(self) -> None:
         erase_resident_credentials()
