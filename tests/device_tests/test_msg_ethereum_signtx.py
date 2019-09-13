@@ -20,14 +20,14 @@ from trezorlib import ethereum, messages
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from ..common import MNEMONIC12
 
 TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
 
 
 @pytest.mark.altcoin
 @pytest.mark.ethereum
-class TestMsgEthereumSigntx(TrezorTest):
+class TestMsgEthereumSigntx:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_ethereum_signtx_known_erc20_token(self, client):
         with client:

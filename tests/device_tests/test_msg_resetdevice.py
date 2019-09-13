@@ -19,11 +19,11 @@ from mnemonic import Mnemonic
 
 from trezorlib import device, messages as proto
 
-from .common import TrezorTest, generate_entropy
+from ..common import generate_entropy
 
 
 @pytest.mark.skip_t2
-class TestMsgResetDevice(TrezorTest):
+class TestMsgResetDevice:
     @pytest.mark.setup_client(uninitialized=True)
     def test_reset_device(self, client):
         # No PIN, no passphrase
@@ -218,12 +218,12 @@ class TestMsgResetDevice(TrezorTest):
         assert isinstance(ret, proto.PinMatrixRequest)
 
         # Enter PIN for first time
-        pin_encoded = client.debug.encode_pin(self.pin4)
+        pin_encoded = client.debug.encode_pin("1234")
         ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
         assert isinstance(ret, proto.PinMatrixRequest)
 
         # Enter PIN for second time
-        pin_encoded = client.debug.encode_pin(self.pin6)
+        pin_encoded = client.debug.encode_pin("6789")
         ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
 
         assert isinstance(ret, proto.Failure)

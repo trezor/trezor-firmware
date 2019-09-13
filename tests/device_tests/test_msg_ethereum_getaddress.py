@@ -19,12 +19,12 @@ import pytest
 from trezorlib import ethereum
 from trezorlib.tools import H_
 
-from .common import MNEMONIC12, TrezorTest
+from ..common import MNEMONIC12
 
 
 @pytest.mark.altcoin
 @pytest.mark.ethereum
-class TestMsgEthereumGetaddress(TrezorTest):
+class TestMsgEthereumGetaddress:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_ethereum_getaddress(self, client):
         assert (

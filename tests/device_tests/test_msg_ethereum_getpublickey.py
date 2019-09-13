@@ -19,12 +19,12 @@ import pytest
 from trezorlib import ethereum
 from trezorlib.tools import H_
 
-from .common import MNEMONIC12, TrezorTest
+from ..common import MNEMONIC12
 
 
 @pytest.mark.altcoin
 @pytest.mark.ethereum
-class TestMsgEthereumGetPublicKey(TrezorTest):
+class TestMsgEthereumGetPublicKey:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_ethereum_getpublickey(self, client):
         res = ethereum.get_public_node(client, [H_(44), H_(60), H_(0)])

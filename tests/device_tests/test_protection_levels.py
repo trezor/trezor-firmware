@@ -19,8 +19,8 @@ import pytest
 from trezorlib import btc, debuglink, device, messages as proto, misc
 from trezorlib.exceptions import TrezorFailure
 
-from .common import TrezorTest
-from .tx_cache import tx_cache
+from ..common import MNEMONIC12
+from ..tx_cache import tx_cache
 
 TXHASH_d5f65e = bytes.fromhex(
     "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
@@ -28,7 +28,7 @@ TXHASH_d5f65e = bytes.fromhex(
 
 
 @pytest.mark.skip_t2
-class TestProtectionLevels(TrezorTest):
+class TestProtectionLevels:
     @pytest.mark.setup_client(pin=True, passphrase=True)
     def test_initialize(self, client):
         with client:
@@ -163,7 +163,7 @@ class TestProtectionLevels(TrezorTest):
 
     @pytest.mark.setup_client(uninitialized=True)
     def test_recovery_device(self, client):
-        client.set_mnemonic(self.mnemonic12)
+        client.set_mnemonic(MNEMONIC12)
         with client:
             client.set_expected_responses(
                 [proto.ButtonRequest()]

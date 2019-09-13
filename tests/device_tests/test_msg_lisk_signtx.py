@@ -19,12 +19,10 @@ import pytest
 from trezorlib import lisk, messages as proto
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
-
 
 @pytest.mark.altcoin
 @pytest.mark.lisk
-class TestMsgLiskSignTx(TrezorTest):
+class TestMsgLiskSignTx:
     def test_lisk_sign_tx_send(self, client):
         with client:
             client.set_expected_responses(

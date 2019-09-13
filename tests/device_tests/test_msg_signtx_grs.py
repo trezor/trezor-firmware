@@ -19,14 +19,13 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
-from .tx_cache import tx_cache
+from ..tx_cache import tx_cache
 
 TX_API = tx_cache("Groestlcoin")
 
 
 @pytest.mark.altcoin
-class TestMsgSigntxGRS(TrezorTest):
+class TestMsgSigntxGRS:
     def test_legacy(self, client):
         inp1 = proto.TxInputType(
             address_n=parse_path(

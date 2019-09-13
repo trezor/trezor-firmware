@@ -22,7 +22,7 @@ from trezorlib import btc, device, messages
 from trezorlib.messages import ButtonRequestType as B, ResetDeviceBackupType
 from trezorlib.tools import parse_path
 
-from .common import click_through, read_and_confirm_mnemonic, recovery_enter_shares
+from ..common import click_through, read_and_confirm_mnemonic, recovery_enter_shares
 
 
 @pytest.mark.skip_t1

@@ -19,11 +19,11 @@ import pytest
 from trezorlib import btc, debuglink, device
 from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 
-from .common import MNEMONIC12, TrezorTest
+from ..common import MNEMONIC12
 
 
 @pytest.mark.setup_client(uninitialized=True)
-class TestDeviceLoad(TrezorTest):
+class TestDeviceLoad:
     def test_load_device_1(self, client):
         debuglink.load_device_by_mnemonic(
             client,

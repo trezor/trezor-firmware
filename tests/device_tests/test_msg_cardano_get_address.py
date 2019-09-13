@@ -19,7 +19,7 @@ import pytest
 from trezorlib.cardano import get_address
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12
+from ..common import MNEMONIC12
 
 
 @pytest.mark.altcoin

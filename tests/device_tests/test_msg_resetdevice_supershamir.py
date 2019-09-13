@@ -22,7 +22,7 @@ import shamir_mnemonic as shamir
 from trezorlib import device, messages as proto
 from trezorlib.messages import ButtonRequestType as B, ResetDeviceBackupType
 
-from .common import click_through, generate_entropy, read_and_confirm_mnemonic
+from ..common import click_through, generate_entropy, read_and_confirm_mnemonic
 
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 

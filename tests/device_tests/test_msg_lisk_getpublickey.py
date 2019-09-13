@@ -19,14 +19,14 @@ import pytest
 from trezorlib import lisk
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from ..common import MNEMONIC12
 
 LISK_PATH = parse_path("m/44h/134h/0h/0h")
 
 
 @pytest.mark.altcoin
 @pytest.mark.lisk
-class TestMsgLiskGetPublicKey(TrezorTest):
+class TestMsgLiskGetPublicKey:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_lisk_get_public_key(self, client):
         sig = lisk.get_public_key(client, LISK_PATH)

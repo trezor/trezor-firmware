@@ -1,0 +1,41 @@
+WHAT:
+A couple of self-contained u2f HID device conformance tests:
+HIDTest to check compliance at the usb HID communication layer.
+U2FTest to check compliance at the application layer.
+
+DEPENDENCIES:
+git clone https://github.com/signal11/hidapi
+git clone -b lollipop-release https://android.googlesource.com/platform/system/core
+
+linux: sudo apt-get install libudev-dev
+
+BUILD:
+linux, mac: make
+
+windows: nmake -f Makefile.win
+  - if you have an old vc compiler, consider adding
+    http://msinttypes.googlecode.com/svn/trunk/stdint.h
+    or similar to your vc include directory.
+
+RUN:
+./list
+  to find path of device to test (e.g. /dev/hidraw3)
+
+./HIDTest $PATH [args]?
+  to test low level communications with device.
+  On windows?
+  - Make sure to keep the quotes around the path.
+  - Try https://github.com/adoxa/ansicon to get ANSI colors.
+  On linux?
+  - Make sure path is rw for your uid. Typically, a udev rule that adds
+    rw for group plugdev goes a long way.
+
+./U2FTest $PATH [args]?
+  to test u2f application layer functionality of device.
+
+Additional commandline arguments:
+Add -a to continue execution after an error.
+Add -p to pause after each error.
+Add -v and -V to get more verbose output, down to the usb frames with -V.
+Add -b to U2FTest in case fob under test is of the insert / remove
+  class and does not have a user-presence button.

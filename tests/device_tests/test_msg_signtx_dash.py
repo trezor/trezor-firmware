@@ -19,14 +19,13 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
-from .tx_cache import tx_cache
+from ..tx_cache import tx_cache
 
 TX_API = tx_cache("Dash")
 
 
 @pytest.mark.altcoin
-class TestMsgSigntxDash(TrezorTest):
+class TestMsgSigntxDash:
     def test_send_dash(self, client):
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/5'/0'/0/0"),

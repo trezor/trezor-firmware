@@ -19,13 +19,11 @@ import pytest
 from trezorlib.tezos import get_public_key
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
-
 
 @pytest.mark.altcoin
 @pytest.mark.tezos
 @pytest.mark.skip_t1
-class TestMsgTezosGetPublicKey(TrezorTest):
+class TestMsgTezosGetPublicKey:
     def test_tezos_get_public_key(self, client):
         path = parse_path("m/44'/1729'/0'")
         pk = get_public_key(client, path)

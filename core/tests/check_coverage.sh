@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 find ../mocks -name '*.py' | sort | while read module; do
     module=$(echo $module | sed 's:^\.\./mocks/::')
     base=$(basename $module)

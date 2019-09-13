@@ -19,13 +19,13 @@ import pytest
 from trezorlib import monero
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from ..common import MNEMONIC12
 
 
 @pytest.mark.altcoin
 @pytest.mark.monero
 @pytest.mark.skip_t1
-class TestMsgMoneroGetwatchkey(TrezorTest):
+class TestMsgMoneroGetwatchkey:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_monero_getwatchkey(self, client):
         res = monero.get_watch_key(client, parse_path("m/44h/128h/0h"))

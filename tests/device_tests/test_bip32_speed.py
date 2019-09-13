@@ -21,11 +21,9 @@ import pytest
 from trezorlib import btc
 from trezorlib.tools import H_
 
-from .common import TrezorTest
-
 
 @pytest.mark.flaky(max_runs=5)
-class TestBip32Speed(TrezorTest):
+class TestBip32Speed:
     def test_public_ckd(self, client):
         btc.get_address(client, "Bitcoin", [])  # to compute root node via BIP39
 

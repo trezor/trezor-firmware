@@ -19,8 +19,6 @@ import pytest
 from trezorlib.ripple import get_address
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
-
 CUSTOM_MNEMONIC = (
     "armed bundle pudding lazy strategy impulse where identify "
     "submit weekend physical antenna flight social acoustic absurd "
@@ -31,7 +29,7 @@ CUSTOM_MNEMONIC = (
 @pytest.mark.altcoin
 @pytest.mark.ripple
 @pytest.mark.skip_t1  # T1 support is not planned
-class TestMsgRippleGetAddress(TrezorTest):
+class TestMsgRippleGetAddress:
     def test_ripple_get_address(self, client):
         # data from https://iancoleman.io/bip39/#english
         address = get_address(client, parse_path("m/44'/144'/0'/0/0"))

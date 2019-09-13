@@ -19,15 +19,14 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, CallException, parse_path
 
-from .common import TrezorTest
-from .tx_cache import tx_cache
+from ..tx_cache import tx_cache
 
 TX_API = tx_cache("Bgold")
 
 
 # All data taken from T1
 @pytest.mark.altcoin
-class TestMsgSigntxBitcoinGold(TrezorTest):
+class TestMsgSigntxBitcoinGold:
     def test_send_bitcoin_gold_change(self, client):
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/156'/0'/0/0"),

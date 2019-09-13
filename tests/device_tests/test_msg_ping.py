@@ -18,11 +18,9 @@ import pytest
 
 from trezorlib import messages as proto
 
-from .common import TrezorTest
-
 
 @pytest.mark.skip_t2
-class TestMsgPing(TrezorTest):
+class TestMsgPing:
     @pytest.mark.setup_client(pin=True, passphrase=True)
     def test_ping(self, client):
         with client:

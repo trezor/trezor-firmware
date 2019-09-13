@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 declare -a results
 declare -i PYOPT=1 passed=0 failed=0 exit_code=0

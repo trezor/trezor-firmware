@@ -76,7 +76,7 @@ core unix upgrade test:
   variables:
     TREZOR_UPGRADE_TEST: "core"
   script:
-    - tests/upgrade_tests/download_emulators.sh
+    - tests/download_emulators.sh
     - pipenv run pytest tests/upgrade_tests
 
 
@@ -133,7 +133,7 @@ legacy emu upgrade test:
   variables:
     TREZOR_UPGRADE_TEST: "legacy"
   script:
-    - tests/upgrade_tests/download_emulators.sh
+    - tests/download_emulators.sh
     - pipenv run pytest tests/upgrade_tests
 
 

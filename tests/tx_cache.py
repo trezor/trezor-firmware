@@ -21,7 +21,7 @@ import os.path
 from trezorlib import coins
 from trezorlib.tx_api import json_to_tx
 
-CACHE_PATH = os.path.join(os.path.dirname(__file__), "..", "txcache")
+CACHE_PATH = os.path.join(os.path.dirname(__file__), "txcache")
 
 
 def tx_cache(coin_name, allow_fetch=True):

@@ -19,9 +19,8 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, CallException, btc_hash, parse_path
 
-from .common import MNEMONIC12, TrezorTest
-from .conftest import TREZOR_VERSION
-from .tx_cache import tx_cache
+from ..common import MNEMONIC12
+from ..tx_cache import tx_cache
 
 TXHASH_157041 = bytes.fromhex(
     "1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6"
@@ -96,7 +95,7 @@ def check_sign_tx(
 
     for i, inp in enumerate(inputs):
         expected_responses.append(tx_request(t.TXINPUT, request_index=i))
-        if unknown_path and TREZOR_VERSION != 1:
+        if unknown_path and client.features.model != "1":
             expected_responses.append(btn(b.UnknownDerivationPath))
         expected_responses.append(tx_request(t.TXMETA, tx_hash=inp.prev_hash))
 
@@ -151,7 +150,7 @@ def check_sign_tx(
         return btc.sign_tx(client, coin_name, inputs, outputs, prev_txes=txes)
 
 
-class TestMsgSigntx(TrezorTest):
+class TestMsgSigntx:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_one_one_fee(self, client):
         # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
@@ -716,7 +715,7 @@ class TestMsgSigntx(TrezorTest):
                 )
 
             assert exc.value.args[0] == proto.FailureType.ProcessError
-            if TREZOR_VERSION == 1:
+            if client.features.model == "1":
                 assert exc.value.args[1].endswith("Failed to compile input")
             else:
                 assert exc.value.args[1].endswith(

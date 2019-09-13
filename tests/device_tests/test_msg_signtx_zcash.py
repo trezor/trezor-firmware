@@ -19,8 +19,7 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
-from .tx_cache import tx_cache
+from ..tx_cache import tx_cache
 
 TX_API = tx_cache("Zcash Testnet")
 
@@ -34,7 +33,7 @@ TXHASH_e38206 = bytes.fromhex(
 
 @pytest.mark.altcoin
 @pytest.mark.zcash
-class TestMsgSigntxZcash(TrezorTest):
+class TestMsgSigntxZcash:
     def test_one_one_fee_overwinter(self, client):
         # prevout: aaf51e4606c264e47e5c42c958fe4cf1539c5172684721e38e69f4ef634d75dc:1
         # input 1: 3.0 TAZ

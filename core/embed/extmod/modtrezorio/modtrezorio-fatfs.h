@@ -129,7 +129,8 @@ typedef struct _mp_obj_FatFSFile_t {
 ///     """
 ///     Close an open file object
 ///     """
-STATIC mp_obj_t mod_trezorio_FatFSFile___exit__(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorio_FatFSFile___exit__(size_t n_args,
+                                                const mp_obj_t *args) {
   mp_obj_FatFSFile_t *o = MP_OBJ_TO_PTR(args[0]);
   FRESULT res = f_close(&(o->fp));
   if (res != FR_OK) {
@@ -137,7 +138,8 @@ STATIC mp_obj_t mod_trezorio_FatFSFile___exit__(size_t n_args, const mp_obj_t *a
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_FatFSFile___exit___obj, 4, 4,
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_FatFSFile___exit___obj,
+                                           4, 4,
                                            mod_trezorio_FatFSFile___exit__);
 
 /// def close(self) -> None:
@@ -152,7 +154,8 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_close(mp_obj_t self) {
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFSFile_close_obj, mod_trezorio_FatFSFile_close);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFSFile_close_obj,
+                                 mod_trezorio_FatFSFile_close);
 
 /// def read(self, data: bytearray) -> int:
 ///     """
@@ -169,7 +172,8 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_read(mp_obj_t self, mp_obj_t data) {
   }
   return mp_obj_new_int_from_uint(read);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFSFile_read_obj, mod_trezorio_FatFSFile_read);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFSFile_read_obj,
+                                 mod_trezorio_FatFSFile_read);
 
 /// def write(self, data: bytearray) -> int:
 ///     """
@@ -190,7 +194,8 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_write(mp_obj_t self, mp_obj_t data) {
   }
   return mp_obj_new_int_from_uint(written);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFSFile_write_obj, mod_trezorio_FatFSFile_write);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFSFile_write_obj,
+                                 mod_trezorio_FatFSFile_write);
 
 /// def seek(self, offset: int) -> None:
 ///     """
@@ -205,7 +210,8 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_seek(mp_obj_t self, mp_obj_t offset) {
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFSFile_seek_obj, mod_trezorio_FatFSFile_seek);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFSFile_seek_obj,
+                                 mod_trezorio_FatFSFile_seek);
 
 /// def truncate(self) -> None:
 ///     """
@@ -234,16 +240,19 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_sync(mp_obj_t self) {
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFSFile_sync_obj, mod_trezorio_FatFSFile_sync);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFSFile_sync_obj,
+                                 mod_trezorio_FatFSFile_sync);
 
 STATIC const mp_rom_map_elem_t mod_trezorio_FatFSFile_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR___enter__), MP_ROM_PTR(&mp_identity_obj)},
-    {MP_ROM_QSTR(MP_QSTR___exit__), MP_ROM_PTR(&mod_trezorio_FatFSFile___exit___obj)},
+    {MP_ROM_QSTR(MP_QSTR___exit__),
+     MP_ROM_PTR(&mod_trezorio_FatFSFile___exit___obj)},
     {MP_ROM_QSTR(MP_QSTR_close), MP_ROM_PTR(&mod_trezorio_FatFSFile_close_obj)},
     {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_FatFSFile_read_obj)},
     {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_FatFSFile_write_obj)},
     {MP_ROM_QSTR(MP_QSTR_seek), MP_ROM_PTR(&mod_trezorio_FatFSFile_seek_obj)},
-    {MP_ROM_QSTR(MP_QSTR_truncate), MP_ROM_PTR(&mod_trezorio_FatFSFile_truncate_obj)},
+    {MP_ROM_QSTR(MP_QSTR_truncate),
+     MP_ROM_PTR(&mod_trezorio_FatFSFile_truncate_obj)},
     {MP_ROM_QSTR(MP_QSTR_sync), MP_ROM_PTR(&mod_trezorio_FatFSFile_sync_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_FatFSFile_locals_dict,
@@ -304,7 +313,8 @@ typedef struct _mp_obj_FatFS_t {
 /// def __init__(self) -> None:
 ///     """
 ///     """
-STATIC mp_obj_t mod_trezorio_FatFS_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw,
+STATIC mp_obj_t mod_trezorio_FatFS_make_new(const mp_obj_type_t *type,
+                                            size_t n_args, size_t n_kw,
                                             const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 0, 0, false);
   mp_obj_FatFS_t *o = m_new_obj(mp_obj_FatFS_t);
@@ -316,7 +326,8 @@ STATIC mp_obj_t mod_trezorio_FatFS_make_new(const mp_obj_type_t *type, size_t n_
 ///     """
 ///     Open or create a file
 ///     """
-STATIC mp_obj_t mod_trezorio_FatFS_open(mp_obj_t self, mp_obj_t path, mp_obj_t flags) {
+STATIC mp_obj_t mod_trezorio_FatFS_open(mp_obj_t self, mp_obj_t path,
+                                        mp_obj_t flags) {
   mp_obj_FatFS_t *o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t _path, _flags;
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
@@ -352,7 +363,8 @@ STATIC mp_obj_t mod_trezorio_FatFS_open(mp_obj_t self, mp_obj_t path, mp_obj_t f
   f->fp = fp;
   return f;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_FatFS_open_obj, mod_trezorio_FatFS_open);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_FatFS_open_obj,
+                                 mod_trezorio_FatFS_open);
 
 /// def listdir(self, path: str) -> FatFSDir:
 ///     """
@@ -372,7 +384,8 @@ STATIC mp_obj_t mod_trezorio_FatFS_listdir(mp_obj_t self, mp_obj_t path) {
   d->dp = dp;
   return d;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFS_listdir_obj, mod_trezorio_FatFS_listdir);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFS_listdir_obj,
+                                 mod_trezorio_FatFS_listdir);
 
 /// def mkdir(self, path: str) -> None:
 ///     """
@@ -388,7 +401,8 @@ STATIC mp_obj_t mod_trezorio_FatFS_mkdir(mp_obj_t self, mp_obj_t path) {
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFS_mkdir_obj, mod_trezorio_FatFS_mkdir);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFS_mkdir_obj,
+                                 mod_trezorio_FatFS_mkdir);
 
 /// def unlink(self, path: str) -> None:
 ///     """
@@ -404,7 +418,8 @@ STATIC mp_obj_t mod_trezorio_FatFS_unlink(mp_obj_t self, mp_obj_t path) {
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFS_unlink_obj, mod_trezorio_FatFS_unlink);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFS_unlink_obj,
+                                 mod_trezorio_FatFS_unlink);
 
 /// def stat(self, path: str) -> Tuple[int, str, str]:
 ///     """
@@ -421,13 +436,15 @@ STATIC mp_obj_t mod_trezorio_FatFS_stat(mp_obj_t self, mp_obj_t path) {
   }
   return filinfo_to_tuple(&info);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFS_stat_obj, mod_trezorio_FatFS_stat);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFS_stat_obj,
+                                 mod_trezorio_FatFS_stat);
 
 /// def rename(self, oldpath: str, newpath: str) -> None:
 ///     """
 ///     Rename/Move a file or directory
 ///     """
-STATIC mp_obj_t mod_trezorio_FatFS_rename(mp_obj_t self, mp_obj_t oldpath, mp_obj_t newpath) {
+STATIC mp_obj_t mod_trezorio_FatFS_rename(mp_obj_t self, mp_obj_t oldpath,
+                                          mp_obj_t newpath) {
   mp_obj_FatFS_t *o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t _oldpath, _newpath;
   mp_get_buffer_raise(oldpath, &_oldpath, MP_BUFFER_READ);
@@ -438,7 +455,8 @@ STATIC mp_obj_t mod_trezorio_FatFS_rename(mp_obj_t self, mp_obj_t oldpath, mp_ob
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_FatFS_rename_obj, mod_trezorio_FatFS_rename);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_FatFS_rename_obj,
+                                 mod_trezorio_FatFS_rename);
 
 /// def mount(self) -> None:
 ///     """
@@ -452,7 +470,8 @@ STATIC mp_obj_t mod_trezorio_FatFS_mount(mp_obj_t self) {
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFS_mount_obj, mod_trezorio_FatFS_mount);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFS_mount_obj,
+                                 mod_trezorio_FatFS_mount);
 
 /// def unmount(self) -> None:
 ///     """
@@ -466,7 +485,8 @@ STATIC mp_obj_t mod_trezorio_FatFS_unmount(mp_obj_t self) {
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFS_unmount_obj, mod_trezorio_FatFS_unmount);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFS_unmount_obj,
+                                 mod_trezorio_FatFS_unmount);
 
 #ifdef TREZOR_EMULATOR
 
@@ -483,7 +503,8 @@ STATIC mp_obj_t mod_trezorio_FatFS_mkfs(mp_obj_t self) {
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFS_mkfs_obj, mod_trezorio_FatFS_mkfs);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFS_mkfs_obj,
+                                 mod_trezorio_FatFS_mkfs);
 
 #endif
 
@@ -500,7 +521,8 @@ STATIC const mp_rom_map_elem_t mod_trezorio_FatFS_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_mkfs), MP_ROM_PTR(&mod_trezorio_FatFS_mkfs_obj)},
 #endif
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorio_FatFS_locals_dict, mod_trezorio_FatFS_locals_dict_table);
+STATIC MP_DEFINE_CONST_DICT(mod_trezorio_FatFS_locals_dict,
+                            mod_trezorio_FatFS_locals_dict_table);
 
 STATIC const mp_obj_type_t mod_trezorio_FatFS_type = {
     {&mp_type_type},

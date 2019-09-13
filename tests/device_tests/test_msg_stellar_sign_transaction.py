@@ -53,12 +53,12 @@ import pytest
 from trezorlib import messages as proto, stellar
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from ..common import MNEMONIC12
 
 
 @pytest.mark.altcoin
 @pytest.mark.stellar
-class TestMsgStellarSignTransaction(TrezorTest):
+class TestMsgStellarSignTransaction:
 
     ADDRESS_N = parse_path(stellar.DEFAULT_BIP32_PATH)
     NETWORK_PASSPHRASE = "Test SDF Network ; September 2015"
