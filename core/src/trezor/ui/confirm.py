@@ -4,6 +4,9 @@ from trezor import loop, res, ui
 from trezor.ui.button import Button, ButtonCancel, ButtonConfirm
 from trezor.ui.loader import Loader, LoaderDefault
 
+if __debug__:
+    from apps.debug import swipe_signal
+
 if False:
     from typing import Any, Optional, Tuple
     from trezor.ui.button import ButtonContent, ButtonStyleType
@@ -109,7 +112,10 @@ class ConfirmPageable(Confirm):
         else:
             directions = SWIPE_HORIZONTAL
 
-        swipe = await Swipe(directions)
+        if __debug__:
+            swipe = await loop.race(Swipe(directions), swipe_signal())
+        else:
+            swipe = await Swipe(directions)
 
         if swipe == SWIPE_LEFT:
             self.pageable.next()
