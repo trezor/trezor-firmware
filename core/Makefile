@@ -70,6 +70,9 @@ test_emu: ## run selected device tests from python-trezor
 test_emu_monero: ## run selected monero device tests from monero-agent
 	cd tests ; ./run_tests_device_emu_monero.sh $(TESTOPTS)
 
+test_emu_u2f: ## run selected u2f device tests from u2f-tests-hid
+	cd tests ; ./run_tests_device_emu_u2f.sh $(TESTOPTS)
+
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 
