@@ -7,12 +7,6 @@
 // Thin shim to allow abstracting away from hid_* calls to
 // a set or read/write pipes w/ a particular interface.
 #include <assert.h>
-#include <endian.h>
-#include <fcntl.h>
-#include <string.h>
-
-#include <string>
-
 #include "u2f_util.h"
 
 bool DEV_opened(struct U2Fob* device) {
@@ -24,10 +18,19 @@ void DEV_close(struct U2Fob* device) {
     hid_close(device->dev);
     device->dev = NULL;
   }
+  if (device->dev_debug) {
+    hid_close(device->dev_debug);
+    device->dev_debug = NULL;
+  }
 }
 
 void DEV_open_path(struct U2Fob* device) {
   device->dev = hid_open_path(device->path);
+  if (atoi(device->path) != 21325) {
+    device->dev_debug = hid_open_path("21325");
+  } else {
+    device->dev_debug = NULL;
+  }
 }
 
 int DEV_write(struct U2Fob* device, const uint8_t* src, size_t n) {
@@ -42,5 +45,12 @@ int DEV_read_timeout(struct U2Fob* device, uint8_t* dst, size_t n,
 }
 
 int DEV_touch(struct U2Fob* device) {
-  return 0;
+  if (!device->dev_debug) {
+    return 0;
+  }
+  sleep(1);
+  // send DebugLinkDecision{yes_no=True} to DebugLink interface
+  hid_write(device->dev_debug, (const uint8_t *)"\x00?##\x00" "d\x00\x00\x00\x02\x08\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 65);
+  sleep(1);
+  return 1;
 }
