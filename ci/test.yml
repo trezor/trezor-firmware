@@ -74,6 +74,7 @@ core unix u2f test:
   dependencies:
     - core unix frozen regular build
   script:
+    - make -C tests/fido_tests/u2f-tests-hid
     - cd core
     - pipenv run make test_emu_u2f
 
