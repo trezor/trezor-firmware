@@ -71,7 +71,7 @@ class TestDeviceLoad:
     def test_load_device_shamir_basic(self, client):
         debuglink.load_device_by_mnemonic(
             client,
-            mnemonic=MNEMONIC_SHAMIR_20_3of6,
+            mnemonic=common.MNEMONIC_SLIP39_BASIC_20_3of6,
             pin="",
             passphrase_protection=False,
             label="test",
@@ -82,7 +82,7 @@ class TestDeviceLoad:
     def test_load_device_shamir_advanced(self, client):
         debuglink.load_device_by_mnemonic(
             client,
-            mnemonic=MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS,
+            mnemonic=common.MNEMONIC_SLIP39_ADVANCED_20,
             pin="",
             passphrase_protection=False,
             label="test",

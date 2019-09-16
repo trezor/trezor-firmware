@@ -18,10 +18,10 @@ import pytest
 
 from trezorlib import btc
 
-from .common import MNEMONIC_SUPERSHAMIR_128BIT, MNEMONIC_SUPERSHAMIR_256BIT
+from .common import MNEMONIC_SLIP39_ADVANCED_20, MNEMONIC_SLIP39_ADVANCED_33
 
 
-@pytest.mark.setup_client(mnemonic=MNEMONIC_SUPERSHAMIR_128BIT, passphrase=True)
+@pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20, passphrase=True)
 @pytest.mark.skip_t1
 def test_128bit_passphrase(client):
     """
@@ -35,7 +35,7 @@ def test_128bit_passphrase(client):
     assert address == "1CX5rv2vbSV8YFAZEAdMwRVqbxxswPnSPw"
 
 
-@pytest.mark.setup_client(mnemonic=MNEMONIC_SUPERSHAMIR_256BIT, passphrase=True)
+@pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_33, passphrase=True)
 @pytest.mark.skip_t1
 def test_256bit_passphrase(client):
     """

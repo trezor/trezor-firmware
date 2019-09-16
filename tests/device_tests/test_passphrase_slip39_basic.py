@@ -18,10 +18,10 @@ import pytest
 
 from trezorlib import btc
 
-from ..common import MNEMONIC_SHAMIR_20_3of6
+from .common import MNEMONIC_SLIP39_BASIC_20_3of6
 
 
-@pytest.mark.setup_client(mnemonic=MNEMONIC_SHAMIR_20_3of6, passphrase=True)
+@pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, passphrase=True)
 @pytest.mark.skip_t1
 def test_3of6_passphrase(client):
     """

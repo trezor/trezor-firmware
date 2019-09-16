@@ -19,23 +19,22 @@ import pytest
 from trezorlib import device, exceptions, messages
 
 from .common import (
-    MNEMONIC_SUPERSHAMIR_128BIT,
-    MNEMONIC_SUPERSHAMIR_256BIT,
-    MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS,
+    MNEMONIC_SLIP39_ADVANCED_20,
+    MNEMONIC_SLIP39_ADVANCED_33,
     recovery_enter_shares,
 )
 
 pytestmark = pytest.mark.skip_t1
 
 EXTRA_GROUP_SHARE = [
-    "gesture negative ceramic leaf device fantasy style ceramic safari keyboard thumb total smug cage plunge aunt favorite lizard intend peanut"
+    "eraser senior decision smug corner ruin rescue cubic angel tackle skin skunk program roster trash rumor slush angel flea amazing"
 ]
 
 # secrets generated using model T
 VECTORS = (
-    (MNEMONIC_SUPERSHAMIR_128BIT, "c2d2e26ad06023c60145f150abe2dd2b"),
+    (MNEMONIC_SLIP39_ADVANCED_20, "c2d2e26ad06023c60145f150abe2dd2b"),
     (
-        MNEMONIC_SUPERSHAMIR_256BIT,
+        MNEMONIC_SLIP39_ADVANCED_33,
         "c41d5cf80fed71a008a3a0ae0458ff0c6d621b1a5522bccbfedbcfad87005c06",
     ),
 )
@@ -76,7 +75,7 @@ def test_extra_share_entered(client):
         debug.press_yes()
         # Proceed with recovery
         yield from recovery_enter_shares(
-            debug, MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS + EXTRA_GROUP_SHARE, groups=True
+            debug, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20, groups=True
         )
 
     with client:
@@ -125,7 +124,7 @@ def test_noabort(client):
         yield  # Homescreen - go back to process
         debug.press_no()
         yield from recovery_enter_shares(
-            debug, EXTRA_GROUP_SHARE + MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, groups=True
+            debug, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20, groups=True
         )
 
     with client:

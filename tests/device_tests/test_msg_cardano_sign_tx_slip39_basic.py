@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import cardano, messages
 
-from ..common import MNEMONIC_SHAMIR_20_3of6
+from .common import MNEMONIC_SLIP39_BASIC_20_3of6
 
 PROTOCOL_MAGICS = {"mainnet": 764824073, "testnet": 1097911063}
 
@@ -109,7 +109,7 @@ VALID_VECTORS = [
 @pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
-@pytest.mark.setup_client(mnemonic=MNEMONIC_SHAMIR_20_3of6, passphrase=True)
+@pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, passphrase=True)
 @pytest.mark.parametrize(
     "protocol_magic,inputs,outputs,transactions,tx_hash,tx_body", VALID_VECTORS
 )

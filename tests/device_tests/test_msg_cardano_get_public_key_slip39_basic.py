@@ -19,13 +19,13 @@ import pytest
 from trezorlib.cardano import get_public_key
 from trezorlib.tools import parse_path
 
-from ..common import MNEMONIC_SHAMIR_20_3of6
+from .common import MNEMONIC_SLIP39_BASIC_20_3of6
 
 
 @pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
-@pytest.mark.setup_client(mnemonic=MNEMONIC_SHAMIR_20_3of6, passphrase=True)
+@pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, passphrase=True)
 @pytest.mark.parametrize(
     "path,public_key,chain_code",
     [
