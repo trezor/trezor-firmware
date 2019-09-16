@@ -68,6 +68,16 @@ core unix monero test:
     - cd core
     - pipenv run make test_emu_monero
 
+core unix u2f test:
+  stage: test
+  <<: *only_changes_core
+  dependencies:
+    - core unix frozen regular build
+  script:
+    - make -C tests/fido_tests/u2f-tests-hid
+    - cd core
+    - pipenv run make test_emu_u2f
+
 core unix upgrade test:
   stage: test
   <<: *only_changes_core

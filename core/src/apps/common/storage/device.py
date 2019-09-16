@@ -9,7 +9,7 @@ if False:
     from typing import Optional
 
 # Namespace:
-_NAMESPACE = common._APP_DEVICE
+_NAMESPACE = common.APP_DEVICE
 
 # fmt: off
 # Keys:
@@ -37,15 +37,15 @@ HOMESCREEN_MAXSIZE = 16384
 
 
 def is_version_stored() -> bool:
-    return bool(common._get(_NAMESPACE, _VERSION))
+    return bool(common.get(_NAMESPACE, _VERSION))
 
 
 def get_version() -> Optional[bytes]:
-    return common._get(_NAMESPACE, _VERSION)
+    return common.get(_NAMESPACE, _VERSION)
 
 
 def set_version(version: bytes) -> None:
-    common._set(_NAMESPACE, _VERSION, version)
+    common.set(_NAMESPACE, _VERSION, version)
 
 
 def _new_device_id() -> str:
@@ -53,41 +53,41 @@ def _new_device_id() -> str:
 
 
 def get_device_id() -> str:
-    dev_id = common._get(_NAMESPACE, _DEVICE_ID, True)  # public
+    dev_id = common.get(_NAMESPACE, _DEVICE_ID, True)  # public
     if not dev_id:
         dev_id = _new_device_id().encode()
-        common._set(_NAMESPACE, _DEVICE_ID, dev_id, True)  # public
+        common.set(_NAMESPACE, _DEVICE_ID, dev_id, True)  # public
     return dev_id.decode()
 
 
 def get_rotation() -> int:
-    rotation = common._get(_NAMESPACE, _ROTATION, True)  # public
+    rotation = common.get(_NAMESPACE, _ROTATION, True)  # public
     if not rotation:
         return 0
     return int.from_bytes(rotation, "big")
 
 
 def get_label() -> Optional[str]:
-    label = common._get(_NAMESPACE, _LABEL, True)  # public
+    label = common.get(_NAMESPACE, _LABEL, True)  # public
     if label is None:
         return None
     return label.decode()
 
 
 def get_mnemonic_secret() -> Optional[bytes]:
-    return common._get(_NAMESPACE, _MNEMONIC_SECRET)
+    return common.get(_NAMESPACE, _MNEMONIC_SECRET)
 
 
 def get_mnemonic_type() -> Optional[int]:
-    return common._get_uint8(_NAMESPACE, _MNEMONIC_TYPE)
+    return common.get_uint8(_NAMESPACE, _MNEMONIC_TYPE)
 
 
 def has_passphrase() -> bool:
-    return common._get_bool(_NAMESPACE, _USE_PASSPHRASE)
+    return common.get_bool(_NAMESPACE, _USE_PASSPHRASE)
 
 
 def get_homescreen() -> Optional[bytes]:
-    return common._get(_NAMESPACE, _HOMESCREEN, True)  # public
+    return common.get(_NAMESPACE, _HOMESCREEN, True)  # public
 
 
 def store_mnemonic_secret(
@@ -96,36 +96,36 @@ def store_mnemonic_secret(
     needs_backup: bool = False,
     no_backup: bool = False,
 ) -> None:
-    set_version(common._STORAGE_VERSION_CURRENT)
-    common._set(_NAMESPACE, _MNEMONIC_SECRET, secret)
-    common._set_uint8(_NAMESPACE, _MNEMONIC_TYPE, mnemonic_type)
-    common._set_true_or_delete(_NAMESPACE, _NO_BACKUP, no_backup)
+    set_version(common.STORAGE_VERSION_CURRENT)
+    common.set(_NAMESPACE, _MNEMONIC_SECRET, secret)
+    common.set_uint8(_NAMESPACE, _MNEMONIC_TYPE, mnemonic_type)
+    common.set_true_or_delete(_NAMESPACE, _NO_BACKUP, no_backup)
     if not no_backup:
-        common._set_true_or_delete(_NAMESPACE, _NEEDS_BACKUP, needs_backup)
+        common.set_true_or_delete(_NAMESPACE, _NEEDS_BACKUP, needs_backup)
 
 
 def needs_backup() -> bool:
-    return common._get_bool(_NAMESPACE, _NEEDS_BACKUP)
+    return common.get_bool(_NAMESPACE, _NEEDS_BACKUP)
 
 
 def set_backed_up() -> None:
-    common._delete(_NAMESPACE, _NEEDS_BACKUP)
+    common.delete(_NAMESPACE, _NEEDS_BACKUP)
 
 
 def unfinished_backup() -> bool:
-    return common._get_bool(_NAMESPACE, _UNFINISHED_BACKUP)
+    return common.get_bool(_NAMESPACE, _UNFINISHED_BACKUP)
 
 
 def set_unfinished_backup(state: bool) -> None:
-    common._set_bool(_NAMESPACE, _UNFINISHED_BACKUP, state)
+    common.set_bool(_NAMESPACE, _UNFINISHED_BACKUP, state)
 
 
 def no_backup() -> bool:
-    return common._get_bool(_NAMESPACE, _NO_BACKUP)
+    return common.get_bool(_NAMESPACE, _NO_BACKUP)
 
 
 def get_passphrase_source() -> int:
-    b = common._get(_NAMESPACE, _PASSPHRASE_SOURCE)
+    b = common.get(_NAMESPACE, _PASSPHRASE_SOURCE)
     if b == b"\x01":
         return 1
     elif b == b"\x02":
@@ -142,31 +142,31 @@ def load_settings(
     display_rotation: int = None,
 ) -> None:
     if label is not None:
-        common._set(_NAMESPACE, _LABEL, label.encode(), True)  # public
+        common.set(_NAMESPACE, _LABEL, label.encode(), True)  # public
     if use_passphrase is not None:
-        common._set_bool(_NAMESPACE, _USE_PASSPHRASE, use_passphrase)
+        common.set_bool(_NAMESPACE, _USE_PASSPHRASE, use_passphrase)
     if homescreen is not None:
         if homescreen[:8] == b"TOIf\x90\x00\x90\x00":
             if len(homescreen) <= HOMESCREEN_MAXSIZE:
-                common._set(_NAMESPACE, _HOMESCREEN, homescreen, True)  # public
+                common.set(_NAMESPACE, _HOMESCREEN, homescreen, True)  # public
         else:
-            common._set(_NAMESPACE, _HOMESCREEN, b"", True)  # public
+            common.set(_NAMESPACE, _HOMESCREEN, b"", True)  # public
     if passphrase_source is not None:
         if passphrase_source in (0, 1, 2):
-            common._set(_NAMESPACE, _PASSPHRASE_SOURCE, bytes([passphrase_source]))
+            common.set(_NAMESPACE, _PASSPHRASE_SOURCE, bytes([passphrase_source]))
     if display_rotation is not None:
         if display_rotation not in (0, 90, 180, 270):
             raise ValueError(
                 "Unsupported display rotation degrees: %d" % display_rotation
             )
         else:
-            common._set(
+            common.set(
                 _NAMESPACE, _ROTATION, display_rotation.to_bytes(2, "big"), True
             )  # public
 
 
 def get_flags() -> int:
-    b = common._get(_NAMESPACE, _FLAGS)
+    b = common.get(_NAMESPACE, _FLAGS)
     if b is None:
         return 0
     else:
@@ -174,18 +174,18 @@ def get_flags() -> int:
 
 
 def set_flags(flags: int) -> None:
-    b = common._get(_NAMESPACE, _FLAGS)
+    b = common.get(_NAMESPACE, _FLAGS)
     if b is None:
         i = 0
     else:
         i = int.from_bytes(b, "big")
     flags = (flags | i) & 0xFFFFFFFF
     if flags != i:
-        common._set(_NAMESPACE, _FLAGS, flags.to_bytes(4, "big"))
+        common.set(_NAMESPACE, _FLAGS, flags.to_bytes(4, "big"))
 
 
 def get_autolock_delay_ms() -> int:
-    b = common._get(_NAMESPACE, _AUTOLOCK_DELAY_MS)
+    b = common.get(_NAMESPACE, _AUTOLOCK_DELAY_MS)
     if b is None:
         return 10 * 60 * 1000
     else:
@@ -195,15 +195,15 @@ def get_autolock_delay_ms() -> int:
 def set_autolock_delay_ms(delay_ms: int) -> None:
     if delay_ms < 60 * 1000:
         delay_ms = 60 * 1000
-    common._set(_NAMESPACE, _AUTOLOCK_DELAY_MS, delay_ms.to_bytes(4, "big"))
+    common.set(_NAMESPACE, _AUTOLOCK_DELAY_MS, delay_ms.to_bytes(4, "big"))
 
 
 def next_u2f_counter() -> Optional[int]:
-    return common._next_counter(_NAMESPACE, U2F_COUNTER, True)  # writable when locked
+    return common.next_counter(_NAMESPACE, U2F_COUNTER, True)  # writable when locked
 
 
 def set_u2f_counter(count: int) -> None:
-    common._set_counter(_NAMESPACE, U2F_COUNTER, count, True)  # writable when locked
+    common.set_counter(_NAMESPACE, U2F_COUNTER, count, True)  # writable when locked
 
 
 def set_slip39_identifier(identifier: int) -> None:
@@ -212,12 +212,12 @@ def set_slip39_identifier(identifier: int) -> None:
     Not to be confused with recovery.identifier, which is stored only during
     the recovery process and it is copied here upon success.
     """
-    common._set_uint16(_NAMESPACE, _SLIP39_IDENTIFIER, identifier)
+    common.set_uint16(_NAMESPACE, _SLIP39_IDENTIFIER, identifier)
 
 
 def get_slip39_identifier() -> Optional[int]:
     """The device's actual SLIP-39 identifier used in passphrase derivation."""
-    return common._get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
+    return common.get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
 
 
 def set_slip39_iteration_exponent(exponent: int) -> None:
@@ -226,11 +226,11 @@ def set_slip39_iteration_exponent(exponent: int) -> None:
     Not to be confused with recovery.iteration_exponent, which is stored only during
     the recovery process and it is copied here upon success.
     """
-    common._set_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT, exponent)
+    common.set_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT, exponent)
 
 
 def get_slip39_iteration_exponent() -> Optional[int]:
     """
     The device's actual SLIP-39 iteration exponent used in passphrase derivation.
     """
-    return common._get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
+    return common.get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)

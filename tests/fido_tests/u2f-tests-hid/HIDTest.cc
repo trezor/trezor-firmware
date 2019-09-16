@@ -34,7 +34,7 @@ void checkPause() {
 static
 void AbortOrNot() {
   checkPause();
-  if (arg_Abort) abort();
+  if (arg_Abort) exit(3);
   cerr << "(continuing -a)" << endl;
 }
 
@@ -138,9 +138,9 @@ void test_LongEcho() {
   // Expected transfer times for 2ms bInterval.
   // We do not want fobs to be too slow or too agressive.
   if (device->dev != NULL) {
-    // CHECK_GE(sent, .020);
+    CHECK_GE(sent, .020);
     CHECK_LE(sent, .075);
-    // CHECK_GE(received, .020);
+    CHECK_GE(received, .020);
     CHECK_LE(received, .075);
   }
 }

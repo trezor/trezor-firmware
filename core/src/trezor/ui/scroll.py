@@ -9,7 +9,7 @@ if __debug__:
     from apps.debug import swipe_signal
 
 if False:
-    from typing import Iterable, Sequence
+    from typing import Tuple, Sequence
 
 
 def render_scrollbar(pages: int, page: int) -> None:
@@ -32,10 +32,10 @@ def render_scrollbar(pages: int, page: int) -> None:
 
 
 def render_swipe_icon() -> None:
-    DRAW_DELAY = const(200000)
+    PULSE_PERIOD = const(1200000)
 
     icon = res.load(ui.ICON_SWIPE)
-    t = ui.pulse(DRAW_DELAY)
+    t = ui.pulse(PULSE_PERIOD)
     c = ui.blend(ui.GREY, ui.DARK_GREY, t)
     ui.display.icon(70, 205, icon, c, ui.BG)
 
@@ -91,7 +91,7 @@ class Paginated(ui.Layout):
 
         self.on_change()
 
-    def create_tasks(self) -> Iterable[loop.Task]:
+    def create_tasks(self) -> Tuple[loop.Task, ...]:
         return self.handle_input(), self.handle_rendering(), self.handle_paging()
 
     def on_change(self) -> None:

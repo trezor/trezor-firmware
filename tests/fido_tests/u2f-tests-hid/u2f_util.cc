@@ -101,7 +101,7 @@ struct U2Fob* U2Fob_create() {
   if (hid_init() == 0) {
     f = (struct U2Fob*)malloc(sizeof(struct U2Fob));
     memset(f, 0, sizeof(struct U2Fob));
-    f->cid = f->fd_in = f->fd_out = -1;
+    f->cid = -1;
   }
   return f;
 }
