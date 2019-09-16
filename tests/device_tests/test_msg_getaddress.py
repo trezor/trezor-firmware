@@ -19,7 +19,7 @@ import pytest
 from trezorlib import btc, ckd_public as bip32, messages as proto
 from trezorlib.tools import H_, CallException, parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from ..common import MNEMONIC12
 
 
 def getmultisig(chain, nr, xpubs, signatures=[b"", b"", b""]):
@@ -31,7 +31,7 @@ def getmultisig(chain, nr, xpubs, signatures=[b"", b"", b""]):
     )
 
 
-class TestMsgGetaddress(TrezorTest):
+class TestMsgGetaddress:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_btc(self, client):
         assert (

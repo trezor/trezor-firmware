@@ -8,7 +8,7 @@ if False:
     from apps.management.recovery_device.backup_types import BackupTypeUnion
 
 # Namespace:
-_NAMESPACE = common._APP_RECOVERY
+_NAMESPACE = common.APP_RECOVERY
 
 # fmt: off
 # Keys:
@@ -29,75 +29,75 @@ if False:
 
 
 def set_in_progress(val: bool) -> None:
-    common._set_bool(_NAMESPACE, _IN_PROGRESS, val)
+    common.set_bool(_NAMESPACE, _IN_PROGRESS, val)
 
 
 def is_in_progress() -> bool:
-    return common._get_bool(_NAMESPACE, _IN_PROGRESS)
+    return common.get_bool(_NAMESPACE, _IN_PROGRESS)
 
 
 def set_dry_run(val: bool) -> None:
-    common._set_bool(_NAMESPACE, _DRY_RUN, val)
+    common.set_bool(_NAMESPACE, _DRY_RUN, val)
 
 
 def is_dry_run() -> bool:
-    return common._get_bool(_NAMESPACE, _DRY_RUN)
+    return common.get_bool(_NAMESPACE, _DRY_RUN)
 
 
 def set_word_count(count: int) -> None:
-    common._set_uint8(_NAMESPACE, _WORD_COUNT, count)
+    common.set_uint8(_NAMESPACE, _WORD_COUNT, count)
 
 
 def get_word_count() -> Optional[int]:
-    return common._get_uint8(_NAMESPACE, _WORD_COUNT)
+    return common.get_uint8(_NAMESPACE, _WORD_COUNT)
 
 
 def set_backup_type(backup_type: BackupTypeUnion) -> None:
-    common._set_uint8(_NAMESPACE, _BACKUP_TYPE, backup_type)
+    common.set_uint8(_NAMESPACE, _BACKUP_TYPE, backup_type)
 
 
 def get_backup_type() -> Optional[BackupTypeUnion]:
-    return common._get_uint8(_NAMESPACE, _BACKUP_TYPE)
+    return common.get_uint8(_NAMESPACE, _BACKUP_TYPE)
 
 
 def set_slip39_identifier(identifier: int) -> None:
-    common._set_uint16(_NAMESPACE, _SLIP39_IDENTIFIER, identifier)
+    common.set_uint16(_NAMESPACE, _SLIP39_IDENTIFIER, identifier)
 
 
 def get_slip39_identifier() -> Optional[int]:
-    return common._get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
+    return common.get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
 
 
 def set_slip39_threshold(threshold: int) -> None:
-    common._set_uint8(_NAMESPACE, _SLIP39_THRESHOLD, threshold)
+    common.set_uint8(_NAMESPACE, _SLIP39_THRESHOLD, threshold)
 
 
 def get_slip39_threshold() -> Optional[int]:
-    return common._get_uint8(_NAMESPACE, _SLIP39_THRESHOLD)
+    return common.get_uint8(_NAMESPACE, _SLIP39_THRESHOLD)
 
 
 def set_slip39_iteration_exponent(exponent: int) -> None:
-    common._set_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT, exponent)
+    common.set_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT, exponent)
 
 
 def get_slip39_iteration_exponent() -> Optional[int]:
-    return common._get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
+    return common.get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
 
 
 def set_slip39_group_count(group_count: int) -> None:
-    common._set_uint8(_NAMESPACE, _SLIP39_GROUP_COUNT, group_count)
+    common.set_uint8(_NAMESPACE, _SLIP39_GROUP_COUNT, group_count)
 
 
 def get_slip39_group_count() -> Optional[int]:
-    return common._get_uint8(_NAMESPACE, _SLIP39_GROUP_COUNT)
+    return common.get_uint8(_NAMESPACE, _SLIP39_GROUP_COUNT)
 
 
 def set_slip39_group_threshold(group_threshold: int) -> None:
-    common._set_uint8(_NAMESPACE, _SLIP39_GROUP_THRESHOLD, group_threshold)
+    common.set_uint8(_NAMESPACE, _SLIP39_GROUP_THRESHOLD, group_threshold)
 
 
 def get_slip39_group_threshold() -> Optional[int]:
-    return common._get_uint8(_NAMESPACE, _SLIP39_GROUP_THRESHOLD)
+    return common.get_uint8(_NAMESPACE, _SLIP39_GROUP_THRESHOLD)
 
 
 def set_slip39_remaining_shares(shares_remaining: int, group_index: int = 0) -> None:
@@ -107,7 +107,7 @@ def set_slip39_remaining_shares(shares_remaining: int, group_index: int = 0) -> 
     0x10 (16) was chosen as the default value because it's the max
     share count for a group.
     """
-    remaining = common._get(_NAMESPACE, _REMAINING)
+    remaining = common.get(_NAMESPACE, _REMAINING)
     group_count = get_slip39_group_count()
     if not group_count:
         raise RuntimeError
@@ -115,11 +115,11 @@ def set_slip39_remaining_shares(shares_remaining: int, group_index: int = 0) -> 
         remaining = bytearray([slip39.MAX_SHARE_COUNT] * group_count)
     remaining = bytearray(remaining)
     remaining[group_index] = shares_remaining
-    common._set(_NAMESPACE, _REMAINING, remaining)
+    common.set(_NAMESPACE, _REMAINING, remaining)
 
 
 def get_slip39_remaining_shares(group_index: int = 0) -> Optional[int]:
-    remaining = common._get(_NAMESPACE, _REMAINING)
+    remaining = common.get(_NAMESPACE, _REMAINING)
     if remaining is None or remaining[group_index] == slip39.MAX_SHARE_COUNT:
         return None
     else:
@@ -127,7 +127,7 @@ def get_slip39_remaining_shares(group_index: int = 0) -> Optional[int]:
 
 
 def fetch_slip39_remaining_shares() -> Optional[List[int]]:
-    remaining = common._get(_NAMESPACE, _REMAINING)
+    remaining = common.get(_NAMESPACE, _REMAINING)
     if not remaining:
         return None
 
@@ -139,14 +139,14 @@ def fetch_slip39_remaining_shares() -> Optional[List[int]]:
 
 
 def end_progress() -> None:
-    common._delete(_NAMESPACE, _IN_PROGRESS)
-    common._delete(_NAMESPACE, _DRY_RUN)
-    common._delete(_NAMESPACE, _WORD_COUNT)
-    common._delete(_NAMESPACE, _SLIP39_IDENTIFIER)
-    common._delete(_NAMESPACE, _SLIP39_THRESHOLD)
-    common._delete(_NAMESPACE, _REMAINING)
-    common._delete(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
-    common._delete(_NAMESPACE, _SLIP39_GROUP_COUNT)
-    common._delete(_NAMESPACE, _SLIP39_GROUP_THRESHOLD)
-    common._delete(_NAMESPACE, _BACKUP_TYPE)
+    common.delete(_NAMESPACE, _IN_PROGRESS)
+    common.delete(_NAMESPACE, _DRY_RUN)
+    common.delete(_NAMESPACE, _WORD_COUNT)
+    common.delete(_NAMESPACE, _SLIP39_IDENTIFIER)
+    common.delete(_NAMESPACE, _SLIP39_THRESHOLD)
+    common.delete(_NAMESPACE, _REMAINING)
+    common.delete(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
+    common.delete(_NAMESPACE, _SLIP39_GROUP_COUNT)
+    common.delete(_NAMESPACE, _SLIP39_GROUP_THRESHOLD)
+    common.delete(_NAMESPACE, _BACKUP_TYPE)
     recovery_shares.delete()

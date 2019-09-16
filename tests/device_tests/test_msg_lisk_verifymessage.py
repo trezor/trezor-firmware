@@ -18,12 +18,10 @@ import pytest
 
 from trezorlib import lisk, messages as proto
 
-from .common import TrezorTest
-
 
 @pytest.mark.altcoin
 @pytest.mark.lisk
-class TestMsgLiskVerifymessage(TrezorTest):
+class TestMsgLiskVerifymessage:
     def test_verify(self, client):
         with client:
             client.set_expected_responses(

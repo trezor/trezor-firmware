@@ -19,13 +19,11 @@ import pytest
 from trezorlib.tezos import get_address
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
-
 
 @pytest.mark.altcoin
 @pytest.mark.tezos
 @pytest.mark.skip_t1
-class TestMsgTezosGetAddress(TrezorTest):
+class TestMsgTezosGetAddress:
     def test_tezos_get_address(self, client):
         path = parse_path("m/44'/1729'/0'")
         address = get_address(client, path, show_display=True)

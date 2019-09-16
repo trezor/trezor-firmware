@@ -19,10 +19,8 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
 
-
-class TestMsgGetaddressSegwitNative(TrezorTest):
+class TestMsgGetaddressSegwitNative:
     def test_show_segwit(self, client):
         assert (
             btc.get_address(

@@ -19,14 +19,14 @@ import pytest
 from trezorlib import lisk
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from ..common import MNEMONIC12
 
 LISK_PATH = parse_path("m/44h/134h/0h/1h")
 
 
 @pytest.mark.altcoin
 @pytest.mark.lisk
-class TestMsgLiskGetaddress(TrezorTest):
+class TestMsgLiskGetaddress:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_lisk_getaddress(self, client):
         assert lisk.get_address(client, LISK_PATH[:2]) == "1431530009238518937L"

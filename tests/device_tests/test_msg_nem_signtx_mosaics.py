@@ -19,14 +19,14 @@ import pytest
 from trezorlib import nem
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from ..common import MNEMONIC12
 
 
 # assertion data from T1
 @pytest.mark.altcoin
 @pytest.mark.nem
 @pytest.mark.skip_t2
-class TestMsgNEMSignTxMosaics(TrezorTest):
+class TestMsgNEMSignTxMosaics:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_nem_signtx_mosaic_supply_change(self, client):
         tx = nem.sign_tx(

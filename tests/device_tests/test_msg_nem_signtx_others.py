@@ -19,13 +19,13 @@ import pytest
 from trezorlib import nem
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC12, TrezorTest
+from ..common import MNEMONIC12
 
 
 # assertion data from T1
 @pytest.mark.altcoin
 @pytest.mark.nem
-class TestMsgNEMSignTxOther(TrezorTest):
+class TestMsgNEMSignTxOther:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_nem_signtx_importance_transfer(self, client):
         with client:

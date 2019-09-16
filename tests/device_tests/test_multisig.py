@@ -19,8 +19,8 @@ import pytest
 from trezorlib import btc, ckd_public as bip32, messages as proto
 from trezorlib.tools import CallException, parse_path
 
-from .common import MNEMONIC12, TrezorTest
-from .tx_cache import tx_cache
+from ..common import MNEMONIC12
+from ..tx_cache import tx_cache
 
 TX_API = tx_cache("Bitcoin")
 
@@ -29,7 +29,7 @@ TXHASH_c6091a = bytes.fromhex(
 )
 
 
-class TestMultisig(TrezorTest):
+class TestMultisig:
     def test_2_of_3(self, client):
         nodes = [
             btc.get_public_node(client, parse_path("48'/0'/%d'" % index)).node

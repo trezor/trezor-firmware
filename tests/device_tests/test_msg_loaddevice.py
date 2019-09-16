@@ -20,21 +20,25 @@ from trezorlib import btc, debuglink, device
 from trezorlib.messages import BackupType
 from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 
-from . import common
+from ..common import (
+    MNEMONIC12,
+    MNEMONIC_SHAMIR_20_3of6,
+    MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS,
+)
 
 
 @pytest.mark.setup_client(uninitialized=True)
-class TestDeviceLoad(common.TrezorTest):
+class TestDeviceLoad:
     def test_load_device_1(self, client):
         debuglink.load_device_by_mnemonic(
             client,
-            mnemonic=common.MNEMONIC12,
+            mnemonic=MNEMONIC12,
             pin="",
             passphrase_protection=False,
             label="test",
         )
         state = client.debug.state()
-        assert state.mnemonic_secret == common.MNEMONIC12.encode()
+        assert state.mnemonic_secret == MNEMONIC12.encode()
         assert state.pin is None
         assert state.passphrase_protection is False
 
@@ -44,7 +48,7 @@ class TestDeviceLoad(common.TrezorTest):
     def test_load_device_2(self, client):
         debuglink.load_device_by_mnemonic(
             client,
-            mnemonic=common.MNEMONIC12,
+            mnemonic=MNEMONIC12,
             pin="1234",
             passphrase_protection=True,
             label="test",
@@ -53,7 +57,7 @@ class TestDeviceLoad(common.TrezorTest):
             device.apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
         client.set_passphrase("passphrase")
         state = client.debug.state()
-        assert state.mnemonic_secret == common.MNEMONIC12.encode()
+        assert state.mnemonic_secret == MNEMONIC12.encode()
 
         if client.features.model == "1":
             # we do not send PIN in DebugLinkState in Core
@@ -67,7 +71,7 @@ class TestDeviceLoad(common.TrezorTest):
     def test_load_device_shamir_basic(self, client):
         debuglink.load_device_by_mnemonic(
             client,
-            mnemonic=common.MNEMONIC_SHAMIR_20_3of6,
+            mnemonic=MNEMONIC_SHAMIR_20_3of6,
             pin="",
             passphrase_protection=False,
             label="test",
@@ -78,7 +82,7 @@ class TestDeviceLoad(common.TrezorTest):
     def test_load_device_shamir_advanced(self, client):
         debuglink.load_device_by_mnemonic(
             client,
-            mnemonic=common.MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS,
+            mnemonic=MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS,
             pin="",
             passphrase_protection=False,
             label="test",

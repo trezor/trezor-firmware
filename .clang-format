@@ -1,2 +1,5 @@
 ---
-BasedOnStyle:  Google
+BasedOnStyle: Google
+# Google style has a default of 80 lines, but clang-format 7 disregards it in
+# a weird case in modtrezorio-fatfs.h. Setting it explicitly helps.
+ColumnLimit: 80

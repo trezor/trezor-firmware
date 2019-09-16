@@ -18,11 +18,11 @@ import pytest
 
 from trezorlib import messages as proto
 
-from .common import MNEMONIC12, TrezorTest
+from ..common import MNEMONIC12
 
 
 @pytest.mark.skip_t2
-class TestMsgRecoverydeviceDryrun(TrezorTest):
+class TestMsgRecoverydeviceDryrun:
     def recovery_loop(self, client, mnemonic, result):
         ret = client.call_raw(
             proto.RecoveryDevice(

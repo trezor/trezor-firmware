@@ -18,14 +18,14 @@ import pytest
 
 from trezorlib import device, messages as proto
 
-from .common import TrezorTest
+from ..common import MNEMONIC12
 
 
 @pytest.mark.skip_t1
-class TestMsgRecoverydeviceT2(TrezorTest):
+class TestMsgRecoverydeviceT2:
     @pytest.mark.setup_client(uninitialized=True)
     def test_pin_passphrase(self, client):
-        mnemonic = self.mnemonic12.split(" ")
+        mnemonic = MNEMONIC12.split(" ")
         ret = client.call_raw(
             proto.RecoveryDevice(
                 passphrase_protection=True,
@@ -84,14 +84,14 @@ class TestMsgRecoverydeviceT2(TrezorTest):
 
         # Mnemonic is the same
         client.init_device()
-        assert client.debug.read_mnemonic_secret() == self.mnemonic12.encode()
+        assert client.debug.read_mnemonic_secret() == MNEMONIC12.encode()
 
         assert client.features.pin_protection is True
         assert client.features.passphrase_protection is True
 
     @pytest.mark.setup_client(uninitialized=True)
     def test_nopin_nopassphrase(self, client):
-        mnemonic = self.mnemonic12.split(" ")
+        mnemonic = MNEMONIC12.split(" ")
         ret = client.call_raw(
             proto.RecoveryDevice(
                 passphrase_protection=False,
@@ -140,7 +140,7 @@ class TestMsgRecoverydeviceT2(TrezorTest):
 
         # Mnemonic is the same
         client.init_device()
-        assert client.debug.read_mnemonic_secret() == self.mnemonic12.encode()
+        assert client.debug.read_mnemonic_secret() == MNEMONIC12.encode()
 
         assert client.features.pin_protection is False
         assert client.features.passphrase_protection is False

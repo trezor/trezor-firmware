@@ -19,7 +19,7 @@ import pytest
 from trezorlib import device, messages
 from trezorlib.exceptions import TrezorFailure
 
-from .common import recovery_enter_shares
+from ..common import recovery_enter_shares
 
 pytestmark = pytest.mark.skip_t1
 

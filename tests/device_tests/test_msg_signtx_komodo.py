@@ -19,9 +19,7 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
-from .conftest import TREZOR_VERSION
-from .tx_cache import tx_cache
+from ..tx_cache import tx_cache
 
 # KMD has no usable backends, use cached TX only
 TX_API = tx_cache("Komodo", allow_fetch=False)
@@ -36,7 +34,7 @@ TXHASH_7b28bd = bytes.fromhex(
 
 @pytest.mark.altcoin
 @pytest.mark.komodo
-class TestMsgSigntxKomodo(TrezorTest):
+class TestMsgSigntxKomodo:
     def test_one_one_fee_sapling(self, client):
         # prevout: 2807c5b126ec8e2b078cab0f12e4c8b4ce1d7724905f8ebef8dca26b0c8e0f1d:0
         # input 1: 10.9998 KMD
@@ -68,7 +66,7 @@ class TestMsgSigntxKomodo(TrezorTest):
                 ),
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
             ]
-            if TREZOR_VERSION != 1:  # extra screen for lock_time
+            if client.features.model != "1":  # extra screen for lock_time
                 er += [proto.ButtonRequest(code=proto.ButtonRequestType.SignTx)]
             er += [
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
@@ -145,7 +143,7 @@ class TestMsgSigntxKomodo(TrezorTest):
                 ),
                 proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
             ]
-            if TREZOR_VERSION != 1:  # extra screen for lock_time
+            if client.features.model != "1":  # extra screen for lock_time
                 er += [proto.ButtonRequest(code=proto.ButtonRequestType.SignTx)]
             er += [
                 proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),

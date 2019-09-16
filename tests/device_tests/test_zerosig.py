@@ -18,8 +18,8 @@ import pytest
 
 from trezorlib import btc, messages as proto
 
-from .common import MNEMONIC12, TrezorTest
-from .tx_cache import tx_cache
+from ..common import MNEMONIC12
+from ..tx_cache import tx_cache
 
 TXHASH_d5f65e = bytes.fromhex(
     "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
@@ -28,39 +28,7 @@ TXHASH_d5f65e = bytes.fromhex(
 
 # address_n = [177] < 68
 # address_n = [16518] < 66
-class TestZerosig(TrezorTest):
-
-    """
-    def test_mine_zero_signature(self):
-        # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
-        # input 0: 0.0039 BTC
-
-        inp1 = proto.TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
-                             # amount=390000,
-                             prev_hash=TXHASH_d5f65e,
-                             prev_index=0,
-                             )
-
-        msg = self.client._prepare_sign_tx('Bitcoin', [inp1, ], [])
-
-        for n in range(3500, 200000):
-            out1 = proto.TxOutputType(address_n=[n],
-                                  amount=390000 - 10000,
-                                  script_type=proto.OutputScriptType.PAYTOADDRESS,
-                                  )
-            msg.ClearField('outputs')
-            msg.outputs.extend([out1, ])
-
-            tx = self.client.call(msg)
-
-            siglen = tx.serialized_tx[44]
-            print(siglen)
-            if siglen < 67:
-                print("!!!!", n)
-                print(tx.serialized_tx.hex())
-                return
-    """
-
+class TestZerosig:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_one_zero_signature(self, client):
         inp1 = proto.TxInputType(

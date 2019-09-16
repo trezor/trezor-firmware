@@ -42,29 +42,40 @@ async def require_confirm_transfer(ctx, msg: BinanceTransferMsg):
 
 
 async def require_confirm_cancel(ctx, msg: BinanceCancelMsg):
-    text = Text("Confirm cancel", ui.ICON_SEND, icon_color=ui.GREEN)
-    text.normal("Reference id:")
-    text.bold(msg.refid)
-    return await hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
+    page1 = Text("Confirm cancel 1/2", ui.ICON_SEND, icon_color=ui.GREEN)
+    page1.normal("Sender address:")
+    page1.bold(msg.sender)
+    page1.normal("Pair:")
+    page1.bold(msg.symbol)
+
+    page2 = Text("Confirm cancel 2/2", ui.ICON_SEND, icon_color=ui.GREEN)
+    page2.normal("Order ID:")
+    page2.bold(msg.refid)
+
+    return await hold_to_confirm(
+        ctx, Paginated([page1, page2]), ButtonRequestType.SignTx
+    )
 
 
 async def require_confirm_order(ctx, msg: BinanceOrderMsg):
-    page1 = Text("Confirm order", ui.ICON_SEND, icon_color=ui.GREEN)
+    page1 = Text("Confirm order 1/3", ui.ICON_SEND, icon_color=ui.GREEN)
     page1.normal("Sender address:")
     page1.bold(msg.sender)
 
-    page2 = Text("Confirm order", ui.ICON_SEND, icon_color=ui.GREEN)
-    page2.normal("side:")
+    page2 = Text("Confirm order 2/3", ui.ICON_SEND, icon_color=ui.GREEN)
+    page2.normal("Pair:")
+    page2.bold(msg.symbol)
+    page2.normal("Side:")
     if msg.side == BinanceOrderSide.BUY:
-        page2.bold("buy")
+        page2.bold("Buy")
     elif msg.side == BinanceOrderSide.SELL:
-        page2.bold("sell")
+        page2.bold("Sell")
 
-    page3 = Text("Confirm order", ui.ICON_SEND, icon_color=ui.GREEN)
+    page3 = Text("Confirm order 3/3", ui.ICON_SEND, icon_color=ui.GREEN)
     page3.normal("Quantity:")
-    page3.bold(str(msg.quantity))
+    page3.bold(format_amount(msg.quantity, helpers.DIVISIBILITY))
     page3.normal("Price:")
-    page3.bold(str(msg.price))
+    page3.bold(format_amount(msg.price, helpers.DIVISIBILITY))
 
     return await hold_to_confirm(
         ctx, Paginated([page1, page2, page3]), ButtonRequestType.SignTx

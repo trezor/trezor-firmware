@@ -18,10 +18,8 @@ import pytest
 
 from trezorlib import messages as proto
 
-from .common import TrezorTest
 
-
-class TestMsgResetDeviceNobackup(TrezorTest):
+class TestMsgResetDeviceNobackup:
 
     external_entropy = b"zlutoucky kun upel divoke ody" * 2
     strength = 128

@@ -22,7 +22,7 @@ from mnemonic import Mnemonic
 from trezorlib import device, messages as proto
 from trezorlib.messages import ButtonRequestType as B
 
-from .common import (
+from ..common import (
     MNEMONIC12,
     click_through,
     generate_entropy,

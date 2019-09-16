@@ -10,11 +10,11 @@ if False:
 
 
 def set(index: int, mnemonic: str) -> None:
-    common._set(common._APP_RECOVERY_SHARES, index, mnemonic.encode())
+    common.set(common.APP_RECOVERY_SHARES, index, mnemonic.encode())
 
 
 def get(index: int) -> Optional[str]:
-    m = common._get(common._APP_RECOVERY_SHARES, index)
+    m = common.get(common.APP_RECOVERY_SHARES, index)
     if m:
         return m.decode()
     return None
@@ -44,4 +44,4 @@ def fetch_group(group_index: int) -> List[str]:
 
 def delete() -> None:
     for index in range(0, slip39.MAX_SHARE_COUNT):
-        common._delete(common._APP_RECOVERY_SHARES, index)
+        common.delete(common.APP_RECOVERY_SHARES, index)

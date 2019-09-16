@@ -19,12 +19,12 @@ import pytest
 from trezorlib import ethereum
 from trezorlib.tools import H_
 
-from .common import MNEMONIC12, TrezorTest
+from ..common import MNEMONIC12
 
 
 @pytest.mark.altcoin
 @pytest.mark.ethereum
-class TestMsgEthereumSignmessage(TrezorTest):
+class TestMsgEthereumSignmessage:
 
     PATH = [H_(44), H_(60), H_(0), 0]
     ADDRESS = "0xEa53AF85525B1779eE99ece1a5560C0b78537C3b"

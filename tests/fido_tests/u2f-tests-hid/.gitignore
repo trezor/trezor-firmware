@@ -1,0 +1,4 @@
+*.o
+list
+HIDTest
+U2FTest
