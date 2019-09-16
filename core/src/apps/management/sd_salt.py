@@ -7,6 +7,7 @@ from trezor.pin import pin_to_int
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
+from apps.common.request_pin import request_pin_ack, request_pin_and_sd_salt
 from apps.common.sd_salt import (
     SD_SALT_AUTH_KEY_LEN_BYTES,
     SD_SALT_AUTH_TAG_LEN_BYTES,
@@ -17,7 +18,6 @@ from apps.common.sd_salt import (
     stage_sd_salt,
 )
 from apps.common.storage import device, is_initialized
-from apps.management.change_pin import request_pin_ack, request_pin_and_sd_salt
 
 if False:
     from trezor.messages.SdSalt import SdSalt

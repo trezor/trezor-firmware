@@ -6,7 +6,7 @@ from trezor.ui.text import Text
 
 from apps.common import storage
 from apps.common.confirm import require_confirm
-from apps.management.change_pin import request_pin_and_sd_salt, request_pin_confirm
+from apps.common.request_pin import request_pin_and_sd_salt, request_pin_confirm
 from apps.management.recovery_device.homescreen import recovery_process
 
 if False:

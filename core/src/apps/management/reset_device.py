@@ -10,7 +10,7 @@ from trezor.ui.text import Text
 
 from apps.common import mnemonic, storage
 from apps.common.confirm import require_confirm
-from apps.management.change_pin import request_pin_confirm
+from apps.common.request_pin import request_pin_confirm
 from apps.management.common import layout
 
 if __debug__:

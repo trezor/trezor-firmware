@@ -12,7 +12,7 @@ from trezor.ui.button import (
 )
 
 if False:
-    from typing import Iterable
+    from typing import Iterable, Optional
 
 
 def digit_area(i: int) -> ui.Area:
@@ -30,7 +30,7 @@ def generate_digits() -> Iterable[int]:
 
 
 class PinInput(ui.Component):
-    def __init__(self, prompt: str, subprompt: str, pin: str) -> None:
+    def __init__(self, prompt: str, subprompt: Optional[str], pin: str) -> None:
         self.prompt = prompt
         self.subprompt = subprompt
         self.pin = pin
@@ -82,7 +82,11 @@ CANCELLED = object()
 
 class PinDialog(ui.Layout):
     def __init__(
-        self, prompt: str, subprompt: str, allow_cancel: bool = True, maxlength: int = 9
+        self,
+        prompt: str,
+        subprompt: Optional[str],
+        allow_cancel: bool = True,
+        maxlength: int = 9,
     ) -> None:
         self.maxlength = maxlength
         self.input = PinInput(prompt, subprompt, "")
