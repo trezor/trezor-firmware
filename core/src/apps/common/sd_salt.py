@@ -14,7 +14,7 @@ if False:
     from typing import Optional
 
 
-class SdSaltCancelled(Exception):
+class SdProtectCancelled(Exception):
     pass
 
 
@@ -56,7 +56,7 @@ async def request_sd_salt(
     fs = io.FatFS()
     if not sd.power(True):
         await insert_card_dialog(ctx)
-        raise SdSaltCancelled
+        raise SdProtectCancelled
 
     try:
         fs.mount()
@@ -106,7 +106,7 @@ async def request_sd_salt(
         sd.power(False)
 
     await wrong_card_dialog(ctx)
-    raise SdSaltCancelled
+    raise SdProtectCancelled
 
 
 async def set_sd_salt(
@@ -119,7 +119,7 @@ async def set_sd_salt(
     fs = io.FatFS()
     if not sd.power(True):
         await insert_card_dialog(ctx)
-        raise SdSaltCancelled
+        raise SdProtectCancelled
 
     try:
         fs.mount()
@@ -159,7 +159,7 @@ async def commit_sd_salt(ctx: Optional[wire.Context]) -> None:
     fs = io.FatFS()
     if not sd.power(True):
         await insert_card_dialog(ctx)
-        raise SdSaltCancelled
+        raise SdProtectCancelled
 
     try:
         fs.mount()
@@ -182,7 +182,7 @@ async def remove_sd_salt(ctx: Optional[wire.Context]) -> None:
     fs = io.FatFS()
     if not sd.power(True):
         await insert_card_dialog(ctx)
-        raise SdSaltCancelled
+        raise SdProtectCancelled
 
     try:
         fs.mount()
