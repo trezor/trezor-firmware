@@ -75,7 +75,7 @@ message TezosSignTx {
      * Structure representing information for reveal
      */
     message TezosRevealOp {
-        optional TezosContractID source = 1;
+        optional bytes source = 7;
         optional uint64 fee = 2;
         optional uint64 counter = 3;
         optional uint64 gas_limit = 4;
@@ -86,7 +86,7 @@ message TezosSignTx {
      * Structure representing information for transaction
      */
     message TezosTransactionOp {
-        optional TezosContractID source = 1;
+        optional bytes source = 9;
         optional uint64 fee = 2;
         optional uint64 counter = 3;
         optional uint64 gas_limit = 4;
@@ -94,12 +94,24 @@ message TezosSignTx {
         optional uint64 amount = 6;
         optional TezosContractID destination = 7;
         optional bytes parameters = 8;
+        optional TezosParametersManager parameters_manager = 10;
+
+        message TezosParametersManager {
+            optional bytes set_delegate = 1;
+            optional bool cancel_delegate = 2;
+            optional TezosManagerTransfer transfer = 3;
+
+            message TezosManagerTransfer {
+                optional TezosContractID destination = 1;
+                optional uint64 amount = 2;
+            }
+        }
     }
     /**
      * Structure representing information for origination
      */
     message TezosOriginationOp {
-        optional TezosContractID source = 1;
+        optional bytes source = 12;
         optional uint64 fee = 2;
         optional uint64 counter = 3;
         optional uint64 gas_limit = 4;
@@ -115,7 +127,7 @@ message TezosSignTx {
      * Structure representing information for delegation
      */
     message TezosDelegationOp {
-        optional TezosContractID source = 1;
+        optional bytes source = 7;
         optional uint64 fee = 2;
         optional uint64 counter = 3;
         optional uint64 gas_limit = 4;
