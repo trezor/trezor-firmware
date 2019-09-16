@@ -25,7 +25,7 @@ async def show_internal_entropy(ctx, entropy: bytes):
     await require_confirm(ctx, text, ButtonRequestType.ResetDevice)
 
 
-async def confirm_backup(ctx, repeated=False):
+async def confirm_backup(ctx):
     # First prompt
     text = Text("Success", ui.ICON_CONFIRM, ui.GREEN, new_lines=False)
     text.bold("New wallet created")
