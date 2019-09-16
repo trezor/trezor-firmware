@@ -109,7 +109,7 @@ async def backup_slip39_basic(
     shares_count = await layout.slip39_prompt_number_of_shares(ctx)
 
     # get threshold
-    await layout.slip39_show_checklist(ctx, 1, BackupType.Slip39_Advanced)
+    await layout.slip39_show_checklist(ctx, 1, BackupType.Slip39_Basic)
     threshold = await layout.slip39_prompt_threshold(ctx, shares_count)
 
     # generate the mnemonics
