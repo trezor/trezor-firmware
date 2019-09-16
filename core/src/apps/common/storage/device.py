@@ -241,7 +241,7 @@ def get_sd_salt_auth_key() -> Optional[bytes]:
     """
     The key used to check authenticity of the SD card salt.
     """
-    return common._get(_NAMESPACE, _SD_SALT_AUTH_KEY, public=True)
+    return common.get(_NAMESPACE, _SD_SALT_AUTH_KEY, public=True)
 
 
 def set_sd_salt_auth_key(auth_key: Optional[bytes]) -> None:
@@ -249,6 +249,6 @@ def set_sd_salt_auth_key(auth_key: Optional[bytes]) -> None:
     The key used to check the authenticity of the SD card salt.
     """
     if auth_key is not None:
-        return common._set(_NAMESPACE, _SD_SALT_AUTH_KEY, auth_key, public=True)
+        return common.set(_NAMESPACE, _SD_SALT_AUTH_KEY, auth_key, public=True)
     else:
-        return common._delete(_NAMESPACE, _SD_SALT_AUTH_KEY, public=True)
+        return common.delete(_NAMESPACE, _SD_SALT_AUTH_KEY, public=True)

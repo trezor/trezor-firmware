@@ -16,7 +16,7 @@ def get_resident_credentials(rp_id_hash: Optional[bytes]) -> List[Credential]:
         _RESIDENT_CREDENTIAL_START_KEY,
         _RESIDENT_CREDENTIAL_START_KEY + _MAX_RESIDENT_CREDENTIALS,
     ):
-        stored_cred_data = common._get(common._APP_FIDO2, i)
+        stored_cred_data = common.get(common.APP_FIDO2, i)
         if stored_cred_data is None:
             continue
 
@@ -40,7 +40,7 @@ def store_resident_credential(cred: Fido2Credential) -> bool:
         _RESIDENT_CREDENTIAL_START_KEY,
         _RESIDENT_CREDENTIAL_START_KEY + _MAX_RESIDENT_CREDENTIALS,
     ):
-        stored_cred_data = common._get(common._APP_FIDO2, i)
+        stored_cred_data = common.get(common.APP_FIDO2, i)
         if stored_cred_data is None:
             if slot is None:
                 slot = i
@@ -66,7 +66,7 @@ def store_resident_credential(cred: Fido2Credential) -> bool:
     if slot is None:
         return False
 
-    common._set(common._APP_FIDO2, slot, cred.rp_id_hash + cred.id)
+    common.set(common.APP_FIDO2, slot, cred.rp_id_hash + cred.id)
     return True
 
 
@@ -75,4 +75,4 @@ def erase_resident_credentials() -> None:
         _RESIDENT_CREDENTIAL_START_KEY,
         _RESIDENT_CREDENTIAL_START_KEY + _MAX_RESIDENT_CREDENTIALS,
     ):
-        common._delete(common._APP_FIDO2, i)
+        common._delete(common.APP_FIDO2, i)

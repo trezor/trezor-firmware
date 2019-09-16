@@ -18,11 +18,11 @@ import pytest
 
 from trezorlib import debuglink, device, messages as proto
 
-from .common import MNEMONIC12, TrezorTest
+from ..common import MNEMONIC12
 
 
 @pytest.mark.skip_t1
-class TestMsgSdsalt(TrezorTest):
+class TestMsgSdsalt:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_sd_salt(self, client):
 
