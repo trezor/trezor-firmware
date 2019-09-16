@@ -22,8 +22,8 @@ from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 
 from ..common import (
     MNEMONIC12,
-    MNEMONIC_SHAMIR_20_3of6,
     MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS,
+    MNEMONIC_SHAMIR_20_3of6,
 )
 
 
