@@ -5,7 +5,3 @@
 
 class MnemonicError(RuntimeError):
     pass
-
-
-class GroupThresholdReachedError(MnemonicError):
-    pass
