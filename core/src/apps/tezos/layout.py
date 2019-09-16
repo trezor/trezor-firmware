@@ -99,3 +99,10 @@ async def require_confirm_proposals(ctx, proposals):
     paginated = Paginated(pages)
 
     await require_confirm(ctx, paginated, ButtonRequestType.SignTx)
+
+
+async def require_confirm_delegation_kt_withdraw(ctx, address):
+    text = Text("Withdraw delegation", ui.ICON_CANCEL, icon_color=ui.RED)
+    text.bold("From:")
+    text.mono(*split_address(address))
+    await require_confirm(ctx, text, ButtonRequestType.SignTx)

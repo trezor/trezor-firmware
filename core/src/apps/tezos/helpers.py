@@ -26,6 +26,26 @@ TEZOS_PREFIX_BYTES = {
     "P": [2, 170],
 }
 
+# MICHELSON instruction bytes
+MICHELSON_INSTRUCTION_BYTES = {
+    "DROP": [3, 32],  # '0320'
+    "NIL": [5, 61],  # '053d'
+    "operation": [3, 109],  # '036d'
+    "NONE": [5, 62],  # '053e'
+    "key_hash": [3, 93],  # '035d'
+    "SET_DELEGATE": [3, 78],  # '034e'
+    "CONS": [3, 27],  # '031b'
+    "IMPLICIT_ACCOUNT": [3, 30],  # '031e'
+    "PUSH": [7, 67],  # '0743'
+    "mutez": [3, 106],  # '036a'
+    "UNIT": [3, 79],  # '034f'
+    "TRANSFER_TOKENS": [3, 77],  # '034d'
+    "SOME": [3, 70],  # '0346'
+}
+
+DO_ENTRYPOINT_TAG = const(2)
+MICHELSON_SEQUENCE_TAG = const(2)
+
 
 def base58_encode_check(payload, prefix=None):
     result = payload

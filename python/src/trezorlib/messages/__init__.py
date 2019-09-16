@@ -238,6 +238,8 @@ from .TezosPublicKey import TezosPublicKey
 from .TezosRevealOp import TezosRevealOp
 from .TezosSignTx import TezosSignTx
 from .TezosSignedTx import TezosSignedTx
+from .TezosTransactionKtDelegationOp import TezosTransactionKtDelegationOp
+from .TezosTransactionKtTransferOp import TezosTransactionKtTransferOp
 from .TezosTransactionOp import TezosTransactionOp
 from .TransactionType import TransactionType
 from .TxAck import TxAck
