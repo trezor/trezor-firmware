@@ -26,7 +26,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     # validate parameters and device state
     _validate_reset_device(msg)
 
-    # make sure user knows he's setting up a new wallet
+    # make sure user knows they're setting up a new wallet
     await _show_reset_device_warning(ctx, msg.backup_type)
 
     # request new PIN
@@ -52,14 +52,16 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
         storage.device.set_slip39_identifier(slip39.generate_random_identifier())
         storage.device.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
 
-    # should we back up the wallet now?
-    if not msg.no_backup and not msg.skip_backup:
-        if not await layout.confirm_backup(ctx):
-            if not await layout.confirm_backup(ctx, repeated=True):
-                msg.skip_backup = True
+    # If either of skip_backup or no_backup is specified, we are not doing backup now.
+    # Otherwise, we try to do it.
+    perform_backup = not msg.no_backup and not msg.skip_backup
+
+    # If doing backup, ask the user to confirm.
+    if perform_backup:
+        perform_backup = await layout.confirm_backup(ctx)
 
     # generate and display backup information for the master secret
-    if not msg.no_backup and not msg.skip_backup:
+    if perform_backup:
         if msg.backup_type == BackupType.Slip39_Basic:
             await backup_slip39_basic(ctx, secret)
         elif msg.backup_type == BackupType.Slip39_Advanced:
@@ -77,27 +79,23 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     )
     if msg.backup_type == BackupType.Bip39:
         # in BIP-39 we store mnemonic string instead of the secret
-        storage.device.store_mnemonic_secret(
-            bip39.from_data(secret).encode(),
-            BackupType.Bip39,
-            needs_backup=msg.skip_backup,
-            no_backup=msg.no_backup,
-        )
-    elif msg.backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced):
-        storage.device.store_mnemonic_secret(
-            secret,  # this is the EMS in SLIP-39 terminology
-            msg.backup_type,
-            needs_backup=msg.skip_backup,
-            no_backup=msg.no_backup,
-        )
-    else:
-        # This check might seem superfluous, because we are checking in `_validate_reset_device`
-        # already, however, this is critical part, so just to make sure.
-        # Unknown backup type
-        raise RuntimeError()
+        secret = bip39.from_data(secret).encode()
+    elif msg.backup_type not in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced):
+        # Unknown backup type.
+        # This check might seem superfluous, because we are checking
+        # in `_validate_reset_device` already, however, this is critical part,
+        # so just to make sure.
+        raise RuntimeError
+
+    storage.device.store_mnemonic_secret(
+        secret,  # for SLIP-39, this is the EMS
+        msg.backup_type,
+        needs_backup=not perform_backup,
+        no_backup=msg.no_backup,
+    )
 
     # if we backed up the wallet, show success message
-    if not msg.no_backup and not msg.skip_backup:
+    if perform_backup:
         await layout.show_backup_success(ctx)
 
     return Success(message="Initialized")

@@ -26,26 +26,36 @@ async def show_internal_entropy(ctx, entropy: bytes):
 
 
 async def confirm_backup(ctx, repeated=False):
-    if not repeated:
-        text = Text("Success", ui.ICON_CONFIRM, ui.GREEN, new_lines=False)
-        text.bold("New wallet created")
-        text.br()
-        text.bold("successfully!")
-        text.br()
-        text.br_half()
-        text.normal("You should back up your")
-        text.br()
-        text.normal("new wallet right now.")
-    else:
-        text = Text("Warning", ui.ICON_WRONG, ui.RED, new_lines=False)
-        text.bold("Are you sure you want")
-        text.br()
-        text.bold("to skip the backup?")
-        text.br()
-        text.br_half()
-        text.normal("You can back up your")
-        text.br()
-        text.normal("Trezor once, at any time.")
+    # First prompt
+    text = Text("Success", ui.ICON_CONFIRM, ui.GREEN, new_lines=False)
+    text.bold("New wallet created")
+    text.br()
+    text.bold("successfully!")
+    text.br()
+    text.br_half()
+    text.normal("You should back up your")
+    text.br()
+    text.normal("new wallet right now.")
+    if await confirm(
+        ctx,
+        text,
+        ButtonRequestType.ResetDevice,
+        cancel="Skip",
+        confirm="Back up",
+        major_confirm=True,
+    ):
+        return True
+
+    # If the user selects Skip, ask again
+    text = Text("Warning", ui.ICON_WRONG, ui.RED, new_lines=False)
+    text.bold("Are you sure you want")
+    text.br()
+    text.bold("to skip the backup?")
+    text.br()
+    text.br_half()
+    text.normal("You can back up your")
+    text.br()
+    text.normal("Trezor once, at any time.")
     return await confirm(
         ctx,
         text,
