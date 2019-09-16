@@ -91,8 +91,8 @@ def change_pin(client, remove=False):
 
 
 @expect(proto.Success, field="message")
-def sd_salt(client, operation):
-    ret = client.call(proto.SdSalt(operation=operation))
+def sd_protect(client, operation):
+    ret = client.call(proto.SdProtect(operation=operation))
     client.init_device()  # Re-read features
     return ret
 

@@ -122,11 +122,11 @@ CHOICE_RESET_DEVICE_TYPE = ChoiceType(
     }
 )
 
-CHOICE_SD_SALT_OPERATION_TYPE = ChoiceType(
+CHOICE_SD_PROTECT_OPERATION_TYPE = ChoiceType(
     {
-        "enable": proto.SdSaltOperationType.ENABLE,
-        "disable": proto.SdSaltOperationType.DISABLE,
-        "regenerate": proto.SdSaltOperationType.REGENERATE,
+        "enable": proto.SdProtectOperationType.ENABLE,
+        "disable": proto.SdProtectOperationType.DISABLE,
+        "refresh": proto.SdProtectOperationType.REFRESH,
     }
 )
 
@@ -268,7 +268,7 @@ def get_features(connect):
 #
 
 
-@cli.command(help="Change new PIN or remove existing.")
+@cli.command(help="Set, change or remove PIN.")
 @click.option("-r", "--remove", is_flag=True)
 @click.pass_obj
 def change_pin(connect, remove):
@@ -276,19 +276,25 @@ def change_pin(connect, remove):
 
 
 @cli.command()
-@click.argument("operation", type=CHOICE_SD_SALT_OPERATION_TYPE)
+@click.argument("operation", type=CHOICE_SD_PROTECT_OPERATION_TYPE)
 @click.pass_obj
-def sd_salt(connect, operation):
-    """Configure SD card salt protection.
+def sd_protect(connect, operation):
+    """Secure the device with SD card protection.
 
-    Enable, disable or regenerate SD card salt. The options are:
+    When SD card protection is enabled, a randomly generated secret is stored
+    on the SD card. During every PIN checking and unlocking operation this
+    secret is combined with the entered PIN value to decrypt data stored on
+    the device. The SD card will thus be needed every time you unlock the
+    device. The options are:
 
     \b
-    enable - Generate SD card salt and use it to encrypt the storage.
-    disable - Remove SD card salt protection.
-    regenerate - Replace the current SD card salt and with a new one.
+    enable - Generate SD card secret and use it to protect the PIN and storage.
+    disable - Remove SD card secret protection.
+    refresh - Replace the current SD card secret with a new one.
     """
-    return device.sd_salt(connect(), operation)
+    if client.features.model == "1":
+        raise click.BadUsage("Trezor One does not support SD card protection.")
+    return device.sd_protect(connect(), operation)
 
 
 @cli.command(help="Enable passphrase.")
