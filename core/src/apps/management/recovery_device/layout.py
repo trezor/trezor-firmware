@@ -13,14 +13,14 @@ from .keyboard_slip39 import Slip39Keyboard
 from .recover import RecoveryAborted
 
 from apps.common import storage
-from apps.common.confirm import confirm, require_confirm
+from apps.common.confirm import confirm, info_confirm, require_confirm
 from apps.common.layout import show_success, show_warning
 
 if __debug__:
     from apps.debug import input_signal
 
 if False:
-    from typing import List, Optional
+    from typing import List, Optional, Callable
     from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
@@ -144,7 +144,7 @@ async def show_remaining_shares(
                 text.normal(word)
             pages.append(text)
 
-    return await confirm(ctx, Paginated(pages), confirm="Continue", cancel=None)
+    return await confirm(ctx, Paginated(pages), cancel=None)
 
 
 async def show_group_share_success(
@@ -271,16 +271,30 @@ class RecoveryHomescreen(ui.Component):
 
 
 async def homescreen_dialog(
-    ctx: wire.Context, homepage: RecoveryHomescreen, button_label: str
+    ctx: wire.Context,
+    homepage: RecoveryHomescreen,
+    button_label: str,
+    info_func: Callable = None,
 ) -> None:
     while True:
-        continue_recovery = await confirm(
-            ctx,
-            homepage,
-            code=ButtonRequestType.RecoveryHomepage,
-            confirm=button_label,
-            major_confirm=True,
-        )
+        if info_func:
+            continue_recovery = await info_confirm(
+                ctx,
+                homepage,
+                code=ButtonRequestType.RecoveryHomepage,
+                confirm=button_label,
+                info_func=info_func,
+                info="Info",
+                cancel="Abort",
+            )
+        else:
+            continue_recovery = await confirm(
+                ctx,
+                homepage,
+                code=ButtonRequestType.RecoveryHomepage,
+                confirm=button_label,
+                major_confirm=True,
+            )
         if continue_recovery:
             # go forward in the recovery process
             break

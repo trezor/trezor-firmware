@@ -2,13 +2,13 @@ from trezor import wire
 from trezor.messages import ButtonRequestType
 from trezor.messages.ButtonAck import ButtonAck
 from trezor.messages.ButtonRequest import ButtonRequest
-from trezor.ui.confirm import CONFIRMED, Confirm, HoldToConfirm
+from trezor.ui.confirm import CONFIRMED, INFO, Confirm, HoldToConfirm, InfoConfirm
 
 if __debug__:
     from apps.debug import confirm_signal
 
 if False:
-    from typing import Any
+    from typing import Any, Callable
     from trezor import ui
     from trezor.ui.confirm import ButtonContent, ButtonStyleType
     from trezor.ui.loader import LoaderStyleType
@@ -45,6 +45,37 @@ async def confirm(
         return await ctx.wait(dialog, confirm_signal()) is CONFIRMED
     else:
         return await ctx.wait(dialog) is CONFIRMED
+
+
+async def info_confirm(
+    ctx: wire.Context,
+    content: ui.Component,
+    info_func: Callable,
+    code: int = ButtonRequestType.Other,
+    confirm: ButtonContent = InfoConfirm.DEFAULT_CONFIRM,
+    confirm_style: ButtonStyleType = InfoConfirm.DEFAULT_CONFIRM_STYLE,
+    cancel: ButtonContent = InfoConfirm.DEFAULT_CANCEL,
+    cancel_style: ButtonStyleType = InfoConfirm.DEFAULT_CANCEL_STYLE,
+    info: ButtonContent = InfoConfirm.DEFAULT_INFO,
+    info_style: ButtonStyleType = InfoConfirm.DEFAULT_INFO_STYLE,
+) -> bool:
+    await ctx.call(ButtonRequest(code=code), ButtonAck)
+
+    dialog = InfoConfirm(
+        content, confirm, confirm_style, cancel, cancel_style, info, info_style
+    )
+
+    while True:
+        if __debug__:
+            result = await ctx.wait(dialog, confirm_signal())
+        else:
+            result = await ctx.wait(dialog)
+
+        if result == INFO:
+            await info_func(ctx)
+
+        else:
+            return result is CONFIRMED
 
 
 async def hold_to_confirm(
