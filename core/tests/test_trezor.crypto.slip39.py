@@ -25,9 +25,9 @@ class TestCryptoSlip39(unittest.TestCase):
     EMS = b"ABCDEFGHIJKLMNOP"
 
     def test_basic_sharing_random(self):
-        ms = random.bytes(32)
+        ems = random.bytes(32)
         identifier = slip39.generate_random_identifier()
-        mnemonics = slip39.generate_mnemonics_from_data(ms, identifier, 1, [(3, 5)], 1)
+        mnemonics = slip39.generate_mnemonics_from_data(ems, identifier, 1, [(3, 5)], 1)
         mnemonics = mnemonics[0]
         self.assertEqual(slip39.combine_mnemonics(mnemonics[:3]), slip39.combine_mnemonics(mnemonics[2:]))
 
