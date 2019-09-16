@@ -204,13 +204,12 @@ async def _process_words(
 def _store_backup_type(is_slip39: bool, share: Share = None) -> EnumTypeBackupType:
     if not is_slip39:  # BIP-39
         backup_type = BackupType.Bip39
+    elif not share or share.group_count < 1:  # invalid parameters
+        raise RuntimeError
+    elif share.group_count == 1:
+        backup_type = BackupType.Slip39_Basic
     else:
-        if not share or share.group_count < 1:
-            raise RuntimeError
-        if share.group_count == 1:
-            backup_type = BackupType.Slip39_Basic
-        elif share.group_count > 1:
-            backup_type = BackupType.Slip39_Advanced
+        backup_type = BackupType.Slip39_Advanced
 
     storage.recovery.set_backup_type(backup_type)
     return backup_type
