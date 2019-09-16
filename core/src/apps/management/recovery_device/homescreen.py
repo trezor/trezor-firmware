@@ -196,7 +196,7 @@ async def _process_words(
     if secret is None:
         if share.group_count and share.group_count > 1:
             await layout.show_group_share_success(ctx, share.index, share.group_index)
-        await _request_share_next_screen(ctx, is_slip39)
+        await _request_share_next_screen(ctx)
 
     return secret, backup_type
 
@@ -221,7 +221,7 @@ async def _request_share_first_screen(
     if is_slip39:
         remaining = storage.recovery.fetch_slip39_remaining_shares()
         if remaining:
-            await _request_share_next_screen(ctx, is_slip39)
+            await _request_share_next_screen(ctx)
         else:
             content = layout.RecoveryHomescreen(
                 "Enter any share", "(%d words)" % word_count
@@ -234,26 +234,23 @@ async def _request_share_first_screen(
         await layout.homescreen_dialog(ctx, content, "Enter seed")
 
 
-async def _request_share_next_screen(ctx: wire.Context, is_slip39: bool) -> None:
-    if is_slip39:
-        remaining = storage.recovery.fetch_slip39_remaining_shares()
-        group_count = storage.recovery.get_slip39_group_count()
-        if not remaining:
-            # 'remaining' should be stored at this point
-            raise RuntimeError
-
-        if group_count > 1:
-            content = layout.RecoveryHomescreen("More shares needed")
-            await layout.homescreen_dialog(ctx, content, "Enter share")
-        else:
-            if remaining[0] == 1:
-                text = "1 more share"
-            else:
-                text = "%d more shares" % remaining[0]
-            content = layout.RecoveryHomescreen(text, "needed to enter")
-            await layout.homescreen_dialog(ctx, content, "Enter share")
-    else:
+async def _request_share_next_screen(ctx: wire.Context) -> None:
+    remaining = storage.recovery.fetch_slip39_remaining_shares()
+    group_count = storage.recovery.get_slip39_group_count()
+    if not remaining:
+        # 'remaining' should be stored at this point
         raise RuntimeError
+
+    if group_count > 1:
+        content = layout.RecoveryHomescreen("More shares needed")
+        await layout.homescreen_dialog(ctx, content, "Enter share")
+    else:
+        if remaining[0] == 1:
+            text = "1 more share"
+        else:
+            text = "%d more shares" % remaining[0]
+        content = layout.RecoveryHomescreen(text, "needed to enter")
+        await layout.homescreen_dialog(ctx, content, "Enter share")
 
 
 async def _show_remaining_groups_and_shares(ctx: wire.Context) -> None:
