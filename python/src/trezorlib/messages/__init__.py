@@ -201,7 +201,7 @@ from .RippleGetAddress import RippleGetAddress
 from .RipplePayment import RipplePayment
 from .RippleSignTx import RippleSignTx
 from .RippleSignedTx import RippleSignedTx
-from .SdSalt import SdSalt
+from .SdProtect import SdProtect
 from .SelfTest import SelfTest
 from .SetU2FCounter import SetU2FCounter
 from .SignIdentity import SignIdentity
@@ -270,7 +270,7 @@ from . import PinMatrixRequestType
 from . import RecoveryDeviceType
 from . import RequestType
 from . import ResetDeviceBackupType
-from . import SdSaltOperationType
+from . import SdProtectOperationType
 from . import TezosBallotType
 from . import TezosContractType
 from . import WordRequestType

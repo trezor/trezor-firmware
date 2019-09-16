@@ -132,20 +132,20 @@ message ChangePin {
 }
 
 /**
- * Request: Starts workflow for enabling/regenerating/disabling SD card salt
+ * Request: Starts workflow for enabling/regenerating/disabling SD card protection
  * @start
  * @next Success
  * @next Failure
  */
-message SdSalt {
-    optional SdSaltOperationType operation = 1;
+message SdProtect {
+    optional SdProtectOperationType operation = 1;
     /**
-    * Structure representing SD card salt operation
+    * Structure representing SD card protection operation
     */
-    enum SdSaltOperationType {
+    enum SdProtectOperationType {
         DISABLE = 0;
         ENABLE = 1;
-        REGENERATE = 2;
+        REFRESH = 2;
     }
 }
 

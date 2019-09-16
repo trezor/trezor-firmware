@@ -2,4 +2,4 @@
 # fmt: off
 DISABLE = 0
 ENABLE = 1
-REGENERATE = 2
+REFRESH = 2

@@ -61,7 +61,7 @@ enum MessageType {
     MessageType_WordAck = 47 [(wire_in) = true];
     MessageType_GetFeatures = 55 [(wire_in) = true];
     MessageType_SetU2FCounter = 63 [(wire_in) = true];
-    MessageType_SdSalt = 79 [(wire_in) = true];
+    MessageType_SdProtect = 79 [(wire_in) = true];
 
     // Bootloader
     MessageType_FirmwareErase = 6 [(wire_in) = true, (wire_bootloader) = true];
