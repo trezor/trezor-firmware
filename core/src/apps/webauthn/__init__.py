@@ -512,20 +512,15 @@ class KeepaliveCallback:
         send_cmd_sync(cmd_keepalive(self.cid, _KEEPALIVE_STATUS_PROCESSING), self.iface)
 
 
-async def check_pin(keepalive_callback: KeepaliveCallback) -> bool:
-    from apps.common.request_pin import PinCancelled, request_pin
+async def verify_user(keepalive_callback: KeepaliveCallback) -> bool:
+    from apps.common.request_pin import verify_user_pin, PinCancelled, PinInvalid
     import trezor.pin
 
     try:
         trezor.pin.keepalive_callback = keepalive_callback
-        if config.has_pin():
-            pin = await request_pin("Enter your PIN", config.get_pin_rem())
-            while config.unlock(trezor.pin.pin_to_int(pin)) is not True:
-                pin = await request_pin("Wrong PIN, enter again", config.get_pin_rem())
-            ret = True
-        else:
-            ret = config.unlock(trezor.pin.pin_to_int(""))
-    except PinCancelled:
+        await verify_user_pin()
+        ret = True
+    except (PinCancelled, PinInvalid):
         ret = False
     finally:
         trezor.pin.keepalive_callback = None
@@ -695,7 +690,7 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
         if not await confirm(content):
             return False
         if self._user_verification:
-            return await check_pin(KeepaliveCallback(self.cid, self.iface))
+            return await verify_user(KeepaliveCallback(self.cid, self.iface))
         return True
 
     async def on_confirm(self) -> None:
@@ -764,7 +759,7 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
         if await ConfirmPageable(self, content) is not CONFIRMED:
             return False
         if self._user_verification:
-            return await check_pin(KeepaliveCallback(self.cid, self.iface))
+            return await verify_user(KeepaliveCallback(self.cid, self.iface))
         return True
 
     async def on_confirm(self) -> None:

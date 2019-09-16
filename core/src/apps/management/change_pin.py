@@ -1,19 +1,12 @@
 from trezor import config, ui, wire
-from trezor.messages import ButtonRequestType
-from trezor.messages.ButtonAck import ButtonAck
-from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
-from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
-from apps.common.request_pin import PinCancelled, request_pin
-from apps.common.sd_salt import request_sd_salt
-from apps.common.storage import device
+from apps.common.request_pin import request_pin_and_sd_salt, request_pin_confirm
 
 if False:
-    from typing import Any, Optional, Tuple
     from trezor.messages.ChangePin import ChangePin
 
 
@@ -65,46 +58,3 @@ def require_confirm_change_pin(ctx: wire.Context, msg: ChangePin) -> None:
         text.normal("Do you really want to")
         text.bold("enable PIN protection?")
         return require_confirm(ctx, text)
-
-
-async def request_pin_confirm(ctx: wire.Context, *args: Any, **kwargs: Any) -> str:
-    while True:
-        pin1 = await request_pin_ack(ctx, "Enter new PIN", *args, **kwargs)
-        pin2 = await request_pin_ack(ctx, "Re-enter new PIN", *args, **kwargs)
-        if pin1 == pin2:
-            return pin1
-        await pin_mismatch()
-
-
-async def request_pin_and_sd_salt(
-    ctx: wire.Context, prompt: str = "Enter your PIN", allow_cancel: bool = True
-) -> Tuple[str, Optional[bytearray]]:
-    salt_auth_key = device.get_sd_salt_auth_key()
-    if salt_auth_key is not None:
-        salt = await request_sd_salt(ctx, salt_auth_key)  # type: Optional[bytearray]
-    else:
-        salt = None
-
-    if config.has_pin():
-        pin = await request_pin_ack(ctx, prompt, config.get_pin_rem(), allow_cancel)
-    else:
-        pin = ""
-
-    return pin, salt
-
-
-async def request_pin_ack(ctx: wire.Context, *args: Any, **kwargs: Any) -> str:
-    try:
-        await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
-        return await ctx.wait(request_pin(*args, **kwargs))
-    except PinCancelled:
-        raise wire.ActionCancelled("Cancelled")
-
-
-async def pin_mismatch() -> None:
-    text = Text("PIN mismatch", ui.ICON_WRONG, ui.RED)
-    text.normal("The PINs you entered", "do not match.")
-    text.normal("")
-    text.normal("Please try again.")
-    popup = Popup(text, 3000)  # show for 3 seconds
-    await popup
