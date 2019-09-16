@@ -6,7 +6,7 @@ from apps.common import storage
 
 if False:
     from typing import Optional, Tuple
-    from apps.management.recovery_device.backup_types import BackupTypeUnion
+    from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
 def get() -> Tuple[Optional[bytes], int]:
@@ -17,7 +17,7 @@ def get_secret() -> Optional[bytes]:
     return storage.device.get_mnemonic_secret()
 
 
-def get_type() -> BackupTypeUnion:
+def get_type() -> EnumTypeBackupType:
     return storage.device.get_backup_type()
 
 

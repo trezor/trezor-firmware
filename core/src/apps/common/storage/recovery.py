@@ -5,7 +5,7 @@ from trezor.crypto import slip39
 from apps.common.storage import common, recovery_shares
 
 if False:
-    from apps.management.recovery_device.backup_types import BackupTypeUnion
+    from trezor.messages.ResetDevice import EnumTypeBackupType
 
 # Namespace:
 _NAMESPACE = common.APP_RECOVERY
@@ -52,11 +52,11 @@ def get_word_count() -> Optional[int]:
     return common.get_uint8(_NAMESPACE, _WORD_COUNT)
 
 
-def set_backup_type(backup_type: BackupTypeUnion) -> None:
+def set_backup_type(backup_type: EnumTypeBackupType) -> None:
     common.set_uint8(_NAMESPACE, _BACKUP_TYPE, backup_type)
 
 
-def get_backup_type() -> Optional[BackupTypeUnion]:
+def get_backup_type() -> Optional[EnumTypeBackupType]:
     return common.get_uint8(_NAMESPACE, _BACKUP_TYPE)
 
 

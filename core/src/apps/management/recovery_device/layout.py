@@ -21,7 +21,7 @@ if __debug__:
 
 if False:
     from typing import List, Optional
-    from apps.management.recovery_device.backup_types import BackupTypeUnion
+    from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
 async def confirm_abort(ctx: wire.Context, dry_run: bool = False) -> bool:
@@ -54,7 +54,7 @@ async def request_word_count(ctx: wire.Context, dry_run: bool) -> int:
 
 
 async def request_mnemonic(
-    ctx: wire.Context, word_count: int, backup_type: Optional[BackupTypeUnion]
+    ctx: wire.Context, word_count: int, backup_type: Optional[EnumTypeBackupType]
 ) -> Optional[str]:
     await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicInput), ButtonAck)
 
@@ -82,7 +82,7 @@ async def check_mnemonic_validity(
     ctx: wire.Context,
     current_index: int,
     current_word: str,
-    backup_type: BackupTypeUnion,
+    backup_type: EnumTypeBackupType,
 ) -> bool:
     previous_mnemonics = storage.recovery_shares.fetch()
     if not previous_mnemonics:

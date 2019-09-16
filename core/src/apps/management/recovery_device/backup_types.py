@@ -1,12 +1,3 @@
-from trezor.messages import BackupType
-
-if False:
-    from typing import Union
-
-    BackupTypeUnion = Union[
-        BackupType.Bip39, BackupType.Slip39_Basic, BackupType.Slip39_Advanced
-    ]
-
 _BIP39_WORD_COUNTS = (12, 18, 24)
 _SLIP39_WORD_COUNTS = (20, 33)
 

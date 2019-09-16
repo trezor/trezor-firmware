@@ -13,7 +13,7 @@ from apps.management.recovery_device import backup_types, layout
 
 if False:
     from typing import Optional, Tuple
-    from apps.management.recovery_device.backup_types import BackupTypeUnion
+    from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
 async def recovery_homescreen() -> None:
@@ -67,7 +67,7 @@ async def _request_secret(
     ctx: wire.Context,
     word_count: int,
     dry_run: bool,
-    backup_type: Optional[BackupTypeUnion],
+    backup_type: Optional[EnumTypeBackupType],
 ) -> bytes:
     is_slip39 = backup_types.is_slip39_word_count(word_count)
     await _request_share_first_screen(ctx, word_count, is_slip39)
@@ -176,8 +176,8 @@ async def _process_words(
     ctx: wire.Context,
     words: str,
     is_slip39: bool,
-    backup_type: Optional[BackupTypeUnion],
-) -> Tuple[Optional[bytes], BackupTypeUnion]:
+    backup_type: Optional[EnumTypeBackupType],
+) -> Tuple[Optional[bytes], EnumTypeBackupType]:
 
     share = None
     if not is_slip39:  # BIP-39
@@ -201,7 +201,7 @@ async def _process_words(
     return secret, backup_type
 
 
-def _store_backup_type(is_slip39: bool, share: Share = None) -> BackupTypeUnion:
+def _store_backup_type(is_slip39: bool, share: Share = None) -> EnumTypeBackupType:
     if not is_slip39:  # BIP-39
         backup_type = BackupType.Bip39
     else:
