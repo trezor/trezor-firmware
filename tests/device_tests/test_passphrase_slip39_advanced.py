@@ -33,6 +33,11 @@ def test_128bit_passphrase(client):
     client.set_passphrase("TREZOR")
     address = btc.get_address(client, "Bitcoin", [])
     assert address == "1CX5rv2vbSV8YFAZEAdMwRVqbxxswPnSPw"
+    client.state = None
+    client.clear_session()
+    client.set_passphrase("ROZERT")
+    address_compare = btc.get_address(client, "Bitcoin", [])
+    assert address != address_compare
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_33, passphrase=True)
@@ -47,3 +52,8 @@ def test_256bit_passphrase(client):
     client.set_passphrase("TREZOR")
     address = btc.get_address(client, "Bitcoin", [])
     assert address == "18oNx6UczHWASBQXc5XQqdSdAAZyhUwdQU"
+    client.state = None
+    client.clear_session()
+    client.set_passphrase("ROZERT")
+    address_compare = btc.get_address(client, "Bitcoin", [])
+    assert address != address_compare

@@ -74,10 +74,6 @@ async def _request_secret(
 
     secret = None
     while secret is None:
-        # show info dialog for Slip39 Advanced - what shares are to be entered
-        if backup_type == BackupType.Slip39_Advanced:
-            await _show_remaining_groups_and_shares(ctx)
-
         # ask for mnemonic words one by one
         words = await layout.request_mnemonic(ctx, word_count, backup_type)
 
@@ -239,7 +235,9 @@ async def _request_share_next_screen(ctx: wire.Context) -> None:
 
     if group_count > 1:
         content = layout.RecoveryHomescreen("More shares needed")
-        await layout.homescreen_dialog(ctx, content, "Enter share")
+        await layout.homescreen_dialog(
+            ctx, content, "Enter", _show_remaining_groups_and_shares
+        )
     else:
         if remaining[0] == 1:
             text = "1 more share"
@@ -250,6 +248,9 @@ async def _request_share_next_screen(ctx: wire.Context) -> None:
 
 
 async def _show_remaining_groups_and_shares(ctx: wire.Context) -> None:
+    """
+    Show info dialog for Slip39 Advanced - what shares are to be entered.
+    """
     shares_remaining = storage.recovery.fetch_slip39_remaining_shares()
 
     identifiers = []
