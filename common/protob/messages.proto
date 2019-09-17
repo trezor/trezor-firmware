@@ -237,4 +237,10 @@ enum MessageType {
     MessageType_BinanceOrderMsg = 707 [(wire_in) = true];
     MessageType_BinanceCancelMsg = 708 [(wire_in) = true];
     MessageType_BinanceSignedTx = 709 [(wire_out) = true];
+
+    // WebAuthn
+    MessageType_WebAuthnListResidentCredentials = 800 [(wire_in) = true];
+    MessageType_WebAuthnCredentials = 801 [(wire_out) = true];
+    MessageType_WebAuthnAddResidentCredential = 802 [(wire_in) = true];
+    MessageType_WebAuthnRemoveResidentCredential = 803 [(wire_in) = true];
 }

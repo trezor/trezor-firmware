@@ -177,3 +177,7 @@ BinanceTransferMsg = 706
 BinanceOrderMsg = 707
 BinanceCancelMsg = 708
 BinanceSignedTx = 709
+WebAuthnListResidentCredentials = 800
+WebAuthnCredentials = 801
+WebAuthnAddResidentCredential = 802
+WebAuthnRemoveResidentCredential = 803
