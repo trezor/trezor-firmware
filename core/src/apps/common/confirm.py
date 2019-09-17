@@ -71,7 +71,7 @@ async def info_confirm(
         else:
             result = await ctx.wait(dialog)
 
-        if result == INFO:
+        if result is INFO:
             await info_func(ctx)
 
         else:
