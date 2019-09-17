@@ -85,7 +85,7 @@ async def check_mnemonic_validity(
     current_index: int,
     current_word: str,
     backup_type: EnumTypeBackupType,
-    previous_words: str,
+    previous_words: List[str],
 ) -> bool:
     previous_mnemonics = storage.recovery_shares.fetch()
     if not previous_mnemonics:
