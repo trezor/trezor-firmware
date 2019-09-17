@@ -1,7 +1,7 @@
 from trezor import loop, utils, wire
 from trezor.crypto.hashlib import sha256
 from trezor.crypto.slip39 import MAX_SHARE_COUNT, Share
-from trezor.errors import GroupThresholdReachedError, MnemonicError
+from trezor.errors import MnemonicError
 from trezor.messages import BackupType
 from trezor.messages.Success import Success
 
@@ -179,11 +179,7 @@ async def _process_words(
     if not is_slip39:  # BIP-39
         secret = recover.process_bip39(words)
     else:
-        try:
-            secret, share = recover.process_slip39(words)
-        except GroupThresholdReachedError:
-            await layout.show_group_threshold_reached(ctx)
-            return None, backup_type
+        secret, share = recover.process_slip39(words)
 
     if backup_type is None:
         # we have to decide what backup type this is and store it

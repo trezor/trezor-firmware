@@ -70,7 +70,9 @@ async def request_mnemonic(
             word = await ctx.wait(keyboard)
 
         # only if we know the backup type we can perform additional checks
-        if backup_type and not await check_mnemonic_validity(ctx, i, word, backup_type):
+        if backup_type and not await check_mnemonic_validity(
+            ctx, i, word, backup_type, words
+        ):
             return None
 
         words.append(word)
@@ -83,6 +85,7 @@ async def check_mnemonic_validity(
     current_index: int,
     current_word: str,
     backup_type: EnumTypeBackupType,
+    previous_words: List[str],
 ) -> bool:
     previous_mnemonics = storage.recovery_shares.fetch()
     if not previous_mnemonics:
@@ -93,12 +96,12 @@ async def check_mnemonic_validity(
         # check if first 3 words of mnemonic match
         # we can check against the first one, others were checked already
         if current_index < 3:
-            share_list = previous_mnemonics[0].split(" ")
+            share_list = previous_mnemonics[0][0].split(" ")
             if share_list[current_index] != current_word:
                 await show_identifier_mismatch(ctx)
                 return False
         elif current_index == 3:
-            for share in previous_mnemonics:
+            for share in previous_mnemonics[0]:
                 share_list = share.split(" ")
                 # check if the fourth word is different from previous shares
                 if share_list[current_index] == current_word:
@@ -107,10 +110,38 @@ async def check_mnemonic_validity(
     elif backup_type == BackupType.Slip39_Advanced:
         # in case of advanced shamir recovery we only check 2 words
         if current_index < 2:
-            share_list = previous_mnemonics[0].split(" ")
+            share_list = next(s for s in previous_mnemonics if s)[0].split(" ")
             if share_list[current_index] != current_word:
                 await show_identifier_mismatch(ctx)
                 return False
+        # check if we reached threshold in group
+        elif current_index == 2:
+            for i, group in enumerate(previous_mnemonics):
+                if len(group) > 0:
+                    if current_word == group[0].split(" ")[current_index]:
+                        remaining_shares = (
+                            storage.recovery.fetch_slip39_remaining_shares()
+                        )
+                        if remaining_shares[i] == 0:
+                            await show_group_threshold_reached(ctx)
+                            return False
+        # check if share was already added for group
+        elif current_index == 3:
+            # we use the 3rd word from previously entered shares to find the group id
+            group_identifier_word = previous_words[2]
+            group_index = None
+            for i, group in enumerate(previous_mnemonics):
+                if len(group) > 0:
+                    if group_identifier_word == group[0].split(" ")[2]:
+                        group_index = i
+
+            if group_index:
+                group = previous_mnemonics[group_index]
+                for share in group:
+                    if current_word == share.split(" ")[current_index]:
+                        await show_share_already_added(ctx)
+                        return False
+
     return True
 
 

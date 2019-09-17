@@ -1,5 +1,5 @@
 from trezor.crypto import bip39, slip39
-from trezor.errors import GroupThresholdReachedError, MnemonicError
+from trezor.errors import MnemonicError
 
 from apps.common import storage
 
@@ -55,9 +55,6 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
             # we need more shares
             return None, share
 
-    if remaining[share.group_index] == 0:
-        raise GroupThresholdReachedError()
-
     # These should be checked by UI before so it's a Runtime exception otherwise
     if share.identifier != storage.recovery.get_slip39_identifier():
         raise RuntimeError("Slip39: Share identifiers do not match")
@@ -78,7 +75,7 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
         # we need more shares
         return None, share
 
-    if len(remaining) > 1:
+    if share.group_count > 1:
         mnemonics = []
         for i, r in enumerate(remaining):
             # if we have multiple groups pass only the ones with threshold reached
@@ -86,7 +83,8 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
                 group = storage.recovery_shares.fetch_group(i)
                 mnemonics.extend(group)
     else:
-        mnemonics = storage.recovery_shares.fetch()
+        # in case of slip39 basic we only need the first and only group
+        mnemonics = storage.recovery_shares.fetch_group(0)
 
     identifier, iteration_exponent, secret, _ = slip39.combine_mnemonics(mnemonics)
     return secret, share
