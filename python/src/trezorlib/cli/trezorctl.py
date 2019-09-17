@@ -809,7 +809,7 @@ def firmware_update(
         try:
             if f.major_version == 1 and f.firmware_present is not False:
                 # Trezor One does not send ButtonRequest
-                click.echo("Please confirm action on your Trezor device")
+                click.echo("Please confirm the action on your Trezor device")
             return firmware.update(client, data)
         except exceptions.Cancelled:
             click.echo("Update aborted on device.")
