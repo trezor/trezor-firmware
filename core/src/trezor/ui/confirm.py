@@ -1,7 +1,7 @@
 from micropython import const
 
 from trezor import loop, res, ui
-from trezor.ui.button import Button, ButtonCancel, ButtonConfirm
+from trezor.ui.button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
 from trezor.ui.loader import Loader, LoaderDefault
 
 if __debug__:
@@ -14,6 +14,7 @@ if False:
 
 CONFIRMED = object()
 CANCELLED = object()
+INFO = object()
 
 
 class Confirm(ui.Layout):
@@ -151,6 +152,54 @@ class ConfirmPageable(Confirm):
             c = ui.blend(ui.GREY, ui.DARK_GREY, t)
             icon = res.load(ui.ICON_SWIPE_LEFT)
             ui.display.icon(205, 68, icon, c, ui.BG)
+
+
+class InfoConfirm(ui.Layout):
+    DEFAULT_CONFIRM = res.load(ui.ICON_CONFIRM)
+    DEFAULT_CONFIRM_STYLE = ButtonConfirm
+    DEFAULT_CANCEL = res.load(ui.ICON_CANCEL)
+    DEFAULT_CANCEL_STYLE = ButtonCancel
+    DEFAULT_INFO = res.load(ui.ICON_CLICK)  # TODO: this should be (i) icon, not click
+    DEFAULT_INFO_STYLE = ButtonDefault
+
+    def __init__(
+        self,
+        content: ui.Component,
+        confirm: ButtonContent = DEFAULT_CONFIRM,
+        confirm_style: ButtonStyleType = DEFAULT_CONFIRM_STYLE,
+        cancel: ButtonContent = DEFAULT_CANCEL,
+        cancel_style: ButtonStyleType = DEFAULT_CANCEL_STYLE,
+        info: ButtonContent = DEFAULT_INFO,
+        info_style: ButtonStyleType = DEFAULT_INFO_STYLE,
+    ) -> None:
+        self.content = content
+
+        self.confirm = Button(ui.grid(14), confirm, confirm_style)
+        self.confirm.on_click = self.on_confirm  # type: ignore
+
+        self.info = Button(ui.grid(13), info, info_style)
+        self.info.on_click = self.on_info
+
+        self.cancel = Button(ui.grid(12), cancel, cancel_style)
+        self.cancel.on_click = self.on_cancel  # type: ignore
+
+    def dispatch(self, event: int, x: int, y: int) -> None:
+        self.content.dispatch(event, x, y)
+        if self.confirm is not None:
+            self.confirm.dispatch(event, x, y)
+        if self.cancel is not None:
+            self.cancel.dispatch(event, x, y)
+        if self.info is not None:
+            self.info.dispatch(event, x, y)
+
+    def on_confirm(self) -> None:
+        raise ui.Result(CONFIRMED)
+
+    def on_cancel(self) -> None:
+        raise ui.Result(CANCELLED)
+
+    def on_info(self) -> None:
+        raise ui.Result(INFO)
 
 
 class HoldToConfirm(ui.Layout):
