@@ -16,8 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, debuglink, device
-from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
+from trezorlib import btc
 
 from ..common import MNEMONIC_SLIP39_ADVANCED_20, MNEMONIC_SLIP39_ADVANCED_33
 
@@ -34,18 +33,8 @@ def test_128bit_passphrase(client):
     client.set_passphrase("TREZOR")
     address = btc.get_address(client, "Bitcoin", [])
     assert address == "1CX5rv2vbSV8YFAZEAdMwRVqbxxswPnSPw"
-    device.wipe(client)
-    debuglink.load_device_by_mnemonic(
-        client,
-        mnemonic=MNEMONIC_SLIP39_ADVANCED_20,
-        pin="",
-        passphrase_protection=True,
-        label="test",
-        language="english",
-        skip_checksum=True,
-    )
-    if client.features.model == "T":
-        device.apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
+    client.state = None
+    client.clear_session()
     client.set_passphrase("ROZERT")
     address_compare = btc.get_address(client, "Bitcoin", [])
     assert address != address_compare
@@ -63,18 +52,8 @@ def test_256bit_passphrase(client):
     client.set_passphrase("TREZOR")
     address = btc.get_address(client, "Bitcoin", [])
     assert address == "18oNx6UczHWASBQXc5XQqdSdAAZyhUwdQU"
-    device.wipe(client)
-    debuglink.load_device_by_mnemonic(
-        client,
-        mnemonic=MNEMONIC_SLIP39_ADVANCED_33,
-        pin="",
-        passphrase_protection=True,
-        label="test",
-        language="english",
-        skip_checksum=True,
-    )
-    if client.features.model == "T":
-        device.apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
+    client.state = None
+    client.clear_session()
     client.set_passphrase("ROZERT")
     address_compare = btc.get_address(client, "Bitcoin", [])
     assert address != address_compare

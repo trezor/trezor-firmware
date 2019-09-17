@@ -19,7 +19,6 @@ from trezorlib.messages import ButtonRequestType as B
 # fmt: off
 #                1      2     3    4      5      6      7     8      9    10    11    12
 MNEMONIC12 = "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
-MNEMONIC18 = "owner little vague addict embark decide pink prosper true fork panda embody mixture exchange choose canoe electric jewel"
 MNEMONIC24 = "dignity pass list indicate nasty swamp pool script soccer toe leaf photo multiply desk host tomato cradle drill spread actor shine dismiss champion exotic"
 MNEMONIC_ALLALLALL = " ".join(["all"] * 12)
 MNEMONIC_SLIP39_BASIC_20_3of6 = [
