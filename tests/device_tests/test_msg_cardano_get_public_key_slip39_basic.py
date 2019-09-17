@@ -19,7 +19,7 @@ import pytest
 from trezorlib.cardano import get_public_key
 from trezorlib.tools import parse_path
 
-from .common import MNEMONIC_SLIP39_BASIC_20_3of6
+from ..common import MNEMONIC_SLIP39_BASIC_20_3of6
 
 
 @pytest.mark.altcoin

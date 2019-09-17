@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import cardano, messages
 
-from .common import MNEMONIC_SLIP39_BASIC_20_3of6
+from ..common import MNEMONIC_SLIP39_BASIC_20_3of6
 
 PROTOCOL_MAGICS = {"mainnet": 764824073, "testnet": 1097911063}
 

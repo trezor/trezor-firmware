@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 
-from .common import (
+from ..common import (
     MNEMONIC_SLIP39_ADVANCED_20,
     MNEMONIC_SLIP39_ADVANCED_33,
     recovery_enter_shares,

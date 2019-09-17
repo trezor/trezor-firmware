@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import btc
 
-from .common import MNEMONIC_SLIP39_BASIC_20_3of6
+from ..common import MNEMONIC_SLIP39_BASIC_20_3of6
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, passphrase=True)
