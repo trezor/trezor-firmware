@@ -807,7 +807,7 @@ def firmware_update(
         click.echo("Dry run. Not uploading firmware to device.")
     else:
         try:
-            if f.major_version == 1 and f.firmware_present:
+            if f.major_version == 1 and f.firmware_present is not False:
                 # Trezor One does not send ButtonRequest
                 click.echo("Please confirm action on your Trezor device")
             return firmware.update(client, data)
