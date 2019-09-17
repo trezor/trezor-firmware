@@ -18,17 +18,56 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 
-from ..common import MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, recovery_enter_shares
+from ..common import (
+    MNEMONIC_SLIP39_ADVANCED_20,
+    MNEMONIC_SLIP39_ADVANCED_33,
+    recovery_enter_shares,
+)
 
 pytestmark = pytest.mark.skip_t1
 
 EXTRA_GROUP_SHARE = [
-    "gesture negative ceramic leaf device fantasy style ceramic safari keyboard thumb total smug cage plunge aunt favorite lizard intend peanut"
+    "eraser senior decision smug corner ruin rescue cubic angel tackle skin skunk program roster trash rumor slush angel flea amazing"
 ]
+
+# secrets generated using model T
+VECTORS = (
+    (MNEMONIC_SLIP39_ADVANCED_20, "c2d2e26ad06023c60145f150abe2dd2b"),
+    (
+        MNEMONIC_SLIP39_ADVANCED_33,
+        "c41d5cf80fed71a008a3a0ae0458ff0c6d621b1a5522bccbfedbcfad87005c06",
+    ),
+)
+
+
+@pytest.mark.parametrize("shares, secret", VECTORS)
+@pytest.mark.setup_client(uninitialized=True)
+def test_secret(client, shares, secret):
+    debug = client.debug
+
+    def input_flow():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        # Proceed with recovery
+        yield from recovery_enter_shares(debug, shares, groups=True)
+
+    with client:
+        client.set_input_flow(input_flow)
+        ret = device.recover(
+            client, pin_protection=False, passphrase_protection=False, label="label"
+        )
+
+    # Workflow succesfully ended
+    assert ret == messages.Success(message="Device recovered")
+    assert client.features.initialized is True
+    assert client.features.pin_protection is False
+    assert client.features.passphrase_protection is False
+    assert client.features.backup_type is messages.BackupType.Slip39_Advanced
+    assert debug.read_mnemonic_secret().hex() == secret
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_recover_no_pin_no_passphrase(client):
+def test_extra_share_entered(client):
     debug = client.debug
 
     def input_flow():
@@ -36,7 +75,7 @@ def test_recover_no_pin_no_passphrase(client):
         debug.press_yes()
         # Proceed with recovery
         yield from recovery_enter_shares(
-            debug, EXTRA_GROUP_SHARE + MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, groups=True
+            debug, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20, groups=True
         )
 
     with client:
@@ -85,7 +124,7 @@ def test_noabort(client):
         yield  # Homescreen - go back to process
         debug.press_no()
         yield from recovery_enter_shares(
-            debug, EXTRA_GROUP_SHARE + MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, groups=True
+            debug, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20, groups=True
         )
 
     with client:

@@ -28,22 +28,26 @@ from ..common import click_through, read_and_confirm_mnemonic, recovery_enter_sh
 def test_reset_recovery(client):
     mnemonics = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
-    # TODO: more combinations
-    selected_mnemonics = [
-        mnemonics[0],
-        mnemonics[1],
-        mnemonics[2],
-        mnemonics[5],
-        mnemonics[6],
-        mnemonics[7],
-        mnemonics[10],
-        mnemonics[11],
-        mnemonics[12],
+    # we're generating 3of5 groups 3of5 shares each
+    test_combinations = [
+        mnemonics[0:3]  # shares 1-3 from groups 1-3
+        + mnemonics[5:8]
+        + mnemonics[10:13],
+        mnemonics[2:5]  # shares 3-5 from groups 1-3
+        + mnemonics[7:10]
+        + mnemonics[12:15],
+        mnemonics[10:13]  # shares 1-3 from groups 3-5
+        + mnemonics[15:18]
+        + mnemonics[20:23],
+        mnemonics[12:15]  # shares 3-5 from groups 3-5
+        + mnemonics[17:20]
+        + mnemonics[22:25],
     ]
-    device.wipe(client)
-    recover(client, selected_mnemonics)
-    address_after = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
-    assert address_before == address_after
+    for combination in test_combinations:
+        device.wipe(client)
+        recover(client, combination)
+        address_after = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
+        assert address_before == address_after
 
 
 def reset(client, strength=128):
