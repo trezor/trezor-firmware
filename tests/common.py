@@ -90,13 +90,6 @@ def recovery_enter_shares(debug, shares, groups=False):
     debug.press_yes()
     # Enter shares
     for index, share in enumerate(shares):
-        if groups and index >= 1:
-            # confirm remaining shares
-            debug.swipe_down()
-            code = yield
-            assert code == B.Other
-            debug.press_yes()
-
         code = yield
         assert code == B.MnemonicInput
         # Enter mnemonic words
