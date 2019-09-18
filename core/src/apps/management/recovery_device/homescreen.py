@@ -9,7 +9,8 @@ from . import recover
 
 from apps.common import mnemonic, storage
 from apps.common.layout import show_success
-from apps.management.recovery_device import backup_types, layout
+from apps.management import backup_types
+from apps.management.recovery_device import layout
 
 if False:
     from typing import Optional, Tuple
@@ -110,7 +111,7 @@ async def _finish_recovery_dry_run(ctx: wire.Context, secret: bytes) -> Success:
     digest_stored = sha256(stored).digest()
     result = utils.consteq(digest_stored, digest_input)
 
-    is_slip39 = backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced)
+    is_slip39 = backup_types.is_slip39_backup_type(backup_type)
     # Check that the identifier and iteration exponent match as well
     if is_slip39:
         result &= (

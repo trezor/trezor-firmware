@@ -7,7 +7,7 @@ from trezor.ui.text import Text
 
 from apps.common import storage
 from apps.common.confirm import require_confirm
-from apps.management.recovery_device import backup_types
+from apps.management import backup_types
 
 
 async def load_device(ctx, msg):

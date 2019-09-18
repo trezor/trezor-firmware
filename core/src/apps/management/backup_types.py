@@ -1,3 +1,9 @@
+from trezor.messages import BackupType
+
+if False:
+    from trezor.messages.ResetDevice import EnumTypeBackupType
+
+
 _BIP39_WORD_COUNTS = (12, 18, 24)
 _SLIP39_WORD_COUNTS = (20, 33)
 
@@ -13,3 +19,7 @@ def is_slip39_word_count(word_count: int) -> bool:
         return False
     # Unknown word count.
     raise RuntimeError
+
+
+def is_slip39_backup_type(backup_type: EnumTypeBackupType):
+    return backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced)
