@@ -8,7 +8,7 @@ from trezor.crypto.hashlib import sha256
 class TestCredential(unittest.TestCase):
     def test_fido2_credential_decode(self):
         mnemonic_secret = b"all all all all all all all all all all all all"
-        mnemonic.get = lambda: (mnemonic_secret, mnemonic.TYPE_BIP39)
+        mnemonic.get_secret = lambda: mnemonic_secret
         storage.is_initialized = lambda: True
 
         cred_id = (
