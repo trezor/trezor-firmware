@@ -310,6 +310,8 @@ async def slip39_show_checklist(ctx, step: int, backup_type: BackupType) -> None
 
 async def slip39_prompt_threshold(ctx, num_of_shares, group_id=None):
     count = num_of_shares // 2 + 1
+    # min value of share threshold is 2 unless the number of shares is 1
+    # number of shares 1 is possible in advnaced slip39
     min_count = min(2, num_of_shares)
     max_count = num_of_shares
 
