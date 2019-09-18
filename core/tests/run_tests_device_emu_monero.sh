@@ -16,8 +16,9 @@ upy_pid=""
 if [[ $RUN_TEST_EMU > 0 ]]; then
   source ../trezor_cmd.sh
 
-  # remove flash before run to prevent inconsistent states
+  # remove flash and sdcard files before run to prevent inconsistent states
   mv "${TREZOR_PROFILE_DIR}/trezor.flash" "${TREZOR_PROFILE_DIR}/trezor.flash.bkp" 2>/dev/null
+  mv "${TREZOR_PROFILE_DIR}/trezor.sdcard" "${TREZOR_PROFILE_DIR}/trezor.sdcard.bkp" 2>/dev/null
 
   cd "${TREZOR_SRC}"
   echo "Starting emulator: $MICROPYTHON $ARGS ${MAIN}"
