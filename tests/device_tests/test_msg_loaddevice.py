@@ -68,7 +68,7 @@ class TestDeviceLoad:
         assert address == "15fiTDFwZd2kauHYYseifGi9daH2wniDHH"
 
     @pytest.mark.skip_t1
-    def test_load_device_shamir_basic(self, client):
+    def test_load_device_slip39_basic(self, client):
         debuglink.load_device_by_mnemonic(
             client,
             mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6,
@@ -79,7 +79,7 @@ class TestDeviceLoad:
         assert client.features.backup_type == BackupType.Slip39_Basic
 
     @pytest.mark.skip_t1
-    def test_load_device_shamir_advanced(self, client):
+    def test_load_device_slip39_advanced(self, client):
         debuglink.load_device_by_mnemonic(
             client,
             mnemonic=MNEMONIC_SLIP39_ADVANCED_20,

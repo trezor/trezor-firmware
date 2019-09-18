@@ -108,7 +108,7 @@ async def check_slip39_mnemonic_validity(
                     await show_share_already_added(ctx)
                     return False
     elif backup_type == BackupType.Slip39_Advanced:
-        # in case of advanced shamir recovery we only check 2 words
+        # in case of advanced slip39 recovery we only check 2 words
         if current_index < 2:
             share_list = next(s for s in previous_mnemonics if s)[0].split(" ")
             if share_list[current_index] != current_word:
