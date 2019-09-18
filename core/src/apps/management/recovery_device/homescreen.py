@@ -46,25 +46,14 @@ async def _continue_recovery_process(ctx: wire.Context) -> Success:
     # gather the current recovery state from storage
     word_count = storage.recovery.get_word_count()
     dry_run = storage.recovery.is_dry_run()
+    backup_type = storage.recovery.get_backup_type()
 
     if not word_count:  # the first run, prompt word count from the user
         word_count = await _request_and_store_word_count(ctx, dry_run)
 
-    secret = await _request_secret(ctx, word_count, dry_run)
-
-    if dry_run:
-        result = await _finish_recovery_dry_run(ctx, secret)
-    else:
-        result = await _finish_recovery(ctx, secret)
-
-    return result
-
-
-async def _request_secret(ctx: wire.Context, word_count: int, dry_run: bool) -> bytes:
     is_slip39 = backup_types.is_slip39_word_count(word_count)
     await _request_share_first_screen(ctx, word_count, is_slip39)
 
-    backup_type = storage.recovery.get_backup_type()
     secret = None
     while secret is None:
         # ask for mnemonic words one by one
@@ -90,7 +79,12 @@ async def _request_secret(ctx: wire.Context, word_count: int, dry_run: bool) -> 
                 backup_type = None
             continue
 
-    return secret
+    if dry_run:
+        result = await _finish_recovery_dry_run(ctx, secret)
+    else:
+        result = await _finish_recovery(ctx, secret)
+
+    return result
 
 
 async def _finish_recovery_dry_run(ctx: wire.Context, secret: bytes) -> Success:
