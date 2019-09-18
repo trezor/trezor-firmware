@@ -55,6 +55,6 @@ async def load_device(ctx, msg):
         use_passphrase=msg.passphrase_protection, label=msg.label
     )
     if msg.pin:
-        config.change_pin(pin_to_int(""), pin_to_int(msg.pin))
+        config.change_pin(pin_to_int(""), pin_to_int(msg.pin), None, None)
 
     return Success(message="Device loaded")

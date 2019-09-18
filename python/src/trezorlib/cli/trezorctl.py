@@ -123,6 +123,14 @@ CHOICE_RESET_DEVICE_TYPE = ChoiceType(
     }
 )
 
+CHOICE_SD_PROTECT_OPERATION_TYPE = ChoiceType(
+    {
+        "enable": proto.SdProtectOperationType.ENABLE,
+        "disable": proto.SdProtectOperationType.DISABLE,
+        "refresh": proto.SdProtectOperationType.REFRESH,
+    }
+)
+
 
 class UnderscoreAgnosticGroup(click.Group):
     """Command group that normalizes dashes and underscores.
@@ -261,11 +269,33 @@ def get_features(connect):
 #
 
 
-@cli.command(help="Change new PIN or remove existing.")
+@cli.command(help="Set, change or remove PIN.")
 @click.option("-r", "--remove", is_flag=True)
 @click.pass_obj
 def change_pin(connect, remove):
     return device.change_pin(connect(), remove)
+
+
+@cli.command()
+@click.argument("operation", type=CHOICE_SD_PROTECT_OPERATION_TYPE)
+@click.pass_obj
+def sd_protect(connect, operation):
+    """Secure the device with SD card protection.
+
+    When SD card protection is enabled, a randomly generated secret is stored
+    on the SD card. During every PIN checking and unlocking operation this
+    secret is combined with the entered PIN value to decrypt data stored on
+    the device. The SD card will thus be needed every time you unlock the
+    device. The options are:
+
+    \b
+    enable - Generate SD card secret and use it to protect the PIN and storage.
+    disable - Remove SD card secret protection.
+    refresh - Replace the current SD card secret with a new one.
+    """
+    if connect().features.model == "1":
+        raise click.BadUsage("Trezor One does not support SD card protection.")
+    return device.sd_protect(connect(), operation)
 
 
 @cli.command(help="Enable passphrase.")

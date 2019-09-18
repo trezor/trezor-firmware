@@ -27,7 +27,7 @@ if [[ $RUN_TEST_EMU > 0 ]]; then
     $MICROPYTHON $ARGS "${MAIN}" &> "${TREZOR_LOGFILE}" &
   upy_pid=$!
   cd -
-  sleep 1
+  sleep 30
 fi
 
 DOCKER_ID=""

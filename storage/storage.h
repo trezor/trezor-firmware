@@ -24,6 +24,9 @@
 #include <stdint.h>
 #include "secbool.h"
 
+// The length of the external salt in bytes.
+#define EXTERNAL_SALT_SIZE 32
+
 typedef secbool (*PIN_UI_WAIT_CALLBACK)(uint32_t wait, uint32_t progress,
                                         const char *message);
 
@@ -32,11 +35,13 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
 void storage_wipe(void);
 secbool storage_is_unlocked(void);
 void storage_lock(void);
-secbool storage_unlock(const uint32_t pin);
+secbool storage_unlock(const uint32_t pin, const uint8_t *ext_salt);
 secbool storage_has_pin(void);
 secbool storage_pin_fails_increase(void);
 uint32_t storage_get_pin_rem(void);
-secbool storage_change_pin(const uint32_t oldpin, const uint32_t newpin);
+secbool storage_change_pin(const uint32_t oldpin, const uint32_t newpin,
+                           const uint8_t *old_ext_salt,
+                           const uint8_t *new_ext_salt);
 secbool storage_get(const uint16_t key, void *val, const uint16_t max_len,
                     uint16_t *len);
 secbool storage_set(const uint16_t key, const void *val, uint16_t len);

@@ -91,6 +91,12 @@ def change_pin(client, remove=False):
 
 
 @expect(proto.Success, field="message")
+def sd_protect(client, operation):
+    ret = client.call(proto.SdProtect(operation=operation))
+    return ret
+
+
+@expect(proto.Success, field="message")
 def set_u2f_counter(client, u2f_counter):
     ret = client.call(proto.SetU2FCounter(u2f_counter=u2f_counter))
     return ret

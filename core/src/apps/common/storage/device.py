@@ -3,6 +3,7 @@ from ubinascii import hexlify
 
 from trezor.crypto import random
 
+from apps.common.sd_salt import SD_SALT_AUTH_KEY_LEN_BYTES
 from apps.common.storage import common
 
 if False:
@@ -31,6 +32,7 @@ _MNEMONIC_TYPE             = const(0x0E)  # int
 _ROTATION                  = const(0x0F)  # int
 _SLIP39_IDENTIFIER         = const(0x10)  # bool
 _SLIP39_ITERATION_EXPONENT = const(0x11)  # int
+_SD_SALT_AUTH_KEY          = const(0x12)  # bytes
 # fmt: on
 
 HOMESCREEN_MAXSIZE = 16384
@@ -234,3 +236,25 @@ def get_slip39_iteration_exponent() -> Optional[int]:
     The device's actual SLIP-39 iteration exponent used in passphrase derivation.
     """
     return common.get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
+
+
+def get_sd_salt_auth_key() -> Optional[bytes]:
+    """
+    The key used to check the authenticity of the SD card salt.
+    """
+    auth_key = common.get(_NAMESPACE, _SD_SALT_AUTH_KEY, public=True)
+    if auth_key is not None and len(auth_key) != SD_SALT_AUTH_KEY_LEN_BYTES:
+        raise ValueError
+    return auth_key
+
+
+def set_sd_salt_auth_key(auth_key: Optional[bytes]) -> None:
+    """
+    The key used to check the authenticity of the SD card salt.
+    """
+    if auth_key is not None:
+        if len(auth_key) != SD_SALT_AUTH_KEY_LEN_BYTES:
+            raise ValueError
+        return common.set(_NAMESPACE, _SD_SALT_AUTH_KEY, auth_key, public=True)
+    else:
+        return common.delete(_NAMESPACE, _SD_SALT_AUTH_KEY, public=True)
