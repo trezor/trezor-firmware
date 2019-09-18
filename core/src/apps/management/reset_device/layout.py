@@ -634,6 +634,7 @@ class MnemonicWordSelect(ui.Layout):
 
         return fn
 
+
 async def show_reset_device_warning(ctx, backup_type: BackupType = BackupType.Bip39):
     text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
     if backup_type == BackupType.Slip39_Basic:

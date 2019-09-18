@@ -1,14 +1,12 @@
-from trezor import config, ui, wire
+from trezor import config, wire
 from trezor.crypto import bip39, hashlib, random, slip39
-from trezor.messages import BackupType, ButtonRequestType
+from trezor.messages import BackupType
 from trezor.messages.EntropyAck import EntropyAck
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
-from trezor.ui.text import Text
 
 from apps.common import storage
-from apps.common.confirm import require_confirm
 from apps.management.change_pin import request_pin_confirm
 from apps.management.reset_device import layout
 
