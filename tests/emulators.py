@@ -99,7 +99,7 @@ class EmulatorWrapper:
             args, cwd=self.workdir.name, env=env, stdout=open(os.devnull, "w")
         )
         # wait until emulator is listening
-        for _ in range(100):
+        for _ in range(300):
             try:
                 time.sleep(0.1)
                 transport = get_transport("udp:127.0.0.1:21324")
@@ -110,7 +110,7 @@ class EmulatorWrapper:
                 self._cleanup()
                 raise RuntimeError("Emulator proces died")
         else:
-            # could not connect after 100 attempts * 0.1s = 10s of waiting
+            # could not connect after 300 attempts * 0.1s = 30s of waiting
             self._cleanup()
             raise RuntimeError("Can't connect to emulator")
 
