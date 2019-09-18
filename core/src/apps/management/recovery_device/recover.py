@@ -17,7 +17,7 @@ def process_bip39(words: str) -> bytes:
     in the storage, which is the mnemonic itself for BIP-39.
     """
     if not bip39.check(words):
-        raise MnemonicError()
+        raise MnemonicError
     return words.encode()
 
 
