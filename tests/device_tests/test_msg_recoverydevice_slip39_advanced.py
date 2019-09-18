@@ -160,10 +160,6 @@ def test_same_share(client):
         debug.press_yes()
         yield  # Homescreen - next share
         debug.press_yes()
-        code = yield  # Confirm remaining shares
-        debug.swipe_down()
-        assert code == messages.ButtonRequestType.Other
-        debug.press_yes()
         yield  # Enter next share
         for word in second_share:
             debug.input(word)
@@ -203,10 +199,6 @@ def test_group_threshold_reached(client):
         yield  # Continue to next share
         debug.press_yes()
         yield  # Homescreen - next share
-        debug.press_yes()
-        code = yield  # Confirm remaining shares
-        debug.swipe_down()
-        assert code == messages.ButtonRequestType.Other
         debug.press_yes()
         yield  # Enter next share
         for word in second_share:
