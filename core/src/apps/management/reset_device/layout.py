@@ -168,6 +168,7 @@ async def _confirm_word(
     ctx, share_index, numbered_share_words, count, group_index=None
 ):
 
+    # TODO: duplicated words in the choice list
     # shuffle the numbered seed half, slice off the choices we need
     random.shuffle(numbered_share_words)
     numbered_choices = numbered_share_words[: MnemonicWordSelect.NUM_OF_CHOICES]
