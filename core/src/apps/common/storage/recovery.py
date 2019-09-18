@@ -100,7 +100,7 @@ def get_slip39_group_threshold() -> Optional[int]:
     return common.get_uint8(_NAMESPACE, _SLIP39_GROUP_THRESHOLD)
 
 
-def set_slip39_remaining_shares(shares_remaining: int, group_index: int = 0) -> None:
+def set_slip39_remaining_shares(shares_remaining: int, group_index: int) -> None:
     """
     We store the remaining shares as a bytearray of length group_count.
     Each byte represents share remaining for group of that group_index.
@@ -118,7 +118,7 @@ def set_slip39_remaining_shares(shares_remaining: int, group_index: int = 0) -> 
     common.set(_NAMESPACE, _REMAINING, remaining)
 
 
-def get_slip39_remaining_shares(group_index: int = 0) -> Optional[int]:
+def get_slip39_remaining_shares(group_index: int) -> Optional[int]:
     remaining = common.get(_NAMESPACE, _REMAINING)
     if remaining is None or remaining[group_index] == slip39.MAX_SHARE_COUNT:
         return None
