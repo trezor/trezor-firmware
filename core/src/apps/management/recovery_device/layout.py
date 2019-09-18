@@ -70,7 +70,7 @@ async def request_mnemonic(
             word = await ctx.wait(keyboard)
 
         # only if we know the backup type we can perform additional checks
-        if backup_type and not await check_slip39_mnemonic_validity(
+        if backup_type is not None and not await check_slip39_mnemonic_validity(
             ctx, i, word, backup_type, words
         ):
             return None
