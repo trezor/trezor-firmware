@@ -115,8 +115,6 @@ def reset(client, strength=128):
             backup_type=BackupType.Slip39_Basic,
         )
 
-    client.set_input_flow(None)
-
     # Check if device is properly initialized
     assert client.features.initialized is True
     assert client.features.needs_backup is False
@@ -138,8 +136,6 @@ def recover(client, shares):
     with client:
         client.set_input_flow(input_flow)
         ret = device.recover(client, pin_protection=False, label="label")
-
-    client.set_input_flow(None)
 
     # Workflow successfully ended
     assert ret == messages.Success(message="Device recovered")

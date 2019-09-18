@@ -194,24 +194,26 @@ class TestMsgTezosSignTx:
         debug.press_yes()
 
     def test_tezos_sign_tx_proposal(self, client):
-        client.set_input_flow(self.input_flow(client.debug, num_pages=1))
-        resp = tezos.sign_tx(
-            client,
-            TEZOS_PATH_10,
-            dict_to_proto(
-                messages.TezosSignTx,
-                {
-                    "branch": "dee04042c0832d68a43699b2001c0a38065436eb05e578071a763e1972d0bc81",
-                    "proposal": {
-                        "source": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
-                        "period": 17,
-                        "proposals": [
-                            "dfa974df171c2dad9a9b8f25d99af41fd9702ce5d04521d2f9943c84d88aa572"
-                        ],
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, num_pages=1))
+            resp = tezos.sign_tx(
+                client,
+                TEZOS_PATH_10,
+                dict_to_proto(
+                    messages.TezosSignTx,
+                    {
+                        "branch": "dee04042c0832d68a43699b2001c0a38065436eb05e578071a763e1972d0bc81",
+                        "proposal": {
+                            "source": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
+                            "period": 17,
+                            "proposals": [
+                                "dfa974df171c2dad9a9b8f25d99af41fd9702ce5d04521d2f9943c84d88aa572"
+                            ],
+                        },
                     },
-                },
-            ),
-        )
+                ),
+            )
+
         assert (
             resp.signature
             == "edsigtfY16R32k2WVMYfFr7ymnro4ib5zMckk28vsuViYNN77DJAvCJLRNArd9L531pUCxT4YdcvCvBym5dhcZ1rknEVm6yZ8bB"
@@ -225,25 +227,27 @@ class TestMsgTezosSignTx:
         )
 
     def test_tezos_sign_tx_multiple_proposals(self, client):
-        client.set_input_flow(self.input_flow(client.debug, num_pages=2))
-        resp = tezos.sign_tx(
-            client,
-            TEZOS_PATH_10,
-            dict_to_proto(
-                messages.TezosSignTx,
-                {
-                    "branch": "7e0be36a90c663c73c60da3889ffefff1383fb65cc29f0639f173d8f95a52df7",
-                    "proposal": {
-                        "source": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
-                        "period": 17,
-                        "proposals": [
-                            "2a6ff28ab4d0ccb18f7129aaaf9a4b8027d794f2562849665fdb6999db2a4e57",
-                            "47cd60c09ab8437cc9fe19add494dce1b9844100f660f02ce77510a0c66d2762",
-                        ],
+        with client:
+            client.set_input_flow(self.input_flow(client.debug, num_pages=2))
+            resp = tezos.sign_tx(
+                client,
+                TEZOS_PATH_10,
+                dict_to_proto(
+                    messages.TezosSignTx,
+                    {
+                        "branch": "7e0be36a90c663c73c60da3889ffefff1383fb65cc29f0639f173d8f95a52df7",
+                        "proposal": {
+                            "source": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
+                            "period": 17,
+                            "proposals": [
+                                "2a6ff28ab4d0ccb18f7129aaaf9a4b8027d794f2562849665fdb6999db2a4e57",
+                                "47cd60c09ab8437cc9fe19add494dce1b9844100f660f02ce77510a0c66d2762",
+                            ],
+                        },
                     },
-                },
-            ),
-        )
+                ),
+            )
+
         assert (
             resp.signature
             == "edsigu6GAjhiWAQ64ctWTGEDYAZ16tYzLgzWzqc4CUyixK4FGRE8YUBVzFaVJ2fUCexZjZLMLdiNZGcUdzeL1bQhZ2h5oLrh7pA"

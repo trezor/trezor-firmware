@@ -237,6 +237,9 @@ class TrezorClientDebugLink(TrezorClient):
             self.ui.input_flow = None
             return
 
+        if not self.in_with_statement:
+            raise RuntimeError("Must be called inside 'with' statement")
+
         if callable(input_flow):
             input_flow = input_flow()
         if not hasattr(input_flow, "send"):
@@ -251,6 +254,9 @@ class TrezorClientDebugLink(TrezorClient):
 
     def __exit__(self, _type, value, traceback):
         self.in_with_statement -= 1
+
+        # Clear input flow.
+        self.set_input_flow(None)
 
         if _type is not None:
             # Another exception raised
@@ -268,6 +274,7 @@ class TrezorClientDebugLink(TrezorClient):
         # Cleanup
         self.expected_responses = None
         self.current_response = None
+
         return False
 
     def set_expected_responses(self, expected):
