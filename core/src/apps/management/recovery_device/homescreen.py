@@ -44,12 +44,9 @@ async def recovery_process(ctx: wire.Context) -> Success:
 
 async def _continue_recovery_process(ctx: wire.Context) -> Success:
     # gather the current recovery state from storage
-    in_progress = storage.recovery.is_in_progress()
     word_count = storage.recovery.get_word_count()
     dry_run = storage.recovery.is_dry_run()
 
-    if not in_progress:  # invalid and inconsistent state
-        raise RuntimeError
     if not word_count:  # the first run, prompt word count from the user
         word_count = await _request_and_store_word_count(ctx, dry_run)
 
