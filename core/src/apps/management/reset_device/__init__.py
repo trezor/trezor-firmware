@@ -60,12 +60,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
 
     # generate and display backup information for the master secret
     if perform_backup:
-        if msg.backup_type == BackupType.Slip39_Basic:
-            await backup_slip39_basic(ctx, secret)
-        elif msg.backup_type == BackupType.Slip39_Advanced:
-            await backup_slip39_advanced(ctx, secret)
-        else:
-            await backup_bip39(ctx, secret)
+        await backup_seed(ctx, msg.backup_type, secret)
 
     # write PIN into storage
     if not config.change_pin(pin_to_int(""), pin_to_int(newpin)):
@@ -195,3 +190,14 @@ def _compute_secret_from_entropy(
     strength = strength_in_bytes // 8
     secret = entropy[:strength]
     return secret
+
+
+async def backup_seed(
+    ctx: wire.Context, backup_type: BackupType, mnemonic_secret: bytes
+):
+    if backup_type == BackupType.Slip39_Basic:
+        await backup_slip39_basic(ctx, mnemonic_secret)
+    elif backup_type == BackupType.Slip39_Advanced:
+        await backup_slip39_advanced(ctx, mnemonic_secret)
+    else:
+        await backup_bip39(ctx, mnemonic_secret)
