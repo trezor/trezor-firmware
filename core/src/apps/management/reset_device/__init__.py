@@ -5,7 +5,6 @@ from trezor.messages.EntropyAck import EntropyAck
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
-from trezor.ui.loader import LoadingAnimation
 from trezor.ui.text import Text
 
 from apps.common import storage
@@ -27,7 +26,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     _validate_reset_device(msg)
 
     # make sure user knows they're setting up a new wallet
-    await _show_reset_device_warning(ctx, msg.backup_type)
+    await layout.show_reset_device_warning(ctx, msg.backup_type)
 
     # request new PIN
     if msg.pin_protection:
@@ -196,27 +195,3 @@ def _compute_secret_from_entropy(
     strength = strength_in_bytes // 8
     secret = entropy[:strength]
     return secret
-
-
-async def _show_reset_device_warning(ctx, backup_type: BackupType = BackupType.Bip39):
-    text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
-    if backup_type == BackupType.Slip39_Basic:
-        text.bold("Create a new wallet")
-        text.br()
-        text.bold("with Shamir Backup?")
-    elif backup_type == BackupType.Slip39_Advanced:
-        text.bold("Create a new wallet")
-        text.br()
-        text.bold("with Super Shamir?")
-    else:
-        text.bold("Do you want to create")
-        text.br()
-        text.bold("a new wallet?")
-    text.br()
-    text.br_half()
-    text.normal("By continuing you agree")
-    text.br()
-    text.normal("to")
-    text.bold("https://trezor.io/tos")
-    await require_confirm(ctx, text, ButtonRequestType.ResetDevice, major_confirm=True)
-    await LoadingAnimation()

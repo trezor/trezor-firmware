@@ -6,6 +6,7 @@ from trezor.messages import BackupType, ButtonRequestType
 from trezor.ui.button import Button, ButtonDefault
 from trezor.ui.checklist import Checklist
 from trezor.ui.info import InfoConfirm
+from trezor.ui.loader import LoadingAnimation
 from trezor.ui.num_input import NumInput
 from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
@@ -631,3 +632,26 @@ class MnemonicWordSelect(ui.Layout):
             raise ui.Result(word)
 
         return fn
+
+async def show_reset_device_warning(ctx, backup_type: BackupType = BackupType.Bip39):
+    text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
+    if backup_type == BackupType.Slip39_Basic:
+        text.bold("Create a new wallet")
+        text.br()
+        text.bold("with Shamir Backup?")
+    elif backup_type == BackupType.Slip39_Advanced:
+        text.bold("Create a new wallet")
+        text.br()
+        text.bold("with Super Shamir?")
+    else:
+        text.bold("Do you want to create")
+        text.br()
+        text.bold("a new wallet?")
+    text.br()
+    text.br_half()
+    text.normal("By continuing you agree")
+    text.br()
+    text.normal("to")
+    text.bold("https://trezor.io/tos")
+    await require_confirm(ctx, text, ButtonRequestType.ResetDevice, major_confirm=True)
+    await LoadingAnimation()
