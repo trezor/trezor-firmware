@@ -42,5 +42,5 @@ def fetch_group(group_index: int) -> List[str]:
 
 
 def delete() -> None:
-    for index in range(0, slip39.MAX_SHARE_COUNT):
+    for index in range(slip39.MAX_SHARE_COUNT * slip39.MAX_GROUP_COUNT):
         common.delete(common.APP_RECOVERY_SHARES, index)

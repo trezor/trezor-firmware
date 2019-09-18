@@ -132,6 +132,8 @@ def button_sequence_to_word(prefix: str) -> str:
 
 MAX_SHARE_COUNT = const(16)
 """The maximum number of shares that can be created."""
+MAX_GROUP_COUNT = const(16)
+"""The maximum number of groups that can be created."""
 
 DEFAULT_ITERATION_EXPONENT = const(1)
 
