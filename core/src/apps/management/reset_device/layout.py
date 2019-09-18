@@ -7,7 +7,7 @@ from trezor.ui.button import Button, ButtonDefault
 from trezor.ui.checklist import Checklist
 from trezor.ui.info import InfoConfirm
 from trezor.ui.scroll import Paginated
-from trezor.ui.slip39 import NumInput
+from trezor.ui.num_input import NumInput
 from trezor.ui.text import Text
 
 from apps.common.confirm import confirm, hold_to_confirm, require_confirm
