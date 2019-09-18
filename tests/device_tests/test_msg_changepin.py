@@ -18,15 +18,12 @@ import pytest
 
 from trezorlib import messages as proto
 
-from ..common import MNEMONIC12
-
 PIN4 = "1234"
 PIN6 = "789456"
 
 
 @pytest.mark.skip_t2
 class TestMsgChangepin:
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_set_pin(self, client):
         features = client.call_raw(proto.Initialize())
         assert features.pin_protection is False
@@ -63,7 +60,7 @@ class TestMsgChangepin:
         # Check that the PIN is correct
         self.check_pin(client, PIN6)
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12, pin=True, passphrase=True)
+    @pytest.mark.setup_client(pin=True)
     def test_change_pin(self, client):
         features = client.call_raw(proto.Initialize())
         assert features.pin_protection is True
@@ -109,7 +106,7 @@ class TestMsgChangepin:
         # Check that the PIN is correct
         self.check_pin(client, PIN6)
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12, pin=True, passphrase=True)
+    @pytest.mark.setup_client(pin=True)
     def test_remove_pin(self, client):
         features = client.call_raw(proto.Initialize())
         assert features.pin_protection is True
@@ -141,7 +138,6 @@ class TestMsgChangepin:
         ret = client.call_raw(proto.Ping(pin_protection=True))
         assert isinstance(ret, proto.Success)
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_set_failed(self, client):
         features = client.call_raw(proto.Initialize())
         assert features.pin_protection is False
@@ -177,7 +173,7 @@ class TestMsgChangepin:
         ret = client.call_raw(proto.Ping(pin_protection=True))
         assert isinstance(ret, proto.Success)
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12, pin=True, passphrase=True)
+    @pytest.mark.setup_client(pin=True)
     def test_set_failed_2(self, client):
         features = client.call_raw(proto.Initialize())
         assert features.pin_protection is True
