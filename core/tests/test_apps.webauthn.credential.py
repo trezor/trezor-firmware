@@ -49,7 +49,7 @@ class TestCredential(unittest.TestCase):
         self.assertEqual(cred.rp_id_hash, rp_id_hash)
         self.assertEqual(hexlify(cred.user_id), user_id)
         self.assertEqual(cred.user_name, user_name)
-        self.assertEqual(cred._creation_time, 2)
+        self.assertEqual(cred.creation_time, creation_time)
         self.assertTrue(cred.hmac_secret)
         self.assertIsNone(cred.rp_name)
         self.assertIsNone(cred.user_display_name)

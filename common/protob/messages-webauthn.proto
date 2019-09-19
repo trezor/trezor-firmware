@@ -52,5 +52,6 @@ message WebAuthnCredentials {
         optional string user_display_name = 7;
         optional uint32 creation_time = 8;
         optional bool hmac_secret = 9;
+        optional bool use_sign_count = 10;
     }
 }

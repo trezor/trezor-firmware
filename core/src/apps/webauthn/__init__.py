@@ -1152,18 +1152,20 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     # sign the authentication challenge and return
     if __debug__:
         log.info(__name__, "signing authentication")
-    buf = msg_authenticate_sign(auth.chal, auth.appId, cred.private_key())
+    buf = msg_authenticate_sign(auth.chal, auth.appId, cred)
 
     dialog_mgr.reset()
 
     return Cmd(req.cid, _CMD_MSG, buf)
 
 
-def msg_authenticate_sign(challenge: bytes, rp_id_hash: bytes, privkey: bytes) -> bytes:
+def msg_authenticate_sign(
+    challenge: bytes, rp_id_hash: bytes, cred: Credential
+) -> bytes:
     flags = bytes([_AUTH_FLAG_UP])
 
     # get next counter
-    ctr = storage.device.next_u2f_counter()
+    ctr = cred.next_signature_counter()
     ctrbuf = ustruct.pack(">L", ctr)
 
     # hash input data together with counter
@@ -1174,7 +1176,7 @@ def msg_authenticate_sign(challenge: bytes, rp_id_hash: bytes, privkey: bytes) -
     dig.update(challenge)  # uint8_t chal[32];
 
     # sign the digest and convert to der
-    sig = nist256p1.sign(privkey, dig.digest(), False)
+    sig = nist256p1.sign(cred.private_key(), dig.digest(), False)
     sig = der.encode_seq((sig[1:33], sig[33:]))
 
     # pack to a response
@@ -1206,6 +1208,8 @@ def cbor_error(cid: int, code: int) -> Cmd:
 
 
 def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
+    from apps.webauthn.knownapps import knownapps
+
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
@@ -1259,6 +1263,8 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         client_data_hash = param[_MAKECRED_CMD_CLIENT_DATA_HASH]
     except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
+
+    cred.use_sign_count = knownapps.get(rp_id_hash, {}).get("use_sign_count", True)
 
     # Check data types.
     if (
@@ -1333,10 +1339,12 @@ def cbor_make_credential_sign(
         extensions = cbor.encode({"hmac-secret": True})
         flags |= _AUTH_FLAG_ED
 
+    ctr = cred.next_signature_counter()
+
     authenticator_data = (
         cred.rp_id_hash
         + bytes([flags])
-        + b"\x00\x00\x00\x00"
+        + ctr.to_bytes(4, "big")
         + att_cred_data
         + extensions
     )
@@ -1541,7 +1549,8 @@ def cbor_get_assertion_sign(
         flags |= _AUTH_FLAG_ED
         encoded_extensions = cbor.encode(extensions)
 
-    ctr = storage.device.next_u2f_counter() or 0
+    ctr = cred.next_signature_counter()
+
     authenticator_data = (
         rp_id_hash + bytes([flags]) + ctr.to_bytes(4, "big") + encoded_extensions
     )

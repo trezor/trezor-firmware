@@ -1976,20 +1976,22 @@ def webauthn_list_credentials(connect):
         click.echo("")
         click.echo("WebAuthn credential at index {}:".format(cred.index))
         if cred.rp_id is not None:
-            click.echo("  Relying party ID:     {}".format(cred.rp_id))
+            click.echo("  Relying party ID:       {}".format(cred.rp_id))
         if cred.rp_name is not None:
-            click.echo("  Relying party name:   {}".format(cred.rp_name))
+            click.echo("  Relying party name:     {}".format(cred.rp_name))
         if cred.user_id is not None:
-            click.echo("  User ID:              {}".format(cred.user_id.hex()))
+            click.echo("  User ID:                {}".format(cred.user_id.hex()))
         if cred.user_name is not None:
-            click.echo("  User name:            {}".format(cred.user_name))
+            click.echo("  User name:              {}".format(cred.user_name))
         if cred.user_display_name is not None:
-            click.echo("  User display name:    {}".format(cred.user_display_name))
+            click.echo("  User display name:      {}".format(cred.user_display_name))
         if cred.creation_time is not None:
-            click.echo("  Creation time:        {}".format(cred.creation_time))
+            click.echo("  Creation time:          {}".format(cred.creation_time))
         if cred.hmac_secret is not None:
-            click.echo("  hmac-secret enabled:  {}".format(cred.hmac_secret))
-        click.echo("  Credential ID:        {}".format(cred.id.hex()))
+            click.echo("  hmac-secret enabled:    {}".format(cred.hmac_secret))
+        if cred.use_sign_count is not None:
+            click.echo("  Use signature counter:  {}".format(cred.use_sign_count))
+        click.echo("  Credential ID:          {}".format(cred.id.hex()))
 
     if not creds:
         click.echo("There are no resident credentials stored on the device.")

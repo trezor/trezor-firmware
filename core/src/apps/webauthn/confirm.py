@@ -20,10 +20,10 @@ class ConfirmInfo:
 
     def load_icon(self, rp_id_hash: bytes) -> None:
         from trezor import res
-        from apps.webauthn import knownapps
+        from apps.webauthn.knownapps import knownapps
 
         try:
-            namepart = knownapps.knownapps[rp_id_hash].lower().replace(" ", "_")
+            namepart = knownapps[rp_id_hash]["label"].lower().replace(" ", "_")
             icon = res.load("apps/webauthn/res/icon_%s.toif" % namepart)
         except Exception as e:
             icon = res.load("apps/webauthn/res/icon_webauthn.toif")

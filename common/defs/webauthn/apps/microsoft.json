@@ -1,4 +1,5 @@
 {
   "label": "Microsoft",
-  "webauthn": "login.microsoft.com"
+  "webauthn": "login.microsoft.com",
+  "use_sign_count": false
 }
