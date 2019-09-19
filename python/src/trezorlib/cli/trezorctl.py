@@ -563,10 +563,16 @@ def reset_device(
         strength = int(strength)
 
     client = connect()
-    if client.features.model == "1" and backup_type != proto.BackupType.Bip39:
+    if (
+        backup_type == proto.BackupType.Slip39_Basic
+        and proto.Capability.Shamir not in client.features.capabilities
+    ) or (
+        backup_type == proto.BackupType.Slip39_Advanced
+        and proto.Capability.ShamirGroups not in client.features.capabilities
+    ):
         click.echo(
-            "WARNING: Trezor One currently does not support Shamir backup.\n"
-            "Traditional single-seed backup will be generated instead."
+            "WARNING: Your Trezor device does not indicate support for the requested\n"
+            "backup type. Traditional single-seed backup may be generated instead."
         )
 
     return device.reset(
