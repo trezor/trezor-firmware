@@ -37,7 +37,7 @@ static void send_msg_failure(usbd_device *dev) {
 static void send_msg_features(usbd_device *dev) {
   uint8_t response[64];
   memzero(response, sizeof(response));
-  // response: Features message (id 17), payload len 25
+  // response: Features message (id 17), payload len 26
   //           - vendor = "trezor.io"
   //           - major_version = VERSION_MAJOR
   //           - minor_version = VERSION_MINOR
@@ -51,7 +51,7 @@ static void send_msg_features(usbd_device *dev) {
          // msg_id
          "\x00\x11"
          // msg_size
-         "\x00\x00\x00\x16"
+         "\x00\x00\x00\x1a"
          // data
          "\x0a"
          "\x09"
@@ -63,9 +63,9 @@ static void send_msg_features(usbd_device *dev) {
          "\x90\x01"
          "\x00"
          "\xaa"
-         "\x01"
+         "\x01\x01"
          "1",
-         34);
+         35);
   response[30] = firmware_present_new() ? 0x01 : 0x00;
   while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {
   }

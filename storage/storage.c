@@ -331,15 +331,26 @@ static secbool auth_get(uint16_t key, const void **val, uint16_t *len) {
 }
 
 static void derive_kek(uint32_t pin, const uint8_t *random_salt,
+                       const uint8_t *ext_salt,
                        uint8_t kek[SHA256_DIGEST_LENGTH],
                        uint8_t keiv[SHA256_DIGEST_LENGTH]) {
 #if BYTE_ORDER == BIG_ENDIAN
   REVERSE32(pin, pin);
 #endif
 
-  uint8_t salt[HARDWARE_SALT_SIZE + RANDOM_SALT_SIZE];
-  memcpy(salt, hardware_salt, HARDWARE_SALT_SIZE);
-  memcpy(salt + HARDWARE_SALT_SIZE, random_salt, RANDOM_SALT_SIZE);
+  uint8_t salt[HARDWARE_SALT_SIZE + RANDOM_SALT_SIZE + EXTERNAL_SALT_SIZE];
+  size_t salt_len = 0;
+
+  memcpy(salt + salt_len, hardware_salt, HARDWARE_SALT_SIZE);
+  salt_len += HARDWARE_SALT_SIZE;
+
+  memcpy(salt + salt_len, random_salt, RANDOM_SALT_SIZE);
+  salt_len += RANDOM_SALT_SIZE;
+
+  if (ext_salt != NULL) {
+    memcpy(salt + salt_len, ext_salt, EXTERNAL_SALT_SIZE);
+    salt_len += EXTERNAL_SALT_SIZE;
+  }
 
   uint32_t progress = (ui_total - ui_rem) * 1000 / ui_total;
   if (ui_callback && ui_message) {
@@ -348,7 +359,7 @@ static void derive_kek(uint32_t pin, const uint8_t *random_salt,
 
   PBKDF2_HMAC_SHA256_CTX ctx;
   pbkdf2_hmac_sha256_Init(&ctx, (const uint8_t *)&pin, sizeof(pin), salt,
-                          sizeof(salt), 1);
+                          salt_len, 1);
   for (int i = 1; i <= 5; i++) {
     pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
     if (ui_callback && ui_message) {
@@ -360,7 +371,7 @@ static void derive_kek(uint32_t pin, const uint8_t *random_salt,
   pbkdf2_hmac_sha256_Final(&ctx, kek);
 
   pbkdf2_hmac_sha256_Init(&ctx, (const uint8_t *)&pin, sizeof(pin), salt,
-                          sizeof(salt), 2);
+                          salt_len, 2);
   for (int i = 6; i <= 10; i++) {
     pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
     if (ui_callback && ui_message) {
@@ -377,17 +388,17 @@ static void derive_kek(uint32_t pin, const uint8_t *random_salt,
   memzero(&salt, sizeof(salt));
 }
 
-static secbool set_pin(uint32_t pin) {
+static secbool set_pin(uint32_t pin, const uint8_t *ext_salt) {
   uint8_t buffer[RANDOM_SALT_SIZE + KEYS_SIZE + POLY1305_TAG_SIZE];
-  uint8_t *salt = buffer;
+  uint8_t *rand_salt = buffer;
   uint8_t *ekeys = buffer + RANDOM_SALT_SIZE;
   uint8_t *pvc = buffer + RANDOM_SALT_SIZE + KEYS_SIZE;
 
   uint8_t kek[SHA256_DIGEST_LENGTH];
   uint8_t keiv[SHA256_DIGEST_LENGTH];
   chacha20poly1305_ctx ctx;
-  random_buffer(salt, RANDOM_SALT_SIZE);
-  derive_kek(pin, salt, kek, keiv);
+  random_buffer(rand_salt, RANDOM_SALT_SIZE);
+  derive_kek(pin, rand_salt, ext_salt, kek, keiv);
   rfc7539_init(&ctx, kek, keiv);
   memzero(kek, sizeof(kek));
   memzero(keiv, sizeof(keiv));
@@ -515,7 +526,7 @@ static void init_wiped_storage(void) {
   ui_total = DERIVE_SECS;
   ui_rem = ui_total;
   ui_message = PROCESSING_MSG;
-  ensure(set_pin(PIN_EMPTY), "init_pin failed");
+  ensure(set_pin(PIN_EMPTY, NULL), "init_pin failed");
   if (unlocked != sectrue) {
     memzero(cached_keys, sizeof(cached_keys));
   }
@@ -784,7 +795,7 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
   return sectrue;
 }
 
-static secbool unlock(uint32_t pin) {
+static secbool unlock(uint32_t pin, const uint8_t *ext_salt) {
   if (sectrue != initialized) {
     return secfalse;
   }
@@ -827,10 +838,10 @@ static secbool unlock(uint32_t pin) {
 
   // Read the random salt from EDEK_PVC_KEY and use it to derive the KEK and
   // KEIV from the PIN.
-  const void *salt = NULL;
+  const void *rand_salt = NULL;
   uint16_t len = 0;
   if (sectrue != initialized ||
-      sectrue != norcow_get(EDEK_PVC_KEY, &salt, &len) ||
+      sectrue != norcow_get(EDEK_PVC_KEY, &rand_salt, &len) ||
       len != RANDOM_SALT_SIZE + KEYS_SIZE + PVC_SIZE) {
     memzero(&pin, sizeof(pin));
     handle_fault("no EDEK");
@@ -838,7 +849,7 @@ static secbool unlock(uint32_t pin) {
   }
   uint8_t kek[SHA256_DIGEST_LENGTH];
   uint8_t keiv[SHA256_DIGEST_LENGTH];
-  derive_kek(pin, (const uint8_t *)salt, kek, keiv);
+  derive_kek(pin, (const uint8_t *)rand_salt, ext_salt, kek, keiv);
   memzero(&pin, sizeof(pin));
 
   // First, we increase PIN fail counter in storage, even before checking the
@@ -875,7 +886,7 @@ static secbool unlock(uint32_t pin) {
   return pin_fails_reset();
 }
 
-secbool storage_unlock(uint32_t pin) {
+secbool storage_unlock(uint32_t pin, const uint8_t *ext_salt) {
   ui_total = DERIVE_SECS;
   ui_rem = ui_total;
   if (pin == PIN_EMPTY) {
@@ -887,7 +898,7 @@ secbool storage_unlock(uint32_t pin) {
   } else {
     ui_message = VERIFYING_PIN_MSG;
   }
-  return unlock(pin);
+  return unlock(pin, ext_salt);
 }
 
 /*
@@ -1152,7 +1163,9 @@ uint32_t storage_get_pin_rem(void) {
   return PIN_MAX_TRIES - ctr;
 }
 
-secbool storage_change_pin(uint32_t oldpin, uint32_t newpin) {
+secbool storage_change_pin(uint32_t oldpin, uint32_t newpin,
+                           const uint8_t *old_ext_salt,
+                           const uint8_t *new_ext_salt) {
   if (sectrue != initialized) {
     return secfalse;
   }
@@ -1162,10 +1175,10 @@ secbool storage_change_pin(uint32_t oldpin, uint32_t newpin) {
   ui_message = (oldpin != PIN_EMPTY && newpin == PIN_EMPTY) ? VERIFYING_PIN_MSG
                                                             : PROCESSING_MSG;
 
-  if (sectrue != unlock(oldpin)) {
+  if (sectrue != unlock(oldpin, old_ext_salt)) {
     return secfalse;
   }
-  secbool ret = set_pin(newpin);
+  secbool ret = set_pin(newpin, new_ext_salt);
   memzero(&oldpin, sizeof(oldpin));
   memzero(&newpin, sizeof(newpin));
   return ret;
@@ -1268,9 +1281,9 @@ static secbool storage_upgrade(void) {
     ui_rem = ui_total;
     ui_message = PROCESSING_MSG;
     if (sectrue == norcow_get(V0_PIN_KEY, &val, &len)) {
-      set_pin(*(const uint32_t *)val);
+      set_pin(*(const uint32_t *)val, NULL);
     } else {
-      set_pin(PIN_EMPTY);
+      set_pin(PIN_EMPTY, NULL);
     }
 
     // Convert PIN failure counter.

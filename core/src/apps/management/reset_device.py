@@ -10,7 +10,7 @@ from trezor.ui.text import Text
 
 from apps.common import mnemonic, storage
 from apps.common.confirm import require_confirm
-from apps.management.change_pin import request_pin_confirm
+from apps.common.request_pin import request_pin_confirm
 from apps.management.common import layout
 
 if __debug__:
@@ -71,7 +71,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
             await backup_bip39_wallet(ctx, secret)
 
     # write PIN into storage
-    if not config.change_pin(pin_to_int(""), pin_to_int(newpin)):
+    if not config.change_pin(pin_to_int(""), pin_to_int(newpin), None, None):
         raise wire.ProcessError("Could not change PIN")
 
     # write settings and master secret into storage

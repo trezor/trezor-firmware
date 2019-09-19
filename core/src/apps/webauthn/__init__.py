@@ -3,11 +3,12 @@ import ustruct
 import utime
 from micropython import const
 
-from trezor import config, io, log, loop, ui, utils, workflow
+from trezor import config, io, log, loop, ui, utils, wire, workflow
 from trezor.crypto import aes, der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
+from trezor.messages import MessageType
 from trezor.ui.confirm import CONFIRMED, Confirm, ConfirmPageable, Pageable
-from trezor.ui.text import Text, text_center_trim_left, text_center_trim_right
+from trezor.ui.text import Text
 
 from apps.common import cbor, storage
 from apps.common.storage.webauthn import (
@@ -15,6 +16,7 @@ from apps.common.storage.webauthn import (
     get_resident_credentials,
     store_resident_credential,
 )
+from apps.webauthn.confirm import ConfirmContent, ConfirmInfo
 from apps.webauthn.credential import Credential, Fido2Credential, U2fCredential
 
 if __debug__:
@@ -464,6 +466,19 @@ def send_cmd_sync(cmd: Cmd, iface: io.HID) -> None:
 
 
 def boot(iface: io.HID) -> None:
+    wire.add(
+        MessageType.WebAuthnListResidentCredentials,
+        __name__,
+        "list_resident_credentials",
+    )
+    wire.add(
+        MessageType.WebAuthnAddResidentCredential, __name__, "add_resident_credential"
+    )
+    wire.add(
+        MessageType.WebAuthnRemoveResidentCredential,
+        __name__,
+        "remove_resident_credential",
+    )
     loop.schedule(handle_reports(iface))
 
 
@@ -497,20 +512,15 @@ class KeepaliveCallback:
         send_cmd_sync(cmd_keepalive(self.cid, _KEEPALIVE_STATUS_PROCESSING), self.iface)
 
 
-async def check_pin(keepalive_callback: KeepaliveCallback) -> bool:
-    from apps.common.request_pin import PinCancelled, request_pin
+async def verify_user(keepalive_callback: KeepaliveCallback) -> bool:
+    from apps.common.request_pin import verify_user_pin, PinCancelled, PinInvalid
     import trezor.pin
 
     try:
         trezor.pin.keepalive_callback = keepalive_callback
-        if config.has_pin():
-            pin = await request_pin("Enter your PIN", config.get_pin_rem())
-            while config.unlock(trezor.pin.pin_to_int(pin)) is not True:
-                pin = await request_pin("Wrong PIN, enter again", config.get_pin_rem())
-            ret = True
-        else:
-            ret = config.unlock(trezor.pin.pin_to_int(""))
-    except PinCancelled:
+        await verify_user_pin()
+        ret = True
+    except (PinCancelled, PinInvalid):
         ret = False
     finally:
         trezor.pin.keepalive_callback = None
@@ -524,64 +534,6 @@ async def confirm(*args: Any, **kwargs: Any) -> bool:
         return await loop.race(dialog, confirm_signal()) is CONFIRMED
     else:
         return await dialog is CONFIRMED
-
-
-class ConfirmInfo:
-    def __init__(self) -> None:
-        self.app_icon = None  # type: Optional[bytes]
-
-    def get_header(self) -> Optional[str]:
-        return None
-
-    def app_name(self) -> str:
-        raise NotImplementedError
-
-    def account_name(self) -> Optional[str]:
-        return None
-
-    def load_icon(self, rp_id_hash: bytes) -> None:
-        from trezor import res
-        from apps.webauthn import knownapps
-
-        try:
-            namepart = knownapps.knownapps[rp_id_hash].lower().replace(" ", "_")
-            icon = res.load("apps/webauthn/res/icon_%s.toif" % namepart)
-        except Exception as e:
-            icon = res.load("apps/webauthn/res/icon_webauthn.toif")
-            if __debug__:
-                log.exception(__name__, e)
-        self.app_icon = icon
-
-
-class ConfirmContent(ui.Component):
-    def __init__(self, info: ConfirmInfo) -> None:
-        self.info = info
-        self.repaint = True
-
-    def on_render(self) -> None:
-        if self.repaint:
-            header = self.info.get_header()
-
-            if header is None or self.info.app_icon is None:
-                return
-            ui.header(header, ui.ICON_DEFAULT, ui.GREEN, ui.BG, ui.GREEN)
-            ui.display.image((ui.WIDTH - 64) // 2, 48, self.info.app_icon)
-
-            app_name = self.info.app_name()
-            account_name = self.info.account_name()
-
-            # Dummy requests usually have some text as both app_name and account_name,
-            # in that case show the text only once.
-            if account_name is not None:
-                if app_name != account_name:
-                    text_center_trim_left(ui.WIDTH // 2, 140, app_name)
-                    text_center_trim_right(ui.WIDTH // 2, 172, account_name)
-                else:
-                    text_center_trim_right(ui.WIDTH // 2, 156, account_name)
-            else:
-                text_center_trim_left(ui.WIDTH // 2, 156, app_name)
-
-            self.repaint = False
 
 
 class State:
@@ -738,7 +690,7 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
         if not await confirm(content):
             return False
         if self._user_verification:
-            return await check_pin(KeepaliveCallback(self.cid, self.iface))
+            return await verify_user(KeepaliveCallback(self.cid, self.iface))
         return True
 
     async def on_confirm(self) -> None:
@@ -807,7 +759,7 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
         if await ConfirmPageable(self, content) is not CONFIRMED:
             return False
         if self._user_verification:
-            return await check_pin(KeepaliveCallback(self.cid, self.iface))
+            return await verify_user(KeepaliveCallback(self.cid, self.iface))
         return True
 
     async def on_confirm(self) -> None:

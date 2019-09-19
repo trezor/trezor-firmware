@@ -54,6 +54,7 @@ from trezorlib import (
     tezos,
     tools,
     ui,
+    webauthn,
 )
 from trezorlib.client import TrezorClient
 from trezorlib.transport import enumerate_devices, get_transport
@@ -119,6 +120,14 @@ CHOICE_RESET_DEVICE_TYPE = ChoiceType(
         "single": proto.ResetDeviceBackupType.Bip39,
         "shamir": proto.ResetDeviceBackupType.Slip39_Single_Group,
         "advanced": proto.ResetDeviceBackupType.Slip39_Multiple_Groups,
+    }
+)
+
+CHOICE_SD_PROTECT_OPERATION_TYPE = ChoiceType(
+    {
+        "enable": proto.SdProtectOperationType.ENABLE,
+        "disable": proto.SdProtectOperationType.DISABLE,
+        "refresh": proto.SdProtectOperationType.REFRESH,
     }
 )
 
@@ -260,11 +269,33 @@ def get_features(connect):
 #
 
 
-@cli.command(help="Change new PIN or remove existing.")
+@cli.command(help="Set, change or remove PIN.")
 @click.option("-r", "--remove", is_flag=True)
 @click.pass_obj
 def change_pin(connect, remove):
     return device.change_pin(connect(), remove)
+
+
+@cli.command()
+@click.argument("operation", type=CHOICE_SD_PROTECT_OPERATION_TYPE)
+@click.pass_obj
+def sd_protect(connect, operation):
+    """Secure the device with SD card protection.
+
+    When SD card protection is enabled, a randomly generated secret is stored
+    on the SD card. During every PIN checking and unlocking operation this
+    secret is combined with the entered PIN value to decrypt data stored on
+    the device. The SD card will thus be needed every time you unlock the
+    device. The options are:
+
+    \b
+    enable - Generate SD card secret and use it to protect the PIN and storage.
+    disable - Remove SD card secret protection.
+    refresh - Replace the current SD card secret with a new one.
+    """
+    if connect().features.model == "1":
+        raise click.BadUsage("Trezor One does not support SD card protection.")
+    return device.sd_protect(connect(), operation)
 
 
 @cli.command(help="Enable passphrase.")
@@ -807,9 +838,9 @@ def firmware_update(
         click.echo("Dry run. Not uploading firmware to device.")
     else:
         try:
-            if f.major_version == 1 and f.firmware_present:
+            if f.major_version == 1 and f.firmware_present is not False:
                 # Trezor One does not send ButtonRequest
-                click.echo("Please confirm action on your Trezor device")
+                click.echo("Please confirm the action on your Trezor device")
             return firmware.update(client, data)
         except exceptions.Cancelled:
             click.echo("Update aborted on device.")
@@ -1927,6 +1958,58 @@ def binance_sign_tx(connect, address, file):
     address_n = tools.parse_path(address)
 
     return binance.sign_tx(client, address_n, json.load(file))
+
+
+#
+# WebAuthn functions
+#
+
+
+@cli.command(help="List all resident credentials on the device.")
+@click.pass_obj
+def webauthn_list_credentials(connect):
+    creds = webauthn.list_credentials(connect())
+    for cred in creds:
+        click.echo("")
+        click.echo("WebAuthn credential at index {}:".format(cred.index))
+        if cred.rp_id is not None:
+            click.echo("  Relying party ID:     {}".format(cred.rp_id))
+        if cred.rp_name is not None:
+            click.echo("  Relying party name:   {}".format(cred.rp_name))
+        if cred.user_id is not None:
+            click.echo("  User ID:              {}".format(cred.user_id.hex()))
+        if cred.user_name is not None:
+            click.echo("  User name:            {}".format(cred.user_name))
+        if cred.user_display_name is not None:
+            click.echo("  User display name:    {}".format(cred.user_display_name))
+        if cred.creation_time is not None:
+            click.echo("  Creation time:        {}".format(cred.creation_time))
+        if cred.hmac_secret is not None:
+            click.echo("  hmac-secret enabled:  {}".format(cred.hmac_secret))
+        click.echo("  Credential ID:        {}".format(cred.id.hex()))
+
+    if not creds:
+        click.echo("There are no resident credentials stored on the device.")
+
+
+@cli.command()
+@click.argument("hex_credential_id")
+@click.pass_obj
+def webauthn_add_credential(connect, hex_credential_id):
+    """Add the credential with the given ID as a resident credential.
+
+    HEX_CREDENTIAL_ID is the credential ID as a hexadecimal string.
+    """
+    return webauthn.add_credential(connect(), bytes.fromhex(hex_credential_id))
+
+
+@cli.command(help="Remove the resident credential at the given index.")
+@click.option(
+    "-i", "--index", required=True, type=click.IntRange(0, 15), help="Credential index."
+)
+@click.pass_obj
+def webauthn_remove_credential(connect, index):
+    return webauthn.remove_credential(connect(), index)
 
 
 #

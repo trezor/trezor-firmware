@@ -33,6 +33,7 @@ WordRequest = 46
 WordAck = 47
 GetFeatures = 55
 SetU2FCounter = 63
+SdProtect = 79
 FirmwareErase = 6
 FirmwareUpload = 7
 FirmwareRequest = 8
@@ -180,3 +181,7 @@ if not utils.BITCOIN_ONLY:
     BinanceOrderMsg = 707
     BinanceCancelMsg = 708
     BinanceSignedTx = 709
+    WebAuthnListResidentCredentials = 800
+    WebAuthnCredentials = 801
+    WebAuthnAddResidentCredential = 802
+    WebAuthnRemoveResidentCredential = 803
