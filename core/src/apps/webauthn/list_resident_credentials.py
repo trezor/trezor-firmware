@@ -30,8 +30,9 @@ async def list_resident_credentials(
             user_id=cred.user_id,
             user_name=cred.user_name,
             user_display_name=cred.user_display_name,
-            creation_time=cred._creation_time,
+            creation_time=cred.creation_time,
             hmac_secret=cred.hmac_secret,
+            use_sign_count=cred.use_sign_count,
         )
         for cred in get_resident_credentials()
     ]

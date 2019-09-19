@@ -21,12 +21,22 @@ def gen_core(data):
     for d in data:
         if "u2f" in d:
             url, label = d["u2f"], d["label"]
-            print('    "%s": "%s",' % (url, label))
+            print('    "%s": {"label": "%s", "use_sign_count": True},' % (url, label))
     print("    # WebAuthn")
     for d in data:
         if "webauthn" in d:
-            origin, label = d["webauthn"], d["label"]
-            print('    "%s": "%s",' % (origin, label))
+            origin, label, use_sign_count = (
+                d["webauthn"],
+                d["label"],
+                d.get("use_sign_count", None),
+            )
+            if use_sign_count is None:
+                print('    "%s": {"label": "%s"},' % (origin, label))
+            else:
+                print(
+                    '    "%s": {"label": "%s", "use_sign_count": %s},'
+                    % (origin, label, use_sign_count)
+                )
     print("}")
 
 

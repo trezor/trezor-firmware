@@ -23,6 +23,7 @@ _CRED_ID_USER_NAME = const(0x04)
 _CRED_ID_USER_DISPLAY_NAME = const(0x05)
 _CRED_ID_CREATION_TIME = const(0x06)
 _CRED_ID_HMAC_SECRET = const(0x07)
+_CRED_ID_USE_SIGN_COUNT = const(0x08)
 
 # Key paths
 _U2F_KEY_PATH = const(0x80553246)
@@ -30,7 +31,7 @@ _U2F_KEY_PATH = const(0x80553246)
 
 class Credential:
     def __init__(self) -> None:
-        self.index = None  # type Optional[int]
+        self.index = None  # type: Optional[int]
         self.id = b""  # type: bytes
         self.rp_id = ""  # type: str
         self.rp_id_hash = b""  # type: bytes
@@ -47,6 +48,9 @@ class Credential:
 
     def hmac_secret_key(self) -> Optional[bytes]:
         return None
+
+    def next_signature_counter(self) -> int:
+        return storage.device.next_u2f_counter() or 0
 
     @staticmethod
     def from_bytes(data: bytes, rp_id_hash: bytes) -> Optional["Credential"]:
@@ -65,19 +69,20 @@ class Fido2Credential(Credential):
         self.rp_name = None  # type: Optional[str]
         self.user_name = None  # type: Optional[str]
         self.user_display_name = None  # type: Optional[str]
-        self._creation_time = 0  # type: int
+        self.creation_time = 0  # type: int
         self.hmac_secret = False  # type: bool
+        self.use_sign_count = False  # type: bool
 
     def __lt__(self, other: Credential) -> bool:
         # Sort FIDO2 credentials newest first amongst each other.
         if isinstance(other, Fido2Credential):
-            return self._creation_time > other._creation_time
+            return self.creation_time > other.creation_time
 
         # Sort FIDO2 credentials before U2F credentials.
         return True
 
     def generate_id(self) -> None:
-        self._creation_time = storage.device.next_u2f_counter() or 0
+        self.creation_time = storage.device.next_u2f_counter() or 0
 
         data = cbor.encode(
             {
@@ -88,8 +93,9 @@ class Fido2Credential(Credential):
                     (_CRED_ID_USER_ID, self.user_id),
                     (_CRED_ID_USER_NAME, self.user_name),
                     (_CRED_ID_USER_DISPLAY_NAME, self.user_display_name),
-                    (_CRED_ID_CREATION_TIME, self._creation_time),
+                    (_CRED_ID_CREATION_TIME, self.creation_time),
                     (_CRED_ID_HMAC_SECRET, self.hmac_secret),
+                    (_CRED_ID_USE_SIGN_COUNT, self.use_sign_count),
                 )
                 if value
             }
@@ -148,8 +154,9 @@ class Fido2Credential(Credential):
         cred.user_id = data.get(_CRED_ID_USER_ID, None)
         cred.user_name = data.get(_CRED_ID_USER_NAME, None)
         cred.user_display_name = data.get(_CRED_ID_USER_DISPLAY_NAME, None)
-        cred._creation_time = data.get(_CRED_ID_CREATION_TIME, 0)
+        cred.creation_time = data.get(_CRED_ID_CREATION_TIME, 0)
         cred.hmac_secret = data.get(_CRED_ID_HMAC_SECRET, False)
+        cred.use_sign_count = data.get(_CRED_ID_USE_SIGN_COUNT, False)
         cred.id = cred_id
 
         if (
@@ -165,7 +172,7 @@ class Fido2Credential(Credential):
         return (
             self.rp_id is not None
             and self.user_id is not None
-            and self._creation_time is not None
+            and self.creation_time is not None
         )
 
     def check_data_types(self) -> bool:
@@ -176,7 +183,8 @@ class Fido2Credential(Credential):
             and isinstance(self.user_name, (str, type(None)))
             and isinstance(self.user_display_name, (str, type(None)))
             and isinstance(self.hmac_secret, bool)
-            and isinstance(self._creation_time, (int, type(None)))
+            and isinstance(self.use_sign_count, bool)
+            and isinstance(self.creation_time, (int, type(None)))
             and isinstance(self.id, (bytes, bytearray))
         )
 
@@ -211,6 +219,11 @@ class Fido2Credential(Credential):
         )
 
         return node.key()
+
+    def next_signature_counter(self) -> int:
+        if not self.use_sign_count:
+            return 0
+        return super().next_signature_counter()
 
 
 class U2fCredential(Credential):
@@ -249,9 +262,9 @@ class U2fCredential(Credential):
         self.id = keypath + mac.digest()
 
     def app_name(self) -> str:
-        from apps.webauthn import knownapps
+        from apps.webauthn.knownapps import knownapps
 
-        app_name = knownapps.knownapps.get(self.rp_id_hash, None)
+        app_name = knownapps.get(self.rp_id_hash, {}).get("label", None)
         if app_name is None:
             app_name = "%s...%s" % (
                 hexlify(self.rp_id_hash[:4]).decode(),
