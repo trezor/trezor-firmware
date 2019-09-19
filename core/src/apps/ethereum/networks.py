@@ -281,6 +281,13 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=28945486,
+        slip44=344,
+        shortcut="AUX",
+        name="Auxilium",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=61717561,
         slip44=61717561,
         shortcut="AQUA",

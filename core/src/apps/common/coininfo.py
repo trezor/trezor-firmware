@@ -932,6 +932,52 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1-groestl',
                 confidential_assets=None,
             )
+        elif name == "Hatch":
+            return CoinInfo(
+                coin_name=name,
+                coin_shortcut="HATCH",
+                address_type=76,
+                address_type_p2sh=16,
+                maxfee_kb=100000,
+                signed_message_header="Hatch Signed Message:\n",
+                xpub_magic=0x02fe52cc,
+                xpub_magic_segwit_p2sh=None,
+                xpub_magic_segwit_native=None,
+                bech32_prefix=None,
+                cashaddr_prefix=None,
+                slip44=88888888,
+                segwit=False,
+                fork_id=None,
+                force_bip143=False,
+                bip115=False,
+                decred=False,
+                negative_fee=False,
+                curve_name='secp256k1',
+                confidential_assets=None,
+            )
+        elif name == "Hatch Testnet":
+            return CoinInfo(
+                coin_name=name,
+                coin_shortcut="tHATCH",
+                address_type=140,
+                address_type_p2sh=19,
+                maxfee_kb=100000,
+                signed_message_header="Hatch Signed Message:\n",
+                xpub_magic=0x043587cf,
+                xpub_magic_segwit_p2sh=None,
+                xpub_magic_segwit_native=None,
+                bech32_prefix=None,
+                cashaddr_prefix=None,
+                slip44=1,
+                segwit=False,
+                fork_id=None,
+                force_bip143=False,
+                bip115=False,
+                decred=False,
+                negative_fee=False,
+                curve_name='secp256k1',
+                confidential_assets=None,
+            )
         elif name == "Horizen":
             return CoinInfo(
                 coin_name=name,
