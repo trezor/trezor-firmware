@@ -200,8 +200,12 @@ _FRAME_CONT_SIZE = 59
 _KEY_AGREEMENT_PRIVKEY = nist256p1.generate_secret()
 _KEY_AGREEMENT_PUBKEY = nist256p1.publickey(_KEY_AGREEMENT_PRIVKEY, False)
 
-_ALLOW_RESIDENT_CREDENTIALS = True
+# FIDO2 configuration.
 _ALLOW_FIDO2 = True
+_ALLOW_RESIDENT_CREDENTIALS = True
+
+# The attestation type to use in MakeCredential responses. If false, then self attestation will be used.
+_USE_BASIC_ATTESTATION = True
 
 
 def frame_init() -> dict:
@@ -1349,7 +1353,10 @@ def cbor_make_credential_sign(
         + extensions
     )
 
-    # Compute self-attestation signature of the authenticator data.
+    # Compute the attestation signature of the authenticator data.
+    if _USE_BASIC_ATTESTATION:
+        privkey = _U2F_ATT_PRIV_KEY
+
     dig = hashlib.sha256()
     dig.update(authenticator_data)
     dig.update(client_data_hash)
@@ -1357,11 +1364,15 @@ def cbor_make_credential_sign(
     sig = der.encode_seq((sig[1:33], sig[33:]))
 
     # Encode the authenticatorMakeCredential response data.
+    attestation_statement = {"alg": _COSE_ALG_ES256, "sig": sig}
+    if _USE_BASIC_ATTESTATION:
+        attestation_statement["x5c"] = [_U2F_ATT_CERT]
+
     return cbor.encode(
         {
             _MAKECRED_RESP_FMT: "packed",
             _MAKECRED_RESP_AUTH_DATA: authenticator_data,
-            _MAKECRED_RESP_ATT_STMT: {"alg": _COSE_ALG_ES256, "sig": sig},
+            _MAKECRED_RESP_ATT_STMT: attestation_statement,
         }
     )
 
