@@ -8,6 +8,15 @@ option java_outer_classname = "TrezorMessageManagement";
 import "messages-common.proto";
 
 /**
+ * Type of the mnemonic backup given/received by the device during reset/recovery.
+ */
+enum BackupType {
+    Bip39 = 0;              // also called "Single Backup", see BIP-0039
+    Slip39_Basic = 1;       // also called "Shamir Backup", see SLIP-0039
+    Slip39_Advanced = 2;    // also called "Super Shamir" or "Shamir with Groups", see SLIP-0039#two-level-scheme
+}
+
+/**
  * Request: Reset device to default state and ask for device details
  * @start
  * @next Features
@@ -58,13 +67,13 @@ message Features {
     optional bool unfinished_backup = 27;       // report unfinished backup (equals to Storage.unfinished_backup)
     optional bool no_backup = 28;               // report no backup (equals to Storage.no_backup)
     optional bool recovery_mode = 29;           // is recovery mode in progress
-    repeated Capability capabilities = 30;         // list of supported capabilities
+    repeated Capability capabilities = 30;      // list of supported capabilities
     enum Capability {
         Capability_Bitcoin = 1;
-        Capability_Bitcoin_like = 2;               // Altcoins based on the Bitcoin source code
+        Capability_Bitcoin_like = 2;            // Altcoins based on the Bitcoin source code
         Capability_Binance = 3;
         Capability_Cardano = 4;
-        Capability_Crypto = 5;                     // generic crypto operations for GPG, SSH, etc.
+        Capability_Crypto = 5;                  // generic crypto operations for GPG, SSH, etc.
         Capability_EOS = 6;
         Capability_Ethereum = 7;
         Capability_Lisk = 8;
@@ -77,6 +86,7 @@ message Features {
         Capability_Shamir = 15;
         Capability_ShamirGroups = 16;
     }
+    optional BackupType backup_type = 31;       // type of device backup (BIP-39 / SLIP-39 basic / SLIP-39 advanced)
 }
 
 /**
@@ -229,14 +239,8 @@ message ResetDevice {
     optional uint32 u2f_counter = 7;                    // U2F counter
     optional bool skip_backup = 8;                      // postpone seed backup to BackupDevice workflow
     optional bool no_backup = 9;                        // indicate that no backup is going to be made
-
-    // type of the mnemonic backup (BIP-39 vs SLIP-39 single group vs SLIP-39 multiple groups)
-    optional ResetDeviceBackupType backup_type = 10 [default=ResetDeviceBackupType_Bip39];
-    enum ResetDeviceBackupType {
-        ResetDeviceBackupType_Bip39 = 0;                      // The traditional Single Backup - BIP39
-        ResetDeviceBackupType_Slip39_Single_Group = 1;        // Shamir Backup with only single group (one-level Shamir)
-        ResetDeviceBackupType_Slip39_Multiple_Groups = 2;     // Shamir Backup with multiple groups (two-level Shamir)
-    }
+    // type of the mnemonic backup
+    optional BackupType backup_type = 10 [default=Bip39];
 }
 
 /**

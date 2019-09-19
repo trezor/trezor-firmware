@@ -5,15 +5,3 @@
 
 class MnemonicError(RuntimeError):
     pass
-
-
-class IdentifierMismatchError(MnemonicError):
-    pass
-
-
-class ShareAlreadyAddedError(MnemonicError):
-    pass
-
-
-class GroupThresholdReachedError(MnemonicError):
-    pass

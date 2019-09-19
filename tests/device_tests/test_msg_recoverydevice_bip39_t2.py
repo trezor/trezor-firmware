@@ -144,6 +144,7 @@ class TestMsgRecoverydeviceT2:
 
         assert client.features.pin_protection is False
         assert client.features.passphrase_protection is False
+        assert client.features.backup_type is proto.BackupType.Bip39
 
     def test_already_initialized(self, client):
         with pytest.raises(RuntimeError):

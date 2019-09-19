@@ -60,7 +60,7 @@ class TestCardanoGetPublicKey(unittest.TestCase):
                 "talent drug much home firefly toxic analysis idea umbrella slice"
         ]
         passphrase = b"TREZOR"
-        identifier, exponent, ems = slip39.combine_mnemonics(mnemonics)
+        identifier, exponent, ems, _ = slip39.combine_mnemonics(mnemonics)
         master_secret = slip39.decrypt(identifier, exponent, ems, passphrase)
 
         node = bip32.from_seed(master_secret, "ed25519 cardano seed")
@@ -111,7 +111,7 @@ class TestCardanoGetPublicKey(unittest.TestCase):
                 "quick silent downtown oral critical step remove says rhythm venture aunt"
         ]
         passphrase = b"TREZOR"
-        identifier, exponent, ems = slip39.combine_mnemonics(mnemonics)
+        identifier, exponent, ems, _ = slip39.combine_mnemonics(mnemonics)
         master_secret = slip39.decrypt(identifier, exponent, ems, passphrase)
 
         node = bip32.from_seed(master_secret, "ed25519 cardano seed")
