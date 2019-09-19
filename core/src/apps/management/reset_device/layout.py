@@ -168,7 +168,17 @@ async def _confirm_word(
     ctx, share_index, numbered_share_words, count, group_index=None
 ):
 
-    # TODO: duplicated words in the choice list
+    # remove duplicate share words so we don't offer them
+    duplicate_list = []
+    for i in range(len(numbered_share_words)):
+        duplicates = [
+            j for j, word in numbered_share_words if word == numbered_share_words[i][1]
+        ]
+        if len(duplicates) > 1:
+            duplicate_list.extend(duplicate_list[1:])
+    for remove_index in sorted(set(duplicate_list), reverse=True):
+        numbered_share_words.pop(remove_index)
+
     # shuffle the numbered seed half, slice off the choices we need
     random.shuffle(numbered_share_words)
     numbered_choices = numbered_share_words[: MnemonicWordSelect.NUM_OF_CHOICES]
@@ -565,7 +575,10 @@ class Slip39NumInput(ui.Component):
             elif self.step is Slip39NumInput.SET_THRESHOLD:
                 if self.group_id is None:
                     first_line_text = "For recovery you need"
-                    second_line_text = "any %s of the shares." % count
+                    if count == self.input.max_count:
+                        second_line_text = "all %s of the shares." % count
+                    else:
+                        second_line_text = "any %s of the shares." % count
                 else:
                     first_line_text = "The required number of "
                     second_line_text = "shares to form Group %s." % (self.group_id + 1)

@@ -132,10 +132,13 @@ def fetch_slip39_remaining_shares() -> Optional[List[int]]:
         return None
 
     result = []
-    for i in range(get_slip39_group_count()):
+    group_count = get_slip39_group_count()
+    if not group_count:
+        raise RuntimeError
+    for i in range(group_count):
         result.append(remaining[i])
 
-    return result
+    return result[:group_count]
 
 
 def end_progress() -> None:
