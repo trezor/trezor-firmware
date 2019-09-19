@@ -69,10 +69,7 @@ async def request_mnemonic(
         else:
             word = await ctx.wait(keyboard)
 
-        # only if we know the backup type we can perform additional checks
-        if backup_type is not None and not await check_slip39_mnemonic_validity(
-            ctx, i, word, backup_type, words
-        ):
+        if not await check_word_validity(ctx, i, word, backup_type, words):
             return None
 
         words.append(word)
@@ -80,13 +77,20 @@ async def request_mnemonic(
     return " ".join(words)
 
 
-async def check_slip39_mnemonic_validity(
+async def check_word_validity(
     ctx: wire.Context,
     current_index: int,
     current_word: str,
     backup_type: EnumTypeBackupType,
     previous_words: List[str],
 ) -> bool:
+    # we can't perform any checks if the backup type was not yet decided
+    if backup_type is None:
+        return True
+    # there are no "on-the-fly" checks for BIP-39
+    if backup_type is BackupType.Bip39:
+        return True
+
     previous_mnemonics = storage.recovery_shares.fetch()
     if not previous_mnemonics:
         # this function must be called only if some mnemonics are already stored
