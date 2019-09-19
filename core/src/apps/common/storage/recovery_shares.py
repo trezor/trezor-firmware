@@ -20,20 +20,19 @@ def get(index: int) -> Optional[str]:
     return None
 
 
-def fetch() -> List[str]:
+def fetch() -> List[List[str]]:
     mnemonics = []
     if not recovery.get_slip39_group_count():
-        raise RuntimeError
-    for index in range(0, slip39.MAX_SHARE_COUNT * recovery.get_slip39_group_count()):
-        m = get(index)
-        if m:
-            mnemonics.append(m)
+        return mnemonics
+    for i in range(recovery.get_slip39_group_count()):
+        mnemonics.append(fetch_group(i))
+
     return mnemonics
 
 
 def fetch_group(group_index: int) -> List[str]:
     mnemonics = []
-    starting_index = 0 + group_index * slip39.MAX_SHARE_COUNT
+    starting_index = group_index * slip39.MAX_SHARE_COUNT
     for index in range(starting_index, starting_index + slip39.MAX_SHARE_COUNT):
         m = get(index)
         if m:
@@ -43,5 +42,5 @@ def fetch_group(group_index: int) -> List[str]:
 
 
 def delete() -> None:
-    for index in range(0, slip39.MAX_SHARE_COUNT):
+    for index in range(slip39.MAX_SHARE_COUNT * slip39.MAX_GROUP_COUNT):
         common.delete(common.APP_RECOVERY_SHARES, index)

@@ -19,21 +19,23 @@ import pytest
 from trezorlib import device, messages
 from trezorlib.exceptions import TrezorFailure
 
-from ..common import MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, recovery_enter_shares
+from ..common import recovery_enter_shares
 
 pytestmark = pytest.mark.skip_t1
 
-INVALID_SHARES_20_2of3_2of3_GROUPS = [
-    "chest garlic acrobat leaf diploma thank soul predator grant laundry camera license language likely slim twice amount rich total carve",
-    "chest garlic acrobat lily adequate dwarf genius wolf faint nylon scroll national necklace leader pants literary lift axle watch midst",
-    "chest garlic beard leaf coastal album dramatic learn identify angry dismiss goat plan describe round writing primary surprise sprinkle orbit",
-    "chest garlic beard lily burden pistol retreat pickup emphasis large gesture hand eyebrow season pleasure genuine election skunk champion income",
+SHARES_20_2of3 = [
+    "crush merchant academic acid dream decision orbit smug trend trust painting slice glad crunch veteran lunch friar satoshi engage aquatic",
+    "crush merchant academic agency devote eyebrow disaster island deploy flip toxic budget numerous airport loyalty fitness resident learn sympathy daughter",
+    "crush merchant academic always course verdict rescue paces fridge museum energy solution space ladybug junction national biology game fawn coal",
+]
+
+INVALID_SHARES_20_2of3 = [
+    "gesture necklace academic acid civil round fiber buyer swing ancient jerky kitchen chest dining enjoy tension museum increase various rebuild",
+    "gesture necklace academic agency decrease justice ounce dragon shaped unknown material answer dress wrote smell family squeeze diet angry husband",
 ]
 
 
-@pytest.mark.setup_client(
-    mnemonic=MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS[1:5], passphrase=False
-)
+@pytest.mark.setup_client(mnemonic=SHARES_20_2of3[0:2], passphrase=True)
 def test_2of3_dryrun(client):
     debug = client.debug
 
@@ -41,9 +43,7 @@ def test_2of3_dryrun(client):
         yield  # Confirm Dryrun
         debug.press_yes()
         # run recovery flow
-        yield from recovery_enter_shares(
-            debug, MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS, groups=True
-        )
+        yield from recovery_enter_shares(debug, SHARES_20_2of3[1:3])
 
     with client:
         client.set_input_flow(input_flow)
@@ -62,9 +62,7 @@ def test_2of3_dryrun(client):
     )
 
 
-@pytest.mark.setup_client(
-    mnemonic=MNEMONIC_SHAMIR_20_2of3_2of3_GROUPS[1:5], passphrase=True
-)
+@pytest.mark.setup_client(mnemonic=SHARES_20_2of3[0:2], passphrase=True)
 def test_2of3_invalid_seed_dryrun(client):
     debug = client.debug
 
@@ -72,9 +70,7 @@ def test_2of3_invalid_seed_dryrun(client):
         yield  # Confirm Dryrun
         debug.press_yes()
         # run recovery flow
-        yield from recovery_enter_shares(
-            debug, INVALID_SHARES_20_2of3_2of3_GROUPS, groups=True
-        )
+        yield from recovery_enter_shares(debug, INVALID_SHARES_20_2of3)
 
     # test fails because of different seed on device
     with client, pytest.raises(

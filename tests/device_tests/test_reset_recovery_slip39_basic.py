@@ -19,7 +19,7 @@ import itertools
 import pytest
 
 from trezorlib import btc, device, messages
-from trezorlib.messages import ButtonRequestType as B, ResetDeviceBackupType
+from trezorlib.messages import BackupType, ButtonRequestType as B
 from trezorlib.tools import parse_path
 
 from ..common import click_through, read_and_confirm_mnemonic, recovery_enter_shares
@@ -60,7 +60,7 @@ def reset(client, strength=128):
         for h in range(5):
             # mnemonic phrases
             btn_code = yield
-            assert btn_code == B.Other
+            assert btn_code == B.ResetDevice
             mnemonic = read_and_confirm_mnemonic(client.debug, words=word_count)
             all_mnemonics.append(mnemonic)
 
@@ -86,15 +86,15 @@ def reset(client, strength=128):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Other),
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.Other),
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.Other),
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.Other),
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.Other),
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success(),
@@ -112,7 +112,7 @@ def reset(client, strength=128):
             pin_protection=False,
             label="test",
             language="english",
-            backup_type=ResetDeviceBackupType.Slip39_Single_Group,
+            backup_type=BackupType.Slip39_Basic,
         )
 
     client.set_input_flow(None)

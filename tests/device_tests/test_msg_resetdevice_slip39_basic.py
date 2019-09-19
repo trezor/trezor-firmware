@@ -22,7 +22,7 @@ import shamir_mnemonic as shamir
 from shamir_mnemonic import MnemonicError
 
 from trezorlib import device, messages as proto
-from trezorlib.messages import ButtonRequestType as B, ResetDeviceBackupType
+from trezorlib.messages import BackupType, ButtonRequestType as B
 
 from ..common import click_through, generate_entropy, read_and_confirm_mnemonic
 
@@ -33,7 +33,7 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 class TestMsgResetDeviceT2:
     # TODO: test with different options
     @pytest.mark.setup_client(uninitialized=True)
-    def test_reset_device_shamir(self, client):
+    def test_reset_device_slip39_basic(self, client):
         strength = 128
         member_threshold = 3
         all_mnemonics = []
@@ -53,7 +53,7 @@ class TestMsgResetDeviceT2:
             for h in range(5):
                 # mnemonic phrases
                 btn_code = yield
-                assert btn_code == B.Other
+                assert btn_code == B.ResetDevice
                 mnemonic = read_and_confirm_mnemonic(client.debug, words=20)
                 all_mnemonics.append(mnemonic)
 
@@ -80,15 +80,15 @@ class TestMsgResetDeviceT2:
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Other),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.Other),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.Other),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.Other),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.Other),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Success),
                     proto.ButtonRequest(code=B.Success),
                     proto.Success(),
@@ -106,7 +106,7 @@ class TestMsgResetDeviceT2:
                 pin_protection=False,
                 label="test",
                 language="english",
-                backup_type=ResetDeviceBackupType.Slip39_Single_Group,
+                backup_type=BackupType.Slip39_Basic,
             )
 
         # generate secret locally
@@ -121,6 +121,7 @@ class TestMsgResetDeviceT2:
         assert client.features.needs_backup is False
         assert client.features.pin_protection is False
         assert client.features.passphrase_protection is False
+        assert client.features.backup_type is BackupType.Slip39_Basic
 
 
 def validate_mnemonics(mnemonics, threshold, expected_ems):

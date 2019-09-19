@@ -17,9 +17,14 @@
 import pytest
 
 from trezorlib import btc, debuglink, device
+from trezorlib.messages import BackupType
 from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 
-from ..common import MNEMONIC12
+from ..common import (
+    MNEMONIC12,
+    MNEMONIC_SLIP39_ADVANCED_20,
+    MNEMONIC_SLIP39_BASIC_20_3of6,
+)
 
 
 @pytest.mark.setup_client(uninitialized=True)
@@ -61,6 +66,28 @@ class TestDeviceLoad:
 
         address = btc.get_address(client, "Bitcoin", [])
         assert address == "15fiTDFwZd2kauHYYseifGi9daH2wniDHH"
+
+    @pytest.mark.skip_t1
+    def test_load_device_slip39_basic(self, client):
+        debuglink.load_device_by_mnemonic(
+            client,
+            mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6,
+            pin="",
+            passphrase_protection=False,
+            label="test",
+        )
+        assert client.features.backup_type == BackupType.Slip39_Basic
+
+    @pytest.mark.skip_t1
+    def test_load_device_slip39_advanced(self, client):
+        debuglink.load_device_by_mnemonic(
+            client,
+            mnemonic=MNEMONIC_SLIP39_ADVANCED_20,
+            pin="",
+            passphrase_protection=False,
+            label="test",
+        )
+        assert client.features.backup_type == BackupType.Slip39_Advanced
 
     def test_load_device_utf(self, client):
         words_nfkd = u"Pr\u030ci\u0301s\u030cerne\u030c z\u030clut\u030couc\u030cky\u0301 ku\u030an\u030c u\u0301pe\u030cl d\u030ca\u0301belske\u0301 o\u0301dy za\u0301ker\u030cny\u0301 uc\u030cen\u030c be\u030cz\u030ci\u0301 pode\u0301l zo\u0301ny u\u0301lu\u030a"
