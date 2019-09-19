@@ -26,7 +26,7 @@ def get_resident_credential(
         return None
 
     stored_cred_data = common.get(
-        common.APP_FIDO2, index + _RESIDENT_CREDENTIAL_START_KEY
+        common.APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY
     )
     if stored_cred_data is None:
         return None
@@ -50,7 +50,7 @@ def store_resident_credential(cred: Fido2Credential) -> bool:
     slot = None
     for i in range(_MAX_RESIDENT_CREDENTIALS):
         stored_cred_data = common.get(
-            common.APP_FIDO2, i + _RESIDENT_CREDENTIAL_START_KEY
+            common.APP_WEBAUTHN, i + _RESIDENT_CREDENTIAL_START_KEY
         )
         if stored_cred_data is None:
             if slot is None:
@@ -78,7 +78,7 @@ def store_resident_credential(cred: Fido2Credential) -> bool:
         return False
 
     common.set(
-        common.APP_FIDO2,
+        common.APP_WEBAUTHN,
         slot + _RESIDENT_CREDENTIAL_START_KEY,
         cred.rp_id_hash + cred.id,
     )
@@ -87,11 +87,11 @@ def store_resident_credential(cred: Fido2Credential) -> bool:
 
 def erase_resident_credentials() -> None:
     for i in range(_MAX_RESIDENT_CREDENTIALS):
-        common.delete(common.APP_FIDO2, i + _RESIDENT_CREDENTIAL_START_KEY)
+        common.delete(common.APP_WEBAUTHN, i + _RESIDENT_CREDENTIAL_START_KEY)
 
 
 def erase_resident_credential(index: int) -> bool:
     if not (0 <= index < _MAX_RESIDENT_CREDENTIALS):
         return False
-    common.delete(common.APP_FIDO2, index + _RESIDENT_CREDENTIAL_START_KEY)
+    common.delete(common.APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY)
     return True
