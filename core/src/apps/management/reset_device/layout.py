@@ -149,50 +149,38 @@ def _split_share_into_pages(share_words):
 
 
 async def _confirm_share_words(ctx, share_index, share_words, group_index=None):
-    numbered = list(enumerate(share_words))
-
     # divide list into thirds, rounding up, so that chunking by `third` always yields
     # three parts (the last one might be shorter)
-    third = (len(numbered) + 2) // 3
+    third = (len(share_words) + 2) // 3
 
-    for part in utils.chunks(numbered, third):
-        if not await _confirm_word(
-            ctx, share_index, part, len(share_words), group_index
-        ):
+    offset = 0
+    count = len(share_words)
+    for part in utils.chunks(share_words, third):
+        if not await _confirm_word(ctx, share_index, part, offset, count, group_index):
             return False
+        offset += len(part)
 
     return True
 
 
-async def _confirm_word(
-    ctx, share_index, numbered_share_words, count, group_index=None
-):
+async def _confirm_word(ctx, share_index, share_words, offset, count, group_index=None):
+    # remove duplicates
+    non_duplicates = list(set(share_words))
+    # shuffle list
+    random.shuffle(non_duplicates)
+    # take top NUM_OF_CHOICES words
+    choices = non_duplicates[: MnemonicWordSelect.NUM_OF_CHOICES]
+    # select first of them
+    checked_word = choices[0]
+    # find its index
+    checked_index = share_words.index(checked_word) + offset
+    # shuffle again so the confirmed word is not always the first choice
+    random.shuffle(choices)
 
-    # remove duplicate share words so we don't offer them
-    duplicate_list = []
-    for i in range(len(numbered_share_words)):
-        duplicates = [
-            j for j, word in numbered_share_words if word == numbered_share_words[i][1]
-        ]
-        if len(duplicates) > 1:
-            duplicate_list.extend(duplicate_list[1:])
-    for remove_index in sorted(set(duplicate_list), reverse=True):
-        numbered_share_words.pop(remove_index)
-
-    # shuffle the numbered seed half, slice off the choices we need
-    random.shuffle(numbered_share_words)
-    numbered_choices = numbered_share_words[: MnemonicWordSelect.NUM_OF_CHOICES]
-
-    # we always confirm the first (random) word index
-    checked_index, checked_word = numbered_choices[0]
     if __debug__:
         debug.reset_word_index.publish(checked_index)
 
-    # shuffle again so the confirmed word is not always the first choice
-    random.shuffle(numbered_choices)
-
     # let the user pick a word
-    choices = [word for _, word in numbered_choices]
     select = MnemonicWordSelect(choices, share_index, checked_index, count, group_index)
     if __debug__:
         selected_word = await ctx.wait(select, debug.input_signal())
