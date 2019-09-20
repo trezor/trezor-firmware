@@ -9,7 +9,7 @@ if False:
 # Each mnemonic is stored under key = index.
 
 
-def set(index: int, mnemonic: str, group_index: int) -> None:
+def set(index: int, group_index: int, mnemonic: str) -> None:
     common.set(
         common.APP_RECOVERY_SHARES,
         index + group_index * slip39.MAX_SHARE_COUNT,

@@ -40,7 +40,7 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
         storage.recovery.set_slip39_remaining_shares(
             share.threshold - 1, share.group_index
         )
-        storage.recovery_shares.set(share.index, words, share.group_index)
+        storage.recovery_shares.set(share.index, share.group_index, words)
 
         # if share threshold and group threshold are 1
         # we can calculate the secret right away
@@ -67,7 +67,7 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
         remaining_for_share - 1, share.group_index
     )
     remaining[share.group_index] = remaining_for_share - 1
-    storage.recovery_shares.set(share.index, words, share.group_index)
+    storage.recovery_shares.set(share.index, share.group_index, words)
 
     if remaining.count(0) < share.group_threshold:
         # we need more shares
