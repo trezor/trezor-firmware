@@ -2,9 +2,11 @@ from trezor.crypto import bip39, slip39
 from trezor.errors import MnemonicError
 
 from apps.common import storage
+from apps.management import backup_types
 
 if False:
-    from typing import Optional, Tuple
+    from trezor.messages.ResetDevice import EnumTypeBackupType
+    from typing import Optional, Tuple, List
 
 
 class RecoveryAborted(Exception):
@@ -86,3 +88,25 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
 
     identifier, iteration_exponent, secret, _ = slip39.combine_mnemonics(mnemonics)
     return secret, share
+
+
+def load_slip39_state() -> Tuple[Optional[int], Optional[EnumTypeBackupType]]:
+    previous_mnemonics = fetch_previous_mnemonics()
+    if not previous_mnemonics:
+        return None, None
+    # let's get the first mnemonic and decode it to find out the metadata
+    mnemonic = next(p[0] for p in previous_mnemonics if p)
+    share = slip39.decode_mnemonic(mnemonic)
+    word_count = len(mnemonic.split(" "))
+    return word_count, backup_types.infer_backup_type(True, share)
+
+
+def fetch_previous_mnemonics() -> Optional[List[List[str]]]:
+    mnemonics = []
+    if not storage.recovery.get_slip39_group_count():
+        return None
+    for i in range(storage.recovery.get_slip39_group_count()):
+        mnemonics.append(storage.recovery_shares.fetch_group(i))
+    if not any(p for p in mnemonics):
+        return None
+    return mnemonics

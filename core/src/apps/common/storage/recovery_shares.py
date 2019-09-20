@@ -1,6 +1,6 @@
 from trezor.crypto import slip39
 
-from apps.common.storage import common, recovery
+from apps.common.storage import common
 
 if False:
     from typing import List, Optional
@@ -24,16 +24,6 @@ def get(index: int, group_index: int) -> Optional[str]:
     if m:
         return m.decode()
     return None
-
-
-def fetch() -> List[List[str]]:
-    mnemonics = []
-    if not recovery.get_slip39_group_count():
-        return mnemonics
-    for i in range(recovery.get_slip39_group_count()):
-        mnemonics.append(fetch_group(i))
-
-    return mnemonics
 
 
 def fetch_group(group_index: int) -> List[str]:
