@@ -46,9 +46,17 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     # For SLIP-39 this is the Encrypted Master Secret
     secret = _compute_secret_from_entropy(int_entropy, ext_entropy, msg.strength)
 
-    if msg.backup_type != BackupType.Bip39:
+    # Check backup type, perform type-specific handling
+    if msg.backup_type == BackupType.Bip39:
+        # in BIP-39 we store mnemonic string instead of the secret
+        secret = bip39.from_data(secret).encode()
+    elif msg.backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced):
+        # generate and set SLIP39 parameters
         storage.device.set_slip39_identifier(slip39.generate_random_identifier())
         storage.device.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
+    else:
+        # Unknown backup type.
+        raise RuntimeError
 
     # If either of skip_backup or no_backup is specified, we are not doing backup now.
     # Otherwise, we try to do it.
@@ -57,17 +65,6 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     # If doing backup, ask the user to confirm.
     if perform_backup:
         perform_backup = await layout.confirm_backup(ctx)
-
-    # Check backup type, convert seed accordingly
-    if msg.backup_type == BackupType.Bip39:
-        # in BIP-39 we store mnemonic string instead of the secret
-        secret = bip39.from_data(secret).encode()
-    elif msg.backup_type not in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced):
-        # Unknown backup type.
-        # This check might seem superfluous, because we are checking
-        # in `_validate_reset_device` already, however, this is critical part,
-        # so just to make sure.
-        raise RuntimeError
 
     # generate and display backup information for the master secret
     if perform_backup:
