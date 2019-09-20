@@ -29,8 +29,6 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
     share = slip39.decode_mnemonic(words)
 
     remaining = storage.recovery.fetch_slip39_remaining_shares()
-    # TODO: move this whole logic to storage
-    index_with_group_offset = share.index + share.group_index * slip39.MAX_SHARE_COUNT
 
     # if this is the first share, parse and store metadata
     if not remaining:
@@ -42,7 +40,7 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
         storage.recovery.set_slip39_remaining_shares(
             share.threshold - 1, share.group_index
         )
-        storage.recovery_shares.set(index_with_group_offset, words)
+        storage.recovery_shares.set(share.index, words, share.group_index)
 
         # if share threshold and group threshold are 1
         # we can calculate the secret right away
@@ -58,7 +56,7 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
     # These should be checked by UI before so it's a Runtime exception otherwise
     if share.identifier != storage.recovery.get_slip39_identifier():
         raise RuntimeError("Slip39: Share identifiers do not match")
-    if storage.recovery_shares.get(index_with_group_offset):
+    if storage.recovery_shares.get(share.index, share.group_index):
         raise RuntimeError("Slip39: This mnemonic was already entered")
 
     remaining_for_share = (
@@ -69,7 +67,7 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
         remaining_for_share - 1, share.group_index
     )
     remaining[share.group_index] = remaining_for_share - 1
-    storage.recovery_shares.set(index_with_group_offset, words)
+    storage.recovery_shares.set(share.index, words, share.group_index)
 
     if remaining.count(0) < share.group_threshold:
         # we need more shares
