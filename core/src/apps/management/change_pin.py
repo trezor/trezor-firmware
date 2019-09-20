@@ -50,7 +50,7 @@ def require_confirm_change_pin(ctx: wire.Context, msg: ChangePin) -> None:
     if not msg.remove and has_pin:  # changing pin
         text = Text("Change PIN", ui.ICON_CONFIG)
         text.normal("Do you really want to")
-        text.bold("change the current PIN?")
+        text.bold("change your PIN?")
         return require_confirm(ctx, text)
 
     if not msg.remove and not has_pin:  # setting new pin

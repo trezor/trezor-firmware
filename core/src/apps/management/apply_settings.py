@@ -49,14 +49,14 @@ async def apply_settings(ctx, msg):
 
 
 async def require_confirm_change_homescreen(ctx):
-    text = Text("Change homescreen", ui.ICON_CONFIG)
-    text.normal("Do you really want to", "change homescreen?")
+    text = Text("Set homescreen", ui.ICON_CONFIG)
+    text.normal("Do you really want to", "change the homescreen", "image?")
     await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
 
 
 async def require_confirm_change_label(ctx, label):
     text = Text("Change label", ui.ICON_CONFIG)
-    text.normal("Do you really want to", "change label to")
+    text.normal("Do you really want to", "change the label to")
     text.bold("%s?" % label)
     await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
 

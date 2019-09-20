@@ -44,7 +44,7 @@ async def request_passphrase_source(ctx: wire.Context) -> int:
     await ctx.call(req, ButtonAck)
 
     text = Text("Enter passphrase", ui.ICON_CONFIG)
-    text.normal("Where to enter your", "passphrase?")
+    text.normal("Where do you want to", "enter your passphrase?")
     source = PassphraseSource(text)
 
     return await ctx.wait(source)
@@ -53,7 +53,7 @@ async def request_passphrase_source(ctx: wire.Context) -> int:
 async def request_passphrase_ack(ctx: wire.Context, on_device: bool) -> str:
     if not on_device:
         text = Text("Passphrase entry", ui.ICON_CONFIG)
-        text.normal("Please, type passphrase", "on connected host.")
+        text.normal("Please type your", "passphrase on the", "connected host.")
         await Popup(text)
 
     req = PassphraseRequest(on_device=on_device)
