@@ -205,7 +205,7 @@ _ALLOW_FIDO2 = True
 _ALLOW_RESIDENT_CREDENTIALS = True
 
 # The attestation type to use in MakeCredential responses. If false, then self attestation will be used.
-_USE_BASIC_ATTESTATION = True
+_USE_BASIC_ATTESTATION = False
 
 
 def frame_init() -> dict:
