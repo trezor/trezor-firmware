@@ -323,7 +323,6 @@ static void display_choices(bool twoColumn, char choices[9][12], int num) {
  * Generates a new matrix and requests the next pin.
  */
 static void next_matrix(void) {
-  const char *const *wl = mnemonic_wordlist();
   char word_choices[9][12];
   uint32_t idx, num;
   bool last = (word_index % 4) == 3;
@@ -342,7 +341,8 @@ static void next_matrix(void) {
       const uint32_t first = TABLE2(idx);
       num = TABLE2(idx + 1) - first;
       for (uint32_t i = 0; i < num; i++) {
-        strlcpy(word_choices[i], wl[first + i], sizeof(word_choices[i]));
+        strlcpy(word_choices[i], mnemonic_get_word(first + i),
+                sizeof(word_choices[i]));
       }
       break;
 
@@ -354,7 +354,8 @@ static void next_matrix(void) {
       num = TABLE1(word_pincode + 1) - idx;
       for (uint32_t i = 0; i < num; i++) {
         add_choice(word_choices[i], (word_table2[idx + i] >> 12),
-                   wl[TABLE2(idx + i)], wl[TABLE2(idx + i + 1) - 1]);
+                   mnemonic_get_word(TABLE2(idx + i)),
+                   mnemonic_get_word(TABLE2(idx + i + 1) - 1));
       }
       break;
 
@@ -366,8 +367,8 @@ static void next_matrix(void) {
       num = 9;
       for (uint32_t i = 0; i < num; i++) {
         add_choice(word_choices[i], (word_table1[idx + i] >> 12),
-                   wl[TABLE2(TABLE1(idx + i))],
-                   wl[TABLE2(TABLE1(idx + i + 1)) - 1]);
+                   mnemonic_get_word(TABLE2(TABLE1(idx + i))),
+                   mnemonic_get_word(TABLE2(TABLE1(idx + i + 1)) - 1));
       }
       break;
 
@@ -376,8 +377,8 @@ static void next_matrix(void) {
       /* num: the number of choices. */
       num = 9;
       for (uint32_t i = 0; i < num; i++) {
-        add_choice(word_choices[i], 1, wl[TABLE2(TABLE1(9 * i))],
-                   wl[TABLE2(TABLE1(9 * (i + 1))) - 1]);
+        add_choice(word_choices[i], 1, mnemonic_get_word(TABLE2(TABLE1(9 * i))),
+                   mnemonic_get_word(TABLE2(TABLE1(9 * (i + 1))) - 1));
       }
       break;
   }
@@ -427,7 +428,7 @@ static void recovery_digit(const char digit) {
     uint32_t widx = word_index / 4;
 
     word_pincode = 0;
-    strlcpy(words[widx], mnemonic_wordlist()[idx], sizeof(words[widx]));
+    strlcpy(words[widx], mnemonic_get_word(idx), sizeof(words[widx]));
     if (widx + 1 == word_count) {
       recovery_done();
       return;
@@ -449,8 +450,8 @@ void next_word(void) {
   oledDrawStringCenter(OLED_WIDTH / 2, 8, _("Please enter"), FONT_STANDARD);
   word_pos = word_order[word_index];
   if (word_pos == 0) {
-    const char *const *wl = mnemonic_wordlist();
-    strlcpy(fake_word, wl[random_uniform(2048)], sizeof(fake_word));
+    strlcpy(fake_word, mnemonic_get_word(random_uniform(BIP39_WORDS)),
+            sizeof(fake_word));
     oledDrawStringCenter(OLED_WIDTH / 2, 24, fake_word,
                          FONT_FIXED | FONT_DOUBLE);
   } else {
@@ -521,6 +522,10 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
 }
 
 static void recovery_scrambledword(const char *word) {
+  int index = -1;
+  if (enforce_wordlist) {  // check if word is valid
+    index = mnemonic_find_word(word);
+  }
   if (word_pos == 0) {  // fake word
     if (strcmp(word, fake_word) != 0) {
       if (!dry_run) {
@@ -531,18 +536,9 @@ static void recovery_scrambledword(const char *word) {
       layoutHome();
       return;
     }
-  } else {                   // real word
-    if (enforce_wordlist) {  // check if word is valid
-      const char *const *wl = mnemonic_wordlist();
-      bool found = false;
-      while (*wl) {
-        if (strcmp(word, *wl) == 0) {
-          found = true;
-          break;
-        }
-        wl++;
-      }
-      if (!found) {
+  } else {  // real word
+    if (enforce_wordlist) {
+      if (index < 0) {  // not found
         if (!dry_run) {
           session_clear(true);
         }
