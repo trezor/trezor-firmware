@@ -1,6 +1,6 @@
 from trezor import loop, utils, wire
+from trezor.crypto import slip39
 from trezor.crypto.hashlib import sha256
-from trezor.crypto.slip39 import MAX_SHARE_COUNT
 from trezor.errors import MnemonicError
 from trezor.messages import BackupType
 from trezor.messages.Success import Success
@@ -209,14 +209,18 @@ async def _show_remaining_groups_and_shares(ctx: wire.Context) -> None:
     identifiers = []
     first_entered_index = -1
     for i in range(len(shares_remaining)):
-        if shares_remaining[i] < MAX_SHARE_COUNT:
+        if shares_remaining[i] < slip39.MAX_SHARE_COUNT:
             first_entered_index = i
 
+    share = None
     for i, r in enumerate(shares_remaining):
-        if 0 < r < MAX_SHARE_COUNT:
-            identifier = storage.recovery_shares.fetch_group(i)[0].split(" ")[0:3]
+        if 0 < r < slip39.MAX_SHARE_COUNT:
+            if not share:
+                m = storage.recovery_shares.fetch_group(i)[0]
+                share = slip39.decode_mnemonic(m)
+            identifier = mnemonic.split(" ")[0:3]
             identifiers.append([r, identifier])
-        elif r == MAX_SHARE_COUNT:
+        elif r == slip39.MAX_SHARE_COUNT:
             identifier = storage.recovery_shares.fetch_group(first_entered_index)[
                 0
             ].split(" ")[0:2]
@@ -226,4 +230,6 @@ async def _show_remaining_groups_and_shares(ctx: wire.Context) -> None:
             except ValueError:
                 identifiers.append([r, identifier])
 
-    return await layout.show_remaining_shares(ctx, identifiers, shares_remaining)
+    return await layout.show_remaining_shares(
+        ctx, identifiers, shares_remaining, share.group_threshold
+    )

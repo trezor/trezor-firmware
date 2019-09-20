@@ -16,7 +16,6 @@ _SLIP39_THRESHOLD          = const(0x04)  # int
 _REMAINING                 = const(0x05)  # int
 _SLIP39_ITERATION_EXPONENT = const(0x06)  # int
 _SLIP39_GROUP_COUNT        = const(0x07)  # int
-_SLIP39_GROUP_THRESHOLD    = const(0x08)  # int
 
 # Deprecated Keys:
 # _WORD_COUNT                = const(0x02)  # int
@@ -95,15 +94,6 @@ def get_slip39_group_count() -> Optional[int]:
     )
 
 
-def set_slip39_group_threshold(group_threshold: int) -> None:
-    common.set_uint8(_NAMESPACE, _SLIP39_GROUP_THRESHOLD, group_threshold)
-
-
-def get_slip39_group_threshold() -> Optional[int]:
-    _require_progress()
-    return common.get_uint8(_NAMESPACE, _SLIP39_GROUP_THRESHOLD)
-
-
 def set_slip39_remaining_shares(shares_remaining: int, group_index: int) -> None:
     """
     We store the remaining shares as a bytearray of length group_count.
@@ -153,5 +143,4 @@ def end_progress() -> None:
     common.delete(_NAMESPACE, _REMAINING)
     common.delete(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
     common.delete(_NAMESPACE, _SLIP39_GROUP_COUNT)
-    common.delete(_NAMESPACE, _SLIP39_GROUP_THRESHOLD)
     recovery_shares.delete()

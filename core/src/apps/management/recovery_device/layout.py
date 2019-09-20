@@ -154,8 +154,8 @@ async def show_remaining_shares(
     ctx: wire.Context,
     groups: List[int, List[str]],  # remaining + list 3 words
     shares_remaining: List[int],
+    group_threshold: int,
 ) -> None:
-    group_threshold = storage.recovery.get_slip39_group_threshold()
     pages = []
     for remaining, group in groups:
         if 0 < remaining < MAX_SHARE_COUNT:

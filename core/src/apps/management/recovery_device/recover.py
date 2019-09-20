@@ -35,7 +35,6 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
     # if this is the first share, parse and store metadata
     if not remaining:
         storage.recovery.set_slip39_group_count(share.group_count)
-        storage.recovery.set_slip39_group_threshold(share.group_threshold)
         storage.recovery.set_slip39_iteration_exponent(share.iteration_exponent)
         storage.recovery.set_slip39_identifier(share.identifier)
         storage.recovery.set_slip39_threshold(share.threshold)
