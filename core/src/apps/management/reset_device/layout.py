@@ -332,24 +332,27 @@ async def slip39_prompt_threshold(ctx, num_of_shares, group_id=None):
         if confirmed:
             break
 
+        text = "The threshold sets the number of shares "
         if group_id is None:
-            info = InfoConfirm(
-                "The threshold sets the "
-                "number of shares "
-                "needed to recover your "
-                "wallet. Set it to %s and "
-                "you will need any %s "
-                "of your %s shares." % (count, count, num_of_shares)
-            )
+            text += "needed to recover your wallet. "
+            text += "Set it to %s and you will need " % count
+            if num_of_shares == 1:
+                text += "1 share."
+            elif num_of_shares == count:
+                text += "all %s of your %s shares." % (count, num_of_shares)
+            else:
+                text += "any %s of your %s shares." % (count, num_of_shares)
         else:
-            info = InfoConfirm(
-                "The threshold sets the "
-                "number of shares "
-                "needed to form a group. "
-                "Set it to %s and you will "
-                "need any %s of %s shares "
-                "to form Group %s." % (count, count, num_of_shares, group_id + 1)
-            )
+            text += "needed to form a group. "
+            text += "Set it to %s and you will " % count
+            if num_of_shares == 1:
+                text += "need 1 share "
+            elif num_of_shares == count:
+                text += "need all %s of %s shares " % (count, num_of_shares)
+            else:
+                text += "need any %s of %s shares " % (count, num_of_shares)
+            text += "to form Group %s." % (group_id + 1)
+        info = InfoConfirm(text)
         await info
 
     return count
@@ -357,10 +360,7 @@ async def slip39_prompt_threshold(ctx, num_of_shares, group_id=None):
 
 async def slip39_prompt_number_of_shares(ctx, group_id=None):
     count = 5
-    if group_id is not None:
-        min_count = 1
-    else:
-        min_count = 2
+    min_count = 1
     max_count = 16
 
     while True:
@@ -551,19 +551,27 @@ class Slip39NumInput(ui.Component):
             # render the counter
             if self.step is Slip39NumInput.SET_SHARES:
                 if self.group_id is None:
-                    first_line_text = "%s people or locations" % count
-                    second_line_text = "will each hold one share."
+                    if count == 1:
+                        first_line_text = "Only one share will"
+                        second_line_text = "be created."
+                    else:
+                        first_line_text = "%s people or locations" % count
+                        second_line_text = "will each hold one share."
                 else:
                     first_line_text = "Set the total number of"
                     second_line_text = "shares in Group %s." % (self.group_id + 1)
                 ui.display.text(
                     12, 130, first_line_text, ui.NORMAL, ui.FG, ui.BG, ui.WIDTH - 12
                 )
-                ui.display.text(12, 156, second_line_text, ui.NORMAL, ui.FG, ui.BG)
+                ui.display.text(
+                    12, 156, second_line_text, ui.NORMAL, ui.FG, ui.BG, ui.WIDTH - 12
+                )
             elif self.step is Slip39NumInput.SET_THRESHOLD:
                 if self.group_id is None:
                     first_line_text = "For recovery you need"
-                    if count == self.input.max_count:
+                    if count == 1:
+                        second_line_text = "1 share."
+                    elif count == self.input.max_count:
                         second_line_text = "all %s of the shares." % count
                     else:
                         second_line_text = "any %s of the shares." % count
