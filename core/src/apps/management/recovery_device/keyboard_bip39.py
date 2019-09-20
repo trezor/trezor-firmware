@@ -172,8 +172,8 @@ class Bip39Keyboard(ui.Layout):
 
         # find the completions
         pending = button is not None
-        word = bip39.find_word(text) or ""
-        mask = bip39.complete_word(text)
+        word = bip39.complete_word(text) or ""
+        mask = bip39.word_completion_mask(text)
 
         # modify the input state
         self.input.edit(text, word, pending)

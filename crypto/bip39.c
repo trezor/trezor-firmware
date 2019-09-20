@@ -228,4 +228,54 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
 #endif
 }
 
-const char *const *mnemonic_wordlist(void) { return wordlist; }
+// binary search for finding the word in the wordlist
+int mnemonic_find_word(const char *word) {
+  int lo = 0, hi = BIP39_WORDS - 1;
+  while (lo <= hi) {
+    int mid = lo + (hi - lo) / 2;
+    int cmp = strcmp(word, wordlist[mid]);
+    if (cmp == 0) {
+      return mid;
+    }
+    if (cmp > 0) {
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return -1;
+}
+
+const char *mnemonic_complete_word(const char *prefix, int len) {
+  // we need to perform linear search,
+  // because we want to return the first match
+  for (const char *const *w = wordlist; *w != 0; w++) {
+    if (strncmp(*w, prefix, len) == 0) {
+      return *w;
+    }
+  }
+  return NULL;
+}
+
+const char *mnemonic_get_word(int index) {
+  if (index >= 0 && index < BIP39_WORDS) {
+    return wordlist[index];
+  } else {
+    return NULL;
+  }
+}
+
+uint32_t mnemonic_word_completion_mask(const char *prefix, int len) {
+  if (len <= 0) {
+    return 0x3ffffff;  // all letters (bits 1-26 set)
+  }
+  uint32_t res = 0;
+  for (const char *const *w = wordlist; *w != 0; w++) {
+    const char *word = *w;
+    if (strncmp(word, prefix, len) == 0 && word[len] >= 'a' &&
+        word[len] <= 'z') {
+      res |= 1 << (word[len] - 'a');
+    }
+  }
+  return res;
+}
