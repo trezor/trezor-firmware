@@ -4,7 +4,12 @@ from trezor.pin import pin_to_int
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
-from apps.common.request_pin import request_pin_and_sd_salt, request_pin_confirm
+from apps.common.layout import show_success
+from apps.common.request_pin import (
+    request_pin_and_sd_salt,
+    request_pin_confirm,
+    show_pin_invalid,
+)
 
 if False:
     from trezor.messages.ChangePin import ChangePin
@@ -20,6 +25,7 @@ async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:
     # if changing pin, pre-check the entered pin before getting new pin
     if curpin and not msg.remove:
         if not config.check_pin(pin_to_int(curpin), salt):
+            await show_pin_invalid(ctx)
             raise wire.PinInvalid("PIN invalid")
 
     # get new pin
@@ -30,12 +36,22 @@ async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:
 
     # write into storage
     if not config.change_pin(pin_to_int(curpin), pin_to_int(newpin), salt, salt):
+        await show_pin_invalid(ctx)
         raise wire.PinInvalid("PIN invalid")
 
     if newpin:
-        return Success(message="PIN changed")
+        if curpin:
+            msg_screen = "changed your PIN."
+            msg_wire = "PIN changed"
+        else:
+            msg_screen = "enabled PIN protection."
+            msg_wire = "PIN enabled"
     else:
-        return Success(message="PIN removed")
+        msg_screen = "disabled PIN protection."
+        msg_wire = "PIN removed"
+
+    await show_success(ctx, ("You have successfully", msg_screen))
+    return Success(message=msg_wire)
 
 
 def require_confirm_change_pin(ctx: wire.Context, msg: ChangePin) -> None:

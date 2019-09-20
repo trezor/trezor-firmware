@@ -35,6 +35,9 @@ def _input_flow_set_pin(debug, pin):
     yield  # enter new pin again
     print(f"reenter pin {pin}")
     debug.input(pin)
+    yield  # success
+    print("success")
+    debug.press_yes()
 
 
 def _input_flow_change_pin(debug, old_pin, new_pin):
@@ -46,6 +49,8 @@ def _input_flow_change_pin(debug, old_pin, new_pin):
     debug.input(new_pin)
     yield  # enter new pin again
     debug.input(new_pin)
+    yield  # success
+    debug.press_yes()
 
 
 def _input_flow_clear_pin(debug, old_pin):
@@ -53,6 +58,8 @@ def _input_flow_clear_pin(debug, old_pin):
     debug.press_yes()
     yield  # enter current pin
     debug.input(old_pin)
+    yield  # success
+    debug.press_yes()
 
 
 def _check_pin(client, pin):
@@ -61,7 +68,7 @@ def _check_pin(client, pin):
 
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 4 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 5 + [messages.Success(), messages.Features()]
         )
         client.set_input_flow(_input_flow_change_pin(client.debug, pin, pin))
         device.change_pin(client)
@@ -77,9 +84,9 @@ def _check_no_pin(client):
 
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 3
+            [messages.ButtonRequest()] * 4
             + [messages.Success(), messages.Features()]
-            + [messages.ButtonRequest()] * 2
+            + [messages.ButtonRequest()] * 3
             + [messages.Success(), messages.Features()]
         )
         client.set_input_flow(input_flow)
@@ -98,7 +105,7 @@ def test_set_pin(client):
     # Let's set new PIN
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 3 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 4 + [messages.Success(), messages.Features()]
         )
         client.set_input_flow(_input_flow_set_pin(client.debug, PIN6))
 
@@ -119,7 +126,7 @@ def test_change_pin(client):
     # Let's change PIN
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 4 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 5 + [messages.Success(), messages.Features()]
         )
         client.set_input_flow(_input_flow_change_pin(client.debug, PIN4, PIN6))
 
@@ -142,7 +149,7 @@ def test_remove_pin(client):
     # Let's remove PIN
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 2 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 3 + [messages.Success(), messages.Features()]
         )
         client.set_input_flow(_input_flow_clear_pin(client.debug, PIN4))
 
