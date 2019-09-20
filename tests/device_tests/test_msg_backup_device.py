@@ -60,6 +60,8 @@ def test_backup_bip39(client):
         device.backup(client)
 
     assert mnemonic == MNEMONIC12
+    client.init_device()
+    assert client.features.needs_backup is False
 
 
 @pytest.mark.skip_t1
@@ -114,6 +116,9 @@ def test_backup_slip39_basic(client):
             ]
         )
         device.backup(client)
+
+    client.init_device()
+    assert client.features.needs_backup is False
 
     expected_ms = shamir.combine_mnemonics(MNEMONIC_SLIP39_BASIC_20_3of6)
     actual_ms = shamir.combine_mnemonics(mnemonics[:3])
