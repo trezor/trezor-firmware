@@ -15,6 +15,7 @@ from apps.common import storage
 from apps.common.confirm import confirm, info_confirm, require_confirm
 from apps.common.layout import show_success, show_warning
 from apps.management import backup_types
+from apps.management.recovery_device import recover
 
 if __debug__:
     from apps.debug import input_signal
@@ -91,9 +92,9 @@ async def check_word_validity(
     if backup_type is BackupType.Bip39:
         return True
 
-    previous_mnemonics = storage.recovery_shares.fetch()
-    if not previous_mnemonics:
-        # this function must be called only if some mnemonics are already stored
+    previous_mnemonics = recover.fetch_previous_mnemonics()
+    if previous_mnemonics is None:
+        # this should not happen if backup_type is set
         raise RuntimeError
 
     if backup_type == BackupType.Slip39_Basic:
@@ -151,10 +152,10 @@ async def check_word_validity(
 
 async def show_remaining_shares(
     ctx: wire.Context,
-    groups: List[[int, List[str]]],  # remaining + list 3 words
+    groups: List[int, List[str]],  # remaining + list 3 words
     shares_remaining: List[int],
+    group_threshold: int,
 ) -> None:
-    group_threshold = storage.recovery.get_slip39_group_threshold()
     pages = []
     for remaining, group in groups:
         if 0 < remaining < MAX_SHARE_COUNT:
@@ -239,8 +240,8 @@ async def show_dry_run_different_type(ctx: wire.Context) -> None:
     )
 
 
-async def show_invalid_mnemonic(ctx: wire.Context, is_slip39: bool) -> None:
-    if is_slip39:
+async def show_invalid_mnemonic(ctx: wire.Context, word_count: int) -> None:
+    if backup_types.is_slip39_word_count(word_count):
         await show_warning(ctx, ("You have entered", "an invalid recovery", "share."))
     else:
         await show_warning(ctx, ("You have entered", "an invalid recovery", "seed."))
