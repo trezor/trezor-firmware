@@ -14,6 +14,9 @@ from trezorutils import (  # noqa: F401
     set_mode_unprivileged,
 )
 
+# Don't remove! This line will be modified when freezing the module
+BITCOIN_ONLY = BITCOIN_ONLY
+
 if __debug__:
     if EMULATOR:
         import uos
