@@ -30,6 +30,7 @@
 #include "memzero.h"
 #include "oled.h"
 #include "rng.h"
+#include "secbool.h"
 #include "secp256k1.h"
 #include "sha2.h"
 #include "signatures.h"
@@ -115,6 +116,34 @@ static void check_and_write_chunk(void) {
 
   memzero(FW_CHUNK, sizeof(FW_CHUNK));
   chunk_idx++;
+}
+
+// read protobuf integer and advance pointer
+static secbool readprotobufint(const uint8_t **ptr, uint32_t *result) {
+  *result = 0;
+
+  for (int i = 0; i <= 3; ++i) {
+    *result += (**ptr & 0x7F) << (7 * i);
+    if ((**ptr & 0x80) == 0) {
+      (*ptr)++;
+      return sectrue;
+    }
+    (*ptr)++;
+  }
+
+  if (**ptr & 0xF0) {
+    // result does not fit into uint32_t
+    *result = 0;
+
+    // skip over the rest of the integer
+    while (**ptr & 0x80) (*ptr)++;
+    (*ptr)++;
+    return secfalse;
+  }
+
+  *result += (uint32_t)(**ptr) << 28;
+  (*ptr)++;
+  return sectrue;
 }
 
 static void rx_callback(usbd_device *dev, uint8_t ep) {
@@ -226,7 +255,12 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       }
       // read payload length
       const uint8_t *p = buf + 10;
-      flash_len = readprotobufint(&p);
+      if (readprotobufint(&p, &flash_len) != sectrue) {  // integer too large
+        send_msg_failure(dev);
+        flash_state = STATE_END;
+        show_halt("Firmware is too big.", NULL);
+        return;
+      }
       if (flash_len <= FLASH_FWHEADER_LEN) {  // firmware is too small
         send_msg_failure(dev);
         flash_state = STATE_END;
@@ -254,7 +288,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       chunk_idx = 0;
       w = 0;
       while (p < buf + 64) {
-        w = (w >> 8) | (*p << 24);  // assign byte to first byte of uint32_t w
+        // assign byte to first byte of uint32_t w
+        w = (w >> 8) | (((uint32_t)*p) << 24);
         wi++;
         if (wi == 4) {
           FW_HEADER[flash_pos / 4] = w;
@@ -285,7 +320,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
     const uint8_t *p = buf + 1;
     while (p < buf + 64 && flash_pos < flash_len) {
-      w = (w >> 8) | (*p << 24);  // assign byte to first byte of uint32_t w
+      // assign byte to first byte of uint32_t w
+      w = (w >> 8) | (((uint32_t)*p) << 24);
       wi++;
       if (wi == 4) {
         if (flash_pos < FLASH_FWHEADER_LEN) {
