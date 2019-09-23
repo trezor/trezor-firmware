@@ -20,6 +20,7 @@ import pytest
 from mnemonic import Mnemonic
 
 from trezorlib import device, messages as proto
+from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import ButtonRequestType as B
 
 from ..common import (
@@ -104,6 +105,10 @@ class TestMsgResetDeviceT2:
         assert resp.pin_protection is False
         assert resp.passphrase_protection is False
         assert resp.backup_type is proto.BackupType.Bip39
+
+        # backup attempt fails because backup was done in reset
+        with pytest.raises(TrezorFailure, match="ProcessError: Seed already backed up"):
+            device.backup(client)
 
     @pytest.mark.setup_client(uninitialized=True)
     def test_reset_device_pin(self, client):
