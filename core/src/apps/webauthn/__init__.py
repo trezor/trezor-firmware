@@ -132,6 +132,7 @@ _ERR_CHANNEL_BUSY = const(0x06)  # channel busy
 _ERR_LOCK_REQUIRED = const(0x0A)  # command requires channel lock
 _ERR_INVALID_CID = const(0x0B)  # command not allowed on this cid
 _ERR_INVALID_CBOR = const(0x12)  # error when parsing CBOR
+_ERR_MISSING_PARAMETER = const(0x14)  # missing non-optional parameter
 _ERR_CREDENTIAL_EXCLUDED = const(0x19)  # valid credential found in the exclude list
 _ERR_UNSUPPORTED_ALGORITHM = const(0x26)  # requested COSE algorithm not supported
 _ERR_OPERATION_DENIED = const(0x27)  # user declined or timed out
@@ -1270,6 +1271,8 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         )
 
         client_data_hash = param[_MAKECRED_CMD_CLIENT_DATA_HASH]
+    except KeyError:
+        return cbor_error(req.cid, _ERR_MISSING_PARAMETER)
     except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
@@ -1428,6 +1431,8 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         hmac_secret = param.get(_GETASSERT_CMD_EXTENSIONS, {}).get("hmac-secret", None)
 
         client_data_hash = param[_GETASSERT_CMD_CLIENT_DATA_HASH]
+    except KeyError:
+        return cbor_error(req.cid, _ERR_MISSING_PARAMETER)
     except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
