@@ -208,6 +208,8 @@ _ALLOW_RESIDENT_CREDENTIALS = True
 # The attestation type to use in MakeCredential responses. If false, then self attestation will be used.
 _USE_BASIC_ATTESTATION = False
 
+_AUTOCONFIRM = False
+
 
 def frame_init() -> dict:
     # uint32_t cid;     // Channel identifier
@@ -534,6 +536,8 @@ async def verify_user(keepalive_callback: KeepaliveCallback) -> bool:
 
 
 async def confirm(*args: Any, **kwargs: Any) -> bool:
+    if _AUTOCONFIRM:
+        return True
     dialog = Confirm(*args, **kwargs)
     if __debug__:
         return await loop.race(dialog, confirm_signal()) is CONFIRMED
@@ -542,6 +546,8 @@ async def confirm(*args: Any, **kwargs: Any) -> bool:
 
 
 async def confirm_pageable(*args: Any, **kwargs: Any) -> bool:
+    if _AUTOCONFIRM:
+        return True
     dialog = ConfirmPageable(*args, **kwargs)
     if __debug__:
         return await loop.race(dialog, confirm_signal()) is CONFIRMED
