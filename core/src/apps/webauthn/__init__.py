@@ -541,6 +541,14 @@ async def confirm(*args: Any, **kwargs: Any) -> bool:
         return await dialog is CONFIRMED
 
 
+async def confirm_pageable(*args: Any, **kwargs: Any) -> bool:
+    dialog = ConfirmPageable(*args, **kwargs)
+    if __debug__:
+        return await loop.race(dialog, confirm_signal()) is CONFIRMED
+    else:
+        return await dialog is CONFIRMED
+
+
 class State:
     def __init__(self, cid: int, iface: io.HID) -> None:
         self.cid = cid
@@ -763,7 +771,7 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
 
     async def confirm_dialog(self) -> bool:
         content = ConfirmContent(self)
-        if await ConfirmPageable(self, content) is not CONFIRMED:
+        if not await confirm_pageable(self, content):
             return False
         if self._user_verification:
             return await verify_user(KeepaliveCallback(self.cid, self.iface))
