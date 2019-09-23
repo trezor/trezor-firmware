@@ -7,7 +7,12 @@ from trezor.pin import pin_to_int
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
-from apps.common.request_pin import request_pin_ack, request_pin_and_sd_salt
+from apps.common.layout import show_success
+from apps.common.request_pin import (
+    request_pin_ack,
+    request_pin_and_sd_salt,
+    show_pin_invalid,
+)
 from apps.common.sd_salt import (
     SD_SALT_AUTH_KEY_LEN_BYTES,
     SD_SALT_AUTH_TAG_LEN_BYTES,
@@ -71,10 +76,12 @@ async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
             # SD-protection. If it fails for any reason, we suppress the
             # exception, because primarily we need to raise wire.PinInvalid.
             pass
+        await show_pin_invalid(ctx)
         raise wire.PinInvalid("PIN invalid")
 
     device.set_sd_salt_auth_key(salt_auth_key)
 
+    await show_success(ctx, ("You have successfully", "enabled SD protection."))
     return Success(message="SD card protection enabled")
 
 
@@ -90,6 +97,7 @@ async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
 
     # Check PIN and remove salt.
     if not config.change_pin(pin_to_int(pin), pin_to_int(pin), salt, None):
+        await show_pin_invalid(ctx)
         raise wire.PinInvalid("PIN invalid")
 
     device.set_sd_salt_auth_key(None)
@@ -103,6 +111,7 @@ async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
         # because overall SD-protection was successfully disabled.
         pass
 
+    await show_success(ctx, ("You have successfully", "disabled SD protection."))
     return Success(message="SD card protection disabled")
 
 
@@ -128,6 +137,7 @@ async def sd_protect_refresh(ctx: wire.Context, msg: SdProtect) -> Success:
         raise wire.ProcessError("Failed to write to SD card")
 
     if not config.change_pin(pin_to_int(pin), pin_to_int(pin), old_salt, new_salt):
+        await show_pin_invalid(ctx)
         raise wire.PinInvalid("PIN invalid")
 
     device.set_sd_salt_auth_key(new_salt_auth_key)
@@ -141,6 +151,7 @@ async def sd_protect_refresh(ctx: wire.Context, msg: SdProtect) -> Success:
         # SD-protection was successfully refreshed.
         pass
 
+    await show_success(ctx, ("You have successfully", "refreshed SD protection."))
     return Success(message="SD card protection refreshed")
 
 

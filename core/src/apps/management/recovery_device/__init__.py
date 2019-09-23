@@ -6,7 +6,11 @@ from trezor.ui.text import Text
 
 from apps.common import storage
 from apps.common.confirm import require_confirm
-from apps.common.request_pin import request_pin_and_sd_salt, request_pin_confirm
+from apps.common.request_pin import (
+    request_pin_and_sd_salt,
+    request_pin_confirm,
+    show_pin_invalid,
+)
 from apps.management.recovery_device.homescreen import recovery_process
 
 if False:
@@ -28,6 +32,7 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     if msg.dry_run:
         curpin, salt = await request_pin_and_sd_salt(ctx, "Enter PIN")
         if not config.check_pin(pin_to_int(curpin), salt):
+            await show_pin_invalid(ctx)
             raise wire.PinInvalid("PIN invalid")
 
     # set up pin if requested
