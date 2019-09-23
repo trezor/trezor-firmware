@@ -484,6 +484,8 @@ def load_device(
 
     if slip0014:
         mnemonic = [" ".join(["all"] * 12)]
+        if not label:
+            label = "SLIP-0014"
 
     return debuglink.load_device_by_mnemonic(
         client,
