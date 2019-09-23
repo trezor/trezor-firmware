@@ -20,6 +20,7 @@ import pytest
 import shamir_mnemonic as shamir
 
 from trezorlib import device, messages as proto
+from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
 from ..common import click_through, generate_entropy, read_and_confirm_mnemonic
@@ -175,6 +176,10 @@ class TestMsgResetDeviceT2:
         assert client.features.pin_protection is False
         assert client.features.passphrase_protection is False
         assert client.features.backup_type is BackupType.Slip39_Advanced
+
+        # backup attempt fails because backup was done in reset
+        with pytest.raises(TrezorFailure, match="ProcessError: Seed already backed up"):
+            device.backup(client)
 
 
 def validate_mnemonics(mnemonics, threshold, expected_ems):
