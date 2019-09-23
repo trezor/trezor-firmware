@@ -735,6 +735,7 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
         client_data_hash: bytes,
         creds: List[Credential],
         hmac_secret: Optional[dict],
+        resident: bool,
         user_verification: bool,
     ) -> None:
         Fido2State.__init__(self, cid, iface)
@@ -743,6 +744,7 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
         self._client_data_hash = client_data_hash
         self._creds = creds
         self._hmac_secret = hmac_secret
+        self._resident = resident
         self._user_verification = user_verification
         self.load_icon(self._creds[0].rp_id_hash)
 
@@ -777,6 +779,7 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
                 cred.rp_id_hash,
                 cred,
                 self._hmac_secret,
+                self._resident,
                 True,
                 self._user_verification,
             )
@@ -804,7 +807,9 @@ class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
     def __init__(self, cid: int, iface: io.HID, rp_id: str) -> None:
         cred = Fido2Credential()
         cred.rp_id = rp_id
-        super().__init__(cid, iface, b"", [cred], {}, user_verification=False)
+        super().__init__(
+            cid, iface, b"", [cred], {}, resident=False, user_verification=False
+        )
 
     async def on_confirm(self) -> None:
         cmd = cbor_error(self.cid, _ERR_NO_CREDENTIALS)
@@ -1400,10 +1405,12 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
                     if cred.rp_id is None:
                         cred.rp_id = rp_id
                     cred_list.append(cred)
+            resident = False
         else:
             # Allow list is empty. Get resident credentials.
             if _ALLOW_RESIDENT_CREDENTIALS:
                 cred_list = get_resident_credentials(rp_id_hash)
+            resident = True
 
         # Sort credentials by time of creation.
         cred_list.sort()
@@ -1461,6 +1468,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
                 rp_id_hash,
                 cred_list[0],
                 hmac_secret,
+                resident,
                 user_presence,
                 user_verification,
             )
@@ -1476,6 +1484,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
                 client_data_hash,
                 cred_list,
                 hmac_secret,
+                resident,
                 user_verification,
             )
         )
@@ -1536,6 +1545,7 @@ def cbor_get_assertion_sign(
     rp_id_hash: bytes,
     cred: Credential,
     hmac_secret: Optional[dict],
+    resident: bool,
     user_presence: bool,
     user_verification: bool,
 ) -> bytes:
@@ -1585,7 +1595,7 @@ def cbor_get_assertion_sign(
         _GETASSERT_RESP_SIGNATURE: sig,
     }
 
-    if user_presence and cred.user_id is not None:
+    if resident and user_presence and cred.user_id is not None:
         response[_GETASSERT_RESP_USER] = {"id": cred.user_id}
 
     return cbor.encode(response)
