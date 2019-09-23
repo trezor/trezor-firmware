@@ -29,9 +29,9 @@ async def wrong_card_dialog(ctx: Optional[wire.Context]) -> None:
     text.br_half()
     text.normal("Please unplug the", "device and insert a", "different card.")
     if ctx is None:
-        await Confirm(text, confirm=None)
+        await Confirm(text, confirm=None, cancel="Close")
     else:
-        await require_confirm(ctx, text, confirm=None)
+        await require_confirm(ctx, text, confirm=None, cancel="Close")
 
 
 async def insert_card_dialog(ctx: Optional[wire.Context]) -> None:
@@ -40,9 +40,9 @@ async def insert_card_dialog(ctx: Optional[wire.Context]) -> None:
     text.br_half()
     text.normal("Please unplug the", "device and insert your", "SD card.")
     if ctx is None:
-        await Confirm(text, confirm=None)
+        await Confirm(text, confirm=None, cancel="Close")
     else:
-        await require_confirm(ctx, text, confirm=None)
+        await require_confirm(ctx, text, confirm=None, cancel="Close")
 
 
 async def request_sd_salt(
