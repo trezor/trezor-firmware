@@ -134,6 +134,97 @@ def test_noabort(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
+def test_ask_word_number(client):
+    debug = client.debug
+
+    def input_flow_retry_first():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        yield  # Homescreen - start process
+        debug.press_yes()
+        yield  # Enter number of words
+        debug.input("20")
+        yield  # Homescreen - proceed to share entry
+        debug.press_yes()
+        yield  # Enter first share
+        for _ in range(20):
+            debug.input("slush")
+
+        code = yield  # Invalid share
+        assert code == messages.ButtonRequestType.Warning
+        debug.press_yes()
+
+        yield  # Homescreen - start process
+        debug.press_yes()
+        yield  # Enter number of words
+        debug.input("33")
+        yield  # Homescreen - proceed to share entry
+        debug.press_yes()
+        yield  # Enter first share
+        for _ in range(33):
+            debug.input("slush")
+
+        code = yield  # Invalid share
+        assert code == messages.ButtonRequestType.Warning
+        debug.press_yes()
+
+        yield  # Homescreen
+        debug.press_no()
+        yield  # Confirm abort
+        debug.press_yes()
+
+    with client:
+        client.set_input_flow(input_flow_retry_first)
+        with pytest.raises(exceptions.Cancelled):
+            device.recover(client, pin_protection=False, label="label")
+        client.init_device()
+        assert client.features.initialized is False
+
+    def input_flow_retry_second():
+        yield  # Confirm Recovery
+        debug.press_yes()
+        yield  # Homescreen - start process
+        debug.press_yes()
+        yield  # Enter number of words
+        debug.input("20")
+        yield  # Homescreen - proceed to share entry
+        debug.press_yes()
+        yield  # Enter first share
+        share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
+        for word in share:
+            debug.input(word)
+
+        yield  # More shares needed
+        debug.press_yes()
+
+        yield  # Enter another share
+        share = share[:3] + ["slush"] * 17
+        for word in share:
+            debug.input(word)
+
+        code = yield  # Invalid share
+        assert code == messages.ButtonRequestType.Warning
+        debug.press_yes()
+
+        yield  # Proceed to next share
+        share = MNEMONIC_SLIP39_BASIC_20_3of6[1].split(" ")
+        for word in share:
+            debug.input(word)
+
+        yield  # More shares needed
+        debug.press_no()
+        yield  # Confirm abort
+        debug.press_yes()
+
+    with client:
+        client.set_input_flow(input_flow_retry_second)
+        with pytest.raises(exceptions.Cancelled):
+            device.recover(client, pin_protection=False, label="label")
+        client.init_device()
+        assert client.features.initialized is False
+
+
+@pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("nth_word", range(3))
 def test_wrong_nth_word(client, nth_word):
     debug = client.debug
