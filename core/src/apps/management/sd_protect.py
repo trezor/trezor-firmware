@@ -7,6 +7,7 @@ from trezor.pin import pin_to_int
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
+from apps.common.layout import show_success
 from apps.common.request_pin import (
     request_pin_ack,
     request_pin_and_sd_salt,
@@ -80,6 +81,7 @@ async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
 
     device.set_sd_salt_auth_key(salt_auth_key)
 
+    await show_success(ctx, ("You have successfully", "enabled SD protection."))
     return Success(message="SD card protection enabled")
 
 
@@ -109,6 +111,7 @@ async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
         # because overall SD-protection was successfully disabled.
         pass
 
+    await show_success(ctx, ("You have successfully", "disabled SD protection."))
     return Success(message="SD card protection disabled")
 
 
@@ -148,6 +151,7 @@ async def sd_protect_refresh(ctx: wire.Context, msg: SdProtect) -> Success:
         # SD-protection was successfully refreshed.
         pass
 
+    await show_success(ctx, ("You have successfully", "refreshed SD protection."))
     return Success(message="SD card protection refreshed")
 
 
