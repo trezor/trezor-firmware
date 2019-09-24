@@ -607,6 +607,10 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg) {
     strlcpy(str_title, _("Clear Flag(s)"), sizeof(str_title));
 
     // Auth required
+    if (msg->clear_flags > 7) {
+      stellar_signingAbort(_("Invalid flags"));
+      return false;
+    }
     if (msg->clear_flags & 0x01) {
       strlcpy(rows[row_idx], _("AUTH_REQUIRED"), sizeof(rows[row_idx]));
       row_idx++;
@@ -614,6 +618,11 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg) {
     // Auth revocable
     if (msg->clear_flags & 0x02) {
       strlcpy(rows[row_idx], _("AUTH_REVOCABLE"), sizeof(rows[row_idx]));
+      row_idx++;
+    }
+    // Auth immutable
+    if (msg->clear_flags & 0x04) {
+      strlcpy(rows[row_idx], _("AUTH_IMMUTABLE"), sizeof(rows[row_idx]));
       row_idx++;
     }
 
@@ -636,6 +645,10 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg) {
     strlcpy(str_title, _("Set Flag(s)"), sizeof(str_title));
 
     // Auth required
+    if (msg->set_flags > 7) {
+      stellar_signingAbort(_("Invalid flags"));
+      return false;
+    }
     if (msg->set_flags & 0x01) {
       strlcpy(rows[row_idx], _("AUTH_REQUIRED"), sizeof(rows[row_idx]));
       row_idx++;
@@ -643,6 +656,11 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg) {
     // Auth revocable
     if (msg->set_flags & 0x02) {
       strlcpy(rows[row_idx], _("AUTH_REVOCABLE"), sizeof(rows[row_idx]));
+      row_idx++;
+    }
+    // Auth immutable
+    if (msg->set_flags & 0x04) {
+      strlcpy(rows[row_idx], _("AUTH_IMMUTABLE"), sizeof(rows[row_idx]));
       row_idx++;
     }
 
