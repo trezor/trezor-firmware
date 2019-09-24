@@ -155,7 +155,7 @@ async def _request_word_count(ctx: wire.Context, dry_run: bool) -> int:
 
 async def _process_words(
     ctx: wire.Context, words: str
-) -> Tuple[Optional[bytes], EnumTypeBackupType, int]:
+) -> Tuple[Optional[bytes], EnumTypeBackupType]:
     word_count = len(words.split(" "))
     is_slip39 = backup_types.is_slip39_word_count(word_count)
 
