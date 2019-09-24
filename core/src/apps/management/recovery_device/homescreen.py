@@ -226,22 +226,22 @@ async def _show_remaining_groups_and_shares(ctx: wire.Context) -> None:
             first_entered_index = i
 
     share = None
-    for i, r in enumerate(shares_remaining):
-        if 0 <= r < slip39.MAX_SHARE_COUNT:
-            m = storage.recovery_shares.fetch_group(i)[0]
+    for index, remaining in enumerate(shares_remaining):
+        if 0 <= remaining < slip39.MAX_SHARE_COUNT:
+            m = storage.recovery_shares.fetch_group(index)[0]
             if not share:
                 share = slip39.decode_mnemonic(m)
             identifier = m.split(" ")[0:3]
-            identifiers.append([r, identifier])
-        elif r == slip39.MAX_SHARE_COUNT:
+            identifiers.append([remaining, identifier])
+        elif remaining == slip39.MAX_SHARE_COUNT:  # no shares yet
             identifier = storage.recovery_shares.fetch_group(first_entered_index)[
                 0
             ].split(" ")[0:2]
             try:
                 # we only add the group (two words) identifier once
-                identifiers.index([r, identifier])
+                identifiers.index([remaining, identifier])
             except ValueError:
-                identifiers.append([r, identifier])
+                identifiers.append([remaining, identifier])
 
     return await layout.show_remaining_shares(
         ctx, identifiers, shares_remaining, share.group_threshold
