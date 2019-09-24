@@ -62,10 +62,7 @@ async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
     salt_tag = hmac.new(salt_auth_key, salt, sha256).digest()[
         :SD_SALT_AUTH_TAG_LEN_BYTES
     ]
-    try:
-        await set_sd_salt(ctx, salt, salt_tag)
-    except Exception:
-        raise wire.ProcessError("Failed to write to SD card")
+    await set_sd_salt(ctx, salt, salt_tag)
 
     if not config.change_pin(pin, pin, None, salt):
         # Wrong PIN. Clean up the prepared salt file.
@@ -131,10 +128,7 @@ async def sd_protect_refresh(ctx: wire.Context, msg: SdProtect) -> Success:
     new_salt_tag = hmac.new(new_salt_auth_key, new_salt, sha256).digest()[
         :SD_SALT_AUTH_TAG_LEN_BYTES
     ]
-    try:
-        await stage_sd_salt(ctx, new_salt, new_salt_tag)
-    except Exception:
-        raise wire.ProcessError("Failed to write to SD card")
+    await stage_sd_salt(ctx, new_salt, new_salt_tag)
 
     if not config.change_pin(pin_to_int(pin), pin_to_int(pin), old_salt, new_salt):
         await show_pin_invalid(ctx)
