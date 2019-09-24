@@ -46,13 +46,23 @@ async def _continue_recovery_process(ctx: wire.Context) -> Success:
     # gather the current recovery state from storage
     dry_run = storage.recovery.is_dry_run()
     word_count, backup_type = recover.load_slip39_state()
-    if word_count:
+
+    # Both word_count and backup_type are derived from the same data. Both will be
+    # either set or unset. We use 'backup_type is None' to detect status of both.
+    # The following variable indicates that we are (re)starting the first recovery step,
+    # which includes word count selection.
+    is_first_step = backup_type is None
+
+    if not is_first_step:
+        # If we continue recovery, show starting screen with word count immediately.
         await _request_share_first_screen(ctx, word_count)
 
     secret = None
     while secret is None:
-        if not word_count:  # the first run, prompt word count from the user
+        if is_first_step:
+            # If we are starting recovery, ask for word count first...
             word_count = await _request_word_count(ctx, dry_run)
+            # ...and only then show the starting screen with word count.
             await _request_share_first_screen(ctx, word_count)
 
         # ask for mnemonic words one by one
@@ -63,7 +73,11 @@ async def _continue_recovery_process(ctx: wire.Context) -> Success:
             continue
 
         try:
-            secret, word_count, backup_type = await _process_words(ctx, words)
+            secret, backup_type = await _process_words(ctx, words)
+            # If _process_words succeeded, we now have both backup_type (from
+            # its result) and word_count (from _request_word_count earlier), which means
+            # that the first step is complete.
+            is_first_step = False
         except MnemonicError:
             await layout.show_invalid_mnemonic(ctx, word_count)
 
@@ -142,8 +156,7 @@ async def _request_word_count(ctx: wire.Context, dry_run: bool) -> int:
 
 async def _process_words(
     ctx: wire.Context, words: str
-) -> Tuple[Optional[bytes], EnumTypeBackupType, int]:
-
+) -> Tuple[Optional[bytes], EnumTypeBackupType]:
     word_count = len(words.split(" "))
     is_slip39 = backup_types.is_slip39_word_count(word_count)
 
@@ -159,7 +172,7 @@ async def _process_words(
             await layout.show_group_share_success(ctx, share.index, share.group_index)
         await _request_share_next_screen(ctx)
 
-    return secret, word_count, backup_type
+    return secret, backup_type
 
 
 async def _request_share_first_screen(ctx: wire.Context, word_count: int) -> None:
