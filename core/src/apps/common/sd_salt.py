@@ -123,19 +123,8 @@ async def set_sd_salt(
 
     try:
         fs.mount()
-
-        try:
-            fs.mkdir("/trezor")
-        except OSError:
-            # Directory already exists.
-            pass
-
-        try:
-            fs.mkdir(device_dir)
-        except OSError:
-            # Directory already exists.
-            pass
-
+        fs.mkdir("/trezor", True)
+        fs.mkdir(device_dir, True)
         with fs.open(salt_path, "w") as f:
             f.write(salt)
             f.write(salt_tag)

@@ -387,22 +387,26 @@ STATIC mp_obj_t mod_trezorio_FatFS_listdir(mp_obj_t self, mp_obj_t path) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFS_listdir_obj,
                                  mod_trezorio_FatFS_listdir);
 
-/// def mkdir(self, path: str) -> None:
+/// def mkdir(self, path: str, exist_ok: bool=False) -> None:
 ///     """
 ///     Create a sub directory
 ///     """
-STATIC mp_obj_t mod_trezorio_FatFS_mkdir(mp_obj_t self, mp_obj_t path) {
-  mp_obj_FatFS_t *o = MP_OBJ_TO_PTR(self);
-  mp_buffer_info_t _path;
-  mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
-  FRESULT res = f_mkdir(&(o->fs), _path.buf);
+STATIC mp_obj_t mod_trezorio_FatFS_mkdir(size_t n_args, const mp_obj_t *args) {
+  mp_obj_FatFS_t *o = MP_OBJ_TO_PTR(args[0]);
+  mp_buffer_info_t path;
+  mp_get_buffer_raise(args[1], &path, MP_BUFFER_READ);
+  FRESULT res = f_mkdir(&(o->fs), path.buf);
+  // directory exists and exist_ok is True, return without failure
+  if (res == FR_EXIST && n_args > 2 && args[2] == mp_const_true) {
+    return mp_const_none;
+  }
   if (res != FR_OK) {
     mp_raise_OSError(fresult_to_errno_table[res]);
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFS_mkdir_obj,
-                                 mod_trezorio_FatFS_mkdir);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_FatFS_mkdir_obj, 2, 3,
+                                           mod_trezorio_FatFS_mkdir);
 
 /// def unlink(self, path: str) -> None:
 ///     """
