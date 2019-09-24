@@ -227,7 +227,7 @@ async def _show_remaining_groups_and_shares(ctx: wire.Context) -> None:
 
     share = None
     for i, r in enumerate(shares_remaining):
-        if 0 < r < slip39.MAX_SHARE_COUNT:
+        if 0 <= r < slip39.MAX_SHARE_COUNT:
             m = storage.recovery_shares.fetch_group(i)[0]
             if not share:
                 share = slip39.decode_mnemonic(m)
