@@ -211,6 +211,7 @@ static inline mp_uint_t disable_irq(void) {
 #define MICROPY_HW_BOARD_NAME "TREZORv2"
 #define MICROPY_HW_MCU_NAME "STM32F427xx"
 #define MICROPY_PY_SYS_PLATFORM "trezor"
+#define MICROPY_HW_HAS_SDCARD 1
 
 // There is no classical C heap in bare-metal ports, only Python
 // garbage-collected heap. For completeness, emulate C heap via
