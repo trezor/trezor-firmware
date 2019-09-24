@@ -75,8 +75,8 @@ async def lockscreen() -> None:
 if utils.EMULATOR:
     # Ensure the emulated SD card is FAT32 formatted.
     sd = io.SDCard()
-    fs = io.FatFS()
     sd.power(True)
+    fs = io.FatFS()
     try:
         fs.mount()
     except OSError:

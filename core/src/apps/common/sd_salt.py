@@ -116,10 +116,11 @@ async def set_sd_salt(
     salt_path = "%s/%s" % (device_dir, filename)
 
     sd = io.SDCard()
-    fs = io.FatFS()
     if not sd.power(True):
         await insert_card_dialog(ctx)
         raise SdProtectCancelled
+
+    fs = io.FatFS()
 
     try:
         fs.mount()
