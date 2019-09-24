@@ -507,7 +507,7 @@ async def slip39_advanced_show_and_confirm_shares(ctx, shares):
                     await _show_confirmation_success(
                         ctx,
                         share_index=share_index,
-                        num_of_shares=len(shares),
+                        num_of_shares=len(group),
                         group_index=group_index,
                     )
                     break  # this share is confirmed, go to next one
