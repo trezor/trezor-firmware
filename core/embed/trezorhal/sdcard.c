@@ -47,6 +47,7 @@
 
 #include <string.h>
 
+#include "sdcard-set_clr_card_detect.h"
 #include "sdcard.h"
 
 static SD_HandleTypeDef sd_handle;
@@ -141,6 +142,17 @@ secbool sdcard_power_on(void) {
       goto error;
     }
     HAL_Delay(50);
+  }
+
+  // disable the card's internal CD/DAT3 card detect pull-up resistor
+  // to send ACMD42, we have to send CMD55 (APP_CMD) with with the card's RCA as
+  // the argument followed by CMD42 (SET_CLR_CARD_DETECT)
+  if (SDMMC_CmdAppCommand(sd_handle.Instance, sd_handle.SdCard.RelCardAdd
+                                                  << 16U) != SDMMC_ERROR_NONE) {
+    goto error;
+  }
+  if (SDMMC_CmdSetClrCardDetect(sd_handle.Instance, 0) != SDMMC_ERROR_NONE) {
+    goto error;
   }
 
   // configure the SD bus width for wide operation
