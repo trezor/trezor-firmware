@@ -74,9 +74,10 @@ async def _continue_recovery_process(ctx: wire.Context) -> Success:
 
         try:
             secret, backup_type = await _process_words(ctx, words)
-            # If _process_words succeeded, backup_type will be set.
-            # Otherwise we are still in "first step".
-            is_first_step = backup_type is None
+            # If _process_words succeeded, we now have both backup_type (from
+            # its result) and word_count (from _request_word_count earlier), which means
+            # that the first step is complete.
+            is_first_step = False
         except MnemonicError:
             await layout.show_invalid_mnemonic(ctx, word_count)
 
