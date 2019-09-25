@@ -58,3 +58,6 @@ def require_confirm_change_pin(ctx: wire.Context, msg: ChangePin) -> None:
         text.normal("Do you really want to")
         text.bold("enable PIN protection?")
         return require_confirm(ctx, text)
+
+    # removing non-existing PIN
+    raise wire.ProcessError("PIN protection already disabled")
