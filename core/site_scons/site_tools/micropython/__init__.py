@@ -23,13 +23,11 @@ def generate(env):
         target = str(target[0])
         source = str(source[0])
         source_name = source.replace(env['source_dir'], '')
-        # set utils.BITCOIN_ONLY to constant in src/trezor/utils.py
-        if source == "src/trezor/utils.py":
-            btc_only = 'True' if env['bitcoin_only'] == '1' else 'False'
-            interim = "%s.i" % target[:-4]  # replace .mpy with .i
-            return '$SED "s:^BITCOIN_ONLY = BITCOIN_ONLY$:BITCOIN_ONLY = %s:g" %s > %s && $MPY_CROSS -o %s -s %s %s' % (btc_only, source, interim, target, source_name, interim)
-        else:
-            return '$MPY_CROSS -o %s -s %s %s' % (target, source_name, source)
+        # replace "utils.BITCOIN_ONLY" with literal constant (True/False)
+        # so the compiler can optimize out the things we don't want
+        btc_only = 'True' if env['bitcoin_only'] == '1' else 'False'
+        interim = "%s.i" % target[:-4]  # replace .mpy with .i
+        return '$SED "s:utils\.BITCOIN_ONLY:%s:g" %s > %s && $MPY_CROSS -o %s -s %s %s' % (btc_only, source, interim, target, source_name, interim)
 
     env['BUILDERS']['FrozenModule'] = SCons.Builder.Builder(
         generator=generate_frozen_module,
