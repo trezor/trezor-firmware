@@ -276,6 +276,9 @@ class U2fCredential(Credential):
     def from_key_handle(
         key_handle: bytes, rp_id_hash: bytes
     ) -> Optional["U2fCredential"]:
+        if len(key_handle) != _KEY_HANDLE_LENGTH:
+            return None
+
         # check the keyHandle and generate the signing key
         node = U2fCredential._node_from_key_handle(rp_id_hash, key_handle, "<8L")
         if node is None:
