@@ -1,4 +1,4 @@
-from trezor import loop, utils, wire
+from trezor import restart, utils, wire
 from trezor.crypto import slip39
 from trezor.crypto.hashlib import sha256
 from trezor.errors import MnemonicError
@@ -23,10 +23,7 @@ async def recovery_homescreen() -> None:
     try:
         await recovery_process(ctx)
     finally:
-        # clear the loop state, so loop.run will exit
-        loop.clear()
-        # clear the registered wire handlers to avoid conflicts
-        wire.clear()
+        await restart.restart()
 
 
 async def recovery_process(ctx: wire.Context) -> Success:
