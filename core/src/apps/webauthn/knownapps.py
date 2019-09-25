@@ -48,6 +48,7 @@ _knownapps = {
     "www.binance.com": {"label": "Binance", "use_sign_count": False},
     "www.dropbox.com": {"label": "Dropbox"},
     "github.com": {"label": "GitHub", "use_sign_count": True},
+    "google.com": {"label": "Google"},
     "secure.login.gov": {"label": "login.gov"},
     "login.microsoft.com": {"label": "Microsoft", "use_sign_count": False},
     "webauthn.bin.coffee": {"label": "webauthn.bin.coffee"},
