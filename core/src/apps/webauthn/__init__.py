@@ -1599,7 +1599,7 @@ def cbor_get_info(req: Cmd) -> Cmd:
         _GETINFO_RESP_OPTIONS: {
             "rk": _ALLOW_RESIDENT_CREDENTIALS,
             "up": True,
-            "uv": config.has_pin(),
+            "uv": True,
         },
     }
     return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
