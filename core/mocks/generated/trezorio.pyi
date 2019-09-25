@@ -75,7 +75,7 @@ class FatFS:
         List a directory (return generator)
         """
 
-    def mkdir(self, path: str) -> None:
+    def mkdir(self, path: str, exist_ok: bool=False) -> None:
         """
         Create a sub directory
         """
