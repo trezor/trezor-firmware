@@ -131,6 +131,7 @@ _ERR_MSG_TIMEOUT = const(0x05)  # message has timed out
 _ERR_CHANNEL_BUSY = const(0x06)  # channel busy
 _ERR_LOCK_REQUIRED = const(0x0A)  # command requires channel lock
 _ERR_INVALID_CID = const(0x0B)  # command not allowed on this cid
+_ERR_CBOR_UNEXPECTED_TYPE = const(0x11)  # invalid/unexpected CBOR
 _ERR_INVALID_CBOR = const(0x12)  # error when parsing CBOR
 _ERR_MISSING_PARAMETER = const(0x14)  # missing non-optional parameter
 _ERR_CREDENTIAL_EXCLUDED = const(0x19)  # valid credential found in the exclude list
@@ -1231,6 +1232,43 @@ def cbor_error(cid: int, code: int) -> Cmd:
     return Cmd(cid, _CMD_CBOR, ustruct.pack(">B", code))
 
 
+def credentials_from_descriptor_list(
+    descriptor_list: List[dict], rp_id_hash: bytes
+) -> List[Credential]:
+    cred_list = []
+    for credential_descriptor in descriptor_list:
+        credential_type = credential_descriptor["type"]
+        if not isinstance(credential_type, str):
+            raise TypeError
+        if credential_type != "public-key":
+            continue
+
+        credential_id = credential_descriptor["id"]
+        if not isinstance(credential_id, (bytes, bytearray)):
+            raise TypeError
+        cred = Credential.from_bytes(credential_id, rp_id_hash)
+        if cred is not None:
+            cred_list.append(cred)
+
+    return cred_list
+
+
+def algorithms_from_pub_key_cred_params(pub_key_cred_params: List[dict]) -> List[int]:
+    alg_list = []
+    for pkcp in pub_key_cred_params:
+        pub_key_cred_type = pkcp["type"]
+        if not isinstance(pub_key_cred_type, str):
+            raise TypeError
+        if pub_key_cred_type != "public-key":
+            continue
+
+        pub_key_cred_alg = pkcp["alg"]
+        if not isinstance(pub_key_cred_alg, int):
+            raise TypeError
+        alg_list.append(pub_key_cred_alg)
+    return alg_list
+
+
 def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     from apps.webauthn.knownapps import knownapps
 
@@ -1241,7 +1279,8 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
     try:
         param = cbor.decode(req.data[1:])
-        rp_id = param[_MAKECRED_CMD_RP]["id"]
+        rp = param[_MAKECRED_CMD_RP]
+        rp_id = rp["id"]
         rp_id_hash = hashlib.sha256(rp_id).digest()
 
         # Prepare the new credential.
@@ -1256,21 +1295,18 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
         # Check if any of the credential descriptors in the exclude list belong to this authenticator.
         exclude_list = param.get(_MAKECRED_CMD_EXCLUDE_LIST, [])
-        for credential_descriptor in exclude_list:
-            excl_cred = Credential.from_bytes(credential_descriptor["id"], rp_id_hash)
-            if credential_descriptor["type"] == "public-key" and excl_cred is not None:
-                # This authenticator is already registered.
-                if not dialog_mgr.set_state(
-                    Fido2ConfirmExcluded(req.cid, dialog_mgr.iface, cred)
-                ):
-                    return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
-                return None
+        if credentials_from_descriptor_list(exclude_list, rp_id_hash):
+            # This authenticator is already registered.
+            if not dialog_mgr.set_state(
+                Fido2ConfirmExcluded(req.cid, dialog_mgr.iface, cred)
+            ):
+                return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
+            return None
 
         # Check that the relying party supports ECDSA P-256 with SHA-256. We don't support any other algorithms.
         pub_key_cred_params = param[_MAKECRED_CMD_PUB_KEY_CRED_PARAMS]
-        if ("public-key", _COSE_ALG_ES256) not in (
-            (pkcp.get("type", None), pkcp.get("alg", None))
-            for pkcp in pub_key_cred_params
+        if _COSE_ALG_ES256 not in algorithms_from_pub_key_cred_params(
+            pub_key_cred_params
         ):
             return cbor_error(req.cid, _ERR_UNSUPPORTED_ALGORITHM)
 
@@ -1285,6 +1321,8 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         )
 
         client_data_hash = param[_MAKECRED_CMD_CLIENT_DATA_HASH]
+    except TypeError:
+        return cbor_error(req.cid, _ERR_CBOR_UNEXPECTED_TYPE)
     except KeyError:
         return cbor_error(req.cid, _ERR_MISSING_PARAMETER)
     except Exception:
@@ -1295,11 +1333,13 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     # Check data types.
     if (
         not cred.check_data_types()
+        or not isinstance(user.get("icon", ""), str)
+        or not isinstance(rp.get("icon", ""), str)
         or not isinstance(client_data_hash, (bytes, bytearray))
         or not isinstance(resident_key, bool)
         or not isinstance(user_verification, bool)
     ):
-        return cbor_error(req.cid, _ERR_INVALID_CBOR)
+        return cbor_error(req.cid, _ERR_CBOR_UNEXPECTED_TYPE)
 
     # Check options.
     if resident_key and not _ALLOW_RESIDENT_CREDENTIALS:
@@ -1410,23 +1450,20 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         rp_id = param[_GETASSERT_CMD_RP_ID]
         rp_id_hash = hashlib.sha256(rp_id).digest()
 
-        cred_list = []
         allow_list = param.get(_GETASSERT_CMD_ALLOW_LIST, [])
         if allow_list:
             # Get all credentials from the allow list that belong to this authenticator.
-            for credential_descriptor in allow_list:
-                if credential_descriptor["type"] != "public-key":
-                    continue
-                cred = Credential.from_bytes(credential_descriptor["id"], rp_id_hash)
-                if cred is not None:
-                    if cred.rp_id is None:
-                        cred.rp_id = rp_id
-                    cred_list.append(cred)
+            cred_list = credentials_from_descriptor_list(allow_list, rp_id_hash)
+            for cred in cred_list:
+                if cred.rp_id is None:
+                    cred.rp_id = rp_id
             resident = False
         else:
             # Allow list is empty. Get resident credentials.
             if _ALLOW_RESIDENT_CREDENTIALS:
                 cred_list = get_resident_credentials(rp_id_hash)
+            else:
+                cred_list = []
             resident = True
 
         # Sort credentials by time of creation.
@@ -1445,6 +1482,8 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         hmac_secret = param.get(_GETASSERT_CMD_EXTENSIONS, {}).get("hmac-secret", None)
 
         client_data_hash = param[_GETASSERT_CMD_CLIENT_DATA_HASH]
+    except TypeError:
+        return cbor_error(req.cid, _ERR_CBOR_UNEXPECTED_TYPE)
     except KeyError:
         return cbor_error(req.cid, _ERR_MISSING_PARAMETER)
     except Exception:
@@ -1457,7 +1496,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         or not isinstance(user_presence, bool)
         or not isinstance(user_verification, bool)
     ):
-        return cbor_error(req.cid, _ERR_INVALID_CBOR)
+        return cbor_error(req.cid, _ERR_CBOR_UNEXPECTED_TYPE)
 
     # Check options.
     if "rk" in options:
