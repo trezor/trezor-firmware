@@ -1,4 +1,4 @@
-from trezor import config, ui, wire
+from trezor import config, restart, ui, wire
 from trezor.messages import ButtonRequestType
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
@@ -11,13 +11,12 @@ from apps.common.request_pin import (
     request_pin_confirm,
     show_pin_invalid,
 )
-from apps.management.recovery_device.homescreen import recovery_process
 
 if False:
     from trezor.messages.RecoveryDevice import RecoveryDevice
 
 
-async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
+async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> None:
     """
     Recover BIP39/SLIP39 seed into empty device.
     Recovery is also possible with replugged Trezor. We call this process Persistance.
@@ -51,9 +50,10 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     if msg.dry_run:
         storage.recovery.set_dry_run(msg.dry_run)
 
-    result = await recovery_process(ctx)
+    await ctx.write(Success("Device has entered the recovery mode successfully."))
 
-    return result
+    # reboot the device to start in recovery mode
+    await restart.restart()
 
 
 def _check_state(msg: RecoveryDevice) -> None:

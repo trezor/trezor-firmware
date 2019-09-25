@@ -27,6 +27,8 @@ def on_start(workflow: loop.Task) -> None:
     Call after creating a workflow task, but before running it.  You should
     make sure to always call `on_close` when the task is finished.
     """
+    if __debug__:
+        log.debug(__name__, "start: %s", workflow)
     # Take note that this workflow task is running.
     tasks.add(workflow)
 
@@ -73,6 +75,23 @@ def close_default() -> None:
             log.debug(__name__, "close default")
         # We let the `_finalize_default` reset the global.
         loop.close(default_task)
+
+
+def clear() -> None:
+    """
+    Call close on default workflow, clear default constructor and the task list.
+    """
+    global default_task
+    global default_constructor
+    if __debug__:
+        log.debug(__name__, "resetting default")
+
+    close_default()
+    # We need to set the default_constructor to None so the
+    # the default is not started again in `start_default.`
+    default_constructor = None
+    default_task = None
+    tasks.clear()
 
 
 def _finalize_default(task, value) -> None:

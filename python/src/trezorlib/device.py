@@ -156,6 +156,7 @@ def recover(
         except Cancelled:
             res = client.call(proto.Cancel())
 
+    time.sleep(1)
     client.init_device()
     return res
 
