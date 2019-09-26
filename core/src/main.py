@@ -82,6 +82,7 @@ from trezor import loop, wire, workflow
 from apps.common.storage import recovery
 
 while True:
+    modules = utils.unimport_begin()
     # initialize the wire codec
     wire.setup(usb.iface_wire)
     if __debug__:
@@ -93,5 +94,5 @@ while True:
     else:
         _boot_default()
     loop.run()
-
     # loop is empty, reboot
+    utils.unimport_end(modules)
