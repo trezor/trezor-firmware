@@ -21,6 +21,9 @@ from . import protobuf
 
 OMITTED_MESSAGES = set()  # type: Set[Type[protobuf.MessageType]]
 
+DUMP_BYTES = 5
+
+logging.addLevelName(DUMP_BYTES, "BYTES")
 
 class PrettyProtobufFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
@@ -39,13 +42,18 @@ class PrettyProtobufFormatter(logging.Formatter):
         return message
 
 
-def enable_debug_output(handler: Optional[logging.Handler] = None):
+def enable_debug_output(verbosity: int = 1, handler: Optional[logging.Handler] = None):
     if handler is None:
         handler = logging.StreamHandler()
 
     formatter = PrettyProtobufFormatter()
     handler.setFormatter(formatter)
 
+    if verbosity > 0:
+        level = logging.DEBUG
+    if verbosity > 1:
+        level = DUMP_BYTES
+
     logger = logging.getLogger("trezorlib")
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(level)
     logger.addHandler(handler)

@@ -147,9 +147,10 @@ class UnderscoreAgnosticGroup(click.Group):
         return cmd
 
 
-def enable_logging():
-    log.enable_debug_output()
-    log.OMITTED_MESSAGES.add(proto.Features)
+def configure_logging(verbose: int):
+    if verbose:
+        log.enable_debug_output(verbose)
+        log.OMITTED_MESSAGES.add(proto.Features)
 
 
 @click.command(cls=UnderscoreAgnosticGroup, context_settings={"max_content_width": 400})
@@ -159,14 +160,13 @@ def enable_logging():
     help="Select device by specific path.",
     default=os.environ.get("TREZOR_PATH"),
 )
-@click.option("-v", "--verbose", is_flag=True, help="Show communication messages.")
+@click.option("-v", "--verbose", count=True, help="Show communication messages.")
 @click.option(
     "-j", "--json", "is_json", is_flag=True, help="Print result as JSON object"
 )
 @click.pass_context
 def cli(ctx, path, verbose, is_json):
-    if verbose:
-        enable_logging()
+    configure_logging(verbose)
 
     def get_device():
         try:

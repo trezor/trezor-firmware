@@ -24,6 +24,7 @@ from typing_extensions import Protocol as StructuralType
 
 from .. import mapping, protobuf
 from . import Transport
+from ..log import DUMP_BYTES
 
 REPLEN = 64
 
@@ -141,6 +142,7 @@ class ProtocolV1(Protocol):
         data = BytesIO()
         protobuf.dump_message(data, msg)
         ser = data.getvalue()
+        LOG.log(DUMP_BYTES, "sending bytes: {}".format(ser.hex()))
         header = struct.pack(">HL", mapping.get_type(msg), len(ser))
         buffer = bytearray(b"##" + header + ser)
 
@@ -162,7 +164,9 @@ class ProtocolV1(Protocol):
             buffer.extend(self.read_next())
 
         # Strip padding
-        data = BytesIO(buffer[:datalen])
+        ser = buffer[:datalen]
+        data = BytesIO(ser)
+        LOG.log(DUMP_BYTES, "received bytes: {}".format(ser.hex()))
 
         # Parse to protobuf
         msg = protobuf.load_message(data, mapping.get_class(msg_type))
