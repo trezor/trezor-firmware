@@ -1,4 +1,4 @@
 {
   "label": "WebAuthn.me",
-  "webauthn": "webauthn.me"
+  "webauthn": ["webauthn.me"]
 }

@@ -1,4 +1,4 @@
 {
   "label": "Bitwarden",
-  "u2f": "https://vault.bitwarden.com/app-id.json"
+  "u2f": ["https://vault.bitwarden.com/app-id.json"]
 }

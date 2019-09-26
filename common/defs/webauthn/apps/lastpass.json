@@ -1,4 +1,4 @@
 {
   "label": "LastPass",
-  "u2f": "https://lastpass.com"
+  "u2f": ["https://lastpass.com"]
 }
