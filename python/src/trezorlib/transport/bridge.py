@@ -22,8 +22,8 @@ from typing import Any, Dict, Iterable, Optional
 import requests
 
 from .. import mapping, protobuf
-from . import Transport, TransportException
 from ..log import DUMP_BYTES
+from . import Transport, TransportException
 
 LOG = logging.getLogger(__name__)
 

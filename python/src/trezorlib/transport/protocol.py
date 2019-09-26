@@ -23,8 +23,8 @@ from typing import Tuple
 from typing_extensions import Protocol as StructuralType
 
 from .. import mapping, protobuf
-from . import Transport
 from ..log import DUMP_BYTES
+from . import Transport
 
 REPLEN = 64
 
