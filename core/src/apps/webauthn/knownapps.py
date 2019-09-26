@@ -1,62 +1,116 @@
-from trezor.crypto.hashlib import sha256
-
 # contents generated via script in
 # trezor-common/defs/webauthn/gen.py
 # do not edit manually
 
-_knownapps = {
+knownapps = {
     # U2F
-    "https://bitbucket.org": {"label": "Bitbucket", "use_sign_count": True},
-    "https://www.bitfinex.com": {"label": "Bitfinex", "use_sign_count": True},
-    "https://vault.bitwarden.com/app-id.json": {
+    b"\x12t;\x92\x12\x97\xb7\x7f\x115\xe4\x1f\xde\xddJ\x84j\xfe\x82\xe1\xf3i2\xa9\x91/;\r\x8d\xfb}\x0e": {
+        "label": "Bitbucket",
+        "use_sign_count": True,
+    },
+    b"0/\xd5\xb4I*\x07\xb9\xfe\xbb0\xe72i\xec\xa5\x01 \\\xcf\xe0\xc2\x0b\xf7\xb4r\xfa-1\xe2\x1ec": {
+        "label": "Bitfinex",
+        "use_sign_count": True,
+    },
+    b"\xa3M0\x9f\xfa(\xc1$\x14\xb8\xbal\x07\xee\x1e\xfa\xe1\xa8^\x8a\x04aHY\xa6|\x04\x93\xb6\x95a\x90": {
         "label": "Bitwarden",
         "use_sign_count": True,
     },
-    "https://www.dashlane.com": {"label": "Dashlane", "use_sign_count": True},
-    "https://www.dropbox.com/u2f-app-id.json": {
+    b"h \x19\x15\xd7L\xb4*\xf5\xb3\xcc\\\x95\xb9U>>:\x83\xb4\xd2\xa9;E\xfb\xad\xaa\x84i\xff\x8en": {
+        "label": "Dashlane",
+        "use_sign_count": True,
+    },
+    b'\xc5\x0f\x8a{p\x8e\x92\xf8.zP\xe2\xbd\xc5]\x8f\xd9\x1a"\xfek)\xc0\xcd\xf7\x80U0\x84*\xf5\x81': {
         "label": "Dropbox",
         "use_sign_count": True,
     },
-    "https://api-9dcf9b83.duosecurity.com": {"label": "Duo", "use_sign_count": True},
-    "https://www.fastmail.com": {"label": "FastMail", "use_sign_count": True},
-    "https://id.fedoraproject.org/u2f-origins.json": {
+    b"\xf3\xe2\x04/\x94`}\xa0\xa9\xc1\xf3\xb9^\r/+\xb2\xe0i\xc5\xbbO\xa7d\xaf\xfad}\x84{~\xd6": {
+        "label": "Duo",
+        "use_sign_count": True,
+    },
+    b"if\xab\xe3gN\xa2\xf50y\xebq\x01\x97\x84\x8c\x9b\xe6\xf3c\x99/\xd0)\xe9\x89\x84G\xcb\x9f\x00\x84": {
+        "label": "FastMail",
+        "use_sign_count": True,
+    },
+    b"\x9daD/\\\xe13\xbdFTO\xc4/\nmT\xc0\xde\xb8\x88@\xca\xc2\xb6\xae\xfae\x14\xf8\x93I\xe9": {
         "label": "Fedora",
         "use_sign_count": True,
     },
-    "https://account.gandi.net/api/u2f/trusted_facets.json": {
+    b"\xa4\xe2-\xca\xfe\xa7\xe9\x0e\x12\x89P\x119\x89\xfcE\x97\x8d\xc9\xfb\x87vu`Ql\x1ci\xdf\xdf\xd1\x96": {
         "label": "Gandi",
         "use_sign_count": True,
     },
-    "https://github.com/u2f/trusted_facets": {
+    b"pa}\xfe\xd0e\x86:\xf4|\x15Ul\x91y\x88\x80\x82\x8c\xc4\x07\xfd\xf7\n\xe8P\x11V\x94e\xa0u": {
         "label": "GitHub",
         "use_sign_count": True,
     },
-    "https://gitlab.com": {"label": "GitLab", "use_sign_count": True},
-    "https://www.gstatic.com/securitykey/origins.json": {
+    b"\xe7\xbe\x96\xa5\x1b\xd0\x19*r\x84\r.Y\t\xf7+\xa8*/\xe9?\xaabO\x039k0\xe4\x94\xc8\x04": {
+        "label": "GitLab",
+        "use_sign_count": True,
+    },
+    b'\xa5Fr\xb2"\xc4\xcf\x95\xe1Q\xed\x8dM<vzl\xc3ICYCyN\x88O=\x02:\x82)\xfd': {
         "label": "Google",
         "use_sign_count": True,
     },
-    "https://keepersecurity.com": {"label": "Keeper", "use_sign_count": True},
-    "https://lastpass.com": {"label": "LastPass", "use_sign_count": True},
-    "https://slushpool.com/static/security/u2f.json": {
+    b"S\xa1[\xa4*|\x03%\xb8\xdb\xee(\x964\xa4\x8fX\xae\xa3$fE\xd5\xffA\x8f\x9b\xb8\x81\x98\x85\xa9": {
+        "label": "Keeper",
+        "use_sign_count": True,
+    },
+    b"\xd7U\xc5'\xa8k\xf7\x84E\xc2\x82\xe7\x13\xdc\xb8mF\xff\x8b<\xaf\xcf\xb7;.\x8c\xbel\x08\x84\xcb$": {
+        "label": "LastPass",
+        "use_sign_count": True,
+    },
+    b"\x08\xb2\xa3\xd4\x199\xaa1f\x84\x93\xcb6\xcd\xccO\x16\xc4\xd9\xb4\xc8#\x8bs\xc2\xf6r\xc03\x00q\x97": {
         "label": "Slush Pool",
         "use_sign_count": True,
     },
-    "https://slushpool.com/u2f.json": {"label": "Slush Pool", "use_sign_count": True},
-    "https://dashboard.stripe.com": {"label": "Stripe", "use_sign_count": True},
-    "https://u2f.bin.coffee": {"label": "u2f.bin.coffee", "use_sign_count": True},
+    b"8\x80O.\xfft\xf2(\xb7AQ\xc2\x01\xaa\x82\xe7\xe8\xee\xfc\xac\xfe\xcf#\xfa\x14k\x13\xa3vf1O": {
+        "label": "Slush Pool",
+        "use_sign_count": True,
+    },
+    b"*\xc6\xad\t\xa6\xd0w,D\xdas\xa6\x07/\x9d$\x0f\xc6\x85Jp\xd7\x9c\x10$\xff|uYY2\x92": {
+        "label": "Stripe",
+        "use_sign_count": True,
+    },
+    b"\x1b<\x16\xdd/|F\xe2\xb4\xc2\x89\xdc\x16tk\xcc`\xdf\xcf\x0f\xb8\x18\xe12\x15Rn\x14\x08\xe7\xf4h": {
+        "label": "u2f.bin.coffee",
+        "use_sign_count": True,
+    },
     # WebAuthn
-    "www.binance.com": {"label": "Binance", "use_sign_count": False},
-    "www.dropbox.com": {"label": "Dropbox"},
-    "gandi.net": {"label": "Gandi"},
-    "github.com": {"label": "GitHub", "use_sign_count": True},
-    "google.com": {"label": "Google"},
-    "secure.login.gov": {"label": "login.gov"},
-    "login.microsoft.com": {"label": "Microsoft", "use_sign_count": False},
-    "webauthn.bin.coffee": {"label": "webauthn.bin.coffee"},
-    "webauthn.io": {"label": "WebAuthn.io"},
-    "webauthn.me": {"label": "WebAuthn.me"},
-    "demo.yubico.com": {"label": "demo.yubico.com"},
+    b"\xc3@\x8c\x04G\x88\xae\xa5\xb3\xdf0\x89R\xfd\x8c\xa3\xc7\x0e!\xfe\xf4\xf6\xc1\xc27L\xaa\x1d\xf9\xb2\x8d\xdd": {
+        "label": "Binance",
+        "use_sign_count": False,
+    },
+    b"\x82\xf4\xa8\xc9_\xec\x94\xb2k\xaf\x9e7%\x0e\x95c\xd9\xa3f\xc7\xbe&\x1c\xa4\xdd\x01\x01\xf4\xd5\xef\xcb\x83": {
+        "label": "Dropbox"
+    },
+    b"T\xcee\x1e\xd7\x15\xb4\xaa\xa7U\xee\xce\xbdN\xa0\x95\x08\x15\xb34\xbd\x07\xd1\t\x89>\x960\x18\xcd\xdb\xd9": {
+        "label": "Gandi"
+    },
+    b":\xeb\x00$`8\x1co%\x8e\x83\x95\xd3\x02oW\x1f\r\x9avH\x8d\xcd\x83v9\xb1:\xed1e`": {
+        "label": "GitHub",
+        "use_sign_count": True,
+    },
+    b"\xd4\xc9\xd9\x02s&'\x1a\x89\xceQ\xfc\xaf2\x8e\xd6s\xf1{\xe34i\xff\x97\x9e\x8a\xb8\xddP\x1efO": {
+        "label": "Google"
+    },
+    b"\xf8?\xc3\xa1\xb2\x89\xa0\xde\xc5\xc1\xc8\xaa\x07\xe9\xb5\xdd\x9c\xbbv\xf6\xb2\xf5``\x17frh\xe5\xb9\xc4^": {
+        "label": "login.gov"
+    },
+    b"5l\x9e\xd4\xa0\x93!\xb9i_\x1e\xaf\x91\x82\x03\xf1\xb5_h\x9d\xa6\x1f\xbc\x96\x18L\x15}\xdah\x0c\x81": {
+        "label": "Microsoft",
+        "use_sign_count": False,
+    },
+    b"\xa6B\xd2\x1b|mU\xe1\xce#\xc59\x98(\xd2\xc7I\xbfjn\xf2\xfe\x03\xcc\x9e\x10\xcd\xf4\xedS\x08\x8b": {
+        "label": "webauthn.bin.coffee"
+    },
+    b"t\xa6\xea\x92\x13\xc9\x9c/t\xb2$\x92\xb3 \xcf@&*\x94\xc1\xa9P\xa09\x7f)%\x0b`\x84\x1e\xf0": {
+        "label": "WebAuthn.io"
+    },
+    b"\xf9[\xc78(\xee!\x0f\x9f\xd3\xbb\xe7-\x97\x90\x80\x13\xb0\xa3u\x9e\x9a\xea=\n\xe3\x18vl\xd2\xe1\xad": {
+        "label": "WebAuthn.me"
+    },
+    b"\xc4l\xef\x82\xad\x1bTdwY\x1d\x00\x8b\x08u\x9e\xc3\xe6\xd2\xec\xb4\xf3\x94t\xbf\xeaii\x92]\x03\xb7": {
+        "label": "demo.yubico.com"
+    },
 }
-
-knownapps = {sha256(k.encode()).digest(): v for (k, v) in _knownapps.items()}
