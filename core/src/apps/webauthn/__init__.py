@@ -113,6 +113,7 @@ _KEEPALIVE_STATUS_UP_NEEDED = const(0x02)  # waiting for user presence
 
 # time intervals and timeouts
 _KEEPALIVE_INTERVAL_MS = const(80)  # interval between keepalive commands
+_CTAP_HID_TIMEOUT_MS = const(500)
 _U2F_CONFIRM_TIMEOUT_MS = const(10 * 1000)
 _FIDO2_CONFIRM_TIMEOUT_MS = const(60 * 1000)
 
@@ -396,7 +397,10 @@ async def read_cmd(iface: io.HID) -> Optional[Cmd]:
             data = data[:bcnt]
 
         while datalen < bcnt:
-            buf = await read
+            buf = await loop.race(read, loop.sleep(_CTAP_HID_TIMEOUT_MS * 1000))
+            if not isinstance(buf, (bytes, bytearray)):
+                await send_cmd(cmd_error(ifrm.cid, _ERR_MSG_TIMEOUT), iface)
+                return None
 
             cfrm = overlay_struct(buf, desc_cont)
 
