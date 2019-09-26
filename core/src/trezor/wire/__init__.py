@@ -40,7 +40,7 @@ from trezor import log, loop, messages, ui, utils, workflow
 from trezor.messages import FailureType
 from trezor.messages.Failure import Failure
 from trezor.wire import codec_v1
-from trezor.wire.errors import Error
+from trezor.wire.errors import ActionCancelled, Error
 
 # Import all errors into namespace, so that `wire.Error` is available from
 # other packages.
@@ -339,7 +339,10 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                     # - the first workflow message was not a valid protobuf
                     # - workflow raised some kind of an exception while running
                     if __debug__:
-                        log.exception(__name__, exc)
+                        if isinstance(exc, ActionCancelled):
+                            log.debug(__name__, "cancelled: {}".format(exc.message))
+                        else:
+                            log.exception(__name__, exc)
                     res_msg = failure(exc)
 
                 finally:
