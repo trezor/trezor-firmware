@@ -10,7 +10,7 @@
 from trezor.crypto import hmac, monero as tcry, random
 from trezor.crypto.hashlib import sha3_256
 
-NULL_KEY_ENC = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+NULL_KEY_ENC = b"\x00" * 32
 
 random_bytes = random.bytes
 ct_equals = tcry.ct_equals
