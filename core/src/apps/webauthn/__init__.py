@@ -1356,6 +1356,9 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         return cbor_error(req.cid, _ERR_CBOR_UNEXPECTED_TYPE)
 
     # Check options.
+    if "up" in options:
+        return cbor_error(req.cid, _ERR_INVALID_OPTION)
+
     if resident_key and not _ALLOW_RESIDENT_CREDENTIALS:
         return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
 
