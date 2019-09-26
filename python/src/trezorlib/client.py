@@ -291,6 +291,7 @@ class TrezorClient:
     def clear_session(self):
         resp = self.call_raw(messages.ClearSession())
         if isinstance(resp, messages.Success):
+            self.state = None
             self.init_device()
             return resp.message
         else:
