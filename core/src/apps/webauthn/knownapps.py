@@ -56,6 +56,10 @@ knownapps = {
         "label": "Keeper",
         "use_sign_count": True,
     },
+    b"\xd6_\x00^\xf4\xde\xa92\x0c\x99s\x05<\x95\xff` \x11]_\xec\x1b\x7f\xeeA\xa5x\xe1\x8d\xf9\xca\x8c": {
+        "label": "Keeper",
+        "use_sign_count": True,
+    },
     b"\xd7U\xc5'\xa8k\xf7\x84E\xc2\x82\xe7\x13\xdc\xb8mF\xff\x8b<\xaf\xcf\xb7;.\x8c\xbel\x08\x84\xcb$": {
         "label": "LastPass",
         "use_sign_count": True,
