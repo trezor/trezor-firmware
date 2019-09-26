@@ -1,6 +1,6 @@
 {
   "label": "GitHub",
-  "u2f": "https://github.com/u2f/trusted_facets",
-  "webauthn": "github.com",
+  "u2f": ["https://github.com/u2f/trusted_facets"],
+  "webauthn": ["github.com"],
   "use_sign_count": true
 }

@@ -1,4 +1,4 @@
 {
   "label": "Bitfinex",
-  "u2f": "https://www.bitfinex.com"
+  "u2f": ["https://www.bitfinex.com"]
 }

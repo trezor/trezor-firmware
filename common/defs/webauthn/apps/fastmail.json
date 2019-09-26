@@ -1,4 +1,4 @@
 {
   "label": "FastMail",
-  "u2f": "https://www.fastmail.com"
+  "u2f": ["https://www.fastmail.com"]
 }

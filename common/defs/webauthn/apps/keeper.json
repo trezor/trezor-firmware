@@ -1,4 +1,4 @@
 {
   "label": "Keeper",
-  "u2f": "https://keepersecurity.com"
+  "u2f": ["https://keepersecurity.com"]
 }

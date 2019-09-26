@@ -19,17 +19,13 @@ def gen_core(data):
     print("_knownapps = {")
     print("    # U2F")
     for d in data:
-        if "u2f" in d:
-            url, label = d["u2f"], d["label"]
+        for url in d.get("u2f", []):
+            label = d["label"]
             print('    "%s": {"label": "%s", "use_sign_count": True},' % (url, label))
     print("    # WebAuthn")
     for d in data:
-        if "webauthn" in d:
-            origin, label, use_sign_count = (
-                d["webauthn"],
-                d["label"],
-                d.get("use_sign_count", None),
-            )
+        for origin in d.get("webauthn", []):
+            label, use_sign_count = (d["label"], d.get("use_sign_count", None))
             if use_sign_count is None:
                 print('    "%s": {"label": "%s"},' % (origin, label))
             else:
@@ -42,15 +38,15 @@ def gen_core(data):
 
 def gen_mcu(data):
     for d in data:
-        if "u2f" in d:
-            url, label = d["u2f"], d["label"]
+        for url in d.get("u2f", []):
+            label = d["label"]
             h = sha256(url.encode()).digest()
             print(
                 '\t{\n\t\t// U2F: %s\n\t\t%s,\n\t\t"%s"\n\t},'
                 % (url, c_bytes(h), label)
             )
-        if "webauthn" in d:
-            origin, label = d["webauthn"], d["label"]
+        for origin in d.get("webauthn", []):
+            label = d["label"]
             h = sha256(origin.encode()).digest()
             print(
                 '\t{\n\t\t// WebAuthn: %s\n\t\t%s,\n\t\t"%s"\n\t},'
