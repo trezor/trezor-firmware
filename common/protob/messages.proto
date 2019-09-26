@@ -244,4 +244,20 @@ enum MessageType {
     MessageType_WebAuthnCredentials = 801 [(wire_out) = true];
     MessageType_WebAuthnAddResidentCredential = 802 [(wire_in) = true];
     MessageType_WebAuthnRemoveResidentCredential = 803 [(wire_in) = true];
+
+    // Beam
+    MessageType_BeamSignMessage = 902 [(wire_in) = true];
+    MessageType_BeamSignature = 903 [(wire_out) = true];
+    MessageType_BeamVerifyMessage = 904 [(wire_in) = true];
+    MessageType_BeamGetPublicKey = 905 [(wire_in) = true];
+    MessageType_BeamGetOwnerKey = 907 [(wire_in) = true];
+    MessageType_BeamOwnerKey = 908 [(wire_out) = true];
+    MessageType_BeamGenerateKey = 909 [(wire_in) = true];
+    MessageType_BeamGenerateNonce = 910 [(wire_in) = true];
+    MessageType_BeamECCPoint = 911 [(wire_out) = true];
+    MessageType_BeamGenerateRangeproof = 912 [(wire_in) = true];
+    MessageType_BeamRangeproofData = 913 [(wire_out) = true];
+    MessageType_BeamSignTransaction = 914 [(wire_in) = true];
+    MessageType_BeamSignedTransaction = 915 [(wire_out) = true];
+    MessageType_BeamGetNoncePublic = 916 [(wire_in) = true];
 }

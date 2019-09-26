@@ -6,6 +6,7 @@ from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
 
+from apps.beam.nonce import create_master_nonce as create_beam_master_nonce
 from apps.common import storage
 from apps.management import backup_types
 from apps.management.change_pin import request_pin_confirm
@@ -32,6 +33,9 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
         newpin = await request_pin_confirm(ctx)
     else:
         newpin = ""
+
+    beam_nonce_seed = random.bytes(32)
+    create_beam_master_nonce(beam_nonce_seed)
 
     # generate and display internal entropy
     int_entropy = random.bytes(32)

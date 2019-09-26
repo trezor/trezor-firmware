@@ -35,6 +35,7 @@ CPPDEFINES_MOD += [
     'AES_128',
     'AES_192',
     ('USE_KECCAK', '1'),
+    ('USE_BEAM', '1' if EVERYTHING else '0'),
     ('USE_ETHEREUM', '1' if EVERYTHING else '0'),
     ('USE_MONERO', '1' if EVERYTHING else '0'),
     ('USE_CARDANO', '1' if EVERYTHING else '0'),
@@ -51,6 +52,19 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/aes/aestab.c',
     'vendor/trezor-crypto/base58.c',
     'vendor/trezor-crypto/base32.c',
+    'vendor/trezor-crypto/beam/definitions_ipp.c',
+    'vendor/trezor-crypto/beam/definitions.c',
+    'vendor/trezor-crypto/beam/beam.c',
+    'vendor/trezor-crypto/beam/functions.c',
+    'vendor/trezor-crypto/beam/internal.c',
+    'vendor/trezor-crypto/beam/misc.c',
+    'vendor/trezor-crypto/beam/rangeproof.c',
+    'vendor/trezor-crypto/beam/oracle.c',
+    'vendor/trezor-crypto/beam/inner_product.c',
+    'vendor/trezor-crypto/beam/multi_mac.c',
+    'vendor/trezor-crypto/beam/nonce_generator.c',
+    'vendor/trezor-crypto/beam/kernel.c',
+    'vendor/trezor-crypto/beam/lib/vec.c',
     'vendor/trezor-crypto/bignum.c',
     'vendor/trezor-crypto/bip32.c',
     'vendor/trezor-crypto/bip39.c',
@@ -410,6 +424,7 @@ if FROZEN:
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/*.py',
         exclude=[
+            SOURCE_PY_DIR + 'trezor/messages/Beam*.py',
             SOURCE_PY_DIR + 'trezor/messages/Binance*.py',
             SOURCE_PY_DIR + 'trezor/messages/Cardano*.py',
             SOURCE_PY_DIR + 'trezor/messages/DebugMonero*.py',
@@ -439,6 +454,9 @@ if FROZEN:
     )
 
     if EVERYTHING:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/beam/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Beam*.py'))
+
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/binance/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Binance*.py'))
 

@@ -43,6 +43,7 @@ def _boot_default() -> None:
         import apps.cardano
         import apps.tezos
         import apps.eos
+        import apps.beam
         import apps.binance
 
     if __debug__:
@@ -65,6 +66,7 @@ def _boot_default() -> None:
         apps.cardano.boot()
         apps.tezos.boot()
         apps.eos.boot()
+        apps.beam.boot()
         apps.binance.boot()
     if __debug__:
         apps.debug.boot()

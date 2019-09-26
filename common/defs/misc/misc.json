@@ -217,5 +217,18 @@
             "OMNI Trezor": "https://omnitrezor.com/"
         },
         "blockchain_link": null
+    },
+    {
+        "name": "BEAM",
+        "shortcut": "BEAM",
+        "slip44": 1533,
+        "curve": "secp256k1",
+        "decimals": 8,
+        "links": {
+            "Homepage": "https://beam.mw",
+            "Github": "https://github.com/beammw/beam"
+        },
+        "wallet": {},
+        "blockchain_link": null
     }
 ]

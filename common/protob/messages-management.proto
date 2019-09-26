@@ -83,6 +83,7 @@ message Features {
         Capability_Stellar = 12;
         Capability_Tezos = 13;
         Capability_U2F = 14;
+        Capability_Beam = 17;
         Capability_Shamir = 15;
         Capability_ShamirGroups = 16;
     }

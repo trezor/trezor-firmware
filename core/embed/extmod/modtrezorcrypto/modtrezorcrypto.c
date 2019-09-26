@@ -26,6 +26,7 @@
 #if MICROPY_PY_TREZORCRYPTO
 
 #include "modtrezorcrypto-aes.h"
+#include "modtrezorcrypto-beam.h"
 #include "modtrezorcrypto-bip32.h"
 #include "modtrezorcrypto-bip39.h"
 #include "modtrezorcrypto-blake256.h"
@@ -58,6 +59,7 @@
 STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorcrypto)},
     {MP_ROM_QSTR(MP_QSTR_aes), MP_ROM_PTR(&mod_trezorcrypto_AES_type)},
+    {MP_ROM_QSTR(MP_QSTR_beam), MP_ROM_PTR(&mod_trezorcrypto_beam_module)},
     {MP_ROM_QSTR(MP_QSTR_bip32), MP_ROM_PTR(&mod_trezorcrypto_bip32_module)},
     {MP_ROM_QSTR(MP_QSTR_bip39), MP_ROM_PTR(&mod_trezorcrypto_bip39_module)},
     {MP_ROM_QSTR(MP_QSTR_blake256),

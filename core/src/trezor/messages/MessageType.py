@@ -185,3 +185,17 @@ if not utils.BITCOIN_ONLY:
     WebAuthnCredentials = 801
     WebAuthnAddResidentCredential = 802
     WebAuthnRemoveResidentCredential = 803
+    BeamSignMessage = 902
+    BeamSignature = 903
+    BeamVerifyMessage = 904
+    BeamGetPublicKey = 905
+    BeamGetOwnerKey = 907
+    BeamOwnerKey = 908
+    BeamGenerateKey = 909
+    BeamGenerateNonce = 910
+    BeamECCPoint = 911
+    BeamGenerateRangeproof = 912
+    BeamRangeproofData = 913
+    BeamSignTransaction = 914
+    BeamSignedTransaction = 915
+    BeamGetNoncePublic = 916

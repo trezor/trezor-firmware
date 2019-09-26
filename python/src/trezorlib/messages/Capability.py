@@ -14,5 +14,6 @@ Ripple = 11
 Stellar = 12
 Tezos = 13
 U2F = 14
+Beam = 17
 Shamir = 15
 ShamirGroups = 16

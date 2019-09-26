@@ -60,6 +60,7 @@ def get_features() -> Features:
             Capability.Stellar,
             Capability.Tezos,
             Capability.U2F,
+            Capability.Beam,
             Capability.Shamir,
             Capability.ShamirGroups,
         ]

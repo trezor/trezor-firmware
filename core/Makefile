@@ -47,6 +47,7 @@ help: ## show this help
 
 vendor: ## update git submodules
 	git submodule update --init --recursive --force
+	cd ../vendor/secp256k1-zkp ; git cherry-pick 496c5b43b872d598da1743118f4c8f9bf92f91a7
 
 res: ## update resources
 	./tools/res_collect
