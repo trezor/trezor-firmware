@@ -25,13 +25,18 @@ if __debug__:
 if False:
     from typing import Any, Coroutine, List, Optional
 
-_HID_RPT_SIZE = const(64)
 _CID_BROADCAST = const(0xFFFFFFFF)  # broadcast channel id
 
 # types of frame
 _TYPE_MASK = const(0x80)  # frame type mask
 _TYPE_INIT = const(0x80)  # initial frame identifier
 _TYPE_CONT = const(0x00)  # continuation frame identifier
+
+# U2F HID sizes
+_HID_RPT_SIZE = const(64)
+_FRAME_INIT_SIZE = const(57)
+_FRAME_CONT_SIZE = const(59)
+_MAX_U2FHID_MSG_PAYLOAD_LEN = const(_FRAME_INIT_SIZE + 128 * _FRAME_CONT_SIZE)
 
 # types of cmd
 _CMD_PING = const(0x81)  # echo data through local processor only
@@ -194,9 +199,6 @@ _RESULT_CONFIRM = const(1)  # User confirmed.
 _RESULT_DECLINE = const(2)  # User declined.
 _RESULT_CANCEL = const(3)  # Request was cancelled by _CMD_CANCEL.
 _RESULT_TIMEOUT = const(4)  # Request exceeded _FIDO2_CONFIRM_TIMEOUT_MS.
-
-_FRAME_INIT_SIZE = 57
-_FRAME_CONT_SIZE = 59
 
 # Generate the authenticatorKeyAgreementKey used for ECDH in authenticatorClientPIN getKeyAgreement.
 _KEY_AGREEMENT_PRIVKEY = nist256p1.generate_secret()
@@ -372,6 +374,13 @@ async def read_cmd(iface: io.HID) -> Optional[Cmd]:
         # unexpected cont packet, abort current msg
         if __debug__:
             log.warning(__name__, "_TYPE_CONT")
+        return None
+
+    if bcnt > _MAX_U2FHID_MSG_PAYLOAD_LEN:
+        # invalid payload length, abort current msg
+        if __debug__:
+            log.warning(__name__, "_MAX_U2FHID_MSG_PAYLOAD_LEN")
+        await send_cmd(cmd_error(ifrm.cid, _ERR_INVALID_LEN), iface)
         return None
 
     if datalen < bcnt:
@@ -952,7 +961,10 @@ class DialogManager:
 
 def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     if req.cmd == _CMD_MSG:
-        m = req.to_msg()
+        try:
+            m = req.to_msg()
+        except IndexError:
+            return cmd_error(req.cid, _ERR_INVALID_LEN)
 
         if m.cla != 0:
             if __debug__:
@@ -995,6 +1007,8 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         loop.schedule(ui.alert())
         return req
     elif req.cmd == _CMD_CBOR and _ALLOW_FIDO2:
+        if not req.data:
+            return cmd_error(req.cid, _ERR_INVALID_LEN)
         if req.data[0] == _CBOR_MAKE_CREDENTIAL:
             if __debug__:
                 log.debug(__name__, "_CBOR_MAKE_CREDENTIAL")
