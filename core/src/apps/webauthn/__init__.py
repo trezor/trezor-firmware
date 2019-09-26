@@ -363,63 +363,66 @@ async def read_cmd(iface: io.HID) -> Optional[Cmd]:
     read = loop.wait(iface.iface_num() | io.POLL_READ)
 
     buf = await read
+    while True:
+        ifrm = overlay_struct(buf, desc_init)
+        bcnt = ifrm.bcnt
+        data = ifrm.data
+        datalen = len(data)
+        seq = 0
 
-    ifrm = overlay_struct(buf, desc_init)
-    bcnt = ifrm.bcnt
-    data = ifrm.data
-    datalen = len(data)
-    seq = 0
-
-    if ifrm.cmd & _TYPE_MASK == _TYPE_CONT:
-        # unexpected cont packet, abort current msg
-        if __debug__:
-            log.warning(__name__, "_TYPE_CONT")
-        return None
-
-    if bcnt > _MAX_U2FHID_MSG_PAYLOAD_LEN:
-        # invalid payload length, abort current msg
-        if __debug__:
-            log.warning(__name__, "_MAX_U2FHID_MSG_PAYLOAD_LEN")
-        await send_cmd(cmd_error(ifrm.cid, _ERR_INVALID_LEN), iface)
-        return None
-
-    if datalen < bcnt:
-        databuf = bytearray(bcnt)
-        utils.memcpy(databuf, 0, data, 0, bcnt)
-        data = databuf
-    else:
-        data = data[:bcnt]
-
-    while datalen < bcnt:
-        buf = await read
-
-        cfrm = overlay_struct(buf, desc_cont)
-
-        if cfrm.seq == _CMD_INIT:
-            # _CMD_INIT frame, cancels current channel
-            ifrm = overlay_struct(buf, desc_init)
-            data = ifrm.data[: ifrm.bcnt]
-            break
-
-        if cfrm.cid != ifrm.cid:
-            # cont frame for a different channel, reply with BUSY and skip
+        if ifrm.cmd & _TYPE_MASK == _TYPE_CONT:
+            # unexpected cont packet, abort current msg
             if __debug__:
-                log.warning(__name__, "_ERR_CHANNEL_BUSY")
-            await send_cmd(cmd_error(cfrm.cid, _ERR_CHANNEL_BUSY), iface)
-            continue
-
-        if cfrm.seq != seq:
-            # cont frame for this channel, but incorrect seq number, abort
-            # current msg
-            if __debug__:
-                log.warning(__name__, "_ERR_INVALID_SEQ")
-            await send_cmd(cmd_error(cfrm.cid, _ERR_INVALID_SEQ), iface)
+                log.warning(__name__, "_TYPE_CONT")
             return None
 
-        datalen += utils.memcpy(data, datalen, cfrm.data, 0, bcnt - datalen)
-        seq += 1
+        if ifrm.cid == 0 or ((ifrm.cid == _CID_BROADCAST) and (ifrm.cmd != _CMD_INIT)):
+            # CID 0 is reserved for future use and _CID_BROADCAST is reserved for channel allocation
+            await send_cmd(cmd_error(ifrm.cid, _ERR_INVALID_CID), iface)
+            return None
 
-    return Cmd(ifrm.cid, ifrm.cmd, data)
+        if bcnt > _MAX_U2FHID_MSG_PAYLOAD_LEN:
+            # invalid payload length, abort current msg
+            if __debug__:
+                log.warning(__name__, "_MAX_U2FHID_MSG_PAYLOAD_LEN")
+            await send_cmd(cmd_error(ifrm.cid, _ERR_INVALID_LEN), iface)
+            return None
+
+        if datalen < bcnt:
+            databuf = bytearray(bcnt)
+            utils.memcpy(databuf, 0, data, 0, bcnt)
+            data = databuf
+        else:
+            data = data[:bcnt]
+
+        while datalen < bcnt:
+            buf = await read
+
+            cfrm = overlay_struct(buf, desc_cont)
+
+            if cfrm.seq == _CMD_INIT:
+                # _CMD_INIT frame, cancels current channel
+                break
+
+            if cfrm.cid != ifrm.cid:
+                # cont frame for a different channel, reply with BUSY and abort
+                if __debug__:
+                    log.warning(__name__, "_ERR_CHANNEL_BUSY")
+                await send_cmd(cmd_error(cfrm.cid, _ERR_CHANNEL_BUSY), iface)
+                continue
+
+            if cfrm.seq != seq:
+                # cont frame for this channel, but incorrect seq number, abort
+                # current msg
+                if __debug__:
+                    log.warning(__name__, "_ERR_INVALID_SEQ")
+                await send_cmd(cmd_error(cfrm.cid, _ERR_INVALID_SEQ), iface)
+                return None
+
+            datalen += utils.memcpy(data, datalen, cfrm.data, 0, bcnt - datalen)
+            seq += 1
+        else:
+            return Cmd(ifrm.cid, ifrm.cmd, data)
 
 
 async def send_cmd(cmd: Cmd, iface: io.HID) -> None:
@@ -1051,9 +1054,7 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
 
 def cmd_init(req: Cmd) -> Cmd:
-    if req.cid == 0:
-        return cmd_error(req.cid, _ERR_INVALID_CID)
-    elif req.cid == _CID_BROADCAST:
+    if req.cid == _CID_BROADCAST:
         # uint32_t except 0 and 0xffffffff
         resp_cid = random.uniform(0xFFFFFFFE) + 1
     else:
