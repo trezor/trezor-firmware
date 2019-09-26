@@ -1,4 +1,5 @@
 {
   "label": "Gandi",
-  "u2f": ["https://account.gandi.net/api/u2f/trusted_facets.json"]
+  "u2f": ["https://account.gandi.net/api/u2f/trusted_facets.json"],
+  "webauthn": ["gandi.net"]
 }

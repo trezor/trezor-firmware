@@ -42,11 +42,13 @@ _knownapps = {
         "label": "Slush Pool",
         "use_sign_count": True,
     },
+    "https://slushpool.com/u2f.json": {"label": "Slush Pool", "use_sign_count": True},
     "https://dashboard.stripe.com": {"label": "Stripe", "use_sign_count": True},
     "https://u2f.bin.coffee": {"label": "u2f.bin.coffee", "use_sign_count": True},
     # WebAuthn
     "www.binance.com": {"label": "Binance", "use_sign_count": False},
     "www.dropbox.com": {"label": "Dropbox"},
+    "gandi.net": {"label": "Gandi"},
     "github.com": {"label": "GitHub", "use_sign_count": True},
     "google.com": {"label": "Google"},
     "secure.login.gov": {"label": "login.gov"},
