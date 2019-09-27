@@ -70,6 +70,7 @@ DebugLinkMemoryRead = 110  # type: Literal[110]
 DebugLinkMemory = 111  # type: Literal[111]
 DebugLinkMemoryWrite = 112  # type: Literal[112]
 DebugLinkFlashErase = 113  # type: Literal[113]
+DebugLinkLayout = 9001  # type: Literal[9001]
 if not utils.BITCOIN_ONLY:
     EthereumGetPublicKey = 450  # type: Literal[450]
     EthereumPublicKey = 451  # type: Literal[451]
