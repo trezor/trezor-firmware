@@ -643,6 +643,11 @@ class MnemonicWordSelect(ui.Layout):
 
         return fn
 
+    if __debug__:
+
+        def read_content(self):
+            return self.text.read_content() + [b.text for b in self.buttons]
+
 
 async def show_reset_device_warning(ctx, backup_type: BackupType = BackupType.Bip39):
     text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)

@@ -6,10 +6,10 @@ from trezor.ui.confirm import CANCELLED, CONFIRMED
 from trezor.ui.swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
 
 if __debug__:
-    from apps.debug import swipe_signal
+    from apps.debug import swipe_signal, notify_layout_change
 
 if False:
-    from typing import Tuple, Sequence
+    from typing import List, Tuple, Sequence
 
 
 def render_scrollbar(pages: int, page: int) -> None:
@@ -89,6 +89,9 @@ class Paginated(ui.Layout):
         self.pages[self.page].dispatch(ui.REPAINT, 0, 0)
         self.repaint = True
 
+        if __debug__:
+            notify_layout_change(self)
+
         self.on_change()
 
     def create_tasks(self) -> Tuple[loop.Task, ...]:
@@ -97,6 +100,11 @@ class Paginated(ui.Layout):
     def on_change(self) -> None:
         if self.one_by_one:
             raise ui.Result(self.page)
+
+    if __debug__:
+
+        def read_content(self) -> List[str]:
+            return self.pages[self.page].read_content()
 
 
 class PageWithButtons(ui.Component):
@@ -154,6 +162,11 @@ class PageWithButtons(ui.Component):
         else:
             self.paginated.on_down()
 
+    if __debug__:
+
+        def read_content(self) -> List[str]:
+            return self.content.read_content()
+
 
 class PaginatedWithButtons(ui.Layout):
     def __init__(
@@ -191,3 +204,8 @@ class PaginatedWithButtons(ui.Layout):
     def on_change(self) -> None:
         if self.one_by_one:
             raise ui.Result(self.page)
+
+    if __debug__:
+
+        def read_content(self) -> List[str]:
+            return self.pages[self.page].read_content()

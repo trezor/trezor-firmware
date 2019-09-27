@@ -4,7 +4,7 @@ from trezor import ui
 from trezor.ui import display, in_area
 
 if False:
-    from typing import Type, Union
+    from typing import List, Type, Union
 
 
 class ButtonDefault:
@@ -239,3 +239,8 @@ class Button(ui.Component):
 
     def on_click(self) -> None:
         pass
+
+    if __debug__:
+
+        def read_content(self) -> List[str]:
+            return ["<Button: {}>".format(self.text)]

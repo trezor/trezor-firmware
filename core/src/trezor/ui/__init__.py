@@ -5,8 +5,11 @@ from trezorui import Display
 
 from trezor import io, loop, res, utils
 
+if __debug__:
+    from apps.debug import notify_layout_change
+
 if False:
-    from typing import Any, Generator, Tuple, TypeVar
+    from typing import Any, Generator, List, Tuple, TypeVar
 
     Pos = Tuple[int, int]
     Area = Tuple[int, int, int, int]
@@ -226,6 +229,11 @@ class Component:
     def on_touch_end(self, x: int, y: int) -> None:
         pass
 
+    if __debug__:
+
+        def read_content(self) -> List[str]:
+            return [self.__class__.__name__]
+
 
 class Result(Exception):
     """
@@ -279,6 +287,8 @@ class Layout(Component):
             # layout channel.  This allows other layouts to cancel us, and the
             # layout tasks to trigger restart by exiting (new tasks are created
             # and we continue, because we are in a loop).
+            if __debug__:
+                notify_layout_change(self)
             while True:
                 await loop.race(layout_chan.take(), *self.create_tasks())
         except Result as result:

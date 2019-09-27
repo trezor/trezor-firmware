@@ -305,6 +305,11 @@ class RecoveryHomescreen(ui.Component):
 
         self.repaint = False
 
+    if __debug__:
+
+        def read_content(self):
+            return [self.__class__.__name__, self.text, self.subtext or ""]
+
 
 async def homescreen_dialog(
     ctx: wire.Context,
