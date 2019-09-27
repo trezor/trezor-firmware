@@ -83,16 +83,24 @@ class DebugLink:
         obj = self._call(proto.DebugLinkGetState())
         return obj.passphrase_protection
 
-    def input(self, word=None, button=None, swipe=None):
+    def input(self, word=None, button=None, swipe=None, x=None, y=None, wait=False):
         if not self.allow_interactions:
             return
 
-        args = sum(a is not None for a in (word, button, swipe))
+        args = sum(a is not None for a in (word, button, swipe, x))
         if args != 1:
             raise ValueError("Invalid input - must use one of word, button, swipe")
 
-        decision = proto.DebugLinkDecision(yes_no=button, swipe=swipe, input=word)
-        self._call(decision, nowait=True)
+        decision = proto.DebugLinkDecision(
+            yes_no=button, swipe=swipe, input=word, x=x, y=y, wait=wait
+        )
+        ret = self._call(decision, nowait=not wait)
+        if ret is not None:
+            return ret.lines
+
+    def click(self, click, wait=False):
+        x, y = click
+        return self.input(x=x, y=y, wait=wait)
 
     def press_yes(self):
         self.input(button=True)
