@@ -1,5 +1,5 @@
 {
   "label": "Binance",
-  "webauthn": "www.binance.com",
+  "webauthn": ["www.binance.com"],
   "use_sign_count": false
 }

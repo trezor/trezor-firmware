@@ -25,13 +25,18 @@ if __debug__:
 if False:
     from typing import Any, Coroutine, List, Optional
 
-_HID_RPT_SIZE = const(64)
 _CID_BROADCAST = const(0xFFFFFFFF)  # broadcast channel id
 
 # types of frame
 _TYPE_MASK = const(0x80)  # frame type mask
 _TYPE_INIT = const(0x80)  # initial frame identifier
 _TYPE_CONT = const(0x00)  # continuation frame identifier
+
+# U2F HID sizes
+_HID_RPT_SIZE = const(64)
+_FRAME_INIT_SIZE = const(57)
+_FRAME_CONT_SIZE = const(59)
+_MAX_U2FHID_MSG_PAYLOAD_LEN = const(_FRAME_INIT_SIZE + 128 * _FRAME_CONT_SIZE)
 
 # types of cmd
 _CMD_PING = const(0x81)  # echo data through local processor only
@@ -108,6 +113,7 @@ _KEEPALIVE_STATUS_UP_NEEDED = const(0x02)  # waiting for user presence
 
 # time intervals and timeouts
 _KEEPALIVE_INTERVAL_MS = const(80)  # interval between keepalive commands
+_CTAP_HID_TIMEOUT_MS = const(500)
 _U2F_CONFIRM_TIMEOUT_MS = const(10 * 1000)
 _FIDO2_CONFIRM_TIMEOUT_MS = const(60 * 1000)
 
@@ -131,7 +137,9 @@ _ERR_MSG_TIMEOUT = const(0x05)  # message has timed out
 _ERR_CHANNEL_BUSY = const(0x06)  # channel busy
 _ERR_LOCK_REQUIRED = const(0x0A)  # command requires channel lock
 _ERR_INVALID_CID = const(0x0B)  # command not allowed on this cid
+_ERR_CBOR_UNEXPECTED_TYPE = const(0x11)  # invalid/unexpected CBOR
 _ERR_INVALID_CBOR = const(0x12)  # error when parsing CBOR
+_ERR_MISSING_PARAMETER = const(0x14)  # missing non-optional parameter
 _ERR_CREDENTIAL_EXCLUDED = const(0x19)  # valid credential found in the exclude list
 _ERR_UNSUPPORTED_ALGORITHM = const(0x26)  # requested COSE algorithm not supported
 _ERR_OPERATION_DENIED = const(0x27)  # user declined or timed out
@@ -193,9 +201,6 @@ _RESULT_DECLINE = const(2)  # User declined.
 _RESULT_CANCEL = const(3)  # Request was cancelled by _CMD_CANCEL.
 _RESULT_TIMEOUT = const(4)  # Request exceeded _FIDO2_CONFIRM_TIMEOUT_MS.
 
-_FRAME_INIT_SIZE = 57
-_FRAME_CONT_SIZE = 59
-
 # Generate the authenticatorKeyAgreementKey used for ECDH in authenticatorClientPIN getKeyAgreement.
 _KEY_AGREEMENT_PRIVKEY = nist256p1.generate_secret()
 _KEY_AGREEMENT_PUBKEY = nist256p1.publickey(_KEY_AGREEMENT_PRIVKEY, False)
@@ -206,6 +211,8 @@ _ALLOW_RESIDENT_CREDENTIALS = True
 
 # The attestation type to use in MakeCredential responses. If false, then self attestation will be used.
 _USE_BASIC_ATTESTATION = False
+
+_AUTOCONFIRM = False
 
 
 def frame_init() -> dict:
@@ -357,56 +364,69 @@ async def read_cmd(iface: io.HID) -> Optional[Cmd]:
     read = loop.wait(iface.iface_num() | io.POLL_READ)
 
     buf = await read
+    while True:
+        ifrm = overlay_struct(buf, desc_init)
+        bcnt = ifrm.bcnt
+        data = ifrm.data
+        datalen = len(data)
+        seq = 0
 
-    ifrm = overlay_struct(buf, desc_init)
-    bcnt = ifrm.bcnt
-    data = ifrm.data
-    datalen = len(data)
-    seq = 0
-
-    if ifrm.cmd & _TYPE_MASK == _TYPE_CONT:
-        # unexpected cont packet, abort current msg
-        if __debug__:
-            log.warning(__name__, "_TYPE_CONT")
-        return None
-
-    if datalen < bcnt:
-        databuf = bytearray(bcnt)
-        utils.memcpy(databuf, 0, data, 0, bcnt)
-        data = databuf
-    else:
-        data = data[:bcnt]
-
-    while datalen < bcnt:
-        buf = await read
-
-        cfrm = overlay_struct(buf, desc_cont)
-
-        if cfrm.seq == _CMD_INIT:
-            # _CMD_INIT frame, cancels current channel
-            ifrm = overlay_struct(buf, desc_init)
-            data = ifrm.data[: ifrm.bcnt]
-            break
-
-        if cfrm.cid != ifrm.cid:
-            # cont frame for a different channel, reply with BUSY and skip
+        if ifrm.cmd & _TYPE_MASK == _TYPE_CONT:
+            # unexpected cont packet, abort current msg
             if __debug__:
-                log.warning(__name__, "_ERR_CHANNEL_BUSY")
-            await send_cmd(cmd_error(cfrm.cid, _ERR_CHANNEL_BUSY), iface)
-            continue
-
-        if cfrm.seq != seq:
-            # cont frame for this channel, but incorrect seq number, abort
-            # current msg
-            if __debug__:
-                log.warning(__name__, "_ERR_INVALID_SEQ")
-            await send_cmd(cmd_error(cfrm.cid, _ERR_INVALID_SEQ), iface)
+                log.warning(__name__, "_TYPE_CONT")
             return None
 
-        datalen += utils.memcpy(data, datalen, cfrm.data, 0, bcnt - datalen)
-        seq += 1
+        if ifrm.cid == 0 or ((ifrm.cid == _CID_BROADCAST) and (ifrm.cmd != _CMD_INIT)):
+            # CID 0 is reserved for future use and _CID_BROADCAST is reserved for channel allocation
+            await send_cmd(cmd_error(ifrm.cid, _ERR_INVALID_CID), iface)
+            return None
 
-    return Cmd(ifrm.cid, ifrm.cmd, data)
+        if bcnt > _MAX_U2FHID_MSG_PAYLOAD_LEN:
+            # invalid payload length, abort current msg
+            if __debug__:
+                log.warning(__name__, "_MAX_U2FHID_MSG_PAYLOAD_LEN")
+            await send_cmd(cmd_error(ifrm.cid, _ERR_INVALID_LEN), iface)
+            return None
+
+        if datalen < bcnt:
+            databuf = bytearray(bcnt)
+            utils.memcpy(databuf, 0, data, 0, bcnt)
+            data = databuf
+        else:
+            data = data[:bcnt]
+
+        while datalen < bcnt:
+            buf = await loop.race(read, loop.sleep(_CTAP_HID_TIMEOUT_MS * 1000))
+            if not isinstance(buf, (bytes, bytearray)):
+                await send_cmd(cmd_error(ifrm.cid, _ERR_MSG_TIMEOUT), iface)
+                return None
+
+            cfrm = overlay_struct(buf, desc_cont)
+
+            if cfrm.seq == _CMD_INIT:
+                # _CMD_INIT frame, cancels current channel
+                break
+
+            if cfrm.cid != ifrm.cid:
+                # cont frame for a different channel, reply with BUSY and abort
+                if __debug__:
+                    log.warning(__name__, "_ERR_CHANNEL_BUSY")
+                await send_cmd(cmd_error(cfrm.cid, _ERR_CHANNEL_BUSY), iface)
+                continue
+
+            if cfrm.seq != seq:
+                # cont frame for this channel, but incorrect seq number, abort
+                # current msg
+                if __debug__:
+                    log.warning(__name__, "_ERR_INVALID_SEQ")
+                await send_cmd(cmd_error(cfrm.cid, _ERR_INVALID_SEQ), iface)
+                return None
+
+            datalen += utils.memcpy(data, datalen, cfrm.data, 0, bcnt - datalen)
+            seq += 1
+        else:
+            return Cmd(ifrm.cid, ifrm.cmd, data)
 
 
 async def send_cmd(cmd: Cmd, iface: io.HID) -> None:
@@ -533,7 +553,19 @@ async def verify_user(keepalive_callback: KeepaliveCallback) -> bool:
 
 
 async def confirm(*args: Any, **kwargs: Any) -> bool:
+    if _AUTOCONFIRM:
+        return True
     dialog = Confirm(*args, **kwargs)
+    if __debug__:
+        return await loop.race(dialog, confirm_signal()) is CONFIRMED
+    else:
+        return await dialog is CONFIRMED
+
+
+async def confirm_pageable(*args: Any, **kwargs: Any) -> bool:
+    if _AUTOCONFIRM:
+        return True
+    dialog = ConfirmPageable(*args, **kwargs)
     if __debug__:
         return await loop.race(dialog, confirm_signal()) is CONFIRMED
     else:
@@ -735,6 +767,7 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
         client_data_hash: bytes,
         creds: List[Credential],
         hmac_secret: Optional[dict],
+        resident: bool,
         user_verification: bool,
     ) -> None:
         Fido2State.__init__(self, cid, iface)
@@ -743,6 +776,7 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
         self._client_data_hash = client_data_hash
         self._creds = creds
         self._hmac_secret = hmac_secret
+        self._resident = resident
         self._user_verification = user_verification
         self.load_icon(self._creds[0].rp_id_hash)
 
@@ -760,7 +794,7 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
 
     async def confirm_dialog(self) -> bool:
         content = ConfirmContent(self)
-        if await ConfirmPageable(self, content) is not CONFIRMED:
+        if not await confirm_pageable(self, content):
             return False
         if self._user_verification:
             return await verify_user(KeepaliveCallback(self.cid, self.iface))
@@ -777,6 +811,7 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
                 cred.rp_id_hash,
                 cred,
                 self._hmac_secret,
+                self._resident,
                 True,
                 self._user_verification,
             )
@@ -804,7 +839,9 @@ class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
     def __init__(self, cid: int, iface: io.HID, rp_id: str) -> None:
         cred = Fido2Credential()
         cred.rp_id = rp_id
-        super().__init__(cid, iface, b"", [cred], {}, user_verification=False)
+        super().__init__(
+            cid, iface, b"", [cred], {}, resident=False, user_verification=False
+        )
 
     async def on_confirm(self) -> None:
         cmd = cbor_error(self.cid, _ERR_NO_CREDENTIALS)
@@ -931,7 +968,10 @@ class DialogManager:
 
 def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     if req.cmd == _CMD_MSG:
-        m = req.to_msg()
+        try:
+            m = req.to_msg()
+        except IndexError:
+            return cmd_error(req.cid, _ERR_INVALID_LEN)
 
         if m.cla != 0:
             if __debug__:
@@ -974,6 +1014,8 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         loop.schedule(ui.alert())
         return req
     elif req.cmd == _CMD_CBOR and _ALLOW_FIDO2:
+        if not req.data:
+            return cmd_error(req.cid, _ERR_INVALID_LEN)
         if req.data[0] == _CBOR_MAKE_CREDENTIAL:
             if __debug__:
                 log.debug(__name__, "_CBOR_MAKE_CREDENTIAL")
@@ -1016,9 +1058,7 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
 
 def cmd_init(req: Cmd) -> Cmd:
-    if req.cid == 0:
-        return cmd_error(req.cid, _ERR_INVALID_CID)
-    elif req.cid == _CID_BROADCAST:
+    if req.cid == _CID_BROADCAST:
         # uint32_t except 0 and 0xffffffff
         resp_cid = random.uniform(0xFFFFFFFE) + 1
     else:
@@ -1211,6 +1251,43 @@ def cbor_error(cid: int, code: int) -> Cmd:
     return Cmd(cid, _CMD_CBOR, ustruct.pack(">B", code))
 
 
+def credentials_from_descriptor_list(
+    descriptor_list: List[dict], rp_id_hash: bytes
+) -> List[Credential]:
+    cred_list = []
+    for credential_descriptor in descriptor_list:
+        credential_type = credential_descriptor["type"]
+        if not isinstance(credential_type, str):
+            raise TypeError
+        if credential_type != "public-key":
+            continue
+
+        credential_id = credential_descriptor["id"]
+        if not isinstance(credential_id, (bytes, bytearray)):
+            raise TypeError
+        cred = Credential.from_bytes(credential_id, rp_id_hash)
+        if cred is not None:
+            cred_list.append(cred)
+
+    return cred_list
+
+
+def algorithms_from_pub_key_cred_params(pub_key_cred_params: List[dict]) -> List[int]:
+    alg_list = []
+    for pkcp in pub_key_cred_params:
+        pub_key_cred_type = pkcp["type"]
+        if not isinstance(pub_key_cred_type, str):
+            raise TypeError
+        if pub_key_cred_type != "public-key":
+            continue
+
+        pub_key_cred_alg = pkcp["alg"]
+        if not isinstance(pub_key_cred_alg, int):
+            raise TypeError
+        alg_list.append(pub_key_cred_alg)
+    return alg_list
+
+
 def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     from apps.webauthn.knownapps import knownapps
 
@@ -1221,7 +1298,8 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
     try:
         param = cbor.decode(req.data[1:])
-        rp_id = param[_MAKECRED_CMD_RP]["id"]
+        rp = param[_MAKECRED_CMD_RP]
+        rp_id = rp["id"]
         rp_id_hash = hashlib.sha256(rp_id).digest()
 
         # Prepare the new credential.
@@ -1236,21 +1314,18 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
         # Check if any of the credential descriptors in the exclude list belong to this authenticator.
         exclude_list = param.get(_MAKECRED_CMD_EXCLUDE_LIST, [])
-        for credential_descriptor in exclude_list:
-            excl_cred = Credential.from_bytes(credential_descriptor["id"], rp_id_hash)
-            if credential_descriptor["type"] == "public-key" and excl_cred is not None:
-                # This authenticator is already registered.
-                if not dialog_mgr.set_state(
-                    Fido2ConfirmExcluded(req.cid, dialog_mgr.iface, cred)
-                ):
-                    return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
-                return None
+        if credentials_from_descriptor_list(exclude_list, rp_id_hash):
+            # This authenticator is already registered.
+            if not dialog_mgr.set_state(
+                Fido2ConfirmExcluded(req.cid, dialog_mgr.iface, cred)
+            ):
+                return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
+            return None
 
         # Check that the relying party supports ECDSA P-256 with SHA-256. We don't support any other algorithms.
         pub_key_cred_params = param[_MAKECRED_CMD_PUB_KEY_CRED_PARAMS]
-        if ("public-key", _COSE_ALG_ES256) not in (
-            (pkcp.get("type", None), pkcp.get("alg", None))
-            for pkcp in pub_key_cred_params
+        if _COSE_ALG_ES256 not in algorithms_from_pub_key_cred_params(
+            pub_key_cred_params
         ):
             return cbor_error(req.cid, _ERR_UNSUPPORTED_ALGORITHM)
 
@@ -1265,6 +1340,10 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         )
 
         client_data_hash = param[_MAKECRED_CMD_CLIENT_DATA_HASH]
+    except TypeError:
+        return cbor_error(req.cid, _ERR_CBOR_UNEXPECTED_TYPE)
+    except KeyError:
+        return cbor_error(req.cid, _ERR_MISSING_PARAMETER)
     except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
@@ -1273,13 +1352,18 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     # Check data types.
     if (
         not cred.check_data_types()
+        or not isinstance(user.get("icon", ""), str)
+        or not isinstance(rp.get("icon", ""), str)
         or not isinstance(client_data_hash, (bytes, bytearray))
         or not isinstance(resident_key, bool)
         or not isinstance(user_verification, bool)
     ):
-        return cbor_error(req.cid, _ERR_INVALID_CBOR)
+        return cbor_error(req.cid, _ERR_CBOR_UNEXPECTED_TYPE)
 
     # Check options.
+    if "up" in options:
+        return cbor_error(req.cid, _ERR_INVALID_OPTION)
+
     if resident_key and not _ALLOW_RESIDENT_CREDENTIALS:
         return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
 
@@ -1388,22 +1472,21 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         rp_id = param[_GETASSERT_CMD_RP_ID]
         rp_id_hash = hashlib.sha256(rp_id).digest()
 
-        cred_list = []
         allow_list = param.get(_GETASSERT_CMD_ALLOW_LIST, [])
         if allow_list:
             # Get all credentials from the allow list that belong to this authenticator.
-            for credential_descriptor in allow_list:
-                if credential_descriptor["type"] != "public-key":
-                    continue
-                cred = Credential.from_bytes(credential_descriptor["id"], rp_id_hash)
-                if cred is not None:
-                    if cred.rp_id is None:
-                        cred.rp_id = rp_id
-                    cred_list.append(cred)
+            cred_list = credentials_from_descriptor_list(allow_list, rp_id_hash)
+            for cred in cred_list:
+                if cred.rp_id is None:
+                    cred.rp_id = rp_id
+            resident = False
         else:
             # Allow list is empty. Get resident credentials.
             if _ALLOW_RESIDENT_CREDENTIALS:
                 cred_list = get_resident_credentials(rp_id_hash)
+            else:
+                cred_list = []
+            resident = True
 
         # Sort credentials by time of creation.
         cred_list.sort()
@@ -1421,6 +1504,10 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         hmac_secret = param.get(_GETASSERT_CMD_EXTENSIONS, {}).get("hmac-secret", None)
 
         client_data_hash = param[_GETASSERT_CMD_CLIENT_DATA_HASH]
+    except TypeError:
+        return cbor_error(req.cid, _ERR_CBOR_UNEXPECTED_TYPE)
+    except KeyError:
+        return cbor_error(req.cid, _ERR_MISSING_PARAMETER)
     except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
@@ -1431,7 +1518,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         or not isinstance(user_presence, bool)
         or not isinstance(user_verification, bool)
     ):
-        return cbor_error(req.cid, _ERR_INVALID_CBOR)
+        return cbor_error(req.cid, _ERR_CBOR_UNEXPECTED_TYPE)
 
     # Check options.
     if "rk" in options:
@@ -1461,6 +1548,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
                 rp_id_hash,
                 cred_list[0],
                 hmac_secret,
+                resident,
                 user_presence,
                 user_verification,
             )
@@ -1476,6 +1564,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
                 client_data_hash,
                 cred_list,
                 hmac_secret,
+                resident,
                 user_verification,
             )
         )
@@ -1536,6 +1625,7 @@ def cbor_get_assertion_sign(
     rp_id_hash: bytes,
     cred: Credential,
     hmac_secret: Optional[dict],
+    resident: bool,
     user_presence: bool,
     user_verification: bool,
 ) -> bytes:
@@ -1585,7 +1675,7 @@ def cbor_get_assertion_sign(
         _GETASSERT_RESP_SIGNATURE: sig,
     }
 
-    if user_presence and cred.user_id is not None:
+    if resident and user_presence and cred.user_id is not None:
         response[_GETASSERT_RESP_USER] = {"id": cred.user_id}
 
     return cbor.encode(response)
