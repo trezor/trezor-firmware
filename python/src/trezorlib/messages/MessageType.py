@@ -65,6 +65,7 @@ DebugLinkMemoryRead = 110
 DebugLinkMemory = 111
 DebugLinkMemoryWrite = 112
 DebugLinkFlashErase = 113
+DebugLinkLayout = 9001
 EthereumGetPublicKey = 450
 EthereumPublicKey = 451
 EthereumGetAddress = 56

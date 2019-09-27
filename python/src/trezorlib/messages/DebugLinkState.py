@@ -29,6 +29,7 @@ class DebugLinkState(p.MessageType):
         recovery_word_pos: int = None,
         reset_word_pos: int = None,
         mnemonic_type: int = None,
+        layout_lines: List[str] = None,
     ) -> None:
         self.layout = layout
         self.pin = pin
@@ -42,6 +43,7 @@ class DebugLinkState(p.MessageType):
         self.recovery_word_pos = recovery_word_pos
         self.reset_word_pos = reset_word_pos
         self.mnemonic_type = mnemonic_type
+        self.layout_lines = layout_lines if layout_lines is not None else []
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -58,4 +60,5 @@ class DebugLinkState(p.MessageType):
             10: ('recovery_word_pos', p.UVarintType, 0),
             11: ('reset_word_pos', p.UVarintType, 0),
             12: ('mnemonic_type', p.UVarintType, 0),
+            13: ('layout_lines', p.UnicodeType, p.FLAG_REPEATED),
         }
