@@ -50,6 +50,9 @@ if __debug__:
     log_delay_rb_len = const(10)
     log_delay_rb = array.array("i", [0] * log_delay_rb_len)
 
+    # synthetic event queue
+    synthetic_events = []  # type: List[Tuple[int, Any]]
+
 
 def schedule(
     task: Task, value: Any = None, deadline: int = None, finalizer: Finalizer = None
@@ -124,6 +127,15 @@ def run() -> None:
             # add current delay to ring buffer for performance stats
             log_delay_rb[log_delay_pos] = delay
             log_delay_pos = (log_delay_pos + 1) % log_delay_rb_len
+
+            # process synthetic events
+            if synthetic_events:
+                iface, event = synthetic_events[0]
+                msg_tasks = _paused.pop(iface, ())
+                if msg_tasks:
+                    synthetic_events.pop(0)
+                    for task in msg_tasks:
+                        _step(task, event)
 
         if io.poll(_paused, msg_entry, delay):
             # message received, run tasks paused on the interface
