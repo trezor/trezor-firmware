@@ -44,6 +44,7 @@ def _boot_default() -> None:
         import apps.tezos
         import apps.eos
         import apps.binance
+        import apps.vsys
 
     if __debug__:
         import apps.debug
@@ -66,6 +67,7 @@ def _boot_default() -> None:
         apps.tezos.boot()
         apps.eos.boot()
         apps.binance.boot()
+        apps.vsys.boot()
     if __debug__:
         apps.debug.boot()
     if not utils.BITCOIN_ONLY:

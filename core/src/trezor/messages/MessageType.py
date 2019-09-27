@@ -185,3 +185,12 @@ if not utils.BITCOIN_ONLY:
     WebAuthnCredentials = 801
     WebAuthnAddResidentCredential = 802
     WebAuthnRemoveResidentCredential = 803
+    VsysGetAddress = 1000
+    VsysAddress = 1001
+    VsysGetPublicKey = 1002
+    VsysPublicKey = 1003
+    VsysSignedTx = 1004
+    VsysSignTx = 1005
+    VsysSignContract = 1006
+    VsysSignFunctionExec = 1007
+
