@@ -14,8 +14,10 @@ async def require_confirm_data(ctx, data):
 
 async def require_confirm_tx(ctx, dest, value):
     text = Text("Confirm sending", ui.ICON_SEND, icon_color=ui.GREEN)
+    text.mono(format_amount_trx(value))
+    text.bold(*split_address("To: " + dest))
+    text.mono("Amount:")
     text.bold(format_amount_trx(value))
-    text.mono(*split_address("To: " + dest))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
@@ -23,6 +25,8 @@ async def require_confirm_tx_asset(ctx, token, dest, value, decimals=0):
     text = Text("Confirm sending", ui.ICON_SEND, icon_color=ui.GREEN)
     text.bold(format_amount(value, decimals) + token)
     text.mono(*split_address("To: " + dest))
+    text.mono("Token Amount:")
+    text.bold(format_amount(value))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
