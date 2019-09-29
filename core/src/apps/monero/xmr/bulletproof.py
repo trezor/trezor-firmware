@@ -344,10 +344,12 @@ class KeyV(KeyVBase):
     def _set_d(self, elems):
         if elems > 64 and elems % 64 == 0:
             self.chunked = True
+            gc.collect()
             self.d = [bytearray(32 * 64) for _ in range(elems // 64)]
 
         else:
             self.chunked = False
+            gc.collect()
             self.d = bytearray(32 * elems)
 
     def _set_mv(self):
@@ -401,10 +403,13 @@ class KeyV(KeyVBase):
         if self.chunked and nsize <= 64:
             self.chunked = False  # de-chunk
             if self.size > nsize and realloc:
+                gc.collect()
                 self.d = bytearray(self.d[0][: nsize << 5])
             elif self.size > nsize and not chop:
+                gc.collect()
                 self.d = self.d[0][: nsize << 5]
             else:
+                gc.collect()
                 self.d = bytearray(nsize << 5)
 
         elif self.chunked:
@@ -412,10 +417,13 @@ class KeyV(KeyVBase):
 
         else:
             if self.size > nsize and realloc:
+                gc.collect()
                 self.d = bytearray(self.d[: nsize << 5])
             elif self.size > nsize and not chop:
+                gc.collect()
                 self.d = self.d[: nsize << 5]
             else:
+                gc.collect()
                 self.d = bytearray(nsize << 5)
 
         self.size = nsize
@@ -1005,6 +1013,7 @@ class BulletProofBuilder:
         )
 
     def sX_gen(self, ln=BP_N):
+        gc.collect()
         buff = bytearray(ln * 32)
         buff_mv = memoryview(buff)
         sc = crypto.new_scalar()
@@ -1029,6 +1038,7 @@ class BulletProofBuilder:
 
         self.proof_sec = crypto.random_bytes(64)
         self._det_mask_init()
+        gc.collect()
         sv = [crypto.encodeint(x) for x in sv]
         gamma = [crypto.encodeint(x) for x in gamma]
 
