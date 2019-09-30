@@ -46,11 +46,11 @@ core fw regular build:
     - pipenv run make sizecheck
     - cd ..
     - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
-    - cp core/build/firmware/firmware.bin trezor-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+    - cp core/build/firmware/firmware.bin trezor-fw-regular-$VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - trezor-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+    - trezor-fw-regular-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 core fw btconly build:
@@ -65,11 +65,11 @@ core fw btconly build:
     - cd ..
     - pipenv run ./tools/check-bitcoin-only core/build/firmware/firmware-bitcoinonly.bin
     - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
-    - cp core/build/firmware/firmware-bitcoinonly.bin trezor-$VERSION-$CI_COMMIT_SHORT_SHA-bitcoinonly.bin
+    - cp core/build/firmware/firmware-bitcoinonly.bin trezor-fw-btconly-$VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - trezor-*.*.*-$CI_COMMIT_SHORT_SHA-bitcoinonly.bin
+    - trezor-fw-btconly-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 core unix regular build:
@@ -131,11 +131,12 @@ build core unix frozen regular darwin:
     - mkdir -p TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/{MacOS,libs}
     - cp -v core/build/unix/micropython TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/MacOS/TrezorEmu-$CI_COMMIT_SHORT_SHA
     - dylibbundler -of -b -i /usr/lib/system -d TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/libs -x TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/MacOS/TrezorEmu-$CI_COMMIT_SHORT_SHA
+    - mv TrezorEmu-$CI_COMMIT_SHORT_SHA.app trezor-emu-regular-macos-$VERSION-$CI_COMMIT_SHORT_SHA.app
   allow_failure: true
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-      - TrezorEmu-$CI_COMMIT_SHORT_SHA.app
+      - trezor-emu-regular-macos-$VERSION-$CI_COMMIT_SHORT_SHA.app
     expire_in: 1 week
 
 # Crypto
@@ -174,11 +175,11 @@ legacy fw regular build:
     - pipenv run make -C demo
     - cd ..
     - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
-    - cp legacy/firmware/trezor.bin trezor-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+    - mv legacy/firmware/trezor.bin trezor-fw-regular-$VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - trezor-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+    - trezor-fw-regular-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 legacy fw debug build:
@@ -204,11 +205,11 @@ legacy fw btconly build:
     - cd ..
     - pipenv run ./tools/check-bitcoin-only legacy/firmware/trezor-bitcoinonly.bin
     - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
-    - cp legacy/firmware/trezor-bitcoinonly.bin trezor-$VERSION-$CI_COMMIT_SHORT_SHA-bitcoinonly.bin
+    - mv legacy/firmware/trezor-bitcoinonly.bin trezor-fw-btconly-$VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - trezor-*.*.*-$CI_COMMIT_SHORT_SHA-bitcoinonly.bin
+    - trezor-fw-btconly-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 legacy emu regular build:

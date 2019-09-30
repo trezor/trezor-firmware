@@ -2,10 +2,90 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
 
 # Core
 
-core upgrade tests deploy:
+core emu regular deploy:
   stage: deploy
   variables:
-    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}/upgrade_tests"
+    DEPLOY_DIRECTORY: "branches/${CI_COMMIT_REF_NAME}/emulators/core"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - core unix frozen regular build
+  script:
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - export NAME="trezor-emu-regular-$VERSION-$CI_COMMIT_SHORT_SHA"
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
+    - mv core/build/unix/micropython $NAME
+    - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
+    - echo "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
+    - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
+  tags:
+    - deploy
+
+core fw regular deploy:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "branches/${CI_COMMIT_REF_NAME}/firmwares/core"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - core fw regular build
+  script:
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - export NAME="trezor-fw-regular-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
+    - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
+    - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
+  tags:
+    - deploy
+
+
+# Legacy
+
+legacy emu regular deploy:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "branches/${CI_COMMIT_REF_NAME}/emulators/legacy"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - legacy emu regular build
+  script:
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - export NAME="trezor-emu-regular-$VERSION-$CI_COMMIT_SHORT_SHA"
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
+    - mv legacy/firmware/trezor.elf $NAME
+    - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
+    - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
+  tags:
+    - deploy
+
+legacy fw regular deploy:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "branches/${CI_COMMIT_REF_NAME}/firmwares/legacy"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - legacy fw regular build
+  script:
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - export NAME="trezor-fw-regular-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
+    - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
+    - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
+  tags:
+    - deploy
+
+
+# Release deploys
+# These can be run only on actual releases (based on tags)
+
+## Upgrade tests
+
+upgrade tests core deploy:
+  stage: deploy
+  variables:
+    DEPLOY_PATH: "${DEPLOY_BASE_DIR}upgrade_tests/"
   before_script: []  # no pipenv
   when: manual
   dependencies:
@@ -13,49 +93,16 @@ core upgrade tests deploy:
   script:
     - TAG=`git tag --points-at HEAD | sed "s/\//-/"`
     - "[[ ! $TAG =~ 'core' ]] && echo 'Tag is not core/*: exiting.' && exit 1"
-    - DEST=${DEPLOY_DIRECTORY}/trezor-emu-`git tag --points-at HEAD | sed "s/\//-/"`
+    - DEST=${DEPLOY_PATH}/trezor-emu-`git tag --points-at HEAD | sed "s/\//-/"`
     - echo "Deploying to $DEST"
     - rsync --delete -va core/build/unix/micropython "$DEST"
   tags:
     - deploy
 
-core emu regular deploy:
+upgrade tests legacy deploy:
   stage: deploy
   variables:
-    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}core/emulators/${CI_COMMIT_REF_NAME}"
-  before_script: []  # no pipenv
-  when: manual
-  dependencies:
-    - core unix frozen regular build
-  script:
-    - echo "Deploying to ${DEPLOY_DIRECTORY}/`date -I`-core-emu-${CI_COMMIT_SHORT_SHA}"
-    - mkdir -p ${DEPLOY_DIRECTORY}
-    - rsync --delete -va core/build/unix/micropython "${DEPLOY_DIRECTORY}/`date -I`-core-emu-${CI_COMMIT_SHORT_SHA}"
-  tags:
-    - deploy
-
-core fw regular deploy:
-  stage: deploy
-  variables:
-    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}core/firmwares/${CI_COMMIT_REF_NAME}"
-  before_script: []  # no pipenv
-  when: manual
-  dependencies:
-    - core fw regular build
-  script:
-    - echo "Deploying to ${DEPLOY_DIRECTORY}/`date -I`-core-firmware-${CI_COMMIT_SHORT_SHA}"
-    - mkdir -p ${DEPLOY_DIRECTORY}
-    - rsync --delete -va core/build/firmware/firmware.bin "${DEPLOY_DIRECTORY}/`date -I`-core-firmware-${CI_COMMIT_SHORT_SHA}"
-  tags:
-    - deploy
-
-
-# Legacy
-
-legacy to upgrade tests deploy:
-  stage: deploy
-  variables:
-    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}/upgrade_tests"
+    DEPLOY_PATH: "${DEPLOY_BASE_DIR}upgrade_tests/"
   before_script: []  # no pipenv
   when: manual
   dependencies:
@@ -63,36 +110,91 @@ legacy to upgrade tests deploy:
   script:
     - TAG=`git tag --points-at HEAD | sed "s/\//-/"`
     - "[[ ! $TAG =~ 'legacy' ]] && echo 'Tag is not legacy/*: exiting.' && exit 1"
-    - DEST=${DEPLOY_DIRECTORY}/trezor-emu-`git tag --points-at HEAD | sed "s/\//-/"`
+    - DEST=${DEPLOY_PATH}/trezor-emu-`git tag --points-at HEAD | sed "s/\//-/"`
     - echo "Deploying to $DEST"
     - rsync --delete -va legacy/firmware/trezor.elf "$DEST"
 
-legacy emu regular deploy:
+## Releases
+
+### Core
+
+release core emu regular deploy:
   stage: deploy
   variables:
-    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}legacy/emulators/${CI_COMMIT_REF_NAME}"
+    DEPLOY_DIRECTORY: "releases/${CI_COMMIT_REF_NAME}/emulators"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - core unix frozen regular build
+  script:
+    - TAG=`git tag --points-at HEAD | sed "s/\//-/"`
+    - "[[ ! $TAG =~ 'core' ]] && echo 'Tag is not core/*: exiting.' && exit 1"
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - export NAME="trezor-emu-regular-$VERSION-$CI_COMMIT_SHORT_SHA"
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
+    - mv core/build/unix/micropython $NAME
+    - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
+    - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
+  tags:
+    - deploy
+
+release core fw regular deploy:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "releases/${CI_COMMIT_REF_NAME}/firmwares"
+  before_script: []  # no pipenv
+  when: manual
+  dependencies:
+    - core fw regular build
+  script:
+    - TAG=`git tag --points-at HEAD | sed "s/\//-/"`
+    - "[[ ! $TAG =~ 'core' ]] && echo 'Tag is not core/*: exiting.' && exit 1"
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - export NAME="trezor-fw-regular-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
+    - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
+    - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
+  tags:
+    - deploy
+
+
+### Legacy
+
+release legacy emu regular deploy:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "releases/${CI_COMMIT_REF_NAME}/emulators"
   before_script: []  # no pipenv
   when: manual
   dependencies:
     - legacy emu regular build
   script:
-    - echo "Deploying to ${DEPLOY_DIRECTORY}/`date -I`-legacy-emu-${CI_COMMIT_SHORT_SHA}"
-    - mkdir -p ${DEPLOY_DIRECTORY}
-    - rsync --delete -va legacy/firmware/trezor.elf "${DEPLOY_DIRECTORY}/`date -I`-legacy-emu-${CI_COMMIT_SHORT_SHA}"
+    - TAG=`git tag --points-at HEAD | sed "s/\//-/"`
+    - "[[ ! $TAG =~ 'legacy' ]] && echo 'Tag is not legacy/*: exiting.' && exit 1"
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - export NAME="trezor-emu-regular-$VERSION-$CI_COMMIT_SHORT_SHA"
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
+    - mv legacy/firmware/trezor.elf $NAME
+    - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
+    - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
   tags:
     - deploy
 
-legacy fw regular deploy:
+release legacy fw regular deploy:
   stage: deploy
   variables:
-    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}legacy/firmwares/${CI_COMMIT_REF_NAME}"
+    DEPLOY_DIRECTORY: "releases/${CI_COMMIT_REF_NAME}/firmwares"
   before_script: []  # no pipenv
   when: manual
   dependencies:
     - legacy fw regular build
   script:
-    - echo "Deploying to ${DEPLOY_DIRECTORY}/`date -I`-legacy-firmware-${CI_COMMIT_SHORT_SHA}"
-    - mkdir -p ${DEPLOY_DIRECTORY}
-    - rsync --delete -va legacy/firmware/trezor.bin "${DEPLOY_DIRECTORY}/`date -I`-legacy-firmware-${CI_COMMIT_SHORT_SHA}"
+    - TAG=`git tag --points-at HEAD | sed "s/\//-/"`
+    - "[[ ! $TAG =~ 'legacy' ]] && echo 'Tag is not legacy/*: exiting.' && exit 1"
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - export NAME="trezor-fw-regular-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
+    - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
+    - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
   tags:
     - deploy
