@@ -33,7 +33,7 @@ def grid35(x, y):
 
 
 def grid34(x, y):
-    return grid(DISPLAY_WIDTH, 3, x), grid(DISPLAY_HEIGHT, 5, y)
+    return grid(DISPLAY_WIDTH, 3, x), grid(DISPLAY_HEIGHT, 4, y)
 
 
 def type_word(word):
