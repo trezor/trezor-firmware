@@ -120,6 +120,7 @@ _FIDO2_CONFIRM_TIMEOUT_MS = const(60 * 1000)
 # CBOR object signing and encryption algorithms and keys
 _COSE_ALG_KEY = const(3)
 _COSE_ALG_ES256 = const(-7)  # ECDSA P-256 with SHA-256
+_COSE_ALG_ECDH_ES_HKDF_256 = const(-25)  # Ephemeral-static ECDH with HKDF SHA-256
 _COSE_KEY_TYPE_KEY = const(1)
 _COSE_KEY_TYPE_EC2 = const(2)  # elliptic curve keys with x- and y-coordinate pair
 _COSE_CURVE_KEY = const(-1)  # elliptic curve identifier
@@ -1585,7 +1586,7 @@ def cbor_get_assertion_hmac_secret(
     x = key_agreement[_COSE_X_COORD_KEY]
     y = key_agreement[_COSE_Y_COORD_KEY]
     if (
-        key_agreement[_COSE_ALG_KEY] != _COSE_ALG_ES256
+        key_agreement[_COSE_ALG_KEY] != _COSE_ALG_ECDH_ES_HKDF_256
         or key_agreement[_COSE_KEY_TYPE_KEY] != _COSE_KEY_TYPE_EC2
         or key_agreement[_COSE_CURVE_KEY] != _COSE_CURVE_P256
         or len(x) != 32
@@ -1713,7 +1714,7 @@ def cbor_client_pin(req: Cmd) -> Cmd:
     # Encode the public key of the authenticator key agreement key.
     response_data = {
         _CLIENTPIN_RESP_KEY_AGREEMENT: {
-            _COSE_ALG_KEY: _COSE_ALG_ES256,
+            _COSE_ALG_KEY: _COSE_ALG_ECDH_ES_HKDF_256,
             _COSE_KEY_TYPE_KEY: _COSE_KEY_TYPE_EC2,
             _COSE_CURVE_KEY: _COSE_CURVE_P256,
             _COSE_X_COORD_KEY: _KEY_AGREEMENT_PUBKEY[1:33],
