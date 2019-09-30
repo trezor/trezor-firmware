@@ -188,7 +188,7 @@ void fsm_sendFailure(FailureType code, const char *text)
 }
 
 static const CoinInfo *fsm_getCoin(bool has_name, const char *name) {
-  const CoinInfo *coin;
+  const CoinInfo *coin = NULL;
   if (has_name) {
     coin = coinByName(name);
   } else {

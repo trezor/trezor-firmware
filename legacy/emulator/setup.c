@@ -57,7 +57,7 @@ void __attribute__((noreturn)) shutdown(void) {
 }
 
 void emulatorRandom(void *buffer, size_t size) {
-  ssize_t n, len = 0;
+  ssize_t n = 0, len = 0;
   do {
     n = read(random_fd, (char *)buffer + len, size - len);
     if (n < 0) {

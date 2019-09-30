@@ -64,7 +64,7 @@ void pinmatrix_start(const char *text) {
 }
 
 void pinmatrix_done(char *pin) {
-  int k, i = 0;
+  int i = 0, k = 0;
   while (pin && pin[i]) {
     k = pin[i] - '1';
     if (k >= 0 && k <= 8) {

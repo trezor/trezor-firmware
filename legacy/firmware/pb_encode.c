@@ -73,7 +73,7 @@ static const pb_encoder_t PB_ENCODERS[PB_LTYPES_COUNT] = {
 
 static bool checkreturn buf_write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count)
 {
-    size_t i;
+    size_t i = 0;
     pb_byte_t *dest = (pb_byte_t*)stream->state;
     stream->state = dest + count;
     
@@ -128,9 +128,9 @@ bool checkreturn pb_write(pb_ostream_t *stream, const pb_byte_t *buf, size_t cou
 static bool checkreturn encode_array(pb_ostream_t *stream, const pb_field_t *field,
                          const void *pData, size_t count, pb_encoder_t func)
 {
-    size_t i;
-    const void *p;
-    size_t size;
+    size_t i = 0;
+    const void *p = NULL;
+    size_t size = 0;
     
     if (count == 0)
         return true;
@@ -688,7 +688,7 @@ bool checkreturn pb_encode_submessage(pb_ostream_t *stream, const pb_field_t fie
 {
     /* First calculate the message size using a non-writing substream. */
     pb_ostream_t substream = PB_OSTREAM_SIZING;
-    size_t size;
+    size_t size = 0;
     bool status;
     
     if (!pb_encode(&substream, fields, src_struct))

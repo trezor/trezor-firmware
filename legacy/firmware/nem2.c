@@ -224,7 +224,7 @@ bool nem_askTransfer(const NEMTransactionCommon *common,
       }
     }
 
-    bignum256 multiplier;
+    bignum256 multiplier = {0};
     bn_read_uint64(transfer->amount, &multiplier);
 
     if (unknownMosaic) {
@@ -399,7 +399,7 @@ bool nem_askMosaicCreation(const NEMTransactionCommon *common,
     return false;
   }
 
-  char str_out[32];
+  char str_out[32] = {0};
 
   bn_format_uint64(mosaic_creation->definition.supply, NULL, NULL,
                    mosaic_creation->definition.divisibility,
@@ -478,7 +478,7 @@ bool nem_askSupplyChange(const NEMTransactionCommon *common,
     return false;
   }
 
-  char str_out[32];
+  char str_out[32] = {0};
   bn_format_uint64(supply_change->delta, NULL, NULL, 0, 0, false, str_out,
                    sizeof(str_out));
 
@@ -523,7 +523,7 @@ bool nem_askAggregateModification(
     }
   }
 
-  char address[NEM_ADDRESS_SIZE + 1];
+  char address[NEM_ADDRESS_SIZE + 1] = {0};
 
   for (size_t i = 0; i < aggregate_modification->modifications_count; i++) {
     const NEMCosignatoryModification *modification =
@@ -543,7 +543,7 @@ bool nem_askAggregateModification(
 
   int32_t relative_change = aggregate_modification->relative_change;
   if (relative_change) {
-    char str_out[32];
+    char str_out[32] = {0};
     bn_format_uint64(relative_change < 0 ? -relative_change : relative_change,
                      NULL, NULL, 0, 0, false, str_out, sizeof(str_out));
 
@@ -685,7 +685,7 @@ static inline size_t format_amount(const NEMMosaicDefinition *definition,
                                    const bignum256 *amnt,
                                    const bignum256 *multiplier, int divisor,
                                    char *str_out, size_t size) {
-  bignum256 val;
+  bignum256 val = {0};
   memcpy(&val, amnt, sizeof(bignum256));
 
   if (multiplier) {
@@ -746,7 +746,7 @@ void nem_canonicalizeMosaics(NEMTransfer *transfer) {
       NEMMosaic *b = &mosaics[j];
 
       if (nem_mosaicCompare(a, b) > 0) {
-        NEMMosaic temp;
+        NEMMosaic temp = {0};
         memcpy(&temp, a, sizeof(NEMMosaic));
         memcpy(a, b, sizeof(NEMMosaic));
         memcpy(b, &temp, sizeof(NEMMosaic));
@@ -758,7 +758,7 @@ void nem_canonicalizeMosaics(NEMTransfer *transfer) {
 void nem_mosaicFormatAmount(const NEMMosaicDefinition *definition,
                             uint64_t quantity, const bignum256 *multiplier,
                             char *str_out, size_t size) {
-  bignum256 amnt;
+  bignum256 amnt = {0};
   bn_read_uint64(quantity, &amnt);
 
   format_amount(definition, &amnt, multiplier, 0, str_out, size);
@@ -771,7 +771,7 @@ bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition,
     return false;
   }
 
-  bignum256 amnt, fee;
+  bignum256 amnt = {0}, fee = {0};
   bn_read_uint64(quantity, &amnt);
   bn_read_uint64(definition->fee, &fee);
 

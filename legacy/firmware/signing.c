@@ -417,7 +417,7 @@ bool check_change_bip32_path(const TxOutputType *toutput) {
 bool compile_input_script_sig(TxInputType *tinput) {
   if (!multisig_fp_mismatch) {
     // check that this is still multisig
-    uint8_t h[32];
+    uint8_t h[32] = {0};
     if (!tinput->has_multisig ||
         cryptoMultisigFingerprint(&(tinput->multisig), h) == 0 ||
         memcmp(multisig_fp, h, 32) != 0) {
@@ -445,7 +445,7 @@ bool compile_input_script_sig(TxInputType *tinput) {
     tinput->script_sig.size = compile_script_multisig(coin, &(tinput->multisig),
                                                       tinput->script_sig.bytes);
   } else {  // SPENDADDRESS
-    uint8_t hash[20];
+    uint8_t hash[20] = {0};
     ecdsa_get_pubkeyhash(node.public_key, coin->curve->hasher_pubkey, hash);
     tinput->script_sig.size =
         compile_script_sig(coin->address_type, hash, tinput->script_sig.bytes);
@@ -557,7 +557,7 @@ static bool signing_check_input(const TxInputType *txinput) {
   /* (if all input share the same fingerprint, outputs having the same
    * fingerprint will be considered as change outputs) */
   if (txinput->has_multisig && !multisig_fp_mismatch) {
-    uint8_t h[32];
+    uint8_t h[32] = {0};
     if (cryptoMultisigFingerprint(&txinput->multisig, h) == 0) {
       fsm_sendFailure(FailureType_Failure_ProcessError,
                       _("Error computing multisig fingerprint"));
@@ -610,7 +610,7 @@ static bool signing_check_input(const TxInputType *txinput) {
 
 // check if the hash of the prevtx matches
 static bool signing_check_prevtx_hash(void) {
-  uint8_t hash[32];
+  uint8_t hash[32] = {0};
   tx_hash_final(&tp, hash, true);
   if (memcmp(hash, input.prev_hash.bytes, 32) != 0) {
     fsm_sendFailure(FailureType_Failure_DataError,
@@ -640,7 +640,7 @@ static bool signing_check_output(TxOutputType *txoutput) {
      * For multisig check that all inputs are multisig
      */
     if (txoutput->has_multisig) {
-      uint8_t h[32];
+      uint8_t h[32] = {0};
       if (multisig_fp_set && !multisig_fp_mismatch &&
           cryptoMultisigFingerprint(&(txoutput->multisig), h) &&
           memcmp(multisig_fp, h, 32) == 0) {
@@ -720,7 +720,7 @@ static bool signing_check_fee(void) {
       return false;
     }
   }
-  uint64_t fee;
+  uint64_t fee = 0;
   if (spending <= to_spend) {
     fee = to_spend - spending;
     if (fee > ((uint64_t)tx_weight * coin->maxfee_kb) / 4000) {
@@ -788,7 +788,7 @@ static void phase1_request_next_output(void) {
 
 static void signing_hash_bip143(const TxInputType *txinput, uint8_t *hash) {
   uint32_t hash_type = signing_hash_type();
-  Hasher hasher_preimage;
+  Hasher hasher_preimage = {0};
   hasher_Init(&hasher_preimage, coin->curve->hasher_sign);
   hasher_Update(&hasher_preimage, (const uint8_t *)&version, 4);  // nVersion
   hasher_Update(&hasher_preimage, hash_prevouts, 32);  // hashPrevouts
@@ -809,10 +809,10 @@ static void signing_hash_bip143(const TxInputType *txinput, uint8_t *hash) {
 
 static void signing_hash_zip143(const TxInputType *txinput, uint8_t *hash) {
   uint32_t hash_type = signing_hash_type();
-  uint8_t personal[16];
+  uint8_t personal[16] = {0};
   memcpy(personal, "ZcashSigHash", 12);
   memcpy(personal + 12, &branch_id, 4);
-  Hasher hasher_preimage;
+  Hasher hasher_preimage = {0};
   hasher_InitParam(&hasher_preimage, HASHER_BLAKE2B_PERSONAL, personal,
                    sizeof(personal));
   uint32_t ver = version | TX_OVERWINTERED;  // 1. nVersion | fOverwintered
@@ -843,10 +843,10 @@ static void signing_hash_zip143(const TxInputType *txinput, uint8_t *hash) {
 
 static void signing_hash_zip243(const TxInputType *txinput, uint8_t *hash) {
   uint32_t hash_type = signing_hash_type();
-  uint8_t personal[16];
+  uint8_t personal[16] = {0};
   memcpy(personal, "ZcashSigHash", 12);
   memcpy(personal + 12, &branch_id, 4);
-  Hasher hasher_preimage;
+  Hasher hasher_preimage = {0};
   hasher_InitParam(&hasher_preimage, HASHER_BLAKE2B_PERSONAL, personal,
                    sizeof(personal));
   uint32_t ver = version | TX_OVERWINTERED;  // 1. nVersion | fOverwintered
@@ -884,7 +884,7 @@ static void signing_hash_zip243(const TxInputType *txinput, uint8_t *hash) {
 
 static void signing_hash_decred(const uint8_t *hash_witness, uint8_t *hash) {
   uint32_t hash_type = signing_hash_type();
-  Hasher hasher_preimage;
+  Hasher hasher_preimage = {0};
   hasher_Init(&hasher_preimage, coin->curve->hasher_sign);
   hasher_Update(&hasher_preimage, (const uint8_t *)&hash_type, 4);
   hasher_Update(&hasher_preimage, decred_hash_prefix, 32);
@@ -941,7 +941,7 @@ static bool signing_sign_hash(TxInputType *txinput, const uint8_t *private_key,
 }
 
 static bool signing_sign_input(void) {
-  uint8_t hash[32];
+  uint8_t hash[32] = {0};
   hasher_Final(&hasher_check, hash);
   if (memcmp(hash, hash_outputs, 32) != 0) {
     fsm_sendFailure(FailureType_Failure_DataError,
@@ -962,7 +962,7 @@ static bool signing_sign_input(void) {
 
 static bool signing_sign_segwit_input(TxInputType *txinput) {
   // idx1: index to sign
-  uint8_t hash[32];
+  uint8_t hash[32] = {0};
 
   if (txinput->script_type == InputScriptType_SPENDWITNESS ||
       txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
@@ -1042,7 +1042,7 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 #if !BITCOIN_ONLY
 
 static bool signing_sign_decred_input(TxInputType *txinput) {
-  uint8_t hash[32], hash_witness[32];
+  uint8_t hash[32] = {}, hash_witness[32] = {};
   tx_hash_final(&ti, hash_witness, false);
   signing_hash_decred(hash_witness, hash);
   resp.has_serialized = true;
@@ -1325,7 +1325,7 @@ void signing_txack(TransactionType *tx) {
         idx2++;
         send_req_4_input();
       } else {
-        uint8_t hash[32];
+        uint8_t hash[32] = {0};
         hasher_Final(&hasher_check, hash);
         if (memcmp(hash, hash_check, 32) != 0) {
           fsm_sendFailure(FailureType_Failure_DataError,
@@ -1405,7 +1405,7 @@ void signing_txack(TransactionType *tx) {
         }
         authorized_amount -= tx->inputs[0].amount;
 
-        uint8_t hash[32];
+        uint8_t hash[32] = {0};
 #if !BITCOIN_ONLY
         if (overwintered) {
           switch (version) {
@@ -1550,7 +1550,7 @@ void signing_txack(TransactionType *tx) {
       }
 
       for (idx2 = 0; idx2 < inputs_count; idx2++) {
-        uint32_t r;
+        uint32_t r = 0;
         if (idx2 == idx1) {
           r = tx_serialize_decred_witness_hash(&ti, &tx->inputs[0]);
         } else {

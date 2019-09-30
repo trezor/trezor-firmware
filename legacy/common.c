@@ -103,7 +103,7 @@ void wait_random(void) {
 }
 
 void drbg_init() {
-  uint8_t entropy[48];
+  uint8_t entropy[48] = {0};
   random_buffer(entropy, sizeof(entropy));
   hmac_drbg_init(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
 }
@@ -117,7 +117,7 @@ void drbg_generate(uint8_t *buf, size_t len) {
 }
 
 uint32_t drbg_random32(void) {
-  uint32_t value;
+  uint32_t value = 0;
   drbg_generate((uint8_t *)&value, sizeof(value));
   return value;
 }
