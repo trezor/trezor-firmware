@@ -10,19 +10,15 @@ from trezor.ui.confirm import CONFIRMED, Confirm, ConfirmPageable, Pageable
 from trezor.ui.text import Text
 
 from apps.common import cbor, storage
-from apps.common.storage.webauthn import (
-    erase_resident_credentials,
-    get_resident_credentials,
-    store_resident_credential,
-)
 from apps.webauthn.confirm import ConfirmContent, ConfirmInfo
-from apps.webauthn.credential import Credential, Fido2Credential, U2fCredential
 
 if __debug__:
     from apps.debug import confirm_signal
 
 if False:
     from typing import Any, Coroutine, List, Optional
+    from apps.webauthn.credential import Credential, Fido2Credential, U2fCredential
+
 
 _CID_BROADCAST = const(0xFFFFFFFF)  # broadcast channel id
 
@@ -591,7 +587,7 @@ class State:
 
 class U2fState(State, ConfirmInfo):
     def __init__(
-        self, cid: int, iface: io.HID, req_data: bytes, cred: Credential
+        self, cid: int, iface: io.HID, req_data: bytes, cred: "Credential"
     ) -> None:
         State.__init__(self, cid, iface)
         ConfirmInfo.__init__(self)
@@ -611,7 +607,7 @@ class U2fState(State, ConfirmInfo):
 
 class U2fConfirmRegister(U2fState):
     def __init__(
-        self, cid: int, iface: io.HID, req_data: bytes, cred: U2fCredential
+        self, cid: int, iface: io.HID, req_data: bytes, cred: "U2fCredential"
     ) -> None:
         super().__init__(cid, iface, req_data, cred)
 
@@ -639,7 +635,7 @@ class U2fConfirmRegister(U2fState):
 
 class U2fConfirmAuthenticate(U2fState):
     def __init__(
-        self, cid: int, iface: io.HID, req_data: bytes, cred: Credential
+        self, cid: int, iface: io.HID, req_data: bytes, cred: "Credential"
     ) -> None:
         super().__init__(cid, iface, req_data, cred)
 
@@ -690,7 +686,7 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
         cid: int,
         iface: io.HID,
         client_data_hash: bytes,
-        cred: Fido2Credential,
+        cred: "Fido2Credential",
         resident: bool,
         user_verification: bool,
     ) -> None:
@@ -731,13 +727,15 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
             send_cmd_sync(
                 cmd_keepalive(self.cid, _KEEPALIVE_STATUS_PROCESSING), self.iface
             )
+            from apps.common.storage.webauthn import store_resident_credential
+
             if not store_resident_credential(self._cred):
                 cmd = cbor_error(self.cid, _ERR_KEY_STORE_FULL)
         await send_cmd(cmd, self.iface)
 
 
 class Fido2ConfirmExcluded(Fido2ConfirmMakeCredential):
-    def __init__(self, cid: int, iface: io.HID, cred: Fido2Credential) -> None:
+    def __init__(self, cid: int, iface: io.HID, cred: "Fido2Credential") -> None:
         super().__init__(cid, iface, b"", cred, resident=False, user_verification=False)
 
     async def on_confirm(self) -> None:
@@ -755,7 +753,7 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
         cid: int,
         iface: io.HID,
         client_data_hash: bytes,
-        creds: List[Credential],
+        creds: List["Credential"],
         hmac_secret: Optional[dict],
         resident: bool,
         user_verification: bool,
@@ -831,6 +829,9 @@ class Fido2ConfirmNoPin(State):
 
 class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
     def __init__(self, cid: int, iface: io.HID, rp_id: str) -> None:
+
+        from apps.webauthn.credential import Fido2Credential
+
         cred = Fido2Credential()
         cred.rp_id = rp_id
         super().__init__(
@@ -859,6 +860,8 @@ class Fido2ConfirmReset(Fido2State):
         return await confirm(text)
 
     async def on_confirm(self) -> None:
+        from apps.common.storage.webauthn import erase_resident_credentials
+
         erase_resident_credentials()
         cmd = Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]))
         await send_cmd(cmd, self.iface)
@@ -1082,8 +1085,11 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
             log.warning(__name__, "_SW_WRONG_LENGTH req.data")
         return msg_error(req.cid, _SW_WRONG_LENGTH)
 
+    from apps.webauthn.credential import U2fCredential
+
     # parse challenge and rp_id_hash
     chal = req.data[:32]
+
     cred = U2fCredential()
     cred.rp_id_hash = bytes(req.data[32:])
     cred.generate_key_handle()
@@ -1111,7 +1117,7 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     return Cmd(req.cid, _CMD_MSG, buf)
 
 
-def msg_register_sign(challenge: bytes, cred: U2fCredential) -> bytes:
+def msg_register_sign(challenge: bytes, cred: "U2fCredential") -> bytes:
     pubkey = nist256p1.publickey(cred.private_key(), False)
 
     # hash the request data together with keyhandle and pubkey
@@ -1157,6 +1163,8 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     khlen = req.data[_REQ_CMD_AUTHENTICATE_KHLEN]
     auth = overlay_struct(req.data, req_cmd_authenticate(khlen))
 
+    from apps.webauthn.credential import Credential
+
     cred = Credential.from_bytes(auth.keyHandle, bytes(auth.appId))
     if cred is None:
         # specific error logged in msg_authenticate_genkey
@@ -1198,7 +1206,7 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
 
 
 def msg_authenticate_sign(
-    challenge: bytes, rp_id_hash: bytes, cred: Credential
+    challenge: bytes, rp_id_hash: bytes, cred: "Credential"
 ) -> bytes:
     flags = bytes([_AUTH_FLAG_UP])
 
@@ -1247,7 +1255,10 @@ def cbor_error(cid: int, code: int) -> Cmd:
 
 def credentials_from_descriptor_list(
     descriptor_list: List[dict], rp_id_hash: bytes
-) -> List[Credential]:
+) -> List["Credential"]:
+
+    from apps.webauthn.credential import Credential
+
     cred_list = []
     for credential_descriptor in descriptor_list:
         credential_type = credential_descriptor["type"]
@@ -1259,6 +1270,7 @@ def credentials_from_descriptor_list(
         credential_id = credential_descriptor["id"]
         if not isinstance(credential_id, (bytes, bytearray)):
             raise TypeError
+
         cred = Credential.from_bytes(credential_id, rp_id_hash)
         if cred is not None:
             cred_list.append(cred)
@@ -1298,6 +1310,9 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
         # Prepare the new credential.
         user = param[_MAKECRED_CMD_USER]
+
+        from apps.webauthn.credential import Fido2Credential
+
         cred = Fido2Credential()
         cred.rp_id = rp_id
         cred.rp_id_hash = rp_id_hash
@@ -1392,7 +1407,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
 
 def cbor_make_credential_sign(
-    client_data_hash: bytes, cred: Fido2Credential, user_verification: bool
+    client_data_hash: bytes, cred: "Fido2Credential", user_verification: bool
 ) -> bytes:
     privkey = cred.private_key()
     pubkey = nist256p1.publickey(privkey, False)
@@ -1477,6 +1492,8 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         else:
             # Allow list is empty. Get resident credentials.
             if _ALLOW_RESIDENT_CREDENTIALS:
+                from apps.common.storage.webauthn import get_resident_credentials
+
                 cred_list = get_resident_credentials(rp_id_hash)
             else:
                 cred_list = []
@@ -1570,7 +1587,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
 
 def cbor_get_assertion_hmac_secret(
-    cred: Credential, hmac_secret: dict
+    cred: "Credential", hmac_secret: dict
 ) -> Optional[bytes]:
     key_agreement = hmac_secret[1]  # The public key of platform key agreement key.
     # NOTE: We should check the key_agreement[_COSE_ALG_KEY] here, but to avoid compatibility issues we don't,
@@ -1621,7 +1638,7 @@ def cbor_get_assertion_hmac_secret(
 def cbor_get_assertion_sign(
     client_data_hash: bytes,
     rp_id_hash: bytes,
-    cred: Credential,
+    cred: "Credential",
     hmac_secret: Optional[dict],
     resident: bool,
     user_presence: bool,
