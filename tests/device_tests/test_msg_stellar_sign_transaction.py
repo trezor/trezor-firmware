@@ -50,246 +50,213 @@ from base64 import b64encode
 
 import pytest
 
-from trezorlib import messages as proto, stellar
+from trezorlib import messages, stellar
 from trezorlib.tools import parse_path
 
 from ..common import MNEMONIC12
 
 
-@pytest.mark.altcoin
-@pytest.mark.stellar
-class TestMsgStellarSignTransaction:
+pytestmark = [
+    pytest.mark.altcoin,
+    pytest.mark.stellar,
+    pytest.mark.setup_client(mnemonic=MNEMONIC12),
+]
 
-    ADDRESS_N = parse_path(stellar.DEFAULT_BIP32_PATH)
-    NETWORK_PASSPHRASE = "Test SDF Network ; September 2015"
+ADDRESS_N = parse_path(stellar.DEFAULT_BIP32_PATH)
+NETWORK_PASSPHRASE = "Test SDF Network ; September 2015"
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign_tx_bump_sequence_op(self, client):
-        op = proto.StellarBumpSequenceOp()
-        op.bump_to = 0x7FFFFFFFFFFFFFFF
-        tx = self._create_msg()
 
-        response = stellar.sign_tx(
-            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
-        )
-        assert (
-            b64encode(response.signature)
-            == b"ZMIfHWhpyXdg40PzwOtkcXYnbZIO12Qy0WvkGqoYpb7jyWbG2HQCG7dgWhCoU5K81pvZTA2pMwiPjMwCXA//Bg=="
-        )
+def _create_msg(self) -> messages.StellarSignTx:
+    return messages.StellarSignTx(
+        source_account="GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW",
+        fee=100,
+        sequence_number=0x100000000,
+        memo_type=0,
+    )
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign_tx_account_merge_op(self, client):
-        op = proto.StellarAccountMergeOp()
-        op.destination_account = (
-            "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
-        )
 
-        tx = self._create_msg()
+def test_sign_tx_bump_sequence_op(client):
+    op = messages.StellarBumpSequenceOp()
+    op.bump_to = 0x7FFFFFFFFFFFFFFF
+    tx = _create_msg()
 
-        response = stellar.sign_tx(
-            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
-        )
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+    assert (
+        b64encode(response.signature)
+        == b"ZMIfHWhpyXdg40PzwOtkcXYnbZIO12Qy0WvkGqoYpb7jyWbG2HQCG7dgWhCoU5K81pvZTA2pMwiPjMwCXA//Bg=="
+    )
 
-        assert (
-            response.public_key.hex()
-            == "15d648bfe4d36f196cfb5735ffd8ca54cd4b8233f743f22449de7cf301cdb469"
-        )
-        assert (
-            b64encode(response.signature)
-            == b"2R3Pj89U+dWrqy7otUrLLjtANjAg0lmBQL8E+89Po0Y94oqZkauP8j3WE7+/z7vF6XvAMLoOdqRYkUzr2oh7Dg=="
-        )
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign_tx_create_account_op(self, client):
-        """Create new account with initial balance of 100.0333"""
+def test_sign_tx_account_merge_op(client):
+    op = messages.StellarAccountMergeOp()
+    op.destination_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
 
-        op = proto.StellarCreateAccountOp()
-        op.new_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
-        op.starting_balance = 1000333000
+    tx = _create_msg()
 
-        tx = self._create_msg()
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
 
-        response = stellar.sign_tx(
-            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
-        )
+    assert (
+        response.public_key.hex()
+        == "15d648bfe4d36f196cfb5735ffd8ca54cd4b8233f743f22449de7cf301cdb469"
+    )
+    assert (
+        b64encode(response.signature)
+        == b"2R3Pj89U+dWrqy7otUrLLjtANjAg0lmBQL8E+89Po0Y94oqZkauP8j3WE7+/z7vF6XvAMLoOdqRYkUzr2oh7Dg=="
+    )
 
-        assert (
-            b64encode(response.signature)
-            == b"vrRYqkM4b54NrDR05UrW7ZHU7CNcidV0fn+bk9dqOW1bCbmX3YfeRbk2Tf1aea8nr9SD0sfBhtrDpdyxUenjBw=="
-        )
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign_tx_payment_op_native(self, client):
-        """Native payment of 50.0111 XLM to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
+def test_sign_tx_create_account_op(client):
+    """Create new account with initial balance of 100.0333"""
 
-        op = proto.StellarPaymentOp()
-        op.amount = 500111000
-        op.destination_account = (
-            "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
-        )
+    op = messages.StellarCreateAccountOp()
+    op.new_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
+    op.starting_balance = 1000333000
 
-        tx = self._create_msg()
+    tx = _create_msg()
 
-        response = stellar.sign_tx(
-            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
-        )
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
 
-        assert (
-            b64encode(response.signature)
-            == b"pDc6ghKCLNoYbt3h4eBw+533237m0BB0Jp/d/TxJCA83mF3o5Fr4l5vwAWBR62hdTWAP9MhVluY0cd5i54UwDg=="
-        )
+    assert (
+        b64encode(response.signature)
+        == b"vrRYqkM4b54NrDR05UrW7ZHU7CNcidV0fn+bk9dqOW1bCbmX3YfeRbk2Tf1aea8nr9SD0sfBhtrDpdyxUenjBw=="
+    )
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign_tx_payment_op_native_explicit_asset(self, client):
-        """Native payment of 50.0111 XLM to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
 
-        op = proto.StellarPaymentOp()
-        op.amount = 500111000
-        op.destination_account = (
-            "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
-        )
-        op.asset = proto.StellarAssetType(0)
+def test_sign_tx_payment_op_native(client):
+    """Native payment of 50.0111 XLM to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
 
-        tx = self._create_msg()
+    op = messages.StellarPaymentOp()
+    op.amount = 500111000
+    op.destination_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
 
-        response = stellar.sign_tx(
-            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
-        )
+    tx = _create_msg()
 
-        assert (
-            b64encode(response.signature)
-            == b"pDc6ghKCLNoYbt3h4eBw+533237m0BB0Jp/d/TxJCA83mF3o5Fr4l5vwAWBR62hdTWAP9MhVluY0cd5i54UwDg=="
-        )
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign_tx_payment_op_custom_asset1(self, client):
-        """Custom asset payment (code length 1) of 50.0111 X to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
+    assert (
+        b64encode(response.signature)
+        == b"pDc6ghKCLNoYbt3h4eBw+533237m0BB0Jp/d/TxJCA83mF3o5Fr4l5vwAWBR62hdTWAP9MhVluY0cd5i54UwDg=="
+    )
 
-        op = proto.StellarPaymentOp()
-        op.amount = 500111000
-        op.destination_account = (
-            "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
-        )
 
-        op.asset = proto.StellarAssetType(
-            1, "X", "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
-        )
-        tx = self._create_msg()
+def test_sign_tx_payment_op_native_explicit_asset(client):
+    """Native payment of 50.0111 XLM to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
 
-        response = stellar.sign_tx(
-            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
-        )
+    op = messages.StellarPaymentOp()
+    op.amount = 500111000
+    op.destination_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
+    op.asset = messages.StellarAssetType(0)
 
-        assert (
-            b64encode(response.signature)
-            == b"ArZydOtXU2whoRuSjJLFIWPSIsq3AbsncJZ+THF24CRSriVWw5Fy/dHrDlUOu4fzU28I6osDMeI39aWezg5tDw=="
-        )
+    tx = _create_msg()
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign_tx_payment_op_custom_asset12(self, client):
-        """Custom asset payment (code length 12) of 50.0111 ABCDEFGHIJKL to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
 
-        op = proto.StellarPaymentOp()
-        op.amount = 500111000
-        op.destination_account = (
-            "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
-        )
+    assert (
+        b64encode(response.signature)
+        == b"pDc6ghKCLNoYbt3h4eBw+533237m0BB0Jp/d/TxJCA83mF3o5Fr4l5vwAWBR62hdTWAP9MhVluY0cd5i54UwDg=="
+    )
 
-        op.asset = proto.StellarAssetType(
-            2,
-            "ABCDEFGHIJKL",
-            "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
-        )
-        tx = self._create_msg()
 
-        response = stellar.sign_tx(
-            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
-        )
+def test_sign_tx_payment_op_custom_asset1(client):
+    """Custom asset payment (code length 1) of 50.0111 X to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
 
-        assert (
-            b64encode(response.signature)
-            == b"QZIP4XKPfe4OpZtuJiyrMZBX9YBzvGpHGcngdgFfHn2kcdONreF384/pCF80xfEnGm8grKaoOnUEKxqcMKvxAA=="
-        )
+    op = messages.StellarPaymentOp()
+    op.amount = 500111000
+    op.destination_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign_tx_set_options(self, client):
-        """Set inflation destination"""
+    op.asset = messages.StellarAssetType(
+        1, "X", "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
+    )
+    tx = _create_msg()
 
-        op = proto.StellarSetOptionsOp()
-        op.inflation_destination_account = (
-            "GAFXTC5OV5XQD66T7WGOB2HUVUC3ZVJDJMBDPTVQYV3G3K7TUHC6CLBR"
-        )
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
 
-        tx = self._create_msg()
-        response = stellar.sign_tx(
-            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
-        )
+    assert (
+        b64encode(response.signature)
+        == b"ArZydOtXU2whoRuSjJLFIWPSIsq3AbsncJZ+THF24CRSriVWw5Fy/dHrDlUOu4fzU28I6osDMeI39aWezg5tDw=="
+    )
 
-        assert (
-            b64encode(response.signature)
-            == b"dveWhKY8x7b0YqGHWH6Fo1SskxaHP11NXd2n6oHKGiv+T/LqB+CCzbmJA0tplZ+0HNPJbHD7L3Bsg/y462qLDA=="
-        )
 
-        op = proto.StellarSetOptionsOp()
-        op.signer_type = 0
-        op.signer_key = bytes.fromhex(
-            "72187adb879c414346d77c71af8cce7b6eaa57b528e999fd91feae6b6418628e"
-        )
-        op.signer_weight = 2
+def test_sign_tx_payment_op_custom_asset12(client):
+    """Custom asset payment (code length 12) of 50.0111 ABCDEFGHIJKL to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
 
-        tx = self._create_msg()
-        response = stellar.sign_tx(
-            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
-        )
-        assert (
-            b64encode(response.signature)
-            == b"EAeihuFBhUnjH6Sgd/+uAHlvajfv944VEpNSCLsOULNxYWdo/S0lJdUZw/2kN6I+ztKL7ZPQ5gYPJRNUePTOCg=="
-        )
+    op = messages.StellarPaymentOp()
+    op.amount = 500111000
+    op.destination_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
 
-        op = proto.StellarSetOptionsOp()
-        op.medium_threshold = 0
+    op.asset = messages.StellarAssetType(
+        2, "ABCDEFGHIJKL", "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
+    )
+    tx = _create_msg()
 
-        tx = self._create_msg()
-        response = stellar.sign_tx(
-            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
-        )
-        assert (
-            b64encode(response.signature)
-            == b"E2pz06PFB5CvIT3peUcY0wxo7u9da2h6/+/qim1eRWLHC73ZtFqDtLMBaKnr63ZfjB/kDzZmCzHxiv5m+m6+AQ=="
-        )
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
 
-        op = proto.StellarSetOptionsOp()
-        op.low_threshold = 0
-        op.high_threshold = 3
-        op.clear_flags = 0
+    assert (
+        b64encode(response.signature)
+        == b"QZIP4XKPfe4OpZtuJiyrMZBX9YBzvGpHGcngdgFfHn2kcdONreF384/pCF80xfEnGm8grKaoOnUEKxqcMKvxAA=="
+    )
 
-        tx = self._create_msg()
-        response = stellar.sign_tx(
-            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
-        )
-        assert (
-            b64encode(response.signature)
-            == b"ySQE4aS0TI+N1xjSwi/pABHpC+A6RrNPWDOuFYGJFQ5B4vIU2S+ql2gCGLE7bQiYZ5dK9021f+a30mZoYeFLDw=="
-        )
 
-        op = proto.StellarSetOptionsOp()
-        op.set_flags = 3
-        op.master_weight = 4
-        op.home_domain = "hello"
+def test_sign_tx_set_options(client):
+    """Set inflation destination"""
 
-        tx = self._create_msg()
-        response = stellar.sign_tx(
-            client, tx, [op], self.ADDRESS_N, self.NETWORK_PASSPHRASE
-        )
-        assert (
-            b64encode(response.signature)
-            == b"22rfcOrxBiE5akpNsnWX8yPgAOpclbajVqXUaXMNeL000p1OhFhi050t1+GNRpoSNyfVsJGNvtlICGpH4ksDAQ=="
-        )
+    op = messages.StellarSetOptionsOp()
+    op.inflation_destination_account = (
+        "GAFXTC5OV5XQD66T7WGOB2HUVUC3ZVJDJMBDPTVQYV3G3K7TUHC6CLBR"
+    )
 
-    def _create_msg(self) -> proto.StellarSignTx:
-        tx = proto.StellarSignTx()
-        tx.source_account = "GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW"
-        tx.fee = 100
-        tx.sequence_number = 0x100000000
-        tx.memo_type = 0
-        return tx
+    tx = _create_msg()
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+
+    assert (
+        b64encode(response.signature)
+        == b"dveWhKY8x7b0YqGHWH6Fo1SskxaHP11NXd2n6oHKGiv+T/LqB+CCzbmJA0tplZ+0HNPJbHD7L3Bsg/y462qLDA=="
+    )
+
+    op = messages.StellarSetOptionsOp()
+    op.signer_type = 0
+    op.signer_key = bytes.fromhex(
+        "72187adb879c414346d77c71af8cce7b6eaa57b528e999fd91feae6b6418628e"
+    )
+    op.signer_weight = 2
+
+    tx = _create_msg()
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+    assert (
+        b64encode(response.signature)
+        == b"EAeihuFBhUnjH6Sgd/+uAHlvajfv944VEpNSCLsOULNxYWdo/S0lJdUZw/2kN6I+ztKL7ZPQ5gYPJRNUePTOCg=="
+    )
+
+    op = messages.StellarSetOptionsOp()
+    op.medium_threshold = 0
+
+    tx = _create_msg()
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+    assert (
+        b64encode(response.signature)
+        == b"E2pz06PFB5CvIT3peUcY0wxo7u9da2h6/+/qim1eRWLHC73ZtFqDtLMBaKnr63ZfjB/kDzZmCzHxiv5m+m6+AQ=="
+    )
+
+    op = messages.StellarSetOptionsOp()
+    op.low_threshold = 0
+    op.high_threshold = 3
+    op.clear_flags = 0
+
+    tx = _create_msg()
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+    assert (
+        b64encode(response.signature)
+        == b"ySQE4aS0TI+N1xjSwi/pABHpC+A6RrNPWDOuFYGJFQ5B4vIU2S+ql2gCGLE7bQiYZ5dK9021f+a30mZoYeFLDw=="
+    )
+
+    op = messages.StellarSetOptionsOp()
+    op.set_flags = 3
+    op.master_weight = 4
+    op.home_domain = "hello"
+
+    tx = _create_msg()
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+    assert (
+        b64encode(response.signature)
+        == b"22rfcOrxBiE5akpNsnWX8yPgAOpclbajVqXUaXMNeL000p1OhFhi050t1+GNRpoSNyfVsJGNvtlICGpH4ksDAQ=="
+    )
