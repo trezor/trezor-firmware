@@ -1,3 +1,4 @@
+import gc
 import math
 import utime
 from micropython import const
@@ -274,6 +275,8 @@ class Layout(Component):
             # closed, just to be sure.
             if layout_chan.takers:
                 await layout_chan.put(Cancelled())
+            # Not it's good time to GC collect, so let's use this opportunity
+            gc.collect()
             # Now, no other layout should be running.  In a loop, we create new
             # layout tasks and execute them in parallel, while waiting on the
             # layout channel.  This allows other layouts to cancel us, and the
