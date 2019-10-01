@@ -257,7 +257,6 @@ def test_backup_slip39_advanced(client):
 
 
 # we only test this with bip39 because the code path is always the same
-@pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
 def test_no_backup_fails(client):
     device.reset(
@@ -276,14 +275,13 @@ def test_no_backup_fails(client):
     assert client.features.needs_backup is False
 
     # backup attempt should fail because no_backup=True
-    with pytest.raises(TrezorFailure, match="ProcessError: Seed already backed up"):
+    with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
         device.backup(client)
 
 
 # we only test this with bip39 because the code path is always the same
-@pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
-def test_interupt_backup_fails(client):
+def test_interrupt_backup_fails(client):
     device.reset(
         client,
         display_random=False,
@@ -313,17 +311,15 @@ def test_interupt_backup_fails(client):
     assert client.features.no_backup is False
 
     # Second attempt at backup should fail
-    with pytest.raises(TrezorFailure, match="ProcessError: Seed already backed up"):
+    with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
         device.backup(client)
 
 
 # we only test this with bip39 because the code path is always the same
-@pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
 def test_no_backup_show_entropy_fails(client):
     with pytest.raises(
-        TrezorFailure,
-        match="ProcessError: Can't show internal entropy when backup is skipped",
+        TrezorFailure, match=r".*Can't show internal entropy when backup is skipped"
     ):
         device.reset(
             client,
