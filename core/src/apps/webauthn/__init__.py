@@ -98,6 +98,7 @@ _GETINFO_RESP_VERSIONS = const(0x01)  # array of str, required
 _GETINFO_RESP_EXTENSIONS = const(0x02)  # array of str, optional
 _GETINFO_RESP_AAGUID = const(0x03)  # bytes(16), required
 _GETINFO_RESP_OPTIONS = const(0x04)  # map, optional
+_GETINFO_RESP_PIN_PROTOCOLS = const(0x06)  # list of unsigned integers, optional
 
 # CBOR ClientPin command parameter keys
 _CLIENTPIN_CMD_PIN_PROTOCOL = const(0x01)  # unsigned int, required
@@ -152,6 +153,7 @@ _ERR_NO_CREDENTIALS = const(0x2E)  # no valid credentials provided
 _ERR_NOT_ALLOWED = const(0x30)  # continuation command not allowed
 _ERR_PIN_AUTH_INVALID = const(0x33)  # pinAuth verification failed
 _ERR_OTHER = const(0x7F)  # other unspecified error
+_ERR_EXTENSION_FIRST = const(0xE0)  # extension specific error
 
 # command status responses
 _SW_NO_ERROR = const(0x9000)
@@ -214,6 +216,11 @@ _ALLOW_RESIDENT_CREDENTIALS = True
 _USE_BASIC_ATTESTATION = False
 
 _AUTOCONFIRM = False
+
+
+class CborError(Exception):
+    def __init__(self, code: int):
+        self.code = code
 
 
 def frame_init() -> dict:
@@ -817,6 +824,10 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
                 self._user_verification,
             )
             cmd = Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
+        except CborError as e:
+            cmd = cbor_error(self.cid, e.code)
+        except KeyError:
+            cmd = cbor_error(self.cid, _ERR_MISSING_PARAMETER)
         except Exception:
             cmd = cbor_error(self.cid, _ERR_OPERATION_DENIED)
 
@@ -1580,21 +1591,24 @@ def cbor_get_assertion_hmac_secret(
     cred: Credential, hmac_secret: dict
 ) -> Optional[bytes]:
     key_agreement = hmac_secret[1]  # The public key of platform key agreement key.
-    salt_enc = hmac_secret[2]  # The encrypted salt.
-    salt_auth = hmac_secret[3]  # The HMAC of the encrypted salt.
-
-    x = key_agreement[_COSE_X_COORD_KEY]
-    y = key_agreement[_COSE_Y_COORD_KEY]
     if (
         key_agreement[_COSE_ALG_KEY] != _COSE_ALG_ECDH_ES_HKDF_256
         or key_agreement[_COSE_KEY_TYPE_KEY] != _COSE_KEY_TYPE_EC2
         or key_agreement[_COSE_CURVE_KEY] != _COSE_CURVE_P256
-        or len(x) != 32
+    ):
+        return None
+
+    x = key_agreement[_COSE_X_COORD_KEY]
+    y = key_agreement[_COSE_Y_COORD_KEY]
+    salt_enc = hmac_secret[2]  # The encrypted salt.
+    salt_auth = hmac_secret[3]  # The HMAC of the encrypted salt.
+    if (
+        len(x) != 32
         or len(y) != 32
         or len(salt_auth) != 16
         or len(salt_enc) not in (32, 64)
     ):
-        return None
+        raise CborError(_ERR_INVALID_LEN)
 
     # Compute the ECDH shared secret.
     ecdh_result = nist256p1.multiply(_KEY_AGREEMENT_PRIVKEY, b"\04" + x + y)
@@ -1603,7 +1617,7 @@ def cbor_get_assertion_hmac_secret(
     # Check the authentication tag and decrypt the salt.
     tag = hmac.Hmac(shared_secret, salt_enc, hashlib.sha256).digest()[:16]
     if not utils.consteq(tag, salt_auth):
-        return None
+        raise CborError(_ERR_EXTENSION_FIRST)
     salt = aes(aes.CBC, shared_secret).decrypt(salt_enc)
 
     # Get cred_random - a constant symmetric key associated with the credential.
@@ -1692,6 +1706,7 @@ def cbor_get_info(req: Cmd) -> Cmd:
             "up": True,
             "uv": True,
         },
+        _GETINFO_RESP_PIN_PROTOCOLS: [1],
     }
     return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
 
