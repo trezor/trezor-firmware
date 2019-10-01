@@ -16,7 +16,6 @@ async def sign_tx(ctx, received_msg, keychain):
         if __debug__:
             log.debug(__name__, "#### F: %s, A: %s", gc.mem_free(), gc.mem_alloc())
         gc.collect()
-        gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
 
         result_msg, accept_msgs = await sign_tx_dispatch(state, received_msg, keychain)
         if accept_msgs is None:

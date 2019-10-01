@@ -15,6 +15,12 @@ usb.bus.open()
 utils.set_mode_unprivileged()
 
 
+# set GC threshold to 25% of the heap capacity
+import gc
+
+gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
+
+
 def _boot_recovery() -> None:
     # load applications
     import apps.homescreen
