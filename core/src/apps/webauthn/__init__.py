@@ -1591,9 +1591,10 @@ def cbor_get_assertion_hmac_secret(
     cred: Credential, hmac_secret: dict
 ) -> Optional[bytes]:
     key_agreement = hmac_secret[1]  # The public key of platform key agreement key.
+    # NOTE: We should check the key_agreement[_COSE_ALG_KEY] here, but to avoid compatibility issues we don't,
+    # because there is currently no valid value which describes the actual key agreement algorithm.
     if (
-        key_agreement[_COSE_ALG_KEY] != _COSE_ALG_ECDH_ES_HKDF_256
-        or key_agreement[_COSE_KEY_TYPE_KEY] != _COSE_KEY_TYPE_EC2
+        key_agreement[_COSE_KEY_TYPE_KEY] != _COSE_KEY_TYPE_EC2
         or key_agreement[_COSE_CURVE_KEY] != _COSE_CURVE_P256
     ):
         return None
@@ -1727,6 +1728,9 @@ def cbor_client_pin(req: Cmd) -> Cmd:
         return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
 
     # Encode the public key of the authenticator key agreement key.
+    # NOTE: There is currently no valid value for _COSE_ALG_KEY which describes the actual
+    # key agreement algorithm as specified, but _COSE_ALG_ECDH_ES_HKDF_256 is allegedly
+    # recommended by the latest draft of the CTAP2 spec.
     response_data = {
         _CLIENTPIN_RESP_KEY_AGREEMENT: {
             _COSE_ALG_KEY: _COSE_ALG_ECDH_ES_HKDF_256,
