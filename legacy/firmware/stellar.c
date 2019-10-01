@@ -1088,9 +1088,7 @@ bool stellar_confirmManageDataOp(const StellarManageDataOp *msg) {
   // value
   if (msg->has_value) {
     stellar_hashupdate_bool(true);
-    // Variable opaque field is length + raw bytes
-    stellar_hashupdate_uint32(msg->value.size);
-    stellar_hashupdate_bytes(msg->value.bytes, msg->value.size);
+    stellar_hashupdate_string(msg->value.bytes, msg->value.size);
   } else {
     stellar_hashupdate_bool(false);
   }

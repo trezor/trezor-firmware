@@ -55,7 +55,6 @@ from trezorlib.tools import parse_path
 
 from ..common import MNEMONIC12
 
-
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.stellar,
@@ -66,7 +65,7 @@ ADDRESS_N = parse_path(stellar.DEFAULT_BIP32_PATH)
 NETWORK_PASSPHRASE = "Test SDF Network ; September 2015"
 
 
-def _create_msg(self) -> messages.StellarSignTx:
+def _create_msg() -> messages.StellarSignTx:
     return messages.StellarSignTx(
         source_account="GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW",
         fee=100,
@@ -259,4 +258,17 @@ def test_sign_tx_set_options(client):
     assert (
         b64encode(response.signature)
         == b"22rfcOrxBiE5akpNsnWX8yPgAOpclbajVqXUaXMNeL000p1OhFhi050t1+GNRpoSNyfVsJGNvtlICGpH4ksDAQ=="
+    )
+
+
+def test_manage_data(client):
+    tx = _create_msg()
+
+    # testing a value whose length is not divisible by 4
+    op = messages.StellarManageDataOp(key="data", value=b"abc")
+
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+    assert (
+        b64encode(response.signature)
+        == b"MTa8fmhM7BxYYo9kY1RKQFFrg/MVfzsgiPSuP7+SJZjhQ3P1ucN5JUnfmD5484ULRPjVTd+0YYjS6hScLupbCQ=="
     )
