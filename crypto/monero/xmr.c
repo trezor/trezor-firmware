@@ -44,14 +44,14 @@ void xmr_hasher_copy(Hasher *dst, const Hasher *src) {
 }
 
 void xmr_hash_to_scalar(bignum256modm r, const void *data, size_t length) {
-  uint8_t hash[HASHER_DIGEST_LENGTH];
+  uint8_t hash[HASHER_DIGEST_LENGTH] = {0};
   hasher_Raw(HASHER_SHA3K, data, length, hash);
   expand256_modm(r, hash, HASHER_DIGEST_LENGTH);
 }
 
 void xmr_hash_to_ec(ge25519 *P, const void *data, size_t length) {
-  ge25519 point2;
-  uint8_t hash[HASHER_DIGEST_LENGTH];
+  ge25519 point2 = {0};
+  uint8_t hash[HASHER_DIGEST_LENGTH] = {0};
   hasher_Raw(HASHER_SHA3K, data, length, hash);
 
   ge25519_fromfe_frombytes_vartime(&point2, hash);
@@ -60,7 +60,7 @@ void xmr_hash_to_ec(ge25519 *P, const void *data, size_t length) {
 
 void xmr_derivation_to_scalar(bignum256modm s, const ge25519 *p,
                               uint32_t output_index) {
-  uint8_t buff[32 + 8];
+  uint8_t buff[32 + 8] = {0};
   ge25519_pack(buff, p);
   int written = xmr_write_varint(buff + 32, 8, output_index);
   xmr_hash_to_scalar(s, buff, 32u + written);
@@ -68,7 +68,7 @@ void xmr_derivation_to_scalar(bignum256modm s, const ge25519 *p,
 
 void xmr_generate_key_derivation(ge25519 *r, const ge25519 *A,
                                  const bignum256modm b) {
-  ge25519 bA;
+  ge25519 bA = {0};
   ge25519_scalarmult(&bA, A, b);
   ge25519_mul8(r, &bA);
 }
@@ -82,7 +82,7 @@ void xmr_derive_private_key(bignum256modm s, const ge25519 *deriv, uint32_t idx,
 void xmr_derive_public_key(ge25519 *r, const ge25519 *deriv, uint32_t idx,
                            const ge25519 *base) {
   bignum256modm s = {0};
-  ge25519 p2;
+  ge25519 p2 = {0};
 
   xmr_derivation_to_scalar(s, deriv, idx);
   ge25519_scalarmult_base_niels(&p2, ge25519_niels_base_multiples, s);
@@ -92,7 +92,7 @@ void xmr_derive_public_key(ge25519 *r, const ge25519 *deriv, uint32_t idx,
 void xmr_add_keys2(ge25519 *r, const bignum256modm a, const bignum256modm b,
                    const ge25519 *B) {
   // aG + bB, G is basepoint
-  ge25519 aG, bB;
+  ge25519 aG = {0}, bB = {0};
   ge25519_scalarmult_base_niels(&aG, ge25519_niels_base_multiples, a);
   ge25519_scalarmult(&bB, B, b);
   ge25519_add(r, &aG, &bB, 0);
@@ -107,7 +107,7 @@ void xmr_add_keys2_vartime(ge25519 *r, const bignum256modm a,
 void xmr_add_keys3(ge25519 *r, const bignum256modm a, const ge25519 *A,
                    const bignum256modm b, const ge25519 *B) {
   // aA + bB
-  ge25519 aA, bB;
+  ge25519 aA = {0}, bB = {0};
   ge25519_scalarmult(&aA, A, a);
   ge25519_scalarmult(&bB, B, b);
   ge25519_add(r, &aA, &bB, 0);
@@ -122,10 +122,10 @@ void xmr_add_keys3_vartime(ge25519 *r, const bignum256modm a, const ge25519 *A,
 void xmr_get_subaddress_secret_key(bignum256modm r, uint32_t major,
                                    uint32_t minor, const bignum256modm m) {
   const char prefix[] = "SubAddr";
-  unsigned char buff[32];
+  unsigned char buff[32] = {0};
   contract256_modm(buff, m);
 
-  char data[sizeof(prefix) + sizeof(buff) + 2 * sizeof(uint32_t)];
+  char data[sizeof(prefix) + sizeof(buff) + 2 * sizeof(uint32_t)] = {0};
   memcpy(data, prefix, sizeof(prefix));
   memcpy(data + sizeof(prefix), buff, sizeof(buff));
   memcpy(data + sizeof(prefix) + sizeof(buff), &major, sizeof(uint32_t));

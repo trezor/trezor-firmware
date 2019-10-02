@@ -50,7 +50,7 @@ const char *mnemonic_generate(int strength) {
   if (strength % 32 || strength < 128 || strength > 256) {
     return 0;
   }
-  uint8_t data[32];
+  uint8_t data[32] = {0};
   random_buffer(data, 32);
   const char *r = mnemonic_from_data(data, strength / 8);
   memzero(data, sizeof(data));
@@ -64,7 +64,7 @@ const char *mnemonic_from_data(const uint8_t *data, int len) {
     return 0;
   }
 
-  uint8_t bits[32 + 1];
+  uint8_t bits[32 + 1] = {0};
 
   sha256_Raw(data, len, bits);
   // checksum
@@ -74,7 +74,7 @@ const char *mnemonic_from_data(const uint8_t *data, int len) {
 
   int mlen = len * 3 / 4;
 
-  int i, j, idx;
+  int i = 0, j = 0, idx = 0;
   char *p = mnemo;
   for (i = 0; i < mlen; i++) {
     idx = 0;
@@ -114,9 +114,9 @@ int mnemonic_to_entropy(const char *mnemonic, uint8_t *entropy) {
     return 0;
   }
 
-  char current_word[10];
-  uint32_t j, k, ki, bi = 0;
-  uint8_t bits[32 + 1];
+  char current_word[10] = {0};
+  uint32_t j = 0, k = 0, ki = 0, bi = 0;
+  uint8_t bits[32 + 1] = {0};
 
   memzero(bits, sizeof(bits));
   i = 0;
@@ -159,7 +159,7 @@ int mnemonic_to_entropy(const char *mnemonic, uint8_t *entropy) {
 }
 
 int mnemonic_check(const char *mnemonic) {
-  uint8_t bits[32 + 1];
+  uint8_t bits[32 + 1] = {0};
   int seed_len = mnemonic_to_entropy(mnemonic, bits);
   if (seed_len != (12 * 11) && seed_len != (18 * 11) && seed_len != (24 * 11)) {
     return 0;
@@ -198,7 +198,7 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
     }
   }
 #endif
-  uint8_t salt[8 + 256];
+  uint8_t salt[8 + 256] = {0};
   memcpy(salt, "mnemonic", 8);
   memcpy(salt + 8, passphrase, passphraselen);
   static CONFIDENTIAL PBKDF2_HMAC_SHA512_CTX pctx;

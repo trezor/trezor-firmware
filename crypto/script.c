@@ -26,7 +26,7 @@
 
 int script_output_to_address(const uint8_t *script, int scriptlen, char *addr,
                              int addrsize) {
-  uint8_t raw[35];
+  uint8_t raw[35] = {0};
 
   // P2PKH
   if (scriptlen == 25 && script[0] == 0x76 && script[1] == 0xA9 &&

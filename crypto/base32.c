@@ -77,7 +77,7 @@ void base32_encode_unsafe(const uint8_t *in, size_t inlen, uint8_t *out) {
   uint8_t remainder = inlen % 5;
   size_t limit = inlen - remainder;
 
-  size_t i, j;
+  size_t i = 0, j = 0;
   for (i = 0, j = 0; i < limit; i += 5, j += 8) {
     base32_5to8(&in[i], 5, &out[j]);
   }
@@ -90,7 +90,7 @@ bool base32_decode_unsafe(const uint8_t *in, size_t inlen, uint8_t *out,
   uint8_t remainder = inlen % 8;
   size_t limit = inlen - remainder;
 
-  size_t i, j;
+  size_t i = 0, j = 0;
   for (i = 0, j = 0; i < limit; i += 8, j += 5) {
     if (!base32_8to5(&in[i], 8, &out[j], alphabet)) {
       return false;

@@ -41,8 +41,8 @@
 #include "memzero.h"
 
 static void bitslice(uint32_t r[8], const uint8_t *x, size_t len) {
-  size_t bit_idx, arr_idx;
-  uint32_t cur;
+  size_t bit_idx = 0, arr_idx = 0;
+  uint32_t cur = 0;
 
   memset(r, 0, sizeof(uint32_t[8]));
   for (arr_idx = 0; arr_idx < len; arr_idx++) {
@@ -54,8 +54,8 @@ static void bitslice(uint32_t r[8], const uint8_t *x, size_t len) {
 }
 
 static void unbitslice(uint8_t *r, const uint32_t x[8], size_t len) {
-  size_t bit_idx, arr_idx;
-  uint32_t cur;
+  size_t bit_idx = 0, arr_idx = 0;
+  uint32_t cur = 0;
 
   memset(r, 0, sizeof(uint8_t) * len);
   for (bit_idx = 0; bit_idx < 8; bit_idx++) {
@@ -67,7 +67,7 @@ static void unbitslice(uint8_t *r, const uint32_t x[8], size_t len) {
 }
 
 static void bitslice_setall(uint32_t r[8], const uint8_t x) {
-  size_t idx;
+  size_t idx = 0;
   for (idx = 0; idx < 8; idx++) {
     r[idx] = -((x >> idx) & 1);
   }
@@ -77,7 +77,7 @@ static void bitslice_setall(uint32_t r[8], const uint8_t x) {
  * Add (XOR) `r` with `x` and store the result in `r`.
  */
 static void gf256_add(uint32_t r[8], const uint32_t x[8]) {
-  size_t idx;
+  size_t idx = 0;
   for (idx = 0; idx < 8; idx++) r[idx] ^= x[idx];
 }
 
@@ -97,7 +97,7 @@ static void gf256_mul(uint32_t r[8], const uint32_t a[8], const uint32_t b[8]) {
    * However, some compilers seem to fail in optimizing these kinds of
    * loops. So we will just have to do this by hand.
    */
-  uint32_t a2[8];
+  uint32_t a2[8] = {0};
   memcpy(a2, a, sizeof(uint32_t[8]));
 
   r[0] = a2[0] & b[0]; /* add (assignment, because r is 0) */
@@ -200,7 +200,7 @@ static void gf256_mul(uint32_t r[8], const uint32_t a[8], const uint32_t b[8]) {
  * Square `x` in GF(2^8) and write the result to `r`. `r` and `x` may overlap.
  */
 static void gf256_square(uint32_t r[8], const uint32_t x[8]) {
-  uint32_t r8, r10, r12, r14;
+  uint32_t r8 = 0, r10 = 0, r12 = 0, r14 = 0;
   /* Use the Freshman's Dream rule to square the polynomial
    * Assignments are done from 7 downto 0, because this allows the user
    * to execute this function in-place (e.g. `gf256_square(r, r);`).
@@ -242,7 +242,7 @@ static void gf256_square(uint32_t r[8], const uint32_t x[8]) {
  * Invert `x` in GF(2^8) and write the result to `r`
  */
 static void gf256_inv(uint32_t r[8], uint32_t x[8]) {
-  uint32_t y[8], z[8];
+  uint32_t y[8] = {0}, z[8] = {0};
 
   gf256_square(y, x);  // y = x^2
   gf256_square(y, y);  // y = x^4
@@ -264,13 +264,13 @@ bool shamir_interpolate(uint8_t *result, uint8_t result_index,
                         const uint8_t *share_indices,
                         const uint8_t **share_values, uint8_t share_count,
                         size_t len) {
-  size_t i, j;
-  uint32_t x[8];
+  size_t i = 0, j = 0;
+  uint32_t x[8] = {0};
   uint32_t xs[share_count][8];
   uint32_t ys[share_count][8];
   uint32_t num[8] = {~0}; /* num is the numerator (=1) */
-  uint32_t denom[8];
-  uint32_t tmp[8];
+  uint32_t denom[8] = {0};
+  uint32_t tmp[8] = {0};
   uint32_t secret[8] = {0};
   bool ret = true;
 
