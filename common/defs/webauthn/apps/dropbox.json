@@ -1,5 +1,5 @@
 {
   "label": "Dropbox",
-  "u2f": "https://www.dropbox.com/u2f-app-id.json",
-  "webauthn": "www.dropbox.com"
+  "u2f": ["c50f8a7b708e92f82e7a50e2bdc55d8fd91a22fe6b29c0cdf7805530842af581"],
+  "webauthn": ["www.dropbox.com"]
 }

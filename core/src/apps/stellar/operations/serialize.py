@@ -56,8 +56,7 @@ def write_manage_data_op(w, msg: StellarManageDataOp):
     writers.write_string(w, msg.key)
     writers.write_bool(w, bool(msg.value))
     if msg.value:
-        writers.write_uint32(w, len(msg.value))
-        writers.write_bytes(w, msg.value)
+        writers.write_string(w, msg.value)
 
 
 def write_manage_offer_op(w, msg: StellarManageOfferOp):

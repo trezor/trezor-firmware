@@ -1088,9 +1088,7 @@ bool stellar_confirmManageDataOp(const StellarManageDataOp *msg) {
   // value
   if (msg->has_value) {
     stellar_hashupdate_bool(true);
-    // Variable opaque field is length + raw bytes
-    stellar_hashupdate_uint32(msg->value.size);
-    stellar_hashupdate_bytes(msg->value.bytes, msg->value.size);
+    stellar_hashupdate_string(msg->value.bytes, msg->value.size);
   } else {
     stellar_hashupdate_bool(false);
   }
@@ -1699,13 +1697,13 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg) {
     memzero(str_timebound, sizeof(str_timebound));
 
     timebound = (time_t)msg->timebounds_end;
-    strlcpy(str_lines[0], _("Valid from:"), sizeof(str_lines[0]));
+    strlcpy(str_lines[2], _("Valid to:"), sizeof(str_lines[2]));
     if (timebound) {
       tm = gmtime(&timebound);
       strftime(str_timebound, sizeof(str_timebound), "%F %T (UTC)", tm);
-      strlcpy(str_lines[1], str_timebound, sizeof(str_lines[1]));
+      strlcpy(str_lines[3], str_timebound, sizeof(str_lines[3]));
     } else {
-      strlcpy(str_lines[1], _("[no restriction]"), sizeof(str_lines[1]));
+      strlcpy(str_lines[3], _("[no restriction]"), sizeof(str_lines[3]));
     }
   }
 

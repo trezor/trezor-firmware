@@ -5,9 +5,16 @@ from apps.common.writers import write_bytes, write_uint32_be, write_uint64_be
 write_uint32 = write_uint32_be
 write_uint64 = write_uint64_be
 
+if False:
+    from typing import AnyStr
 
-def write_string(w, s: str):
-    buf = s.encode()
+
+def write_string(w, s: AnyStr) -> None:
+    """Write XDR string padded to a multiple of 4 bytes."""
+    if isinstance(s, str):
+        buf = s.encode()
+    else:
+        buf = s
     write_uint32(w, len(buf))
     write_bytes(w, buf)
     # if len isn't a multiple of 4, add padding bytes

@@ -1,4 +1,4 @@
 {
   "label": "LastPass",
-  "u2f": "https://lastpass.com"
+  "u2f": ["d755c527a86bf78445c282e713dcb86d46ff8b3cafcfb73b2e8cbe6c0884cb24"]
 }
