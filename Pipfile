@@ -7,7 +7,7 @@ verify_ssl = true
 # all
 trezor = {editable = true,path = "./python"}
 scons = "*"
-protobuf = "==3.4.0"
+protobuf = "==3.6.1"
 pyblake2 = "*"
 
 ## test tools

@@ -18,7 +18,7 @@ addons:
 
 env:
     global:
-        PROTOBUF_VERSION=3.4.0
+        PROTOBUF_VERSION=3.6.1
 
 install:
     - pip install --upgrade pip wheel setuptools
