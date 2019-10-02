@@ -574,6 +574,7 @@ void layoutAddress(const char *address, const char *desc, bool qrcode,
   uint32_t addrlen = strlen(address);
   if (qrcode) {
     char address_upcase[addrlen + 1];
+    memset(address_upcase, 0, sizeof(address_upcase));
     if (ignorecase) {
       for (uint32_t i = 0; i < addrlen + 1; i++) {
         address_upcase[i] = address[i] >= 'a' && address[i] <= 'z'

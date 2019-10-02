@@ -1339,6 +1339,8 @@ size_t stellar_publicAddressAsStr(const uint8_t *bytes, char *out,
   // version + key bytes + checksum
   uint8_t keylen = 1 + 32 + 2;
   uint8_t bytes_full[keylen];
+  memset(bytes_full, 0, sizeof(bytes_full));
+
   bytes_full[0] = 6 << 3;  // 'G'
 
   memcpy(bytes_full + 1, bytes, 32);

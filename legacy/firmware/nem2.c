@@ -210,6 +210,7 @@ bool nem_askTransfer(const NEMTransactionCommon *common,
     bool unknownMosaic = false;
 
     const NEMMosaicDefinition *definitions[transfer->mosaics_count];
+    memset(definitions, 0, sizeof(definitions));
 
     for (size_t i = 0; i < transfer->mosaics_count; i++) {
       const NEMMosaic *mosaic = &transfer->mosaics[i];
