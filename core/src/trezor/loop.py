@@ -375,15 +375,15 @@ class chan:
             self.ch = ch
             self.task = None  # type: Optional[Task]
 
-        def handle(self, task) -> None:
+        def handle(self, task: Task) -> None:
             self.task = task
             self.ch._schedule_take(task)
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.putters = []  # type: List[Tuple[Optional[Task], Any]]
         self.takers = []  # type: List[Task]
 
-    def put(self, value: Any) -> None:
+    def put(self, value: Any) -> Awaitable[None]:  # type: ignore
         put = chan.Put(self, value)
         try:
             return (yield put)
@@ -393,7 +393,7 @@ class chan:
                 self.putters.remove(entry)
             raise
 
-    def take(self) -> None:
+    def take(self) -> Awaitable[Any]:  # type: ignore
         take = chan.Take(self)
         try:
             return (yield take)
@@ -409,7 +409,7 @@ class chan:
         else:
             self.putters.append((None, value))
 
-    def _schedule_put(self, putter: Task, value: Any) -> None:
+    def _schedule_put(self, putter: Task, value: Any) -> bool:
         if self.takers:
             taker = self.takers.pop(0)
             schedule(taker, value)

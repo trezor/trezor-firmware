@@ -11,6 +11,7 @@ from apps.common.request_pin import (
     request_pin_confirm,
     show_pin_invalid,
 )
+from apps.common.storage import device as storage_device, recovery as storage_recovery
 from apps.management.recovery_device.homescreen import recovery_process
 
 if False:
@@ -43,13 +44,13 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
         config.change_pin(pin_to_int(""), pin_to_int(newpin), None, None)
 
     if msg.u2f_counter:
-        storage.device.set_u2f_counter(msg.u2f_counter)
-    storage.device.load_settings(
+        storage_device.set_u2f_counter(msg.u2f_counter)
+    storage_device.load_settings(
         label=msg.label, use_passphrase=msg.passphrase_protection
     )
-    storage.recovery.set_in_progress(True)
+    storage_recovery.set_in_progress(True)
     if msg.dry_run:
-        storage.recovery.set_dry_run(msg.dry_run)
+        storage_recovery.set_dry_run(msg.dry_run)
 
     result = await recovery_process(ctx)
 
@@ -62,7 +63,7 @@ def _check_state(msg: RecoveryDevice) -> None:
     if msg.dry_run and not storage.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
-    if storage.recovery.is_in_progress():
+    if storage_recovery.is_in_progress():
         raise RuntimeError(
             "Function recovery_device should not be invoked when recovery is already in progress"
         )
@@ -73,7 +74,7 @@ def _check_state(msg: RecoveryDevice) -> None:
         )
 
 
-async def _continue_dialog(ctx: wire.Context, msg: RecoveryDevice):
+async def _continue_dialog(ctx: wire.Context, msg: RecoveryDevice) -> None:
     if not msg.dry_run:
         text = Text("Recovery mode", ui.ICON_RECOVERY, new_lines=False)
         text.bold("Do you really want to")

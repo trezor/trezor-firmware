@@ -4,12 +4,11 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeTezosContractType = Literal[0, 1]
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
-        EnumTypeTezosContractType = None  # type: ignore
+        pass
 
 
 class TezosContractID(p.MessageType):

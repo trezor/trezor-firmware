@@ -7,6 +7,7 @@ from trezor.ui.text import Text
 
 from apps.common import storage
 from apps.common.confirm import require_confirm
+from apps.common.storage import device as storage_device
 from apps.management import backup_types
 
 
@@ -32,13 +33,13 @@ async def load_device(ctx, msg):
             backup_type = BackupType.Slip39_Advanced
         else:
             raise RuntimeError("Invalid group count")
-        storage.device.set_slip39_identifier(identifier)
-        storage.device.set_slip39_iteration_exponent(iteration_exponent)
+        storage_device.set_slip39_identifier(identifier)
+        storage_device.set_slip39_iteration_exponent(iteration_exponent)
 
-    storage.device.store_mnemonic_secret(
+    storage_device.store_mnemonic_secret(
         secret, backup_type, needs_backup=True, no_backup=False
     )
-    storage.device.load_settings(
+    storage_device.load_settings(
         use_passphrase=msg.passphrase_protection, label=msg.label
     )
     if msg.pin:

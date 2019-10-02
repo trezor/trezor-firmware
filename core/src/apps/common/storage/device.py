@@ -96,7 +96,7 @@ def get_backup_type() -> EnumTypeBackupType:
     ):
         # Invalid backup type
         raise RuntimeError
-    return backup_type
+    return backup_type  # type: ignore
 
 
 def has_passphrase() -> bool:

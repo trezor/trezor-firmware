@@ -13,7 +13,7 @@ from apps.common import HARDENED
 from apps.common.confirm import confirm, require_confirm
 
 if False:
-    from typing import Iterable
+    from typing import Iterable, Iterator
     from trezor import wire
 
 
@@ -60,7 +60,7 @@ async def show_pubkey(ctx: wire.Context, pubkey: bytes) -> None:
     await require_confirm(ctx, text, ButtonRequestType.PublicKey)
 
 
-def split_address(address: str) -> Iterable[str]:
+def split_address(address: str) -> Iterator[str]:
     return chunks(address, 17)
 
 

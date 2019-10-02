@@ -241,6 +241,10 @@ class UnexpectedMessageError(Exception):
 async def handle_session(iface: WireInterface, session_id: int) -> None:
     ctx = Context(iface, session_id)
     next_reader = None  # type: Optional[codec_v1.Reader]
+    res_msg = None
+    req_reader = None
+    req_type = None
+    req_msg = None
     while True:
         try:
             if next_reader is None:
@@ -404,9 +408,9 @@ def get_workflow_handler(reader: codec_v1.Reader) -> Optional[Handler]:
     return handler
 
 
-def import_workflow(pkgname: str, modname: str) -> Handler:
+def import_workflow(pkgname: str, modname: str) -> Any:
     modpath = "%s.%s" % (pkgname, modname)
-    module = __import__(modpath, None, None, (modname,), 0)  # type: ignore
+    module = __import__(modpath, None, None, (modname,), 0)
     handler = getattr(module, modname)
     return handler
 

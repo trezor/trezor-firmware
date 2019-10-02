@@ -7,8 +7,8 @@ from trezor.ui.confirm import CONFIRMED, Confirm
 from trezor.ui.text import Text
 from trezor.utils import consteq
 
-from apps.common import storage
 from apps.common.confirm import confirm
+from apps.common.storage.device import get_device_id
 
 if False:
     from typing import Optional
@@ -78,7 +78,7 @@ async def _write_failed_dialog(ctx: Optional[wire.Context]) -> None:
 
 
 def _get_device_dir() -> str:
-    return "/trezor/device_%s" % storage.device.get_device_id().lower()
+    return "/trezor/device_%s" % get_device_id().lower()
 
 
 def _get_salt_path(new: bool = False) -> str:

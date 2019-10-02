@@ -22,7 +22,7 @@ def boot() -> None:
         wire.add(MessageType.DebugMoneroDiagRequest, __name__, "diag")
 
 
-def live_refresh_token(token=None):
+def live_refresh_token(token: bytes = None) -> None:
     global _LIVE_REFRESH_TOKEN
     if token is None:
         return _LIVE_REFRESH_TOKEN

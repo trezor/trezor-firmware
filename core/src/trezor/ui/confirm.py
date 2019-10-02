@@ -178,7 +178,7 @@ class InfoConfirm(ui.Layout):
         self.confirm.on_click = self.on_confirm  # type: ignore
 
         self.info = Button(ui.grid(13), info, info_style)
-        self.info.on_click = self.on_info
+        self.info.on_click = self.on_info  # type: ignore
 
         self.cancel = Button(ui.grid(12), cancel, cancel_style)
         self.cancel.on_click = self.on_cancel  # type: ignore

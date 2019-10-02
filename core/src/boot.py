@@ -4,15 +4,15 @@ from trezor.pin import pin_to_int, show_pin_timeout
 from apps.common import storage
 from apps.common.request_pin import PinCancelled, request_pin
 from apps.common.sd_salt import SdProtectCancelled, request_sd_salt
-from apps.common.storage import device
+from apps.common.storage import device as storage_device
 
 if False:
     from typing import Optional
 
 
 async def bootscreen() -> None:
-    ui.display.orientation(storage.device.get_rotation())
-    salt_auth_key = device.get_sd_salt_auth_key()
+    ui.display.orientation(storage_device.get_rotation())
+    salt_auth_key = storage_device.get_sd_salt_auth_key()
 
     while True:
         try:
@@ -47,8 +47,8 @@ async def bootscreen() -> None:
 
 
 async def lockscreen() -> None:
-    label = storage.device.get_label()
-    image = storage.device.get_homescreen()
+    label = storage_device.get_label()
+    image = storage_device.get_homescreen()
     if not label:
         label = "My Trezor"
     if not image:

@@ -97,6 +97,7 @@ class Keychain:
     def derive_slip77_blinding_private_key(self, script: bytes) -> bytes:
         """Following the derivation by Elements/Liquid."""
         master_node = self.derive(node_path=[b"SLIP-0077"], curve_name="slip21")
+        assert isinstance(master_node, Slip21Node)
         return hmac.new(
             key=master_node.key(), msg=script, digestmod=hashlib.sha256
         ).digest()

@@ -1,6 +1,7 @@
 from trezor import config, res, ui
 
 from apps.common import storage
+from apps.common.storage import device as storage_device
 
 
 async def homescreen() -> None:
@@ -8,10 +9,10 @@ async def homescreen() -> None:
 
 
 class Homescreen(ui.Layout):
-    def __init__(self):
+    def __init__(self) -> None:
         self.repaint = True
 
-    def on_render(self):
+    def on_render(self) -> None:
         if not self.repaint:
             return
 
@@ -19,17 +20,17 @@ class Homescreen(ui.Layout):
         if not storage.is_initialized():
             label = "Go to trezor.io/start"
         else:
-            label = storage.device.get_label() or "My Trezor"
-            image = storage.device.get_homescreen()
+            label = storage_device.get_label() or "My Trezor"
+            image = storage_device.get_homescreen()
 
         if not image:
             image = res.load("apps/homescreen/res/bg.toif")
 
-        if storage.is_initialized() and storage.device.no_backup():
+        if storage.is_initialized() and storage_device.no_backup():
             ui.header_error("SEEDLESS")
-        elif storage.is_initialized() and storage.device.unfinished_backup():
+        elif storage.is_initialized() and storage_device.unfinished_backup():
             ui.header_error("BACKUP FAILED!")
-        elif storage.is_initialized() and storage.device.needs_backup():
+        elif storage.is_initialized() and storage_device.needs_backup():
             ui.header_warning("NEEDS BACKUP!")
         elif storage.is_initialized() and not config.has_pin():
             ui.header_warning("PIN NOT SET!")

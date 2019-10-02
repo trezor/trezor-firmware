@@ -6,7 +6,7 @@ from trezorui import Display
 from trezor import io, loop, res, utils
 
 if False:
-    from typing import Any, Generator, Tuple, TypeVar
+    from typing import Any, Awaitable, Generator, Tuple, TypeVar
 
     Pos = Tuple[int, int]
     Area = Tuple[int, int, int, int]
@@ -334,6 +334,6 @@ class Layout(Component):
             self.dispatch(RENDER, 0, 0)
 
 
-def wait_until_layout_is_running():
+def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore
     while not layout_chan.takers:
         yield

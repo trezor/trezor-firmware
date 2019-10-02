@@ -9,7 +9,7 @@ if __debug__:
     from apps.debug import swipe_signal
 
 if False:
-    from typing import Tuple, Sequence
+    from typing import Tuple, List
 
 
 def render_scrollbar(pages: int, page: int) -> None:
@@ -46,7 +46,7 @@ def render_swipe_text() -> None:
 
 class Paginated(ui.Layout):
     def __init__(
-        self, pages: Sequence[ui.Component], page: int = 0, one_by_one: bool = False
+        self, pages: List[ui.Component], page: int = 0, one_by_one: bool = False
     ):
         self.pages = pages
         self.page = page
@@ -157,7 +157,7 @@ class PageWithButtons(ui.Component):
 
 class PaginatedWithButtons(ui.Layout):
     def __init__(
-        self, pages: Sequence[ui.Component], page: int = 0, one_by_one: bool = False
+        self, pages: List[ui.Component], page: int = 0, one_by_one: bool = False
     ) -> None:
         self.pages = [
             PageWithButtons(p, self, i, len(pages)) for i, p in enumerate(pages)
