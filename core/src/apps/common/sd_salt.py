@@ -23,7 +23,7 @@ SD_SALT_AUTH_TAG_LEN_BYTES = const(16)
 SD_SALT_AUTH_KEY_LEN_BYTES = const(16)
 
 
-async def wrong_card_dialog(ctx: Optional[wire.Context]) -> None:
+async def _wrong_card_dialog(ctx: Optional[wire.Context]) -> None:
     text = Text("SD card protection", ui.ICON_WRONG)
     text.bold("Wrong SD card.")
     text.br_half()
@@ -34,7 +34,7 @@ async def wrong_card_dialog(ctx: Optional[wire.Context]) -> None:
         await require_confirm(ctx, text, confirm=None, cancel="Close")
 
 
-async def insert_card_dialog(ctx: Optional[wire.Context]) -> None:
+async def _insert_card_dialog(ctx: Optional[wire.Context]) -> None:
     text = Text("SD card protection")
     text.bold("SD card required.")
     text.br_half()
@@ -45,17 +45,27 @@ async def insert_card_dialog(ctx: Optional[wire.Context]) -> None:
         await require_confirm(ctx, text, confirm=None, cancel="Close")
 
 
+def _get_device_dir() -> bytes:
+    return "/trezor/device_%s" % storage.device.get_device_id().lower()
+
+
+def _get_salt_path(new: bool = False) -> bytes:
+    if new:
+        return "%s/salt.new" % _get_device_dir()
+    else:
+        return "%s/salt" % _get_device_dir()
+
+
 async def request_sd_salt(
     ctx: Optional[wire.Context], salt_auth_key: bytes
 ) -> bytearray:
-    device_dir = "/trezor/device_%s" % storage.device.get_device_id()
-    salt_path = "%s/salt" % device_dir
-    new_salt_path = "%s/salt.new" % device_dir
+    salt_path = _get_salt_path()
+    new_salt_path = _get_salt_path(True)
 
     sd = io.SDCard()
     fs = io.FatFS()
     if not sd.power(True):
-        await insert_card_dialog(ctx)
+        await _insert_card_dialog(ctx)
         raise SdProtectCancelled
 
     try:
@@ -105,19 +115,18 @@ async def request_sd_salt(
         fs.unmount()
         sd.power(False)
 
-    await wrong_card_dialog(ctx)
+    await _wrong_card_dialog(ctx)
     raise SdProtectCancelled
 
 
 async def set_sd_salt(
     ctx: Optional[wire.Context], salt: bytes, salt_tag: bytes, filename: str = "salt"
 ) -> None:
-    device_dir = "/trezor/device_%s" % storage.device.get_device_id()
-    salt_path = "%s/%s" % (device_dir, filename)
+    salt_path = _get_salt_path()
 
     sd = io.SDCard()
     if not sd.power(True):
-        await insert_card_dialog(ctx)
+        await _insert_card_dialog(ctx)
         raise SdProtectCancelled
 
     fs = io.FatFS()
@@ -125,7 +134,7 @@ async def set_sd_salt(
     try:
         fs.mount()
         fs.mkdir("/trezor", True)
-        fs.mkdir(device_dir, True)
+        fs.mkdir(_get_device_dir(), True)
         with fs.open(salt_path, "w") as f:
             f.write(salt)
             f.write(salt_tag)
@@ -141,14 +150,13 @@ async def stage_sd_salt(
 
 
 async def commit_sd_salt(ctx: Optional[wire.Context]) -> None:
-    device_dir = "/trezor/device_%s" % storage.device.get_device_id()
-    salt_path = "%s/salt" % device_dir
-    new_salt_path = "%s/salt.new" % device_dir
+    salt_path = _get_salt_path()
+    new_salt_path = _get_salt_path(True)
 
     sd = io.SDCard()
     fs = io.FatFS()
     if not sd.power(True):
-        await insert_card_dialog(ctx)
+        await _insert_card_dialog(ctx)
         raise SdProtectCancelled
 
     try:
@@ -165,13 +173,12 @@ async def commit_sd_salt(ctx: Optional[wire.Context]) -> None:
 
 
 async def remove_sd_salt(ctx: Optional[wire.Context]) -> None:
-    device_dir = "/trezor/device_%s" % storage.device.get_device_id()
-    salt_path = "%s/salt" % device_dir
+    salt_path = _get_salt_path()
 
     sd = io.SDCard()
     fs = io.FatFS()
     if not sd.power(True):
-        await insert_card_dialog(ctx)
+        await _insert_card_dialog(ctx)
         raise SdProtectCancelled
 
     try:
