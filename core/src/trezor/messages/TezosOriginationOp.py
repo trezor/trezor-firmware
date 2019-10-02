@@ -2,8 +2,6 @@
 # fmt: off
 import protobuf as p
 
-from .TezosContractID import TezosContractID
-
 if __debug__:
     try:
         from typing import Dict, List  # noqa: F401
@@ -16,7 +14,7 @@ class TezosOriginationOp(p.MessageType):
 
     def __init__(
         self,
-        source: TezosContractID = None,
+        source: bytes = None,
         fee: int = None,
         counter: int = None,
         gas_limit: int = None,
@@ -43,7 +41,7 @@ class TezosOriginationOp(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('source', TezosContractID, 0),
+            12: ('source', p.BytesType, 0),
             2: ('fee', p.UVarintType, 0),
             3: ('counter', p.UVarintType, 0),
             4: ('gas_limit', p.UVarintType, 0),

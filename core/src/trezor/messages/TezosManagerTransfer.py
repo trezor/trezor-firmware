@@ -2,6 +2,8 @@
 # fmt: off
 import protobuf as p
 
+from .TezosContractID import TezosContractID
+
 if __debug__:
     try:
         from typing import Dict, List, Optional
@@ -10,16 +12,19 @@ if __debug__:
         Dict, List, Optional = None, None, None  # type: ignore
 
 
-class TezosTransactionKtDelegationOp(p.MessageType):
+class TezosManagerTransfer(p.MessageType):
 
     def __init__(
         self,
-        delegate: bytes = None,
+        destination: TezosContractID = None,
+        amount: int = None,
     ) -> None:
-        self.delegate = delegate
+        self.destination = destination
+        self.amount = amount
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('delegate', p.BytesType, 0),
+            1: ('destination', TezosContractID, 0),
+            2: ('amount', p.UVarintType, 0),
         }

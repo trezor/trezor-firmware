@@ -50,7 +50,6 @@ message TezosPublicKey {
 message TezosSignTx {
     repeated uint32 address_n = 1;                  // BIP-32 path to derive the key from master node
     optional bytes branch = 2;
-    optional string protocol_hash = 9;
 
     optional TezosRevealOp reveal = 3;              // Tezos reveal operation (may be bundled with other op)
     optional TezosTransactionOp transaction = 4;    // Tezos transaction operation
@@ -61,7 +60,7 @@ message TezosSignTx {
     /*
      * Tezos contract ID
      */
-     message TezosContractID {
+    message TezosContractID {
         optional TezosContractType tag = 1;
         optional bytes hash = 2;                    // Implicit = 21B, originated = 20B + 1B padding
         /*
@@ -76,7 +75,7 @@ message TezosSignTx {
      * Structure representing information for reveal
      */
     message TezosRevealOp {
-        optional TezosContractID source = 1;
+        optional bytes source = 7;
         optional uint64 fee = 2;
         optional uint64 counter = 3;
         optional uint64 gas_limit = 4;
@@ -87,7 +86,7 @@ message TezosSignTx {
      * Structure representing information for transaction
      */
     message TezosTransactionOp {
-        optional TezosContractID source = 1;
+        optional bytes source = 9;
         optional uint64 fee = 2;
         optional uint64 counter = 3;
         optional uint64 gas_limit = 4;
@@ -95,28 +94,24 @@ message TezosSignTx {
         optional uint64 amount = 6;
         optional TezosContractID destination = 7;
         optional bytes parameters = 8;
-        optional TezosTransactionKtDelegationOp kt_delegation = 10;
-        optional TezosTransactionKtTransferOp kt_transfer = 11;
+        optional TezosParametersManager parameters_manager = 10;
 
-        /**
-         * used to delegate from an originated (kt) account
-         */
-        message TezosTransactionKtDelegationOp {
-            optional bytes delegate = 1;
-        }
-        /**
-         * used to tranfer tokens from an originated (kt) account to an implicit account 
-         */
-        message TezosTransactionKtTransferOp {
-            optional uint64 amount = 1;
-            optional bytes recipient = 2;
+        message TezosParametersManager {
+            optional bytes set_delegate = 1;
+            optional bool cancel_delegate = 2;
+            optional TezosManagerTransfer transfer = 3;
+
+            message TezosManagerTransfer {
+                optional TezosContractID destination = 1;
+                optional uint64 amount = 2;
+            }
         }
     }
     /**
      * Structure representing information for origination
      */
     message TezosOriginationOp {
-        optional TezosContractID source = 1;
+        optional bytes source = 12;
         optional uint64 fee = 2;
         optional uint64 counter = 3;
         optional uint64 gas_limit = 4;
@@ -132,7 +127,7 @@ message TezosSignTx {
      * Structure representing information for delegation
      */
     message TezosDelegationOp {
-        optional TezosContractID source = 1;
+        optional bytes source = 7;
         optional uint64 fee = 2;
         optional uint64 counter = 3;
         optional uint64 gas_limit = 4;

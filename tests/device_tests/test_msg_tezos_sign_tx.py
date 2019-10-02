@@ -22,171 +22,13 @@ from trezorlib.tools import parse_path
 
 TEZOS_PATH = parse_path("m/44'/1729'/0'")
 TEZOS_PATH_10 = parse_path("m/44'/1729'/10'")
+TEZOS_PATH_15 = parse_path("m/44'/1729'/15'")
 
 
 @pytest.mark.altcoin
 @pytest.mark.tezos
 @pytest.mark.skip_t1
 class TestMsgTezosSignTx:
-    def test_tezos_sign_tx_transaction(self, client):
-        resp = tezos.sign_tx(
-            client,
-            TEZOS_PATH,
-            dict_to_proto(
-                messages.TezosSignTx,
-                {
-                    "branch": "f2ae0c72fdd41d7a89bebfe8d6dd6d38e0fcd0782adb8194717176eb70366f64",
-                    "transaction": {
-                        "source": {
-                            "tag": 0,
-                            "hash": "00001e65c88ae6317cd62a638c8abd1e71c83c8475",
-                        },
-                        "fee": 0,
-                        "counter": 108925,
-                        "gas_limit": 200,
-                        "storage_limit": 0,
-                        "amount": 10000,
-                        "destination": {
-                            "tag": 0,
-                            "hash": "0004115bce5af2f977acbb900f449c14c53e1d89cf",
-                        },
-                    },
-                },
-            ),
-        )
-        assert (
-            resp.signature
-            == "edsigtfmAbUJtZMAJRGMppvDzPtiWBBQiZKf7G15dV9tgkHQefwiV4JeSw5Rj57ZK54FHEthpyzCpfGvAjU8YqhHxMwZP9Z2Jmt"
-        )
-        assert (
-            resp.sig_op_contents.hex()
-            == "f2ae0c72fdd41d7a89bebfe8d6dd6d38e0fcd0782adb8194717176eb70366f64080000001e65c88ae6317cd62a638c8abd1e71c83c847500fdd206c80100904e000004115bce5af2f977acbb900f449c14c53e1d89cf003cce7e6dfe3f79a8bd39f77d738fd79140da1a9e762b7d156eca2cf945aae978436cf68c1ec11889e4f2cf074c9642e05b3d65cc2896809af1fbdab0b126f90c"
-        )
-        assert (
-            resp.operation_hash == "opNeGBdgbM5jN2ykz4o8NdsCuJfqNZ6WBEFVbBUmYH8gp45CJvH"
-        )
-
-    def test_tezos_sign_reveal_transaction(self, client):
-        resp = tezos.sign_tx(
-            client,
-            TEZOS_PATH,
-            dict_to_proto(
-                messages.TezosSignTx,
-                {
-                    "branch": "03cbce9a5ea1fae2566f7f244a01edc5869f5ada9d0bf21c1098017c59be98e0",
-                    "reveal": {
-                        "source": {
-                            "tag": 0,
-                            "hash": "00001e65c88ae6317cd62a638c8abd1e71c83c8475",
-                        },
-                        "fee": 0,
-                        "counter": 108923,
-                        "gas_limit": 200,
-                        "storage_limit": 0,
-                        "public_key": "00200da2c0200927dd8168b2b62e1322637521fcefb3184e61c1c3123c7c00bb95",
-                    },
-                    "transaction": {
-                        "source": {
-                            "tag": 0,
-                            "hash": "00001e65c88ae6317cd62a638c8abd1e71c83c8475",
-                        },
-                        "fee": 0,
-                        "counter": 108924,
-                        "gas_limit": 200,
-                        "storage_limit": 0,
-                        "amount": 10000,
-                        "destination": {
-                            "tag": 0,
-                            "hash": "0004115bce5af2f977acbb900f449c14c53e1d89cf",
-                        },
-                    },
-                },
-            ),
-        )
-        assert (
-            resp.signature
-            == "edsigtheQQ78dZM9Sir78T3TNdfnyHrbFw8w3hiGMaLD5mPbGrUiD1jvy5fpsNJW9T5o7qrWBe7y7bai6vZ5KhwJ5HKZ8UnoCbh"
-        )
-        assert (
-            resp.sig_op_contents.hex()
-            == "03cbce9a5ea1fae2566f7f244a01edc5869f5ada9d0bf21c1098017c59be98e0070000001e65c88ae6317cd62a638c8abd1e71c83c847500fbd206c8010000200da2c0200927dd8168b2b62e1322637521fcefb3184e61c1c3123c7c00bb95080000001e65c88ae6317cd62a638c8abd1e71c83c847500fcd206c80100904e000004115bce5af2f977acbb900f449c14c53e1d89cf004b33e241c90b828c31cf44a28c123aee3f161049c3cb4c42ec71dd96fbbf8dae9963bdadb33f51d7c6f11ff0e74f0baad742352d980a1899f69c3c65c70fe40f"
-        )
-        assert (
-            resp.operation_hash == "opQHu93L8juNm2VjmsMKioFowWNyMvGzopcuoVcuzFV1bJMhJef"
-        )
-
-    def test_tezos_sign_tx_origination(self, client):
-        resp = tezos.sign_tx(
-            client,
-            TEZOS_PATH,
-            dict_to_proto(
-                messages.TezosSignTx,
-                {
-                    "branch": "5e556181029c4ce5e54c9ffcbba2fc0966ed4d880ddeb0849bf6387438a7a877",
-                    "origination": {
-                        "source": {
-                            "tag": 0,
-                            "hash": "00001e65c88ae6317cd62a638c8abd1e71c83c8475",
-                        },
-                        "fee": 0,
-                        "counter": 108929,
-                        "gas_limit": 10000,
-                        "storage_limit": 100,
-                        "manager_pubkey": "00001e65c88ae6317cd62a638c8abd1e71c83c8475",
-                        "balance": 2000000,
-                        "spendable": True,
-                        "delegatable": True,
-                        "delegate": "0049a35041e4be130977d51419208ca1d487cfb2e7",
-                    },
-                },
-            ),
-        )
-        assert (
-            resp.signature
-            == "edsigu46YtcVthQQQ2FTcuayNwTcYY1Mpo6BmwCu83qGovi4kHM9CL5h4NaV4NQw8RTEP1VgraR6Kiv5J6RQsDLMzG17V6fcYwp"
-        )
-        assert (
-            resp.sig_op_contents.hex()
-            == "5e556181029c4ce5e54c9ffcbba2fc0966ed4d880ddeb0849bf6387438a7a877090000001e65c88ae6317cd62a638c8abd1e71c83c84750081d306904e6400001e65c88ae6317cd62a638c8abd1e71c83c847580897affffff0049a35041e4be130977d51419208ca1d487cfb2e700e785342fd2258277741f93c17c5022ea1be059f47f3e343600e83c50ca191e8318da9e5ec237be9657d0fc6aba654f476c945430239a3c6dfeca21e06be98706"
-        )
-        assert (
-            resp.operation_hash == "onuKkBtP4K2JMGg7YMv7qs869B8aHCEUQecvuiL71aKkY8iPCb6"
-        )
-
-    def test_tezos_sign_tx_delegation(self, client):
-        resp = tezos.sign_tx(
-            client,
-            TEZOS_PATH,
-            dict_to_proto(
-                messages.TezosSignTx,
-                {
-                    "branch": "9b8b8bc45d611a3ada20ad0f4b6f0bfd72ab395cc52213a57b14d1fb75b37fd0",
-                    "delegation": {
-                        "source": {
-                            "tag": 0,
-                            "hash": "00001e65c88ae6317cd62a638c8abd1e71c83c8475",
-                        },
-                        "fee": 0,
-                        "counter": 108927,
-                        "gas_limit": 200,
-                        "storage_limit": 0,
-                        "delegate": "0049a35041e4be130977d51419208ca1d487cfb2e7",
-                    },
-                },
-            ),
-        )
-        assert (
-            resp.signature
-            == "edsigu3qGseaB2MghcGQWNWUhPtWgM9rC62FTEVrYWGtzFTHShDxGGmLFfEpJyToRCeRqcgGm3pyXY3NdyATkjmFTtUvJKvb3rX"
-        )
-        assert (
-            resp.sig_op_contents.hex()
-            == "9b8b8bc45d611a3ada20ad0f4b6f0bfd72ab395cc52213a57b14d1fb75b37fd00a0000001e65c88ae6317cd62a638c8abd1e71c83c847500ffd206c80100ff0049a35041e4be130977d51419208ca1d487cfb2e7e581d41daf8cab833d5b99151a0303fd04472eb990f7338d7be57afe21c26e779ff4341511694aebd901a0d74d183bbcb726a9be4b873d3b47298f99f2b7e80c"
-        )
-        assert (
-            resp.operation_hash == "oocgc3hyKsGHPsw6WFWJpWT8jBwQLtebQAXF27KNisThkzoj635"
-        )
-
     def input_flow(self, debug, num_pages):
         yield
         for _ in range(num_pages - 1):
@@ -328,28 +170,24 @@ class TestMsgTezosSignTx:
             == "edsigu6YX7EegPwrpcEbdNQsNhrRiEagBNGJBmFamP4mixZZw1UynhahGQ8RNiZLSUVLERUZwygrsSVenBqXGt9VnknTxtzjKzv"
         )
 
-    def test_tezos_babylon_sign_tx_tranasaction(self, client):
+    def test_tezos_sign_tx_tranasaction(self, client):
         resp = tezos.sign_tx(
             client,
             TEZOS_PATH_10,
             dict_to_proto(
                 messages.TezosSignTx,
                 {
-                    "branch": "ce69c5713dac3537254e7be59759cf59c15abd530d10501ccf9028a5786314cf",
-                    "protocol_hash": "PsBABY5HQTSkA4297zNHfsZNKtxULfL18y95qb3m53QJiXGmrbU",
+                    "branch": "3b85532b5a468cd26b6d3c7e762ae53b795d19c6db4838ed2750df8e063aedb8",
                     "transaction": {
-                        "source": {
-                            "tag": 0,
-                            "hash": "0002298c03ed7d454a101eb7022bc95f7e5f41ac78",
-                        },
-                        "fee": 50000,
-                        "counter": 3,
-                        "gas_limit": 200,
+                        "source": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
+                        "fee": 10000,
+                        "counter": 274,
+                        "gas_limit": 20000,
                         "storage_limit": 0,
-                        "amount": 100000000,
+                        "amount": 100000,
                         "destination": {
                             "tag": 0,
-                            "hash": "00e7670f32038107a59a2b9cfefae36ea21f5aa63c",
+                            "hash": "003325df8851047421605ae7d6b09b49f70c8ce460",
                         },
                     },
                 },
@@ -357,26 +195,29 @@ class TestMsgTezosSignTx:
         )
         assert (
             resp.signature
-            == "edsigtrw2WiZ1ukvuGKxC5D3vDYENtHAKTVNCMRucP4V2NZa65FrEWF6VfLCeDPZVXgS8gr2UBefUA8tazSemirEQAb9E3Rbhwi"
+            == "edsigtvRTDegGy83x5AHQwhzPAbKteJ7MsLukhLRS9RLMRX5UdmtV1xiHEhQCUrGNv6h9CbV1cvuUVzRgLd6Af4XfVQgGkkYUuY"
+        )
+        assert (
+            resp.sig_op_contents.hex()
+            == "3b85532b5a468cd26b6d3c7e762ae53b795d19c6db4838ed2750df8e063aedb86c005f450441f41ee11eee78a31d1e1e55627c783bd6904e9202a09c0100a08d0600003325df8851047421605ae7d6b09b49f70c8ce46000acdcd3df9daaa79c7345c068ffddc2113047fc00c1eed3503838d15fc6690821ee6eaa1e67b4a8d40dcf30a9ec456bbbda18ef2bcc021053d7d8c3f1473df809"
+        )
+        assert (
+            resp.operation_hash == "oon8PNUsPETGKzfESv1Epv4535rviGS7RdCfAEKcPvzojrcuufb"
         )
 
-    def test_tezos_babylon_sign_tx_delegation(self, client):
+    def test_tezos_sign_tx_delegation(self, client):
         resp = tezos.sign_tx(
             client,
-            TEZOS_PATH_10,
+            TEZOS_PATH_15,
             dict_to_proto(
                 messages.TezosSignTx,
                 {
-                    "branch": "f7332bca1c541848c070050487a12d0e95a83f2f0b6615c05bb31526bb5c14a1",
-                    "protocol_hash": "PsBABY5HQTSkA4297zNHfsZNKtxULfL18y95qb3m53QJiXGmrbU",
+                    "branch": "447d51450749763989c1aa5e1939aae623abb5a050f9cf1c04c247d91ca67593",
                     "delegation": {
-                        "source": {
-                            "tag": 0,
-                            "hash": "00fe24d178d020b7fd8e9e4f5887ace9f32feba4f9",
-                        },
-                        "fee": 1257,
-                        "counter": 190,
-                        "gas_limit": 10100,
+                        "source": "0002eca091abc1e0f5c38a155c1313c410b47e1549",
+                        "fee": 20000,
+                        "counter": 458069,
+                        "gas_limit": 20000,
                         "storage_limit": 0,
                         "delegate": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
                     },
@@ -385,28 +226,31 @@ class TestMsgTezosSignTx:
         )
         assert (
             resp.signature
-            == "edsigttZHuCmpHDkWn4XboUq6UkSiaLDaY6V2cHW3eGBELeq7bpUALoLAfXr5ktbq2r1KAeBCxSR3YQ9mcY485jyAnY57fhk3RP"
+            == "edsigu2ZsDXXm7RzMF2oSKHK54ZfSUPvU2jekJBQmAprMe8ksnofMScKd3Kc3RTTExwzaJGENzoe94ZDiW86eWWnWBTPNw2xu5m"
+        )
+        assert (
+            resp.sig_op_contents.hex()
+            == "447d51450749763989c1aa5e1939aae623abb5a050f9cf1c04c247d91ca675936e0002eca091abc1e0f5c38a155c1313c410b47e1549a09c01d5fa1ba09c0100ff005f450441f41ee11eee78a31d1e1e55627c783bd6dbd53f9129387e82548e5d20b1479a46a876ac7516001fae01488dfbe9dcfc732cb8664d52fd7e1bc25a9845714131fd498ef65ea91f84e180688a41e06fe700"
+        )
+        assert (
+            resp.operation_hash == "op79C1tR7wkUgYNid2zC1WNXmGorS38mTXZwtAjmCQm2kG7XG59"
         )
 
-    def test_tezos_babylon_sign_tx_origination(self, client):
+    def test_tezos_sign_tx_origination(self, client):
         resp = tezos.sign_tx(
             client,
             TEZOS_PATH_10,
             dict_to_proto(
                 messages.TezosSignTx,
                 {
-                    "branch": "464bc6bd8be4087b86691cce1af635c1a4ccdcd9fa8d71c55279e4395503d46e",
-                    "protocol_hash": "PsBABY5HQTSkA4297zNHfsZNKtxULfL18y95qb3m53QJiXGmrbU",
+                    "branch": "927ac7cd7969bde606e7537712584eb0d34fc52d9f5a88cc908994d817170a16",
                     "origination": {
-                        "source": {
-                            "tag": 0,
-                            "hash": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
-                        },
-                        "fee": 1391,
-                        "counter": 193,
-                        "gas_limit": 11137,
-                        "storage_limit": 323,
-                        "balance": 100000000,
+                        "source": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
+                        "fee": 20000,
+                        "counter": 276,
+                        "gas_limit": 20000,
+                        "storage_limit": 10000,
+                        "balance": 100000,
                         "script": "0000001c02000000170500036805010368050202000000080316053d036d03420000000a010000000568656c6c6f",
                     },
                 },
@@ -414,42 +258,42 @@ class TestMsgTezosSignTx:
         )
         assert (
             resp.signature
-            == "edsigtwqvmAmZDSjS9yw4zvRbrYW4y7xjmo4yk5yoWCxFAiyVzHbCkDXWUMq7RH14Q3Loe4rgkA562uBqJEK6tffVnYFLsEBfHv"
+            == "edsigtcAamBz7cL8whbLvaeMNYUdsQieh6RADrzWLCPhDjzqn7JtdX9Yy4vYWKcpMnycY6YTMWCAYMegPaKMNJVM4zbxypALAyN"
+        )
+        assert (
+            resp.sig_op_contents.hex()
+            == "927ac7cd7969bde606e7537712584eb0d34fc52d9f5a88cc908994d817170a166d005f450441f41ee11eee78a31d1e1e55627c783bd6a09c019402a09c01904ea08d06000000001c02000000170500036805010368050202000000080316053d036d03420000000a010000000568656c6c6f2151774735e1659a7d0f54659e98fbcbd86a667717a9a2a9961292a170e5e8d1608a1dbf805a03981be2f7389ba1738841ac8b1069fe5978a72d441a97de3505"
+        )
+        assert (
+            resp.operation_hash == "onmq9FFZzvG2zghNdr1bgv9jzdbzNycXjSSNmCVhXCGSnV3WA9g"
         )
 
-    def test_tezos_babylon_sign_tx_reveal(self, client):
+    def test_tezos_sign_tx_reveal(self, client):
         resp = tezos.sign_tx(
             client,
-            TEZOS_PATH_10,
+            TEZOS_PATH,
             dict_to_proto(
                 messages.TezosSignTx,
                 {
-                    "branch": "ce69c5713dac3537254e7be59759cf59c15abd530d10501ccf9028a5786314cf",
-                    "protocol_hash": "PsBABY5HQTSkA4297zNHfsZNKtxULfL18y95qb3m53QJiXGmrbU",
+                    "branch": "f26502c204619c4bdab2e59efc50c79bc0136d781304b8f7fad389263550300e",
                     "reveal": {
-                        "source": {
-                            "tag": 0,
-                            "hash": "00a1133f154bf55df7189dede340db03bad09235fb",
-                        },
-                        "fee": 1269,
-                        "counter": 416223,
-                        "gas_limit": 10100,
+                        "source": "00001e65c88ae6317cd62a638c8abd1e71c83c8475",
+                        "fee": 20000,
+                        "counter": 564560,
+                        "gas_limit": 20000,
                         "storage_limit": 0,
-                        "public_key": "0056a1c1fbae8ae7dc0c79519634d61ae67bd0ce92a9974f3d3cfe2ccf44e55b06",
+                        "public_key": "00200da2c0200927dd8168b2b62e1322637521fcefb3184e61c1c3123c7c00bb95",
                     },
                     "transaction": {
-                        "source": {
-                            "tag": 0,
-                            "hash": "0002298c03ed7d454a101eb7022bc95f7e5f41ac78",
-                        },
+                        "source": "00001e65c88ae6317cd62a638c8abd1e71c83c8475",
                         "fee": 50000,
-                        "counter": 3,
-                        "gas_limit": 200,
+                        "counter": 564561,
+                        "gas_limit": 20000,
                         "storage_limit": 0,
-                        "amount": 100000000,
+                        "amount": 100000,
                         "destination": {
                             "tag": 0,
-                            "hash": "00e7670f32038107a59a2b9cfefae36ea21f5aa63c",
+                            "hash": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
                         },
                     },
                 },
@@ -457,103 +301,117 @@ class TestMsgTezosSignTx:
         )
         assert (
             resp.signature
-            == "edsigu43ztCKfgeHybP78pjdMBpNHXKtL9TmpymMSLYi5ss6hSYbZBeTR7rgNqwuq4iT8cEj8KHsii5jraAsK4mF3x8AqGqCP1Y"
-        )
-
-    def test_tezos_babylon_kt_delegation(self, client):
-        resp = tezos.sign_tx(
-            client,
-            TEZOS_PATH_10,
-            dict_to_proto(
-                messages.TezosSignTx,
-                {
-                    "branch": "6f2867511d04e00a0aa0fe8d4240a0755a49d265262a3ad76f6124531d8e8cb5",
-                    "protocol_hash": "PsBABY5HQTSkA4297zNHfsZNKtxULfL18y95qb3m53QJiXGmrbU",
-                    "transaction": {
-                        "source": {
-                            "tag": 0,
-                            "hash": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
-                        },
-                        "fee": 2894,
-                        "counter": 195,
-                        "gas_limit": 25917,
-                        "storage_limit": 0,
-                        "amount": 0,
-                        "destination": {
-                            "tag": 1,
-                            "hash": "8b83360512c6045c1185f8000de41302e23a220c00",
-                        },
-                        "kt_delegation": {
-                            "delegate": "00a31e81ac3425310e3274a4698a793b2839dc0afa"
-                        },
-                    },
-                },
-            ),
+            == "edsigtcqDr47paEVgr8X8gmvFt9UnNWACkMVCGdVFZ2yUq849oxmTbx2FqjToveUNwNujC9qmoi5kXWy78qZY2d5Qeryx6kCbGs"
         )
         assert (
-            resp.signature
-            == "edsigtsFTxYMoeRbzCCRg2ck4ChSrNNms99RF5KvWw1X5VSmhCTn3akccxjEQFLg982p8LvRdwhLUoEaekEF6MrZhyEooXXxvdz"
+            resp.sig_op_contents.hex()
+            == "f26502c204619c4bdab2e59efc50c79bc0136d781304b8f7fad389263550300e6b00001e65c88ae6317cd62a638c8abd1e71c83c8475a09c01d0ba22a09c010000200da2c0200927dd8168b2b62e1322637521fcefb3184e61c1c3123c7c00bb956c00001e65c88ae6317cd62a638c8abd1e71c83c8475d08603d1ba22a09c0100a08d0600005f450441f41ee11eee78a31d1e1e55627c783bd60026690d65407d6cda03cde8e3c17a22ffd0351f78c18c500f3997cbe311e12e6cc4b5ff40b339c7fba8b4c7d62329ea45da662340113a6da98b7510b40042f204"
+        )
+        assert (
+            resp.operation_hash == "oo9JFiWTnTSvUZfajMNwQe1VyFN2pqwiJzZPkpSAGfGD57Z6mZJ"
         )
 
-    def test_tezos_babylon_kt_remove_delegation(self, client):
+    def test_tezos_smart_contract_delegation(self, client):
         resp = tezos.sign_tx(
             client,
             TEZOS_PATH_10,
             dict_to_proto(
                 messages.TezosSignTx,
                 {
-                    "branch": "38f027151adbf750cf05f5e7259fd7e1d8122a7f76be5204c0db5eb93757c3e4",
-                    "protocol_hash": "PsBABY5HQTSkA4297zNHfsZNKtxULfL18y95qb3m53QJiXGmrbU",
+                    "branch": "49eead995833934ee2571c6cd6439897ee71b72a9e4d22f127e0c3d4ca69ba15",
                     "transaction": {
-                        "source": {
-                            "tag": 0,
-                            "hash": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
-                        },
-                        "fee": 2857,
-                        "counter": 196,
+                        "source": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
+                        "fee": 10000,
+                        "counter": 278,
                         "gas_limit": 25822,
                         "storage_limit": 0,
                         "amount": 0,
                         "destination": {
                             "tag": 1,
-                            "hash": "8b83360512c6045c1185f8000de41302e23a220c00",
+                            "hash": "c116a6c74bf00a5839b593838215fe1fcf2db59c00",
                         },
-                        "kt_delegation": {"delegate": None},
+                        "parameters_manager": {
+                            "set_delegate": "005f450441f41ee11eee78a31d1e1e55627c783bd6"
+                        },
                     },
                 },
             ),
         )
         assert (
             resp.signature
-            == "edsigu5B11SxhJqcvhwgHvLKfEb8wwtnJeFfBRocTaVs4RGiiW21c8nQ3F6xuVRRGLg4p51YtikvK4E3bTsHE5t5guoaDNjMToK"
+            == "edsigtw8uSW99pT4GUd1mS14DbczxVfTCJrKBy6bMckBknwAxwAF53yBXnQAZwZ9WWMKyGmbta8RgPs262b7hGGNxFyTM8zdPBd"
+        )
+        assert (
+            resp.sig_op_contents.hex()
+            == "49eead995833934ee2571c6cd6439897ee71b72a9e4d22f127e0c3d4ca69ba156c005f450441f41ee11eee78a31d1e1e55627c783bd6904e9602dec901000001c116a6c74bf00a5839b593838215fe1fcf2db59c00ff020000002f020000002a0320053d036d0743035d0a00000015005f450441f41ee11eee78a31d1e1e55627c783bd60346034e031bb2534eb5478c31d5ffbc13b4692a7f2b73aad16e2d8e0f7068110955aa9480a6432775ba301f24bc20e4c12cffc9fd1f27b44204f830ea7f4dec23a18e25450d"
+        )
+        assert (
+            resp.operation_hash == "oo75gfQGGPEPChXZzcPPAGtYqCpsg2BS5q9gmhrU3NQP7CEffpU"
         )
 
-    def test_tezos_babylon_kt_transfer(self, client):
+    def test_tezos_kt_remove_delegation(self, client):
         resp = tezos.sign_tx(
             client,
             TEZOS_PATH_10,
             dict_to_proto(
                 messages.TezosSignTx,
                 {
-                    "branch": "dafa0777baf8a81cef1e2511398638703f8353d3572f835e87a078124c757ea8",
-                    "protocol_hash": "PsBABY5HQTSkA4297zNHfsZNKtxULfL18y95qb3m53QJiXGmrbU",
+                    "branch": "77a1800dd37b54f61755bd97b2a6759627c53a5f8afb00bdcf8255b5d23eff44",
                     "transaction": {
-                        "source": {
-                            "tag": 0,
-                            "hash": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
-                        },
-                        "fee": 2941,
-                        "counter": 195,
-                        "gas_limit": 26283,
+                        "source": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
+                        "fee": 10000,
+                        "counter": 279,
+                        "gas_limit": 25822,
                         "storage_limit": 0,
                         "amount": 0,
                         "destination": {
                             "tag": 1,
-                            "hash": "8b83360512c6045c1185f8000de41302e23a220c00",
+                            "hash": "c116a6c74bf00a5839b593838215fe1fcf2db59c00",
                         },
-                        "kt_transfer": {
-                            "amount": 20000,
-                            "recipient": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
+                        "parameters_manager": {"cancel_delegate": True},
+                    },
+                },
+            ),
+        )
+        assert (
+            resp.signature
+            == "edsigtqZZd8r2cww5GvTpaJANizYyAAB8n2sByKJWYwgEQQu6gjzSi7mQ7NAxbwsCaHGUS3F87oDJ1J5mz8SM8KYVidQj1NUz8E"
+        )
+        assert (
+            resp.sig_op_contents.hex()
+            == "77a1800dd37b54f61755bd97b2a6759627c53a5f8afb00bdcf8255b5d23eff446c005f450441f41ee11eee78a31d1e1e55627c783bd6904e9702dec901000001c116a6c74bf00a5839b593838215fe1fcf2db59c00ff0200000013020000000e0320053d036d053e035d034e031b87b6a5f01c0689f8f453f2b23582a2891792087197e01276648eec734850999e54e9edd687efb9297e24a96d126dc1e6636e772aeab80d5bc6b3f9b55aa3a701"
+        )
+        assert (
+            resp.operation_hash == "ootMi1tXbfoVgFyzJa8iXyR4mnHd5TxLm9hmxVzMVRkbyVjKaHt"
+        )
+
+    def test_tezos_smart_contract_transfer(self, client):
+        resp = tezos.sign_tx(
+            client,
+            TEZOS_PATH_10,
+            dict_to_proto(
+                messages.TezosSignTx,
+                {
+                    "branch": "442b86e27a7b79d893262b4daee229818f71073827570c74fa3aa1da7929d16d",
+                    "transaction": {
+                        "source": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
+                        "fee": 10000,
+                        "counter": 280,
+                        "gas_limit": 36000,
+                        "storage_limit": 0,
+                        "amount": 0,
+                        "destination": {
+                            "tag": 1,
+                            "hash": "c116a6c74bf00a5839b593838215fe1fcf2db59c00",
+                        },
+                        "parameters_manager": {
+                            "transfer": {
+                                "amount": 20000,
+                                "destination": {
+                                    "tag": 0,
+                                    "hash": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
+                                },
+                            }
                         },
                     },
                 },
@@ -561,5 +419,56 @@ class TestMsgTezosSignTx:
         )
         assert (
             resp.signature
-            == "edsigu2MMdtkWyRofmSwB5gZuF3P6rzbuWXjWHmsG6v2NQgfgKrDoEZ6czUUXXrCCoQL3TfuTX1r3epCXpvVMcFKuRcjBL83RFN"
+            == "edsigtaY4HzLQ2oVDqnUAzbkSjGMQVBNHnBLq5t4TmVnsdAG8W4FWzeEnWbJXRQSTUKme3sXijve9vmDyAtim7HXeu9XhFJDrMo"
+        )
+        assert (
+            resp.sig_op_contents.hex()
+            == "442b86e27a7b79d893262b4daee229818f71073827570c74fa3aa1da7929d16d6c005f450441f41ee11eee78a31d1e1e55627c783bd6904e9802a09902000001c116a6c74bf00a5839b593838215fe1fcf2db59c00ff020000003902000000340320053d036d0743035d0a00000015005f450441f41ee11eee78a31d1e1e55627c783bd6031e0743036a00a0b802034f034d031b14dc70ef8db46c4b8f53e387ff3d642644af458f757ab85f9291727dc18bb09d7ec5790136b8cc428b165aec9cf628eeefc90aad526dc75e2aab203e57b8920f"
+        )
+        assert (
+            resp.operation_hash == "ooRGGtCmoQDgB36XvQqmM7govc3yb77YDUoa7p2QS7on27wGRns"
+        )
+
+    def test_tezos_smart_contract_transfer_to_contract(self, client):
+        resp = tezos.sign_tx(
+            client,
+            TEZOS_PATH_10,
+            dict_to_proto(
+                messages.TezosSignTx,
+                {
+                    "branch": "8c696f9eb98cd641e33b680f424f7334b903d2b0108f0f896e73e921c44bf4c9",
+                    "transaction": {
+                        "source": "005f450441f41ee11eee78a31d1e1e55627c783bd6",
+                        "fee": 4813,
+                        "counter": 272,
+                        "gas_limit": 44725,
+                        "storage_limit": 0,
+                        "amount": 0,
+                        "destination": {
+                            "tag": 1,
+                            "hash": "c116a6c74bf00a5839b593838215fe1fcf2db59c00",
+                        },
+                        "parameters_manager": {
+                            "transfer": {
+                                "amount": 200,
+                                "destination": {
+                                    "tag": 1,
+                                    "hash": "8b83360512c6045c1185f8000de41302e23a220c00",
+                                },
+                            }
+                        },
+                    },
+                },
+            ),
+        )
+        assert (
+            resp.sig_op_contents.hex()
+            == "8c696f9eb98cd641e33b680f424f7334b903d2b0108f0f896e73e921c44bf4c96c005f450441f41ee11eee78a31d1e1e55627c783bd6cd259002b5dd02000001c116a6c74bf00a5839b593838215fe1fcf2db59c00ff020000005502000000500320053d036d0743036e0a00000016018b83360512c6045c1185f8000de41302e23a220c000555036c0200000015072f02000000090200000004034f032702000000000743036a008803034f034d031b911b8e7f22acdacc78e6d40566636a7029773c9ebfa741bb94bb58fb9e705d3ad695ac24fd1a58943c3070e9c38b0660671adb478233ae31005cd9139c84a80b"
+        )
+        assert (
+            resp.signature
+            == "edsigtrnr4jXpPZK1yFVGtsapR4VHKp9Gnz1Uj7G4AdAXVn8ug16tgUx5u3TsyYJFp9MzENKuVqotaEwco3JhAhKpbjxbBQhEsT"
+        )
+        assert (
+            resp.operation_hash == "opUE4xNkiUyYmJwUUgAab9xqHE66FXEc6VNZq4ZXDiBJcYwqNJX"
         )

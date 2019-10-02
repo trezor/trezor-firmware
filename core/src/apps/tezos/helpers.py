@@ -41,6 +41,38 @@ MICHELSON_INSTRUCTION_BYTES = {
     "UNIT": [3, 79],  # '034f'
     "TRANSFER_TOKENS": [3, 77],  # '034d'
     "SOME": [3, 70],  # '0346'
+    "address": [3, 110],  # '036e'
+    "CONTRACT": [5, 85],  # '0555'
+    "unit": [3, 108],  # '036c'
+    # ASSERT_SOME unfolded as { IF_NONE { { UNIT ; FAILWITH } } {} }
+    "ASSERT_SOME": [
+        2,
+        0,
+        0,
+        0,
+        21,
+        7,
+        47,
+        2,
+        0,
+        0,
+        0,
+        9,
+        2,
+        0,
+        0,
+        0,
+        4,
+        3,
+        79,
+        3,
+        39,
+        2,
+        0,
+        0,
+        0,
+        0,
+    ],
 }
 
 DO_ENTRYPOINT_TAG = const(2)
