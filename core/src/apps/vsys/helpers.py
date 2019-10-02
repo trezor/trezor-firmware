@@ -55,6 +55,10 @@ def get_address_from_public_key(public_key, chain_id):
     return address
 
 
+def get_chain_id(path: list) -> str:
+    return "M" if len(path) >= 3 and path[1] != 360 | HARDENED else "T"
+
+
 def validate_full_path(path: list) -> bool:
     """
     Validates derivation path to equal 44'/360'/a',
@@ -67,7 +71,7 @@ def validate_full_path(path: list) -> bool:
         return False
     if path[0] != 44 | HARDENED:
         return False
-    if path[1] != 360 | HARDENED:
+    if path[1] != 360 | HARDENED and path[1] != 1 | HARDENED:
         return False
     if length == 3:
         if path[2] < HARDENED or path[2] > 1000000 | HARDENED:
