@@ -120,9 +120,9 @@ async def request_sd_salt(
 
 
 async def set_sd_salt(
-    ctx: Optional[wire.Context], salt: bytes, salt_tag: bytes, filename: str = "salt"
+    ctx: Optional[wire.Context], salt: bytes, salt_tag: bytes, new: bool = False
 ) -> None:
-    salt_path = _get_salt_path()
+    salt_path = _get_salt_path(new)
 
     sd = io.SDCard()
     if not sd.power(True):
@@ -146,7 +146,7 @@ async def set_sd_salt(
 async def stage_sd_salt(
     ctx: Optional[wire.Context], salt: bytes, salt_tag: bytes
 ) -> None:
-    await set_sd_salt(ctx, salt, salt_tag, "salt.new")
+    await set_sd_salt(ctx, salt, salt_tag, True)
 
 
 async def commit_sd_salt(ctx: Optional[wire.Context]) -> None:
