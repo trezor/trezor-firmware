@@ -460,6 +460,7 @@ static void config_setNode(const HDNodeType *node) {
 }
 
 #if DEBUG_LINK
+
 bool config_dumpNode(HDNodeType *node) {
   memzero(node, sizeof(HDNodeType));
 
@@ -488,7 +489,6 @@ bool config_dumpNode(HDNodeType *node) {
   memzero(&storageNode, sizeof(storageNode));
   return true;
 }
-#endif
 
 void config_loadDevice(const LoadDevice *msg) {
   session_clear(false);
@@ -517,7 +517,17 @@ void config_loadDevice(const LoadDevice *msg) {
   if (msg->has_u2f_counter) {
     config_setU2FCounter(msg->u2f_counter);
   }
+
+  if (msg->has_needs_backup) {
+    config_setNeedsBackup(msg->needs_backup);
+  }
+
+  if (msg->has_no_backup && msg->no_backup) {
+    config_setNoBackup();
+  }
 }
+
+#endif
 
 void config_setLabel(const char *label) {
   if (label == NULL || label[0] == '\0') {
