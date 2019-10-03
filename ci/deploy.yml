@@ -5,7 +5,7 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
 core to upgrade tests deploy:
   stage: deploy
   variables:
-    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}upgrade_tests/"
+    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}/upgrade_tests"
   before_script: []  # no pipenv
   when: manual
   dependencies:
@@ -25,7 +25,7 @@ core to upgrade tests deploy:
 legacy to upgrade tests deploy:
   stage: deploy
   variables:
-    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}upgrade_tests/"
+    DEPLOY_DIRECTORY: "${DEPLOY_BASE_DIR}/upgrade_tests"
   before_script: []  # no pipenv
   when: manual
   dependencies:
