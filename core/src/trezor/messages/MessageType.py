@@ -191,6 +191,4 @@ if not utils.BITCOIN_ONLY:
     VsysPublicKey = 1003
     VsysSignedTx = 1004
     VsysSignTx = 1005
-    VsysSignContract = 1006
-    VsysSignFunctionExec = 1007
 

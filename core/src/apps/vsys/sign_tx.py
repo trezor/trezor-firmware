@@ -43,6 +43,8 @@ async def sign_tx(ctx, msg, keychain):
     elif msg.transactionType == LEASE_CANCEL_TX_TYPE:
         await layout.require_confirm_cancel_lease_tx(ctx, msg.recipient, msg.amount)
         to_sign_bytes = encode_cancel_lease_tx_to_bytes(msg)
+    else:
+        raise wire.DataError("Transaction type unsupported")
 
     signature = ed25519.sign(node.private_key(), to_sign_bytes)
     signature_base58 = base58.encode(signature)
