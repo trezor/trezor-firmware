@@ -216,6 +216,8 @@ void fsm_msgGetEntropy(const GetEntropy *msg) {
   layoutHome();
 }
 
+#if DEBUG_LINK
+
 void fsm_msgLoadDevice(const LoadDevice *msg) {
   CHECK_PIN
 
@@ -244,6 +246,8 @@ void fsm_msgLoadDevice(const LoadDevice *msg) {
   fsm_sendSuccess(_("Device loaded"));
   layoutHome();
 }
+
+#endif
 
 void fsm_msgResetDevice(const ResetDevice *msg) {
   CHECK_PIN

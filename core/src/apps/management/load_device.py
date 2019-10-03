@@ -37,7 +37,10 @@ async def load_device(ctx, msg):
         storage.device.set_slip39_iteration_exponent(iteration_exponent)
 
     storage.device.store_mnemonic_secret(
-        secret, backup_type, needs_backup=True, no_backup=False
+        secret,
+        backup_type,
+        needs_backup=msg.needs_backup is True,
+        no_backup=msg.no_backup is True,
     )
     storage.device.load_settings(
         use_passphrase=msg.passphrase_protection, label=msg.label

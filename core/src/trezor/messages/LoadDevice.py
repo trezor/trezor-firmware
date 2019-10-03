@@ -25,6 +25,8 @@ class LoadDevice(p.MessageType):
         label: str = None,
         skip_checksum: bool = None,
         u2f_counter: int = None,
+        needs_backup: bool = None,
+        no_backup: bool = None,
     ) -> None:
         self.mnemonics = mnemonics if mnemonics is not None else []
         self.node = node
@@ -34,6 +36,8 @@ class LoadDevice(p.MessageType):
         self.label = label
         self.skip_checksum = skip_checksum
         self.u2f_counter = u2f_counter
+        self.needs_backup = needs_backup
+        self.no_backup = no_backup
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -46,4 +50,6 @@ class LoadDevice(p.MessageType):
             6: ('label', p.UnicodeType, 0),
             7: ('skip_checksum', p.BoolType, 0),
             8: ('u2f_counter', p.UVarintType, 0),
+            9: ('needs_backup', p.BoolType, 0),
+            10: ('no_backup', p.BoolType, 0),
         }
