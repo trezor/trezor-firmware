@@ -62,16 +62,6 @@ def get_slip39_identifier() -> Optional[int]:
     return common.get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
 
 
-def set_slip39_threshold(threshold: int) -> None:
-    _require_progress()
-    common.set_uint8(_NAMESPACE, _SLIP39_THRESHOLD, threshold)
-
-
-def get_slip39_threshold() -> Optional[int]:
-    _require_progress()
-    return common.get_uint8(_NAMESPACE, _SLIP39_THRESHOLD)
-
-
 def set_slip39_iteration_exponent(exponent: int) -> None:
     _require_progress()
     common.set_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT, exponent)

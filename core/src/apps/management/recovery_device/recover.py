@@ -37,7 +37,6 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
         storage.recovery.set_slip39_group_count(share.group_count)
         storage.recovery.set_slip39_iteration_exponent(share.iteration_exponent)
         storage.recovery.set_slip39_identifier(share.identifier)
-        storage.recovery.set_slip39_threshold(share.threshold)
         storage.recovery.set_slip39_remaining_shares(
             share.threshold - 1, share.group_index
         )
