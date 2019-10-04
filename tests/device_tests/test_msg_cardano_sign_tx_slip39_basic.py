@@ -134,10 +134,10 @@ def test_cardano_sign_tx(
 
     def input_flow():
         yield
-        client.debug.swipe_down()
+        client.debug.swipe_up()
         client.debug.press_yes()
         yield
-        client.debug.swipe_down()
+        client.debug.swipe_up()
         client.debug.press_yes()
 
     client.set_passphrase("TREZOR")

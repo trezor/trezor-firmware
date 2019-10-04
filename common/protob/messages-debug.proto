@@ -14,8 +14,17 @@ import "messages-common.proto";
  */
 message DebugLinkDecision {
     optional bool yes_no = 1;   // true for "Confirm", false for "Cancel"
-    optional bool up_down = 2;  // true for scroll up, false for scroll down
+    optional DebugSwipeDirection swipe = 2;  // swipe direction
     optional string input = 3;  // keyboard input
+    /**
+    * Structure representing swipe direction
+    */
+    enum DebugSwipeDirection {
+        UP = 0;
+        DOWN = 1;
+        LEFT = 2;
+        RIGHT = 3;
+    }
 }
 
 /**

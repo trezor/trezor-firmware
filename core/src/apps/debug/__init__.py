@@ -5,7 +5,7 @@ if not __debug__:
 
 if __debug__:
     from trezor import config, log, loop, utils
-    from trezor.messages import MessageType
+    from trezor.messages import MessageType, DebugSwipeDirection
     from trezor.wire import register
 
     if False:
@@ -33,15 +33,19 @@ if __debug__:
 
         while True:
             msg = await debuglink_decision_chan.take()
-
             if msg.yes_no is not None:
                 await confirm_chan.put(
                     confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED
                 )
-            if msg.up_down is not None:
-                await swipe_chan.put(
-                    swipe.SWIPE_DOWN if msg.up_down else swipe.SWIPE_UP
-                )
+            if msg.swipe is not None:
+                if msg.swipe == DebugSwipeDirection.UP:
+                    await swipe_chan.put(swipe.SWIPE_UP)
+                elif msg.swipe == DebugSwipeDirection.DOWN:
+                    await swipe_chan.put(swipe.SWIPE_DOWN)
+                elif msg.swipe == DebugSwipeDirection.LEFT:
+                    await swipe_chan.put(swipe.SWIPE_LEFT)
+                elif msg.swipe == DebugSwipeDirection.RIGHT:
+                    await swipe_chan.put(swipe.SWIPE_RIGHT)
             if msg.input is not None:
                 await input_chan.put(msg.input)
 
