@@ -1,27 +1,42 @@
 # isort:skip_file
+import sys
 
 # unlock the device
-import boot  # noqa: F401
+import boot
 
-# prepare the USB interfaces, but do not connect to the host yet
-import usb
+# we do not need the boot module in memory anymore
+del boot
+del sys.modules["boot"]
 
-from trezor import utils
 
-# start the USB
-usb.bus.open()
+def _initialize():
+    # prepare the USB interfaces, but do not connect to the host yet
+    import usb
+    from trezor import utils
 
-# switch into unprivileged mode, as we don't need the extra permissions anymore
-utils.set_mode_unprivileged()
+    # start the USB
+    usb.bus.open()
+
+    # switch into unprivileged mode, as we don't need the extra permissions anymore
+    utils.set_mode_unprivileged()
+
+
+# _initialize is a function so that its imports stay local and can be easily unimported
+_initialize()
 
 
 def _boot_recovery() -> None:
+    from trezor import loop
+
     # load applications
     import apps.homescreen
 
     # boot applications
     apps.homescreen.boot(features_only=True)
+
     if __debug__:
+        import apps.debug
+
         apps.debug.boot()
 
     from apps.management.recovery_device.homescreen import recovery_homescreen
@@ -30,6 +45,9 @@ def _boot_recovery() -> None:
 
 
 def _boot_default() -> None:
+    from trezor import utils, workflow
+    import usb
+
     # load applications
     import apps.homescreen
     import apps.management
@@ -80,11 +98,11 @@ def _boot_default() -> None:
     workflow.start_default(homescreen)
 
 
-from trezor import loop, wire, workflow
-from apps.common.storage import recovery
+def main():
+    import usb
+    from apps.common.storage import recovery
+    from trezor import loop, wire
 
-while True:
-    modules = utils.unimport_begin()
     # initialize the wire codec
     wire.setup(usb.iface_wire)
     if __debug__:
@@ -96,5 +114,19 @@ while True:
     else:
         _boot_default()
     loop.run()
-    # loop is empty, reboot
-    utils.unimport_end(modules)
+    # loop.run will return when the queue becomes empty
+
+
+def unimport_all():
+    import gc
+
+    for key in list(sys.modules.keys()):
+        if key not in ("sys", "usb"):
+            del sys.modules[key]
+
+    gc.collect()
+
+
+while True:
+    main()
+    unimport_all()
