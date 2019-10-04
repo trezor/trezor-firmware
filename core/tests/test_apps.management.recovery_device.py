@@ -51,7 +51,7 @@ class TestSlip39(unittest.TestCase):
         # third share (member index 3)
         third = MNEMONIC_SLIP39_BASIC_20_3of6[2]
         secret, share = process_slip39(third)
-        self.assertIsNotNone(secret)
+        self.assertEqual(secret, b'I\x1by[\x80\xfc!\xcc\xdfFl\x0f\xbc\x98\xc8\xfc')
         self.assertEqual(storage.recovery.get_slip39_remaining_shares(0), 0)
         self.assertEqual(storage.recovery_shares.get(share.index, share.group_index), third)
         self.assertEqual(storage.recovery_shares.fetch_group(share.group_index), [second, third, first])  # ordered by index
@@ -98,7 +98,7 @@ class TestSlip39(unittest.TestCase):
         # now group 2 is complete => the whole Shamir recovery is completed
         words = MNEMONIC_SLIP39_ADVANCED_20[3]
         secret, share = process_slip39(words)
-        self.assertIsNotNone(secret)
+        self.assertEqual(secret, b'\xc2\xd2\xe2j\xd0`#\xc6\x01E\xf1P\xab\xe2\xdd+')
         self.assertEqual(share.group_count, storage.recovery.get_slip39_group_count())
         self.assertEqual(share.iteration_exponent, storage.recovery.get_slip39_iteration_exponent())
         self.assertEqual(share.identifier, storage.recovery.get_slip39_identifier())
