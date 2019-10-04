@@ -564,6 +564,29 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 confidential_assets=None,
             )
+        elif name == "Crown":
+            return CoinInfo(
+                coin_name=name,
+                coin_shortcut="CRW",
+                address_type=95495,
+                address_type_p2sh=95473,
+                maxfee_kb=2000000,
+                signed_message_header="Crown Signed Message:\n",
+                xpub_magic=0x0488b21e,
+                xpub_magic_segwit_p2sh=None,
+                xpub_magic_segwit_native=None,
+                bech32_prefix=None,
+                cashaddr_prefix=None,
+                slip44=72,
+                segwit=False,
+                fork_id=None,
+                force_bip143=False,
+                bip115=False,
+                decred=False,
+                negative_fee=False,
+                curve_name='secp256k1',
+                confidential_assets=None,
+            )
         elif name == "Dash":
             return CoinInfo(
                 coin_name=name,
