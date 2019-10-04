@@ -61,24 +61,21 @@ def get_chain_id(path: list) -> str:
 
 def validate_full_path(path: list) -> bool:
     """
-    Validates derivation path to equal 44'/360'/a',
+    Validates derivation path to equal 44'/360'/a'/0/0,
     where `a` is an account index from 0 to 1 000 000.
-    Additional component added to allow ledger migration
-    44'/360'/0'/b' where `b` is an account index from 0 to 1 000 000
+    Similar to Ethereum this should be 44'/360'/a', but for
+    compatibility with other HW vendors we use 44'/360'/a'/0/0.
     """
-    length = len(path)
-    if length < 3 or length > 4:
+    if len(path) != 5:
         return False
     if path[0] != 44 | HARDENED:
         return False
-    if path[1] != 360 | HARDENED and path[1] != 1 | HARDENED:
+    if path[1] != 360 | HARDENED and path[1] != 1 | HARDENED :
         return False
-    if length == 3:
-        if path[2] < HARDENED or path[2] > 1000000 | HARDENED:
-            return False
-    if length == 4:
-        if path[2] != 0 | HARDENED:
-            return False
-        if path[3] < HARDENED or path[3] > 1000000 | HARDENED:
-            return False
+    if path[2] < HARDENED or path[2] > 1000000 | HARDENED:
+        return False
+    if path[3] != 0:
+        return False
+    if path[4] != 0:
+        return False
     return True
