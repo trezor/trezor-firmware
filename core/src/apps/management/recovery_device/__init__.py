@@ -60,7 +60,7 @@ def _check_state(msg: RecoveryDevice) -> None:
     if not msg.dry_run and storage.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
     if msg.dry_run and not storage.is_initialized():
-        raise wire.UnexpectedMessage("Device is not initialized")
+        raise wire.NotInitialized("Device is not initialized")
 
     if storage.recovery.is_in_progress():
         raise RuntimeError(
