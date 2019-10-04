@@ -190,6 +190,7 @@ int base58_encode_check(const uint8_t *data, int datalen,
     return 0;
   }
   uint8_t buf[datalen + 32];
+  memset(buf, 0, sizeof(buf));
   uint8_t *hash = buf + datalen;
   memcpy(buf, data, datalen);
   hasher_Raw(hasher_type, data, datalen, hash);
@@ -205,6 +206,7 @@ int base58_decode_check(const char *str, HasherType hasher_type, uint8_t *data,
     return 0;
   }
   uint8_t d[datalen + 4];
+  memset(d, 0, sizeof(d));
   size_t res = datalen + 4;
   if (b58tobin(d, &res, str) != true) {
     return 0;
@@ -241,6 +243,7 @@ int base58gph_encode_check(const uint8_t *data, int datalen, char *str,
     return 0;
   }
   uint8_t buf[datalen + 32];
+  memset(buf, 0, sizeof(buf));
   uint8_t *hash = buf + datalen;
   memcpy(buf, data, datalen);
   ripemd160(data, datalen, hash);  // No double SHA256, but a single RIPEMD160
@@ -255,6 +258,7 @@ int base58gph_decode_check(const char *str, uint8_t *data, int datalen) {
     return 0;
   }
   uint8_t d[datalen + 4];
+  memset(d, 0, sizeof(d));
   size_t res = datalen + 4;
   if (b58tobin(d, &res, str) != true) {
     return 0;
