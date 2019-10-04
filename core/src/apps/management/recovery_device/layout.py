@@ -21,7 +21,7 @@ if __debug__:
     from apps.debug import input_signal
 
 if False:
-    from typing import List, Optional, Callable
+    from typing import List, Optional, Callable, Iterable, Tuple
     from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
@@ -152,7 +152,7 @@ async def check_word_validity(
 
 async def show_remaining_shares(
     ctx: wire.Context,
-    groups: List[int, List[str]],  # remaining + list 3 words
+    groups: Iterable[Tuple[int, Tuple[str]]],  # remaining + list 3 words
     shares_remaining: List[int],
     group_threshold: int,
 ) -> None:

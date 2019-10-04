@@ -219,7 +219,7 @@ async def _show_remaining_groups_and_shares(ctx: wire.Context) -> None:
     """
     shares_remaining = storage.recovery.fetch_slip39_remaining_shares()
 
-    identifiers = []
+    groups = set()
     first_entered_index = -1
     for i in range(len(shares_remaining)):
         if shares_remaining[i] < slip39.MAX_SHARE_COUNT:
@@ -232,17 +232,13 @@ async def _show_remaining_groups_and_shares(ctx: wire.Context) -> None:
             if not share:
                 share = slip39.decode_mnemonic(m)
             identifier = m.split(" ")[0:3]
-            identifiers.append([remaining, identifier])
+            groups.add((remaining, tuple(identifier)))
         elif remaining == slip39.MAX_SHARE_COUNT:  # no shares yet
             identifier = storage.recovery_shares.fetch_group(first_entered_index)[
                 0
             ].split(" ")[0:2]
-            try:
-                # we only add the group (two words) identifier once
-                identifiers.index([remaining, identifier])
-            except ValueError:
-                identifiers.append([remaining, identifier])
+            groups.add((remaining, tuple(identifier)))
 
     return await layout.show_remaining_shares(
-        ctx, identifiers, shares_remaining, share.group_threshold
+        ctx, groups, shares_remaining, share.group_threshold
     )
