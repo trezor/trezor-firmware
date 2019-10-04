@@ -136,6 +136,8 @@ void fsm_msgPing(const Ping *msg) {
 }
 
 void fsm_msgChangePin(const ChangePin *msg) {
+  CHECK_INITIALIZED
+
   bool removal = msg->has_remove && msg->remove;
   if (removal) {
     if (config_hasPin()) {

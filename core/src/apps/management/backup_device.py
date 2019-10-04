@@ -7,7 +7,7 @@ from apps.management.reset_device import backup_seed, layout
 
 async def backup_device(ctx, msg):
     if not storage.is_initialized():
-        raise wire.ProcessError("Device is not initialized")
+        raise wire.NotInitialized("Device is not initialized")
     if not storage.device.needs_backup():
         raise wire.ProcessError("Seed already backed up")
 
