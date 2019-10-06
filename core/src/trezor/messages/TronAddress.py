@@ -2,9 +2,16 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class TronAddress(p.MessageType):
-    MESSAGE_WIRE_TYPE = 801
+    MESSAGE_WIRE_TYPE = 901
 
     def __init__(
         self,
@@ -13,7 +20,7 @@ class TronAddress(p.MessageType):
         self.address = address
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('address', p.UnicodeType, 0),
         }

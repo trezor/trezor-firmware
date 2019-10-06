@@ -2,6 +2,13 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class TronUpdateAssetContract(p.MessageType):
 
@@ -14,7 +21,7 @@ class TronUpdateAssetContract(p.MessageType):
         self.url = url
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('description', p.UnicodeType, 0),
             2: ('url', p.UnicodeType, 0),

@@ -6,9 +6,10 @@ from .TronVote import TronVote
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class TronVoteWitnessContract(p.MessageType):
@@ -20,7 +21,7 @@ class TronVoteWitnessContract(p.MessageType):
         self.votes = votes if votes is not None else []
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('votes', TronVote, p.FLAG_REPEATED),
         }

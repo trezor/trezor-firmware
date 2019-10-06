@@ -2,6 +2,13 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class TronAccountUpdateContract(p.MessageType):
 
@@ -12,7 +19,7 @@ class TronAccountUpdateContract(p.MessageType):
         self.account_name = account_name
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('account_name', p.UnicodeType, 0),
         }

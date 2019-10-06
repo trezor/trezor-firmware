@@ -2,6 +2,13 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class TronProposalApproveContract(p.MessageType):
 
@@ -14,7 +21,7 @@ class TronProposalApproveContract(p.MessageType):
         self.is_add_approval = is_add_approval
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('proposal_id', p.UVarintType, 0),
             2: ('is_add_approval', p.BoolType, 0),

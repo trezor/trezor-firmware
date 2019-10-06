@@ -6,9 +6,10 @@ from .TronProposalParameters import TronProposalParameters
 
 if __debug__:
     try:
-        from typing import List
+        from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
     except ImportError:
-        List = None  # type: ignore
+        Dict, List, Optional = None, None, None  # type: ignore
 
 
 class TronProposalCreateContract(p.MessageType):
@@ -20,7 +21,7 @@ class TronProposalCreateContract(p.MessageType):
         self.parameters = parameters if parameters is not None else []
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('parameters', TronProposalParameters, p.FLAG_REPEATED),
         }

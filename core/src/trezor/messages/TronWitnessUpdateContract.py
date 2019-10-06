@@ -2,6 +2,13 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class TronWitnessUpdateContract(p.MessageType):
 
@@ -12,7 +19,7 @@ class TronWitnessUpdateContract(p.MessageType):
         self.update_url = update_url
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             2: ('update_url', p.UnicodeType, 0),
         }

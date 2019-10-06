@@ -2,6 +2,13 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class TronVote(p.MessageType):
 
@@ -14,7 +21,7 @@ class TronVote(p.MessageType):
         self.vote_count = vote_count
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('vote_address', p.UnicodeType, 0),
             2: ('vote_count', p.UVarintType, 0),

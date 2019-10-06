@@ -2,6 +2,13 @@
 # fmt: off
 import protobuf as p
 
+if __debug__:
+    try:
+        from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+    except ImportError:
+        Dict, List, Optional = None, None, None  # type: ignore
+
 
 class TronExchangeTransactionContract(p.MessageType):
 
@@ -32,7 +39,7 @@ class TronExchangeTransactionContract(p.MessageType):
         self.exchange_signature = exchange_signature
 
     @classmethod
-    def get_fields(cls):
+    def get_fields(cls) -> Dict:
         return {
             1: ('exchange_id', p.UVarintType, 0),
             2: ('token_id', p.UnicodeType, 0),
