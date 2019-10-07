@@ -94,5 +94,8 @@
     },
     "bitcoin:UNO": {
         "Electrum-UNO": "https://github.com/flurbos/electrum"
+    },
+    "bitcoin:XSN": {
+        "Stakenet": "https://xsnexplorer.io/trezor"
     }
 }
