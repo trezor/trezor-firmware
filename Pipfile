@@ -45,7 +45,7 @@ termcolor = ">=0.1.2"
 Pillow = ">=5.2.0"
 
 # crypto
-ecdsa = "*"
+ecdsa = ">=0.13.3"
 curve25519-donna = "*"
 pyasn1 = "*"
 
