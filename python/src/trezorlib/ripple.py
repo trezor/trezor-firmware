@@ -18,7 +18,7 @@ from . import messages
 from .protobuf import dict_to_proto
 from .tools import dict_from_camelcase, expect
 
-REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType", "Payment")
+REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType")
 REQUIRED_PAYMENT_FIELDS = ("Amount", "Destination")
 
 
@@ -38,10 +38,12 @@ def sign_tx(client, address_n, msg: messages.RippleSignTx):
 def create_sign_tx_msg(transaction) -> messages.RippleSignTx:
     if not all(transaction.get(k) for k in REQUIRED_FIELDS):
         raise ValueError("Some of the required fields missing")
-    if not all(transaction["Payment"].get(k) for k in REQUIRED_PAYMENT_FIELDS):
+    if "Payment" in transaction and not all(
+        transaction["Payment"].get(k) for k in REQUIRED_PAYMENT_FIELDS
+    ):
         raise ValueError("Some of the required payment fields missing")
-    if transaction["TransactionType"] != "Payment":
-        raise ValueError("Only Payment transaction type is supported")
+    # if transaction["TransactionType"] != "Payment":
+    #     raise ValueError("Only Payment transaction type is supported")
 
     converted = dict_from_camelcase(transaction)
     return dict_to_proto(messages.RippleSignTx, converted)

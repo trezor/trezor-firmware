@@ -11,44 +11,106 @@
 from trezor.messages.RippleSignTx import RippleSignTx
 
 from . import helpers
-
-FIELD_TYPE_INT16 = 1
-FIELD_TYPE_INT32 = 2
-FIELD_TYPE_AMOUNT = 6
-FIELD_TYPE_VL = 7
-FIELD_TYPE_ACCOUNT = 8
-
-FIELDS_MAP = {
-    "account": {"type": FIELD_TYPE_ACCOUNT, "key": 1},
-    "amount": {"type": FIELD_TYPE_AMOUNT, "key": 1},
-    "destination": {"type": FIELD_TYPE_ACCOUNT, "key": 3},
-    "fee": {"type": FIELD_TYPE_AMOUNT, "key": 8},
-    "sequence": {"type": FIELD_TYPE_INT32, "key": 4},
-    "type": {"type": FIELD_TYPE_INT16, "key": 2},
-    "signingPubKey": {"type": FIELD_TYPE_VL, "key": 3},
-    "flags": {"type": FIELD_TYPE_INT32, "key": 2},
-    "txnSignature": {"type": FIELD_TYPE_VL, "key": 4},
-    "lastLedgerSequence": {"type": FIELD_TYPE_INT32, "key": 27},
-    "destinationTag": {"type": FIELD_TYPE_INT32, "key": 14},
-}
-
-TRANSACTION_TYPES = {"Payment": 0}
+from .binary_field import field as binfield
 
 
-def serialize(msg: RippleSignTx, source_address: str, pubkey=None, signature=None):
-    w = bytearray()
+def serialize(
+    msg: RippleSignTx,
+    fields: dict,
+    multisig: bool,
+    source_address,
+    pubkey=None,
+    signature=None,
+) -> bytearray:
+    """Append common field and serialize transaction"""
+    if "TransactionType" not in fields:
+        raise ValueError("TransactionType is not present")
+    tType = fields["TransactionType"]
+    if type(tType) is str:
+        fields["TransactionType"] = binfield["TRANSACTION_TYPES"][tType]
+    fields["Flags"] = msg.flags
+    fields["Sequence"] = msg.sequence
+    fields["Fee"] = msg.fee
+    fields["Account"] = source_address
+    fields["LastLedgerSequence"] = msg.last_ledger_sequence
+    fields["AccountTxnID"] = msg.account_txn_id
+    fields["SourceTag"] = msg.source_tag
+    if msg.memos:
+        memos = []
+        for m in msg.memos:
+            memos.append(
+                {
+                    "Memo": {
+                        "MemoType": m.memo_type,
+                        "MemoData": m.memo_data,
+                        "MemoFormat": m.memo_format,
+                    }
+                }
+            )
+    if multisig:
+        signers = [
+            {
+                "Signer": {
+                    "Account": helpers.address_from_public_key(pubkey),
+                    "TxnSignature": signature,
+                    "SigningPubKey": pubkey,
+                }
+            }
+        ]
+        for signer in msg.signers:
+            signers.append(
+                {
+                    "Signer": {
+                        "Account": signer.account,
+                        "TxnSignature": signer.txn_signature,
+                        "SigningPubKey": signer.signing_pub_key,
+                    }
+                }
+            )
+        fields["Signers"] = signers
+        fields["SigningPubKey"] = b""
+    else:
+        if signature:
+            fields["TxnSignature"] = signature
+        if pubkey:
+            fields["SigningPubKey"] = pubkey
     # must be sorted numerically first by type and then by name
-    write(w, FIELDS_MAP["type"], TRANSACTION_TYPES["Payment"])
-    write(w, FIELDS_MAP["flags"], msg.flags)
-    write(w, FIELDS_MAP["sequence"], msg.sequence)
-    write(w, FIELDS_MAP["destinationTag"], msg.payment.destination_tag)
-    write(w, FIELDS_MAP["lastLedgerSequence"], msg.last_ledger_sequence)
-    write(w, FIELDS_MAP["amount"], msg.payment.amount)
-    write(w, FIELDS_MAP["fee"], msg.fee)
-    write(w, FIELDS_MAP["signingPubKey"], pubkey)
-    write(w, FIELDS_MAP["txnSignature"], signature)
-    write(w, FIELDS_MAP["account"], source_address)
-    write(w, FIELDS_MAP["destination"], msg.payment.destination)
+    return serialize_raw(fields, signature is not None)
+
+
+def serialize_raw(fields: dict, isSigning=True) -> bytearray:
+    """Serialize transaction field dict into signable format"""
+    w = bytearray()
+    farr = list(fields.keys())
+    n = len(fields)
+    for i in range(0, n):
+        for j in range(n - 1, i, -1):
+            if (
+                farr[j - 1] == "Invalid"
+                or binfield["FIELDS"][farr[j]]["type"]
+                < binfield["FIELDS"][farr[j - 1]]["type"]
+                or (
+                    binfield["FIELDS"][farr[j]]["type"]
+                    == binfield["FIELDS"][farr[j - 1]]["type"]
+                    and binfield["FIELDS"][farr[j]]["nth"]
+                    < binfield["FIELDS"][farr[j - 1]]["nth"]
+                )
+            ):
+                farr[j - 1], farr[j] = farr[j], farr[j - 1]
+
+    for k in farr:
+        fInfo = binfield["FIELDS"][k]
+        if (not fInfo["isSerialized"]) or not (isSigning or fInfo["isSigningField"]):
+            continue
+        write(w, fInfo, fields[k])
+    return w
+
+
+def serialize_array(farr: list):
+    """Serialize array"""
+    w = bytearray()
+    for f in farr:
+        w.extend(serialize_raw(f))
     return w
 
 
@@ -56,27 +118,55 @@ def write(w: bytearray, field: dict, value):
     if value is None:
         return
     write_type(w, field)
-    if field["type"] == FIELD_TYPE_INT16:
+    if field["type"] == binfield["TYPES"]["UInt8"]:
+        w.extend(value.to_bytes(1, "big"))
+    elif field["type"] == binfield["TYPES"]["UInt16"]:
         w.extend(value.to_bytes(2, "big"))
-    elif field["type"] == FIELD_TYPE_INT32:
+    elif field["type"] == binfield["TYPES"]["UInt32"]:
         w.extend(value.to_bytes(4, "big"))
-    elif field["type"] == FIELD_TYPE_AMOUNT:
-        w.extend(serialize_amount(value))
-    elif field["type"] == FIELD_TYPE_ACCOUNT:
+    elif field["type"] == binfield["TYPES"]["Amount"]:
+        if type(value) is dict:
+            w.extend(serialize_issued_amount(value))
+        else:
+            w.extend(serialize_amount(value))  # it should be int
+    elif field["type"] == binfield["TYPES"]["AccountID"]:
         write_bytes(w, helpers.decode_address(value))
-    elif field["type"] == FIELD_TYPE_VL:
+    elif field["type"] == binfield["TYPES"]["Blob"]:
         write_bytes(w, value)
+    elif field["type"] == binfield["TYPES"]["STArray"]:
+        w.extend(
+            serialize_array(value) + b"\xf1"
+        )  # STObject end with 0xf1(ArrayEndMarker)
+    elif field["type"] == binfield["TYPES"]["STObject"]:
+        w.extend(
+            serialize_raw(value) + b"\xe1"
+        )  # STObject end with 0xe1(ObjectEndMarker)
+    elif field["type"] == binfield["TYPES"]["Hash128"]:
+        w.extend(bytes.fromhex(value)[0:16])
+    elif field["type"] == binfield["TYPES"]["Hash160"]:
+        w.extend(bytes.fromhex(value)[0:20])
+    elif field["type"] == binfield["TYPES"]["Hash256"]:
+        w.extend(bytes.fromhex(value)[0:32])
     else:
         raise ValueError("Unknown field type")
 
 
 def write_type(w: bytearray, field: dict):
-    if field["key"] <= 0xF:
-        w.append((field["type"] << 4) | field["key"])
+    fcode = field["nth"]
+    ftype = field["type"]
+
+    if ftype < 16 and fcode < 16:
+        w.append((ftype << 4) | fcode)
+    elif ftype >= 16 and fcode < 16:
+        w.append(fcode)
+        w.append(ftype)
+    elif ftype < 16 and fcode >= 16:
+        w.append(ftype << 4)
+        w.append(fcode)
     else:
-        # this concerns two-bytes fields such as lastLedgerSequence
-        w.append(field["type"] << 4)
-        w.append(field["key"])
+        w.append(0)
+        w.append(fcode)
+        w.append(ftype)
 
 
 def serialize_amount(value: int) -> bytearray:
@@ -89,6 +179,10 @@ def serialize_amount(value: int) -> bytearray:
     b[0] &= 0x7F  # clear first bit to indicate XRP
     b[0] |= 0x40  # set second bit to indicate positive number
     return b
+
+
+def serialize_issued_amount(amount: dict) -> bytearray:
+    raise NotImplementedError("Issued currency is currently not supported")
 
 
 def write_bytes(w: bytearray, value: bytes):
