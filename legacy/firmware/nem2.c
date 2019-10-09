@@ -700,27 +700,31 @@ static inline size_t format_amount(const NEMMosaicDefinition *definition,
       -divisor, false, str_out, size);
 }
 
-size_t nem_canonicalizeMosaics(NEMMosaic *mosaics, size_t mosaics_count) {
-  if (mosaics_count <= 1) {
-    return mosaics_count;
+void nem_canonicalizeMosaics(NEMTransfer *transfer) {
+  size_t old_count = transfer->mosaics_count;
+
+  if (old_count <= 1) {
+    return;
   }
 
-  size_t actual_count = 0;
+  NEMMosaic *const mosaics = transfer->mosaics;
 
-  bool skip[mosaics_count];
+  bool skip[old_count];
   memzero(skip, sizeof(skip));
 
+  size_t new_count = 0;
+
   // Merge duplicates
-  for (size_t i = 0; i < mosaics_count; i++) {
+  for (size_t i = 0; i < old_count; i++) {
     if (skip[i]) continue;
 
-    NEMMosaic *mosaic = &mosaics[actual_count];
+    NEMMosaic *mosaic = &mosaics[new_count];
 
-    if (actual_count++ != i) {
+    if (new_count++ != i) {
       memcpy(mosaic, &mosaics[i], sizeof(NEMMosaic));
     }
 
-    for (size_t j = i + 1; j < mosaics_count; j++) {
+    for (size_t j = i + 1; j < old_count; j++) {
       if (skip[j]) continue;
 
       const NEMMosaic *new_mosaic = &mosaics[j];
@@ -732,24 +736,23 @@ size_t nem_canonicalizeMosaics(NEMMosaic *mosaics, size_t mosaics_count) {
     }
   }
 
-  NEMMosaic temp;
+  transfer->mosaics_count = new_count;
 
   // Sort mosaics
-  for (size_t i = 0; i < actual_count - 1; i++) {
+  for (size_t i = 0; i < new_count - 1; i++) {
     NEMMosaic *a = &mosaics[i];
 
-    for (size_t j = i + 1; j < actual_count; j++) {
+    for (size_t j = i + 1; j < new_count; j++) {
       NEMMosaic *b = &mosaics[j];
 
       if (nem_mosaicCompare(a, b) > 0) {
+        NEMMosaic temp;
         memcpy(&temp, a, sizeof(NEMMosaic));
         memcpy(a, b, sizeof(NEMMosaic));
         memcpy(b, &temp, sizeof(NEMMosaic));
       }
     }
   }
-
-  return actual_count;
 }
 
 void nem_mosaicFormatAmount(const NEMMosaicDefinition *definition,

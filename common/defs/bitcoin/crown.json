@@ -2,9 +2,9 @@
   "coin_name": "Crown",
   "coin_shortcut": "CRW",
   "coin_label": "Crown",
-  "website": "https://crown.tech",
+  "website": "https://crownplatform.com",
   "github": "https://github.com/Crowndev/crowncoin",
-  "maintainer": "Ashot <ashot@crown.tech>",
+  "maintainer": "Ashot <ashot@crownplatform.com>",
   "curve_name": "secp256k1",
   "address_type": 95495,
   "address_type_p2sh": 95473,
@@ -33,9 +33,9 @@
   "min_address_length": 36,
   "max_address_length": 40,
   "bitcore": [
-    "https://insight-01.crown.tech",
-    "https://insight-02.crown.tech",
-    "https://insight-03.crown.tech"
+    "https://insight-01.crownplatform.com",
+    "https://insight-02.crownplatform.com",
+    "https://insight-03.crownplatform.com"
   ],
   "blockbook": [],
   "negative_fee": false,

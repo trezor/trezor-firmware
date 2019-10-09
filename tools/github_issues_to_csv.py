@@ -8,7 +8,8 @@ import csv
 from getpass import getpass
 import requests
 
-auth = None
+auth_id = None
+auth_secret = None
 
 PRIORITIES = ("P1", "P2", "P3", "P4")
 SEVERITIES = ("S1", "S2", "S3", "S4")
@@ -29,7 +30,7 @@ def write_issues(r, csvout):
                     priority = l["name"]
                 elif l["name"][:2] in SEVERITIES:
                     severity = l["name"]
-                elif l["name"][:2] in WEIGHTS:
+                elif l["name"] in WEIGHTS:
                     weight = l["name"][1:]
                     if weight == "1/2":
                         weight = "0.5"
@@ -47,8 +48,11 @@ def write_issues(r, csvout):
 
 def get_issues(name):
     """Requests issues from GitHub API and writes to CSV file."""
-    url = 'https://api.github.com/repos/{}/issues?state=all'.format(name)
-    r = requests.get(url, auth=auth)
+    if auth_secret:
+        url = 'https://api.github.com/repos/{}/issues?state=all&client_id={}&client_secret={}'.format(name, auth_id, auth_secret)
+    else:
+        url = 'https://api.github.com/repos/{}/issues?state=all'.format(name)
+    r = requests.get(url)
 
     csvfilename = '{}-issues.csv'.format(name.replace('/', '-'))
     with open(csvfilename, 'w', newline='') as csvfile:
@@ -65,7 +69,7 @@ def get_issues(name):
                 pages = {rel[6:-1]: url[url.index('<')+1:-1] for url, rel in
                          (link.split(';') for link in
                           r.headers['link'].split(','))}
-                r = requests.get(pages['next'], auth=auth)
+                r = requests.get(pages['next'])
                 write_issues(r, csvout)
                 if pages['next'] == pages['last']:
                     break

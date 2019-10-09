@@ -10,12 +10,16 @@ from apps.common.request_pin import (
     request_pin_confirm,
     show_pin_invalid,
 )
+from apps.common.storage import is_initialized
 
 if False:
     from trezor.messages.ChangePin import ChangePin
 
 
 async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:
+    if not is_initialized():
+        raise wire.NotInitialized("Device is not initialized")
+
     # confirm that user wants to change the pin
     await require_confirm_change_pin(ctx, msg)
 

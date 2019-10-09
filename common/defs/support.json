@@ -43,6 +43,7 @@
       "bitcoin:VTC": true,
       "bitcoin:XMY": true,
       "bitcoin:XPM": true,
+      "bitcoin:XRC": true,
       "bitcoin:XSN": true,
       "bitcoin:XZC": true,
       "bitcoin:ZCL": true,
@@ -110,6 +111,7 @@
       "bitcoin:BTG": "1.6.2",
       "bitcoin:BTX": "1.7.1",
       "bitcoin:CPU": "1.8.3",
+      "bitcoin:CRW": "1.8.4",
       "bitcoin:DASH": "1.5.2",
       "bitcoin:DCR": "1.6.2",
       "bitcoin:DGB": "1.6.3",
@@ -1294,7 +1296,6 @@
     },
     "unsupported": {
       "bitcoin:CPC": "not implemented",
-      "bitcoin:CRW": "address_type collides with Bitcoin",
       "bitcoin:TRC": "address_type collides with Bitcoin",
       "bitcoin:ZEN": "not implemented",
       "erc20:etc:PLAY": "(AUTO) duplicate key",
@@ -1475,6 +1476,7 @@
       "bitcoin:BTX": "2.0.8",
       "bitcoin:CPC": "2.0.10",
       "bitcoin:CPU": "2.1.4",
+      "bitcoin:CRW": "2.1.7",
       "bitcoin:DASH": "2.0.5",
       "bitcoin:DCR": "2.0.8",
       "bitcoin:DGB": "2.0.7",
@@ -2668,7 +2670,6 @@
       "nem:XEM": "2.0.7"
     },
     "unsupported": {
-      "bitcoin:CRW": "address_type collides with Bitcoin",
       "bitcoin:TRC": "address_type collides with Bitcoin",
       "erc20:etc:PLAY": "(AUTO) duplicate key",
       "erc20:eth:A18:ba7d": "(AUTO) duplicate key",

@@ -16,7 +16,7 @@ stdenv.mkDerivation {
     openssl
     pipenv
     pkgconfig
-    protobuf
+    protobuf3_6
     scons
     valgrind
     zlib

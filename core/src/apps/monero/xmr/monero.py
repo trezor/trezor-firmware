@@ -1,13 +1,8 @@
-from micropython import const
-
 from apps.monero.xmr import crypto
 
 if False:
     from typing import Tuple, Optional
     from apps.monero.xmr.types import Ge25519, Sc25519
-
-
-DISPLAY_DECIMAL_POINT = const(12)
 
 
 class XmrException(Exception):

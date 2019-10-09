@@ -27,11 +27,11 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     # make sure user knows they're setting up a new wallet
     await layout.show_reset_device_warning(ctx, msg.backup_type)
 
-    # request new PIN
+    # request and set new PIN
     if msg.pin_protection:
         newpin = await request_pin_confirm(ctx)
-    else:
-        newpin = ""
+        if not config.change_pin(pin_to_int(""), pin_to_int(newpin), None, None):
+            raise wire.ProcessError("Failed to set PIN")
 
     # generate and display internal entropy
     int_entropy = random.bytes(32)
@@ -69,10 +69,6 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     # generate and display backup information for the master secret
     if perform_backup:
         await backup_seed(ctx, msg.backup_type, secret)
-
-    # write PIN into storage
-    if not config.change_pin(pin_to_int(""), pin_to_int(newpin), None, None):
-        raise wire.ProcessError("Could not change PIN")
 
     # write settings and master secret into storage
     storage.device.load_settings(

@@ -1,12 +1,11 @@
 Version 2.x.x [not yet released]
-* nothing yet
+* SD card protection
 
-Version 2.1.6 [to be released Oct 2019]
+Version 2.1.6 [Oct 2019]
 * Refactor Shamir related codebase
 * Super Shamir
 * FIDO2
 * FIDO2 credential management via trezorctl
-* SD card protection
 * BackupType in Features
 
 Version 2.1.5 [Sep 2019]

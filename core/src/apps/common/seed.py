@@ -108,7 +108,7 @@ class Keychain:
 
 async def get_keychain(ctx: wire.Context, namespaces: list) -> Keychain:
     if not storage.is_initialized():
-        raise wire.ProcessError("Device is not initialized")
+        raise wire.NotInitialized("Device is not initialized")
     seed = cache.get_seed()
     if seed is None:
         passphrase = cache.get_passphrase()

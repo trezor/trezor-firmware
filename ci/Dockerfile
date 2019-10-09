@@ -93,8 +93,8 @@ RUN if [ "${TOOLCHAIN_FLAVOR}" = "src" ]; then \
 
 # download protobuf
 
-ENV PROTOBUF_VERSION=3.4.0
-ENV PROTOBUF_HASH=e4b51de1b75813e62d6ecdde582efa798586e09b5beaebfb866ae7c9eaadace4
+ENV PROTOBUF_VERSION=3.6.1
+ENV PROTOBUF_HASH=6003de742ea3fcf703cfec1cd4a3380fd143081a2eb0e559065563496af27807
 RUN wget --no-verbose "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
 RUN echo "${PROTOBUF_HASH} protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" | sha256sum -c
 

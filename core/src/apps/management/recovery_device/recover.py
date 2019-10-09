@@ -37,7 +37,6 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
         storage.recovery.set_slip39_group_count(share.group_count)
         storage.recovery.set_slip39_iteration_exponent(share.iteration_exponent)
         storage.recovery.set_slip39_identifier(share.identifier)
-        storage.recovery.set_slip39_threshold(share.threshold)
         storage.recovery.set_slip39_remaining_shares(
             share.threshold - 1, share.group_index
         )
@@ -57,8 +56,12 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
     # These should be checked by UI before so it's a Runtime exception otherwise
     if share.identifier != storage.recovery.get_slip39_identifier():
         raise RuntimeError("Slip39: Share identifiers do not match")
+    if share.iteration_exponent != storage.recovery.get_slip39_iteration_exponent():
+        raise RuntimeError("Slip39: Share exponents do not match")
     if storage.recovery_shares.get(share.index, share.group_index):
         raise RuntimeError("Slip39: This mnemonic was already entered")
+    if share.group_count != storage.recovery.get_slip39_group_count():
+        raise RuntimeError("Slip39: Group count does not match")
 
     remaining_for_share = (
         storage.recovery.get_slip39_remaining_shares(share.group_index)

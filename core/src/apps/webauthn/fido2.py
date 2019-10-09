@@ -7,6 +7,7 @@ from trezor import config, io, log, loop, ui, utils, workflow
 from trezor.crypto import aes, der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
 from trezor.ui.confirm import CONFIRMED, Confirm, ConfirmPageable, Pageable
+from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
 from apps.common import cbor, storage
@@ -116,6 +117,7 @@ _KEEPALIVE_INTERVAL_MS = const(80)  # interval between keepalive commands
 _CTAP_HID_TIMEOUT_MS = const(500)
 _U2F_CONFIRM_TIMEOUT_MS = const(10 * 1000)
 _FIDO2_CONFIRM_TIMEOUT_MS = const(60 * 1000)
+_POPUP_TIMEOUT_MS = const(4 * 1000) if not __debug__ else const(0)
 
 # CBOR object signing and encryption algorithms and keys
 _COSE_ALG_KEY = const(3)
@@ -213,8 +215,6 @@ _ALLOW_RESIDENT_CREDENTIALS = True
 
 # The attestation type to use in MakeCredential responses. If false, then self attestation will be used.
 _USE_BASIC_ATTESTATION = False
-
-_AUTOCONFIRM = False
 
 
 class CborError(Exception):
@@ -543,8 +543,6 @@ async def verify_user(keepalive_callback: KeepaliveCallback) -> bool:
 
 
 async def confirm(*args: Any, **kwargs: Any) -> bool:
-    if _AUTOCONFIRM:
-        return True
     dialog = Confirm(*args, **kwargs)
     if __debug__:
         return await loop.race(dialog, confirm_signal()) is CONFIRMED
@@ -553,8 +551,6 @@ async def confirm(*args: Any, **kwargs: Any) -> bool:
 
 
 async def confirm_pageable(*args: Any, **kwargs: Any) -> bool:
-    if _AUTOCONFIRM:
-        return True
     dialog = ConfirmPageable(*args, **kwargs)
     if __debug__:
         return await loop.race(dialog, confirm_signal()) is CONFIRMED
@@ -618,10 +614,12 @@ class U2fConfirmRegister(U2fState):
     async def confirm_dialog(self) -> bool:
         if self._cred.rp_id_hash == _BOGUS_APPID:
             text = Text("U2F", ui.ICON_WRONG, ui.RED)
+            text.bold("Not registered.")
+            text.br_half()
             text.normal(
                 "Another U2F device", "was used to register", "in this application."
             )
-            return await confirm(text, confirm=None, cancel="Close")
+            return await Popup(text, _POPUP_TIMEOUT_MS)
         else:
             content = ConfirmContent(self)
             return await confirm(content)
@@ -745,8 +743,10 @@ class Fido2ConfirmExcluded(Fido2ConfirmMakeCredential):
         await send_cmd(cmd, self.iface)
 
         text = Text("FIDO2 Register", ui.ICON_WRONG, ui.RED)
+        text.bold("Already registered.")
+        text.br_half()
         text.normal("This device is already", "registered with", self._cred.rp_id + ".")
-        await confirm(text, confirm=None, cancel="Close")
+        await Popup(text, _POPUP_TIMEOUT_MS)
 
 
 class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
@@ -825,8 +825,10 @@ class Fido2ConfirmNoPin(State):
 
     async def confirm_dialog(self) -> bool:
         text = Text("FIDO2 Verify User", ui.ICON_WRONG, ui.RED)
-        text.normal("Unable to verify user.", "Please enable PIN", "protection.")
-        return await confirm(text, confirm=None, cancel="Close")
+        text.bold("Unable to verify user.")
+        text.br_half()
+        text.normal("Please enable PIN", "protection.")
+        return await Popup(text, _POPUP_TIMEOUT_MS)
 
 
 class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
@@ -842,10 +844,12 @@ class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
         await send_cmd(cmd, self.iface)
 
         text = Text("FIDO2 Authenticate", ui.ICON_WRONG, ui.RED)
+        text.bold("Not registered.")
+        text.br_half()
         text.normal(
             "This device is not", "registered with", self._creds[0].app_name() + "."
         )
-        await confirm(text, confirm=None, cancel="Close")
+        await Popup(text, _POPUP_TIMEOUT_MS)
 
 
 class Fido2ConfirmReset(Fido2State):

@@ -30,7 +30,7 @@ if False:
 
 async def sd_protect(ctx: wire.Context, msg: SdProtect) -> Success:
     if not is_initialized():
-        raise wire.ProcessError("Device is not initialized")
+        raise wire.NotInitialized("Device is not initialized")
 
     if msg.operation == SdProtectOperationType.ENABLE:
         return await sd_protect_enable(ctx, msg)

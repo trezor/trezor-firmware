@@ -39,7 +39,7 @@ async def _get_passphrase(ctx: wire.Context) -> bytes:
 
 async def get_keychain(ctx: wire.Context) -> Keychain:
     if not storage.is_initialized():
-        raise wire.ProcessError("Device is not initialized")
+        raise wire.NotInitialized("Device is not initialized")
 
     if mnemonic.is_bip39():
         # derive the root node from mnemonic and passphrase

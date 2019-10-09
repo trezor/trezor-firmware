@@ -50,6 +50,9 @@
     "bitcoin:MONA": {
         "Electrum-MONA": "https://electrum-mona.org"
     },
+    "bitcoin:MUE": {
+        "Electrum-MUE": "https://electrum.monetaryunit.org"
+    },
     "bitcoin:NMC": {
         "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
     },
@@ -91,5 +94,8 @@
     },
     "bitcoin:UNO": {
         "Electrum-UNO": "https://github.com/flurbos/electrum"
+    },
+    "bitcoin:XSN": {
+        "Stakenet": "https://xsnexplorer.io/trezor"
     }
 }
