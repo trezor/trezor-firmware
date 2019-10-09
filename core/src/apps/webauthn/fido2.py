@@ -23,7 +23,7 @@ if __debug__:
     from apps.debug import confirm_signal
 
 if False:
-    from typing import Any, Coroutine, List, Optional
+    from typing import Any, Coroutine, List, Optional, Tuple
 
 _CID_BROADCAST = const(0xFFFFFFFF)  # broadcast channel id
 
@@ -319,15 +319,15 @@ def resp_cmd_authenticate(siglen: int) -> dict:
     }
 
 
-def overlay_struct(buf, desc):
-    desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)
+def overlay_struct(buf: bytes, desc: dict) -> Any:
+    desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)  # type: ignore
     if desc_size > len(buf):
         raise ValueError("desc is too big (%d > %d)" % (desc_size, len(buf)))
     return uctypes.struct(uctypes.addressof(buf), desc, uctypes.BIG_ENDIAN)
 
 
-def make_struct(desc):
-    desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)
+def make_struct(desc: dict) -> Tuple[bytearray, Any]:
+    desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)  # type: ignore
     buf = bytearray(desc_size)
     return buf, uctypes.struct(uctypes.addressof(buf), desc, uctypes.BIG_ENDIAN)
 
