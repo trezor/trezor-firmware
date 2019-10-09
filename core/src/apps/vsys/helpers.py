@@ -1,5 +1,6 @@
 from trezor.crypto import base58
 from trezor.crypto import hashlib
+from trezor.crypto.curve import curve25519
 
 from apps.common import HARDENED
 from apps.vsys.constants import VSYS_ADDRESS_VERSION
@@ -9,54 +10,51 @@ VSYS_ADDRESS_HASH_LENGTH = 20
 VSYS_ADDRESS_LENGTH = 1 + 1 + VSYS_CHECKSUM_LENGTH + VSYS_ADDRESS_HASH_LENGTH
 
 
-if bytes == str:  # python2
-    str2bytes = lambda s: s
-    bytes2str = lambda b: b
-    str2list = lambda s: [ord(c) for c in s]
-else:  # python3
-    str2bytes = lambda s: s.encode('latin-1')
-    bytes2str = lambda b: ''.join(map(chr, b))
-    str2list = lambda s: [c for c in s]
-
-
 def keccak256_hash(data=None):
     return hashlib.sha3_256(data=data, keccak=True)
 
 
-# def keccak_hash(key, msg=None):
-#    h = hmac.new(key, msg=msg, digestmod=keccak_factory)
-#    return h.digest()
-
-
-def hash_chain(s):
-    a = hashlib.blake2b(s, digest_size=32).digest()
-    b = keccak256_hash(a)
+def hash_chain(s: bytes):
+    a = hashlib.blake2b(s, outlen=32).digest()
+    b = keccak256_hash(a).digest()
     return b
 
 
-def validate_address(address, chain_id):
-    addr = bytes2str(base58.decode(address))
-    if addr[0] != chr(VSYS_ADDRESS_VERSION):
-        return False  # Wrong address version
-    elif addr[1] != chain_id:
-        return False  # Wrong chain id
-    elif len(addr) != VSYS_ADDRESS_LENGTH:
+def validate_address(address: str, chain_id: str):
+    try:
+        addr_bytes = base58.decode(address)
+    except:
+        return False
+    if len(addr_bytes) != VSYS_ADDRESS_LENGTH:
         return False  # Wrong address length
-    elif addr[-VSYS_CHECKSUM_LENGTH:] != hash_chain(str2bytes(addr[:-VSYS_CHECKSUM_LENGTH]))[:VSYS_CHECKSUM_LENGTH]:
-        return False  # Wrong address checksum
+    elif addr_bytes[0] != VSYS_ADDRESS_VERSION:
+        return False  # Wrong address version
+    elif not chain_id or chr(addr_bytes[1]) != chain_id[0]:
+        return False  # Wrong chain id
     else:
-        return True
+        expected_checksum = addr_bytes[-VSYS_CHECKSUM_LENGTH:]
+        actual_checksum = hash_chain(addr_bytes[:-VSYS_CHECKSUM_LENGTH])[:VSYS_CHECKSUM_LENGTH]
+        return expected_checksum == actual_checksum
 
 
-def get_address_from_public_key(public_key, chain_id):
-    unhashedAddress = chr(VSYS_ADDRESS_VERSION) + str(chain_id) + hash_chain(public_key)[0:20]
-    addressHash = hash_chain(str2bytes(unhashedAddress))[0:4]
-    address = bytes2str(base58.encode(str2bytes(unhashedAddress + addressHash)))
+def get_address_from_public_key(public_key: str, chain_id: str):
+    addr_head_bytes = bytes([VSYS_ADDRESS_VERSION] + [ord(c) for c in chain_id])
+    addr_body_bytes = hash_chain(base58.decode(public_key))[:VSYS_ADDRESS_HASH_LENGTH]
+    unhashed_address = addr_head_bytes + addr_body_bytes
+    address_hash = hash_chain(unhashed_address)[:VSYS_CHECKSUM_LENGTH]
+    address = base58.encode(unhashed_address + address_hash)
     return address
 
 
+def get_public_key_from_private_key(private_key: str):
+    private_key_bytes = base58.decode(private_key)
+    public_key_bytes = curve25519.publickey(private_key_bytes)
+    public_key = base58.encode(public_key_bytes)
+    return public_key
+
+
 def get_chain_id(path: list) -> str:
-    return "M" if len(path) >= 3 and path[1] != 360 | HARDENED else "T"
+    return "M" if len(path) >= 3 and path[1] == 360 | HARDENED else "T"
 
 
 def validate_full_path(path: list) -> bool:
@@ -79,3 +77,14 @@ def validate_full_path(path: list) -> bool:
     if path[4] != 0:
         return False
     return True
+
+
+def convert_to_nano_sec(timestamp):
+    if timestamp < 1e10:
+        return timestamp * 1e9
+    elif timestamp < 1e13:
+        return timestamp * 1e6
+    elif timestamp < 1e16:
+        return timestamp * 1e3
+    else:
+        return timestamp

@@ -3,7 +3,7 @@ from trezor.messages import MessageType
 
 from apps.common import HARDENED
 
-CURVE = "ed25519"
+CURVE = "curve25519"
 
 
 def boot() -> None:

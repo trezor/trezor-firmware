@@ -17,7 +17,7 @@ async def get_public_key(ctx, msg, keychain):
     )
 
     node = keychain.derive(msg.address_n, CURVE)
-    pk = seed.remove_ed25519_prefix(node.public_key())
+    pk = node.public_key()
     pk_base58 = base58.encode(pk)
     chain_id = helpers.get_chain_id(msg.address_n)
     address = helpers.get_address_from_public_key(pk, chain_id)

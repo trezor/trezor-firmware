@@ -2,7 +2,7 @@ from common import *
 from apps.common.paths import HARDENED
 
 if not utils.BITCOIN_ONLY:
-    from apps.vsys.helpers import get_address_from_public_key, validate_full_path, get_chain_id, validate_address
+    from apps.vsys.helpers import *
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -20,6 +20,14 @@ class TestVsysAddress(unittest.TestCase):
         address2 = get_address_from_public_key(pubkey2, "M")
 
         self.assertEqual(address2, expected_address2)
+
+    def test_public_key_from_private_key(self):
+        # source of test data - vsys java SDK
+        private_key = "8Yoy9QL2sqggrM22VvHcRmAVzRr5h23FuDeFohyAU27B"
+        expect_public_key = "2cLDxAPJNWGGWAyHUFEnyoznhkf4QCEkcQrL5g2oEBCY"
+        public_key = get_public_key_from_private_key(private_key)
+
+        self.assertEqual(public_key, expect_public_key)
 
     def test_paths(self):
         # 44'/360'/a'/0/0 (mainnet) or 44'/1'/a'/0/0 (testnet) is correct
