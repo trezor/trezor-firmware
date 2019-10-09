@@ -66,8 +66,8 @@ static void check_and_write_chunk(void) {
   if (chunk_pos == 0) {
     chunk_pos = FW_CHUNK_SIZE;
   }
-  uint8_t hash[32];
-  SHA256_CTX ctx;
+  uint8_t hash[32] = {0};
+  SHA256_CTX ctx = {0};
   sha256_Init(&ctx);
   sha256_Update(&ctx, (const uint8_t *)FW_CHUNK + offset, chunk_pos - offset);
   if (chunk_pos < 64 * 1024) {
@@ -329,7 +329,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       if (msg_id != 0x001B) {  // ButtonAck message (id 27)
         return;
       }
-      uint8_t hash[32];
+      uint8_t hash[32] = {0};
       compute_firmware_fingerprint(hdr, hash);
       layoutFirmwareFingerprint(hash);
       hash_check_ok = get_button_response();
@@ -347,7 +347,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       // erase storage
       erase_storage();
       // check erasure
-      uint8_t hash[32];
+      uint8_t hash[32] = {0};
       sha256_Raw(FLASH_PTR(FLASH_STORAGE_START), FLASH_STORAGE_LEN, hash);
       if (memcmp(hash,
                  "\x2d\x86\x4c\x0b\x78\x9a\x43\x21\x4e\xee\x85\x24\xd3\x18\x20"

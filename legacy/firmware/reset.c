@@ -68,7 +68,7 @@ void reset_init(bool display_random, uint32_t _strength,
 
   if (display_random) {
     for (int start = 0; start < 2; start++) {
-      char ent_str[4][17];
+      char ent_str[4][17] = {0};
       char desc[] = "Internal entropy _/2:";
       data2hex(int_entropy + start * 16, 4, ent_str[0]);
       data2hex(int_entropy + start * 16 + 4, 4, ent_str[1]);
@@ -109,7 +109,7 @@ void reset_init(bool display_random, uint32_t _strength,
   config_setLabel(label);
   config_setU2FCounter(u2f_counter);
 
-  EntropyRequest resp;
+  EntropyRequest resp = {0};
   memzero(&resp, sizeof(EntropyRequest));
   msg_write(MessageType_MessageType_EntropyRequest, &resp);
   awaiting_entropy = true;
@@ -123,7 +123,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len) {
   }
   awaiting_entropy = false;
 
-  SHA256_CTX ctx;
+  SHA256_CTX ctx = {0};
   sha256_Init(&ctx);
   sha256_Update(&ctx, int_entropy, 32);
   sha256_Update(&ctx, ext_entropy, len);

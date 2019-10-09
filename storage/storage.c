@@ -151,7 +151,7 @@ static secbool secequal(const void *ptr1, const void *ptr2, size_t n) {
   const uint8_t *p1 = ptr1;
   const uint8_t *p2 = ptr2;
   uint8_t diff = 0;
-  size_t i;
+  size_t i = 0;
   for (i = 0; i < n; ++i) {
     diff |= *p1 ^ *p2;
     ++p1;
@@ -169,7 +169,7 @@ static secbool secequal(const void *ptr1, const void *ptr2, size_t n) {
 static secbool secequal32(const uint32_t *ptr1, const uint32_t *ptr2,
                           size_t n) {
   uint32_t diff = 0;
-  size_t i;
+  size_t i = 0;
   for (i = 0; i < n; ++i) {
     uint32_t mask = random32();
     diff |= (*ptr1 + mask - *ptr2) ^ mask;
@@ -194,7 +194,7 @@ static secbool is_protected(uint16_t key) {
  * Initialize the storage authentication tag for freshly wiped storage.
  */
 static secbool auth_init(void) {
-  uint8_t tag[SHA256_DIGEST_LENGTH];
+  uint8_t tag[SHA256_DIGEST_LENGTH] = {0};
   memzero(authentication_sum, sizeof(authentication_sum));
   hmac_sha256(cached_sak, SAK_SIZE, authentication_sum,
               sizeof(authentication_sum), tag);
@@ -209,7 +209,7 @@ static secbool auth_update(uint16_t key) {
     return sectrue;
   }
 
-  uint8_t tag[SHA256_DIGEST_LENGTH];
+  uint8_t tag[SHA256_DIGEST_LENGTH] = {0};
   hmac_sha256(cached_sak, SAK_SIZE, (uint8_t *)&key, sizeof(key), tag);
   for (uint32_t i = 0; i < SHA256_DIGEST_LENGTH; i++) {
     authentication_sum[i] ^= tag[i];
@@ -224,7 +224,7 @@ static secbool auth_update(uint16_t key) {
  * tag.
  */
 static secbool auth_set(uint16_t key, const void *val, uint16_t len) {
-  secbool found;
+  secbool found = secfalse;
   secbool ret = norcow_set_ex(key, val, len, &found);
   if (sectrue == ret && secfalse == found) {
     ret = auth_update(key);
@@ -245,8 +245,8 @@ static secbool auth_get(uint16_t key, const void **val, uint16_t *len) {
   uint32_t sum[SHA256_DIGEST_LENGTH / sizeof(uint32_t)] = {0};
 
   // Prepare inner and outer digest.
-  uint32_t odig[SHA256_DIGEST_LENGTH / sizeof(uint32_t)];
-  uint32_t idig[SHA256_DIGEST_LENGTH / sizeof(uint32_t)];
+  uint32_t odig[SHA256_DIGEST_LENGTH / sizeof(uint32_t)] = {0};
+  uint32_t idig[SHA256_DIGEST_LENGTH / sizeof(uint32_t)] = {0};
   hmac_sha256_prepare(cached_sak, SAK_SIZE, odig, idig);
 
   // Prepare SHA-256 message padding.
@@ -338,7 +338,8 @@ static void derive_kek(uint32_t pin, const uint8_t *random_salt,
   REVERSE32(pin, pin);
 #endif
 
-  uint8_t salt[HARDWARE_SALT_SIZE + RANDOM_SALT_SIZE + EXTERNAL_SALT_SIZE];
+  uint8_t salt[HARDWARE_SALT_SIZE + RANDOM_SALT_SIZE + EXTERNAL_SALT_SIZE] = {
+      0};
   size_t salt_len = 0;
 
   memcpy(salt + salt_len, hardware_salt, HARDWARE_SALT_SIZE);
@@ -357,7 +358,7 @@ static void derive_kek(uint32_t pin, const uint8_t *random_salt,
     ui_callback(ui_rem, progress, ui_message);
   }
 
-  PBKDF2_HMAC_SHA256_CTX ctx;
+  PBKDF2_HMAC_SHA256_CTX ctx = {0};
   pbkdf2_hmac_sha256_Init(&ctx, (const uint8_t *)&pin, sizeof(pin), salt,
                           salt_len, 1);
   for (int i = 1; i <= 5; i++) {
@@ -389,14 +390,14 @@ static void derive_kek(uint32_t pin, const uint8_t *random_salt,
 }
 
 static secbool set_pin(uint32_t pin, const uint8_t *ext_salt) {
-  uint8_t buffer[RANDOM_SALT_SIZE + KEYS_SIZE + POLY1305_TAG_SIZE];
+  uint8_t buffer[RANDOM_SALT_SIZE + KEYS_SIZE + POLY1305_TAG_SIZE] = {0};
   uint8_t *rand_salt = buffer;
   uint8_t *ekeys = buffer + RANDOM_SALT_SIZE;
   uint8_t *pvc = buffer + RANDOM_SALT_SIZE + KEYS_SIZE;
 
-  uint8_t kek[SHA256_DIGEST_LENGTH];
-  uint8_t keiv[SHA256_DIGEST_LENGTH];
-  chacha20poly1305_ctx ctx;
+  uint8_t kek[SHA256_DIGEST_LENGTH] = {0};
+  uint8_t keiv[SHA256_DIGEST_LENGTH] = {0};
+  chacha20poly1305_ctx ctx = {0};
   random_buffer(rand_salt, RANDOM_SALT_SIZE);
   derive_kek(pin, rand_salt, ext_salt, kek, keiv);
   rfc7539_init(&ctx, kek, keiv);
@@ -482,12 +483,12 @@ static secbool pin_logs_init(uint32_t fails) {
   // The format of the PIN_LOGS_KEY entry is:
   // guard_key (1 word), pin_success_log (PIN_LOG_WORDS), pin_entry_log
   // (PIN_LOG_WORDS)
-  uint32_t logs[GUARD_KEY_WORDS + 2 * PIN_LOG_WORDS];
+  uint32_t logs[GUARD_KEY_WORDS + 2 * PIN_LOG_WORDS] = {0};
 
   logs[0] = generate_guard_key();
 
-  uint32_t guard_mask;
-  uint32_t guard;
+  uint32_t guard_mask = 0;
+  uint32_t guard = 0;
   wait_random();
   if (sectrue != expand_guard_key(logs[0], &guard_mask, &guard)) {
     return secfalse;
@@ -550,8 +551,8 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
   }
 
   // If there is no EDEK, then generate a random DEK and SAK and store them.
-  const void *val;
-  uint16_t len;
+  const void *val = NULL;
+  uint16_t len = 0;
   if (secfalse == norcow_get(EDEK_PVC_KEY, &val, &len)) {
     init_wiped_storage();
   }
@@ -567,8 +568,8 @@ static secbool pin_fails_reset(void) {
     return secfalse;
   }
 
-  uint32_t guard_mask;
-  uint32_t guard;
+  uint32_t guard_mask = 0;
+  uint32_t guard = 0;
   wait_random();
   if (sectrue !=
       expand_guard_key(*(const uint32_t *)logs, &guard_mask, &guard)) {
@@ -608,8 +609,8 @@ secbool storage_pin_fails_increase(void) {
     return secfalse;
   }
 
-  uint32_t guard_mask;
-  uint32_t guard;
+  uint32_t guard_mask = 0;
+  uint32_t guard = 0;
   wait_random();
   if (sectrue !=
       expand_guard_key(*(const uint32_t *)logs, &guard_mask, &guard)) {
@@ -668,8 +669,8 @@ static secbool pin_get_fails(uint32_t *ctr) {
     return secfalse;
   }
 
-  uint32_t guard_mask;
-  uint32_t guard;
+  uint32_t guard_mask = 0;
+  uint32_t guard = 0;
   wait_random();
   if (sectrue !=
       expand_guard_key(*(const uint32_t *)logs, &guard_mask, &guard)) {
@@ -681,7 +682,7 @@ static secbool pin_get_fails(uint32_t *ctr) {
   const uint32_t *success_log = ((const uint32_t *)logs) + GUARD_KEY_WORDS;
   const uint32_t *entry_log = success_log + PIN_LOG_WORDS;
   volatile int current = -1;
-  volatile size_t i;
+  volatile size_t i = 0;
   for (i = 0; i < PIN_LOG_WORDS; ++i) {
     if ((entry_log[i] & guard_mask) != guard ||
         (success_log[i] & guard_mask) != guard ||
@@ -760,9 +761,9 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
   _Static_assert(((RANDOM_SALT_SIZE + KEYS_SIZE) & 3) == 0, "PVC unaligned");
   _Static_assert((PVC_SIZE & 3) == 0, "PVC size unaligned");
 
-  uint8_t keys[KEYS_SIZE];
+  uint8_t keys[KEYS_SIZE] = {0};
   uint8_t tag[POLY1305_TAG_SIZE] __attribute__((aligned(sizeof(uint32_t))));
-  chacha20poly1305_ctx ctx;
+  chacha20poly1305_ctx ctx = {0};
 
   // Decrypt the data encryption key and the storage authentication key and
   // check the PIN verification code.
@@ -784,7 +785,7 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
   // Check that the authenticated version number matches the norcow version.
   // NOTE: storage_get_encrypted() calls auth_get(), which initializes the
   // authentication_sum.
-  uint32_t version;
+  uint32_t version = 0;
   if (sectrue !=
           storage_get_encrypted(VERSION_KEY, &version, sizeof(version), &len) ||
       len != sizeof(version) || version != norcow_active_version) {
@@ -801,7 +802,7 @@ static secbool unlock(uint32_t pin, const uint8_t *ext_salt) {
   }
 
   // Get the pin failure counter
-  uint32_t ctr;
+  uint32_t ctr = 0;
   if (sectrue != pin_get_fails(&ctr)) {
     memzero(&pin, sizeof(pin));
     return secfalse;
@@ -847,8 +848,8 @@ static secbool unlock(uint32_t pin, const uint8_t *ext_salt) {
     handle_fault("no EDEK");
     return secfalse;
   }
-  uint8_t kek[SHA256_DIGEST_LENGTH];
-  uint8_t keiv[SHA256_DIGEST_LENGTH];
+  uint8_t kek[SHA256_DIGEST_LENGTH] = {0};
+  uint8_t keiv[SHA256_DIGEST_LENGTH] = {0};
   derive_kek(pin, (const uint8_t *)rand_salt, ext_salt, kek, keiv);
   memzero(&pin, sizeof(pin));
 
@@ -860,7 +861,7 @@ static secbool unlock(uint32_t pin, const uint8_t *ext_salt) {
   }
 
   // Check that the PIN fail counter was incremented.
-  uint32_t ctr_ck;
+  uint32_t ctr_ck = 0;
   if (sectrue != pin_get_fails(&ctr_ck) || ctr + 1 != ctr_ck) {
     handle_fault("PIN counter increment");
     return secfalse;
@@ -932,8 +933,8 @@ static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
   const uint8_t *tag_stored = (const uint8_t *)val_stored + CHACHA20_IV_SIZE;
   const uint8_t *ciphertext =
       (const uint8_t *)val_stored + CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
-  uint8_t tag_computed[POLY1305_TAG_SIZE];
-  chacha20poly1305_ctx ctx;
+  uint8_t tag_computed[POLY1305_TAG_SIZE] = {0};
+  chacha20poly1305_ctx ctx = {0};
   rfc7539_init(&ctx, cached_dek, iv);
   rfc7539_auth(&ctx, (const uint8_t *)&key, sizeof(key));
   chacha20poly1305_decrypt(&ctx, ciphertext, (uint8_t *)val_dest, *len);
@@ -1007,7 +1008,7 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
   }
 
   // Write the IV to the flash.
-  uint8_t buffer[CHACHA20_BLOCK_SIZE];
+  uint8_t buffer[CHACHA20_BLOCK_SIZE] = {0};
   random_buffer(buffer, CHACHA20_IV_SIZE);
   uint16_t offset = 0;
   if (sectrue != norcow_update_bytes(key, offset, buffer, CHACHA20_IV_SIZE)) {
@@ -1016,10 +1017,10 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
   offset += CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
 
   // Encrypt all blocks except for the last one.
-  chacha20poly1305_ctx ctx;
+  chacha20poly1305_ctx ctx = {0};
   rfc7539_init(&ctx, cached_dek, buffer);
   rfc7539_auth(&ctx, (const uint8_t *)&key, sizeof(key));
-  size_t i;
+  size_t i = 0;
   for (i = 0; i + CHACHA20_BLOCK_SIZE < len;
        i += CHACHA20_BLOCK_SIZE, offset += CHACHA20_BLOCK_SIZE) {
     chacha20poly1305_encrypt(&ctx, ((const uint8_t *)val) + i, buffer,
@@ -1092,7 +1093,7 @@ secbool storage_set_counter(const uint16_t key, const uint32_t count) {
 
   // The count is stored as a 32-bit integer followed by a tail of "1" bits,
   // which is used as a tally.
-  uint32_t value[1 + COUNTER_TAIL_WORDS];
+  uint32_t value[1 + COUNTER_TAIL_WORDS] = {0};
   memset(value, 0xff, sizeof(value));
   value[0] = count;
   return storage_set(key, value, sizeof(value));
@@ -1143,7 +1144,7 @@ secbool storage_has_pin(void) {
   }
 
   const void *val = NULL;
-  uint16_t len;
+  uint16_t len = 0;
   if (sectrue != norcow_get(PIN_NOT_SET_KEY, &val, &len) ||
       (len > 0 && *(uint8_t *)val != FALSE_BYTE)) {
     return secfalse;
@@ -1206,7 +1207,7 @@ static void __handle_fault(const char *msg, const char *file, int line,
   // We use the PIN fail counter as a fault counter. Increment the counter,
   // check that it was incremented and halt.
   in_progress = sectrue;
-  uint32_t ctr;
+  uint32_t ctr = 0;
   if (sectrue != pin_get_fails(&ctr)) {
     storage_wipe();
     __fatal_error("Fault detected", msg, file, line, func);
@@ -1217,7 +1218,7 @@ static void __handle_fault(const char *msg, const char *file, int line,
     __fatal_error("Fault detected", msg, file, line, func);
   }
 
-  uint32_t ctr_new;
+  uint32_t ctr_new = 0;
   if (sectrue != pin_get_fails(&ctr_new) || ctr + 1 != ctr_new) {
     storage_wipe();
   }
@@ -1298,7 +1299,7 @@ static secbool storage_upgrade(void) {
         continue;
       }
 
-      secbool ret;
+      secbool ret = secfalse;
       if (((key >> 8) & FLAG_PUBLIC) != 0) {
         ret = norcow_set(key, val, len);
       } else {

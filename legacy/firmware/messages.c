@@ -164,12 +164,12 @@ bool msg_write_common(char type, uint16_t msg_id, const void *msg_ptr) {
     return false;
   }
 
-  size_t len;
+  size_t len = 0;
   if (!pb_get_encoded_size(&len, fields, msg_ptr)) {
     return false;
   }
 
-  void (*append)(uint8_t);
+  void (*append)(uint8_t) = NULL;
   bool (*pb_callback)(pb_ostream_t *, const uint8_t *, size_t);
 
   if (type == 'n') {

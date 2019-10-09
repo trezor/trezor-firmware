@@ -143,7 +143,7 @@ static void format_number(char *dest, int number) {
 /* Send a request for a new word/matrix code to the PC.
  */
 static void recovery_request(void) {
-  WordRequest resp;
+  WordRequest resp = {0};
   memzero(&resp, sizeof(WordRequest));
   resp.has_type = true;
   resp.type = awaiting_word == 1
@@ -323,8 +323,8 @@ static void display_choices(bool twoColumn, char choices[9][12], int num) {
  * Generates a new matrix and requests the next pin.
  */
 static void next_matrix(void) {
-  char word_choices[9][12];
-  uint32_t idx, num;
+  char word_choices[9][12] = {0};
+  uint32_t idx = 0, num = 0;
   bool last = (word_index % 4) == 3;
 
   /* Build the matrix:

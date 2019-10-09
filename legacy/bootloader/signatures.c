@@ -79,7 +79,7 @@ int signatures_old_ok(void) {
     return false;
   }
 
-  uint8_t hash[32];
+  uint8_t hash[32] = {0};
   sha256_Raw(FLASH_PTR(FLASH_OLD_APP_START), codelen, hash);
 
   if (sigindex1 < 1 || sigindex1 > PUBKEYS) return SIG_FAIL;  // invalid index
@@ -110,7 +110,7 @@ int signatures_old_ok(void) {
 }
 
 void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32]) {
-  image_header copy;
+  image_header copy = {0};
   memcpy(&copy, hdr, sizeof(image_header));
   memzero(copy.sig1, sizeof(copy.sig1));
   memzero(copy.sig2, sizeof(copy.sig2));
@@ -137,7 +137,7 @@ bool firmware_present_new(void) {
 }
 
 int signatures_new_ok(const image_header *hdr, uint8_t store_fingerprint[32]) {
-  uint8_t hash[32];
+  uint8_t hash[32] = {0};
   compute_firmware_fingerprint(hdr, hash);
 
   if (store_fingerprint) {
@@ -179,7 +179,7 @@ int mem_is_empty(const uint8_t *src, uint32_t len) {
 }
 
 int check_firmware_hashes(const image_header *hdr) {
-  uint8_t hash[32];
+  uint8_t hash[32] = {0};
   // check hash of the first code chunk
   sha256_Raw(FLASH_PTR(FLASH_APP_START), (64 - 1) * 1024, hash);
   if (0 != memcmp(hash, hdr->hashes, 32)) return SIG_FAIL;
