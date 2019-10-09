@@ -919,19 +919,20 @@ class DialogManager:
         if state.keepalive_status() is not None:
             self.keepalive = self.keepalive_loop()
             loop.schedule(self.keepalive)
-        else:
-            self.keepalive = None
         self.workflow = self.dialog_workflow()
         loop.schedule(self.workflow)
         return True
 
     async def keepalive_loop(self) -> None:
-        if not isinstance(self.state, Fido2State):
-            return
-        while utime.ticks_ms() < self.deadline:
-            cmd = cmd_keepalive(self.state.cid, self.state.keepalive_status())
-            await send_cmd(cmd, self.iface)
-            await loop.sleep(_KEEPALIVE_INTERVAL_MS * 1000)
+        try:
+            if not isinstance(self.state, Fido2State):
+                return
+            while utime.ticks_ms() < self.deadline:
+                cmd = cmd_keepalive(self.state.cid, self.state.keepalive_status())
+                await send_cmd(cmd, self.iface)
+                await loop.sleep(_KEEPALIVE_INTERVAL_MS * 1000)
+        finally:
+            self.keepalive = None
 
         self.result = _RESULT_TIMEOUT
         self.reset()
@@ -949,7 +950,6 @@ class DialogManager:
         finally:
             if self.keepalive is not None:
                 loop.close(self.keepalive)
-            self.keepalive = None
 
             if self.result == _RESULT_CONFIRM:
                 await self.state.on_confirm()
