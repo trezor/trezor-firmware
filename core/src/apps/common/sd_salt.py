@@ -70,11 +70,11 @@ async def _write_failed_dialog(ctx: Optional[wire.Context]) -> None:
     text = Text("SD card protection", ui.ICON_WRONG, ui.RED)
     text.normal("Failed to write data to", "the SD card.")
     if ctx is None:
-        await Confirm(text, confirm=None, cancel="Close")
-        raise OSError
+        if await Confirm(text, confirm="Retry", cancel="Abort") is not CONFIRMED:
+            raise OSError
     else:
-        await confirm(ctx, text, confirm=None, cancel="Close")
-        raise wire.ProcessError("Failed to write to SD card.")
+        if not await confirm(ctx, text, confirm="Retry", cancel="Abort"):
+            raise wire.ProcessError("Failed to write to SD card.")
 
 
 def _get_device_dir() -> str:
@@ -159,23 +159,24 @@ async def set_sd_salt(
 ) -> None:
     salt_path = _get_salt_path(new)
 
-    sd = io.SDCard()
-    while not sd.power(True):
-        await _insert_card_dialog(ctx)
+    while True:
+        sd = io.SDCard()
+        while not sd.power(True):
+            await _insert_card_dialog(ctx)
 
-    fs = io.FatFS()
-
-    try:
-        fs.mount()
-        fs.mkdir("/trezor", True)
-        fs.mkdir(_get_device_dir(), True)
-        with fs.open(salt_path, "w") as f:
-            f.write(salt)
-            f.write(salt_tag)
-    except Exception:
-        fs.unmount()
-        sd.power(False)
-        await _write_failed_dialog(ctx)
+        try:
+            fs = io.FatFS()
+            fs.mount()
+            fs.mkdir("/trezor", True)
+            fs.mkdir(_get_device_dir(), True)
+            with fs.open(salt_path, "w") as f:
+                f.write(salt)
+                f.write(salt_tag)
+            break
+        except Exception:
+            fs.unmount()
+            sd.power(False)
+            await _write_failed_dialog(ctx)
 
     fs.unmount()
     sd.power(False)
