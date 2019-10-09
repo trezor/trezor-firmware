@@ -125,7 +125,17 @@ typedef struct _mp_obj_FatFSFile_t {
   FIL fp;
 } mp_obj_FatFSFile_t;
 
-/// def __exit__(self) -> None:
+/// def __enter__(self) -> FatFSFile:
+///     """
+///     Return an open file object
+///     """
+
+/// from types import TracebackType
+/// def __exit__(
+///     self, type: Optional[Type[BaseException]],
+///     value: Optional[BaseException],
+///     traceback: Optional[TracebackType],
+/// ) -> None:
 ///     """
 ///     Close an open file object
 ///     """
@@ -175,7 +185,7 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_read(mp_obj_t self, mp_obj_t data) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFSFile_read_obj,
                                  mod_trezorio_FatFSFile_read);
 
-/// def write(self, data: bytearray) -> int:
+/// def write(self, data: Union[bytes, bytearray]) -> int:
 ///     """
 ///     Write data to the file
 ///     """

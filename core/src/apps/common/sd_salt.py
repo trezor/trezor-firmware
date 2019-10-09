@@ -45,11 +45,11 @@ async def _insert_card_dialog(ctx: Optional[wire.Context]) -> None:
         await require_confirm(ctx, text, confirm=None, cancel="Close")
 
 
-def _get_device_dir() -> bytes:
+def _get_device_dir() -> str:
     return "/trezor/device_%s" % storage.device.get_device_id().lower()
 
 
-def _get_salt_path(new: bool = False) -> bytes:
+def _get_salt_path(new: bool = False) -> str:
     if new:
         return "%s/salt.new" % _get_device_dir()
     else:
@@ -72,9 +72,10 @@ async def request_sd_salt(
         fs.mount()
 
         # Load salt if it exists.
+        salt = None  # type: Optional[bytearray]
         try:
             with fs.open(salt_path, "r") as f:
-                salt = bytearray(SD_SALT_LEN_BYTES)  # type: Optional[bytearray]
+                salt = bytearray(SD_SALT_LEN_BYTES)
                 salt_tag = bytearray(SD_SALT_AUTH_TAG_LEN_BYTES)
                 f.read(salt)
                 f.read(salt_tag)
@@ -88,9 +89,10 @@ async def request_sd_salt(
             return salt
 
         # Load salt.new if it exists.
+        new_salt = None  # type: Optional[bytearray]
         try:
             with fs.open(new_salt_path, "r") as f:
-                new_salt = bytearray(SD_SALT_LEN_BYTES)  # type: Optional[bytearray]
+                new_salt = bytearray(SD_SALT_LEN_BYTES)
                 new_salt_tag = bytearray(SD_SALT_AUTH_TAG_LEN_BYTES)
                 f.read(new_salt)
                 f.read(new_salt_tag)
