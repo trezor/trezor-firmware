@@ -97,5 +97,8 @@
     },
     "bitcoin:XSN": {
         "Stakenet": "https://xsnexplorer.io/trezor"
+    },
+    "bitcoin:ZCR": {
+        "ZCore": "https://zcore.cash"
     }
 }
