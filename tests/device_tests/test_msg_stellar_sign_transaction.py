@@ -43,7 +43,9 @@
 #
 # 6. In the first "Add Signer" text box enter the secret key: SDE2YU4V2IYSJIUH7MONDYZTSSLDXV5QDEGUUOLCU4TK7CZWTAXZ5CEG
 #
-# 7. Scroll down to the bottom and look at the "signatures" section. The Trezor should generate the same signature
+# 7. Scroll down to the signed XDR blob and click "View in XDR Viewer"
+#
+# 8. Scroll down to the bottom and look at the "signatures" section. The Trezor should generate the same signature
 #
 
 from base64 import b64encode
