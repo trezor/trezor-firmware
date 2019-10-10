@@ -269,12 +269,36 @@ void oledDrawChar(int x, int y, char c, int font) {
 }
 
 char oledConvertChar(const char c) {
-  uint8_t a = c;
-  if (a < 0x80) return c;
+  static char last_was_utf8 = 0;
+
+  // non-printable ASCII character
+  if (c < ' ') {
+    last_was_utf8 = 0;
+    return '_';
+  }
+
+  // regular ASCII character
+  if (c < 0x80) {
+    last_was_utf8 = 0;
+    return c;
+  }
+
   // UTF-8 handling: https://en.wikipedia.org/wiki/UTF-8#Description
-  // bytes 11xxxxxx are first byte of UTF-8 characters
-  // bytes 10xxxxxx are successive UTF-8 characters
-  if (a >= 0xC0) return '_';
+
+  // bytes 11xxxxxx are first bytes of UTF-8 characters
+  if (c >= 0xC0) {
+    last_was_utf8 = 1;
+    return '_';
+  }
+
+  if (last_was_utf8) {
+    // bytes 10xxxxxx can be successive UTF-8 characters ...
+    return 0;  // skip glyph
+  } else {
+    // ... or they are just non-printable ASCII characters
+    return '_';
+  }
+
   return 0;
 }
 

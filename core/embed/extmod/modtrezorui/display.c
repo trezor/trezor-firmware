@@ -511,18 +511,43 @@ void display_printf(const char *fmt, ...) {
 
 #if TREZOR_MODEL == T
 
-static const uint8_t *get_glyph(int font, uint8_t c) {
-  if (c >= ' ' && c <= '~') {
-    // do nothing - valid ASCII
-  } else
-      // UTF-8 handling: https://en.wikipedia.org/wiki/UTF-8#Description
-      if (c >= 0xC0) {
-    // bytes 11xxxxxx are first byte of UTF-8 characters
-    c = '_';
-  } else {
-    // bytes 10xxxxxx are successive UTF-8 characters
-    return 0;
+static uint8_t convert_char(const uint8_t c) {
+  static char last_was_utf8 = 0;
+
+  // non-printable ASCII character
+  if (c < ' ') {
+    last_was_utf8 = 0;
+    return '_';
   }
+
+  // regular ASCII character
+  if (c < 0x80) {
+    last_was_utf8 = 0;
+    return c;
+  }
+
+  // UTF-8 handling: https://en.wikipedia.org/wiki/UTF-8#Description
+
+  // bytes 11xxxxxx are first bytes of UTF-8 characters
+  if (c >= 0xC0) {
+    last_was_utf8 = 1;
+    return '_';
+  }
+
+  if (last_was_utf8) {
+    // bytes 10xxxxxx can be successive UTF-8 characters ...
+    return 0;  // skip glyph
+  } else {
+    // ... or they are just non-printable ASCII characters
+    return '_';
+  }
+
+  return 0;
+}
+
+static const uint8_t *get_glyph(int font, uint8_t c) {
+  c = convert_char(c);
+  if (!c) return 0;
   switch (font) {
 #ifdef TREZOR_FONT_NORMAL_ENABLE
     case FONT_NORMAL:
