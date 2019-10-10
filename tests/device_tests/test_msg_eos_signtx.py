@@ -40,7 +40,7 @@ class TestMsgEosSignTx:
         # swipe through pages
         yield
         for _ in range(pages - 1):
-            debug.swipe_down()
+            debug.swipe_up()
 
         # confirm last page
         debug.press_yes()
@@ -654,14 +654,14 @@ class TestMsgEosSignTx:
             # swipe through new account
             yield
             for _ in range(5):
-                client.debug.swipe_down()
+                client.debug.swipe_up()
 
             # confirm new account
             client.debug.press_yes()
 
             # swipe through buyrambytes
             yield
-            client.debug.swipe_down()
+            client.debug.swipe_up()
 
             # confirm buyrambytes
             client.debug.press_yes()
@@ -669,7 +669,7 @@ class TestMsgEosSignTx:
             # swipe through delegatebw
             yield
             for _ in range(2):
-                client.debug.swipe_down()
+                client.debug.swipe_up()
 
             # confirm delegatebw
             client.debug.press_yes()
@@ -721,14 +721,14 @@ class TestMsgEosSignTx:
 
             # swipe through setcode
             yield
-            client.debug.swipe_down()
+            client.debug.swipe_up()
 
             # confirm setcode
             client.debug.press_yes()
 
             # swipe through setabi
             yield
-            client.debug.swipe_down()
+            client.debug.swipe_up()
 
             # confirm setabi
             client.debug.press_yes()
