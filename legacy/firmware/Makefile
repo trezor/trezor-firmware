@@ -96,8 +96,7 @@ OBJS += ../vendor/trezor-storage/norcow.o
 
 OBJS += ../vendor/nanopb/pb_common.o
 OBJS += ../vendor/nanopb/pb_decode.o
-# we have a local patch in pb_encode.c
-OBJS += pb_encode.o
+OBJS += ../vendor/nanopb/pb_encode.o
 
 OBJS += protob/messages.pb.o
 OBJS += protob/messages-bitcoin.pb.o
@@ -126,7 +125,7 @@ DEBUG_LINK ?= 0
 DEBUG_LOG  ?= 0
 
 CFLAGS += -Wno-sequence-point
-CFLAGS += -I../vendor/nanopb -Iprotob -DPB_FIELD_16BIT=1
+CFLAGS += -I../vendor/nanopb -Iprotob -DPB_FIELD_16BIT=1 -DPB_ENCODE_ARRAYS_UNPACKED=1
 CFLAGS += -DDEBUG_LINK=$(DEBUG_LINK)
 CFLAGS += -DDEBUG_LOG=$(DEBUG_LOG)
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'
