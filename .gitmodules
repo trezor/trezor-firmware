@@ -21,3 +21,6 @@
 	path = vendor/nanopb
 	url = https://github.com/nanopb/nanopb.git
 	ignore = untracked
+[submodule "vendor/axolotl-curve25519"]
+	path = vendor/axolotl-curve25519
+	url = https://github.com/tgalal/python-axolotl-curve25519.git

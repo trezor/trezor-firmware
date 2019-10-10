@@ -92,3 +92,7 @@ def encode_cancel_lease_tx_to_bytes(msg):
 def generate_content_signature(content: bytes, private_key: bytes) -> bytes:
     signature = ed25519.sign(private_key, content)
     return signature
+
+
+def verify_content_signature(content: bytes, public_key: bytes, signature: bytes) -> bool:
+    raise wire.DataError("Not implemented")
