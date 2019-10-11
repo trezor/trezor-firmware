@@ -118,6 +118,7 @@ enum {
 #define PROGRESS_PRECISION 16
 
 /*
+clang-format off
 
 Workflow of streamed signing
 The STAGE_ constants describe the signing_stage when request is sent.
@@ -131,20 +132,29 @@ Phase1 - check inputs, previous transactions, and outputs
 =========================================================
 
 foreach I (idx1):
-    Request I STAGE_REQUEST_1_INPUT Add I to segwit hash_prevouts, hash_sequence
+    Request I                                                 STAGE_REQUEST_1_INPUT
+    Add I to segwit hash_prevouts, hash_sequence
     Add I to Decred decred_hash_prefix
     Add I to TransactionChecksum (prevout and type)
     if (Decred)
         Return I
     If not segwit, Calculate amount of I:
-        Request prevhash I, META STAGE_REQUEST_2_PREV_META foreach prevhash I
-(idx2): Request prevhash I STAGE_REQUEST_2_PREV_INPUT foreach prevhash O (idx2):
-            Request prevhash O STAGE_REQUEST_2_PREV_OUTPUT Add amount of
-prevhash O (which is amount of I) Request prevhash extra data (if applicable)
-STAGE_REQUEST_2_PREV_EXTRADATA Calculate hash of streamed tx, compare to
-prevhash I foreach O (idx1): Request O STAGE_REQUEST_3_OUTPUT Add O to Decred
-decred_hash_prefix Add O to TransactionChecksum if (Decred) Return O Display
-output Ask for confirmation
+        Request prevhash I, META                              STAGE_REQUEST_2_PREV_META
+        foreach prevhash I (idx2):
+            Request prevhash I                                STAGE_REQUEST_2_PREV_INPUT
+        foreach prevhash O (idx2):
+            Request prevhash O                                STAGE_REQUEST_2_PREV_OUTPUT
+            Add amount of prevhash O (which is amount of I)
+        Request prevhash extra data (if applicable)           STAGE_REQUEST_2_PREV_EXTRADATA
+        Calculate hash of streamed tx, compare to prevhash I
+foreach O (idx1):
+    Request O                                                 STAGE_REQUEST_3_OUTPUT
+    Add O to Decred decred_hash_prefix
+    Add O to TransactionChecksum
+    if (Decred)
+        Return O
+    Display output
+    Ask for confirmation
 
 Check tx fee
 Ask for confirmation
@@ -157,17 +167,21 @@ if (Decred)
 
 foreach I (idx1):  // input to sign
     if (idx1 is segwit)
-        Request I STAGE_REQUEST_SEGWIT_INPUT Return serialized input chunk
+        Request I                                             STAGE_REQUEST_SEGWIT_INPUT
+        Return serialized input chunk
 
     else
         foreach I (idx2):
-            Request I STAGE_REQUEST_4_INPUT If idx1 == idx2 Fill scriptsig
+            Request I                                         STAGE_REQUEST_4_INPUT
+            If idx1 == idx2
+                Fill scriptsig
                 Remember key for signing
             Add I to StreamTransactionSign
             Add I to TransactionChecksum
         foreach O (idx2):
-            Request O STAGE_REQUEST_4_OUTPUT Add O to StreamTransactionSign Add
-O to TransactionChecksum
+            Request O                                         STAGE_REQUEST_4_OUTPUT
+            Add O to StreamTransactionSign
+            Add O to TransactionChecksum
 
         Compare TransactionChecksum with checksum computed in Phase 1
         If different:
@@ -176,24 +190,32 @@ O to TransactionChecksum
         Return signed chunk
 
 foreach O (idx1):
-    Request O STAGE_REQUEST_5_OUTPUT Rewrite change address Return O
+    Request O                                                 STAGE_REQUEST_5_OUTPUT
+	Rewrite change address
+	Return O
 
 
 Phase3: sign segwit inputs, check that nothing changed
 ===============================================
 
 foreach I (idx1):  // input to sign
-    Request I STAGE_REQUEST_SEGWIT_WITNESS Check amount Sign  segwit prevhash,
-sequence, amount, outputs Return witness
+    Request I                                                 STAGE_REQUEST_SEGWIT_WITNESS
+	Check amount
+	Sign  segwit prevhash, sequence, amount, outputs
+	Return witness
 
 Phase3: sign Decred inputs
 ==========================
 
-foreach I (idx1): // input to sign STAGE_REQUEST_DECRED_WITNESS Request I Fill
-scriptSig Compute hash_witness
+foreach I (idx1): // input to sign                            STAGE_REQUEST_DECRED_WITNESS
+    Request I
+	Fill scriptSig
+	Compute hash_witness
 
     Sign (hash_type || decred_hash_prefix || hash_witness)
     Return witness
+
+clang-format on
 */
 
 void send_req_1_input(void) {
