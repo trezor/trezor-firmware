@@ -61,7 +61,7 @@ def test_recovery(client):
     assert "You have successfully recovered your wallet" in text
     text = click_ok(client.debug)
 
-    assert text == "Homescreen"
+    assert text == "__RESTART__"
     client.init_device()
     assert client.features.initialized is True
     assert client.features.recovery_mode is False

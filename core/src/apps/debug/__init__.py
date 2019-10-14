@@ -4,10 +4,10 @@ if not __debug__:
     halt("debug mode inactive")
 
 if __debug__:
-    from trezor import config, io, log, loop, utils
+    from trezor import io, log, loop
     from trezor.messages import MessageType, DebugSwipeDirection
     from trezor.messages.DebugLinkLayout import DebugLinkLayout
-    from trezor.wire import register
+    from trezor.wire import register, FirmwareError
 
     if False:
         from typing import List, Optional
@@ -37,6 +37,14 @@ if __debug__:
         current_content = layout.read_content()
         if layout_change_chan.takers:
             layout_change_chan.publish(current_content)
+
+    async def close_listeners():
+        if layout_change_chan.takers:
+            await layout_change_chan.put(["__RESTART__"])
+        if reset_current_words.takers:
+            await reset_current_words.put(FirmwareError("__RESTART__"))
+        if reset_word_index.takers:
+            await reset_word_index.put(FirmwareError("__RESTART__"))
 
     async def debuglink_decision_dispatcher():
         from trezor.ui import confirm, swipe

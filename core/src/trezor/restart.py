@@ -2,11 +2,13 @@ from trezor import loop, wire, workflow
 
 if __debug__:
     from trezor import log
+    from apps.debug import close_listeners
 
 
 async def _perform_restart() -> None:
     if __debug__:
         log.debug(__name__, "restarting")
+        await close_listeners()
 
     workflow.clear()
     loop.clear()
