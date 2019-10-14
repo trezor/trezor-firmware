@@ -12,10 +12,8 @@
   "minfee_kb": 3000,
   "signed_message_header": "DarkNet Signed Message:\n",
   "hash_genesis_block": "3ee1620fa1706966da5e5182a664220691491bdfd9289a73cadf6244fa5dccb5",
-  ### THE below 2 TODO AND THIS COMMENT LINE TO BE REMOVED.
   "xprv_magic": 76066276,
   "xpub_magic": 76067358,
-  ### THE REST is correct.
   "xpub_magic_segwit_p2sh": null,
   "xpub_magic_segwit_native": null,
   "bech32_prefix": null,
