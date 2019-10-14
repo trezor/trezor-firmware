@@ -12,7 +12,11 @@ del sys.modules["boot"]
 def _initialize():
     # prepare the USB interfaces, but do not connect to the host yet
     import usb
-    from trezor import utils
+    from trezor import config, utils
+
+    # wipe storage when debug build is used on real hardware
+    if __debug__ and not utils.EMULATOR:
+        config.wipe()
 
     # start the USB
     usb.bus.open()

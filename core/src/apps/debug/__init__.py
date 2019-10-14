@@ -99,9 +99,5 @@ if __debug__:
         return m
 
     def boot() -> None:
-        # wipe storage when debug build is used on real hardware
-        if not utils.EMULATOR:
-            config.wipe()
-
         register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)
         register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)
