@@ -7,6 +7,6 @@
 	remote = git+ssh://git@github.com/trezor/trezor-common
 	branch = master
 	commit = 3cd4b8eaabab9c1a88c219bcf824b696a8eb5478
-	parent = d498b1a92150305bffa0389cf86a3d5b7684d311
+	parent = 533d9c67943789cc0d5d3e550ed913bcff0211ab
 	method = rebase
 	cmdver = 0.4.0
