@@ -113,7 +113,8 @@
             "Github": "https://github.com/tezos/tezos"
         },
         "wallet": {
-            "SimpleStaking": "https://simplestaking.com"
+            "SimpleStaking": "https://simplestaking.com",
+            "Magnum": "https://magnumwallet.co"
         },
         "blockchain_link": null
     },

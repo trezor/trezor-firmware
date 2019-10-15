@@ -18,6 +18,7 @@
         "ElectrumG": "https://github.com/BTCGPU/electrum"
     },
     "bitcoin:BTX": {
+        "Magnum": "https://magnumwallet.co",
         "Electrum-BTX": "https://github.com/LIMXTEC/electrum-btx"
     },
     "bitcoin:CPC": {
@@ -28,6 +29,9 @@
     },
     "bitcoin:DASH": {
         "Dash Electrum": "https://electrum.dash.org"
+    },
+    "bitcoin:DCR": {
+        "Exodus": "https://www.exodus.io"
     },
     "bitcoin:FJC": {
         "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
@@ -40,6 +44,9 @@
     },
     "bitcoin:GRS": {
         "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet"
+    },
+    "bitcoin:KMD": {
+        "Magnum": "https://magnumwallet.co"
     },
     "bitcoin:KOTO": {
         "Electrum-KOTO": "https://electrum.kotocoin.info"
