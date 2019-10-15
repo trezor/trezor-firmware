@@ -122,5 +122,8 @@
     },
     "bitcoin:XSN": {
         "Stakenet": "https://xsnexplorer.io/trezor"
+    },
+    "bitcoin:SYS": {
+        "Electrum-SYS": "https://github.com/syscoin/electrum"
     }
 }
