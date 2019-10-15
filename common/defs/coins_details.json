@@ -5,7 +5,7 @@
                 "Github": "https://github.com/Actinium-project/Actinium",
                 "Homepage": "https://actinium.org"
             },
-            "marketcap_usd": 1018564,
+            "marketcap_usd": 927029,
             "name": "Actinium",
             "shortcut": "ACM",
             "t1_enabled": "yes",
@@ -23,7 +23,7 @@
                 "Github": "https://github.com/axerunners/axe",
                 "Homepage": "https://axerunners.com"
             },
-            "marketcap_usd": 3642881,
+            "marketcap_usd": 3651941,
             "name": "Axe",
             "shortcut": "AXE",
             "t1_enabled": "yes",
@@ -36,7 +36,7 @@
                 "Github": "https://github.com/Bitcoin-ABC/bitcoin-abc",
                 "Homepage": "https://www.bitcoincash.org"
             },
-            "marketcap_usd": 4074615424,
+            "marketcap_usd": 4058563650,
             "name": "Bitcoin Cash",
             "shortcut": "BCH",
             "t1_enabled": "yes",
@@ -50,6 +50,10 @@
                 {
                     "name": "Electron Cash",
                     "url": "https://electroncash.org"
+                },
+                {
+                    "name": "Exodus",
+                    "url": "https://www.exodus.io"
                 }
             ]
         },
@@ -76,7 +80,7 @@
                 "Github": "https://github.com/WillyTheCat/BitCash",
                 "Homepage": "https://www.choosebitcash.com"
             },
-            "marketcap_usd": 379695,
+            "marketcap_usd": 384584,
             "name": "BitCash",
             "shortcut": "BITC",
             "t1_enabled": "yes",
@@ -89,7 +93,7 @@
                 "Github": "https://github.com/bitgreen/bitgreen",
                 "Homepage": "https://bitg.org"
             },
-            "marketcap_usd": 1185950,
+            "marketcap_usd": 1190273,
             "name": "BitGreen",
             "shortcut": "BITG",
             "t1_enabled": "yes",
@@ -102,7 +106,7 @@
                 "Github": "https://github.com/LIMXTEC/BitSend",
                 "Homepage": "https://bitsend.info"
             },
-            "marketcap_usd": 164891,
+            "marketcap_usd": 153593,
             "name": "Bitsend",
             "shortcut": "BSD",
             "t1_enabled": "yes",
@@ -115,7 +119,7 @@
                 "Github": "https://github.com/BlockStamp/bst",
                 "Homepage": "https://blockstamp.info"
             },
-            "marketcap_usd": 1126551,
+            "marketcap_usd": 1123550,
             "name": "BlockStamp",
             "shortcut": "BST",
             "t1_enabled": "yes",
@@ -128,7 +132,7 @@
                 "Github": "https://github.com/bitcoin/bitcoin",
                 "Homepage": "https://bitcoin.org"
             },
-            "marketcap_usd": 149812841234,
+            "marketcap_usd": 149391634983,
             "name": "Bitcoin",
             "shortcut": "BTC",
             "t1_enabled": "yes",
@@ -142,6 +146,14 @@
                 {
                     "name": "Electrum",
                     "url": "https://electrum.org"
+                },
+                {
+                    "name": "Exodus",
+                    "url": "https://www.exodus.io"
+                },
+                {
+                    "name": "Magnum",
+                    "url": "https://magnumwallet.co"
                 }
             ]
         },
@@ -150,7 +162,7 @@
                 "Github": "https://github.com/BTCPrivate/BitcoinPrivate",
                 "Homepage": "https://btcprivate.org"
             },
-            "marketcap_usd": 626211,
+            "marketcap_usd": 624465,
             "name": "Bitcoin Private",
             "shortcut": "BTCP",
             "t1_enabled": "yes",
@@ -168,7 +180,7 @@
                 "Github": "https://github.com/LIMXTEC/Bitcloud",
                 "Homepage": "https://bit-cloud.info"
             },
-            "marketcap_usd": 58666,
+            "marketcap_usd": 53236,
             "name": "Bitcloud",
             "shortcut": "BTDX",
             "t1_enabled": "yes",
@@ -181,7 +193,7 @@
                 "Github": "https://github.com/BTCGPU/BTCGPU",
                 "Homepage": "https://bitcoingold.org"
             },
-            "marketcap_usd": 142499296,
+            "marketcap_usd": 145831136,
             "name": "Bitcoin Gold",
             "shortcut": "BTG",
             "t1_enabled": "yes",
@@ -195,6 +207,10 @@
                 {
                     "name": "ElectrumG",
                     "url": "https://github.com/BTCGPU/electrum"
+                },
+                {
+                    "name": "Exodus",
+                    "url": "https://www.exodus.io"
                 }
             ]
         },
@@ -203,7 +219,7 @@
                 "Github": "https://github.com/LIMXTEC/BitCore",
                 "Homepage": "https://bitcore.cc"
             },
-            "marketcap_usd": 3717828,
+            "marketcap_usd": 3931699,
             "name": "Bitcore",
             "shortcut": "BTX",
             "t1_enabled": "yes",
@@ -225,7 +241,7 @@
                 "Github": "https://github.com/Capricoinofficial/Capricoin",
                 "Homepage": "https://capricoin.org"
             },
-            "marketcap_usd": 161477,
+            "marketcap_usd": 161098,
             "name": "Capricoin",
             "shortcut": "CPC",
             "t1_enabled": "no",
@@ -243,7 +259,7 @@
                 "Github": "https://github.com/cpuchain/cpuchain",
                 "Homepage": "https://cpuchain.org"
             },
-            "marketcap_usd": 19126,
+            "marketcap_usd": 19101,
             "name": "CPUchain",
             "shortcut": "CPU",
             "t1_enabled": "yes",
@@ -261,7 +277,7 @@
                 "Github": "https://github.com/Crowndev/crowncoin",
                 "Homepage": "https://crownplatform.com"
             },
-            "marketcap_usd": 1295643,
+            "marketcap_usd": 1257442,
             "name": "Crown",
             "shortcut": "CRW",
             "t1_enabled": "soon",
@@ -274,7 +290,7 @@
                 "Github": "https://github.com/dashpay/dash",
                 "Homepage": "https://www.dash.org"
             },
-            "marketcap_usd": 661884436,
+            "marketcap_usd": 660471831,
             "name": "Dash",
             "shortcut": "DASH",
             "t1_enabled": "yes",
@@ -288,6 +304,14 @@
                 {
                     "name": "Dash Electrum",
                     "url": "https://electrum.dash.org"
+                },
+                {
+                    "name": "Exodus",
+                    "url": "https://www.exodus.io"
+                },
+                {
+                    "name": "Magnum",
+                    "url": "https://magnumwallet.co"
                 }
             ]
         },
@@ -296,7 +320,7 @@
                 "Github": "https://github.com/decred/dcrd",
                 "Homepage": "https://www.decred.org"
             },
-            "marketcap_usd": 167277565,
+            "marketcap_usd": 166993531,
             "name": "Decred",
             "shortcut": "DCR",
             "t1_enabled": "yes",
@@ -314,7 +338,7 @@
                 "Github": "https://github.com/digibyte/digibyte",
                 "Homepage": "https://digibyte.io"
             },
-            "marketcap_usd": 103827839,
+            "marketcap_usd": 102926899,
             "name": "DigiByte",
             "shortcut": "DGB",
             "t1_enabled": "yes",
@@ -324,6 +348,10 @@
                 {
                     "name": "Trezor",
                     "url": "https://wallet.trezor.io"
+                },
+                {
+                    "name": "Exodus",
+                    "url": "https://www.exodus.io"
                 }
             ]
         },
@@ -333,7 +361,7 @@
                 "Github": "https://github.com/carsenk/denarius",
                 "Homepage": "https://denarius.io"
             },
-            "marketcap_usd": 424345,
+            "marketcap_usd": 425930,
             "name": "Denarius",
             "shortcut": "DNR",
             "t1_enabled": "yes",
@@ -346,7 +374,7 @@
                 "Github": "https://github.com/dogecoin/dogecoin",
                 "Homepage": "https://dogecoin.com"
             },
-            "marketcap_usd": 310641706,
+            "marketcap_usd": 308581126,
             "name": "Dogecoin",
             "shortcut": "DOGE",
             "t1_enabled": "yes",
@@ -356,6 +384,14 @@
                 {
                     "name": "Trezor",
                     "url": "https://wallet.trezor.io"
+                },
+                {
+                    "name": "Exodus",
+                    "url": "https://www.exodus.io"
+                },
+                {
+                    "name": "Magnum",
+                    "url": "https://magnumwallet.co"
                 }
             ]
         },
@@ -377,7 +413,7 @@
                 "Github": "https://github.com/faircoin/faircoin",
                 "Homepage": "https://www.faircoin.world"
             },
-            "marketcap_usd": 1770341,
+            "marketcap_usd": 1765336,
             "name": "FairCoin",
             "shortcut": "FAIR",
             "t1_enabled": "yes",
@@ -390,7 +426,7 @@
                 "Github": "https://github.com/fujicoin/fujicoin",
                 "Homepage": "https://fujicoin.org"
             },
-            "marketcap_usd": 190240,
+            "marketcap_usd": 190250,
             "name": "Fujicoin",
             "shortcut": "FJC",
             "t1_enabled": "yes",
@@ -408,7 +444,7 @@
                 "Github": "https://github.com/floblockchain/flo",
                 "Homepage": "https://flo.cash"
             },
-            "marketcap_usd": 6617417,
+            "marketcap_usd": 6585643,
             "name": "Flo",
             "shortcut": "FLO",
             "t1_enabled": "yes",
@@ -421,7 +457,7 @@
                 "Github": "https://github.com/FeatherCoin/Feathercoin",
                 "Homepage": "https://feathercoin.com"
             },
-            "marketcap_usd": 3037309,
+            "marketcap_usd": 3148136,
             "name": "Feathercoin",
             "shortcut": "FTC",
             "t1_enabled": "yes",
@@ -439,7 +475,7 @@
                 "Github": "https://github.com/gamecredits-project/gamecredits",
                 "Homepage": "https://gamecredits.org"
             },
-            "marketcap_usd": 1449483,
+            "marketcap_usd": 1456454,
             "name": "GameCredits",
             "shortcut": "GAME",
             "t1_enabled": "yes",
@@ -470,7 +506,7 @@
                 "Github": "https://github.com/Groestlcoin/groestlcoin",
                 "Homepage": "https://www.groestlcoin.org"
             },
-            "marketcap_usd": 15455366,
+            "marketcap_usd": 15520031,
             "name": "Groestlcoin",
             "shortcut": "GRS",
             "t1_enabled": "yes",
@@ -501,7 +537,7 @@
                 "Github": "https://github.com/komodoplatform/komodo",
                 "Homepage": "https://komodoplatform.com"
             },
-            "marketcap_usd": 70454045,
+            "marketcap_usd": 69858677,
             "name": "Komodo",
             "shortcut": "KMD",
             "t1_enabled": "yes",
@@ -537,7 +573,7 @@
                 "Github": "https://github.com/litecoin-project/litecoin",
                 "Homepage": "https://litecoin.org"
             },
-            "marketcap_usd": 3537806320,
+            "marketcap_usd": 3523427875,
             "name": "Litecoin",
             "shortcut": "LTC",
             "t1_enabled": "yes",
@@ -551,6 +587,10 @@
                 {
                     "name": "Electrum-LTC",
                     "url": "https://electrum-ltc.org"
+                },
+                {
+                    "name": "Exodus",
+                    "url": "https://www.exodus.io"
                 }
             ]
         },
@@ -559,7 +599,7 @@
                 "Github": "https://github.com/LIMXTEC/Megacoin",
                 "Homepage": "https://www.megacoin.eu"
             },
-            "marketcap_usd": 79679,
+            "marketcap_usd": 79464,
             "name": "Megacoin",
             "shortcut": "MEC",
             "t1_enabled": "yes",
@@ -572,7 +612,7 @@
                 "Github": "https://github.com/monacoinproject/monacoin",
                 "Homepage": "https://monacoin.org"
             },
-            "marketcap_usd": 74672627,
+            "marketcap_usd": 74302917,
             "name": "Monacoin",
             "shortcut": "MONA",
             "t1_enabled": "yes",
@@ -603,7 +643,7 @@
                 "Github": "https://github.com/muecoin/MUE",
                 "Homepage": "https://www.monetaryunit.org"
             },
-            "marketcap_usd": 914521,
+            "marketcap_usd": 911956,
             "name": "MonetaryUnit",
             "shortcut": "MUE",
             "t1_enabled": "yes",
@@ -621,7 +661,7 @@
                 "Github": "https://github.com/nixplatform/nixcore",
                 "Homepage": "https://nixplatform.io"
             },
-            "marketcap_usd": 3249010,
+            "marketcap_usd": 3291659,
             "name": "NIX",
             "shortcut": "NIX",
             "t1_enabled": "yes",
@@ -643,7 +683,7 @@
                 "Github": "https://github.com/namecoin/namecoin-core",
                 "Homepage": "https://namecoin.org"
             },
-            "marketcap_usd": 6719585,
+            "marketcap_usd": 6624979,
             "name": "Namecoin",
             "shortcut": "NMC",
             "t1_enabled": "yes",
@@ -665,7 +705,7 @@
                 "Github": "https://github.com/particl/particl-core",
                 "Homepage": "https://particl.io"
             },
-            "marketcap_usd": 6416314,
+            "marketcap_usd": 6410688,
             "name": "Particl",
             "shortcut": "PART",
             "t1_enabled": "yes",
@@ -683,7 +723,7 @@
                 "Github": "https://github.com/PIVX-Project/PIVX",
                 "Homepage": "https://pivx.org"
             },
-            "marketcap_usd": 14902201,
+            "marketcap_usd": 14827532,
             "name": "PIVX",
             "shortcut": "PIVX",
             "t1_enabled": "yes",
@@ -696,7 +736,7 @@
                 "Github": "https://github.com/polispay/polis",
                 "Homepage": "https://www.polispay.org"
             },
-            "marketcap_usd": 4934550,
+            "marketcap_usd": 5832633,
             "name": "Polis",
             "shortcut": "POLIS",
             "t1_enabled": "yes",
@@ -714,7 +754,7 @@
                 "Github": "https://github.com/FundacionPesetacoin/PesetacoinCore",
                 "Homepage": "https://pesetacoin.info"
             },
-            "marketcap_usd": 174282,
+            "marketcap_usd": 173773,
             "name": "Pesetacoin",
             "shortcut": "PTC",
             "t1_enabled": "yes",
@@ -727,7 +767,7 @@
                 "Github": "https://github.com/qtumproject/qtum",
                 "Homepage": "https://qtum.org"
             },
-            "marketcap_usd": 173063617,
+            "marketcap_usd": 172313100,
             "name": "Qtum",
             "shortcut": "QTUM",
             "t1_enabled": "yes",
@@ -758,7 +798,7 @@
                 "Github": "https://github.com/RavenProject/Ravencoin",
                 "Homepage": "https://ravencoin.org"
             },
-            "marketcap_usd": 163165378,
+            "marketcap_usd": 162890528,
             "name": "Ravencoin",
             "shortcut": "RVN",
             "t1_enabled": "yes",
@@ -780,7 +820,7 @@
                 "Github": "https://github.com/SmartCash/Core-Smart",
                 "Homepage": "https://smartcash.cc"
             },
-            "marketcap_usd": 3905584,
+            "marketcap_usd": 3901354,
             "name": "SmartCash",
             "shortcut": "SMART",
             "t1_enabled": "yes",
@@ -811,7 +851,7 @@
                 "Github": "https://github.com/unobtanium-official/unobtanium",
                 "Homepage": "https://unobtanium.uno"
             },
-            "marketcap_usd": 10442174,
+            "marketcap_usd": 10512272,
             "name": "Unobtanium",
             "shortcut": "UNO",
             "t1_enabled": "soon",
@@ -829,7 +869,7 @@
                 "Github": "https://github.com/viacoin",
                 "Homepage": "https://viacoin.org"
             },
-            "marketcap_usd": 5061037,
+            "marketcap_usd": 5044465,
             "name": "Viacoin",
             "shortcut": "VIA",
             "t1_enabled": "yes",
@@ -865,7 +905,7 @@
                 "Github": "https://github.com/vertcoin-project/vertcoin-core",
                 "Homepage": "https://vertcoin.org"
             },
-            "marketcap_usd": 11804962,
+            "marketcap_usd": 11796309,
             "name": "Vertcoin",
             "shortcut": "VTC",
             "t1_enabled": "yes",
@@ -883,7 +923,7 @@
                 "Github": "https://github.com/myriadteam/myriadcoin",
                 "Homepage": "https://www.myriadcoin.org"
             },
-            "marketcap_usd": 1557715,
+            "marketcap_usd": 1553261,
             "name": "Myriad",
             "shortcut": "XMY",
             "t1_enabled": "yes",
@@ -896,7 +936,7 @@
                 "Github": "https://github.com/primecoin/primecoin",
                 "Homepage": "https://primecoin.io"
             },
-            "marketcap_usd": 2770402,
+            "marketcap_usd": 2805174,
             "name": "Primecoin",
             "shortcut": "XPM",
             "t1_enabled": "yes",
@@ -909,7 +949,7 @@
                 "Github": "https://gitlab.com/bitcoinrh/BRhodiumNode",
                 "Homepage": "https://www.bitcoinrh.org"
             },
-            "marketcap_usd": 7373344,
+            "marketcap_usd": 7166429,
             "name": "Bitcoin Rhodium",
             "shortcut": "XRC",
             "t1_enabled": "yes",
@@ -927,7 +967,7 @@
                 "Github": "https://github.com/X9Developers/XSN",
                 "Homepage": "https://stakenet.io"
             },
-            "marketcap_usd": 3847135,
+            "marketcap_usd": 3851724,
             "name": "Stakenet",
             "shortcut": "XSN",
             "t1_enabled": "yes",
@@ -945,7 +985,7 @@
                 "Github": "https://github.com/zcoinofficial/zcoin",
                 "Homepage": "https://zcoin.io"
             },
-            "marketcap_usd": 45727373,
+            "marketcap_usd": 45198679,
             "name": "Zcoin",
             "shortcut": "XZC",
             "t1_enabled": "yes",
@@ -967,7 +1007,7 @@
                 "Github": "https://github.com/ZclassicCommunity",
                 "Homepage": "https://zclassic.org"
             },
-            "marketcap_usd": 1527875,
+            "marketcap_usd": 1523879,
             "name": "ZClassic",
             "shortcut": "ZCL",
             "t1_enabled": "yes",
@@ -980,7 +1020,7 @@
                 "Github": "https://github.com/zcore-coin/zcore-2.0",
                 "Homepage": "https://zcore.cash"
             },
-            "marketcap_usd": 213466,
+            "marketcap_usd": 215831,
             "name": "ZCore",
             "shortcut": "ZCR",
             "t1_enabled": "soon",
@@ -993,7 +1033,7 @@
                 "Github": "https://github.com/zcash/zcash",
                 "Homepage": "https://z.cash"
             },
-            "marketcap_usd": 282336451,
+            "marketcap_usd": 283159676,
             "name": "Zcash",
             "shortcut": "ZEC",
             "t1_enabled": "yes",
@@ -1003,6 +1043,14 @@
                 {
                     "name": "Trezor",
                     "url": "https://wallet.trezor.io"
+                },
+                {
+                    "name": "Exodus",
+                    "url": "https://www.exodus.io"
+                },
+                {
+                    "name": "Magnum",
+                    "url": "https://magnumwallet.co"
                 }
             ]
         },
@@ -1037,7 +1085,7 @@
                 "Github": "https://github.com/BitzenyCoreDevelopers/bitzeny",
                 "Homepage": "https://bitzeny.tech"
             },
-            "marketcap_usd": 132117,
+            "marketcap_usd": 131743,
             "name": "BitZeny",
             "shortcut": "ZNY",
             "t1_enabled": "yes",
@@ -1138,7 +1186,7 @@
                 "Github": "https://github.com/HurifyPlatform",
                 "Homepage": "https://hurify.co/"
             },
-            "marketcap_usd": 83629,
+            "marketcap_usd": 83159,
             "name": "$Hurify Token",
             "network": "eth",
             "shortcut": "$HUR",
@@ -1176,7 +1224,7 @@
             "links": {
                 "Homepage": "https://0xbitcoin.org/"
             },
-            "marketcap_usd": 678521,
+            "marketcap_usd": 674487,
             "name": "0xBitcoin",
             "network": "eth",
             "shortcut": "0xBTC",
@@ -1196,7 +1244,7 @@
                 "Github": "https://github.com/MarsBlockchain/1sg-contract",
                 "Homepage": "https://www.1.sg"
             },
-            "marketcap_usd": 1581012,
+            "marketcap_usd": 1584205,
             "name": "1SG",
             "network": "eth",
             "shortcut": "1SG",
@@ -1215,7 +1263,7 @@
             "links": {
                 "Homepage": "https://firstblood.io"
             },
-            "marketcap_usd": 8593751,
+            "marketcap_usd": 8992335,
             "name": "FirstBlood",
             "network": "eth",
             "shortcut": "1ST",
@@ -1311,7 +1359,7 @@
             "links": {
                 "Homepage": "https://www.arcblock.io"
             },
-            "marketcap_usd": 15690823,
+            "marketcap_usd": 15558902,
             "name": "ArcBlock Token",
             "network": "eth",
             "shortcut": "ABT",
@@ -1331,7 +1379,7 @@
                 "Github": "https://github.com/theabyssportal",
                 "Homepage": "https://www.theabyss.com"
             },
-            "marketcap_usd": 2416051,
+            "marketcap_usd": 2342698,
             "name": "The Abyss",
             "network": "eth",
             "shortcut": "ABYSS",
@@ -1369,7 +1417,7 @@
             "links": {
                 "Homepage": "https://tokenstars.com/en/ace"
             },
-            "marketcap_usd": 280540,
+            "marketcap_usd": 279888,
             "name": "ACE (TokenStars)",
             "network": "eth",
             "shortcut": "ACE",
@@ -1388,7 +1436,7 @@
             "links": {
                 "Homepage": "https://adbank.network"
             },
-            "marketcap_usd": 367513,
+            "marketcap_usd": 365222,
             "name": "adbank",
             "network": "eth",
             "shortcut": "ADB",
@@ -1407,7 +1455,7 @@
             "links": {
                 "Homepage": "https://adhive.tv"
             },
-            "marketcap_usd": 153031,
+            "marketcap_usd": 152599,
             "name": "AdHive Token",
             "network": "eth",
             "shortcut": "ADH",
@@ -1427,7 +1475,7 @@
                 "Github": "https://github.com/aditus",
                 "Homepage": "https://aditus.net"
             },
-            "marketcap_usd": 177506,
+            "marketcap_usd": 179099,
             "name": "Aditus",
             "network": "eth",
             "shortcut": "ADI",
@@ -1447,7 +1495,7 @@
                 "Github": "https://github.com/adelecosystem",
                 "Homepage": "https://adel.io"
             },
-            "marketcap_usd": 118965,
+            "marketcap_usd": 130664,
             "name": "Adelphoi",
             "network": "eth",
             "shortcut": "ADL",
@@ -1486,7 +1534,7 @@
                 "Github": "https://github.com/adchain",
                 "Homepage": "https://adtoken.com"
             },
-            "marketcap_usd": 2412173,
+            "marketcap_usd": 2378425,
             "name": "AdToken",
             "network": "eth",
             "shortcut": "ADT",
@@ -1506,7 +1554,7 @@
                 "Github": "https://github.com/AdExBlockchain",
                 "Homepage": "https://www.adex.network"
             },
-            "marketcap_usd": 6287917,
+            "marketcap_usd": 6306380,
             "name": "AdEx Network",
             "network": "eth",
             "shortcut": "ADX",
@@ -1586,7 +1634,7 @@
                 "Github": "https://github.com/singnet/singnet",
                 "Homepage": "https://singularitynet.io"
             },
-            "marketcap_usd": 11990370,
+            "marketcap_usd": 11958471,
             "name": "SingularityNET",
             "network": "eth",
             "shortcut": "AGI",
@@ -1624,7 +1672,7 @@
             "links": {
                 "Homepage": "https://www.aidcoin.co"
             },
-            "marketcap_usd": 686935,
+            "marketcap_usd": 685998,
             "name": "AidCoin",
             "network": "eth",
             "shortcut": "AID",
@@ -1741,7 +1789,7 @@
             "links": {
                 "Homepage": "http://ailink.in"
             },
-            "marketcap_usd": 170043,
+            "marketcap_usd": 162649,
             "name": "AiLink Token",
             "network": "eth",
             "shortcut": "ALI",
@@ -1761,7 +1809,7 @@
                 "Github": "https://github.com/AlisProject",
                 "Homepage": "https://alismedia.jp"
             },
-            "marketcap_usd": 1423237,
+            "marketcap_usd": 1212883,
             "name": "ALIS Token",
             "network": "eth",
             "shortcut": "ALIS",
@@ -1819,7 +1867,7 @@
                 "Github": "https://github.com/ambrosus",
                 "Homepage": "https://ambrosus.com/index.html"
             },
-            "marketcap_usd": 5496161,
+            "marketcap_usd": 5503849,
             "name": "Amber Token",
             "network": "eth",
             "shortcut": "AMB",
@@ -1859,7 +1907,7 @@
                 "Github": "https://github.com/amlt-by-coinfirm",
                 "Homepage": "https://amlt.coinfirm.io/"
             },
-            "marketcap_usd": 1842411,
+            "marketcap_usd": 1851120,
             "name": "AMLT",
             "network": "eth",
             "shortcut": "AMLT",
@@ -1879,7 +1927,7 @@
                 "Github": "https://github.com/amontech",
                 "Homepage": "https://amon.tech"
             },
-            "marketcap_usd": 521005,
+            "marketcap_usd": 516717,
             "name": "Amon",
             "network": "eth",
             "shortcut": "AMN",
@@ -1899,7 +1947,7 @@
                 "Github": "https://github.com/AMO-Project/",
                 "Homepage": "https://amo.foundation"
             },
-            "marketcap_usd": 1735273,
+            "marketcap_usd": 1737906,
             "name": "AMO Coin",
             "network": "eth",
             "shortcut": "AMO",
@@ -1937,7 +1985,7 @@
             "links": {
                 "Homepage": "https://aragon.org"
             },
-            "marketcap_usd": 26559111,
+            "marketcap_usd": 26728346,
             "name": "Aragon",
             "network": "eth",
             "shortcut": "ANT",
@@ -1956,7 +2004,7 @@
             "links": {
                 "Homepage": "https://www.aurorachain.io"
             },
-            "marketcap_usd": 51193161,
+            "marketcap_usd": 53136729,
             "name": "Aurora",
             "network": "eth",
             "shortcut": "AOA",
@@ -1976,7 +2024,7 @@
                 "Github": "https://github.com/Oxchild/crowdsale",
                 "Homepage": "https://apisplatform.io"
             },
-            "marketcap_usd": 3615907,
+            "marketcap_usd": 3507095,
             "name": "APIS",
             "network": "eth",
             "shortcut": "APIS",
@@ -1996,7 +2044,7 @@
                 "Github": "https://github.com/Aptoide/AppCoins-ethereumj",
                 "Homepage": "https://appcoins.io"
             },
-            "marketcap_usd": 3783106,
+            "marketcap_usd": 3717156,
             "name": "AppCoins",
             "network": "eth",
             "shortcut": "APPC",
@@ -2054,7 +2102,7 @@
             "links": {
                 "Homepage": "https://www.arbitragect.com"
             },
-            "marketcap_usd": 34830,
+            "marketcap_usd": 34731,
             "name": "ArbitrageCT",
             "network": "eth",
             "shortcut": "ARCT",
@@ -2093,7 +2141,7 @@
             "links": {
                 "Homepage": "https://aeron.aero"
             },
-            "marketcap_usd": 4538279,
+            "marketcap_usd": 4527319,
             "name": "Aeron",
             "network": "eth",
             "shortcut": "ARN",
@@ -2112,7 +2160,7 @@
             "links": {
                 "Homepage": "http://www.maecenas.co"
             },
-            "marketcap_usd": 1948765,
+            "marketcap_usd": 1941270,
             "name": "Maecenas",
             "network": "eth",
             "shortcut": "ART",
@@ -2171,7 +2219,7 @@
             "links": {
                 "Homepage": "https://www.blockarray.com"
             },
-            "marketcap_usd": 41601,
+            "marketcap_usd": 40114,
             "name": "Block Array",
             "network": "eth",
             "shortcut": "ARY",
@@ -2190,7 +2238,7 @@
             "links": {
                 "Homepage": "https://airswap.io"
             },
-            "marketcap_usd": 4298760,
+            "marketcap_usd": 4277736,
             "name": "Airswap",
             "network": "eth",
             "shortcut": "AST",
@@ -2209,7 +2257,7 @@
             "links": {
                 "Homepage": "https://atlant.io"
             },
-            "marketcap_usd": 883793,
+            "marketcap_usd": 845129,
             "name": "ATLANT",
             "network": "eth",
             "shortcut": "ATL",
@@ -2248,7 +2296,7 @@
                 "Github": "https://github.com/atonomi",
                 "Homepage": "https://atonomi.io"
             },
-            "marketcap_usd": 178641,
+            "marketcap_usd": 178411,
             "name": "Atonomi",
             "network": "eth",
             "shortcut": "ATMI",
@@ -2306,7 +2354,7 @@
             "links": {
                 "Homepage": "https://www.aston.company"
             },
-            "marketcap_usd": 185108,
+            "marketcap_usd": 279529,
             "name": "Aston",
             "network": "eth",
             "shortcut": "ATX",
@@ -2325,7 +2373,7 @@
             "links": {
                 "Homepage": "https://auctus.org"
             },
-            "marketcap_usd": 150788,
+            "marketcap_usd": 151478,
             "name": "Auctus",
             "network": "eth",
             "shortcut": "AUC",
@@ -2363,7 +2411,7 @@
             "links": {
                 "Homepage": "https://cubeint.io"
             },
-            "marketcap_usd": 4478490,
+            "marketcap_usd": 4532323,
             "name": "Cube",
             "network": "eth",
             "shortcut": "AUTO",
@@ -2402,7 +2450,7 @@
             "links": {
                 "Homepage": "https://aventus.io"
             },
-            "marketcap_usd": 680974,
+            "marketcap_usd": 611216,
             "name": "Aventus",
             "network": "eth",
             "shortcut": "AVT",
@@ -2461,7 +2509,7 @@
                 "Github": "https://www.github.com/axpire",
                 "Homepage": "https://www.axpire.io"
             },
-            "marketcap_usd": 1520572,
+            "marketcap_usd": 1516414,
             "name": "aXpire",
             "network": "eth",
             "shortcut": "AXPR",
@@ -2480,7 +2528,7 @@
             "links": {
                 "Homepage": "https://www.b2bx.exchange"
             },
-            "marketcap_usd": 10338978,
+            "marketcap_usd": 10358190,
             "name": "B2BX",
             "network": "eth",
             "shortcut": "B2BX",
@@ -2499,7 +2547,7 @@
             "links": {
                 "Homepage": "https://www.banca.world"
             },
-            "marketcap_usd": 407116,
+            "marketcap_usd": 401596,
             "name": "Banca",
             "network": "eth",
             "shortcut": "BANCA",
@@ -2557,7 +2605,7 @@
             "links": {
                 "Homepage": "https://basicattentiontoken.org"
             },
-            "marketcap_usd": 311972576,
+            "marketcap_usd": 308561671,
             "name": "Basic Attention Token",
             "network": "eth",
             "shortcut": "BAT",
@@ -2576,7 +2624,7 @@
             "links": {
                 "Homepage": "https://getbabb.com"
             },
-            "marketcap_usd": 933563,
+            "marketcap_usd": 858421,
             "name": "BABB",
             "network": "eth",
             "shortcut": "BAX",
@@ -2595,7 +2643,7 @@
             "links": {
                 "Homepage": "http://bbcoin.tradove.com"
             },
-            "marketcap_usd": 457757,
+            "marketcap_usd": 456400,
             "name": "TraDove B2BCoin",
             "network": "eth",
             "shortcut": "BBC",
@@ -2615,7 +2663,7 @@
                 "Github": "https://github.com/brickblock-io",
                 "Homepage": "https://www.brickblock.io/"
             },
-            "marketcap_usd": 1321724,
+            "marketcap_usd": 1316405,
             "name": "BRICKBLOCK TOKEN",
             "network": "eth",
             "shortcut": "BBK",
@@ -2634,7 +2682,7 @@
             "links": {
                 "Homepage": "http://www.banyanbbt.org"
             },
-            "marketcap_usd": 269344,
+            "marketcap_usd": 268547,
             "name": "Banyan Network",
             "network": "eth",
             "shortcut": "BBN",
@@ -2653,7 +2701,7 @@
             "links": {
                 "Homepage": "https://bigbom.com"
             },
-            "marketcap_usd": 275590,
+            "marketcap_usd": 280252,
             "name": "Bigbom",
             "network": "eth",
             "shortcut": "BBO",
@@ -2790,7 +2838,7 @@
                 "Github": "https://github.com/blockmason",
                 "Homepage": "https://blockmason.io"
             },
-            "marketcap_usd": 3673103,
+            "marketcap_usd": 3651743,
             "name": "BlockMason Credit Protocol Token",
             "network": "eth",
             "shortcut": "BCPT",
@@ -2810,7 +2858,7 @@
                 "Github": "https://github.com/bitcv",
                 "Homepage": "https://bitcv.one/"
             },
-            "marketcap_usd": 35847894,
+            "marketcap_usd": 36522834,
             "name": "BitCapitalVendor Token",
             "network": "eth",
             "shortcut": "BCV",
@@ -2830,7 +2878,7 @@
                 "Github": "https://github.com/bitdegree",
                 "Homepage": "https://bitdegree.org"
             },
-            "marketcap_usd": 197735,
+            "marketcap_usd": 196961,
             "name": "BitDegree Token",
             "network": "eth",
             "shortcut": "BDG",
@@ -2870,7 +2918,7 @@
                 "Github": "https://github.com/Rentberry",
                 "Homepage": "https://rentberry.com"
             },
-            "marketcap_usd": 98526,
+            "marketcap_usd": 113162,
             "name": "Berry",
             "network": "eth",
             "shortcut": "BERRY",
@@ -2890,7 +2938,7 @@
                 "Github": "https://github.com/daocasino",
                 "Homepage": "https://dao.casino"
             },
-            "marketcap_usd": 5300879,
+            "marketcap_usd": 5335377,
             "name": "DAO.Casino",
             "network": "eth",
             "shortcut": "BET",
@@ -2910,7 +2958,7 @@
                 "Github": "https://github.com/bethereumproject",
                 "Homepage": "https://www.bethereum.com/"
             },
-            "marketcap_usd": 265677,
+            "marketcap_usd": 256384,
             "name": "Bethereum",
             "network": "eth",
             "shortcut": "BETHER",
@@ -2930,7 +2978,7 @@
                 "Github": "https://github.com/betterbetting",
                 "Homepage": "https://www.betterbetting.org"
             },
-            "marketcap_usd": 106291,
+            "marketcap_usd": 105928,
             "name": "BetterBetting",
             "network": "eth",
             "shortcut": "BETR",
@@ -3045,7 +3093,7 @@
             "links": {
                 "Homepage": "https://www.bibox.com"
             },
-            "marketcap_usd": 17607861,
+            "marketcap_usd": 17501702,
             "name": "Bibox Token",
             "network": "eth",
             "shortcut": "BIX",
@@ -3103,7 +3151,7 @@
                 "Github": "https://github.com/BankEx",
                 "Homepage": "https://bankex.com/"
             },
-            "marketcap_usd": 1280542,
+            "marketcap_usd": 1257555,
             "name": "BANKEX",
             "network": "eth",
             "shortcut": "BKX",
@@ -3162,7 +3210,7 @@
                 "Github": "https://github.com/hellobloom",
                 "Homepage": "https://hellobloom.io"
             },
-            "marketcap_usd": 2147941,
+            "marketcap_usd": 2306375,
             "name": "Bloom",
             "network": "eth",
             "shortcut": "BLT",
@@ -3182,7 +3230,7 @@
                 "Github": "https://github.com/BlueCrypto",
                 "Homepage": "https://blueprotocol.com/"
             },
-            "marketcap_usd": 343499,
+            "marketcap_usd": 366982,
             "name": "Ethereum Blue",
             "network": "eth",
             "shortcut": "BLUE",
@@ -3240,7 +3288,7 @@
             "links": {
                 "Homepage": "https://bluzelle.com"
             },
-            "marketcap_usd": 5838335,
+            "marketcap_usd": 5830803,
             "name": "Bluzelle",
             "network": "eth",
             "shortcut": "BLZ",
@@ -3260,7 +3308,7 @@
                 "Github": "https://github.com/blackmoonfg",
                 "Homepage": "https://blackmooncrypto.com"
             },
-            "marketcap_usd": 22431696,
+            "marketcap_usd": 21375371,
             "name": "Blackmoon Crypto BMC Token",
             "network": "eth",
             "shortcut": "BMC",
@@ -3299,7 +3347,7 @@
             "links": {
                 "Homepage": "https://www.bitmart.com"
             },
-            "marketcap_usd": 3836294,
+            "marketcap_usd": 3745296,
             "name": "BitMart Token",
             "network": "eth",
             "shortcut": "BMX",
@@ -3357,7 +3405,7 @@
                 "Github": "https://github.com/bancorprotocol",
                 "Homepage": "https://www.bancor.network/discover"
             },
-            "marketcap_usd": 21585193,
+            "marketcap_usd": 21560009,
             "name": "Bancor",
             "network": "eth",
             "shortcut": "BNT",
@@ -3376,7 +3424,7 @@
             "links": {
                 "Homepage": "https://bounty0x.io"
             },
-            "marketcap_usd": 1352234,
+            "marketcap_usd": 1339875,
             "name": "Bounty0x Token",
             "network": "eth",
             "shortcut": "BNTY",
@@ -3395,7 +3443,7 @@
             "links": {
                 "Homepage": "https://bobsrepair.com"
             },
-            "marketcap_usd": 206753,
+            "marketcap_usd": 204980,
             "name": "Bob's repair",
             "network": "eth",
             "shortcut": "BOB",
@@ -3414,7 +3462,7 @@
             "links": {
                 "Homepage": "https://bonpay.com"
             },
-            "marketcap_usd": 87309,
+            "marketcap_usd": 85123,
             "name": "Bonpay",
             "network": "eth",
             "shortcut": "BON",
@@ -3471,7 +3519,7 @@
             "links": {
                 "Homepage": "https://www.bouts.pro"
             },
-            "marketcap_usd": 87631,
+            "marketcap_usd": 87400,
             "name": "BoutsPro",
             "network": "eth",
             "shortcut": "BOUTS",
@@ -3490,7 +3538,7 @@
             "links": {
                 "Homepage": "https://www.goblockparty.com"
             },
-            "marketcap_usd": 526548,
+            "marketcap_usd": 525060,
             "name": "BOXX Token [Blockparty]",
             "network": "eth",
             "shortcut": "BOXX",
@@ -3510,7 +3558,7 @@
                 "Github": "https://github.com/Blockport/tokensale",
                 "Homepage": "https://blockport.io"
             },
-            "marketcap_usd": 387529,
+            "marketcap_usd": 380007,
             "name": "Blockport Token",
             "network": "eth",
             "shortcut": "BPT",
@@ -3529,7 +3577,7 @@
             "links": {
                 "Homepage": "https://www.bitquence.com"
             },
-            "marketcap_usd": 5328038,
+            "marketcap_usd": 5291076,
             "name": "Bitquence",
             "network": "eth",
             "shortcut": "BQX",
@@ -3568,7 +3616,7 @@
                 "Github": "https://github.com/breadwallet",
                 "Homepage": "https://token.breadapp.com/en"
             },
-            "marketcap_usd": 26801940,
+            "marketcap_usd": 26872496,
             "name": "Bread",
             "network": "eth",
             "shortcut": "BRD",
@@ -3858,7 +3906,7 @@
             "links": {
                 "Homepage": "https://biotron.io"
             },
-            "marketcap_usd": 21954,
+            "marketcap_usd": 16418,
             "name": "Biotron",
             "network": "eth",
             "shortcut": "BTRN",
@@ -3897,7 +3945,7 @@
             "links": {
                 "Homepage": "https://blocktrade.com/"
             },
-            "marketcap_usd": 1184520,
+            "marketcap_usd": 1177871,
             "name": "Blocktrade.com",
             "network": "eth",
             "shortcut": "BTTX",
@@ -3917,7 +3965,7 @@
                 "Github": "https://github.com/btuprotocol",
                 "Homepage": "https://btu-protocol.com"
             },
-            "marketcap_usd": 13699795,
+            "marketcap_usd": 13835275,
             "name": "BTU Protocol",
             "network": "eth",
             "shortcut": "BTU",
@@ -3974,7 +4022,7 @@
             "links": {
                 "Homepage": "https://www.bitz.com"
             },
-            "marketcap_usd": 36321771,
+            "marketcap_usd": 36358056,
             "name": "Bit-Z Token",
             "network": "eth",
             "shortcut": "BZ",
@@ -3993,7 +4041,7 @@
             "links": {
                 "Homepage": "https://bezant.io"
             },
-            "marketcap_usd": 3821581,
+            "marketcap_usd": 3792584,
             "name": "Bezant",
             "network": "eth",
             "shortcut": "BZNT",
@@ -4013,7 +4061,7 @@
                 "Github": "https://github.com/cryptotwenty",
                 "Homepage": "https://crypto20.com"
             },
-            "marketcap_usd": 18316396,
+            "marketcap_usd": 18072137,
             "name": "Crypto20's Token",
             "network": "eth",
             "shortcut": "C20",
@@ -4032,7 +4080,7 @@
             "links": {
                 "Homepage": "https://www.carboneum.io"
             },
-            "marketcap_usd": 1371171,
+            "marketcap_usd": 1363474,
             "name": "Carboneum",
             "network": "eth",
             "shortcut": "C8",
@@ -4051,7 +4099,7 @@
             "links": {
                 "Homepage": "https://change-bank.com"
             },
-            "marketcap_usd": 2598382,
+            "marketcap_usd": 2575355,
             "name": "Change Bank",
             "network": "eth",
             "shortcut": "CAG",
@@ -4070,7 +4118,7 @@
             "links": {
                 "Homepage": "https://canya.io"
             },
-            "marketcap_usd": 1152721,
+            "marketcap_usd": 1149038,
             "name": "CanYaCoin",
             "network": "eth",
             "shortcut": "CAN",
@@ -4089,7 +4137,7 @@
             "links": {
                 "Homepage": "https://cappasity.com/tech/"
             },
-            "marketcap_usd": 794394,
+            "marketcap_usd": 786516,
             "name": "Cappasity",
             "network": "eth",
             "shortcut": "CAPP",
@@ -4203,7 +4251,7 @@
             "links": {
                 "Homepage": "https://coin.cashbet.com"
             },
-            "marketcap_usd": 1338779,
+            "marketcap_usd": 1337378,
             "name": "CashBet Coin",
             "network": "eth",
             "shortcut": "CBC",
@@ -4242,7 +4290,7 @@
             "links": {
                 "Homepage": "https://www.commerceblock.com"
             },
-            "marketcap_usd": 7744309,
+            "marketcap_usd": 7715564,
             "name": "CommerceBlock",
             "network": "eth",
             "shortcut": "CBT",
@@ -4357,7 +4405,7 @@
             "links": {
                 "Homepage": "https://ccore.io"
             },
-            "marketcap_usd": 6864,
+            "marketcap_usd": 6826,
             "name": "Ccore",
             "network": "eth",
             "shortcut": "CCO",
@@ -4435,7 +4483,7 @@
             "links": {
                 "Homepage": "https://www.coindash.io"
             },
-            "marketcap_usd": 8068588,
+            "marketcap_usd": 8028193,
             "name": "CoinDash",
             "network": "eth",
             "shortcut": "CDT",
@@ -4454,7 +4502,7 @@
             "links": {
                 "Homepage": "https://www.ceek.com/"
             },
-            "marketcap_usd": 1200220,
+            "marketcap_usd": 1193798,
             "name": "CEEK VR Token",
             "network": "eth",
             "shortcut": "CEEK",
@@ -4473,7 +4521,7 @@
             "links": {
                 "Homepage": "https://www.centrality.ai"
             },
-            "marketcap_usd": 88174988,
+            "marketcap_usd": 80711185,
             "name": "Centrality",
             "network": "eth",
             "shortcut": "CENNZ",
@@ -4570,7 +4618,7 @@
             "links": {
                 "Homepage": "https://coinpoker.com"
             },
-            "marketcap_usd": 1495409,
+            "marketcap_usd": 1479964,
             "name": "CoinPoker",
             "network": "eth",
             "shortcut": "CHP",
@@ -4589,7 +4637,7 @@
             "links": {
                 "Homepage": "https://swissborg.com"
             },
-            "marketcap_usd": 5338976,
+            "marketcap_usd": 5425883,
             "name": "SwissBorg",
             "network": "eth",
             "shortcut": "CHSB",
@@ -4685,7 +4733,7 @@
             "links": {
                 "Homepage": "https://www.coinlancer.io"
             },
-            "marketcap_usd": 166810,
+            "marketcap_usd": 166338,
             "name": "Coinlancer",
             "network": "eth",
             "shortcut": "CL",
@@ -4705,7 +4753,7 @@
                 "Github": "https://github.com/Cloudbric-Project",
                 "Homepage": "https://www.cloudbric.io/"
             },
-            "marketcap_usd": 2110434,
+            "marketcap_usd": 1478334,
             "name": "Cloudbric",
             "network": "eth",
             "shortcut": "CLB",
@@ -4745,7 +4793,7 @@
                 "Github": "https://github.com/colucom/CLN-solidity",
                 "Homepage": "https://cln.network"
             },
-            "marketcap_usd": 2136789,
+            "marketcap_usd": 2183680,
             "name": "ColuLocalNetwork",
             "network": "eth",
             "shortcut": "CLN",
@@ -4821,7 +4869,7 @@
             "links": {
                 "Homepage": "https://crowdmachine.com"
             },
-            "marketcap_usd": 469319,
+            "marketcap_usd": 453290,
             "name": "Crowd Machine Compute Token",
             "network": "eth",
             "shortcut": "CMCT",
@@ -4879,7 +4927,7 @@
             "links": {
                 "Homepage": "https://cindicator.com"
             },
-            "marketcap_usd": 13941053,
+            "marketcap_usd": 13758950,
             "name": "Cindicator",
             "network": "eth",
             "shortcut": "CND",
@@ -4898,7 +4946,7 @@
             "links": {
                 "Homepage": "https://cnntoken.io"
             },
-            "marketcap_usd": 3445047,
+            "marketcap_usd": 3341008,
             "name": "Content Neutrality Network",
             "network": "eth",
             "shortcut": "CNN",
@@ -4957,7 +5005,7 @@
                 "Github": "https://github.com/cobinhood",
                 "Homepage": "https://cobinhood.com"
             },
-            "marketcap_usd": 341961,
+            "marketcap_usd": 340811,
             "name": "Cobinhood Token",
             "network": "eth",
             "shortcut": "COB",
@@ -4977,7 +5025,7 @@
                 "Github": "https://github.com/coinfi",
                 "Homepage": "https://www.coinfi.com"
             },
-            "marketcap_usd": 750123,
+            "marketcap_usd": 766316,
             "name": "CoinFi Token",
             "network": "eth",
             "shortcut": "COFI",
@@ -5054,7 +5102,7 @@
             "links": {
                 "Homepage": "https://covesting.io/"
             },
-            "marketcap_usd": 1345405,
+            "marketcap_usd": 1335355,
             "name": "Covesting",
             "network": "eth",
             "shortcut": "COV",
@@ -5073,7 +5121,7 @@
             "links": {
                 "Homepage": "https://cryptopay.me"
             },
-            "marketcap_usd": 1196331,
+            "marketcap_usd": 1189615,
             "name": "Cryptopay",
             "network": "eth",
             "shortcut": "CPAY",
@@ -5172,7 +5220,7 @@
             "links": {
                 "Homepage": "https://www.creditbit.org"
             },
-            "marketcap_usd": 21093,
+            "marketcap_usd": 21033,
             "name": "Creditbit",
             "network": "eth",
             "shortcut": "CRB",
@@ -5210,7 +5258,7 @@
             "links": {
                 "Homepage": "https://crycash.io"
             },
-            "marketcap_usd": 305398,
+            "marketcap_usd": 304535,
             "name": "CryCash",
             "network": "eth",
             "shortcut": "CRC",
@@ -5249,7 +5297,7 @@
             "links": {
                 "Homepage": "https://bitbounce.io"
             },
-            "marketcap_usd": 3828361,
+            "marketcap_usd": 3781160,
             "name": "Credo / Bitbounce",
             "network": "eth",
             "shortcut": "CREDO",
@@ -5307,7 +5355,7 @@
             "links": {
                 "Homepage": "https://crypterium.io"
             },
-            "marketcap_usd": 49652161,
+            "marketcap_usd": 49273933,
             "name": "CrypteriumToken",
             "network": "eth",
             "shortcut": "CRPT",
@@ -5345,7 +5393,7 @@
             "links": {
                 "Homepage": "https://credits.com/en"
             },
-            "marketcap_usd": 13893247,
+            "marketcap_usd": 13727224,
             "name": "Credits",
             "network": "eth",
             "shortcut": "CS",
@@ -5364,7 +5412,7 @@
             "links": {
                 "Homepage": "https://www.bitdice.me"
             },
-            "marketcap_usd": 2199497,
+            "marketcap_usd": 2193278,
             "name": "BitDice",
             "network": "eth",
             "shortcut": "CSNO",
@@ -5500,7 +5548,7 @@
             "links": {
                 "Homepage": "http://www.cortexlabs.ai"
             },
-            "marketcap_usd": 10788427,
+            "marketcap_usd": 10806587,
             "name": "Cortex",
             "network": "eth",
             "shortcut": "CTXC",
@@ -5519,7 +5567,7 @@
             "links": {
                 "Homepage": "https://www.civic.com"
             },
-            "marketcap_usd": 27632464,
+            "marketcap_usd": 27562443,
             "name": "Civic",
             "network": "eth",
             "shortcut": "CVC",
@@ -5538,7 +5586,7 @@
             "links": {
                 "Homepage": "http://www.cybervein.org"
             },
-            "marketcap_usd": 4563491,
+            "marketcap_usd": 4584415,
             "name": "CyberVein",
             "network": "eth",
             "shortcut": "CVT",
@@ -5578,7 +5626,7 @@
                 "Github": "https://github.com/cargoxio",
                 "Homepage": "https://cargox.io"
             },
-            "marketcap_usd": 1069063,
+            "marketcap_usd": 1067772,
             "name": "CargoX",
             "network": "eth",
             "shortcut": "CXO",
@@ -5597,7 +5645,7 @@
             "links": {
                 "Homepage": "https://cyberfmradio.com"
             },
-            "marketcap_usd": 104590,
+            "marketcap_usd": 103857,
             "name": "CyberFM",
             "network": "eth",
             "shortcut": "CYFM",
@@ -5616,7 +5664,7 @@
             "links": {
                 "Homepage": "https://cybermusic.io"
             },
-            "marketcap_usd": 27118,
+            "marketcap_usd": 26966,
             "name": "CyberMusic",
             "network": "eth",
             "shortcut": "CYMT",
@@ -5635,7 +5683,7 @@
             "links": {
                 "Homepage": "http://www.canonchain.com"
             },
-            "marketcap_usd": 2357583,
+            "marketcap_usd": 2362919,
             "name": "CanonChain",
             "network": "eth",
             "shortcut": "CZR",
@@ -5711,7 +5759,7 @@
             "links": {
                 "Homepage": "https://dadi.cloud"
             },
-            "marketcap_usd": 3562564,
+            "marketcap_usd": 3553034,
             "name": "DADI",
             "network": "eth",
             "shortcut": "DADI",
@@ -5731,7 +5779,7 @@
                 "Github": "https://github.com/makerdao",
                 "Homepage": "https://makerdao.com"
             },
-            "marketcap_usd": 84602134,
+            "marketcap_usd": 85302422,
             "name": "Dai Stablecoin v1.0",
             "network": "eth",
             "shortcut": "DAI",
@@ -5750,7 +5798,7 @@
             "links": {
                 "Homepage": "http://www.dalecoin.org"
             },
-            "marketcap_usd": 2130,
+            "marketcap_usd": 4696,
             "name": "DaleCoin",
             "network": "eth",
             "shortcut": "DALC",
@@ -5770,7 +5818,7 @@
                 "Github": "https://github.com/project-daneel",
                 "Homepage": "https://daneel.io"
             },
-            "marketcap_usd": 68346,
+            "marketcap_usd": 112715,
             "name": "DaneelToken",
             "network": "eth",
             "shortcut": "DAN",
@@ -5808,7 +5856,7 @@
             "links": {
                 "Homepage": "https://datum.org"
             },
-            "marketcap_usd": 980116,
+            "marketcap_usd": 991495,
             "name": "Datum Token",
             "network": "eth",
             "shortcut": "DAT",
@@ -5828,7 +5876,7 @@
                 "Github": "https://github.com/streamr-dev",
                 "Homepage": "https://www.streamr.com"
             },
-            "marketcap_usd": 8560370,
+            "marketcap_usd": 8536328,
             "name": "Streamr DATAcoin",
             "network": "eth",
             "shortcut": "DATA",
@@ -5867,7 +5915,7 @@
             "links": {
                 "Homepage": "https://www.datx.co"
             },
-            "marketcap_usd": 687873,
+            "marketcap_usd": 686292,
             "name": "DATx",
             "network": "eth",
             "shortcut": "DATX",
@@ -5887,7 +5935,7 @@
                 "Github": "https://github.com/DAVFoundation",
                 "Homepage": "https://dav.network/"
             },
-            "marketcap_usd": 146700,
+            "marketcap_usd": 145878,
             "name": "DAV Token",
             "network": "eth",
             "shortcut": "DAV",
@@ -5906,7 +5954,7 @@
             "links": {
                 "Homepage": "https://www.daex.io"
             },
-            "marketcap_usd": 1309771,
+            "marketcap_usd": 1335434,
             "name": "DAEX",
             "network": "eth",
             "shortcut": "DAX",
@@ -5945,7 +5993,7 @@
                 "Github": "https://github.com/chronologic",
                 "Homepage": "https://chronologic.network"
             },
-            "marketcap_usd": 206724,
+            "marketcap_usd": 206519,
             "name": "ChronoLogic DAY",
             "network": "eth",
             "shortcut": "DAY",
@@ -6043,7 +6091,7 @@
                 "Github": "https://github.com/Dentacoin",
                 "Homepage": "https://dentacoin.com"
             },
-            "marketcap_usd": 27440690,
+            "marketcap_usd": 27272111,
             "name": "Dentacoin",
             "network": "eth",
             "shortcut": "DCN",
@@ -6121,7 +6169,7 @@
             "links": {
                 "Homepage": "https://deltachain.tech"
             },
-            "marketcap_usd": 7149,
+            "marketcap_usd": 7108,
             "name": "DeltaChain",
             "network": "eth",
             "shortcut": "DELTA",
@@ -6140,7 +6188,7 @@
             "links": {
                 "Homepage": "https://www.dentwireless.com"
             },
-            "marketcap_usd": 19798072,
+            "marketcap_usd": 19784749,
             "name": "DENT",
             "network": "eth",
             "shortcut": "DENT",
@@ -6178,7 +6226,7 @@
             "links": {
                 "Homepage": "https://www.coinbit.co.kr/"
             },
-            "marketcap_usd": 4168936,
+            "marketcap_usd": 4153333,
             "name": "DEX",
             "network": "eth",
             "shortcut": "DEX",
@@ -6197,7 +6245,7 @@
             "links": {
                 "Homepage": "https://www.dgx.io"
             },
-            "marketcap_usd": 28423711,
+            "marketcap_usd": 28039517,
             "name": "Digix DAO",
             "network": "eth",
             "shortcut": "DGD",
@@ -6257,7 +6305,7 @@
                 "Github": "https://github.com/DigitexFutures",
                 "Homepage": "https://digitexfutures.com/"
             },
-            "marketcap_usd": 29208728,
+            "marketcap_usd": 28478027,
             "name": "DigitexFutures",
             "network": "eth",
             "shortcut": "DGTX",
@@ -6277,7 +6325,7 @@
                 "Github": "https://github.com/DigixGlobal",
                 "Homepage": "https://digix.global"
             },
-            "marketcap_usd": 5612583,
+            "marketcap_usd": 5594562,
             "name": "Digix Gold Token",
             "network": "eth",
             "shortcut": "DGX",
@@ -6335,7 +6383,7 @@
             "links": {
                 "Homepage": "https://inmediate.io"
             },
-            "marketcap_usd": 373987,
+            "marketcap_usd": 372930,
             "name": "Digital Insurance Token",
             "network": "eth",
             "shortcut": "DIT",
@@ -6373,7 +6421,7 @@
             "links": {
                 "Homepage": "https://www.agrello.org"
             },
-            "marketcap_usd": 3850777,
+            "marketcap_usd": 3871674,
             "name": "Agrello",
             "network": "eth",
             "shortcut": "DLT",
@@ -6393,7 +6441,7 @@
                 "Github": "https://github.com/suntechsoft/dmarket-smartcontract",
                 "Homepage": "https://dmarket.com"
             },
-            "marketcap_usd": 3616640,
+            "marketcap_usd": 3605769,
             "name": "DMarket Token",
             "network": "eth",
             "shortcut": "DMT",
@@ -6412,7 +6460,7 @@
             "links": {
                 "Homepage": "https://www.encrypgen.com"
             },
-            "marketcap_usd": 813086,
+            "marketcap_usd": 808521,
             "name": "EncrypGen",
             "network": "eth",
             "shortcut": "DNA",
@@ -6432,7 +6480,7 @@
                 "Github": "https://github.com/district0x",
                 "Homepage": "https://district0x.io"
             },
-            "marketcap_usd": 4388642,
+            "marketcap_usd": 4419485,
             "name": "District0x Network Token",
             "network": "eth",
             "shortcut": "DNT",
@@ -6471,7 +6519,7 @@
             "links": {
                 "Homepage": "https://dock.io"
             },
-            "marketcap_usd": 6861983,
+            "marketcap_usd": 6842965,
             "name": "Dock",
             "network": "eth",
             "shortcut": "DOCK",
@@ -6547,7 +6595,7 @@
             "links": {
                 "Homepage": "https://dreamteam.gg"
             },
-            "marketcap_usd": 2710312,
+            "marketcap_usd": 2779168,
             "name": "DREAM",
             "network": "eth",
             "shortcut": "DREAM",
@@ -6567,7 +6615,7 @@
                 "Github": "https://github.com/dragonchain/dragonchain",
                 "Homepage": "https://dragonchain.com"
             },
-            "marketcap_usd": 9596527,
+            "marketcap_usd": 9581983,
             "name": "Dragon",
             "network": "eth",
             "shortcut": "DRGN",
@@ -6586,7 +6634,7 @@
             "links": {
                 "Homepage": "https://www.dcorp.it"
             },
-            "marketcap_usd": 448054,
+            "marketcap_usd": 464697,
             "name": "DCORP Utility",
             "network": "eth",
             "shortcut": "DRPU",
@@ -6605,7 +6653,7 @@
             "links": {
                 "Homepage": "https://token.domraider.com"
             },
-            "marketcap_usd": 887601,
+            "marketcap_usd": 780501,
             "name": "DomRaider",
             "network": "eth",
             "shortcut": "DRT",
@@ -6704,7 +6752,7 @@
                 "Github": "https://github.com/dethertech",
                 "Homepage": "https://dether.io"
             },
-            "marketcap_usd": 205910,
+            "marketcap_usd": 205165,
             "name": "dether",
             "network": "eth",
             "shortcut": "DTH",
@@ -6723,7 +6771,7 @@
             "links": {
                 "Homepage": "https://www.tokens.net"
             },
-            "marketcap_usd": 56079042,
+            "marketcap_usd": 55755200,
             "name": "Dynamic Trading Rights",
             "network": "eth",
             "shortcut": "DTR",
@@ -6781,7 +6829,7 @@
             "links": {
                 "Homepage": "https://datawallet.com"
             },
-            "marketcap_usd": 595124,
+            "marketcap_usd": 603904,
             "name": "Datawallet",
             "network": "eth",
             "shortcut": "DXT",
@@ -6858,7 +6906,7 @@
             "links": {
                 "Homepage": "https://ebcoin.io"
             },
-            "marketcap_usd": 655128,
+            "marketcap_usd": 657927,
             "name": "EBCoin",
             "network": "eth",
             "shortcut": "EBC",
@@ -6878,7 +6926,7 @@
                 "Github": "https://github.com/eBTCCommunityTrustToken/eBTC",
                 "Homepage": "https://ebitcoin.org"
             },
-            "marketcap_usd": 255582,
+            "marketcap_usd": 254697,
             "name": "eBitcoin",
             "network": "eth",
             "shortcut": "EBTC",
@@ -6935,7 +6983,7 @@
             "links": {
                 "Homepage": "https://omnitude.tech"
             },
-            "marketcap_usd": 4363697,
+            "marketcap_usd": 4339793,
             "name": "Omnitude",
             "network": "eth",
             "shortcut": "ECOM",
@@ -6973,7 +7021,7 @@
             "links": {
                 "Homepage": "https://edgeless.io"
             },
-            "marketcap_usd": 1974917,
+            "marketcap_usd": 1973470,
             "name": "Edgeless",
             "network": "eth",
             "shortcut": "EDG",
@@ -6992,7 +7040,7 @@
             "links": {
                 "Homepage": "https://eidoo.io"
             },
-            "marketcap_usd": 15992606,
+            "marketcap_usd": 16094145,
             "name": "Eidoo",
             "network": "eth",
             "shortcut": "EDO",
@@ -7012,7 +7060,7 @@
                 "Github": "https://github.com/EndorCoin",
                 "Homepage": "https://www.endor.com"
             },
-            "marketcap_usd": 2935396,
+            "marketcap_usd": 2921536,
             "name": "Endor Protocol Token",
             "network": "eth",
             "shortcut": "EDR",
@@ -7032,7 +7080,7 @@
                 "Github": "https://github.com/egretia",
                 "Homepage": "https://www.egretia.io"
             },
-            "marketcap_usd": 8242279,
+            "marketcap_usd": 8179039,
             "name": "Egretia Token",
             "network": "eth",
             "shortcut": "EGT",
@@ -7071,7 +7119,7 @@
             "links": {
                 "Homepage": "https://echolink.info"
             },
-            "marketcap_usd": 1300374,
+            "marketcap_usd": 1305346,
             "name": "EchoLink",
             "network": "eth",
             "shortcut": "EKO",
@@ -7109,7 +7157,7 @@
             "links": {
                 "Homepage": "https://electrify.asia"
             },
-            "marketcap_usd": 370529,
+            "marketcap_usd": 369825,
             "name": "Electrify.Asia",
             "network": "eth",
             "shortcut": "ELEC",
@@ -7129,7 +7177,7 @@
                 "Github": "https://github.com/aelfProject",
                 "Homepage": "https://aelf.io/"
             },
-            "marketcap_usd": 43198533,
+            "marketcap_usd": 43045627,
             "name": "ELF Token",
             "network": "eth",
             "shortcut": "ELF",
@@ -7148,7 +7196,7 @@
             "links": {
                 "Homepage": "https://elixirtoken.io"
             },
-            "marketcap_usd": 69788,
+            "marketcap_usd": 78987,
             "name": "Elixir Token",
             "network": "eth",
             "shortcut": "ELIX",
@@ -7168,7 +7216,7 @@
                 "Github": "https://github.com/eltcoin",
                 "Homepage": "http://www.eltcoin.tech/"
             },
-            "marketcap_usd": 29038,
+            "marketcap_usd": 28814,
             "name": "ELTCOIN",
             "network": "eth",
             "shortcut": "ELTCOIN",
@@ -7188,7 +7236,7 @@
                 "Github": "https://github.com/Elysian-ELY",
                 "Homepage": "https://elycoin.io"
             },
-            "marketcap_usd": 85193,
+            "marketcap_usd": 86029,
             "name": "ELYCOIN",
             "network": "eth",
             "shortcut": "ELY",
@@ -7326,7 +7374,7 @@
                 "Github": "https://github.com/enigmampc",
                 "Homepage": "https://enigma.co/"
             },
-            "marketcap_usd": 23465502,
+            "marketcap_usd": 23175154,
             "name": "Enigma",
             "network": "eth",
             "shortcut": "ENG",
@@ -7345,7 +7393,7 @@
             "links": {
                 "Homepage": "https://engagementtoken.com"
             },
-            "marketcap_usd": 33542,
+            "marketcap_usd": 33442,
             "name": "Engagement Token",
             "network": "eth",
             "shortcut": "ENGT",
@@ -7365,7 +7413,7 @@
                 "Github": "https://github.com/enjin/contracts",
                 "Homepage": "https://enjincoin.io"
             },
-            "marketcap_usd": 48147713,
+            "marketcap_usd": 48494650,
             "name": "ENJIN",
             "network": "eth",
             "shortcut": "ENJ",
@@ -7424,7 +7472,7 @@
             "links": {
                 "Homepage": "https://emphy.io"
             },
-            "marketcap_usd": 123262,
+            "marketcap_usd": 122570,
             "name": "Emphy",
             "network": "eth",
             "shortcut": "EPY",
@@ -7462,7 +7510,7 @@
             "links": {
                 "Homepage": "https://eroscoin.org"
             },
-            "marketcap_usd": 176256,
+            "marketcap_usd": 177679,
             "name": "Eroscoin",
             "network": "eth",
             "shortcut": "ERO",
@@ -7482,7 +7530,7 @@
                 "Github": "https://github.com/Krishtopa/ContractEristica",
                 "Homepage": "https://eristica.com/"
             },
-            "marketcap_usd": 473576,
+            "marketcap_usd": 472234,
             "name": "Eristica",
             "network": "eth",
             "shortcut": "ERT",
@@ -7521,7 +7569,7 @@
             "links": {
                 "Homepage": "https://www.ethbits.com"
             },
-            "marketcap_usd": 796883,
+            "marketcap_usd": 794630,
             "name": "Ethbits",
             "network": "eth",
             "shortcut": "ETBS",
@@ -7559,7 +7607,7 @@
             "links": {
                 "Homepage": "https://www.etgproject.org"
             },
-            "marketcap_usd": 4978,
+            "marketcap_usd": 4964,
             "name": "Ethereum Gold",
             "network": "eth",
             "shortcut": "ETG",
@@ -7636,7 +7684,7 @@
             "links": {
                 "Homepage": "https://stasis.net"
             },
-            "marketcap_usd": 35236507,
+            "marketcap_usd": 35154403,
             "name": "STASIS EURS",
             "network": "eth",
             "shortcut": "EURS",
@@ -7674,7 +7722,7 @@
             "links": {
                 "Homepage": "https://eventchain.io"
             },
-            "marketcap_usd": 79127,
+            "marketcap_usd": 76205,
             "name": "EventChain",
             "network": "eth",
             "shortcut": "EVC",
@@ -7694,7 +7742,7 @@
                 "Github": "https://github.com/devery",
                 "Homepage": "https://devery.io"
             },
-            "marketcap_usd": 59939,
+            "marketcap_usd": 59265,
             "name": "Devery",
             "network": "eth",
             "shortcut": "EVE",
@@ -7713,7 +7761,7 @@
             "links": {
                 "Homepage": "https://everex.io "
             },
-            "marketcap_usd": 8345434,
+            "marketcap_usd": 8286425,
             "name": "EVX Token",
             "network": "eth",
             "shortcut": "EVX",
@@ -7753,7 +7801,7 @@
                 "Github": "https://github.com/eXMRcoin/",
                 "Homepage": "https://exmr.io/"
             },
-            "marketcap_usd": 95275,
+            "marketcap_usd": 94740,
             "name": "eXMRcoin",
             "network": "eth",
             "shortcut": "EXMR",
@@ -7772,7 +7820,7 @@
             "links": {
                 "Homepage": "https://exrnchain.com"
             },
-            "marketcap_usd": 1291082,
+            "marketcap_usd": 1327304,
             "name": "EXRNchain",
             "network": "eth",
             "shortcut": "EXRN",
@@ -7791,7 +7839,7 @@
             "links": {
                 "Homepage": "https://experty.io/en"
             },
-            "marketcap_usd": 351550,
+            "marketcap_usd": 350586,
             "name": "Experty",
             "network": "eth",
             "shortcut": "EXY",
@@ -7868,7 +7916,7 @@
             "links": {
                 "Homepage": "https://tokensale.faceter.io"
             },
-            "marketcap_usd": 508199,
+            "marketcap_usd": 506027,
             "name": "Faceter",
             "network": "eth",
             "shortcut": "FACE",
@@ -7946,7 +7994,7 @@
             "links": {
                 "Homepage": "https://friendz.io"
             },
-            "marketcap_usd": 1281351,
+            "marketcap_usd": 1447485,
             "name": "Friendz",
             "network": "eth",
             "shortcut": "FDZ",
@@ -8025,7 +8073,7 @@
                 "Github": "https://github.com/FortKnoxster",
                 "Homepage": "https://fortknoxster.com"
             },
-            "marketcap_usd": 444204,
+            "marketcap_usd": 448137,
             "name": "Knoxstertoken",
             "network": "eth",
             "shortcut": "FKX",
@@ -8044,7 +8092,7 @@
             "links": {
                 "Homepage": "https://www.flixxo.com"
             },
-            "marketcap_usd": 485451,
+            "marketcap_usd": 483545,
             "name": "Flixxo",
             "network": "eth",
             "shortcut": "FLIXX",
@@ -8063,7 +8111,7 @@
             "links": {
                 "Homepage": "https://firelotto.io"
             },
-            "marketcap_usd": 50294,
+            "marketcap_usd": 50152,
             "name": "Fire Lotto",
             "network": "eth",
             "shortcut": "FLOT",
@@ -8083,7 +8131,7 @@
                 "Github": "https://github.com/gameflip",
                 "Homepage": "https://gameflip.com"
             },
-            "marketcap_usd": 465432,
+            "marketcap_usd": 465752,
             "name": "FLIP Token",
             "network": "eth",
             "shortcut": "FLP",
@@ -8160,7 +8208,7 @@
                 "Github": "https://github.com/FormosaFinancial",
                 "Homepage": "https://www.formosa.financial/"
             },
-            "marketcap_usd": 285999,
+            "marketcap_usd": 196258,
             "name": "Formosa Financial Token",
             "network": "eth",
             "shortcut": "FMF",
@@ -8199,7 +8247,7 @@
             "links": {
                 "Homepage": "https://www.foglink.io"
             },
-            "marketcap_usd": 871159,
+            "marketcap_usd": 866268,
             "name": "FNKOS",
             "network": "eth",
             "shortcut": "FNKOS",
@@ -8238,7 +8286,7 @@
                 "Github": "https://github.com/f-o-a-m",
                 "Homepage": "http://foam.space"
             },
-            "marketcap_usd": 8848175,
+            "marketcap_usd": 8893010,
             "name": "FOAM Token",
             "network": "eth",
             "shortcut": "FOAM",
@@ -8296,7 +8344,7 @@
             "links": {
                 "Homepage": "https://www.fota.io"
             },
-            "marketcap_usd": 902069,
+            "marketcap_usd": 901456,
             "name": "Fortuna",
             "network": "eth",
             "shortcut": "FOTA",
@@ -8354,7 +8402,7 @@
             "links": {
                 "Homepage": "http://www.freyrchain.org"
             },
-            "marketcap_usd": 73030,
+            "marketcap_usd": 72826,
             "name": "Freyrchain",
             "network": "eth",
             "shortcut": "FREC",
@@ -8373,7 +8421,7 @@
             "links": {
                 "Homepage": "https://fusion.org"
             },
-            "marketcap_usd": 10002506,
+            "marketcap_usd": 9944210,
             "name": "Fusion",
             "network": "eth",
             "shortcut": "FSN",
@@ -8411,7 +8459,7 @@
             "links": {
                 "Homepage": "https://fanstime.org"
             },
-            "marketcap_usd": 1753442,
+            "marketcap_usd": 1771195,
             "name": "FansTime",
             "network": "eth",
             "shortcut": "FTI",
@@ -8450,7 +8498,7 @@
                 "Github": "https://github.com/farmatrust",
                 "Homepage": "https://www.farmatrust.io"
             },
-            "marketcap_usd": 513986,
+            "marketcap_usd": 511101,
             "name": "FarmaTrust Token",
             "network": "eth",
             "shortcut": "FTT",
@@ -8469,7 +8517,7 @@
             "links": {
                 "Homepage": "https://www.fintrux.com"
             },
-            "marketcap_usd": 1083182,
+            "marketcap_usd": 1077586,
             "name": "FintruX Network",
             "network": "eth",
             "shortcut": "FTX",
@@ -8489,7 +8537,7 @@
                 "Github": "https://github.com/futuraxproject",
                 "Homepage": "https://futurax.global"
             },
-            "marketcap_usd": 5346,
+            "marketcap_usd": 5304,
             "name": "FUTURAX",
             "network": "eth",
             "shortcut": "FTXT",
@@ -8509,7 +8557,7 @@
                 "Github": "https://github.com/etherparty",
                 "Homepage": "https://etherparty.io"
             },
-            "marketcap_usd": 3827269,
+            "marketcap_usd": 3816453,
             "name": "Etherparty FUEL",
             "network": "eth",
             "shortcut": "FUEL",
@@ -8528,7 +8576,7 @@
             "links": {
                 "Homepage": "https://funfair.io"
             },
-            "marketcap_usd": 26137070,
+            "marketcap_usd": 26086143,
             "name": "Funfair",
             "network": "eth",
             "shortcut": "FUN",
@@ -8547,7 +8595,7 @@
             "links": {
                 "Homepage": "https://fuzex.co"
             },
-            "marketcap_usd": 1302699,
+            "marketcap_usd": 1304436,
             "name": "FuzeX",
             "network": "eth",
             "shortcut": "FXT",
@@ -8585,7 +8633,7 @@
             "links": {
                 "Homepage": "https://flyp.me"
             },
-            "marketcap_usd": 410775,
+            "marketcap_usd": 409614,
             "name": "FlypMe",
             "network": "eth",
             "shortcut": "FYP",
@@ -8644,7 +8692,7 @@
             "links": {
                 "Homepage": "https://www.gatcoin.io"
             },
-            "marketcap_usd": 1137077,
+            "marketcap_usd": 1130693,
             "name": "Global Awards Token",
             "network": "eth",
             "shortcut": "GAT",
@@ -8780,7 +8828,7 @@
             "links": {
                 "Homepage": "https://gems.org"
             },
-            "marketcap_usd": 321388,
+            "marketcap_usd": 316220,
             "name": "Gems",
             "network": "eth",
             "shortcut": "GEM",
@@ -8800,7 +8848,7 @@
                 "Github": "https://github.com/daostack",
                 "Homepage": "https://daostack.io"
             },
-            "marketcap_usd": 2705914,
+            "marketcap_usd": 2690915,
             "name": "DAOstack",
             "network": "eth",
             "shortcut": "GEN",
@@ -8819,7 +8867,7 @@
             "links": {
                 "Homepage": "https://parkgene.io"
             },
-            "marketcap_usd": 365228,
+            "marketcap_usd": 364021,
             "name": "Parkgene",
             "network": "eth",
             "shortcut": "GENE",
@@ -8839,7 +8887,7 @@
                 "Github": "https://github.com/Getprotocol",
                 "Homepage": "http://www.get-protocol.io"
             },
-            "marketcap_usd": 4167584,
+            "marketcap_usd": 4125803,
             "name": "GET Protocol",
             "network": "eth",
             "shortcut": "GET",
@@ -8935,7 +8983,7 @@
             "links": {
                 "Homepage": "https://gnosis.pm"
             },
-            "marketcap_usd": 16479338,
+            "marketcap_usd": 16531108,
             "name": "Gnosis",
             "network": "eth",
             "shortcut": "GNO",
@@ -8954,7 +9002,7 @@
             "links": {
                 "Homepage": "https://golem.network"
             },
-            "marketcap_usd": 50443932,
+            "marketcap_usd": 50166077,
             "name": "Golem",
             "network": "eth",
             "shortcut": "GNT",
@@ -8973,7 +9021,7 @@
             "links": {
                 "Homepage": "https://genaro.network"
             },
-            "marketcap_usd": 3028893,
+            "marketcap_usd": 2996243,
             "name": "Genaro Network",
             "network": "eth",
             "shortcut": "GNX",
@@ -8993,7 +9041,7 @@
                 "Github": "https://github.com/GNYIO",
                 "Homepage": "https://www.gny.io/"
             },
-            "marketcap_usd": 13172258,
+            "marketcap_usd": 12972750,
             "name": "GNY",
             "network": "eth",
             "shortcut": "GNY",
@@ -9032,7 +9080,7 @@
             "links": {
                 "Homepage": "https://gonetwork.co/index.html"
             },
-            "marketcap_usd": 566640,
+            "marketcap_usd": 562746,
             "name": "GoNetwork",
             "network": "eth",
             "shortcut": "GOT",
@@ -9051,7 +9099,7 @@
             "links": {
                 "Homepage": "http://gridplus.io"
             },
-            "marketcap_usd": 2031154,
+            "marketcap_usd": 2019752,
             "name": "Grid+",
             "network": "eth",
             "shortcut": "GRID",
@@ -9070,7 +9118,7 @@
             "links": {
                 "Homepage": "https://www.greenmed.io"
             },
-            "marketcap_usd": 1820,
+            "marketcap_usd": 1816,
             "name": "GreenMed",
             "network": "eth",
             "shortcut": "GRMD",
@@ -9129,7 +9177,7 @@
             "links": {
                 "Homepage": "https://www.gsc.social"
             },
-            "marketcap_usd": 2679614,
+            "marketcap_usd": 2752057,
             "name": "Global Social Chain",
             "network": "eth",
             "shortcut": "GSC",
@@ -9168,7 +9216,7 @@
                 "Github": "https://github.com/GameLeLe",
                 "Homepage": "https://game.com"
             },
-            "marketcap_usd": 2930558,
+            "marketcap_usd": 2929712,
             "name": "GTC Token",
             "network": "eth",
             "shortcut": "GTC",
@@ -9208,7 +9256,7 @@
                 "Github": "https://github.com/GIFTO-io",
                 "Homepage": "https://gifto.io/"
             },
-            "marketcap_usd": 8275250,
+            "marketcap_usd": 8179829,
             "name": "Gifto",
             "network": "eth",
             "shortcut": "GTO",
@@ -9266,7 +9314,7 @@
             "links": {
                 "Homepage": "https://matchpool.co"
             },
-            "marketcap_usd": 293567,
+            "marketcap_usd": 292097,
             "name": "Matchpool",
             "network": "eth",
             "shortcut": "GUP",
@@ -9286,7 +9334,7 @@
                 "Github": "https://github.com/GenesisVision",
                 "Homepage": "https://genesis.vision"
             },
-            "marketcap_usd": 5329044,
+            "marketcap_usd": 5316240,
             "name": "Genesis Vision",
             "network": "eth",
             "shortcut": "GVT",
@@ -9423,7 +9471,7 @@
             "links": {
                 "Homepage": "https://www.showhand.io"
             },
-            "marketcap_usd": 26244,
+            "marketcap_usd": 27225,
             "name": "ShowHand",
             "network": "eth",
             "shortcut": "HAND",
@@ -9480,7 +9528,7 @@
             "links": {
                 "Homepage": "https://heartbout.com"
             },
-            "marketcap_usd": 208516,
+            "marketcap_usd": 209323,
             "name": "HeartBout",
             "network": "eth",
             "shortcut": "HB",
@@ -9499,7 +9547,7 @@
             "links": {
                 "Homepage": "https://www.hubii.network"
             },
-            "marketcap_usd": 3936399,
+            "marketcap_usd": 3914301,
             "name": "Hubii Network",
             "network": "eth",
             "shortcut": "HBT",
@@ -9518,7 +9566,7 @@
             "links": {
                 "Homepage": "https://www.hbzcoin.com/#"
             },
-            "marketcap_usd": 254257,
+            "marketcap_usd": 256415,
             "name": "HBZ coin",
             "network": "eth",
             "shortcut": "HBZ",
@@ -9556,7 +9604,7 @@
             "links": {
                 "Homepage": "https://heronode.io"
             },
-            "marketcap_usd": 156412,
+            "marketcap_usd": 153569,
             "name": "HeroNode",
             "network": "eth",
             "shortcut": "HER",
@@ -9596,7 +9644,7 @@
                 "Github": "https://github.com/myHelloGold/Foundation",
                 "Homepage": "https://www.hellogold.org"
             },
-            "marketcap_usd": 148388,
+            "marketcap_usd": 147772,
             "name": "HelloGold",
             "network": "eth",
             "shortcut": "HGT",
@@ -9673,7 +9721,7 @@
             "links": {
                 "Homepage": "https://hacken.io"
             },
-            "marketcap_usd": 611425,
+            "marketcap_usd": 611268,
             "name": "Hacken",
             "network": "eth",
             "shortcut": "HKN",
@@ -9731,7 +9779,7 @@
             "links": {
                 "Homepage": "https://humaniq.com"
             },
-            "marketcap_usd": 1160856,
+            "marketcap_usd": 1159132,
             "name": "Humaniq",
             "network": "eth",
             "shortcut": "HMQ",
@@ -9790,7 +9838,7 @@
                 "Github": "https://github.com/ethorse",
                 "Homepage": "https://ethorse.com"
             },
-            "marketcap_usd": 163029,
+            "marketcap_usd": 162113,
             "name": "Ethorse",
             "network": "eth",
             "shortcut": "HORSE",
@@ -9810,7 +9858,7 @@
                 "Github": "https://github.com/Holo-Host",
                 "Homepage": "https://holo.host/"
             },
-            "marketcap_usd": 129595228,
+            "marketcap_usd": 129564251,
             "name": "Holo Token",
             "network": "eth",
             "shortcut": "HOT (Holo)",
@@ -9829,7 +9877,7 @@
             "links": {
                 "Homepage": "https://thehydrofoundation.com/"
             },
-            "marketcap_usd": 2780936,
+            "marketcap_usd": 2769201,
             "name": "Hydro Protocol",
             "network": "eth",
             "shortcut": "HOT (Hydro)",
@@ -9848,7 +9896,7 @@
             "links": {
                 "Homepage": "https://horizonstate.com"
             },
-            "marketcap_usd": 5329,
+            "marketcap_usd": 5314,
             "name": "Decision Token",
             "network": "eth",
             "shortcut": "HST",
@@ -9867,7 +9915,7 @@
             "links": {
                 "Homepage": "https://www.hbg.com"
             },
-            "marketcap_usd": 883580489,
+            "marketcap_usd": 849634530,
             "name": "Huobi Token",
             "network": "eth",
             "shortcut": "HT",
@@ -9907,7 +9955,7 @@
                 "Github": "https://github.com/HiveProjectLTD",
                 "Homepage": "https://www.hiveterminal.com"
             },
-            "marketcap_usd": 1387020,
+            "marketcap_usd": 1382795,
             "name": "Hiveterminal Token",
             "network": "eth",
             "shortcut": "HVN",
@@ -9927,7 +9975,7 @@
                 "Github": "https://github.com/hydrogen-dev",
                 "Homepage": "https://www.hydrogenplatform.com/hydro"
             },
-            "marketcap_usd": 8317748,
+            "marketcap_usd": 8229470,
             "name": "Hydro",
             "network": "eth",
             "shortcut": "HYDRO",
@@ -10080,7 +10128,7 @@
             "links": {
                 "Homepage": "https://indahash.com"
             },
-            "marketcap_usd": 2428631,
+            "marketcap_usd": 2378724,
             "name": "indaHash",
             "network": "eth",
             "shortcut": "IDH",
@@ -10099,7 +10147,7 @@
             "links": {
                 "Homepage": "http://iethereum.trade"
             },
-            "marketcap_usd": 585482,
+            "marketcap_usd": 619219,
             "name": "iEthereum",
             "network": "eth",
             "shortcut": "IETH",
@@ -10137,7 +10185,7 @@
             "links": {
                 "Homepage": "http://igtoken.net"
             },
-            "marketcap_usd": 71543,
+            "marketcap_usd": 71142,
             "name": "IGToken",
             "network": "eth",
             "shortcut": "IG",
@@ -10156,7 +10204,7 @@
             "links": {
                 "Homepage": "https://ihtcoin.com"
             },
-            "marketcap_usd": 2044717,
+            "marketcap_usd": 1997840,
             "name": "I HOUSE TOKEN",
             "network": "eth",
             "shortcut": "IHT",
@@ -10233,7 +10281,7 @@
             "links": {
                 "Homepage": "https://indorse.io"
             },
-            "marketcap_usd": 260933,
+            "marketcap_usd": 186072,
             "name": "Indorse",
             "network": "eth",
             "shortcut": "IND",
@@ -10252,7 +10300,7 @@
             "links": {
                 "Homepage": "https://iungo.network"
             },
-            "marketcap_usd": 103005,
+            "marketcap_usd": 93090,
             "name": "Iungo",
             "network": "eth",
             "shortcut": "ING",
@@ -10271,7 +10319,7 @@
             "links": {
                 "Homepage": "https://insolar.io"
             },
-            "marketcap_usd": 6557713,
+            "marketcap_usd": 6478357,
             "name": "Insolar",
             "network": "eth",
             "shortcut": "INS",
@@ -10290,7 +10338,7 @@
             "links": {
                 "Homepage": "https://insights.network"
             },
-            "marketcap_usd": 1972249,
+            "marketcap_usd": 1964497,
             "name": "Insights Network",
             "network": "eth",
             "shortcut": "INSTAR",
@@ -10328,7 +10376,7 @@
             "links": {
                 "Homepage": "https://www.invacio.com"
             },
-            "marketcap_usd": 221699,
+            "marketcap_usd": 191826,
             "name": "Invacio",
             "network": "eth",
             "shortcut": "INV",
@@ -10348,7 +10396,7 @@
                 "Github": "https://github.com/Internxt/",
                 "Homepage": "https://internxt.com/"
             },
-            "marketcap_usd": 349612,
+            "marketcap_usd": 416022,
             "name": "Internxt",
             "network": "eth",
             "shortcut": "INXT",
@@ -10387,7 +10435,7 @@
                 "Github": "https://github.com/iotexproject/iotex-core",
                 "Homepage": "http://iotex.io/"
             },
-            "marketcap_usd": 24250540,
+            "marketcap_usd": 24220606,
             "name": "IoTeX Network",
             "network": "eth",
             "shortcut": "IOTX",
@@ -10407,7 +10455,7 @@
                 "Github": "https://github.com/InsurePal",
                 "Homepage": "https://insurepal.io/"
             },
-            "marketcap_usd": 913371,
+            "marketcap_usd": 907061,
             "name": "InsurePal token",
             "network": "eth",
             "shortcut": "IPL",
@@ -10446,7 +10494,7 @@
                 "Github": "https://github.com/iqeon",
                 "Homepage": "https://iqeon.io/"
             },
-            "marketcap_usd": 1833366,
+            "marketcap_usd": 1833843,
             "name": "IQeon",
             "network": "eth",
             "shortcut": "IQN",
@@ -10486,7 +10534,7 @@
                 "Github": "https://github.com/IoTChainCode",
                 "Homepage": "https://iotchain.io/"
             },
-            "marketcap_usd": 9820503,
+            "marketcap_usd": 9827108,
             "name": "IoT Chain",
             "network": "eth",
             "shortcut": "ITC",
@@ -10544,7 +10592,7 @@
             "links": {
                 "Homepage": "https://www.insurex.co"
             },
-            "marketcap_usd": 459637,
+            "marketcap_usd": 447261,
             "name": "InsureX",
             "network": "eth",
             "shortcut": "IXT",
@@ -10583,7 +10631,7 @@
                 "Github": "https://github.com/jet8",
                 "Homepage": "https://jet8.io"
             },
-            "marketcap_usd": 333796,
+            "marketcap_usd": 332806,
             "name": "J8T Token",
             "network": "eth",
             "shortcut": "J8T",
@@ -10621,7 +10669,7 @@
             "links": {
                 "Homepage": "https://jetcoin.io"
             },
-            "marketcap_usd": 114348,
+            "marketcap_usd": 111437,
             "name": "JET",
             "network": "eth",
             "shortcut": "JET",
@@ -10641,7 +10689,7 @@
                 "Github": "https://github.com/jibrelnetwork",
                 "Homepage": "https://jibrel.network"
             },
-            "marketcap_usd": 5099368,
+            "marketcap_usd": 5139785,
             "name": "Jibrel Network",
             "network": "eth",
             "shortcut": "JNT",
@@ -10660,7 +10708,7 @@
             "links": {
                 "Homepage": "https://jury.online"
             },
-            "marketcap_usd": 37036,
+            "marketcap_usd": 39095,
             "name": "Jury.Online Token",
             "network": "eth",
             "shortcut": "JOT",
@@ -10698,7 +10746,7 @@
             "links": {
                 "Homepage": "http://www.kan.land"
             },
-            "marketcap_usd": 14890283,
+            "marketcap_usd": 14898653,
             "name": "BitKan",
             "network": "eth",
             "shortcut": "KAN",
@@ -10776,7 +10824,7 @@
             "links": {
                 "Homepage": "https://kindads.io"
             },
-            "marketcap_usd": 36319,
+            "marketcap_usd": 36228,
             "name": "Kind Ads Token",
             "network": "eth",
             "shortcut": "KIND",
@@ -10796,7 +10844,7 @@
                 "Github": "https://github.com/KyberNetwork",
                 "Homepage": "https://kyber.network"
             },
-            "marketcap_usd": 33447259,
+            "marketcap_usd": 33820632,
             "name": "Kyber Network",
             "network": "eth",
             "shortcut": "KNC",
@@ -10815,7 +10863,7 @@
             "links": {
                 "Homepage": "https://kanadecoin.com"
             },
-            "marketcap_usd": 23668,
+            "marketcap_usd": 26079,
             "name": "KanadeCoin",
             "network": "eth",
             "shortcut": "KNDC",
@@ -10834,7 +10882,7 @@
             "links": {
                 "Homepage": "https://kora.network"
             },
-            "marketcap_usd": 19167,
+            "marketcap_usd": 19059,
             "name": "Kora Network Token",
             "network": "eth",
             "shortcut": "KNT",
@@ -10874,7 +10922,7 @@
                 "Github": "https://github.com/Cryptense/",
                 "Homepage": "https://kryll.io/"
             },
-            "marketcap_usd": 1394047,
+            "marketcap_usd": 1387993,
             "name": "Kryll",
             "network": "eth",
             "shortcut": "KRL",
@@ -10913,7 +10961,7 @@
             "links": {
                 "Homepage": "https://ico.kuende.com"
             },
-            "marketcap_usd": 284716,
+            "marketcap_usd": 284629,
             "name": "Kuende Token",
             "network": "eth",
             "shortcut": "KUE",
@@ -10932,7 +10980,7 @@
             "links": {
                 "Homepage": "https://4new.io"
             },
-            "marketcap_usd": 13774,
+            "marketcap_usd": 13697,
             "name": "4NEW",
             "network": "eth",
             "shortcut": "KWATT",
@@ -10971,7 +11019,7 @@
                 "Github": "https://github.com/latoken",
                 "Homepage": "https://latoken.com/"
             },
-            "marketcap_usd": 22903303,
+            "marketcap_usd": 22844669,
             "name": "LATOKEN",
             "network": "eth",
             "shortcut": "LA",
@@ -11028,7 +11076,7 @@
             "links": {
                 "Homepage": "https://www.mycred.io"
             },
-            "marketcap_usd": 6076392,
+            "marketcap_usd": 6075600,
             "name": "Cred",
             "network": "eth",
             "shortcut": "LBA",
@@ -11047,7 +11095,7 @@
             "links": {
                 "Homepage": "https://www.localcoinswap.com"
             },
-            "marketcap_usd": 279147,
+            "marketcap_usd": 278358,
             "name": "LocalCoinSwap",
             "network": "eth",
             "shortcut": "LCS",
@@ -11106,7 +11154,7 @@
                 "Github": "https://github.com/livecodingtvofficial",
                 "Homepage": "https://ledu.education-ecosystem.com"
             },
-            "marketcap_usd": 1201415,
+            "marketcap_usd": 1195678,
             "name": "Education Ecosystem",
             "network": "eth",
             "shortcut": "LEDU",
@@ -11126,7 +11174,7 @@
                 "Github": "https://github.com/ETHLend",
                 "Homepage": "https://ethlend.io/"
             },
-            "marketcap_usd": 7139930,
+            "marketcap_usd": 7113777,
             "name": "EHTLend",
             "network": "eth",
             "shortcut": "LEND",
@@ -11260,7 +11308,7 @@
                 "Github": "https://github.com/windingtree",
                 "Homepage": "https://windingtree.com/"
             },
-            "marketcap_usd": 1969533,
+            "marketcap_usd": 1958476,
             "name": "Winding Tree",
             "network": "eth",
             "shortcut": "LIF",
@@ -11279,7 +11327,7 @@
             "links": {
                 "Homepage": "http://www.lifelabs.io"
             },
-            "marketcap_usd": 550958,
+            "marketcap_usd": 592130,
             "name": "LIFE",
             "network": "eth",
             "shortcut": "LIFE",
@@ -11318,7 +11366,7 @@
             "links": {
                 "Homepage": "https://link.smartcontract.com"
             },
-            "marketcap_usd": 892404044,
+            "marketcap_usd": 885639003,
             "name": "Chainlink",
             "network": "eth",
             "shortcut": "LINK (Chainlink)",
@@ -11356,7 +11404,7 @@
             "links": {
                 "Homepage": "https://www.linkey.info"
             },
-            "marketcap_usd": 5940169,
+            "marketcap_usd": 5971851,
             "name": "Linkey",
             "network": "eth",
             "shortcut": "LKY",
@@ -11376,7 +11424,7 @@
                 "Github": "https://github.com/GNYIO",
                 "Homepage": "https://www.gny.io/lisk"
             },
-            "marketcap_usd": 1228301,
+            "marketcap_usd": 1234097,
             "name": "Lisk Machine Learning",
             "network": "eth",
             "shortcut": "LML",
@@ -11396,7 +11444,7 @@
                 "Github": "https://github.com/lendingblock",
                 "Homepage": "https://lendingblock.com"
             },
-            "marketcap_usd": 3202881,
+            "marketcap_usd": 3077999,
             "name": "Lendingblock",
             "network": "eth",
             "shortcut": "LND",
@@ -11415,7 +11463,7 @@
             "links": {
                 "Homepage": "https://LockChain.co"
             },
-            "marketcap_usd": 6415922,
+            "marketcap_usd": 6197898,
             "name": "LockChain",
             "network": "eth",
             "shortcut": "LOC",
@@ -11435,7 +11483,7 @@
                 "Github": "http://github.com/locipro/loci-coin-sale",
                 "Homepage": "https://locipro.com"
             },
-            "marketcap_usd": 41864,
+            "marketcap_usd": 41740,
             "name": "LOCIcoin",
             "network": "eth",
             "shortcut": "LOCI",
@@ -11454,7 +11502,7 @@
             "links": {
                 "Homepage": "https://www.locuschain.com"
             },
-            "marketcap_usd": 7783410,
+            "marketcap_usd": 7759990,
             "name": "Locus Chain",
             "network": "eth",
             "shortcut": "LOCUS",
@@ -11512,7 +11560,7 @@
                 "Github": "github.com/loomnetwork/",
                 "Homepage": "https://loomx.io"
             },
-            "marketcap_usd": 24229404,
+            "marketcap_usd": 24568045,
             "name": "Loom Network",
             "network": "eth",
             "shortcut": "LOOM",
@@ -11571,7 +11619,7 @@
                 "Github": "https://github.com/Play2Live/blockchain",
                 "Homepage": "https://play2live.io"
             },
-            "marketcap_usd": 95501,
+            "marketcap_usd": 94965,
             "name": "LUCToken",
             "network": "eth",
             "shortcut": "LUC",
@@ -11629,7 +11677,7 @@
                 "Github": "https://github.com/lunyr",
                 "Homepage": "https://lunyr.com"
             },
-            "marketcap_usd": 2239122,
+            "marketcap_usd": 2239899,
             "name": "Lunyr",
             "network": "eth",
             "shortcut": "LUN",
@@ -11727,7 +11775,7 @@
                 "Github": "https://github.com/decentraland",
                 "Homepage": "https://decentraland.org"
             },
-            "marketcap_usd": 34237167,
+            "marketcap_usd": 33890209,
             "name": "Decentraland MANA",
             "network": "eth",
             "shortcut": "MANA",
@@ -11765,7 +11813,7 @@
             "links": {
                 "Homepage": "https://midasprotocol.io/"
             },
-            "marketcap_usd": 1450623,
+            "marketcap_usd": 1454618,
             "name": "MIDAS PROTOCOL",
             "network": "eth",
             "shortcut": "MAS",
@@ -11843,7 +11891,7 @@
             "links": {
                 "Homepage": "https://crypto.com"
             },
-            "marketcap_usd": 56458990,
+            "marketcap_usd": 56367521,
             "name": "Crypto.com",
             "network": "eth",
             "shortcut": "MCO",
@@ -11862,7 +11910,7 @@
             "links": {
                 "Homepage": "https://moedaseeds.com"
             },
-            "marketcap_usd": 24132260,
+            "marketcap_usd": 22457352,
             "name": "Moeda Loyalty Points",
             "network": "eth",
             "shortcut": "MDA",
@@ -11881,7 +11929,7 @@
             "links": {
                 "Homepage": "http://www.medishares.org"
             },
-            "marketcap_usd": 2746485,
+            "marketcap_usd": 2748023,
             "name": "MediShares",
             "network": "eth",
             "shortcut": "MDS",
@@ -11900,7 +11948,7 @@
             "links": {
                 "Homepage": "https://www.mdt.co"
             },
-            "marketcap_usd": 7235854,
+            "marketcap_usd": 6998200,
             "name": "Measurable Data Token",
             "network": "eth",
             "shortcut": "MDT",
@@ -11919,7 +11967,7 @@
             "links": {
                 "Homepage": "https://medibloc.org"
             },
-            "marketcap_usd": 12485202,
+            "marketcap_usd": 12472594,
             "name": "MediBloc [ERC20]",
             "network": "eth",
             "shortcut": "MEDX",
@@ -11958,7 +12006,7 @@
             "links": {
                 "Homepage": "https://www.metronome.io"
             },
-            "marketcap_usd": 6168726,
+            "marketcap_usd": 6213350,
             "name": "Metronome",
             "network": "eth",
             "shortcut": "MET",
@@ -11977,7 +12025,7 @@
             "links": {
                 "Homepage": "https://metamorph.pro"
             },
-            "marketcap_usd": 204398,
+            "marketcap_usd": 213066,
             "name": "MetaMorph",
             "network": "eth",
             "shortcut": "METM",
@@ -11997,7 +12045,7 @@
                 "Github": "https://github.com/syncfab",
                 "Homepage": "https://syncfab.com/"
             },
-            "marketcap_usd": 819570,
+            "marketcap_usd": 830492,
             "name": "SyncFab Smart Manufacturing Blockchain",
             "network": "eth",
             "shortcut": "MFG",
@@ -12017,7 +12065,7 @@
                 "Github": "https://github.com/MainframeHQ",
                 "Homepage": "https://mainframe.com"
             },
-            "marketcap_usd": 8937477,
+            "marketcap_usd": 8927999,
             "name": "Mainframe Token",
             "network": "eth",
             "shortcut": "MFT",
@@ -12036,7 +12084,7 @@
             "links": {
                 "Homepage": "https://mftu.net"
             },
-            "marketcap_usd": 310584,
+            "marketcap_usd": 306735,
             "name": "Mainstream For The Underground",
             "network": "eth",
             "shortcut": "MFTU",
@@ -12055,7 +12103,7 @@
             "links": {
                 "Homepage": "https://mobilego.io"
             },
-            "marketcap_usd": 1533880,
+            "marketcap_usd": 1509954,
             "name": "MobileGo",
             "network": "eth",
             "shortcut": "MGO",
@@ -12112,7 +12160,7 @@
             "links": {
                 "Homepage": "https://token.morpheuslabs.io"
             },
-            "marketcap_usd": 2692228,
+            "marketcap_usd": 2680576,
             "name": "Morpheus Infrastructure Token",
             "network": "eth",
             "shortcut": "MITX",
@@ -12132,7 +12180,7 @@
                 "Github": "https://github.com/makerdao",
                 "Homepage": "https://makerdao.com"
             },
-            "marketcap_usd": 501624203,
+            "marketcap_usd": 499921041,
             "name": "MakerDAO",
             "network": "eth",
             "shortcut": "MKR",
@@ -12171,7 +12219,7 @@
             "links": {
                 "Homepage": "https://melonport.com"
             },
-            "marketcap_usd": 4637715,
+            "marketcap_usd": 4859726,
             "name": "Melonport",
             "network": "eth",
             "shortcut": "MLN (new)",
@@ -12190,7 +12238,7 @@
             "links": {
                 "Homepage": "https://minereum.com"
             },
-            "marketcap_usd": 37438,
+            "marketcap_usd": 36742,
             "name": "Minereum",
             "network": "eth",
             "shortcut": "MNE",
@@ -12249,7 +12297,7 @@
             "links": {
                 "Homepage": "https://moss.land"
             },
-            "marketcap_usd": 4211942,
+            "marketcap_usd": 4169844,
             "name": "Moss Coin",
             "network": "eth",
             "shortcut": "MOC",
@@ -12288,7 +12336,7 @@
             "links": {
                 "Homepage": "https://olympuslabs.io"
             },
-            "marketcap_usd": 292322,
+            "marketcap_usd": 291977,
             "name": "Olympus Labs",
             "network": "eth",
             "shortcut": "MOT",
@@ -12307,7 +12355,7 @@
             "links": {
                 "Homepage": "https://mark.space"
             },
-            "marketcap_usd": 1685537,
+            "marketcap_usd": 1682166,
             "name": "MARK.SPACE",
             "network": "eth",
             "shortcut": "MRK",
@@ -12403,7 +12451,7 @@
             "links": {
                 "Homepage": "http://www.monetha.io"
             },
-            "marketcap_usd": 6216476,
+            "marketcap_usd": 6118105,
             "name": "Monetha",
             "network": "eth",
             "shortcut": "MTH",
@@ -12422,7 +12470,7 @@
             "links": {
                 "Homepage": "https://www.metalpay.com"
             },
-            "marketcap_usd": 17668701,
+            "marketcap_usd": 17819343,
             "name": "Metal",
             "network": "eth",
             "shortcut": "MTL",
@@ -12441,7 +12489,7 @@
             "links": {
                 "Homepage": "https://medicalchain.com"
             },
-            "marketcap_usd": 1417255,
+            "marketcap_usd": 1409531,
             "name": "MedToken",
             "network": "eth",
             "shortcut": "MTN",
@@ -12479,7 +12527,7 @@
             "links": {
                 "Homepage": "https://modultrade.io"
             },
-            "marketcap_usd": 58627,
+            "marketcap_usd": 58462,
             "name": "MTRCToken",
             "network": "eth",
             "shortcut": "MTRc",
@@ -12498,7 +12546,7 @@
             "links": {
                 "Homepage": "https://www.matryx.ai"
             },
-            "marketcap_usd": 745425,
+            "marketcap_usd": 751085,
             "name": "Matryx",
             "network": "eth",
             "shortcut": "MTX",
@@ -12556,7 +12604,7 @@
             "links": {
                 "Homepage": "http://mvlchain.io"
             },
-            "marketcap_usd": 2306332,
+            "marketcap_usd": 2299956,
             "name": "Mass Vehicle Ledger Token",
             "network": "eth",
             "shortcut": "MVL",
@@ -12576,7 +12624,7 @@
                 "Github": "https://github.com/Merculet",
                 "Homepage": "https://www.merculet.io"
             },
-            "marketcap_usd": 1796487,
+            "marketcap_usd": 1776944,
             "name": "Merculet",
             "network": "eth",
             "shortcut": "MVP",
@@ -12595,7 +12643,7 @@
             "links": {
                 "Homepage": "https://www.restartenergy.io"
             },
-            "marketcap_usd": 6236006,
+            "marketcap_usd": 6196355,
             "name": "RED MWAT",
             "network": "eth",
             "shortcut": "MWAT",
@@ -12614,7 +12662,7 @@
             "links": {
                 "Homepage": "https://mysterium.network"
             },
-            "marketcap_usd": 1739511,
+            "marketcap_usd": 1734326,
             "name": "Mysterium",
             "network": "eth",
             "shortcut": "MYST",
@@ -12653,7 +12701,7 @@
                 "Github": "https://github.com/NANJ-COIN",
                 "Homepage": "https://nanjcoin.com/"
             },
-            "marketcap_usd": 420476,
+            "marketcap_usd": 388394,
             "name": "NANJCOIN",
             "network": "eth",
             "shortcut": "NANJ",
@@ -12673,7 +12721,7 @@
                 "Github": "https://github.com/naviworld",
                 "Homepage": "https://naviaddress.com"
             },
-            "marketcap_usd": 76120,
+            "marketcap_usd": 75717,
             "name": "NaviToken",
             "network": "eth",
             "shortcut": "NAVI",
@@ -12712,7 +12760,7 @@
             "links": {
                 "Homepage": "https://niobiumcoin.io"
             },
-            "marketcap_usd": 1254848,
+            "marketcap_usd": 1256353,
             "name": "Niobium Coin",
             "network": "eth",
             "shortcut": "NBC",
@@ -12731,7 +12779,7 @@
             "links": {
                 "Homepage": "https://nucleus.vision"
             },
-            "marketcap_usd": 5659821,
+            "marketcap_usd": 5809508,
             "name": "Nucleus Vision",
             "network": "eth",
             "shortcut": "NCASH",
@@ -12751,7 +12799,7 @@
                 "Github": "https://github.com/polyswarm",
                 "Homepage": "https://polyswarm.io"
             },
-            "marketcap_usd": 2454113,
+            "marketcap_usd": 2444362,
             "name": "Nectar",
             "network": "eth",
             "shortcut": "NCT",
@@ -12790,7 +12838,7 @@
                 "Github": "https://github.com/ndexnetwork/NDX",
                 "Homepage": "https://ndexnetwork.com"
             },
-            "marketcap_usd": 8531,
+            "marketcap_usd": 9030,
             "name": "nDEX",
             "network": "eth",
             "shortcut": "NDX",
@@ -12810,7 +12858,7 @@
                 "Github": "https://github.com/ethfinex/",
                 "Homepage": "https://nectar.community"
             },
-            "marketcap_usd": 7803394,
+            "marketcap_usd": 5957680,
             "name": "Ethfinex Nectar Token",
             "network": "eth",
             "shortcut": "NEC",
@@ -12868,7 +12916,7 @@
                 "Github": "https://github.com/neufund",
                 "Homepage": "https://neufund.org"
             },
-            "marketcap_usd": 3437596,
+            "marketcap_usd": 3446909,
             "name": "NEU Fund",
             "network": "eth",
             "shortcut": "NEU",
@@ -12887,7 +12935,7 @@
             "links": {
                 "Homepage": "http://nexo.io"
             },
-            "marketcap_usd": 52530263,
+            "marketcap_usd": 52439086,
             "name": "Nexo",
             "network": "eth",
             "shortcut": "NEXO",
@@ -12906,7 +12954,7 @@
             "links": {
                 "Homepage": "https://www.nagaico.com"
             },
-            "marketcap_usd": 2064791,
+            "marketcap_usd": 2051881,
             "name": "NAGA Coin",
             "network": "eth",
             "shortcut": "NGC",
@@ -12945,7 +12993,7 @@
             "links": {
                 "Homepage": "https://auton.io"
             },
-            "marketcap_usd": 134737,
+            "marketcap_usd": 134321,
             "name": "Autonio",
             "network": "eth",
             "shortcut": "NIO",
@@ -12965,7 +13013,7 @@
                 "Github": "https://github.com/numerai",
                 "Homepage": "https://numer.ai"
             },
-            "marketcap_usd": 7480000,
+            "marketcap_usd": 7503696,
             "name": "Numerai",
             "network": "eth",
             "shortcut": "NMR",
@@ -12984,7 +13032,7 @@
             "links": {
                 "Homepage": "https://noahcoin.org"
             },
-            "marketcap_usd": 4484229,
+            "marketcap_usd": 4646295,
             "name": "Noah Coin",
             "network": "eth",
             "shortcut": "NOAH",
@@ -13003,7 +13051,7 @@
             "links": {
                 "Homepage": "https://nobscrypto.com"
             },
-            "marketcap_usd": 59496,
+            "marketcap_usd": 58553,
             "name": "No BS Crypto",
             "network": "eth",
             "shortcut": "NOBS",
@@ -13023,7 +13071,7 @@
                 "Github": "https://github.com/nitrotoken/nitro-crowdsale",
                 "Homepage": "https://nitro.live"
             },
-            "marketcap_usd": 169520,
+            "marketcap_usd": 176001,
             "name": "Nitro",
             "network": "eth",
             "shortcut": "NOX",
@@ -13062,7 +13110,7 @@
             "links": {
                 "Homepage": "https://napoleonx.ai"
             },
-            "marketcap_usd": 5862125,
+            "marketcap_usd": 6143082,
             "name": "NaPoleonX",
             "network": "eth",
             "shortcut": "NPX",
@@ -13082,7 +13130,7 @@
                 "Github": "https://github.com/pundix",
                 "Homepage": "https://pundix.com"
             },
-            "marketcap_usd": 47795176,
+            "marketcap_usd": 48012095,
             "name": "Pundi X Token",
             "network": "eth",
             "shortcut": "NPXS",
@@ -13120,7 +13168,7 @@
             "links": {
                 "Homepage": "https://nuggets.life/"
             },
-            "marketcap_usd": 950088,
+            "marketcap_usd": 944755,
             "name": "Nuggets Token",
             "network": "eth",
             "shortcut": "NUG",
@@ -13215,7 +13263,7 @@
             "links": {
                 "Homepage": "https://www.openanx.org/en"
             },
-            "marketcap_usd": 5388057,
+            "marketcap_usd": 5362197,
             "name": "OAX",
             "network": "eth",
             "shortcut": "OAX",
@@ -13254,7 +13302,7 @@
             "links": {
                 "Homepage": "http://www.ocnex.net"
             },
-            "marketcap_usd": 5286821,
+            "marketcap_usd": 5375986,
             "name": "Odyssey",
             "network": "eth",
             "shortcut": "OCN",
@@ -13274,7 +13322,7 @@
                 "Github": "https://github.com/odemio",
                 "Homepage": "https://odem.io/"
             },
-            "marketcap_usd": 24232419,
+            "marketcap_usd": 23929225,
             "name": "ODEM Token",
             "network": "eth",
             "shortcut": "ODE",
@@ -13373,7 +13421,7 @@
                 "Github": "https://github.com/Oneledger",
                 "Homepage": "https://oneledger.io"
             },
-            "marketcap_usd": 2638311,
+            "marketcap_usd": 2484131,
             "name": "OneLedger Token",
             "network": "eth",
             "shortcut": "OLT",
@@ -13393,7 +13441,7 @@
                 "Github": "https://github.com/omisego",
                 "Homepage": "https://omg.omise.co"
             },
-            "marketcap_usd": 114339823,
+            "marketcap_usd": 114032054,
             "name": "OmiseGO",
             "network": "eth",
             "shortcut": "OMG",
@@ -13452,7 +13500,7 @@
                 "Github": "https://github.com/MenloOne/",
                 "Homepage": "https://www.menlo.one"
             },
-            "marketcap_usd": 31424,
+            "marketcap_usd": 31248,
             "name": "Menlo One",
             "network": "eth",
             "shortcut": "ONE",
@@ -13491,7 +13539,7 @@
                 "Github": "https://github.com/onGsocial",
                 "Homepage": "https://somee.social"
             },
-            "marketcap_usd": 135872,
+            "marketcap_usd": 134441,
             "name": "SoMee.Social",
             "network": "eth",
             "shortcut": "ONG",
@@ -13510,7 +13558,7 @@
             "links": {
                 "Homepage": "https://on.live"
             },
-            "marketcap_usd": 220148,
+            "marketcap_usd": 218837,
             "name": "On.Live",
             "network": "eth",
             "shortcut": "ONL",
@@ -13529,7 +13577,7 @@
             "links": {
                 "Homepage": "https://www.ono.chat"
             },
-            "marketcap_usd": 382169,
+            "marketcap_usd": 380023,
             "name": "ONO Token",
             "network": "eth",
             "shortcut": "ONOT",
@@ -13548,7 +13596,7 @@
             "links": {
                 "Homepage": "https://opus-foundation.org"
             },
-            "marketcap_usd": 83611,
+            "marketcap_usd": 83142,
             "name": "Opus Foundation",
             "network": "eth",
             "shortcut": "OPT",
@@ -13567,7 +13615,7 @@
             "links": {
                 "Homepage": "https://optitoken.io"
             },
-            "marketcap_usd": 220386,
+            "marketcap_usd": 219687,
             "name": "OptiToken",
             "network": "eth",
             "shortcut": "OPTI",
@@ -13587,7 +13635,7 @@
                 "Github": "https://github.com/orbs-network",
                 "Homepage": "https://orbs.com"
             },
-            "marketcap_usd": 20532745,
+            "marketcap_usd": 20812332,
             "name": "Orbs",
             "network": "eth",
             "shortcut": "ORBS",
@@ -13645,7 +13693,7 @@
             "links": {
                 "Homepage": "https://www.originsport.io"
             },
-            "marketcap_usd": 2288527,
+            "marketcap_usd": 2337305,
             "name": "Origin Sport",
             "network": "eth",
             "shortcut": "ORS",
@@ -13665,7 +13713,7 @@
                 "Github": "https://github.com/OpenSTFoundation",
                 "Homepage": "https://simpletoken.org"
             },
-            "marketcap_usd": 8511474,
+            "marketcap_usd": 8408100,
             "name": "Simple Token 'OST'",
             "network": "eth",
             "shortcut": "OST",
@@ -13684,7 +13732,7 @@
             "links": {
                 "Homepage": "https://otn.org"
             },
-            "marketcap_usd": 6147,
+            "marketcap_usd": 6129,
             "name": "Open Trading Network",
             "network": "eth",
             "shortcut": "OTN",
@@ -13704,7 +13752,7 @@
                 "Github": "https://github.com/owndata",
                 "Homepage": "https://owndata.network"
             },
-            "marketcap_usd": 628812,
+            "marketcap_usd": 621453,
             "name": "OWNDATA",
             "network": "eth",
             "shortcut": "OWN",
@@ -13763,7 +13811,7 @@
             "links": {
                 "Homepage": "https://www.pchain.org"
             },
-            "marketcap_usd": 2363617,
+            "marketcap_usd": 2351534,
             "name": "PCHAIN",
             "network": "eth",
             "shortcut": "PAI",
@@ -13803,7 +13851,7 @@
                 "Github": "https://github.com/ParetoNetwork",
                 "Homepage": "https://pareto.network"
             },
-            "marketcap_usd": 1294256,
+            "marketcap_usd": 1278215,
             "name": "PARETO",
             "network": "eth",
             "shortcut": "PARETO",
@@ -13822,7 +13870,7 @@
             "links": {
                 "Homepage": "https://patron-influencers.com"
             },
-            "marketcap_usd": 81906,
+            "marketcap_usd": 111732,
             "name": "Patron",
             "network": "eth",
             "shortcut": "PAT",
@@ -13901,7 +13949,7 @@
                 "Github": "https://github.com/paxosglobal",
                 "Homepage": "https://www.paxos.com/standard"
             },
-            "marketcap_usd": 253359373,
+            "marketcap_usd": 254117396,
             "name": "Paxos Standard (PAX)",
             "network": "eth",
             "shortcut": "PAX",
@@ -13920,7 +13968,7 @@
             "links": {
                 "Homepage": "http://www.tenx.tech"
             },
-            "marketcap_usd": 13485755,
+            "marketcap_usd": 13509541,
             "name": "TenX",
             "network": "eth",
             "shortcut": "PAY",
@@ -13978,7 +14026,7 @@
                 "Github": "https://github.com/Peculium-Dev/",
                 "Homepage": "https://peculium.io"
             },
-            "marketcap_usd": 2128029,
+            "marketcap_usd": 1981372,
             "name": "Peculium",
             "network": "eth",
             "shortcut": "PCL",
@@ -14018,7 +14066,7 @@
                 "Github": "https://github.com/opiria-pdata/Pdata",
                 "Homepage": "https://opiria.io"
             },
-            "marketcap_usd": 444870,
+            "marketcap_usd": 435081,
             "name": "PDATA",
             "network": "eth",
             "shortcut": "PDATA",
@@ -14114,7 +14162,7 @@
             "links": {
                 "Homepage": "https://www.phitoken.io"
             },
-            "marketcap_usd": 413363,
+            "marketcap_usd": 404128,
             "name": "PHI Token",
             "network": "eth",
             "shortcut": "PHI",
@@ -14133,7 +14181,7 @@
             "links": {
                 "Homepage": "https://piplcoin.com"
             },
-            "marketcap_usd": 263235,
+            "marketcap_usd": 268552,
             "name": "PIPL Coin",
             "network": "eth",
             "shortcut": "PIPL",
@@ -14171,7 +14219,7 @@
             "links": {
                 "Homepage": "https://www.lampix.co"
             },
-            "marketcap_usd": 127392,
+            "marketcap_usd": 127274,
             "name": "Lampix",
             "network": "eth",
             "shortcut": "PIX",
@@ -14190,7 +14238,7 @@
             "links": {
                 "Homepage": "http://pkgtoken.io"
             },
-            "marketcap_usd": 101290,
+            "marketcap_usd": 100556,
             "name": "PKG Token",
             "network": "eth",
             "shortcut": "PKG",
@@ -14209,7 +14257,7 @@
             "links": {
                 "Homepage": "https://playkey.io"
             },
-            "marketcap_usd": 346053,
+            "marketcap_usd": 293144,
             "name": "Playkey",
             "network": "eth",
             "shortcut": "PKT",
@@ -14247,7 +14295,7 @@
             "links": {
                 "Homepage": "https://polybius.io"
             },
-            "marketcap_usd": 3077809,
+            "marketcap_usd": 3143148,
             "name": "Polybius",
             "network": "eth",
             "shortcut": "PLBT",
@@ -14267,7 +14315,7 @@
                 "Github": "https://github.com/twentythirty/PillarToken",
                 "Homepage": "https://www.pillarproject.io"
             },
-            "marketcap_usd": 9858523,
+            "marketcap_usd": 9780739,
             "name": "Pillar Project",
             "network": "eth",
             "shortcut": "PLR",
@@ -14325,7 +14373,7 @@
             "links": {
                 "Homepage": "https://pumapay.io"
             },
-            "marketcap_usd": 5893404,
+            "marketcap_usd": 6013061,
             "name": "PumaPay",
             "network": "eth",
             "shortcut": "PMA",
@@ -14364,7 +14412,7 @@
                 "Github": "https://github.com/kleros",
                 "Homepage": "https://kleros.io"
             },
-            "marketcap_usd": 1613879,
+            "marketcap_usd": 1607999,
             "name": "Pinakion",
             "network": "eth",
             "shortcut": "PNK",
@@ -14383,7 +14431,7 @@
             "links": {
                 "Homepage": "https://po.et"
             },
-            "marketcap_usd": 8626975,
+            "marketcap_usd": 8602668,
             "name": "Po.et Tokens",
             "network": "eth",
             "shortcut": "POE",
@@ -14421,7 +14469,7 @@
             "links": {
                 "Homepage": "https://clearpoll.com"
             },
-            "marketcap_usd": 207922,
+            "marketcap_usd": 207334,
             "name": "ClearPoll",
             "network": "eth",
             "shortcut": "POLL",
@@ -14440,7 +14488,7 @@
             "links": {
                 "Homepage": "https://polymath.network"
             },
-            "marketcap_usd": 12043974,
+            "marketcap_usd": 12157162,
             "name": "Polymath Network",
             "network": "eth",
             "shortcut": "POLY",
@@ -14518,7 +14566,7 @@
             "links": {
                 "Homepage": "https://powerledger.io"
             },
-            "marketcap_usd": 20336749,
+            "marketcap_usd": 20305879,
             "name": "PowerLedger",
             "network": "eth",
             "shortcut": "POWR",
@@ -14537,7 +14585,7 @@
             "links": {
                 "Homepage": "https://www.paypie.com"
             },
-            "marketcap_usd": 8359169,
+            "marketcap_usd": 8312243,
             "name": "PayPie",
             "network": "eth",
             "shortcut": "PPP",
@@ -14556,7 +14604,7 @@
             "links": {
                 "Homepage": "https://populous.co"
             },
-            "marketcap_usd": 26770444,
+            "marketcap_usd": 27036856,
             "name": "Populous",
             "network": "eth",
             "shortcut": "PPT",
@@ -14575,7 +14623,7 @@
             "links": {
                 "Homepage": "https://presearch.io"
             },
-            "marketcap_usd": 547622,
+            "marketcap_usd": 551442,
             "name": "Presearch",
             "network": "eth",
             "shortcut": "PRE",
@@ -14614,7 +14662,7 @@
             "links": {
                 "Homepage": "https://privatix.io"
             },
-            "marketcap_usd": 323168,
+            "marketcap_usd": 322254,
             "name": "Privatix",
             "network": "eth",
             "shortcut": "PRIX",
@@ -14731,7 +14779,7 @@
             "links": {
                 "Homepage": "https://primas.io"
             },
-            "marketcap_usd": 4686721,
+            "marketcap_usd": 4639844,
             "name": "Primas",
             "network": "eth",
             "shortcut": "PST",
@@ -14770,7 +14818,7 @@
             "links": {
                 "Homepage": "https://patientory.com"
             },
-            "marketcap_usd": 453104,
+            "marketcap_usd": 451825,
             "name": "Patientory",
             "network": "eth",
             "shortcut": "PTOY",
@@ -14789,7 +14837,7 @@
             "links": {
                 "Homepage": "https://www.proton.global"
             },
-            "marketcap_usd": 2486104,
+            "marketcap_usd": 2484028,
             "name": "Proton Token",
             "network": "eth",
             "shortcut": "PTT",
@@ -14869,7 +14917,7 @@
                 "Github": "https://github.com/playgame-global",
                 "Homepage": "https://its.playgame.com"
             },
-            "marketcap_usd": 340170,
+            "marketcap_usd": 193606,
             "name": "PlayGame",
             "network": "eth",
             "shortcut": "PXG",
@@ -14907,7 +14955,7 @@
             "links": {
                 "Homepage": "https://pylon-network.org"
             },
-            "marketcap_usd": 445164,
+            "marketcap_usd": 446612,
             "name": "Pylon Network",
             "network": "eth",
             "shortcut": "PYLNT",
@@ -14926,7 +14974,7 @@
             "links": {
                 "Homepage": "https://liquid.plus"
             },
-            "marketcap_usd": 23901130,
+            "marketcap_usd": 24149127,
             "name": "QASH",
             "network": "eth",
             "shortcut": "QASH",
@@ -14984,7 +15032,7 @@
             "links": {
                 "Homepage": "https://quarkchain.io"
             },
-            "marketcap_usd": 13863680,
+            "marketcap_usd": 13577605,
             "name": "QuarkChain",
             "network": "eth",
             "shortcut": "QKC",
@@ -15004,7 +15052,7 @@
                 "Github": "https://github.com/quantnetwork",
                 "Homepage": "https://www.quant.network/"
             },
-            "marketcap_usd": 67361706,
+            "marketcap_usd": 67391969,
             "name": "Quant",
             "network": "eth",
             "shortcut": "QNT",
@@ -15063,7 +15111,7 @@
                 "Github": "https://github.com/quantstamp",
                 "Homepage": "https://quantstamp.com/"
             },
-            "marketcap_usd": 7294478,
+            "marketcap_usd": 7268891,
             "name": "Quantstamp Token",
             "network": "eth",
             "shortcut": "QSP",
@@ -15122,7 +15170,7 @@
             "links": {
                 "Homepage": "https://qunqun.io"
             },
-            "marketcap_usd": 4263563,
+            "marketcap_usd": 4260041,
             "name": "QunQun",
             "network": "eth",
             "shortcut": "QUN",
@@ -15141,7 +15189,7 @@
             "links": {
                 "Homepage": "https://revain.org"
             },
-            "marketcap_usd": 24833287,
+            "marketcap_usd": 24782289,
             "name": "Revain",
             "network": "eth",
             "shortcut": "R",
@@ -15180,7 +15228,7 @@
             "links": {
                 "Homepage": "http://token.dprating.com"
             },
-            "marketcap_usd": 458187,
+            "marketcap_usd": 457492,
             "name": "DPRating",
             "network": "eth",
             "shortcut": "RATING",
@@ -15200,7 +15248,7 @@
                 "Github": "https://github.com/rublixdev",
                 "Homepage": "https://rublix.io/"
             },
-            "marketcap_usd": 3826393,
+            "marketcap_usd": 3820747,
             "name": "Rublix",
             "network": "eth",
             "shortcut": "RBLX",
@@ -15220,7 +15268,7 @@
                 "Github": "https://github.com/ripio/rcn-token",
                 "Homepage": "https://ripiocredit.network"
             },
-            "marketcap_usd": 20265378,
+            "marketcap_usd": 20257026,
             "name": "Ripio Credit Network",
             "network": "eth",
             "shortcut": "RCN",
@@ -15240,7 +15288,7 @@
                 "Github": "https://github.com/raiden-network/raiden/",
                 "Homepage": "https://raiden.network"
             },
-            "marketcap_usd": 9040072,
+            "marketcap_usd": 9158328,
             "name": "Raiden Network",
             "network": "eth",
             "shortcut": "RDN",
@@ -15317,7 +15365,7 @@
                 "Github": "https://github.com/red",
                 "Homepage": "https://ico.red-lang.org"
             },
-            "marketcap_usd": 674513,
+            "marketcap_usd": 626339,
             "name": "Red Community Token",
             "network": "eth",
             "shortcut": "RED",
@@ -15356,7 +15404,7 @@
             "links": {
                 "Homepage": "https://reftoken.io"
             },
-            "marketcap_usd": 268449,
+            "marketcap_usd": 266942,
             "name": "RefToken",
             "network": "eth",
             "shortcut": "REF",
@@ -15375,7 +15423,7 @@
             "links": {
                 "Homepage": "https://remme.io"
             },
-            "marketcap_usd": 1961793,
+            "marketcap_usd": 1953027,
             "name": "Remme",
             "network": "eth",
             "shortcut": "REM",
@@ -15415,7 +15463,7 @@
                 "Github": "https://github.com/republicprotocol",
                 "Homepage": "https://republicprotocol.com"
             },
-            "marketcap_usd": 51023694,
+            "marketcap_usd": 51368563,
             "name": "Republic Token",
             "network": "eth",
             "shortcut": "REN",
@@ -15434,7 +15482,7 @@
             "links": {
                 "Homepage": "https://augur.net"
             },
-            "marketcap_usd": 92998479,
+            "marketcap_usd": 93036581,
             "name": "Augur",
             "network": "eth",
             "shortcut": "REP",
@@ -15453,7 +15501,7 @@
             "links": {
                 "Homepage": "https://request.network"
             },
-            "marketcap_usd": 10668096,
+            "marketcap_usd": 10693326,
             "name": "Request Network",
             "network": "eth",
             "shortcut": "REQ",
@@ -15473,7 +15521,7 @@
                 "Github": "https://github.com/rexmls/RexToken",
                 "Homepage": "https://imbrex.io"
             },
-            "marketcap_usd": 105523,
+            "marketcap_usd": 105364,
             "name": "imbrex",
             "network": "eth",
             "shortcut": "REX",
@@ -15492,7 +15540,7 @@
             "links": {
                 "Homepage": "https://refereum.com"
             },
-            "marketcap_usd": 3435843,
+            "marketcap_usd": 3420141,
             "name": "Refereum",
             "network": "eth",
             "shortcut": "RFR",
@@ -15511,7 +15559,7 @@
             "links": {
                 "Homepage": "https://www.rchain.coop"
             },
-            "marketcap_usd": 10268511,
+            "marketcap_usd": 10180692,
             "name": "RChain",
             "network": "eth",
             "shortcut": "RHOC",
@@ -15569,7 +15617,7 @@
             "links": {
                 "Homepage": "http://crowdsale.iex.ec"
             },
-            "marketcap_usd": 27029288,
+            "marketcap_usd": 26952450,
             "name": "IEx.ec",
             "network": "eth",
             "shortcut": "RLC",
@@ -15589,7 +15637,7 @@
                 "Github": "https://github.com/Smartroulette",
                 "Homepage": "https://smartplay.tech"
             },
-            "marketcap_usd": 21256,
+            "marketcap_usd": 22044,
             "name": "RouletteToken",
             "network": "eth",
             "shortcut": "RLT",
@@ -15627,7 +15675,7 @@
             "links": {
                 "Homepage": "http://www.relex.io"
             },
-            "marketcap_usd": 521983,
+            "marketcap_usd": 523210,
             "name": "Relex",
             "network": "eth",
             "shortcut": "RLX",
@@ -15647,7 +15695,7 @@
                 "Github": "https://github.com/rightmesh",
                 "Homepage": "https://www.rightmesh.io/"
             },
-            "marketcap_usd": 507775,
+            "marketcap_usd": 504925,
             "name": "RightMesh Token",
             "network": "eth",
             "shortcut": "RMESH",
@@ -15685,7 +15733,7 @@
             "links": {
                 "Homepage": "https://www.oneroot.io/en"
             },
-            "marketcap_usd": 4153913,
+            "marketcap_usd": 4124416,
             "name": "OneRoot Network",
             "network": "eth",
             "shortcut": "RNT",
@@ -15743,7 +15791,7 @@
             "links": {
                 "Homepage": "https://icerockmining.io"
             },
-            "marketcap_usd": 972368,
+            "marketcap_usd": 970527,
             "name": "ICE ROCK MINING",
             "network": "eth",
             "shortcut": "ROCK2",
@@ -15838,7 +15886,7 @@
             "links": {
                 "Homepage": "https://www.rotharium.io"
             },
-            "marketcap_usd": 2572693,
+            "marketcap_usd": 2490876,
             "name": "Rotharium",
             "network": "eth",
             "shortcut": "RTH",
@@ -15877,7 +15925,7 @@
             "links": {
                 "Homepage": "http://ruffchain.com"
             },
-            "marketcap_usd": 8364439,
+            "marketcap_usd": 8181070,
             "name": "Ruff",
             "network": "eth",
             "shortcut": "RUFF",
@@ -16011,7 +16059,7 @@
             "links": {
                 "Homepage": "https://saltlending.com"
             },
-            "marketcap_usd": 6581071,
+            "marketcap_usd": 6595736,
             "name": "Salt Lending Token",
             "network": "eth",
             "shortcut": "SALT",
@@ -16030,7 +16078,7 @@
             "links": {
                 "Homepage": "https://santiment.net"
             },
-            "marketcap_usd": 23465205,
+            "marketcap_usd": 23433035,
             "name": "Santiment",
             "network": "eth",
             "shortcut": "SAN",
@@ -16087,7 +16135,7 @@
             "links": {
                 "Homepage": "https://www.scroll.network"
             },
-            "marketcap_usd": 2803580,
+            "marketcap_usd": 2756759,
             "name": "SCRL",
             "network": "eth",
             "shortcut": "SCRL",
@@ -16106,7 +16154,7 @@
             "links": {
                 "Homepage": "http://seele.pro"
             },
-            "marketcap_usd": 38115890,
+            "marketcap_usd": 37526249,
             "name": "Seele",
             "network": "eth",
             "shortcut": "SEELE",
@@ -16125,7 +16173,7 @@
             "links": {
                 "Homepage": "https://www.sentinel-chain.org"
             },
-            "marketcap_usd": 790755,
+            "marketcap_usd": 785539,
             "name": "Sentinel Chain",
             "network": "eth",
             "shortcut": "SENC",
@@ -16163,7 +16211,7 @@
             "links": {
                 "Homepage": "https://sentinel.co"
             },
-            "marketcap_usd": 3110187,
+            "marketcap_usd": 2948709,
             "name": "SENTinel",
             "network": "eth",
             "shortcut": "SENT",
@@ -16259,7 +16307,7 @@
             "links": {
                 "Homepage": "http://sugarexchange.io"
             },
-            "marketcap_usd": 47115,
+            "marketcap_usd": 47830,
             "name": "Sugar Exchange",
             "network": "eth",
             "shortcut": "SGR",
@@ -16278,7 +16326,7 @@
             "links": {
                 "Homepage": "https://www.shipchain.io"
             },
-            "marketcap_usd": 1369308,
+            "marketcap_usd": 1328212,
             "name": "ShipChain",
             "network": "eth",
             "shortcut": "SHIP",
@@ -16355,7 +16403,7 @@
                 "Github": "https://github.com/SpectivOfficial",
                 "Homepage": "https://spectivvr.com"
             },
-            "marketcap_usd": 145704,
+            "marketcap_usd": 147090,
             "name": "Signal",
             "network": "eth",
             "shortcut": "SIG",
@@ -16374,7 +16422,7 @@
             "links": {
                 "Homepage": "https://www.skb-coin.jp/en"
             },
-            "marketcap_usd": 523033,
+            "marketcap_usd": 520490,
             "name": "Sakura Bloom",
             "network": "eth",
             "shortcut": "SKB",
@@ -16413,7 +16461,7 @@
                 "Github": "https://github.com/Steamtradenet/smart-contract",
                 "Homepage": "https://skincoin.org"
             },
-            "marketcap_usd": 40937,
+            "marketcap_usd": 40707,
             "name": "SKIN",
             "network": "eth",
             "shortcut": "SKIN",
@@ -16432,7 +16480,7 @@
             "links": {
                 "Homepage": "https://skrumble.network"
             },
-            "marketcap_usd": 2564671,
+            "marketcap_usd": 2568434,
             "name": "Skrumble Network",
             "network": "eth",
             "shortcut": "SKM",
@@ -16548,7 +16596,7 @@
             "links": {
                 "Homepage": "https://smscoin.jp/en"
             },
-            "marketcap_usd": 9642,
+            "marketcap_usd": 9588,
             "name": "Speed Mining Service",
             "network": "eth",
             "shortcut": "SMS",
@@ -16567,7 +16615,7 @@
             "links": {
                 "Homepage": "https://suncontract.org"
             },
-            "marketcap_usd": 2681064,
+            "marketcap_usd": 2677226,
             "name": "SunContract",
             "network": "eth",
             "shortcut": "SNC",
@@ -16625,7 +16673,7 @@
             "links": {
                 "Homepage": "https://singulardtv.com"
             },
-            "marketcap_usd": 6694740,
+            "marketcap_usd": 6625034,
             "name": "SingularDTV",
             "network": "eth",
             "shortcut": "SNGLS",
@@ -16664,7 +16712,7 @@
                 "Github": "https://github.com/sonm-io",
                 "Homepage": "https://sonm.com"
             },
-            "marketcap_usd": 4721868,
+            "marketcap_usd": 4541168,
             "name": "SONM",
             "network": "eth",
             "shortcut": "SNM",
@@ -16683,7 +16731,7 @@
             "links": {
                 "Homepage": "https://snovian.space"
             },
-            "marketcap_usd": 235514,
+            "marketcap_usd": 234192,
             "name": "Snovian.Space",
             "network": "eth",
             "shortcut": "SNOV",
@@ -16702,7 +16750,7 @@
             "links": {
                 "Homepage": "https://status.im"
             },
-            "marketcap_usd": 44359060,
+            "marketcap_usd": 44358802,
             "name": "Status Network Token",
             "network": "eth",
             "shortcut": "SNT",
@@ -16721,7 +16769,7 @@
             "links": {
                 "Homepage": "https://silentnotary.com"
             },
-            "marketcap_usd": 113046,
+            "marketcap_usd": 113570,
             "name": "Silent Notary",
             "network": "eth",
             "shortcut": "SNTR",
@@ -16741,7 +16789,7 @@
                 "Github": "https://github.com/havven/havven",
                 "Homepage": "https://synthetix.io"
             },
-            "marketcap_usd": 69969680,
+            "marketcap_usd": 69633558,
             "name": "Synthetix Network Token",
             "network": "eth",
             "shortcut": "SNX",
@@ -16779,7 +16827,7 @@
             "links": {
                 "Homepage": "https://www.allsportschain.com"
             },
-            "marketcap_usd": 6925162,
+            "marketcap_usd": 6895404,
             "name": "All Sports",
             "network": "eth",
             "shortcut": "SOC",
@@ -16837,7 +16885,7 @@
                 "Github": "https://github.com/cryptosoulgame",
                 "Homepage": "https://cryptosoul.io/"
             },
-            "marketcap_usd": 87475,
+            "marketcap_usd": 80888,
             "name": "CryptoSoul",
             "network": "eth",
             "shortcut": "SOUL",
@@ -16856,7 +16904,7 @@
             "links": {
                 "Homepage": "https://spankchain.com"
             },
-            "marketcap_usd": 2094868,
+            "marketcap_usd": 2084303,
             "name": "SpankChain",
             "network": "eth",
             "shortcut": "SPANK",
@@ -16913,7 +16961,7 @@
             "links": {
                 "Homepage": "https://spindle.zone"
             },
-            "marketcap_usd": 544302,
+            "marketcap_usd": 541929,
             "name": "SPINDLE",
             "network": "eth",
             "shortcut": "SPD",
@@ -16932,7 +16980,7 @@
             "links": {
                 "Homepage": "https://sportyfi.io"
             },
-            "marketcap_usd": 37579,
+            "marketcap_usd": 37299,
             "name": "Sportify",
             "network": "eth",
             "shortcut": "SPF",
@@ -16970,7 +17018,7 @@
             "links": {
                 "Homepage": "https://sp8de.com"
             },
-            "marketcap_usd": 57358,
+            "marketcap_usd": 57036,
             "name": "Sp8de",
             "network": "eth",
             "shortcut": "SPX",
@@ -16990,7 +17038,7 @@
                 "Github": "https://github.com/sirin-labs/crowdsale-smart-contract",
                 "Homepage": "https://sirinlabs.com"
             },
-            "marketcap_usd": 4079213,
+            "marketcap_usd": 4085614,
             "name": "Sirin Labs",
             "network": "eth",
             "shortcut": "SRN",
@@ -17028,7 +17076,7 @@
             "links": {
                 "Homepage": "https://smartshare.vip/#"
             },
-            "marketcap_usd": 1714947,
+            "marketcap_usd": 1705760,
             "name": "Smartshare",
             "network": "eth",
             "shortcut": "SSP",
@@ -17066,7 +17114,7 @@
             "links": {
                 "Homepage": "https://coinstarter.com"
             },
-            "marketcap_usd": 18816,
+            "marketcap_usd": 18740,
             "name": "Starter Coin",
             "network": "eth",
             "shortcut": "STAC",
@@ -17104,7 +17152,7 @@
             "links": {
                 "Homepage": "http://starbase.co"
             },
-            "marketcap_usd": 303969,
+            "marketcap_usd": 302263,
             "name": "Star Token",
             "network": "eth",
             "shortcut": "STAR",
@@ -17163,7 +17211,7 @@
             "links": {
                 "Homepage": "https://stktoken.com"
             },
-            "marketcap_usd": 943353,
+            "marketcap_usd": 934124,
             "name": "STK Token",
             "network": "eth",
             "shortcut": "STK",
@@ -17202,7 +17250,7 @@
                 "Github": "https://github.com/Storj",
                 "Homepage": "https://storj.io"
             },
-            "marketcap_usd": 18142905,
+            "marketcap_usd": 18108791,
             "name": "STORJ",
             "network": "eth",
             "shortcut": "STORJ",
@@ -17221,7 +17269,7 @@
             "links": {
                 "Homepage": "https://www.stormtoken.com"
             },
-            "marketcap_usd": 8368741,
+            "marketcap_usd": 8366426,
             "name": "Storm Token",
             "network": "eth",
             "shortcut": "STORM",
@@ -17261,7 +17309,7 @@
                 "Github": "https://github.com/Storiqa/",
                 "Homepage": "https://storiqa.com"
             },
-            "marketcap_usd": 282949,
+            "marketcap_usd": 281905,
             "name": "Storiqa",
             "network": "eth",
             "shortcut": "STQ",
@@ -17280,7 +17328,7 @@
             "links": {
                 "Homepage": "https://staker.network"
             },
-            "marketcap_usd": 2838,
+            "marketcap_usd": 2830,
             "name": "Staker",
             "network": "eth",
             "shortcut": "STR",
@@ -17319,7 +17367,7 @@
             "links": {
                 "Homepage": "https://bitjob.io"
             },
-            "marketcap_usd": 19652,
+            "marketcap_usd": 19574,
             "name": "bitJob",
             "network": "eth",
             "shortcut": "STU",
@@ -17339,7 +17387,7 @@
                 "Github": "https://github.com/stx-technologies/stox-token",
                 "Homepage": "https://www.stox.com"
             },
-            "marketcap_usd": 692423,
+            "marketcap_usd": 691650,
             "name": "StoxToken",
             "network": "eth",
             "shortcut": "STX",
@@ -17359,7 +17407,7 @@
                 "Github": "https://github.com/SubstratumNetwork",
                 "Homepage": "https://substratum.net"
             },
-            "marketcap_usd": 2394446,
+            "marketcap_usd": 2406929,
             "name": "Substratum",
             "network": "eth",
             "shortcut": "SUB",
@@ -17378,7 +17426,7 @@
             "links": {
                 "Homepage": "https://www.suretly.com"
             },
-            "marketcap_usd": 331328,
+            "marketcap_usd": 234588,
             "name": "Suretly",
             "network": "eth",
             "shortcut": "SUR",
@@ -17397,7 +17445,7 @@
             "links": {
                 "Homepage": "https://ico.savedroid.com"
             },
-            "marketcap_usd": 546492,
+            "marketcap_usd": 544404,
             "name": "savedroid",
             "network": "eth",
             "shortcut": "SVD",
@@ -17416,7 +17464,7 @@
             "links": {
                 "Homepage": "http://www.swftcoin.com"
             },
-            "marketcap_usd": 3894122,
+            "marketcap_usd": 3923131,
             "name": "SwftCoin",
             "network": "eth",
             "shortcut": "SWFTC",
@@ -17455,7 +17503,7 @@
             "links": {
                 "Homepage": "http://swarm.city"
             },
-            "marketcap_usd": 1158621,
+            "marketcap_usd": 1218924,
             "name": "Swarm City Token",
             "network": "eth",
             "shortcut": "SWT",
@@ -17474,7 +17522,7 @@
             "links": {
                 "Homepage": "http://www.spectre.ai"
             },
-            "marketcap_usd": 17499265,
+            "marketcap_usd": 16884326,
             "name": "Spectre.ai D-Token",
             "network": "eth",
             "shortcut": "SXDT",
@@ -17569,7 +17617,7 @@
             "links": {
                 "Homepage": "https://taklimakan.io"
             },
-            "marketcap_usd": 347721,
+            "marketcap_usd": 346738,
             "name": "Taklimakan Network",
             "network": "eth",
             "shortcut": "TAN",
@@ -17589,7 +17637,7 @@
                 "Github": "https://github.com/lamden",
                 "Homepage": "https://www.lamden.io"
             },
-            "marketcap_usd": 1238797,
+            "marketcap_usd": 1199152,
             "name": "Lamden Tau",
             "network": "eth",
             "shortcut": "TAU",
@@ -17648,7 +17696,7 @@
             "links": {
                 "Homepage": "https://tokenbox.io"
             },
-            "marketcap_usd": 224050,
+            "marketcap_usd": 221435,
             "name": "Tokenbox",
             "network": "eth",
             "shortcut": "TBX",
@@ -17687,7 +17735,7 @@
             "links": {
                 "Homepage": "https://www.thorecash.com"
             },
-            "marketcap_usd": 39659,
+            "marketcap_usd": 43451,
             "name": "Thore Cash",
             "network": "eth",
             "shortcut": "TCH",
@@ -17744,7 +17792,7 @@
             "links": {
                 "Homepage": "https://tokenstars.com/team"
             },
-            "marketcap_usd": 220087,
+            "marketcap_usd": 213722,
             "name": "TEAM (TokenStars)",
             "network": "eth",
             "shortcut": "TEAM",
@@ -17763,7 +17811,7 @@
             "links": {
                 "Homepage": "https://www.tokenomy.com"
             },
-            "marketcap_usd": 7203921,
+            "marketcap_usd": 7163167,
             "name": "Tokenomy",
             "network": "eth",
             "shortcut": "TEN",
@@ -17782,7 +17830,7 @@
             "links": {
                 "Homepage": "https://ico.tefoodint.com"
             },
-            "marketcap_usd": 2276837,
+            "marketcap_usd": 2267488,
             "name": "TE-FOOD",
             "network": "eth",
             "shortcut": "TFD",
@@ -17802,7 +17850,7 @@
                 "Github": "https://github.com/TrueFlip",
                 "Homepage": "https://trueflip.io"
             },
-            "marketcap_usd": 1098573,
+            "marketcap_usd": 1095024,
             "name": "TrueFlip",
             "network": "eth",
             "shortcut": "TFL",
@@ -17821,7 +17869,7 @@
             "links": {
                 "Homepage": "https://ico.truegame.io"
             },
-            "marketcap_usd": 304647,
+            "marketcap_usd": 304296,
             "name": "Truegame",
             "network": "eth",
             "shortcut": "TGAME",
@@ -17840,7 +17888,7 @@
             "links": {
                 "Homepage": "https://www.tgtcoins.com"
             },
-            "marketcap_usd": 1754,
+            "marketcap_usd": 1744,
             "name": "Target Coin",
             "network": "eth",
             "shortcut": "TGT",
@@ -17878,7 +17926,7 @@
             "links": {
                 "Homepage": "https://www.thorecoin.com"
             },
-            "marketcap_usd": 136099592,
+            "marketcap_usd": 135786710,
             "name": "ThoreCoin",
             "network": "eth",
             "shortcut": "THR",
@@ -17897,7 +17945,7 @@
             "links": {
                 "Homepage": "https://ico.thrivelabs.io"
             },
-            "marketcap_usd": 584142,
+            "marketcap_usd": 582491,
             "name": "Thrive Token",
             "network": "eth",
             "shortcut": "THRT",
@@ -17936,7 +17984,7 @@
             "links": {
                 "Homepage": "https://ties.network"
             },
-            "marketcap_usd": 149441,
+            "marketcap_usd": 118538,
             "name": "Ties.DB",
             "network": "eth",
             "shortcut": "TIE",
@@ -17974,7 +18022,7 @@
             "links": {
                 "Homepage": "https://chronobank.io"
             },
-            "marketcap_usd": 1187765,
+            "marketcap_usd": 1193567,
             "name": "Chronobank",
             "network": "eth",
             "shortcut": "TIME",
@@ -18012,7 +18060,7 @@
             "links": {
                 "Homepage": "https://www.blocktix.io"
             },
-            "marketcap_usd": 165600,
+            "marketcap_usd": 102209,
             "name": "Blocktix",
             "network": "eth",
             "shortcut": "TIX",
@@ -18069,7 +18117,7 @@
             "links": {
                 "Homepage": "https://etherscan.io/token/TokenCard"
             },
-            "marketcap_usd": 12399905,
+            "marketcap_usd": 12374325,
             "name": "TokenCard",
             "network": "eth",
             "shortcut": "TKN",
@@ -18126,7 +18174,7 @@
             "links": {
                 "Homepage": "https://transcodium.com"
             },
-            "marketcap_usd": 94622,
+            "marketcap_usd": 94310,
             "name": "Transcodium",
             "network": "eth",
             "shortcut": "TNS",
@@ -18146,7 +18194,7 @@
                 "Github": "https://github.com/tierion",
                 "Homepage": "https://tierion.com"
             },
-            "marketcap_usd": 31211429,
+            "marketcap_usd": 30838719,
             "name": "Tierion Network Token",
             "network": "eth",
             "shortcut": "TNT",
@@ -18204,7 +18252,7 @@
             "links": {
                 "Homepage": "https://origintrail.io"
             },
-            "marketcap_usd": 3015658,
+            "marketcap_usd": 2965142,
             "name": "OriginTrail",
             "network": "eth",
             "shortcut": "TRAC",
@@ -18261,7 +18309,7 @@
             "links": {
                 "Homepage": "http://www.tracto.org"
             },
-            "marketcap_usd": 22392,
+            "marketcap_usd": 22328,
             "name": "Tracto",
             "network": "eth",
             "shortcut": "TRCT",
@@ -18300,7 +18348,7 @@
                 "Github": "https://github.com/WeTrustPlatform",
                 "Homepage": "https://www.wetrust.io"
             },
-            "marketcap_usd": 1600503,
+            "marketcap_usd": 1613795,
             "name": "WeTrust",
             "network": "eth",
             "shortcut": "TRST",
@@ -18417,7 +18465,7 @@
                 "Github": "https://github.com/trusttoken",
                 "Homepage": "https://www.trusttoken.com"
             },
-            "marketcap_usd": 188306453,
+            "marketcap_usd": 188415770,
             "name": "TrueUSD",
             "network": "eth",
             "shortcut": "TUSD",
@@ -18474,7 +18522,7 @@
             "links": {
                 "Homepage": "https://taas.fund"
             },
-            "marketcap_usd": 6223254,
+            "marketcap_usd": 6248913,
             "name": "Token-as-a-Service",
             "network": "eth",
             "shortcut": "TaaS",
@@ -18494,7 +18542,7 @@
                 "Github": "https://github.com/Thartoken",
                 "Homepage": "https://thartoken.com"
             },
-            "marketcap_usd": 51640,
+            "marketcap_usd": 51361,
             "name": "Thar token",
             "network": "eth",
             "shortcut": "Thar",
@@ -18513,7 +18561,7 @@
             "links": {
                 "Homepage": "https://unibright.io"
             },
-            "marketcap_usd": 1531700,
+            "marketcap_usd": 1518932,
             "name": "Unibright",
             "network": "eth",
             "shortcut": "UBT",
@@ -18532,7 +18580,7 @@
             "links": {
                 "Homepage": "https://u.cash"
             },
-            "marketcap_usd": 2351383,
+            "marketcap_usd": 1058496,
             "name": "U.CASH",
             "network": "eth",
             "shortcut": "UCASH",
@@ -18551,7 +18599,7 @@
             "links": {
                 "Homepage": "https://uchain.world"
             },
-            "marketcap_usd": 158972,
+            "marketcap_usd": 158608,
             "name": "UChain",
             "network": "eth",
             "shortcut": "UCN",
@@ -18570,7 +18618,7 @@
             "links": {
                 "Homepage": "https://www.upfiring.com"
             },
-            "marketcap_usd": 778656,
+            "marketcap_usd": 766061,
             "name": "Upfiring",
             "network": "eth",
             "shortcut": "UFR",
@@ -18590,7 +18638,7 @@
                 "Github": "https://github.com/unikoingold/UnikoinGold-UKG-Contract",
                 "Homepage": "https://unikoingold.com"
             },
-            "marketcap_usd": 2273906,
+            "marketcap_usd": 2304350,
             "name": "UnikoinGold",
             "network": "eth",
             "shortcut": "UKG",
@@ -18609,7 +18657,7 @@
             "links": {
                 "Homepage": "https://uptoken.org"
             },
-            "marketcap_usd": 865570,
+            "marketcap_usd": 863121,
             "name": "UpToken",
             "network": "eth",
             "shortcut": "UP",
@@ -18628,7 +18676,7 @@
             "links": {
                 "Homepage": "https://sentinelprotocol.io"
             },
-            "marketcap_usd": 3113364,
+            "marketcap_usd": 3093881,
             "name": "Sentinel Protocol",
             "network": "eth",
             "shortcut": "UPP",
@@ -18647,7 +18695,7 @@
             "links": {
                 "Homepage": "https://uquidcoin.com"
             },
-            "marketcap_usd": 865084,
+            "marketcap_usd": 862653,
             "name": "Uquid Coin",
             "network": "eth",
             "shortcut": "UQC",
@@ -18687,7 +18735,7 @@
                 "Github": "https://github.com/centrehq/centre-tokens",
                 "Homepage": "https://www.centre.io"
             },
-            "marketcap_usd": 468125356,
+            "marketcap_usd": 468319991,
             "name": "USD//Coin",
             "network": "eth",
             "shortcut": "USDC",
@@ -18706,7 +18754,7 @@
             "links": {
                 "Homepage": "https://stably.io"
             },
-            "marketcap_usd": 3766536,
+            "marketcap_usd": 3773390,
             "name": "StableUSD",
             "network": "eth",
             "shortcut": "USDS",
@@ -18744,7 +18792,7 @@
             "links": {
                 "Homepage": "https://utrust.com"
             },
-            "marketcap_usd": 9492490,
+            "marketcap_usd": 9430820,
             "name": "UTRUST",
             "network": "eth",
             "shortcut": "UTK",
@@ -18764,7 +18812,7 @@
                 "Github": "https://github.com/UniversaBlockchain/universa",
                 "Homepage": "https://www.universa.io"
             },
-            "marketcap_usd": 2256201,
+            "marketcap_usd": 2247914,
             "name": "Universa",
             "network": "eth",
             "shortcut": "UTNP",
@@ -18783,7 +18831,7 @@
             "links": {
                 "Homepage": "https://uttoken.io"
             },
-            "marketcap_usd": 12448016,
+            "marketcap_usd": 12442731,
             "name": "United Traders Token",
             "network": "eth",
             "shortcut": "UTT",
@@ -18802,7 +18850,7 @@
             "links": {
                 "Homepage": "https://u.network/"
             },
-            "marketcap_usd": 3907866,
+            "marketcap_usd": 3880755,
             "name": "U Networks",
             "network": "eth",
             "shortcut": "UUU",
@@ -18822,7 +18870,7 @@
                 "Github": "https://github.com/VeriDocGlobal",
                 "Homepage": "https://www.veridocglobal.com/"
             },
-            "marketcap_usd": 3797757,
+            "marketcap_usd": 3776437,
             "name": "VeriDocGlobal",
             "network": "eth",
             "shortcut": "VDG",
@@ -18862,7 +18910,7 @@
                 "Github": "https://github.com/blockv",
                 "Homepage": "https://blockv.io"
             },
-            "marketcap_usd": 5299494,
+            "marketcap_usd": 5313772,
             "name": "BLOCKv",
             "network": "eth",
             "shortcut": "VEE",
@@ -18939,7 +18987,7 @@
             "links": {
                 "Homepage": "https://veritas.veritaseum.com"
             },
-            "marketcap_usd": 40998515,
+            "marketcap_usd": 40227878,
             "name": "Veritaseum",
             "network": "eth",
             "shortcut": "VERI",
@@ -18958,7 +19006,7 @@
             "links": {
                 "Homepage": "https://www.viberate.com"
             },
-            "marketcap_usd": 4944509,
+            "marketcap_usd": 4933983,
             "name": "Viberate",
             "network": "eth",
             "shortcut": "VIB",
@@ -18977,7 +19025,7 @@
             "links": {
                 "Homepage": "https://www.vibehub.io"
             },
-            "marketcap_usd": 5584849,
+            "marketcap_usd": 5654174,
             "name": "VIBE Coin",
             "network": "eth",
             "shortcut": "VIBE",
@@ -19017,7 +19065,7 @@
                 "Github": "https://github.com/V-ID/V-ID-Token",
                 "Homepage": "https://www.v-id.org"
             },
-            "marketcap_usd": 2722338,
+            "marketcap_usd": 2595110,
             "name": "V-ID Token",
             "network": "eth",
             "shortcut": "VIDT",
@@ -19037,7 +19085,7 @@
                 "Github": "https://github.com/Viewly/",
                 "Homepage": "https://view.ly/"
             },
-            "marketcap_usd": 148890,
+            "marketcap_usd": 157203,
             "name": "Viewly",
             "network": "eth",
             "shortcut": "VIEW",
@@ -19056,7 +19104,7 @@
             "links": {
                 "Homepage": "https://ico.vikky.io"
             },
-            "marketcap_usd": 10299,
+            "marketcap_usd": 10446,
             "name": "VikkyToken",
             "network": "eth",
             "shortcut": "VIKKY",
@@ -19135,7 +19183,7 @@
                 "Github": "https://github.com/vetri-global/",
                 "Homepage": "https://vetri.global/"
             },
-            "marketcap_usd": 441856,
+            "marketcap_usd": 440781,
             "name": "VETRI",
             "network": "eth",
             "shortcut": "VLD",
@@ -19174,7 +19222,7 @@
             "links": {
                 "Homepage": "https://voise.it"
             },
-            "marketcap_usd": 19228,
+            "marketcap_usd": 18113,
             "name": "Voise",
             "network": "eth",
             "shortcut": "VOISE",
@@ -19290,7 +19338,7 @@
             "links": {
                 "Homepage": "https://wab.network"
             },
-            "marketcap_usd": 156813,
+            "marketcap_usd": 148923,
             "name": "WABnetwork",
             "network": "eth",
             "shortcut": "WAB",
@@ -19309,7 +19357,7 @@
             "links": {
                 "Homepage": "https://taelpay.com"
             },
-            "marketcap_usd": 8667669,
+            "marketcap_usd": 8551202,
             "name": "Tael",
             "network": "eth",
             "shortcut": "WABI",
@@ -19408,7 +19456,7 @@
                 "Github": "https://github.com/WrappedBTC",
                 "Homepage": "https://wbtc.network"
             },
-            "marketcap_usd": 4746795,
+            "marketcap_usd": 4736158,
             "name": "Wrapped Bitcoin",
             "network": "eth",
             "shortcut": "WBTC",
@@ -19466,7 +19514,7 @@
             "links": {
                 "Homepage": "https://webcoin.today"
             },
-            "marketcap_usd": 75188,
+            "marketcap_usd": 74609,
             "name": "Webcoin",
             "network": "eth",
             "shortcut": "WEB",
@@ -19525,7 +19573,7 @@
                 "Github": "https://github.com/wibsonorg",
                 "Homepage": "https://wibson.org"
             },
-            "marketcap_usd": 812992,
+            "marketcap_usd": 810568,
             "name": "Wibson Token",
             "network": "eth",
             "shortcut": "WIB",
@@ -19564,7 +19612,7 @@
             "links": {
                 "Homepage": "https://wings.ai"
             },
-            "marketcap_usd": 3654845,
+            "marketcap_usd": 3636525,
             "name": "WINGS",
             "network": "eth",
             "shortcut": "WINGS",
@@ -19661,7 +19709,7 @@
             "links": {
                 "Homepage": "https://wepower.network"
             },
-            "marketcap_usd": 4851802,
+            "marketcap_usd": 4795221,
             "name": "WePower Token",
             "network": "eth",
             "shortcut": "WPR",
@@ -19680,7 +19728,7 @@
             "links": {
                 "Homepage": "https://worldcore.eu"
             },
-            "marketcap_usd": 74089,
+            "marketcap_usd": 74137,
             "name": "Worldcore",
             "network": "eth",
             "shortcut": "WRC",
@@ -19719,7 +19767,7 @@
             "links": {
                 "Homepage": "http://www.waltonchain.org"
             },
-            "marketcap_usd": 32857594,
+            "marketcap_usd": 33036280,
             "name": "Waltonchain",
             "network": "eth",
             "shortcut": "WTC",
@@ -19778,7 +19826,7 @@
             "links": {
                 "Homepage": "https://x8currency.com"
             },
-            "marketcap_usd": 863818,
+            "marketcap_usd": 890771,
             "name": "X8X",
             "network": "eth",
             "shortcut": "X8X",
@@ -19797,7 +19845,7 @@
             "links": {
                 "Homepage": "http://www.xaurum.org"
             },
-            "marketcap_usd": 3116681,
+            "marketcap_usd": 3138833,
             "name": "Xaurum",
             "network": "eth",
             "shortcut": "XAUR",
@@ -19816,7 +19864,7 @@
             "links": {
                 "Homepage": "https://billionairetoken.com"
             },
-            "marketcap_usd": 3585,
+            "marketcap_usd": 3575,
             "name": "Billionaire Token",
             "network": "eth",
             "shortcut": "XBL",
@@ -19836,7 +19884,7 @@
                 "Github": "https://github.com/blitzpredict",
                 "Homepage": "https://www.blitzpredict.io"
             },
-            "marketcap_usd": 274402,
+            "marketcap_usd": 273626,
             "name": "BlitzPredict",
             "network": "eth",
             "shortcut": "XBP",
@@ -19875,7 +19923,7 @@
             "links": {
                 "Homepage": "https://www.swisscryptotokens.ch/"
             },
-            "marketcap_usd": 12044503,
+            "marketcap_usd": 12013855,
             "name": "CryptoFranc",
             "network": "eth",
             "shortcut": "XCHF",
@@ -19933,7 +19981,7 @@
             "links": {
                 "Homepage": "https://www.xinfin.io"
             },
-            "marketcap_usd": 4747092,
+            "marketcap_usd": 4799399,
             "name": "XinFin Network",
             "network": "eth",
             "shortcut": "XDCE",
@@ -19971,7 +20019,7 @@
             "links": {
                 "Homepage": "https://www.atom-solutions.jp/en/xetchange.php"
             },
-            "marketcap_usd": 13440395,
+            "marketcap_usd": 12742962,
             "name": "ETERNAL TOKEN",
             "network": "eth",
             "shortcut": "XET",
@@ -20087,7 +20135,7 @@
             "links": {
                 "Homepage": "http://xmedchain.com"
             },
-            "marketcap_usd": 79242,
+            "marketcap_usd": 82194,
             "name": "XMED Chain",
             "network": "eth",
             "shortcut": "XMCT",
@@ -20106,7 +20154,7 @@
             "links": {
                 "Homepage": "https://www.xmx.com"
             },
-            "marketcap_usd": 33564935,
+            "marketcap_usd": 33393695,
             "name": "XMax",
             "network": "eth",
             "shortcut": "XMX",
@@ -20126,7 +20174,7 @@
                 "Github": "https://github.com/InkProtocol/",
                 "Homepage": "https://paywithink.com"
             },
-            "marketcap_usd": 493518,
+            "marketcap_usd": 493475,
             "name": "Ink Protocol",
             "network": "eth",
             "shortcut": "XNK",
@@ -20183,7 +20231,7 @@
             "links": {
                 "Homepage": "http://www.xov.io"
             },
-            "marketcap_usd": 9184,
+            "marketcap_usd": 9133,
             "name": "XOVBank",
             "network": "eth",
             "shortcut": "XOV",
@@ -20222,7 +20270,7 @@
                 "Github": "https://github.com/Bit-Nation/",
                 "Homepage": "https://bitnation.co"
             },
-            "marketcap_usd": 97254,
+            "marketcap_usd": 96811,
             "name": "Pangea Arbitration Token",
             "network": "eth",
             "shortcut": "XPAT",
@@ -20279,7 +20327,7 @@
             "links": {
                 "Homepage": "https://xyo.network"
             },
-            "marketcap_usd": 3616846,
+            "marketcap_usd": 3599496,
             "name": "XYO",
             "network": "eth",
             "shortcut": "XYO",
@@ -20298,7 +20346,7 @@
             "links": {
                 "Homepage": "http://www.yeefoundation.com"
             },
-            "marketcap_usd": 1678029,
+            "marketcap_usd": 1676235,
             "name": "Yee Token",
             "network": "eth",
             "shortcut": "YEE",
@@ -20338,7 +20386,7 @@
                 "Github": "https://github.com/zapproject",
                 "Homepage": "https://zap.store"
             },
-            "marketcap_usd": 328259,
+            "marketcap_usd": 323964,
             "name": "ZAP",
             "network": "eth",
             "shortcut": "ZAP",
@@ -20357,7 +20405,7 @@
             "links": {
                 "Homepage": "https://0chain.net"
             },
-            "marketcap_usd": 1818372,
+            "marketcap_usd": 1808202,
             "name": "0chain",
             "network": "eth",
             "shortcut": "ZCN",
@@ -20376,7 +20424,7 @@
             "links": {
                 "Homepage": "https://www.zebi.io"
             },
-            "marketcap_usd": 798347,
+            "marketcap_usd": 789407,
             "name": "Zebi",
             "network": "eth",
             "shortcut": "ZCO",
@@ -20395,7 +20443,7 @@
             "links": {
                 "Homepage": "https://zsc.io/"
             },
-            "marketcap_usd": 481031,
+            "marketcap_usd": 484956,
             "name": "Zeusshield",
             "network": "eth",
             "shortcut": "ZCS",
@@ -20415,7 +20463,7 @@
                 "Github": "https://github.com/ZEUS-coin",
                 "Homepage": "https://zeusfundme.com/"
             },
-            "marketcap_usd": 58241,
+            "marketcap_usd": 58077,
             "name": "ZeusNetwork",
             "network": "eth",
             "shortcut": "ZEUS",
@@ -20473,7 +20521,7 @@
             "links": {
                 "Homepage": "http://zipper.io"
             },
-            "marketcap_usd": 4222909,
+            "marketcap_usd": 4174122,
             "name": "Zipper",
             "network": "eth",
             "shortcut": "ZIP",
@@ -20492,7 +20540,7 @@
             "links": {
                 "Homepage": "https://zippie.org"
             },
-            "marketcap_usd": 406156,
+            "marketcap_usd": 405007,
             "name": "Zippie",
             "network": "eth",
             "shortcut": "ZIPT",
@@ -20531,7 +20579,7 @@
             "links": {
                 "Homepage": "https://zla.io"
             },
-            "marketcap_usd": 732227,
+            "marketcap_usd": 718438,
             "name": "Zilla",
             "network": "eth",
             "shortcut": "ZLA",
@@ -20550,7 +20598,7 @@
             "links": {
                 "Homepage": "https://www.zmine.com"
             },
-            "marketcap_usd": 327222,
+            "marketcap_usd": 326297,
             "name": "ZMINE",
             "network": "eth",
             "shortcut": "ZMN",
@@ -20569,7 +20617,7 @@
             "links": {
                 "Homepage": "https://zper.io"
             },
-            "marketcap_usd": 786169,
+            "marketcap_usd": 751071,
             "name": "ZPER",
             "network": "eth",
             "shortcut": "ZPR",
@@ -20589,7 +20637,7 @@
                 "Github": "https://github.com/0xProject",
                 "Homepage": "https://0xproject.com"
             },
-            "marketcap_usd": 200302631,
+            "marketcap_usd": 198315686,
             "name": "0x Project",
             "network": "eth",
             "shortcut": "ZRX",
@@ -20627,7 +20675,7 @@
             "links": {
                 "Homepage": "https://0xcert.org"
             },
-            "marketcap_usd": 244779,
+            "marketcap_usd": 245083,
             "name": "0xcert Protocol Token",
             "network": "eth",
             "shortcut": "ZXC",
@@ -20647,7 +20695,7 @@
                 "Github": "https://github.com/carVertical",
                 "Homepage": "https://www.carvertical.com"
             },
-            "marketcap_usd": 1617857,
+            "marketcap_usd": 1609414,
             "name": "carVertical",
             "network": "eth",
             "shortcut": "cV",
@@ -20725,7 +20773,7 @@
                 "Github": "https://github.com/eosdac",
                 "Homepage": "https://eosdac.io/"
             },
-            "marketcap_usd": 2364487,
+            "marketcap_usd": 2357502,
             "name": "eosDAC",
             "network": "eth",
             "shortcut": "eosDAC",
@@ -20745,7 +20793,7 @@
                 "Github": "https://github.com/havven/",
                 "Homepage": "https://www.synthetix.io"
             },
-            "marketcap_usd": 3523090,
+            "marketcap_usd": 3512505,
             "name": "USD Synth (sUSD)",
             "network": "eth",
             "shortcut": "sUSD",
@@ -20832,7 +20880,7 @@
             "links": {
                 "Homepage": "https://akroma.io"
             },
-            "marketcap_usd": 6382,
+            "marketcap_usd": 6364,
             "name": "Akroma",
             "shortcut": "AKA",
             "t1_enabled": "yes",
@@ -20895,7 +20943,7 @@
             "links": {
                 "Homepage": "https://atheios.com"
             },
-            "marketcap_usd": 8757,
+            "marketcap_usd": 8733,
             "name": "Atheios",
             "shortcut": "ATH",
             "t1_enabled": "yes",
@@ -20937,7 +20985,7 @@
             "links": {
                 "Homepage": "https://auxilium.global"
             },
-            "marketcap_usd": 196386,
+            "marketcap_usd": 182014,
             "name": "Auxilium",
             "shortcut": "AUX",
             "t1_enabled": "soon",
@@ -20959,7 +21007,7 @@
             "links": {
                 "Homepage": "https://callisto.network"
             },
-            "marketcap_usd": 1902313,
+            "marketcap_usd": 1859324,
             "name": "Callisto",
             "shortcut": "CLO",
             "t1_enabled": "yes",
@@ -21001,7 +21049,7 @@
             "links": {
                 "Homepage": "https://egem.io"
             },
-            "marketcap_usd": 89959,
+            "marketcap_usd": 89710,
             "name": "EtherGem",
             "shortcut": "EGEM",
             "t1_enabled": "yes",
@@ -21022,7 +21070,7 @@
             "links": {
                 "Homepage": "https://ellaism.org"
             },
-            "marketcap_usd": 38667,
+            "marketcap_usd": 38557,
             "name": "Ellaism",
             "shortcut": "ELLA",
             "t1_enabled": "yes",
@@ -21065,7 +21113,7 @@
             "links": {
                 "Homepage": "https://ethersocial.org"
             },
-            "marketcap_usd": 249514,
+            "marketcap_usd": 248821,
             "name": "Ethersocial Network",
             "shortcut": "ESN",
             "t1_enabled": "yes",
@@ -21086,7 +21134,7 @@
             "links": {
                 "Homepage": "https://ethereumclassic.github.io"
             },
-            "marketcap_usd": 533594223,
+            "marketcap_usd": 532415090,
             "name": "Ethereum Classic",
             "shortcut": "ETC",
             "t1_enabled": "yes",
@@ -21103,7 +21151,7 @@
             "links": {
                 "Homepage": "https://www.ethereum.org"
             },
-            "marketcap_usd": 19916075720,
+            "marketcap_usd": 19810695578,
             "name": "Ethereum",
             "shortcut": "ETH",
             "t1_enabled": "yes",
@@ -21120,7 +21168,7 @@
             "links": {
                 "Homepage": "https://ether1.org"
             },
-            "marketcap_usd": 299450,
+            "marketcap_usd": 296839,
             "name": "Ether-1",
             "shortcut": "ETHO",
             "t1_enabled": "yes",
@@ -21141,7 +21189,7 @@
             "links": {
                 "Homepage": "https://einc.io"
             },
-            "marketcap_usd": 21478,
+            "marketcap_usd": 20896,
             "name": "EtherInc",
             "shortcut": "ETI",
             "t1_enabled": "yes",
@@ -21183,7 +21231,7 @@
             "links": {
                 "Homepage": "https://expanse.tech"
             },
-            "marketcap_usd": 1311894,
+            "marketcap_usd": 1295091,
             "name": "Expanse",
             "shortcut": "EXP",
             "t1_enabled": "yes",
@@ -21204,7 +21252,7 @@
             "links": {
                 "Homepage": "https://gochain.io"
             },
-            "marketcap_usd": 8061131,
+            "marketcap_usd": 8380923,
             "name": "GoChain",
             "shortcut": "GO",
             "t1_enabled": "yes",
@@ -21225,7 +21273,7 @@
             "links": {
                 "Homepage": "https://hpb.io"
             },
-            "marketcap_usd": 7532928,
+            "marketcap_usd": 7510325,
             "name": "High Performance Blockchain",
             "shortcut": "HPB",
             "t1_enabled": "yes",
@@ -21246,7 +21294,7 @@
             "links": {
                 "Homepage": "https://metadium.com"
             },
-            "marketcap_usd": 6973389,
+            "marketcap_usd": 6935256,
             "name": "Metadium",
             "shortcut": "META",
             "t1_enabled": "yes",
@@ -21309,7 +21357,7 @@
             "links": {
                 "Homepage": "https://pirl.io"
             },
-            "marketcap_usd": 528970,
+            "marketcap_usd": 529543,
             "name": "Pirl",
             "shortcut": "PIRL",
             "t1_enabled": "yes",
@@ -21393,7 +21441,7 @@
             "links": {
                 "Homepage": "https://ubiqsmart.com"
             },
-            "marketcap_usd": 3739825,
+            "marketcap_usd": 3803331,
             "name": "Ubiq",
             "shortcut": "UBQ",
             "t1_enabled": "yes",
@@ -21436,7 +21484,7 @@
                 "Github": "https://github.com/input-output-hk/cardano-sl",
                 "Homepage": "https://www.cardano.org"
             },
-            "marketcap_usd": 1066608231,
+            "marketcap_usd": 1060867755,
             "name": "Cardano",
             "shortcut": "ADA",
             "t1_enabled": "no",
@@ -21475,7 +21523,7 @@
                 "Github": "https://github.com/EOSIO/eos",
                 "Homepage": "https://eos.io"
             },
-            "marketcap_usd": 2916943357,
+            "marketcap_usd": 2906552188,
             "name": "EOS",
             "shortcut": "EOS",
             "t1_enabled": "no",
@@ -21493,7 +21541,7 @@
                 "Github": "https://github.com/LiskHQ/lisk",
                 "Homepage": "https://lisk.io/"
             },
-            "marketcap_usd": 98054642,
+            "marketcap_usd": 97843173,
             "name": "Lisk",
             "shortcut": "LSK",
             "t1_enabled": "yes",
@@ -21511,7 +21559,7 @@
                 "Github": "https://github.com/maidsafe",
                 "Homepage": "https://maidsafe.net"
             },
-            "marketcap_usd": 62401530,
+            "marketcap_usd": 61836728,
             "name": "MaidSafeCoin",
             "shortcut": "MAID",
             "t1_enabled": "yes",
@@ -21529,7 +21577,7 @@
                 "Github": "https://github.com/OmniLayer",
                 "Homepage": "https://www.omnilayer.org"
             },
-            "marketcap_usd": 752697,
+            "marketcap_usd": 750221,
             "name": "Omni",
             "shortcut": "OMNI",
             "t1_enabled": "yes",
@@ -21547,7 +21595,7 @@
                 "Github": "https://github.com/ontio/ontology",
                 "Homepage": "https://ont.io"
             },
-            "marketcap_usd": 346117802,
+            "marketcap_usd": 344358016,
             "name": "Ontology",
             "shortcut": "ONT",
             "t1_enabled": "no",
@@ -21559,7 +21607,7 @@
             "links": {
                 "Homepage": "https://tether.to"
             },
-            "marketcap_usd": 4122644729,
+            "marketcap_usd": 4121869366,
             "name": "Tether",
             "shortcut": "USDT",
             "t1_enabled": "yes",
@@ -21577,7 +21625,7 @@
                 "Github": "https://github.com/wanchain/go-wanchain",
                 "Homepage": "https://wanchain.org"
             },
-            "marketcap_usd": 22412523,
+            "marketcap_usd": 22109508,
             "name": "Wanchain",
             "shortcut": "WAN",
             "t1_enabled": "yes",
@@ -21595,7 +21643,7 @@
                 "Github": "https://github.com/stellar/stellar-core",
                 "Homepage": "https://www.stellar.org"
             },
-            "marketcap_usd": 1291583767,
+            "marketcap_usd": 1292370349,
             "name": "Stellar",
             "shortcut": "XLM",
             "t1_enabled": "yes",
@@ -21605,6 +21653,10 @@
                 {
                     "name": "Account Viewer",
                     "url": "https://trezor.io/stellar/"
+                },
+                {
+                    "name": "Exodus",
+                    "url": "https://www.exodus.io"
                 }
             ]
         },
@@ -21613,7 +21665,7 @@
                 "Github": "https://github.com/monero-project/monero",
                 "Homepage": "https://getmonero.org"
             },
-            "marketcap_usd": 922667095,
+            "marketcap_usd": 921997665,
             "name": "Monero",
             "shortcut": "XMR",
             "t1_enabled": "no",
@@ -21631,7 +21683,7 @@
                 "Github": "https://github.com/ripple/rippled",
                 "Homepage": "https://ripple.com"
             },
-            "marketcap_usd": 12655864389,
+            "marketcap_usd": 12550182835,
             "name": "Ripple",
             "shortcut": "XRP",
             "t1_enabled": "no",
@@ -21641,6 +21693,14 @@
                 {
                     "name": "Trezor Beta",
                     "url": "https://beta-wallet.trezor.io/next/"
+                },
+                {
+                    "name": "Exodus",
+                    "url": "https://www.exodus.io"
+                },
+                {
+                    "name": "Magnum",
+                    "url": "https://magnumwallet.co"
                 }
             ]
         },
@@ -21649,7 +21709,7 @@
                 "Github": "https://github.com/tezos/tezos",
                 "Homepage": "https://tezos.com"
             },
-            "marketcap_usd": 607990939,
+            "marketcap_usd": 609351372,
             "name": "Tezos",
             "shortcut": "XTZ",
             "t1_enabled": "no",
@@ -21691,7 +21751,7 @@
             "links": {
                 "Homepage": "https://www.dimcoin.io"
             },
-            "marketcap_usd": 222614,
+            "marketcap_usd": 222090,
             "name": "DIMCOIN",
             "shortcut": "DIM",
             "t1_enabled": "yes",
@@ -21713,7 +21773,7 @@
             "links": {
                 "Homepage": "https://www.dimcoin.io"
             },
-            "marketcap_usd": 222614,
+            "marketcap_usd": 222090,
             "name": "DIM TOKEN",
             "shortcut": "DIMTOK",
             "t1_enabled": "yes",
@@ -21776,7 +21836,7 @@
             "links": {
                 "Homepage": "https://nem.io"
             },
-            "marketcap_usd": 350907726,
+            "marketcap_usd": 344961670,
             "name": "NEM",
             "shortcut": "XEM",
             "t1_enabled": "yes",
@@ -21795,12 +21855,12 @@
         }
     },
     "info": {
-        "marketcap_supported": "93.69 %",
-        "marketcap_usd": 211606097088,
+        "marketcap_supported": "93.74 %",
+        "marketcap_usd": 210851587828,
         "t1_coins": 1080,
         "t2_coins": 1093,
-        "total_marketcap_usd": 225865318908,
-        "updated_at": 1571147868,
-        "updated_at_readable": "Tue Oct 15 13:57:48 2019"
+        "total_marketcap_usd": 224936984879,
+        "updated_at": 1571152245,
+        "updated_at_readable": "Tue Oct 15 15:10:45 2019"
     }
 }
