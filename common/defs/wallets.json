@@ -97,5 +97,8 @@
     },
     "bitcoin:XSN": {
         "Stakenet": "https://xsnexplorer.io/trezor"
+    },
+    "bitcoin:SYS": {
+        "Spark": "https://github.com/blockchainfoundryinc/syscoin-spark-wallet"
     }
 }
