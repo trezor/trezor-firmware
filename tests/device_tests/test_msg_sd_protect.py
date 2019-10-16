@@ -16,47 +16,36 @@
 
 import pytest
 
-from trezorlib import debuglink, device, messages as proto
+from trezorlib import device
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.messages import SdProtectOperationType as Op
 
-from ..common import MNEMONIC12
+pytestmark = [pytest.mark.skip_t1, pytest.mark.sd_card]
 
 
-@pytest.mark.skip_t1
-class TestMsgSdProtect:
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sd_protect(self, client):
+def test_sd_protect_enable(client):
+    # Disabling SD protection should fail
+    with pytest.raises(TrezorFailure):
+        device.sd_protect(client, Op.DISABLE)
 
-        # Disabling SD protection should fail
-        with pytest.raises(TrezorFailure):
-            device.sd_protect(client, proto.SdProtectOperationType.DISABLE)
+    # Enable SD protection
+    device.sd_protect(client, Op.ENABLE)
 
-        # Enable SD protection
-        device.sd_protect(client, proto.SdProtectOperationType.ENABLE)
+    # Enabling SD protection should fail
+    with pytest.raises(TrezorFailure):
+        device.sd_protect(client, Op.ENABLE)
 
-        # Enabling SD protection should fail
-        with pytest.raises(TrezorFailure):
-            device.sd_protect(client, proto.SdProtectOperationType.ENABLE)
 
-        # Wipe
-        device.wipe(client)
-        debuglink.load_device_by_mnemonic(
-            client,
-            mnemonic=MNEMONIC12,
-            pin="",
-            passphrase_protection=False,
-            label="test",
-        )
+def test_sd_protect_refresh(client):
+    # Enable SD protection
+    device.sd_protect(client, Op.ENABLE)
 
-        # Enable SD protection
-        device.sd_protect(client, proto.SdProtectOperationType.ENABLE)
+    # Refresh SD protection
+    device.sd_protect(client, Op.REFRESH)
 
-        # Refresh SD protection
-        device.sd_protect(client, proto.SdProtectOperationType.REFRESH)
+    # Disable SD protection
+    device.sd_protect(client, Op.DISABLE)
 
-        # Disable SD protection
-        device.sd_protect(client, proto.SdProtectOperationType.DISABLE)
-
-        # Refreshing SD protection should fail
-        with pytest.raises(TrezorFailure):
-            device.sd_protect(client, proto.SdProtectOperationType.REFRESH)
+    # Refreshing SD protection should fail
+    with pytest.raises(TrezorFailure):
+        device.sd_protect(client, Op.REFRESH)
