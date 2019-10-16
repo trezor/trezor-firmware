@@ -46,6 +46,10 @@ class DebugLink:
     def state(self):
         return self._call(proto.DebugLinkGetState())
 
+    def wait_layout(self):
+        obj = self._call(proto.DebugLinkGetState(wait_layout=True))
+        return obj.layout_lines
+
     def read_pin(self):
         state = self.state()
         return state.pin, state.matrix

@@ -94,7 +94,11 @@ if __debug__:
         m.mnemonic_type = mnemonic.get_type()
         m.passphrase_protection = has_passphrase()
         m.reset_entropy = reset_internal_entropy
-        m.layout_lines = current_content
+
+        if msg.wait_layout:
+            m.layout_lines = await layout_change_chan.take()
+        else:
+            m.layout_lines = current_content
 
         if msg.wait_word_pos:
             m.reset_word_pos = await reset_word_index.take()
