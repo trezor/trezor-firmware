@@ -1668,29 +1668,6 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 confidential_assets=None,
             )
-        elif name == "ZClassic":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="ZCL",
-                address_type=7352,
-                address_type_p2sh=7357,
-                maxfee_kb=1000000,
-                signed_message_header="Zcash Signed Message:\n",
-                xpub_magic=0x0488b21e,
-                xpub_magic_segwit_p2sh=None,
-                xpub_magic_segwit_native=None,
-                bech32_prefix=None,
-                cashaddr_prefix=None,
-                slip44=147,
-                segwit=False,
-                fork_id=None,
-                force_bip143=False,
-                bip115=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                confidential_assets=None,
-            )
         elif name == "ZCore":
             return CoinInfo(
                 coin_name=name,
