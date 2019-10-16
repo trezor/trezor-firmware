@@ -24,6 +24,8 @@ from trezorlib.device import apply_settings, wipe as wipe_device
 from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 from trezorlib.transport import enumerate_devices, get_transport
 
+from .background import BackgroundDeviceHandler
+
 
 def get_device():
     path = os.environ.get("TREZOR_PATH")
@@ -156,3 +158,23 @@ def pytest_runtest_setup(item):
     skip_altcoins = int(os.environ.get("TREZOR_PYTEST_SKIP_ALTCOINS", 0))
     if item.get_closest_marker("altcoin") and skip_altcoins:
         pytest.skip("Skipping altcoin test")
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    # Make test results available in fixtures.
+    # See https://docs.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
+    outcome = yield
+    rep = outcome.get_result()
+    setattr(item, f"rep_{rep.when}", rep)
+
+
+@pytest.fixture
+def device_handler(client, request):
+    device_handler = BackgroundDeviceHandler(client)
+    yield device_handler
+
+    # make sure all background tasks are done
+    finalized_ok = device_handler.check_finalize()
+    if request.node.rep_call.passed and not finalized_ok:
+        raise RuntimeError("Test did not check result of background task")
