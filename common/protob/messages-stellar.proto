@@ -59,6 +59,7 @@ message StellarSignTx {
  * @next StellarCreateAccountOp
  * @next StellarPathPaymentOp
  * @next StellarManageOfferOp
+ * @next StellarManageBuyOfferOp
  * @next StellarCreatePassiveOfferOp
  * @next StellarSetOptionsOp
  * @next StellarChangeTrustOp
@@ -118,6 +119,21 @@ message StellarManageOfferOp {
     optional StellarAssetType selling_asset = 2;
     optional StellarAssetType buying_asset = 3;
     optional sint64 amount = 4;
+    optional uint32 price_n = 5;                    // Price numerator
+    optional uint32 price_d = 6;                    // Price denominator
+    optional uint64 offer_id = 7;                   // Offer ID for updating an existing offer
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarManageBuyOfferOp {
+    optional string source_account = 1;             // (optional) source account address
+    optional StellarAssetType selling_asset = 2;
+    optional StellarAssetType buying_asset = 3;
+    optional sint64 buy_amount = 4;
     optional uint32 price_n = 5;                    // Price numerator
     optional uint32 price_d = 6;                    // Price denominator
     optional uint64 offer_id = 7;                   // Offer ID for updating an existing offer

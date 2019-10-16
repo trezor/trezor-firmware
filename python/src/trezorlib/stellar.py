@@ -46,6 +46,7 @@ OP_ACCOUNT_MERGE = 8
 OP_INFLATION = 9  # Included for documentation purposes, not supported by Trezor
 OP_MANAGE_DATA = 10
 OP_BUMP_SEQUENCE = 11
+OP_MANAGE_BUY_OFFER = 12
 
 
 DEFAULT_BIP32_PATH = "m/44h/148h/0h"
@@ -181,6 +182,17 @@ def _parse_operation_bytes(unpacker):
             selling_asset=_xdr_read_asset(unpacker),
             buying_asset=_xdr_read_asset(unpacker),
             amount=unpacker.unpack_hyper(),
+            price_n=unpacker.unpack_uint(),
+            price_d=unpacker.unpack_uint(),
+            offer_id=unpacker.unpack_uhyper(),
+        )
+
+    if type == OP_MANAGE_BUY_OFFER:
+        return messages.StellarManageBuyOfferOp(
+            source_account=source_account,
+            selling_asset=_xdr_read_asset(unpacker),
+            buying_asset=_xdr_read_asset(unpacker),
+            buy_amount=unpacker.unpack_hyper(),
             price_n=unpacker.unpack_uint(),
             price_d=unpacker.unpack_uint(),
             offer_id=unpacker.unpack_uhyper(),

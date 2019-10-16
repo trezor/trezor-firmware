@@ -24,6 +24,8 @@ StellarPathPaymentOp.paths                              max_count:5
 
 StellarManageOfferOp.source_account                     max_size:57
 
+StellarManageBuyOfferOp.source_account                  max_size:57
+
 StellarCreatePassiveOfferOp.source_account              max_size:57
 
 StellarSetOptionsOp.source_account                      max_size:57

@@ -5,6 +5,7 @@ from trezor.messages.StellarBumpSequenceOp import StellarBumpSequenceOp
 from trezor.messages.StellarChangeTrustOp import StellarChangeTrustOp
 from trezor.messages.StellarCreateAccountOp import StellarCreateAccountOp
 from trezor.messages.StellarCreatePassiveOfferOp import StellarCreatePassiveOfferOp
+from trezor.messages.StellarManageBuyOfferOp import StellarManageBuyOfferOp
 from trezor.messages.StellarManageDataOp import StellarManageDataOp
 from trezor.messages.StellarManageOfferOp import StellarManageOfferOp
 from trezor.messages.StellarPathPaymentOp import StellarPathPaymentOp
@@ -63,6 +64,15 @@ def write_manage_offer_op(w, msg: StellarManageOfferOp):
     _write_asset(w, msg.selling_asset)
     _write_asset(w, msg.buying_asset)
     writers.write_uint64(w, msg.amount)  # amount to sell
+    writers.write_uint32(w, msg.price_n)  # numerator
+    writers.write_uint32(w, msg.price_d)  # denominator
+    writers.write_uint64(w, msg.offer_id)
+
+
+def write_manage_buy_offer_op(w, msg: StellarManageBuyOfferOp):
+    _write_asset(w, msg.selling_asset)
+    _write_asset(w, msg.buying_asset)
+    writers.write_uint64(w, msg.buy_amount)  # amount to buy
     writers.write_uint32(w, msg.price_n)  # numerator
     writers.write_uint32(w, msg.price_d)  # denominator
     writers.write_uint64(w, msg.offer_id)

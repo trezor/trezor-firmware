@@ -481,6 +481,93 @@ bool stellar_confirmManageOfferOp(const StellarManageOfferOp *msg) {
   return true;
 }
 
+bool stellar_confirmManageBuyOfferOp(const StellarManageBuyOfferOp *msg) {
+  if (!stellar_signing) return false;
+
+  if (!stellar_confirmSourceAccount(msg->has_source_account,
+                                    msg->source_account)) {
+    stellar_signingAbort(_("Source account error"));
+    return false;
+  }
+
+  // Hash: operation type
+  stellar_hashupdate_uint32(3);
+
+  // New Offer / Delete #123 / Update #123
+  char str_offer[32] = {0};
+  if (msg->offer_id == 0) {
+    strlcpy(str_offer, _("New Offer"), sizeof(str_offer));
+  } else {
+    char str_offer_id[20] = {0};
+    stellar_format_uint64(msg->offer_id, str_offer_id, sizeof(str_offer_id));
+
+    if (msg->buy_amount == 0) {
+      strlcpy(str_offer, _("Delete #"), sizeof(str_offer));
+    } else {
+      strlcpy(str_offer, _("Update #"), sizeof(str_offer));
+    }
+
+    strlcat(str_offer, str_offer_id, sizeof(str_offer));
+  }
+
+  char str_buying[32] = {0};
+  char str_buy_amount[32] = {0};
+  char str_buying_asset[32] = {0};
+
+  stellar_format_asset(&(msg->buying_asset), str_buying_asset,
+                       sizeof(str_buying_asset));
+  stellar_format_stroops(msg->buy_amount, str_buy_amount,
+                         sizeof(str_buy_amount));
+
+  /*
+   Buy 200
+   XLM (Native Asset)
+  */
+  strlcpy(str_buying, _("Buy "), sizeof(str_buying));
+  strlcat(str_buying, str_buy_amount, sizeof(str_buying));
+
+  char str_selling[32] = {0};
+  char str_selling_asset[32] = {0};
+  char str_price[32] = {0};
+
+  stellar_format_asset(&(msg->selling_asset), str_selling_asset,
+                       sizeof(str_selling_asset));
+  stellar_format_price(msg->price_n, msg->price_d, str_price,
+                       sizeof(str_price));
+
+  /*
+   For 0.675952 Per
+   USD (G12345678)
+   */
+  strlcpy(str_selling, _("For "), sizeof(str_selling));
+  strlcat(str_selling, str_price, sizeof(str_selling));
+  strlcat(str_selling, _(" Per"), sizeof(str_selling));
+
+  stellar_layoutTransactionDialog(str_offer, str_buying, str_buying_asset,
+                                  str_selling, str_selling_asset);
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    stellar_signingAbort(_("User canceled"));
+    return false;
+  }
+
+  // Hash buying asset
+  stellar_hashupdate_asset(&(msg->buying_asset));
+  // selling asset
+  stellar_hashupdate_asset(&(msg->selling_asset));
+  // amount to buy (signed vs. unsigned doesn't matter wrt hashing)
+  stellar_hashupdate_uint64(msg->buy_amount);
+  // numerator
+  stellar_hashupdate_uint32(msg->price_n);
+  // denominator
+  stellar_hashupdate_uint32(msg->price_d);
+  // offer ID
+  stellar_hashupdate_uint64(msg->offer_id);
+
+  // At this point, the operation is confirmed
+  stellar_activeTx.confirmed_operations++;
+  return true;
+}
+
 bool stellar_confirmCreatePassiveOfferOp(
     const StellarCreatePassiveOfferOp *msg) {
   if (!stellar_signing) return false;

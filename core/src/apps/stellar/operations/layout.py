@@ -8,6 +8,7 @@ from trezor.messages.StellarBumpSequenceOp import StellarBumpSequenceOp
 from trezor.messages.StellarChangeTrustOp import StellarChangeTrustOp
 from trezor.messages.StellarCreateAccountOp import StellarCreateAccountOp
 from trezor.messages.StellarCreatePassiveOfferOp import StellarCreatePassiveOfferOp
+from trezor.messages.StellarManageBuyOfferOp import StellarManageBuyOfferOp
 from trezor.messages.StellarManageDataOp import StellarManageDataOp
 from trezor.messages.StellarManageOfferOp import StellarManageOfferOp
 from trezor.messages.StellarPathPaymentOp import StellarPathPaymentOp
@@ -97,6 +98,18 @@ async def confirm_manage_offer_op(ctx, op: StellarManageOfferOp):
     await _confirm_offer(ctx, text, op)
 
 
+async def confirm_manage_buy_offer_op(ctx, op: StellarManageBuyOfferOp):
+    if op.offer_id == 0:
+        text = "New Offer"
+    else:
+        if op.amount == 0:
+            text = "Delete"
+        else:
+            text = "Update"
+        text += " #%d" % op.offer_id
+    await _confirm_buy_offer(ctx, text, op)
+
+
 async def _confirm_offer(ctx, title, op):
     text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
     text.bold(title)
@@ -108,6 +121,19 @@ async def _confirm_offer(ctx, title, op):
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
     await confirm_asset_issuer(ctx, op.selling_asset)
     await confirm_asset_issuer(ctx, op.buying_asset)
+
+
+async def _confirm_buy_offer(ctx, title, op):
+    text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
+    text.bold(title)
+    text.normal(
+        "Buy %s %s" % (format_amount(op.buy_amount, ticker=False), op.buying_asset.code)
+    )
+    text.normal("For %f" % (op.price_n / op.price_d))
+    text.normal("Per %s" % format_asset_code(op.selling_asset))
+    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
+    await confirm_asset_issuer(ctx, op.buying_asset)
+    await confirm_asset_issuer(ctx, op.selling_asset)
 
 
 async def confirm_manage_data_op(ctx, op: StellarManageDataOp):
