@@ -61,9 +61,13 @@ if __debug__:
 
     loop.schedule(debuglink_decision_dispatcher())
 
+    async def return_layout_change(ctx: wire.Context):
+        content = await layout_change_chan.take()
+        await ctx.write(DebugLinkLayout(lines=content))
+
     async def dispatch_DebugLinkDecision(
         ctx: wire.Context, msg: DebugLinkDecision
-    ) -> Optional[DebugLinkLayout]:
+    ) -> None:
         if debuglink_decision_chan.putters:
             log.warning(__name__, "DebugLinkDecision queue is not empty")
 
@@ -76,8 +80,7 @@ if __debug__:
             debuglink_decision_chan.publish(msg)
 
         if msg.wait:
-            content = await layout_change_chan.take()
-            return DebugLinkLayout(lines=content)
+            loop.schedule(return_layout_change(ctx))
 
     async def dispatch_DebugLinkGetState(
         ctx: wire.Context, msg: DebugLinkGetState
