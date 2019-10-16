@@ -91,6 +91,16 @@ core unix upgrade test:
     - tests/download_emulators.sh
     - pipenv run pytest tests/upgrade_tests
 
+core mypy test:
+  stage: test
+  <<: *only_changes_core
+  script:
+    - cd core
+    - (pipenv run make mypy | tee /tmp/mypy-result) || true
+    - CNT=`wc -l < /tmp/mypy-result`
+    - echo $CNT
+    - (( $CNT != 0 )) && (( $CNT < 154 )) && exit 0  # currently hardcoded, will be fixed
+
 
 # Crypto
 
