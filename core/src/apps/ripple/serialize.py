@@ -132,6 +132,8 @@ def write(w: bytearray, field: dict, value):
     elif field["type"] == binfield["TYPES"]["AccountID"]:
         write_bytes(w, helpers.decode_address(value))
     elif field["type"] == binfield["TYPES"]["Blob"]:
+        if type(value) is str:
+            value = bytes.fromhex(value)
         write_bytes(w, value)
     elif field["type"] == binfield["TYPES"]["STArray"]:
         w.extend(
