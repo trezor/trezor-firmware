@@ -139,6 +139,29 @@ class TestMsgRippleSignTx:
         msg = ripple.create_sign_tx_msg(
             {
                 "TransactionType": "Payment",
+                "Flags": 2147483648,
+                "Sequence": 2,
+                "Fee": "12",
+                "Payment": {
+                    "Amount": "3000000",
+                    "Destination": "rJX2KwzaLJDyFhhtXKi3htaLfaUH2tptEX",
+                    "DestinationTag": 128
+                }
+            }
+        )
+        resp = ripple.sign_tx(client, parse_path("m/44'/144'/0'/0/0"), msg)
+        assert (
+            resp.signature.hex()
+            == "3045022100c7bdb7dfcd049c6a60cddbb3c31ed0bc966ef7f5c4586732362ccd55080235da02202942dad1c39bf8d88ec7ec43f93628fbe67754e13527e11fe4761a0a745132f7"
+        )
+        assert (
+            resp.serialized_tx.hex()
+            == "120000228000000024000000022e000000806140000000002dc6c068400000000000000c732102131facd1eab748d6cddc492f54b04e8c35658894f4add2232ebc5afe7521dbe474473045022100c7bdb7dfcd049c6a60cddbb3c31ed0bc966ef7f5c4586732362ccd55080235da02202942dad1c39bf8d88ec7ec43f93628fbe67754e13527e11fe4761a0a745132f781148fb40e1ffa5d557ce9851a535af94965e0dd09888314c0426cfcb532e7523bd87b14e12c24c85121aaaa"
+        )
+
+        msg = ripple.create_sign_tx_msg(
+            {
+                "TransactionType": "Payment",
                 "Flags": 0,
                 "Sequence": 1,
                 "LastLedgerSequence": 760000,
@@ -159,6 +182,111 @@ class TestMsgRippleSignTx:
         assert (
             resp.serialized_tx.hex()
             == "120000228000000024000000012e0000032a201b000b98c06140000000014fb18068400000000000000c732102131facd1eab748d6cddc492f54b04e8c35658894f4add2232ebc5afe7521dbe4744730450221008f6710f8c312cbb2c0dca6f11316aa44e588f47c6c5583253fd263e621f2699f022021d6ee388f37802c8507d751b5f5654ee74faf0ec8a546eb225147625e0c910581148fb40e1ffa5d557ce9851a535af94965e0dd09888314c0426cfcb532e7523bd87b14e12c24c85121aaaa"
+        )
+
+        msg = ripple.create_sign_tx_msg(
+            {
+                "TransactionType": "Payment",
+                "Flags": 2147483648,
+                "Sequence": 2,
+                "Fee": "12",
+                "Payment": {
+                    "Amount": "22000000",
+                    "Destination": "rN1CuZjtCe337zrNYqYNYkCZzwPa59YF1w",
+                    "DestinationTag": 128
+                }
+            }
+
+        )
+        resp = ripple.sign_tx(client, parse_path("m/44'/144'/0'/0/0"), msg)
+        assert (
+            resp.signature.hex()
+            == "304402207b861830121fb725d639af304f5dd28e1b098968a8ac3c7adfbd4abc3f12867d02206ac7543164f97a139e62337a3c897e5103585cd7478be1ad56e5cfbaf767652b"
+        )
+        assert (
+            resp.serialized_tx.hex()
+            == "120000228000000024000000022e000000806140000000014fb18068400000000000000c732102131facd1eab748d6cddc492f54b04e8c35658894f4add2232ebc5afe7521dbe47446304402207b861830121fb725d639af304f5dd28e1b098968a8ac3c7adfbd4abc3f12867d02206ac7543164f97a139e62337a3c897e5103585cd7478be1ad56e5cfbaf767652b81148fb40e1ffa5d557ce9851a535af94965e0dd09888314982ee91daadb496f1020c9ea8b1695371e50cfcc"
+
+        msg = ripple.create_sign_tx_msg(
+            {
+                "TransactionType": "SignerListSet",
+                "Sequence": 1,
+                "Fee": "32",
+                "multisig": False,
+                "SignerListSet": {
+                    "SignerQuorum": 3,
+                    "SignerEntries": [
+                        {
+                            "Account": "rJX2KwzaLJDyFhhtXKi3htaLfaUH2tptEX",
+                            "SignerWeight": 1
+                        },
+                        {
+                            "Account": "r9skfe7kZkvqss7oMB3tuj4a59PXD5wRa2",
+                            "SignerWeight": 3
+                        },
+                        {
+                            "Account": "rNb97BY81ZpzvxHRJytSSrqbx2PJTS2pEd",
+                            "SignerWeight": 2
+                        }
+                    ]
+                }
+            }
+        )
+        resp = ripple.sign_tx(client, parse_path("m/44'/144'/4'/0/0"), msg)
+        assert (
+            resp.signature.hex()
+            == "3044022003770053e8b39fdc43a043724d2aa07e1b59f8359cd96abbb661e9f43f6b982002202adbb43966e5a50f4f123cef700d8c44e9f9ce41871ca5b025bc617998f928f0"
+        )
+        assert (
+            resp.serialized_tx.hex()
+            == "12000c228000000024000000012023000000036840000000000000207321039827db639207dc51057f5ffd4060a367526ab67447ef45b9286d8d9383a1b6c374463044022003770053e8b39fdc43a043724d2aa07e1b59f8359cd96abbb661e9f43f6b982002202adbb43966e5a50f4f123cef700d8c44e9f9ce41871ca5b025bc617998f928f08114982ee91daadb496f1020c9ea8b1695371e50cfccf4eb1300018114c0426cfcb532e7523bd87b14e12c24c85121aaaae1eb13000381145845d414ad520dd3700167c2749d4150385fd713e1eb1300028114950ed8dfd390534a1871873975ece0dfa8dde703e1f1"
+        )
+
+         msg = ripple.create_sign_tx_msg(
+             {
+                 "Flags": 2147483648,
+                 "TransactionType": "AccountSet",
+                 "Sequence": 2,
+                 "Fee": "12",
+                 "AccountSet": {
+                     "SetFlag": 4
+                 }
+             }
+        )
+        resp = ripple.sign_tx(client, parse_path("m/44'/144'/4'/0/0"), msg)
+        assert (
+            resp.signature.hex()
+            == "30440220280c0340c905eadd64997ca41a42c1968e86e6015bc36ff397ab89b8b3ee04e002203461928cccb2796df596aacf468239a13de6398d4b7bad894adf860bb827ca44"
+        )
+        assert (
+            resp.serialized_tx.hex()
+            == "1200032280000000240000000220210000000468400000000000000c7321039827db639207dc51057f5ffd4060a367526ab67447ef45b9286d8d9383a1b6c3744630440220280c0340c905eadd64997ca41a42c1968e86e6015bc36ff397ab89b8b3ee04e002203461928cccb2796df596aacf468239a13de6398d4b7bad894adf860bb827ca448114982ee91daadb496f1020c9ea8b1695371e50cfcc"
+        )
+
+         msg = ripple.create_sign_tx_msg(
+             {
+                 "Flags": 2147483648,
+                 "TransactionType": "Payment",
+                 "Sequence": 4,
+                 "Fee": "20",
+                 "Payment": {
+                     "Amount": "22000000",
+                     "Destination": "r9skfe7kZkvqss7oMB3tuj4a59PXD5wRa2",
+                     "DestinationTag": 128
+                 },
+                 "Multisig": True,
+                 "Account": "rN1CuZjtCe337zrNYqYNYkCZzwPa59YF1w"
+             }
+
+        )
+        resp = ripple.sign_tx(client, parse_path("m/44'/144'/3'/0/0"), msg)
+        assert (
+            resp.signature.hex()
+            == "304402202bc7665be30624688b675ea540c0d771a8067c80881d9ede644d1e488cc54076022078f21618113b3fdad05ee21b5772ac3885fa05343d3e203bc9650d03beed0f8e"
+        )
+        assert (
+            resp.serialized_tx.hex()
+            == "120000228000000024000000042e000000806140000000014fb18068400000000000001473008114982ee91daadb496f1020c9ea8b1695371e50cfcc83145845d414ad520dd3700167c2749d4150385fd713f3e010732102e8a48a36f7053431f1a16221c639ab675b0a2a6ce6de0ead5866aa3c495450597446304402202bc7665be30624688b675ea540c0d771a8067c80881d9ede644d1e488cc54076022078f21618113b3fdad05ee21b5772ac3885fa05343d3e203bc9650d03beed0f8e81145845d414ad520dd3700167c2749d4150385fd713e1f1"
         )
 
     def test_ripple_sign_invalid_fee(self, client):
