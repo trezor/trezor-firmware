@@ -2,6 +2,9 @@
     "bitcoin:ACM": {
         "Actilectrum": "https://actilectrum.org"
     },
+    "bitcoin:AXE": {
+        "Electrum-AXE": "https://github.com/AXErunners/electrum-axe"
+    },
     "bitcoin:BCH": {
         "Electron Cash": "https://electroncash.org",
         "Exodus": "https://www.exodus.io"
@@ -11,8 +14,8 @@
     },
     "bitcoin:BTC": {
         "Electrum": "https://electrum.org",
-        "Magnum": "https://magnumwallet.co",
-        "Exodus": "https://www.exodus.io"
+        "Exodus": "https://www.exodus.io",
+        "Magnum": "https://magnumwallet.co"
     },
     "bitcoin:BTCP": {
         "BTCP Electrum": "https://github.com/BTCPrivate/electrum-btcp"
@@ -22,8 +25,8 @@
         "Exodus": "https://www.exodus.io"
     },
     "bitcoin:BTX": {
-        "Magnum": "https://magnumwallet.co",
-        "Electrum-BTX": "https://github.com/LIMXTEC/electrum-btx"
+        "Electrum-BTX": "https://github.com/LIMXTEC/electrum-btx",
+        "Magnum": "https://magnumwallet.co"
     },
     "bitcoin:CPC": {
         "Capricoin Mobile Wallet": "https://wallet.capricoin.org"
@@ -33,8 +36,8 @@
     },
     "bitcoin:DASH": {
         "Dash Electrum": "https://electrum.dash.org",
-        "Magnum": "https://magnumwallet.co",
-        "Exodus": "https://www.exodus.io"
+        "Exodus": "https://www.exodus.io",
+        "Magnum": "https://magnumwallet.co"
     },
     "bitcoin:DCR": {
         "Exodus": "https://www.exodus.io"
@@ -74,6 +77,9 @@
     "bitcoin:MUE": {
         "Electrum-MUE": "https://electrum.monetaryunit.org"
     },
+    "bitcoin:NIX": {
+        "NIX-Electrum": "https://github.com/nixplatform/electrum-nix"
+    },
     "bitcoin:NMC": {
         "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
     },
@@ -83,23 +89,6 @@
     "bitcoin:POLIS": {
         "PolisPay": "https://polispay.com"
     },
-    "bitcoin:VIA": {
-        "Vialectrum": "https://vialectrum.org"
-    },
-    "bitcoin:VIPS": {
-        "Electrum-VIPS": "https://electrum-vips.info"
-    },
-    "bitcoin:XZC": {
-        "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
-        "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"
-    },
-    "bitcoin:SMART": {
-        "Electrum-SMART": "https://github.com/smartcash/electrum-smart"
-    },
-    "bitcoin:NIX": {
-        "NIX-Electrum": "https://github.com/nixplatform/electrum-nix",
-        "Ghostnode Tool": "https://github.com/nixplatform/ghostnode-tool"
-    },
     "bitcoin:QTUM": {
         "Qtum-Electrum": "https://github.com/qtumproject/qtum-electrum"
     },
@@ -107,23 +96,39 @@
         "Electrum-RVN": "https://github.com/traysi/electrum-raven",
         "Mango Farm": "https://mangofarmassets.com/mangowallet"
     },
-    "bitcoin:ZNY": {
-        "Electrum-ZNY": "https://zny.electrum-jp.net"
+    "bitcoin:SMART": {
+        "Electrum-SMART": "https://github.com/smartcash/electrum-smart"
     },
-    "bitcoin:ZEC": {
-        "Magnum": "https://magnumwallet.co",
-        "Exodus": "https://www.exodus.io"
-    },
-    "bitcoin:XRC": {
-        "Electrum-XRC": "https://electrum.bitcoinrh.org"
+    "bitcoin:SYS": {
+        "Electrum-SYS": "https://github.com/syscoin/electrum"
     },
     "bitcoin:UNO": {
         "Electrum-UNO": "https://github.com/flurbos/electrum"
     },
+    "bitcoin:VIA": {
+        "Vialectrum": "https://vialectrum.org"
+    },
+    "bitcoin:VIPS": {
+        "Electrum-VIPS": "https://electrum-vips.info"
+    },
+    "bitcoin:XPM": {
+        "Electrum-XPM": "https://github.com/justjamesdev/electrum-xpm"
+    },
+    "bitcoin:XRC": {
+        "Electrum-XRC": "https://electrum.bitcoinrh.org"
+    },
     "bitcoin:XSN": {
         "Stakenet": "https://xsnexplorer.io/trezor"
     },
-    "bitcoin:SYS": {
-        "Electrum-SYS": "https://github.com/syscoin/electrum"
+    "bitcoin:XZC": {
+        "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
+        "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"
+    },
+    "bitcoin:ZEC": {
+        "Exodus": "https://www.exodus.io",
+        "Magnum": "https://magnumwallet.co"
+    },
+    "bitcoin:ZNY": {
+        "Electrum-ZNY": "https://zny.electrum-jp.net"
     }
 }
