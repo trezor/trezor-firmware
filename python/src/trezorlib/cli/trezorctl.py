@@ -450,8 +450,6 @@ def wipe_device(connect, bootloader):
 
 @cli.command(help="Load custom configuration to the device.")
 @click.option("-m", "--mnemonic", multiple=True)
-@click.option("-e", "--expand", is_flag=True)
-@click.option("-x", "--xprv")
 @click.option("-p", "--pin", default="")
 @click.option("-r", "--passphrase-protection", is_flag=True)
 @click.option("-l", "--label", default="")
@@ -469,25 +467,17 @@ def load_device(
     ignore_checksum,
     slip0014,
 ):
-    n_args = sum(bool(a) for a in (mnemonic, xprv, slip0014))
-    if n_args == 0:
-        raise click.ClickException("Please provide a mnemonic or xprv")
-    if n_args > 1:
-        raise click.ClickException("Cannot use mnemonic and xprv together")
+    if slip0014 and mnemonic:
+        raise click.ClickException("Cannot use -s and -m together.")
 
     client = connect()
-
-    if xprv:
-        return debuglink.load_device_by_xprv(
-            client, xprv, pin, passphrase_protection, label, "english"
-        )
 
     if slip0014:
         mnemonic = [" ".join(["all"] * 12)]
         if not label:
             label = "SLIP-0014"
 
-    return debuglink.load_device_by_mnemonic(
+    return debuglink.load_device(
         client,
         list(mnemonic),
         pin,
