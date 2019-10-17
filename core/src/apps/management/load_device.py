@@ -55,9 +55,6 @@ def _validate(msg) -> int:
     if storage.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
-    if msg.node is not None:
-        raise wire.ProcessError("LoadDevice.node is not supported")
-
     if not msg.mnemonics:
         raise wire.ProcessError("No mnemonic provided")
 

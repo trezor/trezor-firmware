@@ -5,8 +5,6 @@ package hw.trezor.messages.management;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageManagement";
 
-import "messages-common.proto";
-
 /**
  * Type of the mnemonic backup given/received by the device during reset/recovery.
  */
@@ -216,7 +214,6 @@ message WipeDevice {
  */
 message LoadDevice {
     repeated string mnemonics = 1;                          // seed encoded as mnemonic (12, 18 or 24 words for BIP39, 20 or 33 for SLIP39)
-    optional hw.trezor.messages.common.HDNodeType node = 2; // BIP-32 node
     optional string pin = 3;                                // set PIN protection
     optional bool passphrase_protection = 4;                // enable master node encryption using passphrase
     optional string language = 5 [default='english'];       // device language

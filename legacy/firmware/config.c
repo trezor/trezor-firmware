@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "messages-common.pb.h"
 #include "messages.pb.h"
 
 #include "aes/aes.h"
@@ -438,27 +439,6 @@ static void config_compute_u2froot(const char *mnemonic,
   session_clear(false);  // invalidate seed cache
 }
 
-static void config_setNode(const HDNodeType *node) {
-  StorageHDNode storageHDNode = {0};
-  memzero(&storageHDNode, sizeof(storageHDNode));
-
-  storageHDNode.depth = node->depth;
-  storageHDNode.fingerprint = node->fingerprint;
-  storageHDNode.child_num = node->child_num;
-  storageHDNode.chain_code.size = 32;
-  memcpy(storageHDNode.chain_code.bytes, node->chain_code.bytes, 32);
-
-  if (node->has_private_key) {
-    storageHDNode.has_private_key = true;
-    storageHDNode.private_key.size = 32;
-    memcpy(storageHDNode.private_key.bytes, node->private_key.bytes, 32);
-  }
-  if (sectrue == storage_set(KEY_NODE, &storageHDNode, sizeof(storageHDNode))) {
-    config_set_bool(KEY_INITIALIZED, true);
-  }
-  memzero(&storageHDNode, sizeof(storageHDNode));
-}
-
 #if DEBUG_LINK
 
 bool config_dumpNode(HDNodeType *node) {
@@ -500,10 +480,7 @@ void config_loadDevice(const LoadDevice *msg) {
     config_changePin("", msg->pin);
   }
 
-  if (msg->has_node) {
-    storage_delete(KEY_MNEMONIC);
-    config_setNode(&(msg->node));
-  } else if (msg->mnemonics_count) {
+  if (msg->mnemonics_count) {
     storage_delete(KEY_NODE);
     config_setMnemonic(msg->mnemonics[0]);
   }

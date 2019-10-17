@@ -21,6 +21,7 @@
 #define __CONFIG_H__
 
 #include "bip32.h"
+#include "messages-common.pb.h"
 #include "messages-management.pb.h"
 
 #define STORAGE_FIELD(TYPE, NAME) \
