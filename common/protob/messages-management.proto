@@ -87,6 +87,8 @@ message Features {
         Capability_ShamirGroups = 16;
     }
     optional BackupType backup_type = 31;       // type of device backup (BIP-39 / SLIP-39 basic / SLIP-39 advanced)
+    optional bool sd_card_present = 32;         // is SD card present
+    optional bool sd_protection = 33;           // is SD Protect enabled
 }
 
 /**
