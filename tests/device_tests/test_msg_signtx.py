@@ -615,6 +615,59 @@ class TestMsgSigntx:
         )
         assert exc.value.args[1].endswith("Transaction has changed during signing")
 
+    # Ensure that if the change output is modified after the user confirms the
+    # transaction, then signing fails.
+    def test_attack_modify_change_address(self, client):
+        # see 87be0736f202f7c2bff0781b42bad3e0cdcb54761939da69ea793a3735552c56
+
+        # tx: e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd
+        # input 0: 0.31 BTC
+        inp1 = proto.TxInputType(
+            address_n=parse_path("44'/1'/0'/0/0"),
+            # amount=31000000,
+            prev_hash=TXHASH_e5040e,
+            prev_index=0,
+        )
+
+        out1 = proto.TxOutputType(
+            address="msj42CCGruhRsFrGATiUuh25dtxYtnpbTx",
+            amount=30090000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        out2 = proto.TxOutputType(
+            address_n=parse_path("44'/1'/0'/1/0"),
+            amount=900000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        run_attack = False
+
+        def attack_processor(msg):
+            nonlocal run_attack
+            if msg.tx.outputs and msg.tx.outputs[0] == out2:
+                if not run_attack:
+                    run_attack = True
+                else:
+                    msg.tx.outputs[0].address_n = []
+                    msg.tx.outputs[0].address = "mwue7mokpBRAsJtHqEMcRPanYBmsSmYKvY"
+
+            return msg
+
+        # Set up attack processors
+        client.set_filter(proto.TxAck, attack_processor)
+
+        with pytest.raises(CallException) as exc:
+            btc.sign_tx(
+                client, "Testnet", [inp1], [out1, out2], prev_txes=tx_cache("Testnet")
+            )
+
+        assert exc.value.args[0] in (
+            proto.FailureType.ProcessError,
+            proto.FailureType.DataError,
+        )
+        assert exc.value.args[1].endswith("Transaction has changed during signing")
+
     def test_attack_change_input_address(self, client):
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/1'/4'/0/0"),
