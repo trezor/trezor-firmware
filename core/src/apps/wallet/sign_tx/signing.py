@@ -111,6 +111,8 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
 
         if txi.multisig:
             multifp.add(txi.multisig)
+        else:
+            multifp.mismatch = True
 
         if txi.script_type in (
             InputScriptType.SPENDWITNESS,
