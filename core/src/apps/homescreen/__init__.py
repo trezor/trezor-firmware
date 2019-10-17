@@ -1,4 +1,4 @@
-from trezor import config, utils, wire
+from trezor import config, io, utils, wire
 from trezor.messages import Capability, MessageType
 from trezor.messages.Features import Features
 from trezor.messages.Success import Success
@@ -63,6 +63,8 @@ def get_features() -> Features:
             Capability.Shamir,
             Capability.ShamirGroups,
         ]
+    f.sd_card_present = io.SDCard().present()
+    f.sd_protection = storage.device.get_sd_salt_auth_key() is not None
     return f
 
 
