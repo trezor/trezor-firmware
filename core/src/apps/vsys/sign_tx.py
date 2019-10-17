@@ -1,12 +1,13 @@
 from trezor import wire
 from trezor.crypto import base58
 from trezor.messages.VsysSignedTx import VsysSignedTx
-from trezor.crypto.curve import ed25519
+from trezor.crypto.curve import curve25519_axolotl
 
 from apps.common import paths
 from apps.common.writers import write_bytes, write_uint8, write_uint16_be, write_uint64_be
 from apps.vsys import CURVE, helpers, layout
 from apps.vsys.constants import *
+import os
 
 
 async def sign_tx(ctx, msg, keychain):
@@ -90,9 +91,10 @@ def encode_cancel_lease_tx_to_bytes(msg):
 
 
 def generate_content_signature(content: bytes, private_key: bytes) -> bytes:
-    signature = ed25519.sign(private_key, content)
+    random64 = os.urandom(64)
+    signature = curve25519_axolotl.curve25519_axolotl_sign(private_key, content, random64)
     return signature
 
 
 def verify_content_signature(content: bytes, public_key: bytes, signature: bytes) -> bool:
-    raise wire.DataError("Not implemented")
+    return curve25519_axolotl.curve25519_axolotl_verify(public_key, content, signature)
