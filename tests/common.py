@@ -149,7 +149,7 @@ def read_and_confirm_mnemonic(debug, words):
     while True:
         mnemonic.extend(debug.read_reset_word().split())
         if len(mnemonic) < words:
-            debug.swipe_down()
+            debug.swipe_up()
         else:
             # last page is confirmation
             debug.press_yes()

@@ -472,29 +472,6 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 confidential_assets=None,
             )
-        elif name == "Bitsend":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="BSD",
-                address_type=102,
-                address_type_p2sh=5,
-                maxfee_kb=1000000,
-                signed_message_header="Bitsend Signed Message:\n",
-                xpub_magic=0x0488b21e,
-                xpub_magic_segwit_p2sh=0x049d7cb2,
-                xpub_magic_segwit_native=0x04b24746,
-                bech32_prefix="bsd",
-                cashaddr_prefix=None,
-                slip44=91,
-                segwit=True,
-                fork_id=None,
-                force_bip143=False,
-                bip115=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                confidential_assets=None,
-            )
         elif name == "BlockStamp":
             return CoinInfo(
                 coin_name=name,
@@ -1254,29 +1231,6 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 confidential_assets=None,
             )
-        elif name == "OmotenashiCoin":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="MTNS",
-                address_type=63,
-                address_type_p2sh=18,
-                maxfee_kb=100000,
-                signed_message_header="MtnsNet Signed Message:\n",
-                xpub_magic=0x03a39555,
-                xpub_magic_segwit_p2sh=None,
-                xpub_magic_segwit_native=None,
-                bech32_prefix=None,
-                cashaddr_prefix=None,
-                slip44=341,
-                segwit=False,
-                fork_id=None,
-                force_bip143=False,
-                bip115=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                confidential_assets=None,
-            )
         elif name == "PIVX":
             return CoinInfo(
                 coin_name=name,
@@ -1714,20 +1668,20 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 confidential_assets=None,
             )
-        elif name == "ZClassic":
+        elif name == "ZCore":
             return CoinInfo(
                 coin_name=name,
-                coin_shortcut="ZCL",
-                address_type=7352,
-                address_type_p2sh=7357,
+                coin_shortcut="ZCR",
+                address_type=142,
+                address_type_p2sh=145,
                 maxfee_kb=1000000,
-                signed_message_header="Zcash Signed Message:\n",
-                xpub_magic=0x0488b21e,
+                signed_message_header="ZCore Genesis Block mined by Mosqueiro",
+                xpub_magic=0x04b24746,
                 xpub_magic_segwit_p2sh=None,
                 xpub_magic_segwit_native=None,
                 bech32_prefix=None,
                 cashaddr_prefix=None,
-                slip44=147,
+                slip44=428,
                 segwit=False,
                 fork_id=None,
                 force_bip143=False,

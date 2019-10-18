@@ -21,7 +21,7 @@
 
 uint32_t random32(void) {
   static uint32_t last = 0;
-  uint32_t new;
+  uint32_t new = 0;
 
   do {
     emulatorRandom(&new, sizeof(new));

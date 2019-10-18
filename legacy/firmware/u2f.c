@@ -174,7 +174,7 @@ void u2fhid_init_cmd(const U2FHID_FRAME *f) {
 }
 
 void u2fhid_read_start(const U2FHID_FRAME *f) {
-  U2F_ReadBuffer readbuffer;
+  U2F_ReadBuffer readbuffer = {0};
   memzero(&readbuffer, sizeof(readbuffer));
 
   if (!(f->type & TYPE_INIT)) {
@@ -273,7 +273,7 @@ void u2fhid_wink(const uint8_t *buf, uint32_t len) {
 
   if (dialog_timeout > 0) dialog_timeout = U2F_TIMEOUT;
 
-  U2FHID_FRAME f;
+  U2FHID_FRAME f = {0};
   memzero(&f, sizeof(f));
   f.cid = cid;
   f.init.cmd = U2FHID_WINK;
@@ -283,8 +283,8 @@ void u2fhid_wink(const uint8_t *buf, uint32_t len) {
 
 void u2fhid_init(const U2FHID_FRAME *in) {
   const U2FHID_INIT_REQ *init_req = (const U2FHID_INIT_REQ *)&in->init.data;
-  U2FHID_FRAME f;
-  U2FHID_INIT_RESP resp;
+  U2FHID_FRAME f = {0};
+  U2FHID_INIT_RESP resp = {0};
   memzero(&resp, sizeof(resp));
 
   debugLog(0, "", "u2fhid_init");
@@ -367,10 +367,10 @@ void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data,
     return;
   }
 
-  U2FHID_FRAME f;
+  U2FHID_FRAME f = {0};
   uint8_t *p = (uint8_t *)data;
   uint32_t l = len;
-  uint32_t psz;
+  uint32_t psz = 0;
   uint8_t seq = 0;
 
   // debugLog(0, "", "send_u2fhid_msg");
@@ -405,7 +405,7 @@ void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data,
 }
 
 void send_u2fhid_error(uint32_t fcid, uint8_t err) {
-  U2FHID_FRAME f;
+  U2FHID_FRAME f = {0};
 
   memzero(&f, sizeof(f));
   f.cid = fcid;
@@ -470,10 +470,10 @@ static const HDNode *getDerivedNode(uint32_t *address_n,
 
 static const HDNode *generateKeyHandle(const uint8_t app_id[],
                                        uint8_t key_handle[]) {
-  uint8_t keybase[U2F_APPID_SIZE + KEY_PATH_LEN];
+  uint8_t keybase[U2F_APPID_SIZE + KEY_PATH_LEN] = {0};
 
   // Derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
-  uint32_t key_path[KEY_PATH_ENTRIES];
+  uint32_t key_path[KEY_PATH_ENTRIES] = {0};
   for (uint32_t i = 0; i < KEY_PATH_ENTRIES; i++) {
     // high bit for hardened keys
     key_path[i] = 0x80000000 | random32();
@@ -499,7 +499,7 @@ static const HDNode *generateKeyHandle(const uint8_t app_id[],
 
 static const HDNode *validateKeyHandle(const uint8_t app_id[],
                                        const uint8_t key_handle[]) {
-  uint32_t key_path[KEY_PATH_ENTRIES];
+  uint32_t key_path[KEY_PATH_ENTRIES] = {0};
   memcpy(key_path, key_handle, KEY_PATH_LEN);
   for (unsigned int i = 0; i < KEY_PATH_ENTRIES; i++) {
     // check high bit for hardened keys
@@ -511,11 +511,11 @@ static const HDNode *validateKeyHandle(const uint8_t app_id[],
   const HDNode *node = getDerivedNode(key_path, KEY_PATH_ENTRIES);
   if (!node) return NULL;
 
-  uint8_t keybase[U2F_APPID_SIZE + KEY_PATH_LEN];
+  uint8_t keybase[U2F_APPID_SIZE + KEY_PATH_LEN] = {0};
   memcpy(&keybase[0], app_id, U2F_APPID_SIZE);
   memcpy(&keybase[U2F_APPID_SIZE], key_handle, KEY_PATH_LEN);
 
-  uint8_t hmac[SHA256_DIGEST_LENGTH];
+  uint8_t hmac[SHA256_DIGEST_LENGTH] = {0};
   hmac_sha256(node->private_key, sizeof(node->private_key), keybase,
               sizeof(keybase), hmac);
 
@@ -558,7 +558,7 @@ void u2f_register(const APDU *a) {
                    _("Another U2F device"), _("was used to register"),
                    _("in this application."), NULL, NULL, NULL);
     } else {
-      const char *appname;
+      const char *appname = NULL;
       getReadableAppId(req->appId, &appname);
       layoutU2FDialog(_("Register"), appname);
     }
@@ -575,7 +575,7 @@ void u2f_register(const APDU *a) {
 
   // Buttons said yes
   if (last_req_state == REG_PASS) {
-    uint8_t data[sizeof(U2F_REGISTER_RESP) + 2];
+    uint8_t data[sizeof(U2F_REGISTER_RESP) + 2] = {0};
     U2F_REGISTER_RESP *resp = (U2F_REGISTER_RESP *)&data;
     memzero(data, sizeof(data));
 
@@ -597,8 +597,8 @@ void u2f_register(const APDU *a) {
     memcpy(resp->keyHandleCertSig + resp->keyHandleLen, U2F_ATT_CERT,
            sizeof(U2F_ATT_CERT));
 
-    uint8_t sig[64];
-    U2F_REGISTER_SIG_STR sig_base;
+    uint8_t sig[64] = {0};
+    U2F_REGISTER_SIG_STR sig_base = {0};
     sig_base.reserved = 0;
     memcpy(sig_base.appId, req->appId, U2F_APPID_SIZE);
     memcpy(sig_base.chal, req->chal, U2F_CHAL_SIZE);
@@ -690,7 +690,7 @@ void u2f_authenticate(const APDU *a) {
   if (last_req_state == INIT) {
     // error: testof-user-presence is required
     buttonUpdate();  // Clear button state
-    const char *appname;
+    const char *appname = NULL;
     getReadableAppId(req->appId, &appname);
     layoutU2FDialog(_("Authenticate"), appname);
     last_req_state = AUTH;
@@ -706,7 +706,7 @@ void u2f_authenticate(const APDU *a) {
 
   // Buttons said yes
   if (last_req_state == AUTH_PASS) {
-    uint8_t buf[sizeof(U2F_AUTHENTICATE_RESP) + 2];
+    uint8_t buf[(sizeof(U2F_AUTHENTICATE_RESP)) + 2] = {0};
     U2F_AUTHENTICATE_RESP *resp = (U2F_AUTHENTICATE_RESP *)&buf;
 
     const uint32_t ctr = config_nextU2FCounter();
@@ -717,8 +717,8 @@ void u2f_authenticate(const APDU *a) {
     resp->ctr[3] = ctr & 0xff;
 
     // Build and sign response
-    U2F_AUTHENTICATE_SIG_STR sig_base;
-    uint8_t sig[64];
+    U2F_AUTHENTICATE_SIG_STR sig_base = {0};
+    uint8_t sig[64] = {0};
     memcpy(sig_base.appId, req->appId, U2F_APPID_SIZE);
     sig_base.flags = resp->flags;
     memcpy(sig_base.ctr, resp->ctr, 4);
@@ -744,7 +744,7 @@ void u2f_authenticate(const APDU *a) {
 }
 
 void send_u2f_error(const uint16_t err) {
-  uint8_t data[2];
+  uint8_t data[2] = {0};
   data[0] = err >> 8 & 0xFF;
   data[1] = err & 0xFF;
   send_u2f_msg(data, 2);

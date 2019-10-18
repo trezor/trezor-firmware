@@ -43,7 +43,9 @@
 #
 # 6. In the first "Add Signer" text box enter the secret key: SDE2YU4V2IYSJIUH7MONDYZTSSLDXV5QDEGUUOLCU4TK7CZWTAXZ5CEG
 #
-# 7. Scroll down to the bottom and look at the "signatures" section. The Trezor should generate the same signature
+# 7. Scroll down to the signed XDR blob and click "View in XDR Viewer"
+#
+# 8. Scroll down to the bottom and look at the "signatures" section. The Trezor should generate the same signature
 #
 
 from base64 import b64encode
@@ -83,6 +85,7 @@ def test_sign_tx_bump_sequence_op(client):
     assert (
         b64encode(response.signature)
         == b"ZMIfHWhpyXdg40PzwOtkcXYnbZIO12Qy0WvkGqoYpb7jyWbG2HQCG7dgWhCoU5K81pvZTA2pMwiPjMwCXA//Bg=="
+        # 64c21f1d6869c97760e343f3c0eb647176276d920ed76432d16be41aaa18a5bee3c966c6d874021bb7605a10a85392bcd69bd94c0da933088f8ccc025c0fff06
     )
 
 
@@ -101,6 +104,7 @@ def test_sign_tx_account_merge_op(client):
     assert (
         b64encode(response.signature)
         == b"2R3Pj89U+dWrqy7otUrLLjtANjAg0lmBQL8E+89Po0Y94oqZkauP8j3WE7+/z7vF6XvAMLoOdqRYkUzr2oh7Dg=="
+        # d91dcf8fcf54f9d5abab2ee8b54acb2e3b40363020d2598140bf04fbcf4fa3463de28a9991ab8ff23dd613bfbfcfbbc5e97bc030ba0e76a458914cebda887b0e
     )
 
 
@@ -118,6 +122,7 @@ def test_sign_tx_create_account_op(client):
     assert (
         b64encode(response.signature)
         == b"vrRYqkM4b54NrDR05UrW7ZHU7CNcidV0fn+bk9dqOW1bCbmX3YfeRbk2Tf1aea8nr9SD0sfBhtrDpdyxUenjBw=="
+        # beb458aa43386f9e0dac3474e54ad6ed91d4ec235c89d5747e7f9b93d76a396d5b09b997dd87de45b9364dfd5a79af27afd483d2c7c186dac3a5dcb151e9e307
     )
 
 
@@ -135,6 +140,7 @@ def test_sign_tx_payment_op_native(client):
     assert (
         b64encode(response.signature)
         == b"pDc6ghKCLNoYbt3h4eBw+533237m0BB0Jp/d/TxJCA83mF3o5Fr4l5vwAWBR62hdTWAP9MhVluY0cd5i54UwDg=="
+        # a4373a8212822cda186edde1e1e070fb9df7db7ee6d01074269fddfd3c49080f37985de8e45af8979bf0016051eb685d4d600ff4c85596e63471de62e785300e
     )
 
 
@@ -153,6 +159,7 @@ def test_sign_tx_payment_op_native_explicit_asset(client):
     assert (
         b64encode(response.signature)
         == b"pDc6ghKCLNoYbt3h4eBw+533237m0BB0Jp/d/TxJCA83mF3o5Fr4l5vwAWBR62hdTWAP9MhVluY0cd5i54UwDg=="
+        # a4373a8212822cda186edde1e1e070fb9df7db7ee6d01074269fddfd3c49080f37985de8e45af8979bf0016051eb685d4d600ff4c85596e63471de62e785300e
     )
 
 
@@ -173,6 +180,7 @@ def test_sign_tx_payment_op_custom_asset1(client):
     assert (
         b64encode(response.signature)
         == b"ArZydOtXU2whoRuSjJLFIWPSIsq3AbsncJZ+THF24CRSriVWw5Fy/dHrDlUOu4fzU28I6osDMeI39aWezg5tDw=="
+        # 02b67274eb57536c21a11b928c92c52163d222cab701bb2770967e4c7176e02452ae2556c39172fdd1eb0e550ebb87f3536f08ea8b0331e237f5a59ece0e6d0f
     )
 
 
@@ -193,6 +201,7 @@ def test_sign_tx_payment_op_custom_asset12(client):
     assert (
         b64encode(response.signature)
         == b"QZIP4XKPfe4OpZtuJiyrMZBX9YBzvGpHGcngdgFfHn2kcdONreF384/pCF80xfEnGm8grKaoOnUEKxqcMKvxAA=="
+        # 41920fe1728f7dee0ea59b6e262cab319057f58073bc6a4719c9e076015f1e7da471d38dade177f38fe9085f34c5f1271a6f20aca6a83a75042b1a9c30abf100
     )
 
 
@@ -210,6 +219,7 @@ def test_sign_tx_set_options(client):
     assert (
         b64encode(response.signature)
         == b"dveWhKY8x7b0YqGHWH6Fo1SskxaHP11NXd2n6oHKGiv+T/LqB+CCzbmJA0tplZ+0HNPJbHD7L3Bsg/y462qLDA=="
+        # 76f79684a63cc7b6f462a187587e85a354ac9316873f5d4d5ddda7ea81ca1a2bfe4ff2ea07e082cdb989034b69959fb41cd3c96c70fb2f706c83fcb8eb6a8b0c
     )
 
     op = messages.StellarSetOptionsOp()
@@ -224,6 +234,7 @@ def test_sign_tx_set_options(client):
     assert (
         b64encode(response.signature)
         == b"EAeihuFBhUnjH6Sgd/+uAHlvajfv944VEpNSCLsOULNxYWdo/S0lJdUZw/2kN6I+ztKL7ZPQ5gYPJRNUePTOCg=="
+        # 1007a286e1418549e31fa4a077ffae00796f6a37eff78e1512935208bb0e50b371616768fd2d2525d519c3fda437a23eced28bed93d0e6060f25135478f4ce0a
     )
 
     op = messages.StellarSetOptionsOp()
@@ -234,6 +245,7 @@ def test_sign_tx_set_options(client):
     assert (
         b64encode(response.signature)
         == b"E2pz06PFB5CvIT3peUcY0wxo7u9da2h6/+/qim1eRWLHC73ZtFqDtLMBaKnr63ZfjB/kDzZmCzHxiv5m+m6+AQ=="
+        # 136a73d3a3c50790af213de9794718d30c68eeef5d6b687affefea8a6d5e4562c70bbdd9b45a83b4b30168a9ebeb765f8c1fe40f36660b31f18afe66fa6ebe01
     )
 
     op = messages.StellarSetOptionsOp()
@@ -246,6 +258,7 @@ def test_sign_tx_set_options(client):
     assert (
         b64encode(response.signature)
         == b"ySQE4aS0TI+N1xjSwi/pABHpC+A6RrNPWDOuFYGJFQ5B4vIU2S+ql2gCGLE7bQiYZ5dK9021f+a30mZoYeFLDw=="
+        # c92404e1a4b44c8f8dd718d2c22fe90011e90be03a46b34f5833ae158189150e41e2f214d92faa97680218b13b6d089867974af74db57fe6b7d2666861e14b0f
     )
 
     op = messages.StellarSetOptionsOp()
@@ -258,6 +271,7 @@ def test_sign_tx_set_options(client):
     assert (
         b64encode(response.signature)
         == b"22rfcOrxBiE5akpNsnWX8yPgAOpclbajVqXUaXMNeL000p1OhFhi050t1+GNRpoSNyfVsJGNvtlICGpH4ksDAQ=="
+        # db6adf70eaf10621396a4a4db27597f323e000ea5c95b6a356a5d469730d78bd34d29d4e845862d39d2dd7e18d469a123727d5b0918dbed948086a47e24b0301
     )
 
 
@@ -271,4 +285,5 @@ def test_manage_data(client):
     assert (
         b64encode(response.signature)
         == b"MTa8fmhM7BxYYo9kY1RKQFFrg/MVfzsgiPSuP7+SJZjhQ3P1ucN5JUnfmD5484ULRPjVTd+0YYjS6hScLupbCQ=="
+        # 3136bc7e684cec1c58628f6463544a40516b83f3157f3b2088f4ae3fbf922598e14373f5b9c3792549df983e78f3850b44f8d54ddfb46188d2ea149c2eea5b09
     )

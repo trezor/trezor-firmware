@@ -23,7 +23,7 @@ if __debug__:
     from apps.debug import confirm_signal
 
 if False:
-    from typing import Any, Coroutine, List, Optional
+    from typing import Any, Coroutine, List, Optional, Tuple
 
 _CID_BROADCAST = const(0xFFFFFFFF)  # broadcast channel id
 
@@ -319,15 +319,15 @@ def resp_cmd_authenticate(siglen: int) -> dict:
     }
 
 
-def overlay_struct(buf, desc):
-    desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)
+def overlay_struct(buf: bytes, desc: dict) -> Any:
+    desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)  # type: ignore
     if desc_size > len(buf):
         raise ValueError("desc is too big (%d > %d)" % (desc_size, len(buf)))
     return uctypes.struct(uctypes.addressof(buf), desc, uctypes.BIG_ENDIAN)
 
 
-def make_struct(desc):
-    desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)
+def make_struct(desc: dict) -> Tuple[bytearray, Any]:
+    desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)  # type: ignore
     buf = bytearray(desc_size)
     return buf, uctypes.struct(uctypes.addressof(buf), desc, uctypes.BIG_ENDIAN)
 
@@ -919,19 +919,20 @@ class DialogManager:
         if state.keepalive_status() is not None:
             self.keepalive = self.keepalive_loop()
             loop.schedule(self.keepalive)
-        else:
-            self.keepalive = None
         self.workflow = self.dialog_workflow()
         loop.schedule(self.workflow)
         return True
 
     async def keepalive_loop(self) -> None:
-        if not isinstance(self.state, Fido2State):
-            return
-        while utime.ticks_ms() < self.deadline:
-            cmd = cmd_keepalive(self.state.cid, self.state.keepalive_status())
-            await send_cmd(cmd, self.iface)
-            await loop.sleep(_KEEPALIVE_INTERVAL_MS * 1000)
+        try:
+            if not isinstance(self.state, Fido2State):
+                return
+            while utime.ticks_ms() < self.deadline:
+                cmd = cmd_keepalive(self.state.cid, self.state.keepalive_status())
+                await send_cmd(cmd, self.iface)
+                await loop.sleep(_KEEPALIVE_INTERVAL_MS * 1000)
+        finally:
+            self.keepalive = None
 
         self.result = _RESULT_TIMEOUT
         self.reset()
@@ -949,7 +950,6 @@ class DialogManager:
         finally:
             if self.keepalive is not None:
                 loop.close(self.keepalive)
-            self.keepalive = None
 
             if self.result == _RESULT_CONFIRM:
                 await self.state.on_confirm()

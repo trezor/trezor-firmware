@@ -116,7 +116,7 @@ static inline bool nem_write_mosaic_bool(nem_transaction_ctx *ctx,
 
 static inline bool nem_write_mosaic_u64(nem_transaction_ctx *ctx,
                                         const char *name, uint64_t value) {
-  char buffer[21];
+  char buffer[21] = {0};
 
   if (bn_format_uint64(value, NULL, NULL, 0, 0, false, buffer,
                        sizeof(buffer)) == 0) {
@@ -128,7 +128,7 @@ static inline bool nem_write_mosaic_u64(nem_transaction_ctx *ctx,
 
 void nem_get_address_raw(const ed25519_public_key public_key, uint8_t version,
                          uint8_t *address) {
-  uint8_t hash[SHA3_256_DIGEST_LENGTH];
+  uint8_t hash[SHA3_256_DIGEST_LENGTH] = {0};
 
   /* 1.  Perform 256-bit Sha3 on the public key */
   keccak_256(public_key, sizeof(ed25519_public_key), hash);
@@ -151,7 +151,7 @@ void nem_get_address_raw(const ed25519_public_key public_key, uint8_t version,
 
 bool nem_get_address(const ed25519_public_key public_key, uint8_t version,
                      char *address) {
-  uint8_t pubkeyhash[NEM_ADDRESS_SIZE_RAW];
+  uint8_t pubkeyhash[NEM_ADDRESS_SIZE_RAW] = {0};
 
   nem_get_address_raw(public_key, version, pubkeyhash);
 
@@ -167,7 +167,7 @@ bool nem_validate_address_raw(const uint8_t *address, uint8_t network) {
     return false;
   }
 
-  uint8_t hash[SHA3_256_DIGEST_LENGTH];
+  uint8_t hash[SHA3_256_DIGEST_LENGTH] = {0};
 
   keccak_256(address, 1 + RIPEMD160_DIGEST_LENGTH, hash);
   bool valid = (memcmp(&address[1 + RIPEMD160_DIGEST_LENGTH], hash, 4) == 0);
@@ -177,7 +177,7 @@ bool nem_validate_address_raw(const uint8_t *address, uint8_t network) {
 }
 
 bool nem_validate_address(const char *address, uint8_t network) {
-  uint8_t pubkeyhash[NEM_ADDRESS_SIZE_RAW];
+  uint8_t pubkeyhash[NEM_ADDRESS_SIZE_RAW] = {0};
 
   if (strlen(address) != NEM_ADDRESS_SIZE) {
     return false;
@@ -314,10 +314,10 @@ bool nem_transaction_create_multisig_signature(
       timestamp, signer, fee, deadline);
   if (!ret) return false;
 
-  char address[NEM_ADDRESS_SIZE + 1];
+  char address[NEM_ADDRESS_SIZE + 1] = {0};
   nem_get_address(inner->public_key, network, address);
 
-  uint8_t hash[SHA3_256_DIGEST_LENGTH];
+  uint8_t hash[SHA3_256_DIGEST_LENGTH] = {0};
   keccak_256(inner->buffer, inner->offset, hash);
 
   SERIALIZE_U32(sizeof(uint32_t) + SHA3_256_DIGEST_LENGTH);
@@ -379,7 +379,7 @@ bool nem_transaction_create_mosaic_creation(
       sizeof(uint32_t) + namespace_length + sizeof(uint32_t) + mosaic_length;
 
   // This length will be rewritten later on
-  nem_transaction_ctx state;
+  nem_transaction_ctx state = {0};
   memcpy(&state, ctx, sizeof(state));
 
   SERIALIZE_U32(0);

@@ -174,7 +174,7 @@ class TestMsgNEMSignTxMosaics:
             # Swipe and confirm
             yield
             for _ in range(num_of_swipes):
-                client.debug.swipe_down()
+                client.debug.swipe_up()
             client.debug.press_yes()
 
             # Confirm Action

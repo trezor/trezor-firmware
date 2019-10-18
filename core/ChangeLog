@@ -1,6 +1,9 @@
 Version 2.x.x [not yet released]
 * SD card protection
 
+Version 2.1.7 [Oct 2019]
+* Fix low memory issue
+
 Version 2.1.6 [Oct 2019]
 * Refactor Shamir related codebase
 * Super Shamir

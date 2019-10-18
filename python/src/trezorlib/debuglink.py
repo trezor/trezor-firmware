@@ -91,7 +91,7 @@ class DebugLink:
         if args != 1:
             raise ValueError("Invalid input - must use one of word, button, swipe")
 
-        decision = proto.DebugLinkDecision(yes_no=button, up_down=swipe, input=word)
+        decision = proto.DebugLinkDecision(yes_no=button, swipe=swipe, input=word)
         self._call(decision, nowait=True)
 
     def press_yes(self):
@@ -101,10 +101,16 @@ class DebugLink:
         self.input(button=False)
 
     def swipe_up(self):
-        self.input(swipe=True)
+        self.input(swipe=proto.DebugSwipeDirection.UP)
 
     def swipe_down(self):
-        self.input(swipe=False)
+        self.input(swipe=proto.DebugSwipeDirection.DOWN)
+
+    def swipe_right(self):
+        self.input(swipe=proto.DebugSwipeDirection.RIGHT)
+
+    def swipe_left(self):
+        self.input(swipe=proto.DebugSwipeDirection.LEFT)
 
     def stop(self):
         self._call(proto.DebugLinkStop(), nowait=True)

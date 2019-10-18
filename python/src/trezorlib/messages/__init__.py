@@ -268,6 +268,7 @@ from . import BinanceOrderType
 from . import BinanceTimeInForce
 from . import ButtonRequestType
 from . import Capability
+from . import DebugSwipeDirection
 from . import FailureType
 from . import InputScriptType
 from . import LiskTransactionType

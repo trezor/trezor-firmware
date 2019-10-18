@@ -35,7 +35,7 @@
 #include "util.h"
 
 void layoutFirmwareFingerprint(const uint8_t *hash) {
-  char str[4][17];
+  char str[4][17] = {0};
   for (int i = 0; i < 4; i++) {
     data2hex(hash + i * 8, 8, str[i]);
   }
@@ -129,7 +129,7 @@ int main(void) {
     const image_header *hdr =
         (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
 
-    uint8_t fingerprint[32];
+    uint8_t fingerprint[32] = {0};
     int signed_firmware = signatures_new_ok(hdr, fingerprint);
     if (SIG_OK != signed_firmware) {
       show_unofficial_warning(fingerprint);

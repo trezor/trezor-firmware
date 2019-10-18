@@ -264,7 +264,9 @@ class U2fCredential(Credential):
     def app_name(self) -> str:
         from apps.webauthn.knownapps import knownapps
 
-        app_name = knownapps.get(self.rp_id_hash, {}).get("label", None)
+        app_name = knownapps.get(self.rp_id_hash, {}).get(
+            "label", None
+        )  # type: Optional[str]
         if app_name is None:
             app_name = "%s...%s" % (
                 hexlify(self.rp_id_hash[:4]).decode(),

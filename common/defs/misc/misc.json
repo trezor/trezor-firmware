@@ -25,7 +25,8 @@
             "Github": "https://github.com/stellar/stellar-core"
         },
         "wallet": {
-            "Account Viewer": "https://trezor.io/stellar/"
+            "Account Viewer": "https://trezor.io/stellar/",
+            "Exodus": "https://www.exodus.io"
         },
         "blockchain_link": null
     },
@@ -55,7 +56,9 @@
             "Github": "https://github.com/ripple/rippled"
         },
         "wallet": {
-            "Trezor Beta": "https://beta-wallet.trezor.io/next/"
+            "Trezor Beta": "https://beta-wallet.trezor.io/next/",
+            "Exodus": "https://www.exodus.io",
+            "Magnum": "https://magnumwallet.co"
         },
         "blockchain_link": {
             "type": "ripple",
@@ -113,7 +116,8 @@
             "Github": "https://github.com/tezos/tezos"
         },
         "wallet": {
-            "SimpleStaking": "https://simplestaking.com"
+            "SimpleStaking": "https://simplestaking.com",
+            "Magnum": "https://magnumwallet.co"
         },
         "blockchain_link": null
     },

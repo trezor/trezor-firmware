@@ -39,7 +39,7 @@
 #endif
 
 /* Screen timeout */
-uint32_t system_millis_lock_start;
+uint32_t system_millis_lock_start = 0;
 
 void check_lock_screen(void) {
   buttonUpdate();
@@ -100,7 +100,7 @@ static void collect_hw_entropy(bool privileged) {
     desig_get_unique_id((uint32_t *)HW_ENTROPY_DATA);
     // set entropy in the OTP randomness block
     if (!flash_otp_is_locked(FLASH_OTP_BLOCK_RANDOMNESS)) {
-      uint8_t entropy[FLASH_OTP_BLOCK_SIZE];
+      uint8_t entropy[FLASH_OTP_BLOCK_SIZE] = {0};
       random_buffer(entropy, FLASH_OTP_BLOCK_SIZE);
       flash_otp_write(FLASH_OTP_BLOCK_RANDOMNESS, 0, entropy,
                       FLASH_OTP_BLOCK_SIZE);

@@ -108,7 +108,7 @@ aligned_array(unsigned long, dec_hybrid_table, 12, 16) = NEH_DEC_HYBRID_DATA;
 
 AES_RETURN aes_test_alignment_detection(unsigned int n)	/* 4 <= n <= 16 */
 {	uint8_t	p[16];
-    uint32_t i, count_eq = 0, count_neq = 0;
+    uint32_t i = 0, count_eq = 0, count_neq = 0;
 
     if(n < 4 || n > 16)
         return EXIT_FAILURE;
@@ -156,7 +156,7 @@ AES_RETURN aes_ecb_encrypt(const unsigned char *ibuf, unsigned char *obuf,
         }
         else
         {   aligned_auto(uint8_t, buf, BFR_BLOCKS * AES_BLOCK_SIZE, 16);
-            uint8_t *ip, *op;
+            uint8_t *ip = NULL, *op = NULL;
 
             while(nb)
             {
@@ -218,7 +218,7 @@ AES_RETURN aes_ecb_decrypt(const unsigned char *ibuf, unsigned char *obuf,
         }
         else
         {   aligned_auto(uint8_t, buf, BFR_BLOCKS * AES_BLOCK_SIZE, 16);
-            uint8_t *ip, *op;
+            uint8_t *ip = NULL, *op = NULL;
 
             while(nb)
             {
@@ -287,7 +287,7 @@ AES_RETURN aes_cbc_encrypt(const unsigned char *ibuf, unsigned char *obuf,
         }
         else
         {   aligned_auto(uint8_t, buf, BFR_BLOCKS * AES_BLOCK_SIZE, 16);
-            uint8_t *ip, *op;
+            uint8_t *ip = NULL, *op = NULL;
 
             while(nb)
             {
@@ -385,7 +385,7 @@ AES_RETURN aes_cbc_decrypt(const unsigned char *ibuf, unsigned char *obuf,
         }
         else
         {   aligned_auto(uint8_t, buf, BFR_BLOCKS * AES_BLOCK_SIZE, 16);
-            uint8_t *ip, *op;
+            uint8_t *ip = NULL, *op = NULL;
 
             while(nb)
             {
@@ -497,7 +497,7 @@ AES_RETURN aes_cfb_encrypt(const unsigned char *ibuf, unsigned char *obuf,
             }
             else    /* input, output or both are unaligned  */
             {   aligned_auto(uint8_t, buf, BFR_BLOCKS * AES_BLOCK_SIZE, 16);
-                uint8_t *ip, *op;
+                uint8_t *ip = NULL, *op = NULL;
 
                 while(nb)
                 {
@@ -625,7 +625,7 @@ AES_RETURN aes_cfb_decrypt(const unsigned char *ibuf, unsigned char *obuf,
             }
             else    /* input, output or both are unaligned  */
             {   aligned_auto(uint8_t, buf, BFR_BLOCKS * AES_BLOCK_SIZE, 16);
-                uint8_t *ip, *op;
+                uint8_t *ip = NULL, *op = NULL;
 
                 while(nb)
                 {
@@ -763,7 +763,7 @@ AES_RETURN aes_ofb_crypt(const unsigned char *ibuf, unsigned char *obuf,
             }
             else    /* input, output or both are unaligned  */
         {   aligned_auto(uint8_t, buf, BFR_BLOCKS * AES_BLOCK_SIZE, 16);
-            uint8_t *ip, *op;
+            uint8_t *ip = NULL, *op = NULL;
 
                 while(nb)
                 {
@@ -850,14 +850,14 @@ AES_RETURN aes_ofb_crypt(const unsigned char *ibuf, unsigned char *obuf,
 AES_RETURN aes_ctr_crypt(const unsigned char *ibuf, unsigned char *obuf,
             int len, unsigned char *cbuf, cbuf_inc ctr_inc, aes_encrypt_ctx ctx[1])
 {   unsigned char   *ip;
-    int             i, blen, b_pos = (int)(ctx->inf.b[2]);
+    int             i = 0, blen = 0, b_pos = (int)(ctx->inf.b[2]);
 
 #if defined( USE_VIA_ACE_IF_PRESENT )
     aligned_auto(uint8_t, buf, BFR_LENGTH, 16);
     if(ctx->inf.b[1] == 0xff && ALIGN_OFFSET( ctx, 16 ))
         return EXIT_FAILURE;
 #else
-    uint8_t buf[BFR_LENGTH];
+    uint8_t buf[BFR_LENGTH] = {0};
 #endif
 
     if(b_pos)

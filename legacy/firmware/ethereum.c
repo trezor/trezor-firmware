@@ -46,7 +46,7 @@ static EthereumTxRequest msg_tx_request;
 static CONFIDENTIAL uint8_t privkey[32];
 static uint32_t chain_id;
 static uint32_t tx_type;
-struct SHA3_CTX keccak_ctx;
+struct SHA3_CTX keccak_ctx = {0};
 
 static inline void hash_data(const uint8_t *buf, size_t size) {
   sha3_Update(&keccak_ctx, buf, size);
@@ -56,7 +56,7 @@ static inline void hash_data(const uint8_t *buf, size_t size) {
  * Push an RLP encoded length to the hash buffer.
  */
 static void hash_rlp_length(uint32_t length, uint8_t firstbyte) {
-  uint8_t buf[4];
+  uint8_t buf[4] = {0};
   if (length == 1 && firstbyte <= 0x7f) {
     /* empty length header */
   } else if (length <= 55) {
@@ -84,7 +84,7 @@ static void hash_rlp_length(uint32_t length, uint8_t firstbyte) {
  * Push an RLP encoded list length to the hash buffer.
  */
 static void hash_rlp_list_length(uint32_t length) {
-  uint8_t buf[4];
+  uint8_t buf[4] = {0};
   if (length <= 55) {
     buf[0] = 0xc0 + length;
     hash_data(buf, 1);
@@ -122,7 +122,7 @@ static void hash_rlp_number(uint32_t number) {
   if (!number) {
     return;
   }
-  uint8_t data[4];
+  uint8_t data[4] = {0};
   data[0] = (number >> 24) & 0xff;
   data[1] = (number >> 16) & 0xff;
   data[2] = (number >> 8) & 0xff;
@@ -182,8 +182,8 @@ static int ethereum_is_canonic(uint8_t v, uint8_t signature[64]) {
 }
 
 static void send_signature(void) {
-  uint8_t hash[32], sig[64];
-  uint8_t v;
+  uint8_t hash[32] = {0}, sig[64] = {0};
+  uint8_t v = 0;
   layoutProgress(_("Signing"), 1000);
 
   /* eip-155 replay protection */
@@ -234,7 +234,7 @@ static void send_signature(void) {
  */
 static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token,
                                  char *buf, int buflen) {
-  bignum256 bn1e9;
+  bignum256 bn1e9 = {0};
   bn_read_uint32(1000000000, &bn1e9);
   const char *suffix = NULL;
   int decimals = 18;
@@ -260,13 +260,13 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token,
 static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
                                     const uint8_t *value, uint32_t value_len,
                                     const TokenType *token) {
-  bignum256 val;
-  uint8_t pad_val[32];
+  bignum256 val = {0};
+  uint8_t pad_val[32] = {0};
   memzero(pad_val, sizeof(pad_val));
   memcpy(pad_val + (32 - value_len), value, value_len);
   bn_read_be(pad_val, &val);
 
-  char amount[32];
+  char amount[32] = {0};
   if (token == NULL) {
     if (bn_is_zero(&val)) {
       strcpy(amount, _("message"));
@@ -282,7 +282,7 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
   char _to3[] = "_______________?";
 
   if (to_len) {
-    char to_str[41];
+    char to_str[41] = {0};
 
     bool rskip60 = false;
     // constants from trezor-common/defs/ethereum/networks.json
@@ -311,8 +311,8 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
 
 static void layoutEthereumData(const uint8_t *data, uint32_t len,
                                uint32_t total_len) {
-  char hexdata[3][17];
-  char summary[20];
+  char hexdata[3][17] = {0};
+  char summary[20] = {0};
   uint32_t printed = 0;
   for (int i = 0; i < 3; i++) {
     uint32_t linelen = len - printed;
@@ -343,10 +343,10 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
                               const uint8_t *gas_price, uint32_t gas_price_len,
                               const uint8_t *gas_limit, uint32_t gas_limit_len,
                               bool is_token) {
-  bignum256 val, gas;
-  uint8_t pad_val[32];
-  char tx_value[32];
-  char gas_value[32];
+  bignum256 val = {0}, gas = {0};
+  uint8_t pad_val[32] = {0};
+  char tx_value[32] = {0};
+  char gas_value[32] = {0};
 
   memzero(tx_value, sizeof(tx_value));
   memzero(gas_value, sizeof(gas_value));
@@ -421,7 +421,7 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node) {
   if (!msg->has_value) msg->value.size = 0;
   if (!msg->has_data_initial_chunk) msg->data_initial_chunk.size = 0;
   bool toset;
-  uint8_t pubkeyhash[20];
+  uint8_t pubkeyhash[20] = {0};
   if (msg->has_to && ethereum_parse(msg->to, pubkeyhash)) {
     toset = true;
   } else {
@@ -626,10 +626,10 @@ void ethereum_signing_abort(void) {
 
 static void ethereum_message_hash(const uint8_t *message, size_t message_len,
                                   uint8_t hash[32]) {
-  struct SHA3_CTX ctx;
+  struct SHA3_CTX ctx = {0};
   sha3_256_Init(&ctx);
   sha3_Update(&ctx, (const uint8_t *)"\x19" "Ethereum Signed Message:\n", 26);
-  uint8_t c;
+  uint8_t c = 0;
   if (message_len >= 1000000000) {
     c = '0' + message_len / 1000000000 % 10;
     sha3_Update(&ctx, &c, 1);
@@ -674,7 +674,7 @@ static void ethereum_message_hash(const uint8_t *message, size_t message_len,
 
 void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node,
                            EthereumMessageSignature *resp) {
-  uint8_t pubkeyhash[20];
+  uint8_t pubkeyhash[20] = {0};
   if (!hdnode_get_ethereum_pubkeyhash(node, pubkeyhash)) {
     return;
   }
@@ -685,10 +685,10 @@ void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node,
   ethereum_address_checksum(pubkeyhash, resp->address + 2, false, 0);
   // ethereum_address_checksum adds trailing zero
 
-  uint8_t hash[32];
+  uint8_t hash[32] = {0};
   ethereum_message_hash(msg->message.bytes, msg->message.size, hash);
 
-  uint8_t v;
+  uint8_t v = 0;
   if (ecdsa_sign_digest(&secp256k1, node->private_key, hash,
                         resp->signature.bytes, &v, ethereum_is_canonic) != 0) {
     fsm_sendFailure(FailureType_Failure_ProcessError, _("Signing failed"));
@@ -707,14 +707,14 @@ int ethereum_message_verify(const EthereumVerifyMessage *msg) {
     return 1;
   }
 
-  uint8_t pubkeyhash[20];
+  uint8_t pubkeyhash[20] = {0};
   if (!ethereum_parse(msg->address, pubkeyhash)) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Malformed address"));
     return 1;
   }
 
-  uint8_t pubkey[65];
-  uint8_t hash[32];
+  uint8_t pubkey[65] = {0};
+  uint8_t hash[32] = {0};
 
   ethereum_message_hash(msg->message.bytes, msg->message.size, hash);
 
@@ -730,7 +730,7 @@ int ethereum_message_verify(const EthereumVerifyMessage *msg) {
     return 2;
   }
 
-  struct SHA3_CTX ctx;
+  struct SHA3_CTX ctx = {0};
   sha3_256_Init(&ctx);
   sha3_Update(&ctx, pubkey + 1, 64);
   keccak_Final(&ctx, hash);

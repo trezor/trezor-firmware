@@ -190,7 +190,7 @@ class TestMsgTezosSignTx:
     def input_flow(self, debug, num_pages):
         yield
         for _ in range(num_pages - 1):
-            debug.swipe_down()
+            debug.swipe_up()
         debug.press_yes()
 
     def test_tezos_sign_tx_proposal(self, client):

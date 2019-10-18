@@ -15,11 +15,13 @@ pytest = "*"
 mock = "*"
 coverage = "==4.5.3"  # coverage 5+ uses binary format
 flaky = ">=3.6.1"  # https://github.com/box/flaky/issues/156
+pytest-ordering = "*"
 pytest-random-order = "*"
 tox = "*"
 
 ## test requirements
 shamir-mnemonic = "*"
+fido2 = "*"
 
 ## typing
 mypy = "*"

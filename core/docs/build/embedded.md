@@ -38,11 +38,10 @@ You need to have OpenOCD installed.
 
 ## Building in debug mode
 
-You can also build firmware in debug mode to see log output or run tests. To avoid building firmware in debug mode accidentally, we do not provide a _make_ target. You need to rewrite `PYOPT` variable to `0` in `SConscript.firmware` file and then build the same way. The change is intentionally not _gitignored_.
+You can also build firmware in debug mode to see log output or run tests.
 
 ```sh
-sed -i "s/^PYOPT = '1'$/PYOPT = '0'/" SConscript.firmware
-pipenv run make build_firmware
+PYOPT=0 pipenv run make build_firmware
 ```
 
 You can then use `screen` to enter the device's console. Do not forget to add your user to the `dialout` group or use `sudo`. Note that both the group and the tty name can differ, use `ls -l` to find out proper names on your machine.

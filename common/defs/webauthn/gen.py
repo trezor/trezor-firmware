@@ -40,7 +40,7 @@ def gen_core(data):
             if use_sign_count is not None:
                 print('        "use_sign_count": %s,' % use_sign_count)
             print("    },")
-    print("}")
+    print("}  # type: dict")
 
 
 def gen_mcu(data):

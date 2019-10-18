@@ -9,8 +9,8 @@ const uint8_t *const font_data[2][128] = {
     },
 };
 
-int fontCharWidth(int font, char c) { return font_data[font][c & 0x7f][0]; }
+int fontCharWidth(int font, uint8_t c) { return font_data[font][c & 0x7f][0]; }
 
-const uint8_t *fontCharData(int font, char c) {
+const uint8_t *fontCharData(int font, uint8_t c) {
   return font_data[font][c & 0x7f] + 1;
 }
