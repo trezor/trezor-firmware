@@ -132,9 +132,9 @@ class TrezorClient:
         self.session_counter += 1
 
     def close(self):
-        if self.session_counter == 1:
+        self.session_counter = max(self.session_counter - 1, 0)
+        if self.session_counter == 0:
             self.transport.end_session()
-        self.session_counter -= 1
 
     def cancel(self):
         self._raw_write(messages.Cancel())
