@@ -36,6 +36,7 @@
     },
     "bitcoin:DASH": {
         "Dash Electrum": "https://electrum.dash.org",
+        "DMT": "https://github.com/Bertrand256/dash-masternode-tool",
         "Exodus": "https://www.exodus.io",
         "Magnum": "https://magnumwallet.co"
     },
@@ -63,6 +64,9 @@
     },
     "bitcoin:GRS": {
         "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet"
+    },
+    "bitcoin:HATCH": {
+        "HMT": "https://github.com/hatchpay/hatch-masternode-tool/"
     },
     "bitcoin:KMD": {
         "Magnum": "https://magnumwallet.co"
