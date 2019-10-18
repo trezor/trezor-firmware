@@ -80,6 +80,15 @@ core unix u2f test:
     - cd core
     - pipenv run make test_emu_u2f
 
+core unix fido2 test:
+  stage: test
+  <<: *only_changes_core
+  dependencies:
+    - core unix frozen regular build
+  script:
+    - cd core
+    - pipenv run make test_emu_fido2
+
 core unix upgrade test:
   stage: test
   <<: *only_changes_core
@@ -94,6 +103,7 @@ core unix upgrade test:
 core mypy test:
   stage: test
   <<: *only_changes_core
+  dependencies: []  # no artifacts needed
   script:
     - cd core
     - (pipenv run make mypy | tee /tmp/mypy-result) || true

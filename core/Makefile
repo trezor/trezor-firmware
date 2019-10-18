@@ -73,6 +73,9 @@ test_emu_monero: ## run selected monero device tests from monero-agent
 test_emu_u2f: ## run selected u2f device tests from u2f-tests-hid
 	cd tests ; ./run_tests_device_emu_u2f.sh $(TESTOPTS)
 
+test_emu_fido2: ## run fido2 device tests
+	cd tests ; ./run_tests_device_emu_fido2.sh $(TESTOPTS)
+
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 
