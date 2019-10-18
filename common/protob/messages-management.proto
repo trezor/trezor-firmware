@@ -142,6 +142,16 @@ message ChangePin {
 }
 
 /**
+ * Request: Starts workflow for setting/removing the wipe code
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message ChangeWipeCode {
+    optional bool remove = 1;   // is wipe code removal requested?
+}
+
+/**
  * Request: Starts workflow for enabling/regenerating/disabling SD card protection
  * @start
  * @next Success

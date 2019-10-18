@@ -71,6 +71,11 @@ class PinMismatch(Error):
         super().__init__(FailureType.PinMismatch, message)
 
 
+class WipeCodeMismatch(Error):
+    def __init__(self, message: str) -> None:
+        super().__init__(FailureType.WipeCodeMismatch, message)
+
+
 class FirmwareError(Error):
     def __init__(self, message: str) -> None:
         super().__init__(FailureType.FirmwareError, message)

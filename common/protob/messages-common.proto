@@ -33,6 +33,7 @@ message Failure {
         Failure_NotEnoughFunds = 10;
         Failure_NotInitialized = 11;
         Failure_PinMismatch = 12;
+        Failure_WipeCodeMismatch = 13;
         Failure_FirmwareError = 99;
     }
 }
@@ -90,6 +91,8 @@ message PinMatrixRequest {
         PinMatrixRequestType_Current = 1;
         PinMatrixRequestType_NewFirst = 2;
         PinMatrixRequestType_NewSecond = 3;
+        PinMatrixRequestType_WipeCodeFirst = 4;
+        PinMatrixRequestType_WipeCodeSecond = 5;
     }
 }
 
