@@ -7,7 +7,7 @@ stdenv.mkDerivation {
     SDL2_image
     autoflake
     check
-    clang-tools
+    clang
     gcc
     gnumake
     graphviz
