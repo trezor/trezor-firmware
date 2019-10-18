@@ -1,5 +1,9 @@
 from concurrent.futures import ThreadPoolExecutor
 
+from trezorlib.transport import udp
+
+udp.SOCKET_TIMEOUT = 0.1
+
 
 class NullUI:
     @staticmethod
@@ -28,6 +32,19 @@ class BackgroundDeviceHandler:
             raise RuntimeError("Wait for previous task first")
         self.task = self._pool.submit(function, self.client, *args, **kwargs)
 
+    def kill_task(self):
+        if self.task is not None:
+            # Force close the client, which should raise an exception in a client
+            # waiting on IO. Does not work over Bridge, because bridge doesn't have
+            # a close() method.
+            while self.client.session_counter > 0:
+                self.client.close()
+            try:
+                self.task.result()
+            except Exception:
+                pass
+        self.task = None
+
     def result(self):
         if self.task is None:
             raise RuntimeError("No task running")
@@ -47,7 +64,13 @@ class BackgroundDeviceHandler:
 
     def check_finalize(self):
         if self.task is not None:
-            self.task.cancel()
-            self.task = None
+            self.kill_task()
             return False
         return True
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if not self.check_finalize():
+            raise RuntimeError("Exit while task is unfinished")
