@@ -7,7 +7,7 @@ from apps.common import paths
 from apps.common.writers import write_bytes, write_uint8, write_uint16_be, write_uint64_be
 from apps.vsys import CURVE, helpers, layout
 from apps.vsys.constants import *
-import os
+from trezor.crypto import random
 
 
 async def sign_tx(ctx, msg, keychain):
@@ -91,7 +91,7 @@ def encode_cancel_lease_tx_to_bytes(msg):
 
 
 def generate_content_signature(content: bytes, private_key: bytes) -> bytes:
-    random64 = os.urandom(64)
+    random64 = random.bytes(64)
     signature = curve25519_axolotl.curve25519_axolotl_sign(private_key, content, random64)
     return signature
 
