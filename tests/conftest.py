@@ -24,7 +24,7 @@ from trezorlib.device import apply_settings, wipe as wipe_device
 from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 from trezorlib.transport import enumerate_devices, get_transport
 
-from .background import BackgroundDeviceHandler
+from .device_handler import BackgroundDeviceHandler
 
 
 def get_device():
@@ -164,6 +164,8 @@ def pytest_runtest_setup(item):
 def pytest_runtest_makereport(item, call):
     # Make test results available in fixtures.
     # See https://docs.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
+    # The device_handler fixture uses this as 'request.node.rep_call.passed' attribute,
+    # in order to raise error only if the test passed.
     outcome = yield
     rep = outcome.get_result()
     setattr(item, f"rep_{rep.when}", rep)
