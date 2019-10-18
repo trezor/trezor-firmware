@@ -362,6 +362,7 @@ Device settings.
     label             Set new device label.
     passphrase        Enable, disable or configure passphrase protection.
     pin               Set, change or remove PIN.
+    wipe-code         Set or remove the wipe code.
 
 Stellar commands.
 ~~~~~~~~~~~~~~~~~

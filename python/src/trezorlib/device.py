@@ -91,6 +91,13 @@ def change_pin(client, remove=False):
 
 
 @expect(messages.Success, field="message")
+def change_wipe_code(client, remove=False):
+    ret = client.call(messages.ChangeWipeCode(remove=remove))
+    client.init_device()  # Re-read features
+    return ret
+
+
+@expect(messages.Success, field="message")
 def sd_protect(client, operation):
     ret = client.call(messages.SdProtect(operation=operation))
     client.init_device()
