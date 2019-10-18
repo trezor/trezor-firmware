@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from collections import namedtuple
 from copy import deepcopy
 
 from mnemonic import Mnemonic
@@ -23,6 +24,13 @@ from .client import TrezorClient
 from .tools import expect
 
 EXPECTED_RESPONSES_CONTEXT_LINES = 3
+
+
+LayoutLines = namedtuple("LayoutLines", "lines text")
+
+
+def layout_lines(lines):
+    return LayoutLines(lines, " ".join(lines))
 
 
 class DebugLink:
@@ -46,9 +54,12 @@ class DebugLink:
     def state(self):
         return self._call(proto.DebugLinkGetState())
 
+    def read_layout(self):
+        return layout_lines(self.state().layout_lines)
+
     def wait_layout(self):
         obj = self._call(proto.DebugLinkGetState(wait_layout=True))
-        return obj.layout_lines
+        return layout_lines(obj.layout_lines)
 
     def read_pin(self):
         state = self.state()
@@ -100,7 +111,7 @@ class DebugLink:
         )
         ret = self._call(decision, nowait=not wait)
         if ret is not None:
-            return ret.lines
+            return layout_lines(ret.lines)
 
     def click(self, click, wait=False):
         x, y = click
