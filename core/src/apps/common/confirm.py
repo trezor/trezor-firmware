@@ -8,7 +8,7 @@ if __debug__:
     from apps.debug import confirm_signal
 
 if False:
-    from typing import Any, Callable
+    from typing import Any, Callable, Optional
     from trezor import ui
     from trezor.ui.confirm import ButtonContent, ButtonStyleType
     from trezor.ui.loader import LoaderStyleType
@@ -18,9 +18,9 @@ async def confirm(
     ctx: wire.Context,
     content: ui.Component,
     code: int = ButtonRequestType.Other,
-    confirm: ButtonContent = Confirm.DEFAULT_CONFIRM,
+    confirm: Optional[ButtonContent] = Confirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = Confirm.DEFAULT_CONFIRM_STYLE,
-    cancel: ButtonContent = Confirm.DEFAULT_CANCEL,
+    cancel: Optional[ButtonContent] = Confirm.DEFAULT_CANCEL,
     cancel_style: ButtonStyleType = Confirm.DEFAULT_CANCEL_STYLE,
     major_confirm: bool = False,
 ) -> bool:
