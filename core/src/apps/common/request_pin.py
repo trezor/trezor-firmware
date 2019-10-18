@@ -117,3 +117,11 @@ async def show_pin_invalid(ctx: wire.Context) -> None:
     text = Text("Wrong PIN", ui.ICON_WRONG, ui.RED)
     text.normal("The PIN you entered is", "invalid.")
     await confirm(ctx, text, confirm=None, cancel="Close")
+
+
+async def show_pin_matches_wipe_code(ctx: wire.Context) -> None:
+    from apps.common.confirm import confirm
+
+    text = Text("Invalid PIN", ui.ICON_WRONG, ui.RED)
+    text.normal("The new PIN must be", "different from your", "wipe code.")
+    await confirm(ctx, text, confirm=None, cancel="Close")

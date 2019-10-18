@@ -61,6 +61,17 @@ def change_pin(
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
+def change_wipe_code(
+    pin: int,
+    ext_salt: Optional[bytes],
+    wipe_code: int,
+) -> bool:
+    """
+    Change wipe code. Returns True on success, False on failure.
+    """
+
+
+# extmod/modtrezorconfig/modtrezorconfig.c
 def get(app: int, key: int, public: bool = False) -> Optional[bytes]:
     """
     Gets the value of the given key for the given app (or None if not set).
