@@ -52,6 +52,9 @@
     "bitcoin:FJC": {
         "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
     },
+    "bitcoin:FLO": {
+        "Chaintek": "https://wallet.chaintek.net/"
+    },
     "bitcoin:FTC": {
         "Electrum-FTC": "https://github.com/Feathercoin-Foundation/electrum-ftc"
     },
@@ -93,6 +96,7 @@
         "Qtum-Electrum": "https://github.com/qtumproject/qtum-electrum"
     },
     "bitcoin:RVN": {
+        "Chaintek": "https://wallet.chaintek.net/",
         "Electrum-RVN": "https://github.com/traysi/electrum-raven",
         "Mango Farm": "https://mangofarmassets.com/mangowallet"
     },
