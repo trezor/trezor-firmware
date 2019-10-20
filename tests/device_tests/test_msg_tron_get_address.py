@@ -19,13 +19,10 @@ import pytest
 from trezorlib import debuglink, messages as proto, tron
 from trezorlib.tools import CallException, parse_path
 
-from .common import TrezorTest
-from .conftest import TREZOR_VERSION
-
 
 @pytest.mark.tron
 @pytest.mark.skip_t2
-class TestMsgTronGetAddress(TrezorTest):
+class TestMsgTronGetAddress:
     def test_tron_getaddressAllAllAll(self):
         self.setup_mnemonic_allallall()
 
@@ -75,9 +72,6 @@ class TestMsgTronGetAddress(TrezorTest):
         with pytest.raises(CallException) as exc:
             tron.get_address(self.client, parse_path("m/0/1"))
 
-        if TREZOR_VERSION == 1:
-            assert exc.value.args[0] == proto.FailureType.ProcessError
-            assert exc.value.args[1].endswith("Failed to derive private key")
-        else:
-            assert exc.value.args[0] == proto.FailureType.DataError
-            assert exc.value.args[1].endswith("Forbidden key path")
+        assert exc.value.args[0] == proto.FailureType.DataError
+        assert exc.value.args[1].endswith("Forbidden key path")
+
