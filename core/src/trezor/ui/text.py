@@ -120,7 +120,7 @@ def render_text(
             offset_x += SPACE
 
 
-class Text(ui.Control):
+class Text(ui.Component):
     def __init__(
         self,
         header_text: str,
@@ -177,7 +177,7 @@ LABEL_CENTER = const(1)
 LABEL_RIGHT = const(2)
 
 
-class Label(ui.Control):
+class Label(ui.Component):
     def __init__(
         self,
         area: ui.Area,

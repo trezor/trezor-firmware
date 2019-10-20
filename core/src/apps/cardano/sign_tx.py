@@ -17,7 +17,6 @@ from apps.cardano.layout import confirm_sending, confirm_transaction, progress
 from apps.common import cbor
 from apps.common.paths import validate_path
 from apps.common.seed import remove_ed25519_prefix
-from apps.homescreen.homescreen import display_homescreen
 
 # the maximum allowed change address.  this should be large enough for normal
 # use and still allow to quickly brute-force the correct bip32 path
@@ -101,9 +100,6 @@ async def sign_tx(ctx, msg):
         transaction = Transaction(
             msg.inputs, msg.outputs, keychain, msg.protocol_magic, input_coins_sum
         )
-
-        # clear progress bar
-        display_homescreen()
 
         for i in msg.inputs:
             await validate_path(ctx, validate_full_path, keychain, i.address_n, CURVE)

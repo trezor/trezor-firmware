@@ -5,8 +5,11 @@ import protobuf as p
 if __debug__:
     try:
         from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+        EnumTypeRecoveryDeviceType = Literal[0, 1]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
+        EnumTypeRecoveryDeviceType = None  # type: ignore
 
 
 class RecoveryDevice(p.MessageType):
@@ -20,7 +23,7 @@ class RecoveryDevice(p.MessageType):
         language: str = None,
         label: str = None,
         enforce_wordlist: bool = None,
-        type: int = None,
+        type: EnumTypeRecoveryDeviceType = None,
         u2f_counter: int = None,
         dry_run: bool = None,
     ) -> None:
@@ -43,7 +46,7 @@ class RecoveryDevice(p.MessageType):
             4: ('language', p.UnicodeType, 0),  # default=english
             5: ('label', p.UnicodeType, 0),
             6: ('enforce_wordlist', p.BoolType, 0),
-            8: ('type', p.UVarintType, 0),
+            8: ('type', p.EnumType("RecoveryDeviceType", (0, 1)), 0),
             9: ('u2f_counter', p.UVarintType, 0),
             10: ('dry_run', p.BoolType, 0),
         }

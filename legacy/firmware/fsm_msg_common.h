@@ -83,6 +83,22 @@ void fsm_msgGetFeatures(const GetFeatures *msg) {
   resp->has_model = true;
   strlcpy(resp->model, "1", sizeof(resp->model));
 
+#if BITCOIN_ONLY
+  resp->capabilities_count = 2;
+  resp->capabilities[0] = Capability_Capability_Bitcoin;
+  resp->capabilities[1] = Capability_Capability_Crypto;
+#else
+  resp->capabilities_count = 8;
+  resp->capabilities[0] = Capability_Capability_Bitcoin;
+  resp->capabilities[1] = Capability_Capability_Bitcoin_like;
+  resp->capabilities[2] = Capability_Capability_Crypto;
+  resp->capabilities[3] = Capability_Capability_Ethereum;
+  resp->capabilities[4] = Capability_Capability_Lisk;
+  resp->capabilities[5] = Capability_Capability_NEM;
+  resp->capabilities[6] = Capability_Capability_Stellar;
+  resp->capabilities[7] = Capability_Capability_U2F;
+#endif
+
   msg_write(MessageType_MessageType_Features, resp);
 }
 

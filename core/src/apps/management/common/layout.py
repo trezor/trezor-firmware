@@ -93,7 +93,7 @@ async def _confirm_word(ctx, share_index, numbered_share_words, count):
     # we always confirm the first (random) word index
     checked_index, checked_word = numbered_choices[0]
     if __debug__:
-        debug.reset_word_index = checked_index
+        debug.reset_word_index.publish(checked_index)
 
     # shuffle again so the confirmed word is not always the first choice
     random.shuffle(numbered_choices)
@@ -102,7 +102,7 @@ async def _confirm_word(ctx, share_index, numbered_share_words, count):
     choices = [word for _, word in numbered_choices]
     select = MnemonicWordSelect(choices, share_index, checked_index, count)
     if __debug__:
-        selected_word = await ctx.wait(select, debug.input_signal)
+        selected_word = await ctx.wait(select, debug.input_signal())
     else:
         selected_word = await ctx.wait(select)
 
@@ -200,7 +200,7 @@ async def _bip39_show_mnemonic(ctx, words: list):
 
         def export_displayed_words():
             # export currently displayed mnemonic words into debuglink
-            debug.reset_current_words = [w for _, w in words[paginated.page]]
+            debug.reset_current_words.publish([w for _, w in words[paginated.page]])
 
         paginated.on_change = export_displayed_words
         export_displayed_words()
@@ -380,8 +380,8 @@ async def _slip39_show_share_words(ctx, share_index, share_words):
         text.mono("%s. %s" % (index + 1, word))
         shares_words_check.append(word)
     text.br_half()
-    text.bold("I confirm that I wrote")
-    text.bold("down all %s words." % len(share_words))
+    text.bold("I wrote down all %s" % len(share_words))
+    text.bold("words in order.")
     pages.append(text)
 
     # pagination
@@ -393,7 +393,8 @@ async def _slip39_show_share_words(ctx, share_index, share_words):
 
         def export_displayed_words():
             # export currently displayed mnemonic words into debuglink
-            debug.reset_current_words = [w for _, w in word_pages[paginated.page]]
+            words = [w for _, w in word_pages[paginated.page]]
+            debug.reset_current_words.publish(words)
 
         paginated.on_change = export_displayed_words
         export_displayed_words()
@@ -408,13 +409,22 @@ async def _slip39_show_share_words(ctx, share_index, share_words):
 def _slip39_split_share_into_pages(share_words):
     share = list(enumerate(share_words))  # we need to keep track of the word indices
     first = share[:2]  # two words on the first page
-    middle = share[2:-2]
-    last = share[-2:]  # two words on the last page
+    length = len(share_words)
+    if length == 20:
+        middle = share[2:-2]
+        last = share[-2:]  # two words on the last page
+    elif length == 33:
+        middle = share[2:]
+        last = []  # no words at the last page, because it does not add up
+    else:
+        # Invalid number of shares. SLIP-39 allows 20 or 33 words.
+        raise RuntimeError
+
     chunks = utils.chunks(middle, 4)  # 4 words on the middle pages
     return first, list(chunks), last
 
 
-class ShamirNumInput(ui.Control):
+class ShamirNumInput(ui.Component):
     SET_SHARES = object()
     SET_THRESHOLD = object()
 

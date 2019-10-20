@@ -1,11 +1,13 @@
 from common import *
-from trezor.messages.RipplePayment import RipplePayment
-from trezor.messages.RippleSignTx import RippleSignTx
 
-from apps.ripple.serialize import serialize, serialize_amount
-from apps.ripple.sign_tx import get_network_prefix
+if not utils.BITCOIN_ONLY:
+    from trezor.messages.RipplePayment import RipplePayment
+    from trezor.messages.RippleSignTx import RippleSignTx
+    from apps.ripple.serialize import serialize, serialize_amount
+    from apps.ripple.sign_tx import get_network_prefix
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestRippleSerializer(unittest.TestCase):
     def test_amount(self):
         # https://github.com/ripple/ripple-binary-codec/blob/4581f1b41e712f545ba08be15e188a557c731ecf/test/fixtures/data-driven-tests.json#L2494

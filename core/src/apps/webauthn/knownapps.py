@@ -27,10 +27,11 @@ _knownapps = {
     "www.binance.com": "Binance",
     "www.dropbox.com": "Dropbox",
     "secure.login.gov": "login.gov",
+    "login.microsoft.com": "Microsoft",
     "webauthn.bin.coffee": "webauthn.bin.coffee",
     "webauthn.io": "WebAuthn.io",
     "webauthn.me": "WebAuthn.me",
     "demo.yubico.com": "demo.yubico.com",
 }
 
-knownapps = {sha256(k).digest(): v for (k, v) in _knownapps.items()}
+knownapps = {sha256(k.encode()).digest(): v for (k, v) in _knownapps.items()}

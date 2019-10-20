@@ -1,9 +1,12 @@
 from common import *
 from apps.common.paths import HARDENED
-from apps.stellar.helpers import address_from_public_key, public_key_from_address, validate_full_path
 from trezor.wire import ProcessError
 
+if not utils.BITCOIN_ONLY:
+    from apps.stellar.helpers import address_from_public_key, public_key_from_address, validate_full_path
 
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestStellarAddress(unittest.TestCase):
 
     def test_address_to_pubkey(self):

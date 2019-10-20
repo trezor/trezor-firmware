@@ -2,13 +2,18 @@
 
 import os
 
+BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
+EVERYTHING = BITCOIN_ONLY != '1'
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
 SOURCE_MOD = []
-SOURCE_MOD_SECP256K1_ZKP = []
+if EVERYTHING:
+    SOURCE_MOD_SECP256K1_ZKP = []
 
-PYOPT = '1'
+PYOPT = ARGUMENTS.get('PYOPT', '1')
+FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
 
 # modtrezorconfig
 CPPPATH_MOD += [
@@ -30,11 +35,11 @@ CPPDEFINES_MOD += [
     'AES_128',
     'AES_192',
     ('USE_KECCAK', '1'),
-    ('USE_ETHEREUM', '1'),
-    ('USE_MONERO', '1'),
-    ('USE_CARDANO', '1'),
-    ('USE_NEM', '1'),
-    ('USE_EOS', '1'),
+    ('USE_ETHEREUM', '1' if EVERYTHING else '0'),
+    ('USE_MONERO', '1' if EVERYTHING else '0'),
+    ('USE_CARDANO', '1' if EVERYTHING else '0'),
+    ('USE_NEM', '1' if EVERYTHING else '0'),
+    ('USE_EOS', '1' if EVERYTHING else '0'),
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
@@ -68,9 +73,6 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/ed25519-donna/ed25519-keccak.c',
     'vendor/trezor-crypto/ed25519-donna/ed25519-sha3.c',
     'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
-    'vendor/trezor-crypto/monero/base58.c',
-    'vendor/trezor-crypto/monero/serialize.c',
-    'vendor/trezor-crypto/monero/xmr.c',
     'vendor/trezor-crypto/groestl.c',
     'vendor/trezor-crypto/hasher.c',
     'vendor/trezor-crypto/hmac.c',
@@ -88,31 +90,38 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/shamir.c',
     'vendor/trezor-crypto/slip39.c',
 ]
+if EVERYTHING:
+    SOURCE_MOD += [
+        'vendor/trezor-crypto/monero/base58.c',
+        'vendor/trezor-crypto/monero/serialize.c',
+        'vendor/trezor-crypto/monero/xmr.c',
+    ]
 
 # libsecp256k1-zkp
-CPPPATH_MOD += [
-    'vendor/secp256k1-zkp',
-    'vendor/secp256k1-zkp/src',
-    'vendor/secp256k1-zkp/include',
-]
-CPPDEFINES_MOD += [
-    'SECP256K1_BUILD',
-    'USE_NUM_NONE',
-    'USE_FIELD_INV_BUILTIN',
-    'USE_SCALAR_INV_BUILTIN',
-    'USE_FIELD_10X26',
-    'USE_SCALAR_8X32',
-    'USE_ECMULT_STATIC_PRECOMPUTATION',
-    'USE_EXTERNAL_DEFAULT_CALLBACKS',
-    ('ECMULT_WINDOW_SIZE', '8'),
-    'ENABLE_MODULE_GENERATOR',
-    'ENABLE_MODULE_RANGEPROOF',
-    'ENABLE_MODULE_RECOVERY',
-    'ENABLE_MODULE_ECDH',
-]
-SOURCE_MOD_SECP256K1_ZKP += [
-    'vendor/secp256k1-zkp/src/secp256k1.c',
-]
+if EVERYTHING:
+    CPPPATH_MOD += [
+        'vendor/secp256k1-zkp',
+        'vendor/secp256k1-zkp/src',
+        'vendor/secp256k1-zkp/include',
+    ]
+    CPPDEFINES_MOD += [
+        'SECP256K1_BUILD',
+        'USE_NUM_NONE',
+        'USE_FIELD_INV_BUILTIN',
+        'USE_SCALAR_INV_BUILTIN',
+        'USE_FIELD_10X26',
+        'USE_SCALAR_8X32',
+        'USE_ECMULT_STATIC_PRECOMPUTATION',
+        'USE_EXTERNAL_DEFAULT_CALLBACKS',
+        ('ECMULT_WINDOW_SIZE', '8'),
+        'ENABLE_MODULE_GENERATOR',
+        'ENABLE_MODULE_RANGEPROOF',
+        'ENABLE_MODULE_RECOVERY',
+        'ENABLE_MODULE_ECDH',
+    ]
+    SOURCE_MOD_SECP256K1_ZKP += [
+        'vendor/secp256k1-zkp/src/secp256k1.c',
+    ]
 
 # modtrezorio
 SOURCE_MOD += [
@@ -137,7 +146,7 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/modtrezorui.c',
     'embed/extmod/modtrezorui/qr-code-generator/qrcodegen.c',
 ]
-if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
+if FROZEN:
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_FROZEN']
 
 # modtrezorutils
@@ -291,7 +300,7 @@ SOURCE_UNIX = [
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT))
+env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s -DBITCOIN_ONLY=%s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT, BITCOIN_ONLY))
 
 env.Tool('micropython')
 
@@ -381,20 +390,93 @@ env.Ignore(qstr_collected, qstr_generated)
 # Frozen modules
 #
 
-if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
+if FROZEN:
     if env.get('TREZOR_MODEL') == '1':
         SOURCE_PY_DIR = 'src1/'
     else:
         SOURCE_PY_DIR = 'src/'
 
-    # TODO: recursive Glob
     SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + '*/*/*/*/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/crypto/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/res/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py'))
 
-    source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR)
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'trezor/messages/Binance*.py',
+            SOURCE_PY_DIR + 'trezor/messages/Cardano*.py',
+            SOURCE_PY_DIR + 'trezor/messages/DebugMonero*.py',
+            SOURCE_PY_DIR + 'trezor/messages/Eos*.py',
+            SOURCE_PY_DIR + 'trezor/messages/Ethereum*.py',
+            SOURCE_PY_DIR + 'trezor/messages/Lisk*.py',
+            SOURCE_PY_DIR + 'trezor/messages/Monero*.py',
+            SOURCE_PY_DIR + 'trezor/messages/NEM*.py',
+            SOURCE_PY_DIR + 'trezor/messages/Ripple*.py',
+            SOURCE_PY_DIR + 'trezor/messages/Stellar*.py',
+            SOURCE_PY_DIR + 'trezor/messages/Tezos*.py',
+        ])
+    )
+
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/*/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'apps/wallet/sign_tx/decred.py',
+            SOURCE_PY_DIR + 'apps/wallet/sign_tx/zcash.py',
+        ])
+    )
+
+    if EVERYTHING:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/binance/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Binance*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/cardano/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/cardano/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Cardano*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Eos*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ethereum/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Ethereum*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/lisk/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Lisk*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/monero/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/monero/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/monero/*/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/DebugMonero*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Monero*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/NEM*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ripple/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Ripple*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/stellar/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/stellar/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Stellar*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tezos/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Tezos*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/webauthn/*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/sign_tx/decred.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/sign_tx/zcash.py'))
+
+    source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR, bitcoin_only=BITCOIN_ONLY)
 
     source_mpyc = env.FrozenCFile(
         target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)
@@ -405,22 +487,22 @@ if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
 # static secp256-zkp ecmult context
 #
 
-host_env = Environment(ENV=os.environ)
-host_env.Replace(
-    CC=os.getenv('CC_FOR_BUILD') or 'gcc',
-    COPT='-O2',
-    CPPPATH='vendor/secp256k1-zkp',
-)
-gen_context = host_env.Program(
-    target='vendor/secp256k1-zkp/gen_context',
-    source='vendor/secp256k1-zkp/src/gen_context.c',
-)
-
-secp256k1_zkp_ecmult_static_context = host_env.Command(
-    target='vendor/secp256k1-zkp/src/ecmult_static_context.h',
-    source='vendor/secp256k1-zkp/gen_context',
-    action='cd ${SOURCE.dir}; ./gen_context',
-)
+if EVERYTHING:
+    host_env = Environment(ENV=os.environ)
+    host_env.Replace(
+        CC=os.getenv('CC_FOR_BUILD') or 'gcc',
+        COPT='-O2',
+        CPPPATH='vendor/secp256k1-zkp',
+    )
+    gen_context = host_env.Program(
+        target='vendor/secp256k1-zkp/gen_context',
+        source='vendor/secp256k1-zkp/src/gen_context.c',
+    )
+    secp256k1_zkp_ecmult_static_context = host_env.Command(
+        target='vendor/secp256k1-zkp/src/ecmult_static_context.h',
+        source='vendor/secp256k1-zkp/gen_context',
+        action='cd ${SOURCE.dir}; ./gen_context',
+    )
 
 #
 # Program objects
@@ -428,14 +510,16 @@ secp256k1_zkp_ecmult_static_context = host_env.Command(
 
 obj_program = []
 obj_program.extend(env.Object(source=SOURCE_MOD))
-obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
+if EVERYTHING:
+    obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
 obj_program.extend(env.Object(source=SOURCE_UNIX))
-if ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0):
+if FROZEN:
     obj_program.extend(env.Object(source=source_mpyc))
 
 env.Depends(obj_program, qstr_generated)
-env.Depends(obj_program, secp256k1_zkp_ecmult_static_context)
+if EVERYTHING:
+    env.Depends(obj_program, secp256k1_zkp_ecmult_static_context)
 
 program = env.Command(
     target='micropython',

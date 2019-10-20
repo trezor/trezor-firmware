@@ -37,6 +37,8 @@
   "max_address_length": 53,
   "bitcore": [],
   "blockbook": [],
+  "negative_fee": false,
   "cooldown": 100,
-  "consensus_branch_id": null
+  "consensus_branch_id": null,
+  "confidential_assets": null
 }

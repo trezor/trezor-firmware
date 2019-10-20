@@ -114,7 +114,7 @@ class Input(Button):
         pass
 
 
-class Prompt(ui.Control):
+class Prompt(ui.Component):
     def __init__(self, text: str) -> None:
         self.text = text
         self.repaint = True
@@ -210,17 +210,17 @@ class PassphraseKeyboard(ui.Layout):
     async def handle_input(self) -> None:
         touch = loop.wait(io.TOUCH)
         timeout = loop.sleep(1000 * 1000 * 1)
-        spawn_touch = loop.spawn(touch)
-        spawn_timeout = loop.spawn(touch, timeout)
+        race_touch = loop.race(touch)
+        race_timeout = loop.race(touch, timeout)
 
         while True:
             if self.pending_button is not None:
-                spawn = spawn_timeout
+                race = race_timeout
             else:
-                spawn = spawn_touch
-            result = await spawn
+                race = race_touch
+            result = await race
 
-            if touch in spawn.finished:
+            if touch in race.finished:
                 event, x, y = result
                 self.dispatch(event, x, y)
             else:
@@ -249,7 +249,7 @@ class PassphraseKeyboard(ui.Layout):
 
 
 class PassphraseSource(ui.Layout):
-    def __init__(self, content: ui.Control) -> None:
+    def __init__(self, content: ui.Component) -> None:
         self.content = content
 
         self.device = Button(ui.grid(8, n_y=4, n_x=4, cells_x=4), "Device")

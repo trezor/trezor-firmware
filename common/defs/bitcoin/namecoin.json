@@ -37,6 +37,8 @@
     "https://nmc1.trezor.io",
     "https://nmc2.trezor.io"
   ],
+  "negative_fee": false,
   "cooldown": 100,
-  "consensus_branch_id": null
+  "consensus_branch_id": null,
+  "confidential_assets": null
 }

@@ -29,7 +29,7 @@ def generate_digits() -> Iterable[int]:
     return digits[6:] + digits[3:6] + digits[:3]
 
 
-class PinInput(ui.Control):
+class PinInput(ui.Component):
     def __init__(self, prompt: str, subprompt: str, pin: str) -> None:
         self.prompt = prompt
         self.subprompt = subprompt

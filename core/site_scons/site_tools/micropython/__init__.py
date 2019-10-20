@@ -23,7 +23,10 @@ def generate(env):
         target = str(target[0])
         source = str(source[0])
         source_name = source.replace(env['source_dir'], '')
-        return '$MPY_CROSS -o %s -s %s %s' % (target, source_name, source)
+        # unroll the utils.BITCOIN_ONLY constant
+        btc_only = 'True' if env['bitcoin_only'] == '1' else 'False'
+        interim = "%s.i" % target[:-4]  # replace .mpy with .i
+        return '$SED "s:utils\.BITCOIN_ONLY:%s:g" %s > %s && $MPY_CROSS -o %s -s %s %s' % (btc_only, source, interim, target, source_name, interim)
 
     env['BUILDERS']['FrozenModule'] = SCons.Builder.Builder(
         generator=generate_frozen_module,

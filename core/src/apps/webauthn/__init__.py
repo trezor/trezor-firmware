@@ -355,12 +355,16 @@ class ConfirmState:
             return False
         if utime.ticks_ms() >= self.deadline:
             if self.workflow is not None:
+                # We crossed the deadline, kill the running confirmation
+                # workflow. `self.workflow` is reset in the finally
+                # handler in `confirm_workflow`.
                 loop.close(self.workflow)
             return False
         return True
 
     def setup(self, action: int, checksum: bytes, app_id: bytes) -> bool:
-        if workflow.workflows:
+        if workflow.tasks or self.workflow:
+            # If any other workflow is running, we bail out.
             return False
 
         self.action = action
@@ -377,10 +381,10 @@ class ConfirmState:
 
     async def confirm_workflow(self) -> None:
         try:
-            workflow.onstart(self.workflow)
+            workflow.on_start(self.workflow)
             await self.confirm_layout()
         finally:
-            workflow.onclose(self.workflow)
+            workflow.on_close(self.workflow)
             self.workflow = None
 
     async def confirm_layout(self) -> None:
@@ -402,7 +406,7 @@ class ConfirmState:
         self.confirmed = await dialog is CONFIRMED
 
 
-class ConfirmContent(ui.Control):
+class ConfirmContent(ui.Component):
     def __init__(self, action: int, app_id: bytes) -> None:
         self.action = action
         self.app_id = app_id

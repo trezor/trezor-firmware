@@ -7,9 +7,9 @@ from trezor.ui.info import InfoConfirm
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
 
-from .bip39_keyboard import Bip39Keyboard
+from .keyboard_bip39 import Bip39Keyboard
+from .keyboard_slip39 import Slip39Keyboard
 from .recover import RecoveryAborted
-from .slip39_keyboard import Slip39Keyboard
 
 from apps.common import mnemonic, storage
 from apps.common.confirm import confirm, require_confirm
@@ -43,7 +43,7 @@ async def request_word_count(ctx: wire.Context, dry_run: bool) -> int:
     text.normal("Number of words?")
 
     if __debug__:
-        count = await ctx.wait(WordSelector(text), input_signal)
+        count = await ctx.wait(WordSelector(text), input_signal())
         count = int(count)  # if input_signal was triggered, count is a string
     else:
         count = await ctx.wait(WordSelector(text))
@@ -63,7 +63,7 @@ async def request_mnemonic(
         else:
             keyboard = Bip39Keyboard("Type word %s of %s:" % (i + 1, count))
         if __debug__:
-            word = await ctx.wait(keyboard, input_signal)
+            word = await ctx.wait(keyboard, input_signal())
         else:
             word = await ctx.wait(keyboard)
 
@@ -145,38 +145,38 @@ async def show_keyboard_info(ctx: wire.Context) -> None:
         "Great!",
     )
     if __debug__:
-        await ctx.wait(info, confirm_signal)
+        await ctx.wait(info, confirm_signal())
     else:
         await ctx.wait(info)
 
 
-async def show_invalid_mnemonic(ctx, mnemonic_type: int):
+async def show_invalid_mnemonic(ctx: wire.Context, mnemonic_type: int) -> None:
     if mnemonic_type == mnemonic.TYPE_SLIP39:
         await show_warning(ctx, ("You have entered", "an invalid recovery", "share."))
     else:
         await show_warning(ctx, ("You have entered", "an invalid recovery", "seed."))
 
 
-async def show_share_already_added(ctx):
-    return await show_warning(
+async def show_share_already_added(ctx: wire.Context) -> None:
+    await show_warning(
         ctx, ("Share already entered,", "please enter", "a different share.")
     )
 
 
-async def show_identifier_mismatch(ctx):
-    return await show_warning(
+async def show_identifier_mismatch(ctx: wire.Context) -> None:
+    await show_warning(
         ctx, ("You have entered", "a share from another", "Shamir Backup.")
     )
 
 
-class RecoveryHomescreen(ui.Control):
+class RecoveryHomescreen(ui.Component):
     def __init__(self, text: str, subtext: str = None):
         self.text = text
         self.subtext = subtext
         self.dry_run = storage.recovery.is_dry_run()
         self.repaint = True
 
-    def on_render(self):
+    def on_render(self) -> None:
         if not self.repaint:
             return
 
@@ -208,8 +208,6 @@ async def homescreen_dialog(
     ctx: wire.Context, homepage: RecoveryHomescreen, button_label: str
 ) -> None:
     while True:
-        # make sure the homepage gets painted, even after cancelling the dialog
-        homepage.repaint = True
         continue_recovery = await confirm(
             ctx,
             homepage,

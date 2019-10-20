@@ -5,8 +5,11 @@ import protobuf as p
 if __debug__:
     try:
         from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+        EnumTypeInputScriptType = Literal[0, 1, 2, 3, 4]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
+        EnumTypeInputScriptType = None  # type: ignore
 
 
 class SignMessage(p.MessageType):
@@ -17,7 +20,7 @@ class SignMessage(p.MessageType):
         address_n: List[int] = None,
         message: bytes = None,
         coin_name: str = None,
-        script_type: int = None,
+        script_type: EnumTypeInputScriptType = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.message = message
@@ -30,5 +33,5 @@ class SignMessage(p.MessageType):
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
             2: ('message', p.BytesType, 0),  # required
             3: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
-            4: ('script_type', p.UVarintType, 0),  # default=SPENDADDRESS
+            4: ('script_type', p.EnumType("InputScriptType", (0, 1, 2, 3, 4)), 0),  # default=SPENDADDRESS
         }

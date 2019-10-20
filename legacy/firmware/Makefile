@@ -30,11 +30,8 @@ OBJS += reset.o
 OBJS += signing.o
 OBJS += crypto.o
 
-ifneq ($(U2F_ENABLED),0)
-OBJS += u2f.o
-endif
-
 ifneq ($(BITCOIN_ONLY),1)
+OBJS += u2f.o
 OBJS += ethereum.o
 OBJS += ethereum_tokens.o
 OBJS += lisk.o
@@ -103,7 +100,8 @@ OBJS += ../vendor/trezor-storage/norcow.o
 
 OBJS += ../vendor/nanopb/pb_common.o
 OBJS += ../vendor/nanopb/pb_decode.o
-OBJS += ../vendor/nanopb/pb_encode.o
+# we have a local patch in pb_encode.c
+OBJS += pb_encode.o
 
 OBJS += protob/messages.pb.o
 OBJS += protob/messages-bitcoin.pb.o

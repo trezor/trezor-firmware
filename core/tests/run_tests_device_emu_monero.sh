@@ -6,7 +6,7 @@
 
 SDIR="$(SHELL_SESSION_FILE='' && cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 CORE_DIR="$SDIR/.."
-MICROPYTHON="$CORE_DIR/build/unix/micropython"
+MICROPYTHON="${MICROPYTHON:-$CORE_DIR/build/unix/micropython}"
 DISABLE_FADE=1
 PYOPT=0
 upy_pid=""

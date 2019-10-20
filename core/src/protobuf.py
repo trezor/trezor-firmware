@@ -6,7 +6,7 @@ bytes, string, embedded message and repeated fields.
 from micropython import const
 
 if False:
-    from typing import Any, Dict, List, Type, TypeVar
+    from typing import Any, Dict, Iterable, List, Optional, Type, TypeVar, Union
     from typing_extensions import Protocol
 
     class AsyncReader(Protocol):
@@ -121,6 +121,19 @@ class BoolType:
     WIRE_TYPE = 0
 
 
+class EnumType:
+    WIRE_TYPE = 0
+
+    def __init__(self, name: str, enum_values: Iterable[int]) -> None:
+        self.enum_values = enum_values
+
+    def validate(self, fvalue: int) -> int:
+        if fvalue in self.enum_values:
+            return fvalue
+        else:
+            raise TypeError("Invalid enum value")
+
+
 class BytesType:
     WIRE_TYPE = 2
 
@@ -177,6 +190,11 @@ async def load_message(
     fields = msg_type.get_fields()
     msg = msg_type()
 
+    if False:
+        SingularValue = Union[int, bool, bytearray, str, MessageType]
+        Value = Union[SingularValue, List[SingularValue]]
+        fvalue = 0  # type: Value
+
     while True:
         try:
             fkey = await load_uvarint(reader)
@@ -210,6 +228,8 @@ async def load_message(
             fvalue = uint_to_sint(ivalue)
         elif ftype is BoolType:
             fvalue = bool(ivalue)
+        elif isinstance(ftype, EnumType):
+            fvalue = ftype.validate(ivalue)
         elif ftype is BytesType:
             fvalue = bytearray(ivalue)
             await reader.areadinto(fvalue)
@@ -258,10 +278,7 @@ async def dump_message(
             repvalue[0] = fvalue
             fvalue = repvalue
 
-        if issubclass(ftype, MessageType):
-            ffields = ftype.get_fields()
-        else:
-            ffields = None
+        ffields = None  # type: Optional[Dict]
 
         for svalue in fvalue:
             await dump_uvarint(writer, fkey)
@@ -274,6 +291,9 @@ async def dump_message(
 
             elif ftype is BoolType:
                 await dump_uvarint(writer, int(svalue))
+
+            elif isinstance(ftype, EnumType):
+                await dump_uvarint(writer, svalue)
 
             elif ftype is BytesType:
                 if isinstance(svalue, list):
@@ -290,6 +310,8 @@ async def dump_message(
                 await writer.awrite(svalue)
 
             elif issubclass(ftype, MessageType):
+                if ffields is None:
+                    ffields = ftype.get_fields()
                 await dump_uvarint(writer, count_message(svalue, ffields))
                 await dump_message(writer, svalue, ffields)
 
@@ -331,6 +353,10 @@ def count_message(msg: MessageType, fields: Dict = None) -> int:
         elif ftype is BoolType:
             for svalue in fvalue:
                 nbytes += count_uvarint(int(svalue))
+
+        elif isinstance(ftype, EnumType):
+            for svalue in fvalue:
+                nbytes += count_uvarint(svalue)
 
         elif ftype is BytesType:
             for svalue in fvalue:

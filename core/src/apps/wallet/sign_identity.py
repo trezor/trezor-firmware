@@ -39,6 +39,14 @@ async def sign_identity(ctx, msg, keychain):
             "gpg",
             msg.ecdsa_curve_name,
         )
+    elif msg.identity.proto == "signify":
+        signature = sign_challenge(
+            seckey,
+            msg.challenge_hidden,
+            msg.challenge_visual,
+            "signify",
+            msg.ecdsa_curve_name,
+        )
     elif msg.identity.proto == "ssh":
         signature = sign_challenge(
             seckey,
@@ -119,6 +127,10 @@ def sign_challenge(
     from apps.common.signverify import message_digest
 
     if sigtype == "gpg":
+        data = challenge_hidden
+    elif sigtype == "signify":
+        if curve != "ed25519":
+            raise ValueError("Unsupported curve")
         data = challenge_hidden
     elif sigtype == "ssh":
         if curve != "ed25519":

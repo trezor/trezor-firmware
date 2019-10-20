@@ -20,7 +20,7 @@ INVALID_TYPE = const(-1)
 
 class Reader:
     """
-    Decoder for legacy codec over the HID layer.  Provides readable
+    Decoder for a wire codec over the HID (or UDP) layer.  Provides readable
     async-file-like interface.
     """
 
@@ -33,9 +33,9 @@ class Reader:
 
     async def aopen(self) -> None:
         """
-        Begin the message transmission by waiting for initial V2 message report
-        on this session.  `self.type` and `self.size` are initialized and
-        available after `aopen()` returns.
+        Start reading a message by waiting for initial message report.  Because
+        the first report contains the message header, `self.type` and
+        `self.size` are initialized and available after `aopen()` returns.
         """
         read = loop.wait(self.iface.iface_num() | io.POLL_READ)
         while True:
@@ -88,7 +88,7 @@ class Reader:
 
 class Writer:
     """
-    Encoder for legacy codec over the HID layer.  Provides writable
+    Encoder for a wire codec over the HID (or UDP) layer.  Provides writable
     async-file-like interface.
     """
 

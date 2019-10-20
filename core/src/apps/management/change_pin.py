@@ -10,8 +10,12 @@ from trezor.ui.text import Text
 from apps.common.confirm import require_confirm
 from apps.common.request_pin import PinCancelled, request_pin
 
+if False:
+    from typing import Any
+    from trezor.messages.ChangePin import ChangePin
 
-async def change_pin(ctx, msg):
+
+async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:
 
     # confirm that user wants to change the pin
     await require_confirm_change_pin(ctx, msg)
@@ -42,7 +46,7 @@ async def change_pin(ctx, msg):
         return Success(message="PIN removed")
 
 
-def require_confirm_change_pin(ctx, msg):
+def require_confirm_change_pin(ctx: wire.Context, msg: ChangePin) -> None:
     has_pin = config.has_pin()
 
     if msg.remove and has_pin:  # removing pin
@@ -64,7 +68,7 @@ def require_confirm_change_pin(ctx, msg):
         return require_confirm(ctx, text)
 
 
-async def request_pin_confirm(ctx, *args, **kwargs):
+async def request_pin_confirm(ctx: wire.Context, *args: Any, **kwargs: Any) -> str:
     while True:
         pin1 = await request_pin_ack(ctx, "Enter new PIN", *args, **kwargs)
         pin2 = await request_pin_ack(ctx, "Re-enter new PIN", *args, **kwargs)
@@ -73,7 +77,7 @@ async def request_pin_confirm(ctx, *args, **kwargs):
         await pin_mismatch()
 
 
-async def request_pin_ack(ctx, *args, **kwargs):
+async def request_pin_ack(ctx: wire.Context, *args: Any, **kwargs: Any) -> str:
     try:
         await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
         return await ctx.wait(request_pin(*args, **kwargs))
@@ -81,7 +85,7 @@ async def request_pin_ack(ctx, *args, **kwargs):
         raise wire.ActionCancelled("Cancelled")
 
 
-async def pin_mismatch():
+async def pin_mismatch() -> None:
     text = Text("PIN mismatch", ui.ICON_WRONG, ui.RED)
     text.normal("The PINs you entered", "do not match.")
     text.normal("")

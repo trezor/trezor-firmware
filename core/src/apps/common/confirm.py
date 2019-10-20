@@ -16,7 +16,7 @@ if False:
 
 async def confirm(
     ctx: wire.Context,
-    content: ui.Control,
+    content: ui.Component,
     code: int = ButtonRequestType.Other,
     confirm: ButtonContent = Confirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = Confirm.DEFAULT_CONFIRM_STYLE,
@@ -42,14 +42,14 @@ async def confirm(
         )
 
     if __debug__:
-        return await ctx.wait(dialog, confirm_signal) is CONFIRMED
+        return await ctx.wait(dialog, confirm_signal()) is CONFIRMED
     else:
         return await ctx.wait(dialog) is CONFIRMED
 
 
 async def hold_to_confirm(
     ctx: wire.Context,
-    content: ui.Control,
+    content: ui.Component,
     code: int = ButtonRequestType.Other,
     confirm: ButtonContent = HoldToConfirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = HoldToConfirm.DEFAULT_CONFIRM_STYLE,
@@ -66,7 +66,7 @@ async def hold_to_confirm(
         dialog = HoldToConfirm(content, confirm, confirm_style, loader_style)
 
     if __debug__:
-        return await ctx.wait(dialog, confirm_signal) is CONFIRMED
+        return await ctx.wait(dialog, confirm_signal()) is CONFIRMED
     else:
         return await ctx.wait(dialog) is CONFIRMED
 

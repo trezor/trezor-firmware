@@ -1,5 +1,5 @@
+from trezor import utils
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
-from trezor.utils import ensure
 
 from apps.common.coininfo import CoinInfo
 from apps.common.writers import empty_bytearray
@@ -31,7 +31,7 @@ def input_script_p2pkh_or_p2sh(
 
 
 def output_script_p2pkh(pubkeyhash: bytes) -> bytearray:
-    ensure(len(pubkeyhash) == 20)
+    utils.ensure(len(pubkeyhash) == 20)
     s = bytearray(25)
     s[0] = 0x76  # OP_DUP
     s[1] = 0xA9  # OP_HASH_160
@@ -44,7 +44,7 @@ def output_script_p2pkh(pubkeyhash: bytes) -> bytearray:
 
 def output_script_p2sh(scripthash: bytes) -> bytearray:
     # A9 14 <scripthash> 87
-    ensure(len(scripthash) == 20)
+    utils.ensure(len(scripthash) == 20)
     s = bytearray(23)
     s[0] = 0xA9  # OP_HASH_160
     s[1] = 0x14  # pushing 20 bytes
@@ -58,7 +58,7 @@ def script_replay_protection_bip115(
 ) -> bytearray:
     if block_hash is None or block_height is None:
         return bytearray()
-    ensure(len(block_hash) == 32)
+    utils.ensure(len(block_hash) == 32)
     s = bytearray(33)
     s[0] = 0x20  # 32 bytes for block hash
     s[1:33] = block_hash  # block hash
@@ -88,7 +88,7 @@ def output_script_native_p2wpkh_or_p2wsh(witprog: bytes) -> bytearray:
     # Either:
     # 00 14 <20-byte-key-hash>
     # 00 20 <32-byte-script-hash>
-    ensure(len(witprog) == 20 or len(witprog) == 32)
+    utils.ensure(len(witprog) == 20 or len(witprog) == 32)
 
     w = empty_bytearray(3 + len(witprog))
     w.append(0x00)  # witness version byte
@@ -108,7 +108,7 @@ def output_script_native_p2wpkh_or_p2wsh(witprog: bytes) -> bytearray:
 def input_script_p2wpkh_in_p2sh(pubkeyhash: bytes) -> bytearray:
     # 16 00 14 <pubkeyhash>
     # Signature is moved to the witness.
-    ensure(len(pubkeyhash) == 20)
+    utils.ensure(len(pubkeyhash) == 20)
 
     w = empty_bytearray(3 + len(pubkeyhash))
     w.append(0x16)  # length of the data
@@ -223,7 +223,7 @@ def input_script_multisig(
 
     # length of the result
     total_length = 0
-    if not coin.decred:
+    if utils.BITCOIN_ONLY or not coin.decred:
         total_length += 1  # OP_FALSE
     for s in signatures:
         total_length += 1 + len(s) + 1  # length, signature, sighash
@@ -250,7 +250,7 @@ def input_script_multisig(
 
 def output_script_multisig(pubkeys, m: int, w: bytearray = None) -> bytearray:
     n = len(pubkeys)
-    if n < 1 or n > 15 or m < 1 or m > 15:
+    if n < 1 or n > 15 or m < 1 or m > 15 or m > n:
         raise ScriptsError("Invalid multisig parameters")
     for pubkey in pubkeys:
         if len(pubkey) != 33:

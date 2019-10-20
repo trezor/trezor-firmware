@@ -12,6 +12,7 @@ def node_derive(root, path):
     return node
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestAddressGRS(unittest.TestCase):
     # pylint: disable=C0301
 

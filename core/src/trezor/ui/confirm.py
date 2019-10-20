@@ -3,6 +3,7 @@ from trezor.ui.button import Button, ButtonCancel, ButtonConfirm
 from trezor.ui.loader import Loader, LoaderDefault
 
 if False:
+    from typing import Optional
     from trezor.ui.button import ButtonContent, ButtonStyleType
     from trezor.ui.loader import LoaderStyleType
 
@@ -18,10 +19,10 @@ class Confirm(ui.Layout):
 
     def __init__(
         self,
-        content: ui.Control,
-        confirm: ButtonContent = DEFAULT_CONFIRM,
+        content: ui.Component,
+        confirm: Optional[ButtonContent] = DEFAULT_CONFIRM,
         confirm_style: ButtonStyleType = DEFAULT_CONFIRM_STYLE,
-        cancel: ButtonContent = DEFAULT_CANCEL,
+        cancel: Optional[ButtonContent] = DEFAULT_CANCEL,
         cancel_style: ButtonStyleType = DEFAULT_CANCEL_STYLE,
         major_confirm: bool = False,
     ) -> None:
@@ -34,7 +35,9 @@ class Confirm(ui.Layout):
                 area = ui.grid(13, cells_x=2)
             else:
                 area = ui.grid(9, n_x=2)
-            self.confirm = Button(area, confirm, confirm_style)
+            self.confirm = Button(
+                area, confirm, confirm_style
+            )  # type: Optional[Button]
             self.confirm.on_click = self.on_confirm  # type: ignore
         else:
             self.confirm = None
@@ -46,7 +49,7 @@ class Confirm(ui.Layout):
                 area = ui.grid(12, cells_x=1)
             else:
                 area = ui.grid(8, n_x=2)
-            self.cancel = Button(area, cancel, cancel_style)
+            self.cancel = Button(area, cancel, cancel_style)  # type: Optional[Button]
             self.cancel.on_click = self.on_cancel  # type: ignore
         else:
             self.cancel = None
@@ -72,7 +75,7 @@ class HoldToConfirm(ui.Layout):
 
     def __init__(
         self,
-        content: ui.Control,
+        content: ui.Component,
         confirm: str = DEFAULT_CONFIRM,
         confirm_style: ButtonStyleType = DEFAULT_CONFIRM_STYLE,
         loader_style: LoaderStyleType = DEFAULT_LOADER_STYLE,

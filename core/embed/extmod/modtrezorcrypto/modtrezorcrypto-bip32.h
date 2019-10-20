@@ -25,7 +25,9 @@
 #include "bip39.h"
 #include "curves.h"
 #include "memzero.h"
+#if !BITCOIN_ONLY
 #include "nem.h"
+#endif
 
 /// package: trezorcrypto.bip32
 
@@ -184,6 +186,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_HDNode_derive_obj,
                                            2, 3,
                                            mod_trezorcrypto_HDNode_derive);
 
+#if !BITCOIN_ONLY
+
 /// def derive_cardano(self, index: int) -> None:
 ///     """
 ///     Derive a BIP0032 child node in place using Cardano algorithm.
@@ -216,6 +220,8 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_derive_cardano(mp_obj_t self,
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_derive_cardano_obj,
                                  mod_trezorcrypto_HDNode_derive_cardano);
+
+#endif
 
 /// def derive_path(self, path: List[int]) -> None:
 ///     """
@@ -409,6 +415,8 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_address(mp_obj_t self,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_address_obj,
                                  mod_trezorcrypto_HDNode_address);
 
+#if !BITCOIN_ONLY
+
 /// def nem_address(self, network: int) -> str:
 ///     """
 ///     Compute a NEM address string from the HD node.
@@ -489,6 +497,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(
     mod_trezorcrypto_HDNode_ethereum_pubkeyhash_obj,
     mod_trezorcrypto_HDNode_ethereum_pubkeyhash);
 
+#endif
+
 /// def __del__(self) -> None:
 ///     """
 ///     Cleans up sensitive memory.
@@ -507,15 +517,16 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_HDNode_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_HDNode___del___obj)},
     {MP_ROM_QSTR(MP_QSTR_derive),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_derive_obj)},
+#if !BITCOIN_ONLY
     {MP_ROM_QSTR(MP_QSTR_derive_cardano),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_derive_cardano_obj)},
+#endif
     {MP_ROM_QSTR(MP_QSTR_derive_path),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_derive_path_obj)},
     {MP_ROM_QSTR(MP_QSTR_serialize_private),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_serialize_private_obj)},
     {MP_ROM_QSTR(MP_QSTR_serialize_public),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_serialize_public_obj)},
-
     {MP_ROM_QSTR(MP_QSTR_clone),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_clone_obj)},
     {MP_ROM_QSTR(MP_QSTR_depth),
@@ -534,12 +545,14 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_HDNode_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_public_key_obj)},
     {MP_ROM_QSTR(MP_QSTR_address),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_address_obj)},
+#if !BITCOIN_ONLY
     {MP_ROM_QSTR(MP_QSTR_nem_address),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_nem_address_obj)},
     {MP_ROM_QSTR(MP_QSTR_nem_encrypt),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_nem_encrypt_obj)},
     {MP_ROM_QSTR(MP_QSTR_ethereum_pubkeyhash),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_ethereum_pubkeyhash_obj)},
+#endif
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_HDNode_locals_dict,
                             mod_trezorcrypto_HDNode_locals_dict_table);
@@ -606,8 +619,10 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed,
   int res = 0;
   if (strcmp(curveb.buf, ED25519_CARDANO_NAME) != 0) {
     res = hdnode_from_seed(seedb.buf, seedb.len, curveb.buf, &hdnode);
+#if !BITCOIN_ONLY
   } else {
     res = hdnode_from_seed_cardano(seedb.buf, seedb.len, &hdnode);
+#endif
   }
 
   if (!res) {
@@ -622,6 +637,8 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed,
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_seed_obj,
                                  mod_trezorcrypto_bip32_from_seed);
+
+#if !BITCOIN_ONLY
 
 /// def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> bytes:
 ///     """
@@ -661,10 +678,11 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(
   o->fingerprint = 0;
   return MP_OBJ_FROM_PTR(o);
 }
-
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(
     mod_trezorcrypto_bip32_from_mnemonic_cardano_obj,
     mod_trezorcrypto_bip32_from_mnemonic_cardano);
+
+#endif
 
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_bip32_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_bip32)},
@@ -673,8 +691,10 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_bip32_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_bip32_deserialize_obj)},
     {MP_ROM_QSTR(MP_QSTR_from_seed),
      MP_ROM_PTR(&mod_trezorcrypto_bip32_from_seed_obj)},
+#if !BITCOIN_ONLY
     {MP_ROM_QSTR(MP_QSTR_from_mnemonic_cardano),
      MP_ROM_PTR(&mod_trezorcrypto_bip32_from_mnemonic_cardano_obj)},
+#endif
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_bip32_globals,
                             mod_trezorcrypto_bip32_globals_table);

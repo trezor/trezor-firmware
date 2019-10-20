@@ -37,6 +37,8 @@
 
 #define BITCOIN_DIVISIBILITY (8)
 
+#if !BITCOIN_ONLY
+
 static const char *slip44_extras(uint32_t coin_type) {
   if ((coin_type & 0x80000000) == 0) {
     return 0;
@@ -59,6 +61,8 @@ static const char *slip44_extras(uint32_t coin_type) {
   }
   return 0;
 }
+
+#endif
 
 #define BIP32_MAX_LAST_ELEMENT 1000000
 
@@ -98,8 +102,10 @@ static const char *address_n_str(const uint32_t *address_n,
           legacy = true;
         }
         abbr = coin->coin_shortcut + 1;
+#if !BITCOIN_ONLY
       } else {
         abbr = slip44_extras(address_n[1]);
+#endif
       }
     }
     const uint32_t accnum = address_is_account

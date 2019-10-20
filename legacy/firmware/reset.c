@@ -27,6 +27,7 @@
 #include "memzero.h"
 #include "messages.h"
 #include "messages.pb.h"
+#include "oled.h"
 #include "protect.h"
 #include "rng.h"
 #include "sha2.h"

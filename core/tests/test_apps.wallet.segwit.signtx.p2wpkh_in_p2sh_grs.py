@@ -19,6 +19,7 @@ from apps.common.seed import Keychain
 from apps.wallet.sign_tx import helpers, signing
 
 # https://groestlsight-test.groestlcoin.org/api/tx/4ce0220004bdfe14e3dd49fd8636bcb770a400c0c9e9bff670b6a13bb8f15c72
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
     # pylint: disable=C0301
 

@@ -441,6 +441,7 @@ void oledSwipeRight(void) {
 
 /*
  * Mitigate SCA on lines y1-y2 by setting at least width pixels white
+ * Pixels grow from the outside (left/right border of the screen)
  */
 void oledSCA(int y1, int y2, int width) {
   y1 = MAX(y1, 0);
@@ -456,6 +457,30 @@ void oledSCA(int y1, int y2, int width) {
         oledDrawPixel(x, y);
       }
       for (int x = OLED_WIDTH - ((pix + 1) / 2); x < OLED_WIDTH; x++) {
+        oledDrawPixel(x, y);
+      }
+    }
+  }
+}
+
+/*
+ * Mitigate SCA on lines y1-y2 by setting at least width pixels white
+ * Pixels grow from the inside (from columns a/b to the right/left)
+ */
+void oledSCAInside(int y1, int y2, int width, int a, int b) {
+  y1 = MAX(y1, 0);
+  y2 = MIN(y2, OLED_HEIGHT - 1);
+  for (int y = y1; y <= y2; y++) {
+    int pix = 0;
+    for (int x = 0; x < OLED_WIDTH; x++) {
+      pix += oledGetPixel(x, y);
+    }
+    if (width > pix) {
+      pix = width - pix;
+      for (int x = a - pix / 2; x < a; x++) {
+        oledDrawPixel(x, y);
+      }
+      for (int x = b; x < b + (pix + 1) / 2; x++) {
         oledDrawPixel(x, y);
       }
     }

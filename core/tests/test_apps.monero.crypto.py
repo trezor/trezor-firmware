@@ -1,12 +1,15 @@
 from common import *
 
-from apps.monero.xmr import crypto, monero
-from apps.monero.xmr.addresses import encode_addr
-from apps.monero.xmr.credentials import AccountCreds
-from apps.monero.xmr.networks import NetworkTypes, net_version
+if not utils.BITCOIN_ONLY:
+    from apps.monero.xmr import crypto, monero
+    from apps.monero.xmr.addresses import encode_addr
+    from apps.monero.xmr.credentials import AccountCreds
+    from apps.monero.xmr.networks import NetworkTypes, net_version
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestMoneroCrypto(unittest.TestCase):
+
     def test_encoding(self):
         point = unhexlify(
             b"2486224797d05cae3cba4be043be2db0df381f3f19cfa113f86ab38e3d8d2bd0"

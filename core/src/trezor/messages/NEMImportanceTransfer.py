@@ -5,15 +5,18 @@ import protobuf as p
 if __debug__:
     try:
         from typing import Dict, List, Optional
+        from typing_extensions import Literal  # noqa: F401
+        EnumTypeNEMImportanceTransferMode = Literal[1, 2]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
+        EnumTypeNEMImportanceTransferMode = None  # type: ignore
 
 
 class NEMImportanceTransfer(p.MessageType):
 
     def __init__(
         self,
-        mode: int = None,
+        mode: EnumTypeNEMImportanceTransferMode = None,
         public_key: bytes = None,
     ) -> None:
         self.mode = mode
@@ -22,6 +25,6 @@ class NEMImportanceTransfer(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('mode', p.UVarintType, 0),
+            1: ('mode', p.EnumType("NEMImportanceTransferMode", (1, 2)), 0),
             2: ('public_key', p.BytesType, 0),
         }

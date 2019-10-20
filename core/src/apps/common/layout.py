@@ -13,7 +13,7 @@ from apps.common import HARDENED
 from apps.common.confirm import confirm, require_confirm
 
 if False:
-    from typing import Iterable, List
+    from typing import Iterable
     from trezor import wire
 
 
@@ -79,8 +79,8 @@ def address_n_to_str(address_n: list) -> str:
 
 async def show_warning(
     ctx: wire.Context,
-    content: List[str],
-    subheader: List[str] = [],
+    content: Iterable[str],
+    subheader: Iterable[str] = [],
     button: str = "Try again",
 ) -> None:
     text = Text("Warning", ui.ICON_WRONG, ui.RED)
@@ -97,8 +97,8 @@ async def show_warning(
 
 async def show_success(
     ctx: wire.Context,
-    content: List[str] = [],
-    subheader: List[str] = [],
+    content: Iterable[str] = [],
+    subheader: Iterable[str] = [],
     button: str = "Continue",
 ) -> None:
     text = Text("Success", ui.ICON_CONFIRM, ui.GREEN)

@@ -2,9 +2,43 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-_At the moment, the project does **not** adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
+_At the moment, the project does **not** adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
+
+## [0.11.5] - Unreleased
+
+[0.11.5]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.3...master
+
+### Added
+
+- warnings are emitted when encountering unknown value for a protobuf enum [f#363]
+- debug messages show enum value names instead of raw numbers
+- support for packed repeated encoding in the protobuf decoder
+- in `trezorctl firmware-update`, the new `--beta` switch enables downloading beta
+  firmwares. By default, only stable firmware is used. [f#411], [f#420]
+
+### Changed
+
+- package directory structure was changed: `src` subdirectory contains sources and
+  `tests` subdirectory contains tests, so that cwd is not cluttered
+- `trezorctl` script was moved into a module `trezorlib.cli.trezorctl` and is launched
+  through the `entry_points` mechanism. This makes it usable on Windows
+- `pyblake2` is no longer required on Python 3.6 and up
+
+
+### Removed
+
+- device test suite was moved out of trezor package
+
+## [0.11.4] - 2019-07-31
+
+[0.11.4]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.3...python/v0.11.4
+
+### Added
+
+- trezorctl support for SLIP-39 Shamir Backup
+- support for Binance Chain
 
 ## [0.11.3] - 2019-05-29
 
@@ -277,3 +311,6 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](http://
 [#352]: https://github.com/trezor/python-trezor/issues/352
 [f#41]: https://github.com/trezor/trezor-firmware/issues/41
 [f#87]: https://github.com/trezor/trezor-firmware/issues/87
+[f#363]: https://github.com/trezor/trezor-firmware/issues/363
+[f#411]: https://github.com/trezor/trezor-firmware/issues/411
+[f#420]: https://github.com/trezor/trezor-firmware/issues/420

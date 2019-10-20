@@ -1,17 +1,18 @@
 from common import *
 
-from apps.nem.helpers import *
-from apps.nem.multisig import *
-from apps.nem.multisig.serialize import *
-from apps.nem.namespace import *
-from apps.nem.namespace.serialize import *
+if not utils.BITCOIN_ONLY:
+    from apps.nem.helpers import *
+    from apps.nem.multisig import *
+    from apps.nem.multisig.serialize import *
+    from apps.nem.namespace import *
+    from apps.nem.namespace.serialize import *
+    from trezor.messages.NEMSignTx import NEMSignTx
+    from trezor.messages.NEMAggregateModification import NEMAggregateModification
+    from trezor.messages.NEMProvisionNamespace import NEMProvisionNamespace
+    from trezor.messages.NEMCosignatoryModification import NEMCosignatoryModification
 
-from trezor.messages.NEMSignTx import NEMSignTx
-from trezor.messages.NEMAggregateModification import NEMAggregateModification
-from trezor.messages.NEMProvisionNamespace import NEMProvisionNamespace
-from trezor.messages.NEMCosignatoryModification import NEMCosignatoryModification
 
-
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestNemMultisig(unittest.TestCase):
 
     def test_nem_multisig(self):

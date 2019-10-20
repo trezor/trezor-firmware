@@ -30,6 +30,8 @@ pystyle: ## apply code style on application sources and tests
 	@isort $(PY_FILES)
 	@echo [BLACK]
 	@black $(PY_FILES)
+	@echo [FLAKE8]
+	@flake8 $(PY_FILES)
 	make -C python style
 
 cstyle_check: ## run code style check on low-level C code

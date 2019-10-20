@@ -117,7 +117,7 @@ async def _require_confirm_fee(ctx, fee):
     await require_hold_to_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
 
 
-class TransactionStep(ui.Control):
+class TransactionStep(ui.Component):
     def __init__(self, state, info):
         self.state = state
         self.info = info
@@ -133,7 +133,7 @@ class TransactionStep(ui.Control):
             ui.display.text_center(ui.WIDTH // 2, 235, info[1], ui.NORMAL, ui.FG, ui.BG)
 
 
-class KeyImageSyncStep(ui.Control):
+class KeyImageSyncStep(ui.Component):
     def __init__(self, current, total_num):
         self.current = current
         self.total_num = total_num
@@ -146,7 +146,7 @@ class KeyImageSyncStep(ui.Control):
         ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
 
 
-class LiveRefreshStep(ui.Control):
+class LiveRefreshStep(ui.Component):
     def __init__(self, current):
         self.current = current
 

@@ -6,6 +6,11 @@ class aes:
     """
     AES context.
     """
+    ECB: int
+    CBC: int
+    CFB: int
+    OFB: int
+    CTR: int
 
     def __init__(self, mode: int, key: bytes, iv: bytes = None) -> None:
         """
@@ -358,7 +363,7 @@ class sha512:
         Creates a hash context object.
         """
 
-    def hash(self, data: bytes) -> None:
+    def update(self, data: bytes) -> None:
         """
         Update the hash context with hashed data.
         """

@@ -1,22 +1,24 @@
 from common import *
 
-from apps.eos.actions import check_action
-from trezor.messages.EosTxActionAck import EosTxActionAck
-from trezor.messages.EosActionBuyRam import EosActionBuyRam
-from trezor.messages.EosActionBuyRamBytes import EosActionBuyRamBytes
-from trezor.messages.EosActionDelegate import EosActionDelegate
-from trezor.messages.EosActionDeleteAuth import EosActionDeleteAuth
-from trezor.messages.EosActionLinkAuth import EosActionLinkAuth
-from trezor.messages.EosActionNewAccount import EosActionNewAccount
-from trezor.messages.EosActionRefund import EosActionRefund
-from trezor.messages.EosActionSellRam import EosActionSellRam
-from trezor.messages.EosActionTransfer import EosActionTransfer
-from trezor.messages.EosActionUndelegate import EosActionUndelegate
-from trezor.messages.EosActionUnlinkAuth import EosActionUnlinkAuth
-from trezor.messages.EosActionUpdateAuth import EosActionUpdateAuth
-from trezor.messages.EosActionVoteProducer import EosActionVoteProducer
+if not utils.BITCOIN_ONLY:
+    from apps.eos.actions import check_action
+    from trezor.messages.EosTxActionAck import EosTxActionAck
+    from trezor.messages.EosActionBuyRam import EosActionBuyRam
+    from trezor.messages.EosActionBuyRamBytes import EosActionBuyRamBytes
+    from trezor.messages.EosActionDelegate import EosActionDelegate
+    from trezor.messages.EosActionDeleteAuth import EosActionDeleteAuth
+    from trezor.messages.EosActionLinkAuth import EosActionLinkAuth
+    from trezor.messages.EosActionNewAccount import EosActionNewAccount
+    from trezor.messages.EosActionRefund import EosActionRefund
+    from trezor.messages.EosActionSellRam import EosActionSellRam
+    from trezor.messages.EosActionTransfer import EosActionTransfer
+    from trezor.messages.EosActionUndelegate import EosActionUndelegate
+    from trezor.messages.EosActionUnlinkAuth import EosActionUnlinkAuth
+    from trezor.messages.EosActionUpdateAuth import EosActionUpdateAuth
+    from trezor.messages.EosActionVoteProducer import EosActionVoteProducer
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestEosActions(unittest.TestCase):
     def test_check_action(self):
         # return True

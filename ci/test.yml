@@ -1,0 +1,109 @@
+image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
+
+# Core
+
+test core unix unit:
+  stage: test
+  dependencies:
+    - build core unix frozen
+  script:
+    - cd core
+    - pipenv run make test
+
+test core unix device:
+  stage: test
+  dependencies:
+    - build core unix frozen
+  script:
+    - cd core
+    - pipenv run make test_emu
+
+test core unix device bitcoinonly:
+  stage: test
+  dependencies:
+    - build core unix frozen bitcoinonly
+  variables:
+    MICROPYTHON: "../build/unix/micropython-bitcoinonly"
+    TREZOR_PYTEST_SKIP_ALTCOINS: 1
+  script:
+    - cd core
+    - pipenv run make test_emu
+
+test core unix monero:
+  stage: test
+  dependencies:
+    - build core unix frozen
+  script:
+    - cd core
+    - pipenv run make test_emu_monero
+
+
+# Crypto
+
+test crypto:
+  stage: test
+  dependencies:
+    - build crypto
+  script:
+    - cd crypto
+    - ./tests/aestst
+    - ./tests/test_check
+    - ./tests/test_openssl 1000
+    - ITERS=10 pipenv run pytest tests
+
+
+# Legacy
+
+test legacy emu:
+  stage: test
+  dependencies:
+    - build legacy emu
+  variables:
+    EMULATOR: "1"
+  script:
+    - cd legacy
+    - pipenv run script/test
+
+test legacy emu bitcoinonly:
+  stage: test
+  dependencies:
+    - build legacy emu bitcoinonly
+  variables:
+    EMULATOR: "1"
+    EMULATOR_BINARY: "firmware/trezor-bitcoinonly.elf"
+    TREZOR_PYTEST_SKIP_ALTCOINS: 1
+  script:
+    - cd legacy
+    - pipenv run script/test
+
+
+# Python
+
+test python:
+  stage: test
+  script:
+    - cd python
+    - pipenv run tox
+
+
+# Storage
+
+test storage:
+  stage: test
+  dependencies: []
+  script:
+    - cd storage/tests
+    - pipenv run make build
+    - pipenv run make tests_all
+
+
+# Other
+
+test upgrade:
+  stage: test
+  dependencies:
+    - build core unix frozen debug
+    - build legacy emu
+  script:
+    - tests/upgrade_tests/download_emulators.sh
+    - pipenv run pytest tests/upgrade_tests

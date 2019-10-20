@@ -1,17 +1,17 @@
-from ubinascii import unhexlify
-
 from common import *
-from trezor.messages import TezosContractType
-from trezor.messages.TezosContractID import TezosContractID
 
-from apps.tezos.helpers import base58_decode_check, base58_encode_check, write_bool
-from apps.tezos.sign_tx import (
-    _encode_contract_id,
-    _encode_data_with_bool_prefix,
-    _encode_zarith,
-)
+if not utils.BITCOIN_ONLY:
+    from trezor.messages import TezosContractType
+    from trezor.messages.TezosContractID import TezosContractID
+    from apps.tezos.helpers import base58_decode_check, base58_encode_check, write_bool
+    from apps.tezos.sign_tx import (
+        _encode_contract_id,
+        _encode_data_with_bool_prefix,
+        _encode_zarith,
+    )
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestTezosEncoding(unittest.TestCase):
     def test_tezos_encode_zarith(self):
         inputs = [2000000, 159066, 200, 60000, 157000000, 0]

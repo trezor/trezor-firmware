@@ -1,6 +1,7 @@
 import gc
 import sys
 from trezorutils import (  # noqa: F401
+    BITCOIN_ONLY,
     EMULATOR,
     GITREV,
     MODEL,
@@ -74,8 +75,17 @@ def chunks(items: List[Chunked], size: int) -> Iterator[List[Chunked]]:
 
 
 def format_amount(amount: int, decimals: int) -> str:
+    if amount < 0:
+        amount = -amount
+        sign = "-"
+    else:
+        sign = ""
     d = pow(10, decimals)
-    s = ("%d.%0*d" % (amount // d, decimals, amount % d)).rstrip("0").rstrip(".")
+    s = (
+        ("%s%d.%0*d" % (sign, amount // d, decimals, amount % d))
+        .rstrip("0")
+        .rstrip(".")
+    )
     return s
 
 

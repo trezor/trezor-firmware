@@ -1,8 +1,11 @@
 from common import *
 
-from apps.eos import helpers
-from trezor.messages.EosAsset import EosAsset
+if not utils.BITCOIN_ONLY:
+    from apps.eos import helpers
+    from trezor.messages.EosAsset import EosAsset
 
+
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestEosConversions(unittest.TestCase):
     def test_eos_name_to_string(self):
         names_in = [

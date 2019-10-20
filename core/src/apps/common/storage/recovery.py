@@ -20,15 +20,15 @@ if False:
     from typing import Optional
 
 
-def set_in_progress(val: bool):
+def set_in_progress(val: bool) -> None:
     common._set_bool(_NAMESPACE, _IN_PROGRESS, val)
 
 
-def is_in_progress():
+def is_in_progress() -> bool:
     return common._get_bool(_NAMESPACE, _IN_PROGRESS)
 
 
-def set_dry_run(val: bool):
+def set_dry_run(val: bool) -> None:
     common._set_bool(_NAMESPACE, _DRY_RUN, val)
 
 
@@ -36,11 +36,11 @@ def is_dry_run() -> bool:
     return common._get_bool(_NAMESPACE, _DRY_RUN)
 
 
-def set_word_count(count: int):
+def set_word_count(count: int) -> None:
     common._set_uint8(_NAMESPACE, _WORD_COUNT, count)
 
 
-def get_word_count() -> int:
+def get_word_count() -> Optional[int]:
     return common._get_uint8(_NAMESPACE, _WORD_COUNT)
 
 
@@ -76,7 +76,7 @@ def get_slip39_iteration_exponent() -> Optional[int]:
     return common._get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
 
 
-def end_progress():
+def end_progress() -> None:
     common._delete(_NAMESPACE, _IN_PROGRESS)
     common._delete(_NAMESPACE, _DRY_RUN)
     common._delete(_NAMESPACE, _WORD_COUNT)

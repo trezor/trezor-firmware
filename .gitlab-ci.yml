@@ -28,13 +28,10 @@ stages:
   - test
 
 before_script:
-  - pipenv install
+  - pipenv sync
 
 include:
   - ci/environment.yml
-  - ci/prebuild.yml  # common, style
-  - ci/core.yml
-  - ci/legacy.yml
-  # - ci/python.yml  TODO
-  - ci/crypto.yml
-  - ci/storage.yml
+  - ci/prebuild.yml
+  - ci/build.yml
+  - ci/test.yml

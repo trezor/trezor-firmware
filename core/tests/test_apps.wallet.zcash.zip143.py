@@ -5,10 +5,13 @@ from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
 
 from apps.common import coins
-from apps.wallet.sign_tx.zcash import Zip143
+
+if not utils.BITCOIN_ONLY:
+    from apps.wallet.sign_tx.zcash import Zip143
 
 
 # test vectors inspired from https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0143.py
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestZcashZip143(unittest.TestCase):
 
     VECTORS = [

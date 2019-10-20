@@ -51,8 +51,11 @@ def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
     elif mnemonic_type == TYPE_SLIP39:
         identifier = storage.device.get_slip39_identifier()
         iteration_exponent = storage.device.get_slip39_iteration_exponent()
+        if identifier is None or iteration_exponent is None:
+            # Identifier or exponent expected but not found
+            raise RuntimeError
         seed = slip39.decrypt(
-            identifier, iteration_exponent, mnemonic_secret, passphrase
+            identifier, iteration_exponent, mnemonic_secret, passphrase.encode()
         )
 
     if progress_bar:
@@ -67,7 +70,10 @@ def type_from_word_count(count: int) -> int:
 
 
 def _start_progress() -> None:
-    workflow.closedefault()
+    # Because we are drawing to the screen manually, without a layout, we
+    # should make sure that no other layout is running.  At this point, only
+    # the homescreen should be on, so shut it down.
+    workflow.close_default()
     ui.backlight_fade(ui.BACKLIGHT_DIM)
     ui.display.clear()
     ui.header("Please wait")

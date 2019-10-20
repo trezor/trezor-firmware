@@ -1,3 +1,10 @@
+Version 1.x.x [not yet released]
+* nothing yet
+
+Version 1.8.2 [Aug 2019]
+* OLED display security improvements
+* Fix display of non-divisible OMNI amounts
+
 Version 1.8.1 [May 2019]
 * Fix fault when using the device with no PIN
 * Fix OMNI transactions parsing

@@ -13,6 +13,9 @@ from apps.wallet.sign_tx.scripts import (
     output_script_native_p2wpkh_or_p2wsh,
 )
 
+if False:
+    from typing import List
+
 # supported witness version for bech32 addresses
 _BECH32_WITVER = const(0x00)
 
@@ -85,7 +88,7 @@ def get_address(
         raise AddressError(FailureType.ProcessError, "Invalid script type")
 
 
-def address_multisig_p2sh(pubkeys: bytes, m: int, coin: CoinInfo):
+def address_multisig_p2sh(pubkeys: List[bytes], m: int, coin: CoinInfo):
     if coin.address_type_p2sh is None:
         raise AddressError(
             FailureType.ProcessError, "Multisig not enabled on this coin"
@@ -95,7 +98,7 @@ def address_multisig_p2sh(pubkeys: bytes, m: int, coin: CoinInfo):
     return address_p2sh(redeem_script_hash, coin)
 
 
-def address_multisig_p2wsh_in_p2sh(pubkeys: bytes, m: int, coin: CoinInfo):
+def address_multisig_p2wsh_in_p2sh(pubkeys: List[bytes], m: int, coin: CoinInfo):
     if coin.address_type_p2sh is None:
         raise AddressError(
             FailureType.ProcessError, "Multisig not enabled on this coin"
@@ -105,7 +108,7 @@ def address_multisig_p2wsh_in_p2sh(pubkeys: bytes, m: int, coin: CoinInfo):
     return address_p2wsh_in_p2sh(witness_script_hash, coin)
 
 
-def address_multisig_p2wsh(pubkeys: bytes, m: int, hrp: str):
+def address_multisig_p2wsh(pubkeys: List[bytes], m: int, hrp: str):
     if not hrp:
         raise AddressError(
             FailureType.ProcessError, "Multisig not enabled on this coin"

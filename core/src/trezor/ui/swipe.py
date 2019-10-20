@@ -17,7 +17,7 @@ _SWIPE_DISTANCE = const(120)
 _SWIPE_TRESHOLD = const(30)
 
 
-class Swipe(ui.Control):
+class Swipe(ui.Component):
     def __init__(self, directions: int = SWIPE_ALL, area: ui.Area = None) -> None:
         if area is None:
             area = (0, 0, ui.WIDTH, ui.HEIGHT)

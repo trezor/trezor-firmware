@@ -1,15 +1,17 @@
 from common import *
 
-from apps.nem.helpers import *
-from apps.nem.mosaic import *
-from apps.nem.transfer import *
-from apps.nem.transfer.serialize import *
-
 from trezor.crypto import hashlib
-from trezor.messages.NEMTransfer import NEMTransfer
-from trezor.messages.NEMSignTx import NEMSignTx
+
+if not utils.BITCOIN_ONLY:
+    from apps.nem.helpers import *
+    from apps.nem.mosaic import *
+    from apps.nem.transfer import *
+    from apps.nem.transfer.serialize import *
+    from trezor.messages.NEMTransfer import NEMTransfer
+    from trezor.messages.NEMSignTx import NEMSignTx
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestNemTransfer(unittest.TestCase):
 
     def test_create_transfer(self):

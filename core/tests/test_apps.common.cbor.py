@@ -6,7 +6,6 @@ from apps.common.cbor import (
     decode,
     encode,
 )
-from ubinascii import unhexlify
 
 class TestCardanoCbor(unittest.TestCase):
     def test_cbor_encoding(self):

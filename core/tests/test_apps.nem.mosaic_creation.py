@@ -1,15 +1,17 @@
 from common import *
 
-from apps.nem.helpers import *
-from apps.nem.mosaic import *
-from apps.nem.mosaic.serialize import *
-
 from trezor.crypto import hashlib
-from trezor.messages.NEMSignTx import NEMSignTx
-from trezor.messages.NEMMosaicCreation import NEMMosaicCreation
-from trezor.messages.NEMMosaicDefinition import NEMMosaicDefinition
+
+if not utils.BITCOIN_ONLY:
+    from trezor.messages.NEMSignTx import NEMSignTx
+    from trezor.messages.NEMMosaicCreation import NEMMosaicCreation
+    from trezor.messages.NEMMosaicDefinition import NEMMosaicDefinition
+    from apps.nem.helpers import *
+    from apps.nem.mosaic import *
+    from apps.nem.mosaic.serialize import *
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestNemMosaicCreation(unittest.TestCase):
 
     def test_nem_transaction_mosaic_creation(self):

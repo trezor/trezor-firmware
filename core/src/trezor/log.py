@@ -59,5 +59,11 @@ def critical(name: str, msg: str, *args: Any) -> None:
 
 
 def exception(name: str, exc: BaseException) -> None:
-    _log(name, ERROR, "exception:")
-    sys.print_exception(exc)
+    # we are using `__class__.__name__` to avoid importing ui module
+    if exc.__class__.__name__ == "Result":
+        _log(name, DEBUG, "ui.Result: %s", exc.value)
+    elif exc.__class__.__name__ == "Cancelled":
+        _log(name, DEBUG, "ui.Cancelled")
+    else:
+        _log(name, ERROR, "exception:")
+        sys.print_exception(exc)

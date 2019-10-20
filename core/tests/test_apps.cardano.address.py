@@ -2,16 +2,18 @@ from common import *
 from apps.common import seed
 
 from apps.common import HARDENED
-from apps.cardano.address import (
-    _get_address_root,
-    _address_hash,
-    validate_full_path,
-    derive_address_and_node
-)
-from apps.cardano.seed import Keychain
 from trezor.crypto import bip32, slip39
+if not utils.BITCOIN_ONLY:
+    from apps.cardano.address import (
+        _get_address_root,
+        _address_hash,
+        validate_full_path,
+        derive_address_and_node
+    )
+    from apps.cardano.seed import Keychain
 
 
+@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestCardanoAddress(unittest.TestCase):
     def test_hardened_address_derivation_scheme(self):
         mnemonic = "all all all all all all all all all all all all"
@@ -177,9 +179,14 @@ class TestCardanoAddress(unittest.TestCase):
         self.assertEqual(address_root, b'\xb3\xbbS\xa8;uN:E=\xe8\xe5\x9c\x18\xbcn\xcf\xd0c\xba\x0e\xba\xaelL}\xba\xbb')
 
     def test_slip39_128(self):
-        mnemonics = ["extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
-                "extra extend academic acne away best indicate impact square oasis prospect painting voting guest either argue username racism enemy eclipse",
-                "extra extend academic arcade born dive legal hush gross briefing talent drug much home firefly toxic analysis idea umbrella slice"]
+        mnemonics = [
+            "extra extend academic bishop cricket bundle tofu goat apart victim "
+                "enlarge program behavior permit course armed jerky faint language modern",
+            "extra extend academic acne away best indicate impact square oasis "
+                "prospect painting voting guest either argue username racism enemy eclipse",
+            "extra extend academic arcade born dive legal hush gross briefing "
+                "talent drug much home firefly toxic analysis idea umbrella slice"
+        ]
         passphrase = b"TREZOR"
         identifier, exponent, ems = slip39.combine_mnemonics(mnemonics)
         master_secret = slip39.decrypt(identifier, exponent, ems, passphrase)
@@ -188,8 +195,8 @@ class TestCardanoAddress(unittest.TestCase):
 
         # Check root node.
         root_priv = b"c0fe4a6973df4de06262693fc9186f71faf292960350882d49456bf108d13954"
-        root_pub = b"83e3ecaf57f90f022c45e10d1b8cb78499c30819515ad9a81ad82139fdb12a90"
         root_ext = b"4064253ffefc4127489bce1b825a47329010c5afb4d21154ef949ef786204405"
+        root_pub = b"83e3ecaf57f90f022c45e10d1b8cb78499c30819515ad9a81ad82139fdb12a90"
         root_chain = b"22c12755afdd192742613b3062069390743ea232bc1b366c8f41e37292af9305"
 
         self.assertEqual(hexlify(node.private_key()), root_priv)
@@ -202,20 +209,48 @@ class TestCardanoAddress(unittest.TestCase):
         node.derive_cardano(0x80000000 | 1815)
         keychain = Keychain([0x80000000 | 44, 0x80000000 | 1815], node)
 
-        addresses = [
-            "Ae2tdPwUPEYxF9NAMNdd3v2LZoMeWp7gCZiDb6bZzFQeeVASzoP7HC4V9s6",
-            "Ae2tdPwUPEZ1TjYcvfkWAbiHtGVxv4byEHHZoSyQXjPJ362DifCe1ykgqgy",
-            "Ae2tdPwUPEZGXmSbda1kBNfyhRQGRcQxJFdk7mhWZXAGnapyejv2b2U3aRb"
+        nodes = [
+            (
+                "Ae2tdPwUPEYxF9NAMNdd3v2LZoMeWp7gCZiDb6bZzFQeeVASzoP7HC4V9s6",
+                b"e0acfe234aa6e1219ce7d3d8d91853e0808bab92ecb8a0ff0f345ff31ad13954",
+                b"ff89dc71365c4b67bb7bb75d566e65b8a95f16e4d70cce51c25937db15614530",
+                b"bc043d84b8b891d49890edb6aced6f2d78395f255c5b6aea8878b913f83e8579",
+                b"dc3f0d2b5cccb822335ef6213fd133f4ca934151ec44a6000aee43b8a101078c",
+            ),
+            (
+                "Ae2tdPwUPEZ1TjYcvfkWAbiHtGVxv4byEHHZoSyQXjPJ362DifCe1ykgqgy",
+                b"d0ce3e7a6445bc91801319b9bbaf47fdfca9364257295fb13bc5046a20d13954",
+                b"c800359abdc875944754ae7368bab7ef75184d48816c368f5a28af4bcf1d1ee8",
+                b"24c4fe188a39103db88818bc191fd8571eae7b284ebcbdf2462bde97b058a95c",
+                b"6f7a744035f4b3ddb8f861c18446169643cc3ae85e271b4b4f0eda05cf84c65b",
+            ),
+            (
+                "Ae2tdPwUPEZGXmSbda1kBNfyhRQGRcQxJFdk7mhWZXAGnapyejv2b2U3aRb",
+                b"e8320644cce22a6e9fc33865fc5a598b1cda061c47a548aead3af4ed1cd13954",
+                b"9e2ece5d7fe8119cb76090009be926a84fc5d3b95855b5962ffe2f880836cf09",
+                b"831a63d381a8dab1e6e1ee991a4300fc70687aae5f97f4fcf92ed1b6c2bd99de",
+                b"672d6af4707aba201b7940231e83dd357f92f8851b3dfdc224ef311e1b64cdeb"
+            )
         ]
 
-        for i, expected in enumerate(addresses):
+        for i, (address, priv, ext, pub, chain) in enumerate(nodes):
             # 44'/1815'/0'/0/i
-            address, _ = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
-            self.assertEqual(address, expected)
+            a, n = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
+            self.assertEqual(a, address)
+            self.assertEqual(hexlify(n.private_key()), priv)
+            self.assertEqual(hexlify(n.private_key_ext()), ext)
+            self.assertEqual(hexlify(seed.remove_ed25519_prefix(n.public_key())), pub)
+            self.assertEqual(hexlify(n.chain_code()), chain)
 
     def test_slip39_256(self):
-        mnemonics = ["hobo romp academic axis august founder knife legal recover alien expect emphasis loan kitchen involve teacher capture rebuild trial numb spider forward ladle lying voter typical security quantity hawk legs idle leaves gasoline",
-"hobo romp academic agency ancestor industry argue sister scene midst graduate profile numb paid headset airport daisy flame express scene usual welcome quick silent downtown oral critical step remove says rhythm venture aunt"]
+        mnemonics = [
+            "hobo romp academic axis august founder knife legal recover alien expect "
+                "emphasis loan kitchen involve teacher capture rebuild trial numb spider forward "
+                "ladle lying voter typical security quantity hawk legs idle leaves gasoline",
+            "hobo romp academic agency ancestor industry argue sister scene midst graduate "
+                "profile numb paid headset airport daisy flame express scene usual welcome "
+                "quick silent downtown oral critical step remove says rhythm venture aunt"
+        ]
         passphrase = b"TREZOR"
         identifier, exponent, ems = slip39.combine_mnemonics(mnemonics)
         master_secret = slip39.decrypt(identifier, exponent, ems, passphrase)
@@ -224,8 +259,8 @@ class TestCardanoAddress(unittest.TestCase):
 
         # Check root node.
         root_priv = b"90633724b5daf770a8b420b8658e7d8bc21e066b60ec8cd4d5730681cc294e4f"
-        root_pub = b"eea170f0ef97b59d22907cb429888029721ed67d3e7a1b56b81731086ab7db64"
         root_ext = b"f9d99bf3cd9c7e12663e8646afa40cb3aecf15d91f2abc15d21056c6bccb3414"
+        root_pub = b"eea170f0ef97b59d22907cb429888029721ed67d3e7a1b56b81731086ab7db64"
         root_chain = b"04f1de750b62725fcc1ae1b93ca4063acb53c486b959cadaa100ebd7828e5460"
 
         self.assertEqual(hexlify(node.private_key()), root_priv)
@@ -238,16 +273,38 @@ class TestCardanoAddress(unittest.TestCase):
         node.derive_cardano(0x80000000 | 1815)
         keychain = Keychain([0x80000000 | 44, 0x80000000 | 1815], node)
 
-        addresses = [
-            "Ae2tdPwUPEYyDD1C2FbVJFAE3FuAxLspfMYt29TJ1urnSKr57cVhEcioSCC",
-            "Ae2tdPwUPEZHJGtyz47F6wD7qAegt1JNRJWuiE36QLvFzeqJPBZ2EBvhr8M",
-            "Ae2tdPwUPEYxD9xNPBJTzYmtFVVWEPB6KW4TCDijQ4pDwU11wt5621PyCi4"
+        nodes = [
+            (
+                "Ae2tdPwUPEYyDD1C2FbVJFAE3FuAxLspfMYt29TJ1urnSKr57cVhEcioSCC",
+                b"38e8a4b17ca07b6a309f1cee83f87593e34a1fc3a289785ea451ef65df294e4f",
+                b"405d10ef71c2b0019250d11837de8db825d8556bf1e57f8866920af6d8c90002",
+                b"967a9a041ad1379e31c2c7f2aa4bc2b3f7769341c0ea89ccfb12a904f2e10877",
+                b"7b15d8d9006afe3cd7e04f375a1126a8c7c7c07c59a6f0c5b0310f4245f4edbb",
+            ),
+            (
+                "Ae2tdPwUPEZHJGtyz47F6wD7qAegt1JNRJWuiE36QLvFzeqJPBZ2EBvhr8M",
+                b"a09f90e3f76a7bdb7f8721cc0c142dbd6398fd704b83455e123fa886dc294e4f",
+                b"917e4166bb404def9f12634e84ecbcb98afdea051ba7c38745e208178a9e9baf",
+                b"6f3805bbc1b7a75afa95dffec331671f3c4662800615e80d2ec1202a9d874c86",
+                b"44baf30fd549e6a1e05f99c2a2c8971aea8894ee8d9c5fc2c5ae6ee839a56b2d",
+            ),
+            (
+                "Ae2tdPwUPEYxD9xNPBJTzYmtFVVWEPB6KW4TCDijQ4pDwU11wt5621PyCi4",
+                b"78dd824aea33bed5c1502d1a17f11a4adbe923aac1cd1f7ae98c9506db294e4f",
+                b"ddfe7f27e2894b983df773d8ac2a07973fc37ff36e93a2f2d71fb7327d4e18f4",
+                b"7f145b50ef07fb9accc40ee07a01fe93ceb6fa07d5a9f20fc3c8a48246dd4d02",
+                b"e67d2864614ada5eec8fb8ee1225a94a6fb0a1b3c347c854ec3037351c6a0fc7",
+            )
         ]
 
-        for i, expected in enumerate(addresses):
+        for i, (address, priv, ext, pub, chain) in enumerate(nodes):
             # 44'/1815'/0'/0/i
-            address, _ = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
-            self.assertEqual(address, expected)
+            a, n = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
+            self.assertEqual(a, address)
+            self.assertEqual(hexlify(n.private_key()), priv)
+            self.assertEqual(hexlify(n.private_key_ext()), ext)
+            self.assertEqual(hexlify(seed.remove_ed25519_prefix(n.public_key())), pub)
+            self.assertEqual(hexlify(n.chain_code()), chain)
 
 if __name__ == '__main__':
     unittest.main()

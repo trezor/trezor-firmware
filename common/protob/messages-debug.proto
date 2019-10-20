@@ -24,6 +24,8 @@ message DebugLinkDecision {
  * @next DebugLinkState
  */
 message DebugLinkGetState {
+    optional bool wait_word_list = 1;  // Trezor T only - wait until mnemonic words are shown
+    optional bool wait_word_pos = 2;   // Trezor T only - wait until reset word position is requested
 }
 
 /**

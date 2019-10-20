@@ -1,0 +1,187 @@
+image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
+
+variables:
+  SDL_VIDEODRIVER: "dummy"
+  XDG_RUNTIME_DIR: "/var/tmp"
+
+
+# Core
+
+build core firmware:
+  stage: build
+  script:
+    - cd core
+    - pipenv run make build_cross
+    - pipenv run make build_boardloader
+    - pipenv run make build_bootloader
+    - pipenv run make build_prodtest
+    - pipenv run make build_firmware
+    - pipenv run make sizecheck
+    - cd ..
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - cp core/build/firmware/firmware.bin trezor-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - trezor-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+    expire_in: 1 week
+
+build core firmware bitcoinonly:
+  stage: build
+  variables:
+    BITCOIN_ONLY: "1"
+  script:
+    - cd core
+    - pipenv run make build_firmware
+    - mv build/firmware/firmware.bin build/firmware/firmware-bitcoinonly.bin
+    - cd ..
+    - pipenv run ./tools/check-bitcoin-only core/build/firmware/firmware-bitcoinonly.bin
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - cp core/build/firmware/firmware-bitcoinonly.bin trezor-$VERSION-$CI_COMMIT_SHORT_SHA-bitcoinonly.bin
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - trezor-*.*.*-$CI_COMMIT_SHORT_SHA-bitcoinonly.bin
+    expire_in: 1 week
+
+build core unix:
+  stage: build
+  script:
+    - cd core
+    - pipenv run make build_unix
+
+build core unix frozen:
+  stage: build
+  script:
+    - cd core
+    - pipenv run make build_unix_frozen
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - core/build/unix/micropython
+    - core/src/trezor/res/resources.py
+    expire_in: 1 week
+
+build core unix frozen bitcoinonly:
+  stage: build
+  variables:
+    BITCOIN_ONLY: "1"
+  script:
+    - cd core
+    - pipenv run make build_unix_frozen
+    - mv build/unix/micropython build/unix/micropython-bitcoinonly
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - core/build/unix/micropython-bitcoinonly
+    - core/src/trezor/res/resources.py
+    expire_in: 1 week
+
+build core unix frozen debug:
+  stage: build
+  variables:
+    PYOPT: "0"
+  script:
+    - cd core
+    - pipenv run make build_unix_frozen
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    untracked: true
+    expire_in: 1 week
+
+
+# Crypto
+
+build crypto:
+  stage: build
+  script:
+    - cd crypto
+    - pipenv run make
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - crypto/tests/aestst
+    - crypto/tests/libtrezor-crypto.so
+    - crypto/tests/test_check
+    - crypto/tests/test_openssl
+    expire_in: 1 week
+
+
+# Legacy
+
+# TODO: add clang https://github.com/trezor/trezor-firmware/issues/44
+build legacy firmware:
+  stage: build
+  variables:
+    MEMORY_PROTECT: "0"
+  script:
+    - cd legacy
+    - pipenv run script/cibuild
+    - pipenv run make -C bootloader
+    - pipenv run make -C demo
+    - cd ..
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - cp legacy/firmware/trezor.bin trezor-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - trezor-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+    expire_in: 1 week
+
+build legacy firmware debug:
+  stage: build
+  variables:
+    DEBUG_LINK: "1"
+    MEMORY_PROTECT: "0"
+  script:
+    - cd legacy
+    - pipenv run script/cibuild
+
+build legacy firmware bitcoinonly:
+  stage: build
+  variables:
+    BITCOIN_ONLY: "1"
+    MEMORY_PROTECT: "0"
+  script:
+    - cd legacy
+    - pipenv run script/cibuild
+    - mv firmware/trezor.bin firmware/trezor-bitcoinonly.bin
+    - cd ..
+    - pipenv run ./tools/check-bitcoin-only legacy/firmware/trezor-bitcoinonly.bin
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - cp legacy/firmware/trezor-bitcoinonly.bin trezor-$VERSION-$CI_COMMIT_SHORT_SHA-bitcoinonly.bin
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - trezor-*.*.*-$CI_COMMIT_SHORT_SHA-bitcoinonly.bin
+    expire_in: 1 week
+
+build legacy emu:
+  stage: build
+  variables:
+    DEBUG_LINK: "1"
+    EMULATOR: "1"
+  script:
+    - cd legacy
+    - pipenv run script/cibuild
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - legacy/firmware/trezor.elf
+    expire_in: 1 week
+
+build legacy emu bitcoinonly:
+  stage: build
+  variables:
+    BITCOIN_ONLY: "1"
+    DEBUG_LINK: "1"
+    EMULATOR: "1"
+  script:
+    - cd legacy
+    - pipenv run script/cibuild
+    - mv firmware/trezor.elf firmware/trezor-bitcoinonly.elf
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - legacy/firmware/trezor-bitcoinonly.elf
+    expire_in: 1 week

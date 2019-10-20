@@ -47,6 +47,7 @@ typedef struct _CoinInfo {
   const char *bech32_prefix;
   const char *cashaddr_prefix;
   uint32_t coin_type;
+  bool negative_fee;
   const char *curve_name;
   const curve_info *curve;
 } CoinInfo;
