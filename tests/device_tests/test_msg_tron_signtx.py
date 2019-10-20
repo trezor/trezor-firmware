@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import debuglink, messages as proto, tron
+from trezorlib import messages as proto, tron
 from trezorlib.tools import parse_path
 
 TRON_DEFAULT_PATH = "m/44'/195'/0'/0/0"
@@ -194,8 +194,8 @@ def test_tron_witness_update(client):
         == "6feca2a4558ded324f439c7cecf596f1378fbd6071569a99ea28f06c4cb1fb754720125f8721c0663e3768b7a888ee8c37fbbb9690e192b8908e225ba49a2aaa01"
     )
 
-# TODO:
 
+# TODO:
 def test_tron_participate_asset(client):
 
     msg = proto.TronSignTx(

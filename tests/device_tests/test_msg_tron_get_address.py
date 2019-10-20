@@ -74,4 +74,3 @@ class TestMsgTronGetAddress:
 
         assert exc.value.args[0] == proto.FailureType.DataError
         assert exc.value.args[1].endswith("Forbidden key path")
-
