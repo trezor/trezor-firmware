@@ -8,7 +8,6 @@ from trezor.ui.text import Text
 from trezor.utils import consteq
 
 from apps.common.confirm import confirm
-from apps.common.storage.device import get_device_id
 
 if False:
     from typing import Optional
@@ -78,6 +77,8 @@ async def _write_failed_dialog(ctx: Optional[wire.Context]) -> None:
 
 
 def _get_device_dir() -> str:
+    from apps.common.storage.device import get_device_id
+
     return "/trezor/device_%s" % get_device_id().lower()
 
 
