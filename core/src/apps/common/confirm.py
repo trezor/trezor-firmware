@@ -17,7 +17,7 @@ if False:
 
 
 async def confirm(
-    ctx: wire.Context,
+    ctx: wire.GenericContext,
     content: ui.Component,
     code: EnumTypeButtonRequestType = ButtonRequestType.Other,
     confirm: Optional[ButtonContent] = Confirm.DEFAULT_CONFIRM,
@@ -54,7 +54,7 @@ async def confirm(
 
 
 async def info_confirm(
-    ctx: wire.Context,
+    ctx: wire.GenericContext,
     content: ui.Component,
     info_func: Callable,
     code: EnumTypeButtonRequestType = ButtonRequestType.Other,

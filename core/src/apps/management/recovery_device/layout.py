@@ -25,7 +25,7 @@ if False:
     from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
-async def confirm_abort(ctx: wire.Context, dry_run: bool = False) -> bool:
+async def confirm_abort(ctx: wire.GenericContext, dry_run: bool = False) -> bool:
     if dry_run:
         text = Text("Abort seed check", ui.ICON_WIPE)
         text.normal("Do you really want to", "abort the seed check?")
@@ -36,7 +36,7 @@ async def confirm_abort(ctx: wire.Context, dry_run: bool = False) -> bool:
     return await confirm(ctx, text, code=ButtonRequestType.ProtectCall)
 
 
-async def request_word_count(ctx: wire.Context, dry_run: bool) -> int:
+async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
     await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicWordCount), ButtonAck)
 
     if dry_run:
@@ -55,7 +55,7 @@ async def request_word_count(ctx: wire.Context, dry_run: bool) -> int:
 
 
 async def request_mnemonic(
-    ctx: wire.Context, word_count: int, backup_type: Optional[EnumTypeBackupType]
+    ctx: wire.GenericContext, word_count: int, backup_type: Optional[EnumTypeBackupType]
 ) -> Optional[str]:
     await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicInput), ButtonAck)
 
@@ -81,7 +81,7 @@ async def request_mnemonic(
 
 
 async def check_word_validity(
-    ctx: wire.Context,
+    ctx: wire.GenericContext,
     current_index: int,
     current_word: str,
     backup_type: Optional[EnumTypeBackupType],
@@ -155,7 +155,7 @@ async def check_word_validity(
 
 
 async def show_remaining_shares(
-    ctx: wire.Context,
+    ctx: wire.GenericContext,
     groups: Iterable[Tuple[int, Tuple[str, ...]]],  # remaining + list 3 words
     shares_remaining: List[int],
     group_threshold: int,
@@ -187,7 +187,7 @@ async def show_remaining_shares(
 
 
 async def show_group_share_success(
-    ctx: wire.Context, share_index: int, group_index: int
+    ctx: wire.GenericContext, share_index: int, group_index: int
 ) -> None:
     text = Text("Success", ui.ICON_CONFIRM)
     text.bold("You have entered")
@@ -198,7 +198,9 @@ async def show_group_share_success(
     await confirm(ctx, text, confirm="Continue", cancel=None)
 
 
-async def show_dry_run_result(ctx: wire.Context, result: bool, is_slip39: bool) -> None:
+async def show_dry_run_result(
+    ctx: wire.GenericContext, result: bool, is_slip39: bool
+) -> None:
     if result:
         if is_slip39:
             text = (
@@ -233,7 +235,7 @@ async def show_dry_run_result(ctx: wire.Context, result: bool, is_slip39: bool) 
         await show_warning(ctx, text, button="Continue")
 
 
-async def show_dry_run_different_type(ctx: wire.Context) -> None:
+async def show_dry_run_different_type(ctx: wire.GenericContext) -> None:
     text = Text("Dry run failure", ui.ICON_CANCEL)
     text.normal("Seed in the device was")
     text.normal("created using another")
@@ -243,26 +245,26 @@ async def show_dry_run_different_type(ctx: wire.Context) -> None:
     )
 
 
-async def show_invalid_mnemonic(ctx: wire.Context, word_count: int) -> None:
+async def show_invalid_mnemonic(ctx: wire.GenericContext, word_count: int) -> None:
     if backup_types.is_slip39_word_count(word_count):
         await show_warning(ctx, ("You have entered", "an invalid recovery", "share."))
     else:
         await show_warning(ctx, ("You have entered", "an invalid recovery", "seed."))
 
 
-async def show_share_already_added(ctx: wire.Context) -> None:
+async def show_share_already_added(ctx: wire.GenericContext) -> None:
     await show_warning(
         ctx, ("Share already entered,", "please enter", "a different share.")
     )
 
 
-async def show_identifier_mismatch(ctx: wire.Context) -> None:
+async def show_identifier_mismatch(ctx: wire.GenericContext) -> None:
     await show_warning(
         ctx, ("You have entered", "a share from another", "Shamir Backup.")
     )
 
 
-async def show_group_threshold_reached(ctx: wire.Context) -> None:
+async def show_group_threshold_reached(ctx: wire.GenericContext) -> None:
     await show_warning(
         ctx,
         (
@@ -310,7 +312,7 @@ class RecoveryHomescreen(ui.Component):
 
 
 async def homescreen_dialog(
-    ctx: wire.Context,
+    ctx: wire.GenericContext,
     homepage: RecoveryHomescreen,
     button_label: str,
     info_func: Callable = None,

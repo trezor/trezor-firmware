@@ -18,13 +18,13 @@ from apps.management import backup_types
 from apps.management.recovery_device import layout
 
 if False:
-    from typing import Optional, Tuple, cast
+    from typing import Optional, Tuple
     from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
 async def recovery_homescreen() -> None:
     # recovery process does not communicate on the wire
-    ctx = cast(wire.Context, wire.DummyContext())  # TODO
+    ctx = wire.DummyContext()
     try:
         await recovery_process(ctx)
     finally:
@@ -34,7 +34,7 @@ async def recovery_homescreen() -> None:
         wire.clear()
 
 
-async def recovery_process(ctx: wire.Context) -> Success:
+async def recovery_process(ctx: wire.GenericContext) -> Success:
     try:
         result = await _continue_recovery_process(ctx)
     except recover.RecoveryAborted:
@@ -47,7 +47,7 @@ async def recovery_process(ctx: wire.Context) -> Success:
     return result
 
 
-async def _continue_recovery_process(ctx: wire.Context) -> Success:
+async def _continue_recovery_process(ctx: wire.GenericContext) -> Success:
     # gather the current recovery state from storage
     dry_run = storage_recovery.is_dry_run()
     word_count, backup_type = recover.load_slip39_state()
@@ -98,7 +98,7 @@ async def _continue_recovery_process(ctx: wire.Context) -> Success:
 
 
 async def _finish_recovery_dry_run(
-    ctx: wire.Context, secret: bytes, backup_type: EnumTypeBackupType
+    ctx: wire.GenericContext, secret: bytes, backup_type: EnumTypeBackupType
 ) -> Success:
     if backup_type is None:
         raise RuntimeError
@@ -131,7 +131,7 @@ async def _finish_recovery_dry_run(
 
 
 async def _finish_recovery(
-    ctx: wire.Context, secret: bytes, backup_type: EnumTypeBackupType
+    ctx: wire.GenericContext, secret: bytes, backup_type: EnumTypeBackupType
 ) -> Success:
     if backup_type is None:
         raise RuntimeError
@@ -154,7 +154,7 @@ async def _finish_recovery(
     return Success(message="Device recovered")
 
 
-async def _request_word_count(ctx: wire.Context, dry_run: bool) -> int:
+async def _request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
     homepage = layout.RecoveryHomescreen("Select number of words")
     await layout.homescreen_dialog(ctx, homepage, "Select")
 
@@ -163,7 +163,7 @@ async def _request_word_count(ctx: wire.Context, dry_run: bool) -> int:
 
 
 async def _process_words(
-    ctx: wire.Context, words: str
+    ctx: wire.GenericContext, words: str
 ) -> Tuple[Optional[bytes], EnumTypeBackupType]:
     word_count = len(words.split(" "))
     is_slip39 = backup_types.is_slip39_word_count(word_count)
@@ -184,7 +184,9 @@ async def _process_words(
     return secret, backup_type
 
 
-async def _request_share_first_screen(ctx: wire.Context, word_count: int) -> None:
+async def _request_share_first_screen(
+    ctx: wire.GenericContext, word_count: int
+) -> None:
     if backup_types.is_slip39_word_count(word_count):
         remaining = storage_recovery.fetch_slip39_remaining_shares()
         if remaining:
@@ -201,7 +203,7 @@ async def _request_share_first_screen(ctx: wire.Context, word_count: int) -> Non
         await layout.homescreen_dialog(ctx, content, "Enter seed")
 
 
-async def _request_share_next_screen(ctx: wire.Context) -> None:
+async def _request_share_next_screen(ctx: wire.GenericContext) -> None:
     remaining = storage_recovery.fetch_slip39_remaining_shares()
     group_count = storage_recovery.get_slip39_group_count()
     if not remaining:
@@ -222,7 +224,7 @@ async def _request_share_next_screen(ctx: wire.Context) -> None:
         await layout.homescreen_dialog(ctx, content, "Enter share")
 
 
-async def _show_remaining_groups_and_shares(ctx: wire.Context) -> None:
+async def _show_remaining_groups_and_shares(ctx: wire.GenericContext) -> None:
     """
     Show info dialog for Slip39 Advanced - what shares are to be entered.
     """

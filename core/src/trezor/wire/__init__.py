@@ -99,14 +99,35 @@ def clear() -> None:
     workflow_namespaces.clear()
 
 
+if False:
+    from typing import Protocol
+
+    class GenericContext(Protocol):
+        async def call(
+            self,
+            msg: protobuf.MessageType,
+            expected_type: Type[protobuf.LoadedMessageType],
+        ) -> Any:
+            ...
+
+        async def read(self, expected_type: Type[protobuf.LoadedMessageType]) -> Any:
+            ...
+
+        async def write(self, msg: protobuf.MessageType) -> None:
+            ...
+
+        async def wait(self, *tasks: Awaitable) -> Any:
+            ...
+
+
 class DummyContext:
-    async def call(*argv: Any) -> None:
+    async def call(self, *argv: Any) -> None:
         pass
 
-    async def read(*argv: Any) -> None:
+    async def read(self, *argv: Any) -> None:
         pass
 
-    async def write(*argv: Any) -> None:
+    async def write(self, *argv: Any) -> None:
         pass
 
     async def wait(self, *tasks: Awaitable) -> Any:

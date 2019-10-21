@@ -78,7 +78,7 @@ def address_n_to_str(address_n: list) -> str:
 
 
 async def show_warning(
-    ctx: wire.Context,
+    ctx: wire.GenericContext,
     content: Iterable[str],
     subheader: Iterable[str] = [],
     button: str = "Try again",
@@ -96,7 +96,7 @@ async def show_warning(
 
 
 async def show_success(
-    ctx: wire.Context,
+    ctx: wire.GenericContext,
     content: Iterable[str] = [],
     subheader: Iterable[str] = [],
     button: str = "Continue",
