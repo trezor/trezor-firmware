@@ -57,7 +57,8 @@ typing = "*"
 
 # storage
 cryptography = "*"
-hypothesis = "*"
+hypothesis = "==4.38.1"  # let's use this version because of the nixos pipenv/pip issue
+attrs = "==18.2.0"  # let's use this version because of the nixos pipenv/pip issue
 
 [dev-packages]
 scan-build = "*"
