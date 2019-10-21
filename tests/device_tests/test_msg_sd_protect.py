@@ -23,29 +23,41 @@ from trezorlib.messages import SdProtectOperationType as Op
 pytestmark = [pytest.mark.skip_t1, pytest.mark.sd_card]
 
 
-def test_sd_protect_enable(client):
+def test_enable_disable(client):
+    assert client.features.sd_protection is False
     # Disabling SD protection should fail
     with pytest.raises(TrezorFailure):
         device.sd_protect(client, Op.DISABLE)
 
     # Enable SD protection
     device.sd_protect(client, Op.ENABLE)
+    assert client.features.sd_protection is True
 
     # Enabling SD protection should fail
     with pytest.raises(TrezorFailure):
         device.sd_protect(client, Op.ENABLE)
-
-
-def test_sd_protect_refresh(client):
-    # Enable SD protection
-    device.sd_protect(client, Op.ENABLE)
-
-    # Refresh SD protection
-    device.sd_protect(client, Op.REFRESH)
+    assert client.features.sd_protection is True
 
     # Disable SD protection
     device.sd_protect(client, Op.DISABLE)
+    assert client.features.sd_protection is False
+
+
+def test_refresh(client):
+    assert client.features.sd_protection is False
+    # Enable SD protection
+    device.sd_protect(client, Op.ENABLE)
+    assert client.features.sd_protection is True
+
+    # Refresh SD protection
+    device.sd_protect(client, Op.REFRESH)
+    assert client.features.sd_protection is True
+
+    # Disable SD protection
+    device.sd_protect(client, Op.DISABLE)
+    assert client.features.sd_protection is False
 
     # Refreshing SD protection should fail
     with pytest.raises(TrezorFailure):
         device.sd_protect(client, Op.REFRESH)
+    assert client.features.sd_protection is False
