@@ -16,9 +16,11 @@
 
 import pytest
 
-from trezorlib import device
+from trezorlib import debuglink, device
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import SdProtectOperationType as Op
+
+from ..common import MNEMONIC12
 
 pytestmark = [pytest.mark.skip_t1, pytest.mark.sd_card]
 
@@ -61,3 +63,26 @@ def test_refresh(client):
     with pytest.raises(TrezorFailure):
         device.sd_protect(client, Op.REFRESH)
     assert client.features.sd_protection is False
+
+
+def test_wipe(client):
+    # Enable SD protection
+    device.sd_protect(client, Op.ENABLE)
+    assert client.features.sd_protection is True
+
+    # Wipe device (this wipes internal storage)
+    device.wipe(client)
+    assert client.features.sd_protection is False
+
+    # Restore device to working status
+    debuglink.load_device_by_mnemonic(
+        client, mnemonic=MNEMONIC12, pin=None, passphrase_protection=False, label="test"
+    )
+    assert client.features.sd_protection is False
+
+    # Enable SD protection
+    device.sd_protect(client, Op.ENABLE)
+    assert client.features.sd_protection is True
+
+    # Refresh SD protection
+    device.sd_protect(client, Op.REFRESH)
