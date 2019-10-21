@@ -72,5 +72,6 @@ class BackgroundDeviceHandler:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if not self.check_finalize():
+        finalized_ok = self.check_finalize()
+        if exc_type is None and not finalized_ok:
             raise RuntimeError("Exit while task is unfinished")

@@ -19,6 +19,7 @@ from trezorlib import device
 from .. import buttons
 from ..device_handler import BackgroundDeviceHandler
 from ..emulators import EmulatorWrapper
+from . import core_only
 
 
 def enter_word(debug, word):
@@ -28,6 +29,7 @@ def enter_word(debug, word):
     return debug.click(buttons.CONFIRM_WORD, wait=True)
 
 
+@core_only
 def test_persistence():
     with EmulatorWrapper("core") as emu, BackgroundDeviceHandler(
         emu.client
