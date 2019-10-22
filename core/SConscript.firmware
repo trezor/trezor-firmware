@@ -526,6 +526,10 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/stellar/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Stellar*.py'))
 
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tron/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tron/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Tron*.py'))
+
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tezos/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Tezos*.py'))
 
