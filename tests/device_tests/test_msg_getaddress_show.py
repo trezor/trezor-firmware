@@ -37,6 +37,7 @@ class TestMsgGetaddressShow:
             == "1CmzyJp9w3NafXMSEFH4SLYUPAVCSUrrJ5"
         )
 
+    @pytest.mark.multisig
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_show_multisig_3(self, client):
         node = bip32.deserialize(
@@ -60,6 +61,7 @@ class TestMsgGetaddressShow:
                 == "3E7GDtuHqnqPmDgwH59pVC7AvySiSkbibz"
             )
 
+    @pytest.mark.multisig
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_show_multisig_15(self, client):
         node = bip32.deserialize(

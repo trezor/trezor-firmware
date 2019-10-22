@@ -238,6 +238,7 @@ class TestMultisigChange:
         return resp
 
     # both outputs are external
+    @pytest.mark.multisig
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_external_external(self, client):
         out1 = proto.TxOutputType(
@@ -268,6 +269,7 @@ class TestMultisigChange:
         )
 
     # first external, second internal
+    @pytest.mark.multisig
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_external_internal(self, client):
         out1 = proto.TxOutputType(
@@ -300,6 +302,7 @@ class TestMultisigChange:
         )
 
     # first internal, second external
+    @pytest.mark.multisig
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_internal_external(self, client):
         out1 = proto.TxOutputType(
@@ -332,6 +335,7 @@ class TestMultisigChange:
         )
 
     # both outputs are external
+    @pytest.mark.multisig
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_multisig_external_external(self, client):
         out1 = proto.TxOutputType(
@@ -362,6 +366,7 @@ class TestMultisigChange:
         )
 
     # inputs match, change matches (first is change)
+    @pytest.mark.multisig
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_multisig_change_match_first(self, client):
         multisig_out1 = proto.MultisigRedeemScriptType(
@@ -402,6 +407,7 @@ class TestMultisigChange:
         )
 
     # inputs match, change matches (second is change)
+    @pytest.mark.multisig
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_multisig_change_match_second(self, client):
         multisig_out2 = proto.MultisigRedeemScriptType(
@@ -442,6 +448,7 @@ class TestMultisigChange:
         )
 
     # inputs match, change mismatches (second tries to be change but isn't)
+    @pytest.mark.multisig
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_multisig_mismatch_change(self, client):
         multisig_out2 = proto.MultisigRedeemScriptType(
@@ -480,6 +487,7 @@ class TestMultisigChange:
         )
 
     # inputs mismatch, change matches with first input
+    @pytest.mark.multisig
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_multisig_mismatch_inputs(self, client):
         multisig_out1 = proto.MultisigRedeemScriptType(
