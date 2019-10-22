@@ -21,15 +21,8 @@ tox = "*"
 
 ## test requirements
 shamir-mnemonic = "*"
-<<<<<<< HEAD
-<<<<<<< HEAD
 fido2 = "*"
 
-=======
->>>>>>> 2233edbd... update pipfile
-=======
-
->>>>>>> 48e8e7b0... add contract to contract transfer operation
 ## typing
 mypy = "*"
 typing-extensions = ">=3.7.4"
