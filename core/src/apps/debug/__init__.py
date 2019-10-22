@@ -30,7 +30,7 @@ if __debug__:
     debuglink_decision_chan = loop.chan()
 
     layout_change_chan = loop.chan()
-    current_content = []  # type: List[str]
+    current_content = None  # type: Optional[List[str]]
 
     def notify_layout_change(layout: ui.Layout) -> None:
         global current_content
@@ -95,7 +95,7 @@ if __debug__:
         m.passphrase_protection = has_passphrase()
         m.reset_entropy = reset_internal_entropy
 
-        if msg.wait_layout:
+        if msg.wait_layout or current_content is None:
             m.layout_lines = await layout_change_chan.take()
         else:
             m.layout_lines = current_content
