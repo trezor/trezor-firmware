@@ -77,6 +77,16 @@ def client(request):
     if request.node.get_closest_marker("skip_t1") and client.features.model == "1":
         pytest.skip("Test excluded on Trezor 1")
 
+    if (
+        request.node.get_closest_marker("sd_card")
+        and not client.features.sd_card_present
+    ):
+        raise RuntimeError(
+            "This test requires SD card.\n"
+            "To skip all such tests, run:\n"
+            "  pytest -m 'not sd_card' <test path>"
+        )
+
     wipe_device(client)
 
     # fmt: off
@@ -141,7 +151,7 @@ def pytest_runtest_setup(item):
     both T1 and TT.
     """
     if item.get_closest_marker("skip_t1") and item.get_closest_marker("skip_t2"):
-        pytest.fail("Don't skip tests for both trezors!")
+        raise RuntimeError("Don't skip tests for both trezors!")
 
     skip_altcoins = int(os.environ.get("TREZOR_PYTEST_SKIP_ALTCOINS", 0))
     if item.get_closest_marker("altcoin") and skip_altcoins:
