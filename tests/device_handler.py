@@ -45,6 +45,13 @@ class BackgroundDeviceHandler:
                 pass
         self.task = None
 
+    def restart(self, emulator):
+        # TODO handle actual restart as well
+        self.kill_task()
+        emulator.restart()
+        self.client = emulator.client
+        self.client.ui = NullUI
+
     def result(self):
         if self.task is None:
             raise RuntimeError("No task running")
