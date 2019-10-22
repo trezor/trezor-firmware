@@ -4,7 +4,7 @@ from trezor import ui
 from trezor.ui import display, in_area
 
 if False:
-    from typing import List, Type, Union
+    from typing import List, Optional, Type, Union
 
 
 class ButtonDefault:

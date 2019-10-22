@@ -312,7 +312,7 @@ class RecoveryHomescreen(ui.Component):
 
     if __debug__:
 
-        def read_content(self):
+        def read_content(self) -> List[str]:
             return [self.__class__.__name__, self.text, self.subtext or ""]
 
 

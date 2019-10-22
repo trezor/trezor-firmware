@@ -9,7 +9,7 @@ if __debug__:
     from apps.debug import notify_layout_change
 
 if False:
-    from typing import Any, Awaitable, Generator, Tuple, TypeVar
+    from typing import Any, Awaitable, Generator, List, Tuple, TypeVar
 
     Pos = Tuple[int, int]
     Area = Tuple[int, int, int, int]

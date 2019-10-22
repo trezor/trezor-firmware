@@ -61,7 +61,7 @@ if __debug__:
 
     loop.schedule(debuglink_decision_dispatcher())
 
-    async def return_layout_change(ctx: wire.Context):
+    async def return_layout_change(ctx: wire.Context) -> None:
         content = await layout_change_chan.take()
         await ctx.write(DebugLinkLayout(lines=content))
 
