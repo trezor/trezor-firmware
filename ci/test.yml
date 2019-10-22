@@ -106,10 +106,9 @@ core mypy test:
   dependencies: []  # no artifacts needed
   script:
     - cd core
-    - (pipenv run make mypy | tee /tmp/mypy-result) || true
-    - CNT=`wc -l < /tmp/mypy-result`
-    - echo $CNT
-    - (( $CNT != 0 )) && (( $CNT < 154 )) && exit 0  # currently hardcoded, will be fixed
+    - pipenv run mypy --version
+    - pipenv run make res  # needed for clean mypy
+    - pipenv run make mypy
 
 
 # Crypto
