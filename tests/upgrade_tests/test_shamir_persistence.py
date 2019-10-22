@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import pytest
+
 from trezorlib import device
 
 from .. import buttons
@@ -29,42 +31,42 @@ def enter_word(debug, word):
     return debug.click(buttons.CONFIRM_WORD, wait=True)
 
 
+@pytest.fixture
+def emulator():
+    emu = EmulatorWrapper("core")
+    with emu:
+        yield emu
+
+
 @core_only
-def test_persistence():
-    with EmulatorWrapper("core") as emu, BackgroundDeviceHandler(
-        emu.client
-    ) as device_handler:
-        debug = device_handler.debuglink()
-        features = device_handler.features()
+def test_persistence(emulator):
+    device_handler = BackgroundDeviceHandler(emulator.client)
+    debug = device_handler.debuglink()
+    features = device_handler.features()
 
-        assert features.recovery_mode is False
+    assert features.recovery_mode is False
 
-        device_handler.run(device.recover, pin_protection=False)
-        layout = debug.wait_layout()
-        assert layout.text.startswith("Recovery mode")
+    device_handler.run(device.recover, pin_protection=False)
+    layout = debug.wait_layout()
+    assert layout.text.startswith("Recovery mode")
 
-        layout = debug.click(buttons.OK, wait=True)
-        assert "Select number of words" in layout.text
+    layout = debug.click(buttons.OK, wait=True)
+    assert "Select number of words" in layout.text
 
-        storage = emu.storage()
-        device_handler.kill_task()
+    device_handler.restart(emulator)
+    debug = device_handler.debuglink()
+    features = device_handler.features()
 
-    with EmulatorWrapper("core", storage=storage) as emu, BackgroundDeviceHandler(
-        emu.client
-    ) as device_handler:
-        debug = device_handler.debuglink()
-        features = device_handler.features()
+    assert features.recovery_mode is True
 
-        assert features.recovery_mode is True
+    # no waiting for layout because layout doesn't change
+    layout = debug.read_layout()
+    assert "Select number of words" in layout.text
+    layout = debug.click(buttons.CANCEL, wait=True)
 
-        # no waiting for layout because layout doesn't change
-        layout = debug.read_layout()
-        assert "Select number of words" in layout.text
-        layout = debug.click(buttons.CANCEL, wait=True)
+    assert layout.text.startswith("Abort recovery")
+    layout = debug.click(buttons.OK, wait=True)
 
-        assert layout.text.startswith("Abort recovery")
-        layout = debug.click(buttons.OK, wait=True)
-
-        assert layout.text == "Homescreen"
-        features = device_handler.features()
-        assert features.recovery_mode is False
+    assert layout.text == "Homescreen"
+    features = device_handler.features()
+    assert features.recovery_mode is False
