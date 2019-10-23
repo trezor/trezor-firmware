@@ -142,25 +142,20 @@ def test_tron_witness_create(client):
 def test_tron_asset_issue(client):
 
     msg = proto.TronSignTx(
-        ref_block_bytes=bytes.fromhex("D0EF"),
-        ref_block_hash=bytes.fromhex("6CD6025AFD991D7D"),
-        expiration=1531429101000,
-        timestamp=1531428803023,
+        ref_block_bytes=bytes.fromhex("a745"),
+        ref_block_hash=bytes.fromhex("5d3db33ec351b082"),
+        expiration=1571828655000,
+        timestamp=1571828595353,
         contract=proto.TronContract(
             asset_issue_contract=proto.TronAssetIssueContract(
                 name="CryptoChain",
                 abbr="CCT",
                 total_supply=9999999999,
-                frozen_supply=[
-                    proto.TronFrozenSupply(frozen_amount=1000, frozen_days=10),
-                    proto.TronFrozenSupply(frozen_amount=10000, frozen_days=20),
-                    proto.TronFrozenSupply(frozen_amount=100000, frozen_days=30),
-                ],
                 trx_num=1000,
                 num=1,
-                precision=0,
-                start_time=1514764800000,
-                end_time=1546300800000,
+                precision=1,
+                start_time=1571900000000,
+                end_time=1572900000000,
                 description="CryptoChain Token Issue Test",
                 url="http://cryptochain.network",
             )
@@ -170,7 +165,7 @@ def test_tron_asset_issue(client):
     result = tron.sign_tx(client, parse_path(TRON_DEFAULT_PATH), msg)
     assert (
         result.signature.hex()
-        == "861a62e4d0ae920284a5d936220563b5536102b43044103011fc0b523592ef1c3a8a852075d3cce2525c048377b66005f04184d6ec7fe661c0634abc93ba414a00"
+        == "8e5632cee4c25fa2966ef7a4a7db9df3f228ed67b23d8c4344d82d1598ec8ee55dc6b79845fd899ecce3c0310b5da2d4cf020eefbe5cdd3259bd561e1c40571601"
     )
 
 
