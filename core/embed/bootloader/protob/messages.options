@@ -14,6 +14,4 @@ Success.message				max_size:256
 
 Failure.message				max_size:256
 
-ButtonRequest.data			max_size:256
-
 FirmwareUpload.hash			max_size:32

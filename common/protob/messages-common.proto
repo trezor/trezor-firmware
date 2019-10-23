@@ -44,7 +44,6 @@ message Failure {
  */
 message ButtonRequest {
     optional ButtonRequestType code = 1;
-    optional string data = 2;
     /**
     * Type of button request
     */
