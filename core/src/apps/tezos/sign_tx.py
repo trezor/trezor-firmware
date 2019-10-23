@@ -32,7 +32,7 @@ async def sign_tx(ctx, msg, keychain):
                 await layout.require_confirm_set_delegate(ctx, msg.transaction.fee)
 
             # operation to remove delegate from the smart contract with manager.tz
-            if parameters_manager.cancel_delegate is not None:
+            elif parameters_manager.cancel_delegate is not None:
                 address = _get_address_from_contract(msg.transaction.destination)
                 await layout.require_confirm_delegation_manager_withdraw(ctx, address)
                 await layout.require_confirm_manager_remove_delegate(
@@ -40,7 +40,7 @@ async def sign_tx(ctx, msg, keychain):
                 )
 
             # operation to transfer tokens from a smart contract to an implicit account or a smart contract
-            if parameters_manager.transfer is not None:
+            elif parameters_manager.transfer is not None:
                 to = _get_address_from_contract(parameters_manager.transfer.destination)
                 await layout.require_confirm_tx(
                     ctx, to, parameters_manager.transfer.amount
