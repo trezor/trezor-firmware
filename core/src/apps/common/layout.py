@@ -6,6 +6,7 @@ from trezor.messages import ButtonRequestType
 from trezor.ui.button import ButtonDefault
 from trezor.ui.container import Container
 from trezor.ui.qr import Qr
+from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 from trezor.utils import chunks
 
@@ -13,12 +14,16 @@ from apps.common import HARDENED
 from apps.common.confirm import confirm, require_confirm
 
 if False:
-    from typing import Iterable
+    from typing import Iterable, Iterator, List
     from trezor import wire
 
 
 async def show_address(
-    ctx: wire.Context, address: str, desc: str = "Confirm address", network: str = None
+    ctx: wire.Context,
+    address: str,
+    desc: str = "Confirm address",
+    cancel: str = "QR",
+    network: str = None,
 ) -> bool:
     text = Text(desc, ui.ICON_RECEIVE, ui.GREEN)
     if network is not None:
@@ -29,13 +34,16 @@ async def show_address(
         ctx,
         text,
         code=ButtonRequestType.Address,
-        cancel="QR",
+        cancel=cancel,
         cancel_style=ButtonDefault,
     )
 
 
 async def show_qr(
-    ctx: wire.Context, address: str, desc: str = "Confirm address"
+    ctx: wire.Context,
+    address: str,
+    desc: str = "Confirm address",
+    cancel: str = "Address",
 ) -> bool:
     QR_X = const(120)
     QR_Y = const(115)
@@ -48,7 +56,7 @@ async def show_qr(
         ctx,
         content,
         code=ButtonRequestType.Address,
-        cancel="Address",
+        cancel=cancel,
         cancel_style=ButtonDefault,
     )
 
@@ -60,7 +68,23 @@ async def show_pubkey(ctx: wire.Context, pubkey: bytes) -> None:
     await require_confirm(ctx, text, ButtonRequestType.PublicKey)
 
 
-def split_address(address: str) -> Iterable[str]:
+async def show_xpub(ctx: wire.Context, xpub: str, desc: str, cancel: str) -> bool:
+    pages = []  # type: List[ui.Component]
+    for lines in chunks(list(chunks(xpub, 16)), 5):
+        text = Text(desc, ui.ICON_RECEIVE, ui.GREEN)
+        text.mono(*lines)
+        pages.append(text)
+
+    return await confirm(
+        ctx,
+        Paginated(pages),
+        code=ButtonRequestType.PublicKey,
+        cancel=cancel,
+        cancel_style=ButtonDefault,
+    )
+
+
+def split_address(address: str) -> Iterator[str]:
     return chunks(address, 17)
 
 
