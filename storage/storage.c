@@ -53,6 +53,9 @@
 // Norcow storage key of the wipe code data.
 #define WIPE_CODE_DATA_KEY ((APP_STORAGE << 8) | 0x06)
 
+// Norcow storage key of the storage upgrade flag.
+#define STORAGE_UPGRADED_KEY ((APP_STORAGE << 8) | 0x07)
+
 // The PIN value corresponding to an empty PIN.
 #define PIN_EMPTY 1
 
@@ -150,6 +153,8 @@ static uint8_t hardware_salt[HARDWARE_SALT_SIZE] = {0};
 static uint32_t norcow_active_version = 0;
 static const uint8_t TRUE_BYTE = 0x01;
 static const uint8_t FALSE_BYTE = 0x00;
+static const uint32_t TRUE_WORD = 0xC35A69A5;
+static const uint32_t FALSE_WORD = 0x3CA5965A;
 
 static void __handle_fault(const char *msg, const char *file, int line,
                            const char *func);
@@ -621,6 +626,8 @@ static void init_wiped_storage(void) {
   ensure(auth_init(), "set_storage_auth_tag failed");
   ensure(storage_set_encrypted(VERSION_KEY, &version, sizeof(version)),
          "set_storage_version failed");
+  ensure(norcow_set(STORAGE_UPGRADED_KEY, &FALSE_WORD, sizeof(FALSE_WORD)),
+         "set_storage_not_upgraded failed");
   ensure(pin_logs_init(0), "init_pin_logs failed");
   ensure(set_wipe_code(WIPE_CODE_EMPTY), "set_wipe_code failed");
 
@@ -854,12 +861,36 @@ secbool check_storage_version(void) {
     handle_fault("storage version check");
     return secfalse;
   }
-
+  const void *storage_upgraded = NULL;
+  if (sectrue != norcow_get(STORAGE_UPGRADED_KEY, &storage_upgraded, &len) ||
+      len != sizeof(TRUE_WORD)) {
+    handle_fault("storage version check");
+    return secfalse;
+  }
   if (version > norcow_active_version) {
+    // Attack: Storage was downgraded.
     storage_wipe();
+    handle_fault("storage version check");
+    return secfalse;
   } else if (version < norcow_active_version) {
+    // Storage was upgraded.
+    if (*(const uint32_t *)storage_upgraded != TRUE_WORD) {
+      // Attack: The upgrade process was bypassed.
+      storage_wipe();
+      handle_fault("storage version check");
+      return secfalse;
+    }
+    norcow_set(STORAGE_UPGRADED_KEY, &FALSE_WORD, sizeof(FALSE_WORD));
     storage_set_encrypted(VERSION_KEY, &norcow_active_version,
                           sizeof(norcow_active_version));
+  } else {
+    // Standard operation. The storage was neither upgraded nor downgraded.
+    if (*(const uint32_t *)storage_upgraded != FALSE_WORD) {
+      // Attack: The upgrade process was launched when it shouldn't have been.
+      storage_wipe();
+      handle_fault("storage version check");
+      return secfalse;
+    }
   }
   return sectrue;
 }
@@ -900,7 +931,6 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
   memcpy(cached_keys, keys, sizeof(keys));
   memzero(keys, sizeof(keys));
   memzero(tag, sizeof(tag));
-
   // Check that the authenticated version number matches the norcow version.
   // NOTE: This also initializes the authentication_sum by calling
   // storage_get_encrypted() which calls auth_get().
@@ -1462,6 +1492,11 @@ static secbool storage_upgrade(void) {
     if (sectrue != set_wipe_code(WIPE_CODE_EMPTY)) {
       return secfalse;
     }
+  }
+
+  if (sectrue !=
+      norcow_set(STORAGE_UPGRADED_KEY, &TRUE_WORD, sizeof(TRUE_WORD))) {
+    return secfalse;
   }
 
   norcow_active_version = NORCOW_VERSION;

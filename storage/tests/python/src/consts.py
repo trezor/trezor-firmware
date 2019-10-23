@@ -18,6 +18,9 @@ SAT_KEY = (PIN_APP_ID << 8) | 0x05
 # Norcow storage key of the wipe code data.
 WIPE_CODE_DATA_KEY = (PIN_APP_ID << 8) | 0x06
 
+# Norcow storage key of the storage upgrade flag.
+STORAGE_UPGRADED_KEY = (PIN_APP_ID << 8) | 0x07
+
 # The PIN value corresponding to an empty PIN.
 PIN_EMPTY = 1
 
@@ -102,6 +105,8 @@ WORD_SIZE = 4
 # Boolean values are stored as a simple 0/1 int.
 TRUE_BYTE = b"\x01"
 FALSE_BYTE = b"\x00"
+TRUE_WORD = b"\xA5\x69\x5A\xC3"
+FALSE_WORD = b"\x5A\x96\xA5\x3C"
 
 # ----- Crypto ----- #
 

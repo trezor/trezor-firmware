@@ -39,6 +39,7 @@ class Storage:
 
         self.nc.set(consts.SAT_KEY, crypto.init_hmacs(self.sak))
         self._set_encrypt(consts.VERSION_KEY, b"\x02\x00\x00\x00")
+        self.nc.set(consts.STORAGE_UPGRADED_KEY, consts.FALSE_WORD)
         self.pin_log.init()
         self._set_wipe_code(consts.WIPE_CODE_EMPTY)
         self._set_pin(consts.PIN_EMPTY)
