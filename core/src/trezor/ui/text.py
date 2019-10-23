@@ -171,6 +171,12 @@ class Text(ui.Component):
             render_text(self.content, self.new_lines, self.max_lines)
             self.repaint = False
 
+    if __debug__:
+
+        def read_content(self) -> List[str]:
+            lines = [w for w in self.content if isinstance(w, str)]
+            return [self.header_text] + lines[: self.max_lines]
+
 
 LABEL_LEFT = const(0)
 LABEL_CENTER = const(1)
@@ -208,6 +214,11 @@ class Label(ui.Component):
                     tx, ty, self.content, self.style, ui.FG, ui.BG, aw
                 )
             self.repaint = False
+
+    if __debug__:
+
+        def read_content(self) -> List[str]:
+            return [self.content]
 
 
 def text_center_trim_left(

@@ -4,12 +4,13 @@ if not __debug__:
     halt("debug mode inactive")
 
 if __debug__:
-    from trezor import config, log, loop, utils
+    from trezor import config, io, log, loop, ui, utils
     from trezor.messages import MessageType, DebugSwipeDirection
+    from trezor.messages.DebugLinkLayout import DebugLinkLayout
     from trezor.wire import register
 
     if False:
-        from typing import Optional
+        from typing import List, Optional
         from trezor import wire
         from trezor.messages.DebugLinkDecision import DebugLinkDecision
         from trezor.messages.DebugLinkGetState import DebugLinkGetState
@@ -27,6 +28,15 @@ if __debug__:
     input_signal = input_chan.take
 
     debuglink_decision_chan = loop.chan()
+
+    layout_change_chan = loop.chan()
+    current_content = None  # type: Optional[List[str]]
+
+    def notify_layout_change(layout: ui.Layout) -> None:
+        global current_content
+        current_content = layout.read_content()
+        if layout_change_chan.takers:
+            layout_change_chan.publish(current_content)
 
     async def debuglink_decision_dispatcher() -> None:
         from trezor.ui import confirm, swipe
@@ -51,14 +61,26 @@ if __debug__:
 
     loop.schedule(debuglink_decision_dispatcher())
 
+    async def return_layout_change(ctx: wire.Context) -> None:
+        content = await layout_change_chan.take()
+        await ctx.write(DebugLinkLayout(lines=content))
+
     async def dispatch_DebugLinkDecision(
         ctx: wire.Context, msg: DebugLinkDecision
     ) -> None:
-
         if debuglink_decision_chan.putters:
             log.warning(__name__, "DebugLinkDecision queue is not empty")
 
-        debuglink_decision_chan.publish(msg)
+        if msg.x is not None:
+            evt_down = io.TOUCH_START, msg.x, msg.y
+            evt_up = io.TOUCH_END, msg.x, msg.y
+            loop.synthetic_events.append((io.TOUCH, evt_down))
+            loop.synthetic_events.append((io.TOUCH, evt_up))
+        else:
+            debuglink_decision_chan.publish(msg)
+
+        if msg.wait:
+            loop.schedule(return_layout_change(ctx))
 
     async def dispatch_DebugLinkGetState(
         ctx: wire.Context, msg: DebugLinkGetState
@@ -72,6 +94,11 @@ if __debug__:
         m.mnemonic_type = mnemonic.get_type()
         m.passphrase_protection = has_passphrase()
         m.reset_entropy = reset_internal_entropy
+
+        if msg.wait_layout or current_content is None:
+            m.layout_lines = await layout_change_chan.take()
+        else:
+            m.layout_lines = current_content
 
         if msg.wait_word_pos:
             m.reset_word_pos = await reset_word_index.take()

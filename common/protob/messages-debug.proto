@@ -10,7 +10,7 @@ import "messages-common.proto";
 /**
  * Request: "Press" the button on the device
  * @start
- * @next Success
+ * @next DebugLinkLayout
  */
 message DebugLinkDecision {
     optional bool yes_no = 1;   // true for "Confirm", false for "Cancel"
@@ -25,6 +25,18 @@ message DebugLinkDecision {
         LEFT = 2;
         RIGHT = 3;
     }
+
+    optional uint32 x = 4;   // touch X coordinate
+    optional uint32 y = 5;   // touch Y coordinate
+    optional bool wait = 6;  // wait for layout change
+}
+
+/**
+ * Response: Device text layout
+ * @end
+ */
+message DebugLinkLayout {
+    repeated string lines = 1;
 }
 
 /**
@@ -35,6 +47,7 @@ message DebugLinkDecision {
 message DebugLinkGetState {
     optional bool wait_word_list = 1;  // Trezor T only - wait until mnemonic words are shown
     optional bool wait_word_pos = 2;   // Trezor T only - wait until reset word position is requested
+    optional bool wait_layout = 3;     // wait until current layout changes
 }
 
 /**
@@ -54,6 +67,7 @@ message DebugLinkState {
     optional uint32 recovery_word_pos = 10;                 // index of mnemonic word the device is expecting during RecoveryDevice workflow
     optional uint32 reset_word_pos = 11;                    // index of mnemonic word the device is expecting during ResetDevice workflow
     optional uint32 mnemonic_type = 12;                     // current mnemonic type (BIP-39/SLIP-39)
+    repeated string layout_lines = 13;  // current layout text
 }
 
 /**

@@ -17,13 +17,16 @@ class DebugLinkGetState(p.MessageType):
         self,
         wait_word_list: bool = None,
         wait_word_pos: bool = None,
+        wait_layout: bool = None,
     ) -> None:
         self.wait_word_list = wait_word_list
         self.wait_word_pos = wait_word_pos
+        self.wait_layout = wait_layout
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
             1: ('wait_word_list', p.BoolType, 0),
             2: ('wait_word_pos', p.BoolType, 0),
+            3: ('wait_layout', p.BoolType, 0),
         }

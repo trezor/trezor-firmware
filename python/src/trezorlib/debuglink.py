@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from collections import namedtuple
 from copy import deepcopy
 
 from mnemonic import Mnemonic
@@ -23,6 +24,13 @@ from .client import TrezorClient
 from .tools import expect
 
 EXPECTED_RESPONSES_CONTEXT_LINES = 3
+
+
+LayoutLines = namedtuple("LayoutLines", "lines text")
+
+
+def layout_lines(lines):
+    return LayoutLines(lines, " ".join(lines))
 
 
 class DebugLink:
@@ -45,6 +53,13 @@ class DebugLink:
 
     def state(self):
         return self._call(proto.DebugLinkGetState())
+
+    def read_layout(self):
+        return layout_lines(self.state().layout_lines)
+
+    def wait_layout(self):
+        obj = self._call(proto.DebugLinkGetState(wait_layout=True))
+        return layout_lines(obj.layout_lines)
 
     def read_pin(self):
         state = self.state()
@@ -83,16 +98,24 @@ class DebugLink:
         obj = self._call(proto.DebugLinkGetState())
         return obj.passphrase_protection
 
-    def input(self, word=None, button=None, swipe=None):
+    def input(self, word=None, button=None, swipe=None, x=None, y=None, wait=False):
         if not self.allow_interactions:
             return
 
-        args = sum(a is not None for a in (word, button, swipe))
+        args = sum(a is not None for a in (word, button, swipe, x))
         if args != 1:
             raise ValueError("Invalid input - must use one of word, button, swipe")
 
-        decision = proto.DebugLinkDecision(yes_no=button, swipe=swipe, input=word)
-        self._call(decision, nowait=True)
+        decision = proto.DebugLinkDecision(
+            yes_no=button, swipe=swipe, input=word, x=x, y=y, wait=wait
+        )
+        ret = self._call(decision, nowait=not wait)
+        if ret is not None:
+            return layout_lines(ret.lines)
+
+    def click(self, click, wait=False):
+        x, y = click
+        return self.input(x=x, y=y, wait=wait)
 
     def press_yes(self):
         self.input(button=True)

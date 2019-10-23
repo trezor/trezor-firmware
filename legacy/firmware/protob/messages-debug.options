@@ -13,3 +13,9 @@ DebugLinkLog.text                       max_size:256
 
 DebugLinkMemory.memory                  max_size:1024
 DebugLinkMemoryWrite.memory             max_size:1024
+
+# unused fields
+DebugLinkState.layout_lines             max_count:0
+DebugLinkState.layout_lines             max_size:1
+DebugLinkLayout.lines                   max_size:1
+DebugLinkLayout.lines                   max_count:0
