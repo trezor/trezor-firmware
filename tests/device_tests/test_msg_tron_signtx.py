@@ -190,7 +190,6 @@ def test_tron_witness_update(client):
     )
 
 
-# TODO:
 def test_tron_participate_asset(client):
 
     msg = proto.TronSignTx(
@@ -213,7 +212,7 @@ def test_tron_participate_asset(client):
     result = tron.sign_tx(client, parse_path(TRON_DEFAULT_PATH), msg)
     assert (
         result.signature.hex()
-        == "0f752c52ee5daea6c740e0783398a03b1002a4a4e244ca0037981f18c0ad539b71b00bc1398297077373e303ddfe3fc48f7b8dc9afc4146bae5d7d448667d3c300"
+        == "e58356174e071e378490acc461961694dfa3708236b9742084c21b1404b516ba205c87516e89f1b4bc63c643162d375e5f4481c7fadd608dc8e38c39c10658f100"
     )
 
 
