@@ -24,8 +24,8 @@ from collections import defaultdict
 from trezorlib.debuglink import TrezorClientDebugLink
 from trezorlib.transport.udp import UdpTransport
 
-ROOT = os.path.abspath(os.path.dirname(__file__) + "/..")
-BINDIR = ROOT + "/tests/emulators"
+ROOT = os.path.abspath(os.path.dirname(__file__) + "/../..")
+BINDIR = ROOT + "/tests/emulator_tests/emulators"
 LOCAL_BUILD_PATHS = {
     "core": ROOT + "/core/build/unix/micropython",
     "legacy": ROOT + "/legacy/firmware/trezor.elf",

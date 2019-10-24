@@ -18,13 +18,12 @@ import os
 
 import pytest
 
+from tests.device_handler import BackgroundDeviceHandler
 from trezorlib import debuglink, log
 from trezorlib.debuglink import TrezorClientDebugLink
 from trezorlib.device import apply_settings, wipe as wipe_device
 from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 from trezorlib.transport import enumerate_devices, get_transport
-
-from .device_handler import BackgroundDeviceHandler
 
 
 def get_device():

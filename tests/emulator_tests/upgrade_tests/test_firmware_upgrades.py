@@ -16,10 +16,10 @@
 
 import pytest
 
+from tests.emulator_tests.emulators import ALL_TAGS, EmulatorWrapper
 from trezorlib import MINIMUM_FIRMWARE_VERSION, btc, debuglink, device
 from trezorlib.tools import H_
 
-from ..emulators import ALL_TAGS, EmulatorWrapper
 from . import SELECTED_GENS
 
 MINIMUM_FIRMWARE_VERSION["1"] = (1, 0, 0)

@@ -16,12 +16,11 @@
 
 import pytest
 
+from tests import buttons
+from tests.device_handler import BackgroundDeviceHandler
+from tests.emulator_tests.emulators import EmulatorWrapper
+from tests.emulator_tests.upgrade_tests import core_only
 from trezorlib import device
-
-from .. import buttons
-from ..device_handler import BackgroundDeviceHandler
-from ..emulators import EmulatorWrapper
-from . import core_only
 
 
 def enter_word(debug, word):

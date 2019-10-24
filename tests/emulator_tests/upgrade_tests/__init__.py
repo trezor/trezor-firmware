@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from ..emulators import EmulatorWrapper
+from tests.emulator_tests.emulators import EmulatorWrapper
 
 SELECTED_GENS = [
     gen.strip() for gen in os.environ.get("TREZOR_UPGRADE_TEST", "").split(",") if gen
