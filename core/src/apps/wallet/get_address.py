@@ -17,14 +17,14 @@ if False:
 async def show_xpubs(
     ctx: wire.Context, coin: CoinInfo, pubnodes: List[HDNodeType]
 ) -> bool:
-    for i, x in enumerate(pubnodes):
+    for i, pubnode in enumerate(pubnodes):
         cancel = "Next" if i < len(pubnodes) - 1 else "Address"
         node = bip32.HDNode(
-            depth=x.depth,
-            fingerprint=x.fingerprint,
-            child_num=x.child_num,
-            chain_code=x.chain_code,
-            public_key=x.public_key,
+            depth=pubnode.depth,
+            fingerprint=pubnode.fingerprint,
+            child_num=pubnode.child_num,
+            chain_code=pubnode.chain_code,
+            public_key=pubnode.public_key,
             curve_name=coin.curve_name,
         )
         xpub = node.serialize_public(coin.xpub_magic)
