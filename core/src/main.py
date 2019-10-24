@@ -21,6 +21,8 @@ def _boot_recovery() -> None:
 
     # boot applications
     apps.homescreen.boot(features_only=True)
+    if __debug__:
+        apps.debug.boot()
 
     from apps.management.recovery_device.homescreen import recovery_homescreen
 

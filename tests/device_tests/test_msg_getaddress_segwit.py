@@ -92,6 +92,7 @@ class TestMsgGetaddressSegwit:
             == "XNW67ZQA9K3AuXPBWvJH4zN2y5QBDTwy2Z"
         )
 
+    @pytest.mark.multisig
     def test_show_multisig_3(self, client):
         nodes = [
             btc.get_public_node(client, parse_path("999'/1'/%d'" % i)).node

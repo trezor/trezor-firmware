@@ -5,7 +5,8 @@ from ubinascii import hexlify
 from trezor import log, utils
 from trezor.crypto import bip32, chacha20poly1305, hashlib, hmac, random
 
-from apps.common import HARDENED, cbor, seed, storage
+from apps.common import HARDENED, cbor, seed
+from apps.common.storage import device as storage_device
 
 if False:
     from typing import Optional
@@ -50,7 +51,7 @@ class Credential:
         return None
 
     def next_signature_counter(self) -> int:
-        return storage.device.next_u2f_counter() or 0
+        return storage_device.next_u2f_counter() or 0
 
     @staticmethod
     def from_bytes(data: bytes, rp_id_hash: bytes) -> Optional["Credential"]:
@@ -82,7 +83,7 @@ class Fido2Credential(Credential):
         return True
 
     def generate_id(self) -> None:
-        self.creation_time = storage.device.next_u2f_counter() or 0
+        self.creation_time = storage_device.next_u2f_counter() or 0
 
         data = cbor.encode(
             {

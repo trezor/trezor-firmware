@@ -7,12 +7,13 @@ stdenv.mkDerivation {
     SDL2_image
     autoflake
     check
-    clang-tools
+    clang
     gcc
     gnumake
     graphviz
+    libjpeg
+    libressl
     libusb1
-    openssl
     pipenv
     pkgconfig
     protobuf3_6
@@ -34,7 +35,7 @@ stdenv.mkDerivation {
     darwin.libobjc
     libiconv
   ];
-  LD_LIBRARY_PATH="${libusb1}/lib";
+  LD_LIBRARY_PATH="${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   shellHook = ''
     pipenv shell
     exit

@@ -13,7 +13,7 @@ from apps.common import HARDENED
 from apps.common.confirm import confirm, require_confirm
 
 if False:
-    from typing import Iterable
+    from typing import Iterable, Iterator
     from trezor import wire
 
 
@@ -60,7 +60,7 @@ async def show_pubkey(ctx: wire.Context, pubkey: bytes) -> None:
     await require_confirm(ctx, text, ButtonRequestType.PublicKey)
 
 
-def split_address(address: str) -> Iterable[str]:
+def split_address(address: str) -> Iterator[str]:
     return chunks(address, 17)
 
 
@@ -78,7 +78,7 @@ def address_n_to_str(address_n: list) -> str:
 
 
 async def show_warning(
-    ctx: wire.Context,
+    ctx: wire.GenericContext,
     content: Iterable[str],
     subheader: Iterable[str] = [],
     button: str = "Try again",
@@ -96,7 +96,7 @@ async def show_warning(
 
 
 async def show_success(
-    ctx: wire.Context,
+    ctx: wire.GenericContext,
     content: Iterable[str] = [],
     subheader: Iterable[str] = [],
     button: str = "Continue",

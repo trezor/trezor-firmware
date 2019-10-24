@@ -401,6 +401,7 @@ class TestMsgSigntxBch:
             with pytest.raises(CallException):
                 btc.sign_tx(client, "Bcash", [inp1], [out1, out2], prev_txes=TX_API)
 
+    @pytest.mark.multisig
     def test_send_bch_multisig_wrongchange(self, client):
         nodes = [
             btc.get_public_node(client, parse_path("48'/145'/%d'" % i)).node
@@ -487,6 +488,7 @@ class TestMsgSigntxBch:
             == "01000000015f3d291cae106548f3be5ed0f4cbedc65668fa881d60347ab0d512df10af8cf601000000fc0047304402201badcdcafef4855ed58621f95935efcbc72068510472140f4ec5e252faa0af93022003310a43488288f70aedee96a5af2643a255268a6858cda9ae3001ea5e3c75574147304402207274b5a4d15e75f3df7319a375557b0efba9b27bc63f9f183a17da95a6125c94022000efac57629f1522e2d3958430e2ef073b0706cfac06cce492651b79858f09ae414c69522102245739b55787a27228a4fe78b3a324366cc645fbaa708cad45da351a334341192102debbdcb0b6970d5ade84a50fdbda1c701cdde5c9925d9b6cd8e05a9a15dbef352102ffe5fa04547b2b0c3cfbc21c08a1ddfb147025fee10274cdcd5c1bdeee88eae253aeffffffff01d85900000000000017a914a23eb2a1ed4003d357770120f5c370e199ee55468700000000"
         )
 
+    @pytest.mark.multisig
     def test_send_bch_multisig_change(self, client):
         nodes = [
             btc.get_public_node(client, parse_path("48'/145'/%d'" % i)).node

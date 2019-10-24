@@ -4,12 +4,11 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeButtonRequestType = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
-        EnumTypeButtonRequestType = None  # type: ignore
+        pass
 
 
 class ButtonRequest(p.MessageType):

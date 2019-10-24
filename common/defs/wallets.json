@@ -36,6 +36,7 @@
     },
     "bitcoin:DASH": {
         "Dash Electrum": "https://electrum.dash.org",
+        "DMT": "https://github.com/Bertrand256/dash-masternode-tool",
         "Exodus": "https://www.exodus.io",
         "Magnum": "https://magnumwallet.co"
     },
@@ -52,6 +53,9 @@
     "bitcoin:FJC": {
         "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
     },
+    "bitcoin:FLO": {
+        "Chaintek": "https://wallet.chaintek.net/"
+    },
     "bitcoin:FTC": {
         "Electrum-FTC": "https://github.com/Feathercoin-Foundation/electrum-ftc"
     },
@@ -60,6 +64,9 @@
     },
     "bitcoin:GRS": {
         "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet"
+    },
+    "bitcoin:HATCH": {
+        "HMT": "https://github.com/hatchpay/hatch-masternode-tool/"
     },
     "bitcoin:KMD": {
         "Magnum": "https://magnumwallet.co"
@@ -93,6 +100,7 @@
         "Qtum-Electrum": "https://github.com/qtumproject/qtum-electrum"
     },
     "bitcoin:RVN": {
+        "Chaintek": "https://wallet.chaintek.net/",
         "Electrum-RVN": "https://github.com/traysi/electrum-raven",
         "Mango Farm": "https://mangofarmassets.com/mangowallet"
     },

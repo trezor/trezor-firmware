@@ -274,7 +274,7 @@ STATIC const mp_obj_type_t mod_trezorio_FatFSFile_type = {
     .locals_dict = (void *)&mod_trezorio_FatFSFile_locals_dict,
 };
 
-/// class FatFSDir(Iterable[Tuple[int, str, str]]):
+/// class FatFSDir(Iterator[Tuple[int, str, str]]):
 ///     """
 ///     Class encapsulating directory
 ///     """

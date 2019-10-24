@@ -207,6 +207,7 @@ class TestMsgSigntxSegwit:
             == "01000000000101ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000171600140099a7ecbd938ed1839f5f6bf6d50933c6db9d5cffffffff01010000000100000017a914097c569095163e84475d07aa95a1f736df895b7b8702483045022100cb9d3aa7a8064702e6b61c20c7fb9cb672c69d3786cf5efef8ad6d90136ca7d8022065119ff6c6e6e6960e6508fc5360359bb269bb25ef8d90019decaa0a050cc45a0121033add1f0e8e3c3136f7428dd4a4de1057380bd311f5b0856e2269170b4ffa65bf00000000"
         )
 
+    @pytest.mark.multisig
     def test_send_multisig_1(self, client):
         nodes = [
             btc.get_public_node(client, parse_path("49'/1'/%d'" % i)).node

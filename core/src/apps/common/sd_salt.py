@@ -7,7 +7,6 @@ from trezor.ui.confirm import CONFIRMED, Confirm
 from trezor.ui.text import Text
 from trezor.utils import consteq
 
-from apps.common import storage
 from apps.common.confirm import confirm
 
 if False:
@@ -30,7 +29,7 @@ async def _wrong_card_dialog(ctx: Optional[wire.Context]) -> None:
     text.br_half()
     if SD_CARD_HOT_SWAPPABLE:
         text.normal("Please insert the", "correct SD card for", "this device.")
-        btn_confirm = "Retry"
+        btn_confirm = "Retry"  # type: Optional[str]
         btn_cancel = "Abort"
     else:
         text.normal("Please unplug the", "device and insert the", "correct SD card.")
@@ -51,7 +50,7 @@ async def _insert_card_dialog(ctx: Optional[wire.Context]) -> None:
     text.br_half()
     if SD_CARD_HOT_SWAPPABLE:
         text.normal("Please insert your", "SD card.")
-        btn_confirm = "Retry"
+        btn_confirm = "Retry"  # type: Optional[str]
         btn_cancel = "Abort"
     else:
         text.normal("Please unplug the", "device and insert your", "SD card.")
@@ -78,7 +77,9 @@ async def _write_failed_dialog(ctx: Optional[wire.Context]) -> None:
 
 
 def _get_device_dir() -> str:
-    return "/trezor/device_%s" % storage.device.get_device_id().lower()
+    from apps.common.storage.device import get_device_id
+
+    return "/trezor/device_%s" % get_device_id().lower()
 
 
 def _get_salt_path(new: bool = False) -> str:
@@ -86,6 +87,27 @@ def _get_salt_path(new: bool = False) -> str:
         return "%s/salt.new" % _get_device_dir()
     else:
         return "%s/salt" % _get_device_dir()
+
+
+def _load_salt(fs: io.FatFS, auth_key: bytes, path: str) -> Optional[bytearray]:
+    # Load the salt file if it exists.
+    try:
+        with fs.open(path, "r") as f:
+            salt = bytearray(SD_SALT_LEN_BYTES)
+            stored_tag = bytearray(SD_SALT_AUTH_TAG_LEN_BYTES)
+            f.read(salt)
+            f.read(stored_tag)
+    except OSError:
+        return None
+
+    # Check the salt's authentication tag.
+    computed_tag = hmac.new(auth_key, salt, sha256).digest()[
+        :SD_SALT_AUTH_TAG_LEN_BYTES
+    ]
+    if not consteq(computed_tag, stored_tag):
+        return None
+
+    return salt
 
 
 async def request_sd_salt(
@@ -102,56 +124,34 @@ async def request_sd_salt(
 
         try:
             fs.mount()
-
-            # Load salt if it exists.
-            salt = None  # type: Optional[bytearray]
-            try:
-                with fs.open(salt_path, "r") as f:
-                    salt = bytearray(SD_SALT_LEN_BYTES)
-                    salt_tag = bytearray(SD_SALT_AUTH_TAG_LEN_BYTES)
-                    f.read(salt)
-                    f.read(salt_tag)
-            except OSError:
-                salt = None
-
-            if salt is not None and consteq(
-                hmac.new(salt_auth_key, salt, sha256).digest()[
-                    :SD_SALT_AUTH_TAG_LEN_BYTES
-                ],
-                salt_tag,
-            ):
+            salt = _load_salt(fs, salt_auth_key, salt_path)
+            if salt is not None:
                 return salt
 
-            # Load salt.new if it exists.
-            new_salt = None  # type: Optional[bytearray]
-            try:
-                with fs.open(new_salt_path, "r") as f:
-                    new_salt = bytearray(SD_SALT_LEN_BYTES)
-                    new_salt_tag = bytearray(SD_SALT_AUTH_TAG_LEN_BYTES)
-                    f.read(new_salt)
-                    f.read(new_salt_tag)
-            except OSError:
-                new_salt = None
-
-            if new_salt is not None and consteq(
-                hmac.new(salt_auth_key, new_salt, sha256).digest()[
-                    :SD_SALT_AUTH_TAG_LEN_BYTES
-                ],
-                new_salt_tag,
-            ):
+            # Check if there is a new salt.
+            salt = _load_salt(fs, salt_auth_key, new_salt_path)
+            if salt is not None:
                 # SD salt regeneration was interrupted earlier. Bring into consistent state.
                 # TODO Possibly overwrite salt file with random data.
                 try:
                     fs.unlink(salt_path)
                 except OSError:
                     pass
-                fs.rename(new_salt_path, salt_path)
-                return new_salt
+
+                try:
+                    fs.rename(new_salt_path, salt_path)
+                except OSError:
+                    error_dialog = _write_failed_dialog(ctx)
+                else:
+                    return salt
+            else:
+                # No valid salt file on this SD card.
+                error_dialog = _wrong_card_dialog(ctx)
         finally:
             fs.unmount()
             sd.power(False)
 
-        await _wrong_card_dialog(ctx)
+        await error_dialog
 
 
 async def set_sd_salt(
@@ -195,7 +195,7 @@ async def commit_sd_salt(ctx: Optional[wire.Context]) -> None:
     sd = io.SDCard()
     fs = io.FatFS()
     if not sd.power(True):
-        raise IOError
+        raise OSError
 
     try:
         fs.mount()
@@ -216,7 +216,7 @@ async def remove_sd_salt(ctx: Optional[wire.Context]) -> None:
     sd = io.SDCard()
     fs = io.FatFS()
     if not sd.power(True):
-        raise IOError
+        raise OSError
 
     try:
         fs.mount()

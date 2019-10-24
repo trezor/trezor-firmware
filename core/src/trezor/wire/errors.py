@@ -1,8 +1,11 @@
 from trezor.messages import FailureType
 
+if False:
+    from trezor.messages.Failure import EnumTypeFailureType
+
 
 class Error(Exception):
-    def __init__(self, code: int, message: str) -> None:
+    def __init__(self, code: EnumTypeFailureType, message: str) -> None:
         super().__init__()
         self.code = code
         self.message = message

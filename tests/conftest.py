@@ -24,6 +24,8 @@ from trezorlib.device import apply_settings, wipe as wipe_device
 from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 from trezorlib.transport import enumerate_devices, get_transport
 
+from .device_handler import BackgroundDeviceHandler
+
 
 def get_device():
     path = os.environ.get("TREZOR_PATH")
@@ -76,6 +78,16 @@ def client(request):
         pytest.skip("Test excluded on Trezor T")
     if request.node.get_closest_marker("skip_t1") and client.features.model == "1":
         pytest.skip("Test excluded on Trezor 1")
+
+    if (
+        request.node.get_closest_marker("sd_card")
+        and not client.features.sd_card_present
+    ):
+        raise RuntimeError(
+            "This test requires SD card.\n"
+            "To skip all such tests, run:\n"
+            "  pytest -m 'not sd_card' <test path>"
+        )
 
     wipe_device(client)
 
@@ -141,8 +153,30 @@ def pytest_runtest_setup(item):
     both T1 and TT.
     """
     if item.get_closest_marker("skip_t1") and item.get_closest_marker("skip_t2"):
-        pytest.fail("Don't skip tests for both trezors!")
+        raise RuntimeError("Don't skip tests for both trezors!")
 
     skip_altcoins = int(os.environ.get("TREZOR_PYTEST_SKIP_ALTCOINS", 0))
     if item.get_closest_marker("altcoin") and skip_altcoins:
         pytest.skip("Skipping altcoin test")
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    # Make test results available in fixtures.
+    # See https://docs.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
+    # The device_handler fixture uses this as 'request.node.rep_call.passed' attribute,
+    # in order to raise error only if the test passed.
+    outcome = yield
+    rep = outcome.get_result()
+    setattr(item, f"rep_{rep.when}", rep)
+
+
+@pytest.fixture
+def device_handler(client, request):
+    device_handler = BackgroundDeviceHandler(client)
+    yield device_handler
+
+    # make sure all background tasks are done
+    finalized_ok = device_handler.check_finalize()
+    if request.node.rep_call.passed and not finalized_ok:
+        raise RuntimeError("Test did not check result of background task")

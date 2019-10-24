@@ -41,18 +41,21 @@ async def request_pin(
 
     while True:
         if __debug__:
-            result = await loop.race(dialog, input_signal())
+            pin = await loop.race(dialog, input_signal())
         else:
-            result = await dialog
-        if result is CANCELLED:
+            pin = await dialog
+        if pin is CANCELLED:
             raise PinCancelled
-        return result
+        assert isinstance(pin, str)
+        return pin
 
 
 async def request_pin_ack(ctx: wire.Context, *args: Any, **kwargs: Any) -> str:
     try:
         await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
-        return await ctx.wait(request_pin(*args, **kwargs))
+        pin = await ctx.wait(request_pin(*args, **kwargs))
+        assert isinstance(pin, str)
+        return pin
     except PinCancelled:
         raise wire.ActionCancelled("Cancelled")
 

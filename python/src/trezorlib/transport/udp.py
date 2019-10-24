@@ -20,6 +20,8 @@ from typing import Iterable, Optional, cast
 from . import TransportException
 from .protocol import ProtocolBasedTransport, get_protocol
 
+SOCKET_TIMEOUT = 10
+
 
 class UdpTransport(ProtocolBasedTransport):
 
@@ -85,7 +87,7 @@ class UdpTransport(ProtocolBasedTransport):
     def open(self) -> None:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.connect(self.device)
-        self.socket.settimeout(10)
+        self.socket.settimeout(SOCKET_TIMEOUT)
 
     def close(self) -> None:
         if self.socket is not None:

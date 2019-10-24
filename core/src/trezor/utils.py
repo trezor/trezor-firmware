@@ -1,6 +1,6 @@
 import gc
 import sys
-from trezorutils import (  # noqa: F401
+from trezorutils import (  # type: ignore[attr-defined] # noqa: F401
     BITCOIN_ONLY,
     EMULATOR,
     GITREV,
@@ -29,7 +29,7 @@ if __debug__:
         LOG_MEMORY = 0
 
 if False:
-    from typing import Iterable, Iterator, Protocol, List, TypeVar
+    from typing import Any, Iterable, Iterator, Protocol, TypeVar, Sequence
 
 
 def unimport_begin() -> Iterable[str]:
@@ -66,10 +66,10 @@ def ensure(cond: bool, msg: str = None) -> None:
 
 
 if False:
-    Chunked = TypeVar("Chunked")
+    Chunkable = TypeVar("Chunkable", str, Sequence[Any])
 
 
-def chunks(items: List[Chunked], size: int) -> Iterator[List[Chunked]]:
+def chunks(items: Chunkable, size: int) -> Iterator[Chunkable]:
     for i in range(0, len(items), size):
         yield items[i : i + size]
 

@@ -12,7 +12,8 @@ from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard, PassphraseSource
 from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
-from apps.common import cache, storage
+from apps.common import cache
+from apps.common.storage import device as storage_device
 
 if __debug__:
     from apps.debug import input_signal
@@ -21,14 +22,14 @@ _MAX_PASSPHRASE_LEN = const(50)
 
 
 async def protect_by_passphrase(ctx: wire.Context) -> str:
-    if storage.device.has_passphrase():
+    if storage_device.has_passphrase():
         return await request_passphrase(ctx)
     else:
         return ""
 
 
 async def request_passphrase(ctx: wire.Context) -> str:
-    source = storage.device.get_passphrase_source()
+    source = storage_device.get_passphrase_source()
     if source == PassphraseSourceType.ASK:
         source = await request_passphrase_source(ctx)
     passphrase = await request_passphrase_ack(
@@ -47,7 +48,9 @@ async def request_passphrase_source(ctx: wire.Context) -> int:
     text.normal("Where do you want to", "enter your passphrase?")
     source = PassphraseSource(text)
 
-    return await ctx.wait(source)
+    response = await ctx.wait(source)
+    assert isinstance(response, int)
+    return response
 
 
 async def request_passphrase_ack(ctx: wire.Context, on_device: bool) -> str:
@@ -56,8 +59,8 @@ async def request_passphrase_ack(ctx: wire.Context, on_device: bool) -> str:
         text.normal("Please type your", "passphrase on the", "connected host.")
         await Popup(text)
 
-    req = PassphraseRequest(on_device=on_device)
-    ack = await ctx.call(req, PassphraseAck)
+    passphrase_request = PassphraseRequest(on_device=on_device)
+    ack = await ctx.call(passphrase_request, PassphraseAck)
 
     if on_device:
         if ack.passphrase is not None:
@@ -75,8 +78,10 @@ async def request_passphrase_ack(ctx: wire.Context, on_device: bool) -> str:
             raise wire.ProcessError("Passphrase not provided")
         passphrase = ack.passphrase
 
+    assert isinstance(passphrase, str)
+
     state = cache.get_state(prev_state=ack.state, passphrase=passphrase)
-    req = PassphraseStateRequest(state=state)
-    ack = await ctx.call(req, PassphraseStateAck)
+    state_request = PassphraseStateRequest(state=state)
+    await ctx.call(state_request, PassphraseStateAck)
 
     return passphrase

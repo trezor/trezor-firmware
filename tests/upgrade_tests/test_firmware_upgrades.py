@@ -14,14 +14,13 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import os
-
 import pytest
 
 from trezorlib import MINIMUM_FIRMWARE_VERSION, btc, debuglink, device
 from trezorlib.tools import H_
 
 from ..emulators import ALL_TAGS, EmulatorWrapper
+from . import SELECTED_GENS
 
 MINIMUM_FIRMWARE_VERSION["1"] = (1, 0, 0)
 MINIMUM_FIRMWARE_VERSION["T"] = (2, 0, 0)
@@ -41,11 +40,8 @@ def for_all(*args, minimum_version=(1, 0, 0)):
     if not args:
         args = ("core", "legacy")
 
-    specified_gens = os.environ.get("TREZOR_UPGRADE_TEST")
-    if specified_gens is not None:
-        enabled_gens = specified_gens.split(",")
-    else:
-        enabled_gens = args
+    # If any gens were selected, use them. If none, select all.
+    enabled_gens = SELECTED_GENS or args
 
     all_params = []
     for gen in args:

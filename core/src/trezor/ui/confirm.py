@@ -8,7 +8,7 @@ if __debug__:
     from apps.debug import swipe_signal
 
 if False:
-    from typing import Any, Optional, Tuple
+    from typing import Any, Optional, List, Tuple
     from trezor.ui.button import ButtonContent, ButtonStyleType
     from trezor.ui.loader import LoaderStyleType
 
@@ -73,6 +73,11 @@ class Confirm(ui.Layout):
 
     def on_cancel(self) -> None:
         raise ui.Result(CANCELLED)
+
+    if __debug__:
+
+        def read_content(self) -> List[str]:
+            return self.content.read_content()
 
 
 class Pageable:
@@ -178,7 +183,7 @@ class InfoConfirm(ui.Layout):
         self.confirm.on_click = self.on_confirm  # type: ignore
 
         self.info = Button(ui.grid(13), info, info_style)
-        self.info.on_click = self.on_info
+        self.info.on_click = self.on_info  # type: ignore
 
         self.cancel = Button(ui.grid(12), cancel, cancel_style)
         self.cancel.on_click = self.on_cancel  # type: ignore
@@ -200,6 +205,11 @@ class InfoConfirm(ui.Layout):
 
     def on_info(self) -> None:
         raise ui.Result(INFO)
+
+    if __debug__:
+
+        def read_content(self) -> List[str]:
+            return self.content.read_content()
 
 
 class HoldToConfirm(ui.Layout):
@@ -250,3 +260,8 @@ class HoldToConfirm(ui.Layout):
 
     def on_confirm(self) -> None:
         raise ui.Result(CONFIRMED)
+
+    if __debug__:
+
+        def read_content(self) -> List[str]:
+            return self.content.read_content()

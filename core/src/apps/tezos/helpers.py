@@ -12,25 +12,50 @@ TEZOS_PUBLICKEY_PREFIX = "edpk"
 TEZOS_SIGNATURE_PREFIX = "edsig"
 TEZOS_PREFIX_BYTES = {
     # addresses
-    "tz1": [6, 161, 159],
-    "tz2": [6, 161, 161],
-    "tz3": [6, 161, 164],
-    "KT1": [2, 90, 121],
+    "tz1": b"\x06\xa1\x9f",  # 06a19f
+    "tz2": b"\x06\xa1\xa1",  # 06a1a1
+    "tz3": b"\x06\xa1\xa4",  # 06a1a4
+    "KT1": b"\x02Zy",  # 025a79
     # public keys
-    "edpk": [13, 15, 37, 217],
+    "edpk": b"\r\x0f%\xd9",  # 0d0f25d9
     # signatures
-    "edsig": [9, 245, 205, 134, 18],
+    "edsig": b"\t\xf5\xcd\x86\x12",  # 09f5cd8612
     # operation hash
-    "o": [5, 116],
+    "o": b"\x05t",  # 0574
     # protocol hash
-    "P": [2, 170],
+    "P": b"\x02\xaa",  # 02aa
 }
+
+MICHELSON_INSTRUCTION_BYTES = {
+    "DROP": b"\x03 ",  # 0320
+    "NIL": b"\x05=",  # 053d
+    "operation": b"\x03m",  # 036d
+    "NONE": b"\x05>",  # 053e
+    "key_hash": b"\x03]",  # 035d
+    "SET_DELEGATE": b"\x03N",  # 034e
+    "CONS": b"\x03\x1b",  # 031b
+    "IMPLICIT_ACCOUNT": b"\x03\x1e",  # 031e
+    "PUSH": b"\x07C",  # 0743
+    "mutez": b"\x03j",  # 036a
+    "UNIT": b"\x03O",  # 034f
+    "TRANSFER_TOKENS": b"\x03M",  # 034d
+    "SOME": b"\x03F",  # 0346
+    "address": b"\x03n",  # 036e
+    "CONTRACT": b"\x05U",  # 0555
+    "unit": b"\x03l",  # 036c
+    # ASSERT_SOME unfolded as { IF_NONE { { UNIT ; FAILWITH } } {} }
+    # 0200000015072f02000000090200000004034f03270200000000
+    "ASSERT_SOME": b"\x02\x00\x00\x00\x15\x07/\x02\x00\x00\x00\t\x02\x00\x00\x00\x04\x03O\x03'\x02\x00\x00\x00\x00",
+}
+
+DO_ENTRYPOINT_TAG = const(2)
+MICHELSON_SEQUENCE_TAG = const(2)
 
 
 def base58_encode_check(payload, prefix=None):
     result = payload
     if prefix is not None:
-        result = bytes(TEZOS_PREFIX_BYTES[prefix]) + payload
+        result = TEZOS_PREFIX_BYTES[prefix] + payload
     return base58.encode_check(result)
 
 

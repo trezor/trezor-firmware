@@ -1,6 +1,6 @@
 from trezor.crypto import hashlib, hmac, random
 
-from apps.common import storage
+from apps.common.storage.device import get_device_id
 
 if False:
     from typing import Optional
@@ -28,7 +28,7 @@ def get_state(prev_state: bytes = None, passphrase: str = None) -> Optional[byte
 
 def _compute_state(salt: bytes, passphrase: str) -> bytes:
     # state = HMAC(passphrase, salt || device_id)
-    message = salt + storage.device.get_device_id().encode()
+    message = salt + get_device_id().encode()
     state = hmac.new(passphrase.encode(), message, hashlib.sha256).digest()
     return salt + state
 

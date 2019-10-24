@@ -134,7 +134,7 @@ class Text(ui.Component):
         self.icon_color = icon_color
         self.max_lines = max_lines
         self.new_lines = new_lines
-        self.content = []  # type: List[Union[str, int]]
+        self.content = []  # type: List[TextContent]
         self.repaint = True
 
     def normal(self, *content: TextContent) -> None:
@@ -170,6 +170,12 @@ class Text(ui.Component):
             )
             render_text(self.content, self.new_lines, self.max_lines)
             self.repaint = False
+
+    if __debug__:
+
+        def read_content(self) -> List[str]:
+            lines = [w for w in self.content if isinstance(w, str)]
+            return [self.header_text] + lines[: self.max_lines]
 
 
 LABEL_LEFT = const(0)
@@ -208,6 +214,11 @@ class Label(ui.Component):
                     tx, ty, self.content, self.style, ui.FG, ui.BG, aw
                 )
             self.repaint = False
+
+    if __debug__:
+
+        def read_content(self) -> List[str]:
+            return [self.content]
 
 
 def text_center_trim_left(

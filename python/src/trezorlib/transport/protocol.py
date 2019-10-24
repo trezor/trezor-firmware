@@ -93,9 +93,9 @@ class Protocol:
         self.session_counter += 1
 
     def end_session(self) -> None:
-        if self.session_counter == 1:
+        self.session_counter = max(self.session_counter - 1, 0)
+        if self.session_counter == 0:
             self.handle.close()
-        self.session_counter -= 1
 
     def read(self) -> protobuf.MessageType:
         raise NotImplementedError

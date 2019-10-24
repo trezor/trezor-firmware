@@ -41,6 +41,7 @@ from .CosiSignature import CosiSignature
 from .DebugLinkDecision import DebugLinkDecision
 from .DebugLinkFlashErase import DebugLinkFlashErase
 from .DebugLinkGetState import DebugLinkGetState
+from .DebugLinkLayout import DebugLinkLayout
 from .DebugLinkLog import DebugLinkLog
 from .DebugLinkMemory import DebugLinkMemory
 from .DebugLinkMemoryRead import DebugLinkMemoryRead
@@ -232,7 +233,9 @@ from .TezosContractID import TezosContractID
 from .TezosDelegationOp import TezosDelegationOp
 from .TezosGetAddress import TezosGetAddress
 from .TezosGetPublicKey import TezosGetPublicKey
+from .TezosManagerTransfer import TezosManagerTransfer
 from .TezosOriginationOp import TezosOriginationOp
+from .TezosParametersManager import TezosParametersManager
 from .TezosProposalOp import TezosProposalOp
 from .TezosPublicKey import TezosPublicKey
 from .TezosRevealOp import TezosRevealOp

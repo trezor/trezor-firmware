@@ -123,6 +123,7 @@ class TestMsgGetaddress:
             == "2dpWh6jbhAowNsQ5agtFzi7j6nKscj6UnEr"
         )
 
+    @pytest.mark.multisig
     def test_multisig(self, client):
         xpubs = []
         for n in range(1, 4):
@@ -151,6 +152,7 @@ class TestMsgGetaddress:
                 == "36gP3KVx1ooStZ9quZDXbAF3GCr42b2zzd"
             )
 
+    @pytest.mark.multisig
     def test_multisig_missing(self, client):
         xpubs = []
         for n in range(1, 4):
@@ -178,6 +180,7 @@ class TestMsgGetaddress:
                 )
 
     @pytest.mark.altcoin
+    @pytest.mark.multisig
     def test_bch_multisig(self, client):
         xpubs = []
         for n in range(1, 4):

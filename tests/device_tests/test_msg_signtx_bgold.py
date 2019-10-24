@@ -216,6 +216,7 @@ class TestMsgSigntxBitcoinGold:
             with pytest.raises(CallException):
                 btc.sign_tx(client, "Bgold", [inp1], [out1, out2], prev_txes=TX_API)
 
+    @pytest.mark.multisig
     def test_send_btg_multisig_change(self, client):
         nodes = [
             btc.get_public_node(client, parse_path("48'/156'/%d'" % i)).node
@@ -478,6 +479,7 @@ class TestMsgSigntxBitcoinGold:
             == "0100000000010185c9dd4ae1071affd77d90b9d03c1b5fdd7c62cf30a9bb8230ad766cf06b52250000000017160014b5355d001e720d8f4513da00ff2bba4dcf9d39fcffffffff02e0aebb00000000001976a914ea5f904d195079a350b534db4446433b3cec222e88ac3df39f060000000017a9140cd03822b799a452c106d1b3771844a067b17f118702483045022100d79b33384c686d8dd40ad5f84f46691d30994992c1cb42e934c2a625d86cb2f902206859805a9a98ba140b71a9d4b9a6b8df94a9424f9c40f3bd804149fd6e278d63412102ecea08b559fc5abd009acf77cfae13fa8a3b1933e3e031956c65c12cec8ca3e300000000"
         )
 
+    @pytest.mark.multisig
     def test_send_multisig_1(self, client):
         nodes = [
             btc.get_public_node(client, parse_path("49'/156'/%d'" % i)).node

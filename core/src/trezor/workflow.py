@@ -1,7 +1,7 @@
 from trezor import log, loop
 
 if False:
-    from typing import Callable, Optional, Set
+    from typing import Any, Callable, Optional, Set
 
 if __debug__:
     # Used in `on_close` bellow for memory statistics.
@@ -75,7 +75,7 @@ def close_default() -> None:
         loop.close(default_task)
 
 
-def _finalize_default(task, value) -> None:
+def _finalize_default(task: loop.Task, value: Any) -> None:
     global default_task
 
     if default_task is task:

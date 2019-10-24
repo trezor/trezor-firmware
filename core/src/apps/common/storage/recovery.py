@@ -29,7 +29,7 @@ if False:
     from typing import List, Optional
 
 
-def _require_progress():
+def _require_progress() -> None:
     if not is_in_progress():
         raise RuntimeError
 
@@ -77,7 +77,7 @@ def set_slip39_group_count(group_count: int) -> None:
     common.set_uint8(_NAMESPACE, _SLIP39_GROUP_COUNT, group_count)
 
 
-def get_slip39_group_count() -> Optional[int]:
+def get_slip39_group_count() -> int:
     _require_progress()
     return (
         common.get_uint8(_NAMESPACE, _SLIP39_GROUP_COUNT) or _DEFAULT_SLIP39_GROUP_COUNT

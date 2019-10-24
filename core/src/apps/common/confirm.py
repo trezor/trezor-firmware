@@ -6,27 +6,33 @@ from trezor.ui.confirm import CONFIRMED, INFO, Confirm, HoldToConfirm, InfoConfi
 
 if __debug__:
     from apps.debug import confirm_signal
+    from trezor.ui.scroll import Paginated
 
 if False:
-    from typing import Any, Callable
+    from typing import Any, Callable, Optional
     from trezor import ui
     from trezor.ui.confirm import ButtonContent, ButtonStyleType
     from trezor.ui.loader import LoaderStyleType
+    from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
 
 
 async def confirm(
-    ctx: wire.Context,
+    ctx: wire.GenericContext,
     content: ui.Component,
-    code: int = ButtonRequestType.Other,
-    confirm: ButtonContent = Confirm.DEFAULT_CONFIRM,
+    code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    confirm: Optional[ButtonContent] = Confirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = Confirm.DEFAULT_CONFIRM_STYLE,
-    cancel: ButtonContent = Confirm.DEFAULT_CANCEL,
+    cancel: Optional[ButtonContent] = Confirm.DEFAULT_CANCEL,
     cancel_style: ButtonStyleType = Confirm.DEFAULT_CANCEL_STYLE,
     major_confirm: bool = False,
 ) -> bool:
     await ctx.call(ButtonRequest(code=code), ButtonAck)
 
     if content.__class__.__name__ == "Paginated":
+        # The following works because asserts are omitted in non-debug builds.
+        # IOW if the assert runs, that means __debug__ is True and Paginated is imported
+        assert isinstance(content, Paginated)
+
         content.pages[-1] = Confirm(
             content.pages[-1],
             confirm,
@@ -35,7 +41,7 @@ async def confirm(
             cancel_style,
             major_confirm,
         )
-        dialog = content
+        dialog = content  # type: ui.Layout
     else:
         dialog = Confirm(
             content, confirm, confirm_style, cancel, cancel_style, major_confirm
@@ -48,10 +54,10 @@ async def confirm(
 
 
 async def info_confirm(
-    ctx: wire.Context,
+    ctx: wire.GenericContext,
     content: ui.Component,
     info_func: Callable,
-    code: int = ButtonRequestType.Other,
+    code: EnumTypeButtonRequestType = ButtonRequestType.Other,
     confirm: ButtonContent = InfoConfirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = InfoConfirm.DEFAULT_CONFIRM_STYLE,
     cancel: ButtonContent = InfoConfirm.DEFAULT_CANCEL,
@@ -80,19 +86,23 @@ async def info_confirm(
 
 async def hold_to_confirm(
     ctx: wire.Context,
-    content: ui.Component,
-    code: int = ButtonRequestType.Other,
-    confirm: ButtonContent = HoldToConfirm.DEFAULT_CONFIRM,
+    content: ui.Layout,
+    code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    confirm: str = HoldToConfirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = HoldToConfirm.DEFAULT_CONFIRM_STYLE,
     loader_style: LoaderStyleType = HoldToConfirm.DEFAULT_LOADER_STYLE,
 ) -> bool:
     await ctx.call(ButtonRequest(code=code), ButtonAck)
 
     if content.__class__.__name__ == "Paginated":
+        # The following works because asserts are omitted in non-debug builds.
+        # IOW if the assert runs, that means __debug__ is True and Paginated is imported
+        assert isinstance(content, Paginated)
+
         content.pages[-1] = HoldToConfirm(
             content.pages[-1], confirm, confirm_style, loader_style
         )
-        dialog = content
+        dialog = content  # type: ui.Layout
     else:
         dialog = HoldToConfirm(content, confirm, confirm_style, loader_style)
 
