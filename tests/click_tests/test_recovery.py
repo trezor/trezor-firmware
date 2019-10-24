@@ -49,8 +49,8 @@ def test_recovery(device_handler):
     assert layout.text == "WordSelector"
     # click "20" at 2, 2
     coords = buttons.grid34(2, 2)
-    lines = debug.click(coords, wait=True)
-    layout = " ".join(lines)
+    layout = debug.click(coords, wait=True)
+    assert "Enter any share" in layout.text
 
     expected_text = "Enter any share (20 words)"
     remaining = len(MNEMONIC_SLIP39_BASIC_20_3of6)
