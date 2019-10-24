@@ -1,5 +1,10 @@
 Version 2.x.x [not yet released]
 * SD card protection
+* Remove unused ButtonRequest.data field
+
+Version 2.1.8 [Nov 2019]
+* Support Tezos 005-BABYLON hardfork
+* Show XPUBs in GetAddress for multisig
 
 Version 2.1.7 [Oct 2019]
 * Fix low memory issue
