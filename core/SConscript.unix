@@ -128,13 +128,9 @@ if EVERYTHING:
 # libaxolotl-curve25519
 if EVERYTHING:
     CPPPATH_MOD += [
-        'vendor/axolotl-curve25519',
-        'vendor/axolotl-curve25519/curve',
         'vendor/axolotl-curve25519/curve/ed25519',
-        'vendor/axolotl-curve25519/curve/additions',
-        'vendor/axolotl-curve25519/curve/additions/generalized',
+        'vendor/axolotl-curve25519/curve/ed25519/additions',
         'vendor/axolotl-curve25519/curve/ed25519/nacl_includes',
-        'vendor/axolotl-curve25519/curve/ed25519/nacl_sha512',
     ]
     SOURCE_MOD_AXOLOTL_CURVE25519 += [
         'vendor/axolotl-curve25519/curve/ed25519/fe_0.c',
@@ -180,8 +176,8 @@ if EVERYTHING:
         'vendor/axolotl-curve25519/curve/ed25519/additions/zeroize.c',
         'vendor/axolotl-curve25519/curve/ed25519/additions/open_modified.c',
         'vendor/axolotl-curve25519/curve/ed25519/additions/sign_modified.c',
-        'vendor/axolotl-curve25519/curve/ed25519/additions/xeddsa.c',
-        'vendor/axolotl-curve25519/curve/ed25519/additions/curve_sigs.c'
+        'vendor/trezor-crypto/ed25519-donna/xed25519_sign.c',
+        'vendor/trezor-crypto/ed25519-donna/curve25519_sign.c'
     ]
 
 
