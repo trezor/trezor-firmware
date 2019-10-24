@@ -7,7 +7,7 @@ verify_ssl = true
 # all
 trezor = {editable = true,path = "./python"}
 scons = "*"
-protobuf = "==3.4.0"
+protobuf = "==3.6.1"
 pyblake2 = "*"
 
 ## test tools
@@ -15,11 +15,13 @@ pytest = "*"
 mock = "*"
 coverage = "==4.5.3"  # coverage 5+ uses binary format
 flaky = ">=3.6.1"  # https://github.com/box/flaky/issues/156
+pytest-ordering = "*"
 pytest-random-order = "*"
 tox = "*"
 
 ## test requirements
 shamir-mnemonic = "*"
+fido2 = "*"
 
 ## typing
 mypy = "*"
@@ -45,7 +47,7 @@ termcolor = ">=0.1.2"
 Pillow = ">=5.2.0"
 
 # crypto
-ecdsa = "*"
+ecdsa = ">=0.13.3"
 curve25519-donna = "*"
 pyasn1 = "*"
 
@@ -55,7 +57,8 @@ typing = "*"
 
 # storage
 cryptography = "*"
-hypothesis = "*"
+hypothesis = "==4.38.1"  # let's use this version because of the nixos pipenv/pip issue
+attrs = "==18.2.0"  # let's use this version because of the nixos pipenv/pip issue
 
 [dev-packages]
 scan-build = "*"
