@@ -1,3 +1,4 @@
+import storage.recovery
 from trezor import ui, wire
 from trezor.crypto.slip39 import MAX_SHARE_COUNT
 from trezor.messages import BackupType, ButtonRequestType
@@ -13,7 +14,6 @@ from .recover import RecoveryAborted
 
 from apps.common.confirm import confirm, info_confirm, require_confirm
 from apps.common.layout import show_success, show_warning
-from apps.common.storage import recovery as storage_recovery
 from apps.management import backup_types
 from apps.management.recovery_device import recover
 
@@ -127,7 +127,7 @@ async def check_word_validity(
                 if len(group) > 0:
                     if current_word == group[0].split(" ")[current_index]:
                         remaining_shares = (
-                            storage_recovery.fetch_slip39_remaining_shares()
+                            storage.recovery.fetch_slip39_remaining_shares()
                         )
                         # if backup_type is not None, some share was already entered -> remaining needs to be set
                         assert remaining_shares is not None
@@ -280,7 +280,7 @@ class RecoveryHomescreen(ui.Component):
     def __init__(self, text: str, subtext: str = None):
         self.text = text
         self.subtext = subtext
-        self.dry_run = storage_recovery.is_dry_run()
+        self.dry_run = storage.recovery.is_dry_run()
         self.repaint = True
 
     def on_render(self) -> None:
@@ -345,6 +345,6 @@ async def homescreen_dialog(
             # go forward in the recovery process
             break
         # user has chosen to abort, confirm the choice
-        dry_run = storage_recovery.is_dry_run()
+        dry_run = storage.recovery.is_dry_run()
         if await confirm_abort(ctx, dry_run):
             raise RecoveryAborted

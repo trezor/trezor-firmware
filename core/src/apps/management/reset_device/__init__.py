@@ -1,3 +1,5 @@
+import storage
+import storage.device
 from trezor import config, wire
 from trezor.crypto import bip39, hashlib, random, slip39
 from trezor.messages import BackupType
@@ -6,8 +8,6 @@ from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
 
-from apps.common import storage
-from apps.common.storage import device as storage_device
 from apps.management import backup_types
 from apps.management.change_pin import request_pin_confirm
 from apps.management.reset_device import layout
@@ -53,8 +53,8 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
         secret = bip39.from_data(secret).encode()
     elif msg.backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced):
         # generate and set SLIP39 parameters
-        storage_device.set_slip39_identifier(slip39.generate_random_identifier())
-        storage_device.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
+        storage.device.set_slip39_identifier(slip39.generate_random_identifier())
+        storage.device.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
     else:
         # Unknown backup type.
         raise RuntimeError
@@ -72,10 +72,10 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
         await backup_seed(ctx, msg.backup_type, secret)
 
     # write settings and master secret into storage
-    storage_device.load_settings(
+    storage.device.load_settings(
         label=msg.label, use_passphrase=msg.passphrase_protection
     )
-    storage_device.store_mnemonic_secret(
+    storage.device.store_mnemonic_secret(
         secret,  # for SLIP-39, this is the EMS
         msg.backup_type,
         needs_backup=not perform_backup,
@@ -103,10 +103,10 @@ async def backup_slip39_basic(
     # generate the mnemonics
     mnemonics = slip39.generate_mnemonics_from_data(
         encrypted_master_secret,
-        storage_device.get_slip39_identifier(),
+        storage.device.get_slip39_identifier(),
         1,  # Single Group threshold
         [(threshold, shares_count)],  # Single Group threshold/count
-        storage_device.get_slip39_iteration_exponent(),
+        storage.device.get_slip39_iteration_exponent(),
     )[0]
 
     # show and confirm individual shares
@@ -138,10 +138,10 @@ async def backup_slip39_advanced(
     # generate the mnemonics
     mnemonics = slip39.generate_mnemonics_from_data(
         encrypted_master_secret=encrypted_master_secret,
-        identifier=storage_device.get_slip39_identifier(),
+        identifier=storage.device.get_slip39_identifier(),
         group_threshold=group_threshold,
         groups=groups,
-        iteration_exponent=storage_device.get_slip39_iteration_exponent(),
+        iteration_exponent=storage.device.get_slip39_iteration_exponent(),
     )
 
     # show and confirm individual shares

@@ -1,3 +1,4 @@
+import storage.webauthn
 from trezor import wire
 from trezor.messages.Success import Success
 from trezor.messages.WebAuthnRemoveResidentCredential import (
@@ -5,12 +6,9 @@ from trezor.messages.WebAuthnRemoveResidentCredential import (
 )
 
 from apps.common.confirm import require_confirm
-from apps.common.storage.webauthn import (
-    erase_resident_credential,
-    get_resident_credential,
-)
 from apps.webauthn.confirm import ConfirmContent, ConfirmInfo
 from apps.webauthn.credential import Fido2Credential
+from apps.webauthn.resident_credentials import get_resident_credential
 
 if False:
     from typing import Optional
@@ -44,5 +42,6 @@ async def remove_resident_credential(
     content = ConfirmContent(ConfirmRemoveCredential(cred))
     await require_confirm(ctx, content)
 
-    erase_resident_credential(msg.index)
+    assert cred.index is not None
+    storage.webauthn.delete_resident_credential(cred.index)
     return Success(message="Credential removed")

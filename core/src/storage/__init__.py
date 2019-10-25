@@ -1,7 +1,5 @@
+from storage import cache, common, device
 from trezor import config
-
-from apps.common import cache
-from apps.common.storage import common, device
 
 
 def set_current_version() -> None:

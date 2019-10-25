@@ -1,5 +1,7 @@
 from micropython import const
 
+import storage.device
+from storage import cache
 from trezor import ui, wire
 from trezor.messages import ButtonRequestType, PassphraseSourceType
 from trezor.messages.ButtonAck import ButtonAck
@@ -12,9 +14,6 @@ from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard, PassphraseSource
 from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
-from apps.common import cache
-from apps.common.storage import device as storage_device
-
 if __debug__:
     from apps.debug import input_signal
 
@@ -22,14 +21,14 @@ _MAX_PASSPHRASE_LEN = const(50)
 
 
 async def protect_by_passphrase(ctx: wire.Context) -> str:
-    if storage_device.has_passphrase():
+    if storage.device.has_passphrase():
         return await request_passphrase(ctx)
     else:
         return ""
 
 
 async def request_passphrase(ctx: wire.Context) -> str:
-    source = storage_device.get_passphrase_source()
+    source = storage.device.get_passphrase_source()
     if source == PassphraseSourceType.ASK:
         source = await request_passphrase_source(ctx)
     passphrase = await request_passphrase_ack(

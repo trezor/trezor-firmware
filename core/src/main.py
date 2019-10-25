@@ -76,8 +76,8 @@ def _boot_default() -> None:
     workflow.start_default(homescreen)
 
 
+import storage.recovery
 from trezor import loop, wire, workflow
-from apps.common.storage import recovery
 
 while True:
     # initialize the wire codec
@@ -86,7 +86,7 @@ while True:
         wire.setup(usb.iface_debug)
 
     # boot either in recovery or default mode
-    if recovery.is_in_progress():
+    if storage.recovery.is_in_progress():
         _boot_recovery()
     else:
         _boot_default()

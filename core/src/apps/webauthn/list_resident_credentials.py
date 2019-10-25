@@ -7,7 +7,7 @@ from trezor.messages.WebAuthnListResidentCredentials import (
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
-from apps.common.storage.webauthn import get_resident_credentials
+from apps.webauthn import resident_credentials
 
 
 async def list_resident_credentials(
@@ -34,6 +34,6 @@ async def list_resident_credentials(
             hmac_secret=cred.hmac_secret,
             use_sign_count=cred.use_sign_count,
         )
-        for cred in get_resident_credentials()
+        for cred in resident_credentials.find_all()
     ]
     return WebAuthnCredentials(creds)
