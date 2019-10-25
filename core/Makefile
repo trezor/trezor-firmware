@@ -76,6 +76,9 @@ test_emu_u2f: ## run selected u2f device tests from u2f-tests-hid
 test_emu_fido2: ## run fido2 device tests
 	cd tests ; ./run_tests_device_emu_fido2.sh $(TESTOPTS)
 
+test_emu_click: ## run click tests
+	cd tests ; ./run_tests_click_emu.sh $(TESTOPTS)
+
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 
