@@ -1,4 +1,5 @@
 from trezor.crypto import base58
+from trezor.crypto.curve import curve25519
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.messages.VsysPublicKey import VsysPublicKey
@@ -17,10 +18,11 @@ async def get_public_key(ctx, msg, keychain):
     )
 
     node = keychain.derive(msg.address_n, CURVE)
-    pk = node.public_key()
+    sk = helpers.modify_private_key(node.private_key())
+    pk = curve25519.publickey(sk)
     pk_base58 = base58.encode(pk)
     chain_id = helpers.get_chain_id(msg.address_n)
-    address = helpers.get_address_from_public_key(pk, chain_id)
+    address = helpers.get_address_from_public_key(pk_base58, chain_id)
 
     if msg.show_display:
         await _show_vsys_pubkey(ctx, pk_base58)

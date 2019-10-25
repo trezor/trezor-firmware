@@ -46,6 +46,13 @@ def get_address_from_public_key(public_key: str, chain_id: str):
     return address
 
 
+def modify_private_key(private_key: bytes):
+    sk = list(private_key)
+    sk[0] &= 248
+    sk[31] = (sk[31] & 127) | 64
+    return bytes(sk)
+
+
 def get_public_key_from_private_key(private_key: str):
     private_key_bytes = base58.decode(private_key)
     public_key_bytes = curve25519.publickey(private_key_bytes)
@@ -59,22 +66,16 @@ def get_chain_id(path: list) -> str:
 
 def validate_full_path(path: list) -> bool:
     """
-    Validates derivation path to equal 44'/360'/a'/0/0,
+    Validates derivation path to equal 44'/360'/a',
     where `a` is an account index from 0 to 1 000 000.
-    Similar to Ethereum this should be 44'/360'/a', but for
-    compatibility with other HW vendors we use 44'/360'/a'/0/0.
     """
-    if len(path) != 5:
+    if len(path) != 3:
         return False
     if path[0] != 44 | HARDENED:
         return False
     if path[1] != 360 | HARDENED and path[1] != 1 | HARDENED :
         return False
     if path[2] < HARDENED or path[2] > 1000000 | HARDENED:
-        return False
-    if path[3] != 0:
-        return False
-    if path[4] != 0:
         return False
     return True
 

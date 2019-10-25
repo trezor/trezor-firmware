@@ -30,30 +30,35 @@ class TestVsysAddress(unittest.TestCase):
         self.assertEqual(public_key, expect_public_key)
 
     def test_paths(self):
-        # 44'/360'/a'/0/0 (mainnet) or 44'/1'/a'/0/0 (testnet) is correct
+        # 44'/360'/a' (mainnet) or 44'/1'/a' (testnet) is correct
         incorrect_paths = [
             [44 | HARDENED],
             [44 | HARDENED, 360 | HARDENED],
             [44 | HARDENED, 360 | HARDENED, 0],
-            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 0],
             [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED],
             [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 1, 0],
-            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 0, 5],
-            [44 | HARDENED, 360 | HARDENED, 9999 | HARDENED],
-            [44 | HARDENED, 360 | HARDENED, 9999000 | HARDENED, 0, 0],
+            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 0, 0],
+            [44 | HARDENED, 360 | HARDENED, 1 | HARDENED, 1 | HARDENED],
+            [44 | HARDENED, 360 | HARDENED, 9999000 | HARDENED],
             [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 0],
             [1 | HARDENED, 1 | HARDENED, 1 | HARDENED],
         ]
         correct_paths_mainnet = [
-            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 0, 0],
-            [44 | HARDENED, 360 | HARDENED, 3 | HARDENED, 0, 0],
-            [44 | HARDENED, 360 | HARDENED, 9 | HARDENED, 0, 0],
+            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 360 | HARDENED, 3 | HARDENED],
+            [44 | HARDENED, 360 | HARDENED, 9 | HARDENED],
+            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 3 | HARDENED],
+            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 9 | HARDENED],
         ]
-
         correct_paths_testnet = [
-            [44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 0, 0],
-            [44 | HARDENED, 1 | HARDENED, 3 | HARDENED, 0, 0],
-            [44 | HARDENED, 1 | HARDENED, 9 | HARDENED, 0, 0],
+            [44 | HARDENED, 1 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 1 | HARDENED, 3 | HARDENED],
+            [44 | HARDENED, 1 | HARDENED, 9 | HARDENED],
+            [44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 3 | HARDENED],
+            [44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 9 | HARDENED],
         ]
 
         for path in incorrect_paths:
