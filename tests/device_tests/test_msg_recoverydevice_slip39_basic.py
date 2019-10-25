@@ -18,7 +18,11 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 
-from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, recovery_enter_shares
+from ..common import (
+    MNEMONIC_SLIP39_BASIC_20_3of6,
+    MNEMONIC_SLIP39_BASIC_20_3of6_SECRET,
+    recovery_enter_shares,
+)
 
 pytestmark = pytest.mark.skip_t1
 
@@ -33,7 +37,7 @@ MNEMONIC_SLIP39_BASIC_33_2of5 = [
 ]
 
 VECTORS = (
-    (MNEMONIC_SLIP39_BASIC_20_3of6, "491b795b80fc21ccdf466c0fbc98c8fc"),
+    (MNEMONIC_SLIP39_BASIC_20_3of6, MNEMONIC_SLIP39_BASIC_20_3of6_SECRET),
     (
         MNEMONIC_SLIP39_BASIC_33_2of5,
         "b770e0da1363247652de97a39bdbf2463be087848d709ecbf28e84508e31202a",
