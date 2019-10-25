@@ -121,6 +121,7 @@ if not utils.BITCOIN_ONLY:
     StellarAccountMergeOp = 218  # type: Literal[218]
     StellarManageDataOp = 220  # type: Literal[220]
     StellarBumpSequenceOp = 221  # type: Literal[221]
+    StellarManageBuyOfferOp = 222  # type: Literal[222]
     StellarSignedTx = 230  # type: Literal[230]
     CardanoSignTx = 303  # type: Literal[303]
     CardanoTxRequest = 304  # type: Literal[304]

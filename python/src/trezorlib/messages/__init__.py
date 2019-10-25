@@ -221,6 +221,7 @@ from .StellarChangeTrustOp import StellarChangeTrustOp
 from .StellarCreateAccountOp import StellarCreateAccountOp
 from .StellarCreatePassiveOfferOp import StellarCreatePassiveOfferOp
 from .StellarGetAddress import StellarGetAddress
+from .StellarManageBuyOfferOp import StellarManageBuyOfferOp
 from .StellarManageDataOp import StellarManageDataOp
 from .StellarManageOfferOp import StellarManageOfferOp
 from .StellarPathPaymentOp import StellarPathPaymentOp
