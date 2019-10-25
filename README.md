@@ -4,7 +4,7 @@
 
 ## Repository Structure
 
-* **[`ci`](ci/)**: Gitlab CI configuration files
+* **[`ci`](ci/)**: [Gitlab CI](https://gitlab.com/satoshilabs/trezor/trezor-firmware) configuration files
 * **[`common/defs`](common/defs/)**: JSON coin definitions and support tables
 * **[`common/protob`](common/protob/)**: Common protobuf definitions for the Trezor protocol
 * **[`common/tools`](common/tools/)**: Tools for managing coin definitions and related data
@@ -54,4 +54,4 @@ S4 Low      | Functionality inconvenience or cosmetic issue
 
 ### CI
 
-The complete test suite is running on our internal GitLab CI. If you are an external contributor, we also have a [Travis instance](https://travis-ci.org/trezor/trezor-firmware) where a small subset of tests is running as well - mostly style and easy fast checks, which are quite common to fail for new contributors.
+The complete test suite is running on a public [GitLab CI](https://gitlab.com/satoshilabs/trezor/trezor-firmware). If you are an external contributor, we also have a [Travis instance](https://travis-ci.org/trezor/trezor-firmware) where a small subset of tests is running as well - mostly style and easy fast checks, which are quite common to fail for new contributors.
