@@ -21,7 +21,7 @@ from trezorlib import device
 from .. import buttons
 from ..device_handler import BackgroundDeviceHandler
 from ..emulators import EmulatorWrapper
-from . import core_only
+from ..upgrade_tests import core_only
 
 
 def enter_word(debug, word):
