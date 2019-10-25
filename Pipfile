@@ -13,7 +13,7 @@ pyblake2 = "*"
 ## test tools
 pytest = "*"
 mock = "*"
-coverage = "==4.5.3"  # coverage 5+ uses binary format
+coverage = "<5"  # coverage 5+ uses binary sqlite format
 flaky = ">=3.6.1"  # https://github.com/box/flaky/issues/156
 pytest-ordering = "*"
 pytest-random-order = "*"
@@ -37,11 +37,11 @@ autoflake = "*"
 
 # common
 demjson = "*"
-graphviz = "*"  # TODO this was '8' do we need that?
+graphviz = "*"
 
 ## cointool
 click = ">=6"
-"ed25519" = ">=1.4"
+ed25519 = ">=1.4"
 requests = ">=2.19"
 termcolor = ">=0.1.2"
 Pillow = ">=5.2.0"
