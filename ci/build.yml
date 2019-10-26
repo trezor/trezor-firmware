@@ -163,7 +163,6 @@ crypto build:
 
 # Legacy
 
-# TODO: add clang https://github.com/trezor/trezor-firmware/issues/44
 legacy fw regular build:
   stage: build
   <<: *only_changes_legacy

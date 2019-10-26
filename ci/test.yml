@@ -62,7 +62,7 @@ core unix btconly device test:
 core unix monero test:
   stage: test
   <<: *only_changes_core
-  retry: 2  # see #405
+  retry: 2  # see https://github.com/trezor/trezor-firmware/issues/405
   dependencies:
     - core unix frozen regular build
   script:
@@ -72,7 +72,7 @@ core unix monero test:
 core unix u2f test:
   stage: test
   <<: *only_changes_core
-  retry: 2  # see #596
+  retry: 2  # see https://github.com/trezor/trezor-firmware/issues/596
   dependencies:
     - core unix frozen regular build
   script:
