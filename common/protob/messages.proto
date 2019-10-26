@@ -250,4 +250,8 @@ enum MessageType {
     MessageType_WebAuthnCredentials = 801 [(wire_out) = true];
     MessageType_WebAuthnAddResidentCredential = 802 [(wire_in) = true];
     MessageType_WebAuthnRemoveResidentCredential = 803 [(wire_in) = true];
+
+    //NEM2
+    MessageType_NEM2GetPublicKey = 804 [(wire_in) = true];
+    MessageType_NEM2PublicKey = 805 [(wire_out) = true];
 }

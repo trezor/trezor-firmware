@@ -175,6 +175,8 @@ from .MoneroTransactionSourceEntry import MoneroTransactionSourceEntry
 from .MoneroTransferDetails import MoneroTransferDetails
 from .MoneroWatchKey import MoneroWatchKey
 from .MultisigRedeemScriptType import MultisigRedeemScriptType
+from .NEM2GetPublicKey import NEM2GetPublicKey
+from .NEM2PublicKey import NEM2PublicKey
 from .NEMAddress import NEMAddress
 from .NEMAggregateModification import NEMAggregateModification
 from .NEMCosignatoryModification import NEMCosignatoryModification

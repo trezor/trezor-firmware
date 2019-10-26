@@ -24,6 +24,7 @@ def _boot_apps() -> None:
         import apps.lisk
         import apps.monero
         import apps.nem
+        import apps.nem2
         import apps.stellar
         import apps.ripple
         import apps.cardano
@@ -40,10 +41,12 @@ def _boot_apps() -> None:
     apps.management.boot()
     apps.wallet.boot()
     if not utils.BITCOIN_ONLY:
+        print("MAIN PYTHON BOOTING")
         apps.ethereum.boot()
         apps.lisk.boot()
         apps.monero.boot()
         apps.nem.boot()
+        apps.nem2.boot()
         apps.stellar.boot()
         apps.ripple.boot()
         apps.cardano.boot()
