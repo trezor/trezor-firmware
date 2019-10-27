@@ -33,9 +33,9 @@ TYPE_MOSAIC_SUPPLY_CHANGE = 0x4002
 
 
 @expect(proto.NEM2PublicKey, field="public_key")
-def get_public_key(client, n, network, show_display=False):
+def get_public_key(client, n, show_display=False):
     return client.call(
-        proto.NEM2GetPublicKey(address_n=n, network=network, show_display=show_display)
+        proto.NEM2GetPublicKey(address_n=n, show_display=show_display)
     )
 
 
