@@ -22,5 +22,5 @@ class NEM2PublicKey(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('public_key', p.BytesType, 0),
+            1: ('public_key', p.BytesType, 0),  # required
         }

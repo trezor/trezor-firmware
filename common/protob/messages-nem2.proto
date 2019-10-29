@@ -36,7 +36,6 @@ message NEM2PublicKey {
 message NEM2SignTx {
     optional NEMTransactionCommon transaction = 1;    // Common part of transaction
     optional NEMTransactionCommon multisig = 2;       // Common part of inner transaction for multisig transactions
-
     optional NEMTransferTransaction transfer = 3;          // Transfer transaction part
     optional bool cosigning = 4;
 
@@ -64,11 +63,11 @@ message NEM2SignTx {
     }
 
     message VerifiableEntity {
-        optional fixed64 signature = 1;
+        optional uint64 signature = 1;
     }
 
     message EntityBody {
-        optional fixed32 signer_public_key = 1;
+        optional uint32 signer_public_key = 1;
         optional uint32 version = 2;    // defined as uint16 in catbuffer
         optional NEMEntityType type = 3;
     }
@@ -94,7 +93,7 @@ message NEM2SignTx {
     message NEMTransferTransaction {
         optional uint32 version = 1 [default=1];
         optional NEMEntityType entityType = 2 [default=TRANSFER];
-        optional fixed32 recipient_address = 3;
+        optional uint32 recipient_address = 3;
         optional uint32 message_size = 4;
         optional uint32 mosaics_count = 5;
         optional bytes message = 6;
