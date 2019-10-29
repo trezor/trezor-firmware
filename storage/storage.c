@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <string.h>
 
 #include "chacha20poly1305/rfc7539.h"
@@ -185,19 +186,22 @@ static secbool secequal(const void *ptr1, const void *ptr2, size_t n) {
   return diff ? secfalse : sectrue;
 }
 
-static secbool secequal32(const uint32_t *ptr1, const uint32_t *ptr2,
-                          size_t n) {
+static secbool secequal32(const void *ptr1, const void *ptr2, size_t n) {
+  assert(n % sizeof(uint32_t) == 0);
+  size_t wn = n / sizeof(uint32_t);
+  const uint32_t *p1 = (const uint32_t *)ptr1;
+  const uint32_t *p2 = (const uint32_t *)ptr2;
   uint32_t diff = 0;
   size_t i = 0;
-  for (i = 0; i < n; ++i) {
+  for (i = 0; i < wn; ++i) {
     uint32_t mask = random32();
-    diff |= (*ptr1 + mask - *ptr2) ^ mask;
-    ++ptr1;
-    ++ptr2;
+    diff |= (*p1 + mask - *p2) ^ mask;
+    ++p1;
+    ++p2;
   }
 
   // Check loop completion in case of a fault injection attack.
-  if (i != n) {
+  if (i != wn) {
     handle_fault("loop completion check");
   }
 
@@ -922,8 +926,7 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
   rfc7539_finish(&ctx, 0, KEYS_SIZE, tag);
   memzero(&ctx, sizeof(ctx));
   wait_random();
-  if (secequal32((const uint32_t *)tag, pvc, PVC_SIZE / sizeof(uint32_t)) !=
-      sectrue) {
+  if (secequal32(tag, pvc, PVC_SIZE) != sectrue) {
     memzero(keys, sizeof(keys));
     memzero(tag, sizeof(tag));
     return secfalse;
