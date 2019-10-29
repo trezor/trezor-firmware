@@ -70,6 +70,7 @@ def get_features() -> Features:
         ]
     f.sd_card_present = io.SDCard().present()
     f.sd_protection = storage.sd_salt.is_enabled()
+    f.wipe_code_protection = config.has_wipe_code()
     return f
 
 
