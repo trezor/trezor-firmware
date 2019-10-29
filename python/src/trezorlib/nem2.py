@@ -19,33 +19,81 @@ import json
 from . import messages as proto
 from .tools import CallException, expect
 
-TYPE_TRANSACTION_TRANSFER = 0x0101
-TYPE_IMPORTANCE_TRANSFER = 0x0801
-TYPE_AGGREGATE_MODIFICATION = 0x1001
+TYPE_TRANSACTION_TRANSFER = 0x4154
 TYPE_MULTISIG_SIGNATURE = 0x1002
-TYPE_MULTISIG = 0x1004
-TYPE_PROVISION_NAMESPACE = 0x2001
-TYPE_MOSAIC_CREATION = 0x4001
-TYPE_MOSAIC_SUPPLY_CHANGE = 0x4002
+
+
+def create_transaction_common(transaction):
+    msg = proto.NEM2TransactionCommon()
+    msg.size = transaction["size"]
+    msg.fee = transaction["fee"]
+    msg.deadline = transaction["deadline"]
+
+    if "signer" in transaction:
+        msg.signer = bytes.fromhex(transaction["signer"])
+
+    return msg
+
+
+def create_transfer(transaction):
+    msg = proto.NEMTransfer()
+    msg.recipient_address = transaction["recipient_address"]
+    msg.amount = transaction["amount"]
+
+    if "payload" in transaction["message"]:
+        msg.message = bytes.fromhex(transaction["message"]["payload"])
+
+        if transaction["message"]["type"] == 0x02:
+            msg.public_key = bytes.fromhex(transaction["message"]["publicKey"])
+
+    if "mosaics" in transaction:
+        msg.mosaics = [
+            proto.NEMMosaic(
+                namespace=mosaic["mosaicId"]["namespaceId"],
+                mosaic=mosaic["mosaicId"]["name"],
+                quantity=mosaic["quantity"],
+            )
+            for mosaic in transaction["mosaics"]
+        ]
+
+    return msg
+
+def fill_transaction_by_type(msg, transaction):
+    if transaction["entityType"] == TYPE_TRANSACTION_TRANSFER:
+        msg.transfer = create_transfer(transaction)
+    else:
+        raise ValueError("Unknown transaction type")
+
+
+def create_sign_tx(transaction):
+    print("IN create_sign_tx")
+    msg = proto.NEM2SignTx()
+    msg.transaction = create_transaction_common(transaction)
+
+    fill_transaction_by_type(msg, transaction)
+
+    return msg
 
 
 # ====== Client functions ====== #
 
 
-@expect(proto.NEM2PublicKey, field="public_key")
-def get_public_key(client, n, show_display=False):
+@expect(proto.NEMAddress, field="address")
+def get_address(client, n, network, show_display=False):
     return client.call(
-        proto.NEM2GetPublicKey(address_n=n, show_display=show_display)
+        proto.NEMGetAddress(address_n=n, network=network, show_display=show_display)
     )
 
 
-# @expect(proto.NEM2SignedTx)
-# def sign_tx(client, n, transaction):
-#     try:
-#         msg = create_sign_tx(transaction)
-#     except ValueError as e:
-#         raise CallException(e.args)
+@expect(proto.NEM2SignedTx)
+def sign_tx(client, n, transaction):
+    print("sign_tx was just called")
+    try:
+        msg = create_sign_tx(transaction)
+    except ValueError as e:
+        raise CallException(e.args)
 
-#     assert msg.transaction is not None
-#     msg.transaction.address_n = n
-#     return client.call(msg)
+    print("GOT TO HERE", msg)
+    assert msg.transaction is not None
+    msg.transaction.address_n = n
+    return client.call(msg)

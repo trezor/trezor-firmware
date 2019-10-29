@@ -196,3 +196,5 @@ if not utils.BITCOIN_ONLY:
     WebAuthnRemoveResidentCredential = 803
     NEM2GetPublicKey = 804
     NEM2PublicKey = 805
+    NEM2SignTx = 806
+    NEM2SignedTx = 807

@@ -10,16 +10,20 @@ if __debug__:
         Dict, List, Optional = None, None, None  # type: ignore
 
 
-class VerifiableEntity(p.MessageType):
+class NEM2SignedTx(p.MessageType):
+    MESSAGE_WIRE_TYPE = 807
 
     def __init__(
         self,
-        signature: int = None,
+        data: bytes = None,
+        signature: bytes = None,
     ) -> None:
+        self.data = data
         self.signature = signature
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('signature', p.UVarintType, 0),
+            1: ('data', p.BytesType, 0),
+            2: ('signature', p.BytesType, 0),
         }

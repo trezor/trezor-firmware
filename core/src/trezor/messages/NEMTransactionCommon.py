@@ -2,10 +2,6 @@
 # fmt: off
 import protobuf as p
 
-from .EntityBody import EntityBody
-from .SizePrefixedEntity import SizePrefixedEntity
-from .VerifiableEntity import VerifiableEntity
-
 if __debug__:
     try:
         from typing import Dict, List  # noqa: F401
@@ -18,24 +14,27 @@ class NEMTransactionCommon(p.MessageType):
 
     def __init__(
         self,
-        size_prefixed_entity: SizePrefixedEntity = None,
-        verifiable_entity: VerifiableEntity = None,
-        entity_body: EntityBody = None,
+        address_n: List[int] = None,
+        network: int = None,
+        timestamp: int = None,
         fee: int = None,
         deadline: int = None,
+        signer: bytes = None,
     ) -> None:
-        self.size_prefixed_entity = size_prefixed_entity
-        self.verifiable_entity = verifiable_entity
-        self.entity_body = entity_body
+        self.address_n = address_n if address_n is not None else []
+        self.network = network
+        self.timestamp = timestamp
         self.fee = fee
         self.deadline = deadline
+        self.signer = signer
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('size_prefixed_entity', SizePrefixedEntity, 0),
-            2: ('verifiable_entity', VerifiableEntity, 0),
-            3: ('entity_body', EntityBody, 0),
+            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            2: ('network', p.UVarintType, 0),
+            3: ('timestamp', p.UVarintType, 0),
             4: ('fee', p.UVarintType, 0),
             5: ('deadline', p.UVarintType, 0),
+            6: ('signer', p.BytesType, 0),
         }

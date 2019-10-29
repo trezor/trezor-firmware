@@ -16,7 +16,7 @@ option java_outer_classname = "TrezorMessageNem2";
  */
 message NEM2GetPublicKey {
     repeated uint32 address_n = 1;      // BIP-32 path to derive the key from master node
-    optional bool show_display = 3;     // Optionally show on display before sending the result
+    optional bool show_display = 2;     // Optionally show on display before sending the result
 }
 
 /**
@@ -30,21 +30,22 @@ message NEM2PublicKey {
 /**
  * Request: Ask device to sign transaction
  * @start
- * @next NEMSignedTx
+ * @next NEM2SignedTx
  * @next Failure
  */
 message NEM2SignTx {
-    optional NEMTransactionCommon transaction = 1;    // Common part of transaction
-    optional NEMTransactionCommon multisig = 2;       // Common part of inner transaction for multisig transactions
-    optional NEMTransferTransaction transfer = 3;          // Transfer transaction part
-    optional bool cosigning = 4;
+    optional NEM2TransactionCommon transaction = 1;    // Common part of transaction
+    optional NEM2TransactionCommon multisig = 2;       // Common part of inner transaction for multisig transactions
+    optional NEM2TransferTransaction transfer = 3;          // Transfer transaction part
+    optional uint32 generationHash = 4;
+    optional bool cosigning = 5;
 
     /**
     * Common types from
     * https://github.com/nemtech/catbuffer/blob/master/schemas/types.cats
     */
 
-    message NEMMosaic {
+    message NEM2Mosaic {
         optional uint64 mosaic_id = 1; // mosaic id
         optional uint64 amount = 2;
     }
@@ -53,24 +54,11 @@ message NEM2SignTx {
     * Entities reflect definitions from
     * https://github.com/nemtech/catbuffer/blob/master/schemas/entity.cats
     */
-    enum NEMEntityType {
+    enum NEM2EntityType {
         RESERVED = 0;
         TRANSFER = 16724;
     }
 
-    message SizePrefixedEntity {
-        optional uint32 size = 1;
-    }
-
-    message VerifiableEntity {
-        optional uint64 signature = 1;
-    }
-
-    message EntityBody {
-        optional uint32 signer_public_key = 1;
-        optional uint32 version = 2;    // defined as uint16 in catbuffer
-        optional NEMEntityType type = 3;
-    }
     // END entities
 
 
@@ -78,25 +66,36 @@ message NEM2SignTx {
     * Base Transaction attributes
     * https://github.com/nemtech/catbuffer/blob/master/schemas/transaction.cats
     */
-    message NEMTransactionCommon {
-        optional SizePrefixedEntity size_prefixed_entity = 1;
-        optional VerifiableEntity verifiable_entity = 2;
-        optional EntityBody entity_body = 3;
-        optional uint64 fee = 4;
-        optional uint64 deadline = 5;
+    message NEM2TransactionCommon {
+        optional uint32 size = 1;
+        optional uint64 signature = 2;
+        optional uint32 signer_public_key = 3;
+        optional uint32 version = 4;    // defined as uint16 in catbuffer
+        optional NEM2EntityType type = 5;
+        optional uint64 fee = 6;
+        optional uint64 deadline = 7;
     }
 
     /**
     * Transfer Transaction type attributes
     * https://github.com/nemtech/catbuffer/blob/master/schemas/transaction.cats
     */
-    message NEMTransferTransaction {
+    message NEM2TransferTransaction {
         optional uint32 version = 1 [default=1];
-        optional NEMEntityType entityType = 2 [default=TRANSFER];
+        optional NEM2EntityType entityType = 2 [default=TRANSFER];
         optional uint32 recipient_address = 3;
         optional uint32 message_size = 4;
         optional uint32 mosaics_count = 5;
         optional bytes message = 6;
-        repeated NEMMosaic mosaics = 7;
+        repeated NEM2Mosaic mosaics = 7;
     }
+}
+
+/**
+ * Response: Contains NEM2 transaction data and signature
+ * @end
+ */
+ message NEM2SignedTx {
+    optional bytes data = 1;        // Transaction data
+    optional bytes signature = 2;   // Signature for the transaction
 }

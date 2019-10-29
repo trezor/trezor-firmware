@@ -25,5 +25,5 @@ class NEM2GetPublicKey(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            3: ('show_display', p.BoolType, 0),
+            2: ('show_display', p.BoolType, 0),
         }

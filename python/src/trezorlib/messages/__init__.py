@@ -54,7 +54,6 @@ from .DebugLinkStop import DebugLinkStop
 from .DebugMoneroDiagAck import DebugMoneroDiagAck
 from .DebugMoneroDiagRequest import DebugMoneroDiagRequest
 from .ECDHSessionKey import ECDHSessionKey
-from .EntityBody import EntityBody
 from .Entropy import Entropy
 from .EntropyAck import EntropyAck
 from .EntropyRequest import EntropyRequest
@@ -177,8 +176,12 @@ from .MoneroTransferDetails import MoneroTransferDetails
 from .MoneroWatchKey import MoneroWatchKey
 from .MultisigRedeemScriptType import MultisigRedeemScriptType
 from .NEM2GetPublicKey import NEM2GetPublicKey
+from .NEM2Mosaic import NEM2Mosaic
 from .NEM2PublicKey import NEM2PublicKey
 from .NEM2SignTx import NEM2SignTx
+from .NEM2SignedTx import NEM2SignedTx
+from .NEM2TransactionCommon import NEM2TransactionCommon
+from .NEM2TransferTransaction import NEM2TransferTransaction
 from .NEMAddress import NEMAddress
 from .NEMAggregateModification import NEMAggregateModification
 from .NEMCosignatoryModification import NEMCosignatoryModification
@@ -187,7 +190,6 @@ from .NEMDecryptedMessage import NEMDecryptedMessage
 from .NEMGetAddress import NEMGetAddress
 from .NEMImportanceTransfer import NEMImportanceTransfer
 from .NEMMosaic import NEMMosaic
-from .NEMMosaic import NEMMosaic
 from .NEMMosaicCreation import NEMMosaicCreation
 from .NEMMosaicDefinition import NEMMosaicDefinition
 from .NEMMosaicSupplyChange import NEMMosaicSupplyChange
@@ -195,9 +197,7 @@ from .NEMProvisionNamespace import NEMProvisionNamespace
 from .NEMSignTx import NEMSignTx
 from .NEMSignedTx import NEMSignedTx
 from .NEMTransactionCommon import NEMTransactionCommon
-from .NEMTransactionCommon import NEMTransactionCommon
 from .NEMTransfer import NEMTransfer
-from .NEMTransferTransaction import NEMTransferTransaction
 from .PassphraseAck import PassphraseAck
 from .PassphraseRequest import PassphraseRequest
 from .PassphraseStateAck import PassphraseStateAck
@@ -220,7 +220,6 @@ from .SignIdentity import SignIdentity
 from .SignMessage import SignMessage
 from .SignTx import SignTx
 from .SignedIdentity import SignedIdentity
-from .SizePrefixedEntity import SizePrefixedEntity
 from .StellarAccountMergeOp import StellarAccountMergeOp
 from .StellarAddress import StellarAddress
 from .StellarAllowTrustOp import StellarAllowTrustOp
@@ -262,7 +261,6 @@ from .TxOutputType import TxOutputType
 from .TxRequest import TxRequest
 from .TxRequestDetailsType import TxRequestDetailsType
 from .TxRequestSerializedType import TxRequestSerializedType
-from .VerifiableEntity import VerifiableEntity
 from .VerifyMessage import VerifyMessage
 from .WebAuthnAddResidentCredential import WebAuthnAddResidentCredential
 from .WebAuthnCredential import WebAuthnCredential
@@ -283,7 +281,7 @@ from . import FailureType
 from . import InputScriptType
 from . import LiskTransactionType
 from . import MessageType
-from . import NEMEntityType
+from . import NEM2EntityType
 from . import NEMImportanceTransferMode
 from . import NEMModificationType
 from . import NEMMosaicLevy

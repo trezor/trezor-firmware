@@ -10,16 +10,19 @@ if __debug__:
         Dict, List, Optional = None, None, None  # type: ignore
 
 
-class SizePrefixedEntity(p.MessageType):
+class NEM2Mosaic(p.MessageType):
 
     def __init__(
         self,
-        size: int = None,
+        mosaic_id: int = None,
+        amount: int = None,
     ) -> None:
-        self.size = size
+        self.mosaic_id = mosaic_id
+        self.amount = amount
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('size', p.UVarintType, 0),
+            1: ('mosaic_id', p.UVarintType, 0),
+            2: ('amount', p.UVarintType, 0),
         }

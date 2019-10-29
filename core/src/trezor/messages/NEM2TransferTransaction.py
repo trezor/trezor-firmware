@@ -2,29 +2,29 @@
 # fmt: off
 import protobuf as p
 
-from .NEMMosaic import NEMMosaic
+from .NEM2Mosaic import NEM2Mosaic
 
 if __debug__:
     try:
         from typing import Dict, List, Optional
         from typing_extensions import Literal  # noqa: F401
-        EnumTypeNEMEntityType = Literal[0, 16724]
+        EnumTypeNEM2EntityType = Literal[0, 16724]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
-        EnumTypeNEMEntityType = None  # type: ignore
+        EnumTypeNEM2EntityType = None  # type: ignore
 
 
-class NEMTransferTransaction(p.MessageType):
+class NEM2TransferTransaction(p.MessageType):
 
     def __init__(
         self,
         version: int = None,
-        entityType: EnumTypeNEMEntityType = None,
+        entityType: EnumTypeNEM2EntityType = None,
         recipient_address: int = None,
         message_size: int = None,
         mosaics_count: int = None,
         message: bytes = None,
-        mosaics: List[NEMMosaic] = None,
+        mosaics: List[NEM2Mosaic] = None,
     ) -> None:
         self.version = version
         self.entityType = entityType
@@ -38,10 +38,10 @@ class NEMTransferTransaction(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('version', p.UVarintType, 0),  # default=1
-            2: ('entityType', p.EnumType("NEMEntityType", (0, 16724)), 0),  # default=TRANSFER
+            2: ('entityType', p.EnumType("NEM2EntityType", (0, 16724)), 0),  # default=TRANSFER
             3: ('recipient_address', p.UVarintType, 0),
             4: ('message_size', p.UVarintType, 0),
             5: ('mosaics_count', p.UVarintType, 0),
             6: ('message', p.BytesType, 0),
-            7: ('mosaics', NEMMosaic, p.FLAG_REPEATED),
+            7: ('mosaics', NEM2Mosaic, p.FLAG_REPEATED),
         }

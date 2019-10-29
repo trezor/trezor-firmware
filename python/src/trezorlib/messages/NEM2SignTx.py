@@ -2,7 +2,8 @@
 # fmt: off
 from .. import protobuf as p
 
-from .NEMTransactionCommon import NEMTransactionCommon
+from .NEM2TransactionCommon import NEM2TransactionCommon
+from .NEM2TransferTransaction import NEM2TransferTransaction
 
 if __debug__:
     try:
@@ -13,18 +14,28 @@ if __debug__:
 
 
 class NEM2SignTx(p.MessageType):
+    MESSAGE_WIRE_TYPE = 806
 
     def __init__(
         self,
-        transaction: NEMTransactionCommon = None,
+        transaction: NEM2TransactionCommon = None,
+        multisig: NEM2TransactionCommon = None,
+        transfer: NEM2TransferTransaction = None,
+        generationHash: int = None,
         cosigning: bool = None,
     ) -> None:
         self.transaction = transaction
+        self.multisig = multisig
+        self.transfer = transfer
+        self.generationHash = generationHash
         self.cosigning = cosigning
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('transaction', NEMTransactionCommon, 0),
-            4: ('cosigning', p.BoolType, 0),
+            1: ('transaction', NEM2TransactionCommon, 0),
+            2: ('multisig', NEM2TransactionCommon, 0),
+            3: ('transfer', NEM2TransferTransaction, 0),
+            4: ('generationHash', p.UVarintType, 0),
+            5: ('cosigning', p.BoolType, 0),
         }
