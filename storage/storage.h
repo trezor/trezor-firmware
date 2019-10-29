@@ -52,6 +52,7 @@ uint32_t storage_get_pin_rem(void);
 secbool storage_change_pin(uint32_t oldpin, uint32_t newpin,
                            const uint8_t *old_ext_salt,
                            const uint8_t *new_ext_salt);
+secbool storage_has_wipe_code(void);
 secbool storage_change_wipe_code(uint32_t pin, const uint8_t *ext_salt,
                                  uint32_t wipe_code);
 secbool storage_get(const uint16_t key, void *val, const uint16_t max_len,

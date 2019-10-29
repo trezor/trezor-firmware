@@ -173,6 +173,19 @@ STATIC mp_obj_t mod_trezorconfig_change_pin(size_t n_args,
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_change_pin_obj, 4,
                                            4, mod_trezorconfig_change_pin);
 
+/// def has_wipe_code() -> bool:
+///     """
+///     Returns True if storage has a configured wipe code, False otherwise.
+///     """
+STATIC mp_obj_t mod_trezorconfig_has_wipe_code(void) {
+  if (sectrue != storage_has_wipe_code()) {
+    return mp_const_false;
+  }
+  return mp_const_true;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_wipe_code_obj,
+                                 mod_trezorconfig_has_wipe_code);
+
 /// def change_wipe_code(
 ///     pin: int,
 ///     ext_salt: Optional[bytes],
@@ -354,6 +367,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
      MP_ROM_PTR(&mod_trezorconfig_get_pin_rem_obj)},
     {MP_ROM_QSTR(MP_QSTR_change_pin),
      MP_ROM_PTR(&mod_trezorconfig_change_pin_obj)},
+    {MP_ROM_QSTR(MP_QSTR_has_wipe_code),
+     MP_ROM_PTR(&mod_trezorconfig_has_wipe_code_obj)},
     {MP_ROM_QSTR(MP_QSTR_change_wipe_code),
      MP_ROM_PTR(&mod_trezorconfig_change_wipe_code_obj)},
     {MP_ROM_QSTR(MP_QSTR_get), MP_ROM_PTR(&mod_trezorconfig_get_obj)},

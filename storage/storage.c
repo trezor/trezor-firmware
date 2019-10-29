@@ -1331,6 +1331,14 @@ secbool storage_change_pin(uint32_t oldpin, uint32_t newpin,
   return ret;
 }
 
+secbool storage_has_wipe_code(void) {
+  if (sectrue != initialized || sectrue != unlocked) {
+    return secfalse;
+  }
+
+  return is_not_wipe_code(WIPE_CODE_EMPTY);
+}
+
 secbool storage_change_wipe_code(uint32_t pin, const uint8_t *ext_salt,
                                  uint32_t wipe_code) {
   if (sectrue != initialized || (pin != PIN_EMPTY && pin == wipe_code)) {

@@ -61,6 +61,13 @@ def change_pin(
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
+def has_wipe_code() -> bool:
+    """
+    Returns True if storage has a configured wipe code, False otherwise.
+    """
+
+
+# extmod/modtrezorconfig/modtrezorconfig.c
 def change_wipe_code(
     pin: int,
     ext_salt: Optional[bytes],

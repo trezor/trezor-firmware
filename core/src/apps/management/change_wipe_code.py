@@ -22,7 +22,8 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
         raise wire.NotInitialized("Device is not initialized")
 
     # Confirm that user wants to set or remove the wipe code.
-    await _require_confirm_action(ctx, msg)
+    has_wipe_code = config.has_wipe_code()
+    await _require_confirm_action(ctx, msg, has_wipe_code)
 
     # Get the unlocking PIN.
     pin, salt = await request_pin_and_sd_salt(ctx)
@@ -44,8 +45,12 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
         raise wire.PinInvalid("PIN invalid")
 
     if wipe_code:
-        msg_screen = "set the wipe code."
-        msg_wire = "Wipe code set"
+        if has_wipe_code:
+            msg_screen = "changed the wipe code."
+            msg_wire = "Wipe code changed"
+        else:
+            msg_screen = "set the wipe code."
+            msg_wire = "Wipe code set"
     else:
         msg_screen = "disabled the wipe code."
         msg_wire = "Wipe code removed"
@@ -54,18 +59,30 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
     return Success(message=msg_wire)
 
 
-def _require_confirm_action(ctx: wire.Context, msg: ChangeWipeCode) -> None:
-    if msg.remove:
+def _require_confirm_action(
+    ctx: wire.Context, msg: ChangeWipeCode, has_wipe_code: bool
+) -> None:
+    if msg.remove and has_wipe_code:
         text = Text("Disable wipe code", ui.ICON_CONFIG)
         text.normal("Do you really want to")
         text.bold("disable wipe code")
         text.bold("protection?")
         return require_confirm(ctx, text)
-    else:
+
+    if not msg.remove and has_wipe_code:
+        text = Text("Change wipe code", ui.ICON_CONFIG)
+        text.normal("Do you really want to")
+        text.bold("change the wipe code?")
+        return require_confirm(ctx, text)
+
+    if not msg.remove and not has_wipe_code:
         text = Text("Set wipe code", ui.ICON_CONFIG)
         text.normal("Do you really want to")
         text.bold("set the wipe code?")
         return require_confirm(ctx, text)
+
+    # Removing non-existing wipe code.
+    raise wire.ProcessError("Wipe code protection is already disabled")
 
 
 async def _request_wipe_code_confirm(ctx: wire.Context, pin: str) -> str:
