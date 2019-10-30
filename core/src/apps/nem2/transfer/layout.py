@@ -1,18 +1,14 @@
 from trezor import ui
 from trezor.messages import (
     ButtonRequestType,
-    NEMImportanceTransfer,
-    NEMImportanceTransferMode,
-    NEMMosaic,
-    NEMMosaicLevy,
-    NEMTransactionCommon,
-    NEMTransfer,
+    NEM2Mosaic,
+    NEM2TransactionCommon,
+    NEM2TransferTransaction,
 )
 from trezor.ui.text import Text
 from trezor.utils import format_amount
 
 from ..helpers import (
-    NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE,
     NEM_MAX_DIVISIBILITY,
     NEM_MOSAIC_AMOUNT_DIVISOR,
 )

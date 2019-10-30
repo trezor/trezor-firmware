@@ -35,10 +35,11 @@ class TestMsgNEM2SignTxTransfer:
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     # Confirm recipient
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.NEMSignedTx(),
+                    proto.NEM2SignedTx(),
                 ]
             )
 
+            print("TRANSFER TYPE", nem2.TYPE_TRANSACTION_TRANSFER)
             tx = nem2.sign_tx(
                 client,
                 parse_path("m/44'/43'/0'"),

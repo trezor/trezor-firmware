@@ -4,14 +4,14 @@
 mosaics = [
     {
         "name": "NEM",
-        "ticker": "  XEM",
+        "ticker": " XEM",
         "namespace": "nem",
         "mosaic": "xem",
         "divisibility": 6,
     },
     {
         "name": "DIMCOIN",
-        "ticker": "  DIM",
+        "ticker": " DIM",
         "namespace": "dim",
         "mosaic": "coin",
         "divisibility": 6,
@@ -23,7 +23,7 @@ mosaics = [
     },
     {
         "name": "DIM TOKEN",
-        "ticker": "  DIMTOK",
+        "ticker": " DIMTOK",
         "namespace": "dim",
         "mosaic": "token",
         "divisibility": 6,
@@ -31,7 +31,7 @@ mosaics = [
     },
     {
         "name": "Breeze Token",
-        "ticker": "  BREEZE",
+        "ticker": " BREEZE",
         "namespace": "breeze",
         "mosaic": "breeze-token",
         "divisibility": 0,
@@ -39,7 +39,7 @@ mosaics = [
     },
     {
         "name": "PacNEM Game Credits",
-        "ticker": "  PAC:HRT",
+        "ticker": " PAC:HRT",
         "namespace": "pacnem",
         "mosaic": "heart",
         "divisibility": 0,
@@ -47,7 +47,7 @@ mosaics = [
     },
     {
         "name": "PacNEM Score Tokens",
-        "ticker": "  PAC:CHS",
+        "ticker": " PAC:CHS",
         "namespace": "pacnem",
         "mosaic": "cheese",
         "divisibility": 6,

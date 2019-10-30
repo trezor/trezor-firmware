@@ -1,7 +1,7 @@
-from trezor.messages.NEMSignTx import (
+from trezor.messages.NEM2SignTx import (
     NEM2SignTx,
     NEM2TransactionCommon,
-    NEM2Transfer,
+    NEM2TransferTransaction,
 )
 from trezor.wire import ProcessError
 
@@ -15,8 +15,6 @@ from .helpers import (
     NEM_NETWORK_TESTNET,
     NEM_PUBLIC_KEY_SIZE,
 )
-
-
 
 def validate(msg: NEMSignTx):
     if msg.transaction is None:

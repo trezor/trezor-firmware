@@ -67,11 +67,11 @@ message NEM2SignTx {
     * https://github.com/nemtech/catbuffer/blob/master/schemas/transaction.cats
     */
     message NEM2TransactionCommon {
-        optional uint32 size = 1;
-        optional uint64 signature = 2;
-        optional uint32 signer_public_key = 3;
-        optional uint32 version = 4;    // defined as uint16 in catbuffer
-        optional NEM2EntityType type = 5;
+        optional uint32 size = 1; // inline SizePrefixedEntity
+        optional uint64 signature = 2; // inline VerifiableEntity
+        optional uint32 signer_public_key = 3; // inline EntityBody
+        optional uint32 version = 4; // inline EntityBody, defined as uint16 in catbuffer
+        optional NEM2EntityType type = 5; // inline EntityBody
         optional uint64 fee = 6;
         optional uint64 deadline = 7;
     }

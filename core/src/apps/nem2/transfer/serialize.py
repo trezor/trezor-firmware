@@ -4,8 +4,6 @@ from trezor.messages.NEMTransfer import NEMTransfer
 
 from ..helpers import (
     AES_BLOCK_SIZE,
-    NEM_SALT_SIZE,
-    NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER,
     NEM_TRANSACTION_TYPE_TRANSFER,
 )
 from ..writers import (

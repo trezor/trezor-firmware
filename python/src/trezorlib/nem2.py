@@ -66,7 +66,6 @@ def fill_transaction_by_type(msg, transaction):
 
 
 def create_sign_tx(transaction):
-    print("IN create_sign_tx")
     msg = proto.NEM2SignTx()
     msg.transaction = create_transaction_common(transaction)
 
@@ -87,7 +86,6 @@ def get_address(client, n, network, show_display=False):
 
 @expect(proto.NEM2SignedTx)
 def sign_tx(client, n, transaction):
-    print("sign_tx was just called")
     try:
         msg = create_sign_tx(transaction)
     except ValueError as e:
