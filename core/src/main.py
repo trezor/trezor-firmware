@@ -50,8 +50,7 @@ def _boot_default() -> None:
     if __debug__:
         import apps.debug
     if not utils.BITCOIN_ONLY:
-        if not __debug__ or utils.EMULATOR:
-            import apps.webauthn
+        import apps.webauthn
 
     # boot applications
     apps.homescreen.boot()
@@ -71,8 +70,7 @@ def _boot_default() -> None:
     if __debug__:
         apps.debug.boot()
     if not utils.BITCOIN_ONLY:
-        if not __debug__ or utils.EMULATOR:
-            apps.webauthn.boot(usb.iface_webauthn)
+        apps.webauthn.boot()
 
     # run main event loop and specify which screen is the default
     from apps.homescreen.homescreen import homescreen
