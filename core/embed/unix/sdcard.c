@@ -35,20 +35,23 @@
 
 #define SDCARD_SIZE (64 * 1024 * 1024)
 
-static uint8_t *sdcard_buffer;
-static secbool sdcard_powered;
+static uint8_t *sdcard_buffer = NULL;
+static secbool sdcard_powered = secfalse;
 
 static void sdcard_exit(void) {
   int r = munmap(sdcard_buffer, SDCARD_SIZE);
   ensure(sectrue * (r == 0), "munmap failed");
+  sdcard_buffer = NULL;
 }
 
 void sdcard_init(void) {
-  int r;
+  if (sdcard_buffer != NULL) {
+    return;
+  }
 
   // check whether the file exists and it has the correct size
   struct stat sb;
-  r = stat(SDCARD_FILE, &sb);
+  int r = stat(SDCARD_FILE, &sb);
 
   // (re)create if non existant or wrong size
   if (r != 0 || sb.st_size != SDCARD_SIZE) {
