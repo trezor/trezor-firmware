@@ -46,11 +46,10 @@ def _boot_default() -> None:
         import apps.tezos
         import apps.eos
         import apps.binance
+        import apps.webauthn
 
     if __debug__:
         import apps.debug
-    if not utils.BITCOIN_ONLY:
-        import apps.webauthn
 
     # boot applications
     apps.homescreen.boot()
@@ -67,10 +66,9 @@ def _boot_default() -> None:
         apps.tezos.boot()
         apps.eos.boot()
         apps.binance.boot()
+        apps.webauthn.boot()
     if __debug__:
         apps.debug.boot()
-    if not utils.BITCOIN_ONLY:
-        apps.webauthn.boot()
 
     # run main event loop and specify which screen is the default
     from apps.homescreen.homescreen import homescreen
