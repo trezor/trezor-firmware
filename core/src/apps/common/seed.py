@@ -57,6 +57,7 @@ class Keychain:
         del self.seed
 
     def validate_path(self, checked_path: list, checked_curve: str) -> None:
+        print("HERE BRO", self, checked_path, checked_curve)
         for curve, *path in self.namespaces:
             if path == checked_path[: len(path)] and curve == checked_curve:
                 if "ed25519" in curve and not _path_hardened(checked_path):

@@ -38,7 +38,9 @@ message NEM2SignTx {
     optional NEM2TransactionCommon multisig = 2;       // Common part of inner transaction for multisig transactions
     optional NEM2TransferTransaction transfer = 3;          // Transfer transaction part
     optional uint32 generationHash = 4;
-    optional bool cosigning = 5;
+    optional uint32 network = 5;
+    optional uint32 address_n = 6;
+    optional bool cosigning = 7;
 
     /**
     * Common types from
@@ -59,6 +61,13 @@ message NEM2SignTx {
         TRANSFER = 16724;
     }
 
+    enum NEM2NetworkType {
+        MAIN_NET = 104;
+        TEST_NET = 152;
+        MIJIN = 96;
+        MIJIN_TEST = 144;
+    }
+
     // END entities
 
 
@@ -70,7 +79,7 @@ message NEM2SignTx {
         optional uint32 size = 1; // inline SizePrefixedEntity
         optional uint64 signature = 2; // inline VerifiableEntity
         optional uint32 signer_public_key = 3; // inline EntityBody
-        optional uint32 version = 4; // inline EntityBody, defined as uint16 in catbuffer
+        optional NEM2NetworkType version = 4 [default=MAIN_NET]; // inline EntityBody, defined as uint16 in catbuffer
         optional NEM2EntityType type = 5; // inline EntityBody
         optional uint64 fee = 6;
         optional uint64 deadline = 7;
@@ -83,7 +92,7 @@ message NEM2SignTx {
     message NEM2TransferTransaction {
         optional uint32 version = 1 [default=1];
         optional NEM2EntityType entityType = 2 [default=TRANSFER];
-        optional uint32 recipient_address = 3;
+        optional string recipient_address = 3;
         optional uint32 message_size = 4;
         optional uint32 mosaics_count = 5;
         optional bytes message = 6;

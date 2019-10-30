@@ -36,7 +36,7 @@ def create_transaction_common(transaction):
 
 
 def create_transfer(transaction):
-    msg = proto.NEMTransfer()
+    msg = proto.NEM2TransferTransaction()
     msg.recipient_address = transaction["recipient_address"]
     msg.amount = transaction["amount"]
 

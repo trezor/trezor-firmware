@@ -45,7 +45,7 @@ class TestMsgNEM2SignTxTransfer:
                 parse_path("m/44'/43'/0'"),
                 {
                     "amount": 2000000,
-                    "fee": 2000000,
+                    "fee": 1000,
                     "size": 2212312,
                     "recipient_address": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
                     "entityType": nem2.TYPE_TRANSACTION_TRANSFER,

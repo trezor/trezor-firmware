@@ -22,12 +22,16 @@ class NEM2SignTx(p.MessageType):
         multisig: NEM2TransactionCommon = None,
         transfer: NEM2TransferTransaction = None,
         generationHash: int = None,
+        network: int = None,
+        address_n: int = None,
         cosigning: bool = None,
     ) -> None:
         self.transaction = transaction
         self.multisig = multisig
         self.transfer = transfer
         self.generationHash = generationHash
+        self.network = network
+        self.address_n = address_n
         self.cosigning = cosigning
 
     @classmethod
@@ -37,5 +41,7 @@ class NEM2SignTx(p.MessageType):
             2: ('multisig', NEM2TransactionCommon, 0),
             3: ('transfer', NEM2TransferTransaction, 0),
             4: ('generationHash', p.UVarintType, 0),
-            5: ('cosigning', p.BoolType, 0),
+            5: ('network', p.UVarintType, 0),
+            6: ('address_n', p.UVarintType, 0),
+            7: ('cosigning', p.BoolType, 0),
         }

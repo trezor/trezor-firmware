@@ -6,9 +6,11 @@ if __debug__:
     try:
         from typing import Dict, List, Optional
         from typing_extensions import Literal  # noqa: F401
+        EnumTypeNEM2NetworkType = Literal[96, 104, 144, 152]
         EnumTypeNEM2EntityType = Literal[0, 16724]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
+        EnumTypeNEM2NetworkType = None  # type: ignore
         EnumTypeNEM2EntityType = None  # type: ignore
 
 
@@ -19,7 +21,7 @@ class NEM2TransactionCommon(p.MessageType):
         size: int = None,
         signature: int = None,
         signer_public_key: int = None,
-        version: int = None,
+        version: EnumTypeNEM2NetworkType = None,
         type: EnumTypeNEM2EntityType = None,
         fee: int = None,
         deadline: int = None,
@@ -38,7 +40,7 @@ class NEM2TransactionCommon(p.MessageType):
             1: ('size', p.UVarintType, 0),
             2: ('signature', p.UVarintType, 0),
             3: ('signer_public_key', p.UVarintType, 0),
-            4: ('version', p.UVarintType, 0),
+            4: ('version', p.EnumType("NEM2NetworkType", (104, 144, 96, 152)), 0),  # default=MAIN_NET
             5: ('type', p.EnumType("NEM2EntityType", (0, 16724)), 0),
             6: ('fee', p.UVarintType, 0),
             7: ('deadline', p.UVarintType, 0),

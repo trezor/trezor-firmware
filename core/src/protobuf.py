@@ -128,6 +128,7 @@ class EnumType:
         self.enum_values = enum_values
 
     def validate(self, fvalue: int) -> int:
+        print("VALIDATING ", fvalue, " AGAINST ", self.enum_values, self)
         if fvalue in self.enum_values:
             return fvalue
         else:

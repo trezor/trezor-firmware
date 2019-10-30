@@ -25,31 +25,24 @@ def validate(msg: NEMSignTx):
 
     if msg.multisig:
         _validate_common(msg.multisig, True)
-        _validate_multisig(msg.multisig, msg.transaction.network)
+        _validate_multisig(msg.multisig, msg.transaction.version)
     if not msg.multisig and msg.cosigning:
         raise ProcessError("No multisig transaction to cosign")
 
     if msg.transfer:
-        _validate_transfer(msg.transfer, msg.transaction.network)
+        _validate_transfer(msg.transfer, msg.transaction.version)
 
-
-def validate_network(network: int) -> int:
-    if network is None:
-        return NEM_NETWORK_MAINNET
-    if network not in (NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET, NEM_NETWORK_MIJIN):
-        raise ProcessError("Invalid NEM network")
-    return network
 
 
 def _validate_single_tx(msg: NEMSignTx):
     # ensure exactly one transaction is provided
     tx_count = (
         bool(msg.transfer)
-        + bool(msg.provision_namespace)
-        + bool(msg.mosaic_creation)
-        + bool(msg.supply_change)
-        + bool(msg.aggregate_modification)
-        + bool(msg.importance_transfer)
+        # + bool(msg.provision_namespace)
+        # + bool(msg.mosaic_creation)
+        # + bool(msg.supply_change)
+        # + bool(msg.aggregate_modification)
+        # + bool(msg.importance_transfer)
     )
     if tx_count == 0:
         raise ProcessError("No transaction provided")
@@ -58,21 +51,18 @@ def _validate_single_tx(msg: NEMSignTx):
 
 
 def _validate_common(common: NEMTransactionCommon, inner: bool = False):
-    common.network = validate_network(common.network)
 
     err = None
-    if common.timestamp is None:
-        err = "timestamp"
     if common.fee is None:
         err = "fee"
     if common.deadline is None:
         err = "deadline"
 
-    if not inner and common.signer:
+    if not inner and common.signer_public_key:
         raise ProcessError("Signer not allowed in outer transaction")
 
-    if inner and common.signer is None:
-        err = "signer"
+    if inner and common.signer_public_key is None:
+        err = "signer_public_key"
 
     if err:
         if inner:
@@ -80,9 +70,9 @@ def _validate_common(common: NEMTransactionCommon, inner: bool = False):
         else:
             raise ProcessError("No %s provided" % err)
 
-    if common.signer is not None:
+    if common.signer_public_key is not None:
         _validate_public_key(
-            common.signer, "Invalid signer public key in inner transaction"
+            common.signer_public_key, "Invalid sign_public_key in inner transaction"
         )
 
 
@@ -98,27 +88,12 @@ def _validate_multisig(multisig: NEMTransactionCommon, network: int):
     _validate_public_key(multisig.signer, "Invalid multisig signer public key provided")
 
 def _validate_transfer(transfer: NEMTransfer, network: int):
-    if transfer.recipient is None:
+    if transfer.recipient_address is None:
         raise ProcessError("No recipient provided")
-    if transfer.amount is None:
-        raise ProcessError("No amount provided")
 
-    if transfer.public_key is not None:
-        _validate_public_key(transfer.public_key, "Invalid recipient public key")
-        if transfer.payload is None:
-            raise ProcessError("Public key provided but no payload to encrypt")
-
-    if transfer.payload:
-        if len(transfer.payload) > NEM_MAX_PLAIN_PAYLOAD_SIZE:
-            raise ProcessError("Payload too large")
-        if (
-            transfer.public_key
-            and len(transfer.payload) > NEM_MAX_ENCRYPTED_PAYLOAD_SIZE
-        ):
-            raise ProcessError("Payload too large")
-
-    if not nem.validate_address(transfer.recipient, network):
-        raise ProcessError("Invalid recipient address")
+    # TODO: replace C implementation of validate_address with something new for nem2
+    # if not nem2.validate_address(transfer.recipient_address, network):
+    #     raise ProcessError("Invalid recipient address")
 
     for m in transfer.mosaics:
         if m.namespace is None:

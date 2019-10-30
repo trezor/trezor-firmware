@@ -10,19 +10,19 @@ from apps.nem2.validators import validate
 
 
 async def sign_tx(ctx, msg: NEM2SignTx, keychain):
-    print("in sign_tx")
+    print("in sign_tx", check_path)
     validate(msg)
 
     await validate_path(
         ctx,
         check_path,
         keychain,
-        msg.transaction.address_n,
+        msg.address_n,
         CURVE,
-        network=msg.transaction.network,
+        network=msg.transaction.version,
     )
 
-    node = keychain.derive(msg.transaction.address_n, CURVE)
+    node = keychain.derive(msg.address_n, CURVE)
 
     if msg.multisig:
         public_key = msg.multisig.signer

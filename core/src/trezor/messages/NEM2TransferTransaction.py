@@ -20,7 +20,7 @@ class NEM2TransferTransaction(p.MessageType):
         self,
         version: int = None,
         entityType: EnumTypeNEM2EntityType = None,
-        recipient_address: int = None,
+        recipient_address: str = None,
         message_size: int = None,
         mosaics_count: int = None,
         message: bytes = None,
@@ -39,7 +39,7 @@ class NEM2TransferTransaction(p.MessageType):
         return {
             1: ('version', p.UVarintType, 0),  # default=1
             2: ('entityType', p.EnumType("NEM2EntityType", (0, 16724)), 0),  # default=TRANSFER
-            3: ('recipient_address', p.UVarintType, 0),
+            3: ('recipient_address', p.UnicodeType, 0),
             4: ('message_size', p.UVarintType, 0),
             5: ('mosaics_count', p.UVarintType, 0),
             6: ('message', p.BytesType, 0),
