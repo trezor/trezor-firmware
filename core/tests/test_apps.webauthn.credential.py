@@ -1,5 +1,6 @@
 from common import *
-from apps.common import mnemonic, storage
+import storage
+from apps.common import mnemonic
 from apps.webauthn.credential import Fido2Credential
 from trezor.crypto.curve import nist256p1
 from trezor.crypto.hashlib import sha256

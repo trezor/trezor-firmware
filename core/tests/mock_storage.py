@@ -1,6 +1,6 @@
 from mock import patch
 
-import apps.common.storage.common
+import storage.common
 
 class MockStorage:
     PATCH_METHODS = ("get", "set", "delete")
@@ -8,7 +8,7 @@ class MockStorage:
     def __init__(self):
         self.namespace = {}
         self.patches = [
-            patch(apps.common.storage.common, method, getattr(self, method))
+            patch(storage.common, method, getattr(self, method))
             for method in self.PATCH_METHODS
         ]
 
