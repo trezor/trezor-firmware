@@ -27,6 +27,9 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     """
     _check_state(msg)
 
+    if storage_recovery.is_in_progress():
+        return await recovery_process(ctx)
+
     await _continue_dialog(ctx, msg)
 
     # for dry run pin needs to be entered
@@ -52,9 +55,7 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     if msg.dry_run:
         storage_recovery.set_dry_run(msg.dry_run)
 
-    result = await recovery_process(ctx)
-
-    return result
+    return await recovery_process(ctx)
 
 
 def _check_state(msg: RecoveryDevice) -> None:
@@ -62,11 +63,6 @@ def _check_state(msg: RecoveryDevice) -> None:
         raise wire.UnexpectedMessage("Already initialized")
     if msg.dry_run and not storage.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
-
-    if storage_recovery.is_in_progress():
-        raise RuntimeError(
-            "Function recovery_device should not be invoked when recovery is already in progress"
-        )
 
     if msg.enforce_wordlist is False:
         raise wire.ProcessError(

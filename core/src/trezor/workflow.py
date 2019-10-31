@@ -57,13 +57,27 @@ def start_default(constructor: Callable[[], loop.Task]) -> None:
         default_constructor = constructor
         default_task = constructor()
         if __debug__:
-            log.debug(__name__, "start default")
+            log.debug(__name__, "start default: %s", default_task)
         # Schedule the default task.  Because the task can complete on its own,
         # we need to reset the `default_task` global in a finalizer.
         loop.schedule(default_task, None, None, _finalize_default)
     else:
         if __debug__:
             log.debug(__name__, "default already started")
+
+
+def replace_default(constructor: Callable[[], loop.Task]) -> None:
+    global default_task
+
+    if __debug__:
+        if default_task is None:
+            log.debug(__name__, "replacing default: default not running")
+        else:
+            log.debug(__name__, "replacing default: %s", default_task)
+
+    if default_task is not None:
+        loop.finalize(default_task, None)  # TODO: why not close_default()
+    start_default(constructor)
 
 
 def close_default() -> None:
@@ -80,7 +94,7 @@ def _finalize_default(task: loop.Task, value: Any) -> None:
 
     if default_task is task:
         if __debug__:
-            log.debug(__name__, "default closed")
+            log.debug(__name__, "default closed: %s", task)
         default_task = None
     else:
         if __debug__:

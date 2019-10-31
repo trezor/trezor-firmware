@@ -15,21 +15,7 @@ usb.bus.open()
 utils.set_mode_unprivileged()
 
 
-def _boot_recovery() -> None:
-    # load applications
-    import apps.homescreen
-
-    # boot applications
-    apps.homescreen.boot(features_only=True)
-    if __debug__:
-        apps.debug.boot()
-
-    from apps.management.recovery_device.homescreen import recovery_homescreen
-
-    loop.schedule(recovery_homescreen())
-
-
-def _boot_default() -> None:
+def _boot_apps() -> None:
     # load applications
     import apps.homescreen
     import apps.management
@@ -71,13 +57,19 @@ def _boot_default() -> None:
         apps.debug.boot()
 
     # run main event loop and specify which screen is the default
-    from apps.homescreen.homescreen import homescreen
+    from apps.common.storage import recovery
 
-    workflow.start_default(homescreen)
+    if recovery.is_in_progress():
+        from apps.management.recovery_device.homescreen import recovery_homescreen
+
+        workflow.start_default(recovery_homescreen)
+    else:
+        from apps.homescreen.homescreen import homescreen
+
+        workflow.start_default(homescreen)
 
 
 from trezor import loop, wire, workflow
-from apps.common.storage import recovery
 
 while True:
     # initialize the wire codec
@@ -85,11 +77,7 @@ while True:
     if __debug__:
         wire.setup(usb.iface_debug)
 
-    # boot either in recovery or default mode
-    if recovery.is_in_progress():
-        _boot_recovery()
-    else:
-        _boot_default()
+    _boot_apps()
     loop.run()
 
     # loop is empty, reboot
