@@ -10,7 +10,7 @@
   "address_type_p2sh": 145,
   "maxfee_kb": 1000000,
   "minfee_kb": 1000,
-  "signed_message_header": "ZCore Genesis Block mined by Mosqueiro",
+  "signed_message_header": "DarkNet Signed Message:\n",
   "hash_genesis_block": "695b79c8c234b45b2eeb4722f33373e471c9b686ff78efeb39da95f824a9f81b",
   "xprv_magic": 78791432,
   "xpub_magic": 78792518,
