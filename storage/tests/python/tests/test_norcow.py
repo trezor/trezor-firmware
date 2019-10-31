@@ -9,7 +9,7 @@ def test_norcow_set():
     n.init()
     n.set(0x0001, b"123")
     data = n._dump()[0][:256]
-    assert data[:8] == b"NRC2\xFE\xFF\xFF\xFF"
+    assert data[:8] == consts.NORCOW_MAGIC_AND_VERSION
     assert data[8:10] == b"\x01\x00"  # app + key
     assert data[10:12] == b"\x03\x00"  # length
     assert data[12:15] == b"123"  # data
@@ -18,7 +18,7 @@ def test_norcow_set():
     n.wipe()
     n.set(0x0901, b"hello")
     data = n._dump()[0][:256]
-    assert data[:8] == b"NRC2\xFE\xFF\xFF\xFF"
+    assert data[:8] == consts.NORCOW_MAGIC_AND_VERSION
     assert data[8:10] == b"\x01\x09"  # app + key
     assert data[10:12] == b"\x05\x00"  # length
     assert data[12:17] == b"hello"  # data
@@ -63,7 +63,8 @@ def test_norcow_get_item():
     assert value == b"123"
     assert (
         n._dump()[0][:40].hex()
-        == "4e524332feffffff010003003132330002000300343536000101030037383900ffffffffffffffff"
+        == consts.NORCOW_MAGIC_AND_VERSION.hex()
+        + "010003003132330002000300343536000101030037383900ffffffffffffffff"
     )
 
     # replacing item with the same value (update)
@@ -72,7 +73,8 @@ def test_norcow_get_item():
     assert value == b"789"
     assert (
         n._dump()[0][:40].hex()
-        == "4e524332feffffff010003003132330002000300343536000101030037383900ffffffffffffffff"
+        == consts.NORCOW_MAGIC_AND_VERSION.hex()
+        + "010003003132330002000300343536000101030037383900ffffffffffffffff"
     )
 
     # replacing item with value with less 1 bits than before (update)
@@ -81,7 +83,8 @@ def test_norcow_get_item():
     assert value == b"788"
     assert (
         n._dump()[0][:40].hex()
-        == "4e524332feffffff010003003132330002000300343536000101030037383800ffffffffffffffff"
+        == consts.NORCOW_MAGIC_AND_VERSION.hex()
+        + "010003003132330002000300343536000101030037383800ffffffffffffffff"
     )
 
     # replacing item with value with more 1 bits than before (wipe and new entry)
@@ -90,7 +93,8 @@ def test_norcow_get_item():
     assert value == b"787"
     assert (
         n._dump()[0][:44].hex()
-        == "4e524332feffffff0100030031323300020003003435360000000300000000000101030037383700ffffffff"
+        == consts.NORCOW_MAGIC_AND_VERSION.hex()
+        + "0100030031323300020003003435360000000300000000000101030037383700ffffffff"
     )
 
     n.set(0x0002, b"world")
