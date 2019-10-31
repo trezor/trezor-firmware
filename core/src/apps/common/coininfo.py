@@ -1629,7 +1629,7 @@ def by_name(name: str) -> CoinInfo:
                 address_type=142,
                 address_type_p2sh=145,
                 maxfee_kb=1000000,
-                signed_message_header="ZCore Genesis Block mined by Mosqueiro",
+                signed_message_header="DarkNet Signed Message:\n",
                 xpub_magic=0x04b24746,
                 xpub_magic_segwit_p2sh=None,
                 xpub_magic_segwit_native=None,
