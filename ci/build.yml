@@ -191,6 +191,14 @@ legacy fw debug build:
   script:
     - cd legacy
     - pipenv run script/cibuild
+    - cd ..
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - mv legacy/firmware/trezor.bin trezor-fw-regular-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - trezor-fw-regular-debug-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+    expire_in: 1 week
 
 legacy fw btconly build:
   stage: build
