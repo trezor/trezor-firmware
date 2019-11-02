@@ -21,7 +21,9 @@ async def validate_path(
     curve: str,
     **kwargs: Any,
 ) -> None:
+    print("----COMMON VALIDATE PATHS----", path, curve)
     keychain.validate_path(path, curve)
+    print("----COMMON VALIDATE PATH keychain.validate_path() success----", keychain, curve)
     if not validate_func(path, **kwargs):
         await show_path_warning(ctx, path)
 

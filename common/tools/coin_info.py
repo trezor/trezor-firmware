@@ -250,6 +250,14 @@ def _load_nem_mosaics():
         mosaic.update(shortcut=shortcut, key="nem:{}".format(shortcut))
     return mosaics
 
+def _load_nem2_mosaics():
+    """Loads NEM2 mosaics from `nem2/nem2_mosaics.json`"""
+    mosaics = load_json("nem2", "nem2_mosaics.json")
+    for mosaic in mosaics:
+        shortcut = mosaic["ticker"].strip()
+        mosaic.update(shortcut=shortcut, key="nem:{}".format(shortcut))
+    return mosaics
+
 
 def _load_misc():
     """Loads miscellaneous networks from `misc/misc.json`"""
@@ -531,6 +539,7 @@ def collect_coin_info():
         eth=_load_ethereum_networks(),
         erc20=_load_erc20_tokens(),
         nem=_load_nem_mosaics(),
+        nem2=_load_nem2_mosaics(),
         misc=_load_misc(),
     )
 

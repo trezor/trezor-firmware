@@ -15,15 +15,15 @@ class NEM2SignedTx(p.MessageType):
 
     def __init__(
         self,
-        data: bytes = None,
-        signature: bytes = None,
+        payload: bytes = None,
+        hash: bytes = None,
     ) -> None:
-        self.data = data
-        self.signature = signature
+        self.payload = payload
+        self.hash = hash
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('data', p.BytesType, 0),
-            2: ('signature', p.BytesType, 0),
+            1: ('payload', p.BytesType, 0),
+            2: ('hash', p.BytesType, 0),
         }

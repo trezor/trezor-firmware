@@ -1,15 +1,15 @@
-from .nem_mosaics import mosaics
+from .nem2_mosaics import mosaics
 
 
-def get_mosaic_definition(namespace_name: str, mosaic_name: str, network: int) -> dict:
+def get_mosaic_definition(mosaic_id: int, network: int) -> dict:
     for m in mosaics:
-        if namespace_name == m["namespace"] and mosaic_name == m["mosaic"]:
+        if mosaic_id == m["id"]:
             if ("networks" not in m) or (network in m["networks"]):
                 return m
     return None
 
 
-def is_nem_xem_mosaic(namespace_name: str, mosaic_name: str) -> bool:
-    if namespace_name == "nem" and mosaic_name == "xem":
+def is_nem_xem_mosaic(mosaic_id: str) -> bool:
+    if mosaic_id == int("85BBEA6CC462B244", 16):
         return True
     return False

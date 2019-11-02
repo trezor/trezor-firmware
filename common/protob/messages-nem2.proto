@@ -37,9 +37,9 @@ message NEM2SignTx {
     optional NEM2TransactionCommon transaction = 1;    // Common part of transaction
     optional NEM2TransactionCommon multisig = 2;       // Common part of inner transaction for multisig transactions
     optional NEM2TransferTransaction transfer = 3;          // Transfer transaction part
-    optional uint32 generationHash = 4;
-    optional uint32 network = 5;
-    optional uint32 address_n = 6;
+    optional uint32 generation_hash = 4;
+    optional NEM2NetworkType network_type = 5 [default=MAIN_NET];
+    repeated uint32 address_n = 6;
     optional bool cosigning = 7;
 
     /**
@@ -48,7 +48,7 @@ message NEM2SignTx {
     */
 
     message NEM2Mosaic {
-        optional uint64 mosaic_id = 1; // mosaic id
+        optional uint64 id = 1;
         optional uint64 amount = 2;
     }
 
@@ -76,13 +76,11 @@ message NEM2SignTx {
     * https://github.com/nemtech/catbuffer/blob/master/schemas/transaction.cats
     */
     message NEM2TransactionCommon {
-        optional uint32 size = 1; // inline SizePrefixedEntity
-        optional uint64 signature = 2; // inline VerifiableEntity
-        optional uint32 signer_public_key = 3; // inline EntityBody
-        optional NEM2NetworkType version = 4 [default=MAIN_NET]; // inline EntityBody, defined as uint16 in catbuffer
-        optional NEM2EntityType type = 5; // inline EntityBody
-        optional uint64 fee = 6;
-        optional uint64 deadline = 7;
+        optional NEM2EntityType type = 1; // inline EntityBody
+        optional NEM2NetworkType network_type = 2;
+        optional uint32 version = 3 [default=1]; // inline EntityBody, defined as uint16 in catbuffer
+        optional uint64 max_fee = 4;
+        optional uint64 deadline = 5;
     }
 
     /**
@@ -90,13 +88,9 @@ message NEM2SignTx {
     * https://github.com/nemtech/catbuffer/blob/master/schemas/transaction.cats
     */
     message NEM2TransferTransaction {
-        optional uint32 version = 1 [default=1];
-        optional NEM2EntityType entityType = 2 [default=TRANSFER];
-        optional string recipient_address = 3;
-        optional uint32 message_size = 4;
-        optional uint32 mosaics_count = 5;
-        optional bytes message = 6;
-        repeated NEM2Mosaic mosaics = 7;
+        optional string recipient_address = 1;
+        optional bytes message = 2;
+        repeated NEM2Mosaic mosaics = 3;
     }
 }
 
@@ -105,6 +99,6 @@ message NEM2SignTx {
  * @end
  */
  message NEM2SignedTx {
-    optional bytes data = 1;        // Transaction data
-    optional bytes signature = 2;   // Signature for the transaction
+    optional bytes payload = 1;     // signed transaction payload
+    optional bytes hash = 2;        // transaction hash
 }

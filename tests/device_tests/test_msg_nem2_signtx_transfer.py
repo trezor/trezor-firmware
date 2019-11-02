@@ -31,25 +31,24 @@ class TestMsgNEM2SignTxTransfer:
                 [
                     # Confirm transfer and network fee
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    # Unencrypted message
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     # Confirm recipient
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
                     proto.NEM2SignedTx(),
                 ]
             )
 
-            print("TRANSFER TYPE", nem2.TYPE_TRANSACTION_TRANSFER)
             tx = nem2.sign_tx(
                 client,
                 parse_path("m/44'/43'/0'"),
                 {
-                    "amount": 2000000,
-                    "fee": 1000,
-                    "size": 2212312,
+                    "type": nem2.TYPE_TRANSACTION_TRANSFER,
+                    "network_type": nem2.NETWORK_TYPE_TEST_NET,
+                    "generation_hash": "9F1979BEBA29C47E59B40393ABB516801A353CFC0C18BC241FEDE41939C907E7",
+                    "version": 36865,
+                    "max_fee": 100,
+                    "deadline": 113212179217,
                     "recipient_address": "TALICE2GMA34CXHD7XLJQ536NM5UNKQHTORNNT2J",
-                    "entityType": nem2.TYPE_TRANSACTION_TRANSFER,
-                    "deadline": 74735615,
+                    "mosaics": [{ "amount": 10000000, "id": "85BBEA6CC462B244" }],
                     "message": {
                         "payload": b"test_nem2_transaction_transfer".hex(),
                         "type": 1,
@@ -58,10 +57,10 @@ class TestMsgNEM2SignTxTransfer:
             )
 
             assert (
-                tx.data.hex()
-                == "01010000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f74042800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a80841e000000000025000000010000001d000000746573745f6e656d5f7472616e73616374696f6e5f7472616e73666572"
+                tx.payload.hex()
+                == "B70000007BC55B27E1BA92994B021342176E4C274A2DC74C9A1F724EC39BF5E8D0C28ED066E4CD762B8A98C38081AF347D20DAE0140DCAF19C3E67896C164AF6CB8C7A0F8AF53BB8F3A167C68F264C33237DB309DBC88F64D7A1088B8BEEA5A34DBBBEC201985441640000000000000071A2155C1A00000098168113466037C15CE3FDD698777E6B3B46AA079BA2D6CF4913000100546869732069732061207472616E7366657244B262C46CEABB858096980000000000"
             )
             assert (
-                tx.signature.hex()
-                == "9cda2045324d05c791a4fc312ecceb62954e7740482f8df8928560d63cf273dea595023640179f112de755c79717757ef76962175378d6d87360ddb3f3e5f70f"
+                tx.hash.hex()
+                == "76287219944D387336C27626CB0902B141B66032B99893E687837C85B160E56A"
             )

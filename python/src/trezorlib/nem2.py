@@ -22,11 +22,17 @@ from .tools import CallException, expect
 TYPE_TRANSACTION_TRANSFER = 0x4154
 TYPE_MULTISIG_SIGNATURE = 0x1002
 
+NETWORK_TYPE_MIJIN_TEST = 0x90
+NETWORK_TYPE_MIJIN = 0x60
+NETWORK_TYPE_TEST_NET = 0x98
+NETWORK_TYPE_MAIN_NET = 0x68
 
 def create_transaction_common(transaction):
     msg = proto.NEM2TransactionCommon()
-    msg.size = transaction["size"]
-    msg.fee = transaction["fee"]
+    msg.type = transaction["type"]
+    msg.network_type = transaction["network_type"]
+    msg.version = transaction["version"]
+    msg.max_fee = transaction["max_fee"]
     msg.deadline = transaction["deadline"]
 
     if "signer" in transaction:
@@ -38,20 +44,15 @@ def create_transaction_common(transaction):
 def create_transfer(transaction):
     msg = proto.NEM2TransferTransaction()
     msg.recipient_address = transaction["recipient_address"]
-    msg.amount = transaction["amount"]
 
     if "payload" in transaction["message"]:
         msg.message = bytes.fromhex(transaction["message"]["payload"])
 
-        if transaction["message"]["type"] == 0x02:
-            msg.public_key = bytes.fromhex(transaction["message"]["publicKey"])
-
     if "mosaics" in transaction:
         msg.mosaics = [
-            proto.NEMMosaic(
-                namespace=mosaic["mosaicId"]["namespaceId"],
-                mosaic=mosaic["mosaicId"]["name"],
-                quantity=mosaic["quantity"],
+            proto.NEM2Mosaic(
+                id=int(mosaic["id"], 16),
+                amount=mosaic["amount"],
             )
             for mosaic in transaction["mosaics"]
         ]
@@ -59,7 +60,7 @@ def create_transfer(transaction):
     return msg
 
 def fill_transaction_by_type(msg, transaction):
-    if transaction["entityType"] == TYPE_TRANSACTION_TRANSFER:
+    if transaction["type"] == TYPE_TRANSACTION_TRANSFER:
         msg.transfer = create_transfer(transaction)
     else:
         raise ValueError("Unknown transaction type")
@@ -91,7 +92,7 @@ def sign_tx(client, n, transaction):
     except ValueError as e:
         raise CallException(e.args)
 
-    print("GOT TO HERE", msg)
     assert msg.transaction is not None
-    msg.transaction.address_n = n
+    msg.address_n = n
+    msg.generation_hash = int(transaction["generation_hash"], 16)
     return client.call(msg)

@@ -50,37 +50,24 @@ def _validate_single_tx(msg: NEMSignTx):
         raise ProcessError("More than one transaction provided")
 
 
-def _validate_common(common: NEMTransactionCommon, inner: bool = False):
+def _validate_common(common: NEM2TransactionCommon, inner: bool = False):
 
+    print("VALIDATING COMMON", common)
     err = None
-    if common.fee is None:
-        err = "fee"
+    if common.type is None:
+        err = "type"
+    if common.network_type is None:
+        err = "network_type"
+    if common.version is None:
+        err = "version"
+    if common.max_fee is None:
+        err = "max_fee"
     if common.deadline is None:
         err = "deadline"
 
-    if not inner and common.signer_public_key:
-        raise ProcessError("Signer not allowed in outer transaction")
-
-    if inner and common.signer_public_key is None:
-        err = "signer_public_key"
-
     if err:
-        if inner:
-            raise ProcessError("No %s provided in inner transaction" % err)
-        else:
-            raise ProcessError("No %s provided" % err)
+        raise ProcessError("No %s provided" % err)
 
-    if common.signer_public_key is not None:
-        _validate_public_key(
-            common.signer_public_key, "Invalid sign_public_key in inner transaction"
-        )
-
-
-def _validate_public_key(public_key: bytes, err_msg: str):
-    if not public_key:
-        raise ProcessError("%s (none provided)" % err_msg)
-    if len(public_key) != NEM_PUBLIC_KEY_SIZE:
-        raise ProcessError("%s (invalid length)" % err_msg)
 
 def _validate_multisig(multisig: NEMTransactionCommon, network: int):
     if multisig.network != network:
@@ -96,9 +83,7 @@ def _validate_transfer(transfer: NEMTransfer, network: int):
     #     raise ProcessError("Invalid recipient address")
 
     for m in transfer.mosaics:
-        if m.namespace is None:
-            raise ProcessError("No mosaic namespace provided")
-        if m.mosaic is None:
-            raise ProcessError("No mosaic name provided")
-        if m.quantity is None:
-            raise ProcessError("No mosaic quantity provided")
+        if m.id is None:
+            raise ProcessError("No mosaic id provided")
+        if m.amount is None:
+            raise ProcessError("No mosaic amount provided")

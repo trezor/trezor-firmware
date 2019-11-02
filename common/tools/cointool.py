@@ -712,7 +712,7 @@ def check(backend, icons, show_duplicates):
 
     print("Checking key uniformity...")
     for cointype, coinlist in defs.items():
-        if cointype in ("erc20", "nem"):
+        if cointype in ("erc20", "nem", "nem2"):
             continue
         if not check_key_uniformity(coinlist):
             all_checks_passed = False
@@ -760,7 +760,7 @@ def dump(
     """Dump coin data in JSON format.
 
     This file is structured the same as the internal data. That is, top-level object
-    is a dict with keys: 'bitcoin', 'eth', 'erc20', 'nem' and 'misc'. Value for each
+    is a dict with keys: 'bitcoin', 'eth', 'erc20', 'nem', 'nem2' and 'misc'. Value for each
     key is a list of dicts, each describing a known coin.
 
     If '--list' is specified, the top-level object is instead a flat list of coins.

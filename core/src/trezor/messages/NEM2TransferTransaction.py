@@ -8,40 +8,26 @@ if __debug__:
     try:
         from typing import Dict, List, Optional
         from typing_extensions import Literal  # noqa: F401
-        EnumTypeNEM2EntityType = Literal[0, 16724]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
-        EnumTypeNEM2EntityType = None  # type: ignore
 
 
 class NEM2TransferTransaction(p.MessageType):
 
     def __init__(
         self,
-        version: int = None,
-        entityType: EnumTypeNEM2EntityType = None,
         recipient_address: str = None,
-        message_size: int = None,
-        mosaics_count: int = None,
         message: bytes = None,
         mosaics: List[NEM2Mosaic] = None,
     ) -> None:
-        self.version = version
-        self.entityType = entityType
         self.recipient_address = recipient_address
-        self.message_size = message_size
-        self.mosaics_count = mosaics_count
         self.message = message
         self.mosaics = mosaics if mosaics is not None else []
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('version', p.UVarintType, 0),  # default=1
-            2: ('entityType', p.EnumType("NEM2EntityType", (0, 16724)), 0),  # default=TRANSFER
-            3: ('recipient_address', p.UnicodeType, 0),
-            4: ('message_size', p.UVarintType, 0),
-            5: ('mosaics_count', p.UVarintType, 0),
-            6: ('message', p.BytesType, 0),
-            7: ('mosaics', NEM2Mosaic, p.FLAG_REPEATED),
+            1: ('recipient_address', p.UnicodeType, 0),
+            2: ('message', p.BytesType, 0),
+            3: ('mosaics', NEM2Mosaic, p.FLAG_REPEATED),
         }

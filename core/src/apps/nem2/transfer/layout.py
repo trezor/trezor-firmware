@@ -21,26 +21,22 @@ from apps.common.layout import split_address
 
 async def ask_transfer(
     ctx,
-    common: NEMTransactionCommon,
-    transfer: NEMTransfer,
-    payload: bytes,
-    encrypted: bool,
+    common: NEM2TransactionCommon,
+    transfer: NEM2TransferTransaction
 ):
-    if payload:
-        await _require_confirm_payload(ctx, transfer.payload, encrypted)
     for mosaic in transfer.mosaics:
         await ask_transfer_mosaic(ctx, common, transfer, mosaic)
-    await _require_confirm_transfer(ctx, transfer.recipient, _get_xem_amount(transfer))
-    await require_confirm_final(ctx, common.fee)
+    await _require_confirm_transfer(ctx, transfer.recipient_address, _get_xem_amount(transfer))
+    await require_confirm_final(ctx, common.max_fee)
 
 
 async def ask_transfer_mosaic(
-    ctx, common: NEMTransactionCommon, transfer: NEMTransfer, mosaic: NEMMosaic
+    ctx, common: NEM2TransactionCommon, transfer: NEM2TransferTransaction, mosaic: NEMMosaic
 ):
-    if is_nem_xem_mosaic(mosaic.namespace, mosaic.mosaic):
+    if is_nem_xem_mosaic(mosaic.id):
         return
 
-    definition = get_mosaic_definition(mosaic.namespace, mosaic.mosaic, common.network)
+    definition = get_mosaic_definition(mosaic.id, common.network_type)
     mosaic_quantity = mosaic.quantity * transfer.amount / NEM_MOSAIC_AMOUNT_DIVISOR
 
     if definition:
@@ -77,14 +73,10 @@ async def ask_transfer_mosaic(
         await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
 
-def _get_xem_amount(transfer: NEMTransfer):
-    # if mosaics are empty the transfer.amount denotes the xem amount
-    if not transfer.mosaics:
-        return transfer.amount
-    # otherwise xem amount is taken from the nem xem mosaic if present
+def _get_xem_amount(transfer: NEM2TransferTransaction):
     for mosaic in transfer.mosaics:
-        if is_nem_xem_mosaic(mosaic.namespace, mosaic.mosaic):
-            return mosaic.quantity * transfer.amount / NEM_MOSAIC_AMOUNT_DIVISOR
+        if is_nem_xem_mosaic(mosaic.id):
+            return mosaic.amount / NEM_MOSAIC_AMOUNT_DIVISOR
     # if there are mosaics but do not include xem, 0 xem is sent
     return 0
 
@@ -106,7 +98,7 @@ def _get_levy_msg(mosaic_definition, quantity: int, network: int) -> str:
 
 
 async def ask_importance_transfer(
-    ctx, common: NEMTransactionCommon, imp: NEMImportanceTransfer
+    ctx, common: NEM2TransactionCommon, imp: NEMImportanceTransfer
 ):
     if imp.mode == NEMImportanceTransferMode.ImportanceTransfer_Activate:
         m = "Activate"

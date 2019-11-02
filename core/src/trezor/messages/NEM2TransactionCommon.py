@@ -6,42 +6,36 @@ if __debug__:
     try:
         from typing import Dict, List, Optional
         from typing_extensions import Literal  # noqa: F401
-        EnumTypeNEM2NetworkType = Literal[96, 104, 144, 152]
         EnumTypeNEM2EntityType = Literal[0, 16724]
+        EnumTypeNEM2NetworkType = Literal[96, 104, 144, 152]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
-        EnumTypeNEM2NetworkType = None  # type: ignore
         EnumTypeNEM2EntityType = None  # type: ignore
+        EnumTypeNEM2NetworkType = None  # type: ignore
 
 
 class NEM2TransactionCommon(p.MessageType):
 
     def __init__(
         self,
-        size: int = None,
-        signature: int = None,
-        signer_public_key: int = None,
-        version: EnumTypeNEM2NetworkType = None,
         type: EnumTypeNEM2EntityType = None,
-        fee: int = None,
+        network_type: EnumTypeNEM2NetworkType = None,
+        version: int = None,
+        max_fee: int = None,
         deadline: int = None,
     ) -> None:
-        self.size = size
-        self.signature = signature
-        self.signer_public_key = signer_public_key
-        self.version = version
         self.type = type
-        self.fee = fee
+        self.network_type = network_type
+        self.version = version
+        self.max_fee = max_fee
         self.deadline = deadline
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('size', p.UVarintType, 0),
-            2: ('signature', p.UVarintType, 0),
-            3: ('signer_public_key', p.UVarintType, 0),
-            4: ('version', p.EnumType("NEM2NetworkType", (104, 144, 96, 152)), 0),  # default=MAIN_NET
-            5: ('type', p.EnumType("NEM2EntityType", (0, 16724)), 0),
-            6: ('fee', p.UVarintType, 0),
-            7: ('deadline', p.UVarintType, 0),
+            1: ('type', p.EnumType("NEM2EntityType", (0, 16724)), 0),
+            2: ('network_type', p.EnumType("NEM2NetworkType", (104, 144, 96, 152)), 0),
+            3: ('version', p.UVarintType, 0),  # default=1
+            4: ('max_fee', p.UVarintType, 0),
+            5: ('deadline', p.UVarintType, 0),
         }

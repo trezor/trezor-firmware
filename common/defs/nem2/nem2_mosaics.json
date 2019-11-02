@@ -1,0 +1,12 @@
+[
+    {
+      "name": "NEM",
+      "ticker": "XEM",
+      "namespace": "nem",
+      "mosaic": "xem",
+      "divisibility": 6,
+      "links": {
+        "Homepage": "https://nem.io"
+      }
+    }
+]

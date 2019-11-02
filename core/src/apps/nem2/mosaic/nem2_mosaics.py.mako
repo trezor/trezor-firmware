@@ -1,22 +1,18 @@
 # generated from nem_mosaics.py.mako
 # do not edit manually!
+
+# TODO: ensure all required mosaic fields are accounted for
 <%
 ATTRIBUTES = (
+    "id",
     "name",
-    "ticker",
-    "namespace",
-    "mosaic",
     "divisibility",
-    "levy",
-    "fee",
-    "levy_namespace",
-    "levy_mosaic",
     "networks",
 )
 %>\
 
 mosaics = [
-% for m in supported_on("trezor2", nem):
+% for m in supported_on("trezor2", nem2):
 <% m.ticker = " " + m.ticker %>\
     {
     % for attr in ATTRIBUTES:

@@ -21,8 +21,7 @@ NEM_PUBLIC_KEY_SIZE = const(32)  # ed25519 public key
 NEM_MAX_PLAIN_PAYLOAD_SIZE = const(1024)
 NEM_MAX_ENCRYPTED_PAYLOAD_SIZE = const(960)
 
-
-def check_path(path: list, network=None) -> bool:
+def check_path(path: list) -> bool:
     """
     Validates derivation path to fit 44'/43'/a'
     """

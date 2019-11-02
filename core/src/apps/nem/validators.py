@@ -1,9 +1,9 @@
 from trezor.crypto import nem
 from trezor.messages import NEMModificationType, NEMSupplyChangeType
 from trezor.messages.NEMSignTx import (
-    NEM2SignTx,
-    NEM2TransactionCommon,
-    NEM2Transfer,
+    NEMSignTx,
+    NEMTransactionCommon,
+    NEMTransfer,
 )
 from trezor.wire import ProcessError
 

@@ -14,15 +14,15 @@ class NEM2Mosaic(p.MessageType):
 
     def __init__(
         self,
-        mosaic_id: int = None,
+        id: int = None,
         amount: int = None,
     ) -> None:
-        self.mosaic_id = mosaic_id
+        self.id = id
         self.amount = amount
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('mosaic_id', p.UVarintType, 0),
+            1: ('id', p.UVarintType, 0),
             2: ('amount', p.UVarintType, 0),
         }

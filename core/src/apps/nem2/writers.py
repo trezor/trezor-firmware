@@ -15,11 +15,10 @@ def serialize_tx_common(
     if version is None:
         version = common.network << 24 | 1
     write_uint32_le(w, version)
-    write_uint32_le(w, common.timestamp)
 
     write_bytes_with_len(w, public_key)
-    write_uint64_le(w, common.fee)
-    write_uint32_le(w, common.deadline)
+    write_uint64_le(w, common.max_fee)
+    write_uint64_le(w, common.deadline)
 
     return w
 
