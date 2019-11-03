@@ -52,7 +52,6 @@ def _validate_single_tx(msg: NEMSignTx):
 
 def _validate_common(common: NEM2TransactionCommon, inner: bool = False):
 
-    print("VALIDATING COMMON", common)
     err = None
     if common.type is None:
         err = "type"

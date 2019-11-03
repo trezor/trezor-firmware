@@ -30,17 +30,6 @@ def serialize_transfer(
 
     write_bytes_with_len(tx, transfer.recipient_address.encode())
 
-    if payload:
-        # payload + payload size (u32) + encryption flag (u32)
-        write_uint32_le(tx, len(payload) + 2 * 4)
-        if encrypted:
-            write_uint32_le(tx, 0x02)
-        else:
-            write_uint32_le(tx, 0x01)
-        write_bytes_with_len(tx, payload)
-    else:
-        write_uint32_le(tx, 0)
-
     if transfer.mosaics:
         write_uint32_le(tx, len(transfer.mosaics))
 

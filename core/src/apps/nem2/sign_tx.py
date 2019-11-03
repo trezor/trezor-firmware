@@ -20,7 +20,6 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
         CURVE,
     )
 
-    print("in sign_tx passed validate_path")
     node = keychain.derive(msg.address_n, CURVE)
 
     if msg.multisig:
@@ -70,7 +69,7 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
 
 
     # https://nemtech.github.io/concepts/transaction.html#signing-a-transaction
-
+    print("TX ", tx)
     signature = ed25519.sign(node.private_key(), msg.generation_hash + tx.decode(), NEM_HASH_ALG)
 
     resp = NEM2SignedTx()
