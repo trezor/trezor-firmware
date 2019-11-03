@@ -93,6 +93,10 @@
     "bitcoin:PART": {
         "Particl Core": "https://github.com/particl/particl-core/releases"
     },
+    "bitcoin:PIVX": {
+        "SPMT": "https://github.com/PIVX-Project/PIVX-SPMT/",
+        "Zephyr": "https://github.com/mrcarlanthony/Zephyr-wallet"
+    },
     "bitcoin:POLIS": {
         "PolisPay": "https://polispay.com"
     },
