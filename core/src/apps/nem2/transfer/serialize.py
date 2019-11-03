@@ -4,7 +4,7 @@ from trezor.messages.NEMTransfer import NEMTransfer
 
 from ..helpers import (
     AES_BLOCK_SIZE,
-    NEM_TRANSACTION_TYPE_TRANSFER,
+    NEM2_TRANSACTION_TYPE_TRANSFER,
 )
 from ..writers import (
     serialize_tx_common,
@@ -24,7 +24,7 @@ def serialize_transfer(
     tx = serialize_tx_common(
         common,
         public_key,
-        NEM_TRANSACTION_TYPE_TRANSFER,
+        NEM2_TRANSACTION_TYPE_TRANSFER,
         _get_version(common.network_type, transfer.mosaics),
     )
 

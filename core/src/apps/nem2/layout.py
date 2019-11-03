@@ -3,7 +3,7 @@ from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
 from trezor.utils import format_amount
 
-from .helpers import NEM_MAX_DIVISIBILITY
+from .helpers import NEM2_MAX_DIVISIBILITY
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 

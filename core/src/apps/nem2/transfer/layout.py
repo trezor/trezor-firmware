@@ -9,8 +9,8 @@ from trezor.ui.text import Text
 from trezor.utils import format_amount
 
 from ..helpers import (
-    NEM_MAX_DIVISIBILITY,
-    NEM_MOSAIC_AMOUNT_DIVISOR,
+    NEM2_MAX_DIVISIBILITY,
+    NEM2_MOSAIC_AMOUNT_DIVISOR,
 )
 from ..layout import require_confirm_final, require_confirm_text
 from ..mosaic.helpers import get_mosaic_definition, is_nem_xem_mosaic

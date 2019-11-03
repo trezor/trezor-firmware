@@ -21,7 +21,9 @@ trap 'print_summary; echo -e "${COLOR_RED}Interrupted by user!${COLOR_RESET}"; e
 
 cd $(dirname $0)
 
-[ -z "$*" ] && tests=(test_*.py) || tests=($*)
+# TODO: revert back to unit tests for everything
+#[ -z "$*" ] && tests=(test_apps.nem2*.py) || tests=($*)
+[ -z "$*" ] && tests=(test_apps.nem2*.py) || tests=($*)
 
 declare -i num_of_tests=${#tests[@]}
 
