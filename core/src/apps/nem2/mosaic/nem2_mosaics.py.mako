@@ -1,4 +1,4 @@
-# generated from nem_mosaics.py.mako
+# generated from nem2_mosaics.py.mako
 # do not edit manually!
 
 # TODO: ensure all required mosaic fields are accounted for
