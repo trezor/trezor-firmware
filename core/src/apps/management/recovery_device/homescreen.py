@@ -24,6 +24,10 @@ if False:
 
 
 async def recovery_homescreen() -> None:
+    if not storage.recovery.is_in_progress():
+        workflow.replace_default(homescreen)
+        return
+
     # recovery process does not communicate on the wire
     ctx = wire.DummyContext()
     await recovery_process(ctx)
@@ -31,16 +35,14 @@ async def recovery_homescreen() -> None:
 
 async def recovery_process(ctx: wire.GenericContext) -> Success:
     try:
-        result = await _continue_recovery_process(ctx)
+        return await _continue_recovery_process(ctx)
     except recover.RecoveryAborted:
         dry_run = storage_recovery.is_dry_run()
         if dry_run:
             storage_recovery.end_progress()
         else:
             storage.wipe()
-        workflow.replace_default(homescreen)
         raise wire.ActionCancelled("Cancelled")
-    return result
 
 
 async def _continue_recovery_process(ctx: wire.GenericContext) -> Success:

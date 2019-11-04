@@ -1,4 +1,4 @@
-from trezor import config, ui, wire
+from trezor import config, ui, wire, workflow
 from trezor.messages import ButtonRequestType
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
@@ -12,7 +12,10 @@ from apps.common.request_pin import (
     show_pin_invalid,
 )
 from apps.common.storage import device as storage_device, recovery as storage_recovery
-from apps.management.recovery_device.homescreen import recovery_process
+from apps.management.recovery_device.homescreen import (
+    recovery_homescreen,
+    recovery_process,
+)
 
 if False:
     from trezor.messages.RecoveryDevice import RecoveryDevice
@@ -55,6 +58,7 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     if msg.dry_run:
         storage_recovery.set_dry_run(msg.dry_run)
 
+    workflow.replace_default(recovery_homescreen)
     return await recovery_process(ctx)
 
 
