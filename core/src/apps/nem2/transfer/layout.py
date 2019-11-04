@@ -37,7 +37,7 @@ async def ask_transfer_mosaic(
         return
 
     definition = get_mosaic_definition(mosaic.id, common.network_type)
-    mosaic_quantity = mosaic.quantity * transfer.amount / NEM_MOSAIC_AMOUNT_DIVISOR
+    mosaic_quantity = mosaic.quantity * transfer.amount / NEM2_MOSAIC_AMOUNT_DIVISOR
 
     if definition:
         msg = Text("Confirm mosaic", ui.ICON_SEND, ui.GREEN)
@@ -76,7 +76,7 @@ async def ask_transfer_mosaic(
 def _get_xem_amount(transfer: NEM2TransferTransaction):
     for mosaic in transfer.mosaics:
         if is_nem_xem_mosaic(mosaic.id):
-            return mosaic.amount / NEM_MOSAIC_AMOUNT_DIVISOR
+            return mosaic.amount / NEM2_MOSAIC_AMOUNT_DIVISOR
     # if there are mosaics but do not include xem, 0 xem is sent
     return 0
 
@@ -89,7 +89,7 @@ def _get_levy_msg(mosaic_definition, quantity: int, network: int) -> str:
         levy_fee = mosaic_definition["fee"]
     else:
         levy_fee = (
-            quantity * mosaic_definition["fee"] / NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE
+            quantity * mosaic_definition["fee"] / NEM2_LEVY_PERCENTILE_DIVISOR_ABSOLUTE
         )
     return (
         format_amount(levy_fee, levy_definition["divisibility"])
@@ -110,7 +110,7 @@ async def ask_importance_transfer(
 
 async def _require_confirm_transfer(ctx, recipient, value):
     text = Text("Confirm transfer", ui.ICON_SEND, ui.GREEN)
-    text.bold("Send %s XEM" % format_amount(value, NEM_MAX_DIVISIBILITY))
+    text.bold("Send %s XEM" % format_amount(value, NEM2_MAX_DIVISIBILITY))
     text.normal("to")
     text.mono(*split_address(recipient))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)

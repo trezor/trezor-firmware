@@ -6,17 +6,17 @@ from trezor.messages.NEM2SignTx import (
 from trezor.wire import ProcessError
 
 from .helpers import (
-    NEM_MAX_DIVISIBILITY,
-    NEM_MAX_ENCRYPTED_PAYLOAD_SIZE,
-    NEM_MAX_PLAIN_PAYLOAD_SIZE,
-    NEM_MAX_SUPPLY,
-    NEM_NETWORK_MAINNET,
-    NEM_NETWORK_MIJIN,
-    NEM_NETWORK_TESTNET,
-    NEM_PUBLIC_KEY_SIZE,
+    NEM2_MAX_DIVISIBILITY,
+    NEM2_MAX_ENCRYPTED_PAYLOAD_SIZE,
+    NEM2_MAX_PLAIN_PAYLOAD_SIZE,
+    NEM2_MAX_SUPPLY,
+    NEM2_NETWORK_MAINNET,
+    NEM2_NETWORK_MIJIN,
+    NEM2_NETWORK_TESTNET,
+    NEM2_PUBLIC_KEY_SIZE,
 )
 
-def validate(msg: NEMSignTx):
+def validate(msg: NEM2SignTx):
     if msg.transaction is None:
         raise ProcessError("No common transaction fields provided")
 
@@ -34,7 +34,7 @@ def validate(msg: NEMSignTx):
 
 
 
-def _validate_single_tx(msg: NEMSignTx):
+def _validate_single_tx(msg: NEM2SignTx):
     # ensure exactly one transaction is provided
     tx_count = (
         bool(msg.transfer)
@@ -68,12 +68,12 @@ def _validate_common(common: NEM2TransactionCommon, inner: bool = False):
         raise ProcessError("No %s provided" % err)
 
 
-def _validate_multisig(multisig: NEMTransactionCommon, network: int):
+def _validate_multisig(multisig: NEM2TransactionCommon, network: int):
     if multisig.network != network:
         raise ProcessError("Inner transaction network is different")
     _validate_public_key(multisig.signer, "Invalid multisig signer public key provided")
 
-def _validate_transfer(transfer: NEMTransfer, network: int):
+def _validate_transfer(transfer: NEM2TransferTransaction, network: int):
     if transfer.recipient_address is None:
         raise ProcessError("No recipient provided")
 

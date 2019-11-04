@@ -101,4 +101,5 @@ message NEM2SignTx {
  message NEM2SignedTx {
     optional bytes payload = 1;     // signed transaction payload
     optional bytes hash = 2;        // transaction hash
+    optional bytes signature = 3;        // transaction signature
 }

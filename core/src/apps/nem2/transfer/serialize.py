@@ -13,7 +13,8 @@ from ..writers import (
     write_uint64_le,
 )
 
-
+# reflect the serialization used here:
+# https://github.com/nemtech/nem2-sdk-typescript-javascript/blob/master/src/infrastructure/catbuffer/TransferTransactionBodyBuilder.ts#L120
 def serialize_transfer(
     common: NEM2TransactionCommon,
     transfer: NEM2TransferTransaction,

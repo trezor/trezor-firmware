@@ -5,7 +5,7 @@ from trezor.messages.NEM2SignTx import NEM2SignTx
 from apps.common import seed
 from apps.common.paths import validate_path
 from apps.nem2 import CURVE, transfer
-from apps.nem2.helpers import NEM_HASH_ALG, check_path
+from apps.nem2.helpers import NEM2_HASH_ALG, check_path
 from apps.nem2.validators import validate
 
 
@@ -67,12 +67,13 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
                 seed.remove_ed25519_prefix(node.public_key()), msg.transaction, tx
             )
 
-
     # https://nemtech.github.io/concepts/transaction.html#signing-a-transaction
     print("TX ", tx)
-    signature = ed25519.sign(node.private_key(), msg.generation_hash + tx.decode(), NEM_HASH_ALG)
+    # signature = ed25519.sign(node.private_key(), msg.generation_hash + tx.decode(), NEM2_HASH_ALG)
+    # signature = ed25519.sign(node.private_key(), tx, NEM2_HASH_ALG)
 
     resp = NEM2SignedTx()
-    resp.payload = tx.decode() + signature + node.public_key()
-    resp.hash = signature
+    resp.payload = "MOCK_PAYLOAD"
+    resp.hash = "MOCK_HASH"
+    resp.signature = "MOCK_SIGNATURE"
     return resp

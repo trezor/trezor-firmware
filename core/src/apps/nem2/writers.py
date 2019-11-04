@@ -2,7 +2,7 @@ from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 
 from apps.common.writers import write_bytes, write_uint32_le, write_uint64_le
 
-
+# https://github.com/nemtech/nem2-sdk-typescript-javascript/blob/master/src/infrastructure/catbuffer/TransactionBuilder.ts#L167
 def serialize_tx_common(
     common: NEMTransactionCommon,
     public_key: bytearray,
