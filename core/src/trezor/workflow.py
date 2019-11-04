@@ -49,7 +49,11 @@ def on_close(workflow: loop.Task) -> None:
 
 
 def start_default(constructor: Callable[[], loop.Task]) -> None:
-    """Start a default workflow, created from `constructor`."""
+    """Start a default workflow, created from `constructor`.
+
+    If a default task is already running, nothing will happen. Use `replace_default`
+    to set up a new default task for the next run.
+    """
     global default_task
     global default_constructor
 
@@ -67,17 +71,12 @@ def start_default(constructor: Callable[[], loop.Task]) -> None:
 
 
 def replace_default(constructor: Callable[[], loop.Task]) -> None:
-    global default_task
-
+    """Configure a default workflow, which will be started next time it is needed."""
+    global default_constructor
     if __debug__:
-        if default_task is None:
-            log.debug(__name__, "replacing default: default not running")
-        else:
-            log.debug(__name__, "replacing default: %s", default_task)
+        log.debug(__name__, "setting a new default: %s", constructor)
+    default_constructor = constructor
 
-    if default_task is not None:
-        loop.finalize(default_task, None)  # TODO: why not close_default()
-    start_default(constructor)
 
 def kill_default() -> None:
     """Forcefully shut down default task.
@@ -96,12 +95,21 @@ def kill_default() -> None:
 
 
 def _finalize_default(task: loop.Task, value: Any) -> None:
+    """Finalizer for the default task. Cleans up globals and restarts the default
+    in case no other task is running."""
     global default_task
 
     if default_task is task:
         if __debug__:
             log.debug(__name__, "default closed: %s", task)
         default_task = None
+
+        if not tasks and default_constructor:
+            # No registered workflows are running and we are in the default task
+            # finalizer, so when this function finished, nothing will be running.
+            # We must schedule a new instance of the default now.
+            start_default(default_constructor)
+
     else:
         if __debug__:
             log.warning(
@@ -110,3 +118,9 @@ def _finalize_default(task: loop.Task, value: Any) -> None:
                 task,
                 default_task,
             )
+
+
+# TODO
+# If required, a function `shutdown_default` should be written, that clears the
+# default constructor and shuts down the running default task.
+# We currently do not need such function, so I'm just noting how it should work.
