@@ -79,9 +79,15 @@ def replace_default(constructor: Callable[[], loop.Task]) -> None:
         loop.finalize(default_task, None)  # TODO: why not close_default()
     start_default(constructor)
 
+def kill_default() -> None:
+    """Forcefully shut down default task.
 
-def close_default() -> None:
-    """Explicitly close the default workflow task."""
+    The purpose of the call is to prevent the default task from interfering with
+    a synchronous layout-less workflow (e.g., the progress bar in `mnemonic.get_seed`).
+
+    This function should only be called from a workflow registered with `on_start`.
+    Otherwise the default will be restarted immediately.
+    """
     if default_task:
         if __debug__:
             log.debug(__name__, "close default")
