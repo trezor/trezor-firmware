@@ -26,6 +26,9 @@ def set_selection(debug, button, diff):
 
 
 def read_words(debug, is_advanced=False):
+    def read_word(line: str):
+        return line.split()[1]
+
     words = []
     layout = debug.read_layout()
     if is_advanced:
@@ -35,17 +38,17 @@ def read_words(debug, is_advanced=False):
     for i in range(6):
         lines = debug.read_layout().lines
         if i == 0:
-            words.append(lines[3].split()[1])
-            words.append(lines[4].split()[1])
+            words.append(read_word(lines[3]))
+            words.append(read_word(lines[4]))
             debug.input(swipe=messages.DebugSwipeDirection.UP, wait=True)
         elif i == 5:
-            words.append(lines[1].split()[1])
-            words.append(lines[2].split()[1])
+            words.append(read_word(lines[1]))
+            words.append(read_word(lines[2]))
         else:
-            words.append(lines[1].split()[1])
-            words.append(lines[2].split()[1])
-            words.append(lines[3].split()[1])
-            words.append(lines[4].split()[1])
+            words.append(read_word(lines[1]))
+            words.append(read_word(lines[2]))
+            words.append(read_word(lines[3]))
+            words.append(read_word(lines[4]))
             debug.input(swipe=messages.DebugSwipeDirection.UP, wait=True)
     debug.press_yes()
 
@@ -53,7 +56,6 @@ def read_words(debug, is_advanced=False):
 
 
 def confirm_words(debug, words):
-    # confirm words
     layout = debug.wait_layout()
     layout.text.startswith("Check share")
     for _ in range(3):
