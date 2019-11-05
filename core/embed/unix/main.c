@@ -653,7 +653,11 @@ MP_NOINLINE int main_(int argc, char **argv) {
   }
 
 #if MICROPY_PY_MICROPYTHON_MEM_INFO
-  if (mp_verbose_flag) {
+  char *env_str_trezor_log_memory = getenv("TREZOR_LOG_MEMORY");
+  if (!env_str_trezor_log_memory || atoi(env_str_trezor_log_memory) == 0) {
+    env_str_trezor_log_memory = NULL;
+  }
+  if (mp_verbose_flag || env_str_trezor_log_memory) {
     mp_micropython_mem_info(0, NULL);
   }
 #endif
