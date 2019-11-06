@@ -15,8 +15,6 @@ async def get_address(ctx, msg, keychain):
 
     node = keychain.derive(msg.address_n, CURVE)
     sk = helpers.modify_private_key(node.private_key())
-    sk_base58 = base58.encode(sk)
-    print("SK: "+sk_base58)
     pk = curve25519.publickey(sk)
     pk_base58 = base58.encode(pk)
     chain_id = helpers.get_chain_id(msg.address_n)

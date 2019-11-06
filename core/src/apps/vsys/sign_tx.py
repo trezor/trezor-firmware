@@ -1,7 +1,7 @@
 from trezor import wire
 from trezor.crypto import base58
 from trezor.messages.VsysSignedTx import VsysSignedTx
-from trezor.crypto.curve import curve25519_axolotl
+from trezor.crypto.curve import curve25519_axolotl, curve25519
 
 from apps.common import paths
 from apps.common.writers import write_bytes, write_uint8, write_uint16_be, write_uint64_be
@@ -35,7 +35,10 @@ async def sign_tx(ctx, msg, keychain):
     if not msg.timestamp:
         raise wire.DataError("Invalid timestamp")
 
-    if msg.senderPublicKey != node.public_key():
+    sk = helpers.modify_private_key(node.private_key())
+    pk = curve25519.publickey(sk)
+    pk_base58 = base58.encode(pk)
+    if msg.senderPublicKey != pk_base58:
         raise wire.DataError("Public key mismatch. Please confirm you used correct Trezor device.")
 
     if msg.transactionType == PAYMENT_TX_TYPE:
@@ -50,7 +53,7 @@ async def sign_tx(ctx, msg, keychain):
     else:
         raise wire.DataError("Transaction type unsupported")
 
-    signature = generate_content_signature(to_sign_bytes, node.private_key())
+    signature = generate_content_signature(to_sign_bytes, sk)
     signature_base58 = base58.encode(signature)
     return VsysSignedTx(signature=signature_base58, api=SIGN_API_VER, protocol=PROTOCOL, opc=OPC_SIGN)
 
@@ -63,7 +66,10 @@ def encode_payment_tx_to_bytes(msg):
     write_uint64_be(w, msg.fee)
     write_uint16_be(w, msg.feeScale)
     write_bytes(w, base58.decode(msg.recipient))
-    attachment_bytes = base58.decode(msg.attachment)
+    try:
+        attachment_bytes = base58.decode(msg.attachment)
+    except Exception:
+        attachment_bytes = bytes(msg.attachment, 'utf-8')
     write_uint16_be(w, len(attachment_bytes))
     write_bytes(w, attachment_bytes)
     return w
