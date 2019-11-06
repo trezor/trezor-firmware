@@ -35,7 +35,8 @@ async def bootscreen() -> None:
             if __debug__:
                 log.exception(__name__, e)
         except Exception as e:
-            print(e)
+            if __debug__:
+                log.exception(__name__, e)
             utils.halt(e.__class__.__name__)
 
 
