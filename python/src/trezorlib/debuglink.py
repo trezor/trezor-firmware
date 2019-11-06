@@ -181,6 +181,27 @@ class DebugUI:
 
     def button_request(self, code):
         if self.input_flow is None:
+            # XXX
+            # On Trezor T, in some rare cases, two layouts may be queuing for events at
+            # the same time.  A new workflow will first send out a ButtonRequest, wait
+            # for a ButtonAck, and only then display a layout (closing the old one).
+            # That means that if a layout that accepts debuglink decisions is currently
+            # on screen, it has a good chance of accepting the following `press_yes`
+            # before it can be closed by the newly open layout from the new workflow.
+            #
+            # This happens in particular when the recovery homescreen is on, because
+            # it is a homescreen that accepts debuglink decisions.
+            #
+            # To prevent the issue, we insert a `wait_layout`, which on TT will only
+            # return after the screen is refreshed, so we are certain that the new
+            # layout is on. On T1 it is a no-op.
+            #
+            # This could run into trouble if some workflow asks for a ButtonRequest
+            # without refreshing the screen.
+            # This will also freeze on old bridges, where Read and Write are not
+            # separate operations, because it relies on ButtonAck being sent without
+            # waiting for a response.
+            self.debuglink.wait_layout()
             self.debuglink.press_yes()
         elif self.input_flow is self.INPUT_FLOW_DONE:
             raise AssertionError("input flow ended prematurely")
