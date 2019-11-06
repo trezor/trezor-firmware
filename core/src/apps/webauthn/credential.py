@@ -54,7 +54,7 @@ class Credential:
         return storage.device.next_u2f_counter() or 0
 
     @staticmethod
-    def from_bytes(data: bytes, rp_id_hash: bytes) -> Optional["Credential"]:
+    def from_bytes(data: bytes, rp_id_hash: bytes) -> "Credential":
         try:
             return Fido2Credential.from_cred_id(data, rp_id_hash)
         except Exception:
@@ -274,11 +274,9 @@ class U2fCredential(Credential):
         return app_name
 
     @staticmethod
-    def from_key_handle(
-        key_handle: bytes, rp_id_hash: bytes
-    ) -> Optional["U2fCredential"]:
+    def from_key_handle(key_handle: bytes, rp_id_hash: bytes) -> "U2fCredential":
         if len(key_handle) != _KEY_HANDLE_LENGTH:
-            return None
+            raise ValueError  # key length mismatch
 
         # check the keyHandle and generate the signing key
         node = U2fCredential._node_from_key_handle(rp_id_hash, key_handle, "<8L")
@@ -289,7 +287,7 @@ class U2fCredential(Credential):
             node = U2fCredential._node_from_key_handle(rp_id_hash, key_handle, ">8L")
         if node is None:
             # specific error logged in msg_authenticate_genkey
-            return None
+            raise ValueError  # failed to parse key handle in either direction
 
         cred = U2fCredential()
         cred.id = key_handle

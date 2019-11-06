@@ -1162,8 +1162,9 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     khlen = req.data[_REQ_CMD_AUTHENTICATE_KHLEN]
     auth = overlay_struct(req.data, req_cmd_authenticate(khlen))
 
-    cred = Credential.from_bytes(auth.keyHandle, bytes(auth.appId))
-    if cred is None:
+    try:
+        cred = Credential.from_bytes(auth.keyHandle, bytes(auth.appId))
+    except Exception:
         # specific error logged in msg_authenticate_genkey
         return msg_error(req.cid, _SW_WRONG_DATA)
 
@@ -1264,9 +1265,11 @@ def credentials_from_descriptor_list(
         credential_id = credential_descriptor["id"]
         if not isinstance(credential_id, (bytes, bytearray)):
             raise TypeError
-        cred = Credential.from_bytes(credential_id, rp_id_hash)
-        if cred is not None:
+        try:
+            cred = Credential.from_bytes(credential_id, rp_id_hash)
             cred_list.append(cred)
+        except Exception:
+            pass
 
     return cred_list
 
