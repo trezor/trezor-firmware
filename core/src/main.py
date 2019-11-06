@@ -71,13 +71,13 @@ def _boot_apps() -> None:
 
 from trezor import loop, wire, workflow
 
-while True:
-    # initialize the wire codec
-    wire.setup(usb.iface_wire)
-    if __debug__:
-        wire.setup(usb.iface_debug)
+# initialize the wire codec
+wire.setup(usb.iface_wire)
+if __debug__:
+    wire.setup(usb.iface_debug)
 
-    _boot_apps()
-    loop.run()
+_boot_apps()
+loop.run()
 
-    # loop is empty, reboot
+# loop is empty. That should not happen
+utils.halt("All tasks have died.")

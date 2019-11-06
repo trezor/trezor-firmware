@@ -104,11 +104,14 @@ def _finalize_default(task: loop.Task, value: Any) -> None:
             log.debug(__name__, "default closed: %s", task)
         default_task = None
 
-        if not tasks and default_constructor:
+        if not tasks:
             # No registered workflows are running and we are in the default task
             # finalizer, so when this function finished, nothing will be running.
             # We must schedule a new instance of the default now.
-            start_default(default_constructor)
+            if default_constructor is not None:
+                start_default(default_constructor)
+            else:
+                raise RuntimeError  # no tasks and no default constructor
 
     else:
         if __debug__:
