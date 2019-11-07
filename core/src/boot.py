@@ -16,7 +16,7 @@ async def bootscreen() -> None:
             if storage.sd_salt.is_enabled() or config.has_pin():
                 await lockscreen()
 
-            salt = await request_sd_salt(wire.DummyContext())
+            salt = await request_sd_salt()
 
             if not config.has_pin():
                 config.unlock(pin_to_int(""), salt)
