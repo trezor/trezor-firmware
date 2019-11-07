@@ -4,7 +4,7 @@ from trezor.messages.NEM2SignTx import NEM2SignTx
 
 from apps.common import seed
 from apps.common.paths import validate_path
-from apps.nem2 import CURVE, transfer
+from apps.nem2 import CURVE, transfer, mosaic
 from apps.nem2.helpers import NEM2_HASH_ALG, check_path
 from apps.nem2.validators import validate
 
@@ -30,12 +30,14 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
         public_key = seed.remove_ed25519_prefix(node.public_key())
         common = msg.transaction
 
+    print(msg)
+
     if msg.transfer:
         tx = await transfer.transfer(ctx, public_key, common, msg.transfer, node)
+    elif msg.mosaic_definition:
+        tx = await mosaic.mosaic_definition(ctx, public_key, common, msg.mosaic_definition)
     # elif msg.provision_namespace:
     #     tx = await namespace.namespace(ctx, public_key, common, msg.provision_namespace)
-    # elif msg.mosaic_creation:
-    #     tx = await mosaic.mosaic_creation(ctx, public_key, common, msg.mosaic_creation)
     # elif msg.supply_change:
     #     tx = await mosaic.supply_change(ctx, public_key, common, msg.supply_change)
     # elif msg.aggregate_modification:

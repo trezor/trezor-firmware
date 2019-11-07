@@ -177,6 +177,7 @@ from .MoneroWatchKey import MoneroWatchKey
 from .MultisigRedeemScriptType import MultisigRedeemScriptType
 from .NEM2GetPublicKey import NEM2GetPublicKey
 from .NEM2Mosaic import NEM2Mosaic
+from .NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
 from .NEM2PublicKey import NEM2PublicKey
 from .NEM2SignTx import NEM2SignTx
 from .NEM2SignedTx import NEM2SignedTx

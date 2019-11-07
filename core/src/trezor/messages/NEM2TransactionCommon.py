@@ -6,7 +6,7 @@ if __debug__:
     try:
         from typing import Dict, List, Optional
         from typing_extensions import Literal  # noqa: F401
-        EnumTypeNEM2EntityType = Literal[0, 16724]
+        EnumTypeNEM2EntityType = Literal[0, 16717, 16724]
         EnumTypeNEM2NetworkType = Literal[96, 104, 144, 152]
     except ImportError:
         Dict, List, Optional = None, None, None  # type: ignore
@@ -33,7 +33,7 @@ class NEM2TransactionCommon(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.EnumType("NEM2EntityType", (0, 16724)), 0),
+            1: ('type', p.EnumType("NEM2EntityType", (0, 16724, 16717)), 0),
             2: ('network_type', p.EnumType("NEM2NetworkType", (104, 144, 96, 152)), 0),
             3: ('version', p.UVarintType, 0),  # default=1
             4: ('max_fee', p.UVarintType, 0),

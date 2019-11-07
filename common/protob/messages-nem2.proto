@@ -41,6 +41,7 @@ message NEM2SignTx {
     optional NEM2NetworkType network_type = 5 [default=MAIN_NET];
     repeated uint32 address_n = 6;
     optional bool cosigning = 7;
+    optional NEM2MosaicDefinitionTransaction mosaic_definition = 8;
 
     /**
     * Common types from
@@ -59,6 +60,7 @@ message NEM2SignTx {
     enum NEM2EntityType {
         RESERVED = 0;
         TRANSFER = 16724;
+        MOSAIC_DEFINITION = 16717;
     }
 
     enum NEM2NetworkType {
@@ -91,6 +93,17 @@ message NEM2SignTx {
         optional string recipient_address = 1;
         optional bytes message = 2;
         repeated NEM2Mosaic mosaics = 3;
+    }
+
+    /**
+    * Mosaic Transaction type definitions
+    */
+    message NEM2MosaicDefinitionTransaction {
+        optional uint32 nonce = 1; // mosaic nonce
+        optional string mosaicId = 2; // mosaic identifier
+        optional uint32 flags = 3; // mosaic flags
+        optional uint32 divisibility = 4; // mosaic divisibility
+        optional uint64 duration = 5; // mosaic duration
     }
 }
 

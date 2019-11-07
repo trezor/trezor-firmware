@@ -21,6 +21,7 @@ from .tools import CallException, expect
 
 TYPE_TRANSACTION_TRANSFER = 0x4154
 TYPE_MULTISIG_SIGNATURE = 0x1002
+TYPE_MOSAIC_DEFINITION = 0x414D
 
 NETWORK_TYPE_MIJIN_TEST = 0x90
 NETWORK_TYPE_MIJIN = 0x60
@@ -59,9 +60,16 @@ def create_transfer(transaction):
 
     return msg
 
+def create_mosaic_defnition(transaction):
+    msg = proto.NEM2MosaicDefinitionTransaction()
+    msg.nonce = 2
+    return msg
+
 def fill_transaction_by_type(msg, transaction):
     if transaction["type"] == TYPE_TRANSACTION_TRANSFER:
         msg.transfer = create_transfer(transaction)
+    if transaction["type"] == TYPE_MOSAIC_DEFINITION:
+        msg.mosaic_definition = create_mosaic_defnition(transaction)
     else:
         raise ValueError("Unknown transaction type")
 
