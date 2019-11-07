@@ -6,7 +6,8 @@ import boot  # noqa: F401
 # prepare the USB interfaces, but do not connect to the host yet
 import usb
 
-from trezor import utils
+import storage.recovery
+from trezor import loop, utils, wire, workflow
 
 # start the USB
 usb.bus.open()
@@ -15,21 +16,7 @@ usb.bus.open()
 utils.set_mode_unprivileged()
 
 
-def _boot_recovery() -> None:
-    # load applications
-    import apps.homescreen
-
-    # boot applications
-    apps.homescreen.boot(features_only=True)
-    if __debug__:
-        apps.debug.boot()
-
-    from apps.management.recovery_device.homescreen import recovery_homescreen
-
-    loop.schedule(recovery_homescreen())
-
-
-def _boot_default() -> None:
+def _boot_apps() -> None:
     # load applications
     import apps.homescreen
     import apps.management
@@ -71,25 +58,23 @@ def _boot_default() -> None:
         apps.debug.boot()
 
     # run main event loop and specify which screen is the default
-    from apps.homescreen.homescreen import homescreen
-
-    workflow.start_default(homescreen)
-
-
-import storage.recovery
-from trezor import loop, wire, workflow
-
-while True:
-    # initialize the wire codec
-    wire.setup(usb.iface_wire)
-    if __debug__:
-        wire.setup(usb.iface_debug)
-
-    # boot either in recovery or default mode
     if storage.recovery.is_in_progress():
-        _boot_recovery()
-    else:
-        _boot_default()
-    loop.run()
+        from apps.management.recovery_device.homescreen import recovery_homescreen
 
-    # loop is empty, reboot
+        workflow.start_default(recovery_homescreen)
+    else:
+        from apps.homescreen.homescreen import homescreen
+
+        workflow.start_default(homescreen)
+
+
+# initialize the wire codec
+wire.setup(usb.iface_wire)
+if __debug__:
+    wire.setup(usb.iface_debug)
+
+_boot_apps()
+loop.run()
+
+# loop is empty. That should not happen
+utils.halt("All tasks have died.")

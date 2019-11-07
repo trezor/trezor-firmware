@@ -24,6 +24,7 @@ from trezorlib.tools import H_
 
 @pytest.mark.flaky(max_runs=5)
 class TestBip32Speed:
+    @pytest.mark.skip_t2
     def test_public_ckd(self, client):
         btc.get_address(client, "Bitcoin", [])  # to compute root node via BIP39
 
@@ -35,6 +36,7 @@ class TestBip32Speed:
             print("DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay)
             assert delay <= expected
 
+    @pytest.mark.skip_t2
     def test_private_ckd(self, client):
         btc.get_address(client, "Bitcoin", [])  # to compute root node via BIP39
 

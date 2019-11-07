@@ -21,8 +21,14 @@ INFO = (MID, BOTTOM)
 
 CONFIRM_WORD = (MID, TOP)
 
-MINUS = (LEFT, grid(DISPLAY_HEIGHT, 5, 2))
-PLUS = (RIGHT, grid(DISPLAY_HEIGHT, 5, 2))
+RESET_MINUS = (LEFT, grid(DISPLAY_HEIGHT, 5, 1))
+RESET_PLUS = (RIGHT, grid(DISPLAY_HEIGHT, 5, 1))
+
+RESET_WORD_CHECK = [
+    (MID, grid(DISPLAY_HEIGHT, 6, 3)),
+    (MID, grid(DISPLAY_HEIGHT, 6, 4)),
+    (MID, grid(DISPLAY_HEIGHT, 6, 5)),
+]
 
 
 BUTTON_LETTERS = ("ab", "cd", "ef", "ghij", "klm", "nopq", "rs", "tuv", "wxyz")

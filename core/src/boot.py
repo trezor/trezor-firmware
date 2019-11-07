@@ -1,7 +1,7 @@
 import storage
 import storage.device
 import storage.sd_salt
-from trezor import config, io, log, loop, res, ui, utils, wire
+from trezor import config, io, log, loop, res, ui, utils
 from trezor.pin import pin_to_int, show_pin_timeout
 
 from apps.common.request_pin import PinCancelled, request_pin
@@ -34,7 +34,7 @@ async def bootscreen() -> None:
         except (OSError, PinCancelled, SdProtectCancelled) as e:
             if __debug__:
                 log.exception(__name__, e)
-        except Exception as e:
+        except BaseException as e:
             if __debug__:
                 log.exception(__name__, e)
             utils.halt(e.__class__.__name__)

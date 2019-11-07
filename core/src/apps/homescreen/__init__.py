@@ -108,10 +108,9 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
     return Success(message=msg.message)
 
 
-def boot(features_only: bool = False) -> None:
+def boot() -> None:
     register(MessageType.Initialize, handle_Initialize)
     register(MessageType.GetFeatures, handle_GetFeatures)
-    if not features_only:
-        register(MessageType.Cancel, handle_Cancel)
-        register(MessageType.ClearSession, handle_ClearSession)
-        register(MessageType.Ping, handle_Ping)
+    register(MessageType.Cancel, handle_Cancel)
+    register(MessageType.ClearSession, handle_ClearSession)
+    register(MessageType.Ping, handle_Ping)
