@@ -1,4 +1,4 @@
-import storage.webauthn
+import storage.resident_credentials
 from trezor import wire
 from trezor.messages.Success import Success
 from trezor.messages.WebAuthnRemoveResidentCredential import (
@@ -43,5 +43,5 @@ async def remove_resident_credential(
     await require_confirm(ctx, content)
 
     assert cred.index is not None
-    storage.webauthn.delete_resident_credential(cred.index)
+    storage.resident_credentials.delete(cred.index)
     return Success(message="Credential removed")

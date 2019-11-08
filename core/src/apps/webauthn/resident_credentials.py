@@ -1,7 +1,7 @@
 from micropython import const
 
-import storage.webauthn
-from storage.webauthn import MAX_RESIDENT_CREDENTIALS
+import storage.resident_credentials
+from storage.resident_credentials import MAX_RESIDENT_CREDENTIALS
 
 from apps.webauthn.credential import Fido2Credential
 
@@ -22,14 +22,14 @@ def _credential_from_data(index: int, data: bytes) -> Fido2Credential:
 
 def find_all() -> Iterator[Fido2Credential]:
     for index in range(MAX_RESIDENT_CREDENTIALS):
-        data = storage.webauthn.get_resident_credential(index)
+        data = storage.resident_credentials.get(index)
         if data is not None:
             yield _credential_from_data(index, data)
 
 
 def find_by_rp_id_hash(rp_id_hash: bytes) -> Iterator[Fido2Credential]:
     for index in range(MAX_RESIDENT_CREDENTIALS):
-        data = storage.webauthn.get_resident_credential(index)
+        data = storage.resident_credentials.get(index)
 
         if data is None:
             # empty slot
@@ -46,7 +46,7 @@ def get_resident_credential(index: int) -> Optional[Fido2Credential]:
     if not (0 <= index < MAX_RESIDENT_CREDENTIALS):
         return None
 
-    data = storage.webauthn.get_resident_credential(index)
+    data = storage.resident_credentials.get(index)
     if data is None:
         return None
 
@@ -56,18 +56,18 @@ def get_resident_credential(index: int) -> Optional[Fido2Credential]:
 def store_resident_credential(cred: Fido2Credential) -> bool:
     slot = None
     for index in range(MAX_RESIDENT_CREDENTIALS):
-        data = storage.webauthn.get_resident_credential(index)
-        if data is None:
+        stored_data = storage.resident_credentials.get(index)
+        if stored_data is None:
             # found candidate empty slot
             if slot is None:
                 slot = index
             continue
 
-        if cred.rp_id_hash != data[:RP_ID_HASH_LENGTH]:
+        if cred.rp_id_hash != stored_data[:RP_ID_HASH_LENGTH]:
             # slot is occupied by a different rp_id_hash
             continue
 
-        stored_cred = _credential_from_data(index, data)
+        stored_cred = _credential_from_data(index, stored_data)
         # If a credential for the same RP ID and user ID already exists, then overwrite it.
         if stored_cred.user_id == cred.user_id:
             slot = index
@@ -77,5 +77,5 @@ def store_resident_credential(cred: Fido2Credential) -> bool:
         return False
 
     cred_data = cred.rp_id_hash + cred.id
-    storage.webauthn.set_resident_credential(slot, cred_data)
+    storage.resident_credentials.set(slot, cred_data)
     return True

@@ -4,7 +4,7 @@ import utime
 from micropython import const
 
 import storage
-import storage.webauthn
+import storage.resident_credentials
 from trezor import config, io, log, loop, ui, utils, workflow
 from trezor.crypto import aes, der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
@@ -864,7 +864,7 @@ class Fido2ConfirmReset(Fido2State):
         return await confirm(text)
 
     async def on_confirm(self) -> None:
-        storage.webauthn.delete_all_resident_credentials()
+        storage.resident_credentials.delete_all()
         cmd = Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]))
         await send_cmd(cmd, self.iface)
 
