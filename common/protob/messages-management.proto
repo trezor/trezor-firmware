@@ -20,8 +20,7 @@ enum BackupType {
  * @next Features
  */
 message Initialize {
-    optional bytes state = 1;           // assumed device state, clear session if set and different
-    optional bool skip_passphrase = 2;  // this session should always assume empty passphrase
+    optional bytes session_id = 1;           // assumed device session id; Trezor clears caches if it is different or empty
 }
 
 /**
@@ -88,6 +87,7 @@ message Features {
     optional bool sd_card_present = 32;         // is SD card present
     optional bool sd_protection = 33;           // is SD Protect enabled
     optional bool wipe_code_protection = 34;    // is wipe code protection enabled
+    optional bytes session_id = 35;
 }
 
 /**

@@ -20,7 +20,7 @@ from trezorlib import device, messages
 class TestBasic:
     def test_features(self, client):
         f0 = client.features
-        f1 = client.call(messages.Initialize())
+        f1 = client.call(messages.Initialize(f0.session_id))
         assert f0 == f1
 
     def test_ping(self, client):

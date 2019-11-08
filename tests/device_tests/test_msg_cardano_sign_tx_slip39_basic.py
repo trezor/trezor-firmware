@@ -119,10 +119,7 @@ def test_cardano_sign_tx(
     inputs = [cardano.create_input(i) for i in inputs]
     outputs = [cardano.create_output(o) for o in outputs]
 
-    expected_responses = [
-        messages.PassphraseRequest(),
-        messages.PassphraseStateRequest(),
-    ]
+    expected_responses = [messages.PassphraseRequest()]
     expected_responses += [
         messages.CardanoTxRequest(tx_index=i) for i in range(len(transactions))
     ]
