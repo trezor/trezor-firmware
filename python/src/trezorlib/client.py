@@ -107,15 +107,21 @@ class TrezorClient:
     - passphrase request (ask the user to enter a passphrase)
     See `trezorlib.ui` for details.
 
-    You can supply a `state` you saved in the previous session. If you do,
-    the user might not need to enter their passphrase again.
+    You can supply a `session_id` you might have saved in the previous session.
+    If you do, the user might not need to enter their passphrase again.
+
+    Set `passphrase_on_host` to True if you want to enter passphrase on host directly
+    instead of on Trezor.
     """
 
-    def __init__(self, transport, ui=_NO_UI_OBJECT, state=None):
+    def __init__(
+        self, transport, ui=_NO_UI_OBJECT, session_id=None, passphrase_on_host=False
+    ):
         LOG.info("creating client instance for device: {}".format(transport.get_path()))
         self.transport = transport
         self.ui = ui
-        self.state = state
+        self.session_id = session_id
+        self.passphrase_on_host = passphrase_on_host
 
         # XXX remove when old Electrum has been cycled out.
         # explanation: We changed the API in 0.11 and this broke older versions
@@ -177,10 +183,9 @@ class TrezorClient:
         else:
             return resp
 
-    def _callback_passphrase(self, msg):
-        if msg.on_device:
-            passphrase = None
-        else:
+    def _callback_passphrase(self, msg: messages.PassphraseRequest):
+        if self.passphrase_on_host:
+            on_device = False
             try:
                 passphrase = self.ui.get_passphrase()
             except exceptions.Cancelled:
@@ -191,16 +196,13 @@ class TrezorClient:
             if len(passphrase) > MAX_PASSPHRASE_LENGTH:
                 self.call_raw(messages.Cancel())
                 raise ValueError("Passphrase too long")
-
-        resp = self.call_raw(
-            messages.PassphraseAck(passphrase=passphrase, state=self.state)
-        )
-        if isinstance(resp, messages.PassphraseStateRequest):
-            # TODO report to the user that the passphrase has changed?
-            self.state = resp.state
-            return self.call_raw(messages.PassphraseStateAck())
         else:
-            return resp
+            on_device = True
+            passphrase = None
+
+        return self.call_raw(
+            messages.PassphraseAck(passphrase=passphrase, on_device=on_device)
+        )
 
     def _callback_button(self, msg):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
@@ -229,7 +231,7 @@ class TrezorClient:
 
     @tools.session
     def init_device(self):
-        resp = self.call_raw(messages.Initialize(state=self.state))
+        resp = self.call_raw(messages.Initialize(session_id=self.session_id))
         if not isinstance(resp, messages.Features):
             raise exceptions.TrezorException("Unexpected initial response")
         else:
@@ -245,6 +247,8 @@ class TrezorClient:
             self.features.patch_version,
         )
         self.check_firmware_version(warn_only=True)
+        if self.version >= (2, 1, 9):
+            self.session_id = self.features.session_id
 
     def is_outdated(self):
         if self.features.bootloader_mode:
@@ -295,7 +299,7 @@ class TrezorClient:
     def clear_session(self):
         resp = self.call_raw(messages.ClearSession())
         if isinstance(resp, messages.Success):
-            self.state = None
+            self.session_id = None
             self.init_device()
             return resp.message
         else:

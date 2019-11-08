@@ -141,9 +141,16 @@ def configure_logging(verbose: int):
 @click.option(
     "-j", "--json", "is_json", is_flag=True, help="Print result as JSON object"
 )
+@click.option(
+    "-P",
+    "--passphrase-on-host",
+    "passphrase_on_host",
+    is_flag=True,
+    help="Enter passphrase on host.",
+)
 @click.version_option()
 @click.pass_context
-def cli(ctx, path, verbose, is_json):
+def cli(ctx, path, verbose, is_json, passphrase_on_host):
     configure_logging(verbose)
 
     def get_device():
@@ -157,13 +164,15 @@ def cli(ctx, path, verbose, is_json):
                 if path is not None:
                     click.echo("Using path: {}".format(path))
                 sys.exit(1)
-        return TrezorClient(transport=device, ui=ui.ClickUI())
+        return TrezorClient(
+            transport=device, ui=ui.ClickUI(), passphrase_on_host=passphrase_on_host
+        )
 
     ctx.obj = get_device
 
 
 @cli.resultcallback()
-def print_result(res, path, verbose, is_json):
+def print_result(res, path, verbose, is_json, passphrase_on_host):
     if is_json:
         if isinstance(res, protobuf.MessageType):
             click.echo(json.dumps({res.__class__.__name__: res.__dict__}))

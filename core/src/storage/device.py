@@ -101,7 +101,7 @@ def get_backup_type() -> EnumTypeBackupType:
     return backup_type  # type: ignore
 
 
-def has_passphrase() -> bool:
+def is_passphrase_enabled() -> bool:
     return common.get_bool(_NAMESPACE, _USE_PASSPHRASE)
 
 

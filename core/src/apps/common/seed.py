@@ -5,7 +5,7 @@ from trezor.crypto import bip32, hashlib, hmac
 from trezor.crypto.curve import secp256k1
 
 from apps.common import HARDENED, mnemonic
-from apps.common.request_passphrase import protect_by_passphrase
+from apps.common.passphrase import get as get_passphrase
 
 if False:
     from typing import List, Union
@@ -114,10 +114,7 @@ async def get_keychain(ctx: wire.Context, namespaces: list) -> Keychain:
         raise wire.NotInitialized("Device is not initialized")
     seed = storage.cache.get_seed()
     if seed is None:
-        passphrase = storage.cache.get_passphrase()
-        if passphrase is None:
-            passphrase = await protect_by_passphrase(ctx)
-            storage.cache.set_passphrase(passphrase)
+        passphrase = await get_passphrase(ctx)
         seed = mnemonic.get_seed(passphrase)
         storage.cache.set_seed(seed)
     keychain = Keychain(seed, namespaces)

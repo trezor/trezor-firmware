@@ -34,8 +34,8 @@ def get_features() -> Features:
     f.initialized = storage.is_initialized()
     f.pin_protection = config.has_pin()
     f.pin_cached = config.has_pin()
-    f.passphrase_protection = storage.device.has_passphrase()
-    f.passphrase_cached = cache.has_passphrase()
+    f.passphrase_protection = storage.device.is_passphrase_enabled()
+    # f.passphrase_cached = cache.has_passphrase()  # TODO
     f.needs_backup = storage.device.needs_backup()
     f.unfinished_backup = storage.device.unfinished_backup()
     f.no_backup = storage.device.no_backup()
@@ -71,14 +71,13 @@ def get_features() -> Features:
     f.sd_card_present = io.SDCard().present()
     f.sd_protection = storage.sd_salt.is_enabled()
     f.wipe_code_protection = config.has_wipe_code()
+    f.session_id = cache.get_session_id()
     return f
 
 
 async def handle_Initialize(ctx: wire.Context, msg: Initialize) -> Features:
-    if msg.state is None or msg.state != cache.get_state(prev_state=bytes(msg.state)):
+    if msg.session_id is None or msg.session_id != cache.get_session_id():
         cache.clear()
-        if msg.skip_passphrase:
-            cache.set_passphrase("")
     return get_features()
 
 
@@ -91,7 +90,7 @@ async def handle_Cancel(ctx: wire.Context, msg: Cancel) -> NoReturn:
 
 
 async def handle_ClearSession(ctx: wire.Context, msg: ClearSession) -> Success:
-    cache.clear(keep_passphrase=True)
+    cache.clear()
     return Success(message="Session cleared")
 
 
@@ -102,10 +101,10 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
         from trezor.ui.text import Text
 
         await require_confirm(ctx, Text("Confirm"), ProtectCall)
-    if msg.passphrase_protection:
-        from apps.common.request_passphrase import protect_by_passphrase
+    if msg.passphrase_protection:  # TODO
+        from apps.common import passphrase
 
-        await protect_by_passphrase(ctx)
+        await passphrase.get(ctx)
     return Success(message=msg.message)
 
 

@@ -110,31 +110,16 @@ message PinMatrixAck {
  * @next PassphraseAck
  */
 message PassphraseRequest {
-    optional bool on_device = 1;    // passphrase is being entered on the device
+    optional bool _deprecated_on_device = 1;  // moved to PassphraseAck but left for backwards compatibility
 }
 
 /**
  * Request: Send passphrase back
- * @next PassphraseStateRequest
+ * @auxend
  */
 message PassphraseAck {
     optional string passphrase = 1;
-    optional bytes state = 2;       // expected device state
-}
-
-/**
- * Response: Device awaits passphrase state
- * @next PassphraseStateAck
- */
-message PassphraseStateRequest {
-    optional bytes state = 1;       // actual device state
-}
-
-/**
- * Request: Send passphrase state back
- * @auxend
- */
-message PassphraseStateAck {
+    optional bool on_device = 2;    // user wants to enter passphrase on the device
 }
 
 /**

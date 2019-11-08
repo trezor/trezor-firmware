@@ -97,13 +97,12 @@ if __debug__:
         ctx: wire.Context, msg: DebugLinkGetState
     ) -> DebugLinkState:
         from trezor.messages.DebugLinkState import DebugLinkState
-        from storage.device import has_passphrase
-        from apps.common import mnemonic
+        from apps.common import mnemonic, passphrase
 
         m = DebugLinkState()
         m.mnemonic_secret = mnemonic.get_secret()
         m.mnemonic_type = mnemonic.get_type()
-        m.passphrase_protection = has_passphrase()
+        m.passphrase_protection = passphrase.is_enabled()
         m.reset_entropy = reset_internal_entropy
 
         if msg.wait_layout or current_content is None:
