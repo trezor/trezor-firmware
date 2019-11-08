@@ -75,7 +75,7 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
     # signature = ed25519.sign(node.private_key(), tx, NEM2_HASH_ALG)
 
     resp = NEM2SignedTx()
-    resp.payload = "MOCK_PAYLOAD"
+    resp.payload = tx
     resp.hash = "MOCK_HASH"
     resp.signature = "MOCK_SIGNATURE"
     return resp

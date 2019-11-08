@@ -15,12 +15,17 @@ from ..writers import (
 def serialize_mosaic_definition(
     common: NEM2TransactionCommon, creation: NEM2MosaicDefinitionTransaction, public_key: bytes
 ):
-    tx = serialize_tx_common(
-        common,
-        public_key,
-        NEM2_TRANSACTION_TYPE_MOSAIC_DEFINITION,
-        _get_version(common.network_type),
-    )
+    # tx = serialize_tx_common(
+    #     common,
+    #     public_key,
+    #     NEM2_TRANSACTION_TYPE_MOSAIC_DEFINITION,
+    #     _get_version(common.network_type),
+    # )
+
+    tx = bytearray()
+
+    write_uint32_le(tx, creation.nonce)
+    write_uint64_le(tx, creation.mosaic_id)
 
     # mosaics_w = bytearray()
     # write_bytes_with_len(mosaics_w, public_key)
