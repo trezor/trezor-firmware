@@ -14,7 +14,7 @@ from apps.common.request_pin import (
     request_pin_and_sd_salt,
     show_pin_invalid,
 )
-from apps.common.sd_salt import ensure_sd_card, sd_write_failed_dialog
+from apps.common.sd_salt import ensure_sd_card, sd_problem_dialog
 
 if False:
     from typing import Awaitable, Tuple
@@ -32,10 +32,11 @@ async def _set_salt(
     ctx: wire.Context, salt: bytes, salt_tag: bytes, stage: bool = False
 ) -> None:
     while True:
+        ensure_sd_card(ctx)
         try:
             return storage.sd_salt.set_sd_salt(salt, salt_tag, stage)
         except OSError:
-            if not await sd_write_failed_dialog(ctx):
+            if not await sd_problem_dialog(ctx):
                 raise
 
 
@@ -60,7 +61,7 @@ async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
     # Confirm that user wants to proceed with the operation.
     await require_confirm_sd_protect(ctx, msg)
 
-    # Make sure SD card is available.
+    # Make sure SD card is present.
     await ensure_sd_card(ctx)
 
     # Get the current PIN.
@@ -95,7 +96,7 @@ async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
     if not storage.sd_salt.is_enabled():
         raise wire.ProcessError("SD card protection not enabled")
 
-    # Note that the SD card doesn't need to be accessible in order to disable SD
+    # Note that the SD card doesn't need to be present in order to disable SD
     # protection. The cleanup will not happen in such case, but that does not matter.
 
     # Confirm that user wants to proceed with the operation.
@@ -131,7 +132,7 @@ async def sd_protect_refresh(ctx: wire.Context, msg: SdProtect) -> Success:
     # Confirm that user wants to proceed with the operation.
     await require_confirm_sd_protect(ctx, msg)
 
-    # Make sure SD card is available.
+    # Make sure SD card is present.
     await ensure_sd_card(ctx)
 
     # Get the current PIN and salt from the SD card.

@@ -1,5 +1,5 @@
 import storage.sd_salt
-from storage.sd_salt import SD_CARD_HOT_SWAPPABLE, SdSaltMismatch
+from storage.sd_salt import SD_CARD_HOT_SWAPPABLE
 from trezor import io, ui, wire
 from trezor.ui.text import Text
 
@@ -29,7 +29,7 @@ async def _wrong_card_dialog(ctx: wire.GenericContext) -> bool:
     return await confirm(ctx, text, confirm=btn_confirm, cancel=btn_cancel)
 
 
-async def _insert_card_dialog(ctx: wire.GenericContext) -> None:
+async def insert_card_dialog(ctx: wire.GenericContext) -> bool:
     text = Text("SD card protection", ui.ICON_WRONG)
     text.bold("SD card required.")
     text.br_half()
@@ -42,20 +42,20 @@ async def _insert_card_dialog(ctx: wire.GenericContext) -> None:
         btn_confirm = None
         btn_cancel = "Close"
 
-    if not await confirm(ctx, text, confirm=btn_confirm, cancel=btn_cancel):
-        raise SdProtectCancelled
+    return await confirm(ctx, text, confirm=btn_confirm, cancel=btn_cancel)
 
 
-async def sd_write_failed_dialog(ctx: wire.GenericContext) -> bool:
+async def sd_problem_dialog(ctx: wire.GenericContext) -> bool:
     text = Text("SD card protection", ui.ICON_WRONG, ui.RED)
-    text.normal("Failed to write data to", "the SD card.")
+    text.normal("There was a problem", "accessing the SD card.")
     return await confirm(ctx, text, confirm="Retry", cancel="Abort")
 
 
 async def ensure_sd_card(ctx: wire.GenericContext) -> None:
     sd = io.SDCard()
-    while not sd.power(True):
-        await _insert_card_dialog(ctx)
+    while not sd.present():
+        if not await insert_card_dialog(ctx):
+            raise SdProtectCancelled
 
 
 async def request_sd_salt(
@@ -65,11 +65,14 @@ async def request_sd_salt(
         ensure_sd_card(ctx)
         try:
             return storage.sd_salt.load_sd_salt()
-        except SdSaltMismatch as e:
+        except storage.sd_salt.WrongSdCard:
             if not await _wrong_card_dialog(ctx):
-                raise SdProtectCancelled from e
+                raise SdProtectCancelled
         except OSError:
-            # This happens when there is both old and new salt file, and we can't move
-            # new salt over the old salt. If the user clicks Retry, we will try again.
-            if not await sd_write_failed_dialog(ctx):
+            # Either the SD card did not power on, or the filesystem could not be
+            # mounted (card is not formatted?), or there is a staged salt file and
+            # we could not commit it.
+            # In either case, there is no good way to recover. If the user clicks Retry,
+            # we will try again.
+            if not await sd_problem_dialog(ctx):
                 raise
