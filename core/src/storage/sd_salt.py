@@ -137,7 +137,6 @@ def load_sd_salt() -> Optional[bytearray]:
 def set_sd_salt(salt: bytes, salt_tag: bytes, stage: bool = False) -> None:
     salt_path = _get_salt_path(stage)
     fs = io.FatFS()
-    fs.mount()
     fs.mkdir("/trezor", True)
     fs.mkdir(_get_device_dir(), True)
     with fs.open(salt_path, "w") as f:
