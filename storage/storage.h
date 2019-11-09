@@ -34,6 +34,9 @@
 // can be written even when the storage is locked.
 #define FLAGS_WRITE 0xC0
 
+// Mask for extracting the "real" app_id.
+#define FLAGS_APPID 0x3F
+
 typedef secbool (*PIN_UI_WAIT_CALLBACK)(uint32_t wait, uint32_t progress,
                                         const char *message);
 
