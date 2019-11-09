@@ -201,15 +201,11 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       if (but) {
         erase_storage_code_progress();
         flash_state = STATE_END;
-        layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, "Device",
-                     "successfully wiped.", NULL, "You may now",
-                     "unplug your Trezor.", NULL);
+        show_unplug("Device", "successfully wiped.");
         send_msg_success(dev);
       } else {
         flash_state = STATE_END;
-        layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Device wipe",
-                     "aborted.", NULL, "You may now", "unplug your Trezor.",
-                     NULL);
+        show_unplug("Device wipe", "aborted.");
         send_msg_failure(dev);
       }
       return;
@@ -245,9 +241,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       } else {
         send_msg_failure(dev);
         flash_state = STATE_END;
-        layoutDialog(&bmp_icon_warning, NULL, NULL, NULL,
-                     "Firmware installation", "aborted.", NULL, "You may now",
-                     "unplug your Trezor.", NULL);
+        show_unplug("Firmware installation", "aborted.");
       }
       return;
     }
@@ -421,9 +415,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
     flash_state = STATE_END;
     if (hash_check_ok) {
-      layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, "New firmware",
-                   "successfully installed.", NULL, "You may now",
-                   "unplug your Trezor.", NULL);
+      show_unplug("New firmware", "successfully installed.");
       send_msg_success(dev);
       shutdown();
     } else {

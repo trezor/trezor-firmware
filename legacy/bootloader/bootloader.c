@@ -57,6 +57,11 @@ void show_halt(const char *line1, const char *line2) {
   shutdown();
 }
 
+void show_unplug(const char *line1, const char *line2) {
+  layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, line1, line2, NULL,
+               "You may now", "unplug your Trezor.", NULL);
+}
+
 static void show_unofficial_warning(const uint8_t *hash) {
   layoutDialog(&bmp_icon_warning, "Abort", "I'll take the risk", NULL,
                "WARNING!", NULL, "Unofficial firmware", "detected.", NULL,
