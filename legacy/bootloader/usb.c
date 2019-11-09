@@ -261,27 +261,27 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       if (readprotobufint(&p, &flash_len) != sectrue) {  // integer too large
         send_msg_failure(dev);
         flash_state = STATE_END;
-        show_halt("Firmware is too big.", NULL);
+        show_halt("Firmware is", "too big.");
         return;
       }
       if (flash_len <= FLASH_FWHEADER_LEN) {  // firmware is too small
         send_msg_failure(dev);
         flash_state = STATE_END;
-        show_halt("Firmware is too small.", NULL);
+        show_halt("Firmware is", "too small.");
         return;
       }
       if (flash_len >
           FLASH_FWHEADER_LEN + FLASH_APP_LEN) {  // firmware is too big
         send_msg_failure(dev);
         flash_state = STATE_END;
-        show_halt("Firmware is too big.", NULL);
+        show_halt("Firmware is", "too big.");
         return;
       }
       // check firmware magic
       if (memcmp(p, &FIRMWARE_MAGIC_NEW, 4) != 0) {
         send_msg_failure(dev);
         flash_state = STATE_END;
-        show_halt("Wrong firmware header.", NULL);
+        show_halt("Wrong firmware", "header.");
         return;
       }
       memzero(FW_HEADER, sizeof(FW_HEADER));
