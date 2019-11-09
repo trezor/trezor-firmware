@@ -180,7 +180,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_change_pin_obj, 4,
 ///     value fails.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
-  uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
+  uint8_t app = trezor_obj_get_uint8(args[0]) & FLAGS_APPID;
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 2 && args[2] == mp_const_true) {
     app |= FLAG_PUBLIC;
@@ -209,7 +209,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_get_obj, 2, 3,
 ///     Sets a value of given key for given app.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
-  uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
+  uint8_t app = trezor_obj_get_uint8(args[0]) & FLAGS_APPID;
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 3 && args[3] == mp_const_true) {
     app |= FLAG_PUBLIC;
@@ -230,7 +230,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_obj, 3, 4,
 ///     Deletes the given key of the given app.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
-  uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
+  uint8_t app = trezor_obj_get_uint8(args[0]) & FLAGS_APPID;
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 2 && args[2] == mp_const_true) {
     app |= FLAG_PUBLIC;
@@ -252,7 +252,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_delete_obj, 2, 3,
 ///     """
 STATIC mp_obj_t mod_trezorconfig_set_counter(size_t n_args,
                                              const mp_obj_t *args) {
-  uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
+  uint8_t app = trezor_obj_get_uint8(args[0]) & FLAGS_APPID;
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 3 && args[3] == mp_const_true) {
     app |= FLAGS_WRITE;
@@ -284,7 +284,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_counter_obj, 3,
 ///     """
 STATIC mp_obj_t mod_trezorconfig_next_counter(size_t n_args,
                                               const mp_obj_t *args) {
-  uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
+  uint8_t app = trezor_obj_get_uint8(args[0]) & FLAGS_APPID;
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 2 && args[2] == mp_const_true) {
     app |= FLAGS_WRITE;
