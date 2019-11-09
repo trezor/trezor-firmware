@@ -42,7 +42,6 @@
 #include "winusb.h"
 
 #include "usb_desc.h"
-#include "usb_erase.h"
 #include "usb_send.h"
 
 enum {
@@ -60,6 +59,19 @@ static char flash_state = STATE_READY;
 
 static uint32_t FW_HEADER[FLASH_FWHEADER_LEN / sizeof(uint32_t)];
 static uint32_t FW_CHUNK[FW_CHUNK_SIZE / sizeof(uint32_t)];
+
+static void flash_enter(void) {
+  flash_wait_for_last_operation();
+  flash_clear_status_flags();
+  flash_unlock();
+}
+
+static void flash_exit(void) {
+  flash_wait_for_last_operation();
+  flash_lock();
+}
+
+#include "usb_erase.h"
 
 static void check_and_write_chunk(void) {
   uint32_t offset = (chunk_idx == 0) ? FLASH_FWHEADER_LEN : 0;
@@ -89,17 +101,14 @@ static void check_and_write_chunk(void) {
     return;
   }
 
-  flash_wait_for_last_operation();
-  flash_clear_status_flags();
-  flash_unlock();
+  flash_enter();
   for (uint32_t i = offset / sizeof(uint32_t); i < chunk_pos / sizeof(uint32_t);
        i++) {
     flash_program_word(
         FLASH_FWHEADER_START + chunk_idx * FW_CHUNK_SIZE + i * sizeof(uint32_t),
         FW_CHUNK[i]);
   }
-  flash_wait_for_last_operation();
-  flash_lock();
+  flash_exit();
 
   // all done
   if (flash_len == flash_pos) {
@@ -395,9 +404,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         return;
       }
     }
-    flash_wait_for_last_operation();
-    flash_clear_status_flags();
-    flash_unlock();
+
+    flash_enter();
     // write firmware header only when hash was confirmed
     if (hash_check_ok) {
       for (size_t i = 0; i < FLASH_FWHEADER_LEN / sizeof(uint32_t); i++) {
@@ -409,8 +417,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         flash_program_word(FLASH_FWHEADER_START + i * sizeof(uint32_t), 0);
       }
     }
-    flash_wait_for_last_operation();
-    flash_lock();
+    flash_exit();
 
     flash_state = STATE_END;
     if (hash_check_ok) {
