@@ -982,6 +982,29 @@ secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len,
 }
 
 /*
+ * Finds the data stored under key and writes its length to len.
+ * Returns a pointer to the data in val_ptr.
+ * Works only on public fields, it does not make sense to return encrypted data.
+ */
+secbool storage_get_public_nocopy(const uint16_t key, const void **val_ptr,
+                                  uint16_t *len) {
+  const uint8_t app = key >> 8;
+  // APP == 0 is reserved for PIN related values
+  if (sectrue != initialized || app == APP_STORAGE) {
+    return secfalse;
+  }
+
+  // If the top bit of APP is set, then the value is not encrypted and can be
+  // read from a locked device.
+  if ((app & FLAG_PUBLIC) != 0) {
+    return norcow_get(key, val_ptr, len);
+  } else {
+    // it doesn't make sense to return encrypted data
+    return secfalse;
+  }
+}
+
+/*
  * Encrypts the data at val using cached_dek as the encryption key and stores
  * the ciphertext under key.
  */

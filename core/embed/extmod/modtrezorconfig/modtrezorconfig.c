@@ -193,13 +193,32 @@ STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
   if (len == 0) {
     return mp_const_empty_bytes;
   }
-  vstr_t vstr;
-  vstr_init_len(&vstr, len);
-  if (sectrue != storage_get(appkey, vstr.buf, vstr.len, &len)) {
-    vstr_clear(&vstr);
-    mp_raise_msg(&mp_type_RuntimeError, "Failed to get value from storage.");
+
+  // public field
+  if (app & FLAG_PUBLIC) {
+    // let's not copy, use the value directly
+    const void *ptr;
+    uint16_t len;
+    if (sectrue != storage_get_public_nocopy(appkey, &ptr, &len)) {
+      mp_raise_msg(&mp_type_RuntimeError, "Failed to get value from storage.");
+    }
+    // create bytes object without copying the data, let's use the const pointer
+    mp_obj_str_t *o = m_new_obj(mp_obj_str_t);
+    o->base.type = &mp_type_bytes;
+    o->len = len;
+    o->hash = 0;  // will be computed later if ever needed
+    o->data = (const byte *)ptr;
+    return MP_OBJ_FROM_PTR(o);
+  } else {
+    // we need to allocate and copy, because the value needs to be decrypted
+    vstr_t vstr;
+    vstr_init_len(&vstr, len);
+    if (sectrue != storage_get(appkey, vstr.buf, vstr.len, &len)) {
+      vstr_clear(&vstr);
+      mp_raise_msg(&mp_type_RuntimeError, "Failed to get value from storage.");
+    }
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
   }
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_get_obj, 2, 3,
                                            mod_trezorconfig_get);
