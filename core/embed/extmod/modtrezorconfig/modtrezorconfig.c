@@ -183,7 +183,7 @@ STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 2 && args[2] == mp_const_true) {
-    app |= 0x80;
+    app |= FLAG_PUBLIC;
   }
   uint16_t appkey = (app << 8) | key;
   uint16_t len = 0;
@@ -212,7 +212,7 @@ STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 3 && args[3] == mp_const_true) {
-    app |= 0x80;
+    app |= FLAG_PUBLIC;
   }
   uint16_t appkey = (app << 8) | key;
   mp_buffer_info_t value;
@@ -233,7 +233,7 @@ STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 2 && args[2] == mp_const_true) {
-    app |= 0x80;
+    app |= FLAG_PUBLIC;
   }
   uint16_t appkey = (app << 8) | key;
   if (sectrue != storage_delete(appkey)) {
@@ -255,9 +255,9 @@ STATIC mp_obj_t mod_trezorconfig_set_counter(size_t n_args,
   uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 3 && args[3] == mp_const_true) {
-    app |= 0xC0;
+    app |= FLAGS_WRITE;
   } else {
-    app |= 0x80;
+    app |= FLAG_PUBLIC;
   }
   uint16_t appkey = (app << 8) | key;
   if (args[2] == mp_const_none) {
@@ -287,9 +287,9 @@ STATIC mp_obj_t mod_trezorconfig_next_counter(size_t n_args,
   uint8_t app = trezor_obj_get_uint8(args[0]) & 0x3F;
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 2 && args[2] == mp_const_true) {
-    app |= 0xC0;
+    app |= FLAGS_WRITE;
   } else {
-    app |= 0x80;
+    app |= FLAG_PUBLIC;
   }
   uint16_t appkey = (app << 8) | key;
   uint32_t count = 0;
