@@ -83,8 +83,8 @@ void reset_init(bool display_random, uint32_t _strength,
       oledDrawStringCenter(OLED_WIDTH / 2, 2 + 3 * 9, ent_str[2], FONT_FIXED);
       oledDrawStringCenter(OLED_WIDTH / 2, 2 + 4 * 9, ent_str[3], FONT_FIXED);
       oledHLine(OLED_HEIGHT - 13);
-      layoutButtonNo(_("Cancel"));
-      layoutButtonYes(_("Continue"));
+      layoutButtonNo(_("Cancel"), &bmp_btn_cancel);
+      layoutButtonYes(_("Continue"), &bmp_btn_confirm);
       // 40 is the maximum pixels used for a row
       oledSCA(2 + 1 * 9, 2 + 1 * 9 + 6, 40);
       oledSCA(2 + 2 * 9, 2 + 2 * 9 + 6, 40);
