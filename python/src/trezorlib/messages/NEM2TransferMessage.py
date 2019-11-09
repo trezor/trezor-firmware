@@ -10,19 +10,19 @@ if __debug__:
         Dict, List, Optional = None, None, None  # type: ignore
 
 
-class NEM2Mosaic(p.MessageType):
+class NEM2TransferMessage(p.MessageType):
 
     def __init__(
         self,
-        id: str = None,
-        amount: str = None,
+        payload: str = None,
+        type: int = None,
     ) -> None:
-        self.id = id
-        self.amount = amount
+        self.payload = payload
+        self.type = type
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('id', p.UnicodeType, 0),
-            2: ('amount', p.UnicodeType, 0),
+            1: ('payload', p.UnicodeType, 0),
+            2: ('type', p.UVarintType, 0),
         }

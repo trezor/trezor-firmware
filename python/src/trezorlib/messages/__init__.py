@@ -182,6 +182,7 @@ from .NEM2PublicKey import NEM2PublicKey
 from .NEM2SignTx import NEM2SignTx
 from .NEM2SignedTx import NEM2SignedTx
 from .NEM2TransactionCommon import NEM2TransactionCommon
+from .NEM2TransferMessage import NEM2TransferMessage
 from .NEM2TransferTransaction import NEM2TransferTransaction
 from .NEMAddress import NEMAddress
 from .NEMAggregateModification import NEMAggregateModification

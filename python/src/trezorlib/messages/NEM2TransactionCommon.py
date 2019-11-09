@@ -21,8 +21,8 @@ class NEM2TransactionCommon(p.MessageType):
         type: EnumTypeNEM2EntityType = None,
         network_type: EnumTypeNEM2NetworkType = None,
         version: int = None,
-        max_fee: int = None,
-        deadline: int = None,
+        max_fee: str = None,
+        deadline: str = None,
     ) -> None:
         self.type = type
         self.network_type = network_type
@@ -36,6 +36,6 @@ class NEM2TransactionCommon(p.MessageType):
             1: ('type', p.EnumType("NEM2EntityType", (0, 16724, 16717)), 0),
             2: ('network_type', p.EnumType("NEM2NetworkType", (104, 144, 96, 152)), 0),
             3: ('version', p.UVarintType, 0),  # default=1
-            4: ('max_fee', p.UVarintType, 0),
-            5: ('deadline', p.UVarintType, 0),
+            4: ('max_fee', p.UnicodeType, 0),
+            5: ('deadline', p.UnicodeType, 0),
         }

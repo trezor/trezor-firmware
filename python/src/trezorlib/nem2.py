@@ -64,6 +64,10 @@ def create_mosaic_defnition(transaction):
     msg = proto.NEM2MosaicDefinitionTransaction()
     msg.nonce = transaction["nonce"]
     msg.mosaic_id = int(transaction["mosaic_id"], 16)
+    msg.flags = transaction["flags"]
+    msg.divisibility = transaction["divisibility"]
+    print(int(transaction["duration"], 16))
+    msg.duration = int(transaction["duration"])
     return msg
 
 def fill_transaction_by_type(msg, transaction):
@@ -103,5 +107,5 @@ def sign_tx(client, n, transaction):
 
     assert msg.transaction is not None
     msg.address_n = n
-    msg.generation_hash = int(transaction["generation_hash"], 16)
+    msg.generation_hash = transaction["generation_hash"]
     return client.call(msg)

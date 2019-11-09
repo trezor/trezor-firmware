@@ -37,13 +37,13 @@ async def ask_transfer_mosaic(
         return
 
     definition = get_mosaic_definition(mosaic.id, common.network_type)
-    mosaic_quantity = mosaic.quantity * transfer.amount / NEM2_MOSAIC_AMOUNT_DIVISOR
+    mosaic_amount = int(mosaic.amount) / NEM2_MOSAIC_AMOUNT_DIVISOR
 
     if definition:
         msg = Text("Confirm mosaic", ui.ICON_SEND, ui.GREEN)
         msg.normal("Confirm transfer of")
         msg.bold(
-            format_amount(mosaic_quantity, definition["divisibility"])
+            format_amount(mosaic_amount, definition["divisibility"])
             + definition["ticker"]
         )
         msg.normal("of")
@@ -51,7 +51,7 @@ async def ask_transfer_mosaic(
         await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
         if "levy" in definition and "fee" in definition:
-            levy_msg = _get_levy_msg(definition, mosaic_quantity, common.network)
+            levy_msg = _get_levy_msg(definition, mosaic_amount, common.network)
             msg = Text("Confirm mosaic", ui.ICON_SEND, ui.GREEN)
             msg.normal("Confirm mosaic", "levy fee of")
             msg.bold(levy_msg)
@@ -67,9 +67,9 @@ async def ask_transfer_mosaic(
 
         msg = Text("Confirm mosaic", ui.ICON_SEND, ui.GREEN)
         msg.normal("Confirm transfer of")
-        msg.bold("%s raw units" % mosaic_quantity)
+        msg.bold("%s raw units" % mosaic_amount)
         msg.normal("of")
-        msg.bold("%s.%s" % (mosaic.namespace, mosaic.mosaic))
+        msg.bold("%s.%s" % (mosaic.id, mosaic.id))
         await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
 
@@ -81,7 +81,7 @@ def _get_xem_amount(transfer: NEM2TransferTransaction):
     return 0
 
 
-def _get_levy_msg(mosaic_definition, quantity: int, network: int) -> str:
+def _get_levy_msg(mosaic_definition, amount: int, network: int) -> str:
     levy_definition = get_mosaic_definition(
         mosaic_definition["levy_namespace"], mosaic_definition["levy_mosaic"], network
     )
@@ -89,7 +89,7 @@ def _get_levy_msg(mosaic_definition, quantity: int, network: int) -> str:
         levy_fee = mosaic_definition["fee"]
     else:
         levy_fee = (
-            quantity * mosaic_definition["fee"] / NEM2_LEVY_PERCENTILE_DIVISOR_ABSOLUTE
+            amount * mosaic_definition["fee"] / NEM2_LEVY_PERCENTILE_DIVISOR_ABSOLUTE
         )
     return (
         format_amount(levy_fee, levy_definition["divisibility"])

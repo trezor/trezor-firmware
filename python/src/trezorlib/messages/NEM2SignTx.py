@@ -24,7 +24,7 @@ class NEM2SignTx(p.MessageType):
         transaction: NEM2TransactionCommon = None,
         multisig: NEM2TransactionCommon = None,
         transfer: NEM2TransferTransaction = None,
-        generation_hash: int = None,
+        generation_hash: str = None,
         network_type: EnumTypeNEM2NetworkType = None,
         address_n: List[int] = None,
         cosigning: bool = None,
@@ -45,7 +45,7 @@ class NEM2SignTx(p.MessageType):
             1: ('transaction', NEM2TransactionCommon, 0),
             2: ('multisig', NEM2TransactionCommon, 0),
             3: ('transfer', NEM2TransferTransaction, 0),
-            4: ('generation_hash', p.UVarintType, 0),
+            4: ('generation_hash', p.UnicodeType, 0),
             5: ('network_type', p.EnumType("NEM2NetworkType", (104, 144, 96, 152)), 0),  # default=MAIN_NET
             6: ('address_n', p.UVarintType, p.FLAG_REPEATED),
             7: ('cosigning', p.BoolType, 0),

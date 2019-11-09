@@ -1,6 +1,7 @@
 from trezor.crypto.curve import ed25519
 from trezor.messages.NEM2SignedTx import NEM2SignedTx
 from trezor.messages.NEM2SignTx import NEM2SignTx
+from ubinascii import unhexlify, hexlify
 
 from apps.common import seed
 from apps.common.paths import validate_path
@@ -71,11 +72,22 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
 
     # https://nemtech.github.io/concepts/transaction.html#signing-a-transaction
     print("TX ", tx)
-    # signature = ed25519.sign(node.private_key(), msg.generation_hash + tx.decode(), NEM2_HASH_ALG)
-    # signature = ed25519.sign(node.private_key(), tx, NEM2_HASH_ALG)
+    print("PUBLIC ", hexlify(public_key))
+    print("PRIVATE ", hexlify(node.private_key()))
+
+    # signing bytes (all tx data expect size, signature and signer)
+    # everything after the first 100 bytes of serialised transaction
+    signing_bytes = tx[100:]
+
+    generation_hash_bytes = unhexlify(msg.generation_hash)
+
+    signature = ed25519.sign(node.private_key(), generation_hash_bytes + signing_bytes, NEM2_HASH_ALG)
+
+    payload = tx[:4] + signature + node.public_key() + tx[100:]
+
+    hash_content = signature[:32] + node.public_key() + generation_hash_bytes + tx[100:]
 
     resp = NEM2SignedTx()
-    resp.payload = tx
-    resp.hash = "MOCK_HASH"
-    resp.signature = "MOCK_SIGNATURE"
+    resp.payload = payload
+    resp.hash = ed25519.sign(node.private_key(), hash_content, NEM2_HASH_ALG)
     return resp

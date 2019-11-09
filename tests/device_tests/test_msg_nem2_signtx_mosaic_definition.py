@@ -28,26 +28,25 @@ class TestMsgNEM2SignTxMosaics:
     def test_nem2_signtx_mosaic_definition(self, client):
         tx = nem2.sign_tx(
             client,
-            parse_path("m/44'/43'/0'"),
+            parse_path("m/44'/43'/0'/0'/0'"),
             {
                 "type": nem2.TYPE_MOSAIC_DEFINITION,
                 "network_type": nem2.NETWORK_TYPE_TEST_NET,
                 "generation_hash": "9F1979BEBA29C47E59B40393ABB516801A353CFC0C18BC241FEDE41939C907E7",
                 "version": 38913,
-                "max_fee": 0,
-                "deadline": 113225983632,
-                "signature": "",
+                "max_fee": "100",
+                "deadline": "113728610090",
                 "nonce": 3095715558,
                 "mosaic_id": "57319AF73440C323",
                 "flags": 7,
-                "divisibility": 0,
-                "duration": "0"
+                "divisibility": 100,
+                "duration": "123"
             },
         )
 
         assert (
             tx.payload.hex().upper()
-            == "E6DE84B823C34034F79A3157"
+            == "8E000000853683E02F7651AFBD6905CE23B9F4C9FB25559F2B89EE1892F7B3062C56FDAF898C6E9E7A3005BDF518AB8BA4D9E40248ACDB80E952F046DCA497C5FEEEE7028AF53BB8F3A167C68F264C33237DB309DBC88F64D7A1088B8BEEA5A34DBBBEC201984D4164000000000000002ADFC07A1A000000E6DE84B823C34034F79A315707647B00000000000000"
         )
         # == "E6DE84B823C34034F79A315707000000000000000000"
         # assert (
