@@ -56,28 +56,28 @@ static const uint32_t META_MAGIC_V10 = 0x525a5254;  // 'TRZR' as uint32_t
 static const uint32_t META_MAGIC_V10 = 0xFFFFFFFF;
 #endif
 
-#define APP 0x0100
-#define FLAG_PUBLIC 0x8000
-#define FLAGS_WRITE 0xC000
+#define APP (0x01 << 8)
+#define FLAG_PUBLIC_SHIFTED (FLAG_PUBLIC << 8)
+#define FLAGS_WRITE_SHIFTED (FLAGS_WRITE << 8)
 
-#define KEY_UUID (0 | APP | FLAG_PUBLIC)                   // bytes(12)
-#define KEY_VERSION (1 | APP)                              // uint32
-#define KEY_MNEMONIC (2 | APP)                             // string(241)
-#define KEY_LANGUAGE (3 | APP | FLAG_PUBLIC)               // string(17)
-#define KEY_LABEL (4 | APP | FLAG_PUBLIC)                  // string(33)
-#define KEY_PASSPHRASE_PROTECTION (5 | APP | FLAG_PUBLIC)  // bool
-#define KEY_HOMESCREEN (6 | APP | FLAG_PUBLIC)             // bytes(1024)
-#define KEY_NEEDS_BACKUP (7 | APP)                         // bool
-#define KEY_FLAGS (8 | APP)                                // uint32
-#define KEY_U2F_COUNTER (9 | APP | FLAGS_WRITE)            // uint32
-#define KEY_UNFINISHED_BACKUP (11 | APP)                   // bool
-#define KEY_AUTO_LOCK_DELAY_MS (12 | APP)                  // uint32
-#define KEY_NO_BACKUP (13 | APP)                           // bool
-#define KEY_INITIALIZED (14 | APP | FLAG_PUBLIC)           // uint32
-#define KEY_NODE (15 | APP)                                // node
-#define KEY_IMPORTED (16 | APP)                            // bool
-#define KEY_U2F_ROOT (17 | APP | FLAG_PUBLIC)              // node
-#define KEY_DEBUG_LINK_PIN (255 | APP | FLAG_PUBLIC)       // string(10)
+#define KEY_UUID (0 | APP | FLAG_PUBLIC_SHIFTED)      // bytes(12)
+#define KEY_VERSION (1 | APP)                         // uint32
+#define KEY_MNEMONIC (2 | APP)                        // string(241)
+#define KEY_LANGUAGE (3 | APP | FLAG_PUBLIC_SHIFTED)  // string(17)
+#define KEY_LABEL (4 | APP | FLAG_PUBLIC_SHIFTED)     // string(33)
+#define KEY_PASSPHRASE_PROTECTION (5 | APP | FLAG_PUBLIC_SHIFTED)  // bool
+#define KEY_HOMESCREEN (6 | APP | FLAG_PUBLIC_SHIFTED)        // bytes(1024)
+#define KEY_NEEDS_BACKUP (7 | APP)                            // bool
+#define KEY_FLAGS (8 | APP)                                   // uint32
+#define KEY_U2F_COUNTER (9 | APP | FLAGS_WRITE_SHIFTED)       // uint32
+#define KEY_UNFINISHED_BACKUP (11 | APP)                      // bool
+#define KEY_AUTO_LOCK_DELAY_MS (12 | APP)                     // uint32
+#define KEY_NO_BACKUP (13 | APP)                              // bool
+#define KEY_INITIALIZED (14 | APP | FLAG_PUBLIC_SHIFTED)      // uint32
+#define KEY_NODE (15 | APP)                                   // node
+#define KEY_IMPORTED (16 | APP)                               // bool
+#define KEY_U2F_ROOT (17 | APP | FLAG_PUBLIC_SHIFTED)         // node
+#define KEY_DEBUG_LINK_PIN (255 | APP | FLAG_PUBLIC_SHIFTED)  // string(10)
 
 // The PIN value corresponding to an empty PIN.
 static const uint32_t PIN_EMPTY = 1;

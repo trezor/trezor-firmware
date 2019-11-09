@@ -27,6 +27,13 @@
 // The length of the external salt in bytes.
 #define EXTERNAL_SALT_SIZE 32
 
+// If the top bit of APP is set, then the value is not encrypted.
+#define FLAG_PUBLIC 0x80
+
+// If the top two bits of APP are set, then the value is not encrypted and it
+// can be written even when the storage is locked.
+#define FLAGS_WRITE 0xC0
+
 typedef secbool (*PIN_UI_WAIT_CALLBACK)(uint32_t wait, uint32_t progress,
                                         const char *message);
 

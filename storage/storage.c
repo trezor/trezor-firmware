@@ -64,13 +64,6 @@
 // The number of seconds required to derive the KEK and KEIV.
 #define DERIVE_SECS 1
 
-// If the top bit of APP is set, then the value is not encrypted.
-#define FLAG_PUBLIC 0x80
-
-// If the top two bits of APP are set, then the value is not encrypted and it
-// can be written even when the storage is locked.
-#define FLAGS_WRITE 0xC0
-
 // The length of the guard key in words.
 #define GUARD_KEY_WORDS 1
 
@@ -967,7 +960,6 @@ secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len,
 
   // If the top bit of APP is set, then the value is not encrypted and can be
   // read from a locked device.
-  secbool ret = secfalse;
   if ((app & FLAG_PUBLIC) != 0) {
     const void *val_stored = NULL;
     if (sectrue != norcow_get(key, &val_stored, len)) {
@@ -980,15 +972,13 @@ secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len,
       return secfalse;
     }
     memcpy(val_dest, val_stored, *len);
-    ret = sectrue;
+    return sectrue;
   } else {
     if (sectrue != unlocked) {
       return secfalse;
     }
-    ret = storage_get_encrypted(key, val_dest, max_len, len);
+    return storage_get_encrypted(key, val_dest, max_len, len);
   }
-
-  return ret;
 }
 
 /*
