@@ -23,7 +23,7 @@ def convert(imgfile, outfile):
     img = Img(imgfile)
     cur = ""
     with open(outfile, "w") as f:
-        for i in range(128):
+        for i in range(128 - 32):
             x = (i % 16) * 10
             y = (i // 16) * 10
             cur = ""
@@ -32,7 +32,8 @@ def convert(imgfile, outfile):
                 x += 1
                 cur += "\\x%02x" % int(val, 2)
             cur = "\\x%02x" % (len(cur) // 4) + cur
-            ch = chr(i) if i >= 32 and i <= 126 else "_"
+            i += 32
+            ch = "_" if (i == 127) else chr(i)
             f.write('\t/* 0x%02x %c */ (uint8_t *)"%s",\n' % (i, ch, cur))
 
 

@@ -8,9 +8,9 @@
 #define FONT_FIXED 1
 #define FONT_DOUBLE 0x80
 
-extern const uint8_t *const font_data[2][128];
+extern const uint8_t *const font_data[2][128 - 32];
 
-int fontCharWidth(int font, uint8_t c);
-const uint8_t *fontCharData(int font, uint8_t c);
+int fontCharWidth(uint8_t font, uint8_t c);
+const uint8_t *fontCharData(uint8_t font, uint8_t c);
 
 #endif
