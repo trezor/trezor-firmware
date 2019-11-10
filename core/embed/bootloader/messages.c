@@ -188,6 +188,23 @@ typedef struct {
   uint8_t *buf;
 } usb_read_state;
 
+static void _usb_webusb_read_retry(uint8_t iface_num, uint8_t *buf) {
+  for (int retry = 0;; retry++) {
+    int r =
+        usb_webusb_read_blocking(iface_num, buf, USB_PACKET_SIZE, USB_TIMEOUT);
+    if (r != USB_PACKET_SIZE) {  // reading failed
+      if (r == 0 && retry < 10) {
+        // only timeout => let's try again
+      } else {
+        // error
+        error_shutdown("Error reading", "from USB.", "Try different",
+                       "USB cable.");
+      }
+    }
+    return;  // success
+  }
+}
+
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
 static bool _usb_read(pb_istream_t *stream, uint8_t *buf, size_t count) {
   usb_read_state *state = (usb_read_state *)(stream->state);
@@ -209,10 +226,8 @@ static bool _usb_read(pb_istream_t *stream, uint8_t *buf, size_t count) {
       memcpy(buf + read, state->buf + state->packet_pos,
              USB_PACKET_SIZE - state->packet_pos);
       read += USB_PACKET_SIZE - state->packet_pos;
-      // read next packet
-      int r = usb_webusb_read_blocking(state->iface_num, state->buf,
-                                       USB_PACKET_SIZE, USB_TIMEOUT);
-      ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
+      // read next packet (with retry)
+      _usb_webusb_read_retry(state->iface_num, state->buf);
       // prepare next packet
       state->packet_index++;
       state->packet_pos = MSG_HEADER2_LEN;
@@ -626,9 +641,8 @@ void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
   }
 
   for (int i = 0; i < remaining_chunks; i++) {
-    int r =
-        usb_webusb_read_blocking(iface_num, buf, USB_PACKET_SIZE, USB_TIMEOUT);
-    ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
+    // read next packet (with retry)
+    _usb_webusb_read_retry(iface_num, buf);
   }
 
   MSG_SEND_INIT(Failure);
