@@ -186,7 +186,6 @@ legacy fw regular build:
   script:
     - cd legacy
     - pipenv run script/cibuild
-    - pipenv run make -C bootloader
     - pipenv run make -C demo
     - cd ..
     - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
