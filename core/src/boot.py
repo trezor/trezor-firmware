@@ -42,7 +42,7 @@ async def bootscreen() -> None:
         except (OSError, PinCancelled, SdProtectCancelled) as e:
             if __debug__:
                 log.exception(__name__, e)
-        except Exception as e:
+        except BaseException as e:
             utils.halt(e.__class__.__name__)
 
 

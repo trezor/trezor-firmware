@@ -43,12 +43,11 @@ bool oledGetPixel(int x, int y);
 void oledDrawPixel(int x, int y);
 void oledClearPixel(int x, int y);
 void oledInvertPixel(int x, int y);
-void oledDrawChar(int x, int y, char c, int zoom);
-int oledStringWidth(const char *text, int font);
-
-void oledDrawString(int x, int y, const char *text, int font);
-void oledDrawStringCenter(int x, int y, const char *text, int font);
-void oledDrawStringRight(int x, int y, const char *text, int font);
+void oledDrawChar(int x, int y, char c, uint8_t font);
+int oledStringWidth(const char *text, uint8_t font);
+void oledDrawString(int x, int y, const char *text, uint8_t font);
+void oledDrawStringCenter(int x, int y, const char *text, uint8_t font);
+void oledDrawStringRight(int x, int y, const char *text, uint8_t font);
 void oledDrawBitmap(int x, int y, const BITMAP *bmp);
 void oledInvert(int x1, int y1, int x2, int y2);
 void oledBox(int x1, int y1, int x2, int y2, bool set);

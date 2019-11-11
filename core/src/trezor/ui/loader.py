@@ -82,7 +82,7 @@ class Loader(ui.Component):
             display.loader(
                 r, False, Y, s.fg_color, s.bg_color, res.load(s.icon), s.icon_fg_color
             )
-        if r == 0:
+        if (r == 0) and (self.stop_ms is not None):
             self.start_ms = None
             self.stop_ms = None
             self.on_start()

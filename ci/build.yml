@@ -53,6 +53,21 @@ core fw regular build:
     - trezor-fw-regular-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
+core fw regular debug build:
+  stage: build
+  <<: *only_changes_core
+  script:
+    - cd core
+    - PYOPT=0 pipenv run make build_firmware
+    - cd ..
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - cp core/build/firmware/firmware.bin trezor-fw-regular-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - trezor-fw-regular-debug-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+    expire_in: 1 week
+
 core fw btconly build:
   stage: build
   <<: *only_changes_core
@@ -163,7 +178,6 @@ crypto build:
 
 # Legacy
 
-# TODO: add clang https://github.com/trezor/trezor-firmware/issues/44
 legacy fw regular build:
   stage: build
   <<: *only_changes_legacy
@@ -172,7 +186,6 @@ legacy fw regular build:
   script:
     - cd legacy
     - pipenv run script/cibuild
-    - pipenv run make -C bootloader
     - pipenv run make -C demo
     - cd ..
     - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
@@ -192,6 +205,14 @@ legacy fw debug build:
   script:
     - cd legacy
     - pipenv run script/cibuild
+    - cd ..
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - mv legacy/firmware/trezor.bin trezor-fw-regular-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - trezor-fw-regular-debug-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+    expire_in: 1 week
 
 legacy fw btconly build:
   stage: build

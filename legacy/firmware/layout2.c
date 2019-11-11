@@ -339,8 +339,8 @@ static void render_address_dialog(const CoinInfo *coin, const char *address,
       oledHLine(OLED_HEIGHT - 13);
     }
   }
-  layoutButtonNo(_("Cancel"));
-  layoutButtonYes(_("Confirm"));
+  layoutButtonNo(_("Cancel"), &bmp_btn_cancel);
+  layoutButtonYes(_("Confirm"), &bmp_btn_confirm);
   oledRefresh();
 }
 
@@ -555,7 +555,7 @@ void layoutResetWord(const char *word, int pass, int word_pos, bool last) {
   // 30 is the maximum pixels used for a pixel row in the BIP39 word "abstract"
   oledSCA(4 * 9 - 3 - 2, 4 * 9 - 3 + 15 + 2, 30);
   oledInvert(0, 4 * 9 - 3 - 2, OLED_WIDTH - 1, 4 * 9 - 3 + 15 + 2);
-  layoutButtonYes(btnYes);
+  layoutButtonYes(btnYes, &bmp_btn_confirm);
   oledRefresh();
 }
 
@@ -634,10 +634,10 @@ void layoutAddress(const char *address, const char *desc, bool qrcode,
   }
 
   if (!qrcode) {
-    layoutButtonNo(_("QR Code"));
+    layoutButtonNo(_("QR Code"), NULL);
   }
 
-  layoutButtonYes(_("Continue"));
+  layoutButtonYes(_("Continue"), &bmp_btn_confirm);
   oledRefresh();
 }
 

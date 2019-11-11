@@ -22,24 +22,29 @@
 #include "layout.h"
 #include "oled.h"
 
-void layoutButtonNo(const char *btnNo) {
-  oledDrawString(1, OLED_HEIGHT - 8, "\x15", FONT_STANDARD);
-  oledDrawString(fontCharWidth(FONT_STANDARD, '\x15') + 3, OLED_HEIGHT - 8,
-                 btnNo, FONT_STANDARD);
+void layoutButtonNo(const char *btnNo, const BITMAP *icon) {
+  int icon_width = 0;
+  if (icon) {
+    oledDrawBitmap(1, OLED_HEIGHT - 8, icon);
+    icon_width = icon->width;
+  }
+  oledDrawString(8 + 3, OLED_HEIGHT - icon_width, btnNo, FONT_STANDARD);
   oledInvert(0, OLED_HEIGHT - 9,
-             fontCharWidth(FONT_STANDARD, '\x15') +
-                 oledStringWidth(btnNo, FONT_STANDARD) + 2,
+             icon_width + oledStringWidth(btnNo, FONT_STANDARD) + 2,
              OLED_HEIGHT - 1);
 }
 
-void layoutButtonYes(const char *btnYes) {
-  oledDrawString(OLED_WIDTH - fontCharWidth(FONT_STANDARD, '\x06') - 1,
-                 OLED_HEIGHT - 8, "\x06", FONT_STANDARD);
-  oledDrawStringRight(OLED_WIDTH - fontCharWidth(FONT_STANDARD, '\x06') - 3,
-                      OLED_HEIGHT - 8, btnYes, FONT_STANDARD);
-  oledInvert(OLED_WIDTH - oledStringWidth(btnYes, FONT_STANDARD) -
-                 fontCharWidth(FONT_STANDARD, '\x06') - 4,
-             OLED_HEIGHT - 9, OLED_WIDTH - 1, OLED_HEIGHT - 1);
+void layoutButtonYes(const char *btnYes, const BITMAP *icon) {
+  int icon_width = 0;
+  if (icon) {
+    oledDrawBitmap(OLED_WIDTH - 8 - 1, OLED_HEIGHT - 8, icon);
+    icon_width = icon->width;
+  }
+  oledDrawStringRight(OLED_WIDTH - icon_width - 3, OLED_HEIGHT - 8, btnYes,
+                      FONT_STANDARD);
+  oledInvert(
+      OLED_WIDTH - oledStringWidth(btnYes, FONT_STANDARD) - icon_width - 4,
+      OLED_HEIGHT - 9, OLED_WIDTH - 1, OLED_HEIGHT - 1);
 }
 
 void layoutDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
@@ -70,10 +75,10 @@ void layoutDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
     }
   }
   if (btnNo) {
-    layoutButtonNo(btnNo);
+    layoutButtonNo(btnNo, &bmp_btn_cancel);
   }
   if (btnYes) {
-    layoutButtonYes(btnYes);
+    layoutButtonYes(btnYes, &bmp_btn_confirm);
   }
   oledRefresh();
 }

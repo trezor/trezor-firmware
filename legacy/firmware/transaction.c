@@ -804,7 +804,7 @@ static uint32_t tx_input_script_size(const TxInputType *txinput) {
   if (txinput->has_multisig) {
     uint32_t multisig_script_size =
         TXSIZE_MULTISIGSCRIPT +
-        txinput->multisig.pubkeys_count * (1 + TXSIZE_PUBKEY);
+        cryptoMultisigPubkeyCount(&(txinput->multisig)) * (1 + TXSIZE_PUBKEY);
     input_script_size = 1  // the OP_FALSE bug in multisig
                         + txinput->multisig.m * (1 + TXSIZE_SIGNATURE) +
                         op_push_size(multisig_script_size) +

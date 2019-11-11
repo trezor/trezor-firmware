@@ -1,4 +1,4 @@
-from trezor import loop, utils, wire
+from trezor import utils, wire, workflow
 from trezor.crypto import slip39
 from trezor.crypto.hashlib import sha256
 from trezor.errors import MnemonicError
@@ -14,6 +14,7 @@ from apps.common.storage import (
     recovery as storage_recovery,
     recovery_shares as storage_recovery_shares,
 )
+from apps.homescreen.homescreen import homescreen
 from apps.management import backup_types
 from apps.management.recovery_device import layout
 
@@ -23,20 +24,18 @@ if False:
 
 
 async def recovery_homescreen() -> None:
+    if not storage.recovery.is_in_progress():
+        workflow.replace_default(homescreen)
+        return
+
     # recovery process does not communicate on the wire
     ctx = wire.DummyContext()
-    try:
-        await recovery_process(ctx)
-    finally:
-        # clear the loop state, so loop.run will exit
-        loop.clear()
-        # clear the registered wire handlers to avoid conflicts
-        wire.clear()
+    await recovery_process(ctx)
 
 
 async def recovery_process(ctx: wire.GenericContext) -> Success:
     try:
-        result = await _continue_recovery_process(ctx)
+        return await _continue_recovery_process(ctx)
     except recover.RecoveryAborted:
         dry_run = storage_recovery.is_dry_run()
         if dry_run:
@@ -44,7 +43,6 @@ async def recovery_process(ctx: wire.GenericContext) -> Success:
         else:
             storage.wipe()
         raise wire.ActionCancelled("Cancelled")
-    return result
 
 
 async def _continue_recovery_process(ctx: wire.GenericContext) -> Success:

@@ -15,21 +15,7 @@ usb.bus.open()
 utils.set_mode_unprivileged()
 
 
-def _boot_recovery() -> None:
-    # load applications
-    import apps.homescreen
-
-    # boot applications
-    apps.homescreen.boot(features_only=True)
-    if __debug__:
-        apps.debug.boot()
-
-    from apps.management.recovery_device.homescreen import recovery_homescreen
-
-    loop.schedule(recovery_homescreen())
-
-
-def _boot_default() -> None:
+def _boot_apps() -> None:
     # load applications
     import apps.homescreen
     import apps.management
@@ -47,12 +33,10 @@ def _boot_default() -> None:
         import apps.eos
         import apps.binance
         import apps.vsys
+        import apps.webauthn
 
     if __debug__:
         import apps.debug
-    if not utils.BITCOIN_ONLY:
-        if not __debug__ or utils.EMULATOR:
-            import apps.webauthn
 
     # boot applications
     apps.homescreen.boot()
@@ -70,32 +54,32 @@ def _boot_default() -> None:
         apps.eos.boot()
         apps.binance.boot()
         apps.vsys.boot()
+        apps.webauthn.boot()
     if __debug__:
         apps.debug.boot()
-    if not utils.BITCOIN_ONLY:
-        if not __debug__ or utils.EMULATOR:
-            apps.webauthn.boot(usb.iface_webauthn)
 
     # run main event loop and specify which screen is the default
-    from apps.homescreen.homescreen import homescreen
+    from apps.common.storage import recovery
 
-    workflow.start_default(homescreen)
+    if recovery.is_in_progress():
+        from apps.management.recovery_device.homescreen import recovery_homescreen
+
+        workflow.start_default(recovery_homescreen)
+    else:
+        from apps.homescreen.homescreen import homescreen
+
+        workflow.start_default(homescreen)
 
 
 from trezor import loop, wire, workflow
-from apps.common.storage import recovery
 
-while True:
-    # initialize the wire codec
-    wire.setup(usb.iface_wire)
-    if __debug__:
-        wire.setup(usb.iface_debug)
+# initialize the wire codec
+wire.setup(usb.iface_wire)
+if __debug__:
+    wire.setup(usb.iface_debug)
 
-    # boot either in recovery or default mode
-    if recovery.is_in_progress():
-        _boot_recovery()
-    else:
-        _boot_default()
-    loop.run()
+_boot_apps()
+loop.run()
 
-    # loop is empty, reboot
+# loop is empty. That should not happen
+utils.halt("All tasks have died.")

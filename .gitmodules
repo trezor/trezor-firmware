@@ -26,4 +26,4 @@
 	url = https://github.com/tgalal/python-axolotl-curve25519.git
 [submodule "vendor/fido2-tests"]
 	path = vendor/fido2-tests
-	url = https://github.com/solokeys/fido2-tests.git
+	url = https://github.com/trezor/fido2-tests.git

@@ -11,6 +11,7 @@ stdenv.mkDerivation {
     gcc
     gnumake
     graphviz
+    libffi
     libjpeg
     libressl
     libusb1
@@ -35,7 +36,7 @@ stdenv.mkDerivation {
     darwin.libobjc
     libiconv
   ];
-  LD_LIBRARY_PATH="${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
+  LD_LIBRARY_PATH="${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   shellHook = ''
     pipenv shell
     exit

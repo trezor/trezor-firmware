@@ -2047,7 +2047,7 @@ def webauthn_add_credential(connect, hex_credential_id):
 
 @cli.command(help="Remove the resident credential at the given index.")
 @click.option(
-    "-i", "--index", required=True, type=click.IntRange(0, 15), help="Credential index."
+    "-i", "--index", required=True, type=click.IntRange(0, 99), help="Credential index."
 )
 @click.pass_obj
 def webauthn_remove_credential(connect, index):

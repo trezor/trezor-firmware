@@ -7,7 +7,7 @@ if False:
     from typing import List, Optional
 
 _RESIDENT_CREDENTIAL_START_KEY = const(1)
-_MAX_RESIDENT_CREDENTIALS = const(16)
+_MAX_RESIDENT_CREDENTIALS = const(100)
 
 
 def get_resident_credentials(rp_id_hash: Optional[bytes] = None) -> List[Credential]:

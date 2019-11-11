@@ -219,7 +219,7 @@ def validate_full_path(
 
     if path[1] > 20 and path[1] != coin.slip44 | HARDENED:
         return False
-    if (path[2] > 20 and path[2] < HARDENED) or path[2] > 20 | HARDENED:
+    if (20 < path[2] < HARDENED) or path[2] > 20 | HARDENED:
         return False
     if path[3] not in (0, 1, 0 | HARDENED, 1 | HARDENED, 2 | HARDENED):
         return False

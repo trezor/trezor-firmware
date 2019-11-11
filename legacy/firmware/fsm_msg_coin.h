@@ -221,7 +221,7 @@ void fsm_msgGetAddress(const GetAddress *msg) {
     if (msg->has_multisig) {
       strlcpy(desc, "Multisig __ of __:", sizeof(desc));
       const uint32_t m = msg->multisig.m;
-      const uint32_t n = msg->multisig.pubkeys_count;
+      const uint32_t n = cryptoMultisigPubkeyCount(&(msg->multisig));
       desc[9] = (m < 10) ? ' ' : ('0' + (m / 10));
       desc[10] = '0' + (m % 10);
       desc[15] = (n < 10) ? ' ' : ('0' + (n / 10));

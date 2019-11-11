@@ -18,15 +18,8 @@ import pytest
 
 from trezorlib import device, messages
 
-from .. import buttons
 from ..common import MNEMONIC_SLIP39_BASIC_20_3of6
-
-
-def enter_word(debug, word):
-    word = word[:4]
-    for coords in buttons.type_word(word):
-        debug.click(coords)
-    return debug.click(buttons.CONFIRM_WORD, wait=True)
+from . import recovery
 
 
 @pytest.mark.skip_t1
@@ -38,37 +31,9 @@ def test_recovery(device_handler):
     assert features.initialized is False
     device_handler.run(device.recover, pin_protection=False)
 
-    # select number of words
-    layout = debug.wait_layout()
-    assert layout.text.startswith("Recovery mode")
-    layout = debug.click(buttons.OK, wait=True)
-
-    assert "Select number of words" in layout.text
-    layout = debug.click(buttons.OK, wait=True)
-
-    assert layout.text == "WordSelector"
-    # click "20" at 2, 2
-    coords = buttons.grid34(2, 2)
-    lines = debug.click(coords, wait=True)
-    layout = " ".join(lines)
-
-    expected_text = "Enter any share (20 words)"
-    remaining = len(MNEMONIC_SLIP39_BASIC_20_3of6)
-    for share in MNEMONIC_SLIP39_BASIC_20_3of6:
-        assert expected_text in layout.text
-        layout = debug.click(buttons.OK, wait=True)
-
-        assert layout.text == "Slip39Keyboard"
-        for word in share.split(" "):
-            layout = enter_word(debug, word)
-
-        remaining -= 1
-        expected_text = "RecoveryHomescreen {} more".format(remaining)
-
-    assert "You have successfully recovered your wallet" in layout.text
-    layout = debug.click(buttons.OK, wait=True)
-
-    assert layout.text == "Homescreen"
+    recovery.select_number_of_words(debug)
+    recovery.enter_shares(debug, MNEMONIC_SLIP39_BASIC_20_3of6)
+    recovery.finalize(debug)
 
     assert isinstance(device_handler.result(), messages.Success)
     features = device_handler.features()
