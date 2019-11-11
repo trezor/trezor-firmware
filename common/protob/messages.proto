@@ -62,6 +62,8 @@ enum MessageType {
     MessageType_GetFeatures = 55 [(wire_in) = true];
     MessageType_SetU2FCounter = 63 [(wire_in) = true];
     MessageType_SdProtect = 79 [(wire_in) = true];
+    MessageType_GetNextU2FCounter = 80 [(wire_in) = true];
+    MessageType_NextU2FCounter = 81 [(wire_out) = true];
 
     // Bootloader
     MessageType_FirmwareErase = 6 [(wire_in) = true, (wire_bootloader) = true];
