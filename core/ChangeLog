@@ -2,7 +2,6 @@ Version 2.x.x [not yet released]
 * SD card protection
 * Remove unused ButtonRequest.data field
 * Rework Recovery persistence internally
-* Fix EOS' delegatebw action signing
 
 Version 2.1.8 [Nov 2019]
 * Support Tezos 005-BABYLON hardfork
