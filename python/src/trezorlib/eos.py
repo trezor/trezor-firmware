@@ -144,7 +144,7 @@ def parse_sell_ram(data):
 
 def parse_delegate(data):
     return messages.EosActionDelegate(
-        sender=name_to_number(data["sender"]),
+        sender=name_to_number(data["from"]),
         receiver=name_to_number(data["receiver"]),
         net_quantity=parse_asset(data["stake_net_quantity"]),
         cpu_quantity=parse_asset(data["stake_cpu_quantity"]),
@@ -154,7 +154,7 @@ def parse_delegate(data):
 
 def parse_undelegate(data):
     return messages.EosActionUndelegate(
-        sender=name_to_number(data["sender"]),
+        sender=name_to_number(data["from"]),
         receiver=name_to_number(data["receiver"]),
         net_quantity=parse_asset(data["unstake_net_quantity"]),
         cpu_quantity=parse_asset(data["unstake_cpu_quantity"]),

@@ -25,14 +25,11 @@
 #define STR(X) #X
 #define VERSTR(X) STR(X)
 
-#define VERSION_MAJOR_CHAR "\x01"
-#define VERSION_MINOR_CHAR "\x08"
-#define VERSION_PATCH_CHAR "\x00"
-
 #include <stdbool.h>
 #include <stdint.h>
 
 void show_halt(const char *line1, const char *line2);
+void show_unplug(const char *line1, const char *line2);
 void layoutFirmwareFingerprint(const uint8_t *hash);
 bool get_button_response(void);
 
