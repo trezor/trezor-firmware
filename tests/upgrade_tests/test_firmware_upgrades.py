@@ -209,6 +209,7 @@ def test_upgrade_shamir_recovery(gen, from_tag, to_tag):
 
         device_handler.run(device.recover, pin_protection=False)
 
+        recovery.confirm_recovery(debug)
         recovery.select_number_of_words(debug)
         layout = recovery.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[0])
         assert "2 more shares" in layout.text

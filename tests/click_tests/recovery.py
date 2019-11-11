@@ -8,11 +8,14 @@ def enter_word(debug, word):
     return debug.click(buttons.CONFIRM_WORD, wait=True)
 
 
-def select_number_of_words(debug, num_of_words=20):
-    # confirm recovery
+def confirm_recovery(debug):
     layout = debug.wait_layout()
     assert layout.text.startswith("Recovery mode")
-    layout = debug.click(buttons.OK, wait=True)
+    debug.click(buttons.OK, wait=True)
+
+
+def select_number_of_words(debug, num_of_words=20):
+    layout = debug.read_layout()
 
     # select number of words
     assert "Select number of words" in layout.text

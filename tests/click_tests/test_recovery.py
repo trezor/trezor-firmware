@@ -31,6 +31,8 @@ def test_recovery(device_handler):
     assert features.initialized is False
     device_handler.run(device.recover, pin_protection=False)
 
+    recovery.confirm_recovery(debug)
+
     recovery.select_number_of_words(debug)
     recovery.enter_shares(debug, MNEMONIC_SLIP39_BASIC_20_3of6)
     recovery.finalize(debug)
