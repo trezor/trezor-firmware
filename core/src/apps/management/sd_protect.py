@@ -37,7 +37,7 @@ async def _set_salt(
             return storage.sd_salt.set_sd_salt(salt, salt_tag, stage)
         except OSError:
             if not await sd_problem_dialog(ctx):
-                raise
+                raise wire.ProcessError("SD card I/O error.")
 
 
 async def sd_protect(ctx: wire.Context, msg: SdProtect) -> Success:

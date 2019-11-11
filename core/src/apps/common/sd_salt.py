@@ -9,7 +9,7 @@ if False:
     from typing import Optional
 
 
-class SdProtectCancelled(Exception):
+class SdProtectCancelled(wire.ProcessError):
     pass
 
 
@@ -55,7 +55,7 @@ async def ensure_sd_card(ctx: wire.GenericContext) -> None:
     sd = io.SDCard()
     while not sd.present():
         if not await insert_card_dialog(ctx):
-            raise SdProtectCancelled
+            raise SdProtectCancelled("SD card required.")
 
 
 async def request_sd_salt(
@@ -67,7 +67,7 @@ async def request_sd_salt(
             return storage.sd_salt.load_sd_salt()
         except storage.sd_salt.WrongSdCard:
             if not await _wrong_card_dialog(ctx):
-                raise SdProtectCancelled
+                raise SdProtectCancelled("Wrong SD card.")
         except OSError:
             # Either the SD card did not power on, or the filesystem could not be
             # mounted (card is not formatted?), or there is a staged salt file and
