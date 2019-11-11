@@ -32,7 +32,7 @@ async def _set_salt(
     ctx: wire.Context, salt: bytes, salt_tag: bytes, stage: bool = False
 ) -> None:
     while True:
-        ensure_sd_card(ctx)
+        await ensure_sd_card(ctx)
         try:
             return storage.sd_salt.set_sd_salt(salt, salt_tag, stage)
         except OSError:

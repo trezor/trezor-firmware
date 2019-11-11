@@ -62,7 +62,7 @@ async def request_sd_salt(
     ctx: wire.GenericContext = wire.DUMMY_CONTEXT
 ) -> Optional[bytearray]:
     while True:
-        ensure_sd_card(ctx)
+        await ensure_sd_card(ctx)
         try:
             return storage.sd_salt.load_sd_salt()
         except storage.sd_salt.WrongSdCard:
