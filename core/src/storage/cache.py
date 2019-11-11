@@ -1,6 +1,5 @@
+from storage.device import get_device_id
 from trezor.crypto import hashlib, hmac, random
-
-from apps.common.storage.device import get_device_id
 
 if False:
     from typing import Optional

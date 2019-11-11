@@ -1,17 +1,18 @@
+import storage
+import storage.device
+import storage.recovery
 from trezor import config, ui, wire, workflow
 from trezor.messages import ButtonRequestType
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
 from trezor.ui.text import Text
 
-from apps.common import storage
 from apps.common.confirm import require_confirm
 from apps.common.request_pin import (
     request_pin_and_sd_salt,
     request_pin_confirm,
     show_pin_invalid,
 )
-from apps.common.storage import device as storage_device, recovery as storage_recovery
 from apps.management.recovery_device.homescreen import (
     recovery_homescreen,
     recovery_process,
@@ -30,7 +31,7 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     """
     _check_state(msg)
 
-    if storage_recovery.is_in_progress():
+    if storage.recovery.is_in_progress():
         return await recovery_process(ctx)
 
     await _continue_dialog(ctx, msg)
@@ -50,13 +51,13 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
         config.change_pin(pin_to_int(""), pin_to_int(newpin), None, None)
 
     if msg.u2f_counter:
-        storage_device.set_u2f_counter(msg.u2f_counter)
-    storage_device.load_settings(
+        storage.device.set_u2f_counter(msg.u2f_counter)
+    storage.device.load_settings(
         label=msg.label, use_passphrase=msg.passphrase_protection
     )
-    storage_recovery.set_in_progress(True)
+    storage.recovery.set_in_progress(True)
     if msg.dry_run:
-        storage_recovery.set_dry_run(msg.dry_run)
+        storage.recovery.set_dry_run(msg.dry_run)
 
     workflow.replace_default(recovery_homescreen)
     return await recovery_process(ctx)

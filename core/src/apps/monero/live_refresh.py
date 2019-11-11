@@ -1,5 +1,6 @@
 import gc
 
+from storage.cache import get_passphrase_fprint
 from trezor import log
 from trezor.messages import MessageType
 from trezor.messages.MoneroLiveRefreshFinalAck import MoneroLiveRefreshFinalAck
@@ -9,7 +10,6 @@ from trezor.messages.MoneroLiveRefreshStepAck import MoneroLiveRefreshStepAck
 from trezor.messages.MoneroLiveRefreshStepRequest import MoneroLiveRefreshStepRequest
 
 from apps.common import paths
-from apps.common.cache import get_passphrase_fprint
 from apps.monero import CURVE, live_refresh_token, misc
 from apps.monero.layout import confirms
 from apps.monero.xmr import crypto, key_image, monero

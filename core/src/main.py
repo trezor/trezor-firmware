@@ -6,7 +6,8 @@ import boot  # noqa: F401
 # prepare the USB interfaces, but do not connect to the host yet
 import usb
 
-from trezor import utils
+import storage.recovery
+from trezor import loop, utils, wire, workflow
 
 # start the USB
 usb.bus.open()
@@ -57,9 +58,7 @@ def _boot_apps() -> None:
         apps.debug.boot()
 
     # run main event loop and specify which screen is the default
-    from apps.common.storage import recovery
-
-    if recovery.is_in_progress():
+    if storage.recovery.is_in_progress():
         from apps.management.recovery_device.homescreen import recovery_homescreen
 
         workflow.start_default(recovery_homescreen)
@@ -68,8 +67,6 @@ def _boot_apps() -> None:
 
         workflow.start_default(homescreen)
 
-
-from trezor import loop, wire, workflow
 
 # initialize the wire codec
 wire.setup(usb.iface_wire)

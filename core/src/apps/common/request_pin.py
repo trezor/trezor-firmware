@@ -7,8 +7,7 @@ from trezor.ui.pin import CANCELLED, PinDialog
 from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
-from apps.common.sd_salt import request_sd_salt
-from apps.common.storage import device
+from apps.common.sd_salt import SdProtectCancelled, request_sd_salt
 
 if False:
     from typing import Any, Optional, Tuple
@@ -81,11 +80,7 @@ async def pin_mismatch() -> None:
 async def request_pin_and_sd_salt(
     ctx: wire.Context, prompt: str = "Enter your PIN", allow_cancel: bool = True
 ) -> Tuple[str, Optional[bytearray]]:
-    salt_auth_key = device.get_sd_salt_auth_key()
-    if salt_auth_key is not None:
-        salt = await request_sd_salt(ctx, salt_auth_key)  # type: Optional[bytearray]
-    else:
-        salt = None
+    salt = await request_sd_salt(ctx)
 
     if config.has_pin():
         pin = await request_pin_ack(ctx, prompt, config.get_pin_rem(), allow_cancel)
@@ -98,11 +93,10 @@ async def request_pin_and_sd_salt(
 async def verify_user_pin(
     prompt: str = "Enter your PIN", allow_cancel: bool = True, retry: bool = True
 ) -> None:
-    salt_auth_key = device.get_sd_salt_auth_key()
-    if salt_auth_key is not None:
-        salt = await request_sd_salt(None, salt_auth_key)  # type: Optional[bytearray]
-    else:
-        salt = None
+    try:
+        salt = await request_sd_salt()
+    except SdProtectCancelled:
+        raise PinCancelled
 
     if not config.has_pin() and not config.check_pin(pin_to_int(""), salt):
         raise RuntimeError

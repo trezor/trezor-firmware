@@ -1,6 +1,5 @@
+from storage import common
 from trezor.crypto import slip39
-
-from apps.common.storage import common
 
 if False:
     from typing import List, Optional

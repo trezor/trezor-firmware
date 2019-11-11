@@ -1,7 +1,7 @@
 from common import *
 from trezor.pin import pin_to_int
 from trezor import config
-from apps.common.storage import device
+from storage import device
 
 
 class TestConfig(unittest.TestCase):

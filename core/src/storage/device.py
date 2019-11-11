@@ -1,11 +1,9 @@
 from micropython import const
 from ubinascii import hexlify
 
+from storage import common
 from trezor.crypto import random
 from trezor.messages import BackupType
-
-from apps.common.sd_salt import SD_SALT_AUTH_KEY_LEN_BYTES
-from apps.common.storage import common
 
 if False:
     from trezor.messages.ResetDevice import EnumTypeBackupType
@@ -40,6 +38,10 @@ _DEFAULT_BACKUP_TYPE       = BackupType.Bip39
 # fmt: on
 
 HOMESCREEN_MAXSIZE = 16384
+
+# Length of SD salt auth tag.
+# Other SD-salt-related constants are in sd_salt.py
+SD_SALT_AUTH_KEY_LEN_BYTES = const(16)
 
 
 def is_version_stored() -> bool:

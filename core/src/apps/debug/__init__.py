@@ -86,8 +86,8 @@ if __debug__:
         ctx: wire.Context, msg: DebugLinkGetState
     ) -> DebugLinkState:
         from trezor.messages.DebugLinkState import DebugLinkState
+        from storage.device import has_passphrase
         from apps.common import mnemonic
-        from apps.common.storage.device import has_passphrase
 
         m = DebugLinkState()
         m.mnemonic_secret = mnemonic.get_secret()

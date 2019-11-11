@@ -2,11 +2,11 @@ import ustruct
 from micropython import const
 from ubinascii import hexlify
 
+import storage.device
 from trezor import log, utils
 from trezor.crypto import bip32, chacha20poly1305, hashlib, hmac, random
 
 from apps.common import HARDENED, cbor, seed
-from apps.common.storage import device as storage_device
 
 if False:
     from typing import Optional
@@ -51,16 +51,14 @@ class Credential:
         return None
 
     def next_signature_counter(self) -> int:
-        return storage_device.next_u2f_counter() or 0
+        return storage.device.next_u2f_counter() or 0
 
     @staticmethod
-    def from_bytes(data: bytes, rp_id_hash: bytes) -> Optional["Credential"]:
-        cred = Fido2Credential.from_cred_id(
-            data, rp_id_hash
-        )  # type: Optional[Credential]
-        if cred is None:
-            cred = U2fCredential.from_key_handle(data, rp_id_hash)
-        return cred
+    def from_bytes(data: bytes, rp_id_hash: bytes) -> "Credential":
+        try:
+            return Fido2Credential.from_cred_id(data, rp_id_hash)
+        except Exception:
+            return U2fCredential.from_key_handle(data, rp_id_hash)
 
 
 # SLIP-0022: FIDO2 credential ID format for HD wallets
@@ -83,7 +81,7 @@ class Fido2Credential(Credential):
         return True
 
     def generate_id(self) -> None:
-        self.creation_time = storage_device.next_u2f_counter() or 0
+        self.creation_time = storage.device.next_u2f_counter() or 0
 
         data = cbor.encode(
             {
@@ -111,12 +109,12 @@ class Fido2Credential(Credential):
         tag = ctx.finish()
         self.id = _CRED_ID_VERSION + iv + ciphertext + tag
 
-    @staticmethod
+    @classmethod
     def from_cred_id(
-        cred_id: bytes, rp_id_hash: Optional[bytes]
-    ) -> Optional["Fido2Credential"]:
+        cls, cred_id: bytes, rp_id_hash: Optional[bytes]
+    ) -> "Fido2Credential":
         if len(cred_id) < _CRED_ID_MIN_LENGTH or cred_id[0:4] != _CRED_ID_VERSION:
-            return None
+            raise ValueError  # invalid length or version
 
         key = seed.derive_slip21_node_without_passphrase(
             [b"SLIP-0022", cred_id[0:4], b"Encryption key"]
@@ -130,25 +128,25 @@ class Fido2Credential(Credential):
             data = ctx.decrypt(ciphertext)
             try:
                 rp_id = cbor.decode(data)[_CRED_ID_RP_ID]
-            except Exception:
-                return None
+            except Exception as e:
+                raise ValueError from e  # CBOR decoding failed
             rp_id_hash = hashlib.sha256(rp_id).digest()
 
         ctx = chacha20poly1305(key, iv)
         ctx.auth(rp_id_hash)
         data = ctx.decrypt(ciphertext)
         if not utils.consteq(ctx.finish(), tag):
-            return None
+            raise ValueError  # inauthentic ciphertext
 
         try:
             data = cbor.decode(data)
-        except Exception:
-            return None
+        except Exception as e:
+            raise ValueError from e  # CBOR decoding failed
 
         if not isinstance(data, dict):
-            return None
+            raise ValueError  # invalid CBOR data
 
-        cred = Fido2Credential()
+        cred = cls()
         cred.rp_id = data.get(_CRED_ID_RP_ID, None)
         cred.rp_id_hash = rp_id_hash
         cred.rp_name = data.get(_CRED_ID_RP_NAME, None)
@@ -165,7 +163,7 @@ class Fido2Credential(Credential):
             or not cred.check_data_types()
             or hashlib.sha256(cred.rp_id).digest() != rp_id_hash
         ):
-            return None
+            raise ValueError  # data consistency check failed
 
         return cred
 
@@ -276,11 +274,9 @@ class U2fCredential(Credential):
         return app_name
 
     @staticmethod
-    def from_key_handle(
-        key_handle: bytes, rp_id_hash: bytes
-    ) -> Optional["U2fCredential"]:
+    def from_key_handle(key_handle: bytes, rp_id_hash: bytes) -> "U2fCredential":
         if len(key_handle) != _KEY_HANDLE_LENGTH:
-            return None
+            raise ValueError  # key length mismatch
 
         # check the keyHandle and generate the signing key
         node = U2fCredential._node_from_key_handle(rp_id_hash, key_handle, "<8L")
@@ -291,7 +287,7 @@ class U2fCredential(Credential):
             node = U2fCredential._node_from_key_handle(rp_id_hash, key_handle, ">8L")
         if node is None:
             # specific error logged in msg_authenticate_genkey
-            return None
+            raise ValueError  # failed to parse key handle in either direction
 
         cred = U2fCredential()
         cred.id = key_handle

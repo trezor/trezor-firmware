@@ -3,6 +3,8 @@ import ustruct
 import utime
 from micropython import const
 
+import storage
+import storage.resident_credentials
 from trezor import config, io, log, loop, ui, utils, workflow
 from trezor.crypto import aes, der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
@@ -10,14 +12,13 @@ from trezor.ui.confirm import CONFIRMED, Confirm, ConfirmPageable, Pageable
 from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
-from apps.common import cbor, storage
-from apps.common.storage.webauthn import (
-    erase_resident_credentials,
-    get_resident_credentials,
-    store_resident_credential,
-)
+from apps.common import cbor
 from apps.webauthn.confirm import ConfirmContent, ConfirmInfo
 from apps.webauthn.credential import Credential, Fido2Credential, U2fCredential
+from apps.webauthn.resident_credentials import (
+    find_by_rp_id_hash,
+    store_resident_credential,
+)
 
 if __debug__:
     from apps.debug import confirm_signal
@@ -863,7 +864,7 @@ class Fido2ConfirmReset(Fido2State):
         return await confirm(text)
 
     async def on_confirm(self) -> None:
-        erase_resident_credentials()
+        storage.resident_credentials.delete_all()
         cmd = Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]))
         await send_cmd(cmd, self.iface)
 
@@ -1161,8 +1162,9 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     khlen = req.data[_REQ_CMD_AUTHENTICATE_KHLEN]
     auth = overlay_struct(req.data, req_cmd_authenticate(khlen))
 
-    cred = Credential.from_bytes(auth.keyHandle, bytes(auth.appId))
-    if cred is None:
+    try:
+        cred = Credential.from_bytes(auth.keyHandle, bytes(auth.appId))
+    except Exception:
         # specific error logged in msg_authenticate_genkey
         return msg_error(req.cid, _SW_WRONG_DATA)
 
@@ -1263,9 +1265,11 @@ def credentials_from_descriptor_list(
         credential_id = credential_descriptor["id"]
         if not isinstance(credential_id, (bytes, bytearray)):
             raise TypeError
-        cred = Credential.from_bytes(credential_id, rp_id_hash)
-        if cred is not None:
+        try:
+            cred = Credential.from_bytes(credential_id, rp_id_hash)
             cred_list.append(cred)
+        except Exception:
+            pass
 
     return cred_list
 
@@ -1481,7 +1485,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         else:
             # Allow list is empty. Get resident credentials.
             if _ALLOW_RESIDENT_CREDENTIALS:
-                cred_list = get_resident_credentials(rp_id_hash)
+                cred_list = list(find_by_rp_id_hash(rp_id_hash))
             else:
                 cred_list = []
             resident = True

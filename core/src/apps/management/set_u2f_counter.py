@@ -1,10 +1,10 @@
+import storage.device
 from trezor import ui, wire
 from trezor.messages import ButtonRequestType
 from trezor.messages.Success import Success
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
-from apps.common.storage import device as storage_device
 
 
 async def set_u2f_counter(ctx, msg):
@@ -16,6 +16,6 @@ async def set_u2f_counter(ctx, msg):
     text.bold("to %d?" % msg.u2f_counter)
     await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)
 
-    storage_device.set_u2f_counter(msg.u2f_counter)
+    storage.device.set_u2f_counter(msg.u2f_counter)
 
     return Success(message="U2F counter set")

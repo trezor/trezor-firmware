@@ -1,8 +1,8 @@
 from common import *
-from storage import mock_storage
+from mock_storage import mock_storage
 
-import apps.common.storage.recovery
-from apps.common import storage
+import storage
+import storage.recovery
 from apps.management.recovery_device.recover import process_slip39
 
 MNEMONIC_SLIP39_BASIC_20_3of6 = [
