@@ -3,9 +3,6 @@ from trezor.messages import MessageType
 
 
 def boot() -> None:
-    # only enable LoadDevice in debug builds
-    if __debug__:
-        wire.add(MessageType.LoadDevice, __name__, "load_device")
     wire.add(MessageType.ResetDevice, __name__, "reset_device")
     wire.add(MessageType.BackupDevice, __name__, "backup_device")
     wire.add(MessageType.WipeDevice, __name__, "wipe_device")
