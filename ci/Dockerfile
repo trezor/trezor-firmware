@@ -113,8 +113,8 @@ ENV WORKON_HOME=/tmp/.venvs
 
 # download monero tests binary
 
-ENV TREZOR_MONERO_TESTS_SHA256SUM=140a16b3d6105b5e8e88a93b451e9600a36ed23928ea3cf2f975f9c83f36dab7
-ENV TREZOR_MONERO_TESTS_URL="https://github.com/ph4r05/monero/releases/download/v0.14.1.0-tests-u14.04-01/trezor_tests"
+ENV TREZOR_MONERO_TESTS_SHA256SUM=4c4e4b1ad0acda8bf9622c16f1af3298d7e20b9b53634c5d55e60c5a115f0110
+ENV TREZOR_MONERO_TESTS_URL="https://github.com/ph4r05/monero/releases/download/v0.15.0.0-tests-u18.04-01/trezor_tests"
 ENV TREZOR_MONERO_TESTS_PATH="/opt/trezor_monero_tests"
 
 RUN if [ "${FULLDEPS_TESTING}" = "1" ]; then \
