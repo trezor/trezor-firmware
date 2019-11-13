@@ -97,6 +97,8 @@ def client(request):
         mnemonic=" ".join(["all"] * 12),
         pin=None,
         passphrase=False,
+        needs_backup=False,
+        no_backup=False,
     )
     # fmt: on
 
@@ -108,17 +110,22 @@ def client(request):
         if setup_params["pin"] is True:
             setup_params["pin"] = "1234"
 
-        debuglink.load_device_by_mnemonic(
+        debuglink.load_device(
             client,
             mnemonic=setup_params["mnemonic"],
             pin=setup_params["pin"],
             passphrase_protection=setup_params["passphrase"],
             label="test",
             language="english",
+            needs_backup=setup_params["needs_backup"],
+            no_backup=setup_params["no_backup"],
         )
-        client.clear_session()
         if setup_params["passphrase"] and client.features.model != "1":
             apply_settings(client, passphrase_source=PASSPHRASE_ON_HOST)
+
+        if setup_params["pin"]:
+            # ClearSession locks the device. We only do that if the PIN is set.
+            client.clear_session()
 
     client.open()
     yield client
