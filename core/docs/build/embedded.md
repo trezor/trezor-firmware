@@ -49,3 +49,7 @@ You can then use `screen` to enter the device's console. Do not forget to add yo
 ```sh
 screen /dev/ttyACM0
 ```
+
+Debug console via serial port is enabled only for the Bitcoin-only firmware.
+If you need the console to debug non-Bitcoin features, please edit `src/usb.py`,
+disable WebAuthn USB interface and enable the VCP USB interface.

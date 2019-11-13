@@ -31,14 +31,15 @@ fi
 
 # run tests
 error=0
+TREZOR_FIDO2_UDP_PORT=21326
 # missuse loaddevice test to initialize the device
 if ! pytest ../../tests/device_tests -k "test_msg_loaddevice" "$@"; then
   error=1
 fi
-if ! ../../tests/fido_tests/u2f-tests-hid/HIDTest 21328 "$@"; then
+if ! ../../tests/fido_tests/u2f-tests-hid/HIDTest "${TREZOR_FIDO2_UDP_PORT}" "$@"; then
   error=1
 fi
-if ! ../../tests/fido_tests/u2f-tests-hid/U2FTest 21328 "$@"; then
+if ! ../../tests/fido_tests/u2f-tests-hid/U2FTest "${TREZOR_FIDO2_UDP_PORT}" "$@"; then
   error=1
 fi
 kill $upy_pid
