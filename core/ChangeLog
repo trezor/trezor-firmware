@@ -19,7 +19,6 @@ Version 2.1.6 [Oct 2019]
 * BackupType in Features
 
 Version 2.1.5 [Sep 2019]
-* Introduce Bitcoin-only firmware
 * Fix for sluggish U2F authentication when using Shamir
 * Fix UI for Shamir with 33 words
 * Fix Wanchain signing
