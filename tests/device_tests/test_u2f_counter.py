@@ -14,14 +14,14 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from trezorlib import device
+from trezorlib import fido
 
 
 def test_u2f_counter(client):
-    assert device.get_next_u2f_counter(client) == 0
-    assert device.get_next_u2f_counter(client) == 1
-    device.set_u2f_counter(client, 111111)
-    assert device.get_next_u2f_counter(client) == 111112
-    assert device.get_next_u2f_counter(client) == 111113
-    device.set_u2f_counter(client, 0)
-    assert device.get_next_u2f_counter(client) == 1
+    assert fido.get_next_counter(client) == 0
+    assert fido.get_next_counter(client) == 1
+    fido.set_counter(client, 111111)
+    assert fido.get_next_counter(client) == 111112
+    assert fido.get_next_counter(client) == 111113
+    fido.set_counter(client, 0)
+    assert fido.get_next_counter(client) == 1

@@ -16,15 +16,15 @@
 
 import click
 
-from .. import device, webauthn
+from .. import fido
 
 
-@click.group(name="webauthn")
+@click.group(name="fido")
 def cli():
-    """WebAuthn, FIDO2 and U2F management commands."""
+    """FIDO2, U2F and WebAuthN management commands."""
 
 
-@click.group()
+@cli.group()
 def credentials():
     """Manage FIDO2 resident credentials."""
 
@@ -33,7 +33,7 @@ def credentials():
 @click.pass_obj
 def credentials_list(connect):
     """List all resident credentials on the device."""
-    creds = webauthn.list_credentials(connect())
+    creds = fido.list_credentials(connect())
     for cred in creds:
         click.echo("")
         click.echo("WebAuthn credential at index {}:".format(cred.index))
@@ -62,49 +62,49 @@ def credentials_list(connect):
 @credentials.command(name="add")
 @click.argument("hex_credential_id")
 @click.pass_obj
-def credential_add(connect, hex_credential_id):
+def credentials_add(connect, hex_credential_id):
     """Add the credential with the given ID as a resident credential.
 
     HEX_CREDENTIAL_ID is the credential ID as a hexadecimal string.
     """
-    return webauthn.add_credential(connect(), bytes.fromhex(hex_credential_id))
+    return fido.add_credential(connect(), bytes.fromhex(hex_credential_id))
 
 
-@cli.command()
+@credentials.command(name="remove")
 @click.option(
     "-i", "--index", required=True, type=click.IntRange(0, 99), help="Credential index."
 )
 @click.pass_obj
-def remove_credential(connect, index):
+def credentials_remove(connect, index):
     """Remove the resident credential at the given index."""
-    return webauthn.remove_credential(connect(), index)
+    return fido.remove_credential(connect(), index)
 
 
 #
-# U2F counter operations
+# FIDO counter operations
 #
 
 
 @cli.group()
-def u2f():
-    """Get or set the U2F counter value."""
+def counter():
+    """Get or set the FIDO/U2F counter value."""
 
 
-@u2f.command(name="set")
+@counter.command(name="set")
 @click.argument("counter", type=int)
 @click.pass_obj
-def u2f_set(connect, counter):
-    """Set U2F counter value."""
-    return device.set_u2f_counter(connect(), counter)
+def counter_set(connect, counter):
+    """Set FIDO/U2F counter value."""
+    return fido.set_counter(connect(), counter)
 
 
-@u2f.command(name="get-next")
+@counter.command(name="get-next")
 @click.pass_obj
-def u2f_get_next(connect):
-    """Get-and-increase value of U2F counter.
+def counter_get_next(connect):
+    """Get-and-increase value of FIDO/U2F counter.
 
-    U2F counter value cannot be read directly. On each U2F exchange, the counter value
+    FIDO counter value cannot be read directly. On each U2F exchange, the counter value
     is returned and atomically increased. This command performs the same operation
     and returns the counter value.
     """
-    return device.get_next_u2f_counter(connect())
+    return fido.get_next_counter(connect())
