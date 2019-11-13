@@ -99,8 +99,12 @@ def sd_protect(client, operation):
 
 @expect(proto.Success, field="message")
 def set_u2f_counter(client, u2f_counter):
-    ret = client.call(proto.SetU2FCounter(u2f_counter=u2f_counter))
-    return ret
+    return client.call(proto.SetU2FCounter(u2f_counter=u2f_counter))
+
+
+@expect(proto.NextU2FCounter, field="u2f_counter")
+def get_next_u2f_counter(client):
+    return client.call(proto.GetNextU2FCounter())
 
 
 @expect(proto.Success, field="message")

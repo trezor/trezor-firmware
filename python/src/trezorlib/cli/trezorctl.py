@@ -412,6 +412,12 @@ def set_u2f_counter(connect, counter):
     return device.set_u2f_counter(connect(), counter)
 
 
+@cli.command(help="Get U2F counter.")
+@click.pass_obj
+def get_u2f_counter(connect):
+    return device.get_next_u2f_counter(connect())
+
+
 @cli.command(help="Reset device to factory defaults and remove all private data.")
 @click.option(
     "-b",
