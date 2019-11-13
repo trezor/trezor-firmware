@@ -1,31 +1,17 @@
 from storage.device import get_device_id
 from trezor import io, utils
 
-# fmt: off
-
 # interface used for trezor wire protocol
-iface_wire = io.WebUSB(
-    iface_num=0,
-    ep_in=0x81,
-    ep_out=0x01,
-)
+iface_wire = io.WebUSB(iface_num=0, ep_in=0x81, ep_out=0x01)
 
-# as the iface_vcp interface can have at most 3 endpoints, we cannot use it simultaneously
-# with the iface_webauthn interface.
+# we cannot use simultaneously iface_webauthn and debug interfaces,
+# as we have only limited number of endpoints
 if __debug__:
     # interface used for debug messages with trezor wire protocol
-    iface_debug = io.WebUSB(
-        iface_num=1,
-        ep_in=0x82,
-        ep_out=0x02,
-    )
+    iface_debug = io.WebUSB(iface_num=1, ep_in=0x82, ep_out=0x02)
     # interface used for cdc/vcp console emulation (debug messages)
     iface_vcp = io.VCP(
-        iface_num=2,
-        data_iface_num=3,
-        ep_in=0x83,
-        ep_out=0x03,
-        ep_cmd=0x84,
+        iface_num=2, data_iface_num=3, ep_in=0x83, ep_out=0x03, ep_cmd=0x84
     )
 if not utils.BITCOIN_ONLY:
     if not __debug__ or utils.EMULATOR:
@@ -34,6 +20,7 @@ if not utils.BITCOIN_ONLY:
             iface_num=4 if __debug__ else 1,
             ep_in=0x85 if __debug__ else 0x82,
             ep_out=0x04 if __debug__ else 0x02,
+            # fmt: off
             report_desc=bytes([
                 0x06, 0xd0, 0xf1,  # USAGE_PAGE (FIDO Alliance)
                 0x09, 0x01,        # USAGE (U2F HID Authenticator Device)
@@ -52,6 +39,7 @@ if not utils.BITCOIN_ONLY:
                 0x91, 0x02,        # OUTPUT (Data,Var,Abs)
                 0xc0,              # END_COLLECTION
             ]),
+            # fmt: on
         )
 
 bus = io.USB(
