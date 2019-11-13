@@ -101,6 +101,7 @@ from .GetAddress import GetAddress
 from .GetECDHSessionKey import GetECDHSessionKey
 from .GetEntropy import GetEntropy
 from .GetFeatures import GetFeatures
+from .GetNextU2FCounter import GetNextU2FCounter
 from .GetPublicKey import GetPublicKey
 from .HDNodePathType import HDNodePathType
 from .HDNodeType import HDNodeType
@@ -187,6 +188,7 @@ from .NEMSignTx import NEMSignTx
 from .NEMSignedTx import NEMSignedTx
 from .NEMTransactionCommon import NEMTransactionCommon
 from .NEMTransfer import NEMTransfer
+from .NextU2FCounter import NextU2FCounter
 from .PassphraseAck import PassphraseAck
 from .PassphraseRequest import PassphraseRequest
 from .PassphraseStateAck import PassphraseStateAck

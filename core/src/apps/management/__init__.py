@@ -14,4 +14,5 @@ def boot() -> None:
     wire.add(MessageType.ApplyFlags, __name__, "apply_flags")
     wire.add(MessageType.ChangePin, __name__, "change_pin")
     wire.add(MessageType.SetU2FCounter, __name__, "set_u2f_counter")
+    wire.add(MessageType.GetNextU2FCounter, __name__, "get_next_u2f_counter")
     wire.add(MessageType.SdProtect, __name__, "sd_protect")

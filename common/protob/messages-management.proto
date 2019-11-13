@@ -333,5 +333,21 @@ message WordAck {
  * @next Success
  */
 message SetU2FCounter {
-    optional uint32 u2f_counter = 1;    // counter
+    optional uint32 u2f_counter = 1;
+}
+
+/**
+ * Request: Set U2F counter
+ * @start
+ * @next NextU2FCounter
+ */
+message GetNextU2FCounter {
+}
+
+/**
+ * Request: Set U2F counter
+ * @end
+ */
+message NextU2FCounter {
+    optional uint32 u2f_counter = 1;
 }

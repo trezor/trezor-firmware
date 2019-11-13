@@ -430,3 +430,21 @@ void fsm_msgSetU2FCounter(const SetU2FCounter *msg) {
   fsm_sendSuccess(_("U2F counter set"));
   layoutHome();
 }
+
+void fsm_msgGetNextU2FCounter() {
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    _("Do you want to"), _("increase and retrieve"),
+                    _("the U2F counter?"), NULL, NULL, NULL);
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+  uint32_t counter = config_nextU2FCounter();
+
+  RESP_INIT(NextU2FCounter);
+  resp->has_u2f_counter = true;
+  resp->u2f_counter = counter;
+  msg_write(MessageType_MessageType_NextU2FCounter, resp);
+  layoutHome();
+}
