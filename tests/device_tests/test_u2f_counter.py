@@ -17,7 +17,7 @@
 from trezorlib import device
 
 
-def test_set_u2f_counter(client):
+def test_u2f_counter(client):
     assert device.get_next_u2f_counter(client) == 0
     assert device.get_next_u2f_counter(client) == 1
     device.set_u2f_counter(client, 111111)
