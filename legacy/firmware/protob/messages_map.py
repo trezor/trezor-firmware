@@ -25,18 +25,33 @@ LABELS = {
     wire_debug_out: "debug out messages",
 }
 
+# interface-direction pairs
+IFACE_DIR_PAIRS = {
+    wire_in: ("n", "i"),
+    wire_out: ("n", "o"),
+    wire_debug_in: ("d", "i"),
+    wire_debug_out: ("d", "o"),
+}
 
-def handle_message(fh, fl, skipped, message, extension):
+SPECIAL_DEBUG_MESSAGES = {"MessageType_LoadDevice"}
+
+
+def get_wire_extension(message):
+    extensions = message.GetOptions().Extensions
+    return next(ext for ext in IFACE_DIR_PAIRS if extensions[ext])
+
+
+def handle_message(fh, fl, skipped, message):
     name = message.name
     short_name = name.split("MessageType_", 1).pop()
     assert short_name != name
 
+    extension = get_wire_extension(message)
+    interface, direction = IFACE_DIR_PAIRS[extension]
+
     for s in skipped:
         if short_name.startswith(s):
             return
-
-    interface = "d" if extension in (wire_debug_in, wire_debug_out) else "n"
-    direction = "i" if extension in (wire_in, wire_debug_in) else "o"
 
     options = message.GetOptions()
     bootloader = options.Extensions[wire_bootloader]
@@ -94,11 +109,8 @@ fl.write(
 messages = defaultdict(list)
 
 for message in MessageType.DESCRIPTOR.values:
-    extensions = message.GetOptions().Extensions
-
-    for extension in (wire_in, wire_out, wire_debug_in, wire_debug_out):
-        if extensions[extension]:
-            messages[extension].append(message)
+    extension = get_wire_extension(message)
+    messages[extension].append(message)
 
 for extension in (wire_in, wire_out, wire_debug_in, wire_debug_out):
     if extension == wire_debug_in:
@@ -108,7 +120,11 @@ for extension in (wire_in, wire_out, wire_debug_in, wire_debug_out):
     fh.write("\n\t// {label}\n\n".format(label=LABELS[extension]))
 
     for message in messages[extension]:
-        handle_message(fh, fl, skipped, message, extension)
+        if message.name in SPECIAL_DEBUG_MESSAGES:
+            fh.write("#if DEBUG_LINK\n")
+        handle_message(fh, fl, skipped, message)
+        if message.name in SPECIAL_DEBUG_MESSAGES:
+            fh.write("#endif\n")
 
     if extension == wire_debug_out:
         fh.write("\n#endif\n")
