@@ -34,6 +34,7 @@ from . import (
     device,
     eos,
     ethereum,
+    fido,
     firmware,
     lisk,
     monero,
@@ -42,7 +43,6 @@ from . import (
     settings,
     stellar,
     tezos,
-    webauthn,
 )
 
 COMMAND_ALIASES = {
@@ -262,6 +262,7 @@ cli.add_command(crypto.cli)
 cli.add_command(device.cli)
 cli.add_command(eos.cli)
 cli.add_command(ethereum.cli)
+cli.add_command(fido.cli)
 cli.add_command(lisk.cli)
 cli.add_command(monero.cli)
 cli.add_command(nem.cli)
@@ -269,7 +270,6 @@ cli.add_command(ripple.cli)
 cli.add_command(settings.cli)
 cli.add_command(stellar.cli)
 cli.add_command(tezos.cli)
-cli.add_command(webauthn.cli)
 
 cli.add_command(firmware.firmware_update)
 

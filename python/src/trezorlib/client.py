@@ -337,7 +337,7 @@ class ProtocolMixin(object):
     reset_device = MovedTo("device.reset")
     backup_device = MovedTo("device.backup")
 
-    set_u2f_counter = MovedTo("device.set_u2f_counter")
+    set_u2f_counter = MovedTo("fido.set_counter")
 
     apply_settings = MovedTo("device.apply_settings")
     apply_flags = MovedTo("device.apply_flags")
@@ -386,8 +386,7 @@ class ProtocolMixin(object):
     decrypt_keyvalue = MovedTo("misc.decrypt_keyvalue")
 
     # Debug device functionality
-    load_device_by_mnemonic = MovedTo("debuglink.load_device_by_mnemonic")
-    load_device_by_xprv = MovedTo("debuglink.load_device_by_xprv")
+    load_device_by_mnemonic = MovedTo("debuglink.load_device")
 
 
 class BaseClient:

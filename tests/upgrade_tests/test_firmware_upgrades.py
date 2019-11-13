@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import MINIMUM_FIRMWARE_VERSION, btc, debuglink, device
+from trezorlib import MINIMUM_FIRMWARE_VERSION, btc, debuglink, device, fido
 from trezorlib.messages import BackupType
 from trezorlib.tools import H_
 
@@ -253,15 +253,15 @@ def test_upgrade_u2f(gen, from_tag, to_tag):
     Check U2F counter stayed the same after an upgrade.
     """
     with EmulatorWrapper(gen, from_tag) as emu:
-        success = device.set_u2f_counter(emu.client, 10)
+        success = fido.set_counter(emu.client, 10)
         assert "U2F counter set" in success
 
-        counter = device.get_next_u2f_counter(emu.client)
+        counter = fido.get_next_counter(emu.client)
         assert counter == 11
         storage = emu.storage()
 
     with EmulatorWrapper(gen, to_tag, storage=storage) as emu:
-        counter = device.get_next_u2f_counter(emu.client)
+        counter = fido.get_next_counter(emu.client)
         assert counter == 12
 
 
