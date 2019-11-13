@@ -41,7 +41,7 @@ nix-shell
 * __Mac OS X__:
 
 ```sh
-brew install scons sdl2 sdl2_image pkg-config
+brew install scons sdl2 sdl2_image pkg-config micropython
 ```
 
 * __Windows__: not supported yet, sorry.
