@@ -450,7 +450,7 @@ class TrezorClientDebugLink(TrezorClient):
 
 
 @expect(proto.Success, field="message")
-def load_device_by_mnemonic(
+def load_device(
     client,
     mnemonic,
     pin,
@@ -458,6 +458,8 @@ def load_device_by_mnemonic(
     label,
     language="english",
     skip_checksum=False,
+    needs_backup=False,
+    no_backup=False,
 ):
     if not isinstance(mnemonic, (list, tuple)):
         mnemonic = [mnemonic]
@@ -477,10 +479,16 @@ def load_device_by_mnemonic(
             language=language,
             label=label,
             skip_checksum=skip_checksum,
+            needs_backup=needs_backup,
+            no_backup=no_backup,
         )
     )
     client.init_device()
     return resp
+
+
+# keep the old name for compatibility
+load_device_by_mnemonic = load_device
 
 
 @expect(proto.Success, field="message")

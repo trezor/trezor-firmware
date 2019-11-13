@@ -32,7 +32,7 @@ from ..common import (
 
 
 @pytest.mark.skip_t1  # TODO we want this for t1 too
-@pytest.mark.setup_client(mnemonic=MNEMONIC12)
+@pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC12)
 def test_backup_bip39(client):
     assert client.features.needs_backup is True
     mnemonic = None
@@ -71,7 +71,7 @@ def test_backup_bip39(client):
 
 
 @pytest.mark.skip_t1
-@pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
+@pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
 def test_backup_slip39_basic(client):
     assert client.features.needs_backup is True
     mnemonics = []
@@ -136,7 +136,7 @@ def test_backup_slip39_basic(client):
 
 
 @pytest.mark.skip_t1
-@pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
+@pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
 def test_backup_slip39_advanced(client):
     assert client.features.needs_backup is True
     mnemonics = []
@@ -257,19 +257,8 @@ def test_backup_slip39_advanced(client):
 
 
 # we only test this with bip39 because the code path is always the same
-@pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.setup_client(no_backup=True)
 def test_no_backup_fails(client):
-    device.reset(
-        client,
-        display_random=False,
-        strength=128,
-        passphrase_protection=False,
-        pin_protection=False,
-        label="test",
-        language="english",
-        no_backup=True,
-    )
-
     assert client.features.initialized is True
     assert client.features.no_backup is True
     assert client.features.needs_backup is False
@@ -280,19 +269,8 @@ def test_no_backup_fails(client):
 
 
 # we only test this with bip39 because the code path is always the same
-@pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.setup_client(needs_backup=True)
 def test_interrupt_backup_fails(client):
-    device.reset(
-        client,
-        display_random=False,
-        strength=128,
-        passphrase_protection=False,
-        pin_protection=False,
-        label="test",
-        language="english",
-        skip_backup=True,
-    )
-
     assert client.features.initialized is True
     assert client.features.needs_backup is True
     assert client.features.unfinished_backup is False

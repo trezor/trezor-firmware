@@ -30,7 +30,7 @@ from ..common import (
 @pytest.mark.setup_client(uninitialized=True)
 class TestDeviceLoad:
     def test_load_device_1(self, client):
-        debuglink.load_device_by_mnemonic(
+        debuglink.load_device(
             client,
             mnemonic=MNEMONIC12,
             pin="",
@@ -46,7 +46,7 @@ class TestDeviceLoad:
         assert address == "1EfKbQupktEMXf4gujJ9kCFo83k1iMqwqK"
 
     def test_load_device_2(self, client):
-        debuglink.load_device_by_mnemonic(
+        debuglink.load_device(
             client,
             mnemonic=MNEMONIC12,
             pin="1234",
@@ -69,7 +69,7 @@ class TestDeviceLoad:
 
     @pytest.mark.skip_t1
     def test_load_device_slip39_basic(self, client):
-        debuglink.load_device_by_mnemonic(
+        debuglink.load_device(
             client,
             mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6,
             pin="",
@@ -80,7 +80,7 @@ class TestDeviceLoad:
 
     @pytest.mark.skip_t1
     def test_load_device_slip39_advanced(self, client):
-        debuglink.load_device_by_mnemonic(
+        debuglink.load_device(
             client,
             mnemonic=MNEMONIC_SLIP39_ADVANCED_20,
             pin="",
@@ -109,7 +109,7 @@ class TestDeviceLoad:
         )
 
         device.wipe(client)
-        debuglink.load_device_by_mnemonic(
+        debuglink.load_device(
             client,
             mnemonic=words_nfkd,
             pin="",
@@ -124,7 +124,7 @@ class TestDeviceLoad:
         address_nfkd = btc.get_address(client, "Bitcoin", [])
 
         device.wipe(client)
-        debuglink.load_device_by_mnemonic(
+        debuglink.load_device(
             client,
             mnemonic=words_nfc,
             pin="",
@@ -139,7 +139,7 @@ class TestDeviceLoad:
         address_nfc = btc.get_address(client, "Bitcoin", [])
 
         device.wipe(client)
-        debuglink.load_device_by_mnemonic(
+        debuglink.load_device(
             client,
             mnemonic=words_nfkc,
             pin="",
@@ -154,7 +154,7 @@ class TestDeviceLoad:
         address_nfkc = btc.get_address(client, "Bitcoin", [])
 
         device.wipe(client)
-        debuglink.load_device_by_mnemonic(
+        debuglink.load_device(
             client,
             mnemonic=words_nfd,
             pin="",
