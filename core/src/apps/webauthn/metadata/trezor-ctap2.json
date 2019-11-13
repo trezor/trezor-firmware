@@ -34,7 +34,7 @@
   "attachmentHint": 6,
   "isSecondFactorOnly": false,
   "tcDisplay": 9,
-  "tcDisplayContentType": "image/png",
+  "tcDisplayContentType": "text/plain",
   "tcDisplayPNGCharacteristics": [
     {
       "bitDepth": 16,
