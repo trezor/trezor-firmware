@@ -64,8 +64,8 @@ if [[ "$OSTYPE" != "linux-gnu" && "$OSTYPE" != "darwin"* ]]; then
 fi
 
 error=1
-: "${TREZOR_MONERO_TESTS_URL:=https://github.com/ph4r05/monero/releases/download/v0.15.0.0-tests-u18.04-01/trezor_tests}"
-: "${TREZOR_MONERO_TESTS_SHA256SUM:=4c4e4b1ad0acda8bf9622c16f1af3298d7e20b9b53634c5d55e60c5a115f0110}"
+: "${TREZOR_MONERO_TESTS_URL:=https://github.com/ph4r05/monero/releases/download/v0.15.0.0-tests-u18.04-02/trezor_tests}"
+: "${TREZOR_MONERO_TESTS_SHA256SUM:=36852ff2add3f865dbf4e23f4e32e1022a8f4b14cd4fb4eb97491d99ba93b9bc}"
 : "${TREZOR_MONERO_TESTS_PATH:=$CORE_DIR/tests/trezor_monero_tests}"
 : "${TREZOR_MONERO_TESTS_LOG:=$CORE_DIR/tests/trezor_monero_tests.log}"
 
