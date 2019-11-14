@@ -5,15 +5,25 @@ Currently writes all issues that have some Weight.
 """
 import argparse
 import csv
-from getpass import getpass
 import requests
+import os.path
 
-auth_id = None
-auth_secret = None
+token = None
+
+path = os.path.dirname(os.path.realpath(__file__))
+filename = path + "/github_issues_to_csv.ignore"
+if os.path.exists(filename):
+    with open(filename, "r") as config:
+        content = config.read()
+        if len(content) == 40:
+            token = content
+        else:
+            raise ValueError("Invalid config file")
 
 PRIORITIES = ("P1", "P2", "P3", "P4")
 SEVERITIES = ("S1", "S2", "S3", "S4")
 WEIGHTS = ("W0", "W1/2", "W1", "W2", "W3", "W5", "W8", "W13", "W20", "W40", "W100")
+
 
 def write_issues(r, csvout):
     """Parses JSON response and writes to CSV."""
@@ -49,11 +59,12 @@ def write_issues(r, csvout):
 
 def get_issues(name):
     """Requests issues from GitHub API and writes to CSV file."""
-    if auth_secret:
-        url = 'https://api.github.com/repos/{}/issues?state=all&client_id={}&client_secret={}'.format(name, auth_id, auth_secret)
+    url = 'https://api.github.com/repos/{}/issues?state=all'.format(name)
+    if token is not None:
+        headers = {"Authorization": "token " + token}
     else:
-        url = 'https://api.github.com/repos/{}/issues?state=all'.format(name)
-    r = requests.get(url)
+        headers = None
+    r = requests.get(url, headers=headers)
 
     csvfilename = '{}-issues.csv'.format(name.replace('/', '-'))
     with open(csvfilename, 'w', newline='') as csvfile:
@@ -70,7 +81,7 @@ def get_issues(name):
                 pages = {rel[6:-1]: url[url.index('<')+1:-1] for url, rel in
                          (link.split(';') for link in
                           r.headers['link'].split(','))}
-                r = requests.get(pages['next'])
+                r = requests.get(pages['next'], headers=headers)
                 write_issues(r, csvout)
                 if pages['next'] == pages['last']:
                     break
