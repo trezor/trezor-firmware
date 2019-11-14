@@ -30,12 +30,12 @@ def write_issues(r, csvout):
     if r.status_code != 200:
         raise Exception(r.status_code)
     for issue in r.json():
-        if 'pull_request' not in issue:
+        if "pull_request" not in issue:
             priority = ""
             severity = ""
             weight = ""
             labels = []
-            for l in issue['labels']:
+            for l in issue["labels"]:
                 if l["name"][:2] in PRIORITIES:
                     priority = l["name"]
                 elif l["name"][:2] in SEVERITIES:
@@ -49,50 +49,84 @@ def write_issues(r, csvout):
             if not weight:
                 continue
             labels = ", ".join(labels)
-            date = issue['created_at'].split('T')[0]
-            milestone =  issue['milestone']['title'] if issue['milestone'] else ""
-            assignee = issue['assignee']['login'] if issue['assignee'] else ""
+            date = issue["created_at"].split("T")[0]
+            milestone = issue["milestone"]["title"] if issue["milestone"] else ""
+            assignee = issue["assignee"]["login"] if issue["assignee"] else ""
 
-            csvout.writerow([issue['title'], issue['number'], issue['html_url'], issue['state'], assignee,
-                milestone, priority, severity, weight, labels])
+            csvout.writerow(
+                [
+                    issue["title"],
+                    issue["number"],
+                    issue["html_url"],
+                    issue["state"],
+                    assignee,
+                    milestone,
+                    priority,
+                    severity,
+                    weight,
+                    labels,
+                ]
+            )
 
 
 def get_issues(name):
     """Requests issues from GitHub API and writes to CSV file."""
-    url = 'https://api.github.com/repos/{}/issues?state=all'.format(name)
+    url = "https://api.github.com/repos/{}/issues?state=all".format(name)
     if token is not None:
         headers = {"Authorization": "token " + token}
     else:
         headers = None
     r = requests.get(url, headers=headers)
 
-    csvfilename = '{}-issues.csv'.format(name.replace('/', '-'))
-    with open(csvfilename, 'w', newline='') as csvfile:
+    csvfilename = "{}-issues.csv".format(name.replace("/", "-"))
+    with open(csvfilename, "w", newline="") as csvfile:
         csvout = csv.writer(csvfile)
-        csvout.writerow(['Title', 'Number', 'URL', 'State', 'Assignee', 'Milestone', 'Priority', 'Severity', 'Weight', 'Labels'])
+        csvout.writerow(
+            [
+                "Title",
+                "Number",
+                "URL",
+                "State",
+                "Assignee",
+                "Milestone",
+                "Priority",
+                "Severity",
+                "Weight",
+                "Labels",
+            ]
+        )
         write_issues(r, csvout)
 
         # Multiple requests are required if response is paged
-        if 'link' in r.headers:
-            pages = {rel[6:-1]: url[url.index('<')+1:-1] for url, rel in
-                     (link.split(';') for link in
-                      r.headers['link'].split(','))}
-            while 'last' in pages and 'next' in pages:
-                pages = {rel[6:-1]: url[url.index('<')+1:-1] for url, rel in
-                         (link.split(';') for link in
-                          r.headers['link'].split(','))}
-                r = requests.get(pages['next'], headers=headers)
+        if "link" in r.headers:
+            pages = {
+                rel[6:-1]: url[url.index("<") + 1 : -1]
+                for url, rel in (
+                    link.split(";") for link in r.headers["link"].split(",")
+                )
+            }
+            while "last" in pages and "next" in pages:
+                pages = {
+                    rel[6:-1]: url[url.index("<") + 1 : -1]
+                    for url, rel in (
+                        link.split(";") for link in r.headers["link"].split(",")
+                    )
+                }
+                r = requests.get(pages["next"], headers=headers)
                 write_issues(r, csvout)
-                if pages['next'] == pages['last']:
+                if pages["next"] == pages["last"]:
                     break
 
 
-parser = argparse.ArgumentParser(description="Write GitHub repository issues "
-                                             "to CSV file.")
-parser.add_argument('repositories', nargs='+', help="Repository names, "
-                    "formatted as 'username/repo'")
-parser.add_argument('--all', action='store_true', help="Returns both open "
-                    "and closed issues.")
+parser = argparse.ArgumentParser(
+    description="Write GitHub repository issues " "to CSV file."
+)
+parser.add_argument(
+    "repositories", nargs="+", help="Repository names, " "formatted as 'username/repo'"
+)
+parser.add_argument(
+    "--all", action="store_true", help="Returns both open " "and closed issues."
+)
 args = parser.parse_args()
 
 for repository in args.repositories:
