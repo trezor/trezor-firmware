@@ -1,3 +1,4 @@
+syntax = "proto2";
 /**
  * Request: Ask device for VSYS address corresponding to address_n path
  * @next PassphraseRequest
