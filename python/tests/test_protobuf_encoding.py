@@ -19,7 +19,6 @@ from io import BytesIO
 import pytest
 
 from trezorlib import protobuf
-from trezorlib.messages import InputScriptType
 
 
 class PrimitiveMessage(protobuf.MessageType):
@@ -168,24 +167,6 @@ def test_validate_enum(caplog):
     record = caplog.records.pop(0)
     assert record.levelname == "WARNING"
     assert record.getMessage() == "Value 3 unknown for type t"
-
-
-def test_enum_to_str():
-    enum_values = [
-        (key, getattr(InputScriptType, key))
-        for key in dir(InputScriptType)
-        if not key.startswith("__")
-    ]
-    enum_type = protobuf.EnumType("InputScriptType", [v for _, v in enum_values])
-    for name, value in enum_values:
-        assert enum_type.to_str(value) == name
-        assert enum_type.from_str(name) == value
-
-    with pytest.raises(TypeError):
-        enum_type.from_str("NotAValidValue")
-
-    with pytest.raises(TypeError):
-        enum_type.to_str(999)
 
 
 def test_repeated():

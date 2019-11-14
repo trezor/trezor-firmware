@@ -205,6 +205,13 @@ class MessageType:
     def get_fields(cls) -> Dict[int, FieldInfo]:
         return {}
 
+    @classmethod
+    def get_field_type(cls, name: str) -> Optional[FieldType]:
+        for fname, ftype, flags in cls.get_fields().values():
+            if fname == name:
+                return ftype
+        return None
+
     def __init__(self, **kwargs: Any) -> None:
         for kw in kwargs:
             setattr(self, kw, kwargs[kw])
@@ -438,16 +445,10 @@ def format_message(
         printable = sum(1 for byte in bytes if 0x20 <= byte <= 0x7E)
         return printable / len(bytes) > 0.8
 
-    def get_type(name: str) -> Any:
-        try:
-            return next(ft for fn, ft, _ in pb.get_fields().values() if fn == name)
-        except StopIteration:
-            return None
-
     def pformat(name: str, value: Any, indent: int) -> str:
         level = sep * indent
         leadin = sep * (indent + 1)
-        ftype = get_type(name)
+        ftype = pb.get_field_type(name)
 
         if isinstance(value, MessageType):
             return format_message(value, indent, sep)
@@ -549,13 +550,15 @@ def dict_to_proto(message_type: Type[MT], d: Dict[str, Any]) -> MT:
 
 
 def to_dict(msg: MessageType, hexlify_bytes: bool = True) -> Dict[str, Any]:
-    def convert_value(value: Any) -> Any:
+    def convert_value(ftype: FieldType, value: Any) -> Any:
         if hexlify_bytes and isinstance(value, bytes):
             return value.hex()
         elif isinstance(value, MessageType):
             return to_dict(value, hexlify_bytes)
         elif isinstance(value, list):
-            return [convert_value(v) for v in value]
+            return [convert_value(ftype, v) for v in value]
+        elif isinstance(value, int) and isinstance(ftype, EnumType):
+            return ftype.to_str(value)
         else:
             return value
 
@@ -563,6 +566,6 @@ def to_dict(msg: MessageType, hexlify_bytes: bool = True) -> Dict[str, Any]:
     for key, value in msg.__dict__.items():
         if value is None or value == []:
             continue
-        res[key] = convert_value(value)
+        res[key] = convert_value(msg.get_field_type(key), value)
 
     return res
