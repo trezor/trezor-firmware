@@ -41,8 +41,9 @@ def write_issues(r, csvout):
             labels = ", ".join(labels)
             date = issue['created_at'].split('T')[0]
             milestone =  issue['milestone']['title'] if issue['milestone'] else ""
+            assignee = issue['assignee']['login'] if issue['assignee'] else ""
 
-            csvout.writerow([issue['title'], issue['number'], issue['html_url'], issue['state'],
+            csvout.writerow([issue['title'], issue['number'], issue['html_url'], issue['state'], assignee,
                 milestone, priority, severity, weight, labels])
 
 
@@ -57,7 +58,7 @@ def get_issues(name):
     csvfilename = '{}-issues.csv'.format(name.replace('/', '-'))
     with open(csvfilename, 'w', newline='') as csvfile:
         csvout = csv.writer(csvfile)
-        csvout.writerow(['Title', 'Number', 'URL', 'State', 'Milestone', 'Priority', 'Severity', 'Weight', 'Labels'])
+        csvout.writerow(['Title', 'Number', 'URL', 'State', 'Assignee', 'Milestone', 'Priority', 'Severity', 'Weight', 'Labels'])
         write_issues(r, csvout)
 
         # Multiple requests are required if response is paged
