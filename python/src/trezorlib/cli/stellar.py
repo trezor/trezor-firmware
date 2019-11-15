@@ -39,7 +39,7 @@ def cli():
 @click.option("-d", "--show-display", is_flag=True)
 @click.pass_obj
 def get_address(connect, address, show_display):
-    """Get Stellar public address"""
+    """Get Stellar public address."""
     client = connect()
     address_n = tools.parse_path(address)
     return stellar.get_address(client, address_n, show_display)
@@ -63,7 +63,7 @@ def get_address(connect, address, show_display):
 @click.argument("b64envelope")
 @click.pass_obj
 def sign_transaction(connect, b64envelope, address, network_passphrase):
-    """Sign a base64-encoded transaction envelope
+    """Sign a base64-encoded transaction envelope.
 
     For testnet transactions, use the following network passphrase:
     'Test SDF Network ; September 2015'

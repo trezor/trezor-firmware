@@ -11,6 +11,7 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 
 ### Changed
 
+- `trezorctl` command was reworked for ease of use and maintenance. See `trezorctl --help` and `OPTIONS.rst` for details. [f#510]
 - updated EOS transaction parser to match `cleos` in `delegatebw` and `undelegatebw` actions [f#680] [f#681]
 
 ## [0.11.5] - 2019-09-26
@@ -336,6 +337,7 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 [f#411]: https://github.com/trezor/trezor-firmware/issues/411
 [f#420]: https://github.com/trezor/trezor-firmware/issues/420
 [f#445]: https://github.com/trezor/trezor-firmware/issues/445
+[f#510]: https://github.com/trezor/trezor-firmware/issues/510
 [f#525]: https://github.com/trezor/trezor-firmware/issues/525
 [f#680]: https://github.com/trezor/trezor-firmware/issues/680
 [f#681]: https://github.com/trezor/trezor-firmware/issues/681
