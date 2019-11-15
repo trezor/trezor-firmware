@@ -972,13 +972,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_monero_xmr_random_scalar_obj, 0, 1,
     mod_trezorcrypto_monero_xmr_random_scalar);
 
-/// def xmr_fast_hash(r: Optional[bytes], buff: bytes) -> bytes:
+/// def xmr_fast_hash(r: Optional[bytes], buff: bytes, length: int, offset: int) -> bytes:
 ///     """
 ///     XMR fast hash
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_monero_xmr_fast_hash(size_t n_args,
                                                       const mp_obj_t *args) {
-  const int off = n_args == 2 ? 0 : -1;
+  const int off = n_args >= 2 ? 0 : -1;
   uint8_t buff[32];
   uint8_t *buff_use = buff;
   if (n_args > 1) {
@@ -992,47 +992,69 @@ STATIC mp_obj_t mod_trezorcrypto_monero_xmr_fast_hash(size_t n_args,
 
   mp_buffer_info_t data;
   mp_get_buffer_raise(args[1 + off], &data, MP_BUFFER_READ);
-  xmr_fast_hash(buff_use, data.buf, data.len);
-  return n_args == 2 ? args[0] : mp_obj_new_bytes(buff, 32);
+  mp_int_t length = n_args >= 3 ? mp_obj_get_int(args[2]) : data.len;
+  mp_int_t offset = n_args >= 4 ? mp_obj_get_int(args[3]) : 0;
+  if (length < 0) length += data.len;
+  if (offset < 0) offset += data.len;
+  if (length < 0 || offset < 0 || offset + length > data.len){
+    mp_raise_ValueError("Illegal offset/length");
+  }
+  xmr_fast_hash(buff_use, (const char*)data.buf + offset, length);
+  return n_args >= 2 ? args[0] : mp_obj_new_bytes(buff, 32);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
-    mod_trezorcrypto_monero_xmr_fast_hash_obj, 1, 2,
+    mod_trezorcrypto_monero_xmr_fast_hash_obj, 1, 4,
     mod_trezorcrypto_monero_xmr_fast_hash);
 
-/// def xmr_hash_to_ec(r: Optional[Ge25519], buff: bytes) -> Ge25519:
+/// def xmr_hash_to_ec(r: Optional[Ge25519], buff: bytes, length: int, offset: int) -> Ge25519:
 ///     """
 ///     XMR hashing to EC point
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_monero_xmr_hash_to_ec(size_t n_args,
                                                        const mp_obj_t *args) {
-  const bool res_arg = n_args == 2;
+  const bool res_arg = n_args >= 2;
   const int off = res_arg ? 0 : -1;
   mp_obj_t res = mp_obj_new_ge25519_r(res_arg ? args[0] : mp_const_none);
   mp_buffer_info_t data;
   mp_get_buffer_raise(args[1 + off], &data, MP_BUFFER_READ);
-  xmr_hash_to_ec(&MP_OBJ_GE25519(res), data.buf, data.len);
+  mp_int_t length = n_args >= 3 ? mp_obj_get_int(args[2]) : data.len;
+  mp_int_t offset = n_args >= 4 ? mp_obj_get_int(args[3]) : 0;
+  if (length < 0) length += data.len;
+  if (offset < 0) offset += data.len;
+  if (length < 0 || offset < 0 || offset + length > data.len){
+    mp_raise_ValueError("Illegal offset/length");
+  }
+
+  xmr_hash_to_ec(&MP_OBJ_GE25519(res), (const char*)data.buf + offset, length);
   return res;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
-    mod_trezorcrypto_monero_xmr_hash_to_ec_obj, 1, 2,
+    mod_trezorcrypto_monero_xmr_hash_to_ec_obj, 1, 4,
     mod_trezorcrypto_monero_xmr_hash_to_ec);
 
-/// def xmr_hash_to_scalar(r: Optional[Sc25519], buff: bytes) -> Sc25519:
+/// def xmr_hash_to_scalar(r: Optional[Sc25519], buff: bytes, length: int, offset: int) -> Sc25519:
 ///     """
 ///     XMR hashing to EC scalar
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_monero_xmr_hash_to_scalar(
     size_t n_args, const mp_obj_t *args) {
-  const bool res_arg = n_args == 2;
+  const bool res_arg = n_args >= 2;
   const int off = res_arg ? 0 : -1;
   mp_obj_t res = mp_obj_new_scalar_r(res_arg ? args[0] : mp_const_none);
   mp_buffer_info_t data;
   mp_get_buffer_raise(args[1 + off], &data, MP_BUFFER_READ);
-  xmr_hash_to_scalar(MP_OBJ_SCALAR(res), data.buf, data.len);
+  mp_int_t length = n_args >= 3 ? mp_obj_get_int(args[2]) : data.len;
+  mp_int_t offset = n_args >= 4 ? mp_obj_get_int(args[3]) : 0;
+  if (length < 0) length += data.len;
+  if (offset < 0) offset += data.len;
+  if (length < 0 || offset < 0 || offset + length > data.len){
+    mp_raise_ValueError("Illegal offset/length");
+  }
+  xmr_hash_to_scalar(MP_OBJ_SCALAR(res), (const char*)data.buf + offset, length);
   return res;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
-    mod_trezorcrypto_monero_xmr_hash_to_scalar_obj, 1, 2,
+    mod_trezorcrypto_monero_xmr_hash_to_scalar_obj, 1, 4,
     mod_trezorcrypto_monero_xmr_hash_to_scalar);
 
 /// def xmr_derivation_to_scalar(

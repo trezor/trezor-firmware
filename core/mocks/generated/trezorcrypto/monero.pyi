@@ -292,21 +292,21 @@ def xmr_random_scalar(r: Optional[Sc25519] = None) -> Sc25519:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def xmr_fast_hash(r: Optional[bytes], buff: bytes) -> bytes:
+def xmr_fast_hash(r: Optional[bytes], buff: bytes, length: int, offset: int) -> bytes:
     """
     XMR fast hash
     """
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def xmr_hash_to_ec(r: Optional[Ge25519], buff: bytes) -> Ge25519:
+def xmr_hash_to_ec(r: Optional[Ge25519], buff: bytes, length: int, offset: int) -> Ge25519:
     """
     XMR hashing to EC point
     """
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def xmr_hash_to_scalar(r: Optional[Sc25519], buff: bytes) -> Sc25519:
+def xmr_hash_to_scalar(r: Optional[Sc25519], buff: bytes, length: int, offset: int) -> Sc25519:
     """
     XMR hashing to EC scalar
     """
