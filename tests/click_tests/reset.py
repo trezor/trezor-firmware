@@ -35,21 +35,24 @@ def read_words(debug, is_advanced=False):
         assert layout.text.startswith("Group")
     else:
         assert layout.text.startswith("Recovery share")
-    for i in range(6):
-        lines = debug.read_layout().lines
-        if i == 0:
-            words.append(read_word(lines[3]))
-            words.append(read_word(lines[4]))
-            debug.input(swipe=messages.DebugSwipeDirection.UP, wait=True)
-        elif i == 5:
-            words.append(read_word(lines[1]))
-            words.append(read_word(lines[2]))
-        else:
-            words.append(read_word(lines[1]))
-            words.append(read_word(lines[2]))
-            words.append(read_word(lines[3]))
-            words.append(read_word(lines[4]))
-            debug.input(swipe=messages.DebugSwipeDirection.UP, wait=True)
+
+    lines = layout.lines
+    # first screen
+    words.append(read_word(lines[3]))
+    words.append(read_word(lines[4]))
+    lines = debug.input(swipe=messages.DebugSwipeDirection.UP, wait=True).lines
+
+    # screens 2 through
+    for _ in range(4):
+        words.append(read_word(lines[1]))
+        words.append(read_word(lines[2]))
+        words.append(read_word(lines[3]))
+        words.append(read_word(lines[4]))
+        lines = debug.input(swipe=messages.DebugSwipeDirection.UP, wait=True).lines
+
+    # final screen
+    words.append(read_word(lines[1]))
+    words.append(read_word(lines[2]))
     debug.press_yes()
 
     return words
@@ -57,11 +60,13 @@ def read_words(debug, is_advanced=False):
 
 def confirm_words(debug, words):
     layout = debug.wait_layout()
-    layout.text.startswith("Check share")
+    assert "Select word" in layout.text
     for _ in range(3):
-        word_pos = int(debug.state().layout_lines[1].split()[2])
-        button_pos = debug.state().layout_lines.index(words[word_pos - 1]) - 2
-        debug.click(buttons.RESET_WORD_CHECK[button_pos], wait=True)
+        # "Select word 3 of 20"
+        #              ^
+        word_pos = int(layout.lines[1].split()[2])
+        button_pos = layout.lines.index(words[word_pos - 1]) - 2
+        layout = debug.click(buttons.RESET_WORD_CHECK[button_pos], wait=True)
 
 
 def validate_mnemonics(mnemonics, expected_ems):
