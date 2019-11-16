@@ -15,7 +15,7 @@ class NEM2MosaicDefinitionTransaction(p.MessageType):
     def __init__(
         self,
         nonce: int = None,
-        mosaic_id: int = None,
+        mosaic_id: str = None,
         flags: int = None,
         divisibility: int = None,
         duration: int = None,
@@ -30,7 +30,7 @@ class NEM2MosaicDefinitionTransaction(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('nonce', p.UVarintType, 0),
-            2: ('mosaic_id', p.UVarintType, 0),
+            2: ('mosaic_id', p.UnicodeType, 0),
             3: ('flags', p.UVarintType, 0),
             4: ('divisibility', p.UVarintType, 0),
             5: ('duration', p.UVarintType, 0),

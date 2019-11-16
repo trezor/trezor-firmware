@@ -63,7 +63,7 @@ def create_transfer(transaction):
 def create_mosaic_defnition(transaction):
     msg = proto.NEM2MosaicDefinitionTransaction()
     msg.nonce = transaction["nonce"]
-    msg.mosaic_id = int(transaction["mosaic_id"], 16)
+    msg.mosaic_id = transaction["mosaic_id"]
     msg.flags = transaction["flags"]
     msg.divisibility = transaction["divisibility"]
     print(int(transaction["duration"], 16))

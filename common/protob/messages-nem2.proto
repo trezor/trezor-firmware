@@ -105,7 +105,7 @@ message NEM2SignTx {
     */
     message NEM2MosaicDefinitionTransaction {
         optional uint32 nonce = 1; // mosaic nonce
-        optional uint64 mosaic_id = 2; // mosaic identifier
+        optional string mosaic_id = 2; // mosaic identifier
         optional uint32 flags = 3; // mosaic flags
         optional uint32 divisibility = 4; // mosaic divisibility
         optional uint64 duration = 5; // mosaic duration

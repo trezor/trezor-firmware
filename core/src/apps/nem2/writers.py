@@ -4,6 +4,7 @@ from apps.common.writers import (
     write_bytes,
     write_uint16_le,
     write_uint32_le,
+    write_uint32_be,
     write_uint64_le,
     write_uint8
 )
@@ -21,6 +22,9 @@ def serialize_tx_common(
     # pad them out so the payload is still the correct size
     # https://nemtech.github.io/concepts/transaction.html#signing-a-transaction
 
+    # pad out verifiableEntityHeader
+    write_uint32_le(w, 0)
+
     # pad out signature (64 bytes)
     write_uint64_le(w, 0)
     write_uint64_le(w, 0)
@@ -37,8 +41,14 @@ def serialize_tx_common(
     write_uint64_le(w, 0)
     write_uint64_le(w, 0)
 
+    # # pad out entityBody_Reserved1Bytes
+    write_uint32_le(w, 0)
+
     # version
-    write_uint16_le(w, common.version)
+    write_uint8(w, common.version)
+
+    # # network
+    write_uint8(w, common.network_type)
 
     # type
     write_uint16_le(w, common.type)
@@ -56,10 +66,13 @@ def get_common_message_size():
     # calculate the size of the common message (in bytes)
     size = 0
     size += 4 # message size
-    size += 64 # signature (catbuffer Signature)
-    size += 32 # signer public key (catbuffer Key)
-    size += 2 # version
+    size += 4 # verifiableEntityHeader
+    size += 64 # signature
+    size += 32 # signer public key
+    size += 4 # entityBody_Reserved1Bytes
+    size += 1 # version
+    size += 1 # network
     size += 2 # type
-    size += 8 # amount (catbuffer Amount)
-    size += 8 # deadline (catbuffer Timestamp)
+    size += 8 # fee
+    size += 8 # deadline
     return size

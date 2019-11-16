@@ -70,22 +70,23 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
                 seed.remove_ed25519_prefix(node.public_key()), msg.transaction, tx
             )
 
-    # https://nemtech.github.io/concepts/transaction.html#signing-a-transaction
-    print("TX ", tx)
+    # https://nemtech.github.io/concepts/transaction.html#signing-a-transaction    
     print("PUBLIC ", hexlify(public_key))
     print("PRIVATE ", hexlify(node.private_key()))
 
     # signing bytes (all tx data expect size, signature and signer)
     # everything after the first 100 bytes of serialised transaction
-    signing_bytes = tx[100:]
-
+    signing_bytes = tx[108:]    
+    
     generation_hash_bytes = unhexlify(msg.generation_hash)
 
-    signature = ed25519.sign(node.private_key(), generation_hash_bytes + signing_bytes, NEM2_HASH_ALG)
+    signature = ed25519.sign(node.private_key(), generation_hash_bytes + signing_bytes, NEM2_HASH_ALG)    
+    print("signing_bytes ", hexlify(generation_hash_bytes + signing_bytes))
 
-    payload = tx[:4] + signature + node.public_key() + tx[100:]
+    payload = tx[:8] + signature + public_key + tx[104:]
+    print("payload ", hexlify(payload))
 
-    hash_content = signature[:32] + node.public_key() + generation_hash_bytes + tx[100:]
+    hash_content = signature[:32] + node.public_key() + generation_hash_bytes + tx[104:]
 
     resp = NEM2SignedTx()
     resp.payload = payload

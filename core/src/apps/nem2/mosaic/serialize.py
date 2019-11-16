@@ -8,6 +8,7 @@ from ..writers import (
     serialize_tx_common,
     get_common_message_size,    
     write_uint32_le,
+    write_uint32_be,
     write_uint64_le,
     write_uint8
 )
@@ -30,10 +31,11 @@ def serialize_mosaic_definition(
 
     tx = serialize_tx_common(tx, common)
 
-    write_uint32_le(tx, creation.nonce)
-    write_uint64_le(tx, creation.mosaic_id)
-    write_uint8(tx, creation.flags)
-    write_uint8(tx, creation.divisibility)
+    write_uint32_le(tx, int(creation.mosaic_id[8:], 16))
+    write_uint32_le(tx, int(creation.mosaic_id[:8], 16))
     write_uint64_le(tx, creation.duration)
+    write_uint32_le(tx, creation.nonce)
+    write_uint8(tx, creation.flags)
+    write_uint8(tx, creation.divisibility)        
 
     return tx
