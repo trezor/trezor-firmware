@@ -36,5 +36,9 @@ def convert(imgfile, outfile):
             f.write('\t/* 0x%02x %c */ (uint8_t *)"%s",\n' % (i, ch, cur))
 
 
-convert("fonts/fontfixed.png", "fontfixed.inc")
-convert("fonts/font.png", "font.inc")
+print("Converting fontfixed...")
+convert("fontfixed.png", "../fontfixed.inc")
+print("Done")
+print("Converting font...")
+convert("font.png", "../font.inc")
+print("Done")

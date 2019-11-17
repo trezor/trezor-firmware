@@ -44,6 +44,9 @@ void layoutDialogSwipe(const BITMAP *icon, const char *btnNo,
                        const char *line5, const char *line6);
 void layoutProgressSwipe(const char *desc, int permil);
 
+void layoutScrollInput(const char *text, int text_width, int num_total, int num_screen, int current_index, const char entries[], int horizontal_padding, int num_group, const int groups[], int num_skip_in_groups, bool draw_caret);
+void layoutCheckPassphrase(const char *passphrase, int text_width, bool enable_edit, bool enable_done);
+
 void layoutScreensaver(void);
 void layoutHome(void);
 void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out);

@@ -122,7 +122,7 @@ static secbool sessionSeedCached, sessionSeedUsesPassphrase;
 static uint8_t CONFIDENTIAL sessionSeed[64];
 
 static secbool sessionPassphraseCached = secfalse;
-static char CONFIDENTIAL sessionPassphrase[51];
+static char CONFIDENTIAL sessionPassphrase[MAX_PASSPHRASE_LEN];
 
 #define autoLockDelayMsDefault (10 * 60 * 1000U)  // 10 minutes
 static secbool autoLockDelayMsCached = secfalse;
@@ -132,6 +132,9 @@ static const uint32_t CONFIG_VERSION = 11;
 
 static const uint8_t FALSE_BYTE = '\x00';
 static const uint8_t TRUE_BYTE = '\x01';
+
+static secbool sessionUseOnDeviceTextInputCached = secfalse;
+static secbool sessionUseOnDeviceTextInput;
 
 static uint32_t pin_to_int(const char *pin) {
   uint32_t val = 1;
@@ -406,8 +409,10 @@ void config_init(void) {
 void session_clear(bool lock) {
   sessionSeedCached = secfalse;
   memzero(&sessionSeed, sizeof(sessionSeed));
-  sessionPassphraseCached = secfalse;
-  memzero(&sessionPassphrase, sizeof(sessionPassphrase));
+  if (!session_isUseOnDeviceTextInput()) {
+    sessionPassphraseCached = secfalse;
+    memzero(&sessionPassphrase, sizeof(sessionPassphrase));
+  }
   if (lock) {
     storage_lock();
   }
@@ -834,6 +839,22 @@ bool session_getState(const uint8_t *salt, uint8_t *state,
 }
 
 bool session_isUnlocked(void) { return sectrue == storage_is_unlocked(); }
+
+bool session_isUseOnDeviceTextInputCached(void)
+{
+	return sectrue == sessionUseOnDeviceTextInputCached;
+}
+
+bool session_isUseOnDeviceTextInput(void)
+{
+	return sectrue == sessionUseOnDeviceTextInput;
+}
+
+void session_setUseOnDeviceTextInput(bool use)
+{
+	sessionUseOnDeviceTextInputCached = sectrue;
+	sessionUseOnDeviceTextInput = use ? sectrue : secfalse;
+}
 
 bool config_isInitialized(void) {
   bool initialized = false;

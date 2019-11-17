@@ -44,14 +44,18 @@ void oledDrawPixel(int x, int y);
 void oledClearPixel(int x, int y);
 void oledInvertPixel(int x, int y);
 void oledDrawChar(int x, int y, char c, int zoom);
+void oledDrawCaret(void);
 int oledStringWidth(const char *text, int font);
 
 void oledDrawString(int x, int y, const char *text, int font);
 void oledDrawStringCenter(int x, int y, const char *text, int font);
+void oledDrawStringCenterMultiline(int y, const char* text, int font, int width);
 void oledDrawStringRight(int x, int y, const char *text, int font);
 void oledDrawBitmap(int x, int y, const BITMAP *bmp);
 void oledInvert(int x1, int y1, int x2, int y2);
 void oledBox(int x1, int y1, int x2, int y2, bool set);
+void oledPartialHLine(int x1, int x2, int y);
+void oledPartialVLine(int x, int y1, int y2);
 void oledHLine(int y);
 void oledFrame(int x1, int y1, int x2, int y2);
 void oledSwipeLeft(void);

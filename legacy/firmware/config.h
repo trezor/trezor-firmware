@@ -82,6 +82,7 @@ extern Storage configUpdate;
 #define MAX_LABEL_LEN 32
 #define MAX_LANGUAGE_LEN 16
 #define MAX_MNEMONIC_LEN 240
+#define MAX_PASSPHRASE_LEN 51
 #define HOMESCREEN_SIZE 1024
 #define UUID_SIZE 12
 
@@ -111,6 +112,9 @@ void session_cachePassphrase(const char *passphrase);
 bool session_isPassphraseCached(void);
 bool session_getState(const uint8_t *salt, uint8_t *state,
                       const char *passphrase);
+bool session_isUseOnDeviceTextInputCached(void);
+bool session_isUseOnDeviceTextInput(void);
+void session_setUseOnDeviceTextInput(bool use);
 
 bool config_setMnemonic(const char *mnemonic);
 bool config_containsMnemonic(const char *mnemonic);
