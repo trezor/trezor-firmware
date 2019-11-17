@@ -2,7 +2,7 @@
   "coin_name": "CHIPO",
   "coin_shortcut": "ICU",
   "coin_label": "CHIPO",
-  "website": "https://www.chipo.icu/",
+  "website": "https://www.chipo.icu",
   "github": "https://github.com/CHIPO-Project/CHIPO",
   "maintainer": "chipodev <dev@chipo.icu>",
   "curve_name": "secp256k1",
