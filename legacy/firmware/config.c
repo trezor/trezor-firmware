@@ -119,11 +119,14 @@ be added to the storage u2f_counter to get the real counter value.
  * storage.u2f_counter + config_u2f_offset.
  * This corresponds to the number of cleared bits in the U2FAREA.
  */
+static secbool sessionUseOnDeviceTextInputCached = secfalse;
+static secbool sessionUseOnDeviceTextInput;
+
 static secbool sessionSeedCached, sessionSeedUsesPassphrase;
 static uint8_t CONFIDENTIAL sessionSeed[64];
 
 static secbool sessionPassphraseCached = secfalse;
-static char CONFIDENTIAL sessionPassphrase[51];
+static char CONFIDENTIAL sessionPassphrase[MAX_PASSPHRASE_LEN];
 
 #define autoLockDelayMsDefault (10 * 60 * 1000U)  // 10 minutes
 static secbool autoLockDelayMsCached = secfalse;
@@ -407,8 +410,10 @@ void config_init(void) {
 void session_clear(bool lock) {
   sessionSeedCached = secfalse;
   memzero(&sessionSeed, sizeof(sessionSeed));
-  sessionPassphraseCached = secfalse;
-  memzero(&sessionPassphrase, sizeof(sessionPassphrase));
+  if (!session_isUseOnDeviceTextInput()) {
+    sessionPassphraseCached = secfalse;
+    memzero(&sessionPassphrase, sizeof(sessionPassphrase));
+  }
   if (lock) {
     storage_lock();
   }
@@ -822,6 +827,22 @@ bool session_getState(const uint8_t *salt, uint8_t *state,
 }
 
 bool session_isUnlocked(void) { return sectrue == storage_is_unlocked(); }
+
+bool session_isUseOnDeviceTextInputCached(void)
+{
+	return sectrue == sessionUseOnDeviceTextInputCached;
+}
+
+bool session_isUseOnDeviceTextInput(void)
+{
+	return sectrue == sessionUseOnDeviceTextInput;
+}
+
+void session_setUseOnDeviceTextInput(bool use)
+{
+	sessionUseOnDeviceTextInputCached = sectrue;
+	sessionUseOnDeviceTextInput = use ? sectrue : secfalse;
+}
 
 bool config_isInitialized(void) {
   bool initialized = false;

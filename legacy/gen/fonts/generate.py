@@ -23,7 +23,7 @@ def convert(imgfile, outfile):
     img = Img(imgfile)
     cur = ""
     with open(outfile, "w") as f:
-        for i in range(128 - 32):
+        for i in range(128):
             x = (i % 16) * 10
             y = (i // 16) * 10
             cur = ""
@@ -32,10 +32,14 @@ def convert(imgfile, outfile):
                 x += 1
                 cur += "\\x%02x" % int(val, 2)
             cur = "\\x%02x" % (len(cur) // 4) + cur
-            i += 32
-            ch = "_" if (i == 127) else chr(i)
+            ch = chr(i) if i >= 32 and i <= 126 else "_"
             f.write('\t/* 0x%02x %c */ (uint8_t *)"%s",\n' % (i, ch, cur))
 
 
-convert("fonts/fontfixed.png", "fontfixed.inc")
-convert("fonts/font.png", "font.inc")
+print("Converting fontfixed...")
+convert("fontfixed.png", "../fontfixed.inc")
+print("Done")
+
+print("Converting font...")
+convert("font.png", "../font.inc")
+print("Done")

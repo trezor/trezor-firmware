@@ -83,6 +83,7 @@ extern Storage configUpdate;
 #define MAX_LABEL_LEN 32
 #define MAX_LANGUAGE_LEN 16
 #define MAX_MNEMONIC_LEN 240
+#define MAX_PASSPHRASE_LEN 51
 #define HOMESCREEN_SIZE 1024
 #define UUID_SIZE 12
 
@@ -107,6 +108,10 @@ bool config_getPassphraseProtection(bool *passphrase_protection);
 
 bool config_getHomescreen(uint8_t *dest, uint16_t dest_size);
 void config_setHomescreen(const uint8_t *data, uint32_t size);
+
+bool session_isUseOnDeviceTextInputCached(void);
+bool session_isUseOnDeviceTextInput(void);
+void session_setUseOnDeviceTextInput(bool use);
 
 void session_cachePassphrase(const char *passphrase);
 bool session_isPassphraseCached(void);
