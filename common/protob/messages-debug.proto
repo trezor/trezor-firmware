@@ -39,6 +39,11 @@ message DebugLinkLayout {
     repeated string lines = 1;
 }
 
+/**
+ * Request: Show text on the screen
+ * @start
+ * @next Success
+ */
 message DebugShowText {
     optional string header_text = 1;        // show text in the header of the screen
     optional string body_text = 2;          // show text in the body of the screen
