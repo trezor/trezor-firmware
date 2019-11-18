@@ -83,7 +83,7 @@ extern Storage configUpdate;
 #define MAX_LABEL_LEN 32
 #define MAX_LANGUAGE_LEN 16
 #define MAX_MNEMONIC_LEN 240
-#define MAX_PASSPHRASE_LEN 51
+#define MAX_PASSPHRASE_LEN 50
 #define HOMESCREEN_SIZE 1024
 #define UUID_SIZE 12
 

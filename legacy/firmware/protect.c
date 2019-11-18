@@ -44,9 +44,7 @@
 
 #define NUM_PASSPHRASE_LINES 3
 #define CHAR_AND_SPACE_WIDTH (5 + 1)
-#define PASSPHRASE_WIDTH (MAX_PASSPHRASE_LEN / NUM_PASSPHRASE_LINES * CHAR_AND_SPACE_WIDTH)
-
-#define LAST_PASSPHRASE_INDEX (MAX_PASSPHRASE_LEN - 1)
+#define PASSPHRASE_WIDTH ((MAX_PASSPHRASE_LEN + 1) / NUM_PASSPHRASE_LINES * CHAR_AND_SPACE_WIDTH)
 
 #define CARET_SHOW 80
 #define CARET_CYCLE (CARET_SHOW * 2)
@@ -475,7 +473,7 @@ int inputPassphraseScroll(char *passphrase, int *passphrasecharindex, const char
 			}
 			else
 			{
-				if (*passphrasecharindex < LAST_PASSPHRASE_INDEX)
+				if (*passphrasecharindex < MAX_PASSPHRASE_LEN)
 				{
 					passphrase[*passphrasecharindex] = entries[entryindex];
 					++(*passphrasecharindex);
@@ -538,7 +536,7 @@ void inputPassphrase(char *passphrase)
 	for (;;)
 	{
 		int entryindex = random32() % numentries;
-		if (passphrasecharindex >= LAST_PASSPHRASE_INDEX)
+		if (passphrasecharindex >= MAX_PASSPHRASE_LEN)
 			entryindex = findCharIndex(Entries, DONE, numentries, entryindex, entryindex < numentries / 2);
 		entryindex = inputPassphraseScroll(passphrase, &passphrasecharindex, Entries, entryindex, numentries, 9, 9, EntriesGroups, numentriesgroups, 2, &caret);
 		if (entryindex == INPUT_DONE)
@@ -565,7 +563,7 @@ bool checkPassphrase(const char *passphrase, bool enable_edit, bool enable_done)
 
 bool protectPassphraseDevice(void)
 {
-	static char CONFIDENTIAL passphrase[MAX_PASSPHRASE_LEN];
+	static char CONFIDENTIAL passphrase[MAX_PASSPHRASE_LEN + 1];
 
 	memzero(passphrase, sizeof(passphrase));
 	buttonUpdate();
@@ -602,7 +600,7 @@ bool protectPassphraseDevice(void)
 
 	if (twice)
 	{
-		static char CONFIDENTIAL passphrase2[MAX_PASSPHRASE_LEN];
+		static char CONFIDENTIAL passphrase2[MAX_PASSPHRASE_LEN + 1];
 
 		memzero(passphrase2, sizeof(passphrase2));
 
@@ -627,7 +625,7 @@ bool protectPassphraseDevice(void)
 
 	checkPassphrase(passphrase, false, true);
 
-	for (int i = 0; i < MAX_PASSPHRASE_LEN && passphrase[i]; ++i)
+	for (int i = 0; i < MAX_PASSPHRASE_LEN + 1 && passphrase[i]; ++i)
 		if (passphrase[i] == SPACE)
 			passphrase[i] = ' ';
 			

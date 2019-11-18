@@ -126,7 +126,7 @@ static secbool sessionSeedCached, sessionSeedUsesPassphrase;
 static uint8_t CONFIDENTIAL sessionSeed[64];
 
 static secbool sessionPassphraseCached = secfalse;
-static char CONFIDENTIAL sessionPassphrase[MAX_PASSPHRASE_LEN];
+static char CONFIDENTIAL sessionPassphrase[MAX_PASSPHRASE_LEN + 1];
 
 #define autoLockDelayMsDefault (10 * 60 * 1000U)  // 10 minutes
 static secbool autoLockDelayMsCached = secfalse;

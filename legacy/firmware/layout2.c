@@ -252,7 +252,7 @@ void layoutScrollInput(const char *text, int text_width, int num_total, int num_
 	if (num_screen % 2 > 0)
 		++num_screen;
 
-	if (num_total <= 0 || num_screen <= 0 || current_index < 0 || current_index >= num_total || groups[num_group - 1] > num_total)
+	if (num_total <= 0 || num_screen <= 0 || current_index < 0 || current_index >= num_total || num_group <= 0 || groups[num_group - 1] > num_total)
 		return;
 	
 	const int CenterX = OLED_WIDTH / 2;
@@ -282,7 +282,7 @@ void layoutScrollInput(const char *text, int text_width, int num_total, int num_
 	for (int i = 0; i < num_group; ++i)
 		oledPartialVLine(horizontal_padding + width * groups[i] / num_total, LineY - 1, LineY);
 	
-	int x = horizontal_padding + width * current_index / num_total;
+	int x = horizontal_padding + width * current_index / (num_total - 1);
 	oledPartialHLine(x, x + 1, LineY - 1);
 	oledPartialHLine(x - 1, x + 2, LineY - 2);
 	oledPartialHLine(x - 2, x + 3, LineY - 3);
