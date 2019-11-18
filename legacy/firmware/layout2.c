@@ -243,109 +243,118 @@ void layoutProgressSwipe(const char *desc, int permil) {
   layoutProgress(desc, permil);
 }
 
-void layoutScrollInput(const char *text, int text_width, int num_total, int num_screen, int current_index, const char entries[], int horizontal_padding, int num_group, const int groups[], int num_skip_in_groups, bool draw_caret)
-{
-	layoutLast = layoutScrollInput;
+void layoutScrollInput(const char *text, int text_width, int num_total,
+                       int num_screen, int current_index, const char entries[],
+                       int horizontal_padding, int num_group,
+                       const int groups[], int num_skip_in_groups,
+                       bool draw_caret) {
+  layoutLast = layoutScrollInput;
 
-	oledClear();
+  oledClear();
 
-	if (num_screen % 2 > 0)
-		++num_screen;
+  if (num_screen % 2 > 0) ++num_screen;
 
-	if (num_total <= 0 || num_screen <= 0 || current_index < 0 || current_index >= num_total || num_group <= 0 || groups[num_group - 1] > num_total)
-		return;
-	
-	const int CenterX = OLED_WIDTH / 2;
-	const int Y = 2;
+  if (num_total <= 0 || num_screen <= 0 || current_index < 0 ||
+      current_index >= num_total || num_group <= 0 ||
+      groups[num_group - 1] > num_total)
+    return;
 
-	int width = OLED_WIDTH - horizontal_padding * 2;
-	int gap = width / (num_screen - 1);
-	int t = (num_screen - 1) / 2;
-	char letter[2];
-	letter[1] = 0;
-	for (int i = 0; i < num_screen && i < num_total; ++i)
-	{
-		int x = CenterX - gap * (t - i);
-		int n = (current_index + i - t + num_total) % num_total;
-		letter[0] = entries[n];
-		oledDrawStringCenter(x, Y, letter, 1);
-	}
+  const int CenterX = OLED_WIDTH / 2;
+  const int Y = 2;
 
-	int halfgap = gap / 2;
-	oledInvert(CenterX - halfgap, Y - 2, CenterX + halfgap - 1, Y + FONT_HEIGHT + 1);
+  int width = OLED_WIDTH - horizontal_padding * 2;
+  int gap = width / (num_screen - 1);
+  int t = (num_screen - 1) / 2;
+  char letter[2];
+  letter[1] = 0;
+  for (int i = 0; i < num_screen && i < num_total; ++i) {
+    int x = CenterX - gap * (t - i);
+    int n = (current_index + i - t + num_total) % num_total;
+    letter[0] = entries[n];
+    oledDrawStringCenter(x, Y, letter, 1);
+  }
 
-	const int LineY = Y + FONT_HEIGHT * 2 - 2;
+  int halfgap = gap / 2;
+  oledInvert(CenterX - halfgap, Y - 2, CenterX + halfgap - 1,
+             Y + FONT_HEIGHT + 1);
 
-	width--;
+  const int LineY = Y + FONT_HEIGHT * 2 - 2;
 
-	oledPartialHLine(horizontal_padding, OLED_WIDTH - horizontal_padding, LineY);
-	for (int i = 0; i < num_group; ++i)
-		oledPartialVLine(horizontal_padding + width * groups[i] / num_total, LineY - 1, LineY);
-	
-	int x = horizontal_padding + width * current_index / (num_total - 1);
-	oledPartialHLine(x, x + 1, LineY - 1);
-	oledPartialHLine(x - 1, x + 2, LineY - 2);
-	oledPartialHLine(x - 2, x + 3, LineY - 3);
+  width--;
 
-	char groupinfo[] = "?-?";
-	int group;
-	for (group = 0; group < num_group - 1; ++group)
-	{
-		if (current_index >= groups[group] && current_index < groups[group + 1])
-			break;
-	}
-	groupinfo[0] = entries[groups[group]];
-	groupinfo[2] = entries[groups[group + 1] - num_skip_in_groups - 1];
-	oledDrawStringCenter(x, LineY + 2, groupinfo, 1);
+  oledPartialHLine(horizontal_padding, OLED_WIDTH - horizontal_padding, LineY);
+  for (int i = 0; i < num_group; ++i)
+    oledPartialVLine(horizontal_padding + width * groups[i] / num_total,
+                     LineY - 1, LineY);
 
-	oledHLine(OLED_HEIGHT / 2 - 5);
+  int x = horizontal_padding + width * current_index / (num_total - 1);
+  oledPartialHLine(x, x + 1, LineY - 1);
+  oledPartialHLine(x - 1, x + 2, LineY - 2);
+  oledPartialHLine(x - 2, x + 3, LineY - 3);
 
-	if (text)
-		oledDrawStringCenterMultiline(OLED_HEIGHT - FONT_HEIGHT * 2 - 1, text, 1, text_width);
+  char groupinfo[] = "?-?";
+  int group;
+  for (group = 0; group < num_group - 1; ++group) {
+    if (current_index >= groups[group] && current_index < groups[group + 1])
+      break;
+  }
+  groupinfo[0] = entries[groups[group]];
+  groupinfo[2] = entries[groups[group + 1] - num_skip_in_groups - 1];
+  oledDrawStringCenter(x, LineY + 2, groupinfo, 1);
 
-	if (draw_caret)
-		oledDrawCaret();
+  oledHLine(OLED_HEIGHT / 2 - 5);
 
-	oledRefresh();
+  if (text)
+    oledDrawStringCenterMultiline(OLED_HEIGHT - FONT_HEIGHT * 2 - 1, text, 1,
+                                  text_width);
+
+  if (draw_caret) oledDrawCaret();
+
+  oledRefresh();
 }
 
-void layoutCheckPassphrase(const char *passphrase, int text_width, bool enable_edit, bool enable_done_yes)
-{
-	layoutLast = layoutCheckPassphrase;
-	layoutSwipe();
+void layoutCheckPassphrase(const char *passphrase, int text_width,
+                           bool enable_edit, bool enable_done_yes) {
+  layoutLast = layoutCheckPassphrase;
+  layoutSwipe();
 
-	oledClear();
+  oledClear();
 
-	if (enable_edit && enable_done_yes)
-		oledDrawString(0, 0 * 9, "Confirm passphrase:", 0);
-	else if (enable_edit)
-		oledDrawString(0, 0 * 9, "Passphrases mismatched:", 0);
-	else
-		oledDrawString(0, 0 * 9, "Passphrase confirmed:", 0);
+  if (enable_edit && enable_done_yes)
+    oledDrawString(0, 0 * 9, "Confirm passphrase:", 0);
+  else if (enable_edit)
+    oledDrawString(0, 0 * 9, "Passphrases mismatched:", 0);
+  else
+    oledDrawString(0, 0 * 9, "Passphrase confirmed:", 0);
 
-	oledDrawStringCenterMultiline(OLED_HEIGHT / 2 - 2, passphrase, 1, text_width);
+  oledDrawStringCenterMultiline(OLED_HEIGHT / 2 - 2, passphrase, 1, text_width);
 
-	if (enable_edit)
-	{
-		const char *btnNo = "Edit";
-		oledDrawString(1, OLED_HEIGHT - 8, "\x15", 0);
-		oledDrawString(fontCharWidth(0, '\x15') + 3, OLED_HEIGHT - 8, btnNo, 0);
-		oledInvert(0, OLED_HEIGHT - 9, fontCharWidth(0, '\x15') + oledStringWidth(btnNo, 0) + 2, OLED_HEIGHT - 1);
-	}
+  if (enable_edit) {
+    const char *btnNo = "Edit";
+    oledDrawString(1, OLED_HEIGHT - 8, "\x15", 0);
+    oledDrawString(fontCharWidth(0, '\x15') + 3, OLED_HEIGHT - 8, btnNo, 0);
+    oledInvert(0, OLED_HEIGHT - 9,
+               fontCharWidth(0, '\x15') + oledStringWidth(btnNo, 0) + 2,
+               OLED_HEIGHT - 1);
+  }
 
-	if (enable_done_yes)
-	{
-		const char *DONE = "Done";
-		const char *NEXT = "Next";
-		const char *btnYes = enable_edit ? DONE : NEXT;
-		oledDrawString(OLED_WIDTH - fontCharWidth(0, '\x06') - 1, OLED_HEIGHT - 8, "\x06", 0);
-		oledDrawString(OLED_WIDTH - oledStringWidth(btnYes, 0) - fontCharWidth(0, '\x06') - 3, OLED_HEIGHT - 8, btnYes, 0);
-		oledInvert(OLED_WIDTH - oledStringWidth(btnYes, 0) - fontCharWidth(0, '\x06') - 4, OLED_HEIGHT - 9, OLED_WIDTH - 1, OLED_HEIGHT - 1);
-	}
+  if (enable_done_yes) {
+    const char *DONE = "Done";
+    const char *NEXT = "Next";
+    const char *btnYes = enable_edit ? DONE : NEXT;
+    oledDrawString(OLED_WIDTH - fontCharWidth(0, '\x06') - 1, OLED_HEIGHT - 8,
+                   "\x06", 0);
+    oledDrawString(
+        OLED_WIDTH - oledStringWidth(btnYes, 0) - fontCharWidth(0, '\x06') - 3,
+        OLED_HEIGHT - 8, btnYes, 0);
+    oledInvert(
+        OLED_WIDTH - oledStringWidth(btnYes, 0) - fontCharWidth(0, '\x06') - 4,
+        OLED_HEIGHT - 9, OLED_WIDTH - 1, OLED_HEIGHT - 1);
+  }
 
-	oledHLine(OLED_HEIGHT - 13);
+  oledHLine(OLED_HEIGHT - 13);
 
-	oledRefresh();
+  oledRefresh();
 }
 
 void layoutScreensaver(void) {

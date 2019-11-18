@@ -48,7 +48,8 @@ void oledDrawCaret(void);
 int oledStringWidth(const char *text, uint8_t font);
 void oledDrawString(int x, int y, const char *text, uint8_t font);
 void oledDrawStringCenter(int x, int y, const char *text, uint8_t font);
-void oledDrawStringCenterMultiline(int y, const char* text, uint8_t font, int maxwidth);
+void oledDrawStringCenterMultiline(int y, const char *text, uint8_t font,
+                                   int maxwidth);
 void oledDrawStringRight(int x, int y, const char *text, uint8_t font);
 void oledDrawBitmap(int x, int y, const BITMAP *bmp);
 void oledInvert(int x1, int y1, int x2, int y2);

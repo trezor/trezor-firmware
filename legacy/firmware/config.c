@@ -828,20 +828,17 @@ bool session_getState(const uint8_t *salt, uint8_t *state,
 
 bool session_isUnlocked(void) { return sectrue == storage_is_unlocked(); }
 
-bool session_isUseOnDeviceTextInputCached(void)
-{
-	return sectrue == sessionUseOnDeviceTextInputCached;
+bool session_isUseOnDeviceTextInputCached(void) {
+  return sectrue == sessionUseOnDeviceTextInputCached;
 }
 
-bool session_isUseOnDeviceTextInput(void)
-{
-	return sectrue == sessionUseOnDeviceTextInput;
+bool session_isUseOnDeviceTextInput(void) {
+  return sectrue == sessionUseOnDeviceTextInput;
 }
 
-void session_setUseOnDeviceTextInput(bool use)
-{
-	sessionUseOnDeviceTextInputCached = sectrue;
-	sessionUseOnDeviceTextInput = use ? sectrue : secfalse;
+void session_setUseOnDeviceTextInput(bool use) {
+  sessionUseOnDeviceTextInputCached = sectrue;
+  sessionUseOnDeviceTextInput = use ? sectrue : secfalse;
 }
 
 bool config_isInitialized(void) {
