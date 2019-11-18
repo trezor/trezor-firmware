@@ -284,6 +284,12 @@ class TrezorClient:
         )
         return self.call(msg)
 
+    def show_text(self, header_text, body_text, icon):
+        msg = messages.DebugShowText(
+            header_text=header_text, body_text=body_text, icon=icon
+        )
+        return self.call(msg)
+
     def get_device_id(self):
         return self.features.device_id
 

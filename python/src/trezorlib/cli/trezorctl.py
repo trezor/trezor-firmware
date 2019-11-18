@@ -250,6 +250,16 @@ def usb_reset():
     WebUsbTransport.enumerate(usb_reset=True)
 
 
+@cli.command(help="Show text on Trezor display.")
+@click.option("-i", "--icon", default=1)
+@click.argument("header_text")
+@click.argument("body_text")
+@click.pass_obj
+def show_text(connect, header_text, body_text, icon):
+    client = connect()
+    return client.show_text(header_text, body_text, icon)
+
+
 #
 # Basic coin functions
 #

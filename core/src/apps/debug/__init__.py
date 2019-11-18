@@ -111,5 +111,5 @@ if __debug__:
 
         wire.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)
         wire.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)
-
         wire.add(MessageType.LoadDevice, __name__, "load_device")
+        wire.add(MessageType.DebugShowText, __name__, "show_text")
