@@ -16,6 +16,5 @@ int fontCharWidth(uint8_t font, uint8_t c) {
 }
 
 const uint8_t *fontCharData(uint8_t font, uint8_t c) {
-  return (c >= 0x80) ? (const uint8_t *)""
-                                 : font_data[font % FONTS][c] + 1;
+  return (c >= 0x80) ? (const uint8_t *)"" : font_data[font % FONTS][c] + 1;
 }
