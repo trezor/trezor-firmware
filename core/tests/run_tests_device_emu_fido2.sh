@@ -33,7 +33,7 @@ cd ../../tests/fido_tests/fido2
 # run tests
 error=0
 export TREZOR_FIDO2_UDP_PORT=21326
-if ! pytest --random-order-seed=414020 --sim tests/standard/ --vendor trezor "$@"; then  # hardcoded order seed, which succeeds
+if ! pytest --sim tests/standard/ --vendor trezor "$@"; then
   error=1
 fi
 kill $upy_pid
