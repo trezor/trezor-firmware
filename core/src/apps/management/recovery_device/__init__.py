@@ -22,6 +22,12 @@ if False:
     from trezor.messages.RecoveryDevice import RecoveryDevice
 
 
+# List of RecoveryDevice fields that can be set when doing dry-run recovery.
+# All except `dry_run` are allowed for T1 compatibility, but their values are ignored.
+# If set, `enforce_wordlist` must be True, because we do not support non-enforcing.
+DRY_RUN_ALLOWED_FIELDS = ("dry_run", "word_count", "enforce_wordlist", "type")
+
+
 async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     """
     Recover BIP39/SLIP39 seed into empty device.
@@ -29,7 +35,7 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     User starts the process here using the RecoveryDevice msg and then they can unplug
     the device anytime and continue without a computer.
     """
-    _check_state(msg)
+    _validate(msg)
 
     if storage.recovery.is_in_progress():
         return await recovery_process(ctx)
@@ -43,27 +49,26 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
             await show_pin_invalid(ctx)
             raise wire.PinInvalid("PIN invalid")
 
-    # set up pin if requested
-    if msg.pin_protection:
-        if msg.dry_run:
-            raise wire.ProcessError("Can't setup PIN during dry_run recovery.")
-        newpin = await request_pin_confirm(ctx, allow_cancel=False)
-        config.change_pin(pin_to_int(""), pin_to_int(newpin), None, None)
+    if not msg.dry_run:
+        # set up pin if requested
+        if msg.pin_protection:
+            newpin = await request_pin_confirm(ctx, allow_cancel=False)
+            config.change_pin(pin_to_int(""), pin_to_int(newpin), None, None)
 
-    if msg.u2f_counter:
-        storage.device.set_u2f_counter(msg.u2f_counter)
-    storage.device.load_settings(
-        label=msg.label, use_passphrase=msg.passphrase_protection
-    )
+        if msg.u2f_counter is not None:
+            storage.device.set_u2f_counter(msg.u2f_counter)
+        storage.device.load_settings(
+            label=msg.label, use_passphrase=msg.passphrase_protection
+        )
+
     storage.recovery.set_in_progress(True)
-    if msg.dry_run:
-        storage.recovery.set_dry_run(msg.dry_run)
+    storage.recovery.set_dry_run(bool(msg.dry_run))
 
     workflow.replace_default(recovery_homescreen)
     return await recovery_process(ctx)
 
 
-def _check_state(msg: RecoveryDevice) -> None:
+def _validate(msg: RecoveryDevice) -> None:
     if not msg.dry_run and storage.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
     if msg.dry_run and not storage.is_initialized():
@@ -73,6 +78,14 @@ def _check_state(msg: RecoveryDevice) -> None:
         raise wire.ProcessError(
             "Value enforce_wordlist must be True, Trezor Core enforces words automatically."
         )
+
+    if msg.dry_run:
+        # check that only allowed fields are set
+        for key, value in msg.__dict__.items():
+            if key not in DRY_RUN_ALLOWED_FIELDS and value is not None:
+                raise wire.ProcessError(
+                    "Forbidden field set in dry-run: {}".format(key)
+                )
 
 
 async def _continue_dialog(ctx: wire.Context, msg: RecoveryDevice) -> None:

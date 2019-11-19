@@ -16,54 +16,190 @@
 
 import pytest
 
-from trezorlib import messages as proto
+from trezorlib import device, exceptions, messages, protobuf
 
+from .. import buttons
 from ..common import MNEMONIC12
 
 
+def do_recover_legacy(client, mnemonic, **kwargs):
+    def input_callback(_):
+        word, pos = client.debug.read_recovery_word()
+        if pos != 0:
+            word = mnemonic[pos - 1]
+            mnemonic[pos - 1] = None
+            assert word is not None
+
+        return word
+
+    ret = device.recover(
+        client,
+        dry_run=True,
+        word_count=len(mnemonic),
+        type=messages.RecoveryDeviceType.ScrambledWords,
+        input_callback=input_callback,
+        **kwargs
+    )
+    # if the call succeeded, check that all words have been used
+    assert all(m is None for m in mnemonic)
+    return ret
+
+
+def do_recover_core(client, mnemonic, **kwargs):
+    def input_flow():
+        yield
+        layout = client.debug.wait_layout()
+        assert "check the recovery seed" in layout.text
+        client.debug.click(buttons.OK)
+
+        yield
+        layout = client.debug.wait_layout()
+        assert "Select number of words" in layout.text
+        client.debug.click(buttons.OK)
+
+        yield
+        layout = client.debug.wait_layout()
+        assert layout.text == "WordSelector"
+        # click the number
+        word_option_offset = 6
+        word_options = (12, 18, 20, 24, 33)
+        index = word_option_offset + word_options.index(len(mnemonic))
+        client.debug.click(buttons.grid34(index % 3, index // 3))
+
+        yield
+        layout = client.debug.wait_layout()
+        assert "Enter recovery seed" in layout.text
+        client.debug.click(buttons.OK)
+
+        yield
+        for word in mnemonic:
+            client.debug.input(word)
+
+        yield
+        client.debug.click(buttons.OK)
+
+    with client:
+        client.set_input_flow(input_flow)
+        return device.recover(client, dry_run=True, **kwargs)
+
+
+def do_recover(client, mnemonic):
+    if client.features.model == "1":
+        return do_recover_legacy(client, mnemonic)
+    else:
+        return do_recover_core(client, mnemonic)
+
+
+@pytest.mark.setup_client(mnemonic=MNEMONIC12)
+def test_dry_run(client):
+    ret = do_recover(client, MNEMONIC12.split(" "))
+    assert isinstance(ret, messages.Success)
+
+
+@pytest.mark.setup_client(mnemonic=MNEMONIC12)
+def test_seed_mismatch(client):
+    with pytest.raises(exceptions.TrezorFailure) as exc:
+        do_recover(client, ["all"] * 12)
+    assert "does not match the one in the device" in exc.value.failure.message
+
+
 @pytest.mark.skip_t2
-class TestMsgRecoverydeviceDryrun:
-    def recovery_loop(self, client, mnemonic, result):
-        ret = client.call_raw(
-            proto.RecoveryDevice(
-                word_count=12,
-                passphrase_protection=False,
-                pin_protection=False,
-                label="label",
-                language="english",
-                enforce_wordlist=True,
-                dry_run=True,
-            )
-        )
+def test_invalid_seed_t1(client):
+    with pytest.raises(exceptions.TrezorFailure) as exc:
+        do_recover(client, ["stick"] * 12)
+    assert "Invalid seed" in exc.value.failure.message
 
-        fakes = 0
-        for _ in range(int(12 * 2)):
-            assert isinstance(ret, proto.WordRequest)
-            (word, pos) = client.debug.read_recovery_word()
 
-            if pos != 0:
-                ret = client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
-                mnemonic[pos - 1] = None
-            else:
-                ret = client.call_raw(proto.WordAck(word=word))
-                fakes += 1
+@pytest.mark.skip_t1
+def test_invalid_seed_core(client):
+    def input_flow():
+        yield
+        layout = client.debug.wait_layout()
+        assert "check the recovery seed" in layout.text
+        client.debug.click(buttons.OK)
 
-            print(mnemonic)
+        yield
+        layout = client.debug.wait_layout()
+        assert "Select number of words" in layout.text
+        client.debug.click(buttons.OK)
 
-        assert isinstance(ret, proto.ButtonRequest)
-        client.debug.press_yes()
+        yield
+        layout = client.debug.wait_layout()
+        assert layout.text == "WordSelector"
+        # select 12 words
+        client.debug.click(buttons.grid34(0, 2))
 
-        ret = client.call_raw(proto.ButtonAck())
-        assert isinstance(ret, result)
+        yield
+        layout = client.debug.wait_layout()
+        assert "Enter recovery seed" in layout.text
+        client.debug.click(buttons.OK)
 
-    def test_correct_notsame(self, client):
-        mnemonic = MNEMONIC12.split(" ")
-        self.recovery_loop(client, mnemonic, proto.Failure)
+        yield
+        for _ in range(12):
+            client.debug.input("stick")
 
-    def test_correct_same(self, client):
-        mnemonic = ["all"] * 12
-        self.recovery_loop(client, mnemonic, proto.Success)
+        code = yield
+        layout = client.debug.wait_layout()
+        assert code == messages.ButtonRequestType.Warning
+        assert "invalid recovery seed" in layout.text
+        client.debug.click(buttons.OK)
 
-    def test_incorrect(self, client):
-        mnemonic = ["stick"] * 12
-        self.recovery_loop(client, mnemonic, proto.Failure)
+        yield
+        # retry screen
+        layout = client.debug.wait_layout()
+        assert "Select number of words" in layout.text
+        client.debug.click(buttons.CANCEL)
+
+        yield
+        layout = client.debug.wait_layout()
+        assert "abort" in layout.text
+        client.debug.click(buttons.OK)
+
+    with client:
+        client.set_input_flow(input_flow)
+        with pytest.raises(exceptions.Cancelled):
+            return device.recover(client, dry_run=True)
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_uninitialized(client):
+    with pytest.raises(exceptions.TrezorFailure) as exc:
+        do_recover(client, ["all"] * 12)
+    assert "not initialized" in exc.value.failure.message
+
+
+DRY_RUN_ALLOWED_FIELDS = ("dry_run", "word_count", "enforce_wordlist", "type")
+
+
+def _make_bad_params():
+    """Generate a list of field names that must NOT be set on a dry-run message,
+    and default values of the appropriate type.
+    """
+    for fname, ftype, _ in messages.RecoveryDevice.get_fields().values():
+        if fname in DRY_RUN_ALLOWED_FIELDS:
+            continue
+
+        if ftype is protobuf.UVarintType:
+            yield fname, 1
+        elif ftype is protobuf.BoolType:
+            yield fname, True
+        elif ftype is protobuf.UnicodeType:
+            yield fname, "test"
+        else:
+            # Someone added a field to RecoveryDevice of a type that has no assigned
+            # default value. This test must be fixed.
+            raise RuntimeError("unknown field in RecoveryDevice")
+
+
+@pytest.mark.parametrize("field_name, field_value", _make_bad_params())
+def test_bad_parameters(client, field_name, field_value):
+    msg = messages.RecoveryDevice(
+        dry_run=True,
+        word_count=12,
+        enforce_wordlist=True,
+        type=messages.RecoveryDeviceType.ScrambledWords,
+    )
+    setattr(msg, field_name, field_value)
+    with pytest.raises(exceptions.TrezorFailure) as exc:
+        client.call(msg)
+    assert "Forbidden field set in dry-run" in exc.value.failure.message
