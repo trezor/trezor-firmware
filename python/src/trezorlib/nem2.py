@@ -100,6 +100,7 @@ def get_address(client, n, network, show_display=False):
 
 @expect(proto.NEM2SignedTx)
 def sign_tx(client, n, transaction):
+    print("signing nem2 transaction")
     try:
         msg = create_sign_tx(transaction)
     except ValueError as e:

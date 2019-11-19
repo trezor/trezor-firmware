@@ -11,6 +11,7 @@ from apps.nem2.validators import validate
 
 
 async def sign_tx(ctx, msg: NEM2SignTx, keychain):
+    print("signing nem2 transaction", msg)
     validate(msg)
 
     await validate_path(

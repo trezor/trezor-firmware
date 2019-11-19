@@ -37,11 +37,10 @@ message NEM2SignTx {
     optional NEM2TransactionCommon transaction = 1;    // Common part of transaction
     optional NEM2TransactionCommon multisig = 2;       // Common part of inner transaction for multisig transactions
     optional NEM2TransferTransaction transfer = 3;          // Transfer transaction part
-    optional string generation_hash = 4;
-    optional NEM2NetworkType network_type = 5 [default=MAIN_NET];
-    repeated uint32 address_n = 6;
-    optional bool cosigning = 7;
-    optional NEM2MosaicDefinitionTransaction mosaic_definition = 8; // Mosaic Definition part
+    optional string generation_hash = 4;    
+    repeated uint32 address_n = 5;
+    optional bool cosigning = 6;
+    optional NEM2MosaicDefinitionTransaction mosaic_definition = 7; // Mosaic Definition part
 
     /**
     * Common types from
