@@ -403,6 +403,12 @@ void fsm_msgRecoveryDevice(const RecoveryDevice *msg) {
   const bool dry_run = msg->has_dry_run ? msg->dry_run : false;
   if (!dry_run) {
     CHECK_NOT_INITIALIZED
+  } else {
+    CHECK_INITIALIZED
+    CHECK_PARAM(!msg->has_passphrase_protection && !msg->has_pin_protection &&
+                    !msg->has_language && !msg->has_label &&
+                    !msg->has_u2f_counter,
+                _("Forbidden field set in dry-run"))
   }
 
   CHECK_PARAM(!msg->has_word_count || msg->word_count == 12 ||
