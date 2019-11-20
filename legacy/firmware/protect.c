@@ -42,10 +42,13 @@
 
 #define INPUT_DONE -1
 
-#define NUM_PASSPHRASE_LINES 3
 #define CHAR_AND_SPACE_WIDTH (5 + 1)
+
+#define NUM_PASSPHRASE_LINES 3
 #define PASSPHRASE_WIDTH \
   ((MAX_PASSPHRASE_LEN + 1) / NUM_PASSPHRASE_LINES * CHAR_AND_SPACE_WIDTH)
+
+#define PIN_WIDTH (MAX_PIN_LEN * CHAR_AND_SPACE_WIDTH)
 
 #define CARET_SHOW 80
 #define CARET_CYCLE (CARET_SHOW * 2)
@@ -149,6 +152,56 @@ void requestOnDeviceTextInput(void) {
   session_setUseOnDeviceTextInput(button.YesUp);
 }
 
+int findCharIndex(const char entries[], char needle, int numtotal,
+                  int startindex, bool forward) {
+  int index = startindex;
+  int step = forward ? 1 : -1;
+  while (index >= 0 && index < numtotal) {
+    if (entries[index] == needle) return index;
+    index += step;
+  }
+  return startindex;
+}
+
+int inputTextScroll(char *text, int *textcharindex, int maxtextcharindex,
+                    const char entries[], int textwidth, int entryindex,
+                    int numtotal, int numscreen, int horizontalpadding,
+                    const int groups[], int numgroup, int numskipingroups,
+                    int *caret) {
+  for (;; *caret = (*caret + 1) % CARET_CYCLE) {
+    bool yes, no, confirm;
+    buttonCheckRepeat(&yes, &no, &confirm);
+
+    if (confirm) {
+      buttonWaitForIdle();
+
+      if (entries[entryindex] == BACKSPACE) {
+        if (*textcharindex > 0) {
+          --(*textcharindex);
+          text[*textcharindex] = 0;
+        }
+      } else if (entries[entryindex] == DONE) {
+        return INPUT_DONE;
+      } else {
+        if (*textcharindex < maxtextcharindex) {
+          text[*textcharindex] = entries[entryindex];
+          ++(*textcharindex);
+        }
+        return entryindex;
+      }
+
+      entryindex = random32() % numtotal;
+    } else {
+      if (yes) entryindex = (entryindex + 1) % numtotal;
+      if (no) entryindex = (entryindex - 1 + numtotal) % numtotal;
+    }
+
+    layoutScrollInput(text, textwidth, numtotal, numscreen, entryindex, entries,
+                      horizontalpadding, numgroup, groups, numskipingroups,
+                      *caret < CARET_SHOW);
+  }
+}
+
 bool protectButton(ButtonRequestType type, bool confirm_only) {
   ButtonRequest resp = {0};
   bool result = false;
@@ -222,7 +275,8 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
   return result;
 }
 
-const char *requestPin(PinMatrixRequestType type, const char *text) {
+bool requestPinComputer(PinMatrixRequestType type, const char *text,
+                        char pin[]) {
   PinMatrixRequest resp = {0};
   memzero(&resp, sizeof(PinMatrixRequest));
   resp.has_type = true;
@@ -237,7 +291,8 @@ const char *requestPin(PinMatrixRequestType type, const char *text) {
       PinMatrixAck *pma = (PinMatrixAck *)msg_tiny;
       pinmatrix_done(pma->pin);  // convert via pinmatrix
       usbTiny(0);
-      return pma->pin;
+      strlcpy(pin, pma->pin, sizeof(pma->pin));
+      return true;
     }
     // check for Cancel / Initialize
     protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
@@ -247,7 +302,8 @@ const char *requestPin(PinMatrixRequestType type, const char *text) {
       pinmatrix_done(0);
       msg_tiny_id = 0xFFFF;
       usbTiny(0);
-      return 0;
+      pin[0] = 0;
+      return false;
     }
 #if DEBUG_LINK
     if (msg_tiny_id == MessageType_MessageType_DebugLinkGetState) {
@@ -302,39 +358,126 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress,
   return secfalse;
 }
 
+void userEnterPin(char pin[]) {
+  const char Entries[] = {
+      '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', BACKSPACE, DONE,
+  };
+  const int EntriesGroups[] = {0, 12};
+
+  int numentries = sizeof(Entries) / sizeof(Entries[0]);
+  int numentriesgroups = sizeof(EntriesGroups) / sizeof(EntriesGroups[0]);
+
+  usbSleep(5);
+  buttonUpdate();
+
+  int pincharindex = strlen(pin);
+  int caret = 0;
+
+  for (;;) {
+    int entryindex = random32() % numentries;
+    if (pincharindex >= MAX_PIN_LEN)
+      entryindex = findCharIndex(Entries, DONE, numentries, entryindex, true);
+    entryindex = inputTextScroll(pin, &pincharindex, MAX_PIN_LEN, Entries,
+                                 PIN_WIDTH, entryindex, numentries, 9, 9,
+                                 EntriesGroups, numentriesgroups, 2, &caret);
+    if (entryindex == INPUT_DONE && pincharindex > 0) return;
+  }
+}
+
+bool userCheckPin(char pin[]) {
+  layoutCheckInput(pin, PIN_WIDTH, true, true, "Confirm PIN:", NULL, NULL);
+
+  buttonUpdate();
+
+  for (;;) {
+    usbSleep(5);
+    buttonUpdate();
+    if (button.YesUp) return true;
+    if (button.NoUp) return false;
+  }
+}
+
+void requestPinDevice(const char *line1, const char *line2, const char *line3,
+                      char pin[]) {
+  buttonUpdate();
+
+  layoutDialog(NULL, NULL, _("Next"), NULL, line1, line2, line3, NULL, NULL,
+               NULL);
+  buttonWaitForYesUp();
+  layoutSwipe();
+
+  for (;;) {
+    userEnterPin(pin);
+    layoutSwipe();
+
+    if (userCheckPin(pin)) break;
+
+    oledSwipeRight();
+  }
+}
+
 bool protectPin(bool use_cached) {
   if (use_cached && session_isUnlocked()) {
     return true;
   }
 
-  const char *pin = "";
-  if (config_hasPin()) {
-    pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current,
-                     _("Please enter current PIN:"));
-    if (!pin) {
+  if (!config_hasPin()) {
+    return false;
+  }
+
+  if (!session_isUseOnDeviceTextInputCached()) requestOnDeviceTextInput();
+
+  static CONFIDENTIAL char pin[MAX_PIN_LEN + 1];
+
+  if (session_isUseOnDeviceTextInput()) {
+    memzero(pin, sizeof(pin));
+    bool ret = true;
+    for (;;) {
+      if (ret)
+        requestPinDevice("Please enter current PIN", "on the next screen.",
+                         NULL, pin);
+      else
+        requestPinDevice("Wrong PIN.", "Please enter current PIN",
+                         "on the next screen.", pin);
+      ret = config_unlock(pin);
+      memzero(pin, sizeof(pin));
+      if (ret) return true;
+    }
+  } else {
+    requestPinComputer(PinMatrixRequestType_PinMatrixRequestType_Current,
+                       _("Please enter current PIN:"), pin);
+    if (!pin[0]) {
       fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
       return false;
     }
-  }
 
-  bool ret = config_unlock(pin);
-  if (!ret) {
-    fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+    bool ret = config_unlock(pin);
+    if (!ret) {
+      fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+    }
+    return ret;
   }
-  return ret;
 }
 
 bool protectChangePin(bool removal) {
   static CONFIDENTIAL char old_pin[MAX_PIN_LEN + 1] = "";
   static CONFIDENTIAL char new_pin[MAX_PIN_LEN + 1] = "";
-  const char *pin = NULL;
+  static CONFIDENTIAL char pin[MAX_PIN_LEN + 1];
+
+  if (!session_isUseOnDeviceTextInputCached()) requestOnDeviceTextInput();
 
   if (config_hasPin()) {
-    pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current,
-                     _("Please enter current PIN:"));
-    if (pin == NULL) {
-      fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
-      return false;
+    if (session_isUseOnDeviceTextInput()) {
+      memzero(pin, sizeof(pin));
+      requestPinDevice("Please enter current PIN", "on the next screen.", NULL,
+                       pin);
+    } else {
+      requestPinComputer(PinMatrixRequestType_PinMatrixRequestType_Current,
+                         _("Please enter current PIN:"), pin);
+      if (!pin[0]) {
+        fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
+        return false;
+      }
     }
 
     // If removing, defer the check to config_changePin().
@@ -349,25 +492,39 @@ bool protectChangePin(bool removal) {
     }
 
     strlcpy(old_pin, pin, sizeof(old_pin));
+  } else {
+    memzero(old_pin, sizeof(old_pin));
   }
 
   if (!removal) {
-    pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewFirst,
-                     _("Please enter new PIN:"));
-    if (pin == NULL) {
-      memzero(old_pin, sizeof(old_pin));
-      fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
-      return false;
+    if (session_isUseOnDeviceTextInput()) {
+      memzero(pin, sizeof(pin));
+      requestPinDevice("Please enter new PIN", "on the next screen.", NULL,
+                       pin);
+    } else {
+      requestPinComputer(PinMatrixRequestType_PinMatrixRequestType_NewFirst,
+                         _("Please enter new PIN:"), pin);
+      if (!pin[0]) {
+        memzero(old_pin, sizeof(old_pin));
+        fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
+        return false;
+      }
     }
     strlcpy(new_pin, pin, sizeof(new_pin));
 
-    pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewSecond,
-                     _("Please re-enter new PIN:"));
-    if (pin == NULL) {
-      memzero(old_pin, sizeof(old_pin));
-      memzero(new_pin, sizeof(new_pin));
-      fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
-      return false;
+    if (session_isUseOnDeviceTextInput()) {
+      memzero(pin, sizeof(pin));
+      requestPinDevice("Please re-enter new PIN", "on the next screen.", NULL,
+                       pin);
+    } else {
+      requestPinComputer(PinMatrixRequestType_PinMatrixRequestType_NewSecond,
+                         _("Please re-enter new PIN:"), pin);
+      if (!pin[0]) {
+        memzero(old_pin, sizeof(old_pin));
+        memzero(new_pin, sizeof(new_pin));
+        fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
+        return false;
+      }
     }
 
     if (strncmp(new_pin, pin, sizeof(new_pin)) != 0) {
@@ -376,11 +533,14 @@ bool protectChangePin(bool removal) {
       fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
       return false;
     }
+  } else {
+    memzero(new_pin, sizeof(new_pin));
   }
 
   bool ret = config_changePin(old_pin, new_pin);
   memzero(old_pin, sizeof(old_pin));
   memzero(new_pin, sizeof(new_pin));
+  memzero(pin, sizeof(pin));
   if (ret == false) {
     fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
   }
@@ -424,56 +584,7 @@ bool protectPassphraseComputer(void) {
   return result;
 }
 
-int inputPassphraseScroll(char *passphrase, int *passphrasecharindex,
-                          const char entries[], int entryindex, int numtotal,
-                          int numscreen, int padding, const int groups[],
-                          int numgroup, int skip, int *caret) {
-  for (;; *caret = (*caret + 1) % CARET_CYCLE) {
-    bool yes, no, confirm;
-    buttonCheckRepeat(&yes, &no, &confirm);
-
-    if (confirm) {
-      buttonWaitForIdle();
-
-      if (entries[entryindex] == BACKSPACE) {
-        if (*passphrasecharindex > 0) {
-          --(*passphrasecharindex);
-          passphrase[*passphrasecharindex] = 0;
-        }
-      } else if (entries[entryindex] == DONE) {
-        return INPUT_DONE;
-      } else {
-        if (*passphrasecharindex < MAX_PASSPHRASE_LEN) {
-          passphrase[*passphrasecharindex] = entries[entryindex];
-          ++(*passphrasecharindex);
-        }
-        return entryindex;
-      }
-
-      entryindex = random32() % numtotal;
-    } else {
-      if (yes) entryindex = (entryindex + 1) % numtotal;
-      if (no) entryindex = (entryindex - 1 + numtotal) % numtotal;
-    }
-
-    layoutScrollInput(passphrase, PASSPHRASE_WIDTH, numtotal, numscreen,
-                      entryindex, entries, padding, numgroup, groups, skip,
-                      *caret < CARET_SHOW);
-  }
-}
-
-int findCharIndex(const char entries[], char needle, int numtotal,
-                  int startindex, bool forward) {
-  int index = startindex;
-  int step = forward ? 1 : -1;
-  while (index >= 0 && index < numtotal) {
-    if (entries[index] == needle) return index;
-    index += step;
-  }
-  return startindex;
-}
-
-void inputPassphrase(char *passphrase) {
+void userEnterPassphrase(char *passphrase) {
   const char Entries[] = {
       'a',       'b',       'c',       'd',       'e',       'f',    'g',
       'h',       'i',       BACKSPACE, DONE,      'j',       'k',    'l',
@@ -508,16 +619,19 @@ void inputPassphrase(char *passphrase) {
     if (passphrasecharindex >= MAX_PASSPHRASE_LEN)
       entryindex = findCharIndex(Entries, DONE, numentries, entryindex,
                                  entryindex < numentries / 2);
-    entryindex = inputPassphraseScroll(
-        passphrase, &passphrasecharindex, Entries, entryindex, numentries, 9, 9,
-        EntriesGroups, numentriesgroups, 2, &caret);
+    entryindex =
+        inputTextScroll(passphrase, &passphrasecharindex, MAX_PASSPHRASE_LEN,
+                        Entries, PASSPHRASE_WIDTH, entryindex, numentries, 9, 9,
+                        EntriesGroups, numentriesgroups, 2, &caret);
     if (entryindex == INPUT_DONE) return;
   }
 }
 
-bool checkPassphrase(const char *passphrase, bool enable_edit,
-                     bool enable_done) {
-  layoutCheckPassphrase(passphrase, PASSPHRASE_WIDTH, enable_edit, enable_done);
+bool userCheckPassphrase(const char *passphrase, bool enable_edit,
+                         bool enable_done) {
+  layoutCheckInput(passphrase, PASSPHRASE_WIDTH, enable_edit, enable_done,
+                   "Confirm passphrase:", "Passphrases mismatched:",
+                   "Passphrase confirmed:");
 
   buttonUpdate();
 
@@ -530,7 +644,7 @@ bool checkPassphrase(const char *passphrase, bool enable_edit,
 }
 
 bool protectPassphraseDevice(void) {
-  static char CONFIDENTIAL passphrase[MAX_PASSPHRASE_LEN + 1];
+  static CONFIDENTIAL char passphrase[MAX_PASSPHRASE_LEN + 1];
 
   memzero(passphrase, sizeof(passphrase));
   buttonUpdate();
@@ -560,15 +674,15 @@ bool protectPassphraseDevice(void) {
   layoutSwipe();
 
   for (;;) {
-    inputPassphrase(passphrase);
+    userEnterPassphrase(passphrase);
 
-    if (checkPassphrase(passphrase, true, true)) break;
+    if (userCheckPassphrase(passphrase, true, true)) break;
 
     oledSwipeRight();
   }
 
   if (twice) {
-    static char CONFIDENTIAL passphrase2[MAX_PASSPHRASE_LEN + 1];
+    static CONFIDENTIAL char passphrase2[MAX_PASSPHRASE_LEN + 1];
 
     memzero(passphrase2, sizeof(passphrase2));
 
@@ -579,18 +693,18 @@ bool protectPassphraseDevice(void) {
     layoutSwipe();
 
     for (;;) {
-      inputPassphrase(passphrase2);
+      userEnterPassphrase(passphrase2);
 
       if (strcmp(passphrase, passphrase2) == 0) break;
 
-      checkPassphrase(passphrase2, true, false);
+      userCheckPassphrase(passphrase2, true, false);
       oledSwipeRight();
     }
 
     memzero(passphrase2, sizeof(passphrase2));
   }
 
-  checkPassphrase(passphrase, false, true);
+  userCheckPassphrase(passphrase, false, true);
 
   for (int i = 0; i < MAX_PASSPHRASE_LEN + 1 && passphrase[i]; ++i)
     if (passphrase[i] == SPACE) passphrase[i] = ' ';

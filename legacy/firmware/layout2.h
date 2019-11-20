@@ -49,8 +49,10 @@ void layoutScrollInput(const char *text, int text_width, int num_total,
                        int horizontal_padding, int num_group,
                        const int groups[], int num_skip_in_groups,
                        bool draw_caret);
-void layoutCheckPassphrase(const char *passphrase, int text_width,
-                           bool enable_edit, bool enable_done);
+void layoutCheckInput(const char *text, int text_width, bool enable_edit,
+                      bool enable_done, const char *confirm_input,
+                      const char *inputs_mismatched,
+                      const char *input_confirmed);
 
 void layoutScreensaver(void);
 void layoutHome(void);

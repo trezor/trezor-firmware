@@ -313,21 +313,23 @@ void layoutScrollInput(const char *text, int text_width, int num_total,
   oledRefresh();
 }
 
-void layoutCheckPassphrase(const char *passphrase, int text_width,
-                           bool enable_edit, bool enable_done_yes) {
-  layoutLast = layoutCheckPassphrase;
+void layoutCheckInput(const char *text, int text_width, bool enable_edit,
+                      bool enable_done_yes, const char *confirm_input,
+                      const char *inputs_mismatched,
+                      const char *input_confirmed) {
+  layoutLast = layoutCheckInput;
   layoutSwipe();
 
   oledClear();
 
   if (enable_edit && enable_done_yes)
-    oledDrawString(0, 0 * 9, "Confirm passphrase:", 0);
+    oledDrawString(0, 0 * 9, confirm_input, 0);
   else if (enable_edit)
-    oledDrawString(0, 0 * 9, "Passphrases mismatched:", 0);
+    oledDrawString(0, 0 * 9, inputs_mismatched, 0);
   else
-    oledDrawString(0, 0 * 9, "Passphrase confirmed:", 0);
+    oledDrawString(0, 0 * 9, input_confirmed, 0);
 
-  oledDrawStringCenterMultiline(OLED_HEIGHT / 2 - 2, passphrase, 1, text_width);
+  oledDrawStringCenterMultiline(OLED_HEIGHT / 2 - 2, text, 1, text_width);
 
   if (enable_edit) {
     const char *btnNo = "Edit";
