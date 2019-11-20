@@ -118,7 +118,7 @@ _KEEPALIVE_INTERVAL_MS = const(80)  # interval between keepalive commands
 _CTAP_HID_TIMEOUT_MS = const(500)
 _U2F_CONFIRM_TIMEOUT_MS = const(10 * 1000)
 _FIDO2_CONFIRM_TIMEOUT_MS = const(60 * 1000)
-_POPUP_TIMEOUT_MS = const(4 * 1000) if not __debug__ else const(0)
+_POPUP_TIMEOUT_MS = const(4 * 1000)
 
 # CBOR object signing and encryption algorithms and keys
 _COSE_ALG_KEY = const(3)
@@ -561,6 +561,7 @@ class State:
     def __init__(self, cid: int, iface: io.HID) -> None:
         self.cid = cid
         self.iface = iface
+        self.finished = False
 
     def keepalive_status(self) -> Optional[int]:
         return None
@@ -668,10 +669,12 @@ class Fido2State(State):
     async def on_confirm(self) -> None:
         cmd = cbor_error(self.cid, _ERR_OPERATION_DENIED)
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
     async def on_decline(self) -> None:
         cmd = cbor_error(self.cid, _ERR_OPERATION_DENIED)
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
     async def on_timeout(self) -> None:
         await self.on_decline()
@@ -679,6 +682,7 @@ class Fido2State(State):
     async def on_cancel(self) -> None:
         cmd = cbor_error(self.cid, _ERR_KEEPALIVE_CANCEL)
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
 
 class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
@@ -731,6 +735,7 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
             if not store_resident_credential(self._cred):
                 cmd = cbor_error(self.cid, _ERR_KEY_STORE_FULL)
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
 
 class Fido2ConfirmExcluded(Fido2ConfirmMakeCredential):
@@ -740,6 +745,7 @@ class Fido2ConfirmExcluded(Fido2ConfirmMakeCredential):
     async def on_confirm(self) -> None:
         cmd = cbor_error(self.cid, _ERR_CREDENTIAL_EXCLUDED)
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
         text = Text("FIDO2 Register", ui.ICON_WRONG, ui.RED)
         text.bold("Already registered.")
@@ -813,11 +819,13 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
             cmd = cbor_error(self.cid, _ERR_OPERATION_DENIED)
 
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
 
 class Fido2ConfirmNoPin(State):
     def __init__(self, cid: int, iface: io.HID) -> None:
         super().__init__(cid, iface)
+        self.finished = True
 
     def timeout_ms(self) -> int:
         return _FIDO2_CONFIRM_TIMEOUT_MS
@@ -841,6 +849,7 @@ class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
     async def on_confirm(self) -> None:
         cmd = cbor_error(self.cid, _ERR_NO_CREDENTIALS)
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
         text = Text("FIDO2 Authenticate", ui.ICON_WRONG, ui.RED)
         text.bold("Not registered.")
@@ -865,6 +874,7 @@ class Fido2ConfirmReset(Fido2State):
         storage.resident_credentials.delete_all()
         cmd = Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]))
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
 
 class DialogManager:
@@ -909,7 +919,12 @@ class DialogManager:
         return True
 
     def set_state(self, state: State) -> bool:
-        if self.is_busy():
+        if self.workflow is not None:
+            if self.state is None or self.state.finished:
+                self.reset()
+            else:
+                return False
+        elif workflow.tasks:
             return False
 
         self.state = state
@@ -942,23 +957,24 @@ class DialogManager:
 
         try:
             workflow.on_start(self.workflow)
-            if await self.state.confirm_dialog():
-                self.result = _RESULT_CONFIRM
-            else:
-                self.result = _RESULT_DECLINE
+            try:
+                if await self.state.confirm_dialog():
+                    self.result = _RESULT_CONFIRM
+                else:
+                    self.result = _RESULT_DECLINE
+            finally:
+                if self.keepalive is not None:
+                    loop.close(self.keepalive)
+
+                if self.result == _RESULT_CONFIRM:
+                    await self.state.on_confirm()
+                elif self.result == _RESULT_CANCEL:
+                    await self.state.on_cancel()
+                elif self.result == _RESULT_TIMEOUT:
+                    await self.state.on_timeout()
+                else:
+                    await self.state.on_decline()
         finally:
-            if self.keepalive is not None:
-                loop.close(self.keepalive)
-
-            if self.result == _RESULT_CONFIRM:
-                await self.state.on_confirm()
-            elif self.result == _RESULT_CANCEL:
-                await self.state.on_cancel()
-            elif self.result == _RESULT_TIMEOUT:
-                await self.state.on_timeout()
-            else:
-                await self.state.on_decline()
-
             workflow.on_close(self.workflow)
             self.workflow = None
 
