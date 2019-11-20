@@ -908,7 +908,15 @@ class DialogManager:
     def is_busy(self) -> bool:
         if utime.ticks_ms() >= self.deadline:
             self.reset()
-        return bool(workflow.tasks or self.workflow)
+
+        if self.workflow is None:
+            return bool(workflow.tasks)
+
+        if self.state is None or self.state.finished:
+            self.reset()
+            return False
+
+        return True
 
     def compare(self, state: State) -> bool:
         if self.state != state:
@@ -919,12 +927,7 @@ class DialogManager:
         return True
 
     def set_state(self, state: State) -> bool:
-        if self.workflow is not None:
-            if self.state is None or self.state.finished:
-                self.reset()
-            else:
-                return False
-        elif workflow.tasks:
+        if self.is_busy():
             return False
 
         self.state = state
