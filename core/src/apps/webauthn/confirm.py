@@ -1,4 +1,4 @@
-from trezor import log, ui
+from trezor import ui
 from trezor.ui.text import text_center_trim_left, text_center_trim_right
 
 if False:
@@ -22,14 +22,21 @@ class ConfirmInfo:
         from trezor import res
         from apps.webauthn.knownapps import knownapps
 
-        try:
-            namepart = knownapps[rp_id_hash]["label"].lower().replace(" ", "_")
-            icon = res.load("apps/webauthn/res/icon_%s.toif" % namepart)
-        except Exception as e:
-            icon = res.load("apps/webauthn/res/icon_webauthn.toif")
-            if __debug__:
-                log.exception(__name__, e)
-        self.app_icon = icon
+        app_name = knownapps.get(rp_id_hash, {}).get(
+            "label", None
+        )  # type: Optional[str]
+        if app_name is not None:
+            resource = "apps/webauthn/res/icon_%s.toif" % app_name.lower().replace(
+                " ", "_"
+            )
+            try:
+                self.app_icon = res.load(resource)
+            except Exception:
+                pass
+            else:
+                return
+
+        self.app_icon = res.load("apps/webauthn/res/icon_webauthn.toif")
 
 
 class ConfirmContent(ui.Component):
