@@ -263,9 +263,13 @@ def combine_mnemonics(mnemonics: List[str]) -> Tuple[int, int, bytes, int]:
     if not mnemonics:
         raise MnemonicError("The list of mnemonics is empty.")
 
-    identifier, iteration_exponent, group_threshold, group_count, groups = _decode_mnemonics(
-        mnemonics
-    )
+    (
+        identifier,
+        iteration_exponent,
+        group_threshold,
+        group_count,
+        groups,
+    ) = _decode_mnemonics(mnemonics)
 
     if len(groups) != group_threshold:
         raise MnemonicError(
@@ -316,9 +320,13 @@ def decode_mnemonic(mnemonic: str) -> Share:
     tmp = _int_from_indices(
         mnemonic_data[_ID_EXP_LENGTH_WORDS : _ID_EXP_LENGTH_WORDS + 2]
     )
-    group_index, group_threshold, group_count, member_index, member_threshold = _int_to_indices(
-        tmp, 5, 4
-    )
+    (
+        group_index,
+        group_threshold,
+        group_count,
+        member_index,
+        member_threshold,
+    ) = _int_to_indices(tmp, 5, 4)
     value_data = mnemonic_data[_ID_EXP_LENGTH_WORDS + 2 : -_CHECKSUM_LENGTH_WORDS]
 
     if group_count < group_threshold:
@@ -585,7 +593,7 @@ def _encode_mnemonic(
 
 
 def _decode_mnemonics(
-    mnemonics: List[str]
+    mnemonics: List[str],
 ) -> Tuple[int, int, int, int, MnemonicGroups]:
     identifiers = set()
     iteration_exponents = set()

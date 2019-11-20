@@ -59,7 +59,7 @@ async def ensure_sd_card(ctx: wire.GenericContext) -> None:
 
 
 async def request_sd_salt(
-    ctx: wire.GenericContext = wire.DUMMY_CONTEXT
+    ctx: wire.GenericContext = wire.DUMMY_CONTEXT,
 ) -> Optional[bytearray]:
     if not storage.sd_salt.is_enabled():
         return None
