@@ -1,7 +1,6 @@
 from micropython import const
 
 from trezor import io, loop, res, ui
-from trezor.messages import PassphraseSourceType
 from trezor.ui import display
 from trezor.ui.button import Button, ButtonClear, ButtonConfirm
 from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, Swipe
@@ -246,25 +245,3 @@ class PassphraseKeyboard(ui.Layout):
 
     def create_tasks(self) -> Tuple[loop.Task, ...]:
         return self.handle_input(), self.handle_rendering(), self.handle_paging()
-
-
-class PassphraseSource(ui.Layout):
-    def __init__(self, content: ui.Component) -> None:
-        self.content = content
-
-        self.device = Button(ui.grid(8, n_y=4, n_x=4, cells_x=4), "Device")
-        self.device.on_click = self.on_device  # type: ignore
-
-        self.host = Button(ui.grid(12, n_y=4, n_x=4, cells_x=4), "Host")
-        self.host.on_click = self.on_host  # type: ignore
-
-    def dispatch(self, event: int, x: int, y: int) -> None:
-        self.content.dispatch(event, x, y)
-        self.device.dispatch(event, x, y)
-        self.host.dispatch(event, x, y)
-
-    def on_device(self) -> None:
-        raise ui.Result(PassphraseSourceType.DEVICE)
-
-    def on_host(self) -> None:
-        raise ui.Result(PassphraseSourceType.HOST)

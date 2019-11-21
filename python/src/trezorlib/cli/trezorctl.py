@@ -49,7 +49,6 @@ COMMAND_ALIASES = {
     "change-pin": settings.pin,
     "enable-passphrase": settings.passphrase_enable,
     "disable-passphrase": settings.passphrase_disable,
-    "set-passphrase-source": settings.passphrase_source,
     "wipe-device": device.wipe,
     "reset-device": device.setup,
     "recovery-device": device.recover,

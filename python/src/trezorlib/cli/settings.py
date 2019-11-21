@@ -16,14 +16,8 @@
 
 import click
 
-from .. import device, messages
+from .. import device
 from . import ChoiceType
-
-PASSPHRASE_SOURCE = {
-    "ask": messages.PassphraseSourceType.ASK,
-    "device": messages.PassphraseSourceType.DEVICE,
-    "host": messages.PassphraseSourceType.HOST,
-}
 
 ROTATION = {"north": 0, "east": 90, "south": 180, "west": 270}
 
@@ -145,10 +139,24 @@ def passphrase():
 
 
 @passphrase.command(name="enabled")
+@click.option("-f", "--force-on-device", is_flag=True)
+@click.option("-F", "--no-force-on-device", is_flag=True)
 @click.pass_obj
-def passphrase_enable(connect):
+def passphrase_enable(connect, force_on_device: bool, no_force_on_device: bool):
     """Enable passphrase."""
-    return device.apply_settings(connect(), use_passphrase=True)
+    if force_on_device and no_force_on_device:
+        raise ValueError(
+            "Only one option of --force-on-device/-no-force-on-device makes sense."
+        )
+    on_device = None
+    if force_on_device:
+        on_device = True
+    if no_force_on_device:
+        on_device = False
+
+    return device.apply_settings(
+        connect(), use_passphrase=True, passphrase_always_on_device=on_device
+    )
 
 
 @passphrase.command(name="disabled")
@@ -156,19 +164,3 @@ def passphrase_enable(connect):
 def passphrase_disable(connect):
     """Disable passphrase."""
     return device.apply_settings(connect(), use_passphrase=False)
-
-
-@passphrase.command(name="source")
-@click.argument("source", type=ChoiceType(PASSPHRASE_SOURCE))
-@click.pass_obj
-def passphrase_source(connect, source):
-    """Set passphrase source.
-
-    Configure how to enter passphrase on Trezor Model T. The options are:
-
-    \b
-    ask - always ask where to enter passphrase
-    device - always enter passphrase on device
-    host - always enter passphrase on host
-    """
-    return device.apply_settings(connect(), passphrase_source=source)
