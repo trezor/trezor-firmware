@@ -28,6 +28,7 @@
 #include "messages-management.pb.h"
 #include "messages-nem.pb.h"
 #include "messages-stellar.pb.h"
+#include "messages-vsys.pb.h"
 
 // message functions
 
@@ -132,5 +133,10 @@ void fsm_msgStellarAllowTrustOp(const StellarAllowTrustOp *msg);
 void fsm_msgStellarAccountMergeOp(const StellarAccountMergeOp *msg);
 void fsm_msgStellarManageDataOp(const StellarManageDataOp *msg);
 void fsm_msgStellarBumpSequenceOp(const StellarBumpSequenceOp *msg);
+
+// vsys
+void fsm_msgVsysGetAddress(const VsysGetAddress *msg);
+void fsm_msgVsysGetPublicKey(const VsysGetPublicKey *msg);
+void fsm_msgVsysSignTx(VsysSignTx *msg);
 
 #endif

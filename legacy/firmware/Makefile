@@ -34,6 +34,7 @@ OBJS += lisk.o
 OBJS += nem2.o
 OBJS += nem_mosaics.o
 OBJS += stellar.o
+OBJS += vsys.o
 endif
 
 OBJS += debug.o

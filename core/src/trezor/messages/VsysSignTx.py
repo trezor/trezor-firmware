@@ -4,10 +4,10 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
+        pass
 
 
 class VsysSignTx(p.MessageType):
@@ -20,13 +20,13 @@ class VsysSignTx(p.MessageType):
         api: int = None,
         opc: str = None,
         transactionType: int = None,
-        senderPublicKey: str = None,
+        senderPublicKey: bytes = None,
         amount: int = None,
         fee: int = None,
         feeScale: int = None,
         recipient: str = None,
         timestamp: int = None,
-        attachment: str = None,
+        attachment: bytes = None,
         txId: str = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
@@ -51,12 +51,12 @@ class VsysSignTx(p.MessageType):
             3: ('api', p.UVarintType, 0),  # required
             4: ('opc', p.UnicodeType, 0),  # required
             5: ('transactionType', p.UVarintType, 0),  # required
-            6: ('senderPublicKey', p.UnicodeType, 0),
+            6: ('senderPublicKey', p.BytesType, 0),
             7: ('amount', p.UVarintType, 0),
             8: ('fee', p.UVarintType, 0),  # required
             9: ('feeScale', p.UVarintType, 0),  # required
             10: ('recipient', p.UnicodeType, 0),
             11: ('timestamp', p.UVarintType, 0),  # required
-            12: ('attachment', p.UnicodeType, 0),
+            12: ('attachment', p.BytesType, 0),
             13: ('txId', p.UnicodeType, 0),
         }

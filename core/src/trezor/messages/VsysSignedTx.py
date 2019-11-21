@@ -4,10 +4,10 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
+        pass
 
 
 class VsysSignedTx(p.MessageType):
@@ -18,7 +18,7 @@ class VsysSignedTx(p.MessageType):
         protocol: str = None,
         api: int = None,
         opc: str = None,
-        signature: str = None,
+        signature: bytes = None,
     ) -> None:
         self.protocol = protocol
         self.api = api
@@ -31,5 +31,5 @@ class VsysSignedTx(p.MessageType):
             1: ('protocol', p.UnicodeType, 0),  # required
             2: ('api', p.UVarintType, 0),  # required
             3: ('opc', p.UnicodeType, 0),  # required
-            4: ('signature', p.UnicodeType, 0),
+            4: ('signature', p.BytesType, 0),
         }
