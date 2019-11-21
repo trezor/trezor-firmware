@@ -89,6 +89,7 @@ message Features {
     optional bool sd_protection = 33;           // is SD Protect enabled
     optional bool wipe_code_protection = 34;    // is wipe code protection enabled
     optional bytes session_id = 35;
+    optional bool passphrase_always_on_device = 36;  // device enforces passphrase entry on Trezor
 }
 
 /**
@@ -110,17 +111,10 @@ message ApplySettings {
     optional string label = 2;
     optional bool use_passphrase = 3;
     optional bytes homescreen = 4;
-    optional PassphraseSourceType passphrase_source = 5;
+//    optional PassphraseSourceType passphrase_source = 5;  DEPRECATED
     optional uint32 auto_lock_delay_ms = 6;
     optional uint32 display_rotation = 7;  // in degrees from North
-    /**
-    * Structure representing passphrase source
-    */
-    enum PassphraseSourceType {
-        ASK = 0;
-        DEVICE = 1;
-        HOST = 2;
-    }
+    optional bool passphrase_always_on_device = 8;  // do not prompt for passphrase, enforce device entry
 }
 
 /**

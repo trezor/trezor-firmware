@@ -24,7 +24,7 @@ _HOMESCREEN                = const(0x06)  # bytes
 _NEEDS_BACKUP              = const(0x07)  # bool (0x01 or empty)
 _FLAGS                     = const(0x08)  # int
 U2F_COUNTER                = const(0x09)  # int
-_PASSPHRASE_SOURCE         = const(0x0A)  # int
+_PASSPHRASE_ALWAYS_ON_DEVICE = const(0x0A)  # bool (0x01 or empty)
 _UNFINISHED_BACKUP         = const(0x0B)  # bool (0x01 or empty)
 _AUTOLOCK_DELAY_MS         = const(0x0C)  # int
 _NO_BACKUP                 = const(0x0D)  # bool (0x01 or empty)
@@ -143,21 +143,24 @@ def no_backup() -> bool:
     return common.get_bool(_NAMESPACE, _NO_BACKUP)
 
 
-def get_passphrase_source() -> int:
-    b = common.get(_NAMESPACE, _PASSPHRASE_SOURCE)
-    if b == b"\x01":
-        return 1
-    elif b == b"\x02":
-        return 2
+def get_passphrase_always_on_device() -> bool:
+    b = common.get(_NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE)
+    # backwards compatible for _PASSPHRASE_SOURCE.HOST = 2
+    if b == b"\x02":
+        return False
+    # backwards compatible for _PASSPHRASE_SOURCE.DEVICE = 1
+    # and also \x01 is TRUE_BYTE so it is future compatible as well
+    elif b == b"\x01":
+        return True
     else:
-        return 0
+        return False
 
 
 def load_settings(
     label: str = None,
     use_passphrase: bool = None,
     homescreen: bytes = None,
-    passphrase_source: int = None,
+    passphrase_always_on_device: bool = None,
     display_rotation: int = None,
 ) -> None:
     if label is not None:
@@ -170,9 +173,10 @@ def load_settings(
                 common.set(_NAMESPACE, _HOMESCREEN, homescreen, True)  # public
         else:
             common.set(_NAMESPACE, _HOMESCREEN, b"", True)  # public
-    if passphrase_source is not None:
-        if passphrase_source in (0, 1, 2):
-            common.set(_NAMESPACE, _PASSPHRASE_SOURCE, bytes([passphrase_source]))
+    if passphrase_always_on_device is not None:
+        common.set_bool(
+            _NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE, passphrase_always_on_device
+        )
     if display_rotation is not None:
         if display_rotation not in (0, 90, 180, 270):
             raise ValueError(

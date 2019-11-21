@@ -278,7 +278,6 @@ from . import NEMModificationType
 from . import NEMMosaicLevy
 from . import NEMSupplyChangeType
 from . import OutputScriptType
-from . import PassphraseSourceType
 from . import PinMatrixRequestType
 from . import RecoveryDeviceType
 from . import RequestType
