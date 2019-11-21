@@ -23,3 +23,4 @@ if not utils.BITCOIN_ONLY:
     U2F = 14  # type: Literal[14]
 Shamir = 15  # type: Literal[15]
 ShamirGroups = 16  # type: Literal[16]
+PassphraseEntry = 17  # type: Literal[17]

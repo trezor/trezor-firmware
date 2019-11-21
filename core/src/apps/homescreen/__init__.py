@@ -48,6 +48,7 @@ def get_features() -> Features:
             Capability.Crypto,
             Capability.Shamir,
             Capability.ShamirGroups,
+            Capability.PassphraseEntry,
         ]
     else:
         f.capabilities = [
@@ -67,6 +68,7 @@ def get_features() -> Features:
             Capability.U2F,
             Capability.Shamir,
             Capability.ShamirGroups,
+            Capability.PassphraseEntry,
         ]
     f.sd_card_present = io.SDCard().present()
     f.sd_protection = storage.sd_salt.is_enabled()
