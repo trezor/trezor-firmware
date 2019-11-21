@@ -421,42 +421,35 @@ bool protectPin(bool use_cached) {
     return true;
   }
 
-  if (!config_hasPin()) {
-    return false;
-  }
-
-  if (!session_isUseOnDeviceTextInputCached()) requestOnDeviceTextInput();
-
   static CONFIDENTIAL char pin[MAX_PIN_LEN + 1];
 
-  if (session_isUseOnDeviceTextInput()) {
+  if (config_hasPin()) {
     memzero(pin, sizeof(pin));
-    bool ret = true;
-    for (;;) {
-      if (ret)
-        requestPinDevice("Please enter current PIN", "on the next screen.",
-                         NULL, pin);
-      else
-        requestPinDevice("Wrong PIN.", "Please enter current PIN",
-                         "on the next screen.", pin);
-      ret = config_unlock(pin);
-      memzero(pin, sizeof(pin));
-      if (ret) return true;
-    }
-  } else {
-    requestPinComputer(PinMatrixRequestType_PinMatrixRequestType_Current,
-                       _("Please enter current PIN:"), pin);
-    if (!pin[0]) {
-      fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
-      return false;
+
+    if (!session_isUseOnDeviceTextInputCached()) {
+      requestOnDeviceTextInput();
     }
 
-    bool ret = config_unlock(pin);
-    if (!ret) {
-      fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+    if (session_isUseOnDeviceTextInput()) {
+      requestPinDevice("Please enter current PIN", "on the next screen.", NULL,
+                       pin);
+    } else {
+      requestPinComputer(PinMatrixRequestType_PinMatrixRequestType_Current,
+                         _("Please enter current PIN:"), pin);
+      if (!pin[0]) {
+        memzero(pin, sizeof(pin));
+        fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
+        return false;
+      }
     }
-    return ret;
   }
+
+  bool ret = config_unlock(pin);
+  memzero(pin, sizeof(pin));
+  if (!ret) {
+    fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+  }
+  return ret;
 }
 
 bool protectChangePin(bool removal) {
@@ -464,7 +457,9 @@ bool protectChangePin(bool removal) {
   static CONFIDENTIAL char new_pin[MAX_PIN_LEN + 1] = "";
   static CONFIDENTIAL char pin[MAX_PIN_LEN + 1];
 
-  if (!session_isUseOnDeviceTextInputCached()) requestOnDeviceTextInput();
+  if (!session_isUseOnDeviceTextInputCached()) {
+    requestOnDeviceTextInput();
+  }
 
   if (config_hasPin()) {
     if (session_isUseOnDeviceTextInput()) {
@@ -725,7 +720,9 @@ bool protectPassphrase(void) {
   }
 
   bool result;
-  if (!session_isUseOnDeviceTextInputCached()) requestOnDeviceTextInput();
+  if (!session_isUseOnDeviceTextInputCached()) {
+    requestOnDeviceTextInput();
+  }
   if (session_isUseOnDeviceTextInput())
     result = protectPassphraseDevice();
   else
