@@ -477,9 +477,12 @@ void next_word(void) {
   recovery_request();
 }
 
-bool confirmWord(const char *word, bool enable_edit, bool enable_done) {
-  layoutCheckInput(word, WORD_WIDTH, enable_edit, enable_done,
-                   "Confirm word:", "Word not found:", "Word confirmed:");
+bool confirmWord(const char *word, const char *desc, bool enable_edit,
+                 bool enable_done) {
+  char str[256];
+  sprintf(str, "Confirm %s:", desc);
+  layoutCheckInput(word, WORD_WIDTH, enable_edit, enable_done, str,
+                   "Word not found:", NULL);
 
   buttonUpdate();
 
@@ -515,6 +518,9 @@ void input_seed(void) {
     for (;;) {
       int begin, end;
       for (;;) {
+        if (strlen(prefix) >= 4) {
+          prefix[3] = 0;
+        }
         bool done = inputText(prefix, 4, Characters,
                               sizeof(Characters) / sizeof(Characters[0]),
                               CHAR_DONE, WORD_WIDTH, false, false);
@@ -522,10 +528,10 @@ void input_seed(void) {
         if ((done && begin >= 0) || end == begin + 1) {
           break;
         } else if (begin < 0) {
-          confirmWord(prefix, true, false);
+          confirmWord(prefix, desc, true, false);
         }
       }
-      if (confirmWord(wordlist[begin], true, true)) {
+      if (confirmWord(wordlist[begin], desc, true, true)) {
         strcpy(words[word_index], wordlist[begin]);
         break;
       }
