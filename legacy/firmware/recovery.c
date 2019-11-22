@@ -21,9 +21,12 @@
 #include "recovery.h"
 #include <ctype.h>
 #include "bip39.h"
+#include "bip39_english.h"
+#include "buttons.h"
 #include "config.h"
 #include "fsm.h"
 #include "gettext.h"
+#include "input.h"
 #include "layout2.h"
 #include "memzero.h"
 #include "messages.h"
@@ -33,6 +36,10 @@
 #include "recovery-table.h"
 #include "rng.h"
 #include "usb.h"
+
+#define MAX_WORD_LEN 11
+#define WORD_SIZE (MAX_WORD_LEN + 1)
+#define WORD_WIDTH (MAX_WORD_LEN * CHAR_AND_SPACE_WIDTH)
 
 /* number of words expected in the new seed */
 static uint32_t word_count;
@@ -56,7 +63,7 @@ static bool enforce_wordlist;
 /* For scrambled recovery Trezor may ask for faked words if
  * seed is short.  This contains the fake word.
  */
-static char fake_word[12];
+static char fake_word[WORD_SIZE];
 
 /* Word position in the seed that we are currently asking for.
  * This is 0 if we ask for a fake word.  Only for scrambled recovery.
@@ -75,7 +82,7 @@ static char word_order[24];
 
 /* The recovered seed.  This is filled during the recovery process.
  */
-static char words[24][12];
+static char words[24][WORD_SIZE];
 
 /* The "pincode" of the current word.  This is basically the "pin"
  * that the user would have entered for the current word if the words
@@ -231,7 +238,7 @@ static void recovery_done(void) {
  *  memcmp(last, "last + 1", prefixlen) != 0
  *  first[prefixlen-2] == last[prefixlen-2]  except for range WI-Z.
  */
-static void add_choice(char choice[12], int prefixlen, const char *first,
+static void add_choice(char choice[WORD_SIZE], int prefixlen, const char *first,
                        const char *last) {
   // assert 1 <= prefixlen <= 4
   char *dest = choice;
@@ -269,7 +276,8 @@ static void add_choice(char choice[12], int prefixlen, const char *first,
  * use 2x3 layout, otherwise 3x3 layout.  Also generates a random
  * scrambling and stores it in word_matrix.
  */
-static void display_choices(bool twoColumn, char choices[9][12], int num) {
+static void display_choices(bool twoColumn, char choices[9][WORD_SIZE],
+                            int num) {
   const int nColumns = twoColumn ? 2 : 3;
   const int displayedChoices = nColumns * 3;
   for (int i = 0; i < displayedChoices; i++) {
@@ -323,7 +331,7 @@ static void display_choices(bool twoColumn, char choices[9][12], int num) {
  * Generates a new matrix and requests the next pin.
  */
 static void next_matrix(void) {
-  char word_choices[9][12] = {0};
+  char word_choices[9][WORD_SIZE] = {0};
   uint32_t idx = 0, num = 0;
   bool last = (word_index % 4) == 3;
 
@@ -353,7 +361,7 @@ static void next_matrix(void) {
       idx = TABLE1(word_pincode);
       num = TABLE1(word_pincode + 1) - idx;
       for (uint32_t i = 0; i < num; i++) {
-        add_choice(word_choices[i], (word_table2[idx + i] >> 12),
+        add_choice(word_choices[i], (word_table2[idx + i] >> WORD_SIZE),
                    mnemonic_get_word(TABLE2(idx + i)),
                    mnemonic_get_word(TABLE2(idx + i + 1) - 1));
       }
@@ -366,7 +374,7 @@ static void next_matrix(void) {
       idx = word_pincode * 9;
       num = 9;
       for (uint32_t i = 0; i < num; i++) {
-        add_choice(word_choices[i], (word_table1[idx + i] >> 12),
+        add_choice(word_choices[i], (word_table1[idx + i] >> WORD_SIZE),
                    mnemonic_get_word(TABLE2(TABLE1(idx + i))),
                    mnemonic_get_word(TABLE2(TABLE1(idx + i + 1)) - 1));
       }
@@ -469,6 +477,63 @@ void next_word(void) {
   recovery_request();
 }
 
+bool confirmWord(const char *word, bool enable_edit, bool enable_done) {
+  layoutCheckInput(word, WORD_WIDTH, enable_edit, enable_done,
+                   "Confirm word:", "Word not found:", "Word confirmed:");
+
+  buttonUpdate();
+
+  for (;;) {
+    usbSleep(5);
+    buttonUpdate();
+    if (enable_done && button.YesUp) return true;
+    if (enable_edit && button.NoUp) return false;
+  }
+}
+
+void input_seed(void) {
+  const char Characters[] = {
+      'a',         'b',       'c', 'd', 'e', 'f', 'g', 'h', 'i', CHAR_BCKSPC,
+      CHAR_DONE,   'j',       'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+      CHAR_BCKSPC, CHAR_DONE, 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+      CHAR_BCKSPC, CHAR_DONE};
+
+  char prefix[5];
+  for (word_index = 0; word_index < word_count; ++word_index) {
+    memzero(prefix, sizeof(prefix));
+    char desc[] = "##th word";
+    int nr = word_index + 1;
+    format_number(desc, nr);
+    layoutDialogSwipe(&bmp_icon_info, NULL, "Next", NULL, _("Please enter the"),
+                      (nr < 10 ? desc + 1 : desc), _("of your mnemonic"),
+                      _("on the next screen."), NULL, NULL);
+    for (;;) {
+      usbSleep(5);
+      buttonUpdate();
+      if (button.YesUp) break;
+    }
+    for (;;) {
+      int begin, end;
+      for (;;) {
+        bool done = inputText(prefix, 4, Characters,
+                              sizeof(Characters) / sizeof(Characters[0]),
+                              CHAR_DONE, WORD_WIDTH, false, false);
+        begin = mnemonic_find_words(prefix, strlen(prefix), &end);
+        if ((done && begin >= 0) || end == begin + 1) {
+          break;
+        } else if (begin < 0) {
+          confirmWord(prefix, true, false);
+        }
+      }
+      if (confirmWord(wordlist[begin], true, true)) {
+        strcpy(words[word_index], wordlist[begin]);
+        break;
+      }
+    }
+  }
+  recovery_done();
+}
+
 void recovery_init(uint32_t _word_count, bool passphrase_protection,
                    bool pin_protection, const char *language, const char *label,
                    bool _enforce_wordlist, uint32_t type, uint32_t u2f_counter,
@@ -502,9 +567,13 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
     config_setU2FCounter(u2f_counter);
   }
 
-  if ((type & RecoveryDeviceType_RecoveryDeviceType_Matrix) != 0) {
+  requestOnDeviceTextInput();
+
+  word_index = 0;
+  if (session_isUseOnDeviceTextInput()) {
+    input_seed();
+  } else if ((type & RecoveryDeviceType_RecoveryDeviceType_Matrix) != 0) {
     awaiting_word = 2;
-    word_index = 0;
     word_pincode = 0;
     next_matrix();
   } else {
@@ -516,7 +585,6 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
     }
     random_permute(word_order, 24);
     awaiting_word = 1;
-    word_index = 0;
     next_word();
   }
 }

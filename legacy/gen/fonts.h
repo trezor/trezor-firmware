@@ -15,6 +15,12 @@
 
 #define FONT_DOUBLE 0x80
 
+#define CHAR_BCKSPC '\x08'  // Backspace
+#define CHAR_SPACE '\x09'
+#define CHAR_DONE '\x06'
+
+#define CHAR_AND_SPACE_WIDTH (5 + 1)
+
 extern const uint8_t *const font_data[FONTS][128];
 
 int fontCharWidth(uint8_t font, uint8_t c);

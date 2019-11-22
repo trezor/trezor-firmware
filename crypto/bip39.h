@@ -45,6 +45,7 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
                                                 uint32_t total));
 
 int mnemonic_find_word(const char *word);
+int mnemonic_find_words(const char *prefix, int len, int *end);
 const char *mnemonic_complete_word(const char *prefix, int len);
 const char *mnemonic_get_word(int index);
 uint32_t mnemonic_word_completion_mask(const char *prefix, int len);

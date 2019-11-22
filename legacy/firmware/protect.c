@@ -23,6 +23,7 @@
 #include "debug.h"
 #include "fsm.h"
 #include "gettext.h"
+#include "input.h"
 #include "layout2.h"
 #include "memory.h"
 #include "memzero.h"
@@ -36,171 +37,14 @@
 
 #define MAX_WRONG_PINS 15
 
-#define BACKSPACE '\x08'
-#define SPACE '\x09'
-#define DONE '\x06'
-
-#define INPUT_DONE -1
-
-#define CHAR_AND_SPACE_WIDTH (5 + 1)
-
 #define NUM_PASSPHRASE_LINES 3
 #define PASSPHRASE_WIDTH \
   ((MAX_PASSPHRASE_LEN + 1) / NUM_PASSPHRASE_LINES * CHAR_AND_SPACE_WIDTH)
 
 #define PIN_WIDTH (MAX_PIN_LEN * CHAR_AND_SPACE_WIDTH)
 
-#define CARET_SHOW 80
-#define CARET_CYCLE (CARET_SHOW * 2)
-
 bool protectAbortedByCancel = false;
 bool protectAbortedByInitialize = false;
-
-void buttonCheckRepeat(bool *yes, bool *no, bool *confirm) {
-  *yes = false;
-  *no = false;
-  *confirm = false;
-
-  const int Threshold0 = 20;
-  const int Thresholds[] = {Threshold0, 80, 20, 18, 16, 14, 12, 10, 8, 6, 4};
-  const int MaxThresholdLevel = sizeof(Thresholds) / sizeof(Thresholds[0]) - 1;
-
-  static int yesthreshold = Threshold0;
-  static int nothreshold = Threshold0;
-
-  static int yeslevel = 0;
-  static int nolevel = 0;
-
-  static bool both = false;
-
-  usbSleep(5);
-  buttonUpdate();
-
-  if (both) {
-    if (!button.YesDown && !button.NoDown) {
-      both = false;
-      yeslevel = 0;
-      nolevel = 0;
-      yesthreshold = Thresholds[0];
-      nothreshold = Thresholds[0];
-    }
-  } else if ((button.YesDown && button.NoDown) ||
-             (button.YesUp && button.NoDown) ||
-             (button.YesDown && button.NoUp) || (button.YesUp && button.NoUp)) {
-    if (!yeslevel && !nolevel) {
-      both = true;
-      *confirm = true;
-    }
-  } else {
-    if (button.YesUp) {
-      if (!yeslevel) *yes = true;
-      yeslevel = 0;
-      yesthreshold = Thresholds[0];
-    } else if (button.YesDown >= yesthreshold) {
-      if (yeslevel < MaxThresholdLevel) yeslevel++;
-      yesthreshold += Thresholds[yeslevel];
-      *yes = true;
-    }
-    if (button.NoUp) {
-      if (!nolevel) *no = true;
-      nolevel = 0;
-      nothreshold = Thresholds[0];
-    } else if (button.NoDown >= nothreshold) {
-      if (nolevel < MaxThresholdLevel) nolevel++;
-      nothreshold += Thresholds[nolevel];
-      *no = true;
-    }
-  }
-}
-
-void buttonWaitForYesUp(void) {
-  buttonUpdate();
-
-  for (;;) {
-    usbSleep(5);
-    buttonUpdate();
-    if (button.YesUp) break;
-  }
-}
-
-void buttonWaitForIdle(void) {
-  buttonUpdate();
-
-  for (;;) {
-    usbSleep(5);
-    buttonUpdate();
-    if (!button.YesDown && !button.YesUp && !button.NoDown && !button.NoUp)
-      break;
-  }
-}
-
-void requestOnDeviceTextInput(void) {
-  layoutDialog(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-               _("Do you like to use"), _("on-device text input?"), NULL, NULL,
-               NULL, NULL);
-
-  buttonUpdate();
-
-  for (;;) {
-    usbSleep(5);
-    buttonUpdate();
-    if (button.YesUp || button.NoUp) break;
-  }
-
-  layoutSwipe();
-
-  session_setUseOnDeviceTextInput(button.YesUp);
-}
-
-int findCharIndex(const char entries[], char needle, int numtotal,
-                  int startindex, bool forward) {
-  int index = startindex;
-  int step = forward ? 1 : -1;
-  while (index >= 0 && index < numtotal) {
-    if (entries[index] == needle) return index;
-    index += step;
-  }
-  return startindex;
-}
-
-int inputTextScroll(char *text, int *textcharindex, int maxtextcharindex,
-                    const char entries[], int textwidth, int entryindex,
-                    int numtotal, int numscreen, int horizontalpadding,
-                    const int groups[], int numgroup, int numskipingroups,
-                    int *caret) {
-  for (;; *caret = (*caret + 1) % CARET_CYCLE) {
-    bool yes, no, confirm;
-    buttonCheckRepeat(&yes, &no, &confirm);
-
-    if (confirm) {
-      buttonWaitForIdle();
-
-      if (entries[entryindex] == BACKSPACE) {
-        if (*textcharindex > 0) {
-          --(*textcharindex);
-          text[*textcharindex] = 0;
-        }
-      } else if (entries[entryindex] == DONE) {
-        return INPUT_DONE;
-      } else {
-        if (*textcharindex < maxtextcharindex) {
-          text[*textcharindex] = entries[entryindex];
-          ++(*textcharindex);
-        }
-        return entryindex;
-      }
-
-      entryindex = random32() % numtotal;
-    } else {
-      if (yes) entryindex = (entryindex + 1) % numtotal;
-      if (no) entryindex = (entryindex - 1 + numtotal) % numtotal;
-    }
-
-    layoutScrollInput(text, textwidth, numtotal, numscreen, entryindex, entries,
-                      horizontalpadding, numgroup, groups, numskipingroups,
-                      *caret < CARET_SHOW);
-  }
-}
 
 bool protectButton(ButtonRequestType type, bool confirm_only) {
   ButtonRequest resp = {0};
@@ -358,33 +202,17 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress,
   return secfalse;
 }
 
-void userEnterPin(char pin[]) {
-  const char Entries[] = {
-      '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', BACKSPACE, DONE,
+void inputPin(char pin[]) {
+  const char Characters[] = {
+      '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', CHAR_BCKSPC, CHAR_DONE,
   };
-  const int EntriesGroups[] = {0, 12};
 
-  int numentries = sizeof(Entries) / sizeof(Entries[0]);
-  int numentriesgroups = sizeof(EntriesGroups) / sizeof(EntriesGroups[0]);
-
-  usbSleep(5);
-  buttonUpdate();
-
-  int pincharindex = strlen(pin);
-  int caret = 0;
-
-  for (;;) {
-    int entryindex = random32() % numentries;
-    if (pincharindex >= MAX_PIN_LEN)
-      entryindex = findCharIndex(Entries, DONE, numentries, entryindex, true);
-    entryindex = inputTextScroll(pin, &pincharindex, MAX_PIN_LEN, Entries,
-                                 PIN_WIDTH, entryindex, numentries, 9, 9,
-                                 EntriesGroups, numentriesgroups, 2, &caret);
-    if (entryindex == INPUT_DONE && pincharindex > 0) return;
-  }
+  inputText(pin, MAX_PIN_LEN, Characters,
+            sizeof(Characters) / sizeof(Characters[0]), CHAR_DONE, PIN_WIDTH,
+            true, false);
 }
 
-bool userCheckPin(char pin[]) {
+bool confirmPin(char pin[]) {
   layoutCheckInput(pin, PIN_WIDTH, true, true, "Confirm PIN:", NULL, NULL);
 
   buttonUpdate();
@@ -407,10 +235,10 @@ void requestPinDevice(const char *line1, const char *line2, const char *line3,
   layoutSwipe();
 
   for (;;) {
-    userEnterPin(pin);
+    inputPin(pin);
     layoutSwipe();
 
-    if (userCheckPin(pin)) break;
+    if (confirmPin(pin)) break;
 
     oledSwipeRight();
   }
@@ -579,51 +407,40 @@ bool protectPassphraseComputer(void) {
   return result;
 }
 
-void userEnterPassphrase(char *passphrase) {
-  const char Entries[] = {
-      'a',       'b',       'c',       'd',       'e',       'f',    'g',
-      'h',       'i',       BACKSPACE, DONE,      'j',       'k',    'l',
-      'm',       'n',       'o',       'p',       'q',       'r',    BACKSPACE,
-      DONE,      's',       't',       'u',       'v',       'w',    'x',
-      'y',       'z',       SPACE,     BACKSPACE, DONE,      'A',    'B',
-      'C',       'D',       'E',       'F',       'G',       'H',    'I',
-      BACKSPACE, DONE,      'J',       'K',       'L',       'M',    'N',
-      'O',       'P',       'Q',       'R',       BACKSPACE, DONE,   'S',
-      'T',       'U',       'V',       'W',       'X',       'Y',    'Z',
-      SPACE,     BACKSPACE, DONE,      '1',       '2',       '3',    '4',
-      '5',       '6',       '7',       '8',       '9',       '0',    BACKSPACE,
-      DONE,      '!',       '@',       '#',       '$',       '\x25', '^',
-      '&',       '*',       '(',       ')',       BACKSPACE, DONE,   '`',
-      '-',       '=',       '[',       ']',       '\\',      ';',    '\'',
-      ',',       '.',       '/',       BACKSPACE, DONE,      '~',    '_',
-      '+',       '{',       '}',       '|',       ':',       '\'',   '<',
-      '>',       '?',       BACKSPACE, DONE};
-  const int EntriesGroups[] = {0, 11, 22, 33, 44, 55, 66, 78, 90, 103, 116};
+void inputPassphrase(char *passphrase) {
+  const char Characters[] = {
+      'a',         'b',         'c',         'd',         'e',
+      'f',         'g',         'h',         'i',         CHAR_BCKSPC,
+      CHAR_DONE,   'j',         'k',         'l',         'm',
+      'n',         'o',         'p',         'q',         'r',
+      CHAR_BCKSPC, CHAR_DONE,   's',         't',         'u',
+      'v',         'w',         'x',         'y',         'z',
+      CHAR_SPACE,  CHAR_BCKSPC, CHAR_DONE,   'A',         'B',
+      'C',         'D',         'E',         'F',         'G',
+      'H',         'I',         CHAR_BCKSPC, CHAR_DONE,   'J',
+      'K',         'L',         'M',         'N',         'O',
+      'P',         'Q',         'R',         CHAR_BCKSPC, CHAR_DONE,
+      'S',         'T',         'U',         'V',         'W',
+      'X',         'Y',         'Z',         CHAR_SPACE,  CHAR_BCKSPC,
+      CHAR_DONE,   '1',         '2',         '3',         '4',
+      '5',         '6',         '7',         '8',         '9',
+      '0',         CHAR_BCKSPC, CHAR_DONE,   '!',         '@',
+      '#',         '$',         '\x25',      '^',         '&',
+      '*',         '(',         ')',         CHAR_BCKSPC, CHAR_DONE,
+      '`',         '-',         '=',         '[',         ']',
+      '\\',        ';',         '\'',        ',',         '.',
+      '/',         CHAR_BCKSPC, CHAR_DONE,   '~',         '_',
+      '+',         '{',         '}',         '|',         ':',
+      '\'',        '<',         '>',         '?',         CHAR_BCKSPC,
+      CHAR_DONE};
 
-  int numentries = sizeof(Entries) / sizeof(Entries[0]);
-  int numentriesgroups = sizeof(EntriesGroups) / sizeof(EntriesGroups[0]);
-
-  usbSleep(5);
-  buttonUpdate();
-
-  int passphrasecharindex = strlen(passphrase);
-  int caret = 0;
-
-  for (;;) {
-    int entryindex = random32() % numentries;
-    if (passphrasecharindex >= MAX_PASSPHRASE_LEN)
-      entryindex = findCharIndex(Entries, DONE, numentries, entryindex,
-                                 entryindex < numentries / 2);
-    entryindex =
-        inputTextScroll(passphrase, &passphrasecharindex, MAX_PASSPHRASE_LEN,
-                        Entries, PASSPHRASE_WIDTH, entryindex, numentries, 9, 9,
-                        EntriesGroups, numentriesgroups, 2, &caret);
-    if (entryindex == INPUT_DONE) return;
-  }
+  inputText(passphrase, MAX_PASSPHRASE_LEN, Characters,
+            sizeof(Characters) / sizeof(Characters[0]), CHAR_DONE,
+            PASSPHRASE_WIDTH, true, true);
 }
 
-bool userCheckPassphrase(const char *passphrase, bool enable_edit,
-                         bool enable_done) {
+bool confirmPassphrase(const char *passphrase, bool enable_edit,
+                       bool enable_done) {
   layoutCheckInput(passphrase, PASSPHRASE_WIDTH, enable_edit, enable_done,
                    "Confirm passphrase:", "Passphrases mismatched:",
                    "Passphrase confirmed:");
@@ -669,9 +486,9 @@ bool protectPassphraseDevice(void) {
   layoutSwipe();
 
   for (;;) {
-    userEnterPassphrase(passphrase);
+    inputPassphrase(passphrase);
 
-    if (userCheckPassphrase(passphrase, true, true)) break;
+    if (confirmPassphrase(passphrase, true, true)) break;
 
     oledSwipeRight();
   }
@@ -688,21 +505,21 @@ bool protectPassphraseDevice(void) {
     layoutSwipe();
 
     for (;;) {
-      userEnterPassphrase(passphrase2);
+      inputPassphrase(passphrase2);
 
       if (strcmp(passphrase, passphrase2) == 0) break;
 
-      userCheckPassphrase(passphrase2, true, false);
+      confirmPassphrase(passphrase2, true, false);
       oledSwipeRight();
     }
 
     memzero(passphrase2, sizeof(passphrase2));
   }
 
-  userCheckPassphrase(passphrase, false, true);
+  confirmPassphrase(passphrase, false, true);
 
   for (int i = 0; i < MAX_PASSPHRASE_LEN + 1 && passphrase[i]; ++i)
-    if (passphrase[i] == SPACE) passphrase[i] = ' ';
+    if (passphrase[i] == CHAR_SPACE) passphrase[i] = ' ';
 
   session_cachePassphrase(passphrase);
   memzero(passphrase, sizeof(passphrase));

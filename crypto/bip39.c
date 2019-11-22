@@ -246,15 +246,50 @@ int mnemonic_find_word(const char *word) {
   return -1;
 }
 
-const char *mnemonic_complete_word(const char *prefix, int len) {
-  // we need to perform linear search,
-  // because we want to return the first match
-  for (const char *const *w = wordlist; *w != 0; w++) {
-    if (strncmp(*w, prefix, len) == 0) {
-      return *w;
+int mnemonic_find_words(const char *prefix, int len, int *end) {
+  int lo = 0, hi = BIP39_WORDS - 1, mid;
+  while (lo <= hi) {
+    mid = lo + (hi - lo) / 2;
+    int cmp = strncmp(prefix, wordlist[mid], len);
+    if (cmp == 0) {
+      break;
+    }
+    if (cmp > 0) {
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
     }
   }
-  return NULL;
+  if (lo <= hi) {
+    if (end != NULL) {
+      int tmp = mid;
+      while (tmp < BIP39_WORDS - 1) {
+        if (strncmp(prefix, wordlist[tmp + 1], len) == 0) {
+          ++tmp;
+        } else {
+          break;
+        }
+      }
+      *end = tmp + 1;
+    }
+    int tmp = mid;
+    while (tmp > 0) {
+      if (strncmp(prefix, wordlist[tmp - 1], len) == 0) {
+        --tmp;
+      } else {
+        break;
+      }
+    }
+    return tmp;
+  } else {
+    *end = -1;
+    return -1;
+  }
+}
+
+const char *mnemonic_complete_word(const char *prefix, int len) {
+  int index = mnemonic_find_words(prefix, len, NULL);
+  return index >= 0 ? wordlist[index] : NULL;
 }
 
 const char *mnemonic_get_word(int index) {

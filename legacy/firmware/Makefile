@@ -19,6 +19,7 @@ OBJS += fsm.o
 OBJS += coins.o
 OBJS += coin_info.o
 OBJS += transaction.o
+OBJS += input.o
 OBJS += protect.o
 OBJS += layout2.o
 OBJS += recovery.o
