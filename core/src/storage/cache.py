@@ -8,7 +8,7 @@ _cached_seed_without_passphrase = None  # type: Optional[bytes]  # Needed for SL
 _cached_session_id = None  # type: Optional[bytes]
 
 
-def get_session_id() -> Optional[bytes]:
+def get_session_id() -> bytes:
     global _cached_session_id
     if not _cached_session_id:
         _cached_session_id = random.bytes(32)
