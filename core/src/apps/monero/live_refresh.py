@@ -1,6 +1,6 @@
 import gc
 
-from storage.cache import get_passphrase_fprint
+import storage.cache
 from trezor import log
 from trezor.messages import MessageType
 from trezor.messages.MoneroLiveRefreshFinalAck import MoneroLiveRefreshFinalAck
@@ -49,10 +49,10 @@ async def _init_step(
         ctx, misc.validate_full_path, keychain, msg.address_n, CURVE
     )
 
-    passphrase_fprint = get_passphrase_fprint()
-    if live_refresh_token() != passphrase_fprint:
+    fingerprint = storage.cache.get_session_id()[:4]
+    if live_refresh_token() != fingerprint:
         await confirms.require_confirm_live_refresh(ctx)
-        live_refresh_token(passphrase_fprint)
+        live_refresh_token(fingerprint)
 
     s.creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
 
