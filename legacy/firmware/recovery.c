@@ -477,12 +477,12 @@ void next_word(void) {
   recovery_request();
 }
 
-bool confirmWord(const char *word, const char *desc, bool enable_edit,
-                 bool enable_done) {
+bool confirmWord(const char *word, const char *desc, const char *input_invalid,
+                 bool enable_edit, bool enable_done) {
   char str[256];
   sprintf(str, "Confirm %s:", desc);
   layoutCheckInput(word, WORD_WIDTH, enable_edit, enable_done, str,
-                   "Word not found:", NULL);
+                   input_invalid, NULL);
 
   buttonUpdate();
 
@@ -518,22 +518,28 @@ void input_seed(void) {
     for (;;) {
       int begin, end;
       for (;;) {
-        if (strlen(prefix) >= 4) {
-          prefix[3] = 0;
-        }
-        bool done = inputText(prefix, 4, Characters,
-                              sizeof(Characters) / sizeof(Characters[0]),
-                              CHAR_DONE, WORD_WIDTH, false, false);
+        bool done_entered = inputText(
+            prefix, 4, Characters, sizeof(Characters) / sizeof(Characters[0]),
+            CHAR_DONE, WORD_WIDTH, false, false);
         begin = mnemonic_find_words(prefix, strlen(prefix), &end);
-        if ((done && begin >= 0) || end == begin + 1) {
+        if (end == begin + 1) {
           break;
+        } else if (done_entered && begin >= 0) {
+          if (strlen(wordlist[begin]) == strlen(prefix)) {
+            break;
+          } else {
+            confirmWord(prefix, desc, "More letters needed:", true, false);
+          }
         } else if (begin < 0) {
-          confirmWord(prefix, desc, true, false);
+          confirmWord(prefix, desc, "Word not found:", true, false);
+          prefix[strlen(prefix) - 1] = 0;
         }
       }
-      if (confirmWord(wordlist[begin], desc, true, true)) {
+      if (confirmWord(wordlist[begin], desc, "", true, true)) {
         strcpy(words[word_index], wordlist[begin]);
         break;
+      } else {
+        prefix[strlen(prefix) - 1] = 0;
       }
     }
   }

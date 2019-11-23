@@ -315,8 +315,7 @@ void layoutScrollInput(const char *text, int text_width, int num_total,
 
 void layoutCheckInput(const char *text, int text_width, bool enable_edit,
                       bool enable_done_yes, const char *confirm_input,
-                      const char *inputs_mismatched,
-                      const char *input_confirmed) {
+                      const char *input_invalid, const char *input_confirmed) {
   layoutLast = layoutCheckInput;
   layoutSwipe();
 
@@ -325,7 +324,7 @@ void layoutCheckInput(const char *text, int text_width, bool enable_edit,
   if (enable_edit && enable_done_yes)
     oledDrawString(0, 0 * 9, confirm_input, 0);
   else if (enable_edit)
-    oledDrawString(0, 0 * 9, inputs_mismatched, 0);
+    oledDrawString(0, 0 * 9, input_invalid, 0);
   else
     oledDrawString(0, 0 * 9, input_confirmed, 0);
 
