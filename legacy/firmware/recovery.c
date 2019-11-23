@@ -39,7 +39,7 @@
 
 #define MAX_WORD_LEN 11
 #define WORD_SIZE (MAX_WORD_LEN + 1)
-#define WORD_WIDTH (MAX_WORD_LEN * CHAR_AND_SPACE_WIDTH)
+#define WORD_WIDTH (MAX_WORD_LEN * CHAR_FULL_WIDTH)
 
 /* number of words expected in the new seed */
 static uint32_t word_count;

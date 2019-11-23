@@ -67,20 +67,28 @@ void buttonCheckRepeat(bool *yes, bool *no, bool *confirm) {
     }
   } else {
     if (button.YesUp) {
-      if (!yeslevel) *yes = true;
+      if (!yeslevel) {
+        *yes = true;
+      }
       yeslevel = 0;
       yesthreshold = Thresholds[0];
     } else if (button.YesDown >= yesthreshold) {
-      if (yeslevel < MaxThresholdLevel) ++yeslevel;
+      if (yeslevel < MaxThresholdLevel) {
+        ++yeslevel;
+      }
       yesthreshold += Thresholds[yeslevel];
       *yes = true;
     }
     if (button.NoUp) {
-      if (!nolevel) *no = true;
+      if (!nolevel) {
+        *no = true;
+      }
       nolevel = 0;
       nothreshold = Thresholds[0];
     } else if (button.NoDown >= nothreshold) {
-      if (nolevel < MaxThresholdLevel) ++nolevel;
+      if (nolevel < MaxThresholdLevel) {
+        ++nolevel;
+      }
       nothreshold += Thresholds[nolevel];
       *no = true;
     }
@@ -93,7 +101,9 @@ void buttonWaitForYesUp(void) {
   for (;;) {
     usbSleep(5);
     buttonUpdate();
-    if (button.YesUp) break;
+    if (button.YesUp) {
+      break;
+    }
   }
 }
 
@@ -103,8 +113,9 @@ void buttonWaitForIdle(void) {
   for (;;) {
     usbSleep(5);
     buttonUpdate();
-    if (!button.YesDown && !button.YesUp && !button.NoDown && !button.NoUp)
+    if (!button.YesDown && !button.YesUp && !button.NoDown && !button.NoUp) {
       break;
+    }
   }
 }
 
@@ -118,7 +129,9 @@ void requestOnDeviceTextInput(void) {
   for (;;) {
     usbSleep(5);
     buttonUpdate();
-    if (button.YesUp || button.NoUp) break;
+    if (button.YesUp || button.NoUp) {
+      break;
+    }
   }
 
   layoutSwipe();
@@ -128,12 +141,19 @@ void requestOnDeviceTextInput(void) {
 
 int findCharIndex(const char entries[], char needle, int numtotal,
                   int startindex, bool forward) {
-  if (numtotal <= 1 || entries[startindex] == needle) return startindex;
+  if (startindex < 0 || startindex >= numtotal) {
+    return 0;
+  }
+  if (numtotal <= 1 || entries[startindex] == needle) {
+    return startindex;
+  }
   int step = forward ? 1 : -1;
   int index = (startindex + step + numtotal) % numtotal;
   while (index != startindex) {
-    if (entries[index] == needle) return index;
-    index += step;
+    if (entries[index] == needle) {
+      return index;
+    }
+    index = (index + step + numtotal) % numtotal;
   }
   return startindex;
 }
@@ -167,8 +187,12 @@ int inputTextScroll(char *text, int *textcharindex, int maxtextcharindex,
 
       entryindex = random32() % numtotal;
     } else {
-      if (yes) entryindex = (entryindex + 1) % numtotal;
-      if (no) entryindex = (entryindex - 1 + numtotal) % numtotal;
+      if (yes) {
+        entryindex = (entryindex + 1) % numtotal;
+      }
+      if (no) {
+        entryindex = (entryindex - 1 + numtotal) % numtotal;
+      }
     }
 
     layoutScrollInput(text, textwidth, numtotal, numscreen, entryindex, entries,
@@ -203,9 +227,10 @@ bool inputText(char *text, int maxtextlen, const char characters[],
 
   for (;;) {
     int entryindex = random32() % numcharacters;
-    if (charindex >= maxtextlen)
+    if (charindex >= maxtextlen) {
       entryindex = findCharIndex(characters, CHAR_DONE, numcharacters,
                                  entryindex, entryindex < numcharacters / 2);
+    }
     entryindex = inputTextScroll(
         text, &charindex, maxtextlen, characters, width, entryindex,
         numcharacters, 9, 9, charactersGroups, numcharactersgroups, 2, &caret);

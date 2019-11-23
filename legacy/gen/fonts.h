@@ -19,7 +19,7 @@
 #define CHAR_SPACE '\x09'
 #define CHAR_DONE '\x06'
 
-#define CHAR_AND_SPACE_WIDTH (5 + 1)
+#define CHAR_FULL_WIDTH (5 + 1)
 
 extern const uint8_t *const font_data[FONTS][128];
 
