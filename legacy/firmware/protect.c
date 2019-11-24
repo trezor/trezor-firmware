@@ -204,8 +204,30 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress,
 
 void inputPin(char pin[]) {
   const char Characters[] = {
-      '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', CHAR_BCKSPC, CHAR_DONE,
-  };
+      'a',         'b',         'c',         'd',         'e',
+      'f',         'g',         'h',         'i',         CHAR_BCKSPC,
+      CHAR_DONE,   'j',         'k',         'l',         'm',
+      'n',         'o',         'p',         'q',         'r',
+      CHAR_BCKSPC, CHAR_DONE,   's',         't',         'u',
+      'v',         'w',         'x',         'y',         'z',
+      CHAR_SPACE,  CHAR_BCKSPC, CHAR_DONE,   'A',         'B',
+      'C',         'D',         'E',         'F',         'G',
+      'H',         'I',         CHAR_BCKSPC, CHAR_DONE,   'J',
+      'K',         'L',         'M',         'N',         'O',
+      'P',         'Q',         'R',         CHAR_BCKSPC, CHAR_DONE,
+      'S',         'T',         'U',         'V',         'W',
+      'X',         'Y',         'Z',         CHAR_SPACE,  CHAR_BCKSPC,
+      CHAR_DONE,   '1',         '2',         '3',         '4',
+      '5',         '6',         '7',         '8',         '9',
+      '0',         CHAR_BCKSPC, CHAR_DONE,   '!',         '@',
+      '#',         '$',         '\x25',      '^',         '&',
+      '*',         '(',         ')',         CHAR_BCKSPC, CHAR_DONE,
+      '`',         '-',         '=',         '[',         ']',
+      '\\',        ';',         '\'',        ',',         '.',
+      '/',         CHAR_BCKSPC, CHAR_DONE,   '~',         '_',
+      '+',         '{',         '}',         '|',         ':',
+      '\'',        '<',         '>',         '?',         CHAR_BCKSPC,
+      CHAR_DONE};
 
   inputText(pin, MAX_PIN_LEN, Characters,
             sizeof(Characters) / sizeof(Characters[0]), CHAR_DONE, PIN_WIDTH,
@@ -242,6 +264,9 @@ void requestPinDevice(const char *line1, const char *line2, const char *line3,
 
     oledSwipeRight();
   }
+
+  for (int i = 0; i < MAX_PIN_LEN + 1 && pin[i]; ++i)
+    if (pin[i] == CHAR_SPACE) pin[i] = ' ';
 }
 
 bool protectPin(bool use_cached) {
