@@ -81,7 +81,7 @@ static const uint32_t META_MAGIC_V10 = 0xFFFFFFFF;
 #define KEY_DEBUG_LINK_PIN (255 | APP | FLAG_PUBLIC_SHIFTED)  // string(10)
 
 // The PIN value corresponding to an empty PIN.
-static const uint32_t PIN_EMPTY = 1;
+static const uint64_t PIN_EMPTY = 1;
 
 static uint32_t config_uuid[UUID_SIZE / sizeof(uint32_t)];
 _Static_assert(sizeof(config_uuid) == UUID_SIZE, "config_uuid has wrong size");
@@ -137,8 +137,8 @@ static const uint32_t CONFIG_VERSION = 11;
 static const uint8_t FALSE_BYTE = '\x00';
 static const uint8_t TRUE_BYTE = '\x01';
 
-static uint32_t pin_to_int(const char *pin) {
-  uint32_t val = 1;
+static uint64_t pin_to_int64(const char *pin) {
+  uint64_t val = 1;
   size_t i = 0;
   for (i = 0; i < MAX_PIN_LEN && pin[i] != '\0'; ++i) {
     if (pin[i] < '0' || pin[i] > '9') {
@@ -322,7 +322,7 @@ static secbool config_upgrade_v10(void) {
   storage_init(NULL, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
   storage_unlock(PIN_EMPTY, NULL);
   if (config.has_pin) {
-    storage_change_pin(PIN_EMPTY, pin_to_int(config.pin), NULL, NULL);
+    storage_change_pin(PIN_EMPTY, pin_to_int64(config.pin), NULL, NULL);
   }
 
   while (pin_wait != 0) {
@@ -751,7 +751,7 @@ bool config_containsMnemonic(const char *mnemonic) {
  */
 bool config_unlock(const char *pin) {
   char oldTiny = usbTiny(1);
-  secbool ret = storage_unlock(pin_to_int(pin), NULL);
+  secbool ret = storage_unlock(pin_to_int64(pin), NULL);
   usbTiny(oldTiny);
   return sectrue == ret;
 }
@@ -759,14 +759,14 @@ bool config_unlock(const char *pin) {
 bool config_hasPin(void) { return sectrue == storage_has_pin(); }
 
 bool config_changePin(const char *old_pin, const char *new_pin) {
-  uint32_t new_pin_int = pin_to_int(new_pin);
+  uint64_t new_pin_int = pin_to_int64(new_pin);
   if (new_pin_int == 0) {
     return false;
   }
 
   char oldTiny = usbTiny(1);
   secbool ret =
-      storage_change_pin(pin_to_int(old_pin), new_pin_int, NULL, NULL);
+      storage_change_pin(pin_to_int64(old_pin), new_pin_int, NULL, NULL);
   usbTiny(oldTiny);
 
 #if DEBUG_LINK

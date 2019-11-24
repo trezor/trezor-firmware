@@ -323,12 +323,12 @@ static secbool auth_get(uint16_t key, const void **val, uint16_t *len) {
   return sectrue;
 }
 
-static void derive_kek(uint32_t pin, const uint8_t *random_salt,
+static void derive_kek(uint64_t pin, const uint8_t *random_salt,
                        const uint8_t *ext_salt,
                        uint8_t kek[SHA256_DIGEST_LENGTH],
                        uint8_t keiv[SHA256_DIGEST_LENGTH]) {
 #if BYTE_ORDER == BIG_ENDIAN
-  REVERSE32(pin, pin);
+  REVERSE64(pin, pin);
 #endif
 
   uint8_t salt[HARDWARE_SALT_SIZE + RANDOM_SALT_SIZE + EXTERNAL_SALT_SIZE] = {
@@ -382,7 +382,7 @@ static void derive_kek(uint32_t pin, const uint8_t *random_salt,
   memzero(&salt, sizeof(salt));
 }
 
-static secbool set_pin(uint32_t pin, const uint8_t *ext_salt) {
+static secbool set_pin(uint64_t pin, const uint8_t *ext_salt) {
   uint8_t buffer[RANDOM_SALT_SIZE + KEYS_SIZE + POLY1305_TAG_SIZE] = {0};
   uint8_t *rand_salt = buffer;
   uint8_t *ekeys = buffer + RANDOM_SALT_SIZE;
@@ -789,7 +789,7 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
   return sectrue;
 }
 
-static secbool unlock(uint32_t pin, const uint8_t *ext_salt) {
+static secbool unlock(uint64_t pin, const uint8_t *ext_salt) {
   if (sectrue != initialized) {
     return secfalse;
   }
@@ -880,7 +880,7 @@ static secbool unlock(uint32_t pin, const uint8_t *ext_salt) {
   return pin_fails_reset();
 }
 
-secbool storage_unlock(uint32_t pin, const uint8_t *ext_salt) {
+secbool storage_unlock(uint64_t pin, const uint8_t *ext_salt) {
   ui_total = DERIVE_SECS;
   ui_rem = ui_total;
   if (pin == PIN_EMPTY) {
@@ -1154,7 +1154,7 @@ uint32_t storage_get_pin_rem(void) {
   return PIN_MAX_TRIES - ctr;
 }
 
-secbool storage_change_pin(uint32_t oldpin, uint32_t newpin,
+secbool storage_change_pin(uint64_t oldpin, uint64_t newpin,
                            const uint8_t *old_ext_salt,
                            const uint8_t *new_ext_salt) {
   if (sectrue != initialized) {

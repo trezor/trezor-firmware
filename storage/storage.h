@@ -45,11 +45,11 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
 void storage_wipe(void);
 secbool storage_is_unlocked(void);
 void storage_lock(void);
-secbool storage_unlock(const uint32_t pin, const uint8_t *ext_salt);
+secbool storage_unlock(const uint64_t pin, const uint8_t *ext_salt);
 secbool storage_has_pin(void);
 secbool storage_pin_fails_increase(void);
 uint32_t storage_get_pin_rem(void);
-secbool storage_change_pin(const uint32_t oldpin, const uint32_t newpin,
+secbool storage_change_pin(const uint64_t oldpin, const uint64_t newpin,
                            const uint8_t *old_ext_salt,
                            const uint8_t *new_ext_salt);
 secbool storage_get(const uint16_t key, void *val, const uint16_t max_len,
