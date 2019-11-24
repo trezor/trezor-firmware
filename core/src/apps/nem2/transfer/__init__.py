@@ -10,7 +10,7 @@ async def transfer(
 
     await layout.ask_transfer(ctx, common, transfer)
 
-    w = serialize.serialize_transfer(common, transfer, public_key)
+    w = serialize.serialize_transfer(common, transfer)
     for mosaic in transfer.mosaics:
         serialize.serialize_mosaic(w, mosaic.id, mosaic.amount)
     return w

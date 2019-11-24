@@ -28,7 +28,7 @@ class TestMsgNEM2SignTxMosaics:
     def test_nem2_signtx_mosaic_definition(self, client):
         tx = nem2.sign_tx(
             client,
-            parse_path("m/44'/43'/0'/0'/0'"),
+            parse_path("m/44'/43'/0'"),
             {
                 "type": nem2.TYPE_MOSAIC_DEFINITION,
                 "network_type": nem2.NETWORK_TYPE_TEST_NET,
@@ -50,9 +50,7 @@ class TestMsgNEM2SignTxMosaics:
             tx.payload.hex().upper()
             == "9600000000000000FD1497976AFA3155798512F9EF0E8B534DEFCFEF6A00700CC5CF08363B77DA737ADC5E9BC4999A864A6830E9C54BD1FC0A4330206EDCFD153C999199341D9C0CA8F70E4D5C357273968B12417AE8B742E35E530623C2488D0A73306B412715000000000001984D4164000000000000002ADFC07A1A00000019C6809AB2C4650B7B00000000000000E6DE84B80764"
         )
-        #"57319AF73440C323"
-        # == "E6DE84B823C34034F79A315707000000000000000000"
-        # assert (
-        #     tx.hash.hex()
-        #     == "533E8FB484BF73A1E401BE2B028A5962BD37E277C1BC168F77214DB08C0D7106"
-        # )
+        assert (
+            tx.hash.hex()
+            == "C271DFA2397D879ACE264A8CECE03E2D8E1E01302D2A8B86E41A8ED440A12955"
+        )

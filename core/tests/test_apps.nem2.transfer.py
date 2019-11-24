@@ -49,7 +49,7 @@ class TestNem2Transfer(unittest.TestCase):
         t = serialize_transfer(m.transaction, m.transfer)
 
         self.assertEqual(t, unhexlify('BE000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001985441204E000000000000090A1E5E1A000000981DE81282D81E19B06024D86F232947F0EBD8EB30BB3E1C1C010E0000000000C47BCD9047148F3000CA9A3B000000000054657374205472616E73666572'))
-        # self.assertEqual(hashlib.sha3_256(t, keccak=True).digest(), unhexlify('0acbf8df91e6a65dc56c56c43d65f31ff2a6a48d06fc66e78c7f3436faf3e74f'))
+        # self.assertEqual(hashlib.sha3_256(t, keccak=True).digest(), unhexlify('923EB29CF8C75E9BB03DB064C47389FD98B1EC2A62CD7C685FBA7F706B09DF73'))
 
 def _create_msg(network_type: int, tx_type: int, version: int, max_fee: str,
                 deadline: str, recipient_address: str, message: dict, mosaics: list):

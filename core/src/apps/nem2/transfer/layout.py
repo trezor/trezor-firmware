@@ -49,18 +49,10 @@ async def ask_transfer_mosaic(
         msg.normal("of")
         msg.bold(definition["name"])
         await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
-
-        if "levy" in definition and "fee" in definition:
-            levy_msg = _get_levy_msg(definition, mosaic_amount, common.network)
-            msg = Text("Confirm mosaic", ui.ICON_SEND, ui.GREEN)
-            msg.normal("Confirm mosaic", "levy fee of")
-            msg.bold(levy_msg)
-            await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
-
     else:
         msg = Text("Confirm mosaic", ui.ICON_SEND, ui.RED)
         msg.bold("Unknown mosaic!")
-        msg.normal("Divisibility and levy")
+        msg.normal("Divisibility")
         msg.normal("cannot be shown for")
         msg.normal("unknown mosaics")
         await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
@@ -76,7 +68,7 @@ async def ask_transfer_mosaic(
 def _get_xem_amount(transfer: NEM2TransferTransaction):
     for mosaic in transfer.mosaics:
         if is_nem_xem_mosaic(mosaic.id):
-            return mosaic.amount / NEM2_MOSAIC_AMOUNT_DIVISOR
+            return int(mosaic.amount) / NEM2_MOSAIC_AMOUNT_DIVISOR
     # if there are mosaics but do not include xem, 0 xem is sent
     return 0
 

@@ -10,6 +10,6 @@ def get_mosaic_definition(mosaic_id: int, network: int) -> dict:
 
 
 def is_nem_xem_mosaic(mosaic_id: str) -> bool:
-    if mosaic_id == int("85BBEA6CC462B244", 16):
+    if mosaic_id == "0069AE078A2E51A9":
         return True
     return False
