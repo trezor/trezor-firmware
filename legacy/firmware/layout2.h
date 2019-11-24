@@ -45,14 +45,13 @@ void layoutDialogSwipe(const BITMAP *icon, const char *btnNo,
 void layoutProgressSwipe(const char *desc, int permil);
 
 void layoutScrollInput(const char *text, int text_width, int num_total,
-                       int num_screen, int current_index, const char entries[],
-                       int horizontal_padding, int num_group,
-                       const int groups[], int num_skip_in_groups,
-                       bool draw_caret);
+                       int num_screen, int current_index,
+                       const char characters[], int horizontal_padding,
+                       int num_group, const int groups[],
+                       int num_skip_in_groups, bool draw_caret);
 void layoutCheckInput(const char *text, int text_width, bool enable_edit,
                       bool enable_done, const char *confirm_input,
-                      const char *inputs_mismatched,
-                      const char *input_confirmed);
+                      const char *input_invalid, const char *input_confirmed);
 
 void layoutScreensaver(void);
 void layoutHome(void);

@@ -244,10 +244,10 @@ void layoutProgressSwipe(const char *desc, int permil) {
 }
 
 void layoutScrollInput(const char *text, int text_width, int num_total,
-                       int num_screen, int current_index, const char entries[],
-                       int horizontal_padding, int num_group,
-                       const int groups[], int num_skip_in_groups,
-                       bool draw_caret) {
+                       int num_screen, int current_index,
+                       const char characters[], int horizontal_padding,
+                       int num_group, const int groups[],
+                       int num_skip_in_groups, bool draw_caret) {
   layoutLast = layoutScrollInput;
 
   oledClear();
@@ -270,7 +270,7 @@ void layoutScrollInput(const char *text, int text_width, int num_total,
   for (int i = 0; i < num_screen && i < num_total; ++i) {
     int x = CenterX - gap * (t - i);
     int n = (current_index + i - t + num_total) % num_total;
-    letter[0] = entries[n];
+    letter[0] = characters[n];
     oledDrawStringCenter(x, Y, letter, 1);
   }
 
@@ -298,8 +298,8 @@ void layoutScrollInput(const char *text, int text_width, int num_total,
     if (current_index >= groups[group] && current_index < groups[group + 1])
       break;
   }
-  groupinfo[0] = entries[groups[group]];
-  groupinfo[2] = entries[groups[group + 1] - num_skip_in_groups - 1];
+  groupinfo[0] = characters[groups[group]];
+  groupinfo[2] = characters[groups[group + 1] - num_skip_in_groups - 1];
   oledDrawStringCenter(x, LineY + 2, groupinfo, 1);
 
   oledHLine(OLED_HEIGHT / 2 - 5);

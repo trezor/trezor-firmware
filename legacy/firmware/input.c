@@ -139,18 +139,18 @@ void requestOnDeviceTextInput(void) {
   session_setUseOnDeviceTextInput(button.YesUp);
 }
 
-int findCharIndex(const char entries[], char needle, int numtotal,
+int findCharIndex(const char characters[], char needle, int numtotal,
                   int startindex, bool forward) {
   if (startindex < 0 || startindex >= numtotal) {
     return 0;
   }
-  if (numtotal <= 1 || entries[startindex] == needle) {
+  if (numtotal <= 1 || characters[startindex] == needle) {
     return startindex;
   }
   int step = forward ? 1 : -1;
   int index = (startindex + step + numtotal) % numtotal;
   while (index != startindex) {
-    if (entries[index] == needle) {
+    if (characters[index] == needle) {
       return index;
     }
     index = (index + step + numtotal) % numtotal;
@@ -158,11 +158,10 @@ int findCharIndex(const char entries[], char needle, int numtotal,
   return startindex;
 }
 
-int inputTextScroll(char *text, int *textcharindex, int maxtextcharindex,
-                    const char entries[], int textwidth, int entryindex,
-                    int numtotal, int numscreen, int horizontalpadding,
-                    const int groups[], int numgroup, int numskipingroups,
-                    int *caret) {
+int inputTextScroll(char *text, int *textindex, int maxtextindex, int textwidth,
+                    const char characters[], int charactersindex, int numtotal,
+                    int numscreen, int horizontalpadding, const int groups[],
+                    int numgroup, int numskipingroups, int *caret) {
   for (;; *caret = (*caret + 1) % CARET_CYCLE) {
     bool yes, no, confirm;
     buttonCheckRepeat(&yes, &no, &confirm);
@@ -170,34 +169,34 @@ int inputTextScroll(char *text, int *textcharindex, int maxtextcharindex,
     if (confirm) {
       buttonWaitForIdle();
 
-      if (entries[entryindex] == CHAR_BCKSPC) {
-        if (*textcharindex > 0) {
-          --(*textcharindex);
-          text[*textcharindex] = 0;
+      if (characters[charactersindex] == CHAR_BCKSPC) {
+        if (*textindex > 0) {
+          --(*textindex);
+          text[*textindex] = 0;
         }
-      } else if (entries[entryindex] == CHAR_DONE) {
+      } else if (characters[charactersindex] == CHAR_DONE) {
         return INPUT_DONE;
       } else {
-        if (*textcharindex < maxtextcharindex) {
-          text[*textcharindex] = entries[entryindex];
-          ++(*textcharindex);
+        if (*textindex < maxtextindex) {
+          text[*textindex] = characters[charactersindex];
+          ++(*textindex);
         }
-        return entryindex;
+        return charactersindex;
       }
 
-      entryindex = random32() % numtotal;
+      charactersindex = random32() % numtotal;
     } else {
       if (yes) {
-        entryindex = (entryindex + 1) % numtotal;
+        charactersindex = (charactersindex + 1) % numtotal;
       }
       if (no) {
-        entryindex = (entryindex - 1 + numtotal) % numtotal;
+        charactersindex = (charactersindex - 1 + numtotal) % numtotal;
       }
     }
 
-    layoutScrollInput(text, textwidth, numtotal, numscreen, entryindex, entries,
-                      horizontalpadding, numgroup, groups, numskipingroups,
-                      *caret < CARET_SHOW);
+    layoutScrollInput(text, textwidth, numtotal, numscreen, charactersindex,
+                      characters, horizontalpadding, numgroup, groups,
+                      numskipingroups, *caret < CARET_SHOW);
   }
 }
 
@@ -222,21 +221,22 @@ bool inputText(char *text, int maxtextlen, const char characters[],
   usbSleep(5);
   buttonUpdate();
 
-  int charindex = strlen(text);
+  int textindex = strlen(text);
   int caret = 0;
 
   for (;;) {
-    int entryindex = random32() % numcharacters;
-    if (charindex >= maxtextlen) {
-      entryindex = findCharIndex(characters, CHAR_DONE, numcharacters,
-                                 entryindex, entryindex < numcharacters / 2);
+    int charactersindex = random32() % numcharacters;
+    if (textindex >= maxtextlen) {
+      charactersindex =
+          findCharIndex(characters, CHAR_DONE, numcharacters, charactersindex,
+                        charactersindex < numcharacters / 2);
     }
-    entryindex = inputTextScroll(
-        text, &charindex, maxtextlen, characters, width, entryindex,
+    charactersindex = inputTextScroll(
+        text, &textindex, maxtextlen, width, characters, charactersindex,
         numcharacters, 9, 9, charactersGroups, numcharactersgroups, 2, &caret);
-    if ((!requiredone || entryindex == INPUT_DONE) &&
-        (allowempty || charindex > 0)) {
-      return entryindex == INPUT_DONE;
+    if ((!requiredone || charactersindex == INPUT_DONE) &&
+        (allowempty || textindex > 0)) {
+      return charactersindex == INPUT_DONE;
     }
   }
 }
