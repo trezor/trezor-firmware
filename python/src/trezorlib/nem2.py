@@ -44,7 +44,7 @@ def create_transaction_common(transaction):
 
 def create_transfer(transaction):
     msg = proto.NEM2TransferTransaction()
-    msg.recipient_address = transaction["recipient_address"]
+    msg.recipient_address = transaction["recipient_address"]["address"]
 
     if "payload" in transaction["message"]:
         msg.message = bytes.fromhex(transaction["message"]["payload"])

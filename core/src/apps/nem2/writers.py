@@ -45,7 +45,10 @@ def serialize_tx_common(
     write_uint32_le(w, 0)
 
     # version
-    write_uint8(w, common.version)
+    # convert DTO representation of version back to actual value
+    # https://github.com/nemtech/nem2-sdk-typescript-javascript/blob/master/src/model/transaction/Transaction.ts#L311
+
+    write_uint8(w, common.version - (common.network_type << 8))
 
     # # network
     write_uint8(w, common.network_type)
