@@ -46,11 +46,11 @@ from .DebugLinkLog import DebugLinkLog
 from .DebugLinkMemory import DebugLinkMemory
 from .DebugLinkMemoryRead import DebugLinkMemoryRead
 from .DebugLinkMemoryWrite import DebugLinkMemoryWrite
+from .DebugLinkShowText import DebugLinkShowText
 from .DebugLinkState import DebugLinkState
 from .DebugLinkStop import DebugLinkStop
 from .DebugMoneroDiagAck import DebugMoneroDiagAck
 from .DebugMoneroDiagRequest import DebugMoneroDiagRequest
-from .DebugShowText import DebugShowText
 from .ECDHSessionKey import ECDHSessionKey
 from .Entropy import Entropy
 from .EntropyAck import EntropyAck
@@ -268,7 +268,7 @@ from . import BinanceOrderType
 from . import BinanceTimeInForce
 from . import ButtonRequestType
 from . import Capability
-from . import DebugShowTextIcon
+from . import DebugLinkShowTextIcon
 from . import DebugSwipeDirection
 from . import FailureType
 from . import InputScriptType

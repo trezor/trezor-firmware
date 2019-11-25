@@ -501,3 +501,11 @@ def self_test(client):
             payload=b"\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC"
         )
     )
+
+
+@expect(proto.Success, field="message")
+def show_text(client, header_text, body_text, icon):
+    msg = proto.DebugLinkShowText(
+        header_text=header_text, body_text=body_text, icon=icon
+    )
+    return client.call(msg)
