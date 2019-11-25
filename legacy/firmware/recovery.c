@@ -21,6 +21,7 @@
 #include "recovery.h"
 #include <ctype.h>
 #include "bip39.h"
+#include "buttons.h"
 #include "config.h"
 #include "fsm.h"
 #include "gettext.h"
@@ -469,6 +470,26 @@ void next_word(void) {
   recovery_request();
 }
 
+void requestAmnesicMode(void) {
+  layoutDialog(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+               _("Do you like to enable"), _("amnesic mode?"), NULL, NULL, NULL,
+               NULL);
+
+  buttonUpdate();
+
+  for (;;) {
+    usbSleep(5);
+    buttonUpdate();
+    if (button.YesUp || button.NoUp) {
+      break;
+    }
+  }
+
+  layoutSwipe();
+
+  session_setAmnesic(button.YesUp);
+}
+
 void recovery_init(uint32_t _word_count, bool passphrase_protection,
                    bool pin_protection, const char *language, const char *label,
                    bool _enforce_wordlist, uint32_t type, uint32_t u2f_counter,
@@ -501,6 +522,8 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
     config_setLabel(label);
     config_setU2FCounter(u2f_counter);
   }
+
+  requestAmnesicMode();
 
   if ((type & RecoveryDeviceType_RecoveryDeviceType_Matrix) != 0) {
     awaiting_word = 2;

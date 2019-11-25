@@ -119,6 +119,10 @@ be added to the storage u2f_counter to get the real counter value.
  * storage.u2f_counter + config_u2f_offset.
  * This corresponds to the number of cleared bits in the U2FAREA.
  */
+static bool sessionAmnesic = false;
+static CONFIDENTIAL char sessionMnemonic[MAX_MNEMONIC_LEN + 1] = {0};
+static CONFIDENTIAL StorageHDNode sessionU2fNode = {0};
+
 static secbool sessionSeedCached, sessionSeedUsesPassphrase;
 static uint8_t CONFIDENTIAL sessionSeed[64];
 
@@ -160,6 +164,11 @@ static secbool config_set_bool(uint16_t key, bool value) {
 }
 
 static secbool config_get_bool(uint16_t key, bool *value) {
+  if (sessionAmnesic && key == KEY_INITIALIZED) {
+    *value = sessionMnemonic[0] != 0;
+    return *value ? sectrue : secfalse;
+  }
+
   uint8_t val = 0;
   uint16_t len = 0;
   if (sectrue == storage_get(key, &val, sizeof(val), &len) &&
@@ -178,6 +187,19 @@ static secbool config_get_bytes(uint16_t key, uint8_t *dest, uint16_t dest_size,
     return secfalse;
   }
 
+  if (sessionAmnesic && key == KEY_MNEMONIC) {
+    uint16_t size = strlen(sessionMnemonic);
+    if (size > 0 && size < dest_size) {
+      memcpy(dest, sessionMnemonic, size + 1);
+      *real_size = size;
+      return sectrue;
+    } else {
+      dest[0] = '\0';
+      *real_size = 0;
+      return secfalse;
+    }
+  }
+
   if (sectrue != storage_get(key, dest, dest_size, real_size)) {
     return secfalse;
   }
@@ -187,6 +209,17 @@ static secbool config_get_bytes(uint16_t key, uint8_t *dest, uint16_t dest_size,
 static secbool config_get_string(uint16_t key, char *dest, uint16_t dest_size) {
   if (dest_size == 0) {
     return secfalse;
+  }
+
+  if (sessionAmnesic && key == KEY_MNEMONIC) {
+    uint16_t size = strlen(sessionMnemonic);
+    if (size > 0 && size < dest_size) {
+      strlcpy(dest, sessionMnemonic, size + 1);
+      return sectrue;
+    } else {
+      dest[0] = '\0';
+      return secfalse;
+    }
   }
 
   uint16_t len = 0;
@@ -595,11 +628,19 @@ static bool config_loadNode(const StorageHDNode *node, const char *curve,
 
 bool config_getU2FRoot(HDNode *node) {
   StorageHDNode u2fNode = {0};
-  uint16_t len = 0;
-  if (sectrue != storage_get(KEY_U2F_ROOT, &u2fNode, sizeof(u2fNode), &len) ||
-      len != sizeof(StorageHDNode)) {
-    memzero(&u2fNode, sizeof(u2fNode));
-    return false;
+  if (sessionAmnesic) {
+    if (sessionMnemonic[0] != 0) {
+      u2fNode = sessionU2fNode;
+    } else {
+      return false;
+    }
+  } else {
+    uint16_t len = 0;
+    if (sectrue != storage_get(KEY_U2F_ROOT, &u2fNode, sizeof(u2fNode), &len) ||
+        len != sizeof(StorageHDNode)) {
+      memzero(&u2fNode, sizeof(u2fNode));
+      return false;
+    }
   }
   bool ret = config_loadNode(&u2fNode, NIST256P1_NAME, node);
   memzero(&u2fNode, sizeof(u2fNode));
@@ -682,6 +723,13 @@ bool config_setMnemonic(const char *mnemonic) {
     return false;
   }
 
+  if (sessionAmnesic) {
+    strlcpy(sessionMnemonic, mnemonic, sizeof(sessionMnemonic));
+    memzero(&sessionU2fNode, sizeof(sessionU2fNode));
+    config_compute_u2froot(mnemonic, &sessionU2fNode);
+    return true;
+  }
+
   if (sectrue != storage_set(KEY_MNEMONIC, mnemonic,
                              strnlen(mnemonic, MAX_MNEMONIC_LEN))) {
     return false;
@@ -718,8 +766,8 @@ bool config_getMnemonic(char *dest, uint16_t dest_size) {
 bool config_containsMnemonic(const char *mnemonic) {
   uint16_t len = 0;
   uint8_t stored_mnemonic[MAX_MNEMONIC_LEN] = {0};
-  if (sectrue != storage_get(KEY_MNEMONIC, stored_mnemonic,
-                             sizeof(stored_mnemonic), &len)) {
+  if (true !=
+      config_getMnemonicBytes(stored_mnemonic, sizeof(stored_mnemonic), &len)) {
     return false;
   }
 
@@ -820,6 +868,8 @@ bool session_getState(const uint8_t *salt, uint8_t *state,
 
   return true;
 }
+
+void session_setAmnesic(bool amnesic) { sessionAmnesic = amnesic; }
 
 bool session_isUnlocked(void) { return sectrue == storage_is_unlocked(); }
 
