@@ -44,12 +44,12 @@ message DebugLinkLayout {
  * @start
  * @next Success
  */
-message DebugShowText {
+message DebugLinkShowText {
     optional string header_text = 1;        // show text in the header of the screen
     optional string body_text = 2;          // show text in the body of the screen
-    optional DebugShowTextIcon icon = 3;    // choose icon to show in the header
+    optional DebugLinkShowTextIcon icon = 3;    // choose icon to show in the header
 
-    enum DebugShowTextIcon {
+    enum DebugLinkShowTextIcon {
         CONFIRM = 1;
         CONFIG = 2;
         RESET = 3;

@@ -6,19 +6,19 @@ if __debug__:
     try:
         from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
-        EnumTypeDebugShowTextIcon = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        EnumTypeDebugLinkShowTextIcon = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
     except ImportError:
         pass
 
 
-class DebugShowText(p.MessageType):
+class DebugLinkShowText(p.MessageType):
     MESSAGE_WIRE_TYPE = 9002
 
     def __init__(
         self,
         header_text: str = None,
         body_text: str = None,
-        icon: EnumTypeDebugShowTextIcon = None,
+        icon: EnumTypeDebugLinkShowTextIcon = None,
     ) -> None:
         self.header_text = header_text
         self.body_text = body_text
@@ -29,5 +29,5 @@ class DebugShowText(p.MessageType):
         return {
             1: ('header_text', p.UnicodeType, 0),
             2: ('body_text', p.UnicodeType, 0),
-            3: ('icon', p.EnumType("DebugShowTextIcon", (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18)), 0),
+            3: ('icon', p.EnumType("DebugLinkShowTextIcon", (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18)), 0),
         }
