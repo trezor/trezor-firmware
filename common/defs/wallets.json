@@ -115,7 +115,7 @@
         "Electrum-SYS": "https://github.com/syscoin/electrum"
     },
     "bitcoin:UNO": {
-        "Electrum-UNO": "https://github.com/flurbos/electrum"
+        "Electrum-UNO": "https://github.com/flurbos/electrum-uno"
     },
     "bitcoin:VIA": {
         "Vialectrum": "https://vialectrum.org"
