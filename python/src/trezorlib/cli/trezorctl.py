@@ -31,6 +31,7 @@ from . import (
     cardano,
     cosi,
     crypto,
+    debug,
     device,
     eos,
     ethereum,
@@ -57,6 +58,7 @@ COMMAND_ALIASES = {
     "sd-protect": device.sd_protect,
     "load-device": device.load,
     "self-test": device.self_test,
+    "show-text": debug.show_text,
     "get-entropy": crypto.get_entropy,
     "encrypt-keyvalue": crypto.encrypt_keyvalue,
     "decrypt-keyvalue": crypto.decrypt_keyvalue,
@@ -248,16 +250,6 @@ def usb_reset():
     from trezorlib.transport.webusb import WebUsbTransport
 
     WebUsbTransport.enumerate(usb_reset=True)
-
-
-@cli.command(help="Show text on Trezor display.")
-@click.option("-i", "--icon", default=1)
-@click.argument("header_text")
-@click.argument("body_text")
-@click.pass_obj
-def show_text(connect, header_text, body_text, icon):
-    client = connect()
-    return client.show_text(header_text, body_text, icon)
 
 
 #
