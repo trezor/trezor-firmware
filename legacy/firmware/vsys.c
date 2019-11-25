@@ -27,8 +27,12 @@
 #include "messages.pb.h"
 #include "protect.h"
 #include "util.h"
+#include "sha3.h"
+#include "blake2b.h"
+#include "base58.h"
 
 #define MAX_AMOUNT_SIZE 20
+#define ADDR_VER 5
 
 
 void vsys_sign_tx(const HDNode *node, VsysSignTx *msg, VsysSignedTx *resp) {
@@ -37,12 +41,35 @@ void vsys_sign_tx(const HDNode *node, VsysSignTx *msg, VsysSignedTx *resp) {
 }
 
 // Helpers
-void vsys_get_address_from_public_key(const uint8_t *public_key,
+static void vsys_secure_hash(const uint8_t *message, size_t message_len, uint8_t output[32]) {
+  uint8_t hash[32];
+  blake2b(message, message_len, hash, 32);
+  keccak_256(hash, 32, output);
+}
+
+char get_network_byte(const uint32_t *address_n, size_t address_n_count) {
+  return address_n_count >= 3 && address_n[1] == 0x80000168 ? 'M' : 'T';
+}
+
+size_t vsys_get_address_from_public_key(const uint8_t *public_key,
+                                      char network_byte,
                                       char *address) {
-  uint8_t i;
-  for (i=0; i<MAX_VSYS_ADDRESS_SIZE; i++) {
-    address[i] = public_key[i]; //TODO: implement public_key -> address
-  }
+  uint8_t public_key_hash[32];
+  uint8_t checksum[32];
+  uint8_t address_bytes[26];
+
+  address_bytes[0] = ADDR_VER;
+  address_bytes[1] = network_byte;
+
+  vsys_secure_hash(public_key, 32, public_key_hash);
+  memcpy(address_bytes+2, &public_key_hash, 20);
+
+  vsys_secure_hash(address_bytes, 22, checksum);
+  memcpy(address_bytes+22, &checksum, 4);
+
+  size_t address_size;
+  b58enc(address, &address_size, address_bytes, 26);
+  return address_size;
 }
 
 static void vsys_format_amount(uint64_t value, char *formated_value) {

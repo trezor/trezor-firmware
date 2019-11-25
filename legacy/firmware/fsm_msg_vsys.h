@@ -30,7 +30,8 @@ void fsm_msgVsysGetAddress(const VsysGetAddress *msg) {
 
   resp->has_address = true;
   hdnode_fill_public_key(node);
-  vsys_get_address_from_public_key(&node->public_key[1], resp->address);
+  char network_byte = get_network_byte(msg->address_n, msg->address_n_count);
+  vsys_get_address_from_public_key(&node->public_key[1], network_byte, resp->address);
 
   if (msg->has_show_display && msg->show_display) {
     if (!fsm_layoutAddress(resp->address, _("Address:"), true, 0,
@@ -59,6 +60,7 @@ void fsm_msgVsysGetPublicKey(const VsysGetPublicKey *msg) {
 
   resp->has_public_key = true;
   resp->public_key.size = 32;
+  resp->has_address = true;
 
   if (msg->has_show_display && msg->show_display) {
     layoutVsysPublicKey(&node->public_key[1]);
@@ -71,6 +73,9 @@ void fsm_msgVsysGetPublicKey(const VsysGetPublicKey *msg) {
 
   memcpy(&resp->public_key.bytes, &node->public_key[1],
          sizeof(resp->public_key.bytes));
+
+  char network_byte = get_network_byte(msg->address_n, msg->address_n_count);
+  vsys_get_address_from_public_key(&node->public_key[1], network_byte, resp->address);
 
   msg_write(MessageType_MessageType_VsysPublicKey, resp);
 

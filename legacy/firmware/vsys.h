@@ -29,7 +29,8 @@
 void vsys_sign_tx(const HDNode *node, VsysSignTx *msg, VsysSignedTx *resp);
 
 // Helpers
-void vsys_get_address_from_public_key(const uint8_t *public_key, char *address);
+size_t vsys_get_address_from_public_key(const uint8_t *public_key, char network_byte, char *address);
+char get_network_byte(const uint32_t *address_n, size_t address_n_count);
 
 // Layout
 void layoutVsysPublicKey(const uint8_t *pubkey);
