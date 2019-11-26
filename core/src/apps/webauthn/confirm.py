@@ -31,7 +31,7 @@ class ConfirmInfo:
             )
             try:
                 self.app_icon = res.load(resource)
-            except Exception:
+            except KeyError:
                 pass
             else:
                 return
