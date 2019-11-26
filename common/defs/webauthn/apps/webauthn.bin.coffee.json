@@ -1,4 +1,5 @@
 {
   "label": "webauthn.bin.coffee",
-  "webauthn": ["webauthn.bin.coffee"]
+  "webauthn": ["webauthn.bin.coffee"],
+  "demo": true
 }
