@@ -1400,7 +1400,7 @@ def by_name(name: str) -> CoinInfo:
                 address_type_p2sh=5,
                 maxfee_kb=1000000,
                 signed_message_header="Sinovate Signed Message:\n",
-                xpub_magic=0x0‭488B21E‬,
+                xpub_magic=0x0488b21e,
                 xpub_magic_segwit_p2sh=None,
                 xpub_magic_segwit_native=None,
                 bech32_prefix=None,
