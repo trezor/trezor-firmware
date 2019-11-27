@@ -42,6 +42,12 @@ uint32_t read_be(const uint8_t *data);
 // write 4 big endian bytes
 void write_be(uint8_t *data, uint32_t x);
 
+// write 8 big endian bytes
+void write_uint64_be(uint8_t *data, uint64_t x);
+
+// write 2 big endian bytes
+void write_uint16_be(uint8_t *data, uint16_t x);
+
 // read 4 little endian bytes into uint32
 uint32_t read_le(const uint8_t *data);
 

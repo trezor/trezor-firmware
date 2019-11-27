@@ -10,7 +10,7 @@ OPC_ACCOUNT = 'account'
 OPC_TX = 'transaction'
 OPC_SIGN = 'signature'
 
-SUPPORT_API_VER = 2
+SUPPORT_API_VER = 4
 ACCOUNT_API_VER = 1
 SIGN_API_VER = 1
 

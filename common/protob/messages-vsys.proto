@@ -31,13 +31,13 @@ message VsysSignTx {
     required uint32 api = 3;			    // VSYS message API version
     required string opc = 4;			    // VSYS message operation code
     required uint32 transactionType = 5;	// 2 for payment, 3 for lease, 4 for cancel lease
-    optional bytes senderPublicKey = 6;
+    optional string senderPublicKey = 6;
     optional uint64 amount = 7;
     required uint64 fee = 8;
     required uint32 feeScale = 9;
     optional string recipient = 10;
     required uint64 timestamp = 11;
-    optional bytes attachment = 12;
+    optional string attachment = 12;
     optional string txId = 13;			    // lease transaction id (for lease cancellation used)
 }
 
@@ -49,7 +49,7 @@ message VsysSignedTx {
     required string protocol = 1;			// VSYS message protocol
     required uint32 api = 2;			    // VSYS message API version
     required string opc = 3;			    // VSYS message operation code
-    optional bytes signature = 4;			// VSYS transaction signature
+    optional string signature = 4;			// VSYS transaction signature
 }
 
 /**
@@ -69,6 +69,6 @@ message VsysPublicKey {
     required string protocol = 1;			// VSYS message protocol
     required uint32 api = 2;			    // VSYS message API version
     required string opc = 3;			    // VSYS message operation code
-    optional bytes public_key = 4;			// VSYS public key
+    optional string public_key = 4;			// VSYS public key
     optional string address = 5;			// Coin address in Base58 encoding
 }

@@ -30,18 +30,79 @@
 #include "sha3.h"
 #include "blake2b.h"
 #include "base58.h"
+#include "ed25519-donna/curve25519_sign.h"
+#include "rand.h"
+#include "bignum.h"
 
 #define MAX_AMOUNT_SIZE 20
 #define ADDR_VER 5
+#define MAX_TX_SIZE 516
 
 
-void vsys_sign_tx(const HDNode *node, VsysSignTx *msg, VsysSignedTx *resp) {
-  memcpy(msg->senderPublicKey.bytes, &node->public_key[1], 32);
-  resp->signature.size = 64;
+bool vsys_sign_tx(const HDNode *node, VsysSignTx *msg, VsysSignedTx *resp) {
+  if (strcmp(msg->protocol, PROTOCOL) != 0) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Invalid protocol"));
+    return false;
+  }
+  if (strcmp(msg->opc, OPC_TX) != 0) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Invalid OP Code"));
+    return false;
+  }
+  if (msg->api > SUPPORT_API_VER) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Need upgrade firmware for signing this transaction"));
+    return false;
+  }
+  if (!msg->has_senderPublicKey) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Missing sender public key"));
+    return false;
+  }
+  size_t public_key_size;
+  char b58_public_key[45];
+  b58enc(b58_public_key, &public_key_size, &node->public_key[1], 32);
+  if (strcmp(b58_public_key, msg->senderPublicKey) != 0) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Sender public key mismatch"));
+    return false;
+  }
+
+  size_t to_sign_bytes_len;
+  uint8_t to_sign_bytes[MAX_TX_SIZE];
+
+  if (msg->transactionType == PAYMENT_TX_TYPE) {
+    encode_payment_tx_to_bytes(msg, to_sign_bytes, &to_sign_bytes_len);
+  } else if (msg->transactionType == PAYMENT_TX_TYPE) {
+    // encode_lease_tx_to_bytes(msg, to_sign_bytes, &to_sign_bytes_len);
+    fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Not implement encode_lease_tx_to_bytes"));
+  } else if (msg->transactionType == PAYMENT_TX_TYPE) {
+    // encode_cancel_lease_tx_to_bytes(msg, to_sign_bytes, &to_sign_bytes_len);
+    fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Not implement encode_cancel_lease_tx_to_bytes"));
+  } else {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Transaction type unsupported"));
+    return false;
+  }
+
+  uint8_t signature[64];
+  uint8_t random[64];
+  random_buffer(random, 64);
+  curve25519_sign(signature, (const unsigned char*)&node->private_key,
+                  to_sign_bytes, to_sign_bytes_len, random);
+  char signature_b58[89];
+  size_t signature_b58_size;
+  b58enc(signature_b58, &signature_b58_size, signature, 64);
+  strcpy(resp->signature, signature_b58);
+  return true;
 }
 
 // Helpers
-static void vsys_secure_hash(const uint8_t *message, size_t message_len, uint8_t output[32]) {
+static void vsys_secure_hash(const uint8_t *message, size_t message_len,
+                             uint8_t output[32]) {
   uint8_t hash[32];
   blake2b(message, message_len, hash, 32);
   keccak_256(hash, 32, output);
@@ -52,8 +113,8 @@ char get_network_byte(const uint32_t *address_n, size_t address_n_count) {
 }
 
 size_t vsys_get_address_from_public_key(const uint8_t *public_key,
-                                      char network_byte,
-                                      char *address) {
+                                        char network_byte,
+                                        char *address) {
   uint8_t public_key_hash[32];
   uint8_t checksum[32];
   uint8_t address_bytes[26];
@@ -75,6 +136,49 @@ size_t vsys_get_address_from_public_key(const uint8_t *public_key,
 static void vsys_format_amount(uint64_t value, char *formated_value) {
   bn_format_uint64(value, NULL, " VSYS", 8, 0, false, formated_value,
                    MAX_AMOUNT_SIZE);
+}
+
+uint64_t convert_to_nano_sec(uint64_t timestamp) {
+  if (timestamp < 10000000000) {
+    return timestamp * 1000000000;
+  } else if (timestamp < 10000000000000) {
+    return timestamp * 1000000;
+  } else if (timestamp < 10000000000000000) {
+    return timestamp * 1000;
+  } else {
+    return timestamp;
+  }
+}
+
+// Encode
+void encode_payment_tx_to_bytes(VsysSignTx *msg, uint8_t *ctx, size_t *ctx_len) {
+  uint8_t* index = ctx;
+  ctx[0] = msg->transactionType;
+  index += 1;
+  write_uint64_be(index, convert_to_nano_sec(msg->timestamp));
+  index += 8;
+  write_uint64_be(index, msg->amount);
+  index += 8;
+  write_uint64_be(index, msg->fee);
+  index += 8;
+  write_uint16_be(index, msg->feeScale);
+  index += 2;
+  size_t recipient_size;
+  uint8_t recipient[26];
+  b58tobin(&recipient, &recipient_size, msg->recipient);
+  memcpy(index, &recipient, 26);
+  index += 26;
+  uint8_t attachment_bytes[192];
+  size_t attachment_bytes_len;
+  bool is_base58 = b58tobin(&attachment_bytes, &attachment_bytes_len, msg->attachment);
+  if (!is_base58) {
+    attachment_bytes_len = strlen(msg->attachment);
+    memcpy(attachment_bytes, msg->attachment, attachment_bytes_len);
+  }
+  write_uint16_be(index, attachment_bytes_len);
+  index += 2;
+  memcpy(index, &attachment_bytes, attachment_bytes_len);
+  *ctx_len = 55 + attachment_bytes_len; // 55 = 1 + 8 * 3 + 2 + 26 + 2
 }
 
 // Layouts

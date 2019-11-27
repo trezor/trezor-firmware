@@ -29,6 +29,10 @@ void fsm_msgVsysGetAddress(const VsysGetAddress *msg) {
   if (!node) return;
 
   resp->has_address = true;
+  strcpy(resp->protocol, PROTOCOL);
+  strcpy(resp->opc, OPC_ACCOUNT);
+  resp->api = ACCOUNT_API_VER;
+
   hdnode_fill_public_key(node);
   char network_byte = get_network_byte(msg->address_n, msg->address_n_count);
   vsys_get_address_from_public_key(&node->public_key[1], network_byte, resp->address);
@@ -59,8 +63,10 @@ void fsm_msgVsysGetPublicKey(const VsysGetPublicKey *msg) {
   hdnode_fill_public_key(node);
 
   resp->has_public_key = true;
-  resp->public_key.size = 32;
   resp->has_address = true;
+  strcpy(resp->protocol, PROTOCOL);
+  strcpy(resp->opc, OPC_ACCOUNT);
+  resp->api = ACCOUNT_API_VER;
 
   if (msg->has_show_display && msg->show_display) {
     layoutVsysPublicKey(&node->public_key[1]);
@@ -71,8 +77,8 @@ void fsm_msgVsysGetPublicKey(const VsysGetPublicKey *msg) {
     }
   }
 
-  memcpy(&resp->public_key.bytes, &node->public_key[1],
-         sizeof(resp->public_key.bytes));
+  size_t public_key_size;
+  b58enc(resp->public_key, &public_key_size, &node->public_key[1], 32);
 
   char network_byte = get_network_byte(msg->address_n, msg->address_n_count);
   vsys_get_address_from_public_key(&node->public_key[1], network_byte, resp->address);
@@ -95,9 +101,16 @@ void fsm_msgVsysSignTx(VsysSignTx *msg) {
 
   hdnode_fill_public_key(node);
 
-  vsys_sign_tx(node, msg, resp);
+  layoutVsysRequireConfirmTx(msg->recipient, msg->amount);
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, true)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
 
-  msg_write(MessageType_MessageType_VsysSignedTx, resp);
+  if (vsys_sign_tx(node, msg, resp)) {
+    msg_write(MessageType_MessageType_VsysSignedTx, resp);
+  }
 
   layoutHome();
 }

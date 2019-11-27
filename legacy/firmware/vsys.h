@@ -21,16 +21,34 @@
 #define __VSYS_H__
 
 #include <stdbool.h>
+#include <string.h>
 #include "bip32.h"
 #include "messages-vsys.pb.h"
 
-#define MAX_VSYS_ADDRESS_SIZE 26
+#define MAX_VSYS_ADDRESS_SIZE 37
+#define PROTOCOL "v.systems"
 
-void vsys_sign_tx(const HDNode *node, VsysSignTx *msg, VsysSignedTx *resp);
+#define OPC_ACCOUNT "account"
+#define OPC_TX "transaction"
+#define OPC_SIGN "signature"
+
+#define SUPPORT_API_VER 4
+#define ACCOUNT_API_VER 1
+#define SIGN_API_VER 1
+
+#define PAYMENT_TX_TYPE 2
+#define LEASE_TX_TYPE 3
+#define LEASE_CANCEL_TX_TYPE 4
+
+bool vsys_sign_tx(const HDNode *node, VsysSignTx *msg, VsysSignedTx *resp);
 
 // Helpers
 size_t vsys_get_address_from_public_key(const uint8_t *public_key, char network_byte, char *address);
 char get_network_byte(const uint32_t *address_n, size_t address_n_count);
+uint64_t convert_to_nano_sec(uint64_t timestamp);
+
+// Encode
+void encode_payment_tx_to_bytes(VsysSignTx *msg, uint8_t *ctx, size_t *ctx_len);
 
 // Layout
 void layoutVsysPublicKey(const uint8_t *pubkey);

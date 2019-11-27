@@ -66,6 +66,22 @@ inline void write_be(uint8_t *data, uint32_t x) {
   data[3] = x;
 }
 
+inline void write_uint64_be(uint8_t *data, uint64_t x) {
+  data[0] = x >> 56;
+  data[1] = x >> 48;
+  data[2] = x >> 40;
+  data[3] = x >> 32;
+  data[4] = x >> 24;
+  data[5] = x >> 16;
+  data[6] = x >> 8;
+  data[7] = x;
+}
+
+inline void write_uint16_be(uint8_t *data, uint16_t x) {
+  data[0] = x >> 8;
+  data[1] = x;
+}
+
 inline uint32_t read_le(const uint8_t *data) {
   return (((uint32_t)data[3]) << 24) | (((uint32_t)data[2]) << 16) |
          (((uint32_t)data[1]) << 8) | (((uint32_t)data[0]));
