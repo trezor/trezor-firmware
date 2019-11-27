@@ -274,7 +274,7 @@ cli.add_command(stellar.cli)
 cli.add_command(tezos.cli)
 
 cli.add_command(firmware.firmware_update)
-
+cli.add_command(debug.cli)
 
 #
 # Main
