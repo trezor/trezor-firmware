@@ -2,7 +2,7 @@
   "coin_name": "Sinovate",
   "coin_shortcut": "SIN",
   "coin_label": "Sinovate",
-  "website": "https://sinovate.io/",
+  "website": "https://sinovate.io",
   "github": "https://github.com/SINOVATEblockchain/SIN-core",
   "maintainer": "Cryplander <info@sinovate.org>",
   "curve_name": "secp256k1",
