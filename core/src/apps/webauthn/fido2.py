@@ -1356,7 +1356,7 @@ def algorithms_from_pub_key_cred_params(pub_key_cred_params: List[dict]) -> List
 
 
 def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
-    from apps.webauthn.knownapps import knownapps
+    from apps.webauthn import knownapps
 
     if not storage.is_initialized():
         if __debug__:
@@ -1414,7 +1414,11 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
-    cred.use_sign_count = knownapps.get(rp_id_hash, {}).get("use_sign_count", True)
+    app = knownapps.by_rp_id_hash(rp_id_hash)
+    if app is not None and app.use_sign_count is not None:
+        cred.use_sign_count = app.use_sign_count
+    else:
+        cred.use_sign_count = True
 
     # Check data types.
     if (
