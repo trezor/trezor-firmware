@@ -262,12 +262,20 @@ def _load_misc():
 def _load_fido_apps():
     """Load btc-like coins from `coins/*.json`"""
     apps = []
-    for filename in glob.glob(os.path.join(DEFS_DIR, "webauthn", "apps", "*.json")):
-        app_name = os.path.basename(filename)[:-5]
+    for filename in sorted(
+        glob.glob(os.path.join(DEFS_DIR, "webauthn", "apps", "*.json"))
+    ):
+        app_name = os.path.basename(filename)[:-5].lower()
         app = load_json(filename)
-        app.update(
-            key=app_name,
-        )
+        app.setdefault("use_sign_count", None)
+        app.setdefault("u2f", [])
+        app.setdefault("webauthn", [])
+
+        icon_path = os.path.join(DEFS_DIR, "webauthn", "apps", app_name + ".png")
+        if not os.path.exists(icon_path):
+            icon_path = None
+
+        app.update(key=app_name, icon=icon_path)
         apps.append(app)
 
     return apps
