@@ -261,17 +261,16 @@ class U2fCredential(Credential):
         self.id = keypath + mac.digest()
 
     def app_name(self) -> str:
-        from apps.webauthn.knownapps import knownapps
+        from apps.webauthn import knownapps
 
-        app_name = knownapps.get(self.rp_id_hash, {}).get(
-            "label", None
-        )  # type: Optional[str]
-        if app_name is None:
-            app_name = "%s...%s" % (
-                hexlify(self.rp_id_hash[:4]).decode(),
-                hexlify(self.rp_id_hash[-4:]).decode(),
-            )
-        return app_name
+        app = knownapps.by_rp_id_hash(self.rp_id_hash)
+        if app is not None:
+            return app.label
+
+        return "%s...%s" % (
+            hexlify(self.rp_id_hash[:4]).decode(),
+            hexlify(self.rp_id_hash[-4:]).decode(),
+        )
 
     @staticmethod
     def from_key_handle(key_handle: bytes, rp_id_hash: bytes) -> "U2fCredential":
