@@ -48,9 +48,8 @@ and no header. This can be achieved with ZLIB library by using the following:
 
 ```python
 import zlib
-z = zlib.compressobj(level=9, wbits=10)
+z = zlib.compressobj(level=9, wbits=-10)
 zdata = z.compress(pixeldata) + z.flush()
-zdata = zdata[2:-4] # strip header and checksum
 ```
 
 ## Tools
