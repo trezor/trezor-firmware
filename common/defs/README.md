@@ -1,4 +1,20 @@
-# Coin Definitions
+# Coin and FIDO Definitions
+
+This directory hosts JSON definitions of recognized coins, tokens, and FIDO/U2F apps.
+
+## FIDO
+
+The [`fido/`](fido) subdirectory contains definitons of apps whose logos and
+names are shown on Trezor T screen for FIDO/U2F authentication.
+
+Each app must have a single JSON file in the `fido/` subdirectory, and a corresponding
+PNG image with the same name. The PNG must be 128x128 pixels RGBA.
+
+Every app must have its `label` set to the user-recognizable application name. The `u2f`
+field is a list of U2F origin hashes, and the `webauthn` field is a list of
+FIDO2/WebAuthn hostnames for the app. At least one must be present.
+
+## Coins
 
 We currently recognize five categories of coins.
 
