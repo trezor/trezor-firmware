@@ -477,7 +477,7 @@ def check_segwit(coins):
 
 
 FIDO_KNOWN_KEYS = frozenset(
-    ("key", "u2f", "webauthn", "label", "use_sign_count", "demo")
+    ("key", "u2f", "webauthn", "label", "use_sign_count", "demo", "icon")
 )
 
 
@@ -510,20 +510,23 @@ def check_fido(apps):
         unknown_keys = set(app.keys()) - FIDO_KNOWN_KEYS
         if unknown_keys:
             print_log(logging.ERROR, app["key"], ": unrecognized keys:", unknown_keys)
+            check_passed = False
 
         # check icons
-        icon_file = app["key"].lower() + ".png"
-        try:
-            icon = Image.open(
-                os.path.join(coin_info.DEFS_DIR, "webauthn", "apps", icon_file)
-            )
-        except Exception:
+        if app["icon"] is None:
             if app.get("demo"):
                 log_level = logging.WARNING
             else:
                 log_level = logging.ERROR
                 check_passed = False
-            print_log(log_level, app["key"], ": failed to open icon file", icon_file)
+            print_log(log_level, app["key"], ": missing icon")
+            continue
+
+        try:
+            icon = Image.open(app["icon"])
+        except Exception:
+            print_log(log_level, app["key"], ": failed to open icon file", app["icon"])
+            check_passed = False
             continue
 
         if icon.size != (128, 128) or icon.mode != "RGBA":
@@ -887,6 +890,7 @@ def render(paths, outfile, verbose, bitcoin_only):
 
     # prepare defs
     defs = coin_info.coin_info()
+    defs["fido"] = coin_info.fido_info()
     support_info = coin_info.support_info(defs)
 
     if bitcoin_only:
