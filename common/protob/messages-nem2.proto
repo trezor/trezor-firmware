@@ -41,6 +41,7 @@ message NEM2SignTx {
     repeated uint32 address_n = 5;
     optional bool cosigning = 6;
     optional NEM2MosaicDefinitionTransaction mosaic_definition = 7; // Mosaic Definition part
+    optional NEM2MosaicSupplyChangeTransaction mosaic_supply = 8; // Mosaic Supply part
 
     /**
     * Common types from
@@ -60,6 +61,7 @@ message NEM2SignTx {
         RESERVED = 0;
         TRANSFER = 16724;
         MOSAIC_DEFINITION = 16717;
+        MOSAIC_SUPPLY_CHANGE = 16973;
     }
 
     enum NEM2NetworkType {
@@ -100,7 +102,7 @@ message NEM2SignTx {
     }
 
     /**
-    * Mosaic Transaction type definitions
+    * Mosaic Definition transaction type definition
     */
     message NEM2MosaicDefinitionTransaction {
         optional uint32 nonce = 1; // mosaic nonce
@@ -108,6 +110,15 @@ message NEM2SignTx {
         optional uint32 flags = 3; // mosaic flags
         optional uint32 divisibility = 4; // mosaic divisibility
         optional uint64 duration = 5; // mosaic duration
+    }
+
+    /**
+    * Mosaic Supply Change transaction definition
+    */
+    message NEM2MosaicSupplyChangeTransaction {
+        optional string mosaic_id = 1; // mosaic identifier
+        optional uint32 action = 2; // supply change direction (increase/descrease)
+        optional uint64 delta = 3; // change in supply
     }
 }
 

@@ -3,6 +3,7 @@
 from .. import protobuf as p
 
 from .NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
+from .NEM2MosaicSupplyChangeTransaction import NEM2MosaicSupplyChangeTransaction
 from .NEM2TransactionCommon import NEM2TransactionCommon
 from .NEM2TransferTransaction import NEM2TransferTransaction
 
@@ -26,6 +27,7 @@ class NEM2SignTx(p.MessageType):
         address_n: List[int] = None,
         cosigning: bool = None,
         mosaic_definition: NEM2MosaicDefinitionTransaction = None,
+        mosaic_supply: NEM2MosaicSupplyChangeTransaction = None,
     ) -> None:
         self.transaction = transaction
         self.multisig = multisig
@@ -34,6 +36,7 @@ class NEM2SignTx(p.MessageType):
         self.address_n = address_n if address_n is not None else []
         self.cosigning = cosigning
         self.mosaic_definition = mosaic_definition
+        self.mosaic_supply = mosaic_supply
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -45,4 +48,5 @@ class NEM2SignTx(p.MessageType):
             5: ('address_n', p.UVarintType, p.FLAG_REPEATED),
             6: ('cosigning', p.BoolType, 0),
             7: ('mosaic_definition', NEM2MosaicDefinitionTransaction, 0),
+            8: ('mosaic_supply', NEM2MosaicSupplyChangeTransaction, 0),
         }

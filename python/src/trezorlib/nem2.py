@@ -22,6 +22,7 @@ from .tools import CallException, expect
 TYPE_TRANSACTION_TRANSFER = 0x4154
 TYPE_MULTISIG_SIGNATURE = 0x1002
 TYPE_MOSAIC_DEFINITION = 0x414D
+TYPE_MOSAIC_SUPPLY_CHANGE = 0x424D
 
 NETWORK_TYPE_MIJIN_TEST = 0x90
 NETWORK_TYPE_MIJIN = 0x60
@@ -66,8 +67,15 @@ def create_mosaic_defnition(transaction):
     msg.mosaic_id = transaction["mosaic_id"]
     msg.flags = transaction["flags"]
     msg.divisibility = transaction["divisibility"]
-    print(int(transaction["duration"], 16))
     msg.duration = int(transaction["duration"])
+    return msg
+
+
+def create_mosaic_supply(transaction):
+    msg = proto.NEM2MosaicSupplyChangeTransaction()
+    msg.mosaic_id = transaction["mosaic_id"]
+    msg.delta = int(transaction["delta"])
+    msg.action = transaction["action"]
     return msg
 
 def fill_transaction_by_type(msg, transaction):
@@ -75,8 +83,8 @@ def fill_transaction_by_type(msg, transaction):
         msg.transfer = create_transfer(transaction)
     if transaction["type"] == TYPE_MOSAIC_DEFINITION:
         msg.mosaic_definition = create_mosaic_defnition(transaction)
-    else:
-        raise ValueError("Unknown transaction type")
+    if transaction["type"] == TYPE_MOSAIC_SUPPLY_CHANGE:
+        msg.mosaic_supply = create_mosaic_supply(transaction)
 
 
 def create_sign_tx(transaction):

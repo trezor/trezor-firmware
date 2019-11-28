@@ -39,6 +39,8 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
         tx = await transfer.transfer(ctx, public_key, common, msg.transfer, node)
     elif msg.mosaic_definition:
         tx = await mosaic.mosaic_definition(ctx, public_key, common, msg.mosaic_definition)
+    elif msg.mosaic_supply:
+        tx = await mosaic.mosaic_supply(ctx, common, msg.mosaic_supply)
     # elif msg.provision_namespace:
     #     tx = await namespace.namespace(ctx, public_key, common, msg.provision_namespace)
     # elif msg.supply_change:
