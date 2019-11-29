@@ -153,13 +153,6 @@ def by_rp_id_hash(rp_id_hash: bytes) -> Optional[FIDOApp]:
             icon="apps/webauthn/res/icon_keeper.toif",
             use_sign_count=None,
         )
-    elif rp_id_hash == b"\xd7\x55\xc5\x27\xa8\x6b\xf7\x84\x45\xc2\x82\xe7\x13\xdc\xb8\x6d\x46\xff\x8b\x3c\xaf\xcf\xb7\x3b\x2e\x8c\xbe\x6c\x08\x84\xcb\x24":
-        # U2F key for LastPass
-        return FIDOApp(
-            label="LastPass",
-            icon="apps/webauthn/res/icon_lastpass.toif",
-            use_sign_count=None,
-        )
     elif rp_id_hash == b"\xf8\x3f\xc3\xa1\xb2\x89\xa0\xde\xc5\xc1\xc8\xaa\x07\xe9\xb5\xdd\x9c\xbb\x76\xf6\xb2\xf5\x60\x60\x17\x66\x72\x68\xe5\xb9\xc4\x5e":
         # WebAuthn key for login.gov
         return FIDOApp(
