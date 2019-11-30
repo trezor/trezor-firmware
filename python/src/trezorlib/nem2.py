@@ -48,7 +48,7 @@ def create_transfer(transaction):
     msg.recipient_address = transaction["recipient_address"]["address"]
 
     if "payload" in transaction["message"]:
-        msg.message = bytes.fromhex(transaction["message"]["payload"])
+        msg.message = transaction["message"]["payload"]
 
     if "mosaics" in transaction:
         msg.mosaics = [

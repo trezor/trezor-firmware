@@ -11,6 +11,7 @@ if not utils.BITCOIN_ONLY:
     from trezor.messages.NEM2SignTx import NEM2SignTx
     from trezor.messages.NEM2Mosaic import NEM2Mosaic
     from trezor.messages.NEM2TransferMessage import NEM2TransferMessage
+    from trezor.messages.NEM2RecipientAddress import NEM2RecipientAddress
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -19,12 +20,15 @@ class TestNem2Transfer(unittest.TestCase):
     def test_create_transfer(self):
 
         # http://api-01.mt.us-west-2.nemtech.network:3000/transaction/8729BE2004B61CFFCEC2B7264DAF48A0F7E952258269C176BB678C385366E373
-        m = _create_msg(NEM2_NETWORK_TESTNET,
+        m = _create_msg(NEM2_NETWORK_TEST_NET,
                         NEM2_TRANSACTION_TYPE_TRANSFER,
                         38913,
                         "20000",
                         "113248176649",
-                        "TAO6QEUC3APBTMDAETMG6IZJI7YOXWHLGC5T4HA4",
+                        {
+                            "address": "TAO6QEUC3APBTMDAETMG6IZJI7YOXWHLGC5T4HA4",
+                            "network_type": NEM2_NETWORK_TEST_NET
+                        },
                         {"payload": "", "type": 0},
                         [{ "id": "308F144790CD7BC4", "amount": 1000000000}]
                     )
@@ -36,12 +40,15 @@ class TestNem2Transfer(unittest.TestCase):
 
     def test_create_transfer_with_message_payload(self):
 
-        m = _create_msg(NEM2_NETWORK_TESTNET,
+        m = _create_msg(NEM2_NETWORK_TEST_NET,
                         NEM2_TRANSACTION_TYPE_TRANSFER,
                         38913,
                         "20000",
                         "113248176649",
-                        "TAO6QEUC3APBTMDAETMG6IZJI7YOXWHLGC5T4HA4",
+                        {
+                            "address": "TAO6QEUC3APBTMDAETMG6IZJI7YOXWHLGC5T4HA4",
+                            "network_type": NEM2_NETWORK_TEST_NET
+                        },
                         {"payload": "Test Transfer", "type": 0},
                         [{ "id": "308F144790CD7BC4", "amount": 1000000000}]
                     )
@@ -52,7 +59,7 @@ class TestNem2Transfer(unittest.TestCase):
         # self.assertEqual(hashlib.sha3_256(t, keccak=True).digest(), unhexlify('923EB29CF8C75E9BB03DB064C47389FD98B1EC2A62CD7C685FBA7F706B09DF73'))
 
 def _create_msg(network_type: int, tx_type: int, version: int, max_fee: str,
-                deadline: str, recipient_address: str, message: dict, mosaics: list):
+                deadline: str, recipient_address: dict, message: dict, mosaics: list):
     m = NEM2SignTx()
     m.transaction = NEM2TransactionCommon()
     m.transaction.network_type = network_type
@@ -61,7 +68,10 @@ def _create_msg(network_type: int, tx_type: int, version: int, max_fee: str,
     m.transaction.max_fee = max_fee
     m.transaction.deadline = deadline
     m.transfer = NEM2TransferTransaction()
-    m.transfer.recipient_address = recipient_address
+    m.transfer.recipient_address = NEM2RecipientAddress(
+        address=recipient_address["address"],
+        network_type=recipient_address["network_type"]
+    )
     m.transfer.message = NEM2TransferMessage(payload=message["payload"], type=message["type"])
     m.transfer.mosaics = list()
     for i in mosaics:

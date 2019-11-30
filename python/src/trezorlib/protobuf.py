@@ -424,6 +424,7 @@ def dump_message(writer: Writer, msg: MessageType) -> None:
 
             elif issubclass(ftype, MessageType):
                 counter = CountingWriter()
+                print("SVALUE", svalue)
                 dump_message(counter, svalue)
                 dump_uvarint(writer, counter.size)
                 dump_message(writer, svalue)

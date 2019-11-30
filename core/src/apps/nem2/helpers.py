@@ -2,8 +2,8 @@ from micropython import const
 
 from apps.common import HARDENED
 
-NEM2_NETWORK_MAINNET = const(0x68)
-NEM2_NETWORK_TESTNET = const(0x98)
+NEM2_NETWORK_MAIN_NET = const(0x68)
+NEM2_NETWORK_TEST_NET = const(0x98)
 NEM2_NETWORK_MIJIN = const(0x60)
 NEM2_NETWORK_MIJIN_TEST = const(0x90)
 

@@ -39,7 +39,7 @@ def serialize_transfer(
     tx = serialize_tx_common(tx, common)
 
     # recipient_address (catbuffer UnresolvedAddress - 25 bits) base 32 encoded
-    write_bytes(tx, base32.decode(transfer.recipient_address))
+    write_bytes(tx, base32.decode(transfer.recipient_address.address))
 
     # mosaics count (1 byte)
     write_uint8(tx, len(transfer.mosaics))

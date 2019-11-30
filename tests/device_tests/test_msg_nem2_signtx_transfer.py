@@ -45,23 +45,31 @@ class TestMsgNEM2SignTxTransfer:
                 parse_path("m/44'/43'/0'"),
                 {
                     "type": nem2.TYPE_TRANSACTION_TRANSFER,
-                    "network_type": nem2.NETWORK_TYPE_MIJIN_TEST,
+                    "network_type": nem2.NETWORK_TYPE_TEST_NET,
                     "generation_hash": "9F1979BEBA29C47E59B40393ABB516801A353CFC0C18BC241FEDE41939C907E7",
-                    "version": 36865,
+                    "version": 38913,
                     "max_fee": "20000",
                     "deadline": "113248176649",
-                    "recipient_address": "SAIKV5OOWCQ3EHIBMJH7HR2GGKPXUG2VT4OE3FU7",
-                    "mosaics": [{ "amount": "1000000000", "id": "308F144790CD7BC4" }],
-                    "message": {
-                        "payload": "This is a message",
-                        "type": 0,
+                    "recipient_address": {
+                        "address": "TAO6QEUC3APBTMDAETMG6IZJI7YOXWHLGC5T4HA4",
+                        "network_type": nem2.NETWORK_TYPE_TEST_NET
                     },
-                },
+                    "mosaics": [
+                        {
+                            "amount": "1000000000",
+                            "id": "308F144790CD7BC4"
+                        }
+                    ],
+                    "message": {
+                        "type": 0,
+                        "payload": "Test Transfer"
+                    }
+                }
             )
 
             assert (
                 tx.payload.hex().upper()
-                == "B6000000946BFD936C0FD410F997268141EAAACD48182E5C5198C313737EF0AAFFD1097DB8B43201CCFBFEC67B5D85F0446DC04DB48C66A1408E334EDA8655BDE73C090F8AF53BB8F3A167C68F264C33237DB309DBC88F64D7A1088B8BEEA5A34DBBBEC201905441204E000000000000090A1E5E1A0000009010AAF5CEB0A1B21D01624FF3C746329F7A1B559F1C4D969F12000100546869732069732061206D657373616765C47BCD9047148F3000CA9A3B00000000"
+                == "BE000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001985441204E000000000000090A1E5E1A000000981DE81282D81E19B06024D86F232947F0EBD8EB30BB3E1C1C010E0000000000C47BCD9047148F3000CA9A3B000000000054657374205472616E73666572"
             )
             # assert (
             #     tx.hash.hex()
