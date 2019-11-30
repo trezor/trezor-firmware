@@ -27,6 +27,9 @@ async def ask_transfer(
     for mosaic in transfer.mosaics:
         await ask_transfer_mosaic(ctx, common, transfer, mosaic)
     await _require_confirm_transfer(ctx, transfer.recipient_address.address, _get_xem_amount(transfer))
+
+    if(transfer.message.payload):
+        await _require_confirm_message(ctx, transfer.message.payload)
     await require_confirm_final(ctx, common.max_fee)
 
 
@@ -72,23 +75,6 @@ def _get_xem_amount(transfer: NEM2TransferTransaction):
     # if there are mosaics but do not include xem, 0 xem is sent
     return 0
 
-
-def _get_levy_msg(mosaic_definition, amount: int, network: int) -> str:
-    levy_definition = get_mosaic_definition(
-        mosaic_definition["levy_namespace"], mosaic_definition["levy_mosaic"], network
-    )
-    if mosaic_definition["levy"] == NEMMosaicLevy.MosaicLevy_Absolute:
-        levy_fee = mosaic_definition["fee"]
-    else:
-        levy_fee = (
-            amount * mosaic_definition["fee"] / NEM2_LEVY_PERCENTILE_DIVISOR_ABSOLUTE
-        )
-    return (
-        format_amount(levy_fee, levy_definition["divisibility"])
-        + levy_definition["ticker"]
-    )
-
-
 async def ask_importance_transfer(
     ctx, common: NEM2TransactionCommon, imp: NEMImportanceTransfer
 ):
@@ -107,16 +93,7 @@ async def _require_confirm_transfer(ctx, recipient, value):
     text.mono(*split_address(recipient))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
-
-async def _require_confirm_payload(ctx, payload: bytearray, encrypt=False):
-    payload = bytes(payload).decode()
-
-    if encrypt:
-        text = Text("Confirm payload", ui.ICON_SEND, ui.GREEN)
-        text.bold("Encrypted:")
-        text.normal(*payload.split(" "))
-    else:
-        text = Text("Confirm payload", ui.ICON_SEND, ui.RED)
-        text.bold("Unencrypted:")
-        text.normal(*payload.split(" "))
+async def _require_confirm_message(ctx, message):
+    text = Text("Confirm message", ui.ICON_SEND, ui.GREEN)
+    text.normal(message)
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
