@@ -29,16 +29,16 @@ class TestMsgNEM2SignTxTransfer:
         tx = nem2.sign_tx(
             client,
             parse_path("m/44'/43'/0'"),
+            "9F1979BEBA29C47E59B40393ABB516801A353CFC0C18BC241FEDE41939C907E7",
             {
                 "type": nem2.TYPE_TRANSACTION_TRANSFER,
-                "network_type": nem2.NETWORK_TYPE_TEST_NET,
-                "generation_hash": "9F1979BEBA29C47E59B40393ABB516801A353CFC0C18BC241FEDE41939C907E7",
+                "network": nem2.NETWORK_TYPE_TEST_NET,
                 "version": 38913,
-                "max_fee": "20000",
+                "maxFee": "20000",
                 "deadline": "113248176649",
-                "recipient_address": {
+                "recipientAddress": {
                     "address": "TAO6QEUC3APBTMDAETMG6IZJI7YOXWHLGC5T4HA4",
-                    "network_type": nem2.NETWORK_TYPE_TEST_NET
+                    "networkType": nem2.NETWORK_TYPE_TEST_NET
                 },
                 "mosaics": [
                     {

@@ -29,15 +29,15 @@ class TestMsgNEM2SignTxMosaics:
         tx = nem2.sign_tx(
             client,
             parse_path("m/44'/43'/0'/0'/0'"),
+            "9F1979BEBA29C47E59B40393ABB516801A353CFC0C18BC241FEDE41939C907E7",
             {
                 "type": nem2.TYPE_MOSAIC_DEFINITION,
-                "network_type": nem2.NETWORK_TYPE_TEST_NET,
-                "generation_hash": "9F1979BEBA29C47E59B40393ABB516801A353CFC0C18BC241FEDE41939C907E7",
+                "network": nem2.NETWORK_TYPE_TEST_NET,
                 "version": 38913,
-                "max_fee": "100",
+                "maxFee": "100",
                 "deadline": "113728610090",
                 "nonce": 3095715558,
-                "mosaic_id": "0B65C4B29A80C619",
+                "mosaicId": "0B65C4B29A80C619",
                 "flags": 7,
                 "divisibility": 100,
                 "duration": "123"
