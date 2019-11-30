@@ -91,7 +91,7 @@ message NEM2SignTx {
     * https://github.com/nemtech/catbuffer/blob/master/schemas/transaction.cats
     */
     message NEM2TransferTransaction {
-        optional string recipient_address = 1;
+        optional NEM2RecipientAddress recipient_address = 1;
         optional NEM2TransferMessage message = 2;
         repeated NEM2Mosaic mosaics = 3;
     }

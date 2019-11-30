@@ -3,6 +3,7 @@
 import protobuf as p
 
 from .NEM2Mosaic import NEM2Mosaic
+from .NEM2RecipientAddress import NEM2RecipientAddress
 from .NEM2TransferMessage import NEM2TransferMessage
 
 if __debug__:
@@ -17,7 +18,7 @@ class NEM2TransferTransaction(p.MessageType):
 
     def __init__(
         self,
-        recipient_address: str = None,
+        recipient_address: NEM2RecipientAddress = None,
         message: NEM2TransferMessage = None,
         mosaics: List[NEM2Mosaic] = None,
     ) -> None:
@@ -28,7 +29,7 @@ class NEM2TransferTransaction(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('recipient_address', p.UnicodeType, 0),
+            1: ('recipient_address', NEM2RecipientAddress, 0),
             2: ('message', NEM2TransferMessage, 0),
             3: ('mosaics', NEM2Mosaic, p.FLAG_REPEATED),
         }

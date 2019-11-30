@@ -45,15 +45,21 @@ def create_transaction_common(transaction):
 
 def create_transfer(transaction):
     msg = proto.NEM2TransferTransaction()
-    msg.recipient_address = transaction["recipient_address"]["address"]
+    msg.recipient_address = proto.NEM2RecipientAddress(
+        address=transaction["recipient_address"]["address"],
+        network_type=transaction["recipient_address"]["network_type"],
+    )
 
     if "payload" in transaction["message"]:
-        msg.message = transaction["message"]["payload"]
+        msg.message = proto.NEM2TransferMessage(
+            payload=transaction["message"]["payload"],
+            type=transaction["message"]["type"]
+        )
 
     if "mosaics" in transaction:
         msg.mosaics = [
             proto.NEM2Mosaic(
-                id=int(mosaic["id"], 16),
+                id=mosaic["id"],
                 amount=mosaic["amount"],
             )
             for mosaic in transaction["mosaics"]

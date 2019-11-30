@@ -26,7 +26,7 @@ async def ask_transfer(
 ):
     for mosaic in transfer.mosaics:
         await ask_transfer_mosaic(ctx, common, transfer, mosaic)
-    await _require_confirm_transfer(ctx, transfer.recipient_address, _get_xem_amount(transfer))
+    await _require_confirm_transfer(ctx, transfer.recipient_address.address, _get_xem_amount(transfer))
     await require_confirm_final(ctx, common.max_fee)
 
 
