@@ -25,38 +25,29 @@ from ..common import MNEMONIC12
 @pytest.mark.nem2
 class TestMsgNEM2SignTxTransfer:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_nem2_signtx_transfer(self, client):
+    def test_nem2_signtx_namespace_registration(self, client):
         tx = nem2.sign_tx(
             client,
             parse_path("m/44'/43'/0'"),
             "9F1979BEBA29C47E59B40393ABB516801A353CFC0C18BC241FEDE41939C907E7",
             {
-                "type": nem2.TYPE_TRANSACTION_TRANSFER,
+                "type": nem2.TYPE_NAMESPACE_REGISTRATION,
                 "network": nem2.NETWORK_TYPE_TEST_NET,
                 "version": 38913,
                 "maxFee": "20000",
                 "deadline": "113248176649",
-                "recipientAddress": {
-                    "address": "TAO6QEUC3APBTMDAETMG6IZJI7YOXWHLGC5T4HA4",
-                    "networkType": nem2.NETWORK_TYPE_TEST_NET
-                },
-                "mosaics": [
-                    {
-                        "amount": "1000000000",
-                        "id": "308F144790CD7BC4"
-                    }
-                ],
-                "message": {
-                    "type": 0,
-                    "payload": "Test Transfer"
-                }
+                "registrationType": 0,
+                "namespaceName": "testnamespace",
+                "id": "EAA4CB0862DBCB67",
+                "duration": "1000000"
             }
         )
 
         assert (
             tx.payload.hex().upper()
-            == "BE000000000000007AA702F0B217F37AC256C1D9638962305263B7665304CA0D9E749E988246298061DF8F644ADC63236065FDE417C81ED5AE58426744406E1D8F2C75F78F481A05252D2E9F95C4671EEB0C67C6666890567E35976B32666263CD390FC188CCF3170000000001985441204E000000000000090A1E5E1A000000981DE81282D81E19B06024D86F232947F0EBD8EB30BB3E1C1C010E0000000000C47BCD9047148F3000CA9A3B000000000054657374205472616E73666572"
+            == "9F00000000000000642F60B0D3116FB633CC5BEC7FFB563C4B7D53638E129F67CD9E314464729FB9C5589EC16D0D8AC3D9B8600872D246E357F97D87B768E1C63130D3FCFB51F20C252D2E9F95C4671EEB0C67C6666890567E35976B32666263CD390FC188CCF3170000000001984E41204E000000000000090A1E5E1A00000040420F000000000067CBDB6208CBA4EA000D746573746E616D657370616365"
         )
+
         # TODO: fix this
         # assert (
         #     tx.hash.hex().upper()

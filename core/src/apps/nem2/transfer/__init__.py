@@ -4,7 +4,7 @@ from trezor.messages.NEM2TransferTransaction import NEM2TransferTransaction
 from . import layout, serialize
 
 async def transfer(
-    ctx, public_key: bytes, common: NEM2TransactionCommon, transfer: NEM2TransferTransaction, node
+    ctx, public_key: bytes, common: NEM2TransactionCommon, transfer: NEM2TransferTransaction
 ):
 
     await layout.ask_transfer(ctx, common, transfer)

@@ -25,6 +25,9 @@ TYPE_MOSAIC_DEFINITION = 0x414D
 TYPE_MOSAIC_SUPPLY_CHANGE = 0x424D
 TYPE_NAMESPACE_REGISTRATION = 0x414E
 
+NAMESPACE_REGISTRATION_TYPE_ROOT = 0x00
+NAMESPACE_REGISTRATION_TYPE_CHILD = 0x01
+
 NETWORK_TYPE_MIJIN_TEST = 0x90
 NETWORK_TYPE_MIJIN = 0x60
 NETWORK_TYPE_TEST_NET = 0x98
@@ -87,12 +90,13 @@ def create_mosaic_supply(transaction):
 
 def create_namespace_registration(transaction):
     msg = proto.NEM2NamespaceRegistrationTransaction()
-    msg.duration = int(transaction["duration"]) # cast in case payload represents uint64 in string format
-    msg.parent_id = int(transaction["parentId"]) # cast in case payload represents uint64 in string format
-    msg.id = int(transaction["id"])
     msg.registration_type = transaction["registrationType"]
-    msg.name_size = transaction["nameSize"]
-    msg.name = transaction["name"]
+    if(msg.registration_type == NAMESPACE_REGISTRATION_TYPE_ROOT):
+        msg.duration = int(transaction["duration"]) # cast in case payload represents uint64 in string format
+    if(msg.registration_type == NAMESPACE_REGISTRATION_TYPE_CHILD):
+        msg.parent_id = int(transaction["parentId"]) # cast in case payload represents uint64 in string format
+    msg.id = int(transaction["id"], 16)
+    msg.namespace_name = transaction["namespaceName"].encode()
     return msg
 
 def fill_transaction_by_type(msg, transaction):

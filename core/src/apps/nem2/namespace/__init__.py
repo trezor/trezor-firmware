@@ -4,9 +4,10 @@ from trezor.messages.NEM2NamespaceRegistrationTransaction import NEM2NamespaceRe
 from . import layout, serialize
 
 async def namespace_registration(
-    ctx, public_key: bytes, common: NEM2TransactionCommon, namespace_registration: NEM2NamespaceRegistrationTransaction, node
+    ctx, public_key: bytes, common: NEM2TransactionCommon, namespace_registration: NEM2NamespaceRegistrationTransaction
 ):
 
-    await layout.ask_namespace_registration(ctx, common, namespace_registration)
+    # TODO: do this
+    # await layout.ask_namespace_registration(ctx, common, namespace_registration)
 
     return serialize.serialize_namespace_registration(common, namespace_registration)

@@ -64,6 +64,7 @@ message NEM2SignTx {
         TRANSFER = 16724;
         MOSAIC_DEFINITION = 16717;
         MOSAIC_SUPPLY_CHANGE = 16973;
+        NAMESPACE_REGISTRATION = 16718;
     }
 
     enum NEM2NetworkType {

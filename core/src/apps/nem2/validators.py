@@ -16,6 +16,8 @@ from .helpers import (
     NEM2_PUBLIC_KEY_SIZE,
 )
 
+from .namespace.validators import _validate_namespace_registration
+
 def validate(msg: NEM2SignTx):
     if msg.transaction is None:
         raise ProcessError("No common transaction fields provided")
@@ -31,14 +33,14 @@ def validate(msg: NEM2SignTx):
 
     if msg.transfer:
         _validate_transfer(msg.transfer, msg.transaction.version)
-
-
+    if(msg.namespace_registration):
+        _validate_namespace_registration(msg.namespace_registration, msg.transaction.version)
 
 def _validate_single_tx(msg: NEM2SignTx):
     # ensure exactly one transaction is provided
     tx_count = (
         bool(msg.transfer)
-        # + bool(msg.provision_namespace)
+        + bool(msg.namespace_registration)
         + bool(msg.mosaic_definition)
         + bool(msg.mosaic_supply)
         # + bool(msg.aggregate_modification)
@@ -68,12 +70,12 @@ def _validate_common(common: NEM2TransactionCommon, inner: bool = False):
         raise ProcessError("No %s provided" % err)
 
 
-def _validate_multisig(multisig: NEM2TransactionCommon, network: int):
-    if multisig.network != network:
+def _validate_multisig(multisig: NEM2TransactionCommon, version: int):
+    if multisig.version != version:
         raise ProcessError("Inner transaction network is different")
     _validate_public_key(multisig.signer, "Invalid multisig signer public key provided")
 
-def _validate_transfer(transfer: NEM2TransferTransaction, network: int):
+def _validate_transfer(transfer: NEM2TransferTransaction, version: int):
     if transfer.recipient_address is None:
         raise ProcessError("No recipient provided")
 
