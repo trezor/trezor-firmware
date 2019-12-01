@@ -5,7 +5,7 @@ if [ "$1" = "--gcc_source" ]; then
   TOOLCHAIN_FLAVOR=src
   shift
 else
-  TOOLCHAIN_FLAVOR=linux
+  TOOLCHAIN_FLAVOR=x86_64-linux
 fi
 
 IMAGE=trezor-firmware-build.$TOOLCHAIN_FLAVOR
