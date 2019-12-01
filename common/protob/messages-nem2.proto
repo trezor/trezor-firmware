@@ -42,6 +42,8 @@ message NEM2SignTx {
     optional bool cosigning = 6;
     optional NEM2MosaicDefinitionTransaction mosaic_definition = 7; // Mosaic Definition part
     optional NEM2MosaicSupplyChangeTransaction mosaic_supply = 8; // Mosaic Supply part
+    optional NEM2NamespaceRegistrationTransaction namespace_registration = 9; // Mosaic Supply part
+
 
     /**
     * Common types from
@@ -71,6 +73,11 @@ message NEM2SignTx {
         MIJIN_TEST = 144;
     }
 
+    enum NEM2NamespaceRegistrationType {
+        ROOT = 0;
+        CHILD = 1;
+    }
+
     // END entities
 
 
@@ -82,8 +89,8 @@ message NEM2SignTx {
         optional NEM2EntityType type = 1; // inline EntityBody
         optional NEM2NetworkType network_type = 2;
         optional uint32 version = 3 [default=1]; // inline EntityBody, defined as uint16 in catbuffer
-        optional string max_fee = 4;
-        optional string deadline = 5;
+        optional string max_fee = 4; // uint64
+        optional string deadline = 5; // uint64
     }
 
     /**
@@ -124,6 +131,18 @@ message NEM2SignTx {
         optional string mosaic_id = 1; // mosaic identifier
         optional uint32 action = 2; // supply change direction (increase/descrease)
         optional uint64 delta = 3; // change in supply
+    }
+
+    /**
+    * Namespace Registration transaction definition
+    */
+    message NEM2NamespaceRegistrationTransaction {
+        optional uint64 duration = 1; // namespace duration
+        optional uint64 parent_id = 2; // parent namespace identifier
+        optional uint64 id = 3; // identifier
+        optional NEM2NamespaceRegistrationType registration_type = 4 [default=ROOT];
+        optional uint32 name_size = 5; // length of name (bytes) (uint8 in catbuffer)
+        optional bytes namespace_name = 6; // namespace name
     }
 }
 

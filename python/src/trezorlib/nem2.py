@@ -23,6 +23,7 @@ TYPE_TRANSACTION_TRANSFER = 0x4154
 TYPE_MULTISIG_SIGNATURE = 0x1002
 TYPE_MOSAIC_DEFINITION = 0x414D
 TYPE_MOSAIC_SUPPLY_CHANGE = 0x424D
+TYPE_NAMESPACE_REGISTRATION = 0x414E
 
 NETWORK_TYPE_MIJIN_TEST = 0x90
 NETWORK_TYPE_MIJIN = 0x60
@@ -67,7 +68,7 @@ def create_transfer(transaction):
 
     return msg
 
-def create_mosaic_defnition(transaction):
+def create_mosaic_definition(transaction):
     msg = proto.NEM2MosaicDefinitionTransaction()
     msg.nonce = transaction["nonce"]
     msg.mosaic_id = transaction["mosaicId"]
@@ -84,13 +85,25 @@ def create_mosaic_supply(transaction):
     msg.action = transaction["action"]
     return msg
 
+def create_namespace_registration(transaction):
+    msg = proto.NEM2NamespaceRegistrationTransaction()
+    msg.duration = int(transaction["duration"]) # cast in case payload represents uint64 in string format
+    msg.parent_id = int(transaction["parentId"]) # cast in case payload represents uint64 in string format
+    msg.id = int(transaction["id"])
+    msg.registration_type = transaction["registrationType"]
+    msg.name_size = transaction["nameSize"]
+    msg.name = transaction["name"]
+    return msg
+
 def fill_transaction_by_type(msg, transaction):
     if transaction["type"] == TYPE_TRANSACTION_TRANSFER:
         msg.transfer = create_transfer(transaction)
     if transaction["type"] == TYPE_MOSAIC_DEFINITION:
-        msg.mosaic_definition = create_mosaic_defnition(transaction)
+        msg.mosaic_definition = create_mosaic_definition(transaction)
     if transaction["type"] == TYPE_MOSAIC_SUPPLY_CHANGE:
         msg.mosaic_supply = create_mosaic_supply(transaction)
+    if transaction["type"] == TYPE_NAMESPACE_REGISTRATION:
+        msg.namespace_registration = create_namespace_registration(transaction)
 
 
 def create_sign_tx(transaction):

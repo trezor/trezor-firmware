@@ -44,7 +44,7 @@ def serialize_transfer(
     # mosaics count (1 byte)
     write_uint8(tx, len(transfer.mosaics))
 
-    # message size (1 byte for type + n bytes for payload)
+    # message size (1 byte for type + n bytes for message payload size)
     write_uint16_le(tx, 1 + len(transfer.message.payload.encode()))
 
     # transfer tx reserved bytes (4 bytes)

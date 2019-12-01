@@ -349,6 +349,7 @@ from .NEM2Mosaic import NEM2Mosaic
 from .NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
 from .NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
 from .NEM2MosaicSupplyChangeTransaction import NEM2MosaicSupplyChangeTransaction
+from .NEM2NamespaceRegistrationTransaction import NEM2NamespaceRegistrationTransaction
 from .NEM2PublicKey import NEM2PublicKey
 from .NEM2PublicKey import NEM2PublicKey
 from .NEM2RecipientAddress import NEM2RecipientAddress
@@ -559,6 +560,7 @@ from . import MessageType
 from . import MessageType
 from . import NEM2EntityType
 from . import NEM2EntityType
+from . import NEM2NamespaceRegistrationType
 from . import NEM2NetworkType
 from . import NEM2NetworkType
 from . import NEMImportanceTransferMode
