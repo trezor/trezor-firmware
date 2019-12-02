@@ -958,6 +958,7 @@ static secbool unlock(uint32_t pin, const uint8_t *ext_salt) {
   // Get the pin failure counter
   uint32_t ctr = 0;
   if (sectrue != pin_get_fails(&ctr)) {
+    memzero(&pin, sizeof(pin));
     return secfalse;
   }
 
@@ -997,6 +998,7 @@ static secbool unlock(uint32_t pin, const uint8_t *ext_salt) {
   if (sectrue != initialized ||
       sectrue != norcow_get(EDEK_PVC_KEY, &rand_salt, &len) ||
       len != RANDOM_SALT_SIZE + KEYS_SIZE + PVC_SIZE) {
+    memzero(&pin, sizeof(pin));
     handle_fault("no EDEK");
     return secfalse;
   }
