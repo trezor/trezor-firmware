@@ -188,6 +188,9 @@ static secbool secequal(const void *ptr1, const void *ptr2, size_t n) {
 
 static secbool secequal32(const void *ptr1, const void *ptr2, size_t n) {
   assert(n % sizeof(uint32_t) == 0);
+  assert((uintptr_t)ptr1 % sizeof(uint32_t) == 0);
+  assert((uintptr_t)ptr2 % sizeof(uint32_t) == 0);
+
   size_t wn = n / sizeof(uint32_t);
   const uint32_t *p1 = (const uint32_t *)ptr1;
   const uint32_t *p2 = (const uint32_t *)ptr2;
