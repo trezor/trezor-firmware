@@ -1414,7 +1414,9 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         # User verification requested, but PIN is not enabled.
         state_set = dialog_mgr.set_state(Fido2ConfirmNoPin(req.cid, dialog_mgr.iface))
         if state_set:
-            return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
+            # We should return _ERR_UNSUPPORTED_OPTION, but since we claim in GetInfo that the PIN
+            # is set even when it's not, it makes more sense to return _ERR_OPERATION_DENIED.
+            return cbor_error(req.cid, _ERR_OPERATION_DENIED)
         else:
             return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
 
@@ -1571,7 +1573,9 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         # User verification requested, but PIN is not enabled.
         state_set = dialog_mgr.set_state(Fido2ConfirmNoPin(req.cid, dialog_mgr.iface))
         if state_set:
-            return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
+            # We should return _ERR_UNSUPPORTED_OPTION, but since we claim in GetInfo that the PIN
+            # is set even when it's not, it makes more sense to return _ERR_OPERATION_DENIED.
+            return cbor_error(req.cid, _ERR_OPERATION_DENIED)
         else:
             return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
 
@@ -1729,6 +1733,8 @@ def cbor_get_assertion_sign(
 
 
 def cbor_get_info(req: Cmd) -> Cmd:
+    # Note: We claim that the PIN is set even when it's not, because otherwise
+    # login.live.com shows an error, but doesn't instruct the user to set a PIN.
     response_data = {
         _GETINFO_RESP_VERSIONS: ["U2F_V2", "FIDO_2_0"],
         _GETINFO_RESP_EXTENSIONS: ["hmac-secret"],
