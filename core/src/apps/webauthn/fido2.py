@@ -1027,7 +1027,7 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     elif req.cmd == _CMD_WINK:
         if __debug__:
             log.debug(__name__, "_CMD_WINK")
-        loop.schedule(ui.alert())
+        ui.alert()
         return req
     elif req.cmd == _CMD_CBOR and _ALLOW_FIDO2:
         if not req.data:

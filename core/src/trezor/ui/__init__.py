@@ -34,6 +34,9 @@ VIEWY = const(9)
 # channel used to cancel layouts, see `Cancelled` exception
 layout_chan = loop.chan()
 
+# allow only one alert at a time to avoid alerts overlapping
+_alert_in_progress = False
+
 # in debug mode, display an indicator in top right corner
 if __debug__:
 
@@ -78,7 +81,7 @@ def pulse(period: int, offset: int = 0) -> float:
     return 0.5 + 0.5 * math.sin(2 * math.pi * (utime.ticks_us() + offset) / period)
 
 
-async def alert(count: int = 3) -> None:
+async def _alert(count: int) -> None:
     short_sleep = loop.sleep(20000)
     long_sleep = loop.sleep(80000)
     for i in range(count * 2):
@@ -89,6 +92,17 @@ async def alert(count: int = 3) -> None:
             display.backlight(style.BACKLIGHT_DIM)
             await long_sleep
     display.backlight(style.BACKLIGHT_NORMAL)
+    global _alert_in_progress
+    _alert_in_progress = False
+
+
+def alert(count: int = 3) -> None:
+    global _alert_in_progress
+    if _alert_in_progress:
+        return
+
+    _alert_in_progress = True
+    loop.schedule(_alert(count))
 
 
 async def click() -> Pos:
