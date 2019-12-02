@@ -15,6 +15,7 @@ def align4_data(data):
 class Norcow:
     def __init__(self):
         self.sectors = None
+        self.active_sector = 0
 
     def init(self):
         if self.sectors:
@@ -26,7 +27,10 @@ class Norcow:
         else:
             self.wipe()
 
-    def wipe(self, sector: int = 0):
+    def wipe(self, sector: int = None):
+        if sector is None:
+            sector = self.active_sector
+
         self.sectors = [
             bytearray([0xFF] * consts.NORCOW_SECTOR_SIZE)
             for _ in range(consts.NORCOW_SECTOR_COUNT)
