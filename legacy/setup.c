@@ -28,6 +28,8 @@
 #include "layout.h"
 #include "rng.h"
 #include "util.h"
+#include "sys.h"
+#include "usart.h"
 
 uint32_t __stack_chk_guard;
 
@@ -86,11 +88,23 @@ void setup(void) {
   RCC_CR |= RCC_CR_CSSON;
 
   // set GPIO for buttons
-  gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO2 | GPIO5);
+  gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO_BUTTON_OK | GPIO_BUTTON_UP|GPIO_BUTTON_DOWN|GPIO_BUTTON_CANCEL);
+  gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE,GPIO_BUTTON_CANCEL);
+
+   //usb insert io
+   gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE,  GPIO_USB_INSERT);
+   gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE,  GPIO_NFC_INSERT);
+   //battery power on
+   gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP,  GPIO_POWER_ON);
+   //ble power off
+   gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,  GPIO_BLE_POWER);
+   POWER_OFF_BLE();
+   //combus
+   gpio_mode_setup(GPIO_CMBUS_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_SI2C_CMBUS);
+   SET_COMBUS_LOW();
 
   // set GPIO for OLED display
-  gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO4);
-  gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO0 | GPIO1);
+  gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO2 | GPIO4 | GPIO3);
 
   // enable SPI 1 for OLED display
   gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO5 | GPIO7);
@@ -105,16 +119,41 @@ void setup(void) {
   //	spi_set_nss_high(SPI1);
   //	spi_clear_mode_fault(SPI1);
   spi_enable(SPI1);
+#if(_SUPPORT_DEBUG_UART_)
+ usart_setup();
+#endif
+  vCheckMode();
+  #if(_SUPPORT_DEBUG_UART_)
+  if(WORK_MODE_BLE == g_ucWorkMode)
+  {
+    vUART_DebugInfo("\n\r WORK_MODE_BLE !\n\r",&g_ucWorkMode,1); 
+  }
+  else  if(WORK_MODE_USB == g_ucWorkMode)
+  {
+   
+    vUART_DebugInfo("\n\r WORK_MODE_USB !\n\r",&g_ucWorkMode,1); 
+  }
+  else  if(WORK_MODE_NFC == g_ucWorkMode)
+  {
+    vUART_DebugInfo("\n\r WORK_MODE_NFC !\n\r",&g_ucWorkMode,1); 
+  }
+  else  
+  {
+    vUART_DebugInfo("\n\r WORK_MODE_ERROR !\n\r",&g_ucWorkMode,1); 
+  }
+  #endif
+  if(WORK_MODE_USB  == g_ucWorkMode)
+  {
+      // enable OTG_FS
+      gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO10);
+      gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
+      gpio_set_af(GPIOA, GPIO_AF10, GPIO10 | GPIO11 | GPIO12);
 
-  // enable OTG_FS
-  gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO10);
-  gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
-  gpio_set_af(GPIOA, GPIO_AF10, GPIO10 | GPIO11 | GPIO12);
-
-  // enable OTG FS clock
-  rcc_periph_clock_enable(RCC_OTGFS);
-  // clear USB OTG_FS peripheral dedicated RAM
-  memset_reg((void *)0x50020000, (void *)0x50020500, 0);
+      // enable OTG FS clock
+      rcc_periph_clock_enable(RCC_OTGFS);
+      // clear USB OTG_FS peripheral dedicated RAM
+      memset_reg((void *)0x50020000, (void *)0x50020500, 0);
+ }
 }
 
 void setupApp(void) {

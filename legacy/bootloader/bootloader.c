@@ -33,6 +33,11 @@
 #include "signatures.h"
 #include "usb.h"
 #include "util.h"
+#include "si2c.h"
+#include "usart.h"
+
+#include "sys.h"
+
 
 void layoutFirmwareFingerprint(const uint8_t *hash) {
   char str[4][17] = {0};
@@ -117,12 +122,10 @@ int main(void) {
   __stack_chk_guard = random32();  // this supports compiler provided
                                    // unpredictable stack protection checks
 #ifndef APPVER
-  memory_protect();
+  //memory_protect();
   oledInit();
 #endif
-
-  mpu_config_bootloader();
-
+  //mpu_config_bootloader();
 #ifndef APPVER
   bool left_pressed = (buttonRead() & BTN_PIN_NO) == 0;
 
