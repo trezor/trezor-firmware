@@ -110,13 +110,18 @@ _CLIENTPIN_SUBCMD_GET_KEY_AGREEMENT = const(0x02)
 _CLIENTPIN_RESP_KEY_AGREEMENT = const(0x01)  # COSE_Key, optional
 
 # status codes for the keepalive cmd
+_KEEPALIVE_STATUS_NONE = const(0x00)
 _KEEPALIVE_STATUS_PROCESSING = const(0x01)  # still processing the current request
 _KEEPALIVE_STATUS_UP_NEEDED = const(0x02)  # waiting for user presence
 
 # time intervals and timeouts
 _KEEPALIVE_INTERVAL_MS = const(80)  # interval between keepalive commands
-_CTAP_HID_TIMEOUT_MS = const(500)
-_U2F_CONFIRM_TIMEOUT_MS = const(10 * 1000)
+_CTAP_HID_TIMEOUT_MS = const(
+    500
+)  # maximum interval between CTAP HID continuation frames
+_U2F_CONFIRM_TIMEOUT_MS = const(
+    3 * 1000
+)  # maximum U2F pollling interval, Chrome uses 200 ms
 _FIDO2_CONFIRM_TIMEOUT_MS = const(60 * 1000)
 _POPUP_TIMEOUT_MS = const(4 * 1000)
 
@@ -603,6 +608,10 @@ class U2fState(State, ConfirmInfo):
         self._req_data = req_data
         self.load_icon(self._cred.rp_id_hash)
 
+    def keepalive_status(self) -> int:
+        # Run the keepalive loop to check for timeout, but do not send any keepalive messages.
+        return _KEEPALIVE_STATUS_NONE
+
     def timeout_ms(self) -> int:
         return _U2F_CONFIRM_TIMEOUT_MS
 
@@ -957,11 +966,12 @@ class DialogManager:
 
     async def keepalive_loop(self) -> None:
         try:
-            if not isinstance(self.state, Fido2State):
+            if not isinstance(self.state, (U2fState, Fido2State)):
                 return
             while utime.ticks_ms() < self.deadline:
-                cmd = cmd_keepalive(self.state.cid, self.state.keepalive_status())
-                await send_cmd(cmd, self.iface)
+                if self.state.keepalive_status() != _KEEPALIVE_STATUS_NONE:
+                    cmd = cmd_keepalive(self.state.cid, self.state.keepalive_status())
+                    await send_cmd(cmd, self.iface)
                 await loop.sleep(_KEEPALIVE_INTERVAL_MS * 1000)
         finally:
             self.keepalive = None
