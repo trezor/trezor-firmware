@@ -22,24 +22,32 @@ message VsysAddress {
 }
 
 /**
+ * Structure: VSYS common transaction
+ */
+message VsysTransaction {
+    required string protocol = 1;			// VSYS message protocol
+    required uint32 api = 2;			    // VSYS message API version
+    required string opc = 3;			    // VSYS message operation code
+    required uint32 transactionType = 4;	// 2 for payment, 3 for lease, 4 for cancel lease
+    optional string senderPublicKey = 5;
+    optional uint64 amount = 6;
+    required uint64 fee = 7;
+    required uint32 feeScale = 8;
+    optional string recipient = 9;
+    required uint64 timestamp = 10;
+    optional string attachment = 11;
+    optional string txId = 12;			    // lease transaction id (for lease cancellation used)
+}
+
+/**
  * Request: Ask device to sign VSYS transaction
  * @next VsysSignedTx
  */
 message VsysSignTx {
-    repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
-    required string protocol = 2;			// VSYS message protocol
-    required uint32 api = 3;			    // VSYS message API version
-    required string opc = 4;			    // VSYS message operation code
-    required uint32 transactionType = 5;	// 2 for payment, 3 for lease, 4 for cancel lease
-    optional string senderPublicKey = 6;
-    optional uint64 amount = 7;
-    required uint64 fee = 8;
-    required uint32 feeScale = 9;
-    optional string recipient = 10;
-    required uint64 timestamp = 11;
-    optional string attachment = 12;
-    optional string txId = 13;			    // lease transaction id (for lease cancellation used)
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+    required VsysTransaction tx = 2; // VSYS transaction structure
 }
+
 
 /**
 * Response: Contains VSYS transaction signature

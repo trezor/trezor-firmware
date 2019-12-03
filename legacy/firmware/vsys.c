@@ -40,22 +40,22 @@
 
 
 bool vsys_sign_tx(const HDNode *node, VsysSignTx *msg, VsysSignedTx *resp) {
-  if (strcmp(msg->protocol, PROTOCOL) != 0) {
+  if (strcmp(msg->tx.protocol, PROTOCOL) != 0) {
     fsm_sendFailure(FailureType_Failure_DataError,
                       _("Invalid protocol"));
     return false;
   }
-  if (strcmp(msg->opc, OPC_TX) != 0) {
+  if (strcmp(msg->tx.opc, OPC_TX) != 0) {
     fsm_sendFailure(FailureType_Failure_DataError,
                       _("Invalid OP Code"));
     return false;
   }
-  if (msg->api > SUPPORT_API_VER) {
+  if (msg->tx.api > SUPPORT_API_VER) {
     fsm_sendFailure(FailureType_Failure_DataError,
                       _("Need upgrade firmware for signing this transaction"));
     return false;
   }
-  if (!msg->has_senderPublicKey) {
+  if (!msg->tx.has_senderPublicKey) {
     fsm_sendFailure(FailureType_Failure_DataError,
                       _("Missing sender public key"));
     return false;
@@ -63,7 +63,7 @@ bool vsys_sign_tx(const HDNode *node, VsysSignTx *msg, VsysSignedTx *resp) {
   size_t public_key_size;
   char b58_public_key[45];
   b58enc(b58_public_key, &public_key_size, &node->public_key[1], 32);
-  if (strcmp(b58_public_key, msg->senderPublicKey) != 0) {
+  if (strcmp(b58_public_key, msg->tx.senderPublicKey) != 0) {
     fsm_sendFailure(FailureType_Failure_DataError,
                       _("Sender public key mismatch"));
     return false;
@@ -72,16 +72,18 @@ bool vsys_sign_tx(const HDNode *node, VsysSignTx *msg, VsysSignedTx *resp) {
   size_t to_sign_bytes_len;
   uint8_t to_sign_bytes[MAX_TX_SIZE];
 
-  if (msg->transactionType == PAYMENT_TX_TYPE) {
+  if (msg->tx.transactionType == PAYMENT_TX_TYPE) {
     encode_payment_tx_to_bytes(msg, to_sign_bytes, &to_sign_bytes_len);
-  } else if (msg->transactionType == PAYMENT_TX_TYPE) {
+  } else if (msg->tx.transactionType == PAYMENT_TX_TYPE) {
     // encode_lease_tx_to_bytes(msg, to_sign_bytes, &to_sign_bytes_len);
     fsm_sendFailure(FailureType_Failure_DataError,
                       _("Not implement encode_lease_tx_to_bytes"));
-  } else if (msg->transactionType == PAYMENT_TX_TYPE) {
+    return false;
+  } else if (msg->tx.transactionType == PAYMENT_TX_TYPE) {
     // encode_cancel_lease_tx_to_bytes(msg, to_sign_bytes, &to_sign_bytes_len);
     fsm_sendFailure(FailureType_Failure_DataError,
                       _("Not implement encode_cancel_lease_tx_to_bytes"));
+    return false;
   } else {
     fsm_sendFailure(FailureType_Failure_DataError,
                       _("Transaction type unsupported"));
@@ -153,27 +155,27 @@ uint64_t convert_to_nano_sec(uint64_t timestamp) {
 // Encode
 void encode_payment_tx_to_bytes(VsysSignTx *msg, uint8_t *ctx, size_t *ctx_len) {
   uint8_t* index = ctx;
-  ctx[0] = msg->transactionType;
+  ctx[0] = msg->tx.transactionType;
   index += 1;
-  write_uint64_be(index, convert_to_nano_sec(msg->timestamp));
+  write_uint64_be(index, convert_to_nano_sec(msg->tx.timestamp));
   index += 8;
-  write_uint64_be(index, msg->amount);
+  write_uint64_be(index, msg->tx.amount);
   index += 8;
-  write_uint64_be(index, msg->fee);
+  write_uint64_be(index, msg->tx.fee);
   index += 8;
-  write_uint16_be(index, msg->feeScale);
+  write_uint16_be(index, msg->tx.feeScale);
   index += 2;
   size_t recipient_size;
   uint8_t recipient[26];
-  b58tobin(&recipient, &recipient_size, msg->recipient);
+  b58tobin(&recipient, &recipient_size, msg->tx.recipient);
   memcpy(index, &recipient, 26);
-  index += 26;
+  index += recipient_size;
   uint8_t attachment_bytes[192];
-  size_t attachment_bytes_len;
-  bool is_base58 = b58tobin(&attachment_bytes, &attachment_bytes_len, msg->attachment);
+  size_t attachment_bytes_len = 0;
+  bool is_base58 = b58tobin(&attachment_bytes, &attachment_bytes_len, msg->tx.attachment);
   if (!is_base58) {
-    attachment_bytes_len = strlen(msg->attachment);
-    memcpy(attachment_bytes, msg->attachment, attachment_bytes_len);
+    attachment_bytes_len = strlen(msg->tx.attachment);
+    memcpy(attachment_bytes, msg->tx.attachment, attachment_bytes_len);
   }
   write_uint16_be(index, attachment_bytes_len);
   index += 2;

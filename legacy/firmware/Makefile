@@ -98,12 +98,12 @@ OBJS += ../vendor/axolotl-curve25519/curve/ed25519/sc_muladd.o
 OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_tobytes.o
 OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_frombytes.o
 OBJS += ../vendor/axolotl-curve25519/curve/ed25519/nacl_sha512/blocks.o
-OBJS += ../vendor/axolotl-curve25519/curve/ed25519/nacl_sha512/hash.o
 OBJS += ../vendor/axolotl-curve25519/curve/ed25519/additions/compare.o
 OBJS += ../vendor/axolotl-curve25519/curve/ed25519/additions/fe_montx_to_edy.o
-OBJS += ../vendor/axolotl-curve25519/curve/ed25519/additions/zeroize.o
 OBJS += ../vendor/axolotl-curve25519/curve/ed25519/additions/open_modified.o
-OBJS += ../vendor/axolotl-curve25519/curve/ed25519/additions/sign_modified.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/nacl-sha512-hash.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/zeroize.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/curve25519_sign_modified.o
 OBJS += ../vendor/trezor-crypto/ed25519-donna/xed25519_sign.o
 OBJS += ../vendor/trezor-crypto/ed25519-donna/curve25519_sign.o
 endif

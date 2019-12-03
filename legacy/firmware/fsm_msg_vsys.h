@@ -101,7 +101,7 @@ void fsm_msgVsysSignTx(VsysSignTx *msg) {
 
   hdnode_fill_public_key(node);
 
-  layoutVsysRequireConfirmTx(msg->recipient, msg->amount);
+  layoutVsysRequireConfirmTx(msg->tx.recipient, msg->tx.amount);
   if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, true)) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     layoutHome();
