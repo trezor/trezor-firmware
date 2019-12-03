@@ -1140,10 +1140,17 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     dialog_mgr.reset_timeout()
 
     # wait for a button or continue
-    if dialog_mgr.result != _RESULT_CONFIRM:
+    if dialog_mgr.result == _RESULT_NONE:
         if __debug__:
             log.info(__name__, "waiting for button")
         return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
+
+    if dialog_mgr.result != _RESULT_CONFIRM:
+        if __debug__:
+            log.info(__name__, "request declined")
+        # There is no standard way to decline a U2F request, but responding with ERR_CHANNEL_BUSY
+        # doesn't seem to violate the protocol and at least stops Chrome from polling.
+        return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
 
     # sign the registration challenge and return
     if __debug__:
@@ -1229,10 +1236,17 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     dialog_mgr.reset_timeout()
 
     # wait for a button or continue
-    if dialog_mgr.result != _RESULT_CONFIRM:
+    if dialog_mgr.result == _RESULT_NONE:
         if __debug__:
             log.info(__name__, "waiting for button")
         return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
+
+    if dialog_mgr.result != _RESULT_CONFIRM:
+        if __debug__:
+            log.info(__name__, "request declined")
+        # There is no standard way to decline a U2F request, but responding with ERR_CHANNEL_BUSY
+        # doesn't seem to violate the protocol and at least stops Chrome from polling.
+        return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
 
     # sign the authentication challenge and return
     if __debug__:
