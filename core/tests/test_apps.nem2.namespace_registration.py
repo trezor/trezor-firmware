@@ -37,7 +37,27 @@ class TestNem2NamespaceRegistration(unittest.TestCase):
         t = serialize_namespace_registration(transaction, namespace_registration)
 
         self.assertEqual(t, unhexlify('9F000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001984E41204E000000000000090A1E5E1A00000040420F000000000067CBDB6208CBA4EA000D746573746E616D657370616365'))
-        # self.assertEqual(hashlib.sha3_256(t, keccak=True).digest(), unhexlify('0acbf8df91e6a65dc56c56c43d65f31ff2a6a48d06fc66e78c7f3436faf3e74f'))
+
+    def test_create_child_namespace_registration(self):
+
+        transaction=NEM2TransactionCommon(
+            network_type=NEM2_NETWORK_TEST_NET,
+            type=NEM2_TRANSACTION_TYPE_NAMESPACE_REGISTRATION,
+            version=38913,
+            max_fee="20000",
+            deadline="113248176649"
+        )
+
+        namespace_registration=NEM2NamespaceRegistrationTransaction(
+            registration_type=NEM2_NAMESPACE_REGISTRATION_TYPE_CHILD,
+            namespace_name="sub".encode(),
+            parent_id=int("EAA4CB0862DBCB67", 16),
+            id=int("B1B6FADB51C1368C", 16)
+        )
+
+        t = serialize_namespace_registration(transaction, namespace_registration)
+
+        self.assertEqual(t, unhexlify('95000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001984E41204E000000000000090A1E5E1A00000067CBDB6208CBA4EA8C36C151DBFAB6B10103737562'))
 
 if __name__ == '__main__':
     unittest.main()

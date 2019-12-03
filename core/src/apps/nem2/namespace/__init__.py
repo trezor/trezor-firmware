@@ -8,6 +8,6 @@ async def namespace_registration(
 ):
 
     # TODO: do this
-    # await layout.ask_namespace_registration(ctx, common, namespace_registration)
+    await layout.ask_namespace_registration(ctx, common, namespace_registration)
 
     return serialize.serialize_namespace_registration(common, namespace_registration)

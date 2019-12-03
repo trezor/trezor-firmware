@@ -25,7 +25,7 @@ from ..common import MNEMONIC12
 @pytest.mark.nem2
 class TestMsgNEM2SignTxTransfer:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_nem2_signtx_namespace_registration(self, client):
+    def test_nem2_signtx_root_namespace_registration(self, client):
         tx = nem2.sign_tx(
             client,
             parse_path("m/44'/43'/0'"),
@@ -46,6 +46,35 @@ class TestMsgNEM2SignTxTransfer:
         assert (
             tx.payload.hex().upper()
             == "9F00000000000000642F60B0D3116FB633CC5BEC7FFB563C4B7D53638E129F67CD9E314464729FB9C5589EC16D0D8AC3D9B8600872D246E357F97D87B768E1C63130D3FCFB51F20C252D2E9F95C4671EEB0C67C6666890567E35976B32666263CD390FC188CCF3170000000001984E41204E000000000000090A1E5E1A00000040420F000000000067CBDB6208CBA4EA000D746573746E616D657370616365"
+        )
+
+        # TODO: fix this
+        # assert (
+        #     tx.hash.hex().upper()
+        #     == "EF0CA99813CA2708BE34F125547E28ADEC60C6BECF37A981E3231425511D147E"
+        # )
+
+    def test_nem2_signtx_sub_namespace_registration(self, client):
+        tx = nem2.sign_tx(
+            client,
+            parse_path("m/44'/43'/0'"),
+            "9F1979BEBA29C47E59B40393ABB516801A353CFC0C18BC241FEDE41939C907E7",
+            {
+                "type": nem2.TYPE_NAMESPACE_REGISTRATION,
+                "network": nem2.NETWORK_TYPE_TEST_NET,
+                "version": 38913,
+                "maxFee": "20000",
+                "deadline": "113248176649",
+                "registrationType": 1,
+                "namespaceName": "sub",
+                "id": "B1B6FADB51C1368C",
+                "parentId": "EAA4CB0862DBCB67",
+            }
+        )
+
+        assert (
+            tx.payload.hex().upper()
+            == "9500000000000000857CB0FB9DF14674DEA1E782D5EE3803DF72DDD661E7D732B559FE6EC5833239F508D33D69C94BC919387FF72800F1A3C43D7A9CD6EB03DAB7532217F2AA1504252D2E9F95C4671EEB0C67C6666890567E35976B32666263CD390FC188CCF3170000000001984E41204E000000000000090A1E5E1A00000067CBDB6208CBA4EA8C36C151DBFAB6B10103737562"
         )
 
         # TODO: fix this

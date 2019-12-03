@@ -67,7 +67,6 @@ async def ask_transfer_mosaic(
         msg.bold("%s.%s" % (mosaic.id, mosaic.id))
         await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
-
 def _get_xem_amount(transfer: NEM2TransferTransaction):
     for mosaic in transfer.mosaics:
         if is_nem_xem_mosaic(mosaic.id):

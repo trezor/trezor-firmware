@@ -94,7 +94,7 @@ def create_namespace_registration(transaction):
     if(msg.registration_type == NAMESPACE_REGISTRATION_TYPE_ROOT):
         msg.duration = int(transaction["duration"]) # cast in case payload represents uint64 in string format
     if(msg.registration_type == NAMESPACE_REGISTRATION_TYPE_CHILD):
-        msg.parent_id = int(transaction["parentId"]) # cast in case payload represents uint64 in string format
+        msg.parent_id = int(transaction["parentId"], 16) # cast in case payload represents uint64 in string format
     msg.id = int(transaction["id"], 16)
     msg.namespace_name = transaction["namespaceName"].encode()
     return msg

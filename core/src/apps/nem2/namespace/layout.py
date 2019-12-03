@@ -9,8 +9,8 @@ from trezor.ui.text import Text
 from trezor.utils import format_amount
 
 from ..helpers import (
-    NEM2_MAX_DIVISIBILITY,
-    NEM2_MOSAIC_AMOUNT_DIVISOR,
+    NEM2_NAMESPACE_REGISTRATION_TYPE_ROOT,
+    NEM2_NAMESPACE_REGISTRATION_TYPE_CHILD
 )
 from ..layout import require_confirm_final, require_confirm_text
 from ..mosaic.helpers import get_mosaic_definition, is_nem_xem_mosaic
@@ -18,82 +18,27 @@ from ..mosaic.helpers import get_mosaic_definition, is_nem_xem_mosaic
 from apps.common.confirm import require_confirm
 from apps.common.layout import split_address
 
-
-async def ask_transfer(
-    ctx,
-    common: NEM2TransactionCommon,
-    transfer: NEM2TransferTransaction
+async def ask_namespace_registration(
+    ctx, common: NEM2TransactionCommon, namespace_registration: NEM2NamespaceRegistrationTransaction
 ):
-    for mosaic in transfer.mosaics:
-        await ask_transfer_mosaic(ctx, common, transfer, mosaic)
-    await _require_confirm_transfer(ctx, transfer.recipient_address.address, _get_xem_amount(transfer))
 
-    if(transfer.message.payload):
-        await _require_confirm_message(ctx, transfer.message.payload)
-    await require_confirm_final(ctx, common.max_fee)
+    # confirm name and id
+    msg = Text("Register Namespace")
+    msg.normal("Id:")
+    msg.bold(hex(namespace_registration.id)[1:].upper())
+    msg.normal("Name:")
+    msg.bold(bytes(namespace_registration.namespace_name).decode()) # casting to bytes prevents errors on long names
+    await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
-
-async def ask_transfer_mosaic(
-    ctx, common: NEM2TransactionCommon, transfer: NEM2TransferTransaction, mosaic: NEMMosaic
-):
-    if is_nem_xem_mosaic(mosaic.id):
-        return
-
-    definition = get_mosaic_definition(mosaic.id, common.network_type)
-    mosaic_amount = int(mosaic.amount) / NEM2_MOSAIC_AMOUNT_DIVISOR
-
-    if definition:
-        msg = Text("Confirm mosaic", ui.ICON_SEND, ui.GREEN)
-        msg.normal("Confirm transfer of")
-        msg.bold(
-            format_amount(mosaic_amount, definition["divisibility"])
-            + definition["ticker"]
-        )
-        msg.normal("of")
-        msg.bold(definition["name"])
-        await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
-    else:
-        msg = Text("Confirm mosaic", ui.ICON_SEND, ui.RED)
-        msg.bold("Unknown mosaic!")
-        msg.normal("Divisibility")
-        msg.normal("cannot be shown for")
-        msg.normal("unknown mosaics")
-        await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
-
-        msg = Text("Confirm mosaic", ui.ICON_SEND, ui.GREEN)
-        msg.normal("Confirm transfer of")
-        msg.bold("%s raw units" % mosaic_amount)
-        msg.normal("of")
-        msg.bold("%s.%s" % (mosaic.id, mosaic.id))
-        await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
-
-
-def _get_xem_amount(transfer: NEM2TransferTransaction):
-    for mosaic in transfer.mosaics:
-        if is_nem_xem_mosaic(mosaic.id):
-            return int(mosaic.amount) / NEM2_MOSAIC_AMOUNT_DIVISOR
-    # if there are mosaics but do not include xem, 0 xem is sent
-    return 0
-
-async def ask_importance_transfer(
-    ctx, common: NEM2TransactionCommon, imp: NEMImportanceTransfer
-):
-    if imp.mode == NEMImportanceTransferMode.ImportanceTransfer_Activate:
-        m = "Activate"
-    else:
-        m = "Deactivate"
-    await require_confirm_text(ctx, m + " remote harvesting?")
-    await require_confirm_final(ctx, common.fee)
-
-
-async def _require_confirm_transfer(ctx, recipient, value):
-    text = Text("Confirm transfer", ui.ICON_SEND, ui.GREEN)
-    text.bold("Send %s XEM" % format_amount(value, NEM2_MAX_DIVISIBILITY))
-    text.normal("to")
-    text.mono(*split_address(recipient))
-    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
-
-async def _require_confirm_message(ctx, message):
-    text = Text("Confirm message", ui.ICON_SEND, ui.GREEN)
-    text.normal(message)
-    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
+    # confirm registration type and either parentId and  and id
+    msg = Text("Register Namespace")
+    msg.normal("Registration Type:")
+    if(namespace_registration.registration_type == NEM2_NAMESPACE_REGISTRATION_TYPE_ROOT):
+        msg.bold("Root Namespace")
+        msg.normal("Duration:")
+        msg.bold(str(namespace_registration.duration)) # casting to bytes prevents errors on long names
+    elif (namespace_registration.registration_type == NEM2_NAMESPACE_REGISTRATION_TYPE_CHILD):
+        msg.bold("Sub Namespace")
+        msg.normal("Parent Id:")
+        msg.bold(hex(namespace_registration.parent_id)[1:].upper()) # casting to bytes prevents errors on long names
+    await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
