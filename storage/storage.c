@@ -642,9 +642,7 @@ static void init_wiped_storage(void) {
   ui_rem = ui_total;
   ui_message = PROCESSING_MSG;
   ensure(set_pin(PIN_EMPTY, NULL), "init_pin failed");
-  if (unlocked != sectrue) {
-    memzero(cached_keys, sizeof(cached_keys));
-  }
+  unlocked = sectrue;
 }
 
 void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
@@ -669,6 +667,7 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
   uint16_t len = 0;
   if (secfalse == norcow_get(EDEK_PVC_KEY, &val, &len)) {
     init_wiped_storage();
+    storage_lock();
   }
   memzero(cached_keys, sizeof(cached_keys));
 }
