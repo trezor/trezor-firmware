@@ -100,6 +100,9 @@
     "bitcoin:POLIS": {
         "PolisPay": "https://polispay.com"
     },
+    "bitcoin:PPC": {
+        "Magnum": "https://magnumwallet.co"
+    },
     "bitcoin:QTUM": {
         "Qtum-Electrum": "https://github.com/qtumproject/qtum-electrum"
     },

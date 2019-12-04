@@ -749,6 +749,24 @@
                 }
             ]
         },
+        "bitcoin:PPC": {
+            "links": {
+                "Github": "https://github.com/peercoin/peercoin",
+                "Homepage": "https://peercoin.net"
+            },
+            "marketcap_usd": 6704787,
+            "name": "Peercoin",
+            "shortcut": "PPC",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": [
+                {
+                    "name": "Peercoin Wallet",
+                    "url": "https://github.com/peercoin/peercoin/releases"
+                }
+            ]
+        },
         "bitcoin:PTC": {
             "links": {
                 "Github": "https://github.com/FundacionPesetacoin/PesetacoinCore",

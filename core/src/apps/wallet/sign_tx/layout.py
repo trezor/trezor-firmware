@@ -9,7 +9,10 @@ _LOCKTIME_TIMESTAMP_MIN_VALUE = const(500000000)
 
 
 def format_coin_amount(amount, coin):
-    return "%s %s" % (format_amount(amount, 8), coin.coin_shortcut)
+    if coin.coin_shortcut == "PPC" or coin.coin_shortcut == "tPPC":
+        return "%s %s" % (format_amount(amount, 6), coin.coin_shortcut)
+    else:
+        return "%s %s" % (format_amount(amount, 8), coin.coin_shortcut)
 
 
 def split_address(address):
