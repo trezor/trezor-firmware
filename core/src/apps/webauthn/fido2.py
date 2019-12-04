@@ -215,6 +215,9 @@ _ALLOW_RESIDENT_CREDENTIALS = True
 # The attestation type to use in MakeCredential responses. If false, then self attestation will be used.
 _USE_BASIC_ATTESTATION = False
 
+# The CID of the last WINK command. Used to ensure that we do only one WINK at a time on any given CID.
+_last_wink_cid = 0
+
 
 class CborError(Exception):
     def __init__(self, code: int):
@@ -1027,8 +1030,7 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     elif req.cmd == _CMD_WINK:
         if __debug__:
             log.debug(__name__, "_CMD_WINK")
-        loop.schedule(ui.alert())
-        return req
+        return cmd_wink(req)
     elif req.cmd == _CMD_CBOR and _ALLOW_FIDO2:
         if not req.data:
             return cmd_error(req.cid, _ERR_INVALID_LEN)
@@ -1090,6 +1092,14 @@ def cmd_init(req: Cmd) -> Cmd:
     resp.capFlags = _CAPFLAG_WINK | _CAPFLAG_CBOR
 
     return Cmd(req.cid, req.cmd, buf)
+
+
+def cmd_wink(req: Cmd) -> Cmd:
+    global _last_wink_cid
+    if _last_wink_cid != req.cid:
+        _last_wink_cid = req.cid
+        ui.alert()
+    return req
 
 
 def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
