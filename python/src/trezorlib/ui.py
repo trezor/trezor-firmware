@@ -45,6 +45,8 @@ PIN_GENERIC = None
 PIN_CURRENT = PinMatrixRequestType.Current
 PIN_NEW = PinMatrixRequestType.NewFirst
 PIN_CONFIRM = PinMatrixRequestType.NewSecond
+WIPE_CODE_NEW = PinMatrixRequestType.WipeCodeFirst
+WIPE_CODE_CONFIRM = PinMatrixRequestType.WipeCodeSecond
 
 
 def echo(*args, **kwargs):
@@ -74,6 +76,10 @@ class ClickUI:
             desc = "new PIN"
         elif code == PIN_CONFIRM:
             desc = "new PIN again"
+        elif code == WIPE_CODE_NEW:
+            desc = "new wipe code"
+        elif code == WIPE_CODE_CONFIRM:
+            desc = "new wipe code again"
         else:
             desc = "PIN"
 
@@ -88,7 +94,7 @@ class ClickUI:
             except click.Abort:
                 raise Cancelled from None
             if not pin.isdigit():
-                echo("Non-numerical PIN provided, please try again")
+                echo("Non-numerical value provided, please try again")
             else:
                 return pin
 

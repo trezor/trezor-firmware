@@ -42,6 +42,19 @@ def pin(connect, remove):
 
 
 @cli.command()
+@click.option("-r", "--remove", is_flag=True)
+@click.pass_obj
+def wipe_code(connect, remove):
+    """Set or remove the wipe code.
+
+    The wipe code functions as a "self-destruct PIN". If the wipe code is ever
+    entered into any PIN entry dialog, then all private data will be immediately
+    removed and the device will be reset to factory defaults.
+    """
+    return device.change_wipe_code(connect(), remove)
+
+
+@cli.command()
 # keep the deprecated -l/--label option, make it do nothing
 @click.option("-l", "--label", "_ignore", is_flag=True, hidden=True, expose_value=False)
 @click.argument("label")

@@ -31,6 +31,7 @@ from .CardanoTxInputType import CardanoTxInputType
 from .CardanoTxOutputType import CardanoTxOutputType
 from .CardanoTxRequest import CardanoTxRequest
 from .ChangePin import ChangePin
+from .ChangeWipeCode import ChangeWipeCode
 from .CipherKeyValue import CipherKeyValue
 from .CipheredKeyValue import CipheredKeyValue
 from .ClearSession import ClearSession

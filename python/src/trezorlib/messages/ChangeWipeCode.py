@@ -6,22 +6,21 @@ if __debug__:
     try:
         from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
-        EnumTypePinMatrixRequestType = Literal[1, 2, 3, 4, 5]
     except ImportError:
         pass
 
 
-class PinMatrixRequest(p.MessageType):
-    MESSAGE_WIRE_TYPE = 18
+class ChangeWipeCode(p.MessageType):
+    MESSAGE_WIRE_TYPE = 82
 
     def __init__(
         self,
-        type: EnumTypePinMatrixRequestType = None,
+        remove: bool = None,
     ) -> None:
-        self.type = type
+        self.remove = remove
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.EnumType("PinMatrixRequestType", (1, 2, 3, 4, 5)), 0),
+            1: ('remove', p.BoolType, 0),
         }

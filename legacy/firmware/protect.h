@@ -29,6 +29,7 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress,
                              const char* message);
 bool protectPin(bool use_cached);
 bool protectChangePin(bool removal);
+bool protectChangeWipeCode(bool removal);
 bool protectPassphrase(void);
 
 extern bool protectAbortedByCancel;

@@ -15,6 +15,12 @@ VERSION_KEY = (PIN_APP_ID << 8) | 0x04
 # Norcow storage key of the storage authentication tag.
 SAT_KEY = (PIN_APP_ID << 8) | 0x05
 
+# Norcow storage key of the wipe code data.
+WIPE_CODE_DATA_KEY = (PIN_APP_ID << 8) | 0x06
+
+# Norcow storage key of the storage upgrade flag.
+STORAGE_UPGRADED_KEY = (PIN_APP_ID << 8) | 0x07
+
 # The PIN value corresponding to an empty PIN.
 PIN_EMPTY = 1
 
@@ -45,6 +51,17 @@ KEK_SIZE = 32
 
 # The length of KEIV in bytes.
 KEIV_SIZE = 12
+
+# The byte length of the salt used in checking the wipe code.
+WIPE_CODE_SALT_SIZE = 8
+
+# The byte length of the tag used in checking the wipe code.
+WIPE_CODE_TAG_SIZE = 8
+
+# The value corresponding to an unconfigured wipe code.
+# NOTE: This is intentionally different from PIN_EMPTY so that we don't need
+# special handling when both the PIN and wipe code are not set.
+WIPE_CODE_EMPTY = 0
 
 # Size of counter. 4B integer and 8B tail.
 COUNTER_TAIL = 12
@@ -88,6 +105,8 @@ WORD_SIZE = 4
 # Boolean values are stored as a simple 0/1 int.
 TRUE_BYTE = b"\x01"
 FALSE_BYTE = b"\x00"
+TRUE_WORD = b"\xA5\x69\x5A\xC3"
+FALSE_WORD = b"\x5A\x96\xA5\x3C"
 
 # ----- Crypto ----- #
 
@@ -106,7 +125,7 @@ NORCOW_SECTOR_SIZE = 64 * 1024
 NORCOW_MAGIC = b"NRC2"
 
 # Norcow version, set in the storage header, but also as an encrypted item.
-NORCOW_VERSION = b"\x01\x00\x00\x00"
+NORCOW_VERSION = b"\x02\x00\x00\x00"
 
 # Norcow magic combined with the version, which is stored as its negation.
 NORCOW_MAGIC_AND_VERSION = NORCOW_MAGIC + bytes(

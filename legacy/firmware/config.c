@@ -785,6 +785,22 @@ bool config_getPin(char *dest, uint16_t dest_size) {
 }
 #endif
 
+bool config_hasWipeCode(void) { return sectrue == storage_has_wipe_code(); }
+
+bool config_changeWipeCode(const char *pin, const char *wipe_code) {
+  uint32_t wipe_code_int = pin_to_int(wipe_code);
+  if (wipe_code_int == 0) {
+    return false;
+  }
+
+  char oldTiny = usbTiny(1);
+  secbool ret = storage_change_wipe_code(pin_to_int(pin), NULL, wipe_code_int);
+  usbTiny(oldTiny);
+
+  memzero(&wipe_code_int, sizeof(wipe_code_int));
+  return sectrue == ret;
+}
+
 void session_cachePassphrase(const char *passphrase) {
   strlcpy(sessionPassphrase, passphrase, sizeof(sessionPassphrase));
   sessionPassphraseCached = sectrue;

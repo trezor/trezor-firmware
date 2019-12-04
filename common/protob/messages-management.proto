@@ -87,6 +87,7 @@ message Features {
     optional BackupType backup_type = 31;       // type of device backup (BIP-39 / SLIP-39 basic / SLIP-39 advanced)
     optional bool sd_card_present = 32;         // is SD card present
     optional bool sd_protection = 33;           // is SD Protect enabled
+    optional bool wipe_code_protection = 34;    // is wipe code protection enabled
 }
 
 /**
@@ -139,6 +140,16 @@ message ApplyFlags {
  */
 message ChangePin {
     optional bool remove = 1;   // is PIN removal requested?
+}
+
+/**
+ * Request: Starts workflow for setting/removing the wipe code
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message ChangeWipeCode {
+    optional bool remove = 1;   // is wipe code removal requested?
 }
 
 /**
