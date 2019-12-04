@@ -130,8 +130,12 @@ class Storage:
             # public fields can be read from an unlocked device
             raise RuntimeError("Storage locked")
         if consts.is_app_public(app):
-            return self.nc.get(key)
-        return self._get_encrypted(key)
+            value = self.nc.get(key)
+        else:
+            value = self._get_encrypted(key)
+        if value is False:
+            raise RuntimeError("Failed to find key in storage.")
+        return value
 
     def set(self, key: int, val: bytes) -> bool:
         app = key >> 8
@@ -153,7 +157,7 @@ class Storage:
         app = key >> 8
         self._check_lock(app)
 
-        current = self.get(key)
+        current = self.nc.get(key)
         if current is False:
             self.set_counter(key, 0)
             return 0
