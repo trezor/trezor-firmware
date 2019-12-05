@@ -138,12 +138,12 @@ message NEM2SignTx {
     * Namespace Registration transaction definition
     */
     message NEM2NamespaceRegistrationTransaction {
-        optional uint64 duration = 1; // namespace duration
-        optional uint64 parent_id = 2; // parent namespace identifier
-        optional uint64 id = 3; // identifier
+        optional string duration = 1; // namespace duration (uint64)
+        optional string parent_id = 2; // parent namespace identifier (uint64)
+        optional string id = 3; // identifier (uint64)
         optional NEM2NamespaceRegistrationType registration_type = 4 [default=ROOT];
         optional uint32 name_size = 5; // length of name (bytes) (uint8 in catbuffer)
-        optional bytes namespace_name = 6; // namespace name
+        optional string namespace_name = 6; // namespace name
     }
 }
 

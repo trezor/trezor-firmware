@@ -92,11 +92,11 @@ def create_namespace_registration(transaction):
     msg = proto.NEM2NamespaceRegistrationTransaction()
     msg.registration_type = transaction["registrationType"]
     if(msg.registration_type == NAMESPACE_REGISTRATION_TYPE_ROOT):
-        msg.duration = int(transaction["duration"]) # cast in case payload represents uint64 in string format
+        msg.duration = transaction["duration"] # cast in case payload represents uint64 in string format
     if(msg.registration_type == NAMESPACE_REGISTRATION_TYPE_CHILD):
-        msg.parent_id = int(transaction["parentId"], 16) # cast in case payload represents uint64 in string format
-    msg.id = int(transaction["id"], 16)
-    msg.namespace_name = transaction["namespaceName"].encode()
+        msg.parent_id = transaction["parentId"] # cast in case payload represents uint64 in string format
+    msg.id = transaction["id"]
+    msg.namespace_name = transaction["namespaceName"]
     return msg
 
 def fill_transaction_by_type(msg, transaction):

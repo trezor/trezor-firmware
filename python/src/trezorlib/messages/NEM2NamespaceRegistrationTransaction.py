@@ -16,12 +16,12 @@ class NEM2NamespaceRegistrationTransaction(p.MessageType):
 
     def __init__(
         self,
-        duration: int = None,
-        parent_id: int = None,
-        id: int = None,
+        duration: str = None,
+        parent_id: str = None,
+        id: str = None,
         registration_type: EnumTypeNEM2NamespaceRegistrationType = None,
         name_size: int = None,
-        namespace_name: bytes = None,
+        namespace_name: str = None,
     ) -> None:
         self.duration = duration
         self.parent_id = parent_id
@@ -33,10 +33,10 @@ class NEM2NamespaceRegistrationTransaction(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('duration', p.UVarintType, 0),
-            2: ('parent_id', p.UVarintType, 0),
-            3: ('id', p.UVarintType, 0),
+            1: ('duration', p.UnicodeType, 0),
+            2: ('parent_id', p.UnicodeType, 0),
+            3: ('id', p.UnicodeType, 0),
             4: ('registration_type', p.EnumType("NEM2NamespaceRegistrationType", (0, 1)), 0),  # default=ROOT
             5: ('name_size', p.UVarintType, 0),
-            6: ('namespace_name', p.BytesType, 0),
+            6: ('namespace_name', p.UnicodeType, 0),
         }

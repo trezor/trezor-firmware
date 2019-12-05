@@ -30,9 +30,9 @@ class TestNem2NamespaceRegistration(unittest.TestCase):
 
         namespace_registration=NEM2NamespaceRegistrationTransaction(
             registration_type=NEM2_NAMESPACE_REGISTRATION_TYPE_ROOT,
-            namespace_name="testnamespace".encode(),
-            id=int("EAA4CB0862DBCB67", 16),
-            duration=int("1000000")
+            namespace_name="testnamespace",
+            id="EAA4CB0862DBCB67",
+            duration="1000000"
         )
 
         t = serialize_namespace_registration(transaction, namespace_registration)
@@ -51,9 +51,9 @@ class TestNem2NamespaceRegistration(unittest.TestCase):
 
         namespace_registration=NEM2NamespaceRegistrationTransaction(
             registration_type=NEM2_NAMESPACE_REGISTRATION_TYPE_SUB,
-            namespace_name="sub".encode(),
-            parent_id=int("EAA4CB0862DBCB67", 16),
-            id=int("B1B6FADB51C1368C", 16)
+            namespace_name="sub",
+            parent_id="EAA4CB0862DBCB67",
+            id="B1B6FADB51C1368C"
         )
 
         t = serialize_namespace_registration(transaction, namespace_registration)

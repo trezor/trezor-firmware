@@ -43,18 +43,18 @@ def serialize_namespace_registration(
 
     # root namespace registration define their own duration
     if(namespace_registration.registration_type == NEM2_NAMESPACE_REGISTRATION_TYPE_ROOT):
-        write_uint64_le(tx, namespace_registration.duration)
+        write_uint64_le(tx, int(namespace_registration.duration))
 
     # child namespace registration reference a parent id
     if(namespace_registration.registration_type == NEM2_NAMESPACE_REGISTRATION_TYPE_SUB):
-        write_uint64_le(tx, namespace_registration.parent_id,)
+        write_uint64_le(tx, int(namespace_registration.parent_id, 16))
 
-    write_uint64_le(tx, namespace_registration.id)
+    write_uint64_le(tx, int(namespace_registration.id, 16))
 
     write_uint8(tx, namespace_registration.registration_type)
 
     write_uint8(tx, len(namespace_registration.namespace_name))
 
-    write_bytes(tx, namespace_registration.namespace_name)
+    write_bytes(tx, namespace_registration.namespace_name.encode())
 
     return tx
