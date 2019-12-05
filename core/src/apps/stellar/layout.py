@@ -25,6 +25,23 @@ async def require_confirm_init(
         await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
+async def require_confirm_timebounds(ctx, start: int, end: int):
+    text = Text("Confirm timebounds", ui.ICON_SEND, ui.GREEN)
+    text.bold("Valid from (UTC):")
+    if start:
+        text.normal(str(start))
+    else:
+        text.mono("[no restriction]")
+
+    text.bold("Valid to (UTC):")
+    if end:
+        text.normal(str(end))
+    else:
+        text.mono("[no restriction]")
+
+    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
+
+
 async def require_confirm_memo(ctx, memo_type: int, memo_text: str):
     text = Text("Confirm memo", ui.ICON_CONFIRM, ui.GREEN)
     if memo_type == consts.MEMO_TYPE_TEXT:
