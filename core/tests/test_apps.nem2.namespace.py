@@ -3,15 +3,16 @@ from common import *
 from trezor.crypto import hashlib
 
 if not utils.BITCOIN_ONLY:
-    from apps.nem2.helpers import *
-    from apps.nem2.mosaic import *
-    from apps.nem2.namespace import *
-    from apps.nem2.namespace.serialize import *
-    from trezor.messages.NEM2TransferTransaction import NEM2TransferTransaction
-    from trezor.messages.NEM2SignTx import NEM2SignTx
-    from trezor.messages.NEM2Mosaic import NEM2Mosaic
-    from trezor.messages.NEM2TransferMessage import NEM2TransferMessage
-    from trezor.messages.NEM2RecipientAddress import NEM2RecipientAddress
+    from apps.nem2.helpers import (
+        NEM2_NETWORK_TEST_NET,
+        NEM2_TRANSACTION_TYPE_NAMESPACE_REGISTRATION,
+        NEM2_NAMESPACE_REGISTRATION_TYPE_ROOT,
+        NEM2_NAMESPACE_REGISTRATION_TYPE_SUB,
+    )
+    from apps.nem2.namespace.serialize import serialize_namespace_registration
+    from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
+    from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
+    from trezor.messages.NEM2NamespaceRegistrationTransaction import NEM2NamespaceRegistrationTransaction
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -49,7 +50,7 @@ class TestNem2NamespaceRegistration(unittest.TestCase):
         )
 
         namespace_registration=NEM2NamespaceRegistrationTransaction(
-            registration_type=NEM2_NAMESPACE_REGISTRATION_TYPE_CHILD,
+            registration_type=NEM2_NAMESPACE_REGISTRATION_TYPE_SUB,
             namespace_name="sub".encode(),
             parent_id=int("EAA4CB0862DBCB67", 16),
             id=int("B1B6FADB51C1368C", 16)

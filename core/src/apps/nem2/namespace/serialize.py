@@ -7,7 +7,7 @@ from ..helpers import (
     AES_BLOCK_SIZE,
     NEM2_TRANSACTION_TYPE_NAMESPACE_REGISTRATION,
     NEM2_NAMESPACE_REGISTRATION_TYPE_ROOT,
-    NEM2_NAMESPACE_REGISTRATION_TYPE_CHILD
+    NEM2_NAMESPACE_REGISTRATION_TYPE_SUB
 )
 
 from ..writers import serialize_tx_common, get_common_message_size
@@ -46,7 +46,7 @@ def serialize_namespace_registration(
         write_uint64_le(tx, namespace_registration.duration)
 
     # child namespace registration reference a parent id
-    if(namespace_registration.registration_type == NEM2_NAMESPACE_REGISTRATION_TYPE_CHILD):
+    if(namespace_registration.registration_type == NEM2_NAMESPACE_REGISTRATION_TYPE_SUB):
         write_uint64_le(tx, namespace_registration.parent_id,)
 
     write_uint64_le(tx, namespace_registration.id)

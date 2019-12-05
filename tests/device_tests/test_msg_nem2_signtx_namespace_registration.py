@@ -54,6 +54,7 @@ class TestMsgNEM2SignTxTransfer:
         #     == "EF0CA99813CA2708BE34F125547E28ADEC60C6BECF37A981E3231425511D147E"
         # )
 
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_nem2_signtx_sub_namespace_registration(self, client):
         tx = nem2.sign_tx(
             client,

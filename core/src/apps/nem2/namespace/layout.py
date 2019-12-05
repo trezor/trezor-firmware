@@ -10,7 +10,7 @@ from trezor.utils import format_amount
 
 from ..helpers import (
     NEM2_NAMESPACE_REGISTRATION_TYPE_ROOT,
-    NEM2_NAMESPACE_REGISTRATION_TYPE_CHILD
+    NEM2_NAMESPACE_REGISTRATION_TYPE_SUB
 )
 from ..layout import require_confirm_final, require_confirm_text
 from ..mosaic.helpers import get_mosaic_definition, is_nem_xem_mosaic
@@ -37,7 +37,7 @@ async def ask_namespace_registration(
         msg.bold("Root Namespace")
         msg.normal("Duration:")
         msg.bold(str(namespace_registration.duration)) # casting to bytes prevents errors on long names
-    elif (namespace_registration.registration_type == NEM2_NAMESPACE_REGISTRATION_TYPE_CHILD):
+    elif (namespace_registration.registration_type == NEM2_NAMESPACE_REGISTRATION_TYPE_SUB):
         msg.bold("Sub Namespace")
         msg.normal("Parent Id:")
         msg.bold(hex(namespace_registration.parent_id)[1:].upper()) # casting to bytes prevents errors on long names
