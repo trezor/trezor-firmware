@@ -34,6 +34,10 @@ def is_capricoin(coin):
     return coin["coin_name"].lower().startswith("capricoin")
 
 
+def is_peercoin(coin):
+    return coin["coin_name"].lower().startswith("peercoin")
+
+
 def is_dash(coin):
     return coin["coin_name"].lower().startswith("dash")
 
@@ -72,7 +76,12 @@ def _json_to_input(coin, vin):
 
 def _json_to_bin_output(coin, vout):
     o = messages.TxOutputBinType()
-    o.amount = int(Decimal(vout["value"]) * 100000000)
+    if is_peercoin(coin):
+        DIVISIBILITY = 1000000
+    else:
+        DIVISIBILITY = 100000000
+
+    o.amount = int(Decimal(vout["value"]) * DIVISIBILITY)
     o.script_pubkey = bytes.fromhex(vout["scriptPubKey"]["hex"])
     if coin["bip115"] and o.script_pubkey[-1] == 0xB4:
         # Verify if coin implements replay protection bip115 and script includes
@@ -92,7 +101,7 @@ def json_to_tx(coin, data):
     t.version = data["version"]
     t.lock_time = data.get("locktime")
 
-    if is_capricoin(coin):
+    if is_capricoin(coin) or is_peercoin(coin):
         t.timestamp = data["time"]
 
     if coin["decred"]:

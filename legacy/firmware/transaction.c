@@ -510,6 +510,10 @@ uint32_t tx_serialize_header(TxStruct *tx, uint8_t *out) {
     r += 4;
   } else {
     memcpy(out, &(tx->version), 4);
+    if (tx->timestamp) {
+      memcpy(out + r, &(tx->timestamp), 4);
+      r += 4;
+    }
     if (tx->is_segwit) {
       memcpy(out + r, segwit_header, 2);
       r += 2;
@@ -527,6 +531,9 @@ uint32_t tx_serialize_header_hash(TxStruct *tx) {
     r += 4;
   } else {
     hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->version), 4);
+    if (tx->timestamp) {
+      hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->timestamp), 4);
+    }
     if (tx->is_segwit) {
       hasher_Update(&(tx->hasher), segwit_header, 2);
       r += 2;
@@ -766,7 +773,7 @@ uint32_t tx_serialize_extra_data_hash(TxStruct *tx, const uint8_t *data,
 void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len,
              uint32_t version, uint32_t lock_time, uint32_t expiry,
              uint32_t extra_data_len, HasherType hasher_sign, bool overwintered,
-             uint32_t version_group_id) {
+             uint32_t version_group_id, uint32_t timestamp) {
   tx->inputs_len = inputs_len;
   tx->outputs_len = outputs_len;
   tx->version = version;
@@ -781,6 +788,7 @@ void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len,
   tx->is_decred = false;
   tx->overwintered = overwintered;
   tx->version_group_id = version_group_id;
+  tx->timestamp = timestamp;
   hasher_Init(&(tx->hasher), hasher_sign);
 }
 
