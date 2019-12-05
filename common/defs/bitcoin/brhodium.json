@@ -6,6 +6,7 @@
   "github": "https://gitlab.com/bitcoinrh/BRhodiumNode",
   "maintainer": "baff5b <dvbr3@protonmail.com>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 61,
   "address_type_p2sh": 123,
   "maxfee_kb": 2000000,

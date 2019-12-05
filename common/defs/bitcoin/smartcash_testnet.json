@@ -6,6 +6,7 @@
   "github": "https://github.com/SmartCash/Core-Smart",
   "maintainer": "Leandro Reinaux <leoreinaux@gmail.com>",
   "curve_name": "secp256k1_smart",
+  "divisibility": 8,
   "address_type": 65,
   "address_type_p2sh": 21,
   "maxfee_kb": 1000000,

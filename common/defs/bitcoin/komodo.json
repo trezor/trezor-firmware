@@ -6,6 +6,7 @@
   "github": "https://github.com/komodoplatform/komodo",
   "maintainer": "Kadan Stadelmann <ca333@komodoplatform.com>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 60,
   "address_type_p2sh": 85,
   "maxfee_kb": 1000000,

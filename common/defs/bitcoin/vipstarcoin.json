@@ -6,6 +6,7 @@
   "github": "https://github.com/VIPSTARCOIN/VIPSTARCOIN",
   "maintainer": "y-chan <yuto_tetuota@yahoo.co.jp>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 70,
   "address_type_p2sh": 50,
   "maxfee_kb": 40000000,

@@ -6,6 +6,7 @@
   "github": "https://github.com/viacoin",
   "maintainer": "romanornr <romanornr@gmail.com>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 71,
   "address_type_p2sh": 33,
   "maxfee_kb": 40000000,

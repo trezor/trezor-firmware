@@ -6,6 +6,7 @@
   "github": "https://github.com/syscoin/syscoin",
   "maintainer": "Jagdeep Sidhu <jsidhu@blockchainfoundry.co>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 63,
   "address_type_p2sh": 5,
   "maxfee_kb": 10000000,

@@ -6,6 +6,7 @@
   "github": "https://github.com/gamecredits-project/gamecredits",
   "maintainer": "Samad Sajanlal <samad.sajanlal@gmail.com>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 38,
   "address_type_p2sh": 62,
   "maxfee_kb": 5000000,

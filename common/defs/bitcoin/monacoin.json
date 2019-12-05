@@ -6,6 +6,7 @@
   "github": "https://github.com/monacoinproject/monacoin",
   "maintainer": "cryptcoin-junkey <cryptcoin.junkey@gmail.com>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 50,
   "address_type_p2sh": 55,
   "maxfee_kb": 5000000,

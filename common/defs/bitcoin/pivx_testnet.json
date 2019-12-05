@@ -6,6 +6,7 @@
   "github": "https://github.com/PIVX-Project/PIVX",
   "maintainer": "Random Zebra <random.zebra@protonmail.com>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 139,
   "address_type_p2sh": 19,
   "maxfee_kb": 100000,

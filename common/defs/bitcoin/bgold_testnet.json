@@ -6,6 +6,7 @@
   "github": "https://github.com/BTCGPU/BTCGPU",
   "maintainer": "The Bitcoin Gold Developers <support@bitcoingold.org>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 111,
   "address_type_p2sh": 196,
   "maxfee_kb": 500000,

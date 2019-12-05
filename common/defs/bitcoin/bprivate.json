@@ -6,6 +6,7 @@
   "github": "https://github.com/BTCPrivate/BitcoinPrivate",
   "maintainer": "Chris Sulmone <csulmone@gmail.com>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 4901,
   "address_type_p2sh": 5039,
   "maxfee_kb": 1000000,

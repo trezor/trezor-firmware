@@ -6,6 +6,7 @@
   "github": "https://github.com/Bitcoin-ABC/bitcoin-abc",
   "maintainer": "Jochen Hoenicke <hoenicke@gmail.com>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 0,
   "address_type_p2sh": 5,
   "maxfee_kb": 500000,

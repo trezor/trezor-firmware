@@ -165,7 +165,6 @@ static bool path_mismatched(const CoinInfo *coin, const GetAddress *msg) {
   if (msg->address_n[0] == (0x80000000 + 49)) {
     mismatch |= (msg->script_type != InputScriptType_SPENDP2SHWITNESS);
     mismatch |= !coin->has_segwit;
-    mismatch |= !coin->has_address_type_p2sh;
     mismatch |= (msg->address_n_count != 5);
     mismatch |= (msg->address_n[1] != coin->coin_type);
     mismatch |= (msg->address_n[2] & 0x80000000) == 0;

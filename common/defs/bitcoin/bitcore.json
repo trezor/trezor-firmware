@@ -6,6 +6,7 @@
   "github": "https://github.com/LIMXTEC/BitCore",
   "maintainer": "limxdev <limxdev@bitcore.cc>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 3,
   "address_type_p2sh": 125,
   "maxfee_kb": 2000000,

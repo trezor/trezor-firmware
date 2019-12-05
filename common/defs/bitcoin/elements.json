@@ -6,6 +6,7 @@
   "github": "https://github.com/ElementsProject/elements",
   "maintainer": "Roman Zeyde <mail@romanzey.de>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 235,
   "address_type_p2sh": 75,
   "maxfee_kb": 10000000,

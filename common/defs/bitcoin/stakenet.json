@@ -6,6 +6,7 @@
   "github": "https://github.com/X9Developers/XSN",
   "maintainer": "Alexis Hernandez <alexis@alexitc.com>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 76,
   "address_type_p2sh": 16,
   "maxfee_kb": 2000000,

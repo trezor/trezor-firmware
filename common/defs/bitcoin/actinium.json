@@ -6,6 +6,7 @@
   "github": "https://github.com/Actinium-project/Actinium",
   "maintainer": "Harris Brakmic <brakmic@actinium.org>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 53,
   "address_type_p2sh": 55,
   "maxfee_kb": 40000000,

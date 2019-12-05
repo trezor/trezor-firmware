@@ -6,6 +6,7 @@
   "github": "https://github.com/FeatherCoin/Feathercoin",
   "maintainer": "Lucas Betschart <lucas@feathercoin.foundation>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 14,
   "address_type_p2sh": 5,
   "maxfee_kb": 40000000,

@@ -6,6 +6,7 @@
   "github": "https://github.com/cpuchain/cpuchain",
   "maintainer": "Min Khang Aung <info@cpuchain.org>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 28,
   "address_type_p2sh": 30,
   "maxfee_kb": 1000000,

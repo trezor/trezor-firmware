@@ -6,6 +6,7 @@
   "github": "https://github.com/ZencashOfficial/zen",
   "maintainer": "Power_VANO <vano@horizen.global>",
   "curve_name": "secp256k1",
+  "divisibility": 8,
   "address_type": 8329,
   "address_type_p2sh": 8342,
   "maxfee_kb": 2000000,
