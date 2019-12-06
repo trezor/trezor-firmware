@@ -3,6 +3,11 @@ Version 2.x.x [not yet released]
 * Remove unused ButtonRequest.data field
 * Rework Recovery persistence internally
 * Disallow changing of settings via dry-run recovery
+* Add feature to retrieve the next U2F counter
+* Fix continuous display blinking with Android in U2F
+* U2F UX improvements
+* Wipe code
+* Add screen for time bounds in Stellar
 
 Version 2.1.8 [Nov 2019]
 * Support Tezos 005-BABYLON hardfork
