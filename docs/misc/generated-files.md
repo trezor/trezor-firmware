@@ -1,14 +1,4 @@
-# Assorted knowledge
-
-This file serves as a dumping ground for important knowledge tidbits that do not clearly
-fit in any particular location. Please add any information that you think should be
-written down.
-
-At any time, information stored here might be restructured or moved to a different
-location, so as to ensure that the documentation is well structured overall.
-
-
-### Generated files
+# Generated files
 
 Certain files in the repository are auto-generated from other sources, but the generated
 content is stored in Git. The command `make gen_check`, run from CI, ensures that the
@@ -17,7 +7,7 @@ files.
 
 In general, generated files are not compatible between branches. After rebasing or
 merging a different branch, you should immediately run `make gen` and make sure the
-result is commited.
+result is committed.
 
 **Do not fix merge conflicts in generated files**. Instead, run `make gen` and commit
 the result.

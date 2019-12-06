@@ -11,4 +11,4 @@ See the `core/tests/` directory.
 
 ## Common tests
 
-See the [README](../../../tests/README.md) file in `tests/`.
+See the [tests](../../tests/index.md) section.

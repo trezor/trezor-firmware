@@ -1,4 +1,4 @@
-# Contribute to Trezor Core
+# Contribute to Trezor Firmware
 
 Please read the general instructions you can find on our [wiki](https://wiki.trezor.io/Developers_guide:Contributing).
 

@@ -4,5 +4,5 @@ description = "Documentation of Trezor Core firmware."
 src = "."
 
 [build]
-build-dir = "../build/docs"
+build-dir = "mdbook"
 create-missing = false
