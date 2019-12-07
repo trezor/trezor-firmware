@@ -36,7 +36,7 @@ class TestMsgResetDeviceSkipbackup:
                 strength=self.strength,
                 passphrase_protection=False,
                 pin_protection=False,
-                language="english",
+                language="en-US",
                 label="test",
                 skip_backup=True,
             )
@@ -106,7 +106,7 @@ class TestMsgResetDeviceSkipbackup:
                 strength=self.strength,
                 passphrase_protection=False,
                 pin_protection=False,
-                language="english",
+                language="en-US",
                 label="test",
                 skip_backup=True,
             )
@@ -163,7 +163,7 @@ class TestMsgResetDeviceSkipbackup:
                 strength=self.strength,
                 passphrase_protection=False,
                 pin_protection=False,
-                language="english",
+                language="en-US",
                 label="test",
                 skip_backup=True,
             )

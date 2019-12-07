@@ -116,7 +116,7 @@ def client(request):
             pin=setup_params["pin"],
             passphrase_protection=setup_params["passphrase"],
             label="test",
-            language="english",
+            language="en-US",
             needs_backup=setup_params["needs_backup"],
             no_backup=setup_params["no_backup"],
         )
