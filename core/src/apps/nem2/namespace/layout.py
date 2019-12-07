@@ -10,7 +10,9 @@ from trezor.utils import format_amount
 
 from ..helpers import (
     NEM2_NAMESPACE_REGISTRATION_TYPE_ROOT,
-    NEM2_NAMESPACE_REGISTRATION_TYPE_SUB
+    NEM2_NAMESPACE_REGISTRATION_TYPE_SUB,
+    NEM2_ALIAS_ACTION_TYPE_LINK,
+    NEM2_ALIAS_ACTION_TYPE_UNLINK,
 )
 from ..layout import require_confirm_final, require_confirm_text
 from ..mosaic.helpers import get_mosaic_definition, is_nem_xem_mosaic
@@ -41,6 +43,29 @@ async def ask_namespace_registration(
         msg.bold("Sub Namespace")
         msg.normal("Parent Id:")
         msg.bold(namespace_registration.parent_id.upper())
+    await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
+
+    await require_confirm_final(ctx, common.max_fee)
+
+async def ask_address_alias(
+    ctx, common: NEM2TransactionCommon, address_alias: NEM2NamespaceRegistrationTransaction
+):
+
+    # confirm namespace id
+    msg = Text("Address Alias")
+    msg.normal("Namspace Id:")
+    msg.bold(address_alias.namespace_id.upper())
+    msg.normal("Alias Action:")
+    if(address_alias.alias_action == NEM2_ALIAS_ACTION_TYPE_LINK):
+        msg.bold("LINK")
+    elif (address_alias.alias_action == NEM2_ALIAS_ACTION_TYPE_UNLINK):
+        msg.bold("UNLINK")
+    await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
+
+    # confirm address to link/unlink
+    msg = Text("Address Alias", ui.ICON_SEND, ui.GREEN)
+    msg.normal("Address:")
+    msg.mono(*split_address(address_alias.address.address))
     await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
     await require_confirm_final(ctx, common.max_fee)

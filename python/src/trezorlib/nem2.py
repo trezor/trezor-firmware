@@ -24,6 +24,7 @@ TYPE_MULTISIG_SIGNATURE = 0x1002
 TYPE_MOSAIC_DEFINITION = 0x414D
 TYPE_MOSAIC_SUPPLY_CHANGE = 0x424D
 TYPE_NAMESPACE_REGISTRATION = 0x414E
+TYPE_ADDRESS_ALIAS = 0x424E
 
 NAMESPACE_REGISTRATION_TYPE_ROOT = 0x00
 NAMESPACE_REGISTRATION_TYPE_CHILD = 0x01
@@ -49,7 +50,7 @@ def create_transaction_common(transaction):
 
 def create_transfer(transaction):
     msg = proto.NEM2TransferTransaction()
-    msg.recipient_address = proto.NEM2RecipientAddress(
+    msg.recipient_address = proto.NEM2Address(
         address=transaction["recipientAddress"]["address"],
         network_type=transaction["recipientAddress"]["networkType"],
     )
@@ -99,6 +100,16 @@ def create_namespace_registration(transaction):
     msg.namespace_name = transaction["namespaceName"]
     return msg
 
+def create_address_alias(transaction):
+    msg = proto.NEM2AddressAliasTransaction()
+    msg.namespace_id = transaction["namespaceId"]
+    msg.address = proto.NEM2Address(
+        address=transaction["address"]["address"],
+        network_type=transaction["address"]["networkType"],
+    )
+    msg.alias_action = transaction["aliasAction"]
+    return msg
+
 def fill_transaction_by_type(msg, transaction):
     if transaction["type"] == TYPE_TRANSACTION_TRANSFER:
         msg.transfer = create_transfer(transaction)
@@ -108,6 +119,8 @@ def fill_transaction_by_type(msg, transaction):
         msg.mosaic_supply = create_mosaic_supply(transaction)
     if transaction["type"] == TYPE_NAMESPACE_REGISTRATION:
         msg.namespace_registration = create_namespace_registration(transaction)
+    if transaction["type"] == TYPE_ADDRESS_ALIAS:
+        msg.address_alias = create_address_alias(transaction)
 
 
 def create_sign_tx(transaction):

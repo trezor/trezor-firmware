@@ -12,7 +12,6 @@ from apps.nem2.validators import validate
 
 
 async def sign_tx(ctx, msg: NEM2SignTx, keychain):
-    print("signing nem2 transaction", msg)
     validate(msg)
 
     await validate_path(
@@ -42,7 +41,9 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
     elif msg.mosaic_supply:
         tx = await mosaic.mosaic_supply(ctx, common, msg.mosaic_supply)
     elif msg.namespace_registration:
-        tx = await namespace.namespace_registration(ctx, public_key, common, msg.namespace_registration)
+        tx = await namespace.namespace_registration(ctx, common, msg.namespace_registration)
+    elif msg.address_alias:
+        tx = await namespace.address_alias(ctx, common, msg.address_alias)
     # elif msg.supply_change:
     #     tx = await mosaic.supply_change(ctx, public_key, common, msg.supply_change)
     # elif msg.aggregate_modification:

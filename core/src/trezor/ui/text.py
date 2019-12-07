@@ -87,9 +87,7 @@ def render_text(
             for index in range(len(word) - 1, 0, -1):
                 letter = word[index]
                 width -= ui.display.text_width(letter, font)
-                print("GOT WIDTH", width)
                 if offset_x + width + splitw < offset_x_max:
-                    print("BREAKING")
                     break
             else:
                 index = 0

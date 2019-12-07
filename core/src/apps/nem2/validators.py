@@ -16,7 +16,10 @@ from .helpers import (
     NEM2_PUBLIC_KEY_SIZE,
 )
 
-from .namespace.validators import _validate_namespace_registration
+from .namespace.validators import (
+    _validate_namespace_registration,
+    _validate_address_alias
+)
 
 def validate(msg: NEM2SignTx):
     if msg.transaction is None:
@@ -35,6 +38,8 @@ def validate(msg: NEM2SignTx):
         _validate_transfer(msg.transfer, msg.transaction.version)
     if(msg.namespace_registration):
         _validate_namespace_registration(msg.namespace_registration, msg.transaction.version)
+    if(msg.address_alias):
+        _validate_address_alias(msg.address_alias, msg.transaction.version)
 
 def _validate_single_tx(msg: NEM2SignTx):
     # ensure exactly one transaction is provided
@@ -43,7 +48,7 @@ def _validate_single_tx(msg: NEM2SignTx):
         + bool(msg.namespace_registration)
         + bool(msg.mosaic_definition)
         + bool(msg.mosaic_supply)
-        # + bool(msg.aggregate_modification)
+        + bool(msg.address_alias)
         # + bool(msg.importance_transfer)
     )
     if tx_count == 0:

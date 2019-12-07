@@ -42,7 +42,8 @@ message NEM2SignTx {
     optional bool cosigning = 6;
     optional NEM2MosaicDefinitionTransaction mosaic_definition = 7; // Mosaic Definition part
     optional NEM2MosaicSupplyChangeTransaction mosaic_supply = 8; // Mosaic Supply part
-    optional NEM2NamespaceRegistrationTransaction namespace_registration = 9; // Mosaic Supply part
+    optional NEM2NamespaceRegistrationTransaction namespace_registration = 9; // Namespace registration part
+    optional NEM2AddressAliasTransaction address_alias = 10; // Address Alias
 
 
     /**
@@ -65,6 +66,7 @@ message NEM2SignTx {
         MOSAIC_DEFINITION = 16717;
         MOSAIC_SUPPLY_CHANGE = 16973;
         NAMESPACE_REGISTRATION = 16718;
+        ADDRESS_ALIAS = 16974;
     }
 
     enum NEM2NetworkType {
@@ -77,6 +79,11 @@ message NEM2SignTx {
     enum NEM2NamespaceRegistrationType {
         ROOT = 0;
         CHILD = 1;
+    }
+
+    enum NEM2AliasAction {
+        LINK = 1;
+        UNLINK = 0;
     }
 
     // END entities
@@ -99,7 +106,7 @@ message NEM2SignTx {
     * https://github.com/nemtech/catbuffer/blob/master/schemas/transaction.cats
     */
     message NEM2TransferTransaction {
-        optional NEM2RecipientAddress recipient_address = 1;
+        optional NEM2Address recipient_address = 1;
         optional NEM2TransferMessage message = 2;
         repeated NEM2Mosaic mosaics = 3;
     }
@@ -109,7 +116,7 @@ message NEM2SignTx {
         optional uint32 type = 2;
     }
 
-    message NEM2RecipientAddress {
+    message NEM2Address {
         optional string address = 1;
         optional uint32 network_type = 2;
     }
@@ -144,6 +151,15 @@ message NEM2SignTx {
         optional NEM2NamespaceRegistrationType registration_type = 4 [default=ROOT];
         optional uint32 name_size = 5; // length of name (bytes) (uint8 in catbuffer)
         optional string namespace_name = 6; // namespace name
+    }
+
+    /**
+    * Namespace Address Alias
+    */
+    message NEM2AddressAliasTransaction {
+        optional string namespace_id = 1; // namespace identifier (uint64)
+        optional NEM2Address address = 2; // address to link/unlink namespace to
+        optional NEM2AliasAction alias_action = 3 [default=LINK];
     }
 }
 

@@ -19,8 +19,7 @@ from apps.common.writers import (
     write_uint32_le,
     write_uint64_le
 )
-# reflect the serialization used here:
-# https://github.com/nemtech/nem2-sdk-typescript-javascript/blob/master/src/infrastructure/catbuffer/TransferTransactionBodyBuilder.ts#L120
+
 def serialize_namespace_registration(
     common: NEM2TransactionCommon,
     namespace_registration: NEM2NamespaceRegistrationTransaction
@@ -30,7 +29,7 @@ def serialize_namespace_registration(
 
     size = get_common_message_size()
 
-    # add up the namespace_registration-specific message attribute sizes
+    # add up the namespace registration message attribute sizes
     size += 8 # duration if root namespace or parent id if subnamespace
     size += 8 # namespace id
     size += 1 # registration type
@@ -56,5 +55,31 @@ def serialize_namespace_registration(
     write_uint8(tx, len(namespace_registration.namespace_name))
 
     write_bytes(tx, namespace_registration.namespace_name.encode())
+
+    return tx
+
+def serialize_address_alias(
+    common: NEM2TransactionCommon,
+    address_alias: NEM2AddressAliasTransaction
+) -> bytearray:
+    tx = bytearray()
+
+    size = get_common_message_size()
+
+    # add up the address alias message attribute sizes
+    size += 8 # namespace id
+    size += 25 # address (catbuffer UnresolvedAddress)
+    size += 1 # alias action
+
+    write_uint32_le(tx, size)
+
+    tx = serialize_tx_common(tx, common)
+
+    write_uint64_le(tx, int(address_alias.namespace_id, 16))
+
+    # address (catbuffer UnresolvedAddress - 25 bits) base 32 encoded
+    write_bytes(tx, base32.decode(address_alias.address.address))
+
+    write_uint8(tx, address_alias.alias_action)
 
     return tx

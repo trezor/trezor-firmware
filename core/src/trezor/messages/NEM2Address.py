@@ -10,7 +10,7 @@ if __debug__:
         Dict, List, Optional = None, None, None  # type: ignore
 
 
-class NEM2RecipientAddress(p.MessageType):
+class NEM2Address(p.MessageType):
 
     def __init__(
         self,

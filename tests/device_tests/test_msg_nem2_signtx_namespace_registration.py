@@ -23,7 +23,7 @@ from ..common import MNEMONIC12
 
 @pytest.mark.altcoin
 @pytest.mark.nem2
-class TestMsgNEM2SignTxTransfer:
+class TestMsgNEM2SignTxNamespaceRegistration:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_nem2_signtx_root_namespace_registration(self, client):
         tx = nem2.sign_tx(

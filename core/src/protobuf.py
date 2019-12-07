@@ -236,6 +236,7 @@ async def load_message(
         elif ftype is UnicodeType:
             fvalue = bytearray(ivalue)
             await reader.areadinto(fvalue)
+            print("BROBRO", fvalue)
             fvalue = bytes(fvalue).decode()
         elif issubclass(ftype, MessageType):
             fvalue = await load_message(LimitedReader(reader, ivalue), ftype)

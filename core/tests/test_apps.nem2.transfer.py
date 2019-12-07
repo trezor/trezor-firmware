@@ -11,7 +11,7 @@ if not utils.BITCOIN_ONLY:
     from trezor.messages.NEM2SignTx import NEM2SignTx
     from trezor.messages.NEM2Mosaic import NEM2Mosaic
     from trezor.messages.NEM2TransferMessage import NEM2TransferMessage
-    from trezor.messages.NEM2RecipientAddress import NEM2RecipientAddress
+    from trezor.messages.NEM2Address import NEM2Address
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -28,7 +28,7 @@ class TestNem2Transfer(unittest.TestCase):
         )
 
         transfer = NEM2TransferTransaction(
-            recipient_address=NEM2RecipientAddress(
+            recipient_address=NEM2Address(
                 address="TAO6QEUC3APBTMDAETMG6IZJI7YOXWHLGC5T4HA4",
                 network_type=NEM2_NETWORK_TEST_NET
             ),
@@ -56,7 +56,7 @@ class TestNem2Transfer(unittest.TestCase):
         )
 
         transfer = NEM2TransferTransaction(
-            recipient_address=NEM2RecipientAddress(
+            recipient_address=NEM2Address(
                 address="TAO6QEUC3APBTMDAETMG6IZJI7YOXWHLGC5T4HA4",
                 network_type=NEM2_NETWORK_TEST_NET
             ),
