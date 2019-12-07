@@ -831,8 +831,8 @@ def nem_sign_tx(connect, address, file, broadcast):
     "-f",
     "--file",
     type=click.File("r"),
-    default="-",
-    help="Transaction object as per typescript sdk",
+    required=True,
+    help="path to json file containing transaction object as per typescript sdk",
 )
 @click.pass_obj
 def nem2_sign_tx(connect, address, generation_hash, file):
