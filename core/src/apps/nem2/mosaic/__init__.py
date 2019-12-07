@@ -8,7 +8,7 @@ async def mosaic_definition(
     ctx, public_key: bytes, common: NEM2TransactionCommon, creation: NEM2MosaicDefinitionTransaction
 ) -> bytearray:
     await layout.ask_mosaic_definition(ctx, common, creation)
-    return serialize.serialize_mosaic_definition(common, creation, public_key)
+    return serialize.serialize_mosaic_definition(common, creation)
 
 async def mosaic_supply(
     ctx, common: NEM2TransactionCommon, supply: NEM2MosaicSupplyChangeTransaction
