@@ -35,7 +35,7 @@ class TestMsgRecoverydevice:
                 passphrase_protection=True,
                 pin_protection=True,
                 label="label",
-                language="english",
+                language="en-US",
                 enforce_wordlist=True,
             )
         )
@@ -98,7 +98,7 @@ class TestMsgRecoverydevice:
                 passphrase_protection=False,
                 pin_protection=False,
                 label="label",
-                language="english",
+                language="en-US",
                 enforce_wordlist=True,
             )
         )
@@ -152,7 +152,7 @@ class TestMsgRecoverydevice:
                 passphrase_protection=False,
                 pin_protection=False,
                 label="label",
-                language="english",
+                language="en-US",
                 enforce_wordlist=True,
             )
         )
@@ -180,7 +180,7 @@ class TestMsgRecoverydevice:
                 passphrase_protection=True,
                 pin_protection=True,
                 label="label",
-                language="english",
+                language="en-US",
                 enforce_wordlist=True,
             )
         )
@@ -207,5 +207,5 @@ class TestMsgRecoverydevice:
     def test_already_initialized(self, client):
         with pytest.raises(RuntimeError):
             device.recover(
-                client, 12, False, False, "label", "english", client.mnemonic_callback
+                client, 12, False, False, "label", "en-US", client.mnemonic_callback
             )

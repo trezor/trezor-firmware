@@ -106,7 +106,7 @@ class TestMsgResetDeviceT2:
                 passphrase_protection=False,
                 pin_protection=False,
                 label="test",
-                language="english",
+                language="en-US",
                 backup_type=BackupType.Slip39_Basic,
             )
 

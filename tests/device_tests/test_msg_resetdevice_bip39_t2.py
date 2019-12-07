@@ -87,7 +87,7 @@ class TestMsgResetDeviceT2:
                 passphrase_protection=False,
                 pin_protection=False,
                 label="test",
-                language="english",
+                language="en-US",
             )
 
         # generate mnemonic locally
@@ -189,7 +189,7 @@ class TestMsgResetDeviceT2:
                 passphrase_protection=True,
                 pin_protection=True,
                 label="test",
-                language="english",
+                language="en-US",
             )
 
         # generate mnemonic locally
@@ -235,4 +235,4 @@ class TestMsgResetDeviceT2:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_already_initialized(self, client):
         with pytest.raises(Exception):
-            device.reset(client, False, 128, True, True, "label", "english")
+            device.reset(client, False, 128, True, True, "label", "en-US")
