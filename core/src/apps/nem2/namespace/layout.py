@@ -27,7 +27,7 @@ async def ask_namespace_registration(
     msg.normal("Id:")
     msg.bold(namespace_registration.id.upper())
     msg.normal("Name:")
-    msg.bold(namespace_registration.namespace_name) # casting to bytes prevents errors on long names
+    msg.bold(namespace_registration.namespace_name)
     await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
     # confirm registration type and either parentId and  and id
@@ -36,9 +36,12 @@ async def ask_namespace_registration(
     if(namespace_registration.registration_type == NEM2_NAMESPACE_REGISTRATION_TYPE_ROOT):
         msg.bold("Root Namespace")
         msg.normal("Duration:")
-        msg.bold(namespace_registration.duration) # casting to bytes prevents errors on long names
+        msg.bold(namespace_registration.duration)
     elif (namespace_registration.registration_type == NEM2_NAMESPACE_REGISTRATION_TYPE_SUB):
         msg.bold("Sub Namespace")
         msg.normal("Parent Id:")
-        msg.bold(namespace_registration.parent_id.upper()) # casting to bytes prevents errors on long names
+        msg.bold(namespace_registration.parent_id.upper())
     await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
+
+    await require_confirm_final(ctx, common.max_fee)
+
