@@ -23,12 +23,13 @@ from apps.common.writers import (
 # https://github.com/nemtech/nem2-sdk-typescript-javascript/blob/master/src/infrastructure/catbuffer/TransferTransactionBodyBuilder.ts#L120
 def serialize_namespace_registration(
     common: NEM2TransactionCommon,
-    namespace_registration: NEM2NamespaceRegistrationTransaction,
-    embedded: bool
+    namespace_registration: NEM2NamespaceRegistrationTransaction
 ) -> bytearray:
     tx = bytearray()
 
-    size = get_common_message_size(embedded)
+
+    size = get_common_message_size()
+
     # add up the namespace_registration-specific message attribute sizes
     size += 8 # duration if root namespace or parent id if subnamespace
     size += 8 # namespace id
@@ -38,7 +39,7 @@ def serialize_namespace_registration(
 
     write_uint32_le(tx, size)
 
-    tx = serialize_tx_common(tx, common, embedded)
+    tx = serialize_tx_common(tx, common)
 
     # root namespace registration define their own duration
     if(namespace_registration.registration_type == NEM2_NAMESPACE_REGISTRATION_TYPE_ROOT):
@@ -56,4 +57,4 @@ def serialize_namespace_registration(
 
     write_bytes(tx, namespace_registration.namespace_name.encode())
 
-    return tx, size
+    return tx
