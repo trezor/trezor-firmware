@@ -14,7 +14,7 @@ if not utils.BITCOIN_ONLY:
     from trezor.messages.NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
     from trezor.messages.NEM2Mosaic import NEM2Mosaic
     from trezor.messages.NEM2TransferMessage import NEM2TransferMessage
-    from trezor.messages.NEM2RecipientAddress import NEM2RecipientAddress
+    from trezor.messages.NEM2Address import NEM2Address
     from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
     from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
     from trezor.messages.NEM2AggregateTransaction import NEM2AggregateTransaction
@@ -35,7 +35,7 @@ class TestNem2Aggregate(unittest.TestCase):
                     public_key = "BBCE621C6DAB03ECB620356EC029BF74B417E734A699970ADFE504C0CE9EE8AD"
                 ),
                 "body": NEM2TransferTransaction(
-                    recipient_address = NEM2RecipientAddress(
+                    recipient_address = NEM2Address(
                         address = "SAAXKRVD6HLAN6IHYM7YWTS3W2BGYXCRBNSA4Q6Y",
                         network_type = NEM2_NETWORK_MIJIN_TEST
                     ),
@@ -59,7 +59,7 @@ class TestNem2Aggregate(unittest.TestCase):
                     public_key = "596FEAB15D98BFD75F1743E9DC8A36474A3D0C06AE78ED134C231336C38A6297"
                 ),
                 "body": NEM2TransferTransaction(
-                    recipient_address = NEM2RecipientAddress(
+                    recipient_address = NEM2Address(
                         address = "SDR6OBOYSGCWVQDYJ4ISLXFDZXFZ3FCY3ZLJKI57",
                         network_type = NEM2_NETWORK_MIJIN_TEST
                     ),

@@ -11,7 +11,7 @@ if not utils.BITCOIN_ONLY:
     from trezor.messages.NEM2SignTx import NEM2SignTx
     from trezor.messages.NEM2Mosaic import NEM2Mosaic
     from trezor.messages.NEM2TransferMessage import NEM2TransferMessage
-    from trezor.messages.NEM2RecipientAddress import NEM2RecipientAddress
+    from trezor.messages.NEM2Address import NEM2Address
     from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
     from trezor.messages.NEM2InnerTransaction import NEM2InnerTransaction
     from trezor.messages.NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
