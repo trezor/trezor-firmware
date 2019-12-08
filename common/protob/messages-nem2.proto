@@ -191,9 +191,10 @@ message NEM2SignTx {
     message NEM2NamespaceMetadataTransaction {
         optional string target_public_key = 1; // target namespace owner public key
         optional string scoped_metadata_key = 2; // metadata key (uint64)
-        optional uint32 value_size_delta = 3; // change in value size (in bytes)
-        optional uint32 value_size = 4; // new value size (in bytes)
-        optional string value = 5; // difference between previous value and new value
+        optional string target_namespace_id = 3; // id of target namespace (uint64)
+        optional uint32 value_size_delta = 4; // change in value size (in bytes)
+        optional uint32 value_size = 5; // new value size (in bytes)
+        optional string value = 6; // difference between previous value and new value
     }
 }
 

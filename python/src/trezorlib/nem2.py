@@ -23,8 +23,15 @@ TYPE_TRANSACTION_TRANSFER = 0x4154
 TYPE_MULTISIG_SIGNATURE = 0x1002
 TYPE_MOSAIC_DEFINITION = 0x414D
 TYPE_MOSAIC_SUPPLY_CHANGE = 0x424D
-TYPE_AGGREGATE_BONDED = 0x4241
-TYPE_AGGREGATE_COMPLETE = 0x4141
+TYPE_NAMESPACE_REGISTRATION = 0x414E
+TYPE_ADDRESS_ALIAS = 0x424E
+TYPE_NAMESPACE_METADATA = 0x4344
+
+NAMESPACE_REGISTRATION_TYPE_ROOT = 0x00
+NAMESPACE_REGISTRATION_TYPE_CHILD = 0x01
+
+ALIAS_ACTION_TYPE_LINK = 0x01
+ALIAS_ACTION_TYPE_UNLINK = 0x00
 
 NETWORK_TYPE_MIJIN_TEST = 0x90
 NETWORK_TYPE_MIJIN = 0x60
@@ -107,6 +114,16 @@ def create_aggregate(aggregate_transaction):
     msg.inner_transactions = inner_transactions
     return msg
 
+def create_namespace_metadata(transaction):
+    msg = proto.NEM2NamespaceMetadataTransaction()
+    msg.target_public_key = transaction["targetPublicKey"]
+    msg.scoped_metadata_key = transaction["scopedMetadataKey"]
+    msg.target_namespace_id = transaction["targetNamespaceId"]
+    msg.value_size_delta = transaction["valueSizeDelta"]
+    msg.value_size = transaction["valueSize"]
+    msg.value = transaction["value"]
+    return msg
+
 def fill_transaction_by_type(msg, transaction):
     if transaction["type"] == TYPE_TRANSACTION_TRANSFER:
         msg.transfer = create_transfer(transaction)
@@ -114,8 +131,12 @@ def fill_transaction_by_type(msg, transaction):
         msg.mosaic_definition = create_mosaic_definition(transaction)
     if transaction["type"] == TYPE_MOSAIC_SUPPLY_CHANGE:
         msg.mosaic_supply = create_mosaic_supply(transaction)
-    if transaction["type"] == TYPE_AGGREGATE_BONDED or transaction["type"] == TYPE_AGGREGATE_COMPLETE:
-        msg.aggregate = create_aggregate(transaction)
+    if transaction["type"] == TYPE_NAMESPACE_REGISTRATION:
+        msg.namespace_registration = create_namespace_registration(transaction)
+    if transaction["type"] == TYPE_ADDRESS_ALIAS:
+        msg.address_alias = create_address_alias(transaction)
+    if transaction["type"] == TYPE_NAMESPACE_METADATA:
+        msg.namespace_metadata = create_namespace_metadata(transaction)
 
 
 def create_sign_tx(transaction):

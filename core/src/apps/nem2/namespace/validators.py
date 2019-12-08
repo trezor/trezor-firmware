@@ -1,7 +1,6 @@
 from trezor.messages.NEM2SignTx import (
     NEM2SignTx,
     NEM2TransactionCommon,
-    NEM2TransferTransaction,
 )
 from trezor.wire import ProcessError
 
