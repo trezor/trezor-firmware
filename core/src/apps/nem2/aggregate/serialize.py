@@ -7,8 +7,11 @@ from trezor.utils import HashWriter
 
 from ..helpers import (
     NEM2_TRANSACTION_TYPE_TRANSFER,
-    NEM2_TRANSACTION_TYPE_MOSAIC_DEFINITION
+    NEM2_TRANSACTION_TYPE_MOSAIC_DEFINITION,
+    NEM2_TRANSACTION_TYPE_NAMESPACE_REGISTRATION,
+    NEM2_TRANSACTION_TYPE_ADDRESS_ALIAS,
 )
+
 from ..writers import (
     serialize_tx_common,
     get_common_message_size,
@@ -22,6 +25,7 @@ from ..writers import (
 
 from ..transfer.serialize import serialize_transfer
 from ..mosaic.serialize import serialize_mosaic_definition, serialize_mosaic_supply
+from ..namespace.serialize import serialize_namespace_registration, serialize_address_alias
 from .helpers import MerkleTools
 
 def serialize_according_to_type(transaction):
@@ -30,6 +34,10 @@ def serialize_according_to_type(transaction):
         return serialize_transfer(transaction.common, transaction.transfer, embedded=True)
     elif tx_type == NEM2_TRANSACTION_TYPE_MOSAIC_DEFINITION:
         return serialize_mosaic_definition(transaction.common, transaction.mosaic_definition, embedded=True)
+    elif tx_type == NEM2_TRANSACTION_TYPE_NAMESPACE_REGISTRATION:
+        return serialize_namespace_registration(transaction.common, transaction.namespace_registration, embedded=True)
+    elif tx_type == NEM2_TRANSACTION_TYPE_ADDRESS_ALIAS:
+        return serialize_address_alias(transaction.common, transaction.address_alias, embedded=True)
 
 # 1. Takes in a list of non-serialized transactions
 # 2. Serializes them as embedded transactions
