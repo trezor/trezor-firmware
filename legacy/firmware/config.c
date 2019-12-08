@@ -78,6 +78,7 @@ static const uint32_t META_MAGIC_V10 = 0xFFFFFFFF;
 #define KEY_NODE (15 | APP)                                   // node
 #define KEY_IMPORTED (16 | APP)                               // bool
 #define KEY_U2F_ROOT (17 | APP | FLAG_PUBLIC_SHIFTED)         // node
+#define KEY_ON_DEVICE_INPUT (18 | APP | FLAG_PUBLIC_SHIFTED)  // bool
 #define KEY_DEBUG_LINK_PIN (255 | APP | FLAG_PUBLIC_SHIFTED)  // string(10)
 
 // The PIN value corresponding to an empty PIN.
@@ -119,9 +120,6 @@ be added to the storage u2f_counter to get the real counter value.
  * storage.u2f_counter + config_u2f_offset.
  * This corresponds to the number of cleared bits in the U2FAREA.
  */
-static secbool sessionUseOnDeviceTextInputCached = secfalse;
-static secbool sessionUseOnDeviceTextInput;
-
 static secbool sessionSeedCached, sessionSeedUsesPassphrase;
 static uint8_t CONFIDENTIAL sessionSeed[64];
 
@@ -411,7 +409,7 @@ void config_init(void) {
 void session_clear(bool lock) {
   sessionSeedCached = secfalse;
   memzero(&sessionSeed, sizeof(sessionSeed));
-  if (!session_isUseOnDeviceTextInput()) {
+  if (!config_isUseOnDeviceTextInput()) {
     sessionPassphraseCached = secfalse;
     memzero(&sessionPassphrase, sizeof(sessionPassphrase));
   }
@@ -829,23 +827,20 @@ bool session_getState(const uint8_t *salt, uint8_t *state,
 
 bool session_isUnlocked(void) { return sectrue == storage_is_unlocked(); }
 
-bool session_isUseOnDeviceTextInputCached(void) {
-  return sectrue == sessionUseOnDeviceTextInputCached;
-}
-
-bool session_isUseOnDeviceTextInput(void) {
-  return sectrue == sessionUseOnDeviceTextInput;
-}
-
-void session_setUseOnDeviceTextInput(bool use) {
-  sessionUseOnDeviceTextInputCached = sectrue;
-  sessionUseOnDeviceTextInput = use ? sectrue : secfalse;
-}
-
 bool config_isInitialized(void) {
   bool initialized = false;
   config_get_bool(KEY_INITIALIZED, &initialized);
   return initialized;
+}
+
+bool config_isUseOnDeviceTextInput(void) {
+  bool useOnDeviceTextInput;
+  secbool res = config_get_bool(KEY_ON_DEVICE_INPUT, &useOnDeviceTextInput);
+  return sectrue == res ? useOnDeviceTextInput : false;
+}
+
+void config_setUseOnDeviceTextInput(bool use) {
+  config_set_bool(KEY_ON_DEVICE_INPUT, use);
 }
 
 bool config_getImported(bool *imported) {

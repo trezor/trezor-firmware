@@ -279,11 +279,7 @@ bool protectPin(bool use_cached) {
   if (config_hasPin()) {
     memzero(pin, sizeof(pin));
 
-    if (!session_isUseOnDeviceTextInputCached()) {
-      requestOnDeviceTextInput();
-    }
-
-    if (session_isUseOnDeviceTextInput()) {
+    if (config_isUseOnDeviceTextInput()) {
       requestPinDevice("Please enter current PIN", "on the next screen.", NULL,
                        pin);
     } else {
@@ -310,12 +306,8 @@ bool protectChangePin(bool removal) {
   static CONFIDENTIAL char new_pin[MAX_PIN_LEN + 1] = "";
   static CONFIDENTIAL char pin[MAX_PIN_LEN + 1];
 
-  if (!session_isUseOnDeviceTextInputCached()) {
-    requestOnDeviceTextInput();
-  }
-
   if (config_hasPin()) {
-    if (session_isUseOnDeviceTextInput()) {
+    if (config_isUseOnDeviceTextInput()) {
       memzero(pin, sizeof(pin));
       requestPinDevice("Please enter current PIN", "on the next screen.", NULL,
                        pin);
@@ -345,7 +337,7 @@ bool protectChangePin(bool removal) {
   }
 
   if (!removal) {
-    if (session_isUseOnDeviceTextInput()) {
+    if (config_isUseOnDeviceTextInput()) {
       memzero(pin, sizeof(pin));
       requestPinDevice("Please enter new PIN", "on the next screen.", NULL,
                        pin);
@@ -360,7 +352,7 @@ bool protectChangePin(bool removal) {
     }
     strlcpy(new_pin, pin, sizeof(new_pin));
 
-    if (session_isUseOnDeviceTextInput()) {
+    if (config_isUseOnDeviceTextInput()) {
       memzero(pin, sizeof(pin));
       requestPinDevice("Please re-enter new PIN", "on the next screen.", NULL,
                        pin);
@@ -562,10 +554,7 @@ bool protectPassphrase(void) {
   }
 
   bool result;
-  if (!session_isUseOnDeviceTextInputCached()) {
-    requestOnDeviceTextInput();
-  }
-  if (session_isUseOnDeviceTextInput())
+  if (config_isUseOnDeviceTextInput())
     result = protectPassphraseDevice();
   else
     result = protectPassphraseComputer();

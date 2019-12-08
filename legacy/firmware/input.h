@@ -26,8 +26,6 @@
 
 void buttonWaitForYesUp(void);
 
-void requestOnDeviceTextInput(void);
-
 bool inputText(char *text, int maxtextlen, const char characters[],
                int numcharacters, char groupseparator, int width,
                bool requiredone, bool allowempty);

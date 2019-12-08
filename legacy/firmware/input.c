@@ -119,26 +119,6 @@ void buttonWaitForIdle(void) {
   }
 }
 
-void requestOnDeviceTextInput(void) {
-  layoutDialog(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-               _("Do you like to use"), _("on-device text input?"), NULL, NULL,
-               NULL, NULL);
-
-  buttonUpdate();
-
-  for (;;) {
-    usbSleep(5);
-    buttonUpdate();
-    if (button.YesUp || button.NoUp) {
-      break;
-    }
-  }
-
-  layoutSwipe();
-
-  session_setUseOnDeviceTextInput(button.YesUp);
-}
-
 int findCharIndex(const char characters[], char needle, int numtotal,
                   int startindex, bool forward) {
   if (startindex < 0 || startindex >= numtotal) {
