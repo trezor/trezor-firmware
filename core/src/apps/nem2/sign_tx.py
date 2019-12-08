@@ -6,10 +6,29 @@ from ubinascii import unhexlify, hexlify
 
 from apps.common import seed
 from apps.common.paths import validate_path
-from apps.nem2 import CURVE, transfer, mosaic, namespace
+from apps.nem2 import CURVE, transfer, mosaic, aggregate
 from apps.nem2.helpers import NEM2_HASH_ALG, check_path, NEM2_TRANSACTION_TYPE_AGGREGATE_BONDED, NEM2_TRANSACTION_TYPE_AGGREGATE_COMPLETE
 from apps.nem2.validators import validate
 
+# Included fields are `size`, `verifiableEntityHeader_Reserved1`,
+# `signature`, `signerPublicKey` and `entityBody_Reserved1`.
+def get_transaction_header_size():
+    return 8 + 64 + 32 + 4
+
+# Included fields are the transaction header, `version`,
+# `network`, `type`, `maxFee` and `deadline`
+def get_transaction_body_index():
+    return get_transaction_header_size() + 1 + 1 + 2 + 8 + 8
+
+def is_aggregate_transaction(tx_type):
+    return (tx_type == NEM2_TRANSACTION_TYPE_AGGREGATE_BONDED or
+        tx_type == NEM2_TRANSACTION_TYPE_AGGREGATE_COMPLETE)
+
+def get_signing_bytes(payload_buffer_without_header, generation_hash_bytes, tx_type):
+    print('payload_buffer_without_header', hexlify(payload_buffer_without_header))
+    if is_aggregate_transaction(tx_type):
+        return generation_hash_bytes + payload_buffer_without_header[:52]
+    return generation_hash_bytes + payload_buffer_without_header
 
 async def sign_tx(ctx, msg: NEM2SignTx, keychain):
     validate(msg)
@@ -32,18 +51,17 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
         public_key = seed.remove_ed25519_prefix(node.public_key())
         common = msg.transaction
 
-    print(msg)
-
     if msg.transfer:
         tx = await transfer.transfer(ctx, public_key, common, msg.transfer)
     elif msg.mosaic_definition:
         tx = await mosaic.mosaic_definition(ctx, public_key, common, msg.mosaic_definition)
     elif msg.mosaic_supply:
         tx = await mosaic.mosaic_supply(ctx, common, msg.mosaic_supply)
-    elif msg.namespace_registration:
-        tx = await namespace.namespace_registration(ctx, common, msg.namespace_registration)
-    elif msg.address_alias:
-        tx = await namespace.address_alias(ctx, common, msg.address_alias)
+    elif msg.aggregate:
+        tx = await aggregate.aggregate(ctx, common, msg.aggregate)
+        # tx = await mosaic.mosaic_supply(ctx, common, msg.mosaic_supply)
+    # elif msg.provision_namespace:
+    #     tx = await namespace.namespace(ctx, public_key, common, msg.provision_namespace)
     # elif msg.supply_change:
     #     tx = await mosaic.supply_change(ctx, public_key, common, msg.supply_change)
     # elif msg.aggregate_modification:
@@ -76,28 +94,31 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
             )
 
     # https://nemtech.github.io/concepts/transaction.html#signing-a-transaction
-    # signing bytes (all tx data expect size, signature and signer)
-    # everything after the first 108 bytes of serialised transaction
-    signing_bytes = tx[108:]
-
     # sign tx
     generation_hash_bytes = unhexlify(msg.generation_hash)
-    signature = ed25519.sign(node.private_key(), generation_hash_bytes + signing_bytes, NEM2_HASH_ALG)
+    # Will be used for calculating signed payload, and subsequent hash.
+    payload_without_header = tx[get_transaction_header_size():]
+
+    signing_bytes = get_signing_bytes(payload_without_header, generation_hash_bytes, msg.transaction.type)
+    signature = ed25519.sign(node.private_key(), signing_bytes, NEM2_HASH_ALG)
 
     # prepare payload
     payload = tx[:8] + signature + public_key + tx[104:]
 
-    # prepare hash content
-    payload_without_header = payload[108:]
-    data_bytes = generation_hash_bytes + payload_without_header
-    if msg.transaction.type == NEM2_TRANSACTION_TYPE_AGGREGATE_BONDED or msg.transaction.type == NEM2_TRANSACTION_TYPE_AGGREGATE_COMPLETE:
-        data_bytes = generation_hash_bytes + payload_without_header[0:52]
-
+    # 1) Take "R" part of a signature (first 32 bytes)
     first_half_of_sig = payload[8:40]
+    # 2) Add public key to match sign/verify behavior (32 bytes)
     signer = payload[72:104]
-    hash_bytes = first_half_of_sig + signer + data_bytes
+    # 3) add transaction data without header (EntityDataBuffer)
+    transaction_body = payload_without_header
+    # In case of aggregate transactions, we hash only the merkle transaction hash.
+    if is_aggregate_transaction(msg.transaction.type):
+        transaction_body = tx[get_transaction_header_size():get_transaction_body_index() + 32]
+    # 4) Add all the parts together
+    # layout: `signature_R || signerPublicKey || generationHash || EntityDataBuffer`
+    hash_bytes = first_half_of_sig + signer + generation_hash_bytes + transaction_body
 
     resp = NEM2SignedTx()
     resp.payload = payload
-    resp.hash = sha3_256(hash_bytes, keccak=True).digest()
+    resp.hash = sha3_256(hash_bytes).digest()
     return resp

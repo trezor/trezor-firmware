@@ -48,7 +48,8 @@ def _validate_single_tx(msg: NEM2SignTx):
         + bool(msg.namespace_registration)
         + bool(msg.mosaic_definition)
         + bool(msg.mosaic_supply)
-        + bool(msg.address_alias)
+        + bool(msg.aggregate)
+        # + bool(msg.aggregate_modification)
         # + bool(msg.importance_transfer)
     )
     if tx_count == 0:
