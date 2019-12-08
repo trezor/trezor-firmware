@@ -226,7 +226,7 @@ void inputPin(char pin[]) {
       '\\',        ';',         '\'',        ',',         '.',
       '/',         CHAR_BCKSPC, CHAR_DONE,   '~',         '_',
       '+',         '{',         '}',         '|',         ':',
-      '\'',        '<',         '>',         '?',         CHAR_BCKSPC,
+      '"',        '<',         '>',         '?',         CHAR_BCKSPC,
       CHAR_DONE};
 
   inputText(pin, MAX_PIN_LEN, Characters,
