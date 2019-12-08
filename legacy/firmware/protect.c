@@ -431,7 +431,7 @@ void inputPassphrase(char *passphrase) {
       '\\',        ';',         '\'',        ',',         '.',
       '/',         CHAR_BCKSPC, CHAR_DONE,   '~',         '_',
       '+',         '{',         '}',         '|',         ':',
-      '\'',        '<',         '>',         '?',         CHAR_BCKSPC,
+      '"',         '<',         '>',         '?',         CHAR_BCKSPC,
       CHAR_DONE};
 
   inputText(passphrase, MAX_PASSPHRASE_LEN, Characters,
