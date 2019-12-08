@@ -477,6 +477,26 @@ void next_word(void) {
   recovery_request();
 }
 
+void requestOnDeviceTextInput(void) {
+  layoutDialog(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+               _("Do you like to use"), _("on-device text input?"), NULL, NULL,
+               NULL, NULL);
+
+  buttonUpdate();
+
+  for (;;) {
+    usbSleep(5);
+    buttonUpdate();
+    if (button.YesUp || button.NoUp) {
+      break;
+    }
+  }
+
+  layoutSwipe();
+
+  config_setUseOnDeviceTextInput(button.YesUp);
+}
+
 bool confirmWord(const char *word, const char *desc, const char *input_invalid,
                  bool enable_edit, bool enable_done) {
   char str[256];
@@ -582,7 +602,7 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
   requestOnDeviceTextInput();
 
   word_index = 0;
-  if (session_isUseOnDeviceTextInput()) {
+  if (config_isUseOnDeviceTextInput()) {
     input_seed();
   } else if ((type & RecoveryDeviceType_RecoveryDeviceType_Matrix) != 0) {
     awaiting_word = 2;

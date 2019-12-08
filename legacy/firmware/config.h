@@ -109,10 +109,6 @@ bool config_getPassphraseProtection(bool *passphrase_protection);
 bool config_getHomescreen(uint8_t *dest, uint16_t dest_size);
 void config_setHomescreen(const uint8_t *data, uint32_t size);
 
-bool session_isUseOnDeviceTextInputCached(void);
-bool session_isUseOnDeviceTextInput(void);
-void session_setUseOnDeviceTextInput(bool use);
-
 void session_cachePassphrase(const char *passphrase);
 bool session_isPassphraseCached(void);
 bool session_getState(const uint8_t *salt, uint8_t *state,
@@ -138,6 +134,9 @@ uint32_t config_nextU2FCounter(void);
 void config_setU2FCounter(uint32_t u2fcounter);
 
 bool config_isInitialized(void);
+
+bool config_isUseOnDeviceTextInput(void);
+void config_setUseOnDeviceTextInput(bool use);
 
 bool config_getImported(bool *imported);
 void config_setImported(bool imported);
