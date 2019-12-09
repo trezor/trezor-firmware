@@ -20,8 +20,8 @@ def c_bytes(rp_id_hash):
 
 fido_entries = []
 for app in fido:
-    for u2f in app.u2f:
-        fido_entries.append((bytes.fromhex(u2f), "U2F", "", app))
+    for app_id in app.u2f:
+        fido_entries.append((bytes.fromhex(app_id), "U2F", "", app))
     for origin in app.webauthn:
         rp_id_hash = sha256(origin.encode()).digest()
         origin_str = " ({})".format(origin)
