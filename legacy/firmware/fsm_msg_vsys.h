@@ -35,7 +35,8 @@ void fsm_msgVsysGetAddress(const VsysGetAddress *msg) {
 
   hdnode_fill_public_key(node);
   char network_byte = get_network_byte(msg->address_n, msg->address_n_count);
-  vsys_get_address_from_public_key(&node->public_key[1], network_byte, resp->address);
+  vsys_get_address_from_public_key(&node->public_key[1], network_byte,
+                                   resp->address);
 
   if (msg->has_show_display && msg->show_display) {
     if (!fsm_layoutAddress(resp->address, _("Address:"), true, 0,
@@ -81,7 +82,8 @@ void fsm_msgVsysGetPublicKey(const VsysGetPublicKey *msg) {
   b58enc(resp->public_key, &public_key_size, &node->public_key[1], 32);
 
   char network_byte = get_network_byte(msg->address_n, msg->address_n_count);
-  vsys_get_address_from_public_key(&node->public_key[1], network_byte, resp->address);
+  vsys_get_address_from_public_key(&node->public_key[1], network_byte,
+                                   resp->address);
 
   msg_write(MessageType_MessageType_VsysPublicKey, resp);
 
@@ -101,7 +103,10 @@ void fsm_msgVsysSignTx(VsysSignTx *msg) {
 
   hdnode_fill_public_key(node);
 
-  layoutVsysRequireConfirmTx(msg->tx.recipient, msg->tx.amount);
+  if (!layoutVsysRequireConfirmTx(msg)) {
+    layoutHome();
+    return;
+  }
   if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, true)) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     layoutHome();
@@ -109,6 +114,13 @@ void fsm_msgVsysSignTx(VsysSignTx *msg) {
   }
 
   if (vsys_sign_tx(node, msg, resp)) {
+    strcpy(resp->protocol, PROTOCOL);
+    strcpy(resp->opc, OPC_SIGN);
+    resp->api = SIGN_API_VER;
+    if (!resp->has_signature || resp->signature == NULL) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Failed to sign the transaction"));
+    }
     msg_write(MessageType_MessageType_VsysSignedTx, resp);
   }
 
