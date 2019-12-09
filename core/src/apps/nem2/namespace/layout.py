@@ -21,7 +21,7 @@ from apps.common.confirm import require_confirm
 from apps.common.layout import split_address
 
 async def ask_namespace_registration(
-    ctx, common: NEM2TransactionCommon, namespace_registration: NEM2NamespaceRegistrationTransaction
+    ctx, common: NEM2TransactionCommon, namespace_registration: NEM2NamespaceRegistrationTransaction, embedded=False
 ):
 
     # confirm name and id
@@ -45,10 +45,11 @@ async def ask_namespace_registration(
         msg.bold(namespace_registration.parent_id.upper())
     await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
-    await require_confirm_final(ctx, common.max_fee)
+    if not embedded:
+        await require_confirm_final(ctx, common.max_fee)
 
 async def ask_address_alias(
-    ctx, common: NEM2TransactionCommon, address_alias: NEM2NamespaceRegistrationTransaction
+    ctx, common: NEM2TransactionCommon, address_alias: NEM2NamespaceRegistrationTransaction, embedded=False
 ):
 
     # confirm namespace id
@@ -68,5 +69,6 @@ async def ask_address_alias(
     msg.mono(*split_address(address_alias.address.address))
     await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
-    await require_confirm_final(ctx, common.max_fee)
+    if not embedded:
+        await require_confirm_final(ctx, common.max_fee)
 

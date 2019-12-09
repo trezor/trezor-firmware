@@ -20,13 +20,13 @@ from apps.common.layout import require_confirm, split_address
 
 
 async def ask_mosaic_definition(
-    ctx, common: NEM2TransactionCommon, creation: NEM2MosaicDefinitionTransaction
+    ctx, common: NEM2TransactionCommon, creation: NEM2MosaicDefinitionTransaction, embedded=False
 ):
     # await require_confirm_content(ctx, "Create mosaic", _creation_message(creation))
     # await require_confirm_properties(ctx, creation.definition)
     # await require_confirm_fee(ctx, "Confirm creation fee", creation.fee)
-
-    await require_confirm_final(ctx, common.max_fee)
+    if not embedded:
+        await require_confirm_final(ctx, common.max_fee)
 
 def _creation_message(mosaic_creation):
     return [

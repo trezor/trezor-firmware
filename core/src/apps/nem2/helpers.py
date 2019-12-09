@@ -47,3 +47,8 @@ def check_path(path: list) -> bool:
     if path[2] < HARDENED or path[2] > 1000000 | HARDENED:
         return False
     return True
+
+def captialize_string(s):
+    s = list(s)
+    s[0] = s[0].upper()
+    return "".join(s)

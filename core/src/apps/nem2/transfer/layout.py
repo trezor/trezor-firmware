@@ -22,7 +22,8 @@ from apps.common.layout import split_address
 async def ask_transfer(
     ctx,
     common: NEM2TransactionCommon,
-    transfer: NEM2TransferTransaction
+    transfer: NEM2TransferTransaction,
+    embedded=False
 ):
     for mosaic in transfer.mosaics:
         await ask_transfer_mosaic(ctx, common, transfer, mosaic)
@@ -30,7 +31,8 @@ async def ask_transfer(
 
     if(transfer.message.payload):
         await _require_confirm_message(ctx, transfer.message.payload)
-    await require_confirm_final(ctx, common.max_fee)
+    if not embedded:
+        await require_confirm_final(ctx, common.max_fee)
 
 
 async def ask_transfer_mosaic(
@@ -82,7 +84,8 @@ async def ask_importance_transfer(
     else:
         m = "Deactivate"
     await require_confirm_text(ctx, m + " remote harvesting?")
-    await require_confirm_final(ctx, common.fee)
+    if not embedded:
+        await require_confirm_final(ctx, common.fee)
 
 
 async def _require_confirm_transfer(ctx, recipient, value):
