@@ -82,9 +82,9 @@ If ``` TREZOR_SAVE_SCREEN=1 ``` is set, the emulator makes print screen on every
 
 If ```TREZOR_LOG_MEMORY=1``` is set, the emulator prints memory usage information after each workflow task is finished.
 
-#### Disable fade
+#### Disable animations
 
-```TREZOR_DISABLE_FADE=1``` disables fading, which speeds up the UI workflows (useful for tests).
+```TREZOR_DISABLE_ANIMATION=1``` disables fading and other animations, which speeds up the UI workflows significantly (useful for tests). This is also requirement for UI integration tests.
 
 #### Tests
 

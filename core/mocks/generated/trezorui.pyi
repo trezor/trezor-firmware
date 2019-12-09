@@ -187,3 +187,8 @@ class Display:
         """
         Saves current display contents to PNG file with given prefix.
         """
+
+    def clear_save(self) -> None:
+        """
+        Clears buffers in display saving.
+        """

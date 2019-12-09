@@ -499,3 +499,5 @@ void display_refresh(void) {
 }
 
 const char *display_save(const char *prefix) { return NULL; }
+
+void display_clear_save(void) {}

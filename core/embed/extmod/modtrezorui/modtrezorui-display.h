@@ -535,6 +535,17 @@ STATIC mp_obj_t mod_trezorui_Display_save(mp_obj_t self, mp_obj_t prefix) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_save_obj,
                                  mod_trezorui_Display_save);
 
+/// def clear_save(self) -> None:
+///     """
+///     Clears buffers in display saving.
+///     """
+STATIC mp_obj_t mod_trezorui_Display_clear_save(mp_obj_t self) {
+  display_clear_save();
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_clear_save_obj,
+                                 mod_trezorui_Display_clear_save);
+
 STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_clear), MP_ROM_PTR(&mod_trezorui_Display_clear_obj)},
     {MP_ROM_QSTR(MP_QSTR_refresh),
@@ -561,6 +572,8 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorui_Display_backlight_obj)},
     {MP_ROM_QSTR(MP_QSTR_offset), MP_ROM_PTR(&mod_trezorui_Display_offset_obj)},
     {MP_ROM_QSTR(MP_QSTR_save), MP_ROM_PTR(&mod_trezorui_Display_save_obj)},
+    {MP_ROM_QSTR(MP_QSTR_clear_save),
+     MP_ROM_PTR(&mod_trezorui_Display_clear_save_obj)},
     {MP_ROM_QSTR(MP_QSTR_WIDTH), MP_ROM_INT(DISPLAY_RESX)},
     {MP_ROM_QSTR(MP_QSTR_HEIGHT), MP_ROM_INT(DISPLAY_RESY)},
     {MP_ROM_QSTR(MP_QSTR_FONT_SIZE), MP_ROM_INT(FONT_SIZE)},

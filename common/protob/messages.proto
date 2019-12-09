@@ -107,6 +107,8 @@ enum MessageType {
     MessageType_DebugLinkMemoryWrite = 112 [(wire_debug_in) = true];
     MessageType_DebugLinkFlashErase = 113 [(wire_debug_in) = true];
     MessageType_DebugLinkLayout = 9001 [(wire_debug_out) = true];
+    MessageType_DebugLinkReseedRandom = 9002 [(wire_debug_in) = true];
+    MessageType_DebugLinkRecordScreen = 9003 [(wire_debug_in) = true];
 
     // Ethereum
     MessageType_EthereumGetPublicKey = 450 [(wire_in) = true];

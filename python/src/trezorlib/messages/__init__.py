@@ -47,6 +47,8 @@ from .DebugLinkLog import DebugLinkLog
 from .DebugLinkMemory import DebugLinkMemory
 from .DebugLinkMemoryRead import DebugLinkMemoryRead
 from .DebugLinkMemoryWrite import DebugLinkMemoryWrite
+from .DebugLinkRecordScreen import DebugLinkRecordScreen
+from .DebugLinkReseedRandom import DebugLinkReseedRandom
 from .DebugLinkState import DebugLinkState
 from .DebugLinkStop import DebugLinkStop
 from .DebugMoneroDiagAck import DebugMoneroDiagAck

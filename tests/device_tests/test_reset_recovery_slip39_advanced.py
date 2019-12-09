@@ -14,17 +14,25 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from unittest import mock
+
 import pytest
 
 from trezorlib import btc, device, messages
 from trezorlib.messages import BackupType, ButtonRequestType as B
 from trezorlib.tools import parse_path
 
-from ..common import click_through, read_and_confirm_mnemonic, recovery_enter_shares
+from ..common import (
+    EXTERNAL_ENTROPY,
+    click_through,
+    read_and_confirm_mnemonic,
+    recovery_enter_shares,
+)
 
 
 @pytest.mark.skip_t1
-@pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.skip_ui
+@pytest.mark.setup_client(uninitialized=True, random_seed=0)
 def test_reset_recovery(client):
     mnemonics = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
@@ -89,7 +97,8 @@ def reset(client, strength=128):
         assert btn_code == B.Success
         client.debug.press_yes()
 
-    with client:
+    os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
+    with mock.patch("os.urandom", os_urandom), client:
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.ResetDevice),

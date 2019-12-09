@@ -15,17 +15,20 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 
+from unittest import mock
+
 import pytest
 
 from trezorlib import btc, device, messages
 from trezorlib.messages import BackupType, ButtonRequestType as B
 from trezorlib.tools import parse_path
 
-from ..common import click_through, read_and_confirm_mnemonic
+from ..common import EXTERNAL_ENTROPY, click_through, read_and_confirm_mnemonic
 
 
 @pytest.mark.skip_t1
-@pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.skip_ui
+@pytest.mark.setup_client(uninitialized=True, random_seed=0)
 def test_reset_recovery(client):
     mnemonic = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
@@ -79,17 +82,19 @@ def reset(client, strength=128, skip_backup=False):
         )
         client.set_input_flow(input_flow)
 
-        # No PIN, no passphrase, don't display random
-        device.reset(
-            client,
-            display_random=False,
-            strength=strength,
-            passphrase_protection=False,
-            pin_protection=False,
-            label="test",
-            language="en-US",
-            backup_type=BackupType.Bip39,
-        )
+        os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
+        with mock.patch("os.urandom", os_urandom), client:
+            # No PIN, no passphrase, don't display random
+            device.reset(
+                client,
+                display_random=False,
+                strength=strength,
+                passphrase_protection=False,
+                pin_protection=False,
+                label="test",
+                language="en-US",
+                backup_type=BackupType.Bip39,
+            )
 
     # Check if device is properly initialized
     assert client.features.initialized is True
