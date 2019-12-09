@@ -76,12 +76,8 @@ def _json_to_input(coin, vin):
 
 def _json_to_bin_output(coin, vout):
     o = messages.TxOutputBinType()
-    if is_peercoin(coin):
-        DIVISIBILITY = 1000000
-    else:
-        DIVISIBILITY = 100000000
-
-    o.amount = int(Decimal(vout["value"]) * DIVISIBILITY)
+    DECIMALS = 6 if is_peercoin(coin) else 8
+    o.amount = int(Decimal(vout["value"]) * (10 ** DECIMALS))
     o.script_pubkey = bytes.fromhex(vout["scriptPubKey"]["hex"])
     if coin["bip115"] and o.script_pubkey[-1] == 0xB4:
         # Verify if coin implements replay protection bip115 and script includes

@@ -6,7 +6,7 @@
   "github": "https://github.com/BlockStamp/bst",
   "maintainer": "Krzysztof Kuchta <k.kuchta@blockstamp.info>",
   "curve_name": "secp256k1",
-  "divisibility": 8,
+  "decimals": 8,
   "address_type": 26,
   "address_type_p2sh": 5,
   "maxfee_kb": 2000000,

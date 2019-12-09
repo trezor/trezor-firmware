@@ -6,7 +6,7 @@
   "github": "https://github.com/peercoin/peercoin",
   "maintainer": "backpacker69 <backpacker69@protonmail.com>",
   "curve_name": "secp256k1",
-  "divisibility": 6,
+  "decimals": 6,
   "address_type": 55,
   "address_type_p2sh": 117,
   "maxfee_kb": 2000000,

@@ -6,7 +6,7 @@
   "github": "https://github.com/zcash/zcash",
   "maintainer": "Pavol Rusnak <stick@satoshilabs.com>",
   "curve_name": "secp256k1",
-  "divisibility": 8,
+  "decimals": 8,
   "address_type": 7461,
   "address_type_p2sh": 7354,
   "maxfee_kb": 10000000,

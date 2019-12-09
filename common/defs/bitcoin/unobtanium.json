@@ -6,7 +6,7 @@
   "github": "https://github.com/unobtanium-official/unobtanium",
   "maintainer": "choicesz <choicesz@unobtanium.uno>",
   "curve_name": "secp256k1",
-  "divisibility": 8,
+  "decimals": 8,
   "address_type": 130,
   "address_type_p2sh": 30,
   "maxfee_kb": 2000000,

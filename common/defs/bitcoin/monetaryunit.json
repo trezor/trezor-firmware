@@ -6,7 +6,7 @@
   "github": "https://github.com/muecoin/MUE",
   "maintainer": "Sotiris Blad <swthrhs@protonmail.com>",
   "curve_name": "secp256k1",
-  "divisibility": 8,
+  "decimals": 8,
   "address_type": 16,
   "address_type_p2sh": 76,
   "maxfee_kb": 100000,

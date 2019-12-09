@@ -344,8 +344,8 @@ static void render_address_dialog(const CoinInfo *coin, const char *address,
 
 void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out) {
   char str_out[32 + 3] = {0};
-  bn_format_uint64(out->amount, NULL, coin->coin_shortcut, coin->divisibility,
-                   0, false, str_out, sizeof(str_out) - 3);
+  bn_format_uint64(out->amount, NULL, coin->coin_shortcut, coin->decimals, 0,
+                   false, str_out, sizeof(str_out) - 3);
   strlcat(str_out, " to", sizeof(str_out));
   const char *address = out->address;
   const char *extra_line =
@@ -422,9 +422,9 @@ void layoutConfirmOpReturn(const uint8_t *data, uint32_t size) {
 void layoutConfirmTx(const CoinInfo *coin, uint64_t amount_out,
                      uint64_t amount_fee) {
   char str_out[32] = {0}, str_fee[32] = {0};
-  bn_format_uint64(amount_out, NULL, coin->coin_shortcut, coin->divisibility, 0,
+  bn_format_uint64(amount_out, NULL, coin->coin_shortcut, coin->decimals, 0,
                    false, str_out, sizeof(str_out));
-  bn_format_uint64(amount_fee, NULL, coin->coin_shortcut, coin->divisibility, 0,
+  bn_format_uint64(amount_fee, NULL, coin->coin_shortcut, coin->decimals, 0,
                    false, str_fee, sizeof(str_fee));
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Really send"), str_out, _("from your wallet?"),
@@ -433,7 +433,7 @@ void layoutConfirmTx(const CoinInfo *coin, uint64_t amount_out,
 
 void layoutFeeOverThreshold(const CoinInfo *coin, uint64_t fee) {
   char str_fee[32] = {0};
-  bn_format_uint64(fee, NULL, coin->coin_shortcut, coin->divisibility, 0, false,
+  bn_format_uint64(fee, NULL, coin->coin_shortcut, coin->decimals, 0, false,
                    str_fee, sizeof(str_fee));
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Fee"), str_fee, _("is unexpectedly high."), NULL,

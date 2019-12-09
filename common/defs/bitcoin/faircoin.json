@@ -6,7 +6,7 @@
   "github": "https://github.com/faircoin/faircoin",
   "maintainer": "Santi Noreña <santi@criptomart.net>",
   "curve_name": "secp256k1",
-  "divisibility": 8,
+  "decimals": 8,
   "address_type": 95,
   "address_type_p2sh": 36,
   "maxfee_kb": 10000000,
