@@ -39,7 +39,7 @@ def build_icons(check, remove):
 
     for app in apps:
         if app["icon"] is None:
-            if not app.get("demo"):
+            if not app.get("no_icon"):
                 raise click.ClickException(f"Icon not found for: {app['key']}")
             else:
                 continue
