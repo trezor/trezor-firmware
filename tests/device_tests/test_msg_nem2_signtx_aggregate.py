@@ -23,9 +23,9 @@ from ..common import MNEMONIC12
 
 @pytest.mark.altcoin
 @pytest.mark.nem2
-class TestMsgNEM2SignTxMosaics:
+class TestMsgNEM2SignTxAggregate:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_nem2_signtx_mosaic_definition(self, client):
+    def test_nem2_signtx_aggregate_transfer_and_mosaic_definition(self, client):
         tx = nem2.sign_tx(
             client,
             parse_path("m/44'/43'/0'/0'/0'"),
@@ -71,9 +71,6 @@ class TestMsgNEM2SignTxMosaics:
                 ]
             },
         )
-
-        print(tx.payload.hex().upper())
-        print(tx.hash)
 
         assert (
             tx.payload.hex().upper()
