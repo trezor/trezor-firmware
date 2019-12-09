@@ -40,6 +40,8 @@ def validate(msg: NEM2SignTx):
         _validate_namespace_registration(msg.namespace_registration, msg.transaction.version)
     if(msg.address_alias):
         _validate_address_alias(msg.address_alias, msg.transaction.version)
+    if msg.mosaic_alias:
+        _validate_mosaic_alias(msg.mosaic_alias, msg.transaction.version)
 
 def _validate_single_tx(msg: NEM2SignTx):
     # ensure exactly one transaction is provided
@@ -49,7 +51,8 @@ def _validate_single_tx(msg: NEM2SignTx):
         + bool(msg.mosaic_definition)
         + bool(msg.mosaic_supply)
         + bool(msg.address_alias)
-        + bool(msg.namespace_metadata)
+        + bool(msg.mosaic_alias)
+        + bool(msg.aggregate)
         # + bool(msg.importance_transfer)
     )
     if tx_count == 0:
@@ -94,3 +97,11 @@ def _validate_transfer(transfer: NEM2TransferTransaction, version: int):
             raise ProcessError("No mosaic id provided")
         if m.amount is None:
             raise ProcessError("No mosaic amount provided")
+
+def _validate_mosaic_alias(mosaic_alias: NEM2MosaicAliasTransaction, network: int):
+    if mosaic_alias.namespace_id is None:
+        raise ProcessError("No namespace ID provided")
+    if mosaic_alias.mosaic_id is None:
+        raise ProcessError("No mosiac ID provided")
+    if mosaic_alias.alias_action is None:
+        raise ProcessError("No alias action provided")

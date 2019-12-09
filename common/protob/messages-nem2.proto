@@ -45,7 +45,7 @@ message NEM2SignTx {
     optional NEM2NamespaceRegistrationTransaction namespace_registration = 9; // Namespace registration part
     optional NEM2AddressAliasTransaction address_alias = 10; // Address Alias
     optional NEM2AggregateTransaction aggregate = 11; // Aggregate part
-    optional NEM2NamespaceMetadataTransaction namespace_metadata = 12; // Aggregate part
+    optional NEM2MosaicAliasTransaction mosaic_alias = 12; // Mosaic Alias part
 
     /**
     * Common types from
@@ -68,7 +68,7 @@ message NEM2SignTx {
         MOSAIC_SUPPLY_CHANGE = 16973;
         AGGREGATE_BONDED = 16961;
         AGGREGATE_COMPLETE = 16705;
-        NAMESPACE_METADATA = 17220;
+        MOSAIC_ALIAS = 17230;
     }
 
     enum NEM2NetworkType {
@@ -152,6 +152,36 @@ message NEM2SignTx {
         optional string mosaic_id = 1; // mosaic identifier
         optional uint32 action = 2; // supply change direction (increase/descrease)
         optional uint64 delta = 3; // change in supply
+    }
+
+    /**
+    * Namespace Registration transaction definition
+    */
+    message NEM2NamespaceRegistrationTransaction {
+        optional string duration = 1; // namespace duration (uint64)
+        optional string parent_id = 2; // parent namespace identifier (uint64)
+        optional string id = 3; // identifier (uint64)
+        optional NEM2NamespaceRegistrationType registration_type = 4 [default=ROOT];
+        optional uint32 name_size = 5; // length of name (bytes) (uint8 in catbuffer)
+        optional string namespace_name = 6; // namespace name
+    }
+
+    /**
+    * Namespace Address Alias
+    */
+    message NEM2AddressAliasTransaction {
+        optional string namespace_id = 1; // namespace identifier (uint64)
+        optional NEM2Address address = 2; // address to link/unlink namespace to
+        optional NEM2AliasAction alias_action = 3 [default=LINK];
+    }
+
+    /**
+    * Mosaic Alias transaction type definition
+    */
+    message NEM2MosaicAliasTransaction {
+        optional NEM2AliasAction alias_action = 1;
+        optional string namespace_id = 2;
+        optional string mosaic_id = 3;
     }
 
     /**

@@ -23,3 +23,9 @@ async def address_alias(
     await layout.ask_address_alias(ctx, common, address_alias)
 
     return serialize.serialize_address_alias(common, address_alias)
+
+async def mosaic_alias(
+    ctx, common: NEM2TransactionCommon, creation: NEM2MosaicAliasTransaction
+) -> bytearray:
+    await layout.ask_mosaic_alias(ctx, common, creation)
+    return serialize.serialize_mosaic_alias(common, creation)

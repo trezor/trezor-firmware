@@ -179,6 +179,7 @@ from .NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
 from .NEM2GetPublicKey import NEM2GetPublicKey
 from .NEM2InnerTransaction import NEM2InnerTransaction
 from .NEM2Mosaic import NEM2Mosaic
+from .NEM2MosaicAliasTransaction import NEM2MosaicAliasTransaction
 from .NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
 from .NEM2MosaicSupplyChangeTransaction import NEM2MosaicSupplyChangeTransaction
 from .NEM2MosaicSupplyChangeTransaction import NEM2MosaicSupplyChangeTransaction

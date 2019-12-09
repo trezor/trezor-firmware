@@ -91,6 +91,29 @@ def serialize_address_alias(
 
     return tx
 
+def serialize_mosaic_alias(
+    common: NEM2TransactionCommon, creation: NEM2MosaicAliasTransaction
+):
+    tx = bytearray()
+
+    size = get_common_message_size()
+    # Add up the mosaic-definition specific message attribute sizes
+    size += 8 # namespace id is 8 bytes
+    size += 8 # mosaic id is 8 bytes
+    size += 1 # alias_action is 1 byte
+
+    write_uint32_le(tx, size)
+
+    tx = serialize_tx_common(tx, common)
+
+    write_uint32_le(tx, int(creation.namespace_id[8:], 16))
+    write_uint32_le(tx, int(creation.namespace_id[:8], 16))
+    write_uint32_le(tx, int(creation.mosaic_id[8:], 16))
+    write_uint32_le(tx, int(creation.mosaic_id[:8], 16))
+    write_uint8(tx, creation.alias_action) 
+
+    return tx
+
 def get_address_alias_body_size():
     # add up the address alias message attribute sizes
     size = 8 # namespace id
