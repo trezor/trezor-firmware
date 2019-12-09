@@ -6,7 +6,7 @@
   "github": "https://github.com/RitoProject",
   "maintainer": "Scotty <scotty.rvn@gmail.com>",
   "curve_name": "secp256k1",
-  "divisibility": 8,
+  "decimals": 8,
   "address_type": 25,
   "address_type_p2sh": 105,
   "maxfee_kb": 2000000,

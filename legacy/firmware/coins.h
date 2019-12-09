@@ -31,7 +31,7 @@ typedef struct _CoinInfo {
   const char *coin_shortcut;
   uint64_t maxfee_kb;
   const char *signed_message_header;
-  uint32_t divisibility;
+  uint32_t decimals;
   bool has_segwit;
   bool has_fork_id;
   bool force_bip143;

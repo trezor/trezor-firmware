@@ -6,7 +6,7 @@
   "github": "https://github.com/KotoDevelopers/koto",
   "maintainer": "WO <wo@ko-to.org>",
   "curve_name": "secp256k1",
-  "divisibility": 8,
+  "decimals": 8,
   "address_type": 6198,
   "address_type_p2sh": 6203,
   "maxfee_kb": 1000000,

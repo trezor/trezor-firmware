@@ -6,7 +6,7 @@
   "github": "https://github.com/particl/particl-core",
   "maintainer": "Ryno <ryno@particl.io>",
   "curve_name": "secp256k1",
-  "divisibility": 8,
+  "decimals": 8,
   "address_type": 56,
   "address_type_p2sh": 60,
   "maxfee_kb": 2000000,

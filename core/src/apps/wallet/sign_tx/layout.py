@@ -9,7 +9,7 @@ _LOCKTIME_TIMESTAMP_MIN_VALUE = const(500000000)
 
 
 def format_coin_amount(amount, coin):
-    return "%s %s" % (format_amount(amount, coin.divisibility), coin.coin_shortcut)
+    return "%s %s" % (format_amount(amount, coin.decimals), coin.coin_shortcut)
 
 
 def split_address(address):

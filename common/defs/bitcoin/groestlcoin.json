@@ -6,7 +6,7 @@
   "github": "https://github.com/Groestlcoin/groestlcoin",
   "maintainer": "Yura Pakhuchiy <pakhuchiy@gmail.com>",
   "curve_name": "secp256k1_groestl",
-  "divisibility": 8,
+  "decimals": 8,
   "address_type": 36,
   "address_type_p2sh": 5,
   "maxfee_kb": 100000,

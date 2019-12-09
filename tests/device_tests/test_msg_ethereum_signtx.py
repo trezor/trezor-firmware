@@ -54,7 +54,7 @@ class TestMsgEthereumSigntx:
                     "000000000000000000000000000000000000000000000000000000000bebc200"
                 )
             )
-            # 200 000 000 in dec, divisibility of ADT = 9, trezor1 displays 0.2 ADT, Trezor T 200 000 000 Wei ADT
+            # 200 000 000 in dec, decimals of ADT = 9, trezor1 displays 0.2 ADT, Trezor T 200 000 000 Wei ADT
 
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 client,
