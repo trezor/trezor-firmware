@@ -7,12 +7,14 @@ This directory hosts JSON definitions of recognized coins, tokens, and FIDO/U2F 
 The [`fido/`](fido) subdirectory contains definitons of apps whose logos and
 names are shown on Trezor T screen for FIDO/U2F authentication.
 
-Each app must have a single JSON file in the `fido/` subdirectory, and a corresponding
-PNG image with the same name. The PNG must be 128x128 pixels RGBA.
+Each app must have a single JSON file in the `fido/` subdirectory. Every app must have
+its `label` set to the user-recognizable application name. The `u2f` field is a list of
+U2F origin hashes, and the `webauthn` field is a list of FIDO2/WebAuthn hostnames for
+the app. At least one must be present.
 
-Every app must have its `label` set to the user-recognizable application name. The `u2f`
-field is a list of U2F origin hashes, and the `webauthn` field is a list of
-FIDO2/WebAuthn hostnames for the app. At least one must be present.
+Each app can have an icon. If present, it must be a 128x128 pixels RGBA PNG of the same
+name as the corresponding JSON name. If the app does not have an icon, it must instead
+have a field `no_icon` set to `true` in the JSON.
 
 ## Coins
 

@@ -1,5 +1,5 @@
 {
   "label": "WebAuthn.io",
   "webauthn": ["webauthn.io"],
-  "demo": true
+  "no_icon": true
 }
