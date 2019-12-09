@@ -477,7 +477,7 @@ def check_segwit(coins):
 
 
 FIDO_KNOWN_KEYS = frozenset(
-    ("key", "u2f", "webauthn", "label", "use_sign_count", "demo", "icon")
+    ("key", "u2f", "webauthn", "label", "use_sign_count", "no_icon", "icon")
 )
 
 
@@ -514,18 +514,23 @@ def check_fido(apps):
 
         # check icons
         if app["icon"] is None:
-            if app.get("demo"):
-                log_level = logging.WARNING
-            else:
-                log_level = logging.ERROR
-                check_passed = False
-            print_log(log_level, app["key"], ": missing icon")
+            if app.get("no_icon"):
+                continue
+
+            print_log(logging.ERROR, app["key"], ": missing icon")
+            check_passed = False
             continue
+
+        elif app.get("no_icon"):
+            print_log(logging.ERROR, app["key"], ": icon present for 'no_icon' app")
+            check_passed = False
 
         try:
             icon = Image.open(app["icon"])
         except Exception:
-            print_log(log_level, app["key"], ": failed to open icon file", app["icon"])
+            print_log(
+                logging.ERROR, app["key"], ": failed to open icon file", app["icon"]
+            )
             check_passed = False
             continue
 
@@ -534,6 +539,7 @@ def check_fido(apps):
                 logging.ERROR, app["key"], ": bad icon format (must be RGBA 128x128)"
             )
             check_passed = False
+
     return check_passed
 
 
