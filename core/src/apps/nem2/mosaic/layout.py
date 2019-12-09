@@ -20,61 +20,45 @@ from apps.common.layout import require_confirm, split_address
 
 
 async def ask_mosaic_definition(
-    ctx, common: NEM2TransactionCommon, creation: NEM2MosaicDefinitionTransaction, embedded=False
+    ctx, common: NEM2TransactionCommon, mosaic_definition: NEM2MosaicDefinitionTransaction, embedded=False
 ):
-    # await require_confirm_content(ctx, "Create mosaic", _creation_message(creation))
-    # await require_confirm_properties(ctx, creation.definition)
-    # await require_confirm_fee(ctx, "Confirm creation fee", creation.fee)
+    await require_confirm_properties(ctx, mosaic_definition)
     if not embedded:
         await require_confirm_final(ctx, common.max_fee)
 
-def _creation_message(mosaic_creation):
-    return [
-        ui.NORMAL,
-        "Create mosaic",
-        ui.BOLD,
-        mosaic_creation.definition.mosaic,
-        ui.NORMAL,
-        "under namespace",
-        ui.BOLD,
-        mosaic_creation.definition.namespace,
-    ]
-
-async def require_confirm_properties(ctx, definition: NEMMosaicDefinition):
+async def require_confirm_properties(ctx, mosaic_definition: NEM2MosaicDefinitionTransaction):
     properties = []
-
-    # description
-    if definition.description:
+    # Mosaic ID
+    if mosaic_definition.mosaic_id:
         t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
-        t.bold("Description:")
+        t.bold("Mosaic Id:")
         t.br()
-        t.normal(*definition.description.split(" "))
+        t.normal(mosaic_definition.mosaic_id)
         properties.append(t)
-
-    # transferable
-    if definition.transferable:
-        transferable = "Yes"
-    else:
-        transferable = "No"
-    t = Text("Confirm properties", ui.ICON_SEND)
-    t.bold("Transferable?")
-    t.normal(transferable)
-    properties.append(t)
-
-    # mutable_supply
-    if definition.mutable_supply:
-        imm = "mutable"
-    else:
-        imm = "immutable"
-    if definition.supply:
-        t = Text("Confirm properties", ui.ICON_SEND)
-        t.bold("Initial supply:")
-        t.normal(str(definition.supply), imm)
-    else:
-        t = Text("Confirm properties", ui.ICON_SEND)
-        t.bold("Initial supply:")
-        t.normal(imm)
-    properties.append(t)
+    # Duration
+    if mosaic_definition.duration:
+        t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
+        t.bold("Duration:")
+        t.normal(str(mosaic_definition.duration))
+        properties.append(t)
+    # Nonce
+    if mosaic_definition.nonce:
+        t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
+        t.bold("Nonce:")
+        t.normal(str(mosaic_definition.nonce))
+        properties.append(t)
+    # Flags
+    if mosaic_definition.flags:
+        t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
+        t.bold("Flags:")
+        t.normal(str(mosaic_definition.flags))
+        properties.append(t)
+    # Divisibility
+    if mosaic_definition.divisibility:
+        t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
+        t.bold("Divisibility:")
+        t.normal(str(mosaic_definition.divisibility))
+        properties.append(t)
 
     paginated = Paginated(properties)
     await require_confirm(ctx, paginated, ButtonRequestType.ConfirmOutput)

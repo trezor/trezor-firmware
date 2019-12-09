@@ -54,5 +54,5 @@ class TestMsgNEM2SignTxMosaics:
         )
         assert (
             tx.hash.hex().upper()
-            == "3F5E26802ABA3D0598A1930BD80BD711D6797887135D318B15EB1EC223733959"
+            == "C271DFA2397D879ACE264A8CECE03E2D8E1E01302D2A8B86E41A8ED440A12955"
         )
