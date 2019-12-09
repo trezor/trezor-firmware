@@ -260,7 +260,7 @@ def _load_misc():
 
 
 def _load_fido_apps():
-    """Load btc-like coins from `coins/*.json`"""
+    """Load FIDO apps from `fido/*.json`"""
     apps = []
     for filename in sorted(glob.glob(os.path.join(DEFS_DIR, "fido", "*.json"))):
         app_name = os.path.basename(filename)[:-5].lower()
