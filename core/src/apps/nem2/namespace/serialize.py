@@ -28,7 +28,7 @@ from apps.common.writers import (
 def serialize_namespace_registration(
     common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
     namespace_registration: NEM2NamespaceRegistrationTransaction,
-    embedded = False
+    embedded=False
 ) -> bytearray:
     tx = bytearray()
 
@@ -78,7 +78,7 @@ def get_namespace_registration_body_size(namespace_registration: NEM2NamespaceRe
 def serialize_address_alias(
     common: NEM2TransactionCommon,
     address_alias: NEM2AddressAliasTransaction,
-    embedded = False
+    embedded=False
 ) -> bytearray:
     tx = bytearray()
 
@@ -92,25 +92,24 @@ def serialize_address_alias(
     return tx
 
 def serialize_mosaic_alias(
-    common: NEM2TransactionCommon, creation: NEM2MosaicAliasTransaction
+    common: NEM2TransactionCommon,
+    mosaic_alias: NEM2MosaicAliasTransaction,
+    embedded=False
 ):
     tx = bytearray()
 
-    size = get_common_message_size()
-    # Add up the mosaic-definition specific message attribute sizes
-    size += 8 # namespace id is 8 bytes
-    size += 8 # mosaic id is 8 bytes
-    size += 1 # alias_action is 1 byte
+    size = get_common_message_size() if not embedded else get_embedded_common_message_size()
+    size += get_mosaic_alias_body_size()
 
     write_uint32_le(tx, size)
 
-    tx = serialize_tx_common(tx, common)
+    serialize_tx_common(tx, common) if not embedded else serialize_embedded_tx_common(tx, common)
 
-    write_uint32_le(tx, int(creation.namespace_id[8:], 16))
-    write_uint32_le(tx, int(creation.namespace_id[:8], 16))
-    write_uint32_le(tx, int(creation.mosaic_id[8:], 16))
-    write_uint32_le(tx, int(creation.mosaic_id[:8], 16))
-    write_uint8(tx, creation.alias_action) 
+    write_uint32_le(tx, int(mosaic_alias.namespace_id[8:], 16))
+    write_uint32_le(tx, int(mosaic_alias.namespace_id[:8], 16))
+    write_uint32_le(tx, int(mosaic_alias.mosaic_id[8:], 16))
+    write_uint32_le(tx, int(mosaic_alias.mosaic_id[:8], 16))
+    write_uint8(tx, mosaic_alias.alias_action)
 
     return tx
 
@@ -120,6 +119,13 @@ def get_address_alias_body_size():
     size += 25 # address (catbuffer UnresolvedAddress)
     size += 1 # alias action
 
+    return size
+
+def get_mosaic_alias_body_size():
+    # Add up the mosaic alias specific message attribute sizes
+    size = 8 # namespace id is 8 bytes
+    size += 8 # mosaic id is 8 bytes
+    size += 1 # alias_action is 1 byte
     return size
 
 def serialize_address_alias_body(address_alias: NEM2AddressAliasTransaction) -> bytearray:
