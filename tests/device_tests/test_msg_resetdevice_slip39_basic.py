@@ -25,15 +25,18 @@ from trezorlib import device, messages as proto
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
-from ..common import click_through, generate_entropy, read_and_confirm_mnemonic
-
-EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
+from ..common import (
+    EXTERNAL_ENTROPY,
+    click_through,
+    generate_entropy,
+    read_and_confirm_mnemonic,
+)
 
 
 @pytest.mark.skip_t1
 class TestMsgResetDeviceT2:
     # TODO: test with different options
-    @pytest.mark.setup_client(uninitialized=True)
+    @pytest.mark.setup_client(uninitialized=True, random_seed=0)
     def test_reset_device_slip39_basic(self, client):
         strength = 128
         member_threshold = 3

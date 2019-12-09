@@ -369,6 +369,7 @@ class TestMsgSigntx:
         )
 
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    @pytest.mark.skip_ui
     def test_lots_of_inputs(self, client):
         # Tests if device implements serialization of len(inputs) correctly
         # tx 4a7b7e0403ae5607e473949cfa03f09f2cd8b0f404bf99ce10b7303d86280bf7 : 100 UTXO for spending for unit tests
@@ -397,6 +398,7 @@ class TestMsgSigntx:
         )
 
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    @pytest.mark.skip_ui
     def test_lots_of_outputs(self, client):
         # Tests if device implements serialization of len(outputs) correctly
 

@@ -66,7 +66,7 @@ def test_secret(client, shares, secret):
     assert debug.read_mnemonic_secret().hex() == secret
 
 
-@pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.setup_client(uninitialized=True, random_seed=0)
 def test_extra_share_entered(client):
     debug = client.debug
 

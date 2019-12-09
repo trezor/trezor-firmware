@@ -14,7 +14,13 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import filecmp
+import hashlib
+import itertools
 import os
+import re
+from contextlib import contextmanager
+from pathlib import Path
 
 import pytest
 
@@ -48,8 +54,124 @@ def get_device():
             raise RuntimeError("No debuggable device found")
 
 
+def _get_test_dirname(node):
+    # This composes the dirname from the test module name and test item name.
+    # Test item name is usually function name, but when parametrization is used,
+    # parameters are also part of the name. Some functions have very long parameter
+    # names (tx hashes etc) that run out of maximum allowable filename length, so
+    # we limit the name to first 100 chars. This is not a problem with txhashes.
+    node_name = re.sub(r"\W+", "_", node.name)[:100]
+    node_module_name = node.getparent(pytest.Module).name
+    return "{}_{}".format(node_module_name, node_name)
+
+
+def _check_screen_fixtures_dir(fixture_dir):
+    if fixture_dir.exists():
+        # remove old fixtures
+        for fixture in fixture_dir.iterdir():
+            fixture.unlink()
+    else:
+        # create the fixture dir, if not present
+        fixture_dir.mkdir()
+
+
+def _record_screen_fixtures(fixture_dir, test_dir):
+    _check_screen_fixtures_dir(fixture_dir)
+
+    # move recorded screenshots into fixture directory
+    records = sorted(test_dir.iterdir())
+    for index, record in enumerate(sorted(records)):
+        fixture = fixture_dir / "{:08}.png".format(index)
+        record.replace(fixture)
+
+
+def _hash_screen_fixtures(fixture_dir, test_dir):
+    _check_screen_fixtures_dir(fixture_dir)
+
+    # hash recorded screenshots
+    records = sorted(test_dir.iterdir())
+    digest = _hash_files(records)
+
+    with open(fixture_dir / "hash.txt", "w") as f:
+        f.write(digest)
+
+
+def _hash_files(files):
+    hasher = hashlib.sha256()
+    for file in sorted(files):
+        with open(file, "rb") as f:
+            content = f.read()
+            hasher.update(content)
+
+    return hasher.digest().hex()
+
+
+def _assert_screen_recording(fixture_dir, test_dir):
+    fixtures = sorted(fixture_dir.iterdir())
+    records = sorted(test_dir.iterdir())
+
+    if not fixtures:
+        return
+
+    for fixture, image in itertools.zip_longest(fixtures, records):
+        if fixture is None:
+            pytest.fail("Missing fixture for image {}".format(image))
+        if image is None:
+            pytest.fail("Missing image for fixture {}".format(fixture))
+        if not filecmp.cmp(fixture, image):
+            pytest.fail("Image {} and fixture {} differ".format(image, fixture))
+
+
+def _assert_screen_hashes(fixture_dir, test_dir):
+    records = sorted(test_dir.iterdir())
+    hash_file = fixture_dir / "hash.txt"
+
+    if not hash_file.exists():
+        raise ValueError("File hash.txt not found.")
+
+    with open(hash_file, "r") as f:
+        expected_hash = f.read()
+
+    actual_hash = _hash_files(records)
+
+    if actual_hash != expected_hash:
+        pytest.fail(
+            "Hash of {} differs.\nExpected: {}\nActual:   {}".format(
+                fixture_dir.name, expected_hash, actual_hash
+            )
+        )
+
+
+@contextmanager
+def _screen_recording(client, request, tmp_path):
+    if not request.node.get_closest_marker("skip_ui"):
+        test_screen = request.config.getoption("test_screen")
+    else:
+        test_screen = ""
+    fixture_root = Path(__file__) / "../ui_tests"
+
+    try:
+        if test_screen:
+            client.debug.start_recording(str(tmp_path))
+        yield
+    finally:
+        if test_screen:
+            client.debug.stop_recording()
+            fixture_path = fixture_root.resolve() / _get_test_dirname(request.node)
+            if test_screen == "record":
+                _record_screen_fixtures(fixture_path, tmp_path)
+            elif test_screen == "hash":
+                _hash_screen_fixtures(fixture_path, tmp_path)
+            elif test_screen == "test-hash":
+                _assert_screen_hashes(fixture_path, tmp_path)
+            elif test_screen == "test-record":
+                _assert_screen_recording(fixture_path, tmp_path)
+            else:
+                raise ValueError("Invalid test_screen option.")
+
+
 @pytest.fixture(scope="function")
-def client(request):
+def client(request, tmp_path):
     """Client fixture.
 
     Every test function that requires a client instance will get it from here.
@@ -99,6 +221,7 @@ def client(request):
         passphrase=False,
         needs_backup=False,
         no_backup=False,
+        random_seed=None,
     )
     # fmt: on
 
@@ -128,8 +251,23 @@ def client(request):
             client.clear_session()
 
     client.open()
-    yield client
+
+    if setup_params["random_seed"] is not None:
+        client.debug.reseed(setup_params["random_seed"])
+
+    with _screen_recording(client, request, tmp_path):
+        yield client
+
     client.close()
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--test_screen",
+        action="store",
+        default="",
+        help="Enable UI intergration tests: 'record', 'hash' or 'test-hash' and 'test-record'",
+    )
 
 
 def pytest_configure(config):
@@ -143,6 +281,9 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers",
         'setup_client(mnemonic="all all all...", pin=None, passphrase=False, uninitialized=False): configure the client instance',
+    )
+    config.addinivalue_line(
+        "markers", "skip_ui: skip UI integration checks for this test"
     )
     with open(os.path.join(os.path.dirname(__file__), "REGISTERED_MARKERS")) as f:
         for line in f:

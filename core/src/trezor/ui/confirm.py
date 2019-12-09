@@ -1,6 +1,6 @@
 from micropython import const
 
-from trezor import loop, res, ui
+from trezor import loop, res, ui, utils
 from trezor.ui.button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
 from trezor.ui.loader import Loader, LoaderDefault
 
@@ -150,13 +150,19 @@ class ConfirmPageable(Confirm):
             t = ui.pulse(PULSE_PERIOD)
             c = ui.blend(ui.GREY, ui.DARK_GREY, t)
             icon = res.load(ui.ICON_SWIPE_RIGHT)
-            ui.display.icon(18, 68, icon, c, ui.BG)
+            if utils.DISABLE_ANIMATION:
+                ui.display.icon(18, 68, icon, ui.GREY, ui.BG)
+            else:
+                ui.display.icon(18, 68, icon, c, ui.BG)
 
         if not self.pageable.is_last():
             t = ui.pulse(PULSE_PERIOD, PULSE_PERIOD // 2)
             c = ui.blend(ui.GREY, ui.DARK_GREY, t)
             icon = res.load(ui.ICON_SWIPE_LEFT)
-            ui.display.icon(205, 68, icon, c, ui.BG)
+            if utils.DISABLE_ANIMATION:
+                ui.display.icon(205, 68, icon, ui.GREY, ui.BG)
+            else:
+                ui.display.icon(205, 68, icon, c, ui.BG)
 
 
 class InfoConfirm(ui.Layout):

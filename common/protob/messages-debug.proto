@@ -40,6 +40,24 @@ message DebugLinkLayout {
 }
 
 /**
+ * Request: Re-seed RNG with given value
+ * @start
+ * @next Success
+ */
+message DebugLinkReseedRandom {
+    optional uint32 value = 1;
+}
+
+/**
+ * Request: Start or stop recording screen changes into given target directory
+ * @start
+ * @next Success
+ */
+message DebugLinkRecordScreen {
+    optional string target_directory = 1;  // empty or missing to stop recording
+}
+
+/**
  * Request: Computer asks for device state
  * @start
  * @next DebugLinkState

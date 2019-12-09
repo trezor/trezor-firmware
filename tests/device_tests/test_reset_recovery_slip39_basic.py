@@ -26,6 +26,7 @@ from ..common import click_through, read_and_confirm_mnemonic, recovery_enter_sh
 
 
 @pytest.mark.skip_t1
+@pytest.mark.skip_ui
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_recovery(client):
     mnemonics = reset(client)
