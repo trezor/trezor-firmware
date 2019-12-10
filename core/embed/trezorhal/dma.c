@@ -33,6 +33,7 @@
 #include "dma.h"
 #include "irq.h"
 #include "systick.h"
+#include "supervise.h"
 
 #define DMA_IDLE_ENABLED()  (dma_idle.enabled != 0)
 #define DMA_SYSTICK_LOG2    (3)
@@ -233,7 +234,7 @@ void dma_init(DMA_HandleTypeDef *dma, const dma_descr_t *dma_descr, uint32_t dir
             // (dma->State is set to HAL_DMA_STATE_RESET by memset above)
             HAL_DMA_DeInit(dma);
             HAL_DMA_Init(dma);
-            NVIC_SetPriority(IRQn_NONNEG(dma_irqn[dma_id]), IRQ_PRI_DMA);
+            svc_setpriority(IRQn_NONNEG(dma_irqn[dma_id]), IRQ_PRI_DMA);
         } else {
             // only necessary initialization
             dma->State = HAL_DMA_STATE_READY;
@@ -242,13 +243,13 @@ void dma_init(DMA_HandleTypeDef *dma, const dma_descr_t *dma_descr, uint32_t dir
             DMA_CalcBaseAndBitshift(dma);
         }
 
-        HAL_NVIC_EnableIRQ(dma_irqn[dma_id]);
+        svc_enableIRQ(dma_irqn[dma_id]);
     }
 }
 
 void dma_deinit(const dma_descr_t *dma_descr) {
     if (dma_descr != NULL) {
-        HAL_NVIC_DisableIRQ(dma_irqn[dma_descr->id]);
+        svc_disableIRQ(dma_irqn[dma_descr->id]);
         dma_handle[dma_descr->id] = NULL;
 
         dma_disable_clock(dma_descr->id);

@@ -52,6 +52,7 @@
 #include "irq.h"
 #include "sdcard-set_clr_card_detect.h"
 #include "sdcard.h"
+#include "supervise.h"
 
 #define SDMMC_CLK_ENABLE() __HAL_RCC_SDMMC1_CLK_ENABLE()
 #define SDMMC_CLK_DISABLE() __HAL_RCC_SDMMC1_CLK_DISABLE()
@@ -122,8 +123,8 @@ void HAL_SD_MspInit(SD_HandleTypeDef *hsd) {
     SDMMC_CLK_ENABLE();
 
     // NVIC configuration for SDIO interrupts
-    NVIC_SetPriority(SDMMC_IRQn, IRQ_PRI_SDIO);
-    HAL_NVIC_EnableIRQ(SDMMC_IRQn);
+    svc_setpriority(SDMMC_IRQn, IRQ_PRI_SDIO);
+    svc_enableIRQ(SDMMC_IRQn);
   }
 
   // GPIO have already been initialised by sdcard_init
@@ -131,7 +132,7 @@ void HAL_SD_MspInit(SD_HandleTypeDef *hsd) {
 
 void HAL_SD_MspDeInit(SD_HandleTypeDef *hsd) {
   if (hsd->Instance == sd_handle.Instance) {
-    HAL_NVIC_DisableIRQ(SDMMC_IRQn);
+    svc_disableIRQ(SDMMC_IRQn);
     SDMMC_CLK_DISABLE();
   }
 }
