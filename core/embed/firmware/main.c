@@ -40,6 +40,7 @@
 #include "mpu.h"
 #include "rng.h"
 #include "sdcard.h"
+#include "supervise.h"
 #include "touch.h"
 
 int main(void) {
@@ -112,6 +113,36 @@ void __attribute__((noreturn)) nlr_jump_fail(void *val) {
 }
 
 void PendSV_Handler(void) { pendsv_isr_handler(); }
+
+void SVC_C_Handler(uint32_t *stack) {
+  uint8_t svc_number = ((uint8_t *)stack[6])[-2];
+  switch (svc_number) {
+    case SVC_ENABLE_IRQ:
+      HAL_NVIC_EnableIRQ(stack[0]);
+      break;
+    case SVC_DISABLE_IRQ:
+      HAL_NVIC_DisableIRQ(stack[0]);
+      break;
+    case SVC_SET_PRIORITY:
+      NVIC_SetPriority(stack[0], stack[1]);
+      break;
+    default:
+      stack[0] = 0xffffffff;
+      break;
+  }
+}
+
+__attribute__((naked)) void SVC_Handler(void) {
+  __asm volatile(
+      " tst lr, #4    \n"    // Test Bit 3 to see which stack pointer we should
+                             // use.
+      " ite eq        \n"    // Tell the assembler that the nest 2 instructions
+                             // are if-then-else
+      " mrseq r0, msp \n"    // Make R0 point to main stack pointer
+      " mrsne r0, psp \n"    // Make R0 point to process stack pointer
+      " b SVC_C_Handler \n"  // Off to C land
+  );
+}
 
 // MicroPython builtin stubs
 
