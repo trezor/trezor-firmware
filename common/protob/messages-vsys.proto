@@ -1,4 +1,10 @@
 syntax = "proto2";
+package hw.trezor.messages.vsys;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageVsys";
+
 /**
  * Request: Ask device for VSYS address corresponding to address_n path
  * @next PassphraseRequest

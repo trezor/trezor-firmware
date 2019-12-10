@@ -19,7 +19,7 @@
 
 #include "py/objstr.h"
 
-#include "vendor/axolotl-curve25519/curve/ed25519/additions/curve_sigs.h"
+#include "ed25519-donna/curve25519_sign.h"
 
 /// package: trezorcrypto.curve25519_axolotl
 
@@ -44,7 +44,7 @@ STATIC mp_obj_t mod_trezorcrypto_curve25519_axolotl_curve25519_axolotl_sign(size
   }
 
   uint8_t signature[64];
-  curve25519_sign(*(ed25519_signature *)signature, (const uint8_t *)sk.buf,
+  curve25519_sign(signature, (const uint8_t *)sk.buf,
                   (const uint8_t *)msg.buf, msg.len, (const uint8_t *)random.buf);
   return mp_obj_new_bytes(signature, sizeof(signature));
 }

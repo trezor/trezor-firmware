@@ -1,5 +1,4 @@
 from trezor.crypto import base58
-from trezor.crypto.curve import curve25519
 from trezor.messages.VsysAddress import VsysAddress
 
 from apps.common import paths, seed
@@ -14,8 +13,7 @@ async def get_address(ctx, msg, keychain):
     )
 
     node = keychain.derive(msg.address_n, CURVE)
-    sk = helpers.modify_private_key(node.private_key())
-    pk = curve25519.publickey(sk)
+    pk = seed.remove_ed25519_prefix(node.public_key())
     pk_base58 = base58.encode(pk)
     chain_id = helpers.get_chain_id(msg.address_n)
     address = helpers.get_address_from_public_key(pk_base58, chain_id)

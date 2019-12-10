@@ -2,6 +2,7 @@ from trezor import wire
 from trezor.crypto import base58
 from trezor.messages.VsysSignedTx import VsysSignedTx
 from trezor.crypto.curve import curve25519_axolotl, curve25519
+from trezor.crypto.curve import ed25519
 
 from apps.common import paths
 from apps.common.writers import write_bytes, write_uint8, write_uint16_be, write_uint64_be
@@ -16,40 +17,41 @@ async def sign_tx(ctx, msg, keychain):
     )
 
     node = keychain.derive(msg.address_n, CURVE)
+    tx = msg.tx
 
-    if msg.protocol != PROTOCOL:
+    if tx.protocol != PROTOCOL:
         raise wire.DataError("Invalid protocol")
 
-    if msg.api > SUPPORT_API_VER:
+    if tx.api > SUPPORT_API_VER:
         raise wire.DataError("Not support to sign this transaction. Please upgrade firmware!")
 
-    if msg.opc != OPC_TX:
+    if tx.opc != OPC_TX:
         raise wire.DataError("Invalid operation code")
 
-    if not msg.fee:
+    if not tx.fee:
         raise wire.DataError("Invalid fee")
 
-    if not msg.feeScale:
+    if not tx.feeScale:
         raise wire.DataError("Invalid fee scale")
 
-    if not msg.timestamp:
+    if not tx.timestamp:
         raise wire.DataError("Invalid timestamp")
 
     sk = helpers.modify_private_key(node.private_key())
     pk = curve25519.publickey(sk)
     pk_base58 = base58.encode(pk)
-    if msg.senderPublicKey != pk_base58:
+    if tx.senderPublicKey != pk_base58:
         raise wire.DataError("Public key mismatch. Please confirm you used correct Trezor device.")
 
-    if msg.transactionType == PAYMENT_TX_TYPE:
-        await layout.require_confirm_payment_tx(ctx, msg.recipient, msg.amount)
-        to_sign_bytes = encode_payment_tx_to_bytes(msg)
-    elif msg.transactionType == LEASE_TX_TYPE:
-        await layout.require_confirm_lease_tx(ctx, msg.recipient, msg.amount)
-        to_sign_bytes = encode_lease_tx_to_bytes(msg)
-    elif msg.transactionType == LEASE_CANCEL_TX_TYPE:
-        await layout.require_confirm_cancel_lease_tx(ctx, msg.recipient, msg.amount)
-        to_sign_bytes = encode_cancel_lease_tx_to_bytes(msg)
+    if tx.transactionType == PAYMENT_TX_TYPE:
+        await layout.require_confirm_payment_tx(ctx, tx.recipient, tx.amount)
+        to_sign_bytes = encode_payment_tx_to_bytes(tx)
+    elif tx.transactionType == LEASE_TX_TYPE:
+        await layout.require_confirm_lease_tx(ctx, tx.recipient, tx.amount)
+        to_sign_bytes = encode_lease_tx_to_bytes(tx)
+    elif tx.transactionType == LEASE_CANCEL_TX_TYPE:
+        await layout.require_confirm_cancel_lease_tx(ctx, tx.txId)
+        to_sign_bytes = encode_cancel_lease_tx_to_bytes(tx)
     else:
         raise wire.DataError("Transaction type unsupported")
 
@@ -58,41 +60,41 @@ async def sign_tx(ctx, msg, keychain):
     return VsysSignedTx(signature=signature_base58, api=SIGN_API_VER, protocol=PROTOCOL, opc=OPC_SIGN)
 
 
-def encode_payment_tx_to_bytes(msg):
+def encode_payment_tx_to_bytes(tx):
     w = bytearray()
-    write_uint8(w, msg.transactionType)
-    write_uint64_be(w, helpers.convert_to_nano_sec(msg.timestamp))
-    write_uint64_be(w, msg.amount)
-    write_uint64_be(w, msg.fee)
-    write_uint16_be(w, msg.feeScale)
-    write_bytes(w, base58.decode(msg.recipient))
+    write_uint8(w, tx.transactionType)
+    write_uint64_be(w, helpers.convert_to_nano_sec(tx.timestamp))
+    write_uint64_be(w, tx.amount)
+    write_uint64_be(w, tx.fee)
+    write_uint16_be(w, tx.feeScale)
+    write_bytes(w, base58.decode(tx.recipient))
     try:
-        attachment_bytes = base58.decode(msg.attachment)
+        attachment_bytes = base58.decode(tx.attachment)
     except Exception:
-        attachment_bytes = bytes(msg.attachment, 'utf-8')
+        attachment_bytes = bytes(tx.attachment, 'utf-8')
     write_uint16_be(w, len(attachment_bytes))
     write_bytes(w, attachment_bytes)
     return w
 
 
-def encode_lease_tx_to_bytes(msg):
+def encode_lease_tx_to_bytes(tx):
     w = bytearray()
-    write_uint8(w, msg.transactionType)
-    write_bytes(w, base58.decode(msg.recipient))
-    write_uint64_be(w, msg.amount)
-    write_uint64_be(w, msg.fee)
-    write_uint16_be(w, msg.feeScale)
-    write_uint64_be(w, helpers.convert_to_nano_sec(msg.timestamp))
+    write_uint8(w, tx.transactionType)
+    write_bytes(w, base58.decode(tx.recipient))
+    write_uint64_be(w, tx.amount)
+    write_uint64_be(w, tx.fee)
+    write_uint16_be(w, tx.feeScale)
+    write_uint64_be(w, helpers.convert_to_nano_sec(tx.timestamp))
     return w
 
 
-def encode_cancel_lease_tx_to_bytes(msg):
+def encode_cancel_lease_tx_to_bytes(tx):
     w = bytearray()
-    write_uint8(w, msg.transactionType)
-    write_uint64_be(w, msg.fee)
-    write_uint16_be(w, msg.feeScale)
-    write_uint64_be(w, helpers.convert_to_nano_sec(msg.timestamp))
-    write_bytes(w, base58.decode(msg.txId))
+    write_uint8(w, tx.transactionType)
+    write_uint64_be(w, tx.fee)
+    write_uint16_be(w, tx.feeScale)
+    write_uint64_be(w, helpers.convert_to_nano_sec(tx.timestamp))
+    write_bytes(w, base58.decode(tx.txId))
     return w
 
 

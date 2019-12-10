@@ -43,22 +43,23 @@ class TestVsysAddress(unittest.TestCase):
             [44 | HARDENED, 360 | HARDENED, 9999000 | HARDENED],
             [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 0],
             [1 | HARDENED, 1 | HARDENED, 1 | HARDENED],
+            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 3 | HARDENED],
+            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 9 | HARDENED],
+            [44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 0 | HARDENED],
+            [44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 3 | HARDENED],
+            [44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 9 | HARDENED],
         ]
         correct_paths_mainnet = [
             [44 | HARDENED, 360 | HARDENED, 0 | HARDENED],
             [44 | HARDENED, 360 | HARDENED, 3 | HARDENED],
             [44 | HARDENED, 360 | HARDENED, 9 | HARDENED],
-            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 0 | HARDENED],
-            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 3 | HARDENED],
-            [44 | HARDENED, 360 | HARDENED, 0 | HARDENED, 9 | HARDENED],
+
         ]
         correct_paths_testnet = [
             [44 | HARDENED, 1 | HARDENED, 0 | HARDENED],
             [44 | HARDENED, 1 | HARDENED, 3 | HARDENED],
             [44 | HARDENED, 1 | HARDENED, 9 | HARDENED],
-            [44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 0 | HARDENED],
-            [44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 3 | HARDENED],
-            [44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 9 | HARDENED],
         ]
 
         for path in incorrect_paths:

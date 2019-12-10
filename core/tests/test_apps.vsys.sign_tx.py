@@ -5,7 +5,7 @@ from trezor.crypto import base58
 
 if not utils.BITCOIN_ONLY:
     from apps.vsys.sign_tx import *
-    from trezor.messages.VsysSignTx import VsysSignTx
+    from trezor.messages.VsysSignTx import VsysTransaction
     from apps.vsys.constants import *
 
 
@@ -17,7 +17,7 @@ class TestVsysSign(unittest.TestCase):
         public_key = "2cLDxAPJNWGGWAyHUFEnyoznhkf4QCEkcQrL5g2oEBCY"
         private_key_bytes = base58.decode(private_key)
         public_key_bytes = base58.decode(public_key)
-        msg = VsysSignTx(
+        msg = VsysTransaction(
             transactionType=PAYMENT_TX_TYPE,
             senderPublicKey=public_key,
             amount=1000000000,
@@ -42,7 +42,7 @@ class TestVsysSign(unittest.TestCase):
         public_key = "2cLDxAPJNWGGWAyHUFEnyoznhkf4QCEkcQrL5g2oEBCY"
         private_key_bytes = base58.decode(private_key)
         public_key_bytes = base58.decode(public_key)
-        msg = VsysSignTx(
+        msg = VsysTransaction(
             transactionType=LEASE_TX_TYPE,
             senderPublicKey=public_key,
             amount=1000000000,
@@ -66,7 +66,7 @@ class TestVsysSign(unittest.TestCase):
         public_key = "2cLDxAPJNWGGWAyHUFEnyoznhkf4QCEkcQrL5g2oEBCY"
         private_key_bytes = base58.decode(private_key)
         public_key_bytes = base58.decode(public_key)
-        msg = VsysSignTx(
+        msg = VsysTransaction(
             transactionType=LEASE_CANCEL_TX_TYPE,
             senderPublicKey=public_key,
             fee=10000000,

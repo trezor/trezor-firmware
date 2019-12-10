@@ -5,7 +5,7 @@ from trezor.ui.text import Text
 from trezor.utils import chunks, format_amount
 
 from apps.common.confirm import require_confirm
-from apps.tezos.helpers import TEZOS_AMOUNT_DIVISIBILITY
+from apps.vsys.helpers import VSYS_AMOUNT_DIVISIBILITY
 
 
 async def require_confirm_payment_tx(ctx, to, value):
@@ -24,11 +24,9 @@ async def require_confirm_lease_tx(ctx, to, value):
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def require_confirm_cancel_lease_tx(ctx, to, txId):
+async def require_confirm_cancel_lease_tx(ctx, txId):
     text = Text("Confirm lease cancellation", ui.ICON_SEND, ui.GREEN)
     text.bold(txId)
-    text.normal("to")
-    text.mono(*split_address(to))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
@@ -37,6 +35,6 @@ def split_address(address):
 
 
 def format_vsys_amount(value):
-    formatted_value = format_amount(value, TEZOS_AMOUNT_DIVISIBILITY)
-    return formatted_value + " V"
+    formatted_value = format_amount(value, VSYS_AMOUNT_DIVISIBILITY)
+    return formatted_value + " VSYS"
 

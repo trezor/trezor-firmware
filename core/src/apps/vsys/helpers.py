@@ -8,6 +8,7 @@ from apps.vsys.constants import VSYS_ADDRESS_VERSION
 VSYS_CHECKSUM_LENGTH = 4
 VSYS_ADDRESS_HASH_LENGTH = 20
 VSYS_ADDRESS_LENGTH = 1 + 1 + VSYS_CHECKSUM_LENGTH + VSYS_ADDRESS_HASH_LENGTH
+VSYS_AMOUNT_DIVISIBILITY = 8
 
 
 def keccak256_hash(data=None):
@@ -49,7 +50,8 @@ def get_address_from_public_key(public_key: str, chain_id: str):
 def modify_private_key(private_key: bytes):
     sk = list(private_key)
     sk[0] &= 248
-    sk[31] = (sk[31] & 127) | 64
+    sk[31] &= 127
+    sk[31] |= 64
     return bytes(sk)
 
 
@@ -81,11 +83,10 @@ def validate_full_path(path: list) -> bool:
 
 
 def convert_to_nano_sec(timestamp):
-    if timestamp < 1e10:
-        return timestamp * 1e9
-    elif timestamp < 1e13:
-        return timestamp * 1e6
-    elif timestamp < 1e16:
-        return timestamp * 1e3
-    else:
-        return timestamp
+    if timestamp < 10000000000:
+        return int(timestamp * 1000000000)
+    elif timestamp < 10000000000000:
+        return int(timestamp * 1000000)
+    elif timestamp < 10000000000000000:
+        return int(timestamp * 1000)
+    return timestamp
