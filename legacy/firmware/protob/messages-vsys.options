@@ -1,0 +1,22 @@
+VsysGetAddress.address_n                    max_count:8
+VsysAddress.protocol                        max_size:32
+VsysAddress.opc                             max_size:32
+VsysAddress.address                         max_size:37
+
+VsysGetPublicKey.address_n                  max_count:8
+VsysPublicKey.protocol                      max_size:32
+VsysPublicKey.opc                           max_size:32
+VsysPublicKey.public_key                    max_size:45
+VsysPublicKey.address                       max_size:37
+
+VsysSignTx.address_n                        max_count:8
+VsysTransaction.protocol                    max_size:32
+VsysTransaction.opc                         max_size:32
+VsysTransaction.senderPublicKey             max_size:45
+VsysTransaction.recipient                   max_size:37
+VsysTransaction.attachment                  max_size:192
+VsysTransaction.txId                        max_size:45
+
+VsysSignedTx.protocol                       max_size:32
+VsysSignedTx.opc                            max_size:32
+VsysSignedTx.signature                      max_size:89

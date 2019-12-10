@@ -245,4 +245,15 @@ enum MessageType {
     MessageType_WebAuthnCredentials = 801 [(wire_out) = true];
     MessageType_WebAuthnAddResidentCredential = 802 [(wire_in) = true];
     MessageType_WebAuthnRemoveResidentCredential = 803 [(wire_in) = true];
+
+    // VSYS
+    MessageType_VsysGetAddress = 1000 [(wire_in) = true];
+    MessageType_VsysAddress = 1001 [(wire_out) = true];
+    MessageType_VsysGetPublicKey = 1002 [(wire_in) = true];
+    MessageType_VsysPublicKey = 1003 [(wire_out) = true];
+    MessageType_VsysSignedTx = 1004 [(wire_out) = true];
+    MessageType_VsysSignTx = 1005 [(wire_in) = true];
+    // MessageType_VsysSignContract = 1006 [(wire_in) = true];
+    // MessageType_VsysSignFunctionExec = 1007 [(wire_in) = true];
+
 }

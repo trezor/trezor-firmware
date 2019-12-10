@@ -55,6 +55,7 @@ from trezorlib import (
     tools,
     ui,
     webauthn,
+    vsys,
 )
 from trezorlib.client import TrezorClient
 from trezorlib.transport import enumerate_devices, get_transport
@@ -1963,6 +1964,40 @@ def binance_sign_tx(connect, address, file):
     address_n = tools.parse_path(address)
 
     return binance.sign_tx(client, address_n, json.load(file))
+
+
+#
+# V Systems functions
+#
+@cli.command(help="Get VSYS address for specified path.")
+@click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/360'/0'")
+@click.option("-d", "--show-display", is_flag=True)
+@click.pass_obj
+def vsys_get_address(connect, address, show_display):
+    client = connect()
+    address_n = tools.parse_path(address)
+    return vsys.get_address(client, address_n, show_display)
+
+
+@cli.command(help="Get VSYS public key.")
+@click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/360'/0'")
+@click.option("-d", "--show-display", is_flag=True)
+@click.pass_obj
+def vsys_get_public_key(connect, address, show_display):
+    client = connect()
+    address_n = tools.parse_path(address)
+    return vsys.get_public_key(client, address_n, show_display)
+
+
+@cli.command(help="Sign VSYS transaction.")
+@click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/44'/360'/0'")
+@click.option("-f", "--file", type=click.File("r"), default="-", help="Transaction in JSON format")
+@click.pass_obj
+def vsys_sign_tx(connect, address, file):
+    client = connect()
+    address_n = tools.parse_path(address)
+    msg = json.loads(file)
+    return vsys.sign_tx(client, address_n, msg)
 
 
 #

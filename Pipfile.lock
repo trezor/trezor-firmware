@@ -682,7 +682,14 @@
                 "sha256:3718b1cbcd963c7d4c5511a8240812904164b7f381b647143a89d3b98f9bcd8e",
                 "sha256:f06903e9f1f43b12d371004b4ac7b06ab39a44adc747266928ae6debfa7b3335"
             ],
-            "version": "==0.6.0"
+            "version": "==0.5.2"
+        },
+        "python-axolotl-curve25519": {
+            "hashes": [
+                "sha256:0705a66297ebd2f508a60dc94e22881c754301eb81db93963322f6b3bdcb63a3"
+            ],
+            "index": "pypi",
+            "version": "==0.4.1.post2"
         }
     },
     "develop": {

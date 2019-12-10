@@ -50,6 +50,7 @@ Pillow = ">=5.2.0"
 ecdsa = ">=0.13.3"
 curve25519-donna = "*"
 pyasn1 = "*"
+python-axolotl-curve25519 = "*"
 
 # legacy
 setuptools = ">=24.2.0"

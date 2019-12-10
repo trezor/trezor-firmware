@@ -34,6 +34,7 @@ OBJS += lisk.o
 OBJS += nem2.o
 OBJS += nem_mosaics.o
 OBJS += stellar.o
+OBJS += vsys.o
 endif
 
 OBJS += debug.o
@@ -59,6 +60,54 @@ OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519.o
 OBJS += ../vendor/trezor-crypto/ed25519-donna/curve25519-donna-scalarmult-base.o
 OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519-sha3.o
 OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519-keccak.o
+ifneq ($(BITCOIN_ONLY),1)
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_0.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_1.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_cmov.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_copy.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_sq.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_sq2.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_neg.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_add.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_sub.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_mul.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_pow22523.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_isnegative.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_invert.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_tobytes.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_frombytes.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/fe_isnonzero.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_precomp_0.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_p2_0.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_p3_0.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_p3_tobytes.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_p3_to_cached.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_p1p1_to_p3.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_p1p1_to_p2.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_p3_to_p2.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_p2_dbl.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_p3_dbl.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_madd.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_add.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_msub.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_sub.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_double_scalarmult.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_scalarmult_base.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/sc_reduce.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/sc_muladd.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_tobytes.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/ge_frombytes.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/nacl_sha512/blocks.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/additions/compare.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/additions/fe_montx_to_edy.o
+OBJS += ../vendor/axolotl-curve25519/curve/ed25519/additions/open_modified.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/nacl-sha512-hash.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/zeroize.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/curve25519_sign_modified.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/xed25519_sign.o
+OBJS += ../vendor/trezor-crypto/ed25519-donna/curve25519_sign.o
+endif
+
 
 OBJS += ../vendor/trezor-crypto/hmac.o
 OBJS += ../vendor/trezor-crypto/bip32.o
@@ -109,6 +158,7 @@ OBJS += protob/messages-ethereum.pb.o
 OBJS += protob/messages-lisk.pb.o
 OBJS += protob/messages-nem.pb.o
 OBJS += protob/messages-stellar.pb.o
+OBJS += protob/messages-vsys.pb.o
 endif
 
 OPTFLAGS ?= -Os

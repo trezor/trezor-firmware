@@ -251,6 +251,12 @@ from .TxRequest import TxRequest
 from .TxRequestDetailsType import TxRequestDetailsType
 from .TxRequestSerializedType import TxRequestSerializedType
 from .VerifyMessage import VerifyMessage
+from .VsysAddress import VsysAddress
+from .VsysGetAddress import VsysGetAddress
+from .VsysGetPublicKey import VsysGetPublicKey
+from .VsysPublicKey import VsysPublicKey
+from .VsysSignTx import VsysSignTx
+from .VsysSignedTx import VsysSignedTx
 from .WebAuthnAddResidentCredential import WebAuthnAddResidentCredential
 from .WebAuthnCredential import WebAuthnCredential
 from .WebAuthnCredentials import WebAuthnCredentials

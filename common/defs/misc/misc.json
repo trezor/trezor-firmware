@@ -221,5 +221,20 @@
             "OMNI Trezor": "https://omnitrezor.com/"
         },
         "blockchain_link": null
+    },
+    {
+        "name": "V Systems",
+        "shortcut": "VSYS",
+        "slip44": 360,
+        "curve": "ed25519",
+        "decimals": 8,
+        "links": {
+            "Homepage": "https://v.systems",
+            "Github": "https://github.com/virtualeconomy/v-systems/"
+        },
+        "wallet": {
+            "Web Wallet": "https://wallet.v.systems/"
+        },
+        "blockchain_link": null
     }
 ]

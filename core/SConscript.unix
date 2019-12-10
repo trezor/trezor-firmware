@@ -11,6 +11,7 @@ CPPDEFINES_MOD = []
 SOURCE_MOD = []
 if EVERYTHING:
     SOURCE_MOD_SECP256K1_ZKP = []
+    SOURCE_MOD_AXOLOTL_CURVE25519 = []
 
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
@@ -40,6 +41,7 @@ CPPDEFINES_MOD += [
     ('USE_CARDANO', '1' if EVERYTHING else '0'),
     ('USE_NEM', '1' if EVERYTHING else '0'),
     ('USE_EOS', '1' if EVERYTHING else '0'),
+    ('USE_VSYS', '1' if EVERYTHING else '0'),
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
@@ -122,6 +124,65 @@ if EVERYTHING:
     SOURCE_MOD_SECP256K1_ZKP += [
         'vendor/secp256k1-zkp/src/secp256k1.c',
     ]
+
+# libaxolotl-curve25519
+if EVERYTHING:
+    CPPPATH_MOD += [
+        'vendor/axolotl-curve25519/curve/ed25519',
+        'vendor/axolotl-curve25519/curve/ed25519/additions',
+        'vendor/axolotl-curve25519/curve/ed25519/nacl_includes',
+    ]
+    SOURCE_MOD_AXOLOTL_CURVE25519 += [
+        'vendor/axolotl-curve25519/curve/ed25519/fe_0.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_1.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_cmov.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_copy.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_sq.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_sq2.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_neg.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_add.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_sub.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_mul.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_pow22523.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_isnegative.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_invert.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_tobytes.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_frombytes.c',
+        'vendor/axolotl-curve25519/curve/ed25519/fe_isnonzero.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_precomp_0.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_p2_0.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_p3_0.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_p3_tobytes.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_p3_to_cached.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_p1p1_to_p3.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_p1p1_to_p2.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_p3_to_p2.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_p2_dbl.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_p3_dbl.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_madd.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_add.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_msub.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_sub.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_double_scalarmult.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_scalarmult_base.c',
+        'vendor/axolotl-curve25519/curve/ed25519/sc_reduce.c',
+        'vendor/axolotl-curve25519/curve/ed25519/sc_muladd.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_tobytes.c',
+        'vendor/axolotl-curve25519/curve/ed25519/ge_frombytes.c',
+        'vendor/axolotl-curve25519/curve/ed25519/nacl_sha512/blocks.c',
+        'vendor/axolotl-curve25519/curve/ed25519/nacl_sha512/hash.c',
+        'vendor/axolotl-curve25519/curve/ed25519/additions/sc_neg.c',
+        'vendor/axolotl-curve25519/curve/ed25519/additions/sc_cmov.c',
+        'vendor/axolotl-curve25519/curve/ed25519/additions/fe_isreduced.c',
+        'vendor/axolotl-curve25519/curve/ed25519/additions/compare.c',
+        'vendor/axolotl-curve25519/curve/ed25519/additions/fe_montx_to_edy.c',
+        'vendor/axolotl-curve25519/curve/ed25519/additions/zeroize.c',
+        'vendor/axolotl-curve25519/curve/ed25519/additions/open_modified.c',
+        'vendor/axolotl-curve25519/curve/ed25519/additions/sign_modified.c',
+        'vendor/trezor-crypto/ed25519-donna/xed25519_sign.c',
+        'vendor/trezor-crypto/ed25519-donna/curve25519_sign.c'
+    ]
+
 
 # modtrezorio
 SOURCE_MOD += [
@@ -316,13 +377,16 @@ env.Replace(
     STRIP='strip',
     OBJCOPY='objcopy', )
 
+import platform
+platsys = platform.system()
 if env.get('ENV').get('DEBUG_BUILD', 0):
-    import platform
-    platsys = platform.system()
     env.Replace(
         OPTIMIZE='-O0',
-        LINKFLAGS='-Wl,-no_pie' if platsys == "Darwin" else '-Wl,-no-pie'
+        LINKFLAGS='-Wl,-no_pie,-undefined dynamic_lookup' if platsys == "Darwin" else '-Wl,-no-pie'
     )
+else:
+    if platsys == "Darwin":
+        env.Replace(LINKFLAGS='-undefined dynamic_lookup')
 
 env.Replace(
     TREZOR_MODEL=env.get('ENV').get('TREZOR_MODEL', 'T'), )
@@ -473,6 +537,9 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/stellar/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Stellar*.py'))
 
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/vsys/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Vsys*.py'))
+
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tezos/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Tezos*.py'))
 
@@ -517,6 +584,7 @@ obj_program = []
 obj_program.extend(env.Object(source=SOURCE_MOD))
 if EVERYTHING:
     obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
+    obj_program.extend(env.Object(source=SOURCE_MOD_AXOLOTL_CURVE25519, CCFLAGS='$CCFLAGS -Wno-unused-function'))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
 obj_program.extend(env.Object(source=SOURCE_UNIX))
 if FROZEN:

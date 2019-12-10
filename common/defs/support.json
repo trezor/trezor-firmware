@@ -85,7 +85,8 @@
       "nem:DIMTOK": true,
       "nem:PAC:CHS": true,
       "nem:PAC:HRT": true,
-      "nem:XEM": true
+      "nem:XEM": true,
+      "misc:VSYS": true
     },
     "unsupported": {}
   },
@@ -1378,7 +1379,8 @@
       "nem:DIMTOK": "1.6.2",
       "nem:PAC:CHS": "1.6.2",
       "nem:PAC:HRT": "1.6.2",
-      "nem:XEM": "1.6.2"
+      "nem:XEM": "1.6.2",
+      "misc:VSYS": "soon"
     },
     "unsupported": {
       "bitcoin:CPC": "not implemented",
@@ -2851,6 +2853,7 @@
       "misc:XRP": "2.0.8",
       "misc:XTZ": "2.0.8",
       "misc:tXRP": "2.0.8",
+      "misc:VSYS": "soon",
       "nem:BREEZE": "2.0.7",
       "nem:DIM": "2.0.7",
       "nem:DIMTOK": "2.0.7",

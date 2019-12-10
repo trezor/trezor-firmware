@@ -1,0 +1,88 @@
+syntax = "proto2";
+package hw.trezor.messages.vsys;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageVsys";
+
+/**
+ * Request: Ask device for VSYS address corresponding to address_n path
+ * @next PassphraseRequest
+ * @next VSYS Address
+ * @next Failure
+ */
+message VsysGetAddress {
+    repeated uint32 address_n = 1;			// BIP-32 path to derive the key from master node
+    optional bool show_display = 2;			// optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains VSYS address derived from device private seed
+ * @prev VsysGetAddress
+ */
+message VsysAddress {
+    required string protocol = 1;			// VSYS message protocol
+    required uint32 api = 2;			    // VSYS message API version
+    required string opc = 3;			    // VSYS message operation code
+    optional string address = 4;			// Coin address in Base58 encoding
+}
+
+/**
+ * Structure: VSYS common transaction
+ */
+message VsysTransaction {
+    required string protocol = 1;			// VSYS message protocol
+    required uint32 api = 2;			    // VSYS message API version
+    required string opc = 3;			    // VSYS message operation code
+    required uint32 transactionType = 4;	// 2 for payment, 3 for lease, 4 for cancel lease
+    optional string senderPublicKey = 5;
+    optional uint64 amount = 6;
+    required uint64 fee = 7;
+    required uint32 feeScale = 8;
+    optional string recipient = 9;
+    required uint64 timestamp = 10;
+    optional string attachment = 11;
+    optional string txId = 12;			    // lease transaction id (for lease cancellation used)
+}
+
+/**
+ * Request: Ask device to sign VSYS transaction
+ * @next VsysSignedTx
+ */
+message VsysSignTx {
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+    required VsysTransaction tx = 2; // VSYS transaction structure
+}
+
+
+/**
+* Response: Contains VSYS transaction signature
+* @prev VsysSignTx
+*/
+message VsysSignedTx {
+    required string protocol = 1;			// VSYS message protocol
+    required uint32 api = 2;			    // VSYS message API version
+    required string opc = 3;			    // VSYS message operation code
+    optional string signature = 4;			// VSYS transaction signature
+}
+
+/**
+ * Request: Ask device for VSYS public key corresponding to address_n path
+ * @next VsysPublicKey
+ */
+message VsysGetPublicKey {
+    repeated uint32 address_n = 1; 			// BIP-32 path to derive the key from master node
+    optional bool show_display = 2;			// Optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains VSYS public key derived from device private seed
+ * @prev VsysGetPublicKey
+*/
+message VsysPublicKey {
+    required string protocol = 1;			// VSYS message protocol
+    required uint32 api = 2;			    // VSYS message API version
+    required string opc = 3;			    // VSYS message operation code
+    optional string public_key = 4;			// VSYS public key
+    optional string address = 5;			// Coin address in Base58 encoding
+}
