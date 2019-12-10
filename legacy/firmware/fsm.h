@@ -53,9 +53,12 @@ void fsm_msgInitialize(const Initialize *msg);
 void fsm_msgGetFeatures(const GetFeatures *msg);
 void fsm_msgPing(const Ping *msg);
 void fsm_msgChangePin(const ChangePin *msg);
+void fsm_msgChangeWipeCode(const ChangeWipeCode *msg);
 void fsm_msgWipeDevice(const WipeDevice *msg);
 void fsm_msgGetEntropy(const GetEntropy *msg);
+#if DEBUG_LINK
 void fsm_msgLoadDevice(const LoadDevice *msg);
+#endif
 void fsm_msgResetDevice(const ResetDevice *msg);
 void fsm_msgEntropyAck(const EntropyAck *msg);
 void fsm_msgBackupDevice(const BackupDevice *msg);
@@ -66,6 +69,7 @@ void fsm_msgApplyFlags(const ApplyFlags *msg);
 void fsm_msgRecoveryDevice(const RecoveryDevice *msg);
 void fsm_msgWordAck(const WordAck *msg);
 void fsm_msgSetU2FCounter(const SetU2FCounter *msg);
+void fsm_msgGetNextU2FCounter(void);
 
 // coin
 void fsm_msgGetPublicKey(const GetPublicKey *msg);

@@ -6,3 +6,5 @@ if False:
 Current = 1  # type: Literal[1]
 NewFirst = 2  # type: Literal[2]
 NewSecond = 3  # type: Literal[3]
+WipeCodeFirst = 4  # type: Literal[4]
+WipeCodeSecond = 5  # type: Literal[5]

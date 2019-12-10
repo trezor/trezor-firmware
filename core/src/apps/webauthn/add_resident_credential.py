@@ -4,9 +4,9 @@ from trezor.messages.WebAuthnAddResidentCredential import WebAuthnAddResidentCre
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
-from apps.common.storage.webauthn import store_resident_credential
 from apps.webauthn.confirm import ConfirmContent, ConfirmInfo
 from apps.webauthn.credential import Fido2Credential
+from apps.webauthn.resident_credentials import store_resident_credential
 
 if False:
     from typing import Optional
@@ -33,8 +33,10 @@ async def add_resident_credential(
     if not msg.credential_id:
         raise wire.ProcessError("Missing credential ID parameter.")
 
-    cred = Fido2Credential.from_cred_id(msg.credential_id, None)
-    if cred is None:
+    try:
+        cred = Fido2Credential.from_cred_id(msg.credential_id, None)
+
+    except Exception:
         text = Text("Import credential", ui.ICON_WRONG, ui.RED)
         text.normal(
             "The credential you are",
@@ -43,7 +45,7 @@ async def add_resident_credential(
             "authenticator.",
         )
         await require_confirm(ctx, text, confirm=None, cancel="Close")
-        raise wire.ActionCancelled("Cancelled")
+        raise wire.ActionCancelled("Cancelled") from None
 
     content = ConfirmContent(ConfirmAddCredential(cred))
     await require_confirm(ctx, content)

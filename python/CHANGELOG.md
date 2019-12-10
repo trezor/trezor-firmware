@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 _At the moment, the project does **not** adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
+## [0.11.6] - Unreleased
+[0.11.6]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.4...python/v0.11.5
+
+### Changed
+
+- `trezorctl` command was reworked for ease of use and maintenance. See `trezorctl --help` and `OPTIONS.rst` for details. [f#510]
+- updated EOS transaction parser to match `cleos` in `delegatebw` and `undelegatebw` actions [f#680] [f#681]
+
 ## [0.11.5] - 2019-09-26
 
 [0.11.5]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.4...python/v0.11.5
@@ -329,4 +337,7 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 [f#411]: https://github.com/trezor/trezor-firmware/issues/411
 [f#420]: https://github.com/trezor/trezor-firmware/issues/420
 [f#445]: https://github.com/trezor/trezor-firmware/issues/445
+[f#510]: https://github.com/trezor/trezor-firmware/issues/510
 [f#525]: https://github.com/trezor/trezor-firmware/issues/525
+[f#680]: https://github.com/trezor/trezor-firmware/issues/680
+[f#681]: https://github.com/trezor/trezor-firmware/issues/681

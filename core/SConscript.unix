@@ -472,6 +472,8 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py'))
 
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py'))
+
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/*.py',
         exclude=[
             SOURCE_PY_DIR + 'trezor/messages/Binance*.py',

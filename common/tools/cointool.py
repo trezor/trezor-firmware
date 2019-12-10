@@ -168,8 +168,11 @@ def find_collisions(coins, field):
     """Detects collisions in a given field. Returns buckets of colliding coins."""
     collisions = defaultdict(list)
     for coin in coins:
-        value = coin[field]
-        collisions[value].append(coin)
+        values = coin[field]
+        if not isinstance(values, list):
+            values = [values]
+        for value in values:
+            collisions[value].append(coin)
     return {k: v for k, v in collisions.items() if len(v) > 1}
 
 
@@ -473,6 +476,73 @@ def check_segwit(coins):
     return True
 
 
+FIDO_KNOWN_KEYS = frozenset(
+    ("key", "u2f", "webauthn", "label", "use_sign_count", "no_icon", "icon")
+)
+
+
+def check_fido(apps):
+    check_passed = True
+
+    uf2_hashes = find_collisions((a for a in apps if "u2f" in a), "u2f")
+    for key, bucket in uf2_hashes.items():
+        bucket_str = ", ".join(app["key"] for app in bucket)
+        u2f_hash_str = "colliding U2F hash " + crayon(None, key, bold=True) + ":"
+        print_log(logging.ERROR, u2f_hash_str, bucket_str)
+        check_passed = False
+
+    webauthn_domains = find_collisions((a for a in apps if "webauthn" in a), "webauthn")
+    for key, bucket in webauthn_domains.items():
+        bucket_str = ", ".join(app["key"] for app in bucket)
+        webauthn_str = "colliding WebAuthn domain " + crayon(None, key, bold=True) + ":"
+        print_log(logging.ERROR, webauthn_str, bucket_str)
+        check_passed = False
+
+    for app in apps:
+        if "label" not in app:
+            print_log(logging.ERROR, app["key"], ": missing label")
+            check_passed = False
+
+        if not app.get("u2f") and not app.get("webauthn"):
+            print_log(logging.ERROR, app["key"], ": no U2F nor WebAuthn addresses")
+            check_passed = False
+
+        unknown_keys = set(app.keys()) - FIDO_KNOWN_KEYS
+        if unknown_keys:
+            print_log(logging.ERROR, app["key"], ": unrecognized keys:", unknown_keys)
+            check_passed = False
+
+        # check icons
+        if app["icon"] is None:
+            if app.get("no_icon"):
+                continue
+
+            print_log(logging.ERROR, app["key"], ": missing icon")
+            check_passed = False
+            continue
+
+        elif app.get("no_icon"):
+            print_log(logging.ERROR, app["key"], ": icon present for 'no_icon' app")
+            check_passed = False
+
+        try:
+            icon = Image.open(app["icon"])
+        except Exception:
+            print_log(
+                logging.ERROR, app["key"], ": failed to open icon file", app["icon"]
+            )
+            check_passed = False
+            continue
+
+        if icon.size != (128, 128) or icon.mode != "RGBA":
+            print_log(
+                logging.ERROR, app["key"], ": bad icon format (must be RGBA 128x128)"
+            )
+            check_passed = False
+
+    return check_passed
+
+
 # ====== coindefs generators ======
 
 
@@ -638,6 +708,10 @@ def check(backend, icons, show_duplicates):
         if not check_key_uniformity(coinlist):
             all_checks_passed = False
 
+    print("Checking FIDO app definitions...")
+    if not check_fido(coin_info.fido_info()):
+        all_checks_passed = False
+
     if not all_checks_passed:
         print("Some checks failed.")
         sys.exit(1)
@@ -674,7 +748,7 @@ def dump(
     exclude_tokens,
     device,
 ):
-    """Dump coin data in JSON format
+    """Dump coin data in JSON format.
 
     This file is structured the same as the internal data. That is, top-level object
     is a dict with keys: 'bitcoin', 'eth', 'erc20', 'nem' and 'misc'. Value for each
@@ -822,6 +896,7 @@ def render(paths, outfile, verbose, bitcoin_only):
 
     # prepare defs
     defs = coin_info.coin_info()
+    defs["fido"] = coin_info.fido_info()
     support_info = coin_info.support_info(defs)
 
     if bitcoin_only:

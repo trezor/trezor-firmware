@@ -26,168 +26,166 @@ from . import reset
 
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
+with_mock_urandom = mock.patch("os.urandom", mock.Mock(return_value=EXTERNAL_ENTROPY))
+
 
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
+@with_mock_urandom
 def test_reset_slip39_advanced_2of2groups_2of2shares(device_handler):
     features = device_handler.features()
     debug = device_handler.debuglink()
 
     assert features.initialized is False
 
-    os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
-    with mock.patch("os.urandom", os_urandom), device_handler:
-        device_handler.run(
-            device.reset,
-            strength=128,
-            backup_type=messages.BackupType.Slip39_Advanced,
-            pin_protection=False,
-        )
+    device_handler.run(
+        device.reset,
+        backup_type=messages.BackupType.Slip39_Advanced,
+        pin_protection=False,
+    )
 
-        # confirm new wallet
-        reset.confirm_wait(debug, "Create new wallet")
+    # confirm new wallet
+    reset.confirm_wait(debug, "Create new wallet")
 
-        # confirm back up
-        reset.confirm_wait(debug, "Success")
+    # confirm back up
+    reset.confirm_wait(debug, "Success")
 
-        # confirm checklist
-        reset.confirm_read(debug, "Checklist")
+    # confirm checklist
+    reset.confirm_read(debug, "Checklist")
 
-        # set num of groups
+    # set num of groups
+    reset.set_selection(debug, buttons.RESET_MINUS, 3)
+
+    # confirm checklist
+    reset.confirm_read(debug, "Checklist")
+
+    # set group threshold
+    reset.set_selection(debug, buttons.RESET_MINUS, 0)
+
+    # confirm checklist
+    reset.confirm_read(debug, "Checklist")
+
+    # set share num and threshold for groups
+    for _ in range(2):
+        # set num of shares
         reset.set_selection(debug, buttons.RESET_MINUS, 3)
 
-        # confirm checklist
-        reset.confirm_read(debug, "Checklist")
-
-        # set group threshold
+        # set share threshold
         reset.set_selection(debug, buttons.RESET_MINUS, 0)
 
-        # confirm checklist
-        reset.confirm_read(debug, "Checklist")
+    # confirm backup warning
+    reset.confirm_read(debug, "Caution")
 
-        # set share num and threshold for groups
+    all_words = []
+    for _ in range(2):
         for _ in range(2):
-            # set num of shares
-            reset.set_selection(debug, buttons.RESET_MINUS, 3)
+            # read words
+            words = reset.read_words(debug, True)
 
-            # set share threshold
-            reset.set_selection(debug, buttons.RESET_MINUS, 0)
+            # confirm words
+            reset.confirm_words(debug, words)
 
-        # confirm backup warning
-        reset.confirm_read(debug, "Caution")
+            # confirm share checked
+            reset.confirm_read(debug, "Success")
 
-        all_words = []
-        for _ in range(2):
-            for _ in range(2):
-                # read words
-                words = reset.read_words(debug, True)
+            all_words.append(" ".join(words))
 
-                # confirm words
-                reset.confirm_words(debug, words)
+    # confirm backup done
+    reset.confirm_read(debug, "Success")
 
-                # confirm share checked
-                reset.confirm_read(debug, "Success")
+    # generate secret locally
+    internal_entropy = debug.state().reset_entropy
+    secret = generate_entropy(128, internal_entropy, EXTERNAL_ENTROPY)
 
-                all_words.append(" ".join(words))
+    # validate that all combinations will result in the correct master secret
+    reset.validate_mnemonics(all_words, secret)
 
-        # confirm backup done
-        reset.confirm_read(debug, "Success")
+    assert device_handler.result() == "Initialized"
 
-        # generate secret locally
-        internal_entropy = debug.state().reset_entropy
-        secret = generate_entropy(128, internal_entropy, EXTERNAL_ENTROPY)
-
-        # validate that all combinations will result in the correct master secret
-        reset.validate_mnemonics(all_words, secret)
-
-        assert device_handler.result() == "Initialized"
-
-        features = device_handler.features()
-        assert features.initialized is True
-        assert features.needs_backup is False
-        assert features.pin_protection is False
-        assert features.passphrase_protection is False
-        assert features.backup_type is messages.BackupType.Slip39_Advanced
+    features = device_handler.features()
+    assert features.initialized is True
+    assert features.needs_backup is False
+    assert features.pin_protection is False
+    assert features.passphrase_protection is False
+    assert features.backup_type is messages.BackupType.Slip39_Advanced
 
 
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
+@with_mock_urandom
 def test_reset_slip39_advanced_16of16groups_16of16shares(device_handler):
     features = device_handler.features()
     debug = device_handler.debuglink()
 
     assert features.initialized is False
 
-    os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
-    with mock.patch("os.urandom", os_urandom), device_handler:
-        device_handler.run(
-            device.reset,
-            strength=128,
-            backup_type=messages.BackupType.Slip39_Advanced,
-            pin_protection=False,
-        )
+    device_handler.run(
+        device.reset,
+        backup_type=messages.BackupType.Slip39_Advanced,
+        pin_protection=False,
+    )
 
-        # confirm new wallet
-        reset.confirm_wait(debug, "Create new wallet")
+    # confirm new wallet
+    reset.confirm_wait(debug, "Create new wallet")
 
-        # confirm back up
-        reset.confirm_wait(debug, "Success")
+    # confirm back up
+    reset.confirm_wait(debug, "Success")
 
-        # confirm checklist
-        reset.confirm_read(debug, "Checklist")
+    # confirm checklist
+    reset.confirm_read(debug, "Checklist")
 
-        # set num of groups
+    # set num of groups
+    reset.set_selection(debug, buttons.RESET_PLUS, 11)
+
+    # confirm checklist
+    reset.confirm_read(debug, "Checklist")
+
+    # set group threshold
+    reset.set_selection(debug, buttons.RESET_PLUS, 11)
+
+    # confirm checklist
+    reset.confirm_read(debug, "Checklist")
+
+    # set share num and threshold for groups
+    for _ in range(16):
+        # set num of shares
         reset.set_selection(debug, buttons.RESET_PLUS, 11)
 
-        # confirm checklist
-        reset.confirm_read(debug, "Checklist")
-
-        # set group threshold
+        # set share threshold
         reset.set_selection(debug, buttons.RESET_PLUS, 11)
 
-        # confirm checklist
-        reset.confirm_read(debug, "Checklist")
+    # confirm backup warning
+    reset.confirm_read(debug, "Caution")
 
-        # set share num and threshold for groups
+    all_words = []
+    for _ in range(16):
         for _ in range(16):
-            # set num of shares
-            reset.set_selection(debug, buttons.RESET_PLUS, 11)
+            # read words
+            words = reset.read_words(debug, True)
 
-            # set share threshold
-            reset.set_selection(debug, buttons.RESET_PLUS, 11)
+            # confirm words
+            reset.confirm_words(debug, words)
 
-        # confirm backup warning
-        reset.confirm_read(debug, "Caution")
+            # confirm share checked
+            reset.confirm_read(debug, "Success")
 
-        all_words = []
-        for _ in range(16):
-            for _ in range(16):
-                # read words
-                words = reset.read_words(debug, True)
+            all_words.append(" ".join(words))
 
-                # confirm words
-                reset.confirm_words(debug, words)
+    # confirm backup done
+    reset.confirm_read(debug, "Success")
 
-                # confirm share checked
-                reset.confirm_read(debug, "Success")
+    # generate secret locally
+    internal_entropy = debug.state().reset_entropy
+    secret = generate_entropy(128, internal_entropy, EXTERNAL_ENTROPY)
 
-                all_words.append(" ".join(words))
+    # validate that all combinations will result in the correct master secret
+    reset.validate_mnemonics(all_words, secret)
 
-        # confirm backup done
-        reset.confirm_read(debug, "Success")
+    assert device_handler.result() == "Initialized"
 
-        # generate secret locally
-        internal_entropy = debug.state().reset_entropy
-        secret = generate_entropy(128, internal_entropy, EXTERNAL_ENTROPY)
-
-        # validate that all combinations will result in the correct master secret
-        reset.validate_mnemonics(all_words, secret)
-
-        assert device_handler.result() == "Initialized"
-
-        features = device_handler.features()
-        assert features.initialized is True
-        assert features.needs_backup is False
-        assert features.pin_protection is False
-        assert features.passphrase_protection is False
-        assert features.backup_type is messages.BackupType.Slip39_Advanced
+    features = device_handler.features()
+    assert features.initialized is True
+    assert features.needs_backup is False
+    assert features.pin_protection is False
+    assert features.passphrase_protection is False
+    assert features.backup_type is messages.BackupType.Slip39_Advanced

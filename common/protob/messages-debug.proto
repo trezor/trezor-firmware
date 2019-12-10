@@ -67,7 +67,7 @@ message DebugLinkState {
     optional uint32 recovery_word_pos = 10;                 // index of mnemonic word the device is expecting during RecoveryDevice workflow
     optional uint32 reset_word_pos = 11;                    // index of mnemonic word the device is expecting during ResetDevice workflow
     optional uint32 mnemonic_type = 12;                     // current mnemonic type (BIP-39/SLIP-39)
-    repeated string layout_lines = 13;  // current layout text
+    repeated string layout_lines = 13;                      // current layout text
 }
 
 /**

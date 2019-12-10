@@ -8,7 +8,7 @@
   "upv": [
     {
       "major": 1,
-      "minor": 2
+      "minor": 1
     }
   ],
   "assertionScheme": "U2FV1BIN",
@@ -24,12 +24,12 @@
       }
     ]
   ],
+  "isSecondFactorOnly": true,
   "keyProtection": 2,
   "matcherProtection": 4,
   "cryptoStrength": 128,
   "attachmentHint": 6,
-  "isSecondFactorOnly": true,
-  "tcDisplay": 9,
+  "tcDisplay": 0,
   "attestationRootCertificates": [
     "MIIBGDCBwAIJALHZj0JkctMsMAoGCCqGSM49BAMCMBUxEzARBgNVBAMMClRyZXpvciBVMkYwHhcNMTYwNDI5MTMzMTUzWhcNMjYwNDI3MTMzMTUzWjAVMRMwEQYDVQQDDApUcmV6b3IgVTJGMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2Ri9+opUrJLpDakfynqiZFTA0XM2MU3eg6VLhrXfTvBSZZodb/y3Rn8azduKMwgLXu2RiRP0Q6UmG8d7aGBvwTAKBggqhkjOPQQDAgNHADBEAiAkHoH/0uXmFTaUw1Uuj+vXHok1khy0g0FDcRx26u7zlQIgX4DrEPJczDmLPKipraQCf5MTIHe3q853Rlon9T0zoR0="
   ],

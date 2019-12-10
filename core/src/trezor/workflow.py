@@ -28,6 +28,8 @@ def on_start(workflow: loop.Task) -> None:
     make sure to always call `on_close` when the task is finished.
     """
     # Take note that this workflow task is running.
+    if __debug__:
+        log.debug(__name__, "start: %s", workflow)
     tasks.add(workflow)
 
 

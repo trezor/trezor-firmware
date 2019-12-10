@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import MINIMUM_FIRMWARE_VERSION, btc, debuglink, device
+from trezorlib import MINIMUM_FIRMWARE_VERSION, btc, debuglink, device, fido
 from trezorlib.messages import BackupType
 from trezorlib.tools import H_
 
@@ -40,7 +40,7 @@ LANGUAGE = "english"
 STRENGTH = 128
 
 
-def for_all(*args, minimum_version=(1, 0, 0)):
+def for_all(*args, legacy_minimum_version=(1, 0, 0), core_minimum_version=(2, 0, 0)):
     if not args:
         args = ("core", "legacy")
 
@@ -49,6 +49,13 @@ def for_all(*args, minimum_version=(1, 0, 0)):
 
     all_params = []
     for gen in args:
+        if gen == "legacy":
+            minimum_version = legacy_minimum_version
+        elif gen == "core":
+            minimum_version = core_minimum_version
+        else:
+            raise ValueError
+
         if gen not in enabled_gens:
             continue
         try:
@@ -164,7 +171,7 @@ def test_upgrade_reset_skip_backup(gen, from_tag, to_tag):
         assert btc.get_address(emu.client, "Bitcoin", PATH) == address
 
 
-@for_all(minimum_version=(1, 7, 2))
+@for_all(legacy_minimum_version=(1, 7, 2))
 def test_upgrade_reset_no_backup(gen, from_tag, to_tag):
     def asserts(tag, client):
         assert not client.features.pin_protection
@@ -199,7 +206,7 @@ def test_upgrade_reset_no_backup(gen, from_tag, to_tag):
 
 
 # Although Shamir was introduced in 2.1.2 already, the debug instrumentation was not present until 2.1.9.
-@for_all("core", minimum_version=(2, 1, 9))
+@for_all("core", core_minimum_version=(2, 1, 9))
 def test_upgrade_shamir_recovery(gen, from_tag, to_tag):
     with EmulatorWrapper(gen, from_tag) as emu, BackgroundDeviceHandler(
         emu.client
@@ -209,6 +216,7 @@ def test_upgrade_shamir_recovery(gen, from_tag, to_tag):
 
         device_handler.run(device.recover, pin_protection=False)
 
+        recovery.confirm_recovery(debug)
         recovery.select_number_of_words(debug)
         layout = recovery.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[0])
         assert "2 more shares" in layout.text
@@ -237,6 +245,24 @@ def test_upgrade_shamir_recovery(gen, from_tag, to_tag):
         assert state.mnemonic_secret.hex() == MNEMONIC_SLIP39_BASIC_20_3of6_SECRET
         assert state.mnemonic_type == BackupType.Slip39_Basic
         device_handler.check_finalize()
+
+
+@for_all(legacy_minimum_version=(1, 8, 4), core_minimum_version=(2, 1, 9))
+def test_upgrade_u2f(gen, from_tag, to_tag):
+    """
+    Check U2F counter stayed the same after an upgrade.
+    """
+    with EmulatorWrapper(gen, from_tag) as emu:
+        success = fido.set_counter(emu.client, 10)
+        assert "U2F counter set" in success
+
+        counter = fido.get_next_counter(emu.client)
+        assert counter == 11
+        storage = emu.storage()
+
+    with EmulatorWrapper(gen, to_tag, storage=storage) as emu:
+        counter = fido.get_next_counter(emu.client)
+        assert counter == 12
 
 
 if __name__ == "__main__":

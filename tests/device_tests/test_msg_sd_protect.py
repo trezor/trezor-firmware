@@ -75,7 +75,7 @@ def test_wipe(client):
     assert client.features.sd_protection is False
 
     # Restore device to working status
-    debuglink.load_device_by_mnemonic(
+    debuglink.load_device(
         client, mnemonic=MNEMONIC12, pin=None, passphrase_protection=False, label="test"
     )
     assert client.features.sd_protection is False

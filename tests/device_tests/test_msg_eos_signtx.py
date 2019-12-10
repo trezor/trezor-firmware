@@ -199,7 +199,7 @@ class TestMsgEosSignTx:
                         {"actor": "miniminimini", "permission": "active"}
                     ],
                     "data": {
-                        "sender": "miniminimini",
+                        "from": "miniminimini",
                         "receiver": "maximaximaxi",
                         "stake_net_quantity": "1.0000 EOS",
                         "stake_cpu_quantity": "1.0000 EOS",
@@ -236,7 +236,7 @@ class TestMsgEosSignTx:
                         {"actor": "miniminimini", "permission": "active"}
                     ],
                     "data": {
-                        "sender": "miniminimini",
+                        "from": "miniminimini",
                         "receiver": "maximaximaxi",
                         "unstake_net_quantity": "1.0000 EOS",
                         "unstake_cpu_quantity": "1.0000 EOS",
@@ -635,7 +635,7 @@ class TestMsgEosSignTx:
                         {"actor": "miniminimini", "permission": "active"}
                     ],
                     "data": {
-                        "sender": "miniminimini",
+                        "from": "miniminimini",
                         "receiver": "maximaximaxi",
                         "stake_net_quantity": "1.0000 EOS",
                         "stake_cpu_quantity": "1.0000 EOS",

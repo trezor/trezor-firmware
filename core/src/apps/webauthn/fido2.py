@@ -3,6 +3,8 @@ import ustruct
 import utime
 from micropython import const
 
+import storage
+import storage.resident_credentials
 from trezor import config, io, log, loop, ui, utils, workflow
 from trezor.crypto import aes, der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
@@ -10,14 +12,13 @@ from trezor.ui.confirm import CONFIRMED, Confirm, ConfirmPageable, Pageable
 from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
-from apps.common import cbor, storage
-from apps.common.storage.webauthn import (
-    erase_resident_credentials,
-    get_resident_credentials,
-    store_resident_credential,
-)
+from apps.common import cbor
 from apps.webauthn.confirm import ConfirmContent, ConfirmInfo
 from apps.webauthn.credential import Credential, Fido2Credential, U2fCredential
+from apps.webauthn.resident_credentials import (
+    find_by_rp_id_hash,
+    store_resident_credential,
+)
 
 if __debug__:
     from apps.debug import confirm_signal
@@ -109,15 +110,20 @@ _CLIENTPIN_SUBCMD_GET_KEY_AGREEMENT = const(0x02)
 _CLIENTPIN_RESP_KEY_AGREEMENT = const(0x01)  # COSE_Key, optional
 
 # status codes for the keepalive cmd
+_KEEPALIVE_STATUS_NONE = const(0x00)
 _KEEPALIVE_STATUS_PROCESSING = const(0x01)  # still processing the current request
 _KEEPALIVE_STATUS_UP_NEEDED = const(0x02)  # waiting for user presence
 
 # time intervals and timeouts
 _KEEPALIVE_INTERVAL_MS = const(80)  # interval between keepalive commands
-_CTAP_HID_TIMEOUT_MS = const(500)
-_U2F_CONFIRM_TIMEOUT_MS = const(10 * 1000)
+_CTAP_HID_TIMEOUT_MS = const(
+    500
+)  # maximum interval between CTAP HID continuation frames
+_U2F_CONFIRM_TIMEOUT_MS = const(
+    3 * 1000
+)  # maximum U2F pollling interval, Chrome uses 200 ms
 _FIDO2_CONFIRM_TIMEOUT_MS = const(60 * 1000)
-_POPUP_TIMEOUT_MS = const(4 * 1000) if not __debug__ else const(0)
+_POPUP_TIMEOUT_MS = const(4 * 1000)
 
 # CBOR object signing and encryption algorithms and keys
 _COSE_ALG_KEY = const(3)
@@ -174,10 +180,10 @@ _U2FHID_IF_VERSION = const(2)  # interface version
 _U2F_REGISTER_ID = const(0x05)  # version 2 registration identifier
 _U2F_ATT_PRIV_KEY = b"q&\xac+\xf6D\xdca\x86\xad\x83\xef\x1f\xcd\xf1*W\xb5\xcf\xa2\x00\x0b\x8a\xd0'\xe9V\xe8T\xc5\n\x8b"
 _U2F_ATT_CERT = b"0\x82\x01\x180\x81\xc0\x02\t\x00\xb1\xd9\x8fBdr\xd3,0\n\x06\x08*\x86H\xce=\x04\x03\x020\x151\x130\x11\x06\x03U\x04\x03\x0c\nTrezor U2F0\x1e\x17\r160429133153Z\x17\r260427133153Z0\x151\x130\x11\x06\x03U\x04\x03\x0c\nTrezor U2F0Y0\x13\x06\x07*\x86H\xce=\x02\x01\x06\x08*\x86H\xce=\x03\x01\x07\x03B\x00\x04\xd9\x18\xbd\xfa\x8aT\xac\x92\xe9\r\xa9\x1f\xcaz\xa2dT\xc0\xd1s61M\xde\x83\xa5K\x86\xb5\xdfN\xf0Re\x9a\x1do\xfc\xb7F\x7f\x1a\xcd\xdb\x8a3\x08\x0b^\xed\x91\x89\x13\xf4C\xa5&\x1b\xc7{h`o\xc10\n\x06\x08*\x86H\xce=\x04\x03\x02\x03G\x000D\x02 $\x1e\x81\xff\xd2\xe5\xe6\x156\x94\xc3U.\x8f\xeb\xd7\x1e\x895\x92\x1c\xb4\x83ACq\x1cv\xea\xee\xf3\x95\x02 _\x80\xeb\x10\xf2\\\xcc9\x8b<\xa8\xa9\xad\xa4\x02\x7f\x93\x13 w\xb7\xab\xcewFZ'\xf5=3\xa1\x1d"
-_BOGUS_APPID = b"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-_AAGUID = (
-    b"\xd6\xd0\xbd\xc3b\xee\xc4\xdb\xde\x8dzenJD\x87"
-)  # First 16 bytes of SHA-256("TREZOR 2")
+_BOGUS_APPID_CHROME = b"A" * 32
+_BOGUS_APPID_FIREFOX = b"\0" * 32
+_BOGUS_APPIDS = (_BOGUS_APPID_CHROME, _BOGUS_APPID_FIREFOX)
+_AAGUID = b"\xd6\xd0\xbd\xc3b\xee\xc4\xdb\xde\x8dzenJD\x87"  # First 16 bytes of SHA-256("TREZOR 2")
 _BOGUS_PRIV_KEY = b"\xAA" * 32
 
 # authentication control byte
@@ -215,6 +221,12 @@ _ALLOW_RESIDENT_CREDENTIALS = True
 
 # The attestation type to use in MakeCredential responses. If false, then self attestation will be used.
 _USE_BASIC_ATTESTATION = False
+
+# The CID of the last WINK command. Used to ensure that we do only one WINK at a time on any given CID.
+_last_wink_cid = 0
+
+# The CID of the last successful U2F_AUTHENTICATE check-only request.
+_last_good_auth_check_cid = 0
 
 
 class CborError(Exception):
@@ -562,6 +574,7 @@ class State:
     def __init__(self, cid: int, iface: io.HID) -> None:
         self.cid = cid
         self.iface = iface
+        self.finished = False
 
     def keepalive_status(self) -> Optional[int]:
         return None
@@ -595,6 +608,10 @@ class U2fState(State, ConfirmInfo):
         self._req_data = req_data
         self.load_icon(self._cred.rp_id_hash)
 
+    def keepalive_status(self) -> int:
+        # Run the keepalive loop to check for timeout, but do not send any keepalive messages.
+        return _KEEPALIVE_STATUS_NONE
+
     def timeout_ms(self) -> int:
         return _U2F_CONFIRM_TIMEOUT_MS
 
@@ -612,13 +629,20 @@ class U2fConfirmRegister(U2fState):
         super().__init__(cid, iface, req_data, cred)
 
     async def confirm_dialog(self) -> bool:
-        if self._cred.rp_id_hash == _BOGUS_APPID:
+        if self._cred.rp_id_hash in _BOGUS_APPIDS:
             text = Text("U2F", ui.ICON_WRONG, ui.RED)
-            text.bold("Not registered.")
-            text.br_half()
-            text.normal(
-                "Another U2F device", "was used to register", "in this application."
-            )
+            if self.cid == _last_good_auth_check_cid:
+                text.bold("Already registered.")
+                text.br_half()
+                text.normal(
+                    "This device is already", "registered with this", "application."
+                )
+            else:
+                text.bold("Not registered.")
+                text.br_half()
+                text.normal(
+                    "This device is not", "registered with this", "application."
+                )
             return await Popup(text, _POPUP_TIMEOUT_MS)
         else:
             content = ConfirmContent(self)
@@ -669,10 +693,12 @@ class Fido2State(State):
     async def on_confirm(self) -> None:
         cmd = cbor_error(self.cid, _ERR_OPERATION_DENIED)
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
     async def on_decline(self) -> None:
         cmd = cbor_error(self.cid, _ERR_OPERATION_DENIED)
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
     async def on_timeout(self) -> None:
         await self.on_decline()
@@ -680,6 +706,7 @@ class Fido2State(State):
     async def on_cancel(self) -> None:
         cmd = cbor_error(self.cid, _ERR_KEEPALIVE_CANCEL)
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
 
 class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
@@ -732,6 +759,7 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
             if not store_resident_credential(self._cred):
                 cmd = cbor_error(self.cid, _ERR_KEY_STORE_FULL)
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
 
 class Fido2ConfirmExcluded(Fido2ConfirmMakeCredential):
@@ -741,6 +769,7 @@ class Fido2ConfirmExcluded(Fido2ConfirmMakeCredential):
     async def on_confirm(self) -> None:
         cmd = cbor_error(self.cid, _ERR_CREDENTIAL_EXCLUDED)
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
         text = Text("FIDO2 Register", ui.ICON_WRONG, ui.RED)
         text.bold("Already registered.")
@@ -814,11 +843,13 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
             cmd = cbor_error(self.cid, _ERR_OPERATION_DENIED)
 
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
 
 class Fido2ConfirmNoPin(State):
     def __init__(self, cid: int, iface: io.HID) -> None:
         super().__init__(cid, iface)
+        self.finished = True
 
     def timeout_ms(self) -> int:
         return _FIDO2_CONFIRM_TIMEOUT_MS
@@ -842,6 +873,7 @@ class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
     async def on_confirm(self) -> None:
         cmd = cbor_error(self.cid, _ERR_NO_CREDENTIALS)
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
         text = Text("FIDO2 Authenticate", ui.ICON_WRONG, ui.RED)
         text.bold("Not registered.")
@@ -863,9 +895,10 @@ class Fido2ConfirmReset(Fido2State):
         return await confirm(text)
 
     async def on_confirm(self) -> None:
-        erase_resident_credentials()
+        storage.resident_credentials.delete_all()
         cmd = Cmd(self.cid, _CMD_CBOR, bytes([_ERR_NONE]))
         await send_cmd(cmd, self.iface)
+        self.finished = True
 
 
 class DialogManager:
@@ -899,7 +932,15 @@ class DialogManager:
     def is_busy(self) -> bool:
         if utime.ticks_ms() >= self.deadline:
             self.reset()
-        return bool(workflow.tasks or self.workflow)
+
+        if self.workflow is None:
+            return bool(workflow.tasks)
+
+        if self.state is None or self.state.finished:
+            self.reset()
+            return False
+
+        return True
 
     def compare(self, state: State) -> bool:
         if self.state != state:
@@ -925,11 +966,12 @@ class DialogManager:
 
     async def keepalive_loop(self) -> None:
         try:
-            if not isinstance(self.state, Fido2State):
+            if not isinstance(self.state, (U2fState, Fido2State)):
                 return
             while utime.ticks_ms() < self.deadline:
-                cmd = cmd_keepalive(self.state.cid, self.state.keepalive_status())
-                await send_cmd(cmd, self.iface)
+                if self.state.keepalive_status() != _KEEPALIVE_STATUS_NONE:
+                    cmd = cmd_keepalive(self.state.cid, self.state.keepalive_status())
+                    await send_cmd(cmd, self.iface)
                 await loop.sleep(_KEEPALIVE_INTERVAL_MS * 1000)
         finally:
             self.keepalive = None
@@ -943,23 +985,24 @@ class DialogManager:
 
         try:
             workflow.on_start(self.workflow)
-            if await self.state.confirm_dialog():
-                self.result = _RESULT_CONFIRM
-            else:
-                self.result = _RESULT_DECLINE
+            try:
+                if await self.state.confirm_dialog():
+                    self.result = _RESULT_CONFIRM
+                else:
+                    self.result = _RESULT_DECLINE
+            finally:
+                if self.keepalive is not None:
+                    loop.close(self.keepalive)
+
+                if self.result == _RESULT_CONFIRM:
+                    await self.state.on_confirm()
+                elif self.result == _RESULT_CANCEL:
+                    await self.state.on_cancel()
+                elif self.result == _RESULT_TIMEOUT:
+                    await self.state.on_timeout()
+                else:
+                    await self.state.on_decline()
         finally:
-            if self.keepalive is not None:
-                loop.close(self.keepalive)
-
-            if self.result == _RESULT_CONFIRM:
-                await self.state.on_confirm()
-            elif self.result == _RESULT_CANCEL:
-                await self.state.on_cancel()
-            elif self.result == _RESULT_TIMEOUT:
-                await self.state.on_timeout()
-            else:
-                await self.state.on_decline()
-
             workflow.on_close(self.workflow)
             self.workflow = None
 
@@ -1009,8 +1052,7 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     elif req.cmd == _CMD_WINK:
         if __debug__:
             log.debug(__name__, "_CMD_WINK")
-        loop.schedule(ui.alert())
-        return req
+        return cmd_wink(req)
     elif req.cmd == _CMD_CBOR and _ALLOW_FIDO2:
         if not req.data:
             return cmd_error(req.cid, _ERR_INVALID_LEN)
@@ -1074,6 +1116,14 @@ def cmd_init(req: Cmd) -> Cmd:
     return Cmd(req.cid, req.cmd, buf)
 
 
+def cmd_wink(req: Cmd) -> Cmd:
+    global _last_wink_cid
+    if _last_wink_cid != req.cid:
+        _last_wink_cid = req.cid
+        ui.alert()
+    return req
+
+
 def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     if not storage.is_initialized():
         if __debug__:
@@ -1100,10 +1150,17 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     dialog_mgr.reset_timeout()
 
     # wait for a button or continue
-    if dialog_mgr.result != _RESULT_CONFIRM:
+    if dialog_mgr.result == _RESULT_NONE:
         if __debug__:
             log.info(__name__, "waiting for button")
         return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
+
+    if dialog_mgr.result != _RESULT_CONFIRM:
+        if __debug__:
+            log.info(__name__, "request declined")
+        # There is no standard way to decline a U2F request, but responding with ERR_CHANNEL_BUSY
+        # doesn't seem to violate the protocol and at least stops Chrome from polling.
+        return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
 
     # sign the registration challenge and return
     if __debug__:
@@ -1161,8 +1218,9 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     khlen = req.data[_REQ_CMD_AUTHENTICATE_KHLEN]
     auth = overlay_struct(req.data, req_cmd_authenticate(khlen))
 
-    cred = Credential.from_bytes(auth.keyHandle, bytes(auth.appId))
-    if cred is None:
+    try:
+        cred = Credential.from_bytes(auth.keyHandle, bytes(auth.appId))
+    except Exception:
         # specific error logged in msg_authenticate_genkey
         return msg_error(req.cid, _SW_WRONG_DATA)
 
@@ -1170,6 +1228,8 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     if req.p1 == _AUTH_CHECK_ONLY:
         if __debug__:
             log.info(__name__, "_AUTH_CHECK_ONLY")
+        global _last_good_auth_check_cid
+        _last_good_auth_check_cid = req.cid
         return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
 
     # from now on, only _AUTH_ENFORCE is supported
@@ -1186,10 +1246,17 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     dialog_mgr.reset_timeout()
 
     # wait for a button or continue
-    if dialog_mgr.result != _RESULT_CONFIRM:
+    if dialog_mgr.result == _RESULT_NONE:
         if __debug__:
             log.info(__name__, "waiting for button")
         return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
+
+    if dialog_mgr.result != _RESULT_CONFIRM:
+        if __debug__:
+            log.info(__name__, "request declined")
+        # There is no standard way to decline a U2F request, but responding with ERR_CHANNEL_BUSY
+        # doesn't seem to violate the protocol and at least stops Chrome from polling.
+        return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
 
     # sign the authentication challenge and return
     if __debug__:
@@ -1263,9 +1330,11 @@ def credentials_from_descriptor_list(
         credential_id = credential_descriptor["id"]
         if not isinstance(credential_id, (bytes, bytearray)):
             raise TypeError
-        cred = Credential.from_bytes(credential_id, rp_id_hash)
-        if cred is not None:
+        try:
+            cred = Credential.from_bytes(credential_id, rp_id_hash)
             cred_list.append(cred)
+        except Exception:
+            pass
 
     return cred_list
 
@@ -1287,7 +1356,7 @@ def algorithms_from_pub_key_cred_params(pub_key_cred_params: List[dict]) -> List
 
 
 def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
-    from apps.webauthn.knownapps import knownapps
+    from apps.webauthn import knownapps
 
     if not storage.is_initialized():
         if __debug__:
@@ -1345,7 +1414,11 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
-    cred.use_sign_count = knownapps.get(rp_id_hash, {}).get("use_sign_count", True)
+    app = knownapps.by_rp_id_hash(rp_id_hash)
+    if app is not None and app.use_sign_count is not None:
+        cred.use_sign_count = app.use_sign_count
+    else:
+        cred.use_sign_count = True
 
     # Check data types.
     if (
@@ -1369,7 +1442,9 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         # User verification requested, but PIN is not enabled.
         state_set = dialog_mgr.set_state(Fido2ConfirmNoPin(req.cid, dialog_mgr.iface))
         if state_set:
-            return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
+            # We should return _ERR_UNSUPPORTED_OPTION, but since we claim in GetInfo that the PIN
+            # is set even when it's not, it makes more sense to return _ERR_OPERATION_DENIED.
+            return cbor_error(req.cid, _ERR_OPERATION_DENIED)
         else:
             return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
 
@@ -1481,7 +1556,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         else:
             # Allow list is empty. Get resident credentials.
             if _ALLOW_RESIDENT_CREDENTIALS:
-                cred_list = get_resident_credentials(rp_id_hash)
+                cred_list = list(find_by_rp_id_hash(rp_id_hash))
             else:
                 cred_list = []
             resident = True
@@ -1526,7 +1601,9 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         # User verification requested, but PIN is not enabled.
         state_set = dialog_mgr.set_state(Fido2ConfirmNoPin(req.cid, dialog_mgr.iface))
         if state_set:
-            return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
+            # We should return _ERR_UNSUPPORTED_OPTION, but since we claim in GetInfo that the PIN
+            # is set even when it's not, it makes more sense to return _ERR_OPERATION_DENIED.
+            return cbor_error(req.cid, _ERR_OPERATION_DENIED)
         else:
             return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
 
@@ -1684,6 +1761,8 @@ def cbor_get_assertion_sign(
 
 
 def cbor_get_info(req: Cmd) -> Cmd:
+    # Note: We claim that the PIN is set even when it's not, because otherwise
+    # login.live.com shows an error, but doesn't instruct the user to set a PIN.
     response_data = {
         _GETINFO_RESP_VERSIONS: ["U2F_V2", "FIDO_2_0"],
         _GETINFO_RESP_EXTENSIONS: ["hmac-secret"],

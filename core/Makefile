@@ -129,6 +129,7 @@ build_cross: ## build mpy-cross port
 ## clean commands:
 
 clean: clean_boardloader clean_bootloader clean_prodtest clean_firmware clean_unix clean_cross ## clean all
+	rm -f ".sconsign.dblite"
 
 clean_boardloader: ## clean boardloader build
 	rm -rf $(BOARDLOADER_BUILD_DIR)

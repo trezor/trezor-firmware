@@ -28,13 +28,13 @@
       }
     ]
   ],
+  "isSecondFactorOnly": false,
   "keyProtection": 2,
   "matcherProtection": 4,
   "cryptoStrength": 128,
   "attachmentHint": 6,
-  "isSecondFactorOnly": false,
   "tcDisplay": 9,
-  "tcDisplayContentType": "image/png",
+  "tcDisplayContentType": "text/plain",
   "tcDisplayPNGCharacteristics": [
     {
       "bitDepth": 16,

@@ -134,6 +134,9 @@ class DummyContext:
         return await loop.race(*tasks)
 
 
+DUMMY_CONTEXT = DummyContext()
+
+
 class Context:
     def __init__(self, iface: WireInterface, sid: int) -> None:
         self.iface = iface

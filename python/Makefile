@@ -26,9 +26,13 @@ build:
 install:
 	$(SETUP) install
 
-dist: clean
+dist: clean doc
 	$(SETUP) sdist
 	$(SETUP) bdist_wheel
+
+doc:
+	$(PYTHON) helper-scripts/linkify-changelog.py
+	$(PYTHON) helper-scripts/make-options-rst.py
 
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
@@ -58,6 +62,7 @@ style:
 	black $(STYLE_TARGETS)
 	isort --apply --recursive $(STYLE_TARGETS) --skip-glob "$(EXCLUDE_TARGETS)/*"
 	autoflake -i --remove-all-unused-imports -r $(STYLE_TARGETS) --exclude "$(EXCLUDE_TARGETS)"
+	flake8
 
 style_check:
 	black --check $(STYLE_TARGETS)

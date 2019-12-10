@@ -6,6 +6,7 @@
   "github": "https://github.com/BTCGPU/BTCGPU",
   "maintainer": "Saleem Rashid <trezor@saleemrashid.com>",
   "curve_name": "secp256k1",
+  "decimals": 8,
   "address_type": 38,
   "address_type_p2sh": 23,
   "maxfee_kb": 500000,

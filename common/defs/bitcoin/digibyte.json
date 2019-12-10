@@ -6,6 +6,7 @@
   "github": "https://github.com/digibyte/digibyte",
   "maintainer": "DigiByte <dev@digibyte.co>",
   "curve_name": "secp256k1",
+  "decimals": 8,
   "address_type": 30,
   "address_type_p2sh": 63,
   "maxfee_kb": 500000,

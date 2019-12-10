@@ -1,8 +1,11 @@
 Version 1.x.x [not yet released]
-* nothing yet
+* Disallow changing of settings via dry-run recovery
+* Wipe code
+* Make LoadDevice debug only and drop its XPRV feature
+* Add feature to retrieve the next U2F counter
 
 Version 1.8.3 [Sep 2019]
-* Introduce Bitcoin-only firmware
+* Small code improvements
 
 Version 1.8.2 [Aug 2019]
 * OLED display security improvements

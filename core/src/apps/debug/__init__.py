@@ -4,14 +4,12 @@ if not __debug__:
     halt("debug mode inactive")
 
 if __debug__:
-    from trezor import config, io, log, loop, ui, utils
+    from trezor import config, io, log, loop, ui, utils, wire
     from trezor.messages import MessageType, DebugSwipeDirection
     from trezor.messages.DebugLinkLayout import DebugLinkLayout
-    from trezor.wire import register
 
     if False:
         from typing import List, Optional
-        from trezor import wire
         from trezor.messages.DebugLinkDecision import DebugLinkDecision
         from trezor.messages.DebugLinkGetState import DebugLinkGetState
         from trezor.messages.DebugLinkState import DebugLinkState
@@ -86,8 +84,8 @@ if __debug__:
         ctx: wire.Context, msg: DebugLinkGetState
     ) -> DebugLinkState:
         from trezor.messages.DebugLinkState import DebugLinkState
+        from storage.device import has_passphrase
         from apps.common import mnemonic
-        from apps.common.storage.device import has_passphrase
 
         m = DebugLinkState()
         m.mnemonic_secret = mnemonic.get_secret()
@@ -111,5 +109,7 @@ if __debug__:
         if not utils.EMULATOR:
             config.wipe()
 
-        register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)
-        register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)
+        wire.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)
+        wire.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)
+
+        wire.add(MessageType.LoadDevice, __name__, "load_device")

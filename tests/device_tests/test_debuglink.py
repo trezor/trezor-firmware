@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import debuglink, messages
+from trezorlib import messages
 
 from ..common import MNEMONIC12
 
@@ -27,18 +27,8 @@ class TestDebuglink:
         layout = client.debug.state().layout
         assert len(layout) == 1024
 
-    # mnemonic_secret is not available when the device is locked, and the client fixture
-    # locks the device after initialization.
-    # It is easier to request an unintialized client and load it manually.
-    @pytest.mark.setup_client(uninitialized=True)
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_mnemonic(self, client):
-        debuglink.load_device_by_mnemonic(
-            client,
-            mnemonic=MNEMONIC12,
-            pin="",
-            passphrase_protection=False,
-            label="test",
-        )
         mnemonic = client.debug.state().mnemonic_secret
         assert mnemonic == MNEMONIC12.encode()
 

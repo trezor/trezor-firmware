@@ -23,7 +23,7 @@ async def require_confirm_transfer(ctx, msg: BinanceTransferMsg):
         for coin in msg.coins:
             coin_page = Text("Confirm " + direction, ui.ICON_SEND, icon_color=ui.GREEN)
             coin_page.bold(
-                format_amount(coin.amount, helpers.DIVISIBILITY) + " " + coin.denom
+                format_amount(coin.amount, helpers.DECIMALS) + " " + coin.denom
             )
             coin_page.normal("to")
             coin_page.mono(*split_address(msg.address))
@@ -73,9 +73,9 @@ async def require_confirm_order(ctx, msg: BinanceOrderMsg):
 
     page3 = Text("Confirm order 3/3", ui.ICON_SEND, icon_color=ui.GREEN)
     page3.normal("Quantity:")
-    page3.bold(format_amount(msg.quantity, helpers.DIVISIBILITY))
+    page3.bold(format_amount(msg.quantity, helpers.DECIMALS))
     page3.normal("Price:")
-    page3.bold(format_amount(msg.price, helpers.DIVISIBILITY))
+    page3.bold(format_amount(msg.price, helpers.DECIMALS))
 
     return await hold_to_confirm(
         ctx, Paginated([page1, page2, page3]), ButtonRequestType.SignTx

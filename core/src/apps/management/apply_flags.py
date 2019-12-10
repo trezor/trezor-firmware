@@ -1,6 +1,5 @@
+from storage.device import set_flags
 from trezor.messages.Success import Success
-
-from apps.common.storage.device import set_flags
 
 
 async def apply_flags(ctx, msg):

@@ -1,4 +1,4 @@
-from trezor import loop, utils, wire
+from trezor import loop, wire
 from trezor.messages import MessageType
 
 from apps.webauthn.fido2 import handle_reports
@@ -18,7 +18,6 @@ def boot() -> None:
         __name__,
         "remove_resident_credential",
     )
-    if not __debug__ or utils.EMULATOR:
-        import usb
+    import usb
 
-        loop.schedule(handle_reports(usb.iface_webauthn))
+    loop.schedule(handle_reports(usb.iface_webauthn))

@@ -6,6 +6,7 @@
   "github": "https://github.com/decred/dcrd",
   "maintainer": "Alex Yocom-Piatt <ay-p@decred.org>",
   "curve_name": "secp256k1_decred",
+  "decimals": 8,
   "address_type": 1855,
   "address_type_p2sh": 1818,
   "maxfee_kb": 1000000,

@@ -82,6 +82,10 @@ void fsm_msgGetFeatures(const GetFeatures *msg) {
   resp->has_flags = config_getFlags(&(resp->flags));
   resp->has_model = true;
   strlcpy(resp->model, "1", sizeof(resp->model));
+  if (session_isUnlocked()) {
+    resp->has_wipe_code_protection = true;
+    resp->wipe_code_protection = config_hasWipeCode();
+  }
 
 #if BITCOIN_ONLY
   resp->capabilities_count = 2;
@@ -176,6 +180,52 @@ void fsm_msgChangePin(const ChangePin *msg) {
   layoutHome();
 }
 
+void fsm_msgChangeWipeCode(const ChangeWipeCode *msg) {
+  CHECK_INITIALIZED
+
+  bool removal = msg->has_remove && msg->remove;
+  bool has_wipe_code = config_hasWipeCode();
+
+  if (removal) {
+    // Note that if storage is locked, then config_hasWipeCode() returns false.
+    if (has_wipe_code || !session_isUnlocked()) {
+      layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                        _("Do you really want to"), _("disable wipe code"),
+                        _("protection?"), NULL, NULL, NULL);
+    } else {
+      fsm_sendSuccess(_("Wipe code removed"));
+      return;
+    }
+  } else {
+    if (has_wipe_code) {
+      layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                        _("Do you really want to"), _("change the current"),
+                        _("wipe code?"), NULL, NULL, NULL);
+    } else {
+      layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                        _("Do you really want to"), _("set a new wipe code?"),
+                        NULL, NULL, NULL, NULL);
+    }
+  }
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+
+  if (protectChangeWipeCode(removal)) {
+    if (removal) {
+      fsm_sendSuccess(_("Wipe code removed"));
+    } else if (has_wipe_code) {
+      fsm_sendSuccess(_("Wipe code changed"));
+    } else {
+      fsm_sendSuccess(_("Wipe code set"));
+    }
+  }
+
+  layoutHome();
+}
+
 void fsm_msgWipeDevice(const WipeDevice *msg) {
   (void)msg;
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
@@ -216,6 +266,8 @@ void fsm_msgGetEntropy(const GetEntropy *msg) {
   layoutHome();
 }
 
+#if DEBUG_LINK
+
 void fsm_msgLoadDevice(const LoadDevice *msg) {
   CHECK_PIN
 
@@ -244,6 +296,8 @@ void fsm_msgLoadDevice(const LoadDevice *msg) {
   fsm_sendSuccess(_("Device loaded"));
   layoutHome();
 }
+
+#endif
 
 void fsm_msgResetDevice(const ResetDevice *msg) {
   CHECK_PIN
@@ -399,6 +453,12 @@ void fsm_msgRecoveryDevice(const RecoveryDevice *msg) {
   const bool dry_run = msg->has_dry_run ? msg->dry_run : false;
   if (!dry_run) {
     CHECK_NOT_INITIALIZED
+  } else {
+    CHECK_INITIALIZED
+    CHECK_PARAM(!msg->has_passphrase_protection && !msg->has_pin_protection &&
+                    !msg->has_language && !msg->has_label &&
+                    !msg->has_u2f_counter,
+                _("Forbidden field set in dry-run"))
   }
 
   CHECK_PARAM(!msg->has_word_count || msg->word_count == 12 ||
@@ -428,5 +488,23 @@ void fsm_msgSetU2FCounter(const SetU2FCounter *msg) {
   }
   config_setU2FCounter(msg->u2f_counter);
   fsm_sendSuccess(_("U2F counter set"));
+  layoutHome();
+}
+
+void fsm_msgGetNextU2FCounter() {
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    _("Do you want to"), _("increase and retrieve"),
+                    _("the U2F counter?"), NULL, NULL, NULL);
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+  uint32_t counter = config_nextU2FCounter();
+
+  RESP_INIT(NextU2FCounter);
+  resp->has_u2f_counter = true;
+  resp->u2f_counter = counter;
+  msg_write(MessageType_MessageType_NextU2FCounter, resp);
   layoutHome();
 }

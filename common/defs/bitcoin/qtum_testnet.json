@@ -6,6 +6,7 @@
   "github": "https://github.com/qtumproject/qtum",
   "maintainer": "CodeFace <codeface@qtum.info>",
   "curve_name": "secp256k1",
+  "decimals": 8,
   "address_type": 120,
   "address_type_p2sh": 110,
   "maxfee_kb": 40000000,

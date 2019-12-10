@@ -2,6 +2,12 @@ Version 2.x.x [not yet released]
 * SD card protection
 * Remove unused ButtonRequest.data field
 * Rework Recovery persistence internally
+* Disallow changing of settings via dry-run recovery
+* Add feature to retrieve the next U2F counter
+* Fix continuous display blinking with Android in U2F
+* U2F UX improvements
+* Wipe code
+* Add screen for time bounds in Stellar
 
 Version 2.1.8 [Nov 2019]
 * Support Tezos 005-BABYLON hardfork
@@ -19,7 +25,6 @@ Version 2.1.6 [Oct 2019]
 * BackupType in Features
 
 Version 2.1.5 [Sep 2019]
-* Introduce Bitcoin-only firmware
 * Fix for sluggish U2F authentication when using Shamir
 * Fix UI for Shamir with 33 words
 * Fix Wanchain signing

@@ -1,8 +1,11 @@
-from trezor import log, ui
+from trezor import ui
 from trezor.ui.text import text_center_trim_left, text_center_trim_right
 
 if False:
     from typing import Optional
+
+
+DEFAULT_ICON = "apps/webauthn/res/icon_webauthn.toif"
 
 
 class ConfirmInfo:
@@ -20,16 +23,13 @@ class ConfirmInfo:
 
     def load_icon(self, rp_id_hash: bytes) -> None:
         from trezor import res
-        from apps.webauthn.knownapps import knownapps
+        from apps.webauthn import knownapps
 
-        try:
-            namepart = knownapps[rp_id_hash]["label"].lower().replace(" ", "_")
-            icon = res.load("apps/webauthn/res/icon_%s.toif" % namepart)
-        except Exception as e:
-            icon = res.load("apps/webauthn/res/icon_webauthn.toif")
-            if __debug__:
-                log.exception(__name__, e)
-        self.app_icon = icon
+        fido_app = knownapps.by_rp_id_hash(rp_id_hash)
+        if fido_app is not None and fido_app.icon is not None:
+            self.app_icon = res.load(fido_app.icon)
+        else:
+            self.app_icon = res.load(DEFAULT_ICON)
 
 
 class ConfirmContent(ui.Component):
