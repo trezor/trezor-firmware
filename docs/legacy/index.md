@@ -1,41 +1,86 @@
 # Trezor One Bootloader and Firmware
 
-**TODO: this is currently outdated, see [#658](https://github.com/trezor/trezor-firmware/issues/658).** 
-
-[![Build Status](https://travis-ci.org/trezor/trezor-mcu.svg?branch=master)](https://travis-ci.org/trezor/trezor-mcu) [![gitter](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
-
-## How to build the Trezor bootloader, firmware and emulator
+## Building with Docker
 
 Ensure that you have Docker installed. You can follow [Docker's installation instructions](https://docs.docker.com/engine/installation/).
 
-Clone this repository:
+Clone this repository, then use `build-docker.sh` to build all images:
 ```sh
-git clone https://github.com/trezor/trezor-mcu.git`
-cd trezor-mcu
+git clone https://github.com/trezor/trezor-firmware.git`
+cd trezor-firmware
+./build-docker.sh
 ```
 
-Use the `build.sh` command to build the images.
+When the build is done, you will find the current firmware in `build/legacy/firmware/trezor.bin`.
 
-* to build bootloader 1.6.0 and firmware 1.7.0:
+### Running with sudo
+
+It is possible to run `build-docker.sh` if either your Docker is configured in rootless mode,
+or if your user is a member of the `docker` group; see [Docker documentation](https://docs.docker.com/install/linux/linux-postinstall/)
+for details.
+
+If you don't satisfy the above conditions, and run `sudo ./build-docker.sh`, you might receive a `Permission denied`
+error. To work around it, make sure that the directory hierarchy in `build/` directory
+is world-writable - e.g., by running `chmod -R a+w build/`.
+
+## Building older versions
+
+For firmware versions **1.8.1** and newer, you can checkout the respective tag locally.
+To build firmware 1.8.2, for example, run `git checkout legacy/v1.8.2` and then use
+the instructions below.
+
+Note that the unified Docker build was added after version 1.8.3, so it is not available
+for older versions.
+
+For firmwares older than 1.8.1, please clone the archived [trezor-mcu](https://github.com/trezor/trezor-mcu) repository and follow the instructions in its README.
+
+## Local development build
+
+Make sure you have Python 3.6 or later and [pipenv](https://pipenv.readthedocs.io/en/latest/install/)
+installed.
+
+If you want to build device firmware, also make sure that you have the [GNU ARM Embedded toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) installed.
+See [Dockerfile](../../ci/Dockerfile#L72-L76) for up-to-date version of the toolchain.
+
+The build process is configured via environment variables:
+
+* `EMULATOR=1` specifies that an emulator should be built, instead of the device firmware.
+* `DEBUG_LINK=1` specifies that DebugLink should be available in the built image.
+* `MEMORY_PROTECT=0` disables memory protection. This is necessary for installing unofficial firmware.
+* `DEBUG_LOG=1` enables debug messages to be printed on device screen.
+* `BITCOIN_ONLY=1` specifies Bitcoin-only version of the firmware.
+
+To run the build process, execute the following commands:
+
+```sh
+# enter the legacy subdirectory
+cd legacy
+# set up pipenv
+pipenv sync
+# set up environment variables. For example, to build emulator with debuglink:
+export EMULATOR=1 DEBUG_LINK=1
+# clear build artifacts
+pipenv run ./script/setup
+# run build process
+pipenv run ./script/cibuild
+```
+
+A built device firmware will be located in `legacy/firmware/trezor.bin`. A built emulator will be
+located in `legacy/firmware/trezor.elf`.
+
+### Common errors
+
+* **"Exception: bootloader has to be smaller than 32736 bytes"**: if you didn't modify the bootloader
+  source code, simply make sure you always run `./script/setup` before runnning `./script/cibuild`
+
+* **"error adding symbols: File in wrong format"**: This happens when building emulator after building
+  the firmware, or vice-versa. Execute the following command to fix the problem:
   ```sh
-  ./build.sh bl1.6.0 v1.7.0
-  ```
-* to build latest firmware from master:
-  ```sh
-  ./build.sh
-  ```
-* to build the emulator from master:
-  ```sh
-  ./build.sh EMU
-  ```
-* to build the emulator for version 1.7.0:
-  ```sh
-  ./build.sh EMU v1.7.0
+  find -L vendor -name "*.o" -delete
   ```
 
-Build results are stored in the `build/` directory. File `bootloader-<tag>.bin` represents
-the bootloader, `trezor-<tag>.bin` is the firmware image, and `trezor-emulator-<tag>.elf`
-is the emulator executable.
+You can launch the emulator using `./firmware/trezor.elf`. To use `trezorctl` with the emulator, use
+`trezorctl -p udp` (for example, `trezorctl -p udp get_features`).
 
 You can use `TREZOR_OLED_SCALE` environment variable to make emulator screen bigger.
 
@@ -43,34 +88,18 @@ You can use `TREZOR_OLED_SCALE` environment variable to make emulator screen big
 
 1. Pick version of firmware binary listed on https://wallet.trezor.io/data/firmware/1/releases.json
 2. Download it: `wget -O trezor.signed.bin https://wallet.trezor.io/data/firmware/1/trezor-1.6.1.bin`
-3. Compute fingerprint: `tail -c +257 trezor.signed.bin | sha256sum`
+3. Use `trezorctl` dry-run mode to get the firmware fingerprint:
+   ```sh
+   trezorctl firmware-update -n -f trezor.signed.bin
+   ```
 
-Step 3 should produce the same sha256 fingerprint like your local build (for the same version tag). Firmware has a special header (of length 256 bytes) holding signatures themselves, which must be avoided while calculating the fingerprint, that's why tail command has to be used.
+Step 3 should produce the same fingerprint like your local build (for the same version tag).
 
 ## How to install custom built firmware?
 
 **WARNING: This will erase the recovery seed stored on the device! You should never do this on Trezor that contains coins!**
 
-1. Install python-trezor: `pip install trezor` ([more info](https://github.com/trezor/python-trezor))
-2. `trezorctl firmware_update -f build/trezor-TAG.bin`
-
-*Note: if your device is on the latest bootloader version and you flash custom firmware then you will receive a hard fault warning when booting the firmware image. To avoid this issue, just remove the code in startup.s added by [this commit](https://github.com/trezor/trezor-firmware/commit/222c9ea46c7574cb52d4713c481438a32b85e692#diff-178d0ab7c4debbcf430a0fad8fa06a5c).*
-
-## Building for development
-
-If you want to build device firmware, make sure you have the
-[GNU ARM Embedded toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) installed.
-You will also need Python 3.5 or later and [pipenv](https://pipenv.readthedocs.io/en/latest/install/).
-
-* If you want to build the emulator instead of the firmware, run `export EMULATOR=1`
-* If you want to build with the debug link, run `export DEBUG_LINK=1`. Use this if you want to run the device tests.
-* When you change these variables, use `script/setup` to clean the repository
-
-1. To initialize the repository, run `script/setup`
-2. To initialize a Python environment, run `pipenv install`
-3. To build the firmware or emulator, run `pipenv run script/cibuild`
-
-If you are building device firmware, the firmware will be in `firmware/trezor.bin`.
-
-You can launch the emulator using `firmware/trezor.elf`. To use `trezorctl` with the emulator, use
-`trezorctl -p udp` (for example, `trezorctl -p udp get_features`).
+Switch your device to bootloader mode, then execute:
+```sh
+trezorctl firmware-update -f build/legacy/firmware/trezor.bin
+```
