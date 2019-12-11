@@ -62,11 +62,12 @@ message ButtonRequest {
         ButtonRequest_PublicKey = 11;
         ButtonRequest_MnemonicWordCount = 12;
         ButtonRequest_MnemonicInput = 13;
-        ButtonRequest_PassphraseType = 14;
+//        ButtonRequest_PassphraseType = 14;  DEPRECATED
         ButtonRequest_UnknownDerivationPath = 15;
         ButtonRequest_RecoveryHomepage = 16;
         ButtonRequest_Success = 17;
         ButtonRequest_Warning = 18;
+        ButtonRequest_PassphraseEntry = 19;
     }
 }
 
