@@ -477,7 +477,16 @@ def check_segwit(coins):
 
 
 FIDO_KNOWN_KEYS = frozenset(
-    ("key", "u2f", "webauthn", "label", "use_sign_count", "no_icon", "icon")
+    (
+        "key",
+        "u2f",
+        "webauthn",
+        "label",
+        "use_sign_count",
+        "use_self_attestation",
+        "no_icon",
+        "icon",
+    )
 )
 
 
