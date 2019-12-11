@@ -10,16 +10,19 @@ if not utils.BITCOIN_ONLY:
         NEM2_NAMESPACE_REGISTRATION_TYPE_ROOT,
         NEM2_NAMESPACE_REGISTRATION_TYPE_SUB,
         NEM2_ALIAS_ACTION_TYPE_LINK,
-        NEM2_ALIAS_ACTION_TYPE_UNLINK
+        NEM2_ALIAS_ACTION_TYPE_UNLINK,
+        NEM2_TRANSACTION_TYPE_MOSAIC_ALIAS
     )
     from apps.nem2.namespace.serialize import (
         serialize_namespace_registration,
-        serialize_address_alias
+        serialize_address_alias,
+        serialize_mosaic_alias
     )
     from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
     from trezor.messages.NEM2Address import NEM2Address
     from trezor.messages.NEM2NamespaceRegistrationTransaction import NEM2NamespaceRegistrationTransaction
     from trezor.messages.NEM2AddressAliasTransaction import NEM2AddressAliasTransaction
+    from trezor.messages.NEM2MosaicAliasTransaction import NEM2MosaicAliasTransaction
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -112,6 +115,25 @@ class TestNem2NamespaceRegistration(unittest.TestCase):
         t = serialize_address_alias(transaction, address_alias)
 
         self.assertEqual(t, unhexlify('A2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001984E42204E000000000000090A1E5E1A00000067CBDB6208CBA4EA98FE546AAAFE62278E34423DABAFBEFD7FA43DDD106EF6685B00'))
+
+    def test_create_mosaic_alias(self):
+
+        transaction=NEM2TransactionCommon(
+            network_type=NEM2_NETWORK_TEST_NET,
+            type=NEM2_TRANSACTION_TYPE_MOSAIC_ALIAS,
+            version=38913,
+            max_fee="20000",
+            deadline="113248176649"
+        )
+
+        mosaic_alias=NEM2MosaicAliasTransaction(
+            alias_action=NEM2_ALIAS_ACTION_TYPE_LINK,
+            namespace_id="EAA4CB0862DBCB67",
+            mosaic_id="32503CBAF145209D",
+        )
+
+        t = serialize_mosaic_alias(transaction, mosaic_alias)
+        self.assertEqual(t, unhexlify('91000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001984E43204E000000000000090A1E5E1A00000067CBDB6208CBA4EA9D2045F1BA3C503201'))
 
 if __name__ == '__main__':
     unittest.main()

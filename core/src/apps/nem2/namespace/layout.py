@@ -97,6 +97,13 @@ async def ask_address_alias(
     if not embedded:
         await require_confirm_final(ctx, common.max_fee)
 
+async def ask_mosaic_alias(
+    ctx, common: NEM2TransactionCommon, creation: NEM2MosaicAliasTransaction
+):
+    await require_confirm_properties(ctx, creation)
+    if not embedded:
+        await require_confirm_final(ctx, common.max_fee)
+
 async def require_confirm_properties(ctx, creation: NEM2MosaicAliasTransaction):
     properties = []
 
@@ -116,11 +123,9 @@ async def require_confirm_properties(ctx, creation: NEM2MosaicAliasTransaction):
         t.normal(creation.namespace_id)
         properties.append(t)
     # Alias Action
-    if creation.alias_action:
-        if creation.alias_action:
-            alias_text = "Link"
-        else:
-            alias_text = "Unlink"
+    if (creation.alias_action == NEM2_ALIAS_ACTION_TYPE_LINK or
+        creation.alias_action == NEM2_ALIAS_ACTION_TYPE_UNLINK):
+        alias_text = "Link" if creation.alias_action else "Unlink"
         t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
         t.bold("Alias Action:")
         t.br()
