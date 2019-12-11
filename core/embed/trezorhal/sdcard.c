@@ -298,7 +298,7 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
   err =
       HAL_SD_ReadBlocks_DMA(&sd_handle, (uint8_t *)dest, block_num, num_blocks);
   if (err == HAL_OK) {
-    err = sdcard_wait_finished(&sd_handle, 60000);
+    err = sdcard_wait_finished(&sd_handle, 5000);
   }
 
   dma_deinit(&SDMMC_DMA);
@@ -342,7 +342,7 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
   err =
       HAL_SD_WriteBlocks_DMA(&sd_handle, (uint8_t *)src, block_num, num_blocks);
   if (err == HAL_OK) {
-    err = sdcard_wait_finished(&sd_handle, 60000);
+    err = sdcard_wait_finished(&sd_handle, 5000);
   }
 
   dma_deinit(&SDMMC_DMA);
