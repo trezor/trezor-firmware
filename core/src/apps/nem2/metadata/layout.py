@@ -7,6 +7,7 @@ from trezor.messages import (
 )
 from trezor.ui.text import Text
 from trezor.utils import format_amount
+from trezor.ui.scroll import Paginated
 from ubinascii import unhexlify
 
 from ..layout import require_confirm_final, require_confirm_text
@@ -15,26 +16,36 @@ from apps.common.confirm import require_confirm
 from apps.common.layout import split_address
 
 async def ask_namespace_metadata(
-    ctx, common: NEM2TransactionCommon, namespace_metadata: NEM2NamespaceMetadataTransaction
+    ctx,
+    common: NEM2TransactionCommon,
+    namespace_metadata: NEM2NamespaceMetadataTransaction,
+    embedded=False
 ):
 
+
+    properties = []
     # confirm target public key
-    msg = Text("Namespace Metadata")
-    msg.normal("Target Public Key:")
-    msg.mono(*split_address(namespace_metadata.target_public_key.upper()))
-    await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
+    t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
+    t.bold("Target Public Key:")
+    t.mono(*split_address(namespace_metadata.target_public_key.upper()))
+    properties.append(t)
 
     # confirm namespace id and metadata key
-    msg = Text("Namespace Metadata")
-    msg.normal("Namespace Id:")
-    msg.bold(namespace_metadata.target_namespace_id.upper())
-    msg.normal("Metadata Key:")
-    msg.bold(namespace_metadata.scoped_metadata_key)
-    await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
-
+    t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
+    t.bold("Namespace Id:")
+    t.normal(namespace_metadata.target_namespace_id.upper())
+    t.bold("Metadata Key:")
+    t.normal(namespace_metadata.scoped_metadata_key)
+    properties.append(t)
 
     # confirm new value
-    msg = Text("Namespace Metadata")
-    msg.normal("Metadata Value:")
-    msg.bold(unhexlify(namespace_metadata.value).decode())
-    await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
+    t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
+    t.bold("Metadata Value:")
+    t.normal(unhexlify(namespace_metadata.value).decode())
+    properties.append(t)
+
+    paginated = Paginated(properties)
+    await require_confirm(ctx, paginated, ButtonRequestType.ConfirmOutput)
+
+    if not embedded:
+        await require_confirm_final(ctx, common.max_fee)

@@ -27,7 +27,7 @@ from apps.common.writers import (
 def serialize_namespace_metadata(
     common: NEM2TransactionCommon,
     namespace_metadata: NEM2NamespaceMetadataTransaction,
-    embedded = False
+    embedded=False
 ) -> bytearray:
     tx = bytearray()
 

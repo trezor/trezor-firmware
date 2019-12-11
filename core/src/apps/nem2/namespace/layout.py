@@ -22,62 +22,80 @@ from apps.common.confirm import require_confirm
 from apps.common.layout import split_address
 
 async def ask_namespace_registration(
-    ctx, common: NEM2TransactionCommon, namespace_registration: NEM2NamespaceRegistrationTransaction, embedded=False
+    ctx,
+    common: NEM2TransactionCommon,
+    namespace_registration: NEM2NamespaceRegistrationTransaction,
+    embedded=False
 ):
 
+    properties = []
     # confirm name and id
-    msg = Text("Register Namespace")
-    msg.normal("Id:")
-    msg.bold(namespace_registration.id.upper())
-    msg.normal("Name:")
-    msg.bold(namespace_registration.namespace_name)
-    await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
+    t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
+    t.bold("Id:")
+    t.br()
+    t.normal(namespace_registration.id.upper())
+    t.bold("Name:")
+    t.br()
+    t.normal(namespace_registration.namespace_name)
+    properties.append(t)
 
     # confirm registration type and either parentId and  and id
-    msg = Text("Register Namespace")
-    msg.normal("Registration Type:")
+    t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
+    t.bold("Registration Type:")
+    t.br()
     if(namespace_registration.registration_type == NEM2_NAMESPACE_REGISTRATION_TYPE_ROOT):
-        msg.bold("Root Namespace")
-        msg.normal("Duration:")
-        msg.bold(namespace_registration.duration)
+        t.normal("Root Namespace")
+        t.bold("Duration:")
+        t.br()
+        t.normal(namespace_registration.duration)
     elif (namespace_registration.registration_type == NEM2_NAMESPACE_REGISTRATION_TYPE_SUB):
-        msg.bold("Sub Namespace")
-        msg.normal("Parent Id:")
-        msg.bold(namespace_registration.parent_id.upper())
-    await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
+        t.normal("Sub Namespace")
+        t.bold("Parent Id:")
+        t.br()
+        t.normal(namespace_registration.parent_id.upper())
+    properties.append(t)
+
+    paginated = Paginated(properties)
+    await require_confirm(ctx, paginated, ButtonRequestType.ConfirmOutput)
 
     if not embedded:
         await require_confirm_final(ctx, common.max_fee)
 
 async def ask_address_alias(
-    ctx, common: NEM2TransactionCommon, address_alias: NEM2NamespaceRegistrationTransaction, embedded=False
+    ctx,
+    common: NEM2TransactionCommon,
+    address_alias: NEM2NamespaceRegistrationTransaction,
+    embedded=False
 ):
 
+    properties = []
     # confirm namespace id
-    msg = Text("Address Alias")
-    msg.normal("Namspace Id:")
-    msg.bold(address_alias.namespace_id.upper())
-    msg.normal("Alias Action:")
+    t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
+    t.bold("Namspace Id:")
+    t.br()
+    t.normal(address_alias.namespace_id.upper())
+    t.bold("Alias Action:")
+    t.br()
     if(address_alias.alias_action == NEM2_ALIAS_ACTION_TYPE_LINK):
-        msg.bold("LINK")
+        t.normal("LINK")
     elif (address_alias.alias_action == NEM2_ALIAS_ACTION_TYPE_UNLINK):
-        msg.bold("UNLINK")
-    await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
+        t.normal("UNLINK")
+
+    properties.append(t)
+    paginated = Paginated(properties)
 
     # confirm address to link/unlink
-    msg = Text("Address Alias", ui.ICON_SEND, ui.GREEN)
-    msg.normal("Address:")
-    msg.mono(*split_address(address_alias.address.address))
-    await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
+    t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
+    t.bold("Address:")
+    t.br()
+    t.mono(*split_address(address_alias.address.address))
+
+    properties.append(t)
+    paginated = Paginated(properties)
+    await require_confirm(ctx, paginated, ButtonRequestType.ConfirmOutput)
 
     if not embedded:
         await require_confirm_final(ctx, common.max_fee)
-
-async def ask_mosaic_alias(
-    ctx, common: NEM2TransactionCommon, creation: NEM2MosaicAliasTransaction
-):
-    await require_confirm_properties(ctx, creation)
-    await require_confirm_final(ctx, common.max_fee)
 
 async def require_confirm_properties(ctx, creation: NEM2MosaicAliasTransaction):
     properties = []
