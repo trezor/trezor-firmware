@@ -28,6 +28,7 @@ TYPE_ADDRESS_ALIAS = 0x424E
 TYPE_MOSAIC_ALIAS = 0x434E
 TYPE_HASH_LOCK = 0x4148
 TYPE_SECRET_LOCK = 0x4152
+TYPE_SECRET_PROOF = 0x4252
 
 NAMESPACE_REGISTRATION_TYPE_ROOT = 0x00
 NAMESPACE_REGISTRATION_TYPE_CHILD = 0x01
@@ -177,6 +178,17 @@ def create_secret_lock(transaction):
     msg.secret = transaction["secret"]
     return msg
 
+def create_secret_proof(transaction):
+    msg = proto.NEM2SecretProofTransaction()
+    msg.recipient_address = proto.NEM2Address(
+        address=transaction["recipientAddress"]["address"],
+        network_type=transaction["recipientAddress"]["networkType"],
+    )
+    msg.proof = transaction["proof"]
+    msg.hash_algorithm = int(transaction["hashType"])
+    msg.secret = transaction["secret"]
+    return msg
+
 def fill_transaction_by_type(msg, transaction):
     if transaction["type"] == TYPE_TRANSACTION_TRANSFER:
         msg.transfer = create_transfer(transaction)
@@ -194,6 +206,8 @@ def fill_transaction_by_type(msg, transaction):
         msg.hash_lock = create_hash_lock(transaction)
     if transaction["type"] == TYPE_SECRET_LOCK:
         msg.secret_lock = create_secret_lock(transaction)
+    if transaction["type"] == TYPE_SECRET_PROOF:
+        msg.secret_proof = create_secret_proof(transaction)
 
 
 def create_sign_tx(transaction):

@@ -69,6 +69,8 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
         tx = await hash_lock.hash_lock(ctx, common, msg.hash_lock)
     elif msg.secret_lock:
         tx = await secret_lock.secret_lock(ctx, common, msg.secret_lock)
+    elif msg.secret_proof:
+        tx = await secret_lock.secret_proof(ctx, common, msg.secret_proof)
     # elif msg.supply_change:
     #     tx = await mosaic.supply_change(ctx, public_key, common, msg.supply_change)
     # elif msg.aggregate_modification:

@@ -48,6 +48,7 @@ message NEM2SignTx {
     optional NEM2MosaicAliasTransaction mosaic_alias = 12; // Mosaic Alias part
     optional NEM2HashLockTransaction hash_lock = 13; // Hash Lock part
     optional NEM2SecretLockTransaction secret_lock = 14; // Secret Lock part
+    optional NEM2SecretProofTransaction secret_proof = 15; // Secret Proof part
 
     /**
     * Common types from
@@ -73,6 +74,7 @@ message NEM2SignTx {
         MOSAIC_ALIAS = 17230;
         HASH_LOCK = 16712;
         SECRET_LOCK = 16722;
+        SECRET_PROOF = 16978;
     }
 
     enum NEM2NetworkType {
@@ -221,6 +223,16 @@ message NEM2SignTx {
     }
 
     /**
+    * Secret Proof transaction type definition
+    */
+    message NEM2SecretProofTransaction {
+        optional string secret = 1;
+        optional NEM2LockHashAlgorithm hash_algorithm = 2 [default=SHA3_256];
+        optional NEM2Address recipient_address = 3;
+        optional string proof = 4;
+    }
+
+    /**
     * Aggregate transaction definition
     * There is no difference between an aggregate completed
     * and aggregate bonded transaction besides the "type"
@@ -245,6 +257,7 @@ message NEM2SignTx {
         optional NEM2MosaicAliasTransaction mosaic_alias = 7;
         optional NEM2HashLockTransaction hash_lock = 8;
         optional NEM2SecretLockTransaction secret_lock = 9;
+        optional NEM2SecretProofTransaction secret_proof = 10;
     }
 
     /**

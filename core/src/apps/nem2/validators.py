@@ -64,6 +64,8 @@ def validate(msg: NEM2SignTx):
         _validate_hash_lock(msg.hash_lock)
     if msg.secret_lock:
         _validate_secret_lock(msg.secret_lock)
+    if msg.secret_proof:
+        _validate_secret_proof(msg.secret_proof)
 
 def _validate_single_tx(msg: NEM2SignTx):
     # ensure exactly one transaction is provided
@@ -77,6 +79,7 @@ def _validate_single_tx(msg: NEM2SignTx):
         + bool(msg.aggregate)
         + bool(msg.hash_lock)
         + bool(msg.secret_lock)
+        + bool(msg.secret_proof)
         # + bool(msg.importance_transfer)
     )
     if tx_count == 0:
@@ -176,6 +179,18 @@ def _validate_secret_lock(secret_lock: NEM2SecretLockTransaction):
         raise ProcessError("No mosaic provided")
     if secret_lock.duration is None:
         raise ProcessError("No duration provided")
+    if secret_lock.hash_algorithm is None:
+        raise ProcessError("No hash algorithm provided")
+    if secret_lock.recipient_address is None:
+        raise ProcessError("No recipient address provided")
+
+    validate_secret(secret_lock.secret, secret_lock.hash_algorithm)
+
+def _validate_secret_proof(secret_lock: NEM2SecretProofTransaction):
+    if secret_lock.secret is None:
+        raise ProcessError("No secret provided")
+    if secret_lock.proof is None:
+        raise ProcessError("No proof provided")
     if secret_lock.hash_algorithm is None:
         raise ProcessError("No hash algorithm provided")
     if secret_lock.recipient_address is None:

@@ -32,11 +32,21 @@ async def ask_secret_lock(
     secret_lock: NEM2SecretLockTransaction,
     embedded=False
 ):
-    await require_confirm_properties(ctx, secret_lock)
+    await require_confirm_properties_lock(ctx, secret_lock)
     if not embedded:
         await require_confirm_final(ctx, common.max_fee)
 
-async def require_confirm_properties(ctx, secret_lock: NEM2SecretLockTransaction):
+async def ask_secret_proof(
+    ctx,
+    common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
+    secret_proof: NEM2SecretProofTransaction,
+    embedded=False
+):
+    await require_confirm_properties_proof(ctx, secret_proof)
+    if not embedded:
+        await require_confirm_final(ctx, common.max_fee)
+
+async def require_confirm_properties_lock(ctx, secret_lock: NEM2SecretLockTransaction):
     properties = []
     # Mosaic
     if secret_lock.mosaic:
@@ -71,6 +81,37 @@ async def require_confirm_properties(ctx, secret_lock: NEM2SecretLockTransaction
         t = Text("Confirm properties", ui.ICON_SEND, new_lines=True, max_lines=10)
         t.bold("Secret:")
         t.mono(*split_address(secret_lock.secret))
+        properties.append(t)
+
+    paginated = Paginated(properties)
+    await require_confirm(ctx, paginated, ButtonRequestType.ConfirmOutput)
+
+async def require_confirm_properties_proof(ctx, secret_proof: NEM2SecretProofTransaction):
+    properties = []
+    # Recipient address
+    if secret_proof.recipient_address:
+        t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
+        t.bold("Recipient address:")
+        t.mono(*split_address(secret_proof.recipient_address.address))
+        properties.append(t)
+    # Hash Algorithm
+    if secret_proof.hash_algorithm in enum_to_friendly_text:
+        friendly_text = enum_to_friendly_text[secret_proof.hash_algorithm]
+        t = Text("Confirm properties", ui.ICON_SEND, new_lines=True, max_lines=10)
+        t.bold("Hash algorithm used:")
+        t.normal('{} ({})'.format(friendly_text, secret_proof.hash_algorithm))
+        properties.append(t)
+    # Secret
+    if secret_proof.secret:
+        t = Text("Confirm properties", ui.ICON_SEND, new_lines=True, max_lines=10)
+        t.bold("Secret:")
+        t.mono(*split_address(secret_proof.secret))
+        properties.append(t)
+    # Proof
+    if secret_proof.secret:
+        t = Text("Confirm properties", ui.ICON_SEND, new_lines=True, max_lines=10)
+        t.bold("Proof:")
+        t.mono(*split_address(secret_proof.proof))
         properties.append(t)
 
     paginated = Paginated(properties)
