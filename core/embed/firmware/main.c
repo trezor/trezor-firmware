@@ -109,7 +109,32 @@ int main(void) {
 // MicroPython default exception handler
 
 void __attribute__((noreturn)) nlr_jump_fail(void *val) {
-  ensure(secfalse, "uncaught exception");
+  error_shutdown("Internal error", "(UE)", NULL, NULL);
+}
+
+// interrupt handlers
+
+void NMI_Handler(void) {
+  // Clock Security System triggered NMI
+  if ((RCC->CIR & RCC_CIR_CSSF) != 0) {
+    error_shutdown("Internal error", "(CS)", NULL, NULL);
+  }
+}
+
+void HardFault_Handler(void) {
+  error_shutdown("Internal error", "(HF)", NULL, NULL);
+}
+
+void MemManage_Handler(void) {
+  error_shutdown("Internal error", "(MM)", NULL, NULL);
+}
+
+void BusFault_Handler(void) {
+  error_shutdown("Internal error", "(BF)", NULL, NULL);
+}
+
+void UsageFault_Handler(void) {
+  error_shutdown("Internal error", "(UF)", NULL, NULL);
 }
 
 void PendSV_Handler(void) { pendsv_isr_handler(); }
