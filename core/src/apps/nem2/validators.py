@@ -14,6 +14,7 @@ from .helpers import (
     NEM2_NETWORK_MIJIN,
     NEM2_NETWORK_TEST_NET,
     NEM2_PUBLIC_KEY_SIZE,
+    validate_nem2_path
 )
 
 from .namespace.validators import (
@@ -22,6 +23,9 @@ from .namespace.validators import (
 )
 
 def validate(msg: NEM2SignTx):
+    if(not validate_nem2_path(msg.address_n)):
+        raise ProcessError("Invalid HD path provided, must fit 'm/44\'/43\'/a'")
+
     if msg.transaction is None:
         raise ProcessError("No common transaction fields provided")
 

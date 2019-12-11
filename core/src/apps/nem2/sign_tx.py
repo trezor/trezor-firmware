@@ -7,7 +7,12 @@ from ubinascii import unhexlify, hexlify
 from apps.common import seed
 from apps.common.paths import validate_path
 from apps.nem2 import CURVE, transfer, mosaic, namespace, metadata
-from apps.nem2.helpers import NEM2_HASH_ALG, check_path, NEM2_TRANSACTION_TYPE_AGGREGATE_BONDED, NEM2_TRANSACTION_TYPE_AGGREGATE_COMPLETE
+from apps.nem2.helpers import (
+    validate_nem2_path,
+    NEM2_HASH_ALG,
+    NEM2_TRANSACTION_TYPE_AGGREGATE_COMPLETE,
+    NEM2_TRANSACTION_TYPE_AGGREGATE_BONDED
+)
 from apps.nem2.validators import validate
 
 # Included fields are `size`, `verifiableEntityHeader_Reserved1`,
@@ -35,7 +40,7 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
 
     await validate_path(
         ctx,
-        check_path,
+        validate_nem2_path,
         keychain,
         msg.address_n,
         CURVE,

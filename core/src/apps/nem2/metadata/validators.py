@@ -25,7 +25,7 @@ def _validate_namespace_metadata(namespace_metadata: NEM2NamespaceMetadataTransa
         raise ProcessError("Invalid value size, value size not provided")
 
     if(namespace_metadata.value_size > 1024 ):
-        raise ProcessError("Invalid value size, value size too large")
+        raise ProcessError("Invalid value size, value size cannot be greater than 1024")
 
     if(namespace_metadata.value is None):
         raise ProcessError("Invalid value")
