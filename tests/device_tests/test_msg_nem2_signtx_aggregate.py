@@ -28,6 +28,8 @@ class TestMsgNEM2SignTxAggregate:
     def test_nem2_signtx_aggregate_transfer_and_mosaic_definition(self, client):
         tx = nem2.sign_tx(
             client,
+            # TODO: update to use m/44'/43'/0' and re-enable check in core/src/apps/nem2/validators
+            # this will change the sign_tx payload
             parse_path("m/44'/43'/0'/0'/0'"),
             "9F1979BEBA29C47E59B40393ABB516801A353CFC0C18BC241FEDE41939C907E7",
             {
