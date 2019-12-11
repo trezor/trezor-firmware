@@ -9,11 +9,16 @@ if False:
 
 class FIDOApp:
     def __init__(
-        self, label: str, icon: Optional[str], use_sign_count: Optional[bool]
+        self,
+        label: str,
+        icon: Optional[str],
+        use_sign_count: Optional[bool],
+        use_self_attestation: Optional[bool],
     ) -> None:
         self.label = label
         self.icon = icon
         self.use_sign_count = use_sign_count
+        self.use_self_attestation = use_self_attestation
 
 
 <%
@@ -42,6 +47,7 @@ def by_rp_id_hash(rp_id_hash: bytes) -> Optional[FIDOApp]:
             label=${black_repr(app.label)},
             icon=${black_repr(app.icon_res)},
             use_sign_count=${black_repr(app.use_sign_count)},
+            use_self_attestation=${black_repr(app.use_self_attestation)},
         )
 % endfor
     else:
