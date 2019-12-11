@@ -31,9 +31,20 @@ def _get_xpub(client, passphrase):
     return response.xpub
 
 
+def _enable_passphrase(client):
+    response = client.call_raw(messages.ApplySettings(use_passphrase=True))
+    assert isinstance(response, messages.ButtonRequest)  # confirm dialog
+    client.debug.press_yes()
+    response = client.call_raw(messages.ButtonAck())
+    assert isinstance(response, messages.Success)
+
+
 @pytest.mark.skip_t1  # TODO
-@pytest.mark.setup_client(passphrase=True)
+@pytest.mark.setup_client()
 def test_session_with_passphrase(client):
+    # Turn on passphrase.
+    _enable_passphrase(client)
+
     # Let's start the communication by calling Initialize.
     response = client.call_raw(messages.Initialize())
     assert isinstance(response, messages.Features)
@@ -96,11 +107,7 @@ def test_session_enable_passphrase(client):
     )
 
     # Turn on passphrase.
-    response = client.call_raw(messages.ApplySettings(use_passphrase=True))
-    assert isinstance(response, messages.ButtonRequest)  # confirm dialog
-    client.debug.press_yes()
-    response = client.call_raw(messages.ButtonAck())
-    assert isinstance(response, messages.Success)
+    _enable_passphrase(client)
 
     # The session id is unchanged, therefore we do not prompt for the passphrase.
     response = client.call_raw(messages.Initialize(session_id=session_id))
@@ -119,5 +126,64 @@ def test_session_enable_passphrase(client):
     assert session_id != response.session_id
     assert (
         xpub
+        == "xpub6CekxGcnqnJ6osfY4Rrq7W5ogFtR54KUvz4H16XzaQuukMFZCGebEpVznfq4yFcKEmYyShwj2UKjL7CazuNSuhdkofF4mHabHkLxCMVvsqG"
+    )
+
+
+@pytest.mark.skip_t1
+@pytest.mark.setup_client()
+def test_passphrase_always_on_device(client):
+    # Let's start the communication by calling Initialize.
+    response = client.call_raw(messages.Initialize())
+    assert isinstance(response, messages.Features)
+    session_id = response.session_id
+
+    # Turn on passphrase.
+    _enable_passphrase(client)
+
+    # Force passphrase entry on Trezor.
+    response = client.call_raw(messages.ApplySettings(passphrase_always_on_device=True))
+    assert isinstance(response, messages.ButtonRequest)  # confirm dialog
+    client.debug.press_yes()
+    response = client.call_raw(messages.ButtonAck())
+    assert isinstance(response, messages.Success)
+
+    # Since we enabled the always_on_device setting, Trezor will send ButtonRequests and ask for it on the device.
+    response = client.call_raw(
+        messages.GetPublicKey(address_n=parse_path("44'/0'/0'"), coin_name="Bitcoin")
+    )
+    assert isinstance(response, messages.ButtonRequest)
+    client.debug.input("")  # Input empty passphrase.
+    response = client.call_raw(messages.ButtonAck())
+    assert isinstance(response, messages.PublicKey)
+    assert (
+        response.xpub
+        == "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"
+    )
+
+    # Passphrase will not be prompted. The session id stays the same and the passphrase is cached.
+    response = client.call_raw(messages.Initialize(session_id=session_id))
+    assert isinstance(response, messages.Features)
+    response = client.call_raw(
+        messages.GetPublicKey(address_n=parse_path("44'/0'/0'"), coin_name="Bitcoin")
+    )
+    assert isinstance(response, messages.PublicKey)
+    assert (
+        response.xpub
+        == "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"
+    )
+
+    # In case we want to add a new passphrase we need to send session_id = None.
+    response = client.call_raw(messages.Initialize(session_id=None))
+    assert isinstance(response, messages.Features)
+    response = client.call_raw(
+        messages.GetPublicKey(address_n=parse_path("44'/0'/0'"), coin_name="Bitcoin")
+    )
+    assert isinstance(response, messages.ButtonRequest)
+    client.debug.input("A")  # Input empty passphrase.
+    response = client.call_raw(messages.ButtonAck())
+    assert isinstance(response, messages.PublicKey)
+    assert (
+        response.xpub
         == "xpub6CekxGcnqnJ6osfY4Rrq7W5ogFtR54KUvz4H16XzaQuukMFZCGebEpVznfq4yFcKEmYyShwj2UKjL7CazuNSuhdkofF4mHabHkLxCMVvsqG"
     )
