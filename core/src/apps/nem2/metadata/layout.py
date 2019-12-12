@@ -1,11 +1,9 @@
 from trezor import ui
-from trezor.messages import (
-    ButtonRequestType,
-    NEM2Mosaic,
-    NEM2TransactionCommon,
-    NEM2EmbeddedTransactionCommon,
-    NEM2NamespaceMetadataTransaction,
-)
+from trezor.messages import ButtonRequestType
+from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
+from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
+from trezor.messages.NEM2NamespaceMetadataTransaction import NEM2NamespaceMetadataTransaction
+
 from trezor.ui.text import Text
 from trezor.utils import format_amount
 from trezor.ui.scroll import Paginated
