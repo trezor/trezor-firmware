@@ -188,7 +188,7 @@ from .NEM2NamespaceMetadataTransaction import NEM2NamespaceMetadataTransaction
 from .NEM2NamespaceRegistrationTransaction import NEM2NamespaceRegistrationTransaction
 from .NEM2NamespaceRegistrationTransaction import NEM2NamespaceRegistrationTransaction
 from .NEM2PublicKey import NEM2PublicKey
-from .NEM2RecipientAddress import NEM2RecipientAddress
+from .NEM2SecretLockTransaction import NEM2SecretLockTransaction
 from .NEM2SignTx import NEM2SignTx
 from .NEM2SignedTx import NEM2SignedTx
 from .NEM2TransactionCommon import NEM2TransactionCommon
@@ -293,6 +293,7 @@ from . import InputScriptType
 from . import LiskTransactionType
 from . import MessageType
 from . import NEM2EntityType
+from . import NEM2LockHashAlgorithm
 from . import NEM2MosaicSupplyChangeAction
 from . import NEM2NamespaceRegistrationType
 from . import NEM2NetworkType

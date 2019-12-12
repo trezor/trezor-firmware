@@ -15,7 +15,10 @@ from .helpers import (
     NEM2_NETWORK_MIJIN,
     NEM2_NETWORK_TEST_NET,
     NEM2_PUBLIC_KEY_SIZE,
-    validate_nem2_path
+    NEM2_SECRET_LOCK_SHA3_256,
+    NEM2_SECRET_LOCK_KECCAK_256,
+    NEM2_SECRET_LOCK_HASH_160,
+    NEM2_SECRET_LOCK_HASH_256,
 )
 
 from .namespace.validators import (
@@ -51,6 +54,8 @@ def validate(msg: NEM2SignTx):
         _validate_mosaic_alias(msg.mosaic_alias, msg.transaction.version)
     if msg.hash_lock:
         _validate_hash_lock(msg.hash_lock)
+    if msg.secret_lock:
+        _validate_secret_lock(msg.secret_lock)
 
 def _validate_single_tx(msg: NEM2SignTx):
     # ensure exactly one transaction is provided
@@ -63,6 +68,7 @@ def _validate_single_tx(msg: NEM2SignTx):
         + bool(msg.mosaic_alias)
         + bool(msg.aggregate)
         + bool(msg.hash_lock)
+        + bool(msg.secret_lock)
         # + bool(msg.importance_transfer)
     )
     if tx_count == 0:
@@ -123,3 +129,29 @@ def _validate_hash_lock(hash_lock: NEM2HashLockTransaction):
         raise ProcessError("No duration provided")
     if hash_lock.hash is None:
         raise ProcessError("No AggregateTransaction hash provided")
+
+def _validate_secret_lock(secret_lock: NEM2SecretLockTransaction):
+    if secret_lock.secret is None:
+        raise ProcessError("No secret provided")
+    if secret_lock.mosaic is None:
+        raise ProcessError("No mosaic provided")
+    if secret_lock.duration is None:
+        raise ProcessError("No duration provided")
+    if secret_lock.hash_algorithm is None:
+        raise ProcessError("No hash algorithm provided")
+    if secret_lock.recipient_address is None:
+        raise ProcessError("No recipient address provided")
+
+    validate_secret(secret_lock.secret, secret_lock.hash_algorithm)
+
+def validate_secret(secret, hash_algorithm):
+    if (hash_algorithm == NEM2_SECRET_LOCK_SHA3_256 or
+        hash_algorithm == NEM2_SECRET_LOCK_KECCAK_256 or
+        hash_algorithm == NEM2_SECRET_LOCK_HASH_256):
+        if len(secret) != 64:
+            raise ProcessError("Secret must be of length 64 (was {})".format(len(secret)))
+    elif hash_algorithm == NEM2_SECRET_LOCK_HASH_160:
+        if len(secret) != 40 or len(secret) != 64:
+            raise ProcessError("Secret must be of length 40 or 64 (was {})".format(len(secret)))
+    else:
+        raise ProcessError("Invalid hash algorithm selected")

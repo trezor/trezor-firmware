@@ -47,6 +47,7 @@ message NEM2SignTx {
     optional NEM2AggregateTransaction aggregate = 11; // Aggregate part
     optional NEM2MosaicAliasTransaction mosaic_alias = 12; // Mosaic Alias part
     optional NEM2HashLockTransaction hash_lock = 13; // Hash Lock part
+    optional NEM2SecretLockTransaction secret_lock = 14; // Secret Lock part
 
     /**
     * Common types from
@@ -71,6 +72,7 @@ message NEM2SignTx {
         AGGREGATE_COMPLETE = 16705;
         MOSAIC_ALIAS = 17230;
         HASH_LOCK = 16712;
+        SECRET_LOCK = 16722;
     }
 
     enum NEM2NetworkType {
@@ -93,6 +95,13 @@ message NEM2SignTx {
     enum NEM2MosaicSupplyChangeAction {
         INCREASE = 1;
         DECREASE = 0;
+    }
+
+    enum NEM2LockHashAlgorithm {
+        SHA3_256 = 0; // Proof is hashed using SHA3-256.
+        KECCAK_256 = 1; // Proof is hashed using Keccak (ETH compatibility).
+        HASH_160 = 2; // Proof is hashed twice: first with SHA-256 and then with RIPEMD-160 (bitcoin’s OP_HASH160).
+        HASH_256 = 3; // Proof is hashed twice with SHA-256 (bitcoin’s OP_HASH256).
     }
 
     // END entities
@@ -198,6 +207,17 @@ message NEM2SignTx {
         optional NEM2Mosaic mosaic = 1;
         optional uint64 duration = 2;
         optional string hash = 3;
+    }
+
+    /**
+    * Secret Lock transaction type definition
+    */
+    message NEM2SecretLockTransaction {
+        optional string secret = 1;
+        optional NEM2Mosaic mosaic = 2;
+        optional uint64 duration = 3;
+        optional NEM2LockHashAlgorithm hash_algorithm = 4 [default=SHA3_256];
+        optional NEM2Address recipient_address = 5;
     }
 
     /**
