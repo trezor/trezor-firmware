@@ -47,11 +47,23 @@
 
 #include "py/runtime.h"
 #include "py/mphal.h"
-#include "ports/stm32/irq.h"
-#include "ports/stm32/systick.h"
-#include "ports/stm32/pybthread.h"
+#include "irq.h"
+#include "systick.h"
 
 extern __IO uint32_t uwTick;
+
+systick_dispatch_t systick_dispatch_table[SYSTICK_DISPATCH_NUM_SLOTS];
+
+void SysTick_Handler(void) {
+  // this is a millisecond tick counter that wraps after approximately
+  // 49.71 days = (0xffffffff / (24 * 60 * 60 * 1000))
+  uint32_t uw_tick = uwTick + 1;
+  uwTick = uw_tick;
+  systick_dispatch_t f = systick_dispatch_table[uw_tick & (SYSTICK_DISPATCH_NUM_SLOTS - 1)];
+  if (f != NULL) {
+    f(uw_tick);
+  }
+}
 
 // We provide our own version of HAL_Delay that calls __WFI while waiting,
 // and works when interrupts are disabled.  This function is intended to be
