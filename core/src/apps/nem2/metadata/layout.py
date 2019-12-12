@@ -3,6 +3,7 @@ from trezor.messages import (
     ButtonRequestType,
     NEM2Mosaic,
     NEM2TransactionCommon,
+    NEM2TransactionCommonEmbedded,
     NEM2NamespaceMetadataTransaction,
 )
 from trezor.ui.text import Text
@@ -17,7 +18,7 @@ from apps.common.layout import split_address
 
 async def ask_namespace_metadata(
     ctx,
-    common: NEM2TransactionCommon,
+    common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
     namespace_metadata: NEM2NamespaceMetadataTransaction,
     embedded=False
 ):
