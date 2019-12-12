@@ -180,9 +180,11 @@ from .NEM2GetPublicKey import NEM2GetPublicKey
 from .NEM2HashLockTransaction import NEM2HashLockTransaction
 from .NEM2HashLockTransaction import NEM2HashLockTransaction
 from .NEM2InnerTransaction import NEM2InnerTransaction
+from .NEM2InnerTransaction import NEM2InnerTransaction
 from .NEM2Mosaic import NEM2Mosaic
 from .NEM2MosaicAliasTransaction import NEM2MosaicAliasTransaction
 from .NEM2MosaicAliasTransaction import NEM2MosaicAliasTransaction
+from .NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
 from .NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
 from .NEM2MosaicSupplyChangeTransaction import NEM2MosaicSupplyChangeTransaction
 from .NEM2MosaicSupplyChangeTransaction import NEM2MosaicSupplyChangeTransaction
@@ -194,6 +196,8 @@ from .NEM2NamespaceRegistrationTransaction import NEM2NamespaceRegistrationTrans
 from .NEM2PublicKey import NEM2PublicKey
 from .NEM2SecretLockTransaction import NEM2SecretLockTransaction
 from .NEM2SecretLockTransaction import NEM2SecretLockTransaction
+from .NEM2SecretLockTransaction import NEM2SecretLockTransaction
+from .NEM2SecretProofTransaction import NEM2SecretProofTransaction
 from .NEM2SecretProofTransaction import NEM2SecretProofTransaction
 from .NEM2SecretProofTransaction import NEM2SecretProofTransaction
 from .NEM2SignTx import NEM2SignTx

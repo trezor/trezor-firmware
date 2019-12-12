@@ -268,7 +268,8 @@ message NEM2SignTx {
     * Used as part of an Aggregate transaction
     */
     message NEM2Cosignature {
-        // TODO
+        optional string signature = 1;
+        optional string public_key = 2;
     }
 
     /**

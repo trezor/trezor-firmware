@@ -11,4 +11,18 @@ if __debug__:
 
 
 class NEM2Cosignature(p.MessageType):
-    pass
+
+    def __init__(
+        self,
+        signature: str = None,
+        public_key: str = None,
+    ) -> None:
+        self.signature = signature
+        self.public_key = public_key
+
+    @classmethod
+    def get_fields(cls) -> Dict:
+        return {
+            1: ('signature', p.UnicodeType, 0),
+            2: ('public_key', p.UnicodeType, 0),
+        }

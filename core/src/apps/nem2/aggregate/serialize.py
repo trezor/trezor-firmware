@@ -1,6 +1,7 @@
 from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
 from trezor.messages.NEM2AggregateTransaction import NEM2AggregateTransaction
 from trezor.messages.NEM2InnerTransaction import NEM2InnerTransaction
+from trezor.messages.NEM2Cosignature import NEM2Cosignature
 
 from ubinascii import unhexlify
 from trezor.crypto.hashlib import sha3_256
@@ -35,7 +36,7 @@ def serialize_according_to_type(transaction):
 # 4. Add them to a merkle tree
 # 5. Calcualte the root hash of the merkle tree and return
 def compute_inner_transaction_hash(
-    transactions: NEM2InnerTransactions
+    transactions: NEM2InnerTransaction
 ):
     mt = MerkleTools()
 
@@ -54,7 +55,7 @@ def getInnerTransactionPaddingSize(size, alignment):
         return alignment - (size % alignment)
 
 def serialize_inner_transactions(
-    inner_transactions: NEM2InnerTransactions
+    inner_transactions: NEM2InnerTransaction
 ):
     txs = bytearray()
     for transaction in inner_transactions:
@@ -63,6 +64,16 @@ def serialize_inner_transactions(
         write_bytes(txs, serialized_transaction)
         for _ in range(inner_transaction_padding):
             write_uint8(txs, 0)
+    return txs
+
+def serialize_cosignatures(
+    cosignatures: NEM2Cosignature
+):
+    txs = bytearray()
+    for cosignature in cosignatures:
+        write_bytes(txs, unhexlify(cosignature.public_key))
+        write_bytes(txs, unhexlify(cosignature.signature))
+
     return txs
 
 def serialize_aggregate_transaction_body(
@@ -95,9 +106,9 @@ def serialize_aggregate_transaction(
     # Serialize the inner trascations
     serialized_inner_transactions = serialize_inner_transactions(aggregate.inner_transactions)
     # Serialize the cosignatures
-    # TODO
+    serialized_cosignatures = serialize_cosignatures(aggregate.cosignatures)
     # Serialize the body
-    serialized_body = serialize_aggregate_transaction_body(inner_transaction_hash, serialized_inner_transactions)
+    serialized_body = serialize_aggregate_transaction_body(inner_transaction_hash, serialized_inner_transactions, serialized_cosignatures)
 
     # Total size is the size of the common transaction properties
     # + the length of the serialized aggregate body

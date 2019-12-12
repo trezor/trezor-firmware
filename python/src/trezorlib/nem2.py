@@ -123,7 +123,17 @@ def create_aggregate(aggregate_transaction):
         fill_transaction_by_type(inner_transaction, transaction)
         inner_transactions.append(inner_transaction)
 
+    # Generate cosignatures
+    cosignatures = []
+    if "cosignatures" in aggregate_transaction:
+        for signature in aggregate_transaction["cosignatures"]:
+            cosignature = proto.NEM2Cosignature()
+            cosignature.signature = signature["signature"]
+            cosignature.public_key = signature["publicKey"]
+            cosignatures.append(cosignature)
+
     msg.inner_transactions = inner_transactions
+    msg.cosignatures = cosignatures
     return msg
 
 def create_namespace_registration(transaction):
