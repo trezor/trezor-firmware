@@ -31,10 +31,8 @@ from .namespace.validators import (
 )
 
 def validate(msg: NEM2SignTx):
-    # TODO: enable this and update any tests that are stil using
-    # m/44'/43'/0'
-    # if(not validate_nem2_path(msg.address_n)):
-        # raise ProcessError("Invalid HD path provided, must fit 'm/44\'/43\'/a'")
+    if(not validate_nem2_path(msg.address_n)):
+        raise ProcessError("Invalid HD path provided, must fit 'm/44\'/43\'/a'")
 
     if msg.transaction is None:
         raise ProcessError("No common transaction fields provided")

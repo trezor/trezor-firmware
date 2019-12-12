@@ -95,15 +95,10 @@ async def ask_address_alias(
 
 async def ask_mosaic_alias(
     ctx,
-    common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
-    mosaic_alias: NEM2MosaicAliasTransaction,
+    common: NEM2TransactionCommon,
+    mosaic_alias: NEM2NamespaceRegistrationTransaction,
     embedded=False
 ):
-    await require_confirm_properties(ctx, mosaic_alias)
-    if not embedded:
-        await require_confirm_final(ctx, common.max_fee)
-
-async def require_confirm_properties(ctx, mosaic_alias: NEM2MosaicAliasTransaction):
     properties = []
 
     # Mosaic ID
@@ -122,9 +117,11 @@ async def require_confirm_properties(ctx, mosaic_alias: NEM2MosaicAliasTransacti
         t.normal(mosaic_alias.namespace_id)
         properties.append(t)
     # Alias Action
-    if (mosaic_alias.alias_action == NEM2_ALIAS_ACTION_TYPE_LINK or
-        mosaic_alias.alias_action == NEM2_ALIAS_ACTION_TYPE_UNLINK):
-        alias_text = "Link" if mosaic_alias.alias_action else "Unlink"
+    if mosaic_alias.alias_action:
+        if mosaic_alias.alias_action:
+            alias_text = "Link"
+        else:
+            alias_text = "Unlink"
         t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
         t.bold("Alias Action:")
         t.br()
@@ -133,3 +130,6 @@ async def require_confirm_properties(ctx, mosaic_alias: NEM2MosaicAliasTransacti
 
     paginated = Paginated(properties)
     await require_confirm(ctx, paginated, ButtonRequestType.ConfirmOutput)
+
+    if not embedded:
+        await require_confirm_final(ctx, common.max_fee)
