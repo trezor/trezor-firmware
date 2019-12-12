@@ -48,7 +48,7 @@ def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
             # Identifier or exponent expected but not found
             raise RuntimeError
         seed = slip39.decrypt(
-            identifier, iteration_exponent, mnemonic_secret, passphrase.encode()
+            mnemonic_secret, passphrase.encode(), iteration_exponent, identifier
         )
 
     return seed

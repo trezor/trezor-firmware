@@ -165,10 +165,10 @@ class Share:
 
 
 def decrypt(
-    identifier: int,
-    iteration_exponent: int,
     encrypted_master_secret: bytes,
     passphrase: bytes,
+    iteration_exponent: int,
+    identifier: int,
 ) -> bytes:
     """
     Converts the Encrypted Master Secret to a Master Secret by applying the passphrase.
@@ -194,12 +194,12 @@ def generate_random_identifier() -> int:
     return identifier & ((1 << _ID_LENGTH_BITS) - 1)
 
 
-def generate_mnemonics_from_data(
-    encrypted_master_secret: bytes,  # The encrypted master secret to split.
-    identifier: int,
+def split_ems(
     group_threshold: int,  # The number of groups required to reconstruct the master secret.
     groups: List[Tuple[int, int]],  # A list of (member_threshold, member_count).
+    identifier: int,
     iteration_exponent: int,
+    encrypted_master_secret: bytes,  # The encrypted master secret to split.
 ) -> List[List[str]]:
     """
     Splits an encrypted master secret into mnemonic shares using Shamir's secret sharing scheme.
@@ -253,7 +253,7 @@ def generate_mnemonics_from_data(
     return mnemonics
 
 
-def combine_mnemonics(mnemonics: List[str]) -> Tuple[int, int, bytes, int]:
+def recover_ems(mnemonics: List[str]) -> Tuple[int, int, bytes]:
     """
     Combines mnemonic shares to obtain the encrypted master secret which was previously
     split using Shamir's secret sharing scheme.
@@ -292,7 +292,7 @@ def combine_mnemonics(mnemonics: List[str]) -> Tuple[int, int, bytes, int]:
     ]
 
     encrypted_master_secret = _recover_secret(group_threshold, group_shares)
-    return identifier, iteration_exponent, encrypted_master_secret, group_count
+    return identifier, iteration_exponent, encrypted_master_secret
 
 
 def decode_mnemonic(mnemonic: str) -> Share:

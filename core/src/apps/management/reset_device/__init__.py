@@ -101,12 +101,12 @@ async def backup_slip39_basic(
     threshold = await layout.slip39_prompt_threshold(ctx, shares_count)
 
     # generate the mnemonics
-    mnemonics = slip39.generate_mnemonics_from_data(
-        encrypted_master_secret,
-        storage.device.get_slip39_identifier(),
+    mnemonics = slip39.split_ems(
         1,  # Single Group threshold
         [(threshold, shares_count)],  # Single Group threshold/count
+        storage.device.get_slip39_identifier(),
         storage.device.get_slip39_iteration_exponent(),
+        encrypted_master_secret,
     )[0]
 
     # show and confirm individual shares
@@ -136,12 +136,12 @@ async def backup_slip39_advanced(
         groups.append((share_threshold, share_count))
 
     # generate the mnemonics
-    mnemonics = slip39.generate_mnemonics_from_data(
-        encrypted_master_secret=encrypted_master_secret,
-        identifier=storage.device.get_slip39_identifier(),
+    mnemonics = slip39.split_ems(
         group_threshold=group_threshold,
         groups=groups,
+        identifier=storage.device.get_slip39_identifier(),
         iteration_exponent=storage.device.get_slip39_iteration_exponent(),
+        encrypted_master_secret=encrypted_master_secret,
     )
 
     # show and confirm individual shares
