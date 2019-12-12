@@ -61,4 +61,4 @@ As long as the session_id in `Initialize` is the same as the one Trezor stores i
 
 User might want to enforce the passphrase entry on the device every time without the hassle of instructing the Host to do so.
 
-For such cases the user may apply the *Passphrase always on device* setting TODO: Name. As the name suggests, with this setting the passphrase is prompted on the device right away and no PassphraseRequest/PassphraseAck messages are exchanged.
+For such cases the user may apply the *Passphrase always on device* setting. As the name suggests, with this setting the passphrase is prompted on the device right away and no PassphraseRequest/PassphraseAck messages are exchanged. Note that the passphrase is prompted only once for given session id. If the user wishes to enter another passphrase they need to either send Initialize(session_id=None) or replug the device.
