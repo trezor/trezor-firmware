@@ -24,15 +24,17 @@ async def load_device(ctx, msg):
         secret = msg.mnemonics[0].encode()
         backup_type = BackupType.Bip39
     else:
-        identifier, iteration_exponent, secret, group_count = slip39.combine_mnemonics(
-            msg.mnemonics
-        )
-        if group_count == 1:
+        identifier, iteration_exponent, secret = slip39.recover_ems(msg.mnemonics)
+
+        # this must succeed if the recover_ems call succeeded
+        share = slip39.decode_mnemonic(msg.mnemonics[0])
+        if share.group_count == 1:
             backup_type = BackupType.Slip39_Basic
-        elif group_count > 1:
+        elif share.group_count > 1:
             backup_type = BackupType.Slip39_Advanced
         else:
             raise RuntimeError("Invalid group count")
+
         storage.device.set_slip39_identifier(identifier)
         storage.device.set_slip39_iteration_exponent(iteration_exponent)
 
