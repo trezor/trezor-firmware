@@ -90,6 +90,11 @@ message NEM2SignTx {
         UNLINK = 0;
     }
 
+    enum NEM2MosaicSupplyChangeAction {
+        INCREASE = 1;
+        DECREASE = 0;
+    }
+
     // END entities
 
 
@@ -152,7 +157,7 @@ message NEM2SignTx {
     */
     message NEM2MosaicSupplyChangeTransaction {
         optional string mosaic_id = 1; // mosaic identifier
-        optional uint32 action = 2; // supply change direction (increase/descrease)
+        optional NEM2MosaicSupplyChangeAction action = 2 [default=INCREASE]; // supply change direction (increase/descrease)
         optional uint64 delta = 3; // change in supply
     }
 
@@ -181,7 +186,7 @@ message NEM2SignTx {
     * Mosaic Alias transaction type definition
     */
     message NEM2MosaicAliasTransaction {
-        optional NEM2AliasAction alias_action = 1;
+        optional NEM2AliasAction alias_action = 1 [default=LINK];
         optional string namespace_id = 2;
         optional string mosaic_id = 3;
     }

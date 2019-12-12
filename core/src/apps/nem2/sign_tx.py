@@ -98,9 +98,6 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
                 seed.remove_ed25519_prefix(node.public_key()), msg.transaction, tx
             )
 
-    print('unsigned tx', hexlify(tx))
-    print('singner public key', hexlify(public_key))
-
     # https://nemtech.github.io/concepts/transaction.html#signing-a-transaction
     # sign tx
     generation_hash_bytes = unhexlify(msg.generation_hash)

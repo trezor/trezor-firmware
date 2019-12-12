@@ -27,7 +27,7 @@ class NEM2MosaicAliasTransaction(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('alias_action', p.EnumType("NEM2AliasAction", (0, 1)), 0),
+            1: ('alias_action', p.EnumType("NEM2AliasAction", (0, 1)), 0),  # default=LINK
             2: ('namespace_id', p.UnicodeType, 0),
             3: ('mosaic_id', p.UnicodeType, 0),
         }

@@ -293,6 +293,8 @@ from . import InputScriptType
 from . import LiskTransactionType
 from . import MessageType
 from . import NEM2EntityType
+from . import NEM2MosaicSupplyChangeAction
+from . import NEM2NamespaceRegistrationType
 from . import NEM2NetworkType
 from . import NEMImportanceTransferMode
 from . import NEMModificationType

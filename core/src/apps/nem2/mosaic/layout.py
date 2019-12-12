@@ -16,17 +16,41 @@ from ..layout import (
     require_confirm_text,
 )
 
-from apps.common.layout import require_confirm, split_address
+from ..helpers import (
+    NEM2_MOSAIC_SUPPLY_CHANGE_ACTION_INCREASE,
+    NEM2_MOSAIC_SUPPLY_CHANGE_ACTION_DECREASE
+)
 
+from apps.common.layout import require_confirm, split_address
 
 async def ask_mosaic_definition(
     ctx, common: NEM2TransactionCommon, mosaic_definition: NEM2MosaicDefinitionTransaction, embedded=False
 ):
-    await require_confirm_properties(ctx, mosaic_definition)
+    await require_confirm_properties_definition(ctx, mosaic_definition)
     if not embedded:
         await require_confirm_final(ctx, common.max_fee)
 
-async def require_confirm_properties(ctx, mosaic_definition: NEM2MosaicDefinitionTransaction):
+async def ask_mosaic_supply(
+    ctx, common: NEM2TransactionCommon, mosaic_supply: NEM2MosaicSupplyChangeTransaction, embedded=False
+):
+    # Initial message
+    msg = Text("Supply change", ui.ICON_SEND, ui.GREEN)
+    msg.normal("Modify supply for")
+    msg.bold(mosaic_supply.mosaic_id)
+    await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
+
+    # Ask to confirm supply increase/descrease
+    if mosaic_supply.action == NEM2_MOSAIC_SUPPLY_CHANGE_ACTION_DECREASE:
+        msg = "Decrease supply by " + str(mosaic_supply.delta) + " whole units?"
+    elif mosaic_supply.action == NEM2_MOSAIC_SUPPLY_CHANGE_ACTION_INCREASE:
+        msg = "Increase supply by " + str(mosaic_supply.delta) + " whole units?"
+
+    await require_confirm_text(ctx, msg)
+
+    if not embedded:
+        await require_confirm_final(ctx, common.max_fee)
+
+async def require_confirm_properties_definition(ctx, mosaic_definition: NEM2MosaicDefinitionTransaction):
     properties = []
     # Mosaic ID
     if mosaic_definition.mosaic_id:

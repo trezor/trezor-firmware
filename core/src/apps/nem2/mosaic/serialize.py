@@ -46,7 +46,7 @@ def serialize_mosaic_definition(
 def serialize_mosaic_supply(
     common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
     supply_change: NEM2MosaicSupplyChangeTransaction,
-    embedded = False
+    embedded=False
 ):
     tx = bytearray()
 

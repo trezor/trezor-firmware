@@ -39,7 +39,7 @@ class TestMsgNEM2SignTxMosaicSupply:
                 "maxFee": "100",
                 "deadline": "113728610090",
                 "mosaicId": "0B65C4B29A80C619",
-                "action": 1,
+                "action": nem2.MOSAIC_SUPPLY_CHANGE_ACTION_INCREASE,
                 "delta": "1000000"
             },
         )
@@ -50,5 +50,5 @@ class TestMsgNEM2SignTxMosaicSupply:
         )
         assert (
             tx.hash.hex().upper()
-            == "EEDDFBCBE0FF235ABB7A5618C42FF61E1FEDAC015BF1009BD6FA27A84CA2340D"
+            == "73993D7473F3C28665B2EF27EECE8CC50D725B2CBE01FE7FA82F8D0A9AD9E4D5"
         )
