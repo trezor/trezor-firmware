@@ -1,10 +1,10 @@
 from trezor import ui
-from trezor.messages import (
-    ButtonRequestType,
-    NEM2Mosaic,
-    NEM2TransactionCommon,
-    NEM2EmbeddedTransactionCommon
-)
+
+from trezor.messages import ButtonRequestType
+from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
+from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
+from trezor.messages.NEM2SecretLockTransaction import NEM2SecretLockTransaction
+
 from trezor.ui.text import Text
 from trezor.ui.scroll import Paginated
 
@@ -33,7 +33,8 @@ async def ask_secret_lock(
     embedded=False
 ):
     await require_confirm_properties(ctx, secret_lock)
-    await require_confirm_final(ctx, common.max_fee)
+    if not embedded:
+        await require_confirm_final(ctx, common.max_fee)
 
 async def require_confirm_properties(ctx, secret_lock: NEM2SecretLockTransaction):
     properties = []

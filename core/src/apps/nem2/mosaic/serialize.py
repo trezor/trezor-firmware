@@ -1,25 +1,25 @@
+from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
+from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
 from trezor.messages.NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
 from trezor.messages.NEM2MosaicSupplyChangeTransaction import NEM2MosaicSupplyChangeTransaction
-from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
 
-from ..helpers import (
-    NEM2_TRANSACTION_TYPE_MOSAIC_DEFINITION,
-)
 from ..writers import (
     serialize_tx_common,
     get_common_message_size,
     serialize_embedded_tx_common,
-    get_embedded_common_message_size,
+    get_embedded_common_message_size
+)
+
+from apps.common.writers import (
+    write_uint8,
     write_uint32_le,
-    write_uint32_be,
-    write_uint64_le,
-    write_uint8
+    write_uint64_le
 )
 
 def serialize_mosaic_definition(
     common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
     creation: NEM2MosaicDefinitionTransaction,
-    embedded = False
+    embedded=False
 ):
     tx = bytearray()
 

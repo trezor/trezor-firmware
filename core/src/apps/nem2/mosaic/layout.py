@@ -1,17 +1,16 @@
-# TODO: this is a straight copy-paste from the nem2 integration
-
 from trezor import ui
-from trezor.messages import (
-    ButtonRequestType,
-    NEM2TransactionCommon,
-    NEM2MosaicDefinitionTransaction
-)
+
+from trezor.messages import ButtonRequestType
+from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
+from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
+from trezor.messages.NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
+from trezor.messages.NEM2MosaicSupplyChangeTransaction import NEM2MosaicSupplyChangeTransaction
+
 from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 
 from ..layout import (
     require_confirm_content,
-    require_confirm_fee,
     require_confirm_final,
     require_confirm_text,
 )
@@ -21,17 +20,23 @@ from ..helpers import (
     NEM2_MOSAIC_SUPPLY_CHANGE_ACTION_DECREASE
 )
 
-from apps.common.layout import require_confirm, split_address
+from apps.common.layout import require_confirm
 
 async def ask_mosaic_definition(
-    ctx, common: NEM2TransactionCommon, mosaic_definition: NEM2MosaicDefinitionTransaction, embedded=False
+    ctx,
+    common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
+    mosaic_definition: NEM2MosaicDefinitionTransaction,
+    embedded=False
 ):
     await require_confirm_properties_definition(ctx, mosaic_definition)
     if not embedded:
         await require_confirm_final(ctx, common.max_fee)
 
 async def ask_mosaic_supply(
-    ctx, common: NEM2TransactionCommon, mosaic_supply: NEM2MosaicSupplyChangeTransaction, embedded=False
+    ctx,
+    common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
+    mosaic_supply: NEM2MosaicSupplyChangeTransaction,
+    embedded=False
 ):
     # Initial message
     msg = Text("Supply change", ui.ICON_SEND, ui.GREEN)

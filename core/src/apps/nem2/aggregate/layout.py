@@ -1,29 +1,13 @@
 from trezor import ui
-from trezor.messages import (
-    ButtonRequestType,
-    NEM2TransactionCommon,
-    NEM2MosaicDefinitionTransaction,
-    NEM2AggregateTransaction,
-    NEM2InnerTransaction
-)
+from trezor.messages import ButtonRequestType
+from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
+from trezor.messages.NEM2AggregateTransaction import NEM2AggregateTransaction
+from trezor.messages.NEM2InnerTransaction import NEM2InnerTransaction
+
 from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 
-from apps.nem2.helpers import (
-    NEM2_TRANSACTION_TYPE_TRANSFER,
-    NEM2_TRANSACTION_TYPE_MOSAIC_DEFINITION,
-    NEM2_TRANSACTION_TYPE_NAMESPACE_REGISTRATION,
-    NEM2_TRANSACTION_TYPE_ADDRESS_ALIAS,
-    NEM2_NAMESPACE_REGISTRATION_TYPE_ROOT,
-    NEM2_TRANSACTION_TYPE_ADDRESS_ALIAS,
-    NEM2_ALIAS_ACTION_TYPE_LINK,
-    NEM2_ALIAS_ACTION_TYPE_UNLINK,
-    captialize_string
-)
-
-from apps.nem2.transfer.layout import ask_transfer
-from apps.nem2.mosaic.layout import ask_mosaic_definition
-from apps.nem2.namespace.layout import ask_namespace_registration, ask_address_alias
+from apps.nem2.helpers import captialize_string
 
 from ..layout import (
     require_confirm_content,
@@ -35,21 +19,7 @@ from ..layout import (
 from apps.common.layout import require_confirm, split_address
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 
-
-map_type_to_layout = {
-    NEM2_TRANSACTION_TYPE_TRANSFER: ask_transfer,
-    NEM2_TRANSACTION_TYPE_MOSAIC_DEFINITION: ask_mosaic_definition,
-    NEM2_TRANSACTION_TYPE_NAMESPACE_REGISTRATION: ask_namespace_registration,
-    NEM2_TRANSACTION_TYPE_ADDRESS_ALIAS: ask_address_alias
-}
-
-# Should be the key that maps to the transaction data
-map_type_to_property = {
-    NEM2_TRANSACTION_TYPE_TRANSFER: "transfer",
-    NEM2_TRANSACTION_TYPE_MOSAIC_DEFINITION: "mosaic_definition",
-    NEM2_TRANSACTION_TYPE_NAMESPACE_REGISTRATION: "namespace_registration",
-    NEM2_TRANSACTION_TYPE_ADDRESS_ALIAS: "address_alias"
-}
+from .helpers import map_type_to_property, map_type_to_layout
 
 async def ask_aggregate(
     ctx, common: NEM2TransactionCommon, aggregate: NEM2AggregateTransaction

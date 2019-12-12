@@ -240,6 +240,11 @@ message NEM2SignTx {
         optional NEM2TransferTransaction transfer = 2;
         optional NEM2MosaicDefinitionTransaction mosaic_definition = 3;
         optional NEM2MosaicSupplyChangeTransaction mosaic_supply = 4;
+        optional NEM2NamespaceRegistrationTransaction namespace_registration = 5;
+        optional NEM2AddressAliasTransaction address_alias = 6;
+        optional NEM2MosaicAliasTransaction mosaic_alias = 7;
+        optional NEM2HashLockTransaction hash_lock = 8;
+        optional NEM2SecretLockTransaction secret_lock = 9;
     }
 
     /**

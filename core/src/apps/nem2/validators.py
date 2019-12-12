@@ -19,6 +19,10 @@ from .helpers import (
     NEM2_SECRET_LOCK_KECCAK_256,
     NEM2_SECRET_LOCK_HASH_160,
     NEM2_SECRET_LOCK_HASH_256,
+    NEM2_ALIAS_ACTION_TYPE_LINK,
+    NEM2_ALIAS_ACTION_TYPE_UNLINK,
+    NEM2_MOSAIC_SUPPLY_CHANGE_ACTION_INCREASE,
+    NEM2_MOSAIC_SUPPLY_CHANGE_ACTION_DECREASE
 )
 
 from .namespace.validators import (
@@ -46,6 +50,10 @@ def validate(msg: NEM2SignTx):
 
     if msg.transfer:
         _validate_transfer(msg.transfer, msg.transaction.version)
+    if msg.mosaic_definition:
+        _validate_mosaic_definition(msg.mosaic_definition)
+    if msg.mosaic_supply:
+        _validate_mosaic_supply(msg.mosaic_supply)
     if(msg.namespace_registration):
         _validate_namespace_registration(msg.namespace_registration, msg.transaction.version)
     if(msg.address_alias):
@@ -114,6 +122,32 @@ def _validate_transfer(transfer: NEM2TransferTransaction, version: int):
         if m.amount is None:
             raise ProcessError("No mosaic amount provided")
 
+def _validate_mosaic_definition(mosaic_definition: NEM2MosaicDefinitionTransaction):
+    if mosaic_definition.mosaic_id is None:
+        raise ProcessError("No mosaic ID provided")
+    if mosaic_definition.duration is None:
+        raise ProcessError("No duration provided")
+    if mosaic_definition.flags is None:
+        raise ProcessError("No flags provided")
+    if mosaic_definition.nonce is None:
+        raise ProcessError("No nonce provided")
+    if mosaic_definition.divisibility is None:
+        raise ProcessError("No divisibility provided")
+
+def _validate_mosaic_supply(mosaic_supply: NEM2MosaicSupplyChangeTransaction):
+    if mosaic_supply.mosaic_id is None:
+        raise ProcessError("No mosaic ID provided")
+    if mosaic_supply.action is None:
+        raise ProcessError("No action provided")    
+    if mosaic_supply.delta is None:
+        raise ProcessError("No delta provided")
+
+    # Action was provided, now check it is valid
+    valid_actions = [NEM2_MOSAIC_SUPPLY_CHANGE_ACTION_INCREASE, NEM2_MOSAIC_SUPPLY_CHANGE_ACTION_DECREASE]
+    if mosaic_supply.action not in valid_actions:
+        raise ProcessError("Invalid action provided")   
+
+
 def _validate_mosaic_alias(mosaic_alias: NEM2MosaicAliasTransaction, network: int):
     if mosaic_alias.namespace_id is None:
         raise ProcessError("No namespace ID provided")
@@ -121,6 +155,11 @@ def _validate_mosaic_alias(mosaic_alias: NEM2MosaicAliasTransaction, network: in
         raise ProcessError("No mosiac ID provided")
     if mosaic_alias.alias_action is None:
         raise ProcessError("No alias action provided")
+
+    # Alais action was provided, now check it is valid
+    valid_actions = [NEM2_ALIAS_ACTION_TYPE_LINK, NEM2_ALIAS_ACTION_TYPE_UNLINK]
+    if mosaic_alias.alias_action not in valid_actions:
+        raise ProcessError("Invalid alias action provided")
 
 def _validate_hash_lock(hash_lock: NEM2HashLockTransaction):
     if hash_lock.mosaic is None:

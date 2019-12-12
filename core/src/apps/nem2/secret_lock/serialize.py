@@ -1,4 +1,5 @@
-from trezor.crypto import random, base32
+from trezor.crypto import base32
+
 from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
 from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
 from trezor.messages.NEM2SecretLockTransaction import NEM2SecretLockTransaction

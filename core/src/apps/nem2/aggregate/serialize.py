@@ -1,16 +1,10 @@
 from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
 from trezor.messages.NEM2AggregateTransaction import NEM2AggregateTransaction
 from trezor.messages.NEM2InnerTransaction import NEM2InnerTransaction
+
 from ubinascii import unhexlify
 from trezor.crypto.hashlib import sha3_256
 from trezor.utils import HashWriter
-
-from ..helpers import (
-    NEM2_TRANSACTION_TYPE_TRANSFER,
-    NEM2_TRANSACTION_TYPE_MOSAIC_DEFINITION,
-    NEM2_TRANSACTION_TYPE_NAMESPACE_REGISTRATION,
-    NEM2_TRANSACTION_TYPE_ADDRESS_ALIAS,
-)
 
 from ..writers import (
     serialize_tx_common,
@@ -23,21 +17,17 @@ from ..writers import (
     write_bytes
 )
 
-from ..transfer.serialize import serialize_transfer
-from ..mosaic.serialize import serialize_mosaic_definition, serialize_mosaic_supply
-from ..namespace.serialize import serialize_namespace_registration, serialize_address_alias
-from .helpers import MerkleTools
+from .helpers import MerkleTools, map_type_to_property, map_type_to_serialize
 
 def serialize_according_to_type(transaction):
     tx_type = transaction.common.type
-    if tx_type == NEM2_TRANSACTION_TYPE_TRANSFER:
-        return serialize_transfer(transaction.common, transaction.transfer, embedded=True)
-    elif tx_type == NEM2_TRANSACTION_TYPE_MOSAIC_DEFINITION:
-        return serialize_mosaic_definition(transaction.common, transaction.mosaic_definition, embedded=True)
-    elif tx_type == NEM2_TRANSACTION_TYPE_NAMESPACE_REGISTRATION:
-        return serialize_namespace_registration(transaction.common, transaction.namespace_registration, embedded=True)
-    elif tx_type == NEM2_TRANSACTION_TYPE_ADDRESS_ALIAS:
-        return serialize_address_alias(transaction.common, transaction.address_alias, embedded=True)
+    transaction_type_key = map_type_to_property[tx_type]
+    serialize_function = map_type_to_serialize[tx_type]
+
+    return serialize_function(
+        transaction.common,
+        transaction.__dict__[transaction_type_key],
+        embedded=True)
 
 # 1. Takes in a list of non-serialized transactions
 # 2. Serializes them as embedded transactions

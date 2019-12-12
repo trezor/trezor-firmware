@@ -6,6 +6,7 @@ if not utils.BITCOIN_ONLY:
     from apps.nem2.transfer import *
     from apps.nem2.transfer.serialize import *
     from trezor.messages.NEM2TransferTransaction import NEM2TransferTransaction
+    from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
     from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
     from trezor.messages.NEM2SignTx import NEM2SignTx
     from trezor.messages.NEM2Mosaic import NEM2Mosaic

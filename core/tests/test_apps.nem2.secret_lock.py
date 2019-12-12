@@ -2,21 +2,12 @@ from common import *
 
 if not utils.BITCOIN_ONLY:
     from apps.nem2.helpers import *
-    from apps.nem2.transfer.serialize import serialize_transfer_body, serialize_transfer
-    from apps.nem2.secret_lock.serialize import (
-        serialize_secret_lock
-    )
+    from apps.nem2.secret_lock.serialize import serialize_secret_lock
     from apps.nem2.writers import serialize_embedded_tx_common
-    from trezor.messages.NEM2TransferTransaction import NEM2TransferTransaction
-    from trezor.messages.NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
-    from trezor.messages.NEM2Mosaic import NEM2Mosaic
-    from trezor.messages.NEM2TransferMessage import NEM2TransferMessage
-    from trezor.messages.NEM2Address import NEM2Address
-    from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
     from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
-    from trezor.messages.NEM2AggregateTransaction import NEM2AggregateTransaction
-    from trezor.messages.NEM2InnerTransaction import NEM2InnerTransaction
     from trezor.messages.NEM2SecretLockTransaction import NEM2SecretLockTransaction
+    from trezor.messages.NEM2Mosaic import NEM2Mosaic
+    from trezor.messages.NEM2Address import NEM2Address
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestNem2SecretLock(unittest.TestCase):

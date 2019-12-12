@@ -1,8 +1,7 @@
-from trezor.messages import (
-    NEM2TransactionCommon,
-    NEM2EmbeddedTransactionCommon,
-    NEM2HashLockTransaction,
-)
+from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
+from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
+from trezor.messages.NEM2HashLockTransaction import NEM2HashLockTransaction
+
 from ubinascii import unhexlify
 
 from ..writers import (
@@ -20,7 +19,7 @@ from apps.common.writers import (
 
 def serialize_hash_lock(
     common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
-    hash_lock: NEM2HashLockTransaction,
+    hash_lock: asdfkkasdklfklaskldfklf,
     embedded=False
 ) -> bytearray:
     tx = bytearray()

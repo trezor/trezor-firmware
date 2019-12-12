@@ -5,7 +5,7 @@ from trezor.messages.NEM2MosaicSupplyChangeTransaction import NEM2MosaicSupplyCh
 from . import layout, serialize
 
 async def mosaic_definition(
-    ctx, public_key: bytes, common: NEM2TransactionCommon, creation: NEM2MosaicDefinitionTransaction
+    ctx, common: NEM2TransactionCommon, creation: NEM2MosaicDefinitionTransaction
 ) -> bytearray:
     await layout.ask_mosaic_definition(ctx, common, creation)
     return serialize.serialize_mosaic_definition(common, creation)

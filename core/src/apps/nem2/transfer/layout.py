@@ -1,10 +1,10 @@
 from trezor import ui
-from trezor.messages import (
-    ButtonRequestType,
-    NEM2Mosaic,
-    NEM2TransactionCommon,
-    NEM2TransferTransaction,
-)
+
+from trezor.messages import ButtonRequestType
+from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
+from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
+from trezor.messages.NEM2TransferTransaction import NEM2TransferTransaction
+
 from trezor.ui.text import Text
 from trezor.utils import format_amount
 
@@ -21,7 +21,7 @@ from apps.common.layout import split_address
 
 async def ask_transfer(
     ctx,
-    common: NEM2TransactionCommon,
+    common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
     transfer: NEM2TransferTransaction,
     embedded=False
 ):
@@ -36,7 +36,10 @@ async def ask_transfer(
 
 
 async def ask_transfer_mosaic(
-    ctx, common: NEM2TransactionCommon, transfer: NEM2TransferTransaction, mosaic: NEMMosaic
+    ctx,
+    common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
+    transfer: NEM2TransferTransaction,
+    mosaic: NEMMosaic
 ):
     if is_nem_xem_mosaic(mosaic.id):
         return
@@ -77,7 +80,9 @@ def _get_xem_amount(transfer: NEM2TransferTransaction):
     return 0
 
 async def ask_importance_transfer(
-    ctx, common: NEM2TransactionCommon, imp: NEMImportanceTransfer
+    ctx,
+    common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
+    imp: NEMImportanceTransfer
 ):
     if imp.mode == NEMImportanceTransferMode.ImportanceTransfer_Activate:
         m = "Activate"

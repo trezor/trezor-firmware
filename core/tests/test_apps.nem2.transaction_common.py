@@ -8,7 +8,6 @@ if not utils.BITCOIN_ONLY:
     from apps.nem2.writers import serialize_embedded_tx_common
     from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
 
-
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestNem2TransactionCommon(unittest.TestCase):
 

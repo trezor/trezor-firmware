@@ -4,6 +4,7 @@ if not utils.BITCOIN_ONLY:
     from apps.nem2.helpers import *
     from apps.nem2.mosaic import *
     from apps.nem2.mosaic.serialize import serialize_mosaic_definition, serialize_mosaic_supply
+    from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
     from trezor.messages.NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
     from trezor.messages.NEM2MosaicSupplyChangeTransaction import NEM2MosaicSupplyChangeTransaction
 

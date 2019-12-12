@@ -1,12 +1,12 @@
-from trezor.crypto import random, base32
+from trezor.crypto import base32
+
 from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
+from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
 from trezor.messages.NEM2NamespaceRegistrationTransaction import NEM2NamespaceRegistrationTransaction
 from trezor.messages.NEM2AddressAliasTransaction import NEM2AddressAliasTransaction
-from ubinascii import hexlify, unhexlify
+from trezor.messages.NEM2MosaicAliasTransaction import NEM2MosaicAliasTransaction
 
 from ..helpers import (
-    AES_BLOCK_SIZE,
-    NEM2_TRANSACTION_TYPE_NAMESPACE_REGISTRATION,
     NEM2_NAMESPACE_REGISTRATION_TYPE_ROOT,
     NEM2_NAMESPACE_REGISTRATION_TYPE_SUB
 )
@@ -20,7 +20,6 @@ from ..writers import (
 from apps.common.writers import (
     write_bytes,
     write_uint8,
-    write_uint16_le,
     write_uint32_le,
     write_uint64_le
 )

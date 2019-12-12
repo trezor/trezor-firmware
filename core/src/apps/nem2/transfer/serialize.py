@@ -1,12 +1,8 @@
-from trezor.crypto import random, base32
-from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
-from trezor.messages.NEMTransfer import NEMTransfer
-from ubinascii import hexlify, unhexlify
+from trezor.crypto import base32
 
-from ..helpers import (
-    AES_BLOCK_SIZE,
-    NEM2_TRANSACTION_TYPE_TRANSFER,
-)
+from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
+from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
+from trezor.messages.NEM2TransferTransaction import NEM2TransferTransaction
 
 from ..writers import (
     serialize_tx_common,
@@ -27,7 +23,7 @@ from apps.common.writers import (
 def serialize_transfer(
     common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
     transfer: NEM2TransferTransaction,
-    embedded = False
+    embedded=False
 ) -> bytearray:
     tx = bytearray()
 
@@ -87,71 +83,3 @@ def get_transfer_body_size(transfer):
 def serialize_mosaic(w: bytearray, mosaic_id: str, amount: int):
     write_uint64_le(w, int(mosaic_id, 16))
     write_uint64_le(w, int(amount))
-
-def serialize_importance_transfer(
-    common: NEMTransactionCommon, imp: NEMImportanceTransfer, public_key: bytes
-) -> bytearray:
-    w = serialize_tx_common(
-        common, public_key, NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER
-    )
-
-    write_uint32_le(w, imp.mode)
-    write_bytes_with_len(w, imp.public_key)
-    return w
-
-
-def get_transfer_payload(transfer: NEM2Transfer, node) -> [bytes, bool]:
-    payload = transfer.payload
-    encrypted = False
-    if transfer.public_key is not None:
-        if payload is None:
-            raise ValueError("Public key provided but no payload to encrypt")
-        payload = _encrypt(node, transfer.public_key, transfer.payload)
-        encrypted = True
-
-    return payload, encrypted
-
-
-def _encrypt(node, public_key: bytes, payload: bytes) -> bytes:
-    salt = random.bytes(NEM_SALT_SIZE)
-    iv = random.bytes(AES_BLOCK_SIZE)
-    encrypted = node.nem_encrypt(public_key, iv, salt, payload)
-    return iv + salt + encrypted
-
-
-def _get_version(network, mosaics=None) -> int:
-    if mosaics:
-        return network << 24 | 2
-    return network << 24 | 1
-
-
-def canonicalize_mosaics(mosaics: list):
-    if len(mosaics) <= 1:
-        return mosaics
-    mosaics = merge_mosaics(mosaics)
-    return sort_mosaics(mosaics)
-
-
-def are_mosaics_equal(a: NEM2Mosaic, b: NEM2Mosaic) -> bool:
-    if a.id == b.id:
-        return True
-    return False
-
-
-def merge_mosaics(mosaics: list) -> list:
-    if not mosaics:
-        return []
-    ret = []
-    for i in mosaics:
-        found = False
-        for k, y in enumerate(ret):
-            if are_mosaics_equal(i, y):
-                ret[k].amount += i.amount
-                found = True
-        if not found:
-            ret.append(i)
-    return ret
-
-
-def sort_mosaics(mosaics: list) -> list:
-    return sorted(mosaics, key=lambda m: (m.namespace, m.mosaic))
