@@ -36,7 +36,7 @@ class TestMsgResetDevice:
                 strength=strength,
                 passphrase_protection=False,
                 pin_protection=False,
-                language="english",
+                language="en-US",
                 label="test",
             )
         )
@@ -106,7 +106,7 @@ class TestMsgResetDevice:
                 strength=strength,
                 passphrase_protection=True,
                 pin_protection=True,
-                language="english",
+                language="en-US",
                 label="test",
             )
         )
@@ -195,7 +195,7 @@ class TestMsgResetDevice:
                 strength=strength,
                 passphrase_protection=True,
                 pin_protection=True,
-                language="english",
+                language="en-US",
                 label="test",
             )
         )
@@ -230,4 +230,4 @@ class TestMsgResetDevice:
 
     def test_already_initialized(self, client):
         with pytest.raises(Exception):
-            device.reset(client, False, 128, True, True, "label", "english")
+            device.reset(client, False, 128, True, True, "label", "en-US")

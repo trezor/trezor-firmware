@@ -44,7 +44,6 @@ from ..common import MNEMONIC12
 )
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_cardano_get_address(client, path, expected_address):
-    # data from https://iancoleman.io/bip39/#english
-
+    # data from https://iancoleman.io/bip39/
     address = get_address(client, parse_path(path))
     assert address == expected_address

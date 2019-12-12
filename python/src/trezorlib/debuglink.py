@@ -456,7 +456,7 @@ def load_device(
     pin,
     passphrase_protection,
     label,
-    language="english",
+    language="en-US",
     skip_checksum=False,
     needs_backup=False,
     no_backup=False,

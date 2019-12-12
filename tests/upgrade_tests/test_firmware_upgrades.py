@@ -36,7 +36,7 @@ MNEMONIC = " ".join(["all"] * 12)
 PATH = [H_(44), H_(0), H_(0), 0, 0]
 ADDRESS = "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL"
 LABEL = "test"
-LANGUAGE = "english"
+LANGUAGE = "en-US"
 STRENGTH = 128
 
 
@@ -83,7 +83,6 @@ def test_upgrade_load(gen, from_tag, to_tag):
         assert not client.features.passphrase_protection
         assert client.features.initialized
         assert client.features.label == LABEL
-        assert client.features.language == LANGUAGE
         assert btc.get_address(client, "Bitcoin", PATH) == ADDRESS
 
     with EmulatorWrapper(gen, from_tag) as emu:
@@ -102,6 +101,7 @@ def test_upgrade_load(gen, from_tag, to_tag):
     with EmulatorWrapper(gen, to_tag, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(to_tag, emu.client)
+        assert emu.client.features.language == LANGUAGE
 
 
 @for_all("legacy")
@@ -111,7 +111,6 @@ def test_upgrade_reset(gen, from_tag, to_tag):
         assert not client.features.passphrase_protection
         assert client.features.initialized
         assert client.features.label == LABEL
-        assert client.features.language == LANGUAGE
         assert not client.features.needs_backup
         assert not client.features.unfinished_backup
         assert not client.features.no_backup
@@ -134,6 +133,7 @@ def test_upgrade_reset(gen, from_tag, to_tag):
     with EmulatorWrapper(gen, to_tag, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(to_tag, emu.client)
+        assert emu.client.features.language == LANGUAGE
         assert btc.get_address(emu.client, "Bitcoin", PATH) == address
 
 
@@ -144,7 +144,6 @@ def test_upgrade_reset_skip_backup(gen, from_tag, to_tag):
         assert not client.features.passphrase_protection
         assert client.features.initialized
         assert client.features.label == LABEL
-        assert client.features.language == LANGUAGE
         assert client.features.needs_backup
         assert not client.features.unfinished_backup
         assert not client.features.no_backup
@@ -168,6 +167,7 @@ def test_upgrade_reset_skip_backup(gen, from_tag, to_tag):
     with EmulatorWrapper(gen, to_tag, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(to_tag, emu.client)
+        assert emu.client.features.language == LANGUAGE
         assert btc.get_address(emu.client, "Bitcoin", PATH) == address
 
 
@@ -178,7 +178,6 @@ def test_upgrade_reset_no_backup(gen, from_tag, to_tag):
         assert not client.features.passphrase_protection
         assert client.features.initialized
         assert client.features.label == LABEL
-        assert client.features.language == LANGUAGE
         assert not client.features.needs_backup
         assert not client.features.unfinished_backup
         assert client.features.no_backup
@@ -202,6 +201,7 @@ def test_upgrade_reset_no_backup(gen, from_tag, to_tag):
     with EmulatorWrapper(gen, to_tag, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(to_tag, emu.client)
+        assert emu.client.features.language == LANGUAGE
         assert btc.get_address(emu.client, "Bitcoin", PATH) == address
 
 
