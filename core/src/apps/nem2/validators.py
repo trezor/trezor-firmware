@@ -2,6 +2,7 @@ from trezor.messages.NEM2SignTx import (
     NEM2SignTx,
     NEM2TransactionCommon,
     NEM2TransferTransaction,
+    NEM2HashLockTransaction
 )
 from trezor.wire import ProcessError
 
@@ -48,6 +49,8 @@ def validate(msg: NEM2SignTx):
         _validate_address_alias(msg.address_alias, msg.transaction.version)
     if msg.mosaic_alias:
         _validate_mosaic_alias(msg.mosaic_alias, msg.transaction.version)
+    if msg.hash_lock:
+        _validate_hash_lock(msg.hash_lock)
 
 def _validate_single_tx(msg: NEM2SignTx):
     # ensure exactly one transaction is provided
@@ -59,6 +62,7 @@ def _validate_single_tx(msg: NEM2SignTx):
         + bool(msg.address_alias)
         + bool(msg.mosaic_alias)
         + bool(msg.aggregate)
+        + bool(msg.hash_lock)
         # + bool(msg.importance_transfer)
     )
     if tx_count == 0:
@@ -111,3 +115,11 @@ def _validate_mosaic_alias(mosaic_alias: NEM2MosaicAliasTransaction, network: in
         raise ProcessError("No mosiac ID provided")
     if mosaic_alias.alias_action is None:
         raise ProcessError("No alias action provided")
+
+def _validate_hash_lock(hash_lock: NEM2HashLockTransaction):
+    if hash_lock.mosaic is None:
+        raise ProcessError("No mosaic provided")
+    if hash_lock.duration is None:
+        raise ProcessError("No duration provided")
+    if hash_lock.hash is None:
+        raise ProcessError("No AggregateTransaction hash provided")

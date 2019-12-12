@@ -46,6 +46,7 @@ message NEM2SignTx {
     optional NEM2AddressAliasTransaction address_alias = 10; // Address Alias
     optional NEM2AggregateTransaction aggregate = 11; // Aggregate part
     optional NEM2MosaicAliasTransaction mosaic_alias = 12; // Mosaic Alias part
+    optional NEM2HashLockTransaction hash_lock = 13; // Hash Lock part
 
     /**
     * Common types from
@@ -69,6 +70,7 @@ message NEM2SignTx {
         AGGREGATE_BONDED = 16961;
         AGGREGATE_COMPLETE = 16705;
         MOSAIC_ALIAS = 17230;
+        HASH_LOCK = 16712;
     }
 
     enum NEM2NetworkType {
@@ -182,6 +184,15 @@ message NEM2SignTx {
         optional NEM2AliasAction alias_action = 1;
         optional string namespace_id = 2;
         optional string mosaic_id = 3;
+    }
+
+    /**
+    * Hash Lock transaction type definition
+    */
+    message NEM2HashLockTransaction {
+        optional NEM2Mosaic mosaic = 1;
+        optional uint64 duration = 2;
+        optional string hash = 3;
     }
 
     /**

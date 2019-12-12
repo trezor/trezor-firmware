@@ -6,13 +6,8 @@ from ubinascii import unhexlify, hexlify
 
 from apps.common import seed
 from apps.common.paths import validate_path
-from apps.nem2 import CURVE, transfer, mosaic, namespace, metadata
-from apps.nem2.helpers import (
-    validate_nem2_path,
-    NEM2_HASH_ALG,
-    NEM2_TRANSACTION_TYPE_AGGREGATE_COMPLETE,
-    NEM2_TRANSACTION_TYPE_AGGREGATE_BONDED
-)
+from apps.nem2 import CURVE, transfer, mosaic, namespace, aggregate, hash_lock
+from apps.nem2.helpers import NEM2_HASH_ALG, check_path, NEM2_TRANSACTION_TYPE_AGGREGATE_BONDED, NEM2_TRANSACTION_TYPE_AGGREGATE_COMPLETE
 from apps.nem2.validators import validate
 
 # Included fields are `size`, `verifiableEntityHeader_Reserved1`,
@@ -70,6 +65,8 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
         tx = await namespace.mosaic_alias(ctx, common, msg.mosaic_alias)
     elif msg.aggregate:
         tx = await aggregate.aggregate(ctx, common, msg.aggregate)
+    elif msg.hash_lock:
+        tx = await hash_lock.hash_lock(ctx, common, msg.hash_lock)
     # elif msg.supply_change:
     #     tx = await mosaic.supply_change(ctx, public_key, common, msg.supply_change)
     # elif msg.aggregate_modification:
@@ -100,6 +97,9 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
             tx = multisig.initiate(
                 seed.remove_ed25519_prefix(node.public_key()), msg.transaction, tx
             )
+
+    print('unsigned tx', hexlify(tx))
+    print('singner public key', hexlify(public_key))
 
     # https://nemtech.github.io/concepts/transaction.html#signing-a-transaction
     # sign tx

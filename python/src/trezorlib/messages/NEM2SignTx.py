@@ -3,6 +3,7 @@
 from .. import protobuf as p
 
 from .NEM2AggregateTransaction import NEM2AggregateTransaction
+from .NEM2HashLockTransaction import NEM2HashLockTransaction
 from .NEM2MosaicAliasTransaction import NEM2MosaicAliasTransaction
 from .NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
 from .NEM2MosaicSupplyChangeTransaction import NEM2MosaicSupplyChangeTransaction
@@ -34,6 +35,7 @@ class NEM2SignTx(p.MessageType):
         mosaic_supply: NEM2MosaicSupplyChangeTransaction = None,
         aggregate: NEM2AggregateTransaction = None,
         mosaic_alias: NEM2MosaicAliasTransaction = None,
+        hash_lock: NEM2HashLockTransaction = None,
     ) -> None:
         self.transaction = transaction
         self.multisig = multisig
@@ -45,6 +47,7 @@ class NEM2SignTx(p.MessageType):
         self.mosaic_supply = mosaic_supply
         self.aggregate = aggregate
         self.mosaic_alias = mosaic_alias
+        self.hash_lock = hash_lock
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -61,4 +64,5 @@ class NEM2SignTx(p.MessageType):
             10: ('address_alias', NEM2AddressAliasTransaction, 0),
             11: ('aggregate', NEM2AggregateTransaction, 0),
             12: ('mosaic_alias', NEM2MosaicAliasTransaction, 0),
+            13: ('hash_lock', NEM2HashLockTransaction, 0),
         }
