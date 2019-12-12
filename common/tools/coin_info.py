@@ -266,6 +266,7 @@ def _load_fido_apps():
         app_name = os.path.basename(filename)[:-5].lower()
         app = load_json(filename)
         app.setdefault("use_sign_count", None)
+        app.setdefault("use_self_attestation", None)
         app.setdefault("u2f", [])
         app.setdefault("webauthn", [])
 
