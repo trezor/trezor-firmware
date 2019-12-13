@@ -22867,6 +22867,7 @@
         },
         "eth:AUX": {
             "links": {
+                "Github": "https://github.com/auxiliumglobal",
                 "Homepage": "https://auxilium.global"
             },
             "marketcap_usd": 263034,
@@ -22879,10 +22880,6 @@
                 {
                     "name": "MyCrypto",
                     "url": "https://mycrypto.com"
-                },
-                {
-                    "name": "MyEtherWallet",
-                    "url": "https://www.myetherwallet.com"
                 }
             ]
         },
