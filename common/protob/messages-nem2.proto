@@ -45,12 +45,12 @@ message NEM2SignTx {
     optional NEM2NamespaceRegistrationTransaction namespace_registration = 9; // Namespace registration part
     optional NEM2AddressAliasTransaction address_alias = 10; // Address Alias
     optional NEM2AggregateTransaction aggregate = 11; // Aggregate part
-    optional NEM2NamespaceMetadataTransaction namespace_metadata = 12; // Aggregate part
-    optional NEM2MosaicAliasTransaction mosaic_alias = 13; // Mosaic Alias part
-    optional NEM2HashLockTransaction hash_lock = 14; // Hash Lock part
-    optional NEM2SecretLockTransaction secret_lock = 15; // Secret Lock part
-    optional NEM2SecretProofTransaction secret_proof = 16; // Secret Proof part
-    optional NEM2MultisigModificationTransaction multisig_modification = 17; // Multisig modification part
+    optional NEM2NamespaceMetadataTransaction namespace_metadata = 12; // Namespace metadata part
+    optional NEM2MosaicMetadataTransaction mosaic_metadata = 13; // Mosaic metadata part
+    optional NEM2MosaicAliasTransaction mosaic_alias = 14; // Mosaic Alias part
+    optional NEM2HashLockTransaction hash_lock = 15; // Hash Lock part
+    optional NEM2SecretLockTransaction secret_lock = 16; // Secret Lock part
+    optional NEM2SecretProofTransaction secret_proof = 17; // Secret Proof part
 
     /**
     * Common types from
@@ -73,6 +73,8 @@ message NEM2SignTx {
         MOSAIC_SUPPLY_CHANGE = 16973;
         AGGREGATE_BONDED = 16961;
         AGGREGATE_COMPLETE = 16705;
+        NAMESPACE_METADATA = 17220;
+        MOSAIC_METADATA = 16964;
         MOSAIC_ALIAS = 17230;
         HASH_LOCK = 16712;
         SECRET_LOCK = 16722;
@@ -286,14 +288,16 @@ message NEM2SignTx {
     }
 
     /**
-    * Multisig modification type definition
-    * https://nemtech.github.io/concepts/multisig-account.html#multisigaccountmodificationtransaction
+    * Mosaic metadata type definition
+    * https://nemtech.github.io/concepts/metadata.html#mosaic-metadata-transaction
     */
-    message NEM2MultisigModificationTransaction {
-        optional uint32 min_approval_delta = 1; // relative change in number of cosignatures required to add public key
-        optional uint32 min_removal_delta = 2; // relative change in number of cosignatures required to remove public key
-        repeated string public_key_additions = 3; // public keys to add to multisig account
-        repeated string public_key_deletions = 4; // public keys to remove from multisig account
+    message NEM2MosaicMetadataTransaction {
+        optional string target_public_key = 1; // target namespace owner public key
+        optional string scoped_metadata_key = 2; // metadata key (uint64)
+        optional string target_mosaic_id = 3; // id of target mosaic (uint64)
+        optional uint32 value_size_delta = 4; // change in value size (in bytes)
+        optional uint32 value_size = 5; // new value size (in bytes)
+        optional string value = 6; // difference between previous value and new value
     }
 }
 

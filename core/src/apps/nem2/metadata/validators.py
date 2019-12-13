@@ -1,34 +1,43 @@
-from trezor.messages.NEM2SignTx import (
-    NEM2SignTx,
-    NEM2NamespaceMetadataTransaction
+from trezor.messages.NEM2NamespaceMetadataTransaction import NEM2NamespaceMetadataTransaction
+from trezor.messages.NEM2MosaicMetadataTransaction import NEM2MosaicMetadataTransaction
+
+from ..helpers import (
+    NEM2_TRANSACTION_TYPE_NAMESPACE_METADATA,
+    NEM2_TRANSACTION_TYPE_MOSAIC_METADATA
 )
 
 from trezor.wire import ProcessError
 
-def _validate_namespace_metadata(namespace_metadata: NEM2NamespaceMetadataTransaction, version: int):
+def _validate_metadata(
+    metadata: NEM2NamespaceMetadataTransaction | NEM2MosaicMetadataTransaction,
+    entity_type: int
+):
 
     # https://nemtech.github.io/concepts/metadata.html#namespace-metadata-transaction
+    # https://nemtech.github.io/concepts/metadata.html#mosaic-metadata-transaction
 
-    if(namespace_metadata.target_public_key is None):
+    if metadata.target_public_key is None:
         raise ProcessError("Invalid target public key")
 
-    if(namespace_metadata.scoped_metadata_key is None):
+    if metadata.scoped_metadata_key is None:
         raise ProcessError("Invalid scoped metadata key")
 
-    if(namespace_metadata.target_namespace_id is None):
-        raise ProcessError("Invalid target namespace id")
+    if entity_type == NEM2_TRANSACTION_TYPE_NAMESPACE_METADATA:
+        if metadata.target_namespace_id is None:
+            raise ProcessError("Invalid target namespace id")
 
-    if(namespace_metadata.value_size_delta is None):
+    elif entity_type == NEM2_TRANSACTION_TYPE_MOSAIC_METADATA:
+        if metadata.target_mosaic_id is None:
+            raise ProcessError("Invalid target mosaic id")
+
+    if metadata.value_size_delta is None:
         raise ProcessError("Invalid value size delta")
 
-    if(namespace_metadata.value_size is None ):
+    if metadata.value_size is None:
         raise ProcessError("Invalid value size, value size not provided")
 
-    if(namespace_metadata.value_size > 1024 ):
+    if metadata.value_size > 1024:
         raise ProcessError("Invalid value size, value size cannot be greater than 1024")
 
-    if(namespace_metadata.value is None):
+    if metadata.value is None:
         raise ProcessError("Invalid value")
-
-
-

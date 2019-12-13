@@ -4,6 +4,11 @@ from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
 from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
 from trezor.messages.NEM2NamespaceMetadataTransaction import NEM2NamespaceMetadataTransaction
 
+from ..helpers import (
+    NEM2_TRANSACTION_TYPE_NAMESPACE_METADATA,
+    NEM2_TRANSACTION_TYPE_MOSAIC_METADATA
+)
+
 from trezor.ui.text import Text
 from trezor.utils import format_amount
 from trezor.ui.scroll import Paginated
@@ -28,10 +33,16 @@ async def ask_namespace_metadata(
     t.mono(*split_address(namespace_metadata.target_public_key.upper()))
     properties.append(t)
 
-    # confirm namespace id and metadata key
+    # confirm namespace/mosaic id and metadata key
     t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
-    t.bold("Namespace Id:")
-    t.normal(namespace_metadata.target_namespace_id.upper())
+
+    if common.type == NEM2_TRANSACTION_TYPE_NAMESPACE_METADATA:
+        t.bold("Namespace Id:")
+        t.normal(namespace_metadata.target_namespace_id.upper())
+    if common.type == NEM2_TRANSACTION_TYPE_MOSAIC_METADATA:
+        t.bold("Mosaic Id:")
+        t.normal(namespace_metadata.target_mosaic_id.upper())
+    
     t.bold("Metadata Key:")
     t.normal(namespace_metadata.scoped_metadata_key)
     properties.append(t)

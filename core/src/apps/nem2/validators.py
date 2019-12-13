@@ -30,6 +30,8 @@ from .namespace.validators import (
     _validate_address_alias
 )
 
+from .metadata.validators import _validate_metadata
+
 def validate(msg: NEM2SignTx):
     if not validate_nem2_path(msg.address_n):
         raise ProcessError("Invalid HD path provided, must fit 'm/44\'/43\'/a'")
@@ -52,12 +54,16 @@ def validate(msg: NEM2SignTx):
         _validate_mosaic_definition(msg.mosaic_definition)
     if msg.mosaic_supply:
         _validate_mosaic_supply(msg.mosaic_supply)
-    if(msg.namespace_registration):
+    if msg.namespace_registration:
         _validate_namespace_registration(msg.namespace_registration, msg.transaction.version)
-    if(msg.address_alias):
+    if msg.address_alias:
         _validate_address_alias(msg.address_alias, msg.transaction.version)
     if msg.mosaic_alias:
         _validate_mosaic_alias(msg.mosaic_alias, msg.transaction.version)
+    if msg.namespace_metadata:
+        _validate_metadata(msg.namespace_metadata, msg.transaction.type)
+    if msg.mosaic_metadata:
+        _validate_metadata(msg.mosaic_metadata, msg.transaction.type)
     if msg.hash_lock:
         _validate_hash_lock(msg.hash_lock)
     if msg.secret_lock:
@@ -73,6 +79,8 @@ def _validate_single_tx(msg: NEM2SignTx):
         + bool(msg.mosaic_definition)
         + bool(msg.mosaic_supply)
         + bool(msg.address_alias)
+        + bool(msg.namespace_metadata)
+        + bool(msg.mosaic_metadata)
         + bool(msg.mosaic_alias)
         + bool(msg.aggregate)
         + bool(msg.hash_lock)
@@ -139,14 +147,14 @@ def _validate_mosaic_supply(mosaic_supply: NEM2MosaicSupplyChangeTransaction):
     if mosaic_supply.mosaic_id is None:
         raise ProcessError("No mosaic ID provided")
     if mosaic_supply.action is None:
-        raise ProcessError("No action provided")    
+        raise ProcessError("No action provided")
     if mosaic_supply.delta is None:
         raise ProcessError("No delta provided")
 
     # Action was provided, now check it is valid
     valid_actions = [NEM2_MOSAIC_SUPPLY_CHANGE_ACTION_INCREASE, NEM2_MOSAIC_SUPPLY_CHANGE_ACTION_DECREASE]
     if mosaic_supply.action not in valid_actions:
-        raise ProcessError("Invalid action provided")   
+        raise ProcessError("Invalid action provided")
 
 
 def _validate_mosaic_alias(mosaic_alias: NEM2MosaicAliasTransaction, network: int):
