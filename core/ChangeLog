@@ -23,6 +23,7 @@ Version 2.1.6 [Oct 2019]
 * FIDO2
 * FIDO2 credential management via trezorctl
 * BackupType in Features
+* Fix storage keys module visbility bug (6ad329) introduced in 2.1.3 (46e4c0) which was breaking fw upgrades
 
 Version 2.1.5 [Sep 2019]
 * Fix for sluggish U2F authentication when using Shamir
