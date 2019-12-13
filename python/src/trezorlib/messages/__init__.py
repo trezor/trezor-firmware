@@ -59,6 +59,8 @@ from .DebugMoneroDiagRequest import DebugMoneroDiagRequest
 from .Deprecated_PassphraseStateAck import Deprecated_PassphraseStateAck
 from .Deprecated_PassphraseStateRequest import Deprecated_PassphraseStateRequest
 from .ECDHSessionKey import ECDHSessionKey
+from .ElementsGetRangeProofNonce import ElementsGetRangeProofNonce
+from .ElementsRangeProofNonce import ElementsRangeProofNonce
 from .Entropy import Entropy
 from .EntropyAck import EntropyAck
 from .EntropyRequest import EntropyRequest

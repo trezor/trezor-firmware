@@ -515,6 +515,9 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/DebugMonero*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Monero*.py'))
 
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/elements/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/Elements*.py'))
+
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/NEM*.py'))
