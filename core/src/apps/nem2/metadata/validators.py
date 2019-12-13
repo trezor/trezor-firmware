@@ -6,6 +6,8 @@ from ..helpers import (
     NEM2_TRANSACTION_TYPE_MOSAIC_METADATA
 )
 
+from ubinascii import unhexlify
+
 from trezor.wire import ProcessError
 
 def _validate_metadata(
@@ -41,3 +43,6 @@ def _validate_metadata(
 
     if metadata.value is None:
         raise ProcessError("Invalid value")
+
+    if len(unhexlify(metadata.value)) > 1024:
+        raise ProcessError("The maximum value size is 1024")

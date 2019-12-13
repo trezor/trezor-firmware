@@ -19,10 +19,10 @@ from ..layout import require_confirm_final, require_confirm_text
 from apps.common.confirm import require_confirm
 from apps.common.layout import split_address
 
-async def ask_namespace_metadata(
+async def ask_metadata(
     ctx,
     common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
-    namespace_metadata: NEM2NamespaceMetadataTransaction,
+    metadata: NEM2NamespaceMetadataTransaction | NEM2MosaicMetadataTransaction | NEM2AccountMetadataTransaction,
     embedded=False
 ):
 
@@ -30,7 +30,7 @@ async def ask_namespace_metadata(
     # confirm target public key
     t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
     t.bold("Target Public Key:")
-    t.mono(*split_address(namespace_metadata.target_public_key.upper()))
+    t.mono(*split_address(metadata.target_public_key.upper()))
     properties.append(t)
 
     # confirm namespace/mosaic id and metadata key
@@ -38,19 +38,19 @@ async def ask_namespace_metadata(
 
     if common.type == NEM2_TRANSACTION_TYPE_NAMESPACE_METADATA:
         t.bold("Namespace Id:")
-        t.normal(namespace_metadata.target_namespace_id.upper())
+        t.normal(metadata.target_namespace_id.upper())
     if common.type == NEM2_TRANSACTION_TYPE_MOSAIC_METADATA:
         t.bold("Mosaic Id:")
-        t.normal(namespace_metadata.target_mosaic_id.upper())
+        t.normal(metadata.target_mosaic_id.upper())
     
     t.bold("Metadata Key:")
-    t.normal(namespace_metadata.scoped_metadata_key)
+    t.normal(metadata.scoped_metadata_key)
     properties.append(t)
 
     # confirm new value
     t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
     t.bold("Metadata Value:")
-    t.normal(unhexlify(namespace_metadata.value).decode())
+    t.normal(unhexlify(metadata.value).decode())
     properties.append(t)
 
     paginated = Paginated(properties)

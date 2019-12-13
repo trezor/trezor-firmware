@@ -70,6 +70,8 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
         tx = await metadata.metadata(ctx, common, msg.namespace_metadata)
     elif msg.mosaic_metadata:
         tx = await metadata.metadata(ctx, common, msg.mosaic_metadata)
+    elif msg.account_metadata:
+        tx = await metadata.metadata(ctx, common, msg.account_metadata)
     elif msg.mosaic_alias:
         tx = await namespace.mosaic_alias(ctx, common, msg.mosaic_alias)
     elif msg.aggregate:

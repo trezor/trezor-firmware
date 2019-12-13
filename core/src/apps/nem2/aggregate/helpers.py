@@ -7,12 +7,14 @@ from apps.nem2.mosaic.layout import ask_mosaic_definition, ask_mosaic_supply
 from apps.nem2.namespace.layout import ask_namespace_registration, ask_address_alias, ask_mosaic_alias 
 from apps.nem2.hash_lock.layout import ask_hash_lock
 from apps.nem2.secret_lock.layout import ask_secret_lock, ask_secret_proof
+from apps.nem2.metadata.layout import ask_metadata
 
 from apps.nem2.transfer.serialize import serialize_transfer
 from apps.nem2.mosaic.serialize import serialize_mosaic_definition, serialize_mosaic_supply
 from apps.nem2.namespace.serialize import serialize_namespace_registration, serialize_address_alias, serialize_mosaic_alias
 from apps.nem2.hash_lock.serialize import serialize_hash_lock
 from apps.nem2.secret_lock.serialize import serialize_secret_lock, serialize_secret_proof
+from apps.nem2.metadata.serialize import serialize_metadata
 
 from ..helpers import (
     NEM2_TRANSACTION_TYPE_TRANSFER,
@@ -23,7 +25,10 @@ from ..helpers import (
     NEM2_TRANSACTION_TYPE_MOSAIC_ALIAS,
     NEM2_TRANSACTION_TYPE_HASH_LOCK,
     NEM2_TRANSACTION_TYPE_SECRET_LOCK,
-    NEM2_TRANSACTION_TYPE_SECRET_PROOF
+    NEM2_TRANSACTION_TYPE_SECRET_PROOF,
+    NEM2_TRANSACTION_TYPE_NAMESPACE_METADATA,
+    NEM2_TRANSACTION_TYPE_MOSAIC_METADATA,
+    NEM2_TRANSACTION_TYPE_ACCOUNT_METADATA
 )
 
 # Should be the key that maps to the transaction data
@@ -34,6 +39,9 @@ map_type_to_property = {
     NEM2_TRANSACTION_TYPE_NAMESPACE_REGISTRATION: "namespace_registration",
     NEM2_TRANSACTION_TYPE_ADDRESS_ALIAS: "address_alias",
     NEM2_TRANSACTION_TYPE_MOSAIC_ALIAS: "mosaic_alias",
+    NEM2_TRANSACTION_TYPE_NAMESPACE_METADATA: "namespace_metadata",
+    NEM2_TRANSACTION_TYPE_MOSAIC_METADATA: "mosaic_metadata",
+    NEM2_TRANSACTION_TYPE_ACCOUNT_METADATA: "account_metadata",
     NEM2_TRANSACTION_TYPE_HASH_LOCK: "hash_lock",
     NEM2_TRANSACTION_TYPE_SECRET_LOCK: "secret_lock",
     NEM2_TRANSACTION_TYPE_SECRET_PROOF: "secret_proof"
@@ -48,7 +56,10 @@ map_type_to_serialize = {
     NEM2_TRANSACTION_TYPE_MOSAIC_ALIAS: serialize_mosaic_alias,
     NEM2_TRANSACTION_TYPE_HASH_LOCK: serialize_hash_lock,
     NEM2_TRANSACTION_TYPE_SECRET_LOCK: serialize_secret_lock,
-    NEM2_TRANSACTION_TYPE_SECRET_PROOF: serialize_secret_proof
+    NEM2_TRANSACTION_TYPE_SECRET_PROOF: serialize_secret_proof,
+    NEM2_TRANSACTION_TYPE_NAMESPACE_METADATA: serialize_metadata,
+    NEM2_TRANSACTION_TYPE_MOSAIC_METADATA: serialize_metadata,
+    NEM2_TRANSACTION_TYPE_ACCOUNT_METADATA: serialize_metadata
 }
 
 map_type_to_layout = {
@@ -60,7 +71,10 @@ map_type_to_layout = {
     NEM2_TRANSACTION_TYPE_MOSAIC_ALIAS: ask_mosaic_alias,
     NEM2_TRANSACTION_TYPE_HASH_LOCK: ask_hash_lock,
     NEM2_TRANSACTION_TYPE_SECRET_LOCK: ask_secret_lock,
-    NEM2_TRANSACTION_TYPE_SECRET_PROOF: ask_secret_proof
+    NEM2_TRANSACTION_TYPE_SECRET_PROOF: ask_secret_proof,
+    NEM2_TRANSACTION_TYPE_NAMESPACE_METADATA: ask_metadata,
+    NEM2_TRANSACTION_TYPE_MOSAIC_METADATA: ask_metadata,
+    NEM2_TRANSACTION_TYPE_ACCOUNT_METADATA: ask_metadata
 }
 
 class MerkleTools(object):

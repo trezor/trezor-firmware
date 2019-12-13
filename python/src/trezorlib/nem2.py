@@ -27,6 +27,7 @@ TYPE_NAMESPACE_REGISTRATION = 0x414E
 TYPE_ADDRESS_ALIAS = 0x424E
 TYPE_NAMESPACE_METADATA = 0x4344
 TYPE_MOSAIC_METADATA = 0x4244
+TYPE_ACCOUNT_METADATA = 0x4144
 TYPE_MOSAIC_ALIAS = 0x434E
 TYPE_HASH_LOCK = 0x4148
 TYPE_SECRET_LOCK = 0x4152
@@ -186,6 +187,15 @@ def create_mosaic_metadata(transaction):
     msg.value = transaction["value"]
     return msg
 
+def create_account_metadata(transaction):
+    msg = proto.NEM2AccountMetadataTransaction()
+    msg.target_public_key = transaction["targetPublicKey"]
+    msg.scoped_metadata_key = transaction["scopedMetadataKey"]
+    msg.value_size_delta = transaction["valueSizeDelta"]
+    msg.value_size = transaction["valueSize"]
+    msg.value = transaction["value"]
+    return msg
+
 def create_hash_lock(transaction):
     msg = proto.NEM2HashLockTransaction()
     msg.mosaic = proto.NEM2Mosaic(
@@ -250,6 +260,8 @@ def fill_transaction_by_type(msg, transaction):
         msg.namespace_metadata = create_namespace_metadata(transaction)
     if transaction["type"] == TYPE_MOSAIC_METADATA:
         msg.mosaic_metadata = create_mosaic_metadata(transaction)
+    if transaction["type"] == TYPE_ACCOUNT_METADATA:
+        msg.account_metadata = create_account_metadata(transaction)
     if transaction["type"] == TYPE_HASH_LOCK:
         msg.hash_lock = create_hash_lock(transaction)
     if transaction["type"] == TYPE_SECRET_LOCK:

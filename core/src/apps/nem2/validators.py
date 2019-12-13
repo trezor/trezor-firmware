@@ -64,6 +64,8 @@ def validate(msg: NEM2SignTx):
         _validate_metadata(msg.namespace_metadata, msg.transaction.type)
     if msg.mosaic_metadata:
         _validate_metadata(msg.mosaic_metadata, msg.transaction.type)
+    if msg.account_metadata:
+        _validate_metadata(msg.account_metadata, msg.transaction.type)
     if msg.hash_lock:
         _validate_hash_lock(msg.hash_lock)
     if msg.secret_lock:
@@ -81,6 +83,7 @@ def _validate_single_tx(msg: NEM2SignTx):
         + bool(msg.address_alias)
         + bool(msg.namespace_metadata)
         + bool(msg.mosaic_metadata)
+        + bool(msg.account_metadata)
         + bool(msg.mosaic_alias)
         + bool(msg.aggregate)
         + bool(msg.hash_lock)
