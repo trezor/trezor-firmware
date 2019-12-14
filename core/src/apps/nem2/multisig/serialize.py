@@ -67,9 +67,3 @@ def serialize_multisig_modification_body(multisig_modification: NEM2MultisigModi
         write_bytes(tx, unhexlify(deletion))
 
     return tx
-
-def to_signed_8_bit_representation(unsigned_32_bit_int):
-    unsigned_8_bit_int = unsigned_32_bit_int & 0x000000ff
-    if(unsigned_8_bit_int > 127):
-        return unsigned_8_bit_int - 256
-    return unsigned_8_bit_int
