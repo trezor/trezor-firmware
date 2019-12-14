@@ -85,3 +85,34 @@ class TestMsgNEM2SignTxNamespaceMetadata:
             tx.hash.hex().upper()
             == "0472E9468043BDA687C6370C004659D42C3C4110FD585BA11B9333AE27DC138F"
         )
+
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem2_signtx_multisig_modification_negative_delta(self, client):
+        tx = nem2.sign_tx(
+            client,
+            parse_path("m/44'/43'/0'"),
+            "9F1979BEBA29C47E59B40393ABB516801A353CFC0C18BC241FEDE41939C907E7",
+            {
+                "type": nem2.TYPE_MULTISIG_MODIFICATION,
+                "network": nem2.NETWORK_TYPE_TEST_NET,
+                "version": 38913,
+                "maxFee": "100",
+                "deadline": "113248176649",
+                "minApprovalDelta": -120,
+                "minRemovalDelta": 115,
+                "publicKeyAdditions": [],
+                "publicKeyDeletions": [
+                    "596FEAB15D98BFD75F1743E9DC8A36474A3D0C06AE78ED134C231336C38A6297"
+                ]
+            }
+        )
+
+        assert (
+            tx.payload.hex().upper()
+            == "A800000000000000CC51B06A34770A67FB16BE423EC5D1E3A99D9F0C123BA62DD7C73011ECC33DA602BF0ADA270A34FB55A9594E7073A6B95BBB3270041E893D11611D939846420B252D2E9F95C4671EEB0C67C6666890567E35976B32666263CD390FC188CCF31700000000019855416400000000000000090A1E5E1A0000007388000100000000596FEAB15D98BFD75F1743E9DC8A36474A3D0C06AE78ED134C231336C38A6297"
+        )
+
+        assert (
+            tx.hash.hex().upper()
+            == "24AE0377365208636D2F6BEF79C1B4990F912A2EC3271540794EE1D06727278E"
+        )

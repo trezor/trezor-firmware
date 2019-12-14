@@ -27,8 +27,8 @@ class NEM2MultisigModificationTransaction(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('min_approval_delta', p.SVarintType, 0),
-            2: ('min_removal_delta', p.SVarintType, 0),
+            1: ('min_approval_delta', p.UVarintType, 0),
+            2: ('min_removal_delta', p.UVarintType, 0),
             3: ('public_key_additions', p.UnicodeType, p.FLAG_REPEATED),
             4: ('public_key_deletions', p.UnicodeType, p.FLAG_REPEATED),
         }

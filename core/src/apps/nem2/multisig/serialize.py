@@ -3,7 +3,7 @@ from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
 from trezor.messages.NEM2MultisigModificationTransaction import NEM2MultisigModificationTransaction
 from ubinascii import hexlify, unhexlify
 
-from ..helpers import NEM2_TRANSACTION_TYPE_MULTISIG_MODIFICATION
+from ..helpers import NEM2_TRANSACTION_TYPE_MULTISIG_MODIFICATION, unsigned_32_bit_int_to_8_bit
 
 from ..writers import (
     serialize_tx_common,
@@ -50,9 +50,9 @@ def serialize_multisig_modification_body(multisig_modification: NEM2MultisigModi
 
     tx = bytearray()
 
-    write_uint8(tx, multisig_modification.min_removal_delta & 0xff) # convert signed int to uint representation
+    write_uint8(tx, unsigned_32_bit_int_to_8_bit(multisig_modification.min_removal_delta, signed=False))
 
-    write_uint8(tx, multisig_modification.min_approval_delta & 0xff) # convert signed int to int representation
+    write_uint8(tx, unsigned_32_bit_int_to_8_bit(multisig_modification.min_approval_delta, signed=False))
 
     write_uint8(tx, len(multisig_modification.public_key_additions))
 
@@ -67,3 +67,9 @@ def serialize_multisig_modification_body(multisig_modification: NEM2MultisigModi
         write_bytes(tx, unhexlify(deletion))
 
     return tx
+
+def to_signed_8_bit_representation(unsigned_32_bit_int):
+    unsigned_8_bit_int = unsigned_32_bit_int & 0x000000ff
+    if(unsigned_8_bit_int > 127):
+        return unsigned_8_bit_int - 256
+    return unsigned_8_bit_int

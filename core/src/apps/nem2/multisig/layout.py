@@ -16,6 +16,8 @@ from ..layout import require_confirm_final, require_confirm_text
 from apps.common.confirm import require_confirm
 from apps.common.layout import split_address
 
+from apps.nem2.helpers import unsigned_32_bit_int_to_8_bit
+
 async def ask_multisig_modification(
     ctx,
     common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
@@ -23,18 +25,17 @@ async def ask_multisig_modification(
     embedded=False
 ):
 
-
     properties = []
 
     # confirm approval and removal delta
     t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
     t.bold("Approval Delta:")
     t.br()
-    t.normal(str(multisig_modification.min_approval_delta))
+    t.normal(str(unsigned_32_bit_int_to_8_bit(multisig_modification.min_approval_delta, signed=True)))
     t.br()
     t.bold("Removal Delta:")
     t.br()
-    t.normal(str(multisig_modification.min_removal_delta))
+    t.normal(str(unsigned_32_bit_int_to_8_bit(multisig_modification.min_removal_delta, signed=True)))
     properties.append(t)
 
     # confirm number of additions and deletions

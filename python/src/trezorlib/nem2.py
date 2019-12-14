@@ -192,8 +192,11 @@ def create_secret_proof(transaction):
 
 def create_mutlisig_modification(transaction):
     msg = proto.NEM2MultisigModificationTransaction()
-    msg.min_approval_delta = transaction["minApprovalDelta"]
-    msg.min_removal_delta = transaction["minRemovalDelta"]
+    # the smallest protobuf integer size is 32 bits
+    # nem2 catapult uses a signed 8 bit integer for minApprovalDelta and minRemovalDelta
+    msg.min_approval_delta = transaction["minApprovalDelta"] & 0x000000ff
+    msg.min_removal_delta = transaction["minRemovalDelta"] & 0x000000ff
+
     msg.public_key_additions = transaction["publicKeyAdditions"]
     msg.public_key_deletions = transaction["publicKeyDeletions"]
     return msg
