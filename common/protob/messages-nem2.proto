@@ -45,10 +45,12 @@ message NEM2SignTx {
     optional NEM2NamespaceRegistrationTransaction namespace_registration = 9; // Namespace registration part
     optional NEM2AddressAliasTransaction address_alias = 10; // Address Alias
     optional NEM2AggregateTransaction aggregate = 11; // Aggregate part
-    optional NEM2MosaicAliasTransaction mosaic_alias = 12; // Mosaic Alias part
-    optional NEM2HashLockTransaction hash_lock = 13; // Hash Lock part
-    optional NEM2SecretLockTransaction secret_lock = 14; // Secret Lock part
-    optional NEM2SecretProofTransaction secret_proof = 15; // Secret Proof part
+    optional NEM2NamespaceMetadataTransaction namespace_metadata = 12; // Aggregate part
+    optional NEM2MosaicAliasTransaction mosaic_alias = 13; // Mosaic Alias part
+    optional NEM2HashLockTransaction hash_lock = 14; // Hash Lock part
+    optional NEM2SecretLockTransaction secret_lock = 15; // Secret Lock part
+    optional NEM2SecretProofTransaction secret_proof = 16; // Secret Proof part
+    optional NEM2MultisigModificationTransaction multisig_modification = 17; // Multisig modification part
 
     /**
     * Common types from
@@ -75,6 +77,7 @@ message NEM2SignTx {
         HASH_LOCK = 16712;
         SECRET_LOCK = 16722;
         SECRET_PROOF = 16978;
+        MULTISIG_MODIFICATION = 16725;
     }
 
     enum NEM2NetworkType {
@@ -280,13 +283,24 @@ message NEM2SignTx {
         optional uint32 value_size = 5; // new value size (in bytes)
         optional string value = 6; // difference between previous value and new value
     }
+
+    /**
+    * Multisig modification type definition
+    * https://nemtech.github.io/concepts/multisig-account.html#multisigaccountmodificationtransaction
+    */
+    message NEM2MultisigModificationTransaction {
+        optional uint32 min_approval_delta = 1; // relative change in number of cosignatures required to add public key
+        optional uint32 min_removal_delta = 2; // relative change in number of cosignatures required to remove public key
+        repeated string public_key_additions = 3; // public keys to add to multisig account
+        repeated string public_key_deletions = 4; // public keys to remove from multisig account
+    }
 }
 
 /**
  * Response: Contains NEM2 transaction data and signature
  * @end
  */
- message NEM2SignedTx {
+message NEM2SignedTx {
     optional bytes payload = 1;     // signed transaction payload
     optional bytes hash = 2;        // transaction hash
     optional bytes signature = 3;        // transaction signature

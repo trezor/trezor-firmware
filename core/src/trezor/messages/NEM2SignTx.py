@@ -7,6 +7,7 @@ from .NEM2HashLockTransaction import NEM2HashLockTransaction
 from .NEM2MosaicAliasTransaction import NEM2MosaicAliasTransaction
 from .NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
 from .NEM2MosaicSupplyChangeTransaction import NEM2MosaicSupplyChangeTransaction
+from .NEM2MultisigModificationTransaction import NEM2MultisigModificationTransaction
 from .NEM2NamespaceMetadataTransaction import NEM2NamespaceMetadataTransaction
 from .NEM2NamespaceRegistrationTransaction import NEM2NamespaceRegistrationTransaction
 from .NEM2SecretLockTransaction import NEM2SecretLockTransaction
@@ -40,6 +41,7 @@ class NEM2SignTx(p.MessageType):
         hash_lock: NEM2HashLockTransaction = None,
         secret_lock: NEM2SecretLockTransaction = None,
         secret_proof: NEM2SecretProofTransaction = None,
+        multisig_modification: NEM2MultisigModificationTransaction = None,
     ) -> None:
         self.transaction = transaction
         self.multisig = multisig
@@ -54,6 +56,7 @@ class NEM2SignTx(p.MessageType):
         self.hash_lock = hash_lock
         self.secret_lock = secret_lock
         self.secret_proof = secret_proof
+        self.multisig_modification = multisig_modification
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -69,8 +72,10 @@ class NEM2SignTx(p.MessageType):
             9: ('namespace_registration', NEM2NamespaceRegistrationTransaction, 0),
             10: ('address_alias', NEM2AddressAliasTransaction, 0),
             11: ('aggregate', NEM2AggregateTransaction, 0),
-            12: ('mosaic_alias', NEM2MosaicAliasTransaction, 0),
-            13: ('hash_lock', NEM2HashLockTransaction, 0),
-            14: ('secret_lock', NEM2SecretLockTransaction, 0),
-            15: ('secret_proof', NEM2SecretProofTransaction, 0),
+            12: ('namespace_metadata', NEM2NamespaceMetadataTransaction, 0),
+            13: ('mosaic_alias', NEM2MosaicAliasTransaction, 0),
+            14: ('hash_lock', NEM2HashLockTransaction, 0),
+            15: ('secret_lock', NEM2SecretLockTransaction, 0),
+            16: ('secret_proof', NEM2SecretProofTransaction, 0),
+            17: ('multisig_modification', NEM2MultisigModificationTransaction, 0),
         }

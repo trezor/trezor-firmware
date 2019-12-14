@@ -29,6 +29,7 @@ TYPE_MOSAIC_ALIAS = 0x434E
 TYPE_HASH_LOCK = 0x4148
 TYPE_SECRET_LOCK = 0x4152
 TYPE_SECRET_PROOF = 0x4252
+TYPE_MULTISIG_MODIFICATION = 0x4155
 
 NAMESPACE_REGISTRATION_TYPE_ROOT = 0x00
 NAMESPACE_REGISTRATION_TYPE_CHILD = 0x01
@@ -189,6 +190,14 @@ def create_secret_proof(transaction):
     msg.secret = transaction["secret"]
     return msg
 
+def create_mutlisig_modification(transaction):
+    msg = proto.NEM2MultisigModificationTransaction()
+    msg.min_approval_delta = transaction["minApprovalDelta"]
+    msg.min_removal_delta = transaction["minRemovalDelta"]
+    msg.public_key_additions = transaction["publicKeyAdditions"]
+    msg.public_key_deletions = transaction["publicKeyDeletions"]
+    return msg
+
 def fill_transaction_by_type(msg, transaction):
     if transaction["type"] == TYPE_TRANSACTION_TRANSFER:
         msg.transfer = create_transfer(transaction)
@@ -208,6 +217,8 @@ def fill_transaction_by_type(msg, transaction):
         msg.secret_lock = create_secret_lock(transaction)
     if transaction["type"] == TYPE_SECRET_PROOF:
         msg.secret_proof = create_secret_proof(transaction)
+    if transaction["type"] == TYPE_MULTISIG_MODIFICATION:
+        msg.multisig_modification = create_mutlisig_modification(transaction)
 
 
 def create_sign_tx(transaction):

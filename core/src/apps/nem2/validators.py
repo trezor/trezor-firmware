@@ -78,7 +78,7 @@ def _validate_single_tx(msg: NEM2SignTx):
         + bool(msg.hash_lock)
         + bool(msg.secret_lock)
         + bool(msg.secret_proof)
-        # + bool(msg.importance_transfer)
+        + bool(msg.multisig_modification)
     )
     if tx_count == 0:
         raise ProcessError("No transaction provided")

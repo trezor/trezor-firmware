@@ -1,5 +1,6 @@
 from trezor.crypto import random, base32
 from trezor.messages.NEM2TransactionCommon import NEM2TransactionCommon
+from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
 from trezor.messages.NEM2NamespaceMetadataTransaction import NEM2NamespaceMetadataTransaction
 from ubinascii import hexlify, unhexlify
 
@@ -25,7 +26,7 @@ from apps.common.writers import (
 )
 
 def serialize_namespace_metadata(
-    common: NEM2TransactionCommon,
+    common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
     namespace_metadata: NEM2NamespaceMetadataTransaction,
     embedded=False
 ) -> bytearray:
