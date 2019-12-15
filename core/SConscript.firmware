@@ -310,6 +310,7 @@ SOURCE_FIRMWARE = [
 
 SOURCE_TREZORHAL = [
     'embed/trezorhal/common.c',
+    'embed/trezorhal/delay.c',
     'embed/trezorhal/dma.c',
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',

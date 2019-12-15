@@ -46,7 +46,6 @@
 #include STM32_HAL_H
 
 #include <string.h>
-#include "mpconfigport.h"
 
 #include "dma.h"
 #include "irq.h"
