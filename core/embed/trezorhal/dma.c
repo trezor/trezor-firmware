@@ -29,7 +29,6 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "py/obj.h"
 #include "dma.h"
 #include "irq.h"
 #include "systick.h"
@@ -157,10 +156,10 @@ static void dma_tickle(dma_id_t dma_id) {
 static void dma_enable_clock(dma_id_t dma_id) {
     // We don't want dma_tick_handler() to turn off the clock right after we
     // enable it, so we need to mark the channel in use in an atomic fashion.
-    mp_uint_t irq_state = MICROPY_BEGIN_ATOMIC_SECTION();
+    uint32_t irq_state = disable_irq();
     uint32_t old_enable_mask = dma_enable_mask;
     dma_enable_mask |= (1 << dma_id);
-    MICROPY_END_ATOMIC_SECTION(irq_state);
+    enable_irq(irq_state);
 
     if (dma_id < NSTREAMS_PER_CONTROLLER) {
         if (((old_enable_mask & DMA1_ENABLE_MASK) == 0) && !DMA1_IS_CLK_ENABLED()) {
