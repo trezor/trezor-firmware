@@ -227,30 +227,6 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 confidential_assets=None,
             )
-        elif name == "Bitgreen":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="BITG",
-                decimals=8,
-                address_type=38,
-                address_type_p2sh=6,
-                maxfee_kb=100000,
-                signed_message_header="DarkNet Signed Message:\n",
-                xpub_magic=0x0488b21e,
-                xpub_magic_segwit_p2sh=None,
-                xpub_magic_segwit_native=None,
-                bech32_prefix=None,
-                cashaddr_prefix=None,
-                slip44=222,
-                segwit=False,
-                fork_id=None,
-                force_bip143=False,
-                bip115=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                confidential_assets=None,
-            )
         elif name == "BitZeny":
             return CoinInfo(
                 coin_name=name,
@@ -434,30 +410,6 @@ def by_name(name: str) -> CoinInfo:
                 bech32_prefix="btx",
                 cashaddr_prefix=None,
                 slip44=160,
-                segwit=True,
-                fork_id=None,
-                force_bip143=False,
-                bip115=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                confidential_assets=None,
-            )
-        elif name == "BlockStamp":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="BST",
-                decimals=8,
-                address_type=26,
-                address_type_p2sh=5,
-                maxfee_kb=2000000,
-                signed_message_header="BST Signed Message:\n",
-                xpub_magic=0x0488b21e,
-                xpub_magic_segwit_p2sh=0x049d7cb2,
-                xpub_magic_segwit_native=0x04b24746,
-                bech32_prefix="bst",
-                cashaddr_prefix=None,
-                slip44=254,
                 segwit=True,
                 fork_id=None,
                 force_bip143=False,
@@ -706,30 +658,6 @@ def by_name(name: str) -> CoinInfo:
                 negative_fee=False,
                 curve_name='secp256k1',
                 confidential_assets={'address_prefix': 4, 'blech32_prefix': 'el'},
-            )
-        elif name == "FairCoin":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="FAIR",
-                decimals=8,
-                address_type=95,
-                address_type_p2sh=36,
-                maxfee_kb=10000000,
-                signed_message_header="FairCoin Signed Message:\n",
-                xpub_magic=0x0488b21e,
-                xpub_magic_segwit_p2sh=None,
-                xpub_magic_segwit_native=None,
-                bech32_prefix=None,
-                cashaddr_prefix=None,
-                slip44=298,
-                segwit=False,
-                fork_id=0,
-                force_bip143=False,
-                bip115=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                confidential_assets=None,
             )
         elif name == "Feathercoin":
             return CoinInfo(
