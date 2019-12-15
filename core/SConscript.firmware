@@ -301,6 +301,7 @@ SOURCE_STMHAL = [
 
 SOURCE_FIRMWARE = [
     'embed/firmware/bl_check.c',
+    'embed/firmware/delay.c',
     'embed/firmware/header.S',
     'embed/firmware/main.c',
     'embed/firmware/mphalport.c',
@@ -310,7 +311,6 @@ SOURCE_FIRMWARE = [
 
 SOURCE_TREZORHAL = [
     'embed/trezorhal/common.c',
-    'embed/trezorhal/delay.c',
     'embed/trezorhal/dma.c',
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
