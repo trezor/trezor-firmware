@@ -550,10 +550,10 @@ bool stellar_confirmManageBuyOfferOp(const StellarManageBuyOfferOp *msg) {
     return false;
   }
 
-  // Hash buying asset
-  stellar_hashupdate_asset(&(msg->buying_asset));
   // selling asset
   stellar_hashupdate_asset(&(msg->selling_asset));
+  // Hash buying asset
+  stellar_hashupdate_asset(&(msg->buying_asset));
   // amount to buy (signed vs. unsigned doesn't matter wrt hashing)
   stellar_hashupdate_uint64(msg->buy_amount);
   // numerator
