@@ -23,19 +23,20 @@
 #include "oled.h"
 
 void layoutButtonNo(const char *btnNo, const BITMAP *icon) {
-  int icon_width = 0;
+  int icon_width = -2;
   if (icon) {
     oledDrawBitmap(1, OLED_HEIGHT - 8, icon);
     icon_width = icon->width;
   }
-  oledDrawString(3 + icon_width, OLED_HEIGHT - 8, btnNo, FONT_STANDARD);
+  oledDrawString(icon_width + 3, OLED_HEIGHT - icon_width, btnNo,
+                 FONT_STANDARD);
   oledInvert(0, OLED_HEIGHT - 9,
-             icon_width + oledStringWidth(btnNo, FONT_STANDARD) + 4,
+             icon_width + oledStringWidth(btnNo, FONT_STANDARD) + 2,
              OLED_HEIGHT - 1);
 }
 
 void layoutButtonYes(const char *btnYes, const BITMAP *icon) {
-  int icon_width = 0;
+  int icon_width = -3;
   if (icon) {
     oledDrawBitmap(OLED_WIDTH - 8 - 1, OLED_HEIGHT - 8, icon);
     icon_width = icon->width;
