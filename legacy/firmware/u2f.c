@@ -247,7 +247,8 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
       dialog_timeout--;
       usbPoll();  // may trigger new request
       buttonUpdate();
-      if (button.YesUp && (last_req_state == AUTH || last_req_state == REG)) {
+      if (button.YesReleased &&
+          (last_req_state == AUTH || last_req_state == REG)) {
         last_req_state++;
         // standard requires to remember button press for 10 seconds.
         dialog_timeout = 10 * U2F_TIMEOUT;

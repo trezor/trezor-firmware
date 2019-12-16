@@ -294,9 +294,9 @@ int main(void) {
 
       buttonUpdate();
       frame += 1;
-    } while (!button.YesUp && !button.NoUp);
+    } while (!button.YesReleased && !button.NoReleased);
 
-    if (button.YesUp) {
+    if (button.YesReleased) {
       state = (state + 1) % states;
       oledSwipeLeft();
     } else {

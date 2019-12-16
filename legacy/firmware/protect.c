@@ -66,11 +66,11 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
     if (acked) {
       usbSleep(5);
       buttonUpdate();
-      if (button.YesUp) {
+      if (button.YesReleased) {
         result = true;
         break;
       }
-      if (!confirm_only && button.NoUp) {
+      if (!confirm_only && button.NoReleased) {
         result = false;
         break;
       }

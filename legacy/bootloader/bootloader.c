@@ -47,8 +47,8 @@ bool get_button_response(void) {
   do {
     delay(100000);
     buttonUpdate();
-  } while (!button.YesUp && !button.NoUp);
-  return button.YesUp;
+  } while (!button.YesReleased && !button.NoReleased);
+  return button.YesReleased;
 }
 
 void show_halt(const char *line1, const char *line2) {

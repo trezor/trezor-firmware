@@ -24,9 +24,9 @@
 #include <stdbool.h>
 
 struct buttonState {
-  volatile bool YesUp;
+  volatile bool YesReleased;
   volatile int YesDown;
-  volatile bool NoUp;
+  volatile bool NoReleased;
   volatile int NoDown;
 };
 
