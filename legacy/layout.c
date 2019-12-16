@@ -23,7 +23,7 @@
 #include "oled.h"
 
 void layoutButtonNo(const char *btnNo, const BITMAP *icon) {
-  int icon_width = 0;
+  int icon_width = -2;
   if (icon) {
     oledDrawBitmap(1, OLED_HEIGHT - 8, icon);
     icon_width = icon->width;
@@ -35,7 +35,7 @@ void layoutButtonNo(const char *btnNo, const BITMAP *icon) {
 }
 
 void layoutButtonYes(const char *btnYes, const BITMAP *icon) {
-  int icon_width = 0;
+  int icon_width = -3;
   if (icon) {
     oledDrawBitmap(OLED_WIDTH - 8 - 1, OLED_HEIGHT - 8, icon);
     icon_width = icon->width;

@@ -1,7 +1,7 @@
 /*
  * This file is part of the Trezor project, https://trezor.io/
  *
- * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
+ * Copyright (C) 2019 SatoshiLabs
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -17,34 +17,14 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __BUTTONS_H__
-#define __BUTTONS_H__
+#ifndef __KEYBOARD_H__
+#define __KEYBOARD_H__
 
-#include <libopencm3/stm32/gpio.h>
 #include <stdbool.h>
+#include "messages-common.pb.h"
+#include "secbool.h"
 
-struct buttonState {
-  volatile bool YesReleased;
-  volatile int YesDown;
-  volatile bool NoReleased;
-  volatile int NoDown;
-};
-
-extern struct buttonState button;
-
-uint16_t buttonRead(void);
-void buttonUpdate(void);
-
-#ifndef BTN_PORT
-#define BTN_PORT GPIOC
-#endif
-
-#ifndef BTN_PIN_YES
-#define BTN_PIN_YES GPIO2
-#endif
-
-#ifndef BTN_PIN_NO
-#define BTN_PIN_NO GPIO5
-#endif
+const char *passphrase_keyboard(const char *text);
+const char *pin_keyboard(const char *text);
 
 #endif

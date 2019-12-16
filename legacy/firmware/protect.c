@@ -23,6 +23,7 @@
 #include "debug.h"
 #include "fsm.h"
 #include "gettext.h"
+#include "keyboard.h"
 #include "layout2.h"
 #include "memory.h"
 #include "memzero.h"
@@ -32,8 +33,6 @@
 #include "pinmatrix.h"
 #include "usb.h"
 #include "util.h"
-
-#define MAX_WRONG_PINS 15
 
 bool protectAbortedByCancel = false;
 bool protectAbortedByInitialize = false;
@@ -66,11 +65,11 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
     if (acked) {
       usbSleep(5);
       buttonUpdate();
-      if (button.YesUp) {
+      if (button.YesReleased) {
         result = true;
         break;
       }
-      if (!confirm_only && button.NoUp) {
+      if (!confirm_only && button.NoReleased) {
         result = false;
         break;
       }
@@ -112,6 +111,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
 }
 
 const char *requestPin(PinMatrixRequestType type, const char *text) {
+  return pin_keyboard(text);
   PinMatrixRequest resp = {0};
   memzero(&resp, sizeof(PinMatrixRequest));
   resp.has_type = true;

@@ -19,7 +19,7 @@
 
 #include "buttons.h"
 
-struct buttonState button;
+struct buttonState button = {0};
 
 #if !EMULATOR
 uint16_t buttonRead(void) { return gpio_port_read(BTN_PORT); }
@@ -33,36 +33,34 @@ void buttonUpdate() {
   if ((state & BTN_PIN_YES) == 0) {         // Yes button is down
     if ((last_state & BTN_PIN_YES) == 0) {  // last Yes was down
       if (button.YesDown < 2000000000) button.YesDown++;
-      button.YesUp = false;
+      button.YesReleased = false;
     } else {  // last Yes was up
-      button.YesDown = 0;
-      button.YesUp = false;
+      button.YesDown = 1;
+      button.YesReleased = false;
     }
   } else {                                  // Yes button is up
     if ((last_state & BTN_PIN_YES) == 0) {  // last Yes was down
-      button.YesDown = 0;
-      button.YesUp = true;
+      button.YesReleased = true;
     } else {  // last Yes was up
       button.YesDown = 0;
-      button.YesUp = false;
+      button.YesReleased = false;
     }
   }
 
   if ((state & BTN_PIN_NO) == 0) {         // No button is down
     if ((last_state & BTN_PIN_NO) == 0) {  // last No was down
       if (button.NoDown < 2000000000) button.NoDown++;
-      button.NoUp = false;
+      button.NoReleased = false;
     } else {  // last No was up
-      button.NoDown = 0;
-      button.NoUp = false;
+      button.NoDown = 1;
+      button.NoReleased = false;
     }
   } else {                                 // No button is up
     if ((last_state & BTN_PIN_NO) == 0) {  // last No was down
-      button.NoDown = 0;
-      button.NoUp = true;
+      button.NoReleased = true;
     } else {  // last No was up
       button.NoDown = 0;
-      button.NoUp = false;
+      button.NoReleased = false;
     }
   }
 

@@ -45,7 +45,8 @@ void check_lock_screen(void) {
   buttonUpdate();
 
   // wake from screensaver on any button
-  if (layoutLast == layoutScreensaver && (button.NoUp || button.YesUp)) {
+  if (layoutLast == layoutScreensaver &&
+      (button.NoReleased || button.YesReleased)) {
     layoutHome();
     return;
   }
@@ -61,16 +62,16 @@ void check_lock_screen(void) {
     do {
       usbSleep(5);
       buttonUpdate();
-    } while (!button.NoUp);
+    } while (!button.NoReleased);
 
     // wait for confirmation/cancellation of the dialog
     do {
       usbSleep(5);
       buttonUpdate();
-    } while (!button.YesUp && !button.NoUp);
+    } while (!button.YesReleased && !button.NoReleased);
     usbTiny(0);
 
-    if (button.YesUp) {
+    if (button.YesReleased) {
       // lock the screen
       config_lockDevice();
       layoutScreensaver();
