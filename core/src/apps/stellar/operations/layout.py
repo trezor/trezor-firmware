@@ -20,6 +20,11 @@ from trezor.wire import ProcessError
 from apps.stellar import consts, helpers
 from apps.stellar.layout import format_amount, require_confirm, split, trim_to_rows, ui
 
+if False:
+    from typing import Union
+
+    StellarManageOfferUnion = Union[StellarManageOfferOp, StellarManageBuyOfferOp]
+
 
 async def confirm_source_account(ctx, source_account: bytes):
     text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
@@ -96,7 +101,7 @@ async def confirm_manage_buy_offer_op(ctx, op: StellarManageBuyOfferOp):
     await _confirm_buy_offer(ctx, text, op)
 
 
-def confirm_manage_offer_common(op: Union[StellarManageOfferOp, StellarManageBuyOfferOp]):
+def confirm_manage_offer_common(op: StellarManageOfferUnion):
     if op.offer_id == 0:
         text = "New Offer"
     else:

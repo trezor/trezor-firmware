@@ -15,6 +15,11 @@ from trezor.wire import ProcessError
 
 from apps.stellar import consts, writers
 
+if False:
+    from typing import Union
+
+    StellarManageOfferUnion = Union[StellarManageOfferOp, StellarManageBuyOfferOp]
+
 
 def write_account_merge_op(w, msg: StellarAccountMergeOp):
     writers.write_pubkey(w, msg.destination_account)
@@ -60,7 +65,7 @@ def write_manage_data_op(w, msg: StellarManageDataOp):
         writers.write_string(w, msg.value)
 
 
-def write_manage_offer_op(w, msg: Union[StellarManageOfferOp, StellarManageBuyOfferOp]):
+def write_manage_offer_op(w, msg: StellarManageOfferUnion):
     _write_asset(w, msg.selling_asset)
     _write_asset(w, msg.buying_asset)
     writers.write_uint64(w, msg.amount)  # amount to buy
