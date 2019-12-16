@@ -6,7 +6,18 @@ from ubinascii import unhexlify, hexlify
 
 from apps.common import seed
 from apps.common.paths import validate_path
-from apps.nem2 import CURVE, transfer, mosaic, namespace, metadata, aggregate, hash_lock, secret_lock, multisig
+from apps.nem2 import (
+    CURVE,
+    transfer,
+    mosaic,
+    namespace,
+    metadata,
+    aggregate,
+    hash_lock,
+    secret_lock,
+    multisig,
+    account_restriction
+)
 from apps.nem2.helpers import (
     validate_nem2_path,
     NEM2_HASH_ALG,
@@ -84,6 +95,12 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
         tx = await secret_lock.secret_proof(ctx, common, msg.secret_proof)
     elif msg.multisig_modification:
         tx = await multisig.multisig_modification(ctx, common, msg.multisig_modification)
+    elif msg.account_address_restriction:
+        tx = await account_restriction.account_restriction(ctx, common, msg.account_address_restriction)
+    elif msg.account_mosaic_restriction:
+        tx = await account_restriction.account_restriction(ctx, common, msg.account_mosaic_restriction)
+    elif msg.account_operation_restriction:
+        tx = await account_restriction.account_restriction(ctx, common, msg.account_operation_restriction)
     # elif msg.supply_change:
     #     tx = await mosaic.supply_change(ctx, public_key, common, msg.supply_change)
     # elif msg.aggregate_modification:

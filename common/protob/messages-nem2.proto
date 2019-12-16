@@ -52,6 +52,10 @@ message NEM2SignTx {
     optional NEM2HashLockTransaction hash_lock = 16; // Hash Lock part
     optional NEM2SecretLockTransaction secret_lock = 17; // Secret Lock part
     optional NEM2SecretProofTransaction secret_proof = 18; // Secret Proof part
+    optional NEM2MultisigModificationTransaction multisig_modification = 19; // Multisig modification part
+    optional NEM2AccountAddressRestrictionTransaction account_address_restriction = 21; // Account address restriction part
+    optional NEM2AccountMosaicRestrictionTransaction account_mosaic_restriction = 22; // Account mosaic restriction part
+    optional NEM2AccountOperationRestrictionTransaction account_operation_restriction = 23; // Account operation restriction part
 
     /**
     * Common types from
@@ -82,6 +86,9 @@ message NEM2SignTx {
         SECRET_LOCK = 16722;
         SECRET_PROOF = 16978;
         MULTISIG_MODIFICATION = 16725;
+        ACCOUNT_ADDRESS_RESTRICTION = 16720;
+        ACCOUNT_MOSAIC_RESTRICTION = 16976;
+        ACCOUNT_OPERATION_RESTRICTION = 17232;
     }
 
     enum NEM2NetworkType {
@@ -111,6 +118,19 @@ message NEM2SignTx {
         KECCAK_256 = 1; // Proof is hashed using Keccak (ETH compatibility).
         HASH_160 = 2; // Proof is hashed twice: first with SHA-256 and then with RIPEMD-160 (bitcoin’s OP_HASH160).
         HASH_256 = 3; // Proof is hashed twice with SHA-256 (bitcoin’s OP_HASH256).
+    }
+
+    enum NEM2AccountRestrictionFlags {
+        ALLOW_INCOMING_ADDRESS = 1; // Allow only incoming transactions from a given address.
+        ALLOW_MOSAIC = 2; // Allow only incoming transactions containing a a given mosaic identifier.
+        ALLOW_INCOMING_TRANSACTION_TYPE = 4; // Allow only outgoing transactions with a given transaction type.
+        ALLOW_OUTGOING_ADDRESS = 16385; // Allow only outgoing transactions to a given address.
+        ALLOW_OUTGOING_TRANSACTION_TYPE = 16388; // Allow only outgoing transactions with a given transaction type.
+        BLOCK_INCOMING_ADDRESS = 32769; // Block incoming transactions from a given address.
+        BLOCK_MOSAIC = 32770; // Block incoming transactions containing a given mosaic identifier.
+        BLOCK_INCOMING_TRANSACTION_TYPE = 32772; // Block incoming transactions with a given transaction type.
+        BLOCK_OUTGOING_ADDRESS = 49153; // Block outgoing transactions from a given address.
+        BLOCK_OUTGOING_TRANSACTION_TYPE = 49156; // Block outgoing transactions with a given transaction type.
     }
 
     // END entities
@@ -313,6 +333,48 @@ message NEM2SignTx {
         optional uint32 value_size = 4; // new value size (in bytes)
         optional string value = 5; // difference between previous value and new value
     }
+
+    /**
+    * Multisig modification type definition
+    * https://nemtech.github.io/concepts/multisig-account.html#multisigaccountmodificationtransaction
+    */
+    message NEM2MultisigModificationTransaction {
+        optional uint32 min_approval_delta = 1; // relative change in number of cosignatures required to add public key
+        optional uint32 min_removal_delta = 2; // relative change in number of cosignatures required to remove public key
+        repeated string public_key_additions = 3; // public keys to add to multisig account
+        repeated string public_key_deletions = 4; // public keys to remove from multisig account
+    }
+
+    /**
+    * Account address restriction type definition
+    * https://nemtech.github.io/concepts/account-restriction.html#account-address-restriction-transaction
+    */
+    message NEM2AccountAddressRestrictionTransaction {
+        optional NEM2AccountRestrictionFlags restriction_type = 1;
+        repeated NEM2Address restriction_additions = 2;
+        repeated NEM2Address restriction_deletions = 3;
+    }
+
+    /**
+    * Account mosaic restriction type definition
+    * https://nemtech.github.io/concepts/account-restriction.html#account-mosaic-restriction-transaction
+    */
+    message NEM2AccountMosaicRestrictionTransaction {
+        optional NEM2AccountRestrictionFlags restriction_type = 1;
+        repeated string restriction_additions = 2; // Array of mosaic IDs
+        repeated string restriction_deletions = 3; // Array of mosaic IDs
+    }
+
+    /**
+    * Account operation restriction type definition
+    * https://nemtech.github.io/concepts/account-restriction.html#account-mosaic-restriction-transaction
+    */
+    message NEM2AccountOperationRestrictionTransaction {
+        optional NEM2AccountRestrictionFlags restriction_type = 1;
+        repeated NEM2EntityType restriction_additions = 2;
+        repeated NEM2EntityType restriction_deletions = 3;
+    }
+
 }
 
 /**

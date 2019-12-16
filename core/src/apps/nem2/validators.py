@@ -22,7 +22,17 @@ from .helpers import (
     NEM2_ALIAS_ACTION_TYPE_LINK,
     NEM2_ALIAS_ACTION_TYPE_UNLINK,
     NEM2_MOSAIC_SUPPLY_CHANGE_ACTION_INCREASE,
-    NEM2_MOSAIC_SUPPLY_CHANGE_ACTION_DECREASE
+    NEM2_MOSAIC_SUPPLY_CHANGE_ACTION_DECREASE,
+    NEM2_ACCOUNT_RESTRICTION_ALLOW_INCOMING_ADDRESS,
+    NEM2_ACCOUNT_RESTRICTION_ALLOW_MOSAIC,
+    NEM2_ACCOUNT_RESTRICTION_ALLOW_INCOMING_TRANSACTION_TYPE,
+    NEM2_ACCOUNT_RESTRICTION_ALLOW_OUTGOING_ADDRESS,
+    NEM2_ACCOUNT_RESTRICTION_ALLOW_OUTGOING_TRANSACTION_TYPE,
+    NEM2_ACCOUNT_RESTRICTION_BLOCK_INCOMING_ADDRESS,
+    NEM2_ACCOUNT_RESTRICTION_BLOCK_MOSAIC,
+    NEM2_ACCOUNT_RESTRICTION_BLOCK_INCOMING_TRANSACTION_TYPE,
+    NEM2_ACCOUNT_RESTRICTION_BLOCK_OUTGOING_ADDRESS,
+    NEM2_ACCOUNT_RESTRICTION_BLOCK_OUTGOING_TRANSACTION_TYPE,
 )
 
 from .namespace.validators import (
@@ -72,6 +82,12 @@ def validate(msg: NEM2SignTx):
         _validate_secret_lock(msg.secret_lock)
     if msg.secret_proof:
         _validate_secret_proof(msg.secret_proof)
+    if msg.account_address_restriction:
+        _validate_account_address_restriction(msg.account_address_restriction)
+    if msg.account_mosaic_restriction:
+        _validate_account_mosaic_restriction(msg.account_mosaic_restriction)
+    if msg.account_operation_restriction:
+        _validate_account_operation_restriction(msg.account_operation_restriction)
 
 def _validate_single_tx(msg: NEM2SignTx):
     # ensure exactly one transaction is provided
@@ -90,6 +106,9 @@ def _validate_single_tx(msg: NEM2SignTx):
         + bool(msg.secret_lock)
         + bool(msg.secret_proof)
         + bool(msg.multisig_modification)
+        + bool(msg.account_address_restriction)
+        + bool(msg.account_mosaic_restriction)
+        + bool(msg.account_operation_restriction)
     )
     if tx_count == 0:
         raise ProcessError("No transaction provided")
@@ -218,3 +237,55 @@ def validate_secret(secret, hash_algorithm):
             raise ProcessError("Secret must be of length 40 or 64 (was {})".format(len(secret)))
     else:
         raise ProcessError("Invalid hash algorithm selected")
+
+def _validate_account_address_restriction(account_address_restriction: NEM2AccountAddressRestrictionTransaction):
+
+    valid_restriction_types = [
+        NEM2_ACCOUNT_RESTRICTION_ALLOW_INCOMING_ADDRESS,
+        NEM2_ACCOUNT_RESTRICTION_ALLOW_OUTGOING_ADDRESS,
+        NEM2_ACCOUNT_RESTRICTION_BLOCK_INCOMING_ADDRESS,
+        NEM2_ACCOUNT_RESTRICTION_BLOCK_OUTGOING_ADDRESS
+    ]
+
+    if account_address_restriction.restriction_type is None:
+        raise ProcessError("No restriction type provided")
+    if account_address_restriction.restriction_type not in valid_restriction_types:
+        raise ProcessError("Restriction type is invalid")
+    if account_address_restriction.restriction_additions is None:
+        raise ProcessError("No restriction additions provided")
+    if account_address_restriction.restriction_deletions is None:
+        raise ProcessError("No restriction deletions provided")
+
+def _validate_account_mosaic_restriction(account_mosaic_restriction: NEM2AccountMosaicRestrictionTransaction):
+
+    valid_restriction_types = [
+        NEM2_ACCOUNT_RESTRICTION_ALLOW_MOSAIC,
+        NEM2_ACCOUNT_RESTRICTION_BLOCK_MOSAIC,
+    ]
+
+    if account_mosaic_restriction.restriction_type is None:
+        raise ProcessError("No restriction type provided")
+    if account_mosaic_restriction.restriction_type not in valid_restriction_types:
+        raise ProcessError("Restriction type is invalid")
+    if account_mosaic_restriction.restriction_additions is None:
+        raise ProcessError("No restriction additions provided")
+    if account_mosaic_restriction.restriction_deletions is None:
+        raise ProcessError("No restriction deletions provided")
+
+def _validate_account_operation_restriction(account_operation_restriction: NEM2AccountOperationRestrictionTransaction):
+
+    valid_restriction_types = [
+        NEM2_ACCOUNT_RESTRICTION_ALLOW_INCOMING_TRANSACTION_TYPE,
+        NEM2_ACCOUNT_RESTRICTION_ALLOW_OUTGOING_TRANSACTION_TYPE,
+        NEM2_ACCOUNT_RESTRICTION_BLOCK_INCOMING_TRANSACTION_TYPE,
+        NEM2_ACCOUNT_RESTRICTION_BLOCK_OUTGOING_TRANSACTION_TYPE
+    ]
+
+    if account_operation_restriction.restriction_type is None:
+        raise ProcessError("No restriction type provided")
+    if account_operation_restriction.restriction_type not in valid_restriction_types:
+        raise ProcessError("Restriction type is invalid")
+    if account_operation_restriction.restriction_additions is None:
+        raise ProcessError("No restriction additions provided")
+    if account_operation_restriction.restriction_deletions is None:
+        raise ProcessError("No restriction deletions provided")

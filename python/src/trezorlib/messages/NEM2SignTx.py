@@ -2,7 +2,10 @@
 # fmt: off
 from .. import protobuf as p
 
+from .NEM2AccountAddressRestrictionTransaction import NEM2AccountAddressRestrictionTransaction
 from .NEM2AccountMetadataTransaction import NEM2AccountMetadataTransaction
+from .NEM2AccountMosaicRestrictionTransaction import NEM2AccountMosaicRestrictionTransaction
+from .NEM2AccountOperationRestrictionTransaction import NEM2AccountOperationRestrictionTransaction
 from .NEM2AddressAliasTransaction import NEM2AddressAliasTransaction
 from .NEM2AggregateTransaction import NEM2AggregateTransaction
 from .NEM2HashLockTransaction import NEM2HashLockTransaction
@@ -48,6 +51,9 @@ class NEM2SignTx(p.MessageType):
         secret_lock: NEM2SecretLockTransaction = None,
         secret_proof: NEM2SecretProofTransaction = None,
         multisig_modification: NEM2MultisigModificationTransaction = None,
+        account_address_restriction: NEM2AccountAddressRestrictionTransaction = None,
+        account_mosaic_restriction: NEM2AccountMosaicRestrictionTransaction = None,
+        account_operation_restriction: NEM2AccountOperationRestrictionTransaction = None,
     ) -> None:
         self.transaction = transaction
         self.multisig = multisig
@@ -66,6 +72,9 @@ class NEM2SignTx(p.MessageType):
         self.secret_lock = secret_lock
         self.secret_proof = secret_proof
         self.multisig_modification = multisig_modification
+        self.account_address_restriction = account_address_restriction
+        self.account_mosaic_restriction = account_mosaic_restriction
+        self.account_operation_restriction = account_operation_restriction
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -88,4 +97,8 @@ class NEM2SignTx(p.MessageType):
             16: ('hash_lock', NEM2HashLockTransaction, 0),
             17: ('secret_lock', NEM2SecretLockTransaction, 0),
             18: ('secret_proof', NEM2SecretProofTransaction, 0),
+            19: ('multisig_modification', NEM2MultisigModificationTransaction, 0),
+            21: ('account_address_restriction', NEM2AccountAddressRestrictionTransaction, 0),
+            22: ('account_mosaic_restriction', NEM2AccountMosaicRestrictionTransaction, 0),
+            23: ('account_operation_restriction', NEM2AccountOperationRestrictionTransaction, 0),
         }

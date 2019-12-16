@@ -33,6 +33,9 @@ TYPE_HASH_LOCK = 0x4148
 TYPE_SECRET_LOCK = 0x4152
 TYPE_SECRET_PROOF = 0x4252
 TYPE_MULTISIG_MODIFICATION = 0x4155
+TYPE_ACCOUNT_ADDRESS_RESTRICTION = 0x4150
+TYPE_ACCOUNT_MOSAIC_RESTRICTION = 0x4250
+TYPE_ACCOUNT_OPERATION_RESTRICTION = 0x4350
 
 NAMESPACE_REGISTRATION_TYPE_ROOT = 0x00
 NAMESPACE_REGISTRATION_TYPE_CHILD = 0x01
@@ -52,6 +55,17 @@ NETWORK_TYPE_MIJIN_TEST = 0x90
 NETWORK_TYPE_MIJIN = 0x60
 NETWORK_TYPE_TEST_NET = 0x98
 NETWORK_TYPE_MAIN_NET = 0x68
+
+ACCOUNT_RESTRICTION_ALLOW_INCOMING_ADDRESS = 0x01
+ACCOUNT_RESTRICTION_ALLOW_MOSAIC = 0x02
+ACCOUNT_RESTRICTION_ALLOW_INCOMING_TRANSACTION_TYPE = 0x04
+ACCOUNT_RESTRICTION_ALLOW_OUTGOING_ADDRESS = 0x4001
+ACCOUNT_RESTRICTION_ALLOW_OUTGOING_TRANSACTION_TYPE = 0x4004
+ACCOUNT_RESTRICTION_BLOCK_INCOMING_ADDRESS = 0x8001
+ACCOUNT_RESTRICTION_BLOCK_MOSAIC = 0x8002
+ACCOUNT_RESTRICTION_BLOCK_INCOMING_TRANSACTION_TYPE = 0x8004
+ACCOUNT_RESTRICTION_BLOCK_OUTGOING_ADDRESS = 0xC001
+ACCOUNT_RESTRICTION_BLOCK_OUTGOING_TRANSACTION_TYPE = 0xC004
 
 def create_transaction_common(transaction):
     msg = proto.NEM2TransactionCommon()
@@ -243,6 +257,36 @@ def create_mutlisig_modification(transaction):
     msg.public_key_deletions = transaction["publicKeyDeletions"]
     return msg
 
+def map_address(address_data):
+    return proto.NEM2Address(
+        address=address_data["address"],
+        network_type=address_data["networkType"],
+    )
+
+def create_account_address_restriction(transaction):
+    msg = proto.NEM2AccountAddressRestrictionTransaction()
+    msg.restriction_type = transaction["restrictionType"]
+    msg.restriction_additions = [map_address(a) for a in transaction["restrictionAdditions"]]
+    msg.restriction_deletions = [map_address(a) for a in transaction["restrictionDeletions"]]
+
+    return msg
+
+def create_account_mosaic_restriction(transaction):
+    msg = proto.NEM2AccountMosaicRestrictionTransaction()
+    msg.restriction_type = transaction["restrictionType"]
+    msg.restriction_additions = transaction["restrictionAdditions"]
+    msg.restriction_deletions = transaction["restrictionDeletions"]
+
+    return msg
+
+def create_account_operation_restriction(transaction):
+    msg = proto.NEM2AccountOperationRestrictionTransaction()
+    msg.restriction_type = transaction["restrictionType"]
+    msg.restriction_additions = transaction["restrictionAdditions"]
+    msg.restriction_deletions = transaction["restrictionDeletions"]
+
+    return msg
+
 def fill_transaction_by_type(msg, transaction):
     if transaction["type"] == TYPE_TRANSACTION_TRANSFER:
         msg.transfer = create_transfer(transaction)
@@ -270,6 +314,12 @@ def fill_transaction_by_type(msg, transaction):
         msg.secret_proof = create_secret_proof(transaction)
     if transaction["type"] == TYPE_MULTISIG_MODIFICATION:
         msg.multisig_modification = create_mutlisig_modification(transaction)
+    if transaction["type"] == TYPE_ACCOUNT_ADDRESS_RESTRICTION:
+        msg.account_address_restriction = create_account_address_restriction(transaction)
+    if transaction["type"] == TYPE_ACCOUNT_MOSAIC_RESTRICTION:
+        msg.account_mosaic_restriction = create_account_mosaic_restriction(transaction)
+    if transaction["type"] == TYPE_ACCOUNT_OPERATION_RESTRICTION:
+        msg.account_operation_restriction = create_account_operation_restriction(transaction)
 
 
 def create_sign_tx(transaction):

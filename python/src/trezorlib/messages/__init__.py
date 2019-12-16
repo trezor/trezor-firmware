@@ -173,8 +173,12 @@ from .MoneroTransactionSourceEntry import MoneroTransactionSourceEntry
 from .MoneroTransferDetails import MoneroTransferDetails
 from .MoneroWatchKey import MoneroWatchKey
 from .MultisigRedeemScriptType import MultisigRedeemScriptType
+from .MultisigRedeemScriptType import MultisigRedeemScriptType
+from .NEM2AccountAddressRestrictionTransaction import NEM2AccountAddressRestrictionTransaction
 from .NEM2AccountMetadataTransaction import NEM2AccountMetadataTransaction
 from .NEM2AccountMetadataTransaction import NEM2AccountMetadataTransaction
+from .NEM2AccountMosaicRestrictionTransaction import NEM2AccountMosaicRestrictionTransaction
+from .NEM2AccountOperationRestrictionTransaction import NEM2AccountOperationRestrictionTransaction
 from .NEM2Address import NEM2Address
 from .NEM2Address import NEM2Address
 from .NEM2AddressAliasTransaction import NEM2AddressAliasTransaction
@@ -311,6 +315,10 @@ from . import FailureType
 from . import InputScriptType
 from . import LiskTransactionType
 from . import MessageType
+from . import NEM2AccountRestrictionFlags
+from . import NEM2AliasAction
+from . import NEM2AliasAction
+from . import NEM2EntityType
 from . import NEM2EntityType
 from . import NEM2LockHashAlgorithm
 from . import NEM2LockHashAlgorithm
