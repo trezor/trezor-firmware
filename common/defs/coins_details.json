@@ -80,32 +80,6 @@
                 }
             ]
         },
-        "bitcoin:BITG": {
-            "links": {
-                "Github": "https://github.com/bitgreen/bitgreen",
-                "Homepage": "https://bitg.org"
-            },
-            "marketcap_usd": 849111,
-            "name": "BitGreen",
-            "shortcut": "BITG",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
-            "type": "coin",
-            "wallet": []
-        },
-        "bitcoin:BST": {
-            "links": {
-                "Github": "https://github.com/BlockStamp/bst",
-                "Homepage": "https://blockstamp.info"
-            },
-            "marketcap_usd": 2629356,
-            "name": "BlockStamp",
-            "shortcut": "BST",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
-            "type": "coin",
-            "wallet": []
-        },
         "bitcoin:BTC": {
             "links": {
                 "Github": "https://github.com/bitcoin/bitcoin",
@@ -373,19 +347,6 @@
             "name": "Metaverse ETP",
             "shortcut": "ETP",
             "t1_enabled": "soon",
-            "t2_enabled": "yes",
-            "type": "coin",
-            "wallet": []
-        },
-        "bitcoin:FAIR": {
-            "links": {
-                "Github": "https://github.com/faircoin/faircoin",
-                "Homepage": "https://www.faircoin.world"
-            },
-            "marketcap_usd": 0,
-            "name": "FairCoin",
-            "shortcut": "FAIR",
-            "t1_enabled": "yes",
             "t2_enabled": "yes",
             "type": "coin",
             "wallet": []
@@ -23392,12 +23353,7 @@
             "t1_enabled": "no",
             "t2_enabled": "yes",
             "type": "coin",
-            "wallet": [
-                {
-                    "name": "Trust Wallet",
-                    "url": "https://trustwallet.com"
-                }
-            ]
+            "wallet": []
         },
         "misc:EOS": {
             "links": {
@@ -23736,12 +23692,12 @@
         }
     },
     "info": {
-        "marketcap_supported": "92.95 %",
-        "marketcap_usd": 182923614853,
-        "t1_coins": 1068,
-        "t2_coins": 1183,
-        "total_marketcap_usd": 196806559730,
-        "updated_at": 1576247920,
-        "updated_at_readable": "Fri Dec 13 15:38:40 2019"
+        "marketcap_supported": "94.24 %",
+        "marketcap_usd": 182920136386,
+        "t1_coins": 1065,
+        "t2_coins": 1180,
+        "total_marketcap_usd": 194095360631,
+        "updated_at": 1576515187,
+        "updated_at_readable": "Mon Dec 16 17:53:07 2019"
     }
 }
