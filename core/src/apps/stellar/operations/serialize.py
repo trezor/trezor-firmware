@@ -60,19 +60,10 @@ def write_manage_data_op(w, msg: StellarManageDataOp):
         writers.write_string(w, msg.value)
 
 
-def write_manage_offer_op(w, msg: StellarManageOfferOp):
+def write_manage_offer_op(w, msg: Union[StellarManageOfferOp, StellarManageBuyOfferOp]):
     _write_asset(w, msg.selling_asset)
     _write_asset(w, msg.buying_asset)
-    writers.write_uint64(w, msg.amount)  # amount to sell
-    writers.write_uint32(w, msg.price_n)  # numerator
-    writers.write_uint32(w, msg.price_d)  # denominator
-    writers.write_uint64(w, msg.offer_id)
-
-
-def write_manage_buy_offer_op(w, msg: StellarManageBuyOfferOp):
-    _write_asset(w, msg.selling_asset)
-    _write_asset(w, msg.buying_asset)
-    writers.write_uint64(w, msg.buy_amount)  # amount to buy
+    writers.write_uint64(w, msg.amount)  # amount to buy
     writers.write_uint32(w, msg.price_n)  # numerator
     writers.write_uint32(w, msg.price_d)  # denominator
     writers.write_uint64(w, msg.offer_id)

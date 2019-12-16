@@ -501,7 +501,7 @@ bool stellar_confirmManageBuyOfferOp(const StellarManageBuyOfferOp *msg) {
     char str_offer_id[20] = {0};
     stellar_format_uint64(msg->offer_id, str_offer_id, sizeof(str_offer_id));
 
-    if (msg->buy_amount == 0) {
+    if (msg->amount == 0) {
       strlcpy(str_offer, _("Delete #"), sizeof(str_offer));
     } else {
       strlcpy(str_offer, _("Update #"), sizeof(str_offer));
@@ -511,20 +511,19 @@ bool stellar_confirmManageBuyOfferOp(const StellarManageBuyOfferOp *msg) {
   }
 
   char str_buying[32] = {0};
-  char str_buy_amount[32] = {0};
+  char str_amount[32] = {0};
   char str_buying_asset[32] = {0};
 
   stellar_format_asset(&(msg->buying_asset), str_buying_asset,
                        sizeof(str_buying_asset));
-  stellar_format_stroops(msg->buy_amount, str_buy_amount,
-                         sizeof(str_buy_amount));
+  stellar_format_stroops(msg->amount, str_amount, sizeof(str_amount));
 
   /*
    Buy 200
    XLM (Native Asset)
   */
   strlcpy(str_buying, _("Buy "), sizeof(str_buying));
-  strlcat(str_buying, str_buy_amount, sizeof(str_buying));
+  strlcat(str_buying, str_amount, sizeof(str_buying));
 
   char str_selling[32] = {0};
   char str_selling_asset[32] = {0};
@@ -555,7 +554,7 @@ bool stellar_confirmManageBuyOfferOp(const StellarManageBuyOfferOp *msg) {
   // Hash buying asset
   stellar_hashupdate_asset(&(msg->buying_asset));
   // amount to buy (signed vs. unsigned doesn't matter wrt hashing)
-  stellar_hashupdate_uint64(msg->buy_amount);
+  stellar_hashupdate_uint64(msg->amount);
   // numerator
   stellar_hashupdate_uint32(msg->price_n);
   // denominator

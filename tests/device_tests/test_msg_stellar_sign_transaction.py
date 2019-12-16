@@ -323,7 +323,7 @@ def test_manage_data(client):
 def test_sign_tx_manage_buy_offer_op(client):
     op = messages.StellarManageBuyOfferOp()
     op.buying_asset = messages.StellarAssetType(0)
-    op.buy_amount = 200
+    op.amount = 200
     op.selling_asset = messages.StellarAssetType(
         1, "X", "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
     )

@@ -33,7 +33,7 @@ async def process_operation(ctx, w, op):
         serialize.write_manage_offer_op(w, op)
     elif isinstance(op, serialize.StellarManageBuyOfferOp):
         await layout.confirm_manage_buy_offer_op(ctx, op)
-        serialize.write_manage_buy_offer_op(w, op)
+        serialize.write_manage_offer_op(w, op)
     elif isinstance(op, serialize.StellarPathPaymentOp):
         await layout.confirm_path_payment_op(ctx, op)
         serialize.write_path_payment_op(w, op)

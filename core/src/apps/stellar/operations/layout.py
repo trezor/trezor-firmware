@@ -87,18 +87,16 @@ async def confirm_create_passive_offer_op(ctx, op: StellarCreatePassiveOfferOp):
 
 
 async def confirm_manage_offer_op(ctx, op: StellarManageOfferOp):
-    if op.offer_id == 0:
-        text = "New Offer"
-    else:
-        if op.amount == 0:
-            text = "Delete"
-        else:
-            text = "Update"
-        text += " #%d" % op.offer_id
+    text = confirm_manage_offer_common(op)
     await _confirm_offer(ctx, text, op)
 
 
 async def confirm_manage_buy_offer_op(ctx, op: StellarManageBuyOfferOp):
+    text = confirm_manage_offer_common(op)
+    await _confirm_buy_offer(ctx, text, op)
+
+
+def confirm_manage_offer_common(op: Union[StellarManageOfferOp, StellarManageBuyOfferOp]):
     if op.offer_id == 0:
         text = "New Offer"
     else:
@@ -107,7 +105,7 @@ async def confirm_manage_buy_offer_op(ctx, op: StellarManageBuyOfferOp):
         else:
             text = "Update"
         text += " #%d" % op.offer_id
-    await _confirm_buy_offer(ctx, text, op)
+    return text
 
 
 async def _confirm_offer(ctx, title, op):
@@ -127,7 +125,7 @@ async def _confirm_buy_offer(ctx, title, op):
     text = Text("Confirm operation", ui.ICON_CONFIRM, ui.GREEN)
     text.bold(title)
     text.normal(
-        "Buy %s %s" % (format_amount(op.buy_amount, ticker=False), op.buying_asset.code)
+        "Buy %s %s" % (format_amount(op.amount, ticker=False), op.buying_asset.code)
     )
     text.normal("For %f" % (op.price_n / op.price_d))
     text.normal("Per %s" % format_asset_code(op.selling_asset))
