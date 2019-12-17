@@ -59,7 +59,7 @@ void show_halt(const char *line1, const char *line2) {
 
 void show_unplug(const char *line1, const char *line2) {
   layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, line1, line2, NULL,
-               "You may now", "unplug your Trezor.", NULL);
+               "Your Trezor", "will be reset later.", NULL);
 }
 
 static void show_unofficial_warning(const uint8_t *hash) {
