@@ -61,7 +61,6 @@ enum MessageType {
     MessageType_WordAck = 47 [(wire_in) = true];
     MessageType_GetFeatures = 55 [(wire_in) = true];
     MessageType_SetU2FCounter = 63 [(wire_in) = true];
-    MessageType_SdProtect = 79 [(wire_in) = true];
     MessageType_GetNextU2FCounter = 80 [(wire_in) = true];
     MessageType_NextU2FCounter = 81 [(wire_out) = true];
     MessageType_ChangeWipeCode = 82 [(wire_in) = true];
@@ -248,4 +247,11 @@ enum MessageType {
     MessageType_WebAuthnCredentials = 801 [(wire_out) = true];
     MessageType_WebAuthnAddResidentCredential = 802 [(wire_in) = true];
     MessageType_WebAuthnRemoveResidentCredential = 803 [(wire_in) = true];
+
+    // SDCard
+    MessageType_SdProtect = 79 [(wire_in) = true];
+    MessageType_SdAppDataGet = 900 [(wire_in) = true];
+    MessageType_SdAppDataValue = 901 [(wire_out) = true];
+    MessageType_SdAppDataSet = 902 [(wire_in) = true];
+    MessageType_SdAppDataDelete = 903 [(wire_in) = true];
 }

@@ -18,6 +18,7 @@ CORE_PROTOBUF_SOURCES="\
     $PROTOB/messages-monero.proto \
     $PROTOB/messages-nem.proto \
     $PROTOB/messages-ripple.proto \
+    $PROTOB/messages-sdcard.proto \
     $PROTOB/messages-stellar.proto \
     $PROTOB/messages-tezos.proto \
     $PROTOB/messages-webauthn.proto \

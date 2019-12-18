@@ -205,6 +205,10 @@ from .RippleGetAddress import RippleGetAddress
 from .RipplePayment import RipplePayment
 from .RippleSignTx import RippleSignTx
 from .RippleSignedTx import RippleSignedTx
+from .SdAppDataDelete import SdAppDataDelete
+from .SdAppDataGet import SdAppDataGet
+from .SdAppDataSet import SdAppDataSet
+from .SdAppDataValue import SdAppDataValue
 from .SdProtect import SdProtect
 from .SelfTest import SelfTest
 from .SetU2FCounter import SetU2FCounter

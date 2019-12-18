@@ -1,0 +1,66 @@
+syntax = "proto2";
+package hw.trezor.messages.sdcard;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageSdCard";
+
+/**
+ * Request: Starts workflow for enabling/regenerating/disabling SD card protection
+ * @start
+ * @next Success
+ * @next Failure
+ */
+ message SdProtect {
+    optional SdProtectOperationType operation = 1;
+    /**
+    * Structure representing SD card protection operation
+    */
+    enum SdProtectOperationType {
+        DISABLE = 0;
+        ENABLE = 1;
+        REFRESH = 2;
+    }
+}
+
+/**
+ * Request: SD AppData Get
+ * @start
+ * @next SdAppDataData
+ * @next Failure
+ */
+ message SdAppDataGet {
+    optional string app = 1;
+    optional bytes key = 2;
+}
+
+/**
+ * Request: SD AppData Value
+ * @end
+ */
+message SdAppDataValue {
+    optional bytes value = 3;
+}
+
+/**
+ * Request: SD AppData Set
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message SdAppDataSet {
+    optional string app = 1;
+    optional bytes key = 2;
+    optional bytes value = 3;
+}
+
+/**
+ * Request: SD AppData Delete
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message SdAppDataDelete {
+    optional string app = 1;
+    optional bytes key = 2;
+}
