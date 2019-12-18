@@ -30,18 +30,24 @@ except ImportError:
 
 
 V1_SIGNATURE_SLOTS = 3
-V1_BOOTLOADER_KEYS = {
-    1: "04d571b7f148c5e4232c3814f777d8faeaf1a84216c78d569b71041ffc768a5b2d810fc3bb134dd026b57e65005275aedef43e155f48fc11a32ec790a93312bd58",
-    2: "0463279c0c0866e50c05c799d32bd6bab0188b6de06536d1109d2ed9ce76cb335c490e55aee10cc901215132e853097d5432eda06b792073bd7740c94ce4516cb1",
-    3: "0443aedbb6f7e71c563f8ed2ef64ec9981482519e7ef4f4aa98b27854e8c49126d4956d300ab45fdc34cd26bc8710de0a31dbdf6de7435fd0b492be70ac75fde58",
-    4: "04877c39fd7c62237e038235e9c075dab261630f78eeb8edb92487159fffedfdf6046c6f8b881fa407c4a4ce6c28de0b19c1f4e29f1fcbc5a58ffd1432a3e0938a",
-    5: "047384c51ae81add0a523adbb186c91b906ffb64c2c765802bf26dbd13bdf12c319e80c2213a136c8ee03d7874fd22b70d68e7dee469decfbbb510ee9a460cda45",
-}
+V1_BOOTLOADER_KEYS = [
+    bytes.fromhex(key)
+    for key in (
+        "04d571b7f148c5e4232c3814f777d8faeaf1a84216c78d569b71041ffc768a5b2d810fc3bb134dd026b57e65005275aedef43e155f48fc11a32ec790a93312bd58",
+        "0463279c0c0866e50c05c799d32bd6bab0188b6de06536d1109d2ed9ce76cb335c490e55aee10cc901215132e853097d5432eda06b792073bd7740c94ce4516cb1",
+        "0443aedbb6f7e71c563f8ed2ef64ec9981482519e7ef4f4aa98b27854e8c49126d4956d300ab45fdc34cd26bc8710de0a31dbdf6de7435fd0b492be70ac75fde58",
+        "04877c39fd7c62237e038235e9c075dab261630f78eeb8edb92487159fffedfdf6046c6f8b881fa407c4a4ce6c28de0b19c1f4e29f1fcbc5a58ffd1432a3e0938a",
+        "047384c51ae81add0a523adbb186c91b906ffb64c2c765802bf26dbd13bdf12c319e80c2213a136c8ee03d7874fd22b70d68e7dee469decfbbb510ee9a460cda45",
+    )
+]
 
 V2_BOOTLOADER_KEYS = [
-    bytes.fromhex("c2c87a49c5a3460977fbb2ec9dfe60f06bd694db8244bd4981fe3b7a26307f3f"),
-    bytes.fromhex("80d036b08739b846f4cb77593078deb25dc9487aedcf52e30b4fb7cd7024178a"),
-    bytes.fromhex("b8307a71f552c60a4cbb317ff48b82cdbf6b6bb5f04c920fec7badf017883751"),
+    bytes.fromhex(key)
+    for key in (
+        "c2c87a49c5a3460977fbb2ec9dfe60f06bd694db8244bd4981fe3b7a26307f3f",
+        "80d036b08739b846f4cb77593078deb25dc9487aedcf52e30b4fb7cd7024178a",
+        "b8307a71f552c60a4cbb317ff48b82cdbf6b6bb5f04c920fec7badf017883751",
+    )
 ]
 V2_BOOTLOADER_M = 2
 V2_BOOTLOADER_N = 3
@@ -272,14 +278,14 @@ def check_sig_v1(
         )
 
     for i in range(len(key_indexes)):
-        key_idx = key_indexes[i]
+        key_idx = key_indexes[i] - 1
         signature = signatures[i]
 
         if key_idx not in V1_BOOTLOADER_KEYS:
             # unknown pubkey
             raise InvalidSignatureError("Unknown key in slot {}".format(i))
 
-        pubkey = bytes.fromhex(V1_BOOTLOADER_KEYS[key_idx])[1:]
+        pubkey = V1_BOOTLOADER_KEYS[key_idx][1:]
         verify = ecdsa.VerifyingKey.from_string(pubkey, curve=ecdsa.curves.SECP256k1)
         try:
             verify.verify_digest(signature, digest)
