@@ -198,24 +198,37 @@ FirmwareHeader = c.Struct(
 )
 
 
-Firmware = c.Struct(
+"""Raw firmware image.
+
+Consists of firmware header and code block.
+This is the expected format of firmware binaries for Trezor One, or bootloader images
+for Trezor T."""
+FirmwareImage = c.Struct(
+    "header" / FirmwareHeader,
+    "_code_offset" / c.Tell,
+    "code" / c.Bytes(c.this.header.code_length),
+    c.Terminated,
+)
+
+
+"""Firmware image prefixed by a vendor header.
+
+This is the expected format of firmware binaries for Trezor T."""
+VendorFirmware = c.Struct(
     "vendor_header" / VendorHeader,
-    "firmware_header" / FirmwareHeader,
-    "_code_offset" / c.Tell,
-    "code" / c.Bytes(c.this.firmware_header.code_length),
+    "image" / FirmwareImage,
     c.Terminated,
 )
 
 
-FirmwareOneV2 = c.Struct(
-    "firmware_header" / FirmwareHeader,
-    "_code_offset" / c.Tell,
-    "code" / c.Bytes(c.this.firmware_header.code_length),
-    c.Terminated,
-)
+"""Legacy firmware image.
+Consists of a custom header and code block.
+This is the expected format of firmware binaries for Trezor One pre-1.8.0.
 
-
-FirmwareOne = c.Struct(
+The code block can optionally be interpreted as a new-style firmware image. That is the
+expected format of firmware binary for Trezor One version 1.8.0, which can be installed
+by both the older and the newer bootloader."""
+LegacyFirmware = c.Struct(
     "magic" / c.Const(b"TRZR"),
     "code_length" / c.Rebuild(c.Int32ul, c.len_(c.this.code)),
     "key_indexes" / c.Int8ul[V1_SIGNATURE_SLOTS],  # pylint: disable=E1136
@@ -228,7 +241,7 @@ FirmwareOne = c.Struct(
     "code" / c.Bytes(c.this.code_length),
     c.Terminated,
 
-    "embedded_onev2" / c.RestreamData(c.this.code, c.Optional(FirmwareOneV2)),
+    "embedded_onev2" / c.RestreamData(c.this.code, c.Optional(FirmwareImage)),
 )
 
 # fmt: on
@@ -240,20 +253,19 @@ class FirmwareFormat(Enum):
     TREZOR_ONE_V2 = 3
 
 
-FirmwareType = NewType("FirmwareType", c.Container)
-ParsedFirmware = Tuple[FirmwareFormat, FirmwareType]
+ParsedFirmware = Tuple[FirmwareFormat, c.Container]
 
 
 def parse(data: bytes) -> ParsedFirmware:
     if data[:4] == b"TRZR":
         version = FirmwareFormat.TREZOR_ONE
-        cls = FirmwareOne
+        cls = LegacyFirmware
     elif data[:4] == b"TRZV":
         version = FirmwareFormat.TREZOR_T
-        cls = Firmware
+        cls = VendorFirmware
     elif data[:4] == b"TRZF":
         version = FirmwareFormat.TREZOR_ONE_V2
-        cls = FirmwareOneV2
+        cls = FirmwareImage
     else:
         raise ValueError("Unrecognized firmware image type")
 
@@ -261,10 +273,10 @@ def parse(data: bytes) -> ParsedFirmware:
         fw = cls.parse(data)
     except Exception as e:
         raise FirmwareIntegrityError("Invalid firmware image") from e
-    return version, FirmwareType(fw)
+    return version, fw
 
 
-def digest_onev1(fw: FirmwareType) -> bytes:
+def digest_onev1(fw: c.Container) -> bytes:
     return hashlib.sha256(fw.code).digest()
 
 
@@ -286,7 +298,7 @@ def check_sig_v1(
         key_idx = key_indexes[i] - 1
         signature = signatures[i]
 
-        if key_idx not in V1_BOOTLOADER_KEYS:
+        if key_idx >= len(V1_BOOTLOADER_KEYS):
             # unknown pubkey
             raise InvalidSignatureError("Unknown key in slot {}".format(i))
 
@@ -310,60 +322,75 @@ def header_digest(
     return hash_function(header_bytes).digest()
 
 
-def digest_v2(fw: FirmwareType) -> bytes:
+def digest_v2(fw: c.Container) -> bytes:
     return header_digest(fw.image.header, FirmwareHeader, blake2s)
 
 
-def digest_onev2(fw: FirmwareType) -> bytes:
+def digest_onev2(fw: c.Container) -> bytes:
     return header_digest(fw.header, FirmwareHeader, hashlib.sha256)
 
 
-def validate_code_hashes(
-    fw: FirmwareType,
+def calculate_code_hashes(
+    code: bytes,
+    code_offset: int,
     hash_function: Callable = blake2s,
     chunk_size: int = V2_CHUNK_SIZE,
     padding_byte: bytes = None,
 ) -> None:
-    for i, expected_hash in enumerate(fw.firmware_header.hashes):
+    hashes = []
+    for i in range(16):
         if i == 0:
             # Because first chunk is sent along with headers, there is less code in it.
-            chunk = fw.code[: chunk_size - fw._code_offset]
+            chunk = code[: chunk_size - code_offset]
         else:
             # Subsequent chunks are shifted by the "missing header" size.
-            ptr = i * chunk_size - fw._code_offset
-            chunk = fw.code[ptr : ptr + chunk_size]
+            ptr = i * chunk_size - code_offset
+            chunk = code[ptr : ptr + chunk_size]
 
         # padding for last chunk
         if padding_byte is not None and i > 1 and chunk and len(chunk) < chunk_size:
             chunk += padding_byte[0:1] * (chunk_size - len(chunk))
 
-        if not chunk and expected_hash == b"\0" * 32:
-            continue
-        chunk_hash = hash_function(chunk).digest()
-        if chunk_hash != expected_hash:
-            raise FirmwareIntegrityError("Invalid firmware data.")
+        if not chunk:
+            hashes.append(b"\0" * 32)
+        else:
+            hashes.append(hash_function(chunk).digest())
+
+    return hashes
 
 
-def validate_onev2(fw: FirmwareType, allow_unsigned: bool = False) -> None:
+def validate_code_hashes(fw: c.Container, version: FirmwareFormat) -> None:
+    if version == FirmwareFormat.TREZOR_ONE_V2:
+        image = fw
+        hash_function = hashlib.sha256
+        chunk_size = ONEV2_CHUNK_SIZE
+        padding_byte = b"\xff"
+    else:
+        image = fw.image
+        hash_function = blake2s
+        chunk_size = V2_CHUNK_SIZE
+        padding_byte = None
+
+    expected_hashes = calculate_code_hashes(
+        image.code, image._code_offset, hash_function, chunk_size, padding_byte
+    )
+    if expected_hashes != image.header.hashes:
+        raise FirmwareIntegrityError("Invalid firmware data.")
+
+
+def validate_onev2(fw: c.Container, allow_unsigned: bool = False) -> None:
     try:
         check_sig_v1(
-            digest_onev2(fw),
-            fw.firmware_header.v1_key_indexes,
-            fw.firmware_header.v1_signatures,
+            digest_onev2(fw), fw.header.v1_key_indexes, fw.header.v1_signatures,
         )
     except Unsigned:
         if not allow_unsigned:
             raise
 
-    validate_code_hashes(
-        fw,
-        hash_function=hashlib.sha256,
-        chunk_size=ONEV2_CHUNK_SIZE,
-        padding_byte=b"\xFF",
-    )
+    validate_code_hashes(fw, FirmwareFormat.TREZOR_ONE_V2)
 
 
-def validate_onev1(fw: FirmwareType, allow_unsigned: bool = False) -> None:
+def validate_onev1(fw: c.Container, allow_unsigned: bool = False) -> None:
     try:
         check_sig_v1(digest_onev1(fw), fw.key_indexes, fw.signatures)
     except Unsigned:
@@ -373,7 +400,7 @@ def validate_onev1(fw: FirmwareType, allow_unsigned: bool = False) -> None:
         validate_onev2(fw.embedded_onev2, allow_unsigned)
 
 
-def validate_v2(fw: FirmwareType, skip_vendor_header: bool = False) -> None:
+def validate_v2(fw: c.Container, skip_vendor_header: bool = False) -> None:
     vendor_fingerprint = header_digest(fw.vendor_header, VendorHeader)
     fingerprint = digest_v2(fw)
 
@@ -399,23 +426,23 @@ def validate_v2(fw: FirmwareType, skip_vendor_header: bool = False) -> None:
 
     try:
         cosi.verify_m_of_n(
-            fw.firmware_header.signature,
+            fw.image.header.signature,
             fingerprint,
             fw.vendor_header.vendor_sigs_required,
             fw.vendor_header.vendor_sigs_n,
-            fw.firmware_header.sigmask,
+            fw.image.header.sigmask,
             fw.vendor_header.pubkeys,
         )
     except Exception:
         raise InvalidSignatureError("Invalid firmware signature.")
 
     # XXX expiry is not used now
-    # if time.gmtime(fw.firmware_header.expiry) < now:
+    # if time.gmtime(fw.image.header.expiry) < now:
     #     raise ValueError("Firmware header expired.")
-    validate_code_hashes(fw)
+    validate_code_hashes(fw, FirmwareFormat.TREZOR_T)
 
 
-def digest(version: FirmwareFormat, fw: FirmwareType) -> bytes:
+def digest(version: FirmwareFormat, fw: c.Container) -> bytes:
     if version == FirmwareFormat.TREZOR_ONE:
         return digest_onev1(fw)
     elif version == FirmwareFormat.TREZOR_ONE_V2:
@@ -427,7 +454,7 @@ def digest(version: FirmwareFormat, fw: FirmwareType) -> bytes:
 
 
 def validate(
-    version: FirmwareFormat, fw: FirmwareType, allow_unsigned: bool = False
+    version: FirmwareFormat, fw: c.Container, allow_unsigned: bool = False
 ) -> None:
     if version == FirmwareFormat.TREZOR_ONE:
         return validate_onev1(fw, allow_unsigned)
