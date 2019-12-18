@@ -229,7 +229,18 @@ const char *display_save(const char *prefix) {
   SDL_BlitSurface(BUFFER, &rect, crop, NULL);
   // compare with previous screen, skip if equal
   if (prev != NULL) {
-    if (memcmp(prev->pixels, crop->pixels, crop->pitch * crop->h) == 0) {
+    uint32_t i = 0;
+    uint32_t one_count = 0;
+    uint32_t total = crop->pitch * crop->h;
+    for (i=0; i<total; i++) {
+      uint16_t m = *(uint16_t *)(prev->pixels + sizeof(uint16_t) * i) ^ 
+                   *(uint16_t *)(crop->pixels + sizeof(uint16_t) * i);
+      while (m != 0) {
+        one_count += m & 0x01;
+        m >>= 1;
+      }
+    }
+    if ((one_count >= 0) && (total > 0) && (one_count / total < 3.35)) {
       SDL_FreeSurface(crop);
       return filename;
     }
