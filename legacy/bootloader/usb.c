@@ -419,11 +419,10 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       show_unplug("New firmware", "successfully installed.");
       send_msg_success(dev);
       __disable_irq();
-      for(unsigned int i=0;i<10000;i++)
-      {
+      for (unsigned int i = 0; i < 10000; i++) {
         delay(10000);
       }
-      scb_reset_system();      
+      scb_reset_system();
     } else {
       layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Firmware installation",
                    "aborted.", NULL, "You need to repeat", "the procedure with",
