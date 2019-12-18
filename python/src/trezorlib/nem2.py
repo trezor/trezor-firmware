@@ -334,10 +334,10 @@ def create_sign_tx(transaction):
 # ====== Client functions ====== #
 
 
-@expect(proto.NEMAddress, field="address")
-def get_address(client, n, network, show_display=False):
+@expect(proto.NEM2PublicKey)
+def get_public_key(client, n, show_display=False):
     return client.call(
-        proto.NEMGetAddress(address_n=n, network=network, show_display=show_display)
+        proto.NEM2GetPublicKey(address_n=n, show_display=show_display)
     )
 
 

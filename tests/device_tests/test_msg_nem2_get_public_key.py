@@ -21,16 +21,20 @@ from trezorlib.tools import parse_path
 
 from ..common import MNEMONIC12
 
+@pytest.mark.altcoin
+@pytest.mark.nem2
+class TestMsgNEM2GetPublicKey:
 
-# TODO: actually implement this properly, parked for now
-# @pytest.mark.altcoin
-# @pytest.mark.nem2
-# class TestMsgNEM2GetPublicKey:
-#     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-#     def test_nem2_get_public_key(self, client):
-#         print("RUNNING GET PUBLIC KEY TEST")
-#         print("PUBKEY", nem2.get_public_key(client, parse_path("m/44'/43'/0'"), 0x68).hex())
-#         assert (
-#             nem2.get_public_key(client, parse_path("m/44'/43'/0'"), 0x68)
-#             == "NB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQGHUBWQN"
-#         )
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem2_get_public_key(self, client):
+        assert (
+            nem2.get_public_key(client, parse_path("m/44'/43'/0'/0'/0'"), False).public_key.hex().upper()
+            == "A8F70E4D5C357273968B12417AE8B742E35E530623C2488D0A73306B41271500"
+        )
+
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem2_get_public_key_with_display(self, client):
+        assert (
+            nem2.get_public_key(client, parse_path("m/44'/43'/0'/0'/0'"), True).public_key.hex().upper()
+            == "A8F70E4D5C357273968B12417AE8B742E35E530623C2488D0A73306B41271500"
+        )

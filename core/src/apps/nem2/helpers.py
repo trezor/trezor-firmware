@@ -81,18 +81,24 @@ map_type_to_friendly_name = {
 
 def validate_nem2_path(path: list) -> bool:
     """
-    Validates derivation path to fit 44'/43'/a'
+    Validates derivation path to fit 44'/43'/a'/0'/0',
+    where `a` is an account number.
     """
     length = len(path)
-    if length != 3:
+    if length != 5:
         return False
     if path[0] != 44 | HARDENED:
         return False
-    if path[1] != 43 | HARDENED:
+    if not (
+        path[1] == 43 | HARDENED
+    ):
         return False
     if path[2] < HARDENED or path[2] > 1000000 | HARDENED:
         return False
+    if (path[3] != 0 | HARDENED or path[4] != 0 | HARDENED):
+        return False
     return True
+
 
 def captialize_string(s):
     s = list(s)
