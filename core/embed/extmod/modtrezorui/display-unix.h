@@ -232,8 +232,8 @@ const char *display_save(const char *prefix) {
     uint32_t i = 0;
     uint32_t one_count = 0;
     uint32_t total = crop->pitch * crop->h;
-    for (i=0; i<total; i++) {
-      uint16_t m = *(uint16_t *)(prev->pixels + sizeof(uint16_t) * i) ^ 
+    for (i = 0; i < total; i++) {
+      uint16_t m = *(uint16_t *)(prev->pixels + sizeof(uint16_t) * i) ^
                    *(uint16_t *)(crop->pixels + sizeof(uint16_t) * i);
       while (m != 0) {
         one_count += m & 0x01;
