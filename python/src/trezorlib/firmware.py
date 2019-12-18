@@ -112,7 +112,7 @@ Toif = c.Struct(
 
 
 VendorTrust = c.Transformed(c.BitStruct(
-    "reserved" / c.Default(c.BitsInteger(9), 0),
+    "_reserved" / c.Default(c.BitsInteger(9), 0),
     "show_vendor_string" / c.Flag,
     "require_user_click" / c.Flag,
     "red_background" / c.Flag,
@@ -132,7 +132,7 @@ VendorHeader = c.Struct(
     "vendor_sigs_required" / c.Int8ul,
     "vendor_sigs_n" / c.Rebuild(c.Int8ul, c.len_(c.this.pubkeys)),
     "vendor_trust" / VendorTrust,
-    "reserved" / c.Padding(14),
+    "_reserved" / c.Padding(14),
     "pubkeys" / c.Bytes(32)[c.this.vendor_sigs_n],
     "vendor_string" / c.Aligned(4, c.PascalString(c.Int8ul, "utf-8")),
     "vendor_image" / Toif,
@@ -171,13 +171,13 @@ FirmwareHeader = c.Struct(
     ),
     "version" / VersionLong,
     "fix_version" / VersionLong,
-    "reserved" / c.Padding(8),
+    "_reserved" / c.Padding(8),
     "hashes" / c.Bytes(32)[16],
 
     "v1_signatures" / c.Bytes(64)[V1_SIGNATURE_SLOTS],
     "v1_key_indexes" / c.Int8ul[V1_SIGNATURE_SLOTS],  # pylint: disable=E1136
 
-    "reserved" / c.Padding(220),
+    "_reserved" / c.Padding(220),
     "sigmask" / c.Byte,
     "signature" / c.Bytes(64),
 
@@ -218,7 +218,7 @@ FirmwareOne = c.Struct(
         c.Padding(7),
         "restore_storage" / c.Flag,
     ),
-    "reserved" / c.Padding(52),
+    "_reserved" / c.Padding(52),
     "signatures" / c.Bytes(64)[V1_SIGNATURE_SLOTS],
     "code" / c.Bytes(c.this.code_length),
     c.Terminated,
