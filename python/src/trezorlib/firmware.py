@@ -86,6 +86,11 @@ class ToifMode(Enum):
     grayscale = b"g"
 
 
+class HeaderType(Enum):
+    FIRMWARE = b"TRZF"
+    BOOTLOADER = b"TRZB"
+
+
 class EnumAdapter(c.Adapter):
     def __init__(self, subcon, enum):
         self.enum = enum
@@ -160,7 +165,7 @@ VersionLong = c.Struct(
 
 FirmwareHeader = c.Struct(
     "_start_offset" / c.Tell,
-    "magic" / c.Const(b"TRZF"),
+    "magic" / EnumAdapter(c.Bytes(4), HeaderType),
     "header_len" / c.Int32ul,
     "expiry" / c.Int32ul,
     "code_length" / c.Rebuild(
