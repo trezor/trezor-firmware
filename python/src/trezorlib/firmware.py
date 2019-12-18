@@ -298,7 +298,7 @@ def check_sig_v1(
             raise InvalidSignatureError("Invalid signature in slot {}".format(i)) from e
 
 
-def _header_digest(
+def header_digest(
     header: c.Container, header_type: c.Construct, hash_function: Callable = blake2s
 ) -> bytes:
     stripped_header = header.copy()
@@ -311,11 +311,11 @@ def _header_digest(
 
 
 def digest_v2(fw: FirmwareType) -> bytes:
-    return _header_digest(fw.firmware_header, FirmwareHeader, blake2s)
+    return header_digest(fw.image.header, FirmwareHeader, blake2s)
 
 
 def digest_onev2(fw: FirmwareType) -> bytes:
-    return _header_digest(fw.firmware_header, FirmwareHeader, hashlib.sha256)
+    return header_digest(fw.header, FirmwareHeader, hashlib.sha256)
 
 
 def validate_code_hashes(
@@ -374,7 +374,7 @@ def validate_onev1(fw: FirmwareType, allow_unsigned: bool = False) -> None:
 
 
 def validate_v2(fw: FirmwareType, skip_vendor_header: bool = False) -> None:
-    vendor_fingerprint = _header_digest(fw.vendor_header, VendorHeader)
+    vendor_fingerprint = header_digest(fw.vendor_header, VendorHeader)
     fingerprint = digest_v2(fw)
 
     if not skip_vendor_header:
