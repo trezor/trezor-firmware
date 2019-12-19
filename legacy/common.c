@@ -27,6 +27,9 @@
 #include "rng.h"
 #include "util.h"
 
+#include "../RTT/SEGGER_RTT.h"
+#include "string.h"
+
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
 static HMAC_DRBG_CTX drbg_ctx;
@@ -34,6 +37,7 @@ static HMAC_DRBG_CTX drbg_ctx;
 void __attribute__((noreturn))
 __fatal_error(const char *expr, const char *msg, const char *file, int line_num,
               const char *func) {
+#if 0
   const BITMAP *icon = &bmp_icon_error;
   char line[128] = {0};
   int y = icon->height + 3;
@@ -64,6 +68,26 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line_num,
 
   oledDrawString(0, y, "Contact Trezor support.", FONT_STANDARD);
   oledRefresh();
+#endif
+
+#if 1
+  char line[128] = {0};
+  snprintf(line, sizeof(line), "Expr: %s", expr ? expr : "(null)");
+  SEGGER_RTT_printf(0," %s\r\n",line);
+
+  memset(line,0x00,sizeof(line));
+  snprintf(line, sizeof(line), "Msg: %s", msg ? msg : "(null)");
+  SEGGER_RTT_printf(0," %s\r\n",line);
+
+  memset(line,0x00,sizeof(line));
+  //const char *label = "File: ";
+  snprintf(line, sizeof(line), "%s:%d", file ? file : "(null)", line_num);
+  //SEGGER_RTT_printf(0,"lable %s\r\n",label);
+
+  memset(line,0x00,sizeof(line));
+  snprintf(line, sizeof(line), "Func: %s", func ? func : "(null)");
+  SEGGER_RTT_printf(0," %s\r\n",line);
+#endif
 
   shutdown();
 }

@@ -116,6 +116,10 @@ void oledInvertPixel(int x, int y) {
  */
 static inline void SPISend(uint32_t base, const uint8_t *data, int len) {
   delay(1);
+  (void)base;
+  (void)data;
+  (void)len;
+#if 0
   for (int i = 0; i < len; i++) {
     spi_send(base, data[i]);
   }
@@ -123,6 +127,7 @@ static inline void SPISend(uint32_t base, const uint8_t *data, int len) {
     ;
   while ((SPI_SR(base) & SPI_SR_BSY))
     ;
+#endif
 }
 
 /*
