@@ -146,6 +146,9 @@
         "Exodus": "https://www.exodus.io",
         "Magnum": "https://magnumwallet.co"
     },
+    "bitcoin:ZCR": {
+        "Electrum-ZCR": "https://github.com/zcore-coin/electrum-wallet/"
+    },
     "bitcoin:ZNY": {
         "Electrum-ZNY": "https://zny.electrum-jp.net"
     }
