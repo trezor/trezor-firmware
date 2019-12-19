@@ -328,6 +328,7 @@ def test_sign_tx_manage_buy_offer_op(client):
         1, "X", "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
     )
     op.buying_price = 10
+    op.offer_id = 0
 
     tx = _create_msg()
 
