@@ -23,6 +23,8 @@
 #include "flash.h"
 #include "norcow.h"
 
+#include "../../../RTT/SEGGER_RTT.h"
+
 // NRC2 = 4e524332
 #define NORCOW_MAGIC ((uint32_t)0x3243524e)
 // NRCW = 4e524357
@@ -187,6 +189,8 @@ static secbool find_start_offset(uint8_t sector, uint32_t *offset,
     return secfalse;
   }
 
+  SEGGER_RTT_printf(0,"magic = %x.\r\n",magic);
+
   if (*magic == NORCOW_MAGIC) {
     *offset = NORCOW_STORAGE_START;
     *version = ~(magic[1]);
@@ -214,11 +218,17 @@ static secbool find_item(uint8_t sector, uint16_t key, const void **val,
     return secfalse;
   }
 
+  SEGGER_RTT_printf(0,"offset = %u.\r\n",offset);
+  SEGGER_RTT_printf(0,"version = %u.\r\n",version);
+
   for (;;) {
     uint16_t k = 0, l = 0;
     const void *v = NULL;
     uint32_t pos = 0;
     if (sectrue != read_item(sector, offset, &k, &v, &l, &pos)) {
+    	  SEGGER_RTT_printf(0,"k = %u.\r\n",k);
+    	  SEGGER_RTT_printf(0,"v = %u.\r\n",v);
+    	  SEGGER_RTT_printf(0,"len = %u.\r\n",l);
       break;
     }
     if (key == k) {
@@ -226,6 +236,9 @@ static secbool find_item(uint8_t sector, uint16_t key, const void **val,
       *len = l;
     }
     offset = pos;
+    SEGGER_RTT_printf(0,"k = %u.\r\n",k);
+    SEGGER_RTT_printf(0,"v = %u.\r\n",v);
+    SEGGER_RTT_printf(0,"len = %u.\r\n",l);
   }
   return sectrue * (*val != NULL);
 }

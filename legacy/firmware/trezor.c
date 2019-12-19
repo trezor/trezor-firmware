@@ -38,6 +38,8 @@
 #include "otp.h"
 #endif
 
+#include "../../RTT/SEGGER_RTT.h"
+
 /* Screen timeout */
 uint32_t system_millis_lock_start = 0;
 
@@ -123,6 +125,9 @@ int main(void) {
                                    // unpredictable stack protection checks
   oledInit();
 #else
+
+  SEGGER_RTT_ConfigUpBuffer(0, NULL, NULL, 0, SEGGER_RTT_MODE_BLOCK_IF_FIFO_FULL);
+
   check_bootloader();
   setupApp();
   __stack_chk_guard = random32();  // this supports compiler provided
@@ -148,13 +153,16 @@ int main(void) {
   config_wipe();
 #endif
 #endif
-
   oledDrawBitmap(40, 0, &bmp_logo64);
   oledRefresh();
 
+  SEGGER_RTT_WriteString(0,"ready config_init.\r\n");
   config_init();
+  SEGGER_RTT_WriteString(0,"ready layoutHome.\r\n");
   layoutHome();
+  SEGGER_RTT_WriteString(0,"ready usbInit.\r\n");
   usbInit();
+  SEGGER_RTT_WriteString(0,"ready forever.\r\n");
   for (;;) {
     usbPoll();
     check_lock_screen();

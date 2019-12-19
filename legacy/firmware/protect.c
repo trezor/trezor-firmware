@@ -33,6 +33,8 @@
 #include "usb.h"
 #include "util.h"
 
+#include "../../RTT/SEGGER_RTT.h"
+
 #define MAX_WRONG_PINS 15
 
 bool protectAbortedByCancel = false;
@@ -188,6 +190,9 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress,
     return sectrue;
   }
 
+  SEGGER_RTT_printf(0,"message %s.\r\n",message);
+
+  SEGGER_RTT_WriteString(0,"protectPinUiCallback.\r\n");
   return secfalse;
 }
 
