@@ -115,7 +115,6 @@ async def check_word_validity(
                     await show_share_already_added(ctx)
                     return False
     elif backup_type == BackupType.Slip39_Advanced:
-        # in case of advanced slip39 recovery we only check 2 words
         if current_index < 2:
             share_list = next(s for s in previous_mnemonics if s)[0].split(" ")
             if share_list[current_index] != current_word:
@@ -144,7 +143,7 @@ async def check_word_validity(
                     if group_identifier_word == group[0].split(" ")[2]:
                         group_index = i
 
-            if group_index:
+            if group_index is not None:
                 group = previous_mnemonics[group_index]
                 for share in group:
                     if current_word == share.split(" ")[current_index]:
