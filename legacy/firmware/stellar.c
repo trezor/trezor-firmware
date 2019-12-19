@@ -491,7 +491,7 @@ bool stellar_confirmManageBuyOfferOp(const StellarManageBuyOfferOp *msg) {
   }
 
   // Hash: operation type
-  stellar_hashupdate_uint32(3);
+  stellar_hashupdate_uint32(12);
 
   // New Offer / Delete #123 / Update #123
   char str_offer[32] = {0};
