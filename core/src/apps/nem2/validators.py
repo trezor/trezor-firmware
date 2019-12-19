@@ -14,6 +14,7 @@ from .helpers import (
     NEM2_NETWORK_MAIN_NET,
     NEM2_NETWORK_MIJIN,
     NEM2_NETWORK_TEST_NET,
+    NEM2_NETWORK_MIJIN_TEST,
     NEM2_PUBLIC_KEY_SIZE,
     NEM2_SECRET_LOCK_SHA3_256,
     NEM2_SECRET_LOCK_KECCAK_256,
@@ -117,7 +118,6 @@ def _validate_single_tx(msg: NEM2SignTx):
 
 
 def _validate_common(common: NEM2TransactionCommon, inner: bool = False):
-
     err = None
     if common.type is None:
         err = "type"
@@ -133,6 +133,36 @@ def _validate_common(common: NEM2TransactionCommon, inner: bool = False):
     if err:
         raise ProcessError("No %s provided" % err)
 
+def address_validator(address_data):
+    address = address_data.address
+    network_type = address_data.network_type
+    if len(address) != 40:
+        raise ProcessError("Address must be 40 characters long")
+
+    # Check address matches network type
+    first_char = address[0]
+    if first_char.upper() == 'S':
+        if network_type != NEM2_NETWORK_MIJIN_TEST:
+            raise ProcessError("Network type for address is invalid. Must be Mijin Test")
+    elif first_char.upper() == 'M':
+        if network_type != NEM2_NETWORK_MIJIN:
+            raise ProcessError("Network type for address is invalid. Must be Mijin")
+    elif first_char.upper() == 'T':
+        if network_type != NEM2_NETWORK_TEST_NET:
+            raise ProcessError("Network type for address is invalid. Must be Test Net")
+    elif first_char.upper() == 'N':
+        if network_type != NEM2_NETWORK_MAIN_NET:
+            raise ProcessError("Network type for address is invalid. Must be Main Net")
+    else:
+        raise ProcessError("Address network is unsupported")
+
+def validate_recipient_address(recipient_address):
+    if recipient_address is None:
+        raise ProcessError("No recipient provided")
+    if recipient_address.address is None:
+        raise ProcessError("No address provided")
+    if recipient_address.network_type is None:
+        raise ProcessError("No address network type provided")
 
 def _validate_multisig(multisig: NEM2TransactionCommon, version: int):
     if multisig.version != version:
@@ -140,12 +170,12 @@ def _validate_multisig(multisig: NEM2TransactionCommon, version: int):
     _validate_public_key(multisig.signer, "Invalid multisig signer public key provided")
 
 def _validate_transfer(transfer: NEM2TransferTransaction, version: int):
-    if transfer.recipient_address is None:
-        raise ProcessError("No recipient provided")
+    validate_recipient_address(transfer.recipient_address)
 
-    # TODO: replace C implementation of validate_address with something new for nem2
-    # if not nem2.validate_address(transfer.recipient_address, network):
-    #     raise ProcessError("Invalid recipient address")
+    if transfer.message is None:
+        raise ProcessError("No message provided")
+
+    address_validator(transfer.recipient_address)
 
     for m in transfer.mosaics:
         if m.id is None:
@@ -178,7 +208,6 @@ def _validate_mosaic_supply(mosaic_supply: NEM2MosaicSupplyChangeTransaction):
     if mosaic_supply.action not in valid_actions:
         raise ProcessError("Invalid action provided")
 
-
 def _validate_mosaic_alias(mosaic_alias: NEM2MosaicAliasTransaction, network: int):
     if mosaic_alias.namespace_id is None:
         raise ProcessError("No namespace ID provided")
@@ -209,9 +238,8 @@ def _validate_secret_lock(secret_lock: NEM2SecretLockTransaction):
         raise ProcessError("No duration provided")
     if secret_lock.hash_algorithm is None:
         raise ProcessError("No hash algorithm provided")
-    if secret_lock.recipient_address is None:
-        raise ProcessError("No recipient address provided")
 
+    validate_recipient_address(secret_lock.recipient_address)
     validate_secret(secret_lock.secret, secret_lock.hash_algorithm)
 
 def _validate_secret_proof(secret_lock: NEM2SecretProofTransaction):
@@ -221,9 +249,8 @@ def _validate_secret_proof(secret_lock: NEM2SecretProofTransaction):
         raise ProcessError("No proof provided")
     if secret_lock.hash_algorithm is None:
         raise ProcessError("No hash algorithm provided")
-    if secret_lock.recipient_address is None:
-        raise ProcessError("No recipient address provided")
 
+    validate_recipient_address(secret_lock.recipient_address)
     validate_secret(secret_lock.secret, secret_lock.hash_algorithm)
 
 def validate_secret(secret, hash_algorithm):

@@ -17,6 +17,7 @@ def _validate_metadata(
 
     # https://nemtech.github.io/concepts/metadata.html#namespace-metadata-transaction
     # https://nemtech.github.io/concepts/metadata.html#mosaic-metadata-transaction
+    # https://nemtech.github.io/concepts/metadata.html#account-metadata-transaction
 
     if metadata.target_public_key is None:
         raise ProcessError("Invalid target public key")
