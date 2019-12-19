@@ -327,7 +327,8 @@ def test_sign_tx_manage_buy_offer_op(client):
     op.selling_asset = messages.StellarAssetType(
         1, "X", "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
     )
-    op.buying_price = 10
+    op.price_n = 10
+    op.price_d = 1
     op.offer_id = 0
 
     tx = _create_msg()
