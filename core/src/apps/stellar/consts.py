@@ -13,7 +13,7 @@ op_codes = {
     "StellarChangeTrustOp": const(6),
     "StellarCreateAccountOp": const(0),
     "StellarCreatePassiveOfferOp": const(4),
-    "StellarManageBuyOffer": const(12),
+    "StellarManageBuyOfferOp": const(12),
     "StellarManageDataOp": const(10),
     "StellarManageOfferOp": const(3),
     "StellarPathPaymentOp": const(2),
