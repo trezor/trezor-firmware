@@ -219,8 +219,11 @@ _KEY_AGREEMENT_PUBKEY = nist256p1.publickey(_KEY_AGREEMENT_PRIVKEY, False)
 _ALLOW_FIDO2 = True
 _ALLOW_RESIDENT_CREDENTIALS = True
 
-# The attestation type to use in MakeCredential responses. If false, then self attestation will be used.
-_USE_BASIC_ATTESTATION = False
+# The default attestation type to use in MakeCredential responses. If false, then basic attestation will be used by default.
+_DEFAULT_USE_SELF_ATTESTATION = True
+
+# The default value of the use_sign_count flag for newly created credentials.
+_DEFAULT_USE_SIGN_COUNT = True
 
 # The CID of the last WINK command. Used to ensure that we do only one WINK at a time on any given CID.
 _last_wink_cid = 0
@@ -1356,7 +1359,7 @@ def algorithms_from_pub_key_cred_params(pub_key_cred_params: List[dict]) -> List
 
 
 def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
-    from apps.webauthn.knownapps import knownapps
+    from apps.webauthn import knownapps
 
     if not storage.is_initialized():
         if __debug__:
@@ -1414,7 +1417,11 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     except Exception:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
-    cred.use_sign_count = knownapps.get(rp_id_hash, {}).get("use_sign_count", True)
+    app = knownapps.by_rp_id_hash(rp_id_hash)
+    if app is not None and app.use_sign_count is not None:
+        cred.use_sign_count = app.use_sign_count
+    else:
+        cred.use_sign_count = _DEFAULT_USE_SIGN_COUNT
 
     # Check data types.
     if (
@@ -1469,6 +1476,8 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 def cbor_make_credential_sign(
     client_data_hash: bytes, cred: Fido2Credential, user_verification: bool
 ) -> bytes:
+    from apps.webauthn import knownapps
+
     privkey = cred.private_key()
     pubkey = nist256p1.publickey(privkey, False)
 
@@ -1506,8 +1515,14 @@ def cbor_make_credential_sign(
         + extensions
     )
 
+    app = knownapps.by_rp_id_hash(cred.rp_id_hash)
+    if app is not None and app.use_self_attestation is not None:
+        use_self_attestation = app.use_self_attestation
+    else:
+        use_self_attestation = _DEFAULT_USE_SELF_ATTESTATION
+
     # Compute the attestation signature of the authenticator data.
-    if _USE_BASIC_ATTESTATION:
+    if not use_self_attestation:
         privkey = _U2F_ATT_PRIV_KEY
 
     dig = hashlib.sha256()
@@ -1518,7 +1533,7 @@ def cbor_make_credential_sign(
 
     # Encode the authenticatorMakeCredential response data.
     attestation_statement = {"alg": _COSE_ALG_ES256, "sig": sig}
-    if _USE_BASIC_ATTESTATION:
+    if not use_self_attestation:
         attestation_statement["x5c"] = [_U2F_ATT_CERT]
 
     return cbor.encode(

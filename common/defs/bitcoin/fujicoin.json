@@ -6,7 +6,7 @@
   "github": "https://github.com/fujicoin/fujicoin",
   "maintainer": "motty <admin@fujicoin.org>",
   "curve_name": "secp256k1",
-  "divisibility": 8,
+  "decimals": 8,
   "address_type": 36,
   "address_type_p2sh": 16,
   "maxfee_kb": 1000000000,

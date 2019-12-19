@@ -1,0 +1,8 @@
+[book]
+title = "Trezor Core"
+description = "Documentation of Trezor Core firmware."
+src = "."
+
+[build]
+build-dir = "mdbook"
+create-missing = false

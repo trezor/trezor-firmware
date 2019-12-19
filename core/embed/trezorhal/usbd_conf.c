@@ -54,12 +54,7 @@
 #include STM32_HAL_H
 #include "usbd_core.h"
 #include "usb.h"
-
-#define IRQ_PRI_OTG_FS          6
-#define IRQ_SUBPRI_OTG_FS       0
-
-#define IRQ_PRI_OTG_HS          6
-#define IRQ_SUBPRI_OTG_HS       0
+#include "irq.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -122,7 +117,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
 
     /* Set USBFS Interrupt priority */
-    HAL_NVIC_SetPriority(OTG_FS_IRQn, IRQ_PRI_OTG_FS, IRQ_SUBPRI_OTG_FS);
+    NVIC_SetPriority(OTG_FS_IRQn, IRQ_PRI_OTG_FS);
 
     /* Enable USBFS Interrupt */
     HAL_NVIC_EnableIRQ(OTG_FS_IRQn);
@@ -231,7 +226,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
 #endif // !USE_USB_HS_IN_FS
 
     /* Set USBHS Interrupt to the lowest priority */
-    HAL_NVIC_SetPriority(OTG_HS_IRQn, IRQ_PRI_OTG_HS, IRQ_SUBPRI_OTG_HS);
+    NVIC_SetPriority(OTG_HS_IRQn, IRQ_PRI_OTG_HS);
 
     /* Enable USBHS Interrupt */
     HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
@@ -706,12 +701,20 @@ void  USBD_LL_Delay(uint32_t Delay)
   */
 #if defined(USE_USB_FS)
 void OTG_FS_IRQHandler(void) {
-    HAL_PCD_IRQHandler(&pcd_fs_handle);
+    IRQ_ENTER(OTG_FS_IRQn);
+    if (pcd_fs_handle.Instance) {
+        HAL_PCD_IRQHandler(&pcd_fs_handle);
+    }
+    IRQ_EXIT(OTG_FS_IRQn);
 }
 #endif
 #if defined(USE_USB_HS)
 void OTG_HS_IRQHandler(void) {
-    HAL_PCD_IRQHandler(&pcd_hs_handle);
+    IRQ_ENTER(OTG_HS_IRQn);
+    if (pcd_hs_handle.Instance) {
+        HAL_PCD_IRQHandler(&pcd_hs_handle);
+    }
+    IRQ_EXIT(OTG_HS_IRQn);
 }
 #endif
 
@@ -760,18 +763,24 @@ static void OTG_CMD_WKUP_Handler(PCD_HandleTypeDef *pcd_handle) {
   */
 #if defined(USE_USB_FS)
 void OTG_FS_WKUP_IRQHandler(void) {
-    OTG_CMD_WKUP_Handler(&pcd_fs_handle);
-
+    IRQ_ENTER(OTG_FS_WKUP_IRQn);
+    if (pcd_fs_handle.Instance) {
+        OTG_CMD_WKUP_Handler(&pcd_fs_handle);
+    }
     /* Clear EXTI pending Bit*/
     __HAL_USB_OTG_FS_WAKEUP_EXTI_CLEAR_FLAG();
+    IRQ_EXIT(OTG_FS_WKUP_IRQn);
 }
 #endif
 #if defined(USE_USB_HS)
 void OTG_HS_WKUP_IRQHandler(void) {
-    OTG_CMD_WKUP_Handler(&pcd_hs_handle);
-
+    IRQ_ENTER(OTG_HS_WKUP_IRQn);
+    if (pcd_hs_handle.Instance) {
+        OTG_CMD_WKUP_Handler(&pcd_hs_handle);
+    }
     /* Clear EXTI pending Bit*/
     __HAL_USB_HS_EXTI_CLEAR_FLAG();
+    IRQ_EXIT(OTG_HS_WKUP_IRQn);
 }
 #endif
 

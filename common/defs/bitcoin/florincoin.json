@@ -6,7 +6,7 @@
   "github": "https://github.com/floblockchain/flo",
   "maintainer": "Robert English <ksaredfx@gmail.com>",
   "curve_name": "secp256k1",
-  "divisibility": 8,
+  "decimals": 8,
   "address_type": 35,
   "address_type_p2sh": 94,
   "maxfee_kb": 40000000,

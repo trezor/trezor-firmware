@@ -5,6 +5,9 @@ if False:
     from typing import Optional
 
 
+DEFAULT_ICON = "apps/webauthn/res/icon_webauthn.toif"
+
+
 class ConfirmInfo:
     def __init__(self) -> None:
         self.app_icon = None  # type: Optional[bytes]
@@ -20,23 +23,13 @@ class ConfirmInfo:
 
     def load_icon(self, rp_id_hash: bytes) -> None:
         from trezor import res
-        from apps.webauthn.knownapps import knownapps
+        from apps.webauthn import knownapps
 
-        app_name = knownapps.get(rp_id_hash, {}).get(
-            "label", None
-        )  # type: Optional[str]
-        if app_name is not None:
-            resource = "apps/webauthn/res/icon_%s.toif" % app_name.lower().replace(
-                " ", "_"
-            )
-            try:
-                self.app_icon = res.load(resource)
-            except KeyError:
-                pass
-            else:
-                return
-
-        self.app_icon = res.load("apps/webauthn/res/icon_webauthn.toif")
+        fido_app = knownapps.by_rp_id_hash(rp_id_hash)
+        if fido_app is not None and fido_app.icon is not None:
+            self.app_icon = res.load(fido_app.icon)
+        else:
+            self.app_icon = res.load(DEFAULT_ICON)
 
 
 class ConfirmContent(ui.Component):

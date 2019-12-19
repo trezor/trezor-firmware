@@ -520,7 +520,7 @@ void config_setLanguage(const char *lang) {
   }
 
   // Sanity check.
-  if (strcmp(lang, "english") != 0) {
+  if (strcmp(lang, "en-US") != 0) {
     return;
   }
   storage_set(KEY_LANGUAGE, lang, strnlen(lang, MAX_LANGUAGE_LEN));
@@ -665,7 +665,17 @@ bool config_getLabel(char *dest, uint16_t dest_size) {
 }
 
 bool config_getLanguage(char *dest, uint16_t dest_size) {
-  return sectrue == config_get_string(KEY_LANGUAGE, dest, dest_size);
+  if (sectrue == config_get_string(KEY_LANGUAGE, dest, dest_size)) {
+    if (dest_size == 7 && (strcmp(dest, "english") != 0)) {
+      // fallthrough -> return "en-US"
+    } else {
+      // other language -> return the value
+      return true;
+    }
+  }
+  strcpy(dest, "en-US");
+  dest_size = 5;
+  return true;
 }
 
 bool config_getHomescreen(uint8_t *dest, uint16_t dest_size) {

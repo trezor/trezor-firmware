@@ -63,7 +63,7 @@ async def _init(ctx, w: bytearray, pubkey: bytes, msg: StellarSignTx):
     )
 
 
-def _timebounds(ctx, w: bytearray, start: int, end: int):
+async def _timebounds(ctx, w: bytearray, start: int, end: int):
     # timebounds are only present if timebounds_start or timebounds_end is non-zero
     if start or end:
         # confirm dialog

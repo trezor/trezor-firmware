@@ -77,7 +77,7 @@ def format_amount(amount: int, ticker=True) -> str:
     t = ""
     if ticker:
         t = " XLM"
-    return utils.format_amount(amount, consts.AMOUNT_DIVISIBILITY) + t
+    return utils.format_amount(amount, consts.AMOUNT_DECIMALS) + t
 
 
 def split(text):

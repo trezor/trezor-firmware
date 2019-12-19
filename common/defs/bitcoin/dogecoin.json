@@ -6,7 +6,7 @@
   "github": "https://github.com/dogecoin/dogecoin",
   "maintainer": "Karel Bilek <karel.bilek@satoshilabs.com>",
   "curve_name": "secp256k1",
-  "divisibility": 8,
+  "decimals": 8,
   "address_type": 30,
   "address_type_p2sh": 22,
   "maxfee_kb": 1000000000,
