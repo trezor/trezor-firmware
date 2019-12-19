@@ -30,6 +30,8 @@
 #include "sha2.h"
 #include "storage.h"
 
+#include "../../RTT/SEGGER_RTT.h"
+
 #define LOW_MASK 0x55555555
 
 // The APP namespace which is reserved for storage related values.
@@ -984,6 +986,7 @@ static secbool unlock(uint32_t pin, const uint8_t *ext_salt) {
           progress = ((ui_total - ui_rem) * 10 + i) * 100 / ui_total;
         }
         if (sectrue == ui_callback(ui_rem, progress, ui_message)) {
+        	SEGGER_RTT_WriteString(0,"UI_CB secfalse.\r\n");
           return secfalse;
         }
       }
@@ -1053,6 +1056,12 @@ secbool storage_unlock(uint32_t pin, const uint8_t *ext_salt) {
   } else {
     ui_message = VERIFYING_PIN_MSG;
   }
+  SEGGER_RTT_printf(0,"storage_unlock pin = %u\r\n",pin);
+
+  SEGGER_RTT_printf(0,"storage_unlock ui_message = %s\r\n",ui_message);
+
+  SEGGER_RTT_WriteString(0,"storage_unlock enter unlock.\r\n");
+
   return unlock(pin, ext_salt);
 }
 
@@ -1466,7 +1475,9 @@ static secbool storage_upgrade(void) {
     if (sectrue == norcow_get(V0_PIN_KEY, &val, &len)) {
       set_pin(*(const uint32_t *)val, NULL);
     } else {
-      set_pin(PIN_EMPTY, NULL);
+    SEGGER_RTT_printf(0,"val = %u.\r\n",val);
+    SEGGER_RTT_printf(0,"len = %u.\r\n",len);
+    set_pin(PIN_EMPTY, NULL);
     }
 
     // Convert PIN failure counter.

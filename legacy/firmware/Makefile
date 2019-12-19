@@ -9,6 +9,8 @@ OBJS += usb.o
 OBJS += bl_check.o
 OBJS += otp.o
 OBJS += header.o
+OBJS += ../../RTT/SEGGER_RTT.o
+OBJS += ../../RTT/SEGGER_RTT_printf.o
 endif
 
 OBJS += messages.o
