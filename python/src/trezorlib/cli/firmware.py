@@ -44,7 +44,7 @@ def validate_firmware(version, fw, expected_fingerprint=None):
         _print_version(fw.header.version)
     elif version == firmware.FirmwareFormat.TREZOR_T:
         click.echo("Trezor T firmware image.")
-        vendor = fw.vendor_header.vendor_string
+        vendor = fw.vendor_header.text
         vendor_version = "{major}.{minor}".format(**fw.vendor_header.version)
         click.echo("Vendor header from {}, version {}".format(vendor, vendor_version))
         _print_version(fw.image.header.version)

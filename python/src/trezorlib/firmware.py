@@ -152,13 +152,13 @@ VendorHeader = c.Struct(
         "major" / c.Int8ul,
         "minor" / c.Int8ul,
     ),
-    "vendor_sigs_required" / c.Int8ul,
-    "vendor_sigs_n" / c.Rebuild(c.Int8ul, c.len_(c.this.pubkeys)),
-    "vendor_trust" / VendorTrust,
+    "sig_m" / c.Int8ul,
+    "sig_n" / c.Rebuild(c.Int8ul, c.len_(c.this.pubkeys)),
+    "trust" / VendorTrust,
     "_reserved" / c.Padding(14),
-    "pubkeys" / c.Bytes(32)[c.this.vendor_sigs_n],
-    "vendor_string" / c.Aligned(4, c.PascalString(c.Int8ul, "utf-8")),
-    "vendor_image" / Toif,
+    "pubkeys" / c.Bytes(32)[c.this.sig_n],
+    "text" / c.Aligned(4, c.PascalString(c.Int8ul, "utf-8")),
+    "image" / Toif,
     "_data_end_offset" / c.Tell,
 
     c.Padding(-(c.this._data_end_offset + 65) % 512),
@@ -446,7 +446,7 @@ def validate_v2(fw: c.Container, skip_vendor_header: bool = False) -> None:
         cosi.verify(
             fw.image.header.signature,
             fingerprint,
-            fw.vendor_header.vendor_sigs_required,
+            fw.vendor_header.sig_m,
             fw.vendor_header.pubkeys,
             fw.image.header.sigmask,
         )
