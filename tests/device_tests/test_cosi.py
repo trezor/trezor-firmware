@@ -73,7 +73,7 @@ class TestCosi:
             global_R, [sig0.signature, sig1.signature, sig2.signature]
         )
 
-        cosi.verify(sig, digest, global_pk)
+        cosi.verify_combined(sig, digest, global_pk)
 
     def test_cosi_compat(self, client):
         digest = sha256(b"this is not a pipe").digest()
@@ -94,4 +94,4 @@ class TestCosi:
         )
         sig = cosi.combine_sig(global_R, [remote_sig.signature, local_sig])
 
-        cosi.verify(sig, digest, global_pk)
+        cosi.verify_combined(sig, digest, global_pk)

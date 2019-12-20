@@ -49,8 +49,8 @@ V2_BOOTLOADER_KEYS = [
         "b8307a71f552c60a4cbb317ff48b82cdbf6b6bb5f04c920fec7badf017883751",
     )
 ]
-V2_BOOTLOADER_M = 2
-V2_BOOTLOADER_N = 3
+
+V2_SIGS_REQUIRED = 2
 
 ONEV2_CHUNK_SIZE = 1024 * 64
 V2_CHUNK_SIZE = 1024 * 128
@@ -408,13 +408,12 @@ def validate_v2(fw: c.Container, skip_vendor_header: bool = False) -> None:
         try:
             # if you want to validate a custom vendor header, you can modify
             # the global variables to match your keys and m-of-n scheme
-            cosi.verify_m_of_n(
+            cosi.verify(
                 fw.vendor_header.signature,
                 vendor_fingerprint,
-                V2_BOOTLOADER_M,
-                V2_BOOTLOADER_N,
-                fw.vendor_header.sigmask,
+                V2_SIGS_REQUIRED,
                 V2_BOOTLOADER_KEYS,
+                fw.vendor_header.sigmask,
             )
         except Exception:
             raise InvalidSignatureError("Invalid vendor header signature.")
@@ -425,13 +424,12 @@ def validate_v2(fw: c.Container, skip_vendor_header: bool = False) -> None:
         #     raise ValueError("Vendor header expired.")
 
     try:
-        cosi.verify_m_of_n(
+        cosi.verify(
             fw.image.header.signature,
             fingerprint,
             fw.vendor_header.vendor_sigs_required,
-            fw.vendor_header.vendor_sigs_n,
-            fw.image.header.sigmask,
             fw.vendor_header.pubkeys,
+            fw.image.header.sigmask,
         )
     except Exception:
         raise InvalidSignatureError("Invalid firmware signature.")

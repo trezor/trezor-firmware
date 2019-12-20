@@ -67,31 +67,45 @@ def get_nonce(
     return r, Ed25519PublicPoint(_ed25519.encodepoint(R))
 
 
-def verify(
+def verify_combined(
     signature: Ed25519Signature, digest: bytes, pub_key: Ed25519PublicPoint
 ) -> None:
-    """Verify Ed25519 signature. Raise exception if the signature is invalid."""
+    """Verify Ed25519 signature. Raise exception if the signature is invalid.
+
+    A CoSi combined signature is equivalent to a plain Ed25519 signature with a public
+    key that is a combination of the cosigners' public keys. This function takes the
+    combined public key and performs simple Ed25519 verification.
+    """
     # XXX this *might* change to bool function
     _ed25519.checkvalid(signature, digest, pub_key)
 
 
-def verify_m_of_n(
+def verify(
     signature: Ed25519Signature,
     digest: bytes,
-    m: int,
-    n: int,
-    mask: int,
+    sigs_required: int,
     keys: List[Ed25519PublicPoint],
+    mask: int,
 ) -> None:
-    if m < 1:
-        raise ValueError("At least 1 signer must be specified")
-    selected_keys = [keys[i] for i in range(n) if mask & (1 << i)]
-    if len(selected_keys) < m:
-        raise ValueError(
-            "Not enough signers ({} required, {} found)".format(m, len(selected_keys))
-        )
+    """Verify a CoSi multi-signature. Raise exception if the signature is invalid.
+
+    This function verifies a M-of-N signature scheme. The arguments are:
+    - the minimum number M of signatures required
+    - public keys of all N possible cosigners
+    - a bitmask specifying which of the N cosigners have produced the signature.
+
+    The verification checks that the mask specifies at least M cosigners, then combines
+    the selected public keys and verifies the signature against the combined key.
+    """
+    if sigs_required < 1:
+        raise ValueError("At least one signer must be specified.")
+    if mask.bit_length() > len(keys):
+        raise ValueError("Sigmask specifies more public keys than provided.")
+    selected_keys = [key for i, key in enumerate(keys) if mask & (1 << i)]
+    if len(selected_keys) < sigs_required:
+        raise _ed25519.SignatureMismatch("Insufficient number of signatures.")
     global_pk = combine_keys(selected_keys)
-    return verify(signature, digest, global_pk)
+    return verify_combined(signature, digest, global_pk)
 
 
 def pubkey_from_privkey(privkey: Ed25519PrivateKey) -> Ed25519PublicPoint:

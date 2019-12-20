@@ -311,15 +311,19 @@ def binopen(filename):
             firmware = FirmwareImage(data, vheader.hdrlen)
             # check signatures against signing keys in the vendor header
             if firmware.sigmask > 0:
-                pk = [vheader.vpub[i] for i in range(8) if firmware.sigmask & (1 << i)]
-                global_pk = cosi.combine_keys(pk)
                 hdr = (
                     subdata[: IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE]
                     + IMAGE_SIG_SIZE * b"\x00"
                 )
                 digest = pyblake2.blake2s(hdr).digest()
                 try:
-                    cosi.verify(firmware.sig, digest, global_pk)
+                    cosi.verify(
+                        firmware.sig,
+                        digest,
+                        vheader.vsig_m,
+                        vheader.vpub,
+                        firmware.sigmask,
+                    )
                     print("Firmware signature OK")
                 except ValueError:
                     print("Firmware signature INCORRECT")

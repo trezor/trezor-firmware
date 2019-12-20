@@ -55,7 +55,7 @@ def sign(index, filename, seckeys):
         sigs.append(sig)
     # compute global signature
     sig = cosi.combine_sig(global_R, sigs)
-    cosi.verify(sig, digest, global_pk)
+    cosi.verify_combined(sig, digest, global_pk)
     print(binascii.hexlify(sig).decode())
 
 
