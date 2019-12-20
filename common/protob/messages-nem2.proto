@@ -39,7 +39,7 @@ message NEM2SignTx {
     optional NEM2TransferTransaction transfer = 3;          // Transfer transaction part
     optional string generation_hash = 4;
     repeated uint32 address_n = 5;
-    optional bool cosigning = 6;
+    optional string cosigning = 6;
     optional NEM2MosaicDefinitionTransaction mosaic_definition = 7; // Mosaic Definition part
     optional NEM2MosaicSupplyChangeTransaction mosaic_supply = 8; // Mosaic Supply part
     optional NEM2NamespaceRegistrationTransaction namespace_registration = 9; // Namespace registration part
@@ -285,6 +285,13 @@ message NEM2SignTx {
         optional NEM2HashLockTransaction hash_lock = 8;
         optional NEM2SecretLockTransaction secret_lock = 9;
         optional NEM2SecretProofTransaction secret_proof = 10;
+        optional NEM2NamespaceMetadataTransaction namespace_metadata = 11;
+        optional NEM2MosaicMetadataTransaction mosaic_metadata = 12;
+        optional NEM2AccountMetadataTransaction account_metadata = 13;
+        optional NEM2MultisigModificationTransaction multisig_modification = 14;
+        optional NEM2AccountAddressRestrictionTransaction account_address_restriction = 15;
+        optional NEM2AccountMosaicRestrictionTransaction account_mosaic_restriction = 16;
+        optional NEM2AccountOperationRestrictionTransaction account_operation_restriction = 17;
     }
 
     /**
@@ -385,4 +392,9 @@ message NEM2SignedTx {
     optional bytes payload = 1;     // signed transaction payload
     optional bytes hash = 2;        // transaction hash
     optional bytes signature = 3;        // transaction signature
+}
+
+message NEM2CosignatureSignedTx {
+    optional bytes parent_hash = 1;
+    optional bytes signature = 2;        // transaction signature
 }

@@ -2,12 +2,19 @@
 # fmt: off
 from .. import protobuf as p
 
+from .NEM2AccountAddressRestrictionTransaction import NEM2AccountAddressRestrictionTransaction
+from .NEM2AccountMetadataTransaction import NEM2AccountMetadataTransaction
+from .NEM2AccountMosaicRestrictionTransaction import NEM2AccountMosaicRestrictionTransaction
+from .NEM2AccountOperationRestrictionTransaction import NEM2AccountOperationRestrictionTransaction
 from .NEM2AddressAliasTransaction import NEM2AddressAliasTransaction
 from .NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
 from .NEM2HashLockTransaction import NEM2HashLockTransaction
 from .NEM2MosaicAliasTransaction import NEM2MosaicAliasTransaction
 from .NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
+from .NEM2MosaicMetadataTransaction import NEM2MosaicMetadataTransaction
 from .NEM2MosaicSupplyChangeTransaction import NEM2MosaicSupplyChangeTransaction
+from .NEM2MultisigModificationTransaction import NEM2MultisigModificationTransaction
+from .NEM2NamespaceMetadataTransaction import NEM2NamespaceMetadataTransaction
 from .NEM2NamespaceRegistrationTransaction import NEM2NamespaceRegistrationTransaction
 from .NEM2SecretLockTransaction import NEM2SecretLockTransaction
 from .NEM2SecretProofTransaction import NEM2SecretProofTransaction
@@ -35,6 +42,13 @@ class NEM2InnerTransaction(p.MessageType):
         hash_lock: NEM2HashLockTransaction = None,
         secret_lock: NEM2SecretLockTransaction = None,
         secret_proof: NEM2SecretProofTransaction = None,
+        namespace_metadata: NEM2NamespaceMetadataTransaction = None,
+        mosaic_metadata: NEM2MosaicMetadataTransaction = None,
+        account_metadata: NEM2AccountMetadataTransaction = None,
+        multisig_modification: NEM2MultisigModificationTransaction = None,
+        account_address_restriction: NEM2AccountAddressRestrictionTransaction = None,
+        account_mosaic_restriction: NEM2AccountMosaicRestrictionTransaction = None,
+        account_operation_restriction: NEM2AccountOperationRestrictionTransaction = None,
     ) -> None:
         self.common = common
         self.transfer = transfer
@@ -46,6 +60,13 @@ class NEM2InnerTransaction(p.MessageType):
         self.hash_lock = hash_lock
         self.secret_lock = secret_lock
         self.secret_proof = secret_proof
+        self.namespace_metadata = namespace_metadata
+        self.mosaic_metadata = mosaic_metadata
+        self.account_metadata = account_metadata
+        self.multisig_modification = multisig_modification
+        self.account_address_restriction = account_address_restriction
+        self.account_mosaic_restriction = account_mosaic_restriction
+        self.account_operation_restriction = account_operation_restriction
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -60,4 +81,11 @@ class NEM2InnerTransaction(p.MessageType):
             8: ('hash_lock', NEM2HashLockTransaction, 0),
             9: ('secret_lock', NEM2SecretLockTransaction, 0),
             10: ('secret_proof', NEM2SecretProofTransaction, 0),
+            11: ('namespace_metadata', NEM2NamespaceMetadataTransaction, 0),
+            12: ('mosaic_metadata', NEM2MosaicMetadataTransaction, 0),
+            13: ('account_metadata', NEM2AccountMetadataTransaction, 0),
+            14: ('multisig_modification', NEM2MultisigModificationTransaction, 0),
+            15: ('account_address_restriction', NEM2AccountAddressRestrictionTransaction, 0),
+            16: ('account_mosaic_restriction', NEM2AccountMosaicRestrictionTransaction, 0),
+            17: ('account_operation_restriction', NEM2AccountOperationRestrictionTransaction, 0),
         }

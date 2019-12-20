@@ -186,3 +186,4 @@ NEM2GetPublicKey = 804
 NEM2PublicKey = 805
 NEM2SignTx = 806
 NEM2SignedTx = 807
+NEM2CosignatureSignedTx = 808

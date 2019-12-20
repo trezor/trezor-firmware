@@ -1,6 +1,7 @@
 from trezor.crypto.curve import ed25519
 from trezor.crypto.hashlib import sha3_256
 from trezor.messages.NEM2SignedTx import NEM2SignedTx
+from trezor.messages.NEM2CosignatureSignedTx import NEM2CosignatureSignedTx
 from trezor.messages.NEM2SignTx import NEM2SignTx
 from ubinascii import unhexlify, hexlify
 
@@ -58,6 +59,12 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
     )
 
     node = keychain.derive(msg.address_n, CURVE)
+
+    if msg.cosigning:
+        resp = NEM2CosignatureSignedTx()
+        resp.parent_hash = unhexlify(msg.cosigning)
+        resp.signature = ed25519.sign(node.private_key(), unhexlify(msg.cosigning), NEM2_HASH_ALG)
+        return resp
 
     if msg.multisig:
         public_key = msg.multisig.signer

@@ -256,4 +256,5 @@ enum MessageType {
     MessageType_NEM2PublicKey = 805 [(wire_out) = true];
     MessageType_NEM2SignTx = 806 [(wire_in) = true];
     MessageType_NEM2SignedTx = 807 [(wire_out) = true];
+    MessageType_NEM2CosignatureSignedTx = 808 [(wire_out) = true];
 }

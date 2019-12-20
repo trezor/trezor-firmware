@@ -356,3 +356,13 @@ def sign_tx(client, n, generation_hash, transaction):
     msg.address_n = n
     msg.generation_hash = generation_hash
     return client.call(msg)
+
+@expect(proto.NEM2CosignatureSignedTx)
+def cosign_tx(client, n, transaction):
+
+    assert n is not None
+
+    msg = proto.NEM2SignTx()
+    msg.cosigning = transaction["hash"]
+    msg.address_n = n
+    return client.call(msg)

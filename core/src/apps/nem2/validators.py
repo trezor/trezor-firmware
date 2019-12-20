@@ -44,8 +44,11 @@ from .namespace.validators import (
 from .metadata.validators import _validate_metadata
 
 def validate(msg: NEM2SignTx):
-    if not validate_nem2_path(msg.address_n):
-        raise ProcessError("Invalid HD path provided, must fit 'm/44\'/43\'/a'")
+    # if not validate_nem2_path(msg.address_n):
+    #     raise ProcessError("Invalid HD path provided, must fit 'm/44'/43'/a'/0'/0'")
+
+    if msg.cosigning:
+        return
 
     if msg.transaction is None:
         raise ProcessError("No common transaction fields provided")
