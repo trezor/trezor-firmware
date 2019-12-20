@@ -72,15 +72,18 @@ SOURCE_STMHAL = [
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c',
 ]
 
+SOURCE_NANOPB = [
+    'vendor/nanopb/pb_common.c',
+    'vendor/nanopb/pb_decode.c',
+    'vendor/nanopb/pb_encode.c',
+]
+
 SOURCE_BOOTLOADER = [
     'embed/bootloader/startup.s',
     'embed/bootloader/header.S',
     'embed/bootloader/bootui.c',
     'embed/bootloader/main.c',
     'embed/bootloader/messages.c',
-    'embed/bootloader/nanopb/pb_common.c',
-    'embed/bootloader/nanopb/pb_decode.c',
-    'embed/bootloader/nanopb/pb_encode.c',
     'embed/bootloader/protob/messages.pb.c',
     'embed/bootloader/protob/types.pb.c',
 ]
@@ -148,6 +151,7 @@ env.Replace(
         'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',
         'vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include',
         'vendor/micropython/lib/cmsis/inc',
+        'vendor/nanopb',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
         ('TREZOR_MODEL', '$TREZOR_MODEL'),
@@ -172,6 +176,7 @@ env.Replace(
 obj_program = []
 obj_program += env.Object(source=SOURCE_MOD)
 obj_program += env.Object(source=SOURCE_BOOTLOADER)
+obj_program += env.Object(source=SOURCE_NANOPB)
 obj_program += env.Object(source=SOURCE_STMHAL)
 obj_program += env.Object(source=SOURCE_TREZORHAL)
 
