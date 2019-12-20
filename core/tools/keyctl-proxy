@@ -4,8 +4,9 @@ import sys
 import traceback
 
 import Pyro4
-import serpent
 from trezorlib import cosi, tools
+
+Pyro4.config.SERIALIZER = "marshal"
 
 PORT = 5001
 indexmap = {"bootloader": 0, "vendorheader": 1, "firmware": 2}
@@ -26,7 +27,6 @@ def get_path(index):
 @Pyro4.expose
 class KeyctlProxy(object):
     def get_commit(self, index, digest):
-        digest = serpent.tobytes(digest)
         path = get_path(index)
         commit = None
         while commit is None:
@@ -47,11 +47,6 @@ class KeyctlProxy(object):
         return (pk, R)
 
     def get_signature(self, index, digest, global_R, global_pk):
-        digest, global_R, global_pk = (
-            serpent.tobytes(digest),
-            serpent.tobytes(global_R),
-            serpent.tobytes(global_pk),
-        )
         path = get_path(index)
         signature = None
         while signature is None:

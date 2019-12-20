@@ -4,8 +4,9 @@ import struct
 import click
 import pyblake2
 import Pyro4
-import serpent
 from trezorlib import cosi
+
+Pyro4.config.SERIALIZER = "marshal"
 
 PORT = 5001
 indexmap = {"bootloader": 0, "vendorheader": 1, "firmware": 2}
@@ -50,7 +51,6 @@ def sign(index, filename, participants):
     pks, Rs = [], []
     for i, p in enumerate(proxy):
         pk, R = p.get_commit(index, digest)
-        pk, R = serpent.tobytes(pk), serpent.tobytes(R)
         pks.append(pk)
         Rs.append(R)
         print("collected commit #%d from %s" % (i, p._pyroUri.host))
@@ -61,7 +61,6 @@ def sign(index, filename, participants):
     sigs = []
     for i, p in enumerate(proxy):
         sig = p.get_signature(index, digest, global_R, global_pk)
-        sig = serpent.tobytes(sig)
         sigs.append(sig)
         print("collected signature #%d from %s" % (i, p._pyroUri.host))
     # compute global signature
