@@ -140,6 +140,53 @@ class TestSlip39(unittest.TestCase):
             secret, share = process_slip39(words)
             self.assertIsNone(secret)
 
+    @mock_storage
+    def test_check_word_validity(self):
+        from trezor.messages import BackupType
+        from apps.management.recovery_device.word_validity import check, OK, NOK_IDENTIFIER_MISMATCH, NOK_ALREADY_ADDED, NOK_THRESHOLD_REACHED
+
+        storage.recovery.set_in_progress(True)
+
+        # nothing is stored -> should raise
+        with self.assertRaises(RuntimeError):
+            check(0, "ocean", BackupType.Slip39_Advanced, [])
+
+        # if backup type is not set we can not do any checks
+        result = check(0, "ocean", None, [])
+        self.assertIs(result, OK)
+
+        # BIP-39 has no "on-the-fly" checks
+        result = check(0, "ocean", BackupType.Bip39, [])
+        self.assertIs(result, OK)
+
+        # let's store two shares in the storage
+        secret, share = process_slip39("trash smug adjust ambition criminal prisoner security math cover pecan response pharmacy center criminal salary elbow bracelet lunar briefing dragon")
+        self.assertIsNone(secret)
+        secret, share = process_slip39("trash smug adjust aide benefit temple round clogs devote prevent type cards clogs plastic aspect paper behavior lunar custody intimate")
+        self.assertIsNone(secret)
+
+        # different identifier
+        result = check(0, "slush", BackupType.Slip39_Advanced, [])
+        self.assertIs(result, NOK_IDENTIFIER_MISMATCH)
+
+        # same first word but still a different identifier
+        result = check(1, "slush", BackupType.Slip39_Advanced, ["trash"])
+        self.assertIs(result, NOK_IDENTIFIER_MISMATCH)
+
+        # same mnemonic found out using the index
+        result = check(3, "ambition", BackupType.Slip39_Advanced, ["trash", "smug", "adjust"])
+        self.assertIs(result, NOK_ALREADY_ADDED)
+
+        # Let's store two more. The group is 4/6 so this group is now complete.
+        secret, share = process_slip39("trash smug adjust arena beard quick language program true hush amount round geology should training practice language diet order ruin")
+        self.assertIsNone(secret)
+        secret, share = process_slip39("trash smug adjust beam brave sack magazine radar toxic emission domestic cradle vocal petition mule toxic acid hobo welcome downtown")
+        self.assertIsNone(secret)
+
+        # If trying to add another one from this group we get a warning.
+        result = check(2, "adjust", BackupType.Slip39_Advanced, ["trash", "smug"])
+        self.assertIs(result, NOK_THRESHOLD_REACHED)
+
 
 if __name__ == "__main__":
     unittest.main()

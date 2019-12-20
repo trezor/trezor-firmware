@@ -1,13 +1,14 @@
 import storage.recovery
 from trezor import ui, wire
 from trezor.crypto.slip39 import MAX_SHARE_COUNT
-from trezor.messages import BackupType, ButtonRequestType
+from trezor.messages import ButtonRequestType
 from trezor.messages.ButtonAck import ButtonAck
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
 
+from . import word_validity
 from .keyboard_bip39 import Bip39Keyboard
 from .keyboard_slip39 import Slip39Keyboard
 from .recover import RecoveryAborted
@@ -15,7 +16,6 @@ from .recover import RecoveryAborted
 from apps.common.confirm import confirm, info_confirm, require_confirm
 from apps.common.layout import show_success, show_warning
 from apps.management import backup_types
-from apps.management.recovery_device import recover
 
 if __debug__:
     from apps.debug import input_signal
@@ -72,85 +72,19 @@ async def request_mnemonic(
         else:
             word = await ctx.wait(keyboard)
 
-        if not await check_word_validity(ctx, i, word, backup_type, words):
+        validity = word_validity.check(i, word, backup_type, words)
+        if validity != word_validity.OK:
+            if validity == word_validity.NOK_ALREADY_ADDED:
+                await show_share_already_added(ctx)
+            elif validity == word_validity.NOK_IDENTIFIER_MISMATCH:
+                await show_identifier_mismatch(ctx)
+            elif validity == word_validity.NOK_THRESHOLD_REACHED:
+                await show_group_threshold_reached(ctx)
             return None
 
         words.append(word)
 
     return " ".join(words)
-
-
-async def check_word_validity(
-    ctx: wire.GenericContext,
-    current_index: int,
-    current_word: str,
-    backup_type: Optional[EnumTypeBackupType],
-    previous_words: List[str],
-) -> bool:
-    # we can't perform any checks if the backup type was not yet decided
-    if backup_type is None:
-        return True
-    # there are no "on-the-fly" checks for BIP-39
-    if backup_type is BackupType.Bip39:
-        return True
-
-    previous_mnemonics = recover.fetch_previous_mnemonics()
-    if previous_mnemonics is None:
-        # this should not happen if backup_type is set
-        raise RuntimeError
-
-    if backup_type == BackupType.Slip39_Basic:
-        # check if first 3 words of mnemonic match
-        # we can check against the first one, others were checked already
-        if current_index < 3:
-            share_list = previous_mnemonics[0][0].split(" ")
-            if share_list[current_index] != current_word:
-                await show_identifier_mismatch(ctx)
-                return False
-        elif current_index == 3:
-            for share in previous_mnemonics[0]:
-                share_list = share.split(" ")
-                # check if the fourth word is different from previous shares
-                if share_list[current_index] == current_word:
-                    await show_share_already_added(ctx)
-                    return False
-    elif backup_type == BackupType.Slip39_Advanced:
-        if current_index < 2:
-            share_list = next(s for s in previous_mnemonics if s)[0].split(" ")
-            if share_list[current_index] != current_word:
-                await show_identifier_mismatch(ctx)
-                return False
-        # check if we reached threshold in group
-        elif current_index == 2:
-            for i, group in enumerate(previous_mnemonics):
-                if len(group) > 0:
-                    if current_word == group[0].split(" ")[current_index]:
-                        remaining_shares = (
-                            storage.recovery.fetch_slip39_remaining_shares()
-                        )
-                        # if backup_type is not None, some share was already entered -> remaining needs to be set
-                        assert remaining_shares is not None
-                        if remaining_shares[i] == 0:
-                            await show_group_threshold_reached(ctx)
-                            return False
-        # check if share was already added for group
-        elif current_index == 3:
-            # we use the 3rd word from previously entered shares to find the group id
-            group_identifier_word = previous_words[2]
-            group_index = None
-            for i, group in enumerate(previous_mnemonics):
-                if len(group) > 0:
-                    if group_identifier_word == group[0].split(" ")[2]:
-                        group_index = i
-
-            if group_index is not None:
-                group = previous_mnemonics[group_index]
-                for share in group:
-                    if current_word == share.split(" ")[current_index]:
-                        await show_share_already_added(ctx)
-                        return False
-
-    return True
 
 
 async def show_remaining_shares(
