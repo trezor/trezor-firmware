@@ -328,24 +328,26 @@ def check_sig_v1(
             raise InvalidSignatureError("Invalid signature in slot {}".format(i)) from e
 
 
-def header_digest(
-    header: c.Container, header_type: c.Construct, hash_function: Callable = blake2s
-) -> bytes:
+def header_digest(header: c.Container, hash_function: Callable = blake2s) -> bytes:
     stripped_header = header.copy()
     stripped_header.sigmask = 0
     stripped_header.signature = b"\0" * 64
     stripped_header.v1_key_indexes = [0, 0, 0]
     stripped_header.v1_signatures = [b"\0" * 64] * 3
+    if header.magic == b"TRZV":
+        header_type = VendorHeader
+    else:
+        header_type = FirmwareHeader
     header_bytes = header_type.build(stripped_header)
     return hash_function(header_bytes).digest()
 
 
 def digest_v2(fw: c.Container) -> bytes:
-    return header_digest(fw.image.header, FirmwareHeader, blake2s)
+    return header_digest(fw.image.header, blake2s)
 
 
 def digest_onev2(fw: c.Container) -> bytes:
-    return header_digest(fw.header, FirmwareHeader, hashlib.sha256)
+    return header_digest(fw.header, hashlib.sha256)
 
 
 def calculate_code_hashes(
@@ -419,7 +421,7 @@ def validate_onev1(fw: c.Container, allow_unsigned: bool = False) -> None:
 
 
 def validate_v2(fw: c.Container, skip_vendor_header: bool = False) -> None:
-    vendor_fingerprint = header_digest(fw.vendor_header, VendorHeader)
+    vendor_fingerprint = header_digest(fw.vendor_header)
     fingerprint = digest_v2(fw)
 
     if not skip_vendor_header:
