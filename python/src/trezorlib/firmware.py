@@ -358,23 +358,22 @@ def calculate_code_hashes(
     padding_byte: bytes = None,
 ) -> None:
     hashes = []
-    for i in range(16):
-        if i == 0:
-            # Because first chunk is sent along with headers, there is less code in it.
-            chunk = code[: chunk_size - code_offset]
-        else:
-            # Subsequent chunks are shifted by the "missing header" size.
-            ptr = i * chunk_size - code_offset
-            chunk = code[ptr : ptr + chunk_size]
-
-        # padding for last chunk
-        if padding_byte is not None and i > 1 and chunk and len(chunk) < chunk_size:
+    # End offset for each chunk. Normally this would be (i+1)*chunk_size for i-th chunk,
+    # but the first chunk is shorter by code_offset, so all end offsets are shifted.
+    ends = [(i + 1) * chunk_size - code_offset for i in range(16)]
+    start = 0
+    for end in ends:
+        chunk = code[start:end]
+        # padding for last non-empty chunk
+        if padding_byte is not None and start < len(code) and end > len(code):
             chunk += padding_byte[0:1] * (chunk_size - len(chunk))
 
         if not chunk:
             hashes.append(b"\0" * 32)
         else:
             hashes.append(hash_function(chunk).digest())
+
+        start = end
 
     return hashes
 
