@@ -155,6 +155,8 @@ env.Replace(
         'USE_HAL_DRIVER',
         ('STM32_HAL_H', '"<stm32f4xx.h>"'),
         'PB_FIELD_16BIT',
+        'PB_ENCODE_ARRAYS_UNPACKED',
+        'PB_VALIDATE_UTF8',
     ] + CPPDEFINES_MOD,
     ASFLAGS=CPU_ASFLAGS,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
