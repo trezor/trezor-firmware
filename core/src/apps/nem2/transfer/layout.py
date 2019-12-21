@@ -6,12 +6,15 @@ from trezor.messages.NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactio
 from trezor.messages.NEM2TransferTransaction import NEM2TransferTransaction
 
 from trezor.ui.text import Text
+from trezor.ui.scroll import Paginated
 from trezor.utils import format_amount
 
 from ..helpers import (
     NEM2_MAX_DIVISIBILITY,
     NEM2_MOSAIC_AMOUNT_DIVISOR,
+    NEM2_MESSAGE_TYPE_ENCRYPTED
 )
+
 from ..layout import require_confirm_final, require_confirm_text
 from ..mosaic.helpers import get_mosaic_definition, is_nem_xem_mosaic
 
@@ -25,24 +28,45 @@ async def ask_transfer(
     transfer: NEM2TransferTransaction,
     embedded=False
 ):
+    properties = []
+
+    text = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
+    text.bold("Recipient:")
+    text.br()
+    text.mono(*split_address(transfer.recipient_address.address))
+    properties.append(text)
+
     for mosaic in transfer.mosaics:
-        await ask_transfer_mosaic(ctx, common, transfer, mosaic)
-    await _require_confirm_transfer(ctx, transfer.recipient_address.address, _get_xem_amount(transfer))
+        mosaic_confirmation_sections = get_mosaic_confirmation_sections(ctx, common, transfer, mosaic)
+        properties += mosaic_confirmation_sections
 
     if(transfer.message.payload):
-        await _require_confirm_message(ctx, transfer.message.payload)
+        text = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
+        if(transfer.message.type == NEM2_MESSAGE_TYPE_ENCRYPTED):
+            text.bold("Encrypted Message:")
+            text.br()
+            text.normal(transfer.message.payload[:20] + "..." + transfer.message.payload[-20:])
+        else:
+            text.bold("Plain Message:")
+            text.br()
+            text.normal(transfer.message.payload)
+        properties.append(text)
+
+    paginated = Paginated(properties)
+    await require_confirm(ctx, paginated, ButtonRequestType.ConfirmOutput)
+
     if not embedded:
         await require_confirm_final(ctx, common.max_fee)
 
 
-async def ask_transfer_mosaic(
+def get_mosaic_confirmation_sections(
     ctx,
     common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
     transfer: NEM2TransferTransaction,
     mosaic: NEMMosaic
 ):
-    if is_nem_xem_mosaic(mosaic.id):
-        return
+
+    mosaic_confirmation_sections = []
 
     definition = get_mosaic_definition(mosaic.id, common.network_type)
     mosaic_amount = int(mosaic.amount) / NEM2_MOSAIC_AMOUNT_DIVISOR
@@ -54,44 +78,19 @@ async def ask_transfer_mosaic(
             format_amount(mosaic_amount, definition["divisibility"])
             + definition["ticker"]
         )
-        msg.normal("of")
-        msg.bold(definition["name"])
-        await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
+        msg.normal("Namespace:")
+        msg.bold(definition["namespace"])
+        mosaic_confirmation_sections.append(msg)
     else:
-        msg = Text("Confirm mosaic", ui.ICON_SEND, ui.RED)
-        msg.bold("Unknown mosaic!")
-        msg.normal("Divisibility")
-        msg.normal("cannot be shown for")
-        msg.normal("unknown mosaics")
-        await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
-
         msg = Text("Confirm mosaic", ui.ICON_SEND, ui.GREEN)
         msg.normal("Confirm transfer of")
         msg.bold("%s raw units" % mosaic_amount)
         msg.normal("of")
         msg.bold("%s.%s" % (mosaic.id, mosaic.id))
-        await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
-def _get_xem_amount(transfer: NEM2TransferTransaction):
-    for mosaic in transfer.mosaics:
-        if is_nem_xem_mosaic(mosaic.id):
-            return int(mosaic.amount) / NEM2_MOSAIC_AMOUNT_DIVISOR
-    # if there are mosaics but do not include xem, 0 xem is sent
-    return 0
+        mosaic_confirmation_sections.append(msg)
 
-async def ask_importance_transfer(
-    ctx,
-    common: NEM2TransactionCommon | NEM2EmbeddedTransactionCommon,
-    imp: NEMImportanceTransfer
-):
-    if imp.mode == NEMImportanceTransferMode.ImportanceTransfer_Activate:
-        m = "Activate"
-    else:
-        m = "Deactivate"
-    await require_confirm_text(ctx, m + " remote harvesting?")
-    if not embedded:
-        await require_confirm_final(ctx, common.fee)
-
+    return mosaic_confirmation_sections
 
 async def _require_confirm_transfer(ctx, recipient, value):
     text = Text("Confirm transfer", ui.ICON_SEND, ui.GREEN)
