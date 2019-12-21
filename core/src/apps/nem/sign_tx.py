@@ -68,8 +68,6 @@ async def sign_tx(ctx, msg: NEMSignTx, keychain):
                 seed.remove_ed25519_prefix(node.public_key()), msg.transaction, tx
             )
 
-    # port over signing algorithm from here
-    # https://github.com/nemtech/nem2-sdk-typescript-javascript/blob/master/src/model/transaction/Transaction.ts#L124
     signature = ed25519.sign(node.private_key(), tx, NEM_HASH_ALG)
 
     resp = NEMSignedTx()

@@ -319,3 +319,16 @@ def _validate_account_operation_restriction(account_operation_restriction: NEM2A
         raise ProcessError("No restriction additions provided")
     if account_operation_restriction.restriction_deletions is None:
         raise ProcessError("No restriction deletions provided")
+
+def validate_encrypt_message(encrypt_message):
+    if encrypt_message.payload is None:
+        raise ProcessError("No payload to encrypt")
+    if encrypt_message.recipient_public_key is None:
+        raise ProcessError("No recipient public key provided")
+
+def validate_decrypt_message(decrypt_message):
+    if decrypt_message.payload is None:
+        raise ProcessError("No payload to decrypt")
+    if decrypt_message.recipient_public_key is None:
+        raise ProcessError("No sender public key provided")
+

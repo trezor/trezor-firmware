@@ -1,4 +1,5 @@
 from micropython import const
+from ubinascii import unhexlify
 
 from apps.common import HARDENED
 
@@ -117,3 +118,9 @@ def unsigned_32_bit_int_to_8_bit(unsigned_32_bit_int, signed=False):
     if(signed and unsigned_8_bit_int > 127):
         return unsigned_8_bit_int - 256
     return unsigned_8_bit_int
+
+def derive_shared_key(salt, private_key, public_key):
+    # TODO
+    return unhexlify(
+        "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"
+    )

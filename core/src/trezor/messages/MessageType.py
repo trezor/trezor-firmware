@@ -190,3 +190,7 @@ if not utils.BITCOIN_ONLY:
     NEM2SignTx = 806
     NEM2SignedTx = 807
     NEM2CosignatureSignedTx = 808
+    NEM2EncryptMessage = 809
+    NEM2EncryptedMessage = 810
+    NEM2DecryptMessage = 811
+    NEM2DecryptedMessage = 812

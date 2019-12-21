@@ -366,3 +366,14 @@ def cosign_tx(client, n, transaction):
     msg.cosigning = transaction["hash"]
     msg.address_n = n
     return client.call(msg)
+
+@expect(proto.NEM2EncryptedMessage)
+def encrypt_message(client, n, msg):
+
+    assert n is not None
+
+    _msg = proto.NEM2EncryptMessage()
+    _msg.address_n = n
+    _msg.payload = msg["payload"]
+    _msg.recipient_public_key = msg["recipientPublicKey"]
+    return client.call(_msg)

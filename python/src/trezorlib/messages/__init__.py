@@ -192,8 +192,16 @@ from .NEM2Cosignature import NEM2Cosignature
 from .NEM2Cosignature import NEM2Cosignature
 from .NEM2CosignatureSignedTx import NEM2CosignatureSignedTx
 from .NEM2CosignatureSignedTx import NEM2CosignatureSignedTx
+from .NEM2DecryptMessage import NEM2DecryptMessage
+from .NEM2DecryptMessage import NEM2DecryptMessage
+from .NEM2DecryptedMessage import NEM2DecryptedMessage
+from .NEM2DecryptedMessage import NEM2DecryptedMessage
 from .NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
 from .NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
+from .NEM2EncryptMessage import NEM2EncryptMessage
+from .NEM2EncryptMessage import NEM2EncryptMessage
+from .NEM2EncryptedMessage import NEM2EncryptedMessage
+from .NEM2EncryptedMessage import NEM2EncryptedMessage
 from .NEM2GetPublicKey import NEM2GetPublicKey
 from .NEM2HashLockTransaction import NEM2HashLockTransaction
 from .NEM2HashLockTransaction import NEM2HashLockTransaction

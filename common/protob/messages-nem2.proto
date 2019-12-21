@@ -9,6 +9,38 @@ option java_outer_classname = "TrezorMessageNem2";
 // https://github.com/nemtech/catbuffer/tree/master/schemas
 
 /**
+ * Request: Ask device to encrypt an arbitrary string using AES
+ * @start
+ * @next NEM2EncryptedMessage
+ * @next Failure
+ */
+message NEM2EncryptMessage {
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+    optional string recipient_public_key = 2; // Public key of message recipient
+    optional string payload = 3;
+}
+
+message NEM2EncryptedMessage {
+    optional string payload = 1;
+}
+
+/**
+ * Request: Ask device to decrypt an AES encrypted payload
+ * @start
+ * @next NEM2DecryptedMessage
+ * @next Failure
+ */
+message NEM2DecryptMessage {
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+    optional string sender_public_key = 2; // Public key of message encrypter
+    optional string payload = 3;
+}
+
+message NEM2DecryptedMessage {
+    optional string payload = 1;
+}
+
+/**
  * Request: Ask device for NEM2 public key corresponding to address_n path
  * @start
  * @next NEM2PublicKey
