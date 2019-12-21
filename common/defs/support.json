@@ -2859,7 +2859,8 @@
       "nem:DIMTOK": "2.0.7",
       "nem:PAC:CHS": "2.0.7",
       "nem:PAC:HRT": "2.0.7",
-      "nem:XEM": "2.0.7"
+      "nem:XEM": "2.0.7",
+      "nem2:XEM": "2.0.8"
     },
     "unsupported": {
       "bitcoin:TRC": "address_type collides with Bitcoin",

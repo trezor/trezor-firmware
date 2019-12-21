@@ -32,6 +32,9 @@ WALLET_NEM = {
     "Nano Wallet": "https://nem.io/downloads/",
     "Magnum": "https://magnumwallet.co",
 }
+WALLET_NEM2 = {
+    "Catapult Desktop Wallet": "https://github.com/nemfoundation/nem2-desktop-wallet/branches",
+}
 WALLETS_ETH_3RDPARTY = {
     "MyEtherWallet": "https://www.myetherwallet.com",
     "MyCrypto": "https://mycrypto.com",
@@ -305,6 +308,13 @@ def update_nem_mosaics(coins, support_info):
 
     return res
 
+def update_nem2_mosaics(coins, support_info):
+    res = update_simple(coins, support_info, "mosaic")
+    for coin in coins:
+        key = coin["key"]
+        details = dict(wallet=WALLET_NEM2)
+        dict_merge(res[key], details)
+    return res (edited)
 
 def check_missing_data(coins):
     for k, coin in coins.items():
@@ -408,6 +418,7 @@ def main(refresh, api_key, verbose):
     coins.update(update_erc20(defs.erc20, defs.eth, support_info))
     coins.update(update_ethereum_networks(defs.eth, support_info))
     coins.update(update_nem_mosaics(defs.nem, support_info))
+    coins.update(update_nem2_mosaics(defs.nem2, support_info))
     coins.update(update_simple(defs.misc, support_info, "coin"))
 
     apply_overrides(coins)

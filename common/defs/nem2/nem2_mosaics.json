@@ -1,12 +1,17 @@
 [
-    {
-      "name": "NEM",
-      "ticker": "XEM",
-      "namespace": "nem",
-      "mosaic": "xem",
-      "divisibility": 6,
-      "links": {
-        "Homepage": "https://nem.io"
-      }
-    }
+  {
+    "name": "XEM",
+    "ticker": "XEM",
+    "namespace": "cat.currency",
+    "mosaic": "cat.currency",
+    "divisibility": 6,
+    "id": "85BBEA6CC462B244",
+    "links": {
+      "Homepage": "https://nemtech.github.io/"
+    },
+    "networks": [
+      152,
+      104
+    ]
+  }
 ]

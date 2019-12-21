@@ -255,7 +255,7 @@ def _load_nem2_mosaics():
     mosaics = load_json("nem2", "nem2_mosaics.json")
     for mosaic in mosaics:
         shortcut = mosaic["ticker"].strip()
-        mosaic.update(shortcut=shortcut, key="nem:{}".format(shortcut))
+        mosaic.update(shortcut=shortcut, key="nem2:{}".format(shortcut))
     return mosaics
 
 
