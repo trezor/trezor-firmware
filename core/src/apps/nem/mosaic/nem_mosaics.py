@@ -3,6 +3,13 @@
 
 mosaics = [
     {
+        "name": "NEM",
+        "ticker": " XEM",
+        "namespace": "nem",
+        "mosaic": "xem",
+        "divisibility": 6,
+    },
+    {
         "name": "DIMCOIN",
         "ticker": " DIM",
         "namespace": "dim",

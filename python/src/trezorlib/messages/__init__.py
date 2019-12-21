@@ -191,6 +191,7 @@ from .NEM2AggregateTransaction import NEM2AggregateTransaction
 from .NEM2Cosignature import NEM2Cosignature
 from .NEM2Cosignature import NEM2Cosignature
 from .NEM2CosignatureSignedTx import NEM2CosignatureSignedTx
+from .NEM2CosignatureSignedTx import NEM2CosignatureSignedTx
 from .NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
 from .NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
 from .NEM2GetPublicKey import NEM2GetPublicKey
