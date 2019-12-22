@@ -15,12 +15,12 @@ class NEM2DecryptedMessage(p.MessageType):
 
     def __init__(
         self,
-        payload: str = None,
+        payload: bytes = None,
     ) -> None:
         self.payload = payload
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('payload', p.UnicodeType, 0),
+            1: ('payload', p.BytesType, 0),
         }

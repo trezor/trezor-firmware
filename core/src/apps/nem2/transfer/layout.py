@@ -45,7 +45,7 @@ async def ask_transfer(
         if(transfer.message.type == NEM2_MESSAGE_TYPE_ENCRYPTED):
             text.bold("Encrypted Message:")
             text.br()
-            text.normal(transfer.message.payload[:20] + "..." + transfer.message.payload[-20:])
+            text.mono(*split_address(transfer.message.payload[:20] + "..." + transfer.message.payload[-20:]))
         else:
             text.bold("Plain Message:")
             text.br()

@@ -369,7 +369,6 @@ def count_message(msg: MessageType, fields: Dict = None) -> int:
 
         elif ftype is UnicodeType:
             for svalue in fvalue:
-                print("ENCODING", svalue)
                 svalue = len(svalue.encode())
                 nbytes += count_uvarint(svalue)
                 nbytes += svalue

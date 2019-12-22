@@ -329,6 +329,6 @@ def validate_encrypt_message(encrypt_message):
 def validate_decrypt_message(decrypt_message):
     if decrypt_message.payload is None:
         raise ProcessError("No payload to decrypt")
-    if decrypt_message.recipient_public_key is None:
+    if decrypt_message.sender_public_key is None:
         raise ProcessError("No sender public key provided")
 

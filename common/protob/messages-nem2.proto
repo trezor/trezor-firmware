@@ -21,7 +21,7 @@ message NEM2EncryptMessage {
 }
 
 message NEM2EncryptedMessage {
-    optional string payload = 1;
+    optional bytes payload = 1;
 }
 
 /**
@@ -37,7 +37,7 @@ message NEM2DecryptMessage {
 }
 
 message NEM2DecryptedMessage {
-    optional string payload = 1;
+    optional bytes payload = 1;
 }
 
 /**
