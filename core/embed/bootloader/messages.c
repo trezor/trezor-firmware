@@ -107,7 +107,7 @@ static void _usb_write_flush(usb_write_state *state) {
 }
 
 static secbool _send_msg(uint8_t iface_num, uint16_t msg_id,
-                         const pb_field_t fields[], const void *msg) {
+                         const pb_msgdesc_t *fields, const void *msg) {
   // determine message size by serializing it into a dummy stream
   pb_ostream_t sizestream = {.callback = NULL,
                              .state = NULL,
@@ -225,7 +225,7 @@ static bool _usb_read(pb_istream_t *stream, uint8_t *buf, size_t count) {
 static void _usb_read_flush(usb_read_state *state) { (void)state; }
 
 static secbool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf,
-                         const pb_field_t fields[], void *msg) {
+                         const pb_msgdesc_t *fields, void *msg) {
   usb_read_state state = {.iface_num = iface_num,
                           .packet_index = 0,
                           .packet_pos = MSG_HEADER1_LEN,
