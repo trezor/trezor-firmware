@@ -149,5 +149,5 @@ class TestMsgRecoverydeviceT2:
     def test_already_initialized(self, client):
         with pytest.raises(RuntimeError):
             device.recover(
-                client, 12, False, False, "label", "english", client.mnemonic_callback
+                client, 12, False, False, "label", "en-US", client.mnemonic_callback
             )

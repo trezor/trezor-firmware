@@ -6,7 +6,7 @@ if __debug__:
     try:
         from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
-        EnumTypeFailureType = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 99]
+        EnumTypeFailureType = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 99]
     except ImportError:
         pass
 
@@ -25,6 +25,6 @@ class Failure(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('code', p.EnumType("FailureType", (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 99)), 0),
+            1: ('code', p.EnumType("FailureType", (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 99)), 0),
             2: ('message', p.UnicodeType, 0),
         }

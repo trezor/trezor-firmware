@@ -6,6 +6,7 @@
   "github": "https://github.com/RavenProject/Ravencoin",
   "maintainer": "Scotty <scotty.rvn@gmail.com>",
   "curve_name": "secp256k1",
+  "decimals": 8,
   "address_type": 60,
   "address_type_p2sh": 122,
   "maxfee_kb": 2000000,

@@ -115,7 +115,7 @@ class TestDeviceLoad:
             pin="",
             passphrase_protection=True,
             label="test",
-            language="english",
+            language="en-US",
             skip_checksum=True,
         )
         if client.features.model == "T":
@@ -130,7 +130,7 @@ class TestDeviceLoad:
             pin="",
             passphrase_protection=True,
             label="test",
-            language="english",
+            language="en-US",
             skip_checksum=True,
         )
         if client.features.model == "T":
@@ -145,7 +145,7 @@ class TestDeviceLoad:
             pin="",
             passphrase_protection=True,
             label="test",
-            language="english",
+            language="en-US",
             skip_checksum=True,
         )
         if client.features.model == "T":
@@ -160,7 +160,7 @@ class TestDeviceLoad:
             pin="",
             passphrase_protection=True,
             label="test",
-            language="english",
+            language="en-US",
             skip_checksum=True,
         )
         if client.features.model == "T":

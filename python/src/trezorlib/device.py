@@ -91,6 +91,13 @@ def change_pin(client, remove=False):
 
 
 @expect(messages.Success, field="message")
+def change_wipe_code(client, remove=False):
+    ret = client.call(messages.ChangeWipeCode(remove=remove))
+    client.init_device()  # Re-read features
+    return ret
+
+
+@expect(messages.Success, field="message")
 def sd_protect(client, operation):
     ret = client.call(messages.SdProtect(operation=operation))
     client.init_device()
@@ -110,7 +117,7 @@ def recover(
     passphrase_protection=False,
     pin_protection=True,
     label=None,
-    language="english",
+    language="en-US",
     input_callback=None,
     type=messages.RecoveryDeviceType.ScrambledWords,
     dry_run=False,
@@ -164,7 +171,7 @@ def reset(
     passphrase_protection=False,
     pin_protection=True,
     label=None,
-    language="english",
+    language="en-US",
     u2f_counter=0,
     skip_backup=False,
     no_backup=False,

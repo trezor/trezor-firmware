@@ -520,7 +520,7 @@ void config_setLanguage(const char *lang) {
   }
 
   // Sanity check.
-  if (strcmp(lang, "english") != 0) {
+  if (strcmp(lang, "en-US") != 0) {
     return;
   }
   storage_set(KEY_LANGUAGE, lang, strnlen(lang, MAX_LANGUAGE_LEN));
@@ -665,7 +665,17 @@ bool config_getLabel(char *dest, uint16_t dest_size) {
 }
 
 bool config_getLanguage(char *dest, uint16_t dest_size) {
-  return sectrue == config_get_string(KEY_LANGUAGE, dest, dest_size);
+  if (sectrue == config_get_string(KEY_LANGUAGE, dest, dest_size)) {
+    if (dest_size == 7 && (strcmp(dest, "english") != 0)) {
+      // fallthrough -> return "en-US"
+    } else {
+      // other language -> return the value
+      return true;
+    }
+  }
+  strcpy(dest, "en-US");
+  dest_size = 5;
+  return true;
 }
 
 bool config_getHomescreen(uint8_t *dest, uint16_t dest_size) {
@@ -784,6 +794,22 @@ bool config_getPin(char *dest, uint16_t dest_size) {
   return sectrue == config_get_string(KEY_DEBUG_LINK_PIN, dest, dest_size);
 }
 #endif
+
+bool config_hasWipeCode(void) { return sectrue == storage_has_wipe_code(); }
+
+bool config_changeWipeCode(const char *pin, const char *wipe_code) {
+  uint32_t wipe_code_int = pin_to_int(wipe_code);
+  if (wipe_code_int == 0) {
+    return false;
+  }
+
+  char oldTiny = usbTiny(1);
+  secbool ret = storage_change_wipe_code(pin_to_int(pin), NULL, wipe_code_int);
+  usbTiny(oldTiny);
+
+  memzero(&wipe_code_int, sizeof(wipe_code_int));
+  return sectrue == ret;
+}
 
 void session_cachePassphrase(const char *passphrase) {
   strlcpy(sessionPassphrase, passphrase, sizeof(sessionPassphrase));

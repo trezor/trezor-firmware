@@ -52,6 +52,7 @@ void fsm_msgInitialize(const Initialize *msg);
 void fsm_msgGetFeatures(const GetFeatures *msg);
 void fsm_msgPing(const Ping *msg);
 void fsm_msgChangePin(const ChangePin *msg);
+void fsm_msgChangeWipeCode(const ChangeWipeCode *msg);
 void fsm_msgWipeDevice(const WipeDevice *msg);
 void fsm_msgGetEntropy(const GetEntropy *msg);
 #if DEBUG_LINK

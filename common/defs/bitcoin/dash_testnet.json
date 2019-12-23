@@ -6,6 +6,7 @@
   "github": "https://github.com/dashpay/dash",
   "maintainer": "Karel Bilek <karel.bilek@satoshilabs.com>",
   "curve_name": "secp256k1",
+  "decimals": 8,
   "address_type": 140,
   "address_type_p2sh": 19,
   "maxfee_kb": 100000,

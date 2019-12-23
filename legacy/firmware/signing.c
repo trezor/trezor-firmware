@@ -72,6 +72,7 @@ static uint32_t lock_time = 0;
 static uint32_t expiry = 0;
 static bool overwintered = false;
 static uint32_t version_group_id = 0;
+static uint32_t timestamp = 0;
 #if !BITCOIN_ONLY
 static uint32_t branch_id = 0;
 #endif
@@ -487,6 +488,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
 #if !BITCOIN_ONLY
   overwintered = msg->has_overwintered && msg->overwintered;
   version_group_id = msg->version_group_id;
+  timestamp = msg->timestamp;
   branch_id = msg->branch_id;
   // set default values for Zcash if branch_id is unset
   if (overwintered && (branch_id == 0)) {
@@ -534,7 +536,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   next_nonsegwit_input = 0xffffffff;
 
   tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0,
-          coin->curve->hasher_sign, overwintered, version_group_id);
+          coin->curve->hasher_sign, overwintered, version_group_id, timestamp);
 
 #if !BITCOIN_ONLY
   if (coin->decred) {
@@ -542,7 +544,8 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
     to.is_decred = true;
 
     tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0,
-            coin->curve->hasher_sign, overwintered, version_group_id);
+            coin->curve->hasher_sign, overwintered, version_group_id,
+            timestamp);
     ti.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
     ti.is_decred = true;
   }
@@ -1210,7 +1213,7 @@ void signing_txack(TransactionType *tx) {
       }
       tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time,
               tx->expiry, tx->extra_data_len, coin->curve->hasher_sign,
-              overwintered, version_group_id);
+              tx->overwintered, tx->version_group_id, tx->timestamp);
 #if !BITCOIN_ONLY
       if (coin->decred) {
         tp.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
@@ -1312,7 +1315,8 @@ void signing_txack(TransactionType *tx) {
                  PROGRESS_PRECISION);
       if (idx2 == 0) {
         tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0,
-                coin->curve->hasher_sign, overwintered, version_group_id);
+                coin->curve->hasher_sign, overwintered, version_group_id,
+                timestamp);
         hasher_Reset(&hasher_check);
       }
       // check prevouts and script type
@@ -1555,13 +1559,15 @@ void signing_txack(TransactionType *tx) {
       if (idx1 == 0) {
         // witness
         tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0,
-                coin->curve->hasher_sign, overwintered, version_group_id);
+                coin->curve->hasher_sign, overwintered, version_group_id,
+                timestamp);
         to.is_decred = true;
       }
 
       // witness hash
       tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0,
-              coin->curve->hasher_sign, overwintered, version_group_id);
+              coin->curve->hasher_sign, overwintered, version_group_id,
+              timestamp);
       ti.version |= (DECRED_SERIALIZE_WITNESS_SIGNING << 16);
       ti.is_decred = true;
       if (!compile_input_script_sig(&tx->inputs[0])) {

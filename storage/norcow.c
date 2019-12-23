@@ -302,6 +302,7 @@ void norcow_init(uint32_t *norcow_version) {
   flash_init();
   secbool found = secfalse;
   *norcow_version = 0;
+  norcow_active_sector = 0;
   // detect active sector - starts with magic and has highest version
   for (uint8_t i = 0; i < NORCOW_SECTOR_COUNT; i++) {
     uint32_t offset = 0;
@@ -332,13 +333,16 @@ void norcow_init(uint32_t *norcow_version) {
  * Wipe the storage
  */
 void norcow_wipe(void) {
-  erase_sector(0, sectrue);
-  for (uint8_t i = 1; i < NORCOW_SECTOR_COUNT; i++) {
-    erase_sector(i, secfalse);
+  // Erase the active sector first, because it contains sensitive data.
+  erase_sector(norcow_active_sector, sectrue);
+
+  for (uint8_t i = 0; i < NORCOW_SECTOR_COUNT; i++) {
+    if (i != norcow_active_sector) {
+      erase_sector(i, secfalse);
+    }
   }
-  norcow_active_sector = 0;
   norcow_active_version = NORCOW_VERSION;
-  norcow_write_sector = 0;
+  norcow_write_sector = norcow_active_sector;
   norcow_free_offset = NORCOW_STORAGE_START;
 }
 

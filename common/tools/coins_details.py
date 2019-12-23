@@ -376,7 +376,7 @@ def finalize_wallets(coins):
 
     for coin in coins.values():
         wallets_list = [
-            dict(name=name, url=url) for name, url in coin["wallet"].items()
+            dict(name=name, url=url) for name, url in coin["wallet"].items() if url
         ]
         wallets_list.sort(key=sort_key)
         coin["wallet"] = wallets_list

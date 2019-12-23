@@ -12,6 +12,7 @@ class CoinInfo:
         self,
         coin_name: str,
         coin_shortcut: str,
+        decimals: int,
         address_type: int,
         address_type_p2sh: int,
         maxfee_kb: int,
@@ -33,6 +34,7 @@ class CoinInfo:
     ):
         self.coin_name = coin_name
         self.coin_shortcut = coin_shortcut
+        self.decimals = decimals
         self.address_type = address_type
         self.address_type_p2sh = address_type_p2sh
         self.maxfee_kb = maxfee_kb
@@ -82,6 +84,7 @@ def by_name(name: str) -> CoinInfo:
         return CoinInfo(
             coin_name=name,
             coin_shortcut="BTC",
+            decimals=8,
             address_type=0,
             address_type_p2sh=5,
             maxfee_kb=2000000,
@@ -105,6 +108,7 @@ def by_name(name: str) -> CoinInfo:
         return CoinInfo(
             coin_name=name,
             coin_shortcut="REGTEST",
+            decimals=8,
             address_type=111,
             address_type_p2sh=196,
             maxfee_kb=10000000,
@@ -128,6 +132,7 @@ def by_name(name: str) -> CoinInfo:
         return CoinInfo(
             coin_name=name,
             coin_shortcut="TEST",
+            decimals=8,
             address_type=111,
             address_type_p2sh=196,
             maxfee_kb=10000000,
@@ -154,6 +159,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="ACM",
+                decimals=8,
                 address_type=53,
                 address_type_p2sh=55,
                 maxfee_kb=40000000,
@@ -177,6 +183,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="AXE",
+                decimals=8,
                 address_type=55,
                 address_type_p2sh=16,
                 maxfee_kb=100000,
@@ -200,6 +207,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="BELL",
+                decimals=8,
                 address_type=25,
                 address_type_p2sh=85,
                 maxfee_kb=1000000,
@@ -219,33 +227,11 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 confidential_assets=None,
             )
-        elif name == "Bitgreen":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="BITG",
-                address_type=38,
-                address_type_p2sh=6,
-                maxfee_kb=100000,
-                signed_message_header="DarkNet Signed Message:\n",
-                xpub_magic=0x0488b21e,
-                xpub_magic_segwit_p2sh=None,
-                xpub_magic_segwit_native=None,
-                bech32_prefix=None,
-                cashaddr_prefix=None,
-                slip44=222,
-                segwit=False,
-                fork_id=None,
-                force_bip143=False,
-                bip115=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                confidential_assets=None,
-            )
         elif name == "BitZeny":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="ZNY",
+                decimals=8,
                 address_type=81,
                 address_type_p2sh=5,
                 maxfee_kb=1000000,
@@ -269,6 +255,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="BCH",
+                decimals=8,
                 address_type=0,
                 address_type_p2sh=5,
                 maxfee_kb=500000,
@@ -292,6 +279,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="TBCH",
+                decimals=8,
                 address_type=111,
                 address_type_p2sh=196,
                 maxfee_kb=10000000,
@@ -315,6 +303,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="BTG",
+                decimals=8,
                 address_type=38,
                 address_type_p2sh=23,
                 maxfee_kb=500000,
@@ -338,6 +327,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="TBTG",
+                decimals=8,
                 address_type=111,
                 address_type_p2sh=196,
                 maxfee_kb=500000,
@@ -361,6 +351,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="BTCP",
+                decimals=8,
                 address_type=4901,
                 address_type_p2sh=5039,
                 maxfee_kb=1000000,
@@ -384,6 +375,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="XRC",
+                decimals=8,
                 address_type=61,
                 address_type_p2sh=123,
                 maxfee_kb=2000000,
@@ -407,6 +399,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="BTX",
+                decimals=8,
                 address_type=3,
                 address_type_p2sh=125,
                 maxfee_kb=2000000,
@@ -426,33 +419,11 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 confidential_assets=None,
             )
-        elif name == "BlockStamp":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="BST",
-                address_type=26,
-                address_type_p2sh=5,
-                maxfee_kb=2000000,
-                signed_message_header="BST Signed Message:\n",
-                xpub_magic=0x0488b21e,
-                xpub_magic_segwit_p2sh=0x049d7cb2,
-                xpub_magic_segwit_native=0x04b24746,
-                bech32_prefix="bst",
-                cashaddr_prefix=None,
-                slip44=254,
-                segwit=True,
-                fork_id=None,
-                force_bip143=False,
-                bip115=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                confidential_assets=None,
-            )
         elif name == "CPUchain":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="CPU",
+                decimals=8,
                 address_type=28,
                 address_type_p2sh=30,
                 maxfee_kb=1000000,
@@ -476,6 +447,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="CPC",
+                decimals=8,
                 address_type=28,
                 address_type_p2sh=35,
                 maxfee_kb=2000000,
@@ -499,6 +471,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="CRW",
+                decimals=8,
                 address_type=95495,
                 address_type_p2sh=95473,
                 maxfee_kb=2000000,
@@ -522,6 +495,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="DASH",
+                decimals=8,
                 address_type=76,
                 address_type_p2sh=16,
                 maxfee_kb=100000,
@@ -545,6 +519,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tDASH",
+                decimals=8,
                 address_type=140,
                 address_type_p2sh=19,
                 maxfee_kb=100000,
@@ -568,6 +543,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="DCR",
+                decimals=8,
                 address_type=1855,
                 address_type_p2sh=1818,
                 maxfee_kb=1000000,
@@ -591,6 +567,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="TDCR",
+                decimals=8,
                 address_type=3873,
                 address_type_p2sh=3836,
                 maxfee_kb=10000000,
@@ -614,6 +591,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="DGB",
+                decimals=8,
                 address_type=30,
                 address_type_p2sh=63,
                 maxfee_kb=500000,
@@ -637,6 +615,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="DOGE",
+                decimals=8,
                 address_type=30,
                 address_type_p2sh=22,
                 maxfee_kb=1000000000,
@@ -660,6 +639,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="ELEMENTS",
+                decimals=8,
                 address_type=235,
                 address_type_p2sh=75,
                 maxfee_kb=10000000,
@@ -679,33 +659,11 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 confidential_assets={'address_prefix': 4, 'blech32_prefix': 'el'},
             )
-        elif name == "FairCoin":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="FAIR",
-                address_type=95,
-                address_type_p2sh=36,
-                maxfee_kb=10000000,
-                signed_message_header="FairCoin Signed Message:\n",
-                xpub_magic=0x0488b21e,
-                xpub_magic_segwit_p2sh=None,
-                xpub_magic_segwit_native=None,
-                bech32_prefix=None,
-                cashaddr_prefix=None,
-                slip44=298,
-                segwit=False,
-                fork_id=0,
-                force_bip143=False,
-                bip115=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                confidential_assets=None,
-            )
         elif name == "Feathercoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="FTC",
+                decimals=8,
                 address_type=14,
                 address_type_p2sh=5,
                 maxfee_kb=40000000,
@@ -729,6 +687,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="FLO",
+                decimals=8,
                 address_type=35,
                 address_type_p2sh=94,
                 maxfee_kb=40000000,
@@ -752,6 +711,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="FJC",
+                decimals=8,
                 address_type=36,
                 address_type_p2sh=16,
                 maxfee_kb=1000000000,
@@ -775,6 +735,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="GIN",
+                decimals=8,
                 address_type=38,
                 address_type_p2sh=10,
                 maxfee_kb=100000,
@@ -798,6 +759,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="GAME",
+                decimals=8,
                 address_type=38,
                 address_type_p2sh=62,
                 maxfee_kb=5000000,
@@ -821,6 +783,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="GRS",
+                decimals=8,
                 address_type=36,
                 address_type_p2sh=5,
                 maxfee_kb=100000,
@@ -844,6 +807,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tGRS",
+                decimals=8,
                 address_type=111,
                 address_type_p2sh=196,
                 maxfee_kb=100000,
@@ -867,6 +831,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="HATCH",
+                decimals=8,
                 address_type=76,
                 address_type_p2sh=16,
                 maxfee_kb=100000,
@@ -890,6 +855,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tHATCH",
+                decimals=8,
                 address_type=140,
                 address_type_p2sh=19,
                 maxfee_kb=100000,
@@ -913,6 +879,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="ZEN",
+                decimals=8,
                 address_type=8329,
                 address_type_p2sh=8342,
                 maxfee_kb=2000000,
@@ -936,6 +903,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="KMD",
+                decimals=8,
                 address_type=60,
                 address_type_p2sh=85,
                 maxfee_kb=1000000,
@@ -959,6 +927,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="KOTO",
+                decimals=8,
                 address_type=6198,
                 address_type_p2sh=6203,
                 maxfee_kb=1000000,
@@ -982,6 +951,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="LTC",
+                decimals=8,
                 address_type=48,
                 address_type_p2sh=50,
                 maxfee_kb=40000000,
@@ -1005,6 +975,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tLTC",
+                decimals=8,
                 address_type=111,
                 address_type_p2sh=58,
                 maxfee_kb=40000000,
@@ -1028,6 +999,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="ETP",
+                decimals=8,
                 address_type=50,
                 address_type_p2sh=5,
                 maxfee_kb=2000000,
@@ -1051,6 +1023,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="MONA",
+                decimals=8,
                 address_type=50,
                 address_type_p2sh=55,
                 maxfee_kb=5000000,
@@ -1074,6 +1047,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="MUE",
+                decimals=8,
                 address_type=16,
                 address_type_p2sh=76,
                 maxfee_kb=100000,
@@ -1097,6 +1071,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="NIX",
+                decimals=8,
                 address_type=38,
                 address_type_p2sh=53,
                 maxfee_kb=40000000,
@@ -1120,6 +1095,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="NMC",
+                decimals=8,
                 address_type=52,
                 address_type_p2sh=5,
                 maxfee_kb=10000000,
@@ -1143,6 +1119,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="PIVX",
+                decimals=8,
                 address_type=30,
                 address_type_p2sh=13,
                 maxfee_kb=100000,
@@ -1166,6 +1143,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tPIVX",
+                decimals=8,
                 address_type=139,
                 address_type_p2sh=19,
                 maxfee_kb=100000,
@@ -1189,6 +1167,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="PART",
+                decimals=8,
                 address_type=56,
                 address_type_p2sh=60,
                 maxfee_kb=2000000,
@@ -1212,6 +1191,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tPART",
+                decimals=8,
                 address_type=118,
                 address_type_p2sh=122,
                 maxfee_kb=10000000,
@@ -1231,10 +1211,59 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 confidential_assets=None,
             )
+        elif name == "Peercoin":
+            return CoinInfo(
+                coin_name=name,
+                coin_shortcut="PPC",
+                decimals=6,
+                address_type=55,
+                address_type_p2sh=117,
+                maxfee_kb=2000000,
+                signed_message_header="Peercoin Signed Message:\n",
+                xpub_magic=0x0488b21e,
+                xpub_magic_segwit_p2sh=0x049d7cb2,
+                xpub_magic_segwit_native=0x04b24746,
+                bech32_prefix="pc",
+                cashaddr_prefix=None,
+                slip44=6,
+                segwit=True,
+                fork_id=None,
+                force_bip143=False,
+                bip115=False,
+                decred=False,
+                negative_fee=False,
+                curve_name='secp256k1',
+                confidential_assets=None,
+            )
+        elif name == "Peercoin Testnet":
+            return CoinInfo(
+                coin_name=name,
+                coin_shortcut="tPPC",
+                decimals=6,
+                address_type=111,
+                address_type_p2sh=196,
+                maxfee_kb=2000000,
+                signed_message_header="Peercoin Signed Message:\n",
+                xpub_magic=0x043587cf,
+                xpub_magic_segwit_p2sh=0x044a5262,
+                xpub_magic_segwit_native=0x045f1cf6,
+                bech32_prefix="tpc",
+                cashaddr_prefix=None,
+                slip44=1,
+                segwit=True,
+                fork_id=None,
+                force_bip143=False,
+                bip115=False,
+                decred=False,
+                negative_fee=False,
+                curve_name='secp256k1',
+                confidential_assets=None,
+            )
         elif name == "Pesetacoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="PTC",
+                decimals=8,
                 address_type=47,
                 address_type_p2sh=22,
                 maxfee_kb=1000000000,
@@ -1258,6 +1287,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="POLIS",
+                decimals=8,
                 address_type=55,
                 address_type_p2sh=56,
                 maxfee_kb=100000,
@@ -1281,6 +1311,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="XPM",
+                decimals=8,
                 address_type=23,
                 address_type_p2sh=83,
                 maxfee_kb=1000000,
@@ -1304,6 +1335,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="QTUM",
+                decimals=8,
                 address_type=58,
                 address_type_p2sh=50,
                 maxfee_kb=40000000,
@@ -1327,6 +1359,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tQTUM",
+                decimals=8,
                 address_type=120,
                 address_type_p2sh=110,
                 maxfee_kb=40000000,
@@ -1350,6 +1383,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="RVN",
+                decimals=8,
                 address_type=60,
                 address_type_p2sh=122,
                 maxfee_kb=2000000,
@@ -1373,6 +1407,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="RITO",
+                decimals=8,
                 address_type=25,
                 address_type_p2sh=105,
                 maxfee_kb=2000000,
@@ -1396,6 +1431,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="SMART",
+                decimals=8,
                 address_type=63,
                 address_type_p2sh=18,
                 maxfee_kb=1000000,
@@ -1419,6 +1455,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tSMART",
+                decimals=8,
                 address_type=65,
                 address_type_p2sh=21,
                 maxfee_kb=1000000,
@@ -1442,6 +1479,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="XSN",
+                decimals=8,
                 address_type=76,
                 address_type_p2sh=16,
                 maxfee_kb=2000000,
@@ -1465,6 +1503,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="SYS",
+                decimals=8,
                 address_type=63,
                 address_type_p2sh=5,
                 maxfee_kb=10000000,
@@ -1488,6 +1527,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="UNO",
+                decimals=8,
                 address_type=130,
                 address_type_p2sh=30,
                 maxfee_kb=2000000,
@@ -1511,6 +1551,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="VIPS",
+                decimals=8,
                 address_type=70,
                 address_type_p2sh=50,
                 maxfee_kb=40000000,
@@ -1534,6 +1575,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="VTC",
+                decimals=8,
                 address_type=71,
                 address_type_p2sh=5,
                 maxfee_kb=40000000,
@@ -1557,6 +1599,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="VIA",
+                decimals=8,
                 address_type=71,
                 address_type_p2sh=33,
                 maxfee_kb=40000000,
@@ -1580,6 +1623,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="ZCR",
+                decimals=8,
                 address_type=142,
                 address_type_p2sh=145,
                 maxfee_kb=1000000,
@@ -1603,6 +1647,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="ZEC",
+                decimals=8,
                 address_type=7352,
                 address_type_p2sh=7357,
                 maxfee_kb=1000000,
@@ -1626,6 +1671,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="TAZ",
+                decimals=8,
                 address_type=7461,
                 address_type_p2sh=7354,
                 maxfee_kb=10000000,
@@ -1649,6 +1695,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="XZC",
+                decimals=8,
                 address_type=82,
                 address_type_p2sh=7,
                 maxfee_kb=1000000,
@@ -1672,6 +1719,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tXZC",
+                decimals=8,
                 address_type=65,
                 address_type_p2sh=178,
                 maxfee_kb=1000000,
@@ -1695,6 +1743,7 @@ def by_name(name: str) -> CoinInfo:
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="ZEL",
+                decimals=8,
                 address_type=7352,
                 address_type_p2sh=7357,
                 maxfee_kb=1000000,

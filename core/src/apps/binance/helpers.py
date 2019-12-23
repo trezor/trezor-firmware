@@ -18,7 +18,7 @@ INPUT_OUTPUT_BLUEPRINT = '{{"address":"{address}","coins":[{coins}]}}'
 COIN_BLUEPRINT = '{{"amount":{amount},"denom":"{denom}"}}'
 
 # 1*10^8 Jagers equal 1 BNB https://www.binance.vision/glossary/jager
-DIVISIBILITY = const(8)
+DECIMALS = const(8)
 
 
 def produce_json_for_signing(envelope: BinanceSignTx, msg) -> str:
