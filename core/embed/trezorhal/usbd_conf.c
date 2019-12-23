@@ -1,55 +1,26 @@
 // clang-format off
 
-/*
- * This file is part of the Micro Python project, http://micropython.org/
- */
-
 /**
   ******************************************************************************
-  * @file    USB_Device/CDC_Standalone/Src/usbd_conf.c
+  * @file    usbd_conf_template.c
   * @author  MCD Application Team
-  * @version V1.4.0
-  * @date    17-February-2017
-  * @brief   This file implements the USB Device library callbacks and MSP
+  * @brief   USB Device configuration and interface file
+  *          This template should be copied to the user folder, renamed and customized
+  *          following user needs.
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics International N.V.
+  * <h2><center>&copy; Copyright (c) 2015 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
-  * Redistribution and use in source and binary forms, with or without
-  * modification, are permitted, provided that the following conditions are met:
-  *
-  * 1. Redistribution of source code must retain the above copyright notice,
-  *    this list of conditions and the following disclaimer.
-  * 2. Redistributions in binary form must reproduce the above copyright notice,
-  *    this list of conditions and the following disclaimer in the documentation
-  *    and/or other materials provided with the distribution.
-  * 3. Neither the name of STMicroelectronics nor the names of other
-  *    contributors to this software may be used to endorse or promote products
-  *    derived from this software without specific written permission.
-  * 4. This software, including modifications and/or derivative works of this
-  *    software, must execute solely and exclusively on microcontroller or
-  *    microprocessor devices manufactured by or for STMicroelectronics.
-  * 5. Redistribution and use of this software other than as permitted under
-  *    this license is void and will automatically terminate your rights under
-  *    this license.
-  *
-  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS"
-  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT
-  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-  * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
-  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT
-  * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
-  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  * This software component is licensed by ST under Ultimate Liberty license
+  * SLA0044, the "License"; You may not use this file except in compliance with
+  * the License. You may obtain a copy of the License at:
+  *                      http://www.st.com/SLA0044
   *
   ******************************************************************************
   */
+
 /* Includes ------------------------------------------------------------------*/
 #include STM32_HAL_H
 #include "usbd_core.h"
@@ -403,7 +374,7 @@ void HAL_PCD_DisconnectCallback(PCD_HandleTypeDef *hpcd)
   * @param  pdev: Device handle
   * @retval USBD Status
   */
-USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
+USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
 {
 #if defined(USE_USB_FS)
 if (pdev->id ==  USB_PHY_FS_ID)
@@ -547,8 +518,8 @@ USBD_StatusTypeDef USBD_LL_Stop(USBD_HandleTypeDef *pdev)
   * @retval USBD Status
   */
 USBD_StatusTypeDef USBD_LL_OpenEP(USBD_HandleTypeDef *pdev,
-                                  uint8_t  ep_addr,
-                                  uint8_t  ep_type,
+                                  uint8_t ep_addr,
+                                  uint8_t ep_type,
                                   uint16_t ep_mps)
 {
   HAL_PCD_EP_Open(pdev->pData, ep_addr, ep_mps, ep_type);
@@ -607,7 +578,7 @@ USBD_StatusTypeDef USBD_LL_ClearStallEP(USBD_HandleTypeDef *pdev, uint8_t ep_add
   * @brief  Returns Stall condition.
   * @param  pdev: Device handle
   * @param  ep_addr: Endpoint Number
-  * @retval Stall (1: yes, 0: No)
+  * @retval Stall (1: Yes, 0: No)
   */
 uint8_t USBD_LL_IsStallEP(USBD_HandleTypeDef *pdev, uint8_t ep_addr)
 {
@@ -624,9 +595,9 @@ uint8_t USBD_LL_IsStallEP(USBD_HandleTypeDef *pdev, uint8_t ep_addr)
 }
 
 /**
-  * @brief  Assigns an USB address to the device
+  * @brief  Assigns a USB address to the device.
   * @param  pdev: Device handle
-  * @param  dev_addr: USB address
+  * @param  ep_addr: Endpoint Number
   * @retval USBD Status
   */
 USBD_StatusTypeDef USBD_LL_SetUSBAddress(USBD_HandleTypeDef *pdev, uint8_t dev_addr)
@@ -636,7 +607,7 @@ USBD_StatusTypeDef USBD_LL_SetUSBAddress(USBD_HandleTypeDef *pdev, uint8_t dev_a
 }
 
 /**
-  * @brief  Transmits data over an endpoint
+  * @brief  Transmits data over an endpoint.
   * @param  pdev: Device handle
   * @param  ep_addr: Endpoint Number
   * @param  pbuf: Pointer to data to be sent
@@ -644,48 +615,48 @@ USBD_StatusTypeDef USBD_LL_SetUSBAddress(USBD_HandleTypeDef *pdev, uint8_t dev_a
   * @retval USBD Status
   */
 USBD_StatusTypeDef USBD_LL_Transmit(USBD_HandleTypeDef *pdev,
-                                    uint8_t  ep_addr,
-                                    uint8_t  *pbuf,
-                                    uint16_t  size)
+                                    uint8_t ep_addr,
+                                    uint8_t *pbuf,
+                                    uint16_t size)
 {
   HAL_PCD_EP_Transmit(pdev->pData, ep_addr, pbuf, size);
   return USBD_OK;
 }
 
 /**
-  * @brief  Prepares an endpoint for reception
+  * @brief  Prepares an endpoint for reception.
   * @param  pdev: Device handle
   * @param  ep_addr: Endpoint Number
-  * @param  pbuf:pointer to data to be received
-  * @param  size: data size
+  * @param  pbuf: Pointer to data to be received
+  * @param  size: Data size
   * @retval USBD Status
   */
 USBD_StatusTypeDef USBD_LL_PrepareReceive(USBD_HandleTypeDef *pdev,
-                                          uint8_t  ep_addr,
-                                          uint8_t  *pbuf,
-                                          uint16_t  size)
+                                          uint8_t ep_addr,
+                                          uint8_t *pbuf,
+                                          uint16_t size)
 {
   HAL_PCD_EP_Receive(pdev->pData, ep_addr, pbuf, size);
   return USBD_OK;
 }
 
 /**
-  * @brief  Returns the last transfered packet size.
+  * @brief  Returns the last transferred packet size.
   * @param  pdev: Device handle
   * @param  ep_addr: Endpoint Number
   * @retval Recived Data Size
   */
-uint32_t USBD_LL_GetRxDataSize(USBD_HandleTypeDef *pdev, uint8_t  ep_addr)
+uint32_t USBD_LL_GetRxDataSize(USBD_HandleTypeDef *pdev, uint8_t ep_addr)
 {
   return HAL_PCD_EP_GetRxCount(pdev->pData, ep_addr);
 }
 
 /**
-  * @brief  Delay routine for the USB Device Library
+  * @brief  Delays routine for the USB Device Library.
   * @param  Delay: Delay in ms
   * @retval None
   */
-void  USBD_LL_Delay(uint32_t Delay)
+void USBD_LL_Delay(uint32_t Delay)
 {
   HAL_Delay(Delay);
 }
@@ -785,3 +756,4 @@ void OTG_HS_WKUP_IRQHandler(void) {
 #endif
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
