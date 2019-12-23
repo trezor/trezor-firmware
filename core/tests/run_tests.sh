@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 declare -a results
-declare -i PYOPT=1 passed=0 failed=0 exit_code=0
+declare -i passed=0 failed=0 exit_code=0
 declare COLOR_GREEN='\e[32m' COLOR_RED='\e[91m' COLOR_RESET='\e[39m'
 MICROPYTHON="${MICROPYTHON:-../build/unix/micropython}"
 
@@ -27,7 +27,7 @@ declare -i num_of_tests=${#tests[@]}
 
 for test_case in ${tests[@]}; do
     echo
-    if $MICROPYTHON -O$PYOPT $test_case; then
+    if $MICROPYTHON $test_case; then
         results+=("${COLOR_GREEN}OK:${COLOR_RESET} $test_case")
         ((passed++))
     else
