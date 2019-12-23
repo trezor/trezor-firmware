@@ -4,12 +4,11 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeNEM2AccountRestrictionFlags = Literal[1, 2, 4, 16385, 16388, 32769, 32770, 32772, 49153, 49156]
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
-        EnumTypeNEM2AccountRestrictionFlags = None  # type: ignore
+        pass
 
 
 class NEM2AccountMosaicRestrictionTransaction(p.MessageType):
@@ -27,7 +26,7 @@ class NEM2AccountMosaicRestrictionTransaction(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('restriction_type', p.EnumType("NEM2AccountRestrictionFlags", (1, 2, 16385, 4, 16388, 32769, 32770, 32772, 49153, 49156)), 0),
+            1: ('restriction_type', p.EnumType("NEM2AccountRestrictionFlags", (1, 2, 4, 16385, 16388, 32769, 32770, 32772, 49153, 49156)), 0),
             2: ('restriction_additions', p.UnicodeType, p.FLAG_REPEATED),
             3: ('restriction_deletions', p.UnicodeType, p.FLAG_REPEATED),
         }
