@@ -6,10 +6,10 @@ from .TronContract import TronContract
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
+        pass
 
 
 class TronSignTx(p.MessageType):
@@ -24,6 +24,8 @@ class TronSignTx(p.MessageType):
         data: str = None,
         contract: TronContract = None,
         timestamp: int = None,
+        fee_limit: int = None,
+        permission_id: int = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.ref_block_bytes = ref_block_bytes
@@ -32,6 +34,8 @@ class TronSignTx(p.MessageType):
         self.data = data
         self.contract = contract
         self.timestamp = timestamp
+        self.fee_limit = fee_limit
+        self.permission_id = permission_id
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -43,4 +47,6 @@ class TronSignTx(p.MessageType):
             5: ('data', p.UnicodeType, 0),
             6: ('contract', TronContract, 0),
             7: ('timestamp', p.UVarintType, 0),
+            8: ('fee_limit', p.UVarintType, 0),
+            9: ('permission_id', p.UVarintType, 0),
         }

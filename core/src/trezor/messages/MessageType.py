@@ -196,7 +196,7 @@ if not utils.BITCOIN_ONLY:
     WebAuthnCredentials = 801
     WebAuthnAddResidentCredential = 802  # type: Literal[802]
     WebAuthnRemoveResidentCredential = 803  # type: Literal[803]
-    TronGetAddress = 900 # type: Literal[900]
-    TronAddress = 901 # type: Literal[901]
-    TronSignTx = 902 # type: Literal[902]
-    TronSignedTx = 903 # type: Literal[903]
+    TronGetAddress = 900  # type: Literal[900]
+    TronAddress = 901  # type: Literal[901]
+    TronSignTx = 902  # type: Literal[902]
+    TronSignedTx = 903  # type: Literal[903]
