@@ -37,6 +37,8 @@ message TronSignTx {
     optional string data = 5;                       // Extra transaction info
     optional TronContract contract = 6;             // Contract messages
     optional uint64 timestamp = 7;                  // UTC timestamp
+    optional uint64 fee_limit = 8;                  // Fee limit for smartcontracts
+    optional uint32 permission_id = 9;              // Multisign permission id
 
     /***
      * Tron Contracts Messages
