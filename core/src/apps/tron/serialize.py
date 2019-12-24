@@ -362,6 +362,29 @@ def pack_contract(contract, owner_address):
         add_field(cmessage, 5, TYPE_VARINT)
         write_varint(cmessage, contract.exchange_transaction_contract.expected)
 
+    if contract.trigger_smart_contract:
+        write_varint(retc, 31)
+        api = "TriggerSmartContract"
+
+        add_field(cmessage, 1, TYPE_STRING)
+        write_bytes_with_length(cmessage, base58.decode_check(owner_address))
+        add_field(cmessage, 2, TYPE_STRING)
+        write_bytes_with_length(cmessage, base58.decode_check(contract.trigger_smart_contract.contract_address))
+        if contract.trigger_smart_contract.call_value:
+            add_field(cmessage, 3, TYPE_VARINT)
+            write_varint(cmessage, contract.trigger_smart_contract.call_value)
+
+        # Contract data
+        add_field(cmessage, 4, TYPE_STRING)
+        write_bytes_with_length(cmessage, contract.trigger_smart_contract.data)
+
+        if contract.trigger_smart_contract.call_token_value:
+            # TODO: decode token signature
+            add_field(cmessage, 5, TYPE_VARINT)
+            write_varint(cmessage, contract.trigger_smart_contract.call_token_value)
+            add_field(cmessage, 6, TYPE_VARINT)
+            write_varint(cmessage, contract.trigger_smart_contract.asset_id)
+
     # write API
     capi = bytearray()
     add_field(capi, 1, TYPE_STRING)
@@ -399,5 +422,9 @@ def serialize(transaction: TronSignTx, owner_address: str):
     # add timestamp
     add_field(ret, 14, TYPE_VARINT)
     write_varint(ret, transaction.timestamp)
+    # add fee_limit if any
+    if transaction.fee_limit:
+        add_field(ret, 18, TYPE_VARINT)
+        write_varint(ret, transaction.fee_limit)
 
     return ret
