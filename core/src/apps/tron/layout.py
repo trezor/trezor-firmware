@@ -1,6 +1,7 @@
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
+from trezor.ui.scroll import Paginated
 from trezor.utils import chunks, format_amount
 
 from apps.common.confirm import require_confirm
@@ -14,19 +15,17 @@ async def require_confirm_data(ctx, data):
 
 async def require_confirm_tx(ctx, dest, value):
     text = Text("Confirm sending", ui.ICON_SEND, icon_color=ui.GREEN)
-    text.mono(format_amount_trx(value))
-    text.bold(*split_address("To: " + dest))
     text.mono("Amount:")
     text.bold(format_amount_trx(value))
+    text.bold(*split_address("To: " + dest))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_tx_asset(ctx, token, dest, value, decimals=0):
     text = Text("Confirm sending", ui.ICON_SEND, icon_color=ui.GREEN)
+    text.mono("Amount:")
     text.bold(format_amount(value, decimals) + token)
     text.mono(*split_address("To: " + dest))
-    text.mono("Token Amount:")
-    text.bold(format_amount(value, decimals))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
@@ -197,6 +196,23 @@ async def require_confirm_trigger_smart_contract(
         text.mono("Token Amount:")
         text.bold(format_amount(trigger_smart_contract.call_token_value))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
+
+
+async def require_confirm_trigger_trc20(
+    ctx, action, verified, contract_address, amount, decimals, toAddress
+):
+    page1 = Text("Confirm TRC20 1/2", ui.ICON_CONFIRM if action == "Transfer" else ui.ICON_SEND, icon_color=ui.GREEN)
+    page1.bold("TRC20 " + action)
+    page1.mono(*split_address("To: " + toAddress))
+    
+    page2 = Text("Confirm TRC20 2/2", ui.ICON_CONFIRM if action == "Transfer" else ui.ICON_SEND, icon_color=ui.GREEN)
+    if not verified:
+        page2.mono(*split_address("Contract: " + contract_address))
+        page2.bold("Unknown token value")
+    else:
+        page2.bold("{} {}".format(format_amount(amount, decimals), contract_address))
+
+    return await require_confirm(ctx, Paginated([page1, page2]), ButtonRequestType.SignTx)
 
 
 async def require_confirm_exchange_create_contract(
