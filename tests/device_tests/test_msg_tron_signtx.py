@@ -678,3 +678,117 @@ def test_tron_exchange_transaction_contract(client):
         result.signature.hex()
         == "ae01e592cf9da33a2bea2db24a821d51b91c641f15141b45b49e31739e6c296439a19fbe1839e95d110df66bae9001b965371041c3465e497f17ce0484bd0af800"
     )
+
+
+def test_tron_transfer_trc20(client):
+    data = bytearray()
+    # method id signalizing `transfer(address _to, uint256 _value)` function
+    data.extend(bytes.fromhex("a9059cbb"))
+    # 1st function argument (to - the receiver)
+    data.extend(
+        bytes.fromhex(
+            "000000000000000000000000f1f43b97e403929a6ccce5150cbcc7baf9ee91a0"
+        )
+    )
+    # 2nd function argument (value - amount to be transferred)
+    data.extend(
+        bytes.fromhex(
+            "0000000000000000000000000000000000000000000000000000000002ebae40"
+        )
+    )
+
+    msg = proto.TronSignTx(
+        ref_block_bytes=bytes.fromhex("f89b"),
+        ref_block_hash=bytes.fromhex("5f0ff66bec893fab"),
+        expiration=1574675991000,
+        timestamp=1574675932727,
+        fee_limit=10000000,
+        contract=proto.TronContract(
+            trigger_smart_contract=proto.TronTriggerSmartContract(
+                contract_address="TBoTZcARzWVgnNuB9SyE3S5g1RwsXoQL16",
+                data=data,
+            )
+        ),
+    )
+
+    result = tron.sign_tx(client, parse_path(TRON_DEFAULT_PATH), msg)
+    assert (
+        result.signature.hex()
+        == "6eb52e1a61c72e3c1e8b253322fbeae41beb16830443cdeea7114a240b91651208a87d9775172d68d3077e942d0b4c5916f8741cd83ac8c258eb69eab65cb84f00"
+    )
+
+
+def test_tron_approve_trc20(client):
+    data = bytearray()
+    # method id signalizing `transfer(address _to, uint256 _value)` function
+    data.extend(bytes.fromhex("095ea7b3"))
+    # 1st function argument (to - the receiver)
+    data.extend(
+        bytes.fromhex(
+            "000000000000000000000000f1f43b97e403929a6ccce5150cbcc7baf9ee91a0"
+        )
+    )
+    # 2nd function argument (value - amount to be transferred)
+    data.extend(
+        bytes.fromhex(
+            "0000000000000000000000000000000000000000000000000000000002ebae40"
+        )
+    )
+
+    msg = proto.TronSignTx(
+        ref_block_bytes=bytes.fromhex("f89b"),
+        ref_block_hash=bytes.fromhex("5f0ff66bec893fab"),
+        expiration=1574675991000,
+        timestamp=1574675932727,
+        fee_limit=10000000,
+        contract=proto.TronContract(
+            trigger_smart_contract=proto.TronTriggerSmartContract(
+                contract_address="TBoTZcARzWVgnNuB9SyE3S5g1RwsXoQL16",
+                data=data,
+            )
+        ),
+    )
+
+    result = tron.sign_tx(client, parse_path(TRON_DEFAULT_PATH), msg)
+    assert (
+        result.signature.hex()
+        == "8610da2a2217448880f8f61723da993070f365e3e23fdff9b565cd23cefb860d4d877a5a79552de905258b8646e1c816af8a293af7aadc37f5a1445b332b1ba200"
+    )
+
+
+def test_tron_transfer_trc20_not_in_list(client):
+    data = bytearray()
+    # method id signalizing `transfer(address _to, uint256 _value)` function
+    data.extend(bytes.fromhex("a9059cbb"))
+    # 1st function argument (to - the receiver)
+    data.extend(
+        bytes.fromhex(
+            "000000000000000000000000f1f43b97e403929a6ccce5150cbcc7baf9ee91a0"
+        )
+    )
+    # 2nd function argument (value - amount to be transferred)
+    data.extend(
+        bytes.fromhex(
+            "0000000000000000000000000000000000000000000000000000000002ebae40"
+        )
+    )
+
+    msg = proto.TronSignTx(
+        ref_block_bytes=bytes.fromhex("f89b"),
+        ref_block_hash=bytes.fromhex("5f0ff66bec893fab"),
+        expiration=1574675991000,
+        timestamp=1574675932727,
+        fee_limit=10000000,
+        contract=proto.TronContract(
+            trigger_smart_contract=proto.TronTriggerSmartContract(
+                contract_address="TKYTRRRkyEHKLeDpGmT9TCeqxxnH2XoEBP",
+                data=data,
+            )
+        ),
+    )
+
+    result = tron.sign_tx(client, parse_path(TRON_DEFAULT_PATH), msg)
+    assert (
+        result.signature.hex()
+        == "ffc2d8e8f6297194f30d3c4af37bb47e956ab28025d601e472cae3bbfba75ab834d2197f46c9c9a71df65b3388357ba72ee3a45af17a1f48eadc80b75f0d572000"
+    )
