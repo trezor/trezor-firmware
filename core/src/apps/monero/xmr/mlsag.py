@@ -266,6 +266,7 @@ def generate_mlsag(message, pk, xx, kLRki, index, dsRows, mg_buff):
     mg_buff[index + 1] = bytearray(rows_b_size + 32 * rows)
     int_serialize.dump_uvarint_b_into(rows, mg_buff[index + 1])
     for j in range(rows):
+        crypto.random_scalar(ss[j])
         crypto.sc_mulsub_into(ss[j], c, xx[j], alpha[j])
         crypto.encodeint_into(mg_buff[index + 1], ss[j], rows_b_size + 32 * j)
 
