@@ -100,8 +100,14 @@
     "bitcoin:POLIS": {
         "PolisPay": "https://polispay.com"
     },
+    "bitcoin:PPC": {
+        "Magnum": "https://magnumwallet.co"
+    },
     "bitcoin:QTUM": {
         "Qtum-Electrum": "https://github.com/qtumproject/qtum-electrum"
+    },
+    "bitcoin:RITO": {
+        "Chaintek": "https://wallet.chaintek.net/"
     },
     "bitcoin:RVN": {
         "Chaintek": "https://wallet.chaintek.net/",
@@ -139,6 +145,9 @@
     "bitcoin:ZEC": {
         "Exodus": "https://www.exodus.io",
         "Magnum": "https://magnumwallet.co"
+    },
+    "bitcoin:ZCR": {
+        "Electrum-ZCR": "https://github.com/zcore-coin/electrum-wallet/"
     },
     "bitcoin:ZNY": {
         "Electrum-ZNY": "https://zny.electrum-jp.net"

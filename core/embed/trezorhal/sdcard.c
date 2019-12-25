@@ -47,8 +47,16 @@
 
 #include <string.h>
 
+#include "dma.h"
+#include "irq.h"
 #include "sdcard-set_clr_card_detect.h"
 #include "sdcard.h"
+#include "supervise.h"
+
+#define SDMMC_CLK_ENABLE() __HAL_RCC_SDMMC1_CLK_ENABLE()
+#define SDMMC_CLK_DISABLE() __HAL_RCC_SDMMC1_CLK_DISABLE()
+#define SDMMC_IRQn SDMMC1_IRQn
+#define SDMMC_DMA dma_SDIO_0
 
 static SD_HandleTypeDef sd_handle;
 
@@ -109,12 +117,24 @@ static inline void sdcard_active_pin_state(void) {
 void sdcard_init(void) { sdcard_default_pin_state(); }
 
 void HAL_SD_MspInit(SD_HandleTypeDef *hsd) {
-  // enable SDIO clock
-  __HAL_RCC_SDIO_CLK_ENABLE();
+  if (hsd->Instance == sd_handle.Instance) {
+    // enable SDIO clock
+    SDMMC_CLK_ENABLE();
+
+    // NVIC configuration for SDIO interrupts
+    svc_setpriority(SDMMC_IRQn, IRQ_PRI_SDIO);
+    svc_enableIRQ(SDMMC_IRQn);
+  }
+
   // GPIO have already been initialised by sdcard_init
 }
 
-void HAL_SD_MspDeInit(SD_HandleTypeDef *hsd) { __HAL_RCC_SDIO_CLK_DISABLE(); }
+void HAL_SD_MspDeInit(SD_HandleTypeDef *hsd) {
+  if (hsd->Instance == sd_handle.Instance) {
+    svc_disableIRQ(SDMMC_IRQn);
+    SDMMC_CLK_DISABLE();
+  }
+}
 
 secbool sdcard_power_on(void) {
   if (sectrue != sdcard_is_present()) {
@@ -192,15 +212,42 @@ uint64_t sdcard_get_capacity_in_bytes(void) {
   return (uint64_t)cardinfo.LogBlockNbr * (uint64_t)cardinfo.LogBlockSize;
 }
 
+void SDIO_IRQHandler(void) {
+  IRQ_ENTER(SDIO_IRQn);
+  if (sd_handle.Instance) {
+    HAL_SD_IRQHandler(&sd_handle);
+  }
+  IRQ_EXIT(SDIO_IRQn);
+}
+
+static void sdcard_reset_periph(void) {
+  // Fully reset the SDMMC peripheral before calling HAL SD DMA functions.
+  // (There could be an outstanding DTIMEOUT event from a previous call and the
+  // HAL function enables IRQs before fully configuring the SDMMC peripheral.)
+  SDIO->DTIMER = 0;
+  SDIO->DLEN = 0;
+  SDIO->DCTRL = 0;
+  SDIO->ICR = SDMMC_STATIC_FLAGS;
+}
+
 static HAL_StatusTypeDef sdcard_wait_finished(SD_HandleTypeDef *sd,
                                               uint32_t timeout) {
   // Wait for HAL driver to be ready (eg for DMA to finish)
   uint32_t start = HAL_GetTick();
-  while (sd->State == HAL_SD_STATE_BUSY) {
+  for (;;) {
+    // Do an atomic check of the state; WFI will exit even if IRQs are disabled
+    uint32_t irq_state = disable_irq();
+    if (sd->State != HAL_SD_STATE_BUSY) {
+      enable_irq(irq_state);
+      break;
+    }
+    __WFI();
+    enable_irq(irq_state);
     if (HAL_GetTick() - start >= timeout) {
       return HAL_TIMEOUT;
     }
   }
+
   // Wait for SD card to complete the operation
   for (;;) {
     HAL_SD_CardStateTypeDef state = HAL_SD_GetCardState(sd);
@@ -214,6 +261,7 @@ static HAL_StatusTypeDef sdcard_wait_finished(SD_HandleTypeDef *sd,
     if (HAL_GetTick() - start >= timeout) {
       return HAL_TIMEOUT;
     }
+    __WFI();
   }
   return HAL_OK;
 }
@@ -232,11 +280,32 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
 
   HAL_StatusTypeDef err = HAL_OK;
 
-  err = HAL_SD_ReadBlocks(&sd_handle, (uint8_t *)dest, block_num, num_blocks,
-                          60000);
+  // we must disable USB irqs to prevent MSC contention with SD card
+  uint32_t basepri = raise_irq_pri(IRQ_PRI_OTG_FS);
+
+  DMA_HandleTypeDef sd_dma;
+  dma_init(&sd_dma, &SDMMC_DMA, DMA_PERIPH_TO_MEMORY, &sd_handle);
+  sd_handle.hdmarx = &sd_dma;
+
+  // we need to assign hdmatx even though it's unused
+  // because STMHAL tries to access its error code in SD_DMAError()
+  // even though it shouldn't :-/
+  // this will get removed eventually when we update to new STMHAL
+  DMA_HandleTypeDef dummy_dma;
+  memset(&dummy_dma, 0, sizeof(dummy_dma));
+  sd_handle.hdmatx = &dummy_dma;
+
+  sdcard_reset_periph();
+  err =
+      HAL_SD_ReadBlocks_DMA(&sd_handle, (uint8_t *)dest, block_num, num_blocks);
   if (err == HAL_OK) {
-    err = sdcard_wait_finished(&sd_handle, 60000);
+    err = sdcard_wait_finished(&sd_handle, 5000);
   }
+
+  dma_deinit(&SDMMC_DMA);
+  sd_handle.hdmarx = NULL;
+
+  restore_irq_pri(basepri);
 
   return sectrue * (err == HAL_OK);
 }
@@ -255,11 +324,32 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
 
   HAL_StatusTypeDef err = HAL_OK;
 
-  err = HAL_SD_WriteBlocks(&sd_handle, (uint8_t *)src, block_num, num_blocks,
-                           60000);
+  // we must disable USB irqs to prevent MSC contention with SD card
+  uint32_t basepri = raise_irq_pri(IRQ_PRI_OTG_FS);
+
+  DMA_HandleTypeDef sd_dma;
+  dma_init(&sd_dma, &SDMMC_DMA, DMA_MEMORY_TO_PERIPH, &sd_handle);
+  sd_handle.hdmatx = &sd_dma;
+
+  // we need to assign hdmarx even though it's unused
+  // because HAL tries to access its error code in SD_DMAError()
+  // even though it shouldn't :-/
+  // this will get removed eventually when we update to new STMHAL
+  DMA_HandleTypeDef dummy_dma;
+  memset(&dummy_dma, 0, sizeof(dummy_dma));
+  sd_handle.hdmarx = &dummy_dma;
+
+  sdcard_reset_periph();
+  err =
+      HAL_SD_WriteBlocks_DMA(&sd_handle, (uint8_t *)src, block_num, num_blocks);
   if (err == HAL_OK) {
-    err = sdcard_wait_finished(&sd_handle, 60000);
+    err = sdcard_wait_finished(&sd_handle, 5000);
   }
+
+  dma_deinit(&SDMMC_DMA);
+  sd_handle.hdmatx = NULL;
+
+  restore_irq_pri(basepri);
 
   return sectrue * (err == HAL_OK);
 }

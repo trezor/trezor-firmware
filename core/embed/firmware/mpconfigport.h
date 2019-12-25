@@ -184,25 +184,7 @@ typedef long mp_off_t;
 
 #define MP_PLAT_PRINT_STRN(str, len) mp_hal_stdout_tx_strn_cooked(str, len)
 
-// We have inlined IRQ functions for efficiency (they are generally
-// 1 machine instruction).
-//
-// Note on IRQ state: you should not need to know the specific
-// value of the state variable, but rather just pass the return
-// value from disable_irq back to enable_irq.  If you really need
-// to know the machine-specific values, see irq.h.
-
-#include STM32_HAL_H
-
-static inline void enable_irq(mp_uint_t state) {
-    __set_PRIMASK(state);
-}
-
-static inline mp_uint_t disable_irq(void) {
-    mp_uint_t state = __get_PRIMASK();
-    __disable_irq();
-    return state;
-}
+#include "irq.h"
 
 #define MICROPY_BEGIN_ATOMIC_SECTION()     disable_irq()
 #define MICROPY_END_ATOMIC_SECTION(state)  enable_irq(state)
@@ -211,6 +193,7 @@ static inline mp_uint_t disable_irq(void) {
 #define MICROPY_HW_BOARD_NAME "TREZORv2"
 #define MICROPY_HW_MCU_NAME "STM32F427xx"
 #define MICROPY_PY_SYS_PLATFORM "trezor"
+#define MICROPY_HW_HAS_SDCARD 1
 
 // There is no classical C heap in bare-metal ports, only Python
 // garbage-collected heap. For completeness, emulate C heap via

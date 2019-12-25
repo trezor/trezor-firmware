@@ -75,10 +75,30 @@ class Unsigned(FirmwareIntegrityError):
     pass
 
 
+class ToifMode(Enum):
+    full_color = b"f"
+    grayscale = b"g"
+
+
+class EnumAdapter(c.Adapter):
+    def __init__(self, subcon, enum):
+        self.enum = enum
+        super().__init__(subcon)
+
+    def _encode(self, obj, ctx, path):
+        return obj.value
+
+    def _decode(self, obj, ctx, path):
+        try:
+            return self.enum(obj)
+        except ValueError:
+            return obj
+
+
 # fmt: off
 Toif = c.Struct(
     "magic" / c.Const(b"TOI"),
-    "format" / c.Enum(c.Byte, full_color=b"f", grayscale=b"g"),
+    "format" / EnumAdapter(c.Bytes(1), ToifMode),
     "width" / c.Int16ul,
     "height" / c.Int16ul,
     "data" / c.Prefixed(c.Int32ul, c.GreedyBytes),

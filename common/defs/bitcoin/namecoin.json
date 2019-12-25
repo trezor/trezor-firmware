@@ -6,6 +6,7 @@
   "github": "https://github.com/namecoin/namecoin-core",
   "maintainer": "Pavol Rusnak <stick@satoshilabs.com>",
   "curve_name": "secp256k1",
+  "decimals": 8,
   "address_type": 52,
   "address_type_p2sh": 5,
   "maxfee_kb": 10000000,

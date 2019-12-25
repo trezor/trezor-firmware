@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include STM32_HAL_H
+
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -40,6 +42,7 @@
 #include "mpu.h"
 #include "rng.h"
 #include "sdcard.h"
+#include "supervise.h"
 #include "touch.h"
 
 int main(void) {
@@ -108,10 +111,65 @@ int main(void) {
 // MicroPython default exception handler
 
 void __attribute__((noreturn)) nlr_jump_fail(void *val) {
-  ensure(secfalse, "uncaught exception");
+  error_shutdown("Internal error", "(UE)", NULL, NULL);
+}
+
+// interrupt handlers
+
+void NMI_Handler(void) {
+  // Clock Security System triggered NMI
+  if ((RCC->CIR & RCC_CIR_CSSF) != 0) {
+    error_shutdown("Internal error", "(CS)", NULL, NULL);
+  }
+}
+
+void HardFault_Handler(void) {
+  error_shutdown("Internal error", "(HF)", NULL, NULL);
+}
+
+void MemManage_Handler(void) {
+  error_shutdown("Internal error", "(MM)", NULL, NULL);
+}
+
+void BusFault_Handler(void) {
+  error_shutdown("Internal error", "(BF)", NULL, NULL);
+}
+
+void UsageFault_Handler(void) {
+  error_shutdown("Internal error", "(UF)", NULL, NULL);
 }
 
 void PendSV_Handler(void) { pendsv_isr_handler(); }
+
+void SVC_C_Handler(uint32_t *stack) {
+  uint8_t svc_number = ((uint8_t *)stack[6])[-2];
+  switch (svc_number) {
+    case SVC_ENABLE_IRQ:
+      HAL_NVIC_EnableIRQ(stack[0]);
+      break;
+    case SVC_DISABLE_IRQ:
+      HAL_NVIC_DisableIRQ(stack[0]);
+      break;
+    case SVC_SET_PRIORITY:
+      NVIC_SetPriority(stack[0], stack[1]);
+      break;
+    default:
+      stack[0] = 0xffffffff;
+      break;
+  }
+}
+
+__attribute__((naked)) void SVC_Handler(void) {
+  __asm volatile(
+      " tst lr, #4    \n"    // Test Bit 3 to see which stack pointer we should
+                             // use.
+      " ite eq        \n"    // Tell the assembler that the nest 2 instructions
+                             // are if-then-else
+      " mrseq r0, msp \n"    // Make R0 point to main stack pointer
+      " mrsne r0, psp \n"    // Make R0 point to process stack pointer
+      " b SVC_C_Handler \n"  // Off to C land
+  );
+}
 
 // MicroPython builtin stubs
 

@@ -129,6 +129,9 @@ bool config_hasPin(void);
 bool config_changePin(const char *old_pin, const char *new_pin);
 bool session_isUnlocked(void);
 
+bool config_hasWipeCode(void);
+bool config_changeWipeCode(const char *pin, const char *wipe_code);
+
 uint32_t config_nextU2FCounter(void);
 void config_setU2FCounter(uint32_t u2fcounter);
 

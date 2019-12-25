@@ -23,7 +23,7 @@ if False:
 def get_features() -> Features:
     f = Features()
     f.vendor = "trezor.io"
-    f.language = "english"
+    f.language = "en-US"
     f.major_version = utils.VERSION_MAJOR
     f.minor_version = utils.VERSION_MINOR
     f.patch_version = utils.VERSION_PATCH
@@ -70,6 +70,7 @@ def get_features() -> Features:
         ]
     f.sd_card_present = io.SDCard().present()
     f.sd_protection = storage.sd_salt.is_enabled()
+    f.wipe_code_protection = config.has_wipe_code()
     return f
 
 

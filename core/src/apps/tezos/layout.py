@@ -5,7 +5,7 @@ from trezor.ui.text import Text
 from trezor.utils import chunks, format_amount
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm
-from apps.tezos.helpers import TEZOS_AMOUNT_DIVISIBILITY
+from apps.tezos.helpers import TEZOS_AMOUNT_DECIMALS
 
 
 async def require_confirm_tx(ctx, to, value):
@@ -72,7 +72,7 @@ def split_proposal(proposal):
 
 
 def format_tezos_amount(value):
-    formatted_value = format_amount(value, TEZOS_AMOUNT_DIVISIBILITY)
+    formatted_value = format_amount(value, TEZOS_AMOUNT_DECIMALS)
     return formatted_value + " XTZ"
 
 

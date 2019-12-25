@@ -1,7 +1,4 @@
 {
-    "bitcoin:DNR": {
-        "coinmarketcap_alias": "denarius-dnr"
-    },
     "erc20:eth:BAT": {
         "name": "Basic Attention Token"
     },
@@ -20,5 +17,13 @@
     },
     "nem:DIMTOK": {
         "coinmarketcap_alias": "dimcoin"
+    },
+    "eth:AUX": {
+        "links": {
+            "Github": "https://github.com/auxiliumglobal"
+        },
+        "wallet": {
+            "MyEtherWallet": null
+        }
     }
 }

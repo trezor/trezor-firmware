@@ -84,9 +84,7 @@
         },
         "blockchain_link": {
             "type": "ripple",
-            "url": [
-                "wss://s.altnet.rippletest.net"
-            ]
+            "url": ["wss://s.altnet.rippletest.net"]
         }
     },
     {
@@ -203,9 +201,7 @@
         "links": {
             "Homepage": "https://binance.org"
         },
-        "wallet": {
-            "Trust Wallet": "https://trustwallet.com"
-        },
+        "wallet": {},
         "blockchain_link": null
     },
     {

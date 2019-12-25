@@ -12,6 +12,7 @@ class CoinInfo:
         self,
         coin_name: str,
         coin_shortcut: str,
+        decimals: int,
         address_type: int,
         address_type_p2sh: int,
         maxfee_kb: int,
@@ -33,6 +34,7 @@ class CoinInfo:
     ):
         self.coin_name = coin_name
         self.coin_shortcut = coin_shortcut
+        self.decimals = decimals
         self.address_type = address_type
         self.address_type_p2sh = address_type_p2sh
         self.maxfee_kb = maxfee_kb
@@ -90,6 +92,7 @@ def optional_dict(x):
 ATTRIBUTES = (
     ("coin_name", lambda _: "name"),
     ("coin_shortcut", black_repr),
+    ("decimals", int),
     ("address_type", int),
     ("address_type_p2sh", int),
     ("maxfee_kb", int),

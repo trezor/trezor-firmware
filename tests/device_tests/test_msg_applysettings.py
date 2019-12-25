@@ -44,13 +44,13 @@ class TestMsgApplysettings:
 
     @pytest.mark.skip_t2
     def test_invalid_language(self, client):
-        assert client.features.language == "english"
+        assert client.features.language == "en-US"
 
         with client:
             _set_expected_responses(client)
             device.apply_settings(client, language="nonexistent")
 
-        assert client.features.language == "english"
+        assert client.features.language == "en-US"
 
     @pytest.mark.setup_client(pin=True, passphrase=False)
     def test_apply_settings_passphrase(self, client):

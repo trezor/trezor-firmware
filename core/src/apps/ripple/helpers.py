@@ -11,7 +11,7 @@ HASH_TX_SIGN = const(0x53545800)  # 'STX'
 # HASH_TX_SIGN_TESTNET = const(0x73747800)  # 'stx'
 
 # https://developers.ripple.com/basic-data-types.html#specifying-currency-amounts
-DIVISIBILITY = const(6)  # 1000000 drops equal 1 XRP
+DECIMALS = const(6)  # 1000000 drops equal 1 XRP
 
 # https://developers.ripple.com/transaction-cost.html
 MIN_FEE = const(10)

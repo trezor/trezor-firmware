@@ -21,20 +21,17 @@
 
 ## Contribute
 
-Inspired by [GitLab Contributing Guide](https://docs.gitlab.com/ee/development/contributing/)
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Make sure to check out general [contribution guidelines](https://wiki.trezor.io/Developers_guide:Contributing) on the Trezor Wiki. If you are contributing to Trezor Core
-(the Trezor T firmware), make sure to check out [Trezor Core contribution guidelines](core/docs/CONTRIBUTING.md) as well.
+Also please have a look at the docs, either in the `docs` folder or at  [docs.trezor.io](https://docs.trezor.io) before contributing. The [misc](docs/misc/index.md) chapter should be read in particular because it contains some useful assorted knowledge.
 
-Some useful [assorted knowledge](docs/random.md) can be found in the `docs` subdirectory.
-
-### Security vulnerability disclosure
+## Security vulnerability disclosure
 
 Please report suspected security vulnerabilities in private to [security@satoshilabs.com](mailto:security@satoshilabs.com), also see [the disclosure section on the Trezor.io website](https://trezor.io/security/). Please do NOT create publicly viewable issues for suspected security vulnerabilities.
 
-### Issue Labels
+## Issue Labels
 
-#### Priority
+### Priority
 
 Label     | Meaning (SLA)
 ----------|--------------
@@ -52,6 +49,10 @@ S2 Critical | Broken feature, workaround too complex & unacceptable
 S3 Major    | Broken feature, workaround acceptable
 S4 Low      | Functionality inconvenience or cosmetic issue
 
-### CI
+## CI
 
 The complete test suite is running on a public [GitLab CI](https://gitlab.com/satoshilabs/trezor/trezor-firmware). If you are an external contributor, we also have a [Travis instance](https://travis-ci.org/trezor/trezor-firmware) where a small subset of tests is running as well - mostly style and easy fast checks, which are quite common to fail for new contributors.
+
+## Documentation
+
+See the `docs` folder or visit [docs.trezor.io](https://docs.trezor.io).

@@ -275,6 +275,37 @@ def test_sign_tx_set_options(client):
     )
 
 
+def test_sign_tx_timebounds(client):
+    op = messages.StellarSetOptionsOp()
+    tx = _create_msg()
+    tx.timebounds_start = 1577836800
+    tx.timebounds_end = 1577839000
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+    assert (
+        b64encode(response.signature)
+        == b"KkZSQxXxEwfeGuFEHD7e93hei34rwK7VB79udYzileg6P/QEzK+lKyB9blUy+dPV3e7PvlHMj1FKXOsrgj/uCA=="
+        # 2a46524315f11307de1ae1441c3edef7785e8b7e2bc0aed507bf6e758ce295e83a3ff404ccafa52b207d6e5532f9d3d5ddeecfbe51cc8f514a5ceb2b823fee08
+    )
+
+    tx.timebounds_start = 100
+    tx.timebounds_end = None
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+    assert (
+        b64encode(response.signature)
+        == b"ukpdaMwe6wdNnbVnOl0ZDvU1dde7Mtnjzy2IhjeZAjk8Ze+52WCv4M8IFjLoNF5c0aB847XYozFj8AsZ/k5fDQ=="
+        # ba4a5d68cc1eeb074d9db5673a5d190ef53575d7bb32d9e3cf2d8886379902393c65efb9d960afe0cf081632e8345e5cd1a07ce3b5d8a33163f00b19fe4e5f0d
+    )
+
+    tx.timebounds_start = None
+    tx.timebounds_end = 111111111
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+    assert (
+        b64encode(response.signature)
+        == b"9sFE/EC+zYlYC2t7R33HsI540nOmJi/aHruu2qG+RW4FEvhKLybLS5pRRhSb0IP3comcv1Q3e2Glvis6PgVICQ=="
+        # f6c144fc40becd89580b6b7b477dc7b08e78d273a6262fda1ebbaedaa1be456e0512f84a2f26cb4b9a5146149bd083f772899cbf54377b61a5be2b3a3e054809
+    )
+
+
 def test_manage_data(client):
     tx = _create_msg()
 

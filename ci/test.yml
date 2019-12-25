@@ -46,6 +46,12 @@ core unix device test:
   script:
     - cd core
     - pipenv run make test_emu
+    - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
+  artifacts:
+    name: core-unix-device-test.log
+    paths:
+      - trezor.log
+    expire_in: 1 week
 
 core unix btconly device test:
   stage: test
@@ -58,6 +64,12 @@ core unix btconly device test:
   script:
     - cd core
     - pipenv run make test_emu
+    - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
+  artifacts:
+    name: core-unix-btconly-device-test.log
+    paths:
+      - trezor.log
+    expire_in: 1 week
 
 core unix monero test:
   stage: test
@@ -67,6 +79,12 @@ core unix monero test:
   script:
     - cd core
     - pipenv run make test_emu_monero
+    - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
+  artifacts:
+    name: core-unix-monero-test.log
+    paths:
+      - trezor.log
+    expire_in: 1 week
 
 core unix u2f test:
   stage: test
@@ -78,6 +96,12 @@ core unix u2f test:
     - make -C tests/fido_tests/u2f-tests-hid
     - cd core
     - pipenv run make test_emu_u2f
+    - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
+  artifacts:
+    name: core-unix-u2f-test.log
+    paths:
+      - trezor.log
+    expire_in: 1 week
 
 core unix fido2 test:
   stage: test
@@ -87,6 +111,12 @@ core unix fido2 test:
   script:
     - cd core
     - pipenv run make test_emu_fido2
+    - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
+  artifacts:
+    name: core-unix-fido2-test.log
+    paths:
+      - trezor.log
+    expire_in: 1 week
 
 core unix click test:
   stage: test
@@ -96,6 +126,12 @@ core unix click test:
   script:
     - cd core
     - pipenv run make test_emu_click
+    - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
+  artifacts:
+    name: core-unix-click-test.log
+    paths:
+      - trezor.log
+    expire_in: 1 week
 
 core unix upgrade test:
   stage: test
