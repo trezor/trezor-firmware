@@ -257,8 +257,8 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 - `TrezorClientVerbose` and `VerboseWireMixin` is removed
 - specific `tx_api.TxApi*` classes removed in favor of `coins.tx_api`
 - `client.PRIME_DERIVATION_FLAG` is removed in favor of `tools.HARDENED_FLAG` and `tools.H_()`
-- hard dependency on Ethereum libraries and HIDAPI is changed into extras that need to be
-  specified explicitly. Require `trezor[hidapi]` or `trezor[ethereum]` to get them.
+- hard dependency on Ethereum libraries is changed into extras that need to be
+  specified explicitly. Require `trezor[ethereum]` to get them.
 
 ### Fixed
 

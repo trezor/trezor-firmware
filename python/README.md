@@ -31,8 +31,8 @@ topic bigger than this README.
 
 ### Older Trezor One support
 
-If your Trezor One is on firmware **1.6.3** or older, you will need HIDAPI support
-for it to be recognized. That requires additional packages.
+If your Trezor One is on firmware **1.6.3** or older, you will need to install
+and use the Trezor Bridge.
 
 #### Debian / Ubuntu
 
@@ -52,25 +52,10 @@ refreshenv
 pip3 install protobuf
 ```
 
-When installing the trezor library, you need to specify that you want
-`hidapi`:
-
-```sh
-pip3 install --upgrade setuptools
-pip3 install trezor[hidapi]
-```
-
 ### Ethereum support
 
 Ethereum requires additional python packages. Instead of
 `pip3 install trezor`, specify `pip3 install trezor[ethereum]`.
-
-You can combine it with the above, to get both HIDAPI and Ethereum
-support:
-
-```sh
-pip3 install trezor[ethereum,hidapi]
-```
 
 ### FreeBSD
 
