@@ -72,17 +72,19 @@ async def request_mnemonic(
         else:
             word = await ctx.wait(keyboard)
 
-        validity = word_validity.check(i, word, backup_type, words)
-        if validity != word_validity.OK:
-            if validity == word_validity.NOK_ALREADY_ADDED:
-                await show_share_already_added(ctx)
-            elif validity == word_validity.NOK_IDENTIFIER_MISMATCH:
-                await show_identifier_mismatch(ctx)
-            elif validity == word_validity.NOK_THRESHOLD_REACHED:
-                await show_group_threshold_reached(ctx)
-            return None
-
         words.append(word)
+
+        try:
+            word_validity.check(backup_type, words)
+        except word_validity.AlreadyAdded:
+            await show_share_already_added(ctx)
+            return None
+        except word_validity.IdentifierMismatch:
+            await show_identifier_mismatch(ctx)
+            return None
+        except word_validity.ThresholdReached:
+            await show_group_threshold_reached(ctx)
+            return None
 
     return " ".join(words)
 

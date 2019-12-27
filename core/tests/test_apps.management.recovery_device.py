@@ -5,7 +5,7 @@ import storage
 import storage.recovery
 from apps.management.recovery_device.recover import process_slip39
 from trezor.messages import BackupType
-from apps.management.recovery_device.word_validity import check, OK, NOK_IDENTIFIER_MISMATCH, NOK_ALREADY_ADDED, NOK_THRESHOLD_REACHED
+from apps.management.recovery_device.word_validity import check, IdentifierMismatch, AlreadyAdded, ThresholdReached
 
 MNEMONIC_SLIP39_BASIC_20_3of6 = [
     "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
@@ -151,12 +151,10 @@ class TestSlip39(unittest.TestCase):
             check(BackupType.Slip39_Advanced, ["ocean"])
 
         # if backup type is not set we can not do any checks
-        result = check(None, ["ocean"])
-        self.assertIs(result, OK)
+        self.assertIsNone(check(None, ["ocean"]))
 
         # BIP-39 has no "on-the-fly" checks
-        result = check(BackupType.Bip39, ["ocean"])
-        self.assertIs(result, OK)
+        self.assertIsNone(check(BackupType.Bip39, ["ocean"]))
 
         # let's store two shares in the storage
         secret, share = process_slip39("trash smug adjust ambition criminal prisoner security math cover pecan response pharmacy center criminal salary elbow bracelet lunar briefing dragon")
@@ -165,16 +163,16 @@ class TestSlip39(unittest.TestCase):
         self.assertIsNone(secret)
 
         # different identifier
-        result = check(BackupType.Slip39_Advanced, ["slush"])
-        self.assertIs(result, NOK_IDENTIFIER_MISMATCH)
+        with self.assertRaises(IdentifierMismatch):
+            check(BackupType.Slip39_Advanced, ["slush"])
 
         # same first word but still a different identifier
-        result = check(BackupType.Slip39_Advanced, ["trash", "slush"])
-        self.assertIs(result, NOK_IDENTIFIER_MISMATCH)
+        with self.assertRaises(IdentifierMismatch):
+            check(BackupType.Slip39_Advanced, ["trash", "slush"])
 
         # same mnemonic found out using the index
-        result = check(BackupType.Slip39_Advanced, ["trash", "smug", "adjust", "ambition"])
-        self.assertIs(result, NOK_ALREADY_ADDED)
+        with self.assertRaises(AlreadyAdded):
+            check(BackupType.Slip39_Advanced, ["trash", "smug", "adjust", "ambition"])
 
         # Let's store two more. The group is 4/6 so this group is now complete.
         secret, share = process_slip39("trash smug adjust arena beard quick language program true hush amount round geology should training practice language diet order ruin")
@@ -183,8 +181,8 @@ class TestSlip39(unittest.TestCase):
         self.assertIsNone(secret)
 
         # If trying to add another one from this group we get a warning.
-        result = check(BackupType.Slip39_Advanced, ["trash", "smug", "adjust"])
-        self.assertIs(result, NOK_THRESHOLD_REACHED)
+        with self.assertRaises(ThresholdReached):
+            check(BackupType.Slip39_Advanced, ["trash", "smug", "adjust"])
 
 
 if __name__ == "__main__":
