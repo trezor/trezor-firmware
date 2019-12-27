@@ -9,10 +9,27 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 ## [0.11.6] - Unreleased
 [0.11.6]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.4...python/v0.11.5
 
+### Added
+
+- support for get-and-increase FIDO counter operation
+- support for setting wipe code
+
 ### Changed
 
 - `trezorctl` command was reworked for ease of use and maintenance. See `trezorctl --help` and `OPTIONS.rst` for details. [f#510]
 - updated EOS transaction parser to match `cleos` in `delegatebw` and `undelegatebw` actions [f#680] [f#681]
+- `RecoveryDevice` does not set fields when doing dry-run recovery [f#666]
+
+### Fixed
+
+- fixed "expand words" functionality in `trezorctl device recover` [f#778]
+
+### Removed
+
+- trezorctl no longer interactively signs Bitcoin-like transactions, the only allowed
+  input format is JSON. See [`docs/transaction-format.md`](docs/transaction-format.md)
+  for details.
+- support for "load device by xprv" was removed from firmware and trezorlib
 
 ## [0.11.5] - 2019-09-26
 
