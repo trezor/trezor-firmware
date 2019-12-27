@@ -1,5 +1,5 @@
 static void send_msg_success(usbd_device *dev) {
-  uint8_t response[64+2];
+  uint8_t response[64];
   memzero(response, sizeof(response));
   // response: Success message (id 2), payload len 0
   memcpy(response,
@@ -10,20 +10,13 @@ static void send_msg_success(usbd_device *dev) {
          // msg_size
          "\x00\x00\x00\x00",
          9);
-  if(WORK_MODE_USB ==  g_ucWorkMode)
-  {
-      while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {
-      }
-  }
-  else
-  {
-     vSI2CDRV_SendResponse(response,64); 
+  while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {
   }
 
 }
 
 static void send_msg_failure(usbd_device *dev) {
-  uint8_t response[64+2];
+  uint8_t response[64];
   memzero(response, sizeof(response));
   // response: Failure message (id 3), payload len 2
   //           - code = 99 (Failure_FirmwareError)
@@ -38,19 +31,13 @@ static void send_msg_failure(usbd_device *dev) {
          "\x08"
          "\x63",
          11);
-    if(WORK_MODE_USB ==  g_ucWorkMode)
-    {
-        while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {
-        }
-    }
-    else
-    {
-       vSI2CDRV_SendResponse(response,64); 
-    }
+  while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {
+  }
+
 }
 
 static void send_msg_features(usbd_device *dev) {
-  uint8_t response[64+2];
+  uint8_t response[64];
   memzero(response, sizeof(response));
   // response: Features message (id 17), payload len 26
   //           - vendor = "trezor.io"
@@ -82,41 +69,29 @@ static void send_msg_features(usbd_device *dev) {
          "1",
          35);
   response[30] = firmware_present_new() ? 0x01 : 0x00;
-  if(WORK_MODE_USB ==  g_ucWorkMode)
-  {
-      while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {
+
+  while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {
       }
-  }
-  else
-  {
-     vSI2CDRV_SendResponse(response,64); 
-  }
 
 }
 
-static void send_msg_buttonrequest_firmwarecheck(usbd_device *dev) {
-  uint8_t response[64+2];
-  memzero(response, sizeof(response));
-  // response: ButtonRequest message (id 26), payload len 2
-  //           - code = ButtonRequest_FirmwareCheck (9)
-  memcpy(response,
-         // header
-         "?##"
-         // msg_id
-         "\x00\x1a"
-         // msg_size
-         "\x00\x00\x00\x02"
-         // data
-         "\x08"
-         "\x09",
-         11);
-     if(WORK_MODE_USB ==  g_ucWorkMode)
-    {
-        while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {
-        }
-    }
-    else
-    {
-       vSI2CDRV_SendResponse(response,64); 
-    }
-}
+/*static void send_msg_buttonrequest_firmwarecheck(usbd_device *dev) {*/
+/*  uint8_t response[64];*/
+/*  memzero(response, sizeof(response));*/
+/*  // response: ButtonRequest message (id 26), payload len 2*/
+/*  //           - code = ButtonRequest_FirmwareCheck (9)*/
+/*  memcpy(response,*/
+/*         // header*/
+/*         "?##"*/
+/*         // msg_id*/
+/*         "\x00\x1a"*/
+/*         // msg_size*/
+/*         "\x00\x00\x00\x02"*/
+/*         // data*/
+/*         "\x08"*/
+/*         "\x09",*/
+/*         11);*/
+/*  while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {*/
+/*        }*/
+
+/*}*/

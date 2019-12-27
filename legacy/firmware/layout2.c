@@ -34,6 +34,8 @@
 #include "string.h"
 #include "timer.h"
 #include "util.h"
+#include "../sys.h"
+#include "prompt.h"
 
 #if !BITCOIN_ONLY
 
@@ -247,6 +249,40 @@ void layoutScreensaver(void) {
   oledRefresh();
 }
 
+void vlayoutLogo(void) 
+{
+  if(WORK_MODE_BLE == g_ucWorkMode)
+  {
+    oledDrawBitmap(0, 0, &bmp_ble);
+  }
+  else  if(WORK_MODE_USB == g_ucWorkMode)
+  {
+   oledDrawBitmap(0, 0, &bmp_usb);
+  }
+  else  if(WORK_MODE_NFC == g_ucWorkMode)
+  {
+    oledDrawBitmap(0, 0, &bmp_nfc);
+  }
+  else  
+  {
+    oledDrawBitmap(0, 0, &bmp_ble);
+  
+  }
+  oledDrawBitmap(0, 16, &bmp_logo);
+  if (!config_isInitialized())
+  {
+    vDisp_PromptInfo(DISP_NOT_ACTIVE);
+  }
+  else
+  {
+    if(WORK_MODE_BLE == g_ucWorkMode)
+    {
+      oledclearLine(6);
+      oledclearLine(7);
+      vDisp_PromptInfo(DISP_BLE_NAME);
+    }
+  }
+  
 void layoutHome(void) {
   if (layoutLast == layoutHome || layoutLast == layoutScreensaver) {
     oledClear();
@@ -268,13 +304,13 @@ void layoutHome(void) {
     b.data = homescreen;
     oledDrawBitmap(0, 0, &b);
   } else {
-    if (label[0] != '\0') {
-      oledDrawBitmap(44, 4, &bmp_logo48);
-      oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, label,
-                           FONT_STANDARD);
-    } else {
-      oledDrawBitmap(40, 0, &bmp_logo64);
-    }
+    vlayoutLogo();
+/*    if (label[0] != '\0') {*/
+/*      oledclearLine(6);*/
+/*      oledclearLine(7);*/
+/*      oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, label,*/
+/*                           FONT_STANDARD);*/
+/*    } */
   }
 
   bool no_backup = false;
@@ -284,14 +320,20 @@ void layoutHome(void) {
   config_getUnfinishedBackup(&unfinished_backup);
   config_getNeedsBackup(&needs_backup);
   if (no_backup) {
-    oledBox(0, 0, 127, 8, false);
-    oledDrawStringCenter(OLED_WIDTH / 2, 0, "SEEDLESS", FONT_STANDARD);
+    oledBox(0, OLED_HEIGHT - 8, 127, 8, false);
+    oledclearLine(6);
+    oledclearLine(7);
+    oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, "SEEDLESS", FONT_STANDARD);
   } else if (unfinished_backup) {
-    oledBox(0, 0, 127, 8, false);
-    oledDrawStringCenter(OLED_WIDTH / 2, 0, "BACKUP FAILED!", FONT_STANDARD);
+    oledBox(0, OLED_HEIGHT - 8, 127, 8, false);
+    oledclearLine(6);
+    oledclearLine(7);
+    oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, "BACKUP FAILED!", FONT_STANDARD);
   } else if (needs_backup) {
-    oledBox(0, 0, 127, 8, false);
-    oledDrawStringCenter(OLED_WIDTH / 2, 0, "NEEDS BACKUP!", FONT_STANDARD);
+    oledBox(0, OLED_HEIGHT - 8, 127, 8, false);
+    oledclearLine(6);
+    oledclearLine(7);
+    oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, "NEEDS BACKUP!", FONT_STANDARD);
   }
   oledRefresh();
 

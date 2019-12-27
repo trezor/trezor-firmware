@@ -42,6 +42,10 @@ const uint8_t *msg_debug_out_data(void);
 
 #endif
 
+extern uint32_t msg_out_end;
+extern uint8_t msg_out[MSG_OUT_SIZE];
+
+
 void msg_read_common(char type, const uint8_t *buf, uint32_t len);
 bool msg_write_common(char type, uint16_t msg_id, const void *msg_ptr);
 

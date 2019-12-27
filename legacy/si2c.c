@@ -38,32 +38,34 @@ static void vSI2CDRV_Send_Ack(void)
 static uint8_t ucSI2CDRV_Get_Addr(void)
 {
 	uint8_t bitcount,iic_slv_addr=0;
-	uint32_t i2c_usTimeout;
-	
-	i2c_usTimeout = 0;
+/*	uint32_t i2c_usTimeout;*/
+/*	*/
+/*	i2c_usTimeout = 0;*/
 	while(1)
 	{
 		if ( GET_SCL_DAT )
 			break;
-		i2c_usTimeout++;
-		if(i2c_usTimeout > I2C_TIMEOUT)
-		{
-		    i2c_usTimeout= 0;
-		    return 0xFF;
-		}
+/*		i2c_usTimeout++;*/
+/*		if(i2c_usTimeout > I2C_TIMEOUT)*/
+/*		{*/
+/*		    i2c_usTimeout= 0;*/
+/*		    return 0xFF;*/
+/*		}*/
+        vPower_Control(BUTTON_POWER_OFF);
 	}
-	i2c_usTimeout = 0;
+/*	i2c_usTimeout = 0;*/
 	while(1)
 	{
 		if(0==GET_SDA_DAT)
 			break;
 	
-		i2c_usTimeout++;
-		if(i2c_usTimeout > I2C_TIMEOUT)
-		{
-		    i2c_usTimeout= 0;
-		    return 0xFF;
-		}
+/*		i2c_usTimeout++;*/
+/*		if(i2c_usTimeout > I2C_TIMEOUT)*/
+/*		{*/
+/*		    i2c_usTimeout= 0;*/
+/*		    return 0xFF;*/
+/*		}*/
+        vPower_Control(BUTTON_POWER_OFF);
 	}		
 	for(bitcount = 0; bitcount < 8; bitcount++)
 	{
@@ -237,57 +239,59 @@ static void vSI2CDRV_WriteBytes(uint8_t *buf, uint16_t buf_len)
 static uint8_t bSI2CDRV_ReadBytes(uint8_t *res, uint16_t n)
 {
 	
-	uint32_t i2c_usTimeout = 0;
-	
-	/* Waiting for address is transferred. */
+	uint16_t i;
+	i2c_enable_ack(I2C2);
+	i2c_send_7bit_address(I2C2,SI2C_ADDR, SLAVE_READ);
+	// Waiting for address is transferred. 
 	while (!((I2C_SR1(I2C2) & I2C_SR1_ADDR)))
 	{
-		i2c_usTimeout++;
-		if(i2c_usTimeout > I2C_TIMEOUT)
-		{
-		    i2c_usTimeout= 0;
-		    return false;
-		}
+	    
 	}
-	i2c_enable_ack(I2C2);
 	/* Clearing ADDR condition sequence. */
 	(void)I2C_SR2(I2C2);
+	(void)I2C_SR1(I2C2);
 
-	for (uint16_t i = 0; i < n; ++i) {
-		if (i == n - 1) {
-			i2c_disable_ack(I2C2);
-		}
+	for ( i = 0; i < (n - 1); ++i) 
+	{
 		while (!(I2C_SR1(I2C2) & I2C_SR1_RxNE));
-		res[i] = i2c_get_data(I2C2);
-		i2c_enable_ack(I2C2);
+		res[i] = i2c_get_data(I2C2);	
 	}
+	i2c_disable_ack(I2C2);
+	while (!(I2C_SR1(I2C2) & I2C_SR1_RxNE));
+	res[i] = i2c_get_data(I2C2);
 	while (!(I2C_SR1(I2C2) & I2C_SR1_STOPF));
-	
+	i2c_send_stop(I2C2);
+	(void)I2C_SR1(I2C2);
+	vSI2CDRV_Init();
 	return true;
 }
+
 static void vSI2CDRV_WriteBytes(uint8_t *data, uint16_t n)
 {
-	uint32_t i2c_usTimeout = 0;
 	
+	uint16_t i;
+	
+	i2c_enable_ack(I2C2);
+	i2c_send_7bit_address(I2C2, SI2C_ADDR, SLAVE_WRITE);
 	/* Waiting for address is transferred. */
-	while (!(I2C_SR1(I2C2) & I2C_SR1_ADDR))
+    while (!((I2C_SR1(I2C2) & I2C_SR1_ADDR)))
 	{
-	    i2c_usTimeout++;
-		if(i2c_usTimeout > I2C_TIMEOUT)
-		{
-		    i2c_usTimeout= 0;
-		    return;
-		}
+	    
 	}
-
 	/* Clearing ADDR condition sequence. */
 	(void)I2C_SR2(I2C2);
-
-	for (uint16_t i = 0; i < n; i++) {
+	(void)I2C_SR1(I2C2);
+	for (i = 0; i < n - 1; i++) 
+	{ 
 		i2c_send_data(I2C2, data[i]);
-		while (!(I2C_SR1(I2C2) & (I2C_SR1_BTF)));
+		while (!(I2C_SR1(I2C2) & I2C_SR1_TxE));
 	}
-	while (!(I2C_SR1(I2C2) & I2C_SR1_STOPF));
+	i2c_disable_ack(I2C2);
+	i2c_send_data(I2C2, data[i]);
+	while (!(I2C_SR1(I2C2) & I2C_SR1_TxE));
+	delay_us(200);
+	i2c_send_stop(I2C2);
+	vSI2CDRV_Init();
 }
 #endif
 
@@ -311,22 +315,26 @@ void vSI2CDRV_Init(void)
 {
 	rcc_periph_clock_enable(RCC_I2C2);
 	rcc_periph_clock_enable(RCC_GPIOB);
-	rcc_periph_clock_enable(RCC_GPIOC);
 
-	//i2c_reset(I2C2);
-	gpio_mode_setup(GPIO_SI2C_PORT, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO_SI2C_SCL | GPIO_SI2C_SDA);
+	i2c_reset(I2C2);
+	
+	gpio_set_output_options(GPIO_SI2C_PORT,GPIO_OTYPE_OD,GPIO_OSPEED_50MHZ,GPIO_SI2C_SCL | GPIO_SI2C_SDA);
+	gpio_mode_setup(GPIO_SI2C_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_SI2C_SCL | GPIO_SI2C_SDA);
 	gpio_set_af(GPIO_SI2C_PORT, GPIO_AF4,GPIO_SI2C_SCL | GPIO_SI2C_SDA);
-	//i2c_peripheral_disable(I2C2);
+	i2c_peripheral_disable(I2C2);
 	//I2C_CR1(I2C2) &= ~I2C_CR1_NOSTRETCH;
-	//I2C_CR1(I2C2) |= I2C_CR1_NOSTRETCH;
-	/* HSI is at 2Mhz */
-	//i2c_set_speed(I2C2, i2c_speed_sm_100k, 8);
-	//addressing mode
+	I2C_CR1(I2C2) |= I2C_CR1_NOSTRETCH;
+	I2C_CR1(I2C2) |= I2C_CR1_ENGC;
+	I2C_CR1(I2C2) |= I2C_CR1_POS;
+/*	//HSI is at 2Mhz */
+	i2c_set_speed(I2C2, i2c_speed_sm_100k, 32);
+/*	//addressing mode*/
 	i2c_set_own_7bit_slave_address(I2C2,SI2C_ADDR);
-	//(void)I2C_SR2(I2C2);
 	i2c_peripheral_enable(I2C2);
+	//i2c_enable_ack(I2C2);
 	memset(s_ucSendDataBak,0x00,SI2C_BUF_MAX_LEN);
 	s_usSendLenBak = 0;
+
 }
 #endif
 

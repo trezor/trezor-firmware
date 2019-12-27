@@ -69,9 +69,9 @@ void MessageProcessFunc(char type, char dir, uint16_t msg_id, void *ptr) {
 }
 
 static uint32_t msg_out_start = 0;
-static uint32_t msg_out_end = 0;
+uint32_t msg_out_end = 0;
 static uint32_t msg_out_cur = 0;
-static uint8_t msg_out[MSG_OUT_SIZE];
+uint8_t msg_out[MSG_OUT_SIZE];
 
 #if DEBUG_LINK
 

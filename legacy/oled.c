@@ -237,8 +237,14 @@ void oledSetDebugLink(bool set) {
   oledRefresh();
 }
 
-void oledSetBuffer(uint8_t *buf) {
-  memcpy(_oledbuffer, buf, sizeof(_oledbuffer));
+void oledSetBuffer(uint8_t *buf,uint16_t usLen) {
+  memcpy(_oledbuffer, buf,usLen);
+}
+void oledclearLine(uint8_t line) {
+  if(line < (OLED_HEIGHT/8))
+  {
+    memzero(_oledbuffer+OLED_WIDTH*(OLED_HEIGHT/8 - line - 1), OLED_WIDTH); 
+  }
 }
 
 void oledDrawChar(int x, int y, char c, uint8_t font) {

@@ -46,6 +46,7 @@
 #include "u2f.h"
 #include "usb.h"
 #include "util.h"
+#include "sys.h"
 
 /* Magic constants to check validity of storage block for storage versions 1
  * to 10. */
@@ -125,7 +126,8 @@ static uint8_t CONFIDENTIAL sessionSeed[64];
 static secbool sessionPassphraseCached = secfalse;
 static char CONFIDENTIAL sessionPassphrase[51];
 
-#define autoLockDelayMsDefault (10 * 60 * 1000U)  // 10 minutes
+#define autoLockDelayMsDefault (3 * 60 * 1000U)  // 3 minutes
+
 static secbool autoLockDelayMsCached = secfalse;
 static uint32_t autoLockDelayMs = autoLockDelayMsDefault;
 
@@ -378,13 +380,15 @@ static secbool config_upgrade_v10(void) {
 }
 
 void config_init(void) {
+  char ucBuf[32];
   char oldTiny = usbTiny(1);
 
   config_upgrade_v10();
 
   storage_init(&protectPinUiCallback, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
   memzero(HW_ENTROPY_DATA, sizeof(HW_ENTROPY_DATA));
-
+  //
+  config_getLanguage(ucBuf,MAX_LANGUAGE_LEN);
   // Auto-unlock storage if no PIN is set.
   if (storage_is_unlocked() == secfalse && storage_has_pin() == secfalse) {
     storage_unlock(PIN_EMPTY, NULL);
@@ -523,6 +527,10 @@ void config_setLanguage(const char *lang) {
   if (strcmp(lang, "en-US") != 0) {
     return;
   }
+  if (strcmp(lang, "chinese") != 0) {
+    return;
+  }
+  
   storage_set(KEY_LANGUAGE, lang, strnlen(lang, MAX_LANGUAGE_LEN));
 }
 
@@ -670,6 +678,14 @@ bool config_getLanguage(char *dest, uint16_t dest_size) {
       // fallthrough -> return "en-US"
     } else {
       // other language -> return the value
+      if (strcmp(dest, "chinese") == 0) 
+      {
+    	g_ucLanguageFlag = 1;
+      }
+      else
+      {
+       	g_ucLanguageFlag = 0;
+      }
       return true;
     }
   }

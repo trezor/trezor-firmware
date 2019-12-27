@@ -29,14 +29,15 @@
 #include "rng.h"
 #include "util.h"
 #include "sys.h"
+#include "mi2c.h"
 #include "usart.h"
-
 uint32_t __stack_chk_guard;
 
 static inline void __attribute__((noreturn)) fault_handler(const char *line1) {
   layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, "detected.", NULL,
                "Please unplug", "the device.", NULL);
   shutdown();
+  POWER_OFF();
 }
 
 void __attribute__((noreturn)) __stack_chk_fail(void) {
@@ -62,98 +63,79 @@ void setup(void) {
   // Technical Reference Manual. According to section 4.4.2 and 4.4.7 of the
   // "STM32F10xxx/20xxx/21xxx/L1xxxx Cortex-M3 programming manual", STM32F2
   // series MCUs are r2p0 and always have this bit set on reset already.
-  SCB_CCR |= SCB_CCR_STKALIGN;
+    SCB_CCR |= SCB_CCR_STKALIGN;
 
-  // setup clock
-  struct rcc_clock_scale clock = rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_120MHZ];
-  rcc_clock_setup_hse_3v3(&clock);
+    // setup clock
+    struct rcc_clock_scale clock = rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_120MHZ];
+    rcc_clock_setup_hse_3v3(&clock);
 
-  // enable GPIO clock - A (oled), B(oled), C (buttons)
-  rcc_periph_clock_enable(RCC_GPIOA);
-  rcc_periph_clock_enable(RCC_GPIOB);
-  rcc_periph_clock_enable(RCC_GPIOC);
+    // enable GPIO clock - A (oled), B(oled), C (buttons)
+    rcc_periph_clock_enable(RCC_GPIOA);
+    rcc_periph_clock_enable(RCC_GPIOB);
+    rcc_periph_clock_enable(RCC_GPIOC);
 
-  // enable SPI clock
-  rcc_periph_clock_enable(RCC_SPI1);
+    // enable SPI clock
+    rcc_periph_clock_enable(RCC_SPI1);
 
-  // enable RNG
-  rcc_periph_clock_enable(RCC_RNG);
-  RNG_CR |= RNG_CR_RNGEN;
-  // to be extra careful and heed the STM32F205xx Reference manual,
-  // Section 20.3.1 we don't use the first random number generated after setting
-  // the RNGEN bit in setup
-  random32();
+    // enable RNG
+    rcc_periph_clock_enable(RCC_RNG);
+    RNG_CR |= RNG_CR_RNGEN;
+    // to be extra careful and heed the STM32F205xx Reference manual,
+    // Section 20.3.1 we don't use the first random number generated after setting
+    // the RNGEN bit in setup
+    random32();
 
-  // enable CSS (Clock Security System)
-  RCC_CR |= RCC_CR_CSSON;
+    // enable CSS (Clock Security System)
+    RCC_CR |= RCC_CR_CSSON;
 
-  // set GPIO for buttons
-  gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO_BUTTON_OK | GPIO_BUTTON_UP|GPIO_BUTTON_DOWN|GPIO_BUTTON_CANCEL);
-  gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE,GPIO_BUTTON_CANCEL);
+    // set GPIO for buttons
+    gpio_mode_setup(BTN_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP,BTN_PIN_YES|BTN_PIN_UP|BTN_PIN_DOWN);
+    gpio_mode_setup(BTN_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE,BTN_PIN_NO);
 
-   //usb insert io
-   gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE,  GPIO_USB_INSERT);
-   gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE,  GPIO_NFC_INSERT);
-   //battery power on
-   gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP,  GPIO_POWER_ON);
-   //ble power off
-   gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,  GPIO_BLE_POWER);
-   POWER_OFF_BLE();
-   //combus
-   gpio_mode_setup(GPIO_CMBUS_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_SI2C_CMBUS);
-   SET_COMBUS_LOW();
+    //usb insert io
+    gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE,  GPIO_USB_INSERT);
+    gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE,  GPIO_NFC_INSERT);
+    //battery power on
+    gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP,  GPIO_POWER_ON);
+    //ble power off
+    gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,  GPIO_BLE_POWER);
+    POWER_OFF_BLE();
+    //combus
+    gpio_mode_setup(GPIO_CMBUS_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_SI2C_CMBUS);
+    SET_COMBUS_LOW();
+    //se power
+    gpio_mode_setup(GPIO_SE_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,  GPIO_SE_POWER);
+    POWER_OFF_SE();
 
-  // set GPIO for OLED display
-  gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO2 | GPIO4 | GPIO3);
+    // set GPIO for OLED display
+    gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,GPIO4);
+    //gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO2 | GPIO4 | GPIO3);
+    gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO0 | GPIO1);
 
-  // enable SPI 1 for OLED display
-  gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO5 | GPIO7);
-  gpio_set_af(GPIOA, GPIO_AF5, GPIO5 | GPIO7);
+    // enable SPI 1 for OLED display
+    gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO5 | GPIO7);
+    gpio_set_af(GPIOA, GPIO_AF5, GPIO5 | GPIO7);
 
-  //	spi_disable_crc(SPI1);
-  spi_init_master(
+    //	spi_disable_crc(SPI1);
+    spi_init_master(
       SPI1, SPI_CR1_BAUDRATE_FPCLK_DIV_8, SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,
       SPI_CR1_CPHA_CLK_TRANSITION_1, SPI_CR1_DFF_8BIT, SPI_CR1_MSBFIRST);
-  spi_enable_ss_output(SPI1);
-  //	spi_enable_software_slave_management(SPI1);
-  //	spi_set_nss_high(SPI1);
-  //	spi_clear_mode_fault(SPI1);
-  spi_enable(SPI1);
-#if(_SUPPORT_DEBUG_UART_)
- usart_setup();
-#endif
-  vCheckMode();
-  #if(_SUPPORT_DEBUG_UART_)
-  if(WORK_MODE_BLE == g_ucWorkMode)
-  {
-    vUART_DebugInfo("\n\r WORK_MODE_BLE !\n\r",&g_ucWorkMode,1); 
-  }
-  else  if(WORK_MODE_USB == g_ucWorkMode)
-  {
-   
-    vUART_DebugInfo("\n\r WORK_MODE_USB !\n\r",&g_ucWorkMode,1); 
-  }
-  else  if(WORK_MODE_NFC == g_ucWorkMode)
-  {
-    vUART_DebugInfo("\n\r WORK_MODE_NFC !\n\r",&g_ucWorkMode,1); 
-  }
-  else  
-  {
-    vUART_DebugInfo("\n\r WORK_MODE_ERROR !\n\r",&g_ucWorkMode,1); 
-  }
-  #endif
-  if(WORK_MODE_USB  == g_ucWorkMode)
-  {
-      // enable OTG_FS
-      gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO10);
-      gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
-      gpio_set_af(GPIOA, GPIO_AF10, GPIO10 | GPIO11 | GPIO12);
+    spi_enable_ss_output(SPI1);
+    //	spi_enable_software_slave_management(SPI1);
+    //	spi_set_nss_high(SPI1);
+    //	spi_clear_mode_fault(SPI1);
+    spi_enable(SPI1);
 
-      // enable OTG FS clock
-      rcc_periph_clock_enable(RCC_OTGFS);
-      // clear USB OTG_FS peripheral dedicated RAM
-      memset_reg((void *)0x50020000, (void *)0x50020500, 0);
- }
+    // enable OTG_FS
+    gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO10);
+    gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
+    gpio_set_af(GPIOA, GPIO_AF10, GPIO10 | GPIO11 | GPIO12);
+
+    // enable OTG FS clock
+    rcc_periph_clock_enable(RCC_OTGFS);
+    // clear USB OTG_FS peripheral dedicated RAM
+    memset_reg((void *)0x50020000, (void *)0x50020500, 0);
+    
 }
 
 void setupApp(void) {
@@ -175,11 +157,40 @@ void setupApp(void) {
   // hotfix for old bootloader
   gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO9);
   spi_init_master(
-      SPI1, SPI_CR1_BAUDRATE_FPCLK_DIV_8, SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,
-      SPI_CR1_CPHA_CLK_TRANSITION_1, SPI_CR1_DFF_8BIT, SPI_CR1_MSBFIRST);
+  SPI1, SPI_CR1_BAUDRATE_FPCLK_DIV_8, SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,
+  SPI_CR1_CPHA_CLK_TRANSITION_1, SPI_CR1_DFF_8BIT, SPI_CR1_MSBFIRST);
 
   gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO10);
   gpio_set_af(GPIOA, GPIO_AF10, GPIO10);
+  
+  #if(_SUPPORT_DEBUG_UART_)
+  usart_setup();
+  #endif
+  
+  vCheckMode();
+#if(_SUPPORT_DEBUG_UART_)
+  if(WORK_MODE_BLE == g_ucWorkMode)
+  {
+    vUART_DebugInfo("\n\r WORK_MODE_BLE !\n\r",&g_ucWorkMode,1); 
+  }
+  else  if(WORK_MODE_USB == g_ucWorkMode)
+  {
+
+    vUART_DebugInfo("\n\r WORK_MODE_USB !\n\r",&g_ucWorkMode,1); 
+  }
+  else  if(WORK_MODE_NFC == g_ucWorkMode)
+  {
+    vUART_DebugInfo("\n\r WORK_MODE_NFC !\n\r",&g_ucWorkMode,1); 
+  }
+  else  
+  {
+    vUART_DebugInfo("\n\r WORK_MODE_ERROR !\n\r",&g_ucWorkMode,1); 
+  }
+#endif
+  #if(MI2C_TEST)
+  //master i2c init
+  vMI2CDRV_Init();
+  #endif
 }
 
 #define MPU_RASR_SIZE_32B (0x04UL << MPU_RASR_SIZE_LSB)

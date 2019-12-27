@@ -45,6 +45,7 @@ void layoutDialogSwipe(const BITMAP *icon, const char *btnNo,
 void layoutProgressSwipe(const char *desc, int permil);
 
 void layoutScreensaver(void);
+void vlayoutLogo(void);
 void layoutHome(void);
 void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out);
 void layoutConfirmOmni(const uint8_t *data, uint32_t size);

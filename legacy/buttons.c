@@ -48,8 +48,8 @@ void buttonUpdate() {
     }
   }
 
-  if ((state & BTN_PIN_NO) == 0) {         // No button is down
-    if ((last_state & BTN_PIN_NO) == 0) {  // last No was down
+  if ((state & BTN_PIN_NO)) {         // No button is down
+    if ((last_state & BTN_PIN_NO)) {  // last No was down
       if (button.NoDown < 2000000000) button.NoDown++;
       button.NoUp = false;
     } else {  // last No was up
@@ -57,12 +57,51 @@ void buttonUpdate() {
       button.NoUp = false;
     }
   } else {                                 // No button is up
-    if ((last_state & BTN_PIN_NO) == 0) {  // last No was down
+    if ((last_state & BTN_PIN_NO)) {  // last No was down
       button.NoDown = 0;
       button.NoUp = true;
     } else {  // last No was up
       button.NoDown = 0;
       button.NoUp = false;
+    }
+  }
+  
+  
+  if ((state & BTN_PIN_UP) == 0) {         // UP button is down
+    if ((last_state & BTN_PIN_UP) == 0) {  // last UP was down
+      if (button.UpDown < 2000000000) button.UpDown++;
+      button.UpUp = false;
+    } else {  // last UP was up
+      button.UpDown = 0;
+      button.UpUp = false;
+    }
+  } else {                                  // UP button is up
+    if ((last_state & BTN_PIN_UP) == 0) {  // last UP was down
+      button.UpDown = 0;
+      button.UpUp = true;
+    } else {  // last UP was up
+      button.UpDown = 0;
+      button.UpUp = false;
+    }
+  }
+  
+  
+    
+  if ((state & BTN_PIN_DOWN) == 0) {         // down button is down
+    if ((last_state & BTN_PIN_DOWN) == 0) {  // last down was down
+      if (button.DownDown < 2000000000) button.DownDown++;
+      button.DownUp = false;
+    } else {  // last down was up
+      button.DownDown = 0;
+      button.DownUp = false;
+    }
+  } else {                                  // down button is up
+    if ((last_state & BTN_PIN_DOWN) == 0) {  // last down was down
+      button.DownDown = 0;
+      button.DownUp = true;
+    } else {  // last down was up
+      button.DownDown = 0;
+      button.DownUp = false;
     }
   }
 

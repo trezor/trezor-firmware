@@ -26,6 +26,7 @@
 #include "oled.h"
 #include "rng.h"
 #include "util.h"
+#include "sys.h"
 
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
@@ -66,6 +67,7 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line_num,
   oledRefresh();
 
   shutdown();
+  POWER_OFF();
 }
 
 void __attribute__((noreturn))
@@ -74,6 +76,7 @@ error_shutdown(const char *line1, const char *line2, const char *line3,
   layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, line2, line3, line4,
                "Please unplug", "the device.");
   shutdown();
+  POWER_OFF();
 }
 
 #ifndef NDEBUG

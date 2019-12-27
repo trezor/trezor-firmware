@@ -33,11 +33,6 @@
 #include "signatures.h"
 #include "usb.h"
 #include "util.h"
-#include "si2c.h"
-#include "usart.h"
-
-#include "sys.h"
-
 
 void layoutFirmwareFingerprint(const uint8_t *hash) {
   char str[4][17] = {0};

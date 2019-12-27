@@ -29,6 +29,7 @@
 #if U2F_ENABLED
 #include "u2f.h"
 #endif
+#include "layout2.h"
 #include "si2c.h"
 #include "sys.h"
 #include "usart.h"
@@ -435,6 +436,10 @@ static void vBle_NFC_RX_Data(uint8_t *pucInputBuf)
     switch(ucCmd)
     {
         case APDU_TAG_BLE:
+            if(true == bBle_DisPlay(pucInputBuf[DATA_HEAD_LEN],pucInputBuf+DATA_HEAD_LEN+1))
+            {
+                layoutHome();
+            }
         break;
         case APDU_TAG_BLE_NFC:
             if(0x3F == pucInputBuf[DATA_HEAD_LEN])
@@ -443,6 +448,9 @@ static void vBle_NFC_RX_Data(uint8_t *pucInputBuf)
                 {
 		            memcpy(s_ucPackAppRevBuf,pucInputBuf+DATA_HEAD_LEN+i*64,64);
                     main_rx_callback(NULL,0);
+                    usLen = (msg_out_end*64)&0xFFFF;
+                    vSI2CDRV_SendResponse(msg_out,usLen);
+                    msg_out_end = 0;
                 }
             }
             else
@@ -451,6 +459,9 @@ static void vBle_NFC_RX_Data(uint8_t *pucInputBuf)
                 {
 		            memcpy(s_ucPackAppRevBuf,pucInputBuf+DATA_HEAD_LEN+i*64,64);
                     u2f_rx_callback(NULL,0);
+                    usLen = (u2f_out_end*64)&0xFFFF;
+                    vSI2CDRV_SendResponse(u2f_out_packets[0],usLen);
+                    u2f_out_end = 0;
                 }
             }
                 
@@ -474,6 +485,7 @@ void usb_ble_nfc_poll(void)
     }
     else
     {
+            memset(g_ucI2cRevBuf,0x00,sizeof(g_ucI2cRevBuf));
 	    if(true == bSI2CDRV_ReceiveData(g_ucI2cRevBuf))
 	    {
 	        vBle_NFC_RX_Data(g_ucI2cRevBuf);
@@ -513,11 +525,14 @@ if(WORK_MODE_USB ==  g_ucWorkMode)
 }
 else
 {
-  if(true == bSI2CDRV_ReceiveData(g_ucI2cRevBuf))
-  {
-    vBle_NFC_RX_Data(g_ucI2cRevBuf);
-  }
-    
+    if(true == bSI2CDRV_ReceiveData(g_ucI2cRevBuf))
+    {
+        vBle_NFC_RX_Data(g_ucI2cRevBuf);
+    }
+    if(WORK_MODE_BLE ==  g_ucWorkMode)
+    { 
+       vPower_Control(BUTTON_POWER_OFF);
+    }	
 }
 #if DEBUG_LINK
   // write pending debug data

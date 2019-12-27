@@ -9,6 +9,7 @@ OBJS += layout.o
 OBJS += oled.o
 OBJS += rng.o
 OBJS += si2c.o
+OBJS += mi2c.o
 OBJS += usart.o
 OBJS += sys.o
 
@@ -31,6 +32,7 @@ OBJS += winusb.o
 
 OBJS += gen/bitmaps.o
 OBJS += gen/fonts.o
+OBJS += gen/prompt.o
 
 libtrezor.a: $(OBJS)
 

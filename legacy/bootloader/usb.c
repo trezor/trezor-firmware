@@ -34,9 +34,6 @@
 #include "secp256k1.h"
 #include "sha2.h"
 #include "signatures.h"
-#include "si2c.h"
-#include "sys.h"
-#include "usart.h"
 #include "usb.h"
 #include "util.h"
 
@@ -62,7 +59,6 @@ static char flash_state = STATE_READY;
 
 static uint32_t FW_HEADER[FLASH_FWHEADER_LEN / sizeof(uint32_t)];
 static uint32_t FW_CHUNK[FW_CHUNK_SIZE / sizeof(uint32_t)];
-uint8_t s_ucPackRevBuf[64+2];
 
 static void flash_enter(void) {
   flash_wait_for_last_operation();
@@ -167,14 +163,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
   static int wi;
   static int old_was_signed;
 
-  if(WORK_MODE_USB ==  g_ucWorkMode)
-  {
-    if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_OUT, buf, 64) != 64) return;
-  }
-  else
-  {
-    memcpy(buf,s_ucPackRevBuf,64);
-  }
+
+  if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_OUT, buf, 64) != 64) return;
 
   if (flash_state == STATE_END) {
     return;
@@ -463,8 +453,7 @@ static const struct usb_bos_descriptor bos_descriptor = {
     .capabilities = capabilities};
 
 static void usbInit(void) {
-  if(WORK_MODE_USB ==  g_ucWorkMode)
-  {
+
       usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings,
                            sizeof(usb_strings) / sizeof(const char *),
                            usbd_control_buffer, sizeof(usbd_control_buffer));
@@ -472,13 +461,6 @@ static void usbInit(void) {
       usb21_setup(usbd_dev, &bos_descriptor);
       webusb_setup(usbd_dev, "trezor.io/start");
       winusb_setup(usbd_dev, USB_INTERFACE_INDEX_MAIN);
-
-  }
-  else
-  {
-     vSI2CDRV_Init();
-     POWER_ON_BLE();
-  }
 }
 
 static void checkButtons(void) {
@@ -508,74 +490,16 @@ static void checkButtons(void) {
     btn_final = true;
   }
 }
-static void vBle_NFC_RX_Data(uint8_t *pucInputBuf)
-{
-    uint16_t i,usLen;
-    uint8_t ucCmd;
-    
-    ucCmd = pucInputBuf[0];
-    usLen =(pucInputBuf[1]<<8) + (pucInputBuf[2]&0xFF) - CRC_LEN;
-    #if(_SUPPORT_DEBUG_UART_)
-    vUART_DebugInfo("\n\r vBle_NFC_RX_Data !\n\r",pucInputBuf,usLen+3);
-    #endif
-    switch(ucCmd)
-    {
-        case APDU_TAG_BLE:
-        break;
-        case APDU_TAG_BLE_NFC:
-            for(i=0;i<usLen/64;i++)
-            {
-		        memcpy(s_ucPackRevBuf,pucInputBuf+DATA_HEAD_LEN+i*64,64);
-                rx_callback(NULL,0);
-            }
-        break;
-        case APDU_TAG_HANDSHAKE:
-	     memcpy(s_ucPackRevBuf,BLE_ADV_NAME,BLE_ADV_NAME_LEN);
-	     vSI2CDRV_SendResponse(s_ucPackRevBuf,BLE_ADV_NAME_LEN);
-        break;
-        default:
-        break;
-    }
-   
-    
-}
-
-void usb_ble_nfc_poll(void)
-{
-    if(WORK_MODE_USB ==  g_ucWorkMode)
-    {
-	    usbd_poll(usbd_dev);
-    }
-    else
-    {
-	    if(true == bSI2CDRV_ReceiveData(g_ucI2cRevBuf))
-	    {
-	        vBle_NFC_RX_Data(g_ucI2cRevBuf);
-	    }
-    }
-
-}
 
 
 void usbLoop(void) {
   bool firmware_present = firmware_present_new();
   usbInit();
   for (;;) {
-   usb_ble_nfc_poll();
+    usbd_poll(usbd_dev);
     if (!firmware_present &&
         (flash_state == STATE_READY || flash_state == STATE_OPEN)) {
       checkButtons();
     }
-   if(WORK_MODE_USB ==  g_ucWorkMode)
-   { 
-	    if(GET_USB_INSERT())
-	    {
-		    POWER_OFF();
-	    }
-   }	
-   else
-   {
-	    vPower_Control(BUTTON_POWER_OFF);
-   }
   }
 }
