@@ -138,7 +138,7 @@ def mnemonic_words(expand=False, language="english"):
             return word
         matches = [w for w in wordlist if w.startswith(word)]
         if len(matches) == 1:
-            return word
+            return matches[0]
         echo("Choose one of: " + ", ".join(matches))
         raise KeyError(word)
 
