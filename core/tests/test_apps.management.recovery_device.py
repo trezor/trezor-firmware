@@ -4,6 +4,8 @@ from mock_storage import mock_storage
 import storage
 import storage.recovery
 from apps.management.recovery_device.recover import process_slip39
+from trezor.messages import BackupType
+from apps.management.recovery_device.word_validity import check, OK, NOK_IDENTIFIER_MISMATCH, NOK_ALREADY_ADDED, NOK_THRESHOLD_REACHED
 
 MNEMONIC_SLIP39_BASIC_20_3of6 = [
     "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
@@ -142,21 +144,18 @@ class TestSlip39(unittest.TestCase):
 
     @mock_storage
     def test_check_word_validity(self):
-        from trezor.messages import BackupType
-        from apps.management.recovery_device.word_validity import check, OK, NOK_IDENTIFIER_MISMATCH, NOK_ALREADY_ADDED, NOK_THRESHOLD_REACHED
-
         storage.recovery.set_in_progress(True)
 
-        # nothing is stored -> should raise
+        # We claim to know the backup type, but nothing is stored. That is an invalid state.
         with self.assertRaises(RuntimeError):
-            check(0, "ocean", BackupType.Slip39_Advanced, [])
+            check(BackupType.Slip39_Advanced, ["ocean"])
 
         # if backup type is not set we can not do any checks
-        result = check(0, "ocean", None, [])
+        result = check(None, ["ocean"])
         self.assertIs(result, OK)
 
         # BIP-39 has no "on-the-fly" checks
-        result = check(0, "ocean", BackupType.Bip39, [])
+        result = check(BackupType.Bip39, ["ocean"])
         self.assertIs(result, OK)
 
         # let's store two shares in the storage
@@ -166,15 +165,15 @@ class TestSlip39(unittest.TestCase):
         self.assertIsNone(secret)
 
         # different identifier
-        result = check(0, "slush", BackupType.Slip39_Advanced, [])
+        result = check(BackupType.Slip39_Advanced, ["slush"])
         self.assertIs(result, NOK_IDENTIFIER_MISMATCH)
 
         # same first word but still a different identifier
-        result = check(1, "slush", BackupType.Slip39_Advanced, ["trash"])
+        result = check(BackupType.Slip39_Advanced, ["trash", "slush"])
         self.assertIs(result, NOK_IDENTIFIER_MISMATCH)
 
         # same mnemonic found out using the index
-        result = check(3, "ambition", BackupType.Slip39_Advanced, ["trash", "smug", "adjust"])
+        result = check(BackupType.Slip39_Advanced, ["trash", "smug", "adjust", "ambition"])
         self.assertIs(result, NOK_ALREADY_ADDED)
 
         # Let's store two more. The group is 4/6 so this group is now complete.
@@ -184,7 +183,7 @@ class TestSlip39(unittest.TestCase):
         self.assertIsNone(secret)
 
         # If trying to add another one from this group we get a warning.
-        result = check(2, "adjust", BackupType.Slip39_Advanced, ["trash", "smug"])
+        result = check(BackupType.Slip39_Advanced, ["trash", "smug", "adjust"])
         self.assertIs(result, NOK_THRESHOLD_REACHED)
 
 

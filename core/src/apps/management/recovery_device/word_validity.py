@@ -16,10 +16,7 @@ NOK_THRESHOLD_REACHED = const(3)
 
 
 def check(
-    current_index: int,
-    current_word: str,
-    backup_type: Optional[EnumTypeBackupType],
-    previous_words: List[str],
+    backup_type: Optional[EnumTypeBackupType], partial_mnemonic: List[str]
 ) -> int:
     # we can't perform any checks if the backup type was not yet decided
     if backup_type is None:
@@ -34,22 +31,22 @@ def check(
         raise RuntimeError
 
     if backup_type == BackupType.Slip39_Basic:
-        return check_slip39_basic(current_index, current_word, previous_mnemonics)
+        return check_slip39_basic(partial_mnemonic, previous_mnemonics)
 
     if backup_type == BackupType.Slip39_Advanced:
-        return check_slip39_advanced(
-            current_index, current_word, previous_words, previous_mnemonics
-        )
+        return check_slip39_advanced(partial_mnemonic, previous_mnemonics)
 
     # there are no other backup types
     raise RuntimeError
 
 
 def check_slip39_basic(
-    current_index: int, current_word: str, previous_mnemonics: List[List[str]]
+    partial_mnemonic: List[str], previous_mnemonics: List[List[str]]
 ) -> int:
     # check if first 3 words of mnemonic match
     # we can check against the first one, others were checked already
+    current_index = len(partial_mnemonic) - 1
+    current_word = partial_mnemonic[-1]
     if current_index < 3:
         share_list = previous_mnemonics[0][0].split(" ")
         if share_list[current_index] != current_word:
@@ -65,11 +62,10 @@ def check_slip39_basic(
 
 
 def check_slip39_advanced(
-    current_index: int,
-    current_word: str,
-    previous_words: List[str],
-    previous_mnemonics: List[List[str]],
+    partial_mnemonic: List[str], previous_mnemonics: List[List[str]]
 ) -> int:
+    current_index = len(partial_mnemonic) - 1
+    current_word = partial_mnemonic[-1]
     if current_index < 2:
         share_list = next(s for s in previous_mnemonics if s)[0].split(" ")
         if share_list[current_index] != current_word:
@@ -87,7 +83,7 @@ def check_slip39_advanced(
     # check if share was already added for group
     elif current_index == 3:
         # we use the 3rd word from previously entered shares to find the group id
-        group_identifier_word = previous_words[2]
+        group_identifier_word = partial_mnemonic[2]
         group_index = None
         for i, group in enumerate(previous_mnemonics):
             if len(group) > 0:
