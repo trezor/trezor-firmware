@@ -18,6 +18,7 @@ flaky = ">=3.6.1"  # https://github.com/box/flaky/issues/156
 pytest-ordering = "*"
 pytest-random-order = "*"
 tox = "*"
+dominate = "*"
 
 ## test requirements
 shamir-mnemonic = "*"
