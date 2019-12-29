@@ -30,6 +30,7 @@ from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 from trezorlib.transport import enumerate_devices, get_transport
 
 from .device_handler import BackgroundDeviceHandler
+from .ui_tests import create_diff_html
 
 
 def get_device():
@@ -101,8 +102,8 @@ def _hash_files(files):
     return hasher.digest().hex()
 
 
-def _process_tested(screen_path, test_name):
-    hash_file = screen_path / "../hash.txt"
+def _process_tested(fixture_test_path, test_name):
+    hash_file = fixture_test_path / "hash.txt"
 
     if not hash_file.exists():
         raise ValueError("File hash.txt not found.")
@@ -110,17 +111,22 @@ def _process_tested(screen_path, test_name):
     with open(hash_file, "r") as f:
         expected_hash = f.read()
 
-    _rename_records(screen_path)
+    actual_path = fixture_test_path / "actual"
+    _rename_records(actual_path)
 
-    records = sorted(screen_path.iterdir())
+    records = sorted(actual_path.iterdir())
     actual_hash = _hash_files(records)
 
     if actual_hash != expected_hash:
+        create_diff_html(fixture_test_path, test_name, actual_hash, expected_hash)
         pytest.fail(
             "Hash of {} differs.\nExpected: {}\nActual:   {}".format(
                 test_name, expected_hash, actual_hash
             )
         )
+    else:
+        if (fixture_test_path / "diff.html").exists():
+            (fixture_test_path / "diff.html").unlink()
 
 
 @contextmanager
@@ -155,7 +161,7 @@ def _screen_recording(client, request):
         if test_screen == "record":
             _process_recorded(screen_path)
         elif test_screen == "test":
-            _process_tested(screen_path, test_name)
+            _process_tested(fixture_test_path, test_name)
         else:
             raise ValueError("Invalid test_screen option.")
 
