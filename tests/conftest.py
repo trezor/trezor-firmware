@@ -81,9 +81,12 @@ def _process_recorded(screen_path):
     digest = _hash_files(records)
     with open(screen_path / "../hash.txt", "w") as f:
         f.write(digest)
+    _rename_records(screen_path)
 
+
+def _rename_records(screen_path):
     # rename screenshots
-    for index, record in enumerate(sorted(records)):
+    for index, record in enumerate(sorted(screen_path.iterdir())):
         filename = screen_path / "{:08}.png".format(index)
         record.replace(filename)
 
@@ -106,6 +109,8 @@ def _process_tested(screen_path, test_name):
 
     with open(hash_file, "r") as f:
         expected_hash = f.read()
+
+    _rename_records(screen_path)
 
     records = sorted(screen_path.iterdir())
     actual_hash = _hash_files(records)
