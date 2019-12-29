@@ -80,12 +80,9 @@ test_emu_click: ## run click tests
 	cd tests ; ./run_tests_click_emu.sh $(TESTOPTS)
 
 test_emu_ui: ## run ui integration tests
-	cd tests ; ./run_tests_device_emu.sh --test_screen=test-hash -m "not skip_ui" $(TESTOPTS)
+	cd tests ; ./run_tests_device_emu.sh --test_screen=test -m "not skip_ui" $(TESTOPTS)
 
-test_emu_ui_hash: ## create hashes of ui integration test fixtures
-	cd tests ; ./run_tests_device_emu.sh --test_screen=hash -m "not skip_ui" $(TESTOPTS)
-
-test_emu_ui_record: ## record a full set of new ui fixtures
+test_emu_ui_record: ## record and hash screens for ui integration tests
 	cd tests ; ./run_tests_device_emu.sh --test_screen=record -m "not skip_ui" $(TESTOPTS)
 
 pylint: ## run pylint on application sources and tests
