@@ -142,6 +142,7 @@ def load(
 @click.option("-p", "--pin-protection", is_flag=True)
 @click.option("-r", "--passphrase-protection", is_flag=True)
 @click.option("-l", "--label")
+@click.option("-u", "--u2f-counter", default=None, type=int)
 @click.option(
     "-t", "--type", "rec_type", type=ChoiceType(RECOVERY_TYPE), default="scrambled"
 )
@@ -154,6 +155,7 @@ def recover(
     pin_protection,
     passphrase_protection,
     label,
+    u2f_counter,
     rec_type,
     dry_run,
 ):
@@ -170,6 +172,7 @@ def recover(
         passphrase_protection=passphrase_protection,
         pin_protection=pin_protection,
         label=label,
+        u2f_counter=u2f_counter,
         language="en-US",
         input_callback=input_callback,
         type=rec_type,
