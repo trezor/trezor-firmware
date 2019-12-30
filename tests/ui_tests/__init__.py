@@ -2,6 +2,7 @@ import hashlib
 import re
 import shutil
 from contextlib import contextmanager
+from distutils.dir_util import copy_tree
 from pathlib import Path
 
 import pytest
@@ -80,6 +81,9 @@ def _process_tested(fixture_test_path, test_name):
             )
         )
     else:
+        copy_tree(
+            str(fixture_test_path / "actual"), str(fixture_test_path / "recorded")
+        )
         if (fixture_test_path / "diff.html").exists():
             (fixture_test_path / "diff.html").unlink()
 
