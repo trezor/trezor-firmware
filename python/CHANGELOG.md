@@ -6,13 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 _At the moment, the project does **not** adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
-## [0.11.6] - Unreleased
-[0.11.6]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.4...python/v0.11.5
+## [0.11.6] - 2019-12-30
+[0.11.6]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.5...python/v0.11.6
 
 ### Added
 
 - support for get-and-increase FIDO counter operation
 - support for setting wipe code
+- `trezorctl device recover` supports `--u2f-counter` option to set the FIDO counter to a custom value
 
 ### Changed
 
@@ -356,5 +357,7 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 [f#445]: https://github.com/trezor/trezor-firmware/issues/445
 [f#510]: https://github.com/trezor/trezor-firmware/issues/510
 [f#525]: https://github.com/trezor/trezor-firmware/issues/525
+[f#666]: https://github.com/trezor/trezor-firmware/issues/666
 [f#680]: https://github.com/trezor/trezor-firmware/issues/680
 [f#681]: https://github.com/trezor/trezor-firmware/issues/681
+[f#778]: https://github.com/trezor/trezor-firmware/issues/778
