@@ -47,10 +47,13 @@ core unix device ui test:
     - cd core
     - pipenv run make test_emu_ui
     - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
+    - cd ../ci
+    - pipenv run python prepare_ui_artifacts.py
   artifacts:
-    name: core-unix-device-test.log
+    name: core-unix-device-test
     paths:
       - trezor.log
+      - ci/tmp/
     expire_in: 1 week
 
 core unix device test:
