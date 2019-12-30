@@ -49,12 +49,12 @@
 #define OLED_CHARGEPUMP 0x8D
 
 #define SPI_BASE SPI1
-#define OLED_DC_PORT GPIOA
-#define OLED_DC_PIN GPIO2  // PA2 | Data/Command
+#define OLED_DC_PORT GPIOB
+#define OLED_DC_PIN GPIO0  // PB0 | Data/Command
 #define OLED_CS_PORT GPIOA
 #define OLED_CS_PIN GPIO4  // PA4 | SPI Select
-#define OLED_RST_PORT GPIOA
-#define OLED_RST_PIN GPIO3  // PA3 | Reset display
+#define OLED_RST_PORT GPIOB
+#define OLED_RST_PIN GPIO1  // PB1 | Reset display
 
 /* Trezor has a display of size OLED_WIDTH x OLED_HEIGHT (128x64).
  * The contents of this display are buffered in _oledbuffer.  This is
@@ -237,13 +237,13 @@ void oledSetDebugLink(bool set) {
   oledRefresh();
 }
 
-void oledSetBuffer(uint8_t *buf,uint16_t usLen) {
-  memcpy(_oledbuffer, buf,usLen);
+void oledSetBuffer(uint8_t *buf, uint16_t usLen) {
+  memcpy(_oledbuffer, buf, usLen);
 }
 void oledclearLine(uint8_t line) {
-  if(line < (OLED_HEIGHT/8))
-  {
-    memzero(_oledbuffer+OLED_WIDTH*(OLED_HEIGHT/8 - line - 1), OLED_WIDTH); 
+  if (line < (OLED_HEIGHT / 8)) {
+    memzero(_oledbuffer + OLED_WIDTH * (OLED_HEIGHT / 8 - line - 1),
+            OLED_WIDTH);
   }
 }
 

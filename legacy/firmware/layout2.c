@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "../sys.h"
 #include "bignum.h"
 #include "bitmaps.h"
 #include "config.h"
@@ -29,13 +30,12 @@
 #include "memzero.h"
 #include "nem2.h"
 #include "oled.h"
+#include "prompt.h"
 #include "qrcodegen.h"
 #include "secp256k1.h"
 #include "string.h"
 #include "timer.h"
 #include "util.h"
-#include "../sys.h"
-#include "prompt.h"
 
 #if !BITCOIN_ONLY
 
@@ -249,40 +249,27 @@ void layoutScreensaver(void) {
   oledRefresh();
 }
 
-void vlayoutLogo(void) 
-{
-  if(WORK_MODE_BLE == g_ucWorkMode)
-  {
+void vlayoutLogo(void) {
+  if (WORK_MODE_BLE == g_ucWorkMode) {
     oledDrawBitmap(0, 0, &bmp_ble);
-  }
-  else  if(WORK_MODE_USB == g_ucWorkMode)
-  {
-   oledDrawBitmap(0, 0, &bmp_usb);
-  }
-  else  if(WORK_MODE_NFC == g_ucWorkMode)
-  {
+  } else if (WORK_MODE_USB == g_ucWorkMode) {
+    oledDrawBitmap(0, 0, &bmp_usb);
+  } else if (WORK_MODE_NFC == g_ucWorkMode) {
     oledDrawBitmap(0, 0, &bmp_nfc);
-  }
-  else  
-  {
+  } else {
     oledDrawBitmap(0, 0, &bmp_ble);
-  
   }
   oledDrawBitmap(0, 16, &bmp_logo);
-  if (!config_isInitialized())
-  {
+  if (!config_isInitialized()) {
     vDisp_PromptInfo(DISP_NOT_ACTIVE);
-  }
-  else
-  {
-    if(WORK_MODE_BLE == g_ucWorkMode)
-    {
+  } else {
+    if (WORK_MODE_BLE == g_ucWorkMode) {
       oledclearLine(6);
       oledclearLine(7);
       vDisp_PromptInfo(DISP_BLE_NAME);
     }
   }
-  
+}
 void layoutHome(void) {
   if (layoutLast == layoutHome || layoutLast == layoutScreensaver) {
     oledClear();
@@ -305,12 +292,12 @@ void layoutHome(void) {
     oledDrawBitmap(0, 0, &b);
   } else {
     vlayoutLogo();
-/*    if (label[0] != '\0') {*/
-/*      oledclearLine(6);*/
-/*      oledclearLine(7);*/
-/*      oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, label,*/
-/*                           FONT_STANDARD);*/
-/*    } */
+    /*    if (label[0] != '\0') {*/
+    /*      oledclearLine(6);*/
+    /*      oledclearLine(7);*/
+    /*      oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, label,*/
+    /*                           FONT_STANDARD);*/
+    /*    } */
   }
 
   bool no_backup = false;
@@ -323,17 +310,20 @@ void layoutHome(void) {
     oledBox(0, OLED_HEIGHT - 8, 127, 8, false);
     oledclearLine(6);
     oledclearLine(7);
-    oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, "SEEDLESS", FONT_STANDARD);
+    oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, "SEEDLESS",
+                         FONT_STANDARD);
   } else if (unfinished_backup) {
     oledBox(0, OLED_HEIGHT - 8, 127, 8, false);
     oledclearLine(6);
     oledclearLine(7);
-    oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, "BACKUP FAILED!", FONT_STANDARD);
+    oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, "BACKUP FAILED!",
+                         FONT_STANDARD);
   } else if (needs_backup) {
     oledBox(0, OLED_HEIGHT - 8, 127, 8, false);
     oledclearLine(6);
     oledclearLine(7);
-    oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, "NEEDS BACKUP!", FONT_STANDARD);
+    oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, "NEEDS BACKUP!",
+                         FONT_STANDARD);
   }
   oledRefresh();
 

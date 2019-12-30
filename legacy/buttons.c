@@ -56,7 +56,7 @@ void buttonUpdate() {
       button.NoDown = 0;
       button.NoUp = false;
     }
-  } else {                                 // No button is up
+  } else {                            // No button is up
     if ((last_state & BTN_PIN_NO)) {  // last No was down
       button.NoDown = 0;
       button.NoUp = true;
@@ -65,8 +65,7 @@ void buttonUpdate() {
       button.NoUp = false;
     }
   }
-  
-  
+
   if ((state & BTN_PIN_UP) == 0) {         // UP button is down
     if ((last_state & BTN_PIN_UP) == 0) {  // last UP was down
       if (button.UpDown < 2000000000) button.UpDown++;
@@ -75,7 +74,7 @@ void buttonUpdate() {
       button.UpDown = 0;
       button.UpUp = false;
     }
-  } else {                                  // UP button is up
+  } else {                                 // UP button is up
     if ((last_state & BTN_PIN_UP) == 0) {  // last UP was down
       button.UpDown = 0;
       button.UpUp = true;
@@ -84,9 +83,7 @@ void buttonUpdate() {
       button.UpUp = false;
     }
   }
-  
-  
-    
+
   if ((state & BTN_PIN_DOWN) == 0) {         // down button is down
     if ((last_state & BTN_PIN_DOWN) == 0) {  // last down was down
       if (button.DownDown < 2000000000) button.DownDown++;
@@ -95,7 +92,7 @@ void buttonUpdate() {
       button.DownDown = 0;
       button.DownUp = false;
     }
-  } else {                                  // down button is up
+  } else {                                   // down button is up
     if ((last_state & BTN_PIN_DOWN) == 0) {  // last down was down
       button.DownDown = 0;
       button.DownUp = true;

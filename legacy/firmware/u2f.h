@@ -33,6 +33,8 @@ typedef struct {
   uint8_t data[];
 } APDU;
 
+#define U2F_OUT_PKT_BUFFER_LEN 130
+
 extern uint32_t u2f_out_end;
 extern uint8_t u2f_out_packets[U2F_OUT_PKT_BUFFER_LEN][HID_RPT_SIZE];
 #define APDU_LEN(A) (uint32_t)(((A).lc1 << 16) + ((A).lc2 << 8) + ((A).lc3))

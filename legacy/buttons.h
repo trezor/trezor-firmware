@@ -23,7 +23,7 @@
 #include <libopencm3/stm32/gpio.h>
 #include <stdbool.h>
 
-#define OLD_PCB  0
+#define OLD_PCB 0
 
 struct buttonState {
   volatile bool YesUp;
@@ -44,7 +44,7 @@ void buttonUpdate(void);
 #ifndef BTN_PORT
 #define BTN_PORT GPIOC
 #endif
-#if(OLD_PCB)
+#if (OLD_PCB)
 #ifndef BTN_PIN_YES
 #define BTN_PIN_YES GPIO0
 #endif
@@ -79,6 +79,5 @@ void buttonUpdate(void);
 #define BTN_PIN_DOWN GPIO5
 #endif
 #endif
-
 
 #endif

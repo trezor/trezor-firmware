@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include "bitmaps.h"
 
-
 extern const BITMAP bmp_ble;
 extern const BITMAP bmp_ble_link;
 extern const BITMAP bmp_cn_active_success;

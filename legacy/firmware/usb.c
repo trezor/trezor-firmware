@@ -84,7 +84,7 @@ enum {
 };
 #undef X
 
-uint8_t s_ucPackAppRevBuf[64+2];
+uint8_t s_ucPackAppRevBuf[64 + 2];
 uint16_t s_usOffset;
 #define X(name, value) value,
 static const char *usb_strings[] = {USB_STRINGS};
@@ -312,13 +312,11 @@ static void u2f_rx_callback(usbd_device *dev, uint8_t ep) {
   static CONFIDENTIAL uint8_t buf[64] __attribute__((aligned(4)));
 
   debugLog(0, "", "u2f_rx_callback");
-  if(WORK_MODE_USB ==  g_ucWorkMode)
-  {
-    if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, 64) != 64) return;
-  }
-  else
-  {
-      memcpy(buf,s_ucPackAppRevBuf,64);
+  if (WORK_MODE_USB == g_ucWorkMode) {
+    if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, 64) != 64)
+      return;
+  } else {
+    memcpy(buf, s_ucPackAppRevBuf, 64);
   }
   u2fhid_read(tiny, (const U2FHID_FRAME *)(void *)buf);
 }
@@ -328,14 +326,11 @@ static void u2f_rx_callback(usbd_device *dev, uint8_t ep) {
 static void main_rx_callback(usbd_device *dev, uint8_t ep) {
   (void)ep;
   static CONFIDENTIAL uint8_t buf[64] __attribute__((aligned(4)));
-  if(WORK_MODE_USB ==  g_ucWorkMode)
-  {
-      if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_MAIN_OUT, buf, 64) != 64)
-        return;
-  }
-  else
-  {
-     memcpy(buf,s_ucPackAppRevBuf,64);
+  if (WORK_MODE_USB == g_ucWorkMode) {
+    if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_MAIN_OUT, buf, 64) != 64)
+      return;
+  } else {
+    memcpy(buf, s_ucPackAppRevBuf, 64);
   }
   debugLog(0, "", "main_rx_callback");
   if (!tiny) {
@@ -403,137 +398,111 @@ static const struct usb_bos_descriptor bos_descriptor = {
     .capabilities = capabilities};
 
 void usbInit(void) {
-   if(WORK_MODE_USB ==  g_ucWorkMode)
-   {
-      usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings,
-                           sizeof(usb_strings) / sizeof(*usb_strings),
-                           usbd_control_buffer, sizeof(usbd_control_buffer));
-      usbd_register_set_config_callback(usbd_dev, set_config);
-      usb21_setup(usbd_dev, &bos_descriptor);
-      static const char *origin_url = "trezor.io/start";
-      webusb_setup(usbd_dev, origin_url);
-      // Debug link interface does not have WinUSB set;
-      // if you really need debug link on windows, edit the descriptor in winusb.c
-      winusb_setup(usbd_dev, USB_INTERFACE_INDEX_MAIN);
-   }
-   else
-   {
-        vSI2CDRV_Init();
-        POWER_ON_BLE();
-   }
+  if (WORK_MODE_USB == g_ucWorkMode) {
+    usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings,
+                         sizeof(usb_strings) / sizeof(*usb_strings),
+                         usbd_control_buffer, sizeof(usbd_control_buffer));
+    usbd_register_set_config_callback(usbd_dev, set_config);
+    usb21_setup(usbd_dev, &bos_descriptor);
+    static const char *origin_url = "trezor.io/start";
+    webusb_setup(usbd_dev, origin_url);
+    // Debug link interface does not have WinUSB set;
+    // if you really need debug link on windows, edit the descriptor in winusb.c
+    winusb_setup(usbd_dev, USB_INTERFACE_INDEX_MAIN);
+  } else {
+    vSI2CDRV_Init();
+    POWER_ON_BLE();
+  }
 }
 
-static void vBle_NFC_RX_Data(uint8_t *pucInputBuf)
-{
-    uint16_t i,usLen;
-    uint8_t ucCmd;
-    
-    ucCmd = pucInputBuf[0];
-    usLen =(pucInputBuf[1]<<8) + (pucInputBuf[2]&0xFF) - CRC_LEN;
-    #if(_SUPPORT_DEBUG_UART_)
-    vUART_DebugInfo("\n\r vBle_NFC_RX_Data !\n\r",pucInputBuf,usLen+3);
-    #endif
-    switch(ucCmd)
-    {
-        case APDU_TAG_BLE:
-            if(true == bBle_DisPlay(pucInputBuf[DATA_HEAD_LEN],pucInputBuf+DATA_HEAD_LEN+1))
-            {
-                layoutHome();
-            }
-        break;
-        case APDU_TAG_BLE_NFC:
-            if(0x3F == pucInputBuf[DATA_HEAD_LEN])
-            {
-                for(i=0;i<usLen/64;i++)
-                {
-		            memcpy(s_ucPackAppRevBuf,pucInputBuf+DATA_HEAD_LEN+i*64,64);
-                    main_rx_callback(NULL,0);
-                    usLen = (msg_out_end*64)&0xFFFF;
-                    vSI2CDRV_SendResponse(msg_out,usLen);
-                    msg_out_end = 0;
-                }
-            }
-            else
-            {
-                for(i=0;i<usLen/64;i++)
-                {
-		            memcpy(s_ucPackAppRevBuf,pucInputBuf+DATA_HEAD_LEN+i*64,64);
-                    u2f_rx_callback(NULL,0);
-                    usLen = (u2f_out_end*64)&0xFFFF;
-                    vSI2CDRV_SendResponse(u2f_out_packets[0],usLen);
-                    u2f_out_end = 0;
-                }
-            }
-                
-        break;
-        case APDU_TAG_HANDSHAKE:
-	     memcpy(s_ucPackAppRevBuf,BLE_ADV_NAME,BLE_ADV_NAME_LEN);
-	     vSI2CDRV_SendResponse(s_ucPackAppRevBuf,BLE_ADV_NAME_LEN);
-        break;
-        default:
-        break;
-    }
-   
-    
+static void vBle_NFC_RX_Data(uint8_t *pucInputBuf) {
+  uint16_t i, usLen;
+  uint8_t ucCmd;
+
+  ucCmd = pucInputBuf[0];
+  usLen = (pucInputBuf[1] << 8) + (pucInputBuf[2] & 0xFF) - CRC_LEN;
+#if (_SUPPORT_DEBUG_UART_)
+  vUART_DebugInfo("\n\r vBle_NFC_RX_Data !\n\r", pucInputBuf, usLen + 3);
+#endif
+  switch (ucCmd) {
+    case APDU_TAG_BLE:
+      if (true == bBle_DisPlay(pucInputBuf[DATA_HEAD_LEN],
+                               pucInputBuf + DATA_HEAD_LEN + 1)) {
+        layoutHome();
+      }
+      break;
+    case APDU_TAG_BLE_NFC:
+      if (0x3F == pucInputBuf[DATA_HEAD_LEN]) {
+        for (i = 0; i < usLen / 64; i++) {
+          memcpy(s_ucPackAppRevBuf, pucInputBuf + DATA_HEAD_LEN + i * 64, 64);
+          main_rx_callback(NULL, 0);
+          usLen = (msg_out_end * 64) & 0xFFFF;
+          vSI2CDRV_SendResponse(msg_out, usLen);
+          msg_out_end = 0;
+        }
+      } else {
+        for (i = 0; i < usLen / 64; i++) {
+          memcpy(s_ucPackAppRevBuf, pucInputBuf + DATA_HEAD_LEN + i * 64, 64);
+          u2f_rx_callback(NULL, 0);
+          usLen = (u2f_out_end * 64) & 0xFFFF;
+          vSI2CDRV_SendResponse(u2f_out_packets[0], usLen);
+          u2f_out_end = 0;
+        }
+      }
+
+      break;
+    case APDU_TAG_HANDSHAKE:
+      memcpy(s_ucPackAppRevBuf, BLE_ADV_NAME, BLE_ADV_NAME_LEN);
+      vSI2CDRV_SendResponse(s_ucPackAppRevBuf, BLE_ADV_NAME_LEN);
+      break;
+    default:
+      break;
+  }
 }
 
-void usb_ble_nfc_poll(void)
-{
-    if(WORK_MODE_USB ==  g_ucWorkMode)
-    {
-	    usbd_poll(usbd_dev);
+void usb_ble_nfc_poll(void) {
+  if (WORK_MODE_USB == g_ucWorkMode) {
+    usbd_poll(usbd_dev);
+  } else {
+    memset(g_ucI2cRevBuf, 0x00, sizeof(g_ucI2cRevBuf));
+    if (true == bSI2CDRV_ReceiveData(g_ucI2cRevBuf)) {
+      vBle_NFC_RX_Data(g_ucI2cRevBuf);
     }
-    else
-    {
-            memset(g_ucI2cRevBuf,0x00,sizeof(g_ucI2cRevBuf));
-	    if(true == bSI2CDRV_ReceiveData(g_ucI2cRevBuf))
-	    {
-	        vBle_NFC_RX_Data(g_ucI2cRevBuf);
-	    }
-    }
-
+  }
 }
-
 
 void usbPoll(void) {
-
-if(WORK_MODE_USB ==  g_ucWorkMode)
-{
-     
-  if (usbd_dev == NULL) {
-    return;
-  }
-
-  static const uint8_t *data;
-  // poll read buffer
-  usbd_poll(usbd_dev);
-  // write pending data
-  data = msg_out_data();
-  if (data) {
-    while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_MAIN_IN, data, 64) !=
-           64) {
+  if (WORK_MODE_USB == g_ucWorkMode) {
+    if (usbd_dev == NULL) {
+      return;
     }
-  }
+
+    static const uint8_t *data;
+    // poll read buffer
+    usbd_poll(usbd_dev);
+    // write pending data
+    data = msg_out_data();
+    if (data) {
+      while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_MAIN_IN, data,
+                                  64) != 64) {
+      }
+    }
 #if U2F_ENABLED
-  data = u2f_out_data();
-  if (data) {
-    while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_U2F_IN, data, 64) !=
-           64) {
+    data = u2f_out_data();
+    if (data) {
+      while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_U2F_IN, data,
+                                  64) != 64) {
+      }
+    }
+#endif
+  } else {
+    if (true == bSI2CDRV_ReceiveData(g_ucI2cRevBuf)) {
+      vBle_NFC_RX_Data(g_ucI2cRevBuf);
+    }
+    if (WORK_MODE_BLE == g_ucWorkMode) {
+      vPower_Control(BUTTON_POWER_OFF);
     }
   }
-#endif
-}
-else
-{
-    if(true == bSI2CDRV_ReceiveData(g_ucI2cRevBuf))
-    {
-        vBle_NFC_RX_Data(g_ucI2cRevBuf);
-    }
-    if(WORK_MODE_BLE ==  g_ucWorkMode)
-    { 
-       vPower_Control(BUTTON_POWER_OFF);
-    }	
-}
 #if DEBUG_LINK
   // write pending debug data
   data = msg_debug_out_data();

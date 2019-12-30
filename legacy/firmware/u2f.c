@@ -29,13 +29,13 @@
 #include "hmac.h"
 #include "layout2.h"
 #include "memzero.h"
+#include "mi2c.h"
 #include "nist256p1.h"
 #include "rng.h"
+#include "sys.h"
 #include "trezor.h"
 #include "usb.h"
 #include "util.h"
-#include "mi2c.h"
-#include "sys.h"
 
 #include "u2f.h"
 #include "u2f/u2f.h"
@@ -45,7 +45,7 @@
 
 // About 1/2 Second according to values used in protect.c
 #define U2F_TIMEOUT (800000 / 2)
-#define U2F_OUT_PKT_BUFFER_LEN 130
+// #define U2F_OUT_PKT_BUFFER_LEN 130
 
 // Initialise without a cid
 static uint32_t cid = 0;
@@ -179,23 +179,21 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
   U2F_ReadBuffer readbuffer = {0};
   memzero(&readbuffer, sizeof(readbuffer));
 
+  if (g_ucWorkMode == WORK_MODE_USB) {
+    if (!(f->type & TYPE_INIT)) {
+      return;
+    }
 
-  if(g_ucWorkMode == WORK_MODE_USB)
-  {
-      if (!(f->type & TYPE_INIT)) {
-        return;
-      }
+    // Broadcast is reserved for init
+    if (f->cid == CID_BROADCAST || f->cid == 0) {
+      send_u2fhid_error(f->cid, ERR_INVALID_CID);
+      return;
+    }
 
-      // Broadcast is reserved for init
-      if (f->cid == CID_BROADCAST || f->cid == 0) {
-        send_u2fhid_error(f->cid, ERR_INVALID_CID);
-        return;
-      }
-
-      if ((unsigned)MSG_LEN(*f) > sizeof(reader->buf)) {
-        send_u2fhid_error(f->cid, ERR_INVALID_LEN);
-        return;
-      }
+    if ((unsigned)MSG_LEN(*f) > sizeof(reader->buf)) {
+      send_u2fhid_error(f->cid, ERR_INVALID_LEN);
+      return;
+    }
   }
 
   reader = &readbuffer;
@@ -221,31 +219,28 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
         usbPoll();
       }
     }
-    if(g_ucWorkMode == WORK_MODE_USB)
-    {
-        // We have all the data
-        switch (reader->cmd) {
-          case 0:
-            // message was aborted by init
-            break;
-          
-          case U2FHID_PING:
-            u2fhid_ping(reader->buf, reader->len);
-            break;
-          case U2FHID_MSG:
-            u2fhid_msg((APDU *)reader->buf, reader->len);
-            break;
-          case U2FHID_WINK:
-            u2fhid_wink(reader->buf, reader->len);
-            break;
-          default:
-            send_u2fhid_error(cid, ERR_INVALID_CMD);
-            break;
-        }
-    }
-    else
-    {
-        u2fhid_msg((APDU *)reader->buf, reader->len); 
+    if (g_ucWorkMode == WORK_MODE_USB) {
+      // We have all the data
+      switch (reader->cmd) {
+        case 0:
+          // message was aborted by init
+          break;
+
+        case U2FHID_PING:
+          u2fhid_ping(reader->buf, reader->len);
+          break;
+        case U2FHID_MSG:
+          u2fhid_msg((APDU *)reader->buf, reader->len);
+          break;
+        case U2FHID_WINK:
+          u2fhid_wink(reader->buf, reader->len);
+          break;
+        default:
+          send_u2fhid_error(cid, ERR_INVALID_CMD);
+          break;
+      }
+    } else {
+      u2fhid_msg((APDU *)reader->buf, reader->len);
     }
     // wait for next commmand/ button press
     reader->cmd = 0;

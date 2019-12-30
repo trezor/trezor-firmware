@@ -30,10 +30,10 @@
 #include "oled.h"
 #include "rng.h"
 #include "setup.h"
+#include "sys.h"
 #include "timer.h"
 #include "usb.h"
 #include "util.h"
-#include "sys.h"
 #if !EMULATOR
 #include <libopencm3/stm32/desig.h>
 #include "otp.h"
@@ -46,54 +46,46 @@ uint32_t system_millis_lock_start = 0;
 /*poweroff */
 uint32_t system_millis_poweroff_start = 0;
 
-
-void check_lock_screen(void) 
-{
+void check_lock_screen(void) {
   buttonUpdate();
 
   // wake from screensaver on any button
-  if (layoutLast == layoutScreensaver && (button.NoUp || button.YesUp ||button.UpUp || button.DownUp||(GET_NFC_INSERT()))) 
-  {
+  if (layoutLast == layoutScreensaver &&
+      (button.NoUp || button.YesUp || button.UpUp || button.DownUp ||
+       (GET_NFC_INSERT()))) {
     layoutHome();
     return;
   }
-  
+
   // if homescreen is shown for too long
-  if (layoutLast == layoutHome) 
-  {
-        if ((timer_ms() - system_millis_lock_start) >=config_getAutoLockDelayMs())
-        {
-              // lock the screen
-              session_clear(true);
-              layoutScreensaver();
-              system_millis_poweroff_start = timer_ms();
-        }
+  if (layoutLast == layoutHome) {
+    if ((timer_ms() - system_millis_lock_start) >=
+        config_getAutoLockDelayMs()) {
+      // lock the screen
+      session_clear(true);
+      layoutScreensaver();
+      system_millis_poweroff_start = timer_ms();
+    }
   }
-  if (layoutLast == layoutScreensaver) 
-  {
-      if(WORK_MODE_USB !=  g_ucWorkMode)
-      {
-            //no usb and no nfc
-            if((0x00 == GET_USB_INSERT())&& (GET_NFC_INSERT()))
-            {
-                  //power off time
-                  if((timer_ms() - system_millis_poweroff_start) >= (autoPowerOffDelayMsDefault - config_getAutoLockDelayMs()))
-                  {
-                     vDisp_PromptInfo(DISP_PRESSKEY_POWEROFF);
-                     POWER_OFF();
-                     while(1);
-                  }
-            }
-            else
-            {
-                system_millis_poweroff_start = timer_ms();
-            }
+  if (layoutLast == layoutScreensaver) {
+    if (WORK_MODE_USB != g_ucWorkMode) {
+      // no usb and no nfc
+      if ((0x00 == GET_USB_INSERT()) && (GET_NFC_INSERT())) {
+        // power off time
+        if ((timer_ms() - system_millis_poweroff_start) >=
+            (autoPowerOffDelayMsDefault - config_getAutoLockDelayMs())) {
+          vDisp_PromptInfo(DISP_PRESSKEY_POWEROFF);
+          POWER_OFF();
+          while (1)
+            ;
+        }
+      } else {
+        system_millis_poweroff_start = timer_ms();
       }
-      else
-      {
-          system_millis_poweroff_start = timer_ms();
-      }
-   }
+    } else {
+      system_millis_poweroff_start = timer_ms();
+    }
+  }
 }
 
 static void collect_hw_entropy(bool privileged) {
@@ -128,7 +120,7 @@ int main(void) {
                                    // unpredictable stack protection checks
   oledInit();
 #else
-  //check_bootloader();
+  // check_bootloader();
   setupApp();
   __stack_chk_guard = random32();  // this supports compiler provided
                                    // unpredictable stack protection checks
@@ -141,7 +133,7 @@ int main(void) {
     timer_init();
 #ifdef APPVER
     // enable MPU (Memory Protection Unit)
-   // mpu_config_firmware();
+    // mpu_config_firmware();
 #endif
   } else {
     collect_hw_entropy(false);

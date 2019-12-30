@@ -163,7 +163,6 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
   static int wi;
   static int old_was_signed;
 
-
   if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_OUT, buf, 64) != 64) return;
 
   if (flash_state == STATE_END) {
@@ -453,14 +452,13 @@ static const struct usb_bos_descriptor bos_descriptor = {
     .capabilities = capabilities};
 
 static void usbInit(void) {
-
-      usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings,
-                           sizeof(usb_strings) / sizeof(const char *),
-                           usbd_control_buffer, sizeof(usbd_control_buffer));
-      usbd_register_set_config_callback(usbd_dev, set_config);
-      usb21_setup(usbd_dev, &bos_descriptor);
-      webusb_setup(usbd_dev, "trezor.io/start");
-      winusb_setup(usbd_dev, USB_INTERFACE_INDEX_MAIN);
+  usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings,
+                       sizeof(usb_strings) / sizeof(const char *),
+                       usbd_control_buffer, sizeof(usbd_control_buffer));
+  usbd_register_set_config_callback(usbd_dev, set_config);
+  usb21_setup(usbd_dev, &bos_descriptor);
+  webusb_setup(usbd_dev, "trezor.io/start");
+  winusb_setup(usbd_dev, USB_INTERFACE_INDEX_MAIN);
 }
 
 static void checkButtons(void) {
@@ -490,7 +488,6 @@ static void checkButtons(void) {
     btn_final = true;
   }
 }
-
 
 void usbLoop(void) {
   bool firmware_present = firmware_present_new();
