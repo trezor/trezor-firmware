@@ -30,7 +30,7 @@ from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 from trezorlib.transport import enumerate_devices, get_transport
 
 from .device_handler import BackgroundDeviceHandler
-from .ui_tests import create_diff_html
+from .ui_tests.html import create_diff_doc
 
 
 def get_device():
@@ -118,7 +118,7 @@ def _process_tested(fixture_test_path, test_name):
     actual_hash = _hash_files(records)
 
     if actual_hash != expected_hash:
-        create_diff_html(fixture_test_path, test_name, actual_hash, expected_hash)
+        create_diff_doc(fixture_test_path, test_name, actual_hash, expected_hash)
         pytest.fail(
             "Hash of {} differs.\nExpected: {}\nActual:   {}".format(
                 test_name, expected_hash, actual_hash
@@ -140,7 +140,7 @@ def _screen_recording(client, request):
         yield
         return
 
-    fixture_root = Path(__file__) / "../ui_tests"
+    fixture_root = Path(__file__) / "../ui_tests/fixtures"
     test_name = _get_test_dirname(request.node)
     fixture_test_path = fixture_root.resolve() / test_name
 

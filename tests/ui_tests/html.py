@@ -5,7 +5,7 @@ import dominate
 from dominate.tags import div, h1, hr, i, img, p, table, td, th, tr
 
 
-def create_diff_html(fixture_test_path, test_name, actual_hash, expected_hash):
+def create_diff_doc(fixture_test_path, test_name, actual_hash, expected_hash):
     doc = dominate.document(title=test_name)
     recorded_path = fixture_test_path / "recorded"
     actual_path = fixture_test_path / "actual"
