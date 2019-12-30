@@ -151,10 +151,10 @@ class TestSlip39(unittest.TestCase):
             check(BackupType.Slip39_Advanced, ["ocean"])
 
         # if backup type is not set we can not do any checks
-        self.assertIsNone(check(None, ["ocean"]))
+        check(None, ["ocean"])
 
         # BIP-39 has no "on-the-fly" checks
-        self.assertIsNone(check(BackupType.Bip39, ["ocean"]))
+        check(BackupType.Bip39, ["ocean"])
 
         # let's store two shares in the storage
         secret, share = process_slip39("trash smug adjust ambition criminal prisoner security math cover pecan response pharmacy center criminal salary elbow bracelet lunar briefing dragon")
@@ -169,6 +169,10 @@ class TestSlip39(unittest.TestCase):
         # same first word but still a different identifier
         with self.assertRaises(IdentifierMismatch):
             check(BackupType.Slip39_Advanced, ["trash", "slush"])
+
+        # same identifier but different group settings for Slip 39 Basic
+        with self.assertRaises(IdentifierMismatch):
+            check(BackupType.Slip39_Basic, ["trash", "smug", "slush"])
 
         # same mnemonic found out using the index
         with self.assertRaises(AlreadyAdded):

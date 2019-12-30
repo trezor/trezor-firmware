@@ -8,7 +8,7 @@ if False:
     from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
-class WordValidityResult(BaseException):
+class WordValidityResult(Exception):
     pass
 
 
