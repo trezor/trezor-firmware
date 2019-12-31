@@ -45,7 +45,7 @@ static int socket_setup(int port) {
   struct sockaddr_in addr = {0};
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
-  addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+  addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
   if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
     perror("Failed to bind socket");
