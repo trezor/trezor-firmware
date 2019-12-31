@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from .html import create_diff_doc
+from . import html
 
 
 def _get_test_dirname(node):
@@ -74,10 +74,13 @@ def _process_tested(fixture_test_path, test_name):
     actual_hash = _hash_files(records)
 
     if actual_hash != expected_hash:
-        create_diff_doc(fixture_test_path, test_name, actual_hash, expected_hash)
+        diff_file = html.diff_file(
+            fixture_test_path, test_name, actual_hash, expected_hash
+        )
+
         pytest.fail(
-            "Hash of {} differs.\nExpected: {}\nActual:   {}".format(
-                test_name, expected_hash, actual_hash
+            "Hash of {} differs.\nExpected:  {}\nActual:    {}\nDiff file: {}".format(
+                test_name, expected_hash, actual_hash, diff_file
             )
         )
     else:

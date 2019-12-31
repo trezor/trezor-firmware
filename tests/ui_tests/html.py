@@ -4,14 +4,26 @@ from itertools import zip_longest
 import dominate
 from dominate.tags import div, h1, hr, i, img, p, table, td, th, tr
 
+from . import download
 
-def create_diff_doc(fixture_test_path, test_name, actual_hash, expected_hash):
+
+def _image(src, fixture_test_path):
+    with td():
+        if src:
+            img(src=src.relative_to(fixture_test_path))
+        else:
+            i("missing")
+
+
+def diff_file(fixture_test_path, test_name, actual_hash, expected_hash):
     doc = dominate.document(title=test_name)
     recorded_path = fixture_test_path / "recorded"
     actual_path = fixture_test_path / "actual"
 
     if not recorded_path.exists():
-        return
+        recorded_path.mkdir()
+
+    download.fetch_recorded(expected_hash, recorded_path)
 
     recorded = sorted(recorded_path.iterdir())
     actual = sorted(actual_path.iterdir())
@@ -45,10 +57,4 @@ def create_diff_doc(fixture_test_path, test_name, actual_hash, expected_hash):
         f.write(doc.render())
         f.close()
 
-
-def _image(src, fixture_test_path):
-    with td():
-        if src:
-            img(src=src.relative_to(fixture_test_path))
-        else:
-            i("missing")
+    return fixture_test_path / "diff.html"
