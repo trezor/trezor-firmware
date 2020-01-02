@@ -11,6 +11,7 @@ uint8_t g_ucFlag = 0;
 uint8_t g_ucLanguageFlag = 0;
 uint8_t s_usPower_Button_Status = POWER_BUTTON_UP;
 
+#if !EMULATOR
 extern void check_lock_screen(void);
 /*
  * delay time
@@ -340,3 +341,4 @@ void vCheckMode(void) {
     }
   }
 }
+#endif

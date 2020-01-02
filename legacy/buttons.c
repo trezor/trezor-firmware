@@ -47,7 +47,7 @@ void buttonUpdate() {
       button.YesUp = false;
     }
   }
-
+#if !EMULATOR
   if ((state & BTN_PIN_NO)) {         // No button is down
     if ((last_state & BTN_PIN_NO)) {  // last No was down
       if (button.NoDown < 2000000000) button.NoDown++;
@@ -65,7 +65,25 @@ void buttonUpdate() {
       button.NoUp = false;
     }
   }
-
+#else
+  if ((state & BTN_PIN_NO) == 0) {         // No button is down
+    if ((last_state & BTN_PIN_NO) == 0) {  // last No was down
+      if (button.NoDown < 2000000000) button.NoDown++;
+      button.NoUp = false;
+    } else {  // last No was up
+      button.NoDown = 0;
+      button.NoUp = false;
+    }
+  } else {                                 // No button is up
+    if ((last_state & BTN_PIN_NO) == 0) {  // last No was down
+      button.NoDown = 0;
+      button.NoUp = true;
+    } else {  // last No was up
+      button.NoDown = 0;
+      button.NoUp = false;
+    }
+  }
+#endif
   if ((state & BTN_PIN_UP) == 0) {         // UP button is down
     if ((last_state & BTN_PIN_UP) == 0) {  // last UP was down
       if (button.UpDown < 2000000000) button.UpDown++;

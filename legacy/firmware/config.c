@@ -679,9 +679,9 @@ bool config_getLanguage(char *dest, uint16_t dest_size) {
     } else {
       // other language -> return the value
       if (strcmp(dest, "chinese") == 0) {
-        g_ucLanguageFlag = 1;
+        // g_ucLanguageFlag = 1;
       } else {
-        g_ucLanguageFlag = 0;
+        // g_ucLanguageFlag = 0;
       }
       return true;
     }

@@ -8,13 +8,13 @@ OBJS += flash.o
 OBJS += layout.o
 OBJS += oled.o
 OBJS += rng.o
-OBJS += si2c.o
-OBJS += mi2c.o
-OBJS += usart.o
 OBJS += sys.o
 
 ifneq ($(EMULATOR),1)
 OBJS += setup.o
+OBJS += si2c.o
+OBJS += mi2c.o
+OBJS += usart.o
 endif
 
 OBJS += util.o

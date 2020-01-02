@@ -261,12 +261,16 @@ void vlayoutLogo(void) {
   }
   oledDrawBitmap(0, 16, &bmp_logo);
   if (!config_isInitialized()) {
+#if !EMULATOR
     vDisp_PromptInfo(DISP_NOT_ACTIVE);
+#endif
   } else {
     if (WORK_MODE_BLE == g_ucWorkMode) {
       oledclearLine(6);
       oledclearLine(7);
+#if !EMULATOR
       vDisp_PromptInfo(DISP_BLE_NAME);
+#endif
     }
   }
 }
