@@ -9,7 +9,7 @@ let
         doCheck = true; # set to false if you want to skip tests
         checkPhase = ''
           runHook preCheck
-          pytest --pyargs tests --ignore tests/test_tx_api.py
+          pytest tests/ --ignore tests/test_tx_api.py
           runHook postCheck
         '';
       });
