@@ -217,3 +217,18 @@ def reset(
 def backup(client):
     ret = client.call(messages.BackupDevice())
     return ret
+
+
+@expect(messages.SdAppDataValue, field="value")
+def sd_appdata_get(client, app: str, key: bytes):
+    return client.call(messages.SdAppDataGet(app=app, key=key))
+
+
+@expect(messages.Success, field="message")
+def sd_appdata_set(client, app: str, key: bytes, value: bytes):
+    return client.call(messages.SdAppDataSet(app=app, key=key, value=value))
+
+
+@expect(messages.Success, field="message")
+def sd_appdata_delete(client, app: str, key: bytes):
+    return client.call(messages.SdAppDataDelete(app=app, key=key))
