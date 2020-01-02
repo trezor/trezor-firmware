@@ -31,7 +31,7 @@ fi
 
 # run tests
 error=0
-if ! pytest ../../tests/device_tests "$@"; then
+if ! pytest --junitxml=../../tests/junit.xml ../../tests/device_tests "$@"; then
   error=1
 fi
 kill $upy_pid

@@ -16,4 +16,4 @@ if [ "$EMULATOR" = 1 ]; then
     "${PYTHON:-python}" script/wait_for_emulator.py
 fi
 
-"${PYTHON:-python}" -m pytest ../tests/device_tests "$@"
+"${PYTHON:-python}" -m pytest --junitxml=../tests/junit.xml ../tests/device_tests "$@"

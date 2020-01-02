@@ -6,7 +6,7 @@ build:
 
 ## tests commands:
 tests:
-	pytest -k "not hypothesis"
+	pytest --junitxml=../../tests/junit.xml -k "not hypothesis"
 
 tests_all:
-	pytest
+	pytest --junitxml=../../tests/junit.xml

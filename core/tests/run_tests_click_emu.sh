@@ -31,7 +31,7 @@ fi
 
 # run tests
 error=0
-if ! pytest ../../tests/click_tests "$@"; then
+if ! pytest --junitxml=../../tests/junit.xml ../../tests/click_tests "$@"; then
   error=1
 fi
 kill $upy_pid
