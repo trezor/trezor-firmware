@@ -11,7 +11,6 @@ uint8_t g_ucFlag = 0;
 uint8_t g_ucLanguageFlag = 0;
 uint8_t s_usPower_Button_Status = POWER_BUTTON_UP;
 
-#if !EMULATOR
 extern void check_lock_screen(void);
 /*
  * delay time
@@ -50,7 +49,7 @@ void vTransMode_DisPlay(void) {
  * display ble message
  */
 bool bBle_DisPlay(uint8_t ucIndex, uint8_t *ucStr) {
-  uint8_t ucSw[4], ucDelayFalg;
+  uint8_t ucDelayFalg;
   oledClear();
   ucDelayFalg = 0x00;
   switch (ucIndex) {
@@ -83,9 +82,12 @@ bool bBle_DisPlay(uint8_t ucIndex, uint8_t *ucStr) {
       break;
   }
   oledRefresh();
+#if !EMULATOR
+  uint8_t ucSw[4];
   ucSw[0] = 0x90;
   ucSw[1] = 0x00;
   vSI2CDRV_SendResponse(ucSw, 2);
+#endif
   if (0x00 == ucDelayFalg) {
     delay_time(2000);
     return true;
@@ -341,4 +343,3 @@ void vCheckMode(void) {
     }
   }
 }
-#endif

@@ -88,6 +88,7 @@
 #define GPIO_SI2C_CMBUS GPIO9
 #define GPIO_BLE_POWER GPIO10
 
+#if !EMULATOR
 // combus io level
 #define SET_COMBUS_HIGH() (gpio_set(GPIO_CMBUS_PORT, GPIO_SI2C_CMBUS))
 #define SET_COMBUS_LOW() (gpio_clear(GPIO_CMBUS_PORT, GPIO_SI2C_CMBUS))
@@ -106,6 +107,17 @@
 // power control BLE
 #define POWER_ON_BLE() (gpio_set(GPIOC, GPIO_BLE_POWER))
 #define POWER_OFF_BLE() (gpio_clear(GPIOC, GPIO_BLE_POWER))
+#else
+#define SET_COMBUS_HIGH()
+#define SET_COMBUS_LOW()
+#define GET_USB_INSERT() 1
+#define GET_NFC_INSERT() 0
+#define GET_BUTTON_CANCEL() 0
+#define POWER_ON()
+#define POWER_OFF()
+#define POWER_ON_BLE()
+#define POWER_OFF_BLE()
+#endif
 
 // power control Button status
 #define POWER_BUTTON_UP 0
