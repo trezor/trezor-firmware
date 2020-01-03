@@ -21,7 +21,7 @@ tox = "*"
 
 ## test requirements
 shamir-mnemonic = "*"
-fido2 = "*"
+fido2 = "==0.7.3"  # https://github.com/solokeys/fido2-tests/issues/27
 
 ## typing
 mypy = "*"
