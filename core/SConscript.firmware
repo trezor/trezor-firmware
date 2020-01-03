@@ -397,8 +397,7 @@ env.Replace(
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
 env.Replace(
-    BINCTL='tools/binctl',
-    KEYCTL='tools/keyctl',
+    HEADERTOOL='tools/headertool.py',
     PYTHON='python',
     MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
@@ -613,8 +612,7 @@ if env.get('TREZOR_MODEL') == 'T':
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
         '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
         '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
-        '$BINCTL $TARGET -h',
-        '$BINCTL $TARGET -s 1:2 `$KEYCTL sign firmware $TARGET 4747474747474747474747474747474747474747474747474747474747474747 4848484848484848484848484848484848484848484848484848484848484848`' if ARGUMENTS.get('PRODUCTION', '0') == '0' else '',
+        '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
         '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
     ]
 else:

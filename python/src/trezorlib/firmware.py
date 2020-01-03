@@ -16,7 +16,7 @@
 
 import hashlib
 from enum import Enum
-from typing import Callable, List, NewType, Tuple
+from typing import Callable, List, Tuple
 
 import construct as c
 import ecdsa
