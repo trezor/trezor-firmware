@@ -116,14 +116,20 @@ def do_replace_vendorheader(fw, vh_file) -> None:
     "-S",
     "--sign-private",
     "privkey_data",
+    metavar="INDEX:PRIVKEY_HEX",
     multiple=True,
-    help="Private key to use for signing.",
+    help="Private key to use for signing. Can be repeated.",
 )
 @click.option(
     "-D", "--sign-dev-keys", is_flag=True, help="Sign with development header keys."
 )
 @click.option(
-    "-s", "--signature", "insert_signature", nargs=2, help="Insert external signature."
+    "-s",
+    "--signature",
+    "insert_signature",
+    nargs=2,
+    metavar="INDEX:INDEX:INDEX... SIGNATURE_HEX",
+    help="Insert external signature.",
 )
 @click.option("-V", "--replace-vendor-header", type=click.File("rb"))
 @click.option(
@@ -131,9 +137,15 @@ def do_replace_vendorheader(fw, vh_file) -> None:
     "--digest",
     "print_digest",
     is_flag=True,
-    help="Only output fingerprint for signing.",
+    help="Only output header digest for signing and exit.",
 )
-@click.option("-r", "--remote", multiple=True, help="IP address of remote signer.")
+@click.option(
+    "-r",
+    "--remote",
+    metavar="IPADDR",
+    multiple=True,
+    help="IP address of remote signer. Can be repeated.",
+)
 @click.argument("firmware_file", type=click.File("rb+"))
 def cli(
     firmware_file,
@@ -147,6 +159,44 @@ def cli(
     print_digest,
     remote,
 ):
+    """Manage trezor-core firmware headers.
+
+    This tool supports three types of files: raw vendor headers (TRZV), bootloader
+    images (TRZB), and firmware images which are prefixed with a vendor header
+    (TRZV+TRZF).
+
+    Run with no options on a file to dump information about that file.
+
+    Run with -d to print the header digest and exit. This works correctly regardless of
+    whether code hashes have been filled.
+
+    Run with -h to recalculate and fill in code hashes.
+
+    To insert an external signature:
+
+      ./headertool.py firmware.bin -s 1:2:3 ABCDEF<...signature in hex format>
+
+    The string "1:2:3" is a list of 1-based indexes of keys used to generate the signature.
+
+    To sign with local private keys:
+
+    \b
+      ./headertool.py firmware.bin -S 1:ABCDEF<...hex private key> -S 2:1234<..hex private key>
+
+    Each instance of -S is in the form "index:privkey", where index is the same as
+    above. Instead of specifying the keys manually, use -D to substitue known
+    development keys.
+
+    Signature validity is not checked in either of the two cases.
+
+    To sign with remote participants:
+
+      ./headertool.py firmware.bin -r 10.24.13.11 -r 10.24.13.190 ...
+
+    Each participant must be running keyctl-proxy configured on the same file. Signers'
+    public keys must be in the list of known signers and are matched to indexes
+    automatically.
+    """
     firmware_data = firmware_file.read()
 
     try:
