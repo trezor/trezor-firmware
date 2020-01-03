@@ -53,6 +53,7 @@ core unix device test:
       - trezor.log
       - tests/junit.xml
     expire_in: 1 week
+    when: always
     reports:
       junit: tests/junit.xml
 
@@ -74,6 +75,7 @@ core unix btconly device test:
       - trezor.log
       - tests/junit.xml
     expire_in: 1 week
+    when: always
     reports:
       junit: tests/junit.xml
 
@@ -91,6 +93,7 @@ core unix monero test:
     paths:
       - trezor.log
     expire_in: 1 week
+    when: always
 
 core unix u2f test:
   stage: test
@@ -108,6 +111,7 @@ core unix u2f test:
     paths:
       - trezor.log
     expire_in: 1 week
+    when: always
 
 core unix fido2 test:
   stage: test
@@ -126,6 +130,7 @@ core unix fido2 test:
     expire_in: 1 week
     reports:
       junit: tests/junit.xml
+    when: always
 
 core unix click test:
   stage: test
@@ -144,6 +149,7 @@ core unix click test:
     reports:
       junit: tests/junit.xml
     expire_in: 1 week
+    when: always
 
 core unix upgrade test:
   stage: test
@@ -162,6 +168,7 @@ core unix upgrade test:
     reports:
       junit: tests/junit.xml
     expire_in: 1 week
+    when: always
 
 core unix persistence test:
   stage: test
@@ -177,6 +184,7 @@ core unix persistence test:
     reports:
       junit: tests/junit.xml
     expire_in: 1 week
+    when: always
 
 core mypy test:
   stage: test
@@ -213,6 +221,7 @@ crypto test:
     reports:
       junit: tests/junit.xml
     expire_in: 1 week
+    when: always
 
 
 # Legacy
@@ -234,6 +243,7 @@ legacy emu test:
     reports:
       junit: tests/junit.xml
     expire_in: 1 week
+    when: always
 
 legacy emu btconly test:
   stage: test
@@ -254,6 +264,7 @@ legacy emu btconly test:
     reports:
       junit: tests/junit.xml
     expire_in: 1 week
+    when: always
 
 
 legacy emu upgrade test:
@@ -273,6 +284,7 @@ legacy emu upgrade test:
     reports:
       junit: tests/junit.xml
     expire_in: 1 week
+    when: always
 
 
 # Python
@@ -309,3 +321,4 @@ storage test:
     reports:
       junit: tests/junit.xml
     expire_in: 1 week
+    when: always
