@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 import click
+import Pyro4
 
 from trezorlib import cosi, firmware
 from trezorlib._internal import firmware_headers
 
 from typing import List, Tuple
+
+Pyro4.config.SERIALIZER = "marshal"
+
+PORT = 5001
 
 # =========================== signing =========================
 
@@ -46,6 +51,49 @@ def parse_privkey_args(privkey_data: List[str]) -> Tuple[int, List[bytes]]:
     return sigmask, privkeys
 
 
+def process_remote_signers(fw, addrs: List[str]) -> Tuple[int, List[bytes]]:
+    if len(addrs) < fw.sigs_required:
+        raise click.ClickException(
+            f"Not enough signers (need at least {fw.sigs_required})"
+        )
+
+    digest = fw.digest()
+    name = fw.NAME
+
+    sigmask = 0
+    proxies = []
+    pks, Rs = [], []
+    for addr in addrs:
+        click.echo(f"Connecting to {addr}...")
+        proxy = Pyro4.Proxy(f"PYRO:keyctl@{addr}:{PORT}")
+        proxies.append((addr, proxy))
+        pk, R = proxy.get_commit(name, digest)
+        if pk not in fw.public_keys:
+            raise click.ClickException(
+                f"Signer at {addr} commits with unknown public key {pk.hex()}"
+            )
+        idx = fw.public_keys.index(pk)
+        click.echo(f"Signer at {addr} commits with public key #{idx+1}: {pk.hex()}")
+        sigmask |= 1 << idx
+        pks.append(pk)
+        Rs.append(R)
+
+    # compute global commit
+    global_pk = cosi.combine_keys(pks)
+    global_R = cosi.combine_keys(Rs)
+
+    # collect signatures
+    sigs = []
+    for addr, proxy in proxies:
+        click.echo(f"Waiting for {addr} to sign... ", nl=False)
+        sig = proxy.get_signature(name, digest, global_R, global_pk)
+        sigs.append(sig)
+        click.echo("OK")
+
+    # compute global signature
+    return sigmask, cosi.combine_sig(global_R, sigs)
+
+
 # ===================== CLI actions =========================
 
 
@@ -85,6 +133,7 @@ def do_replace_vendorheader(fw, vh_file) -> None:
     is_flag=True,
     help="Only output fingerprint for signing.",
 )
+@click.option("-r", "--remote", multiple=True, help="IP address of remote signer.")
 @click.argument("firmware_file", type=click.File("rb+"))
 def cli(
     firmware_file,
@@ -96,6 +145,7 @@ def cli(
     insert_signature,
     replace_vendor_header,
     print_digest,
+    remote,
 ):
     firmware_data = firmware_file.read()
 
@@ -140,6 +190,11 @@ def cli(
         sigmask = 0
         for bit in sigmask_str.split(":"):
             sigmask |= 1 << (int(bit) - 1)
+
+    if remote:
+        click.echo(fw.format())
+        click.echo(f"Signing with {len(remote)} remote participants.")
+        sigmask, signature = process_remote_signers(fw, remote)
 
     if signature:
         fw.rehash()
