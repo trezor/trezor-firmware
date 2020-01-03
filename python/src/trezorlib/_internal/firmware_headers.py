@@ -173,7 +173,7 @@ class SignableImage:
         raise NotImplementedError
 
     def rehash(self) -> None:
-        raise NotImplementedError
+        pass
 
     def insert_signature(self, signature: bytes, sigmask: int) -> None:
         self.header.signature = signature
