@@ -1,3 +1,4 @@
+import base64
 import filecmp
 from itertools import zip_longest
 
@@ -7,10 +8,17 @@ from dominate.tags import div, h1, hr, i, img, p, table, td, th, tr
 from . import download
 
 
-def _image(src, fixture_test_path):
+def _image(src):
     with td():
         if src:
-            img(src=src.relative_to(fixture_test_path))
+            # open image file
+            image = open(src, "rb")
+            # encode image as base64
+            image = base64.b64encode(image.read())
+            # convert output to str
+            image = image.decode()
+            # img(src=src.relative_to(fixture_test_path))
+            img(src="data:image/png;base64, " + image)
         else:
             i("missing")
 
@@ -50,8 +58,8 @@ def diff_file(fixture_test_path, test_name, actual_hash, expected_hash):
                 else:
                     background = "red"
                 with tr(bgcolor=background):
-                    _image(r, fixture_test_path)
-                    _image(a, fixture_test_path)
+                    _image(r)
+                    _image(a)
 
     with open(fixture_test_path / "diff.html", "w") as f:
         f.write(doc.render())
