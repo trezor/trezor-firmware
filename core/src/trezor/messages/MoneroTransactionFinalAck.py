@@ -19,11 +19,13 @@ class MoneroTransactionFinalAck(p.MessageType):
         salt: bytes = None,
         rand_mult: bytes = None,
         tx_enc_keys: bytes = None,
+        opening_key: bytes = None,
     ) -> None:
         self.cout_key = cout_key
         self.salt = salt
         self.rand_mult = rand_mult
         self.tx_enc_keys = tx_enc_keys
+        self.opening_key = opening_key
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -32,4 +34,5 @@ class MoneroTransactionFinalAck(p.MessageType):
             2: ('salt', p.BytesType, 0),
             3: ('rand_mult', p.BytesType, 0),
             4: ('tx_enc_keys', p.BytesType, 0),
+            5: ('opening_key', p.BytesType, 0),
         }
