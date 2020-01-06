@@ -9,6 +9,7 @@ trezor = {editable = true,path = "./python"}
 scons = "*"
 protobuf = "==3.6.1"
 pyblake2 = "*"
+Pyro4 = "*"
 
 ## test tools
 pytest = "*"

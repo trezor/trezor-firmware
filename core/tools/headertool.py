@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 import click
-import Pyro4
 
 from trezorlib import cosi, firmware
 from trezorlib._internal import firmware_headers
 
 from typing import List, Tuple
 
-Pyro4.config.SERIALIZER = "marshal"
+
+try:
+    import Pyro4
+    Pyro4.config.SERIALIZER = "marshal"
+except ImportError:
+    Pyro4 = None
 
 PORT = 5001
 
@@ -245,6 +249,8 @@ def cli(
             sigmask |= 1 << (int(bit) - 1)
 
     if remote:
+        if Pyro4 is None:
+            raise click.ClickException("Please install Pyro4 for remote signing.")
         click.echo(fw.format())
         click.echo(f"Signing with {len(remote)} remote participants.")
         sigmask, signature = process_remote_signers(fw, remote)
