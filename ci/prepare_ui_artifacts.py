@@ -18,4 +18,4 @@ for recorded_dir in fixture_root.glob("*/recorded"):
     expected_hash = (recorded_dir.parent / "hash.txt").read_text()
     actual_hash = _hash_files(recorded_dir)
     assert expected_hash == actual_hash
-    shutil.make_archive("tmp/" + actual_hash, "zip", recorded_dir)
+    shutil.make_archive("ui_test_records/" + actual_hash, "zip", recorded_dir)

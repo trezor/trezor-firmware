@@ -206,6 +206,6 @@ ui tests core fixtures deploy:
     - core unix device ui test
   script:
     - echo "Deploying to $DEPLOY_PATH"
-    - rsync --delete -va ci/tmp/* "$DEPLOY_PATH"
+    - rsync --delete -va ci/ui_test_records/* "$DEPLOY_PATH"
   tags:
     - deploy

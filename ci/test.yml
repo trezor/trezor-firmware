@@ -53,7 +53,7 @@ core unix device ui test:
     name: core-unix-device-ui-test
     paths:
       - trezor.log
-      - ci/tmp/
+      - ci/ui_test_records/
       - tests/ui_tests/fixtures/*/diff.html
     when: always
     expire_in: 1 week
