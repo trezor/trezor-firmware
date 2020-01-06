@@ -33,15 +33,13 @@ def render_scrollbar(pages: int, page: int) -> None:
 
 def render_swipe_icon() -> None:
     if utils.DISABLE_ANIMATION:
-        icon = res.load(ui.ICON_SWIPE)
-        ui.display.icon(70, 205, icon, ui.GREY, ui.BG)
-        return
-
-    PULSE_PERIOD = const(1200000)
+        c = ui.GREY
+    else:
+        PULSE_PERIOD = const(1200000)
+        t = ui.pulse(PULSE_PERIOD)
+        c = ui.blend(ui.GREY, ui.DARK_GREY, t)
 
     icon = res.load(ui.ICON_SWIPE)
-    t = ui.pulse(PULSE_PERIOD)
-    c = ui.blend(ui.GREY, ui.DARK_GREY, t)
     ui.display.icon(70, 205, icon, c, ui.BG)
 
 
