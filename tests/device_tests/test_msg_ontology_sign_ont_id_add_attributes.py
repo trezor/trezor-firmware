@@ -35,7 +35,6 @@ def test_ontology_sign_ont_id_add_attributes(client):
     transaction = messages.OntologyTransaction(
         version=0x00,
         nonce=0x7F7F1CEB,
-        type=0xD1,
         gas_price=500,
         gas_limit=30000,
         payer="AGn8JFPGM5S4jkWhTC89Xtz1Y76sPz29Rc",
@@ -54,16 +53,11 @@ def test_ontology_sign_ont_id_add_attributes(client):
         ],
     )
 
-    signature = ontology.sign_add_attr(
+    signature = ontology.sign(
         client, parse_path("m/44'/1024'/0'/0/0"), transaction, ont_id_add_attributes
     )
-
     assert (
-        signature.payload.hex()
-        == "bd00c66b2a6469643a6f6e743a4147566e344e5a4e455137526177485444786a61546a5a33523868387131617139686a7cc8516a7cc80966697273744e616d656a7cc8046a736f6e6a7cc80d4a6f686e2053686570706172646a7cc82103a8269b0dad311d98195e76729bc57003348a315fd17b6bf4f90ba8b86735fa336a7cc86c0d616464417474726962757465731400000000000000000000000000000000000000030068164f6e746f6c6f67792e4e61746976652e496e766f6b65"
-    )
-    assert (
-        signature.signature.hex()
+        signature.hex()
         == "01c256dc16d88685fd6652d69b808059f7ed30edadb0ccfe51802702b94b65500922f9ea80e0fd7b77b5c51515e3bc43a495b3e98fb3adb82a0ab5dd47169fcf4e"
     )
 

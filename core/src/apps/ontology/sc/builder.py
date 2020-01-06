@@ -38,7 +38,8 @@ def write_push_int(ret: bytearray, param: int) -> None:
         # number encoded as 8 bytes
         num = bytearray()
         writer.write_uint64(num, param)
-        write_push_bytes(ret, bytes(num))
+        writer.write_byte(ret, 8)
+        writer.write_uint64(ret, param)
 
 
 def write_push_bool(ret: bytearray, param: bool) -> None:

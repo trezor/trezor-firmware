@@ -36,10 +36,7 @@ def _write_native_code_script(ret: bytearray, arr: list) -> None:
     Writes native code script from supplied data
     """
     for val in reversed(arr):
-        if isinstance(val, str):
-            builder.write_push_bytes(ret, unhexlify(val))
-
-        elif isinstance(val, (bytes, bytearray)):
+        if isinstance(val, (bytes, bytearray)):
             builder.write_push_bytes(ret, val)
 
         elif isinstance(val, bool):

@@ -50,144 +50,54 @@ def get_public_key(connect, address, show_display):
     return result.public_key.hex()
 
 
-@cli.command(help="Sign Ontology transfer.")
+@cli.command(help="Sign Ontology transaction.")
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option(
-    "-t",
-    "--transaction",
-    type=click.File("r"),
-    default="-",
-    help="Transaction in JSON format",
-)
-@click.option(
-    "-r",
-    "--transfer",
-    type=click.File("r"),
-    default="-",
-    help="Transfer in JSON format",
-)
-@click.pass_obj
-def sign_transfer(connect, address, transaction, transfer):
-    client = connect()
-    address_n = tools.parse_path(address)
-    transaction = protobuf.dict_to_proto(
-        messages.OntologyTransaction, json.load(transaction)
-    )
-    transfer = protobuf.dict_to_proto(messages.OntologyTransfer, json.load(transfer))
-
-    result = ontology.sign_transfer(client, address_n, transaction, transfer)
-
-    output = {"payload": result.payload.hex(), "signature": result.signature.hex()}
-
-    return output
-
-
-@cli.command(help="Sign Ontology withdraw Ong.")
-@click.option("-n", "--address", required=True, help=PATH_HELP)
-@click.option(
-    "-t",
-    "--transaction",
-    type=click.File("r"),
-    default="-",
-    help="Transaction in JSON format",
-)
-@click.option(
-    "-w",
-    "--withdraw_ong",
-    type=click.File("r"),
-    default="-",
-    help="Withdrawal in JSON format",
-)
-@click.pass_obj
-def sign_withdraw_ong(connect, address, transaction, withdraw_ong):
-    client = connect()
-    address_n = tools.parse_path(address)
-    transaction = protobuf.dict_to_proto(
-        messages.OntologyTransaction, json.load(transaction)
-    )
-    withdraw_ong = protobuf.dict_to_proto(
-        messages.OntologyWithdrawOng, json.load(withdraw_ong)
-    )
-
-    result = ontology.sign_withdrawal(client, address_n, transaction, withdraw_ong)
-
-    output = {"payload": result.payload.hex(), "signature": result.signature.hex()}
-
-    return output
-
-
-@cli.command(help="Sign Ontology ONT ID Registration.")
-@click.option("-n", "--address", required=True, help=PATH_HELP)
-@click.option(
-    "-t",
-    "--transaction",
-    type=click.File("r"),
-    default="-",
-    help="Transaction in JSON format",
-)
-@click.option(
-    "-r",
-    "--register",
-    type=click.File("r"),
-    default="-",
-    help="Register in JSON format",
-)
-@click.argument("transaction")
-@click.argument("ont_id_register")
-@click.pass_obj
-def sign_ont_id_register(connect, address, transaction, register):
-    client = connect()
-    address_n = tools.parse_path(address)
-    transaction = protobuf.dict_to_proto(
-        messages.OntologyTransaction, json.load(transaction)
-    )
-    ont_id_register = protobuf.dict_to_proto(
-        messages.OntologyOntIdRegister, json.load(register)
-    )
-
-    result = ontology.sign_register(client, address_n, transaction, ont_id_register)
-
-    output = {"payload": result.payload.hex(), "signature": result.signature.hex()}
-
-    return output
-
-
-@cli.command(help="Sign Ontology ONT ID Attributes adding.")
-@click.option(
-    "-n",
-    "--address",
-    required=True,
-    help="BIP-32 path to signing key, e.g. m/44'/888'/0'/0/0",
-)
-@click.option(
-    "-t",
+    "-x",
     "--transaction",
     type=click.File("r"),
     required=True,
-    default="-",
     help="Transaction in JSON format",
 )
 @click.option(
-    "-a",
-    "--add_attribute",
-    type=click.File("r"),
-    required=True,
-    default="-",
-    help="Add attributes in JSON format",
+    "-t", "--transfer", type=click.File("r"), help="Transfer in JSON format",
+)
+@click.option(
+    "-w", "--withdraw_ong", type=click.File("r"), help="Withdrawal in JSON format",
+)
+@click.option(
+    "-r", "--register", type=click.File("r"), help="Register in JSON format",
+)
+@click.option(
+    "-a", "--attributes", type=click.File("r"), help="Add attributes in JSON format",
 )
 @click.pass_obj
-def sign_ont_id_add_attributes(connect, address, transaction, add_attribute):
+def sign_transaction(
+    connect, address, transaction, transfer, withdraw_ong, register, attributes
+):
     client = connect()
     address_n = tools.parse_path(address)
     transaction = protobuf.dict_to_proto(
         messages.OntologyTransaction, json.load(transaction)
     )
-    ont_id_add_attributes = protobuf.dict_to_proto(
-        messages.OntologyOntIdAddAttributes, json.load(add_attribute)
-    )
-    result = ontology.sign_add_attr(
-        client, address_n, transaction, ont_id_add_attributes
-    )
-    output = {"payload": result.payload.hex(), "signature": result.signature.hex()}
 
-    return output
+    if transfer is not None:
+        msg = protobuf.dict_to_proto(messages.OntologyTransfer, json.load(transfer))
+    elif withdraw_ong is not None:
+        msg = protobuf.dict_to_proto(
+            messages.OntologyWithdrawOng, json.load(withdraw_ong)
+        )
+    elif register is not None:
+        msg = protobuf.dict_to_proto(
+            messages.OntologyOntIdRegister, json.load(register)
+        )
+    elif attributes is not None:
+        msg = protobuf.dict_to_proto(
+            messages.OntologyOntIdAddAttributes, json.load(attributes)
+        )
+    else:
+        raise RuntimeError(
+            "No transaction operation specified, use one of -t, -w, -r or -a options"
+        )
+
+    return ontology.sign(client, address_n, transaction, msg).hex()

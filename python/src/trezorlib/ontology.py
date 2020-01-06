@@ -29,38 +29,34 @@ def get_address(client, address_n, show_display=False):
     )
 
 
-@expect(messages.OntologyPublicKey)
+@expect(messages.OntologyPublicKey, field="public_key")
 def get_public_key(client, address_n, show_display=False):
     return client.call(
         messages.OntologyGetPublicKey(address_n=address_n, show_display=show_display)
     )
 
 
-@expect(messages.OntologySignedTx)
-def sign_transfer(client, address_n, t, tr):
-    return client.call(
-        messages.OntologySignTx(address_n=address_n, transaction=t, transfer=tr)
-    )
-
-
-@expect(messages.OntologySignedTx)
-def sign_withdrawal(client, address_n, t, w):
-    return client.call(
-        messages.OntologySignTx(address_n=address_n, transaction=t, withdraw_ong=w)
-    )
-
-
-@expect(messages.OntologySignedTx)
-def sign_register(client, address_n, t, r):
-    return client.call(
-        messages.OntologySignTx(address_n=address_n, transaction=t, ont_id_register=r)
-    )
-
-
-@expect(messages.OntologySignedTx)
-def sign_add_attr(client, address_n, t, a):
-    return client.call(
-        messages.OntologySignTx(
-            address_n=address_n, transaction=t, ont_id_add_attributes=a
+@expect(messages.OntologySignedTx, field="signature")
+def sign(client, address_n, t, msg):
+    if isinstance(msg, messages.OntologyTransfer):
+        return client.call(
+            messages.OntologySignTx(address_n=address_n, transaction=t, transfer=msg)
         )
-    )
+    elif isinstance(msg, messages.OntologyWithdrawOng):
+        return client.call(
+            messages.OntologySignTx(
+                address_n=address_n, transaction=t, withdraw_ong=msg
+            )
+        )
+    elif isinstance(msg, messages.OntologyOntIdRegister):
+        return client.call(
+            messages.OntologySignTx(
+                address_n=address_n, transaction=t, ont_id_register=msg
+            )
+        )
+    elif isinstance(msg, messages.OntologyOntIdAddAttributes):
+        return client.call(
+            messages.OntologySignTx(
+                address_n=address_n, transaction=t, ont_id_add_attributes=msg
+            )
+        )

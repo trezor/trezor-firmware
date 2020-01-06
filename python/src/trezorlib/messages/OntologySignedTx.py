@@ -16,14 +16,11 @@ class OntologySignedTx(p.MessageType):
     def __init__(
         self,
         signature: bytes = None,
-        payload: bytes = None,
     ) -> None:
         self.signature = signature
-        self.payload = payload
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
             1: ('signature', p.BytesType, 0),
-            2: ('payload', p.BytesType, 0),
         }

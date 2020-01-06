@@ -5,26 +5,6 @@ package hw.trezor.messages.ontology;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageOntology";
 
-/**
- * Ontology Transaction
- * @embed
- */
-message OntologyTransaction {
-    optional uint32 version = 1;
-    optional uint32 type = 2;
-    optional uint32 nonce = 3;
-    optional uint64 gas_price = 4;
-    optional uint64 gas_limit = 5;
-    optional string payer = 6;
-    repeated OntologyTxAttribute tx_attributes = 7;
-    /**
-     * Attribute of Ontology transaction
-     */
-    message OntologyTxAttribute {
-        optional uint32 usage = 1;
-        optional bytes data = 2;
-    }
-}
 
 /**
  * Request: Ask device for Ontology public key corresponding to address_n path
@@ -122,6 +102,26 @@ message OntologySignTx{
             optional string value = 3;
         }
     }
+
+    /**
+    * Ontology Transaction
+    * @embed
+    */
+    message OntologyTransaction {
+        optional uint32 version = 1;
+        optional uint32 nonce = 2;
+        optional uint64 gas_price = 3;
+        optional uint64 gas_limit = 4;
+        optional string payer = 5;
+        repeated OntologyTxAttribute tx_attributes = 6;
+        /**
+        * Attribute of Ontology transaction
+        */
+        message OntologyTxAttribute {
+            optional uint32 usage = 1;
+            optional bytes data = 2;
+        }
+    }
 }
 
 /**
@@ -130,5 +130,4 @@ message OntologySignTx{
  */
 message OntologySignedTx {
     optional bytes signature = 1;
-    optional bytes payload = 2;
 }

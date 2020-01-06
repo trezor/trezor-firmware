@@ -11,21 +11,21 @@ from apps.common.confirm import require_confirm
 
 async def require_confirm_transfer_ont(ctx, dest, value):
     text = Text("Confirm sending", ui.ICON_SEND, icon_color=ui.GREEN)
-    text.bold(format_amount(value, 0) + "ONT")
+    text.bold(format_amount(value, 0) + " ONT")
     text.mono(*split_address("To: " + dest))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_transfer_ong(ctx, dest, value):
     text = Text("Confirm sending", ui.ICON_SEND, icon_color=ui.GREEN)
-    text.bold(format_amount(value, 9) + "ONG")
+    text.bold(format_amount(value, 9) + " ONG")
     text.mono(*split_address("To: " + dest))
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_withdraw_ong(ctx, value):
     text = Text("Confirm withdraw of ", ui.ICON_SEND, icon_color=ui.GREEN)
-    text.bold(format_amount(value, 9) + "ONG")
+    text.bold(format_amount(value, 9) + " ONG")
     return await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 

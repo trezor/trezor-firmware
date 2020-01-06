@@ -13,14 +13,14 @@ from .sc.native_builder import ParamStruct, build_native_call
 
 def serialize_tx(tx: OntologyTransaction, payload: bytes, hw) -> None:
     writer.write_byte(hw, tx.version)
-    writer.write_byte(hw, tx.type)
+    writer.write_byte(hw, Const.TRANSACTION_TYPE)
     writer.write_uint32(hw, tx.nonce)
     writer.write_uint64(hw, tx.gas_price)
     writer.write_uint64(hw, tx.gas_limit)
     payer = get_bytes_from_address(tx.payer)
     writer.write_bytes(hw, payer)
 
-    writer.write_bytes(hw, payload)
+    writer.write_bytes_with_length(hw, payload)
 
     attributes = tx.tx_attributes
     writer.write_varint(hw, len(attributes))
@@ -44,10 +44,7 @@ def serialize_transfer(transfer: OntologyTransfer) -> bytes:
     struct = ParamStruct([from_address, to_address, amount])
     native_call = build_native_call("transfer", [[struct]], contract)
 
-    # 9 is the maximum possible length of the uvarint prefix
-    ret = bytearray()
-    writer.write_bytes_with_length(ret, native_call)
-    return bytes(ret)
+    return native_call
 
 
 def serialize_withdraw_ong(withdraw_ong: OntologyWithdrawOng) -> bytes:
@@ -58,9 +55,7 @@ def serialize_withdraw_ong(withdraw_ong: OntologyWithdrawOng) -> bytes:
     struct = ParamStruct([from_address, Const.ONT_CONTRACT, to_address, amount])
     native_call = build_native_call("transferFrom", [struct], Const.ONG_CONTRACT)
 
-    ret = bytearray()
-    writer.write_bytes_with_length(ret, native_call)
-    return bytes(ret)
+    return native_call
 
 
 def serialize_ont_id_register(register: OntologyOntIdRegister) -> bytes:
@@ -71,9 +66,7 @@ def serialize_ont_id_register(register: OntologyOntIdRegister) -> bytes:
         "regIDWithPublicKey", [struct], Const.ONTID_CONTRACT
     )
 
-    ret = bytearray()
-    writer.write_bytes_with_length(ret, native_call)
-    return bytes(ret)
+    return native_call
 
 
 def serialize_ont_id_add_attributes(add: OntologyOntIdAddAttributes) -> bytes:
@@ -92,9 +85,7 @@ def serialize_ont_id_add_attributes(add: OntologyOntIdAddAttributes) -> bytes:
     struct = ParamStruct(arguments)
     native_call = build_native_call("addAttributes", [struct], Const.ONTID_CONTRACT)
 
-    ret = bytearray()
-    writer.write_bytes_with_length(ret, native_call)
-    return bytes(ret)
+    return native_call
 
 
 def _serialize_tx_attribute(ret: bytearray, attribute: OntologyTxAttribute) -> None:

@@ -1,4 +1,3 @@
-from trezor import wire
 from trezor.crypto.curve import nist256p1
 from trezor.crypto.hashlib import sha256
 from trezor.messages import OntologyAsset
@@ -50,17 +49,14 @@ async def sign(raw_data: bytes, private_key: bytes) -> bytes:
 
 
 async def sign_transfer(ctx, msg: OntologySignTx, keychain) -> OntologySignedTx:
-    if msg.transaction.type == 0xD1:
-        if msg.transfer.asset == OntologyAsset.ONT:
-            await require_confirm_transfer_ont(
-                ctx, msg.transfer.to_address, msg.transfer.amount
-            )
-        if msg.transfer.asset == OntologyAsset.ONG:
-            await require_confirm_transfer_ong(
-                ctx, msg.transfer.to_address, msg.transfer.amount
-            )
-    else:
-        raise wire.DataError("Invalid transaction type")
+    if msg.transfer.asset == OntologyAsset.ONT:
+        await require_confirm_transfer_ont(
+            ctx, msg.transfer.to_address, msg.transfer.amount
+        )
+    if msg.transfer.asset == OntologyAsset.ONG:
+        await require_confirm_transfer_ong(
+            ctx, msg.transfer.to_address, msg.transfer.amount
+        )
 
     node = keychain.derive(msg.address_n, CURVE)
     hw = HashWriter(sha256())
@@ -68,14 +64,11 @@ async def sign_transfer(ctx, msg: OntologySignTx, keychain) -> OntologySignedTx:
     serialize_tx(msg.transaction, serialized_payload, hw)
     signature = await sign(hw.get_digest(), node.private_key())
 
-    return OntologySignedTx(signature=signature, payload=serialized_payload)
+    return OntologySignedTx(signature=signature)
 
 
 async def sign_withdraw_ong(ctx, msg: OntologySignTx, keychain) -> OntologySignedTx:
-    if msg.transaction.type == 0xD1:
-        await require_confirm_withdraw_ong(ctx, msg.withdraw_ong.amount)
-    else:
-        raise wire.DataError("Invalid transaction type")
+    await require_confirm_withdraw_ong(ctx, msg.withdraw_ong.amount)
 
     node = keychain.derive(msg.address_n, CURVE)
     hw = HashWriter(sha256())
@@ -83,16 +76,13 @@ async def sign_withdraw_ong(ctx, msg: OntologySignTx, keychain) -> OntologySigne
     serialize_tx(msg.transaction, serialized_payload, hw)
     signature = await sign(hw.get_digest(), node.private_key())
 
-    return OntologySignedTx(signature=signature, payload=serialized_payload)
+    return OntologySignedTx(signature=signature)
 
 
 async def sign_ont_id_register(ctx, msg: OntologySignTx, keychain) -> OntologySignedTx:
-    if msg.transaction.type == 0xD1:
-        await require_confirm_ont_id_register(
-            ctx, msg.ont_id_register.ont_id, msg.ont_id_register.public_key
-        )
-    else:
-        raise wire.DataError("Invalid transaction type")
+    await require_confirm_ont_id_register(
+        ctx, msg.ont_id_register.ont_id, msg.ont_id_register.public_key
+    )
 
     node = keychain.derive(msg.address_n, CURVE)
     hw = HashWriter(sha256())
@@ -100,21 +90,18 @@ async def sign_ont_id_register(ctx, msg: OntologySignTx, keychain) -> OntologySi
     serialize_tx(msg.transaction, serialized_payload, hw)
     signature = await sign(hw.get_digest(), node.private_key())
 
-    return OntologySignedTx(signature=signature, payload=serialized_payload)
+    return OntologySignedTx(signature=signature)
 
 
 async def sign_ont_id_add_attributes(
     ctx, msg: OntologySignTx, keychain
 ) -> OntologySignedTx:
-    if msg.transaction.type == 0xD1:
-        await require_confirm_ont_id_add_attributes(
-            ctx,
-            msg.ont_id_add_attributes.ont_id,
-            msg.ont_id_add_attributes.public_key,
-            msg.ont_id_add_attributes.ont_id_attributes,
-        )
-    else:
-        raise wire.DataError("Invalid transaction type")
+    await require_confirm_ont_id_add_attributes(
+        ctx,
+        msg.ont_id_add_attributes.ont_id,
+        msg.ont_id_add_attributes.public_key,
+        msg.ont_id_add_attributes.ont_id_attributes,
+    )
 
     node = keychain.derive(msg.address_n, CURVE)
     hw = HashWriter(sha256())
@@ -122,4 +109,4 @@ async def sign_ont_id_add_attributes(
     serialize_tx(msg.transaction, serialized_payload, hw)
     signature = await sign(hw.get_digest(), node.private_key())
 
-    return OntologySignedTx(signature=signature, payload=serialized_payload)
+    return OntologySignedTx(signature=signature)
