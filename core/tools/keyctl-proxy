@@ -57,7 +57,10 @@ def make_commit(name, index, digest):
 
 @Pyro4.expose
 class KeyctlProxy:
-    def __init__(self, image_type, digest: bytes, commit: Tuple[bytes, bytes]) -> None:
+    def __init__(
+        self, daemon, image_type, digest: bytes, commit: Tuple[bytes, bytes]
+    ) -> None:
+        self.daemon = daemon
         self.name = image_type.NAME
         self.address_n = parse_path(PATH.format(image_type.BIP32_INDEX))
         self.digest = digest
@@ -87,6 +90,11 @@ class KeyctlProxy:
                 click.echo(e)
                 traceback.print_exc()
                 click.echo("Trying again ...")
+
+    @Pyro4.oneway
+    def finish(self):
+        click.echo("Done! \\(^o^)/")
+        self.daemon.shutdown()
 
 
 @click.command()
@@ -125,7 +133,7 @@ def cli(ipaddr, fw_file, fw_or_type, digest):
         break
 
     daemon = Pyro4.Daemon(host=ipaddr, port=PORT)
-    proxy = KeyctlProxy(fw_or_type, digest, (pubkey, R))
+    proxy = KeyctlProxy(daemon, fw_or_type, digest, (pubkey, R))
     uri = daemon.register(proxy, "keyctl")
     click.echo(f"keyctl-proxy running at URI: {uri}")
     click.echo("Press Ctrl+C to abort.")

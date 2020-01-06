@@ -90,6 +90,9 @@ def process_remote_signers(fw, addrs: List[str]) -> Tuple[int, List[bytes]]:
         sigs.append(sig)
         click.echo("OK")
 
+    for _, proxy in proxies:
+        proxy.finish()
+
     # compute global signature
     return sigmask, cosi.combine_sig(global_R, sigs)
 
