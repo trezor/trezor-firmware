@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import logging
+import os
 import sys
 import warnings
 from types import SimpleNamespace
@@ -73,12 +74,15 @@ def get_default_client(path=None, ui=None, **kwargs):
 
     Returns a TrezorClient instance with minimum fuss.
 
-    If no path is specified, finds first connected Trezor. Otherwise performs
-    a prefix-search for the specified device. If no UI is supplied, instantiates
-    the default CLI UI.
+    If path is specified, does a prefix-search for the specified device. Otherwise, uses
+    the value of TREZOR_PATH env variable, or finds first connected Trezor.
+    If no UI is supplied, instantiates the default CLI UI.
     """
     from .transport import get_transport
     from .ui import ClickUI
+
+    if path is None:
+        path = os.getenv("TREZOR_PATH")
 
     transport = get_transport(path, prefix_search=True)
     if ui is None:
