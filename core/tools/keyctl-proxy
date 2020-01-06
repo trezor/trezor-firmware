@@ -27,32 +27,42 @@ indexmap = {
 
 PATH = "10018h/{}h"
 
+TREZOR = None
 
-def make_commit(name, index, digest):
-    path = PATH.format(index)
+
+def make_commit(fw_or_type, digest, public_keys):
+    path = PATH.format(fw_or_type.BIP32_INDEX)
     address_n = parse_path(path)
-    first_pass = True
+
+    # device information - show only first time
+    click.echo(
+        f"\nUsing device {click.style(TREZOR.features.label, bold=True)} "
+        f"at path {TREZOR.transport.get_path()}"
+    )
+
     while True:
+        # signing information - repeat every time
+        click.echo(f"Commiting to {click.style(fw_or_type.NAME, bold=True)} hash:")
+        for partid in range(4):
+            digest_part = digest[partid * 8 : (partid + 1) * 8]
+            color = "red" if partid % 2 else "blue"
+            digest_str = click.style(digest_part.hex().upper(), fg=color)
+            click.echo("\t" + digest_str)
+        click.echo(f"Using path: {click.style(path, bold=True)}")
+
         try:
-            t = get_default_client()
-            if first_pass:
-                t.clear_session()
-                first_pass = False
+            commit = cosi.commit(TREZOR, address_n, digest)
+            if public_keys is not None and commit.pubkey not in public_keys:
+                click.echo(f"\n\nPublic key {commit.pubkey.hex()} is unknown.")
+                if click.confirm("Retry with a different passphrase?", default=True):
+                    TREZOR.init_device()
+                    continue
 
-            click.echo(f"\n\n\nCommiting to {click.style(name, bold=True)} hash:")
-            for partid in range(4):
-                digest_part = digest[partid * 8 : (partid + 1) * 8]
-                color = "red" if partid % 2 else "blue"
-                digest_str = click.style(digest_part.hex().upper(), fg=color)
-                click.echo(digest_str)
-
-            click.echo(f"Using path: {click.style(path, bold=True)}")
-            commit = cosi.commit(t, address_n, digest)
             return commit.pubkey, commit.commitment
         except Exception as e:
             click.echo(e)
             traceback.print_exc()
-            click.echo("Trying again ...")
+            click.echo("Trying again ...\n\n")
 
 
 @Pyro4.expose
@@ -81,9 +91,10 @@ class KeyctlProxy:
         self._check_name_digest(name, digest)
         while True:
             try:
-                t = get_default_client()
                 click.echo("\n\n\nSigning...")
-                signature = cosi.sign(t, self.address_n, digest, global_R, global_pk)
+                signature = cosi.sign(
+                    TREZOR, self.address_n, digest, global_R, global_pk
+                )
                 click.echo("Sending signature!")
                 return signature.signature
             except Exception as e:
@@ -110,6 +121,8 @@ def cli(ipaddr, fw_file, fw_or_type, digest):
     Specify either fw_file to auto-detect type and digest, or use -t and -d to specify
     the type and digest manually.
     """
+    global TREZOR
+
     public_keys = None
     if fw_file:
         if fw_or_type or digest:
@@ -124,13 +137,13 @@ def cli(ipaddr, fw_file, fw_or_type, digest):
     if not fw_file and (not fw_or_type or not digest):
         raise click.ClickException("Please specify either fw_file or -t and -h")
 
-    while True:
-        pubkey, R = make_commit(fw_or_type.NAME, fw_or_type.BIP32_INDEX, digest)
-        if public_keys is not None and pubkey not in public_keys:
-            click.echo(f"\n\nPublic key {pubkey.hex()} is unknown.")
-            if click.confirm("Retry with a different passphrase?"):
-                continue
-        break
+    try:
+        TREZOR = get_default_client()
+        TREZOR.ui.always_prompt = True
+    except Exception as e:
+        raise click.ClickException("Please connect a Trezor and retry.") from e
+
+    pubkey, R = make_commit(fw_or_type, digest, public_keys)
 
     daemon = Pyro4.Daemon(host=ipaddr, port=PORT)
     proxy = KeyctlProxy(daemon, fw_or_type, digest, (pubkey, R))
