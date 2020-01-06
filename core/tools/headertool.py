@@ -64,14 +64,15 @@ def process_remote_signers(fw, addrs: List[str]) -> Tuple[int, List[bytes]]:
     digest = fw.digest()
     name = fw.NAME
 
+    def mkproxy(addr):
+        return Pyro4.Proxy(f"PYRO:keyctl@{addr}:{PORT}")
+
     sigmask = 0
-    proxies = []
     pks, Rs = [], []
     for addr in addrs:
         click.echo(f"Connecting to {addr}...")
-        proxy = Pyro4.Proxy(f"PYRO:keyctl@{addr}:{PORT}")
-        proxies.append((addr, proxy))
-        pk, R = proxy.get_commit(name, digest)
+        with mkproxy(addr) as proxy:
+            pk, R = proxy.get_commit(name, digest)
         if pk not in fw.public_keys:
             raise click.ClickException(
                 f"Signer at {addr} commits with unknown public key {pk.hex()}"
@@ -88,14 +89,16 @@ def process_remote_signers(fw, addrs: List[str]) -> Tuple[int, List[bytes]]:
 
     # collect signatures
     sigs = []
-    for addr, proxy in proxies:
+    for addr in addrs:
         click.echo(f"Waiting for {addr} to sign... ", nl=False)
-        sig = proxy.get_signature(name, digest, global_R, global_pk)
+        with mkproxy(addr) as proxy:
+            sig = proxy.get_signature(name, digest, global_R, global_pk)
         sigs.append(sig)
         click.echo("OK")
 
-    for _, proxy in proxies:
-        proxy.finish()
+    for addr in addrs:
+        with mkproxy(addr) as proxy:
+            proxy.finish()
 
     # compute global signature
     return sigmask, cosi.combine_sig(global_R, sigs)

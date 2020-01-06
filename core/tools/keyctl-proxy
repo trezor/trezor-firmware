@@ -75,6 +75,8 @@ class KeyctlProxy:
         self.address_n = parse_path(PATH.format(image_type.BIP32_INDEX))
         self.digest = digest
         self.commit = commit
+        self.signature = None
+        self.global_params = None
 
     def _check_name_digest(self, name, digest):
         if name != self.name or digest != self.digest:
@@ -87,20 +89,28 @@ class KeyctlProxy:
         click.echo("Sending commitment!")
         return self.commit
 
-    def get_signature(self, name, digest, global_R, global_pk):
-        self._check_name_digest(name, digest)
+    def _make_signature(self, global_R, global_pk):
         while True:
             try:
                 click.echo("\n\n\nSigning...")
                 signature = cosi.sign(
-                    TREZOR, self.address_n, digest, global_R, global_pk
+                    TREZOR, self.address_n, self.digest, global_R, global_pk
                 )
-                click.echo("Sending signature!")
                 return signature.signature
             except Exception as e:
                 click.echo(e)
                 traceback.print_exc()
                 click.echo("Trying again ...")
+
+
+    def get_signature(self, name, digest, global_R, global_pk):
+        self._check_name_digest(name, digest)
+        global_params = global_R, global_pk
+        if global_params != self.global_params:
+            self.signature = self._make_signature(global_R, global_pk)
+            self.global_params = global_params
+        click.echo("Sending signature!")
+        return self.signature
 
     @Pyro4.oneway
     def finish(self):
