@@ -61,8 +61,5 @@ def diff_file(fixture_test_path, test_name, actual_hash, expected_hash):
                     _image(r)
                     _image(a)
 
-    with open(fixture_test_path / "diff.html", "w") as f:
-        f.write(doc.render())
-        f.close()
-
+    (fixture_test_path / "diff.html").write_text(doc.render())
     return fixture_test_path / "diff.html"

@@ -140,7 +140,7 @@ def client(request):
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--test_screen",
+        "--test-screen",
         action="store",
         default="",
         help="Enable UI intergration tests: 'record' or 'test'",

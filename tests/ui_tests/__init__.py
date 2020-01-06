@@ -18,7 +18,7 @@ def _get_test_dirname(node):
     # we limit the name to first 100 chars. This is not a problem with txhashes.
     node_name = re.sub(r"\W+", "_", node.name)[:100]
     node_module_name = node.getparent(pytest.Module).name
-    return "{}_{}".format(node_module_name, node_name)
+    return f"{node_module_name}_{node_name}"
 
 
 def _check_fixture_directory(fixture_dir, screen_path):
@@ -32,28 +32,24 @@ def _check_fixture_directory(fixture_dir, screen_path):
 
 
 def _process_recorded(screen_path):
-    records = sorted(screen_path.iterdir())
-
     # create hash
-    digest = _hash_files(records)
-    with open(screen_path / "../hash.txt", "w") as f:
-        f.write(digest)
+    digest = _hash_files(screen_path)
+
+    (screen_path.parent / "hash.txt").write_text(digest)
     _rename_records(screen_path)
 
 
 def _rename_records(screen_path):
     # rename screenshots
     for index, record in enumerate(sorted(screen_path.iterdir())):
-        filename = screen_path / "{:08}.png".format(index)
-        record.replace(filename)
+        record.replace(screen_path / f"{index:08}.png")
 
 
-def _hash_files(files):
+def _hash_files(path):
+    files = path.iterdir()
     hasher = hashlib.sha256()
     for file in sorted(files):
-        with open(file, "rb") as f:
-            content = f.read()
-            hasher.update(content)
+        hasher.update(file.read_bytes())
 
     return hasher.digest().hex()
 
@@ -64,14 +60,11 @@ def _process_tested(fixture_test_path, test_name):
     if not hash_file.exists():
         raise ValueError("File hash.txt not found.")
 
-    with open(hash_file, "r") as f:
-        expected_hash = f.read()
-
+    expected_hash = hash_file.read_text()
     actual_path = fixture_test_path / "actual"
-    _rename_records(actual_path)
+    actual_hash = _hash_files(actual_path)
 
-    records = sorted(actual_path.iterdir())
-    actual_hash = _hash_files(records)
+    _rename_records(actual_path)
 
     if actual_hash != expected_hash:
         diff_file = html.diff_file(
@@ -93,18 +86,13 @@ def _process_tested(fixture_test_path, test_name):
 
 @contextmanager
 def screen_recording(client, request):
-    if not request.node.get_closest_marker("skip_ui"):
-        test_screen = request.config.getoption("test_screen")
-    else:
-        test_screen = ""
-
-    if not test_screen:
+    test_screen = request.config.getoption("test_screen")
+    if request.node.get_closest_marker("skip_ui") or not test_screen:
         yield
         return
 
-    fixture_root = Path(__file__) / "../fixtures"
     test_name = _get_test_dirname(request.node)
-    fixture_test_path = fixture_root.resolve() / test_name
+    fixture_test_path = Path(__file__).parent.resolve() / "fixtures" / test_name
 
     if test_screen == "record":
         screen_path = fixture_test_path / "recorded"
