@@ -66,12 +66,12 @@ static const struct usb_config_descriptor config = {
     .bConfigurationValue = 1,
     .iConfiguration = 0,
     .bmAttributes = 0x80,
-    .bMaxPower = 0x32,
+    .bMaxPower = 0x64,
     .interface = ifaces,
 };
 
 static const char *usb_strings[] = {
     "SatoshiLabs",
-    "TREZOR",
+    "Bixin",
     "000000000000000000000000",
 };

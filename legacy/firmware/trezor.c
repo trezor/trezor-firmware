@@ -42,50 +42,50 @@
 #define autoPowerOffDelayMsDefault (5 * 60 * 1000U)  // 5 minutes
 
 /* Screen timeout */
-uint32_t system_millis_lock_start = 0;
-/*poweroff */
-uint32_t system_millis_poweroff_start = 0;
-void check_lock_screen(void) {
-  buttonUpdate();
+//uint32_t system_millis_lock_start = 0;
 
-  // wake from screensaver on any button
-  if (layoutLast == layoutScreensaver &&
-      (button.NoUp || button.YesUp || button.UpUp || button.DownUp ||
-       (GET_NFC_INSERT()))) {
-    layoutHome();
-    return;
-  }
+//void check_lock_screen(void) {
+//  buttonUpdate();
 
-  // if homescreen is shown for too long
-  if (layoutLast == layoutHome) {
-    if ((timer_ms() - system_millis_lock_start) >=
-        config_getAutoLockDelayMs()) {
-      // lock the screen
-      session_clear(true);
-      layoutScreensaver();
-      system_millis_poweroff_start = timer_ms();
-    }
-  }
-  if (layoutLast == layoutScreensaver) {
-    if (WORK_MODE_USB != g_ucWorkMode) {
-      // no usb and no nfc
-      if ((0x00 == GET_USB_INSERT()) && (GET_NFC_INSERT())) {
-        // power off time
-        if ((timer_ms() - system_millis_poweroff_start) >=
-            (autoPowerOffDelayMsDefault - config_getAutoLockDelayMs())) {
-          vDisp_PromptInfo(DISP_PRESSKEY_POWEROFF);
-          POWER_OFF();
-          while (1)
-            ;
-        }
-      } else {
-        system_millis_poweroff_start = timer_ms();
-      }
-    } else {
-      system_millis_poweroff_start = timer_ms();
-    }
-  }
-}
+//  // wake from screensaver on any button
+//  if (layoutLast == layoutScreensaver &&
+//      (button.NoUp || button.YesUp || button.UpUp || button.DownUp ||
+//       (GET_NFC_INSERT()))) {
+//    layoutHome();
+//    return;
+//  }
+
+//  // if homescreen is shown for too long
+//  if (layoutLast == layoutHome) {
+//    if ((timer_ms() - system_millis_lock_start) >=
+//        config_getAutoLockDelayMs()) {
+//      // lock the screen
+//      session_clear(true);
+//      layoutScreensaver();
+//      system_millis_poweroff_start = timer_ms();
+//    }
+//  }
+//  if (layoutLast == layoutScreensaver) {
+//    if (WORK_MODE_USB != g_ucWorkMode) {
+//      // no usb and no nfc
+//      if ((0x00 == GET_USB_INSERT()) && (GET_NFC_INSERT())) {
+//        // power off time
+//        if ((timer_ms() - system_millis_poweroff_start) >=
+//            (autoPowerOffDelayMsDefault - config_getAutoLockDelayMs())) {
+//          vDisp_PromptInfo(DISP_PRESSKEY_POWEROFF);
+//          POWER_OFF();
+//          while (1)
+//            ;
+//        }
+//      } else {
+//        system_millis_poweroff_start = timer_ms();
+//      }
+//    } else {
+//      system_millis_poweroff_start = timer_ms();
+//    }
+//  }
+//}
+
 
 static void collect_hw_entropy(bool privileged) {
 #if EMULATOR
@@ -151,9 +151,11 @@ int main(void) {
   config_init();
   layoutHome();
   usbInit();
+  buttonUpdate();
   for (;;) {
     usbPoll();
-    check_lock_screen();
+   // check_lock_screen();
+   vDISP_DeviceInfo();
   }
 
   return 0;

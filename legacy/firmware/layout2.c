@@ -36,6 +36,28 @@
 #include "string.h"
 #include "timer.h"
 #include "util.h"
+#include "memory.h"
+
+
+ uint8_t Disp_buffer[DISP_BUFSIZE];
+
+static uint16_t s_usCurrentCount;
+
+
+static uint16_t s_uiShowLength;
+
+#define BLE_NAME "Ble name:"
+#define BLE_MAC    "Ble mac:"
+#define BLE_VER    "Ble version:"
+
+#define USB_LABLE      " Lable:"
+#define USB_SN              "SN:"
+#define USB_VER            "USB version:"
+#define APP_FINGERPRINT  "fingerprint:"
+
+#define DEFAULTLABE "Bixin"
+#define DEFAULSN "20200106"
+
 
 #if !BITCOIN_ONLY
 
@@ -186,6 +208,15 @@ const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen) {
   if (rowlen > 32) {
     rowlen = 32;
   }
+  memset(Disp_buffer,0x00,DISP_BUFSIZE);
+  if(len < DISP_BUFSIZE)
+  {
+    memcpy(Disp_buffer,msg,len);
+  }
+
+  s_usCurrentCount = 0;
+  s_uiShowLength = len;
+
   memzero(str, sizeof(str));
   strlcpy(str[0], (char *)msg, rowlen + 1);
   if (len > rowlen) {
@@ -197,27 +228,27 @@ const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen) {
   if (len > rowlen * 3) {
     strlcpy(str[3], (char *)msg + rowlen * 3, rowlen + 1);
   }
-  if (len > rowlen * 4) {
-    str[3][rowlen - 1] = '.';
-    str[3][rowlen - 2] = '.';
-    str[3][rowlen - 3] = '.';
-  }
+//  if (len > rowlen * 4) {
+//    str[3][rowlen - 1] = '.';
+//    str[3][rowlen - 2] = '.';
+//    str[3][rowlen - 3] = '.';
+//  }
   static const char *ret[4] = {str[0], str[1], str[2], str[3]};
   return ret;
 }
 
 const char **split_message_hex(const uint8_t *msg, uint32_t len) {
-  char hex[32 * 2 + 1] = {0};
+  char hex[1024 * 2 + 1] = {0};
   memzero(hex, sizeof(hex));
   uint32_t size = len;
-  if (len > 32) {
-    size = 32;
+  if (len > 1024) {
+    size = 1024;
   }
   data2hex(msg, size, hex);
-  if (len > 32) {
-    hex[63] = '.';
-    hex[62] = '.';
-  }
+//  if (len > 32) {
+//    hex[63] = '.';
+//    hex[62] = '.';
+//  }
   return split_message((const uint8_t *)hex, size * 2, 16);
 }
 
@@ -328,7 +359,7 @@ void layoutHome(void) {
   oledRefresh();
 
   // Reset lock screen timeout
-  system_millis_lock_start = timer_ms();
+  //system_millis_lock_start = timer_ms();
 }
 
 static void render_address_dialog(const CoinInfo *coin, const char *address,
@@ -998,3 +1029,180 @@ void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count,
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), desc, str[0],
                     str[1], str[2], str[3], NULL, NULL);
 }
+
+void Disp_Page(const BITMAP *icon, const char *btnNo,const char *btnYes, const char *desc,uint8_t * pucInfoBuf,uint16_t usLen)
+{
+    char j,line1[33],line2[33],line3[33],line4[33],line5[33],line6[33];
+    j = 0;
+    if (usLen > 32) {
+        usLen = 32;
+    }
+    memzero(line1, sizeof(line1));
+    memzero(line2, sizeof(line2));
+    memzero(line3, sizeof(line3));
+    memzero(line4, sizeof(line4));
+    memzero(line5, sizeof(line5));
+    memzero(line6, sizeof(line6));
+    memcpy(line1,(char *)(pucInfoBuf+j*usLen),usLen);
+    j++;
+    memcpy(line2,(char *)(pucInfoBuf+j*usLen),usLen);
+    j++;
+    memcpy(line3,(char *)(pucInfoBuf+j*usLen),usLen);
+    j++;
+    memcpy(line4,(char *)(pucInfoBuf+j*usLen),usLen);
+    j++;
+     memcpy(line5,(char *)(pucInfoBuf+j*usLen),usLen);
+    j++;
+    memcpy(line6,(char *)(pucInfoBuf+j*usLen),usLen);
+
+    layoutDialog(icon, btnNo, btnYes, desc, line1, line2, line3, line4, line5,line6);
+
+}
+
+
+
+void vDISP_TurnPageUP(void)
+{
+    if(s_usCurrentCount == 0 )
+    {
+      return;
+    }  
+    s_usCurrentCount = s_usCurrentCount - DISP_PAGESIZE;
+    Disp_Page(&bmp_icon_question, _("Up"), _("Down"), NULL,Disp_buffer+s_usCurrentCount,16);
+}
+
+
+
+void vDISP_TurnPageDOWN(void)
+{
+    if( (s_usCurrentCount+DISP_PAGESIZE) >= s_uiShowLength)
+    {
+        return;
+    }
+    s_usCurrentCount +=DISP_PAGESIZE;
+    Disp_Page(&bmp_icon_question, _("Up"), _("Down"),NULL,Disp_buffer+s_usCurrentCount,16);
+
+}
+void vGet_DeviceInfo(uint8_t ucPage)
+{
+    uint8_t ucBuf[66];
+    uint8_t line[17];
+       
+    switch(ucPage)
+    {
+        case 0:
+            oledClear();
+            oledDrawString(0, 0 , (char *)USB_LABLE, FONT_STANDARD);
+
+            oledDrawStringCenter(64, 8 , (char *)DEFAULTLABE, FONT_STANDARD);
+
+            oledDrawString(0, 24 , (char *)USB_SN, FONT_STANDARD);
+            oledDrawStringCenter(64, 32, (char *)DEFAULSN, FONT_STANDARD);
+
+            oledDrawString(0,48 , (char *)USB_VER, FONT_STANDARD);
+            memzero(ucBuf, sizeof(ucBuf));
+            ucBuf[0] = VERSION_MAJOR+'0';
+            ucBuf[1] ='.';
+            ucBuf[2] = VERSION_MINOR+'0';
+            ucBuf[3] ='.';
+            ucBuf[4] = VERSION_PATCH+'0';
+            oledDrawString(64, 56 , (char *)ucBuf, FONT_STANDARD);
+            s_usCurrentCount  = ucPage;
+        break;
+        case 1:
+             oledClear();
+            oledDrawString(0,0 , (char *)APP_FINGERPRINT, FONT_STANDARD);
+            memzero(g_usb_info.ucfingerprint, sizeof(g_usb_info.ucfingerprint));
+            sha256_Raw(FLASH_PTR(FLASH_APP_START), (64 - 1) * 1024, g_usb_info.ucfingerprint);
+            data2hex(g_usb_info.ucfingerprint, 32, (char *) ucBuf);
+            memzero(line, sizeof(line));
+            memcpy(line,ucBuf,0x10);
+            oledDrawStringCenter(64, 16, (char *)line, FONT_STANDARD);
+            memzero(line, sizeof(line));
+            memcpy(line,ucBuf+0x10,0x10);
+            oledDrawStringCenter(64, 24, (char *)line, FONT_STANDARD);
+            memzero(line, sizeof(line));
+            memcpy(line,ucBuf+0x10,0x10);
+            oledDrawStringCenter(64, 32, (char *)line, FONT_STANDARD);
+            memzero(line, sizeof(line));
+            memcpy(line,ucBuf+0x10,0x10);
+            oledDrawStringCenter(64, 40, (char *)line, FONT_STANDARD);
+            s_usCurrentCount  = ucPage;
+            break;
+        case 2:
+             if(WORK_MODE_BLE ==  g_ucWorkMode)
+             {
+                oledClear();
+                oledDrawString(0,0 , (char *)BLE_NAME, FONT_STANDARD);
+                oledDrawStringCenter(64, 8, (char *)g_ble_info.ucBle_Name, FONT_STANDARD);
+                oledDrawString(0,16, (char *)BLE_MAC, FONT_STANDARD);
+                memzero(ucBuf, sizeof(ucBuf));
+                data2hex(g_ble_info.ucBle_Mac, BLE_MAC_LEN, (char *) ucBuf);
+                oledDrawStringCenter(64, 24, (char *)ucBuf, FONT_STANDARD);
+                
+                oledDrawString(0,32 , (char *)BLE_VER, FONT_STANDARD);
+                memzero(ucBuf, sizeof(ucBuf));
+                ucBuf[0] = ((g_ble_info.ucBle_Version[0]&0xF0)>>4)+'0';
+                ucBuf[1] ='.';
+                ucBuf[2] = (g_ble_info.ucBle_Version[0]&0x0F)+'0';
+                ucBuf[3] ='.';
+                ucBuf[4] = ((g_ble_info.ucBle_Version[1]&0xF0)>>4)+'0';
+                ucBuf[5] = (g_ble_info.ucBle_Version[1]&0x0F)+'0';
+
+                oledDrawString(64, 48, (char *)ucBuf, FONT_STANDARD);
+             }
+             s_usCurrentCount  = ucPage;
+            break;
+    }
+
+    oledRefresh();
+
+}
+
+void vDISP_DeviceInfo(void) {
+
+   buttonUpdate();
+   
+   if ((layoutLast == layoutHome) &&( button.UpUp || button.DownUp)) 
+   {        
+    vGet_DeviceInfo(0); 
+    while(1)
+    {
+       delay(100000);
+       buttonUpdate();
+       if(button.NoUp)
+       {
+            layoutHome();
+            break;
+       }
+       if(button.UpUp)
+       {
+          if(s_usCurrentCount)
+          {
+            s_usCurrentCount--;
+          }
+          else
+          {
+             s_usCurrentCount = 2;
+          }
+         vGet_DeviceInfo(s_usCurrentCount); 
+       }
+       if(button.DownUp)
+       {
+          if(s_usCurrentCount < 2)
+          {
+            s_usCurrentCount++;
+          }
+          else
+          {
+             s_usCurrentCount=0;
+          }
+          vGet_DeviceInfo(s_usCurrentCount); 
+       }
+    }
+
+  }
+}
+
+
+

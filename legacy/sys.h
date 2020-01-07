@@ -3,9 +3,10 @@
 
 #include <libopencm3/stm32/gpio.h>
 #include "buttons.h"
+#include "usart.h"
+#include "timer.h"
+#include "oled.h"
 
-#define BLE_ADV_NAME "Bixin_6666"
-#define BLE_ADV_NAME_LEN 10
 
 // Ble display
 #define BT_LINK 0x01          //蓝牙连接//Connect by Bluetooth
@@ -16,38 +17,6 @@
 #define BT_PAIRINGSCESS 0x06  //配对成功
 #define BT_PINCANCEL 0x07     //取消配对请求
 
-// prompt info display
-#define DISP_NOT_ACTIVE 0x01  //未激活////Not Activated
-#define DISP_TOUCHPH 0x02     //需与手机贴合//It needs to touch the phone
-#define DISP_NFC_LINK 0x03    // NFC连接//Connect by NFC
-#define DISP_USB_LINK 0x04    // USB连接//Connect by USB
-#define DISP_COMPUTER_LINK 0x05  //与计算机连接//Connect to a computer
-#define DISP_INPUTPIN \
-  0x06  //按照右图提示输入PIN码//Enter PIN code according to the prompts on the
-        // right screen
-#define DISP_BUTTON_OK_RO_NO \
-  0x07  //按下 OK 确认，按<取消//Press OK to confirm, Press < to Cancel
-#define DISP_GEN_PRI_KEY 0x08  //正在生成私钥...//Generating private key…
-#define DISP_ACTIVE_SUCCESS 0x09     //激活成功//Activated
-#define DISP_BOTTON_UP_OR_DOWN 0x0A  //上下翻页查看//Turn up or down to view
-#define DISP_SN 0x0B                 //序列号//Serial NO.
-#define DISP_VERSION 0x0C            //固件版本//Firmware version
-#define DISP_CONFIRM_PUB_KEY 0x0D    //确认公钥//Confirm public key
-#define DISP_BOTTON_OK_SIGN 0x0E     //按下OK签名//Press OK to sign
-#define DISP_SIGN_SUCCESS \
-  0x0F  //签名成功！请与手机贴合//Signed! Touch it to the phone closely
-#define DISP_SIGN_PRESS_OK_HOME \
-  0x10  //签名完成！按OK返回首页//Signed! Press OK to return to homepage
-#define DISP_SIGN_SUCCESS_VIEW \
-  0x11  //签名成功！请在手机查看交易//Signed! Please view transaction on your
-        // phone
-#define DISP_UPDATGE_APP_GOING \
-  0x12  //正在升级，请不要关机Upgrading, do not turn off
-#define DISP_UPDATGE_SUCCESS \
-  0x13  //固件升级成功，按OK返回首页//Firmware upgraded, press OK to return to
-        // homepage
-#define DISP_PRESSKEY_POWEROFF 0x14  //关机//power off
-#define DISP_BLE_NAME 0x15           //蓝牙名称
 
 // NFC 已连接
 #define NFC_LINK 0x09
@@ -71,8 +40,7 @@
 
 #define GPIO_CMBUS_PORT GPIOC
 
-#define GPIO_USB_INSERT GPIO8
-#define GPIO_POWER_ON GPIO4
+#define GPIO_USB_INSERT   GPIO8
 
 #if (OLD_PCB)
 #define GPIO_NFC_INSERT GPIO5
@@ -98,11 +66,8 @@
 #define GET_NFC_INSERT() (gpio_get(GPIOC, GPIO_NFC_INSERT))
 #define GET_BUTTON_CANCEL() (gpio_get(BTN_PORT, BTN_PIN_NO))
 
-// power control
-#define POWER_ON() (gpio_set(GPIOC, GPIO_POWER_ON))
-#define POWER_OFF() (gpio_clear(GPIOC, GPIO_POWER_ON))
-// power on button
-#define POWER_ON() (gpio_set(GPIOC, GPIO_POWER_ON))
+//power on button
+#define POWER_ON()	        (gpio_set(GPIOC, GPIO_POWER_ON))
 
 // power control BLE
 #define POWER_ON_BLE() (gpio_set(GPIOC, GPIO_BLE_POWER))
@@ -124,19 +89,20 @@
 #define POWER_BUTTON_DOWN 1
 
 extern uint8_t g_ucFlag;
-extern uint8_t g_ucLanguageFlag;
 extern uint8_t g_ucWorkMode;
 
-#define POWER_OFF_ENBALE() (g_ucFlag |= 0x01)
-#define POWER_OFF_CLEAR() (g_ucFlag &= 0xFE)
-#define POWER_OFF_READY() (g_ucFlag & 0x01)
 
-void delay_time(uint32_t uiDelay_Ms);
-void delay_us(uint32_t uiDelay_us);
+//#define POWER_OFF_TIMER_ENBALE()    (g_ucFlag |= 0x01)
+//#define POWER_OFF_TIMER_CLEAR()     (g_ucFlag &= 0xFE)
+//#define POWER_OFF_TIMER_READY()     (g_ucFlag & 0x01)
+
+#define BUTTON_CHECK_ENBALE()    (g_ucFlag |= 0x02)
+#define BUTTON_CHECK_CLEAR()     (g_ucFlag &= 0xFD)
+#define PBUTTON_CHECK_READY()    (g_ucFlag & 0x02)
+
+
+void vCalu_BleName(uint8_t * pucMac,uint8_t * pucName);
 void vCheckMode(void);
 void vPower_Control(uint8_t ucMode);
-bool bBle_DisPlay(uint8_t ucIndex, uint8_t* ucStr);
-void vDisp_PromptInfo(uint8_t ucIndex);
-void vTransMode_DisPlay(void);
-
+bool bBle_DisPlay(uint8_t ucIndex,uint8_t * ucStr);
 #endif

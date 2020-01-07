@@ -137,4 +137,7 @@ void fsm_msgStellarAccountMergeOp(const StellarAccountMergeOp *msg);
 void fsm_msgStellarManageDataOp(const StellarManageDataOp *msg);
 void fsm_msgStellarBumpSequenceOp(const StellarBumpSequenceOp *msg);
 
+void fsm_msgGenSeeds(const         GenSeeds *msg);
+
+
 #endif

@@ -79,6 +79,8 @@ static const uint32_t META_MAGIC_V10 = 0xFFFFFFFF;
 #define KEY_NODE (15 | APP)                                   // node
 #define KEY_IMPORTED (16 | APP)                               // bool
 #define KEY_U2F_ROOT (17 | APP | FLAG_PUBLIC_SHIFTED)         // node
+#define KEY_SEEDS (18| APP)                                 // bytes
+#define KEY_SEEDSFLAG (19| APP | FLAG_PUBLIC_SHIFTED)      // uint32
 #define KEY_DEBUG_LINK_PIN (255 | APP | FLAG_PUBLIC_SHIFTED)  // string(10)
 
 // The PIN value corresponding to an empty PIN.
@@ -726,6 +728,30 @@ bool config_setMnemonic(const char *mnemonic) {
   return true;
 }
 
+bool config_setSeedsBytes(const uint8_t *seeds,uint8_t len) {
+  if (seeds == NULL) {
+    return false;
+  }
+
+  if (sectrue != storage_set(KEY_SEEDS, seeds,
+                             len)) {
+    return false;
+  }
+  config_set_bool(KEY_INITIALIZED, true);
+  config_set_bool(KEY_SEEDSFLAG, true);
+  
+  return true;
+}
+bool config_getSeedsBytes(uint8_t *dest, uint16_t dest_size) {
+  uint16_t real_size;
+   if (!config_isInitializedSeeds()) {
+       return false;
+   }
+   return sectrue == config_get_bytes(KEY_SEEDS, dest, dest_size, &real_size);
+}
+
+
+
 bool config_getMnemonicBytes(uint8_t *dest, uint16_t dest_size,
                              uint16_t *real_size) {
   return sectrue == config_get_bytes(KEY_MNEMONIC, dest, dest_size, real_size);
@@ -867,6 +893,12 @@ bool config_isInitialized(void) {
   config_get_bool(KEY_INITIALIZED, &initialized);
   return initialized;
 }
+bool config_isInitializedSeeds(void) {
+  bool initialized = false;
+  config_get_bool(KEY_SEEDSFLAG, &initialized);
+  return initialized;
+}
+
 
 bool config_getImported(bool *imported) {
   return sectrue == config_get_bool(KEY_IMPORTED, imported);

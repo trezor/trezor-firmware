@@ -40,6 +40,8 @@ extern struct buttonState button;
 
 uint16_t buttonRead(void);
 void buttonUpdate(void);
+bool hasbutton(void) ;
+
 
 #ifndef BTN_PORT
 #define BTN_PORT GPIOC
@@ -79,5 +81,12 @@ void buttonUpdate(void);
 #define BTN_PIN_DOWN GPIO5
 #endif
 #endif
+
+#define GPIO_POWER_ON     GPIO4
+
+//power control
+#define POWER_ON()	        (gpio_set(GPIOC, GPIO_POWER_ON))
+#define POWER_OFF()	        (gpio_clear(GPIOC, GPIO_POWER_ON))
+
 
 #endif

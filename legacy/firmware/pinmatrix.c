@@ -32,7 +32,7 @@ void pinmatrix_draw(const char *text) {
       &bmp_digit5, &bmp_digit6, &bmp_digit7, &bmp_digit8, &bmp_digit9,
   };
   layoutSwipe();
-  const int w = bmp_digit0.width, h = bmp_digit0.height, pad = 2;
+  const int w = bmp_digit0.width, h = bmp_digit0.height, pad = 1;
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
       // use (2 - j) instead of j to achieve 789456123 layout
@@ -48,8 +48,8 @@ void pinmatrix_draw(const char *text) {
   for (int i = 0; i < 3; i++) {
     // 36 is the maximum pixels used for a pin matrix pixel row
     // but we use 56 pixels to add some extra
-    oledSCAInside(12 + i * (h + pad), 12 + i * (h + pad) + h - 1, 56, 38,
-                  OLED_WIDTH - 38);
+   // oledSCAInside(12 + i * (h + pad), 12 + i * (h + pad) + h - 1, 56, 38,
+    //              OLED_WIDTH - 38);
   }
   oledRefresh();
 }

@@ -47,7 +47,7 @@ bool get_button_response(void) {
   do {
     delay(100000);
     buttonUpdate();
-  } while (!button.YesUp && !button.NoUp);
+  } while (!button.YesUp && !button.DownUp);
   return button.YesUp;
 }
 
@@ -122,7 +122,7 @@ int main(void) {
 #endif
   // mpu_config_bootloader();
 #ifndef APPVER
-  bool left_pressed = (buttonRead() & BTN_PIN_NO) == BTN_PIN_NO;
+  bool left_pressed = (buttonRead() & BTN_PIN_DOWN) == BTN_PIN_DOWN;
 
   if (firmware_present_new() && !left_pressed) {
     oledClear();

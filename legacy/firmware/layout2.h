@@ -25,10 +25,15 @@
 #include "coins.h"
 #include "layout.h"
 #include "trezor.h"
+#include "sys.h"
 
 #include "messages-bitcoin.pb.h"
 #include "messages-crypto.pb.h"
 #include "messages-nem.pb.h"
+
+#define DISP_BUFSIZE (2048)
+#define DISP_PAGESIZE (96)
+
 
 extern void *layoutLast;
 
@@ -91,5 +96,10 @@ void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count,
 
 const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen);
 const char **split_message_hex(const uint8_t *msg, uint32_t len);
+void Disp_Page(const BITMAP *icon, const char *btnNo,const char *btnYes, const char *desc,uint8_t * pucInfoBuf,uint16_t usLen);
+
+void vDISP_TurnPageUP(void);
+void vDISP_TurnPageDOWN(void);
+void vDISP_DeviceInfo(void);
 
 #endif
