@@ -36,7 +36,7 @@ from ..common import (
 @pytest.mark.skip_t1
 class TestMsgResetDeviceT2:
     # TODO: test with different options
-    @pytest.mark.setup_client(uninitialized=True, random_seed=0)
+    @pytest.mark.setup_client(uninitialized=True)
     def test_reset_device_slip39_basic(self, client):
         strength = 128
         member_threshold = 3

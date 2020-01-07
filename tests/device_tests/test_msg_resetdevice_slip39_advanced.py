@@ -31,7 +31,7 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 @pytest.mark.skip_t1
 class TestMsgResetDeviceT2:
     # TODO: test with different options
-    @pytest.mark.setup_client(uninitialized=True, random_seed=0)
+    @pytest.mark.setup_client(uninitialized=True)
     def test_reset_device_slip39_advanced(self, client):
         strength = 128
         word_count = 20

@@ -100,7 +100,7 @@ def _check_wipe_code(client, pin, wipe_code):
         device.change_pin(client)
 
 
-@pytest.mark.setup_client(pin=PIN4, random_seed=0)
+@pytest.mark.setup_client(pin=PIN4)
 def test_set_remove_wipe_code(client):
     # Test set wipe code.
     assert client.features.wipe_code_protection is False
@@ -143,7 +143,7 @@ def test_set_remove_wipe_code(client):
     assert client.features.wipe_code_protection is False
 
 
-@pytest.mark.setup_client(random_seed=0)
+@pytest.mark.setup_client()
 def test_set_wipe_code_mismatch(client):
     # Let's set a wipe code.
     def input_flow():
@@ -171,7 +171,7 @@ def test_set_wipe_code_mismatch(client):
     assert client.features.wipe_code_protection is False
 
 
-@pytest.mark.setup_client(pin=PIN4, random_seed=0)
+@pytest.mark.setup_client(pin=PIN4)
 def test_set_wipe_code_to_pin(client):
     def input_flow():
         yield  # do you want to set the wipe code?
@@ -202,7 +202,7 @@ def test_set_wipe_code_to_pin(client):
     _check_wipe_code(client, PIN4, WIPE_CODE4)
 
 
-@pytest.mark.setup_client(random_seed=0)
+@pytest.mark.setup_client()
 def test_set_pin_to_wipe_code(client):
     # Set wipe code.
     with client:
@@ -223,7 +223,7 @@ def test_set_pin_to_wipe_code(client):
         device.change_pin(client)
 
 
-# TODO: this UI test should not be skipped, but when setting random_seed=0 it fails
+# TODO: this UI test should not be skipped, but because of the reseed it fails
 # on device id match and I am not sure why
 @pytest.mark.setup_client(pin=PIN4)
 @pytest.mark.skip_ui

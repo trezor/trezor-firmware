@@ -32,7 +32,7 @@ from ..common import (
 
 
 @pytest.mark.skip_t1  # TODO we want this for t1 too
-@pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC12, random_seed=0)
+@pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC12)
 def test_backup_bip39(client):
     assert client.features.needs_backup is True
     mnemonic = None
@@ -71,9 +71,7 @@ def test_backup_bip39(client):
 
 
 @pytest.mark.skip_t1
-@pytest.mark.setup_client(
-    needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, random_seed=0
-)
+@pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
 def test_backup_slip39_basic(client):
     assert client.features.needs_backup is True
     mnemonics = []
@@ -138,9 +136,7 @@ def test_backup_slip39_basic(client):
 
 
 @pytest.mark.skip_t1
-@pytest.mark.setup_client(
-    needs_backup=True, mnemonic=MNEMONIC_SLIP39_ADVANCED_20, random_seed=0
-)
+@pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
 def test_backup_slip39_advanced(client):
     assert client.features.needs_backup is True
     mnemonics = []

@@ -70,7 +70,7 @@ def test_secret(client, shares, secret):
     assert debug.read_mnemonic_secret().hex() == secret
 
 
-@pytest.mark.setup_client(uninitialized=True, random_seed=0)
+@pytest.mark.setup_client(uninitialized=True)
 def test_recover_with_pin_passphrase(client):
     debug = client.debug
 

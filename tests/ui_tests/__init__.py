@@ -87,10 +87,6 @@ def _process_tested(fixture_test_path, test_name):
 @contextmanager
 def screen_recording(client, request):
     test_ui = request.config.getoption("ui")
-    if request.node.get_closest_marker("skip_ui") or not test_ui:
-        yield
-        return
-
     test_name = _get_test_dirname(request.node)
     fixture_test_path = Path(__file__).parent.resolve() / "fixtures" / test_name
 

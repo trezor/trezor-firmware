@@ -28,7 +28,7 @@ from ..common import EXTERNAL_ENTROPY, click_through, read_and_confirm_mnemonic
 
 @pytest.mark.skip_t1
 @pytest.mark.skip_ui
-@pytest.mark.setup_client(uninitialized=True, random_seed=0)
+@pytest.mark.setup_client(uninitialized=True)
 def test_reset_recovery(client):
     mnemonic = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))

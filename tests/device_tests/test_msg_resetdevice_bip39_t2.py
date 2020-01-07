@@ -35,7 +35,7 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 @pytest.mark.skip_t1
 class TestMsgResetDeviceT2:
-    @pytest.mark.setup_client(uninitialized=True, random_seed=0)
+    @pytest.mark.setup_client(uninitialized=True)
     def test_reset_device(self, client):
         mnemonic = None
         strength = 128
@@ -110,7 +110,7 @@ class TestMsgResetDeviceT2:
         with pytest.raises(TrezorFailure, match="ProcessError: Seed already backed up"):
             device.backup(client)
 
-    @pytest.mark.setup_client(uninitialized=True, random_seed=0)
+    @pytest.mark.setup_client(uninitialized=True)
     def test_reset_device_pin(self, client):
         mnemonic = None
         strength = 128
@@ -207,7 +207,7 @@ class TestMsgResetDeviceT2:
         assert resp.pin_protection is True
         assert resp.passphrase_protection is True
 
-    @pytest.mark.setup_client(uninitialized=True, random_seed=0)
+    @pytest.mark.setup_client(uninitialized=True)
     def test_failed_pin(self, client):
         # external_entropy = b'zlutoucky kun upel divoke ody' * 2
         strength = 128

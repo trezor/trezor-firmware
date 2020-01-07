@@ -178,7 +178,7 @@ VECTORS = [
 
 @pytest.mark.skip_t1
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
-@pytest.mark.setup_client(uninitialized=True, random_seed=0)
+@pytest.mark.setup_client(uninitialized=True)
 def test_skip_backup_msg(client, backup_type, backup_flow):
 
     os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
@@ -213,7 +213,7 @@ def test_skip_backup_msg(client, backup_type, backup_flow):
 
 @pytest.mark.skip_t1
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
-@pytest.mark.setup_client(uninitialized=True, random_seed=0)
+@pytest.mark.setup_client(uninitialized=True)
 def test_skip_backup_manual(client, backup_type, backup_flow):
     def reset_skip_input_flow():
         yield  # Confirm Recovery

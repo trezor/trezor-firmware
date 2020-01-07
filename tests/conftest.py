@@ -99,7 +99,6 @@ def client(request):
         passphrase=False,
         needs_backup=False,
         no_backup=False,
-        random_seed=None,
     )
 
     marker = request.node.get_closest_marker("setup_client")
@@ -129,10 +128,16 @@ def client(request):
 
     client.open()
 
-    if setup_params["random_seed"] is not None:
-        client.debug.reseed(setup_params["random_seed"])
+    test_ui = request.config.getoption("ui")
+    if test_ui not in ("", "record", "test"):
+        raise ValueError("Invalid ui option.")
 
-    with ui_tests.screen_recording(client, request):
+    run_ui_tests = not request.node.get_closest_marker("skip_ui") and test_ui
+    if run_ui_tests:
+        client.debug.reseed(0)
+        with ui_tests.screen_recording(client, request):
+            yield client
+    else:
         yield client
 
     client.close()

@@ -32,7 +32,7 @@ from ..common import (
 
 @pytest.mark.skip_t1
 @pytest.mark.skip_ui
-@pytest.mark.setup_client(uninitialized=True, random_seed=0)
+@pytest.mark.setup_client(uninitialized=True)
 def test_reset_recovery(client):
     mnemonics = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
