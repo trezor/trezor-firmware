@@ -26,7 +26,7 @@ option java_outer_classname = "TrezorMessageSdCard";
 /**
  * Request: SD AppData Get
  * @start
- * @next SdAppDataData
+ * @next SdAppDataValue
  * @next Failure
  */
  message SdAppDataGet {
