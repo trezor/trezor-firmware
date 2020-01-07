@@ -223,10 +223,7 @@ def test_set_pin_to_wipe_code(client):
         device.change_pin(client)
 
 
-# TODO: this UI test should not be skipped, but because of the reseed it fails
-# on device id match and I am not sure why
 @pytest.mark.setup_client(pin=PIN4)
-@pytest.mark.skip_ui
 def test_wipe_code_activate(client):
     import time
 
