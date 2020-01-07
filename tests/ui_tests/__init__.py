@@ -86,20 +86,20 @@ def _process_tested(fixture_test_path, test_name):
 
 @contextmanager
 def screen_recording(client, request):
-    test_screen = request.config.getoption("test_screen")
-    if request.node.get_closest_marker("skip_ui") or not test_screen:
+    test_ui = request.config.getoption("ui")
+    if request.node.get_closest_marker("skip_ui") or not test_ui:
         yield
         return
 
     test_name = _get_test_dirname(request.node)
     fixture_test_path = Path(__file__).parent.resolve() / "fixtures" / test_name
 
-    if test_screen == "record":
+    if test_ui == "record":
         screen_path = fixture_test_path / "recorded"
-    elif test_screen == "test":
+    elif test_ui == "test":
         screen_path = fixture_test_path / "actual"
     else:
-        raise ValueError("Invalid test_screen option.")
+        raise ValueError("Invalid 'ui' option.")
 
     _check_fixture_directory(fixture_test_path, screen_path)
 
@@ -108,9 +108,9 @@ def screen_recording(client, request):
         yield
     finally:
         client.debug.stop_recording()
-        if test_screen == "record":
+        if test_ui == "record":
             _process_recorded(screen_path)
-        elif test_screen == "test":
+        elif test_ui == "test":
             _process_tested(fixture_test_path, test_name)
         else:
-            raise ValueError("Invalid test_screen option.")
+            raise ValueError("Invalid 'ui' option.")
