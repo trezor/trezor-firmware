@@ -2,12 +2,11 @@ import hashlib
 import re
 import shutil
 from contextlib import contextmanager
-from distutils.dir_util import copy_tree
 from pathlib import Path
 
 import pytest
 
-from . import html
+from . import report
 
 
 def _get_test_dirname(node):
@@ -67,21 +66,21 @@ def _process_tested(fixture_test_path, test_name):
     _rename_records(actual_path)
 
     if actual_hash != expected_hash:
-        diff_file = html.diff_file(
+        file_path = report.failure(
             fixture_test_path, test_name, actual_hash, expected_hash
         )
 
+        if (fixture_test_path / "success.html").exists():
+            (fixture_test_path / "success.html").unlink()
         pytest.fail(
             "Hash of {} differs.\nExpected:  {}\nActual:    {}\nDiff file: {}".format(
-                test_name, expected_hash, actual_hash, diff_file
+                test_name, expected_hash, actual_hash, file_path
             )
         )
     else:
-        copy_tree(
-            str(fixture_test_path / "actual"), str(fixture_test_path / "recorded")
-        )
-        if (fixture_test_path / "diff.html").exists():
-            (fixture_test_path / "diff.html").unlink()
+        report.success(fixture_test_path, test_name, actual_hash)
+        if (fixture_test_path / "failure_diff.html").exists():
+            (fixture_test_path / "failure_diff.html").unlink()
 
 
 @contextmanager
