@@ -158,20 +158,23 @@ int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
   if (iface->type != USB_IFACE_TYPE_HID) {
     return -2;  // Invalid interface type
   }
-  usb_hid_state_t *state = &iface->hid;
+  volatile usb_hid_state_t *state = &iface->hid;
 
-  // Copy maximum possible amount of data and truncate the buffer length
-  if (len < state->last_read_len) {
+  // Copy maximum possible amount of data
+  uint32_t last_read_len = state->last_read_len;
+  if (len < last_read_len) {
     return 0;  // Not enough data in the read buffer
   }
-  len = state->last_read_len;
+  memcpy(buf, state->rx_buffer, last_read_len);
+
+  // Reset the length to indicate we are ready to read next packet
   state->last_read_len = 0;
-  memcpy(buf, state->rx_buffer, len);
 
-  // Clear NAK to indicate we are ready to read more data
-  usb_ep_clear_nak(&usb_dev_handle, state->ep_out);
+  // Prepare the OUT EP to receive next packet
+  USBD_LL_PrepareReceive(&usb_dev_handle, state->ep_out, state->rx_buffer,
+                         state->max_packet_len);
 
-  return len;
+  return last_read_len;
 }
 
 int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
@@ -182,7 +185,7 @@ int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
   if (iface->type != USB_IFACE_TYPE_HID) {
     return -2;  // Invalid interface type
   }
-  usb_hid_state_t *state = &iface->hid;
+  volatile usb_hid_state_t *state = &iface->hid;
 
   if (state->ep_in_is_idle == 0) {
     return 0;  // Last transmission is not over yet
@@ -344,17 +347,8 @@ static void usb_hid_class_data_in(USBD_HandleTypeDef *dev,
 static void usb_hid_class_data_out(USBD_HandleTypeDef *dev,
                                    usb_hid_state_t *state, uint8_t ep_num) {
   if (ep_num == state->ep_out) {
+    // Save the report length to indicate we have read something, but don't
+    // schedule next reading until user reads this one
     state->last_read_len = USBD_LL_GetRxDataSize(dev, ep_num);
-
-    // Prepare the OUT EP to receive next packet
-    // User should provide state->rx_buffer that is big enough for
-    // state->max_packet_len bytes
-    USBD_LL_PrepareReceive(dev, ep_num, state->rx_buffer,
-                           state->max_packet_len);
-
-    if (state->last_read_len > 0) {
-      // Block the OUT EP until we process received data
-      usb_ep_set_nak(dev, ep_num);
-    }
   }
 }
