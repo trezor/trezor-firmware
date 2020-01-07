@@ -1,12 +1,12 @@
 from ubinascii import hexlify
 
-from trezor import io
+from trezor import io, utils
 from trezor.crypto import chacha20poly1305, random
 
 from apps.common import seed
 
-MAGIC = b"TRAD"
 VERSION = 1
+MAGIC = b"TRAD" + VERSION.to_bytes(4, "big")
 
 
 def _get_seed_id() -> bytes:
@@ -20,21 +20,28 @@ def _get_appdata_node(name: str) -> bytes:
 
 class SdAppData:
     def __init__(self, name: str):
-        self.sd = io.SDCard()
-        self.sd.power(True)
-        self.fs = io.FatFS()
-        self.fs.mount()
-        self.fs.mkdir("/trezor", True)
-        seed_id = _get_seed_id()[:16]
-        seed_dir = "/trezor/seed_%s" % hexlify(seed_id).decode()
-        self.fs.mkdir(seed_dir, True)
-        self.fs.mkdir("%s/appdata" % seed_dir, True)
-        self.dir = "%s/appdata/%s" % (seed_dir, name)
-        self.fs.mkdir(self.dir, True)
-        self.node = _get_appdata_node(name)
+        self.name = name
 
     def __enter__(self):
-        return self
+        try:
+            self.sd = io.SDCard()
+            self.sd.power(True)
+            self.fs = io.FatFS()
+            self.fs.mount()
+            self.fs.mkdir("/trezor", True)
+            seed_id = _get_seed_id()[:16]
+            seed_dir = "/trezor/seed_%s" % hexlify(seed_id).decode()
+            self.fs.mkdir(seed_dir, True)
+            self.fs.mkdir("%s/appdata" % seed_dir, True)
+            self.dir = "%s/appdata/%s" % (seed_dir, self.name)
+            self.fs.mkdir(self.dir, True)
+            self.node = _get_appdata_node(self.name)
+            return self
+        except Exception as ex:
+            self.fs.unmount()
+            self.sd.power(False)
+            raise
+
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.fs.unmount()
@@ -63,16 +70,14 @@ class SdAppData:
         buf = bytearray(s[0])
         with self.fs.open(fullpath, "r") as f:
             f.read(buf)
-        if buf[:4] != MAGIC:
-            raise ValueError("Invalid magic")
-        if buf[4:8] != VERSION.to_bytes(4, "big"):
-            raise ValueError("Invalid version")
+        if buf[:8] != MAGIC:
+            raise ValueError("Invalid magic/version")
         nonce = buf[8:20]
         ctx = chacha20poly1305(enckey, nonce)
-        ctx.auth(fullpath)
+        ctx.auth(MAGIC + fullpath.encode())
         value = ctx.decrypt(buf[20:-16])
         tag = ctx.finish()
-        if tag != buf[-16:]:
+        if not utils.consteq(tag, buf[-16:]):
             raise ValueError("Invalid MAC")
         return value
 
@@ -81,12 +86,11 @@ class SdAppData:
         self.fs.mkdir(prefix, True)
         nonce = random.bytes(12)
         ctx = chacha20poly1305(enckey, nonce)
-        ctx.auth(fullpath)
+        ctx.auth(MAGIC + fullpath.encode())
         enc = ctx.encrypt(value)
         tag = ctx.finish()
         with self.fs.open(fullpath, "w") as f:
             f.write(MAGIC)
-            f.write(VERSION.to_bytes(4, "big"))
             f.write(nonce)
             f.write(enc)
             f.write(tag)

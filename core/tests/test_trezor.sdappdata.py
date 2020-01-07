@@ -22,24 +22,24 @@ class TestTrezorSdAppData(unittest.TestCase):
     @mock_storage
     def test_set_get(self):
         storage.device.store_mnemonic_secret(b"abcd", BackupType.Bip39)
-        appdata = SdAppData("test1")
-        for _ in range(16):
-            key = random.bytes(128)
-            value = random.bytes(1024)
-            appdata.set(key, value)
-            self.assertEqual(appdata.get(key), value)
+        with SdAppData("test1") as appdata:
+            for _ in range(16):
+                key = random.bytes(128)
+                value = random.bytes(1024)
+                appdata.set(key, value)
+                self.assertEqual(appdata.get(key), value)
 
     @mock_storage
     def test_set_del_get(self):
         storage.device.store_mnemonic_secret(b"efgh", BackupType.Bip39)
-        appdata = SdAppData("test2")
-        for _ in range(16):
-            key = random.bytes(128)
-            value = random.bytes(1024)
-            appdata.set(key, value)
-            appdata.delete(key)
-            with self.assertRaises(KeyError):
-                appdata.get(key)
+        with SdAppData("test2") as appdata:
+            for _ in range(16):
+                key = random.bytes(128)
+                value = random.bytes(1024)
+                appdata.set(key, value)
+                appdata.delete(key)
+                with self.assertRaises(KeyError):
+                    appdata.get(key)
 
 if __name__ == '__main__':
     unittest.main()
