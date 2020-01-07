@@ -10,6 +10,8 @@ if False:
 async def sd_appdata_set(ctx: wire.Context, msg: SdAppDataSet) -> Success:
     if not storage.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
-    appdata = SdAppData(msg.app)
-    appdata.set(msg.key, msg.value)
+    if not io.SDCard().present():
+        raise wire.ProcessError("SD card not inserted")
+    with SdAppData(msg.app) as appdata:
+        appdata.set(msg.key, msg.value)
     return Success(message="OK")
