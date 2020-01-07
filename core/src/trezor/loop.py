@@ -9,7 +9,6 @@ See `schedule`, `run`, and syscalls `sleep`, `wait`, `signal` and `race`.
 
 import utime
 import utimeq
-from micropython import const
 
 from trezor import io, log
 
@@ -43,13 +42,6 @@ _paused = {}  # type: Dict[int, Set[Task]]
 _finalizers = {}  # type: Dict[int, Finalizer]
 
 if __debug__:
-    # for performance stats
-    import array
-
-    log_delay_pos = 0
-    log_delay_rb_len = const(10)
-    log_delay_rb = array.array("i", [0] * log_delay_rb_len)
-
     # synthetic event queue
     synthetic_events = []  # type: List[Tuple[int, Any]]
 
@@ -108,12 +100,6 @@ def run() -> None:
     Tasks yield back to the scheduler on any I/O, usually by calling `await` on
     a `Syscall`.
     """
-
-    if __debug__:
-        global log_delay_pos
-
-    max_delay = const(1000000)  # usec delay if queue is empty
-
     task_entry = [0, 0, 0]  # deadline, task, value
     msg_entry = [0, 0]  # iface | flags, value
     while _queue or _paused:
@@ -121,13 +107,9 @@ def run() -> None:
         if _queue:
             delay = utime.ticks_diff(_queue.peektime(), utime.ticks_us())
         else:
-            delay = max_delay
+            delay = 1000000  # wait for 1 sec maximum if queue is empty
 
         if __debug__:
-            # add current delay to ring buffer for performance stats
-            log_delay_rb[log_delay_pos] = delay
-            log_delay_pos = (log_delay_pos + 1) % log_delay_rb_len
-
             # process synthetic events
             if synthetic_events:
                 iface, event = synthetic_events[0]
