@@ -37,9 +37,11 @@ if __debug__:
     layout_change_chan = loop.chan()
     current_content = None  # type: Optional[List[str]]
 
-    def screenshot() -> None:
+    def screenshot() -> bool:
         if utils.SAVE_SCREEN or save_screen:
             ui.display.save(save_screen_directory + "/refresh-")
+            return True
+        return False
 
     def notify_layout_change(layout: ui.Layout) -> None:
         global current_content

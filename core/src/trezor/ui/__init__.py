@@ -42,9 +42,9 @@ if __debug__:
     from apps.debug import screenshot
 
     def refresh() -> None:
-        display.bar(Display.WIDTH - 8, 0, 8, 8, 0xF800)
+        if not screenshot():
+            display.bar(Display.WIDTH - 8, 0, 8, 8, 0xF800)
         display.refresh()
-        screenshot()
 
 
 else:
