@@ -90,6 +90,16 @@ def client(request):
             "  pytest -m 'not sd_card' <test path>"
         )
 
+    test_ui = request.config.getoption("ui")
+    if test_ui not in ("", "record", "test"):
+        raise ValueError("Invalid ui option.")
+    run_ui_tests = not request.node.get_closest_marker("skip_ui") and test_ui
+
+    client.open()
+    if run_ui_tests:
+        # we need to reseed before the wipe
+        client.debug.reseed(0)
+
     wipe_device(client)
 
     setup_params = dict(
@@ -126,15 +136,7 @@ def client(request):
             # ClearSession locks the device. We only do that if the PIN is set.
             client.clear_session()
 
-    client.open()
-
-    test_ui = request.config.getoption("ui")
-    if test_ui not in ("", "record", "test"):
-        raise ValueError("Invalid ui option.")
-
-    run_ui_tests = not request.node.get_closest_marker("skip_ui") and test_ui
     if run_ui_tests:
-        client.debug.reseed(0)
         with ui_tests.screen_recording(client, request):
             yield client
     else:
