@@ -18,9 +18,9 @@ def _image(src):
     with td():
         if src:
             # open image file
-            image = open(src, "rb")
+            image = src.read_bytes()
             # encode image as base64
-            image = base64.b64encode(image.read())
+            image = base64.b64encode(image)
             # convert output to str
             image = image.decode()
             # img(src=src.relative_to(fixture_test_path))
