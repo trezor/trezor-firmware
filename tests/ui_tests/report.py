@@ -74,23 +74,23 @@ def clear_dir():
     (REPORTS_PATH / "passed").mkdir()
 
 
-def index(tests, status):
+def index(passed_tests, failed_tests):
     title = "UI Test report " + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     doc = dominate.document(title=title)
 
     with doc:
         h1("UI Test report")
-        if status == 0:
+        if not failed_tests:
             p("All tests succeeded!", style="color: green; font-weight: bold;")
         else:
             p("Some tests failed!", style="color: red; font-weight: bold;")
         hr()
 
         h2("Failed", style="color: red;")
-        _report_links(tests["failed"], "failed")
+        _report_links(failed_tests, "failed")
 
         h2("Passed", style="color: green;")
-        _report_links(tests["passed"], "passed")
+        _report_links(passed_tests, "passed")
 
     return _write(REPORTS_PATH, doc, "index.html")
 

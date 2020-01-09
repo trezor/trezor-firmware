@@ -166,7 +166,7 @@ def pytest_sessionfinish(session, exitstatus):
             for t in test:
                 test_names[status].add(get_test_name(t.nodeid))
 
-    report.index(test_names, exitstatus)
+    report.index(sorted(list(test_names["passed"])), sorted(list(test_names["failed"])))
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
