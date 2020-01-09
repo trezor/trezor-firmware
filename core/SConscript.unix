@@ -365,15 +365,6 @@ env.Replace(
 )
 
 #
-# Micropython version
-#
-
-hdr_version = env.Command(
-    target='genhdr/mpversion.h',
-    source='',
-    action='$MAKEVERSIONHDR $TARGET', )
-
-#
 # Qstrings
 #
 
@@ -390,6 +381,25 @@ qstr_generated = env.GenerateQstrDefs(
     target='genhdr/qstrdefs.generated.h', source=qstr_preprocessed)
 
 env.Ignore(qstr_collected, qstr_generated)
+
+#
+# Micropython version and modules
+#
+
+hdr_version = env.Command(
+    target='genhdr/mpversion.h',
+    source='',
+    action='$MAKEVERSIONHDR $TARGET', )
+
+hdr_moduledefs = env.Command(
+    target='genhdr/moduledefs.h',
+    source=SOURCE_QSTR,
+    action='$MAKEMODULEDEFS --vpath="." $SOURCES > $TARGET', )
+
+env.Ignore(hdr_moduledefs, hdr_moduledefs)
+env.Ignore(hdr_moduledefs, qstr_collected)
+env.Ignore(hdr_moduledefs, qstr_preprocessed)
+env.Ignore(hdr_moduledefs, qstr_generated)
 
 #
 # Frozen modules

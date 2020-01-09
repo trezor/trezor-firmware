@@ -179,20 +179,6 @@ static void usb_desc_add_iface(size_t desc_len) {
                                      usb_config_desc->wTotalLength);
 }
 
-static uint8_t usb_ep_set_nak(USBD_HandleTypeDef *dev, uint8_t ep_num) {
-  PCD_HandleTypeDef *hpcd = dev->pData;
-  USB_OTG_GlobalTypeDef *USBx = hpcd->Instance;
-  USBx_OUTEP(ep_num)->DOEPCTL |= USB_OTG_DOEPCTL_SNAK;
-  return USBD_OK;
-}
-
-static uint8_t usb_ep_clear_nak(USBD_HandleTypeDef *dev, uint8_t ep_num) {
-  PCD_HandleTypeDef *hpcd = dev->pData;
-  USB_OTG_GlobalTypeDef *USBx = hpcd->Instance;
-  USBx_OUTEP(ep_num)->DOEPCTL |= USB_OTG_DOEPCTL_CNAK;
-  return USBD_OK;
-}
-
 /*
  * USB interface implementations
  */

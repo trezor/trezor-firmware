@@ -141,8 +141,7 @@ STATIC int execute_from_lexer(int source_kind, const void *source,
     }
 #endif
 
-    mp_obj_t module_fun =
-        mp_compile(&parse_tree, source_name, emit_opt, is_repl);
+    mp_obj_t module_fun = mp_compile(&parse_tree, source_name, is_repl);
 
     if (!compile_only) {
       // execute it
@@ -320,7 +319,12 @@ STATIC int usage(char **argv) {
   int impl_opts_cnt = 0;
   printf(
       "  compile-only                 -- parse and compile only\n"
-      "  emit={bytecode,native,viper} -- set the default code emitter\n");
+#if MICROPY_EMIT_NATIVE
+      "  emit={bytecode,native,viper} -- set the default code emitter\n"
+#else
+      "  emit=bytecode                -- set the default code emitter\n"
+#endif
+  );
   impl_opts_cnt++;
 #if MICROPY_ENABLE_GC
   printf(
@@ -349,10 +353,12 @@ STATIC void pre_process_options(int argc, char **argv) {
           compile_only = true;
         } else if (strcmp(argv[a + 1], "emit=bytecode") == 0) {
           emit_opt = MP_EMIT_OPT_BYTECODE;
+#if MICROPY_EMIT_NATIVE
         } else if (strcmp(argv[a + 1], "emit=native") == 0) {
           emit_opt = MP_EMIT_OPT_NATIVE_PYTHON;
         } else if (strcmp(argv[a + 1], "emit=viper") == 0) {
           emit_opt = MP_EMIT_OPT_VIPER;
+#endif
 #if MICROPY_ENABLE_GC
         } else if (strncmp(argv[a + 1], "heapsize=", sizeof("heapsize=") - 1) ==
                    0) {
@@ -505,7 +511,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
         vstr_add_strn(&vstr, p + 1, p1 - p - 1);
         path_items[i] = mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
       } else {
-        path_items[i] = MP_OBJ_NEW_QSTR(qstr_from_strn(p, p1 - p));
+        path_items[i] = mp_obj_new_str_via_qstr(p, p1 - p);
       }
       p = p1 + 1;
     }
@@ -633,7 +639,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
 
       // Set base dir of the script as first entry in sys.path
       char *p = strrchr(basedir, '/');
-      path_items[0] = MP_OBJ_NEW_QSTR(qstr_from_strn(basedir, p - basedir));
+      path_items[0] = mp_obj_new_str_via_qstr(basedir, p - basedir);
       free(pathbuf);
 
       set_sys_argv(argv, argc, a);
@@ -651,6 +657,18 @@ MP_NOINLINE int main_(int argc, char **argv) {
       ret = execute_from_lexer(LEX_SRC_STDIN, NULL, MP_PARSE_FILE_INPUT, false);
     }
   }
+
+#if MICROPY_PY_SYS_SETTRACE
+  MP_STATE_THREAD(prof_trace_callback) = MP_OBJ_NULL;
+#endif
+
+#if MICROPY_PY_SYS_ATEXIT
+  // Beware, the sys.settrace callback should be disabled before running
+  // sys.atexit.
+  if (mp_obj_is_callable(MP_STATE_VM(sys_exitfunc))) {
+    mp_call_function_0(MP_STATE_VM(sys_exitfunc));
+  }
+#endif
 
 #if MICROPY_PY_MICROPYTHON_MEM_INFO
   char *env_str_trezor_log_memory = getenv("TREZOR_LOG_MEMORY");
