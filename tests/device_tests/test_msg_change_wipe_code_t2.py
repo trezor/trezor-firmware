@@ -143,7 +143,6 @@ def test_set_remove_wipe_code(client):
     assert client.features.wipe_code_protection is False
 
 
-@pytest.mark.setup_client()
 def test_set_wipe_code_mismatch(client):
     # Let's set a wipe code.
     def input_flow():
@@ -202,7 +201,6 @@ def test_set_wipe_code_to_pin(client):
     _check_wipe_code(client, PIN4, WIPE_CODE4)
 
 
-@pytest.mark.setup_client()
 def test_set_pin_to_wipe_code(client):
     # Set wipe code.
     with client:

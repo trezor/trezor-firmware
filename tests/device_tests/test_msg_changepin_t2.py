@@ -96,7 +96,6 @@ def _check_no_pin(client):
     assert client.features.pin_protection is False
 
 
-@pytest.mark.setup_client()
 def test_set_pin(client):
     assert client.features.pin_protection is False
 
@@ -162,7 +161,6 @@ def test_remove_pin(client):
     _check_no_pin(client)
 
 
-@pytest.mark.setup_client()
 def test_set_failed(client):
     assert client.features.pin_protection is False
 
