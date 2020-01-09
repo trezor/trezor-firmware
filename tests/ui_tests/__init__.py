@@ -9,15 +9,16 @@ import pytest
 from . import report
 
 
-def _get_test_dirname(node):
-    # This composes the dirname from the test module name and test item name.
+def get_test_name(node_id):
     # Test item name is usually function name, but when parametrization is used,
     # parameters are also part of the name. Some functions have very long parameter
     # names (tx hashes etc) that run out of maximum allowable filename length, so
     # we limit the name to first 100 chars. This is not a problem with txhashes.
-    node_name = re.sub(r"\W+", "_", node.name)[:100]
-    node_module_name = node.getparent(pytest.Module).name
-    return f"{node_module_name}_{node_name}"
+    new_name = node_id.replace("tests/device_tests/", "")
+    # remove ::TestClass:: if present because it is usually the same as the test file name
+    new_name = re.sub(r"::.*?::", "-", new_name)
+    new_name = new_name.replace("/", "-")  # in case there is "/"
+    return new_name[:100]
 
 
 def _check_fixture_directory(fixture_dir, screen_path):
@@ -86,7 +87,7 @@ def _process_tested(fixture_test_path, test_name):
 @contextmanager
 def screen_recording(client, request):
     test_ui = request.config.getoption("ui")
-    test_name = _get_test_dirname(request.node)
+    test_name = get_test_name(request.node.nodeid)
     fixture_test_path = Path(__file__).parent.resolve() / "fixtures" / test_name
 
     if test_ui == "record":
