@@ -63,7 +63,7 @@ def _report_links(tests, status):
             th("Link to report")
         for test in tests:
             with tr():
-                td(a(test, href=REPORTS_PATH / status / (test + ".html")))
+                td(a(test, href="%s/%s.html" % (status, test)))
 
 
 def clear_dir():
