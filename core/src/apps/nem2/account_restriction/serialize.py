@@ -36,7 +36,7 @@ def serialize_account_restriction(
     entity_type = common.type
 
     # Total size is the size of the common transaction properties
-    # + the secret lock transaction specific properties
+    # + the account restriction body properties
     size = get_common_message_size() if not embedded else get_embedded_common_message_size()
     size += get_account_restriction_body_size(account_restriction, entity_type)
 

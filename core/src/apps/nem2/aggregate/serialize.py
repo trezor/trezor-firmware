@@ -91,7 +91,6 @@ def serialize_aggregate_transaction_body(
     # Transactions
     write_bytes(tx_body, serialized_inner_transactions)
     # Cosignatures
-    #TODO
     write_bytes(tx_body, cosignatures)
     return tx_body
 

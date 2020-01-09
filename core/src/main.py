@@ -41,7 +41,6 @@ def _boot_apps() -> None:
     apps.management.boot()
     apps.wallet.boot()
     if not utils.BITCOIN_ONLY:
-        print("MAIN PYTHON BOOTING")
         apps.ethereum.boot()
         apps.lisk.boot()
         apps.monero.boot()

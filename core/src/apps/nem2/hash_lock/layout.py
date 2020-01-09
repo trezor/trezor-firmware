@@ -23,7 +23,6 @@ async def ask_hash_lock(
 
 async def require_confirm_properties(ctx, hash_lock: NEM2HashLockTransaction):
     properties = []
-    print('drawing layout', hash_lock.mosaic, hash_lock.duration)
     # Mosaic
     if hash_lock.mosaic:
         t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)

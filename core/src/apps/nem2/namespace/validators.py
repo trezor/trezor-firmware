@@ -22,7 +22,6 @@ def _validate_namespace_registration(namespace_registration: NEM2NamespaceRegist
     if(namespace_registration.registration_type == NEM2_NAMESPACE_REGISTRATION_TYPE_SUB):
         if(namespace_registration.parent_id is None):
             raise ProcessError("Parent Id is required for subnamespace registration")
-    #TODO: figure out how to get regex in here, valid characters are a,b,c,…,z,0,1,2,…,9,_ ,-
     if(len(namespace_registration.namespace_name) > 64):
         raise ProcessError("Maximum namespace name is 64 characters")
     if(namespace_registration.id is None):

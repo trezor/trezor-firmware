@@ -44,8 +44,8 @@ from .namespace.validators import (
 from .metadata.validators import _validate_metadata
 
 def validate(msg: NEM2SignTx):
-    # if not validate_nem2_path(msg.address_n):
-    #     raise ProcessError("Invalid HD path provided, must fit 'm/44'/43'/a'/0'/0'")
+    if not validate_nem2_path(msg.address_n):
+        raise ProcessError("Invalid HD path provided, must fit 'm/44'/43'/a'/0'/0'")
 
     if msg.cosigning:
         return
