@@ -91,3 +91,19 @@ If you wan't to catch some memory errors use this.
 ```sh
 time ASAN_OPTIONS=verbosity=1:detect_invalid_pointer_pairs=1:strict_init_order=true:strict_string_checks=true TREZOR_PROFILE="" pipenv run make test_emu
 ```
+
+### Coverage (Emulator only)
+
+Get the Python code coverage report.
+
+If you want to get HTML/console summary output you need to install the __coverage.py__ tool.
+
+```sh
+pip3 install coverage
+```
+
+Run the tests with coverage output.
+
+```sh
+make build_unix && make coverage
+```

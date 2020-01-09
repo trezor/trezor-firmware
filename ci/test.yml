@@ -43,15 +43,21 @@ core unix device test:
   <<: *only_changes_core
   dependencies:
     - core unix frozen regular build
+  variables:
+    TREZOR_PROFILING: 1
   script:
     - cd core
     - pipenv run make test_emu
     - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
+    - sync
+    - sleep 1
+    - mv ./src/.coverage .coverage.test_emu
   artifacts:
     name: core-unix-device-test
     paths:
       - trezor.log
       - tests/junit.xml
+      - core/.coverage.*
     expire_in: 1 week
     when: always
     reports:
@@ -84,14 +90,20 @@ core unix monero test:
   <<: *only_changes_core
   dependencies:
     - core unix frozen regular build
+  variables:
+    TREZOR_PROFILING: 1
   script:
     - cd core
     - pipenv run make test_emu_monero
     - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
+    - sync
+    - sleep 1
+    - mv ./src/.coverage .coverage.test_emu_monero
   artifacts:
     name: core-unix-monero-test
     paths:
       - trezor.log
+      - core/.coverage.*
     expire_in: 1 week
     when: always
 
@@ -101,15 +113,21 @@ core unix u2f test:
   retry: 2  # see https://github.com/trezor/trezor-firmware/issues/596
   dependencies:
     - core unix frozen regular build
+  variables:
+    TREZOR_PROFILING: 1
   script:
     - make -C tests/fido_tests/u2f-tests-hid
     - cd core
     - pipenv run make test_emu_u2f
     - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
+    - sync
+    - sleep 1
+    - mv ./src/.coverage .coverage.test_emu_u2f
   artifacts:
     name: core-unix-u2f-test
     paths:
       - trezor.log
+      - core/.coverage.*
     expire_in: 1 week
     when: always
 
@@ -118,15 +136,21 @@ core unix fido2 test:
   <<: *only_changes_core
   dependencies:
     - core unix frozen regular build
+  variables:
+    TREZOR_PROFILING: 1
   script:
     - cd core
     - pipenv run make test_emu_fido2
     - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
+    - sync
+    - sleep 1
+    - mv ./src/.coverage .coverage.test_emu_fido2
   artifacts:
     name: core-unix-fido2-test
     paths:
       - trezor.log
       - tests/junit.xml
+      - core/.coverage.*
     expire_in: 1 week
     reports:
       junit: tests/junit.xml

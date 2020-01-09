@@ -1,0 +1,21 @@
+image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
+
+core unix coverage posttest:
+  stage: posttest
+  dependencies:
+    - core unix device test
+    - core unix monero test
+    - core unix u2f test
+    - core unix fido2 test
+  script:
+    - cd core
+    - pipenv run make res  # we need to regenerate resources.py
+    - pipenv run make coverage
+  coverage: '/>\d+%</'
+  artifacts:
+    name: core-unix-coverage-posttest
+    paths:
+    - core/.coverage.*
+    - core/htmlcov
+    expire_in: 1 week
+

@@ -26,6 +26,7 @@ stages:
   - prebuild
   - build
   - test
+  - posttest
   - deploy
 
 before_script:
@@ -36,4 +37,5 @@ include:
   - ci/prebuild.yml
   - ci/build.yml
   - ci/test.yml
+  - ci/posttest.yml
   - ci/deploy.yml
