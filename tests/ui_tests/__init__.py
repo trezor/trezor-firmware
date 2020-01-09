@@ -8,6 +8,8 @@ import pytest
 
 from . import report
 
+UI_TESTS_DIR = Path(__file__).parent.resolve()
+
 
 def get_test_name(node_id):
     # Test item name is usually function name, but when parametrization is used,
@@ -67,28 +69,24 @@ def _process_tested(fixture_test_path, test_name):
     _rename_records(actual_path)
 
     if actual_hash != expected_hash:
-        file_path = report.failure(
+        file_path = report.failed(
             fixture_test_path, test_name, actual_hash, expected_hash
         )
 
-        if (fixture_test_path / "success.html").exists():
-            (fixture_test_path / "success.html").unlink()
         pytest.fail(
             "Hash of {} differs.\nExpected:  {}\nActual:    {}\nDiff file: {}".format(
                 test_name, expected_hash, actual_hash, file_path
             )
         )
     else:
-        report.success(fixture_test_path, test_name, actual_hash)
-        if (fixture_test_path / "failure_diff.html").exists():
-            (fixture_test_path / "failure_diff.html").unlink()
+        report.passed(fixture_test_path, test_name, actual_hash)
 
 
 @contextmanager
 def screen_recording(client, request):
     test_ui = request.config.getoption("ui")
     test_name = get_test_name(request.node.nodeid)
-    fixture_test_path = Path(__file__).parent.resolve() / "fixtures" / test_name
+    fixture_test_path = UI_TESTS_DIR / "fixtures" / test_name
 
     if test_ui == "record":
         screen_path = fixture_test_path / "recorded"
@@ -97,7 +95,9 @@ def screen_recording(client, request):
     else:
         raise ValueError("Invalid 'ui' option.")
 
-    _check_fixture_directory(fixture_test_path, screen_path)
+    # remove previous files
+    shutil.rmtree(screen_path, ignore_errors=True)
+    screen_path.mkdir()
 
     try:
         client.debug.start_recording(str(screen_path))
