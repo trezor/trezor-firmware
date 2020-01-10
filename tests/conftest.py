@@ -26,7 +26,7 @@ from trezorlib.transport import enumerate_devices, get_transport
 
 from . import ui_tests
 from .device_handler import BackgroundDeviceHandler
-from .ui_tests import get_test_name, report
+from .ui_tests import report
 
 
 def get_device():
@@ -152,21 +152,8 @@ def pytest_sessionstart(session):
 
 
 def pytest_sessionfinish(session, exitstatus):
-    if session.config.getoption("ui") != "test":
-        return
-
-    reporter = session.config.pluginmanager.get_plugin("terminalreporter")
-    # intentionally set(), because there are multiple stages for one test in the TestReport items
-    test_names = {"passed": set(), "failed": set()}
-    for status, test in reporter.stats.items():
-        if status in ("deselected", "warnings"):
-            continue
-        if status in ("passed", "failed"):
-            # iterate through the stages to get the test name
-            for t in test:
-                test_names[status].add(get_test_name(t.nodeid))
-
-    report.index(sorted(list(test_names["passed"])), sorted(list(test_names["failed"])))
+    if session.config.getoption("ui") == "test":
+        report.index()
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):

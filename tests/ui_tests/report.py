@@ -52,18 +52,18 @@ def _write(fixture_test_path, doc, filename):
     return fixture_test_path / filename
 
 
-def _report_links(tests, status):
-    if status not in ("failed", "passed"):
-        raise ValueError("Different status than failed/passed is not yet supported.")
+def _report_links(tests):
+    tests = list(tests)
     if not tests:
         i("None!")
         return
     with table(border=1):
         with tr():
             th("Link to report")
-        for test in tests:
+        for test in sorted(tests):
             with tr():
-                td(a(test, href="%s/%s.html" % (status, test)))
+                path = test.relative_to(REPORTS_PATH)
+                td(a(test.name, href=path))
 
 
 def clear_dir():
@@ -74,7 +74,10 @@ def clear_dir():
     (REPORTS_PATH / "passed").mkdir()
 
 
-def index(passed_tests, failed_tests):
+def index():
+    passed_tests = (REPORTS_PATH / "passed").iterdir()
+    failed_tests = (REPORTS_PATH / "failed").iterdir()
+
     title = "UI Test report " + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     doc = dominate.document(title=title)
 
@@ -87,10 +90,10 @@ def index(passed_tests, failed_tests):
         hr()
 
         h2("Failed", style="color: red;")
-        _report_links(failed_tests, "failed")
+        _report_links(failed_tests)
 
         h2("Passed", style="color: green;")
-        _report_links(passed_tests, "passed")
+        _report_links(passed_tests)
 
     return _write(REPORTS_PATH, doc, "index.html")
 
