@@ -30,7 +30,7 @@ from apps.nem2.validators import validate
 # Included fields are `size`, `verifiableEntityHeader_Reserved1`,
 # `signature`, `signerPublicKey` and `entityBody_Reserved1`.
 def get_transaction_header_size():
-    return 8 + 64 + 32 + 4
+    return 4 + 4 + 64 + 32 + 4
 
 # Included fields are the transaction header, `version`,
 # `network`, `type`, `maxFee` and `deadline`
@@ -108,20 +108,6 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
         tx = await account_restriction.account_restriction(ctx, common, msg.account_mosaic_restriction)
     elif msg.account_operation_restriction:
         tx = await account_restriction.account_restriction(ctx, common, msg.account_operation_restriction)
-    # elif msg.supply_change:
-    #     tx = await mosaic.supply_change(ctx, public_key, common, msg.supply_change)
-    # elif msg.aggregate_modification:
-    #     tx = await multisig.aggregate_modification(
-    #         ctx,
-    #         public_key,
-    #         common,
-    #         msg.aggregate_modification,
-    #         msg.multisig is not None,
-    #     )
-    # elif msg.importance_transfer:
-    #     tx = await transfer.importance_transfer(
-    #         ctx, public_key, common, msg.importance_transfer
-    #     )
     else:
         raise ValueError("No transaction provided")
 
