@@ -80,7 +80,7 @@ def get_account_restriction_body_size(
         if entity_type == NEM2_TRANSACTION_TYPE_ACCOUNT_ADDRESS_RESTRICTION:
             size += 25 # recipient is 25 bytes
         elif entity_type == NEM2_TRANSACTION_TYPE_ACCOUNT_MOSAIC_RESTRICTION:
-            size += 8 # mosaic ID is 25 bytes
+            size += 8 # mosaic ID is 8 bytes
         elif entity_type == NEM2_TRANSACTION_TYPE_ACCOUNT_OPERATION_RESTRICTION:
             size += 2 # entity type is 2 bytes
 
