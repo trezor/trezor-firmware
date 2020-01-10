@@ -15,13 +15,15 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 
+from unittest import mock
+
 import pytest
 import shamir_mnemonic as shamir
 
 from trezorlib import device, messages
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
-from ..common import click_through, read_and_confirm_mnemonic
+from ..common import EXTERNAL_ENTROPY, click_through, read_and_confirm_mnemonic
 
 
 def backup_flow_bip39(client):
@@ -178,13 +180,16 @@ VECTORS = [
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
 def test_skip_backup_msg(client, backup_type, backup_flow):
-    device.reset(
-        client,
-        skip_backup=True,
-        passphrase_protection=False,
-        pin_protection=False,
-        backup_type=backup_type,
-    )
+
+    os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
+    with mock.patch("os.urandom", os_urandom), client:
+        device.reset(
+            client,
+            skip_backup=True,
+            passphrase_protection=False,
+            pin_protection=False,
+            backup_type=backup_type,
+        )
 
     assert client.features.initialized is True
     assert client.features.needs_backup is True
@@ -220,7 +225,8 @@ def test_skip_backup_manual(client, backup_type, backup_flow):
         yield  # Confirm skip backup
         client.debug.press_no()
 
-    with client:
+    os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
+    with mock.patch("os.urandom", os_urandom), client:
         client.set_input_flow(reset_skip_input_flow)
         client.set_expected_responses(
             [

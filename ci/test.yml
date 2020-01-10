@@ -38,6 +38,29 @@ core unix unit test:
     - cd core
     - pipenv run make test
 
+core unix device ui test:
+  stage: test
+  <<: *only_changes_core
+  dependencies:
+    - core unix frozen regular build
+  script:
+    - cd core
+    - pipenv run make test_emu_ui
+    - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
+    - cd ../ci
+    - pipenv run python prepare_ui_artifacts.py
+  artifacts:
+    name: core-unix-device-ui-test
+    paths:
+      - trezor.log
+      - ci/ui_test_records/
+      - tests/ui_tests/reports/
+      - tests/junit.xml
+    when: always
+    expire_in: 1 week
+    reports:
+      junit: tests/junit.xml
+
 core unix device test:
   stage: test
   <<: *only_changes_core

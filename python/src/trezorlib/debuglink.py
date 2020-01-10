@@ -138,6 +138,15 @@ class DebugLink:
     def stop(self):
         self._call(proto.DebugLinkStop(), nowait=True)
 
+    def reseed(self, value):
+        self._call(proto.DebugLinkReseedRandom(value=value))
+
+    def start_recording(self, directory):
+        self._call(proto.DebugLinkRecordScreen(target_directory=directory))
+
+    def stop_recording(self):
+        self._call(proto.DebugLinkRecordScreen(target_directory=None))
+
     @expect(proto.DebugLinkMemory, field="memory")
     def memory_read(self, address, length):
         return self._call(proto.DebugLinkMemoryRead(address=address, length=length))

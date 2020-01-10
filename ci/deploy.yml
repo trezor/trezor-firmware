@@ -194,3 +194,18 @@ upgrade tests legacy deploy:
     - branches  # run for tags only
   tags:
     - deploy
+
+# UI tests
+
+ui tests core fixtures deploy:
+  stage: deploy
+  variables:
+    DEPLOY_PATH: "${DEPLOY_BASE_DIR}/ui_tests/"
+  before_script: []  # no pipenv
+  dependencies:
+    - core unix device ui test
+  script:
+    - echo "Deploying to $DEPLOY_PATH"
+    - rsync --delete -va ci/ui_test_records/* "$DEPLOY_PATH"
+  tags:
+    - deploy

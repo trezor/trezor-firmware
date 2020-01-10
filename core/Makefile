@@ -79,6 +79,12 @@ test_emu_fido2: ## run fido2 device tests
 test_emu_click: ## run click tests
 	cd tests ; ./run_tests_click_emu.sh $(TESTOPTS)
 
+test_emu_ui: ## run ui integration tests
+	cd tests ; ./run_tests_device_emu.sh --ui=test -m "not skip_ui" $(TESTOPTS)
+
+test_emu_ui_record: ## record and hash screens for ui integration tests
+	cd tests ; ./run_tests_device_emu.sh --ui=record -m "not skip_ui" $(TESTOPTS)
+
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 

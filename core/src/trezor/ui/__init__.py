@@ -39,18 +39,21 @@ _alert_in_progress = False
 
 # in debug mode, display an indicator in top right corner
 if __debug__:
+    from apps.debug import screenshot
 
-    def debug_display_refresh() -> None:
-        display.bar(Display.WIDTH - 8, 0, 8, 8, 0xF800)
+    def refresh() -> None:
+        if not screenshot():
+            display.bar(Display.WIDTH - 8, 0, 8, 8, 0xF800)
         display.refresh()
-        if utils.SAVE_SCREEN:
-            display.save("refresh")
 
-    loop.after_step_hook = debug_display_refresh
+
+else:
+    refresh = display.refresh
+
 
 # in both debug and production, emulator needs to draw the screen explicitly
-elif utils.EMULATOR:
-    loop.after_step_hook = display.refresh
+if utils.EMULATOR:
+    loop.after_step_hook = refresh
 
 
 def lerpi(a: int, b: int, t: float) -> int:
@@ -120,7 +123,7 @@ async def click() -> Pos:
 
 def backlight_fade(val: int, delay: int = 14000, step: int = 15) -> None:
     if __debug__:
-        if utils.DISABLE_FADE:
+        if utils.DISABLE_ANIMATION:
             display.backlight(val)
             return
     current = display.backlight()
@@ -346,7 +349,7 @@ class Layout(Component):
         # Display is usually refreshed after every loop step, but here we are
         # rendering everything synchronously, so refresh it manually and turn
         # the brightness on again.
-        display.refresh()
+        refresh()
         backlight_fade(style.BACKLIGHT_NORMAL)
         sleep = loop.sleep(_RENDER_DELAY_US)
         while True:

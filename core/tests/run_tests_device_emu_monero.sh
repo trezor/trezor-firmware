@@ -8,7 +8,7 @@ CORE_DIR="$(SHELL_SESSION_FILE='' && cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/
 MICROPYTHON="${MICROPYTHON:-$CORE_DIR/build/unix/micropython}"
 TREZOR_SRC="${CORE_DIR}/src"
 
-DISABLE_FADE=1
+DISABLE_ANIMATION=1
 PYOPT="${PYOPT:-0}"
 upy_pid=""
 
@@ -24,7 +24,7 @@ if [[ $RUN_TEST_EMU > 0 ]]; then
   echo "Starting emulator: $MICROPYTHON $ARGS ${MAIN}"
 
   TREZOR_TEST=1 \
-  TREZOR_DISABLE_FADE=$DISABLE_FADE \
+  TREZOR_DISABLE_ANIMATION=$DISABLE_ANIMATION \
     $MICROPYTHON $ARGS "${MAIN}" &> "${TREZOR_LOGFILE}" &
   upy_pid=$!
   cd -

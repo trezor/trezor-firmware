@@ -24,7 +24,9 @@ from trezorlib.device import apply_settings, wipe as wipe_device
 from trezorlib.messages.PassphraseSourceType import HOST as PASSPHRASE_ON_HOST
 from trezorlib.transport import enumerate_devices, get_transport
 
+from . import ui_tests
 from .device_handler import BackgroundDeviceHandler
+from .ui_tests import report
 
 
 def get_device():
@@ -89,9 +91,18 @@ def client(request):
             "  pytest -m 'not sd_card' <test path>"
         )
 
+    test_ui = request.config.getoption("ui")
+    if test_ui not in ("", "record", "test"):
+        raise ValueError("Invalid ui option.")
+    run_ui_tests = not request.node.get_closest_marker("skip_ui") and test_ui
+
+    client.open()
+    if run_ui_tests:
+        # we need to reseed before the wipe
+        client.debug.reseed(0)
+
     wipe_device(client)
 
-    # fmt: off
     setup_params = dict(
         uninitialized=False,
         mnemonic=" ".join(["all"] * 12),
@@ -100,7 +111,6 @@ def client(request):
         needs_backup=False,
         no_backup=False,
     )
-    # fmt: on
 
     marker = request.node.get_closest_marker("setup_client")
     if marker:
@@ -127,9 +137,38 @@ def client(request):
             # ClearSession locks the device. We only do that if the PIN is set.
             client.clear_session()
 
-    client.open()
-    yield client
+    if run_ui_tests:
+        with ui_tests.screen_recording(client, request):
+            yield client
+    else:
+        yield client
+
     client.close()
+
+
+def pytest_sessionstart(session):
+    if session.config.getoption("ui") == "test":
+        report.clear_dir()
+
+
+def pytest_sessionfinish(session, exitstatus):
+    if session.config.getoption("ui") == "test":
+        report.index()
+
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    terminalreporter.writer.line(
+        "\nUI tests summary: %s" % (report.REPORTS_PATH / "index.html")
+    )
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--ui",
+        action="store",
+        default="",
+        help="Enable UI intergration tests: 'record' or 'test'",
+    )
 
 
 def pytest_configure(config):
@@ -143,6 +182,9 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers",
         'setup_client(mnemonic="all all all...", pin=None, passphrase=False, uninitialized=False): configure the client instance',
+    )
+    config.addinivalue_line(
+        "markers", "skip_ui: skip UI integration checks for this test"
     )
     with open(os.path.join(os.path.dirname(__file__), "REGISTERED_MARKERS")) as f:
         for line in f:

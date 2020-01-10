@@ -4,15 +4,22 @@ if not __debug__:
     halt("debug mode inactive")
 
 if __debug__:
-    from trezor import config, io, log, loop, ui, utils, wire
+    from trezor import io, ui, wire
     from trezor.messages import MessageType, DebugSwipeDirection
     from trezor.messages.DebugLinkLayout import DebugLinkLayout
+    from trezor import config, crypto, log, loop, utils
+    from trezor.messages.Success import Success
 
     if False:
         from typing import List, Optional
         from trezor.messages.DebugLinkDecision import DebugLinkDecision
         from trezor.messages.DebugLinkGetState import DebugLinkGetState
+        from trezor.messages.DebugLinkRecordScreen import DebugLinkRecordScreen
+        from trezor.messages.DebugLinkReseedRandom import DebugLinkReseedRandom
         from trezor.messages.DebugLinkState import DebugLinkState
+
+    save_screen = False
+    save_screen_directory = "."
 
     reset_internal_entropy = None  # type: Optional[bytes]
     reset_current_words = loop.chan()
@@ -29,6 +36,12 @@ if __debug__:
 
     layout_change_chan = loop.chan()
     current_content = None  # type: Optional[List[str]]
+
+    def screenshot() -> bool:
+        if utils.SAVE_SCREEN or save_screen:
+            ui.display.save(save_screen_directory + "/refresh-")
+            return True
+        return False
 
     def notify_layout_change(layout: ui.Layout) -> None:
         global current_content
@@ -104,12 +117,35 @@ if __debug__:
             m.reset_word = " ".join(await reset_current_words.take())
         return m
 
+    async def dispatch_DebugLinkRecordScreen(
+        ctx: wire.Context, msg: DebugLinkRecordScreen
+    ) -> Success:
+        global save_screen_directory
+        global save_screen
+
+        if msg.target_directory:
+            save_screen_directory = msg.target_directory
+            save_screen = True
+        else:
+            save_screen = False
+            ui.display.clear_save()  # clear C buffers
+
+        return Success()
+
+    async def dispatch_DebugLinkReseedRandom(
+        ctx: wire.Context, msg: DebugLinkReseedRandom
+    ) -> Success:
+        if msg.value is not None:
+            crypto.random.reseed(msg.value)
+        return Success()
+
     def boot() -> None:
         # wipe storage when debug build is used on real hardware
         if not utils.EMULATOR:
             config.wipe()
 
+        wire.add(MessageType.LoadDevice, __name__, "load_device")
         wire.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)
         wire.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)
-
-        wire.add(MessageType.LoadDevice, __name__, "load_device")
+        wire.register(MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom)
+        wire.register(MessageType.DebugLinkRecordScreen, dispatch_DebugLinkRecordScreen)

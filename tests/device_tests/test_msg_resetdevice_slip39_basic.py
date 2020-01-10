@@ -25,9 +25,12 @@ from trezorlib import device, messages as proto
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
-from ..common import click_through, generate_entropy, read_and_confirm_mnemonic
-
-EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
+from ..common import (
+    EXTERNAL_ENTROPY,
+    click_through,
+    generate_entropy,
+    read_and_confirm_mnemonic,
+)
 
 
 @pytest.mark.skip_t1

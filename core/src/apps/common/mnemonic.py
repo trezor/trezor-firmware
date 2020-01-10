@@ -1,5 +1,5 @@
 import storage.device
-from trezor import ui, workflow
+from trezor import ui, utils, workflow
 from trezor.crypto import bip39, slip39
 from trezor.messages import BackupType
 
@@ -34,7 +34,7 @@ def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
         raise ValueError("Mnemonic not set")
 
     render_func = None
-    if progress_bar:
+    if progress_bar and not utils.DISABLE_ANIMATION:
         _start_progress()
         render_func = _render_progress
 
@@ -62,11 +62,11 @@ def _start_progress() -> None:
     ui.backlight_fade(ui.BACKLIGHT_DIM)
     ui.display.clear()
     ui.header("Please wait")
-    ui.display.refresh()
+    ui.refresh()
     ui.backlight_fade(ui.BACKLIGHT_NORMAL)
 
 
 def _render_progress(progress: int, total: int) -> None:
     p = 1000 * progress // total
     ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
-    ui.display.refresh()
+    ui.refresh()

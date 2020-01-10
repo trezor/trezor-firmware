@@ -1,6 +1,6 @@
 from micropython import const
 
-from trezor import loop, res, ui
+from trezor import loop, res, ui, utils
 from trezor.ui.button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
 from trezor.ui.confirm import CANCELLED, CONFIRMED
 from trezor.ui.swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
@@ -32,11 +32,14 @@ def render_scrollbar(pages: int, page: int) -> None:
 
 
 def render_swipe_icon() -> None:
-    PULSE_PERIOD = const(1200000)
+    if utils.DISABLE_ANIMATION:
+        c = ui.GREY
+    else:
+        PULSE_PERIOD = const(1200000)
+        t = ui.pulse(PULSE_PERIOD)
+        c = ui.blend(ui.GREY, ui.DARK_GREY, t)
 
     icon = res.load(ui.ICON_SWIPE)
-    t = ui.pulse(PULSE_PERIOD)
-    c = ui.blend(ui.GREY, ui.DARK_GREY, t)
     ui.display.icon(70, 205, icon, c, ui.BG)
 
 
