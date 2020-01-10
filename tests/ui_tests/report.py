@@ -53,7 +53,6 @@ def _write(fixture_test_path, doc, filename):
 
 
 def _report_links(tests):
-    tests = list(tests)
     if not tests:
         i("None!")
         return
@@ -75,8 +74,8 @@ def clear_dir():
 
 
 def index():
-    passed_tests = (REPORTS_PATH / "passed").iterdir()
-    failed_tests = (REPORTS_PATH / "failed").iterdir()
+    passed_tests = list((REPORTS_PATH / "passed").iterdir())
+    failed_tests = list((REPORTS_PATH / "failed").iterdir())
 
     title = "UI Test report " + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     doc = dominate.document(title=title)
