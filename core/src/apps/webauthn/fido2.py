@@ -477,7 +477,10 @@ async def send_cmd(cmd: Cmd, iface: io.HID) -> None:
         if copied < _FRAME_CONT_SIZE:
             frm.data[copied:] = bytearray(_FRAME_CONT_SIZE - copied)
         while True:
-            await write
+            ret = await loop.race(write, loop.sleep(_CTAP_HID_TIMEOUT_MS * 1000))
+            if ret is not None:
+                raise TimeoutError
+
             if iface.write(buf) > 0:
                 break
         seq += 1
