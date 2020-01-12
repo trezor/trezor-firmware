@@ -153,4 +153,5 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
     resp = NEM2SignedTx()
     resp.payload = payload
     resp.hash = sha3_256(hash_bytes).digest()
+    resp.signature = signature
     return resp
