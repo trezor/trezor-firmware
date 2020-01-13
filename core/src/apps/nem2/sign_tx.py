@@ -17,7 +17,8 @@ from apps.nem2 import (
     hash_lock,
     secret_lock,
     multisig,
-    account_restriction
+    account_restriction,
+    account_link
 )
 from apps.nem2.helpers import (
     validate_nem2_path,
@@ -108,6 +109,8 @@ async def sign_tx(ctx, msg: NEM2SignTx, keychain):
         tx = await account_restriction.account_restriction(ctx, common, msg.account_mosaic_restriction)
     elif msg.account_operation_restriction:
         tx = await account_restriction.account_restriction(ctx, common, msg.account_operation_restriction)
+    elif msg.account_link:
+        tx = await account_link.account_link(ctx, common, msg.account_link)
     else:
         raise ValueError("No transaction provided")
 

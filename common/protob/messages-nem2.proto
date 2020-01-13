@@ -88,6 +88,7 @@ message NEM2SignTx {
     optional NEM2AccountAddressRestrictionTransaction account_address_restriction = 21; // Account address restriction part
     optional NEM2AccountMosaicRestrictionTransaction account_mosaic_restriction = 22; // Account mosaic restriction part
     optional NEM2AccountOperationRestrictionTransaction account_operation_restriction = 23; // Account operation restriction part
+    optional NEM2AccountLinkTransaction account_link = 24; // Account link part
 
     /**
     * Common types from
@@ -121,6 +122,7 @@ message NEM2SignTx {
         ACCOUNT_ADDRESS_RESTRICTION = 16720;
         ACCOUNT_MOSAIC_RESTRICTION = 16976;
         ACCOUNT_OPERATION_RESTRICTION = 17232;
+        ACCOUNT_LINK = 16716;
     }
 
     enum NEM2NetworkType {
@@ -324,6 +326,7 @@ message NEM2SignTx {
         optional NEM2AccountAddressRestrictionTransaction account_address_restriction = 15;
         optional NEM2AccountMosaicRestrictionTransaction account_mosaic_restriction = 16;
         optional NEM2AccountOperationRestrictionTransaction account_operation_restriction = 17;
+        optional NEM2AccountLinkTransaction account_link = 18;
     }
 
     /**
@@ -412,6 +415,15 @@ message NEM2SignTx {
         optional NEM2AccountRestrictionFlags restriction_type = 1;
         repeated NEM2EntityType restriction_additions = 2;
         repeated NEM2EntityType restriction_deletions = 3;
+    }
+
+    /**
+    * To delegate the account importance to a remote account.
+    * https://nemtech.github.io/concepts/harvesting.html#account-link-transaction
+    **/
+    message NEM2AccountLinkTransaction {
+        optional string remote_public_key = 1;
+        optional uint32 link_action = 2;
     }
 
 }

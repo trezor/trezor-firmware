@@ -92,6 +92,8 @@ def validate(msg: NEM2SignTx):
         _validate_account_mosaic_restriction(msg.account_mosaic_restriction)
     if msg.account_operation_restriction:
         _validate_account_operation_restriction(msg.account_operation_restriction)
+    if msg.account_link:
+        _validate_account_link(msg.account_link)
 
 def _validate_single_tx(msg: NEM2SignTx):
     # ensure exactly one transaction is provided
@@ -113,6 +115,7 @@ def _validate_single_tx(msg: NEM2SignTx):
         + bool(msg.account_address_restriction)
         + bool(msg.account_mosaic_restriction)
         + bool(msg.account_operation_restriction)
+        + bool(msg.account_link)
     )
     if tx_count == 0:
         raise ProcessError("No transaction provided")
@@ -320,15 +323,9 @@ def _validate_account_operation_restriction(account_operation_restriction: NEM2A
     if account_operation_restriction.restriction_deletions is None:
         raise ProcessError("No restriction deletions provided")
 
-def validate_encrypt_message(encrypt_message):
-    if encrypt_message.payload is None:
-        raise ProcessError("No payload to encrypt")
-    if encrypt_message.recipient_public_key is None:
-        raise ProcessError("No recipient public key provided")
+def _validate_account_link(account_link: NEM2AccountLinkTransaction):
 
-def validate_decrypt_message(decrypt_message):
-    if decrypt_message.payload is None:
-        raise ProcessError("No payload to decrypt")
-    if decrypt_message.sender_public_key is None:
-        raise ProcessError("No sender public key provided")
-
+    if account_link.remote_public_key is None:
+        raise ProcessError("No remote public key provided")
+    if account_link.link_action is None:
+        raise ProcessError("No link action provided")

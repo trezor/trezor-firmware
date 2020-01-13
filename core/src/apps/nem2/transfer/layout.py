@@ -88,9 +88,12 @@ def get_mosaic_confirmation_sections(
         msg.normal("of")
         msg.bold("%s.%s" % (mosaic.id, mosaic.id))
 
-        mosaic_confirmation_sections.append(msg)
-
-    return mosaic_confirmation_sections
+def _get_xem_amount(transfer: NEM2TransferTransaction):
+    for mosaic in transfer.mosaics:
+        if is_nem_xem_mosaic(mosaic.id):
+            return int(mosaic.amount) / NEM2_MOSAIC_AMOUNT_DIVISOR
+    # if there are mosaics but do not include xem, 0 xem is sent
+    return 0
 
 async def _require_confirm_transfer(ctx, recipient, value):
     text = Text("Confirm transfer", ui.ICON_SEND, ui.GREEN)

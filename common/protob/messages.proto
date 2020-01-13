@@ -130,13 +130,6 @@ enum MessageType {
     MessageType_NEMDecryptMessage = 75 [(wire_in) = true];
     MessageType_NEMDecryptedMessage = 76 [(wire_out) = true];
 
-    //NEM2
-    MessageType_NEM2GetPublicKey = 77 [(wire_in) = true];
-    MessageType_NEM2PublicKey = 78 [(wire_out) = true];
-    MessageType_NEM2SignTx = 79 [(wire_in) = true];
-    MessageType_NEM2SignedTx = 80 [(wire_out) = true];
-    MessageType_NEM2CosignatureSignedTx = 81 [(wire_out) = true];
-
     // Lisk
     MessageType_LiskGetAddress = 114 [(wire_in) = true];
     MessageType_LiskAddress = 115 [(wire_out) = true];
@@ -257,5 +250,12 @@ enum MessageType {
     MessageType_WebAuthnCredentials = 801 [(wire_out) = true];
     MessageType_WebAuthnAddResidentCredential = 802 [(wire_in) = true];
     MessageType_WebAuthnRemoveResidentCredential = 803 [(wire_in) = true];
+
+    //NEM2
+    MessageType_NEM2GetPublicKey = 804 [(wire_in) = true];
+    MessageType_NEM2PublicKey = 805 [(wire_out) = true];
+    MessageType_NEM2SignTx = 806 [(wire_in) = true];
+    MessageType_NEM2SignedTx = 807 [(wire_out) = true];
+    MessageType_NEM2CosignatureSignedTx = 808 [(wire_out) = true];
 
 }
