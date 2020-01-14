@@ -182,7 +182,7 @@ def print_result(res, path, verbose, is_json):
                     click.echo("%s: %s" % (k, v))
         elif isinstance(res, protobuf.MessageType):
             click.echo(protobuf.format_message(res))
-        else:
+        elif res is not None:
             click.echo(res)
 
 
