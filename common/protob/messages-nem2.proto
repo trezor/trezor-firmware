@@ -426,6 +426,32 @@ message NEM2SignTx {
         optional uint32 link_action = 2;
     }
 
+    /**
+    * The mosaic global restrictions are the network-wide rules that will determine whether an account will be able to transact a given mosaic.
+    * https://nemtech.github.io/concepts/mosaic-restriction.html#global-restriction
+    **/
+    message NEM2MosaicGlobalRestrictionTransaction {
+        optional string mosaic_id = 1;
+        optional string reference_mosaic_id = 2;
+        optional uint64 restriction_key = 3;
+        optional uint64 previous_restriction_value = 4;
+        optional uint64 new_restriction_value = 5;
+        optional uint32 previous_restriction_type = 6;
+        optional uint32 new_restriction_type = 7;
+    }
+
+    /**
+    * Enabling accounts to transact with the token.
+    * https://nemtech.github.io/concepts/mosaic-restriction.html#address-restriction
+    **/
+    message NEM2MosaicAddressRestrictionTransaction {
+        optional string mosaic_id = 1;
+        optional uint64 restriction_key = 2;
+        optional uint64 previous_restriction_value = 3;
+        optional uint64 new_restriction_value = 4;
+        optional NEM2Address target_address = 5;
+    }
+
 }
 
 /**

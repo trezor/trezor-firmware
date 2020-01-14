@@ -27,15 +27,15 @@ def serialize_account_link(
     # Total size is the size of the common transaction properties
     # + the account link properties
     size = get_common_message_size() if not embedded else get_embedded_common_message_size()
-    size += 32
-    size += 1
+    size += 32 # remote public key
+    size += 1 # link action
 
     # Write size
     write_uint32_le(tx, size)
     # Write the common properties
     serialize_tx_common(tx, common) if not embedded else serialize_embedded_tx_common(tx, common)
 
-    # Write Remote Public Keey
+    # Write Remote Public Key
     write_bytes(tx, unhexlify(account_link.remote_public_key))
     # Write Action Link Type
     write_uint8(tx, account_link.link_action)
