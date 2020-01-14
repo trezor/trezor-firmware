@@ -19,12 +19,14 @@
 import json
 import os
 import sys
+import time
 
 import click
 
 from .. import coins, log, messages, protobuf, ui
 from ..client import TrezorClient
 from ..transport import enumerate_devices, get_transport
+from ..transport.udp import UdpTransport
 from . import (
     binance,
     btc,
@@ -248,6 +250,28 @@ def usb_reset():
     from trezorlib.transport.webusb import WebUsbTransport
 
     WebUsbTransport.enumerate(usb_reset=True)
+
+
+@cli.command()
+@click.option("-t", "--timeout", type=float, default=10, help="Timeout in seconds")
+@click.pass_context
+def wait_for_emulator(ctx, timeout):
+    """Wait until Trezor Emulator comes up.
+
+    Tries to connect to emulator and returns when it succeeds.
+    """
+    path = ctx.parent.params.get("path")
+    if path:
+        if not path.startswith("udp:"):
+            raise click.ClickException("You must use UDP path, not {}".format(path))
+        path = path.replace("udp:", "")
+
+    start = time.monotonic()
+    UdpTransport(path).wait_until_ready(timeout)
+    end = time.monotonic()
+
+    if ctx.parent.params.get("verbose"):
+        click.echo("Waited for {:.3f} seconds".format(end - start))
 
 
 #

@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 _At the moment, the project does **not** adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
+## [0.11.7] - Unreleased
+
+### Added
+
+- built-in functionality of UdpTransport to wait until an emulator comes up, and the
+  related command `trezorctl wait-for-emulator`
+
 ## [0.11.6] - 2019-12-30
 [0.11.6]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.5...python/v0.11.6
 
