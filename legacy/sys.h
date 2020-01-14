@@ -7,6 +7,7 @@
 #include "timer.h"
 #include "oled.h"
 
+#define  NORMAL_PCB    0
 
 // Ble display
 #define BT_LINK 0x01          //蓝牙连接//Connect by Bluetooth
@@ -40,13 +41,15 @@
 
 #define GPIO_CMBUS_PORT GPIOC
 
-#define GPIO_USB_INSERT   GPIO8
 
-#if (OLD_PCB)
-#define GPIO_NFC_INSERT GPIO5
+
+#if (NORMAL_PCB)
+#define GPIO_USB_INSERT   GPIO13
 #else
-#define GPIO_NFC_INSERT GPIO1
+#define GPIO_USB_INSERT   GPIO8
 #endif
+
+#define GPIO_NFC_INSERT GPIO1
 
 /*#define GPIO_BUTTON_OK    GPIO0*/
 /*#define GPIO_BUTTON_UP    GPIO1*/
@@ -54,7 +57,11 @@
 /*#define GPIO_BUTTON_CANCEL GPIO3*/
 
 #define GPIO_SI2C_CMBUS GPIO9
+#if (NORMAL_PCB)
+#define GPIO_BLE_POWER GPIO2
+#else
 #define GPIO_BLE_POWER GPIO10
+#endif
 
 #if !EMULATOR
 // combus io level
@@ -62,16 +69,25 @@
 #define SET_COMBUS_LOW() (gpio_clear(GPIO_CMBUS_PORT, GPIO_SI2C_CMBUS))
 
 // usb
+#if (NORMAL_PCB)
+#define GET_USB_INSERT() (gpio_get(GPIOC, GPIO_USB_INSERT))
+#else
 #define GET_USB_INSERT() (gpio_get(GPIOA, GPIO_USB_INSERT))
+#endif
 #define GET_NFC_INSERT() (gpio_get(GPIOC, GPIO_NFC_INSERT))
 #define GET_BUTTON_CANCEL() (gpio_get(BTN_PORT, BTN_PIN_NO))
 
-//power on button
-#define POWER_ON()	        (gpio_set(GPIOC, GPIO_POWER_ON))
 
+#if (NORMAL_PCB)
+// power control BLE
+#define POWER_ON_BLE() (gpio_set(GPIOA, GPIO_BLE_POWER))
+#define POWER_OFF_BLE() (gpio_clear(GPIOA, GPIO_BLE_POWER))
+#else
 // power control BLE
 #define POWER_ON_BLE() (gpio_set(GPIOC, GPIO_BLE_POWER))
 #define POWER_OFF_BLE() (gpio_clear(GPIOC, GPIO_BLE_POWER))
+#endif
+
 #else
 #define SET_COMBUS_HIGH()
 #define SET_COMBUS_LOW()

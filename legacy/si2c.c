@@ -18,7 +18,6 @@ static uint8_t s_ucSendDataBak[SI2C_BUF_MAX_LEN];
 static uint16_t s_usSendLenBak;
 static uint8_t s_usTagbak;
 
-#if (_SUPPORT_SOFTI2C_ > 0)
 bool bCheckNFC(void)
 {
     if (g_ucWorkMode == WORK_MODE_NFC) 
@@ -31,6 +30,8 @@ bool bCheckNFC(void)
     return true;
 }
 
+
+#if (_SUPPORT_SOFTI2C_ > 0)
 static bool bSI2CDRV_Send_Ack(void) {
   while (1) {
     if (0 == GET_SCL_DAT) break;
@@ -260,6 +261,14 @@ static uint8_t bSI2CDRV_ReadBytes(uint8_t *res, uint16_t n) {
   i2c_send_7bit_address(I2C2, SI2C_ADDR, SLAVE_READ);
   // Waiting for address is transferred.
   while (!((I2C_SR1(I2C2) & I2C_SR1_ADDR))) {
+    vPower_Control(BUTTON_POWER_OFF);
+    if(PBUTTON_CHECK_READY())
+    {
+      if(true == hasbutton())
+      {
+        return false;
+      }
+    }
   }
   /* Clearing ADDR condition sequence. */
   (void)I2C_SR2(I2C2);
@@ -267,28 +276,52 @@ static uint8_t bSI2CDRV_ReadBytes(uint8_t *res, uint16_t n) {
 
   for (i = 0; i < (n - 1); ++i) {
     while (!(I2C_SR1(I2C2) & I2C_SR1_RxNE))
-      ;
+    {
+      if(false == bCheckNFC())
+      {
+          return false;
+      }
+    }
     res[i] = i2c_get_data(I2C2);
   }
   i2c_disable_ack(I2C2);
   while (!(I2C_SR1(I2C2) & I2C_SR1_RxNE))
-    ;
+  {
+       if(false == bCheckNFC())
+      {
+          return false;
+      }
+  }
   res[i] = i2c_get_data(I2C2);
   while (!(I2C_SR1(I2C2) & I2C_SR1_STOPF))
-    ;
+  {
+      if(false == bCheckNFC())
+     {
+         return false;
+     }
+  }
+
   i2c_send_stop(I2C2);
   (void)I2C_SR1(I2C2);
   vSI2CDRV_Init();
   return true;
 }
 
-static void vSI2CDRV_WriteBytes(uint8_t *data, uint16_t n) {
+static uint8_t bSI2CDRV_WriteBytes(uint8_t *data, uint16_t n) {
   uint16_t i;
 
   i2c_enable_ack(I2C2);
   i2c_send_7bit_address(I2C2, SI2C_ADDR, SLAVE_WRITE);
   /* Waiting for address is transferred. */
   while (!((I2C_SR1(I2C2) & I2C_SR1_ADDR))) {
+    vPower_Control(BUTTON_POWER_OFF);
+    if(PBUTTON_CHECK_READY())
+    {
+      if(true == hasbutton())
+      {
+        return false;
+      }
+    }
   }
   /* Clearing ADDR condition sequence. */
   (void)I2C_SR2(I2C2);
@@ -296,15 +329,26 @@ static void vSI2CDRV_WriteBytes(uint8_t *data, uint16_t n) {
   for (i = 0; i < n - 1; i++) {
     i2c_send_data(I2C2, data[i]);
     while (!(I2C_SR1(I2C2) & I2C_SR1_TxE))
-      ;
+    {
+      if(false == bCheckNFC())
+      {
+          return false;
+      }
+    }
   }
   i2c_disable_ack(I2C2);
   i2c_send_data(I2C2, data[i]);
   while (!(I2C_SR1(I2C2) & I2C_SR1_TxE))
-    ;
+  {
+      if(false == bCheckNFC())
+      {
+          return false;
+      }
+  }
   delay_us(200);
   i2c_send_stop(I2C2);
   vSI2CDRV_Init();
+  return true;
 }
 #endif
 
@@ -334,7 +378,7 @@ void vSI2CDRV_Init(void) {
                   GPIO_SI2C_SCL | GPIO_SI2C_SDA);
   gpio_set_af(GPIO_SI2C_PORT, GPIO_AF4, GPIO_SI2C_SCL | GPIO_SI2C_SDA);
   i2c_peripheral_disable(I2C2);
-  // I2C_CR1(I2C2) &= ~I2C_CR1_NOSTRETCH;
+   I2C_CR1(I2C2) &= ~I2C_CR1_NOSTRETCH;
   I2C_CR1(I2C2) |= I2C_CR1_NOSTRETCH;
   I2C_CR1(I2C2) |= I2C_CR1_ENGC;
   I2C_CR1(I2C2) |= I2C_CR1_POS;
@@ -395,11 +439,12 @@ uint8_t bSI2CDRV_ReceiveData(uint8_t *pucStr) {
       usLen = SI2C_BUF_MAX_LEN - DATA_HEAD_LEN;
     }
     if (usLen > 0) {
+      SET_COMBUS_HIGH();
       // rev Data Remaining
       if (false == bSI2CDRV_ReadBytes(pucStr + 3, usLen)) {
+        SET_COMBUS_LOW();
         return false;
       }
-      SET_COMBUS_HIGH();
       // Compare checksums
       usCrc = ConnectLessCrc(0, pucStr + 3, usLen - CRC_LEN);
       usRevCrc = (pucStr[3 + usLen - CRC_LEN] << 8) +

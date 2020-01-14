@@ -513,7 +513,7 @@ void oledSCAInside(int y1, int y2, int width, int a, int b) {
  */
 void vDisp_PromptInfo(uint8_t ucIndex) {
   // oledClear();
-   g_ucLanguageFlag = 1;
+  // g_ucLanguageFlag = 1;
   switch (ucIndex) {
     case DISP_NOT_ACTIVE:
       if (g_ucLanguageFlag) {

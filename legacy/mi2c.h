@@ -21,7 +21,7 @@
 
 // SE power IO
 #define GPIO_SE_PORT GPIOC
-#define GPIO_SE_POWER GPIO6
+#define GPIO_SE_POWER GPIO8
 
 // power control SE
 #define POWER_ON_SE() (gpio_set(GPIO_SE_PORT, GPIO_SE_POWER))
@@ -39,7 +39,7 @@ extern uint16_t g_usMI2cRevLen;
 
 extern void vMI2CDRV_Init(void);
 
-extern uint8_t bMI2CDRV_ReceiveData(uint8_t *pucStr);
+extern uint8_t bMI2CDRV_ReceiveData(uint8_t *pucStr, uint16_t *pusRevLen);
 
 extern void vMI2CDRV_SendData(uint8_t *pucStr, uint16_t usStrLen);
 #endif

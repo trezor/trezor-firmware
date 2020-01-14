@@ -46,24 +46,6 @@ bool hasbutton(void) ;
 #ifndef BTN_PORT
 #define BTN_PORT GPIOC
 #endif
-#if (OLD_PCB)
-#ifndef BTN_PIN_YES
-#define BTN_PIN_YES GPIO0
-#endif
-
-#ifndef BTN_PIN_NO
-#define BTN_PIN_NO GPIO3
-#endif
-
-#ifndef BTN_PIN_UP
-#define BTN_PIN_UP GPIO1
-#endif
-
-#ifndef BTN_PIN_DOWN
-#define BTN_PIN_DOWN GPIO2
-#endif
-
-#else
 
 #ifndef BTN_PIN_YES
 #define BTN_PIN_YES GPIO2
@@ -79,7 +61,6 @@ bool hasbutton(void) ;
 
 #ifndef BTN_PIN_DOWN
 #define BTN_PIN_DOWN GPIO5
-#endif
 #endif
 
 #define GPIO_POWER_ON     GPIO4

@@ -117,12 +117,12 @@ int main(void) {
   __stack_chk_guard = random32();  // this supports compiler provided
                                    // unpredictable stack protection checks
 #ifndef APPVER
-  // memory_protect();
-  oledInit();
+   memory_protect();
+   oledInit();
 #endif
-  // mpu_config_bootloader();
+   mpu_config_bootloader();
 #ifndef APPVER
-  bool left_pressed = (buttonRead() & BTN_PIN_DOWN) == BTN_PIN_DOWN;
+  bool left_pressed = (buttonRead() & BTN_PIN_DOWN) == 0;
 
   if (firmware_present_new() && !left_pressed) {
     oledClear();

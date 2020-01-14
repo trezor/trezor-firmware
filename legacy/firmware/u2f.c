@@ -356,6 +356,7 @@ void u2fhid_msg(const APDU *a, uint32_t len) {
     debugLog(0, "", "BAD APDU LENGTH");
     debugInt(APDU_LEN(*a));
     debugInt(len);
+    send_u2f_error(U2F_SW_INS_NOT_SUPPORTED);
     return;
   }
 

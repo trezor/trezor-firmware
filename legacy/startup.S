@@ -53,6 +53,9 @@ reset_handler:
   .type shutdown, STT_FUNC
 shutdown:
   cpsid f
+  ldr r0,=0x40020800
+  ldr r1,=0x100000
+  str r1, [r0,#0x18] 
   ldr r0, =0
   mov r1, r0
   mov r2, r0

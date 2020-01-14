@@ -37,7 +37,6 @@ static inline void __attribute__((noreturn)) fault_handler(const char *line1) {
   layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, "detected.", NULL,
                "Please unplug", "the device.", NULL);
   shutdown();
-  POWER_OFF();
 }
 
 void __attribute__((noreturn)) __stack_chk_fail(void) {
@@ -94,12 +93,20 @@ void setup(void) {
   gpio_mode_setup(BTN_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, BTN_PIN_NO);
 
   // usb insert io
+  #if (NORMAL_PCB)
+  gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_USB_INSERT);
+  #else
   gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_USB_INSERT);
+  #endif
   gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_NFC_INSERT);
   // battery power on
   gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, GPIO_POWER_ON);
   // ble power off
+  #if (NORMAL_PCB)
+  gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_BLE_POWER);
+  #else
   gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_BLE_POWER);
+  #endif
   POWER_OFF_BLE();
   // combus
   gpio_mode_setup(GPIO_CMBUS_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,

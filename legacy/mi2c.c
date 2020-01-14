@@ -20,13 +20,13 @@ static uint8_t ucXorCheck(uint8_t ucInputXor, uint8_t *pucSrc, uint16_t usLen) {
   return ucXor;
 }
 
-static uint8_t bMI2CDRV_ReadBytes(uint32_t i2c, uint8_t *res) {
+static uint8_t bMI2CDRV_ReadBytes(uint32_t i2c, uint8_t *res,uint16_t *pusOutLen) {
   uint8_t ucLenBuf[2], ucXor;
-  uint16_t i, usRevLen, usTimeout;
+  uint16_t i, usRevLen, usTimeout,usRealLen;
 
   ucXor = 0;
   i = 0;
-  g_usMI2cRevLen = 0;
+  usRealLen= 0;
   usTimeout = 0;
 
   ucLenBuf[0] = 0x00;
@@ -79,19 +79,20 @@ static uint8_t bMI2CDRV_ReadBytes(uint32_t i2c, uint8_t *res) {
     }
     while (!(I2C_SR1(i2c) & I2C_SR1_RxNE))
       ;
-    if (usRevLen <= MI2C_BUF_MAX_LEN) {
+    if (usRevLen <= *pusOutLen) {
       res[i] = i2c_get_data(i2c);
+      usRealLen++;
     } else {
       ucLenBuf[0] = i2c_get_data(i2c);
     }
   }
   i2c_send_stop(i2c);
   // cal data xor
-  ucXor = ucXorCheck(ucXor, res, usRevLen - MI2C_XOR_LEN);
-  if (ucXor != res[usRevLen - MI2C_XOR_LEN]) {
+  ucXor = ucXorCheck(ucXor, res, usRealLen - MI2C_XOR_LEN);
+  if (ucXor != res[usRealLen - MI2C_XOR_LEN]) {
     return false;
   }
-  g_usMI2cRevLen = usRevLen - MI2C_XOR_LEN;
+  *pusOutLen = usRealLen - MI2C_XOR_LEN;
   return true;
 }
 
@@ -189,8 +190,11 @@ void vMI2CDRV_Init(void) {
 /*
  *master i2c rev
  */
-uint8_t bMI2CDRV_ReceiveData(uint8_t *pucStr) {
-  if (false == bMI2CDRV_ReadBytes(MI2CX, pucStr)) {
+uint8_t bMI2CDRV_ReceiveData(uint8_t *pucStr, uint16_t *pusRevLen) {
+  if (*pusRevLen <  3 ) {
+    return false;
+  }
+  if (false == bMI2CDRV_ReadBytes(MI2CX, pucStr,pusRevLen)) {
     return false;
   }
 

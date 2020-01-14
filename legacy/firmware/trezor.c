@@ -119,7 +119,7 @@ int main(void) {
                                    // unpredictable stack protection checks
   oledInit();
 #else
-  // check_bootloader();
+  check_bootloader();
   setupApp();
   __stack_chk_guard = random32();  // this supports compiler provided
                                    // unpredictable stack protection checks
@@ -132,7 +132,7 @@ int main(void) {
     timer_init();
 #ifdef APPVER
     // enable MPU (Memory Protection Unit)
-    // mpu_config_firmware();
+     mpu_config_firmware();
 #endif
   } else {
     collect_hw_entropy(false);

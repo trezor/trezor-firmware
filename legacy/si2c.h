@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define I2C_TIMEOUT 400000
-#define _SUPPORT_SOFTI2C_ 1
+#define _SUPPORT_SOFTI2C_ 0
 #define SI2C_BUF_MAX_LEN (1024 * 3)
 
 // I2C gpio
