@@ -95,6 +95,8 @@ def screen_recording(client, request):
     else:
         raise ValueError("Invalid 'ui' option.")
 
+    if not fixture_test_path.exists():
+        fixture_test_path.mkdir()
     # remove previous files
     shutil.rmtree(screen_path, ignore_errors=True)
     screen_path.mkdir()
