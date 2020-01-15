@@ -89,6 +89,8 @@ message NEM2SignTx {
     optional NEM2AccountMosaicRestrictionTransaction account_mosaic_restriction = 22; // Account mosaic restriction part
     optional NEM2AccountOperationRestrictionTransaction account_operation_restriction = 23; // Account operation restriction part
     optional NEM2AccountLinkTransaction account_link = 24; // Account link part
+    optional NEM2MosaicGlobalRestrictionTransaction mosaic_global_restriction = 25; // Mosaic Global Restriction
+    optional NEM2MosaicAddressRestrictionTransaction mosaic_address_restriction = 26; // Mosaic Address Restriction
 
     /**
     * Common types from
@@ -123,6 +125,8 @@ message NEM2SignTx {
         ACCOUNT_MOSAIC_RESTRICTION = 16976;
         ACCOUNT_OPERATION_RESTRICTION = 17232;
         ACCOUNT_LINK = 16716;
+        MOSAIC_GLOBAL_RESTRICTION = 16721;
+        MOSAIC_ADDRESS_RESTRICTION = 16977;
     }
 
     enum NEM2NetworkType {
@@ -327,6 +331,8 @@ message NEM2SignTx {
         optional NEM2AccountMosaicRestrictionTransaction account_mosaic_restriction = 16;
         optional NEM2AccountOperationRestrictionTransaction account_operation_restriction = 17;
         optional NEM2AccountLinkTransaction account_link = 18;
+        optional NEM2MosaicGlobalRestrictionTransaction mosaic_global_restriction = 19;
+        optional NEM2MosaicAddressRestrictionTransaction mosaic_address_restriction = 20;
     }
 
     /**
@@ -433,9 +439,9 @@ message NEM2SignTx {
     message NEM2MosaicGlobalRestrictionTransaction {
         optional string mosaic_id = 1;
         optional string reference_mosaic_id = 2;
-        optional uint64 restriction_key = 3;
-        optional uint64 previous_restriction_value = 4;
-        optional uint64 new_restriction_value = 5;
+        optional string restriction_key = 3; // uint64
+        optional string previous_restriction_value = 4; // uint64
+        optional string new_restriction_value = 5; // uint64
         optional uint32 previous_restriction_type = 6;
         optional uint32 new_restriction_type = 7;
     }
@@ -446,9 +452,9 @@ message NEM2SignTx {
     **/
     message NEM2MosaicAddressRestrictionTransaction {
         optional string mosaic_id = 1;
-        optional uint64 restriction_key = 2;
-        optional uint64 previous_restriction_value = 3;
-        optional uint64 new_restriction_value = 4;
+        optional string restriction_key = 2; // uint64
+        optional string previous_restriction_value = 3; // uint64
+        optional string new_restriction_value = 4; // uint64
         optional NEM2Address target_address = 5;
     }
 

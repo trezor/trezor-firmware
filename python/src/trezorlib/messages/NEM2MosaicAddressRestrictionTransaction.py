@@ -17,9 +17,9 @@ class NEM2MosaicAddressRestrictionTransaction(p.MessageType):
     def __init__(
         self,
         mosaic_id: str = None,
-        restriction_key: int = None,
-        previous_restriction_value: int = None,
-        new_restriction_value: int = None,
+        restriction_key: str = None,
+        previous_restriction_value: str = None,
+        new_restriction_value: str = None,
         target_address: NEM2Address = None,
     ) -> None:
         self.mosaic_id = mosaic_id
@@ -32,8 +32,8 @@ class NEM2MosaicAddressRestrictionTransaction(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('mosaic_id', p.UnicodeType, 0),
-            2: ('restriction_key', p.UVarintType, 0),
-            3: ('previous_restriction_value', p.UVarintType, 0),
-            4: ('new_restriction_value', p.UVarintType, 0),
+            2: ('restriction_key', p.UnicodeType, 0),
+            3: ('previous_restriction_value', p.UnicodeType, 0),
+            4: ('new_restriction_value', p.UnicodeType, 0),
             5: ('target_address', NEM2Address, 0),
         }

@@ -16,9 +16,9 @@ class NEM2MosaicGlobalRestrictionTransaction(p.MessageType):
         self,
         mosaic_id: str = None,
         reference_mosaic_id: str = None,
-        restriction_key: int = None,
-        previous_restriction_value: int = None,
-        new_restriction_value: int = None,
+        restriction_key: str = None,
+        previous_restriction_value: str = None,
+        new_restriction_value: str = None,
         previous_restriction_type: int = None,
         new_restriction_type: int = None,
     ) -> None:
@@ -35,9 +35,9 @@ class NEM2MosaicGlobalRestrictionTransaction(p.MessageType):
         return {
             1: ('mosaic_id', p.UnicodeType, 0),
             2: ('reference_mosaic_id', p.UnicodeType, 0),
-            3: ('restriction_key', p.UVarintType, 0),
-            4: ('previous_restriction_value', p.UVarintType, 0),
-            5: ('new_restriction_value', p.UVarintType, 0),
+            3: ('restriction_key', p.UnicodeType, 0),
+            4: ('previous_restriction_value', p.UnicodeType, 0),
+            5: ('new_restriction_value', p.UnicodeType, 0),
             6: ('previous_restriction_type', p.UVarintType, 0),
             7: ('new_restriction_type', p.UVarintType, 0),
         }

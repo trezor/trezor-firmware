@@ -34,6 +34,8 @@ from .helpers import (
     NEM2_ACCOUNT_RESTRICTION_BLOCK_INCOMING_TRANSACTION_TYPE,
     NEM2_ACCOUNT_RESTRICTION_BLOCK_OUTGOING_ADDRESS,
     NEM2_ACCOUNT_RESTRICTION_BLOCK_OUTGOING_TRANSACTION_TYPE,
+    NEM2_ACCOUNT_LINK_ACTION_UNLINK,
+    NEM2_ACCOUNT_LINK_ACTION_LINK
 )
 
 from .namespace.validators import (
@@ -94,6 +96,10 @@ def validate(msg: NEM2SignTx):
         _validate_account_operation_restriction(msg.account_operation_restriction)
     if msg.account_link:
         _validate_account_link(msg.account_link)
+    if msg.mosaic_global_restriction:
+        _validate_mosaic_global_restriction(msg.mosaic_global_restriction)
+    if msg.mosaic_address_restriction:
+        _validate_mosaic_address_restriction(msg.mosaic_address_restriction)
 
 def _validate_single_tx(msg: NEM2SignTx):
     # ensure exactly one transaction is provided
@@ -116,6 +122,8 @@ def _validate_single_tx(msg: NEM2SignTx):
         + bool(msg.account_mosaic_restriction)
         + bool(msg.account_operation_restriction)
         + bool(msg.account_link)
+        + bool(msg.mosaic_global_restriction)
+        + bool(msg.mosaic_address_restriction)
     )
     if tx_count == 0:
         raise ProcessError("No transaction provided")
@@ -325,7 +333,45 @@ def _validate_account_operation_restriction(account_operation_restriction: NEM2A
 
 def _validate_account_link(account_link: NEM2AccountLinkTransaction):
 
+    valid_actions = [
+        NEM2_ACCOUNT_LINK_ACTION_UNLINK,
+        NEM2_ACCOUNT_LINK_ACTION_LINK
+    ]
+
     if account_link.remote_public_key is None:
         raise ProcessError("No remote public key provided")
     if account_link.link_action is None:
         raise ProcessError("No link action provided")
+    if account_link.link_action not in valid_actions:
+        raise ProcessError("Invalid link action provided")
+
+
+def _validate_mosaic_global_restriction(global_restriction: NEM2MosaicGlobalRestriction):
+
+    if global_restriction.mosaic_id is None:
+        raise ProcessError("No mosaic provided")
+    if global_restriction.reference_mosaic_id is None:
+        raise ProcessError("No reference mosaic provided")
+    if global_restriction.restriction_key is None:
+        raise ProcessError("No restriction key provided")
+    if global_restriction.previous_restriction_value is None:
+        raise ProcessError("No previous restriction value provided")
+    if global_restriction.new_restriction_value is None:
+        raise ProcessError("No new restriction value provided")
+    if global_restriction.previous_restriction_type is None:
+        raise ProcessError("No previous restriction type provided")
+    if global_restriction.new_restriction_type is None:
+        raise ProcessError("No new restriction type provided")
+
+
+def _validate_mosaic_address_restriction(address_restriction: NEM2MosaicAddressRestriction):
+
+    if address_restriction.mosaic_id is None:
+        raise ProcessError("No mosaic provided")
+    if address_restriction.restriction_key is None:
+        raise ProcessError("No restriction key provided")
+    if address_restriction.previous_restriction_value is None:
+        raise ProcessError("No previous restriction value provided")
+    if address_restriction.new_restriction_value is None:
+        raise ProcessError("No new restriction value provided")
+    address_validator(address_restriction.target_address)

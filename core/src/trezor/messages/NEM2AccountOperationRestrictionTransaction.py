@@ -7,8 +7,8 @@ if __debug__:
         from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeNEM2AccountRestrictionFlags = Literal[1, 2, 4, 16385, 16388, 32769, 32770, 32772, 49153, 49156]
-        EnumTypeNEM2EntityType = Literal[0, 16705, 16708, 16712, 16716, 16717, 16718, 16720, 16722, 16724, 16725, 16961, 16964, 16973, 16974, 16976, 16978, 17220, 17230, 17232]
-        EnumTypeNEM2EntityType = Literal[0, 16705, 16708, 16712, 16716, 16717, 16718, 16720, 16722, 16724, 16725, 16961, 16964, 16973, 16974, 16976, 16978, 17220, 17230, 17232]
+        EnumTypeNEM2EntityType = Literal[0, 16705, 16708, 16712, 16716, 16717, 16718, 16720, 16721, 16722, 16724, 16725, 16961, 16964, 16973, 16974, 16976, 16977, 16978, 17220, 17230, 17232]
+        EnumTypeNEM2EntityType = Literal[0, 16705, 16708, 16712, 16716, 16717, 16718, 16720, 16721, 16722, 16724, 16725, 16961, 16964, 16973, 16974, 16976, 16977, 16978, 17220, 17230, 17232]
     except ImportError:
         pass
 
@@ -29,6 +29,6 @@ class NEM2AccountOperationRestrictionTransaction(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('restriction_type', p.EnumType("NEM2AccountRestrictionFlags", (1, 2, 4, 16385, 16388, 32769, 32770, 32772, 49153, 49156)), 0),
-            2: ('restriction_additions', p.EnumType("NEM2EntityType", (0, 16724, 16717, 16973, 16718, 16974, 16961, 16705, 17220, 16964, 16708, 17230, 16712, 16722, 16978, 16725, 16720, 16976, 17232, 16716)), p.FLAG_REPEATED),
-            3: ('restriction_deletions', p.EnumType("NEM2EntityType", (0, 16724, 16717, 16973, 16718, 16974, 16961, 16705, 17220, 16964, 16708, 17230, 16712, 16722, 16978, 16725, 16720, 16976, 17232, 16716)), p.FLAG_REPEATED),
+            2: ('restriction_additions', p.EnumType("NEM2EntityType", (0, 16724, 16717, 16973, 16718, 16974, 16961, 16705, 17220, 16964, 16708, 17230, 16712, 16722, 16978, 16725, 16720, 16976, 17232, 16716, 16721, 16977)), p.FLAG_REPEATED),
+            3: ('restriction_deletions', p.EnumType("NEM2EntityType", (0, 16724, 16717, 16973, 16718, 16974, 16961, 16705, 17220, 16964, 16708, 17230, 16712, 16722, 16978, 16725, 16720, 16976, 17232, 16716, 16721, 16977)), p.FLAG_REPEATED),
         }

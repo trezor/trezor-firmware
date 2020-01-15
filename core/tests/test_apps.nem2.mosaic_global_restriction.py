@@ -14,7 +14,7 @@ class TestNem2MosaicGlobalRestriction(unittest.TestCase):
     def test_serialize_mosaic_global_restriction(self):
         common = NEM2TransactionCommon(
             network_type=NEM2_NETWORK_TEST_NET,
-            type=NEM2_TRANSACTION_TYPE_MOSAIC_GLOBAL_TRANSACTION,
+            type=NEM2_TRANSACTION_TYPE_MOSAIC_GLOBAL_RESTRICTION,
             version=38913,
             max_fee=0,
             deadline=113248176649

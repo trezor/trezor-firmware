@@ -15,7 +15,7 @@ class TestNem2MosaicAddressRestriction(unittest.TestCase):
     def test_serialize_mosaic_address_restriction(self):
         common = NEM2TransactionCommon(
             network_type=NEM2_NETWORK_TEST_NET,
-            type=NEM2_TRANSACTION_TYPE_MOSAIC_ADDRESS_TRANSACTION,
+            type=NEM2_TRANSACTION_TYPE_MOSAIC_ADDRESS_RESTRICTION,
             version=38913,
             max_fee=0,
             deadline=113248176649

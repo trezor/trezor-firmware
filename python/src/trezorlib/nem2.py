@@ -37,6 +37,8 @@ TYPE_ACCOUNT_ADDRESS_RESTRICTION = 0x4150
 TYPE_ACCOUNT_MOSAIC_RESTRICTION = 0x4250
 TYPE_ACCOUNT_OPERATION_RESTRICTION = 0x4350
 TYPE_ACCOUNT_LINK = 0x414C
+TYPE_MOSAIC_GLOBAL_RESTRICTION = 0x4151
+TYPE_MOSAIC_ADDRESS_RESTRICTION = 0x4251
 
 NAMESPACE_REGISTRATION_TYPE_ROOT = 0x00
 NAMESPACE_REGISTRATION_TYPE_CHILD = 0x01
@@ -295,6 +297,28 @@ def create_account_link(transaction):
 
     return msg
 
+def create_mosaic_global_restriction(transaction):
+    msg = proto.NEM2MosaicGlobalRestrictionTransaction()
+    msg.mosaic_id = transaction["mosaicId"]
+    msg.reference_mosaic_id = transaction["referenceMosaicId"]
+    msg.restriction_key = transaction["restrictionKey"]
+    msg.previous_restriction_value = transaction["previousRestrictionValue"]
+    msg.new_restriction_value = transaction["newRestrictionValue"]
+    msg.previous_restriction_type = int(transaction["previousRestrictionType"])
+    msg.new_restriction_type = int(transaction["newRestrictionType"])
+
+    return msg
+
+def create_mosaic_address_restriction(transaction):
+    msg = proto.NEM2MosaicAddressRestrictionTransaction()
+    msg.mosaic_id = transaction["mosaicId"]
+    msg.restriction_key = transaction["restrictionKey"]
+    msg.previous_restriction_value = transaction["previousRestrictionValue"]
+    msg.new_restriction_value = transaction["newRestrictionValue"]
+    msg.target_address = map_address(transaction["targetAddress"])
+
+    return msg
+
 def fill_transaction_by_type(msg, transaction):
     if transaction["type"] == TYPE_TRANSACTION_TRANSFER:
         msg.transfer = create_transfer(transaction)
@@ -330,6 +354,10 @@ def fill_transaction_by_type(msg, transaction):
         msg.account_operation_restriction = create_account_operation_restriction(transaction)
     if transaction["type"] == TYPE_ACCOUNT_LINK:
         msg.account_link = create_account_link(transaction)
+    if transaction["type"] == TYPE_MOSAIC_GLOBAL_RESTRICTION:
+        msg.mosaic_global_restriction = create_mosaic_global_restriction(transaction)
+    if transaction["type"] == TYPE_MOSAIC_ADDRESS_RESTRICTION:
+        msg.mosaic_address_restriction = create_mosaic_address_restriction(transaction)
 
 
 def create_sign_tx(transaction):

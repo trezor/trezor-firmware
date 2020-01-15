@@ -10,8 +10,10 @@ from .NEM2AccountOperationRestrictionTransaction import NEM2AccountOperationRest
 from .NEM2AddressAliasTransaction import NEM2AddressAliasTransaction
 from .NEM2EmbeddedTransactionCommon import NEM2EmbeddedTransactionCommon
 from .NEM2HashLockTransaction import NEM2HashLockTransaction
+from .NEM2MosaicAddressRestrictionTransaction import NEM2MosaicAddressRestrictionTransaction
 from .NEM2MosaicAliasTransaction import NEM2MosaicAliasTransaction
 from .NEM2MosaicDefinitionTransaction import NEM2MosaicDefinitionTransaction
+from .NEM2MosaicGlobalRestrictionTransaction import NEM2MosaicGlobalRestrictionTransaction
 from .NEM2MosaicMetadataTransaction import NEM2MosaicMetadataTransaction
 from .NEM2MosaicSupplyChangeTransaction import NEM2MosaicSupplyChangeTransaction
 from .NEM2MultisigModificationTransaction import NEM2MultisigModificationTransaction
@@ -51,6 +53,8 @@ class NEM2InnerTransaction(p.MessageType):
         account_mosaic_restriction: NEM2AccountMosaicRestrictionTransaction = None,
         account_operation_restriction: NEM2AccountOperationRestrictionTransaction = None,
         account_link: NEM2AccountLinkTransaction = None,
+        mosaic_global_restriction: NEM2MosaicGlobalRestrictionTransaction = None,
+        mosaic_address_restriction: NEM2MosaicAddressRestrictionTransaction = None,
     ) -> None:
         self.common = common
         self.transfer = transfer
@@ -70,6 +74,8 @@ class NEM2InnerTransaction(p.MessageType):
         self.account_mosaic_restriction = account_mosaic_restriction
         self.account_operation_restriction = account_operation_restriction
         self.account_link = account_link
+        self.mosaic_global_restriction = mosaic_global_restriction
+        self.mosaic_address_restriction = mosaic_address_restriction
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -92,4 +98,6 @@ class NEM2InnerTransaction(p.MessageType):
             16: ('account_mosaic_restriction', NEM2AccountMosaicRestrictionTransaction, 0),
             17: ('account_operation_restriction', NEM2AccountOperationRestrictionTransaction, 0),
             18: ('account_link', NEM2AccountLinkTransaction, 0),
+            19: ('mosaic_global_restriction', NEM2MosaicGlobalRestrictionTransaction, 0),
+            20: ('mosaic_address_restriction', NEM2MosaicAddressRestrictionTransaction, 0),
         }
