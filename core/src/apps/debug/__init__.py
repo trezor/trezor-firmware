@@ -38,7 +38,7 @@ if __debug__:
     current_content = None  # type: Optional[List[str]]
 
     def screenshot() -> bool:
-        if utils.SAVE_SCREEN or save_screen:
+        if save_screen:
             ui.display.save(save_screen_directory + "/refresh-")
             return True
         return False

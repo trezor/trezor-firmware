@@ -74,10 +74,6 @@ Press `p` on your keyboard to capture emulator's screen. You will find a png scr
 
 ### Environment Variables
 
-#### Auto print screen
-
-If ``` TREZOR_SAVE_SCREEN=1 ``` is set, the emulator makes print screen on every screen change.
-
 #### Memory statistics
 
 If ```TREZOR_LOG_MEMORY=1``` is set, the emulator prints memory usage information after each workflow task is finished.
@@ -85,7 +81,3 @@ If ```TREZOR_LOG_MEMORY=1``` is set, the emulator prints memory usage informatio
 #### Disable animations
 
 ```TREZOR_DISABLE_ANIMATION=1``` disables fading and other animations, which speeds up the UI workflows significantly (useful for tests). This is also requirement for UI integration tests.
-
-#### Tests
-
-```TREZOR_TEST``` informs whether device tests are to be run. Currently unused.
