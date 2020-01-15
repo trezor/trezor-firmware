@@ -40,6 +40,7 @@ def _enable_passphrase(client):
 
 
 @pytest.mark.skip_t1  # TODO
+@pytest.mark.skip_ui
 @pytest.mark.setup_client()
 def test_session_with_passphrase(client):
     # Turn on passphrase.
@@ -91,6 +92,7 @@ def test_session_with_passphrase(client):
 
 
 @pytest.mark.skip_t1  # TODO
+@pytest.mark.skip_ui
 @pytest.mark.setup_client()
 def test_session_enable_passphrase(client):
     # Let's start the communication by calling Initialize.
@@ -131,6 +133,7 @@ def test_session_enable_passphrase(client):
 
 
 @pytest.mark.skip_t1
+@pytest.mark.skip_ui
 @pytest.mark.setup_client()
 def test_passphrase_always_on_device(client):
     # Let's start the communication by calling Initialize.
