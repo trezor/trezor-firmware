@@ -38,11 +38,13 @@ FIRMWARE_MAXSIZE    = 1703936
 GITREV=$(shell git describe --always --dirty | tr '-' '_')
 CFLAGS += -DGITREV=$(GITREV)
 
+TESTPATH = $(CURDIR)/../tests
+
 EMU = $(CURDIR)/emu.py
-EMU_TEST_ARGS = --disable-animation --headless --quiet --temporary-profile
+EMU_LOG_FILE ?= $(TESTPATH)/trezor.log
+EMU_TEST_ARGS = --disable-animation --headless --output=$(EMU_LOG_FILE) --temporary-profile
 EMU_TEST = $(EMU) $(EMU_TEST_ARGS) -c
 
-TESTPATH = $(CURDIR)/../tests
 JUNIT_XML ?= $(TESTPATH)/junit.xml
 PYTEST = pytest --junitxml=$(JUNIT_XML)
 TREZOR_FIDO2_UDP_PORT = 21326

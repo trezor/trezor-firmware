@@ -46,16 +46,15 @@ core unix device ui test:
   script:
     - cd core
     - pipenv run make test_emu_ui
-    - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
     - cd ../ci
     - pipenv run python prepare_ui_artifacts.py
   artifacts:
     name: core-unix-device-ui-test
     paths:
-      - trezor.log
       - ci/ui_test_records/
       - tests/ui_tests/reports/
       - tests/junit.xml
+      - tests/trezor.log
     when: always
     expire_in: 1 week
     reports:
@@ -71,14 +70,13 @@ core unix device test:
   script:
     - cd core
     - pipenv run make test_emu
-    - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
     - sync
     - sleep 1
     - mv ./src/.coverage .coverage.test_emu
   artifacts:
     name: core-unix-device-test
     paths:
-      - trezor.log
+      - tests/trezor.log
       - tests/junit.xml
       - core/.coverage.*
     expire_in: 1 week
@@ -97,11 +95,10 @@ core unix btconly device test:
   script:
     - cd core
     - pipenv run make test_emu
-    - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
   artifacts:
     name: core-unix-btconly-device-test
     paths:
-      - trezor.log
+      - tests/trezor.log
       - tests/junit.xml
     expire_in: 1 week
     when: always
@@ -118,14 +115,13 @@ core unix monero test:
   script:
     - cd core
     - pipenv run make test_emu_monero
-    - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
     - sync
     - sleep 1
     - mv ./src/.coverage .coverage.test_emu_monero
   artifacts:
     name: core-unix-monero-test
     paths:
-      - trezor.log
+      - tests/trezor.log
       - core/.coverage.*
     expire_in: 1 week
     when: always
@@ -141,14 +137,13 @@ core unix u2f test:
     - make -C tests/fido_tests/u2f-tests-hid
     - cd core
     - pipenv run make test_emu_u2f
-    - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
     - sync
     - sleep 1
     - mv ./src/.coverage .coverage.test_emu_u2f
   artifacts:
     name: core-unix-u2f-test
     paths:
-      - trezor.log
+      - tests/trezor.log
       - core/.coverage.*
     expire_in: 1 week
     when: always
@@ -163,14 +158,13 @@ core unix fido2 test:
   script:
     - cd core
     - pipenv run make test_emu_fido2
-    - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
     - sync
     - sleep 1
     - mv ./src/.coverage .coverage.test_emu_fido2
   artifacts:
     name: core-unix-fido2-test
     paths:
-      - trezor.log
+      - tests/trezor.log
       - tests/junit.xml
       - core/.coverage.*
     expire_in: 1 week
@@ -186,11 +180,10 @@ core unix click test:
   script:
     - cd core
     - pipenv run make test_emu_click
-    - cp /var/tmp/trezor.log ${CI_PROJECT_DIR}
   artifacts:
     name: core-unix-click-test
     paths:
-      - trezor.log
+      - tests/trezor.log
       - tests/junit.xml
     reports:
       junit: tests/junit.xml

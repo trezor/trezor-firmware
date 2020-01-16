@@ -59,8 +59,7 @@ To use the "all all all" seed defined in [SLIP-14](https://github.com/satoshilab
 
 Internal Trezor's storage is emulated and stored in the `/var/tmp/trezor.flash` file on
 default. Deleting this file is similar to calling _wipe device_. You can also find
-`/var/tmp/trezor.sdcard` for SD card and `/var/tmp/trezor.log`, which contains the
-communication log, the same as is in the emulator's stdout.
+`/var/tmp/trezor.sdcard` for SD card.
 
 You can specify a different location for the storage and log files via the `-p` /
 `--profile` option:
@@ -80,6 +79,12 @@ You can also set a full profile path to `TREZOR_PROFILE_DIR` environment variabl
 
 Specifying `-t` / `--temporary-profile` will start the emulator in a clean temporary
 profile that will be erased when the emulator stops. This is useful, e.g., for tests.
+
+### Logging
+
+By default, emulator output goes to stdout. When silenced with `--quiet`, it is
+redirected to `${TREZOR_PROFILE_DIR}/trezor.log`. You can specify an alternate output
+file with `--output`.
 
 ### Running subcommands with the emulator
 

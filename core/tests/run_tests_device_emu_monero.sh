@@ -10,7 +10,11 @@ upy_pid=""
 
 # run emulator if RUN_TEST_EMU
 if [[ $RUN_TEST_EMU > 0 ]]; then
-  ../emu.py --disable-animation --temporary-profile --quiet --headless &
+  ../emu.py \
+    --disable-animation \
+    --temporary-profile \
+    --headless \
+    --output=../../tests/trezor.log &
   upy_pid=$!
   trezorctl -v wait-for-emulator
 fi
