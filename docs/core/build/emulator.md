@@ -59,7 +59,7 @@ pipenv run make build_unix
 Now you can start the emulator:
 
 ```sh
-./emu.sh
+./emu.py
 ```
 
 The emulator has a number of interesting features all documented in the [Emulator](../emulator/index.md) section.

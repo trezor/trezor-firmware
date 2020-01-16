@@ -25,10 +25,9 @@ environment:
 pipenv shell
 ```
 
-If you want to test against the emulator, run it in a separate terminal from the `core`
-subdirectory:
+If you want to test against the emulator, run it in a separate terminal:
 ```sh
-PYOPT=0 ./emu.sh
+./core/emu.py
 ```
 
 Now you can run the test suite with `pytest` from the root directory:
