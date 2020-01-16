@@ -38,6 +38,15 @@ FIRMWARE_MAXSIZE    = 1703936
 GITREV=$(shell git describe --always --dirty | tr '-' '_')
 CFLAGS += -DGITREV=$(GITREV)
 
+EMU = $(CURDIR)/emu.py
+EMU_TEST_ARGS = --disable-animation --headless --quiet --temporary-profile
+EMU_TEST = $(EMU) $(EMU_TEST_ARGS) -c
+
+TESTPATH = $(CURDIR)/../tests
+JUNIT_XML ?= $(TESTPATH)/junit.xml
+PYTEST = pytest --junitxml=$(JUNIT_XML)
+TREZOR_FIDO2_UDP_PORT = 21326
+
 ## help commands:
 
 help: ## show this help
@@ -57,7 +66,7 @@ run: ## run unix port
 	cd src ; ../$(UNIX_BUILD_DIR)/micropython
 
 emu: ## run emulator
-	./emu.sh
+	$(EMU)
 
 ## test commands:
 
@@ -65,25 +74,27 @@ test: ## run unit tests
 	cd tests ; ./run_tests.sh $(TESTOPTS)
 
 test_emu: ## run selected device tests from python-trezor
-	cd tests ; ./run_tests_device_emu.sh $(TESTOPTS)
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS)
 
 test_emu_monero: ## run selected monero device tests from monero-agent
 	cd tests ; ./run_tests_device_emu_monero.sh $(TESTOPTS)
 
 test_emu_u2f: ## run selected u2f device tests from u2f-tests-hid
-	cd tests ; ./run_tests_device_emu_u2f.sh $(TESTOPTS)
+	$(EMU_TEST) --slip0014 $(TESTPATH)/fido_tests/u2f-tests-hid/HIDTest $(TREZOR_FIDO2_UDP_PORT) $(TESTOPTS)
+	$(EMU_TEST) --slip0014 $(TESTPATH)/fido_tests/u2f-tests-hid/U2FTest $(TREZOR_FIDO2_UDP_PORT) $(TESTOPTS)
 
 test_emu_fido2: ## run fido2 device tests
-	cd tests ; ./run_tests_device_emu_fido2.sh $(TESTOPTS)
+	cd $(TESTPATH)/fido_tests/fido2 ; \
+		$(EMU_TEST) $(PYTEST) --sim tests/standard/ --vendor trezor $(TESTOPTS)
 
 test_emu_click: ## run click tests
-	cd tests ; ./run_tests_click_emu.sh $(TESTOPTS)
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/click_tests $(TESTOPTS)
 
 test_emu_ui: ## run ui integration tests
-	cd tests ; ./run_tests_device_emu.sh --ui=test -m "not skip_ui" $(TESTOPTS)
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=test -m "not skip_ui" $(TESTOPTS)
 
 test_emu_ui_record: ## record and hash screens for ui integration tests
-	cd tests ; ./run_tests_device_emu.sh --ui=record -m "not skip_ui" $(TESTOPTS)
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=record -m "not skip_ui" $(TESTOPTS)
 
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
