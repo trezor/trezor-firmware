@@ -92,7 +92,7 @@ core unix btconly device test:
   dependencies:
     - core unix frozen btconly build
   variables:
-    MICROPYTHON: "../build/unix/micropython-bitcoinonly"
+    MICROPYTHON: "build/unix/micropython-bitcoinonly"
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
   script:
     - cd core
