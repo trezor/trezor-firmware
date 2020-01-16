@@ -89,6 +89,14 @@ def by_rp_id_hash(rp_id_hash: bytes) -> Optional[FIDOApp]:
             use_sign_count=None,
             use_self_attestation=None,
         )
+    elif rp_id_hash == b"\x31\x19\x33\x28\xf8\xe2\x1d\xfb\x6c\x99\xf3\x22\xd2\x2d\x7b\x0b\x50\x87\x78\xe6\x4f\xfb\xba\x86\xe5\x22\x93\x37\x90\x31\xb8\x74":
+        # WebAuthn key for Facebook
+        return FIDOApp(
+            label="Facebook",
+            icon="apps/webauthn/res/icon_facebook.toif",
+            use_sign_count=None,
+            use_self_attestation=None,
+        )
     elif rp_id_hash == b"\x69\x66\xab\xe3\x67\x4e\xa2\xf5\x30\x79\xeb\x71\x01\x97\x84\x8c\x9b\xe6\xf3\x63\x99\x2f\xd0\x29\xe9\x89\x84\x47\xcb\x9f\x00\x84":
         # U2F key for FastMail
         return FIDOApp(
