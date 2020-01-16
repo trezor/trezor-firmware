@@ -79,11 +79,12 @@ void display_bar(int x, int y, int w, int h, uint16_t c);
 void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b,
                         uint8_t r);
 
-void display_image(int x, int y, int w, int h, const void *data, int datalen);
-void display_avatar(int x, int y, const void *data, int datalen,
+void display_image(int x, int y, int w, int h, const void *data,
+                   uint32_t datalen);
+void display_avatar(int x, int y, const void *data, uint32_t datalen,
                     uint16_t fgcolor, uint16_t bgcolor);
-void display_icon(int x, int y, int w, int h, const void *data, int datalen,
-                  uint16_t fgcolor, uint16_t bgcolor);
+void display_icon(int x, int y, int w, int h, const void *data,
+                  uint32_t datalen, uint16_t fgcolor, uint16_t bgcolor);
 void display_loader(uint16_t progress, bool indeterminate, int yoffset,
                     uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon,
                     uint32_t iconlen, uint16_t iconfgcolor);
@@ -103,7 +104,8 @@ void display_text_right(int x, int y, const char *text, int textlen, int font,
                         uint16_t fgcolor, uint16_t bgcolor);
 int display_text_width(const char *text, int textlen, int font);
 
-void display_qrcode(int x, int y, const char *data, int datalen, uint8_t scale);
+void display_qrcode(int x, int y, const char *data, uint32_t datalen,
+                    uint8_t scale);
 
 void display_offset(int set_xy[2], int *get_x, int *get_y);
 int display_orientation(int degrees);

@@ -31,6 +31,9 @@ SOURCE_MOD += [
 ]
 
 # modtrezorui
+CPPPATH_MOD += [
+        'vendor/micropython/extmod/uzlib',
+]
 SOURCE_MOD += [
     'embed/extmod/modtrezorui/display.c',
     'embed/extmod/modtrezorui/font_bitmap.c',

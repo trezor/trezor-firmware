@@ -17,8 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "inflate.h"
-
 #include "display.h"
 
 /// class Display:
@@ -139,7 +137,7 @@ STATIC mp_obj_t mod_trezorui_Display_image(size_t n_args,
   }
   mp_int_t w = *(uint16_t *)(data + 4);
   mp_int_t h = *(uint16_t *)(data + 6);
-  mp_int_t datalen = *(uint32_t *)(data + 8);
+  uint32_t datalen = *(uint32_t *)(data + 8);
   if (datalen != image.len - 12) {
     mp_raise_ValueError("Invalid size of data");
   }
@@ -173,7 +171,7 @@ STATIC mp_obj_t mod_trezorui_Display_avatar(size_t n_args,
   if (w != AVATAR_IMAGE_SIZE || h != AVATAR_IMAGE_SIZE) {
     mp_raise_ValueError("Invalid image size");
   }
-  mp_int_t datalen = *(uint32_t *)(data + 8);
+  uint32_t datalen = *(uint32_t *)(data + 8);
   if (datalen != image.len - 12) {
     mp_raise_ValueError("Invalid size of data");
   }
@@ -204,7 +202,7 @@ STATIC mp_obj_t mod_trezorui_Display_icon(size_t n_args, const mp_obj_t *args) {
   }
   mp_int_t w = *(uint16_t *)(data + 4);
   mp_int_t h = *(uint16_t *)(data + 6);
-  mp_int_t datalen = *(uint32_t *)(data + 8);
+  uint32_t datalen = *(uint32_t *)(data + 8);
   if (datalen != icon.len - 12) {
     mp_raise_ValueError("Invalid size of data");
   }
@@ -250,7 +248,7 @@ STATIC mp_obj_t mod_trezorui_Display_loader(size_t n_args,
     }
     mp_int_t w = *(uint16_t *)(data + 4);
     mp_int_t h = *(uint16_t *)(data + 6);
-    mp_int_t datalen = *(uint32_t *)(data + 8);
+    uint32_t datalen = *(uint32_t *)(data + 8);
     if (w != LOADER_ICON_SIZE || h != LOADER_ICON_SIZE) {
       mp_raise_ValueError("Invalid icon size");
     }

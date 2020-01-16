@@ -20,7 +20,6 @@
 #define _GNU_SOURCE
 
 #include "font_bitmap.h"
-#include "inflate.h"
 #ifdef TREZOR_FONT_NORMAL_ENABLE
 #include "font_roboto_regular_20.h"
 #endif
@@ -35,6 +34,8 @@
 #endif
 
 #include "qr-code-generator/qrcodegen.h"
+
+#include "uzlib.h"
 
 #include "common.h"
 #include "display.h"
@@ -91,19 +92,18 @@ static inline void clamp_coords(int x, int y, int w, int h, int *x0, int *y0,
 
 void display_clear(void) {
   const int saved_orientation = DISPLAY_ORIENTATION;
-  display_orientation(
-      0);  // set MADCTL first so that we can set the window correctly next
-  display_set_window(
-      0, 0, MAX_DISPLAY_RESX - 1,
-      MAX_DISPLAY_RESY - 1);  // address the complete frame memory
+  // set MADCTL first so that we can set the window correctly next
+  display_orientation(0);
+  // address the complete frame memory
+  display_set_window(0, 0, MAX_DISPLAY_RESX - 1, MAX_DISPLAY_RESY - 1);
   for (uint32_t i = 0; i < MAX_DISPLAY_RESX * MAX_DISPLAY_RESY; i++) {
-    PIXELDATA(
-        0x0000);  // 2 bytes per pixel because we're using RGB 5-6-5 format
+    // 2 bytes per pixel because we're using RGB 5-6-5 format
+    PIXELDATA(0x0000);
   }
-  display_set_window(0, 0, DISPLAY_RESX - 1,
-                     DISPLAY_RESY - 1);  // go back to restricted window
-  display_orientation(
-      saved_orientation);  // if valid, go back to the saved orientation
+  // go back to restricted window
+  display_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
+  // if valid, go back to the saved orientation
+  display_orientation(saved_orientation);
 }
 
 void display_bar(int x, int y, int w, int h, uint16_t c) {
@@ -174,96 +174,64 @@ void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b,
   }
 }
 
-#if TREZOR_MODEL == T
+#define UZLIB_WINDOW_SIZE (1 << 10)
 
-static void inflate_callback_image(uint8_t byte1, uint32_t pos,
-                                   void *userdata) {
-  static uint8_t byte0;
-  if (pos % 2 == 0) {
-    byte0 = byte1;
-    return;
+static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
+                          const void *src, uint32_t srcsize, void *dest,
+                          uint32_t destsize) {
+  memzero(decomp, sizeof(struct uzlib_uncomp));
+  if (window) {
+    memzero(window, UZLIB_WINDOW_SIZE);
   }
-  const int w = ((const int *)userdata)[0];
-  const int x0 = ((const int *)userdata)[1];
-  const int x1 = ((const int *)userdata)[2];
-  const int y0 = ((const int *)userdata)[3];
-  const int y1 = ((const int *)userdata)[4];
-  const int px = (pos / 2) % w;
-  const int py = (pos / 2) / w;
-  if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
-    PIXELDATA((byte0 << 8) | byte1);
-  }
+  memzero(dest, destsize);
+  decomp->source = (const uint8_t *)src;
+  decomp->source_limit = decomp->source + srcsize;
+  decomp->dest = (uint8_t *)dest;
+  decomp->dest_limit = decomp->dest + destsize;
+  uzlib_uncompress_init(decomp, window, window ? UZLIB_WINDOW_SIZE : 0);
 }
 
-#endif
-
-void display_image(int x, int y, int w, int h, const void *data, int datalen) {
+void display_image(int x, int y, int w, int h, const void *data,
+                   uint32_t datalen) {
 #if TREZOR_MODEL == T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   int x0, y0, x1, y1;
   clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
   display_set_window(x0, y0, x1, y1);
-  int userdata[5] = {w, x0 - x, x1 - x, y0 - y, y1 - y};
-  sinf_inflate(data, datalen, inflate_callback_image, userdata);
+  x0 -= x;
+  x1 -= x;
+  y0 -= y;
+  y1 -= y;
+
+  struct uzlib_uncomp decomp;
+  uint8_t decomp_window[UZLIB_WINDOW_SIZE];
+  uint8_t decomp_out[2];
+  uzlib_prepare(&decomp, decomp_window, data, datalen, decomp_out,
+                sizeof(decomp_out));
+
+  for (uint32_t pos = 0; pos < w * h; pos++) {
+    int st = uzlib_uncompress(&decomp);
+    if (st == TINF_DONE) break;  // all OK
+    if (st < 0) break;           // error
+    const int px = pos % w;
+    const int py = pos / w;
+    if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
+      PIXELDATA((decomp_out[0] << 8) | decomp_out[1]);
+    }
+    decomp.dest = (uint8_t *)&decomp_out;
+  }
 #endif
 }
 
-#if TREZOR_MODEL == T
-
-static void inflate_callback_avatar(uint8_t byte1, uint32_t pos,
-                                    void *userdata) {
 #define AVATAR_BORDER_SIZE 4
 #define AVATAR_BORDER_LOW                        \
   (AVATAR_IMAGE_SIZE / 2 - AVATAR_BORDER_SIZE) * \
       (AVATAR_IMAGE_SIZE / 2 - AVATAR_BORDER_SIZE)
 #define AVATAR_BORDER_HIGH (AVATAR_IMAGE_SIZE / 2) * (AVATAR_IMAGE_SIZE / 2)
 #define AVATAR_ANTIALIAS 1
-  static uint8_t byte0;
-  if (pos % 2 == 0) {
-    byte0 = byte1;
-    return;
-  }
-  const int w = ((const int *)userdata)[0];
-  const int x0 = ((const int *)userdata)[1];
-  const int x1 = ((const int *)userdata)[2];
-  const int y0 = ((const int *)userdata)[3];
-  const int y1 = ((const int *)userdata)[4];
-  const int fgcolor = ((const int *)userdata)[5];
-  const int bgcolor = ((const int *)userdata)[6];
-  const int px = (pos / 2) % w;
-  const int py = (pos / 2) / w;
-  if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
-    int d = (px - w / 2) * (px - w / 2) + (py - w / 2) * (py - w / 2);
-    // inside border area
-    if (d < AVATAR_BORDER_LOW) {
-      PIXELDATA((byte0 << 8) | byte1);
-    } else
-        // outside border area
-        if (d > AVATAR_BORDER_HIGH) {
-      PIXELDATA(bgcolor);
-      // border area
-    } else {
-#if AVATAR_ANTIALIAS
-      d = 31 * (d - AVATAR_BORDER_LOW) /
-          (AVATAR_BORDER_HIGH - AVATAR_BORDER_LOW);
-      uint16_t c;
-      if (d >= 16) {
-        c = interpolate_color(bgcolor, fgcolor, d - 16);
-      } else {
-        c = interpolate_color(fgcolor, (byte0 << 8) | byte1, d);
-      }
-      PIXELDATA(c);
-#else
-      PIXELDATA(fgcolor);
-#endif
-    }
-  }
-}
 
-#endif
-
-void display_avatar(int x, int y, const void *data, int datalen,
+void display_avatar(int x, int y, const void *data, uint32_t datalen,
                     uint16_t fgcolor, uint16_t bgcolor) {
 #if TREZOR_MODEL == T
   x += DISPLAY_OFFSET.x;
@@ -271,51 +239,94 @@ void display_avatar(int x, int y, const void *data, int datalen,
   int x0, y0, x1, y1;
   clamp_coords(x, y, AVATAR_IMAGE_SIZE, AVATAR_IMAGE_SIZE, &x0, &y0, &x1, &y1);
   display_set_window(x0, y0, x1, y1);
-  int userdata[7] = {AVATAR_IMAGE_SIZE, x0 - x, x1 - x, y0 - y, y1 - y,
-                     fgcolor,           bgcolor};
-  sinf_inflate(data, datalen, inflate_callback_avatar, userdata);
+  x0 -= x;
+  x1 -= x;
+  y0 -= y;
+  y1 -= y;
+
+  struct uzlib_uncomp decomp;
+  uint8_t decomp_window[UZLIB_WINDOW_SIZE];
+  uint8_t decomp_out[2];
+  uzlib_prepare(&decomp, decomp_window, data, datalen, decomp_out,
+                sizeof(decomp_out));
+
+  for (uint32_t pos = 0; pos < AVATAR_IMAGE_SIZE * AVATAR_IMAGE_SIZE; pos++) {
+    int st = uzlib_uncompress(&decomp);
+    if (st == TINF_DONE) break;  // all OK
+    if (st < 0) break;           // error
+    const int px = pos % AVATAR_IMAGE_SIZE;
+    const int py = pos / AVATAR_IMAGE_SIZE;
+    if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
+      int d = (px - AVATAR_IMAGE_SIZE / 2) * (px - AVATAR_IMAGE_SIZE / 2) +
+              (py - AVATAR_IMAGE_SIZE / 2) * (py - AVATAR_IMAGE_SIZE / 2);
+      // inside border area
+      if (d < AVATAR_BORDER_LOW) {
+        PIXELDATA((decomp_out[0] << 8) | decomp_out[1]);
+      } else
+          // outside border area
+          if (d > AVATAR_BORDER_HIGH) {
+        PIXELDATA(bgcolor);
+        // border area
+      } else {
+#if AVATAR_ANTIALIAS
+        d = 31 * (d - AVATAR_BORDER_LOW) /
+            (AVATAR_BORDER_HIGH - AVATAR_BORDER_LOW);
+        uint16_t c;
+        if (d >= 16) {
+          c = interpolate_color(bgcolor, fgcolor, d - 16);
+        } else {
+          c = interpolate_color(fgcolor, (decomp_out[0] << 8) | decomp_out[1],
+                                d);
+        }
+        PIXELDATA(c);
+#else
+        PIXELDATA(fgcolor);
+#endif
+      }
+    }
+    decomp.dest = (uint8_t *)&decomp_out;
+  }
 #endif
 }
 
-static void inflate_callback_icon(uint8_t byte, uint32_t pos, void *userdata) {
-  const uint16_t *colortable = (const uint16_t *)(((const int *)userdata) + 5);
-  const int w = ((const int *)userdata)[0];
-  const int x0 = ((const int *)userdata)[1];
-  const int x1 = ((const int *)userdata)[2];
-  const int y0 = ((const int *)userdata)[3];
-  const int y1 = ((const int *)userdata)[4];
-  const int px = (pos * 2) % w;
-  const int py = (pos * 2) / w;
-  if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
-    PIXELDATA(colortable[byte >> 4]);
-    PIXELDATA(colortable[byte & 0x0F]);
-  }
-}
-
-void display_icon(int x, int y, int w, int h, const void *data, int datalen,
-                  uint16_t fgcolor, uint16_t bgcolor) {
+void display_icon(int x, int y, int w, int h, const void *data,
+                  uint32_t datalen, uint16_t fgcolor, uint16_t bgcolor) {
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   x &= ~1;  // cannot draw at odd coordinate
   int x0, y0, x1, y1;
   clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
   display_set_window(x0, y0, x1, y1);
-  int userdata[5 + 16 * sizeof(uint16_t) / sizeof(int)] = {w, x0 - x, x1 - x,
-                                                           y0 - y, y1 - y};
-  set_color_table((uint16_t *)(userdata + 5), fgcolor, bgcolor);
-  sinf_inflate(data, datalen, inflate_callback_icon, userdata);
+  x0 -= x;
+  x1 -= x;
+  y0 -= y;
+  y1 -= y;
+
+  uint16_t colortable[16];
+  set_color_table(colortable, fgcolor, bgcolor);
+
+  struct uzlib_uncomp decomp;
+  uint8_t decomp_window[UZLIB_WINDOW_SIZE];
+  uint8_t decomp_out;
+  uzlib_prepare(&decomp, decomp_window, data, datalen, &decomp_out,
+                sizeof(decomp_out));
+
+  for (uint32_t pos = 0; pos < w * h / 2; pos++) {
+    int st = uzlib_uncompress(&decomp);
+    if (st == TINF_DONE) break;  // all OK
+    if (st < 0) break;           // error
+    const int px = pos % w;
+    const int py = pos / w;
+    if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
+      PIXELDATA(colortable[decomp_out >> 4]);
+      PIXELDATA(colortable[decomp_out & 0x0F]);
+    }
+    decomp.dest = (uint8_t *)&decomp_out;
+  }
 }
 
 #if TREZOR_MODEL == T
-
 #include "loader.h"
-
-static void inflate_callback_loader(uint8_t byte, uint32_t pos,
-                                    void *userdata) {
-  uint8_t *out = (uint8_t *)userdata;
-  out[pos] = byte;
-}
-
 #endif
 
 void display_loader(uint16_t progress, bool indeterminate, int yoffset,
@@ -340,7 +351,11 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
       LOADER_ICON_SIZE == *(uint16_t *)(icon + 6) &&
       iconlen == 12 + *(uint32_t *)(icon + 8)) {
     uint8_t icondata[LOADER_ICON_SIZE * LOADER_ICON_SIZE / 2];
-    sinf_inflate(icon + 12, iconlen - 12, inflate_callback_loader, icondata);
+    memzero(&icondata, sizeof(icondata));
+    struct uzlib_uncomp decomp;
+    uzlib_prepare(&decomp, NULL, icon + 12, iconlen - 12, icondata,
+                  sizeof(icondata));
+    uzlib_uncompress(&decomp);
     icon = icondata;
   } else {
     icon = NULL;
@@ -679,7 +694,7 @@ int display_text_width(const char *text, int textlen, int font) {
 
 #define QR_MAX_VERSION 9
 
-void display_qrcode(int x, int y, const char *data, int datalen,
+void display_qrcode(int x, int y, const char *data, uint32_t datalen,
                     uint8_t scale) {
   if (scale < 1 || scale > 10) return;
 
