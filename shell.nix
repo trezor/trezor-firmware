@@ -38,6 +38,7 @@ stdenv.mkDerivation {
   ];
   LD_LIBRARY_PATH="${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   shellHook = ''
+    export NIX_ENFORCE_PURITY=0
     pipenv shell
     exit
   '';
