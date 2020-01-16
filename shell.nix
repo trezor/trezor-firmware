@@ -36,7 +36,8 @@ stdenv.mkDerivation {
     darwin.libobjc
     libiconv
   ];
-  LD_LIBRARY_PATH="${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
+  LD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
+  NIX_ENFORCE_PURITY = 0;
   shellHook = ''
     pipenv shell
     exit
