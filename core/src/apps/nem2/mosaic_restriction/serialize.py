@@ -47,9 +47,10 @@ def serialize_global_restriction(
     # Write mosaic id
     write_uint32_le(tx, int(global_restriction.mosaic_id[8:], 16))
     write_uint32_le(tx, int(global_restriction.mosaic_id[:8], 16))
-    # Write reference mosaic id
-    write_uint32_le(tx, int(global_restriction.reference_mosaic_id[8:], 16))
-    write_uint32_le(tx, int(global_restriction.reference_mosaic_id[:8], 16))
+    # Write reference mosaic id (optional)
+    if global_restriction.reference_mosaic_id is not None:
+        write_uint32_le(tx, int(global_restriction.reference_mosaic_id[8:], 16))
+        write_uint32_le(tx, int(global_restriction.reference_mosaic_id[:8], 16))
     # Write restriction key
     write_uint32_le(tx, int(global_restriction.restriction_key[8:], 16))
     write_uint32_le(tx, int(global_restriction.restriction_key[:8], 16))
@@ -94,7 +95,8 @@ def serialize_address_restriction(
     write_uint32_le(tx, int(address_restriction.restriction_key[8:], 16))
     write_uint32_le(tx, int(address_restriction.restriction_key[:8], 16))
     # Write previous restriction value
-    write_uint64_le(tx, int(address_restriction.previous_restriction_value))
+    if address_restriction.previous_restriction_value is not None:
+        write_uint64_le(tx, int(address_restriction.previous_restriction_value))
     # Write new restriction value
     write_uint64_le(tx, int(address_restriction.new_restriction_value))
     # Write target address

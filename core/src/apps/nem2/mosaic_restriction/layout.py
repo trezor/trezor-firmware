@@ -61,7 +61,7 @@ async def ask_global_restriction(
         t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
         t.bold("Previous Restriction Type:")
         t.br()
-        t.normal(global_restriction.previous_restriction_type)
+        t.normal(str(global_restriction.previous_restriction_type))
         properties.append(t)
     
     # New Restriction Value
@@ -77,7 +77,7 @@ async def ask_global_restriction(
         t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
         t.bold("New Restriction Type:")
         t.br()
-        t.normal(global_restriction.new_restriction_type)
+        t.normal(str(global_restriction.new_restriction_type))
         properties.append(t)
 
     paginated = Paginated(properties)

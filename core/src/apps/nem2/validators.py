@@ -55,6 +55,9 @@ def validate(msg: NEM2SignTx):
     if msg.transaction is None:
         raise ProcessError("No common transaction fields provided")
 
+    if msg.generation_hash is None:
+        raise ProcessError("No generation hash provided")
+
     _validate_single_tx(msg)
     _validate_common(msg.transaction)
 
@@ -350,8 +353,7 @@ def _validate_mosaic_global_restriction(global_restriction: NEM2MosaicGlobalRest
 
     if global_restriction.mosaic_id is None:
         raise ProcessError("No mosaic provided")
-    if global_restriction.reference_mosaic_id is None:
-        raise ProcessError("No reference mosaic provided")
+    # global_restriction.reference_mosaic_id is optional
     if global_restriction.restriction_key is None:
         raise ProcessError("No restriction key provided")
     if global_restriction.previous_restriction_value is None:
@@ -370,8 +372,7 @@ def _validate_mosaic_address_restriction(address_restriction: NEM2MosaicAddressR
         raise ProcessError("No mosaic provided")
     if address_restriction.restriction_key is None:
         raise ProcessError("No restriction key provided")
-    if address_restriction.previous_restriction_value is None:
-        raise ProcessError("No previous restriction value provided")
+    # address_restriction.previous_restriction_value is optional
     if address_restriction.new_restriction_value is None:
         raise ProcessError("No new restriction value provided")
     address_validator(address_restriction.target_address)
