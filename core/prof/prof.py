@@ -1,10 +1,10 @@
 import sys
 
-import uos
 from uio import open
 
-sys.path.insert(0, uos.getenv("TREZOR_SRC"))
-del uos
+# We need to insert "" to sys.path so that the frozen build can import main from the
+# frozen modules, and regular build can import it from current directory.
+sys.path.insert(0, "")
 
 
 class Coverage:
