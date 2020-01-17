@@ -33,7 +33,7 @@ core unix unit test:
   stage: test
   <<: *only_changes_core
   dependencies:
-    - core unix frozen regular build
+    - core unix regular build
   script:
     - cd core
     - pipenv run make test
@@ -42,7 +42,7 @@ core unix device ui test:
   stage: test
   <<: *only_changes_core
   dependencies:
-    - core unix frozen regular build
+    - core unix frozen debug build
   script:
     - cd core
     - pipenv run make test_emu_ui
@@ -64,7 +64,7 @@ core unix device test:
   stage: test
   <<: *only_changes_core
   dependencies:
-    - core unix frozen regular build
+    - core unix frozen debug build
   variables:
     TREZOR_PROFILING: 1
   script:
@@ -88,7 +88,7 @@ core unix btconly device test:
   stage: test
   <<: *only_changes_core
   dependencies:
-    - core unix frozen btconly build
+    - core unix frozen btconly debug build
   variables:
     MICROPYTHON: "build/unix/micropython-bitcoinonly"
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
@@ -109,7 +109,7 @@ core unix monero test:
   stage: test
   <<: *only_changes_core
   dependencies:
-    - core unix frozen regular build
+    - core unix frozen debug build
   variables:
     TREZOR_PROFILING: 1
   script:
@@ -130,7 +130,7 @@ core unix u2f test:
   stage: test
   <<: *only_changes_core
   dependencies:
-    - core unix frozen regular build
+    - core unix frozen debug build
   variables:
     TREZOR_PROFILING: 1
   script:
@@ -152,7 +152,7 @@ core unix fido2 test:
   stage: test
   <<: *only_changes_core
   dependencies:
-    - core unix frozen regular build
+    - core unix frozen debug build
   variables:
     TREZOR_PROFILING: 1
   script:
