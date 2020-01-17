@@ -692,6 +692,9 @@ MP_NOINLINE int main_(int argc, char **argv) {
   return ret & 0xff;
 }
 
+#ifdef TREZOR_EMULATOR_FROZEN
+uint mp_import_stat(const char *path) { return MP_IMPORT_STAT_NO_EXIST; }
+#else
 uint mp_import_stat(const char *path) {
   struct stat st;
   if (stat(path, &st) == 0) {
@@ -703,6 +706,7 @@ uint mp_import_stat(const char *path) {
   }
   return MP_IMPORT_STAT_NO_EXIST;
 }
+#endif
 
 void nlr_jump_fail(void *val) {
   printf("FATAL: uncaught NLR %p\n", val);
