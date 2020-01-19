@@ -39,7 +39,6 @@ def _enable_passphrase(client):
     assert isinstance(response, messages.Success)
 
 
-@pytest.mark.skip_t1  # TODO
 @pytest.mark.skip_ui
 @pytest.mark.setup_client()
 def test_session_with_passphrase(client):
@@ -91,7 +90,6 @@ def test_session_with_passphrase(client):
     )
 
 
-@pytest.mark.skip_t1  # TODO
 @pytest.mark.skip_ui
 @pytest.mark.setup_client()
 def test_session_enable_passphrase(client):
@@ -132,7 +130,6 @@ def test_session_enable_passphrase(client):
     )
 
 
-@pytest.mark.skip_t1
 @pytest.mark.skip_ui
 @pytest.mark.setup_client()
 def test_passphrase_always_on_device(client):
@@ -146,6 +143,12 @@ def test_passphrase_always_on_device(client):
 
     # Force passphrase entry on Trezor.
     response = client.call_raw(messages.ApplySettings(passphrase_always_on_device=True))
+
+    if client.features.model == "1":
+        assert isinstance(response, messages.Failure)
+        assert response.code == 3  # DataError
+        return
+
     assert isinstance(response, messages.ButtonRequest)  # confirm dialog
     client.debug.press_yes()
     response = client.call_raw(messages.ButtonAck())

@@ -354,6 +354,7 @@ bool protectPassphrase(void) {
   bool passphrase_protection = false;
   config_getPassphraseProtection(&passphrase_protection);
   if (!passphrase_protection || session_isPassphraseCached()) {
+    session_cachePassphrase("");
     return true;
   }
 
@@ -369,11 +370,15 @@ bool protectPassphrase(void) {
   bool result;
   for (;;) {
     usbPoll();
-    // TODO: correctly process PassphraseAck with state field set (mismatch =>
-    // Failure)
     if (msg_tiny_id == MessageType_MessageType_PassphraseAck) {
       msg_tiny_id = 0xFFFF;
       PassphraseAck *ppa = (PassphraseAck *)msg_tiny;
+      if (ppa->has_on_device && ppa->on_device == true) {
+        fsm_sendFailure(
+            FailureType_Failure_DataError,
+            _("This firmware is incapable of passphrase entry on the device."));
+        // TODO: write test
+      }
       session_cachePassphrase(ppa->has_passphrase ? ppa->passphrase : "");
       result = true;
       break;
