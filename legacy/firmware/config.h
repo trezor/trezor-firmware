@@ -91,10 +91,10 @@ void session_clear(bool lock);
 
 void config_loadDevice(const LoadDevice *msg);
 
-const uint8_t *config_getSeed(bool usePassphrase);
+const uint8_t *config_getSeed(void);
 
 bool config_getU2FRoot(HDNode *node);
-bool config_getRootNode(HDNode *node, const char *curve, bool usePassphrase);
+bool config_getRootNode(HDNode *node, const char *curve);
 
 bool config_getLabel(char *dest, uint16_t dest_size);
 void config_setLabel(const char *label);

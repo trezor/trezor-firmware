@@ -350,11 +350,11 @@ bool protectChangeWipeCode(bool removal) {
   return ret;
 }
 
-bool protectPassphrase(void) {
+bool protectPassphrase(char *passphrase) {
   bool passphrase_protection = false;
   config_getPassphraseProtection(&passphrase_protection);
-  if (!passphrase_protection || session_isPassphraseCached()) {
-    session_cachePassphrase("");
+  if (!passphrase_protection) {
+    passphrase[0] = '\0';
     return true;
   }
 
@@ -387,7 +387,8 @@ bool protectPassphrase(void) {
         result = false;
         break;
       }
-      session_cachePassphrase(ppa->passphrase);
+      // TODO: ask - why ppa->passphrase.size is not working? because of tiny?
+      strlcpy(passphrase, ppa->passphrase, sizeof(ppa->passphrase));
       result = true;
       break;
     }

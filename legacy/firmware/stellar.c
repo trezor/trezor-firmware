@@ -1460,7 +1460,7 @@ const HDNode *stellar_deriveNode(const uint32_t *address_n,
   const char *curve = "ed25519";
 
   // Device not initialized, passphrase request cancelled, or unsupported curve
-  if (!config_getRootNode(&node, curve, true)) {
+  if (!config_getRootNode(&node, curve)) {
     return 0;
   }
   // Failed to derive private key
