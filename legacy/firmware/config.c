@@ -119,14 +119,11 @@ be added to the storage u2f_counter to get the real counter value.
  * storage.u2f_counter + config_u2f_offset.
  * This corresponds to the number of cleared bits in the U2FAREA.
  */
-static secbool sessionSeedCached, sessionSeedUsesPassphrase;
+static secbool sessionSeedCached;
 static uint8_t CONFIDENTIAL sessionSeed[64];
 
 static secbool sessionIdCached;
 static uint8_t sessionId[32];
-
-static secbool sessionPassphraseCached = secfalse;
-static char CONFIDENTIAL sessionPassphrase[51];
 
 #define autoLockDelayMsDefault (10 * 60 * 1000U)  // 10 minutes
 static secbool autoLockDelayMsCached = secfalse;
@@ -410,8 +407,6 @@ void config_init(void) {
 void session_clear(bool lock) {
   sessionSeedCached = secfalse;
   memzero(&sessionSeed, sizeof(sessionSeed));
-  sessionPassphraseCached = secfalse;
-  memzero(&sessionPassphrase, sizeof(sessionPassphrase));
   sessionIdCached = secfalse;
   memzero(&sessionId, sizeof(sessionId));
   if (lock) {
@@ -553,19 +548,19 @@ static void get_root_node_callback(uint32_t iter, uint32_t total) {
   layoutProgress(_("Waking up"), 1000 * iter / total);
 }
 
-const uint8_t *config_getSeed(bool usePassphrase) {
+const uint8_t *config_getSeed(void) {
   // root node is properly cached
-  // TODO: investigate
-  if (usePassphrase == (sectrue == sessionSeedUsesPassphrase) &&
-      sectrue == sessionSeedCached) {
+  if (sectrue == sessionSeedCached) {
     return sessionSeed;
   }
 
   // if storage has mnemonic, convert it to node and use it
   char mnemonic[MAX_MNEMONIC_LEN + 1] = {0};
   if (config_getMnemonic(mnemonic, sizeof(mnemonic))) {
-    if (usePassphrase && !protectPassphrase()) {
+    char passphrase[51];
+    if (!protectPassphrase(passphrase)) {
       memzero(mnemonic, sizeof(mnemonic));
+      memzero(passphrase, sizeof(passphrase));
       return NULL;
     }
     // if storage was not imported (i.e. it was properly generated or recovered)
@@ -579,12 +574,12 @@ const uint8_t *config_getSeed(bool usePassphrase) {
       }
     }
     char oldTiny = usbTiny(1);
-    mnemonic_to_seed(mnemonic, usePassphrase ? sessionPassphrase : "",
-                     sessionSeed, get_root_node_callback);  // BIP-0039
+    mnemonic_to_seed(mnemonic, passphrase, sessionSeed,
+                     get_root_node_callback);  // BIP-0039
     memzero(mnemonic, sizeof(mnemonic));
+    memzero(passphrase, sizeof(passphrase));
     usbTiny(oldTiny);
     sessionSeedCached = sectrue;
-    sessionSeedUsesPassphrase = usePassphrase ? sectrue : secfalse;
     return sessionSeed;
   }
 
@@ -610,53 +605,8 @@ bool config_getU2FRoot(HDNode *node) {
   return ret;
 }
 
-bool config_getRootNode(HDNode *node, const char *curve, bool usePassphrase) {
-  // if storage has node, decrypt and use it
-  StorageHDNode storageHDNode = {0};
-  uint16_t len = 0;
-  if (strcmp(curve, SECP256K1_NAME) == 0 &&
-      sectrue ==
-          storage_get(KEY_NODE, &storageHDNode, sizeof(storageHDNode), &len) &&
-      len == sizeof(StorageHDNode)) {
-    if (!protectPassphrase()) {
-      memzero(&storageHDNode, sizeof(storageHDNode));
-      return false;
-    }
-    if (!config_loadNode(&storageHDNode, curve, node)) {
-      memzero(&storageHDNode, sizeof(storageHDNode));
-      return false;
-    }
-    bool passphrase_protection = false;
-    config_getPassphraseProtection(&passphrase_protection);
-    if (passphrase_protection && sectrue == sessionPassphraseCached &&
-        sessionPassphrase[0] != '\0') {
-      // decrypt hd node
-      uint8_t secret[64] = {0};
-      PBKDF2_HMAC_SHA512_CTX pctx = {0};
-      char oldTiny = usbTiny(1);
-      pbkdf2_hmac_sha512_Init(&pctx, (const uint8_t *)sessionPassphrase,
-                              strlen(sessionPassphrase),
-                              (const uint8_t *)"TREZORHD", 8, 1);
-      get_root_node_callback(0, BIP39_PBKDF2_ROUNDS);
-      for (int i = 0; i < 8; i++) {
-        pbkdf2_hmac_sha512_Update(&pctx, BIP39_PBKDF2_ROUNDS / 8);
-        get_root_node_callback((i + 1) * BIP39_PBKDF2_ROUNDS / 8,
-                               BIP39_PBKDF2_ROUNDS);
-      }
-      pbkdf2_hmac_sha512_Final(&pctx, secret);
-      usbTiny(oldTiny);
-      aes_decrypt_ctx ctx = {0};
-      aes_decrypt_key256(secret, &ctx);
-      aes_cbc_decrypt(node->chain_code, node->chain_code, 32, secret + 32,
-                      &ctx);
-      aes_cbc_decrypt(node->private_key, node->private_key, 32, secret + 32,
-                      &ctx);
-    }
-    return true;
-  }
-  memzero(&storageHDNode, sizeof(storageHDNode));
-
-  const uint8_t *seed = config_getSeed(usePassphrase);
+bool config_getRootNode(HDNode *node, const char *curve) {
+  const uint8_t *seed = config_getSeed();
   if (seed == NULL) {
     return false;
   }
@@ -813,15 +763,6 @@ bool config_changeWipeCode(const char *pin, const char *wipe_code) {
 
   memzero(&wipe_code_int, sizeof(wipe_code_int));
   return sectrue == ret;
-}
-
-void session_cachePassphrase(const char *passphrase) {
-  strlcpy(sessionPassphrase, passphrase, sizeof(sessionPassphrase));
-  sessionPassphraseCached = sectrue;
-}
-
-bool session_isPassphraseCached(void) {
-  return sectrue == sessionPassphraseCached;
 }
 
 const uint8_t *session_getSessionId(void) {
