@@ -38,7 +38,7 @@ class TestMsgNEM2GetPublicKey:
             }
         )
 
-        # print("MSG", decrypted_message.payload.hex())
+        print("MSG", decrypted_message.payload.hex())
         assert (
             decrypted_message.payload.hex().encode("utf-8")
             == "Test Transfer"
