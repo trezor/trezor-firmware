@@ -131,6 +131,7 @@ def test_session_enable_passphrase(client):
 
 
 @pytest.mark.skip_ui
+@pytest.mark.skip_t1
 @pytest.mark.setup_client()
 def test_passphrase_always_on_device(client):
     # Let's start the communication by calling Initialize.
@@ -143,11 +144,6 @@ def test_passphrase_always_on_device(client):
 
     # Force passphrase entry on Trezor.
     response = client.call_raw(messages.ApplySettings(passphrase_always_on_device=True))
-
-    if client.features.model == "1":
-        assert isinstance(response, messages.Failure)
-        assert response.code == 3  # DataError
-        return
 
     assert isinstance(response, messages.ButtonRequest)  # confirm dialog
     client.debug.press_yes()
@@ -193,3 +189,53 @@ def test_passphrase_always_on_device(client):
         response.xpub
         == "xpub6CekxGcnqnJ6osfY4Rrq7W5ogFtR54KUvz4H16XzaQuukMFZCGebEpVznfq4yFcKEmYyShwj2UKjL7CazuNSuhdkofF4mHabHkLxCMVvsqG"
     )
+
+
+@pytest.mark.skip_ui
+@pytest.mark.skip_t2
+@pytest.mark.setup_client()
+def test_passphrase_on_device_not_possible_on_t1(client):
+    # Let's start the communication by calling Initialize.
+    response = client.call_raw(messages.Initialize())
+    assert isinstance(response, messages.Features)
+
+    # Turn on passphrase.
+    _enable_passphrase(client)
+
+    # This setting makes no sense on T1.
+    response = client.call_raw(messages.ApplySettings(passphrase_always_on_device=True))
+
+    assert isinstance(response, messages.Failure)
+    assert response.code == 3  # DataError
+
+    response = client.call_raw(
+        messages.GetPublicKey(address_n=parse_path("44'/0'/0'"), coin_name="Bitcoin")
+    )
+    assert isinstance(response, messages.PassphraseRequest)
+    response = client.call_raw(messages.PassphraseAck(on_device=True))
+    assert isinstance(response, messages.Failure)
+    assert response.code == 3  # DataError
+
+
+@pytest.mark.skip_ui
+@pytest.mark.setup_client(passphrase=True)
+def test_passphrase_ack_mismatch(client):
+    response = client.call_raw(
+        messages.GetPublicKey(address_n=parse_path("44'/0'/0'"), coin_name="Bitcoin")
+    )
+    assert isinstance(response, messages.PassphraseRequest)
+    response = client.call_raw(messages.PassphraseAck(passphrase="A", on_device=True))
+    assert isinstance(response, messages.Failure)
+    assert response.code == 3  # DataError
+
+
+@pytest.mark.skip_ui
+@pytest.mark.setup_client(passphrase=True)
+def test_passphrase_missing(client):
+    response = client.call_raw(
+        messages.GetPublicKey(address_n=parse_path("44'/0'/0'"), coin_name="Bitcoin")
+    )
+    assert isinstance(response, messages.PassphraseRequest)
+    response = client.call_raw(messages.PassphraseAck(passphrase=None))
+    assert isinstance(response, messages.Failure)
+    assert response.code == 3  # DataError

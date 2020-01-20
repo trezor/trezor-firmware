@@ -377,9 +377,17 @@ bool protectPassphrase(void) {
         fsm_sendFailure(
             FailureType_Failure_DataError,
             _("This firmware is incapable of passphrase entry on the device."));
-        // TODO: write test
+        result = false;
+        break;
       }
-      session_cachePassphrase(ppa->has_passphrase ? ppa->passphrase : "");
+      if (!ppa->has_passphrase) {
+        fsm_sendFailure(FailureType_Failure_DataError,
+                        _("No passphrase provided. Use empty string to set an "
+                          "empty passphrase."));
+        result = false;
+        break;
+      }
+      session_cachePassphrase(ppa->passphrase);
       result = true;
       break;
     }
