@@ -147,7 +147,7 @@ def _format_version(version: c.Container) -> str:
         str(version[k]) for k in ("major", "minor", "patch") if k in version
     )
     if "build" in version:
-        version_str += f" build {version.build}"
+        version_str += " build {}".format(version.build)
     return version_str
 
 
@@ -207,7 +207,7 @@ class VendorHeader(SignableImage):
             vhash = compute_vhash(vh)
             output = [
                 "Vendor Header " + _format_container(vh),
-                f"Pubkey bundle hash: {vhash.hex()}",
+                "Pubkey bundle hash: {}".format(vhash.hex()),
             ]
         else:
             output = [
@@ -221,11 +221,13 @@ class VendorHeader(SignableImage):
         fingerprint = firmware.header_digest(vh)
 
         if not terse:
-            output.append(f"Fingerprint: {click.style(fingerprint.hex(), bold=True)}")
+            output.append(
+                "Fingerprint: {}".format(click.style(fingerprint.hex(), bold=True))
+            )
 
         sig_status = self.check_signature()
         sym = SYM_OK if sig_status.is_ok() else SYM_FAIL
-        output.append(f"{sym} Signature is {sig_status.value}")
+        output.append("{} Signature is {}".format(sym, sig_status.value))
 
         return "\n".join(output)
 
@@ -271,7 +273,7 @@ class BinImage(SignableImage):
         hashes_out = []
         for expected, actual in zip(self.header.hashes, self.code_hashes):
             status = SYM_OK if expected == actual else SYM_FAIL
-            hashes_out.append(LiteralStr(f"{status} {expected.hex()}"))
+            hashes_out.append(LiteralStr("{} {}".format(status, expected.hex())))
 
         if all(all_zero(h) for h in self.header.hashes):
             hash_status = Status.MISSING
@@ -287,8 +289,10 @@ class BinImage(SignableImage):
 
         output = [
             "Firmware Header " + _format_container(header_out),
-            f"Fingerprint: {click.style(self.digest().hex(), bold=True)}",
-            f"{all_ok} Signature is {sig_status.value}, hashes are {hash_status.value}",
+            "Fingerprint: {}".format(click.style(self.digest().hex(), bold=True)),
+            "{} Signature is {}, hashes are {}".format(
+                all_ok, sig_status.value, hash_status.value
+            ),
         ]
 
         return "\n".join(output)
