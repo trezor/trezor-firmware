@@ -19,8 +19,8 @@ import pytest
 from trezorlib import messages as proto
 
 
-@pytest.mark.skip_t2
 class TestMsgPing:
+    @pytest.mark.skip_ui
     @pytest.mark.setup_client(pin=True, passphrase=True)
     def test_ping(self, client):
         with client:
@@ -36,49 +36,4 @@ class TestMsgPing:
                 ]
             )
             res = client.ping("random data", button_protection=True)
-            assert res == "random data"
-
-        with client:
-            client.set_expected_responses([proto.PinMatrixRequest(), proto.Success()])
-            res = client.ping("random data", pin_protection=True)
-            assert res == "random data"
-
-        with client:
-            client.set_expected_responses([proto.PassphraseRequest(), proto.Success()])
-            res = client.ping("random data", passphrase_protection=True)
-            assert res == "random data"
-
-    @pytest.mark.setup_client(pin=True, passphrase=True)
-    def test_ping_caching(self, client):
-        with client:
-            client.set_expected_responses(
-                [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
-                    proto.PinMatrixRequest(),
-                    proto.PassphraseRequest(),
-                    proto.Success(),
-                ]
-            )
-            res = client.ping(
-                "random data",
-                button_protection=True,
-                pin_protection=True,
-                passphrase_protection=True,
-            )
-            assert res == "random data"
-
-        with client:
-            # pin and passphrase are cached
-            client.set_expected_responses(
-                [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
-                    proto.Success(),
-                ]
-            )
-            res = client.ping(
-                "random data",
-                button_protection=True,
-                pin_protection=True,
-                passphrase_protection=True,
-            )
             assert res == "random data"

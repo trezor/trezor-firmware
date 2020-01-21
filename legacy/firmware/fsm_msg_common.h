@@ -122,19 +122,6 @@ void fsm_msgPing(const Ping *msg) {
     }
   }
 
-  if (msg->has_pin_protection && msg->pin_protection) {
-    CHECK_PIN
-  }
-
-  if (msg->has_passphrase_protection && msg->passphrase_protection) {
-    char dummy[51];
-    if (!protectPassphrase(dummy)) {
-      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-      return;
-    }
-    memzero(&dummy, sizeof(dummy));
-  }
-
   if (msg->has_message) {
     resp->has_message = true;
     memcpy(&(resp->message), &(msg->message), sizeof(resp->message));

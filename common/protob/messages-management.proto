@@ -173,8 +173,6 @@ message SdProtect {
 message Ping {
     optional string message = 1;                // message to send back in Success message
     optional bool button_protection = 2;        // ask for button press
-    optional bool pin_protection = 3;           // ask for PIN if set in device
-    optional bool passphrase_protection = 4;    // ask for passphrase if set in device
 }
 
 /**

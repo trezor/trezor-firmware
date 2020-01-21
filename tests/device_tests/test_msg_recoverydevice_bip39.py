@@ -85,7 +85,7 @@ class TestMsgRecoverydevice:
         assert client.features.passphrase_protection is True
 
         # Do passphrase-protected action, PassphraseRequest should be raised
-        resp = client.call_raw(proto.Ping(passphrase_protection=True))
+        resp = client.call_raw(proto.GetAddress(address_n=[], coin_name="Testnet"))
         assert isinstance(resp, proto.PassphraseRequest)
         client.call_raw(proto.Cancel())
 
@@ -136,13 +136,9 @@ class TestMsgRecoverydevice:
         assert client.features.pin_protection is False
         assert client.features.passphrase_protection is False
 
-        # Do passphrase-protected action, PassphraseRequest should NOT be raised
-        resp = client.call_raw(proto.Ping(passphrase_protection=True))
-        assert isinstance(resp, proto.Success)
-
-        # Do PIN-protected action, PinRequest should NOT be raised
-        resp = client.call_raw(proto.Ping(pin_protection=True))
-        assert isinstance(resp, proto.Success)
+        # Do pin & passphrase-protected action, PassphraseRequest should NOT be raised
+        resp = client.call_raw(proto.GetAddress(address_n=[], coin_name="Testnet"))
+        assert isinstance(resp, proto.Address)
 
     @pytest.mark.setup_client(uninitialized=True)
     def test_word_fail(self, client):

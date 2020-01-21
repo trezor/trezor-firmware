@@ -266,17 +266,13 @@ class TrezorClient:
 
     @tools.expect(messages.Success, field="message")
     def ping(
-        self,
-        msg,
-        button_protection=False,
-        pin_protection=False,
-        passphrase_protection=False,
+        self, msg, button_protection=False,
     ):
         # We would like ping to work on any valid TrezorClient instance, but
         # due to the protection modes, we need to go through self.call, and that will
         # raise an exception if the firmware is too old.
         # So we short-circuit the simplest variant of ping with call_raw.
-        if not button_protection and not pin_protection and not passphrase_protection:
+        if not button_protection:
             # XXX this should be: `with self:`
             try:
                 self.open()
@@ -284,12 +280,7 @@ class TrezorClient:
             finally:
                 self.close()
 
-        msg = messages.Ping(
-            message=msg,
-            button_protection=button_protection,
-            pin_protection=pin_protection,
-            passphrase_protection=passphrase_protection,
-        )
+        msg = messages.Ping(message=msg, button_protection=button_protection,)
         return self.call(msg)
 
     def get_device_id(self):
