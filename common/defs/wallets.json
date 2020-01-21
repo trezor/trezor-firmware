@@ -12,6 +12,9 @@
     "bitcoin:BELL": {
         "Electrum-BELL": "https://bell.electrum-jp.net"
     },
+    "bitcoin:BSD": {
+        "Magnum": "https://magnumwallet.co"
+    },
     "bitcoin:BTC": {
         "Electrum": "https://electrum.org",
         "Exodus": "https://www.exodus.io",
