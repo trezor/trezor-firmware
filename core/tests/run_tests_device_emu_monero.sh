@@ -10,13 +10,17 @@ upy_pid=""
 
 # run emulator if RUN_TEST_EMU
 if [[ $RUN_TEST_EMU > 0 ]]; then
+  t=$(mktemp)
   ../emu.py \
     --disable-animation \
     --temporary-profile \
     --headless \
-    --output=../../tests/trezor.log &
-  upy_pid=$!
-  trezorctl -v wait-for-emulator
+    --output=../../tests/trezor.log \
+    > $t &
+  trezorctl wait-for-emulator
+  source $t
+  upy_pid=$(cat $TREZOR_PROFILE_DIR/trezor.pid)
+  rm $t
 fi
 
 DOCKER_ID=""
@@ -24,7 +28,7 @@ DOCKER_ID=""
 # Test termination trap
 terminate_test() {
   if [[ $# > 0 ]]; then error=$1; fi
-  if [ -n "$upy_pid" ]; then kill -- -$upy_pid 2> /dev/null; fi
+  if [ -n "$upy_pid" ]; then kill $upy_pid 2> /dev/null; fi
   if [ -n "$DOCKER_ID" ]; then docker kill $DOCKER_ID 2>/dev/null >/dev/null; fi
   exit $error
 }
