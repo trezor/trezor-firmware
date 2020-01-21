@@ -221,17 +221,10 @@ def version():
 @cli.command()
 @click.argument("message")
 @click.option("-b", "--button-protection", is_flag=True)
-@click.option("-p", "--pin-protection", is_flag=True)
-@click.option("-r", "--passphrase-protection", is_flag=True)
 @click.pass_obj
-def ping(connect, message, button_protection, pin_protection, passphrase_protection):
+def ping(connect, message, button_protection):
     """Send ping message."""
-    return connect().ping(
-        message,
-        button_protection=button_protection,
-        pin_protection=pin_protection,
-        passphrase_protection=passphrase_protection,
-    )
+    return connect().ping(message, button_protection=button_protection,)
 
 
 @cli.command()

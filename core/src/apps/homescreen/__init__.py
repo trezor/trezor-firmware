@@ -104,10 +104,6 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
         from trezor.ui.text import Text
 
         await require_confirm(ctx, Text("Confirm"), ProtectCall)
-    if msg.passphrase_protection:  # TODO
-        from apps.common import passphrase
-
-        await passphrase.get(ctx)
     return Success(message=msg.message)
 
 

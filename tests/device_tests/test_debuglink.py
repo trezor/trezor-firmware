@@ -34,7 +34,7 @@ class TestDebuglink:
 
     @pytest.mark.setup_client(mnemonic=MNEMONIC12, pin="1234", passphrase=True)
     def test_pin(self, client):
-        resp = client.call_raw(messages.Ping(message="test", pin_protection=True))
+        resp = client.call_raw(messages.GetAddress(address_n=[], coin_name="Testnet"))
         assert isinstance(resp, messages.PinMatrixRequest)
 
         pin, matrix = client.debug.read_pin()
@@ -43,4 +43,7 @@ class TestDebuglink:
 
         pin_encoded = client.debug.read_pin_encoded()
         resp = client.call_raw(messages.PinMatrixAck(pin=pin_encoded))
-        assert isinstance(resp, messages.Success)
+        assert isinstance(resp, messages.PassphraseRequest)
+
+        resp = client.call_raw(messages.PassphraseAck(passphrase=""))
+        assert isinstance(resp, messages.Address)

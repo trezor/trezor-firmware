@@ -225,5 +225,5 @@ def test_set_pin_to_wipe_code(client):
     # Check that there is no PIN protection.
     client.init_device()
     assert client.features.pin_protection is False
-    ret = client.call_raw(messages.Ping(pin_protection=True))
-    assert isinstance(ret, messages.Success)
+    resp = client.call_raw(messages.GetAddress())
+    assert isinstance(resp, messages.Address)

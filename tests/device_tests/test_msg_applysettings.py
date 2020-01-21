@@ -18,7 +18,7 @@ import time
 
 import pytest
 
-from trezorlib import device, messages as proto
+from trezorlib import btc, device, messages as proto
 
 EXPECTED_RESPONSES_NOPIN = [proto.ButtonRequest(), proto.Success(), proto.Features()]
 EXPECTED_RESPONSES_PIN = [proto.PinMatrixRequest()] + EXPECTED_RESPONSES_NOPIN
@@ -91,13 +91,13 @@ class TestMsgApplysettings:
         time.sleep(0.1)  # sleep less than auto-lock delay
         with client:
             # No PIN protection is required.
-            client.set_expected_responses([proto.Success()])
-            client.ping(msg="", pin_protection=True)
+            client.set_expected_responses([proto.Address()])
+            btc.get_address(client, "Testnet", [0])
 
         time.sleep(10.1)  # sleep more than auto-lock delay
         with client:
-            client.set_expected_responses([proto.PinMatrixRequest(), proto.Success()])
-            client.ping(msg="", pin_protection=True)
+            client.set_expected_responses([proto.PinMatrixRequest(), proto.Address()])
+            btc.get_address(client, "Testnet", [0])
 
     @pytest.mark.skip_t2
     def test_apply_minimal_auto_lock_delay(self, client):
@@ -114,16 +114,16 @@ class TestMsgApplysettings:
         time.sleep(0.1)  # sleep less than auto-lock delay
         with client:
             # No PIN protection is required.
-            client.set_expected_responses([proto.Success()])
-            client.ping(msg="", pin_protection=True)
+            client.set_expected_responses([proto.Address()])
+            btc.get_address(client, "Testnet", [0])
 
         time.sleep(2)  # sleep less than the minimal auto-lock delay
         with client:
             # No PIN protection is required.
-            client.set_expected_responses([proto.Success()])
-            client.ping(msg="", pin_protection=True)
+            client.set_expected_responses([proto.Address()])
+            btc.get_address(client, "Testnet", [0])
 
         time.sleep(10.1)  # sleep more than the minimal auto-lock delay
         with client:
-            client.set_expected_responses([proto.PinMatrixRequest(), proto.Success()])
-            client.ping(msg="", pin_protection=True)
+            client.set_expected_responses([proto.PinMatrixRequest(), proto.Address()])
+            btc.get_address(client, "Testnet", [0])
