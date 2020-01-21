@@ -217,6 +217,7 @@ def cli(
         TREZOR_PROFILE_DIR=str(profile_dir.resolve()),
         TREZOR_UDP_PORT=str(emulator.port),
         TREZOR_FIDO2_UDP_PORT=str(emulator.port + 2),
+        TREZOR_SRC=str(SRC_DIR),
     )
     os.environ.update(emulator_env)
     for k, v in emulator_env.items():

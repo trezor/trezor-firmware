@@ -1,10 +1,13 @@
 import sys
 
 from uio import open
+from uos import getenv
 
 # We need to insert "" to sys.path so that the frozen build can import main from the
 # frozen modules, and regular build can import it from current directory.
 sys.path.insert(0, "")
+
+PATH_PREFIX = (getenv("TREZOR_SRC") or ".") + "/"
 
 
 class Coverage:
@@ -22,7 +25,7 @@ class Coverage:
         this_file = globals()["__file__"]
         for filename in self.__files:
             if not filename == this_file:
-                lines[filename] = list(self.__files[filename])
+                lines[PATH_PREFIX + filename] = list(self.__files[filename])
 
         return lines_execution
 
