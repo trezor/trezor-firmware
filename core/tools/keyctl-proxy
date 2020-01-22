@@ -45,7 +45,7 @@ def make_commit(fw_or_type, digest, public_keys):
         click.echo(f"Commiting to {click.style(fw_or_type.NAME, bold=True)} hash:")
         for partid in range(4):
             digest_part = digest[partid * 8 : (partid + 1) * 8]
-            color = "red" if partid % 2 else "blue"
+            color = "red" if partid % 2 else "cyan"
             digest_str = click.style(digest_part.hex().upper(), fg=color)
             click.echo("\t" + digest_str)
         click.echo(f"Using path: {click.style(path, bold=True)}")
