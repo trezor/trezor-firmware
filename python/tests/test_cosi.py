@@ -104,13 +104,13 @@ def test_single_eddsa_vector(privkey, pubkey, message, signature):
     my_pubkey = cosi.pubkey_from_privkey(privkey)
     assert my_pubkey == pubkey
     try:
-        cosi.verify(signature, message, pubkey)
+        cosi.verify_combined(signature, message, pubkey)
     except ValueError:
         pytest.fail("Signature does not verify.")
 
     fake_signature = signature[:37] + b"\xf0" + signature[38:]
     with pytest.raises(_ed25519.SignatureMismatch):
-        cosi.verify(fake_signature, message, pubkey)
+        cosi.verify_combined(fake_signature, message, pubkey)
 
 
 def test_combine_keys():
@@ -148,7 +148,7 @@ def test_cosi_combination(keyset):
     global_sig = cosi.combine_sig(global_commit, signatures)
 
     try:
-        cosi.verify(global_sig, message, global_pk)
+        cosi.verify_combined(global_sig, message, global_pk)
     except Exception:
         pytest.fail("Failed to validate global signature")
 
@@ -175,25 +175,27 @@ def test_m_of_n():
 
     try:
         # this is what we are actually doing
-        cosi.verify_m_of_n(global_sig, message, 3, 4, sigmask, pubkeys)
+        cosi.verify(global_sig, message, 3, pubkeys, sigmask)
         # we can require less signers too
-        cosi.verify_m_of_n(global_sig, message, 1, 4, sigmask, pubkeys)
+        cosi.verify(global_sig, message, 1, pubkeys, sigmask)
     except Exception:
         pytest.fail("Failed to validate by sigmask")
 
     # and now for various ways that should fail
     with pytest.raises(ValueError) as e:
-        cosi.verify_m_of_n(global_sig, message, 4, 4, sigmask, pubkeys)
-    assert "Not enough signers" in e.value.args[0]
+        cosi.verify(global_sig, message, 3, pubkeys[:2], sigmask)
+    assert "more public keys than provided" in e.value.args[0]
 
-    with pytest.raises(_ed25519.SignatureMismatch):
-        # when N < number of possible signers, the topmost signers will be ignored
-        cosi.verify_m_of_n(global_sig, message, 2, 3, sigmask, pubkeys)
+    with pytest.raises(ValueError) as e:
+        cosi.verify(global_sig, message, 0, pubkeys, 0)
+    assert "At least one signer" in e.value.args[0]
 
-    with pytest.raises(_ed25519.SignatureMismatch):
+    with pytest.raises(_ed25519.SignatureMismatch) as e:
+        # at least 5 signatures required
+        cosi.verify(global_sig, message, 5, pubkeys, sigmask)
+    assert "Insufficient number of signatures" in e.value.args[0]
+
+    with pytest.raises(_ed25519.SignatureMismatch) as e:
         # wrong sigmask
-        cosi.verify_m_of_n(global_sig, message, 1, 4, 5, pubkeys)
-
-    with pytest.raises(ValueError):
-        # can't use "0 of N" scheme
-        cosi.verify_m_of_n(global_sig, message, 0, 4, sigmask, pubkeys)
+        cosi.verify(global_sig, message, 3, pubkeys, 7)
+    assert "signature does not pass verification" in e.value.args[0]

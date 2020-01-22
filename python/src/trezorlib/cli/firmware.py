@@ -36,18 +36,18 @@ def validate_firmware(version, fw, expected_fingerprint=None):
     if version == firmware.FirmwareFormat.TREZOR_ONE:
         if fw.embedded_onev2:
             click.echo("Trezor One firmware with embedded v2 image (1.8.0 or later)")
-            _print_version(fw.embedded_onev2.firmware_header.version)
+            _print_version(fw.embedded_onev2.header.version)
         else:
             click.echo("Trezor One firmware image.")
     elif version == firmware.FirmwareFormat.TREZOR_ONE_V2:
         click.echo("Trezor One v2 firmware (1.8.0 or later)")
-        _print_version(fw.firmware_header.version)
+        _print_version(fw.header.version)
     elif version == firmware.FirmwareFormat.TREZOR_T:
         click.echo("Trezor T firmware image.")
-        vendor = fw.vendor_header.vendor_string
+        vendor = fw.vendor_header.text
         vendor_version = "{major}.{minor}".format(**fw.vendor_header.version)
         click.echo("Vendor header from {}, version {}".format(vendor, vendor_version))
-        _print_version(fw.firmware_header.version)
+        _print_version(fw.image.header.version)
 
     try:
         firmware.validate(version, fw, allow_unsigned=False)
@@ -198,17 +198,18 @@ def firmware_update(
         click.echo("Please switch your device to bootloader mode.")
         sys.exit(1)
 
+    # bootloader for T1 does not export 'model', so we rely on major_version
     f = client.features
-    bootloader_onev2 = f.major_version == 1 and f.minor_version >= 8
+    bootloader_version = (f.major_version, f.minor_version, f.patch_version)
+    bootloader_onev2 = f.major_version == 1 and bootloader_version >= (1, 8, 0)
 
     if filename:
         data = open(filename, "rb").read()
     else:
         if not url:
-            bootloader_version = [f.major_version, f.minor_version, f.patch_version]
             version_list = [int(x) for x in version.split(".")] if version else None
             url, fp = find_best_firmware_version(
-                bootloader_version, version_list, beta, bitcoin_only
+                list(bootloader_version), version_list, beta, bitcoin_only
             )
             if not fingerprint:
                 fingerprint = fp
