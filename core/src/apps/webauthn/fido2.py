@@ -20,9 +20,6 @@ from apps.webauthn.resident_credentials import (
     store_resident_credential,
 )
 
-if __debug__:
-    from apps.debug import confirm_signal
-
 if False:
     from typing import Any, Coroutine, List, Optional, Tuple
 
@@ -561,19 +558,11 @@ async def verify_user(keepalive_callback: KeepaliveCallback) -> bool:
 
 
 async def confirm(*args: Any, **kwargs: Any) -> bool:
-    dialog = Confirm(*args, **kwargs)
-    if __debug__:
-        return await loop.race(dialog, confirm_signal()) is CONFIRMED
-    else:
-        return await dialog is CONFIRMED
+    return await Confirm(*args, **kwargs) is CONFIRMED
 
 
 async def confirm_pageable(*args: Any, **kwargs: Any) -> bool:
-    dialog = ConfirmPageable(*args, **kwargs)
-    if __debug__:
-        return await loop.race(dialog, confirm_signal()) is CONFIRMED
-    else:
-        return await dialog is CONFIRMED
+    return await ConfirmPageable(*args, **kwargs) is CONFIRMED
 
 
 class State:

@@ -56,7 +56,7 @@ if __debug__:
             msg = await debuglink_decision_chan.take()
             if msg.yes_no is not None:
                 await confirm_chan.put(
-                    confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED
+                    ui.Result(confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED)
                 )
             if msg.swipe is not None:
                 if msg.swipe == DebugSwipeDirection.UP:

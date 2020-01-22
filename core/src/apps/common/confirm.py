@@ -5,7 +5,6 @@ from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.ui.confirm import CONFIRMED, INFO, Confirm, HoldToConfirm, InfoConfirm
 
 if __debug__:
-    from apps.debug import confirm_signal
     from trezor.ui.scroll import Paginated
 
 if False:
@@ -47,10 +46,7 @@ async def confirm(
             content, confirm, confirm_style, cancel, cancel_style, major_confirm
         )
 
-    if __debug__:
-        return await ctx.wait(dialog, confirm_signal()) is CONFIRMED
-    else:
-        return await ctx.wait(dialog) is CONFIRMED
+    return await ctx.wait(dialog) is CONFIRMED
 
 
 async def info_confirm(
@@ -72,10 +68,7 @@ async def info_confirm(
     )
 
     while True:
-        if __debug__:
-            result = await ctx.wait(dialog, confirm_signal())
-        else:
-            result = await ctx.wait(dialog)
+        result = await ctx.wait(dialog)
 
         if result is INFO:
             await info_func(ctx)
@@ -106,10 +99,7 @@ async def hold_to_confirm(
     else:
         dialog = HoldToConfirm(content, confirm, confirm_style, loader_style)
 
-    if __debug__:
-        return await ctx.wait(dialog, confirm_signal()) is CONFIRMED
-    else:
-        return await ctx.wait(dialog) is CONFIRMED
+    return await ctx.wait(dialog) is CONFIRMED
 
 
 async def require_confirm(*args: Any, **kwargs: Any) -> None:

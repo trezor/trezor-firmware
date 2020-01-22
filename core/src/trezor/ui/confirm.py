@@ -5,7 +5,7 @@ from trezor.ui.button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
 from trezor.ui.loader import Loader, LoaderDefault
 
 if __debug__:
-    from apps.debug import swipe_signal
+    from apps.debug import swipe_signal, confirm_signal
 
 if False:
     from typing import Any, Optional, List, Tuple
@@ -78,6 +78,9 @@ class Confirm(ui.Layout):
 
         def read_content(self) -> List[str]:
             return self.content.read_content()
+
+        def create_tasks(self) -> Tuple[loop.Task, ...]:
+            return super().create_tasks() + (confirm_signal(),)
 
 
 class Pageable:
@@ -217,6 +220,9 @@ class InfoConfirm(ui.Layout):
         def read_content(self) -> List[str]:
             return self.content.read_content()
 
+        def create_tasks(self) -> Tuple[loop.Task, ...]:
+            return super().create_tasks() + (confirm_signal(),)
+
 
 class HoldToConfirm(ui.Layout):
     DEFAULT_CONFIRM = "Hold To Confirm"
@@ -271,3 +277,6 @@ class HoldToConfirm(ui.Layout):
 
         def read_content(self) -> List[str]:
             return self.content.read_content()
+
+        def create_tasks(self) -> Tuple[loop.Task, ...]:
+            return super().create_tasks() + (confirm_signal(),)

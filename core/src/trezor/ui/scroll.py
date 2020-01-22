@@ -6,7 +6,7 @@ from trezor.ui.confirm import CANCELLED, CONFIRMED
 from trezor.ui.swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
 
 if __debug__:
-    from apps.debug import swipe_signal, notify_layout_change
+    from apps.debug import confirm_signal, swipe_signal, notify_layout_change
 
 if False:
     from typing import List, Tuple
@@ -98,7 +98,20 @@ class Paginated(ui.Layout):
         self.on_change()
 
     def create_tasks(self) -> Tuple[loop.Task, ...]:
-        return self.handle_input(), self.handle_rendering(), self.handle_paging()
+        tasks = (
+            self.handle_input(),
+            self.handle_rendering(),
+            self.handle_paging(),
+        )  # type: Tuple[loop.Task, ...]
+
+        if __debug__:
+            # XXX This isn't strictly correct, as it allows *any* Paginated layout to be
+            # shut down by a DebugLink confirm, even if used outside of a confirm() call
+            # But we don't have any such usages in the codebase, and it doesn't actually
+            # make much sense to use a Paginated without a way to confirm it.
+            return tasks + (confirm_signal(),)
+        else:
+            return tasks
 
     def on_change(self) -> None:
         if self.one_by_one:
@@ -212,3 +225,6 @@ class PaginatedWithButtons(ui.Layout):
 
         def read_content(self) -> List[str]:
             return self.pages[self.page].read_content()
+
+        def create_tasks(self) -> Tuple[loop.Task, ...]:
+            return super().create_tasks() + (confirm_signal(),)
