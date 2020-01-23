@@ -28,12 +28,11 @@ from ..upgrade_tests import core_only
 
 @pytest.fixture
 def emulator():
-    emu = EmulatorWrapper("core")
-    with emu:
+    with EmulatorWrapper("core") as emu:
         yield emu
 
 
-def _restart(device_handler: BackgroundDeviceHandler, emulator: EmulatorWrapper):
+def _restart(device_handler, emulator):
     device_handler.restart(emulator)
     return device_handler.debuglink()
 
