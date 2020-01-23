@@ -12,15 +12,3 @@ if __debug__:
 
 class PassphraseRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 41
-
-    def __init__(
-        self,
-        _deprecated_on_device: bool = None,
-    ) -> None:
-        self._deprecated_on_device = _deprecated_on_device
-
-    @classmethod
-    def get_fields(cls) -> Dict:
-        return {
-            1: ('_deprecated_on_device', p.BoolType, 0),
-        }

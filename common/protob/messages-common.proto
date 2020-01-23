@@ -111,7 +111,7 @@ message PinMatrixAck {
  * @next PassphraseAck
  */
 message PassphraseRequest {
-    optional bool _deprecated_on_device = 1;  // moved to PassphraseAck but left for backwards compatibility
+//    optional bool on_device = 1;  // DEPRECATED
 }
 
 /**
