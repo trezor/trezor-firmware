@@ -35,7 +35,6 @@ def get_features() -> Features:
     f.pin_protection = config.has_pin()
     f.pin_cached = config.has_pin()
     f.passphrase_protection = storage.device.is_passphrase_enabled()
-    # f.passphrase_cached = cache.has_passphrase()  # TODO
     f.needs_backup = storage.device.needs_backup()
     f.unfinished_backup = storage.device.unfinished_backup()
     f.no_backup = storage.device.no_backup()

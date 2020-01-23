@@ -32,7 +32,6 @@ class Features(p.MessageType):
         bootloader_hash: bytes = None,
         imported: bool = None,
         pin_cached: bool = None,
-        passphrase_cached: bool = None,
         firmware_present: bool = None,
         needs_backup: bool = None,
         flags: int = None,
@@ -68,7 +67,6 @@ class Features(p.MessageType):
         self.bootloader_hash = bootloader_hash
         self.imported = imported
         self.pin_cached = pin_cached
-        self.passphrase_cached = passphrase_cached
         self.firmware_present = firmware_present
         self.needs_backup = needs_backup
         self.flags = flags
@@ -107,7 +105,6 @@ class Features(p.MessageType):
             14: ('bootloader_hash', p.BytesType, 0),
             15: ('imported', p.BoolType, 0),
             16: ('pin_cached', p.BoolType, 0),
-            17: ('passphrase_cached', p.BoolType, 0),
             18: ('firmware_present', p.BoolType, 0),
             19: ('needs_backup', p.BoolType, 0),
             20: ('flags', p.UVarintType, 0),

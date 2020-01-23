@@ -108,8 +108,6 @@ bool config_getPassphraseProtection(bool *passphrase_protection);
 bool config_getHomescreen(uint8_t *dest, uint16_t dest_size);
 void config_setHomescreen(const uint8_t *data, uint32_t size);
 
-void session_cachePassphrase(const char *passphrase);
-bool session_isPassphraseCached(void);
 const uint8_t *session_getSessionId(void);
 
 bool config_setMnemonic(const char *mnemonic);

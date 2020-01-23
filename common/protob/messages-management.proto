@@ -51,7 +51,7 @@ message Features {
     optional bytes bootloader_hash = 14;        // hash of the bootloader
     optional bool imported = 15;                // was storage imported from an external source?
     optional bool pin_cached = 16;              // is PIN already cached in session?
-    optional bool passphrase_cached = 17;       // is passphrase already cached in session?
+//    optional bool passphrase_cached = 17;       // is passphrase already cached in session?  DEPRECATED
     optional bool firmware_present = 18;        // is valid firmware loaded?
     optional bool needs_backup = 19;            // does storage need backup? (equals to Storage.needs_backup)
     optional uint32 flags = 20;                 // device flags (equals to Storage.flags)
