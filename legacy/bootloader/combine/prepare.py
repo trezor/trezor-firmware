@@ -1,11 +1,10 @@
-#!/usr/bin/env python
-from __future__ import print_function
+#!/usr/bin/env python3
 
-bl = open("bl.bin").read()
-fw = open("fw.bin").read()
-combined = bl + fw[:256] + (32768 - 256) * "\x00" + fw[256:]
+bl = open("bl.bin", "rb").read()
+fw = open("fw.bin", "rb").read()
+combined = bl + 32768 * b"\xff" + fw
 
-open("combined.bin", "w").write(combined)
+open("combined.bin", "wb").write(combined)
 
 print("bootloader : %d bytes" % len(bl))
 print("firmware   : %d bytes" % len(fw))
