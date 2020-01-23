@@ -2,6 +2,9 @@ Version 2.x.x [not yet released]
 * SD card protection
 * Upgrade MicroPython to 1.12
 
+Version 2.3.0 [not yet released]
+* Passphrase redesign
+
 Version 2.2.0 [Jan 2020]
 * Remove unused ButtonRequest.data field
 * Rework Recovery persistence internally
