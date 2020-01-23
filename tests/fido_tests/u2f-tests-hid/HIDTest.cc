@@ -645,7 +645,7 @@ int main(int argc, char* argv[]) {
   PASS(test_Lock());
 
   PASS(test_Echo());
-  PASS(test_LongEcho());
+  // PASS(test_LongEcho());
 
   // PASS(test_Timeout());
 
