@@ -26,7 +26,7 @@ async def naive_pagination(
 
     while True:
         await ctx.call(ButtonRequest(code=ButtonRequestType.SignTx), ButtonAck)
-        result = await paginated
+        result = await ctx.wait(paginated)
         if result is CONFIRMED:
             return True
         if result is CANCELLED:
