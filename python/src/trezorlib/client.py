@@ -247,7 +247,9 @@ class TrezorClient:
             self.features.patch_version,
         )
         self.check_firmware_version(warn_only=True)
-        if self.version >= (2, 1, 9):
+        if (self.version[0] == 1 and self.version >= (1, 9, 0)) or (
+            self.version[0] == 2 and self.version >= (2, 3, 0)
+        ):
             self.session_id = self.features.session_id
 
     def is_outdated(self):

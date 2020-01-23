@@ -224,7 +224,7 @@ def version():
 @click.pass_obj
 def ping(connect, message, button_protection):
     """Send ping message."""
-    return connect().ping(message, button_protection=button_protection,)
+    return connect().ping(message, button_protection=button_protection)
 
 
 @cli.command()
