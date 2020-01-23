@@ -7,7 +7,10 @@ from trezor.messages.ButtonAck import ButtonAck
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.PassphraseAck import PassphraseAck
 from trezor.messages.PassphraseRequest import PassphraseRequest
+from trezor.ui import ICON_CONFIG
 from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard
+from trezor.ui.popup import Popup
+from trezor.ui.text import Text
 
 if __debug__:
     from apps.debug import input_signal
@@ -38,6 +41,8 @@ async def _get_from_user(ctx: wire.Context) -> str:
     if storage.device.get_passphrase_always_on_device():
         return await request_from_user_on_device(ctx)
 
+    await _entry_dialog()
+
     request = PassphraseRequest()
     ack = await ctx.call(request, PassphraseAck)
     if ack.on_device:
@@ -66,3 +71,12 @@ async def request_from_user_on_device(ctx: wire.Context) -> str:
     assert isinstance(passphrase, str)
 
     return passphrase
+
+
+async def _entry_dialog() -> None:
+    text = Text("Passphrase entry", ICON_CONFIG)
+    text.normal("Please type your", "passphrase on the", "connected host.")
+    # no need to specify timeout, because it hangs till PassphraseAck is received
+    # TODO ask: not sure this is correct. If we change the behaviour of Popup
+    #  (e.g. to be redrawn after the timeout expires) this will no longer display the dialog
+    await Popup(text)
