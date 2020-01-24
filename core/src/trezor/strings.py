@@ -19,7 +19,7 @@ def format_ordinal(number: int) -> str:
     )
 
 
-def format_plural(string: str, count: int, plural: str):
+def format_plural(string: str, count: int, plural: str) -> str:
     """
     Adds plural form to a string based on `count`.
     !! Does not work with irregular words !!
