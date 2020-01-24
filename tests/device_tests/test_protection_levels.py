@@ -63,7 +63,6 @@ class TestProtectionLevels:
             )
             device.change_pin(client)
 
-    @pytest.mark.setup_client()
     def test_ping(self, client):
         with client:
             client.set_expected_responses([proto.ButtonRequest(), proto.Success()])

@@ -144,16 +144,13 @@ def no_backup() -> bool:
 
 
 def get_passphrase_always_on_device() -> bool:
-    b = common.get(_NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE)
-    # backwards compatible for _PASSPHRASE_SOURCE.HOST = 2
-    if b == b"\x02":
-        return False
-    # backwards compatible for _PASSPHRASE_SOURCE.DEVICE = 1
-    # and also \x01 is TRUE_BYTE so it is future compatible as well
-    elif b == b"\x01":
-        return True
-    else:
-        return False
+    """
+    This is backwards compatible with _PASSPHRASE_SOURCE:
+    - If ASK(0) => returns False, the check against b"\x01" in get_bool fails.
+    - If DEVICE(1) => returns True, the check against b"\x01" in get_bool succeeds.
+    - If HOST(2) => returns False, the check against b"\x01" in get_bool fails.
+    """
+    return common.get_bool(_NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE)
 
 
 def load_settings(

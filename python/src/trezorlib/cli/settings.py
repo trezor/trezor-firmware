@@ -139,23 +139,12 @@ def passphrase():
 
 
 @passphrase.command(name="enabled")
-@click.option("-f", "--force-on-device", is_flag=True)
-@click.option("-F", "--no-force-on-device", is_flag=True)
+@click.option("-f/-F", "--force-on-device/--no-force-on-device", default=None)
 @click.pass_obj
-def passphrase_enable(connect, force_on_device: bool, no_force_on_device: bool):
+def passphrase_enable(connect, force_on_device: bool):
     """Enable passphrase."""
-    if force_on_device and no_force_on_device:
-        raise ValueError(
-            "Only one option of --force-on-device/-no-force-on-device makes sense."
-        )
-    on_device = None
-    if force_on_device:
-        on_device = True
-    if no_force_on_device:
-        on_device = False
-
     return device.apply_settings(
-        connect(), use_passphrase=True, passphrase_always_on_device=on_device
+        connect(), use_passphrase=True, passphrase_always_on_device=force_on_device
     )
 
 

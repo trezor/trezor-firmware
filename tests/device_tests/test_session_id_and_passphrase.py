@@ -17,10 +17,19 @@
 import pytest
 
 from trezorlib import messages
+from trezorlib.messages import FailureType
 from trezorlib.tools import parse_path
+
+XPUB_PASSPHRASE_A = "xpub6CekxGcnqnJ6osfY4Rrq7W5ogFtR54KUvz4H16XzaQuukMFZCGebEpVznfq4yFcKEmYyShwj2UKjL7CazuNSuhdkofF4mHabHkLxCMVvsqG"
+XPUB_PASSPHRASE_NONE = "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"
 
 
 def _get_xpub(client, passphrase):
+    """
+    Are calls are intentionally "raw", i.e. we are not using trezorlib
+    to avoid its implicit session management
+    (clearing session after settings, hidden handling of session ids, etc.).
+    """
     response = client.call_raw(
         messages.GetPublicKey(address_n=parse_path("44'/0'/0'"), coin_name="Bitcoin")
     )
@@ -40,7 +49,6 @@ def _enable_passphrase(client):
 
 
 @pytest.mark.skip_ui
-@pytest.mark.setup_client()
 def test_session_with_passphrase(client):
     # Turn on passphrase.
     _enable_passphrase(client)
@@ -54,10 +62,7 @@ def test_session_with_passphrase(client):
     # GetPublicKey requires passphrase and since it is not cached,
     # Trezor will prompt for it.
     xpub = _get_xpub(client, passphrase="A")
-    assert (
-        xpub
-        == "xpub6CekxGcnqnJ6osfY4Rrq7W5ogFtR54KUvz4H16XzaQuukMFZCGebEpVznfq4yFcKEmYyShwj2UKjL7CazuNSuhdkofF4mHabHkLxCMVvsqG"
-    )
+    assert xpub == XPUB_PASSPHRASE_A
 
     # Call Initialize again, this time with the received session id and then call
     # GetPublicKey. The passphrase should be cached now so Trezor must
@@ -65,33 +70,23 @@ def test_session_with_passphrase(client):
     response = client.call_raw(messages.Initialize(session_id=session_id))
     assert isinstance(response, messages.Features)
     xpub = _get_xpub(client, passphrase=None)
-    assert (
-        xpub
-        == "xpub6CekxGcnqnJ6osfY4Rrq7W5ogFtR54KUvz4H16XzaQuukMFZCGebEpVznfq4yFcKEmYyShwj2UKjL7CazuNSuhdkofF4mHabHkLxCMVvsqG"
-    )
+    assert xpub == XPUB_PASSPHRASE_A
 
     # If we set session id in Initialize to None, the cache will be cleared
     # and Trezor will ask for the passphrase again.
     response = client.call_raw(messages.Initialize(session_id=None))
     assert isinstance(response, messages.Features)
     xpub = _get_xpub(client, passphrase="A")
-    assert (
-        xpub
-        == "xpub6CekxGcnqnJ6osfY4Rrq7W5ogFtR54KUvz4H16XzaQuukMFZCGebEpVznfq4yFcKEmYyShwj2UKjL7CazuNSuhdkofF4mHabHkLxCMVvsqG"
-    )
+    assert xpub == XPUB_PASSPHRASE_A
 
     # Unknown session id is the same as setting it to None.
     response = client.call_raw(messages.Initialize(session_id=b"X" * 32))
     assert isinstance(response, messages.Features)
     xpub = _get_xpub(client, passphrase="A")
-    assert (
-        xpub
-        == "xpub6CekxGcnqnJ6osfY4Rrq7W5ogFtR54KUvz4H16XzaQuukMFZCGebEpVznfq4yFcKEmYyShwj2UKjL7CazuNSuhdkofF4mHabHkLxCMVvsqG"
-    )
+    assert xpub == XPUB_PASSPHRASE_A
 
 
 @pytest.mark.skip_ui
-@pytest.mark.setup_client()
 def test_session_enable_passphrase(client):
     # Let's start the communication by calling Initialize.
     response = client.call_raw(messages.Initialize())
@@ -101,10 +96,7 @@ def test_session_enable_passphrase(client):
 
     # Trezor will not prompt for passphrase because it is turned off.
     xpub = _get_xpub(client, passphrase=None)
-    assert (
-        xpub
-        == "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"
-    )
+    assert xpub == XPUB_PASSPHRASE_NONE
 
     # Turn on passphrase.
     _enable_passphrase(client)
@@ -114,25 +106,18 @@ def test_session_enable_passphrase(client):
     xpub = _get_xpub(client, passphrase=None)
     assert isinstance(response, messages.Features)
     assert session_id == response.session_id
-    assert (
-        xpub
-        == "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"
-    )
+    assert xpub == XPUB_PASSPHRASE_NONE
 
     # We clear the session id now, so the passphrase should be asked.
     response = client.call_raw(messages.Initialize())
     xpub = _get_xpub(client, passphrase="A")
     assert isinstance(response, messages.Features)
     assert session_id != response.session_id
-    assert (
-        xpub
-        == "xpub6CekxGcnqnJ6osfY4Rrq7W5ogFtR54KUvz4H16XzaQuukMFZCGebEpVznfq4yFcKEmYyShwj2UKjL7CazuNSuhdkofF4mHabHkLxCMVvsqG"
-    )
+    assert xpub == XPUB_PASSPHRASE_A
 
 
 @pytest.mark.skip_ui
 @pytest.mark.skip_t1
-@pytest.mark.setup_client()
 def test_passphrase_always_on_device(client):
     # Let's start the communication by calling Initialize.
     response = client.call_raw(messages.Initialize())
@@ -158,10 +143,7 @@ def test_passphrase_always_on_device(client):
     client.debug.input("")  # Input empty passphrase.
     response = client.call_raw(messages.ButtonAck())
     assert isinstance(response, messages.PublicKey)
-    assert (
-        response.xpub
-        == "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"
-    )
+    assert response.xpub == XPUB_PASSPHRASE_NONE
 
     # Passphrase will not be prompted. The session id stays the same and the passphrase is cached.
     response = client.call_raw(messages.Initialize(session_id=session_id))
@@ -170,10 +152,7 @@ def test_passphrase_always_on_device(client):
         messages.GetPublicKey(address_n=parse_path("44'/0'/0'"), coin_name="Bitcoin")
     )
     assert isinstance(response, messages.PublicKey)
-    assert (
-        response.xpub
-        == "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"
-    )
+    assert response.xpub == XPUB_PASSPHRASE_NONE
 
     # In case we want to add a new passphrase we need to send session_id = None.
     response = client.call_raw(messages.Initialize(session_id=None))
@@ -185,15 +164,11 @@ def test_passphrase_always_on_device(client):
     client.debug.input("A")  # Input empty passphrase.
     response = client.call_raw(messages.ButtonAck())
     assert isinstance(response, messages.PublicKey)
-    assert (
-        response.xpub
-        == "xpub6CekxGcnqnJ6osfY4Rrq7W5ogFtR54KUvz4H16XzaQuukMFZCGebEpVznfq4yFcKEmYyShwj2UKjL7CazuNSuhdkofF4mHabHkLxCMVvsqG"
-    )
+    assert response.xpub == XPUB_PASSPHRASE_A
 
 
 @pytest.mark.skip_ui
 @pytest.mark.skip_t2
-@pytest.mark.setup_client()
 def test_passphrase_on_device_not_possible_on_t1(client):
     # Let's start the communication by calling Initialize.
     response = client.call_raw(messages.Initialize())
@@ -206,7 +181,7 @@ def test_passphrase_on_device_not_possible_on_t1(client):
     response = client.call_raw(messages.ApplySettings(passphrase_always_on_device=True))
 
     assert isinstance(response, messages.Failure)
-    assert response.code == 3  # DataError
+    assert response.code == FailureType.DataError
 
     response = client.call_raw(
         messages.GetPublicKey(address_n=parse_path("44'/0'/0'"), coin_name="Bitcoin")
@@ -214,7 +189,7 @@ def test_passphrase_on_device_not_possible_on_t1(client):
     assert isinstance(response, messages.PassphraseRequest)
     response = client.call_raw(messages.PassphraseAck(on_device=True))
     assert isinstance(response, messages.Failure)
-    assert response.code == 3  # DataError
+    assert response.code == FailureType.DataError
 
 
 @pytest.mark.skip_ui
@@ -226,7 +201,7 @@ def test_passphrase_ack_mismatch(client):
     assert isinstance(response, messages.PassphraseRequest)
     response = client.call_raw(messages.PassphraseAck(passphrase="A", on_device=True))
     assert isinstance(response, messages.Failure)
-    assert response.code == 3  # DataError
+    assert response.code == FailureType.DataError
 
 
 @pytest.mark.skip_ui
@@ -238,4 +213,12 @@ def test_passphrase_missing(client):
     assert isinstance(response, messages.PassphraseRequest)
     response = client.call_raw(messages.PassphraseAck(passphrase=None))
     assert isinstance(response, messages.Failure)
-    assert response.code == 3  # DataError
+    assert response.code == FailureType.DataError
+
+    response = client.call_raw(
+        messages.GetPublicKey(address_n=parse_path("44'/0'/0'"), coin_name="Bitcoin")
+    )
+    assert isinstance(response, messages.PassphraseRequest)
+    response = client.call_raw(messages.PassphraseAck(passphrase=None, on_device=False))
+    assert isinstance(response, messages.Failure)
+    assert response.code == FailureType.DataError

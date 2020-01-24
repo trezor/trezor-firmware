@@ -77,7 +77,7 @@ async def require_confirm_change_passphrase_source(
     text = Text("Passphrase source", ui.ICON_CONFIG)
     if passphrase_always_on_device:
         text.normal(
-            "Do you really want to", "entry passphrase always", "on the device?"
+            "Do you really want to", "enter passphrase always", "on the device?"
         )
     else:
         text.normal("Do you want to revoke", "the passphrase on device", "setting?")
