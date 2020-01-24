@@ -7,9 +7,8 @@ from trezor.messages.ButtonAck import ButtonAck
 from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.PassphraseAck import PassphraseAck
 from trezor.messages.PassphraseRequest import PassphraseRequest
-from trezor.ui import ICON_CONFIG
+from trezor.ui import ICON_CONFIG, draw_simple
 from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard
-from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
 if __debug__:
@@ -24,12 +23,12 @@ def is_enabled() -> bool:
 
 async def get(ctx: wire.Context) -> str:
     if is_enabled():
-        return await request_from_user(ctx)
+        return await _request_from_user(ctx)
     else:
         return ""
 
 
-async def request_from_user(ctx: wire.Context) -> str:
+async def _request_from_user(ctx: wire.Context) -> str:
     passphrase = await _get_from_user(ctx)
     if len(passphrase) > _MAX_PASSPHRASE_LEN:
         raise wire.DataError("Maximum passphrase length is %d" % _MAX_PASSPHRASE_LEN)
@@ -39,16 +38,19 @@ async def request_from_user(ctx: wire.Context) -> str:
 
 async def _get_from_user(ctx: wire.Context) -> str:
     if storage.device.get_passphrase_always_on_device():
-        return await request_from_user_on_device(ctx)
+        return await _request_from_user_on_device(ctx)
+    return await _request_from_host(ctx)
 
-    await _entry_dialog()
+
+async def _request_from_host(ctx: wire.Context) -> str:
+    _entry_dialog()
 
     request = PassphraseRequest()
     ack = await ctx.call(request, PassphraseAck)
     if ack.on_device:
         if ack.passphrase is not None:
             raise wire.DataError("Passphrase provided when it should not be")
-        return await request_from_user_on_device(ctx)
+        return await _request_from_user_on_device(ctx)
 
     if ack.passphrase is None:
         raise wire.DataError(
@@ -57,7 +59,7 @@ async def _get_from_user(ctx: wire.Context) -> str:
     return ack.passphrase
 
 
-async def request_from_user_on_device(ctx: wire.Context) -> str:
+async def _request_from_user_on_device(ctx: wire.Context) -> str:
     await ctx.call(ButtonRequest(code=ButtonRequestType.PassphraseEntry), ButtonAck)
 
     keyboard = PassphraseKeyboard("Enter passphrase", _MAX_PASSPHRASE_LEN)
@@ -73,10 +75,7 @@ async def request_from_user_on_device(ctx: wire.Context) -> str:
     return passphrase
 
 
-async def _entry_dialog() -> None:
+def _entry_dialog() -> None:
     text = Text("Passphrase entry", ICON_CONFIG)
     text.normal("Please type your", "passphrase on the", "connected host.")
-    # no need to specify timeout, because it hangs till PassphraseAck is received
-    # TODO ask: not sure this is correct. If we change the behaviour of Popup
-    #  (e.g. to be redrawn after the timeout expires) this will no longer display the dialog
-    await Popup(text)
+    draw_simple(text)
