@@ -96,7 +96,7 @@ def test_upgrade_load(gen, from_tag, to_tag):
         )
         device_id = emu.client.features.device_id
         asserts(from_tag, emu.client)
-        storage = emu.storage()
+        storage = emu.get_storage()
 
     with EmulatorWrapper(gen, to_tag, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
@@ -128,7 +128,7 @@ def test_upgrade_reset(gen, from_tag, to_tag):
         device_id = emu.client.features.device_id
         asserts(from_tag, emu.client)
         address = btc.get_address(emu.client, "Bitcoin", PATH)
-        storage = emu.storage()
+        storage = emu.get_storage()
 
     with EmulatorWrapper(gen, to_tag, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
@@ -162,7 +162,7 @@ def test_upgrade_reset_skip_backup(gen, from_tag, to_tag):
         device_id = emu.client.features.device_id
         asserts(from_tag, emu.client)
         address = btc.get_address(emu.client, "Bitcoin", PATH)
-        storage = emu.storage()
+        storage = emu.get_storage()
 
     with EmulatorWrapper(gen, to_tag, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
@@ -196,7 +196,7 @@ def test_upgrade_reset_no_backup(gen, from_tag, to_tag):
         device_id = emu.client.features.device_id
         asserts(from_tag, emu.client)
         address = btc.get_address(emu.client, "Bitcoin", PATH)
-        storage = emu.storage()
+        storage = emu.get_storage()
 
     with EmulatorWrapper(gen, to_tag, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
@@ -222,7 +222,7 @@ def test_upgrade_shamir_recovery(gen, from_tag, to_tag):
         assert "2 more shares" in layout.text
 
         device_id = emu.client.features.device_id
-        storage = emu.storage()
+        storage = emu.get_storage()
         device_handler.check_finalize()
 
     with EmulatorWrapper(gen, to_tag, storage=storage) as emu, BackgroundDeviceHandler(
@@ -258,7 +258,7 @@ def test_upgrade_u2f(gen, from_tag, to_tag):
 
         counter = fido.get_next_counter(emu.client)
         assert counter == 11
-        storage = emu.storage()
+        storage = emu.get_storage()
 
     with EmulatorWrapper(gen, to_tag, storage=storage) as emu:
         counter = fido.get_next_counter(emu.client)

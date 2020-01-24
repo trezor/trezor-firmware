@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from ..emulators import EmulatorWrapper
+from ..emulators import LOCAL_BUILD_PATHS
 
 SELECTED_GENS = [
     gen.strip() for gen in os.environ.get("TREZOR_UPGRADE_TEST", "").split(",") if gen
@@ -15,17 +15,8 @@ if SELECTED_GENS:
 
 else:
     # if no selection was provided, select those for which we have emulators
-    try:
-        EmulatorWrapper("legacy")
-        LEGACY_ENABLED = True
-    except Exception:
-        LEGACY_ENABLED = False
-
-    try:
-        EmulatorWrapper("core")
-        CORE_ENABLED = True
-    except Exception:
-        CORE_ENABLED = False
+    LEGACY_ENABLED = LOCAL_BUILD_PATHS["legacy"].exists()
+    CORE_ENABLED = LOCAL_BUILD_PATHS["core"].exists()
 
 
 legacy_only = pytest.mark.skipif(
