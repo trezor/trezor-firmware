@@ -55,6 +55,7 @@
 #include "usbd_core.h"
 #include "usb.h"
 #include "irq.h"
+#include "supervise.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -117,10 +118,10 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
 
     /* Set USBFS Interrupt priority */
-    NVIC_SetPriority(OTG_FS_IRQn, IRQ_PRI_OTG_FS);
+    svc_setpriority(OTG_FS_IRQn, IRQ_PRI_OTG_FS);
 
     /* Enable USBFS Interrupt */
-    HAL_NVIC_EnableIRQ(OTG_FS_IRQn);
+    svc_enableIRQ(OTG_FS_IRQn);
   }
 #if defined(USE_USB_HS)
   else if(hpcd->Instance == USB_OTG_HS)
@@ -226,10 +227,10 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
 #endif // !USE_USB_HS_IN_FS
 
     /* Set USBHS Interrupt to the lowest priority */
-    NVIC_SetPriority(OTG_HS_IRQn, IRQ_PRI_OTG_HS);
+    svc_setpriority(OTG_HS_IRQn, IRQ_PRI_OTG_HS);
 
     /* Enable USBHS Interrupt */
-    HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
+    svc_enableIRQ(OTG_HS_IRQn);
   }
 #endif  // USE_USB_HS
 }

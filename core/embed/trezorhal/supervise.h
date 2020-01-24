@@ -33,7 +33,7 @@ static inline void svc_setpriority(uint32_t IRQn, uint32_t priority) {
     register uint32_t r0 __asm__("r0") = IRQn;
     register uint32_t r1 __asm__("r1") = priority;
     __asm__ __volatile__("svc %0" ::"i"(SVC_SET_PRIORITY), "r"(r0), "r"(r1)
-                        : "memory");
+                         : "memory");
   } else {
     NVIC_SetPriority(IRQn, priority);
   }

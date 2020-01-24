@@ -75,6 +75,11 @@ int main(void) {
   touch_init();
   touch_power_on();
 
+  // jump to unprivileged mode
+  // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
+  __asm__ volatile("msr control, %0" ::"r"(0x1));
+  __asm__ volatile("isb");
+
   display_clear();
 #endif
 

@@ -12,9 +12,6 @@ from trezor import loop, utils, wire, workflow
 # start the USB
 usb.bus.open()
 
-# switch into unprivileged mode, as we don't need the extra permissions anymore
-utils.set_mode_unprivileged()
-
 
 def _boot_apps() -> None:
     # load applications

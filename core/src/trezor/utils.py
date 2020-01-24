@@ -11,7 +11,6 @@ from trezorutils import (  # type: ignore[attr-defined] # noqa: F401
     consteq,
     halt,
     memcpy,
-    set_mode_unprivileged,
 )
 
 DISABLE_ANIMATION = 0
