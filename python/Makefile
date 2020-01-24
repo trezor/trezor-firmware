@@ -7,18 +7,11 @@ EXCLUDE_TARGETS=messages
 
 all: build
 
-clean-gen: ## remove generated files
-	rm -f src/trezorlib/messages/*.py
-	rm -f src/trezorlib/coins.json
-
 coins_json:
 	./helper-scripts/build-coins-json.sh
 
 coins_json_check:
 	./helper-scripts/build-coins-json.sh --check
-
-gen: clean-gen
-	make -C .. gen
 
 build:
 	$(SETUP) build

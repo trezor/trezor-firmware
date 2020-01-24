@@ -1,115 +1,88 @@
-# python-trezor
+# trezorlib
 
-[![image](https://travis-ci.org/trezor/python-trezor.svg?branch=master)](https://travis-ci.org/trezor/python-trezor) [![repology](https://repology.org/badge/tiny-repos/python:trezor.svg)](https://repology.org/metapackage/python:trezor) [![image](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
+[![repology](https://repology.org/badge/tiny-repos/python:trezor.svg)](https://repology.org/metapackage/python:trezor) [![image](https://badges.gitter.im/trezor/community.svg)](https://gitter.im/trezor/community)
 
-Python library and commandline client for communicating with Trezor
+Python library and command-line client for communicating with Trezor
 Hardware Wallet
 
 See <https://trezor.io> for more information
 
 ## Install
 
-Python-trezor requires Python 3.5 or higher, and libusb 1.0. The easiest
+Python Trezor tools require Python 3.5 or higher, and libusb 1.0. The easiest
 way to install it is with `pip`. The rest of this guide assumes you have
 a working `pip`; if not, you can refer to [this
 guide](https://packaging.python.org/tutorials/installing-packages/).
 
-### Quick installation
-
-On a typical Linux / Mac / BSD system, you already have all you need.
-Install `trezor` with:
+On a typical system, you already have all you need. Install `trezor` with:
 
 ```sh
-pip3 install --upgrade setuptools
 pip3 install trezor
 ```
 
-On Windows, you also need to install
-[libusb](https://github.com/libusb/libusb/wiki/Windows) and the
-appropriate [drivers](https://zadig.akeo.ie/). This is, unfortunately, a
-topic bigger than this README.
+On Windows, you also need to either install [Trezor Bridge](https://wallet.trezor.io/#/bridge), or
+[libusb](https://github.com/libusb/libusb/wiki/Windows) and the appropriate
+[drivers](https://zadig.akeo.ie/).
 
-### Older Trezor One support
+### Firmware version requirements
 
-If your Trezor One is on firmware **1.6.3** or older, you will need HIDAPI support
-for it to be recognized. That requires additional packages.
+Current trezorlib version supports Trezor One version 1.8.0 and up, and Trezor T version
+2.1.0 and up.
 
-#### Debian / Ubuntu
+For firmware versions below 1.8.0 and 2.1.0 respectively, the only supported operation
+is "upgrade firmware".
 
-On a Debian or Ubuntu based system, you can install these:
+Trezor One with firmware _older than 1.7.0_ (including firmware-less out-of-the-box
+units) will not be recognized, unless you install HIDAPI support (see below).
 
-```sh
-sudo apt-get install python3-dev python3-pip cython3 libusb-1.0-0-dev libudev-dev
-```
+### Installation options
 
-#### Windows
+* **Firmware-less Trezor One**: If you are setting up a brand new Trezor One without
+  firmware, you will need HIDAPI support. On Linux, you will need the following packages
+  (or their equivalents) as prerequisites: `python3-dev`, `cython3`, `libusb-1.0-0-dev`,
+  `libudev-dev`.
 
-On a Windows based system, you can install these (for more info on choco, refer to [this](https://chocolatey.org/install)):
+  Install with:
 
-```sh
-choco install vcbuildtools python3 protoc
-refreshenv
-pip3 install protobuf
-```
+  ```sh
+  pip3 install trezor[hidapi]
+  ```
 
-When installing the trezor library, you need to specify that you want
-`hidapi`:
+* **Ethereum**: To support Ethereum signing from command line, additional packages are
+  needed. Install with:
 
-```sh
-pip3 install --upgrade setuptools
-pip3 install trezor[hidapi]
-```
+  ```sh
+  pip3 install trezor[ethereum]
+  ```
 
-### Ethereum support
+To install both, use `pip3 install trezor[hidapi,ethereum]`.
 
-Ethereum requires additional python packages. Instead of
-`pip3 install trezor`, specify `pip3 install trezor[ethereum]`.
+### Distro packages
 
-You can combine it with the above, to get both HIDAPI and Ethereum
-support:
+Check out [Repology](https://repology.org/metapackage/python:trezor) to see if your
+operating system has an up-to-date python-trezor package.
 
-```sh
-pip3 install trezor[ethereum,hidapi]
-```
-
-### FreeBSD
-
-On FreeBSD you can install the packages:
+### Installing latest version from GitHub
 
 ```sh
-pkg install security/py-trezor
+pip3 install "git+https://github.com/trezor/trezor-firmware#egg=trezor&subdirectory=python"
 ```
 
-or build via ports:
+### Running from source
+
+Install the [pipenv](https://pipenv.readthedocs.io/en/latest/) tool, checkout
+`trezor-firmware` from git, and enter the pipenv shell:
 
 ```sh
-cd /usr/ports/security/py-trezor
-make install clean
+pip3 install pipenv
+git clone https://github.com/trezor/trezor-firmware
+cd trezor-firmware
+pipenv sync
+pipenv shell
 ```
 
-### Building from source
-
-Sometimes you might need to install the latest-and-greatest unreleased version
-straight from GitHub. You will need some prerequisites first:
-
-```sh
-sudo apt-get install protobuf-compiler protobuf-dev
-pip3 install protobuf
-```
-
-If you just need to install the package, you can use pip again:
-```sh
-pip3 install git+https://github.com/trezor/python-trezor
-```
-
-If you want to work on the sources, make a local clone:
-
-```sh
-git clone https://github.com/trezor/python-trezor
-cd python-trezor
-python3 setup.py prebuild
-python3 setup.py develop
-```
+In this environment, trezorlib and the `trezorctl` tool is running from the live
+sources, so your changes are immediately effective.
 
 ## Command line client (trezorctl)
 
@@ -124,9 +97,8 @@ Debian Stretch](https://packages.debian.org/en/stretch/python-trezor)
 
 ## Python Library
 
-You can use this python library to interact with a Bitcoin Trezor and
-use its capabilities in your application. See examples here in the
-[tools/](tools/) sub folder.
+You can use this python library to interact with a Trezor and use its capabilities in
+your application. See examples here in the [tools/](tools/) sub folder.
 
 ## PIN Entering
 
@@ -152,20 +124,20 @@ You have to enter: **3795**
 
 ## Contributing
 
-Python-trezor pulls coins info and protobuf messages from
-[trezor-common](https://github.com/trezor/trezor-common) repository. If
-you are developing new features for Trezor, you will want to start
-there. Once your changes are accepted to `trezor-common`, you can make a
-PR against this repository. Don't forget to update the submodule with:
+If you want to change protobuf or coin definitions, you will need to regenerate
+definitions in the `python/` subdirectory.
+
+First, make sure your submodules are up-to-date with:
 
 ```sh
-git submodule update --init --remote
+git submodule update --init --recursive
 ```
 
-Then, rebuild the protobuf messages and get `coins.json` by running:
+Then, rebuild the protobuf messages and get `coins.json` by running, from the
+`trezor-firmware` top-level directory:
 
 ```sh
-python3 setup.py prebuild
+make gen
 ```
 
 To get support for BTC-like coins, these steps are enough and no further
