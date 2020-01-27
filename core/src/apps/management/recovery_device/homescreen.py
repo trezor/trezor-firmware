@@ -2,7 +2,7 @@ import storage
 import storage.device
 import storage.recovery
 import storage.recovery_shares
-from trezor import utils, wire, workflow
+from trezor import strings, utils, wire, workflow
 from trezor.crypto import slip39
 from trezor.crypto.hashlib import sha256
 from trezor.errors import MnemonicError
@@ -213,10 +213,7 @@ async def _request_share_next_screen(ctx: wire.GenericContext) -> None:
             ctx, content, "Enter", _show_remaining_groups_and_shares
         )
     else:
-        if remaining[0] == 1:
-            text = "1 more share"
-        else:
-            text = "%d more shares" % remaining[0]
+        text = strings.format_plural("{count} more {plural}", remaining[0], "share")
         content = layout.RecoveryHomescreen(text, "needed to enter")
         await layout.homescreen_dialog(ctx, content, "Enter share")
 

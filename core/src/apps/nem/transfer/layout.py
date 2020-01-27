@@ -8,8 +8,8 @@ from trezor.messages import (
     NEMTransactionCommon,
     NEMTransfer,
 )
+from trezor.strings import format_amount
 from trezor.ui.text import Text
-from trezor.utils import format_amount
 
 from ..helpers import (
     NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE,

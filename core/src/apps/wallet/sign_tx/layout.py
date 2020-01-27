@@ -3,7 +3,8 @@ from ubinascii import hexlify
 
 from trezor import ui
 from trezor.messages import ButtonRequestType, OutputScriptType
-from trezor.utils import chunks, format_amount
+from trezor.strings import format_amount
+from trezor.utils import chunks
 
 _LOCKTIME_TIMESTAMP_MIN_VALUE = const(500000000)
 

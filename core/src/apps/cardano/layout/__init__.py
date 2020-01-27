@@ -1,9 +1,10 @@
 from micropython import const
 
 from trezor import ui
+from trezor.strings import format_amount
 from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
-from trezor.utils import chunks, format_amount
+from trezor.utils import chunks
 
 from apps.common.confirm import confirm, hold_to_confirm
 
