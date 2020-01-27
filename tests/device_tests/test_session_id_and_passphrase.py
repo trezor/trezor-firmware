@@ -22,6 +22,7 @@ from trezorlib.tools import parse_path
 
 XPUB_PASSPHRASE_A = "xpub6CekxGcnqnJ6osfY4Rrq7W5ogFtR54KUvz4H16XzaQuukMFZCGebEpVznfq4yFcKEmYyShwj2UKjL7CazuNSuhdkofF4mHabHkLxCMVvsqG"
 XPUB_PASSPHRASE_NONE = "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"
+XPUB_CARDANO_PASSPHRASE_B = "d80e770f6dfc3edb58eaab68aa091b2c27b08a47583471e93437ac5f8baa61880c7af4938a941c084c19731e6e57a5710e6ad1196263291aea297ce0eec0f177"
 
 
 def _get_xpub(client, passphrase):
@@ -222,3 +223,52 @@ def test_passphrase_missing(client):
     response = client.call_raw(messages.PassphraseAck(passphrase=None, on_device=False))
     assert isinstance(response, messages.Failure)
     assert response.code == FailureType.DataError
+
+
+@pytest.mark.skip_ui
+@pytest.mark.skip_t1
+@pytest.mark.altcoin
+@pytest.mark.setup_client(passphrase=True)
+def test_cardano_passphrase(client):
+    # Cardano uses a variation of BIP-39 so we need to ask for the passphrase again.
+
+    response = client.call_raw(messages.Initialize())
+    assert isinstance(response, messages.Features)
+    session_id = response.session_id
+    assert len(session_id) == 32
+
+    # GetPublicKey requires passphrase and since it is not cached,
+    # Trezor will prompt for it.
+    xpub = _get_xpub(client, passphrase="A")
+    assert xpub == XPUB_PASSPHRASE_A
+
+    # The passphrase is now cached for non-Cardano coins.
+    xpub = _get_xpub(client, passphrase=None)
+    assert xpub == XPUB_PASSPHRASE_A
+
+    # Cardano will prompt for it again.
+    response = client.call_raw(
+        messages.CardanoGetPublicKey(address_n=parse_path("44'/1815'/0'/0/0"))
+    )
+    assert isinstance(response, messages.PassphraseRequest)
+    response = client.call_raw(messages.PassphraseAck(passphrase="B"))
+    assert response.xpub == XPUB_CARDANO_PASSPHRASE_B
+
+    # But now also Cardano has it cached.
+    response = client.call_raw(
+        messages.CardanoGetPublicKey(address_n=parse_path("44'/1815'/0'/0/0"))
+    )
+    assert response.xpub == XPUB_CARDANO_PASSPHRASE_B
+
+    # And others behaviour did not change.
+    xpub = _get_xpub(client, passphrase=None)
+    assert xpub == XPUB_PASSPHRASE_A
+
+    # Initialize with the session id does not destroy the state
+    client.call_raw(messages.Initialize(session_id=session_id))
+    xpub = _get_xpub(client, passphrase=None)
+    assert xpub == XPUB_PASSPHRASE_A
+    response = client.call_raw(
+        messages.CardanoGetPublicKey(address_n=parse_path("44'/1815'/0'/0/0"))
+    )
+    assert response.xpub == XPUB_CARDANO_PASSPHRASE_B
