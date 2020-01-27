@@ -59,7 +59,7 @@ async def process_action(
             await layout.confirm_action_newaccount(ctx, action.new_account)
             writers.write_action_newaccount(w, action.new_account)
         else:
-            raise ValueError("Unrecognized action type for eosio")
+            await process_unknown_action(ctx, w, action)
     elif name == "transfer":
         await layout.confirm_action_transfer(ctx, action.transfer, account)
         writers.write_action_transfer(w, action.transfer)
@@ -100,6 +100,10 @@ async def process_unknown_action(
 
 
 def check_action(action: EosTxActionAck, name: str, account: str) -> bool:
+    # Unknown action
+    if action.unknown is not None:
+        return True
+
     if account == "eosio":
         if (
             (name == "buyram" and action.buy_ram is not None)
@@ -114,6 +118,7 @@ def check_action(action: EosTxActionAck, name: str, account: str) -> bool:
             or (name == "linkauth" and action.link_auth is not None)
             or (name == "unlinkauth" and action.unlink_auth is not None)
             or (name == "newaccount" and action.new_account is not None)
+            or (name == "newaccount" and action.new_account is not None)
         ):
             return True
         else:
@@ -121,8 +126,5 @@ def check_action(action: EosTxActionAck, name: str, account: str) -> bool:
 
     elif name == "transfer":
         return action.transfer is not None
-
-    elif action.unknown is not None:
-        return True
 
     return False

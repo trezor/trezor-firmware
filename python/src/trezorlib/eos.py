@@ -282,6 +282,8 @@ def parse_action(action):
             tx_action.unlink_auth = parse_unlinkauth(data)
         elif action["name"] == "newaccount":
             tx_action.new_account = parse_new_account(data)
+        else:
+            tx_action.unknown = parse_unknown(data)
     elif action["name"] == "transfer":
         tx_action.transfer = parse_transfer(data)
     else:
