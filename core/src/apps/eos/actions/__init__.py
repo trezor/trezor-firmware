@@ -118,7 +118,6 @@ def check_action(action: EosTxActionAck, name: str, account: str) -> bool:
             or (name == "linkauth" and action.link_auth is not None)
             or (name == "unlinkauth" and action.unlink_auth is not None)
             or (name == "newaccount" and action.new_account is not None)
-            or (name == "newaccount" and action.new_account is not None)
         ):
             return True
         else:
