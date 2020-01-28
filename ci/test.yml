@@ -225,16 +225,6 @@ core unix persistence test:
     expire_in: 1 week
     when: always
 
-core mypy test:
-  stage: test
-  <<: *only_changes_core
-  dependencies: []  # no artifacts needed
-  script:
-    - cd core
-    - pipenv run mypy --version
-    - pipenv run make res  # needed for clean mypy
-    - pipenv run make mypy
-
 
 # Crypto
 

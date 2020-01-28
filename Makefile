@@ -17,6 +17,8 @@ pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
 	isort --version | awk '/VERSION/{print $$2}'
 	black --version
+	@echo [MYPY]
+	@make -C core mypy
 	@echo [FLAKE8]
 	@flake8 $(PY_FILES)
 	@echo [ISORT]
@@ -30,6 +32,8 @@ pystyle: ## apply code style on application sources and tests
 	@isort $(PY_FILES)
 	@echo [BLACK]
 	@black $(PY_FILES)
+	@echo [MYPY]
+	@make -C core mypy
 	@echo [FLAKE8]
 	@flake8 $(PY_FILES)
 	make -C python style
