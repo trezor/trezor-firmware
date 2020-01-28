@@ -31,6 +31,7 @@
 #include "config.h"
 #include "curves.h"
 #include "debug.h"
+#include "fsm.h"
 #include "gettext.h"
 #include "hmac.h"
 #include "layout2.h"
@@ -581,6 +582,9 @@ const uint8_t *config_getSeed(void) {
     usbTiny(oldTiny);
     sessionSeedCached = sectrue;
     return sessionSeed;
+  } else {
+    fsm_sendFailure(FailureType_Failure_NotInitialized,
+                    _("Device not initialized"));
   }
 
   return NULL;
@@ -610,8 +614,12 @@ bool config_getRootNode(HDNode *node, const char *curve) {
   if (seed == NULL) {
     return false;
   }
-
-  return hdnode_from_seed(seed, 64, curve, node);
+  int result;
+  result = hdnode_from_seed(seed, 64, curve, node);
+  if (result == 0) {
+    fsm_sendFailure(FailureType_Failure_NotInitialized, _("Unsupported curve"));
+  }
+  return result;
 }
 
 bool config_getLabel(char *dest, uint16_t dest_size) {

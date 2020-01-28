@@ -397,8 +397,9 @@ bool protectPassphrase(char *passphrase) {
     protectAbortedByInitialize =
         (msg_tiny_id == MessageType_MessageType_Initialize);
     if (protectAbortedByCancel || protectAbortedByInitialize) {
-      msg_tiny_id = 0xFFFF;
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       result = false;
+      msg_tiny_id = 0xFFFF;
       break;
     }
   }
