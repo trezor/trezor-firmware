@@ -97,7 +97,7 @@ class Emulator:
 
                 elapsed = time.monotonic() - start
                 if elapsed >= timeout:
-                    raise RuntimeError("Can't connect to emulator")
+                    raise TimeoutError("Can't connect to emulator")
 
                 time.sleep(0.1)
         finally:
@@ -135,7 +135,12 @@ class Emulator:
                 return
 
         self.process = self.launch_process()
-        self.wait_until_ready()
+        try:
+            self.wait_until_ready()
+        except TimeoutError:
+            # Assuming that after the default 30-second timeout, the process is stuck
+            self.process.kill()
+            raise
 
         (self.profile_dir / "trezor.pid").write_text(str(self.process.pid) + "\n")
         (self.profile_dir / "trezor.port").write_text(str(self.port) + "\n")
