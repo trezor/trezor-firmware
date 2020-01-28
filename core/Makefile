@@ -101,7 +101,7 @@ test_emu_ui_record: ## record and hash screens for ui integration tests
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 
-mypy:
+mypy: res
 	mypy --config-file ../setup.cfg \
 		src/main.py
 
