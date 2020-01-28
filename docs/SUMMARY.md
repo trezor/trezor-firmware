@@ -10,6 +10,7 @@
   - [Tests](core/tests/index.md)
 - [Legacy](legacy/index.md)
 - [Python](python/index.md)
+  - [trezorlib](python/trezorlib.md)
 - [Hardware](hardware/index.md)
   - [Model T](hardware/model-t/index.md)
     - [Boot stages](hardware/model-t/boot.md)

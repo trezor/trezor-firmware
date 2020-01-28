@@ -1,6 +1,6 @@
 [book]
-title = "Trezor Core"
-description = "Documentation of Trezor Core firmware."
+title = "Trezor Firmware"
+description = "Documentation of Trezor Firmware."
 src = "."
 
 [build]
