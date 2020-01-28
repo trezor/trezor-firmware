@@ -330,6 +330,7 @@ legacy emu upgrade test:
 
 python test:
   stage: test
+  dependencies: []
   only:
     changes:
       - ci/**/*
