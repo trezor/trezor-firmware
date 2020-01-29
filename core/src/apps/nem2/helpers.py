@@ -1,8 +1,8 @@
 import math
 from micropython import const
-from ubinascii import unhexlify
+from ubinascii import unhexlify, hexlify
 from trezor.crypto.curve import ed25519
-from trezor.crypto.hashlib import sha3_256
+from trezor.crypto.hashlib import sha3_256, sha3_512
 
 from apps.common import HARDENED
 
@@ -146,18 +146,18 @@ def derive_shared_key(salt, private_key, public_key):
     p = [gf(), gf(), gf(), gf()]
     shared_key = [0] * 32
 
-    unpack(q, private_key)
+    unpack(q, public_key)
     scalar_mult(p, q, d)
     pack(shared_key, p)
 
     for i in range(0, 32):
-        sharedKey[i] ^= salt[i]
+        shared_key[i] ^= salt[i]
 
-    shared_key_hash = sha3_256(shared_key)
+    shared_key_hash = sha3_256(bytearray(shared_key), keccak=True).digest()
     return shared_key_hash
 
 def prepare_for_scalar_mult(secret_key):
-    d = sha3_256(secret_key).digest()
+    d = sha3_512(secret_key, keccak=True).digest()
     e = clamp(bytearray(d))
     return e
 
@@ -185,10 +185,9 @@ def unpack(r, p):
     den6 = gf()
     set25519(r[2], gf([1]))
     unpack25519(r[1], p)
-
     S(num, r[1])
     D = gf([0x78a3, 0x1359, 0x4dca, 0x75eb, 0xd8ab, 0x4141, 0x0a4d,
-        0x0070, 0xe898, 0x7779, 0x4079, 0x8cc7, 0xfe73, 0x2b6f, 0x6cee, 0x5203,
+        0x0070, 0xe898, 0x7779, 0x4079, 0x8cc7, 0xfe73, 0x2b6f, 0x6cee, 0x5203
     ])
 
     M(den, num, D)
@@ -209,6 +208,9 @@ def unpack(r, p):
     M(chk, chk, den)
 
     if (neq25519(chk, num)):
+        I = gf([0xa0b0, 0x4a0e, 0x1b27, 0xc4ee, 0xe478, 0xad2f, 0x1806,
+            0x2f43, 0xd7a7, 0x3dfb, 0x0099, 0x2b4d, 0xdf0b, 0x4fc1, 0x2480, 0x2b83,
+        ])
         M(r[0], r[0], I)
 
     S(chk, r[0])
@@ -590,10 +592,7 @@ def M(o, a, b):
     t14 += 38 * t30
 
     c = 1
-    print("t0: ", t0)
-    print("c: ", c)
     v = t0 + c + 65535
-    print("v: ", v)
     c = math.floor(v / 65536)
     t0 = v - c * 65536
     v = t1 + c + 65535
@@ -642,6 +641,58 @@ def M(o, a, b):
     c = math.floor(v / 65536)
     t15 = v - c * 65536
     t0 += c - 1 + 37 * (c - 1)
+
+    c = 1
+    v = t0 + c + 65535
+    c = math.floor(v / 65536)
+    t0 = v - c * 65536
+    v = t1 + c + 65535
+    c = math.floor(v / 65536)
+    t1 = v - c * 65536
+    v = t2 + c + 65535
+    c = math.floor(v / 65536)
+    t2 = v - c * 65536
+    v = t3 + c + 65535
+    c = math.floor(v / 65536)
+    t3 = v - c * 65536
+    v = t4 + c + 65535
+    c = math.floor(v / 65536)
+    t4 = v - c * 65536
+    v = t5 + c + 65535
+    c = math.floor(v / 65536)
+    t5 = v - c * 65536
+    v = t6 + c + 65535
+    c = math.floor(v / 65536)
+    t6 = v - c * 65536
+    v = t7 + c + 65535
+    c = math.floor(v / 65536)
+    t7 = v - c * 65536
+    v = t8 + c + 65535
+    c = math.floor(v / 65536)
+    t8 = v - c * 65536
+    v = t9 + c + 65535
+    c = math.floor(v / 65536)
+    t9 = v - c * 65536
+    v = t10 + c + 65535
+    c = math.floor(v / 65536)
+    t10 = v - c * 65536
+    v = t11 + c + 65535
+    c = math.floor(v / 65536)
+    t11 = v - c * 65536
+    v = t12 + c + 65535
+    c = math.floor(v / 65536)
+    t12 = v - c * 65536
+    v = t13 + c + 65535
+    c = math.floor(v / 65536)
+    t13 = v - c * 65536
+    v = t14 + c + 65535
+    c = math.floor(v / 65536)
+    t14 = v - c * 65536
+    v = t15 + c + 65535
+    c = math.floor(v / 65536)
+    t15 = v - c * 65536
+    t0 += c - 1 + 37 * (c - 1)
+
     o[0] = t0
     o[1] = t1
     o[2] = t2
@@ -664,7 +715,7 @@ def pow2523(o, i):
     for a in range(0, 16):
         c[a] = i[a]
 
-    for a in range(250, 0, -1):
+    for a in range(250, -1, -1):
         S(c, c)
         if(a != 1):
             M(c, c, i)
@@ -680,7 +731,7 @@ def vn(x, xi, y, yi, n):
     for i in range(0, n):
         d |= x[xi + i] ^ y[yi + i]
 
-    return zero_fill_right_shift(1 & ((d - 1), 8)) - 1
+    return zero_fill_right_shift(1 & (d - 1), 8) - 1
 
 def neq25519(a, b):
     c = [0] * 32
@@ -701,10 +752,10 @@ def pack25519(o, n):
     car25519(t)
     car25519(t)
 
-    for i in range(0, 2):
+    for j in range(0, 2):
         m[0] = t[0] - 0xffed
 
-        for j in range(0, 15):
+        for i in range(1, 15):
             m[i] = t[i] - 0xffff - ((m[i - 1] >> 16) & 1)
             m[i - 1] &= 0xffff
 
@@ -728,7 +779,7 @@ def car25519(o):
     c = 1
     for i in range(0, 16):
         v = o[i] + c + 65535
-        c = Math.floor(v / 65536)
+        c = math.floor(v / 65536)
         o[i] = v - c * 65536
     o[0] += c - 1 + 37 * (c - 1)
 
@@ -742,8 +793,8 @@ def scalar_mult(p, q, s):
     set25519(p[1], gf([1]))
     set25519(p[2], gf([1]))
     set25519(p[3], gf([0]))
-    for i in range(255, 0, -1):
-        b = (s[(i / 8) | 0] >> (i & 7)) & 1
+    for i in range(255, -1, -1):
+        b = (s[math.floor(i / 8) | 0] >> (i & 7)) & 1
         cswap(p, q, b)
         add(q, p)
         add(p, p)
@@ -758,7 +809,7 @@ def inv25519 (o, i):
     for a in range(0, 16):
         c[a] = i[a]
 
-    for a in range(253, 0, -1):
+    for a in range(253, -1, -1):
         S(c, c)
         if(a != 2 and a != 4):
             M(c, c, i)
@@ -784,6 +835,11 @@ def add(p, q):
     A(t, q[0], q[1])
     M(b, b, t)
     M(c, p[3], q[3])
+
+    D2 = gf([0xf159, 0x26b2, 0x9b94, 0xebd6, 0xb156, 0x8283, 0x149a,
+        0x00e0, 0xd130, 0xeef3, 0x80f2, 0x198e, 0xfce7, 0x56df, 0xd9dc, 0x2406,
+    ])
+
     M(c, c, D2)
     M(d, p[2], q[2])
     A(d, d, d)
