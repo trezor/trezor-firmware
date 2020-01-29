@@ -6,6 +6,7 @@ if False:
 APP_COMMON_SEED = 0
 APP_COMMON_SEED_WITHOUT_PASSPHRASE = 1
 APP_CARDANO_ROOT = 2
+APP_MONERO_LIVE_REFRESH = 3
 
 _cache_session_id = None  # type: Optional[bytes]
 _cache = {}
@@ -22,7 +23,6 @@ def get_session_id() -> bytes:
 
 
 def set(key: int, value: Any) -> None:
-    global _cache
     _cache[key] = value
 
 
@@ -32,6 +32,5 @@ def get(key: int) -> Any:
 
 def clear() -> None:
     global _cache_session_id
-    global _cache
     _cache_session_id = None
     _cache.clear()
