@@ -129,8 +129,6 @@ def client(request):
             needs_backup=setup_params["needs_backup"],
             no_backup=setup_params["no_backup"],
         )
-        if setup_params["passphrase"]:
-            client.passphrase_on_host = True
 
         if setup_params["pin"]:
             # ClearSession locks the device. We only do that if the PIN is set.
