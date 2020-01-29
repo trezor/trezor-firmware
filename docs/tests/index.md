@@ -15,6 +15,12 @@ The original version of device tests. These tests can be run against both Model 
 
 See [device-tests.md](device-tests.md) for instructions how to run it.
 
+### UI tests
+
+UI tests use device tests and take screenshots of every screen change and compare  them against fixtures. Currently for model T only. 
+
+See [ui-tests.md](ui-tests.md) for more info.
+
 ### Click tests
 
 Click tests are a next-generation of the Device tests. The tests are quite similar, but they are capable of imitating user's interaction with the screen.
