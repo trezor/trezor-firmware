@@ -23,6 +23,7 @@ from types import SimpleNamespace
 from mnemonic import Mnemonic
 
 from . import MINIMUM_FIRMWARE_VERSION, exceptions, messages, tools
+from .messages import Capability
 
 if sys.version_info.major < 3:
     raise Exception("Trezorlib does not support Python 2 anymore.")
@@ -31,6 +32,8 @@ LOG = logging.getLogger(__name__)
 
 VENDORS = ("bitcointrezor.com", "trezor.io")
 MAX_PASSPHRASE_LENGTH = 50
+
+PASSPHRASE_ON_DEVICE = object()
 
 DEPRECATION_ERROR = """
 Incompatible Trezor library detected.
@@ -109,19 +112,15 @@ class TrezorClient:
 
     You can supply a `session_id` you might have saved in the previous session.
     If you do, the user might not need to enter their passphrase again.
-
-    Set `passphrase_on_host` to True if you want to enter passphrase on host directly
-    instead of on Trezor.
     """
 
     def __init__(
-        self, transport, ui=_NO_UI_OBJECT, session_id=None, passphrase_on_host=False
+        self, transport, ui=_NO_UI_OBJECT, session_id=None,
     ):
         LOG.info("creating client instance for device: {}".format(transport.get_path()))
         self.transport = transport
         self.ui = ui
         self.session_id = session_id
-        self.passphrase_on_host = passphrase_on_host
 
         # XXX remove when old Electrum has been cycled out.
         # explanation: We changed the API in 0.11 and this broke older versions
@@ -135,9 +134,6 @@ class TrezorClient:
 
         self.session_counter = 0
         self.init_device()
-
-        if self.features.model == "1":  # TODO @matejcik: move this to the UI object
-            self.passphrase_on_host = True
 
     def open(self):
         if self.session_counter == 0:
@@ -187,24 +183,28 @@ class TrezorClient:
             return resp
 
     def _callback_passphrase(self, msg: messages.PassphraseRequest):
-        if self.passphrase_on_host:
-            on_device = False
-            try:
-                passphrase = self.ui.get_passphrase()
-            except exceptions.Cancelled:
-                self.call_raw(messages.Cancel())
-                raise
+        available_on_device = Capability.PassphraseEntry in self.features.capabilities
+        try:
+            passphrase = self.ui.get_passphrase(available_on_device=available_on_device)
+        except exceptions.Cancelled:
+            self.call_raw(messages.Cancel())
+            raise
 
-            passphrase = Mnemonic.normalize_string(passphrase)
-            if len(passphrase) > MAX_PASSPHRASE_LENGTH:
+        if passphrase is PASSPHRASE_ON_DEVICE:
+            if not available_on_device:
                 self.call_raw(messages.Cancel())
-                raise ValueError("Passphrase too long")
-        else:
-            on_device = True
-            passphrase = None
+                raise RuntimeError("Device is not capable of entering passphrase")
+            else:
+                return self.call_raw(messages.PassphraseAck(on_device=True))
+
+        # else process host-entered passphrase
+        passphrase = Mnemonic.normalize_string(passphrase)
+        if len(passphrase) > MAX_PASSPHRASE_LENGTH:
+            self.call_raw(messages.Cancel())
+            raise ValueError("Passphrase too long")
 
         return self.call_raw(
-            messages.PassphraseAck(passphrase=passphrase, on_device=on_device)
+            messages.PassphraseAck(passphrase=passphrase, on_device=False)
         )
 
     def _callback_button(self, msg):
@@ -250,10 +250,7 @@ class TrezorClient:
             self.features.patch_version,
         )
         self.check_firmware_version(warn_only=True)
-        if (self.version[0] == 1 and self.version >= (1, 9, 0)) or (
-            self.version[0] == 2 and self.version >= (2, 3, 0)
-        ):
-            self.session_id = self.features.session_id
+        self.session_id = self.features.session_id
 
     def is_outdated(self):
         if self.features.bootloader_mode:

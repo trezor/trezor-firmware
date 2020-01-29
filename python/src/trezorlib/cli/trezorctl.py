@@ -160,14 +160,14 @@ def cli(ctx, path, verbose, is_json, passphrase_on_host):
                     click.echo("Using path: {}".format(path))
                 sys.exit(1)
         return TrezorClient(
-            transport=device, ui=ui.ClickUI(), passphrase_on_host=passphrase_on_host
+            transport=device, ui=ui.ClickUI(passphrase_on_host=passphrase_on_host)
         )
 
     ctx.obj = get_device
 
 
 @cli.resultcallback()
-def print_result(res, path, verbose, is_json, passphrase_on_host):
+def print_result(res, is_json, **kwargs):
     if is_json:
         if isinstance(res, protobuf.MessageType):
             click.echo(json.dumps({res.__class__.__name__: res.__dict__}))
