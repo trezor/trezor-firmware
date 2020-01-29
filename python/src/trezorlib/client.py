@@ -136,6 +136,9 @@ class TrezorClient:
         self.session_counter = 0
         self.init_device()
 
+        if self.features.model == "1":  # TODO @matejcik: move this to the UI object
+            self.passphrase_on_host = True
+
     def open(self):
         if self.session_counter == 0:
             self.transport.begin_session()
