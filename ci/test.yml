@@ -12,6 +12,7 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
       - tests/**/*
       - tools/**/*
       - vendor/**/*
+      - Pipfile.lock
 
 .only_changes_legacy: &only_changes_legacy
   only:
@@ -25,6 +26,7 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
       - tests/**/*
       - tools/**/*
       - vendor/**/*
+      - Pipfile.lock
 
 
 # Core

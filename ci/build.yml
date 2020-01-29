@@ -16,6 +16,7 @@ variables:
       - tests/**/*
       - tools/**/*
       - vendor/**/*
+      - Pipfile.lock
 
 .only_changes_legacy: &only_changes_legacy
   only:
@@ -29,6 +30,7 @@ variables:
       - tests/**/*
       - tools/**/*
       - vendor/**/*
+      - Pipfile.lock
 
 
 # Core
