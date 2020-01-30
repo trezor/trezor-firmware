@@ -28,7 +28,7 @@ async def recovery_homescreen() -> None:
         return
 
     # recovery process does not communicate on the wire
-    ctx = wire.DummyContext()
+    ctx = wire.DUMMY_CONTEXT
     await recovery_process(ctx)
 
 
