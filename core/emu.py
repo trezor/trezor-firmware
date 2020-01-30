@@ -144,8 +144,8 @@ def cli(
     if command and not run_command:
         raise click.ClickException("Extra arguments found. Did you mean to use -c?")
 
-    if watch and (command or debugger or frozen):
-        raise click.ClickException("Cannot use -w together with -c or -D or -F")
+    if watch and (command or debugger):
+        raise click.ClickException("Cannot use -w together with -c or -D")
 
     if watch and inotify is None:
         raise click.ClickException("inotify module is missing, install with pip")
