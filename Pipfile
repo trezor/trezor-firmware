@@ -62,6 +62,7 @@ typing = "*"
 cryptography = "*"
 hypothesis = "==4.38.1"  # let's use this version because of the nixos pipenv/pip issue
 attrs = "==18.2.0"  # let's use this version because of the nixos pipenv/pip issue
+inotify = "*"
 
 [dev-packages]
 scan-build = "*"
