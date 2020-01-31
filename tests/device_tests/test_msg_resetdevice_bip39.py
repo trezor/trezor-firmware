@@ -88,7 +88,7 @@ class TestMsgResetDevice:
         assert resp.passphrase_protection is False
 
         # Do pin & passphrase-protected action, PassphraseRequest should NOT be raised
-        resp = client.call_raw(proto.GetAddress(address_n=[], coin_name="Testnet"))
+        resp = client.call_raw(proto.GetAddress())
         assert isinstance(resp, proto.Address)
 
     @pytest.mark.setup_client(uninitialized=True)
@@ -176,7 +176,7 @@ class TestMsgResetDevice:
         assert resp.passphrase_protection is True
 
         # Do passphrase-protected action, PassphraseRequest should be raised
-        resp = client.call_raw(proto.GetAddress(address_n=[], coin_name="Testnet"))
+        resp = client.call_raw(proto.GetAddress())
         assert isinstance(resp, proto.PassphraseRequest)
         client.call_raw(proto.Cancel())
 

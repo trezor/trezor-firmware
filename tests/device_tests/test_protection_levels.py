@@ -261,23 +261,21 @@ class TestProtectionLevels:
         assert client.features.pin_cached is False
 
         with client:
-            client.set_expected_responses(
-                [proto.PinMatrixRequest(), proto.ButtonRequest(), proto.Address()]
-            )
-            btc.get_address(client, "Bitcoin", [], show_display=True)
+            client.set_expected_responses([proto.PinMatrixRequest(), proto.Address()])
+            btc.get_address(client, "Testnet", [0])
 
         client.init_device()
         assert client.features.pin_cached is True
         with client:
-            client.set_expected_responses([proto.ButtonRequest(), proto.Address()])
-            btc.get_address(client, "Bitcoin", [], show_display=True)
+            client.set_expected_responses([proto.Address()])
+            btc.get_address(client, "Testnet", [0])
 
     @pytest.mark.setup_client(passphrase=True)
     def test_passphrase_cached(self, client):
         with client:
             client.set_expected_responses([proto.PassphraseRequest(), proto.Address()])
-            btc.get_address(client, "Bitcoin", [])
+            btc.get_address(client, "Testnet", [0])
 
         with client:
             client.set_expected_responses([proto.Address()])
-            btc.get_address(client, "Bitcoin", [])
+            btc.get_address(client, "Testnet", [0])
