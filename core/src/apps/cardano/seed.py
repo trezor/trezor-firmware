@@ -47,14 +47,10 @@ async def get_keychain(ctx: wire.Context) -> Keychain:
             seed = mnemonic.get_seed(passphrase)
             root = bip32.from_seed(seed, "ed25519 cardano seed")
 
+        # derive the namespaced root node
+        for i in SEED_NAMESPACE:
+            root.derive_cardano(i)
         storage.cache.set(cache.APP_CARDANO_ROOT, root)
-
-    # let's not modify the one in the cache
-    root = root.clone()
-
-    # derive the namespaced root node
-    for i in SEED_NAMESPACE:
-        root.derive_cardano(i)
 
     keychain = Keychain(SEED_NAMESPACE, root)
     return keychain
