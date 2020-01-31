@@ -52,7 +52,6 @@ class TestDeviceLoad:
             passphrase_protection=True,
             label="test",
         )
-        client.passphrase_on_host = True
         client.set_passphrase("passphrase")
         state = client.debug.state()
         assert state.mnemonic_secret == MNEMONIC12.encode()
@@ -106,7 +105,6 @@ class TestDeviceLoad:
             u"Neuve\u030cr\u030citelne\u030c bezpec\u030cne\u0301 hesli\u0301c\u030cko"
         )
 
-        client.passphrase_on_host = True
         debuglink.load_device(
             client,
             mnemonic=words_nfkd,
