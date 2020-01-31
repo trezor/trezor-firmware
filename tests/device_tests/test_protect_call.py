@@ -31,15 +31,6 @@ class TestProtectCall:
         res = btc.get_address(client, "Testnet", [0])
         assert res == "mndoQDWatQhfeQbprzZxD43mZ75Z94D6vz"
 
-    @pytest.mark.setup_client(pin="1234", passphrase=True)
-    def test_expected_responses(self, client):
-        with client:
-            # Scenario 4 - Received what expected
-            client.set_expected_responses(
-                [proto.PinMatrixRequest(), proto.PassphraseRequest(), proto.Address()]
-            )
-            self._some_protected_call(client)
-
     def test_no_protection(self, client):
         with client:
             assert client.debug.read_pin()[0] is None
