@@ -29,20 +29,17 @@ async def get(ctx: wire.Context) -> str:
 
 
 async def _request_from_user(ctx: wire.Context) -> str:
-    passphrase = await _get_from_user(ctx)
+    if storage.device.get_passphrase_always_on_device():
+        passphrase = await _request_on_device(ctx)
+    else:
+        passphrase = await _request_on_host(ctx)
     if len(passphrase) > _MAX_PASSPHRASE_LEN:
         raise wire.DataError("Maximum passphrase length is %d" % _MAX_PASSPHRASE_LEN)
 
     return passphrase
 
 
-async def _get_from_user(ctx: wire.Context) -> str:
-    if storage.device.get_passphrase_always_on_device():
-        return await _request_from_user_on_device(ctx)
-    return await _request_from_host(ctx)
-
-
-async def _request_from_host(ctx: wire.Context) -> str:
+async def _request_on_host(ctx: wire.Context) -> str:
     _entry_dialog()
 
     request = PassphraseRequest()
@@ -50,7 +47,7 @@ async def _request_from_host(ctx: wire.Context) -> str:
     if ack.on_device:
         if ack.passphrase is not None:
             raise wire.DataError("Passphrase provided when it should not be")
-        return await _request_from_user_on_device(ctx)
+        return await _request_on_device(ctx)
 
     if ack.passphrase is None:
         raise wire.DataError(
@@ -59,7 +56,7 @@ async def _request_from_host(ctx: wire.Context) -> str:
     return ack.passphrase
 
 
-async def _request_from_user_on_device(ctx: wire.Context) -> str:
+async def _request_on_device(ctx: wire.Context) -> str:
     await ctx.call(ButtonRequest(code=ButtonRequestType.PassphraseEntry), ButtonAck)
 
     keyboard = PassphraseKeyboard("Enter passphrase", _MAX_PASSPHRASE_LEN)
