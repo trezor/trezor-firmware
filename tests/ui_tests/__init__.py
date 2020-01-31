@@ -1,4 +1,5 @@
 import hashlib
+import json
 import re
 import shutil
 from contextlib import contextmanager
@@ -9,6 +10,8 @@ import pytest
 from . import report
 
 UI_TESTS_DIR = Path(__file__).parent.resolve()
+HASH_FILE = UI_TESTS_DIR / "fixtures.json"
+HASHES = {}
 
 
 def get_test_name(node_id):
@@ -23,21 +26,9 @@ def get_test_name(node_id):
     return new_name[:100]
 
 
-def _check_fixture_directory(fixture_dir, screen_path):
-    # create the fixture dir if it does not exist
-    if not fixture_dir.exists():
-        fixture_dir.mkdir()
-
-    # delete old files
-    shutil.rmtree(screen_path, ignore_errors=True)
-    screen_path.mkdir()
-
-
-def _process_recorded(screen_path):
-    # create hash
-    digest = _hash_files(screen_path)
-
-    (screen_path.parent / "hash.txt").write_text(digest)
+def _process_recorded(screen_path, test_name):
+    # calculate hash
+    HASHES[test_name] = _hash_files(screen_path)
     _rename_records(screen_path)
 
 
@@ -57,12 +48,10 @@ def _hash_files(path):
 
 
 def _process_tested(fixture_test_path, test_name):
-    hash_file = fixture_test_path / "hash.txt"
+    expected_hash = HASHES.get(test_name)
+    if expected_hash is None:
+        raise ValueError("Hash for '%s' not found in fixtures.json" % test_name)
 
-    if not hash_file.exists():
-        raise ValueError("File hash.txt not found.")
-
-    expected_hash = hash_file.read_text()
     actual_path = fixture_test_path / "actual"
     actual_hash = _hash_files(actual_path)
 
@@ -86,17 +75,17 @@ def _process_tested(fixture_test_path, test_name):
 def screen_recording(client, request):
     test_ui = request.config.getoption("ui")
     test_name = get_test_name(request.node.nodeid)
-    fixture_test_path = UI_TESTS_DIR / "fixtures" / test_name
+    screens_test_path = UI_TESTS_DIR / "screens" / test_name
 
     if test_ui == "record":
-        screen_path = fixture_test_path / "recorded"
+        screen_path = screens_test_path / "recorded"
     elif test_ui == "test":
-        screen_path = fixture_test_path / "actual"
+        screen_path = screens_test_path / "actual"
     else:
         raise ValueError("Invalid 'ui' option.")
 
-    if not fixture_test_path.exists():
-        fixture_test_path.mkdir()
+    if not screens_test_path.exists():
+        screens_test_path.mkdir()
     # remove previous files
     shutil.rmtree(screen_path, ignore_errors=True)
     screen_path.mkdir()
@@ -107,8 +96,19 @@ def screen_recording(client, request):
     finally:
         client.debug.stop_recording()
         if test_ui == "record":
-            _process_recorded(screen_path)
+            _process_recorded(screen_path, test_name)
         elif test_ui == "test":
-            _process_tested(fixture_test_path, test_name)
+            _process_tested(screens_test_path, test_name)
         else:
             raise ValueError("Invalid 'ui' option.")
+
+
+def read_fixtures():
+    if not HASH_FILE.exists():
+        raise ValueError("File fixtures.json not found.")
+    global HASHES
+    HASHES = json.loads(HASH_FILE.read_text())
+
+
+def write_fixtures():
+    HASH_FILE.write_text(json.dumps(HASHES, indent="", sort_keys=True))
