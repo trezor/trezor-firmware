@@ -147,6 +147,7 @@ def client(request):
 
 
 def pytest_sessionstart(session):
+    ui_tests.read_fixtures()
     if session.config.getoption("ui") == "test":
         report.clear_dir()
 
@@ -154,6 +155,8 @@ def pytest_sessionstart(session):
 def pytest_sessionfinish(session, exitstatus):
     if session.config.getoption("ui") == "test":
         report.index()
+    if session.config.getoption("ui") == "record":
+        ui_tests.write_fixtures()
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
