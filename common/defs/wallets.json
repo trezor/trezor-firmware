@@ -138,6 +138,9 @@
     "bitcoin:XSN": {
         "Stakenet": "https://xsnexplorer.io/trezor"
     },
+    "bitcoin:XVG": {
+      "Electrum": "https://github.com/vergecurrency/electrum/releases"
+    },
     "bitcoin:XZC": {
         "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
         "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"

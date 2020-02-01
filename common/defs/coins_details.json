@@ -918,6 +918,24 @@
                 }
             ]
         },
+        "bitcoin:XVG": {
+            "links": {
+                "Github": "https://github.com/vergecurrency/VERGE",
+                "Homepage": "https://vergecurrency.com/"
+            },
+            "marketcap_usd": 61715496,
+            "name": "Verge",
+            "shortcut": "XVG",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": [
+                {
+                    "name": "Electrum",
+                    "url": "https://github.com/vergecurrency/electrum/releases"
+                }
+            ]
+        },
         "bitcoin:XZC": {
             "links": {
                 "Github": "https://github.com/zcoinofficial/zcoin",
