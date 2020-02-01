@@ -12,7 +12,8 @@ from apps.common import HARDENED
 from apps.common.paths import validate_path
 
 
-from apps.nem2.helpers import NEM2_SALT_SIZE, AES_BLOCK_SIZE, derive_shared_key
+from apps.nem2.helpers import NEM2_SALT_SIZE, AES_BLOCK_SIZE
+from apps.nem2.nacl import derive_shared_key
 
 from apps.nem2.helpers import validate_nem2_path, NEM2_HASH_ALG
 
@@ -64,6 +65,13 @@ async def decrypt_message(ctx, msg: NEM2DecryptMessage, keychain) -> NEM2Decrypt
   # 2. decrypt the message payload using AES
   ctx = aes(aes.CBC, shared_key, iv)
   decrypted_payload = ctx.decrypt(message)
+
+
+  # payloads are padded with a number representing the number of spaces to pad
+  last_char = bytes(decrypted_payload)[len(decrypted_payload) - 1]
+  if(last_char > 0 and last_char <= 16):
+    # remove the padding from the message
+    decrypted_payload = decrypted_payload[:-last_char]
 
   return NEM2DecryptedMessage(
     payload=decrypted_payload

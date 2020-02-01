@@ -12,7 +12,8 @@ from ubinascii import unhexlify, hexlify
 from apps.common import HARDENED
 from apps.common.paths import validate_path
 
-from apps.nem2.helpers import NEM2_SALT_SIZE, AES_BLOCK_SIZE, derive_shared_key
+from apps.nem2.helpers import NEM2_SALT_SIZE, AES_BLOCK_SIZE
+from apps.nem2.nacl import derive_shared_key
 
 from apps.nem2.helpers import validate_nem2_path, NEM2_HASH_ALG
 
@@ -61,7 +62,11 @@ async def encrypt_message(ctx, msg: NEM2EncryptMessage, keychain) -> NEM2Encrypt
 
   # 2. encrypt the message payload using AES
   ctx = aes(aes.CBC, shared_key, iv)
-  enc = ctx.encrypt(bytes(msg.payload, "ascii"))
+
+  # get the number of bytes to pad
+  padding = max(0, AES_BLOCK_SIZE - len(msg.payload) % AES_BLOCK_SIZE)
+  # use the number of padding bytes required as the padding character
+  enc = ctx.encrypt(bytes(msg.payload, "ascii") + bytes([padding] * padding))
 
   encrypted_payload = salt + iv + enc
 

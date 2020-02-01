@@ -27,16 +27,57 @@ class TestMsgNEM2GetPublicKey:
 
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_nem2_encrypt_message(self, client):
-        encrypted_message = nem2.encrypt_message(
+
+        test_payloads = [
+            "Test Payload",
+            "",
+            "Another message",
+            "message with a \\s character",
+            "message ending with a \r",
+            "1232221232123123232333323121112112",
+            "596FEAB15D98BFD75F1743E9DC8A36474A3D0C06AE78ED134C231336C38A6297"
+        ]
+
+        for test_payload in test_payloads:
+            ensure_encrypted_message_is_correct(test_payload, client)
+
+    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
+    def test_nem2_descrypt_nem2_sdk_message(self, client):
+
+        decrypted_message = nem2.decrypt_message(
             client,
             parse_path("m/44'/43'/0'/0'/0'"),
             {
-                "recipientPublicKey": "596FEAB15D98BFD75F1743E9DC8A36474A3D0C06AE78ED134C231336C38A6297",
-                "payload": "Test Transfer"
+                "senderPublicKey": "596FEAB15D98BFD75F1743E9DC8A36474A3D0C06AE78ED134C231336C38A6297",
+                "payload": "8F95A0BDEA20906FA8D31AC5E2BA8D942B81DB5C2102647FB2899F2E494F9A0C3B34CA4F7942DC83F19BE26DF57B5A12B7911FD02C4C81E09A293D64DCD65E3D8C227EC427D6A90BC340F10DB4143357"
             }
         )
 
         assert (
-            encrypted_message.payload.hex().upper()
-            == ""
+            bytes("Encrypted by nem2-sdk", "ascii")
+            == decrypted_message.payload
         )
+
+def ensure_encrypted_message_is_correct(payload, client):
+    encrypted_message = nem2.encrypt_message(
+        client,
+        parse_path("m/44'/43'/0'/0'/0'"),
+        {
+            "recipientPublicKey": "596FEAB15D98BFD75F1743E9DC8A36474A3D0C06AE78ED134C231336C38A6297",
+            "payload": payload
+        }
+    )
+
+    decrypted_message = nem2.decrypt_message(
+        client,
+        parse_path("m/44'/43'/0'/0'/0'"),
+        {
+            "senderPublicKey": "596FEAB15D98BFD75F1743E9DC8A36474A3D0C06AE78ED134C231336C38A6297",
+            "payload": encrypted_message.payload.hex()
+        }
+    )
+
+    assert (
+        bytes(payload, "ascii")
+        == decrypted_message.payload
+    )
