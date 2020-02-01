@@ -17,7 +17,7 @@
   "xpub_magic": 36513075,
   "xpub_magic_segwit_p2sh": null,
   "xpub_magic_segwit_native": null,
-  "bech32_prefix": "vg",
+  "bech32_prefix": null,
   "cashaddr_prefix": null,
   "slip44": 77,
   "segwit": false,
