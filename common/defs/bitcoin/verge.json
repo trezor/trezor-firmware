@@ -15,6 +15,8 @@
   "hash_genesis_block": "00000fc63692467faeb20cdb3b53200dc601d75bdfa1001463304cc790d77278",
   "xprv_magic": 35729707,
   "xpub_magic": 36513075,
+  "xpub_magic_segwit_p2sh": null,
+  "xpub_magic_segwit_native": null,
   "bech32_prefix": "vg",
   "cashaddr_prefix": null,
   "slip44": 77,
