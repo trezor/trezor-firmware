@@ -61,3 +61,33 @@ def nem2_sign_tx(connect, address, generation_hash, file):
     }
 
     return payload
+
+@cli.command(help="Encrypt NEM2 message.")
+@click.option("-n", "--address", required=True, help="BIP-32 path to signing key")
+@click.option("-r", "--recipient_public_key", required=True, help="Public key of message recipient")
+@click.option("-p", "--payload", required=True, help="Plain text message payload")
+
+@click.pass_obj
+def nem2_encrypt_message(connect, address, recipient_public_key, payload):
+    """Generate an encrypted message payload for the recipient"""
+    client = connect()
+    address_n = tools.parse_path(address)
+    return nem2.encrypt_message(client, address_n, {
+      recipientPublicKey: recipient_public_key,
+      payload: payload
+    })
+
+@cli.command(help="Decrypt NEM2 message.")
+@click.option("-n", "--address", required=True, help="BIP-32 path to signing key")
+@click.option("-r", "--sender_public_key", required=True, help="Public key of message sender")
+@click.option("-p", "--payload", required=True, help="Encrypted message payload as per nem2-sdk")
+
+@click.pass_obj
+def nem2_decrypt_message(connect, address, sender_public_key, payload):
+    """Decrypt an encrypted message payload from the sender"""
+    client = connect()
+    address_n = tools.parse_path(address)
+    return nem2.decrypt_message(client, address_n, {
+      senderPublicKey: sender_public_key,
+      payload: payload
+    })
