@@ -18,7 +18,7 @@
   "xpub_magic_segwit_p2sh": null,
   "xpub_magic_segwit_native": null,
   "bech32_prefix": null,
-  "cashaddr_prefix": 'gleecbtc',
+  "cashaddr_prefix": "gleecbtc",
   "slip44": 476,
   "segwit": false,
   "decred": false,
