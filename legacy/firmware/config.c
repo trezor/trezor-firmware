@@ -558,7 +558,7 @@ const uint8_t *config_getSeed(void) {
   // if storage has mnemonic, convert it to node and use it
   char mnemonic[MAX_MNEMONIC_LEN + 1] = {0};
   if (config_getMnemonic(mnemonic, sizeof(mnemonic))) {
-    char passphrase[51];
+    char passphrase[MAX_PASSPHRASE_LEN + 1] = {0};
     if (!protectPassphrase(passphrase)) {
       memzero(mnemonic, sizeof(mnemonic));
       memzero(passphrase, sizeof(passphrase));
@@ -614,8 +614,7 @@ bool config_getRootNode(HDNode *node, const char *curve) {
   if (seed == NULL) {
     return false;
   }
-  int result;
-  result = hdnode_from_seed(seed, 64, curve, node);
+  int result = hdnode_from_seed(seed, 64, curve, node);
   if (result == 0) {
     fsm_sendFailure(FailureType_Failure_NotInitialized, _("Unsupported curve"));
   }

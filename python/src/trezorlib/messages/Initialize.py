@@ -22,5 +22,5 @@ class Initialize(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('session_id', p.BytesType, 0),
+            3: ('session_id', p.BytesType, 0),
         }

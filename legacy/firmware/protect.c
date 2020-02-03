@@ -351,10 +351,11 @@ bool protectChangeWipeCode(bool removal) {
 }
 
 bool protectPassphrase(char *passphrase) {
+  memzero(passphrase, MAX_PASSPHRASE_LEN + 1);
   bool passphrase_protection = false;
   config_getPassphraseProtection(&passphrase_protection);
   if (!passphrase_protection) {
-    passphrase[0] = '\0';
+    // passphrase already set to empty by memzero above
     return true;
   }
 
@@ -387,7 +388,6 @@ bool protectPassphrase(char *passphrase) {
         result = false;
         break;
       }
-      // TODO: ask - why ppa->passphrase.size is not working? because of tiny?
       strlcpy(passphrase, ppa->passphrase, sizeof(ppa->passphrase));
       result = true;
       break;

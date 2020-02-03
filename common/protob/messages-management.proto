@@ -20,7 +20,7 @@ enum BackupType {
  * @next Features
  */
 message Initialize {
-    optional bytes session_id = 1;           // assumed device session id; Trezor clears caches if it is different or empty
+    optional bytes session_id = 3;           // assumed device session id; Trezor clears caches if it is different or empty
 }
 
 /**

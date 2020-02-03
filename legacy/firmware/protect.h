@@ -24,6 +24,8 @@
 #include "messages-common.pb.h"
 #include "secbool.h"
 
+#define MAX_PASSPHRASE_LEN 50
+
 bool protectButton(ButtonRequestType type, bool confirm_only);
 secbool protectPinUiCallback(uint32_t wait, uint32_t progress,
                              const char* message);

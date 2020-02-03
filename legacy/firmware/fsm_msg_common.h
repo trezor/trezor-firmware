@@ -22,6 +22,7 @@ void fsm_msgInitialize(const Initialize *msg) {
   signing_abort();
   if (msg && msg->has_session_id && msg->session_id.size == 32) {
     if (0 != memcmp(session_getSessionId(), msg->session_id.bytes, 32)) {
+      // If session id was specified but does not match -> clear the cache.
       session_clear(false);  // do not lock
     }
   } else {

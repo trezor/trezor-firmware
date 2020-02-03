@@ -1,4 +1,4 @@
-Version 1.9.0? [not yet released]
+Version 1.9.0 [not yet released]
 * Disallow changing of settings via dry-run recovery
 * Wipe code
 * Make LoadDevice debug only and drop its XPRV feature
