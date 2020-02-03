@@ -1,6 +1,6 @@
 {
   "coin_name": "GleecBTC",
-  "coin_shortcut": "Gleec",
+  "coin_shortcut": "GLEEC",
   "coin_label": "GleecBTC Coin",
   "website": "https://gleecoin.com",
   "github": "https://github.com/Gleecs/GleecBTC-FullNode-Win-Mac-Linux",
@@ -18,7 +18,7 @@
   "xpub_magic_segwit_p2sh": null,
   "xpub_magic_segwit_native": null,
   "bech32_prefix": null,
-  "cashaddr_prefix": null,
+  "cashaddr_prefix": 'gleecbtc',
   "slip44": 476,
   "segwit": false,
   "decred": false,
