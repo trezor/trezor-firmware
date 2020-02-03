@@ -92,8 +92,12 @@ async def handle_Cancel(ctx: wire.Context, msg: Cancel) -> NoReturn:
 
 
 async def handle_ClearSession(ctx: wire.Context, msg: ClearSession) -> Success:
-    cache.clear()
-    return Success(message="Session cleared")
+    """
+    This is currently a no-op on T. This should be called LockSession/LockDevice
+    and lock the device. In other words the cache should stay but the PIN should
+    be forgotten and required again.
+    """
+    return Success()
 
 
 async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:

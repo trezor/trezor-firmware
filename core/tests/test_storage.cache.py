@@ -76,24 +76,6 @@ class TestStorageCache(unittest.TestCase):
         call_Initialize(session_id=new_session_id)
         self.assertIsNone(cache.get(KEY))
 
-    @mock_storage
-    def test_ClearSession(self):
-        def call_Initialize(**kwargs):
-            msg = Initialize(**kwargs)
-            return await_result(handle_Initialize(DUMMY_CONTEXT, msg))
-
-        def call_ClearSession():
-            return await_result(handle_ClearSession(DUMMY_CONTEXT, ClearSession()))
-
-        session_id = call_Initialize().session_id
-        cache.set(KEY, "hello")
-        self.assertEqual(cache.get(KEY), "hello")
-
-        call_ClearSession()
-        self.assertIsNone(cache.get(KEY))
-        new_session_id = cache.get_session_id()
-        self.assertNotEqual(session_id, new_session_id)
-
 
 if __name__ == "__main__":
     unittest.main()

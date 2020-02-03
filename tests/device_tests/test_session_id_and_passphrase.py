@@ -99,23 +99,6 @@ def test_session_enable_passphrase(client):
 
 
 @pytest.mark.skip_ui
-def test_clear_session(client):
-    session_id = _init_session(client)
-
-    # session id remains the same
-    new_session_id = _init_session(client, session_id=session_id)
-    assert session_id == new_session_id
-
-    # by clearing the session, the id is lost
-    response = client.call(messages.ClearSession())
-    assert isinstance(response, messages.Success)
-
-    # cannot resume the old session now
-    new_session_id = _init_session(client, session_id=session_id)
-    assert session_id != new_session_id
-
-
-@pytest.mark.skip_ui
 @pytest.mark.setup_client(passphrase=True)
 def test_clear_session_passphrase(client):
     # at first attempt, we are prompted for passphrase
@@ -124,9 +107,9 @@ def test_clear_session_passphrase(client):
     # now the passphrase is cached
     assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASE_A
 
-    # ClearSession will erase the cached passphrase
-    response = client.call(messages.ClearSession())
-    assert isinstance(response, messages.Success)
+    # Erase the cached passphrase
+    response = client.call(messages.Initialize())
+    assert isinstance(response, messages.Features)
 
     # we have to enter passphrase again
     assert _get_xpub(client, passphrase="A") == XPUB_PASSPHRASE_A
