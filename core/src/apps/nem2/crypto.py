@@ -1,28 +1,54 @@
+# this file contains code ported from the nacl and futoin-hkdf packages
+# which are used as part of the nem2-sdk for message encryption
+
 import math
 from ubinascii import unhexlify, hexlify
 from trezor.crypto.curve import ed25519
-from trezor.crypto.hashlib import sha3_256, sha3_512
+from trezor.crypto.hashlib import sha3_256, sha3_512, sha256
+from trezor.crypto import hmac
+from trezor.utils import HashWriter
 
-def derive_shared_key(salt, private_key, public_key):
-    # port functionality from catbuffer
-    # https://github.com/nemtech/nem2-sdk-typescript-javascript/blob/master/src/core/crypto/KeyPair.ts#L73
-    # https://github.com/nemtech/nem2-sdk-typescript-javascript/blob/master/src/core/crypto/Utilities.ts#L205
+def derive_shared_key(private_key, public_key):
+    shared_secret = derive_shared_secret(private_key, public_key)
 
+    # port extraction logic from futoin-hkdf
+    salt = bytearray([0] * 32)
+    prk = hkdf_extract(salt, bytearray(shared_secret))
+
+    shared_key = hkdf_expand(prk, "catapult")
+    return shared_key
+
+def derive_shared_secret(private_key, public_key):
     d = prepare_for_scalar_mult(private_key)
 
     q = [gf(), gf(), gf(), gf()]
     p = [gf(), gf(), gf(), gf()]
-    shared_key = [0] * 32
+    shared_secret = [0] * 32
 
     unpack(q, public_key)
     scalar_mult(p, q, d)
-    pack(shared_key, p)
+    pack(shared_secret, p)
+    return shared_secret
 
-    for i in range(0, 32):
-        shared_key[i] ^= salt[i]
+def hkdf_extract(salt, ikm):
+    return hmac.new(salt, ikm, sha256).digest()
 
-    shared_key_hash = sha3_256(bytearray(shared_key), keccak=True).digest()
-    return shared_key_hash
+def hkdf_expand(prk, info):
+    info_bytes = bytes(info, "ascii")
+    info_length = len(info_bytes)
+
+    hash_length = 32
+
+    t = bytearray([0] * (hash_length + info_length + 1))
+
+    start = 0
+    end = 0
+
+    t[end : info_length - 1] = info_bytes
+    t[end + info_length] = 1
+
+    msg = t[start : end + info_length + 1]
+    return hmac.new(prk, msg, sha256).digest()
 
 def prepare_for_scalar_mult(secret_key):
     d = sha3_512(secret_key, keccak=True).digest()

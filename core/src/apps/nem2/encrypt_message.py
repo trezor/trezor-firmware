@@ -13,7 +13,7 @@ from apps.common import HARDENED
 from apps.common.paths import validate_path
 
 from apps.nem2.helpers import NEM2_SALT_SIZE, AES_BLOCK_SIZE
-from apps.nem2.nacl import derive_shared_key
+from apps.nem2.crypto import derive_shared_key
 
 from apps.nem2.helpers import validate_nem2_path, NEM2_HASH_ALG
 
@@ -54,11 +54,10 @@ async def encrypt_message(ctx, msg: NEM2EncryptMessage, keychain) -> NEM2Encrypt
 
   node = keychain.derive(msg.address_n, CURVE)
 
-  salt = random.bytes(NEM2_SALT_SIZE)
   iv = random.bytes(AES_BLOCK_SIZE)
 
   # 1. generate a shared key between sender private key and recipient public key
-  shared_key = derive_shared_key(salt, node.private_key(), unhexlify(msg.recipient_public_key))
+  shared_key = derive_shared_key(node.private_key(), unhexlify(msg.recipient_public_key))
 
   # 2. encrypt the message payload using AES
   ctx = aes(aes.CBC, shared_key, iv)
@@ -68,7 +67,7 @@ async def encrypt_message(ctx, msg: NEM2EncryptMessage, keychain) -> NEM2Encrypt
   # use the number of padding bytes required as the padding character
   enc = ctx.encrypt(bytes(msg.payload, "ascii") + bytes([padding] * padding))
 
-  encrypted_payload = salt + iv + enc
+  encrypted_payload = iv + enc
 
   return NEM2EncryptedMessage(
     payload=encrypted_payload

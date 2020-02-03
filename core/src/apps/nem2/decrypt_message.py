@@ -13,7 +13,7 @@ from apps.common.paths import validate_path
 
 
 from apps.nem2.helpers import NEM2_SALT_SIZE, AES_BLOCK_SIZE
-from apps.nem2.nacl import derive_shared_key
+from apps.nem2.crypto import derive_shared_key
 
 from apps.nem2.helpers import validate_nem2_path, NEM2_HASH_ALG
 
@@ -55,17 +55,15 @@ async def decrypt_message(ctx, msg: NEM2DecryptMessage, keychain) -> NEM2Decrypt
 
   payload_bytes = unhexlify(msg.payload)
 
-  salt = payload_bytes[:32]
-  iv = payload_bytes[32:48]
-  message = payload_bytes[48:]
+  iv = payload_bytes[:16]
+  message = payload_bytes[16:]
 
   # 1. generate a shared key between sender public key and recipient private key
-  shared_key = derive_shared_key(salt, node.private_key(), unhexlify(msg.sender_public_key))
+  shared_key = derive_shared_key(node.private_key(), unhexlify(msg.sender_public_key))
 
   # 2. decrypt the message payload using AES
   ctx = aes(aes.CBC, shared_key, iv)
   decrypted_payload = ctx.decrypt(message)
-
 
   # payloads are padded with a number representing the number of spaces to pad
   last_char = bytes(decrypted_payload)[len(decrypted_payload) - 1]
