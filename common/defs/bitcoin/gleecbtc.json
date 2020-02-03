@@ -4,7 +4,7 @@
   "coin_label": "GleecBTC Coin",
   "website": "https://gleecoin.com",
   "github": "https://github.com/Gleecs/GleecBTC-FullNode-Win-Mac-Linux",
-  "maintainer": "Jochen Hoenicke <hoenicke@gmail.com>",
+  "maintainer": "Sone <daogods@gmail.com>",
   "curve_name": "secp256k1",
   "decimals": 8,
   "address_type": 0,
