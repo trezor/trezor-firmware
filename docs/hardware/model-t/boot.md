@@ -54,7 +54,7 @@ allowing a firmware update via USB.
 * Signature system is Ed25519 (allows combining signatures by multiple keys
   into one).
 * All multibyte integer values are little endian.
-* There is a tool called [binctl](../tools/binctl) which checks validity
+* There is a tool called [headertool.py](https://github.com/trezor/trezor-firmware/blob/master/core/tools/headertool.py) which checks validity
   of the bootloader/firmware images including their headers.
 
 ## Bootloader Format
