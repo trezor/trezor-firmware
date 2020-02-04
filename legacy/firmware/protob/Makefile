@@ -14,11 +14,11 @@ PYTHON ?= python
 
 %.pb.c: %.pb %.options
 	@printf "  NANOPB  $@\n"
-	$(Q)$(PYTHON) ../../vendor/nanopb/generator/nanopb_generator.py $< \
+	$(Q)nanopb_generator $< \
 		-L '#include "%s"' \
 		-T \
 		-s "mangle_names:M_FLATTEN"
-	@grep CALLBACK $@ && echo "CALLBACK field found" && rm $@ && exit 1  || :
+	@grep " CALLBACK, " $@ && echo "CALLBACK field found" && rm $@ && exit 1  || :
 
 %.pb: %.proto
 	@printf "  PROTOC  $@\n"

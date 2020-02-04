@@ -3,7 +3,6 @@ Features.device_id			max_size:25
 Features.language			max_size:17
 Features.label				max_size:33
 Features.revision			max_size:20
-Features.bootloader_hash		max_size:32
 Features.model				max_size:17
 Features.fw_vendor			max_size:256
 Features.fw_vendor_keys			max_size:32

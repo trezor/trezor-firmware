@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "0b8d85136c58724c9a9ed769913e4a486ec5b8dad6e96fe7c6aa0c45a2509538"
+            "sha256": "1fb4b3d284c147d94baaa4a6a1224fa9d3d62371cefd4ccd1faa5a2fc80460b2"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -418,6 +418,14 @@
             ],
             "version": "==0.4.3"
         },
+        "nanopb": {
+            "hashes": [
+                "sha256:0f1ef49aed947892a648197201c0c0b86b1e093794ef5cdba85f3f4ee00c5bfb",
+                "sha256:462b94f57cdfc691f4d303c2585024bb5da1f958d16b90d8982043b3d76188ce"
+            ],
+            "index": "pypi",
+            "version": "==0.4.1"
+        },
         "nose": {
             "hashes": [
                 "sha256:9ff7c6cc443f8c51994b34a667bbcf45afd6d945be7477b52e97516fd17c53ac",
@@ -556,11 +564,11 @@
         },
         "pyro4": {
             "hashes": [
-                "sha256:2bfe12a22f396474b0e57c898c7e2c561a8f850bf2055d8cf0f7119f0c7a523f",
-                "sha256:7c4712257ba5bed8bc4ed037bdad5b4683a483a5fd634a2ac3effa5ba787f511"
+                "sha256:98c2c9547d111ecbf2c1f327953ee1919db60b701b8fe9a612f40359b2ea70ba",
+                "sha256:b69200747c4c69bfa6fa8b917806b0a9ee7939daaf67ab9bb5ccac7e5179feee"
             ],
             "index": "pypi",
-            "version": "==4.77"
+            "version": "==4.78"
         },
         "pytest": {
             "hashes": [
@@ -639,10 +647,11 @@
         },
         "serpent": {
             "hashes": [
-                "sha256:34070629becc4db10ff35ddcaed0f6ab83135fff0a6bd3b913910656bba0eb64",
-                "sha256:b112cd656feacb899a29f8ec4cc136b238dcbaca069aaf4eaea3cc09cd0610e4"
+                "sha256:72753820246a7d8486e8b385353e3bbf769abfceec2e850fa527a288b084ff7a",
+                "sha256:b2e8fa890481ca068faf9913c7019db5a8c30aa5e7e5870846996749872cecb3"
             ],
-            "version": "==1.30.1"
+            "markers": "python_version >= '3.2'",
+            "version": "==1.30.2"
         },
         "shamir-mnemonic": {
             "hashes": [
@@ -738,10 +747,10 @@
         },
         "virtualenv": {
             "hashes": [
-                "sha256:916497082376027a387c49af092a4316c0e9db753f95ea1af22eba569f107cfe",
-                "sha256:9a87270123622593ad454a81055b771a8898590ff3d6f3abbe48c4111ff49e79"
+                "sha256:a7a7f272882815c2f84b9a5bfd75ab4e32eea257bc3169a9c139310c064ebbeb",
+                "sha256:d98aa9ae72aa2f892e697e38c0314cd835c8f44d7f38b2fe27d11a6aa084dd2c"
             ],
-            "version": "==20.0.0b1"
+            "version": "==20.0.0b2"
         },
         "wcwidth": {
             "hashes": [

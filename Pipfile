@@ -10,6 +10,7 @@ scons = "*"
 protobuf = "==3.6.1"
 pyblake2 = "*"
 Pyro4 = "*"
+nanopb = "==0.4.1"
 
 ## test tools
 pytest = "*"

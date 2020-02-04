@@ -35,7 +35,7 @@ struct MessagesMap_t {
   char type;  // n = normal, d = debug
   char dir;   // i = in, o = out
   uint16_t msg_id;
-  const pb_field_t *fields;
+  const pb_msgdesc_t *fields;
   void (*process_func)(const void *ptr);
 };
 
@@ -46,7 +46,7 @@ static const struct MessagesMap_t MessagesMap[] = {
 
 #include "messages_map_limits.h"
 
-const pb_field_t *MessageFields(char type, char dir, uint16_t msg_id) {
+const pb_msgdesc_t *MessageFields(char type, char dir, uint16_t msg_id) {
   const struct MessagesMap_t *m = MessagesMap;
   while (m->type) {
     if (type == m->type && dir == m->dir && msg_id == m->msg_id) {
@@ -159,7 +159,7 @@ static bool pb_debug_callback_out(pb_ostream_t *stream, const uint8_t *buf,
 #endif
 
 bool msg_write_common(char type, uint16_t msg_id, const void *msg_ptr) {
-  const pb_field_t *fields = MessageFields(type, 'o', msg_id);
+  const pb_msgdesc_t *fields = MessageFields(type, 'o', msg_id);
   if (!fields) {  // unknown message
     return false;
   }
@@ -212,7 +212,7 @@ enum {
   READSTATE_READING,
 };
 
-void msg_process(char type, uint16_t msg_id, const pb_field_t *fields,
+void msg_process(char type, uint16_t msg_id, const pb_msgdesc_t *fields,
                  uint8_t *msg_raw, uint32_t msg_size) {
   static uint8_t msg_data[MSG_IN_SIZE];
   memzero(msg_data, sizeof(msg_data));
@@ -231,7 +231,7 @@ void msg_read_common(char type, const uint8_t *buf, uint32_t len) {
   static uint16_t msg_id = 0xFFFF;
   static uint32_t msg_size = 0;
   static uint32_t msg_pos = 0;
-  static const pb_field_t *fields = 0;
+  static const pb_msgdesc_t *fields = 0;
 
   if (len != 64) return;
 
@@ -325,7 +325,7 @@ void msg_read_tiny(const uint8_t *buf, int len) {
     return;
   }
 
-  const pb_field_t *fields = 0;
+  const pb_msgdesc_t *fields = 0;
   pb_istream_t stream = pb_istream_from_buffer(buf + 9, msg_size);
 
   switch (msg_id) {
