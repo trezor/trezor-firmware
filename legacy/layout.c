@@ -28,9 +28,9 @@ void layoutButtonNo(const char *btnNo, const BITMAP *icon) {
     oledDrawBitmap(1, OLED_HEIGHT - 8, icon);
     icon_width = icon->width;
   }
-  oledDrawString(8 + 3, OLED_HEIGHT - icon_width, btnNo, FONT_STANDARD);
+  oledDrawString(3 + icon_width, OLED_HEIGHT - 8, btnNo, FONT_STANDARD);
   oledInvert(0, OLED_HEIGHT - 9,
-             icon_width + oledStringWidth(btnNo, FONT_STANDARD) + 2,
+             icon_width + oledStringWidth(btnNo, FONT_STANDARD) + 4,
              OLED_HEIGHT - 1);
 }
 

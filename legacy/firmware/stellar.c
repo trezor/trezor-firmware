@@ -1792,7 +1792,7 @@ void stellar_layoutSigningDialog(const char *line1, const char *line2,
   offset_y += line_height;
 
   // Cancel button
-  layoutButtonNo("Cancel", &bmp_btn_cancel);
+  layoutButtonNo(_("Cancel"), &bmp_btn_cancel);
 
   // Warnings (drawn centered between the buttons
   if (warning) {
