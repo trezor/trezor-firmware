@@ -27,7 +27,16 @@
 #include "sdcard.h"
 // clang-format on
 
-DRESULT disk_read(void *drv, BYTE *buff, DWORD sector, UINT count) {
+DSTATUS disk_initialize(BYTE pdrv) {
+  return (sectrue == sdcard_is_present()) ? 0 : STA_NODISK;
+}
+
+DSTATUS disk_status(BYTE pdrv) {
+  return (sectrue == sdcard_is_present()) ? 0 : STA_NODISK;
+}
+
+DRESULT disk_read(BYTE pdrv, BYTE *buff, LBA_t sector, UINT count) {
+  (void)pdrv;
   if (sectrue == sdcard_read_blocks((uint32_t *)buff, sector, count)) {
     return RES_OK;
   } else {
@@ -35,7 +44,8 @@ DRESULT disk_read(void *drv, BYTE *buff, DWORD sector, UINT count) {
   }
 }
 
-DRESULT disk_write(void *drv, const BYTE *buff, DWORD sector, UINT count) {
+DRESULT disk_write(BYTE pdrv, const BYTE *buff, LBA_t sector, UINT count) {
+  (void)pdrv;
   if (sectrue == sdcard_write_blocks((const uint32_t *)buff, sector, count)) {
     return RES_OK;
   } else {
@@ -43,8 +53,8 @@ DRESULT disk_write(void *drv, const BYTE *buff, DWORD sector, UINT count) {
   }
 }
 
-DRESULT disk_ioctl(void *drv, BYTE cmd, void *buff) {
-  (void)drv;
+DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void *buff) {
+  (void)pdrv;
   switch (cmd) {
     case CTRL_SYNC:
       return RES_OK;
@@ -56,12 +66,6 @@ DRESULT disk_ioctl(void *drv, BYTE cmd, void *buff) {
       return RES_OK;
     case GET_BLOCK_SIZE:
       *((DWORD *)buff) = 1;
-      return RES_OK;
-    case IOCTL_INIT:
-      *((DSTATUS *)buff) = (sectrue == sdcard_is_present()) ? 0 : STA_NODISK;
-      return RES_OK;
-    case IOCTL_STATUS:
-      *((DSTATUS *)buff) = (sectrue == sdcard_is_present()) ? 0 : STA_NODISK;
       return RES_OK;
     default:
       return RES_PARERR;
@@ -280,7 +284,7 @@ STATIC const mp_obj_type_t mod_trezorio_FatFSFile_type = {
 ///     """
 typedef struct _mp_obj_FatFSDir_t {
   mp_obj_base_t base;
-  FF_DIR dp;
+  DIR dp;
 } mp_obj_FatFSDir_t;
 
 /// def __next__(self) -> Tuple[int, str, str]:
@@ -338,7 +342,6 @@ STATIC mp_obj_t mod_trezorio_FatFS_make_new(const mp_obj_type_t *type,
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFS_open(mp_obj_t self, mp_obj_t path,
                                         mp_obj_t flags) {
-  mp_obj_FatFS_t *o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t _path, _flags;
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
   mp_get_buffer_raise(flags, &_flags, MP_BUFFER_READ);
@@ -364,7 +367,7 @@ STATIC mp_obj_t mod_trezorio_FatFS_open(mp_obj_t self, mp_obj_t path,
     }
   }
   FIL fp;
-  FRESULT res = f_open(&(o->fs), &fp, _path.buf, mode);
+  FRESULT res = f_open(&fp, _path.buf, mode);
   if (res != FR_OK) {
     mp_raise_OSError(fresult_to_errno_table[res]);
   }
@@ -381,11 +384,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_FatFS_open_obj,
 ///     List a directory (return generator)
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFS_listdir(mp_obj_t self, mp_obj_t path) {
-  mp_obj_FatFS_t *o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t _path;
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
-  FF_DIR dp;
-  FRESULT res = f_opendir(&(o->fs), &dp, _path.buf);
+  DIR dp;
+  FRESULT res = f_opendir(&dp, _path.buf);
   if (res != FR_OK) {
     mp_raise_OSError(fresult_to_errno_table[res]);
   }
@@ -402,10 +404,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFS_listdir_obj,
 ///     Create a sub directory
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFS_mkdir(size_t n_args, const mp_obj_t *args) {
-  mp_obj_FatFS_t *o = MP_OBJ_TO_PTR(args[0]);
   mp_buffer_info_t path;
   mp_get_buffer_raise(args[1], &path, MP_BUFFER_READ);
-  FRESULT res = f_mkdir(&(o->fs), path.buf);
+  FRESULT res = f_mkdir(path.buf);
   // directory exists and exist_ok is True, return without failure
   if (res == FR_EXIST && n_args > 2 && args[2] == mp_const_true) {
     return mp_const_none;
@@ -423,10 +424,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_FatFS_mkdir_obj, 2, 3,
 ///     Delete an existing file or directory
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFS_unlink(mp_obj_t self, mp_obj_t path) {
-  mp_obj_FatFS_t *o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t _path;
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
-  FRESULT res = f_unlink(&(o->fs), _path.buf);
+  FRESULT res = f_unlink(_path.buf);
   if (res != FR_OK) {
     mp_raise_OSError(fresult_to_errno_table[res]);
   }
@@ -440,11 +440,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFS_unlink_obj,
 ///     Get file status
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFS_stat(mp_obj_t self, mp_obj_t path) {
-  mp_obj_FatFS_t *o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t _path;
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
   FILINFO info;
-  FRESULT res = f_stat(&(o->fs), _path.buf, &info);
+  FRESULT res = f_stat(_path.buf, &info);
   if (res != FR_OK) {
     mp_raise_OSError(fresult_to_errno_table[res]);
   }
@@ -459,11 +458,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFS_stat_obj,
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFS_rename(mp_obj_t self, mp_obj_t oldpath,
                                           mp_obj_t newpath) {
-  mp_obj_FatFS_t *o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t _oldpath, _newpath;
   mp_get_buffer_raise(oldpath, &_oldpath, MP_BUFFER_READ);
   mp_get_buffer_raise(newpath, &_newpath, MP_BUFFER_READ);
-  FRESULT res = f_rename(&(o->fs), _oldpath.buf, _newpath.buf);
+  FRESULT res = f_rename(_oldpath.buf, _newpath.buf);
   if (res != FR_OK) {
     mp_raise_OSError(fresult_to_errno_table[res]);
   }
@@ -478,7 +476,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_FatFS_rename_obj,
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFS_mount(mp_obj_t self) {
   mp_obj_FatFS_t *o = MP_OBJ_TO_PTR(self);
-  FRESULT res = f_mount(&(o->fs));
+  FRESULT res = f_mount(&(o->fs), "", 1);
   if (res != FR_OK) {
     mp_raise_OSError(fresult_to_errno_table[res]);
   }
@@ -492,8 +490,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFS_mount_obj,
 ///     Unmount a logical drive
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFS_unmount(mp_obj_t self) {
-  mp_obj_FatFS_t *o = MP_OBJ_TO_PTR(self);
-  FRESULT res = f_umount(&(o->fs));
+  // to unmount we have to call mount with the first parameter NULL
+  FRESULT res = f_mount(NULL, "", 0);
   if (res != FR_OK) {
     mp_raise_OSError(fresult_to_errno_table[res]);
   }
@@ -502,16 +500,14 @@ STATIC mp_obj_t mod_trezorio_FatFS_unmount(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFS_unmount_obj,
                                  mod_trezorio_FatFS_unmount);
 
-#ifdef TREZOR_EMULATOR
-
 /// def mkfs(self) -> None:
 ///     """
 ///     Create a FAT volume
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFS_mkfs(mp_obj_t self) {
-  mp_obj_FatFS_t *o = MP_OBJ_TO_PTR(self);
+  MKFS_PARM params = {FM_FAT32, 0, 0, 0, 0};
   uint8_t working_buf[FF_MAX_SS];
-  FRESULT res = f_mkfs(&(o->fs), FM_FAT32, 0, working_buf, sizeof(working_buf));
+  FRESULT res = f_mkfs("", &params, working_buf, sizeof(working_buf));
   if (res != FR_OK) {
     mp_raise_OSError(fresult_to_errno_table[res]);
   }
@@ -520,7 +516,21 @@ STATIC mp_obj_t mod_trezorio_FatFS_mkfs(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFS_mkfs_obj,
                                  mod_trezorio_FatFS_mkfs);
 
-#endif
+/// def setlabel(self, label: str) -> None:
+///     """
+///     Set volume label
+///     """
+STATIC mp_obj_t mod_trezorio_FatFS_setlabel(mp_obj_t self, mp_obj_t label) {
+  mp_buffer_info_t _label;
+  mp_get_buffer_raise(label, &_label, MP_BUFFER_READ);
+  FRESULT res = f_setlabel(_label.buf);
+  if (res != FR_OK) {
+    mp_raise_OSError(fresult_to_errno_table[res]);
+  }
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFS_setlabel_obj,
+                                 mod_trezorio_FatFS_setlabel);
 
 STATIC const mp_rom_map_elem_t mod_trezorio_FatFS_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_open), MP_ROM_PTR(&mod_trezorio_FatFS_open_obj)},
@@ -531,9 +541,9 @@ STATIC const mp_rom_map_elem_t mod_trezorio_FatFS_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_stat), MP_ROM_PTR(&mod_trezorio_FatFS_stat_obj)},
     {MP_ROM_QSTR(MP_QSTR_mount), MP_ROM_PTR(&mod_trezorio_FatFS_mount_obj)},
     {MP_ROM_QSTR(MP_QSTR_unmount), MP_ROM_PTR(&mod_trezorio_FatFS_unmount_obj)},
-#ifdef TREZOR_EMULATOR
     {MP_ROM_QSTR(MP_QSTR_mkfs), MP_ROM_PTR(&mod_trezorio_FatFS_mkfs_obj)},
-#endif
+    {MP_ROM_QSTR(MP_QSTR_setlabel),
+     MP_ROM_PTR(&mod_trezorio_FatFS_setlabel_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_FatFS_locals_dict,
                             mod_trezorio_FatFS_locals_dict_table);
