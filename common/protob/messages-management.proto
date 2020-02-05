@@ -360,9 +360,11 @@ message GetNextU2FCounter {
 message NextU2FCounter {
     optional uint32 u2f_counter = 1;
 }
+
 /**
  * Request: Gen bitcon seeds random
  * @end
  */
-message GenBitcoinSeeds{
+message GenSeeds{
 }
+

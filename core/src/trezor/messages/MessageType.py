@@ -192,3 +192,4 @@ if not utils.BITCOIN_ONLY:
     WebAuthnCredentials = 801  # type: Literal[801]
     WebAuthnAddResidentCredential = 802  # type: Literal[802]
     WebAuthnRemoveResidentCredential = 803  # type: Literal[803]
+GenSeeds = 804  # type: Literal[804]
