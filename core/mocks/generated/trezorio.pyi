@@ -120,6 +120,11 @@ class FatFS:
         Create a FAT volume
         """
 
+    def setlabel(self, label: str) -> None:
+        """
+        Set volume label
+        """
+
 
 # extmod/modtrezorio/modtrezorio-flash.h
 class FlashOTP:
