@@ -510,24 +510,22 @@ void fsm_msgGetNextU2FCounter() {
 }
 
 void fsm_msgGenSeeds(const GenSeeds *msg) {
-    uint8_t ucBuf[64],i = 0;;
-    uint32_t uiTemp;
-    
-    (void)msg;
-    CHECK_NOT_INITIALIZED
-    CHECK_PIN
-    for(i = 0;i < 16;i++)
-    {
-        uiTemp = random32();
-        memcpy(ucBuf+i*4,&uiTemp,4);
-    }
-    if(!config_setSeedsBytes(ucBuf,64))
-    {
-      fsm_sendFailure(FailureType_Failure_NotInitialized, NULL);
-      layoutHome();
-      return;    
-    }
-    fsm_sendSuccess(_("U2F counter set"));
-    layoutHome();
-}
+  uint8_t ucBuf[64], i = 0;
+  ;
+  uint32_t uiTemp;
 
+  (void)msg;
+  CHECK_NOT_INITIALIZED
+  CHECK_PIN
+  for (i = 0; i < 16; i++) {
+    uiTemp = random32();
+    memcpy(ucBuf + i * 4, &uiTemp, 4);
+  }
+  if (!config_setSeedsBytes(ucBuf, 64)) {
+    fsm_sendFailure(FailureType_Failure_NotInitialized, NULL);
+    layoutHome();
+    return;
+  }
+  fsm_sendSuccess(_("U2F counter set"));
+  layoutHome();
+}

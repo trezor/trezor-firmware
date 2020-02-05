@@ -92,21 +92,21 @@ void setup(void) {
                   BTN_PIN_YES | BTN_PIN_UP | BTN_PIN_DOWN);
   gpio_mode_setup(BTN_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, BTN_PIN_NO);
 
-  // usb insert io
-  #if (NORMAL_PCB)
+// usb insert io
+#if (NORMAL_PCB)
   gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_USB_INSERT);
-  #else
+#else
   gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_USB_INSERT);
-  #endif
+#endif
   gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_NFC_INSERT);
   // battery power on
   gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, GPIO_POWER_ON);
-  // ble power off
-  #if (NORMAL_PCB)
+// ble power off
+#if (NORMAL_PCB)
   gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_BLE_POWER);
-  #else
+#else
   gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_BLE_POWER);
-  #endif
+#endif
   POWER_OFF_BLE();
   // combus
   gpio_mode_setup(GPIO_CMBUS_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,

@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "./../../firmware/config.h"
 #include "bip39.h"
 #include "bip39_english.h"
 #include "hmac.h"
@@ -32,8 +33,6 @@
 #include "pbkdf2.h"
 #include "rand.h"
 #include "sha2.h"
-#include "./../../firmware/config.h"
-
 
 #if USE_BIP39_CACHE
 
@@ -188,17 +187,15 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
   int mnemoniclen = strlen(mnemonic);
   int passphraselen = strnlen(passphrase, 256);
 
-  if(config_getSeedsBytes(seed,0x10))
-  {
+  if (config_getSeedsBytes(seed, 0x10)) {
     bip39_cache[bip39_cache_index].set = true;
     strcpy(bip39_cache[bip39_cache_index].mnemonic, mnemonic);
     strcpy(bip39_cache[bip39_cache_index].passphrase, passphrase);
     memcpy(bip39_cache[bip39_cache_index].seed, seed, 512 / 8);
     bip39_cache_index = (bip39_cache_index + 1) % BIP39_CACHE_SIZE;
-    return;  
+    return;
   }
-    
-  
+
 #if USE_BIP39_CACHE
   // check cache
   if (mnemoniclen < 256 && passphraselen < 64) {

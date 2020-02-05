@@ -120,19 +120,17 @@ void buttonUpdate() {
       button.DownUp = false;
     }
   }
-  if (button.YesUp ||button.NoUp || button.UpUp ||button.DownUp) {
+  if (button.YesUp || button.NoUp || button.UpUp || button.DownUp) {
     system_millis_poweroff_start = 0;
   }
 
   last_state = state;
 }
 
-bool hasbutton(void) 
-{
+bool hasbutton(void) {
   buttonUpdate();
-  if (button.YesUp ||button.NoUp || button.UpUp ||button.DownUp) {
+  if (button.YesUp || button.NoUp || button.UpUp || button.DownUp) {
     return true;
-         
   }
   return false;
 }

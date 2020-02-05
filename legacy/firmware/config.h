@@ -119,8 +119,7 @@ bool config_getMnemonic(char *dest, uint16_t dest_size);
 bool config_getMnemonicBytes(uint8_t *dest, uint16_t dest_size,
                              uint16_t *real_size);
 
-
-bool config_setSeedsBytes(const uint8_t *seeds,uint8_t len) ;
+bool config_setSeedsBytes(const uint8_t *seeds, uint8_t len);
 bool config_getSeedsBytes(uint8_t *dest, uint16_t dest_size);
 
 #if DEBUG_LINK

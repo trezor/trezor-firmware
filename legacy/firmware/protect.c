@@ -30,10 +30,9 @@
 #include "messages.pb.h"
 #include "oled.h"
 #include "pinmatrix.h"
+#include "sys.h"
 #include "usb.h"
 #include "util.h"
-#include "sys.h"
-
 
 #define MAX_WRONG_PINS 15
 
@@ -65,7 +64,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
       BUTTON_CHECK_ENBALE();
       buttonUpdate();
     }
-    if (WORK_MODE_USB ==  g_ucWorkMode ) {
+    if (WORK_MODE_USB == g_ucWorkMode) {
       // button acked - check buttons
       if (acked) {
         usbSleep(5);
@@ -79,13 +78,13 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
           break;
         }
         if (button.UpUp) {
-         vDISP_TurnPageUP();
+          vDISP_TurnPageUP();
         }
         if (button.DownUp) {
-         vDISP_TurnPageDOWN();
+          vDISP_TurnPageDOWN();
         }
       }
-  
+
       // check for Cancel / Initialize
       protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
       protectAbortedByInitialize =
@@ -95,13 +94,12 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
         result = false;
         break;
       }
-    }
-    else {
+    } else {
       // button acked - check buttons
-      if (acked||PBUTTON_CHECK_READY()) {
+      if (acked || PBUTTON_CHECK_READY()) {
         usbSleep(5);
-        if (WORK_MODE_USB ==  g_ucWorkMode ) {
-         //buttonUpdate();
+        if (WORK_MODE_USB == g_ucWorkMode) {
+          // buttonUpdate();
         }
         if (button.YesUp) {
           BUTTON_CHECK_CLEAR();
@@ -118,17 +116,17 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
           break;
         }
         if (button.UpUp) {
-         vDISP_TurnPageUP();
+          vDISP_TurnPageUP();
         }
         if (button.DownUp) {
-         vDISP_TurnPageDOWN();
+          vDISP_TurnPageDOWN();
         }
         memzero(&resp, sizeof(ButtonRequest));
         resp.has_code = true;
         resp.code = type;
         msg_write(MessageType_MessageType_ButtonRequest, &resp);
       }
-  
+
       // check for Cancel / Initialize
       protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
       protectAbortedByInitialize =
@@ -138,7 +136,6 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
         result = false;
         break;
       }
-                
     }
 
 #if DEBUG_LINK
@@ -304,8 +301,8 @@ bool protectChangePin(bool removal) {
       return false;
     }
     strlcpy(new_pin, pin, sizeof(new_pin));
-    
-    #if 0
+
+#if 0
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewSecond,
                      _("Please re-enter new PIN:"));
     if (pin == NULL) {
@@ -321,16 +318,15 @@ bool protectChangePin(bool removal) {
       fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
       return false;
     }
-    #else
-     layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-                       NULL, _("set new PIN?"), NULL,pin, NULL, NULL);
+#else
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, NULL,
+                      _("set new PIN?"), NULL, pin, NULL, NULL);
     if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       layoutHome();
       return false;
     }
-    #endif
-    
+#endif
   }
 
   bool ret = config_changePin(old_pin, new_pin);

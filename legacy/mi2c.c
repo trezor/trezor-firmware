@@ -20,13 +20,14 @@ static uint8_t ucXorCheck(uint8_t ucInputXor, uint8_t *pucSrc, uint16_t usLen) {
   return ucXor;
 }
 
-static uint8_t bMI2CDRV_ReadBytes(uint32_t i2c, uint8_t *res,uint16_t *pusOutLen) {
+static uint8_t bMI2CDRV_ReadBytes(uint32_t i2c, uint8_t *res,
+                                  uint16_t *pusOutLen) {
   uint8_t ucLenBuf[2], ucXor;
-  uint16_t i, usRevLen, usTimeout,usRealLen;
+  uint16_t i, usRevLen, usTimeout, usRealLen;
 
   ucXor = 0;
   i = 0;
-  usRealLen= 0;
+  usRealLen = 0;
   usTimeout = 0;
 
   ucLenBuf[0] = 0x00;
@@ -191,10 +192,10 @@ void vMI2CDRV_Init(void) {
  *master i2c rev
  */
 uint8_t bMI2CDRV_ReceiveData(uint8_t *pucStr, uint16_t *pusRevLen) {
-  if (*pusRevLen <  3 ) {
+  if (*pusRevLen < 3) {
     return false;
   }
-  if (false == bMI2CDRV_ReadBytes(MI2CX, pucStr,pusRevLen)) {
+  if (false == bMI2CDRV_ReadBytes(MI2CX, pucStr, pusRevLen)) {
     return false;
   }
 

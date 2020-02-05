@@ -26,70 +26,66 @@
 #include "bitmaps.h"
 #include "fonts.h"
 
-
 #define BLE_ADV_NAME "BiXin_abcd"
 #define BLE_ADV_NAME_LEN 10
 
-#define BLE_MAC_LEN     0x06
-#define BLE_NAME_LEN    0x0A
+#define BLE_MAC_LEN 0x06
+#define BLE_NAME_LEN 0x0A
 
-typedef struct BLE_DEVICE_INFO{
-    uint8_t ucBle_Mac[BLE_MAC_LEN];
-    uint8_t ucBle_Name[BLE_NAME_LEN+1];
-    uint8_t ucBle_Version[2];
+typedef struct BLE_DEVICE_INFO {
+  uint8_t ucBle_Mac[BLE_MAC_LEN];
+  uint8_t ucBle_Name[BLE_NAME_LEN + 1];
+  uint8_t ucBle_Version[2];
 
 } Ble_Info;
 
-typedef struct USB_DEVICE_INFO{
-    uint8_t ucUsb_lable[33];
-    uint8_t ucUsb_sn[13];
-    uint8_t ucfingerprint[33];
+typedef struct USB_DEVICE_INFO {
+  uint8_t ucUsb_lable[33];
+  uint8_t ucUsb_sn[13];
+  uint8_t ucfingerprint[33];
 } USB_Info;
-
 
 #define OLED_WIDTH 128
 #define OLED_HEIGHT 64
 #define OLED_BUFSIZE (OLED_WIDTH * OLED_HEIGHT / 8)
 
 // prompt info display
-#define DISP_NOT_ACTIVE 0x01  //Î´¼¤»î////Not Activated
-#define DISP_TOUCHPH 0x02     //ÐèÓëÊÖ»úÌùºÏ//It needs to touch the phone
-#define DISP_NFC_LINK 0x03    // NFCÁ¬½Ó//Connect by NFC
-#define DISP_USB_LINK 0x04    // USBÁ¬½Ó//Connect by USB
-#define DISP_COMPUTER_LINK 0x05  //Óë¼ÆËã»úÁ¬½Ó//Connect to a computer
+#define DISP_NOT_ACTIVE 0x01  //Î´ï¿½ï¿½ï¿½ï¿½////Not Activated
+#define DISP_TOUCHPH 0x02  //ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½//It needs to touch the phone
+#define DISP_NFC_LINK 0x03  // NFCï¿½ï¿½ï¿½ï¿½//Connect by NFC
+#define DISP_USB_LINK 0x04  // USBï¿½ï¿½ï¿½ï¿½//Connect by USB
+#define DISP_COMPUTER_LINK 0x05  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½//Connect to a computer
 #define DISP_INPUTPIN \
-  0x06  //°´ÕÕÓÒÍ¼ÌáÊ¾ÊäÈëPINÂë//Enter PIN code according to the prompts on the
+  0x06  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½PINï¿½ï¿½//Enter PIN code according to the prompts on the
         // right screen
 #define DISP_BUTTON_OK_RO_NO \
-  0x07  //°´ÏÂ OK È·ÈÏ£¬°´<È¡Ïû//Press OK to confirm, Press < to Cancel
-#define DISP_GEN_PRI_KEY 0x08  //ÕýÔÚÉú³ÉË½Ô¿...//Generating private key¡­
-#define DISP_ACTIVE_SUCCESS 0x09     //¼¤»î³É¹¦//Activated
-#define DISP_BOTTON_UP_OR_DOWN 0x0A  //ÉÏÏÂ·­Ò³²é¿´//Turn up or down to view
-#define DISP_SN 0x0B                 //ÐòÁÐºÅ//Serial NO.
-#define DISP_VERSION 0x0C            //¹Ì¼þ°æ±¾//Firmware version
-#define DISP_CONFIRM_PUB_KEY 0x0D    //È·ÈÏ¹«Ô¿//Confirm public key
-#define DISP_BOTTON_OK_SIGN 0x0E     //°´ÏÂOKÇ©Ãû//Press OK to sign
+  0x07  //ï¿½ï¿½ï¿½ï¿½ OK È·ï¿½Ï£ï¿½ï¿½ï¿½<È¡ï¿½ï¿½//Press OK to confirm, Press < to Cancel
+#define DISP_GEN_PRI_KEY 0x08  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë½Ô¿...//Generating private keyï¿½ï¿½
+#define DISP_ACTIVE_SUCCESS 0x09  //ï¿½ï¿½ï¿½ï¿½É¹ï¿½//Activated
+#define DISP_BOTTON_UP_OR_DOWN \
+  0x0A                     //ï¿½ï¿½ï¿½Â·ï¿½Ò³ï¿½é¿´//Turn up or down to view
+#define DISP_SN 0x0B       //ï¿½ï¿½ï¿½Ðºï¿½//Serial NO.
+#define DISP_VERSION 0x0C  //ï¿½Ì¼ï¿½ï¿½æ±¾//Firmware version
+#define DISP_CONFIRM_PUB_KEY 0x0D  //È·ï¿½Ï¹ï¿½Ô¿//Confirm public key
+#define DISP_BOTTON_OK_SIGN 0x0E   //ï¿½ï¿½ï¿½ï¿½OKÇ©ï¿½ï¿½//Press OK to sign
 #define DISP_SIGN_SUCCESS \
-  0x0F  //Ç©Ãû³É¹¦£¡ÇëÓëÊÖ»úÌùºÏ//Signed! Touch it to the phone closely
+  0x0F  //Ç©ï¿½ï¿½ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½//Signed! Touch it to the phone closely
 #define DISP_SIGN_PRESS_OK_HOME \
-  0x10  //Ç©ÃûÍê³É£¡°´OK·µ»ØÊ×Ò³//Signed! Press OK to return to homepage
+  0x10  //Ç©ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½OKï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò³//Signed! Press OK to return to homepage
 #define DISP_SIGN_SUCCESS_VIEW \
-  0x11  //Ç©Ãû³É¹¦£¡ÇëÔÚÊÖ»ú²é¿´½»Ò×//Signed! Please view transaction on your
+  0x11  //Ç©ï¿½ï¿½ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½é¿´ï¿½ï¿½ï¿½ï¿½//Signed!
+        // Please view transaction on your
         // phone
 #define DISP_UPDATGE_APP_GOING \
-  0x12  //ÕýÔÚÉý¼¶£¬Çë²»Òª¹Ø»úUpgrading, do not turn off
+  0x12  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë²»Òªï¿½Ø»ï¿½Upgrading, do not turn off
 #define DISP_UPDATGE_SUCCESS \
-  0x13  //¹Ì¼þÉý¼¶³É¹¦£¬°´OK·µ»ØÊ×Ò³//Firmware upgraded, press OK to return to
+  0x13  //ï¿½Ì¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½OKï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò³//Firmware upgraded, press OK to return to
         // homepage
-#define DISP_PRESSKEY_POWEROFF 0x14  //¹Ø»ú//power off
-#define DISP_BLE_NAME 0x15           //À¶ÑÀÃû³Æ
-
-
-
+#define DISP_PRESSKEY_POWEROFF 0x14  //ï¿½Ø»ï¿½//power off
+#define DISP_BLE_NAME 0x15           //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 extern Ble_Info g_ble_info;
 extern USB_Info g_usb_info;
-
 
 void oledInit(void);
 void oledClear(void);

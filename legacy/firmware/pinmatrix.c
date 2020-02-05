@@ -48,7 +48,7 @@ void pinmatrix_draw(const char *text) {
   for (int i = 0; i < 3; i++) {
     // 36 is the maximum pixels used for a pin matrix pixel row
     // but we use 56 pixels to add some extra
-   // oledSCAInside(12 + i * (h + pad), 12 + i * (h + pad) + h - 1, 56, 38,
+    // oledSCAInside(12 + i * (h + pad), 12 + i * (h + pad) + h - 1, 56, 38,
     //              OLED_WIDTH - 38);
   }
   oledRefresh();

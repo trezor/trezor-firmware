@@ -54,8 +54,6 @@ static const uint8_t * const pubkey_Bixin[PUBKEYS] = {
 
 };
 
-
-
 #define SIGNATURES 3
 
 #define FLASH_META_START 0x08008000
@@ -110,27 +108,27 @@ int signatures_old_ok(void) {
                                (const uint8_t *)FLASH_META_SIG1,
                                hash)) {  // failure
     if (0 != ecdsa_verify_digest(&secp256k1, pubkey_Bixin[sigindex1 - 1],
-                               (const uint8_t *)FLASH_META_SIG1,
-                                hash)) {  // failure
-        return SIG_FAIL;
+                                 (const uint8_t *)FLASH_META_SIG1,
+                                 hash)) {  // failure
+      return SIG_FAIL;
     }
   }
   if (0 != ecdsa_verify_digest(&secp256k1, pubkey[sigindex2 - 1],
                                (const uint8_t *)FLASH_META_SIG2,
                                hash)) {  // failure
     if (0 != ecdsa_verify_digest(&secp256k1, pubkey_Bixin[sigindex2 - 1],
-                               (const uint8_t *)FLASH_META_SIG2,
-                               hash)) {  // failure
-        return SIG_FAIL;
+                                 (const uint8_t *)FLASH_META_SIG2,
+                                 hash)) {  // failure
+      return SIG_FAIL;
     }
   }
   if (0 != ecdsa_verify_digest(&secp256k1, pubkey[sigindex3 - 1],
                                (const uint8_t *)FLASH_META_SIG3,
                                hash)) {  // failture
     if (0 != ecdsa_verify_digest(&secp256k1, pubkey_Bixin[sigindex3 - 1],
-                               (const uint8_t *)FLASH_META_SIG3,
-                               hash)) {  // failture
-        return SIG_FAIL;
+                                 (const uint8_t *)FLASH_META_SIG3,
+                                 hash)) {  // failture
+      return SIG_FAIL;
     }
   }
 

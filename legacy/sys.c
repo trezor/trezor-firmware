@@ -1,33 +1,28 @@
 
 #include "sys.h"
-#include <string.h>
 #include <libopencm3/stm32/gpio.h>
+#include <string.h>
 #include "bitmaps.h"
 #include "si2c.h"
-
-
 
 uint8_t g_ucWorkMode = 0;
 uint8_t g_ucFlag = 0;
 uint8_t s_usPower_Button_Status = POWER_BUTTON_UP;
 
-extern void vDISP_DeviceInfo(void) ;
+extern void vDISP_DeviceInfo(void);
 
 /*
- * ble mac get ble name 
+ * ble mac get ble name
  */
- void vCalu_BleName(uint8_t * pucMac,uint8_t * pucName)
- {
-    uint8_t i;
-    
-    memcpy(pucName,BLE_ADV_NAME,BLE_ADV_NAME_LEN);
-    
-    for(i = 0;i < 4;i++)
-    {
-        pucName[BLE_ADV_NAME_LEN - 4+i] +=pucMac[i] %20;    
-    }
- }
+void vCalu_BleName(uint8_t *pucMac, uint8_t *pucName) {
+  uint8_t i;
 
+  memcpy(pucName, BLE_ADV_NAME, BLE_ADV_NAME_LEN);
+
+  for (i = 0; i < 4; i++) {
+    pucName[BLE_ADV_NAME_LEN - 4 + i] += pucMac[i] % 20;
+  }
+}
 
 /*
  * display ble message

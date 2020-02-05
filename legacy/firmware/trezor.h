@@ -35,6 +35,6 @@
 #endif
 
 /* Screen timeout */
-//extern uint32_t system_millis_lock_start;
+// extern uint32_t system_millis_lock_start;
 
 #endif
