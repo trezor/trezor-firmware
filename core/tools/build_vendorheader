@@ -6,6 +6,15 @@ import click
 from trezorlib import firmware
 
 
+def minimum_header_len(spec):
+    spec = spec.copy()
+    spec["header_len"] = 512000
+    reparsed = firmware.VendorHeader.parse(firmware.VendorHeader.build(spec))
+    data_length = reparsed._end_offset - reparsed._start_offset
+    # data length + 65 for signatures, rounded up to nearest multiple of 512
+    return (data_length + 65 + 511) // 512 * 512
+
+
 @click.command()
 @click.argument("specfile", type=click.File("r"))
 @click.argument("image", type=click.File("rb"))
@@ -16,6 +25,19 @@ def build_vendorheader(specfile, image, outfile):
     spec["image"] = firmware.Toif.parse(image.read())
     spec["sigmask"] = 0
     spec["signature"] = b"\x00" * 64
+
+    min_length = minimum_header_len(spec)
+    if "header_len" not in spec:
+        spec["header_len"] = min_length
+    elif spec["header_len"] < min_length:
+        raise click.ClickException(
+            f"Specified header_len {spec['header_len']} too low. "
+            f"Minimum allowable value is {min_length}."
+        )
+
+    if spec["header_len"] % 512 != 0:
+        raise click.ClickException("Invalid header_len: must be a multiple of 512")
+
     outfile.write(firmware.VendorHeader.build(spec))
 
 

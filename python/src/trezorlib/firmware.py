@@ -146,7 +146,7 @@ VendorTrust = c.Transformed(c.BitStruct(
 VendorHeader = c.Struct(
     "_start_offset" / c.Tell,
     "magic" / c.Const(b"TRZV"),
-    "_header_len" / c.Padding(4),
+    "header_len" / c.Int32ul,
     "expiry" / c.Int32ul,
     "version" / c.Struct(
         "major" / c.Int8ul,
@@ -159,17 +159,14 @@ VendorHeader = c.Struct(
     "pubkeys" / c.Bytes(32)[c.this.sig_n],
     "text" / c.Aligned(4, c.PascalString(c.Int8ul, "utf-8")),
     "image" / Toif,
-    "_data_end_offset" / c.Tell,
+    "_end_offset" / c.Tell,
 
-    c.Padding(-(c.this._data_end_offset + 65) % 512),
+    "_min_header_len" / c.Check(c.this.header_len > (c.this._end_offset - c.this._start_offset) + 65),
+    "_header_len_aligned" / c.Check(c.this.header_len % 512 == 0),
+
+    c.Padding(c.this.header_len - c.this._end_offset + c.this._start_offset - 65),
     "sigmask" / c.Byte,
     "signature" / c.Bytes(64),
-
-    "_end_offset" / c.Tell,
-    "header_len" / c.Pointer(
-        c.this._start_offset + 4,
-        c.Rebuild(c.Int32ul, c.this._end_offset - c.this._start_offset)
-    ),
 )
 
 
