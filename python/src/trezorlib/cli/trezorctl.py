@@ -33,6 +33,7 @@ from . import (
     cardano,
     cosi,
     crypto,
+    debug,
     device,
     eos,
     ethereum,
@@ -59,6 +60,7 @@ COMMAND_ALIASES = {
     "sd-protect": device.sd_protect,
     "load-device": device.load,
     "self-test": device.self_test,
+    "show-text": debug.show_text,
     "get-entropy": crypto.get_entropy,
     "encrypt-keyvalue": crypto.encrypt_keyvalue,
     "decrypt-keyvalue": crypto.decrypt_keyvalue,
@@ -296,7 +298,7 @@ cli.add_command(stellar.cli)
 cli.add_command(tezos.cli)
 
 cli.add_command(firmware.firmware_update)
-
+cli.add_command(debug.cli)
 
 #
 # Main

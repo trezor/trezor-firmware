@@ -49,6 +49,8 @@ from .DebugLinkMemoryRead import DebugLinkMemoryRead
 from .DebugLinkMemoryWrite import DebugLinkMemoryWrite
 from .DebugLinkRecordScreen import DebugLinkRecordScreen
 from .DebugLinkReseedRandom import DebugLinkReseedRandom
+from .DebugLinkShowText import DebugLinkShowText
+from .DebugLinkShowTextItem import DebugLinkShowTextItem
 from .DebugLinkState import DebugLinkState
 from .DebugLinkStop import DebugLinkStop
 from .DebugMoneroDiagAck import DebugMoneroDiagAck
@@ -270,6 +272,7 @@ from . import BinanceOrderType
 from . import BinanceTimeInForce
 from . import ButtonRequestType
 from . import Capability
+from . import DebugLinkShowTextStyle
 from . import DebugSwipeDirection
 from . import FailureType
 from . import InputScriptType

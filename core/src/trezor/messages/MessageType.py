@@ -76,6 +76,7 @@ DebugLinkFlashErase = 113  # type: Literal[113]
 DebugLinkLayout = 9001  # type: Literal[9001]
 DebugLinkReseedRandom = 9002  # type: Literal[9002]
 DebugLinkRecordScreen = 9003  # type: Literal[9003]
+DebugLinkShowText = 9004  # type: Literal[9004]
 if not utils.BITCOIN_ONLY:
     EthereumGetPublicKey = 450  # type: Literal[450]
     EthereumPublicKey = 451  # type: Literal[451]
