@@ -23,18 +23,13 @@
 #include <stdint.h>
 #include "supervise.h"
 
-extern volatile uint32_t system_millis_poweroff_start;
 extern uint8_t ucTimeFlag;
-extern uint8_t g_ucLanguageFlag;
 
 #define autoPowerOffMsDefault (90 * 1000U)
 
 #define POWER_OFF_TIMER_ENBALE() (ucTimeFlag |= 0x01)
 #define POWER_OFF_TIMER_CLEAR() (ucTimeFlag &= 0xFE)
 #define POWER_OFF_TIMER_READY() (ucTimeFlag & 0x01)
-
-void delay_time(uint32_t uiDelay_Ms);
-void delay_us(uint32_t uiDelay_us);
 
 void timer_init(void);
 

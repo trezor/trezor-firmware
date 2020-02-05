@@ -102,6 +102,8 @@
 
 extern uint8_t g_ucFlag;
 extern uint8_t g_ucWorkMode;
+extern uint8_t g_ucLanguageFlag;
+extern volatile uint32_t system_millis_poweroff_start;
 
 //#define POWER_OFF_TIMER_ENBALE()    (g_ucFlag |= 0x01)
 //#define POWER_OFF_TIMER_CLEAR()     (g_ucFlag &= 0xFE)
@@ -110,6 +112,9 @@ extern uint8_t g_ucWorkMode;
 #define BUTTON_CHECK_ENBALE() (g_ucFlag |= 0x02)
 #define BUTTON_CHECK_CLEAR() (g_ucFlag &= 0xFD)
 #define PBUTTON_CHECK_READY() (g_ucFlag & 0x02)
+
+void delay_time(uint32_t uiDelay_Ms);
+void delay_us(uint32_t uiDelay_us);
 
 void vCalu_BleName(uint8_t* pucMac, uint8_t* pucName);
 void vCheckMode(void);

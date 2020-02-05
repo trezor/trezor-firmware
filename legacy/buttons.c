@@ -18,6 +18,7 @@
  */
 
 #include "buttons.h"
+#include "sys.h"
 #include "timer.h"
 
 struct buttonState button;

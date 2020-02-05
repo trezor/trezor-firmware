@@ -302,7 +302,16 @@ bool protectChangePin(bool removal) {
     }
     strlcpy(new_pin, pin, sizeof(new_pin));
 
-#if 0
+#if !EMULATOR
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                      _("Please confirm PIN"), NULL, NULL, new_pin, NULL, NULL);
+
+    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      layoutHome();
+      return false;
+    }
+#else
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewSecond,
                      _("Please re-enter new PIN:"));
     if (pin == NULL) {
@@ -311,19 +320,10 @@ bool protectChangePin(bool removal) {
       fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
       return false;
     }
-
     if (strncmp(new_pin, pin, sizeof(new_pin)) != 0) {
       memzero(old_pin, sizeof(old_pin));
       memzero(new_pin, sizeof(new_pin));
       fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
-      return false;
-    }
-#else
-    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, NULL,
-                      _("set new PIN?"), NULL, pin, NULL, NULL);
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-      layoutHome();
       return false;
     }
 #endif

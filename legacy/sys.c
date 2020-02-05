@@ -8,6 +8,26 @@
 uint8_t g_ucWorkMode = 0;
 uint8_t g_ucFlag = 0;
 uint8_t s_usPower_Button_Status = POWER_BUTTON_UP;
+uint8_t g_ucLanguageFlag = 0;
+
+/*poweroff */
+volatile uint32_t system_millis_poweroff_start;
+
+/*
+ * delay time
+ */
+void delay_time(uint32_t uiDelay_Ms) {
+  uint32_t uiTimeout = uiDelay_Ms * 30000;
+  while (uiTimeout--) {
+    __asm__("nop");
+  }
+}
+void delay_us(uint32_t uiDelay_us) {
+  uint32_t uiTimeout = uiDelay_us * 30;
+  while (uiTimeout--) {
+    __asm__("nop");
+  }
+}
 
 extern void vDISP_DeviceInfo(void);
 

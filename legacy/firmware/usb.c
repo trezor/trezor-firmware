@@ -445,8 +445,10 @@ static void vBle_NFC_RX_Data(uint8_t *pucInputBuf) {
 
       } else {
         g_usI2cRevLen = usLen;
+#if U2F_ENABLED
         u2fhid_read_start(
             (const U2FHID_FRAME *)(void *)(pucInputBuf + DATA_HEAD_LEN));
+#endif
       }
 
       break;
@@ -474,11 +476,13 @@ void usb_ble_nfc_poll(void) {
       vSI2CDRV_SendResponse(msg_out, usLen);
       msg_out_end = 0;
     }
+#if U2F_ENABLED
     if (u2f_out_end) {
       usLen = u2f_out_end & 0xFFFF;
       vSI2CDRV_SendResponse(u2f_out_packets[0], usLen);
       u2f_out_end = 0;
     }
+#endif
     memset(g_ucI2cRevBuf, 0x00, sizeof(g_ucI2cRevBuf));
     if (true == bSI2CDRV_ReceiveData(g_ucI2cRevBuf)) {
       vBle_NFC_RX_Data(g_ucI2cRevBuf);
@@ -487,12 +491,12 @@ void usb_ble_nfc_poll(void) {
 }
 
 void usbPoll(void) {
+  static const uint8_t *data;
   if (WORK_MODE_USB == g_ucWorkMode) {
     if (usbd_dev == NULL) {
       return;
     }
 
-    static const uint8_t *data;
     // poll read buffer
     usbd_poll(usbd_dev);
     // write pending data

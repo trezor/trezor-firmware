@@ -19,7 +19,7 @@
 
 #include "timer.h"
 #include "buttons.h"
-//#include "oled.h"
+#include "sys.h"
 
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/cm3/vector.h>
@@ -28,26 +28,6 @@
 /* 1 tick = 1 ms */
 extern volatile uint32_t system_millis;
 uint8_t ucTimeFlag;
-uint8_t g_ucLanguageFlag = 0;
-
-/*poweroff */
-volatile uint32_t system_millis_poweroff_start;
-
-/*
- * delay time
- */
-void delay_time(uint32_t uiDelay_Ms) {
-  uint32_t uiTimeout = uiDelay_Ms * 30000;
-  while (uiTimeout--) {
-    __asm__("nop");
-  }
-}
-void delay_us(uint32_t uiDelay_us) {
-  uint32_t uiTimeout = uiDelay_us * 30;
-  while (uiTimeout--) {
-    __asm__("nop");
-  }
-}
 
 /*
  * Initialise the Cortex-M3 SysTick timer

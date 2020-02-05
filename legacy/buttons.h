@@ -62,10 +62,11 @@ bool hasbutton(void);
 #define BTN_PIN_DOWN GPIO5
 #endif
 
+#if !EMULATOR
 #define GPIO_POWER_ON GPIO4
-
 // power control
 #define POWER_ON() (gpio_set(GPIOC, GPIO_POWER_ON))
 #define POWER_OFF() (gpio_clear(GPIOC, GPIO_POWER_ON))
+#endif
 
 #endif

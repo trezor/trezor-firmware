@@ -44,6 +44,9 @@ static uint16_t s_usCurrentCount;
 
 static uint16_t s_uiShowLength;
 
+/* Screen timeout */
+uint32_t system_millis_lock_start = 0;
+
 #define BLE_NAME "Ble name:"
 #define BLE_MAC "Ble mac:"
 #define BLE_VER "Ble version:"
@@ -355,7 +358,7 @@ void layoutHome(void) {
   oledRefresh();
 
   // Reset lock screen timeout
-  // system_millis_lock_start = timer_ms();
+  system_millis_lock_start = timer_ms();
 }
 
 static void render_address_dialog(const CoinInfo *coin, const char *address,
@@ -1174,6 +1177,15 @@ void vDISP_DeviceInfo(void) {
         }
         vGet_DeviceInfo(s_usCurrentCount);
       }
+    }
+  }
+  // if homescreen is shown for too long
+  if (layoutLast == layoutHome) {
+    if ((timer_ms() - system_millis_lock_start) >=
+        config_getAutoLockDelayMs()) {
+      // lock the screen
+      session_clear(true);
+      layoutScreensaver();
     }
   }
 }

@@ -196,11 +196,14 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
 
     reader = &readbuffer;
     u2fhid_init_cmd(f);
-  } else {
+  }
+#if !EMULATOR
+  else {
     reader = &readbuffer;
     memcpy(reader->buf, (uint8_t *)f, g_usI2cRevLen);
     reader->len = g_usI2cRevLen;
   }
+#endif
 
   usbTiny(1);
   for (;;) {
@@ -242,10 +245,12 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
           send_u2fhid_error(cid, ERR_INVALID_CMD);
           break;
       }
-    } else {
+    }
+#if !EMULATOR
+    else {
       u2fhid_msg((APDU *)reader->buf, reader->len);
     }
-
+#endif
     // wait for next commmand/ button press
     reader->cmd = 0;
     reader->seq = 255;

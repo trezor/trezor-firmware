@@ -26,6 +26,7 @@
 #include "memzero.h"
 #include "oled.h"
 #include "prompt.h"
+#include "sys.h"
 #include "util.h"
 
 #define OLED_SETCONTRAST 0x81
