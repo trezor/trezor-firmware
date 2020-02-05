@@ -45,6 +45,8 @@ class NEM2SignTx(p.MessageType):
         cosigning: str = None,
         mosaic_definition: NEM2MosaicDefinitionTransaction = None,
         mosaic_supply: NEM2MosaicSupplyChangeTransaction = None,
+        namespace_registration: NEM2NamespaceRegistrationTransaction = None,
+        address_alias: NEM2AddressAliasTransaction = None,
         aggregate: NEM2AggregateTransaction = None,
         namespace_metadata: NEM2NamespaceMetadataTransaction = None,
         mosaic_metadata: NEM2MosaicMetadataTransaction = None,
@@ -69,6 +71,8 @@ class NEM2SignTx(p.MessageType):
         self.cosigning = cosigning
         self.mosaic_definition = mosaic_definition
         self.mosaic_supply = mosaic_supply
+        self.namespace_registration = namespace_registration
+        self.address_alias = address_alias
         self.aggregate = aggregate
         self.namespace_metadata = namespace_metadata
         self.mosaic_metadata = mosaic_metadata

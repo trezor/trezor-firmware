@@ -29,7 +29,7 @@ class NEM2EmbeddedTransactionCommon(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.EnumType("NEM2EntityType", (0, 16724, 16717, 16973, 16718, 16974, 16961, 16705, 17220, 16964, 16708, 17230, 16712, 16722, 16978, 16725, 16720, 16976, 17232, 16716, 16721, 16977)), 0),
+            1: ('type', p.EnumType("NEM2EntityType", (0, 16724, 16717, 16973, 16961, 16705, 17220, 16964, 16708, 17230, 16712, 16722, 16978, 16725, 16720, 16976, 17232, 16716, 16721, 16977, 16718, 16974)), 0),
             2: ('network_type', p.EnumType("NEM2NetworkType", (104, 152, 96, 144)), 0),
             3: ('version', p.UVarintType, 0),  # default=1
             4: ('public_key', p.UnicodeType, 0),

@@ -1,7 +1,7 @@
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
-from trezor.utils import format_amount
+from trezor.strings import format_amount
 
 from .helpers import NEM2_MAX_DIVISIBILITY
 

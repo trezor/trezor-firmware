@@ -27,6 +27,7 @@ async def ask_namespace_registration(
     namespace_registration: NEM2NamespaceRegistrationTransaction,
     embedded=False
 ):
+    properties = []
     # confirm name and id
     t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
     t.bold("Id:")
@@ -65,6 +66,7 @@ async def ask_address_alias(
     address_alias: NEM2NamespaceRegistrationTransaction,
     embedded=False
 ):
+    properties = []
     # confirm namespace id
     t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
     t.bold("Namspace Id:")

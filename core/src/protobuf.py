@@ -131,6 +131,7 @@ class EnumType:
         if fvalue in self.enum_values:
             return fvalue
         else:
+            print("INVALID", fvalue, "IN", self.enum_values)
             raise TypeError("Invalid enum value")
 
 

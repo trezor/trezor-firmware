@@ -10,7 +10,7 @@ from ..helpers import (
 )
 
 from trezor.ui.text import Text
-from trezor.utils import format_amount
+from trezor.strings import format_amount
 from trezor.ui.scroll import Paginated
 from ubinascii import unhexlify
 
@@ -42,7 +42,7 @@ async def ask_metadata(
     if common.type == NEM2_TRANSACTION_TYPE_MOSAIC_METADATA:
         t.bold("Mosaic Id:")
         t.normal(metadata.target_mosaic_id.upper())
-    
+
     t.bold("Metadata Key:")
     t.normal(metadata.scoped_metadata_key)
     properties.append(t)

@@ -7,7 +7,7 @@ from trezor.messages.NEM2TransferTransaction import NEM2TransferTransaction
 
 from trezor.ui.text import Text
 from trezor.ui.scroll import Paginated
-from trezor.utils import format_amount
+from trezor.strings import format_amount
 
 from ..helpers import (
     NEM2_MAX_DIVISIBILITY,
@@ -87,6 +87,10 @@ def get_mosaic_confirmation_sections(
         msg.bold("%s raw units" % mosaic_amount)
         msg.normal("of")
         msg.bold("%s.%s" % (mosaic.id, mosaic.id))
+        mosaic_confirmation_sections.append(msg)
+
+    return mosaic_confirmation_sections
+
 
 def _get_xem_amount(transfer: NEM2TransferTransaction):
     for mosaic in transfer.mosaics:

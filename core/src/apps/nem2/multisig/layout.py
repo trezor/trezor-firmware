@@ -7,7 +7,7 @@ from trezor.messages import (
     NEM2MultisigModificationTransaction,
 )
 from trezor.ui.text import Text
-from trezor.utils import format_amount
+from trezor.strings import format_amount
 from trezor.ui.scroll import Paginated
 from ubinascii import unhexlify
 

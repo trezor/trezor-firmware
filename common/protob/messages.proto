@@ -257,5 +257,8 @@ enum MessageType {
     MessageType_NEM2SignTx = 806 [(wire_in) = true];
     MessageType_NEM2SignedTx = 807 [(wire_out) = true];
     MessageType_NEM2CosignatureSignedTx = 808 [(wire_out) = true];
-
+    MessageType_NEM2EncryptMessage = 809 [(wire_in) = true];
+    MessageType_NEM2EncryptedMessage = 810 [(wire_out) = true];
+    MessageType_NEM2DecryptMessage = 811 [(wire_in) = true];
+    MessageType_NEM2DecryptedMessage = 812 [(wire_out) = true];
 }

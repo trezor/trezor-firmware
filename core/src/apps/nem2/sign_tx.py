@@ -44,7 +44,6 @@ def is_aggregate_transaction(tx_type):
         tx_type == NEM2_TRANSACTION_TYPE_AGGREGATE_COMPLETE)
 
 def get_signing_bytes(payload_buffer_without_header, generation_hash_bytes, tx_type):
-    print('payload_buffer_without_header', hexlify(payload_buffer_without_header))
     if is_aggregate_transaction(tx_type):
         return generation_hash_bytes + payload_buffer_without_header[:52]
     return generation_hash_bytes + payload_buffer_without_header

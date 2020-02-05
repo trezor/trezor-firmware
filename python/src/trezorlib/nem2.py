@@ -23,6 +23,8 @@ TYPE_TRANSACTION_TRANSFER = 0x4154
 TYPE_MULTISIG_SIGNATURE = 0x1002
 TYPE_MOSAIC_DEFINITION = 0x414D
 TYPE_MOSAIC_SUPPLY_CHANGE = 0x424D
+TYPE_AGGREGATE_BONDED = 0x4241
+TYPE_AGGREGATE_COMPLETE = 0x4141
 TYPE_NAMESPACE_REGISTRATION = 0x414E
 TYPE_ADDRESS_ALIAS = 0x424E
 TYPE_NAMESPACE_METADATA = 0x4344
@@ -52,7 +54,7 @@ MOSAIC_SUPPLY_CHANGE_ACTION_DECREASE = 0x00
 SECRET_LOCK_SHA3_256 = 0x00
 SECRET_LOCK_KECCAK_256 = 0x01
 SECRET_LOCK_HASH_160 = 0x02
-ECRET_LOCK_HASH_256 = 0x03
+SECRET_LOCK_HASH_256 = 0x03
 
 NETWORK_TYPE_MIJIN_TEST = 0x90
 NETWORK_TYPE_MIJIN = 0x60
@@ -326,6 +328,8 @@ def fill_transaction_by_type(msg, transaction):
         msg.mosaic_definition = create_mosaic_definition(transaction)
     if transaction["type"] == TYPE_MOSAIC_SUPPLY_CHANGE:
         msg.mosaic_supply = create_mosaic_supply(transaction)
+    if transaction["type"] == TYPE_AGGREGATE_BONDED or transaction["type"] == TYPE_AGGREGATE_COMPLETE:
+        msg.aggregate = create_aggregate(transaction)
     if transaction["type"] == TYPE_NAMESPACE_REGISTRATION:
         msg.namespace_registration = create_namespace_registration(transaction)
     if transaction["type"] == TYPE_MOSAIC_ALIAS:
