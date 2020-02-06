@@ -56,7 +56,7 @@ message LiskSignTx {
      */
     message LiskTransactionCommon {
         optional LiskTransactionType type = 1;
-        optional uint64 amount = 2 [default=0];
+        optional uint64 amount = 2;
         optional uint64 fee = 3;
         optional string recipient_id = 4;
         optional bytes sender_public_key = 5;
