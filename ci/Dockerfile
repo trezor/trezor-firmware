@@ -57,6 +57,15 @@ RUN if [ "${FULLDEPS_TESTING}" = "1" ]; then \
         cd Python-${PYTHON38VER}${PYTHONSUBVER}/ && ./configure && make && make install ; \
     fi
 
+# remove symlinks to newly installed pythons
+RUN cd /usr/local/bin; \
+    rm -f 2to3; \
+    rm -f python3; \
+    rm -f python3-config; \
+    rm -f pydoc3; \
+    rm -f pip3; \
+    rm -f pyvenv;
+
 # install dependencies from toolchain source build
 
 RUN if [ "${TOOLCHAIN_FLAVOR}" = "src" ]; then \

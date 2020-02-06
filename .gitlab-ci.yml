@@ -30,7 +30,7 @@ stages:
   - deploy
 
 before_script:
-  - command -v pipenv >/dev/null && pipenv sync
+  - command -v pipenv >/dev/null && pipenv sync --python=/usr/bin/python3
 
 .core_job:
   only:
