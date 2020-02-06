@@ -90,14 +90,19 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
 
 
 async def backup_slip39_basic(
-    ctx: wire.Context, encrypted_master_secret: bytes
+    ctx: wire.Context, encrypted_master_secret: bytes, delayed_backup=False
 ) -> None:
-    # get number of shares
     await layout.slip39_show_checklist(ctx, 0, BackupType.Slip39_Basic)
+
+    if delayed_backup:
+        storage.device.set_unfinished_backup(True)
+        storage.device.set_backed_up()
+
+    # get number of shares
     shares_count = await layout.slip39_prompt_number_of_shares(ctx)
 
-    # get threshold
     await layout.slip39_show_checklist(ctx, 1, BackupType.Slip39_Basic)
+    # get threshold
     threshold = await layout.slip39_prompt_threshold(ctx, shares_count)
 
     # generate the mnemonics
@@ -115,10 +120,15 @@ async def backup_slip39_basic(
 
 
 async def backup_slip39_advanced(
-    ctx: wire.Context, encrypted_master_secret: bytes
+    ctx: wire.Context, encrypted_master_secret: bytes, delayed_backup=False
 ) -> None:
-    # get number of groups
     await layout.slip39_show_checklist(ctx, 0, BackupType.Slip39_Advanced)
+
+    if delayed_backup:
+        storage.device.set_unfinished_backup(True)
+        storage.device.set_backed_up()
+
+    # get number of groups
     groups_count = await layout.slip39_advanced_prompt_number_of_groups(ctx)
 
     # get group threshold
@@ -183,11 +193,17 @@ def _compute_secret_from_entropy(
 
 
 async def backup_seed(
-    ctx: wire.Context, backup_type: BackupType, mnemonic_secret: bytes
+    ctx: wire.Context,
+    backup_type: BackupType,
+    mnemonic_secret: bytes,
+    delayed_backup=False,
 ):
+    print(delayed_backup)
     if backup_type == BackupType.Slip39_Basic:
-        await backup_slip39_basic(ctx, mnemonic_secret)
+        await backup_slip39_basic(ctx, mnemonic_secret, delayed_backup)
     elif backup_type == BackupType.Slip39_Advanced:
-        await backup_slip39_advanced(ctx, mnemonic_secret)
+        await backup_slip39_advanced(ctx, mnemonic_secret, delayed_backup)
     else:
-        await layout.bip39_show_and_confirm_mnemonic(ctx, mnemonic_secret.decode())
+        await layout.bip39_show_and_confirm_mnemonic(
+            ctx, mnemonic_secret.decode(), delayed_backup
+        )

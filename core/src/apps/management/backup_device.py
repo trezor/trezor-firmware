@@ -15,10 +15,7 @@ async def backup_device(ctx, msg):
 
     mnemonic_secret, mnemonic_type = mnemonic.get()
 
-    storage.device.set_unfinished_backup(True)
-    storage.device.set_backed_up()
-
-    await backup_seed(ctx, mnemonic_type, mnemonic_secret)
+    await backup_seed(ctx, mnemonic_type, mnemonic_secret, delayed_backup=True)
 
     storage.device.set_unfinished_backup(False)
 

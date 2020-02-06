@@ -279,16 +279,31 @@ def test_interrupt_backup_fails(client):
     # start backup
     client.call_raw(messages.BackupDevice())
 
-    # interupt backup by sending initialize
+    # interrupt backup by sending initialize
     client.init_device()
 
-    # check that device state is as expected
+    # we have not confirmed the first screen so we do not forbid the backup yet
+    assert client.features.initialized is True
+    assert client.features.needs_backup is True
+    assert client.features.unfinished_backup is False
+    assert client.features.no_backup is False
+
+    # start backup
+    client.call_raw(messages.BackupDevice())
+    # confirm
+    client.debug.press_yes()
+    client.call_raw(messages.ButtonAck())
+
+    # interrupt backup by sending initialize
+    client.init_device()
+
+    # we should not allow backup anymore
     assert client.features.initialized is True
     assert client.features.needs_backup is False
     assert client.features.unfinished_backup is True
     assert client.features.no_backup is False
 
-    # Second attempt at backup should fail
+    # second attempt at backup should fail
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
         device.backup(client)
 

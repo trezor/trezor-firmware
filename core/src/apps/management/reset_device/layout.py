@@ -1,5 +1,6 @@
 import ubinascii
 
+import storage.device
 from trezor import ui, utils
 from trezor.crypto import random
 from trezor.messages import BackupType, ButtonRequestType
@@ -269,9 +270,13 @@ async def show_backup_success(ctx):
 # ===
 
 
-async def bip39_show_and_confirm_mnemonic(ctx, mnemonic: str):
+async def bip39_show_and_confirm_mnemonic(ctx, mnemonic: str, delayed_backup=False):
     # warn user about mnemonic safety
     await show_backup_warning(ctx)
+
+    if delayed_backup:
+        storage.device.set_unfinished_backup(True)
+        storage.device.set_backed_up()
 
     words = mnemonic.split()
 
