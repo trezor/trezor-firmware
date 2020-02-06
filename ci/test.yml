@@ -112,19 +112,13 @@ core unix monero test:
   <<: *only_changes_core
   dependencies:
     - core unix frozen debug build
-  variables:
-    TREZOR_PROFILING: 1
   script:
     - cd core
     - pipenv run make test_emu_monero
-    - sync
-    - sleep 1
-    - mv ./src/.coverage .coverage.test_emu_monero
   artifacts:
     name: core-unix-monero-test
     paths:
       - tests/trezor.log
-      - core/.coverage.*
     expire_in: 1 week
     when: always
 
