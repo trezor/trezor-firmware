@@ -3,13 +3,42 @@ import storage.device
 import storage.sd_salt
 from trezor import config, io, log, loop, res, ui, utils
 from trezor.pin import pin_to_int, show_pin_timeout
+from trezor.ui.confirm import HoldToConfirm
+from trezor.ui.text import Text
 
 from apps.common.request_pin import PinCancelled, request_pin
 from apps.common.sd_salt import SdProtectCancelled, request_sd_salt
 
 
+async def assert_sdcard() -> None:
+    sd = io.SDCard()
+    if not sd.present():
+        return
+
+    sd.power(True)
+    fs = io.FatFS()
+    try:
+        fs.mount()
+    except OSError:
+        text = Text("SD card", ui.ICON_WRONG, ui.RED)
+        text.normal("Unrecognized filesystem")
+        text.normal("found. Unplug the device")
+        text.normal("and remove the card or")
+        text.normal("you can format the card")
+        text.normal("losing all the data on it.")
+        dialog = HoldToConfirm(text, confirm="Format SD card")
+        await dialog
+        fs.mkfs()
+        fs.setlabel("TREZOR")
+    else:
+        fs.unmount()
+    sd.power(False)
+
+
 async def bootscreen() -> None:
     ui.display.orientation(storage.device.get_rotation())
+
+    await assert_sdcard()
 
     while True:
         try:
@@ -67,19 +96,6 @@ async def lockscreen() -> None:
 
     await ui.click()
 
-
-if utils.EMULATOR:
-    # Ensure the emulated SD card is FAT32 formatted.
-    sd = io.SDCard()
-    sd.power(True)
-    fs = io.FatFS()
-    try:
-        fs.mount()
-    except OSError:
-        fs.mkfs()
-    else:
-        fs.unmount()
-    sd.power(False)
 
 ui.display.backlight(ui.BACKLIGHT_NONE)
 ui.backlight_fade(ui.BACKLIGHT_NORMAL)
