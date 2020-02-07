@@ -256,7 +256,7 @@ class HoldToConfirm(ui.Layout):
         # Loader has either started growing, or returned to the 0-position.
         # In the first case we need to clear the content leftovers, in the latter
         # we need to render the content again.
-        ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT - 60, ui.BG)
+        ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT - 58, ui.BG)
         self.content.dispatch(ui.REPAINT, 0, 0)
 
     def _on_click(self) -> None:
