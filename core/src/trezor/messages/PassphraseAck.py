@@ -25,5 +25,5 @@ class PassphraseAck(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('passphrase', p.UnicodeType, 0),
-            2: ('on_device', p.BoolType, 0),
+            3: ('on_device', p.BoolType, 0),
         }
