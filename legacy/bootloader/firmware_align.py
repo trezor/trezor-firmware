@@ -2,7 +2,7 @@
 import os
 import sys
 
-TOTALSIZE = 32768
+TOTALSIZE = 65538
 MAXSIZE = TOTALSIZE - 32
 
 fn = sys.argv[1]
