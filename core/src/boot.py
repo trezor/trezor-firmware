@@ -1,7 +1,7 @@
 import storage
 import storage.device
 import storage.sd_salt
-from trezor import config, io, log, loop, res, ui, utils
+from trezor import config, log, loop, res, ui, utils
 from trezor.pin import pin_to_int, show_pin_timeout
 
 from apps.common.request_pin import PinCancelled, request_pin
@@ -67,19 +67,6 @@ async def lockscreen() -> None:
 
     await ui.click()
 
-
-if utils.EMULATOR:
-    # Ensure the emulated SD card is FAT32 formatted.
-    sd = io.SDCard()
-    sd.power(True)
-    fs = io.FatFS()
-    try:
-        fs.mount()
-    except OSError:
-        fs.mkfs()
-    else:
-        fs.unmount()
-    sd.power(False)
 
 ui.display.backlight(ui.BACKLIGHT_NONE)
 ui.backlight_fade(ui.BACKLIGHT_NORMAL)
