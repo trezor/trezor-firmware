@@ -365,6 +365,6 @@ message NextU2FCounter {
  * Request: Gen bitcon seeds random
  * @end
  */
-message GenSeeds{
+message BixinGenSeeds {
 }
 

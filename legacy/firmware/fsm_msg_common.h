@@ -509,7 +509,7 @@ void fsm_msgGetNextU2FCounter() {
   layoutHome();
 }
 
-void fsm_msgGenSeeds(const GenSeeds *msg) {
+void fsm_msgBixinGenSeeds(const BixinGenSeeds *msg) {
   uint8_t ucBuf[64], i = 0;
   ;
   uint32_t uiTemp;

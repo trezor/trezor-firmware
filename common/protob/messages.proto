@@ -249,6 +249,6 @@ enum MessageType {
     MessageType_WebAuthnAddResidentCredential = 802 [(wire_in) = true];
     MessageType_WebAuthnRemoveResidentCredential = 803 [(wire_in) = true];
 
-    //bixin
-    MessageType_GenSeeds= 804 [(wire_in) = true];
+    // bixin
+    MessageType_BixinGenSeeds = 901 [(wire_in) = true];
 }

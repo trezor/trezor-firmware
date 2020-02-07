@@ -17,6 +17,7 @@ from .BinanceSignTx import BinanceSignTx
 from .BinanceSignedTx import BinanceSignedTx
 from .BinanceTransferMsg import BinanceTransferMsg
 from .BinanceTxRequest import BinanceTxRequest
+from .BixinGenSeeds import BixinGenSeeds
 from .ButtonAck import ButtonAck
 from .ButtonRequest import ButtonRequest
 from .Cancel import Cancel
@@ -98,7 +99,6 @@ from .Features import Features
 from .FirmwareErase import FirmwareErase
 from .FirmwareRequest import FirmwareRequest
 from .FirmwareUpload import FirmwareUpload
-from .GenSeeds import GenSeeds
 from .GetAddress import GetAddress
 from .GetECDHSessionKey import GetECDHSessionKey
 from .GetEntropy import GetEntropy
