@@ -221,8 +221,12 @@ class DebugUI:
                 self.input_flow = self.INPUT_FLOW_DONE
 
     def get_pin(self, code=None):
-        if self.pin:
-            return self.pin
+        if isinstance(self.pin, str):
+            return self.debuglink.encode_pin(self.pin)
+        elif self.pin == []:
+            raise AssertionError("PIN sequence ended prematurely")
+        elif self.pin:
+            return self.debuglink.encode_pin(self.pin.pop(0))
         else:
             return self.debuglink.read_pin_encoded()
 
@@ -260,9 +264,6 @@ class TrezorClientDebugLink(TrezorClient):
         self.screenshot_id = 0
 
         self.filters = {}
-
-        # Always press Yes and provide correct pin
-        self.setup_debuglink(True, True)
 
         # Do not expect any specific response from device
         self.expected_responses = None
@@ -342,12 +343,11 @@ class TrezorClientDebugLink(TrezorClient):
         self.expected_responses = expected
         self.current_response = 0
 
-    def setup_debuglink(self, button, pin_correct):
-        # self.button = button  # True -> YES button, False -> NO button
-        if pin_correct:
-            self.ui.pin = None
+    def set_pin(self, pin):
+        if isinstance(pin, str):
+            self.ui.pin = pin
         else:
-            self.ui.pin = "444222"
+            self.ui.pin = list(pin)
 
     def set_passphrase(self, passphrase):
         self.ui.passphrase = Mnemonic.normalize_string(passphrase)
