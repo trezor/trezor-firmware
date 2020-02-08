@@ -104,7 +104,7 @@ class Emulator:
             transport.close()
 
     def wait(self, timeout=None):
-        ret = self.process.wait(timeout=None)
+        ret = self.process.wait(timeout=timeout)
         self.stop()
         return ret
 
