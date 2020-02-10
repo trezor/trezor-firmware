@@ -35,7 +35,7 @@ def get_device():
         try:
             transport = get_transport(path)
             return TrezorClientDebugLink(transport, auto_interact=not interact)
-        except Exception as e:
+        except Exception:
             pytest.exit("Failed to open debuglink for {}".format(path), 3)
 
     else:
