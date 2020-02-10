@@ -6,12 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 _At the moment, the project does **not** adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
-## [0.11.7] - Unreleased
+## [0.12.0] - Unreleased
 
 ### Added
 
+- support for firmwares 1.9.0 and 2.3.0
+- Model T now defaults to entering passphrase on device. New trezorctl option `-P`
+  enforces entering passphrase on host.
+- support for "passphrase always on device" mode on model T
+- new trezorctl command `get-session` and option `-s` allows entering passphrase once
+  for multiple subsequent trezorctl operations
 - built-in functionality of UdpTransport to wait until an emulator comes up, and the
   related command `trezorctl wait-for-emulator`
+
+### Changed
+
+- API for `cosi` module was streamlined: `verify_m_of_n` is now `verify`, the old
+  `verify` is `verify_combined`
+- internals of firmware parsing were reworked to support signing firmware headers
+- `get_default_client` respects `TREZOR_PATH` environment variable
+- UI callback `get_passphrase` has an additional argument `available_on_device`,
+  indicating that the connected Trezor is capable of on-device entry
+
+### Fixed
+
+- trezorctl does not print empty line when there is no output
+
+### Removed
+
+- `btc.sign_tx` will not preload transaction data from `prev_txes`, as usage with TxApi
+  is being phased out
+- PIN protection and passphrase protection for `ping()` command was removed
 
 ## [0.11.6] - 2019-12-30
 [0.11.6]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.5...python/v0.11.6
