@@ -36,7 +36,7 @@ def get_device():
             transport = get_transport(path)
             return TrezorClientDebugLink(transport, auto_interact=not interact)
         except Exception as e:
-            raise RuntimeError("Failed to open debuglink for {}".format(path)) from e
+            pytest.exit("Failed to open debuglink for {}".format(path), 3)
 
     else:
         devices = enumerate_devices()
@@ -46,7 +46,7 @@ def get_device():
             except Exception:
                 pass
         else:
-            raise RuntimeError("No debuggable device found")
+            pytest.exit("No debuggable device found", 3)
 
 
 @pytest.fixture(scope="function")
