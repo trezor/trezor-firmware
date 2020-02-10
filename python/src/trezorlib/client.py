@@ -184,6 +184,21 @@ class TrezorClient:
 
     def _callback_passphrase(self, msg: messages.PassphraseRequest):
         available_on_device = Capability.PassphraseEntry in self.features.capabilities
+
+        def send_passphrase(passphrase=None, on_device=None):
+            msg = messages.PassphraseAck(
+                _state=self.session_id, passphrase=passphrase, on_device=on_device
+            )
+            resp = self.call_raw(msg)
+            if isinstance(resp, messages.Deprecated_PassphraseStateRequest):
+                self.session_id = resp.state
+                resp = self.call_raw(messages.Deprecated_PassphraseStateAck())
+            return resp
+
+        # short-circuit old style entry
+        if msg._on_device is True:
+            return send_passphrase(None, None)
+
         try:
             passphrase = self.ui.get_passphrase(available_on_device=available_on_device)
         except exceptions.Cancelled:
@@ -195,7 +210,7 @@ class TrezorClient:
                 self.call_raw(messages.Cancel())
                 raise RuntimeError("Device is not capable of entering passphrase")
             else:
-                return self.call_raw(messages.PassphraseAck(on_device=True))
+                return send_passphrase(on_device=True)
 
         # else process host-entered passphrase
         passphrase = Mnemonic.normalize_string(passphrase)
@@ -203,9 +218,7 @@ class TrezorClient:
             self.call_raw(messages.Cancel())
             raise ValueError("Passphrase too long")
 
-        return self.call_raw(
-            messages.PassphraseAck(passphrase=passphrase, on_device=False)
-        )
+        return send_passphrase(passphrase, on_device=False)
 
     def _callback_button(self, msg):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
