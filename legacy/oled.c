@@ -510,7 +510,7 @@ void oledSCAInside(int y1, int y2, int width, int a, int b) {
  * display prompt info
  */
 void vDisp_PromptInfo(uint8_t ucIndex) {
-  // oledClear();
+  oledClear();
   // g_ucLanguageFlag = 1;
   switch (ucIndex) {
     case DISP_NOT_ACTIVE:
@@ -546,21 +546,21 @@ void vDisp_PromptInfo(uint8_t ucIndex) {
       if (g_ucLanguageFlag) {
         oledDrawBitmap(0, 48, &bmp_cn_computerlink);
       } else {
-        oledDrawStringCenter(0, 48, "Connect to a computer", FONT_STANDARD);
+        oledDrawStringCenter(60, 48, "Connect to a computer", FONT_STANDARD);
       }
       break;
     case DISP_INPUTPIN:
       if (g_ucLanguageFlag) {
         oledDrawBitmap(0, 0, &bmp_cn_input_pin);
       } else {
-        oledDrawStringCenter(0, 48, "Enter PIN code according ", FONT_STANDARD);
-        oledDrawStringCenter(0, 56, "to the prompts on the right screen",
-                             FONT_STANDARD);
+        oledDrawStringCenter(60, 40, "Enter PIN code", FONT_STANDARD);
+        oledDrawStringCenter(60, 48, "according to prompts", FONT_STANDARD);
+        oledDrawStringCenter(60, 56, "on the right screen", FONT_STANDARD);
       }
       break;
     case DISP_BUTTON_OK_RO_NO:
       if (g_ucLanguageFlag) {
-        oledDrawBitmap(0, 48, &bmp_cn_button_yes_no);
+        oledDrawBitmap(0, 32, &bmp_cn_button_yes_no);
       } else {
         oledDrawStringCenter(60, 48, "Press OK to confirm, ", FONT_STANDARD);
         oledDrawStringCenter(60, 56, "Press < to Cancel", FONT_STANDARD);
@@ -585,7 +585,8 @@ void vDisp_PromptInfo(uint8_t ucIndex) {
       if (g_ucLanguageFlag) {
         oledDrawBitmap(0, 48, &bmp_cn_updown_view);
       } else {
-        oledDrawStringCenter(60, 30, "Turn up or down to view", FONT_STANDARD);
+        oledDrawStringCenter(60, 30, "Turn left or right to view",
+                             FONT_STANDARD);
       }
       break;
     case DISP_SN:
@@ -618,43 +619,44 @@ void vDisp_PromptInfo(uint8_t ucIndex) {
       break;
     case DISP_SIGN_SUCCESS:
       if (g_ucLanguageFlag) {
-        oledDrawBitmap(0, 48, &bmp_cn_sign_success_phone);
+        oledDrawBitmap(0, 32, &bmp_cn_sign_success_phone);
       } else {
-        oledDrawStringCenter(0, 48, "Signed! Touch it to", FONT_STANDARD);
-        oledDrawStringCenter(0, 56, "the phone closely", FONT_STANDARD);
+        oledDrawStringCenter(60, 32, "Signed! Touch it to", FONT_STANDARD);
+        oledDrawStringCenter(60, 56, "the phone closely", FONT_STANDARD);
       }
       break;
     case DISP_SIGN_PRESS_OK_HOME:
       if (g_ucLanguageFlag) {
-        oledDrawBitmap(0, 48, &bmp_cn_sign_success_gohome);
+        oledDrawBitmap(0, 32, &bmp_cn_sign_success_gohome);
       } else {
-        oledDrawStringCenter(0, 48, "Signed! Press OK to", FONT_STANDARD);
-        oledDrawStringCenter(0, 56, "return to homepage", FONT_STANDARD);
+        oledDrawStringCenter(60, 32, "Signed! Press OK to", FONT_STANDARD);
+        oledDrawStringCenter(60, 56, "return to homepage", FONT_STANDARD);
       }
       break;
     case DISP_SIGN_SUCCESS_VIEW:
       if (g_ucLanguageFlag) {
-        oledDrawBitmap(0, 48, &bmp_cn_sign_ok_view);
+        oledDrawBitmap(0, 32, &bmp_cn_sign_ok_view);
       } else {
-        oledDrawStringCenter(0, 48, "Signed! Please view ", FONT_STANDARD);
-        oledDrawStringCenter(0, 56, "transaction on your phone", FONT_STANDARD);
+        oledDrawStringCenter(60, 40, "Signed!", FONT_STANDARD);
+        oledDrawStringCenter(60, 48, "Please view transaction", FONT_STANDARD);
+        oledDrawStringCenter(60, 56, "on your phone", FONT_STANDARD);
       }
       break;
     case DISP_UPDATGE_APP_GOING:
       if (g_ucLanguageFlag) {
-        oledDrawBitmap(0, 48, &bmp_cn_nfc_link);
+        oledDrawBitmap(0, 32, &bmp_cn_updating_notpower_off);
       } else {
-        oledDrawStringCenter(0, 48, "Upgrading, do not turn off",
-                             FONT_STANDARD);
+        oledDrawStringCenter(60, 48, "Upgrading,", FONT_STANDARD);
+        oledDrawStringCenter(60, 56, "do not turn off", FONT_STANDARD);
       }
       break;
     case DISP_UPDATGE_SUCCESS:
       if (g_ucLanguageFlag) {
-        oledDrawBitmap(0, 48, &bmp_cn_update_sucess);
+        oledDrawBitmap(0, 32, &bmp_cn_update_sucess);
       } else {
-        oledDrawStringCenter(0, 48, "Firmware upgraded,", FONT_STANDARD);
-        oledDrawStringCenter(0, 56, "press OK to return to homepage",
-                             FONT_STANDARD);
+        oledDrawStringCenter(60, 40, "Firmware upgraded,", FONT_STANDARD);
+        oledDrawStringCenter(60, 48, "press OK to ", FONT_STANDARD);
+        oledDrawStringCenter(60, 56, "return to homepage", FONT_STANDARD);
       }
       break;
     case DISP_PRESSKEY_POWEROFF:
@@ -673,8 +675,37 @@ void vDisp_PromptInfo(uint8_t ucIndex) {
       oledDrawStringCenter(60, 56, (const char *)g_ble_info.ucBle_Name,
                            FONT_STANDARD);
       break;
+    case DISP_EXPORT_PRIVATE_KEY:
+      if (g_ucLanguageFlag) {
+        oledDrawBitmap(0, 32, &bmp_cn_export_encrypted_prikey);
+      } else {
+        oledDrawStringCenter(60, 48, "[Encrypted]", FONT_STANDARD);
+        oledDrawStringCenter(60, 56, "Exporting private key…", FONT_STANDARD);
+      }
+      break;
+    case DISP_IMPORT_PRIVATE_KEY:
+      if (g_ucLanguageFlag) {
+        oledDrawBitmap(0, 32, &bmp_cn_import_prikey);
+      } else {
+        oledDrawStringCenter(60, 56, "Importing private key", FONT_STANDARD);
+      }
+      break;
+    case DISP_UPDATE_SETTINGS:
+      if (g_ucLanguageFlag) {
+        oledDrawBitmap(0, 32, &bmp_cn_update_settings);
+      } else {
+        oledDrawStringCenter(60, 56, "Settings updated", FONT_STANDARD);
+      }
+      break;
+    case DISP_BIXIN_KEY_INITIALIZED:
+      if (g_ucLanguageFlag) {
+        oledDrawBitmap(0, 32, &bmp_cn_BixinKEY_initialized);
+      } else {
+        oledDrawStringCenter(60, 56, "BixinKEY initialized", FONT_STANDARD);
+      }
+      break;
     default:
       break;
   }
-  //   oledRefresh();
+  oledRefresh();
 }

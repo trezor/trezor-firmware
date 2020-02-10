@@ -31,5 +31,9 @@ extern const BITMAP bmp_logo;
 extern const BITMAP bmp_nfc;
 extern const BITMAP bmp_update;
 extern const BITMAP bmp_usb;
+extern const BITMAP bmp_cn_export_encrypted_prikey;
+extern const BITMAP bmp_cn_import_prikey;
+extern const BITMAP bmp_cn_update_settings;
+extern const BITMAP bmp_cn_BixinKEY_initialized;
 
 #endif

@@ -10,20 +10,20 @@
 #define NORMAL_PCB 0
 
 // Ble display
-#define BT_LINK 0x01          //蓝牙连接//Connect by Bluetooth
-#define BT_UNLINK 0x02        //蓝牙断开连接指令
-#define BT_DISPIN 0x03        //显示配对密码
-#define BT_PINERROR 0x04      //配对密码错误
-#define BT_PINTIMEOUT 0x05    //配对超时
-#define BT_PAIRINGSCESS 0x06  //配对成功
-#define BT_PINCANCEL 0x07     //取消配对请求
+#define BT_LINK 0x01          // Connect by Bluetooth
+#define BT_UNLINK 0x02        // BLE disconnected
+#define BT_DISPIN 0x03        // Display PIN code
+#define BT_PINERROR 0x04      // PIN code error
+#define BT_PINTIMEOUT 0x05    // Pairing overtime
+#define BT_PAIRINGSCESS 0x06  // Pairing success
+#define BT_PINCANCEL 0x07     // Cancel pairing request
 
-// NFC 已连接
+// NFC Connected
 #define NFC_LINK 0x09
-// USB 已连接
+// USB Connected
 #define USB_LINK 0x08
 
-//配对码的长度
+// Pairing code length
 #define BT_PAIR_LEN 0x06
 
 // APDU TAG

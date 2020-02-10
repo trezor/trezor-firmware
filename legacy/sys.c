@@ -48,9 +48,9 @@ void vCalu_BleName(uint8_t *pucMac, uint8_t *pucName) {
  * display ble message
  */
 bool bBle_DisPlay(uint8_t ucIndex, uint8_t *ucStr) {
-  uint8_t ucDelayFalg;
+  uint8_t ucDelayFlag;
   oledClear();
-  ucDelayFalg = 0x00;
+  ucDelayFlag = 0x00;
   switch (ucIndex) {
     case BT_LINK:
       oledDrawStringCenter(60, 30, "Connect by Bluetooth", FONT_STANDARD);
@@ -62,7 +62,7 @@ bool bBle_DisPlay(uint8_t ucIndex, uint8_t *ucStr) {
       ucStr[BT_PAIR_LEN] = '\0';
       oledDrawStringCenter(60, 30, "BLE Pair Pin", FONT_STANDARD);
       oledDrawStringCenter(60, 50, (char *)ucStr, FONT_STANDARD);
-      ucDelayFalg = 1;
+      ucDelayFlag = 1;
       break;
     case BT_PINERROR:
       oledDrawStringCenter(60, 30, "Pair Pin Error", FONT_STANDARD);
@@ -87,7 +87,7 @@ bool bBle_DisPlay(uint8_t ucIndex, uint8_t *ucStr) {
   ucSw[1] = 0x00;
   vSI2CDRV_SendResponse(ucSw, 2);
 #endif
-  if (0x00 == ucDelayFalg) {
+  if (0x00 == ucDelayFlag) {
     delay_time(2000);
     return true;
   } else {
