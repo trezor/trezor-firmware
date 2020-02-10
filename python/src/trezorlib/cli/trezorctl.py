@@ -143,10 +143,22 @@ def configure_logging(verbose: int):
 @click.option(
     "-P", "--passphrase-on-host", is_flag=True, help="Enter passphrase on host.",
 )
+@click.option(
+    "-s",
+    "--session-id",
+    help="Resume given session ID.",
+    default=os.environ.get("TREZOR_SESSION_ID"),
+)
 @click.version_option()
 @click.pass_context
-def cli(ctx, path, verbose, is_json, passphrase_on_host):
+def cli(ctx, path, verbose, is_json, passphrase_on_host, session_id):
     configure_logging(verbose)
+
+    if session_id:
+        try:
+            session_id = bytes.fromhex(session_id)
+        except ValueError:
+            raise click.ClickException("Not a valid session id: {}".format(session_id))
 
     def get_device():
         try:
@@ -160,7 +172,9 @@ def cli(ctx, path, verbose, is_json, passphrase_on_host):
                     click.echo("Using path: {}".format(path))
                 sys.exit(1)
         return TrezorClient(
-            transport=device, ui=ui.ClickUI(passphrase_on_host=passphrase_on_host)
+            transport=device,
+            ui=ui.ClickUI(passphrase_on_host=passphrase_on_host),
+            session_id=session_id,
         )
 
     ctx.obj = get_device
@@ -204,7 +218,7 @@ def list_devices():
 @cli.command()
 def version():
     """Show version of trezorctl/trezorlib."""
-    from trezorlib import __version__ as VERSION
+    from .. import __version__ as VERSION
 
     return VERSION
 
@@ -221,6 +235,29 @@ def version():
 def ping(connect, message, button_protection):
     """Send ping message."""
     return connect().ping(message, button_protection=button_protection)
+
+
+@cli.command()
+@click.pass_obj
+def get_session(connect):
+    """Get a session ID for subsequent commands.
+
+    Unlocks Trezor with a passphrase and returns a session ID. Use this session ID with
+    `trezorctl -s SESSION_ID`, or set it to an environment variable `TREZOR_SESSION_ID`,
+    to avoid having to enter passphrase for subsequent commands.
+
+    The session ID is valid until another client starts using Trezor, until the next
+    get-session call, or until Trezor is disconnected.
+    """
+    from ..btc import get_address
+    from ..client import PASSPHRASE_TEST_PATH
+
+    client = connect()
+    get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
+    if client.session_id is None:
+        raise click.ClickException("Passphrase not enabled, session ID not available.")
+    else:
+        return client.session_id.hex()
 
 
 @cli.command()

@@ -34,6 +34,7 @@ VENDORS = ("bitcointrezor.com", "trezor.io")
 MAX_PASSPHRASE_LENGTH = 50
 
 PASSPHRASE_ON_DEVICE = object()
+PASSPHRASE_TEST_PATH = tools.parse_path("44h/1h/19h/0/1337")
 
 DEPRECATION_ERROR = """
 Incompatible Trezor library detected.
