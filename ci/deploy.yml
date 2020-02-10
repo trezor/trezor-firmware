@@ -199,6 +199,7 @@ upgrade tests legacy deploy:
 
 ui tests core fixtures deploy:
   stage: deploy
+  extends: .core_job
   variables:
     DEPLOY_PATH: "${DEPLOY_BASE_DIR}/ui_tests/"
   before_script: []  # no pipenv

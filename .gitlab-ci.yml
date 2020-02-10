@@ -32,6 +32,34 @@ stages:
 before_script:
   - command -v pipenv >/dev/null && pipenv sync
 
+.core_job:
+  only:
+    changes:
+      - ci/**/*
+      - common/**/*
+      - core/**/*
+      - crypto/**/*
+      - python/**/*
+      - storage/**/*
+      - tests/**/*
+      - tools/**/*
+      - vendor/**/*
+      - Pipfile.lock
+
+.legacy_job:
+  only:
+    changes:
+      - ci/**/*
+      - common/**/*
+      - crypto/**/*
+      - legacy/**/*
+      - python/**/*
+      - storage/**/*
+      - tests/**/*
+      - tools/**/*
+      - vendor/**/*
+      - Pipfile.lock
+
 include:
   - ci/environment.yml
   - ci/prebuild.yml

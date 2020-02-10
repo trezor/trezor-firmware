@@ -1,39 +1,10 @@
 image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
 
-.only_changes_core: &only_changes_core
-  only:
-    changes:
-      - ci/**/*
-      - common/**/*
-      - core/**/*
-      - crypto/**/*
-      - python/**/*
-      - storage/**/*
-      - tests/**/*
-      - tools/**/*
-      - vendor/**/*
-      - Pipfile.lock
-
-.only_changes_legacy: &only_changes_legacy
-  only:
-    changes:
-      - ci/**/*
-      - common/**/*
-      - crypto/**/*
-      - legacy/**/*
-      - python/**/*
-      - storage/**/*
-      - tests/**/*
-      - tools/**/*
-      - vendor/**/*
-      - Pipfile.lock
-
-
 # Core
 
 core unix unit test:
   stage: test
-  <<: *only_changes_core
+  extends: .core_job
   dependencies:
     - core unix regular build
   script:
@@ -42,7 +13,7 @@ core unix unit test:
 
 core unix device ui test:
   stage: test
-  <<: *only_changes_core
+  extends: .core_job
   dependencies:
     - core unix frozen debug build
   script:
@@ -64,7 +35,7 @@ core unix device ui test:
 
 core unix device test:
   stage: test
-  <<: *only_changes_core
+  extends: .core_job
   dependencies:
     - core unix frozen debug build
   variables:
@@ -88,7 +59,7 @@ core unix device test:
 
 core unix btconly device test:
   stage: test
-  <<: *only_changes_core
+  extends: .core_job
   dependencies:
     - core unix frozen btconly debug build
   variables:
@@ -109,7 +80,7 @@ core unix btconly device test:
 
 core unix monero test:
   stage: test
-  <<: *only_changes_core
+  extends: .core_job
   dependencies:
     - core unix frozen debug build
   script:
@@ -124,7 +95,7 @@ core unix monero test:
 
 core unix u2f test:
   stage: test
-  <<: *only_changes_core
+  extends: .core_job
   dependencies:
     - core unix frozen debug build
   variables:
@@ -146,7 +117,7 @@ core unix u2f test:
 
 core unix fido2 test:
   stage: test
-  <<: *only_changes_core
+  extends: .core_job
   dependencies:
     - core unix frozen debug build
   variables:
@@ -170,7 +141,7 @@ core unix fido2 test:
 
 core unix click test:
   stage: test
-  <<: *only_changes_core
+  extends: .core_job
   dependencies:
     - core unix frozen debug build
   script:
@@ -188,7 +159,7 @@ core unix click test:
 
 core unix upgrade test:
   stage: test
-  <<: *only_changes_core
+  extends: .core_job
   dependencies:
     - core unix frozen debug build
   variables:
@@ -207,7 +178,7 @@ core unix upgrade test:
 
 core unix persistence test:
   stage: test
-  <<: *only_changes_core
+  extends: .core_job
   dependencies:
     - core unix frozen debug build
   script:
@@ -253,7 +224,7 @@ crypto test:
 
 legacy emu test:
   stage: test
-  <<: *only_changes_legacy
+  extends: .legacy_job
   dependencies:
     - legacy emu regular build
   variables:
@@ -272,7 +243,7 @@ legacy emu test:
 
 legacy emu btconly test:
   stage: test
-  <<: *only_changes_legacy
+  extends: .legacy_job
   dependencies:
     - legacy emu btconly build
   variables:
@@ -294,7 +265,7 @@ legacy emu btconly test:
 
 legacy emu upgrade test:
   stage: test
-  <<: *only_changes_legacy
+  extends: .legacy_job
   dependencies:
     - legacy emu regular build
   variables:
