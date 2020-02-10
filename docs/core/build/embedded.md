@@ -1,6 +1,7 @@
 # Build instructions for Embedded (ARM port)
 
 First clone, initialize submodules and install Pipenv as defined [here](index.md).
+**Do not forget you need to be in a `pipenv shell` environment!**
 
 ## Requirements
 
@@ -13,17 +14,26 @@ You will also need Python dependencies for signing.
 sudo apt-get install scons gcc-arm-none-eabi libnewlib-arm-none-eabi
 ```
 
+### NixOS
+
+There is a `shell.nix` file in the root of the project. Just run the following
+**before** entering the `core` directory:
+
+```sh
+nix-shell
+```
+
 ### OS X
 
 1. Download [gcc-arm-none-eabi](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads)
 2. Follow the [install instructions](https://launchpadlibrarian.net/287100883/readme.txt)
 3. To install OpenOCD, run `brew install open-ocd`
-4. Run `pipenv run make vendor build_boardloader build_bootloader build_firmware`
+4. Run `make vendor build_boardloader build_bootloader build_firmware`
 
 ## Building
 
 ```sh
-pipenv run make vendor build_boardloader build_bootloader build_firmware
+make vendor build_boardloader build_bootloader build_firmware
 ```
 
 ## Uploading
@@ -41,7 +51,7 @@ You need to have OpenOCD installed.
 You can also build firmware in debug mode to see log output or run tests.
 
 ```sh
-PYOPT=0 pipenv run make build_firmware
+PYOPT=0 make build_firmware
 ```
 
 You can then use `screen` to enter the device's console. Do not forget to add your user to the `dialout` group or use `sudo`. Note that both the group and the tty name can differ, use `ls -l` to find out proper names on your machine.
