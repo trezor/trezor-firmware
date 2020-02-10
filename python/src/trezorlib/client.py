@@ -268,7 +268,8 @@ class TrezorClient:
             self.features.patch_version,
         )
         self.check_firmware_version(warn_only=True)
-        self.session_id = self.features.session_id
+        if self.features.session_id is not None:
+            self.session_id = self.features.session_id
 
     def is_outdated(self):
         if self.features.bootloader_mode:
