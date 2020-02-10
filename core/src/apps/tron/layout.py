@@ -204,7 +204,7 @@ async def require_confirm_trigger_trc20(
     page1 = Text("Confirm TRC20 1/2", ui.ICON_CONFIRM if action == "Transfer" else ui.ICON_SEND, icon_color=ui.GREEN)
     page1.bold("TRC20 " + action)
     page1.mono(*split_address("To: " + toAddress))
-    
+
     page2 = Text("Confirm TRC20 2/2", ui.ICON_CONFIRM if action == "Transfer" else ui.ICON_SEND, icon_color=ui.GREEN)
     if not verified:
         page2.mono(*split_address("Contract: " + contract_address))

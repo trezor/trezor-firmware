@@ -174,7 +174,7 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
         return await layout.require_confirm_set_account_id_contract(
             ctx, contract.set_account_id.account_id
         )
-    
+
     if contract.trigger_smart_contract:
         # check if TRC20 transfer/ approval
         data = contract.trigger_smart_contract.data
