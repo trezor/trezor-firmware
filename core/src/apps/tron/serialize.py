@@ -369,7 +369,10 @@ def pack_contract(contract, owner_address):
         add_field(cmessage, 1, TYPE_STRING)
         write_bytes_with_length(cmessage, base58.decode_check(owner_address))
         add_field(cmessage, 2, TYPE_STRING)
-        write_bytes_with_length(cmessage, base58.decode_check(contract.trigger_smart_contract.contract_address))
+        write_bytes_with_length(
+            cmessage,
+            base58.decode_check(contract.trigger_smart_contract.contract_address),
+        )
         if contract.trigger_smart_contract.call_value:
             add_field(cmessage, 3, TYPE_VARINT)
             write_varint(cmessage, contract.trigger_smart_contract.call_value)

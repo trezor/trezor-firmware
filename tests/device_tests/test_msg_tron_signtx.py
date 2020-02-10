@@ -705,8 +705,7 @@ def test_tron_transfer_trc20(client):
         fee_limit=10000000,
         contract=proto.TronContract(
             trigger_smart_contract=proto.TronTriggerSmartContract(
-                contract_address="TBoTZcARzWVgnNuB9SyE3S5g1RwsXoQL16",
-                data=data,
+                contract_address="TBoTZcARzWVgnNuB9SyE3S5g1RwsXoQL16", data=data
             )
         ),
     )
@@ -743,8 +742,7 @@ def test_tron_approve_trc20(client):
         fee_limit=10000000,
         contract=proto.TronContract(
             trigger_smart_contract=proto.TronTriggerSmartContract(
-                contract_address="TBoTZcARzWVgnNuB9SyE3S5g1RwsXoQL16",
-                data=data,
+                contract_address="TBoTZcARzWVgnNuB9SyE3S5g1RwsXoQL16", data=data
             )
         ),
     )
@@ -781,8 +779,7 @@ def test_tron_transfer_trc20_not_in_list(client):
         fee_limit=10000000,
         contract=proto.TronContract(
             trigger_smart_contract=proto.TronTriggerSmartContract(
-                contract_address="TKYTRRRkyEHKLeDpGmT9TCeqxxnH2XoEBP",
-                data=data,
+                contract_address="TKYTRRRkyEHKLeDpGmT9TCeqxxnH2XoEBP", data=data
             )
         ),
     )

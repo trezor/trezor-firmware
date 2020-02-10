@@ -8,9 +8,12 @@ from trezor.messages.TronSignTx import TronSignTx
 
 from apps.common import paths
 from apps.tron import CURVE, TRON_PUBLICKEY, layout, tokens
-from apps.tron.address import get_address_from_public_key, validate_full_path
+from apps.tron.address import (
+    _address_base58,
+    get_address_from_public_key,
+    validate_full_path,
+)
 from apps.tron.serialize import serialize
-from apps.tron.address import _address_base58
 
 
 async def sign_tx(ctx, msg: TronSignTx, keychain):
@@ -180,23 +183,33 @@ async def _require_confirm_by_type(ctx, transaction, owner_address):
         data = contract.trigger_smart_contract.data
         action = None
 
-        if data[:16] == b"\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00":
+        if (
+            data[:16]
+            == b"\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        ):
             action = "Transfer"
-        elif data[:16] == b"\x09\x5e\xa7\xb3\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00":
+        elif (
+            data[:16]
+            == b"\x09\x5e\xa7\xb3\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        ):
             action = "Approve"
 
         if action:
-            token = tokens.token_by_address("TRC20", contract.trigger_smart_contract.contract_address)
+            token = tokens.token_by_address(
+                "TRC20", contract.trigger_smart_contract.contract_address
+            )
             recipient = _address_base58(b"\x41" + data[16:36])
             value = int.from_bytes(data[36:68], "big")
             return await layout.require_confirm_trigger_trc20(
                 ctx,
                 action,
                 token[0],
-                token[2] if token[2] else contract.trigger_smart_contract.contract_address,
+                token[2]
+                if token[2]
+                else contract.trigger_smart_contract.contract_address,
                 value,
                 token[3],
-                recipient
+                recipient,
             )
         raise wire.DataError("Invalid transaction type")
 

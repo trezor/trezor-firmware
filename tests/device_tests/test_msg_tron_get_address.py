@@ -23,10 +23,7 @@ TRON_DEFAULT_PATH = "m/44'/195'/0'/0/0"
 MNEMONIC12 = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 MNEMONICALLALLALL = "all all all all all all all all all all all all"
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.tron,
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.tron]
 
 
 class TestMsgTronGetAddress:
