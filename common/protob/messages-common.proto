@@ -118,7 +118,7 @@ message PassphraseRequest {
  * Request: Send passphrase back
  * @auxend
  */
- message PassphraseAck {
+message PassphraseAck {
     optional string passphrase = 1;
     optional bytes _state = 2 [deprecated=true];  // <2.3.0
     optional bool on_device = 3;    // user wants to enter passphrase on the device
@@ -134,8 +134,8 @@ message Deprecated_PassphraseStateRequest {
 }
 
 /**
-* Request: Send passphrase state back
-* Deprecated in 2.3.0
+ * Request: Send passphrase state back
+ * Deprecated in 2.3.0
  * @auxend
  */
 message Deprecated_PassphraseStateAck {
