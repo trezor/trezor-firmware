@@ -53,6 +53,8 @@ from .DebugLinkState import DebugLinkState
 from .DebugLinkStop import DebugLinkStop
 from .DebugMoneroDiagAck import DebugMoneroDiagAck
 from .DebugMoneroDiagRequest import DebugMoneroDiagRequest
+from .Deprecated_PassphraseStateAck import Deprecated_PassphraseStateAck
+from .Deprecated_PassphraseStateRequest import Deprecated_PassphraseStateRequest
 from .ECDHSessionKey import ECDHSessionKey
 from .Entropy import Entropy
 from .EntropyAck import EntropyAck

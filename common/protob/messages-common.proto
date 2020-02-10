@@ -111,17 +111,34 @@ message PinMatrixAck {
  * @next PassphraseAck
  */
 message PassphraseRequest {
-//    optional bool on_device = 1;  // DEPRECATED
+    optional bool _on_device = 1 [deprecated=true];  // <2.3.0
 }
 
 /**
  * Request: Send passphrase back
  * @auxend
  */
-message PassphraseAck {
+ message PassphraseAck {
     optional string passphrase = 1;
-//    optional bytes state = 2;  // DEPRECATED
+    optional bytes _state = 2 [deprecated=true];  // <2.3.0
     optional bool on_device = 3;    // user wants to enter passphrase on the device
+}
+
+/**
+ * Response: Device awaits passphrase state
+ * Deprecated in 2.3.0
+ * @next Deprecated_PassphraseStateAck
+ */
+message Deprecated_PassphraseStateRequest {
+    optional bytes state = 1;       // actual device state
+}
+
+/**
+* Request: Send passphrase state back
+* Deprecated in 2.3.0
+ * @auxend
+ */
+message Deprecated_PassphraseStateAck {
 }
 
 /**

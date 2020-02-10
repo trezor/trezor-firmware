@@ -10,17 +10,17 @@ if __debug__:
         pass
 
 
-class Initialize(p.MessageType):
-    MESSAGE_WIRE_TYPE = 0
+class Deprecated_PassphraseStateRequest(p.MessageType):
+    MESSAGE_WIRE_TYPE = 77
 
     def __init__(
         self,
-        session_id: bytes = None,
+        state: bytes = None,
     ) -> None:
-        self.session_id = session_id
+        self.state = state
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('session_id', p.BytesType, 0),
+            1: ('state', p.BytesType, 0),
         }
