@@ -255,7 +255,7 @@ def get_session(connect):
     client = connect()
     get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
     if client.session_id is None:
-        raise click.ClickException("Passphrase not enabled, session ID not available.")
+        raise click.ClickException("Passphrase not enabled or firmware too old.")
     else:
         return client.session_id.hex()
 
