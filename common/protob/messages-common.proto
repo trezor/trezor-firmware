@@ -130,6 +130,7 @@ message PassphraseAck {
  * @next Deprecated_PassphraseStateAck
  */
 message Deprecated_PassphraseStateRequest {
+    option deprecated = true;
     optional bytes state = 1;       // actual device state
 }
 
@@ -139,6 +140,7 @@ message Deprecated_PassphraseStateRequest {
  * @auxend
  */
 message Deprecated_PassphraseStateAck {
+    option deprecated = true;
 }
 
 /**

@@ -66,8 +66,8 @@ enum MessageType {
 
     // Deprecated messages, kept for protobuf compatibility.
     // Both are marked wire_out so that we don't need to implement incoming handler for legacy
-    MessageType_Deprecated_PassphraseStateRequest = 77 [(wire_out) = true];
-    MessageType_Deprecated_PassphraseStateAck = 78 [(wire_out) = true];
+    MessageType_Deprecated_PassphraseStateRequest = 77 [deprecated = true];
+    MessageType_Deprecated_PassphraseStateAck = 78 [deprecated = true];
 
     // Bootloader
     MessageType_FirmwareErase = 6 [(wire_in) = true, (wire_bootloader) = true];
