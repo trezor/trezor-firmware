@@ -54,8 +54,6 @@ enum MessageType {
     MessageType_EntropyAck = 36 [(wire_in) = true];
     MessageType_PassphraseRequest = 41 [(wire_out) = true];
     MessageType_PassphraseAck = 42 [(wire_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
-    MessageType_PassphraseStateRequest = 77 [(wire_out) = true];
-    MessageType_PassphraseStateAck = 78 [(wire_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
     MessageType_RecoveryDevice = 45 [(wire_in) = true];
     MessageType_WordRequest = 46 [(wire_out) = true];
     MessageType_WordAck = 47 [(wire_in) = true];
@@ -65,6 +63,11 @@ enum MessageType {
     MessageType_GetNextU2FCounter = 80 [(wire_in) = true];
     MessageType_NextU2FCounter = 81 [(wire_out) = true];
     MessageType_ChangeWipeCode = 82 [(wire_in) = true];
+
+    // Deprecated messages, kept for protobuf compatibility.
+    // Both are marked wire_out so that we don't need to implement incoming handler for legacy
+    MessageType_Deprecated_PassphraseStateRequest = 77 [deprecated = true];
+    MessageType_Deprecated_PassphraseStateAck = 78 [deprecated = true];
 
     // Bootloader
     MessageType_FirmwareErase = 6 [(wire_in) = true, (wire_bootloader) = true];

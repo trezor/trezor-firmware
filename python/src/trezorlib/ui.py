@@ -20,6 +20,7 @@ import click
 from mnemonic import Mnemonic
 
 from . import device
+from .client import PASSPHRASE_ON_DEVICE
 from .exceptions import Cancelled
 from .messages import PinMatrixRequestType, WordRequestType
 
@@ -58,10 +59,11 @@ def prompt(*args, **kwargs):
 
 
 class ClickUI:
-    def __init__(self, always_prompt=False):
+    def __init__(self, always_prompt=False, passphrase_on_host=False):
         self.pinmatrix_shown = False
         self.prompt_shown = False
         self.always_prompt = always_prompt
+        self.passphrase_on_host = passphrase_on_host
 
     def button_request(self, code):
         if not self.prompt_shown:
@@ -98,7 +100,10 @@ class ClickUI:
             else:
                 return pin
 
-    def get_passphrase(self):
+    def get_passphrase(self, available_on_device):
+        if available_on_device and not self.passphrase_on_host:
+            return PASSPHRASE_ON_DEVICE
+
         if os.getenv("PASSPHRASE") is not None:
             echo("Passphrase required. Using PASSPHRASE environment variable.")
             return os.getenv("PASSPHRASE")

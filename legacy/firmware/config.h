@@ -91,10 +91,10 @@ void session_clear(bool lock);
 
 void config_loadDevice(const LoadDevice *msg);
 
-const uint8_t *config_getSeed(bool usePassphrase);
+const uint8_t *config_getSeed(void);
 
 bool config_getU2FRoot(HDNode *node);
-bool config_getRootNode(HDNode *node, const char *curve, bool usePassphrase);
+bool config_getRootNode(HDNode *node, const char *curve);
 
 bool config_getLabel(char *dest, uint16_t dest_size);
 void config_setLabel(const char *label);
@@ -108,10 +108,7 @@ bool config_getPassphraseProtection(bool *passphrase_protection);
 bool config_getHomescreen(uint8_t *dest, uint16_t dest_size);
 void config_setHomescreen(const uint8_t *data, uint32_t size);
 
-void session_cachePassphrase(const char *passphrase);
-bool session_isPassphraseCached(void);
-bool session_getState(const uint8_t *salt, uint8_t *state,
-                      const char *passphrase);
+const uint8_t *session_getSessionId(void);
 
 bool config_setMnemonic(const char *mnemonic);
 bool config_containsMnemonic(const char *mnemonic);

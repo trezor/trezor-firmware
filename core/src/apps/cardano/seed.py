@@ -1,11 +1,11 @@
 import storage
-import storage.cache
+from storage import cache
 from trezor import wire
 from trezor.crypto import bip32
 
 from apps.cardano import CURVE, SEED_NAMESPACE
 from apps.common import mnemonic
-from apps.common.request_passphrase import protect_by_passphrase
+from apps.common.passphrase import get as get_passphrase
 
 
 class Keychain:
@@ -30,34 +30,27 @@ class Keychain:
         return node
 
 
-async def _get_passphrase(ctx: wire.Context) -> bytes:
-    passphrase = storage.cache.get_passphrase()
-    if passphrase is None:
-        passphrase = await protect_by_passphrase(ctx)
-        storage.cache.set_passphrase(passphrase)
-
-    return passphrase
-
-
 async def get_keychain(ctx: wire.Context) -> Keychain:
+    root = cache.get(cache.APP_CARDANO_ROOT)
+
     if not storage.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
-    if mnemonic.is_bip39():
-        # derive the root node from mnemonic and passphrase
-        passphrase = await _get_passphrase(ctx)
-        root = bip32.from_mnemonic_cardano(mnemonic.get_secret().decode(), passphrase)
-    else:
-        seed = storage.cache.get_seed()
-        if seed is None:
-            passphrase = await _get_passphrase(ctx)
+    if root is None:
+        passphrase = await get_passphrase(ctx)
+        if mnemonic.is_bip39():
+            # derive the root node from mnemonic and passphrase
+            root = bip32.from_mnemonic_cardano(
+                mnemonic.get_secret().decode(), passphrase
+            )
+        else:
             seed = mnemonic.get_seed(passphrase)
-            storage.cache.set_seed(seed)
-        root = bip32.from_seed(seed, "ed25519 cardano seed")
+            root = bip32.from_seed(seed, "ed25519 cardano seed")
 
-    # derive the namespaced root node
-    for i in SEED_NAMESPACE:
-        root.derive_cardano(i)
+        # derive the namespaced root node
+        for i in SEED_NAMESPACE:
+            root.derive_cardano(i)
+        storage.cache.set(cache.APP_CARDANO_ROOT, root)
 
     keychain = Keychain(SEED_NAMESPACE, root)
     return keychain

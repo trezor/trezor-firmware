@@ -226,7 +226,7 @@ class DebugUI:
         else:
             return self.debuglink.read_pin_encoded()
 
-    def get_passphrase(self):
+    def get_passphrase(self, available_on_device):
         return self.passphrase
 
 

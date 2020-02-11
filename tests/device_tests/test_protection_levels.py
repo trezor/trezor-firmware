@@ -63,18 +63,10 @@ class TestProtectionLevels:
             )
             device.change_pin(client)
 
-    @pytest.mark.setup_client(pin=True, passphrase=True)
     def test_ping(self, client):
         with client:
-            client.set_expected_responses(
-                [
-                    proto.ButtonRequest(),
-                    proto.PinMatrixRequest(),
-                    proto.PassphraseRequest(),
-                    proto.Success(),
-                ]
-            )
-            client.ping("msg", True, True, True)
+            client.set_expected_responses([proto.ButtonRequest(), proto.Success()])
+            client.ping("msg", True)
 
     @pytest.mark.setup_client(pin=True, passphrase=True)
     def test_get_entropy(self, client):
@@ -269,29 +261,21 @@ class TestProtectionLevels:
         assert client.features.pin_cached is False
 
         with client:
-            client.set_expected_responses(
-                [proto.ButtonRequest(), proto.PinMatrixRequest(), proto.Success()]
-            )
-            client.ping("msg", True, True, True)
+            client.set_expected_responses([proto.PinMatrixRequest(), proto.Address()])
+            btc.get_address(client, "Testnet", [0])
 
         client.init_device()
         assert client.features.pin_cached is True
         with client:
-            client.set_expected_responses([proto.ButtonRequest(), proto.Success()])
-            client.ping("msg", True, True, True)
+            client.set_expected_responses([proto.Address()])
+            btc.get_address(client, "Testnet", [0])
 
     @pytest.mark.setup_client(passphrase=True)
     def test_passphrase_cached(self, client):
-        assert client.features.passphrase_cached is False
+        with client:
+            client.set_expected_responses([proto.PassphraseRequest(), proto.Address()])
+            btc.get_address(client, "Testnet", [0])
 
         with client:
-            client.set_expected_responses(
-                [proto.ButtonRequest(), proto.PassphraseRequest(), proto.Success()]
-            )
-            client.ping("msg", True, True, True)
-
-        features = client.call(proto.GetFeatures())
-        assert features.passphrase_cached is True
-        with client:
-            client.set_expected_responses([proto.ButtonRequest(), proto.Success()])
-            client.ping("msg", True, True, True)
+            client.set_expected_responses([proto.Address()])
+            btc.get_address(client, "Testnet", [0])

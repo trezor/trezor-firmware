@@ -62,11 +62,12 @@ message ButtonRequest {
         ButtonRequest_PublicKey = 11;
         ButtonRequest_MnemonicWordCount = 12;
         ButtonRequest_MnemonicInput = 13;
-        ButtonRequest_PassphraseType = 14;
+//        ButtonRequest_PassphraseType = 14;  DEPRECATED
         ButtonRequest_UnknownDerivationPath = 15;
         ButtonRequest_RecoveryHomepage = 16;
         ButtonRequest_Success = 17;
         ButtonRequest_Warning = 18;
+        ButtonRequest_PassphraseEntry = 19;
     }
 }
 
@@ -110,31 +111,36 @@ message PinMatrixAck {
  * @next PassphraseAck
  */
 message PassphraseRequest {
-    optional bool on_device = 1;    // passphrase is being entered on the device
+    optional bool _on_device = 1 [deprecated=true];  // <2.3.0
 }
 
 /**
  * Request: Send passphrase back
- * @next PassphraseStateRequest
+ * @auxend
  */
 message PassphraseAck {
     optional string passphrase = 1;
-    optional bytes state = 2;       // expected device state
+    optional bytes _state = 2 [deprecated=true];  // <2.3.0
+    optional bool on_device = 3;    // user wants to enter passphrase on the device
 }
 
 /**
  * Response: Device awaits passphrase state
- * @next PassphraseStateAck
+ * Deprecated in 2.3.0
+ * @next Deprecated_PassphraseStateAck
  */
-message PassphraseStateRequest {
+message Deprecated_PassphraseStateRequest {
+    option deprecated = true;
     optional bytes state = 1;       // actual device state
 }
 
 /**
  * Request: Send passphrase state back
+ * Deprecated in 2.3.0
  * @auxend
  */
-message PassphraseStateAck {
+message Deprecated_PassphraseStateAck {
+    option deprecated = true;
 }
 
 /**

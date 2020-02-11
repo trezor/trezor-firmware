@@ -24,7 +24,7 @@ _HOMESCREEN                = const(0x06)  # bytes
 _NEEDS_BACKUP              = const(0x07)  # bool (0x01 or empty)
 _FLAGS                     = const(0x08)  # int
 U2F_COUNTER                = const(0x09)  # int
-_PASSPHRASE_SOURCE         = const(0x0A)  # int
+_PASSPHRASE_ALWAYS_ON_DEVICE = const(0x0A)  # bool (0x01 or empty)
 _UNFINISHED_BACKUP         = const(0x0B)  # bool (0x01 or empty)
 _AUTOLOCK_DELAY_MS         = const(0x0C)  # int
 _NO_BACKUP                 = const(0x0D)  # bool (0x01 or empty)
@@ -101,7 +101,7 @@ def get_backup_type() -> EnumTypeBackupType:
     return backup_type  # type: ignore
 
 
-def has_passphrase() -> bool:
+def is_passphrase_enabled() -> bool:
     return common.get_bool(_NAMESPACE, _USE_PASSPHRASE)
 
 
@@ -143,21 +143,21 @@ def no_backup() -> bool:
     return common.get_bool(_NAMESPACE, _NO_BACKUP)
 
 
-def get_passphrase_source() -> int:
-    b = common.get(_NAMESPACE, _PASSPHRASE_SOURCE)
-    if b == b"\x01":
-        return 1
-    elif b == b"\x02":
-        return 2
-    else:
-        return 0
+def get_passphrase_always_on_device() -> bool:
+    """
+    This is backwards compatible with _PASSPHRASE_SOURCE:
+    - If ASK(0) => returns False, the check against b"\x01" in get_bool fails.
+    - If DEVICE(1) => returns True, the check against b"\x01" in get_bool succeeds.
+    - If HOST(2) => returns False, the check against b"\x01" in get_bool fails.
+    """
+    return common.get_bool(_NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE)
 
 
 def load_settings(
     label: str = None,
     use_passphrase: bool = None,
     homescreen: bytes = None,
-    passphrase_source: int = None,
+    passphrase_always_on_device: bool = None,
     display_rotation: int = None,
 ) -> None:
     if label is not None:
@@ -170,9 +170,10 @@ def load_settings(
                 common.set(_NAMESPACE, _HOMESCREEN, homescreen, True)  # public
         else:
             common.set(_NAMESPACE, _HOMESCREEN, b"", True)  # public
-    if passphrase_source is not None:
-        if passphrase_source in (0, 1, 2):
-            common.set(_NAMESPACE, _PASSPHRASE_SOURCE, bytes([passphrase_source]))
+    if passphrase_always_on_device is not None:
+        common.set_bool(
+            _NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE, passphrase_always_on_device
+        )
     if display_rotation is not None:
         if display_rotation not in (0, 90, 180, 270):
             raise ValueError(

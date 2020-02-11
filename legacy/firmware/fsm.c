@@ -212,10 +212,7 @@ static HDNode *fsm_getDerivedNode(const char *curve, const uint32_t *address_n,
   if (fingerprint) {
     *fingerprint = 0;
   }
-  if (!config_getRootNode(&node, curve, true)) {
-    fsm_sendFailure(FailureType_Failure_NotInitialized,
-                    _("Device not initialized or passphrase request cancelled "
-                      "or unsupported curve"));
+  if (!config_getRootNode(&node, curve)) {
     layoutHome();
     return 0;
   }

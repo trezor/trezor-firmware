@@ -109,6 +109,8 @@ fl.write(
 messages = defaultdict(list)
 
 for message in MessageType.DESCRIPTOR.values:
+    if message.GetOptions().deprecated:
+        continue
     extension = get_wire_extension(message)
     messages[extension].append(message)
 

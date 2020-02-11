@@ -350,10 +350,12 @@ bool protectChangeWipeCode(bool removal) {
   return ret;
 }
 
-bool protectPassphrase(void) {
+bool protectPassphrase(char *passphrase) {
+  memzero(passphrase, MAX_PASSPHRASE_LEN + 1);
   bool passphrase_protection = false;
   config_getPassphraseProtection(&passphrase_protection);
-  if (!passphrase_protection || session_isPassphraseCached()) {
+  if (!passphrase_protection) {
+    // passphrase already set to empty by memzero above
     return true;
   }
 
@@ -369,12 +371,24 @@ bool protectPassphrase(void) {
   bool result;
   for (;;) {
     usbPoll();
-    // TODO: correctly process PassphraseAck with state field set (mismatch =>
-    // Failure)
     if (msg_tiny_id == MessageType_MessageType_PassphraseAck) {
       msg_tiny_id = 0xFFFF;
       PassphraseAck *ppa = (PassphraseAck *)msg_tiny;
-      session_cachePassphrase(ppa->has_passphrase ? ppa->passphrase : "");
+      if (ppa->has_on_device && ppa->on_device == true) {
+        fsm_sendFailure(
+            FailureType_Failure_DataError,
+            _("This firmware is incapable of passphrase entry on the device."));
+        result = false;
+        break;
+      }
+      if (!ppa->has_passphrase) {
+        fsm_sendFailure(FailureType_Failure_DataError,
+                        _("No passphrase provided. Use empty string to set an "
+                          "empty passphrase."));
+        result = false;
+        break;
+      }
+      strlcpy(passphrase, ppa->passphrase, sizeof(ppa->passphrase));
       result = true;
       break;
     }
@@ -383,8 +397,9 @@ bool protectPassphrase(void) {
     protectAbortedByInitialize =
         (msg_tiny_id == MessageType_MessageType_Initialize);
     if (protectAbortedByCancel || protectAbortedByInitialize) {
-      msg_tiny_id = 0xFFFF;
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       result = false;
+      msg_tiny_id = 0xFFFF;
       break;
     }
   }

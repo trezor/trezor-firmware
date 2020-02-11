@@ -20,17 +20,14 @@
 void fsm_msgInitialize(const Initialize *msg) {
   recovery_abort();
   signing_abort();
-  if (msg && msg->has_state && msg->state.size == 64) {
-    uint8_t i_state[64];
-    if (!session_getState(msg->state.bytes, i_state, NULL)) {
-      session_clear(false);  // do not clear PIN
-    } else {
-      if (0 != memcmp(msg->state.bytes, i_state, 64)) {
-        session_clear(false);  // do not clear PIN
-      }
+  if (msg && msg->has_session_id && msg->session_id.size == 32) {
+    if (0 != memcmp(session_getSessionId(), msg->session_id.bytes, 32)) {
+      // If session id was specified but does not match -> clear the cache.
+      session_clear(false);  // do not lock
     }
   } else {
-    session_clear(false);  // do not clear PIN
+    // If session id was not specified -> clear the cache.
+    session_clear(false);  // do not lock
   }
   layoutHome();
   fsm_msgGetFeatures(0);
@@ -39,6 +36,12 @@ void fsm_msgInitialize(const Initialize *msg) {
 void fsm_msgGetFeatures(const GetFeatures *msg) {
   (void)msg;
   RESP_INIT(Features);
+
+  resp->has_session_id = true;
+  memcpy(resp->session_id.bytes, session_getSessionId(),
+         sizeof(resp->session_id.bytes));
+  resp->session_id.size = sizeof(resp->session_id.bytes);
+
   resp->has_vendor = true;
   strlcpy(resp->vendor, "trezor.io", sizeof(resp->vendor));
   resp->has_major_version = true;
@@ -71,8 +74,6 @@ void fsm_msgGetFeatures(const GetFeatures *msg) {
   resp->has_imported = config_getImported(&(resp->imported));
   resp->has_pin_cached = true;
   resp->pin_cached = session_isUnlocked() && config_hasPin();
-  resp->has_passphrase_cached = true;
-  resp->passphrase_cached = session_isPassphraseCached();
   resp->has_needs_backup = true;
   config_getNeedsBackup(&(resp->needs_backup));
   resp->has_unfinished_backup = true;
@@ -116,17 +117,6 @@ void fsm_msgPing(const Ping *msg) {
     if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       layoutHome();
-      return;
-    }
-  }
-
-  if (msg->has_pin_protection && msg->pin_protection) {
-    CHECK_PIN
-  }
-
-  if (msg->has_passphrase_protection && msg->passphrase_protection) {
-    if (!protectPassphrase()) {
-      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       return;
     }
   }
@@ -359,6 +349,10 @@ void fsm_msgClearSession(const ClearSession *msg) {
 }
 
 void fsm_msgApplySettings(const ApplySettings *msg) {
+  CHECK_PARAM(
+      !msg->has_passphrase_always_on_device,
+      _("This firmware is incapable of passphrase entry on the device."));
+
   CHECK_PARAM(msg->has_label || msg->has_language || msg->has_use_passphrase ||
                   msg->has_homescreen || msg->has_auto_lock_delay_ms,
               _("No setting provided"));

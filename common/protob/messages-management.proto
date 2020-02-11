@@ -20,8 +20,7 @@ enum BackupType {
  * @next Features
  */
 message Initialize {
-    optional bytes state = 1;           // assumed device state, clear session if set and different
-    optional bool skip_passphrase = 2;  // this session should always assume empty passphrase
+    optional bytes session_id = 1;           // assumed device session id; Trezor clears caches if it is different or empty
 }
 
 /**
@@ -52,7 +51,7 @@ message Features {
     optional bytes bootloader_hash = 14;        // hash of the bootloader
     optional bool imported = 15;                // was storage imported from an external source?
     optional bool pin_cached = 16;              // is PIN already cached in session?
-    optional bool passphrase_cached = 17;       // is passphrase already cached in session?
+//    optional bool passphrase_cached = 17;       // is passphrase already cached in session?  DEPRECATED
     optional bool firmware_present = 18;        // is valid firmware loaded?
     optional bool needs_backup = 19;            // does storage need backup? (equals to Storage.needs_backup)
     optional uint32 flags = 20;                 // device flags (equals to Storage.flags)
@@ -83,11 +82,14 @@ message Features {
         Capability_U2F = 14;
         Capability_Shamir = 15;
         Capability_ShamirGroups = 16;
+        Capability_PassphraseEntry = 17;        // the device is capable of passphrase entry directly on the device
     }
     optional BackupType backup_type = 31;       // type of device backup (BIP-39 / SLIP-39 basic / SLIP-39 advanced)
     optional bool sd_card_present = 32;         // is SD card present
     optional bool sd_protection = 33;           // is SD Protect enabled
     optional bool wipe_code_protection = 34;    // is wipe code protection enabled
+    optional bytes session_id = 35;
+    optional bool passphrase_always_on_device = 36;  // device enforces passphrase entry on Trezor
 }
 
 /**
@@ -109,17 +111,10 @@ message ApplySettings {
     optional string label = 2;
     optional bool use_passphrase = 3;
     optional bytes homescreen = 4;
-    optional PassphraseSourceType passphrase_source = 5;
+//    optional PassphraseSourceType passphrase_source = 5;  DEPRECATED
     optional uint32 auto_lock_delay_ms = 6;
     optional uint32 display_rotation = 7;  // in degrees from North
-    /**
-    * Structure representing passphrase source
-    */
-    enum PassphraseSourceType {
-        ASK = 0;
-        DEVICE = 1;
-        HOST = 2;
-    }
+    optional bool passphrase_always_on_device = 8;  // do not prompt for passphrase, enforce device entry
 }
 
 /**
@@ -178,8 +173,6 @@ message SdProtect {
 message Ping {
     optional string message = 1;                // message to send back in Success message
     optional bool button_protection = 2;        // ask for button press
-    optional bool pin_protection = 3;           // ask for PIN if set in device
-    optional bool passphrase_protection = 4;    // ask for passphrase if set in device
 }
 
 /**

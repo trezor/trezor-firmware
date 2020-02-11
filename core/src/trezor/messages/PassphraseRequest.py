@@ -15,12 +15,12 @@ class PassphraseRequest(p.MessageType):
 
     def __init__(
         self,
-        on_device: bool = None,
+        _on_device: bool = None,
     ) -> None:
-        self.on_device = on_device
+        self._on_device = _on_device
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('on_device', p.BoolType, 0),
+            1: ('_on_device', p.BoolType, 0),
         }

@@ -160,6 +160,14 @@ def header_error(message: str, clear: bool = True) -> None:
         display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
 
 
+def draw_simple(t: Component) -> None:  # noqa: F405
+    backlight_fade(style.BACKLIGHT_DIM)
+    display.clear()
+    t.on_render()
+    refresh()
+    backlight_fade(style.BACKLIGHT_NORMAL)
+
+
 def grid(
     i: int,  # i-th cell of the table of which we wish to return Area (snake-like starting with 0)
     n_x: int = 3,  # number of rows in the table

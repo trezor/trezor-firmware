@@ -23,6 +23,7 @@ from types import SimpleNamespace
 from mnemonic import Mnemonic
 
 from . import MINIMUM_FIRMWARE_VERSION, exceptions, messages, tools
+from .messages import Capability
 
 if sys.version_info.major < 3:
     raise Exception("Trezorlib does not support Python 2 anymore.")
@@ -31,6 +32,9 @@ LOG = logging.getLogger(__name__)
 
 VENDORS = ("bitcointrezor.com", "trezor.io")
 MAX_PASSPHRASE_LENGTH = 50
+
+PASSPHRASE_ON_DEVICE = object()
+PASSPHRASE_TEST_PATH = tools.parse_path("44h/1h/19h/0/1337")
 
 DEPRECATION_ERROR = """
 Incompatible Trezor library detected.
@@ -107,15 +111,17 @@ class TrezorClient:
     - passphrase request (ask the user to enter a passphrase)
     See `trezorlib.ui` for details.
 
-    You can supply a `state` you saved in the previous session. If you do,
-    the user might not need to enter their passphrase again.
+    You can supply a `session_id` you might have saved in the previous session.
+    If you do, the user might not need to enter their passphrase again.
     """
 
-    def __init__(self, transport, ui=_NO_UI_OBJECT, state=None):
+    def __init__(
+        self, transport, ui=_NO_UI_OBJECT, session_id=None,
+    ):
         LOG.info("creating client instance for device: {}".format(transport.get_path()))
         self.transport = transport
         self.ui = ui
-        self.state = state
+        self.session_id = session_id
 
         # XXX remove when old Electrum has been cycled out.
         # explanation: We changed the API in 0.11 and this broke older versions
@@ -177,30 +183,47 @@ class TrezorClient:
         else:
             return resp
 
-    def _callback_passphrase(self, msg):
-        if msg.on_device:
-            passphrase = None
-        else:
-            try:
-                passphrase = self.ui.get_passphrase()
-            except exceptions.Cancelled:
-                self.call_raw(messages.Cancel())
-                raise
+    def _callback_passphrase(self, msg: messages.PassphraseRequest):
+        available_on_device = Capability.PassphraseEntry in self.features.capabilities
 
-            passphrase = Mnemonic.normalize_string(passphrase)
-            if len(passphrase) > MAX_PASSPHRASE_LENGTH:
-                self.call_raw(messages.Cancel())
-                raise ValueError("Passphrase too long")
-
-        resp = self.call_raw(
-            messages.PassphraseAck(passphrase=passphrase, state=self.state)
-        )
-        if isinstance(resp, messages.PassphraseStateRequest):
-            # TODO report to the user that the passphrase has changed?
-            self.state = resp.state
-            return self.call_raw(messages.PassphraseStateAck())
-        else:
+        def send_passphrase(passphrase=None, on_device=None):
+            if self.features.model == "1":
+                state = None
+            else:
+                state = self.session_id
+            msg = messages.PassphraseAck(
+                _state=state, passphrase=passphrase, on_device=on_device
+            )
+            resp = self.call_raw(msg)
+            if isinstance(resp, messages.Deprecated_PassphraseStateRequest):
+                self.session_id = resp.state
+                resp = self.call_raw(messages.Deprecated_PassphraseStateAck())
             return resp
+
+        # short-circuit old style entry
+        if msg._on_device is True:
+            return send_passphrase(None, None)
+
+        try:
+            passphrase = self.ui.get_passphrase(available_on_device=available_on_device)
+        except exceptions.Cancelled:
+            self.call_raw(messages.Cancel())
+            raise
+
+        if passphrase is PASSPHRASE_ON_DEVICE:
+            if not available_on_device:
+                self.call_raw(messages.Cancel())
+                raise RuntimeError("Device is not capable of entering passphrase")
+            else:
+                return send_passphrase(on_device=True)
+
+        # else process host-entered passphrase
+        passphrase = Mnemonic.normalize_string(passphrase)
+        if len(passphrase) > MAX_PASSPHRASE_LENGTH:
+            self.call_raw(messages.Cancel())
+            raise ValueError("Passphrase too long")
+
+        return send_passphrase(passphrase, on_device=False)
 
     def _callback_button(self, msg):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
@@ -229,7 +252,7 @@ class TrezorClient:
 
     @tools.session
     def init_device(self):
-        resp = self.call_raw(messages.Initialize(state=self.state))
+        resp = self.call_raw(messages.Initialize(session_id=self.session_id))
         if not isinstance(resp, messages.Features):
             raise exceptions.TrezorException("Unexpected initial response")
         else:
@@ -245,6 +268,8 @@ class TrezorClient:
             self.features.patch_version,
         )
         self.check_firmware_version(warn_only=True)
+        if self.features.session_id is not None:
+            self.session_id = self.features.session_id
 
     def is_outdated(self):
         if self.features.bootloader_mode:
@@ -262,17 +287,13 @@ class TrezorClient:
 
     @tools.expect(messages.Success, field="message")
     def ping(
-        self,
-        msg,
-        button_protection=False,
-        pin_protection=False,
-        passphrase_protection=False,
+        self, msg, button_protection=False,
     ):
         # We would like ping to work on any valid TrezorClient instance, but
         # due to the protection modes, we need to go through self.call, and that will
         # raise an exception if the firmware is too old.
         # So we short-circuit the simplest variant of ping with call_raw.
-        if not button_protection and not pin_protection and not passphrase_protection:
+        if not button_protection:
             # XXX this should be: `with self:`
             try:
                 self.open()
@@ -280,12 +301,7 @@ class TrezorClient:
             finally:
                 self.close()
 
-        msg = messages.Ping(
-            message=msg,
-            button_protection=button_protection,
-            pin_protection=pin_protection,
-            passphrase_protection=passphrase_protection,
-        )
+        msg = messages.Ping(message=msg, button_protection=button_protection,)
         return self.call(msg)
 
     def get_device_id(self):
@@ -295,7 +311,7 @@ class TrezorClient:
     def clear_session(self):
         resp = self.call_raw(messages.ClearSession())
         if isinstance(resp, messages.Success):
-            self.state = None
+            self.session_id = None
             self.init_device()
             return resp.message
         else:

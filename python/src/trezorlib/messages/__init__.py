@@ -55,6 +55,8 @@ from .DebugLinkState import DebugLinkState
 from .DebugLinkStop import DebugLinkStop
 from .DebugMoneroDiagAck import DebugMoneroDiagAck
 from .DebugMoneroDiagRequest import DebugMoneroDiagRequest
+from .Deprecated_PassphraseStateAck import Deprecated_PassphraseStateAck
+from .Deprecated_PassphraseStateRequest import Deprecated_PassphraseStateRequest
 from .ECDHSessionKey import ECDHSessionKey
 from .Entropy import Entropy
 from .EntropyAck import EntropyAck
@@ -196,8 +198,6 @@ from .NEMTransfer import NEMTransfer
 from .NextU2FCounter import NextU2FCounter
 from .PassphraseAck import PassphraseAck
 from .PassphraseRequest import PassphraseRequest
-from .PassphraseStateAck import PassphraseStateAck
-from .PassphraseStateRequest import PassphraseStateRequest
 from .PinMatrixAck import PinMatrixAck
 from .PinMatrixRequest import PinMatrixRequest
 from .Ping import Ping
@@ -283,7 +283,6 @@ from . import NEMModificationType
 from . import NEMMosaicLevy
 from . import NEMSupplyChangeType
 from . import OutputScriptType
-from . import PassphraseSourceType
 from . import PinMatrixRequestType
 from . import RecoveryDeviceType
 from . import RequestType

@@ -10,7 +10,7 @@ if __debug__:
         pass
 
 
-class PassphraseStateRequest(p.MessageType):
+class Deprecated_PassphraseStateRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 77
 
     def __init__(

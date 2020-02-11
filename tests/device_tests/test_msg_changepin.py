@@ -29,8 +29,8 @@ class TestMsgChangepin:
         assert features.pin_protection is False
 
         # Check that there's no PIN protection
-        ret = client.call_raw(proto.Ping(pin_protection=True))
-        assert isinstance(ret, proto.Success)
+        ret = client.call_raw(proto.GetAddress())
+        assert isinstance(ret, proto.Address)
 
         # Let's set new PIN
         ret = client.call_raw(proto.ChangePin())
@@ -66,7 +66,7 @@ class TestMsgChangepin:
         assert features.pin_protection is True
 
         # Check that there's PIN protection
-        ret = client.call_raw(proto.Ping(pin_protection=True))
+        ret = client.call_raw(proto.GetAddress())
         assert isinstance(ret, proto.PinMatrixRequest)
         client.call_raw(proto.Cancel())
 
@@ -112,7 +112,7 @@ class TestMsgChangepin:
         assert features.pin_protection is True
 
         # Check that there's PIN protection
-        ret = client.call_raw(proto.Ping(pin_protection=True))
+        ret = client.call_raw(proto.GetAddress())
         assert isinstance(ret, proto.PinMatrixRequest)
         client.call_raw(proto.Cancel())
 
@@ -135,16 +135,16 @@ class TestMsgChangepin:
         # Check that there's no PIN protection now
         features = client.call_raw(proto.Initialize())
         assert features.pin_protection is False
-        ret = client.call_raw(proto.Ping(pin_protection=True))
-        assert isinstance(ret, proto.Success)
+        ret = client.call_raw(proto.GetAddress())
+        assert isinstance(ret, proto.Address)
 
     def test_set_failed(self, client):
         features = client.call_raw(proto.Initialize())
         assert features.pin_protection is False
 
         # Check that there's no PIN protection
-        ret = client.call_raw(proto.Ping(pin_protection=True))
-        assert isinstance(ret, proto.Success)
+        ret = client.call_raw(proto.GetAddress())
+        assert isinstance(ret, proto.Address)
 
         # Let's set new PIN
         ret = client.call_raw(proto.ChangePin())
@@ -170,8 +170,8 @@ class TestMsgChangepin:
         # Check that there's still no PIN protection now
         features = client.call_raw(proto.Initialize())
         assert features.pin_protection is False
-        ret = client.call_raw(proto.Ping(pin_protection=True))
-        assert isinstance(ret, proto.Success)
+        ret = client.call_raw(proto.GetAddress())
+        assert isinstance(ret, proto.Address)
 
     @pytest.mark.setup_client(pin=True)
     def test_set_failed_2(self, client):
@@ -211,8 +211,8 @@ class TestMsgChangepin:
 
     def check_pin(self, client, pin):
         client.clear_session()
-        ret = client.call_raw(proto.Ping(pin_protection=True))
+        ret = client.call_raw(proto.GetAddress())
         assert isinstance(ret, proto.PinMatrixRequest)
         pin_encoded = client.debug.encode_pin(pin)
         ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
-        assert isinstance(ret, proto.Success)
+        assert isinstance(ret, proto.Address)
