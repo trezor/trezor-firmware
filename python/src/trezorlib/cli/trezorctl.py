@@ -148,6 +148,7 @@ def configure_logging(verbose: int):
 @click.option(
     "-s",
     "--session-id",
+    metavar="HEX",
     help="Resume given session ID.",
     default=os.environ.get("TREZOR_SESSION_ID"),
 )
@@ -255,6 +256,9 @@ def get_session(connect):
     from ..client import PASSPHRASE_TEST_PATH
 
     client = connect()
+    if client.features.model == "1" and client.version < (1, 9, 0):
+        raise click.ClickException("Upgrade your firmware to enable session support.")
+
     get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
     if client.session_id is None:
         raise click.ClickException("Passphrase not enabled or firmware too old.")
