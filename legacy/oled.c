@@ -509,9 +509,11 @@ void oledSCAInside(int y1, int y2, int width, int a, int b) {
 /*
  * display prompt info
  */
-void vDisp_PromptInfo(uint8_t ucIndex) {
-  oledClear();
-  // g_ucLanguageFlag = 1;
+void vDisp_PromptInfo(uint8_t ucIndex,bool ucMode) {
+  if(ucMode)
+  {
+    oledClear();
+  }
   switch (ucIndex) {
     case DISP_NOT_ACTIVE:
       if (g_ucLanguageFlag) {
@@ -560,7 +562,7 @@ void vDisp_PromptInfo(uint8_t ucIndex) {
       break;
     case DISP_BUTTON_OK_RO_NO:
       if (g_ucLanguageFlag) {
-        oledDrawBitmap(0, 32, &bmp_cn_button_yes_no);
+        oledDrawBitmap(0, 48, &bmp_cn_button_yes_no);
       } else {
         oledDrawStringCenter(60, 48, "Press OK to confirm, ", FONT_STANDARD);
         oledDrawStringCenter(60, 56, "Press < to Cancel", FONT_STANDARD);
@@ -704,8 +706,17 @@ void vDisp_PromptInfo(uint8_t ucIndex) {
         oledDrawStringCenter(60, 56, "BixinKEY initialized", FONT_STANDARD);
       }
       break;
+	case DISP_CONFIRM_PIN:
+      if (g_ucLanguageFlag) {
+        oledDrawBitmap(0, 16, &bmp_cn_confirm_pin);
+      }
+      break;
     default:
       break;
   }
-  oledRefresh();
+  if(ucMode)
+  {
+    oledRefresh();
+  }
+  g_ucPromptIndex = 0;
 }

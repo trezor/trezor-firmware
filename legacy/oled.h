@@ -25,6 +25,9 @@
 
 #include "bitmaps.h"
 #include "fonts.h"
+#include "sys.h"
+
+
 
 #define BLE_ADV_NAME "BiXin_abcd"
 #define BLE_ADV_NAME_LEN 10
@@ -82,6 +85,8 @@ typedef struct USB_DEVICE_INFO {
 #define DISP_IMPORT_PRIVATE_KEY 0x17     // import private key
 #define DISP_UPDATE_SETTINGS 0x18        // update settings
 #define DISP_BIXIN_KEY_INITIALIZED 0x19  // Bixin Key initialized
+#define DISP_CONFIRM_PIN          0x1A  // confirm pin
+
 
 extern Ble_Info g_ble_info;
 extern USB_Info g_usb_info;
@@ -114,6 +119,6 @@ void oledSwipeLeft(void);
 void oledSwipeRight(void);
 void oledSCA(int y1, int y2, int val);
 void oledSCAInside(int y1, int y2, int val, int a, int b);
-void vDisp_PromptInfo(uint8_t ucIndex);
+void vDisp_PromptInfo(uint8_t ucIndex,bool ucMode);
 
 #endif

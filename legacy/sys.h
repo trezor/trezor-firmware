@@ -29,6 +29,7 @@
 // APDU TAG
 #define APDU_TAG_BLE 0x44
 #define APDU_TAG_BLE_NFC 0x46
+#define APDU_TAG_BAT       0x47
 #define APDU_TAG_HANDSHAKE 0x55
 // work mode
 #define WORK_MODE_BLE 0x10
@@ -102,7 +103,10 @@
 
 extern uint8_t g_ucFlag;
 extern uint8_t g_ucWorkMode;
+extern uint8_t g_ucBatValue;
 extern uint8_t g_ucLanguageFlag;
+extern uint8_t g_ucPromptIndex;
+
 extern volatile uint32_t system_millis_poweroff_start;
 
 //#define POWER_OFF_TIMER_ENBALE()    (g_ucFlag |= 0x01)

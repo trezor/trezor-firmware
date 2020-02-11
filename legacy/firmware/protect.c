@@ -250,6 +250,7 @@ bool protectPin(bool use_cached) {
 
   const char *pin = "";
   if (config_hasPin()) {
+    g_ucPromptIndex = DISP_INPUTPIN;
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current,
                      _("Please enter current PIN:"));
     if (!pin) {
@@ -271,6 +272,7 @@ bool protectChangePin(bool removal) {
   const char *pin = NULL;
 
   if (config_hasPin()) {
+    g_ucPromptIndex = DISP_INPUTPIN;
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current,
                      _("Please enter current PIN:"));
     if (pin == NULL) {
@@ -293,6 +295,7 @@ bool protectChangePin(bool removal) {
   }
 
   if (!removal) {
+    g_ucPromptIndex = DISP_INPUTPIN;
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewFirst,
                      _("Please enter new PIN:"));
     if (pin == NULL) {
@@ -303,6 +306,7 @@ bool protectChangePin(bool removal) {
     strlcpy(new_pin, pin, sizeof(new_pin));
 
 #if !EMULATOR
+    g_ucPromptIndex = DISP_CONFIRM_PIN;
     layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                       _("Please confirm PIN"), NULL, NULL, new_pin, NULL, NULL);
 

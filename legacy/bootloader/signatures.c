@@ -183,15 +183,24 @@ int signatures_new_ok(const image_header *hdr, uint8_t store_fingerprint[32]) {
 
   if (0 != ecdsa_verify_digest(&secp256k1, pubkey[hdr->sigindex1 - 1],
                                hdr->sig1, hash)) {  // failure
-    return SIG_FAIL;
+   if (0 != ecdsa_verify_digest(&secp256k1, pubkey_Bixin[hdr->sigindex1 - 1],
+                               hdr->sig1, hash)) {  // failure                    
+        return SIG_FAIL;
+    }
   }
   if (0 != ecdsa_verify_digest(&secp256k1, pubkey[hdr->sigindex2 - 1],
                                hdr->sig2, hash)) {  // failure
-    return SIG_FAIL;
+    if (0 != ecdsa_verify_digest(&secp256k1, pubkey_Bixin[hdr->sigindex2 - 1],
+                                hdr->sig2, hash)) {  // failure
+        return SIG_FAIL;
+    }
   }
   if (0 != ecdsa_verify_digest(&secp256k1, pubkey[hdr->sigindex3 - 1],
                                hdr->sig3, hash)) {  // failure
-    return SIG_FAIL;
+    if (0 != ecdsa_verify_digest(&secp256k1, pubkey_Bixin[hdr->sigindex3 - 1],
+                                hdr->sig3, hash)) {  // failure
+        return SIG_FAIL;
+    }
   }
 
   return SIG_OK;
