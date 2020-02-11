@@ -316,24 +316,25 @@ class TrezorClientDebugLink(TrezorClient):
         self.in_with_statement -= 1
 
         # Clear input flow.
-        self.set_input_flow(None)
+        try:
+            if _type is not None:
+                # Another exception raised
+                return False
 
-        if _type is not None:
-            # Another exception raised
-            return False
+            if self.expected_responses is None:
+                # no need to check anything else
+                return False
 
-        if self.expected_responses is None:
-            # no need to check anything else
-            return False
+            # Evaluate missed responses in 'with' statement
+            if self.current_response < len(self.expected_responses):
+                self._raise_unexpected_response(None)
 
-        # return isinstance(value, TypeError)
-        # Evaluate missed responses in 'with' statement
-        if self.current_response < len(self.expected_responses):
-            self._raise_unexpected_response(None)
-
-        # Cleanup
-        self.expected_responses = None
-        self.current_response = None
+        finally:
+            # Cleanup
+            self.set_input_flow(None)
+            self.expected_responses = None
+            self.current_response = None
+            self.ui.pin = None
 
         return False
 
