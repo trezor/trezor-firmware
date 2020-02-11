@@ -43,8 +43,6 @@ core unix device test:
   script:
     - cd core
     - pipenv run make test_emu
-    - sync
-    - sleep 1
     - mv ./src/.coverage .coverage.test_emu
   artifacts:
     name: core-unix-device-test
@@ -83,13 +81,17 @@ core unix monero test:
   extends: .core_job
   dependencies:
     - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: 1
   script:
     - cd core
     - pipenv run make test_emu_monero
+    - mv ./src/.coverage .coverage.test_emu_monero
   artifacts:
     name: core-unix-monero-test
     paths:
       - tests/trezor.log
+      - core/.coverage.*
     expire_in: 1 week
     when: always
 
@@ -104,8 +106,6 @@ core unix u2f test:
     - make -C tests/fido_tests/u2f-tests-hid
     - cd core
     - pipenv run make test_emu_u2f
-    - sync
-    - sleep 1
     - mv ./src/.coverage .coverage.test_emu_u2f
   artifacts:
     name: core-unix-u2f-test
@@ -125,8 +125,6 @@ core unix fido2 test:
   script:
     - cd core
     - pipenv run make test_emu_fido2
-    - sync
-    - sleep 1
     - mv ./src/.coverage .coverage.test_emu_fido2
   artifacts:
     name: core-unix-fido2-test
