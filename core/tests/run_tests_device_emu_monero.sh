@@ -2,39 +2,18 @@
 
 : "${RUN_PYTHON_TESTS:=0}"
 : "${FORCE_DOCKER_USE:=0}"
-: "${RUN_TEST_EMU:=1}"
 
 CORE_DIR="$(SHELL_SESSION_FILE='' && cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
-
-upy_pid=""
-
-# run emulator if RUN_TEST_EMU
-if [[ $RUN_TEST_EMU > 0 ]]; then
-  t=$(mktemp)
-  ../emu.py \
-    --disable-animation \
-    --temporary-profile \
-    --headless \
-    --output=../../tests/trezor.log \
-    > $t &
-  trezorctl wait-for-emulator
-  source $t
-  upy_pid=$(cat $TREZOR_PROFILE_DIR/trezor.pid)
-  rm $t
-fi
 
 DOCKER_ID=""
 
 # Test termination trap
 terminate_test() {
-  if [[ $# > 0 ]]; then error=$1; fi
-  if [ -n "$upy_pid" ]; then kill $upy_pid 2> /dev/null; fi
   if [ -n "$DOCKER_ID" ]; then docker kill $DOCKER_ID 2>/dev/null >/dev/null; fi
-  exit $error
 }
 
 set -e
-trap 'terminate_test $?' EXIT
+trap terminate_test EXIT
 
 # run tests
 export EC_BACKEND_FORCE=1

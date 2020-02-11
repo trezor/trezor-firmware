@@ -79,7 +79,7 @@ test_emu: ## run selected device tests from python-trezor
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS)
 
 test_emu_monero: ## run selected monero device tests from monero-agent
-	cd tests ; ./run_tests_device_emu_monero.sh $(TESTOPTS)
+	cd tests ; $(EMU_TEST) ./run_tests_device_emu_monero.sh $(TESTOPTS)
 
 test_emu_u2f: ## run selected u2f device tests from u2f-tests-hid
 	$(EMU_TEST) --slip0014 $(TESTPATH)/fido_tests/u2f-tests-hid/HIDTest $(TREZOR_FIDO2_UDP_PORT) $(TESTOPTS)
