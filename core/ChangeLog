@@ -4,6 +4,7 @@ Version 2.x.x [not yet released]
 
 Version 2.3.0 [not yet released]
 * Passphrase redesign
+* Properly limit passphrase to 50 bytes and not 50 characters
 
 Version 2.2.0 [Jan 2020]
 * Remove unused ButtonRequest.data field

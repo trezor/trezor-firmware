@@ -230,6 +230,30 @@ def test_passphrase_missing(client):
     assert response.code == FailureType.DataError
 
 
+@pytest.mark.skip_ui
+@pytest.mark.setup_client(passphrase=True)
+def test_passphrase_length(client):
+    def call(passphrase: str, expected_result: bool):
+        _init_session(client)
+        response = client.call_raw(XPUB_REQUEST)
+        assert isinstance(response, messages.PassphraseRequest)
+        response = client.call_raw(messages.PassphraseAck(passphrase))
+        if expected_result:
+            assert isinstance(response, messages.PublicKey)
+        else:
+            assert isinstance(response, messages.Failure)
+            assert response.code == FailureType.DataError
+
+    # 50 is ok
+    call(passphrase="A" * 50, expected_result=True)
+    # 51 is not
+    call(passphrase="A" * 51, expected_result=False)
+    # "š" has two bytes - 48x A and "š" should be fine (50 bytes)
+    call(passphrase="A" * 48 + "š", expected_result=True)
+    # "š" has two bytes - 49x A and "š" should not (51 bytes)
+    call(passphrase="A" * 49 + "š", expected_result=False)
+
+
 def _get_xpub_cardano(client, passphrase):
     msg = messages.CardanoGetPublicKey(address_n=parse_path("44'/1815'/0'/0/0"))
     response = client.call_raw(msg)
