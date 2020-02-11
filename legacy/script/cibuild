@@ -19,7 +19,8 @@ if [ "$EMULATOR" != 1 ]; then
     make -C bootloader align
 fi
 
-make -C vendor/nanopb/generator/proto
+# invoking nanopb_generator to make sure its proto files are generated
+nanopb_generator 2>/dev/null || true
 make -C firmware/protob
 
 make -C firmware
