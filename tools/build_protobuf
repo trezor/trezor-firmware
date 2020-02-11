@@ -17,6 +17,7 @@ CORE_PROTOBUF_SOURCES="\
     $PROTOB/messages-management.proto \
     $PROTOB/messages-monero.proto \
     $PROTOB/messages-nem.proto \
+    $PROTOB/messages-ontology.proto \
     $PROTOB/messages-ripple.proto \
     $PROTOB/messages-stellar.proto \
     $PROTOB/messages-tezos.proto \
@@ -73,12 +74,13 @@ do_rebuild() {
         sed -i "3ifrom trezor import utils\n" "$DESTDIR"/Capability.py
         sed -i "3ifrom trezor import utils\n" "$DESTDIR"/MessageType.py
         sed -i "/^EthereumGetPublicKey/iif not utils.BITCOIN_ONLY:" "$DESTDIR"/MessageType.py
-        for altcoin in Ethereum NEM Lisk Tezos Stellar Cardano Ripple Monero DebugMonero Eos Binance WebAuthn; do
+        for altcoin in Ethereum NEM Lisk Tezos Stellar Cardano Ripple Monero DebugMonero Eos Binance WebAuthn Ontology; do
             sed -i "s:^$altcoin:    $altcoin:" "$DESTDIR"/Capability.py
             sed -i "s:^$altcoin:    $altcoin:" "$DESTDIR"/MessageType.py
         done
         sed -i "/^Bitcoin_like/iif not utils.BITCOIN_ONLY:" "$DESTDIR"/Capability.py
         sed -i "/^EOS/iif not utils.BITCOIN_ONLY:" "$DESTDIR"/Capability.py
+        sed -i "/Ontology/iif not utils.BITCOIN_ONLY:" "$DESTDIR"/Capability.py
         for feature in Bitcoin_like EOS U2F; do
             sed -i "s:^$feature:    $feature:" "$DESTDIR"/Capability.py
         done
