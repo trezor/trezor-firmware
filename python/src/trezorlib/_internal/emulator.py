@@ -84,7 +84,7 @@ class Emulator:
     def _get_transport(self):
         return UdpTransport("127.0.0.1:{}".format(self.port))
 
-    def wait_until_ready(self, timeout=30):
+    def wait_until_ready(self, timeout=60):
         transport = self._get_transport()
         transport.open()
         start = time.monotonic()
@@ -138,7 +138,7 @@ class Emulator:
         try:
             self.wait_until_ready()
         except TimeoutError:
-            # Assuming that after the default 30-second timeout, the process is stuck
+            # Assuming that after the default 60-second timeout, the process is stuck
             self.process.kill()
             raise
 
@@ -158,7 +158,7 @@ class Emulator:
         if self.process:
             self.process.terminate()
             try:
-                self.process.wait(1)
+                self.process.wait(30)
             except subprocess.TimeoutExpired:
                 self.process.kill()
 
