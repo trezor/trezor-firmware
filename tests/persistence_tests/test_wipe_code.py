@@ -15,7 +15,7 @@ def setup_device_legacy(client, pin, wipe_code):
     )
 
     with client:
-        client.set_pin([PIN, WIPE_CODE, WIPE_CODE])
+        client.use_pin_sequence([PIN, WIPE_CODE, WIPE_CODE])
         device.change_wipe_code(client)
 
 

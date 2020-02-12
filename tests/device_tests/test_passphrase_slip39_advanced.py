@@ -30,12 +30,12 @@ def test_128bit_passphrase(client):
     xprv9s21ZrQH143K3dzDLfeY3cMp23u5vDeFYftu5RPYZPucKc99mNEddU4w99GxdgUGcSfMpVDxhnR1XpJzZNXRN1m6xNgnzFS5MwMP6QyBRKV
     """
     assert client.features.passphrase_protection is True
-    client.set_passphrase("TREZOR")
+    client.use_passphrase("TREZOR")
     address = btc.get_address(client, "Bitcoin", [])
     assert address == "1CX5rv2vbSV8YFAZEAdMwRVqbxxswPnSPw"
     client.state = None
     client.clear_session()
-    client.set_passphrase("ROZERT")
+    client.use_passphrase("ROZERT")
     address_compare = btc.get_address(client, "Bitcoin", [])
     assert address != address_compare
 
@@ -49,11 +49,11 @@ def test_256bit_passphrase(client):
     xprv9s21ZrQH143K2UspC9FRPfQC9NcDB4HPkx1XG9UEtuceYtpcCZ6ypNZWdgfxQ9dAFVeD1F4Zg4roY7nZm2LB7THPD6kaCege3M7EuS8v85c
     """
     assert client.features.passphrase_protection is True
-    client.set_passphrase("TREZOR")
+    client.use_passphrase("TREZOR")
     address = btc.get_address(client, "Bitcoin", [])
     assert address == "18oNx6UczHWASBQXc5XQqdSdAAZyhUwdQU"
     client.state = None
     client.clear_session()
-    client.set_passphrase("ROZERT")
+    client.use_passphrase("ROZERT")
     address_compare = btc.get_address(client, "Bitcoin", [])
     assert address != address_compare

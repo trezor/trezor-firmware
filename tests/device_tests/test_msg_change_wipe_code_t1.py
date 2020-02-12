@@ -45,7 +45,7 @@ def _set_wipe_code(client, wipe_code):
                 messages.PinMatrixRequest(type=PinType.WipeCodeSecond),
             ]
 
-        client.set_pin(pins)
+        client.use_pin_sequence(pins)
         client.set_expected_responses(
             [messages.ButtonRequest()]
             + pin_matrices
@@ -57,7 +57,7 @@ def _set_wipe_code(client, wipe_code):
 def _change_pin(client, old_pin, new_pin):
     assert client.features.pin_protection is True
     with client:
-        client.set_pin([old_pin, new_pin, new_pin])
+        client.use_pin_sequence([old_pin, new_pin, new_pin])
         try:
             return device.change_pin(client)
         except exceptions.TrezorFailure as f:
@@ -110,7 +110,7 @@ def test_set_wipe_code_mismatch(client):
 
     # Let's set a new wipe code.
     with client:
-        client.set_pin([WIPE_CODE4, WIPE_CODE6])
+        client.use_pin_sequence([WIPE_CODE4, WIPE_CODE6])
         client.set_expected_responses(
             [
                 messages.ButtonRequest(),
@@ -134,7 +134,7 @@ def test_set_wipe_code_to_pin(client):
 
     # Let's try setting the wipe code to the curent PIN value.
     with client:
-        client.set_pin([PIN4, PIN4])
+        client.use_pin_sequence([PIN4, PIN4])
         client.set_expected_responses(
             [
                 messages.ButtonRequest(),
@@ -157,7 +157,7 @@ def test_set_pin_to_wipe_code(client):
 
     # Try to set the PIN to the current wipe code value.
     with client:
-        client.set_pin([WIPE_CODE4, WIPE_CODE4])
+        client.use_pin_sequence([WIPE_CODE4, WIPE_CODE4])
         client.set_expected_responses(
             [
                 messages.ButtonRequest(),

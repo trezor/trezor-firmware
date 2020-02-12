@@ -125,7 +125,7 @@ class TestProtectionLevels:
 
     @pytest.mark.setup_client(uninitialized=True)
     def test_recovery_device(self, client):
-        client.set_mnemonic(MNEMONIC12)
+        client.use_mnemonic(MNEMONIC12)
         with client:
             client.set_expected_responses(
                 [proto.ButtonRequest()]
