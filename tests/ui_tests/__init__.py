@@ -111,4 +111,4 @@ def read_fixtures():
 
 
 def write_fixtures():
-    HASH_FILE.write_text(json.dumps(HASHES, indent="", sort_keys=True))
+    HASH_FILE.write_text(json.dumps(HASHES, indent="", sort_keys=True) + "\n")
