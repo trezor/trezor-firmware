@@ -1,6 +1,6 @@
 # Passphrase 
 
-As of \[versions TBD\] we have changed how [passphrase](https://wiki.trezor.io/Passphrase) is communicated between the Host and the Device.
+As of 2.3.0 we have changed how [passphrase](https://wiki.trezor.io/Passphrase) is communicated between the host and the device.
  
 Passphrase is very tightly coupled with _sessions_. The reader is encouraged to read on that topic first in the [sessions.md](sessions.md) section.
 
@@ -20,7 +20,7 @@ PassphraseAck
 
 In the default Trezor setting, the passphrase is obtained from the Host. Trezor sends a PassphraseRequest message and awaits PassphraseAck as a response. This message contains field `passphrase` to transmit it or it has `on_device` boolean flag to indicate that the user wishes to enter the passphrase on Trezor instead. Setting both `passphrase` and `on_device` to true is forbidden.
 
-Note that this has changed as of TBD. In previous firmware versions the `on_device` flag was in the PassphraseRequest message, since this decision has been made on Trezor. We also had two additional messages PassphraseStateRequest and PassphraseStateAck which were removed.
+Note that this has changed as of 2.3.0. In previous firmware versions the `on_device` flag was in the PassphraseRequest message, since this decision has been made on Trezor. We also had two additional messages PassphraseStateRequest and PassphraseStateAck which were removed.
 
 ## Example
 

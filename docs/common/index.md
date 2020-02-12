@@ -8,7 +8,7 @@ JSON coin definitions and support tables.
 
 ## Protobuf Definitions
 
-Common Protobuf definitions for the Trezor protocol.
+Common Protobuf definitions for the Trezor protocol. Also see [Communication](communication/index.md).
 
 ## Tools 
 
