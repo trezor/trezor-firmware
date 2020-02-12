@@ -187,12 +187,8 @@ class TrezorClient:
         available_on_device = Capability.PassphraseEntry in self.features.capabilities
 
         def send_passphrase(passphrase=None, on_device=None):
-            if self.features.model == "1":
-                state = None
-            else:
-                state = self.session_id
             msg = messages.PassphraseAck(
-                _state=state, passphrase=passphrase, on_device=on_device
+                _state=self.session_id, passphrase=passphrase, on_device=on_device
             )
             resp = self.call_raw(msg)
             if isinstance(resp, messages.Deprecated_PassphraseStateRequest):

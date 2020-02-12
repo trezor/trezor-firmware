@@ -17,3 +17,9 @@ DebugLinkMemoryWrite.memory             max_size:1024
 # unused fields
 DebugLinkState.layout_lines             max_count:10 max_size:30
 DebugLinkLayout.lines                   max_count:10 max_size:30
+DebugLinkRecordScreen.target_directory  max_size:1
+DebugLinkShowText.header_text           max_size:1
+DebugLinkShowText.body_text             max_count:1
+DebugLinkShowText.header_icon           max_size:1
+DebugLinkShowText.icon_color            max_size:1
+DebugLinkShowTextItem.content           max_size:1
