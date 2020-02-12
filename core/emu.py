@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import gzip
+import logging
 import os
 import platform
 import signal
@@ -54,7 +55,6 @@ def watch_emulator(emulator):
     try:
         for _, type_names, _, _ in watch.event_gen(yield_nones=False):
             if "IN_CLOSE_WRITE" in type_names:
-                click.echo("Restarting...")
                 emulator.restart()
     except KeyboardInterrupt:
         emulator.stop()
@@ -198,6 +198,10 @@ def cli(
     if quiet:
         output = None
 
+    logger = logging.getLogger("trezorlib._internal.emulator")
+    logger.setLevel(logging.INFO)
+    logger.addHandler(logging.StreamHandler())
+
     emulator = CoreEmulator(
         executable,
         profile_dir,
@@ -230,11 +234,7 @@ def cli(
         run_debugger(emulator)
         raise RuntimeError("run_debugger should not return")
 
-    click.echo("Waiting for emulator to come up... ", err=True)
-    start = time.monotonic()
     emulator.start()
-    end = time.monotonic()
-    click.echo(f"Emulator ready after {end - start:.3f} seconds", err=True)
 
     if mnemonics:
         if slip0014:
