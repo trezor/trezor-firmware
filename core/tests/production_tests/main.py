@@ -18,6 +18,7 @@ usb = io.USB(
     manufacturer="SatoshiLabs",
     product="TREZOR",
     serial_number="000000000000000000000000",
+    usb21_landing=False,
 )
 
 usb.add(usb_vcp)
