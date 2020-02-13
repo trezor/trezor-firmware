@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import logging
 import os
 import subprocess
 import time
@@ -21,6 +22,10 @@ from pathlib import Path
 
 from trezorlib.debuglink import TrezorClientDebugLink
 from trezorlib.transport.udp import UdpTransport
+
+LOG = logging.getLogger(__name__)
+
+EMULATOR_WAIT_TIME = 60
 
 
 def _rm_f(path):
@@ -84,9 +89,10 @@ class Emulator:
     def _get_transport(self):
         return UdpTransport("127.0.0.1:{}".format(self.port))
 
-    def wait_until_ready(self, timeout=60):
+    def wait_until_ready(self, timeout=EMULATOR_WAIT_TIME):
         transport = self._get_transport()
         transport.open()
+        LOG.info("Waiting for emulator to come up...")
         start = time.monotonic()
         try:
             while True:
@@ -103,8 +109,11 @@ class Emulator:
         finally:
             transport.close()
 
+        LOG.info("Emulator ready after {:.3f} seconds".format(time.monotonic() - start))
+
     def wait(self, timeout=None):
         ret = self.process.wait(timeout=timeout)
+        self.process = None
         self.stop()
         return ret
 
@@ -129,6 +138,7 @@ class Emulator:
         if self.process:
             if self.process.poll() is not None:
                 # process has died, stop and start again
+                LOG.info("Starting from a stopped process.")
                 self.stop()
             else:
                 # process is running, no need to start again
@@ -139,6 +149,9 @@ class Emulator:
             self.wait_until_ready()
         except TimeoutError:
             # Assuming that after the default 60-second timeout, the process is stuck
+            LOG.warning(
+                "Emulator did not come up after {} seconds".format(EMULATOR_WAIT_TIME)
+            )
             self.process.kill()
             raise
 
@@ -156,10 +169,15 @@ class Emulator:
         self.client = None
 
         if self.process:
+            LOG.info("Terminating emulator...")
+            start = time.monotonic()
             self.process.terminate()
             try:
-                self.process.wait(30)
+                self.process.wait(EMULATOR_WAIT_TIME)
+                end = time.monotonic()
+                LOG.info("Emulator shut down after {:.3f} seconds".format(end - start))
             except subprocess.TimeoutExpired:
+                LOG.info("Emulator seems stuck. Sending kill signal.")
                 self.process.kill()
 
         _rm_f(self.profile_dir / "trezor.pid")

@@ -409,7 +409,7 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
             # Unload modules imported by the workflow.  Should not raise.
             utils.unimport_end(modules)
 
-        except BaseException as exc:
+        except Exception as exc:
             # The session handling should never exit, just log and continue.
             if __debug__:
                 log.exception(__name__, exc)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import gzip
+import logging
 import os
 import platform
 import signal
@@ -54,7 +55,6 @@ def watch_emulator(emulator):
     try:
         for _, type_names, _, _ in watch.event_gen(yield_nones=False):
             if "IN_CLOSE_WRITE" in type_names:
-                click.echo("Restarting...")
                 emulator.restart()
     except KeyboardInterrupt:
         emulator.stop()
@@ -77,19 +77,23 @@ def run_debugger(emulator):
         )
 
 
+def _from_env(name):
+    return os.environ.get(name) == "1"
+
+
 @click.command(context_settings=dict(ignore_unknown_options=True))
 # fmt: off
-@click.option("-a", "--disable-animation", is_flag=True, default=os.environ.get("TREZOR_DISABLE_ANIMATION") == "1", help="Disable animation")
+@click.option("-a", "--disable-animation/--enable-animation", default=_from_env("TREZOR_DISABLE_ANIMATION"), help="Disable animation")
 @click.option("-c", "--command", "run_command", is_flag=True, help="Run command while emulator is running")
-@click.option("-d", "--production", is_flag=True, default=os.environ.get("PYOPT") == "1", help="Production mode (debuglink disabled)")
+@click.option("-d", "--production/--no-production", default=_from_env("PYOPT"), help="Production mode (debuglink disabled)")
 @click.option("-D", "--debugger", is_flag=True, help="Run emulator in debugger (gdb/lldb)")
 @click.option("--executable", type=click.Path(exists=True, dir_okay=False), default=os.environ.get("MICROPYTHON"), help="Alternate emulator executable")
-@click.option("-g", "--profiling", is_flag=True, default=os.environ.get("TREZOR_PROFILING"), help="Run with profiler wrapper")
+@click.option("-g", "--profiling/--no-profiling", default=_from_env("TREZOR_PROFILING"), help="Run with profiler wrapper")
 @click.option("-h", "--headless", is_flag=True, help="Headless mode (no display)")
 @click.option("--heap-size", metavar="SIZE", default="20M", help="Configure heap size")
 @click.option("--main", help="Path to python main file")
 @click.option("--mnemonic", "mnemonics", multiple=True, help="Initialize device with given mnemonic. Specify multiple times for Shamir shares.")
-@click.option("--log-memory", is_flag=True, default=os.environ.get("TREZOR_LOG_MEMORY") == "1", help="Print memory usage after workflows")
+@click.option("--log-memory/--no-log-memory", default=_from_env("TREZOR_LOG_MEMORY"), help="Print memory usage after workflows")
 @click.option("-o", "--output", type=click.File("w"), default="-", help="Redirect emulator output to file")
 @click.option("-p", "--profile", metavar="NAME", help="Profile name or path")
 @click.option("-P", "--port", metavar="PORT", type=int, default=int(os.environ.get("TREZOR_UDP_PORT", 0)) or None, help="UDP port number")
@@ -198,6 +202,10 @@ def cli(
     if quiet:
         output = None
 
+    logger = logging.getLogger("trezorlib._internal.emulator")
+    logger.setLevel(logging.INFO)
+    logger.addHandler(logging.StreamHandler())
+
     emulator = CoreEmulator(
         executable,
         profile_dir,
@@ -230,11 +238,7 @@ def cli(
         run_debugger(emulator)
         raise RuntimeError("run_debugger should not return")
 
-    click.echo("Waiting for emulator to come up... ", err=True)
-    start = time.monotonic()
     emulator.start()
-    end = time.monotonic()
-    click.echo(f"Emulator ready after {end - start:.3f} seconds", err=True)
 
     if mnemonics:
         if slip0014:

@@ -47,7 +47,6 @@
 "test_msg_change_wipe_code_t2.py::test_set_remove_wipe_code": "82c0d1acbf5ff344189761f808d3cf0e632726341231c20b2c0925ab5549b6af",
 "test_msg_change_wipe_code_t2.py::test_set_wipe_code_mismatch": "1642d2d15920a3bb2c666b39beca9943ba39adb59289ebc40b97d7088a4d7abf",
 "test_msg_change_wipe_code_t2.py::test_set_wipe_code_to_pin": "15289574ceb002b5161305b0595dcd20e437d1dd4e7561332e1aba4c1615e9ea",
-"test_msg_change_wipe_code_t2.py::test_wipe_code_activate": "348ff6811029253d7d520b37a2d3ff219516a7401c8b65ab088c7a7d39bd8b2b",
 "test_msg_changepin_t2.py::test_change_failed": "370c59da62a84aaefa242562c36a6facac89c7f819e37d1ae8cbe2c44a2de256",
 "test_msg_changepin_t2.py::test_change_pin": "c42fca9bf8f3b4c330516d90231ae0cfa7419d83370be9cfcf6a81cca3f3b06c",
 "test_msg_changepin_t2.py::test_remove_pin": "d049eaa6cd11e88b7af193b080cf868b62271266ad6f2973bfd82944b523741d",

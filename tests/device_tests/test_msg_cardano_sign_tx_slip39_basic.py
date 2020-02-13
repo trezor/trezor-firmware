@@ -137,7 +137,7 @@ def test_cardano_sign_tx(
         client.debug.swipe_up()
         client.debug.press_yes()
 
-    client.set_passphrase("TREZOR")
+    client.use_passphrase("TREZOR")
     with client:
         client.set_expected_responses(expected_responses)
         client.set_input_flow(input_flow)

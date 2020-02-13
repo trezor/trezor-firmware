@@ -52,7 +52,7 @@ class TestDeviceLoad:
             passphrase_protection=True,
             label="test",
         )
-        client.set_passphrase("passphrase")
+        client.use_passphrase("passphrase")
         state = client.debug.state()
         assert state.mnemonic_secret == MNEMONIC12.encode()
 
@@ -114,7 +114,7 @@ class TestDeviceLoad:
             language="en-US",
             skip_checksum=True,
         )
-        client.set_passphrase(passphrase_nfkd)
+        client.use_passphrase(passphrase_nfkd)
         address_nfkd = btc.get_address(client, "Bitcoin", [])
 
         device.wipe(client)
@@ -127,7 +127,7 @@ class TestDeviceLoad:
             language="en-US",
             skip_checksum=True,
         )
-        client.set_passphrase(passphrase_nfc)
+        client.use_passphrase(passphrase_nfc)
         address_nfc = btc.get_address(client, "Bitcoin", [])
 
         device.wipe(client)
@@ -140,7 +140,7 @@ class TestDeviceLoad:
             language="en-US",
             skip_checksum=True,
         )
-        client.set_passphrase(passphrase_nfkc)
+        client.use_passphrase(passphrase_nfkc)
         address_nfkc = btc.get_address(client, "Bitcoin", [])
 
         device.wipe(client)
@@ -153,7 +153,7 @@ class TestDeviceLoad:
             language="en-US",
             skip_checksum=True,
         )
-        client.set_passphrase(passphrase_nfd)
+        client.use_passphrase(passphrase_nfd)
         address_nfd = btc.get_address(client, "Bitcoin", [])
 
         assert address_nfkd == address_nfc

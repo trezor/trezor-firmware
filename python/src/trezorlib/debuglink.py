@@ -184,8 +184,11 @@ class DebugUI:
 
     def __init__(self, debuglink: DebugLink):
         self.debuglink = debuglink
-        self.pin = None
-        self.passphrase = "sphinx of black quartz, judge my wov"
+        self.clear()
+
+    def clear(self):
+        self.pins = None
+        self.passphrase = ""
         self.input_flow = None
 
     def button_request(self, code):
@@ -221,10 +224,14 @@ class DebugUI:
                 self.input_flow = self.INPUT_FLOW_DONE
 
     def get_pin(self, code=None):
-        if self.pin:
-            return self.pin
-        else:
+        if self.pins is None:
+            # respond with correct pin
             return self.debuglink.read_pin_encoded()
+
+        if self.pins == []:
+            raise AssertionError("PIN sequence ended prematurely")
+        else:
+            return self.debuglink.encode_pin(self.pins.pop(0))
 
     def get_passphrase(self, available_on_device):
         return self.passphrase
@@ -261,15 +268,10 @@ class TrezorClientDebugLink(TrezorClient):
 
         self.filters = {}
 
-        # Always press Yes and provide correct pin
-        self.setup_debuglink(True, True)
-
         # Do not expect any specific response from device
         self.expected_responses = None
         self.current_response = None
 
-        # Use blank passphrase
-        self.set_passphrase("")
         super().__init__(transport, ui=self.ui)
 
     def open(self):
@@ -281,6 +283,15 @@ class TrezorClientDebugLink(TrezorClient):
         super().close()
 
     def set_filter(self, message_type, callback):
+        """Configure a filter function for a specified message type.
+
+        The `callback` must be a function that accepts a protobuf message, and returns
+        a (possibly modified) protobuf message of the same type. Whenever a message
+        is sent or received that matches `message_type`, `callback` is invoked on the
+        message and its result is substituted for the original.
+
+        Useful for test scenarios with an active malicious actor on the wire.
+        """
         self.filters[message_type] = callback
 
     def _filter_message(self, msg):
@@ -292,10 +303,30 @@ class TrezorClientDebugLink(TrezorClient):
             return msg
 
     def set_input_flow(self, input_flow):
-        if input_flow is None:
-            self.ui.input_flow = None
-            return
+        """Configure a sequence of input events for the current with-block.
 
+        The `input_flow` must be a generator function. A `yield` statement in the
+        input flow function waits for a ButtonRequest from the device, and returns
+        its code.
+
+        Example usage:
+
+        >>> def input_flow():
+        >>>     # wait for first button prompt
+        >>>     code = yield
+        >>>     assert code == ButtonRequestType.Other
+        >>>     # press No
+        >>>     client.debug.press_no()
+        >>>
+        >>>     # wait for second button prompt
+        >>>     yield
+        >>>     # press Yes
+        >>>     client.debug.press_yes()
+        >>>
+        >>> with client:
+        >>>     client.set_input_flow(input_flow)
+        >>>     some_call(client)
+        """
         if not self.in_with_statement:
             raise RuntimeError("Must be called inside 'with' statement")
 
@@ -315,44 +346,59 @@ class TrezorClientDebugLink(TrezorClient):
         self.in_with_statement -= 1
 
         # Clear input flow.
-        self.set_input_flow(None)
+        try:
+            if _type is not None:
+                # Another exception raised
+                return False
 
-        if _type is not None:
-            # Another exception raised
-            return False
+            if self.expected_responses is None:
+                # no need to check anything else
+                return False
 
-        if self.expected_responses is None:
-            # no need to check anything else
-            return False
+            # Evaluate missed responses in 'with' statement
+            if self.current_response < len(self.expected_responses):
+                self._raise_unexpected_response(None)
 
-        # return isinstance(value, TypeError)
-        # Evaluate missed responses in 'with' statement
-        if self.current_response < len(self.expected_responses):
-            self._raise_unexpected_response(None)
-
-        # Cleanup
-        self.expected_responses = None
-        self.current_response = None
+        finally:
+            # Cleanup
+            self.expected_responses = None
+            self.current_response = None
+            self.ui.clear()
 
         return False
 
     def set_expected_responses(self, expected):
+        """Set a sequence of expected responses to client calls.
+
+        Within a given with-block, the list of received responses from device must
+        match the list of expected responses, otherwise an AssertionError is raised.
+
+        If an expected response is given a field value other than None, that field value
+        must exactly match the received field value. If a given field is None
+        (or unspecified) in the expected response, the received field value is not
+        checked.
+        """
         if not self.in_with_statement:
             raise RuntimeError("Must be called inside 'with' statement")
         self.expected_responses = expected
         self.current_response = 0
 
-    def setup_debuglink(self, button, pin_correct):
-        # self.button = button  # True -> YES button, False -> NO button
-        if pin_correct:
-            self.ui.pin = None
-        else:
-            self.ui.pin = "444222"
+    def use_pin_sequence(self, pins):
+        """Respond to PIN prompts from device with the provided PINs.
+        The sequence must be at least as long as the expected number of PIN prompts.
+        """
+        # XXX This currently only works on T1 as a response to PinMatrixRequest, but
+        # if we modify trezor-core to introduce PIN prompts predictably (i.e. by
+        # a new ButtonRequestType), it could also be used on TT via debug.input()
+        self.ui.pins = list(pins)
 
-    def set_passphrase(self, passphrase):
+    def use_passphrase(self, passphrase):
+        """Respond to passphrase prompts from device with the provided passphrase."""
         self.ui.passphrase = Mnemonic.normalize_string(passphrase)
 
-    def set_mnemonic(self, mnemonic):
+    def use_mnemonic(self, mnemonic):
+        """Use the provided mnemonic to respond to device.
+        Only applies to T1, where device prompts the host for mnemonic words."""
         self.mnemonic = Mnemonic.normalize_string(mnemonic).split(" ")
 
     def _raw_read(self):

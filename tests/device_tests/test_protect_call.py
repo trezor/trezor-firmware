@@ -41,42 +41,28 @@ class TestProtectCall:
     def test_pin(self, client):
         with client:
             assert client.debug.read_pin()[0] == "1234"
-            client.setup_debuglink(button=True, pin_correct=True)
             client.set_expected_responses([proto.PinMatrixRequest(), proto.Address()])
             self._some_protected_call(client)
 
     @pytest.mark.setup_client(pin="1234")
     def test_incorrect_pin(self, client):
-        client.setup_debuglink(button=True, pin_correct=False)
         with pytest.raises(PinException):
-            self._some_protected_call(client)
-
-    @pytest.mark.setup_client(pin="1234")
-    def test_cancelled_pin(self, client):
-        client.setup_debuglink(button=True, pin_correct=False)  # PIN cancel
-        with pytest.raises(PinException):
+            client.use_pin_sequence(["5678"])
             self._some_protected_call(client)
 
     @pytest.mark.setup_client(pin="1234", passphrase=True)
     def test_exponential_backoff_with_reboot(self, client):
-        client.setup_debuglink(button=True, pin_correct=False)
-
         def test_backoff(attempts, start):
             if attempts <= 1:
                 expected = 0
             else:
                 expected = (2 ** (attempts - 1)) - 1
             got = round(time.time() - start, 2)
-
-            msg = "Pin delay expected to be at least %s seconds, got %s" % (
-                expected,
-                got,
-            )
-            print(msg)
             assert got >= expected
 
         for attempt in range(1, 4):
             start = time.time()
-            with pytest.raises(PinException):
+            with client, pytest.raises(PinException):
+                client.use_pin_sequence(["5678"])
                 self._some_protected_call(client)
             test_backoff(attempt, start)

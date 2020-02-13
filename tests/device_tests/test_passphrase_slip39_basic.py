@@ -30,7 +30,7 @@ def test_3of6_passphrase(client):
     xprv9s21ZrQH143K2pMWi8jrTawHaj16uKk4CSbvo4Zt61tcrmuUDMx2o1Byzcr3saXNGNvHP8zZgXVdJHsXVdzYFPavxvCyaGyGr1WkAYG83ce
     """
     assert client.features.passphrase_protection is True
-    client.set_passphrase("TREZOR")
+    client.use_passphrase("TREZOR")
     address = btc.get_address(client, "Bitcoin", [])
     assert address == "18oZEMRWurCZW1FeK8sWYyXuWx2bFqEKyX"
 
@@ -50,6 +50,6 @@ def test_2of5_passphrase(client):
     xprv9s21ZrQH143K2o6EXEHpVy8TCYoMmkBnDCCESLdR2ieKwmcNG48ck2XJQY4waS7RUQcXqR9N7HnQbUVEDMWYyREdF1idQqxFHuCfK7fqFni
     """
     assert client.features.passphrase_protection is True
-    client.set_passphrase("TREZOR")
+    client.use_passphrase("TREZOR")
     address = btc.get_address(client, "Bitcoin", [])
     assert address == "19Fjs9AvT13Y2Nx8GtoVfADmFWnccsPinQ"
