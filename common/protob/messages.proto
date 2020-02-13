@@ -177,6 +177,8 @@ enum MessageType {
     MessageType_RippleAddress = 401 [(wire_out) = true];
     MessageType_RippleSignTx = 402 [(wire_in) = true];
     MessageType_RippleSignedTx = 403 [(wire_in) = true];
+    MessageType_RippleGetPublicKey = 404 [(wire_in) = true];
+    MessageType_RipplePublicKey = 405 [(wire_out) = true];
 
     // Monero
     MessageType_MoneroTransactionInitRequest = 501 [(wire_out) = true];

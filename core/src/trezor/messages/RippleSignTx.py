@@ -2,7 +2,12 @@
 # fmt: off
 import protobuf as p
 
+from .RippleIssuedAmount import RippleIssuedAmount
+from .RippleMemo import RippleMemo
+from .RipplePathArray import RipplePathArray
 from .RipplePayment import RipplePayment
+from .RippleSigner import RippleSigner
+from .RippleSignerEntryContainer import RippleSignerEntryContainer
 
 if __debug__:
     try:
@@ -22,14 +27,112 @@ class RippleSignTx(p.MessageType):
         flags: int = None,
         sequence: int = None,
         last_ledger_sequence: int = None,
+        account_txn_id: str = None,
+        memos: List[RippleMemo] = None,
+        signers: List[RippleSigner] = None,
+        source_tag: int = None,
+        account: str = None,
+        signing_pub_key: str = None,
+        transaction_type: str = None,
         payment: RipplePayment = None,
+        clear_flag: int = None,
+        set_flag: int = None,
+        domain: str = None,
+        email_hash: str = None,
+        message_key: str = None,
+        transfer_rate: int = None,
+        tick_size: int = None,
+        check_id: str = None,
+        amount: int = None,
+        issued_amount: RippleIssuedAmount = None,
+        deliver_min: int = None,
+        issued_deliver_min: RippleIssuedAmount = None,
+        destination: str = None,
+        send_max: int = None,
+        issued_send_max: RippleIssuedAmount = None,
+        destination_tag: int = None,
+        expiration: int = None,
+        invoice_id: str = None,
+        authorize: str = None,
+        unauthorize: str = None,
+        owner: str = None,
+        offer_sequence: int = None,
+        cancel_after: int = None,
+        finish_after: int = None,
+        condition: str = None,
+        fulfillment: str = None,
+        taker_gets: int = None,
+        issued_taker_gets: RippleIssuedAmount = None,
+        taker_pays: int = None,
+        issued_taker_pays: RippleIssuedAmount = None,
+        paths: List[RipplePathArray] = None,
+        channel: str = None,
+        balance: int = None,
+        signature: str = None,
+        public_key: str = None,
+        settle_delay: int = None,
+        regular_key: str = None,
+        signer_quorum: int = None,
+        signer_entries: List[RippleSignerEntryContainer] = None,
+        limit_amount: RippleIssuedAmount = None,
+        quality_in: int = None,
+        quality_out: int = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.fee = fee
         self.flags = flags
         self.sequence = sequence
         self.last_ledger_sequence = last_ledger_sequence
+        self.account_txn_id = account_txn_id
+        self.memos = memos if memos is not None else []
+        self.signers = signers if signers is not None else []
+        self.source_tag = source_tag
+        self.account = account
+        self.signing_pub_key = signing_pub_key
+        self.transaction_type = transaction_type
         self.payment = payment
+        self.clear_flag = clear_flag
+        self.set_flag = set_flag
+        self.domain = domain
+        self.email_hash = email_hash
+        self.message_key = message_key
+        self.transfer_rate = transfer_rate
+        self.tick_size = tick_size
+        self.check_id = check_id
+        self.amount = amount
+        self.issued_amount = issued_amount
+        self.deliver_min = deliver_min
+        self.issued_deliver_min = issued_deliver_min
+        self.destination = destination
+        self.send_max = send_max
+        self.issued_send_max = issued_send_max
+        self.destination_tag = destination_tag
+        self.expiration = expiration
+        self.invoice_id = invoice_id
+        self.authorize = authorize
+        self.unauthorize = unauthorize
+        self.owner = owner
+        self.offer_sequence = offer_sequence
+        self.cancel_after = cancel_after
+        self.finish_after = finish_after
+        self.condition = condition
+        self.fulfillment = fulfillment
+        self.taker_gets = taker_gets
+        self.issued_taker_gets = issued_taker_gets
+        self.taker_pays = taker_pays
+        self.issued_taker_pays = issued_taker_pays
+        self.paths = paths if paths is not None else []
+        self.channel = channel
+        self.balance = balance
+        self.signature = signature
+        self.public_key = public_key
+        self.settle_delay = settle_delay
+        self.regular_key = regular_key
+        self.signer_quorum = signer_quorum
+        self.signer_entries = signer_entries if signer_entries is not None else []
+        self.limit_amount = limit_amount
+        self.quality_in = quality_in
+        self.quality_out = quality_out
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -39,5 +142,54 @@ class RippleSignTx(p.MessageType):
             3: ('flags', p.UVarintType, 0),
             4: ('sequence', p.UVarintType, 0),
             5: ('last_ledger_sequence', p.UVarintType, 0),
+            7: ('account_txn_id', p.UnicodeType, 0),
+            8: ('memos', RippleMemo, p.FLAG_REPEATED),
+            9: ('signers', RippleSigner, p.FLAG_REPEATED),
+            10: ('source_tag', p.UVarintType, 0),
+            11: ('account', p.UnicodeType, 0),
+            12: ('signing_pub_key', p.UnicodeType, 0),
+            13: ('transaction_type', p.UnicodeType, 0),
             6: ('payment', RipplePayment, 0),
+            14: ('clear_flag', p.UVarintType, 0),
+            15: ('set_flag', p.UVarintType, 0),
+            16: ('domain', p.UnicodeType, 0),
+            17: ('email_hash', p.UnicodeType, 0),
+            18: ('message_key', p.UnicodeType, 0),
+            19: ('transfer_rate', p.UVarintType, 0),
+            20: ('tick_size', p.UVarintType, 0),
+            21: ('check_id', p.UnicodeType, 0),
+            22: ('amount', p.UVarintType, 0),
+            23: ('issued_amount', RippleIssuedAmount, 0),
+            24: ('deliver_min', p.UVarintType, 0),
+            25: ('issued_deliver_min', RippleIssuedAmount, 0),
+            26: ('destination', p.UnicodeType, 0),
+            27: ('send_max', p.UVarintType, 0),
+            28: ('issued_send_max', RippleIssuedAmount, 0),
+            29: ('destination_tag', p.UVarintType, 0),
+            30: ('expiration', p.UVarintType, 0),
+            31: ('invoice_id', p.UnicodeType, 0),
+            32: ('authorize', p.UnicodeType, 0),
+            33: ('unauthorize', p.UnicodeType, 0),
+            34: ('owner', p.UnicodeType, 0),
+            35: ('offer_sequence', p.UVarintType, 0),
+            36: ('cancel_after', p.UVarintType, 0),
+            37: ('finish_after', p.UVarintType, 0),
+            38: ('condition', p.UnicodeType, 0),
+            39: ('fulfillment', p.UnicodeType, 0),
+            40: ('taker_gets', p.UVarintType, 0),
+            41: ('issued_taker_gets', RippleIssuedAmount, 0),
+            42: ('taker_pays', p.UVarintType, 0),
+            43: ('issued_taker_pays', RippleIssuedAmount, 0),
+            44: ('paths', RipplePathArray, p.FLAG_REPEATED),
+            45: ('channel', p.UnicodeType, 0),
+            46: ('balance', p.UVarintType, 0),
+            47: ('signature', p.UnicodeType, 0),
+            48: ('public_key', p.UnicodeType, 0),
+            49: ('settle_delay', p.UVarintType, 0),
+            50: ('regular_key', p.UnicodeType, 0),
+            51: ('signer_quorum', p.UVarintType, 0),
+            52: ('signer_entries', RippleSignerEntryContainer, p.FLAG_REPEATED),
+            53: ('limit_amount', RippleIssuedAmount, 0),
+            54: ('quality_in', p.UVarintType, 0),
+            55: ('quality_out', p.UVarintType, 0),
         }

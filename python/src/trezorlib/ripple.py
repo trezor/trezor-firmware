@@ -18,7 +18,33 @@ from . import messages
 from .protobuf import dict_to_proto
 from .tools import dict_from_camelcase, expect
 
-REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType", "Payment")
+REQUIRED_FIELDS = {
+    "Common": ["Fee", "Sequence", "TransactionType"],
+    "Payment": [["Amount", "IssuedAmount"], "Destination"],
+    "SetRegularKey": [],
+    "EscrowCreate": ["Amount", "Destination"],
+    "EscrowCancel": ["Owner", "OfferSequence"],
+    "EscrowFinish": ["Owner", "OfferSequence"],
+    "AccountSet": [],
+    "PaymentChannelCreate": ["Amount", "Destination", "SettleDelay", "PublicKey"],
+    "PaymentChannelFund": ["Channel", "Amount"],
+    "PaymentChannelClaim": ["Channel"],
+    "TrustSet": ["LimitAmount"],
+    "OfferCreate": [["TakerGets", "IssuedTakerGets"], ["TakerPays", "IssuedTakerPays"]],
+    "OfferCancel": ["OfferSequence"],
+    "SignerListSet": ["SignerQuorum"],
+    "CheckCreate": ["Destination", ["IssuedSendMax", "SendMax"]],
+    "CheckCancel": ["CheckID"],
+    "CheckCash": [
+        "CheckID",
+        ["Amount", "IssuedAmount", "DeliverMin", "IssuedDeliverMin"],
+    ],
+    "DepositPreauth": [["Authorize", "Unauthorize"]],
+    "AccountDelete": ["Destination"],
+}
+
+AMOUNT_FIELDS = ["Amount", "DeliverMin", "SendMax", "TakerGets", "TakerPays"]
+
 REQUIRED_PAYMENT_FIELDS = ("Amount", "Destination")
 
 
@@ -35,13 +61,57 @@ def sign_tx(client, address_n, msg: messages.RippleSignTx):
     return client.call(msg)
 
 
+@expect(messages.RipplePublicKey, field="public_key")
+def get_public_key(client, address_n, show_display=False):
+    return client.call(
+        messages.RippleGetPublicKey(address_n=address_n, show_display=show_display)
+    )
+
+
 def create_sign_tx_msg(transaction) -> messages.RippleSignTx:
-    if not all(transaction.get(k) for k in REQUIRED_FIELDS):
-        raise ValueError("Some of the required fields missing")
-    if not all(transaction["Payment"].get(k) for k in REQUIRED_PAYMENT_FIELDS):
-        raise ValueError("Some of the required payment fields missing")
-    if transaction["TransactionType"] != "Payment":
-        raise ValueError("Only Payment transaction type is supported")
+    check_fields(transaction, REQUIRED_FIELDS["Common"])
+    prepare_amount_fields(transaction)
+
+    if transaction["TransactionType"] not in transaction:
+        check_fields(transaction, REQUIRED_FIELDS[transaction["TransactionType"]])
+    else:
+        check_fields(
+            transaction.get(transaction["TransactionType"]),
+            REQUIRED_FIELDS[transaction["TransactionType"]],
+        )
 
     converted = dict_from_camelcase(transaction)
     return dict_to_proto(messages.RippleSignTx, converted)
+
+
+def check_fields(msg, fields):
+    """
+    Checks for the existence of fields in the message.
+    :param fields: List of required fields in `msg`, if one of multiple is required, provide as inner list
+    """
+    for field in fields:
+        has_field = False
+        if isinstance(field, list):
+            for alternative in field:
+                if alternative in msg:
+                    has_field = True
+                    break
+        else:
+            if field in msg:
+                has_field = True
+        if not has_field:
+            raise ValueError(
+                "Some of the following fields are missing {}".format(fields)
+            )
+
+
+def prepare_amount_fields(transaction):
+    """
+    Adds an 'Issued' prefix to every amount field containing an issued currency.
+    :param transaction: A standard XRP transaction JSON
+    """
+    for k, v in transaction.items():
+        if k in AMOUNT_FIELDS:
+            if isinstance(v, dict):
+                transaction["Issued" + k] = v
+                del transaction[k]

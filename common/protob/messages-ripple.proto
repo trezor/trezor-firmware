@@ -24,28 +24,172 @@ message RippleAddress {
 }
 
 /**
+ * Request: Ask device for public key corresponding to address_n path
+ * @start
+ * @next RipplePublicKey
+ */
+message RippleGetPublicKey {
+    repeated uint32 address_n = 1;              // BIP-32 path. For compatibility with other wallets, must be m/44'/144'/index'
+    optional bool show_display = 2;             // optionally show on display before sending the result
+}
+
+/**
+ * Response: Public key for the given index
+ * @end
+ */
+message RipplePublicKey {
+    optional string public_key = 1;             // Address in Ripple format (base58 of a pubkey with checksum)
+}
+
+
+/**
  * Request: ask device to sign Ripple transaction
  * @start
  * @next RippleSignedTx
  */
 message RippleSignTx {
+    // Common fields
     repeated uint32 address_n = 1;              // BIP-32 path. For compatibility with other wallets, must be m/44'/144'/index'
     optional uint64 fee = 2;                    // fee (in drops) for the transaction
     optional uint32 flags = 3;                  // transaction flags
     optional uint32 sequence = 4;               // transaction sequence number
-    optional uint32 last_ledger_sequence = 5;   // see https://developers.ripple.com/reliable-transaction-submission.html#lastledgersequence
-    optional RipplePayment payment = 6;         // Payment transaction type
+    optional uint32 last_ledger_sequence = 5;   // see https://xrpl.org/reliable-transaction-submission.html#lastledgersequence
+    optional string account_txn_id = 7;         // see https://xrpl.org/transaction-common-fields.html#accounttxnid
+    repeated RippleMemo memos = 8;              // additional arbitrary information used to identify this transaction
+    repeated RippleSigner signers = 9;          // array of objects that represent a multi-signature
+    optional uint32 source_tag = 10;            // identify the reason for this payment, or a sender on whose behalf this transaction is made
+    optional string account = 11;               // identify the reason for this payment, or a sender on whose behalf this transaction is made
+    optional string signing_pub_key = 12;       // the public key of the signing device, or an empty string if multi-signing
+    optional string transaction_type = 13;
+
+    optional RipplePayment payment = 6;         // keep number 6 for backwards compatibility
+
+    // Transaction specific fields
+    optional uint32 clear_flag = 14;
+    optional uint32 set_flag = 15;
+    optional string domain = 16;
+    optional string email_hash = 17;
+    optional string message_key = 18;
+    optional uint32 transfer_rate = 19;
+    optional uint32 tick_size = 20;
+    optional string check_id = 21;
+    optional uint64 amount = 22;
+    optional RippleIssuedAmount issued_amount = 23;
+    optional uint64 deliver_min = 24;
+    optional RippleIssuedAmount issued_deliver_min = 25;
+    optional string destination = 26;
+    optional uint64 send_max = 27;
+    optional RippleIssuedAmount issued_send_max = 28;
+    optional uint32 destination_tag = 29;
+    optional uint32 expiration = 30;
+    optional string invoice_id = 31;
+    optional string authorize = 32;
+    optional string unauthorize = 33;
+    optional string owner = 34;
+    optional uint32 offer_sequence = 35;
+    optional uint32 cancel_after = 36;
+    optional uint32 finish_after = 37;
+    optional string condition = 38;
+    optional string fulfillment = 39;
+    optional uint64 taker_gets = 40;
+    optional RippleIssuedAmount issued_taker_gets = 41;
+    optional uint64 taker_pays = 42;
+    optional RippleIssuedAmount issued_taker_pays = 43;
+    repeated RipplePathArray paths = 44;
+    optional string channel = 45;
+    optional uint64 balance = 46;
+    optional string signature = 47;
+    optional string public_key = 48;
+    optional uint32 settle_delay = 49;
+    optional string regular_key = 50;
+    optional uint32 signer_quorum = 51;
+    repeated RippleSignerEntryContainer signer_entries = 52;
+    optional RippleIssuedAmount limit_amount = 53;
+    optional uint32 quality_in = 54;
+    optional uint32 quality_out = 55;
 
     /**
-     * Payment transaction type
+     * Payment transaction type (Trezor legacy format)
      * - simple A sends money to B
-     * - only a subset of fields is supported
-     * - see https://developers.ripple.com/payment.html
+     * - see https://xrpl.org/payment.html
      */
     message RipplePayment {
         optional uint64 amount = 1;             // only XRP is supported at the moment so this an integer
         optional string destination = 2;        // destination account address
         optional uint32 destination_tag = 3;    // destination tag to identify payments
+    }
+
+    /**
+     * Amount object
+     * - specifies amount for issued currencies
+     * - see https://xrpl.org/basic-data-types.html#specifying-currency-amounts
+     */
+    message RippleIssuedAmount {
+        optional string currency = 1;
+        optional string value = 2;
+        optional string issuer = 3;
+    }
+
+    /**
+     * Memo object
+     * - specifies arbitrary messaging data for a transaction
+     * - see https://xrpl.org/transaction-common-fields.html#memos-field
+     */
+    message RippleMemo {
+        optional RippleInternalMemo memo = 1;
+        message RippleInternalMemo {
+            optional string memo_data = 1;
+            optional string memo_format = 2;
+            optional string memo_type = 3;
+        }
+    }
+
+    /**
+     * Signer object
+     * - specifies signatures for a multi-signed transaction
+     * - see https://xrpl.org/transaction-common-fields.html#signers-field
+     */
+    message RippleSigner {
+        optional RippleInternalSigner signer = 1;
+        message RippleInternalSigner {
+            optional string account = 1;
+            optional string txn_signature = 2;
+            optional string signing_pub_key = 3;
+        }
+    }
+
+    /**
+     * Path collection
+     * - specifies different ways for value to flow from the sender to the receiver
+     * - see https://xrpl.org/payment.html#paths
+     */
+    message RipplePathArray {
+        repeated RipplePath path = 1;
+        message RipplePath {
+            optional string account = 1;
+            optional string currency = 2;
+            optional string issuer = 3;
+        }
+    }
+
+    /**
+     * Signer entry collection
+     * - specifies a list of parties that, as a group, are authorized to sign
+     *   a transaction in place of an individual account
+     * - see https://xrpl.org/signerlistset.html#signerlistset-fields
+     */
+    message RippleSignerEntryContainer {
+        optional RippleSignerEntry signer_entry = 1;
+    }
+
+    /**
+     * Signer entry
+     * - specifies a single signing party and their weight
+     * - see https://xrpl.org/signerlist.html#signerentry-object
+     */
+    message RippleSignerEntry {
+        optional string account = 1;
+        optional uint32 signer_weight = 2;
     }
 }
 
