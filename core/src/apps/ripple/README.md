@@ -1,4 +1,4 @@
-# Ripple
+# XRP
 
 MAINTAINER = Tomas Susanka <tomas.susanka@satoshilabs.com>
 
@@ -6,36 +6,54 @@ AUTHOR = Tomas Susanka <tomas.susanka@satoshilabs.com>
 
 REVIEWER = Jan Pochyla <jan.pochyla@satoshilabs.com>
 
+CONTRIBUTORS = Towo Labs AB <hello@towo.io>
+
 -----
 
 ## Documentation
 
-Ripple's documentation can be found [here](https://developers.ripple.com/) and on the deprecated [wiki](https://wiki.ripple.com).
+Developers documentation on the XRP Ledger can be found at [xrpl.org](https://xrpl.org/).
 
 ## Transactions
 
-Ripple has different transaction types, see the [documentation](https://developers.ripple.com/transaction-formats.html) for the structure and the list of all transaction types. The concept is somewhat similar to Stellar. However, Stellar's transaction is composed of operations, whereas in Ripple each transaction is simply of some transaction type.
+Trezor support all 18 XRP Ledger [transaction types](https://xrpl.org/transaction-types.html) and all [common fields](https://xrpl.org/transaction-common-fields.html). You can use your Trezor to store both XRP and assets issued on the XRP Ledger such as USD, SOLO and stocks. All supported transaction types:
 
-We do not support transaction types other than the [Payment](https://developers.ripple.com/payment.html) transaction, which represents the simple "A pays to B" scenario. Other transaction types might be added later on.
+* **AccountSet**, set options on an account.
+* **AccountDelete**, delete an account.
+* **CheckCancel**, cancel a check.
+* **CheckCash**, redeem a check.
+* **CheckCreate**, create a check.
+* **DepositPreauth**, preauthorize deposits from certain counterparties.
+* **EscrowCancel**, reclaim escrowed XRP.
+* **EscrowCreate**, create an escrowed XRP payment.
+* **EscrowFinish**, deliver escrowed XRP to the recipient.
+* **OfferCancel**, withdraw a currency-exchange order.
+* **OfferCreate**, submit an order to exchange currency.
+* **Payment**, send funds from one account to another.
+* **PaymentChannelClaim**, claim money from a payment channel.
+* **PaymentChannelCreate**, open a new payment channel.
+* **PaymentChannelFund**, add more XRP to a payment channel.
+* **SetRegularKey**, add, remove or modify an account's regular key pair.
+* **SignerListSet**, add, remove or modify an account's multi-signing list.
+* **TrustSet**, add or modify a trust line.
 
-We currently sign transactions using ECDSA and the secp256k1 curve same as in Bitcoin. Ripple also supports ed25519, which is currently not supported by Trezor, although the implementation would be quite straightforward.
+#### Interfaces
 
-Non-XRP currencies are not supported. Float and negative amounts are not supported.
+The Trezor [command line client](https://github.com/trezor/trezor-firmware/tree/master/python) or [connect](https://github.com/trezor/connect) can be used to send unsigned transactions to a Trezor. After confirming the transaction on the device, a serialized signed transaction will be returned, ready to be submitted to the XRP Ledger. If you need to serialize or deserialize transactions in your application, refer to [ripple-binary-codec](https://github.com/ripple/ripple-binary-codec).
 
-#### Transactions Explorer
+#### Signing
+The XRP Ledger supports three methods of authorizing transactions. You can have any combination of authorization methods enabled for the XRP Ledger accounts on your Trezor, including the master key pair, a [regular key](https://xrpl.org/cryptographic-keys.html#regular-key-pair) pair or [multi-signing list](https://xrpl.org/multi-signing.html).
 
-[Bithomp](https://bithomp.com/) seems to work fine.
+Trezor devices sign transactions using ECDSA and the secp256k1 curve, same as in Bitcoin. The XRP Ledger also supports signing using ed25519, but this is currently unsupported by Trezor.
 
-#### Submitting a transaction
+#### Submitting
 
-You can use [ripple-lib](https://github.com/ripple/ripple-lib) and its [submit](https://github.com/ripple/ripple-lib/blob/develop/docs/index.md#submit) method to publish a transaction into the Ripple network. Python-trezor returns a serialized signed transaction, which is exactly what you provide as an argument into the submit function.
+To submit signed transactions to the XRP Ledger you can use [ripple-lib](https://github.com/ripple/ripple-lib) and its [submit](https://xrpl.org/rippleapi-reference.html#submit) method. For production use, please see [reliable transaction submission](https://xrpl.org/reliable-transaction-submission.html). After submitting a transaction, you can look up its status by using ripple-lib or a transaction explorer:
 
-## Serialization format
-
-Ripple uses its own [serialization format](https://wiki.ripple.com/Binary_Format). In a simple case, the first nibble of a first byte denotes the type and the second nibble the field. The actual data follow.
-
-Our implementation in `serialize.py` is a simplification of the protocol tailored for the support of the Payment type exclusively.
+* [XRPL Explorer](https://livenet.xrpl.org/)
+* [Bithomp](https://bithomp.com/explorer/) 
+* [XRP Scan](https://xrpscan.com/)
 
 ## Tests
 
-Unit tests are located in the `tests` directory, device tests are in the python-trezor repository.
+Unit tests are located in the [/core/tests](/core/tests) directory and device tests are in the [/tests/device_tests](/tests/device_tests) directory.

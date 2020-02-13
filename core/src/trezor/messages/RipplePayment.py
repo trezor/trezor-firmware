@@ -2,6 +2,9 @@
 # fmt: off
 import protobuf as p
 
+from .RippleIssuedAmount import RippleIssuedAmount
+from .RipplePathArray import RipplePathArray
+
 if __debug__:
     try:
         from typing import Dict, List, Optional
@@ -17,10 +20,24 @@ class RipplePayment(p.MessageType):
         amount: int = None,
         destination: str = None,
         destination_tag: int = None,
+        issued_amount: RippleIssuedAmount = None,
+        invoice_id: str = None,
+        paths: List[RipplePathArray] = None,
+        send_max: int = None,
+        issued_send_max: RippleIssuedAmount = None,
+        deliver_min: int = None,
+        issued_deliver_min: RippleIssuedAmount = None,
     ) -> None:
         self.amount = amount
         self.destination = destination
         self.destination_tag = destination_tag
+        self.issued_amount = issued_amount
+        self.invoice_id = invoice_id
+        self.paths = paths if paths is not None else []
+        self.send_max = send_max
+        self.issued_send_max = issued_send_max
+        self.deliver_min = deliver_min
+        self.issued_deliver_min = issued_deliver_min
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -28,4 +45,11 @@ class RipplePayment(p.MessageType):
             1: ('amount', p.UVarintType, 0),
             2: ('destination', p.UnicodeType, 0),
             3: ('destination_tag', p.UVarintType, 0),
+            4: ('issued_amount', RippleIssuedAmount, 0),
+            5: ('invoice_id', p.UnicodeType, 0),
+            6: ('paths', RipplePathArray, p.FLAG_REPEATED),
+            7: ('send_max', p.UVarintType, 0),
+            8: ('issued_send_max', RippleIssuedAmount, 0),
+            9: ('deliver_min', p.UVarintType, 0),
+            10: ('issued_deliver_min', RippleIssuedAmount, 0),
         }
