@@ -88,6 +88,7 @@ extern Storage configUpdate;
 
 void config_init(void);
 void session_clear(bool lock);
+void config_lockDevice(void);
 
 void config_loadDevice(const LoadDevice *msg);
 
@@ -108,7 +109,7 @@ bool config_getPassphraseProtection(bool *passphrase_protection);
 bool config_getHomescreen(uint8_t *dest, uint16_t dest_size);
 void config_setHomescreen(const uint8_t *data, uint32_t size);
 
-const uint8_t *session_getSessionId(void);
+uint8_t *session_startSession(const uint8_t *received_session_id);
 
 bool config_setMnemonic(const char *mnemonic);
 bool config_containsMnemonic(const char *mnemonic);
