@@ -35,8 +35,8 @@ def get_device():
         try:
             transport = get_transport(path)
             return TrezorClientDebugLink(transport, auto_interact=not interact)
-        except Exception:
-            pytest.exit("Failed to open debuglink for {}".format(path), 3)
+        except Exception as e:
+            raise RuntimeError("Failed to open debuglink for {}".format(path)) from e
 
     else:
         devices = enumerate_devices()
@@ -46,7 +46,7 @@ def get_device():
             except Exception:
                 pass
         else:
-            pytest.exit("No debuggable device found", 3)
+            raise RuntimeError("No debuggable device found")
 
 
 @pytest.fixture(scope="function")
@@ -73,6 +73,7 @@ def client(request):
     try:
         client = get_device()
     except RuntimeError:
+        request.session.shouldstop = "No debuggable Trezor is available"
         pytest.fail("No debuggable Trezor is available")
 
     if request.node.get_closest_marker("skip_t2") and client.features.model == "T":
