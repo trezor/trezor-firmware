@@ -5,7 +5,6 @@ Failure.message                         max_size:256
 PinMatrixAck.pin                        max_size:10
 
 PassphraseAck.passphrase                max_size:51
-PassphraseAck._state                    max_size:32
 
 Deprecated_PassphraseStateRequest.state max_size:1
 
