@@ -1,41 +1,54 @@
 from common import *
-from mock import patch
 from mock_storage import mock_storage
 
-import storage
 from storage import cache
 from trezor.messages.Initialize import Initialize
-from trezor.messages.ClearSession import ClearSession
 from trezor.wire import DUMMY_CONTEXT
 
-from apps.homescreen import handle_Initialize, handle_ClearSession
+from apps.homescreen import handle_Initialize
 
 KEY = 99
 
 
 class TestStorageCache(unittest.TestCase):
-    def test_session_id(self):
-        session_id_a = cache.get_session_id()
+    def test_start_session(self):
+        session_id_a = cache.start_session()
         self.assertIsNotNone(session_id_a)
-        session_id_b = cache.get_session_id()
-        self.assertEqual(session_id_a, session_id_b)
+        session_id_b = cache.start_session()
+        self.assertNotEqual(session_id_a, session_id_b)
 
-        cache.clear()
-        session_id_c = cache.get_session_id()
-        self.assertIsNotNone(session_id_c)
-        self.assertNotEqual(session_id_a, session_id_c)
+        cache.clear_all()
+        with self.assertRaises(RuntimeError):
+            cache.set(KEY, "something")
+        with self.assertRaises(RuntimeError):
+            cache.get(KEY)
+
+    def test_session_queue(self):
+        session_id = cache.start_session()
+        self.assertEqual(cache.start_session(session_id), session_id)
+        cache.set(KEY, "A")
+        for i in range(cache._MAX_SESSIONS_COUNT):
+            cache.start_session()
+        self.assertNotEqual(cache.start_session(session_id), session_id)
+        self.assertIsNone(cache.get(KEY))
 
     def test_get_set(self):
-        value = cache.get(KEY)
-        self.assertIsNone(value)
-
+        session_id1 = cache.start_session()
         cache.set(KEY, "hello")
-        value = cache.get(KEY)
-        self.assertEqual(value, "hello")
+        self.assertEqual(cache.get(KEY), "hello")
 
-        cache.clear()
-        value = cache.get(KEY)
-        self.assertIsNone(value)
+        session_id2 = cache.start_session()
+        cache.set(KEY, "world")
+        self.assertEqual(cache.get(KEY), "world")
+
+        cache.start_session(session_id2)
+        self.assertEqual(cache.get(KEY), "world")
+        cache.start_session(session_id1)
+        self.assertEqual(cache.get(KEY), "hello")
+
+        cache.clear_all()
+        with self.assertRaises(RuntimeError):
+            cache.get(KEY)
 
     @mock_storage
     def test_Initialize(self):
@@ -44,37 +57,31 @@ class TestStorageCache(unittest.TestCase):
             return await_result(handle_Initialize(DUMMY_CONTEXT, msg))
 
         # calling Initialize without an ID allocates a new one
-        session_id = cache.get_session_id()
+        session_id = cache.start_session()
         features = call_Initialize()
-        new_session_id = cache.get_session_id()
-        self.assertNotEqual(session_id, new_session_id)
-        self.assertEqual(new_session_id, features.session_id)
+        self.assertNotEqual(session_id, features.session_id)
 
         # calling Initialize with the current ID does not allocate a new one
-        features = call_Initialize(session_id=new_session_id)
-        same_session_id = cache.get_session_id()
-        self.assertEqual(new_session_id, same_session_id)
-        self.assertEqual(same_session_id, features.session_id)
+        features = call_Initialize(session_id=session_id)
+        self.assertEqual(session_id, features.session_id)
 
-        call_Initialize()
-        # calling Initialize with a non-current ID returns a different one
-        features = call_Initialize(session_id=new_session_id)
-        self.assertNotEqual(new_session_id, features.session_id)
-
-        # allocating a new session ID clears the cache
+        # store "hello"
         cache.set(KEY, "hello")
+        # check that it is cleared
         features = call_Initialize()
+        session_id = features.session_id
         self.assertIsNone(cache.get(KEY))
-
-        # resuming a session does not clear the cache
+        # store "hello" again
         cache.set(KEY, "hello")
-        call_Initialize(session_id=features.session_id)
         self.assertEqual(cache.get(KEY), "hello")
 
-        # supplying a different session ID clears the cache
-        self.assertNotEqual(new_session_id, features.session_id)
-        call_Initialize(session_id=new_session_id)
+        # supplying a different session ID starts a new cache
+        call_Initialize(session_id=b"A")
         self.assertIsNone(cache.get(KEY))
+
+        # but resuming a session loads the previous one
+        call_Initialize(session_id=session_id)
+        self.assertEqual(cache.get(KEY), "hello")
 
 
 if __name__ == "__main__":

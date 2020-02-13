@@ -72,15 +72,16 @@ def get_features() -> Features:
     f.sd_card_present = sdcard.is_present()
     f.sd_protection = storage.sd_salt.is_enabled()
     f.wipe_code_protection = config.has_wipe_code()
-    f.session_id = cache.get_session_id()
     f.passphrase_always_on_device = storage.device.get_passphrase_always_on_device()
     return f
 
 
 async def handle_Initialize(ctx: wire.Context, msg: Initialize) -> Features:
-    if msg.session_id is None or msg.session_id != cache.get_session_id():
-        cache.clear()
-    return get_features()
+    features = get_features()
+    if msg.session_id:
+        msg.session_id = bytes(msg.session_id)
+    features.session_id = cache.start_session(msg.session_id)
+    return features
 
 
 async def handle_GetFeatures(ctx: wire.Context, msg: GetFeatures) -> Features:
