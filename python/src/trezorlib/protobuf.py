@@ -161,7 +161,7 @@ class EnumType:
     def validate(self, fvalue: int) -> int:
         if fvalue not in self.enum_values:
             # raise TypeError("Invalid enum value")
-            LOG.warning("Value {} unknown for type {}".format(fvalue, self.enum_name))
+            LOG.info("Value {} unknown for type {}".format(fvalue, self.enum_name))
         return fvalue
 
     def to_str(self, fvalue: int) -> str:
@@ -485,7 +485,10 @@ def format_message(
             return "{} bytes {}{}".format(length, output, suffix)
 
         if isinstance(value, int) and isinstance(ftype, EnumType):
-            return "{} ({})".format(ftype.to_str(value), value)
+            try:
+                return "{} ({})".format(ftype.to_str(value), value)
+            except TypeError:
+                return str(value)
 
         return repr(value)
 
@@ -558,7 +561,10 @@ def to_dict(msg: MessageType, hexlify_bytes: bool = True) -> Dict[str, Any]:
         elif isinstance(value, list):
             return [convert_value(ftype, v) for v in value]
         elif isinstance(value, int) and isinstance(ftype, EnumType):
-            return ftype.to_str(value)
+            try:
+                return ftype.to_str(value)
+            except TypeError:
+                return value
         else:
             return value
 

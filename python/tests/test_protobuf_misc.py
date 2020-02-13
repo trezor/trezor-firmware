@@ -216,3 +216,21 @@ def test_nested_recover():
     dictdata = {"nested": {}}
     recovered = protobuf.dict_to_proto(NestedMessage, dictdata)
     assert isinstance(recovered.nested, SimpleMessage)
+
+
+@with_simple_enum
+def test_unknown_enum_to_str():
+    simple = SimpleMessage(enum=SimpleEnum.QUUX)
+    string = protobuf.format_message(simple)
+    assert "enum: QUUX (13)" in string
+
+    simple = SimpleMessage(enum=6000)
+    string = protobuf.format_message(simple)
+    assert "enum: 6000" in string
+
+
+@with_simple_enum
+def test_unknown_enum_to_dict():
+    simple = SimpleMessage(enum=6000)
+    converted = protobuf.to_dict(simple)
+    assert converted["enum"] == 6000
