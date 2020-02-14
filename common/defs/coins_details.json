@@ -423,6 +423,24 @@
                 }
             ]
         },
+        "bitcoin:GLEEC": {
+            "links": {
+                "Github": "https://github.com/Gleecs/GleecBTC-FullNode-Win-Mac-Linux",
+                "Homepage": "https://gleecoin.com"
+            },
+            "marketcap_usd": 0,
+            "name": "GleecBTC",
+            "shortcut": "GLEEC",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": [
+                {
+                    "name": "Trezor",
+                    "url": "https://wallet.trezor.io"
+                }
+            ]
+        },
         "bitcoin:GIN": {
             "links": {
                 "Github": "https://github.com/gincoin-dev/gincoin-core",
