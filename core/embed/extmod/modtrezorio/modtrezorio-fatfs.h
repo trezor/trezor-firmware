@@ -28,11 +28,11 @@
 // clang-format on
 
 DSTATUS disk_initialize(BYTE pdrv) {
-  return (sectrue == sdcard_is_present()) ? 0 : STA_NODISK;
+  return disk_status(pdrv);
 }
 
 DSTATUS disk_status(BYTE pdrv) {
-  return (sectrue == sdcard_is_present()) ? 0 : STA_NODISK;
+  return (sectrue == sdcard_is_present()) ? 0 : (STA_NOINIT | STA_NODISK);
 }
 
 DRESULT disk_read(BYTE pdrv, BYTE *buff, LBA_t sector, UINT count) {
