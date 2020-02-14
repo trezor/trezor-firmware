@@ -62,6 +62,9 @@
     "bitcoin:GAME": {
         "Electrum-GAME": "https://electrum-game.org"
     },
+    "bitcoin:GLEEC": {
+        "Electrum-GLEEC": "https://wallet.trezor.io"
+    },
     "bitcoin:GRS": {
         "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet"
     },
