@@ -289,46 +289,31 @@ void vlayoutLogo(void) {
   } else {
     oledDrawBitmap(0, 0, &bmp_ble);
   }
-  if (WORK_MODE_USB   != g_ucWorkMode)
-  {
-    if (GET_USB_INSERT())
-    {
-        oledDrawBitmap(104, 0, &bmp_battery); //charge
-    }
-    else
-    {
-        if (g_ucBatValue == 100)
-        {
-            oledDrawBitmap(104, 0, &bmp_battery); //1
-        }
-        else if (g_ucBatValue == 80)
-        {
-            oledDrawBitmap(104, 0, &bmp_battery); //2/3
-        }
-        else if (g_ucBatValue == 60)
-        {
-             oledDrawBitmap(104, 0, &bmp_battery); // 1/2
-        }
-        else if (g_ucBatValue == 40)
-        {
-             oledDrawBitmap(104, 0, &bmp_battery); //1/3
-        }
-        else
-        {
-             oledDrawBitmap(104, 0, &bmp_battery);
-        }
+  if (WORK_MODE_USB != g_ucWorkMode) {
+    if (GET_USB_INSERT()) {
+      oledDrawBitmap(104, 0, &bmp_battery);  // charge
+    } else {
+      if (g_ucBatValue == 100) {
+        oledDrawBitmap(104, 0, &bmp_battery);  // 1
+      } else if (g_ucBatValue == 80) {
+        oledDrawBitmap(104, 0, &bmp_battery);  // 2/3
+      } else if (g_ucBatValue == 60) {
+        oledDrawBitmap(104, 0, &bmp_battery);  // 1/2
+      } else if (g_ucBatValue == 40) {
+        oledDrawBitmap(104, 0, &bmp_battery);  // 1/3
+      } else {
+        oledDrawBitmap(104, 0, &bmp_battery);
+      }
     }
   }
-
-  
   oledDrawBitmap(0, 16, &bmp_logo);
   if (!config_isInitialized()) {
-    vDisp_PromptInfo(DISP_NOT_ACTIVE,false);
+    vDisp_PromptInfo(DISP_NOT_ACTIVE, false);
   } else {
     if (WORK_MODE_BLE == g_ucWorkMode) {
       oledclearLine(6);
       oledclearLine(7);
-      vDisp_PromptInfo(DISP_BLE_NAME,false);
+      vDisp_PromptInfo(DISP_BLE_NAME, false);
     }
   }
 }

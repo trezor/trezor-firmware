@@ -37,13 +37,12 @@ void pinmatrix_draw(const char *text) {
     for (int j = 0; j < 3; j++) {
       // use (2 - j) instead of j to achieve 789456123 layout
       int k = pinmatrix_perm[i + (2 - j) * 3] - '0';
-      if (g_ucLanguageFlag){
-        vDisp_PromptInfo(g_ucPromptIndex,false);
-      }
-      else{
+      if (g_ucLanguageFlag) {
+        vDisp_PromptInfo(g_ucPromptIndex, false);
+      } else {
         if (text) {
-            oledDrawStringCenter(OLED_WIDTH / 2, 0, text, FONT_STANDARD);
-        }  
+          oledDrawStringCenter(OLED_WIDTH / 2, 0, text, FONT_STANDARD);
+        }
       }
       oledDrawBitmap((OLED_WIDTH - 3 * w - 2 * pad) / 2 + i * (w + pad),
                      OLED_HEIGHT - 3 * h - 2 * pad + j * (h + pad),
