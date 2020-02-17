@@ -22,72 +22,63 @@
 
 #include "sdcard.h"
 
-/// class SDCard:
-///     """
-///     """
-typedef struct _mp_obj_SDCard_t {
-  mp_obj_base_t base;
-} mp_obj_SDCard_t;
+/// package: trezorio.sdcard
 
-/// def __init__(self) -> None:
-///     """
-///     """
-STATIC mp_obj_t mod_trezorio_SDCard_make_new(const mp_obj_type_t *type,
-                                             size_t n_args, size_t n_kw,
-                                             const mp_obj_t *args) {
-  mp_arg_check_num(n_args, n_kw, 0, 0, false);
-  mp_obj_SDCard_t *o = m_new_obj(mp_obj_SDCard_t);
-  o->base.type = type;
-#ifdef TREZOR_EMULATOR
-  sdcard_init();
-#endif
-  return MP_OBJ_FROM_PTR(o);
-}
+/// BLOCK_SIZE: int  # size of SD card block
 
-/// def present(self) -> bool:
+/// def is_present() -> bool:
 ///     """
 ///     Returns True if SD card is detected, False otherwise.
 ///     """
-STATIC mp_obj_t mod_trezorio_SDCard_present(mp_obj_t self) {
+STATIC mp_obj_t mod_trezorio_sdcard_is_present() {
   return mp_obj_new_bool(sdcard_is_present());
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_SDCard_present_obj,
-                                 mod_trezorio_SDCard_present);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_is_present_obj,
+                                 mod_trezorio_sdcard_is_present);
 
-/// def power(self, state: bool) -> bool:
+/// def power_on() -> None:
 ///     """
-///     Power on or power off the SD card interface.
-///     Returns True if in case of success, False otherwise.
+///     Power on the SD card interface.
+///     Raises OSError if the SD card cannot be powered on, e.g., when there
+///     is no SD card inserted.
 ///     """
-STATIC mp_obj_t mod_trezorio_SDCard_power(mp_obj_t self, mp_obj_t state) {
-  if (mp_obj_is_true(state)) {
-    return mp_obj_new_bool(sdcard_power_on());
-  } else {
-    sdcard_power_off();
-    return mp_const_true;
+STATIC mp_obj_t mod_trezorio_sdcard_power_on() {
+  if (sectrue != sdcard_power_on()) {
+    mp_raise_OSError(MP_EIO);
   }
+  return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_SDCard_power_obj,
-                                 mod_trezorio_SDCard_power);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_power_on_obj,
+                                 mod_trezorio_sdcard_power_on);
 
-/// def capacity(self) -> int:
+/// def power_off() -> None:
+///     """
+///     Power off the SD card interface.
+///     """
+STATIC mp_obj_t mod_trezorio_sdcard_power_off() {
+  sdcard_power_off();
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_power_off_obj,
+                                 mod_trezorio_sdcard_power_off);
+
+/// def capacity() -> int:
 ///     """
 ///     Returns capacity of the SD card in bytes, or zero if not present.
 ///     """
-STATIC mp_obj_t mod_trezorio_SDCard_capacity(mp_obj_t self) {
+STATIC mp_obj_t mod_trezorio_sdcard_capacity() {
   return mp_obj_new_int_from_ull(sdcard_get_capacity_in_bytes());
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_SDCard_capacity_obj,
-                                 mod_trezorio_SDCard_capacity);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_capacity_obj,
+                                 mod_trezorio_sdcard_capacity);
 
-/// def read(self, block_num: int, buf: bytearray) -> None:
+/// def read(block_num: int, buf: bytearray) -> None:
 ///     """
 ///     Reads blocks starting with block_num from the SD card into buf.
 ///     Number of bytes read is length of buf rounded down to multiply of
 ///     SDCARD_BLOCK_SIZE. Returns True if in case of success, False otherwise.
 ///     """
-STATIC mp_obj_t mod_trezorio_SDCard_read(mp_obj_t self, mp_obj_t block_num,
-                                         mp_obj_t buf) {
+STATIC mp_obj_t mod_trezorio_sdcard_read(mp_obj_t block_num, mp_obj_t buf) {
   uint32_t block = trezor_obj_get_uint(block_num);
   mp_buffer_info_t bufinfo;
   mp_get_buffer_raise(buf, &bufinfo, MP_BUFFER_WRITE);
@@ -97,17 +88,16 @@ STATIC mp_obj_t mod_trezorio_SDCard_read(mp_obj_t self, mp_obj_t block_num,
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_SDCard_read_obj,
-                                 mod_trezorio_SDCard_read);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_sdcard_read_obj,
+                                 mod_trezorio_sdcard_read);
 
-/// def write(self, block_num: int, buf: bytes) -> None:
+/// def write(block_num: int, buf: bytes) -> None:
 ///     """
 ///     Writes blocks starting with block_num from buf to the SD card.
 ///     Number of bytes written is length of buf rounded down to multiply of
 ///     SDCARD_BLOCK_SIZE. Returns True if in case of success, False otherwise.
 ///     """
-STATIC mp_obj_t mod_trezorio_SDCard_write(mp_obj_t self, mp_obj_t block_num,
-                                          mp_obj_t buf) {
+STATIC mp_obj_t mod_trezorio_sdcard_write(mp_obj_t block_num, mp_obj_t buf) {
   uint32_t block = trezor_obj_get_uint(block_num);
   mp_buffer_info_t bufinfo;
   mp_get_buffer_raise(buf, &bufinfo, MP_BUFFER_READ);
@@ -117,25 +107,26 @@ STATIC mp_obj_t mod_trezorio_SDCard_write(mp_obj_t self, mp_obj_t block_num,
   }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_SDCard_write_obj,
-                                 mod_trezorio_SDCard_write);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_sdcard_write_obj,
+                                 mod_trezorio_sdcard_write);
 
-STATIC const mp_rom_map_elem_t mod_trezorio_SDCard_locals_dict_table[] = {
-    {MP_ROM_QSTR(MP_QSTR_present),
-     MP_ROM_PTR(&mod_trezorio_SDCard_present_obj)},
-    {MP_ROM_QSTR(MP_QSTR_power), MP_ROM_PTR(&mod_trezorio_SDCard_power_obj)},
+STATIC const mp_rom_map_elem_t mod_trezorio_sdcard_globals_table[] = {
+    {MP_ROM_QSTR(MP_QSTR_is_present),
+     MP_ROM_PTR(&mod_trezorio_sdcard_is_present_obj)},
+    {MP_ROM_QSTR(MP_QSTR_power_on),
+     MP_ROM_PTR(&mod_trezorio_sdcard_power_on_obj)},
+    {MP_ROM_QSTR(MP_QSTR_power_off),
+     MP_ROM_PTR(&mod_trezorio_sdcard_power_off_obj)},
     {MP_ROM_QSTR(MP_QSTR_capacity),
-     MP_ROM_PTR(&mod_trezorio_SDCard_capacity_obj)},
-    {MP_ROM_QSTR(MP_QSTR_block_size), MP_ROM_INT(SDCARD_BLOCK_SIZE)},
-    {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_SDCard_read_obj)},
-    {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_SDCard_write_obj)},
+     MP_ROM_PTR(&mod_trezorio_sdcard_capacity_obj)},
+    {MP_ROM_QSTR(MP_QSTR_BLOCK_SIZE), MP_ROM_INT(SDCARD_BLOCK_SIZE)},
+    {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_sdcard_read_obj)},
+    {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_sdcard_write_obj)},
 };
-STATIC MP_DEFINE_CONST_DICT(mod_trezorio_SDCard_locals_dict,
-                            mod_trezorio_SDCard_locals_dict_table);
+STATIC MP_DEFINE_CONST_DICT(mod_trezorio_sdcard_globals,
+                            mod_trezorio_sdcard_globals_table);
 
-STATIC const mp_obj_type_t mod_trezorio_SDCard_type = {
-    {&mp_type_type},
-    .name = MP_QSTR_SDCard,
-    .make_new = mod_trezorio_SDCard_make_new,
-    .locals_dict = (void *)&mod_trezorio_SDCard_locals_dict,
+STATIC const mp_obj_module_t mod_trezorio_sdcard_module = {
+    .base = {&mp_type_module},
+    .globals = (mp_obj_dict_t *)&mod_trezorio_sdcard_globals,
 };
