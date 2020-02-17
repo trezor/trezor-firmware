@@ -87,6 +87,7 @@ void sdcard_init(void) {
 secbool sdcard_is_present(void) { return sectrue; }
 
 secbool sdcard_power_on(void) {
+  sdcard_init();
   sdcard_powered = sectrue;
   return sectrue;
 }
