@@ -35,6 +35,12 @@ Now you can run the test suite with `pytest` from the root directory:
 pytest tests/device_tests --ui=test
 ```
 
+If you wish to check that all test cases in `fixtures.json` were used set the `--ui-check-missing` flag. Of course this is meaningful only if you run the tests on the whole `device_tests` folder.
+
+```sh
+pytest tests/device_tests --ui=test --ui-check-missing
+```
+
 You can also skip tests marked as `skip_ui`.
 
 ```sh
@@ -42,6 +48,13 @@ pytest tests/device_tests --ui=test -m "not skip_ui"
 ```
 
 # Updating Fixtures ("Recording")
+
+Short version:
+```sh
+pipenv run make -C core test_emu_ui_record
+```
+
+Long version:
 
 The `--ui` pytest argument has two options:
 
@@ -54,6 +67,12 @@ If you want to make a change in the UI you simply run `--ui=record`. An easy way
 to proceed is to run `--ui=test` at first, see what tests fail (see the Reports section below),
 decide if those changes are the ones you expected and then finally run the `--ui=record`
 and commit the new hashes.
+
+Also here we provide an option to check the `fixtures.json` file. Use `--ui-check-missing` flag again to make sure there are no extra fixtures in the file:
+
+```sh
+pytest tests/device_tests --ui=record --ui-check-missing
+```
 
 ## Reports
 
