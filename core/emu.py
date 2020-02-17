@@ -18,7 +18,7 @@ from trezorlib._internal.emulator import CoreEmulator
 
 try:
     import inotify.adapters
-except ImportError:
+except Exception:
     inotify = None
 
 
