@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/// package: trezorio.__init__
+
 /// class WebUSB:
 ///     """
 ///     USB WebUSB interface configuration.

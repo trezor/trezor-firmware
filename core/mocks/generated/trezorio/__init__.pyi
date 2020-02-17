@@ -220,46 +220,6 @@ class SBU:
         """
 
 
-# extmod/modtrezorio/modtrezorio-sdcard.h
-class SDCard:
-    """
-    """
-
-    def __init__(self) -> None:
-        """
-        """
-
-    def present(self) -> bool:
-        """
-        Returns True if SD card is detected, False otherwise.
-        """
-
-    def power(self, state: bool) -> bool:
-        """
-        Power on or power off the SD card interface.
-        Returns True if in case of success, False otherwise.
-        """
-
-    def capacity(self) -> int:
-        """
-        Returns capacity of the SD card in bytes, or zero if not present.
-        """
-
-    def read(self, block_num: int, buf: bytearray) -> None:
-        """
-        Reads blocks starting with block_num from the SD card into buf.
-        Number of bytes read is length of buf rounded down to multiply of
-        SDCARD_BLOCK_SIZE. Returns True if in case of success, False otherwise.
-        """
-
-    def write(self, block_num: int, buf: bytes) -> None:
-        """
-        Writes blocks starting with block_num from buf to the SD card.
-        Number of bytes written is length of buf rounded down to multiply of
-        SDCARD_BLOCK_SIZE. Returns True if in case of success, False otherwise.
-        """
-
-
 # extmod/modtrezorio/modtrezorio-usb.h
 class USB:
     """

@@ -27,9 +27,9 @@
 #include "sdcard.h"
 // clang-format on
 
-DSTATUS disk_initialize(BYTE pdrv) {
-  return disk_status(pdrv);
-}
+/// package: trezorio.__init__
+
+DSTATUS disk_initialize(BYTE pdrv) { return disk_status(pdrv); }
 
 DSTATUS disk_status(BYTE pdrv) {
   return (sectrue == sdcard_is_present()) ? 0 : (STA_NOINIT | STA_NODISK);

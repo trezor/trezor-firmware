@@ -19,6 +19,8 @@
 
 #include "sbu.h"
 
+/// package: trezorio.__init__
+
 /// class SBU:
 ///     """
 ///     """
