@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import gzip
 import logging
 import os
 import platform
@@ -25,7 +24,6 @@ except Exception:
 HERE = Path(__file__).parent.resolve()
 MICROPYTHON = HERE / "build" / "unix" / "micropython"
 SRC_DIR = HERE / "src"
-SD_CARD_GZ = HERE / "trezor.sdcard.gz"
 
 PROFILING_WRAPPER = HERE / "prof" / "prof.py"
 
@@ -189,9 +187,6 @@ def cli(
     elif temporary_profile:
         tempdir = tempfile.TemporaryDirectory(prefix="trezor-emulator-")
         profile_dir = Path(tempdir.name)
-        # unpack empty SD card for faster start-up
-        with gzip.open(SD_CARD_GZ, "rb") as gz:
-            (profile_dir / "trezor.sdcard").write_bytes(gz.read())
 
     elif "TREZOR_PROFILE_DIR" in os.environ:
         profile_dir = Path(os.environ["TREZOR_PROFILE_DIR"])

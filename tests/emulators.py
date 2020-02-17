@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import gzip
 import tempfile
 from collections import defaultdict
 from pathlib import Path
@@ -30,7 +29,6 @@ LOCAL_BUILD_PATHS = {
 }
 
 CORE_SRC_DIR = ROOT / "core" / "src"
-SD_CARD_GZ = ROOT / "core" / "trezor.sdcard.gz"
 
 ENV = {"SDL_VIDEODRIVER": "dummy"}
 
@@ -88,15 +86,13 @@ class EmulatorWrapper:
                 executable, self.profile_dir.name, storage=storage, headless=True,
             )
         elif gen == "core":
-            with gzip.open(SD_CARD_GZ, "rb") as gz:
-                self.emulator = CoreEmulator(
-                    executable,
-                    self.profile_dir.name,
-                    storage=storage,
-                    workdir=workdir,
-                    sdcard=gz.read(),
-                    headless=True,
-                )
+            self.emulator = CoreEmulator(
+                executable,
+                self.profile_dir.name,
+                storage=storage,
+                workdir=workdir,
+                headless=True,
+            )
 
     def __enter__(self):
         self.emulator.start()

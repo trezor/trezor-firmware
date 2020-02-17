@@ -52,20 +52,18 @@ void sdcard_init(void) {
   // check whether the file exists and it has the correct size
   struct stat sb;
   int r = stat(SDCARD_FILE, &sb);
+  int should_clear = 0;
 
   // (re)create if non existant or wrong size
   if (r != 0 || sb.st_size != SDCARD_SIZE) {
     int fd = open(SDCARD_FILE, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600);
     ensure(sectrue * (fd >= 0), "open failed");
-    for (int i = 0; i < SDCARD_SIZE / 16; i++) {
-      ssize_t s = write(
-          fd,
-          "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF",
-          16);
-      ensure(sectrue * (s >= 0), "write failed");
-    }
+    r = ftruncate(fd, SDCARD_SIZE);
+    ensure(sectrue * (r == 0), "truncate failed");
     r = close(fd);
     ensure(sectrue * (r == 0), "close failed");
+
+    should_clear = 1;
   }
 
   // mmap file
@@ -76,6 +74,10 @@ void sdcard_init(void) {
   ensure(sectrue * (map != MAP_FAILED), "mmap failed");
 
   sdcard_buffer = (uint8_t *)map;
+
+  if (should_clear) {
+    for (int i = 0; i < SDCARD_SIZE; ++i) sdcard_buffer[i] = 0xFF;
+  }
 
   sdcard_powered = secfalse;
 
