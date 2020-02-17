@@ -78,8 +78,8 @@ async def info_confirm(
 
 
 async def hold_to_confirm(
-    ctx: wire.Context,
-    content: ui.Layout,
+    ctx: wire.GenericContext,
+    content: ui.Component,
     code: EnumTypeButtonRequestType = ButtonRequestType.Other,
     confirm: str = HoldToConfirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = HoldToConfirm.DEFAULT_CONFIRM_STYLE,

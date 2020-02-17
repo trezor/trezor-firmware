@@ -14,7 +14,7 @@ from apps.common.request_pin import (
     request_pin_and_sd_salt,
     show_pin_invalid,
 )
-from apps.common.sd_salt import ensure_sd_card, sd_problem_dialog
+from apps.common.sdcard import ensure_sdcard, sd_problem_dialog
 
 if False:
     from typing import Awaitable, Tuple
@@ -32,7 +32,7 @@ async def _set_salt(
     ctx: wire.Context, salt: bytes, salt_tag: bytes, stage: bool = False
 ) -> None:
     while True:
-        await ensure_sd_card(ctx)
+        await ensure_sdcard(ctx)
         try:
             return storage.sd_salt.set_sd_salt(salt, salt_tag, stage)
         except OSError:
@@ -62,7 +62,7 @@ async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
     await require_confirm_sd_protect(ctx, msg)
 
     # Make sure SD card is present.
-    await ensure_sd_card(ctx)
+    await ensure_sdcard(ctx)
 
     # Get the current PIN.
     if config.has_pin():
@@ -133,7 +133,7 @@ async def sd_protect_refresh(ctx: wire.Context, msg: SdProtect) -> Success:
     await require_confirm_sd_protect(ctx, msg)
 
     # Make sure SD card is present.
-    await ensure_sd_card(ctx)
+    await ensure_sdcard(ctx)
 
     # Get the current PIN and salt from the SD card.
     pin, old_salt = await request_pin_and_sd_salt(ctx, "Enter PIN")

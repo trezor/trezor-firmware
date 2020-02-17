@@ -3,7 +3,7 @@ import storage.device
 import storage.recovery
 import storage.sd_salt
 from storage import cache
-from trezor import config, io, utils, wire
+from trezor import config, sdcard, utils, wire
 from trezor.messages import Capability, MessageType
 from trezor.messages.Features import Features
 from trezor.messages.Success import Success
@@ -69,7 +69,7 @@ def get_features() -> Features:
             Capability.ShamirGroups,
             Capability.PassphraseEntry,
         ]
-    f.sd_card_present = io.SDCard().present()
+    f.sd_card_present = sdcard.is_present()
     f.sd_protection = storage.sd_salt.is_enabled()
     f.wipe_code_protection = config.has_wipe_code()
     f.session_id = cache.get_session_id()

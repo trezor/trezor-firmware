@@ -7,7 +7,7 @@ from trezor.ui.pin import CANCELLED, PinDialog
 from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
-from apps.common.sd_salt import SdProtectCancelled, request_sd_salt
+from apps.common.sdcard import SdCardUnavailable, request_sd_salt
 
 if False:
     from typing import Any, Optional, Tuple
@@ -95,7 +95,7 @@ async def verify_user_pin(
 ) -> None:
     try:
         salt = await request_sd_salt()
-    except SdProtectCancelled:
+    except SdCardUnavailable:
         raise PinCancelled
 
     if not config.has_pin() and not config.check_pin(pin_to_int(""), salt):

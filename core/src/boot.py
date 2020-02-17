@@ -5,7 +5,7 @@ from trezor import config, log, loop, res, ui, utils
 from trezor.pin import pin_to_int, show_pin_timeout
 
 from apps.common.request_pin import PinCancelled, request_pin
-from apps.common.sd_salt import SdProtectCancelled, request_sd_salt
+from apps.common.sdcard import SdCardUnavailable, request_sd_salt
 
 
 async def bootscreen() -> None:
@@ -31,7 +31,7 @@ async def bootscreen() -> None:
                     return
                 else:
                     label = "Wrong PIN, enter again"
-        except (OSError, PinCancelled, SdProtectCancelled) as e:
+        except (OSError, PinCancelled, SdCardUnavailable) as e:
             if __debug__:
                 log.exception(__name__, e)
         except BaseException as e:
