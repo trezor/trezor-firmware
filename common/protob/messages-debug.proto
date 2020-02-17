@@ -173,3 +173,15 @@ message DebugLinkMemoryWrite {
 message DebugLinkFlashErase {
     optional uint32 sector = 1;
 }
+
+
+/**
+ * Request: Erase the SD card
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message DebugLinkEraseSdCard {
+    optional bool format = 1;  // if true, the card will be formatted to FAT32.
+                               // if false, it will be all 0xFF bytes.
+}

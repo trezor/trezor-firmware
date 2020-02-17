@@ -40,6 +40,7 @@ from .CosiCommitment import CosiCommitment
 from .CosiSign import CosiSign
 from .CosiSignature import CosiSignature
 from .DebugLinkDecision import DebugLinkDecision
+from .DebugLinkEraseSdCard import DebugLinkEraseSdCard
 from .DebugLinkFlashErase import DebugLinkFlashErase
 from .DebugLinkGetState import DebugLinkGetState
 from .DebugLinkLayout import DebugLinkLayout

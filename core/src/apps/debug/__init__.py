@@ -17,6 +17,7 @@ if __debug__:
         from trezor.messages.DebugLinkRecordScreen import DebugLinkRecordScreen
         from trezor.messages.DebugLinkReseedRandom import DebugLinkReseedRandom
         from trezor.messages.DebugLinkState import DebugLinkState
+        from trezor.messages.DebugLinkEraseSdCard import DebugLinkEraseSdCard
 
     save_screen = False
     save_screen_directory = "."
@@ -138,6 +139,27 @@ if __debug__:
             crypto.random.reseed(msg.value)
         return Success()
 
+    async def dispatch_DebugLinkEraseSdCard(
+        ctx: wire.Context, msg: DebugLinkEraseSdCard
+    ) -> Success:
+        try:
+            io.sdcard.power_on()
+            if msg.format:
+                fs = io.FatFS()
+                fs.mkfs()
+            else:
+                # trash first 1 MB of data to destroy the FAT filesystem
+                assert io.sdcard.capacity() >= 1024 * 1024
+                empty_block = bytes([0xFF] * io.sdcard.BLOCK_SIZE)
+                for i in range(1024 * 1024 // io.sdcard.BLOCK_SIZE):
+                    io.sdcard.write(i, empty_block)
+
+        except OSError:
+            raise wire.ProcessError("SD card operation failed")
+        finally:
+            io.sdcard.power_off()
+        return Success()
+
     def boot() -> None:
         # wipe storage when debug build is used on real hardware
         if not utils.EMULATOR:
@@ -149,3 +171,4 @@ if __debug__:
         wire.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)
         wire.register(MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom)
         wire.register(MessageType.DebugLinkRecordScreen, dispatch_DebugLinkRecordScreen)
+        wire.register(MessageType.DebugLinkEraseSdCard, dispatch_DebugLinkEraseSdCard)

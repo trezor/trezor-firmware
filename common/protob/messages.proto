@@ -113,6 +113,7 @@ enum MessageType {
     MessageType_DebugLinkReseedRandom = 9002 [(wire_debug_in) = true];
     MessageType_DebugLinkRecordScreen = 9003 [(wire_debug_in) = true];
     MessageType_DebugLinkShowText = 9004 [(wire_debug_in) = true];
+    MessageType_DebugLinkEraseSdCard = 9005 [(wire_debug_in) = true];
 
     // Ethereum
     MessageType_EthereumGetPublicKey = 450 [(wire_in) = true];
