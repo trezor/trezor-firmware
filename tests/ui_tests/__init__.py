@@ -12,6 +12,7 @@ from . import report
 UI_TESTS_DIR = Path(__file__).parent.resolve()
 HASH_FILE = UI_TESTS_DIR / "fixtures.json"
 HASHES = {}
+PROCESSED = set()
 
 
 def get_test_name(node_id):
@@ -30,6 +31,7 @@ def _process_recorded(screen_path, test_name):
     # calculate hash
     HASHES[test_name] = _hash_files(screen_path)
     _rename_records(screen_path)
+    PROCESSED.add(test_name)
 
 
 def _rename_records(screen_path):
@@ -51,6 +53,7 @@ def _process_tested(fixture_test_path, test_name):
     expected_hash = HASHES.get(test_name)
     if expected_hash is None:
         raise ValueError("Hash for '%s' not found in fixtures.json" % test_name)
+    PROCESSED.add(test_name)
 
     actual_path = fixture_test_path / "actual"
     actual_hash = _hash_files(actual_path)
@@ -103,6 +106,12 @@ def screen_recording(client, request):
             raise ValueError("Invalid 'ui' option.")
 
 
+def check_missing():
+    missing = set(HASHES.keys()) - PROCESSED
+    if missing:
+        pytest.fail("Fixtures.json contains tests that are not tested: %s" % missing)
+
+
 def read_fixtures():
     if not HASH_FILE.exists():
         raise ValueError("File fixtures.json not found.")
@@ -110,5 +119,10 @@ def read_fixtures():
     HASHES = json.loads(HASH_FILE.read_text())
 
 
-def write_fixtures():
-    HASH_FILE.write_text(json.dumps(HASHES, indent="", sort_keys=True) + "\n")
+def write_fixtures(remove_missing: bool):
+    if remove_missing:
+        write = {i: HASHES[i] for i in PROCESSED}
+    else:
+        write = HASHES
+
+    HASH_FILE.write_text(json.dumps(write, indent="", sort_keys=True) + "\n")

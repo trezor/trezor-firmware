@@ -152,9 +152,11 @@ def pytest_sessionstart(session):
 
 def pytest_sessionfinish(session, exitstatus):
     if session.config.getoption("ui") == "test":
+        if session.config.getoption("ui_check_missing"):
+            ui_tests.check_missing()
         report.index()
     if session.config.getoption("ui") == "record":
-        ui_tests.write_fixtures()
+        ui_tests.write_fixtures(session.config.getoption("ui_check_missing"))
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
@@ -169,6 +171,13 @@ def pytest_addoption(parser):
         action="store",
         default="",
         help="Enable UI intergration tests: 'record' or 'test'",
+    )
+    parser.addoption(
+        "--ui-check-missing",
+        action="store_true",
+        default=False,
+        help="Check UI fixtures are containing the appropriate test cases (fails on `test`,"
+        "deletes old ones on `record`).",
     )
 
 

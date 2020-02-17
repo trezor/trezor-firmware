@@ -93,10 +93,10 @@ test_emu_click: ## run click tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/click_tests $(TESTOPTS)
 
 test_emu_ui: ## run ui integration tests
-	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=test -m "not skip_ui" $(TESTOPTS)
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=test --ui-check-missing -m "not skip_ui" $(TESTOPTS)
 
 test_emu_ui_record: ## record and hash screens for ui integration tests
-	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=record -m "not skip_ui" $(TESTOPTS)
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=record --ui-check-missing -m "not skip_ui" $(TESTOPTS)
 
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
