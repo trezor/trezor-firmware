@@ -160,6 +160,10 @@ class DebugLink:
     def flash_erase(self, sector):
         self._call(proto.DebugLinkFlashErase(sector=sector), nowait=True)
 
+    @expect(proto.Success)
+    def erase_sd_card(self, format=True):
+        return self._call(proto.DebugLinkEraseSdCard(format=format))
+
 
 class NullDebugLink(DebugLink):
     def __init__(self):

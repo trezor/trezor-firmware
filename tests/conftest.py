@@ -81,10 +81,8 @@ def client(request):
     if request.node.get_closest_marker("skip_t1") and client.features.model == "1":
         pytest.skip("Test excluded on Trezor 1")
 
-    if (
-        request.node.get_closest_marker("sd_card")
-        and not client.features.sd_card_present
-    ):
+    sd_marker = request.node.get_closest_marker("sd_card")
+    if sd_marker and not client.features.sd_card_present:
         raise RuntimeError(
             "This test requires SD card.\n"
             "To skip all such tests, run:\n"
@@ -100,6 +98,10 @@ def client(request):
     if run_ui_tests:
         # we need to reseed before the wipe
         client.debug.reseed(0)
+
+    if sd_marker:
+        should_format = sd_marker.kwargs.get("formatted", True)
+        client.debug.erase_sd_card(format=should_format)
 
     wipe_device(client)
 
