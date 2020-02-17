@@ -9,21 +9,23 @@
 
 char iter[256];
 uint8_t seed[512 / 8];
-uint8_t addr[21], pubkeyhash[20];
+char addr[MAX_ADDR_SIZE];
 int count = 0, found = 0;
 HDNode node;
 clock_t start;
+
+#define ACCOUNT_LEGACY 0
 
 // around 280 tries per second
 
 // testing data:
 //
 // mnemonic:   "all all all all all all all all all all all all"
-// address:    "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL"
+// address:    "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL" / "3L6TyTisPBmrDAj6RoKmDzNnj4eQi54gD2"
 // passphrase: ""
 //
 // mnemonic:   "all all all all all all all all all all all all"
-// address:    "1N3uJ5AU3FTYQ1ZQgTMtYmgSvMBmQiGVBS"
+// address:    "1N3uJ5AU3FTYQ1ZQgTMtYmgSvMBmQiGVBS" / "3NcXPfbDP4UHSbuHASALJEBtDeAcWYMMcS"
 // passphrase: "testing"
 
 int main(int argc, char **argv) {
@@ -44,10 +46,6 @@ int main(int argc, char **argv) {
     fprintf(stderr, "\"%s\" is not a valid mnemonic\n", mnemonic);
     return 2;
   }
-  if (!ecdsa_address_decode(address, 0, secp256k1_info.hasher_base58, addr)) {
-    fprintf(stderr, "\"%s\" is not a valid address\n", address);
-    return 3;
-  }
   printf("Reading %ss from stdin ...\n", item);
   start = clock();
   for (;;) {
@@ -64,15 +62,24 @@ int main(int argc, char **argv) {
       mnemonic_to_seed(iter, "", seed, NULL);
     }
     hdnode_from_seed(seed, 512 / 8, SECP256K1_NAME, &node);
+#if ACCOUNT_LEGACY
     hdnode_private_ckd_prime(&node, 44);
+#else
+    hdnode_private_ckd_prime(&node, 49);
+#endif
     hdnode_private_ckd_prime(&node, 0);
     hdnode_private_ckd_prime(&node, 0);
     hdnode_private_ckd(&node, 0);
     hdnode_private_ckd(&node, 0);
     hdnode_fill_public_key(&node);
-    ecdsa_get_pubkeyhash(node.public_key, secp256k1_info.hasher_pubkey,
-                         pubkeyhash);
-    if (memcmp(addr + 1, pubkeyhash, 20) == 0) {
+#if ACCOUNT_LEGACY
+    // Legacy address
+    ecdsa_get_address(node.public_key, 0, HASHER_SHA2_RIPEMD, HASHER_SHA2D, addr, sizeof(addr));
+#else
+    // Segwit-in-P2SH
+    ecdsa_get_address_segwit_p2sh(node.public_key, 5, HASHER_SHA2_RIPEMD, HASHER_SHA2D, addr, sizeof(addr));
+#endif
+    if (strcmp(address, addr) == 0) {
       found = 1;
       break;
     }
