@@ -21,11 +21,13 @@ clock_t start;
 // testing data:
 //
 // mnemonic:   "all all all all all all all all all all all all"
-// address:    "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL" / "3L6TyTisPBmrDAj6RoKmDzNnj4eQi54gD2"
+// address:    legacy: "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL"
+//             segwit: "3L6TyTisPBmrDAj6RoKmDzNnj4eQi54gD2"
 // passphrase: ""
 //
 // mnemonic:   "all all all all all all all all all all all all"
-// address:    "1N3uJ5AU3FTYQ1ZQgTMtYmgSvMBmQiGVBS" / "3NcXPfbDP4UHSbuHASALJEBtDeAcWYMMcS"
+// address:    legacy: "1N3uJ5AU3FTYQ1ZQgTMtYmgSvMBmQiGVBS"
+//             segwit: "3NcXPfbDP4UHSbuHASALJEBtDeAcWYMMcS"
 // passphrase: "testing"
 
 int main(int argc, char **argv) {
@@ -74,10 +76,12 @@ int main(int argc, char **argv) {
     hdnode_fill_public_key(&node);
 #if ACCOUNT_LEGACY
     // Legacy address
-    ecdsa_get_address(node.public_key, 0, HASHER_SHA2_RIPEMD, HASHER_SHA2D, addr, sizeof(addr));
+    ecdsa_get_address(node.public_key, 0, HASHER_SHA2_RIPEMD, HASHER_SHA2D,
+                      addr, sizeof(addr));
 #else
     // Segwit-in-P2SH
-    ecdsa_get_address_segwit_p2sh(node.public_key, 5, HASHER_SHA2_RIPEMD, HASHER_SHA2D, addr, sizeof(addr));
+    ecdsa_get_address_segwit_p2sh(node.public_key, 5, HASHER_SHA2_RIPEMD,
+                                  HASHER_SHA2D, addr, sizeof(addr));
 #endif
     if (strcmp(address, addr) == 0) {
       found = 1;
