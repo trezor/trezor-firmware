@@ -1,94 +1,144 @@
 
 # Passphrase Redesign In 1.9.0 / 2.3.0
 
+On the T1, passphrase must be entered on the host PC and sent to Trezor. On the TT, the
+user can choose whether to enter the passphrase on host or on Trezor's touch screen.
+
 In versions 1.9.0 and 2.3.0 we have redesigned how the passphrase is
 communicated between the Host and the Device. The new design is documented
 thoroughly in [passphrase.md](passphrase.md) and this document should help
 with the transition from the old design.
 
-## Protobuf changes
+## New features
+
+* Passphrase flow is now identical for T1 and TT.
+* By keeping track of _sessions_, it is possible to avoid having to send passphrase repeatedly.
+* The choice between entering on Host or Device for TT has been moved from Device to Host.
+
+## Backwards compatibility
+
+T1 1.9.0 is fully backwards-compatible and works with existing Host code.
+
+TT 2.3.0 communicating with old Host software degrades to T1-level features: entering
+passphrase on device will not be available, and on-device passphrase caching via the
+`state` field will not be available.
+
+As a workaround, it is possible to use the "passphrase always on device" feature on the
+new TT firmware. When enabled, the passphrase flow is completely hidden from the Host
+software, and the Device itself prompts the user to enter the passphrase.
+
+## Implementation guide
+
+### Protobuf changes
+
+Protobuf has built-in backwards compatibility mechanisms, so a conforming implementation
+should continue to work with old protobuf definitions.
+
+To restore support for TT on-device passphrase entry, and to make use of the new
+features, you will need to update to newer protobuf definitions from `trezor-common`
+(TODO: link to commit in trezor-common).
 
 The gist of the changes is:
 
-- `PassphraseRequest.on_device` was deprecated.
-- And the field was moved to PassphraseAck. The information whether the
-passphrase is entered on the device is now decided on the Host.
-- PassphraseStateRequest/PassphraseStateAck messages were deprecated.
-- Features return a `session_id` (replacement for `state`).
+- `PassphraseRequest.on_device` was deprecated, and renamed to `_on_device`. New Devices
+  will never send this field.
+- Corresponding field `PassphraseAck.on_device` was added.
+- `PassphraseStateRequest`/`PassphraseStateAck` messages were deprecated, and renamed
+  with a `Deprecated_` prefix. New Devices will not send or accept these messages.
+- `Initialize.state` was renamed to `Initialize.session_id`.
+- Corresponding field `Features.session_id` was added. New Devices will always send this
+  field in response to `Initialize` call.
+- A new value `Capability_PassphraseEntry` was added to the `Features.Capability`
+  enum. This capability will be sent from a Device that supports on-device passphrase
+  entry (currently only TT).
 
-The new messages can be found in trezor-common (TODO: link to commit in
-trezor-common).
+### Restoring on-device entry for TT
 
-## Notable Changes
+The Host software reacts to a `PassphraseRequest` message by prompting the user for a
+passphrase and sending it in the `PassphraseAck.passphrase` field.
 
-### Unified exchange for T1 and TT
+A new UI element should be added: when the passphrase prompt is displayed on Host, there
+should be an option to "enter passphrase on device". When the user selects this option,
+the Host must send a `PassphraseAck(passphrase=null, on_device=true)`.
 
-The exchange is now the same for T1 and for TT. `PassphraseStateRequest` and
-`PassphraseStateAck` are no longer used.
+The "enter passphrase on device" option should be displayed when `Features.capabilities`
+contain the `Capability_PassphraseEntry` value, regardless of reported Trezor version of
+model. Firmwares older than 2.3.0 or 1.9.0 never set this value, so his ensures forwards
+and backwards compatibility.
 
-The protocol is described in [passphrase.md](passphrase.md). In a nutshell once
-the Device sends `PassphraseRequest` the Host must respond with `PassphraseAck`
-and choose between these two options:
+### Cross-version compatibility for TT
 
-- Either send `on_device = True` and omit the `passphrase` field. Then the user
-is prompted on Trezor to enter the passphrase.
-- Or omit `on_device` and send the passphrase string in `passphrase`. 
+TT version \< 2.3.0 will send `PassphraseRequest(_on_device=true)` if the user selected
+on-device entry. Neither T1 nor TT >= 2.3.0 will ever set this field to true.
 
-### Different "on device" workflow
+If the Host receives `PassphraseRequest(_on_device=true)`, it should immediately respond
+with `PassphraseAck()` with no fields set.
 
-As mentioned, the `on_device` field has been moved from `PassphraseRequest` to
-`PassphraseAck` and the Host now decides where the passphrase should be
-entered. For this to function properly the Host needs to provide two options:
+TT version \< 2.3.0 will send `Deprecated_PassphraseStateRequest(state=[bytes])` after
+receiving `PassphraseAck`. The Host should immediately respond with
+`Deprecated_PassphraseStateAck()` with no fields set. If the Host does session
+management, it should store the value of `state` as the session ID.
 
-1. Enter the passphrase directly.
-2. Enter the passphrase on device.
+### Triggering passphrase prompt
 
-In option (1) the passphrase is simply send in `PassphraseAck.passphrase`. In
-option (2) the Host must send `PassphraseAck.on_device = True` and omit the
-`passphrase` field. **Failing to provide such an option will make entering the
-passphrase on the device impossible.** 
+Use `GetAddress(coin_name="Testnet", address_n=[44'/1'/0'/0/0])` (the first address of
+the first account of Testnet) to ensure that the Device asks for a passphrase if
+needed, and caches it for future use.
 
-As of 1.9.0 / 2.3.0 you should decide whether the device is capable of
-passphrase entry using the new capability "PassphraseEntry" as received in
-Features. For older versions it is possible for model T but not for model One.
+### Validating passphrases
 
-### Session id
+You can store the result of the above call, and in the future, compare it to a newly
+received address. This is a good way to check if the user is using the same passphrase
+as last time.
 
-We have replaced `state` with `session_id`. As mentioned you can obtain this
-from Features. Session id is completely random and is not derived from
-passphrase in any way.
+Do not store user-entered passphrases for the purpose of validation, even in hashed,
+encrypted, or otherwise obfuscated format.
 
-You can and should use this session id to invoke Trezor's cache of the
-passphrase. Simply store the session id and then send it in Initialize:
-`Initialize(session_id=[your session id])`. In case the session is cached, the
-passphrase will not be prompted again.
+### Session support
 
-### Passphrase check
+A call to `Initialize` can include a `session_id` field. When starting a new user
+session, this field should be left empty.
 
-Some hosts were using the state to find out if the same passphrase is being
-used as previously. Since the session id is now completely random and not
-persistent over power-off this is not possible anymore.
+The response `Features` message will always include a `session_id` field. The value of
+this field should be stored. When calling `Initialize` again, the stored value should
+be sent as `session_id`. If the received `Features.session_id` is the same, it means
+that session was resumed successfully and the user will not be prompted for passphrase.
 
-If you wish to provide some sanity check that the user entered the same
-passphrase as previously, simply remember an address. We recommend using
-Testnet's address 44'/1'/0'/0/0. Then you store it and check if it equal
-once the user entered theirs passphrase.
+```
+--> Initialize()
+<-- Features(session_id=0xABCDEF, ...)
 
-### Supporting older firmwares
+--> Initialize(session_id=0xABCDEF)
+<-- Features(session_id=0xABCDEF)
+# (session resumed successfully)
 
-With the new trezor-common code you should be able to support older firmwares as
-well. T1 should work out of the box!
+--> Initialize(session_id=0xABCDEF)
+<-- Features(session_id=0x123456)
+# (session was not resumed, user will be prompted for passphrase again)
+```
 
-For TT, if the older firmware sends `PassphraseRequest.on_device` it is labeled
-as deprecated `_on_device` in the new Protobuf. However, that does not prevent
-you from using it:
+Session support is identical on T1 and TT, and both models support multiple sessions,
+i.e., it is possible to seamlessly switch between using multiple passphrases.
 
-- In case the value is set to True, respond with an empty `PassphraseAck`.
-- In case the value is set to False, respond with `PassphraseAck` and set the
-passphrase in `passphrase` field.
+### Cross-version compatible algorithm summary
 
-If you receive `PassphraseStateRequest`, now renamed to 
-`Deprecated_PassphraseStateRequest` just respond with
-`Deprecated_PassphraseStateAck`.
+The following algorithm will ensure that your Host application works properly with
+both T1 and TT with both older and newer firmwares.
 
-// TODO: describe the "state" in PassphraseState?
+1. If you have a session ID stored, call `Initialize(session_id=stored_session_id)`
+2. Check the value of `Features.session_id`. If it is identical to `stored_session_id`,
+   the session was resumed and user will not need to be prompted for a passphrase.
+   1. If `Features.session_id` is not set, you are communicating with an older Device.
+      Do not store the null value as session ID.
+   2. Otherwise store the value as `stored_session_id`.
+3. When you receive a `PassphraseRequest(_on_device=true)`, respond with
+   `PassphraseAck()` with no fields set.
+4. When you receive a `PassphraseRequest`, prompt the user for passphrase.
+   1. If `Features.capabilities` contains value `Capability_PassphraseEntry`, display a
+      UI element that allows the user to enter passphrase on-device.
+   2. If the user chooses this option, send `PassphraseAck(passphrase=null, on_device=true)`
+   3. If the user enters the passphrase in your application, send
+      `PassphraseAck(passphrase="user entered passphrase", on_device=false)`
+5. When you receive a `Deprecated_PassphraseStateRequest(state=...)`, store the value
+   of `state` as `stored_session_id`, and respond with `Deprecated_PassphraseStateAck`
+   with no fields set.
