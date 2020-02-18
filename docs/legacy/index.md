@@ -99,6 +99,8 @@ Step 3 should produce the same fingerprint like your local build (for the same v
 
 **WARNING: This will erase the recovery seed stored on the device! You should never do this on Trezor that contains coins!**
 
+Build with `MEMORY_PROTECT=0` or you will get a hard fault on your device. 
+
 Switch your device to bootloader mode, then execute:
 ```sh
 trezorctl firmware-update -f build/legacy/firmware/trezor.bin
