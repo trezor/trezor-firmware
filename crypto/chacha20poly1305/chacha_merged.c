@@ -6,6 +6,7 @@ Public domain.
 
 #include "ecrypt-sync.h"
 #include "ecrypt-portable.h"
+#include "stddef.h"
 
 #define ROTATE(v,c) (ROTL32(v,c))
 #define XOR(v,w) ((v) ^ (w))
