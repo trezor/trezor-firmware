@@ -34,6 +34,7 @@
 #endif
 
 #define SDCARD_SIZE (64 * 1024 * 1024)
+#define SDCARD_BLOCKS (SDCARD_SIZE / SDCARD_BLOCK_SIZE)
 
 static uint8_t *sdcard_buffer = NULL;
 static secbool sdcard_powered = secfalse;
@@ -103,6 +104,12 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
   if (sectrue != sdcard_powered) {
     return secfalse;
   }
+  if (block_num >= SDCARD_BLOCKS) {
+    return secfalse;
+  }
+  if (num_blocks > SDCARD_BLOCKS - block_num) {
+    return secfalse;
+  }
   memcpy(dest, sdcard_buffer + block_num * SDCARD_BLOCK_SIZE,
          num_blocks * SDCARD_BLOCK_SIZE);
   return sectrue;
@@ -111,6 +118,12 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
 secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
                             uint32_t num_blocks) {
   if (sectrue != sdcard_powered) {
+    return secfalse;
+  }
+  if (block_num >= SDCARD_BLOCKS) {
+    return secfalse;
+  }
+  if (num_blocks > SDCARD_BLOCKS - block_num) {
     return secfalse;
   }
   memcpy(sdcard_buffer + block_num * SDCARD_BLOCK_SIZE, src,
