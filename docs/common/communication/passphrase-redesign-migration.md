@@ -77,8 +77,7 @@ with `PassphraseAck()` with no fields set.
 TT version \< 2.3.0 will send `Deprecated_PassphraseStateRequest(state=[bytes])` after
 receiving `PassphraseAck`. The Host should immediately respond with
 `Deprecated_PassphraseStateAck()` with no fields set. If the Host does session
-management, it should store the value of `state` as the session ID. Note that `state`
-used to be 64 bytes long, but `session_id` is only 32 bytes. 
+management, it should store the value of `state` as the session ID.
 
 ### Triggering passphrase prompt
 
@@ -143,3 +142,6 @@ both T1 and TT with both older and newer firmwares.
 5. When you receive a `Deprecated_PassphraseStateRequest(state=...)`, store the value
    of `state` as `stored_session_id`, and respond with `Deprecated_PassphraseStateAck`
    with no fields set.
+
+Note: up to 64 bytes may be required to store the session ID. Firmwares < 2.3.0 use a 
+64-byte value, newer firmwares use a 32-byte value.
