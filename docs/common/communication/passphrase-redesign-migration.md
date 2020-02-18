@@ -14,6 +14,7 @@ with the transition from the old design.
 * Passphrase flow is now identical for T1 and TT.
 * By keeping track of _sessions_, it is possible to avoid having to send passphrase repeatedly.
 * The choice between entering on Host or Device for TT has been moved from Device to Host.
+* Multiple passphrases are cached simultaneously.
 
 ## Backwards compatibility
 
