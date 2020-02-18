@@ -7,7 +7,8 @@ from itertools import zip_longest
 from pathlib import Path
 
 import dominate
-from dominate.tags import a, div, h1, h2, hr, i, img, p, table, td, th, tr
+from dominate.tags import a, div, h1, h2, hr, i, img, p, strong, table, td, th, tr
+from dominate.util import text
 
 from . import download
 
@@ -102,18 +103,25 @@ def failed(fixture_test_path, test_name, actual_hash, expected_hash):
     recorded_path = fixture_test_path / "recorded"
     actual_path = fixture_test_path / "actual"
 
+    download_failed = False
+
     if not recorded_path.exists():
         recorded_path.mkdir()
-    download.fetch_recorded(expected_hash, recorded_path)
+    try:
+        download.fetch_recorded(expected_hash, recorded_path)
+    except Exception:
+        download_failed = True
 
     recorded_screens = sorted(recorded_path.iterdir())
     actual_screens = sorted(actual_path.iterdir())
 
-    if not recorded_screens:
-        return
-
     with doc:
         _header(test_name, expected_hash, actual_hash)
+
+        if download_failed:
+            with p():
+                strong("WARNING:")
+                text(" failed to download recorded fixtures. Is this a new test case?")
 
         with table(border=1, width=600):
             with tr():
