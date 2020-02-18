@@ -62,9 +62,9 @@ should be an option to "enter passphrase on device". When the user selects this 
 the Host must send a `PassphraseAck(passphrase=null, on_device=true)`.
 
 The "enter passphrase on device" option should be displayed when `Features.capabilities`
-contain the `Capability_PassphraseEntry` value, regardless of reported Trezor version of
-model. Firmwares older than 2.3.0 or 1.9.0 never set this value, so his ensures forwards
-and backwards compatibility.
+contain the `Capability_PassphraseEntry` value, regardless of reported Trezor version or
+model. Firmwares older than 2.3.0 or 1.9.0 never set this value, so this ensures
+forwards and backwards compatibility.
 
 ### Cross-version compatibility for TT
 
