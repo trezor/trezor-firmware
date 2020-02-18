@@ -6,15 +6,14 @@ from trezor import io
 class TestTrezorIoFatfs(unittest.TestCase):
 
     def setUp(self):
-        self.sd = io.SDCard()
-        self.sd.power(True)
+        io.sdcard.power_on()
         self.fs = io.FatFS()
         self.fs.mkfs()
         self.fs.mount()
 
     def tearDown(self):
         self.fs.unmount()
-        self.sd.power(False)
+        io.sdcard.power_off()
 
     def _filename(self, suffix=""):
         return "FILE%s.TXT" % suffix
