@@ -1,6 +1,6 @@
 # Passphrase 
 
-As of 2.3.0 we have changed how [passphrase](https://wiki.trezor.io/Passphrase) is communicated between the host and the device.
+As of 1.9.0 / 2.3.0 we have changed how [passphrase](https://wiki.trezor.io/Passphrase) is communicated between the host and the device. For migration information for existing Hosts communicating with Trezor please see this [document](passphrase-redesign-migration.md).
  
 Passphrase is very tightly coupled with _sessions_. The reader is encouraged to read on that topic first in the [sessions.md](sessions.md) section.
 

@@ -1,4 +1,3 @@
-
 # Passphrase Redesign In 1.9.0 / 2.3.0
 
 On the T1, passphrase must be entered on the host PC and sent to Trezor. On the TT, the
