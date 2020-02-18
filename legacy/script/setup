@@ -9,5 +9,5 @@ cd "$(dirname "$0")/.."
 
 script/bootstrap
 
-git clean -fdX
-git submodule foreach git clean -fdX
+git clean -fdX . ../crypto ../common ../storage
+git submodule foreach git clean -fdx
