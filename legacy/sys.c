@@ -9,7 +9,6 @@ uint8_t g_ucWorkMode = 0;
 uint8_t g_ucFlag = 0;
 uint8_t g_ucBatValue = 0;
 
-uint8_t s_usPower_Button_Status = POWER_BUTTON_UP;
 uint8_t g_ucLanguageFlag = 0;
 uint8_t g_ucPromptIndex = 0;
 
@@ -31,8 +30,6 @@ void delay_us(uint32_t uiDelay_us) {
     __asm__("nop");
   }
 }
-
-extern void vDISP_DeviceInfo(void);
 
 /*
  * ble mac get ble name
@@ -95,96 +92,5 @@ bool bBle_DisPlay(uint8_t ucIndex, uint8_t *ucStr) {
     return true;
   } else {
     return false;
-  }
-}
-
-/*
- * battery power on/off
- */
-void vPower_Control(uint8_t ucMode) {
-  uint32_t uiCount = 0;
-
-  if (BUTTON_POWER_ON == ucMode) {
-    while (1) {
-      if (GET_BUTTON_CANCEL()) {
-        delay_time(10);
-        uiCount++;
-        if (uiCount > 150) {
-          POWER_ON();
-          g_ucWorkMode = WORK_MODE_BLE;
-          s_usPower_Button_Status = POWER_BUTTON_DOWN;
-          break;
-        }
-
-      } else {
-        delay_time(2);
-        if (0x00 == GET_BUTTON_CANCEL()) {
-          POWER_OFF();
-          while (1)
-            ;
-        }
-      }
-    }
-
-  } else {
-    if ((WORK_MODE_USB != g_ucWorkMode) && (GET_BUTTON_CANCEL())) {
-      // no usb and button down and no nfc
-      if ((0x00 == GET_USB_INSERT()) &&
-          (POWER_BUTTON_UP == s_usPower_Button_Status) && (GET_NFC_INSERT())) {
-        while (GET_BUTTON_CANCEL()) {
-          delay_time(10);
-          uiCount++;
-          if (uiCount > 150) {
-            vDisp_PromptInfo(DISP_PRESSKEY_POWEROFF, true);
-            POWER_OFF();
-            while (1)
-              ;
-          }
-        }
-      }
-    } else {
-      s_usPower_Button_Status = POWER_BUTTON_UP;
-#if (MEMORY_PROTECT == 1)
-      vDISP_DeviceInfo();
-#endif
-    }
-  }
-  if (WORK_MODE_USB != g_ucWorkMode) {
-    if (g_ucBatValue == 20) {
-      vDisp_PromptInfo(DISP_PRESSKEY_POWEROFF, true);
-      POWER_OFF();
-      while (1)
-        ;
-    }
-  }
-}
-
-/*
- * check usb/nfc/ble
- */
-void vCheckMode(void) {
-  g_ucWorkMode = 0;
-
-  // nfc mode
-  if (0x00 == GET_NFC_INSERT()) {
-    delay_time(2);
-    if (0x00 == GET_NFC_INSERT()) {
-      g_ucWorkMode = WORK_MODE_NFC;
-      POWER_ON();
-      return;
-    }
-  } else {
-    // usb mode
-    if (GET_USB_INSERT()) {
-      delay_time(2);
-      if (GET_USB_INSERT()) {
-        g_ucWorkMode = WORK_MODE_USB;
-        POWER_ON_BLE();
-        return;
-      }
-    } else {
-      // 2s power on
-      vPower_Control(BUTTON_POWER_ON);
-    }
   }
 }

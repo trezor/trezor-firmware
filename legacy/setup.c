@@ -177,7 +177,6 @@ void setupApp(void) {
   usart_setup();
 #endif
 
-  vCheckMode();
 #if (_SUPPORT_DEBUG_UART_)
   if (WORK_MODE_BLE == g_ucWorkMode) {
     vUART_DebugInfo("\n\r WORK_MODE_BLE !\n\r", &g_ucWorkMode, 1);

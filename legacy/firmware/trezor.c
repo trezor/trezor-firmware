@@ -120,6 +120,7 @@ int main(void) {
 #else
   check_bootloader();
   setupApp();
+  vCheckMode();
   __stack_chk_guard = random32();  // this supports compiler provided
                                    // unpredictable stack protection checks
 #endif
