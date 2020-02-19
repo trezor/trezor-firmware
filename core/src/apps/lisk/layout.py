@@ -15,7 +15,7 @@ async def require_confirm_tx(ctx, to, value):
     text.bold(format_coin_amount(value))
     text.normal("to")
     text.mono(*split_address(to))
-    return await require_confirm(ctx, text, ButtonRequestType.SignTx)
+    await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_delegate_registration(ctx, delegate_name):
@@ -23,13 +23,13 @@ async def require_confirm_delegate_registration(ctx, delegate_name):
     text.normal("Do you really want to")
     text.normal("register a delegate?")
     text.bold(*chunks(delegate_name, 20))
-    return await require_confirm(ctx, text, ButtonRequestType.SignTx)
+    await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_vote_tx(ctx, votes):
     text = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     text.normal(*get_vote_tx_text(votes))
-    return await require_confirm(ctx, text, ButtonRequestType.SignTx)
+    await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_public_key(ctx, public_key):
@@ -41,7 +41,7 @@ async def require_confirm_multisig(ctx, multisignature):
     text.normal("Keys group length: %s" % len(multisignature.keys_group))
     text.normal("Life time: %s" % multisignature.life_time)
     text.normal("Min: %s" % multisignature.min)
-    return await require_confirm(ctx, text, ButtonRequestType.SignTx)
+    await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_fee(ctx, value, fee):
