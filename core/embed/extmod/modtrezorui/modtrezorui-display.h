@@ -414,6 +414,25 @@ STATIC mp_obj_t mod_trezorui_Display_text_width(mp_obj_t self, mp_obj_t text,
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorui_Display_text_width_obj,
                                  mod_trezorui_Display_text_width);
 
+/// def text_split(self, text: str, font: int, requested_width: int) -> int:
+///     """
+///     Returns how many characters of the string can be used before exceeding
+///     the requested width. Tries to avoid breaking words if possible. Font
+///     font is used for rendering.
+///     """
+STATIC mp_obj_t mod_trezorui_Display_text_split(size_t n_args,
+                                                const mp_obj_t *args) {
+  mp_buffer_info_t text;
+  mp_get_buffer_raise(args[1], &text, MP_BUFFER_READ);
+  mp_int_t font = mp_obj_get_int(args[2]);
+  mp_int_t requested_width = mp_obj_get_int(args[3]);
+  int chars = display_text_split(text.buf, text.len, font, requested_width);
+  return mp_obj_new_int(chars);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_split_obj,
+                                           4, 4,
+                                           mod_trezorui_Display_text_split);
+
 /// def qrcode(self, x: int, y: int, data: bytes, scale: int) -> None:
 ///     """
 ///     Renders data encoded as a QR code centered at position (x,y).
@@ -563,6 +582,8 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorui_Display_text_right_obj)},
     {MP_ROM_QSTR(MP_QSTR_text_width),
      MP_ROM_PTR(&mod_trezorui_Display_text_width_obj)},
+    {MP_ROM_QSTR(MP_QSTR_text_split),
+     MP_ROM_PTR(&mod_trezorui_Display_text_split_obj)},
     {MP_ROM_QSTR(MP_QSTR_qrcode), MP_ROM_PTR(&mod_trezorui_Display_qrcode_obj)},
     {MP_ROM_QSTR(MP_QSTR_orientation),
      MP_ROM_PTR(&mod_trezorui_Display_orientation_obj)},
