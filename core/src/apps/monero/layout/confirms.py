@@ -15,19 +15,19 @@ DUMMY_PAYMENT_ID = b"\x00" * 8
 async def require_confirm_watchkey(ctx):
     content = Text("Confirm export", ui.ICON_SEND, ui.GREEN)
     content.normal("Do you really want to", "export watch-only", "credentials?")
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
+    await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_keyimage_sync(ctx):
     content = Text("Confirm ki sync", ui.ICON_SEND, ui.GREEN)
     content.normal("Do you really want to", "sync key images?")
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
+    await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_live_refresh(ctx):
     content = Text("Confirm refresh", ui.ICON_SEND, ui.GREEN)
     content.normal("Do you really want to", "start refresh?")
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
+    await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_tx_key(ctx, export_key=False):
@@ -40,7 +40,7 @@ async def require_confirm_tx_key(ctx, export_key=False):
         txt.append("for tx_proof?")
 
     content.normal(*txt)
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
+    await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_transaction(ctx, state, tsx_data, network_type):
