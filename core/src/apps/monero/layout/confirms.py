@@ -54,6 +54,9 @@ async def require_confirm_transaction(ctx, state, tsx_data, network_type):
     has_integrated = bool(tsx_data.integrated_indices)
     has_payment = bool(tsx_data.payment_id)
 
+    if tsx_data.unlock_time != 0:
+        await _require_confirm_unlock_time(ctx, tsx_data.unlock_time)
+
     for idx, dst in enumerate(outputs):
         is_change = change_idx is not None and idx == change_idx
         if is_change:
@@ -115,6 +118,14 @@ async def _require_confirm_fee(ctx, fee):
     content = Text("Confirm fee", ui.ICON_SEND, ui.GREEN)
     content.bold(common.format_amount(fee))
     await require_hold_to_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
+
+
+async def _require_confirm_unlock_time(ctx, unlock_time):
+    content = Text("Confirm unlock time", ui.ICON_SEND, ui.GREEN)
+    content.normal("Unlock time for this transaction is set to")
+    content.bold(str(unlock_time))
+    content.normal("Continue?")
+    await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 class TransactionStep(ui.Component):
