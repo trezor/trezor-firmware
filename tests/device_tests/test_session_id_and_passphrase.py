@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import random
+
 import pytest
 
 from trezorlib import messages
@@ -88,61 +90,122 @@ def test_session_with_passphrase(client):
 
 
 @pytest.mark.skip_ui
+@pytest.mark.timeout(300)
 @pytest.mark.setup_client(passphrase=True)
 def test_multiple_sessions(client):
+    # start SESSIONS_STORED sessions
     session_ids = []
+    for _ in range(SESSIONS_STORED):
+        session_ids.append(_init_session(client))
 
+    # Resume each session
+    for session_id in session_ids:
+        new_session_id = _init_session(client, session_id)
+        assert session_id == new_session_id
+
+    # Creating a new session replaces the least-recently-used session
+    _init_session(client)
+
+    # Resuming session 1 through SESSIONS_STORED will still work
+    for session_id in session_ids[1:]:
+        new_session_id = _init_session(client, session_id)
+        assert session_id == new_session_id
+
+    # Resuming session 0 will not work
+    new_session_id = _init_session(client, session_ids[0])
+    assert new_session_id != session_ids[0]
+
+    # New session bumped out the least-recently-used anonymous session.
+    # Resuming session 1 through SESSIONS_STORED will still work
+    for session_id in session_ids[1:]:
+        new_session_id = _init_session(client, session_id)
+        assert session_id == new_session_id
+
+    # Creating a new session replaces session_ids[0] again
+    _init_session(client)
+
+    # Resuming all sessions one by one will in turn bump out the previous session.
+    for session_id in session_ids:
+        new_session_id = _init_session(client, session_id)
+        assert session_id != new_session_id
+
+
+@pytest.mark.skip_ui
+@pytest.mark.setup_client(passphrase=True)
+def test_multiple_passphrases(client):
     # start a session
-    session_ids.append(_init_session(client))
+    session_a = _init_session(client)
     assert _get_xpub(client, passphrase="A") == XPUB_PASSPHRASES["A"]
     # start it again wit the same session id
-    new_session_id = _init_session(client, session_id=session_ids[0])
+    new_session_id = _init_session(client, session_id=session_a)
     # session is the same
-    assert new_session_id == session_ids[0]
+    assert new_session_id == session_a
     # passphrase is not prompted
     assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["A"]
 
     # start a second session
-    session_ids.append(_init_session(client))
+    session_b = _init_session(client)
     # new session -> new session id and passphrase prompt
     assert _get_xpub(client, passphrase="B") == XPUB_PASSPHRASES["B"]
 
     # provide the same session id -> must not ask for passphrase again.
-    new_session_id = _init_session(client, session_id=session_ids[1])
-    assert new_session_id == session_ids[1]
+    new_session_id = _init_session(client, session_id=session_b)
+    assert new_session_id == session_b
     assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["B"]
 
     # provide the first session id -> must not ask for passphrase again and return the same result.
-    new_session_id = _init_session(client, session_id=session_ids[0])
-    assert new_session_id == session_ids[0]
+    new_session_id = _init_session(client, session_id=session_a)
+    assert new_session_id == session_a
     assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["A"]
 
-    passphrases = list(XPUB_PASSPHRASES.keys())
-    xpubs = list(XPUB_PASSPHRASES.values())
-    # start as many sessions as the limit is (2 were started already)
-    for i in range(2, SESSIONS_STORED):
-        new_session_id = _init_session(client)
-        assert new_session_id not in session_ids
-        session_ids.append(new_session_id)
-        assert _get_xpub(client, passphrase=passphrases[i]) == xpubs[i]
+    # provide the second session id -> must not ask for passphrase again and return the same result.
+    new_session_id = _init_session(client, session_id=session_b)
+    assert new_session_id == session_b
+    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["B"]
+
+
+@pytest.mark.skip_ui
+@pytest.mark.timeout(600)
+@pytest.mark.slow
+@pytest.mark.setup_client(passphrase=True)
+def test_max_sessions_with_passphrases(client):
+    # for the following tests, we are using as many passphrases as there are available sessions
+    assert len(XPUB_PASSPHRASES) == SESSIONS_STORED
+
+    # start as many sessions as the limit is
+    session_ids = {}
+    for passphrase, xpub in XPUB_PASSPHRASES.items():
+        session_id = _init_session(client)
+        assert session_id not in session_ids.values()
+        session_ids[passphrase] = session_id
+        assert _get_xpub(client, passphrase=passphrase) == xpub
 
     # passphrase is not prompted for the started the sessions, regardless the order
-    for i in reversed(range(0, SESSIONS_STORED)):
-        _init_session(client, session_id=session_ids[i])
-        assert _get_xpub(client, passphrase=None) == xpubs[i]
+    # let's try 20 different orderings
+    passphrases = list(XPUB_PASSPHRASES.keys())
+    shuffling = passphrases[:]
+    for _ in range(20):
+        random.shuffle(shuffling)
+        for passphrase in shuffling:
+            session_id = _init_session(client, session_id=session_ids[passphrase])
+            assert session_id == session_ids[passphrase]
+            assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES[passphrase]
 
-    # creating one more will exceed the limit, the LRU item is at the moment the last one (see above)
-    # it should have been removed -> must ask for passphrase
-    _init_session(client)
-    _get_xpub(client, passphrase="XX")  # create one more
-    _init_session(client, session_id=session_ids[SESSIONS_STORED - 1])
-    _get_xpub(client, passphrase="whatever")  # the session is gone
+    # make sure the usage order is the reverse of the creation order
+    for passphrase in reversed(passphrases):
+        session_id = _init_session(client, session_id=session_ids[passphrase])
+        assert session_id == session_ids[passphrase]
+        assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES[passphrase]
 
-    # now the second to last is the next LRU
+    # creating one more session will exceed the limit
     _init_session(client)
-    _get_xpub(client, passphrase="XXXX")
-    _init_session(client, session_id=session_ids[SESSIONS_STORED - 2])
-    _get_xpub(client, passphrase="whatever")
+    # new session asks for passphrase
+    _get_xpub(client, passphrase="XX")
+
+    # restoring the sessions in reverse will evict the next-up session
+    for passphrase in reversed(passphrases):
+        _init_session(client, session_id=session_ids[passphrase])
+        _get_xpub(client, passphrase="whatever")  # passphrase is prompted
 
 
 @pytest.mark.skip_ui
@@ -235,7 +298,7 @@ def test_passphrase_always_on_device(client):
     _init_session(client)
     response = client.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.ButtonRequest)
-    client.debug.input("A")  # Input empty passphrase.
+    client.debug.input("A")  # Input non-empty passphrase.
     response = client.call_raw(messages.ButtonAck())
     assert isinstance(response, messages.PublicKey)
     assert response.xpub == XPUB_PASSPHRASES["A"]
