@@ -122,6 +122,7 @@
 "test_msg_getaddress_show.py-test_show": "903c42539d1b09cb75fda744afc9f645daf71fecf6ee993b231837a86172c0b8",
 "test_msg_getaddress_show.py-test_show_multisig_15": "81fd8fc77f7e48369b528b304db16a11d970dac052b045d9988e5ded580251f4",
 "test_msg_getaddress_show.py-test_show_multisig_3": "c11622e28edfd26e91be1c4fb67e1301b66ce61d70ec24946d1cb3f78e38377b",
+"test_msg_getaddress_show.py-test_show_multisig_xpubs": "d89621c445de3ddcd0c922860869dc1edc1f00a3756cacd558b9d0b9cc6782ac",
 "test_msg_getecdhsessionkey.py-test_ecdh": "75fe462e6afa73742949ede4f3529d2e0ec08f8f1b67c04a57189c8657fcbdcd",
 "test_msg_getentropy.py::test_entropy[128]": "a722fa2048fa3102889ec05558d25f837a364ef2a118e85975683e10a56f1356",
 "test_msg_getentropy.py::test_entropy[129]": "a722fa2048fa3102889ec05558d25f837a364ef2a118e85975683e10a56f1356",
