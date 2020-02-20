@@ -43,6 +43,8 @@ The gist of the changes is:
 - `PassphraseRequest.on_device` was deprecated, and renamed to `_on_device`. New Devices
   will never send this field.
 - Corresponding field `PassphraseAck.on_device` was added.
+- `PassphraseAck.state` was deprecated, and renamed to `_state`. It is retained for
+  code compatibility, but the field should never be set.
 - `PassphraseStateRequest`/`PassphraseStateAck` messages were deprecated, and renamed
   with a `Deprecated_` prefix. New Devices will not send or accept these messages.
 - `Initialize.state` was renamed to `Initialize.session_id`.

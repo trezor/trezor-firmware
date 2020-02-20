@@ -120,7 +120,7 @@ message PassphraseRequest {
  */
 message PassphraseAck {
     optional string passphrase = 1;
-    // optional bytes state = 2;  DEPRECATED since 2.3.0
+    optional bytes _state = 2 [deprecated=true];  // <2.3.0
     optional bool on_device = 3;    // user wants to enter passphrase on the device
 }
 
