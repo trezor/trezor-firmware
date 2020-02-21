@@ -43,3 +43,70 @@ def test_sd_no_format(client):
         device.sd_protect(client, Op.ENABLE)
 
     assert e.value.failure.code == messages.FailureType.ProcessError
+
+
+@pytest.mark.sd_card
+@pytest.mark.setup_client(pin="1234")
+def test_sd_protect_unlock(client):
+    def input_flow_enable_sd_protect():
+        yield  # do you really want to enable SD protection
+        assert "SD card protection" in client.debug.wait_layout().text
+        client.debug.press_yes()
+
+        yield  # enter current PIN
+        assert "PinDialog" == client.debug.wait_layout().text
+        client.debug.input("1234")
+
+        yield  # you have successfully enabled SD protection
+        assert "Success" in client.debug.wait_layout().text
+        client.debug.press_yes()
+
+    with client:
+        client.set_input_flow(input_flow_enable_sd_protect)
+        device.sd_protect(client, Op.ENABLE)
+
+    def input_flow_change_pin():
+        yield  # do you really want to change PIN?
+        assert "Change PIN" in client.debug.wait_layout().text
+        client.debug.press_yes()
+
+        yield  # enter current PIN
+        assert "PinDialog" == client.debug.wait_layout().text
+        client.debug.input("1234")
+
+        yield  # enter new PIN
+        assert "PinDialog" == client.debug.wait_layout().text
+        client.debug.input("1234")
+
+        yield  # enter new PIN again
+        assert "PinDialog" == client.debug.wait_layout().text
+        client.debug.input("1234")
+
+        yield  # Pin change successful
+        assert "Success" in client.debug.wait_layout().text
+        client.debug.press_yes()
+
+    with client:
+        client.set_input_flow(input_flow_change_pin)
+        device.change_pin(client)
+
+    client.debug.erase_sd_card(format=False)
+
+    def input_flow_change_pin_format():
+        yield  # do you really want to change PIN?
+        assert "Change PIN" in client.debug.wait_layout().text
+        client.debug.press_yes()
+
+        yield  # SD card problem
+        assert "SD card problem" in client.debug.wait_layout().text
+        client.debug.press_yes()  # retry
+
+        yield  # still SD card problem
+        assert "SD card problem" in client.debug.wait_layout().text
+        client.debug.press_no()  # do not retry
+
+    with client, pytest.raises(TrezorFailure) as e:
+        client.set_input_flow(input_flow_change_pin_format)
+        device.change_pin(client)
+
+    assert e.value.failure.code == messages.FailureType.ProcessError

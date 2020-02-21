@@ -388,6 +388,7 @@
 "test_reset_backup.py::test_skip_backup_msg[2-backup_flow_slip39_advanced]": "0bafb944169d0ab608513deadba15411d1756ef2658253740c5d8792f4527e9d",
 "test_sdcard.py::test_sd_format": "e0da54c8a26386bff4eb310e9c7ebaa56a02fed3870f976d1dd3b230750a28fe",
 "test_sdcard.py::test_sd_no_format": "f47e897caee95cf98c1b4506732825f853c4b8afcdc2713e38e3b4055973c9ac",
+"test_sdcard.py::test_sd_protect_unlock": "0b6cb625b59256552505575bce75fb0895b935d574f2a07ac4a5246d608252af",
 "test_u2f_counter.py::test_u2f_counter": "7d96a4d262b9d8a2c1158ac1e5f0f7b2c3ed5f2ba9d6235a014320313f9488fe",
 "test_zerosig.py-test_one_zero_signature": "401aeaf7b2f565e2064a3c1a57a8ee3afe1e9bf251fba0874390685e7e0f178f",
 "test_zerosig.py-test_two_zero_signature": "7a01a057fb5dd3e6e38e7986875c5d07f0700bd80b519660e0b42973a9afd664"
