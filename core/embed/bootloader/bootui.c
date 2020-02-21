@@ -144,6 +144,23 @@ void ui_screen_third(void) {
 
 // info UI
 
+static int display_vendor_string(const char *text, int textlen,
+                                 uint16_t fgcolor) {
+  int split = display_text_split(text, textlen, FONT_NORMAL, DISPLAY_RESX - 55);
+  if (split >= textlen) {
+    display_text(55, 95, text, textlen, FONT_NORMAL, fgcolor, COLOR_WHITE);
+    return 120;
+  } else {
+    display_text(55, 95, text, split, FONT_NORMAL, fgcolor, COLOR_WHITE);
+    if (text[split] == ' ') {
+      split++;
+    }
+    display_text(55, 120, text + split, textlen - split, FONT_NORMAL, fgcolor,
+                 COLOR_WHITE);
+    return 145;
+  }
+}
+
 void ui_screen_info(secbool buttons, const vendor_header *const vhdr,
                     const image_header *const hdr) {
   display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
@@ -153,11 +170,9 @@ void ui_screen_info(secbool buttons, const vendor_header *const vhdr,
   display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12,
                COLOR_BL_GRAY, COLOR_WHITE);
   if (vhdr && hdr) {
-    ver_str = format_ver("Firmware %d.%d.%d", (hdr->version));
+    ver_str = format_ver("Firmware %d.%d.%d by", (hdr->version));
     display_text(55, 70, ver_str, -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE);
-    display_text(55, 95, "by", -1, FONT_NORMAL, COLOR_BL_GRAY, COLOR_WHITE);
-    display_text(55, 120, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL,
-                 COLOR_BL_GRAY, COLOR_WHITE);
+    display_vendor_string(vhdr->vstr, vhdr->vstr_len, COLOR_BL_GRAY);
   } else {
     display_text(55, 70, "No Firmware", -1, FONT_NORMAL, COLOR_BL_GRAY,
                  COLOR_WHITE);
@@ -208,10 +223,9 @@ void ui_screen_install_confirm_upgrade(const vendor_header *const vhdr,
                COLOR_BLACK, COLOR_WHITE);
   display_text(55, 70, "Update firmware by", -1, FONT_NORMAL, COLOR_BLACK,
                COLOR_WHITE);
-  display_text(55, 95, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BLACK,
-               COLOR_WHITE);
+  int next_y = display_vendor_string(vhdr->vstr, vhdr->vstr_len, COLOR_BLACK);
   const char *ver_str = format_ver("to version %d.%d.%d?", hdr->version);
-  display_text(55, 120, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE);
+  display_text(55, next_y, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE);
   ui_confirm_cancel_buttons();
 }
 
@@ -225,10 +239,9 @@ void ui_screen_install_confirm_newvendor(const vendor_header *const vhdr,
                COLOR_BLACK, COLOR_WHITE);
   display_text(55, 70, "Install firmware by", -1, FONT_NORMAL, COLOR_BLACK,
                COLOR_WHITE);
-  display_text(55, 95, vhdr->vstr, vhdr->vstr_len, FONT_NORMAL, COLOR_BLACK,
-               COLOR_WHITE);
+  int next_y = display_vendor_string(vhdr->vstr, vhdr->vstr_len, COLOR_BLACK);
   const char *ver_str = format_ver("(version %d.%d.%d)?", hdr->version);
-  display_text(55, 120, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE);
+  display_text(55, next_y, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE);
   display_text_center(120, 170, "Seed will be erased!", -1, FONT_NORMAL,
                       COLOR_BL_FAIL, COLOR_WHITE);
   ui_confirm_cancel_buttons();

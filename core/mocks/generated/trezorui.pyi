@@ -157,6 +157,13 @@ class Display:
         Returns a width of text in pixels. Font font is used for rendering.
         """
 
+    def text_split(self, text: str, font: int, requested_width: int) -> int:
+        """
+        Returns how many characters of the string can be used before exceeding
+        the requested width. Tries to avoid breaking words if possible. Font
+        font is used for rendering.
+        """
+
     def qrcode(self, x: int, y: int, data: bytes, scale: int) -> None:
         """
         Renders data encoded as a QR code centered at position (x,y).

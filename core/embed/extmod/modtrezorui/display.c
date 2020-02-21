@@ -692,6 +692,37 @@ int display_text_width(const char *text, int textlen, int font) {
   return width;
 }
 
+// Returns how many characters of the string can be used before exceeding
+// the requested width. Tries to avoid breaking words if possible.
+int display_text_split(const char *text, int textlen, int font,
+                       int requested_width) {
+  int width = 0;
+  int lastspace = 0;
+#if TREZOR_MODEL == T
+  // determine text length if not provided
+  if (textlen < 0) {
+    textlen = strlen(text);
+  }
+  for (int i = 0; i < textlen; i++) {
+    if (text[i] == ' ') {
+      lastspace = i;
+    }
+    const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
+    if (!g) continue;
+    const uint8_t adv = g[2];  // advance
+    width += adv;
+    if (width > requested_width) {
+      if (lastspace > 0) {
+        return lastspace;
+      } else {
+        return i;
+      }
+    }
+  }
+#endif
+  return textlen;
+}
+
 #define QR_MAX_VERSION 9
 
 void display_qrcode(int x, int y, const char *data, uint32_t datalen,
