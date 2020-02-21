@@ -96,20 +96,18 @@ def screen_recording(client, request):
     try:
         client.debug.start_recording(str(screen_path))
         yield
-    finally:
-        client.debug.stop_recording()
         if test_ui == "record":
             _process_recorded(screen_path, test_name)
         elif test_ui == "test":
             _process_tested(screens_test_path, test_name)
         else:
             raise ValueError("Invalid 'ui' option.")
+    finally:
+        client.debug.stop_recording()
 
 
-def check_missing():
-    missing = set(HASHES.keys()) - PROCESSED
-    if missing:
-        pytest.fail("Fixtures.json contains tests that are not tested: %s" % missing)
+def list_missing():
+    return set(HASHES.keys()) - PROCESSED
 
 
 def read_fixtures():
