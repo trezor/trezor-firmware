@@ -70,10 +70,24 @@ async def sd_problem_dialog(ctx: wire.GenericContext) -> bool:
     return await confirm(ctx, text, confirm="Retry", cancel="Abort")
 
 
-async def ensure_sdcard(ctx: wire.GenericContext) -> None:
+async def ensure_sdcard(
+    ctx: wire.GenericContext, ensure_filesystem: bool = True
+) -> None:
+    """Ensure a SD card is ready for use.
+
+    This function runs the UI flow needed to ask the user to insert a SD card if there
+    isn't one.
+
+    If `ensure_filesystem` is True (the default), it also tries to mount the SD card
+    filesystem, and allows the user to format the card if a filesystem cannot be
+    mounted.
+    """
     while not sdcard.is_present():
         if not await insert_card_dialog(ctx):
             raise SdCardUnavailable("SD card required.")
+
+    if not ensure_filesystem:
+        return
 
     while True:
         try:
@@ -105,7 +119,7 @@ async def request_sd_salt(
         return None
 
     while True:
-        await ensure_sdcard(ctx)
+        await ensure_sdcard(ctx, ensure_filesystem=False)
         try:
             return storage.sd_salt.load_sd_salt()
         except storage.sd_salt.WrongSdCard:
@@ -117,4 +131,4 @@ async def request_sd_salt(
             # In either case, there is no good way to recover. If the user clicks Retry,
             # we will try again.
             if not await sd_problem_dialog(ctx):
-                raise
+                raise SdCardUnavailable("Error accessing SD card.")
