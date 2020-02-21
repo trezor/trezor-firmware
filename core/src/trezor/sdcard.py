@@ -7,7 +7,7 @@ if False:
 class FilesystemWrapper:
     _INSTANCE = None  # type: Optional[FilesystemWrapper]
 
-    def __init__(self, mounted: bool = True) -> None:
+    def __init__(self, mounted: bool) -> None:
         self.fs = FatFS()
         self.mounted = mounted
         self.counter = 0
@@ -20,23 +20,30 @@ class FilesystemWrapper:
             raise RuntimeError  # cannot request mounted and non-mounted instance at the same time
         return cls._INSTANCE
 
+    def _deinit_instance(self) -> None:
+        if self.mounted:
+            self.fs.unmount()
+        sdcard.power_off()
+        FilesystemWrapper._INSTANCE = None
+
     def __enter__(self) -> "FatFS":
-        if self.counter <= 0:
-            self.counter = 0
-            sdcard.power_on()
-            if self.mounted:
-                self.fs.mount()
-        self.counter += 1
-        return self.fs
+        try:
+            if self.counter <= 0:
+                self.counter = 0
+                sdcard.power_on()
+                if self.mounted:
+                    self.fs.mount()
+            self.counter += 1
+            return self.fs
+        except Exception:
+            self._deinit_instance()
+            raise
 
     def __exit__(self, exc_type: Any, exc_val: Any, tb: Any) -> None:
         self.counter -= 1
         if self.counter <= 0:
             self.counter = 0
-            if self.mounted:
-                self.fs.unmount()
-            sdcard.power_off()
-            FilesystemWrapper._INSTANCE = None
+            self._deinit_instance()
 
 
 def get_filesystem(mounted: bool = True) -> FilesystemWrapper:
