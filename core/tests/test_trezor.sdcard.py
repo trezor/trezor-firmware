@@ -62,6 +62,33 @@ class TestTrezorSdcard(unittest.TestCase):
                 with sdcard.get_filesystem(mounted=True):
                     pass
 
+    def test_failed_mount(self):
+        # set up a filesystem first
+        with sdcard.get_filesystem(mounted=False) as fs:
+            fs.mkfs()
+
+        with sdcard.get_filesystem() as fs:
+            # the following should succeed
+            fs.listdir("/")
+
+        # trash filesystem
+        io.sdcard.power_on()
+        io.sdcard.write(0, bytes([0xFF] * io.sdcard.BLOCK_SIZE))
+        io.sdcard.power_off()
+
+        # mounting should now fail
+        with self.assertRaises(OSError):
+            with sdcard.get_filesystem() as fs:
+                pass
+
+        # it should be possible to create an unmounted instance
+        with sdcard.get_filesystem(mounted=False) as fs:
+            fs.mkfs()
+
+        # mounting should now succeed
+        with sdcard.get_filesystem() as fs:
+            fs.listdir("/")
+
 
 
 if __name__ == "__main__":
