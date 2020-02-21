@@ -17,31 +17,7 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void fsm_msgInitialize(const Initialize *msg) {
-  recovery_abort();
-  signing_abort();
-  if (msg && msg->has_session_id && msg->session_id.size == 32) {
-    if (0 != memcmp(session_getSessionId(), msg->session_id.bytes, 32)) {
-      // If session id was specified but does not match -> clear the cache.
-      session_clear(false);  // do not lock
-    }
-  } else {
-    // If session id was not specified -> clear the cache.
-    session_clear(false);  // do not lock
-  }
-  layoutHome();
-  fsm_msgGetFeatures(0);
-}
-
-void fsm_msgGetFeatures(const GetFeatures *msg) {
-  (void)msg;
-  RESP_INIT(Features);
-
-  resp->has_session_id = true;
-  memcpy(resp->session_id.bytes, session_getSessionId(),
-         sizeof(resp->session_id.bytes));
-  resp->session_id.size = sizeof(resp->session_id.bytes);
-
+bool get_features(Features *resp) {
   resp->has_vendor = true;
   strlcpy(resp->vendor, "trezor.io", sizeof(resp->vendor));
   resp->has_major_version = true;
@@ -103,7 +79,35 @@ void fsm_msgGetFeatures(const GetFeatures *msg) {
   resp->capabilities[6] = Capability_Capability_Stellar;
   resp->capabilities[7] = Capability_Capability_U2F;
 #endif
+  return resp;
+}
 
+void fsm_msgInitialize(const Initialize *msg) {
+  recovery_abort();
+  signing_abort();
+
+  uint8_t *session_id;
+  if (msg && msg->has_session_id) {
+    session_id = session_startSession(msg->session_id.bytes);
+  } else {
+    session_id = session_startSession(NULL);
+  }
+
+  RESP_INIT(Features);
+  get_features(resp);
+
+  resp->has_session_id = true;
+  memcpy(resp->session_id.bytes, session_id, sizeof(resp->session_id.bytes));
+  resp->session_id.size = sizeof(resp->session_id.bytes);
+
+  layoutHome();
+  msg_write(MessageType_MessageType_Features, resp);
+}
+
+void fsm_msgGetFeatures(const GetFeatures *msg) {
+  (void)msg;
+  RESP_INIT(Features);
+  get_features(resp);
   msg_write(MessageType_MessageType_Features, resp);
 }
 
@@ -343,7 +347,9 @@ void fsm_msgCancel(const Cancel *msg) {
 
 void fsm_msgClearSession(const ClearSession *msg) {
   (void)msg;
-  session_clear(true);  // clear PIN as well
+  // we do not actually clear the session, we just lock it
+  // TODO: the message should be called LockSession see #819
+  config_lockDevice();
   layoutScreensaver();
   fsm_sendSuccess(_("Session cleared"));
 }

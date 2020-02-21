@@ -12,7 +12,7 @@ def is_initialized() -> bool:
 
 def wipe() -> None:
     config.wipe()
-    cache.clear()
+    cache.clear_all()
 
 
 def init_unlocked() -> None:

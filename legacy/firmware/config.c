@@ -81,6 +81,8 @@ static const uint32_t META_MAGIC_V10 = 0xFFFFFFFF;
 #define KEY_U2F_ROOT (17 | APP | FLAG_PUBLIC_SHIFTED)         // node
 #define KEY_DEBUG_LINK_PIN (255 | APP | FLAG_PUBLIC_SHIFTED)  // string(10)
 
+#define MAX_SESSIONS_COUNT 10
+
 // The PIN value corresponding to an empty PIN.
 static const uint32_t PIN_EMPTY = 1;
 
@@ -120,11 +122,23 @@ be added to the storage u2f_counter to get the real counter value.
  * storage.u2f_counter + config_u2f_offset.
  * This corresponds to the number of cleared bits in the U2FAREA.
  */
-static secbool sessionSeedCached;
-static uint8_t CONFIDENTIAL sessionSeed[64];
 
-static secbool sessionIdCached;
-static uint8_t sessionId[32];
+// Session management
+typedef struct {
+  uint8_t id[32];
+  uint32_t last_use;
+  uint8_t seed[64];
+  secbool seedCached;
+} Session;
+
+static void session_clearCache(Session *session);
+static uint8_t session_findLeastRecent(void);
+static uint8_t session_findSession(const uint8_t *sessionId);
+
+static CONFIDENTIAL Session sessionsCache[MAX_SESSIONS_COUNT];
+static Session *activeSessionCache;
+
+static uint32_t sessionUseCounter = 0;
 
 #define autoLockDelayMsDefault (10 * 60 * 1000U)  // 10 minutes
 static secbool autoLockDelayMsCached = secfalse;
@@ -402,18 +416,29 @@ void config_init(void) {
   }
   data2hex(config_uuid, sizeof(config_uuid), config_uuid_str);
 
+  session_clear(false);
+
   usbTiny(oldTiny);
 }
 
 void session_clear(bool lock) {
-  sessionSeedCached = secfalse;
-  memzero(&sessionSeed, sizeof(sessionSeed));
-  sessionIdCached = secfalse;
-  memzero(&sessionId, sizeof(sessionId));
+  for (uint8_t i = 0; i < MAX_SESSIONS_COUNT; i++) {
+    session_clearCache(sessionsCache + i);
+  }
+  activeSessionCache = NULL;
   if (lock) {
-    storage_lock();
+    config_lockDevice();
   }
 }
+
+void session_clearCache(Session *session) {
+  session->last_use = 0;
+  memzero(session->id, sizeof(session->id));
+  memzero(session->seed, sizeof(session->seed));
+  session->seedCached = false;
+}
+
+void config_lockDevice(void) { storage_lock(); }
 
 static void get_u2froot_callback(uint32_t iter, uint32_t total) {
   layoutProgress(_("Updating"), 1000 * iter / total);
@@ -422,11 +447,11 @@ static void get_u2froot_callback(uint32_t iter, uint32_t total) {
 static void config_compute_u2froot(const char *mnemonic,
                                    StorageHDNode *u2froot) {
   static CONFIDENTIAL HDNode node;
+  static CONFIDENTIAL uint8_t seed[64];
   char oldTiny = usbTiny(1);
-  mnemonic_to_seed(mnemonic, "", sessionSeed,
-                   get_u2froot_callback);  // BIP-0039
+  mnemonic_to_seed(mnemonic, "", seed, get_u2froot_callback);  // BIP-0039
   usbTiny(oldTiny);
-  hdnode_from_seed(sessionSeed, 64, NIST256P1_NAME, &node);
+  hdnode_from_seed(seed, 64, NIST256P1_NAME, &node);
   hdnode_private_ckd(&node, U2F_KEY_PATH);
   u2froot->depth = node.depth;
   u2froot->child_num = U2F_KEY_PATH;
@@ -437,6 +462,7 @@ static void config_compute_u2froot(const char *mnemonic,
   memcpy(u2froot->private_key.bytes, node.private_key,
          sizeof(node.private_key));
   memzero(&node, sizeof(node));
+  memzero(&seed, sizeof(seed));
   session_clear(false);  // invalidate seed cache
 }
 
@@ -551,8 +577,9 @@ static void get_root_node_callback(uint32_t iter, uint32_t total) {
 
 const uint8_t *config_getSeed(void) {
   // root node is properly cached
-  if (sectrue == sessionSeedCached) {
-    return sessionSeed;
+  if ((activeSessionCache != NULL) &&
+      (activeSessionCache->seedCached == sectrue)) {
+    return activeSessionCache->seed;
   }
 
   // if storage has mnemonic, convert it to node and use it
@@ -575,13 +602,17 @@ const uint8_t *config_getSeed(void) {
       }
     }
     char oldTiny = usbTiny(1);
-    mnemonic_to_seed(mnemonic, passphrase, sessionSeed,
+    if (activeSessionCache == NULL) {
+      // this should not happen if the Host behaves and sends Initialize first
+      session_startSession(NULL);
+    }
+    mnemonic_to_seed(mnemonic, passphrase, activeSessionCache->seed,
                      get_root_node_callback);  // BIP-0039
     memzero(mnemonic, sizeof(mnemonic));
     memzero(passphrase, sizeof(passphrase));
     usbTiny(oldTiny);
-    sessionSeedCached = sectrue;
-    return sessionSeed;
+    activeSessionCache->seedCached = sectrue;
+    return activeSessionCache->seed;
   } else {
     fsm_sendFailure(FailureType_Failure_NotInitialized,
                     _("Device not initialized"));
@@ -772,12 +803,51 @@ bool config_changeWipeCode(const char *pin, const char *wipe_code) {
   return sectrue == ret;
 }
 
-const uint8_t *session_getSessionId(void) {
-  if (!sessionIdCached) {
-    random_buffer(sessionId, 32);
+uint8_t session_findLeastRecent(void) {
+  uint8_t least_recent_index = MAX_SESSIONS_COUNT;
+  uint32_t least_recent_use = sessionUseCounter;
+  for (uint8_t i = 0; i < MAX_SESSIONS_COUNT; i++) {
+    if (sessionsCache[i].last_use == 0) {
+      return i;
+    }
+    if (sessionsCache[i].last_use <= least_recent_use) {
+      least_recent_use = sessionsCache[i].last_use;
+      least_recent_index = i;
+    }
   }
-  sessionIdCached = sectrue;
-  return sessionId;
+  ensure(sectrue * (least_recent_index < MAX_SESSIONS_COUNT), NULL);
+  return least_recent_index;
+}
+
+uint8_t session_findSession(const uint8_t *sessionId) {
+  for (uint8_t i = 0; i < MAX_SESSIONS_COUNT; i++) {
+    if (sessionsCache[i].last_use != 0) {
+      if (memcmp(sessionsCache[i].id, sessionId, 32) == 0) {  // session found
+        return i;
+      }
+    }
+  }
+  return MAX_SESSIONS_COUNT;
+}
+
+uint8_t *session_startSession(const uint8_t *received_session_id) {
+  int session_index = MAX_SESSIONS_COUNT;
+
+  if (received_session_id != NULL) {
+    session_index = session_findSession(received_session_id);
+  }
+
+  if (session_index == MAX_SESSIONS_COUNT) {
+    // Session not found in cache. Use an empty one or the least recently used.
+    session_index = session_findLeastRecent();
+    session_clearCache(sessionsCache + session_index);
+    random_buffer(sessionsCache[session_index].id, 32);
+  }
+
+  sessionUseCounter++;
+  sessionsCache[session_index].last_use = sessionUseCounter;
+  activeSessionCache = sessionsCache + session_index;
+  return activeSessionCache->id;
 }
 
 bool session_isUnlocked(void) { return sectrue == storage_is_unlocked(); }
