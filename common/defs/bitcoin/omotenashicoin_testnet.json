@@ -1,0 +1,46 @@
+{
+  "coin_name": "MTNS Testnet",
+  "coin_shortcut": "tMTNS",
+  "coin_label": "MTNS Testnet",
+  "website": "https://www.omotenashicoin.site",
+  "github": "https://github.com/omotenashicoin-project/OmotenashiCoin",
+  "maintainer": "nakkie <git@omotenashiocin.site>",
+  "curve_name": "secp256k1",
+  "decimals": 8,
+  "address_type": 83,
+  "address_type_p2sh": 18,
+  "maxfee_kb": 100000,
+  "minfee_kb": 100,
+  "signed_message_header": "MtnsNet Signed Message:\n",
+  "hash_genesis_block": "000001780e5aa2fa2df9e9e8a4e86f40261cd5851134c236b32e767e58b12dc6",
+  "xprv_magic": 70544262,
+  "xpub_magic": 70544129,
+  "xpub_magic_segwit_p2sh": null,
+  "xpub_magic_segwit_native": null,
+  "bech32_prefix": null,
+  "cashaddr_prefix": null,
+  "slip44": 1,
+  "segwit": false,
+  "decred": false,
+  "fork_id": null,
+  "force_bip143": false,
+  "bip115": false,
+  "default_fee_b": {
+    "Normal": 10
+  },
+  "dust_limit": 546,
+  "blocktime_seconds": 90,
+  "uri_prefix": "omotenashicoin",
+  "min_address_length": 27,
+  "max_address_length": 34,
+  "bitcore": [
+  ],
+  "blockbook": [
+    "https://mtnstestnet.chainview.site"
+  ],
+  "negative_fee": false,
+  "cooldown": 100,
+  "consensus_branch_id": null,
+  "confidential_assets": null
+}
+

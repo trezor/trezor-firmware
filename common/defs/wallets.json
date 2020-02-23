@@ -81,6 +81,9 @@
     "bitcoin:MONA": {
         "Electrum-MONA": "https://electrum-mona.org"
     },
+    "bitcoin:MTNS": {
+        "Electrum-MTNS": "https://github.com/omotenashicoin-project/electrum-mtns"
+    },
     "bitcoin:MUE": {
         "Electrum-MUE": "https://electrum.monetaryunit.org"
     },
