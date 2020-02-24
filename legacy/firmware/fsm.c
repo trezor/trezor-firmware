@@ -237,7 +237,7 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
                               int multisig_index, const CoinInfo *coin) {
   int screen = 0, screens = 2;
   if (multisig) {
-    screens += cryptoMultisigPubkeyCount(multisig);
+    screens += 2 * cryptoMultisigPubkeyCount(multisig);
   }
   for (;;) {
     switch (screen) {
@@ -257,7 +257,8 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
         break;
       }
       default: {  // show XPUBs
-        int index = (screen - 2);
+        int index = (screen - 2) / 2;
+        int page = (screen - 2) % 2;
         char xpub[112] = {0};
         const HDNodeType *node_ptr = NULL;
         if (multisig->nodes_count) {  // use multisig->nodes
@@ -280,7 +281,7 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
                                     coin->xpub_magic, xpub, sizeof(xpub));
           }
         }
-        layoutXPUB(xpub, index, multisig_index == index);
+        layoutXPUB(xpub, index, page, multisig_index == index);
         break;
       }
     }

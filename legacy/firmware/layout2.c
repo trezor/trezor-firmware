@@ -653,14 +653,14 @@ void layoutPublicKey(const uint8_t *pubkey) {
                     str[1], str[2], str[3], NULL);
 }
 
-void layoutXPUB(const char *xpub, int index, bool ours) {
+void layoutXPUB(const char *xpub, int index, int page, bool ours) {
   if (layoutLast != layoutAddress && layoutLast != layoutXPUB) {
     layoutSwipe();
   } else {
     oledClear();
   }
   layoutLast = layoutXPUB;
-  char desc[] = "XPUB #__ (______)";
+  char desc[] = "XPUB #__ _/2 (______)";
   if (index + 1 >= 10) {
     desc[6] = '0' + (((index + 1) / 10) % 10);
     desc[7] = '0' + ((index + 1) % 10);
@@ -668,23 +668,27 @@ void layoutXPUB(const char *xpub, int index, bool ours) {
     desc[6] = '0' + ((index + 1) % 10);
     desc[7] = ' ';
   }
+  desc[9] = '1' + page;
   if (ours) {
-    desc[10] = 'y';
-    desc[11] = 'o';
-    desc[12] = 'u';
-    desc[13] = 'r';
-    desc[14] = 's';
-    desc[15] = ')';
-    desc[16] = 0;
+    desc[14] = 'y';
+    desc[15] = 'o';
+    desc[16] = 'u';
+    desc[17] = 'r';
+    desc[18] = 's';
+    desc[19] = ')';
+    desc[20] = 0;
   } else {
-    desc[10] = 'o';
-    desc[11] = 't';
-    desc[12] = 'h';
-    desc[13] = 'e';
-    desc[14] = 'r';
-    desc[15] = 's';
+    desc[14] = 'o';
+    desc[15] = 't';
+    desc[16] = 'h';
+    desc[17] = 'e';
+    desc[18] = 'r';
+    desc[19] = 's';
   }
 
+  // 21 characters per line, 4 lines, minus 3 chars for "..." = 81
+  // skip 81 characters per page
+  xpub += page * 81;
   const char **str = split_message((const uint8_t *)xpub, strlen(xpub), 21);
   oledDrawString(0, 0 * 9, desc, FONT_STANDARD);
   for (int i = 0; i < 4; i++) {
