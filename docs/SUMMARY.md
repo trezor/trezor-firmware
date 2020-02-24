@@ -26,6 +26,7 @@
   - [CI](tests/ci.md)
   - [Device Tests](tests/device-tests.md)
   - [Upgrade Tests](tests/upgrade-tests.md)
+  - [UI Tests](tests/ui-tests.md)
 - [Miscellaneous](misc/index.md)
   - [Coins' BIP-44 Paths](misc/coins-bip44-paths.md)
   - [Generated Files](misc/generated-files.md)
