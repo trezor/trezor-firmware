@@ -2,7 +2,7 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
 
 # Core
 
-core unix unit test:
+core unit test:
   stage: test
   extends: .core_job
   dependencies:
@@ -11,7 +11,7 @@ core unix unit test:
     - cd core
     - pipenv run make test
 
-core unix device ui test:
+core device ui test:
   stage: test
   extends: .core_job
   dependencies:
@@ -22,7 +22,7 @@ core unix device ui test:
     - cd ../ci
     - pipenv run python prepare_ui_artifacts.py
   artifacts:
-    name: core-unix-device-ui-test
+    name: core-device-ui-test
     paths:
       - ci/ui_test_records/
       - tests/ui_tests/reports/
@@ -33,7 +33,7 @@ core unix device ui test:
     reports:
       junit: tests/junit.xml
 
-core unix device test:
+core device test:
   stage: test
   extends: .core_job
   dependencies:
@@ -45,7 +45,7 @@ core unix device test:
     - pipenv run make test_emu
     - mv ./src/.coverage .coverage.test_emu
   artifacts:
-    name: core-unix-device-test
+    name: core-device-test
     paths:
       - tests/trezor.log
       - tests/junit.xml
@@ -55,7 +55,7 @@ core unix device test:
     reports:
       junit: tests/junit.xml
 
-core unix btconly device test:
+core btconly device test:
   stage: test
   extends: .core_job
   dependencies:
@@ -67,7 +67,7 @@ core unix btconly device test:
     - cd core
     - pipenv run make test_emu
   artifacts:
-    name: core-unix-btconly-device-test
+    name: core-btconly-device-test
     paths:
       - tests/trezor.log
       - tests/junit.xml
@@ -76,7 +76,7 @@ core unix btconly device test:
     reports:
       junit: tests/junit.xml
 
-core unix monero test:
+core monero test:
   stage: test
   extends: .core_job
   dependencies:
@@ -88,14 +88,14 @@ core unix monero test:
     - pipenv run make test_emu_monero
     - mv ./src/.coverage .coverage.test_emu_monero
   artifacts:
-    name: core-unix-monero-test
+    name: core-monero-test
     paths:
       - tests/trezor.log
       - core/.coverage.*
     expire_in: 1 week
     when: always
 
-core unix u2f test:
+core u2f test:
   stage: test
   extends: .core_job
   dependencies:
@@ -108,14 +108,14 @@ core unix u2f test:
     - pipenv run make test_emu_u2f
     - mv ./src/.coverage .coverage.test_emu_u2f
   artifacts:
-    name: core-unix-u2f-test
+    name: core-u2f-test
     paths:
       - tests/trezor.log
       - core/.coverage.*
     expire_in: 1 week
     when: always
 
-core unix fido2 test:
+core fido2 test:
   stage: test
   extends: .core_job
   dependencies:
@@ -127,7 +127,7 @@ core unix fido2 test:
     - pipenv run make test_emu_fido2
     - mv ./src/.coverage .coverage.test_emu_fido2
   artifacts:
-    name: core-unix-fido2-test
+    name: core-fido2-test
     paths:
       - tests/trezor.log
       - tests/junit.xml
@@ -137,7 +137,7 @@ core unix fido2 test:
       junit: tests/junit.xml
     when: always
 
-core unix click test:
+core click test:
   stage: test
   extends: .core_job
   dependencies:
@@ -146,7 +146,7 @@ core unix click test:
     - cd core
     - pipenv run make test_emu_click
   artifacts:
-    name: core-unix-click-test
+    name: core-click-test
     paths:
       - tests/trezor.log
       - tests/junit.xml
@@ -155,7 +155,7 @@ core unix click test:
     expire_in: 1 week
     when: always
 
-core unix upgrade test:
+core upgrade test:
   stage: test
   extends: .core_job
   dependencies:
@@ -166,7 +166,7 @@ core unix upgrade test:
     - tests/download_emulators.sh
     - pipenv run pytest --junitxml=tests/junit.xml tests/upgrade_tests
   artifacts:
-    name: core-unix-upgrade-test
+    name: core-upgrade-test
     paths:
       - tests/junit.xml
     reports:
@@ -174,7 +174,7 @@ core unix upgrade test:
     expire_in: 1 week
     when: always
 
-core unix persistence test:
+core persistence test:
   stage: test
   extends: .core_job
   dependencies:
@@ -182,7 +182,7 @@ core unix persistence test:
   script:
     - pipenv run pytest --junitxml=tests/junit.xml tests/persistence_tests
   artifacts:
-    name: core-unix-persistence-test
+    name: core-persistence-test
     paths:
       - tests/junit.xml
     reports:
@@ -220,7 +220,7 @@ crypto test:
 
 # Legacy
 
-legacy emu test:
+legacy test:
   stage: test
   extends: .legacy_job
   dependencies:
@@ -239,7 +239,7 @@ legacy emu test:
     expire_in: 1 week
     when: always
 
-legacy emu btconly test:
+legacy btconly test:
   stage: test
   extends: .legacy_job
   dependencies:
@@ -261,7 +261,7 @@ legacy emu btconly test:
     when: always
 
 
-legacy emu upgrade test:
+legacy upgrade test:
   stage: test
   extends: .legacy_job
   dependencies:
