@@ -152,8 +152,15 @@ def pytest_sessionstart(session):
         report.clear_dir()
 
 
+def _should_write_ui_report(exitstatus):
+    # generate UI report and check missing only if pytest is exitting cleanly
+    # I.e., the test suite passed or failed (as opposed to ctrl+c break, internal error,
+    # etc.)
+    return exitstatus in (pytest.ExitCode.OK, pytest.ExitCode.TESTS_FAILED)
+
+
 def pytest_sessionfinish(session, exitstatus):
-    if exitstatus != pytest.ExitCode.OK:
+    if not _should_write_ui_report(exitstatus):
         return
 
     if session.config.getoption("ui") == "test":
@@ -170,7 +177,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 
     ui_option = config.getoption("ui")
     missing_tests = ui_tests.list_missing()
-    if ui_option and exitstatus == pytest.ExitCode.OK and missing_tests:
+    if ui_option and _should_write_ui_report(exitstatus) and missing_tests:
         println(f"{len(missing_tests)} expected UI tests did not run.")
         if config.getoption("ui_check_missing"):
             println("List of missing tests follows:")
@@ -183,7 +190,8 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
                 println("Removing missing tests from record.")
             println()
 
-    println(f"UI tests summary: {report.REPORTS_PATH / 'index.html'}")
+    if _should_write_ui_report(exitstatus):
+        println(f"UI tests summary: {report.REPORTS_PATH / 'index.html'}")
 
 
 def pytest_addoption(parser):
