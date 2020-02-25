@@ -33,7 +33,8 @@ int mp_hal_stdin_rx_chr(void) {
 
 void mp_hal_stdout_tx_strn(const char *str, size_t len) {
   if (vcp_iface_num >= 0) {
-    int r = usb_vcp_write_blocking(vcp_iface_num, (const uint8_t *)str, len, 0);
+    int r =
+        usb_vcp_write_blocking(vcp_iface_num, (const uint8_t *)str, len, 500);
     (void)r;
   }
 }
