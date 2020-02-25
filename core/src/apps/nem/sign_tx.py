@@ -1,3 +1,4 @@
+from trezor import wire
 from trezor.crypto.curve import ed25519
 from trezor.messages.NEMSignedTx import NEMSignedTx
 from trezor.messages.NEMSignTx import NEMSignTx
@@ -52,7 +53,7 @@ async def sign_tx(ctx, msg: NEMSignTx, keychain):
             ctx, public_key, common, msg.importance_transfer
         )
     else:
-        raise ValueError("No transaction provided")
+        raise wire.DataError("No transaction provided")
 
     if msg.multisig:
         # wrap transaction in multisig wrapper

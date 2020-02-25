@@ -342,7 +342,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                     addresses.ecdsa_hash_pubkey(key_sign_pub, coin)
                 )
             else:
-                raise ValueError("Unknown input script type")
+                raise SigningError("Unsupported input script type")
 
             h_witness = utils.HashWriter(blake256())
             writers.write_uint32(
@@ -730,10 +730,13 @@ def output_derive_script(
         elif version == cashaddr.ADDRESS_TYPE_P2SH:
             version = coin.address_type_p2sh
         else:
-            raise ValueError("Unknown cashaddr address type")
+            raise SigningError("Unknown cashaddr address type")
         raw_address = bytes([version]) + data
     else:
-        raw_address = base58.decode_check(o.address, coin.b58_hash)
+        try:
+            raw_address = base58.decode_check(o.address, coin.b58_hash)
+        except ValueError:
+            raise SigningError(FailureType.DataError, "Invalid address")
 
     if address_type.check(coin.address_type, raw_address):
         # p2pkh

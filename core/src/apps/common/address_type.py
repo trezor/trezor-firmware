@@ -1,8 +1,3 @@
-if False:
-    from typing import Tuple
-    from apps.common.coininfo import CoinType
-
-
 def length(address_type: int) -> int:
     if address_type <= 0xFF:
         return 1
@@ -24,19 +19,5 @@ def check(address_type: int, raw_address: bytes) -> bool:
 
 def strip(address_type: int, raw_address: bytes) -> bytes:
     if not check(address_type, raw_address):
-        raise ValueError("Invalid address")
+        raise ValueError
     return raw_address[length(address_type) :]
-
-
-def split(coin: CoinType, raw_address: bytes) -> Tuple[bytes, bytes]:
-    for f in (
-        "address_type",
-        "address_type_p2sh",
-        "address_type_p2wpkh",
-        "address_type_p2wsh",
-    ):
-        at = getattr(coin, f)
-        if at is not None and check(at, raw_address):
-            l = length(at)
-            return raw_address[:l], raw_address[l:]
-    raise ValueError("Invalid address")

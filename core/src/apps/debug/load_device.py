@@ -33,7 +33,7 @@ async def load_device(ctx, msg):
         elif share.group_count > 1:
             backup_type = BackupType.Slip39_Advanced
         else:
-            raise RuntimeError("Invalid group count")
+            raise wire.ProcessError("Invalid group count")
 
         storage.device.set_slip39_identifier(identifier)
         storage.device.set_slip39_iteration_exponent(iteration_exponent)
