@@ -34,6 +34,13 @@ static FATFS fs_instance;
 bool _fatfs_instance_is_mounted() { return fs_instance.fs_type != 0; }
 void _fatfs_unmount_instance() { fs_instance.fs_type = 0; }
 
+#define FATFS_ONLY_MOUNTED               \
+  {                                      \
+    if (!_fatfs_instance_is_mounted()) { \
+      mp_raise_OSError(MP_ENODEV);       \
+    }                                    \
+  }
+
 DSTATUS disk_initialize(BYTE pdrv) { return disk_status(pdrv); }
 
 DSTATUS disk_status(BYTE pdrv) {
@@ -327,6 +334,7 @@ STATIC const mp_obj_type_t mod_trezorio_FatFSDir_type = {
 ///     Open or create a file
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_open(mp_obj_t path, mp_obj_t flags) {
+  FATFS_ONLY_MOUNTED;
   mp_buffer_info_t _path, _flags;
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
   mp_get_buffer_raise(flags, &_flags, MP_BUFFER_READ);
@@ -369,6 +377,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_fatfs_open_obj,
 ///     List a directory (return generator)
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_listdir(mp_obj_t path) {
+  FATFS_ONLY_MOUNTED;
   mp_buffer_info_t _path;
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
   DIR dp;
@@ -389,6 +398,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_fatfs_listdir_obj,
 ///     Create a sub directory
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_mkdir(size_t n_args, const mp_obj_t *args) {
+  FATFS_ONLY_MOUNTED;
   mp_buffer_info_t path;
   mp_get_buffer_raise(args[0], &path, MP_BUFFER_READ);
   FRESULT res = f_mkdir(path.buf);
@@ -409,6 +419,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_fatfs_mkdir_obj, 1, 2,
 ///     Delete an existing file or directory
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_unlink(mp_obj_t path) {
+  FATFS_ONLY_MOUNTED;
   mp_buffer_info_t _path;
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
   FRESULT res = f_unlink(_path.buf);
@@ -425,6 +436,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_fatfs_unlink_obj,
 ///     Get file status
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_stat(mp_obj_t path) {
+  FATFS_ONLY_MOUNTED;
   mp_buffer_info_t _path;
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
   FILINFO info;
@@ -442,6 +454,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_fatfs_stat_obj,
 ///     Rename/Move a file or directory
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_rename(mp_obj_t oldpath, mp_obj_t newpath) {
+  FATFS_ONLY_MOUNTED;
   mp_buffer_info_t _oldpath, _newpath;
   mp_get_buffer_raise(oldpath, &_oldpath, MP_BUFFER_READ);
   mp_get_buffer_raise(newpath, &_newpath, MP_BUFFER_READ);
@@ -513,9 +526,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_fatfs_mkfs_obj,
 ///     Set volume label
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_setlabel(mp_obj_t label) {
-  if (_fatfs_instance_is_mounted()) {
-    mp_raise_OSError(MP_EBUSY);
-  }
+  /* setlabel is marked as only-mounted, because "mounting" in ff.c terms means
+  having parsed the FAT table, which is of course a prerequisite for setting
+  label. */
+  FATFS_ONLY_MOUNTED;
   mp_buffer_info_t _label;
   mp_get_buffer_raise(label, &_label, MP_BUFFER_READ);
   FRESULT res = f_setlabel(_label.buf);
