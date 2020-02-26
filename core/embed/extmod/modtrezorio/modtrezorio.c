@@ -62,7 +62,7 @@
 STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorio)},
 
-    {MP_ROM_QSTR(MP_QSTR_FatFS), MP_ROM_PTR(&mod_trezorio_FatFS_type)},
+    {MP_ROM_QSTR(MP_QSTR_fatfs), MP_ROM_PTR(&mod_trezorio_fatfs_module)},
 
     {MP_ROM_QSTR(MP_QSTR_FlashOTP), MP_ROM_PTR(&mod_trezorio_FlashOTP_type)},
 
