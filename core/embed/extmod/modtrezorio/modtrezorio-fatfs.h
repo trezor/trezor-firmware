@@ -449,7 +449,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_stat(mp_obj_t path) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_fatfs_stat_obj,
                                  mod_trezorio_fatfs_stat);
 
-/// def rename(self, oldpath: str, newpath: str) -> None:
+/// def rename(oldpath: str, newpath: str) -> None:
 ///     """
 ///     Rename/Move a file or directory
 ///     """

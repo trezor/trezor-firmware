@@ -101,7 +101,7 @@ def stat(path: str) -> Tuple[int, str, str]:
 
 
 # extmod/modtrezorio/modtrezorio-fatfs.h
-def rename(self, oldpath: str, newpath: str) -> None:
+def rename(oldpath: str, newpath: str) -> None:
     """
     Rename/Move a file or directory
     """
