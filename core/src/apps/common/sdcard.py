@@ -1,6 +1,6 @@
 import storage.sd_salt
 from storage.sd_salt import SD_CARD_HOT_SWAPPABLE
-from trezor import sdcard, ui, wire
+from trezor import fatfs, sdcard, ui, wire
 from trezor.ui.text import Text
 
 from apps.common.confirm import confirm, hold_to_confirm
@@ -91,8 +91,8 @@ async def ensure_sdcard(
 
     while True:
         try:
-            with sdcard.get_filesystem(mounted=False) as fs:
-                fs.mount()
+            with sdcard.filesystem(mounted=False):
+                fatfs.mount()
                 # Mount succeeded, filesystem is OK
                 return
         except OSError:
@@ -103,13 +103,18 @@ async def ensure_sdcard(
             raise SdCardUnavailable("SD card not formatted.")
 
         try:
-            with sdcard.get_filesystem(mounted=False) as fs:
-                fs.mkfs()
-                # mkfs succeeded. Re-run loop to retry mounting.
-                continue
+            with sdcard.filesystem(mounted=False):
+                fatfs.mkfs()
+                fatfs.mount()
+                fatfs.setlabel("TREZOR")
+                # mkfs and mount succeeded
+                return
         except OSError:
-            if not await sd_problem_dialog(ctx):
-                raise SdCardUnavailable("Problem formatting SD card.")
+            pass
+
+        # allow retry if we get as far as here
+        if not await sd_problem_dialog(ctx):
+            raise SdCardUnavailable("Problem formatting SD card.")
 
 
 async def request_sd_salt(
