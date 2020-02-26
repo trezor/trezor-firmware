@@ -48,6 +48,10 @@
 #include "irq.h"
 #include "systick.h"
 
+#ifdef RDI
+  #include "rdi.h"
+#endif
+
 extern __IO uint32_t uwTick;
 
 systick_dispatch_t systick_dispatch_table[SYSTICK_DISPATCH_NUM_SLOTS];
@@ -57,6 +61,9 @@ void SysTick_Handler(void) {
   // 49.71 days = (0xffffffff / (24 * 60 * 60 * 1000))
   uint32_t uw_tick = uwTick + 1;
   uwTick = uw_tick;
+#ifdef RDI
+    rdi_handler(uw_tick);
+#endif
   systick_dispatch_t f = systick_dispatch_table[uw_tick & (SYSTICK_DISPATCH_NUM_SLOTS - 1)];
   if (f != NULL) {
     f(uw_tick);
