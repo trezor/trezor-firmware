@@ -21,6 +21,7 @@
 
 #include "usb.h"
 #include "common.h"
+#include "rdi.h"
 #include "usbd_core.h"
 
 #define USB_MAX_CONFIG_DESC_SIZE 256
@@ -468,6 +469,9 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
 }
 
 static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
+#ifdef RDI
+  rdi_refresh_session_delay();
+#endif
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
     switch (usb_ifaces[i].type) {
       case USB_IFACE_TYPE_HID:
@@ -490,6 +494,9 @@ static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
 }
 
 static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
+#ifdef RDI
+  rdi_refresh_session_delay();
+#endif
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
     switch (usb_ifaces[i].type) {
       case USB_IFACE_TYPE_HID:

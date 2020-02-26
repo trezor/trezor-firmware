@@ -40,6 +40,9 @@
 #include "display.h"
 #include "flash.h"
 #include "mpu.h"
+#ifdef RDI
+#include "rdi.h"
+#endif
 #include "rng.h"
 #include "sdcard.h"
 #include "supervise.h"
@@ -48,6 +51,9 @@
 int main(void) {
   // initialize pseudo-random number generator
   drbg_init();
+#ifdef RDI
+  rdi_start();
+#endif
 
   // reinitialize HAL for Trezor One
 #if TREZOR_MODEL == 1

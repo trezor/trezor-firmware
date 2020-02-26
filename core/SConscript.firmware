@@ -3,6 +3,7 @@
 import os
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
+RDI = ARGUMENTS.get('RDI', '1') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
 
 CCFLAGS_MOD = ''
@@ -335,6 +336,12 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/util.s',
     'embed/trezorhal/vectortable.s',
 ]
+
+if RDI:
+    SOURCE_TREZORHAL += [
+        'embed/trezorhal/rdi.c',
+    ]
+    CPPDEFINES_MOD += ['RDI']
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 
