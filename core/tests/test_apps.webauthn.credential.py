@@ -31,9 +31,9 @@ class TestCredential(unittest.TestCase):
         creation_time = 2
 
         public_key = (
-            b"0451f0d4c307bc737c90ac605c6279f7d01e451798aa7b74df550fdb43a7760c"
-            b"7c02b5107fef42094d00f52a9b1e90afb90e1b9decbf15a6f13d4f882de857e2"
-            b"f4"
+            b"a501020326200121582051f0d4c307bc737c90ac605c6279f7d01e451798aa7b"
+            b"74df550fdb43a7760c7c22582002b5107fef42094d00f52a9b1e90afb90e1b9d"
+            b"ecbf15a6f13d4f882de857e2f4"
         )
 
         cred_random = (
@@ -57,9 +57,7 @@ class TestCredential(unittest.TestCase):
 
         # Check credential keys.
         self.assertEqual(hexlify(cred.hmac_secret_key()), cred_random)
-
-        cred_public_key = nist256p1.publickey(cred.private_key(), False)
-        self.assertEqual(hexlify(cred_public_key), public_key)
+        self.assertEqual(hexlify(cred.public_key()), public_key)
 
 if __name__ == '__main__':
     unittest.main()
