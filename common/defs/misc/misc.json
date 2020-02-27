@@ -172,9 +172,7 @@
             "Homepage": "https://www.omnilayer.org",
             "Github": "https://github.com/OmniLayer"
         },
-        "wallet": {
-            "OMNI Trezor": "https://omnitrezor.com/"
-        },
+        "wallet": {},
         "blockchain_link": null
     },
     {
@@ -187,9 +185,7 @@
             "Homepage": "https://maidsafe.net",
             "Github": "https://github.com/maidsafe"
         },
-        "wallet": {
-            "OMNI Trezor": "https://omnitrezor.com/"
-        },
+        "wallet": {},
         "blockchain_link": null
     },
     {
@@ -213,9 +209,7 @@
         "links": {
             "Homepage": "https://tether.to"
         },
-        "wallet": {
-            "OMNI Trezor": "https://omnitrezor.com/"
-        },
+        "wallet": {},
         "blockchain_link": null
     }
 ]
