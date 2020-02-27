@@ -1,5 +1,6 @@
 from ustruct import pack, unpack
 
+from trezor import wire
 from trezor.crypto.hashlib import sha256
 from trezor.messages.ECDHSessionKey import ECDHSessionKey
 from trezor.ui.text import Text
@@ -62,9 +63,9 @@ def ecdh(seckey: bytes, peer_public_key: bytes, curve: str) -> bytes:
         from trezor.crypto.curve import curve25519
 
         if peer_public_key[0] != 0x40:
-            raise ValueError("Curve25519 public key should start with 0x40")
+            raise wire.DataError("Curve25519 public key should start with 0x40")
         session_key = b"\x04" + curve25519.multiply(seckey, peer_public_key[1:])
     else:
-        raise ValueError("Unsupported curve for ECDH: " + curve)
+        raise wire.DataError("Unsupported curve for ECDH: " + curve)
 
     return session_key
