@@ -562,7 +562,7 @@ void layoutResetWord(const char *word, int pass, int word_pos, bool last) {
 void layoutAddress(const char *address, const char *desc, bool qrcode,
                    bool ignorecase, const uint32_t *address_n,
                    size_t address_n_count, bool address_is_account) {
-  if (layoutLast != layoutAddress) {
+  if (layoutLast != layoutAddress && layoutLast != layoutXPUB) {
     layoutSwipe();
   } else {
     oledClear();
@@ -635,7 +635,7 @@ void layoutAddress(const char *address, const char *desc, bool qrcode,
     layoutButtonNo(_("QR Code"), NULL);
   }
 
-  layoutButtonYes(_("Continue"), &bmp_btn_confirm);
+  layoutButtonYes(_("Confirm"), &bmp_btn_confirm);
   oledRefresh();
 }
 
@@ -651,6 +651,52 @@ void layoutPublicKey(const uint8_t *pubkey) {
   const char **str = split_message_hex(pubkey + 1, 32 * 2);
   layoutDialogSwipe(&bmp_icon_question, NULL, _("Continue"), NULL, desc, str[0],
                     str[1], str[2], str[3], NULL);
+}
+
+void layoutXPUB(const char *xpub, int index, int page, bool ours) {
+  if (layoutLast != layoutAddress && layoutLast != layoutXPUB) {
+    layoutSwipe();
+  } else {
+    oledClear();
+  }
+  layoutLast = layoutXPUB;
+  char desc[] = "XPUB #__ _/2 (______)";
+  if (index + 1 >= 10) {
+    desc[6] = '0' + (((index + 1) / 10) % 10);
+    desc[7] = '0' + ((index + 1) % 10);
+  } else {
+    desc[6] = '0' + ((index + 1) % 10);
+    desc[7] = ' ';
+  }
+  desc[9] = '1' + page;
+  if (ours) {
+    desc[14] = 'y';
+    desc[15] = 'o';
+    desc[16] = 'u';
+    desc[17] = 'r';
+    desc[18] = 's';
+    desc[19] = ')';
+    desc[20] = 0;
+  } else {
+    desc[14] = 'o';
+    desc[15] = 't';
+    desc[16] = 'h';
+    desc[17] = 'e';
+    desc[18] = 'r';
+    desc[19] = 's';
+  }
+
+  // 21 characters per line, 4 lines, minus 3 chars for "..." = 81
+  // skip 81 characters per page
+  xpub += page * 81;
+  const char **str = split_message((const uint8_t *)xpub, strlen(xpub), 21);
+  oledDrawString(0, 0 * 9, desc, FONT_STANDARD);
+  for (int i = 0; i < 4; i++) {
+    oledDrawString(0, (i + 1) * 9 + 4, str[i], FONT_FIXED);
+  }
+  layoutButtonNo(_("Next"), NULL);
+  layoutButtonYes(_("Confirm"), &bmp_btn_confirm);
+  oledRefresh();
 }
 
 void layoutSignIdentity(const IdentityType *identity, const char *challenge) {
