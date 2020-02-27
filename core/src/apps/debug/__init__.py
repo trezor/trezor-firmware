@@ -145,8 +145,7 @@ if __debug__:
         try:
             io.sdcard.power_on()
             if msg.format:
-                fs = io.FatFS()
-                fs.mkfs()
+                io.fatfs.mkfs()
             else:
                 # trash first 1 MB of data to destroy the FAT filesystem
                 assert io.sdcard.capacity() >= 1024 * 1024

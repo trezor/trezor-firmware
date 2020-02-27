@@ -56,6 +56,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_sdcard_power_on_obj,
 ///     Power off the SD card interface.
 ///     """
 STATIC mp_obj_t mod_trezorio_sdcard_power_off() {
+  /* XXX should this call happen inside sdcard_power_off()? */
+  _fatfs_unmount_instance();
   sdcard_power_off();
   return mp_const_none;
 }
@@ -111,6 +113,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_sdcard_write_obj,
                                  mod_trezorio_sdcard_write);
 
 STATIC const mp_rom_map_elem_t mod_trezorio_sdcard_globals_table[] = {
+    {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_sdcard)},
+
     {MP_ROM_QSTR(MP_QSTR_is_present),
      MP_ROM_PTR(&mod_trezorio_sdcard_is_present_obj)},
     {MP_ROM_QSTR(MP_QSTR_power_on),

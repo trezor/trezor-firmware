@@ -1,14 +1,15 @@
-from trezorio import FatFS, sdcard
+from trezorio import fatfs, sdcard
 
 if False:
-    from typing import Any, Optional
+    from typing import Any, Callable, Optional, TypeVar
+
+    T = TypeVar("T", bound=Callable)
 
 
 class FilesystemWrapper:
     _INSTANCE = None  # type: Optional[FilesystemWrapper]
 
     def __init__(self, mounted: bool) -> None:
-        self.fs = FatFS()
         self.mounted = mounted
         self.counter = 0
 
@@ -21,20 +22,18 @@ class FilesystemWrapper:
         return cls._INSTANCE
 
     def _deinit_instance(self) -> None:
-        if self.mounted:
-            self.fs.unmount()
+        fatfs.unmount()
         sdcard.power_off()
         FilesystemWrapper._INSTANCE = None
 
-    def __enter__(self) -> "FatFS":
+    def __enter__(self) -> None:
         try:
             if self.counter <= 0:
                 self.counter = 0
                 sdcard.power_on()
                 if self.mounted:
-                    self.fs.mount()
+                    fatfs.mount()
             self.counter += 1
-            return self.fs
         except Exception:
             self._deinit_instance()
             raise
@@ -46,8 +45,17 @@ class FilesystemWrapper:
             self._deinit_instance()
 
 
-def get_filesystem(mounted: bool = True) -> FilesystemWrapper:
+def filesystem(mounted: bool = True) -> FilesystemWrapper:
     return FilesystemWrapper.get_instance(mounted=mounted)
 
 
+def with_filesystem(func: T) -> T:
+    def wrapped_func(*args, **kwargs) -> Any:  # type: ignore
+        with filesystem():
+            return func(*args, **kwargs)
+
+    return wrapped_func  # type: ignore
+
+
 is_present = sdcard.is_present
+capacity = sdcard.capacity
