@@ -45,6 +45,10 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 #endif
 };
 
+// we use SRAM as SD card read buffer (because DMA can't access the CCMRAM)
+extern uint32_t sram_start[];
+#define sdcard_buf sram_start
+
 static uint32_t check_sdcard(void) {
   if (sectrue != sdcard_power_on()) {
     return 0;
@@ -56,12 +60,10 @@ static uint32_t check_sdcard(void) {
     return 0;
   }
 
-  uint32_t buf[IMAGE_HEADER_SIZE / sizeof(uint32_t)];
-
-  memzero(buf, sizeof(buf));
+  memzero(sdcard_buf, IMAGE_HEADER_SIZE);
 
   const secbool read_status =
-      sdcard_read_blocks(buf, 0, IMAGE_HEADER_SIZE / SDCARD_BLOCK_SIZE);
+      sdcard_read_blocks(sdcard_buf, 0, IMAGE_HEADER_SIZE / SDCARD_BLOCK_SIZE);
 
   sdcard_power_off();
 
@@ -69,7 +71,7 @@ static uint32_t check_sdcard(void) {
 
   if ((sectrue == read_status) &&
       (sectrue ==
-       load_image_header((const uint8_t *)buf, BOOTLOADER_IMAGE_MAGIC,
+       load_image_header((const uint8_t *)sdcard_buf, BOOTLOADER_IMAGE_MAGIC,
                          BOOTLOADER_IMAGE_MAXSIZE, BOARDLOADER_KEY_M,
                          BOARDLOADER_KEY_N, BOARDLOADER_KEYS, &hdr))) {
     return hdr.codelen;
@@ -142,13 +144,14 @@ static secbool copy_sdcard(void) {
 
   ensure(sdcard_power_on(), NULL);
 
-  uint32_t buf[SDCARD_BLOCK_SIZE / sizeof(uint32_t)];
+  memzero(sdcard_buf, SDCARD_BLOCK_SIZE);
+
   for (int i = 0; i < (IMAGE_HEADER_SIZE + codelen) / SDCARD_BLOCK_SIZE; i++) {
-    ensure(sdcard_read_blocks(buf, i, 1), NULL);
+    ensure(sdcard_read_blocks(sdcard_buf, i, 1), NULL);
     for (int j = 0; j < SDCARD_BLOCK_SIZE / sizeof(uint32_t); j++) {
       ensure(flash_write_word(FLASH_SECTOR_BOOTLOADER,
                               i * SDCARD_BLOCK_SIZE + j * sizeof(uint32_t),
-                              buf[j]),
+                              sdcard_buf[j]),
              NULL);
     }
   }
