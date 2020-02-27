@@ -1,9 +1,7 @@
-Version 2.x.x [not yet released]
-* SD card protection
-
 Version 2.3.0 [not yet released]
 * Passphrase redesign
 * Cache up to 10 sessions (passphrases)
+* SD card protection
 * Properly limit passphrase to 50 bytes and not 50 characters
 * Monero: add confirmation dialog for unlock_time
 * Show xpubs with multisig get_address
