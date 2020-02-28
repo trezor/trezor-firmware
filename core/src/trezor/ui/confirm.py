@@ -1,7 +1,13 @@
 from micropython import const
 
 from trezor import loop, res, ui, utils
-from trezor.ui.button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
+from trezor.ui.button import (
+    Button,
+    ButtonAbort,
+    ButtonCancel,
+    ButtonConfirm,
+    ButtonDefault,
+)
 from trezor.ui.loader import Loader, LoaderDefault
 
 if __debug__:
@@ -225,7 +231,7 @@ class InfoConfirm(ui.Layout):
 
 
 class HoldToConfirm(ui.Layout):
-    DEFAULT_CONFIRM = "Hold To Confirm"
+    DEFAULT_CONFIRM = "Hold to confirm"
     DEFAULT_CONFIRM_STYLE = ButtonConfirm
     DEFAULT_LOADER_STYLE = LoaderDefault
 
@@ -241,10 +247,13 @@ class HoldToConfirm(ui.Layout):
         self.loader = Loader(loader_style)
         self.loader.on_start = self._on_loader_start  # type: ignore
 
-        self.button = Button(ui.grid(4, n_x=1), confirm, confirm_style)
-        self.button.on_press_start = self._on_press_start  # type: ignore
-        self.button.on_press_end = self._on_press_end  # type: ignore
-        self.button.on_click = self._on_click  # type: ignore
+        self.confirm = Button(ui.grid(17, n_x=4, cells_x=3), confirm, confirm_style)
+        self.confirm.on_press_start = self._on_press_start  # type: ignore
+        self.confirm.on_press_end = self._on_press_end  # type: ignore
+        self.confirm.on_click = self._on_click  # type: ignore
+
+        self.cancel = Button(ui.grid(16, n_x=4), res.load(ui.ICON_CANCEL), ButtonAbort)
+        self.cancel.on_click = self.on_cancel  # type: ignore
 
     def _on_press_start(self) -> None:
         self.loader.start()
@@ -268,10 +277,14 @@ class HoldToConfirm(ui.Layout):
             self.loader.dispatch(event, x, y)
         else:
             self.content.dispatch(event, x, y)
-        self.button.dispatch(event, x, y)
+        self.confirm.dispatch(event, x, y)
+        self.cancel.dispatch(event, x, y)
 
     def on_confirm(self) -> None:
         raise ui.Result(CONFIRMED)
+
+    def on_cancel(self) -> None:
+        raise ui.Result(CANCELLED)
 
     if __debug__:
 
