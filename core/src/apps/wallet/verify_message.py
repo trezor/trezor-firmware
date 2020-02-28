@@ -2,12 +2,9 @@ from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
 from trezor.messages.Success import Success
-from trezor.ui.text import Text
 
 from apps.common import coins
-from apps.common.confirm import require_confirm
-from apps.common.layout import split_address
-from apps.common.signverify import message_digest, split_message
+from apps.common.signverify import message_digest, require_confirm_verify_message
 from apps.wallet.sign_tx.addresses import (
     address_p2wpkh,
     address_p2wpkh_in_p2sh,
@@ -58,16 +55,8 @@ async def verify_message(ctx, msg):
     if addr != address:
         raise wire.ProcessError("Invalid signature")
 
-    await require_confirm_verify_message(ctx, address_short(coin, address), message)
+    await require_confirm_verify_message(
+        ctx, address_short(coin, address), "Verify message", message
+    )
 
     return Success(message="Message verified")
-
-
-async def require_confirm_verify_message(ctx, address, message):
-    text = Text("Confirm address")
-    text.mono(*split_address(address))
-    await require_confirm(ctx, text)
-
-    text = Text("Verify message", new_lines=False)
-    text.normal(*split_message(message))
-    await require_confirm(ctx, text)

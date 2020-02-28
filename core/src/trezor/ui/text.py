@@ -32,7 +32,7 @@ def render_text(
 ) -> None:
     # initial rendering state
     INITIAL_OFFSET_X = offset_x
-    offset_y_max = offset_y * max_lines
+    offset_y_max = TEXT_HEADER_HEIGHT + (TEXT_LINE_HEIGHT * max_lines)
 
     FONTS = (ui.NORMAL, ui.BOLD, ui.MONO, ui.MONO_BOLD)
 
@@ -47,7 +47,7 @@ def render_text(
         if isinstance(word, int):
             if word is BR or word is BR_HALF:
                 # line break or half-line break
-                if offset_y >= offset_y_max:
+                if offset_y > offset_y_max:
                     ui.display.text(offset_x, offset_y, "...", ui.BOLD, ui.GREY, bg)
                     return
                 offset_x = INITIAL_OFFSET_X

@@ -134,9 +134,9 @@ async def _require_confirm_payload(ctx, payload: bytearray, encrypt=False):
     if encrypt:
         text = Text("Confirm payload", ui.ICON_SEND, ui.GREEN)
         text.bold("Encrypted:")
-        text.normal(*payload.split(" "))
+        text.normal(payload)
     else:
         text = Text("Confirm payload", ui.ICON_SEND, ui.RED)
         text.bold("Unencrypted:")
-        text.normal(*payload.split(" "))
+        text.normal(payload)
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
