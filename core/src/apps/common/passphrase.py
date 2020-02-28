@@ -1,7 +1,7 @@
 from micropython import const
 
 import storage.device
-from trezor import wire
+from trezor import wire, workflow
 from trezor.messages import ButtonRequestType
 from trezor.messages.ButtonAck import ButtonAck
 from trezor.messages.ButtonRequest import ButtonRequest
@@ -75,6 +75,7 @@ async def _request_on_device(ctx: wire.Context) -> str:
 
 
 def _entry_dialog() -> None:
+    workflow.kill_default()
     text = Text("Passphrase entry", ICON_CONFIG)
     text.normal("Please type your", "passphrase on the", "connected host.")
     draw_simple(text)

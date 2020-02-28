@@ -161,6 +161,15 @@ def header_error(message: str, clear: bool = True) -> None:
 
 
 def draw_simple(t: Component) -> None:  # noqa: F405
+    """Render a component synchronously.
+
+    Useful when you need to put something on screen and go on to do other things.
+
+    This function bypasses the UI workflow engine, so other layouts will not know
+    that something was drawn over them. In particular, if no other Layout is shown
+    in a workflow, the homescreen will not redraw when the workflow is finished.
+    Use `workflow.kill_default()` if you need to avoid this situation.
+    """
     backlight_fade(style.BACKLIGHT_DIM)
     display.clear()
     t.on_render()
