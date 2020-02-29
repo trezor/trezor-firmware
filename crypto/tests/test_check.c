@@ -21,6 +21,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <check.h>
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -28,7 +29,6 @@
 #include <string.h>
 #include <time.h>
 
-#include <check.h>
 #include "check_mem.h"
 
 #if VALGRIND
@@ -48,6 +48,7 @@
 #include "blake256.h"
 #include "blake2b.h"
 #include "blake2s.h"
+#include "chacha_drbg.h"
 #include "curves.h"
 #include "ecdsa.h"
 #include "ed25519-donna/ed25519-donna.h"
@@ -4528,6 +4529,24 @@ START_TEST(test_blake2s) {
 }
 END_TEST
 
+START_TEST(test_chacha_drbg) {
+  char entropy[] = "8a09b482de30c12ee1d2eb69dd49753d4252b3d36128ee1e";
+  char reseed[] = "9ec4b991f939dbb44355392d05cd793a2e281809d2ed7139";
+  char expected[] =
+      "4caaeb7db073d34b37b5b26f8a3863849f298dab754966e0f75526823216057c2626e044"
+      "9f7ffda7c3dba8841c06af01029eebfd4d4cae951c19c9f6ff6812783e58438840883401"
+      "2a05cd24c38cd22d18296aceed6829299190ebb9455eb8fd8d1cac1d";
+  uint8_t result[100];
+
+  CHACHA_DRBG_CTX ctx;
+  chacha_drbg_init(&ctx, fromhex(entropy));
+  chacha_drbg_reseed(&ctx, fromhex(reseed));
+  chacha_drbg_generate(&ctx, result, sizeof(result));
+  chacha_drbg_generate(&ctx, result, sizeof(result));
+  ck_assert_mem_eq(result, fromhex(expected), sizeof(result));
+}
+END_TEST
+
 START_TEST(test_pbkdf2_hmac_sha256) {
   uint8_t k[64];
 
@@ -8760,6 +8779,10 @@ Suite *test_suite(void) {
   tc = tcase_create("blake2");
   tcase_add_test(tc, test_blake2b);
   tcase_add_test(tc, test_blake2s);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("chacha_drbg");
+  tcase_add_test(tc, test_chacha_drbg);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("pbkdf2");
