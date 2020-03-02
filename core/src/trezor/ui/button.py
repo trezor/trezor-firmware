@@ -80,6 +80,14 @@ class ButtonCancel(ButtonDefault):
         fg_color = ui.RED
 
 
+class ButtonAbort(ButtonDefault):
+    class normal(ButtonDefault.normal):
+        bg_color = ui.DARK_GREY
+
+    class active(ButtonDefault.active):
+        fg_color = ui.DARK_GREY
+
+
 class ButtonClear(ButtonDefault):
     class normal(ButtonDefault.normal):
         bg_color = ui.ORANGE
