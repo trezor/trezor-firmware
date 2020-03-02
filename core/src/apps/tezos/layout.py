@@ -103,14 +103,14 @@ async def require_confirm_proposals(ctx, proposals):
 
 
 async def require_confirm_delegation_manager_withdraw(ctx, address):
-    text = Text("Cancel delegation", ui.ICON_RECEIVE, icon_color=ui.RED)
+    text = Text("Remove delegation", ui.ICON_RECEIVE, icon_color=ui.RED)
     text.bold("Delegator:")
     text.mono(*split_address(address))
     await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def require_confirm_manager_remove_delegate(ctx, fee):
-    text = Text("Cancel delegation", ui.ICON_RECEIVE, ui.RED)
+    text = Text("Remove delegation", ui.ICON_RECEIVE, ui.RED)
     text.normal("Fee:")
     text.bold(format_tezos_amount(fee))
     await require_hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
