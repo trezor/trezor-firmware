@@ -20,12 +20,31 @@
 #ifndef __OLED_H__
 #define __OLED_H__
 
+#include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/spi.h>
 #include <stdbool.h>
 #include <stdint.h>
 
 #include "bitmaps.h"
 #include "fonts.h"
-#include "sys.h"
+
+#define SPI_BASE SPI1
+
+#ifdef OLD_PCB
+#define OLED_DC_PORT GPIOA
+#define OLED_DC_PIN GPIO2  // PA2 | Data/Command
+#define OLED_CS_PORT GPIOA
+#define OLED_CS_PIN GPIO4  // PA4 | SPI Select
+#define OLED_RST_PORT GPIOA
+#define OLED_RST_PIN GPIO3  // PA3 | Reset display
+#else
+#define OLED_DC_PORT GPIOB
+#define OLED_DC_PIN GPIO0  // PB0 | Data/Command
+#define OLED_CS_PORT GPIOA
+#define OLED_CS_PIN GPIO4  // PA4 | SPI Select
+#define OLED_RST_PORT GPIOB
+#define OLED_RST_PIN GPIO1  // PB1 | Reset display
+#endif
 
 #define BLE_ADV_NAME "BiXin_abcd"
 #define BLE_ADV_NAME_LEN 10

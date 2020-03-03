@@ -30,7 +30,7 @@ AS       := $(PREFIX)as
 OPENOCD  := openocd -f interface/stlink-v2.cfg -c "transport select hla_swd" -f target/stm32f2x.cfg
 GDB      := $(PREFIX)gdb --nx -ex 'set remotetimeout unlimited' -ex 'set confirm off' -ex 'target remote 127.0.0.1:3333' -ex 'monitor reset halt'
 
-OPTFLAGS ?= -O3
+OPTFLAGS ?= -Os
 DBGFLAGS ?= -g -DNDEBUG
 CPUFLAGS ?= -mcpu=cortex-m3 -mthumb
 FPUFLAGS ?= -msoft-float
@@ -118,7 +118,8 @@ LDFLAGS  += --static \
             -L$(TOOLCHAIN_DIR)/lib \
             -T$(LDSCRIPT) \
             -nostartfiles \
-            -Wl,--gc-sections
+            -Wl,--gc-sections \
+            -Wl,-Map=$(NAME).map
 
 LDLIBS   += -ltrezor
 LIBDEPS  += $(TOP_DIR)/libtrezor.a

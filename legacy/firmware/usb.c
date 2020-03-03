@@ -24,6 +24,7 @@
 #include "config.h"
 #include "debug.h"
 #include "messages.h"
+#include "oled.h"
 #include "timer.h"
 #include "trezor.h"
 #if U2F_ENABLED
@@ -39,6 +40,14 @@
 #include "usb21_standard.h"
 #include "webusb.h"
 #include "winusb.h"
+
+typedef enum _ChannelType {
+  CHANNEL_NULL,
+  CHANNEL_USB,
+  CHANNEL_SLAVE,
+} ChannelType;
+
+ChannelType host_channel = CHANNEL_NULL;
 
 #define USB_INTERFACE_INDEX_MAIN 0
 #if DEBUG_LINK
@@ -324,7 +333,7 @@ static void u2f_rx_callback(usbd_device *dev, uint8_t ep) {
 static void main_rx_callback(usbd_device *dev, uint8_t ep) {
   (void)ep;
   static CONFIDENTIAL uint8_t buf[64] __attribute__((aligned(4)));
-  if (WORK_MODE_USB == g_ucWorkMode) {
+  if (dev != NULL) {
     if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_MAIN_OUT, buf, 64) != 64)
       return;
   } else {
@@ -396,23 +405,16 @@ static const struct usb_bos_descriptor bos_descriptor = {
     .capabilities = capabilities};
 
 void usbInit(void) {
-  if (WORK_MODE_USB == g_ucWorkMode) {
-    usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings,
-                         sizeof(usb_strings) / sizeof(*usb_strings),
-                         usbd_control_buffer, sizeof(usbd_control_buffer));
-    usbd_register_set_config_callback(usbd_dev, set_config);
-    usb21_setup(usbd_dev, &bos_descriptor);
-    static const char *origin_url = "trezor.io/start";
-    webusb_setup(usbd_dev, origin_url);
-    // Debug link interface does not have WinUSB set;
-    // if you really need debug link on windows, edit the descriptor in winusb.c
-    winusb_setup(usbd_dev, USB_INTERFACE_INDEX_MAIN);
-  } else {
-    vSI2CDRV_Init();
-    POWER_ON_BLE();
-    POWER_OFF_TIMER_ENBALE();
-    system_millis_poweroff_start = 0;
-  }
+  usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings,
+                       sizeof(usb_strings) / sizeof(*usb_strings),
+                       usbd_control_buffer, sizeof(usbd_control_buffer));
+  usbd_register_set_config_callback(usbd_dev, set_config);
+  usb21_setup(usbd_dev, &bos_descriptor);
+  static const char *origin_url = "trezor.io/start";
+  webusb_setup(usbd_dev, origin_url);
+  // Debug link interface does not have WinUSB set;
+  // if you really need debug link on windows, edit the descriptor in winusb.c
+  winusb_setup(usbd_dev, USB_INTERFACE_INDEX_MAIN);
 }
 
 static void vBle_NFC_RX_Data(uint8_t *pucInputBuf) {
@@ -472,6 +474,31 @@ static void vBle_NFC_RX_Data(uint8_t *pucInputBuf) {
       break;
   }
 }
+static void i2cSlaveRxData(uint8_t *pucInputBuf, uint32_t data_len) {
+  uint16_t i;
+  memset(s_ucPackAppRevBuf, 0x00, sizeof(s_ucPackAppRevBuf));
+  if (data_len > 64) {
+    memcpy(s_ucPackAppRevBuf, pucInputBuf, 64);
+    main_rx_callback(NULL, 0);
+    data_len -= 64;
+    i = 0;
+    while (data_len / 63) {
+      s_ucPackAppRevBuf[0] = '?';
+      memcpy(s_ucPackAppRevBuf + 1, pucInputBuf + 64 + i * 63, 63);
+      main_rx_callback(NULL, 0);
+      data_len -= 63;
+      i++;
+    }
+    if (data_len) {
+      s_ucPackAppRevBuf[0] = '?';
+      memcpy(s_ucPackAppRevBuf + 1, pucInputBuf + 64 + i * 63, data_len);
+      main_rx_callback(NULL, 0);
+    }
+  } else {
+    memcpy(s_ucPackAppRevBuf, pucInputBuf, data_len);
+    main_rx_callback(NULL, 0);
+  }
+}
 
 void usb_ble_nfc_poll(void) {
   uint16_t usLen;
@@ -496,34 +523,60 @@ void usb_ble_nfc_poll(void) {
     }
   }
 }
+void i2cSlavePoll(void) {
+  uint32_t usLen;
+  if (true == g_bI2cRevFlag) {
+    host_channel = CHANNEL_SLAVE;
+    g_bI2cRevFlag = false;
+#if (_SUPPORT_DEBUG_UART_)
+    vUART_DebugInfo("\n\r vBle_NFC_RX_Data !\n\r", g_ucI2cRevBuf,
+                    g_usI2cRevLen);
+#endif
+    usLen = g_usI2cRevLen;
+    g_usI2cRevLen = 0;
+    i2cSlaveRxData(g_ucI2cRevBuf, usLen);
+  }
 
+  if (msg_out_end) {
+    if (CHANNEL_SLAVE == host_channel) {
+      host_channel = CHANNEL_NULL;
+      usLen = (msg_out_end * 64) & 0xFFFF;
+      i2cSlaveResponse(msg_out, usLen);
+#if (_SUPPORT_DEBUG_UART_)
+      vUART_DebugInfo("\n\r vBle_NFC_TX_Data !\n\r", s_ucSendDataBak,
+                      s_usSendLenBak);
+#endif
+      msg_out_end = 0;
+    }
+  }
+}
 void usbPoll(void) {
   static const uint8_t *data;
-  if (WORK_MODE_USB == g_ucWorkMode) {
-    if (usbd_dev == NULL) {
-      return;
-    }
 
-    // poll read buffer
-    usbd_poll(usbd_dev);
-    // write pending data
-    data = msg_out_data();
-    if (data) {
-      while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_MAIN_IN, data,
-                                  64) != 64) {
-      }
-    }
-#if U2F_ENABLED
-    data = u2f_out_data();
-    if (data) {
-      while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_U2F_IN, data,
-                                  64) != 64) {
-      }
-    }
-#endif
-  } else {
-    usb_ble_nfc_poll();
+  i2cSlavePoll();
+
+  if (usbd_dev == NULL) {
+    return;
   }
+
+  // poll read buffer
+  usbd_poll(usbd_dev);
+  // write pending data
+  data = msg_out_data();
+  if (data) {
+    while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_MAIN_IN, data, 64) !=
+           64) {
+    }
+  }
+#if U2F_ENABLED
+  data = u2f_out_data();
+  if (data) {
+    while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_U2F_IN, data, 64) !=
+           64) {
+    }
+  }
+#endif
+
 #if DEBUG_LINK
   // write pending debug data
   data = msg_debug_out_data();
@@ -553,10 +606,9 @@ void usbSleep(uint32_t millis) {
   uint32_t start = timer_ms();
 
   while ((timer_ms() - start) < millis) {
-    if (WORK_MODE_USB == g_ucWorkMode) {
-      if (usbd_dev != NULL) {
-        usbd_poll(usbd_dev);
-      }
+    if (usbd_dev != NULL) {
+      usbd_poll(usbd_dev);
     }
+    i2cSlavePoll();
   }
 }

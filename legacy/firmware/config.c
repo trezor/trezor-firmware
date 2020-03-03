@@ -42,7 +42,7 @@
 #include "sha2.h"
 #include "storage.h"
 #include "supervise.h"
-#include "sys.h"
+#include "timer.h"
 #include "trezor.h"
 #include "u2f.h"
 #include "usb.h"

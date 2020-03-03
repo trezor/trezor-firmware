@@ -30,13 +30,13 @@
 #include "oled.h"
 #include "rng.h"
 #include "setup.h"
-#include "sys.h"
 #include "timer.h"
 #include "usb.h"
 #include "util.h"
 #if !EMULATOR
 #include <libopencm3/stm32/desig.h>
 #include "otp.h"
+#include "sys.h"
 #endif
 
 #define autoPowerOffDelayMsDefault (5 * 60 * 1000U)  // 5 minutes
@@ -118,7 +118,7 @@ int main(void) {
                                    // unpredictable stack protection checks
   oledInit();
 #else
-  check_bootloader();
+  // check_bootloader();
   setupApp();
   __stack_chk_guard = random32();  // this supports compiler provided
                                    // unpredictable stack protection checks
@@ -131,7 +131,7 @@ int main(void) {
     timer_init();
 #ifdef APPVER
     // enable MPU (Memory Protection Unit)
-    mpu_config_firmware();
+    // mpu_config_firmware();
 #endif
   } else {
     collect_hw_entropy(false);
@@ -147,13 +147,11 @@ int main(void) {
 #if EMULATOR
   g_ucWorkMode = WORK_MODE_USB;
 #endif
-  vlayoutLogo();
-  oledRefresh();
 
   config_init();
   layoutHome();
   usbInit();
-  buttonUpdate();
+
   for (;;) {
     usbPoll();
     // check_lock_screen();

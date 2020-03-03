@@ -19,6 +19,7 @@
 
 #include <string.h>
 
+#include "common.h"
 #include "layout.h"
 #include "oled.h"
 

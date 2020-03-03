@@ -1,7 +1,7 @@
 #ifndef _usart_H_
 #define _usart_H_
-
-#define _SUPPORT_DEBUG_UART_ 0
+#include <stdint.h>
+#define _SUPPORT_DEBUG_UART_ 1
 
 #if (_SUPPORT_DEBUG_UART_)
 extern void usart_setup(void);

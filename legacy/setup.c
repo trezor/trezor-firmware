@@ -25,9 +25,12 @@
 #include <libopencm3/stm32/rng.h>
 #include <libopencm3/stm32/spi.h>
 
+#include "buttons.h"
 #include "layout.h"
 #include "mi2c.h"
+#include "oled.h"
 #include "rng.h"
+#include "si2c.h"
 #include "sys.h"
 #include "usart.h"
 #include "util.h"
@@ -88,40 +91,35 @@ void setup(void) {
   RCC_CR |= RCC_CR_CSSON;
 
   // set GPIO for buttons
-  gpio_mode_setup(BTN_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP,
+  gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP,
                   BTN_PIN_YES | BTN_PIN_UP | BTN_PIN_DOWN);
-  gpio_mode_setup(BTN_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, BTN_PIN_NO);
+  gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE, BTN_PIN_NO);
 
-// usb insert io
-#if (NORMAL_PCB)
-  gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_USB_INSERT);
-#else
-  gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_USB_INSERT);
-#endif
-  gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO_NFC_INSERT);
-  // battery power on
-  gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, GPIO_POWER_ON);
-// ble power off
-#if (NORMAL_PCB)
-  gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_BLE_POWER);
-#else
-  gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_BLE_POWER);
-#endif
-  POWER_OFF_BLE();
+  // set GPIO for usb_insert
+  gpio_mode_setup(USB_INSERT_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE,
+                  USB_INSERT_PIN);
+  // nfc showed
+  gpio_mode_setup(NFC_SHOW_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, NFC_SHOW_PIN);
+  // stm32 power control
+  gpio_mode_setup(STM32_POWER_CTRL_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLDOWN,
+                  STM32_POWER_CTRL_PIN);
+  // bluetooth power control
+  gpio_mode_setup(BLE_POWER_CTRL_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLDOWN,
+                  BLE_POWER_CTRL_PIN);
   // combus
   gpio_mode_setup(GPIO_CMBUS_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
                   GPIO_SI2C_CMBUS);
-  SET_COMBUS_LOW();
+  SET_COMBUS_HIGH();
   // se power
   gpio_mode_setup(GPIO_SE_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
                   GPIO_SE_POWER);
   POWER_OFF_SE();
 
   // set GPIO for OLED display
-  gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO4);
-  // gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO2 | GPIO4 |
-  // GPIO3);
-  gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO0 | GPIO1);
+  gpio_mode_setup(OLED_DC_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, OLED_DC_PIN);
+  gpio_mode_setup(OLED_CS_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, OLED_CS_PIN);
+  gpio_mode_setup(OLED_RST_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
+                  OLED_RST_PIN);
 
   // enable SPI 1 for OLED display
   gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO5 | GPIO7);
@@ -146,6 +144,10 @@ void setup(void) {
   rcc_periph_clock_enable(RCC_OTGFS);
   // clear USB OTG_FS peripheral dedicated RAM
   memset_reg((void *)0x50020000, (void *)0x50020500, 0);
+#if (_SUPPORT_DEBUG_UART_)
+  usart_setup();
+#endif
+  vSI2CDRV_Init();
 }
 
 void setupApp(void) {
@@ -174,20 +176,7 @@ void setupApp(void) {
   gpio_set_af(GPIOA, GPIO_AF10, GPIO10);
 
 #if (_SUPPORT_DEBUG_UART_)
-  usart_setup();
-#endif
-
-  vCheckMode();
-#if (_SUPPORT_DEBUG_UART_)
-  if (WORK_MODE_BLE == g_ucWorkMode) {
-    vUART_DebugInfo("\n\r WORK_MODE_BLE !\n\r", &g_ucWorkMode, 1);
-  } else if (WORK_MODE_USB == g_ucWorkMode) {
-    vUART_DebugInfo("\n\r WORK_MODE_USB !\n\r", &g_ucWorkMode, 1);
-  } else if (WORK_MODE_NFC == g_ucWorkMode) {
-    vUART_DebugInfo("\n\r WORK_MODE_NFC !\n\r", &g_ucWorkMode, 1);
-  } else {
-    vUART_DebugInfo("\n\r WORK_MODE_ERROR !\n\r", &g_ucWorkMode, 1);
-  }
+  vUART_DebugInfo("power on", NULL, 1);
 #endif
 #if (MI2C_TEST)
   // master i2c init
@@ -237,10 +226,10 @@ void mpu_config_bootloader(void) {
              MPU_RASR_ATTR_AP_PRW_URW;
 
   // Flash (0x8007FE0 - 0x08007FFF, 32 B, no-access)
-  MPU_RBAR =
-      (FLASH_BASE + 0x7FE0) | MPU_RBAR_VALID | (1 << MPU_RBAR_REGION_LSB);
-  MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH | MPU_RASR_SIZE_32B |
-             MPU_RASR_ATTR_AP_PNO_UNO;
+  // MPU_RBAR =
+  //  (FLASH_BASE + 0x7FE0) | MPU_RBAR_VALID | (1 << MPU_RBAR_REGION_LSB);
+  // MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH | MPU_RASR_SIZE_32B |
+  //         MPU_RASR_ATTR_AP_PNO_UNO;
 
   // SRAM (0x20000000 - 0x2001FFFF, read-write, execute never)
   MPU_RBAR = SRAM_BASE | MPU_RBAR_VALID | (2 << MPU_RBAR_REGION_LSB);
@@ -285,9 +274,9 @@ void mpu_config_firmware(void) {
              MPU_RASR_ATTR_AP_PRO_URO;
 
   // Metadata in Flash is read-write when unlocked
-  // (0x08008000 - 0x0800FFFF, 32 KiB, read-write, execute never)
+  // (0x080C0000 - 0x080FFFFF, 256 KiB, read-write, execute never)
   MPU_RBAR =
-      (FLASH_BASE + 0x8000) | MPU_RBAR_VALID | (1 << MPU_RBAR_REGION_LSB);
+      (0x080C0000 + 0x40000) | MPU_RBAR_VALID | (1 << MPU_RBAR_REGION_LSB);
   MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH | MPU_RASR_SIZE_32KB |
              MPU_RASR_ATTR_AP_PRW_URW | MPU_RASR_ATTR_XN;
 

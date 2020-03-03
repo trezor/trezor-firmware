@@ -25,5 +25,6 @@ void usbPoll(void);
 void usbReconnect(void);
 char usbTiny(char set);
 void usbSleep(uint32_t millis);
+void i2cSlavePoll(void);
 
 #endif

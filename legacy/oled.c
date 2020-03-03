@@ -17,16 +17,14 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/spi.h>
-
 #include <string.h>
 
 #include "buttons.h"
+#include "common.h"
 #include "memzero.h"
 #include "oled.h"
 #include "prompt.h"
-#include "sys.h"
+#include "timer.h"
 #include "util.h"
 
 #define OLED_SETCONTRAST 0x81
@@ -50,14 +48,6 @@
 #define OLED_COMSCANDEC 0xC8
 #define OLED_SEGREMAP 0xA0
 #define OLED_CHARGEPUMP 0x8D
-
-#define SPI_BASE SPI1
-#define OLED_DC_PORT GPIOB
-#define OLED_DC_PIN GPIO0  // PB0 | Data/Command
-#define OLED_CS_PORT GPIOA
-#define OLED_CS_PIN GPIO4  // PA4 | SPI Select
-#define OLED_RST_PORT GPIOB
-#define OLED_RST_PIN GPIO1  // PB1 | Reset display
 
 /* Trezor has a display of size OLED_WIDTH x OLED_HEIGHT (128x64).
  * The contents of this display are buffered in _oledbuffer.  This is
@@ -668,7 +658,7 @@ void vDisp_PromptInfo(uint8_t ucIndex, bool ucMode) {
         oledDrawStringCenter(60, 30, "Power Off", FONT_STANDARD);
       }
       oledRefresh();
-      delay_time(2000);
+      delay(2000);
       oledClear();
       oledRefresh();
       return;

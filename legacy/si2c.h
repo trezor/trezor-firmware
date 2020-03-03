@@ -39,11 +39,15 @@
 
 extern uint8_t g_ucI2cRevBuf[SI2C_BUF_MAX_LEN];
 extern uint16_t g_usI2cRevLen;
-
+extern bool g_bI2cRevFlag;
+extern uint8_t s_ucSendDataBak[SI2C_BUF_MAX_LEN];
+extern uint32_t s_usSendLenBak;
 extern void vSI2CDRV_Init(void);
 
 extern uint8_t bSI2CDRV_ReceiveData(uint8_t *pucStr);
 
 extern void vSI2CDRV_SendResponse(uint8_t *pucStr, uint16_t usStrLen);
+
+void i2cSlaveResponse(uint8_t *pucStr, uint32_t usStrLen);
 
 #endif

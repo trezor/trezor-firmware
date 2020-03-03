@@ -22,6 +22,7 @@
 
 #include "bip32.h"
 #include "buttons.h"
+#include "common.h"
 #include "config.h"
 #include "curves.h"
 #include "debug.h"

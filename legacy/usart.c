@@ -88,9 +88,10 @@ void vUART_DebugInfo(char *pcMsg, uint8_t *pucSendData, uint16_t usStrLen) {
   uint8_t ucBuff[600];
 
   vUART_SendData((uint8_t *)pcMsg, strlen(pcMsg));
-
-  vUART_HtoA(pucSendData, usStrLen, ucBuff);
-  vUART_SendData(ucBuff, usStrLen * 2);
+  if (pucSendData != NULL) {
+    vUART_HtoA(pucSendData, usStrLen, ucBuff);
+    vUART_SendData(ucBuff, usStrLen * 2);
+  }
   vUART_SendData((uint8_t *)"\n", 1);
 }
 

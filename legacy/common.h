@@ -27,6 +27,16 @@
 #define HW_ENTROPY_LEN (12 + 32)
 extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
+// work mode
+#define WORK_MODE_BLE 0x10
+#define WORK_MODE_USB 0x20
+#define WORK_MODE_NFC 0x30
+
+extern uint8_t g_ucLanguageFlag;
+extern uint8_t g_ucPromptIndex;
+extern uint8_t g_ucWorkMode;
+extern volatile uint32_t system_millis_poweroff_start;
+
 void __attribute__((noreturn))
 __fatal_error(const char *expr, const char *msg, const char *file, int line,
               const char *func);

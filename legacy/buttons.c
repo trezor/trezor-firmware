@@ -18,17 +18,52 @@
  */
 
 #include "buttons.h"
-#include "sys.h"
+#include "common.h"
 #include "timer.h"
 
 struct buttonState button;
+int button_poweroff_flag = 0;
 
 #if !EMULATOR
+#include <libopencm3/cm3/nvic.h>
+#include <libopencm3/stm32/exti.h>
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/syscfg.h>
+
 uint16_t buttonRead(void) { return gpio_port_read(BTN_PORT); }
+
+void buttonsIrqInit(void) {
+  // enable SYSCFG	clock
+  rcc_periph_clock_enable(RCC_SYSCFG);
+
+  // remap EXTI0 to GPIOC
+  SYSCFG_EXTICR1 = 0x20;
+
+  // set EXTI
+  exti_select_source(BTN_PIN_NO, GPIOC);
+  exti_set_trigger(BTN_PIN_NO, EXTI_TRIGGER_BOTH);
+  exti_enable_request(BTN_PIN_NO);
+
+  // set NVIC
+  nvic_set_priority(NVIC_EXTI0_IRQ, 0);
+  nvic_enable_irq(NVIC_EXTI0_IRQ);
+}
+
+void exti0_isr(void) {
+  if (exti_get_flag_status(BTN_PIN_NO)) {
+    exti_reset_request(BTN_PIN_NO);
+    if (gpio_get(GPIOC, BTN_PIN_NO)) {
+      button_poweroff_flag = 1;
+    } else {
+      button_poweroff_flag = 0;
+    }
+  }
+}
 #endif
 
 void buttonUpdate() {
-  static uint16_t last_state = BTN_PIN_YES | BTN_PIN_NO;
+  static uint16_t last_state =
+      (BTN_PIN_YES | BTN_PIN_UP | BTN_PIN_DOWN) & (~BTN_PIN_NO);
 
   uint16_t state = buttonRead();
 

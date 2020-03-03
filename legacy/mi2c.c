@@ -1,9 +1,11 @@
-#include "mi2c.h"
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/i2c.h>
 #include <libopencm3/stm32/rcc.h>
 #include <string.h>
+
+#include "mi2c.h"
 #include "sys.h"
+#include "timer.h"
 #include "usart.h"
 
 uint8_t g_ucMI2cRevBuf[MI2C_BUF_MAX_LEN];

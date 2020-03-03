@@ -19,6 +19,7 @@
 
 #include "protect.h"
 #include "buttons.h"
+#include "common.h"
 #include "config.h"
 #include "debug.h"
 #include "fsm.h"
@@ -41,6 +42,7 @@ bool protectAbortedByInitialize = false;
 
 bool protectButton(ButtonRequestType type, bool confirm_only) {
   ButtonRequest resp = {0};
+  bool request = false;
   bool result = false;
   bool acked = false;
 #if DEBUG_LINK
@@ -59,83 +61,48 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
 
     // check for ButtonAck
     if (msg_tiny_id == MessageType_MessageType_ButtonAck) {
+      if (acked) {
+        request = true;
+      }
       msg_tiny_id = 0xFFFF;
       acked = true;
-      BUTTON_CHECK_ENBALE();
       buttonUpdate();
     }
-    if (WORK_MODE_USB == g_ucWorkMode) {
-      // button acked - check buttons
-      if (acked) {
-        usbSleep(5);
-        buttonUpdate();
-        if (button.YesUp) {
-          result = true;
-          break;
-        }
-        if (!confirm_only && button.NoUp) {
-          result = false;
-          break;
-        }
-        if (button.UpUp) {
-          vDISP_TurnPageUP();
-        }
-        if (button.DownUp) {
-          vDISP_TurnPageDOWN();
-        }
+    // button acked - check buttons
+    if (acked) {
+      usbSleep(5);
+      buttonUpdate();
+      if (button.YesUp) {
+        result = true;
+        break;
       }
-
-      // check for Cancel / Initialize
-      protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
-      protectAbortedByInitialize =
-          (msg_tiny_id == MessageType_MessageType_Initialize);
-      if (protectAbortedByCancel || protectAbortedByInitialize) {
-        msg_tiny_id = 0xFFFF;
+      if (!confirm_only && button.NoUp) {
         result = false;
         break;
       }
-    } else {
-      // button acked - check buttons
-      if (acked || PBUTTON_CHECK_READY()) {
-        usbSleep(5);
-        if (WORK_MODE_USB == g_ucWorkMode) {
-          // buttonUpdate();
-        }
-        if (button.YesUp) {
-          BUTTON_CHECK_CLEAR();
-          result = true;
-          layoutHome();
-          usbPoll();
-          break;
-        }
-        if (!confirm_only && button.NoUp) {
-          BUTTON_CHECK_CLEAR();
-          result = false;
-          layoutHome();
-          usbPoll();
-          break;
-        }
-        if (button.UpUp) {
-          vDISP_TurnPageUP();
-        }
-        if (button.DownUp) {
-          vDISP_TurnPageDOWN();
-        }
+      if (button.UpUp) {
+        vDISP_TurnPageUP();
+      }
+      if (button.DownUp) {
+        vDISP_TurnPageDOWN();
+      }
+      if (request) {
+        request = false;
         memzero(&resp, sizeof(ButtonRequest));
         resp.has_code = true;
         resp.code = type;
         msg_write(MessageType_MessageType_ButtonRequest, &resp);
       }
+    }
 
-      // check for Cancel / Initialize
-      protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
-      protectAbortedByInitialize =
-          (msg_tiny_id == MessageType_MessageType_Initialize);
-      if (protectAbortedByCancel || protectAbortedByInitialize) {
-        msg_tiny_id = 0xFFFF;
-        result = false;
-        break;
-      }
+    // check for Cancel / Initialize
+    protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
+    protectAbortedByInitialize =
+        (msg_tiny_id == MessageType_MessageType_Initialize);
+    if (protectAbortedByCancel || protectAbortedByInitialize) {
+      msg_tiny_id = 0xFFFF;
+      result = false;
+      break;
     }
 
 #if DEBUG_LINK

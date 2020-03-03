@@ -31,6 +31,7 @@
 #include "rng.h"
 #include "setup.h"
 #include "signatures.h"
+#include "sys.h"
 #include "usb.h"
 #include "util.h"
 
@@ -119,6 +120,9 @@ int main(void) {
 #ifndef APPVER
   memory_protect();
   oledInit();
+  sys_poweron();
+  buttonsIrqInit();
+  timer_init();
 #endif
   mpu_config_bootloader();
 #ifndef APPVER

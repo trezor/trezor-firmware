@@ -19,6 +19,7 @@
 
 #include <string.h>
 
+#include "common.h"
 #include "layout2.h"
 #include "oled.h"
 #include "pinmatrix.h"
