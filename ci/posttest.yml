@@ -19,3 +19,19 @@ core unix coverage posttest:
     - core/.coverage.*
     - core/htmlcov
     expire_in: 1 week
+
+core unix ui changes:
+  stage: posttest
+  extends: .core_job
+  except:
+    - master
+  dependencies:
+    - core device ui test
+  script:
+    - cd tests/ui_tests
+    - pipenv run python reporting/report_master_diff.py
+  artifacts:
+    name: core-unix-ui-changes
+    paths:
+    - tests/ui_tests/reporting/reports/master_diff
+    expire_in: 1 week
