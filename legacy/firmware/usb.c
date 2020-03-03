@@ -452,17 +452,17 @@ static void vBle_NFC_RX_Data(uint8_t *pucInputBuf) {
       }
 
       break;
-        case APDU_TAG_BAT:
-            g_ucBatValue =  pucInputBuf[DATA_HEAD_LEN];
-            s_ucPackAppRevBuf[0] = 0x90;
-            s_ucPackAppRevBuf[1] = 0x00;
-            vSI2CDRV_SendResponse(s_ucPackAppRevBuf,2);
-        break;
+    case APDU_TAG_BAT:
+      g_ucBatValue = pucInputBuf[DATA_HEAD_LEN];
+      s_ucPackAppRevBuf[0] = 0x90;
+      s_ucPackAppRevBuf[1] = 0x00;
+      vSI2CDRV_SendResponse(s_ucPackAppRevBuf, 2);
+      break;
     case APDU_TAG_HANDSHAKE:
       memcpy(g_ble_info.ucBle_Mac, pucInputBuf + DATA_HEAD_LEN, BLE_MAC_LEN);
       memcpy(g_ble_info.ucBle_Version,
              pucInputBuf + DATA_HEAD_LEN + BLE_MAC_LEN, 2);
-	  g_ucBatValue = pucInputBuf[DATA_HEAD_LEN+BLE_MAC_LEN+2];
+      g_ucBatValue = pucInputBuf[DATA_HEAD_LEN + BLE_MAC_LEN + 2];
       memset(g_ble_info.ucBle_Name, 0x00, sizeof(g_ble_info.ucBle_Name));
       vCalu_BleName(g_ble_info.ucBle_Mac, g_ble_info.ucBle_Name);
       memcpy(s_ucPackAppRevBuf, g_ble_info.ucBle_Name, BLE_ADV_NAME_LEN);

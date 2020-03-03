@@ -509,9 +509,8 @@ void oledSCAInside(int y1, int y2, int width, int a, int b) {
 /*
  * display prompt info
  */
-void vDisp_PromptInfo(uint8_t ucIndex,bool ucMode) {
-  if(ucMode)
-  {
+void vDisp_PromptInfo(uint8_t ucIndex, bool ucMode) {
+  if (ucMode) {
     oledClear();
   }
   switch (ucIndex) {
@@ -706,7 +705,7 @@ void vDisp_PromptInfo(uint8_t ucIndex,bool ucMode) {
         oledDrawStringCenter(60, 56, "BixinKEY initialized", FONT_STANDARD);
       }
       break;
-	case DISP_CONFIRM_PIN:
+    case DISP_CONFIRM_PIN:
       if (g_ucLanguageFlag) {
         oledDrawBitmap(0, 16, &bmp_cn_confirm_pin);
       }
@@ -714,8 +713,7 @@ void vDisp_PromptInfo(uint8_t ucIndex,bool ucMode) {
     default:
       break;
   }
-  if(ucMode)
-  {
+  if (ucMode) {
     oledRefresh();
   }
   g_ucPromptIndex = 0;

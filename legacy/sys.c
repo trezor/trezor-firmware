@@ -11,8 +11,7 @@ uint8_t g_ucBatValue = 0;
 
 uint8_t s_usPower_Button_Status = POWER_BUTTON_UP;
 uint8_t g_ucLanguageFlag = 0;
-uint8_t g_ucPromptIndex =0;
-
+uint8_t g_ucPromptIndex = 0;
 
 /*poweroff */
 volatile uint32_t system_millis_poweroff_start;
@@ -32,8 +31,6 @@ void delay_us(uint32_t uiDelay_us) {
     __asm__("nop");
   }
 }
-
-extern void vDISP_DeviceInfo(void);
 
 /*
  * ble mac get ble name
@@ -136,7 +133,7 @@ void vPower_Control(uint8_t ucMode) {
           delay_time(10);
           uiCount++;
           if (uiCount > 150) {
-            vDisp_PromptInfo(DISP_PRESSKEY_POWEROFF,true);
+            vDisp_PromptInfo(DISP_PRESSKEY_POWEROFF, true);
             POWER_OFF();
             while (1)
               ;
@@ -145,19 +142,16 @@ void vPower_Control(uint8_t ucMode) {
       }
     } else {
       s_usPower_Button_Status = POWER_BUTTON_UP;
-      vDISP_DeviceInfo();
     }
   }
-  if (WORK_MODE_USB != g_ucWorkMode)
-  {
-       if (g_ucBatValue == 20)
-       {
-            vDisp_PromptInfo(DISP_PRESSKEY_POWEROFF,true);
-            POWER_OFF();
-            while (1);
-       }
+  if (WORK_MODE_USB != g_ucWorkMode) {
+    if (g_ucBatValue == 20) {
+      vDisp_PromptInfo(DISP_PRESSKEY_POWEROFF, true);
+      POWER_OFF();
+      while (1)
+        ;
+    }
   }
-
 }
 
 /*
