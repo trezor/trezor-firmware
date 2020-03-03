@@ -20,7 +20,7 @@ from trezorlib import btc, device, messages as proto, misc
 from trezorlib.exceptions import TrezorFailure
 
 from ..common import MNEMONIC12
-from ..tx_cache import tx_cache
+from ..tx_cache import TxCache
 
 TXHASH_d5f65e = bytes.fromhex(
     "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
@@ -246,9 +246,7 @@ class TestProtectionLevels:
                     proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
                 ]
             )
-            btc.sign_tx(
-                client, "Bitcoin", [inp1], [out1], prev_txes=tx_cache("Bitcoin")
-            )
+            btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TxCache("Bitcoin"))
 
     # def test_firmware_erase(self):
     #    pass

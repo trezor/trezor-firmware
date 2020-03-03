@@ -19,7 +19,7 @@ import pytest
 from trezorlib import btc, messages as proto
 
 from ..common import MNEMONIC12
-from ..tx_cache import tx_cache
+from ..tx_cache import TxCache
 
 TXHASH_d5f65e = bytes.fromhex(
     "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
@@ -46,7 +46,7 @@ class TestZerosig:
         )
 
         _, serialized_tx = btc.sign_tx(
-            client, "Bitcoin", [inp1], [out1], prev_txes=tx_cache("Bitcoin")
+            client, "Bitcoin", [inp1], [out1], prev_txes=TxCache("Bitcoin")
         )
         siglen = serialized_tx[44]
 
@@ -70,7 +70,7 @@ class TestZerosig:
         )
 
         _, serialized_tx = btc.sign_tx(
-            client, "Bitcoin", [inp1], [out1], prev_txes=tx_cache("Bitcoin")
+            client, "Bitcoin", [inp1], [out1], prev_txes=TxCache("Bitcoin")
         )
         siglen = serialized_tx[44]
 

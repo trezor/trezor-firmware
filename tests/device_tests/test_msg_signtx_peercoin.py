@@ -19,7 +19,7 @@ import pytest
 from trezorlib import btc, messages
 from trezorlib.tools import parse_path
 
-from ..tx_cache import tx_cache
+from ..tx_cache import TxCache
 
 TXHASH_41b29a = bytes.fromhex(
     "41b29ad615d8eea40a4654a052d18bb10cd08f203c351f4d241f88b031357d3d"
@@ -50,7 +50,7 @@ def test_timestamp_included(client):
             [inp1],
             [out1],
             details=details,
-            prev_txes=tx_cache("Peercoin", allow_fetch=False),
+            prev_txes=TxCache("Peercoin"),
         )
 
     # Accepted by network https://explorer.peercoin.net/api/getrawtransaction?txid=f7e3624c143b6a170cc44f9337d0fa8ea8564a211de9c077c6889d8c78f80909&decrypt=1

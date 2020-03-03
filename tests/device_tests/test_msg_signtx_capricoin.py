@@ -19,7 +19,7 @@ import pytest
 from trezorlib import btc, messages
 from trezorlib.tools import parse_path
 
-from ..tx_cache import tx_cache
+from ..tx_cache import TxCache
 
 TXHASH_3bf506 = bytes.fromhex(
     "3bf506c81ce84eda891679ddc797d162c17c60b15d6c0ac23be5e31369e7235f"
@@ -61,7 +61,7 @@ def test_timestamp_included(client):
             [inp1, inp2],
             [out1],
             details=details,
-            prev_txes=tx_cache("Capricoin"),
+            prev_txes=TxCache("Capricoin"),
         )
 
     # Accepted by network https://insight.capricoin.org/tx/1bf227e6e24fe1f8ac98849fe06a2c5b77762e906fcf7e82787675f7f3a10bb8

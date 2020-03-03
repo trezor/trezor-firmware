@@ -19,9 +19,9 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, CallException, parse_path
 
-from ..tx_cache import tx_cache
+from ..tx_cache import TxCache
 
-TX_API = tx_cache("Bgold")
+TX_API = TxCache("Bgold")
 
 
 # All data taken from T1

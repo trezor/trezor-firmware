@@ -20,9 +20,9 @@ from trezorlib import btc, ckd_public as bip32, messages as proto
 from trezorlib.tools import CallException, parse_path
 
 from ..common import MNEMONIC12
-from ..tx_cache import tx_cache
+from ..tx_cache import TxCache
 
-TX_API = tx_cache("Bitcoin")
+TX_API = TxCache("Bitcoin")
 
 TXHASH_c6091a = bytes.fromhex(
     "c6091adf4c0c23982a35899a6e58ae11e703eacd7954f588ed4b9cdefc4dba52"

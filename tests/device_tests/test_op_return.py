@@ -19,9 +19,9 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import CallException, parse_path
 
-from ..tx_cache import tx_cache
+from ..tx_cache import TxCache
 
-TX_API = tx_cache("Bitcoin")
+TX_API = TxCache("Bitcoin")
 
 TXHASH_d5f65e = bytes.fromhex(
     "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"

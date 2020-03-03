@@ -19,10 +19,9 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
-from ..tx_cache import tx_cache
+from ..tx_cache import TxCache
 
-# KMD has no usable backends, use cached TX only
-TX_API = tx_cache("Komodo", allow_fetch=False)
+TX_API = TxCache("Komodo")
 
 TXHASH_2807c = bytes.fromhex(
     "2807c5b126ec8e2b078cab0f12e4c8b4ce1d7724905f8ebef8dca26b0c8e0f1d"

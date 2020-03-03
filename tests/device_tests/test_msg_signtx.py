@@ -20,7 +20,7 @@ from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, CallException, btc_hash, parse_path
 
 from ..common import MNEMONIC12
-from ..tx_cache import tx_cache
+from ..tx_cache import TxCache
 
 TXHASH_157041 = bytes.fromhex(
     "1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6"
@@ -78,7 +78,7 @@ def check_sign_tx(
     __tracebackhide__ = True
     expected_responses = []
 
-    txes = tx_cache(coin_name)
+    txes = TxCache(coin_name)
 
     t = proto.RequestType
     b = proto.ButtonRequestType
@@ -611,7 +611,7 @@ class TestMsgSigntx:
                 "Bitcoin",
                 [inp1, inp2],
                 [out1, out2],
-                prev_txes=tx_cache("Bitcoin"),
+                prev_txes=TxCache("Bitcoin"),
             )
         assert exc.value.args[0] in (
             proto.FailureType.ProcessError,
@@ -663,7 +663,7 @@ class TestMsgSigntx:
 
         with pytest.raises(CallException) as exc:
             btc.sign_tx(
-                client, "Testnet", [inp1], [out1, out2], prev_txes=tx_cache("Testnet")
+                client, "Testnet", [inp1], [out1, out2], prev_txes=TxCache("Testnet")
             )
 
         assert exc.value.args[0] in (
@@ -768,7 +768,7 @@ class TestMsgSigntx:
                     "Testnet",
                     [inp1],
                     [out1, out2],
-                    prev_txes=tx_cache("Testnet"),
+                    prev_txes=TxCache("Testnet"),
                 )
 
             assert exc.value.args[0] == proto.FailureType.ProcessError

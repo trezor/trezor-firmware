@@ -19,9 +19,9 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
-from ..tx_cache import tx_cache
+from ..tx_cache import TxCache
 
-TX_API = tx_cache("Decred Testnet")
+TX_API = TxCache("Decred Testnet")
 
 
 TXHASH_e16248 = bytes.fromhex(
