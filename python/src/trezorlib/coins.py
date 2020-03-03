@@ -17,8 +17,6 @@
 import json
 import os.path
 
-from .tx_api import TxApi
-
 COINS_JSON = os.path.join(os.path.dirname(__file__), "coins.json")
 
 
@@ -30,7 +28,7 @@ def _load_coins_json():
 
 
 # exported variables
-__all__ = ["by_name", "slip44", "tx_api"]
+__all__ = ["by_name", "slip44"]
 
 try:
     coins_list = _load_coins_json()
@@ -39,8 +37,3 @@ except Exception as e:
     raise ImportError("Failed to load coins.json. Check your installation.") from e
 
 slip44 = {name: coin["slip44"] for name, coin in by_name.items()}
-tx_api = {
-    name: TxApi(coin)
-    for name, coin in by_name.items()
-    if coin["blockbook"] or coin["bitcore"]
-}
