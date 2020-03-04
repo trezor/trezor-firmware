@@ -30,8 +30,9 @@ core unix ui changes:
   script:
     - cd tests/ui_tests
     - pipenv run python reporting/report_master_diff.py
+    - mv reporting/reports/master_diff/ ../..
   artifacts:
     name: core-unix-ui-changes
     paths:
-    - tests/ui_tests/reporting/reports/master_diff
+    - master_diff
     expire_in: 1 week

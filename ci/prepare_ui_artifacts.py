@@ -13,9 +13,9 @@ def _hash_files(path):
     return hasher.digest().hex()
 
 
-root = Path().cwd() / "../tests/ui_tests"
-screens = root / "screens"
-fixtures = root / "fixtures.json"
+root = Path(__file__).parent / ".."
+screens = root / "tests/ui_tests/screens"
+fixtures = root / "tests/ui_tests/fixtures.json"
 
 hashes = json.loads(fixtures.read_text())
 
@@ -24,4 +24,4 @@ for test_case in hashes.keys():
     expected_hash = hashes[test_case]
     actual_hash = _hash_files(recorded_dir)
     assert expected_hash == actual_hash
-    shutil.make_archive("ui_test_records/" + actual_hash, "zip", recorded_dir)
+    shutil.make_archive(root / "ci/ui_test_records" / actual_hash, "zip", recorded_dir)

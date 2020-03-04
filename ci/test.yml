@@ -19,13 +19,14 @@ core device ui test:
   script:
     - cd core
     - pipenv run make test_emu_ui
-    - cd ../ci
-    - pipenv run python prepare_ui_artifacts.py
+    - cd ..
+    - mv tests/ui_tests/reporting/reports/test/ test_ui_report
+    - pipenv run python ci/prepare_ui_artifacts.py
   artifacts:
     name: core-device-ui-test
     paths:
       - ci/ui_test_records/
-      - tests/ui_tests/reporting/reports/test/
+      - test_ui_report
       - tests/ui_tests/screens/
       - tests/junit.xml
       - tests/trezor.log
