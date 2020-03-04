@@ -61,7 +61,6 @@ setup(
     url="https://github.com/trezor/python-trezor",
     packages=find_packages("src"),
     package_dir={"": "src"},
-    package_data={"trezorlib": ["coins.json"]},
     entry_points={"console_scripts": ["trezorctl=trezorlib.cli.trezorctl:cli"]},
     install_requires=install_requires,
     extras_require={
