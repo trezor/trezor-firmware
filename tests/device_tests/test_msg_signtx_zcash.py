@@ -39,9 +39,8 @@ class TestMsgSigntxZcash:
         # input 1: 3.0 TAZ
 
         inp1 = proto.TxInputType(
-            address_n=parse_path(
-                "m/Zcash Testnet/0h/0/0"
-            ),  # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
+            # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
+            address_n=parse_path("m/44h/1h/0h/0/0"),
             amount=300000000,
             prev_hash=TXHASH_aaf51e,
             prev_index=1,
@@ -104,9 +103,8 @@ class TestMsgSigntxZcash:
         # input 1: 3.0 TAZ
 
         inp1 = proto.TxInputType(
-            address_n=parse_path(
-                "m/Zcash Testnet/0h/0/0"
-            ),  # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
+            # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
+            address_n=parse_path("m/44h/1h/0h/0/0"),
             amount=300000000,
             prev_hash=TXHASH_e38206,
             prev_index=0,

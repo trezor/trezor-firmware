@@ -23,7 +23,7 @@ import time
 
 import click
 
-from .. import coins, log, messages, protobuf, ui
+from .. import log, messages, protobuf, ui
 from ..client import TrezorClient
 from ..transport import enumerate_devices, get_transport
 from ..transport.udp import UdpTransport
@@ -115,12 +115,6 @@ class TrezorctlGroup(click.Group):
             return super().get_command(ctx, command).get_command(ctx, subcommand)
         except Exception:
             pass
-
-        # try to find a bitcoin-like coin whose shortcut matches the command
-        for coin in coins.coins_list:
-            if cmd_name.lower() == coin["shortcut"].lower():
-                btc.DEFAULT_COIN = coin["coin_name"]
-                return btc.cli
 
         return None
 

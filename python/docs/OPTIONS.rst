@@ -14,10 +14,6 @@ The full list of subcommands can be seen like so:
 
 Each subcommand has its own help, shown with ``trezorctl <command> --help``.
 
-In addition, aliases are available for currency ticker symbols. For example, instead
-of ``trezorctl btc sign-message``, it is possible to use ``trezorctl ltc sign-message``.
-In that case, the ``-c`` option of ``sign-message`` can be omitted.
-
 List of subcommands
 -------------------
 

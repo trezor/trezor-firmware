@@ -21,6 +21,8 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 
 ### Changed
 
+- `trezorlib.tx_api.json_to_tx` was reduced to only support Bitcoin fields, and moved
+  to `trezorlib.btc.from_json`.
 - API for `cosi` module was streamlined: `verify_m_of_n` is now `verify`, the old
   `verify` is `verify_combined`
 - internals of firmware parsing were reworked to support signing firmware headers
@@ -34,8 +36,10 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 
 ### Removed
 
+- `trezorlib.tx_api` was removed
+- `trezorlib.coins` and coin data was removed
 - `btc.sign_tx` will not preload transaction data from `prev_txes`, as usage with TxApi
-  is being phased out
+  is being removed
 - PIN protection and passphrase protection for `ping()` command was removed
 
 ## [0.11.6] - 2019-12-30
