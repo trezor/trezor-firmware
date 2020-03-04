@@ -1,33 +1,15 @@
-import base64
-import filecmp
 import shutil
 from datetime import datetime
 from distutils.dir_util import copy_tree
-from itertools import zip_longest
 from pathlib import Path
 
 import dominate
-from dominate.tags import a, div, h1, h2, hr, i, img, p, strong, table, td, th, tr
+from dominate.tags import div, h1, h2, hr, p, strong, table, th, tr
 from dominate.util import text
 
-from . import download
+from . import download, html
 
-REPORTS_PATH = Path(__file__).parent.resolve() / "reports"
-
-
-def _image(src):
-    with td():
-        if src:
-            # open image file
-            image = src.read_bytes()
-            # encode image as base64
-            image = base64.b64encode(image)
-            # convert output to str
-            image = image.decode()
-            # img(src=src.relative_to(fixture_test_path))
-            img(src="data:image/png;base64, " + image)
-        else:
-            i("missing")
+REPORTS_PATH = Path(__file__).parent.resolve() / "reports" / "test"
 
 
 def _header(test_name, expected_hash, actual_hash):
@@ -46,24 +28,6 @@ def _header(test_name, expected_hash, actual_hash):
         p("Expected: ", expected_hash)
         p("Actual: ", actual_hash)
     hr()
-
-
-def _write(fixture_test_path, doc, filename):
-    (fixture_test_path / filename).write_text(doc.render())
-    return fixture_test_path / filename
-
-
-def _report_links(tests):
-    if not tests:
-        i("None!")
-        return
-    with table(border=1):
-        with tr():
-            th("Link to report")
-        for test in sorted(tests):
-            with tr():
-                path = test.relative_to(REPORTS_PATH)
-                td(a(test.name, href=path))
 
 
 def clear_dir():
@@ -90,12 +54,12 @@ def index():
         hr()
 
         h2("Failed", style="color: red;")
-        _report_links(failed_tests)
+        html.report_links(failed_tests, REPORTS_PATH)
 
         h2("Passed", style="color: green;")
-        _report_links(passed_tests)
+        html.report_links(passed_tests, REPORTS_PATH)
 
-    return _write(REPORTS_PATH, doc, "index.html")
+    return html.write(REPORTS_PATH, doc, "index.html")
 
 
 def failed(fixture_test_path, test_name, actual_hash, expected_hash):
@@ -128,16 +92,9 @@ def failed(fixture_test_path, test_name, actual_hash, expected_hash):
                 th("Expected")
                 th("Actual")
 
-            for recorded, actual in zip_longest(recorded_screens, actual_screens):
-                if recorded and actual and filecmp.cmp(actual, recorded):
-                    background = "white"
-                else:
-                    background = "red"
-                with tr(bgcolor=background):
-                    _image(recorded)
-                    _image(actual)
+            html.diff_table(recorded_screens, actual_screens)
 
-    return _write(REPORTS_PATH / "failed", doc, test_name + ".html")
+    return html.write(REPORTS_PATH / "failed", doc, test_name + ".html")
 
 
 def passed(fixture_test_path, test_name, actual_hash):
@@ -156,6 +113,6 @@ def passed(fixture_test_path, test_name, actual_hash):
 
             for screen in actual_screens:
                 with tr():
-                    _image(screen)
+                    html.image(screen)
 
-    return _write(REPORTS_PATH / "passed", doc, test_name + ".html")
+    return html.write(REPORTS_PATH / "passed", doc, test_name + ".html")

@@ -25,7 +25,8 @@ core device ui test:
     name: core-device-ui-test
     paths:
       - ci/ui_test_records/
-      - tests/ui_tests/reports/
+      - tests/ui_tests/reporting/reports/test/
+      - tests/ui_tests/screens/
       - tests/junit.xml
       - tests/trezor.log
     when: always
