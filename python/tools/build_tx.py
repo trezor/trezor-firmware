@@ -16,11 +16,11 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import json
-import sys
 
 import click
+import requests
 
-from trezorlib import coins, messages, tools
+from trezorlib import btc, messages, tools
 from trezorlib.cli import ChoiceType
 from trezorlib.cli.btc import INPUT_SCRIPTS, OUTPUT_SCRIPTS
 from trezorlib.protobuf import to_dict
@@ -53,7 +53,7 @@ def parse_vin(s):
     return bytes.fromhex(txid), int(vout)
 
 
-def _get_inputs_interactive(coin_data, txapi):
+def _get_inputs_interactive(blockbook_url):
     inputs = []
     txes = {}
     while True:
@@ -65,15 +65,21 @@ def _get_inputs_interactive(coin_data, txapi):
             break
         prev_hash, prev_index = prev
         address_n = prompt("BIP-32 path to derive the key", type=tools.parse_path)
-        try:
-            tx = txapi[prev_hash]
-            txes[prev_hash] = tx
-            amount = tx.bin_outputs[prev_index].amount
-            echo("Prefilling input amount: {}".format(amount))
-        except Exception as e:
-            print(e)
-            echo("Failed to fetch transation. This might bite you later.")
-            amount = prompt("Input amount (satoshis)", type=int, default=0)
+
+        txhash = prev_hash.hex()
+        tx_url = blockbook_url + txhash
+        r = requests.get(tx_url)
+        if not r.ok:
+            raise click.ClickException(f"Failed to fetch URL: {tx_url}")
+
+        tx_json = r.json()
+        if "error" in tx_json:
+            raise click.ClickException(f"Transaction not found: {txhash}")
+
+        tx = btc.from_json(tx_json)
+        txes[txhash] = tx
+        amount = tx.bin_outputs[prev_index].amount
+        echo("Input amount: {}".format(amount))
 
         sequence = prompt(
             "Sequence Number to use (RBF opt-in enabled by default)",
@@ -96,10 +102,6 @@ def _get_inputs_interactive(coin_data, txapi):
             script_type=script_type,
             sequence=sequence,
         )
-        if coin_data["bip115"]:
-            prev_output = txapi.get_tx(prev_hash.hex()).bin_outputs[prev_index]
-            new_input.prev_block_hash_bip115 = prev_output.block_hash
-            new_input.prev_block_height_bip115 = prev_output.block_height
 
         inputs.append(new_input)
 
@@ -146,34 +148,19 @@ def _get_outputs_interactive():
 @click.command()
 def sign_interactive():
     coin = prompt("Coin name", default="Bitcoin")
-    if coin in coins.tx_api:
-        coin_data = coins.by_name[coin]
-        txapi = coins.tx_api[coin]
-    else:
-        echo('Coin "%s" is not recognized.' % coin, err=True)
-        echo("Supported coin types: %s" % ", ".join(coins.tx_api.keys()), err=True)
-        sys.exit(1)
+    blockbook_host = prompt("Blockbook server", default="btc1.trezor.io")
 
-    inputs, txes = _get_inputs_interactive(coin_data, txapi)
+    if not requests.get(f"https://{blockbook_host}/api").ok:
+        raise click.ClickException("Could not connect to blockbook")
+
+    blockbook_url = f"https://{blockbook_host}/api/tx-specific/"
+
+    inputs, txes = _get_inputs_interactive(blockbook_url)
     outputs = _get_outputs_interactive()
-
-    if coin_data["bip115"]:
-        current_block_height = txapi.current_height()
-        # Zencash recommendation for the better protection
-        block_height = current_block_height - 300
-        block_hash = txapi.get_block_hash(block_height)
-        # Blockhash passed in reverse order
-        block_hash = block_hash[::-1]
-
-        for output in outputs:
-            output.block_hash_bip115 = block_hash
-            output.block_height_bip115 = block_height
 
     signtx = messages.SignTx()
     signtx.version = prompt("Transaction version", type=int, default=2)
     signtx.lock_time = prompt("Transaction locktime", type=int, default=0)
-    if coin == "Capricoin":
-        signtx.timestamp = prompt("Transaction timestamp", type=int)
 
     result = {
         "coin_name": coin,
@@ -181,7 +168,7 @@ def sign_interactive():
         "outputs": [to_dict(o, hexlify_bytes=True) for o in outputs],
         "details": to_dict(signtx, hexlify_bytes=True),
         "prev_txes": {
-            txhash.hex(): to_dict(txdata, hexlify_bytes=True)
+            txhash: to_dict(txdata, hexlify_bytes=True)
             for txhash, txdata in txes.items()
         },
     }
