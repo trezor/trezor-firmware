@@ -18,7 +18,6 @@ import logging
 import os
 import sys
 import warnings
-from types import SimpleNamespace
 
 from mnemonic import Mnemonic
 
@@ -36,41 +35,11 @@ MAX_PASSPHRASE_LENGTH = 50
 PASSPHRASE_ON_DEVICE = object()
 PASSPHRASE_TEST_PATH = tools.parse_path("44h/1h/19h/0/1337")
 
-DEPRECATION_ERROR = """
-Incompatible Trezor library detected.
-
-(Original error: {})
-""".strip()
-
 OUTDATED_FIRMWARE_ERROR = """
 Your Trezor firmware is out of date. Update it with the following command:
   trezorctl firmware-update
 Or visit https://wallet.trezor.io/
 """.strip()
-
-
-def _no_ui_selected(*args, **kwargs):
-    raise RuntimeError(
-        "You did not supply a UI object. You were warned that this would crash soon. "
-        "That's what happened now.\n "
-        "You need to supply a UI object to TrezorClient constructor."
-    )
-
-
-_NO_UI_OBJECT = SimpleNamespace(
-    button_request=_no_ui_selected,
-    get_passphrase=_no_ui_selected,
-    get_pin=_no_ui_selected,
-)
-
-
-def get_buttonrequest_value(code):
-    # Converts integer code to its string representation of ButtonRequestType
-    return [
-        k
-        for k in dir(messages.ButtonRequestType)
-        if getattr(messages.ButtonRequestType, k) == code
-    ][0]
 
 
 def get_default_client(path=None, ui=None, **kwargs):
@@ -116,23 +85,12 @@ class TrezorClient:
     """
 
     def __init__(
-        self, transport, ui=_NO_UI_OBJECT, session_id=None,
+        self, transport, ui, session_id=None,
     ):
         LOG.info("creating client instance for device: {}".format(transport.get_path()))
         self.transport = transport
         self.ui = ui
         self.session_id = session_id
-
-        # XXX remove when old Electrum has been cycled out.
-        # explanation: We changed the API in 0.11 and this broke older versions
-        # of Electrum (incl. all its forks). We want to display an intelligent error
-        # message instead of crashing for no reason (see DEPRECATION_ERROR and MovedTo),
-        # so we are not allowed to crash in constructor.
-        # I'd keep this until, say, end of 2019 (or version 0.12), and then drop
-        # the default value for `ui` argument and all related functionality.
-        if ui is _NO_UI_OBJECT:
-            warnings.warn("UI object not supplied. This will probably crash soon.")
-
         self.session_counter = 0
         self.init_device()
 
@@ -310,111 +268,3 @@ class TrezorClient:
             return resp.message
         else:
             return resp
-
-
-def MovedTo(where):
-    def moved_to(*args, **kwargs):
-        msg = "Function has been moved to " + where
-        raise RuntimeError(DEPRECATION_ERROR.format(msg))
-
-    return moved_to
-
-
-class ProtocolMixin(object):
-    """Fake mixin for old-style software that constructed TrezorClient class
-    from separate mixins.
-
-    Now it only simulates existence of original attributes to prevent some early
-    crashes, and raises errors when any of the attributes are actually called.
-    """
-
-    def __init__(self, *args, **kwargs):
-        warnings.warn("TrezorClient mixins are not supported anymore")
-        self.tx_api = None  # Electrum checks that this attribute exists
-        super().__init__(*args, **kwargs)
-
-    def set_tx_api(self, tx_api):
-        warnings.warn("set_tx_api is deprecated, use new arguments to sign_tx")
-
-    @staticmethod
-    def expand_path(n):
-        warnings.warn(
-            "expand_path is deprecated, use tools.parse_path",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return tools.parse_path(n)
-
-    # Device functionality
-    wipe_device = MovedTo("device.wipe")
-    recovery_device = MovedTo("device.recover")
-    reset_device = MovedTo("device.reset")
-    backup_device = MovedTo("device.backup")
-
-    set_u2f_counter = MovedTo("fido.set_counter")
-
-    apply_settings = MovedTo("device.apply_settings")
-    apply_flags = MovedTo("device.apply_flags")
-    change_pin = MovedTo("device.change_pin")
-
-    # Firmware functionality
-    firmware_update = MovedTo("firmware.update")
-
-    # BTC-like functionality
-    get_public_node = MovedTo("btc.get_public_node")
-    get_address = MovedTo("btc.get_address")
-    sign_tx = MovedTo("btc.sign_tx")
-    sign_message = MovedTo("btc.sign_message")
-    verify_message = MovedTo("btc.verify_message")
-
-    # CoSi functionality
-    cosi_commit = MovedTo("cosi.commit")
-    cosi_sign = MovedTo("cosi.sign")
-
-    # Ethereum functionality
-    ethereum_get_address = MovedTo("ethereum.get_address")
-    ethereum_sign_tx = MovedTo("ethereum.sign_tx")
-    ethereum_sign_message = MovedTo("ethereum.sign_message")
-    ethereum_verify_message = MovedTo("ethereum.verify_message")
-
-    # Lisk functionality
-    lisk_get_address = MovedTo("lisk.get_address")
-    lisk_get_public_key = MovedTo("lisk.get_public_key")
-    lisk_sign_message = MovedTo("lisk.sign_message")
-    lisk_verify_message = MovedTo("lisk.verify_message")
-    lisk_sign_tx = MovedTo("lisk.sign_tx")
-
-    # NEM functionality
-    nem_get_address = MovedTo("nem.get_address")
-    nem_sign_tx = MovedTo("nem.sign_tx")
-
-    # Stellar functionality
-    stellar_get_address = MovedTo("stellar.get_address")
-    stellar_sign_transaction = MovedTo("stellar.sign_tx")
-
-    # Miscellaneous cryptographic functionality
-    get_entropy = MovedTo("misc.get_entropy")
-    sign_identity = MovedTo("misc.sign_identity")
-    get_ecdh_session_key = MovedTo("misc.get_ecdh_session_key")
-    encrypt_keyvalue = MovedTo("misc.encrypt_keyvalue")
-    decrypt_keyvalue = MovedTo("misc.decrypt_keyvalue")
-
-    # Debug device functionality
-    load_device_by_mnemonic = MovedTo("debuglink.load_device")
-
-
-class BaseClient:
-    """Compatibility proxy for original BaseClient class.
-    Prevents early crash in Electrum forks and possibly other software.
-    """
-
-    def __init__(self, *args, **kwargs):
-        warnings.warn("TrezorClient mixins are not supported anymore")
-        self.trezor_client = TrezorClient(*args, **kwargs)
-
-    def __getattr__(self, key):
-        return getattr(self.trezor_client, key)
-
-
-# further Electrum compatibility
-proto = None
