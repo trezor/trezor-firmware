@@ -23,8 +23,7 @@ from pathlib import Path
 import click
 import requests
 
-from trezorlib import messages, protobuf
-from trezorlib.tx_api import json_to_tx
+from trezorlib import btc, messages, protobuf
 
 REPOSITORY_ROOT = Path(__file__).parent.parent
 TOOLS_PATH = REPOSITORY_ROOT / "common" / "tools"
@@ -45,7 +44,7 @@ def _get_blockbooks():
         if not coin.get("blockbook"):
             continue
 
-        res[coin["coin_name"].lower()] = coin["blockbook"][0] + "/api/tx/{}"
+        res[coin["coin_name"].lower()] = coin["blockbook"][0] + "/api/tx-specific/{}"
     return res
 
 
@@ -86,7 +85,7 @@ def cli(tx, coin_name):
     Without URL, default blockbook server will be used:
     ./tests/tx_cache.py bcash bc37c28dfb467d2ecb50261387bf752a3977d7e5337915071bb4151e6b711a78
     It is also possible to specify URL explicitly:
-    ./tests/tx_cache.py bcash https://bch1.trezor.io/api/tx/bc37c28dfb467d2ecb50261387bf752a3977d7e5337915071bb4151e6b711a78
+    ./tests/tx_cache.py bcash https://bch1.trezor.io/api/tx-specific/bc37c28dfb467d2ecb50261387bf752a3977d7e5337915071bb4151e6b711a78
 
     The transaction will be parsed into Trezor format and saved in
     tests/txcache/<COIN_NAME>/<TXHASH>.json. Note that only Bitcoin-compatible fields
@@ -109,7 +108,7 @@ def cli(tx, coin_name):
     click.echo(f"Fetching from {tx_url}...")
     try:
         tx_src = requests.get(tx_url).json(parse_float=Decimal)
-        tx_proto = json_to_tx(tx_src)
+        tx_proto = btc.from_json(tx_src)
         tx_dict = protobuf.to_dict(tx_proto)
         tx_json = json.dumps(tx_dict, sort_keys=True, indent=2) + "\n"
     except Exception as e:

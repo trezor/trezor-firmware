@@ -14,8 +14,41 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from decimal import Decimal
+
 from . import messages
 from .tools import CallException, expect, normalize_nfc, session
+
+
+def from_json(json_dict):
+    def make_input(vin):
+        i = messages.TxInputType()
+        if "coinbase" in vin:
+            i.prev_hash = b"\0" * 32
+            i.prev_index = 0xFFFFFFFF  # signed int -1
+            i.script_sig = bytes.fromhex(vin["coinbase"])
+            i.sequence = vin["sequence"]
+
+        else:
+            i.prev_hash = bytes.fromhex(vin["txid"])
+            i.prev_index = vin["vout"]
+            i.script_sig = bytes.fromhex(vin["scriptSig"]["hex"])
+            i.sequence = vin["sequence"]
+
+        return i
+
+    def make_bin_output(vout):
+        o = messages.TxOutputBinType()
+        o.amount = int(Decimal(vout["value"]) * (10 ** 8))
+        o.script_pubkey = bytes.fromhex(vout["scriptPubKey"]["hex"])
+        return o
+
+    t = messages.TransactionType()
+    t.version = json_dict["version"]
+    t.lock_time = json_dict.get("locktime")
+    t.inputs = [make_input(vin) for vin in json_dict["vin"]]
+    t.bin_outputs = [make_bin_output(vout) for vout in json_dict["vout"]]
+    return t
 
 
 @expect(messages.PublicKey)
