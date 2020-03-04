@@ -26,36 +26,41 @@ on one page here.
   Usage: trezorctl [OPTIONS] COMMAND [ARGS]...
 
   Options:
-    -p, --path TEXT  Select device by specific path.
-    -v, --verbose    Show communication messages.
-    -j, --json       Print result as JSON object
-    --version        Show the version and exit.
-    --help           Show this message and exit.
+    -p, --path TEXT           Select device by specific path.
+    -v, --verbose             Show communication messages.
+    -j, --json                Print result as JSON object
+    -P, --passphrase-on-host  Enter passphrase on host.
+    -s, --session-id HEX      Resume given session ID.
+    --version                 Show the version and exit.
+    --help                    Show this message and exit.
 
   Commands:
-    binance          Binance Chain commands.
-    btc              Bitcoin and Bitcoin-like coins commands.
-    cardano          Cardano commands.
-    clear-session    Clear session (remove cached PIN, passphrase, etc.).
-    cosi             CoSi (Cothority / collective signing) commands.
-    crypto           Miscellaneous cryptography features.
-    device           Device management commands - setup, recover seed, wipe, etc.
-    eos              EOS commands.
-    ethereum         Ethereum commands.
-    fido             FIDO2, U2F and WebAuthN management commands.
-    firmware-update  Upload new firmware to device.
-    get-features     Retrieve device features and settings.
-    lisk             Lisk commands.
-    list             List connected Trezor devices.
-    monero           Monero commands.
-    nem              NEM commands.
-    ping             Send ping message.
-    ripple           Ripple commands.
-    set              Device settings.
-    stellar          Stellar commands.
-    tezos            Tezos commands.
-    usb-reset        Perform USB reset on stuck devices.
-    version          Show version of trezorctl/trezorlib.
+    binance            Binance Chain commands.
+    btc                Bitcoin and Bitcoin-like coins commands.
+    cardano            Cardano commands.
+    clear-session      Clear session (remove cached PIN, passphrase, etc.).
+    cosi               CoSi (Cothority / collective signing) commands.
+    crypto             Miscellaneous cryptography features.
+    debug              Miscellaneous debug features.
+    device             Device management commands - setup, recover seed, wipe, etc.
+    eos                EOS commands.
+    ethereum           Ethereum commands.
+    fido               FIDO2, U2F and WebAuthN management commands.
+    firmware-update    Upload new firmware to device.
+    get-features       Retrieve device features and settings.
+    get-session        Get a session ID for subsequent commands.
+    lisk               Lisk commands.
+    list               List connected Trezor devices.
+    monero             Monero commands.
+    nem                NEM commands.
+    ping               Send ping message.
+    ripple             Ripple commands.
+    set                Device settings.
+    stellar            Stellar commands.
+    tezos              Tezos commands.
+    usb-reset          Perform USB reset on stuck devices.
+    version            Show version of trezorctl/trezorlib.
+    wait-for-emulator  Wait until Trezor Emulator comes up.
 
 Binance Chain commands.
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -162,6 +167,25 @@ Miscellaneous cryptography features.
     decrypt-keyvalue  Decrypt value by given key and path.
     encrypt-keyvalue  Encrypt value by given key and path.
     get-entropy       Get random bytes from device.
+
+Miscellaneous debug features.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code::
+
+  trezorctl debug --help
+
+.. code::
+
+  Usage: trezorctl debug [OPTIONS] COMMAND [ARGS]...
+
+    Miscellaneous debug features.
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    show-text  Show text on Trezor display.
 
 Device management commands - setup, recover seed, wipe, etc.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
