@@ -17,9 +17,9 @@
 import pytest
 
 from trezorlib import btc, messages as proto
-from trezorlib.ckd_public import deserialize
 from trezorlib.tools import H_, parse_path
 
+from ..bip32 import deserialize
 from ..tx_cache import TxCache
 
 TX_API = TxCache("Testnet")

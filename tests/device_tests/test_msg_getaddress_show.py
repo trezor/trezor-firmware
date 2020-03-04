@@ -16,8 +16,9 @@
 
 import pytest
 
-from trezorlib import btc, ckd_public as bip32, messages, tools
+from trezorlib import btc, messages, tools
 
+from .. import bip32
 from ..common import MNEMONIC12
 
 

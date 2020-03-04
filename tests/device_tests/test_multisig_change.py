@@ -16,9 +16,10 @@
 
 import pytest
 
-from trezorlib import btc, ckd_public as bip32, messages as proto
+from trezorlib import btc, messages as proto
 from trezorlib.tools import H_, parse_path
 
+from .. import bip32
 from ..common import MNEMONIC12
 from ..tx_cache import TxCache
 

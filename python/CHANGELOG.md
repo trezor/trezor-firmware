@@ -38,10 +38,12 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 
 - `trezorlib.tx_api` was removed
 - `trezorlib.coins` and coin data was removed
+- `trezorlib.ckd_public`, which was deprecated in 0.10, was now removed.
 - `btc.sign_tx` will not preload transaction data from `prev_txes`, as usage with TxApi
   is being removed
 - PIN protection and passphrase protection for `ping()` command was removed
 - compatibility no-op code from trezorlib 0.9 was removed from `trezorlib.client`
+
 
 ## [0.11.6] - 2019-12-30
 [0.11.6]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.5...python/v0.11.6
@@ -68,6 +70,7 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
   input format is JSON. See [`docs/transaction-format.md`](docs/transaction-format.md)
   for details.
 - support for "load device by xprv" was removed from firmware and trezorlib
+
 
 ## [0.11.5] - 2019-09-26
 

@@ -17,7 +17,6 @@
 import hashlib
 import hmac
 import struct
-import warnings
 
 import ecdsa
 from ecdsa.curves import SECP256k1
@@ -25,8 +24,6 @@ from ecdsa.ellipticcurve import INFINITY, Point
 from ecdsa.util import number_to_string, string_to_number
 
 from trezorlib import messages, tools
-
-warnings.warn("ckd_public module is deprecated and will be removed", DeprecationWarning)
 
 
 def point_to_pubkey(point):
@@ -58,10 +55,6 @@ def sec_to_public_pair(pubkey):
     )
 
 
-def is_prime(n):
-    return bool(n & tools.HARDENED_FLAG)
-
-
 def fingerprint(pubkey):
     return string_to_number(tools.hash_160(pubkey)[:4])
 
@@ -86,7 +79,7 @@ def get_subnode(node, i):
     # Public Child key derivation (CKD) algorithm of BIP32
     i_as_bytes = struct.pack(">L", i)
 
-    if is_prime(i):
+    if i & tools.HARDENED_FLAG:
         raise ValueError("Prime derivation not supported")
 
     # Public derivation
