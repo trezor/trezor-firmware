@@ -1,4 +1,24 @@
 from typing import *
+FR_OK: int                   # (0) Succeeded
+FR_DISK_ERR: int             # (1) A hard error occurred in the low level disk I/O layer
+FR_INT_ERR: int              # (2) Assertion failed
+FR_NOT_READY: int            # (3) The physical drive cannot work
+FR_NO_FILE: int              # (4) Could not find the file
+FR_NO_PATH: int              # (5) Could not find the path
+FR_INVALID_NAME: int         # (6) The path name format is invalid
+FR_DENIED: int               # (7) Access denied due to prohibited access or directory full
+FR_EXIST: int                # (8) Access denied due to prohibited access
+FR_INVALID_OBJECT: int       # (9) The file/directory object is invalid
+FR_WRITE_PROTECTED: int      # (10) The physical drive is write protected
+FR_INVALID_DRIVE: int        # (11) The logical drive number is invalid
+FR_NOT_ENABLED: int          # (12) The volume has no work area
+FR_NO_FILESYSTEM: int        # (13) There is no valid FAT volume
+FR_MKFS_ABORTED: int         # (14) The f_mkfs() aborted due to any problem
+FR_TIMEOUT: int              # (15) Could not get a grant to access the volume within defined period
+FR_LOCKED: int               # (16) The operation is rejected according to the file sharing policy
+FR_NOT_ENOUGH_CORE: int      # (17) LFN working buffer could not be allocated
+FR_TOO_MANY_OPEN_FILES: int  # (18) Number of open files > FF_FS_LOCK
+FR_INVALID_PARAMETER: int    # (19) Given parameter is invalid
 
 
 # extmod/modtrezorio/modtrezorio-fatfs.h

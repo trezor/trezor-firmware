@@ -29,6 +29,29 @@
 
 /// package: trezorio.fatfs
 
+// clang-format off
+/// FR_OK: int                   # (0) Succeeded
+/// FR_DISK_ERR: int             # (1) A hard error occurred in the low level disk I/O layer
+/// FR_INT_ERR: int              # (2) Assertion failed
+/// FR_NOT_READY: int            # (3) The physical drive cannot work
+/// FR_NO_FILE: int              # (4) Could not find the file
+/// FR_NO_PATH: int              # (5) Could not find the path
+/// FR_INVALID_NAME: int         # (6) The path name format is invalid
+/// FR_DENIED: int               # (7) Access denied due to prohibited access or directory full
+/// FR_EXIST: int                # (8) Access denied due to prohibited access
+/// FR_INVALID_OBJECT: int       # (9) The file/directory object is invalid
+/// FR_WRITE_PROTECTED: int      # (10) The physical drive is write protected
+/// FR_INVALID_DRIVE: int        # (11) The logical drive number is invalid
+/// FR_NOT_ENABLED: int          # (12) The volume has no work area
+/// FR_NO_FILESYSTEM: int        # (13) There is no valid FAT volume
+/// FR_MKFS_ABORTED: int         # (14) The f_mkfs() aborted due to any problem
+/// FR_TIMEOUT: int              # (15) Could not get a grant to access the volume within defined period
+/// FR_LOCKED: int               # (16) The operation is rejected according to the file sharing policy
+/// FR_NOT_ENOUGH_CORE: int      # (17) LFN working buffer could not be allocated
+/// FR_TOO_MANY_OPEN_FILES: int  # (18) Number of open files > FF_FS_LOCK
+/// FR_INVALID_PARAMETER: int    # (19) Given parameter is invalid
+// clang-format on
+
 static FATFS fs_instance;
 
 bool _fatfs_instance_is_mounted() { return fs_instance.fs_type != 0; }
@@ -37,7 +60,7 @@ void _fatfs_unmount_instance() { fs_instance.fs_type = 0; }
 #define FATFS_ONLY_MOUNTED               \
   {                                      \
     if (!_fatfs_instance_is_mounted()) { \
-      mp_raise_OSError(MP_ENODEV);       \
+      mp_raise_OSError(FR_NOT_READY);    \
     }                                    \
   }
 
@@ -83,30 +106,6 @@ DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void *buff) {
       return RES_PARERR;
   }
 }
-
-// this table converts from FRESULT to POSIX errno
-const uint8_t fresult_to_errno_table[20] = {
-    [FR_OK] = 0,
-    [FR_DISK_ERR] = MP_EIO,
-    [FR_INT_ERR] = MP_EIO,
-    [FR_NOT_READY] = MP_EBUSY,
-    [FR_NO_FILE] = MP_ENOENT,
-    [FR_NO_PATH] = MP_ENOENT,
-    [FR_INVALID_NAME] = MP_EINVAL,
-    [FR_DENIED] = MP_EACCES,
-    [FR_EXIST] = MP_EEXIST,
-    [FR_INVALID_OBJECT] = MP_EINVAL,
-    [FR_WRITE_PROTECTED] = MP_EROFS,
-    [FR_INVALID_DRIVE] = MP_ENODEV,
-    [FR_NOT_ENABLED] = MP_ENODEV,
-    [FR_NO_FILESYSTEM] = MP_ENODEV,
-    [FR_MKFS_ABORTED] = MP_EIO,
-    [FR_TIMEOUT] = MP_EIO,
-    [FR_LOCKED] = MP_EIO,
-    [FR_NOT_ENOUGH_CORE] = MP_ENOMEM,
-    [FR_TOO_MANY_OPEN_FILES] = MP_EMFILE,
-    [FR_INVALID_PARAMETER] = MP_EINVAL,
-};
 
 STATIC mp_obj_t filinfo_to_tuple(const FILINFO *info) {
   mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
@@ -160,7 +159,7 @@ STATIC mp_obj_t mod_trezorio_FatFSFile___exit__(size_t n_args,
   mp_obj_FatFSFile_t *o = MP_OBJ_TO_PTR(args[0]);
   FRESULT res = f_close(&(o->fp));
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   return mp_const_none;
 }
@@ -176,7 +175,7 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_close(mp_obj_t self) {
   mp_obj_FatFSFile_t *o = MP_OBJ_TO_PTR(self);
   FRESULT res = f_close(&(o->fp));
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   return mp_const_none;
 }
@@ -194,7 +193,7 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_read(mp_obj_t self, mp_obj_t data) {
   UINT read;
   FRESULT res = f_read(&(o->fp), buf.buf, buf.len, &read);
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   return mp_obj_new_int_from_uint(read);
 }
@@ -212,7 +211,7 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_write(mp_obj_t self, mp_obj_t data) {
   UINT written;
   FRESULT res = f_write(&(o->fp), buf.buf, buf.len, &written);
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   if (written != buf.len) {
     /* no space left on device or free clusters recorded in FSInfo fell to 0 */
@@ -232,7 +231,7 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_seek(mp_obj_t self, mp_obj_t offset) {
   FSIZE_t ofs = trezor_obj_get_uint(offset);
   FRESULT res = f_lseek(&(o->fp), ofs);
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   return mp_const_none;
 }
@@ -247,7 +246,7 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_truncate(mp_obj_t self) {
   mp_obj_FatFSFile_t *o = MP_OBJ_TO_PTR(self);
   FRESULT res = f_truncate(&(o->fp));
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   return mp_const_none;
 }
@@ -262,7 +261,7 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_sync(mp_obj_t self) {
   mp_obj_FatFSFile_t *o = MP_OBJ_TO_PTR(self);
   FRESULT res = f_sync(&(o->fp));
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   return mp_const_none;
 }
@@ -309,7 +308,7 @@ STATIC mp_obj_t mod_trezorio_FatFSDir_iternext(mp_obj_t self) {
   FRESULT res = f_readdir(&(o->dp), &info);
   if (res != FR_OK) {
     f_closedir(&(o->dp));
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   if (info.fname[0] == 0) {  // stop on end of dir
     f_closedir(&(o->dp));
@@ -362,7 +361,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_open(mp_obj_t path, mp_obj_t flags) {
   FIL fp;
   FRESULT res = f_open(&fp, _path.buf, mode);
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   mp_obj_FatFSFile_t *f = m_new_obj(mp_obj_FatFSFile_t);
   f->base.type = &mod_trezorio_FatFSFile_type;
@@ -383,7 +382,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_listdir(mp_obj_t path) {
   DIR dp;
   FRESULT res = f_opendir(&dp, _path.buf);
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   mp_obj_FatFSDir_t *d = m_new_obj(mp_obj_FatFSDir_t);
   d->base.type = &mod_trezorio_FatFSDir_type;
@@ -407,7 +406,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_mkdir(size_t n_args, const mp_obj_t *args) {
     return mp_const_none;
   }
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   return mp_const_none;
 }
@@ -424,7 +423,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_unlink(mp_obj_t path) {
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
   FRESULT res = f_unlink(_path.buf);
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   return mp_const_none;
 }
@@ -442,7 +441,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_stat(mp_obj_t path) {
   FILINFO info;
   FRESULT res = f_stat(_path.buf, &info);
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   return filinfo_to_tuple(&info);
 }
@@ -460,7 +459,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_rename(mp_obj_t oldpath, mp_obj_t newpath) {
   mp_get_buffer_raise(newpath, &_newpath, MP_BUFFER_READ);
   FRESULT res = f_rename(_oldpath.buf, _newpath.buf);
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   return mp_const_none;
 }
@@ -474,7 +473,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_fatfs_rename_obj,
 STATIC mp_obj_t mod_trezorio_fatfs_mount() {
   FRESULT res = f_mount(&fs_instance, "", 1);
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   return mp_const_none;
 }
@@ -508,13 +507,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_fatfs_is_mounted_obj,
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_mkfs() {
   if (_fatfs_instance_is_mounted()) {
-    mp_raise_OSError(MP_EBUSY);
+    mp_raise_OSError(FR_LOCKED);
   }
   MKFS_PARM params = {FM_FAT32, 0, 0, 0, 0};
   uint8_t working_buf[FF_MAX_SS];
   FRESULT res = f_mkfs("", &params, working_buf, sizeof(working_buf));
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   return mp_const_none;
 }
@@ -534,7 +533,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_setlabel(mp_obj_t label) {
   mp_get_buffer_raise(label, &_label, MP_BUFFER_READ);
   FRESULT res = f_setlabel(_label.buf);
   if (res != FR_OK) {
-    mp_raise_OSError(fresult_to_errno_table[res]);
+    mp_raise_OSError(res);
   }
   return mp_const_none;
 }
@@ -559,6 +558,29 @@ STATIC const mp_rom_map_elem_t mod_trezorio_fatfs_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_mkfs), MP_ROM_PTR(&mod_trezorio_fatfs_mkfs_obj)},
     {MP_ROM_QSTR(MP_QSTR_setlabel),
      MP_ROM_PTR(&mod_trezorio_fatfs_setlabel_obj)},
+
+    {MP_ROM_QSTR(MP_QSTR_FR_OK), MP_ROM_INT(FR_OK)},
+    {MP_ROM_QSTR(MP_QSTR_FR_DISK_ERR), MP_ROM_INT(FR_DISK_ERR)},
+    {MP_ROM_QSTR(MP_QSTR_FR_INT_ERR), MP_ROM_INT(FR_INT_ERR)},
+    {MP_ROM_QSTR(MP_QSTR_FR_NOT_READY), MP_ROM_INT(FR_NOT_READY)},
+    {MP_ROM_QSTR(MP_QSTR_FR_NO_FILE), MP_ROM_INT(FR_NO_FILE)},
+    {MP_ROM_QSTR(MP_QSTR_FR_NO_PATH), MP_ROM_INT(FR_NO_PATH)},
+    {MP_ROM_QSTR(MP_QSTR_FR_INVALID_NAME), MP_ROM_INT(FR_INVALID_NAME)},
+    {MP_ROM_QSTR(MP_QSTR_FR_DENIED), MP_ROM_INT(FR_DENIED)},
+    {MP_ROM_QSTR(MP_QSTR_FR_EXIST), MP_ROM_INT(FR_EXIST)},
+    {MP_ROM_QSTR(MP_QSTR_FR_INVALID_OBJECT), MP_ROM_INT(FR_INVALID_OBJECT)},
+    {MP_ROM_QSTR(MP_QSTR_FR_WRITE_PROTECTED), MP_ROM_INT(FR_WRITE_PROTECTED)},
+    {MP_ROM_QSTR(MP_QSTR_FR_INVALID_DRIVE), MP_ROM_INT(FR_INVALID_DRIVE)},
+    {MP_ROM_QSTR(MP_QSTR_FR_NOT_ENABLED), MP_ROM_INT(FR_NOT_ENABLED)},
+    {MP_ROM_QSTR(MP_QSTR_FR_NO_FILESYSTEM), MP_ROM_INT(FR_NO_FILESYSTEM)},
+    {MP_ROM_QSTR(MP_QSTR_FR_MKFS_ABORTED), MP_ROM_INT(FR_MKFS_ABORTED)},
+    {MP_ROM_QSTR(MP_QSTR_FR_TIMEOUT), MP_ROM_INT(FR_TIMEOUT)},
+    {MP_ROM_QSTR(MP_QSTR_FR_LOCKED), MP_ROM_INT(FR_LOCKED)},
+    {MP_ROM_QSTR(MP_QSTR_FR_NOT_ENOUGH_CORE), MP_ROM_INT(FR_NOT_ENOUGH_CORE)},
+    {MP_ROM_QSTR(MP_QSTR_FR_TOO_MANY_OPEN_FILES),
+     MP_ROM_INT(FR_TOO_MANY_OPEN_FILES)},
+    {MP_ROM_QSTR(MP_QSTR_FR_INVALID_PARAMETER),
+     MP_ROM_INT(FR_INVALID_PARAMETER)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_fatfs_globals,
                             mod_trezorio_fatfs_globals_table);
