@@ -34,8 +34,7 @@ async def add_resident_credential(
         raise wire.ProcessError("Missing credential ID parameter.")
 
     try:
-        cred = Fido2Credential.from_cred_id(msg.credential_id, None)
-
+        cred = Fido2Credential.from_cred_id(bytes(msg.credential_id), None)
     except Exception:
         text = Text("Import credential", ui.ICON_WRONG, ui.RED)
         text.normal(

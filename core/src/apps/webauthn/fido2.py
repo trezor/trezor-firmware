@@ -320,7 +320,7 @@ def resp_cmd_authenticate(siglen: int) -> dict:
     }
 
 
-def overlay_struct(buf: bytes, desc: dict) -> Any:
+def overlay_struct(buf: bytearray, desc: dict) -> Any:
     desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)  # type: ignore
     if desc_size > len(buf):
         raise ValueError("desc is too big (%d > %d)" % (desc_size, len(buf)))
@@ -373,7 +373,7 @@ async def read_cmd(iface: io.HID) -> Optional[Cmd]:
 
     buf = await read
     while True:
-        ifrm = overlay_struct(buf, desc_init)
+        ifrm = overlay_struct(bytearray(buf), desc_init)
         bcnt = ifrm.bcnt
         data = ifrm.data
         datalen = len(data)
@@ -406,11 +406,11 @@ async def read_cmd(iface: io.HID) -> Optional[Cmd]:
 
         while datalen < bcnt:
             buf = await loop.race(read, loop.sleep(_CTAP_HID_TIMEOUT_MS * 1000))
-            if not isinstance(buf, (bytes, bytearray)):
+            if not isinstance(buf, bytes):
                 await send_cmd(cmd_error(ifrm.cid, _ERR_MSG_TIMEOUT), iface)
                 return None
 
-            cfrm = overlay_struct(buf, desc_cont)
+            cfrm = overlay_struct(bytearray(buf), desc_cont)
 
             if cfrm.seq == _CMD_INIT:
                 # _CMD_INIT frame, cancels current channel
@@ -434,7 +434,7 @@ async def read_cmd(iface: io.HID) -> Optional[Cmd]:
             datalen += utils.memcpy(data, datalen, cfrm.data, 0, bcnt - datalen)
             seq += 1
         else:
-            return Cmd(ifrm.cid, ifrm.cmd, data)
+            return Cmd(ifrm.cid, ifrm.cmd, bytes(data))
 
 
 async def send_cmd(cmd: Cmd, iface: io.HID) -> None:
@@ -1097,7 +1097,7 @@ def cmd_init(req: Cmd) -> Cmd:
     resp.versionBuild = 0
     resp.capFlags = _CAPFLAG_WINK | _CAPFLAG_CBOR
 
-    return Cmd(req.cid, req.cmd, buf)
+    return Cmd(req.cid, req.cmd, bytes(buf))
 
 
 def cmd_wink(req: Cmd) -> Cmd:
@@ -1123,7 +1123,7 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     # parse challenge and rp_id_hash
     chal = req.data[:32]
     cred = U2fCredential()
-    cred.rp_id_hash = bytes(req.data[32:])
+    cred.rp_id_hash = req.data[32:]
     cred.generate_key_handle()
 
     # check equality with last request
@@ -1181,7 +1181,7 @@ def msg_register_sign(challenge: bytes, cred: U2fCredential) -> bytes:
     utils.memcpy(resp.sig, 0, sig, 0, len(sig))
     resp.status = _SW_NO_ERROR
 
-    return buf
+    return bytes(buf)
 
 
 def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
@@ -1198,10 +1198,13 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
 
     # check keyHandleLen
     khlen = req.data[_REQ_CMD_AUTHENTICATE_KHLEN]
-    auth = overlay_struct(req.data, req_cmd_authenticate(khlen))
+    auth = overlay_struct(bytearray(req.data), req_cmd_authenticate(khlen))
+    challenge = bytes(auth.chal)
+    rp_id_hash = bytes(auth.appId)
+    key_handle = bytes(auth.keyHandle)
 
     try:
-        cred = Credential.from_bytes(auth.keyHandle, bytes(auth.appId))
+        cred = Credential.from_bytes(key_handle, rp_id_hash)
     except Exception:
         # specific error logged in msg_authenticate_genkey
         return msg_error(req.cid, _SW_WRONG_DATA)
@@ -1243,7 +1246,7 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     # sign the authentication challenge and return
     if __debug__:
         log.info(__name__, "signing authentication")
-    buf = msg_authenticate_sign(auth.chal, auth.appId, cred)
+    buf = msg_authenticate_sign(challenge, rp_id_hash, cred)
 
     dialog_mgr.reset()
 
@@ -1269,7 +1272,7 @@ def msg_authenticate_sign(
     utils.memcpy(resp.sig, 0, sig, 0, len(sig))
     resp.status = _SW_NO_ERROR
 
-    return buf
+    return bytes(buf)
 
 
 def msg_version(req: Msg) -> Cmd:
@@ -1302,7 +1305,7 @@ def credentials_from_descriptor_list(
             continue
 
         credential_id = credential_descriptor["id"]
-        if not isinstance(credential_id, (bytes, bytearray)):
+        if not isinstance(credential_id, bytes):
             raise TypeError
         try:
             cred = Credential.from_bytes(credential_id, rp_id_hash)
@@ -1406,7 +1409,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         not cred.check_data_types()
         or not isinstance(user.get("icon", ""), str)
         or not isinstance(rp.get("icon", ""), str)
-        or not isinstance(client_data_hash, (bytes, bytearray))
+        or not isinstance(client_data_hash, bytes)
         or not isinstance(resident_key, bool)
         or not isinstance(user_verification, bool)
     ):
@@ -1562,7 +1565,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     # Check data types.
     if (
         not isinstance(hmac_secret, (dict, type(None)))
-        or not isinstance(client_data_hash, (bytes, bytearray))
+        or not isinstance(client_data_hash, bytes)
         or not isinstance(user_presence, bool)
         or not isinstance(user_verification, bool)
     ):
