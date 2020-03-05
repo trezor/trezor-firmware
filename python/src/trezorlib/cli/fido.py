@@ -18,6 +18,10 @@ import click
 
 from .. import fido
 
+ALGORITHM_NAME = {-7: "ES256 (ECDSA w/ SHA-256)", -8: "EdDSA"}
+
+CURVE_NAME = {1: "P-256 (secp256r1)", 6: "Ed25519"}
+
 
 @click.group(name="fido")
 def cli():
@@ -33,6 +37,7 @@ def credentials():
 @click.pass_obj
 def credentials_list(connect):
     """List all resident credentials on the device."""
+
     creds = fido.list_credentials(connect())
     for cred in creds:
         click.echo("")
@@ -53,6 +58,12 @@ def credentials_list(connect):
             click.echo("  hmac-secret enabled:    {}".format(cred.hmac_secret))
         if cred.use_sign_count is not None:
             click.echo("  Use signature counter:  {}".format(cred.use_sign_count))
+        if cred.algorithm is not None:
+            algorithm = ALGORITHM_NAME.get(cred.algorithm, cred.algorithm)
+            click.echo("  Algorithm:              {}".format(algorithm))
+        if cred.curve is not None:
+            curve = CURVE_NAME.get(cred.curve, cred.curve)
+            click.echo("  Curve:                  {}".format(curve))
         click.echo("  Credential ID:          {}".format(cred.id.hex()))
 
     if not creds:

@@ -53,5 +53,7 @@ message WebAuthnCredentials {
         optional uint32 creation_time = 8;
         optional bool hmac_secret = 9;
         optional bool use_sign_count = 10;
+        optional sint32 algorithm = 11;
+        optional sint32 curve = 12;
     }
 }
