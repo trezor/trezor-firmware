@@ -33,6 +33,8 @@ async def list_resident_credentials(
             creation_time=cred.creation_time,
             hmac_secret=cred.hmac_secret,
             use_sign_count=cred.use_sign_count,
+            algorithm=cred.algorithm,
+            curve=cred.curve,
         )
         for cred in resident_credentials.find_all()
     ]
