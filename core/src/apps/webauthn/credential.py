@@ -219,7 +219,7 @@ class Fido2Credential(Credential):
         return (
             isinstance(self.rp_id, str)
             and isinstance(self.rp_name, (str, type(None)))
-            and isinstance(self.user_id, (bytes, bytearray))
+            and isinstance(self.user_id, bytes)
             and isinstance(self.user_name, (str, type(None)))
             and isinstance(self.user_display_name, (str, type(None)))
             and isinstance(self.hmac_secret, bool)
@@ -227,7 +227,7 @@ class Fido2Credential(Credential):
             and isinstance(self.creation_time, (int, type(None)))
             and isinstance(self.algorithm, (int, type(None)))
             and isinstance(self.curve, (int, type(None)))
-            and isinstance(self.id, (bytes, bytearray))
+            and isinstance(self.id, bytes)
         )
 
     def app_name(self) -> str:
@@ -285,7 +285,7 @@ class Fido2Credential(Credential):
             common.COSE_CURVE_ED25519,
         ):
             return ed25519.sign(
-                self._private_key(), b"".join(bytes(segment) for segment in data)
+                self._private_key(), b"".join(segment for segment in data)
             )
 
         raise TypeError
