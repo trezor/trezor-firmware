@@ -127,7 +127,7 @@ async def request_sd_salt(
         await ensure_sdcard(ctx, ensure_filesystem=False)
         try:
             return storage.sd_salt.load_sd_salt()
-        except storage.sd_salt.WrongSdCard:
+        except (storage.sd_salt.WrongSdCard, sdcard.NoFilesystem):
             if not await _wrong_card_dialog(ctx):
                 raise SdCardUnavailable("Wrong SD card.")
         except OSError:
