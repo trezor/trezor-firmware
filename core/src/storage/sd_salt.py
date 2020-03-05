@@ -47,7 +47,7 @@ def _load_salt(auth_key: bytes, path: str) -> Optional[bytearray]:
             stored_tag = bytearray(SD_SALT_AUTH_TAG_LEN_BYTES)
             f.read(salt)
             f.read(stored_tag)
-    except OSError:
+    except fatfs.FatFSError:
         return None
 
     # Check the salt's authentication tag.
@@ -82,10 +82,10 @@ def load_sd_salt() -> Optional[bytearray]:
     # TODO Possibly overwrite salt file with random data.
     try:
         fatfs.unlink(salt_path)
-    except OSError:
+    except fatfs.FatFSError:
         pass
 
-    # fatfs.rename can fail with a write error, which falls through as an OSError.
+    # fatfs.rename can fail with a write error, which falls through as an FatFSError.
     # This should be handled in calling code, by allowing the user to retry.
     fatfs.rename(new_salt_path, salt_path)
     return salt
@@ -108,7 +108,7 @@ def commit_sd_salt() -> None:
 
     try:
         fatfs.unlink(salt_path)
-    except OSError:
+    except fatfs.FatFSError:
         pass
     fatfs.rename(new_salt_path, salt_path)
 

@@ -51,9 +51,9 @@ class TestTrezorIoFatfs(unittest.TestCase):
         self.assertEqual(s, (4, "----a", self._filename()))
         fatfs.unlink("/%s" % self._dirname())
         fatfs.unlink("/%s" % self._filename())
-        with self.assertRaises(OSError):
+        with self.assertRaises(fatfs.FatFSError):
             fatfs.stat("/%s" % self._dirname())
-        with self.assertRaises(OSError):
+        with self.assertRaises(fatfs.FatFSError):
             self.assertRaises(fatfs.stat("/%s" % self._filename()))
 
     def test_rename(self):
@@ -66,9 +66,9 @@ class TestTrezorIoFatfs(unittest.TestCase):
         self.assertEqual(s, (4, "----a", self._filename()))
         fatfs.rename("/%s" % self._dirname(), "/%s" % self._dirname("2"))
         fatfs.rename("/%s" % self._filename(), "/%s" % self._filename("2"))
-        with self.assertRaises(OSError):
+        with self.assertRaises(fatfs.FatFSError):
             fatfs.stat("/%s" % self._dirname())
-        with self.assertRaises(OSError):
+        with self.assertRaises(fatfs.FatFSError):
             self.assertRaises(fatfs.stat("/%s" % self._filename()))
         s = fatfs.stat("/%s" % self._dirname("2"))
         self.assertEqual(s, (0, "---d-", self._dirname("2")))
@@ -138,15 +138,6 @@ class TestTrezorIoFatfsMounting(unittest.TestCase):
     UNMOUNTED_METHODS = [
         ("mkfs", ()),
     ]
-    OTHER = {
-        "__name__",
-        "__class__",
-        "mount",
-        "unmount",
-        "is_mounted",
-        "FatFSFile",
-        "FatFSDir",
-    }
 
     def setUp(self):
         sdcard.power_on()
@@ -173,16 +164,11 @@ class TestTrezorIoFatfsMounting(unittest.TestCase):
         try:
             fatfs.mount()
             self.fail("should have raised")
-        except OSError as e:
-            self.assertEqual(e.args[0], 19)  # ENODEV
+        except fatfs.FatFSError as e:
+            self.assertIsInstance(e, fatfs.NoFilesystem)
+            # check that the proper error code is set on the NoFilesystem subclass
+            self.assertEqual(e.args[0], fatfs.FR_NO_FILESYSTEM)
         self.assertFalse(fatfs.is_mounted())
-
-    def test_exhaustive(self):
-        all_symbols = (
-            set(name for name, call in (self.MOUNTED_METHODS + self.UNMOUNTED_METHODS))
-            | self.OTHER
-        )
-        self.assertEqual(set(dir(fatfs)), all_symbols)
 
     def test_mounted(self):
         fatfs.mkfs()
@@ -198,8 +184,8 @@ class TestTrezorIoFatfsMounting(unittest.TestCase):
             try:
                 function(*call)
                 self.fail("should have raised")
-            except OSError as e:
-                self.assertEqual(e.args[0], 16)  # EBUSY
+            except fatfs.FatFSError as e:
+                self.assertEqual(e.args[0], fatfs.FR_LOCKED)
 
     def test_unmounted(self):
         fatfs.unmount()
@@ -216,15 +202,17 @@ class TestTrezorIoFatfsMounting(unittest.TestCase):
             try:
                 function(*call)
                 self.fail("should have raised")
-            except OSError as e:
-                self.assertEqual(e.args[0], 19)  # ENODEV
+            except fatfs.FatFSError as e:
+                self.assertIsInstance(e, fatfs.NotMounted)
+                # check that the proper error code is set on the NotMounted subclass
+                self.assertEqual(e.args[0], fatfs.FR_NOT_READY)
 
 
 class TestTrezorIoFatfsAndSdcard(unittest.TestCase):
     def test_sd_power(self):
         sdcard.power_off()
         self.assertFalse(fatfs.is_mounted())
-        self.assertRaises(OSError, fatfs.mount)
+        self.assertRaises(fatfs.FatFSError, fatfs.mount)
 
         sdcard.power_on()
         self.assertFalse(fatfs.is_mounted())
