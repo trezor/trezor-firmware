@@ -98,12 +98,8 @@ def test_sd_protect_unlock(client):
         client.debug.press_yes()
 
         yield  # SD card problem
-        assert "SD card problem" in client.debug.wait_layout().text
-        client.debug.press_yes()  # retry
-
-        yield  # still SD card problem
-        assert "SD card problem" in client.debug.wait_layout().text
-        client.debug.press_no()  # do not retry
+        assert "Wrong SD card" in client.debug.wait_layout().text
+        client.debug.press_no()  # close
 
     with client, pytest.raises(TrezorFailure) as e:
         client.set_input_flow(input_flow_change_pin_format)
