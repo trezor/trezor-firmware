@@ -138,15 +138,6 @@ class TestTrezorIoFatfsMounting(unittest.TestCase):
     UNMOUNTED_METHODS = [
         ("mkfs", ()),
     ]
-    OTHER = {
-        "__name__",
-        "__class__",
-        "mount",
-        "unmount",
-        "is_mounted",
-        "FatFSFile",
-        "FatFSDir",
-    }
 
     def setUp(self):
         sdcard.power_on()
@@ -174,15 +165,8 @@ class TestTrezorIoFatfsMounting(unittest.TestCase):
             fatfs.mount()
             self.fail("should have raised")
         except OSError as e:
-            self.assertEqual(e.args[0], 19)  # ENODEV
+            self.assertEqual(e.args[0], fatfs.FR_NO_FILESYSTEM)
         self.assertFalse(fatfs.is_mounted())
-
-    def test_exhaustive(self):
-        all_symbols = (
-            set(name for name, call in (self.MOUNTED_METHODS + self.UNMOUNTED_METHODS))
-            | self.OTHER
-        )
-        self.assertEqual(set(dir(fatfs)), all_symbols)
 
     def test_mounted(self):
         fatfs.mkfs()
@@ -199,7 +183,7 @@ class TestTrezorIoFatfsMounting(unittest.TestCase):
                 function(*call)
                 self.fail("should have raised")
             except OSError as e:
-                self.assertEqual(e.args[0], 16)  # EBUSY
+                self.assertEqual(e.args[0], fatfs.FR_LOCKED)
 
     def test_unmounted(self):
         fatfs.unmount()
@@ -217,7 +201,7 @@ class TestTrezorIoFatfsMounting(unittest.TestCase):
                 function(*call)
                 self.fail("should have raised")
             except OSError as e:
-                self.assertEqual(e.args[0], 19)  # ENODEV
+                self.assertEqual(e.args[0], fatfs.FR_NOT_READY)
 
 
 class TestTrezorIoFatfsAndSdcard(unittest.TestCase):
