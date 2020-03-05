@@ -95,8 +95,8 @@ async def ensure_sdcard(
                 fatfs.mount()
                 # Mount succeeded, filesystem is OK
                 return
-        except OSError:
-            # Mount failed. Handle the problem outside except-clause
+        except fatfs.FatFSError:
+            # Mount failed. Handle problem outside except clause.
             pass
 
         if not await format_card_dialog(ctx):
@@ -109,7 +109,7 @@ async def ensure_sdcard(
                 fatfs.setlabel("TREZOR")
                 # mkfs and mount succeeded
                 return
-        except OSError:
+        except fatfs.FatFSError:
             pass
 
         # allow retry if we get as far as here
