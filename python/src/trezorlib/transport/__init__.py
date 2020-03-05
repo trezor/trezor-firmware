@@ -15,10 +15,9 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import logging
-from typing import Iterable, List, Type
+from typing import Iterable, List, Tuple, Type
 
 from ..exceptions import TrezorException
-from ..protobuf import MessageType
 
 LOG = logging.getLogger(__name__)
 
@@ -33,6 +32,9 @@ UDEV_RULES_STR = """
 Do you have udev rules installed?
 https://github.com/trezor/trezor-common/blob/master/udev/51-trezor.rules
 """.strip()
+
+
+MessagePayload = Tuple[int, bytes]
 
 
 class TransportException(TrezorException):
@@ -71,10 +73,10 @@ class Transport:
     def end_session(self) -> None:
         raise NotImplementedError
 
-    def read(self) -> MessageType:
+    def read(self) -> MessagePayload:
         raise NotImplementedError
 
-    def write(self, message: MessageType) -> None:
+    def write(self, message_type: int, message_data: bytes) -> None:
         raise NotImplementedError
 
     @classmethod

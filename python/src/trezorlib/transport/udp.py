@@ -14,14 +14,18 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import logging
 import socket
 import time
 from typing import Iterable, Optional, cast
 
+from ..log import DUMP_PACKETS
 from . import TransportException
-from .protocol import ProtocolBasedTransport, get_protocol
+from .protocol import ProtocolBasedTransport, ProtocolV1
 
 SOCKET_TIMEOUT = 10
+
+LOG = logging.getLogger(__name__)
 
 
 class UdpTransport(ProtocolBasedTransport):
@@ -42,8 +46,7 @@ class UdpTransport(ProtocolBasedTransport):
         self.device = (host, port)
         self.socket = None  # type: Optional[socket.socket]
 
-        protocol = get_protocol(self, want_v2=False)
-        super().__init__(protocol=protocol)
+        super().__init__(protocol=ProtocolV1(self))
 
     def get_path(self) -> str:
         return "{}:{}:{}".format(self.PATH_PREFIX, *self.device)
@@ -126,6 +129,7 @@ class UdpTransport(ProtocolBasedTransport):
         assert self.socket is not None
         if len(chunk) != 64:
             raise TransportException("Unexpected data length")
+        LOG.log(DUMP_PACKETS, "sending packet: {}".format(chunk.hex()))
         self.socket.sendall(chunk)
 
     def read_chunk(self) -> bytes:
@@ -136,6 +140,7 @@ class UdpTransport(ProtocolBasedTransport):
                 break
             except socket.timeout:
                 continue
+        LOG.log(DUMP_PACKETS, "received packet: {}".format(chunk.hex()))
         if len(chunk) != 64:
             raise TransportException("Unexpected chunk size: %d" % len(chunk))
         return bytearray(chunk)

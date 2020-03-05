@@ -19,7 +19,7 @@ from copy import deepcopy
 
 from mnemonic import Mnemonic
 
-from . import messages as proto, protobuf
+from . import mapping, messages as proto, protobuf
 from .client import TrezorClient
 from .tools import expect
 
@@ -45,11 +45,12 @@ class DebugLink:
         self.transport.end_session()
 
     def _call(self, msg, nowait=False):
-        self.transport.write(msg)
+        msg_type, msg_bytes = mapping.encode(msg)
+        self.transport.write(msg_type, msg_bytes)
         if nowait:
             return None
-        ret = self.transport.read()
-        return ret
+        ret_type, ret_bytes = self.transport.read()
+        return mapping.decode(ret_type, ret_bytes)
 
     def state(self):
         return self._call(proto.DebugLinkGetState())

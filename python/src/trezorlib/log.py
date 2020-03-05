@@ -22,8 +22,10 @@ from . import protobuf
 OMITTED_MESSAGES = set()  # type: Set[Type[protobuf.MessageType]]
 
 DUMP_BYTES = 5
+DUMP_PACKETS = 4
 
 logging.addLevelName(DUMP_BYTES, "BYTES")
+logging.addLevelName(DUMP_PACKETS, "PACKETS")
 
 
 class PrettyProtobufFormatter(logging.Formatter):
@@ -54,6 +56,8 @@ def enable_debug_output(verbosity: int = 1, handler: Optional[logging.Handler] =
         level = logging.DEBUG
     if verbosity > 1:
         level = DUMP_BYTES
+    if verbosity > 2:
+        level = DUMP_PACKETS
 
     logger = logging.getLogger("trezorlib")
     logger.setLevel(level)

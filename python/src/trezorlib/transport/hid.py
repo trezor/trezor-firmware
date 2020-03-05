@@ -19,6 +19,7 @@ import sys
 import time
 from typing import Any, Dict, Iterable
 
+from ..log import DUMP_PACKETS
 from . import DEV_TREZOR1, UDEV_RULES_STR, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
@@ -82,9 +83,10 @@ class HidHandle:
             raise TransportException("Unexpected chunk size: %d" % len(chunk))
 
         if self.hid_version == 2:
-            self.handle.write(b"\0" + bytearray(chunk))
-        else:
-            self.handle.write(chunk)
+            chunk = b"\x00" + chunk
+
+        LOG.log(DUMP_PACKETS, "writing packet: {}".format(chunk.hex()))
+        self.handle.write(chunk)
 
     def read_chunk(self) -> bytes:
         while True:
@@ -93,6 +95,8 @@ class HidHandle:
                 break
             else:
                 time.sleep(0.001)
+
+        LOG.log(DUMP_PACKETS, "read packet: {}".format(chunk.hex()))
         if len(chunk) != 64:
             raise TransportException("Unexpected chunk size: %d" % len(chunk))
         return bytes(chunk)
@@ -119,8 +123,7 @@ class HidTransport(ProtocolBasedTransport):
         self.device = device
         self.handle = HidHandle(device["path"], device["serial_number"])
 
-        protocol = ProtocolV1(self.handle)
-        super().__init__(protocol=protocol)
+        super().__init__(protocol=ProtocolV1(self.handle))
 
     def get_path(self) -> str:
         return "%s:%s" % (self.PATH_PREFIX, self.device["path"].decode())
@@ -142,15 +145,11 @@ class HidTransport(ProtocolBasedTransport):
         return devices
 
     def find_debug(self) -> "HidTransport":
-        if self.protocol.VERSION >= 2:
-            # use the same device
-            return self
-        else:
-            # For v1 protocol, find debug USB interface for the same serial number
-            for debug in HidTransport.enumerate(debug=True):
-                if debug.device["serial_number"] == self.device["serial_number"]:
-                    return debug
-            raise TransportException("Debug HID device not found")
+        # For v1 protocol, find debug USB interface for the same serial number
+        for debug in HidTransport.enumerate(debug=True):
+            if debug.device["serial_number"] == self.device["serial_number"]:
+                return debug
+        raise TransportException("Debug HID device not found")
 
 
 def is_wirelink(dev: HidDevice) -> bool:

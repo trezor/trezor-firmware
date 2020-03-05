@@ -16,14 +16,12 @@
 
 import logging
 import struct
-from io import BytesIO
 from typing import Any, Dict, Iterable, Optional
 
 import requests
 
-from .. import mapping, protobuf
-from ..log import DUMP_BYTES
-from . import Transport, TransportException
+from ..log import DUMP_PACKETS
+from . import MessagePayload, Transport, TransportException
 
 LOG = logging.getLogger(__name__)
 
@@ -66,10 +64,12 @@ class BridgeHandle:
 
 class BridgeHandleModern(BridgeHandle):
     def write_buf(self, buf: bytes) -> None:
+        LOG.log(DUMP_PACKETS, "sending message: {}".format(buf.hex()))
         self.transport._call("post", data=buf.hex())
 
     def read_buf(self) -> bytes:
         data = self.transport._call("read")
+        LOG.log(DUMP_PACKETS, "received message: {}".format(data.text))
         return bytes.fromhex(data.text)
 
 
@@ -87,7 +87,9 @@ class BridgeHandleLegacy(BridgeHandle):
         if self.request is None:
             raise TransportException("Can't read without write on legacy Bridge")
         try:
+            LOG.log(DUMP_PACKETS, "calling with message: {}".format(self.request))
             data = self.transport._call("call", data=self.request)
+            LOG.log(DUMP_PACKETS, "received response: {}".format(data.text))
             return bytes.fromhex(data.text)
         finally:
             self.request = None
@@ -152,29 +154,12 @@ class BridgeTransport(Transport):
         self._call("release")
         self.session = None
 
-    def write(self, msg: protobuf.MessageType) -> None:
-        LOG.debug(
-            "sending message: {}".format(msg.__class__.__name__),
-            extra={"protobuf": msg},
-        )
-        buffer = BytesIO()
-        protobuf.dump_message(buffer, msg)
-        ser = buffer.getvalue()
-        LOG.log(DUMP_BYTES, "sending bytes: {}".format(ser.hex()))
-        header = struct.pack(">HL", mapping.get_type(msg), len(ser))
+    def write(self, message_type: int, message_data: bytes) -> None:
+        header = struct.pack(">HL", message_type, len(message_data))
+        self.handle.write_buf(header + message_data)
 
-        self.handle.write_buf(header + ser)
-
-    def read(self) -> protobuf.MessageType:
+    def read(self) -> MessagePayload:
         data = self.handle.read_buf()
         headerlen = struct.calcsize(">HL")
         msg_type, datalen = struct.unpack(">HL", data[:headerlen])
-        ser = data[headerlen : headerlen + datalen]
-        LOG.log(DUMP_BYTES, "received bytes: {}".format(ser.hex()))
-        buffer = BytesIO(ser)
-        msg = protobuf.load_message(buffer, mapping.get_class(msg_type))
-        LOG.debug(
-            "received message: {}".format(msg.__class__.__name__),
-            extra={"protobuf": msg},
-        )
-        return msg
+        return msg_type, data[headerlen : headerlen + datalen]

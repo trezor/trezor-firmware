@@ -21,7 +21,8 @@ import warnings
 
 from mnemonic import Mnemonic
 
-from . import MINIMUM_FIRMWARE_VERSION, exceptions, messages, tools
+from . import MINIMUM_FIRMWARE_VERSION, exceptions, mapping, messages, tools
+from .log import DUMP_BYTES
 from .messages import Capability
 
 if sys.version_info.major < 3:
@@ -114,11 +115,34 @@ class TrezorClient:
 
     def _raw_write(self, msg):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-        self.transport.write(msg)
+        LOG.debug(
+            "sending message: {}".format(msg.__class__.__name__),
+            extra={"protobuf": msg},
+        )
+        msg_type, msg_bytes = mapping.encode(msg)
+        LOG.log(
+            DUMP_BYTES,
+            "encoded as type {} ({} bytes): {}".format(
+                msg_type, len(msg_bytes), msg_bytes.hex()
+            ),
+        )
+        self.transport.write(msg_type, msg_bytes)
 
     def _raw_read(self):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-        return self.transport.read()
+        msg_type, msg_bytes = self.transport.read()
+        LOG.log(
+            DUMP_BYTES,
+            "received type {} ({} bytes): {}".format(
+                msg_type, len(msg_bytes), msg_bytes.hex()
+            ),
+        )
+        msg = mapping.decode(msg_type, msg_bytes)
+        LOG.debug(
+            "received message: {}".format(msg.__class__.__name__),
+            extra={"protobuf": msg},
+        )
+        return msg
 
     def _callback_pin(self, msg):
         try:

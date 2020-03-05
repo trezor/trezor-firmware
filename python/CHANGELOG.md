@@ -29,6 +29,8 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 - `get_default_client` respects `TREZOR_PATH` environment variable
 - UI callback `get_passphrase` has an additional argument `available_on_device`,
   indicating that the connected Trezor is capable of on-device entry
+- `Transport.write` and `read` method signatures changed to accept bytes instead of
+  protobuf messages
 
 ### Fixed
 

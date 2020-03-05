@@ -59,9 +59,9 @@ def test_cancel_message_via_initialize(client, message):
     resp = client.call_raw(message)
     assert isinstance(resp, m.ButtonRequest)
 
-    client.transport.write(m.ButtonAck())
-    client.transport.write(m.Initialize())
+    client._raw_write(m.ButtonAck())
+    client._raw_write(m.Initialize())
 
-    resp = client.transport.read()
+    resp = client._raw_read()
 
     assert isinstance(resp, m.Features)

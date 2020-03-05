@@ -69,10 +69,10 @@ class TestMsgRecoverydeviceT2:
 
         # Enter mnemonic words
         assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.MnemonicInput)
-        client.transport.write(proto.ButtonAck())
+        client._raw_write(proto.ButtonAck())
         for word in mnemonic:
             client.debug.input(word)
-        ret = client.transport.read()
+        ret = client._raw_read()
 
         # Confirm success
         assert isinstance(ret, proto.ButtonRequest)
@@ -125,10 +125,10 @@ class TestMsgRecoverydeviceT2:
 
         # Enter mnemonic words
         assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.MnemonicInput)
-        client.transport.write(proto.ButtonAck())
+        client._raw_write(proto.ButtonAck())
         for word in mnemonic:
             client.debug.input(word)
-        ret = client.transport.read()
+        ret = client._raw_read()
 
         # Confirm success
         assert isinstance(ret, proto.ButtonRequest)
