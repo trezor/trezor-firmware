@@ -127,12 +127,12 @@ async def request_sd_salt(
         await ensure_sdcard(ctx, ensure_filesystem=False)
         try:
             return storage.sd_salt.load_sd_salt()
-        except storage.sd_salt.WrongSdCard:
+        except (storage.sd_salt.WrongSdCard, fatfs.NoFilesystem):
             if not await _wrong_card_dialog(ctx):
                 raise SdCardUnavailable("Wrong SD card.")
         except OSError:
-            # Generic problem with loading the SD salt (either we could not read the
-            # file, or there is a staged salt which cannot be committed).
+            # Generic problem with loading the SD salt (hardware problem, or we could
+            # not read the file, or there is a staged salt which cannot be committed).
             # In either case, there is no good way to recover. If the user clicks Retry,
             # we will try again.
             if not await sd_problem_dialog(ctx):
