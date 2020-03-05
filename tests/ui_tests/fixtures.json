@@ -371,7 +371,6 @@
 "test_multisig_change.py-test_multisig_external_external": "ddecdadd659b0d1360a6a255c6f9dbf2c5b813039877b76d4062ddab765e1912",
 "test_multisig_change.py-test_multisig_mismatch_change": "7cb243b20be31a587dced4aaaf782a2d8487595369dde66aacb1b9a76e89c4fe",
 "test_multisig_change.py-test_multisig_mismatch_inputs": "64741bd84c5394e719125c1fbe8c34ef866ac63ca24ee1299e4268c59a199466",
-"test_op_return.py-test_nonzero_opreturn": "826099ec3e22bd113fac1bc6f4b22e362673a730ad6838a8894b52541837141c",
 "test_op_return.py-test_opreturn": "87907ef9c2f4ce30ac95ad7d0cb3eac66762756e4ace52147bc589d64277f3b1",
 "test_passphrase_slip39_advanced.py::test_128bit_passphrase": "69b6b8b22c819e1282d7d2c14b31bf8d015c81ac05fe034540dbb11c8a20dbdb",
 "test_passphrase_slip39_advanced.py::test_256bit_passphrase": "69b6b8b22c819e1282d7d2c14b31bf8d015c81ac05fe034540dbb11c8a20dbdb",

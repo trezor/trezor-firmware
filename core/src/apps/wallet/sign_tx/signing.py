@@ -706,6 +706,10 @@ def output_derive_script(
             raise SigningError(
                 FailureType.DataError, "OP_RETURN output with non-zero amount"
             )
+        if o.address or o.address_n or o.multisig:
+            raise SigningError(
+                FailureType.DataError, "OP_RETURN output with address or multisig"
+            )
         return scripts.output_script_paytoopreturn(o.op_return_data)
 
     if o.address_n:
