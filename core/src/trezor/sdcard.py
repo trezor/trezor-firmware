@@ -6,6 +6,11 @@ if False:
     T = TypeVar("T", bound=Callable)
 
 
+class NoFilesystem(OSError):
+    def __init__(self) -> None:
+        super().__init__(fatfs.FR_NO_FILESYSTEM)
+
+
 class FilesystemWrapper:
     _INSTANCE = None  # type: Optional[FilesystemWrapper]
 
@@ -26,13 +31,24 @@ class FilesystemWrapper:
         sdcard.power_off()
         FilesystemWrapper._INSTANCE = None
 
+    def _try_mount(self) -> None:
+        """Try to mount filesystem, raise appropriate exception."""
+        if not self.mounted:
+            return
+        try:
+            fatfs.mount()
+        except OSError as e:
+            if e.args[0] == fatfs.FR_NO_FILESYSTEM:
+                raise NoFilesystem()
+            else:
+                raise
+
     def __enter__(self) -> None:
         try:
             if self.counter <= 0:
                 self.counter = 0
                 sdcard.power_on()
-                if self.mounted:
-                    fatfs.mount()
+                self._try_mount()
             self.counter += 1
         except Exception:
             self._deinit_instance()
