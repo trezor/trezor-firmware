@@ -33,6 +33,7 @@ script:
     - pipenv run make style_check
     - pipenv run make defs_check
     - pipenv run make gen_check
+    - ci/check_fixup.sh
 
 notifications:
     webhooks:
