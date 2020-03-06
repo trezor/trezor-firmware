@@ -790,6 +790,13 @@ def output_is_change(
     segwit_in: int,
     multifp: multisig.MultisigFingerprint,
 ) -> bool:
+    if o.script_type not in (
+        OutputScriptType.PAYTOADDRESS,
+        OutputScriptType.PAYTOMULTISIG,
+        OutputScriptType.PAYTOWITNESS,
+        OutputScriptType.PAYTOP2SHWITNESS,
+    ):
+        return False
     if o.multisig and not multifp.matches(o.multisig):
         return False
     if output_is_segwit(o) and o.amount > segwit_in:

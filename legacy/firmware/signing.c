@@ -696,6 +696,13 @@ static bool signing_check_output(TxOutputType *txoutput) {
     }
   }
 
+  if ((txoutput->script_type != OutputScriptType_PAYTOADDRESS) &&
+      (txoutput->script_type != OutputScriptType_PAYTOMULTISIG) &&
+      (txoutput->script_type != OutputScriptType_PAYTOWITNESS) &&
+      (txoutput->script_type != OutputScriptType_PAYTOP2SHWITNESS)) {
+    is_change = false;
+  }
+
   if (is_change) {
     if (change_spend == 0) {  // not set
       change_spend = txoutput->amount;
