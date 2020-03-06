@@ -301,3 +301,115 @@ class TestMultisig:
 
         assert exc.value.args[0] == proto.FailureType.DataError
         assert exc.value.args[1].endswith("Pubkey not found in multisig script")
+
+    def test_attack_change_input(self, client):
+        """
+        In this attack scenario we replace the first input sent to the device
+        with `input_fake`, which differs from `input_real` only in a multisig
+        definition. If this input is later replaced with `input_real` error
+        must occur.
+        """
+        address_n = parse_path("48'/1'/0'/0/0")
+        attacker_multisig_public_key = bytes.fromhex(
+            "03653a148b68584acb97947344a7d4fd6a6f8b8485cad12987ff8edac874268088"
+        )
+
+        input_real = proto.TxInputType(
+            address_n=address_n,
+            prev_hash=bytes.fromhex(
+                "fbbff7f3c85f8067453d7c062bd5efb8ad839953376ae5eceaf92774102c6e39"
+            ),
+            prev_index=1,
+            script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+            amount=1000000,
+        )
+
+        multisig = proto.MultisigRedeemScriptType(
+            m=1,
+            nodes=[
+                btc.get_public_node(client, address_n).node,
+                proto.HDNodeType(
+                    depth=0,
+                    fingerprint=0,
+                    child_num=0,
+                    chain_code=bytes(32),
+                    public_key=attacker_multisig_public_key,
+                ),
+            ],
+            address_n=[],
+        )
+
+        input_fake = proto.TxInputType(
+            address_n=address_n,
+            prev_hash=input_real.prev_hash,
+            prev_index=input_real.prev_index,
+            script_type=input_real.script_type,
+            multisig=multisig,
+            amount=input_real.amount,
+        )
+
+        output_payee = proto.TxOutputType(
+            address="n2eMqTT929pb1RDNuqEnxdaLau1rxy3efi",
+            amount=1000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        output_change = proto.TxOutputType(
+            address_n=address_n,
+            amount=input_real.amount - output_payee.amount - 1000,
+            script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
+            multisig=multisig,
+        )
+
+        run_attack = True
+
+        def attack_processor(msg):
+            nonlocal run_attack
+            # replace the first input_real with input_fake
+            if run_attack and msg.tx.inputs and msg.tx.inputs[0] == input_real:
+                msg.tx.inputs[0] = input_fake
+                run_attack = False
+            return msg
+
+        client.set_filter(proto.TxAck, attack_processor)
+        with client:
+            client.set_expected_responses(
+                [
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXINPUT,
+                        details=proto.TxRequestDetailsType(request_index=0),
+                    ),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXOUTPUT,
+                        details=proto.TxRequestDetailsType(request_index=0),
+                    ),
+                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXOUTPUT,
+                        details=proto.TxRequestDetailsType(request_index=1),
+                    ),
+                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+                    proto.TxRequest(
+                        request_type=proto.RequestType.TXINPUT,
+                        details=proto.TxRequestDetailsType(request_index=0),
+                    ),
+                    proto.Failure(code=proto.FailureType.ProcessError),
+                ]
+            )
+
+            with pytest.raises(CallException) as exc:
+                btc.sign_tx(
+                    client, "Testnet", [input_real], [output_payee, output_change]
+                )
+                # must not produce this tx:
+                # 01000000000101396e2c107427f9eaece56a37539983adb8efd52b067c3d4567805fc8f3f7bffb01000000171600147a876a07b366f79000b441335f2907f777a0280bffffffff02e8030000000000001976a914e7c1345fc8f87c68170b3aa798a956c2fe6a9eff88ac703a0f000000000017a914a1261837f1b40e84346b1504ffe294e402965f2687024830450221009ff835e861be4e36ca1f2b6224aee2f253dfb9f456b13e4b1724bb4aaff4c9c802205e10679c2ead85743119f468cba5661f68b7da84dd2d477a7215fef98516f1f9012102af12ddd0d55e4fa2fcd084148eaf5b0b641320d0431d63d1e9a90f3cbd0d540700000000
+
+            if client.features.model == "1":
+                assert exc.value.args[0] == proto.FailureType.ProcessError
+                assert exc.value.args[1].endswith("Failed to compile input")
+            else:
+                # TODO
+                assert exc.value.args[0] == proto.FailureType.DataError
+                assert exc.value.args[1].endswith(
+                    "OP_RETURN output with non-zero amount"
+                )
