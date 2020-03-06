@@ -236,4 +236,9 @@ class TestOpReturn:
                 )
 
             assert exc.value.args[0] == proto.FailureType.DataError
-            assert exc.value.args[1] == "OP_RETURN output with address or multisig"
+            if client.features.model == "1":
+                assert exc.value.args[1].endswith(
+                    "OP_RETURN output with address or multisig"
+                )
+            else:
+                assert exc.value.args[1] == "OP_RETURN output with address or multisig"

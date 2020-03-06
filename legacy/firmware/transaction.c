@@ -199,7 +199,8 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in,
 
   if (in->script_type == OutputScriptType_PAYTOOPRETURN) {
     // only 0 satoshi allowed for OP_RETURN
-    if (in->amount != 0) {
+    if (in->amount != 0 || in->has_address || (in->address_n_count > 0) ||
+        in->has_multisig) {
       return 0;  // failed to compile output
     }
     if (needs_confirm) {

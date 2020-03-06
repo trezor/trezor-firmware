@@ -652,6 +652,15 @@ static bool signing_check_output(TxOutputType *txoutput) {
   //   add it to hash_outputs
   //   ask user for permission
 
+  if (txoutput->script_type == OutputScriptType_PAYTOOPRETURN) {
+    if (txoutput->has_address || (txoutput->address_n_count > 0) ||
+        txoutput->has_multisig) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("OP_RETURN output with address or multisig"));
+      signing_abort();
+      return false;
+    }
+  }
   // check for change address
   bool is_change = false;
   if (txoutput->address_n_count > 0) {
