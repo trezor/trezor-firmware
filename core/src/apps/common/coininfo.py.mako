@@ -30,6 +30,8 @@ class CoinInfo:
         decred: bool,
         negative_fee: bool,
         curve_name: str,
+        extra_data: bool,
+        timestamp: bool,
         confidential_assets: dict,
     ):
         self.coin_name = coin_name
@@ -52,6 +54,8 @@ class CoinInfo:
         self.decred = decred
         self.negative_fee = negative_fee
         self.curve_name = curve_name
+        self.extra_data = extra_data
+        self.timestamp = timestamp
         self.confidential_assets = confidential_assets
         if curve_name == "secp256k1-groestl":
             self.b58_hash = groestl512d_32
@@ -110,6 +114,8 @@ ATTRIBUTES = (
     ("decred", bool),
     ("negative_fee", bool),
     ("curve_name", lambda r: repr(r.replace("_", "-"))),
+    ("extra_data", bool),
+    ("timestamp", bool),
     ("confidential_assets", optional_dict),
 )
 

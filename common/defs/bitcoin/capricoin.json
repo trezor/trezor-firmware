@@ -46,5 +46,7 @@
   "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": null,
+  "extra_data": false,
+  "timestamp": true,
   "confidential_assets": null
 }
