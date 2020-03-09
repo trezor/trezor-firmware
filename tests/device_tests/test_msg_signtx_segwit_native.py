@@ -395,6 +395,43 @@ class TestMsgSigntxSegwitNative:
             == "010000000001028a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090100000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff7b010c5faeb41cc5c253121b6bf69bf1a7c5867cd7f2d91569fea0ecd311b8650100000000ffffffff03e0aebb0000000000160014a579388225827d9f2fe9014add644487808c695d00cdb7020000000017a91491233e24a9bf8dbb19c1187ad876a9380c12e787870d859b03000000001976a914a579388225827d9f2fe9014add644487808c695d88ac02483045022100ead79ee134f25bb585b48aee6284a4bb14e07f03cc130253e83450d095515e5202201e161e9402c8b26b666f2b67e5b668a404ef7e57858ae9a6a68c3837e65fdc69012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7902463043021f585c54a84dc7326fa60e22729accd41153c7dd4725bd4c8f751aa3a8cd8d6a0220631bfd83fc312cc6d5d129572a25178696d81eaf50c8c3f16c6121be4f4c029d012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f00000000"
         )
 
+    def test_send_mixed_inputs(self, client):
+        # First is non-segwit, second is segwit.
+
+        inp1 = proto.TxInputType(
+            address_n=parse_path("44'/1'/0'/0/0"),
+            # amount=31000000,
+            prev_hash=bytes.fromhex(
+                "e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd"
+            ),
+            prev_index=0,
+        )
+
+        inp2 = proto.TxInputType(
+            address_n=parse_path("84'/1'/0'/1/0"),
+            amount=7289000,
+            prev_hash=bytes.fromhex(
+                "65b811d3eca0fe6915d9f2d77c86c5a7f19bf66b1b1253c2c51cb4ae5f0c017b"
+            ),
+            prev_index=1,
+            script_type=proto.InputScriptType.SPENDWITNESS,
+        )
+        out1 = proto.TxOutputType(
+            address="tb1q54un3q39sf7e7tlfq99d6ezys7qgc62a6rxllc",
+            amount=31000000 + 7289000 - 1000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        with client:
+            _, serialized_tx = btc.sign_tx(
+                client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API
+            )
+
+        assert (
+            serialized_tx.hex()
+            == "01000000000102cd3b93f5b24ae190ce5141235091cd93fbb2908e24e5b9ff6776aec11b0e04e5000000006b483045022100b9b1002dfaa8aa6e658e37726dc526f145bac3715a933d40f8dacadff2cede560220197691c6bfc55ff260f5a48e9e94d9db73aff0400d79600f8ca63b7c0c7b37010121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffff7b010c5faeb41cc5c253121b6bf69bf1a7c5867cd7f2d91569fea0ecd311b8650100000000ffffffff01803a480200000000160014a579388225827d9f2fe9014add644487808c695d0002473044022013dd59fb2e22da981a528b155e25e3ce360001c275408ea649b34cd51b509e68022030febb79bbb3e75263cdb68d9b9e08ab0ebe85d1986eb4fa5ce2f668b40a2a2c012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f00000000"
+        )
+
     @pytest.mark.multisig
     def test_send_multisig_1(self, client):
         nodes = [
