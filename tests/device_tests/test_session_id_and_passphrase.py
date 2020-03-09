@@ -90,7 +90,6 @@ def test_session_with_passphrase(client):
 
 
 @pytest.mark.skip_ui
-@pytest.mark.timeout(300)
 @pytest.mark.setup_client(passphrase=True)
 def test_multiple_sessions(client):
     # start SESSIONS_STORED sessions
@@ -165,7 +164,6 @@ def test_multiple_passphrases(client):
 
 
 @pytest.mark.skip_ui
-@pytest.mark.timeout(600)
 @pytest.mark.slow
 @pytest.mark.setup_client(passphrase=True)
 def test_max_sessions_with_passphrases(client):

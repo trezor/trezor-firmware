@@ -112,7 +112,7 @@ def test_reset_slip39_advanced_2of2groups_2of2shares(device_handler):
 
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.timeout(600)
+@pytest.mark.slow
 @with_mock_urandom
 def test_reset_slip39_advanced_16of16groups_16of16shares(device_handler):
     features = device_handler.features()
