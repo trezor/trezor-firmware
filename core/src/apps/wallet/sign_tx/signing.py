@@ -81,7 +81,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
     else:
         hash143 = segwit_bip143.Bip143()  # BIP-0143 transaction hashing
 
-    multifp = multisig.MultisigFingerprint()  # control checksum of multisig inputs
+    multisig_fp = multisig.MultisigFingerprint()  # control checksum of multisig inputs
     weight = tx_weight.TxWeightCalculator(tx.inputs_count, tx.outputs_count)
 
     total_in = 0  # sum of input amounts
@@ -110,9 +110,9 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
             await helpers.confirm_foreign_address(txi.address_n)
 
         if txi.multisig:
-            multifp.add(txi.multisig)
+            multisig_fp.add(txi.multisig)
         else:
-            multifp.mismatch = True
+            multisig_fp.mismatch = True
 
         if txi.script_type in (
             InputScriptType.SPENDWITNESS,
@@ -168,7 +168,9 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
         txo_bin.script_pubkey = output_derive_script(txo, coin, keychain)
         weight.add_output(txo_bin.script_pubkey)
 
-        if change_out == 0 and output_is_change(txo, wallet_path, segwit_in, multifp):
+        if change_out == 0 and output_is_change(
+            txo, wallet_path, segwit_in, multisig_fp
+        ):
             # output is change and does not need confirmation
             change_out = txo.amount
         elif not await helpers.confirm_output(txo, coin):
@@ -219,7 +221,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
     if not utils.BITCOIN_ONLY and coin.decred:
         hash143.add_locktime_expiry(tx)
 
-    return h_first, hash143, segwit, total_in, wallet_path
+    return h_first, hash143, segwit, total_in, wallet_path, multisig_fp
 
 
 async def sign_tx(tx: SignTx, keychain: seed.Keychain):
@@ -229,9 +231,14 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
 
     # Phase 1
 
-    h_first, hash143, segwit, authorized_in, wallet_path = await check_tx_fee(
-        tx, keychain
-    )
+    (
+        h_first,
+        hash143,
+        segwit,
+        authorized_in,
+        wallet_path,
+        multisig_fp,
+    ) = await check_tx_fee(tx, keychain)
 
     # Phase 2
     # - sign inputs
@@ -264,6 +271,8 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                     FailureType.ProcessError, "Transaction has changed during signing"
                 )
             input_check_wallet_path(txi_sign, wallet_path)
+            # NOTE: No need to check the multisig fingerprint, because we won't be signing
+            # the script here. Signatures are produced in STAGE_REQUEST_SEGWIT_WITNESS.
 
             key_sign = keychain.derive(txi_sign.address_n, coin.curve_name)
             key_sign_pub = key_sign.public_key()
@@ -284,6 +293,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             # STAGE_REQUEST_SEGWIT_INPUT
             txi_sign = await helpers.request_tx_input(tx_req, i_sign, coin)
             input_check_wallet_path(txi_sign, wallet_path)
+            input_check_multisig_fingerprint(txi_sign, multisig_fp)
 
             is_bip143 = (
                 txi_sign.script_type == InputScriptType.SPENDADDRESS
@@ -332,6 +342,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             txi_sign = await helpers.request_tx_input(tx_req, i_sign, coin)
 
             input_check_wallet_path(txi_sign, wallet_path)
+            input_check_multisig_fingerprint(txi_sign, multisig_fp)
 
             key_sign = keychain.derive(txi_sign.address_n, coin.curve_name)
             key_sign_pub = key_sign.public_key()
@@ -415,6 +426,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                 writers.write_tx_input_check(h_second, txi)
                 if i == i_sign:
                     txi_sign = txi
+                    input_check_multisig_fingerprint(txi_sign, multisig_fp)
                     key_sign = keychain.derive(txi.address_n, coin.curve_name)
                     key_sign_pub = key_sign.public_key()
                     # for the signing process the script_sig is equal
@@ -514,6 +526,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             # STAGE_REQUEST_SEGWIT_WITNESS
             txi = await helpers.request_tx_input(tx_req, i, coin)
             input_check_wallet_path(txi, wallet_path)
+            input_check_multisig_fingerprint(txi, multisig_fp)
 
             if not input_is_segwit(txi) or txi.amount > authorized_in:
                 raise SigningError(
@@ -758,11 +771,11 @@ def output_is_change(
     o: TxOutputType,
     wallet_path: list,
     segwit_in: int,
-    multifp: multisig.MultisigFingerprint,
+    multisig_fp: multisig.MultisigFingerprint,
 ) -> bool:
     if o.script_type not in helpers.CHANGE_OUTPUT_SCRIPT_TYPES:
         return False
-    if o.multisig and not multifp.matches(o.multisig):
+    if o.multisig and not multisig_fp.matches(o.multisig):
         return False
     if output_is_segwit(o) and o.amount > segwit_in:
         # if the output is segwit, make sure it doesn't spend more than what the
@@ -856,6 +869,18 @@ def input_check_wallet_path(txi: TxInputType, wallet_path: list) -> list:
         raise SigningError(
             FailureType.ProcessError, "Transaction has changed during signing"
         )
+
+
+def input_check_multisig_fingerprint(
+    txi: TxInputType, multisig_fp: multisig.MultisigFingerprint
+) -> None:
+    if multisig_fp.mismatch is False:
+        # All inputs in Phase 1 had matching multisig fingerprints, allowing a multisig change-output.
+        if not txi.multisig or not multisig_fp.matches(txi.multisig):
+            # This input no longer has a matching multisig fingerprint.
+            raise SigningError(
+                FailureType.ProcessError, "Transaction has changed during signing"
+            )
 
 
 def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
