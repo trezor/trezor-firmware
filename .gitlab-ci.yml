@@ -15,6 +15,9 @@ variables:
   # Run `make` in parallel
   MAKEFLAGS: "-j10"
 
+  # Apply timeout to pytest-based tests
+  PYTEST_TIMEOUT: "300"
+
   # Pipenv cache
   PIPENV_VENV_IN_PROJECT: "true"
   PIPENV_CACHE_DIR: ".cache/"
