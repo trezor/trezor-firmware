@@ -152,7 +152,8 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
         if not utils.BITCOIN_ONLY and coin.decred:
             w_txi = writers.empty_bytearray(8 if i == 0 else 0 + 9 + len(txi.prev_hash))
             if i == 0:  # serializing first input => prepend headers
-                writers.write_bytes(w_txi, get_tx_header(coin, tx))
+                # decred doesn't support segwit
+                writers.write_bytes(w_txi, get_tx_header(coin, tx, False))
             writers.write_tx_input_decred(w_txi, txi)
             tx_ser.serialized_tx = w_txi
             tx_req.serialized = tx_ser
@@ -236,6 +237,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
     # - sign inputs
     # - check that nothing changed
 
+    any_segwit = True in segwit.values()
     coin = coins.by_name(tx.coin_name)
     tx_ser = TxRequestSerializedType()
 
@@ -320,7 +322,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                 5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
             )
             if i_sign == 0:  # serializing first input => prepend headers
-                writers.write_bytes(w_txi_sign, get_tx_header(coin, tx))
+                writers.write_bytes(w_txi_sign, get_tx_header(coin, tx, any_segwit))
             writers.write_tx_input(w_txi_sign, txi_sign)
             tx_ser.serialized_tx = w_txi_sign
 
@@ -488,7 +490,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                 5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
             )
             if i_sign == 0:  # serializing first input => prepend headers
-                writers.write_bytes(w_txi_sign, get_tx_header(coin, tx))
+                writers.write_bytes(w_txi_sign, get_tx_header(coin, tx, any_segwit))
             writers.write_tx_input(w_txi_sign, txi_sign)
             tx_ser.serialized_tx = w_txi_sign
 
@@ -515,8 +517,6 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
         tx_ser.serialized_tx = w_txo_bin
 
         tx_req.serialized = tx_ser
-
-    any_segwit = True in segwit.values()
 
     for i in range(tx.inputs_count):
         progress.advance()
@@ -674,7 +674,7 @@ def get_hash_type(coin: coininfo.CoinInfo) -> int:
     return hashtype
 
 
-def get_tx_header(coin: coininfo.CoinInfo, tx: SignTx, segwit: bool = False):
+def get_tx_header(coin: coininfo.CoinInfo, tx: SignTx, segwit: bool):
     w_txi = bytearray()
     if not utils.BITCOIN_ONLY and tx.overwintered:
         writers.write_uint32(
