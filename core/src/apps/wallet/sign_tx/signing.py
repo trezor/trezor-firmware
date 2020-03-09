@@ -597,6 +597,11 @@ async def get_prevtx_output_value(
     # STAGE_REQUEST_2_PREV_META
     tx = await helpers.request_tx_meta(tx_req, prev_hash)
 
+    if tx.outputs_cnt <= prev_index:
+        raise SigningError(
+            FailureType.ProcessError, "Not enough outputs in previous transaction."
+        )
+
     if not utils.BITCOIN_ONLY and coin.decred:
         txh = utils.HashWriter(blake256())
     else:

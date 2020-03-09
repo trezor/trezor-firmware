@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages as proto
+from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, CallException, btc_hash, parse_path
 
 from ..common import MNEMONIC12
@@ -864,3 +865,31 @@ class TestMsgSigntx:
         )
 
         check_sign_tx(client, "Testnet", [inp1], [out1, out_change])
+
+    @pytest.mark.skip_ui
+    def test_not_enough_vouts(self, client):
+        cache = tx_cache("Bitcoin")
+        prev_tx = cache[TXHASH_157041]
+
+        # tx has two vouts
+        assert len(prev_tx.bin_outputs) == 2
+
+        # vout[0] and vout[1] exist
+        inp0 = proto.TxInputType(address_n=[0], prev_hash=TXHASH_157041, prev_index=0)
+        inp1 = proto.TxInputType(address_n=[0], prev_hash=TXHASH_157041, prev_index=1)
+        # vout[2] does not exist
+        inp2 = proto.TxInputType(address_n=[0], prev_hash=TXHASH_157041, prev_index=2)
+
+        # try to spend the sum of existing vouts
+        out1 = proto.TxOutputType(
+            address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
+            amount=220160000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        with pytest.raises(TrezorFailure) as e:
+            btc.sign_tx(client, "Bitcoin", [inp0, inp1, inp2], [out1], prev_txes=cache)
+
+        assert e.value.failure.message.endswith(
+            "Not enough outputs in previous transaction."
+        )
