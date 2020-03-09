@@ -29,9 +29,9 @@ extern volatile uint32_t system_millis;
 uint8_t ucTimeFlag;
 
 /*
- * delay time
+ * delay ms
  */
-void delay_time(uint32_t uiDelay_Ms) {
+void delay_ms(uint32_t uiDelay_Ms) {
   uint32_t uiTimeout = uiDelay_Ms * 30000;
   while (uiTimeout--) {
     __asm__("nop");

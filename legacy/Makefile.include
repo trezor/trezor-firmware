@@ -63,7 +63,6 @@ CFLAGS   += $(OPTFLAGS) \
             -fvisibility=internal \
             -ffunction-sections \
             -fdata-sections \
-            -fstack-protector-all \
             $(CPUFLAGS) \
             $(FPUFLAGS) \
             -DSTM32F2 \
@@ -136,7 +135,7 @@ CFLAGS += -DBITCOIN_ONLY=0
 CFLAGS += -DU2F_ENABLED=1
 endif
 
-ifneq ($(MEMORY_PROTECT), 0)
+ifeq ($(MEMORY_PROTECT), 0)
 CFLAGS   += -DMEMORY_PROTECT=0
 CPUFLAGS += -DMEMORY_PROTECT=0
 $(info MEMORY_PROTECT=0)
@@ -228,5 +227,6 @@ clean::
 	rm -f *.list
 	rm -f *.log
 	rm -f *.srec
+	rm -f *.map
 
 -include $(OBJS:.o=.d)

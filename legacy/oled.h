@@ -135,6 +135,5 @@ void oledSwipeLeft(void);
 void oledSwipeRight(void);
 void oledSCA(int y1, int y2, int val);
 void oledSCAInside(int y1, int y2, int val, int a, int b);
-void vDisp_PromptInfo(uint8_t ucIndex, bool ucMode);
 
 #endif

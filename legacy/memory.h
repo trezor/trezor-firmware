@@ -68,6 +68,7 @@ extern uint8_t *emulator_flash_base;
 #endif
 
 #define FLASH_TOTAL_SIZE (1024 * 1024)
+#define FALSH_BLE_BOOTW_SIZE (256 * 1024)  // sect 9 10 11
 
 #define FLASH_BOOT_START (FLASH_ORIGIN)
 #define FLASH_BOOT_LEN (0x8000)
@@ -88,7 +89,12 @@ extern uint8_t *emulator_flash_base;
 #define FLASH_STORAGE_SECTOR_LAST 3
 
 #define FLASH_CODE_SECTOR_FIRST 4
-#define FLASH_CODE_SECTOR_LAST 11
+#define FLASH_CODE_SECTOR_LAST 9
+#define FLASH_BLE_SECTOR_FIRST 10
+#define FLASH_BLE_SECTOR_LAST 11
+
+#define FLASH_BLE_SECTOR9_START (0x080A0000)
+#define FLASH_BLE_MAX_LEN (0x40000)
 
 void memory_protect(void);
 void memory_write_unlock(void);

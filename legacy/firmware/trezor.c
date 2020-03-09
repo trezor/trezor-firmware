@@ -147,15 +147,13 @@ int main(void) {
 #if EMULATOR
   g_ucWorkMode = WORK_MODE_USB;
 #endif
-
   config_init();
   layoutHome();
   usbInit();
 
   for (;;) {
     usbPoll();
-    // check_lock_screen();
-    vDISP_DeviceInfo();
+    layoutHomeInfo();
   }
 
   return 0;

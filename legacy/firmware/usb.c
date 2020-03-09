@@ -417,63 +417,6 @@ void usbInit(void) {
   winusb_setup(usbd_dev, USB_INTERFACE_INDEX_MAIN);
 }
 
-static void vBle_NFC_RX_Data(uint8_t *pucInputBuf) {
-  uint16_t i, usLen;
-  uint8_t ucCmd;
-
-  ucCmd = pucInputBuf[0];
-  usLen = (pucInputBuf[1] << 8) + (pucInputBuf[2] & 0xFF) - CRC_LEN;
-#if (_SUPPORT_DEBUG_UART_)
-  vUART_DebugInfo("\n\r vBle_NFC_RX_Data !\n\r", pucInputBuf, usLen + 3);
-#endif
-  switch (ucCmd) {
-    case APDU_TAG_BLE:
-      if (true == bBle_DisPlay(pucInputBuf[DATA_HEAD_LEN],
-                               pucInputBuf + DATA_HEAD_LEN + 1)) {
-        layoutHome();
-      }
-      break;
-    case APDU_TAG_BLE_NFC:
-      if (0x3F == pucInputBuf[DATA_HEAD_LEN]) {
-        for (i = 0; i < usLen / 64; i++) {
-          memcpy(s_ucPackAppRevBuf, pucInputBuf + DATA_HEAD_LEN + i * 64, 64);
-          main_rx_callback(NULL, 0);
-        }
-        if (usLen % 64) {
-          memcpy(s_ucPackAppRevBuf, pucInputBuf + DATA_HEAD_LEN + i * 64,
-                 usLen % 64);
-          main_rx_callback(NULL, 0);
-        }
-
-      } else {
-        g_usI2cRevLen = usLen;
-#if U2F_ENABLED
-        u2fhid_read_start(
-            (const U2FHID_FRAME *)(void *)(pucInputBuf + DATA_HEAD_LEN));
-#endif
-      }
-
-      break;
-    case APDU_TAG_BAT:
-      g_ucBatValue = pucInputBuf[DATA_HEAD_LEN];
-      s_ucPackAppRevBuf[0] = 0x90;
-      s_ucPackAppRevBuf[1] = 0x00;
-      vSI2CDRV_SendResponse(s_ucPackAppRevBuf, 2);
-      break;
-    case APDU_TAG_HANDSHAKE:
-      memcpy(g_ble_info.ucBle_Mac, pucInputBuf + DATA_HEAD_LEN, BLE_MAC_LEN);
-      memcpy(g_ble_info.ucBle_Version,
-             pucInputBuf + DATA_HEAD_LEN + BLE_MAC_LEN, 2);
-      g_ucBatValue = pucInputBuf[DATA_HEAD_LEN + BLE_MAC_LEN + 2];
-      memset(g_ble_info.ucBle_Name, 0x00, sizeof(g_ble_info.ucBle_Name));
-      vCalu_BleName(g_ble_info.ucBle_Mac, g_ble_info.ucBle_Name);
-      memcpy(s_ucPackAppRevBuf, g_ble_info.ucBle_Name, BLE_ADV_NAME_LEN);
-      vSI2CDRV_SendResponse(s_ucPackAppRevBuf, BLE_ADV_NAME_LEN);
-      break;
-    default:
-      break;
-  }
-}
 static void i2cSlaveRxData(uint8_t *pucInputBuf, uint32_t data_len) {
   uint16_t i;
   memset(s_ucPackAppRevBuf, 0x00, sizeof(s_ucPackAppRevBuf));
@@ -500,29 +443,6 @@ static void i2cSlaveRxData(uint8_t *pucInputBuf, uint32_t data_len) {
   }
 }
 
-void usb_ble_nfc_poll(void) {
-  uint16_t usLen;
-  if (WORK_MODE_USB == g_ucWorkMode) {
-    usbd_poll(usbd_dev);
-  } else {
-    if (msg_out_end) {
-      usLen = (msg_out_end * 64) & 0xFFFF;
-      vSI2CDRV_SendResponse(msg_out, usLen);
-      msg_out_end = 0;
-    }
-#if U2F_ENABLED
-    if (u2f_out_end) {
-      usLen = u2f_out_end & 0xFFFF;
-      vSI2CDRV_SendResponse(u2f_out_packets[0], usLen);
-      u2f_out_end = 0;
-    }
-#endif
-    memset(g_ucI2cRevBuf, 0x00, sizeof(g_ucI2cRevBuf));
-    if (true == bSI2CDRV_ReceiveData(g_ucI2cRevBuf)) {
-      vBle_NFC_RX_Data(g_ucI2cRevBuf);
-    }
-  }
-}
 void i2cSlavePoll(void) {
   uint32_t usLen;
   if (true == g_bI2cRevFlag) {

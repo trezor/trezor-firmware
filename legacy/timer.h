@@ -31,7 +31,7 @@ extern uint8_t ucTimeFlag;
 #define POWER_OFF_TIMER_CLEAR() (ucTimeFlag &= 0xFE)
 #define POWER_OFF_TIMER_READY() (ucTimeFlag & 0x01)
 
-void delay_time(uint32_t uiDelay_Ms);
+void delay_ms(uint32_t uiDelay_Ms);
 void delay_us(uint32_t uiDelay_us);
 
 void timer_init(void);

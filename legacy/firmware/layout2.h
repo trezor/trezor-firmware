@@ -99,6 +99,7 @@ void Disp_Page(const BITMAP *icon, const char *btnNo, const char *btnYes,
 
 void vDISP_TurnPageUP(void);
 void vDISP_TurnPageDOWN(void);
-void vDISP_DeviceInfo(void);
+void layoutHomeInfo(void);
+void vDisp_PromptInfo(uint8_t ucIndex, bool ucMode);
 
 #endif

@@ -29,6 +29,7 @@
 
 const uint32_t FIRMWARE_MAGIC_OLD = 0x525a5254;  // TRZR
 const uint32_t FIRMWARE_MAGIC_NEW = 0x465a5254;  // TRZF
+const uint32_t FIRMWARE_MAGIC_BLE = 0x33383235;  // 5283
 
 #define PUBKEYS 5
 

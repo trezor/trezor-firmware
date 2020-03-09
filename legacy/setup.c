@@ -147,7 +147,7 @@ void setup(void) {
 #if (_SUPPORT_DEBUG_UART_)
   usart_setup();
 #endif
-  vSI2CDRV_Init();
+  i2c_slave_init();
 }
 
 void setupApp(void) {
@@ -226,10 +226,10 @@ void mpu_config_bootloader(void) {
              MPU_RASR_ATTR_AP_PRW_URW;
 
   // Flash (0x8007FE0 - 0x08007FFF, 32 B, no-access)
-  // MPU_RBAR =
-  //  (FLASH_BASE + 0x7FE0) | MPU_RBAR_VALID | (1 << MPU_RBAR_REGION_LSB);
-  // MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH | MPU_RASR_SIZE_32B |
-  //         MPU_RASR_ATTR_AP_PNO_UNO;
+  MPU_RBAR =
+      (FLASH_BASE + 0x7FE0) | MPU_RBAR_VALID | (1 << MPU_RBAR_REGION_LSB);
+  MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH | MPU_RASR_SIZE_32B |
+             MPU_RASR_ATTR_AP_PNO_UNO;
 
   // SRAM (0x20000000 - 0x2001FFFF, read-write, execute never)
   MPU_RBAR = SRAM_BASE | MPU_RBAR_VALID | (2 << MPU_RBAR_REGION_LSB);
@@ -274,9 +274,9 @@ void mpu_config_firmware(void) {
              MPU_RASR_ATTR_AP_PRO_URO;
 
   // Metadata in Flash is read-write when unlocked
-  // (0x080C0000 - 0x080FFFFF, 256 KiB, read-write, execute never)
+  // (0x08008000 - 0x0800FFFF, 32 KiB, read-write, execute never)
   MPU_RBAR =
-      (0x080C0000 + 0x40000) | MPU_RBAR_VALID | (1 << MPU_RBAR_REGION_LSB);
+      (FLASH_BASE + 0x8000) | MPU_RBAR_VALID | (1 << MPU_RBAR_REGION_LSB);
   MPU_RASR = MPU_RASR_ENABLE | MPU_RASR_ATTR_FLASH | MPU_RASR_SIZE_32KB |
              MPU_RASR_ATTR_AP_PRW_URW | MPU_RASR_ATTR_XN;
 

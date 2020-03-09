@@ -63,14 +63,9 @@ bool bBle_DisPlay(uint8_t ucIndex, uint8_t *ucStr) {
       break;
   }
   oledRefresh();
-#if !EMULATOR
-  uint8_t ucSw[4];
-  ucSw[0] = 0x90;
-  ucSw[1] = 0x00;
-  vSI2CDRV_SendResponse(ucSw, 2);
-#endif
+
   if (0x00 == ucDelayFlag) {
-    delay_time(2000);
+    delay_ms(2000);
     return true;
   } else {
     return false;
@@ -79,7 +74,7 @@ bool bBle_DisPlay(uint8_t ucIndex, uint8_t *ucStr) {
 
 bool sys_nfcState(void) {
   if (get_nfc_state() == 0) {
-    delay_time(1);
+    delay_ms(1);
     if (get_nfc_state() == 0) {
       return true;
     }
@@ -88,7 +83,7 @@ bool sys_nfcState(void) {
 }
 bool sys_usbState(void) {
   if (get_usb_state()) {
-    delay_time(1);
+    delay_ms(1);
     if (get_usb_state()) {
       return true;
     }
@@ -100,7 +95,7 @@ void sys_shutdown(void) {
   oledClear();
   oledDrawStringCenter(64, 30, "power off ...", FONT_STANDARD);
   oledRefresh();
-  delay_time(500);
+  delay_ms(500);
   oledClear();
   oledRefresh();
   ble_power_off();
@@ -113,7 +108,7 @@ void sys_poweron(void) {
 
   while (1) {
     if (get_power_key_state()) {
-      delay_time(100);
+      delay_ms(100);
       count++;
       if (count > 5) {
         oledClear();

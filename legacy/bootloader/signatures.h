@@ -25,6 +25,7 @@
 
 extern const uint32_t FIRMWARE_MAGIC_OLD;  // TRZR
 extern const uint32_t FIRMWARE_MAGIC_NEW;  // TRZF
+extern const uint32_t FIRMWARE_MAGIC_BLE;  // 5283
 
 #define SIG_OK 0x5A3CA5C3
 #define SIG_FAIL 0x00000000

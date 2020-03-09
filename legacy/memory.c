@@ -56,7 +56,7 @@ void memory_protect(void) {
   //   Bits 3:2 BOR_LEV: BOR reset Level: BOR off
   //   Bit 1 OPTSTRT: Option start: ignored by flash_program_option_bytes
   //   Bit 0 OPTLOCK: Option lock: ignored by flash_program_option_bytes
-  flash_program_option_bytes(0x0FF0CCEC);
+  flash_program_option_bytes(0x0FFCCCEC);
   flash_lock_option_bytes();
 #endif
 }

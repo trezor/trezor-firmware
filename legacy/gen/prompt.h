@@ -2,6 +2,7 @@
 #define __PROMPT_H__
 
 #include <stdint.h>
+
 #include "bitmaps.h"
 
 extern const BITMAP bmp_battery;

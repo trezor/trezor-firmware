@@ -3,6 +3,8 @@ NAME  = bootloader
 OBJS += bootloader.o
 OBJS += signatures.o
 OBJS += usb.o
+OBJS += swd.o
+OBJS += updateble.o
 
 # overrides from libtrezor
 CFLAGS += -DFONT_SKIP_FIXED=1

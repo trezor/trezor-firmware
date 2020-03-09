@@ -34,6 +34,8 @@
 #include "secp256k1.h"
 #include "sha2.h"
 #include "signatures.h"
+#include "sys.h"
+#include "updateble.h"
 #include "usb.h"
 #include "util.h"
 
@@ -53,13 +55,15 @@ enum {
   STATE_END,
 };
 
+#define UPDATE_BLE 0x5A
+#define UPDATE_ST 0x55
 static uint32_t flash_pos = 0, flash_len = 0;
 static uint32_t chunk_idx = 0;
 static char flash_state = STATE_READY;
 
 static uint32_t FW_HEADER[FLASH_FWHEADER_LEN / sizeof(uint32_t)];
 static uint32_t FW_CHUNK[FW_CHUNK_SIZE / sizeof(uint32_t)];
-
+static uint8_t update_mode = 0;
 static void flash_enter(void) {
   flash_wait_for_last_operation();
   flash_clear_status_flags();
@@ -104,9 +108,15 @@ static void check_and_write_chunk(void) {
   flash_enter();
   for (uint32_t i = offset / sizeof(uint32_t); i < chunk_pos / sizeof(uint32_t);
        i++) {
-    flash_program_word(
-        FLASH_FWHEADER_START + chunk_idx * FW_CHUNK_SIZE + i * sizeof(uint32_t),
-        FW_CHUNK[i]);
+    if (UPDATE_ST == update_mode) {
+      flash_program_word(FLASH_FWHEADER_START + chunk_idx * FW_CHUNK_SIZE +
+                             i * sizeof(uint32_t),
+                         FW_CHUNK[i]);
+    } else {
+      flash_program_word(FLASH_BLE_SECTOR9_START + chunk_idx * FW_CHUNK_SIZE +
+                             i * sizeof(uint32_t),
+                         FW_CHUNK[i]);
+    }
   }
   flash_exit();
 
@@ -236,6 +246,23 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
           old_was_signed = SIG_FAIL;
         }
         erase_code_progress();
+        erase_ble_code_progress();
+        send_msg_success(dev);
+        flash_state = STATE_FLASHSTART;
+      } else {
+        send_msg_failure(dev);
+        flash_state = STATE_END;
+        show_unplug("Firmware installation", "aborted.");
+      }
+      return;
+    } else if (msg_id == 0x0002) {  // FirmwareErase message (id 2)
+      bool proceed = false;
+      layoutDialog(&bmp_icon_question, "Abort", "Continue", NULL, "Install ble",
+                   "firmware?", NULL, "Never do this without",
+                   "your recovery card!", NULL);
+      proceed = get_button_response();
+      if (proceed) {
+        erase_ble_code_progress();
         send_msg_success(dev);
         flash_state = STATE_FLASHSTART;
       } else {
@@ -264,26 +291,45 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         show_halt("Firmware is", "too big.");
         return;
       }
+
+      // check firmware magic
+      if ((memcmp(p, &FIRMWARE_MAGIC_NEW, 4) != 0) &&
+          (memcmp(p, &FIRMWARE_MAGIC_BLE, 4) != 0)) {
+        send_msg_failure(dev);
+        flash_state = STATE_END;
+        show_halt("Wrong firmware", "header.");
+        return;
+      }
+      if (memcmp(p, &FIRMWARE_MAGIC_NEW, 4) == 0) {
+        update_mode = UPDATE_ST;
+      } else {
+        update_mode = UPDATE_BLE;
+      }
+
       if (flash_len <= FLASH_FWHEADER_LEN) {  // firmware is too small
         send_msg_failure(dev);
         flash_state = STATE_END;
         show_halt("Firmware is", "too small.");
         return;
       }
-      if (flash_len >
-          FLASH_FWHEADER_LEN + FLASH_APP_LEN) {  // firmware is too big
-        send_msg_failure(dev);
-        flash_state = STATE_END;
-        show_halt("Firmware is", "too big.");
-        return;
+      if (UPDATE_ST == update_mode) {
+        if (flash_len >
+            FLASH_FWHEADER_LEN + FLASH_APP_LEN) {  // firmware is too big
+          send_msg_failure(dev);
+          flash_state = STATE_END;
+          show_halt("Firmware is", "too big");
+          return;
+        }
+      } else {
+        if (flash_len >
+            FLASH_FWHEADER_LEN + FLASH_BLE_MAX_LEN) {  // firmware is too big
+          send_msg_failure(dev);
+          flash_state = STATE_END;
+          show_halt("Firmware is", "too small.");
+          return;
+        }
       }
-      // check firmware magic
-      if (memcmp(p, &FIRMWARE_MAGIC_NEW, 4) != 0) {
-        send_msg_failure(dev);
-        flash_state = STATE_END;
-        show_halt("Wrong firmware", "header.");
-        return;
-      }
+
       memzero(FW_HEADER, sizeof(FW_HEADER));
       memzero(FW_CHUNK, sizeof(FW_CHUNK));
       flash_state = STATE_FLASHING;
@@ -375,57 +421,90 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
     } else {
       hash_check_ok = true;
     }
-
-    layoutProgress("INSTALLING ... Please wait", 1000);
-    // wipe storage if:
-    // 1) old firmware was unsigned or not present
-    // 2) signatures are not OK
-    // 3) hashes are not OK
-    if (SIG_OK != old_was_signed || SIG_OK != signatures_new_ok(hdr, NULL) ||
-        SIG_OK != check_firmware_hashes(hdr)) {
-      // erase storage
-      erase_storage();
-      // check erasure
-      uint8_t hash[32] = {0};
-      sha256_Raw(FLASH_PTR(FLASH_STORAGE_START), FLASH_STORAGE_LEN, hash);
-      if (memcmp(hash,
-                 "\x2d\x86\x4c\x0b\x78\x9a\x43\x21\x4e\xee\x85\x24\xd3\x18\x20"
-                 "\x75\x12\x5e\x5c\xa2\xcd\x52\x7f\x35\x82\xec\x87\xff\xd9\x40"
-                 "\x76\xbc",
-                 32) != 0) {
-        send_msg_failure(dev);
-        show_halt("Error installing", "firmware.");
-        return;
+    layoutProgress("Programing ... Please wait", 1000);
+    if (UPDATE_ST == update_mode) {
+      // wipe storage if:
+      // 1) old firmware was unsigned or not present
+      // 2) signatures are not OK
+      // 3) hashes are not OK
+      if (SIG_OK != old_was_signed || SIG_OK != signatures_new_ok(hdr, NULL) ||
+          SIG_OK != check_firmware_hashes(hdr)) {
+        // erase storage
+        erase_storage();
+        // check erasure
+        uint8_t hash[32] = {0};
+        sha256_Raw(FLASH_PTR(FLASH_STORAGE_START), FLASH_STORAGE_LEN, hash);
+        if (memcmp(
+                hash,
+                "\x2d\x86\x4c\x0b\x78\x9a\x43\x21\x4e\xee\x85\x24\xd3\x18\x20"
+                "\x75\x12\x5e\x5c\xa2\xcd\x52\x7f\x35\x82\xec\x87\xff\xd9\x40"
+                "\x76\xbc",
+                32) != 0) {
+          send_msg_failure(dev);
+          show_halt("Error installing", "firmware.");
+          return;
+        }
       }
-    }
 
-    flash_enter();
-    // write firmware header only when hash was confirmed
-    if (hash_check_ok) {
+      flash_enter();
+
+      // write firmware header only when hash was confirmed
+      if (hash_check_ok) {
+        for (size_t i = 0; i < FLASH_FWHEADER_LEN / sizeof(uint32_t); i++) {
+          flash_program_word(FLASH_FWHEADER_START + i * sizeof(uint32_t),
+                             FW_HEADER[i]);
+        }
+      } else {
+        for (size_t i = 0; i < FLASH_FWHEADER_LEN / sizeof(uint32_t); i++) {
+          flash_program_word(FLASH_FWHEADER_START + i * sizeof(uint32_t), 0);
+        }
+      }
+      flash_exit();
+
+      flash_state = STATE_END;
+      if (hash_check_ok) {
+        show_unplug("New firmware", "successfully installed.");
+        send_msg_success(dev);
+        shutdown();
+      } else {
+        layoutDialog(&bmp_icon_warning, NULL, NULL, NULL,
+                     "Firmware installation", "aborted.", NULL,
+                     "You need to repeat", "the procedure with",
+                     "the correct firmware.");
+        send_msg_failure(dev);
+        shutdown();
+      }
+      return;
+    } else {
+      flash_enter();
+      // write firmware header only when hash was confirmed
       for (size_t i = 0; i < FLASH_FWHEADER_LEN / sizeof(uint32_t); i++) {
-        flash_program_word(FLASH_FWHEADER_START + i * sizeof(uint32_t),
+        flash_program_word(FLASH_BLE_SECTOR9_START + i * sizeof(uint32_t),
                            FW_HEADER[i]);
       }
-    } else {
-      for (size_t i = 0; i < FLASH_FWHEADER_LEN / sizeof(uint32_t); i++) {
-        flash_program_word(FLASH_FWHEADER_START + i * sizeof(uint32_t), 0);
-      }
-    }
-    flash_exit();
+      flash_exit();
 
-    flash_state = STATE_END;
-    if (hash_check_ok) {
-      show_unplug("New firmware", "successfully installed.");
+      flash_state = STATE_END;
       send_msg_success(dev);
-      shutdown();
-    } else {
-      layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Firmware installation",
-                   "aborted.", NULL, "You need to repeat", "the procedure with",
-                   "the correct firmware.");
-      send_msg_failure(dev);
-      shutdown();
+
+      unsigned int uiBleLen = flash_len - FLASH_FWHEADER_LEN;
+      if (FALSE == bUBLE_UpdateBleFirmware(
+                       uiBleLen, FLASH_BLE_SECTOR9_START + FLASH_FWHEADER_LEN,
+                       ERASE_ALL)) {
+        layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "ble installation",
+                     "aborted.", NULL, "You need to repeat",
+                     "the procedure with", "the correct firmware.");
+        send_msg_failure(dev);
+        return;
+      }
+      // ble power rest
+      show_unplug("ble firmware", "successfully installed.");
+      ble_power_off();
+      delay_ms(10);
+      ble_power_on();
+      send_msg_success(dev);
+      return;
     }
-    return;
   }
 }
 

@@ -13,14 +13,10 @@
 #define GPIO_SI2C_SCL GPIO10  // GPIO6//
 #define GPIO_SI2C_SDA GPIO11  // GPIO7//
 
-// I2C addr
-#if (_SUPPORT_SOFTI2C_ > 0)
-#define SI2C_ADDR 0x90
-#else
 #define SI2C_ADDR 0x48  // 90
 #define SLAVE_READ 0x00
 #define SLAVE_WRITE 0x01
-#endif
+
 // repeat tag
 #define REPEAT_TAG 0x45
 #define DATA_HEAD_LEN 0x03
@@ -42,12 +38,8 @@ extern uint16_t g_usI2cRevLen;
 extern bool g_bI2cRevFlag;
 extern uint8_t s_ucSendDataBak[SI2C_BUF_MAX_LEN];
 extern uint32_t s_usSendLenBak;
-extern void vSI2CDRV_Init(void);
 
-extern uint8_t bSI2CDRV_ReceiveData(uint8_t *pucStr);
-
-extern void vSI2CDRV_SendResponse(uint8_t *pucStr, uint16_t usStrLen);
-
+void i2c_slave_init(void);
 void i2cSlaveResponse(uint8_t *pucStr, uint32_t usStrLen);
 
 #endif
