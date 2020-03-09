@@ -304,10 +304,10 @@ class TestMultisig:
 
     def test_attack_change_input(self, client):
         """
-        In this attack scenario we replace the first input sent to the device
-        with `input_fake`, which differs from `input_real` only in a multisig
-        definition. If this input is later replaced with `input_real` error
-        must occur.
+        In Phases 1 and 2 the attacker replaces a non-multisig input
+        `input_real` with a multisig input `input_fake`, which allows the
+        attacker to provide a 1-of-2 multisig change address. When `input_real`
+        is provided in the signing phase, an error must occur.
         """
         address_n = parse_path("48'/1'/0'/0/0")
         attacker_multisig_public_key = bytes.fromhex(
@@ -324,7 +324,7 @@ class TestMultisig:
             amount=1000000,
         )
 
-        multisig = proto.MultisigRedeemScriptType(
+        multisig_fake = proto.MultisigRedeemScriptType(
             m=1,
             nodes=[
                 btc.get_public_node(client, address_n).node,
@@ -344,7 +344,7 @@ class TestMultisig:
             prev_hash=input_real.prev_hash,
             prev_index=input_real.prev_index,
             script_type=input_real.script_type,
-            multisig=multisig,
+            multisig=multisig_fake,
             amount=input_real.amount,
         )
 
@@ -358,17 +358,17 @@ class TestMultisig:
             address_n=address_n,
             amount=input_real.amount - output_payee.amount - 1000,
             script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
-            multisig=multisig,
+            multisig=multisig_fake,
         )
 
-        run_attack = True
+        attack_count = 2
 
         def attack_processor(msg):
-            nonlocal run_attack
+            nonlocal attack_count
             # replace the first input_real with input_fake
-            if run_attack and msg.tx.inputs and msg.tx.inputs[0] == input_real:
+            if attack_count > 0 and msg.tx.inputs and msg.tx.inputs[0] == input_real:
                 msg.tx.inputs[0] = input_fake
-                run_attack = False
+                attack_count -= 1
             return msg
 
         client.set_filter(proto.TxAck, attack_processor)
@@ -393,6 +393,21 @@ class TestMultisig:
                         request_type=proto.RequestType.TXINPUT,
                         details=proto.TxRequestDetailsType(request_index=0),
                     ),
+                    proto.TxRequest(
+                        # serialized_tx: 01000000000101396e2c107427f9eaece56a37539983adb8efd52b067c3d4567805fc8f3f7bffb01000000232200200b5eada0e3bd4e52b831d6a14553e6f73a4387f1d3a19466af2850dedd74374effffffff
+                        request_type=proto.RequestType.TXOUTPUT,
+                        details=proto.TxRequestDetailsType(request_index=0),
+                    ),
+                    proto.TxRequest(
+                        # serialized_tx: 02e8030000000000001976a914e7c1345fc8f87c68170b3aa798a956c2fe6a9eff88ac
+                        request_type=proto.RequestType.TXOUTPUT,
+                        details=proto.TxRequestDetailsType(request_index=1),
+                    ),
+                    proto.TxRequest(
+                        # serialized_tx: 703a0f000000000017a914a1261837f1b40e84346b1504ffe294e402965f2687
+                        request_type=proto.RequestType.TXINPUT,
+                        details=proto.TxRequestDetailsType(request_index=0),
+                    ),
                     proto.Failure(code=proto.FailureType.ProcessError),
                 ]
             )
@@ -404,12 +419,10 @@ class TestMultisig:
                 # must not produce this tx:
                 # 01000000000101396e2c107427f9eaece56a37539983adb8efd52b067c3d4567805fc8f3f7bffb01000000171600147a876a07b366f79000b441335f2907f777a0280bffffffff02e8030000000000001976a914e7c1345fc8f87c68170b3aa798a956c2fe6a9eff88ac703a0f000000000017a914a1261837f1b40e84346b1504ffe294e402965f2687024830450221009ff835e861be4e36ca1f2b6224aee2f253dfb9f456b13e4b1724bb4aaff4c9c802205e10679c2ead85743119f468cba5661f68b7da84dd2d477a7215fef98516f1f9012102af12ddd0d55e4fa2fcd084148eaf5b0b641320d0431d63d1e9a90f3cbd0d540700000000
 
+            assert exc.value.args[0] == proto.FailureType.ProcessError
             if client.features.model == "1":
-                assert exc.value.args[0] == proto.FailureType.ProcessError
                 assert exc.value.args[1].endswith("Failed to compile input")
             else:
-                # TODO
-                assert exc.value.args[0] == proto.FailureType.DataError
                 assert exc.value.args[1].endswith(
-                    "OP_RETURN output with non-zero amount"
+                    "Transaction has changed during signing"
                 )
