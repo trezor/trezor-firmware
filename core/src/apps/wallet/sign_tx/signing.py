@@ -413,7 +413,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             h_second = utils.HashWriter(sha256())
 
             writers.write_uint32(h_sign, tx.version)  # nVersion
-            if tx.timestamp:
+            if not utils.BITCOIN_ONLY and coin.timestamp:
                 writers.write_uint32(h_sign, tx.timestamp)
 
             writers.write_varint(h_sign, tx.inputs_count)
@@ -615,7 +615,7 @@ async def get_prevtx_output_value(
         writers.write_uint32(txh, tx.version | decred.DECRED_SERIALIZE_NO_WITNESS)
     else:
         writers.write_uint32(txh, tx.version)  # nVersion
-        if tx.timestamp:
+        if not utils.BITCOIN_ONLY and coin.timestamp:
             writers.write_uint32(txh, tx.timestamp)
 
     writers.write_varint(txh, tx.inputs_cnt)
@@ -652,12 +652,13 @@ async def get_prevtx_output_value(
     if not utils.BITCOIN_ONLY and (coin.overwintered or coin.decred):
         writers.write_uint32(txh, tx.expiry)
 
-    ofs = 0
-    while ofs < tx.extra_data_len:
-        size = min(1024, tx.extra_data_len - ofs)
-        data = await helpers.request_tx_extra_data(tx_req, ofs, size, prev_hash)
-        writers.write_bytes(txh, data)
-        ofs += len(data)
+    if not utils.BITCOIN_ONLY and coin.extra_data:
+        ofs = 0
+        while ofs < tx.extra_data_len:
+            size = min(1024, tx.extra_data_len - ofs)
+            data = await helpers.request_tx_extra_data(tx_req, ofs, size, prev_hash)
+            writers.write_bytes(txh, data)
+            ofs += len(data)
 
     if (
         writers.get_tx_hash(txh, double=coin.sign_hash_double, reverse=True)
@@ -690,7 +691,7 @@ def get_tx_header(coin: coininfo.CoinInfo, tx: SignTx, segwit: bool):
         writers.write_uint32(w_txi, tx.version_group_id)  # nVersionGroupId
     else:
         writers.write_uint32(w_txi, tx.version)  # nVersion
-        if tx.timestamp:
+        if not utils.BITCOIN_ONLY and coin.timestamp:
             writers.write_uint32(w_txi, tx.timestamp)
     if segwit:
         writers.write_varint(w_txi, 0x00)  # segwit witness marker

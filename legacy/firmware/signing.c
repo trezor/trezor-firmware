@@ -41,7 +41,9 @@ enum {
   STAGE_REQUEST_2_PREV_META,
   STAGE_REQUEST_2_PREV_INPUT,
   STAGE_REQUEST_2_PREV_OUTPUT,
+#if !BITCOIN_ONLY
   STAGE_REQUEST_2_PREV_EXTRADATA,
+#endif
   STAGE_REQUEST_3_OUTPUT,
   STAGE_REQUEST_4_INPUT,
   STAGE_REQUEST_4_OUTPUT,
@@ -268,6 +270,8 @@ void send_req_2_prev_output(void) {
   msg_write(MessageType_MessageType_TxRequest, &resp);
 }
 
+#if !BITCOIN_ONLY
+
 void send_req_2_prev_extradata(uint32_t chunk_offset, uint32_t chunk_len) {
   signing_stage = STAGE_REQUEST_2_PREV_EXTRADATA;
   resp.has_request_type = true;
@@ -283,6 +287,8 @@ void send_req_2_prev_extradata(uint32_t chunk_offset, uint32_t chunk_len) {
          resp.details.tx_hash.size);
   msg_write(MessageType_MessageType_TxRequest, &resp);
 }
+
+#endif
 
 void send_req_3_output(void) {
   signing_stage = STAGE_REQUEST_3_OUTPUT;
@@ -483,21 +489,26 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   memcpy(&root, _root, sizeof(HDNode));
   version = msg->version;
   lock_time = msg->lock_time;
-  expiry = msg->expiry;
 #if !BITCOIN_ONLY
-  version_group_id = msg->version_group_id;
-  timestamp = msg->timestamp;
-  branch_id = msg->branch_id;
-  // set default values for Zcash if branch_id is unset
-  if (coin->overwintered && (branch_id == 0)) {
-    switch (version) {
-      case 3:
-        branch_id = 0x5BA81B19;  // Overwinter
-        break;
-      case 4:
-        branch_id = 0x76B809BB;  // Sapling
-        break;
+  expiry = (coin->decred || coin->overwintered) ? msg->expiry : 0;
+  timestamp = coin->timestamp ? msg->timestamp : 0;
+  if (coin->overwintered) {
+    version_group_id = msg->version_group_id;
+    branch_id = msg->branch_id;
+    if (branch_id == 0) {
+      // set default values for Zcash if branch_id is unset
+      switch (version) {
+        case 3:
+          branch_id = 0x5BA81B19;  // Overwinter
+          break;
+        case 4:
+          branch_id = 0x76B809BB;  // Sapling
+          break;
+      }
     }
+  } else {
+    version_group_id = 0;
+    branch_id = 0;
   }
 #endif
 
@@ -1221,6 +1232,24 @@ void signing_txack(TransactionType *tx) {
         signing_abort();
         return;
       }
+      if (!coin->extra_data && tx->extra_data_len > 0) {
+        fsm_sendFailure(FailureType_Failure_DataError,
+                        _("Extra data not enabled on this coin."));
+        signing_abort();
+        return;
+      }
+      if (!coin->decred && !coin->overwintered && tx->has_expiry) {
+        fsm_sendFailure(FailureType_Failure_DataError,
+                        _("Expiry not enabled on this coin."));
+        signing_abort();
+        return;
+      }
+      if (!coin->timestamp && tx->has_timestamp) {
+        fsm_sendFailure(FailureType_Failure_DataError,
+                        _("Timestamp not enabled on this coin."));
+        signing_abort();
+        return;
+      }
       if (tx->inputs_cnt + tx->outputs_cnt < tx->inputs_cnt) {
         fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
         signing_abort();
@@ -1292,14 +1321,17 @@ void signing_txack(TransactionType *tx) {
         /* Check prevtx of next input */
         idx2++;
         send_req_2_prev_output();
-      } else if (tp.extra_data_len > 0) {  // has extra data
+#if !BITCOIN_ONLY
+      } else if (coin->extra_data && tp.extra_data_len > 0) {  // has extra data
         send_req_2_prev_extradata(0, MIN(1024, tp.extra_data_len));
         return;
+#endif
       } else {
         /* prevtx is done */
         signing_check_prevtx_hash();
       }
       return;
+#if !BITCOIN_ONLY
     case STAGE_REQUEST_2_PREV_EXTRADATA:
       if (!tx_serialize_extra_data_hash(&tp, tx->extra_data.bytes,
                                         tx->extra_data.size)) {
@@ -1317,6 +1349,7 @@ void signing_txack(TransactionType *tx) {
         signing_check_prevtx_hash();
       }
       return;
+#endif
     case STAGE_REQUEST_3_OUTPUT:
       if (!signing_check_output(&tx->outputs[0])) {
         return;

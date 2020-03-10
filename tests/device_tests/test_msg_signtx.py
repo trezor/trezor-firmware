@@ -893,3 +893,44 @@ class TestMsgSigntx:
         assert e.value.failure.message.endswith(
             "Not enough outputs in previous transaction."
         )
+
+    @pytest.mark.parametrize(
+        "field, value",
+        (("extra_data", b"hello world"), ("expiry", 9), ("timestamp", 42)),
+    )
+    @pytest.mark.skip_ui
+    def test_prevtx_forbidden_fields(self, client, field, value):
+        cache = tx_cache("Bitcoin")
+        inp0 = proto.TxInputType(address_n=[0], prev_hash=TXHASH_157041, prev_index=0)
+        out1 = proto.TxOutputType(
+            address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
+            amount=1000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        prev_tx = cache[TXHASH_157041]
+        setattr(prev_tx, field, value)
+        with pytest.raises(TrezorFailure) as e:
+            btc.sign_tx(
+                client, "Bitcoin", [inp0], [out1], prev_txes={TXHASH_157041: prev_tx}
+            )
+        name = field[0].upper() + field[1:].replace("_", " ")
+        assert e.value.failure.message.endswith(name + " not enabled on this coin.")
+
+    @pytest.mark.parametrize("field, value", (("expiry", 9), ("timestamp", 42)))
+    @pytest.mark.skip_ui
+    def test_signtx_forbidden_fields(self, client, field, value):
+        cache = tx_cache("Bitcoin")
+        inp0 = proto.TxInputType(address_n=[0], prev_hash=TXHASH_157041, prev_index=0)
+        out1 = proto.TxOutputType(
+            address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
+            amount=1000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        details = proto.SignTx()
+        setattr(details, field, value)
+        with pytest.raises(TrezorFailure) as e:
+            btc.sign_tx(client, "Bitcoin", [inp0], [out1], details, prev_txes=cache)
+        name = field[0].upper() + field[1:].replace("_", " ")
+        assert e.value.failure.message.endswith(name + " not enabled on this coin.")

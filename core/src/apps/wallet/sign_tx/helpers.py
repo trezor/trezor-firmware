@@ -171,8 +171,14 @@ def sanitize_sign_tx(tx: SignTx, coin: CoinInfo) -> SignTx:
     tx.inputs_count = tx.inputs_count if tx.inputs_count is not None else 0
     tx.outputs_count = tx.outputs_count if tx.outputs_count is not None else 0
     tx.coin_name = tx.coin_name if tx.coin_name is not None else "Bitcoin"
-    tx.expiry = tx.expiry if tx.expiry is not None else 0
-    tx.timestamp = tx.timestamp if tx.timestamp is not None else 0
+    if coin.decred or coin.overwintered:
+        tx.expiry = tx.expiry if tx.expiry is not None else 0
+    elif tx.expiry:
+        raise SigningError(FailureType.DataError, "Expiry not enabled on this coin.")
+    if coin.timestamp:
+        tx.timestamp = tx.timestamp if tx.timestamp is not None else 0
+    elif tx.timestamp:
+        raise SigningError(FailureType.DataError, "Timestamp not enabled on this coin.")
     return tx
 
 
@@ -181,9 +187,20 @@ def sanitize_tx_meta(tx: TransactionType, coin: CoinInfo) -> TransactionType:
     tx.lock_time = tx.lock_time if tx.lock_time is not None else 0
     tx.inputs_cnt = tx.inputs_cnt if tx.inputs_cnt is not None else 0
     tx.outputs_cnt = tx.outputs_cnt if tx.outputs_cnt is not None else 0
-    tx.extra_data_len = tx.extra_data_len if tx.extra_data_len is not None else 0
-    tx.expiry = tx.expiry if tx.expiry is not None else 0
-    tx.timestamp = tx.timestamp if tx.timestamp is not None else 0
+    if coin.extra_data:
+        tx.extra_data_len = tx.extra_data_len if tx.extra_data_len is not None else 0
+    elif tx.extra_data_len:
+        raise SigningError(
+            FailureType.DataError, "Extra data not enabled on this coin."
+        )
+    if coin.decred or coin.overwintered:
+        tx.expiry = tx.expiry if tx.expiry is not None else 0
+    elif tx.expiry:
+        raise SigningError(FailureType.DataError, "Expiry not enabled on this coin.")
+    if coin.timestamp:
+        tx.timestamp = tx.timestamp if tx.timestamp is not None else 0
+    elif tx.timestamp:
+        raise SigningError(FailureType.DataError, "Timestamp not enabled on this coin.")
     return tx
 
 

@@ -102,6 +102,12 @@ void fsm_msgSignTx(const SignTx *msg) {
 
   const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) return;
+
+  CHECK_PARAM((coin->decred || coin->overwintered) || !msg->has_expiry,
+              _("Expiry not enabled on this coin."))
+  CHECK_PARAM(coin->timestamp || !msg->has_timestamp,
+              _("Timestamp not enabled on this coin."))
+
   const HDNode *node = fsm_getDerivedNode(coin->curve_name, NULL, 0, NULL);
   if (!node) return;
 
