@@ -132,7 +132,7 @@ message SignTx {
     optional uint32 expiry = 6;                         // only for Decred and Zcash
     optional bool overwintered = 7;                     // only for Zcash
     optional uint32 version_group_id = 8;               // only for Zcash, nVersionGroupId when overwintered is set
-    optional uint32 timestamp = 9;                      // only for Capricoin, transaction timestamp
+    optional uint32 timestamp = 9;                      // only for Peercoin, Capricoin
     optional uint32 branch_id = 10;                     // only for Zcash, BRANCH_ID when overwintered is set
 }
 
@@ -163,8 +163,8 @@ message TxRequest {
     message TxRequestDetailsType {
         optional uint32 request_index = 1;      // device expects TxAck message from the computer
         optional bytes tx_hash = 2;             // tx_hash of requested transaction
-        optional uint32 extra_data_len = 3;     // length of requested extra data
-        optional uint32 extra_data_offset = 4;  // offset of requested extra data
+        optional uint32 extra_data_len = 3;     // length of requested extra data (only for Dash, Zcash)
+        optional uint32 extra_data_offset = 4;  // offset of requested extra data (only for Dash, Zcash)
     }
     /**
     * Structure representing serialized data
@@ -193,12 +193,12 @@ message TxAck {
         repeated TxOutputType outputs = 5;
         optional uint32 inputs_cnt = 6;
         optional uint32 outputs_cnt = 7;
-        optional bytes extra_data = 8;          // only for Zcash
-        optional uint32 extra_data_len = 9;     // only for Zcash
+        optional bytes extra_data = 8;          // only for Dash, Zcash
+        optional uint32 extra_data_len = 9;     // only for Dash, Zcash
         optional uint32 expiry = 10;            // only for Decred and Zcash
         optional bool overwintered = 11;        // only for Zcash
         optional uint32 version_group_id = 12;  // only for Zcash, nVersionGroupId when overwintered is set
-        optional uint32 timestamp = 13;         // only for Capricoin, transaction timestamp
+        optional uint32 timestamp = 13;         // only for Peercoin, Capricoin
         optional uint32 branch_id = 14;         // only for Zcash, BRANCH_ID when overwintered is set
         /**
         * Structure representing transaction input
