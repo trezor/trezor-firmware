@@ -1,6 +1,6 @@
 import gc
 
-from trezor.messages import InputScriptType
+from trezor.messages import FailureType, InputScriptType, OutputScriptType
 from trezor.messages.RequestType import (
     TXEXTRADATA,
     TXFINISHED,
@@ -16,7 +16,30 @@ from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxRequest import TxRequest
 from trezor.utils import obj_eq
 
+from .signing import SigningError
+
 from apps.common.coininfo import CoinInfo
+
+CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES = {
+    OutputScriptType.PAYTOADDRESS: InputScriptType.SPENDADDRESS,
+    OutputScriptType.PAYTOMULTISIG: InputScriptType.SPENDMULTISIG,
+    OutputScriptType.PAYTOWITNESS: InputScriptType.SPENDWITNESS,
+    OutputScriptType.PAYTOP2SHWITNESS: InputScriptType.SPENDP2SHWITNESS,
+}
+CHANGE_INPUT_SCRIPT_TYPES = tuple(CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES.values())
+CHANGE_OUTPUT_SCRIPT_TYPES = tuple(CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES.keys())
+
+MULTISIG_INPUT_SCRIPT_TYPES = (
+    InputScriptType.SPENDMULTISIG,
+    InputScriptType.SPENDP2SHWITNESS,
+    InputScriptType.SPENDWITNESS,
+)
+MULTISIG_OUTPUT_SCRIPT_TYPES = (
+    OutputScriptType.PAYTOMULTISIG,
+    OutputScriptType.PAYTOP2SHWITNESS,
+    OutputScriptType.PAYTOWITNESS,
+)
+
 
 # Machine instructions
 # ===
@@ -107,17 +130,17 @@ def request_tx_extra_data(
     return ack.tx.extra_data
 
 
-def request_tx_input(tx_req: TxRequest, i: int, tx_hash: bytes = None):
+def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None):
     tx_req.request_type = TXINPUT
     tx_req.details.request_index = i
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
     tx_req.serialized = None
     gc.collect()
-    return sanitize_tx_input(ack.tx)
+    return sanitize_tx_input(ack.tx, coin)
 
 
-def request_tx_output(tx_req: TxRequest, i: int, tx_hash: bytes = None):
+def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None):
     tx_req.request_type = TXOUTPUT
     tx_req.details.request_index = i
     tx_req.details.tx_hash = tx_hash
@@ -127,7 +150,7 @@ def request_tx_output(tx_req: TxRequest, i: int, tx_hash: bytes = None):
     if tx_hash is None:
         return sanitize_tx_output(ack.tx)
     else:
-        return sanitize_tx_binoutput(ack.tx)
+        return sanitize_tx_binoutput(ack.tx, coin)
 
 
 def request_tx_finish(tx_req: TxRequest):
@@ -166,18 +189,74 @@ def sanitize_tx_meta(tx: TransactionType) -> TransactionType:
     return tx
 
 
-def sanitize_tx_input(tx: TransactionType) -> TxInputType:
+def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
     txi = tx.inputs[0]
     if txi.script_type is None:
         txi.script_type = InputScriptType.SPENDADDRESS
     if txi.sequence is None:
         txi.sequence = 0xFFFFFFFF
+    if txi.multisig and txi.script_type not in MULTISIG_INPUT_SCRIPT_TYPES:
+        raise SigningError(
+            FailureType.DataError, "Multisig field provided but not expected.",
+        )
+    if txi.address_n and txi.script_type not in CHANGE_INPUT_SCRIPT_TYPES:
+        raise SigningError(
+            FailureType.DataError, "Input's address_n provided but not expected.",
+        )
+    if txi.decred_script_version or txi.decred_script_version and not coin.decred:
+        raise SigningError(
+            FailureType.DataError,
+            "Decred details provided but Decred coin not specified.",
+        )
+    if (txi.prev_block_hash_bip115 or txi.prev_block_height_bip115) and not coin.bip115:
+        raise SigningError(
+            FailureType.DataError,
+            "BIP-115 details provided, but the specified coin is unaware of BIP-115.",
+        )
     return txi
 
 
 def sanitize_tx_output(tx: TransactionType) -> TxOutputType:
-    return tx.outputs[0]
+    txo = tx.outputs[0]
+    if txo.multisig and txo.script_type not in MULTISIG_OUTPUT_SCRIPT_TYPES:
+        raise SigningError(
+            FailureType.DataError, "Multisig field provided but not expected.",
+        )
+    if txo.address_n and txo.script_type not in CHANGE_OUTPUT_SCRIPT_TYPES:
+        raise SigningError(
+            FailureType.DataError, "Output's address_n provided but not expected.",
+        )
+    if txo.script_type == OutputScriptType.PAYTOOPRETURN:
+        # op_return output
+        if txo.amount != 0:
+            raise SigningError(
+                FailureType.DataError, "OP_RETURN output with non-zero amount"
+            )
+        if txo.address or txo.address_n or txo.multisig:
+            raise SigningError(
+                FailureType.DataError, "OP_RETURN output with address or multisig"
+            )
+    else:
+        if txo.op_return_data:
+            raise SigningError(
+                FailureType.DataError,
+                "OP RETURN data provided but not OP RETURN script type.",
+            )
+        if txo.address_n and txo.address:
+            raise SigningError(
+                FailureType.DataError, "Both address and address_n provided."
+            )
+        if not txo.address_n and not txo.address:
+            raise SigningError(FailureType.DataError, "Missing address")
+
+    return txo
 
 
-def sanitize_tx_binoutput(tx: TransactionType) -> TxOutputBinType:
-    return tx.bin_outputs[0]
+def sanitize_tx_binoutput(tx: TransactionType, coin: CoinInfo) -> TxOutputBinType:
+    txo_bin = tx.bin_outputs[0]
+    if txo_bin.decred_script_version and not coin.decred:
+        raise SigningError(
+            FailureType.DataError,
+            "Decred details provided but Decred coin not specified.",
+        )
+    return txo_bin

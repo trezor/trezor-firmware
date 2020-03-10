@@ -241,4 +241,6 @@ class TestOpReturn:
                     "OP_RETURN output with address or multisig"
                 )
             else:
-                assert exc.value.args[1] == "OP_RETURN output with address or multisig"
+                assert (
+                    exc.value.args[1] == "Output's address_n provided but not expected."
+                )

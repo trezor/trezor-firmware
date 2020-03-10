@@ -99,7 +99,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
     for i in range(tx.inputs_count):
         progress.advance()
         # STAGE_REQUEST_1_INPUT
-        txi = await helpers.request_tx_input(tx_req, i)
+        txi = await helpers.request_tx_input(tx_req, i, coin)
         wallet_path = input_extract_wallet_path(txi, wallet_path)
         writers.write_tx_input_check(h_first, txi)
         weight.add_input(txi)
@@ -162,7 +162,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
 
     for o in range(tx.outputs_count):
         # STAGE_REQUEST_3_OUTPUT
-        txo = await helpers.request_tx_output(tx_req, o)
+        txo = await helpers.request_tx_output(tx_req, o, coin)
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, keychain)
         weight.add_output(txo_bin.script_pubkey)
@@ -255,7 +255,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
 
         if segwit[i_sign]:
             # STAGE_REQUEST_SEGWIT_INPUT
-            txi_sign = await helpers.request_tx_input(tx_req, i_sign)
+            txi_sign = await helpers.request_tx_input(tx_req, i_sign, coin)
 
             if not input_is_segwit(txi_sign):
                 raise SigningError(
@@ -280,7 +280,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
 
         elif coin.force_bip143 or (not utils.BITCOIN_ONLY and tx.overwintered):
             # STAGE_REQUEST_SEGWIT_INPUT
-            txi_sign = await helpers.request_tx_input(tx_req, i_sign)
+            txi_sign = await helpers.request_tx_input(tx_req, i_sign, coin)
             input_check_wallet_path(txi_sign, wallet_path)
 
             is_bip143 = (
@@ -327,7 +327,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             tx_req.serialized = tx_ser
 
         elif not utils.BITCOIN_ONLY and coin.decred:
-            txi_sign = await helpers.request_tx_input(tx_req, i_sign)
+            txi_sign = await helpers.request_tx_input(tx_req, i_sign, coin)
 
             input_check_wallet_path(txi_sign, wallet_path)
 
@@ -414,7 +414,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
 
             for i in range(tx.inputs_count):
                 # STAGE_REQUEST_4_INPUT
-                txi = await helpers.request_tx_input(tx_req, i)
+                txi = await helpers.request_tx_input(tx_req, i, coin)
                 input_check_wallet_path(txi, wallet_path)
                 writers.write_tx_input_check(h_second, txi)
                 if i == i_sign:
@@ -449,7 +449,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
 
             for o in range(tx.outputs_count):
                 # STAGE_REQUEST_4_OUTPUT
-                txo = await helpers.request_tx_output(tx_req, o)
+                txo = await helpers.request_tx_output(tx_req, o, coin)
                 txo_bin.amount = txo.amount
                 txo_bin.script_pubkey = output_derive_script(txo, coin, keychain)
                 writers.write_tx_output(h_second, txo_bin)
@@ -500,7 +500,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
     for o in range(tx.outputs_count):
         progress.advance()
         # STAGE_REQUEST_5_OUTPUT
-        txo = await helpers.request_tx_output(tx_req, o)
+        txo = await helpers.request_tx_output(tx_req, o, coin)
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, keychain)
 
@@ -522,7 +522,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
         progress.advance()
         if segwit[i]:
             # STAGE_REQUEST_SEGWIT_WITNESS
-            txi = await helpers.request_tx_input(tx_req, i)
+            txi = await helpers.request_tx_input(tx_req, i, coin)
             input_check_wallet_path(txi, wallet_path)
 
             if not input_is_segwit(txi) or txi.amount > authorized_in:
@@ -615,7 +615,7 @@ async def get_prevtx_output_value(
 
     for i in range(tx.inputs_cnt):
         # STAGE_REQUEST_2_PREV_INPUT
-        txi = await helpers.request_tx_input(tx_req, i, prev_hash)
+        txi = await helpers.request_tx_input(tx_req, i, coin, prev_hash)
         if not utils.BITCOIN_ONLY and coin.decred:
             writers.write_tx_input_decred(txh, txi)
         else:
@@ -625,7 +625,7 @@ async def get_prevtx_output_value(
 
     for o in range(tx.outputs_cnt):
         # STAGE_REQUEST_2_PREV_OUTPUT
-        txo_bin = await helpers.request_tx_output(tx_req, o, prev_hash)
+        txo_bin = await helpers.request_tx_output(tx_req, o, coin, prev_hash)
         writers.write_tx_output(txh, txo_bin)
         if o == prev_index:
             total_out += txo_bin.amount
@@ -701,25 +701,11 @@ def output_derive_script(
 ) -> bytes:
 
     if o.script_type == OutputScriptType.PAYTOOPRETURN:
-        # op_return output
-        if o.amount != 0:
-            raise SigningError(
-                FailureType.DataError, "OP_RETURN output with non-zero amount"
-            )
-        if o.address or o.address_n or o.multisig:
-            raise SigningError(
-                FailureType.DataError, "OP_RETURN output with address or multisig"
-            )
         return scripts.output_script_paytoopreturn(o.op_return_data)
 
     if o.address_n:
         # change output
-        if o.address:
-            raise SigningError(FailureType.DataError, "Address in change output")
         o.address = get_address_for_change(o, coin, keychain)
-    else:
-        if not o.address:
-            raise SigningError(FailureType.DataError, "Missing address")
 
     if coin.bech32_prefix and o.address.startswith(coin.bech32_prefix):
         # p2wpkh or p2wsh
@@ -770,15 +756,9 @@ def output_derive_script(
 def get_address_for_change(
     o: TxOutputType, coin: coininfo.CoinInfo, keychain: seed.Keychain
 ):
-    if o.script_type == OutputScriptType.PAYTOADDRESS:
-        input_script_type = InputScriptType.SPENDADDRESS
-    elif o.script_type == OutputScriptType.PAYTOMULTISIG:
-        input_script_type = InputScriptType.SPENDMULTISIG
-    elif o.script_type == OutputScriptType.PAYTOWITNESS:
-        input_script_type = InputScriptType.SPENDWITNESS
-    elif o.script_type == OutputScriptType.PAYTOP2SHWITNESS:
-        input_script_type = InputScriptType.SPENDP2SHWITNESS
-    else:
+    try:
+        input_script_type = helpers.CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[o.script_type]
+    except KeyError:
         raise SigningError(FailureType.DataError, "Invalid script type")
     node = keychain.derive(o.address_n, coin.curve_name)
     return addresses.get_address(input_script_type, coin, node, o.multisig)
@@ -790,12 +770,7 @@ def output_is_change(
     segwit_in: int,
     multifp: multisig.MultisigFingerprint,
 ) -> bool:
-    if o.script_type not in (
-        OutputScriptType.PAYTOADDRESS,
-        OutputScriptType.PAYTOMULTISIG,
-        OutputScriptType.PAYTOWITNESS,
-        OutputScriptType.PAYTOP2SHWITNESS,
-    ):
+    if o.script_type not in helpers.CHANGE_OUTPUT_SCRIPT_TYPES:
         return False
     if o.multisig and not multifp.matches(o.multisig):
         return False
