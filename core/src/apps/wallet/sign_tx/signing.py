@@ -402,15 +402,9 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             # same as h_first, checked before signing the digest
             h_second = utils.HashWriter(sha256())
 
-            if not utils.BITCOIN_ONLY and tx.overwintered:
-                writers.write_uint32(
-                    h_sign, tx.version | zcash.OVERWINTERED
-                )  # nVersion | fOverwintered
-                writers.write_uint32(h_sign, tx.version_group_id)  # nVersionGroupId
-            else:
-                writers.write_uint32(h_sign, tx.version)  # nVersion
-                if tx.timestamp:
-                    writers.write_uint32(h_sign, tx.timestamp)
+            writers.write_uint32(h_sign, tx.version)  # nVersion
+            if tx.timestamp:
+                writers.write_uint32(h_sign, tx.timestamp)
 
             writers.write_varint(h_sign, tx.inputs_count)
 
@@ -458,10 +452,6 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                 writers.write_tx_output(h_sign, txo_bin)
 
             writers.write_uint32(h_sign, tx.lock_time)
-            if not utils.BITCOIN_ONLY and tx.overwintered:
-                writers.write_uint32(h_sign, tx.expiry)  # expiryHeight
-                writers.write_varint(h_sign, 0)  # nJoinSplit
-
             writers.write_uint32(h_sign, get_hash_type(coin))
 
             # check the control digests
