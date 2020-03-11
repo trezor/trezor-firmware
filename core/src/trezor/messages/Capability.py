@@ -24,3 +24,4 @@ if not utils.BITCOIN_ONLY:
 Shamir = 15  # type: Literal[15]
 ShamirGroups = 16  # type: Literal[16]
 PassphraseEntry = 17  # type: Literal[17]
+Tron = 18  # type: Literal[18]
