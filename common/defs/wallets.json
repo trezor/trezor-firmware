@@ -28,6 +28,9 @@
         "Electrum-BTX": "https://github.com/LIMXTEC/electrum-btx",
         "Magnum": "https://magnumwallet.co"
     },
+    "bitcoin:COLX": {
+        "PolisPay": "https://polispay.com"
+    },
     "bitcoin:CPC": {
         "Capricoin Mobile Wallet": "https://wallet.capricoin.org"
     },
