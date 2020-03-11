@@ -576,3 +576,40 @@ class TestMsgSigntxBitcoinGold:
             serialized_tx.hex()
             == "0100000000010185c9dd4ae1071affd77d90b9d03c1b5fdd7c62cf30a9bb8230ad766cf06b52250100000023220020ea9ec48498c451286c2ebaf9e19255e2873b0fb517d67b2f2005298c7e437829ffffffff01887d1800000000001976a914ea5f904d195079a350b534db4446433b3cec222e88ac0400473044022077cb8b2a534f79328810ca8c330539ae9ffa086c359ddb7da11026557b04eef202201d95be0dd1da0aa01720953e52d5dabffd19a998d1490c13a21b8e52e4ead2e041483045022100e41cbd6a501ba8fe6f65554420e23e950d35af0da9b052da54a087463b0717ca02206c695c8d1f74f9535b5d89a2fd1f9326a0ef20e5400137f1e1daeee992b62b594169522103279aea0b253b144d1b2bb8532280001a996dcddd04f86e5e13df1355032cbc1321032c6465c956c0879663fa8be974c912d229c179a5cdedeb29611a1bec1f951eb22103494480a4b72101cbd2eadac8e18c7a3a7589a7f576bf46b8971c38c51e5eceeb53ae00000000"
         )
+
+    def test_send_mixed_inputs(self, client):
+        # First is non-segwit, second is segwit.
+
+        inp1 = proto.TxInputType(
+            address_n=parse_path("44'/156'/0'/0/0"),
+            amount=31000000,
+            prev_hash=bytes.fromhex(
+                "e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd"
+            ),
+            prev_index=0,
+        )
+
+        inp2 = proto.TxInputType(
+            address_n=parse_path("84'/156'/0'/1/0"),
+            amount=7289000,
+            prev_hash=bytes.fromhex(
+                "65b811d3eca0fe6915d9f2d77c86c5a7f19bf66b1b1253c2c51cb4ae5f0c017b"
+            ),
+            prev_index=1,
+            script_type=proto.InputScriptType.SPENDWITNESS,
+        )
+        out1 = proto.TxOutputType(
+            address="GfDB1tvjfm3bukeoBTtfNqrJVFohS2kCTe",
+            amount=31000000 + 7289000 - 1000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        with client:
+            _, serialized_tx = btc.sign_tx(
+                client, "Bgold", [inp1, inp2], [out1], prev_txes=TX_API
+            )
+
+        assert (
+            serialized_tx.hex()
+            == "01000000000102cd3b93f5b24ae190ce5141235091cd93fbb2908e24e5b9ff6776aec11b0e04e5000000006a473044022061e94392fa4c0a4bf510bf713c23a37c6c5f6f4dbe5c116e86cff23a93c578e9022026661d2ffb1102d07b7c1631270152441fa171d91108b75a7b9a2cc36ca7db6c4121023bd0ec4022d12d0106c5b7308a25572953ba1951f576f691354a7b147ee0cc1fffffffff7b010c5faeb41cc5c253121b6bf69bf1a7c5867cd7f2d91569fea0ecd311b8650100000000ffffffff01803a4802000000001976a914ea5f904d195079a350b534db4446433b3cec222e88ac0002483045022100e39d9bff8350b9ba20cb2ed88e82d7568a83184616acdc16bd1adb4005c5a471022066ff36084e896a69a91a0fad01721f20f2bb42b41e20be35e72fc3729ac7ace74121030b75ccac9add5f82a4c61fe34e791a2f2eda61b544bce4f6fa3d403bb0de748400000000"
+        )

@@ -280,6 +280,7 @@
 "test_msg_signtx_bgold.py-test_send_bitcoin_gold_change": "de2fe54950938864480fd40866db18a73565fdc9de2f7867ab7e0a8ae7f65ce4",
 "test_msg_signtx_bgold.py-test_send_bitcoin_gold_nochange": "65a3fa31182748333a44e8cedcee653d7532428126d6df1ef3514424adcb10f1",
 "test_msg_signtx_bgold.py-test_send_btg_multisig_change": "4ed4962fa425498e4d7ae158d1233b01319dfa071edcb2d71f2f4d4e57c4b4fd",
+"test_msg_signtx_bgold.py-test_send_mixed_inputs": "ed137c7c45d1bd9f2e73b4ca6ea0eff63b601e8ad73d79a90aefd2046e2d51b2",
 "test_msg_signtx_bgold.py-test_send_multisig_1": "d049b3b25042c732ce26a253e7de49581adc83003713860924b8d951cb46de0c",
 "test_msg_signtx_bgold.py-test_send_p2sh": "ddd48151ce1d74ade0b9858cbcdba316581991ec92c2ef54b5893e3aae75f995",
 "test_msg_signtx_bgold.py-test_send_p2sh_witness_change": "02e44d4c1072eb774486210f885b1bee53acfb3b7fd787207b9f955853fef055",
