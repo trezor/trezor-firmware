@@ -364,6 +364,7 @@
 "test_msg_wipedevice.py-test_wipe_device": "400dde1df31b10a4fcacc95a0f7a27f34c41a5f12ad5b7f253ec7e2ff38f0c41",
 "test_multisig.py-test_15_of_15": "b606b4e715f736e1e562747289a87624e93782f56ca36e90b4ef9bb4300b8d6d",
 "test_multisig.py-test_2_of_3": "2be92556edf4ff8eed340d535f379ee6915eae34fef25d669ce865848e7b4705",
+"test_multisig.py-test_attack_change_input": "89859fea184df09ce96df5281d405c0e85c87ba7efbafa4b3fdf7d9402c0fc44",
 "test_multisig.py-test_missing_pubkey": "dfd9bdb063329cbc7fae8984a4ec4e4e1f700732e95429ff6a64ae912bacea8d",
 "test_multisig_change.py-test_external_external": "0f9bc8153070c4bad85bf7ae9d1d30843752538b4d1f8964bc748015a07f00bc",
 "test_multisig_change.py-test_external_internal": "f60554e040d8965b8f3efdf9eea1f940b64b5844f12d1ee802abbec8d15ea9bf",
