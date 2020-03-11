@@ -2,7 +2,8 @@ from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
-from trezor.utils import chunks, format_amount
+from trezor.utils import chunks
+from trezor.strings import format_amount
 
 from apps.common.confirm import require_confirm
 
