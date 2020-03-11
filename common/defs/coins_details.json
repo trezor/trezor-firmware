@@ -176,6 +176,24 @@
                 }
             ]
         },
+        "bitcoin:COLX": {
+            "links": {
+                "Github": "https://github.com/ColossusCoinXT/ColossusCoinXT",
+                "Homepage": "https://colossusxt.io/"
+            },
+            "marketcap_usd": 4001283,
+            "name": "Colx",
+            "shortcut": "COLX",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": [
+                {
+                    "name": "PolisPay",
+                    "url": "https://polispay.com"
+                }
+            ]
+        },
         "bitcoin:CPC": {
             "links": {
                 "Github": "https://github.com/Capricoinofficial/Capricoin",
