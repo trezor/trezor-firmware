@@ -33,11 +33,11 @@
   (gpio_mode_setup(GPIO_SI2C_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, \
                    GPIO_SI2C_SDA))
 
-extern uint8_t g_ucI2cRevBuf[SI2C_BUF_MAX_LEN];
-extern uint16_t g_usI2cRevLen;
-extern bool g_bI2cRevFlag;
-extern uint8_t s_ucSendDataBak[SI2C_BUF_MAX_LEN];
-extern uint32_t s_usSendLenBak;
+extern uint8_t i2c_data_in[SI2C_BUF_MAX_LEN];
+extern uint16_t i2c_data_inlen;
+extern bool i2c_recv_done;
+extern uint8_t i2c_data_out[SI2C_BUF_MAX_LEN];
+extern uint32_t i2c_data_outlen;
 
 void i2c_slave_init(void);
 void i2cSlaveResponse(uint8_t *pucStr, uint32_t usStrLen);

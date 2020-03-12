@@ -290,6 +290,7 @@ void vlayoutLogo(void) {
   vDisp_PromptInfo(DISP_BLE_NAME, false);
   oledRefresh();
 }
+
 void layoutHome(void) {
   if (layoutLast == layoutHome || layoutLast == layoutScreensaver) {
     oledClear();
@@ -297,7 +298,6 @@ void layoutHome(void) {
     layoutSwipe();
   }
   layoutLast = layoutHome;
-
   char label[MAX_LABEL_LEN + 1] = _("Go to trezor.io/start");
   if (config_isInitialized()) {
     config_getLabel(label, sizeof(label));
@@ -312,12 +312,6 @@ void layoutHome(void) {
     oledDrawBitmap(0, 0, &b);
   } else {
     vlayoutLogo();
-    /*    if (label[0] != '\0') {*/
-    /*      oledclearLine(6);*/
-    /*      oledclearLine(7);*/
-    /*      oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, label,*/
-    /*                           FONT_STANDARD);*/
-    /*    } */
   }
 
   bool no_backup = false;

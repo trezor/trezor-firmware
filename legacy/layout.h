@@ -24,6 +24,18 @@
 #include <stdlib.h>
 #include "bitmaps.h"
 
+// Ble display
+#define BT_LINK 0x01          // Connect by Bluetooth
+#define BT_UNLINK 0x02        // BLE disconnected
+#define BT_DISPIN 0x03        // Display PIN code
+#define BT_PINERROR 0x04      // PIN code error
+#define BT_PINTIMEOUT 0x05    // Pairing overtime
+#define BT_PAIRINGSCESS 0x06  // Pairing success
+#define BT_PINCANCEL 0x07     // Cancel pairing request
+
+// Pairing code length
+#define BT_PAIR_LEN 0x06
+
 void layoutButtonNo(const char *btnNo, const BITMAP *icon);
 void layoutButtonYes(const char *btnYes, const BITMAP *icon);
 void layoutDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
@@ -32,5 +44,7 @@ void layoutDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
                   const char *line6);
 void layoutProgressUpdate(bool refresh);
 void layoutProgress(const char *desc, int permil);
+void layoutBleInfo(uint8_t ucIndex, uint8_t *ucStr);
+void layoutStatusLogo(void);
 
 #endif

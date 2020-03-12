@@ -445,16 +445,12 @@ static void i2cSlaveRxData(uint8_t *pucInputBuf, uint32_t data_len) {
 
 void i2cSlavePoll(void) {
   uint32_t usLen;
-  if (true == g_bI2cRevFlag) {
+  if (true == i2c_recv_done) {
     host_channel = CHANNEL_SLAVE;
-    g_bI2cRevFlag = false;
-#if (_SUPPORT_DEBUG_UART_)
-    vUART_DebugInfo("\n\r vBle_NFC_RX_Data !\n\r", g_ucI2cRevBuf,
-                    g_usI2cRevLen);
-#endif
-    usLen = g_usI2cRevLen;
-    g_usI2cRevLen = 0;
-    i2cSlaveRxData(g_ucI2cRevBuf, usLen);
+    i2c_recv_done = false;
+    usLen = i2c_data_inlen;
+    i2c_data_inlen = 0;
+    i2cSlaveRxData(i2c_data_in, usLen);
   }
 
   if (msg_out_end) {
@@ -462,10 +458,6 @@ void i2cSlavePoll(void) {
       host_channel = CHANNEL_NULL;
       usLen = (msg_out_end * 64) & 0xFFFF;
       i2cSlaveResponse(msg_out, usLen);
-#if (_SUPPORT_DEBUG_UART_)
-      vUART_DebugInfo("\n\r vBle_NFC_TX_Data !\n\r", s_ucSendDataBak,
-                      s_usSendLenBak);
-#endif
       msg_out_end = 0;
     }
   }
@@ -475,7 +467,7 @@ void usbPoll(void) {
 
   i2cSlavePoll();
 
-  if (usbd_dev == NULL) {
+  if ((usbd_dev == NULL) || (CHANNEL_SLAVE == host_channel)) {
     return;
   }
 

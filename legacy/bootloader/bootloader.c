@@ -48,7 +48,7 @@ bool get_button_response(void) {
   do {
     delay(100000);
     buttonUpdate();
-  } while (!button.YesUp && !button.DownUp);
+  } while (!button.YesUp && !button.NoUp);
   return button.YesUp;
 }
 
@@ -93,19 +93,13 @@ static void __attribute__((noreturn)) load_app(int signed_firmware) {
 
 static void bootloader_loop(void) {
   oledClear();
-  oledDrawBitmap(0, 0, &bmp_logo64);
-  if (firmware_present_new()) {
-    oledDrawStringCenter(90, 10, "Trezor", FONT_STANDARD);
-    oledDrawStringCenter(90, 30, "Bootloader", FONT_STANDARD);
-    oledDrawStringCenter(90, 50,
-                         VERSTR(VERSION_MAJOR) "." VERSTR(
-                             VERSION_MINOR) "." VERSTR(VERSION_PATCH),
-                         FONT_STANDARD);
-  } else {
-    oledDrawStringCenter(90, 10, "Welcome!", FONT_STANDARD);
-    oledDrawStringCenter(90, 30, "Please visit", FONT_STANDARD);
-    oledDrawStringCenter(90, 50, "trezor.io/start", FONT_STANDARD);
-  }
+  oledDrawBitmap(20, 15, &bmp_BiXin_logo32);
+  oledDrawStringCenter(90, 20, "BiXin", FONT_STANDARD);
+  oledDrawStringCenter(90, 30, "Bootloader", FONT_STANDARD);
+  oledDrawStringCenter(
+      90, 40,
+      VERSTR(VERSION_MAJOR) "." VERSTR(VERSION_MINOR) "." VERSTR(VERSION_PATCH),
+      FONT_STANDARD);
   oledRefresh();
 
   usbLoop();
@@ -123,6 +117,8 @@ int main(void) {
   sys_poweron();
   buttonsIrqInit();
   timer_init();
+  register_timer("layout", 100, layoutStatusLogo);
+  register_timer("button", 100, buttonsTimer);
 #endif
   mpu_config_bootloader();
 #ifndef APPVER
@@ -130,7 +126,7 @@ int main(void) {
 
   if (firmware_present_new() && !left_pressed) {
     oledClear();
-    oledDrawBitmap(40, 0, &bmp_logo64_empty);
+    oledDrawBitmap(40, 0, &bmp_BiXin_logo32);
     oledRefresh();
 
     const image_header *hdr =

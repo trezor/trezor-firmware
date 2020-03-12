@@ -201,8 +201,8 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
 #if !EMULATOR
   else {
     reader = &readbuffer;
-    memcpy(reader->buf, (uint8_t *)f, g_usI2cRevLen);
-    reader->len = g_usI2cRevLen;
+    memcpy(reader->buf, (uint8_t *)f, i2c_data_inlen);
+    reader->len = i2c_data_inlen;
   }
 #endif
 

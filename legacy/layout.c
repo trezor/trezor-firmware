@@ -21,6 +21,11 @@
 
 #include "layout.h"
 #include "oled.h"
+#include "prompt.h"
+
+#if !EMULATOR
+#include "sys.h"
+#endif
 
 void layoutButtonNo(const char *btnNo, const BITMAP *icon) {
   int icon_width = 0;
@@ -105,9 +110,27 @@ void layoutProgressUpdate(bool refresh) {
   }
 }
 
+void layoutProgressPercent(int permil) {
+  char percent_asc[5] = {0};
+  int i = 0;
+  if (permil < 10) {
+    percent_asc[i++] = permil + 0x30;
+  } else if (permil < 100) {
+    percent_asc[i++] = permil / 10 + 0x30;
+    percent_asc[i++] = permil % 10 + 0x30;
+  } else {
+    permil = 100;
+    percent_asc[i++] = permil / 100 + 0x30;
+    percent_asc[i++] = permil % 100 / 10 + 0x30;
+    percent_asc[i++] = permil % 10 + 0x30;
+  }
+  percent_asc[i] = '%';
+  oledDrawStringCenter(60, 20, percent_asc, FONT_STANDARD);
+}
+
 void layoutProgress(const char *desc, int permil) {
   oledClear();
-  layoutProgressUpdate(false);
+  layoutProgressPercent(permil / 10);
   // progressbar
   oledFrame(0, OLED_HEIGHT - 8, OLED_WIDTH - 1, OLED_HEIGHT - 1);
   oledBox(1, OLED_HEIGHT - 7, OLED_WIDTH - 2, OLED_HEIGHT - 2, 0);
@@ -123,6 +146,56 @@ void layoutProgress(const char *desc, int permil) {
   oledBox(0, OLED_HEIGHT - 16, OLED_WIDTH - 1, OLED_HEIGHT - 16 + 7, 0);
   if (desc) {
     oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 16, desc, FONT_STANDARD);
+  }
+  oledRefresh();
+}
+
+#if !EMULATOR
+void layoutStatusLogo(void) {
+  static bool nfc_status_bak = false;
+  if ((sys_nfcState() == true) && (false == nfc_status_bak)) {
+    nfc_status_bak = true;
+    oledDrawBitmap(90, 0, &bmp_nfc);
+    oledRefresh();
+  } else if ((sys_nfcState() == false) && (true == nfc_status_bak)) {
+    nfc_status_bak = false;
+    oledClearBitmap(90, 0, &bmp_nfc);
+    oledRefresh();
+  }
+}
+#endif
+/*
+ * display ble message
+ */
+void layoutBleInfo(uint8_t ucIndex, uint8_t *ucStr) {
+  oledClear();
+  switch (ucIndex) {
+    case BT_LINK:
+      oledDrawStringCenter(60, 30, "Connect by Bluetooth", FONT_STANDARD);
+      break;
+    case BT_UNLINK:
+      oledDrawStringCenter(60, 30, "BLE unLink", FONT_STANDARD);
+      break;
+    case BT_DISPIN:
+      ucStr[BT_PAIR_LEN] = '\0';
+      oledDrawStringCenter(60, 30, "BLE Pair Pin", FONT_STANDARD);
+      oledDrawStringCenter(60, 50, (char *)ucStr, FONT_STANDARD);
+      break;
+    case BT_PINERROR:
+      oledDrawStringCenter(60, 30, "Pair Pin Error", FONT_STANDARD);
+      break;
+    case BT_PINTIMEOUT:
+      oledDrawStringCenter(60, 30, "Pair Pin Timeout", FONT_STANDARD);
+      break;
+    case BT_PAIRINGSCESS:
+      oledDrawStringCenter(60, 30, "Pair Pin Success", FONT_STANDARD);
+      break;
+    case BT_PINCANCEL:
+      oledDrawStringCenter(60, 30, "Pair Pin Cancel", FONT_STANDARD);
+      break;
+
+    default:
+      break;
   }
   oledRefresh();
 }

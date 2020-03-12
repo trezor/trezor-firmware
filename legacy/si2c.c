@@ -13,11 +13,11 @@
 #include "timer.h"
 #include "usart.h"
 
-uint8_t g_ucI2cRevBuf[SI2C_BUF_MAX_LEN];
-uint16_t g_usI2cRevLen;
-bool g_bI2cRevFlag = false;
-uint8_t s_ucSendDataBak[SI2C_BUF_MAX_LEN];
-uint32_t s_usSendLenBak;
+uint8_t i2c_data_in[SI2C_BUF_MAX_LEN];
+uint16_t i2c_data_inlen;
+bool i2c_recv_done = false;
+uint8_t i2c_data_out[SI2C_BUF_MAX_LEN];
+uint32_t i2c_data_outlen;
 
 bool bCheckNFC(void) { return sys_nfcState(); }
 
@@ -53,8 +53,8 @@ void i2c_slave_init(void) {
 
   i2c_enable_ack(I2C2);
 
-  memset(s_ucSendDataBak, 0x00, SI2C_BUF_MAX_LEN);
-  s_usSendLenBak = 0;
+  memset(i2c_data_out, 0x00, SI2C_BUF_MAX_LEN);
+  i2c_data_outlen = 0;
 }
 static void i2c_delay(void) {
   volatile uint32_t i = 1000;
@@ -71,31 +71,31 @@ void i2c2_ev_isr() {
     dir = sr2 & I2C_SR2_TRA;
   }
   if (sr1 & I2C_SR1_RxNE) {  // EV2
-    g_ucI2cRevBuf[g_usI2cRevLen++] = i2c_get_data(I2C2);
+    i2c_data_in[i2c_data_inlen++] = i2c_get_data(I2C2);
     index = 0;
   }
   if (dir & I2C_SR2_TRA) {
     if (sr1 & I2C_SR1_TxE) {  // EV3 ev3-1
-      if (s_usSendLenBak > 0) {
-        i2c_send_data(I2C2, s_ucSendDataBak[index++]);
+      if (i2c_data_outlen > 0) {
+        i2c_send_data(I2C2, i2c_data_out[index++]);
         do {
           i2c_delay();
           sr1 = I2C_SR1(I2C2);
         } while ((!(sr1 & I2C_SR1_BTF)) && (!((sr1 & I2C_SR1_AF))));
-        s_usSendLenBak--;
-        if (s_usSendLenBak == 0) {
+        i2c_data_outlen--;
+        if (i2c_data_outlen == 0) {
           SET_COMBUS_HIGH();
         }
       } else {
         i2c_send_data(I2C2, '#');
       }
     } else if (sr1 & I2C_SR1_BTF) {
-      i2c_send_data(I2C2, s_ucSendDataBak[index++]);
+      i2c_send_data(I2C2, i2c_data_out[index++]);
     }
   }
   if (sr1 & I2C_SR1_STOPF) {  // EV4
     I2C_CR1(I2C2) |= I2C_CR1_PE;
-    g_bI2cRevFlag = true;
+    i2c_recv_done = true;
     SET_COMBUS_HIGH();
   }
   if (sr1 & I2C_SR1_AF) {  // EV4
@@ -107,15 +107,15 @@ void i2c2_er_isr(void) {}
 void i2cSlaveResponse(uint8_t *pucStr, uint32_t usStrLen) {
   uint32_t len;
   volatile uint32_t i;
-  memcpy(s_ucSendDataBak, pucStr, usStrLen);
+  memcpy(i2c_data_out, pucStr, usStrLen);
   len = usStrLen - 64;
   if (len) {
     for (i = 0; i < (len / 64); i++) {
-      memcpy(s_ucSendDataBak + 64 + i * 63, pucStr + (i + 1) * 64 + 1, 63);
+      memcpy(i2c_data_out + 64 + i * 63, pucStr + (i + 1) * 64 + 1, 63);
     }
   }
 
-  s_usSendLenBak = (s_ucSendDataBak[5] << 24) + (s_ucSendDataBak[6] << 16) +
-                   (s_ucSendDataBak[7] << 8) + s_ucSendDataBak[8] + 9;
+  i2c_data_outlen = (i2c_data_out[5] << 24) + (i2c_data_out[6] << 16) +
+                    (i2c_data_out[7] << 8) + i2c_data_out[8] + 9;
   SET_COMBUS_LOW();
 }

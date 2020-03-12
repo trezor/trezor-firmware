@@ -353,6 +353,13 @@ void oledDrawBitmap(int x, int y, const BITMAP *bmp) {
   }
 }
 
+void oledClearBitmap(int x, int y, const BITMAP *bmp) {
+  for (int i = 0; i < bmp->width; i++) {
+    for (int j = 0; j < bmp->height; j++) {
+      oledClearPixel(x + i, y + j);
+    }
+  }
+}
 /*
  * Inverts box between (x1,y1) and (x2,y2) inclusive.
  */

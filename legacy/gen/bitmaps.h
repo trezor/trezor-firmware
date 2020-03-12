@@ -35,4 +35,9 @@ extern const BITMAP bmp_logo64;
 extern const BITMAP bmp_logo64_empty;
 extern const BITMAP bmp_webauthn;
 
+// BiXin
+extern const BITMAP bmp_BiXin_logo32;
+extern const BITMAP bmp_BiXin_logo64;
+extern const BITMAP bmp_BiXin_logo64_empty;
+
 #endif

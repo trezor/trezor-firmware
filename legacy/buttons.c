@@ -22,13 +22,17 @@
 #include "timer.h"
 
 struct buttonState button;
-int button_poweroff_flag = 0;
 
 #if !EMULATOR
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/exti.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/syscfg.h>
+
+#include "sys.h"
+
+static volatile int button_timer_enable = 0;
+static volatile uint32_t button_timer_counter = 0;
 
 uint16_t buttonRead(void) { return gpio_port_read(BTN_PORT); }
 
@@ -53,9 +57,23 @@ void exti0_isr(void) {
   if (exti_get_flag_status(BTN_PIN_NO)) {
     exti_reset_request(BTN_PIN_NO);
     if (gpio_get(GPIOC, BTN_PIN_NO)) {
-      button_poweroff_flag = 1;
-    } else {
-      button_poweroff_flag = 0;
+      button_timer_enable = 1;
+      button_timer_counter = 0;
+    }
+  }
+}
+
+void buttonsTimer(void) {
+  if (button_timer_enable) {
+    button_timer_counter++;
+    if (button_timer_counter > 1) {
+      // buttonUpdateIrq();
+      if (gpio_get(GPIOC, BTN_PIN_NO) == 0) {  // key up
+        button_timer_enable = 0;
+      }
+    }
+    if (button_timer_counter > 20) {  // long press
+      sys_shutdown();
     }
   }
 }

@@ -42,23 +42,10 @@ bool sys_usbState(void);
 void sys_poweron(void);
 void sys_shutdown(void);
 
-/**********************move to another place************************/
-// Ble display
-#define BT_LINK 0x01          // Connect by Bluetooth
-#define BT_UNLINK 0x02        // BLE disconnected
-#define BT_DISPIN 0x03        // Display PIN code
-#define BT_PINERROR 0x04      // PIN code error
-#define BT_PINTIMEOUT 0x05    // Pairing overtime
-#define BT_PAIRINGSCESS 0x06  // Pairing success
-#define BT_PINCANCEL 0x07     // Cancel pairing request
-
 // NFC Connected
 #define NFC_LINK 0x09
 // USB Connected
 #define USB_LINK 0x08
-
-// Pairing code length
-#define BT_PAIR_LEN 0x06
 
 // APDU TAG
 #define APDU_TAG_BLE 0x44
@@ -90,7 +77,6 @@ void sys_shutdown(void);
 #define GPIO_SI2C_CMBUS GPIO9
 #define GPIO_BLE_POWER GPIO10
 
-#if !EMULATOR
 // combus io level
 #define SET_COMBUS_HIGH() (gpio_set(GPIO_CMBUS_PORT, GPIO_SI2C_CMBUS))
 #define SET_COMBUS_LOW() (gpio_clear(GPIO_CMBUS_PORT, GPIO_SI2C_CMBUS))
@@ -107,17 +93,6 @@ void sys_shutdown(void);
 // power control BLE
 #define POWER_ON_BLE() (gpio_set(GPIOC, GPIO_BLE_POWER))
 #define POWER_OFF_BLE() (gpio_clear(GPIOC, GPIO_BLE_POWER))
-#else
-#define SET_COMBUS_HIGH()
-#define SET_COMBUS_LOW()
-#define GET_USB_INSERT() 1
-#define GET_NFC_INSERT() 0
-#define GET_BUTTON_CANCEL() 0
-#define POWER_ON()
-#define POWER_OFF()
-#define POWER_ON_BLE()
-#define POWER_OFF_BLE()
-#endif
 
 // power control Button status
 #define POWER_BUTTON_UP 0
@@ -135,9 +110,6 @@ extern uint8_t g_ucBatValue;
 #define PBUTTON_CHECK_READY() (g_ucFlag & 0x02)
 
 void vCalu_BleName(uint8_t* pucMac, uint8_t* pucName);
-void vCheckMode(void);
-void vPower_Control(uint8_t ucMode);
-bool bBle_DisPlay(uint8_t ucIndex, uint8_t* ucStr);
 
 /**********************move to another place end************************/
 #endif

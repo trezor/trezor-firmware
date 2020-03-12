@@ -1,3 +1,13 @@
+static void send_response(usbd_device *dev, uint8_t *buf) {
+  if (dev != NULL) {
+    while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, buf, 64) != 64) {
+    }
+  } else {
+    memcpy(i2c_data_out, buf, 64);
+    i2c_data_outlen = 64;
+    SET_COMBUS_LOW();
+  }
+}
 static void send_msg_success(usbd_device *dev) {
   uint8_t response[64];
   memzero(response, sizeof(response));
@@ -10,8 +20,7 @@ static void send_msg_success(usbd_device *dev) {
          // msg_size
          "\x00\x00\x00\x00",
          9);
-  while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {
-  }
+  send_response(dev, response);
 }
 
 static void send_msg_failure(usbd_device *dev) {
@@ -30,8 +39,7 @@ static void send_msg_failure(usbd_device *dev) {
          "\x08"
          "\x63",
          11);
-  while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {
-  }
+  send_response(dev, response);
 }
 
 static void send_msg_features(usbd_device *dev) {
@@ -67,8 +75,7 @@ static void send_msg_features(usbd_device *dev) {
          "1",
          35);
   response[30] = firmware_present_new() ? 0x01 : 0x00;
-  while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {
-  }
+  send_response(dev, response);
 }
 
 static void send_msg_buttonrequest_firmwarecheck(usbd_device *dev) {
@@ -87,6 +94,5 @@ static void send_msg_buttonrequest_firmwarecheck(usbd_device *dev) {
          "\x08"
          "\x09",
          11);
-  while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {
-  }
+  send_response(dev, response);
 }

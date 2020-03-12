@@ -33,6 +33,7 @@
 #include "secbool.h"
 #include "secp256k1.h"
 #include "sha2.h"
+#include "si2c.h"
 #include "signatures.h"
 #include "sys.h"
 #include "updateble.h"
@@ -173,7 +174,13 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
   static int wi;
   static int old_was_signed;
 
-  if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_OUT, buf, 64) != 64) return;
+  if (dev != NULL) {
+    if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_OUT, buf, 64) != 64) return;
+  } else {
+    memset(buf, 0, 64);
+    memcpy(buf, i2c_data_in, i2c_data_inlen);
+    i2c_data_inlen = 0;
+  }
 
   if (flash_state == STATE_END) {
     return;
@@ -546,13 +553,11 @@ static void checkButtons(void) {
     return;
   }
   uint16_t state = gpio_port_read(BTN_PORT);
-  if ((state & (BTN_PIN_YES | BTN_PIN_NO)) != (BTN_PIN_YES | BTN_PIN_NO)) {
-    if ((state & BTN_PIN_NO) != BTN_PIN_NO) {
-      btn_left = true;
-    }
-    if ((state & BTN_PIN_YES) != BTN_PIN_YES) {
-      btn_right = true;
-    }
+  if ((state & BTN_PIN_NO)) {
+    btn_left = true;
+  }
+  if ((state & BTN_PIN_YES) != BTN_PIN_YES) {
+    btn_right = true;
   }
   if (btn_left) {
     oledBox(0, 0, 3, 3, true);
@@ -568,11 +573,19 @@ static void checkButtons(void) {
   }
 }
 
+static void i2cSlavePoll(void) {
+  if (true == i2c_recv_done) {
+    i2c_recv_done = false;
+    rx_callback(NULL, 0);
+  }
+}
+
 void usbLoop(void) {
   bool firmware_present = firmware_present_new();
   usbInit();
   for (;;) {
     usbd_poll(usbd_dev);
+    i2cSlavePoll();
     if (!firmware_present &&
         (flash_state == STATE_READY || flash_state == STATE_OPEN)) {
       checkButtons();

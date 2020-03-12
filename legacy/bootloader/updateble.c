@@ -19,7 +19,7 @@ unsigned char bUBle_beginUpdateFirmware(void) {
   unsigned char res;
 
   swd_io_init();
-  res = swd_dap_init();  //�����˲���
+  res = swd_dap_init();
   if (res != 1) {
     return FALSE;
   }

@@ -31,6 +31,11 @@ extern uint8_t ucTimeFlag;
 #define POWER_OFF_TIMER_CLEAR() (ucTimeFlag &= 0xFE)
 #define POWER_OFF_TIMER_READY() (ucTimeFlag & 0x01)
 
+typedef void (*timer_func)(void);
+
+void register_timer(char *name, uint32_t cyc, timer_func fp);
+void unregister_timer(char *name);
+
 void delay_ms(uint32_t uiDelay_Ms);
 void delay_us(uint32_t uiDelay_us);
 
