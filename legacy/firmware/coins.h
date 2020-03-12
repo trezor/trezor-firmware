@@ -51,6 +51,7 @@ typedef struct _CoinInfo {
   const curve_info *curve;
   bool extra_data;
   bool timestamp;
+  bool overwintered;
 } CoinInfo;
 
 #include "coin_info.h"

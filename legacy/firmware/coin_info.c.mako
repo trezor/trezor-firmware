@@ -48,6 +48,7 @@ const CoinInfo coins[COINS_COUNT] = {
 	.curve = &${c.curve_name}_info,
 	.extra_data = ${c_bool(c.extra_data)},
 	.timestamp = ${c_bool(c.timestamp)},
+	.overwintered = ${c_bool(c.consensus_branch_id)},
 },
 % endfor
 };

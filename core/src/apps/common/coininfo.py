@@ -32,6 +32,7 @@ class CoinInfo:
         curve_name: str,
         extra_data: bool,
         timestamp: bool,
+        overwintered: bool,
         confidential_assets: dict,
     ):
         self.coin_name = coin_name
@@ -56,6 +57,7 @@ class CoinInfo:
         self.curve_name = curve_name
         self.extra_data = extra_data
         self.timestamp = timestamp
+        self.overwintered = overwintered
         self.confidential_assets = confidential_assets
         if curve_name == "secp256k1-groestl":
             self.b58_hash = groestl512d_32
@@ -108,6 +110,7 @@ def by_name(name: str) -> CoinInfo:
             curve_name='secp256k1',
             extra_data=False,
             timestamp=False,
+            overwintered=False,
             confidential_assets=None,
         )
     elif name == "Regtest":
@@ -134,6 +137,7 @@ def by_name(name: str) -> CoinInfo:
             curve_name='secp256k1',
             extra_data=False,
             timestamp=False,
+            overwintered=False,
             confidential_assets=None,
         )
     elif name == "Testnet":
@@ -160,6 +164,7 @@ def by_name(name: str) -> CoinInfo:
             curve_name='secp256k1',
             extra_data=False,
             timestamp=False,
+            overwintered=False,
             confidential_assets=None,
         )
     if not utils.BITCOIN_ONLY:
@@ -189,6 +194,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Axe":
@@ -215,6 +221,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Bellcoin":
@@ -241,6 +248,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "BitZeny":
@@ -267,6 +275,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Bcash":
@@ -293,6 +302,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Bcash Testnet":
@@ -319,6 +329,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Bgold":
@@ -345,6 +356,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Bgold Testnet":
@@ -371,6 +383,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Bprivate":
@@ -397,6 +410,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Brhodium":
@@ -423,6 +437,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Bitcore":
@@ -449,6 +464,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "CPUchain":
@@ -475,6 +491,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Capricoin":
@@ -501,6 +518,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=True,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Crown":
@@ -527,6 +545,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Dash":
@@ -553,6 +572,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=True,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Dash Testnet":
@@ -579,6 +599,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=True,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Decred":
@@ -605,6 +626,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1-decred',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Decred Testnet":
@@ -631,6 +653,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1-decred',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "DigiByte":
@@ -657,6 +680,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Dogecoin":
@@ -683,6 +707,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Elements":
@@ -709,6 +734,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets={'address_prefix': 4, 'blech32_prefix': 'el'},
             )
         elif name == "Feathercoin":
@@ -735,6 +761,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Florincoin":
@@ -761,6 +788,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Fujicoin":
@@ -787,6 +815,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Gincoin":
@@ -813,6 +842,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "GameCredits":
@@ -839,6 +869,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Groestlcoin":
@@ -865,6 +896,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1-groestl',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Groestlcoin Testnet":
@@ -891,6 +923,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1-groestl',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Hatch":
@@ -917,6 +950,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Hatch Testnet":
@@ -943,6 +977,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Horizen":
@@ -969,6 +1004,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Komodo":
@@ -995,6 +1031,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=True,
                 confidential_assets=None,
             )
         elif name == "Koto":
@@ -1021,6 +1058,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Litecoin":
@@ -1047,6 +1085,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Litecoin Testnet":
@@ -1073,6 +1112,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "MetaverseETP":
@@ -1099,6 +1139,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Monacoin":
@@ -1125,6 +1166,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "MonetaryUnit":
@@ -1151,6 +1193,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "NIX":
@@ -1177,6 +1220,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Namecoin":
@@ -1203,6 +1247,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "PIVX":
@@ -1229,6 +1274,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "PIVX Testnet":
@@ -1255,6 +1301,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Particl":
@@ -1281,6 +1328,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Particl Testnet":
@@ -1307,6 +1355,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Peercoin":
@@ -1333,6 +1382,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=True,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Peercoin Testnet":
@@ -1359,6 +1409,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=True,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Pesetacoin":
@@ -1385,6 +1436,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Polis":
@@ -1411,6 +1463,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Primecoin":
@@ -1437,6 +1490,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Qtum":
@@ -1463,6 +1517,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Qtum Testnet":
@@ -1489,6 +1544,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Ravencoin":
@@ -1515,6 +1571,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Ritocoin":
@@ -1541,6 +1598,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "SmartCash":
@@ -1567,6 +1625,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1-smart',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "SmartCash Testnet":
@@ -1593,6 +1652,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1-smart',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Stakenet":
@@ -1619,6 +1679,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Syscoin":
@@ -1645,6 +1706,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Unobtanium":
@@ -1671,6 +1733,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "VIPSTARCOIN":
@@ -1697,6 +1760,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Vertcoin":
@@ -1723,6 +1787,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Viacoin":
@@ -1749,6 +1814,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "ZCore":
@@ -1775,6 +1841,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Zcash":
@@ -1801,6 +1868,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=True,
                 timestamp=False,
+                overwintered=True,
                 confidential_assets=None,
             )
         elif name == "Zcash Testnet":
@@ -1827,6 +1895,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=True,
                 timestamp=False,
+                overwintered=True,
                 confidential_assets=None,
             )
         elif name == "Zcoin":
@@ -1853,6 +1922,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "Zcoin Testnet":
@@ -1879,6 +1949,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
         elif name == "ZelCash":
@@ -1905,6 +1976,7 @@ def by_name(name: str) -> CoinInfo:
                 curve_name='secp256k1',
                 extra_data=False,
                 timestamp=False,
+                overwintered=False,
                 confidential_assets=None,
             )
     raise ValueError('Unknown coin name "%s"' % name)
