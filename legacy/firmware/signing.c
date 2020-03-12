@@ -70,7 +70,6 @@ static uint64_t to_spend, authorized_amount, spending, change_spend;
 static uint32_t version = 1;
 static uint32_t lock_time = 0;
 static uint32_t expiry = 0;
-static bool overwintered = false;
 static uint32_t version_group_id = 0;
 static uint32_t timestamp = 0;
 #if !BITCOIN_ONLY
@@ -486,12 +485,11 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   lock_time = msg->lock_time;
   expiry = msg->expiry;
 #if !BITCOIN_ONLY
-  overwintered = msg->has_overwintered && msg->overwintered;
   version_group_id = msg->version_group_id;
   timestamp = msg->timestamp;
   branch_id = msg->branch_id;
   // set default values for Zcash if branch_id is unset
-  if (overwintered && (branch_id == 0)) {
+  if (coin->overwintered && (branch_id == 0)) {
     switch (version) {
       case 3:
         branch_id = 0x5BA81B19;  // Overwinter
@@ -536,7 +534,8 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   next_nonsegwit_input = 0xffffffff;
 
   tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0,
-          coin->curve->hasher_sign, overwintered, version_group_id, timestamp);
+          coin->curve->hasher_sign, coin->overwintered, version_group_id,
+          timestamp);
 
 #if !BITCOIN_ONLY
   if (coin->decred) {
@@ -544,7 +543,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
     to.is_decred = true;
 
     tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0,
-            coin->curve->hasher_sign, overwintered, version_group_id,
+            coin->curve->hasher_sign, coin->overwintered, version_group_id,
             timestamp);
     ti.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
     ti.is_decred = true;
@@ -553,7 +552,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
 
   // segwit hashes for hashPrevouts and hashSequence
 #if !BITCOIN_ONLY
-  if (overwintered) {
+  if (coin->overwintered) {
     hasher_InitParam(&hasher_prevouts, HASHER_BLAKE2B_PERSONAL,
                      "ZcashPrevoutHash", 16);
     hasher_InitParam(&hasher_sequence, HASHER_BLAKE2B_PERSONAL,
@@ -1139,7 +1138,7 @@ void signing_txack(TransactionType *tx) {
         }
 #endif
 
-        if (coin->force_bip143 || overwintered) {
+        if (coin->force_bip143 || coin->overwintered) {
           if (!tx->inputs[0].has_amount) {
             fsm_sendFailure(FailureType_Failure_DataError,
                             _("Expected input with amount"));
@@ -1229,7 +1228,7 @@ void signing_txack(TransactionType *tx) {
       }
       tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time,
               tx->expiry, tx->extra_data_len, coin->curve->hasher_sign,
-              tx->overwintered, tx->version_group_id, tx->timestamp);
+              coin->overwintered, tx->version_group_id, tx->timestamp);
 #if !BITCOIN_ONLY
       if (coin->decred) {
         tp.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
@@ -1331,7 +1330,7 @@ void signing_txack(TransactionType *tx) {
                  PROGRESS_PRECISION);
       if (idx2 == 0) {
         tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0,
-                coin->curve->hasher_sign, overwintered, version_group_id,
+                coin->curve->hasher_sign, coin->overwintered, version_group_id,
                 timestamp);
         hasher_Reset(&hasher_check);
       }
@@ -1427,7 +1426,7 @@ void signing_txack(TransactionType *tx) {
       resp.serialized.has_serialized_tx = true;
       if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG ||
           tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
-        if (!(coin->force_bip143 || overwintered)) {
+        if (!(coin->force_bip143 || coin->overwintered)) {
           fsm_sendFailure(FailureType_Failure_DataError,
                           _("Transaction has changed during signing"));
           signing_abort();
@@ -1449,7 +1448,7 @@ void signing_txack(TransactionType *tx) {
 
         uint8_t hash[32] = {0};
 #if !BITCOIN_ONLY
-        if (overwintered) {
+        if (coin->overwintered) {
           switch (version) {
             case 3:
               signing_hash_zip143(&tx->inputs[0], hash);
@@ -1575,14 +1574,14 @@ void signing_txack(TransactionType *tx) {
       if (idx1 == 0) {
         // witness
         tx_init(&to, inputs_count, outputs_count, version, lock_time, expiry, 0,
-                coin->curve->hasher_sign, overwintered, version_group_id,
+                coin->curve->hasher_sign, coin->overwintered, version_group_id,
                 timestamp);
         to.is_decred = true;
       }
 
       // witness hash
       tx_init(&ti, inputs_count, outputs_count, version, lock_time, expiry, 0,
-              coin->curve->hasher_sign, overwintered, version_group_id,
+              coin->curve->hasher_sign, coin->overwintered, version_group_id,
               timestamp);
       ti.version |= (DECRED_SERIALIZE_WITNESS_SIGNING << 16);
       ti.is_decred = true;

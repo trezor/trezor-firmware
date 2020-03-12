@@ -151,7 +151,6 @@ class TestZcashZip143(unittest.TestCase):
                 version=v["version"],
                 lock_time=v["lock_time"],
                 expiry=v["expiry"],
-                overwintered=(v["version"] >= 3),
                 version_group_id=v["version_group_id"],
             )
             zip143 = Zip143(0x5ba81b19)  # Overwinter

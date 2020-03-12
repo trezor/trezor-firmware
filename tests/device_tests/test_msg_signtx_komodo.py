@@ -85,7 +85,6 @@ class TestMsgSigntxKomodo:
 
             details = proto.SignTx(
                 version=4,
-                overwintered=True,
                 version_group_id=0x892F2085,
                 branch_id=0x76B809BB,
                 lock_time=0x5D2A30B8,
@@ -165,7 +164,6 @@ class TestMsgSigntxKomodo:
 
             details = proto.SignTx(
                 version=4,
-                overwintered=True,
                 version_group_id=0x892F2085,
                 branch_id=0x76B809BB,
                 lock_time=0x5D2AF1F2,

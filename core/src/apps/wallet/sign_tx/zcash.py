@@ -85,7 +85,7 @@ class Zip143:
             )
         )
 
-        ensure(tx.overwintered)
+        ensure(coin.overwintered)
         ensure(tx.version == 3)
 
         write_uint32(
@@ -132,7 +132,7 @@ class Zip243(Zip143):
             )
         )
 
-        ensure(tx.overwintered)
+        ensure(coin.overwintered)
         ensure(tx.version == 4)
 
         write_uint32(

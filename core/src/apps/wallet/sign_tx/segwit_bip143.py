@@ -58,7 +58,7 @@ class Bip143:
     ) -> bytes:
         h_preimage = HashWriter(sha256())
 
-        ensure(not tx.overwintered)
+        ensure(not coin.overwintered)
 
         write_uint32(h_preimage, tx.version)  # nVersion
         write_bytes(h_preimage, self.get_prevouts_hash(coin))  # hashPrevouts
