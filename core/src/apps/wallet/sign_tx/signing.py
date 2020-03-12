@@ -55,9 +55,7 @@ class SigningError(ValueError):
 # - check inputs, previous transactions, and outputs
 # - ask for confirmations
 # - check fee
-async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
-    coin = coins.by_name(tx.coin_name)
-
+async def check_tx_fee(tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo):
     # h_first is used to make sure the inputs and outputs streamed in Phase 1
     # are the same as in Phase 2.  it is thus not required to fully hash the
     # tx, as the SignTx info is streamed only once
@@ -225,7 +223,9 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
 
 
 async def sign_tx(tx: SignTx, keychain: seed.Keychain):
-    tx = helpers.sanitize_sign_tx(tx)
+    coin_name = tx.coin_name if tx.coin_name is not None else "Bitcoin"
+    coin = coins.by_name(coin_name)
+    tx = helpers.sanitize_sign_tx(tx, coin)
 
     progress.init(tx.inputs_count, tx.outputs_count)
 
@@ -238,14 +238,13 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
         authorized_in,
         wallet_path,
         multisig_fp,
-    ) = await check_tx_fee(tx, keychain)
+    ) = await check_tx_fee(tx, keychain, coin)
 
     # Phase 2
     # - sign inputs
     # - check that nothing changed
 
     any_segwit = True in segwit.values()
-    coin = coins.by_name(tx.coin_name)
     tx_ser = TxRequestSerializedType()
 
     txo_bin = TxOutputBinType()
@@ -595,7 +594,7 @@ async def get_prevtx_output_value(
     total_out = 0  # sum of output amounts
 
     # STAGE_REQUEST_2_PREV_META
-    tx = await helpers.request_tx_meta(tx_req, prev_hash)
+    tx = await helpers.request_tx_meta(tx_req, coin, prev_hash)
 
     if tx.outputs_cnt <= prev_index:
         raise SigningError(

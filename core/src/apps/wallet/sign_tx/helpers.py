@@ -104,14 +104,14 @@ def confirm_nondefault_locktime(lock_time: int):
     return (yield UiConfirmNonDefaultLocktime(lock_time))
 
 
-def request_tx_meta(tx_req: TxRequest, tx_hash: bytes = None):
+def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None):
     tx_req.request_type = TXMETA
     tx_req.details.tx_hash = tx_hash
     tx_req.details.request_index = None
     ack = yield tx_req
     tx_req.serialized = None
     gc.collect()
-    return sanitize_tx_meta(ack.tx)
+    return sanitize_tx_meta(ack.tx, coin)
 
 
 def request_tx_extra_data(
@@ -148,7 +148,7 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes 
     tx_req.serialized = None
     gc.collect()
     if tx_hash is None:
-        return sanitize_tx_output(ack.tx)
+        return sanitize_tx_output(ack.tx, coin)
     else:
         return sanitize_tx_binoutput(ack.tx, coin)
 
@@ -165,7 +165,7 @@ def request_tx_finish(tx_req: TxRequest):
 # ===
 
 
-def sanitize_sign_tx(tx: SignTx) -> SignTx:
+def sanitize_sign_tx(tx: SignTx, coin: CoinInfo) -> SignTx:
     tx.version = tx.version if tx.version is not None else 1
     tx.lock_time = tx.lock_time if tx.lock_time is not None else 0
     tx.inputs_count = tx.inputs_count if tx.inputs_count is not None else 0
@@ -177,7 +177,7 @@ def sanitize_sign_tx(tx: SignTx) -> SignTx:
     return tx
 
 
-def sanitize_tx_meta(tx: TransactionType) -> TransactionType:
+def sanitize_tx_meta(tx: TransactionType, coin: CoinInfo) -> TransactionType:
     tx.version = tx.version if tx.version is not None else 1
     tx.lock_time = tx.lock_time if tx.lock_time is not None else 0
     tx.inputs_cnt = tx.inputs_cnt if tx.inputs_cnt is not None else 0
@@ -216,7 +216,7 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
     return txi
 
 
-def sanitize_tx_output(tx: TransactionType) -> TxOutputType:
+def sanitize_tx_output(tx: TransactionType, coin: CoinInfo) -> TxOutputType:
     txo = tx.outputs[0]
     if txo.multisig and txo.script_type not in MULTISIG_OUTPUT_SCRIPT_TYPES:
         raise SigningError(
