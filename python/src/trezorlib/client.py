@@ -169,9 +169,9 @@ class TrezorClient:
             self.call_raw(messages.Cancel())
             raise
 
-        if not pin.isdigit():
+        if any(d not in "123456789" for d in pin) or not (1 <= len(pin) <= 9):
             self.call_raw(messages.Cancel())
-            raise ValueError("Non-numeric PIN provided")
+            raise ValueError("Invalid PIN provided")
 
         resp = self.call_raw(messages.PinMatrixAck(pin=pin))
         if isinstance(resp, messages.Failure) and resp.code in (
