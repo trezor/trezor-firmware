@@ -63,18 +63,21 @@ void pinmatrix_start(const char *text) {
   pinmatrix_draw(text);
 }
 
-void pinmatrix_done(char *pin) {
+secbool pinmatrix_done(char *pin) {
   int i = 0, k = 0;
+  secbool ret = sectrue;
   while (pin && pin[i]) {
     k = pin[i] - '1';
     if (k >= 0 && k <= 8) {
       pin[i] = pinmatrix_perm[k];
     } else {
       pin[i] = 'X';
+      ret = secfalse;
     }
     i++;
   }
   memset(pinmatrix_perm, 'X', sizeof(pinmatrix_perm) - 1);
+  return ret;
 }
 
 #if DEBUG_LINK

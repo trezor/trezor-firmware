@@ -174,3 +174,26 @@ def test_set_pin_to_wipe_code(client):
     assert client.features.pin_protection is False
     resp = client.call_raw(messages.GetAddress())
     assert isinstance(resp, messages.Address)
+
+
+@pytest.mark.parametrize("invalid_wipe_code", ("1204", "", "1234567891"))
+def test_set_wipe_code_invalid(client, invalid_wipe_code):
+    # Let's set the wipe code
+    ret = client.call_raw(messages.ChangeWipeCode())
+    assert isinstance(ret, messages.ButtonRequest)
+
+    # Confirm
+    client.debug.press_yes()
+    ret = client.call_raw(messages.ButtonAck())
+
+    # Enter a wipe code containing an invalid digit
+    assert isinstance(ret, messages.PinMatrixRequest)
+    assert ret.type == PinType.WipeCodeFirst
+    ret = client.call_raw(messages.PinMatrixAck(pin=invalid_wipe_code))
+
+    # Ensure the invalid wipe code is detected
+    assert isinstance(ret, messages.Failure)
+
+    # Check that there's still no wipe code protection.
+    client.init_device()
+    assert client.features.wipe_code_protection is False
