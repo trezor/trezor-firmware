@@ -22,79 +22,86 @@ from trezorlib import device, messages as proto
 from ..common import generate_entropy
 
 
+def reset_device(client, strength):
+    # No PIN, no passphrase
+    external_entropy = b"zlutoucky kun upel divoke ody" * 2
+
+    ret = client.call_raw(
+        proto.ResetDevice(
+            display_random=False,
+            strength=strength,
+            passphrase_protection=False,
+            pin_protection=False,
+            language="en-US",
+            label="test",
+        )
+    )
+
+    assert isinstance(ret, proto.ButtonRequest)
+    client.debug.press_yes()
+    ret = client.call_raw(proto.ButtonAck())
+
+    # Provide entropy
+    assert isinstance(ret, proto.EntropyRequest)
+    internal_entropy = client.debug.read_reset_entropy()
+    ret = client.call_raw(proto.EntropyAck(entropy=external_entropy))
+
+    # Generate mnemonic locally
+    entropy = generate_entropy(strength, internal_entropy, external_entropy)
+    expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
+
+    mnemonic = []
+    for _ in range(strength // 32 * 3):
+        assert isinstance(ret, proto.ButtonRequest)
+        mnemonic.append(client.debug.read_reset_word())
+        client.debug.press_yes()
+        client.call_raw(proto.ButtonAck())
+
+    mnemonic = " ".join(mnemonic)
+
+    # Compare that device generated proper mnemonic for given entropies
+    assert mnemonic == expected_mnemonic
+
+    mnemonic = []
+    for _ in range(strength // 32 * 3):
+        assert isinstance(ret, proto.ButtonRequest)
+        mnemonic.append(client.debug.read_reset_word())
+        client.debug.press_yes()
+        resp = client.call_raw(proto.ButtonAck())
+
+    assert isinstance(resp, proto.Success)
+
+    mnemonic = " ".join(mnemonic)
+
+    # Compare that second pass printed out the same mnemonic once again
+    assert mnemonic == expected_mnemonic
+
+    # Check if device is properly initialized
+    resp = client.call_raw(proto.Initialize())
+    assert resp.initialized is True
+    assert resp.needs_backup is False
+    assert resp.pin_protection is False
+    assert resp.passphrase_protection is False
+
+    # Do pin & passphrase-protected action, PassphraseRequest should NOT be raised
+    resp = client.call_raw(proto.GetAddress())
+    assert isinstance(resp, proto.Address)
+
+
 @pytest.mark.skip_t2
 class TestMsgResetDevice:
     @pytest.mark.setup_client(uninitialized=True)
-    def test_reset_device(self, client):
-        # No PIN, no passphrase
-        external_entropy = b"zlutoucky kun upel divoke ody" * 2
-        strength = 128
-
-        ret = client.call_raw(
-            proto.ResetDevice(
-                display_random=False,
-                strength=strength,
-                passphrase_protection=False,
-                pin_protection=False,
-                language="en-US",
-                label="test",
-            )
-        )
-
-        assert isinstance(ret, proto.ButtonRequest)
-        client.debug.press_yes()
-        ret = client.call_raw(proto.ButtonAck())
-
-        # Provide entropy
-        assert isinstance(ret, proto.EntropyRequest)
-        internal_entropy = client.debug.read_reset_entropy()
-        ret = client.call_raw(proto.EntropyAck(entropy=external_entropy))
-
-        # Generate mnemonic locally
-        entropy = generate_entropy(strength, internal_entropy, external_entropy)
-        expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
-
-        mnemonic = []
-        for _ in range(strength // 32 * 3):
-            assert isinstance(ret, proto.ButtonRequest)
-            mnemonic.append(client.debug.read_reset_word())
-            client.debug.press_yes()
-            client.call_raw(proto.ButtonAck())
-
-        mnemonic = " ".join(mnemonic)
-
-        # Compare that device generated proper mnemonic for given entropies
-        assert mnemonic == expected_mnemonic
-
-        mnemonic = []
-        for _ in range(strength // 32 * 3):
-            assert isinstance(ret, proto.ButtonRequest)
-            mnemonic.append(client.debug.read_reset_word())
-            client.debug.press_yes()
-            resp = client.call_raw(proto.ButtonAck())
-
-        assert isinstance(resp, proto.Success)
-
-        mnemonic = " ".join(mnemonic)
-
-        # Compare that second pass printed out the same mnemonic once again
-        assert mnemonic == expected_mnemonic
-
-        # Check if device is properly initialized
-        resp = client.call_raw(proto.Initialize())
-        assert resp.initialized is True
-        assert resp.needs_backup is False
-        assert resp.pin_protection is False
-        assert resp.passphrase_protection is False
-
-        # Do pin & passphrase-protected action, PassphraseRequest should NOT be raised
-        resp = client.call_raw(proto.GetAddress())
-        assert isinstance(resp, proto.Address)
+    def test_reset_device_128(self, client):
+        reset_device(client, 128)
 
     @pytest.mark.setup_client(uninitialized=True)
-    def test_reset_device_pin(self, client):
+    def test_reset_device_192(self, client):
+        reset_device(client, 192)
+
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_reset_device_256_pin(self, client):
         external_entropy = b"zlutoucky kun upel divoke ody" * 2
-        strength = 128
+        strength = 256
 
         ret = client.call_raw(
             proto.ResetDevice(

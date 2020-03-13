@@ -32,104 +32,113 @@ from ..common import (
     read_and_confirm_mnemonic,
 )
 
+STRENGTH_TO_WORDS = {128: 20, 256: 33}
 
-@pytest.mark.skip_t1
-class TestMsgResetDeviceT2:
-    # TODO: test with different options
-    @pytest.mark.setup_client(uninitialized=True)
-    def test_reset_device_slip39_basic(self, client):
-        strength = 128
-        member_threshold = 3
-        all_mnemonics = []
 
-        def input_flow():
-            # 1. Confirm Reset
-            # 2. Backup your seed
-            # 3. Confirm warning
-            # 4. shares info
-            # 5. Set & Confirm number of shares
-            # 6. threshold info
-            # 7. Set & confirm threshold value
-            # 8. Confirm show seeds
-            yield from click_through(client.debug, screens=8, code=B.ResetDevice)
+def reset_device(client, strength):
+    words = STRENGTH_TO_WORDS[strength]
+    member_threshold = 3
+    all_mnemonics = []
 
-            # show & confirm shares
-            for h in range(5):
-                # mnemonic phrases
-                btn_code = yield
-                assert btn_code == B.ResetDevice
-                mnemonic = read_and_confirm_mnemonic(client.debug, words=20)
-                all_mnemonics.append(mnemonic)
+    def input_flow():
+        # 1. Confirm Reset
+        # 2. Backup your seed
+        # 3. Confirm warning
+        # 4. shares info
+        # 5. Set & Confirm number of shares
+        # 6. threshold info
+        # 7. Set & confirm threshold value
+        # 8. Confirm show seeds
+        yield from click_through(client.debug, screens=8, code=B.ResetDevice)
 
-                # Confirm continue to next share
-                btn_code = yield
-                assert btn_code == B.Success
-                client.debug.press_yes()
+        # show & confirm shares
+        for h in range(5):
+            # mnemonic phrases
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            mnemonic = read_and_confirm_mnemonic(client.debug, words=words)
+            all_mnemonics.append(mnemonic)
 
-            # safety warning
+            # Confirm continue to next share
             btn_code = yield
             assert btn_code == B.Success
             client.debug.press_yes()
 
-        os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
-        with mock.patch("os.urandom", os_urandom), client:
-            client.set_expected_responses(
-                [
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.EntropyRequest(),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.Success(),
-                    proto.Features(),
-                ]
-            )
-            client.set_input_flow(input_flow)
+        # safety warning
+        btn_code = yield
+        assert btn_code == B.Success
+        client.debug.press_yes()
 
-            # No PIN, no passphrase, don't display random
-            device.reset(
-                client,
-                display_random=False,
-                strength=strength,
-                passphrase_protection=False,
-                pin_protection=False,
-                label="test",
-                language="en-US",
-                backup_type=BackupType.Slip39_Basic,
-            )
+    os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
+    with mock.patch("os.urandom", os_urandom), client:
+        client.set_expected_responses(
+            [
+                proto.ButtonRequest(code=B.ResetDevice),
+                proto.EntropyRequest(),
+                proto.ButtonRequest(code=B.ResetDevice),
+                proto.ButtonRequest(code=B.ResetDevice),
+                proto.ButtonRequest(code=B.ResetDevice),
+                proto.ButtonRequest(code=B.ResetDevice),
+                proto.ButtonRequest(code=B.ResetDevice),
+                proto.ButtonRequest(code=B.ResetDevice),
+                proto.ButtonRequest(code=B.ResetDevice),
+                proto.ButtonRequest(code=B.ResetDevice),
+                proto.ButtonRequest(code=B.Success),
+                proto.ButtonRequest(code=B.ResetDevice),
+                proto.ButtonRequest(code=B.Success),
+                proto.ButtonRequest(code=B.ResetDevice),
+                proto.ButtonRequest(code=B.Success),
+                proto.ButtonRequest(code=B.ResetDevice),
+                proto.ButtonRequest(code=B.Success),
+                proto.ButtonRequest(code=B.ResetDevice),
+                proto.ButtonRequest(code=B.Success),
+                proto.ButtonRequest(code=B.Success),
+                proto.Success(),
+                proto.Features(),
+            ]
+        )
+        client.set_input_flow(input_flow)
 
-        # generate secret locally
-        internal_entropy = client.debug.state().reset_entropy
-        secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
+        # No PIN, no passphrase, don't display random
+        device.reset(
+            client,
+            display_random=False,
+            strength=strength,
+            passphrase_protection=False,
+            pin_protection=False,
+            label="test",
+            language="en-US",
+            backup_type=BackupType.Slip39_Basic,
+        )
 
-        # validate that all combinations will result in the correct master secret
-        validate_mnemonics(all_mnemonics, member_threshold, secret)
+    # generate secret locally
+    internal_entropy = client.debug.state().reset_entropy
+    secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
 
-        # Check if device is properly initialized
-        assert client.features.initialized is True
-        assert client.features.needs_backup is False
-        assert client.features.pin_protection is False
-        assert client.features.passphrase_protection is False
-        assert client.features.backup_type is BackupType.Slip39_Basic
+    # validate that all combinations will result in the correct master secret
+    validate_mnemonics(all_mnemonics, member_threshold, secret)
 
-        # backup attempt fails because backup was done in reset
-        with pytest.raises(TrezorFailure, match="ProcessError: Seed already backed up"):
-            device.backup(client)
+    # Check if device is properly initialized
+    assert client.features.initialized is True
+    assert client.features.needs_backup is False
+    assert client.features.pin_protection is False
+    assert client.features.passphrase_protection is False
+    assert client.features.backup_type is BackupType.Slip39_Basic
+
+    # backup attempt fails because backup was done in reset
+    with pytest.raises(TrezorFailure, match="ProcessError: Seed already backed up"):
+        device.backup(client)
+
+
+@pytest.mark.skip_t1
+class TestMsgResetDeviceT2:
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_reset_device_slip39_basic(self, client):
+        reset_device(client, 128)
+
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_reset_device_slip39_basic_256(self, client):
+        reset_device(client, 256)
 
 
 def validate_mnemonics(mnemonics, threshold, expected_ems):
