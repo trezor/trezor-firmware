@@ -130,7 +130,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinI
             InputScriptType.SPENDADDRESS,
             InputScriptType.SPENDMULTISIG,
         ):
-            if coin.force_bip143 or (not utils.BITCOIN_ONLY and coin.overwintered):
+            if not utils.BITCOIN_ONLY and (coin.force_bip143 or coin.overwintered):
                 if not txi.amount:
                     raise SigningError(
                         FailureType.DataError, "Expected input with amount"
@@ -288,7 +288,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             tx_ser.signature = None
             tx_req.serialized = tx_ser
 
-        elif coin.force_bip143 or (not utils.BITCOIN_ONLY and coin.overwintered):
+        elif not utils.BITCOIN_ONLY and (coin.force_bip143 or coin.overwintered):
             # STAGE_REQUEST_SEGWIT_INPUT
             txi_sign = await helpers.request_tx_input(tx_req, i_sign, coin)
             input_check_wallet_path(txi_sign, wallet_path)
