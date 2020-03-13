@@ -95,8 +95,10 @@ class ClickUI:
                 pin = prompt("Please enter {}".format(desc), hide_input=True)
             except click.Abort:
                 raise Cancelled from None
-            if not pin.isdigit():
-                echo("Non-numerical value provided, please try again")
+            if any(d not in "123456789" for d in pin):
+                echo("The value may only consist of digits 1 to 9.")
+            elif len(pin) > 9:
+                echo("The value must be at most 9 digits in length.")
             else:
                 return pin
 
