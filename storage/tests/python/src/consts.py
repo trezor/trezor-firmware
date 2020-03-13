@@ -21,6 +21,9 @@ WIPE_CODE_DATA_KEY = (PIN_APP_ID << 8) | 0x06
 # Norcow storage key of the storage upgrade flag.
 STORAGE_UPGRADED_KEY = (PIN_APP_ID << 8) | 0x07
 
+# The PIN value corresponding to an invalid PIN.
+PIN_INVALID = 0
+
 # The PIN value corresponding to an empty PIN.
 PIN_EMPTY = 1
 

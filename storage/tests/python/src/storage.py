@@ -74,6 +74,9 @@ class Storage:
         self._init_pin()
 
     def check_pin(self, pin: int) -> bool:
+        if pin == 0:
+            return False
+
         self.pin_log.write_attempt()
 
         data = self.nc.get(consts.EDEK_ESEK_PVC_KEY)
@@ -115,7 +118,12 @@ class Storage:
         return consts.PIN_MAX_TRIES - self.pin_log.get_failures_count()
 
     def change_pin(self, oldpin: int, newpin: int) -> bool:
-        if not self.initialized or not self.unlocked:
+        if (
+            not self.initialized
+            or not self.unlocked
+            or oldpin == consts.PIN_INVALID
+            or newpin == consts.PIN_INVALID
+        ):
             return False
         if not self.check_pin(oldpin):
             return False
