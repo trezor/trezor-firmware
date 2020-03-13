@@ -588,6 +588,26 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 static bool signing_check_input(const TxInputType *txinput) {
+  if (txinput->has_multisig &&
+      (txinput->script_type != InputScriptType_SPENDMULTISIG &&
+       txinput->script_type != InputScriptType_SPENDP2SHWITNESS &&
+       txinput->script_type != InputScriptType_SPENDWITNESS)) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Multisig field provided but not expected."));
+    signing_abort();
+    return false;
+  }
+  if (txinput->address_n_count > 0 &&
+      (txinput->script_type != InputScriptType_SPENDADDRESS &&
+       txinput->script_type != InputScriptType_SPENDMULTISIG &&
+       txinput->script_type != InputScriptType_SPENDWITNESS &&
+       txinput->script_type != InputScriptType_SPENDP2SHWITNESS)) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    "Input's address_n provided but not expected.");
+    signing_abort();
+    return false;
+  }
+
   /* compute multisig fingerprint */
   /* (if all input share the same fingerprint, outputs having the same
    * fingerprint will be considered as change outputs) */
@@ -662,6 +682,36 @@ static bool signing_check_output(TxOutputType *txoutput) {
   //   add it to hash_outputs
   //   ask user for permission
 
+  if (txoutput->has_multisig &&
+      (txoutput->script_type != OutputScriptType_PAYTOMULTISIG &&
+       txoutput->script_type != OutputScriptType_PAYTOP2SHWITNESS &&
+       txoutput->script_type != OutputScriptType_PAYTOWITNESS)) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Multisig field provided but not expected."));
+    signing_abort();
+    return false;
+  }
+
+  if (txoutput->address_n_count > 0 &&
+      (txoutput->script_type != OutputScriptType_PAYTOADDRESS &&
+       txoutput->script_type != OutputScriptType_PAYTOMULTISIG &&
+       txoutput->script_type != OutputScriptType_PAYTOWITNESS &&
+       txoutput->script_type != OutputScriptType_PAYTOP2SHWITNESS)) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Output's address_n provided but not expected."));
+    signing_abort();
+    return false;
+  }
+
+  if (txoutput->has_op_return_data &&
+      (txoutput->script_type != OutputScriptType_PAYTOOPRETURN)) {
+    fsm_sendFailure(
+        FailureType_Failure_DataError,
+        _("OP RETURN data provided but not OP RETURN script type."));
+    signing_abort();
+    return false;
+  }
+
   if (txoutput->script_type == OutputScriptType_PAYTOOPRETURN) {
     if (txoutput->has_address || (txoutput->address_n_count > 0) ||
         txoutput->has_multisig) {
@@ -670,16 +720,28 @@ static bool signing_check_output(TxOutputType *txoutput) {
       signing_abort();
       return false;
     }
-  }
-  // check for change address
-  bool is_change = false;
-  if (txoutput->address_n_count > 0) {
-    if (txoutput->has_address) {
+    if (txoutput->amount != 0) {
       fsm_sendFailure(FailureType_Failure_DataError,
-                      _("Address in change output"));
+                      _("OP_RETURN output with non-zero amount"));
       signing_abort();
       return false;
     }
+  } else {
+    if (txoutput->has_address && txoutput->address_n_count > 0) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Both address and address_n provided."));
+      signing_abort();
+      return false;
+    } else if (!txoutput->has_address && txoutput->address_n_count == 0) {
+      fsm_sendFailure(FailureType_Failure_DataError, _("Missing address"));
+      signing_abort();
+      return false;
+    }
+  }
+
+  // check for change address
+  bool is_change = false;
+  if (txoutput->address_n_count > 0) {
     /*
      * For multisig check that all inputs are multisig
      */

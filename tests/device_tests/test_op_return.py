@@ -172,14 +172,8 @@ class TestOpReturn:
             with pytest.raises(CallException) as exc:
                 btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_API)
 
-            if client.features.model == "1":
-                assert exc.value.args[0] == proto.FailureType.ProcessError
-                assert exc.value.args[1].endswith("Failed to compile output")
-            else:
-                assert exc.value.args[0] == proto.FailureType.DataError
-                assert exc.value.args[1].endswith(
-                    "OP_RETURN output with non-zero amount"
-                )
+            assert exc.value.args[0] == proto.FailureType.DataError
+            assert exc.value.args[1].endswith("OP_RETURN output with non-zero amount")
 
     @pytest.mark.skip_ui
     def test_opreturn_address(self, client):
@@ -236,11 +230,6 @@ class TestOpReturn:
                 )
 
             assert exc.value.args[0] == proto.FailureType.DataError
-            if client.features.model == "1":
-                assert exc.value.args[1].endswith(
-                    "OP_RETURN output with address or multisig"
-                )
-            else:
-                assert (
-                    exc.value.args[1] == "Output's address_n provided but not expected."
-                )
+            assert exc.value.args[1].endswith(
+                "Output's address_n provided but not expected."
+            )
