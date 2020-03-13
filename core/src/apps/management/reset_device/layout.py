@@ -137,7 +137,7 @@ def _split_share_into_pages(share_words):
     if length == 12 or length == 20 or length == 24:
         middle = share[2:-2]
         last = share[-2:]  # two words on the last page
-    elif length == 33:
+    elif length == 33 or length == 18:
         middle = share[2:]
         last = []  # no words at the last page, because it does not add up
     else:
