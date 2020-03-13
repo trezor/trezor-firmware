@@ -60,8 +60,6 @@ message TxInputType {
     optional uint64 amount = 8;                     // amount of previous transaction output
     optional uint32 decred_tree = 9;                // only for Decred
     optional uint32 decred_script_version = 10;     // only for Decred
-    optional bytes prev_block_hash_bip115 = 11;     // block hash of previous transaction output (for bip115 implementation)
-    optional uint32 prev_block_height_bip115 = 12;  // block height of previous transaction output (for bip115 implementation)
 }
 ```
 
@@ -73,7 +71,7 @@ The field `script_sig` must not be set.
 
 The field `multisig` can be used for multisig inputs. Documenting the multisig structure is TBD. With regular inputs, `multisig` must not be set.
 
-`decred` and `bip115` fields must only be set when relevant to your currency.
+`decred` fields must only be set when relevant to your currency.
 
 ### Outputs
 
@@ -94,8 +92,6 @@ message TxOutputType {
     optional MultisigRedeemScriptType multisig = 5; // multisig output definition
     optional bytes op_return_data = 6;              // defines op_return data
     optional uint32 decred_script_version = 7;      // only for Decred
-    optional bytes block_hash_bip115 = 8;           // block hash of existing block (recommended current_block - 300) (for bip115 implementation)
-    optional uint32 block_height_bip115 = 9;        // block height of existing block (recommended current_block - 300) (for bip115 implementation)
  
 ```
 
@@ -112,7 +108,7 @@ For `OP_RETURN` outputs, `script_type` must be set to `"PAYTOOPRETURN"` and
 `op_return_data` must be filled appropriately. `address_n` and `address` must not be
 set.
 
-`decred` and `bip115` fields must only be set when relevant to your currency.
+`decred` fields must only be set when relevant to your currency.
 
 ### Transaction metadata
 

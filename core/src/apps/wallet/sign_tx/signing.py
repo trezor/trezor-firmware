@@ -439,11 +439,6 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                         txi_sign.script_sig = scripts.output_script_p2pkh(
                             addresses.ecdsa_hash_pubkey(key_sign_pub, coin)
                         )
-                        if coin.bip115:
-                            txi_sign.script_sig += scripts.script_replay_protection_bip115(
-                                txi_sign.prev_block_hash_bip115,
-                                txi_sign.prev_block_height_bip115,
-                            )
                     else:
                         raise SigningError(
                             FailureType.ProcessError, "Unknown transaction type"
@@ -744,20 +739,12 @@ def output_derive_script(
         # p2pkh
         pubkeyhash = address_type.strip(coin.address_type, raw_address)
         script = scripts.output_script_p2pkh(pubkeyhash)
-        if coin.bip115:
-            script += scripts.script_replay_protection_bip115(
-                o.block_hash_bip115, o.block_height_bip115
-            )
         return script
 
     elif address_type.check(coin.address_type_p2sh, raw_address):
         # p2sh
         scripthash = address_type.strip(coin.address_type_p2sh, raw_address)
         script = scripts.output_script_p2sh(scripthash)
-        if coin.bip115:
-            script += scripts.script_replay_protection_bip115(
-                o.block_hash_bip115, o.block_height_bip115
-            )
         return script
 
     raise SigningError(FailureType.DataError, "Invalid address type")

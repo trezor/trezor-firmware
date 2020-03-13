@@ -79,13 +79,6 @@ def _json_to_bin_output(coin, vout):
     DECIMALS = 6 if is_peercoin(coin) else 8
     o.amount = int(Decimal(vout["value"]) * (10 ** DECIMALS))
     o.script_pubkey = bytes.fromhex(vout["scriptPubKey"]["hex"])
-    if coin["bip115"] and o.script_pubkey[-1] == 0xB4:
-        # Verify if coin implements replay protection bip115 and script includes
-        # checkblockatheight opcode. 0xb4 - is op_code (OP_CHECKBLOCKATHEIGHT)
-        # <OP_32> <32-byte block hash> <OP_3> <3-byte block height> <OP_CHECKBLOCKATHEIGHT>
-        tail = o.script_pubkey[-38:]
-        o.block_hash = tail[1:33]  # <32-byte block hash>
-        o.block_height = int.from_bytes(tail[34:37], "little")  # <3-byte block height>
     if coin["decred"]:
         o.decred_script_version = vout["version"]
 

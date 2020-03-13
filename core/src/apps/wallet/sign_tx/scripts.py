@@ -4,12 +4,7 @@ from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
 from apps.common.coininfo import CoinInfo
 from apps.common.writers import empty_bytearray
 from apps.wallet.sign_tx.multisig import multisig_get_pubkey_count, multisig_get_pubkeys
-from apps.wallet.sign_tx.writers import (
-    write_bytes,
-    write_op_push,
-    write_scriptnum,
-    write_varint,
-)
+from apps.wallet.sign_tx.writers import write_bytes, write_op_push, write_varint
 
 
 class ScriptsError(ValueError):
@@ -50,20 +45,6 @@ def output_script_p2sh(scripthash: bytes) -> bytearray:
     s[1] = 0x14  # pushing 20 bytes
     s[2:22] = scripthash
     s[22] = 0x87  # OP_EQUAL
-    return s
-
-
-def script_replay_protection_bip115(
-    block_hash: bytes, block_height: bytes
-) -> bytearray:
-    if block_hash is None or block_height is None:
-        return bytearray()
-    utils.ensure(len(block_hash) == 32)
-    s = bytearray(33)
-    s[0] = 0x20  # 32 bytes for block hash
-    s[1:33] = block_hash  # block hash
-    write_scriptnum(s, block_height)
-    s.append(0xB4)  # OP_CHECKBLOCKATHEIGHT
     return s
 
 

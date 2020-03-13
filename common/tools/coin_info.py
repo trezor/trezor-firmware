@@ -136,7 +136,6 @@ BTC_CHECKS = [
     check_key("decred", bool),
     check_key("fork_id", int, nullable=True),
     check_key("force_bip143", bool),
-    check_key("bip115", bool),
     check_key("default_fee_b", dict),
     check_key("dust_limit", int),
     check_key("blocktime_seconds", int),

@@ -23,7 +23,6 @@ from trezorlib import coins, tx_api
 CACHE_PATH = os.path.join(os.path.dirname(__file__), "../../tests/txcache")
 
 TxApiBitcoin = coins.tx_api["Bitcoin"]
-TxApiZencash = coins.tx_api["Horizen"]
 
 
 def load_tx_json(coin_name, txhash):
@@ -65,18 +64,6 @@ def test_tx_api_gettx():
     )
     TxApiBitcoin.get_tx(
         "e4bc1ae5e5007a08f2b3926fe11c66612e8f73c6b00c69c7027213b84d259be3"
-    )
-
-
-def test_tx_api_current_block():
-    height = TxApiZencash.current_height()
-    assert height > 347041
-
-
-def test_tx_api_get_block_hash():
-    hash = TxApiZencash.get_block_hash(110000)
-    assert (
-        hash.hex() == "000000003f5d6ba1385c6cd2d4f836dfc5adf7f98834309ad67e26faef462454"
     )
 
 

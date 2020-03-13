@@ -223,11 +223,6 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
             FailureType.DataError,
             "Decred details provided but Decred coin not specified.",
         )
-    if (txi.prev_block_hash_bip115 or txi.prev_block_height_bip115) and not coin.bip115:
-        raise SigningError(
-            FailureType.DataError,
-            "BIP-115 details provided, but the specified coin is unaware of BIP-115.",
-        )
     return txi
 
 
