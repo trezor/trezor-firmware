@@ -107,6 +107,7 @@ void fsm_msgSignTx(const SignTx *msg) {
               _("Expiry not enabled on this coin."))
   CHECK_PARAM(coin->timestamp || !msg->has_timestamp,
               _("Timestamp not enabled on this coin."))
+  CHECK_PARAM(!coin->timestamp || msg->timestamp, _("Timestamp must be set."))
 
   const HDNode *node = fsm_getDerivedNode(coin->curve_name, NULL, 0, NULL);
   if (!node) return;

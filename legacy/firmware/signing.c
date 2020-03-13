@@ -1250,6 +1250,12 @@ void signing_txack(TransactionType *tx) {
         signing_abort();
         return;
       }
+      if (coin->timestamp && !tx->timestamp) {
+        fsm_sendFailure(FailureType_Failure_DataError,
+                        _("Timestamp must be set."));
+        signing_abort();
+        return;
+      }
       if (tx->inputs_cnt + tx->outputs_cnt < tx->inputs_cnt) {
         fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
         signing_abort();

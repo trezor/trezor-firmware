@@ -175,9 +175,9 @@ def sanitize_sign_tx(tx: SignTx, coin: CoinInfo) -> SignTx:
         tx.expiry = tx.expiry if tx.expiry is not None else 0
     elif tx.expiry:
         raise SigningError(FailureType.DataError, "Expiry not enabled on this coin.")
-    if coin.timestamp:
-        tx.timestamp = tx.timestamp if tx.timestamp is not None else 0
-    elif tx.timestamp:
+    if coin.timestamp and not tx.timestamp:
+        raise SigningError(FailureType.DataError, "Timestamp must be set.")
+    elif not coin.timestamp and tx.timestamp:
         raise SigningError(FailureType.DataError, "Timestamp not enabled on this coin.")
     return tx
 
@@ -197,9 +197,9 @@ def sanitize_tx_meta(tx: TransactionType, coin: CoinInfo) -> TransactionType:
         tx.expiry = tx.expiry if tx.expiry is not None else 0
     elif tx.expiry:
         raise SigningError(FailureType.DataError, "Expiry not enabled on this coin.")
-    if coin.timestamp:
-        tx.timestamp = tx.timestamp if tx.timestamp is not None else 0
-    elif tx.timestamp:
+    if coin.timestamp and not tx.timestamp:
+        raise SigningError(FailureType.DataError, "Timestamp must be set.")
+    elif not coin.timestamp and tx.timestamp:
         raise SigningError(FailureType.DataError, "Timestamp not enabled on this coin.")
     return tx
 
