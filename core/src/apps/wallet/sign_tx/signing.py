@@ -198,7 +198,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinI
 
     fee = total_in - total_out
 
-    if coin.negative_fee:
+    if not utils.BITCOIN_ONLY and coin.negative_fee:
         pass  # bypass check for negative fee coins, required for reward TX
     else:
         if fee < 0:
@@ -720,8 +720,10 @@ def output_derive_script(
         witprog = addresses.decode_bech32_address(coin.bech32_prefix, o.address)
         return scripts.output_script_native_p2wpkh_or_p2wsh(witprog)
 
-    if coin.cashaddr_prefix is not None and o.address.startswith(
-        coin.cashaddr_prefix + ":"
+    if (
+        not utils.BITCOIN_ONLY
+        and coin.cashaddr_prefix is not None
+        and o.address.startswith(coin.cashaddr_prefix + ":")
     ):
         prefix, addr = o.address.split(":")
         version, data = cashaddr.decode(prefix, addr)
