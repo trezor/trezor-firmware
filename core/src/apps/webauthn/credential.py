@@ -18,6 +18,10 @@ _CRED_ID_VERSION = b"\xf1\xd0\x02\x00"
 _CRED_ID_MIN_LENGTH = const(33)
 _KEY_HANDLE_LENGTH = const(64)
 
+# Maximum supported length of the RP name, user name or user displayName in bytes.
+# Note: The WebAuthn spec allows authenticators to truncate to 64 bytes or more.
+NAME_MAX_LENGTH = const(100)
+
 # Credential ID keys
 _CRED_ID_RP_ID = const(1)
 _CRED_ID_RP_NAME = const(2)
@@ -207,6 +211,18 @@ class Fido2Credential(Credential):
             raise ValueError  # data consistency check failed
 
         return cred
+
+    def truncate_names(self) -> None:
+        if self.rp_name:
+            self.rp_name = utils.truncate_utf8(self.rp_name, NAME_MAX_LENGTH)
+
+        if self.user_name:
+            self.user_name = utils.truncate_utf8(self.user_name, NAME_MAX_LENGTH)
+
+        if self.user_display_name:
+            self.user_display_name = utils.truncate_utf8(
+                self.user_display_name, NAME_MAX_LENGTH
+            )
 
     def check_required_fields(self) -> bool:
         return (

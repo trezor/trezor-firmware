@@ -1355,6 +1355,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         cred.user_id = user["id"]
         cred.user_name = user.get("name", None)
         cred.user_display_name = user.get("displayName", None)
+        cred.truncate_names()
 
         # Check if any of the credential descriptors in the exclude list belong to this authenticator.
         exclude_list = param.get(_MAKECRED_CMD_EXCLUDE_LIST, [])
